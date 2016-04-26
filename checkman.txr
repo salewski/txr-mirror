@@ -59,6 +59,20 @@
 @  (end)
 @(end)
 @;;
+@;; .code, .codn, .cod2, .cod3 checks
+@;;
+@(define check-code ())
+@  (cases)
+.code "@(assert bad ln `.code needs one argument`)@x"@(eol)
+@  (or)
+.code @(assert bad ln `.code needs one argument`)@{x /\S+/}@(eol)
+@  (or)
+.cod3 @(assert bad ln `.cod3 needs three arguments`)@x @y @{z /\S+/}@(eol)
+@  (or)
+.@{type /codn|cod2/} @(assert bad ln `.@type needs two arguments`)@(cases)"@x"@(or)@{x /\S+/}@(end) @{y /\S+/}@(eol)
+@  (end)
+@(end)
+@;;
 @;; Main
 @;;
 @(bind errors 0)
@@ -69,6 +83,8 @@
 @      (check-var)
 @    (or)
 @      (check-func)
+@    (or)
+@      (check-code)
 @    (end)
 @  (catch bad (line msg))
 @    (do (inc errors)

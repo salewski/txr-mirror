@@ -46,10 +46,10 @@
 .de cble
 .  ft 1
 ..
-.\" typeset arguments in monospace
-.\" .code x y z ->  \f[CR]x y z\f[]
+.\" typeset argument in monospace
+.\" .code x  ->  \f[CR]x\f[]
 .de code
-\f[4]\\$*\f[]
+\f[4]\\$1\f[]
 ..
 .\" like .code typesets meta-syntax
 .\" which is done in angle brackets in nroff or oblique
@@ -222,16 +222,11 @@
 .    \}
 .  .
 .\}
-.\" typeset all arguments by the last one in monospace, followed
-.\" by the last one in previous font with no space
-.\" .codn x y ... z ->  \f[CR]x y ...\f[]z
+.\" typeset left argument in monospace, then right one
+.\" in previous font, with no space between.
+.\" .codn x y \f[CR]x\f[]y
 .de codn
-.  ds s "
-.  while (\\n[.$]>2) \{\
-.    as s \\$1 
-.    shift
-.  \}
-\f[4]\\*s\\$1\f[]\\$2
+\f[4]\\$1\f[]\\$2
 ..
 .\" .cod1 a b c ->  abc  where a is typeset as code
 .de cod1
@@ -514,7 +509,7 @@ nested collect:
 ((("a" "b") ("c" "d")) (("e" "f") ("g" "h"))).
 .cble
 Suppose this is bound to a variable V.  With
-.codn -a 1 ,
+.codn "-a 1" ,
 this will be
 reported as:
 
@@ -530,7 +525,7 @@ reported as:
 .cble
 
 With
-.codn -a 2 ,
+.codn "-a 2" ,
 it comes out as:
 
 .cblk
@@ -654,7 +649,7 @@ Requests \*(TX to behave in a manner that is compatible with the specified
 version of \*(TX. This makes a difference in situations when a release of
 \*(TX breaks backward compatibility. If some version N+1 deliberately introduces
 a change which is backward incompatible, then
-.code -C N
+.code "-C N"
 can be used to request the old behavior.
 
 The requested value of N can be too low, in which case \*(TX will
@@ -1697,7 +1692,7 @@ means
 A variable
 .code v
 can be bound to a regular expression using, for example,
-.codn @(bind v #/RE/) .
+.codn "@(bind v #/RE/)" .
 
 The
 .code @*
@@ -1902,12 +1897,12 @@ In the
 form, the match extends over characters which
 are matched by the call to the function, if the call
 succeeds. Thus
-.code @{x (y z w)}
+.code "@{x (y z w)}"
 is just like
 .codn "@(y z w)" ,
 except that the region of
 text skipped over by
-.code @(y z w)
+.code "@(y z w)"
 is also bound to the variable
 .codn x .
 See Functions below.
@@ -2618,7 +2613,7 @@ and
 to
 .strn "banana" ,
 the quasiliteral
-.code `one @a and two @{b}s`
+.code "`one @a and two @{b}s`"
 represents the string
 .strn "one apple and two bananas" .
 A backquote escaped by a backslash represents
@@ -2792,11 +2787,11 @@ An integer constant followed immediately by dotdot is recognized as such; it is
 not treated as a floating constant followed by a dot. That is to say,
 .code 123..
 does not mean
-.code 123. .
+.code "123. ."
 (floating point
 .code 123.0
 value followed by dot token).  It means
-.code 123 ..
+.code "123 .."
 (integer
 .code 123
 followed by
@@ -3111,7 +3106,7 @@ text, with successive substitutions pulled from lists. The directive
 produces iteration over lists horizontally within one line. These directives
 have a different meaning in matching clauses, providing a shorthand
 notation for
-.code @(repeat :vars nil)
+.code "@(repeat :vars nil)"
 and
 .codn "@(rep :vars nil)" ,
 respectively.
@@ -3178,11 +3173,11 @@ variable.  For instance, if variable
 contains the text
 .strn "data" ,
 then
-.code  @(next A)
+.code "@(next A)"
 means switch to the file called
 .strn "data" ,
 and
-.code @(next `@A.txt`)
+.code "@(next `@A.txt`)"
 means to switch to the file
 .strn "data.txt" .
 
@@ -3198,7 +3193,7 @@ source cannot be opened, the situation is treated as a simple
 match failure.
 
 The variant
-.code @(next :args)
+.code "@(next :args)"
 means that the remaining command line arguments are to
 be treated as a data source. For this purpose, each argument is considered to
 be a line of text. The argument list does include that argument which specifies
@@ -3218,7 +3213,7 @@ When the block terminates, the input source and argument list are restored
 to what they were before the block.
 
 The variant
-.code @(next :env)
+.code "@(next :env)"
 means that the list of process environment variables
 is treated as a source of data. It looks like a text file stream
 consisting of lines of the form
@@ -3305,13 +3300,13 @@ which is not an empty input stream, but a stream consisting of
 one empty line.
 
 The
-.code @(next nil)
+.code "@(next nil)"
 variant indicates that the following subquery is applied to empty data,
 and the list of data sources from the command line is considered empty.
 This directive is useful in front of \*(TX code which doesn't process data
 sources from the command line, but takes command line arguments.
 The
-.code @(next nil)
+.code "@(next nil)"
 incantation absolutely prevents \*(TX from trying to open the
 first command line argument as a data source.
 
@@ -3480,7 +3475,7 @@ If the symbol
 .code nil
 is used in place of a number, it means to scan
 an unlimited range of lines; thus,
-.code @(skip nil)
+.code "@(skip nil)"
 is equivalent to
 .codn @(skip) .
 
@@ -3544,7 +3539,7 @@ Essentially,
 means "hard skip by
 .meta n
 lines".
-.code @(skip 1 0)
+.code "@(skip 1 0)"
 is the same as
 .codn "@(skip 1)" ,
 which is a noop, because it means: "the remainder of the query must match
@@ -3754,7 +3749,7 @@ are both present, they may be given in either order.
 
 If a numeric argument is given, it limits the range of lines which are combined
 together. For instance
-.code @(freeform 5)
+.code "@(freeform 5)"
 means to only consider the next five lines
 to to be one big line. Without a numeric argument, freeform is "bottomless". It
 can match the entire file, which creates the risk of allocating a large amount
@@ -3917,7 +3912,7 @@ position within a line, against an expression or variable:
 .cble
 
 The directive
-.code @(line 42)
+.code "@(line 42)"
 means "match the current input line number against the integer 42". If
 the current line is 42, then the directive matches, otherwise it fails.
 .code line
@@ -3934,7 +3929,7 @@ ends up bound to the first line of input:
 .cble
 
 The directive
-.code @(line x)
+.code "@(line x)"
 binds variable
 .code x
 to the current input line number, if
@@ -3997,7 +3992,9 @@ is bound, then it has to match the name of the data source,
 otherwise the directive fails.
 
 The directive
-.code @(name "data.txt")
+.cblk
+@(name "data.txt")
+.cble
 fails unless the current data source has that name.
 
 .dir data
@@ -4058,7 +4055,7 @@ and the unmatched data
 captured after the second
 .code "bar"
 must be the same object in order for
-.code @(require (eq x y))
+.code "@(require (eq x y))"
 to succeed, which implies that the same
 .code "bar"
 was matched in both branches of the
@@ -4922,7 +4919,7 @@ other supported keywords are
 and
 .codn :lines .
 The shorthand
-.code :times N
+.code ":times N"
 means the same thing as
 .codn ":mintimes N :maxtimes N" .
 These specify how many matches should be collected. If there are fewer
@@ -5068,9 +5065,9 @@ matched
 such a piece of text.
 
 In the following example, the assumption is that
-.code THIS NEVER MATCHES
+.code "THIS NEVER MATCHES"
 is not found anywhere in the input but the line
-.code THIS DOES MATCH
+.code "THIS DOES MATCH"
 is found and has a successor which is bound to
 .codn a .
 Because the body did not
@@ -5189,7 +5186,7 @@ Here, the variable
 .code A
 is bound to tokens which match the regular
 expression
-.code /[^, ]+/:
+.codn "/[^, ]+/" :
 non-empty sequence of characters other than commas or
 spaces.
 
@@ -5280,7 +5277,7 @@ matches, and doesn't find any.  It is tempting to try to fix it like this:
 .PP
 
 The problem now is that the regular expression
-.code / ?/
+.code "/ ?/"
 (match either a space or nothing), matches at any position.
 So when it is used as a variable
 delimiter, it matches at the current position, which binds the empty string to
@@ -5381,10 +5378,10 @@ See the section Keyword parameters in
 .code collect
 above.
 So for instance
-.code @(coll :gap 0)
+.code "@(coll :gap 0)"
 means that the collects must be
 consecutive, and
-.code @(coll :maxtimes 2)
+.code "@(coll :maxtimes 2)"
 means that at most two matches
 will be collected.  The
 .code :lines
@@ -5508,7 +5505,7 @@ has depth three.
 
 We can now define the binary (two argument) merge operation as follows.
 .IP 1
-.code (merge A B)
+.code "(merge A B)"
 first normalizes the values
 .code A
 and
@@ -5687,7 +5684,8 @@ assuming that
 .codn H ,
 .code N
 and
-.code C are unbound variables,
+.code C
+are unbound variables,
 will bind
 .code H
 to
@@ -5709,9 +5707,10 @@ is nested to two dimensions and  contains
 (("how" "now") ("brown" "cow")).
 .cble
 Then
-.code @(bind ((H N) (B C)) A)
+.code "@(bind ((H N) (B C)) A)"
 binds
-.code H to
+.code H
+to
 .strn how ,
 .code N
 to
@@ -5728,9 +5727,9 @@ The dot notation may be used at any nesting level. it must be followed
 by an item.  The forms
 .code (.)
 and
-.code (X .)
+.code "(X .)"
 are invalid, but
-.code (. X)
+.code "(. X)"
 is valid and equivalent to
 .codn X .
 
@@ -5749,10 +5748,10 @@ The symbols
 .code t
 and keyword symbols may be used on either side.
 They represent themselves.  For example
-.code @(bind :foo :bar)
+.code "@(bind :foo :bar)"
 fails,
 but
-.code @(bind :foo :foo)
+.code "@(bind :foo :foo)"
 succeeds since the two sides denote the same
 keyword symbol object.
 
@@ -5796,14 +5795,14 @@ For example, the following produces a match:
 .coIP :filter
 This keyword is a shorthand to specify both filters to the same value.
 For instance
-.code :filter :upcase
+.code ":filter :upcase"
 is equivalent to
 .codn ":lfilt :upcase :rfilt :upcase" .
 
 For a description of filters, see Output Filtering below.
 
 Of course, compound filters like
-.code (:fromhtml :upcase)
+.code "(:fromhtml :upcase)"
 are supported with all these keywords. The filters apply across arbitrary
 patterns and nested data.
 
@@ -5821,7 +5820,9 @@ and
 .codn c ,
 and the second bind
 succeeds, because the value of a matches the second element of the list
-.code ("z" "a")
+.cblk
+("z" "a")
+.cble
 if it is upcased, and likewise
 .code b
 matches
@@ -5854,9 +5855,9 @@ is bound to the integer
 The second
 .code bind
 then succeeds because the forms
-.code (+ 2 2)
+.code "(+ 2 2)"
 and
-.code (* 2 2)
+.code "(* 2 2)"
 produce equal values.
 
 .dir set
@@ -6098,12 +6099,12 @@ as do function bodies.
 
 The names of blocks are in a distinct namespace from the variable binding
 space. So
-.code @(block foo)
+.code "@(block foo)"
 is unrelated to the variable
 .codn @foo .
 
 A block extends from the
-.code @(block ...)
+.code "@(block ...)"
 directive which introduces it,
 until the matching
 .codn @(end) ,
@@ -6418,7 +6419,7 @@ construct never gets the
 opportunity to match four lines.
 
 If the
-.code @(accept foo)
+.code "@(accept foo)"
 line is removed from the above query, the output
 is different:
 .IP code:
@@ -6686,7 +6687,7 @@ between which is hardly noticeable, and the need for which is
 made clear below.
 
 A function definition begins with a
-.code @(define ...)
+.code "@(define ...)"
 directive. For vertical
 functions, this is the only element in a line.
 
@@ -6943,11 +6944,11 @@ Example:
 .PP
 
 The query fails because since
-.code @(which fun)
+.code "@(which fun)"
 is in horizontal mode,
 it matches characters in a line. Since the function body consists
 only of
-.code @(bind ...)
+.code "@(bind ...)"
 which doesn't match any characters, the function
 call requires an empty line to match. The line
 .code ABC
@@ -7050,7 +7051,7 @@ and
 .code y
 being local, even if no such bindings exist prior to the top-level invocation of the
 function. The invocation
-.code @(path x)
+.code "@(path x)"
 causes
 .code x
 to be bound, which is
@@ -7598,10 +7599,10 @@ is equal to
 .codn n .
 The first repetition is numbered zero.
 For instance the clause headed by
-.code @(mod 0 2)
+.code "@(mod 0 2)"
 will be used on repetitions 
 0, 2, 4, 6, ...  and
-.code @(mod 1 2)
+.code "@(mod 1 2)"
 will be used on repetitions 1, 3, 5, 7, ...
 
 .coIP "@(modlast n m)"
@@ -7664,7 +7665,7 @@ then
 .meta expr
 is a Lisp expression whose value is taken as a displacement value which
 is added to each iteration of the counter. For instance
-.code :counter (c 1)
+.code ":counter (c 1)"
 specifies a counter
 .code c
 which counts from 1.
@@ -8074,7 +8075,7 @@ Examples:
 
 To escape HTML characters in all variable substitutions occurring in an
 output clause, specify
-.code :filter :tohtml
+.code ":filter :tohtml"
 in the directive:
 
 .cblk
@@ -8107,7 +8108,7 @@ For instance, suppose the original text is HTML, containing codes
 like
 .codn &quot; .
 The compound filter
-.code (:upcase :fromhtml)
+.code "(:upcase :fromhtml)"
 will not work
 because
 .code &quot;
@@ -8169,7 +8170,7 @@ parameter.
 This is a simple filter.
 
 To use the filter, use the syntax
-.code (:fun foo_to_bar)
+.code "(:fun foo_to_bar)"
 in place of a filter name.
 For instance in the bind directive:
 
@@ -8237,7 +8238,7 @@ Output:
 When the filter invokes a function, it generates the first two arguments
 internally to pass in the input value and capture the output. The remaining
 arguments from the
-.code (:fun ...)
+.code "(:fun ...)"
 construct are also passed to the function.
 Thus the string objects
 .str ","
@@ -8343,8 +8344,11 @@ mapping from upper case letters to digits.
   @(deffilter sub x y)
 .cble
 
-The last deffilter above equivalent to
-.codn "@(deffilter sub ("from" "to") ("---" "+++"))" .
+The last deffilter has the same effect as the
+.cblk
+@(deffilter sub ("from" "to") ("---" "+++"))
+.cble
+directive.
 
 Filtering works using a longest match algorithm. The input is scanned from left
 to right, and the longest piece of text is identified at every character
@@ -8752,7 +8756,7 @@ In this example, the
 directive throws an exception of type
 .codn file-error ,
 because the given file does not exist. The exit point for this exception is the
-.code @(catch file-error)
+.code "@(catch file-error)"
 clause in the outer-most
 .code try
 block. The inner block is
@@ -9346,7 +9350,7 @@ Example:
 .cble
 
 Without the assertion in places, if the
-.code Foo: @a, @b
+.code "Foo: @a, @b"
 part does not
 match, then the entire interior of the
 .code @(collect)
@@ -9598,7 +9602,7 @@ of the dot operator, or expressed directly) it is merged. And the qref dot
 operator is right-to-left associative, so that
 .code a.b.c
 first produces
-.code (qref b c)
+.code "(qref b c)"
 via the right dot, and then
 .code a
 is adjoined into the syntax via the right dot.
@@ -9620,11 +9624,11 @@ Such ambiguous uses of floating-point tokens are diagnosed as syntax errors:
 The quote character in front of an expression is used for suppressing evaluation,
 which is useful for forms that evaluate to something other than themselves.
 For instance if
-.code '(+ 2 2)
+.code "'(+ 2 2)"
 is evaluated, the value is the three-element list
 .codn "(+ 2 2)" ,
 whereas if
-.code (+ 2 2)
+.code "(+ 2 2)"
 is evaluated, the value is
 .codn 4 .
 Similarly, the value of
@@ -9672,12 +9676,12 @@ is equivalent to
 .meti >> ' qq-template .
 .cble
 in other words, it is like an ordinary quote.  For instance
-.code ^(a b ^(c ,d))
+.code "^(a b ^(c ,d))"
 is equivalent to
-.codn '(a b ^(c ,d)) .
+.codn "'(a b ^(c ,d))" .
 Although there is an unquote ,d it
 belongs to the inner quasiquote
-.codn ^(c ,d) ,
+.codn "^(c ,d)" ,
 and the outer quasiquote does not have
 any unquotes of its own, making it equivalent to a quote.
 
@@ -9698,12 +9702,12 @@ The comma character is used within a
 to denote an unquote.  Whereas the quasiquote suppresses evaluation,
 similarly to the quote, the comma introduces an exception: an element
 of a form which is evaluated. For example, list
-.code ^(a b c ,(+ 2 2) (+ 2 2))
+.code "^(a b c ,(+ 2 2) (+ 2 2))"
 is the list
-.codn (a b c 4 (+ 2 2)) .
+.codn "(a b c 4 (+ 2 2))" .
 Everything
 in the quasiquote stands for itself, except for the
-.code ,(+ 2 2)
+.code ",(+ 2 2)"
 which is evaluated.
 
 Note: if a variable is called
@@ -9711,13 +9715,13 @@ Note: if a variable is called
 then the syntax
 .code ,*x*
 means
-.codn ,* x* :
+.codn ",* x*" :
 splice
 the value of
 .codn x* .
 In this situation, whitespace between the comma and the
 variable name should be used:
-.codn , *x* .
+.codn ", *x*" .
 
 .meIP >> ,* expr
 
@@ -9726,11 +9730,11 @@ unquote.  The form which follows
 .code ,*
 must evaluate to a list. That list is spliced into
 the structure which the quasiquote denotes. For example:
-.code '(a b c ,*(list (+ 3 3) (+ 4 4) d))
+.code "'(a b c ,*(list (+ 3 3) (+ 4 4) d))"
 evaluates to
 .codn "(a b c 6 8 d)" .
 The expression
-.code (list (+ 3 3) (+ 4 4))
+.code "(list (+ 3 3) (+ 4 4))"
 is evaluated to produce the list
 .codn "(6 8)" ,
 and this list is spliced into the quoted template.
@@ -9753,7 +9757,7 @@ object, for instance:
 .cble
 
 The
-.code #(1 2 3)
+.code "#(1 2 3)"
 literal is turned into a vector atom right in the \*(TX parser,
 and this atom is being quoted: this is
 .cblk
@@ -9805,9 +9809,9 @@ arguments and the key-value pairs. For instance:
 where
 .code (:equal-based)
 is the list of construction arguments and the pairs
-.code (a 1)
+.code "(a 1)"
 and
-.code (b 2)
+.code "(b 2)"
 are the key/value entries. Hash literals may be quasiquoted.  In
 quasiquoting, the arguments and pairs are treated as separate syntax; it is not
 one big list.  So the following is not a possible way to express the above
@@ -9845,7 +9849,7 @@ Example:
 .coIP "#(...)"
 
 A hash token followed by a list denotes a vector. For example
-.code #(1 2 a)
+.code "#(1 2 a)"
 is a three-element vector containing the numbers
 .code 1
 and
@@ -9916,11 +9920,11 @@ shorthand for
 .codn rcons .
 
 That is to say,
-.code A .. B
+.code "A .. B"
 translates to
 .codn "(rcons A B)" ,
 and so for instance
-.code (a b .. (c d) e .. f . g)
+.code "(a b .. (c d) e .. f . g)"
 means
 .codn "(a (rcons b (c d)) (rcons e f) . g)" .
 
@@ -9933,7 +9937,7 @@ sequences.
 For instance, if
 .code L
 is a list, then
-.code [L 1 .. 3]
+.code "[L 1 .. 3]"
 computes a sublist of
 .code L
 consisting of
@@ -9941,11 +9945,11 @@ elements 1 through 2 (counting from zero).
 
 Note that if this notation is used in the dot position of an improper
 list, the transformation still applies. That is, the syntax
-.code (a . b .. c)
+.code "(a . b .. c)"
 is valid and produces the object
-.code (a . (rcons b c))
+.code "(a . (rcons b c))"
 which is another way of writing
-.codn (a rcons b c) ,
+.codn "(a rcons b c)" ,
 which is quite probably nonsense.
 
 The notation's
@@ -9953,7 +9957,7 @@ The notation's
 operator associates right to left, so that
 .code a..b..c
 denotes
-.codn (rcons a (rcons b c)) .
+.codn "(rcons a (rcons b c))" .
 
 Note that range objects are not printed using the dotdot notation.
 A range literal has the syntax of a two-element list, prefixed by
@@ -9965,9 +9969,9 @@ it is evaluated to its value, a range literal may also be specified.
 If an evaluated dotdot notation specifies two constant expressions, then
 an equivalent range literal can replace it. For instance the
 form
-.code [L 1 .. 3]
+.code "[L 1 .. 3]"
 can also be written
-.codn [L #R(1 3)] .
+.codn "[L #R(1 3)]" .
 The two are syntactically different, and so if these expressions are being
 considered for their syntax rather than value, they are not the same.
 
@@ -9985,11 +9989,11 @@ where the expressive style of a Lisp-1 dialect is useful.
 For instance if
 .code foo
 is a variable which holds a function object, then
-.code [foo 3]
+.code "[foo 3]"
 can be used to call it, instead of
 .codn "(call foo 3)" .
 If foo is a vector, then
-.code [foo 3]
+.code "[foo 3]"
 retrieves the fourth element, like
 .codn "(vecref foo 3)" .
 Indexing over lists,
@@ -10025,7 +10029,7 @@ function call in a special way.
 
 Firstly, note that a compound form cannot be used in the dot position,
 for obvious reasons, namely that
-.code (a b c . (foo z))
+.code "(a b c . (foo z))"
 does not mean that there is
 a compound form in the dot position, but denotes an alternate spelling for
 .codn "(a b c foo z)" ,
@@ -10301,9 +10305,9 @@ to the
 corresponding characters of string
 .strn abc .
 Through this function, the list of integer indices
-.code (2 0 1)
+.code "(2 0 1)"
 is taken to the list of characters
-.codn (#\ec #\ea #\eb) .
+.codn "(#\ec #\ea #\eb)" .
 
 .B Example 2:
 
@@ -10312,13 +10316,13 @@ is taken to the list of characters
 .cble
 
 Here, the shorthand
-.code 1 .. 3
+.code "1 .. 3"
 denotes
-.codn (rcons 1 3) .
+.codn "(rcons 1 3)" .
 A range used as an argument
 to a sequence performs range extraction: taking a slice starting at
 index 1, up to and not including index 3, as if by the call
-.codn (sub '(1 2 3 4) 1 3) .
+.codn "(sub '(1 2 3 4) 1 3)" .
 
 .B Example 3:
 
@@ -10328,7 +10332,7 @@ index 1, up to and not including index 3, as if by the call
 
 A list of indices applied to a sequence is equivalent to using the
 select function, as if
-.code (select '(1 2 3 4) '(0 2))
+.code "(select '(1 2 3 4) '(0 2))"
 were called.
 
 .SS* Special Variables
@@ -10417,8 +10421,10 @@ Many variables in \*(TL's standard library are global lexicals.
 Those which are special variables obey the "earmuffs" convention
 in their naming. For instance
 .codn s-ifmt ,
-.code log-emerg and
-.code sig-hup are global lexicals, because they provide constant values
+.code log-emerg
+and
+.code sig-hup
+are global lexicals, because they provide constant values
 for which overriding doesn't make sense. On the other hand the standard
 output stream variable
 .code *stdout*
@@ -10455,7 +10461,7 @@ A symbol is a is a syntactic place if it names a variable. If
 is a variable, then it may be assigned using the
 .code set
 operator: the form
-.code (set a 42)
+.code "(set a 42)"
 causes
 .code a
 to have the integer value 42.
@@ -10474,7 +10480,7 @@ form. If
 is an expression denoting a
 .code cons
 cell, then
-.code (car c)
+.code "(car c)"
 is not only an expression which retrieves the value of the
 .code car
 field of the cell. It is also a syntactic place which denotes that field as
@@ -10496,7 +10502,7 @@ for modifying a place in addition to
 .codn set .
 Subject to certain usage restrictions, these operators work uniformly on all
 places. For instance, the expression
-.code (rotate (car x) [str 3] y)
+.code "(rotate (car x) [str 3] y)"
 causes three different kinds of places to exchange contents,
 while the three expressions denoting those places
 are evaluated only once. New kinds of place update macros like
@@ -10506,7 +10512,7 @@ are quite easily defined, as are new kinds of compound places.
 .NP* Accessor Functions
 
 When a function call form such as the above
-.code (car x)
+.code "(car x)"
 is a syntactic place, then the function is called an
 .IR accessor .
 This term is used throughout this document to denote functions
@@ -10516,13 +10522,13 @@ which have associated syntactic places.
 
 Syntactic places can be macros (global and lexical), including symbol macros.
 So for instance in
-.code (set x 42)
+.code "(set x 42)"
 the
 .code x
 place can actually be a symbolic macro which expands to, say,
-.codn (cdr y) .
+.codn "(cdr y)" .
 This means that the assignment is effectively
-.codn (set (cdr y) 42) .
+.codn "(set (cdr y) 42)" .
 
 .NP* User-Defined Syntactic Places and Place Operators
 
@@ -10609,7 +10615,7 @@ of the prior value of a place, relative to the evaluation of places
 which occur later in the same place operator form. Access to the prior values
 may be delayed until the entire form is evaluated, or it may be interleaved
 into the evaluation of the form. For example, in the form
-.codn (shift a b c 1) ,
+.codn "(shift a b c 1)" ,
 the prior value of
 .code a
 can be accessed and saved as soon as
@@ -10657,7 +10663,7 @@ After the assignment
 (set [obj 0..3] '("forty" "two"))
 .cble
 not only is the range of places denoted by
-.code [obj 0..3]
+.code "[obj 0..3]"
 replaced by the list of strings
 .cblk
 ("forty" "two")
@@ -10814,12 +10820,12 @@ accessor.
 If a name
 .code x
 is defined as both a function and a macro, then an expression of the form
-.code (x ...)
+.code "(x ...)"
 is expanded by the macro, whereas an expression of the form
-.code [x ...]
+.code "[x ...]"
 refers to the function. Moreover, the macro can produce a call to the
 function.  The expression
-.code (fun x)
+.code "(fun x)"
 will retrieve the function object.
 
 .NP* Global and Dynamic Variables
@@ -10894,7 +10900,7 @@ succinctly demonstrated by the following form:
 .cble
 
 The
-.code (fun foo)
+.code "(fun foo)"
 and
 .code [fun]
 expressions are oblivious to the macro; the macro expansion process
@@ -11449,7 +11455,7 @@ accepts only a variable argument list and no required arguments:
 .cble
 
 (These notations are syntactically equivalent because the list notation
-.code (. X)
+.code "(. X)"
 actually denotes the object
 .code X
 which isn't wrapped in any list).
@@ -11498,7 +11504,7 @@ In this
 .codn lambda ,
 the initializing expression for the optional parameter
 end is
-.codn (length str) ,
+.codn "(length str)" ,
 and the
 .code str
 variable it refers to is the previous
@@ -11663,7 +11669,7 @@ passing it the given arguments, if any.
 
 .TP* Examples:
 Apply arguments
-.code 1 2
+.code "1 2"
 to a
 .code lambda
 which adds them to produce
@@ -11676,7 +11682,7 @@ which adds them to produce
 Useless use of
 .code call
 on a named function; equivalent to
-.codn (list 1 2) :
+.codn "(list 1 2)" :
 
 .cblk
   (call (fun list) 1 2)
@@ -11707,7 +11713,7 @@ retrieve a global macro expander using
 .TP* "Dialect Note:"
 A lambda expression is not a function name in \*(TL. The
 syntax
-.code (fun (lambda ...))
+.code "(fun (lambda ...))"
 is invalid.
 
 .coNP Operator @ dwim
@@ -11727,7 +11733,7 @@ Intelligent and Meaningful".
 The notation
 .code [...]
 is a shorthand which denotes
-.code (dwim ...) .
+.codn "(dwim ...)" .
 
 The
 .code dwim
@@ -11805,7 +11811,7 @@ operator, and the leftmost argument of that operator, if it is a symbol, is
 treated as a binding to be resolved in the variable or function namespace,
 like any other argument.
 Thus
-.code [if x y]
+.code "[if x y]"
 is an invocation of the
 .code if
 function, not the
@@ -11941,7 +11947,7 @@ refers to the last element of the vector or
 list, and
 .code -2
 to the second last and so forth. Thus the range
-.code 1 .. -2
+.code "1 .. -2"
 means
 "everything except for the first element and the last two".
 
@@ -11949,12 +11955,12 @@ The symbol
 .code t
 represents the position one past the end of the vector, string or
 list, so
-.code 0 .. t
+.code "0 .. t"
 denotes the entire list or vector, and the range
-.code t .. t
+.code "t .. t"
 represents the empty range just beyond the last element.
 It is possible to assign to
-.codn t .. t .
+.codn "t .. t" .
 For instance:
 
 .cblk
@@ -11979,7 +11985,7 @@ The dwim operator allows for a Lisp-1 flavor of programming in \*(TL,
 which is principally a Lisp-2 dialect.
 
 A Lisp-1 dialect is one in which an expression like
-.code (a b)
+.code "(a b)"
 treats both a and b
 as expressions subject to the same evaluation rules\(emat least, when
 .code a
@@ -11992,7 +11998,7 @@ if the value of variable
 .code a
 is a function object.  Thus in a Lisp-1, named functions do not exist as
 such: they are just variable bindings.  In a Lisp-1, the form
-.code (car 1)
+.code "(car 1)"
 means that there
 is a variable called
 .codn car ,
@@ -12000,18 +12006,18 @@ which holds a function, which is retrieved from that
 variable and the argument
 .code 1
 is applied to it. In the expression
-.codn (car car) ,
+.codn "(car car)" ,
 both occurrences of
 .code car
 refer to the variable, and so this form applies the
 .code car
 function to itself. It is almost certainly meaningless.
 In a Lisp-2
-.code (car 1)
+.code "(car 1)"
 means that there is a function called
 .codn car ,
 in the function namespace. In the expression
-.code (car car)
+.code "(car car)"
 the two occurrences refer to different bindings:
 one is a function and the other a variable.
 Thus there can exist a variable
@@ -12056,12 +12062,12 @@ operator macros.  Whereas functions and variables can be represented in a
 single namespace readily, because functions are data objects, this is not so
 with symbol macros and operator macros, the latter of which are distinguished
 syntactically by their position in a form. In a Lisp-1 dialect, given
-.codn (foo bar) ,
+.codn "(foo bar)" ,
 either of the two symbols could be a symbol macro, but only
 .code foo
 can possibly be an operator macro. Yet, having only a single namespace, a
 Lisp-1 doesn't permit
-.codn (foo foo) ,
+.codn "(foo foo)" ,
 where
 .code foo
 is simultaneously a symbol macro and an operator macro, though the situation is
@@ -12821,11 +12827,11 @@ a
 .code dwim
 form is considered as a function call expression, whose first
 argument is the second element of the form. That is to say,
-.code [f x]
+.code "[f x]"
 which is equivalent to
-.code (dwim f x)
+.code "(dwim f x)"
 is treated similarly to
-.code (f x)
+.code "(f x)"
 as a one-argument call.
 
 .IP 2.
@@ -13352,7 +13358,7 @@ and
 with
 .code return*
 and
-.code block* :
+.codn block* :
 
 .cblk
   (defun func () (return* 'foo 42))
@@ -13660,7 +13666,7 @@ The ANSI Common Lisp
 .code fboundp
 yields true if its argument has a function, macro or operator
 binding. The behavior of the Common Lisp expression
-.code (fboundp x)
+.code "(fboundp x)"
 in Common Lisp can be obtained in \*(TL using the
 .cblk
   (or (fboundp x) (mboundp x) (special-operator-p x))
@@ -14265,9 +14271,9 @@ it returns
 
 Note: programs should avoid explicitly testing values with true.
 For instance
-.code (if x ...)
+.code "(if x ...)"
 should be favored over
-.codn (if (true x) ...) .
+.codn "(if (true x) ...)" .
 However, the latter is useful with the
 .code ifa
 macro because
@@ -14363,11 +14369,11 @@ even if they are different objects.
 Note that an integers and a floating-point number are not
 .code eql
 even if one has a value which converts to the other: thus,
-.code (eql 0.0 0)
+.code "(eql 0.0 0)"
 yields
 .codn nil ;
 the comparison operation which finds these numbers equal is the
-.codn (= 0.0 0) .
+.codn "(= 0.0 0)" .
 The
 .code eql
 function also specially treats range objects. Two distinct range objects are
@@ -14526,7 +14532,8 @@ of that type. In other words, no object is less than itself, no matter
 what it is.
 
 If both arguments are numbers or characters, they are compared as if using the
-.code < function.
+.code <
+function.
 
 If both arguments are strings, they are compared as if using the
 .code string-lt
@@ -14573,11 +14580,11 @@ fields of the arguments, and the result of that comparison is returned.
 .IP
 This logic performs a lexicographic comparison on ordinary lists such
 that for instance
-.code (1 1)
+.code "(1 1)"
 is less than
-.code (1 1 1)
+.code "(1 1 1)"
 but not less than
-.code (1 0)
+.code "(1 0)"
 or
 .codn (1) .
 
@@ -14714,7 +14721,7 @@ the list in its
 and the list of the remaining items in
 .codn cdr .
 The expression
-.code (cons 1 nil)
+.code "(cons 1 nil)"
 allocates and returns a single cons cell which denotes the one-element
 list
 .codn (1) .
@@ -14730,11 +14737,11 @@ is an atom other than
 .code nil
 is printed with the dotted
 pair notation. For example the cell produced by
-.code (cons 1 2)
+.code "(cons 1 2)"
 is denoted
-.codn (1 . 2) .
+.codn "(1 . 2)" .
 The notation
-.code (1 . nil)
+.code "(1 . nil)"
 is perfectly valid as input, but the cell which it denotes
 will print back as
 .codn (1) .
@@ -14744,7 +14751,7 @@ The dotted pair notation can be used regardless of what type
 of object is the cons cell's
 .codn cdr .
 so that for instance
-.code (a . (b c))
+.code "(a . (b c))"
 denotes the cons cell whose
 .code car
 is the symbol a
@@ -14752,29 +14759,29 @@ is the symbol a
 and whose
 .code cdr
 is the list
-.codn (b c) .
+.codn "(b c)" .
 This is exactly the same thing as
-.codn (a b c) .
+.codn "(a b c)" .
 In other words
-.code (a b ... l m . (n o ... w . (x y z)))
+.code "(a b ... l m . (n o ... w . (x y z)))"
 is exactly the same as
-.codn (a b ... l m n o ... w x y z).
+.codn "(a b ... l m n o ... w x y z)" .
 
 Every list, and more generally cons cell tree structure, can be written
 in a "fully dotted" notation, such that there are as many dots as there
 are cells. For instance the cons structure of the nested list
-.code (1 (2) (3 4 (5)))
+.code "(1 (2) (3 4 (5)))"
 can be made more explicit using
-.codn (1 . ((2 . nil) . ((3 . (4 . ((5 . nil) . nil))) . nil)))) .
+.codn "(1 . ((2 . nil) . ((3 . (4 . ((5 . nil) . nil))) . nil))))" .
 The structure contains eight conses, and so there are eight dots
 in the fully dotted notation.
 
 The number of conses in a linear list like
-.code (1 2 3)
+.code "(1 2 3)"
 is simply the number of items, so that list in particular is
 made of three conses. Additional nestings require additional conses,
 so for instance
-.code (1 2 (3))
+.code "(1 2 (3))"
 requires four conses. A visual way to count the conses from the printed
 representation is to count the atoms, then add the count of open parentheses,
 and finally subtract one.
@@ -14784,14 +14791,14 @@ A list terminated by an atom other than
 is called an improper
 list, and the dot notation is extended to cover improper lists.
 For instance
-.code (1 2 . 3)
+.code "(1 2 . 3)"
 is an improper list of two elements,
 terminated by
 .codn 3 ,
 and can be constructed using
-.codn (cons 1 (cons 2 3)) .
+.codn "(cons 1 (cons 2 3))" .
 The fully dotted notation for this list is
-.codn (1 . (2 . 3)) .
+.codn "(1 . (2 . 3))" .
 
 .coNP Function @ atom
 .synb
@@ -14809,9 +14816,9 @@ case,
 .code nil
 otherwise.  All values which are not cons cells are atoms.
 
-.code (atom x)
+.code "(atom x)"
 is equivalent to
-.codn (not (consp x)) .
+.codn "(not (consp x))" .
 
 .TP* Examples:
 .cblk
@@ -14837,9 +14844,9 @@ case,
 .code nil
 otherwise.
 
-.code (consp x)
+.code "(consp x)"
 is equivalent to
-.codn (not (atom x)) .
+.codn "(not (atom x))" .
 
 Non-empty lists test positive under
 .code consp
@@ -14880,7 +14887,7 @@ If
 is a cons cell, these functions retrieve the
 .code car
 field of that cons cell.
-.code (car (cons 1 2))
+.code "(car (cons 1 2))"
 yields
 .codn 1 .
 
@@ -14888,7 +14895,7 @@ For programming convenience,
 .meta object
 may be of several other kinds in addition to conses.
 
-.code (car nil)
+.code "(car nil)"
 is allowed, and returns
 .codn nil .
 
@@ -14961,7 +14968,7 @@ If
 is a cons cell, these functions retrieve the
 .code cdr
 field of that cons cell.
-.code (cdr (cons 1 2))
+.code "(cdr (cons 1 2))"
 yields
 .codn 2 .
 
@@ -14969,7 +14976,7 @@ For programming convenience,
 .meta object
 may be of several other kinds in addition to conses.
 
-.code (cdr nil)
+.code "(cdr nil)"
 is allowed, and returns
 .codn nil .
 
@@ -14977,18 +14984,24 @@ is allowed, and returns
 may also be a vector or a string. If it is a non-empty string or vector
 containing at least two items, then the remaining part of the object is
 returned, with the first element removed. For example
-.code (cdr "abc")
+.cblk
+(cdr "abc")
+.cble
 yields
-.codn "bc" .
+.strn "bc" .
 If
 .meta object
 is is a one-element vector or string, or an empty vector or string,
 then
 .code nil
 is returned. Thus
-.code (cdr "a")
+.cblk
+(cdr "a")
+.cble
 and
-.code (cdr "")
+.cblk
+(cdr "")
+.cble
 both result in
 .codn nil .
 
@@ -15031,7 +15044,7 @@ which takes the place of the original cons.
 Example:
 
 Walk every element of the list
-.code (1 2 3)
+.code "(1 2 3)"
 using a
 .code for
 loop:
@@ -15049,12 +15062,12 @@ of the list. The elements are retrieved using the
 .code car
 function.
 Advancing to the next cell is achieved using
-.codn (cdr i) .
+.codn "(cdr i)" .
 If
 .code i
 is the
 last cell in a (proper) list,
-.code (cdr i)
+.code "(cdr i)"
 yields
 .code nil
 and so
@@ -15083,21 +15096,21 @@ fields of the cell
 .metn cons .
 
 Note that, except for the difference in return value,
-.code (rplaca x y)
+.code "(rplaca x y)"
 is the same as the more generic
-.codn (set (car x) y) ,
+.codn "(set (car x) y)" ,
 and likewise
-.code (rplacd x y)
+.code "(rplacd x y)"
 can be written as
-.codn (set (cdr x) y) .
+.codn "(set (cdr x) y)" .
 
 It is an error if
 .meta cons
 is not a cons or lazy cons. In particular,
 whereas
-.code (car nil)
+.code "(car nil)"
 is correct,
-.code (rplaca nil ...)
+.code "(rplaca nil ...)"
 is erroneous.
 
 The
@@ -15319,17 +15332,17 @@ The
 .code list*
 function is a generalization of cons. If called with exactly
 two arguments, it behaves exactly like cons:
-.code (list* x y)
+.code "(list* x y)"
 is identical to
-.codn (cons x y) .
+.codn "(cons x y)" .
 If three or more arguments are specified,
 the leading arguments specify additional atoms to be consed to the
 front of the list. So for instance
-.code (list* 1 2 3)
+.code "(list* 1 2 3)"
 is the same as
-.code (cons 1 (cons 2 3))
+.code "(cons 1 (cons 2 3))"
 and produces the improper list
-.codn (1 2 . 3) .
+.codn "(1 2 . 3)" .
 Generalizing in the other direction,
 .code list*
 can be called with just
@@ -15348,15 +15361,15 @@ can also be called with no arguments in which case it returns
 .TP* "Dialect Note:"
 Note that unlike in some other Lisp dialects, the effect
 of
-.code (list* 1 2 x)
+.code "(list* 1 2 x)"
 can also be obtained using
-.codn (list 1 2 . x) .
+.codn "(list 1 2 . x)" .
 However,
-.code (list* 1 2 (func 3))
+.code "(list* 1 2 (func 3))"
 cannot be rewritten as
-.code (list 1 2 . (func 3))
+.code "(list 1 2 . (func 3))"
 because the latter is equivalent to
-.codn (list 1 2 func 3) .
+.codn "(list 1 2 func 3)" .
 
 .coNP Function @ sub-list
 .synb
@@ -15408,9 +15421,9 @@ The
 .code listp
 test is weaker, and executes without having to traverse
 the object.
-.code (listp x)
+.code "(listp x)"
 is equivalent to
-.codn (or (null x) (consp x)) .
+.codn "(or (null x) (consp x))" .
 The empty list
 .code nil
 is a list, and a cons cell is a list.
@@ -15786,13 +15799,13 @@ all the way through
 .codn cdddddr .
 
 Expressions involving a-d accessors are places. For example,
-.code (caddr x)
+.code "(caddr x)"
 denotes the same place as
-.codn (car (cddr x)) ,
+.codn "(car (cddr x))" ,
 and
-.code (cdadr x)
+.code "(cdadr x)"
 denotes the same place as
-.codn (cdr (cadr x)) .
+.codn "(cdr (cadr x))" .
 
 The a-d accessor places support deletion, with semantics derived from
 the deletion semantics of the
@@ -15800,9 +15813,9 @@ the deletion semantics of the
 and
 .code cdr
 places. For example,
-.code (del (caddr x))
+.code "(del (caddr x))"
 means the same as
-.code (del (car (cddr x))) .
+.codn "(del (car (cddr x)))" .
 
 .coNP Functions @ flatten and @ flatten*
 .synb
@@ -16043,7 +16056,8 @@ These functions are counterparts to
 .codn memqual ,
 .code member
 and
-.code member-if which look for the right-most
+.code member-if
+which look for the right-most
 element which matches
 .metn object ,
 rather than for the left-most element.
@@ -16097,14 +16111,14 @@ These functions are useful for simulating the
 function found in other dialects like Common Lisp.
 
 \*(TL's
-.code (conses x)
+.code "(conses x)"
 can be expressed in Common Lisp as
-.codn (maplist #'identity x) .
+.codn "(maplist #'identity x)" .
 
 Conversely, the Common Lisp operation
-.code (maplist function list)
+.code "(maplist function list)"
 can be computed in \*(TL as
-.codn (mapcar function (conses list)) .
+.codn "(mapcar function (conses list))" .
 
 More generally, the Common Lisp operation
 
@@ -16611,7 +16625,9 @@ item after the last line. Under this type of lazy list, an empty input stream
 translates to the list
 .codn (nil) ;
 a one-line stream translates to
-.code ("line" nil)
+.cblk
+("line" nil)
+.cble
 and so forth.
 
 .coNP Macro @ delay
@@ -17081,7 +17097,7 @@ returns
 then the accumulation list is returned.
 
 If the expression
-.code (expand-right f v)
+.code "(expand-right f v)"
 produces a terminating list, then the following equivalence holds:
 
 .cblk
@@ -17338,13 +17354,13 @@ is that
 .code range*
 excludes the endpoint.
 For instance
-.code (range 0 3)
+.code "(range 0 3)"
 generates the list
-.codn (0 1 2 3) ,
+.codn "(0 1 2 3)" ,
 whereas
-.code (range* 0 3)
+.code "(range* 0 3)"
 generates
-.codn (0 1 2) .
+.codn "(0 1 2)" .
 
 All arguments are optional. If the
 .meta step
@@ -17411,7 +17427,7 @@ lists, arrays and strings. The dotdot notation serves as a syntactic sugar for
 The syntax
 .code a..b
 denotes the expression
-.codn (rcons a b) .
+.codn "(rcons a b)" .
 
 Note that ranges are immutable, meaning that it is not possible to
 replace the values in a range.
@@ -17869,7 +17885,9 @@ the search for another token within
 .meta string
 resumes after advancing by one
 character position. So for instance,
-.code (tok-str "abc" #/a?/)
+.cblk
+(tok-str "abc" #/a?/)
+.cble
 returns the
 .cblk
 ("a" "" "" "").
@@ -18323,7 +18341,7 @@ must be a string. The following relation holds:
 .cble
 
 since
-.codn [s i] <--> (ref s i) ,
+.codn "[s i] <--> (ref s i)" ,
 this also holds:
 
 .cblk
@@ -18331,11 +18349,11 @@ this also holds:
 .cble
 
 However, note the following difference. When the expression
-.code [s i]
+.code "[s i]"
 is used as a place, then the subexpression
 .code s
 must be a place. When
-.code (chr-str s i)
+.code "(chr-str s i)"
 is used as a place,
 .code s
 need not be a place.
@@ -18382,7 +18400,7 @@ must be a string. The following relation holds:
 .cble
 
 since
-.codn (set [s i] c) <--> (refset s i c) ,
+.codn "(set [s i] c) <--> (refset s i c)" ,
 this also holds:
 
 .cblk
@@ -18849,7 +18867,8 @@ exists, then the
 form denotes a place.
 
 A
-.code vecref place
+.code vecref
+place
 supports deletion. When a deletion takes place,
 then if
 .meta idx
@@ -19272,7 +19291,7 @@ may be used to terminate the execution of a method
 and return a value.
 Methods are invoked
 using the
-.code instance.(name arg ...)
+.code "instance.(name arg ...)"
 syntax, which implicitly inserts the instance into the argument list.
 .meIP (:function < name <> ( param *) << body-form *)
 This syntax creates a static slot called
@@ -19301,7 +19320,7 @@ is visible. Consequently,
 may be used to terminate the execution of the function
 and return a value.
 Such functions are called using the
-.code instance.[name arg ...]
+.code "instance.[name arg ...]"
 syntax which doesn't insert the instance into
 the argument list.
 .meIP (:init <> ( param ) << body-form *)
@@ -20548,7 +20567,7 @@ Because of the type change,
 .code target-obj
 implicitly loses all of its original static slots,
 and acquires those of
-.codn source obj .
+.codn "source obj" .
 
 Note that finalizers registered against
 .meta target-obj
@@ -21063,9 +21082,9 @@ parameter is
 omitted, it defaults to
 .codn t .
 Thus
-.code (sub a)
+.code "(sub a)"
 means
-.codn (sub a 0 t) .
+.codn "(sub a 0 t)" .
 
 The following equivalence holds between the
 .code sub
@@ -21644,7 +21663,7 @@ prior to returning, these functions return a lazy list.
 
 Caution: these functions can still get into infinite looping behavior.
 For instance, in
-.codn (remql* 0 (repeat '(0))) ,
+.codn "(remql* 0 (repeat '(0)))" ,
 .code remql
 will keep consuming
 the
@@ -21692,7 +21711,7 @@ then the predicate function is applied to the elements directly, a behavior
 which is identical to
 .meta key-function
 being
-.codn (fun identity) .
+.codn "(fun identity)" .
 
 The
 .code keep-if
@@ -21783,7 +21802,7 @@ then the predicate function is applied to the elements directly, a behavior
 which is identical to
 .meta key-function
 being
-.codn (fun identity) .
+.codn "(fun identity)" .
 
 .coNP Functions @, posq @ posql and @ posqual
 .synb
@@ -22643,7 +22662,7 @@ if the function being mapped puts out a sequence of
 then the result must be the empty list
 .codn nil ,
 because
-.code (append nil nil nil nil ...)
+.code "(append nil nil nil nil ...)"
 is
 .codn nil .
 
@@ -22912,7 +22931,7 @@ is the keyword
 then the sequence is effectively flanked by copies of itself on both
 ends, repeated enough times to satisfy the window. For instance if
 the sequence is
-.code (1 2 3)
+.code "(1 2 3)"
 and the window size is 9 due to the value of
 .meta range
 being 7, then the behavior of
@@ -22920,13 +22939,13 @@ being 7, then the behavior of
 is as if a
 .meta boundary
 were specified consisting of
-.codn (3 1 2 3 1 2 3 1) .
+.codn "(3 1 2 3 1 2 3 1)" .
 The left flank is
-.code (3 1 2 3)
+.code "(3 1 2 3)"
 and the right flank is
-.code (1 2 3 4)
+.code "(1 2 3 4)"
 formed by repetitions of
-.code (1 2 3)
+.code "(1 2 3)"
 surrounding it on either side, extending out to infinity, and chopped to
 .metn range .
 
@@ -22937,13 +22956,13 @@ is the keyword
 then the sequence is effectively flanked by reversed copies of itself
 on both ends, repeated enough times to satisfy the window.
 For instance if the sequence is
-.code (1 2 3)
+.code "(1 2 3)"
 and the window size is 9, then the behavior of
 .code :wrap
 is as if a
 .meta boundary
 were specified consisting of
-.codn (1 3 2 1 3 2 1 3) .
+.codn "(1 3 2 1 3 2 1 3)" .
 
 .coNP Function @ interpose
 .synb
@@ -23134,9 +23153,9 @@ Of course, this syntax can only be used if
 .code x
 is a symbolic form or an atom.  It
 cannot be a compound form, because
-.code (foo a b . (x))
+.code "(foo a b . (x))"
 and
-.code (foo a b x)
+.code "(foo a b x)"
 are equivalent structures.
 
 .coNP Functions @ reduce-left and @ reduce-right
@@ -24051,12 +24070,12 @@ The combinations are lexicographically ordered.
 \*(TL code is processed in two phases: the expansion phase and the
 evaluation phase. The expansion phase is invoked on Lisp code early during the
 processing of source code. For instance when a \*(TX file containing a
-.code @(do ...)
+.code "@(do ...)"
 directive
 is loaded, expansion of the Lisp forms are its arguments takes place during the
 parsing of the entire source file, and is complete before any of the code in
 that file is executed. If the
-.code @(do ...)
+.code "@(do ...)"
 form is later executed,
 the expanded forms are then evaluated.
 
@@ -24097,7 +24116,7 @@ and
 The constituent at position
 .meta I
 is the mandatory parameter
-.codn (a (b c)) .
+.codn "(a (b c))" .
 Position
 .meta J
 holds the optional parameter
@@ -24107,7 +24126,7 @@ holds the optional parameter
 At
 .meta K
 is found the optional parameter
-.code (d e)
+.code "(d e)"
 (with default init form
 .code frm2
 and presence-indicating variable
@@ -24120,19 +24139,19 @@ which captures trailing arguments.
 
 Obviously, some of the parameters are compound expressions rather
 than symbols:
-.code (a (b c))
+.code "(a (b c))"
 and
-.codn (d e) .
+.codn "(d e)" .
 These compounds express nested macro parameter lists.
 
 Nested macro parameter lists recursively match the corresponding structure
 in the argument object.  For instance if a simple argument would capture
 the structure
-.code (1 (2 3))
+.code "(1 (2 3))"
 then we can replace the argument with the nested argument list
-.code (a (b c))
+.code "(a (b c))"
 which destructures the
-.code (1 (2 3))
+.code "(1 (2 3))"
 such that the parameters
 .codn a ,
 .code b
@@ -24156,7 +24175,7 @@ and
 special parameters, which are described below.  
 In nested parameter lists, the binding strictness is relaxed for optional
 parameters. If
-.code (a (b c))
+.code "(a (b c))"
 is optional, and the argument is, say,
 .codn (1) ,
 then
@@ -24177,7 +24196,7 @@ and
 .codn :form .
 
 The parameter list
-.code (:whole x :env y :form z)
+.code "(:whole x :env y :form z)"
 will bind parameter
 .code x
 to the entire
@@ -24268,18 +24287,18 @@ During the expansion phase, all
 expressions which occur in a context
 that calls for evaluation are evaluated, and replaced by their quoted values.
 For instance
-.code (macro-time (list 1 2 3))
+.code "(macro-time (list 1 2 3))"
 evaluates
-.code (list 1 2 3)
+.code "(list 1 2 3)"
 to the object
-.code (1 2 3)
+.code "(1 2 3)"
 and the entire
 .code macro-time
 form is replaced by that value, quoted:
-.codn '(1 2 3) .
+.codn "'(1 2 3)" .
 If the form is evaluated again at evaluation-time, the resulting value will be
 that of the quote, in this case
-.codn (1 2 3) .
+.codn "(1 2 3)" .
 
 .code macro-time
 forms do not see the surrounding lexical environment; the see only
@@ -24496,7 +24515,7 @@ During macro expansion, the global macro
 .code ismacro
 is handed the macro-expansion environment 
 via
-.codn :env menv .
+.codn ":env menv" .
 
 When the macro is invoked within the macrolet,
 this environment includes the macro-time lexical scope in which the
@@ -24510,7 +24529,7 @@ yields
 .codn t .
 
 When
-.code (global (local))
+.code "(global (local))"
 is invoked outside of the macrolet, no local macro is visible is
 there, and so
 .code macro-form-p
@@ -24593,13 +24612,13 @@ environment passed to
 .codn rem-num .
 It is correctly able to work with the
 expansions
-.code (1 list 42)
+.code "(1 list 42)"
 and
-.code (list 'a)
+.code "(list 'a)"
 to produce
-.code (list 42)
+.code "(list 42)"
 and
-.code (list 'a)
+.code "(list 'a)"
 which evaluate to
 .code 42
 and
@@ -24857,7 +24876,7 @@ differs from
 .code symacrolet
 in that the forms themselves are not aliased, but the storage
 locations which they denote.
-.code (symacrolet ((x y)) z)
+.code "(symacrolet ((x y)) z)"
 performs the syntactic substitution of symbol
 .code x
 by form
@@ -24868,7 +24887,7 @@ appears inside
 .code z
 as an evaluated form, and is not shadowed by any inner binding.
 Whereas
-.code (placelet ((x y)) z)
+.code "(placelet ((x y)) z)"
 generates code which arranges for
 .code y
 to be evaluated to a storage location, and syntactically replaces occurrences
@@ -25016,7 +25035,7 @@ Note that in this example, the atom case is placed last, because an
 argument list which consists of a symbol is a "catch all" match
 that matches any object. We know that it matches an atom, because
 the previous
-.code (a . b)
+.code "(a . b)"
 case matches conses. In general, the order of the cases in
 .code tree-case
 is important: even more so than the order of cases in a
@@ -25104,7 +25123,8 @@ should be understood to be a globally unique symbol:
 .syne
 .desc
 The
-.code set operator stores the values of expressions in places. It must
+.code set
+operator stores the values of expressions in places. It must
 be given an even number of arguments.
 
 If there are no arguments, then
@@ -25128,9 +25148,9 @@ If there are more than two arguments, then
 .code
 set performs multiple assignments in left to right order.
 Effectively,
-.code (set v1 e1 v2 e2 ... vn en)
+.code "(set v1 e1 v2 e2 ... vn en)"
 is precisely equivalent to
-.codn (progn (set v1 e1) (set v2 e2) ... (set vn en)) .
+.codn "(progn (set v1 e1) (set v2 e2) ... (set vn en))" .
 
 .coNP Macro @ pset
 .synb
@@ -25704,7 +25724,7 @@ instance, the update expander for the
 place might be called with an arbitrary variant of the
 .meta place-form
 might look like
-.codn (car (inc (third some-list))) .
+.codn "(car (inc (third some-list)))" .
 
 In the abstract semantics, upfront code wrapped around the
 .meta body-form
@@ -25835,9 +25855,9 @@ The main noteworthy points about the generated code are:
 .RS
 .IP -
 the
-.code (car [a 0])
+.code "(car [a 0])"
 place is evaluated by evaluating the embedded form
-.code [a 0]
+.code "[a 0]"
 and storing storing the resulting object into a hidden local variable.
 That's as close a reference as we can make to the
 .code car
@@ -26015,7 +26035,7 @@ by the
 macros. However, binding those functions is the responsibility of that
 macro. To achieve this, it adds the place-access code to the code generated by
 the
-.code ^(let ...)
+.code "^(let ...)"
 backquote template.  In the following example macro-expansion, the additional
 code added around the template is seen. It takes the form of two
 .code macrolet
@@ -26523,13 +26543,13 @@ as follows:
 .cble
 
 Note that the argument list
-.code (: (delta 1))
+.code "(: (delta 1))"
 doesn't specify the place, because the place is the implicit leftmost
 argument of the macro which isn't given a name. With the above definition
 in place, when
-.code (inc (car a))
+.code "(inc (car a))"
 is invoked, then
-.code (car a)
+.code "(car a)"
 is first reduced to a location, and that location's value is retrieved and
 saved. Then the
 .code delta
@@ -26538,11 +26558,11 @@ the argument was omitted.
 Then these two values are passed to the
 .code +
 function, and so 1 is added to the value previously retrieved from
-.codn (car a) .
+.codn "(car a)" .
 The resulting sum is then stored back
-.code (car a)
+.code "(car a)"
 without, of course, evaluating
-.code (car a)
+.code "(car a)"
 again.
 
 .coNP Macro @ defplace
@@ -26799,9 +26819,9 @@ macro turned it into into a
 .code symacrolet
 denoting the constant 1, which then propagated to the use site,
 turning the expression
-.code (+ x y)
+.code "(+ x y)"
 into
-.codn (+ 1 y) .
+.codn "(+ 1 y)" .
 
 .coNP Macro @ define-accessor
 .synb
@@ -26984,7 +27004,7 @@ is evaluated,
 it will insert the value of
 .codn x ,
 resulting in the object
-.codn (qquote (unquote [value-of-x])) .
+.codn "(qquote (unquote [value-of-x]))" .
 If this resulting qquote value is evaluated again as Lisp syntax, then it will
 yield
 .codn [value-of-value-of-x] ,
@@ -27005,14 +27025,14 @@ when treated as a Lisp expression and evaluated.
 .cble
 
 In the second-to-last example, the
-.code 1 2 3
+.code "1 2 3"
 and the
-.code (+ 2 3)
+.code "(+ 2 3)"
 are quoted verbatim.
 Whereas the
-.code (unquote (+ 2 2))
+.code "(unquote (+ 2 2))"
 operator caused the evaluation of
-.code (+ 2 2)
+.code "(+ 2 2)"
 and the substitution of the resulting value.
 
 The last example shows that
@@ -27021,7 +27041,7 @@ can itself (the entire argument of
 .codn qquote )
 can be an unquote operator.
 However, note:
-.code (quote (splice form))
+.code "(quote (splice form))"
 is not valid.
 
 Note: a way to understand the nesting behavior is a via a possible model of
@@ -27037,29 +27057,29 @@ the
 .code qquote
 operator first encounters the
 embedded
-.code (qquote ...)
+.code "(qquote ...)"
 and compiles it to code. During that recursive
 compilation, the syntax
-.code (unquote (unquote x))
+.code "(unquote (unquote x))"
 is encountered.  The inner quote
 processes the outer unquote which belongs to it, and the inner
-.code (unquote x)
+.code "(unquote x)"
 becomes material that is embedded verbatim in the compilation, which will then
 be found when the recursion pops back to the outer quasiquote, which will
 then traverse the result of the inner compilation and find the
-.codn (unquote x) .
+.codn "(unquote x)" .
 
 .TP* "Dialect note:"
 
 In Lisp dialects which have a published quasiquoting operator syntax, there is
 the expectation that the quasiquote read syntax corresponds to it. That is to
 say, that for instance the read syntax
-.code ^(a b ,c)
+.code "^(a b ,c)"
 is expected translated to
-.codn (qquote b (unquote c)) .
+.codn "(qquote b (unquote c))" .
 
 In \*(TL, this is not true! Although
-.code ^(b b ,c)
+.code "^(b b ,c)"
 is translated to a
 quasiquoting macro, it is an internal one, not based on the public
 .codn qquote ,
@@ -27093,7 +27113,7 @@ and so this syntax simply means that if the value of
 is
 .codn foo ,
 the result will be
-.codn (qquote (unquote foo)) .
+.codn "(qquote (unquote foo))" .
 
 The form's expansion is actually this:
 
@@ -27230,9 +27250,9 @@ argument, the first one is the minuend, and the remaining are subtrahends.
 
 When there are three or more operands, these operations are performed as if by
 binary operations, in a left-associative way. That is to say,
-.code (+ a b c)
+.code "(+ a b c)"
 means
-.codn (+ (+ a b) c) .
+.codn "(+ (+ a b) c)" .
 The sum of
 .code a
 and
@@ -27240,9 +27260,9 @@ and
 is computed first, and then this is added to
 .codn c .
 Similarly
-.code (- a b c)
+.code "(- a b c)"
 means
-.codn (- (- a b) c) .
+.codn "(- (- a b) c)" .
 First,
 .code b
 is subtracted from
@@ -27253,9 +27273,9 @@ is subtracted from that result.
 
 The arithmetic inverse is performed as if it were subtraction from integer 0.
 That is,
-.code (- x)
+.code "(- x)"
 means the same thing as
-.codn (- 0 x) .
+.codn "(- 0 x)" .
 
 The operands of
 .codn + ,
@@ -27276,11 +27296,11 @@ Characters are not considered numbers, and participate in these operations in
 limited ways. Subtraction can be used to computed the displacement between the
 Unicode values of characters, and an integer displacement can be added to a
 character, or subtracted from a character.  For instance
-.codn (- #\e9 #\e0) is 9 .
+.codn "(- #\e9 #\e0) is 9" .
 The Unicode value of a character
 .code C
 can be found using
-.codn (- C #\ex0) :
+.codn "(- C #\ex0)" :
 the displacement from the NUL character.
 
 The rules can be stated as a set of restrictions:
@@ -27358,7 +27378,7 @@ having the same sign as
 If the operands are integer, the result is an integer. If either operand
 is of type float, then the result is a float. The modulus operation is
 then generalized into the floating point domain. For instance the expression
-.code (mod 0.75 0.5)
+.code "(mod 0.75 0.5)"
 yields a residue of 0.25 because 0.5 "goes into" 0.75 only
 once, with a "remainder" of 0.25.
 
@@ -27413,7 +27433,7 @@ The following equivalence holds
 .cble
 
 The expression
-.code (wrap* x0 x1 x)
+.code "(wrap* x0 x1 x)"
 performs the following calculation:
 
 .cblk
@@ -27464,11 +27484,11 @@ Each
 must be an integer.
 
 Negative integers are replaced by their absolute values, so
-.code (lcm -3 -4)
+.code "(lcm -3 -4)"
 is
-.code 12 
-and 
-.code (gcd -12 -9)
+.code 12
+and
+.code "(gcd -12 -9)"
 yields
 .codn 3 .
 
@@ -27481,24 +27501,24 @@ and that of
 is 1 .
 
 The value of
-.code (gcd x)
+.code "(gcd x)"
 and
-.code (lcm x)
+.code "(lcm x)"
 is
-.codn (abs x) .
+.codn "(abs x)" .
 
 Any arguments of
 .code gcd
 which are zero are effectively ignored so that
-.code (gcd 0)
+.code "(gcd 0)"
 and
-.code (gcd 0 0 0)
+.code "(gcd 0 0 0)"
 are both the same as
 .code (gcd)
 and
-.code (gcd 1 0 2 0 3)
+.code "(gcd 1 0 2 0 3)"
 is the same as
-.codn (gcd 1 2 3) .
+.codn "(gcd 1 2 3)" .
 
 If
 .code lcm
@@ -27541,7 +27561,7 @@ an integer, it is simply returned.
 
 If the argument is a float, then the value returned is a float.
 For instance
-.code (floor 1.1)
+.code "(floor 1.1)"
 returns 1.0 rather than 1.
 
 .coNP Functions @, sin @, cos @, tan @, asin @, acos @ atan and @ atan2
@@ -27633,18 +27653,18 @@ to zero or more exponents given
 by the
 .meta exponent
 arguments.
-.code (expt x)
+.code "(expt x)"
 is equivalent to
-.codn (expt x 1) ,
+.codn "(expt x 1)" ,
 and yields
 .code x
 for all
 .codn x .
 For three or more arguments, the operation is right-associative.
 That is to say,
-.code (expt x y z)
+.code "(expt x y z)"
 is equivalent to
-.codn (expt x (expt y z)) ,
+.codn "(expt x (expt y z))" ,
 similarly to the way nested exponents work in standard algebraic
 notation.
 
@@ -27921,14 +27941,14 @@ is applied.
 
 Three or more arguments may be given, in which case the comparison proceeds
 pairwise from left to right. For instance in
-.codn (< a b c) ,
+.codn "(< a b c)" ,
 the comparison
-.code (< a b)
+.code "(< a b)"
 is performed in isolation. If the comparison is false, then
 .code nil
 is returned, otherwise
 the comparison
-.code (< b c)
+.code "(< b c)"
 is performed in isolation, and if that is false,
 .code nil
 is returned, otherwise
@@ -27967,7 +27987,7 @@ exist some
 and
 .code b
 which are distinct arguments such that
-.code (= a b)
+.code "(= a b)"
 is true, then
 the function returns
 .codn nil .
@@ -27997,17 +28017,17 @@ using the same semantics as the
 function.
 
 If two or more arguments are given, then
-.code (max a b)
+.code "(max a b)"
 is equivalent to
-.codn (if (less a b) b a) ,
+.codn "(if (less a b) b a)" ,
 and
-.code (min a b)
+.code "(min a b)"
 is equivalent to
-.codn (if (less a b) a b) .
+.codn "(if (less a b) a b)" .
 If the operands do not
 have the same type, then one of them is converted to the type of the other;
 however, the original unconverted values are returned. For instance
-.code (max 4 3.0)
+.code "(max 4 3.0)"
 yields the integer
 .codn 4 ,
 not
@@ -28019,9 +28039,9 @@ and
 .code min
 reduce the arguments in a left-associative manner.
 Thus
-.code (max a b c)
+.code "(max a b c)"
 means
-.codn (max (max a b) c) .
+.codn "(max (max a b) c)" .
 
 .coNP Function @ clamp
 .synb
@@ -28057,9 +28077,9 @@ Otherwise it returns
 .metn high .
 
 More precisely,
-.code (clamp a b c)
+.code "(clamp a b c)"
 is equivalent to
-.codn (max a (min b c)) .
+.codn "(max a (min b c))" .
 
 .coNP Functions @, int-str @ flo-str and @ num-str
 .synb
@@ -28193,9 +28213,9 @@ and
 .code flo-max
 define the floating-point range, which consists
 of three regions: values from
-.code (- flo-max)
+.code "(- flo-max)"
 to
-.codn (- flo-min) ;
+.codn "(- flo-min)" ;
 the value 0.0, and values from
 .code flo-min
 to
@@ -28298,7 +28318,7 @@ pure binary numbers.  Negative inputs are treated as infinite-bit
 two's-complement.
 
 For example
-.code (logand -2 7)
+.code "(logand -2 7)"
 produces
 .codn 6 .
 This is because
@@ -28358,11 +28378,11 @@ When the one-argument form of lognot is used, then if
 is nonnegative,
 then the result is negative, and vice versa, according to the infinite-bit
 two's complement representation. For instance
-.code (lognot -2)
+.code "(lognot -2)"
 is
 .codn 1 ,
 and
-.code (lognot 1)
+.code "(lognot 1)"
 is
 .codn -2 .
 
@@ -28441,10 +28461,10 @@ is zero, then
 .meta value
 is returned unaltered.  For positive numbers, a left shift by n bits is
 equivalent to a multiplication by two to the power of n, or
-.codn (expt 2 n) .
+.codn "(expt 2 n)" .
 A right shift by n bits of a positive integer is equivalent to integer
 division by
-.codn (expt 2 n) ,
+.codn "(expt 2 n)" ,
 with truncation toward zero.
 For negative numbers, the bit shift is performed as if on the two's-complement
 representation. Under the infinite two's-complement representation,
@@ -28529,7 +28549,7 @@ is called with a single argument
 .meta integer
 then the return value is the same as
 that of the expression
-.codn (ash 1 <integer>) :
+.codn "(ash 1 <integer>)" :
 the value 1 shifted left by
 .meta integer
 bit positions. If
@@ -28687,9 +28707,9 @@ throws an exception of
 type
 .codn error .
 The call
-.code (error ...)
+.code "(error ...)"
 can be regarded as a shorthand for
-.codn (throwf 'error ...) .
+.codn "(throwf 'error ...)" .
 
 The
 .code throw
@@ -28753,7 +28773,7 @@ When a clause catches an exception, the number of arguments in the catch must
 match the number of elements in the exception.  A catch argument list
 resembles a function or lambda argument list, and may be dotted.  For instance
 the clause
-.code (foo (a . b))
+.code "(foo (a . b))"
 catches an exception subtyped from
 .codn foo ,
 with one or
@@ -29137,9 +29157,9 @@ It is erroneous to register a duplicate relationship. If symbol
 is already a direct or indirect subtype of
 .code b
 then
-.code (defex a b)
+.code "(defex a b)"
 and
-.code (defex a x b)
+.code "(defex a x b)"
 are erroneous.
 
 Every symbol is implicitly considered to be its own exception subtype,
@@ -29964,21 +29984,21 @@ The following example demonstrates an accumulator. Values passed to the
 resume function are added to a counter which is initially zero.
 Each call to the function returns the updated value of the accumulator.
 Note the use of
-.code (yield-from acc)
+.code "(yield-from acc)"
 with no arguments to receive the value passed to the first
 call to the resume function, without yielding an item.
 The very first return value
 .code 1
 is produced by the
-.code (yield-from acc sum)
+.code "(yield-from acc sum)"
 form, not by
-.codn (yield-from acc) .
+.codn "(yield-from acc)" .
 The latter only obtains the initial value
 .code 1
 and uses it to establish the seed value of the accumulator. Without causing
 the resume function to terminate and return, control passes into the loop,
 which yields the first item, causing the resume function call
-.code (call *1 1)
+.code "(call *1 1)"
 to return
 .codn 1 :
 
@@ -30551,7 +30571,9 @@ and the syntax of regular expression literals. Any
 .meta string
 are treated as ordinary characters, not as regular expression delimiters.
 The call
-.code (regex-parse "/a/")
+.cblk
+(regex-parse "/a/")
+.cble
 matches three characters: a slash, followed by the letter "a", followed
 by another slash. Note that the slashes are not escaped.
 
@@ -30719,7 +30741,8 @@ The functions
 .codn hash-values ,
 .codn hash-pairs ,
 and
-.code hash-alist also perform an open traversal, because they return
+.code hash-alist
+also perform an open traversal, because they return
 lazy lists. The traversal isn't complete until the returned lazy list
 is fully instantiated. In the meanwhile, the
 \*(TX program can mutate the hash table from which the lazy list
@@ -31066,14 +31089,14 @@ In place update operations, it provides the initial value, which defaults
 to
 .code nil
 if the argument is not specified. For example
-.code (inc (gethash h k d))
+.code "(inc (gethash h k d))"
 will increment the value stored under key
 .code k
 in hash table
 .code h
 by one. If the key does not exist in the hash table, then
 the value
-.code (+ 1 d)
+.code "(+ 1 d)"
 is inserted into the table under that key.
 The expression
 .code d
@@ -31294,9 +31317,9 @@ and
 are the same under the
 .code eql
 function, then
-.code (hash-eql A)
+.code "(hash-eql A)"
 and
-.code (hash-eql B)
+.code "(hash-eql B)"
 produce the same integer hash value.  Similarly,
 if two objects
 .code A
@@ -31305,9 +31328,9 @@ and
 are the same under the
 .code equal
 function, then
-.code (hash-equal A)
+.code "(hash-equal A)"
 and
-.code (hash-equal B)
+.code "(hash-equal B)"
 each produce the same integer hash value.  In all other
 circumstances, the hash values of two distinct objects are unrelated, and
 may or may not be the same.
@@ -31674,13 +31697,13 @@ arguments of
 are not implicitly treated as a DWIM expression,
 but as an ordinary expression. In particular, this means that operator
 syntax is permitted. Note that the syntax
-.code (op @1)
+.code "(op @1)"
 makes sense, since
 the argument can be a function, which will be invoked, but
-.code (do @1)
+.code "(do @1)"
 doesn't
 make sense because it will produce a Lisp-2 form like
-.code (#:arg1 ...)
+.code "(#:arg1 ...)"
 referring
 to nonexistent function
 .codn #:arg1 .
@@ -31688,7 +31711,7 @@ Because it accepts operators,
 .code do
 can be used with imperative constructs
 which are not functions, like set: like set: for instance
-.code (do set x)
+.code "(do set x)"
 produces
 an anonymous function which, if called with one argument, stores that argument
 into
@@ -31715,7 +31738,7 @@ appearing in a
 .meti >> @ num
 .cble
 construct in the body. For instance
-.code (op car @3)
+.code "(op car @3)"
 generates a three-argument function (which passes its third
 argument to
 .codn car ,
@@ -31749,13 +31772,13 @@ syntax, then
 .code @rest
 is implicitly inserted.  What this means is that, for example, since
 the form
-.code (op foo)
+.code "(op foo)"
 does not contain any numeric positional arguments like
 .codn @1 ,
 and does not contain
 .codn @rest ,
 it is actually a shorthand for
-.codn (op foo . @rest) :
+.codn "(op foo . @rest)" :
 a function which applies all of its arguments to
 .codn foo .
 If the body does contain at least one
@@ -31765,7 +31788,7 @@ or
 then
 .meta @rest
 isn't implicitly inserted. The notation
-.code (op foo @1)
+.code "(op foo @1)"
 denotes a function which takes any number of arguments, and ignores
 all but the first one, which is passed to
 .codn foo .
@@ -31839,9 +31862,9 @@ what is the meaning?
 
 A metanumber always belongs with the inner-most op or do operator. So for
 instance
-.code (op (op @1))
+.code "(op (op @1))"
 means that an
-.code (op @1)
+.code "(op @1)"
 expression is nested
 within an
 .code op
@@ -31856,7 +31879,7 @@ to refer to an outer op metanumber argument. This is
 expressed by adding an extra
 .code @
 prefix for every level of escape. For example in
-.code (op (op @@1))
+.code "(op (op @@1))"
 the
 .code @@1
 belongs to the outer
@@ -31867,7 +31890,7 @@ appearing in the outer
 .codn op .
 That is to say,
 in the expression
-.codn (op @1 (op @@1)) ,
+.codn "(op @1 (op @@1))" ,
 the
 .code @1
 and
@@ -31876,7 +31899,7 @@ are the same thing:
 both are parameter 1 of the lambda function generated by the outer
 .codn op .
 By contrast, in the expression
-.code (op @1 (op @1))
+.code "(op @1 (op @1))"
 there are two different parameters:
 the first
 .code @1
@@ -32133,7 +32156,7 @@ macro call, thereby respecting lexical scoping.
 
 .TP* Example:
 Take each element from the list
-.code (1 2 3 4)
+.code "(1 2 3 4)"
 and multiply it by three, then add 1.
 If the result is odd, collect that into the resulting list:
 
@@ -32154,15 +32177,15 @@ The above is equivalent to:
 .cble
 
 The
-.code (* 3)
+.code "(* 3)"
 and
-.code (+ 1)
+.code "(+ 1)"
 terms are rewritten to
-.code (op * 3)
+.code "(op * 3)"
 and
-.codn (op + 1) ,
+.codn "(op + 1)" ,
 respectively, whereas
-.code [iff oddp list]
+.code "[iff oddp list]"
 is passed through untransformed.
 
 .coNP Macro @ ret
@@ -32199,13 +32222,13 @@ The following equivalence holds:
 .cble
 
 Thus the expression
-.code (ret @2)
+.code "(ret @2)"
 returns a function similar to
-.codn (lambda (x y . z) y) ,
+.codn "(lambda (x y . z) y)" ,
 and the expression
-.code (ret 42)
+.code "(ret 42)"
 returns a function similar to
-.codn (lambda (. rest) 42) .
+.codn "(lambda (. rest) 42)" .
 
 .coNP Macro @ aret
 .synb
@@ -32241,13 +32264,13 @@ The following equivalence holds:
 .cble
 
 Thus the expression
-.code (aret @2)
+.code "(aret @2)"
 returns a function similar to
-.codn (lambda (. rest) (second rest)) ,
+.codn "(lambda (. rest) (second rest))" ,
 and the expression
-.code (aret 42)
+.code "(aret 42)"
 returns a function similar to
-.codn (lambda (. rest) 42) .
+.codn "(lambda (. rest) 42)" .
 
 .coNP Function @ dup
 .synb
@@ -32333,7 +32356,7 @@ In this example, a two-element chain is formed from the
 .code +
 function
 and the function produced by
-.code (op * 2)
+.code "(op * 2)"
 which is a one-argument
 function that returns the value of its argument multiplied by two.
 (See the definition of the
@@ -32357,7 +32380,7 @@ which yields
 This
 .code 7
 is then passed to the
-.code (op * 2)
+.code "(op * 2)"
 doubling function, resulting in
 .codn 14 .
 
@@ -32595,9 +32618,9 @@ In Lisp-1-style code,
 and
 .code nilf
 behave like constants which can replace uses of
-.code (ret t)
+.code "(ret t)"
 and
-.codn (ret nil) :
+.codn "(ret nil)" :
 
 .cblk
   [mapcar (ret nil) list] <--> [mapcar nilf list]
@@ -32618,10 +32641,10 @@ In this example, two functions are chained together, and
 is passed
 through the chain such that it is first divided by two via the
 function denoted by
-.code (op trunc @1 2)
+.code "(op trunc @1 2)"
 and then the result is passed into the
 function denoted by
-.codn [iff oddp tf nilf] .
+.codn "[iff oddp tf nilf]" .
 The
 .code iff
 function passes its argument into
@@ -33190,7 +33213,8 @@ directive as if by the
 .codn o ,
 .codn d ,
 or
-.code x directive, depending on the value of the variable.
+.code x
+directive, depending on the value of the variable.
 
 .coIP d
 Requires an argument of integer or character type type. The integer
@@ -34754,7 +34778,7 @@ syntax does not support the application of the dot and dotdot operators
 on a toplevel expression. For instance, if the input is
 .code a.b
 or
-.code a .. b
+.code "a .. b"
 then
 .code iread
 will only read the
@@ -35379,7 +35403,7 @@ of a pseudo-random number generator. This variable is the default argument
 value for the
 .code random-fixnum
 and
-.codn random functions ,
+.codn "random functions" ,
 for the convenience of writing programs which are not concerned about the
 management of random state.
 
@@ -35394,7 +35418,7 @@ When \*(TX starts up, the
 variable is initialized with
 a newly created random state object, which is produced as if by
 the call
-.codn (make-random-state 42) .
+.codn "(make-random-state 42)" .
 
 .coNP Function @ make-random-state
 .synb
@@ -35610,10 +35634,10 @@ The
 .code time
 structure represents a time broken down into individual fields.
 The structure almost directly corresponds to the
-.code struct tm
+.code "struct tm"
 type in the ISO C language.  There are differences.
 Whereas the
-.code struct tm
+.code "struct tm"
 member
 .code tm_year
 represents a year since 1900, the
@@ -36207,9 +36231,10 @@ by the
 .codn stat ,
 .codn lstat ,
 and
-.code fstat functions.  The slots are the direct counterparts of the
+.code fstat
+functions.  The slots are the direct counterparts of the
 members of POSIX C structure
-.codn struct stat .
+.codn "struct stat" .
 For instance the slot
 .code dev
 corresponds to
@@ -36304,7 +36329,7 @@ The
 .code logtest
 function can be used to test these against values of mode.
 For example
-.code (logtest mode s-irgrp)
+.code "(logtest mode s-irgrp)"
 tests for the group read permission.
 
 .coNP Function @ umask
@@ -36799,7 +36824,7 @@ On failure, they throw an exception of type
 The
 .code passwd
 structure corresponds to the C type
-.codn struct passwd .
+.codn "struct passwd" .
 Objects of this struct are produced by the password database
 query functions
 .codn getpwent ,
@@ -36877,7 +36902,7 @@ is returned.
 The
 .code group
 structure corresponds to the C type
-.codn struct group .
+.codn "struct group" .
 Objects of this struct are produced by the password database
 query functions
 .codn getgrent ,
@@ -37004,7 +37029,7 @@ and so forth.
 The variables
 .codn sig-winch ,
 .codn sig-iot ,
-.codn sig-stk flt,
+.codn sig-stkflt ,
 .codn sig-io ,
 .code sig-lost
 and
@@ -37574,7 +37599,8 @@ constants from the
 .code <syslog.h>
 header:
 .codn LOG_PID ,
-.codn LOG_CON S, etc.
+.codn LOG_CON S,
+etc.
 These integer values represent logging options used in the
 .meta options
 argument to the
@@ -37612,12 +37638,12 @@ is not in POSIX, and so
 .code log-authpriv
 might not be available.
 For portability use code like
-.code (or (symbol-value 'log-authpriv) 0)
+.code "(or (symbol-value 'log-authpriv) 0)"
 to evaluate to 0 if
 .code log-authpriv
 doesn't exist, or else check for its existence
 using
-.codn (boundp 'log-authpriv) .
+.codn "(boundp 'log-authpriv)" .
 
 .coNP Special variables @, log-emerg @, log-alert @, log-crit @, log-err @, log-warning @, log-notice @ log-info and @ log-debug
 
@@ -38450,7 +38476,7 @@ This name appears in the filesystem.
 When the
 .code sockaddr-un
 structure is converted to the C structure
-.code "struct sockaddr_un" ,
+.codn "struct sockaddr_un" ,
 the
 .code path
 slot undergoes conversion to UTF-8. The resulting bytes are stored in the
@@ -39193,12 +39219,12 @@ character encodings, into a string which contains the actual characters
 represented by those encodings.
 
 The function composition
-.code (html-decode (html-encode text))
+.code "(html-decode (html-encode text))"
 returns a string which is equal to
 .codn text .
 
 The reverse composition
-.code (html-encode (html-decode html))
+.code "(html-encode (html-decode html))"
 does not necessarily return a string equal to
 .codn html .
 
@@ -39626,7 +39652,7 @@ is the line number.
 In the above example, the pattern function
 .code foo
 is called with arguments
-.codn (a b) .
+.codn "(a b)" .
 These are unbound variables, so they correspond to parameters
 .code x
 and
@@ -40003,7 +40029,7 @@ their gc-heap allocated nodes), and the various structures used by the
 .code cobj
 type objects such as streams and hashes. Objects in external libraries that use
 uninstrumented allocators are not counted: for instance the C
-.code FILE *
+.code "FILE *"
 streams.
 
 .coNP Macro @ pprof
@@ -40433,7 +40459,7 @@ results:
 .cble
 
 The result hash allows relative addressing. For instance the expression
-.code [*r (mod (pred *v) 100)]
+.code "[*r (mod (pred *v) 100)]"
 refers to the result of the previous command.
 
 .SS* Exceptions
@@ -41260,7 +41286,7 @@ This is the debug session:
 The user types
 .code s
 to step into the
-.code (next ...)
+.code "(next ...)"
 form.
 
 .cblk
@@ -41302,7 +41328,7 @@ to step in.
 .cble
 
 Now, the form about to be processed is the first item of the
-.codn (sys:text ...) ,
+.codn "(sys:text ...)" ,
 the string
 .strn <!DOCTYPE .
 
@@ -41320,7 +41346,7 @@ that this is the leftmost position. The programmer steps:
 .cble
 
 Control has now passed to the second element of the
-.codn (sys:text ...) ,
+.codn "(sys:text ...)" ,
 a regular expression which matches one or more spaces, generated by
 a single space in the source code according to the language rules.
 
@@ -41476,7 +41502,7 @@ option, along with a description of what behaviors are affected. For each
 of these version values, the described behaviors are provided if
 .code -C
 is given an argument which is equal or lower. For instance
-.code -C 103
+.code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
 .IP 138
 After \*(TX 138, the variable name lookup rules in the \*(TX pattern language
@@ -41513,7 +41539,9 @@ Lastly, \*(TX 137 compatibility mode also restores another behavior
 of the dot position in function call forms: if the dot position of a
 function call form produces a sequence that is not a list, that sequence
 is converted to a list so that
-.code (list\ .\ "abc")
+.cblk
+(list . "abc")
+.cble
 produces
 .codn "(#\ea #\eb #\ec)" .
 After 137, no such treatment is applied to the value and the same form now
@@ -41851,7 +41879,7 @@ are those elements which are in the intersection of
 with the complement of
 .codn B .
 This is similar to the arithmetic rule
-.codn A - B = A + -B :
+.codn "A - B = A + -B" :
 subtraction is
 equivalent to addition of the additive inverse. Set difference is a useful
 tool: it enables us to write a positive match which captures a more general set
@@ -41890,14 +41918,14 @@ closing sequence
 followed by that closing sequence.
 Examples of valid comments are
 .codn /**/ ,
-.code /* abc */
+.code "/* abc */"
 or
 .codn /***/ .
 But C
 comments do not nest (cannot contain comments), so that 
-.code /* /* nested */ */
+.code "/* /* nested */ */"
 actually consists of the comment
-.codn /* /* nested */ ,
+.codn "/* /* nested */" ,
 which is followed by the trailing junk
 .codn */ .
 Our simple characterization of interior part of a C comment as a string
@@ -41989,7 +42017,7 @@ Thus our the semi-final regular expression is
 .cble
 
 (Interpretation: a C comment is an interior string enclosed in
-.codn /* */ ,
+.codn "/* */" ,
 where this interior part
 consists of a mixture of non-asterisk characters, as well as runs of asterisk
 characters which are terminated by a character other than a slash, except for
