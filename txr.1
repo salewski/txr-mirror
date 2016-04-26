@@ -11313,7 +11313,7 @@ and
 is that in
 .codn let* ,
 later
-.codn init-form s
+.codn init-form -s
 have visibility over the variables established by earlier variables
 in the same let* construct. In plain
 .codn let ,
@@ -22658,7 +22658,7 @@ Like
 .code mappend*
 must "consume" empty lists. For instance,
 if the function being mapped puts out a sequence of
-.codn nil s,
+.codn nil -s,
 then the result must be the empty list
 .codn nil ,
 because
@@ -22683,7 +22683,7 @@ The
 .code mappend*
 function is caught in a loop trying to consume
 and squash an infinite stream of
-.codn nil s,
+.codn nil -s,
 and so doesn't return.
 
 .TP* Examples:
@@ -30669,7 +30669,7 @@ argument specifies whether the hash table shall have weak keys. The
 argument specifies whether it shall have weak values, and
 .meta equal-based
 specifies whether it is
-.codn equal- based.
+.codn equal -based.
 The hash function defaults
 all three of these properties to false, and allows them to be overridden to
 true by the presence of keyword arguments.
@@ -37599,7 +37599,7 @@ constants from the
 .code <syslog.h>
 header:
 .codn LOG_PID ,
-.codn LOG_CON S,
+.codn LOG_CONS ,
 etc.
 These integer values represent logging options used in the
 .meta options

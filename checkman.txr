@@ -70,6 +70,9 @@
 .cod3 @(assert bad ln `.cod3 needs three arguments`)@x @y @{z /\S+/}@(eol)
 @  (or)
 .@{type /codn|cod2/} @(assert bad ln `.@type needs two arguments`)@(cases)"@x"@(or)@{x /\S+/}@(end) @{y /\S+/}@(eol)
+@    (assert bad ln `.codn second argument doesn't begin with punctuation`)
+@    (require (or (not (equal type "codn"))
+                  (chr-ispunct [y 0])))
 @  (end)
 @(end)
 @;;
