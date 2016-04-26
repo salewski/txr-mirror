@@ -56,10 +56,10 @@
 .\" courier in PDF/HTML.
 .de meta
 .  ie n \{\
-<\\$*>
+<\\$1>
 .  \}
 .  el \{\
-\f[5]\\$*\f[]
+\f[5]\\$1\f[]
 .  \}
 ..
 .\" like .meta but tack on second argument with no space.
@@ -10440,7 +10440,7 @@ is known as
 .SS* Syntactic Places and Accessors
 
 The \*(TL feature known as
-.meta syntactic places
+.I syntactic places
 allows programs to use
 the syntax of a form which is used to
 .I access
@@ -16511,7 +16511,7 @@ The macro generates code which, when evaluated, immediately produces
 a lazy cons. The expressions
 .meta car-expression
 and
-.meta cdr-expression 
+.meta cdr-expression
 are not immediately evaluated. Rather, when either the
 .code car
 or
@@ -20905,7 +20905,7 @@ is visible to subsequent
 .metn init-form -s.
 
 Additionally, the values of the
-.meta init-form -s
+.metn init-form -s
 are noted as they are produced.  When the
 .code with-objects
 form terminates, by any means, the
@@ -32778,7 +32778,7 @@ Each
 is called, passed the corresponding argument. The return
 values of these functions are then passed as arguments
 to
-.meta main function
+.meta main-function
 and the resulting value is returned.
 
 If the returned function is called with fewer arguments than there
@@ -33015,9 +33015,9 @@ The syntax of a directive is generally as follows:
 In other words, the
 .code ~
 (tilde) character, followed by a
-.meta width 
+.meta width
 specifier, a
-.meta precision 
+.meta precision
 specifier introduced by a comma,
 and a
 .metn letter ,
