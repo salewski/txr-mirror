@@ -13633,7 +13633,7 @@ retrieves strictly a function binding.  The
 .code symbol-macro
 function doesn't exist in Common Lisp.
 
-.coNP Functions @, boundp @, fboundp and @ mboundp
+.coNP Functions @, boundp @ fboundp and @ mboundp
 .synb
 .mets (boundp << symbol )
 .mets (fboundp << symbol )
@@ -14157,7 +14157,7 @@ previous clauses match.
 
 .SS* Object Equivalence
 
-.coNP Functions @, identity and @ use
+.coNP Functions @ identity and @ use
 .synb
 .mets (identity << value )
 .mets (use << value )
@@ -14193,7 +14193,7 @@ synonym leads to readable code. For instance:
   [[iff oddp use succ] 2] -> 3  ;; succ applied to 2
 .cble
 
-.coNP Functions @, null @, not and @ false
+.coNP Functions @, null @ not and @ false
 .synb
 .mets (null << value )
 .mets (not << value )
@@ -16852,7 +16852,7 @@ argument is accessed. By that time, the variable is initialized
 and holds the lazy cons itself, which creates the circular reference,
 and a circular list.
 
-.coNP Functions @, generate @, giterate and @ ginterate
+.coNP Functions @, generate @ giterate and @ ginterate
 .synb
 .mets (generate < while-fun << gen-fun )
 .mets (giterate < while-fun < gen-fun <> [ value ])
@@ -27864,7 +27864,7 @@ is not divisible by two (odd), otherwise
 it returns
 .codn nil .
 
-.coNP Functions @, succ @, ssucc @, sssucc @, pred @, ppred and @ pppred
+.coNP Functions @, succ @, ssucc @, sssucc @, pred @ ppred and @ pppred
 .synb
 .mets (succ << number )
 .mets (ssucc << number )
@@ -28182,7 +28182,7 @@ is a floating-point number, then it is converted by
 as if by the function
 .codn int-flo .
 
-.coNP Variables @, flo-min @, flo-max and @ flo-epsilon
+.coNP Variables @, flo-min @ flo-max and @ flo-epsilon
 .desc
 These variables hold, respectively: the smallest positive floating-point
 value; the largest positive floating-point value; and the difference
@@ -28285,7 +28285,7 @@ manipulation code to be written which works with positive numbers only, even if
 complements are required. The trade off is that the application has to manage a
 limit on the number of bits.
 
-.coNP Functions @, logand @, logior and @ logxor
+.coNP Functions @, logand @ logior and @ logxor
 .synb
 .mets (logand << integer *)
 .mets (logior << integer *)
@@ -30623,7 +30623,7 @@ is true, that matching text is included in
 the returned string. Otherwise, it is discarded.
 
 .SS* Hashing Library
-.coNP Functions @, make-hash and @ hash
+.coNP Functions @ make-hash and @ hash
 .synb
 .mets (make-hash < weak-keys < weak-vals << equal-based )
 .mets (hash { :weak-keys | :weak-vals | :equal-based }*)
@@ -34866,7 +34866,7 @@ indentation modes. The value of
 .code indent-off
 is zero.
 
-.coNP Functions @, get-indent-mode @, set-indent-mode and @ test-set-indent-mode
+.coNP Functions @, get-indent-mode @ set-indent-mode and @ test-set-indent-mode
 .synb
 .mets (get-indent-mode << stream )
 .mets (set-indent-mode < stream << new-mode )
@@ -34909,7 +34909,7 @@ macro or
 .code unwind-protect
 operator may be used.
 
-.coNP Functions @, get-indent @, set-indent and @ inc-indent
+.coNP Functions @, get-indent @ set-indent and @ inc-indent
 .synb
 .mets (get-indent << stream )
 .mets (set-indent < stream << new-indent )
@@ -35082,7 +35082,7 @@ deleted from the list with the
 function, but it continues
 to exist until the program loses the last reference to that package.
 
-.coNP Variables @, user-package @, keyword-package and @ system-package
+.coNP Variables @, user-package @ keyword-package and @ system-package
 .desc
 These variables hold predefined packages. The
 .code user-package
@@ -35513,8 +35513,8 @@ pseudo-random number generator.
 .SS* Time
 .coNP Functions @ time and @ time-usec
 .synb
-  (time)
-  (time-usec)
+.mets (time)
+.mets (time-usec)
 .syne
 .desc
 The
@@ -35834,7 +35834,7 @@ function constructs and returns an
 hash.  The hash is
 populated with the environment variables, represented as key-value pairs. 
 
-.coNP Functions @, getenv @, setenv and @ unsetenv
+.coNP Functions @, getenv @ setenv and @ unsetenv
 .synb
 .mets (getenv << name )
 .mets (setenv < name < value <> [ overwrite-p ])
@@ -36215,7 +36215,7 @@ For instance the slot
 corresponds to
 .codn st_dev .
 
-.coNP Functions @, stat @, lstat and @ fstat
+.coNP Functions @, stat @ lstat and @ fstat
 .synb
 .mets (stat << path )
 .mets (lstat << path )
@@ -36307,7 +36307,7 @@ For example
 .code (logtest mode s-irgrp)
 tests for the group read permission.
 
-.coNP Functions @ umask
+.coNP Function @ umask
 .synb
 .mets (umask << mask )
 .syne
@@ -36724,7 +36724,7 @@ function is equivalent to
 .code path-newer
 with the arguments reversed.
 
-.coNP Functions @ path-same-object
+.coNP Function @ path-same-object
 .synb
 .mets (path-same-object < left-path << right-path )
 .syne
@@ -37362,8 +37362,8 @@ is implemented using a call to the POSIX function
 
 .coNP Functions @ getpid and @ getppid
 .synb
-  (getpid)
-  (getppid)
+.mets (getpid)
+.mets (getppid)
 .syne
 .desc
 These functions retrieve the current process ID and the parent process ID
@@ -37513,7 +37513,7 @@ execute asynchronous actions. Itimers deliver delayed, one-time signals,
 and also periodically recurring signals. For more information, consult the
 POSIX specification.
 
-.coNP Variables @, itimer-real @, itimer-virtual and @ itimer-prof
+.coNP Variables @, itimer-real @ itimer-virtual and @ itimer-prof
 .desc
 These variables correspond to the POSIX constants
 .codn ITIMER_REAL ,
@@ -39162,7 +39162,7 @@ encoded data are retained as
 characters in the decoded strings. Otherwise,
 plus characters are converted to spaces.
 
-.coNP Functions @, html-encode @, html-encode* and @ html-decode
+.coNP Functions @, html-encode @ html-encode* and @ html-decode
 .synb
 .mets (html-encode << text-string )
 .mets (html-decode << html-string )
