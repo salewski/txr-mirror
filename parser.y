@@ -110,7 +110,7 @@ int yyparse(scanner_t *, parser_t *);
 
 %token <chr> REGCHAR REGTOKEN LITCHAR SPLICE CONSDOT LAMBDOT
 
-%type <val> spec clauses_rev clauses clauses_opt clause
+%type <val> spec clauses_rev clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause block_clause
 %type <val> cases_clause choose_clause gather_clause collect_clause until_last
 %type <val> collect_repeat
@@ -146,8 +146,7 @@ int yyparse(scanner_t *, parser_t *);
 
 %%
 
-spec : clauses                  { parser->syntax_tree = $1; }
-     | /* empty */              { parser->syntax_tree = nil; }
+spec : clauses_opt              { parser->syntax_tree = $1; }
      | SECRET_ESCAPE_R regexpr  { parser->syntax_tree = $2; end_of_regex(scnr); }
      | SECRET_ESCAPE_E n_expr   { parser->syntax_tree = $2; YYACCEPT; }
        byacc_fool               { internal_error("notreached"); }
@@ -180,8 +179,6 @@ byacc_fool : n_expr { internal_error("notreached"); }
            | { internal_error("notreached"); }
            ;
 
-clauses : clauses_rev           { $$ = nreverse($1); }
-
 clauses_rev : clause                    { $$ = check_for_include(cons($1, nil)); }
             | clauses_rev clause        { $$ = check_for_include(cons($2, $1));  }
             ;
@@ -208,49 +205,47 @@ clause : all_clause             { $$ = cons($1, nil); rlcp($$, $1); }
        | line                   { $$ = $1; }
        ;
 
-all_clause : ALL newl clause_parts      { $$ = list(all_s, $3, nao);
+all_clause : ALL newl clause_parts      { if (nilp($3))
+                                            yyerr("empty all clause");
+                                          $$ = list(all_s, $3, nao);
                                           rl($$, num($1)); }
            | ALL newl error             { $$ = nil;
                                           yybadtok(yychar, lit("all clause")); }
-           | ALL newl END newl          { $$ = nil;
-                                          yyerr("empty all clause"); }
-
            ;
 
 some_clause : SOME exprs_opt ')'
-              newl clause_parts         { $$ = list(some_s, $5, $2, nao);
+              newl clause_parts         { if (nilp($5))
+                                            yyerr("empty some clause");
+                                          $$ = list(some_s, $5, $2, nao);
                                           rl($$, num($1)); }
             | SOME exprs_opt ')'
               newl error
                                         { $$ = nil;
                                           yybadtok(yychar, lit("some clause")); }
-            | SOME exprs_opt ')'
-              newl END newl             { $$ = nil;
-                                          yyerr("empty some clause"); }
             ;
 
-none_clause : NONE newl clause_parts    { $$ = list(none_s, $3, nao);
+none_clause : NONE newl clause_parts    { if (nilp($3))
+                                            yyerr("empty none clause");
+                                          $$ = list(none_s, $3, nao);
                                           rl($$, num($1)); }
             | NONE newl error           { $$ = nil;
                                           yybadtok(yychar, lit("none clause")); }
-            | NONE newl END newl        { $$ = nil;
-                                          yyerr("empty none clause"); }
             ;
 
-maybe_clause : MAYBE newl clause_parts  { $$ = list(maybe_s, $3, nao);
+maybe_clause : MAYBE newl clause_parts  { if (nilp($3))
+                                            yyerr("empty maybe clause");
+                                          $$ = list(maybe_s, $3, nao);
                                           rl($$, num($1)); }
              | MAYBE newl error         { $$ = nil;
                                           yybadtok(yychar, lit("maybe clause")); }
-             | MAYBE newl END newl      { $$ = nil;
-                                          yyerr("empty maybe clause"); }
              ;
 
-cases_clause : CASES newl clause_parts  { $$ = list(cases_s, $3, nao);
+cases_clause : CASES newl clause_parts  { if (nilp($3))
+                                            yyerr("empty cases clause");
+                                          $$ = list(cases_s, $3, nao);
                                           rl($$, num($1)); }
              | CASES newl error         { $$ = nil;
                                           yybadtok(yychar, lit("cases clause")); }
-             | CASES newl END newl      { $$ = nil;
-                                          yyerr("empty cases clause"); }
              ;
 
 block_clause  : BLOCK exprs_opt ')'
@@ -270,19 +265,20 @@ block_clause  : BLOCK exprs_opt ')'
               ;
 
 choose_clause : CHOOSE exprs_opt ')'
-                newl clause_parts       { $$ = list(choose_s, $5, $2, nao);
+                newl clause_parts       { if (nilp($5))
+                                            yyerr("empty choose clause");
+                                          $$ = list(choose_s, $5, $2, nao);
                                           rl($$, num($1)); }
               | CHOOSE exprs_opt ')'
                 newl error              { $$ = nil;
                                           yybadtok(yychar, lit("choose clause")); }
-              | CHOOSE exprs_opt ')'
-                newl END newl           { $$ = nil;
-                                          yyerr("empty choose clause"); }
               ;
 
 gather_clause : GATHER exprs_opt ')'
                 newl gather_parts
-                END newl                { $$ = list(gather_s,
+                END newl                { if (nilp($5))
+                                            yyerr("empty gather clause");
+                                          $$ = list(gather_s,
                                                     append2(mapcar(curry_12_1(func_n2(cons), nil),
                                                                    first($5)), rest($5)),
                                                     $2, nao);
@@ -291,8 +287,12 @@ gather_clause : GATHER exprs_opt ')'
               | GATHER exprs_opt ')'
                 newl gather_parts
                 until_last exprs_opt ')' newl
-                clauses
-                END newl                { $$ = list(gather_s,
+                clauses_opt
+                END newl                { if (nilp($5))
+                                            yyerr("empty gather clause");
+                                          if (nilp($10))
+                                            yyerr("empty until/last clause in gather");
+                                          $$ = list(gather_s,
                                                     append2(mapcar(curry_12_1(func_n2(cons), nil),
                                                                    first($5)), rest($5)),
                                                     $2, cons(cdr($6),
@@ -302,27 +302,36 @@ gather_clause : GATHER exprs_opt ')'
               | GATHER exprs_opt ')'
                 newl error              { $$ = nil;
                                           yybadtok(yychar, lit("gather clause")); }
-              | GATHER exprs_opt ')'
-                newl END newl           { $$ = nil;
-                                          yyerr("empty gather clause"); }
               ;
 
-gather_parts : clauses additional_gather_parts  { $$ = cons($1, $2); }
+gather_parts : clauses_opt additional_gather_parts
+                                        { $$ = if2($1, cons($1, $2)); }
              ;
 
-additional_gather_parts : AND newl clauses additional_gather_parts      { $$ = cons($3, $4); }
-                        | OR newl clauses additional_parts              { $$ = cons($3, $4); }
-                        | /* empty */                                   { $$ = nil; }
+additional_gather_parts : AND newl gather_parts { $$ = $3;
+                                                  if (nilp($$))
+                                                    yyerr("empty and subclause"); }
+                        | OR newl gather_parts  { $$ = $3;
+                                                  if (nilp($$))
+                                                    yyerr("empty or subclause"); }
+                        | /* empty */           { $$ = nil; }
                         ;
 
 collect_clause : collect_repeat exprs_opt ')' newl
-                 clauses END newl                { $$ = list(car($1),
+                 clauses_opt END newl            { if (nilp($5))
+                                                     yyerr("empty collect clause");
+                                                   $$ = list(car($1),
                                                              $5, nil, $2,
                                                              nao);
                                                    rl($$, cdr($1)); }
                | collect_repeat exprs_opt ')'
-                 newl clauses until_last exprs_opt ')'
-                 newl clauses END newl    { $$ = list(car($1), $5,
+                 newl clauses_opt until_last exprs_opt ')'
+                 newl clauses_opt END newl
+                                          { if (nilp($5))
+                                              yyerr("empty collect clause");
+                                            if (nilp($10))
+                                              yyerr("empty until/last in collect");
+                                            $$ = list(car($1), $5,
                                                       cons(cdr($6),
                                                            cons($7, $10)),
                                                       $2, nao);
@@ -330,12 +339,7 @@ collect_clause : collect_repeat exprs_opt ')' newl
                                             rl($10, car($6)); }
                | collect_repeat exprs_opt ')'
                  newl error             { $$ = nil;
-                                          if (yychar == UNTIL ||
-                                              yychar == END ||
-                                              yychar == LAST)
-                                            yyerr("empty collect");
-                                          else
-                                            yybadtok(yychar, lit("collect clause")); }
+                                          yybadtok(yychar, lit("collect clause")); }
                ;
 
 collect_repeat : COLLECT { $$ = cons(collect_s, num($1)); }
@@ -346,12 +350,16 @@ until_last : UNTIL { $$ = cons(num($1), until_s); }
            | LAST  { $$ = cons(num($1), last_s); }
            ;
 
-clause_parts : clauses additional_parts { $$ = cons($1, $2); }
+clause_parts : clauses_opt additional_parts     { $$ = if2($1, cons($1, $2)); }
              ;
 
-additional_parts : END newl                             { $$ = nil; }
-                 | AND newl clauses additional_parts    { $$ = cons($3, $4); }
-                 | OR newl clauses additional_parts     { $$ = cons($3, $4); }
+additional_parts : END newl                     { $$ = nil; }
+                 | AND newl clause_parts        { $$ = $3;
+                                                  if (nilp($$))
+                                                    yyerr("empty and subclause"); }
+                 | OR newl clause_parts         { $$ = $3;
+                                                  if (nilp($$))
+                                                    yyerr("empty or subclause"); }
                  ;
 
 if_clause : IF exprs_opt ')'
@@ -447,21 +455,33 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                     $$ = rlcp(cons(sym,
                                                    expand_meta(rest($1), nil)),
                                               $1); }
-     | COLL exprs_opt ')' elems END     { $$ = list(coll_s, $4, nil, $2, nao);
+     | COLL exprs_opt ')' elems_opt END { if (nilp($4))
+                                            yyerr("empty coll clause");
+                                          $$ = list(coll_s, $4, nil, $2, nao);
                                           rl($$, num($1)); }
-     | COLL exprs_opt ')' elems
+     | COLL exprs_opt ')' elems_opt
        until_last exprs_opt ')'
-       elems END                { $$ = list(coll_s, $4, cons(cdr($5),
+       elems_opt END            { if (nilp($4))
+                                    yyerr("empty coll clause");
+                                  if (nilp($8))
+                                    yyerr("empty until/last in coll");
+                                  $$ = list(coll_s, $4, cons(cdr($5),
                                                              cons($6, $8)),
                                             $2, nao);
                                   rl($$, num($1));
                                   rl($6, car($5)); }
-     | REP exprs_opt ')' elems END     { $$ = list(rep_s, $4, nil, $2, nao);
+     | REP exprs_opt ')' elems END     { if (nilp($2))
+                                            yyerr("empty rep clause");
+                                         $$ = list(rep_s, $4, nil, $2, nao);
                                          rl($$, num($1)); }
      | REP exprs_opt ')' elems
        until_last exprs_opt ')'
        elems END
-                                { $$ = list(rep_s, $4, cons(cdr($5),
+                                { if (nilp($2))
+                                    yyerr("empty rep clause");
+                                  if (nilp($8))
+                                    yyerr("empty until/last in rep");
+                                  $$ = list(rep_s, $4, cons(cdr($5),
                                                             cons($6, $8)),
                                             $2, nao);
                                   rl($$, num($1));
@@ -470,32 +490,42 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                   yybadtok(yychar, lit("coll clause")); }
      | REP error               { $$ = nil;
                                  yybadtok(yychar, lit("rep clause")); }
-     | ALL clause_parts_h       { $$ = rl(list(all_s, t, $2, nao), num($1)); }
-     | ALL END                  { yyerr("empty all clause"); }
+     | ALL clause_parts_h       { $$ = rl(list(all_s, t, $2, nao), num($1));
+                                  if (nilp($2))
+                                     yyerr("empty all clause"); }
      | SOME exprs_opt ')'
-       clause_parts_h           { $$ = rl(list(some_s, t, $4, $2, nao), num($1)); }
-     | SOME exprs_opt ')' END   { yyerr("empty some clause"); }
-     | NONE clause_parts_h      { $$ = rl(list(none_s, t, $2, nao), num($1)); }
-     | NONE END                 { yyerr("empty none clause"); }
-     | MAYBE clause_parts_h     { $$ = rl(list(maybe_s, t, $2, nao), num($1)); }
-     | MAYBE END                { yyerr("empty maybe clause"); }
-     | CASES clause_parts_h     { $$ = rl(list(cases_s, t, $2, nao), num($1)); }
-     | CASES END                { yyerr("empty cases clause"); }
+       clause_parts_h           { $$ = rl(list(some_s, t, $4, $2, nao), num($1));
+                                  if (nilp($4))
+                                    yyerr("empty some clause"); }
+     | NONE clause_parts_h      { $$ = rl(list(none_s, t, $2, nao), num($1));
+                                  if (nilp($2))
+                                    yyerr("empty none clause"); }
+     | MAYBE clause_parts_h     { $$ = rl(list(maybe_s, t, $2, nao), num($1));
+                                  if (nilp($2))
+                                    yyerr("empty maybe clause"); }
+     | CASES clause_parts_h     { $$ = rl(list(cases_s, t, $2, nao), num($1));
+                                  if (nilp($2))
+                                    yyerr("empty cases clause"); }
      | CHOOSE exprs_opt ')'
        clause_parts_h           { $$ = list(choose_s, t, $4, $2, nao);
-                                  rl($$, num($1)); }
-     | CHOOSE exprs_opt ')' END { yyerr("empty cases clause"); }
+                                  rl($$, num($1));
+                                  if (nilp($4))
+                                    yyerr("empty cases clause"); }
      | DEFINE exprs ')' elems END
                                 { $$ = list(define_s, t, $4, $2, nao);
                                   rl($$, num($1)); }
      ;
 
-clause_parts_h : elems additional_parts_h { $$ = cons($1, $2); }
+clause_parts_h : elems_opt additional_parts_h   { $$ = if2($1, cons($1, $2)); }
                ;
 
-additional_parts_h : END                                { $$ = nil; }
-                   | AND elems additional_parts_h       { $$ = cons($2, $3); }
-                   | OR elems additional_parts_h        { $$ = cons($2, $3); }
+additional_parts_h : END                        { $$ = nil; }
+                   | AND clause_parts_h         { $$ = $2;
+                                                  if (nilp($$))
+                                                    yyerr("empty and subclause"); }
+                   | OR clause_parts_h          { $$ = $2;
+                                                  if (nilp($$))
+                                                    yyerr("empty or subclause"); }
                    ;
 
 define_clause : DEFINE exprs ')' newl
@@ -516,51 +546,54 @@ define_clause : DEFINE exprs ')' newl
               ;
 
 try_clause : TRY newl
-             clauses
+             clauses_opt
              catch_clauses_opt
-             END newl           { $$ = list(try_s,
+             END newl           { if (nilp($3))
+                                    yyerr("empty try clause");
+                                  $$ = list(try_s,
                                             flatten(mapcar(func_n1(second),
                                                            $4)),
                                             $3, $4, nao);
                                   rl($$, num($1)); }
            | TRY newl
              error              { $$ = nil;
-                                  if (yychar == END || yychar == CATCH ||
-                                      yychar == FINALLY)
-                                    yyerr("empty try clause");
-                                  else
-                                    yybadtok(yychar, lit("try clause")); }
-           | TRY newl
-             clauses
-             error              { $$ = nil;
                                   yybadtok(yychar, lit("try clause")); }
            ;
 
 catch_clauses_opt : CATCH ')' newl
                     clauses_opt
-                    catch_clauses_opt   { $$ = cons(list(catch_s, cons(t, nil),
+                    catch_clauses_opt   { if ((!opt_compat || opt_compat > 139)
+                                              && nilp($4))
+                                            yyerr("empty catch clause");
+                                          $$ = cons(list(catch_s, cons(t, nil),
                                                          $4, nao), $5);
                                           rl($$, num($1)); }
                   | CATCH exprs ')' newl
                     clauses_opt
-                    catch_clauses_opt   { $$ = cons(list(catch_s, $2, $5, nao),
+                    catch_clauses_opt   { if ((!opt_compat || opt_compat > 139)
+                                              && nilp($5))
+                                            yyerr("empty catch clause");
+                                          $$ = cons(list(catch_s, $2, $5, nao),
                                                     $6);
                                           rl($$, num($1)); }
                   | FINALLY newl
-                    clauses_opt         { $$ = cons(list(finally_s, nil,
+                    clauses_opt         { if ((!opt_compat || opt_compat > 139)
+                                              && nilp($3))
+                                            yyerr("empty finally clause");
+                                          $$ = cons(list(finally_s, nil,
                                                          $3, nao),
                                                     nil);
                                           rl($$, num($1)); }
                   |                     { $$ = nil; }
                   | CATCH ')' newl
                     error               { $$ = nil;
-                                          yybadtok(yychar, lit("try clause")); }
+                                          yybadtok(yychar, lit("catch clause")); }
                   | CATCH exprs ')' newl
                     error               { $$ = nil;
-                                          yybadtok(yychar, lit("try clause")); }
+                                          yybadtok(yychar, lit("catch clause")); }
                   | FINALLY newl
                     error               { $$ = nil;
-                                          yybadtok(yychar, lit("try clause")); }
+                                          yybadtok(yychar, lit("finally clause")); }
                   ;
 
 
