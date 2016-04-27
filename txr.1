@@ -28202,6 +28202,21 @@ is a floating-point number, then it is converted by
 as if by the function
 .codn int-flo .
 
+.coNP Variables @ fixnum-min and @ fixnum-max
+.desc
+These variables hold, respectively, the most negative value of the
+.code fixnum
+integer type, and its most positive value. Integer values
+from
+.code fixnum-min
+to
+.code fixnum-max
+are all of type
+.codn fixnum .
+Integers outside of this range are
+.code bignum
+integers.
+
 .coNP Variables @, flo-min @ flo-max and @ flo-epsilon
 .desc
 These variables hold, respectively: the smallest positive floating-point
