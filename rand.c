@@ -41,6 +41,8 @@
 #include "rand.h"
 #include "eval.h"
 
+#define random_warmup (deref(lookup_var_l(nil, random_warmup_s)))
+
 #if SIZEOF_INT == 4
 typedef unsigned int rand32_t;
 #elif SIZEOF_LONG == 4
@@ -56,7 +58,7 @@ struct rand_state {
   unsigned cur;
 };
 
-val random_state_s, random_state_var_s;
+val random_state_s, random_state_var_s, random_warmup_s;
 
 static struct cobj_ops random_state_ops = cobj_ops_init(eq,
                                                         cobj_print_op,
@@ -99,17 +101,18 @@ static rand32_t rand32(struct rand_state *r)
   return ns15;
 }
 
-val make_random_state(val seed)
+val make_random_state(val seed, val warmup)
 {
   val rs = make_state();
-  int i, copy = 0;
+  int i = 0;
   struct rand_state *r = coerce(struct rand_state *,
                                 cobj_handle(rs, random_state_s));
 
   seed = default_bool_arg(seed);
+  warmup = default_bool_arg(warmup);
 
   if (bignump(seed)) {
-    int i, dig, bit;
+    int dig, bit;
     mp_int *m = mp(seed);
 
     for (i = 0, dig = 0, bit = 0; i < 16 && dig < m->used; i++) {
@@ -118,21 +121,15 @@ val make_random_state(val seed)
       if (bit >= MP_DIGIT_BIT)
         dig++, bit = 0;
     }
-
-    while (i > 0 && !r->state[i - 1])
-      i--;
-
-    if (i < 16)
-      memset(r->state + i, 0xAA, sizeof r->state - i * sizeof r->state[0]);
   } else if (fixnump(seed)) {
     cnum s = c_num(seed) & NUM_MAX;
 
-    memset(r->state, 0xAA, sizeof r->state);
     r->state[0] = s & 0xFFFFFFFFul;
+    i = 1;
 #if SIZEOF_PTR == 8
     s >>= 32;
-    if (s)
-      r->state[1] = s & 0xFFFFFFFFul;
+    r->state[1] = s & 0xFFFFFFFFul;
+    i = 2;
 #elif SIZEOF_PTR > 8
 #error port me!
 #endif
@@ -142,16 +139,16 @@ val make_random_state(val seed)
     r->state[1] = convert(rand32_t, c_num(cdr(time)));
 #if HAVE_UNISTD_H
     r->state[2] = convert(rand32_t, getpid());
+    i = 3;
+#else
+    i = 2;
 #endif
-    memset(r->state + 3, 0xAA, sizeof r->state - 3 * sizeof r->state[0]);
   } else if (random_state_p(seed)) {
     struct rand_state *rseed = coerce(struct rand_state *,
                                       cobj_handle(seed, random_state_s));
     *r = *rseed;
-    copy = 1;
+    return rs;
   } else if (vectorp(seed)) {
-    int i;
-
     if (length(seed) < num_fast(17))
       uw_throwf(error_s, lit("make-random-state: vector ~s too short"),
                 seed, nao);
@@ -160,15 +157,25 @@ val make_random_state(val seed)
       r->state[i] = c_uint_ptr_num(seed->v.vec[i]);
 
     r->cur = c_num(seed->v.vec[i]);
-    copy = 1;
+    return rs;
   } else {
     uw_throwf(error_s, lit("make-random-state: seed ~s is not a number"),
               seed, nao);
   }
 
-  if (!copy) {
-    r->cur = 0;
-    for (i = 0; i < 8; i++)
+  while (i > 0 && r->state[i - 1] == 0)
+    i--;
+
+  for (; i < 16; i++)
+    r->state[i] = 0xAAAAAAAAul;
+
+  r->cur = 0;
+
+  {
+    uses_or2;
+    cnum wu = c_num(or2(warmup, random_warmup));
+
+    for (i = 0; i < wu; i++)
       (void) rand32(r);
   }
 
@@ -289,7 +296,7 @@ void rand_compat_fixup(int compat_ver)
   if (compat_ver <= 114) {
     loc l = lookup_var_l(nil, random_state_var_s);
     random_state_s = random_state_var_s;
-    set(l, make_random_state(num_fast(42)));
+    set(l, make_random_state(num_fast(42), num_fast(8)));
   }
 }
 
@@ -297,10 +304,13 @@ void rand_init(void)
 {
   random_state_var_s = intern(lit("*random-state*"), user_package);
   random_state_s = intern(lit("random-state"), user_package);
-  reg_var(random_state_var_s, make_random_state(num_fast(42)));
+  random_warmup_s = intern(lit("*random-warmup*"), user_package);
+
+  reg_var(random_state_var_s, make_random_state(num_fast(42), num_fast(8)));
+  reg_var(random_warmup_s, num_fast(8));
 
   reg_fun(intern(lit("make-random-state"), user_package),
-          func_n1o(make_random_state, 0));
+          func_n2o(make_random_state, 0));
   reg_fun(intern(lit("random-state-get-vec"), user_package),
           func_n1o(random_state_get_vec, 0));
   reg_fun(intern(lit("random-state-p"), user_package), func_n1(random_state_p));

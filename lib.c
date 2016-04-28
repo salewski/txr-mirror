@@ -7979,7 +7979,7 @@ val copy(val seq)
     if (seq->co.cls == hash_s)
       return copy_hash(seq);
     if (seq->co.cls == random_state_s)
-      return make_random_state(seq);
+      return make_random_state(seq, nil);
     if (structp(seq))
       return copy_struct(seq);
     /* fallthrough */

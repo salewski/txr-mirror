@@ -35526,9 +35526,47 @@ a newly created random state object, which is produced as if by
 the call
 .codn "(make-random-state 42)" .
 
+.coNP Special variable @ *random-warmup*
+.desc
+The
+.code *random-warmup*
+special variable specifies the value which is used by
+.code make-random-state
+in place of a missing
+.meta warmup-period
+argument.
+
+To "warm up" a pseudo-random number generator (PRNG) means to obtain some
+values from it which are discarded, prior to use.  The number of values
+discarded is the
+.IR "warm-up period" .
+
+The WELL PRNG used in \*(TX produces 32-bit values, natively. Thus each
+warm-up iteration retrieves and discards a 32-bit value. The PRNG has
+a state space consisting of a vector of sixteen 32-bit words, making
+the state space 4096 bits wide.
+
+Warm up is required because PRNG-s, in particular PRNG-s with large state
+spaces and long periods, produce fairly predictable sequences of values in the
+beginning, before transitioning into chaotic behavior. This problem is worse
+for low complexity seeds, such as small integer values.
+
+.TP* Notes:
+
+The default value of .code *random-warmup* is only 8.  This is insufficient to
+ensure good initial PRNG behavior for seeds even as large as 64 bits or more.
+That is to say, even if as many as eight bytes' worth of true random bits are
+used as the seed, the PRNG will exhibit predictable behaviors, and a poor
+distribution of values.
+
+Applications which critically depend on good PRNG behavior should choose
+large warm-up periods into the hundreds or thousands of iterations.
+If a small warm-up period is used, it is recommended to use larger seeds
+which initialize more of the 4096 bit state space.
+
 .coNP Function @ make-random-state
 .synb
-.mets (make-random-state <> [ seed ])
+.mets (make-random-state << [ seed <> [ warmup-period ])
 .syne
 .desc
 The
@@ -35546,7 +35584,7 @@ to the function
 Note that the sign of the seed is ignored, so that negative seed
 values are equivalent to their additive inverses.
 
-If the seed is not specified, then
+If seed is not specified, then
 .code make-random-state
 produces a seed based
 on some information in the process environment, such as current
@@ -35572,6 +35610,20 @@ which duplicates the random state object which was captured in that vector
 representation by the
 .code random-state-get-vec
 function.
+
+The
+.meta warm-up-period
+argument specifies the number of values which are immediately obtained and
+discarded from the newly-seeded generator before it is returned.
+Warm-up is not performed when
+.meta seed
+is an existing random state object, and this argument is ignored in that
+case. If the parameter is required, but the argument is missing, then
+the value of the
+.code *random-warmup*
+special variable is used. This variable has a default value which may be too
+small for serious applications of pseudo-random numbers; see the Notes under
+.codn *random-warmup* .
 
 .coNP Function @ random-state-p
 .synb
@@ -35612,8 +35664,8 @@ is used.
 .desc
 All three functions produce pseudo-random numbers, which are positive integers.
 
-The numbers are obtained from a WELLS 512 pseudo-random number generator, whose
-state is stored in the random state object.
+The numbers are obtained from a WELL 512 PRNG, whose state is stored in the
+random state object.
 
 The
 .code random-fixnum

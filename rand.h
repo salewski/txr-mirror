@@ -26,7 +26,7 @@
 
 #define random_state (deref(lookup_var_l(nil, random_state_var_s)))
 extern val random_state_s, random_state_var_s;
-val make_random_state(val seed);
+val make_random_state(val seed, val warmup);
 val random_state_get_vec(val state);
 val random_state_p(val obj);
 val random_fixnum(val state);
