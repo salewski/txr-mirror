@@ -606,10 +606,9 @@ mp_err mp_get_uintptr(mp_int *mp, uint_ptr_t *z)
 mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z)
 {
   uint_ptr_t tmp = 0;
-  int_ptr_t out;
   mp_get_uintptr(mp, &tmp);
-  out = tmp;
-  *z = (SIGN(mp) == MP_NEG) ? -out : out;
+  /* Reliance on bitwise unsigned to two's complement conversion */
+  *z = (int_ptr_t) tmp;
   return MP_OKAY;
 }
 
