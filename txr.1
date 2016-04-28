@@ -2972,6 +2972,12 @@ clauses, in conjunction with
 .meIP @(define < name >> ( args ...))
 Introduces a function. Functions are described in the Functions section below.
 
+.meIP @(call < expr << args *)
+Performs function indirection.  Evaluates
+.metn expr ,
+which must produce a symbol that names a pattern function. Then that
+pattern function is invoked.
+
 .coIP @(gather)
 Searches text for matches for multiple clauses which may occur in arbitrary
 order. For convenience, lines of the first clause are treated as separate
@@ -7130,6 +7136,90 @@ local definition.  When
 is called directly from the top level, its
 .code fun
 call goes to the toplevel definition.
+
+.NP* Indirect Calls
+
+Function indirection may be performed using the
+.code call
+directive. If
+.meta fun-expr
+is an expression which evaluates to a symbol, and
+that symbol names a function which takes no arguments, then
+.cblk
+  @(call fun-expr)
+.cble
+may be used to invoke the function. Of course, additional
+expressions may be supplied which specify arguments.
+
+Example 1:
+
+.cblk
+\ @(define foo (arg))
+  @(bind arg "abc")
+  @(end)
+  @(call @'foo b)
+.cble
+
+In this example, the effect is that
+.code foo
+is invoked, and
+.code b
+ends up bound to
+.strn abc .
+
+The
+.code call
+directive here uses the
+.code @'foo
+expression to calculate the name of the function to be invoked.
+The
+.code @
+symbol indicates that the expression which follows is \*(TL ,
+and
+.code 'foo
+is the \*(TL syntax for quoting a symbol. (See the
+.code quote
+operator).
+
+Of course, this particular
+.code call
+expression can just be replaced by the direct invocation
+syntax
+.codn "@(foo b)" .
+
+The power of
+.code call
+lies in being able to specify the function as a value which
+comes from elsewhere in the program, as in the following example.
+
+.cblk
+\ @(define foo (arg))
+  @(bind arg "abc")
+  @(end)
+  @(bind f @'foo)
+  @(call f b)
+.cble
+
+Here the
+.code call
+directive obtains the name of the function from the
+.code f
+variable.
+
+Note that function names are resolved to functions in the environment
+that is apparent at the point in execution where the
+.code call
+takes place. Very simply, the directive
+.code "@(call f args ...)"
+is precisely equivalent to
+.code "@(s args ...)"
+if, at the point of the call,
+.code f
+is a variable which holds the symbol
+.code s
+and symbol
+.code s
+is defined as a function. Otherwise it is erroneous.
 
 .SS* Modularization
 

@@ -1239,6 +1239,42 @@ static match_files_ctx mf_all(val spec, val files, val bindings,
 
 static val v_fun(match_files_ctx *c);
 
+static val h_call(match_line_ctx *c)
+{
+  val saved_specline = c->specline;
+  val elem = first(saved_specline);
+  val args = rest(elem);
+  val funexpr = first(args);
+  val funval = txeval(c->specline, funexpr, c->bindings);
+  val argexprs = rest(args);
+  val call = cons(funval, argexprs);
+  val new_specline = cons(call, nil);
+  val ret;
+
+  c->specline = new_specline;
+
+  ret = h_fun(c);
+
+  c->specline = saved_specline;
+
+  if (ret == decline_k) {
+    val spec = cons(new_specline, nil);
+    match_files_ctx vc = mf_all(spec, nil, c->bindings, nil, c->file);
+    val vresult = v_fun(&vc);
+
+    if (vresult == next_spec_k) {
+      c->bindings = vc.bindings;
+      return vresult;
+    } else if (vresult == decline_k) {
+      sem_error(elem, lit("call: function ~s not found"), funval, nao);
+    }
+
+    return vresult;
+  }
+
+  return ret;
+}
+
 static val do_match_line(match_line_ctx *c)
 {
   val lfe_save = set_last_form_evaled(nil);
@@ -3863,6 +3899,27 @@ static val v_name(match_files_ctx *c)
   return next_spec_k;
 }
 
+static val v_call(match_files_ctx *c)
+{
+  spec_bind (specline, first_spec, c->spec);
+  val exprs = rest(first_spec);
+  val funexpr = car(exprs);
+  val funval = txeval(specline, funexpr, c->bindings);
+  val argexprs = cdr(exprs);
+  val call = cons(funval, argexprs);
+  val spec = cons(cons(call, nil), nil);
+  match_files_ctx ctx = mf_spec_bindings(*c, spec, c->bindings);
+  val ret = v_fun(&ctx);
+
+  if (ret == nil)
+    return nil;
+
+  if (ret == decline_k)
+    sem_error(nil, lit("call: function ~s not found"), funval, nao);
+
+  return cons(ctx.bindings, if3(ctx.data, cons(ctx.data, ctx.data_lineno), t));
+}
+
 static val h_do(match_line_ctx *c)
 {
   val elem = first(c->specline);
@@ -4216,6 +4273,7 @@ static void dir_tables_init(void)
   sethash(v_directive_table, line_s, cptr(coerce(mem_t *, v_line)));
   sethash(v_directive_table, data_s, cptr(coerce(mem_t *, v_data)));
   sethash(v_directive_table, name_s, cptr(coerce(mem_t *, v_name)));
+  sethash(v_directive_table, call_s, cptr(coerce(mem_t *, v_call)));
 
   sethash(h_directive_table, text_s, cptr(coerce(mem_t *, h_text)));
   sethash(h_directive_table, var_s, cptr(coerce(mem_t *, h_var)));
@@ -4247,6 +4305,7 @@ static void dir_tables_init(void)
   sethash(h_directive_table, line_s, cptr(coerce(mem_t *, hv_trampoline)));
   sethash(h_directive_table, data_s, cptr(coerce(mem_t *, hv_trampoline)));
   sethash(h_directive_table, name_s, cptr(coerce(mem_t *, hv_trampoline)));
+  sethash(h_directive_table, call_s, cptr(coerce(mem_t *, h_call)));
 
   sethash(non_matching_directive_table, block_s, t);
   sethash(non_matching_directive_table, accept_s, t);
