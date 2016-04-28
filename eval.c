@@ -5286,14 +5286,6 @@ void eval_init(void)
   reg_fun(intern(lit("functionp"), user_package), func_n1(functionp));
   reg_fun(intern(lit("interp-fun-p"), user_package), func_n1(interp_fun_p));
 
-  reg_fun(intern(lit("make-random-state"), user_package), func_n1o(make_random_state, 0));
-  reg_fun(intern(lit("random-state-get-vec"), user_package),
-          func_n1o(random_state_get_vec, 0));
-  reg_fun(intern(lit("random-state-p"), user_package), func_n1(random_state_p));
-  reg_fun(intern(lit("random-fixnum"), user_package), func_n1o(random_fixnum, 0));
-  reg_fun(intern(lit("random"), user_package), func_n2(random));
-  reg_fun(intern(lit("rand"), user_package), func_n2o(rnd, 1));
-
   reg_fun(intern(lit("range"), user_package), func_n3o(range, 0));
   reg_fun(intern(lit("range*"), user_package), func_n3o(range_star, 0));
   reg_fun(generate_s, func_n2(generate));
