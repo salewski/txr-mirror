@@ -129,15 +129,12 @@ val make_random_state(val seed)
 
     memset(r->state, 0xAA, sizeof r->state);
     r->state[0] = s & 0xFFFFFFFFul;
-#if SIZEOF_PTR >= 8
+#if SIZEOF_PTR == 8
     s >>= 32;
     if (s)
       r->state[1] = s & 0xFFFFFFFFul;
-#endif
-#if SIZEOF_PTR >= 16
-    s >>= 32;
-    if (s)
-      r->state[2] = s & 0xFFFFFFFFul;
+#elif SIZEOF_PTR > 8
+#error port me!
 #endif
   } else if (nilp(seed)) {
     val time = time_sec_usec();
