@@ -140,7 +140,9 @@ val make_random_state(val seed)
     val time = time_sec_usec();
     r->state[0] = convert(rand32_t, c_num(car(time)));
     r->state[1] = convert(rand32_t, c_num(cdr(time)));
+#if HAVE_UNISTD_H
     r->state[2] = convert(rand32_t, getpid());
+#endif
     memset(r->state + 3, 0xAA, sizeof r->state - 3 * sizeof r->state[0]);
   } else if (random_state_p(seed)) {
     struct rand_state *rseed = coerce(struct rand_state *,
