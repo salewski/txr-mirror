@@ -594,7 +594,7 @@ mp_err mp_get_uintptr(mp_int *mp, uint_ptr_t *z)
   int ix;
   int nd = USED(mp);
   for (ix = 0; ix < nd; ix++, out <<= MP_DIGIT_BIT)
-    out = DIGIT(mp, ix);
+    out |= DIGIT(mp, ix);
 #else
   out = DIGIT(mp, 0);
 #endif
