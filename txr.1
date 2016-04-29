@@ -35551,6 +35551,11 @@ spaces and long periods, produce fairly predictable sequences of values in the
 beginning, before transitioning into chaotic behavior. This problem is worse
 for low complexity seeds, such as small integer values.
 
+The sequences are predictable in two ways. Firstly, some initial values
+extracted from the PRNG may exhibit patterns ("problem 1"). Secondly, the initial values
+from sequences produced from similar seeds (for instance consecutive integers)
+may be similar or identical ("problem 2").
+
 .TP* Notes:
 
 The default value of .code *random-warmup* is only 8.  This is insufficient to
@@ -35563,6 +35568,17 @@ Applications which critically depend on good PRNG behavior should choose
 large warm-up periods into the hundreds or thousands of iterations.
 If a small warm-up period is used, it is recommended to use larger seeds
 which initialize more of the 4096 bit state space.
+
+\*(TX's PRNG implementation addresses "problem 1" first problem by padding the
+unseeded portions of the state space with random values (from a static table
+that doesn't change). For instance, if the integer 1 is used to seed the space,
+then one 32 bit word of the space is set to the value 1. The remaining 15 are
+populated from the random table. This helps to ensure that a good PRNG sequence
+is obtained immediately. However, it doesn't address "problem 2": that
+similar seed values generate similar sequences, when the warm-up period is
+small. For instance, if 65536 different random state objects are created, from
+each of the 16-bit seeds in the range [0, 65536), and then a random 16-bit
+value is extracted from each state, only 1024 unique values result.
 
 .coNP Function @ make-random-state
 .synb
@@ -41662,6 +41678,15 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 139
+After \*(TX 139, changes were implemented in the area of pseudo-random
+number generation. Compatibility with 139 brings back the previous
+seeding algorithm used by
+.codn make-random-state ,
+allowing the old pseudo-random sequences to be reproduced. This is only
+the case if the default value of 8 is used for the
+.meta warmup-period
+argument of that function (which didn't exist in 139 or earlier versions).
 .IP 138
 After \*(TX 138, the variable name lookup rules in the \*(TX pattern language
 changed for greater utility and consistency. Compatibility with 138 or later

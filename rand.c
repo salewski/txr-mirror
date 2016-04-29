@@ -66,6 +66,14 @@ static struct cobj_ops random_state_ops = cobj_ops_init(eq,
                                                         cobj_mark_op,
                                                         cobj_hash_op);
 
+/* Source: bits from /dev/random on a Linux server */
+static rand32_t rand_tab[16] = {
+  0x2C272ED6U, 0x4DBD5D69U, 0xC5482819U, 0x142AFCDEU,
+  0xF7ABAEB0U, 0x454B47F1U, 0xFC85D2ADU, 0x1A9DB177U,
+  0x2619231BU, 0x6B678AE8U, 0xAC450E78U, 0xA0A96B1CU,
+  0x88A74E05U, 0xC1CBAEC2U, 0x8170BEADU, 0x29FAF776U
+};
+
 static val make_state(void)
 {
   struct rand_state *r = coerce(struct rand_state *, chk_malloc(sizeof *r));
@@ -167,7 +175,7 @@ val make_random_state(val seed, val warmup)
     i--;
 
   for (; i < 16; i++)
-    r->state[i] = 0xAAAAAAAAul;
+    r->state[i] = rand_tab[i];
 
   r->cur = 0;
 
@@ -293,9 +301,11 @@ val rnd(val modulus, val state)
 
 void rand_compat_fixup(int compat_ver)
 {
-  if (compat_ver <= 114) {
+  if (compat_ver <= 139) {
     loc l = lookup_var_l(nil, random_state_var_s);
-    random_state_s = random_state_var_s;
+    memset(rand_tab, 0xAA, sizeof rand_tab);
+    if (compat_ver <= 114)
+      random_state_s = random_state_var_s;
     set(l, make_random_state(num_fast(42), num_fast(8)));
   }
 }
