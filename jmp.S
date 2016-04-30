@@ -55,6 +55,12 @@ NAME: ;
 NAME: ;
 #endif
 
+#if __arm__
+#define SIGIL() %
+#else
+#define SIGIL() @
+#endif
+
 #if __i386__
 
 #define JEIP  0
@@ -237,4 +243,10 @@ DEFUN(jmp_restore)
 
 #else
 #error port me!
+#endif
+
+#ifndef __APPLE__
+/* This is needed so our assembly code doesn't cause
+   the program to require an executable stack! */
+.section .note.GNU-stack,"",SIGIL()progbits
 #endif
