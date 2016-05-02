@@ -2193,6 +2193,32 @@ else
   printf "no\n"
 fi
 
+printf "Checking for {set,get}res{uid,gid} ... "
+
+cat > conftest.c <<!
+#include <sys/types.h>
+#include <unistd.h>
+
+int main(int argc, char **argv)
+{
+  uid_t ur, ue, us;
+  gid_t gr, ge, gs;
+  int gur = getresuid(&ur, &ue, &us);
+  int ggr = getresgid(&gr, &ge, &gs);
+  int sur = setresuid(0, 0, 0);
+  int sgr = setresgid(0, 0, 0);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_SETRESUID 1\n" >> $config_h
+  have_unistd=y
+else
+  printf "no\n"
+fi
+
 printf "Checking for setgroups ... "
 
 cat > conftest.c <<!

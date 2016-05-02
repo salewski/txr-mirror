@@ -37006,6 +37006,42 @@ is returned.
 On failure, it throws an exception of type
 .codn system-error .
 
+.coNP Functions @ getresuid and @ getresgid
+.synb
+.mets (getresuid)
+.mets (getresgid)
+.syne
+.desc
+These functions directly correspond to the POSIX C library functions
+of the same names available in some Unix operating systems.
+Each function retrieves a three element list of numeric IDs.
+The
+.code getresuid
+function retrieves the real, effective and saved user ID of
+the calling process.
+The
+.code getresgid
+function retrieves the real, effective and saved group ID of
+the calling process.
+
+.coNP Functions @ setresuid and @ setresgid
+.synb
+.mets (setresuid < real-uid < effective-uid << saved-uid )
+.mets (setresgid < real-gid < effective-gid << saved-gid )
+.syne
+.desc
+These functions directly correspond to the POSIX C library functions of the
+same names available in some Unix operating systems.  They change the real,
+effective and saved user ID or group ID, respectively, of the calling process.
+
+A value of -1 for any of the IDs specifies that the ID is not to be changed.
+
+Only privileged processes may arbitrarily change IDs to different values.
+
+Unprivileged processes are restricted in the following way:
+each of the new IDs that is replaced must have a new value which is equal to
+one of the existing three IDs.
+
 .SS* Unix Password Database
 
 .coNP Structure @ passwd

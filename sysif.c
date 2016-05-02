@@ -978,6 +978,44 @@ static val setgroups_wrap(val list)
 
 #endif
 
+#if HAVE_SETRESUID
+
+static val getresuid_wrap(void)
+{
+  uid_t r, e, s;
+  if (getresuid(&r, &e, &s) != 0)
+    uw_throwf(system_error_s, lit("getresuid failed: ~d/~s"),
+              num(errno), string_utf8(strerror(errno)), nao);
+  return list(num(r), num(e), num(s), nao);
+}
+
+static val getresgid_wrap(void)
+{
+  gid_t r, e, s;
+  if (getresgid(&r, &e, &s) != 0)
+    uw_throwf(system_error_s, lit("getresgid failed: ~d/~s"),
+              num(errno), string_utf8(strerror(errno)), nao);
+  return list(num(r), num(e), num(s), nao);
+}
+
+static val setresuid_wrap(val r, val e, val s)
+{
+  if (setresuid(c_num(r), c_num(e), c_num(s)) != 0)
+    uw_throwf(system_error_s, lit("setresuid failed: ~d/~s"),
+              num(errno), string_utf8(strerror(errno)), nao);
+  return t;
+}
+
+static val setresgid_wrap(val r, val e, val s)
+{
+  if (setresuid(c_num(r), c_num(e), c_num(s)) != 0)
+    uw_throwf(system_error_s, lit("setresuid failed: ~d/~s"),
+              num(errno), string_utf8(strerror(errno)), nao);
+  return t;
+}
+
+#endif
+
 #if HAVE_PWUID
 
 static val setpwent_wrap(void)
@@ -1540,6 +1578,13 @@ void sysif_init(void)
 
 #if HAVE_SETGROUPS
   reg_fun(intern(lit("setgroups"), user_package), func_n1(setgroups_wrap));
+#endif
+
+#if HAVE_SETRESUID
+  reg_fun(intern(lit("getresuid"), user_package), func_n0(getresuid_wrap));
+  reg_fun(intern(lit("getresgid"), user_package), func_n0(getresgid_wrap));
+  reg_fun(intern(lit("setresuid"), user_package), func_n3(setresuid_wrap));
+  reg_fun(intern(lit("setresgid"), user_package), func_n3(setresgid_wrap));
 #endif
 
 #if HAVE_PWUID
