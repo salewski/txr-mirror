@@ -946,6 +946,38 @@ void simulate_setuid(val open_script)
 
 #endif
 
+#if HAVE_SETGROUPS
+
+static val setgroups_wrap(val list)
+{
+  cnum len = c_num(length(list));
+  size_t size = len;
+
+  if ((cnum) size != len) {
+    uw_throwf(system_error_s, lit("setgroups: list too long"), nao);
+  } else {
+    gid_t *arr = coerce(gid_t *, chk_malloc(size *sizeof *arr));
+    int i = 0, res;
+
+    for (; list; i++, list = cdr(list)) {
+      cnum gid = c_num(car(list));
+      arr[i] = gid;
+    }
+
+    res = setgroups(size, arr);
+
+    free(arr);
+
+    if (res != 0)
+      uw_throwf(system_error_s, lit("setgroups failed: ~d/~s"),
+                num(errno), string_utf8(strerror(errno)), nao);
+
+    return t;
+  }
+}
+
+#endif
+
 #if HAVE_PWUID
 
 static val setpwent_wrap(void)
@@ -1504,6 +1536,10 @@ void sysif_init(void)
   reg_fun(intern(lit("seteuid"), user_package), func_n1(seteuid_wrap));
   reg_fun(intern(lit("setgid"), user_package), func_n1(setgid_wrap));
   reg_fun(intern(lit("setegid"), user_package), func_n1(setegid_wrap));
+#endif
+
+#if HAVE_SETGROUPS
+  reg_fun(intern(lit("setgroups"), user_package), func_n1(setgroups_wrap));
 #endif
 
 #if HAVE_PWUID
