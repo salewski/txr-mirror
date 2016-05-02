@@ -902,7 +902,7 @@ void repress_privilege(void)
   orig_euid = geteuid();
 
   if (real_uid != orig_euid)
-    seteuid(getuid());
+    seteuid(real_uid);
   else
     is_setuid = 0;
 
@@ -911,8 +911,44 @@ void repress_privilege(void)
 
 void drop_privilege(void)
 {
-  if (repress_called != RC_MAGIC || (is_setuid && setuid(getuid()) != 0))
+  /* Bug: repress_privilege wasn't called. */
+  if (repress_called != RC_MAGIC)
     abort();
+
+  if (!is_setuid)
+    return;
+
+#if HAVE_SETRESUID
+  {
+    if (setresuid(real_uid, real_uid, real_uid) != 0)
+      abort();
+    return;
+  }
+#else
+  {
+    /* First, try to regain as much privilege as possible.
+     * On some platforms, setuid requires the caller to be effective
+     * root in order to change the saved user ID. We don't want this
+     * call to fail just because we weren't effective root, even though
+     * we have the privilege to be effective root!
+     */
+    (void) setuid(0);
+
+    if (setuid(real_uid) == 0) {
+      if (orig_euid == 0)
+        return;
+      /* If we can re-gain the previous
+       * effective ID, then setuid(getuid())
+       * didn't actually work; it didn't
+       * set the saved ID.
+       */
+      if (real_uid != 0 && seteuid(orig_euid) == 0)
+        abort();
+    }
+
+    abort();
+  }
+#endif
 }
 
 void simulate_setuid(val open_script)
@@ -934,14 +970,13 @@ void simulate_setuid(val open_script)
         abort();
 
       if ((stb.st_mode & (S_ISUID | S_IXUSR)) == (S_ISUID | S_IXUSR)) {
-        seteuid(stb.st_uid);
-        return;
+        if (seteuid(stb.st_uid) == 0)
+          return;
       }
     }
   }
 
-  if (is_setuid)
-    setuid(real_uid);
+  drop_privilege();
 }
 
 #endif

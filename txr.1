@@ -41394,49 +41394,68 @@ when the command is submitted for evaluation.
 
 .SH* SETUID OPERATION
 
-On platforms with the Unix security model, \*(TX provides special behaviors
-in situations when the \*(TX executable is running as "setuid" on behalf of
-some user or is running as root (uid 0), and from the command line executes a
-script file which is marked executable and setuid.
+On platforms with the Unix filesystem and process security model, \*(TX has
+support for executing setuid scripts, even on platforms whose operating system
+kernel does not honor the setuid bit on hash bang scripts. On these systems,
+taking advantage of the feature requires \*(TX to be installed as a setuid
+executable. For this reason, \*(TX is aware when it is executed setuid and
+takes care to manage privileges.
 
-The main noteworthy consequence of this functionality is that this feature
-allows TXR interpreter scripts (which use the Unix Hash Bang `#!` mechanism)
-to use the setuid permission bit, even if the underlying operating system
-kernel does not support setuid on interpreter scripts.
+When \*(TX starts, early in its execution it determines whether or not is
+is executing setuid. If so, it temporarily drops privileges, as a precaution.
+This is done before processing the command line arguments.
+When \*(TX determines that it is executing a setuid script (a file marked
+executable to its owner and attributed with the set-user-ID bit), it then
+attempts to impersonate the owner of the script file by changing to
+effective user ID to that owner just before executing the file. It retains
+the real and saved user ID.  If the attempt to assume that user ID is
+unsuccessful, then \*(TX permanently drops setuid privileges before executing
+the script.  Likewise, before executing anything code other than a setuid
+script, \*(TX also drops privileges.
 
-Firstly, when \*(TX is invoked as root (meaning that the effective uid is 0,
-regardless of the value of the real uid), and the command line indicates that a
-file is to be executed whose owner execute permission is set, and which is
-marked "setuid", \*(TX will honor that setuid permission. Before processing the
-file, \*(TX changes its effective user ID to the owner of the file.
+\*(TX tries to honor and implement the setuid permissions on a script
+whether or not it is running setuid. When not running setuid, it nevertheless
+tries to change its effective user ID to that of the owner of the setuid
+script. This will succeed if it has sufficient permissions to do so.
 
-Secondly, when \*(TX is invoked setuid (meaning that the effective uid
-is different from the real uid), and the command line indicates that
-a file is to be executed whose owner execute permission is set, and which
-is marked "setuid", \*(TX will honor that setuid permission, if possible.
-If the effective uid is 0, then this happens through the previously described
-case. If the effective uid is other than zero, and matches the owner uid of
-the file, then \*(TX maintains its effective uid as-is. Otherwise, \*(TX
-drops its setuid privilege.
+To rephrase: in order for \*(TX to execute a file which is setuid root,
+it has to be running with a root effective user ID somehow. In order
+to execute a file which is setuid to a non-root user, \*(TX has to be
+running effectively as root or else as that user.   It doesn't matter whether
+these privileges are achieved effectively using the setuid mechanism, or
+whether \*(TX is running with the require user ID as its real ID.
+However, if \*(TX is running setuid, it takes special care to temporarily
+drop the privileges as early as possible, and eventually to drop the
+privileges permanently before executing any code, other that the setuid
+script. If the setuid script cannot be executed with the privileges it
+calls for, \*(TX also drops privileges and executes it anyway, strictly as the
+real user who invoked the \*(TX executable.
 
-Thirdly, when \*(TX is invoked setuid in order to perform computations other
-than opening a script file, it drops privileges.
-
-Dropping privilege means evaluating the C expression `setuid(getuid())`:
-the effective uid, and every other stored uid, are permanently reset back to
-the real uid.
-
-Thus, in summary, when \*(TX is invoked setuid, eventually a decision is made
-whether to drop the privileges, change the effective uid to that indicated
-by a setuid executable script, or simply keep the effective uid. This decision
-is made before executing code supplied as inputs. Thus a setuid \*(TX
-executable will not execute arbitrary code under elevated privilege,
-but grants privilege to properly configured setuid scripts.
-
-Furthermore, as a small precaution, between program startup and the point in
-the execution when this this decision is made, \*(TX temporarily changes its
-effective uid to the real uid, using `seteuid(getuid())`. Just prior to making
-the decision regarding the setuid script, \*(TX restores its effective uid.
+What it means to drop privileges is to change the effective user ID
+and the saved user ID to be equal to the real user ID. On platforms
+where the
+.code setresuid
+function is available, \*(TX uses that function to drop privileges.
+On platforms where
+.code setresuid
+is not available, \*(TX tries to drop privileges using the
+C language function call
+.codn "setuid(r)" ,
+where
+.code r
+is the previously noted real user ID obtained from
+.codn getuid() .
+On some platforms, this only works for dropping root privileges: it
+overwrites the real and saved ID only if the caller is effectively root.
+On those platforms, this approach does not drop non-root privileges.
+\*(TX tries to detect whether this approach worked by evaluating
+the C language expression
+.codn "seteuid(e)" ,
+where
+.code e
+is the previously noted effective user ID.  In other words, it
+attempts to re-gain the dropped privilege by recovering the previous
+effective ID. If this attempt succeeds, \*(TX immediately aborts.
 
 .SH* DEBUGGER
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding
