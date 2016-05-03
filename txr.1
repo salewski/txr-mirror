@@ -41392,14 +41392,15 @@ If multi-line mode is toggled interactively from within the listener,
 the variable is updated to reflect the latest state. This happens
 when the command is submitted for evaluation.
 
-.SH* SETUID OPERATION
+.SH* SETUID/SETGID OPERATION
 
 On platforms with the Unix filesystem and process security model, \*(TX has
-support for executing setuid scripts, even on platforms whose operating system
-kernel does not honor the setuid bit on hash bang scripts. On these systems,
-taking advantage of the feature requires \*(TX to be installed as a setuid
-executable. For this reason, \*(TX is aware when it is executed setuid and
-takes care to manage privileges.
+support for executing setuid/setgid scripts, even on platforms whose operating system
+kernel does not honor the setuid/setgid bit on hash bang scripts. On these
+systems, taking advantage of the feature requires \*(TX to be installed as a
+setuid/setgid executable. For this reason, \*(TX is aware when it is executed
+setuid and takes care to manage privileges.  The following description about
+the handling of setuid applies to the parallel handling of setgid also.
 
 When \*(TX starts, early in its execution it determines whether or not is
 is executing setuid. If so, it temporarily drops privileges, as a precaution.
@@ -41456,6 +41457,38 @@ where
 is the previously noted effective user ID.  In other words, it
 attempts to re-gain the dropped privilege by recovering the previous
 effective ID. If this attempt succeeds, \*(TX immediately aborts.
+Dropping setgid privileges is similar. Where
+.code setresgid
+is available it is used, otherwise an attempt is made with
+.code "setegid(r)"
+where
+.code r
+is the previously noted real group ID. Then a test using
+.code "setegid(e)"
+is performed using the original effective group ID as
+.codn e .
+This is done after dropping any setuid root user ID privilege
+which would allow such a test to succeed.
+
+If \*(TX is running both setuid and setgid, and execute a script
+which is setuid only, it will still drop group privileges, and vice
+versa: if it executed a setgid script, it will drop user privileges.
+For instance, if a root-owned \*(TX runs a setgid script which is owned by
+user
+.code 10
+and group-owned by group
+.codn 20 ,
+that script will run with an effective group ID of 20. The effective user ID
+will be that of the user who invoked the script: \*(TX will drop the root
+privilege to the original real ID of the user, and while for the setgid
+operation, it will change to the group ID of the script.
+
+The setuid/setgid privilege machinery in \*(TX does not manipulate
+the list of supplementary ("ancillary", in the language of POSIX) group IDs.
+It is unnecessary for security because the list does not change while
+running with setuid privilege. No group IDs are added to the list which
+need to be retracted when privileges are dropped. The supplementary
+groups also persist across the execution of a setuid/setgid script.
 
 .SH* DEBUGGER
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding

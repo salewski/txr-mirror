@@ -789,7 +789,7 @@ int txr_main(int argc, char **argv)
   } else if (spec_file) {
     if (wcscmp(c_str(spec_file), L"-") != 0) {
       open_txr_file(spec_file, &txr_lisp_p, &spec_file_str, &parse_stream);
-      simulate_setuid(parse_stream);
+      simulate_setuid_setgid(parse_stream);
     } else {
       drop_privilege();
       spec_file_str = lit("stdin");
@@ -814,7 +814,7 @@ int txr_main(int argc, char **argv)
 
     if (!equal(arg, lit("-"))) {
       open_txr_file(arg, &txr_lisp_p, &spec_file_str, &parse_stream);
-      simulate_setuid(parse_stream);
+      simulate_setuid_setgid(parse_stream);
     } else {
       drop_privilege();
       spec_file_str = lit("stdin");

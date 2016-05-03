@@ -894,12 +894,20 @@ static val setegid_wrap(val nval)
 #define RC_MAGIC 0xbe50c001
 
 static uid_t orig_euid, real_uid;
-static unsigned int repress_called = 0, is_setuid = 1;
+static gid_t orig_egid, real_gid;
+static unsigned int repress_called = 0, is_setuid = 1, is_setgid = 1;
 
 void repress_privilege(void)
 {
+  real_gid = getgid();
+  orig_egid = getegid();
   real_uid = getuid();
   orig_euid = geteuid();
+
+  if (real_gid != orig_egid)
+    setegid(real_gid);
+  else
+    is_setgid = 0;
 
   if (real_uid != orig_euid)
     seteuid(real_uid);
@@ -915,12 +923,14 @@ void drop_privilege(void)
   if (repress_called != RC_MAGIC)
     abort();
 
-  if (!is_setuid)
+  if (!is_setuid && !is_setgid)
     return;
 
 #if HAVE_SETRESUID
   {
-    if (setresuid(real_uid, real_uid, real_uid) != 0)
+    if (is_setgid && setresgid(real_gid, real_gid, real_gid) != 0)
+      abort();
+    if (is_setuid && setresuid(real_uid, real_uid, real_uid) != 0)
       abort();
     return;
   }
@@ -934,24 +944,37 @@ void drop_privilege(void)
      */
     (void) setuid(0);
 
-    if (setuid(real_uid) == 0) {
-      if (orig_euid == 0)
-        return;
-      /* If we can re-gain the previous
-       * effective ID, then setuid(getuid())
-       * didn't actually work; it didn't
-       * set the saved ID.
+    if (is_setgid) {
+      /* If we are setgid, and cannot set effective gid to real,
+       * then abort.
        */
-      if (real_uid != 0 && seteuid(orig_euid) == 0)
+      if (setgid(real_gid) != 0)
         abort();
     }
 
-    abort();
+    if (is_setuid) {
+      if (setuid(real_uid) != 0)
+        abort();
+      /* If we can re-gain previous effective IDs, then setuid(getuid())
+       * didn't actually work; it didn't set the saved ID. We assume
+       * that setuid(getuid()) does work for effective root; i.e. only
+       * setuid non-root has this problem. And of course, if the
+       * real UID is root, we are not "dropping" privileges.
+       */
+      if (orig_euid != 0 && real_uid != 0) {
+        if (seteuid(orig_euid) == 0)
+          abort();
+      }
+    }
+
+    /* If we can regain setgid privileges, abort */
+    if (is_setgid && real_uid != 0 && setegid(orig_egid) == 0)
+      abort();
   }
 #endif
 }
 
-void simulate_setuid(val open_script)
+void simulate_setuid_setgid(val open_script)
 {
   if (repress_called != RC_MAGIC || (is_setuid && seteuid(orig_euid) != 0))
     abort();
@@ -967,15 +990,21 @@ void simulate_setuid(val open_script)
       cnum fd = c_num(fdv);
 
       if (fstat(fd, &stb) != 0)
-        abort();
+        goto drop;
+
+      if ((stb.st_mode & (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP)) {
+        if (setegid(stb.st_gid) == 0)
+          is_setgid = 0; /* do not drop effective gid in drop_privilege. */
+      }
 
       if ((stb.st_mode & (S_ISUID | S_IXUSR)) == (S_ISUID | S_IXUSR)) {
         if (seteuid(stb.st_uid) == 0)
-          return;
+          is_setuid = 0; /* do not drop effective uid in drop_privilege. */
       }
     }
   }
 
+drop:
   drop_privilege();
 }
 
