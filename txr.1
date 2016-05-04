@@ -36717,6 +36717,18 @@ or
 .code lstat
 call, then the testing is based on that object.
 
+Some of the accessibility tests (functions which determine whether the
+calling process has certain access rights) may not be perfectly accurate, since
+they are based strictly on portable information available via
+.codn stat ,
+together with the basic, portable POSIX APIs for inquiring about
+security credentials, such as
+.codn geteuid .
+They ignoring any special permissions which may exist such as operating system
+and file system specific extended attributes (for example, file immutability
+connected to a "secure level" and such) and special process capabilities
+not reflected in the basic credentials.
+
 .coNP Function @ path-exists-p
 .synb
 .mets (path-exists-p << path )
@@ -36824,36 +36836,60 @@ belongs. This means that the group owner is either the same as the
 effective group ID of the calling process, or else is among the
 supplementary group IDs of the calling process.
 
-.coNP Functions @ path-executable-to-me-p and @ path-writable-to-me-p
+.coNP Function @ path-readable-to-me-p
+.synb
+.mets (path-readable-to-me-p << path )
+.syne
+.desc
+.code path-readable-to-me-p
+tests whether the calling process can read the
+object named by
+.metn path .
+If necessary, this test examines the effective user ID of the
+calling process, the effective group ID, and the list of supplementary groups.
+
+.coNP Function @ path-writable-to-me-p
+.synb
+.mets (path-writable-to-me-p << path )
+.syne
+.desc
+.code path-writable-to-me-p
+tests whether the calling process can write the
+object named by
+.metn path .
+If necessary, this test examines the effective user ID of the
+calling process, the effective group ID, and the list of supplementary groups.
+
+.coNP Function @ path-read-writable-to-me-p
+.synb
+.mets (path-read-writable-to-me-p << path )
+.syne
+.desc
+.code path-readable-to-me-p
+tests whether the calling process can both read and write the
+object named by
+.metn path .
+If necessary, this test examines the effective user ID of the
+calling process, the effective group ID, and the list of supplementary groups.
+
+.coNP Function @ path-executable-to-me-p
 .synb
 .mets (path-executable-to-me-p << path )
-.mets (path-writable-to-me-p << path )
 .syne
 .desc
 .code path-executable-to-me-p
 tests whether the calling process can execute the
 object named by
-.metn path .
-This test is
-carried out using the effective user ID.
+.metn path ,
+or perform a search (name lookup, not implying sequential readability) on it,
+if it is a directory.
+If necessary, this test examines the effective user ID of the
+calling process, the effective group ID, and the list of supplementary groups.
 
-.code path-writable-to-me-p
-tests whether the calling process can write the
-object named by
-.metn path .
-This test is
-carried out using the effective user ID.
-
-These tests may not be perfectly accurate, since they are based strictly
-on portable information available via
-.codn stat ,
-ignoring any special permissions which may exist such as operating system
-and file system specific extended attributes (for example, file immutability
-connected to a "secure level" and such).
-
-.coNP Function @ path-private-to-me-p
+.coNP Functions @ path-private-to-me-p and @ path-strictly-private-to-me-p
 .synb
 .mets (path-private-to-me-p << path )
+.mets (path-strictly-private-to-me-p << path )
 .syne
 .desc
 The
@@ -36861,30 +36897,43 @@ The
 function reports whether the calling process can rely on the
 object indicated by
 .code path
-to be private to the security context implied by its effective user ID.
+to be, respectively, private or strictly private to the security context
+implied by its effective user ID.
 
-"Private" means that no other user has write access to the file, and
-so its contents may be trusted.
+"Private" means that beside the effective user ID of the calling process and
+the superuser, no other user ID has write access to the object, and thus its
+contents may be trusted to be be free from tampering by any other user.
+
+"Strictly private" means that not only is the object private, as above,
+but users other than the effective user ID of the calling process
+and superuser also not not have read access.
 
 The rules which the function applies are as follows:
+
+A file to be examined is initially assumed to be strictly private.
 
 If the file is not owned by the effective user ID of the caller, then
 it is not private.
 
 If the file grants write permission to "others", then it is not private.
 
+If the file grants read permission to "others", then it is not strictly
+private.
+
 If the file grants write permission to the group owner, then it is not
 private, unless either the group is empty, or else the group has exactly one
 member, who is the owner of the file.
 
-Otherwise, the file is reported as private.
+If the file grants read permission to the group owner, then it is not
+strictly private, unless either the group is empty, or else the group has
+exactly one member, who is the owner of the file.
 
-Note that this interpretation of "private" is vulnerable to the following
-time-of-check to time-of-use race condition with regard to the group check.  At
-the time of the check, the group might be empty or contain only the caller as a
-member. But by the time the file is subsequently accessed, the group might have
-been innocently extended by the system administrator to include additional
-users, who can maliciously modify the file.
+Note that this interpretation of "private" and "strictly private" is vulnerable
+to the following time-of-check to time-of-use race condition with regard to the
+group check.  At the time of the check, the group might be empty or contain
+only the caller as a member. But by the time the file is subsequently accessed,
+the group might have been innocently extended by the system administrator to
+include additional users, who can maliciously modify the file.
 
 Also note that the function is vulnerable to a time-of-check to time-of-use
 race if
@@ -36896,7 +36945,10 @@ file can pass the check at the time the function is called, but before it is
 used, the file can be replaced by another file with different permissions.
 To guard against this race, one must open the file, and then use
 .code fstat
-on the stream.
+on the stream, using the structure returned by fstat to perform the check,
+with the understanding that it applies only to the open file, and not
+necessarily to whatever object may now be retrieved by the original
+directory entry.
 
 .coNP Functions @ path-newer and @ path-older
 .synb

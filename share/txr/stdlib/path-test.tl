@@ -78,6 +78,8 @@
           (find g (getgroups))))))
 
 ;; umask, gmask and omask must test identical permissions
+;; multiple permissions may be tested, but not a combination
+;; of x with any other permission.
 (defun sys:path-access (path umask gmask omask)
   (sys:path-test (s stat path)
     (let ((m s.mode)
@@ -85,18 +87,27 @@
       (cond
         ((zerop euid) (or (zerop (logand umask s-ixusr))
                           (plusp (logand m (logior umask gmask omask)))))
-        ((= euid s.uid) (plusp (logand m umask)))
+        ((= euid s.uid) (= umask (logand m umask)))
         ((let ((g s.gid))
            (or (= g (getegid))
                (find g (getgroups))))
-         (plusp (logand m gmask)))
-        (t (plusp (logand m omask)))))))
+         (= gmask (logand m gmask)))
+        (t (= omask (logand m omask)))))))
 
 (defun path-executable-to-me-p (path)
   (sys:path-access path s-ixusr s-ixgrp s-ixoth))
 
 (defun path-writable-to-me-p (path)
   (sys:path-access path s-iwusr s-iwgrp s-iwoth))
+
+(defun path-readable-to-me-p (path)
+  (sys:path-access path s-irusr s-irgrp s-iroth))
+
+(defun path-read-writable-to-me-p (path)
+  (sys:path-access path
+                   (logior s-irusr s-iwusr)
+                   (logior s-irgrp s-iwgrp)
+                   (logior s-iroth s-iwoth)))
 
 (defun path-private-to-me-p (path)
   (sys:path-test (s stat path)
@@ -106,6 +117,18 @@
         (and (eql euid s.uid)
              (zerop (logand m s-iwoth))
              (or (zerop (logand m s-iwgrp))
+                 (null g.mem)
+                 (and (not (rest g.mem))
+                      (equal (getpwuid euid).name (first g.mem)))))))))
+
+(defun path-strictly-private-to-me-p (path)
+  (sys:path-test (s stat path)
+    (let ((m s.mode)
+          (euid (geteuid)))
+      (mlet ((g (getgrgid s.gid)))
+        (and (eql euid s.uid)
+             (zerop (logand m (logior s-iroth s-iwoth)))
+             (or (zerop (logand m (logior s-iroth s-iwgrp)))
                  (null g.mem)
                  (and (not (rest g.mem))
                       (equal (getpwuid euid).name (first g.mem)))))))))
