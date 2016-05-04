@@ -58,7 +58,7 @@
 const wchli_t *version = wli(TXR_VER);
 const wchar_t *progname = L"txr";
 static const char *progname_u8;
-static val progpath = nil;
+static val prog_path = nil, sysroot_path = nil;
 int opt_noninteractive;
 int opt_compat;
 int opt_dbg_expansion;
@@ -251,22 +251,15 @@ static val get_self_path(void)
 }
 #endif
 
-static val sysroot_helper(val exepart, val target)
+static val maybe_sysroot(val exepart)
 {
-  if (match_str(progpath, exepart, negone))
-    return format(nil, lit("~a~a"),
-                  sub_str(progpath, 0, neg(length(exepart))),
-                  target, nao);
-  return nil;
+  return if2(match_str(prog_path, exepart, negone),
+             sysroot_path = sub_str(prog_path, 0, neg(length(exepart))));
 }
 
 static val sysroot(val target)
 {
-  uses_or2;
-  return or4(sysroot_helper(lit(TXR_REL_PATH), target),
-             sysroot_helper(lit(TXR_REL_PATH EXE_SUFF), target),
-             sysroot_helper(lit(PROG_NAME), target),
-             sysroot_helper(lit(PROG_NAME EXE_SUFF), target));
+  return format(nil, lit("~a~a"), sysroot_path, target, nao);
 }
 
 static void sysroot_init(void)
@@ -274,12 +267,22 @@ static void sysroot_init(void)
 #if HAVE_WINDOWS_H
   val slash = regex_compile(lit("\\\\"), nil);
 #endif
-  prot1(&progpath);
-  prot1(&stdlib_path);
-  progpath = get_self_path();
+  protect(&prog_path, &sysroot_path, &stdlib_path, (val *) 0);
+  prog_path = get_self_path();
 #if HAVE_WINDOWS_H
-  progpath = regsub(slash, lit("/"), progpath);
+  prog_path = regsub(slash, lit("/"), prog_path);
 #endif
+
+  if (!(maybe_sysroot(lit(TXR_REL_PATH)) ||
+        maybe_sysroot(lit(TXR_REL_PATH EXE_SUFF)) ||
+        maybe_sysroot(lit(PROG_NAME)) ||
+        maybe_sysroot(lit(PROG_NAME EXE_SUFF))))
+  {
+    format(std_error, lit("~a: unable to calculate sysroot\n"),
+           prog_string, nao);
+    sysroot_path = lit("");
+  }
+
   stdlib_path = sysroot(lit("share/txr/stdlib"));
 
   reg_varl(intern(lit("stdlib"), user_package), stdlib_path);
