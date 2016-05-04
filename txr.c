@@ -257,6 +257,21 @@ static val maybe_sysroot(val exepart)
              sysroot_path = sub_str(prog_path, 0, neg(length(exepart))));
 }
 
+static val substitute_basename(val edited_path, val source_path)
+{
+  val lslash = rpos(chr('/'), edited_path, nil, nil);
+  val rslash = rpos(chr('/'), source_path, nil, nil);
+  val basename = if3(rslash,
+                     sub_str(source_path, succ(rslash), t),
+                     source_path);
+
+  return if3(lslash,
+             format(nil, lit("~a~a"),
+                    sub_str(edited_path, 0, succ(lslash)),
+                    basename, nao),
+             basename);
+}
+
 static val sysroot(val target)
 {
   return format(nil, lit("~a~a"), sysroot_path, target, nao);
@@ -276,7 +291,8 @@ static void sysroot_init(void)
   if (!(maybe_sysroot(lit(TXR_REL_PATH)) ||
         maybe_sysroot(lit(TXR_REL_PATH EXE_SUFF)) ||
         maybe_sysroot(lit(PROG_NAME)) ||
-        maybe_sysroot(lit(PROG_NAME EXE_SUFF))))
+        maybe_sysroot(lit(PROG_NAME EXE_SUFF)) ||
+        maybe_sysroot(substitute_basename(lit(TXR_REL_PATH), prog_path))))
   {
     format(std_error, lit("~a: unable to calculate sysroot\n"),
            prog_string, nao);
