@@ -77,12 +77,13 @@
       (or (= g (getegid))
           (find g (getgroups))))))
 
+;; umask, gmask and omask must test identical permissions
 (defun sys:path-access (path umask gmask omask)
   (sys:path-test (s stat path)
     (let ((m s.mode)
           (euid (geteuid)))
       (cond
-        ((zerop euid) (or (zerop (logior umask s-ixusr))
+        ((zerop euid) (or (zerop (logand umask s-ixusr))
                           (plusp (logand m (logior umask gmask omask)))))
         ((= euid s.uid) (plusp (logand m umask)))
         ((let ((g s.gid))
