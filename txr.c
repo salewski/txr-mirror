@@ -72,7 +72,8 @@ val stdlib_path;
 static mem_t *oom_realloc_handler(mem_t *old, size_t size)
 {
   format(std_error, lit("~a: out of memory\n"), prog_string, nao);
-  put_line(lit("false"), std_error);
+  if (opt_print_bindings)
+    put_line(lit("false"), std_output);
   abort();
 }
 
