@@ -82,7 +82,6 @@ static void help(void)
   val text = lit(
 "\n"
 "TXR Version ~a\n"
-"\n"
 "Copyright 2015, Kaz Kylheku <kaz@kylheku.com>\n"
 "\n"
 "Usage:\n"
