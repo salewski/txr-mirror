@@ -101,7 +101,7 @@ static void help(void)
 "options are interpreted as options. The -- option indicates the end of the\n"
 "options.\n"
 "\n"
-"If no data-file arguments sare supplied, then the query itself must open a\n"
+"If no data-file arguments are supplied, then the query itself must open a\n"
 "a data source prior to attempting to make any pattern match, or it will\n"
 "simply fail due to a match which has run out of data.\n"
 "\n"
