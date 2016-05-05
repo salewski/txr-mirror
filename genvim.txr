@@ -102,8 +102,8 @@ syn match txr_hashbang "^#!.*"
 @  (output :continue out)
 syn match txr_nested_error "[^\t ]\+" contained
 syn match txr_variable "@at[*]\?[ \t]*[@alpha][@alnum]*"
-syn match txr_splicevar "@@[ \t,*@@]*[@alpha][@alnum]*"
-syn match txr_metanum "@@\+[0-9]\+"
+syn match txr_splicevar "@@[ \t,*@@]*[@alpha][@alnum]*" contained
+syn match txr_metanum "@@\+[0-9]\+"@(if txr-p " contained")
 syn match txr_badesc "\\." contained
 syn match txr_escat "\\@@" contained
 syn match txr_stresc "\\[@chesc"`']" contained

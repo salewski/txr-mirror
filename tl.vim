@@ -340,7 +340,7 @@ syn keyword txl_keyword contained wrap wrap* yield yield-from
 syn keyword txl_keyword contained zap zerop zip
 syn match txr_nested_error "[^\t ]\+" contained
 syn match txr_variable "\(@[ \t]*\)[*]\?[ \t]*[A-Za-z_][A-Za-z_0-9]*"
-syn match txr_splicevar "@[ \t,*@]*[A-Za-z_][A-Za-z_0-9]*"
+syn match txr_splicevar "@[ \t,*@]*[A-Za-z_][A-Za-z_0-9]*" contained
 syn match txr_metanum "@\+[0-9]\+"
 syn match txr_badesc "\\." contained
 syn match txr_escat "\\@" contained

@@ -367,8 +367,8 @@ syn match txr_regdir "\(@[ \t]*\)/\(\\/\|[^/]\|\\\n\)*/"
 syn match txr_hashbang "^#!.*"
 syn match txr_nested_error "[^\t ]\+" contained
 syn match txr_variable "\(@[ \t]*\)[*]\?[ \t]*[A-Za-z_][A-Za-z_0-9]*"
-syn match txr_splicevar "@[ \t,*@]*[A-Za-z_][A-Za-z_0-9]*"
-syn match txr_metanum "@\+[0-9]\+"
+syn match txr_splicevar "@[ \t,*@]*[A-Za-z_][A-Za-z_0-9]*" contained
+syn match txr_metanum "@\+[0-9]\+" contained
 syn match txr_badesc "\\." contained
 syn match txr_escat "\\@" contained
 syn match txr_stresc "\\[abtnvfre\\ \n"`']" contained
