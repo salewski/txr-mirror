@@ -524,7 +524,7 @@ static val dup_wrap(val old, val neu)
   return num(dup2(c_num(old), c_num(neu)));
 }
 
-static val exec_wrap(val file, val args_opt)
+val exec_wrap(val file, val args_opt)
 {
   val args = default_bool_arg(args_opt);
   int nargs = c_num(length(args)) + 1;

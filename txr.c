@@ -153,6 +153,9 @@ static void help(void)
 "--compat=N             Synonym for -C N\n"
 "--gc-delta=N           Invoke garbage collection when malloc activity\n"
 "                       increments by N megabytes since last collection.\n"
+#if HAVE_FORK_STUFF
+"--reexec               Re-execute TXR with remaining arguments.\n"
+#endif
 "--debug-autoload       Allow debugger to step through library auto-loading.\n"
 "--debug-expansion      Allow debugger to step through macro-expansion of query.\n"
 "--yydebug              Debug Yacc parser, if compiled with YYDEBUG support.\n"
@@ -603,6 +606,11 @@ int txr_main(int argc, char **argv)
       } else if (equal(opt, lit("lisp"))) {
         txr_lisp_p = t;
         continue;
+#if HAVE_FORK_STUFF
+      } else if (equal(opt, lit("reexec"))) {
+        exec_wrap(prog_path, arg_list);
+        return EXIT_FAILURE;
+#endif
       } else if (equal(opt, lit("debugger"))) {
         drop_privilege();
 #if CONFIG_DEBUG_SUPPORT

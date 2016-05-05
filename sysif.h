@@ -43,6 +43,9 @@ typedef long off_t;
 #endif
 
 val getenv_wrap(val name);
+#if HAVE_FORK_STUFF
+val exec_wrap(val file, val args_opt);
+#endif
 #if HAVE_SYS_STAT
 struct stat;
 val stat_to_struct(struct stat st);

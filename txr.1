@@ -757,6 +757,26 @@ or
 .code -P
 options.
 
+.coIP --reexec
+On platforms which support the POSIX
+.code exec
+family of functions, this option causes \*(TX to re-execute itself.
+The re-executed image receives the remaining arguments which follow
+the
+.code --reexec
+argument. Note: this option is useful for supporting setuid operation in
+"hash hang" scripts. On some platforms, the interpreter designated by
+a "hash bang" script runs without altered privilege, even if that
+interpreter is installed setuid. If the interpreter is executed directly,
+then setuid applies to it, but not if it is executed via "hash bang".
+If the
+.code --reexec
+option is used in the interpreter command line of such a script, the
+interpreter will re-execute itself, thereby gaining the setuid privilege.
+The re-executed image will then obtain the script name from the arguments
+which are passed to it and determine whether that script will run setuid.
+See the section SETUID/SETGID OPERATION.
+
 .coIP --gc-debug
 This option enables a behavior which stresses the garbage collector with
 frequent garbage collection requests. The purpose is to make it more likely
@@ -1100,6 +1120,14 @@ allows some arguments to be encoded into the interpreter script, such that
 script name is inserted anywhere among them, possibly multiple times. Arguments
 for the interpreter can be encoded, as well as arguments to be processed by the
 script.
+
+\*(TX supports setuid hash bang scripting, even on platforms that do not
+support setuid and setgid attributes on hash bang scripts. On such
+platforms, \*(TX has to be installed setuid/setgid. See the section
+SETUID/SETGID OPERATION. On some platforms, it may also be necessary to
+to use the
+.code --reexec
+option.
 
 .SS* Whitespace
 Outside of directives, whitespace is significant in \*(TX queries, and represents
