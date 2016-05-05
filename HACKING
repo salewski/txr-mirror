@@ -254,7 +254,7 @@ and which points to a heap object (at least according to its bit field;
 is_ptr does not validate the pointer).
 
 The codes 01 10 and 11 indicate immediate values: values of type NUM, CHR and
-LIT, respectively. That is to say, if the tag bits are 01, then then remaining
+LIT, respectively. That is to say, if the tag bits are 01, then the remaining
 upper bits of the pointer constitute a signed integer. The range of this
 integer is NUM_MIN to NUM_MAX, defined in lib.h.  The code 10 is for
 characters: the remaining bits of the pointer encode a wchar_t value. The bits
