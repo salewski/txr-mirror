@@ -2237,6 +2237,11 @@ if conftest ; then
   printf "yes\n"
   printf "#define HAVE_SETGROUPS 1\n" >> $config_h
   have_unistd=y
+elif conftest EXTRA_FLAGS=-D__EXTENSIONS__=1 ; then
+  printf "yes\n"
+  printf "#define HAVE_SETGROUPS 1\n" >> $config_h
+  lang_flags="$lang_flags -D__EXTENSIONS__=1" # Solaris buggery
+  have_unistd=y
 else
   printf "no\n"
 fi
