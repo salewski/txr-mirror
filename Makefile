@@ -207,7 +207,12 @@ $(eval $(foreach item,y.tab.c y.tab.h lex.yy.c,\
 lex.yy.c: $(top_srcdir)parser.l
 	$(call ABBREV,LEX)
 	$(V)rm -f $@
-	$(V)$(LEX) $(LEX_DBG_FLAGS) $<
+	$(V)if $(LEX) $(LEX_DBG_FLAGS) $< ; then \
+	  sed -e s@//.*@@ < $@ > $@.tmp ; \
+	  mv $@.tmp $@ ; \
+	else \
+	  exit 1 ; \
+	fi
 	$(V)chmod a-w $@
 
 y.tab.h: y.tab.c
