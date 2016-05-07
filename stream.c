@@ -3419,14 +3419,97 @@ val open_tail(val path, val mode_str, val seek_end_p)
   return set_mode_props(m, stream);
 }
 
+struct save_fds {
+  int in;
+  int out;
+  int err;
+};
+
+#define FDS_IN  1
+#define FDS_OUT 2
+#define FDS_ERR 4
+
+static void fds_init(struct save_fds *fds)
+{
+  fds->in = fds->out = fds->err = -1;
+}
+
+static int fds_subst(val stream, int fd_std)
+{
+  int fd_orig = c_num(stream_fd(stream));
+
+  if (fd_orig == fd_std)
+    return -1;
+
+  {
+    int fd_dup = dup(fd_std);
+
+    if (fd_dup != -1) {
+      dup2(fd_orig, fd_std);
+      return fd_dup;
+    }
+
+    uw_throwf(file_error_s, lit("failed to duplicate file descriptor: ~d/~s"),
+              num(errno), string_utf8(strerror(errno)), nao);
+  }
+}
+
+static void fds_swizzle(struct save_fds *fds, int flags)
+{
+  if ((flags & FDS_IN) != 0)
+    fds->in = fds_subst(std_input, STDIN_FILENO);
+
+  if ((flags & FDS_OUT) != 0)
+    fds->out = fds_subst(std_output, STDOUT_FILENO);
+
+  if ((flags & FDS_ERR) != 0)
+    fds->err = fds_subst(std_error, STDERR_FILENO);
+}
+
+static void fds_restore(struct save_fds *fds)
+{
+  if (fds->in != -1) {
+    dup2(fds->in, STDIN_FILENO);
+    close(fds->in);
+  }
+
+  if (fds->out != -1) {
+    dup2(fds->out, STDOUT_FILENO);
+    close(fds->out);
+  }
+
+  if (fds->err != -1) {
+    dup2(fds->err, STDERR_FILENO);
+    close(fds->err);
+  }
+}
+
+
 val open_command(val path, val mode_str)
 {
   struct stdio_mode m, m_r = stdio_mode_init_r;
-  FILE *f = w_popen(c_str(path), c_str(normalize_mode(&m, mode_str, m_r)));
+  val mode = normalize_mode(&m, mode_str, m_r);
+  int input = m.read != 0;
+  struct save_fds sfds;
+  FILE *f = 0;
+
+  fds_init(&sfds);
+
+  uw_simple_catch_begin;
+
+  fds_swizzle(&sfds, (input ? FDS_IN : FDS_OUT) | FDS_ERR);
+
+  f = w_popen(c_str(path), c_str(mode));
 
   if (!f)
     uw_throwf(file_error_s, lit("error opening pipe ~a: ~d/~s"),
               path, num(errno), string_utf8(strerror(errno)), nao);
+
+  uw_unwind {
+    fds_restore(&sfds);
+  }
+
+  uw_catch_end;
 
   return set_mode_props(m, make_pipe_stream(f, path));
 }
@@ -3442,9 +3525,17 @@ val open_process(val name, val mode_str, val args)
   char **argv = 0;
   val iter;
   int i, nargs;
+  struct save_fds sfds;
+  val ret = nil;
 
   args = default_bool_arg(args);
   nargs = c_num(length(args)) + 1;
+
+  fds_init(&sfds);
+
+  uw_simple_catch_begin;
+
+  fds_swizzle(&sfds, (input ? FDS_IN : FDS_OUT) | FDS_ERR);
 
   if (pipe(fd) == -1) {
     uw_throwf(file_error_s, lit("opening pipe ~a, pipe syscall failed: ~d/~s"),
@@ -3518,8 +3609,16 @@ val open_process(val name, val mode_str, val args)
 
     free(utf8mode);
     /* TODO: catch potential OOM exception here and kill process. */
-    return set_mode_props(m, make_pipevp_stream(f, name, pid));
+    ret = set_mode_props(m, make_pipevp_stream(f, name, pid));
   }
+
+  uw_unwind {
+    fds_restore(&sfds);
+  }
+
+  uw_catch_end;
+
+  return ret;
 }
 #else
 
@@ -3623,6 +3722,8 @@ static val run(val name, val args)
   char **argv = 0;
   val iter;
   int i, nargs;
+  struct save_fds sfds;
+  val ret = nil;
 
   args = default_bool_arg(args);
   nargs = c_num(length(args)) + 1;
@@ -3634,6 +3735,12 @@ static val run(val name, val args)
     argv[i] = utf8_dup_to(c_str(arg));
   }
   argv[i] = 0;
+
+  fds_init(&sfds);
+
+  uw_simple_catch_begin;
+
+  fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR);
 
   pid = fork();
 
@@ -3649,22 +3756,32 @@ static val run(val name, val args)
     execvp(argv[0], argv);
     _exit(errno);
   } else {
-    int status;
+    int status, wres;
     for (i = 0; i < nargs; i++)
       free(argv[i]);
     free(argv);
-    while (waitpid(pid, &status, 0) == -1 && errno == EINTR)
+    while ((wres = waitpid(pid, &status, 0)) == -1 && errno == EINTR)
       ;
-    if (status < 0)
-      return nil;
+    if (wres != -1) {
 #if HAVE_SYS_WAIT
-    if (WIFEXITED(status)) {
-      int exitstatus = WEXITSTATUS(status);
-      return num(exitstatus);
-    }
+      if (WIFEXITED(status)) {
+        int exitstatus = WEXITSTATUS(status);
+        ret = num(exitstatus);
+        goto out;
+      }
 #endif
-    return status == 0 ? zero : nil;
+      ret = (status == 0 ? zero : nil);
+    }
   }
+
+out:
+  uw_unwind {
+    fds_restore(&sfds);
+  }
+
+  uw_catch_end;
+
+  return ret;
 }
 
 static val sh(val command)
@@ -3677,9 +3794,16 @@ static val run(val command, val args)
   const wchar_t **wargv = 0;
   val iter;
   int i, nargs, status;
+  struct save_fds sfds;
 
   args = default_bool_arg(args);
   nargs = c_num(length(args)) + 1;
+
+  fds_init(&sfds);
+
+  uw_simple_catch_begin;
+
+  fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR);
 
   wargv = coerce(const wchar_t **, chk_malloc((nargs + 2) * sizeof *wargv));
 
@@ -3692,6 +3816,12 @@ static val run(val command, val args)
   free(strip_qual(wchar_t **, wargv));
 
   gc_hint(args);
+
+  uw_unwind {
+    fds_restore(&sfds);
+  }
+
+  uw_catch_end;
 
   return (status < 0) ? nil : num(status);
 }

@@ -35214,6 +35214,65 @@ the program's output can be gathered by reading from the returned stream.
 When the program finishes output, it will close the stream, which can be
 detected as normal end of data.
 
+The standard input and error file descriptors of an input coprocess
+are obtained from the streams stored in the
+.code *stdin*
+and
+.code *stderr*
+special variables, respectively. Similarly, the standard output and error
+file descriptors of an output coprocess are obtained from the
+.code *stdout*
+and
+.code *stderr*
+special variables.  These variables must contain streams on which the
+.code fileno
+function is meaningful, otherwise the operation will fail.
+What this functionality means is that re-binding the special variables
+for standard streams has the effect of redirection. For example,
+the following two expressions achieve the same effect of creating
+a stream which reads the output of the
+.code cat
+program, which reads and produces the contents of the file
+.codn text-file .
+
+.cblk
+  ;; redirect input by rebinding *stdin*
+  (let ((*stdin* (open-file "text-file")))
+    (open-command "cat"))
+
+  ;; redirect input using POSIX shell redirection syntax
+  (open-command "cat < text-file")
+.cble
+
+The following is erroneous:
+
+.cblk
+  ;; (let ((*stdin* (make-string-input-stream "abc")))
+       (open-command "cat"))
+.cble
+
+A string input or output stream doesn't have an operating system file
+descriptor; it cannot be passed to a coprocess.
+
+The streams
+.codn *stdin* ,
+.code *stdout*
+and
+.code *stderr*
+are not synchronized with their underlying file descriptors prior to
+the execution of a coprocess. It is up to the program to ensure that
+previous output to
+.code *stdout*
+or
+.code *stderr*
+is flushed, so that the output of the coprocess isn't re-ordered
+with regard to output produced by the program. Similarly,
+input buffered in
+.code *stdin*
+is not available to the coprocess, even though it has not
+yet been read by the program. The program is responsible for preventing this
+situation also.
+
 If a coprocess terminates abnormally or unsuccessfully, an exception is raised.
 
 .SS* Symbols and Packages
@@ -36390,6 +36449,21 @@ but the program cannot be executed, then the exit status will be an
 value from the failed
 .code exec
 attempt.
+
+The standard input, output and error file descriptors of an executed
+command are obtained from the streams stored in the
+.codn *stdin* ,
+.code *stdout*
+and
+.code *stderr*
+special variables, respectively. For a detailed description of the
+behavior and restrictions, see the
+.code open-command
+function, whose description of this mechanism applies to the
+.code run
+and
+.code sh
+function also.
 
 Note: as of \*(TX 120, the
 .code sh
