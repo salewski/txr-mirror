@@ -245,7 +245,7 @@ DEFUN(jmp_restore)
 #error port me!
 #endif
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__MINGW32__) && !defined(__CYGWIN__)
 /* This is needed so our assembly code doesn't cause
    the program to require an executable stack! */
 .section .note.GNU-stack,"",SIGIL()progbits
