@@ -24,7 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if __MINGW32__ || __CYGWIN32__
+#if __MINGW32__ || __CYGWIN__
 #define DEFUN(NAME) \
 .global _ ## NAME ; \
 _ ## NAME: ;
