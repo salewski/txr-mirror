@@ -458,6 +458,14 @@ int txr_main(int argc, char **argv)
     }
   }
 
+  while (*argv)
+    arg_tail = list_collect(arg_tail, string_utf8(*argv++));
+
+  reg_var(intern(lit("*full-args*"), user_package), arg_list);
+  reg_var(intern(lit("*args-full*"), user_package), arg_list);
+
+  arg_list = cdr(arg_list);
+
   if (argc <= 1) {
     drop_privilege();
 #if HAVE_TERMIOS
@@ -468,14 +476,6 @@ int txr_main(int argc, char **argv)
     return EXIT_FAILURE;
 #endif
   }
-
-  while (*argv)
-    arg_tail = list_collect(arg_tail, string_utf8(*argv++));
-
-  reg_var(intern(lit("*full-args*"), user_package), arg_list);
-  reg_var(intern(lit("*args-full*"), user_package), arg_list);
-
-  arg_list = cdr(arg_list);
 
   for (arg = upop(&arg_list, &arg_undo);
        arg && car(arg) == chr('-');
@@ -903,6 +903,8 @@ repl:
            lit("Note: operating in TXR ~a compatibility mode "
                "due to environment variable.\n"),
            num(opt_compat), nao);
+  reg_var(args_s, arg_list);
+  reg_varl(intern(lit("self-path"), user_package), lit("listener"));
   repl(bindings, std_input, std_output);
 #endif
   return 0;
