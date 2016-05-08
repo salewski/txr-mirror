@@ -1,3 +1,44 @@
+                                    TXR 140
+                                   2016-05-08
+
+
+  Features
+
+  - New fixnum-min and fixnum-max variables.
+  - Improvements in pseudo-random number generator.
+  - TXR extraction language:
+    - New @(call fun ...) directive provides indirection on pattern
+      functions, via symbols.
+  - Unix security:
+    - added setgroups, getresuid, getresgid, setresuid and
+      setresgid where available.
+    - added the setgroups function, where available.
+    - added support for setgid operation.
+    - New --rexec option to help with setuid on some platforms.
+  - Process execution:
+    - The standard input, output and error descriptors of subprocesses
+      are now derived from the current *stdin*, *stdout* and *stderr*
+      streams, making useful redirection tricks possible.
+  - TXR now correctly calculates its sysroot even if the executable
+    is renamed (within the same directory).
+  - New filesystem access testing functions:
+    path-readable-to-me-p, path-read-writable-to-me-p,
+    path-strictly-private-to-me-p.
+
+  Bugs
+
+  - Serious bug fixed in bignum integers: incorrect treatment
+    of negative values at the boundary between fixnum and bignum.
+  - Fixed issue of TXR binary requiring an executable stack on
+    GNU/Linux platforms.
+  - Fixed broken setuid privilege dropping.
+  - Bugfix in path-writable-to-me function.
+  - Fixes in Vim syntax highlighting definition.
+  - self-path, *args* and *args-full* now have bindings in
+    the listener.
+
+
+
                                     TXR 139
                                    2016-04-23
 
