@@ -1573,7 +1573,7 @@ static val string_in_get_prop(val stream, val ind)
     struct string_in *s = coerce(struct string_in *, stream->co.handle);
     struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
     val name = static_str(ops->name);
-    return format(nil, lit("~a ~s ~p"), name, s->string, stream, nao);
+    return format(nil, lit("~a ~s"), name, s->string, nao);
   }
 
   return nil;
