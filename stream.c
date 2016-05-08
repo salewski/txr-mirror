@@ -3222,8 +3222,9 @@ val put_lines(val lines, val stream)
   return t;
 }
 
-val flush_stream(val stream)
+val flush_stream(val stream_in)
 {
+  val stream = default_arg(stream_in, std_output);
   struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
   return ops->flush(stream);
 }
@@ -3963,7 +3964,7 @@ void stream_init(void)
   reg_fun(intern(lit("put-strings"), user_package), func_n2o(put_strings, 1));
   reg_fun(intern(lit("unget-char"), user_package), func_n2o(unget_char, 1));
   reg_fun(intern(lit("unget-byte"), user_package), func_n2o(unget_byte, 1));
-  reg_fun(intern(lit("flush-stream"), user_package), func_n1(flush_stream));
+  reg_fun(intern(lit("flush-stream"), user_package), func_n1o(flush_stream, 0));
   reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));
   reg_fun(intern(lit("truncate-stream"), user_package), func_n2(truncate_stream));
   reg_fun(intern(lit("streamp"), user_package), func_n1(streamp));

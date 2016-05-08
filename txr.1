@@ -34519,7 +34519,7 @@ Both functions return
 
 .coNP Function @ flush-stream
 .synb
-.mets (flush-stream << stream )
+.mets (flush-stream <> [ stream ])
 .syne
 .desc
 This function is meaningful for output streams which accumulate data
@@ -34532,6 +34532,12 @@ to be passed
 to the operating system. If called on streams for which this function is not
 meaningful, it does nothing, and returns
 .codn nil .
+
+If
+.meta stream
+is omitted, the current value of
+.code *stdout*
+is used.
 
 .coNP Function @ seek-stream
 .synb
