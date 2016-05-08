@@ -903,6 +903,7 @@ void uw_init(void)
   exception_subtypes = cons(cons(t, nil), exception_subtypes);
   uw_register_subtype(type_error_s, error_s);
   uw_register_subtype(internal_error_s, error_s);
+  uw_register_subtype(panic_s, error_s);
   uw_register_subtype(numeric_error_s, error_s);
   uw_register_subtype(range_error_s, error_s);
   uw_register_subtype(query_error_s, error_s);

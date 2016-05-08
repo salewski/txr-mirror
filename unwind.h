@@ -235,6 +235,16 @@ noreturn val type_mismatch(val, ...);
               nao);                     \
   } while (0)
 
+#define panic(STR)                      \
+  do {                                  \
+    extern obj_t *num(cnum);            \
+    uw_throwf(panic_s,                  \
+              lit("~a:~a ~a"),          \
+              lit(__FILE__),            \
+              num(__LINE__), lit(STR),  \
+              nao);                     \
+  } while (0)
+
 #define type_assert(EXPR, ARGS)         \
   if (!(EXPR)) type_mismatch ARGS
 
