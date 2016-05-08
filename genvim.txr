@@ -67,11 +67,11 @@ static void dir_tables_init(void)
 " INSTALL-HOWTO:
 "
 " 1. Create the directory .vim/syntax in your home directory and
-"    put the files txr.vim and txl.vim into this directory.
+"    put the files txr.vim and tl.vim into this directory.
 " 2. In your .vimrc, add this command to associate *.txr and *.tl
-"    files with the txr and txl filetypes:
+"    files with the txr and tl filetypes:
 "    :au BufRead,BufNewFile *.txr set filetype=txr | set lisp
-"    :au BufRead,BufNewFile *.tl set filetype=txl | set lisp
+"    :au BufRead,BufNewFile *.tl set filetype=tl | set lisp
 "
 " If you want syntax highlighting to be on automatically (for any language)
 " you need to add ":syntax on" in your .vimrc also. But you knew that already!
