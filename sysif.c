@@ -919,9 +919,8 @@ void repress_privilege(void)
 
 void drop_privilege(void)
 {
-  /* Bug: repress_privilege wasn't called. */
   if (repress_called != RC_MAGIC)
-    abort();
+    panic("bug in setuid logic: repress_privilege not called");
 
   if (!is_setuid && !is_setgid)
     return;
@@ -929,9 +928,9 @@ void drop_privilege(void)
 #if HAVE_SETRESUID
   {
     if (is_setgid && setresgid(real_gid, real_gid, real_gid) != 0)
-      abort();
+      panic("setresgid failed when trying to drop privilege");
     if (is_setuid && setresuid(real_uid, real_uid, real_uid) != 0)
-      abort();
+      panic("setresuid failed when trying to drop privilege");
     return;
   }
 #else
@@ -949,12 +948,12 @@ void drop_privilege(void)
        * then abort.
        */
       if (setgid(real_gid) != 0)
-        abort();
+        panic("dropping to real group with setgid failed");
     }
 
     if (is_setuid) {
       if (setuid(real_uid) != 0)
-        abort();
+        panic("dropping to to real user id with setuid failed");
       /* If we can re-gain previous effective IDs, then setuid(getuid())
        * didn't actually work; it didn't set the saved ID. We assume
        * that setuid(getuid()) does work for effective root; i.e. only
@@ -963,13 +962,13 @@ void drop_privilege(void)
        */
       if (orig_euid != 0 && real_uid != 0) {
         if (seteuid(orig_euid) == 0)
-          abort();
+          panic("privilege drop failed: still can regain setuid");
       }
     }
 
     /* If we can regain setgid privileges, abort */
     if (is_setgid && real_uid != 0 && setegid(orig_egid) == 0)
-      abort();
+      panic("privilege drop failed: still can regain setgid");
   }
 #endif
 }
