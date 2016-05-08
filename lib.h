@@ -1024,10 +1024,7 @@ INLINE int null_or_missing_p(val v) { return (nilp(v) || missingp(v)); }
 
 #define tnil(c_cond) ((c_cond) ? t : nil)
 
-INLINE val default_arg(val arg, val dfl)
-{
-  return if3(null_or_missing_p(arg), dfl, arg);
-}
+#define default_arg(arg, dfl) if3(null_or_missing_p(arg), dfl, arg)
 
 INLINE val default_bool_arg(val arg)
 {

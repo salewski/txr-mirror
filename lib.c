@@ -140,7 +140,6 @@ val chr(wchar_t ch);
 val eq(val a, val b);
 val null(val v);
 int null_or_missing_p(val v);
-val default_arg(val arg, val dfl);
 val default_bool_arg(val arg);
 #endif
 
