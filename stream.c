@@ -2373,7 +2373,7 @@ val record_adapter(val regex, val stream, val include_match)
                                           rec_adapter->co.handle);
 
   rb->regex = regex;
-  rb->include_match = tnil(include_match);
+  rb->include_match = default_bool_arg(include_match);
   return rec_adapter;
 }
 
