@@ -2816,12 +2816,12 @@ val minusv(val minuend, struct args *nlist)
   cnum index = 0;
   val fi;
 
-  if (!args_more(nlist, 0))
+  if (!args_more(nlist, index))
     return neg(minuend);
 
   fi = args_get(nlist, &index);
 
-  if (!args_more(nlist, 0))
+  if (!args_more(nlist, index))
     return minus(minuend, fi);
 
   return reduce_left(func_n2(minus), args_get_list(nlist),
@@ -2838,12 +2838,12 @@ val divv(val dividend, struct args *nlist)
   cnum index = 0;
   val fi;
 
-  if (!args_more(nlist, 0))
+  if (!args_more(nlist, index))
     return divi(one, dividend);
 
   fi = args_get(nlist, &index);
 
-  if (!args_more(nlist, 0))
+  if (!args_more(nlist, index))
     return divi(dividend, fi);
 
   return reduce_left(func_n2(divi), args_get_list(nlist),
