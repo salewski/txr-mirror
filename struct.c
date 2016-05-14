@@ -718,6 +718,26 @@ static loc lookup_static_slot(val stype, struct struct_type *st, val sym)
   return nulloc;
 }
 
+static loc lookup_slot_load(val inst, struct struct_inst *si, val sym)
+{
+  loc ptr = lookup_slot(inst, si, sym);
+  if (nullocp(ptr)) {
+    lisplib_try_load(sym);
+    return lookup_slot(inst, si, sym);
+  }
+  return ptr;
+}
+
+static loc lookup_static_slot_load(val stype, struct struct_type *st, val sym)
+{
+    loc ptr = lookup_static_slot(stype, st, sym);
+    if (nullocp(ptr)) {
+      lisplib_try_load(sym);
+      return lookup_static_slot(stype, st, sym);
+    }
+    return ptr;
+}
+
 static noreturn void no_such_slot(val ctx, val type, val slot)
 {
   uw_throwf(error_s, lit("~a: ~s has no slot named ~s"),
@@ -730,7 +750,7 @@ val slot(val strct, val sym)
   struct struct_inst *si = struct_handle(strct, self);
 
   if (symbolp(sym)) {
-    loc ptr = lookup_slot(strct, si, sym);
+    loc ptr = lookup_slot_load(strct, si, sym);
     if (!nullocp(ptr))
       return deref(ptr);
   }
@@ -758,7 +778,7 @@ val static_slot(val stype, val sym)
   struct struct_type *st = stype_handle(&stype, self);
 
   if (symbolp(sym)) {
-    loc ptr = lookup_static_slot(stype, st, sym);
+    loc ptr = lookup_static_slot_load(stype, st, sym);
     if (!nullocp(ptr))
       return deref(ptr);
   }
