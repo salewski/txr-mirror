@@ -819,12 +819,14 @@ val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
     st->eqmslot = 0;
 
   if (nullocp((ptr = lookup_static_slot(stype, st, sym)))) {
+    val null_ptr = 0;
     if (!memq(sym, st->slots)) {
       st->stslot = coerce(val *, chk_manage_vec(coerce(mem_t *, st->stslot),
                                                 st->nstslots, st->nstslots + 1,
                                                 sizeof (val),
-                                                coerce(mem_t *, &newval)));
+                                                coerce(mem_t *, &null_ptr)));
       set(mkloc(st->slots, stype), append2(st->slots, cons(sym, nil)));
+      ptr = mkloc(st->stslot[st->nstslots], stype);
       sethash(slot_hash, cons(sym, num_fast(st->id)),
               num(st->nstslots++ + STATIC_SLOT_BASE));
     } else {
@@ -832,9 +834,9 @@ val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
         uw_throwf(error_s, lit("~a: ~s is an instance slot of ~s"),
                   self, sym, stype, nao);
     }
-  } else {
-    set(ptr, newval);
   }
+
+  set(ptr, newval);
 
   {
     val iter;
