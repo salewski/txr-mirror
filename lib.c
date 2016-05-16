@@ -605,8 +605,8 @@ val pop(val *plist)
 val rcyc_pop(val *plist)
 {
   val rcyc = *plist;
-  val ret = car(rcyc);
-  *plist = cdr(rcyc);
+  val ret = rcyc->c.car;
+  *plist = rcyc->c.cdr;
   rcyc_cons(rcyc);
   return ret;
 }
@@ -2535,7 +2535,7 @@ val make_half_lazy_cons(val func, val car)
 
 void rcyc_cons(val cons)
 {
-  rplacd(cons, recycled_conses);
+  cons->c.cdr = recycled_conses;
   cons->c.car = nil;
   recycled_conses = cons;
 }
@@ -2545,13 +2545,11 @@ void rcyc_list(val list)
   if (list) {
     val rl_orig = recycled_conses;
     recycled_conses = list;
-    for (; list; list = list->c.cdr) {
-      list->c.car = nil;
-      if (!list->c.cdr) {
-        set(mkloc(list->lc.cdr, list), rl_orig);
-        break;
-      }
-    }
+
+    while (list->c.cdr)
+      list = list->c.cdr;
+
+    list->c.cdr = rl_orig;
   }
 }
 

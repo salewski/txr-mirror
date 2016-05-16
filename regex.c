@@ -2579,7 +2579,7 @@ val read_until_match(val regex, val stream_in, val include_match_in)
 
   if (nil) {
 out_match:
-    while (stack != match)
+    while (stack && stack != match)
       unget_char(rcyc_pop(&stack), stream);
     if (!out)
       out = null_string;
