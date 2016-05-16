@@ -762,7 +762,7 @@ val gc_set(loc lo, val obj)
       /* obj can't be in gen 0 because there are no baby objects after gc */
     } else {
       /* We have no space to in checkobj record this backreference, and gc is
-         not available to promote obj to gen 0. We must schedule a full gc. */
+         not available to promote obj to gen 1. We must schedule a full gc. */
       full_gc = 1;
     }
   }
