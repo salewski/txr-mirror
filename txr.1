@@ -13292,7 +13292,6 @@ of their lists.
 .mets \ \  << body-form *)
 .syne
 .desc
-
 The
 .code for
 and
@@ -13873,7 +13872,6 @@ function doesn't exist in Common Lisp.
 .mets (func-get-form << func )
 .syne
 .desc
-
 The
 .code func-get-form
 function retrieves a source code form of
@@ -13955,7 +13953,6 @@ lexical closure.
 .mets (functionp << obj )
 .syne
 .desc
-
 The
 .code functionp
 function returns
@@ -13970,7 +13967,6 @@ is a function, otherwise it returns
 .mets (interp-fun-p << obj )
 .syne
 .desc
-
 The
 .code interp-fun-p
 function returns
@@ -13985,7 +13981,6 @@ is an interpreted function, otherwise it returns
 .mets (special-var-p << obj )
 .syne
 .desc
-
 The
 .code special-var-p
 function returns
@@ -14004,7 +13999,6 @@ and
 .mets (special-operator-p << obj )
 .syne
 .desc
-
 The
 .code special-operator-p
 function returns
@@ -14324,7 +14318,6 @@ synonym leads to readable code. For instance:
 .mets (false << value )
 .syne
 .desc
-
 The
 .codn null ,
 .code not
@@ -14361,7 +14354,6 @@ otherwise.
 .mets (have << value )
 .syne
 .desc
-
 The
 .code true
 function is the complement of the
@@ -16017,7 +16009,6 @@ infinite lazy structure.
 .mets (tree-find < obj < tree << test-function )
 .syne
 .desc
-
 The
 .code tree-find
 function searches
@@ -16074,7 +16065,6 @@ value.
 .mets (memqual < object << list )
 .syne
 .desc
-
 The
 .codn memq ,
 .code memql
@@ -16112,7 +16102,6 @@ is the matching object.
 .mets (member-if < predfun < sequence <> [ keyfun ])
 .syne
 .desc
-
 The
 .code member
 and
@@ -16296,7 +16285,6 @@ function rather than
 .mets (acons < car < cdr << alist )
 .syne
 .desc
-
 The
 .code acons
 function constructs a new alist by consing a new cons to the
@@ -16313,7 +16301,6 @@ The following equivalence holds:
 .mets (acons-new < car < cdr << alist )
 .syne
 .desc
-
 The
 .code acons-new
 function searches
@@ -19950,7 +19937,7 @@ once.
 .mets (qref < object-form
 .mets \ \  >> { slot | >> ( slot << arg *) | >> [ slot << arg *]}+)
 .syne
-
+.desc
 The
 .code qref
 macro performs structure slot access.  Structure slot access is more
@@ -21807,7 +21794,6 @@ does not have to be deleted, in order to instantiate the first lazy value.
 .mets (keep-if* < predicate-function < list <> [ key-function ])
 .syne
 .desc
-
 The
 .code remove-if
 function produces a list whose contents are those of
@@ -21951,7 +21937,6 @@ to
 .mets (pos-if < predfun < list <> [ keyfun ])
 .syne
 .desc
-
 The
 .code pos
 and
@@ -22041,7 +22026,6 @@ rather than the left-most.
 .mets (pos-min < sequence >> [ testfun <> [ keyfun ]])
 .syne
 .desc
-
 The
 .code pos-min
 and
@@ -22114,7 +22098,6 @@ the resulting value is used in its place.
 .mets (where < function << object )
 .syne
 .desc
-
 If
 .meta object
 is a sequence, the
@@ -22148,7 +22131,6 @@ that element is added to a list. Finally, the list is returned.
 .mets (select < object >> { index-list <> | function })
 .syne
 .desc
-
 The
 .code select
 function returns an object, of the same kind as
@@ -22277,7 +22259,6 @@ otherwise
 .mets (partition < sequence >> { index-list >> | index <> | function })
 .syne
 .desc
-
 If
 .meta sequence
 is empty, then
@@ -22350,7 +22331,6 @@ of one element.
 .mets (split* < sequence >> { index-list >> | index <> | function })
 .syne
 .desc
-
 If
 .meta sequence
 is empty, then both
@@ -22709,7 +22689,6 @@ is preserved.
 .mets (mappend* < function << sequence *)
 .syne
 .desc
-
 When given only one argument, the
 .code mapcar
 function returns
@@ -23426,7 +23405,7 @@ The final value of the accumulator is returned.
   (reduce-left (fun *) nil)
 .cble
 
-.coNP Function @, some @ all and @ none
+.coNP Functions @, some @ all and @ none
 .synb
 .mets (some < sequence >> [ predicate-fun <> [ key-fun ]])
 .mets (all < sequence >> [ predicate-fun <> [ key-fun ]])
@@ -24206,7 +24185,7 @@ function, it is first expanded,
 and so processed in its entirety in the expansion phase. Then it is processed
 in the evaluation phase.
 
-.coNP Macro parameter lists
+.NP* Macro parameter lists
 
 \*(TX macros support destructuring, similarly to Common Lisp macros.
 This means that macro parameter lists are like function argument lists,
@@ -24847,7 +24826,6 @@ namespace established by
 .mets (defsymacro < sym << form )
 .syne
 .desc
-
 A
 .code defsymacro
 form introduces a symbol macro: a symbol macro is a parameterless
@@ -25480,6 +25458,7 @@ and returned.
 .synb
 .mets (pop << place )
 .syne
+.desc
 The
 .code pop
 macro removes an element from the list stored in
@@ -31738,6 +31717,7 @@ If no more entries remain to be visited, it returns
 .mets (with-hash-iter >> ( isym < hash-form >> [ ksym <> [ vsym ]])
 .mets \ \  << body-form *)
 .syne
+.desc
 The
 .code with-hash-iter
 macro evaluates
@@ -33617,7 +33597,6 @@ they look like a hex character code.
 .mets (tprint < obj <> [ stream ])
 .syne
 .desc
-
 The
 .code tprint
 function prints a representation of
@@ -33952,7 +33931,7 @@ are output operations.
 
 .coNP Function @ make-string-output-stream
 .synb
-  (make-string-output-stream)
+.mets (make-string-output-stream)
 .syne
 .desc
 This function, which takes no arguments, creates a string output stream.
@@ -33995,7 +33974,7 @@ After this function is called, further output on the stream is not possible.
 
 .coNP Function @ make-strlist-output-stream
 .synb
-  (make-strlist-output-stream)
+.mets (make-strlist-output-stream)
 .syne
 .desc
 This function is very similar to
@@ -36097,7 +36076,7 @@ list of arguments, and that list takes effect.
 
 .coNP Function @ env
 .synb
-  (env)
+.mets (env)
 .syne
 .desc
 The
@@ -36115,7 +36094,7 @@ function.
 
 .coNP Function @ env-hash
 .synb
-  (env-hash)
+.mets (env-hash)
 .syne
 .desc
 The
@@ -36371,7 +36350,7 @@ or else throws an exception of type
 
 .coNP Function @ pwd
 .synb
-  (pwd)
+.mets (pwd)
 .syne
 .desc
 The
@@ -36908,7 +36887,6 @@ for a named pipe.
 .mets (path-sticky-p << path )
 .syne
 .desc
-
 .code path-setgid-p
 tests whether
 .meta path
@@ -37541,7 +37519,7 @@ there is no counter associated with a signal, only a boolean flag.
 
 .coNP Function @ sig-check
 .synb
-  (sig-check)
+.mets (sig-check)
 .syne
 .desc
 The
@@ -37810,6 +37788,7 @@ variable is set in that case.
 .synb
 .mets (open-fileno < file-descriptor <> [ mode-string ])
 .syne
+.desc
 The
 .code open-fileno
 function creates a \*(TX stream over a file descriptor. The
@@ -37855,7 +37834,7 @@ when called with one or two arguments, respectively.
 
 .coNP Function @ pipe
 .synb
-  (pipe)
+.mets (pipe)
 .syne
 .desc
 The
@@ -38122,7 +38101,7 @@ is assumed.
 
 .coNP Function @ closelog
 .synb
-  (closelog)
+.mets (closelog)
 .syne
 .desc
 The
@@ -39141,7 +39120,7 @@ mode in
 marks a socket as a real-time-stream, and, if it is opened for writing
 or reading and writing, changes it to use line buffering.
 
-.coNP Function open-socket-pair
+.coNP Function @ open-socket-pair
 .synb
 .mets (open-socket-pair < family < type <> [ mode-string ])
 .syne
@@ -39708,7 +39687,7 @@ which does not require knowledge of the length of the key in advance.
 
 .coNP Function @ make-trie
 .synb
-  (make-trie)
+.mets (make-trie)
 .syne
 .desc
 The
@@ -40458,7 +40437,7 @@ operator.
 .SS* Garbage Collection
 .coNP Function @ sys:gc
 .synb
-  (sys:gc)
+.mets (sys:gc)
 .syne
 .desc
 The

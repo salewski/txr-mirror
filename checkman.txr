@@ -21,6 +21,8 @@
 @  (end)
 @  (assert bad ln `missing .desc`)
 .desc
+@  (assert bad ln `blank line after .desc`)
+@/..*/
 @(end)
 @;;
 @;; Check variable description headings
@@ -53,7 +55,7 @@
 @      (assert bad ln `no .synb after @{type}s heading`)
 @      (check-synb)
 @    (or)
-.coNP @{type /Function|Operator|Macro/}@(assert bad ln `bad @type heading`) @{x /\S+/}
+.coNP @{type /Function|Operator|Macro/}@(assert bad ln `bad @type heading`) @@ @{x /\S+/}
 @      (assert bad ln `no .synb after @type heading`)
 @      (check-synb)
 @  (end)
