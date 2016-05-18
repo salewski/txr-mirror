@@ -41600,6 +41600,16 @@ the exception.
 
 .SS* Editing
 
+The following sections describe the interactive editing commands
+available in the listener.
+
+Terminals can often be configured with different choices of cursor
+shape: such as a block-shaped cursor, an underline cursor or a
+vertical line or "I-beam" cursor.  In the following sections, the
+phrase "character under the cursor" refers to the character that is
+currently covered by a block cursor, underlined by an underline cursor,
+or that is immediately to the right of an I-beam cursor.
+
 .NP* Move Left and Right
 
 Moving within the line is achieved using the left and right arrow keys.  In
@@ -42012,6 +42022,19 @@ the mode.
 
 Tab completion, history navigation, history search and editing in an external
 editor all cancel visual selection mode.
+
+Note: the semantics of visual mode selection in the \*(TX listener differs from
+that of some text editors. In some text editors, a visual selection always
+includes the "character under the cursor", and thus is never empty.
+This works intuitively with block or underline cursors.
+The \*(TX selection semantics pairs excellently with the terminal
+cursor shape being configured to a vertical line or "I-beam" which appears
+between the characters. The selection then simply spans the region
+between the original I-beam position and the current I-beam position.
+When these positions coincide, the selection is empty.  If an I-beam style
+cursor is configured, there is no apparent "character under the cursor".
+Editing concepts that involve the "character under the cursor" pair best with
+an underline or block cursor.
 
 .NP* Selection Endpoint Toggle
 
