@@ -39486,6 +39486,716 @@ excluding the contiguous all-zero bits in the least significant position:
 how many times the address can be shifted to the right before a 1 appears
 in the least significant bit.
 
+.SS* Unix Terminal Control
+
+\*(TX provides access to the terminal control "termios" interfaces defined by
+POSIX, and some of the extensions to it in Linux. By using termios, programs
+can control serial devices, consoles and virtual terminals. Terminal control
+in POSIX revolves around a C language structure called
+.codn "struct termios" .
+This is mirrored in a \*(TL structure also called
+.codn termios .
+
+Like-named \*(TL functions are provided which correspond to the C functions
+.codn tcgetattr ,
+.codn tcsetattr ,
+.codn tcsendbreak ,
+.codn tcdrain ,
+.code tcflush
+and
+.codn tcflow .
+
+These have somewhat different argument conventions. The TTY device is specified last,
+so that it can conveniently default to the
+.code *stdin*
+stream. A TTY device can be specified as either a stream object or a numeric
+file descriptor.
+
+The functions
+.codn cfgetispeed ,
+.codn cfgetospeed ,
+.code cfsetispeed
+and
+.code cfsetospeed
+are not provided, because they are unnecessary. Device speed (informally, "baud rate")
+is specified directly as a integer value in the
+.code termios
+structure. The \*(TL termios functions automatically convert between integer
+values and the speed constants (like
+.codn B38400 )
+used by the C API.
+
+All of the various termios-related constants are provided, including some non-standard
+ones. They appear in lower case. For instance
+.code IGNBRK
+and
+.code PARENB
+are simply known as the predefined \*(TL variables
+.code ignbrk
+and
+.codn parenb .
+
+.coNP Structure @ termios
+.synb
+.mets (defstruct termios nil
+.mets \ \ iflag oflag cflag lflag
+.mets \ \ cc ispeed ospeed)
+.syne
+.desc
+The
+.code termios
+structure represents the kernel level terminal device configuration.
+It holds hardware related setting such as serial line speed, parity
+and handshaking. It also holds software settings like translations,
+and settings affecting input behaviors. The structure closely corresponds
+to the C language
+.code termios
+structure which exists in the POSIX API.
+
+The
+.codn iflag ,
+.codn oflag ,
+.code cflag
+and
+.code lflag
+slots correspond to the
+.codn c_iflag ,
+.codn c_oflag ,
+.code c_cflag
+and
+.code c_lflag
+members of the C structure. They hold integer values representing
+bit fields.
+
+The
+.code cc
+slot corresponds to the
+.code c_cc
+member of the C structure. Whereas the
+C structure's
+.code c_cc
+member is an array of the C type
+.codn cc_t ,
+the
+.code cc
+slot is a vector of integers, whose values must have the same range as the
+.code cc_t
+type.
+
+.coNP Variables @, ignbrk @, brkint @, ignpar @, parmrk @, inpck @, istrip @, inlcr @, igncr @, icrnl @, iuclc @, ixon @, ixany @, ixoff @ imaxbel and @ iutf8
+.desc
+These variables specify bitmask values for the
+.code iflag
+slot of the
+.code termios
+structure. They correspond to the C language preprocessor symbols
+.codn IGNBRK ,
+.codn BRKINT ,
+.code IGNPAR
+and so forth.
+
+The
+.code imaxbel
+and
+.code iutf8
+variables are specific to Linux and may not be present.
+Portable code should test for their presence with
+.codn boundp .
+
+The
+.code iuclc
+variable is a legacy feature not found on all systems.
+
+Note: the
+.code termios
+methods
+.code set-iflags
+and
+.code clear-iflags
+provide a convenient means for setting and clearing combinations of
+these flags.
+
+.coNP Variables @, opost @, olcuc @, onlcr @, ocrnl @, onocr @, onlret @, ofill @, ofdel @, vtdly @, vt0 @, vt1 @, nldly @, nl0 @, nl1 @, crdly @, cr0 @, cr1 @, cr2 @, cr3 @, tabdly @, tab0 @, tab1 @, tab2 @, tab3 @, bsdly @, bs0 @, bs1 @, ffdly @ ff0 and @ ff1
+.desc
+These variables specify bitmask values for the
+.code oflag
+slot of the
+.code termios
+structure. They correspond to the C language preprocessor symbols
+.codn OPOST ,
+.codn OLCUC ,
+.code ONLCR
+and so forth.
+
+The variable
+.code ofdel
+is Linux-specific. Portable programs should test for its presence using
+.codn boundp .
+
+The
+.code olcuc
+variable is a legacy feature not found on all systems.
+
+Likewise, whether the following groups of symbols are present is
+platform-specific:
+.codn nldly ,
+.code nl0
+and
+.codn nl1 ;
+.codn crdly ,
+.codn cr0 ,
+.codn cr1 ,
+.code cr2
+and
+.codn cr3 ;
+.codn tabdly ,
+.codn tab0 ,
+.codn tab1 ,
+.code tab2
+and
+.codn tab3 ;
+.codn bsdly ,
+.code bs0
+and
+.codn bs1 ;
+and
+.codn ffdly ,
+.code ff0
+and
+.codn ff1 .
+
+Note: the
+.code termios
+methods
+.code set-oflags
+and
+.code clear-oflags
+provide a convenient means for setting and clearing combinations of
+these flags.
+
+.coNP Variables @, csize @, cs5 @, cs6 @, cs7 @, cs8 @, cstopb @, cread @, parenb @, parodd @, hupcl @, clocal @, cbaud @, cbaudex @ cmspar and @ crtscts
+.desc
+These variables specify bitmask values for the
+.code cflag
+slot of the
+.code termios
+structure. They correspond to the C language preprocessor symbols
+.codn CSIZE ,
+.codn CS5 ,
+.code CS6
+and so forth.
+
+The following are present on Linux, and may not be available
+on other platforms. Portable code should test for them using
+.codn boundp :
+.codn cbaud ,
+.codn cbaudex ,
+.code cmspar
+and
+.codn crtscts .
+
+Note: the
+.code termios
+methods
+.code set-cflags
+and
+.code clear-cflags
+provide a convenient means for setting and clearing combinations of
+these flags.
+
+.coNP Variables @, isig @, icanon @, echo @, echoe @, echok @, echonl @, noflsh @, tostop @, iexten @, xcase @, echoctl @, echoprt @, echoke @, flusho @ pendin and @ extproc
+.desc
+These variables specify bitmask values for the
+.code lflag
+slot of the
+.code termios
+structure. They correspond to the C language preprocessor symbols
+.codn ISIG ,
+.codn ICANON ,
+.code ECHO
+and so forth.
+
+The following are present on Linux, and may not be available
+on other platforms. Portable code should test for them using
+.codn boundp :
+.codn iexten ,
+.codn xcase ,
+.codn echoctl ,
+.codn echoprt ,
+.codn echoke ,
+.codn flusho ,
+.code pendin
+and
+.codn extproc .
+
+Note: the
+.code termios
+methods
+.code set-lflags
+and
+.code clear-lflags
+provide a convenient means for setting and clearing combinations of
+these flags.
+
+.coNP Variables @, vintr @, vquit @, verase @, vkill @, veof @, vtime @, vmin @, vswtc @, vstart @, vstop @, vsusp @, veol @, vreprint @, vdiscard @, vwerase @ vlnext and @ veol2
+.desc
+These variables specify integer offsets into the vector stored in the
+.code cc
+slot of the
+.code termios
+structure. They correspond to the C language preprocessor symbols
+.codn VINTR ,
+.codn VQUIT ,
+.code VERASE
+and so forth.
+
+The following are present on Linux, and may not be available
+on other platforms. Portable code should test for them using
+.codn boundp :
+.codn vswtc ,
+.codn vreprint ,
+.codn vdiscard ,
+.code vlnext
+and
+.codn veol2 .
+
+.coNP Variables @, tcooff @, tcoon @ tcioff and @ tcion
+.desc
+These variables hold integer values suitable as the
+.meta action
+argument of the
+.code tcflow
+function. They correspond to the C language preprocessor symbols
+.codn TCOOFF ,
+.codn TCOON ,
+.code TCIOFF
+and
+.codn TCION .
+
+.coNP Variables @, tciflush @ tcoflush and @ tcioflush
+.desc
+These variables hold integer values suitable as the
+.meta queue
+argument of the
+.code tcflush
+function. They correspond to the C language preprocessor symbols
+.codn TCIFLUSH ,
+.code TCOFLUSH
+and
+.codn TCIOFLUSH .
+
+.coNP Variables @, tcsanow @ tcsadrain and @ tcsaflush
+.desc
+These variables hold integer values suitable as the
+.meta actions
+argument of the
+.code tcsetattr
+function. They correspond to the C language preprocessor symbols
+.codn TCSANOW ,
+.code TCSADRAIN
+and
+.codn TCSAFLUSH .
+
+.coNP Functions @ tcgetattr and @ tcsetattr
+.synb
+.mets (tcgetattr <> [ device ])
+.mets (tcsetattr < termios < actions <> [ device ])
+.syne
+.desc
+The
+.code tcgetattr
+and
+.code tcsetattr
+functions, respectively, retrieve and install the configuration
+of the terminal driver associated with the specified device.
+
+These functions are wrappers for the like-named POSIX C library functions,
+but with different argument conventions, and operating using
+a \*(TL structure.
+
+The
+.code tcgetattr
+function, if successful, returns a new instance of the
+.code termios
+structure.
+
+The
+.code tcsetattr
+function requires an instance of a
+.code termios
+structure as an argument to its
+.meta termios
+parameter.
+
+A program may alter the settings of a terminal device by
+retrieving them using
+.codn tcgetattr ,
+manipulating the structure returned by this function, and
+then using
+.code tcsetattr
+to install the modified structure into the device.
+
+The
+.meta actions
+argument of
+.code tcsetattr
+may be given as the value of one of the variables
+.codn tcsanow ,
+.code tcsadrain
+or
+.codn tcsaflush .
+If it is omitted, the default is
+.codn tcsadrain .
+
+If an argument is given for
+.meta device
+it must be either a stream, or an integer file descriptor.
+In either case, it is expected to be associated with a
+terminal (TTY) device.
+
+If the argument is omitted, it defaults to the stream currently
+stored in the
+.code *stdin*
+stream special variable, expected to be associated with
+a terminal device.
+
+.TP* Notes:
+
+The C
+.code termios
+structure usually does not have members for representing the input
+and output speed. \*(TL does not use such members, in any case, even
+if they are present. The speeds are encoded in the
+.code cc_iflag
+and
+.code cc_lflag
+bitmasks. When retrieving the settings, the
+.code tcgetattr
+function uses the POSIX functions
+.code cfgetispeed
+and
+.code cfgetospeed
+to retrieve the speed values from the C structure. These values
+are installed as the
+.code ispeed
+and
+.code ospeed
+slots of the Lisp structure.   A reverse conversion takes place
+when setting are installed using
+.codn tcsetattr :
+the speed values are taken from the slots, and installed into
+the C structure using
+.code cfsetispeed
+and
+.code cfsetospeed
+before the structure is passed to the C
+.code tcsetattr
+function.
+
+On Linux, TTY devices do not have a separate input and output speed.
+The C
+.code termios
+structure stores only one speed which is taken as both the input
+and output speed, with a special exception. The input speed may be
+programmed as zero. In that case, it is independently represented.
+speed may be programmed as zero.
+
+.coNP Function @ tcsendbreak
+.synb
+.mets (tcsendbreak >> [ duration <> [ device ]])
+.syne
+.desc
+The
+.code tcsendbreak
+function generates a break signal on serial devices. The
+.meta duration
+parameter specifies the length of the break signal in milliseconds.
+If the argument is omitted, the value 500 is used.
+
+The
+.meta device
+parameter is exactly the same as that of the
+.code tcsetattr
+function.
+
+.coNP Function @ tcdrain
+.synb
+.mets (tcdrain <> [ device ])
+.syne
+.desc
+The
+.code tcdrain
+function waits until all queued output on a terminal
+device has been transmitted. It is a direct wrapper
+for the like-named POSIX C function.
+
+The
+.meta device
+parameter is exactly the same as that of the
+.code tcsetattr
+function.
+
+.coNP Function @ tcflush
+.synb
+.mets (tcflush < queue <> [ device ])
+.syne
+.desc
+The
+.code tcflush
+function discards either untransmitted output data,
+or received and yet unread input data, depending on the
+value of the
+.meta queue
+argument. It is a direct wrapper for the like-named
+POSIX C function.
+
+The
+.meta queue
+argument should be the value of one of the variables
+.codn tciflush ,
+.code tcoflush
+and
+.codn tcioflush ,
+which specify the flushing of input data, output
+data or both.
+
+The
+.meta device
+parameter is exactly the same as that of the
+.code tcsetattr
+function.
+
+.coNP Function @ tcflow
+.synb
+.mets (tcflow < action <> [ device ])
+.syne
+.desc
+The
+.code tcflow
+function provides bi-directional flow control on the
+specified terminal device. It is a direct wrapper
+for the like-named POSIX C function.
+
+The
+.meta action
+argument should be the value of one of the
+variables
+.codn tcooff ,
+.codn tcoon ,
+.code tcioff
+and
+.codn tcion .
+
+The
+.meta device
+parameter is exactly the same as that of the
+.code tcsetattr
+function.
+
+.coNP Methods @, set-iflags @, set-oflags @, set-cflags @, set-lflags @, clear-iflags @, clear-oflags @ clear-cflags and @ clear-lflags
+.synb
+.mets << termios .(set-iflags << flags *)
+.mets << termios .(set-oflags << flags *)
+.mets << termios .(set-cflags << flags *)
+.mets << termios .(set-lflags << flags *)
+.mets << termios .(clear-iflags << flags *)
+.mets << termios .(clear-oflags << flags *)
+.mets << termios .(clear-cflags << flags *)
+.mets << termios .(clear-lflags << flags *)
+.syne
+.desc
+These methods of the
+.code termios
+structure set or clear multiple flags of the four bitmask flag fields.
+
+The
+.meta flags
+arguments specify zero or more integer values. These values
+are combined together bitwise, as if by the
+.code logior
+function to form a single effective mask.
+If there are no
+.meta flags
+arguments, then the effective mask is zero.
+
+The
+.code set-iflags
+method sets, in the
+.code iflag
+member of the
+.meta termios
+structure, all of the bits which
+are set in the effective mask. That is to say,
+the effective mask is combined with the value in
+.code iflag
+by a
+.code logior
+operation, and the result is stored back into
+.codn iflag .
+Similarly, the
+.codn set-oflags ,
+.code set-cflags
+and
+.code set-lflags
+methods operate on the
+.codn oflag ,
+.code cflag
+and
+.code lflag
+slots of the structure.
+
+The
+.code clear-iflags
+method clears, in the
+.code iflag
+member of the
+.meta termios
+structure, all of the bits which are
+set in the effective mask. That is to say,
+the effective mask is bitwise inverted as if
+by the
+.code lognot
+function, and then combined with the
+existing value of the
+.code iflag
+slot using
+.codn logand .
+The resulting value is stored back into the
+.code iflag
+slot.
+Similarly, the
+.codn clear-oflags ,
+.code clear-cflags
+and
+.code clear-lflags
+methods operate on the
+.codn oflag ,
+.code cflag
+and
+.code lflag
+slots of the structure.
+
+Note: the methods
+.codn go-raw ,
+.code go-cbreak
+and
+.code go-canon
+are provided for changing the settings to raw, "cbreak" and canonical mode.
+These methods should be preferred to directly manipulating the flag and
+.code cc
+slots.
+
+.TP* Example
+
+In this example,
+.code tio
+is assumed to be a variable holding an instance of a
+.code termios
+struct:
+
+.cblk
+  ;; clear the ignbrk, brkint, and various other flags:
+  tio.(clear-iflags ignbrk brkint parmrk istrip inlcr igncr icrnl ixon)
+
+  ;; set the csize and parenb flags:
+  tio.(set-cflags csize parenb)
+.cble
+
+.coNP Methods @ go-raw and @ go-cbreak
+.synb
+.mets << termios .(go-raw)
+.mets << termios .(go-cbreak)
+.syne
+.desc
+The
+.code go-raw
+and
+.code go-cbreak
+methods of the
+.code termios
+structure manipulate the flag slots, as well as certain elements
+of the
+.code cc
+slot, in order to prepare the terminal settings for, respectively,
+"raw" and "cbreak" mode, described below.
+
+Note that manipulating the
+.code termios
+structure doesn't actually put these settings into effect in
+the terminal device; the settings represented by the structure must
+be installed into the device using
+.codn tcsetattr .
+There is no way to reverse the effect of these methods.
+To precisely restore the previous terminal settings, the program
+should retain a copy of the original
+.code termios
+structure.
+
+"Raw" mode refers to a configuration of the terminal device driver in which input
+and output is passed transparently and without accumulation, conversion or
+interpretation. Input isn't buffered into lines; as soon as a single byte is
+received, it is available to the program. No special input characters such as
+commands for generating an interrupt or process suspend request are processed
+by the terminal driver; all characters are treated as input data.  Input isn't
+echoed; the only output which takes place is that generated by program
+output requests to the device.
+
+"Cbreak" mode is named after a concept and function in the "curses" terminal
+control library. It refers to a configuration of the terminal device driver
+which is less transparent than "raw" mode. Input isn't buffered into lines,
+and line editing commands are ordinary input characters, allowing
+character-at-a-time input. However, most input translations are preserved,
+except that the conversion of CR characters to NL is disabled.  The
+signal-generating characters are processed in this mode. This latter feature of
+the configuration is the likely inspiration for the word "cbreak". Unless
+otherwise configured, the interrupt character corresponds to the Ctrl-C key,
+and "break" is another term for an interactive interruption.
+
+.coNP Methods @ string-encode and @ string-decode
+.synb
+.mets << termios .(string-encode)
+.mets << termios .(string-decode << string )
+.syne
+.desc
+The
+.code string-encode
+method converts the terminal state stored in a
+.code termios
+structure into a textual format, returning that representation
+as a character string.
+
+The
+.code string-decode
+method parses the character representation produced by
+.code string-encode
+and populates the
+.meta termios
+structure with the settings are encoded in that string.
+
+If a string is passed to
+.code string-decode
+which wasn't produced by
+.codn string-encode ,
+the behavior is unspecified. An exception may or may not be
+thrown, and the contents of
+.meta termios
+may or may not be affected.
+
+Note: the textual representation produced by
+.code string-encode
+is intended to be identical to that produced by the
+.code -g
+option of the GNU Coreutils version of the
+.code stty
+utility, on the same platform. That is to say, the output of
+.code "stty -g"
+may be used as input into
+.codn string-decode ,
+and the output of
+.code string-encode
+may be used as an argument to
+.codn stty .
+
 .SS* Web Programming Support
 
 .coNP Functions @ url-encode and @ url-decode

@@ -281,7 +281,6 @@ static val yield_instantiate(val set_fun)
 }
 
 #if HAVE_SOCKETS
-
 static val sock_set_entries(val dlt, val fun)
 {
   val name[] = {
@@ -313,6 +312,30 @@ static val sock_instantiate(val set_fun)
 
 #endif
 
+#if HAVE_TERMIOS
+
+static val termios_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("set-iflags"), lit("set-oflags"), lit("set-cflags"), lit("set-lflags"),
+    lit("clear-iflags"), lit("clear-oflags"), lit("clear-cflags"), lit("clear-lflags"),
+    lit("go-raw"), lit("go-cbreak"), lit("go-canon"),
+    lit("string-encode"), lit("string-decode"), nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val termios_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~a/termios.tl"), stdlib_path, nao));
+  sock_load_init();
+  return nil;
+}
+
+#endif
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -338,6 +361,9 @@ void lisplib_init(void)
   dlt_register(dl_table, yield_instantiate, yield_set_entries);
 #if HAVE_SOCKETS
   dlt_register(dl_table, sock_instantiate, sock_set_entries);
+#endif
+#if HAVE_TERMIOS
+  dlt_register(dl_table, termios_instantiate, termios_set_entries);
 #endif
 }
 
