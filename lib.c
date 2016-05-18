@@ -2629,14 +2629,26 @@ val proper_list_p(val obj)
 val length_list(val list)
 {
   cnum len = 0;
+  val bn_len;
 
   gc_hint(list);
 
-  while (consp(list)) {
+  while (consp(list) && len < INT_PTR_MAX) {
     len++;
     list = cdr(list);
   }
-  return num(len);
+
+  if (len < INT_PTR_MAX)
+    return num(len);
+
+  bn_len = num(INT_PTR_MAX);
+
+  while (consp(list)) {
+    bn_len = succ(bn_len);
+    list = cdr(list);
+  }
+
+  return bn_len;
 }
 
 val getplist(val list, val key)
