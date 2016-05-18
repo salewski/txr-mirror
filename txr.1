@@ -36279,6 +36279,44 @@ signal, known in \*(TX as the
 variable. Abnormal termination of the process is this signal's
 default action.
 
+.coNP Functions @ at-exit-call and @ at-exit-do-not-call
+.synb
+.mets (at-exit-call << function )
+.mets (at-exit-do-not-call << function )
+.syne
+.desc
+The
+.code at-exit-call
+function registers
+.meta function
+to be called when the process terminates normally.
+Multiple functions can be registered, and the same function
+can be registered more than once. The registered
+functions are called in reverse order of their
+registrations.
+
+The
+.code at-exit-do-not-call
+function removes all previous
+.code at-exit-call
+registrations of
+.metn function .
+
+The
+.code at-exit-call
+function returns
+.metn function .
+
+The
+.code at-exit-do-not-call
+function returns
+.code t
+if it removed anything,
+.code nil
+if no registrations of
+.meta function
+were found.
+
 .coNP Function @ usleep
 .synb
 .mets (usleep << usec )

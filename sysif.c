@@ -98,6 +98,8 @@ val passwd_s, gecos_s, dir_s, shell_s;
 val group_s, mem_s;
 #endif
 
+static val at_exit_list;
+
 static val errno_wrap(val newval)
 {
   val oldval = num(errno);
@@ -128,6 +130,27 @@ static val exit_wrap(val status)
   exit(stat);
   /* notreached */
   return nil;
+}
+
+val at_exit_call(val func)
+{
+  push(func, &at_exit_list);
+  return func;
+}
+
+val at_exit_do_not_call(val func)
+{
+  val old = at_exit_list;
+  at_exit_list = remq(func, old);
+  return tnil(old == at_exit_list);
+}
+
+static void at_exit_handler(void)
+{
+  val iter;
+
+  for (iter = at_exit_list; iter; iter = cdr(iter))
+    funcall(car(iter));
 }
 
 static val abort_wrap(void)
@@ -1389,6 +1412,10 @@ static val fnmatch_wrap(val pattern, val string, val flags)
 
 void sysif_init(void)
 {
+  prot1(&at_exit_list);
+
+  atexit(at_exit_handler);
+
   stat_s = intern(lit("stat"), user_package);
   dev_k = intern(lit("dev"), keyword_package);
   ino_k = intern(lit("ino"), keyword_package);
@@ -1444,6 +1471,8 @@ void sysif_init(void)
 
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
   reg_fun(intern(lit("exit"), user_package), func_n1(exit_wrap));
+  reg_fun(intern(lit("at-exit-call"), user_package), func_n1(at_exit_call));
+  reg_fun(intern(lit("at-exit-do-not-call"), user_package), func_n1(at_exit_do_not_call));
   reg_fun(intern(lit("abort"), user_package), func_n0(abort_wrap));
   reg_fun(intern(lit("usleep"), user_package), func_n1(usleep_wrap));
 #if HAVE_UNISTD_H

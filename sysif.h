@@ -43,6 +43,8 @@ typedef long off_t;
 #endif
 
 val getenv_wrap(val name);
+val at_exit_call(val func);
+val at_exit_do_not_call(val func);
 #if HAVE_FORK_STUFF
 val exec_wrap(val file, val args_opt);
 #endif
