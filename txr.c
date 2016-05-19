@@ -152,6 +152,13 @@ static void help(void)
 "--compat=N             Synonym for -C N\n"
 "--gc-delta=N           Invoke garbage collection when malloc activity\n"
 "                       increments by N megabytes since last collection.\n"
+"--args...              Allows multiple arguments to be encoded as a single\n"
+"                       argument. This is useful in hash-bang scripting.\n"
+"                       Peculiar syntax. See manual.\n"
+"--eargs... arg         Extended version of --args: additionally consumes\n"
+"                       the following argument arg, and allows one or more\n"
+"                       copies of it to be to be embedded in the\n"
+"                       encoded arguments. See manual.\n"
 #if HAVE_FORK_STUFF
 "--reexec               Re-execute TXR with remaining arguments.\n"
 #endif
