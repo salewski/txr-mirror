@@ -9516,22 +9516,18 @@ are embedded in directives using
 .code @
 also.
 
-Secondly, the
-.code @(do)
-directive can be used for evaluating one or more Lisp
-forms, such that their value is thrown away. This is useful for evaluating some
-Lisp code for the sake of its side effect, such as defining a variable,
-updating a hash table, et cetera.
+Secondly, certain directives evaluate Lisp expressions without
+requiring
+.codn @ .
+These are
+.codn @(do) ,
+.codn @(require) ,
+.codn @(assert) ,
+.code @(if)
+and
+.codn @(next) .
 
-Thirdly, the
-.code @(require)
-directive can be used to evaluate Lisp expressions
-as part of the matching logic of the \*(TX pattern language. The return value
-of the rightmost expression is examined. If it is nil, then the
-.code @(require)
-directive triggers a match failure. Otherwise, matching proceeds.
-
-Fourth, \*(TL code can be placed into files. On the command
+Thirdly, \*(TL code can be placed into files. On the command
 line, \*(TX treats files with a
 .str ".tl"
 suffix as \*(TL code, and the
@@ -9558,7 +9554,9 @@ to the integer 4:
 
 Bind variable
 .code b
-to the standard input stream:
+to the standard input stream. Note that
+.code @
+is not required on a Lisp variable:
 
 .cblk
   @(bind a *stdin*)
