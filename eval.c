@@ -98,7 +98,7 @@ val macro_time_s, with_saved_vars_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
-val sys_load_s, sys_lisp1_value_s;
+val sys_load_s, self_load_path_s, sys_lisp1_value_s;
 
 val special_s, whole_k, form_k, symacro_k;
 
@@ -3257,6 +3257,7 @@ static val sys_load(val target, val sloc)
                                   cons(target, nil)), lit("/")));
   val name, stream;
   val txr_lisp_p = t;
+  val self_load_path_old = nil;
 
   open_txr_file(path, &txr_lisp_p, &name, &stream);
 
@@ -3266,13 +3267,23 @@ static val sys_load(val target, val sloc)
     eval_error(sloc, lit("load doesn't process .txr files"), nao);
   }
 
+  uw_simple_catch_begin;
+
+  self_load_path_old = set_get_symacro(self_load_path_s, path);
+
   if (!read_eval_stream(stream, std_error, nil)) {
     rlset(sloc, sloc);
     close_stream(stream, nil);
     eval_error(sloc, lit("load: ~a contains errors"), path, nao);
   }
 
-  close_stream(stream, nil);
+  uw_unwind {
+    set_get_symacro(self_load_path_s, self_load_path_old);
+    close_stream(stream, nil);
+  }
+
+  uw_catch_end;
+
   return nil;
 }
 
@@ -4383,6 +4394,24 @@ void reg_var(val sym, val val)
   mark_special(sym);
 }
 
+val set_get_symacro(val sym, val form)
+{
+  val cell = gethash_c(top_smb, sym, nulloc);
+  val binding = cdr(cell);
+  val old = cdr(binding);
+
+  if (form) {
+    if (binding)
+      rplacd(binding, form);
+    else
+      rplacd(cell, cons(sym, form));
+  } else {
+    remhash(top_smb, sym);
+  }
+
+  return old;
+}
+
 static val if_fun(val cond, val then, val alt)
 {
   return if3(cond, then, default_bool_arg(alt));
@@ -4661,6 +4690,7 @@ void eval_init(void)
   chain_s = intern(lit("chain"), user_package);
   chand_s = intern(lit("chand"), user_package);
   sys_load_s = intern(lit("load"), system_package);
+  self_load_path_s = intern(lit("self-load-path"), user_package);
   sys_lisp1_value_s = intern(lit("lisp1-value"), system_package);
 
   reg_op(macrolet_s, op_error);

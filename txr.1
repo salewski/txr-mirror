@@ -41399,6 +41399,41 @@ Parser error messages are directed to the
 .code *stderr*
 stream.
 
+.coNP Symbol Macro @ self-load-path
+.desc
+The
+.code self-load-path
+symbol macro expands to a string which holds the name of the file being
+loaded. This is a symbol macro rather than a variable so that it can
+be replaced during the macro-expansion process, thereby permanently embedding
+the file name into the expanded code.
+
+An expansion for
+.code self-load-path
+is established for a \*(TX or \*(TL file which is loaded from the
+command line.
+
+If the
+.code -i
+command line option is used to enter the interactive listener,
+and a file to be loaded is also specified, then the
+.code self-load-path
+macro remains bound to the name of that file.
+
+An expansion for
+.code self-load-path
+is also established by the
+.code load
+function and the
+.code @(load)
+directive, referring to the file being loaded.  When loading completes, the
+previous expansion of
+.code self-load-path
+is restored.
+
+During the processing of the profile file (see Interactive Profile File),
+the variable is bound to the name of that file.
+
 .SH* INTERACTIVE LISTENER
 
 .SS* Overview

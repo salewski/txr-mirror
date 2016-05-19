@@ -3771,29 +3771,33 @@ static val v_load(match_files_ctx *c)
                                     cons(target, nil)), lit("/")));
     val stream, name;
     val txr_lisp_p = nil;
+    val ret = nil;
+    val self_load_path_old = nil;
 
     open_txr_file(path, &txr_lisp_p, &name, &stream);
+
+    uw_simple_catch_begin;
+
+    self_load_path_old = set_get_symacro(self_load_path_s, name);
 
     if (!txr_lisp_p) {
       int gc = gc_state(0);
       parser_t parser;
+
       parse_once(stream, name, &parser);
       gc_state(gc);
-
-      close_stream(stream, nil);
 
       if (parser.errors)
         sem_error(specline, lit("~s: errors encountered in ~a"), sym, path, nao);
 
       if (sym == include_s) {
-        return parser.syntax_tree;
+        ret = parser.syntax_tree;
       } else {
         val spec = parser.syntax_tree;
         val result = match_files(mf_spec(*c, spec));
 
         if (!result) {
           debuglf(specline, lit("load: ~a failed"), path, nao);
-          return nil;
         } else {
           cons_bind (new_bindings, success, result);
 
@@ -3812,7 +3816,7 @@ static val v_load(match_files_ctx *c)
             c->data = nil;
           }
 
-          return next_spec_k;
+          ret = next_spec_k;
         }
       }
     } else {
@@ -3820,9 +3824,18 @@ static val v_load(match_files_ctx *c)
         close_stream(stream, nil);
         sem_error(specline, lit("load: ~a contains errors"), path, nao);
       }
-      close_stream(stream, nil);
-      return (sym == include_s) ? nil : next_spec_k;
+
+      ret = (sym == include_s) ? nil : next_spec_k;
     }
+
+    uw_unwind {
+      set_get_symacro(self_load_path_s, self_load_path_old);
+      close_stream(stream, nil);
+    }
+
+    uw_catch_end;
+
+    return ret;
   }
 }
 
