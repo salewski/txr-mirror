@@ -1,3 +1,28 @@
+                                    TXR 141
+                                   2016-05-20
+
+
+  Features
+
+  - Support for Unix terminal handling (termios).
+  - New functions at-exit-call and at-exit-do-not-call, for registering
+    actions to take when process exits.
+  - New self-load-path symbol macro, allowing code to interpolate its load
+    location.
+  - Interactive listener now supports two behavioral styles of visual
+    selection, controlled by new *listener-sel-inclusive-p* variable.
+
+  Bugs
+
+  - Incorrect argument defaulting in record-adapter function.
+  - Incorrect argument handling in - and / functions,
+    triggering error in [[flipargs -] 2 1]
+  - Fixed gc-related bug in structs.
+  - Fixed gc-related bug in recent cons recycling
+    optimization.
+
+
+
                                     TXR 140
                                    2016-05-08
 
