@@ -72,6 +72,8 @@ int lino_hist_load(lino_t *, const char *filename);
 int lino_clear_screen(lino_t *);
 void lino_set_multiline(lino_t *, int ml);
 int lino_get_multiline(lino_t *);
+void lino_set_selinclusive(lino_t *, int si);
+int lino_get_selinculsive(lino_t *);
 
 typedef char *lino_atom_cb_t(lino_t *, const char *line, int n, void *ctx);
 void lino_set_atom_cb(lino_t *, lino_atom_cb_t *, void *ctx);

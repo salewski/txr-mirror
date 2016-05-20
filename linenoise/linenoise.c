@@ -118,6 +118,7 @@ struct lino_state {
     int need_resize;    /* Need resize flag. */
     int need_refresh;   /* Need refresh. */
     int selmode;        /* Visual selection being made. */
+    int selinclusive;   /* Selections include character right of endpoint. */
     struct lino_undo *undo_stack;
     lino_error_t error; /* Most recent error. */
 };
@@ -157,6 +158,15 @@ void lino_set_multiline(lino_t *ls, int ml) {
 
 int lino_get_multiline(lino_t *ls) {
     return ls->mlmode;
+}
+
+void lino_set_selinclusive(lino_t *ls, int si) {
+    ls->selinclusive = si;
+}
+
+int lino_get_selinculsive(lino_t *ls)
+{
+    return ls->selinclusive;
 }
 
 void lino_set_atom_cb(lino_t *l, lino_atom_cb_t *cb, void *ctx)
@@ -758,6 +768,7 @@ static void sync_data_to_buf(lino_t *l)
 {
     char *dptr = l->data, *bptr = l->buf;
     int col = strlen(l->prompt);
+    int rev = l->dsel > l->dend;
 
     if (l->mlmode) {
         bptr += snprintf(l->buf, sizeof l->buf, "%s",
@@ -767,6 +778,7 @@ static void sync_data_to_buf(lino_t *l)
     while (bptr - l->buf < convert(ptrdiff_t, sizeof l->buf) - 1) {
         int dpos = dptr - l->data;
         int pos = bptr - l->buf;
+        char ch = *dptr++;
 
         if (l->dpos == dpos)
             l->pos = pos;
@@ -774,10 +786,10 @@ static void sync_data_to_buf(lino_t *l)
             l->sel = pos;
         if (l->dend == dpos)
             l->end = pos;
+        if (l->dsel == dpos - 1 && rev && l->selinclusive && ch && ch != '\r')
+            l->sel = pos;
 
-        if (*dptr)  {
-            char ch = *dptr++;
-
+        if (ch) {
             if (ch == TAB) {
                 do {
                     *bptr++ = ' ';
@@ -1236,6 +1248,9 @@ static void yank_sel(lino_t *l)
         int sel = notrev ? l->dsel : l->dend;
         int end = notrev ? l->dend : l->dsel;
 
+        if (l->selinclusive && l->data[end] && l->data[end] != '\r')
+            end++;
+
         if (end - sel > 0) {
             free(l->clip);
             l->clip = coerce(char *, chk_malloc(end - sel + 1));
@@ -1253,6 +1268,9 @@ static void delete_sel(lino_t *l)
         int sel = notrev ? l->dsel : l->dend;
         int end = notrev ? l->dend : l->dsel;
         int len = l->dlen;
+
+        if (l->selinclusive && l->data[end] && l->data[end] != '\r')
+            end++;
 
         if (len - end > 0)
             memmove(l->data + sel, l->data + end, len - end);
