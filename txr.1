@@ -1960,7 +1960,7 @@ are special.
 
 .code nil
 symbol stands for the empty
-list object, an object which marks the end of a list, and boolean false. It is
+list object, an object which marks the end of a list, and Boolean false. It is
 synonymous with the syntax
 .code ()
 which may be used interchangeably with
@@ -7367,10 +7367,10 @@ variable which holds text, as a string literal or as a quasiliteral
 
 Alternatively, the destination may be a stream object.
 
-The keyword list consists of a mixture of boolean keywords which
+The keyword list consists of a mixture of Boolean keywords which
 do not have an argument, or keywords with arguments.
 
-The following boolean keywords are supported:
+The following Boolean keywords are supported:
 
 .coIP :nothrow
 The output directive throws an exception if the output destination
@@ -9588,7 +9588,7 @@ is greater than 42:
 
 \*(TL is a small and simple dialect, like Scheme, but much more similar to
 Common Lisp than Scheme. It has separate value and function binding namespaces,
-like Common Lisp (and thus is a Lisp-2 type dialect), and represents boolean
+like Common Lisp (and thus is a Lisp-2 type dialect), and represents Boolean
 .B true
 and
 .B false
@@ -10853,7 +10853,7 @@ to place, defaulting to
 and returns the prior value.
 
 .meIP (flip << place )
-Logically toggles the boolean value of
+Logically toggles the Boolean value of
 .metn place ,
 and returns the new value.
 
@@ -11603,7 +11603,7 @@ If
 is specified, then
 .meta sym
 will be
-introduced as an additional binding with a boolean value which indicates
+introduced as an additional binding with a Boolean value which indicates
 whether or not the optional parameter had been specified by the caller.
 
 The initializer expressions are evaluated an environment in which
@@ -16992,7 +16992,7 @@ When the lazy list is accessed, for instance with the functions car and cdr, it
 produces items on demand. Prior to producing each item,
 .meta while-fun
 is
-called. If it returns a true boolean value (any value other than
+called. If it returns a true Boolean value (any value other than
 .codn nil ),
 then
 the
@@ -25334,7 +25334,7 @@ Finally, the previously retrieved value is returned.
 .desc
 The
 .code flip
-macro toggles the boolean value stored in
+macro toggles the Boolean value stored in
 .metn place .
 
 If
@@ -28611,7 +28611,7 @@ indicates the least significant bit position of
 
 The
 .code bit
-function has a boolean result, returning the symbol
+function has a Boolean result, returning the symbol
 .code t
 if bit
 .meta bit
@@ -30772,7 +30772,7 @@ value which is then used to index into one of many buckets where the matching
 key will be found (if such a key is present in the hash table).
 
 .code make-hash
-takes three mandatory boolean arguments. The
+takes three mandatory Boolean arguments. The
 .meta weak-keys
 argument specifies whether the hash table shall have weak keys. The
 .meta weak-vals
@@ -31276,7 +31276,7 @@ value is added to the front of that list,
 and the extended list then becomes the new value under
 .metn key .
 
-The return value is boolean. If true, indicates that the hash table entry was
+The return value is Boolean. If true, indicates that the hash table entry was
 newly created. If false, it indicates that the push took place on an existing
 entry.
 
@@ -32604,7 +32604,7 @@ returns a function which accepts any arguments and returns
 .desc
 The
 .code notf
-function returns a function which is the boolean negation
+function returns a function which is the Boolean negation
 of
 .metn function .
 
@@ -33851,7 +33851,7 @@ function for a discussion of modes.
 
 The
 .code seek-to-end-p
-argument is a boolean which determines whether the initial
+argument is a Boolean which determines whether the initial
 read/write position is at the start of the file, or just past the end.
 It defaults to
 .codn nil .
@@ -34138,7 +34138,7 @@ file descriptor, and dissociate that descriptor from the stream. Any buffered
 data is flushed first.
 
 .code close-stream
-returns a boolean true value if the close has occurred without
+returns a Boolean true value if the close has occurred without
 errors, otherwise
 .codn nil .
 
@@ -35852,9 +35852,9 @@ the host system. The
 .code time-string-utc
 function produces time in UTC.
 
-The fields returned as a list consist of six integers, and a boolean value.
+The fields returned as a list consist of six integers, and a Boolean value.
 The six integers represent the year, month, day, hour, minute and second.
-The boolean value indicates whether daylight savings time is in effect
+The Boolean value indicates whether daylight savings time is in effect
 (always
 .code nil
 in the case of
@@ -35896,7 +35896,7 @@ January, whereas the C member
 .code tm_mon
 uses a zero-based month.  The
 .code dst
-slot is a \*(TL boolean value. The remaining slots
+slot is a \*(TL Boolean value. The remaining slots
 .codn hour ,
 .codn min ,
 and
@@ -37519,7 +37519,7 @@ The
 argument is an integer indicating the signal number for which the
 handler is being invoked. The
 .meta asyncp-p
-argument is a boolean value.
+argument is a Boolean value.
 If it is
 .codn t ,
 it indicates that the handler is being invoked
@@ -37551,7 +37551,7 @@ If a handler is invoked synchronously, then its return value is ignored.
 
 In the current implementation, signals do not queue. If a signal is delivered
 to the process again, while it is marked as deferred, it simply stays deferred;
-there is no counter associated with a signal, only a boolean flag.
+there is no counter associated with a signal, only a Boolean flag.
 
 .coNP Function @ sig-check
 .synb
@@ -37736,7 +37736,7 @@ The
 .code w-ifstopped
 and
 .code w-ifcontinued
-functions have Lisp boolean return semantics, unlike their C language
+functions have Lisp Boolean return semantics, unlike their C language
 counterparts: they return
 .code t
 or
@@ -38278,7 +38278,7 @@ encounters errors accessing paths. The function takes two arguments:
 the pathname and the
 .code errno
 value which occurred for that pathname. The function's return value is
-boolean. If the function returns true, then
+Boolean. If the function returns true, then
 .code glob
 will terminate.
 
@@ -42328,7 +42328,7 @@ history lines are immediately discarded. The default value is 500.
 
 .coNP Special variable @ *listener-multi-line-p*
 .desc
-This is a boolean variable which indicates whether the listener is
+This is a Boolean variable which indicates whether the listener is
 in multi-line mode. The default value is
 .codn nil .
 
@@ -42908,7 +42908,7 @@ Also, the
 .code kill
 function returned an integer, obtained from the return
 value of the underlying C function, rather than converting
-that value to a boolean. The old behavior was not documented,
+that value to a Boolean. The old behavior was not documented,
 and 114 compatibility restores it.
 
 Lastly, prior to 115, random state objects were of type
