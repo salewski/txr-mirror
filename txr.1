@@ -42046,9 +42046,8 @@ While in visual selection mode, it is possible to move around using
 the usual movement commands. The ending point of the selection
 tracks the movement. The ending point of the selection is also
 the position immediately to the left of the current character.
-Thus the selection excludes the rightmost character. The selection
-consists of the text between these two positions, whether or not
-they are reversed. The selected text is displayed in reverse video.
+
+The selected text is displayed in reverse video.
 
 Typing Ctrl-S again while in visual selection mode cancels
 the mode.
@@ -42056,18 +42055,23 @@ the mode.
 Tab completion, history navigation, history search and editing in an external
 editor all cancel visual selection mode.
 
-Note: the semantics of visual mode selection in the \*(TX listener differs from
-that of some text editors. In some text editors, a visual selection always
-includes the "character under the cursor", and thus is never empty.
-This works intuitively with block or underline cursors.
-The \*(TX selection semantics pairs excellently with the terminal
-cursor shape being configured to a vertical line or "I-beam" which appears
-between the characters. The selection then simply spans the region
-between the original I-beam position and the current I-beam position.
-When these positions coincide, the selection is empty.  If an I-beam style
-cursor is configured, there is no apparent "character under the cursor".
-Editing concepts that involve the "character under the cursor" pair best with
-an underline or block cursor.
+By default, the the selection excludes the character which lies to the right of
+the rightmost end-point.  Thus, the selection simply consists of the text
+between these two positions, whether or not they are reversed. This style of
+selection pairs excellently with an I-beam style cursor, and has clear
+semantics. The end-points are referenced to the positions between the
+characters, and everything between them is selected.
+
+The selection behavior may be altered using the Boolean configuration variable
+.codn *listener-sel-inclusive-p* .
+This variable is
+.code nil
+by default. If it is changed to true, then the selection includes the
+character to the right of the rightmost endpoint, if there is such a
+character within the current line.  This style of selection
+pair well with a block-shaped cursor. It creates the apparent semantics that
+the end-points of the election are characters, rather than points
+between characters, and that these characters are included in the selection.
 
 .NP* Selection Endpoint Toggle
 
@@ -42334,6 +42338,31 @@ immediately for the next line of input.
 If multi-line mode is toggled interactively from within the listener,
 the variable is updated to reflect the latest state. This happens
 when the command is submitted for evaluation.
+
+.coNP Special variable @ *listener-sel-inclusive-p*
+.desc
+This Boolean variable controls the behavior of visual selection.
+It is
+.code nil
+by default.
+
+A visual selection is determined by end-points, which are abstract positions
+understood as being between characters. When a visual selection begins,
+it marks an end-point immediately to the left of a block-shaped cursor,
+or precisely at the in-between position of an I-beam cursor.
+The end of the visual selection is similarly determined from the ending
+cursor position. The selection consists of those characters which lie
+between these positions. This style of selection pairs well with an I-beam
+style cursor shape.
+
+If the
+.code *listener-sel-inclusive-p*
+variable is set true, then the selection also includes one more
+character to the right of the rightmost endpoint, if there is
+such a character within the current line, giving rise to the appearance
+that the selection is determined by the starting and ending character,
+and includes them. This type of selection pairs well with a block-shaped
+cursor.
 
 .SH* SETUID/SETGID OPERATION
 
