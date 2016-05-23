@@ -3200,9 +3200,9 @@ to \*(TX on the command line.
 
 If
 .meta source
-is given, it must be string-valued Lisp expression which denotes an
-input source; it may be a string literal, quasiliteral or a string-valued
-variable.  For instance, if variable
+is given, it must be a \*(TL expression which denotes an
+input source. Its value may be a string or an input stream.
+For instance, if variable
 .code A
 contains the text
 .strn "data" ,
@@ -3214,6 +3214,11 @@ and
 .code "@(next `@A.txt`)"
 means to switch to the file
 .strn "data.txt" .
+The directive
+.code "@(next (open-command `git log`))"
+switches to the input stream connected to the output of the
+.code "git log"
+command.
 
 If the input source cannot be opened for whatever reason,
 \*(TX throws an exception (see EXCEPTIONS below). An unhandled exception will
