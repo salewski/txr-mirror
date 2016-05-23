@@ -665,6 +665,11 @@ int txr_main(int argc, char **argv)
         opt_noninteractive = 1;
         stream_set_prop(std_input, real_time_k, nil);
         continue;
+      } else {
+        drop_privilege();
+        format(std_error, lit("~a: unrecognized long option: --~a\n"),
+               prog_string, opt, nao);
+        return EXIT_FAILURE;
       }
     }
 
@@ -793,8 +798,8 @@ int txr_main(int argc, char **argv)
           return EXIT_FAILURE;
         case '-':
           drop_privilege();
-          format(std_error, lit("~a: unrecognized long option: --~a\n"),
-                 prog_string, cdr(optchars), nao);
+          format(std_error, lit("~a: dash in the middle of options: ~a\n"),
+                 prog_string, arg, nao);
           return EXIT_FAILURE;
         default:
           drop_privilege();
