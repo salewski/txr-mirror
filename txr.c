@@ -655,6 +655,7 @@ int txr_main(int argc, char **argv)
                  prog_string, opt, org, nao);
           continue;
         } else {
+          drop_privilege();
           format(std_error,
                  lit("~a: option ~a requires YYDEBUG support compiled in\n"),
                  prog_string, arg, nao);
@@ -673,6 +674,7 @@ int txr_main(int argc, char **argv)
       val opt = chr_str(arg, one);
 
       if (!arg_list) {
+        drop_privilege();
         requires_arg(opt);
         return EXIT_FAILURE;
       }
