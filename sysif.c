@@ -158,7 +158,7 @@ static val abort_wrap(void)
   abort();
 }
 
-static val usleep_wrap(val usec)
+val usleep_wrap(val usec)
 {
   val retval;
   cnum u = c_num(usec);

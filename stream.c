@@ -864,37 +864,25 @@ static struct strm_ops stdio_ops =
 static struct strm_ops stdio_sock_ops;
 #endif
 
-static void tail_calc(unsigned long *state, int *sec, int *mod)
+static void tail_calc(unsigned long *state, int *usec, int *mod)
 {
   unsigned long count = (*state)++;
   if (count > 32)
     count = 32;
-  *sec = 1 << (count / 8);
+  *usec = 1048576 << (count / 8);
   *mod = 8 >> (count / 8);
   if (*mod == 0)
     *mod = 1;
 }
 
-#if !HAVE_POSIX_SLEEP && HAVE_WINDOWS_H
-
-int sleep(int sec);
-
-int sleep(int sec)
-{
-   Sleep(sec * 1000);
-   return 0;
-}
-
-#endif
-
 static void tail_strategy(val stream, unsigned long *state)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-  int sec = 0, mod = 0;
+  int usec = 0, mod = 0;
   val mode = nil;
   struct stdio_mode m, m_r = stdio_mode_init_r;
 
-  tail_calc(state, &sec, &mod);
+  tail_calc(state, &usec, &mod);
 
   if (h->is_rotated) {
     /* We already know that the file has rotated. The caller
@@ -907,7 +895,7 @@ static void tail_strategy(val stream, unsigned long *state)
   } else if (h->f != 0) {
     /* We have a file and it hasn't rotated; so sleep on it. */
     sig_save_enable;
-    sleep(sec);
+    usleep_wrap(num(usec));
     sig_restore_enable;
   }
 
@@ -940,9 +928,9 @@ static void tail_strategy(val stream, unsigned long *state)
         }
 
         /* Unable to open; keep trying. */
-        tail_calc(state, &sec, &mod);
+        tail_calc(state, &usec, &mod);
         sig_save_enable;
-        sleep(sec);
+        usleep_wrap(num(usec));
         sig_restore_enable;
         continue;
       }
