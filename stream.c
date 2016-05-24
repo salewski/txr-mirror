@@ -3835,11 +3835,15 @@ static val sh(val command)
 #error port me!
 #endif
 
-val remove_path(val path)
+val remove_path(val path, val throw_on_error)
 {
-  if (w_remove(c_str(path)) < 0)
-    uw_throwf(file_error_s, lit("trying to remove ~a: ~d/~s"),
-                path, num(errno), string_utf8(strerror(errno)), nao);
+  if (w_remove(c_str(path)) < 0) {
+    if (throw_on_error)
+      uw_throwf(file_error_s, lit("trying to remove ~a: ~d/~s"),
+                  path, num(errno), string_utf8(strerror(errno)), nao);
+    return nil;
+  }
+
   return t;
 }
 
@@ -3992,7 +3996,7 @@ void stream_init(void)
   reg_fun(intern(lit("open-process"), user_package), func_n3o(open_process, 2));
   reg_fun(intern(lit("sh"), user_package), func_n1(sh));
   reg_fun(intern(lit("run"), user_package), func_n2o(run, 1));
-  reg_fun(intern(lit("remove-path"), user_package), func_n1(remove_path));
+  reg_fun(intern(lit("remove-path"), user_package), func_n2o(remove_path, 1));
   reg_fun(intern(lit("rename-path"), user_package), func_n2(rename_path));
   reg_fun(intern(lit("open-files"), user_package), func_n2o(open_files, 1));
   reg_fun(intern(lit("open-files*"), user_package), func_n2o(open_files_star, 1));

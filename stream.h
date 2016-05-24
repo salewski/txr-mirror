@@ -198,7 +198,7 @@ val make_catenated_stream(val stream_list);
 val make_catenated_stream_v(struct args *streams);
 val catenated_stream_p(val obj);
 val catenated_stream_push(val new_stream, val cat_stream);
-val remove_path(val path);
+val remove_path(val path, val throw_on_error);
 val rename_path(val from, val to);
 val abs_path_p(val path);
 

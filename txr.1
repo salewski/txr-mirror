@@ -36407,7 +36407,7 @@ an exception will be thrown.
 
 .coNP Function @ remove-path
 .synb
-.mets (remove-path << path )
+.mets (remove-path < path <> [ throw-on-error-p ])
 .syne
 .desc
 The
@@ -36421,7 +36421,14 @@ If successful, it returns
 .codn t .
 
 A failure to remove the object results in an exception of type
-.codn file-error .
+.codn file-error ,
+unless
+.meta throw-on-error-p
+is present, and its value is
+.codn nil .
+In that case, failure is indicated by a
+.code nil
+return value.
 
 .coNP Function @ rename-path
 .synb
