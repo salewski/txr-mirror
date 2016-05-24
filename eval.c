@@ -2945,6 +2945,8 @@ static val me_op(val form, val menv)
     if (sym == do_s)
       dwim_body = rlcp(cdr(dwim_body), dwim_body);
 
+    set_origin(dwim_body, form);
+
     return cons(lambda_s,
                 cons(append2(mapcar(cdr_f, ssyms), rest_gensym),
                      cons(dwim_body, nil)));
