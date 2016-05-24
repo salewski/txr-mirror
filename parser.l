@@ -908,12 +908,12 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   yy_push_state(SPECIAL, yyscanner);
 }
 
-<INITIAL>^@[#;].*{NL} {
+<INITIAL>^@{WS}*[#;].*{NL} {
   /* eat whole line comment */
   yyextra->lineno++;
 }
 
-<INITIAL>@[#;].* {
+<INITIAL>@{WS}*[#;].* {
   /* comment to end of line */
 }
 
