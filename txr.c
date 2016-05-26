@@ -267,6 +267,12 @@ static val maybe_sysroot(val exepart)
              sysroot_path = sub_str(prog_path, 0, neg(length(exepart))));
 }
 
+static val dirname(val path)
+{
+  val rslash = rpos(chr('/'), path, nil, nil);
+  return if3(rslash, sub_str(path, zero, succ(rslash)), path);
+}
+
 static val substitute_basename(val edited_path, val source_path)
 {
   val lslash = rpos(chr('/'), edited_path, nil, nil);
@@ -316,6 +322,7 @@ static void sysroot_init(void)
            toint(lit(TXR_VER), nil));
   reg_varl(intern(lit("txr-version"), user_package),
            toint(lit(TXR_VER), nil));
+  reg_varl(intern(lit("txr-path"), user_package), dirname(prog_path));
 }
 
 static int license(void)
