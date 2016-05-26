@@ -42479,6 +42479,113 @@ running with setuid privilege. No group IDs are added to the list which
 need to be retracted when privileges are dropped. The supplementary
 groups also persist across the execution of a setuid/setgid script.
 
+.SH* STAND-ALONE APPLICATION SUPPORT
+
+The \*(TX executable image supports a general mechanism by means of which
+a custom program can be packaged as an apparent stand-alone executable.
+
+.SS* The Internal Argument String
+
+The \*(TX executable contains a 128 byte data area preceded by the
+seven-byte ASCII character sequence
+.strn @(txr): .
+The 128 byte data area which follows this identifying prefix
+represents a null-terminated UTF-8 string. In the stock executable,
+this area is filled with null bytes.
+
+If the \*(TX executable is edited such that this area is replaced
+with a non-empty, null-terminated UTF-8 string, the program will,
+for the purposes of command line argument processing, treat this string as if
+it were the one and only command line argument. (The original command
+line arguments are still retained in the
+.code *args*
+and
+.code *args-full*
+variables).
+
+.TP* Example:
+
+Suppose that \*(TX is copied to an executable in the same directory called
+.code myapp
+(or
+.code myapp.exe
+on an operating system which requires the
+.code .exe
+suffix). Also suppose that in the same directory, there exists a file
+called
+.codn myscript.tl .
+
+This
+.code myapp
+executable can then be edited so that the data area which follows the
+.code @(txr):
+bytes contains the following string:
+
+.cblk
+  --args|-e|(load `@{txr-path}/main.tl`)
+.cble
+
+When the
+.code myapp
+executable is invoked, it will process the above string as a single
+command line argument, causing the
+.code main.tl
+\*(TL source file to be loaded.
+Any arguments passed to
+.code myapp
+are ignored and available to
+.code main.tl
+via the
+.code *args*
+variable.
+
+.SS* Deployment Directory Structure
+
+The \*(TX executable may require library files, depending on the
+functionality invoked by the program code. Library files are located
+relative to the installation directory, called the
+.IR sysroot .
+The executable tries to dynamically determine the sysroot from
+its own location, according to this directory structure:
+
+.cblk
+  /path/to/sysroot/bin/txr
+               .../share/txr/stdlib/cadr.tl
+                         .../stdlib/except.tl
+                                    ...
+.cble
+
+The above structure is assumed if the executable finds itself
+in a directory named
+.strn bin .
+
+Otherwise, if the executable finds itself in a directory not
+named
+.strn bin ,
+the following structure is expected:
+
+.cblk
+  /path/to/installation/txr
+                    .../share/txr/stdlib/cadr.tl
+                    .../share/txr/stdlib/except.tl
+                                         ...
+.cble
+
+When a custom application is deployed using a possibly renamed
+.code txr
+executable, one of the above structures should be observed:
+either the sysroot with a
+.code bin
+subdirectory where the executable is located, on the
+same level with the
+.code share
+directory, or else the second structure in which the
+.code share
+directory is a subdirectory of the executable directory.
+If one of these structures is not observed, the application
+may fail due to the failure of a library file to load.
+
+
 .SH* DEBUGGER
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding
 the

@@ -295,6 +295,8 @@ static val sysroot(val target)
 
 static void sysroot_init(void)
 {
+  val prog_dir;
+
 #if HAVE_WINDOWS_H
   val slash = regex_compile(lit("\\\\"), nil);
 #endif
@@ -303,6 +305,7 @@ static void sysroot_init(void)
 #if HAVE_WINDOWS_H
   prog_path = regsub(slash, lit("/"), prog_path);
 #endif
+  prog_dir = dirname(prog_path);
 
   if (!(maybe_sysroot(lit(TXR_REL_PATH)) ||
         maybe_sysroot(lit(TXR_REL_PATH EXE_SUFF)) ||
@@ -310,9 +313,7 @@ static void sysroot_init(void)
         maybe_sysroot(lit(PROG_NAME EXE_SUFF)) ||
         maybe_sysroot(substitute_basename(lit(TXR_REL_PATH), prog_path))))
   {
-    format(std_error, lit("~a: unable to calculate sysroot\n"),
-           prog_string, nao);
-    sysroot_path = lit("");
+    sysroot_path = prog_dir;
   }
 
   stdlib_path = sysroot(lit("share/txr/stdlib"));
@@ -322,7 +323,7 @@ static void sysroot_init(void)
            toint(lit(TXR_VER), nil));
   reg_varl(intern(lit("txr-version"), user_package),
            toint(lit(TXR_VER), nil));
-  reg_varl(intern(lit("txr-path"), user_package), dirname(prog_path));
+  reg_varl(intern(lit("txr-path"), user_package), prog_dir);
 }
 
 static int license(void)
@@ -438,6 +439,7 @@ static void no_dbg_support(val arg)
 
 int txr_main(int argc, char **argv)
 {
+  uses_or2;
   val specstring = nil;
   val spec = nil;
   val spec_file = nil;
@@ -453,7 +455,10 @@ int txr_main(int argc, char **argv)
   val self_path_s = intern(lit("self-path"), user_package);
   val compat_var = lit("TXR_COMPAT");
   val compat_val = getenv_wrap(compat_var);
+  val orig_args = nil;
   list_collect_decl(arg_list, arg_tail);
+
+  static char alt_args_buf[128 + 7] = "@(txr):", *alt_args = alt_args_buf + 7;
 
   setvbuf(stderr, 0, _IOLBF, 0);
 
@@ -480,7 +485,10 @@ int txr_main(int argc, char **argv)
 
   arg_list = cdr(arg_list);
 
-  if (argc <= 1) {
+  if (*alt_args) {
+    orig_args = arg_list;
+    arg_list = list(string_utf8(alt_args), nao);
+  } else if (argc <= 1) {
     drop_privilege();
 #if HAVE_TERMIOS
     banner();
@@ -710,32 +718,49 @@ int txr_main(int argc, char **argv)
         break;
       case 'e':
         drop_privilege();
-        reg_varl(self_path_s, lit("cmdline-expr"));
-        reg_var(args_s, arg_list);
+        {
+          val args_saved = or2(orig_args, arg_list);
+          val args_new;
 
-        eval_intrinsic(lisp_parse(arg, std_error, colon_k,
-                                  lit("cmdline-expr"), colon_k),
-                       make_env(bindings, nil, nil));
-        evaled = t;
-        arg_list = cdr(lookup_global_var(args_s));
+          reg_varl(self_path_s, lit("cmdline-expr"));
+          reg_var(args_s, or2(orig_args, arg_list));
+
+          eval_intrinsic(lisp_parse(arg, std_error, colon_k,
+                                    lit("cmdline-expr"), colon_k),
+                         make_env(bindings, nil, nil));
+          evaled = t;
+          args_new = cdr(lookup_global_var(args_s));
+
+          if (args_new != args_saved) {
+            arg_list = args_new;
+            orig_args = nil;
+          }
+        }
         break;
       case 'p':
       case 'P':
       case 't':
+        drop_privilege();
         {
           val (*pf)(val obj, val out) = if3(c_chr(opt) == 'p',
                                             prinl,
                                             if3(c_chr(opt) == 'P',
                                                 pprinl,
                                                 tprint));
-          drop_privilege();
+          val args_saved = or2(orig_args, arg_list);
+          val args_new;
+
           reg_varl(self_path_s, lit("cmdline-expr"));
-          reg_var(args_s, arg_list);
+          reg_var(args_s, or2(orig_args, arg_list));
           pf(eval_intrinsic(lisp_parse(arg, std_error, colon_k,
                                        lit("cmdline-expr"), colon_k),
                             make_env(bindings, nil, nil)), std_output);
           evaled = t;
-          arg_list = cdr(lookup_global_var(args_s));
+          args_new = cdr(lookup_global_var(args_s));
+          if (args_new != args_saved) {
+            arg_list = args_new;
+            orig_args = nil;
+          }
         }
         break;
       }
@@ -871,7 +896,7 @@ int txr_main(int argc, char **argv)
     }
   }
 
-  reg_var(args_s, arg_list);
+  reg_var(args_s, or2(orig_args, arg_list));
   reg_varl(intern(lit("self-path"), user_package), spec_file_str);
 
   if (!txr_lisp_p)
@@ -926,7 +951,7 @@ repl:
            lit("Note: operating in TXR ~a compatibility mode "
                "due to environment variable.\n"),
            num(opt_compat), nao);
-  reg_var(args_s, arg_list);
+  reg_var(args_s, or2(orig_args, arg_list));
   reg_varl(intern(lit("self-path"), user_package), lit("listener"));
   repl(bindings, std_input, std_output);
 #endif
