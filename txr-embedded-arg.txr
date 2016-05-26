@@ -1,0 +1,34 @@
+@(do
+   (defun stream-positioned-to-right-place (name)
+     (let* ((stream (open-file name "r+b"))
+            (pre (read-until-match #/@\(txr\)/ stream t)))
+       (when (or (empty pre) (not (search-str pre "@(txr)")))
+          (throwf 'error "~a isn't a TXR executable" name))
+       stream)))
+@(next :args)
+@(cases)
+-w
+@string
+@file
+@  (eof)
+@  (do
+     (let ((f (stream-positioned-to-right-place file)))
+       (with-in-string-byte-stream (s string)
+         (mapdo (op put-byte @1 f)
+                (take 127 (pad (gun (get-byte s)) 0)))
+         (put-byte 0 f))))
+@(or)
+@file
+@  (eof)
+@  (do
+     (let ((f (stream-positioned-to-right-place file)))
+       (let ((arg-str (with-out-string-stream (u8)
+                        (mapdo (op put-byte @1 u8)
+                               (take 127 (gun (get-byte f)))))))
+         (put-line arg-str))))
+@(or)
+@   (output)
+usage: @{self-path} [-w string] txr-executable
+@   (end)
+@   (do (exit 1))
+@(end)

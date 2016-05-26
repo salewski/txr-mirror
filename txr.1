@@ -709,7 +709,11 @@ The
 option provides a way to encode multiple arguments as a single
 argument, which is useful on some systems which have limitations in
 their implementation of the "hash bang" mechanism. For details about
-its special syntax, See Hash Bang Support below.
+its special syntax, See Hash Bang Support below. It is also very useful in
+stand-alone application deployment. See the section
+STAND-ALONE APPLICATION SUPPORT, in which example uses of
+.code --args
+are shown.
 
 .coIP --eargs
 The
@@ -42585,6 +42589,67 @@ directory is a subdirectory of the executable directory.
 If one of these structures is not observed, the application
 may fail due to the failure of a library file to load.
 
+.coSS Utility program @ txr-embedded-arg.txr
+.synb
+.mets txr txr-embedded-arg.txr [ -w < new-string ] < executable
+.syne
+.desc
+At the root of the \*(TX source code tree, a program called
+.code txr-embedded-arg.txr
+is provided. This program can display or modify the
+embedded argument string inside a \*(TX executable.
+
+The
+.meta executable
+argument must always be present. It should refer to a \*(TX
+executable.
+
+If the
+.code -w
+option and its
+.meta new-string
+argument are omitted, then
+.meta executable
+is examined, and the contents of embedded argument data
+area
+.code @(txr):
+are displayed on standard output (including all
+the padding/terminating null bytes), followed by a newline.
+
+If
+.code -w
+option and its argument
+are present, then
+.code new-string
+is truncated to 127 bytes, if necessary, and written into
+the embedded argument data area of
+.codn executable ,
+padded with sufficient null bytes to write a complete unit of 128 bytes.
+Nothing is displayed on standard output.
+
+Note that
+.code new-string
+is treated as a UTF-8 representation. The 127 character limit is on the
+number of UTF-8 bytes, not Unicode characters.
+
+.TP* Example:
+
+The following is a POSIX shell command, which writes a
+.code --args
+argument into the embedded data area of the
+"myapp" executable. This argument encodes two
+arguments:
+.code -e
+specifying an expression which will cause the executable
+to load a
+.str main.tl
+file that is co-located in the same directory as
+that executable.
+
+.cblk
+  txr txr-embedded-arg.txr \e
+    -w '--args=-e=(load `@{txr-path}/main.tl`)' myapp
+.cble
 
 .SH* DEBUGGER
 \*(TX has a simple, crude, built-in debugger. The debugger is invoked by adding
