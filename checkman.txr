@@ -78,6 +78,20 @@
 @  (end)
 @(end)
 @;;
+@;; Check .cblk/.cble pairing
+@;;
+@(define check-cblk ())
+.cblk
+@  (assert bad ln `.cblk not closed`)
+@  (repeat :gap 0)
+@    (none)
+.cblk
+@    (end)
+@  (until :mandatory)
+.cble
+@  (end)
+@(end)
+@;;
 @;; Main
 @;;
 @(bind errors 0)
@@ -90,6 +104,8 @@
 @      (check-func)
 @    (or)
 @      (check-code)
+@    (or)
+@      (check-cblk)
 @    (end)
 @  (catch bad (line msg))
 @    (do (inc errors)

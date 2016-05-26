@@ -21154,7 +21154,7 @@ This is different from
 the behavior of
 .cblk
 .meti >> [ sequence 0..t]
-.cblk
+.cble
 or
 .cblk
 .meti (sub < sequence 0 t)
@@ -27268,7 +27268,7 @@ evaluated and inserted into the resulting structure.
 The syntax
 .cblk
 .meti (qquote (unquote << form ))
-.cblk
+.cble
 is equivalent to
 .metn form :
 the
@@ -32088,7 +32088,7 @@ Contrast the previous example with:
 
   (let ((rest "0"))
     `rest: @@rest`) -> ;; error: no such function or operator: sys:var
-.cblk
+.cble
 
 Under the
 .code op
@@ -32202,7 +32202,7 @@ according to the following equivalence:
   (ado form ...) <--> (apf (do form ...))
 
   (ido form ...) <--> (ipf (do form ...))
-.cblk
+.cble
 
 See also: the
 .code apf
