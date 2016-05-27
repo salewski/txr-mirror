@@ -7788,6 +7788,7 @@ val take_until(val pred, val seq, val keyfun)
     return nil;
   case CONS:
   case LCONS:
+    keyfun = default_arg(keyfun, identity_f);
     return make_lazy_cons(func_f1(cons(seq, cons(pred, keyfun)),
                                   take_until_list_fun));
   case LSTR:
@@ -7795,8 +7796,7 @@ val take_until(val pred, val seq, val keyfun)
   case STR:
   case VEC:
     {
-      val key = default_arg(keyfun, identity_f);
-      val pos = pos_if(pred, seq, key);
+      val pos = pos_if(pred, seq, keyfun);
       if (!pos)
         return seq;
       return sub(seq, zero, succ(pos));
