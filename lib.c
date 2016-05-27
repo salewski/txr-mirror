@@ -7829,8 +7829,7 @@ val drop_while(val pred, val seq, val keyfun)
   case STR:
   case VEC:
     {
-      val key = default_arg(keyfun, identity_f);
-      val pos = pos_if(notf(pred), seq, key);
+      val pos = pos_if(notf(pred), seq, keyfun);
       if (!pos)
         return make_like(nil, seq);
       return sub(seq, pos, t);
@@ -7862,8 +7861,7 @@ val drop_until(val pred, val seq, val keyfun)
   case STR:
   case VEC:
     {
-      val key = default_arg(keyfun, identity_f);
-      val pos = pos_if(pred, seq, key);
+      val pos = pos_if(pred, seq, keyfun);
       if (!pos)
         return seq;
       return sub(seq, succ(pos), t);
