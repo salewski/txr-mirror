@@ -1139,14 +1139,14 @@ static val h_fun(match_line_ctx *c)
       if (arg && bindable(arg)) {
         val val = tx_lookup_var(arg, c->bindings);
         if (val) {
-          bindings_cp = acons_new(param, cdr(val), bindings_cp);
+          bindings_cp = cons(cons(param, cdr(val)), bindings_cp);
         } else {
           bindings_cp = alist_nremove1(bindings_cp, param);
           ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
         }
       } else {
         val val = txeval(elem, arg, c->bindings);
-        bindings_cp = acons_new(param, val, bindings_cp);
+        bindings_cp = cons(cons(param, val), bindings_cp);
       }
     }
 
@@ -3608,14 +3608,14 @@ static val v_fun(match_files_ctx *c)
       if (bindable(arg)) {
         val val = tx_lookup_var(arg, c->bindings);
         if (val) {
-          bindings_cp = acons_new(param, cdr(val), bindings_cp);
+          bindings_cp = cons(cons(param, cdr(val)), bindings_cp);
         } else {
           bindings_cp = alist_nremove1(bindings_cp, param);
           ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
         }
       } else {
         val val = txeval(specline, arg, c->bindings);
-        bindings_cp = acons_new(param, val, bindings_cp);
+        bindings_cp = cons(cons(param, val), bindings_cp);
       }
     }
 
