@@ -78,13 +78,12 @@ val weak_keys_k, weak_vals_k, equal_based_k;
 static struct hash *reachable_weak_hashes;
 static struct hash_iter *reachable_iters;
 
+static int hash_str_limit = 128, hash_rec_limit = 32;
+
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
 loc gethash_l(val hash, val key, loc new_p);
 #endif
-
-#define HASH_STR_LIMIT 128
-#define HASH_REC_LIMIT 32
 
 /*
  * This is is an adaptation of hashpjw, from Compilers: Principles, Techniques
@@ -95,7 +94,7 @@ loc gethash_l(val hash, val key, loc new_p);
  */
 static unsigned long hash_c_str(const wchar_t *str)
 {
-  int count = HASH_STR_LIMIT;
+  int count = hash_str_limit;
   unsigned long h = 0;
   while (*str && count--) {
     unsigned long g;
@@ -174,7 +173,7 @@ cnum equal_hash(val obj, int *count)
     return (equal_hash(car(obj), count)
             + 32 * (equal_hash(cdr(obj), count) & (NUM_MAX / 16))) & NUM_MAX;
   case LSTR:
-    lazy_str_force_upto(obj, num(HASH_STR_LIMIT - 1));
+    lazy_str_force_upto(obj, num(hash_str_limit - 1));
     return equal_hash(obj->ls.prefix, count);
   case BGNUM:
     return mp_hash(mp(obj)) & NUM_MAX;
@@ -650,7 +649,7 @@ val copy_hash(val existing)
 val gethash_c(val hash, val key, loc new_p)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
-  int lim = HASH_REC_LIMIT;
+  int lim = hash_rec_limit;
   cnum hv = h->hash_fun(key, &lim);
   loc pchain = vecref_l(h->table, num_fast(hv % h->modulus));
   val old = deref(pchain);
@@ -663,7 +662,7 @@ val gethash_c(val hash, val key, loc new_p)
 val gethash(val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
-  int lim = HASH_REC_LIMIT;
+  int lim = hash_rec_limit;
   cnum hv = h->hash_fun(key, &lim);
   val chain = vecref(h->table, num_fast(hv % h->modulus));
   val found = h->assoc_fun(key, hv, chain);
@@ -689,7 +688,7 @@ val inhash(val hash, val key, val init)
 val gethash_f(val hash, val key, loc found)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
-  int lim = HASH_REC_LIMIT;
+  int lim = hash_rec_limit;
   cnum hv = h->hash_fun(key, &lim);
   val chain = vecref(h->table, num_fast(hv % h->modulus));
   set(found, h->assoc_fun(key, hv, chain));
@@ -699,7 +698,7 @@ val gethash_f(val hash, val key, loc found)
 val gethash_n(val hash, val key, val notfound_val)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
-  int lim = HASH_REC_LIMIT;
+  int lim = hash_rec_limit;
   cnum hv = h->hash_fun(key, &lim);
   val chain = vecref(h->table, num_fast(hv % h->modulus));
   val existing = h->assoc_fun(key, hv, chain);
@@ -723,7 +722,7 @@ val pushhash(val hash, val key, val value)
 val remhash(val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
-  int lim = HASH_REC_LIMIT;
+  int lim = hash_rec_limit;
   cnum hv = h->hash_fun(key, &lim);
   loc pchain = vecref_l(h->table, num_fast(hv % h->modulus));
   val existing = h->assoc_fun(key, hv, deref(pchain));
@@ -834,7 +833,7 @@ val hash_eql(val obj)
 
 val hash_equal(val obj)
 {
-  int lim = HASH_REC_LIMIT;
+  int lim = hash_rec_limit;
   return num_fast(equal_hash(obj, &lim));
 }
 
@@ -1321,6 +1320,20 @@ val hash_revget(val hash, val value, val test, val keyfun)
   return nil;
 }
 
+static val set_hash_str_limit(val lim)
+{
+  val old = num(hash_str_limit);
+  hash_str_limit = c_num(lim);
+  return old;
+}
+
+static val set_hash_rec_limit(val lim)
+{
+  val old = num(hash_rec_limit);
+  hash_rec_limit = c_num(lim);
+  return old;
+}
+
 void hash_init(void)
 {
   weak_keys_k = intern(lit("weak-keys"), keyword_package);
@@ -1366,4 +1379,8 @@ void hash_init(void)
   reg_fun(intern(lit("hash-revget"), user_package), func_n4o(hash_revget, 2));
   reg_fun(intern(lit("hash-begin"), user_package), func_n1(hash_begin));
   reg_fun(intern(lit("hash-next"), user_package), func_n1(hash_next));
+  reg_fun(intern(lit("set-hash-str-limit"), system_package),
+          func_n1(set_hash_str_limit));
+  reg_fun(intern(lit("set-hash-rec-limit"), system_package),
+          func_n1(set_hash_rec_limit));
 }

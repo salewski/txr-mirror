@@ -13,6 +13,8 @@
    (defvar dupes (hash))
    (defvar tagnum (hash :equal-based))
 
+   (sys:set-hash-str-limit 1000)
+
    (defun hash-title (title)
      (let* ((h (logtrunc (hash-equal title) 32))
             (existing [dupes h]))
