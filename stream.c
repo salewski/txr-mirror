@@ -71,7 +71,7 @@ val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
 val print_base_s;
 
 val from_start_k, from_current_k, from_end_k;
-val real_time_k, name_k, addr_k, fd_k;
+val real_time_k, name_k, addr_k, fd_k, byte_oriented_k;
 val format_s;
 
 val stdio_stream_s;
@@ -364,6 +364,7 @@ struct stdio_handle {
   val mode; /* used by tail */
   unsigned is_rotated; /* used by tail */
   unsigned is_real_time;
+  unsigned is_byte_oriented;
 #if HAVE_SOCKETS
   val family;
   val type;
@@ -579,15 +580,21 @@ static val stdio_get_prop(val stream, val ind)
     return h->descr;
   } else if (ind == fd_k) {
     return h->f ? num(fileno(h->f)) : nil;
+  } else if (ind == byte_oriented_k) {
+    return h->is_byte_oriented ? t : nil;
   }
   return nil;
 }
 
 static val stdio_set_prop(val stream, val ind, val prop)
 {
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+
   if (ind == real_time_k) {
-    struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
     h->is_real_time = prop ? 1 : 0;
+    return t;
+  } else if (ind == byte_oriented_k) {
+    h->is_byte_oriented = prop ? 1 : 0;
     return t;
   }
   return nil;
@@ -688,8 +695,17 @@ static val stdio_get_char(val stream)
     return rcyc_pop(&h->unget_c);
 
   if (h->f) {
-    wint_t ch = utf8_decode(&h->ud, stdio_get_char_callback,
-                            coerce(mem_t *, h->f));
+    wint_t ch;
+
+    if (h->is_byte_oriented) {
+      ch = se_getc(h->f);
+      if (ch == 0)
+        ch = 0xDC00;
+    } else {
+        ch = utf8_decode(&h->ud, stdio_get_char_callback,
+                         coerce(mem_t *, h->f));
+    }
+
     return (ch != WEOF) ? chr(ch) : stdio_maybe_read_error(stream);
   }
   return stdio_maybe_read_error(stream);
@@ -1307,6 +1323,7 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
 #else
   h->is_real_time = 0;
 #endif
+  h->is_byte_oriented = 0;
 #if HAVE_SOCKETS
   h->family = nil;
   h->type = nil;
@@ -3898,6 +3915,7 @@ void stream_init(void)
   name_k = intern(lit("name"), keyword_package);
   addr_k = intern(lit("addr"), keyword_package);
   fd_k = intern(lit("fd"), keyword_package);
+  byte_oriented_k = intern(lit("byte-oriented"), keyword_package);
   format_s = intern(lit("format"), user_package);
   stdio_stream_s = intern(lit("stdio-stream"), user_package);
 #if HAVE_SOCKETS

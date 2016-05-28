@@ -34627,15 +34627,37 @@ value.  If the stream does not understand a property, nil is returned, which is
 also returned if the property exists, but its value happens to be
 .codn nil .
 
-Properties are currently used for marking certain streams as "real-time" (see
-the
+The
+.code :name
+property is widely supported by streams of various types. It associates
+the stream with a name. This property is not always modifiable.
+
+File, process and stream socket I/O streams have a
+.code :fd
+property which can be accessed, but not modified. It retrieves
+the same value as the
+.code stream-fd
+function.
+
+The "real time"
+property supported by these streams, connected with the
 .code real-time-stream-p
-function above), and also for setting the priority at
-which messages are reported to syslog by the
+function, also appears as the
+.code :real-time
+property.
+
+I/O streams also have a property called
+.code :byte-oriented
+which, if set, suppresses the decoding of UTF-8 on character input. Rather,
+each byte of the file corresponds directly to one character. Bytes
+in the range 1 to 255 correspond to the character code points U+0001
+to U+00FF. Byte value 0 is mapped to the code point U+DC00.
+
+The logging priority of the
 .code *stdlog*
-stream (see
-.code *stdlog*
-in the Unix Syslog section).
+syslog stream is controlled by the
+.code :prio
+property.
 
 If
 .meta stream
