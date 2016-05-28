@@ -1,7 +1,8 @@
 @(do
    (defun stream-positioned-to-right-place (name)
      (let* ((stream (open-file name "r+b"))
-            (pre (read-until-match #/@\(txr\)/ stream t)))
+            (pre (progn (stream-set-prop stream :byte-oriented t)
+                        (read-until-match #/@\(txr\)/ stream t))))
        (when (or (empty pre) (not (search-str pre "@(txr)")))
           (throwf 'error "~a isn't a TXR executable" name))
        stream)))
