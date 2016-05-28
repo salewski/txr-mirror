@@ -56,7 +56,7 @@ struct hash {
   cnum count;
   val userdata;
   int usecount;
-  cnum (*hash_fun)(val);
+  cnum (*hash_fun)(val, int *);
   val (*equal_fun)(val, val);
   val (*assoc_fun)(val key, val list);
   val (*acons_new_c_fun)(val key, loc new_p, loc list);
@@ -82,6 +82,9 @@ static struct hash_iter *reachable_iters;
 loc gethash_l(val hash, val key, loc new_p);
 #endif
 
+#define HASH_STR_LIMIT 128
+#define HASH_REC_LIMIT 32
+
 /*
  * This is is an adaptation of hashpjw, from Compilers: Principles, Techniques
  * and Tools, Aho, Sethi, Ulman, 1988. P. 436.  The register is wider by
@@ -91,8 +94,9 @@ loc gethash_l(val hash, val key, loc new_p);
  */
 static unsigned long hash_c_str(const wchar_t *str)
 {
+  int count = HASH_STR_LIMIT;
   unsigned long h = 0;
-  while (*str) {
+  while (*str && count--) {
     unsigned long g;
     h = (h << 4) + *str++;
     g = h & 0x7C000000;
@@ -119,16 +123,19 @@ static cnum hash_double(double n)
   return h & NUM_MAX;
 }
 
-static cnum equal_hash(val obj)
+cnum equal_hash(val obj, int *count)
 {
+  if ((*count)-- <= 0)
+    return 0;
+
   switch (type(obj)) {
   case NIL:
     return NUM_MAX;
   case LIT:
     return hash_c_str(litptr(obj)) & NUM_MAX;
   case CONS:
-    return (equal_hash(obj->c.car)
-            + 32 * (equal_hash(obj->c.cdr) & (NUM_MAX / 16))) & NUM_MAX;
+    return (equal_hash(obj->c.car, count)
+            + 32 * (equal_hash(obj->c.cdr, count) & (NUM_MAX / 16))) & NUM_MAX;
   case STR:
     return hash_c_str(obj->st.str) & NUM_MAX;
   case CHR:
@@ -146,27 +153,28 @@ static cnum equal_hash(val obj)
     }
     break;
   case FUN:
-    return (coerce(cnum, obj->f.f.interp_fun) + equal_hash(obj->f.env)) & NUM_MAX;
+    return (coerce(cnum, obj->f.f.interp_fun)
+            + equal_hash(obj->f.env, count)) & NUM_MAX;
   case VEC:
     {
       val length = obj->v.vec[vec_length];
-      cnum i, h = equal_hash(obj->v.vec[vec_length]);
+      cnum i, h = equal_hash(obj->v.vec[vec_length], count);
       cnum len = c_num(length);
 
       for (i = 0; i < len; i++) {
         h = 32 * (h & (NUM_MAX / 16));
-        h += equal_hash(obj->v.vec[i]);
+        h += equal_hash(obj->v.vec[i], count);
         h &= NUM_MAX;
       }
 
       return h;
     }
   case LCONS:
-    return (equal_hash(car(obj))
-            + 32 * (equal_hash(cdr(obj)) & (NUM_MAX / 16))) & NUM_MAX;
+    return (equal_hash(car(obj), count)
+            + 32 * (equal_hash(cdr(obj), count) & (NUM_MAX / 16))) & NUM_MAX;
   case LSTR:
-    lazy_str_force(obj);
-    return equal_hash(obj->ls.prefix);
+    lazy_str_force_upto(obj, num(HASH_STR_LIMIT - 1));
+    return equal_hash(obj->ls.prefix, count);
   case BGNUM:
     return mp_hash(mp(obj)) & NUM_MAX;
   case FLNUM:
@@ -175,18 +183,18 @@ static cnum equal_hash(val obj)
     if (obj->co.ops->equalsub) {
       val sub = obj->co.ops->equalsub(obj);
       if (sub)
-        return equal_hash(sub);
+        return equal_hash(sub, count);
     }
-    return obj->co.ops->hash(obj) & NUM_MAX;
+    return obj->co.ops->hash(obj, count) & NUM_MAX;
   case RNG:
-    return (equal_hash(obj->rn.from)
-            + 32 * (equal_hash(obj->rn.to) & (NUM_MAX / 16))) & NUM_MAX;
+    return (equal_hash(obj->rn.from, count)
+            + 32 * (equal_hash(obj->rn.to, count) & (NUM_MAX / 16))) & NUM_MAX;
   }
 
   internal_error("unhandled case in equal function");
 }
 
-static cnum eql_hash(val obj)
+static cnum eql_hash(val obj, int *count)
 {
   switch (tag(obj)) {
   case TAG_PTR:
@@ -198,8 +206,8 @@ static cnum eql_hash(val obj)
     case FLNUM:
       return hash_double(obj->fl.n);
     case RNG:
-      return (eql_hash(obj->rn.from)
-              + 32 * (eql_hash(obj->rn.to) & (NUM_MAX / 16))) & NUM_MAX;
+      return (eql_hash(obj->rn.from, count)
+              + 32 * (eql_hash(obj->rn.to, count) & (NUM_MAX / 16))) & NUM_MAX;
     default:
       switch (sizeof (mem_t *)) {
       case 4:
@@ -224,8 +232,10 @@ static cnum eql_hash(val obj)
   abort();
 }
 
-cnum cobj_hash_op(val obj)
+cnum cobj_hash_op(val obj, int *count)
 {
+  (void) count;
+
   switch (sizeof (mem_t *)) {
   case 4:
     return (coerce(cnum, obj) >> 4) & NUM_MAX;
@@ -333,11 +343,14 @@ static val hash_equal_op(val left, val right)
   return eq(pending, nil);
 }
 
-static cnum hash_hash_op(val obj)
+static cnum hash_hash_op(val obj, int *count)
 {
   cnum out = 0;
   struct hash *h = coerce(struct hash *, obj->co.handle);
   val iter, cell;
+
+  if ((*count)-- <= 0)
+    return 0;
 
   switch (sizeof (mem_t *)) {
   case 4:
@@ -346,13 +359,13 @@ static cnum hash_hash_op(val obj)
     out += coerce(cnum, h->hash_fun) >> 5;
   }
 
-  out += equal_hash(h->userdata);
+  out += equal_hash(h->userdata, count);
   out &= NUM_MAX;
 
   iter = hash_begin(obj);
 
   while ((cell = hash_next(iter)) != nil) {
-    out += equal_hash(cell);
+    out += equal_hash(cell, count);
     out &= NUM_MAX;
   }
 
@@ -479,8 +492,9 @@ static void hash_grow(struct hash *h, val hash)
       val entry = car(conses);
       val next = cdr(conses);
       val key = car(entry);
+      int lim = HASH_REC_LIMIT;
       loc pchain = vecref_l(new_table,
-                            num_fast(h->hash_fun(key) % new_modulus));
+                            num_fast(h->hash_fun(key, &lim) % new_modulus));
       set(cdr_l(conses), deref(pchain));
       set(pchain, conses);
       conses = next;
@@ -573,7 +587,8 @@ val copy_hash(val existing)
 val gethash_c(val hash, val key, loc new_p)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
-  loc pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
+  int lim = HASH_REC_LIMIT;
+  loc pchain = vecref_l(h->table, num_fast(h->hash_fun(key, &lim) % h->modulus));
   val old = deref(pchain);
   val cell = h->acons_new_c_fun(key, new_p, pchain);
   if (old != deref(pchain) && ++h->count > 2 * h->modulus && h->usecount == 0)
@@ -584,7 +599,8 @@ val gethash_c(val hash, val key, loc new_p)
 val gethash(val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
-  val chain = vecref(h->table, num_fast(h->hash_fun(key) % h->modulus));
+  int lim = HASH_REC_LIMIT;
+  val chain = vecref(h->table, num_fast(h->hash_fun(key, &lim) % h->modulus));
   val found = h->assoc_fun(key, chain);
   return cdr(found);
 }
@@ -608,7 +624,8 @@ val inhash(val hash, val key, val init)
 val gethash_f(val hash, val key, loc found)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
-  val chain = vecref(h->table, num_fast(h->hash_fun(key) % h->modulus));
+  int lim = HASH_REC_LIMIT;
+  val chain = vecref(h->table, num_fast(h->hash_fun(key, &lim) % h->modulus));
   set(found, h->assoc_fun(key, chain));
   return cdr(deref(found));
 }
@@ -616,7 +633,8 @@ val gethash_f(val hash, val key, loc found)
 val gethash_n(val hash, val key, val notfound_val)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
-  val chain = vecref(h->table, num_fast(h->hash_fun(key) % h->modulus));
+  int lim = HASH_REC_LIMIT;
+  val chain = vecref(h->table, num_fast(h->hash_fun(key, &lim) % h->modulus));
   val existing = h->assoc_fun(key, chain);
   return if3(existing, cdr(existing), default_bool_arg(notfound_val));
 }
@@ -638,7 +656,8 @@ val pushhash(val hash, val key, val value)
 val remhash(val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
-  loc pchain = vecref_l(h->table, num_fast(h->hash_fun(key) % h->modulus));
+  int lim = HASH_REC_LIMIT;
+  loc pchain = vecref_l(h->table, num_fast(h->hash_fun(key, &lim) % h->modulus));
   val existing = h->assoc_fun(key, deref(pchain));
 
   if (existing) {
@@ -741,12 +760,14 @@ val maphash(val fun, val hash)
 
 val hash_eql(val obj)
 {
-  return num_fast(eql_hash(obj));
+  int lim = 0;
+  return num_fast(eql_hash(obj, &lim));
 }
 
 val hash_equal(val obj)
 {
-  return num_fast(equal_hash(obj));
+  int lim = HASH_REC_LIMIT;
+  return num_fast(equal_hash(obj, &lim));
 }
 
 /*

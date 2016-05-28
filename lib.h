@@ -226,7 +226,7 @@ struct cobj_ops {
   void (*print)(val self, val stream, val pretty);
   void (*destroy)(val self);
   void (*mark)(val self);
-  cnum (*hash)(val self);
+  cnum (*hash)(val self, int *count);
   val (*equalsub)(val self);
 };
 
@@ -245,7 +245,7 @@ void cobj_print_op(val, val, val);
 void cobj_destroy_stub_op(val);
 void cobj_destroy_free_op(val);
 void cobj_mark_op(val);
-cnum cobj_hash_op(val);
+cnum cobj_hash_op(val, int *);
 
 struct env {
   obj_common;

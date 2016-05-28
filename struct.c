@@ -1044,17 +1044,17 @@ static val struct_inst_equal(val left, val right)
   return t;
 }
 
-static cnum struct_inst_hash(val obj)
+static cnum struct_inst_hash(val obj, int *count)
 {
   struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
   struct struct_type *st = si->type;
-  cnum nslots = st->nslots, sl, out = c_num(hash_equal(st->self));
+  cnum nslots = st->nslots, sl, out = equal_hash(st->self, count);
 
   check_init_lazy_struct(obj, si);
 
   for (sl = 0; sl < nslots; sl++) {
-    val hash = hash_equal(si->slot[sl]);
-    out += c_num(hash);
+    cnum hash = equal_hash(si->slot[sl], count);
+    out += hash;
     out &= NUM_MAX;
   }
 
