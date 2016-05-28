@@ -39,6 +39,7 @@
 #include "signal.h"
 #include "unwind.h"
 #include "stream.h"
+#include "eval.h"
 #include "hash.h"
 
 typedef enum hash_flags {
@@ -1325,4 +1326,44 @@ void hash_init(void)
   weak_keys_k = intern(lit("weak-keys"), keyword_package);
   weak_vals_k = intern(lit("weak-vals"), keyword_package);
   equal_based_k = intern(lit("equal-based"), keyword_package);
+
+  reg_fun(intern(lit("make-hash"), user_package), func_n3(make_hash));
+  reg_fun(intern(lit("make-similar-hash"), user_package), func_n1(make_similar_hash));
+  reg_fun(intern(lit("copy-hash"), user_package), func_n1(copy_hash));
+  reg_fun(intern(lit("hash"), user_package), func_n0v(hashv));
+  reg_fun(intern(lit("hash-construct"), user_package), func_n2(hash_construct));
+  reg_fun(intern(lit("hash-from-pairs"), user_package), func_n1v(hash_from_pairs_v));
+  reg_fun(intern(lit("hash-list"), user_package), func_n1v(hash_list));
+  reg_fun(intern(lit("gethash"), user_package), func_n3o(gethash_n, 2));
+  reg_fun(intern(lit("inhash"), user_package), func_n3o(inhash, 2));
+  reg_fun(intern(lit("sethash"), user_package), func_n3(sethash));
+  reg_fun(intern(lit("pushhash"), user_package), func_n3(pushhash));
+  reg_fun(intern(lit("remhash"), user_package), func_n2(remhash));
+  reg_fun(intern(lit("hash-count"), user_package), func_n1(hash_count));
+  reg_fun(intern(lit("get-hash-userdata"), user_package),
+          func_n1(get_hash_userdata));
+  reg_fun(intern(lit("set-hash-userdata"), user_package),
+          func_n2(set_hash_userdata));
+  reg_fun(intern(lit("hashp"), user_package), func_n1(hashp));
+  reg_fun(intern(lit("maphash"), user_package), func_n2(maphash));
+  reg_fun(intern(lit("hash-eql"), user_package), func_n1(hash_eql));
+  reg_fun(intern(lit("hash-equal"), user_package), func_n1(hash_equal));
+  reg_fun(intern(lit("hash-keys"), user_package), func_n1(hash_keys));
+  reg_fun(intern(lit("hash-values"), user_package), func_n1(hash_values));
+  reg_fun(intern(lit("hash-pairs"), user_package), func_n1(hash_pairs));
+  reg_fun(intern(lit("hash-alist"), user_package), func_n1(hash_alist));
+  reg_fun(intern(lit("hash-uni"), user_package), func_n3o(hash_uni, 2));
+  reg_fun(intern(lit("hash-diff"), user_package), func_n2(hash_diff));
+  reg_fun(intern(lit("hash-isec"), user_package), func_n3o(hash_isec, 2));
+  reg_fun(intern(lit("hash-subset"), user_package), func_n2(hash_subset));
+  reg_fun(intern(lit("hash-proper-subset"), user_package), func_n2(hash_proper_subset));
+  reg_fun(intern(lit("group-by"), user_package), func_n2v(group_by));
+  reg_fun(intern(lit("group-reduce"), user_package),
+          func_n6o(group_reduce, 4));
+  reg_fun(intern(lit("hash-update"), user_package), func_n2(hash_update));
+  reg_fun(intern(lit("hash-update-1"), user_package),
+          func_n4o(hash_update_1, 3));
+  reg_fun(intern(lit("hash-revget"), user_package), func_n4o(hash_revget, 2));
+  reg_fun(intern(lit("hash-begin"), user_package), func_n1(hash_begin));
+  reg_fun(intern(lit("hash-next"), user_package), func_n1(hash_next));
 }
