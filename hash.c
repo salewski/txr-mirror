@@ -58,8 +58,8 @@ struct hash {
   int usecount;
   cnum (*hash_fun)(val, int *);
   val (*equal_fun)(val, val);
-  val (*assoc_fun)(val key, val list);
-  val (*acons_new_c_fun)(val key, loc new_p, loc list);
+  val (*assoc_fun)(val key, cnum hash, val list);
+  val (*acons_new_c_fun)(val key, cnum hash, loc new_p, loc list);
 };
 
 struct hash_iter {
@@ -300,7 +300,7 @@ static val hash_equal_op(val left, val right)
      * a difference between the hash tables, and conclude they are different.
      * If there is no match, then we insert the cell into the pending list.
      */
-    found = l->assoc_fun(car(lcell), pending);
+    found = l->assoc_fun(car(lcell), lcell->ch.hash, pending);
 
     if (found && !equal(cdr(found), cdr(lcell))) {
       return nil;
@@ -319,7 +319,7 @@ static val hash_equal_op(val left, val right)
     /*
      * The logic is mirrored for the right cell.
      */
-    found = l->assoc_fun(car(rcell), pending);
+    found = l->assoc_fun(car(rcell), rcell->ch.hash, pending);
 
     if (found && !equal(cdr(found), cdr(rcell))) {
       return nil;
@@ -491,10 +491,8 @@ static void hash_grow(struct hash *h, val hash)
     while (conses) {
       val entry = car(conses);
       val next = cdr(conses);
-      val key = car(entry);
-      int lim = HASH_REC_LIMIT;
       loc pchain = vecref_l(new_table,
-                            num_fast(h->hash_fun(key, &lim) % new_modulus));
+                            num_fast(entry->ch.hash % new_modulus));
       set(cdr_l(conses), deref(pchain));
       set(pchain, conses);
       conses = next;
@@ -504,6 +502,70 @@ static void hash_grow(struct hash *h, val hash)
   h->modulus = new_modulus;
   h->table = new_table;
   set(mkloc(h->table, hash), new_table);
+}
+
+static val hash_assoc(val key, cnum hash, val list)
+{
+  list = nullify(list);
+
+  while (list) {
+    val elem = car(list);
+    if (elem->ch.hash == hash && equal(car(elem), key))
+      return elem;
+    list = cdr(list);
+  }
+
+  return nil;
+}
+
+static val hash_assql(val key, cnum hash, val list)
+{
+  list = nullify(list);
+
+  while (list) {
+    val elem = car(list);
+    if (elem->ch.hash == hash && eql(car(elem), key))
+      return elem;
+    list = cdr(list);
+  }
+
+  return nil;
+}
+
+static val hash_acons_new_c(val key, cnum hash, loc new_p, loc list)
+{
+  val existing = hash_assoc(key, hash, deref(list));
+
+  if (existing) {
+    if (!nullocp(new_p))
+      deref(new_p) = nil;
+    return existing;
+  } else {
+    val nc = cons(key, nil);
+    nc->ch.hash = hash;
+    set(list, cons(nc, deref(list)));
+    if (!nullocp(new_p))
+      deref(new_p) = t;
+    return nc;
+  }
+}
+
+static val hash_aconsql_new_c(val key, cnum hash, loc new_p, loc list)
+{
+  val existing = hash_assql(key, hash, deref(list));
+
+  if (existing) {
+    if (!nullocp(new_p))
+      deref(new_p) = nil;
+    return existing;
+  } else {
+    val nc = cons(key, nil);
+    nc->ch.hash = hash;
+    set(list, cons(nc, deref(list)));
+    if (!nullocp(new_p))
+      deref(new_p) = t;
+    return nc;
+  }
 }
 
 val make_hash(val weak_keys, val weak_vals, val equal_based)
@@ -528,8 +590,8 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
     h->usecount = 0;
     h->hash_fun = equal_based ? equal_hash : eql_hash;
     h->equal_fun = equal_based ? equal : eql;
-    h->assoc_fun = equal_based ? assoc : assql;
-    h->acons_new_c_fun = equal_based ? acons_new_c : aconsql_new_c;
+    h->assoc_fun = equal_based ? hash_assoc : hash_assql;
+    h->acons_new_c_fun = equal_based ? hash_acons_new_c : hash_aconsql_new_c;
 
     return hash;
   }
@@ -588,9 +650,10 @@ val gethash_c(val hash, val key, loc new_p)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = HASH_REC_LIMIT;
-  loc pchain = vecref_l(h->table, num_fast(h->hash_fun(key, &lim) % h->modulus));
+  cnum hv = h->hash_fun(key, &lim);
+  loc pchain = vecref_l(h->table, num_fast(hv % h->modulus));
   val old = deref(pchain);
-  val cell = h->acons_new_c_fun(key, new_p, pchain);
+  val cell = h->acons_new_c_fun(key, hv, new_p, pchain);
   if (old != deref(pchain) && ++h->count > 2 * h->modulus && h->usecount == 0)
     hash_grow(h, hash);
   return cell;
@@ -600,8 +663,9 @@ val gethash(val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = HASH_REC_LIMIT;
-  val chain = vecref(h->table, num_fast(h->hash_fun(key, &lim) % h->modulus));
-  val found = h->assoc_fun(key, chain);
+  cnum hv = h->hash_fun(key, &lim);
+  val chain = vecref(h->table, num_fast(hv % h->modulus));
+  val found = h->assoc_fun(key, hv, chain);
   return cdr(found);
 }
 
@@ -625,8 +689,9 @@ val gethash_f(val hash, val key, loc found)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = HASH_REC_LIMIT;
-  val chain = vecref(h->table, num_fast(h->hash_fun(key, &lim) % h->modulus));
-  set(found, h->assoc_fun(key, chain));
+  cnum hv = h->hash_fun(key, &lim);
+  val chain = vecref(h->table, num_fast(hv % h->modulus));
+  set(found, h->assoc_fun(key, hv, chain));
   return cdr(deref(found));
 }
 
@@ -634,8 +699,9 @@ val gethash_n(val hash, val key, val notfound_val)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = HASH_REC_LIMIT;
-  val chain = vecref(h->table, num_fast(h->hash_fun(key, &lim) % h->modulus));
-  val existing = h->assoc_fun(key, chain);
+  cnum hv = h->hash_fun(key, &lim);
+  val chain = vecref(h->table, num_fast(hv % h->modulus));
+  val existing = h->assoc_fun(key, hv, chain);
   return if3(existing, cdr(existing), default_bool_arg(notfound_val));
 }
 
@@ -657,8 +723,9 @@ val remhash(val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = HASH_REC_LIMIT;
-  loc pchain = vecref_l(h->table, num_fast(h->hash_fun(key, &lim) % h->modulus));
-  val existing = h->assoc_fun(key, deref(pchain));
+  cnum hv = h->hash_fun(key, &lim);
+  loc pchain = vecref_l(h->table, num_fast(hv % h->modulus));
+  val existing = h->assoc_fun(key, hv, deref(pchain));
 
   if (existing) {
     val cell = memq(existing, deref(pchain));

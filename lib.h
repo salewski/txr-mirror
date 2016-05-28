@@ -98,6 +98,12 @@ struct cons {
   val car, cdr;
 };
 
+struct cons_hash_entry {
+  obj_common;
+  val car, cdr;
+  cnum hash;
+};
+
 struct string {
   obj_common;
   wchar_t *str;
@@ -272,6 +278,7 @@ struct range {
 union obj {
   struct any t;
   struct cons c;
+  struct cons_hash_entry ch;
   struct string st;
   struct sym s;
   struct package pk;
