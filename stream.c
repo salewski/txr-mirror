@@ -371,9 +371,9 @@ struct stdio_handle {
   int pid;
 #endif
   val mode; /* used by tail */
-  unsigned is_rotated; /* used by tail */
-  unsigned is_real_time;
-  unsigned is_byte_oriented;
+  unsigned is_rotated : 8; /* used by tail */
+  unsigned is_real_time : 8;
+  unsigned is_byte_oriented : 8;
 #if CONFIG_STDIO_STRICT
   enum stdio_op last_op;
 #endif
