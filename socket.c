@@ -69,8 +69,8 @@ struct dgram_stream {
   mem_t *tx_buf;
   int rx_max, rx_size, rx_pos;
   int tx_pos;
-  unsigned is_connected : 1;
-  unsigned is_byte_oriented : 1;
+  unsigned is_connected : 8;
+  unsigned is_byte_oriented : 8;
 };
 
 val sockaddr_in_s, sockaddr_in6_s, sockaddr_un_s, addrinfo_s;
