@@ -1,3 +1,35 @@
+                                    TXR 142
+                                   2016-05-29
+
+
+  Features
+
+  - The remove-path funtion takes additional Boolean argument
+    to suppress exception.
+  - Better reporting of expansion locations across expansions
+    of the op, do and related macros.
+  - Support for deploying stand-alone executables.
+  - Optimizations in hashing.
+  - Support for byte-oriented stream operation instead of
+    UTF-8 decoding.
+
+  Bugs
+
+  - Bugfix in clumped option processing: test case -B-c.
+  - Uses of POSIX sleep function were removed. These occurred
+    in tail streams implementation. This function can interact
+    with the SIGALRM signal.
+  - Fixed broken argument defaulting in take-until function.
+  - Fixed regression from TXR 42 (!) in pattern
+    function argument passing. This bug has evaded detection for
+    100 public releases, over 4.5 years.
+  - Added support for adherence to ISO C rules regarding switching
+    between input and output operations on update streams,
+    hiding this issue from TXR programs.  This seems to be needed
+    on all tested platforms other than the GNU C library.
+
+
+
                                     TXR 141
                                    2016-05-20
 
