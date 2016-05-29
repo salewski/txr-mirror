@@ -69,7 +69,7 @@ struct dgram_stream {
   mem_t *tx_buf;
   int rx_max, rx_size, rx_pos;
   int tx_pos;
-  unsigned sock_connected : 1;
+  unsigned is_connected : 1;
 };
 
 val sockaddr_in_s, sockaddr_in6_s, sockaddr_un_s, addrinfo_s;
@@ -312,7 +312,7 @@ static val make_dgram_sock_stream(int fd, val family, val peer,
   d->stream = stream;
   d->family = family;
   d->peer = peer;
-  d->sock_connected = 0;
+  d->is_connected = 0;
   return stream;
 }
 
@@ -484,7 +484,7 @@ static val dgram_flush(val stream)
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
   if (d->fd != -1 && d->tx_buf) {
     if (d->peer) {
-      int nwrit = d->sock_connected
+      int nwrit = d->is_connected
                   ? send(d->fd, d->tx_buf, d->tx_pos, 0)
                   : sendto(d->fd, d->tx_buf, d->tx_pos, 0,
                            coerce(struct sockaddr *, &d->peer_addr),
@@ -774,7 +774,7 @@ static val sock_connect(val sock, val sockaddr, val timeout)
 
     if (sock_type(sock) == num_fast(SOCK_DGRAM)) {
       struct dgram_stream *d = coerce(struct dgram_stream *, sock->co.handle);
-      d->sock_connected = 1;
+      d->is_connected = 1;
     }
 
     return sock;
@@ -798,7 +798,7 @@ static val sock_mark_connected(val sock)
 
     if (sock_type(sock) == num_fast(SOCK_DGRAM)) {
       struct dgram_stream *d = coerce(struct dgram_stream *, sock->co.handle);
-      d->sock_connected = 1;
+      d->is_connected = 1;
     }
 
     return sock;
