@@ -65,6 +65,11 @@
 #include "regex.h"
 #include "txr.h"
 
+/* Adhere to ISO C rules about direction switching on update streams. */
+#ifndef __gnu_linux__
+#define CONFIG_STDIO_STRICT 1
+#endif
+
 val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
 val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
@@ -348,6 +353,10 @@ val make_null_stream(void)
   return cobj(coerce(mem_t *, s), stream_s, &null_ops.cobj_ops);
 }
 
+#if CONFIG_STDIO_STRICT
+enum stdio_op { stdio_none, stdio_read, stdio_write };
+#endif
+
 struct stdio_handle {
   struct strm_base a;
   FILE *f;
@@ -365,6 +374,9 @@ struct stdio_handle {
   unsigned is_rotated; /* used by tail */
   unsigned is_real_time;
   unsigned is_byte_oriented;
+#if CONFIG_STDIO_STRICT
+  enum stdio_op last_op;
+#endif
 #if HAVE_SOCKETS
   val family;
   val type;
@@ -495,6 +507,30 @@ static int se_fflush(FILE *f)
   return ret;
 }
 
+#if CONFIG_STDIO_STRICT
+static void stdio_switch(struct stdio_handle *h, enum stdio_op op)
+{
+  if (h->last_op != op) {
+    if (h->f) {
+      switch (h->last_op) {
+      case stdio_read:
+        stdio_fseek(h->f, zero, strm_cur);
+        break;
+      case stdio_write:
+        se_fflush(h->f);
+        break;
+      default:
+        break;
+      }
+    }
+
+    h->last_op = op;
+  }
+}
+#else
+#define stdio_switch(X, Y) ((void) 0)
+#endif
+
 static int stdio_put_char_callback(int ch, mem_t *f)
 {
   int ret = se_putc(ch, coerce(FILE *, f)) != EOF;
@@ -515,6 +551,8 @@ static val stdio_put_string(val stream, val str)
   if (h->f != 0) {
     const wchar_t *s = c_str(str);
 
+    stdio_switch(h, stdio_write);
+
     while (*s) {
       if (!utf8_encode(*s++, stdio_put_char_callback, coerce(mem_t *, h->f)))
         return stdio_maybe_error(stream, lit("writing"));
@@ -528,6 +566,7 @@ static val stdio_put_char(val stream, val ch)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   errno = 0;
+  stdio_switch(h, stdio_write);
   return h->f != 0 && utf8_encode(c_chr(ch), stdio_put_char_callback,
                                   coerce(mem_t *, h->f))
          ? t : stdio_maybe_error(stream, lit("writing"));
@@ -537,6 +576,7 @@ static val stdio_put_byte(val stream, int b)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   errno = 0;
+  stdio_switch(h, stdio_write);
   return h->f != 0 && se_putc(b, coerce(FILE *, h->f)) != EOF
          ? t : stdio_maybe_error(stream, lit("writing"));
 }
@@ -545,6 +585,10 @@ static val stdio_flush(val stream)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   errno = 0;
+#if CONFIG_STDIO_STRICT
+  if (h->f && h->last_op != stdio_write)
+    return t;
+#endif
   return (h->f != 0 && se_fflush(h->f) == 0)
          ? t : stdio_maybe_error(stream, lit("flushing"));
 }
@@ -697,6 +741,8 @@ static val stdio_get_char(val stream)
   if (h->f) {
     wint_t ch;
 
+    stdio_switch(h, stdio_read);
+
     if (h->is_byte_oriented) {
       ch = se_getc(h->f);
       if (ch == 0)
@@ -714,6 +760,9 @@ static val stdio_get_char(val stream)
 static val stdio_get_byte(val stream)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+
+  stdio_switch(h, stdio_read);
+
   if (h->f) {
     int ch = se_getc(h->f);
     return (ch != EOF) ? num(ch) : stdio_maybe_read_error(stream);
@@ -956,6 +1005,9 @@ static void tail_strategy(val stream, unsigned long *state)
        */
       if (!h->f) {
         h->f = newf;
+#if CONFIG_STDIO_STRICT
+        h->last_op = stdio_none;
+#endif
         (void) set_mode_props(m, stream);
         break;
       }
@@ -992,6 +1044,9 @@ static void tail_strategy(val stream, unsigned long *state)
         fseek(newf, save_pos, SEEK_SET);
       fclose(h->f);
       h->f = newf;
+#if CONFIG_STDIO_STRICT
+      h->last_op = stdio_none;
+#endif
       (void) set_mode_props(m, stream);
       return;
     }
@@ -1324,6 +1379,9 @@ static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
   h->is_real_time = 0;
 #endif
   h->is_byte_oriented = 0;
+#if CONFIG_STDIO_STRICT
+  h->last_op = stdio_none;
+#endif
 #if HAVE_SOCKETS
   h->family = nil;
   h->type = nil;
