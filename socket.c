@@ -70,6 +70,7 @@ struct dgram_stream {
   int rx_max, rx_size, rx_pos;
   int tx_pos;
   unsigned is_connected : 1;
+  unsigned is_byte_oriented : 1;
 };
 
 val sockaddr_in_s, sockaddr_in6_s, sockaddr_un_s, addrinfo_s;
@@ -444,8 +445,17 @@ static val dgram_get_char(val stream)
   if (d->unget_c) {
     return rcyc_pop(&d->unget_c);
   } else {
-    wint_t ch = utf8_decode(&d->ud, dgram_get_byte_callback,
-                            coerce(mem_t *, d));
+    wint_t ch;
+
+    if (d->is_byte_oriented) {
+      ch = dgram_get_byte_callback(coerce(mem_t *, d));
+      if (ch == 0)
+        ch = 0xDC00;
+    } else {
+      ch = utf8_decode(&d->ud, dgram_get_byte_callback,
+                       coerce(mem_t *, d));
+    }
+
     return (ch != WEOF) ? chr(ch) : nil;
   }
 }
@@ -543,6 +553,8 @@ static val dgram_get_prop(val stream, val ind)
       return format(nil, lit("connected ~s"), d->peer, nao);
 
     return lit("disconnected");
+  } else if (ind == byte_oriented_k) {
+    return d->is_byte_oriented ? t : nil;
   }
 
   return nil;
@@ -550,9 +562,13 @@ static val dgram_get_prop(val stream, val ind)
 
 static val dgram_set_prop(val stream, val ind, val prop)
 {
+  struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
+
   if (ind == addr_k) {
-    struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
     set(mkloc(d->addr, stream), prop);
+    return t;
+  } else if (ind == byte_oriented_k) {
+    d->is_byte_oriented = prop ? 1 : 0;
     return t;
   }
 
