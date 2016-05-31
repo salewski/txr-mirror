@@ -291,7 +291,7 @@ tst/tests/001/%: TXR_ARGS := tests/001/data
 tst/tests/001/query-1.out: TXR_OPTS := -B
 tst/tests/001/query-2.out: TXR_OPTS := -B
 tst/tests/001/query-4.out: TXR_OPTS := -B
-tst/tests/002/%: TXR_OPTS := -DTESTDIR=tests/002
+tst/tests/002/%: TXR_OPTS := -C 142 -DTESTDIR=tests/002
 tst/tests/004/%: TXR_ARGS := -a 123 -b -c
 tst/tests/005/%: TXR_ARGS := tests/005/data
 tst/tests/005/%: TXR_OPTS := -B

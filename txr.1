@@ -3395,25 +3395,6 @@ variable, which
 is visible to the remainder of the entire query. The variable bindings
 survive beyond the clause, but the data stream does not.
 
-The
-.code @(next)
-directive supports the file name conventions as the command
-line. The name
-.code -
-means standard input. Text which starts with a
-.code !
-is
-interpreted as a shell command whose output is read like a file.  These
-interpretations are applied after variable substitution. If the file is
-specified as
-.codn @a ,
-but the variable a expands to
-.strn "!echo foo" ,
-then the output of
-the
-.str "echo foo"
-command will be processed.
-
 .dir skip
 
 The
@@ -7366,12 +7347,7 @@ the keyword list. If the destination is missing, then the
 entire argument list is a keyword list.
 
 The destination may be a string which gives the path name of
-a file to open for output. If the name is
-.code -
-it instead denotes standard output, and if it begins with
-.code !
-then the rest of the shell is treated as a shell command
-to which the output is piped.  The destination string may be specified as a
+a file to open for output.  The destination string may be specified as a
 variable which holds text, as a string literal or as a quasiliteral
 
 Alternatively, the destination may be a stream object.
@@ -42969,6 +42945,29 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 142
+Until version 142, the \*(TX pattern language supported a prefix
+convention on data sources. Data sources beginning with the character
+.code !
+were treated as system command pipes, and data sources beginning with
+.code $
+indicated that a directory is to be scanned. This convention was recognized
+both for command line arguments, the arguments of the
+.code @(next)
+directive, and of the
+.code @(output)
+directive, whether or not the argument was a literal or a computed
+value. This feature was dropped from the language after version 142.
+Also, until version 142, the
+.code @(next)
+directive recognized the name
+.str -
+as denoting standard input, and
+.code @(output)
+recognized it as standard output. These behaviors were also removed;
+versions after 142 recognize this convention only when it appears
+as a command line argument.  All these old behaviors are provided
+if compatibility with 142 or earlier is requested.
 .IP 139
 After \*(TX 139, changes were implemented in the area of pseudo-random
 number generation. Compatibility with 139 brings back the previous

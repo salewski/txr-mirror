@@ -1578,25 +1578,28 @@ static val txeval_allow_ub(val spec, val form, val bindings)
   return do_txeval(spec, form, bindings, t);
 }
 
-static val complex_open(val name, val output, val append, val nothrow)
+static val complex_open(val name, val output, val append,
+                        val nothrow, val from_cmdline)
 {
+  int old_hacky_open = opt_compat && opt_compat <= 142;
+
   if (streamp(name)) {
     return name;
   } else {
     val fc = car(name);
     val result = nil;
 
-    if (fc == chr('$') && output)
+    if (old_hacky_open && fc == chr('$') && output)
       uw_throwf(query_error_s, lit("cannot output to directory: ~a"),
                 name, nao);
 
     uw_catch_begin (if2(nothrow, cons(error_s, nil)), exc_sym, exc);
 
-    if (fc == chr('-')) {
+    if (from_cmdline && fc == chr('-')) {
       result = output ? std_output : std_input;
-    } else if (fc == chr('!')) {
+    } else if (old_hacky_open && fc == chr('!')) {
       result = open_command(cdr(name), output ? lit("w") : lit("r"));
-    } else if (fc == chr('$')) {
+    } else if (old_hacky_open && fc == chr('$')) {
       result = open_directory(cdr(name));
     } else {
       result = open_file(name,
@@ -2411,6 +2414,7 @@ static val v_next(match_files_ctx *c)
       sem_error(specline, lit("next: keyword argument expected, not ~s"), first(args), nao);
 
     {
+      int old_hacky_open = opt_compat && opt_compat <= 142;
       val alist = improper_plist_to_alist(args, list(nothrow_k, nao));
       val from_var = cdr(assoc(var_k, alist));
       val list_expr = cdr(assoc(list_k, alist));
@@ -2474,7 +2478,7 @@ static val v_next(match_files_ctx *c)
                         if3(c->data, cons(c->data, c->data_lineno), t));
           return nil;
         }
-      } else if (nothrow) {
+      } else if (old_hacky_open && nothrow) {
         if (str) {
           c->files = cons(cons(nothrow_k, str), c->files);
         } else {
@@ -2485,7 +2489,7 @@ static val v_next(match_files_ctx *c)
           }
           c->files = cons(cons(nothrow_k, first(c->files)), rest(c->files));
         }
-      } else {
+      } else if (old_hacky_open) {
         if (str) {
           c->files = cons(str, c->files);
         } else {
@@ -2494,6 +2498,16 @@ static val v_next(match_files_ctx *c)
             sem_error(specline, lit("next: out of arguments"), nao);
           c->files = cons(cons(nothrow_k, first(c->files)), rest(c->files));
         }
+      } else {
+        val stream = complex_open(str, nil, nil, nothrow, nil);
+        cons_bind (new_bindings, success,
+                   match_files(mf_file_data(*c, str,
+                                            lazy_stream_cons(stream), one)));
+
+        if (success)
+          return cons(new_bindings,
+                      if3(c->data, cons(c->data, c->data_lineno), t));
+        return nil;
       }
     }
   } else {
@@ -3193,7 +3207,7 @@ static val v_output(match_files_ctx *c)
   val dest_spec = third(first_spec);
   val nothrow = nil;
   val append = nil;
-  val dest = lit("-");
+  val dest = std_output;
   val filter = nil;
   val named_var = nil, continue_expr = nil, finish_expr = nil;
   val alist;
@@ -3293,7 +3307,7 @@ static val v_output(match_files_ctx *c)
     return next_spec_k;
   }
 
-  stream = complex_open(dest, t, append, nothrow);
+  stream = complex_open(dest, t, append, nothrow, nil);
 
   debuglf(specline, lit("opening data sink ~a"), dest, nao);
 
@@ -3985,7 +3999,7 @@ static void open_data_source(match_files_ctx *c)
                                 "since query starts with non-matching "
                                 "directive."), name, nao);
       } else {
-        val stream = complex_open(name, nil, nil, nothrow);
+        val stream = complex_open(name, nil, nil, nothrow, t);
         val spec = first(c->spec);
 
         debuglf(spec, lit("opening data source ~a"), name, nao);
