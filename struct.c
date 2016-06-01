@@ -759,6 +759,20 @@ val slot(val strct, val sym)
   no_such_slot(self, si->type->self, sym);
 }
 
+val maybe_slot(val strct, val sym)
+{
+  const val self = lit("slot");
+  struct struct_inst *si = struct_handle(strct, self);
+
+  if (symbolp(sym)) {
+    loc ptr = lookup_slot_load(strct, si, sym);
+    if (!nullocp(ptr))
+      return deref(ptr);
+  }
+
+  return nil;
+}
+
 val slotset(val strct, val sym, val newval)
 {
   const val self = lit("slotset");

@@ -10300,6 +10300,13 @@ are made to work with strings and vectors:
   (car #(1 2 3)) -> 1
 .cble
 
+Moreover, structure types which define the methods
+.codn car ,
+.code cdr
+and
+.code nullify
+can also be treated in the same way.
+
 The
 .code ldiff
 function is also extended in a special way. When the right parameter
@@ -19287,6 +19294,48 @@ If a method named by the symbol
 is defined for a structure type, then it is used for pretty-printing instances
 of that type. The method takes one argument (in addition to the object), which
 specifies the output stream.
+
+.NP* Sequence Operations on Structures
+
+Structures may be treated as sequences if they define methods named
+by the symbols
+.codn car ,
+.codn cdr ,
+and
+.codn nullify .
+
+If a structure supports these methods, then these methods are used
+by the functions
+.codn car ,
+.codn cdr ,
+.codn nullify ,
+.code empty
+and various other sequence manipulating functions derived from them, when those
+functions are applied to that object.
+
+An object which implements these three methods can be considered to denote
+an abstract sequence. The object's
+.code car
+method should return the first value in that abstract sequence, or else
+.code nil
+if that sequence is empty.
+
+The object's
+.code cdr
+method should return an object denoting the remainder of the sequence,
+or else
+.code nil
+if the sequence is empty or contains only one value.  This returned object can
+be of any type: it may be of the same structure type as that object, a
+different structure type, a list, or whatever else.  If a non-sequence object
+is returned.
+
+The
+.code nullify
+method should return
+.code nil
+if the object is considered to denote an empty sequence. Otherwise it
+should return that object itself.
 
 .coNP Macro @ defstruct
 .synb

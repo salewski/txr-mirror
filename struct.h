@@ -39,6 +39,7 @@ val replace_struct(val target, val source);
 val reset_struct(val strct);
 val find_struct_type(val sym);
 val slot(val strct, val sym);
+val maybe_slot(val strct, val sym);
 val slotset(val strct, val sym, val newval);
 val static_slot(val stype, val sym);
 val static_slot_set(val stype, val sym, val newval);

@@ -101,7 +101,7 @@ val error_s, type_error_s, internal_error_s, panic_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s, syntax_error_s;
 val timeout_error_s, system_error_s;
-val gensym_counter_s;
+val gensym_counter_s, nullify_s;
 
 val nothrow_k, args_k, colon_k, auto_k, fun_k;
 val wrap_k, reflect_k;
@@ -305,6 +305,9 @@ val car(val cons)
     if (zerop(length_str(cons)))
       return nil;
     return chr_str(cons, zero);
+  case COBJ:
+    if (structp(cons))
+      return funcall1(slot(cons, car_s), cons);
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -333,6 +336,9 @@ val cdr(val cons)
     if (le(length(cons), one))
       return nil;
     return sub(cons, one, t);
+  case COBJ:
+    if (structp(cons))
+      return funcall1(slot(cons, cdr_s), cons);
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -692,6 +698,8 @@ val tolist(val seq)
   case LIT:
   case LSTR:
     return list_str(seq);
+  case COBJ:
+    return mapcar(identity_f, seq);
   case NIL:
   case CONS:
   case LCONS:
@@ -715,6 +723,12 @@ val nullify(val seq)
     return if3(length_str_gt(seq, zero), seq, nil);
   case VEC:
     return if3(length_vec(seq) != zero, seq, nil);
+  case COBJ:
+    if (structp(seq)) {
+      val nullify_meth = maybe_slot(seq, nullify_s);
+      if (nullify_meth)
+        return funcall1(nullify_meth, seq);
+    }
   default:
     return seq;
   }
@@ -8041,7 +8055,10 @@ val empty(val seq)
   case COBJ:
     if (seq->co.cls == hash_s)
       return eq(hash_count(seq), zero);
-    /* fallthrough */
+    if (structp(seq)) {
+      val nullify_meth = maybe_slot(seq, nullify_s);
+      return if3(nullify_meth && funcall1(nullify_meth, seq), nil, seq);
+    }
   default:
     type_mismatch(lit("empty: ~s is not a sequence"), seq, nao);
   }
@@ -8635,6 +8652,7 @@ static void obj_init(void)
   timeout_error_s = intern(lit("timeout-error"), user_package);
   assert_s = intern(lit("assert"), user_package);
   name_s = intern(lit("name"), user_package);
+  nullify_s = intern(lit("nullify"), user_package);
 
   args_k = intern(lit("args"), keyword_package);
   nothrow_k = intern(lit("nothrow"), keyword_package);

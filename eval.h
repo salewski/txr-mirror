@@ -28,6 +28,7 @@ extern val dwim_s, lambda_s, vector_lit_s, vec_list_s, list_s;
 extern val hash_lit_s, hash_construct_s, struct_lit_s, qref_s;
 extern val eval_error_s, if_s, call_s;
 extern val eq_s, eql_s, equal_s;
+extern val car_s, cdr_s;
 extern val last_form_evaled, last_form_expanded;
 extern val self_load_path_s;
 
