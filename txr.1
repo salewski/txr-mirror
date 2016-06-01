@@ -19280,6 +19280,14 @@ type whose instances have already been inserted as keys in an
 .code :equal-based
 hash table, searches for those keys will not work reliably.
 
+.NP* Custom Pretty-Printing
+
+If a method named by the symbol
+.code print
+is defined for a structure type, then it is used for pretty-printing instances
+of that type. The method takes one argument (in addition to the object), which
+specifies the output stream.
+
 .coNP Macro @ defstruct
 .synb
 .mets (defstruct >> { name | >> ( name << arg *)} < super

@@ -76,7 +76,7 @@ struct struct_inst {
   val slot[1];
 };
 
-val struct_type_s, meth_s;
+val struct_type_s, meth_s, print_s;
 
 static cnum struct_id_counter;
 static val struct_type_hash;
@@ -98,6 +98,7 @@ void struct_init(void)
           convert(val *, 0));
   struct_type_s = intern(lit("struct-type"), user_package);
   meth_s = intern(lit("meth"), user_package);
+  print_s = intern(lit("print"), user_package);
   struct_type_hash = make_hash(nil, nil, nil);
   slot_hash = make_hash(nil, nil, t);
   struct_type_finalize_f = func_n1(struct_type_finalize);
@@ -984,6 +985,14 @@ static void struct_inst_print(val obj, val out, val pretty)
   val save_mode = test_set_indent_mode(out, num_fast(indent_off),
                                        num_fast(indent_data));
   val save_indent, iter, once;
+
+  if (pretty) {
+    loc ptr = lookup_static_slot_load(st->self, st, print_s);
+    if (!nullocp(ptr)) {
+      funcall2(deref(ptr), obj, out);
+      return;
+    }
+  }
 
   put_string(lit("#S("), out);
   obj_print_impl(st->name, out, pretty);
