@@ -19223,120 +19223,6 @@ If an inherited slot isn't initialized by its supertype's initialization
 function, then its initial value in the new type is a copy of the current
 value of the supertype's corresponding slot.
 
-.NP* Functors
-
-A structure object can be invoked as a function, if it supports an "anonymous"
-method. An anonymous method is one whose name is the
-.code lambda
-symbol. When arguments are applied to an object
-.codn s ,
-the object and those arguments are passed to the
-.code lambda
-method. If there is no such method, the call is erroneous.
-
-That is to say, the following equivalences apply, except that
-.code s
-is evaluated only once:
-
-.cblk
-  (call s args ...)  <-->  s.(lambda args ...)
-
-  [s args ...]  <-->  [s.lambda s args ...]
-
-  (mapcar s list)  <-->  (mapcar (meth s lambda) list)
-.cble
-
-.NP* Equality Substitution
-
-Normally, two struct values are not considered the same under the
-.code equal
-function unless they are the same object.
-
-However, if a method named
-.code equal
-is defined for a structure type, via a static slot, then instances of
-that structure type support
-.IR "equality substitution" .
-
-The
-.code equal
-method must take exactly one argument: the structure object.
-Moreover, the method must never return
-.codn nil .
-
-When a struct which supports equality substitution is compared using
-.codn equal ,
-.code less
-or
-.codn greater ,
-its
-.code equal
-method is invoked, and the return value is used in place of that
-structure for the purposes of the comparison.
-
-The same applies when an struct is hashed using the
-.code hash-equal
-function, or implicitly by an
-.code :equal-hash
-hash tables.
-
-Note: if an
-.code equal
-method is defined or redefined with different semantics for a struct
-type whose instances have already been inserted as keys in an
-.code :equal-based
-hash table, searches for those keys will not work reliably.
-
-.NP* Custom Pretty-Printing
-
-If a method named by the symbol
-.code print
-is defined for a structure type, then it is used for pretty-printing instances
-of that type. The method takes one argument (in addition to the object), which
-specifies the output stream.
-
-.NP* Sequence Operations on Structures
-
-Structures may be treated as sequences if they define methods named
-by the symbols
-.codn car ,
-.codn cdr ,
-and
-.codn nullify .
-
-If a structure supports these methods, then these methods are used
-by the functions
-.codn car ,
-.codn cdr ,
-.codn nullify ,
-.code empty
-and various other sequence manipulating functions derived from them, when those
-functions are applied to that object.
-
-An object which implements these three methods can be considered to denote
-an abstract sequence. The object's
-.code car
-method should return the first value in that abstract sequence, or else
-.code nil
-if that sequence is empty.
-
-The object's
-.code cdr
-method should return an object denoting the remainder of the sequence,
-or else
-.code nil
-if the sequence is empty or contains only one value.  This returned object can
-be of any type: it may be of the same structure type as that object, a
-different structure type, a list, or whatever else.  If a non-sequence object
-is returned.
-
-The
-.code nullify
-method should return
-.code nil
-if the object is considered to denote an empty sequence. Otherwise it
-should return that object itself.
-
 .coNP Macro @ defstruct
 .synb
 .mets (defstruct >> { name | >> ( name << arg *)} < super
@@ -21068,6 +20954,164 @@ last form is returned, or else
 if there are no forms. The invocations of
 .code call-finalizers
 take place just before the value of the last form is returned.
+
+.SS* Special Structure Functions
+
+Special structure functions are user-defined methods or structure functions
+which are specially recognized by certain functions in \*(TL. They endow
+structure objects with the ability to participate in certain usage scenarios,
+or to participate in a customized way.
+
+Special functions are required to bound to static slots, which is the
+case if the
+.code defmeth
+macro is used, or when methods or functions are defined using syntax
+inside a
+.code defstruct
+form. If a special function or method is defined as an instance slot,
+then the behavior of library functions which depend on this method is
+unspecified.
+
+.coNP Method @ equal
+.synb
+.mets << object .(equal)
+.syne
+.desc
+Normally, two struct values are not considered the same under the
+.code equal
+function unless they are the same object.
+
+However, if the
+.code equal
+method is defined for a structure type, then instances of
+that structure type support
+.IR "equality substitution" .
+
+The
+.code equal
+method must not take any arguments.  Moreover, the method must never return
+.codn nil .
+
+When a struct which supports equality substitution is compared using
+.codn equal ,
+.code less
+or
+.codn greater ,
+its
+.code equal
+method is invoked, and the return value is used in place of that
+structure for the purposes of the comparison.
+
+The same applies when an struct is hashed using the
+.code hash-equal
+function, or implicitly by an
+.code :equal-hash
+hash tables.
+
+Note: if an
+.code equal
+method is defined or redefined with different semantics for a struct
+type whose instances have already been inserted as keys in an
+.code :equal-based
+hash table, searches for those keys will not work reliably.
+
+.coNP Method @ print
+.synb
+.mets << object .(print << stream )
+.syne
+.desc
+If a method named by the symbol
+.code print
+is defined for a structure type, then it is used for pretty-printing instances
+of that type.
+
+The
+.code stream
+argument specifies the output stream to which the printed representation
+is to be written.
+
+The value returned by the
+.code print
+method is ignored.
+
+.coNP Method @ lambda
+.synb
+.mets << object .(lambda << arg *)
+.syne
+.desc
+If a structure type provides a method called
+.code lambda
+then it can be used as a function.
+
+Of course, this method can be called by name, using the syntax given
+in the above syntactic description.
+
+However, the intended use is that it allows the structure instance itself to be
+used as a function.  When arguments are applied to a structure object as if it
+were a function, this is erroneous, unless that object has a
+.code lambda
+method. In that case, the arguments are passed to the lambda method.
+Of course, the leftmost argument of the method is the structure instance
+itself.
+
+That is to say, the following equivalences apply, except that
+.code s
+is evaluated only once:
+
+.cblk
+  (call s args ...)  <-->  s.(lambda args ...)
+
+  [s args ...]  <-->  [s.lambda s args ...]
+
+  (mapcar s list)  <-->  (mapcar (meth s lambda) list)
+.cble
+
+.coNP Methods @, car @, cdr and @ nullify
+.synb
+.mets << object .(car)
+.mets << object .(cdr)
+.mets << object .(nullify)
+.syne
+.desc
+Structures may be treated as sequences if they define methods named
+by the symbols
+.codn car ,
+.codn cdr ,
+and
+.codn nullify .
+
+If a structure supports these methods, then these methods are used
+by the functions
+.codn car ,
+.codn cdr ,
+.codn nullify ,
+.code empty
+and various other sequence manipulating functions derived from them, when those
+functions are applied to that object.
+
+An object which implements these three methods can be considered to denote
+an abstract sequence. The object's
+.code car
+method should return the first value in that abstract sequence, or else
+.code nil
+if that sequence is empty.
+
+The object's
+.code cdr
+method should return an object denoting the remainder of the sequence,
+or else
+.code nil
+if the sequence is empty or contains only one value.  This returned object can
+be of any type: it may be of the same structure type as that object, a
+different structure type, a list, or whatever else.  If a non-sequence object
+is returned.
+
+The
+.code nullify
+method should return
+.code nil
+if the object is considered to denote an empty sequence. Otherwise it
+should return that object itself.
 
 .SS* Sequence Manipulation
 .coNP Function @ seqp
