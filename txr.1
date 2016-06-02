@@ -10310,8 +10310,8 @@ can also be treated in the same way.
 The
 .code ldiff
 function is also extended in a special way. When the right parameter
-is a string or vector, then it uses the equal equality test rather than eq
-for detecting the tail of the list.
+a non-list sequence, then it uses the equal equality test rather than eq for
+detecting the tail of the list.
 
 .cblk
   (ldiff "abcd" "cd") -> (#\ea #\eb)
@@ -15710,7 +15710,7 @@ then a copy of
 .meta list
 is returned.
 
-These functions also work more generally on sequences.
+This function also works more generally on sequences.
 The
 .meta list
 and

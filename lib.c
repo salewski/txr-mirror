@@ -1298,17 +1298,16 @@ val ldiff(val list1, val list2)
   list2 = nullify(list2);
 
   switch (type(list2)) {
-  case STR:
-  case LIT:
-  case LSTR:
-  case VEC:
-    while (list1 && !equal(list1, list2)) {
+  case NIL:
+  case CONS:
+  case LCONS:
+    while (list1 && list1 != list2) {
       ptail = list_collect(ptail, car(list1));
       list1 = cdr(list1);
     }
     break;
   default:
-    while (list1 && list1 != list2) {
+    while (list1 && !equal(list1, list2)) {
       ptail = list_collect(ptail, car(list1));
       list1 = cdr(list1);
     }
