@@ -101,7 +101,7 @@ val error_s, type_error_s, internal_error_s, panic_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s, syntax_error_s;
 val timeout_error_s, system_error_s;
-val gensym_counter_s, nullify_s;
+val gensym_counter_s, nullify_s, from_list_s;
 
 val nothrow_k, args_k, colon_k, auto_k, fun_k;
 val wrap_k, reflect_k;
@@ -661,6 +661,13 @@ val make_like(val list, val thatobj)
       }
       if (is_chr(car(list)))
         return cat_str(list, nil);
+      break;
+    case COBJ:
+      if (structp(thatobj)) {
+        val from_list_meth = maybe_slot(thatobj, from_list_s);
+        if (from_list_meth)
+          return funcall1(from_list_meth, list);
+      }
       break;
     case NIL:
     case CONS:
@@ -8652,6 +8659,7 @@ static void obj_init(void)
   assert_s = intern(lit("assert"), user_package);
   name_s = intern(lit("name"), user_package);
   nullify_s = intern(lit("nullify"), user_package);
+  from_list_s = intern(lit("from-list"), user_package);
 
   args_k = intern(lit("args"), keyword_package);
   nothrow_k = intern(lit("nothrow"), keyword_package);

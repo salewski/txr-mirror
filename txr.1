@@ -21113,6 +21113,48 @@ method should return
 if the object is considered to denote an empty sequence. Otherwise it
 should return that object itself.
 
+.SS Function @ from-list
+.synb
+.mets << object .[from-list << list ]
+.syne
+.desc
+If a
+.code from-list
+structure function is defined for a structure type, it is called in certain
+situations with an argument which is a list object. The function's purpose
+is to construct a new instance of the structure type, derived from that
+list.
+
+Note: the
+.code from-list
+function isn't a method; it doesn't receive
+.meta object
+as an argument. In the style of call depicted by the syntax description
+above,
+.meta object
+is used to identify the structure type whose
+.meta from-list
+static slot provides the function definition.
+
+The purpose of this function is to allow sequence processing operations
+such as
+.code mapcar
+and
+.code remove
+to operate on a structure object as if it were a sequence, and return a
+transformed sequence of the same type.  This is analogous to the way such
+functions can operate on a vector or string, and return a vector or string.
+
+If a structure object behaves as a sequence thanks to providing
+.codn car ,
+.code cdr
+and
+.code nullify
+methods, but does not have a
+.code from-list
+function, then those sequence-processing operations which return a sequence
+will always return a plain list of items.
+
 .SS* Sequence Manipulation
 .coNP Function @ seqp
 .synb
