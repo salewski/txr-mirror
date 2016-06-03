@@ -1,8 +1,6 @@
 @# This requires a hacked version of man2html
 @# See here: http://www.kylheku.com/cgit/man
-@(bind txrhash @(hash :equal-based))
-@(bind txlhash @(hash :equal-based))
-@(bind tgthash txrhash)
+@(bind symhash @(hash :equal-based))
 @(bind tagmap @(hash :equal-based))
 @(bind tochash @(hash :equal-based))
 @(bind closedtxt "<TT>[+]</TT>")
@@ -49,9 +47,8 @@ Content-type: text/html
 @(skip)Updated: @YEAR-@MONTH-@DAY<br><a href="#index">Index</a>
 @(bind TIME @(make-time-utc (int-str YEAR) (int-str MONTH) (int-str DAY)
                             0 0 0 nil))
-@(bind lookup @[orf txrhash txlhash])
 @(bind VERSION nil)
-@(collect :vars (BODY LOOKUP))
+@(collect :vars (BODY))
 @  (some)
 @    (cases)
 <a name="@tag">&nbsp;</a>
@@ -72,13 +69,9 @@ Content-type: text/html
 @BODY
 @    (end)
 @  (and)
-<h2>@nil TXR LISP</h2>
-@    (set lookup txrhash)
-@  (and)
 <b>TXR</b> - text processing language (version @ver)
 @    (set VERSION ver)
 @  (end)
-@  (bind LOOKUP lookup)
 @(until)
 <hr>
 <a name="index">&nbsp;</a><h2>Index</h2>
@@ -108,11 +101,10 @@ Content-type: text/html
 @    (end)
 @  (and)
 <dt><a href="@nil">@nil TXR LISP</a><dd>
-@  (set tgthash txlhash)
 @  (and)
 <dt><a href="#@tag">@(coll :vars (sym))<tt>@sym</tt>@(end)
 @    (do (let ((n-tag [tagmap tag]))
-           (mapdo (do pushnew n-tag [tgthash @1]) sym)
+           (mapdo (do pushnew n-tag [symhash @1]) sym)
            (set [tochash n-tag] rest)))
 @  (and)
 <dt><a href="#@tag">@num @nil
@@ -131,7 +123,7 @@ Content-type: text/html
 This document was created by
 @(end)
 @(flatten TOC)
-@(do [mapdo process-ambiguities (list txrhash txlhash)])
+@(do (process-ambiguities symhash))
 @(set BODY @(let ((inside-tt nil)
                   (inside-syntax nil))
               (mapcar (do cond
@@ -147,8 +139,7 @@ This document was created by
                                                  (pop @1)))
                                             (tok [@1 1..:])
                                             (bkt [@1 0])
-                                            (tag [(if at txrhash txlhash)
-                                                  tok]))
+                                            (tag [symhash tok]))
                                     (if tag
                                       `@at@bkt<a href="#@tag">@tok</a>`
                                       `@at@1`)) @1))
@@ -162,15 +153,14 @@ This document was created by
                                   (set pfx "@("
                                        sym [tok 2 tend]
                                        sfx [tok tend .. :]
-                                       tag [txrhash sym]))
-                                 (t (set tag [@@2 tok]
+                                       tag [symhash sym]))
+                                 (t (set tag [symhash tok]
                                          sym tok)))
                                (if tag
                                  `<tt>@pfx<a href="#@tag">@sym</a>@sfx</tt>`
                                  @1))
                              @1)))
-                      BODY
-                      LOOKUP)))
+                      BODY)))
 @(bind (d-tag n-tag) @(transpose (hash-pairs disamb)))
 @(output)
 <!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -254,8 +244,7 @@ function tocjump(hash) {
 <div class="disambiguations">
 @(repeat)
 <a name="@{d-tag}">
-  <p>Topics matching <tt>@(or (hash-revget txrhash d-tag)
-                              (hash-revget txlhash d-tag))</tt>:
+  <p>Topics matching <tt>@(hash-revget symhash d-tag)</tt>:
   <dl>
 @ (repeat :counter (n 1))
     <dt><a href="#@{n-tag}">@n:</a> @[tochash n-tag]</dt>
