@@ -4,6 +4,7 @@
 @(bind txlhash @(hash :equal-based))
 @(bind tgthash txrhash)
 @(bind tagmap @(hash :equal-based))
+@(bind tochash @(hash :equal-based))
 @(bind closedtxt "<TT>[+]</TT>")
 @(bind opentxt "<TT>[-]</TT>")
 @(bind xpnall "[expand all]")
@@ -12,6 +13,8 @@
 @(do
    (defvar dupes (hash))
    (defvar tagnum (hash :equal-based))
+   (defvarl disamb (hash :equal-based))
+   (defvarl dist-counter 0)
 
    (sys:set-hash-str-limit 1000)
 
@@ -31,7 +34,15 @@
 
    (defun enumerate (title)
      (let ((num (inc [tagnum title 0])))
-       `@title@(if (> num 1) `-@num` "")`)))
+       `@title@(if (> num 1) `-@num` "")`))
+
+   (defun process-ambiguities (hash)
+     (hash-update hash (do if (eql (length @1) 1)
+                         (first @1)
+                         (let ((new-tag (format nil "D-~,04X"
+                                                (inc dist-counter))))
+                           (set [disamb new-tag] (reverse @1))
+                           new-tag)))))
 Content-type: text/html
 @(skip 15)
 <h1>TXR</h1>
@@ -100,8 +111,9 @@ Content-type: text/html
 @  (set tgthash txlhash)
 @  (and)
 <dt><a href="#@tag">@(coll :vars (sym))<tt>@sym</tt>@(end)
-@    (do (mapdo (do unless [tgthash @1] (set [tgthash @1] [tagmap tag]))
-                sym))
+@    (do (let ((n-tag [tagmap tag]))
+           (mapdo (do pushnew n-tag [tgthash @1]) sym)
+           (set [tochash n-tag] rest)))
 @  (and)
 <dt><a href="#@tag">@num @nil
 <dl>
@@ -119,6 +131,7 @@ Content-type: text/html
 This document was created by
 @(end)
 @(flatten TOC)
+@(do [mapdo process-ambiguities (list txrhash txlhash)])
 @(set BODY @(let ((inside-tt nil)
                   (inside-syntax nil))
               (mapcar (do cond
@@ -158,11 +171,15 @@ This document was created by
                              @1)))
                       BODY
                       LOOKUP)))
+@(bind (d-tag n-tag) @(transpose (hash-pairs disamb)))
 @(output)
 <!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head><title>Manpage for TXR @VERSION</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style>
+.disambiguations dl { margin-bottom: 2048px; }
+</style>
 <script type="text/javascript">
 function toggle(link, id) {
   var e = document.getElementById(id);
@@ -234,6 +251,19 @@ function tocjump(hash) {
 @BODY
 @(first)
 @(end)
+<div class="disambiguations">
+@(repeat)
+<a name="@{d-tag}">
+  <p>Topics matching <tt>@(or (hash-revget txrhash d-tag)
+                              (hash-revget txlhash d-tag))</tt>:
+  <dl>
+@ (repeat :counter (n 1))
+    <dt><a href="#@{n-tag}">@n:</a> @[tochash n-tag]</dt>
+@ (end)
+  </dl>
+</a>
+@(end)
+</div>
 </body>
 </html>
 @(end)
