@@ -3219,7 +3219,13 @@ static val v_output(match_files_ctx *c)
   } else if (!keywordp(first(dest_spec))) {
     uses_or2;
     val form = first(dest_spec);
-    val val = txeval(specline, form, c->bindings);
+    val sym = if2(consp(form), car(form));
+    int tx = ((opt_compat && opt_compat <= 142) ||
+              (sym == var_s) || (sym == expr_s));
+    val val = if3(tx,
+                  txeval(specline, form, c->bindings),
+                  eval_with_bindings(form, specline, c->bindings,
+                                     specline));
     dest = or2(val, dest);
     pop(&dest_spec);
   }

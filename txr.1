@@ -7346,11 +7346,14 @@ Any remaining arguments after the optional destination are
 the keyword list. If the destination is missing, then the
 entire argument list is a keyword list.
 
-The destination may be a string which gives the path name of
-a file to open for output.  The destination string may be specified as a
-variable which holds text, as a string literal or as a quasiliteral
-
-Alternatively, the destination may be a stream object.
+The
+.meta destination
+argument,
+if present,
+is treated as a \*(TL expression and evaluated.
+The resulting value is taken as the output destination. The value may be a
+string which gives the path name of a file to open for output. Otherwise,
+the destination must be a stream object.
 
 The keyword list consists of a mixture of Boolean keywords which
 do not have an argument, or keywords with arguments.
@@ -43109,7 +43112,14 @@ as denoting standard input, and
 .code @(output)
 recognized it as standard output. These behaviors were also removed;
 versions after 142 recognize this convention only when it appears
-as a command line argument.  All these old behaviors are provided
+as a command line argument.  Lastly, until version 142, the
+.code @(output)
+directive evaluated the
+.meta destination
+argument as an expression of the \*(TX pattern language, requiring
+.code @
+to be used to denote a Lisp expression. This is no longer required.
+All these old behaviors are provided
 if compatibility with 142 or earlier is requested.
 .IP 139
 After \*(TX 139, changes were implemented in the area of pseudo-random
