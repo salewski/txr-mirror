@@ -2172,7 +2172,7 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
   for (; modifier; pop(&modifier)) {
     val item = first(modifier);
     if (regexp(item)) {
-      uw_throw(query_error_s, lit("bad field format: regex modifier in output"));
+      uw_throw(query_error_s, lit("bad field format: regex modifier in output var"));
     } else if (keywordp(item)) {
       plist = modifier;
       break;
@@ -2191,12 +2191,13 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
         obj = sub(obj, from, to);
       } else {
          val arg = funcall1(eval_fun, arg_expr);
-         if (bignump(arg) || fixnump(arg)) {
+         if (integerp(arg)) {
            obj = ref(obj, arg);
          } else if (rangep(arg)) {
            obj = sub(obj, from(arg), to(arg));
          } else {
-           uw_throwf(query_error_s, lit("format_field: bad index: ~s"),
+           uw_throwf(query_error_s,
+                     lit("bad field format: index ~s expected to be integer or range"),
                      arg, nao);
          }
       }
@@ -2208,8 +2209,8 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
         sep = v;
       else
         uw_throwf(query_error_s,
-                  lit("bad field format: bad modifier object: ~s"),
-                  item, nao);
+                  lit("bad field format: modifier ~s expected to be fixnum or string"),
+                  v, nao);
     }
   }
 
