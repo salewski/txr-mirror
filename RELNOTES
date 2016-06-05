@@ -1,3 +1,33 @@
+                                    TXR 143
+                                   2016-06-04
+
+
+  Features
+
+  - Structs:
+    - Structures can now support custom pretty-printing
+      via a print method.
+    - car, cdr, nullify, and from-list methods on structures allow
+      them to behave as if they were sequences.
+  - TXR Pattern language:
+    - The "!command" and "$dir" convention for opening command pipe
+      and directory steams has been removed: this will not be
+      recognized on the command line or the @(next) or @(output)
+      directives.
+    - The "-" convention for denoting standard input is now
+      only available from the command line, not from the @(next)
+      or @(output) directives.
+    - @(output) now evaluates the destination as a Lisp expression;
+      no need to use the @ escape.
+    - @(repeat) sees variables in more places:
+      - In the output variable syntax @{a b [c..d]}, if b, c and d are
+        variables, they are recognized by the directive and treated
+        accordingly.
+      - Previously @(repeat) would know about a, but have to be informed about
+        the others via :vars (b c d).
+
+
+
                                     TXR 142
                                    2016-05-29
 
