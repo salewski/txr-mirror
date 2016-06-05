@@ -1646,10 +1646,37 @@ static val extract_vars(val output_spec)
   if (consp(output_spec)) {
     val sym = first(output_spec);
     if (sym == var_s) {
-      if (bindable(second(output_spec)))
-        tai = list_collect(tai, second(output_spec));
+      val name = second(output_spec);
+      val modifiers = third(output_spec);
+
+      if (bindable(name))
+        tai = list_collect(tai, name);
       else
-        tai = list_collect_nconc(tai, extract_vars(second(output_spec)));
+        tai = list_collect_nconc(tai, extract_vars(name));
+
+      for (; modifiers; modifiers = cdr(modifiers)) {
+        val mod = car(modifiers);
+        if (bindable(mod)) {
+          tai = list_collect(tai, mod);
+        } else if (consp(mod)) {
+          val msym = car(mod);
+
+          if (msym == dwim_s) {
+            val arg = second(mod);
+
+            if (bindable(arg)) {
+              tai = list_collect(tai, arg);
+            } else if (consp(arg) && car(arg) == rcons_s) {
+              val f = second(arg);
+              val t = third(arg);
+              if (bindable(f))
+                tai = list_collect(tai, f);
+              if (bindable(t))
+                tai = list_collect(tai, t);
+            }
+          }
+        }
+      }
     } else if (sym != expr_s) {
       for (; output_spec; output_spec = cdr(output_spec))
         tai = list_collect_nconc(tai, extract_vars(car(output_spec)));
