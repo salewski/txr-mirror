@@ -803,6 +803,11 @@ loc list_collect_nconc(loc ptail, val obj)
   case LSTR:
     replace_str(tailobj, obj, t, t);
     return ptail;
+  case COBJ:
+    set(ptail, tolist(tailobj));
+    ptail = tail(deref(ptail));
+    set(ptail, tolist(obj));
+    return ptail;
   default:
     uw_throwf(error_s, lit("cannot nconc ~s to ~s"), obj, tailobj, nao);
   }
@@ -832,6 +837,11 @@ loc list_collect_append(loc ptail, val obj)
   case LSTR:
     set(ptail, copy_str(tailobj));
     replace_str(deref(ptail), obj, t, t);
+    return ptail;
+  case COBJ:
+    set(ptail, tolist(tailobj));
+    ptail = tail(deref(ptail));
+    set(ptail, tolist(obj));
     return ptail;
   default:
     uw_throwf(error_s, lit("cannot append to ~s"), tailobj, nao);
