@@ -3687,7 +3687,7 @@ static val vscat(val sep, va_list vl1, va_list vl2)
 
       continue;
     }
-    uw_throwf(error_s, lit("cat-str: ~s is not a character or string"),
+    uw_throwf(error_s, lit("scat: ~s is not a character or string"),
               item, nao);
   }
 
@@ -3715,7 +3715,7 @@ static val vscat(val sep, va_list vl1, va_list vl2)
   return string_own(str);
 
 oflow:
-  uw_throwf(error_s, lit("vcat: string length overflow"), nao);
+  uw_throwf(error_s, lit("scat: string length overflow"), nao);
 }
 
 val scat(val sep, ...)
