@@ -562,25 +562,16 @@ try_clause : TRY newl
 
 catch_clauses_opt : CATCH ')' newl
                     clauses_opt
-                    catch_clauses_opt   { if ((!opt_compat || opt_compat > 139)
-                                              && nilp($4))
-                                            yyerr("empty catch clause");
-                                          $$ = cons(list(catch_s, cons(t, nil),
+                    catch_clauses_opt   { $$ = cons(list(catch_s, cons(t, nil),
                                                          $4, nao), $5);
                                           rl($$, num($1)); }
                   | CATCH exprs ')' newl
                     clauses_opt
-                    catch_clauses_opt   { if ((!opt_compat || opt_compat > 139)
-                                              && nilp($5))
-                                            yyerr("empty catch clause");
-                                          $$ = cons(list(catch_s, $2, $5, nao),
+                    catch_clauses_opt   { $$ = cons(list(catch_s, $2, $5, nao),
                                                     $6);
                                           rl($$, num($1)); }
                   | FINALLY newl
-                    clauses_opt         { if ((!opt_compat || opt_compat > 139)
-                                              && nilp($3))
-                                            yyerr("empty finally clause");
-                                          $$ = cons(list(finally_s, nil,
+                    clauses_opt         { $$ = cons(list(finally_s, nil,
                                                          $3, nao),
                                                     nil);
                                           rl($$, num($1)); }
