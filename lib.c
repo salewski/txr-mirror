@@ -706,7 +706,7 @@ val tolist(val seq)
   case LSTR:
     return list_str(seq);
   case COBJ:
-    return mapcar(identity_f, seq);
+    return mapcar_listout(identity_f, seq);
   case NIL:
   case CONS:
   case LCONS:
