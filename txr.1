@@ -41496,7 +41496,7 @@ holds the suffixed name.
 The
 .code stdlib
 variable expands to the directory where the \*(TX standard library
-is installed.
+is installed. It includes the trailing slash.
 
 Note: there is no need to use the value of this variable to load library
 modules. Library modules are keyed to specific symbols, and lazily loaded. When
@@ -43091,6 +43091,10 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 143
+Until version 143, the
+.code stdlib
+variable didn't include the trailing slash.
 .IP 142
 Until version 142, the \*(TX pattern language supported a prefix
 convention on data sources. Data sources beginning with the character

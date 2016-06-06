@@ -316,7 +316,7 @@ static void sysroot_init(void)
     sysroot_path = prog_dir;
   }
 
-  stdlib_path = sysroot(lit("share/txr/stdlib"));
+  stdlib_path = sysroot(lit("share/txr/stdlib/"));
 
   reg_varl(intern(lit("stdlib"), user_package), stdlib_path);
   reg_varl(intern(lit("*txr-version*"), user_package),
@@ -324,6 +324,13 @@ static void sysroot_init(void)
   reg_varl(intern(lit("txr-version"), user_package),
            toint(lit(TXR_VER), nil));
   reg_varl(intern(lit("txr-path"), user_package), prog_dir);
+}
+
+static void sysroot_compat_fixup(int compat_ver)
+{
+  if (compat_ver <= 143)
+    reg_varl(intern(lit("stdlib"), user_package),
+             sysroot(lit("share/txr/stdlib")));
 }
 
 static int license(void)
@@ -411,6 +418,7 @@ static int compat(val optval)
     return 0;
   }
 
+  sysroot_compat_fixup(compat);
   opt_compat = compat;
   return 1;
 }

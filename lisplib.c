@@ -83,7 +83,7 @@ static val place_set_entries(val dlt, val fun)
 static val place_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/place.tl"), stdlib_path, nao));
+  load(format(nil, lit("~aplace.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -97,7 +97,7 @@ static val ver_set_entries(val dlt, val fun)
 static val ver_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/ver.tl"), stdlib_path, nao));
+  load(format(nil, lit("~aver.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -111,7 +111,7 @@ static val ifa_set_entries(val dlt, val fun)
 static val ifa_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/ifa.tl"), stdlib_path, nao));
+  load(format(nil, lit("~aifa.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -125,7 +125,7 @@ static val txr_case_set_entries(val dlt, val fun)
 static val txr_case_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/txr-case.tl"), stdlib_path, nao));
+  load(format(nil, lit("~atxr-case.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -143,7 +143,7 @@ static val with_resources_set_entries(val dlt, val fun)
 static val with_resources_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/with-resources.tl"), stdlib_path, nao));
+  load(format(nil, lit("~awith-resources.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -170,7 +170,7 @@ static val path_test_set_entries(val dlt, val fun)
 static val path_test_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/path-test.tl"), stdlib_path, nao));
+  load(format(nil, lit("~apath-test.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -194,7 +194,7 @@ static val struct_set_entries(val dlt, val fun)
 static val struct_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/struct.tl"), stdlib_path, nao));
+  load(format(nil, lit("~astruct.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -215,7 +215,7 @@ static val with_stream_set_entries(val dlt, val fun)
 static val with_stream_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/with-stream.tl"), stdlib_path, nao));
+  load(format(nil, lit("~awith-stream.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -229,7 +229,7 @@ static val hash_set_entries(val dlt, val fun)
 static val hash_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/hash.tl"), stdlib_path, nao));
+  load(format(nil, lit("~ahash.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -243,7 +243,7 @@ static val except_set_entries(val dlt, val fun)
 static val except_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/except.tl"), stdlib_path, nao));
+  load(format(nil, lit("~aexcept.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -257,7 +257,7 @@ static val type_set_entries(val dlt, val fun)
 static val type_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/type.tl"), stdlib_path, nao));
+  load(format(nil, lit("~atype.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -276,7 +276,7 @@ static val yield_set_entries(val dlt, val fun)
 static val yield_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/yield.tl"), stdlib_path, nao));
+  load(format(nil, lit("~ayield.tl"), stdlib_path, nao));
   return nil;
 }
 
@@ -305,7 +305,7 @@ static val sock_set_entries(val dlt, val fun)
 static val sock_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/socket.tl"), stdlib_path, nao));
+  load(format(nil, lit("~asocket.tl"), stdlib_path, nao));
   sock_load_init();
   return nil;
 }
@@ -329,7 +329,7 @@ static val termios_set_entries(val dlt, val fun)
 static val termios_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~a/termios.tl"), stdlib_path, nao));
+  load(format(nil, lit("~atermios.tl"), stdlib_path, nao));
   sock_load_init();
   return nil;
 }
