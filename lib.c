@@ -783,56 +783,58 @@ loc list_collect(loc ptail, val obj)
 
 loc list_collect_nconc(loc ptail, val obj)
 {
+  val tailobj = deref(ptail);
   obj = nullify(obj);
 
-  switch (type(deref(ptail))) {
+  switch (type(tailobj)) {
   case NIL:
     set(ptail, obj);
     return ptail;
   case CONS:
   case LCONS:
-    ptail = tail(deref(ptail));
+    ptail = tail(tailobj);
     set(ptail, obj);
     return ptail;
   case VEC:
-    replace_vec(deref(ptail), obj, t, t);
+    replace_vec(tailobj, obj, t, t);
     return ptail;
   case STR:
   case LIT:
   case LSTR:
-    replace_str(deref(ptail), obj, t, t);
+    replace_str(tailobj, obj, t, t);
     return ptail;
   default:
-    uw_throwf(error_s, lit("cannot nconc ~s to ~s"), obj, deref(ptail), nao);
+    uw_throwf(error_s, lit("cannot nconc ~s to ~s"), obj, tailobj, nao);
   }
 }
 
 loc list_collect_append(loc ptail, val obj)
 {
+  val tailobj = deref(ptail);
   obj = nullify(obj);
 
-  switch (type(deref(ptail))) {
+  switch (type(tailobj)) {
   case NIL:
     set(ptail, obj);
     return ptail;
   case CONS:
   case LCONS:
-    set(ptail, copy_list(deref(ptail)));
+    set(ptail, copy_list(tailobj));
     ptail = tail(deref(ptail));
     set(ptail, obj);
     return ptail;
   case VEC:
-    set(ptail, copy_vec(deref(ptail)));
+    set(ptail, copy_vec(tailobj));
     replace_vec(deref(ptail), obj, t, t);
     return ptail;
   case STR:
   case LIT:
   case LSTR:
-    set(ptail, copy_str(deref(ptail)));
+    set(ptail, copy_str(tailobj));
     replace_str(deref(ptail), obj, t, t);
     return ptail;
   default:
-    uw_throwf(error_s, lit("cannot append to ~s"), deref(ptail), nao);
+    uw_throwf(error_s, lit("cannot append to ~s"), tailobj, nao);
   }
 }
 
