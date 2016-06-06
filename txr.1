@@ -41595,7 +41595,8 @@ the variable is bound to the name of that file.
 .coNP Variable @ txr-path
 .desc
 This variable holds the absolute path name of the directory which
-holds the executable file of the current process.
+holds the executable file of the current process. This path includes
+the trailing slash.
 
 .SH* INTERACTIVE LISTENER
 
@@ -42670,7 +42671,7 @@ executable can then be edited so that the data area which follows the
 bytes contains the following string:
 
 .cblk
-  --args|-e|(load `@{txr-path}/main.tl`)
+  --args|-e|(load `@{txr-path}main.tl`)
 .cble
 
 When the
@@ -42792,7 +42793,7 @@ that executable.
 
 .cblk
   txr txr-embedded-arg.txr \e
-    -w '--args=-e=(load `@{txr-path}/main.tl`)' myapp
+    -w '--args=-e=(load `@{txr-path}main.tl`)' myapp
 .cble
 
 .SH* DEBUGGER
