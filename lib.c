@@ -691,6 +691,10 @@ val toseq(val seq)
   case CONS:
   case LCONS:
     return nullify(seq);
+  case COBJ:
+    if (structp(seq) && maybe_slot(seq, car_s))
+      return nullify(seq);
+    /* fallthrough */
   default:
     return cons(seq, nil);
   }
