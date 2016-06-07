@@ -544,7 +544,7 @@ static char_set_t *char_set_create(chset_type_t type, wchar_t base, unsigned st)
 
 static void char_set_destroy(char_set_t *set)
 {
-  if (set->any.stat)
+  if (!set)
     return;
 
   switch (set->any.type) {
@@ -794,7 +794,8 @@ static void init_special_char_sets(void)
 static void char_set_cobj_destroy(val chset)
 {
   char_set_t *set = coerce(char_set_t *, chset->co.handle);
-  char_set_destroy(set);
+  if (!set->any.stat)
+    char_set_destroy(set);
   chset->co.handle = 0;
 }
 
@@ -2648,10 +2649,10 @@ static char_set_t *create_wide_cs(void)
   return cs;
 }
 
+static char_set_t *wide_cs;
+
 int wide_display_char_p(wchar_t ch)
 {
-  static char_set_t *wide_cs;
-
   if (ch < 0x1100)
     return 0;
 
@@ -2678,4 +2679,15 @@ void regex_init(void)
   reg_fun(intern(lit("reg-optimize"), system_package), func_n1(reg_optimize));
   reg_fun(intern(lit("read-until-match"), user_package), func_n3o(read_until_match, 1));
   init_special_char_sets();
+}
+
+void regex_free_all(void)
+{
+  char_set_destroy(space_cs);
+  char_set_destroy(digit_cs);
+  char_set_destroy(word_cs);
+  char_set_destroy(cspace_cs);
+  char_set_destroy(cdigit_cs);
+  char_set_destroy(cword_cs);
+  char_set_destroy(wide_cs);
 }

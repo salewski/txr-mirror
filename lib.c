@@ -9407,11 +9407,9 @@ static void time_init(void)
   static_slot_set(time_st, time_utc_s, func_f1(t, time_meth));
 }
 
-void init(const wchar_t *pn, mem_t *(*oom)(mem_t *, size_t),
-          val *stack_bottom)
+void init(mem_t *(*oom)(mem_t *, size_t), val *stack_bottom)
 {
   int gc_save;
-  progname = pn;
   gc_save = gc_state(0);
 
   oom_realloc = oom;

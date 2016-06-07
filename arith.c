@@ -2369,3 +2369,10 @@ void arith_init(void)
   reg_varl(intern(lit("*e*"), user_package), flo(M_E));
   reg_varl(intern(lit("%e%"), user_package), flo(M_E));
 }
+
+void arith_free_all(void)
+{
+  mp_clear(&NUM_MAX_MP);
+  mp_clear(&INT_PTR_MAX_MP);
+  mp_clear(&UINT_PTR_MAX_MP);
+}

@@ -56,7 +56,7 @@
 #include "txr.h"
 
 const wchli_t *version = wli(TXR_VER);
-const wchar_t *progname = L"txr";
+wchar_t *progname;
 static const char *progname_u8;
 static val prog_path = nil, sysroot_path = nil;
 int opt_noninteractive;
@@ -372,9 +372,9 @@ int main(int argc, char **argv)
 {
   val stack_bottom = nil;
   repress_privilege();
-  progname = argv[0] ? utf8_dup_from(argv[0]) : progname;
+  progname = utf8_dup_from(argv[0] ? argv[0]: "txr");
   progname_u8 = argv[0];
-  init(progname, oom_realloc_handler, &stack_bottom);
+  init(oom_realloc_handler, &stack_bottom);
   match_init();
   debug_init();
   sysroot_init();
@@ -434,6 +434,19 @@ static int gc_delta(val optval)
 {
   opt_gc_delta = c_num(mul(optval, num_fast(1048576)));
   return 1;
+}
+
+static void free_all(void)
+{
+  static int called;
+
+  if (!called) {
+    called = 1;
+    regex_free_all();
+    gc_free_all();
+    arith_free_all();
+    free(progname);
+  }
 }
 
 #ifndef CONFIG_DEBUG_SUPPORT
@@ -687,6 +700,9 @@ int txr_main(int argc, char **argv)
       } else if (equal(opt, lit("noninteractive"))) {
         opt_noninteractive = 1;
         stream_set_prop(std_input, real_time_k, nil);
+        continue;
+      } else if (equal(opt, lit("free-all"))) {
+        atexit(free_all);
         continue;
       } else {
         drop_privilege();

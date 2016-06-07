@@ -936,3 +936,43 @@ void gc_report_copies(val *pvar)
              convert(int, pvar - opvar));
   }
 }
+
+void gc_free_all(void)
+{
+  {
+    heap_t *iter = heap_list;
+
+    while (iter) {
+      heap_t *next = iter->next;
+      obj_t *block, *end;
+
+#if HAVE_VALGRIND
+      if (opt_vg_debug)
+        VALGRIND_MAKE_MEM_DEFINED(&next->block, sizeof next->block);
+#endif
+
+      for (block = iter->block, end = iter->block + HEAP_SIZE;
+           block < end;
+           block++)
+      {
+        type_t t = block->t.type;
+        if ((t & FREE) != 0)
+          continue;
+        finalize(block);
+      }
+
+      free(iter);
+      iter = next;
+    }
+  }
+
+  {
+    struct fin_reg *iter = final_list;
+
+    while (iter) {
+      struct fin_reg *next = iter->next;
+      free(iter);
+      iter = next;
+    }
+  }
+}

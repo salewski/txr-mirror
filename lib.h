@@ -449,7 +449,6 @@ extern val null_list; /* (nil) */
 extern val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
 extern val list_f, less_f, greater_f;
 
-extern const wchar_t *progname;
 extern val prog_string;
 
 extern mem_t *(*oom_realloc)(mem_t *, size_t);
@@ -992,8 +991,7 @@ val make_time_utc(val year, val month, val day,
                   val hour, val minute, val second,
                   val isdst);
 
-void init(const wchar_t *progname, mem_t *(*oom_realloc)(mem_t *, size_t),
-          val *stack_bottom);
+void init(mem_t *(*oom_realloc)(mem_t *, size_t), val *stack_bottom);
 int compat_fixup(int compat_ver);
 void dump(val obj, val stream);
 void d(val obj);

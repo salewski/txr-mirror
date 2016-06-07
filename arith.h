@@ -41,3 +41,4 @@ val tofloat(val obj);
 val toint(val obj, val base);
 val width(val num);
 void arith_init(void);
+void arith_free_all(void);

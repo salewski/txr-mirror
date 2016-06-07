@@ -40,5 +40,5 @@ extern int opt_dbg_autoload;
 extern int opt_dbg_expansion;
 extern alloc_bytes_t opt_gc_delta;
 extern const wchli_t *version;
-extern const wchar_t *progname;
+extern wchar_t *progname;
 extern val stdlib_path;

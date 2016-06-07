@@ -42,3 +42,4 @@ val regsub(val regex, val repl, val str);
 val read_until_match(val regex, val stream, val keep_match);
 int wide_display_char_p(wchar_t ch);
 void regex_init(void);
+void regex_free_all(void);
