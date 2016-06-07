@@ -222,7 +222,7 @@ static val syslog_set_prop(val stream, val ind, val prop)
 static_def(struct strm_ops syslog_strm_ops =
   strm_ops_init(cobj_ops_init(eq,
                               stream_print_op,
-                              cobj_destroy_stub_op,
+                              cobj_destroy_free_op,
                               syslog_mark,
                               cobj_hash_op),
                 wli("syslog-stream"),
