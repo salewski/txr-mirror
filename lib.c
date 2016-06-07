@@ -8048,6 +8048,8 @@ val length(val seq)
   case COBJ:
     if (seq->co.cls == hash_s)
       return hash_count(seq);
+    if (structp(seq) && maybe_slot(seq, car_s))
+      return length_list(nullify(seq));
     /* fallthrough */
   default:
     type_mismatch(lit("length: ~s is not a sequence"), seq, nao);
