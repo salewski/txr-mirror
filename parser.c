@@ -83,6 +83,7 @@ static void parser_destroy(val obj)
 {
   parser_t *p = coerce(parser_t *, obj->co.handle);
   parser_cleanup(p);
+  free(p);
 }
 
 static struct cobj_ops parser_ops = {
