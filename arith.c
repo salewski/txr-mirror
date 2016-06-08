@@ -1771,7 +1771,7 @@ val logand(val a, val b)
   case TYPE_PAIR(BGNUM, BGNUM):
     if (a == b)
       return a;
-    c = make_bignum();
+    c = make_ubignum();
     if (mp_and(mp(a), mp(b), mp(c)) != MP_OKAY)
       goto bad;
     return normalize(c);
@@ -1812,7 +1812,7 @@ val logior(val a, val b)
   case TYPE_PAIR(BGNUM, BGNUM):
     if (a == b)
       return a;
-    c = make_bignum();
+    c = make_ubignum();
     if (mp_or(mp(a), mp(b), mp(c)) != MP_OKAY)
       goto bad;
     return normalize(c);
@@ -1853,7 +1853,7 @@ val logxor(val a, val b)
   case TYPE_PAIR(BGNUM, BGNUM):
     if (a == b)
       return a;
-    c = make_bignum();
+    c = make_ubignum();
     if (mp_xor(mp(a), mp(b), mp(c)) != MP_OKAY)
       goto bad;
     return normalize(c);
@@ -1893,7 +1893,7 @@ static val comp_trunc(val a, val bits)
     a = bignum(an);
     /* fallthrough */
   case BGNUM:
-    b = make_bignum();
+    b = make_ubignum();
     if (mp_trunc_comp(mp(a), mp(b), bn) != MP_OKAY)
       goto bad;
     return normalize(b);
@@ -1922,7 +1922,7 @@ val lognot(val a, val bits)
   case NUM:
     return num_fast(~c_num(a));
   case BGNUM:
-    b = make_bignum();
+    b = make_ubignum();
     if (mp_comp(mp(a), mp(b)) != MP_OKAY)
       goto bad;
     return normalize(b);
@@ -1956,7 +1956,7 @@ val logtrunc(val a, val bits)
     a = bignum(an);
     /* fallthrough */
   case BGNUM:
-    b = make_bignum();
+    b = make_ubignum();
     if (mp_trunc(mp(a), mp(b), bn) != MP_OKAY)
       goto bad;
     return normalize(b);

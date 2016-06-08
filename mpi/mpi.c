@@ -2422,7 +2422,6 @@ mp_err mp_and(mp_int *a, mp_int *b, mp_int *c)
 
   if (ISNEG(a)) {
     extent = USED(b);
-    mp_init(&tmp_a);
     if ((res = mp_2comp(a, &tmp_a, extent)) != MP_OKAY)
 	goto out;
     a = &tmp_a;
@@ -2430,7 +2429,6 @@ mp_err mp_and(mp_int *a, mp_int *b, mp_int *c)
 
   if (ISNEG(b)) {
     extent = USED(a);
-    mp_init(&tmp_b);
     if ((res = mp_2comp(b, &tmp_b, extent)) != MP_OKAY)
 	goto out;
     b = &tmp_b;
@@ -2484,14 +2482,12 @@ mp_err mp_or(mp_int *a, mp_int *b, mp_int *c)
     return mp_copy(a, c);
 
   if (ISNEG(a)) {
-    mp_init(&tmp_a);
     if ((res = mp_2comp(a, &tmp_a, extent)) != MP_OKAY)
 	goto out;
     a = &tmp_a;
   }
 
   if (ISNEG(b)) {
-    mp_init(&tmp_b);
     if ((res = mp_2comp(b, &tmp_b, extent)) != MP_OKAY)
 	goto out;
     b = &tmp_b;
@@ -2548,14 +2544,12 @@ mp_err mp_xor(mp_int *a, mp_int *b, mp_int *c)
   extent = MAX(USED(a), USED(b));
 
   if (ISNEG(a)) {
-    mp_init(&tmp_a);
     if ((res = mp_2comp(a, &tmp_a, extent)) != MP_OKAY)
 	goto out;
     a = &tmp_a;
   }
 
   if (ISNEG(b)) {
-    mp_init(&tmp_b);
     if ((res = mp_2comp(b, &tmp_b, extent)) != MP_OKAY)
 	goto out;
     b = &tmp_b;
@@ -2613,7 +2607,6 @@ mp_err mp_comp(mp_int *a, mp_int *b)
     return res;
 
   if (ISNEG(a)) {
-    mp_init(&tmp);
     if ((res = mp_2comp(a, &tmp, dig)) != MP_OKAY)
 	return res;
     a = &tmp;
@@ -2657,7 +2650,6 @@ mp_err mp_trunc_comp(mp_int *a, mp_int *b, mp_digit bits)
     return res;
 
   if (ISNEG(a)) {
-    mp_init(&tmp);
     if ((res = mp_2comp(a, &tmp, dig + extra)) != MP_OKAY)
 	return res;
     a = &tmp;
@@ -2701,7 +2693,6 @@ mp_err mp_trunc(mp_int *a, mp_int *b, mp_digit bits)
     return res;
 
   if (ISNEG(a)) {
-    mp_init(&tmp);
     if ((res = mp_2comp(a, &tmp, dig + extra)) != MP_OKAY)
 	return res;
     a = &tmp;
@@ -2735,7 +2726,6 @@ mp_err mp_shift(mp_int *a, mp_int *b, int bits)
 
   if (a_neg) {
     mp_size ua = USED(a);
-    mp_init(&tmp);
     if ((res = mp_2comp(a, &tmp, ua)) != MP_OKAY)
 	return res;
     SIGN(&tmp) = MP_ZPOS;
@@ -2785,7 +2775,6 @@ mp_err mp_bit(mp_int *a, mp_digit bit)
   mp_digit mask = convert(mp_digit, 1) << (bit % MP_DIGIT_BIT);
 
   if (a_neg) {
-    mp_init(&tmp);
     if ((res = mp_2comp(a, &tmp, bit + 1)) != MP_OKAY)
 	return res;
     SIGN(&tmp) = MP_ZPOS;
