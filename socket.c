@@ -345,6 +345,7 @@ static void dgram_destroy(val stream)
   free(d->rx_buf);
   free(d->tx_buf);
   d->rx_buf = d->tx_buf = 0;
+  free(d);
 }
 
 static void dgram_overflow(val stream)
