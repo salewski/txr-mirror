@@ -2781,7 +2781,7 @@ mp_err mp_bit(mp_int *a, mp_digit bit)
     a = &tmp;
   }
 
-  return (DIGITS(a)[digit] & mask) != 0 ? MP_YES : MP_NO;
+  return (digit < USED(a) && (DIGITS(a)[digit] & mask) != 0) ? MP_YES : MP_NO;
 }
 
 mp_err mp_to_double(mp_int *mp, double *d)
