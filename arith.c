@@ -62,6 +62,7 @@ static val make_ubignum(void)
 {
   val n = make_obj();
   n->bn.type = BGNUM;
+  mp_init_minimal(&n->bn.mp);
   return n;
 }
 

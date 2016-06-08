@@ -85,6 +85,11 @@ void         mp_set_prec(unsigned int prec);
 /* Memory management                                                      */
 
 mp_err mp_init(mp_int *mp);
+INLINE mp_err mp_init_minimal(mp_int *mp)
+{
+  DIGITS(mp) = 0;
+  return MP_OKAY;
+}
 mp_err mp_init_array(mp_int mp[], int count);
 mp_err mp_init_size(mp_int *mp, mp_size prec);
 mp_err mp_init_copy(mp_int *mp, mp_int *from);
