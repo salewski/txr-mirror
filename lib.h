@@ -478,6 +478,8 @@ val type_check3(val obj, int, int, int);
 val class_check(val cobj, val class_sym);
 val car(val cons);
 val cdr(val cons);
+INLINE val us_car(val cons) { return cons->c.car; }
+INLINE val us_cdr(val cons) { return cons->c.cdr; }
 val rplaca(val cons, val new_car);
 val rplacd(val cons, val new_car);
 val sys_rplaca(val cons, val new_car);

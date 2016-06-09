@@ -100,7 +100,8 @@ val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
 val sys_load_s, self_load_path_s, sys_lisp1_value_s;
 
-val special_s, whole_k, form_k, symacro_k;
+val special_s, unbound_s;
+val whole_k, form_k, symacro_k;
 
 val last_form_evaled, last_form_expanded;
 
@@ -334,7 +335,7 @@ val lookup_var(val env, val sym)
   for (env = dyn_env; env; env = env->e.up_env) {
     val binding = assoc(sym, env->e.vbindings);
     if (binding)
-      return binding;
+      return if3(us_cdr(binding) == unbound_s, nil, binding);
   }
 
   return lookup_global_var(sym);
@@ -3957,10 +3958,24 @@ val special_operator_p(val sym)
 
 static val makunbound(val sym)
 {
-  lisplib_try_load(sym),
+  val env;
+
+  lisplib_try_load(sym);
+
+  if (!opt_compat || opt_compat > 143) {
+    for (env = dyn_env; env; env = env->e.up_env) {
+      val binding = assoc(sym, env->e.vbindings);
+      if (binding) {
+        rplacd(binding, unbound_s);
+        return sym;
+      }
+    }
+  }
+
   remhash(top_vb, sym);
   remhash(top_smb, sym);
   remhash(special, sym);
+
   return sym;
 }
 
@@ -4685,6 +4700,7 @@ void eval_init(void)
   whole_k = intern(lit("whole"), keyword_package);
   form_k = intern(lit("form"), keyword_package);
   special_s = intern(lit("special"), system_package);
+  unbound_s = intern(lit("unbound"), system_package);
   symacro_k = intern(lit("symacro"), keyword_package);
   prof_s = intern(lit("prof"), user_package);
   opip_s = intern(lit("opip"), user_package);

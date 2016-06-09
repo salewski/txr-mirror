@@ -13770,7 +13770,20 @@ if the symbol has a function binding in the global
 environment, otherwise it returns nil
 .codn nil .
 
-.TP* "Dialect Note:"
+.code mboundp
+returns
+.code t
+if the symbol has an operator macro binding in the global environment,
+otherwise
+.codn nil .
+
+.TP* "Dialect Notes:"
+
+The
+.code boundp
+function in ANSI Common Lisp doesn't report that
+global symbol macros have a binding. They are not considered
+bindings. In \*(TL, they are considered bindings.
 
 The ANSI Common Lisp
 .code fboundp
@@ -13783,12 +13796,9 @@ in Common Lisp can be obtained in \*(TL using the
 .cble
 expression.
 
+The
 .code mboundp
-returns
-.code t
-if the symbol has an operator macro binding in the global environment,
-otherwise
-.codn nil .
+function doesn't exist in ANSI Common Lisp.
 
 .coNP Functions @, makunbound @ fmakunbound and @ mmakunbound
 .synb
@@ -13799,24 +13809,91 @@ otherwise
 .desc
 The function
 .code makunbound
-removes any binding for
+the binding of
 .meta symbol
-from the variable namespace of the global environment. If
+from either the dynamic environment or the global symbol
+macro environment. After the call to
+.codn makunbound ,
 .meta symbol
-has no such binding, it does nothing.
-In either case, it returns
+appears to be unbound.
+
+If the
+.code makunbound
+call takes place in a scope in which there exists a dynamic rebinding of
+.metn symbol ,
+the information for restoring the previous binding is not
+affected by
+.codn makunbound .
+When that scope terminates, the previous binding will be restored.
+
+If the
+.code makunbound
+call takes place in a scope in which the dynamic binding for
+.code symbol
+is the global binding, then the global binding is removed.
+When the global binding is removed, then
+if
+.meta symbol
+was previously marked as special (for instance
+by
+.codn defvar )
+this marking is removed.
+
+Otherwise if
+.meta symbol
+has a global symbol macro binding, that binding is removed.
+
+If
+.meta symbol
+has no apparent dynamic binding, and no global symbol macro binding,
+.code makunbound
+does nothing.
+
+In all cases,
+.code makunbound
+returns
 .metn symbol .
 
-Both variables and symbol macros are bindings in the variable namespace.
+.TP* "Dialect Note:"
 
-Additionally, if
-.meta symbol
-was previously marked as special, for instance
-by
-.codn defvar ,
-this marking is removed by
-.codn makunbound .
+The behavior of
+.code makunbound
+differs from its counterpart in ANSI Common Lisp.
 
+The
+.code makunbound
+function in Common Lisp only removes a value from a dynamic variable. The
+dynamic variable does not cease to exist, it only ceases to have a value
+(because a binding is a value). In \*(TL, the variable ceases to exist. The
+binding of a variable isn't its value, it is the variable itself: the
+association between a name and an abstract storage location, in some
+environment.  If the binding is undone, the variable disappears.
+
+The
+.code makunbound
+function in Common Lisp does not remove global symbol macros,
+which are not considered to be bindings in the variable namespace.
+That is to say, the Common Lisp
+.code boundp
+does not report true for symbol macros.
+
+The Common Lisp
+.code makunbound
+also doesn't remove the special attribute from a symbol. If a variable
+is introduced with
+.code defvar
+and then removed with
+.codn makunbound ,
+the symbol continues to exhibit dynamic binding rather than lexical
+in subsequent scopes. In \*(TL, if a global binding is removed, so
+is the special attribute.
+
+.coNP Functions @ fmakunbound and @ mmakunbound
+.synb
+.mets (fmakunbound << symbol )
+.mets (mmakunbound << symbol )
+.syne
+.desc
 The function
 .code fmakunbound
 removes any binding for
@@ -13839,19 +13916,9 @@ In either case, it returns
 
 .TP* "Dialect Note:"
 
-The behavior of these functions differs from ANSI Common Lisp.
-
-The
-.code makunbound
-function in Common Lisp only removes a value from a dynamic variable. The
-dynamic variable does not cease to exist, it only ceases to have a value
-(because a binding is a value).  The special property from a symbol is also not
-removed.  In \*(TL, the variable ceases to exist. The binding
-of a variable isn't its value, it is the variable itself: the association
-between a name and an abstract storage location, in some environment.
-If the binding is undone, the variable disappears.
-
-The
+The behavior of
+.code fmakunbound
+differs from its counterpart in ANSI Common Lisp. The
 .code fmakunbound
 function in Common Lisp removes a function or macro binding, which
 do not coexist.
@@ -43095,7 +43162,12 @@ selects the behaviors described below for version 105, but not those for 102.
 .IP 143
 Until version 143, the
 .code stdlib
-variable didn't include the trailing slash.
+variable didn't include the trailing slash. The
+.code makunbound
+function semantics changed after version 143 to be more
+compatible with ANSI Common Lisp. Until 143, that function removed
+only the global binding, leaving the dynamic rebinding of a variable
+intact.
 .IP 142
 Until version 142, the \*(TX pattern language supported a prefix
 convention on data sources. Data sources beginning with the character
