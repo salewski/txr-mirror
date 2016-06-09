@@ -637,7 +637,7 @@
   :
   (deleter
     ^(macrolet ((,deleter () ^(makunbound ,',sym-expr)))
-       ,*body)))
+       ,body)))
 
 (defplace (slot struct sym) body
   (getter setter
