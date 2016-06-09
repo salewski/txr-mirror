@@ -13715,28 +13715,61 @@ referring to the "macro-expander binding of the symbol cell".
 
 The
 .code symbol-value
-function retrieves the value of a either a global variable or a global
-symbol macro, whichever exists.  Otherwise it returns
-.codn nil .
-
+function retrieves the value stored in the dynamic binding of
+.meta symbol
+that is apparent in the current context. If the variable has no dynamic
+binding, then
+.code symbol-value
+retrieves its value in the global environment.
+If
+.meta symbol
+has no variable binding, but is defined as a global symbol macro,
+then the value of that symbol macro binding is retrieved.
 The value of a symbol macro binding is simply the replacement form.
+
+Rather than throwing an exception, each of these functions returns
+.code nil
+if the argument symbol doesn't have the binding in the respective
+namespace or namespaces which that function searches.
 
 A
 .codn symbol-function ,
 .codn symbol-macro ,
 or
 .code symbol-value
-form denotes a place.  If
+form denotes a place, if
 .meta symbol
-has a binding in, respectively, the function or variable namespace
-of the global environment, then a value may be stored in the place,
-otherwise an error is thrown. Deleting a place doesn't require a binding;
-it takes place as if using the
-.code fmakunbound
-or
-.code makunbound
-functions. If a nonexistent place is deleted, the prior value yielded
-by the deletion is deemed to be
+has a binding of the respective kind.  This place may be assigned to or
+deleted. Assignment to the place causes the denoted binding to have a new
+value. Deleting a place with the
+.code del
+macro removes the binding,
+and returns the previous contents of that binding. A binding
+denoted by a
+.code symbol-function
+form is removed using
+.codn fmakunbound ,
+one denoted by by
+.code symbol-macro
+is removed using
+.code mmakunbound
+and a binding denoted by
+.code symbol-value
+is removed using
+.codn makunbound .
+
+If one of these three accessors is applied to a
+.meta symbol
+which doesn't have a binding in the respective namespace corresponding
+to that accessor, then the form denotes a nonexistent place. An attempt to store
+a value to this place results in an exception being thrown.
+
+Deleting such a nonexistent place doesn't throw an exception.
+If a nonexistent place is deleted using the
+.code del
+macro, nothing happens, and instead of the prior value
+of the place, which doesn't exist, the macro yields
+the value
 .codn nil .
 
 .TP* "Dialect note:"
