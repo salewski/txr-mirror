@@ -5015,6 +5015,53 @@ The behavior of the
 .code :vars
 keyword is specified in the following section, "Specifying variables in
 .codn collect \(dq.
+
+.meIP :counter >> { variable | >> ( variable << starting-value )}
+The
+.code :counter
+keyword's argument is a variable name symbol,
+or a compound expression consisting of a variable name symbol
+and an \*(TL expression.
+If this keyword argument is specified, then a binding for
+.meta variable
+is established prior to each repetition of the
+.code collect
+body, to an integer value representing the repetition count.
+By default, repetition counts begin at zero.
+If
+.meta starting-value
+is specified, it must evaluate to a number. This number is
+then added to each repetition count, and
+.meta variable
+takes on the resulting displaced value.
+
+If there is an existing binding for
+.meta variable
+prior to the processing of the
+.codn collect ,
+then the variable is shadowed.
+
+The binding is collected in the same way as other bindings
+that are established in the
+.code collect
+body.
+
+The repetition count only increments after a successful match.
+
+The
+.code variable
+is visible to the
+.codn collect 's
+.cod3 until / last
+clause. If that clause is being processed after a successful match
+of the body, then
+.meta variable
+holds an integer value. If the body fails to match, then the
+.cod3 until / last
+clause sees a binding for
+.code variable
+with a value of
+.codn nil .
 .PP
 
 .coNP Specifying variables in @ collect

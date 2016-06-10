@@ -814,6 +814,16 @@ static val h_coll(match_line_ctx *c)
   val mintimes = txeval(elem, getplist(args, mintimes_k), c->bindings);
   val maxtimes = txeval(elem, getplist(args, maxtimes_k), c->bindings);
   val chars = txeval(elem, getplist(args, chars_k), c->bindings);
+  val counter_spec = getplist(args, counter_k);
+  val consp_counter = consp(counter_spec);
+  val counter = if3(consp_counter, first(counter_spec), counter_spec);
+  val counter_base = if3(consp_counter,
+                         eval_with_bindings(second(counter_spec),
+                                            elem,
+                                            c->bindings,
+                                            counter_spec), zero);
+  val counter_binding = if2(counter, cons(counter, nil));
+  val bindings_with_counter = if2(counter, cons(counter_binding, nil));
   val have_vars;
   val vars = getplist_f(args, vars_k, mkcloc(have_vars));
   cnum cmax = fixnump(gap) ? c_num(gap) : (fixnump(max) ? c_num(max) : 0);
@@ -834,6 +844,11 @@ static val h_coll(match_line_ctx *c)
     have_vars = t;
   }
 
+  if (counter && !bindable(counter))
+    sem_error(elem, lit("~s: ~s specified as :counter isn't a bindable symbol"),
+              op_sym, counter, nao);
+
+
   vars = vars_to_bindings(elem, vars, c->bindings);
 
   if (((times || maxtimes) && ctimax == 0) || (chars && cchars == 0))
@@ -849,8 +864,20 @@ static val h_coll(match_line_ctx *c)
       break;
 
     {
-      cons_set (new_bindings, new_pos,
-                match_line(ml_specline(*c, coll_specline)));
+      if (counter) {
+        rplacd(counter_binding, plus(num(timescounter), counter_base));
+        rplacd(bindings_with_counter, c->bindings);
+        cons_set (new_bindings, new_pos,
+                  match_line(ml_bindings_specline(*c, bindings_with_counter, coll_specline)));
+
+        if (!new_bindings) {
+          rplacd(counter_binding, nil);
+          new_bindings = bindings_with_counter;
+        }
+      } else {
+        cons_set (new_bindings, new_pos,
+                  match_line(ml_specline(*c, coll_specline)));
+      }
 
       if (until_last_specline) {
         uses_or2;
@@ -2840,6 +2867,16 @@ static val v_collect(match_files_ctx *c)
   val mintimes = txeval(specline, getplist(args, mintimes_k), c->bindings);
   val maxtimes = txeval(specline, getplist(args, maxtimes_k), c->bindings);
   val lines = txeval(specline, getplist(args, lines_k), c->bindings);
+  val counter_spec = getplist(args, counter_k);
+  val consp_counter = consp(counter_spec);
+  val counter = if3(consp_counter, first(counter_spec), counter_spec);
+  val counter_base = if3(consp_counter,
+                         eval_with_bindings(second(counter_spec),
+                                            specline,
+                                            c->bindings,
+                                            counter_spec), zero);
+  val counter_binding = if2(counter, cons(counter, nil));
+  val bindings_with_counter = if2(counter, cons(counter_binding, nil));
   val have_vars;
   volatile val vars = getplist_f(args, vars_k, mkcloc(have_vars));
   cnum cmax = fixnump(gap) ? c_num(gap) : (fixnump(max) ? c_num(max) : 0);
@@ -2867,6 +2904,10 @@ static val v_collect(match_files_ctx *c)
     have_vars = t;
   }
 
+  if (counter && !bindable(counter))
+    sem_error(specline, lit("~s: ~s specified as :counter isn't a bindable symbol"),
+              op_sym, counter, nao);
+
   vars = vars_to_bindings(specline, vars, c->bindings);
 
   if ((times && ctimes == 0) || (lines && clines == 0))
@@ -2884,8 +2925,20 @@ static val v_collect(match_files_ctx *c)
       break;
 
     {
-      cons_set (new_bindings, success,
-                match_files(mf_spec(*c, coll_spec)));
+      if (counter) {
+        rplacd(counter_binding, plus(num(timescounter), counter_base));
+        rplacd(bindings_with_counter, c->bindings);
+        cons_set (new_bindings, success,
+                  match_files(mf_spec_bindings(*c, coll_spec, bindings_with_counter)));
+
+        if (!new_bindings) {
+          rplacd(counter_binding, nil);
+          new_bindings = bindings_with_counter;
+        }
+      } else {
+        cons_set (new_bindings, success,
+                  match_files(mf_spec(*c, coll_spec)));
+      }
 
       /* Until/last clause sees un-collated bindings from collect. */
       if (until_last_spec)
