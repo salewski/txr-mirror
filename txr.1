@@ -4885,18 +4885,33 @@ nonmatching material before the first match, and between matches.
 
 Within the
 .code @(collect)
-syntax, it is possible to specify some useful keyword
-parameters for additional control of the behavior. For instance
+syntax, it is possible to specify keyword
+parameters for additional control of the behavior. A keyword parameter
+consist of a keyword symbol followed by an argument, enclosed within
+the
+.code @(collect)
+syntax. The following are the supported keywords.
+
+.meIP :maxgap < n
+The
+.code :maxgap
+keyword takes a numeric argument
+.metn n .
+It causes the collect to terminate
+if it fails to find a match after skipping
+.meta n
+lines from the starting position,
+or more than five lines since any successful match. For example,
 
 .cblk
   @(collect :maxgap 5)
 .cble
 
-means that the collect will terminate if it does not find a match within five
-lines of the starting position, or if more than five lines are skipped since
-any successful match. A
+specifies that the gap between the current position and the first
+match for the body of the collect, or between consecutive matches
+can be no longer than five lines. A
 .code :maxgap
-of
+value of
 .code 0
 means that the collected regions must be
 adjacent. For instance:
@@ -4913,14 +4928,17 @@ This will not
 search for the first such line, nor will it skip lines which do not match this
 form.
 
-Other keywords are
-.codn :mingap ,
-and
-.codn :gap .
+.meIP :mingap < n
 The
 .code :mingap
-keyword specifies a minimum
-gap between matches, but has no effect on the distance to the first match. The
+keyword complements
+.codn :maxgap ,
+though not exactly. It specifies a minimum number of lines which
+must separate consecutive matches. However, it has no effect on the
+distance from the starting position to the first match.
+
+.meIP :gap < n
+The
 .code :gap
 keyword effectively specifies
 .code :mingap
@@ -4935,39 +4953,40 @@ used if these other two are not used. Thus:
   @(end)
 .cble
 
-means collect every other line starting with the current line. Several
-other supported keywords are
-.codn :times ,
-.codn :mintimes ,
-.code :maxtimes
-and
-.codn :lines .
-The shorthand
-.code ":times N"
-means the same thing as
-.codn ":mintimes N :maxtimes N" .
-These specify how many matches should be collected. If there are fewer
-than
+means: collect every other line starting with the current line.
+
+.meIP :times < n
+This shorthand means the same thing as if
+.meIP :mintimes < n :maxtimes < n
+were specified.  This means that exactly
+.meta n
+matches must occur. If fewer occur, then the collect fails.
+Collect stops once it achieves
+.code n
+matches.
+
+.meIP :mintimes < n
+The numeric argument
+.meta n
+of the
 .code :mintimes
-matches, the collect fails. If
-.code :maxtimes
-matches are collected,
-collect stops collecting immediately. Example:
+keyword specifies that at least
+.meta n
+matches must occur, or else the collect fails.
 
-.cblk
-  @(collect :times 3)
-  @a @b
-  @(end)
-.cble
+.meIP :mintimes < n
+The numeric argument
+.meta n
+of the
+.code :mintimes
+keyword specifies that at most
+.meta n
+matches are collected.
 
-This will collect a match for
-.str @a @b
-exactly three times. If three
-matches are not found, it will fail.
-
-The
+.meIP :lines < n
+The argument of the
 .code :lines
-parameter specifies the upper bound on how many lines
+keyword parameter specifies the upper bound on how many lines
 should be scanned by collect, measuring from the starting position.
 The extent of the collect body is not counted. Example:
 
@@ -4984,9 +5003,19 @@ The above
 will look for a match only twice: at the current position,
 and one line down.
 
-There is one more keyword,
-.codn :vars ,
-described in the following section.
+.meIP :vars >> ({ variable | >> ( variable << default-value)}*)
+The
+.code :vars
+keyword specifies a restriction on what variables will emanate
+from the collect. Its argument is a list of variable
+names. An empty list may be specified using empty parentheses
+or, equivalently, the symbol
+.codn nil .
+The behavior of the
+.code :vars
+keyword is specified in the following section, "Specifying variables in
+.codn collect \(dq.
+.PP
 
 .coNP Specifying variables in @ collect
 Normally, any variable for which a new binding occurs in a
