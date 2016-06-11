@@ -1567,6 +1567,8 @@ static val op_defsymacro(val form, val env)
     eval_error(form, lit("let: ~s is not a bindable symbol"), sym, nao);
 
   remhash(top_vb, sym);
+  if (!opt_compat || opt_compat > 143)
+    remhash(special, sym);
   sethash(top_smb, sym, cons(sym, second(args)));
   return sym;
 }

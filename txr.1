@@ -25167,6 +25167,23 @@ Note: if a symbol macro expands to itself directly, expansion stops. However,
 if a symbol macro expands to itself through a chain of expansions,
 an infinite expansion time loop results.
 
+If a global variable exists by the name
+.metn sym ,
+then
+.code defsymacro
+first removes that variable from the global environment, and if that
+variable is special, the symbol's special marking is removed.
+.code defsymacro
+doesn't alter a dynamic binding of a special variable. Any such
+a binding remains intact.
+If
+.code defsymacro
+is evaluated in a scope in which there is any lexical or dynamic binding
+of
+.meta sym
+in the variable namespace, whether as a variable or macro,
+the global symbol macro is shadowed by that binding.
+
 .coNP Operator @ symacrolet
 .synb
 .mets (symacrolet >> ({( sym << form )}*) << body-form *)
@@ -43276,7 +43293,10 @@ variable didn't include the trailing slash. The
 function semantics changed after version 143 to be more
 compatible with ANSI Common Lisp. Until 143, that function removed
 only the global binding, leaving the dynamic rebinding of a variable
-intact.
+intact. The
+.code defsymacro
+operator neglected to remove the symbol's special variable
+mark, if the symbol was previously defined as a special variable.
 .IP 142
 Until version 142, the \*(TX pattern language supported a prefix
 convention on data sources. Data sources beginning with the character
