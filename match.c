@@ -268,8 +268,7 @@ static val dest_set(val spec, val bindings, val pattern, val value)
   return nil;
 }
 
-static val eval_with_bindings(val form, val spec,
-                              val bindings, val ctx_form)
+static val tleval(val spec, val form, val bindings)
 {
   val ret;
 
@@ -277,12 +276,12 @@ static val eval_with_bindings(val form, val spec,
 
   if (opt_compat && opt_compat <= 121) {
     uw_set_match_context(cons(spec, bindings));
-    ret = eval(form, make_env(bindings, nil, nil), ctx_form);
+    ret = eval(form, make_env(bindings, nil, nil), form);
   } else {
     val saved_de = set_dyn_env(make_env(bindings, nil, nil));
 
     uw_set_match_context(cons(spec, bindings));
-    ret = eval(form, nil, ctx_form);
+    ret = eval(form, nil, spec);
 
     set_dyn_env(saved_de);
   }
@@ -292,8 +291,7 @@ static val eval_with_bindings(val form, val spec,
 }
 
 
-static val eval_progn_with_bindings(val forms, val spec,
-                                    val bindings, val ctx_form)
+static val tleval_progn(val spec, val forms, val bindings)
 {
   val ret;
 
@@ -301,12 +299,12 @@ static val eval_progn_with_bindings(val forms, val spec,
 
   if (opt_compat && opt_compat <= 121) {
     uw_set_match_context(cons(spec, bindings));
-    ret = eval_progn(forms, make_env(bindings, nil, nil), ctx_form);
+    ret = eval_progn(forms, make_env(bindings, nil, nil), forms);
   } else {
     val saved_de = set_dyn_env(make_env(bindings, nil, nil));
 
     uw_set_match_context(cons(spec, bindings));
-    ret = eval_progn(forms, nil, ctx_form);
+    ret = eval_progn(forms, nil, forms);
 
     set_dyn_env(saved_de);
   }
@@ -340,12 +338,12 @@ static val dest_bind(val spec, val bindings, val pattern,
     val ret;
 
     if (first(pattern) == var_s) {
-      ret = eval_with_bindings(second(pattern), spec, bindings, pattern);
+      ret = tleval(spec, second(pattern), bindings);
       lisp_evaled = t;
     }
 
     if (first(pattern) == expr_s) {
-      ret = eval_with_bindings(rest(pattern), spec, bindings, pattern);
+      ret = tleval(spec, rest(pattern), bindings);
       lisp_evaled = t;
     }
 
@@ -818,10 +816,9 @@ static val h_coll(match_line_ctx *c)
   val consp_counter = consp(counter_spec);
   val counter = if3(consp_counter, first(counter_spec), counter_spec);
   val counter_base = if3(consp_counter,
-                         eval_with_bindings(second(counter_spec),
-                                            elem,
-                                            c->bindings,
-                                            counter_spec), zero);
+                         tleval(elem,
+                                second(counter_spec),
+                                c->bindings), zero);
   val counter_binding = if2(counter, cons(counter, nil));
   val bindings_with_counter = if2(counter, cons(counter_binding, nil));
   val have_vars;
@@ -1492,11 +1489,11 @@ static val tx_subst_vars(val spec, val bindings, val filter)
           continue;
         } else if (sym == expr_s) {
           if (opt_compat && opt_compat < 100) {
-            val result = eval_with_bindings(rest(elem), spec, bindings, elem);
+            val result = tleval(spec, rest(elem), bindings);
             spec = cons(filter_string_tree(filter, tostringp(result)), rest(spec));
             continue;
           } else {
-            val str = eval_with_bindings(rest(elem), spec, bindings, elem);
+            val str = tleval(spec, rest(elem), bindings);
             if (listp(str))
               str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
             else if (!stringp(str))
@@ -1564,9 +1561,9 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
           tail = list_collect(tail, tx_subst_vars(cdr(car(iter)), bindings, nil));
         ret = out;
       } else if (sym == var_s) {
-        ret = eval_with_bindings(second(form), spec, bindings, form);
+        ret = tleval(spec, second(form), bindings);
       } else if (sym == expr_s) {
-        ret = eval_with_bindings(rest(form), spec, bindings, form);
+        ret = tleval(spec, rest(form), bindings);
       } else {
         ret =  mapcar(curry_123_2(func_n3(txeval), spec, bindings), form);
       }
@@ -1724,7 +1721,7 @@ static val extract_bindings(val bindings, val output_spec, val vars)
     val var = car(vars);
     if (consp(var)) {
       val form = cadr(var);
-      val value = eval_with_bindings(form, output_spec, bindings, form);
+      val value = tleval(output_spec, form, bindings);
       bindings = cons(cons(car(var), value), bindings);
       vtail = list_collect(vtail, car(var));
     } else {
@@ -1789,10 +1786,9 @@ static void do_output_line(val bindings, val specline, val filter, val out)
           val consp_counter = consp(counter_spec);
           val counter = if3(consp_counter, first(counter_spec), counter_spec);
           val counter_base = if3(consp_counter,
-                                 eval_with_bindings(second(counter_spec),
-                                                    elem,
-                                                    bindings,
-                                                    counter_spec), zero);
+                                 tleval(elem,
+                                        second(counter_spec),
+                                        bindings), zero);
           val vars = getplist(args, vars_k);
           val bind_cp = extract_bindings(bindings, elem, vars);
           val max_depth = reduce_left(func_n2(max2),
@@ -1881,7 +1877,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
         } else if (directive == expr_s) {
           if (opt_compat && opt_compat < 100) {
             format(out, lit("~a"),
-                   eval_with_bindings(rest(elem), elem, bindings, elem), nao);
+                   tleval(elem, rest(elem), bindings), nao);
           } else {
             val str = cat_str(tx_subst_vars(cons(elem, nil),
                                             bindings, filter), nil);
@@ -1933,10 +1929,9 @@ static void do_output(val bindings, val specs, val filter, val out)
         val consp_counter = consp(counter_spec);
         val counter = if3(consp_counter, first(counter_spec), counter_spec);
         val counter_base = if3(consp_counter,
-                               eval_with_bindings(second(counter_spec),
-                                                  first_elem,
-                                                  bindings,
-                                                  counter_spec), zero);
+                               tleval(first_elem,
+                                      second(counter_spec),
+                                      bindings), zero);
         val vars = getplist(args, vars_k);
         val bind_cp = extract_bindings(bindings, first_elem, vars);
         val max_depth = reduce_left(func_n2(max2),
@@ -2476,8 +2471,7 @@ static val v_next(match_files_ctx *c)
       val nothrow = cdr(assoc(nothrow_k, alist));
       val str = if3(meta,
                     txeval(specline, source, c->bindings),
-                    eval_with_bindings(source, specline, c->bindings,
-                                       specline));
+                    tleval(specline, source, c->bindings));
 
       if (!from_var && !source && !string_expr && !list_expr)
         sem_error(specline, lit("next: source required before keyword arguments"), nao);
@@ -2871,10 +2865,9 @@ static val v_collect(match_files_ctx *c)
   val consp_counter = consp(counter_spec);
   val counter = if3(consp_counter, first(counter_spec), counter_spec);
   val counter_base = if3(consp_counter,
-                         eval_with_bindings(second(counter_spec),
-                                            specline,
-                                            c->bindings,
-                                            counter_spec), zero);
+                         tleval(specline,
+                                second(counter_spec),
+                                c->bindings), zero);
   val counter_binding = if2(counter, cons(counter, nil));
   val bindings_with_counter = if2(counter, cons(counter_binding, nil));
   val have_vars;
@@ -3304,8 +3297,7 @@ static val v_output(match_files_ctx *c)
               (sym == var_s) || (sym == expr_s));
     val val = if3(tx,
                   txeval(specline, form, c->bindings),
-                  eval_with_bindings(form, specline, c->bindings,
-                                     specline));
+                  tleval(specline, form, c->bindings));
     dest = or2(val, dest);
     pop(&dest_spec);
   }
@@ -3782,7 +3774,7 @@ static val v_do(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
   val args = rest(first_spec);
-  (void) eval_progn_with_bindings(args, c->spec, c->bindings, specline);
+  (void) tleval_progn(c->spec, args, c->bindings);
   return next_spec_k;
 }
 
@@ -3791,7 +3783,7 @@ static val v_require(match_files_ctx *c)
   spec_bind (specline, first_spec, c->spec);
   val args = rest(first_spec);
   val ret;
-  ret = eval_progn_with_bindings(args, c->spec, c->bindings, specline);
+  ret = tleval_progn(c->spec, args, c->bindings);
   if (!ret) {
     debuglf(specline, lit("require failed"), nao);
     return ret;
@@ -3806,7 +3798,7 @@ static val v_if(match_files_ctx *c)
 
   for (; args; args = cdr(args)) {
     cons_bind (expr, spec, car(args));
-    if (eval_with_bindings(expr, c->spec, c->bindings, specline))
+    if (tleval(c->spec, expr, c->bindings))
       return maybe_next(c, match_files(mf_spec(*c, spec)));
   }
 
@@ -4037,8 +4029,7 @@ static val h_do(match_line_ctx *c)
 {
   val elem = first(c->specline);
   val args = rest(elem);
-  (void) eval_progn_with_bindings(args, cons(c->specline, nil),
-                                  c->bindings, elem);
+  (void) tleval_progn(cons(c->specline, nil), args, c->bindings);
   return next_spec_k;
 }
 
