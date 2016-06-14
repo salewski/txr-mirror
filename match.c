@@ -62,7 +62,7 @@ val line_s, data_s, fuzz_s, load_s;
 val include_s, close_s, require_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
-val append_k, into_k, var_k, list_k, string_k, env_k, counter_k;
+val append_k, into_k, var_k, list_k, tlist_k, string_k, env_k, counter_k;
 val named_k, continue_k, finish_k, mandatory_k;
 
 val filter_s;
@@ -313,6 +313,15 @@ static val tleval_progn(val spec, val forms, val bindings)
   return ret;
 }
 
+static val txeval(val spec, val form, val bindings);
+
+static val tleval_144(val spec, val form, val bindings)
+{
+  return if3(!opt_compat || opt_compat >= 144,
+             tleval(spec, form, bindings),
+             txeval(spec, form, bindings));
+}
+
 static val dest_bind(val spec, val bindings, val pattern,
                      val value, val testfun)
 {
@@ -373,8 +382,6 @@ static val dest_bind(val spec, val bindings, val pattern,
 
   return t;
 }
-
-static val txeval(val spec, val form, val bindings);
 
 static val vars_to_bindings(val spec, val vars, val bindings)
 {
@@ -728,8 +735,8 @@ static val h_var(match_line_ctx *c)
 static val h_skip(match_line_ctx *c)
 {
   val elem = first(c->specline);
-  val max = txeval(elem, second(elem), c->bindings);
-  val min = txeval(elem, third(elem), c->bindings);
+  val max = tleval_144(elem, second(elem), c->bindings);
+  val min = tleval_144(elem, third(elem), c->bindings);
   cnum cmax = fixnump(max) ? c_num(max) : 0;
   cnum cmin = fixnump(min) ? c_num(min) : 0;
   val greedy = eq(max, greedy_k);
@@ -805,13 +812,13 @@ static val h_coll(match_line_ctx *c)
   val args = fourth(elem);
   val bindings_coll = nil;
   val last_bindings = nil;
-  val max = txeval(elem, getplist(args, maxgap_k), c->bindings);
-  val min = txeval(elem, getplist(args, mingap_k), c->bindings);
-  val gap = txeval(elem, getplist(args, gap_k), c->bindings);
-  val times = txeval(elem, getplist(args, times_k), c->bindings);
-  val mintimes = txeval(elem, getplist(args, mintimes_k), c->bindings);
-  val maxtimes = txeval(elem, getplist(args, maxtimes_k), c->bindings);
-  val chars = txeval(elem, getplist(args, chars_k), c->bindings);
+  val max = tleval_144(elem, getplist(args, maxgap_k), c->bindings);
+  val min = tleval_144(elem, getplist(args, mingap_k), c->bindings);
+  val gap = tleval_144(elem, getplist(args, gap_k), c->bindings);
+  val times = tleval_144(elem, getplist(args, times_k), c->bindings);
+  val mintimes = tleval_144(elem, getplist(args, mintimes_k), c->bindings);
+  val maxtimes = tleval_144(elem, getplist(args, maxtimes_k), c->bindings);
+  val chars = tleval_144(elem, getplist(args, chars_k), c->bindings);
   val counter_spec = getplist(args, counter_k);
   val consp_counter = consp(counter_spec);
   val counter = if3(consp_counter, first(counter_spec), counter_spec);
@@ -1269,7 +1276,7 @@ static val h_call(match_line_ctx *c)
   val elem = first(saved_specline);
   val args = rest(elem);
   val funexpr = first(args);
-  val funval = txeval(c->specline, funexpr, c->bindings);
+  val funval = tleval_144(c->specline, funexpr, c->bindings);
   val argexprs = rest(args);
   val call = cons(funval, argexprs);
   val new_specline = cons(call, nil);
@@ -1832,8 +1839,8 @@ static void do_output_line(val bindings, val specline, val filter, val out)
                   for (iter = modlast_clauses; iter != nil; iter = cdr(iter)) {
                     val clause = car(iter);
                     val args = first(clause);
-                    val n = txeval(args, first(args), bind_a);
-                    val m = txeval(args, second(args), bind_a);
+                    val n = tleval_144(args, first(args), bind_a);
+                    val m = tleval_144(args, second(args), bind_a);
 
                     if (eql(mod(num_fast(i), m), n))
                       ptail = list_collect_append(ptail, rest(clause));
@@ -1855,8 +1862,8 @@ static void do_output_line(val bindings, val specline, val filter, val out)
                 for (iter = mod_clauses; iter != nil; iter = cdr(iter)) {
                   val clause = car(iter);
                   val args = first(clause);
-                  val n = txeval(args, first(args), bind_a);
-                  val m = txeval(args, second(args), bind_a);
+                  val n = tleval_144(args, first(args), bind_a);
+                  val m = tleval_144(args, second(args), bind_a);
 
                   if (eql(mod(num_fast(i), m), n))
                     ptail = list_collect_append(ptail, rest(clause));
@@ -1972,8 +1979,8 @@ static void do_output(val bindings, val specs, val filter, val out)
                 for (iter = modlast_clauses; iter != nil; iter = cdr(iter)) {
                   val clause = car(iter);
                   val args = first(clause);
-                  val n = txeval(args, first(args), bind_a);
-                  val m = txeval(args, second(args), bind_a);
+                  val n = tleval_144(args, first(args), bind_a);
+                  val m = tleval_144(args, second(args), bind_a);
 
                   if (eql(mod(num_fast(i), m), n))
                     ptail = list_collect_append(ptail, rest(clause));
@@ -1995,8 +2002,8 @@ static void do_output(val bindings, val specs, val filter, val out)
               for (iter = mod_clauses; iter != nil; iter = cdr(iter)) {
                 val clause = car(iter);
                 val args = first(clause);
-                val n = txeval(args, first(args), bind_a);
-                val m = txeval(args, second(args), bind_a);
+                val n = tleval_144(args, first(args), bind_a);
+                val m = tleval_144(args, second(args), bind_a);
 
                 if (eql(mod(num_fast(i), m), n))
                   ptail = list_collect_append(ptail, rest(clause));
@@ -2107,8 +2114,8 @@ static val v_skip(match_files_ctx *c)
   {
     val skipspec = first(first(c->spec));
     val args = rest(first_spec);
-    val max = txeval(skipspec, first(args), c->bindings);
-    val min = txeval(skipspec, second(args), c->bindings);
+    val max = tleval_144(skipspec, first(args), c->bindings);
+    val min = tleval_144(skipspec, second(args), c->bindings);
     cnum cmax = fixnump(max) ? c_num(max) : 0;
     cnum cmin = fixnump(min) ? c_num(min) : 0;
     val greedy = eq(max, greedy_k);
@@ -2196,8 +2203,8 @@ static val v_fuzz(match_files_ctx *c)
   {
     val fuzz_spec = first(first(c->spec));
     val args = rest(first_spec);
-    val m = txeval(fuzz_spec, first(args), c->bindings);
-    val n = txeval(fuzz_spec, second(args), c->bindings);
+    val m = tleval_144(fuzz_spec, first(args), c->bindings);
+    val n = tleval_144(fuzz_spec, second(args), c->bindings);
     cnum cm = fixnump(m) ? c_num(m) : 0;
     cnum cn = fixnump(n) ? c_num(n) : 0;
 
@@ -2286,7 +2293,7 @@ static val v_freeform(match_files_ctx *c)
   spec_bind (specline, first_spec, c->spec);
 
   val args = rest(first_spec);
-  val vals = mapcar(curry_123_2(func_n3(txeval), first_spec, c->bindings),
+  val vals = mapcar(curry_123_2(func_n3(tleval_144), first_spec, c->bindings),
                     args);
 
   if ((c->spec = rest(c->spec)) == nil) {
@@ -2467,19 +2474,27 @@ static val v_next(match_files_ctx *c)
       val alist = improper_plist_to_alist(args, list(nothrow_k, nao));
       val from_var = cdr(assoc(var_k, alist));
       val list_expr = cdr(assoc(list_k, alist));
+      val tlist_expr = cdr(assoc(tlist_k, alist));
       val string_expr = cdr(assoc(string_k, alist));
       val nothrow = cdr(assoc(nothrow_k, alist));
       val str = if3(meta,
                     txeval(specline, source, c->bindings),
                     tleval(specline, source, c->bindings));
 
-      if (!from_var && !source && !string_expr && !list_expr)
+      if (!from_var && !source && !string_expr && !list_expr && !tlist_expr)
         sem_error(specline, lit("next: source required before keyword arguments"), nao);
 
-      if ((from_var && string_expr) || (string_expr && list_expr) ||
-          (from_var && list_expr))
       {
-        sem_error(specline, lit("next: only one of :var, :list or :string can be specified"), nao);
+        int count = (from_var != nil) +
+                    (list_expr != nil) +
+                    (tlist_expr != nil) +
+                    (string_expr != nil);
+
+        if (count > 1)
+        {
+          sem_error(specline, lit("next: only one of :var, :list, :tlist or :string "
+                                  "can be specified"), nao);
+        }
       }
 
       if (from_var) {
@@ -2502,7 +2517,18 @@ static val v_next(match_files_ctx *c)
           return nil;
         }
       } else if (list_expr) {
-        val list_val = txeval(specline, list_expr, c->bindings);
+        val list_val = if3(opt_compat && opt_compat <= 143,
+                           txeval, tleval)(specline, list_expr, c->bindings);
+        cons_bind (new_bindings, success,
+                   match_files(mf_file_data(*c, lit("var"),
+                               lazy_flatten(list_val), one)));
+
+        if (success)
+          return cons(new_bindings,
+                      if3(c->data, cons(c->data, c->data_lineno), t));
+        return nil;
+      } else if (tlist_expr) {
+        val list_val = txeval(specline, tlist_expr, c->bindings);
         cons_bind (new_bindings, success,
                    match_files(mf_file_data(*c, lit("var"),
                                lazy_flatten(list_val), one)));
@@ -2512,7 +2538,7 @@ static val v_next(match_files_ctx *c)
                       if3(c->data, cons(c->data, c->data_lineno), t));
         return nil;
       } else if (string_expr) {
-        val str_val = txeval(specline, string_expr, c->bindings);
+        val str_val = tleval_144(specline, string_expr, c->bindings);
         if (!stringp(str_val))
           sem_error(specline, lit(":string arg ~s evaluated to non-string ~s"), string_expr, str_val, nao);
 
@@ -2854,13 +2880,13 @@ static val v_collect(match_files_ctx *c)
   val args = fourth(first_spec);
   volatile val bindings_coll = nil;
   volatile val last_bindings = nil;
-  val max = txeval(specline, getplist(args, maxgap_k), c->bindings);
-  val min = txeval(specline, getplist(args, mingap_k), c->bindings);
-  val gap = txeval(specline, getplist(args, gap_k), c->bindings);
-  val times = txeval(specline, getplist(args, times_k), c->bindings);
-  val mintimes = txeval(specline, getplist(args, mintimes_k), c->bindings);
-  val maxtimes = txeval(specline, getplist(args, maxtimes_k), c->bindings);
-  val lines = txeval(specline, getplist(args, lines_k), c->bindings);
+  val max = tleval_144(specline, getplist(args, maxgap_k), c->bindings);
+  val min = tleval_144(specline, getplist(args, mingap_k), c->bindings);
+  val gap = tleval_144(specline, getplist(args, gap_k), c->bindings);
+  val times = tleval_144(specline, getplist(args, times_k), c->bindings);
+  val mintimes = tleval_144(specline, getplist(args, mintimes_k), c->bindings);
+  val maxtimes = tleval_144(specline, getplist(args, maxtimes_k), c->bindings);
+  val lines = tleval_144(specline, getplist(args, lines_k), c->bindings);
   val counter_spec = getplist(args, counter_k);
   val consp_counter = consp(counter_spec);
   val counter = if3(consp_counter, first(counter_spec), counter_spec);
@@ -3370,7 +3396,7 @@ static val v_output(match_files_ctx *c)
   if (continue_expr || finish_expr) {
     uses_or2;
     val which = or2(continue_expr, finish_expr);
-    val stream = txeval(specline, which, c->bindings);
+    val stream = tleval_144(specline, which, c->bindings);
 
 
     if (!streamp(stream))
@@ -3844,7 +3870,7 @@ static val v_load(match_files_ctx *c)
   val sym = first(first_spec);
   val args = rest(first_spec);
   val parent = or2(cdr(source_loc(specline)), null_string);
-  val target = txeval(specline, first(args), c->bindings);
+  val target = tleval(specline, first(args), c->bindings);
 
   if (rest(specline))
     sem_error(specline, lit("unexpected material after ~s"), sym, nao);
@@ -3935,7 +3961,7 @@ static val v_close(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
   val args = rest(first_spec);
-  val stream = txeval(specline, first(args), c->bindings);
+  val stream = tleval(specline, first(args), c->bindings);
 
   if (rest(specline))
     sem_error(specline, lit("unexpected material after close"), nao);
@@ -4009,7 +4035,7 @@ static val v_call(match_files_ctx *c)
   spec_bind (specline, first_spec, c->spec);
   val exprs = rest(first_spec);
   val funexpr = car(exprs);
-  val funval = txeval(specline, funexpr, c->bindings);
+  val funval = tleval_144(specline, funexpr, c->bindings);
   val argexprs = cdr(exprs);
   val call = cons(funval, argexprs);
   val spec = cons(cons(call, nil), nil);
@@ -4308,6 +4334,7 @@ static void syms_init(void)
   into_k = intern(lit("into"), keyword_package);
   var_k = intern(lit("var"), keyword_package);
   list_k = intern(lit("list"), keyword_package);
+  tlist_k = intern(lit("tlist"), keyword_package);
   string_k = intern(lit("string"), keyword_package);
   env_k = intern(lit("env"), keyword_package);
   named_k = intern(lit("named"), keyword_package);

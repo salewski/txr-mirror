@@ -13,7 +13,7 @@
 @  (baz x)
 @(end)
 @(define foo ())
-@  (next :list ("0" "1"))
+@  (next :tlist ("0" "1"))
 @  (collect)
 @num
 @    (try)

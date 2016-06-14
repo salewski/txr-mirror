@@ -1,4 +1,4 @@
-@(next :list ("abc" "yyy"))
+@(next :tlist ("abc" "yyy"))
 @(block foo)
 @line
 @(accept foo)
