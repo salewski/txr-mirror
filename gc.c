@@ -487,17 +487,7 @@ static int sweep_one(obj_t *block)
 
   if (block->t.type & REACHABLE) {
 #if CONFIG_GEN_GC
-    if (block->t.gen == -1) {
-      block->t.gen = 0;
-      if (freshobj_idx < FRESHOBJ_VEC_SIZE)
-        freshobj[freshobj_idx++] = block;
-      /* If freshobj is full, it doesn't matter the next make_obj
-         call will find this situation and set the full_gc flag,
-         and the subsequent full_gc will take care of all
-         these objects. */
-    } else {
-      block->t.gen = 1;
-    }
+    block->t.gen = 1;
 #endif
     block->t.type = convert(type_t, block->t.type & ~REACHABLE);
     return 0;
@@ -558,13 +548,10 @@ static int_ptr_t sweep(void)
 #if CONFIG_GEN_GC
   if (!full_gc) {
     int i;
-    int limit = freshobj_idx;
-
-    freshobj_idx = 0; /* sweep_one rebuilds freshobj array */
 
     /* No need to mark block defined via Valgrind API; everything
        in the freshobj is an allocated node! */
-    for (i = 0; i < limit; i++)
+    for (i = 0; i < freshobj_idx; i++)
       free_count += sweep_one(freshobj[i]);
 
     /* Generation 1 objects that were indicated for dangerous
@@ -576,7 +563,6 @@ static int_ptr_t sweep(void)
     return free_count;
   }
 
-  freshobj_idx = 0;
 #endif
 
   for (heap = heap_list; heap != 0; heap = heap->next) {
@@ -708,6 +694,7 @@ void gc(void)
 #if CONFIG_GEN_GC
   checkobj_idx = 0;
   mutobj_idx = 0;
+  freshobj_idx = 0;
   full_gc = full_gc_next_time;
 #endif
   call_finals();
