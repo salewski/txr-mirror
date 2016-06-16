@@ -130,6 +130,9 @@ static void more(void)
   heap_t *heap = coerce(heap_t *, chk_malloc_gc_more(sizeof *heap));
   obj_t *block = heap->block, *end = heap->block + HEAP_SIZE;
 
+  if (free_list == 0)
+    free_tail = &heap->block[0].t.next;
+
   if (end > heap_max_bound)
     heap_max_bound = end;
 
@@ -141,8 +144,6 @@ static void more(void)
     block->t.type = convert(type_t, FREE);
     free_list = block++;
   }
-
-  free_tail = &heap->block[0].t.next;
 
   heap->next = heap_list;
   heap_list = heap;
@@ -183,6 +184,9 @@ val make_obj(void)
         VALGRIND_MAKE_MEM_DEFINED(free_list, sizeof *free_list);
 #endif
       free_list = free_list->t.next;
+
+      if (free_list == 0)
+        free_tail = &free_list;
 #if HAVE_VALGRIND
       if (opt_vg_debug)
         VALGRIND_MAKE_MEM_UNDEFINED(ret, sizeof *ret);
@@ -541,9 +545,6 @@ static int_ptr_t sweep(void)
 #if HAVE_VALGRIND
   const int vg_dbg = opt_vg_debug;
 #endif
-
-  if (free_list == 0)
-    free_tail = &free_list;
 
 #if CONFIG_GEN_GC
   if (!full_gc) {
