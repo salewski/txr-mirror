@@ -136,8 +136,6 @@ static void syslog_mark(val stream)
   strm_base_mark(&s->a);
   gc_mark(s->prio);
   gc_mark(s->strstream);
-  val stuff = coerce(val, stream->co.handle);
-  gc_mark(stuff);
 }
 
 static val syslog_put_string(val stream, val str)
