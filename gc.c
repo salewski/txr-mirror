@@ -142,6 +142,14 @@ static void more(void)
   while (block < end) {
     block->t.next = free_list;
     block->t.type = convert(type_t, FREE);
+#if EXTRA_DEBUGGING
+      if (block == break_obj) {
+#if HAVE_VALGRIND
+        VALGRIND_PRINTF_BACKTRACE("object %p newly added to free list\n", convert(void *, block));
+#endif
+        breakpt();
+      }
+#endif
     free_list = block++;
   }
 
@@ -198,6 +206,14 @@ val make_obj(void)
         freshobj[freshobj_idx++] = ret;
 #endif
       gc_bytes += sizeof (obj_t);
+#if EXTRA_DEBUGGING
+      if (ret == break_obj) {
+#if HAVE_VALGRIND
+        VALGRIND_PRINTF_BACKTRACE("object %p allocated\n", convert(void *, ret));
+#endif
+        breakpt();
+      }
+#endif
       return ret;
     }
 
@@ -311,8 +327,12 @@ tail_call:
   obj->t.type = convert(type_t, t | REACHABLE);
 
 #if EXTRA_DEBUGGING
-  if (obj == break_obj)
+  if (obj == break_obj) {
+#if HAVE_VALGRIND
+    VALGRIND_PRINTF_BACKTRACE("object %p marked\n", convert(void *, obj));
+#endif
     breakpt();
+  }
 #endif
 
   switch (t) {
@@ -478,8 +498,14 @@ static int sweep_one(obj_t *block)
 #endif
 
 #if EXTRA_DEBUGGING
-  if (block == break_obj)
+  if (block == break_obj) {
+#if HAVE_VALGRIND
+    VALGRIND_PRINTF_BACKTRACE("object %p swept (type = %x)\n",
+                              convert(void *, block),
+                              convert(unsigned int, block->t.type));
+#endif
     breakpt();
+  }
 #endif
 
 #if CONFIG_GEN_GC
