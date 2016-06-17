@@ -6017,12 +6017,12 @@ val vector(val length, val initval)
            : coerce(val *, uw_throwf(error_s, lit("vector: length ~a is too large"),
                                      length, nao));
   val vec = make_obj();
+  vec->v.type = VEC;
   initval = default_bool_arg(initval);
 #if HAVE_VALGRIND
   vec->v.vec_true_start = v;
 #endif
   v += 2;
-  vec->v.type = VEC;
   vec->v.vec = v;
   v[vec_alloc] = length;
   v[vec_length] = length;
@@ -6156,13 +6156,13 @@ val copy_vec(val vec_in)
 {
   val length = length_vec(vec_in);
   cnum alloc_plus = c_num(length) + 2;
-  val vec = make_obj();
   val *v = coerce(val *, chk_malloc(alloc_plus * sizeof *v));
+  val vec = make_obj();
+  vec->v.type = VEC;
 #if HAVE_VALGRIND
   vec->v.vec_true_start = v;
 #endif
   v += 2;
-  vec->v.type = VEC;
   vec->v.vec = v;
   v[vec_alloc] = length;
   v[vec_length] = length;
@@ -6197,13 +6197,13 @@ val sub_vec(val vec_in, val from, val to)
   } else {
     cnum cfrom = c_num(from);
     size_t nelem = c_num(to) - cfrom;
-    val vec = make_obj();
     val *v = coerce(val *, chk_malloc((nelem + 2) * sizeof *v));
+    val vec = make_obj();
+    vec->v.type = VEC;
 #if HAVE_VALGRIND
     vec->v.vec_true_start = v;
 #endif
     v += 2;
-    vec->v.type = VEC;
     vec->v.vec = v;
     v[vec_length] = v[vec_alloc] = num(nelem);
     memcpy(vec->v.vec, vec_in->v.vec + cfrom, nelem * sizeof *vec->v.vec);
@@ -6344,14 +6344,14 @@ val cat_vec(val list)
   if (total > (convert(size_t, -1)/(sizeof (val)) - 2))
     goto toobig;
 
-  vec = make_obj();
   v = coerce(val *, chk_malloc((total + 2) * sizeof *v));
+  vec = make_obj();
+  vec->v.type = VEC;
 
 #if HAVE_VALGRIND
   vec->v.vec_true_start = v;
 #endif
   v += 2;
-  vec->v.type = VEC;
   vec->v.vec = v;
   v[vec_length] = v[vec_alloc] = num(total);
 
