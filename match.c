@@ -1821,7 +1821,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
               val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
               if (counter) {
-                rplacd(counter_var, plus(num_fast(i), counter_base));
+                rplacd(counter_var, plus(num(i), counter_base));
                 rplacd(counter_bind, bind_a);
                 bind_a = counter_bind;
               }
@@ -1840,7 +1840,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
                     val n = tleval_144(args, first(args), bind_a);
                     val m = tleval_144(args, second(args), bind_a);
 
-                    if (eql(mod(num_fast(i), m), n))
+                    if (eql(mod(num(i), m), n))
                       ptail = list_collect_append(ptail, rest(clause));
                   }
 
@@ -1863,7 +1863,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
                   val n = tleval_144(args, first(args), bind_a);
                   val m = tleval_144(args, second(args), bind_a);
 
-                  if (eql(mod(num_fast(i), m), n))
+                  if (eql(mod(num(i), m), n))
                     ptail = list_collect_append(ptail, rest(clause));
                 }
 
@@ -1960,7 +1960,7 @@ static void do_output(val bindings, val specs, val filter, val out)
             val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
             if (counter) {
-              rplacd(counter_var, plus(num_fast(i), counter_base));
+              rplacd(counter_var, plus(num(i), counter_base));
               rplacd(counter_bind, bind_a);
               bind_a = counter_bind;
             }
@@ -1980,7 +1980,7 @@ static void do_output(val bindings, val specs, val filter, val out)
                   val n = tleval_144(args, first(args), bind_a);
                   val m = tleval_144(args, second(args), bind_a);
 
-                  if (eql(mod(num_fast(i), m), n))
+                  if (eql(mod(num(i), m), n))
                     ptail = list_collect_append(ptail, rest(clause));
                 }
 
@@ -2003,7 +2003,7 @@ static void do_output(val bindings, val specs, val filter, val out)
                 val n = tleval_144(args, first(args), bind_a);
                 val m = tleval_144(args, second(args), bind_a);
 
-                if (eql(mod(num_fast(i), m), n))
+                if (eql(mod(num(i), m), n))
                   ptail = list_collect_append(ptail, rest(clause));
               }
 
