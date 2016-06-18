@@ -551,7 +551,7 @@ static val h_var(match_line_ctx *c)
        But if the variable is a fix sized field match,
        then we treat that specially: it has to match
        that much text. */
-    if (fixnump(modifier)) {
+    if (integerp(modifier)) {
       val past = plus(c->pos, modifier);
 
       if (length_str_lt(c->dataline, past) || lt(past, c->pos))
@@ -594,7 +594,7 @@ static val h_var(match_line_ctx *c)
       c->specline = rlcp(cons(next, rest(c->specline)), c->specline);
       return repeat_spec_k;
     }
-  } else if (fixnump(modifier)) { /* fixed field */
+  } else if (integerp(modifier)) { /* fixed field */
     val past = plus(c->pos, modifier);
     if (length_str_lt(c->dataline, past) || lt(past, c->pos))
     {
@@ -737,8 +737,8 @@ static val h_skip(match_line_ctx *c)
   val elem = first(c->specline);
   val max = tleval_144(elem, second(elem), c->bindings);
   val min = tleval_144(elem, third(elem), c->bindings);
-  cnum cmax = fixnump(max) ? c_num(max) : 0;
-  cnum cmin = fixnump(min) ? c_num(min) : 0;
+  cnum cmax = if3(max, c_num(max), 0);
+  cnum cmin = if3(min, c_num(min), 0);
   val greedy = eq(max, greedy_k);
   val last_good_result = nil, last_good_pos = nil;
 
@@ -830,14 +830,12 @@ static val h_coll(match_line_ctx *c)
   val bindings_with_counter = if2(counter, cons(counter_binding, nil));
   val have_vars;
   val vars = getplist_f(args, vars_k, mkcloc(have_vars));
-  cnum cmax = fixnump(gap) ? c_num(gap) : (fixnump(max) ? c_num(max) : 0);
-  cnum cmin = fixnump(gap) ? c_num(gap) : (fixnump(min) ? c_num(min) : 0);
+  cnum cmax = if3(gap, c_num(gap), if3(max, c_num(max), 0));
+  cnum cmin = if3(gap, c_num(gap), if3(min, c_num(min), 0));
   cnum mincounter = cmin, maxcounter = 0;
-  cnum ctimax = fixnump(times) ? c_num(times)
-                               : (fixnump(maxtimes) ? c_num(maxtimes) : 0);
-  cnum ctimin = fixnump(times) ? c_num(times)
-                               : (fixnump(mintimes) ? c_num(mintimes) : 0);
-  cnum cchars = fixnump(chars) ? c_num(chars) : 0;
+  cnum ctimax = if3(times, c_num(times), if3(maxtimes, c_num(maxtimes), 0));
+  cnum ctimin = if3(times, c_num(times), if3(mintimes, c_num(mintimes), 0));
+  cnum cchars = if3(chars, c_num(chars), 0);
   cnum timescounter = 0, charscounter = 0;
   val iter;
 
@@ -2116,8 +2114,8 @@ static val v_skip(match_files_ctx *c)
     val args = rest(first_spec);
     val max = tleval_144(skipspec, first(args), c->bindings);
     val min = tleval_144(skipspec, second(args), c->bindings);
-    cnum cmax = fixnump(max) ? c_num(max) : 0;
-    cnum cmin = fixnump(min) ? c_num(min) : 0;
+    cnum cmax = if3(max, c_num(max), 0);
+    cnum cmin = if3(min, c_num(min), 0);
     val greedy = eq(max, greedy_k);
     volatile val last_good_result = nil;
     volatile val last_good_line = zero;
@@ -2205,8 +2203,8 @@ static val v_fuzz(match_files_ctx *c)
     val args = rest(first_spec);
     val m = tleval_144(fuzz_spec, first(args), c->bindings);
     val n = tleval_144(fuzz_spec, second(args), c->bindings);
-    cnum cm = fixnump(m) ? c_num(m) : 0;
-    cnum cn = fixnump(n) ? c_num(n) : 0;
+    cnum cm = if3(m, c_num(m), 0);
+    cnum cn = if3(n, c_num(n), 0);
 
     {
       cnum reps, good;
@@ -2315,7 +2313,7 @@ static val v_freeform(match_files_ctx *c)
         return nil;
       }
 
-      if (fixnump(success)) {
+      if (integerp(success)) {
         c->data = lazy_str_get_trailing_list(mlc.dataline, success);
         c->data_lineno = plus(c->data_lineno, one);
       } else if (success == t && lim) {
@@ -2334,8 +2332,8 @@ val freeform_prepare(val vals, match_files_ctx *c, match_line_ctx *mlc)
 {
   uses_or2;
   val first_spec = first(c->spec);
-  val limit = or2(if2(fixnump(first(vals)), first(vals)),
-                  if2(fixnump(second(vals)), second(vals)));
+  val limit = or2(if2(integerp(first(vals)), first(vals)),
+                  if2(integerp(second(vals)), second(vals)));
   val term = or2(if2(stringp(first(vals)), first(vals)),
                  if2(stringp(second(vals)), second(vals)));
   val dataline = lazy_str(c->data, term, limit);
@@ -2898,16 +2896,14 @@ static val v_collect(match_files_ctx *c)
   val bindings_with_counter = if2(counter, cons(counter_binding, nil));
   val have_vars;
   volatile val vars = getplist_f(args, vars_k, mkcloc(have_vars));
-  cnum cmax = fixnump(gap) ? c_num(gap) : (fixnump(max) ? c_num(max) : 0);
-  cnum cmin = fixnump(gap) ? c_num(gap) : (fixnump(min) ? c_num(min) : 0);
+  cnum cmax = if3(gap, c_num(gap), if3(max, c_num(max), 0));
+  cnum cmin = if3(gap, c_num(gap), if3(min, c_num(min), 0));
   cnum mincounter = cmin, maxcounter = 0;
-  cnum ctimax = fixnump(times) ? c_num(times)
-                               : (fixnump(maxtimes) ? c_num(maxtimes) : 0);
-  cnum ctimin = fixnump(times) ? c_num(times)
-                               : (fixnump(mintimes) ? c_num(mintimes) : 0);
+  cnum ctimax = if3(times, c_num(times), if3(maxtimes, c_num(maxtimes), 0));
+  cnum ctimin = if3(times, c_num(times), if3(mintimes, c_num(mintimes), 0));
   volatile cnum timescounter = 0, linescounter = 0;
-  cnum ctimes = fixnump(times) ? c_num(times) : 0;
-  cnum clines = fixnump(lines) ? c_num(lines) : 0;
+  cnum ctimes = if3(times, c_num(times), 0);
+  cnum clines = if3(lines, c_num(lines), 0);
   val iter;
   uw_mark_frame;
   uw_block_begin(nil, result);
