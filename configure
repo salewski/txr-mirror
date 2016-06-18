@@ -2655,7 +2655,7 @@ fi
 
 if [ -n "$extra_debugging" ] ; then
   printf "Configuring extra debugging, as requested ...\n"
-  printf "#define EXTRA_DEBUGGING 1\n" >> $config_h
+  printf "#define CONFIG_EXTRA_DEBUGGING 1\n" >> $config_h
 fi
 
 #

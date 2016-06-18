@@ -53,7 +53,7 @@ void gc_free_all(void);
 extern int gc_enabled;
 extern val **gc_prot_top;
 
-#if EXTRA_DEBUGGING
+#if CONFIG_EXTRA_DEBUGGING
 extern val break_obj;
 #endif
 

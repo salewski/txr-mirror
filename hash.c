@@ -871,7 +871,7 @@ static void do_weak_tables(void)
           val entry = car(*iter);
           if (!gc_is_reachable(entry) && !gc_is_reachable(car(entry))) {
             *iter = cdr(*iter);
-#if EXTRA_DEBUGGING
+#if CONFIG_EXTRA_DEBUGGING
             if (car(entry) == break_obj)
               breakpt();
 #endif
@@ -895,7 +895,7 @@ static void do_weak_tables(void)
           val entry = car(*iter);
           if (!gc_is_reachable(entry) && !gc_is_reachable(cdr(entry))) {
             *iter = cdr(*iter);
-#if EXTRA_DEBUGGING
+#if CONFIG_EXTRA_DEBUGGING
             if (cdr(entry) == break_obj)
               breakpt();
 #endif
@@ -921,7 +921,7 @@ static void do_weak_tables(void)
               (!gc_is_reachable(car(entry)) || !gc_is_reachable(cdr(entry))))
           {
             *iter = cdr(*iter);
-#if EXTRA_DEBUGGING
+#if CONFIG_EXTRA_DEBUGGING
             if (!gc_is_reachable(car(entry)) && car(entry) == break_obj)
               breakpt();
             if (!gc_is_reachable(cdr(entry)) && cdr(entry) == break_obj)
