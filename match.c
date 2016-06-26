@@ -397,7 +397,7 @@ static val vars_to_bindings(val spec, val vars, val bindings)
       ptail = list_collect(ptail, cons(item, noval_s));
     } else if (consp(item) && bindable(first(item))) {
       ptail = list_collect(ptail, cons(first(item),
-                                       txeval(spec, second(item), bindings)));
+                                       tleval_144(spec, second(item), bindings)));
     } else {
       sem_error(spec, lit("not a variable spec: ~a"), item, nao);
     }
