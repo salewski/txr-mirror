@@ -2425,35 +2425,59 @@ fetches the entire line.
 For additional information about the advanced regular expression
 operators, NOTES ON EXOTIC REGULAR EXPRESSIONS below.
 
-.SS* Directives
-The general syntax of a directive is:
+.SS* Compound Expressions
+If the
+.code @
+escape character is followed by an open parenthesis or square bracket,
+this is taken to be the start of a \*(TL compound expression.
+
+The \*(TX language has the unusual property that its syntactic elements,
+so-called
+.IR directives ,
+are Lisp compound expressions. These expressions not only enclose syntax, but
+expressions which begin with certain symbols
+.I de facto
+behave as tokens in a phrase structure grammar. For instance, the expression
+.code @(collect)
+begins a block which must be terminated by the expression
+.codn @(end) ,
+otherwise there is a syntax error. The
+.code collect
+expression can contain arguments which modify the behavior of the construct,
+for instance
+.codn "@(collect :gap 0 :vars (a b))" .
+In some ways, this situation might be compared to the HTML language, in which
+an element such as
+.code <a>
+must be terminated by
+.code </a>
+and can have attributes such as
+.codn "<a href=\(dq...\(dq>" .
+
+Compound contain subexpressions: other compound expressions, or literal objects
+of various kinds. Among these are: symbols, numbers, string literals, character
+literals, quasiliterals and regular expressions. These are described in the
+following sections. Additional kinds of literal objects exist, which are
+discussed in the TXR LISP section of the manual.
+
+Some examples of compound expressions are:
 
 .cblk
-.mets >> @ expr
+  (banana)
+
+  (a b c (d e f))
+
+  (  a (b (c d) (e  ) ))
+
+  ("apple" #\eb #\espace 3)
+
+  (a #/[a-z]*/ b)
+
+  (_ `@file.txt`)
 .cble
 
-where
-.meta expr
-stands for a parenthesized list of subexpressions. A subexpression
-is a symbol, number, string literal, character literal, quasiliteral, regular
-expression, or a parenthesized expression.  So, examples of syntactically valid
-directives are:
-
-.cblk
-  @(banana)
-
-  @(a b c (d e f))
-
-  @(  a (b (c d) (e  ) ))
-
-  @("apple" #\eb #\espace 3)
-
-  @(a #/[a-z]*/ b)
-
-  @(_ `@file.txt`)
-.cble
-
-A symbol has a slight more permissive lexical syntax than the
+Symbols occurring in a compound expression follow a slight more permissive
+lexical syntax than the
 .meta bident
 in the syntax
 .cblk
@@ -2839,32 +2863,44 @@ is not an integer, but the floating-point number
 
 Comments of the form
 .code @;
-were already covered. Inside directives,
-comments are introduced just by a
+were introduced earlier. Inside compound expressions, another convention for
+comments exists: Lisp comments, which are introduced by the
 .code ;
-character.
+(semicolon) character and span to the end of the line.
 
 Example:
 
 .cblk
   @(foo  ; this is a comment
-    bar  ; this is another comment 
+    bar  ; this is another comment
     )
 .cble
 
 This is equivalent to
 .codn "@(foo bar)" .
 
-.SS* Directives-driven Syntax
+.SH* DIRECTIVES
 
-Some directives not only denote an expression, but are also involved in
-surrounding syntax. For instance, the directive
+.SS* Overview
+
+When a \*(TL compound expressions occurs in \*(TX preceded by a
+.codn @ ,
+it is a
+.IR directive .
+
+Directives which are based on certain symbols are, additionally,
+involved in a phrase-structure syntax which uses Lisp expressions
+as if they were tokens.
+
+For instance, the directive
 
 .cblk
   @(collect)
 .cble
 
-not only denotes an expression, but it also introduces a syntactic phrase which
+not only denotes a compound expression with the
+.code collect
+symbol in its head position, but it also introduces a syntactic phrase which
 requires a matching
 .code @(end)
 directive. In other words,
@@ -2873,7 +2909,13 @@ is not only
 an expression, but serves as a kind of token in a higher level phrase structure
 grammar.
 
-Usually if this type of "syntactic directive" occurs alone in a line, not
+Effectively,
+.code collect
+is a reserved symbol in the \*(TX language. A \*(TX program cannot use
+this symbol as the name of a pattern function, due to its role in the syntax.
+Lisp code, of course, can use the symbol.
+
+Usually if this type of directive occurs alone in a line, not
 preceded or followed by other material, it is involved in a "vertical" (or line
 oriented) syntax.
 
@@ -3171,7 +3213,87 @@ result values. See the TXR LISP section far below.
 
 .PP
 
-.SH* DIRECTIVES
+.SS* Subexpression Evaluation
+
+Some directives contain subexpressions which are evaluated. Two distinct
+styles of evaluations occur in \*(TX: bind expressions and Lisp expressions.
+Which semantics applies to an expression depends on the syntactic
+context in which it occurs: which position in which directive.
+
+The evaluation of \*(TL expressions is described in the TXR LISP section of the manual.
+
+Bind expressions are so named because they occur in the
+.code @(bind)
+directive. \*(TX pattern function invocations also treat argument expressions
+as bind expressions.
+
+The
+.codn @(rebind) ,
+.codn @(set) ,
+.codn @(merge) ,
+and
+.code @(deffilter)
+directives also use bind expression evaluation. Bind expression evaluation
+also occurs in the argument position of the
+.code :tlist
+keyword in the
+.code @(next)
+directive.
+
+Unlike Lisp expressions, bind expressions do not support operators.  If a bind
+expression is a nested list structure, it is a template denoting that
+structure.  Any symbol in any position of that structure is interpreted as a
+variable. When the bind expression is evaluated, those corresponding positions
+in the template are replaced by the values of the variables.
+
+Anywhere where a variable can appear in a bind expression's nested list
+structure, a Lisp expression can appear preceded by the
+.code @
+character. That Lisp expression is evaluated and its value is substituted
+into the bind expression's template.
+
+Moreover, a Lisp expression preceded by
+.code @
+can be used as an entire bind expression. The value of that Lisp
+expression is then taken as the bind expression value.
+
+Any object in a bind expression which is not a nested list structure containing
+Lisp expressions or variables denotes itself literally.
+
+.TP* Examples:
+
+In the following examples, the variables
+.code a
+and
+.code b
+are assumed to have the string values
+.str foo
+and
+.strn bar ,
+respectively.
+
+The
+.code ->
+notation indicates the value of each expression.
+
+.cblk
+  a              ->  "foo"
+  (a b)          ->  ("foo" "bar")
+  ((a) ((b) b))  ->  (("foo") (("bar") "bar"))
+  (list a b)     ->  error: unbound variable list
+  @(list a b)    ->  ("foo" "bar") ;; Lisp expression
+  (a @[b 1..:])  ->  ("foo" "ar")  ;; Lisp eval of [b 1..:]
+  (a @(+ 2 2))   ->  ("foo" 4)     ;; Lisp eval of (+ 2 2)
+  #(a b)         ->  (a b)         ;; Vector literal, not list.
+  [a b]          ->  error: unbound variable dwim
+.cble
+
+The last example above
+.code "[a b]"
+is a notation equivalent to
+.code "(dwim a b)"
+and so follows similarly to the example involving
+.codn list .
 
 .SS* Input Scanning and Data Manipulation
 
@@ -3191,8 +3313,9 @@ and takes various arguments, according to these possibilities:
 .mets @(next < source :nothrow)
 .mets @(next :args)
 .mets @(next :env)
-.mets @(next :list << expr )
-.mets @(next :string << expr )
+.mets @(next :list << lisp-expr )
+.mets @(next :tlist << bind-expr )
+.mets @(next :string << lisp-expr )
 .mets @(next nil)
 .cble
 
@@ -3266,13 +3389,13 @@ on a given platform, an exception is thrown.
 
 The syntax
 .cblk
-.meti @(next :list << expr )
+.meti @(next :list << lisp-expr )
 .cble
-treats expression
-.meta expr
+treats \*(TL expression
+.meta lisp-expr
 as a source of
 text. The value of
-.meta expr
+.meta lisp-expr
 is flattened to a simple list in a way similar to the
 .code @(flatten)
 directive.  The resulting list is treated as if it were the
@@ -3283,10 +3406,20 @@ separators.
 
 The syntax
 .cblk
-.meti @(next :string << expr )
+.meti @(next :tlist << bind-expr )
+.cble
+is very similar to
+.code "@(next :list ...)"
+except that
+.meta bind-expr
+is not a \*(TL expression, but a \*(TX bind expression.
+
+The syntax
+.cblk
+.meti @(next :string << lisp-expr )
 .cble
 treats expression
-.meta expr
+.meta lisp-expr
 as a source of text. The value of the expression must be a string. Newlines in
 the string are interpreted as line terminators.
 
@@ -3426,8 +3559,9 @@ Skip and match the last character of the line:
   @(skip)@{last 1}@(eol)
 .cble
 
-The skip directive has two optional arguments. If the first argument is a
-number, its value limits the range of lines scanned for a match. Judicious use
+The skip directive has two optional arguments, which are evaluated as \*(TL
+expressions. If the first argument evaluates to an integer,
+its value limits the range of lines scanned for a match. Judicious use
 of this feature can improve the performance of queries.
 
 Example: scan until
@@ -3765,21 +3899,32 @@ The syntax variations are:
   ... query line ..
 .cble
 
+where
+.meta number
+and
+.meta string
+denote \*(TL expressions which evaluate to an integer or string
+value, respectively.
+
 If
 .meta number
 and
 .meta string
 are both present, they may be given in either order.
 
-If a numeric argument is given, it limits the range of lines which are combined
+If the
+.meta number
+argument is given, its value limits the range of lines which are combined
 together. For instance
 .code "@(freeform 5)"
 means to only consider the next five lines
-to to be one big line. Without a numeric argument, freeform is "bottomless". It
+to to be one big line. Without this argument, freeform is "bottomless". It
 can match the entire file, which creates the risk of allocating a large amount
 of memory.
 
-If a string argument is given, it specifies a custom line terminator. The
+If the
+.meta string
+argument is given, it specifies a custom line terminator. The
 default terminator is
 .strn "\en" .
 The terminator does not have to be one character long.
@@ -3902,15 +4047,17 @@ Example:
 The
 .code fuzz
 directive allows for an imperfect match spanning a set number of
-lines. It takes two arguments, both expressions that should evaluate
-to integers:
+lines. It takes two arguments, both of which are \*(TL expressions that should
+evaluate to integers:
 
 .cblk
-  @(fuzz m n)
+.meti @(fuzz m n)
   ...
 .cble
 
-This expresses that over the next n query lines, the matching strictness
+This expresses that over the next
+.meta n
+query lines, the matching strictness
 is relaxed a little bit. Only m out of those n lines have to match.
 Afterward, the rest of the query follows normal, strict processing.
 
@@ -4000,7 +4147,7 @@ character positions:
 The
 .code name
 directive performs a binding between the name of the current
-data source and a variable or expression:
+data source and a variable or bind expression:
 
 .cblk
   @(name na)
@@ -4026,7 +4173,7 @@ fails unless the current data source has that name.
 The
 .code data
 directive performs a binding between the unmatched data
-at the current position, and and a variable or expression.
+at the current position, and and a variable or bind expression.
 The unmatched data takes the form of a list of strings:
 
 .cblk
@@ -4408,14 +4555,7 @@ after any
 .code @(elif)
 clauses. Any of the clauses may be empty.
 
-See the \*(TL section about \*(TL expressions. In this directive,
-\*(TL expressions are not introduced by the
-.code @
-symbol, just like in the
-.code require
-directive.
-
-For example:
+.TP* "Example:"
 
 .cblk
   @(if (> (length str) 42))
@@ -4596,8 +4736,12 @@ The
 directive accepts the keyword parameter
 .codn :vars .
 The argument to vars is
-a list of required and optional variables.  Optional variables are denoted by
-the specification of a default value. Example:
+a list of required and optional variables. A required variable is specified
+as a symbol. An optional variable is specified as a two element list which
+pairs a symbol with a Lisp expression. That Lisp expression is evaluated
+and specifies the default value for the variable.
+
+Example:
 
 .cblk
   @(gather :vars (a b c (d "foo")))
@@ -4607,19 +4751,13 @@ the specification of a default value. Example:
 
 Here,
 .codn a ,
-.codn b ,
-.code c
+.code b
 and
-.code e
+.code c
 are required variables, and
 .code d
-is optional.  Variable
-.code e
-is
-required because its default value is the empty list
-.codn () ,
-same as the symbol
-.codn nil .
+is optional, with the default value given by the Lisp expression
+.strn foo .
 
 The presence of
 .code :vars
@@ -4641,6 +4779,11 @@ Thirdly, if
 succeeds (all required variables have bindings),
 then all of the optional variables which do not have bindings are given
 bindings to their default values.
+
+The expressions which give the default values are evaluated whenever
+the
+.code gather
+directive is evaluated, whether or not their values are used.
 
 .dir collect
 
@@ -4896,7 +5039,8 @@ syntax. The following are the supported keywords.
 The
 .code :maxgap
 keyword takes a numeric argument
-.metn n .
+.metn n ,
+which is a Lisp expression.
 It causes the collect to terminate
 if it fails to find a match after skipping
 .meta n
@@ -4933,9 +5077,11 @@ The
 .code :mingap
 keyword complements
 .codn :maxgap ,
-though not exactly. It specifies a minimum number of lines which
-must separate consecutive matches. However, it has no effect on the
-distance from the starting position to the first match.
+though not exactly. Its argument
+.metn n ,
+a Lisp expression, specifies a minimum number
+of lines which must separate consecutive matches. However, it has no effect on
+the distance from the starting position to the first match.
 
 .meIP :gap < n
 The
@@ -4966,16 +5112,16 @@ Collect stops once it achieves
 matches.
 
 .meIP :mintimes < n
-The numeric argument
+The argument
 .meta n
 of the
 .code :mintimes
-keyword specifies that at least
+keyword is a Lisp expression which specifies that at least
 .meta n
 matches must occur, or else the collect fails.
 
 .meIP :mintimes < n
-The numeric argument
+The Lisp argument expression
 .meta n
 of the
 .code :mintimes
@@ -4984,9 +5130,12 @@ keyword specifies that at most
 matches are collected.
 
 .meIP :lines < n
-The argument of the
+The argument
+.meta n
+of the
 .code :lines
-keyword parameter specifies the upper bound on how many lines
+keyword parameter
+is a Lisp expression which specifies the upper bound on how many lines
 should be scanned by collect, measuring from the starting position.
 The extent of the collect body is not counted. Example:
 
@@ -5011,6 +5160,9 @@ from the collect. Its argument is a list of variable
 names. An empty list may be specified using empty parentheses
 or, equivalently, the symbol
 .codn nil .
+The
+.meta default-value
+element of the syntax is a Lisp expression.
 The behavior of the
 .code :vars
 keyword is specified in the following section, "Specifying variables in
@@ -5021,7 +5173,8 @@ The
 .code :counter
 keyword's argument is a variable name symbol,
 or a compound expression consisting of a variable name symbol
-and an \*(TL expression.
+and the \*(TL expression
+.metn starting-value .
 If this keyword argument is specified, then a binding for
 .meta variable
 is established prior to each repetition of the
@@ -5084,10 +5237,12 @@ The argument to
 is a list of variable specs. A variable spec is either a
 symbol, or a
 .cblk
-.meti >> ( symbol << expression )
+.meti >> ( symbol << default-value )
 .cble
-pair, where the expression specifies a
-default value.
+pair, where
+.meta default-value
+is a Lisp expression whose value specifies a default value
+for the variable.
 
 When a
 .code :vars
@@ -5616,12 +5771,25 @@ A value which has depth zero is put into a one element list.
 .IP 3
 If either value has a smaller depth than the other, it is wrapped
 in a list as many times as needed to give it equal depth.
-Finally, the values are appended together.
+Finally, the values are appended together to produce the
+resulting list.
+.IP 4
+The resulting list is stored back into
+.codn A .
 .PP
 
 Merge takes more than two arguments. These are merged by a left reduction. The
 leftmost two values are merged, and then this result is merged with the third
-value, and so on.
+value, and so on. The leftmost expression is always a target variable.
+The remaining expressions are bind expressions.
+
+It is permitted for the leftmost argument to be an unbound variable. In that
+case the remaining arguments are merged, and the leftmost variable is then
+bound and initialized with the result of the merge. If there are only
+two arguments and the left argument is an unbound symbol, then effectively
+.code merge
+behaves like
+.codn bind .
 
 Merge is useful for combining the results from collects at different
 levels of nesting such that elements are at the appropriate depth.
@@ -5639,8 +5807,8 @@ piece of text. The syntax is:
 
 The
 .meta sep
-argument specifies a separating piece of text. If no separator
-is specified, then a single space is used.
+argument is a Lisp expression whose value specifies a separating piece of text.
+If it is omitted, then a single space is used as the separator.
 
 Example:
 .IP code:
@@ -5665,19 +5833,48 @@ The syntax of the
 directive is:
 
 .cblk
-.mets @(bind < pattern < expression >> { keyword << value }*)
+.mets @(bind < pattern < bind-expression >> { keyword << value }*)
 .cble
 
 The
 .code bind
 directive is a kind of pattern match, which matches one or more
-variables on the left hand side pattern to the value of a variable on the
-right hand side.  The right hand side variable must have a binding, or else the
-directive fails. Any variables on the left hand side which are unbound receive
-a matching piece of the right hand side value. Any variables on the left which
-are already bound must match their corresponding value, or the bind fails. Any
-variables which are already bound and which do match their corresponding value
-remain unchanged (the match can be inexact).
+variables given in
+.meta pattern
+against a value produced by the
+.meta bind-expression
+on the right.
+
+Variables names occurring in the
+.meta pattern
+expression may refer to bound variables, or may be unbound.
+
+All variables references occurring in
+.meta bind-expression
+must have value.
+
+Binding occurs as follows. The tree structure of
+.meta pattern
+and the value of
+.meta bind-expression
+are considered to be parallel structures.
+
+Any variables in
+.meta pattern
+which are unbound receive a new binding, which is initialized with
+the structurally corresponding piece of the object produced by
+.metn bind-expression .
+
+Any variables in
+.meta pattern
+which are already bound must match the corresponding part of the
+value of
+.metn bind-expression ,
+or else
+the
+.code bind
+directive fails. Variables which are already bound are not altered,
+retaining their current values, even if the matching is inexact.
 
 The simplest bind is of one variable against itself, for instance bind
 .code A
@@ -5688,15 +5885,14 @@ against
   @(bind A A)
 .cble
 
-This will fail if
+This will throw an exception if
 .code A
-is not bound, (and complain loudly). If
+is not bound. If
 .code A
 is bound, it
 succeeds, since
 .code A
-matches
-.codn A .
+matches itself.
 
 The next simplest bind binds one variable to another:
 
@@ -5773,7 +5969,9 @@ The last item of a list at any nesting level can be preceded by a
 (dot), which means that the variable matches the rest of the list from that
 position.
 
-Example: suppose that the list A contains
+.TP* "Example 1:"
+
+Suppose that the list A contains
 .cblk
 ("now" "now" "brown" "cow").
 .cble
@@ -5854,6 +6052,37 @@ but
 .code "@(bind :foo :foo)"
 succeeds since the two sides denote the same
 keyword symbol object.
+
+.TP* "Example 2:"
+In this example, suppose
+.code A
+contains
+.str foo
+and
+.code B
+contains
+bar. Then
+.code "@(bind (X (Y Z)) (A (B \(dqhey\(dq)))"
+binds
+.code X
+to
+.strn foo ,
+.code Y
+to
+.str bar
+and
+.code Z
+to
+.strn hey .
+This is because the
+.meta bind-expression
+produces the object
+.cblk
+("foo" ("bar" "hey"))
+.cble
+which is then structurally matched against the pattern
+.codn "(X (Y Z))" ,
+and the variables receive the corresponding pieces.
 
 .coNP Keywords in the @ bind directive
 The
@@ -5937,9 +6166,15 @@ if these are upcased.
 
 \*(TL forms, introduced by
 .code @
-may be used on either side of
-.codn bind .
+may be used in the
+.meta bind-expression
+argument of
+.codn bind ,
+or as the entire form. This is consistent with the rules for bind expressions.
 
+\*(TL forms can be used in the
+.meta pattern
+expression also.
 
 Example:
 
@@ -7332,6 +7567,7 @@ directives is:
 
 Where
 .meta expr
+is a Lisp expression that
 evaluates to a string giving the path of the file to load.
 Unless the path is absolute, it is interpreted relative to the directory of the
 source file from which the
@@ -7772,7 +8008,7 @@ The forms
 .code n
 and
 .code m
-are expressions that evaluate to integers. The value of
+are Lisp expressions that evaluate to integers. The value of
 .code m
 should be nonzero. The clause denoted this way is active if the repetition
 modulo
@@ -8502,7 +8738,7 @@ This directive's syntax is illustrated in this example:
 The
 .code deffilter
 symbol must be followed by the name of the filter to be defined,
-followed by forms which evaluate to lists of strings. Each list must
+followed by bind expressions which evaluate to lists of strings. Each list must
 be at least two elements long and specifies one or more texts which are mapped
 to a replacement text. For instance, the following specifies a telephone keypad
 mapping from upper case letters to digits.
@@ -9113,7 +9349,7 @@ from the throw site to the catch site.
 The
 .code throw
 directive generates an exception. A type must be specified,
-followed by optional arguments. For example,
+followed by optional arguments, which are bind expressions. For example,
 
 .cblk
   @(throw pair "a" `@file.txt`)
@@ -9508,8 +9744,9 @@ exception. If the directive is simply
 
 Then it throws an assertion of type assert, which is a subtype of error.
 The assert directive also takes arguments similar to the throw
-directive. The following assert directive, if it triggers, will throw
-an exception of type
+directive: an exception symbol and additional arguments which are bind
+expressions, and may be unbound variables. The following assert directive, if
+it triggers, will throw an exception of type
 .codn foo ,
 with arguments
 .code 1
