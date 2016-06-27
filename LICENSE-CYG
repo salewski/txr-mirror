@@ -1,0 +1,4 @@
+This build of TXR is linked against the Cygwin library, which is
+Copyright (C) 1995-2016 Red Hat Inc. and is distributed and used
+with TXR in accordance with the Lesser GNU Public License (LGPL),
+Version 3 <https://cygwin.com/COPYING.LIB>.

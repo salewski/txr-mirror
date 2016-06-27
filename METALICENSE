@@ -48,3 +48,7 @@ legally questionable, so the MPI library must be regarded as being copyrighted
 by Michael J. Fromberger. The above text can be reasonably understood to
 constitute a license which is compatible with the TXR LICENSE file
 in the sense that it is at least as permissive.
+
+TXR is ported to Windows with the help of the Cygwin library.  For user
+conveninence, a packaged version of TXR includes the CYGWIN.DLL, in accordance
+with the terms of Cywgin's license, the GNU Lesser Public License, Version 3.

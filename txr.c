@@ -53,6 +53,9 @@
 #include "regex.h"
 #include "arith.h"
 #include "sysif.h"
+#if HAVE_GLOB
+#include "glob.h"
+#endif
 #include "txr.h"
 
 const wchli_t *version = wli(TXR_VER);
@@ -337,25 +340,36 @@ static int license(void)
 {
   int retval = EXIT_SUCCESS;
 
-  uw_catch_begin(cons(error_s, nil), esym, eobj);
+  uw_catch_begin(cons(error_s, nil), esym, eargs);
 
   {
-    val path = sysroot(lit("share/txr/LICENSE"));
-    val lic = open_file(path, lit("r"));
-    val line;
+    val iter;
+#if HAVE_GLOB
+    val glob_pattern = sysroot(lit("share/txr/LICENSE*"));
+    val path_list = glob_wrap(glob_pattern, zero, nil);
+#else
+    val glob_pattern = sysroot(lit("share/txr/LICENSE"));
+    val path_list = cons(glob_pattern, nil);
+#endif
+
+    if (!path_list)
+      uw_throwf(error_s, lit("Error: pattern ~a didn't match any files."),
+                glob_pattern, nao);
 
     put_char(chr('\n'), std_output);
 
-    while ((line = get_line(lic)))
-      put_line(line, std_output);
+    for (iter = path_list; iter; iter = cdr(iter)) {
+      val lic = open_file(car(iter), lit("r"));
 
-    put_char(chr('\n'), std_output);
-
-    close_stream(lic, nil);
+      put_lines(lazy_stream_cons(lic), std_output);
+      put_char(chr('\n'), std_output);
+    }
   }
 
-  uw_catch (esym, eobj) {
-    format(std_output, lit("~a:\nThis TXR installation might be unlicensed.\n"), eobj, nao);
+  uw_catch (esym, eargs) {
+    format(std_output,
+           lit("~a\nThis TXR installation might be unlicensed.\n"),
+           car(eargs), nao);
     retval = EXIT_FAILURE;
   }
 
