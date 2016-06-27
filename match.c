@@ -3284,7 +3284,7 @@ static val v_cat(match_files_ctx *c)
   } else {
     val existing = tx_lookup_var(sym, c->bindings);
     if (existing) {
-      val sep = if3(sep_form, txeval(specline, sep_form, c->bindings),
+      val sep = if3(sep_form, tleval_144(specline, sep_form, c->bindings),
                     lit(" "));
       set(cdr_l(existing), cat_str(flatten(cdr(existing)), sep));
     } else {
