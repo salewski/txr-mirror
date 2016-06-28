@@ -663,7 +663,7 @@ val repl(val bindings, val in_stream, val out_stream)
   val counter = one;
   val home = getenv_wrap(lit("HOME"));
   val histfile = if2(home, format(nil, lit("~a/.txr_history"), home, nao));
-  char *histfile_u8 = utf8_dup_to(c_str(histfile));
+  char *histfile_u8 = if3(home, utf8_dup_to(c_str(histfile)), NULL);
   val rcfile = if2(home, format(nil, lit("~a/.txr_profile"), home, nao));
   val old_sig_handler = set_sig_handler(num(SIGINT), func_n2(repl_intr));
   val hist_len_var = lookup_global_var(listener_hist_len_s);
@@ -681,7 +681,7 @@ val repl(val bindings, val in_stream, val out_stream)
 
   lino_hist_set_max_len(ls, c_num(cdr(hist_len_var)));
 
-  if (histfile)
+  if (histfile_u8)
     lino_hist_load(ls, histfile_u8);
 
   while (!done) {
@@ -784,7 +784,7 @@ val repl(val bindings, val in_stream, val out_stream)
   set_sig_handler(num(SIGINT), old_sig_handler);
 
 
-  if (histfile)
+  if (histfile_u8)
     lino_hist_save(ls, histfile_u8);
 
   free(histfile_u8);
