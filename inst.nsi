@@ -28,6 +28,12 @@ PageEx license
   Caption ": Licensing"
 PageExEnd
 
+PageEx license
+  LicenseText "Use and redistribution of this version of TXR also requires agreement with Cygwin's license." "Agree"
+  LicenseData LICENSE-CYG
+  Caption ": Licensing"
+PageExEnd
+
 PageEx directory
   DirVar $INSTDIR
 PageExEnd
@@ -41,6 +47,8 @@ section "TXR"
   SetOutPath $INSTDIR\txr\bin
   File txr.exe
   File txr-win.exe
+  File c:\cygwin\bin\cygwin1.dll
+  File c:\cygwin\bin\cyggcc_s-1.dll
   SetOutPath $INSTDIR\txr\doc
   File txr-manpage.html
   File txr-manpage.pdf
