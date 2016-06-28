@@ -644,6 +644,32 @@ static val read_eval_ret_last(val env, val counter,
   return t;
 }
 
+#ifdef __CYGWIN__
+static val get_home_path(void)
+{
+  val path_exists_p =  intern(lit("path-exists-p"), user_package);
+
+  {
+    val posixy_home = getenv_wrap(lit("HOME"));
+    if (funcall1(path_exists_p, posixy_home))
+      return posixy_home;
+  }
+
+  {
+    val windowsy_home = getenv_wrap(lit("USERPROFILE"));
+    if (funcall1(path_exists_p, windowsy_home))
+      return windowsy_home;
+  }
+
+  return nil;
+}
+#else
+static val get_home_path(void)
+{
+  return getenv_wrap(lit("HOME"));
+}
+#endif
+
 val repl(val bindings, val in_stream, val out_stream)
 {
   val ifd = stream_get_prop(in_stream, fd_k);
@@ -661,7 +687,7 @@ val repl(val bindings, val in_stream, val out_stream)
   val result_hash = make_hash(nil, nil, nil);
   val done = nil;
   val counter = one;
-  val home = getenv_wrap(lit("HOME"));
+  val home = get_home_path();
   val histfile = if2(home, format(nil, lit("~a/.txr_history"), home, nao));
   char *histfile_u8 = if3(home, utf8_dup_to(c_str(histfile)), NULL);
   val rcfile = if2(home, format(nil, lit("~a/.txr_profile"), home, nao));
