@@ -1,3 +1,43 @@
+                                    TXR 144
+                                   2016-06-29
+
+
+  Features
+
+  - TXR bids adieu to MinGW: the MinGW-based port to Windows is dropped.
+    - Now that Cygwin is under the LGPL, the installer-based TXR
+      for Windows is based on the Cygwin version of TXR, and includes
+      all the required DLL's.
+    - The benefits are great: the Cygwin port of TXR is much less crippled,
+      thanks to the excellent POSIX support in Cygwin.
+    - The interactive listener now works!
+  - Improvements in the support for treating structs as sequences.
+  - New --free-all command line option to get TXR to free all malloced memory
+    before exiting.
+  - Improved semantics of makunbound function: more similar to Common Lisp.
+  - @(collect)/@(coll) take a :counter parameter now, with an optional starting
+    value, for more streamlined enumeration of collected values.
+  - Most TXR-style expression evaluation in the pattern language replaced
+    by Lisp evaluation, reducing the need for @ noise.
+  - Improved Valgrind support in garbage collector: Valgrind backtraces
+    can be printed for interesting objects.
+
+
+  Bugs:
+
+  - Regression fix: @(catch) and @(finally) clauses can be empty once again.
+  - Various memory leaks fixed: in handling of bignums, in syslog streams,
+    dgram sockets and in the Lisp parser object.
+  - Fixed out of bounds memory access in bit function.
+  - Fixed broken (del (symbol-value 'sym)).
+  - defsymacro removes existing special marking from symbol.
+  - Fixed potential crash caused by bogus stray code in the GC marking
+    function for syslog streams.
+  - Fixed possible object leak in GC by managing free list in more
+    disciplined way.
+
+
+
                                     TXR 143
                                    2016-06-04
 
