@@ -43534,6 +43534,9 @@ intact. The
 .code defsymacro
 operator neglected to remove the symbol's special variable
 mark, if the symbol was previously defined as a special variable.
+Also, until version 143 many more places in the \*(TX pattern language used
+bind expressions rather than Lisp expressions. The compatibility
+option restores these behaviors.
 .IP 142
 Until version 142, the \*(TX pattern language supported a prefix
 convention on data sources. Data sources beginning with the character
