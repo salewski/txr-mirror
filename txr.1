@@ -43537,6 +43537,10 @@ mark, if the symbol was previously defined as a special variable.
 Also, until version 143 many more places in the \*(TX pattern language used
 bind expressions rather than Lisp expressions. The compatibility
 option restores these behaviors.
+Lastly, starting in version 144, on the Cygwin platform, streams
+opened in text mode perform conversion between the CR-LF line
+endings in the external representations and newline characters
+in the stream.
 .IP 142
 Until version 142, the \*(TX pattern language supported a prefix
 convention on data sources. Data sources beginning with the character
