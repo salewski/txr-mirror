@@ -468,3 +468,8 @@ conftest.clean:
 	$(V)rm -f conftest$(EXE) conftest.[co] \
 	conftest2$(EXE) conftest[12].[oc] \
 	conftest.err conftest.syms
+
+# rule for building the Cygwin /bin/sh -> cmd.exe wrapper
+
+sh.exe: cmdwrap.c
+	$(CC) -O -o $@ $^
