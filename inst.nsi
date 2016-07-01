@@ -47,7 +47,6 @@ section "TXR"
   SetOutPath $INSTDIR\txr\bin
   File txr.exe
   File txr-win.exe
-  File sh.exe
   File c:\cygwin\bin\cygwin1.dll
   File c:\cygwin\bin\cyggcc_s-1.dll
   SetOutPath $INSTDIR\txr\doc
