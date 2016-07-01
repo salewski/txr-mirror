@@ -85,6 +85,8 @@ val stdio_stream_s;
 val socket_error_s;
 #endif
 
+val shell, shell_arg;
+
 void strm_base_init(struct strm_base *s)
 {
   static struct strm_base init = { indent_off, 60, 10, 0, 0 };
@@ -3855,7 +3857,7 @@ out:
 
 static val sh(val command)
 {
-  return run(lit("/bin/sh"), list(lit("-c"), command, nao));
+  return run(shell, list(shell_arg, command, nao));
 }
 #elif HAVE_WSPAWN
 static val run(val command, val args)
@@ -4111,5 +4113,20 @@ void stream_init(void)
   record_adapter_ops.get_sock_type = delegate_get_sock_type;
   record_adapter_ops.get_sock_peer = delegate_get_sock_peer;
   record_adapter_ops.set_sock_peer = delegate_set_sock_peer;
+#endif
+
+
+  shell = lit("/bin/sh");
+  shell_arg = lit("-c");
+
+#ifdef __CYGWIN__
+  {
+    const char *sh = getusershell();
+    if (sh && strstr(sh, "cmd.exe")) {
+      prot1(&shell);
+      shell = string_utf8(sh);
+      shell_arg = lit("/c");
+    }
+  }
 #endif
 }
