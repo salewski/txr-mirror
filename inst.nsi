@@ -60,6 +60,7 @@ section "TXR"
   SetOutPath $INSTDIR\txr\share\txr\stdlib
   File share\txr\stdlib\*.txr
   File share\txr\stdlib\*.tl
+  Delete /REBOOTOK $INSTDIR\txr\sh.exe
   WriteUninstaller $INSTDIR\txr\uninstall.exe
   CreateDirectory "$SMPROGRAMS\TXR"
   CreateShortCut "$SMPROGRAMS\TXR\txr.lnk" "$INSTDIR\txr"
