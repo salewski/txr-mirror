@@ -1,3 +1,27 @@
+                                    TXR 145
+                                   2016-07-03
+
+
+  Features
+
+  - The Windows installer version of TXR is now packaged
+    with the Cygnal DLL, which is the result of a new project:
+    http://www.kyheku.com/cygnal.
+
+  Bugs
+
+  - Fixed crash in getaddrinfo when host is not found.
+  - Issues in Windows version fixed by Cygnal project:
+    - Fixed unwanted console window suddenly popping up when the
+      console-less txr-win spawns a process.
+    - Command spawning (sh function, open-command) doesn't require
+      sh.exe shim executable any longer to switch to cmd.exe.
+    - Fixed issue of messed up REPL display in multi-line mode,
+      when lines reach the right edge of the display.
+
+
+
+
                                     TXR 144
                                    2016-06-29
 
