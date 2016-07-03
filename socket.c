@@ -170,7 +170,7 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
   val node = default_arg(node_in, nil);
   val service = default_arg(service_in, nil);
   val hints = default_arg(hints_in, nil);
-  struct addrinfo hints_ai, *phints = hints ? &hints_ai : 0, *alist, *aiter;
+  struct addrinfo hints_ai, *phints = hints ? &hints_ai : 0, *alist = 0, *aiter;
   char *node_u8 = stringp(node) ? utf8_dup_to(c_str(node)) : 0;
   char *service_u8 = stringp(service) ? utf8_dup_to(c_str(service)) : 0;
   val node_num_p = integerp(node);
@@ -221,7 +221,9 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
     }
   }
 
-  freeaddrinfo(alist);
+  /* Stupidly, POSIX doesn't require freeaddrinfo(0) to work. */
+  if (alist)
+    freeaddrinfo(alist);
 
   return out;
 }
