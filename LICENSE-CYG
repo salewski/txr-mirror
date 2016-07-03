@@ -1,4 +1,12 @@
-This build of TXR is linked against the Cygwin library, which is
-Copyright (C) 1995-2016 Red Hat Inc. and is distributed and used
-with TXR in accordance with the Lesser GNU Public License (LGPL),
-Version 3 <https://cygwin.com/COPYING.LIB>.
+This build of TXR is linked against the Cygnal library, which is a patched
+derivative of the Cygwin library. It is also linked against a redistibutable
+GCC runtime.
+
+Cygwin is Copyright (C) 1995-2016 Red Hat Inc. and the Cygnal version
+is distributed and used with TXR in accordance with the Lesser GNU Public
+License (LGPL), Version 3 <https://cygwin.com/COPYING.LIB>.
+
+The Cygnal project is hosted at <http://www.kylheku.com/cygnal>.
+
+The redistributable GCC runtime is also under the Lesser GNU Public License,
+and is Copryight (C) 2016 The Free Software Foundation, Inc.
