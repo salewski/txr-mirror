@@ -63,9 +63,10 @@ section "TXR"
   Delete /REBOOTOK $INSTDIR\txr\sh.exe
   WriteUninstaller $INSTDIR\txr\uninstall.exe
   CreateDirectory "$SMPROGRAMS\TXR"
-  CreateShortCut "$SMPROGRAMS\TXR\txr.lnk" "$INSTDIR\txr"
+  CreateShortCut "$SMPROGRAMS\TXR\txr.lnk" "$INSTDIR\txr\bin\txr.exe"
   CreateShortCut "$SMPROGRAMS\TXR\uninstall.lnk" "$INSTDIR\TXR\uninstall.exe"
-  CreateShortCut "$STARTMENU\txr.lnk" "$INSTDIR\TXR"
+  CreateShortCut "$SMPROGRAMS\TXR\install-root.lnk" "$INSTDIR\txr"
+  CreateShortCut "$STARTMENU\txr.lnk" "$INSTDIR\txr\bin\txr.exe"
   ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\TXR\bin"
 sectionEnd
 
