@@ -1317,7 +1317,7 @@ static val format_mode(const struct stdio_mode m)
     *ptr++ = 'b';
 
 #ifdef __CYGWIN__
-  if (!m.binary && (!opt_compat || opt_compat > 143))
+  if (!m.binary && (opt_compat == 144 || opt_compat == 145))
     *ptr++ = 't';
 #endif
 

@@ -43522,6 +43522,13 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 145
+In versions 144 and 145, \*(TX opened files in text mode on Cygwin,
+enabling conversion between CR-LF line endings and abstract newline
+characters. This behavior change was retracted, so that files on Cygwin are
+opened without specifying text mode, causing the streams to be effectively
+binary. The intended "Windows native" behavior of streams being text mode is
+instead provided in the Windows version of \*(TX by the Cygnal library.
 .IP 143
 Until version 143, the
 .code stdlib
@@ -43537,10 +43544,6 @@ mark, if the symbol was previously defined as a special variable.
 Also, until version 143 many more places in the \*(TX pattern language used
 bind expressions rather than Lisp expressions. The compatibility
 option restores these behaviors.
-Lastly, starting in version 144, on the Cygwin platform, streams
-opened in text mode perform conversion between the CR-LF line
-endings in the external representations and newline characters
-in the stream.
 .IP 142
 Until version 142, the \*(TX pattern language supported a prefix
 convention on data sources. Data sources beginning with the character
