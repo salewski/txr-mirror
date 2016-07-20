@@ -230,7 +230,7 @@ struct nfa_machine {
   cnum last_accept_pos; /* common member */
   cnum count;           /* common member */
   unsigned visited;
-  nfa_state_t **flip, **flop, **stack;
+  nfa_state_t **set, **stack;
   int nclos;
   nfa_t nfa;
   int nstates;
@@ -1139,9 +1139,9 @@ static void nfa_free(nfa_t nfa, int nstates)
 }
 
 /*
- * Compute the epsilon-closure of the NFA states stored in the set in, whose
- * size is given by nin. The results are stored in the set out, the size of
- * which is returned. The stack parameter provides storage used by the
+ * Compute the epsilon-closure of the NFA states stored in the set, whose
+ * size is given by nin. The results are stored back in the same array, the
+ * size of which is returned. The stack parameter provides storage used by the
  * algorithm, so it doesn't have to be allocated and freed repeatedly.
  * The visited parameter is a stamp used for marking states which are added
  * to the epsilon-closure set, so that sets are not added twice.
@@ -1152,9 +1152,8 @@ static void nfa_free(nfa_t nfa, int nstates)
  * states which are reachable from that set with empty (epsilon) transitions.
  * (Transitions that don't do not consume and match an input character).
  */
-static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
-                       nfa_state_t **out, int nstates,
-                       unsigned visited, int *accept)
+static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
+                       int nstates, unsigned visited, int *accept)
 {
   int i, nout = 0;
   int stackp = 0;
@@ -1164,10 +1163,10 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
   for (i = 0; i < nin; i++) {
     bug_unless (stackp < nstates);
 
-    in[i]->a.visited = visited;
-    stack[stackp++] = in[i];
-    out[nout++] = in[i];
-    if (in[i]->a.kind == nfa_accept)
+    set[i]->a.visited = visited;
+    stack[stackp++] = set[i];
+    set[nout++] = set[i];
+    if (set[i]->a.kind == nfa_accept)
       *accept = 1;
   }
 
@@ -1184,7 +1183,7 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
       if (e0 && e0->a.visited != visited) {
         e0->a.visited = visited;
         stack[stackp++] = e0;
-        out[nout++] = e0;
+        set[nout++] = e0;
         if (e0->a.kind == nfa_accept)
           *accept = 1;
       }
@@ -1192,7 +1191,7 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
       if (e1 && e1->a.visited != visited) {
         e1->a.visited = visited;
         stack[stackp++] = e1;
-        out[nout++] = e1;
+        set[nout++] = e1;
         if (e1->a.kind == nfa_accept)
           *accept = 1;
       }
@@ -1208,8 +1207,8 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
  * The nfa_move_closure function combines nfa_move and nfa_closure into a
  * single operation, elminating an intermediate array.
  */
-static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
-                            nfa_state_t **out, int nstates, wchar_t ch,
+static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
+                            int nstates, wchar_t ch,
                             unsigned visited, int *accept)
 {
   int i, nout, stackp;
@@ -1220,7 +1219,7 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
    * input states on the consumpion of the input character given by ch.
    */
   for (nout = 0, stackp = 0, i = 0; i < nin; i++) {
-    nfa_state_t *s = in[i];
+    nfa_state_t *s = set[i];
 
     switch (s->a.kind) {
     case nfa_wild:
@@ -1251,7 +1250,7 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
 
       mov->a.visited = visited;
       stack[stackp++] = mov;
-      out[nout++] = mov;
+      set[nout++] = mov;
       if (mov->a.kind == nfa_accept)
         *accept = 1;
     }
@@ -1270,7 +1269,7 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
       if (e0 && e0->a.visited != visited) {
         e0->a.visited = visited;
         stack[stackp++] = e0;
-        out[nout++] = e0;
+        set[nout++] = e0;
         if (e0->a.kind == nfa_accept)
           *accept = 1;
       }
@@ -1278,7 +1277,7 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
       if (e1 && e1->a.visited != visited) {
         e1->a.visited = visited;
         stack[stackp++] = e1;
-        out[nout++] = e1;
+        set[nout++] = e1;
         if (e1->a.kind == nfa_accept)
           *accept = 1;
       }
@@ -1315,17 +1314,16 @@ static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
 {
   const wchar_t *last_accept_pos = 0, *ptr = str;
   unsigned visited = nfa.start->a.visited + 1;
-  nfa_state_t **flip = coerce(nfa_state_t **, alloca(nstates * sizeof *flip));
-  nfa_state_t **flop = coerce(nfa_state_t **, alloca(nstates * sizeof *flop));
+  nfa_state_t **set = coerce(nfa_state_t **, alloca(nstates * sizeof *set));
   nfa_state_t **stack = coerce(nfa_state_t **, alloca(nstates * sizeof *stack));
   int nclos;
   int accept = 0;
 
   nfa_handle_wraparound(nfa.start, &visited);
 
-  flop[0] = nfa.start;
+  set[0] = nfa.start;
 
-  nclos = nfa_closure(stack, flop, 1, flip,
+  nclos = nfa_closure(stack, set, 1,
                       nstates, visited++, &accept);
 
   if (accept)
@@ -1333,13 +1331,12 @@ static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
 
   for (; *ptr != 0; ptr++) {
     wchar_t ch = *ptr;
-    nfa_state_t **tmp;
 
     accept = 0;
 
     nfa_handle_wraparound(nfa.start, &visited);
 
-    nclos = nfa_move_closure(stack, flip, nclos, flop,
+    nclos = nfa_move_closure(stack, set, nclos,
                              nstates, ch, visited++, &accept);
 
     if (accept)
@@ -1347,10 +1344,6 @@ static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
 
     if (nclos == 0) /* dead end; no match */
       break;
-
-    tmp = flip;
-    flip = flop;
-    flop = tmp;
   }
 
   nfa.start->a.visited = visited;
@@ -2282,10 +2275,10 @@ static void regex_machine_reset(regex_machine_t *regm)
     regm->n.visited = regm->n.nfa.start->a.visited + 1;
     nfa_handle_wraparound(s, &regm->n.visited);
 
-    regm->n.flop[0] = regm->n.nfa.start;
+    regm->n.set[0] = regm->n.nfa.start;
 
-    regm->n.nclos = nfa_closure(regm->n.stack, regm->n.flop, 1,
-                                regm->n.flip, regm->n.nstates,
+    regm->n.nclos = nfa_closure(regm->n.stack, regm->n.set, 1,
+                                regm->n.nstates,
                                 regm->n.visited++, &accept);
 
     regm->n.nfa.start->a.visited = regm->n.visited;
@@ -2310,10 +2303,8 @@ static void regex_machine_init(regex_machine_t *regm, val reg)
     regm->n.nfa = regex->r.nfa;
     regm->n.nstates = regex->nstates;
     regm->n.visited = 0;
-    regm->n.flip = coerce(nfa_state_t **,
-                          chk_malloc(regex->nstates * sizeof *regm->n.flip));
-    regm->n.flop = coerce(nfa_state_t **,
-                          chk_malloc(regex->nstates * sizeof *regm->n.flop));
+    regm->n.set = coerce(nfa_state_t **,
+                          chk_malloc(regex->nstates * sizeof *regm->n.set));
     regm->n.stack = coerce(nfa_state_t **,
                            chk_malloc(regex->nstates * sizeof *regm->n.stack));
   }
@@ -2325,11 +2316,9 @@ static void regex_machine_cleanup(regex_machine_t *regm)
 {
   if (regm->n.is_nfa) {
     free(regm->n.stack);
-    free(regm->n.flop);
-    free(regm->n.flip);
+    free(regm->n.set);
     regm->n.stack = 0;
-    regm->n.flip = 0;
-    regm->n.flop = 0;
+    regm->n.set = 0;
     regm->n.nfa.start = 0;
     regm->n.nfa.accept = 0;
   }
@@ -2343,20 +2332,14 @@ static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
     nfa_handle_wraparound(regm->n.nfa.start, &regm->n.visited);
 
     if (ch != 0) {
-      nfa_state_t **tmp;
-
       regm->n.count++;
 
-      regm->n.nclos = nfa_move_closure(regm->n.stack, regm->n.flip,
-                                       regm->n.nclos, regm->n.flop,
+      regm->n.nclos = nfa_move_closure(regm->n.stack,
+                                       regm->n.set, regm->n.nclos,
                                        regm->n.nstates, ch, regm->n.visited++,
                                        &accept);
 
       regm->n.nfa.start->a.visited = regm->n.visited;
-
-      tmp = regm->n.flip;
-      regm->n.flip = regm->n.flop;
-      regm->n.flop = tmp;
 
       if (accept) {
         regm->n.last_accept_pos = regm->n.count;
