@@ -2632,6 +2632,51 @@ else
   printf "no\n"
 fi
 
+printf "Checking for uname ... "
+
+cat > conftest.c <<!
+#include <sys/utsname.h>
+#include <stdio.h>
+
+int main(void)
+{
+  struct utsname utn;
+  if (uname(&utn) == 0)
+    printf("%s:%s:%s:%s:%s\n", utn.sysname,
+           utn.nodename, utn.release, utn.version,
+           utn.machine);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_UNAME 1\n" >> $config_h
+else
+  printf "no\n"
+fi
+
+printf "Checking for domainname in struct utsname ... "
+
+cat > conftest.c <<!
+#include <sys/utsname.h>
+#include <stdio.h>
+
+int main(void)
+{
+  struct utsname utn;
+  if (uname(&utn) == 0)
+    printf("%s\n", utn.domainname);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_UTSNAME_DOMAINNAME 1\n" >> $config_h
+else
+  printf "no\n"
+fi
 
 #
 # Dependent variables

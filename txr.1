@@ -40822,6 +40822,44 @@ and the output of
 may be used as an argument to
 .codn stty .
 
+.SS* Unix System Identification
+
+.coNP Structure @ utsname
+.synb
+.mets (defstruct utsname nil
+.mets \ \ sysname nodename release
+.mets \ \ version machine domainname)
+.syne
+.desc
+The
+.code utsname
+structure corresponds to the POSIX structure of the same name.
+An instance of this structure is returned by the
+.code uname
+function.
+
+.coNP Function @ uname
+.synb
+.mets (uname)
+.syne
+.desc
+The
+.code uname
+function corresponds to the POSIX
+function of the same name. It returns an instance of the
+.code utsname
+structure.  Each slot of the returned structure is
+initialized with a character string that identifies the corresponding attribute
+of the host system.
+
+The host system might not support the reporting of the
+NIS domain name. In this case, the
+.code domainname
+slot of the returned
+.code utsname
+structure will have the value
+.codn nil .
+
 .SS* Web Programming Support
 
 .coNP Functions @ url-encode and @ url-decode

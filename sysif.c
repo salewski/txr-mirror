@@ -67,6 +67,9 @@
 #endif
 #include <fnmatch.h>
 #endif
+#if HAVE_UNAME
+#include <sys/utsname.h>
+#endif
 #include ALLOCA_H
 #include "lib.h"
 #include "stream.h"
@@ -96,6 +99,11 @@ val passwd_s, gecos_s, dir_s, shell_s;
 
 #if HAVE_GRGID
 val group_s, mem_s;
+#endif
+
+#if HAVE_UNAME
+val utsname_s, sysname_s, nodename_s, release_s, version_s, machine_s;
+val domainname_s;
 #endif
 
 static val at_exit_list;
@@ -1410,6 +1418,29 @@ static val fnmatch_wrap(val pattern, val string, val flags)
 }
 #endif
 
+#if HAVE_UNAME
+static val uname_wrap(void)
+{
+  args_decl(args, ARGS_MIN);
+  struct utsname un;
+  int res;
+  if ((res = uname(&un)) >= 0) {
+    val out = make_struct(utsname_s, nil, args);
+    slotset(out, sysname_s, string_utf8(un.sysname));
+    slotset(out, nodename_s, string_utf8(un.nodename));
+    slotset(out, release_s, string_utf8(un.release));
+    slotset(out, version_s, string_utf8(un.version));
+    slotset(out, machine_s, string_utf8(un.machine));
+#if HAVE_UTSNAME_DOMAINNAME
+    slotset(out, domainname_s, string_utf8(un.domainname));
+#endif
+    return out;
+  }
+  uw_throwf(error_s, lit("uname failed: ~d/~s"), num(errno),
+            string_utf8(strerror(errno)), nao);
+}
+#endif
+
 void sysif_init(void)
 {
   prot1(&at_exit_list);
@@ -1453,6 +1484,15 @@ void sysif_init(void)
   group_s = intern(lit("group"), user_package);
   mem_s = intern(lit("mem"), user_package);
 #endif
+#if HAVE_UNAME
+  utsname_s = intern(lit("utsname"), user_package);
+  sysname_s = intern(lit("sysname"), user_package);
+  nodename_s = intern(lit("nodename"), user_package);
+  release_s = intern(lit("release"), user_package);
+  version_s = intern(lit("version"), user_package);
+  machine_s = intern(lit("machine"), user_package);
+  domainname_s = intern(lit("domainname"), user_package);
+#endif
 
   make_struct_type(stat_s, nil, nil,
                    list(dev_s, ino_s, mode_s, nlink_s, uid_s, gid_s,
@@ -1466,6 +1506,12 @@ void sysif_init(void)
 #if HAVE_GRGID
   make_struct_type(group_s, nil, nil,
                    list(name_s, passwd_s, gid_s, mem_s, nao),
+                   nil, nil, nil, nil);
+#endif
+#if HAVE_UNAME
+  make_struct_type(utsname_s, nil, nil,
+                   list(sysname_s, nodename_s, release_s,
+                        version_s, machine_s, domainname_s, nao),
                    nil, nil, nil, nil);
 #endif
 
@@ -1730,5 +1776,9 @@ void sysif_init(void)
 #ifdef FNM_ESTMATCH
   reg_varl(intern(lit("fnm-extmatch"), user_package), num_fast(FNM_EXTMATCH));
 #endif
+#endif
+
+#if HAVE_UNAME
+  reg_fun(intern(lit("uname"), user_package), func_n0(uname_wrap));
 #endif
 }
