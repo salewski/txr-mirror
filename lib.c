@@ -8785,6 +8785,52 @@ static void out_lazy_str(val lstr, val out)
   put_char(chr('"'), out);
 }
 
+static void out_quasi_str(val args, val out)
+{
+  val iter, next;
+
+  for (iter = cdr(args); iter; iter = next) {
+    val elem = car(iter);
+    next = cdr(iter);
+
+    if (stringp(elem)) {
+      int semi_flag = 0;
+      out_str_readable(c_str(elem), out, &semi_flag);
+    } else if (consp(elem)) {
+      val sym = car(elem);
+      if (sym == var_s)
+      {
+        val next_elem = car(next);
+        val name = second(elem);
+        val mods = third(elem);
+        val next_elem_char = and3(next_elem && !mods, stringp(next_elem),
+                                  chr_str(next_elem, zero));
+        int need_brace = mods ||
+          (next_elem_char &&
+           (chr_isalpha(next_elem_char) ||
+            chr_isdigit(next_elem_char) ||
+            next_elem_char == chr('_')));
+        put_char(chr('@'), out);
+        if (need_brace)
+          put_char(chr('{'), out);
+        obj_print_impl(name, out, nil);
+        while (mods) {
+          put_char(chr(' '), out);
+          obj_print_impl(car(mods), out, nil);
+          mods = cdr(mods);
+        }
+        if (need_brace)
+          put_char(chr('}'), out);
+      } else if (sym == expr_s) {
+        put_char(chr('@'), out);
+        obj_print_impl(rest(elem), out, nil);
+      }
+    } else {
+      obj_print_impl(elem, out, nil);
+    }
+  }
+}
+
 val obj_print_impl(val obj, val out, val pretty)
 {
   val ret = obj;
@@ -8844,6 +8890,24 @@ val obj_print_impl(val obj, val out, val pretty)
             put_string(lit("."), out);
           iter = next;
         }
+      } else if (sym == quasi_s) {
+        put_char(chr('`'), out);
+        out_quasi_str(obj, out);
+        put_char(chr('`'), out);
+      } else if (sym == quasilist_s) {
+        val args = cdr(obj);
+        put_string(lit("#`"), out);
+        if (args) {
+          out_quasi_str(car(args), out);
+          args = cdr(args);
+        }
+        while (args) {
+          put_char(chr(' '), out);
+          out_quasi_str(car(args), out);
+          args = cdr(args);
+        }
+        out_quasi_str(cdr(obj), out);
+        put_char(chr('`'), out);
       } else {
         val iter;
         val closepar = chr(')');
