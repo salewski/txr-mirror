@@ -3748,7 +3748,7 @@ val split_str(val str, val sep)
     val pos = zero;
 
     do {
-      cons_bind (new_pos, len, search_regex(str, sep, pos, 0));
+      cons_bind (new_pos, len, search_regex(str, sep, pos, nil));
 
       if (eql(pos, new_pos) && len == zero)
         new_pos = plus(new_pos, one);
