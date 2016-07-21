@@ -1,3 +1,23 @@
+                                    TXR 146
+                                   2016-07-20
+
+
+  Features
+
+  - Time and space optimizations in execution of NFA regexes.
+  - POSIX uname function exposed.
+  - Print syntax which looks like their read syntax implemented for
+    quasistrings and quasi-word-list literals.
+  - Windows version ships with Cygnal 2.5.1.99 for better
+    windows native support.
+
+  Bugs
+
+  - Text streams are not open with stdio "t" mode on Cygwin.
+    This was a mistaken change present in 144 and 145.
+
+
+
                                     TXR 145
                                    2016-07-03
 
