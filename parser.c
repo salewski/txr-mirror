@@ -37,6 +37,9 @@
 #include <errno.h>
 #include "config.h"
 #include ALLOCA_H
+#ifdef __CYGWIN__
+#include <sys/utsname.h>
+#endif
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"
@@ -644,31 +647,18 @@ static val read_eval_ret_last(val env, val counter,
   return t;
 }
 
+static val get_home_path(void)
+{
 #ifdef __CYGWIN__
-static val get_home_path(void)
-{
-  val path_exists_p =  intern(lit("path-exists-p"), user_package);
+  struct utsname un;
 
-  {
-    val posixy_home = getenv_wrap(lit("HOME"));
-    if (funcall1(path_exists_p, posixy_home))
-      return posixy_home;
+  if (uname(&un) >= 0) {
+    if (strncmp(un.sysname, "CYGNAL", 6) == 0)
+      return getenv_wrap(lit("USERPROFILE"));
   }
-
-  {
-    val windowsy_home = getenv_wrap(lit("USERPROFILE"));
-    if (funcall1(path_exists_p, windowsy_home))
-      return windowsy_home;
-  }
-
-  return nil;
-}
-#else
-static val get_home_path(void)
-{
+#endif
   return getenv_wrap(lit("HOME"));
 }
-#endif
 
 val repl(val bindings, val in_stream, val out_stream)
 {
