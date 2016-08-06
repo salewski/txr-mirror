@@ -93,7 +93,8 @@ ABBREV = $(if $(VERBOSE),\
 ABBREV3 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(3)" $(2))
 
 define DEPGEN
-$(V)sed -e '1s/^/DEP_/' -e '1s/: [^ ]\+/ :=/' < $(1) > $(1:.d=.v)
+$(V)sed ':x; /\\$$/ { N; s/\\\n//; tx }' < $(1) | \
+  sed -e '1s/^/DEP_/' -e '1s/: [^ ]\+/ :=/' > $(1:.d=.v)
 endef
 
 define COMPILE_C
