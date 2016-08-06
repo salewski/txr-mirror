@@ -589,7 +589,7 @@ case "$top_srcdir" in
 esac
 
 if [ "$source_dir" != "." ] ; then
-  for x in Makefile share tests win; do
+  for x in Makefile share tests; do
     printf "Symlinking %s -> $source_dir/%s\n" $x $x
     ln -sf "$source_dir/$x" .
   done
