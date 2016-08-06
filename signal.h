@@ -62,6 +62,10 @@ struct jmp {
    unsigned long r13;
    unsigned long r14;
    unsigned long r15;
+#if __CYGWIN__
+   unsigned long rsi;
+   unsigned long rdi;
+#endif
 };
 
 #elif __arm__ && !__thumb__

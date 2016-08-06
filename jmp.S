@@ -24,7 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if __MINGW32__ || __CYGWIN__
+#if __MINGW32__ || (__CYGWIN__ && __i386__)
 #define DEFUN(NAME) \
 .global _ ## NAME ; \
 _ ## NAME: ;
@@ -47,6 +47,11 @@ NAME: ;
 .thumb ; \
 .thumb_func ; \
 .type NAME, %function ; \
+NAME: ;
+#elif __CYGWIN__ && __x86_64__
+#define DEFUN(NAME) \
+.globl NAME ; \
+.def NAME; .scl 2; .type 32; .endef; \
 NAME: ;
 #else
 #define DEFUN(NAME) \
@@ -99,7 +104,7 @@ DEFUN(jmp_restore)
   mov JEIP(%edx),%ecx
   jmp *%ecx
 
-#elif __x86_64__
+#elif __x86_64__ && !__CYGWIN__
 
 #define JRIP  0
 #define JRSP  8
@@ -139,6 +144,54 @@ DEFUN(jmp_restore)
   mov JRIP(%rdi), %rdx
   mov %rsi, %rax
   jmp *%rdx
+
+#elif __x86_64__ && __CYGWIN__
+
+#define JRIP  0
+#define JRSP  8
+#define JRBP 16
+#define JRBX 24
+#define JR12 32
+#define JR13 40
+#define JR14 48
+#define JR15 56
+#define JRSI 64
+#define JRDI 72
+
+#define RETA  0
+#define ARG2  8
+
+DEFUN(jmp_save)
+  mov RETA(%rsp), %rax
+  mov %rax, JRIP(%rcx)
+  lea ARG2(%rsp), %rax
+  mov %rax, JRSP(%rcx)
+  mov %rbp, JRBP(%rcx)
+  mov %rbx, JRBX(%rcx)
+  mov %r12, JR12(%rcx)
+  mov %r13, JR13(%rcx)
+  mov %r14, JR14(%rcx)
+  mov %r15, JR15(%rcx)
+  mov %rsi, JRSI(%rcx)
+  mov %rdi, JRDI(%rcx)
+  xor %rax, %rax
+  ret
+
+DEFUN(jmp_restore)
+  mov JRDI(%rcx), %rdi
+  mov JRSI(%rcx), %rsi
+  mov JR15(%rcx), %r15
+  mov JR14(%rcx), %r14
+  mov JR13(%rcx), %r13
+  mov JR12(%rcx), %r12
+  mov JRBX(%rcx), %rbx
+  mov JRBP(%rcx), %rbp
+  mov JRSP(%rcx), %rax
+  mov %rax, %rsp
+  mov JRIP(%rcx), %rcx
+  mov %rdx, %rax
+  jmp *%rcx
+
 
 #elif __arm__ && !__thumb__
 
