@@ -1,3 +1,18 @@
+                                    TXR 147
+                                   2016-08-12
+
+
+  Features
+
+  - 64 bit Windows/Cygwin port.
+
+  Bugs
+
+  - Fixed native Windows TXR trying to use HOME environment
+    variable when run from Cygwin.
+
+
+
                                     TXR 146
                                    2016-07-20
 
