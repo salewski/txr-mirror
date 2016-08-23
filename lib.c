@@ -115,7 +115,7 @@ val list_f, less_f, greater_f;
 
 val prog_string;
 
-val time_s, time_local_s, time_utc_s;
+val time_s, time_local_s, time_utc_s, time_string_s;
 val year_s, month_s, day_s, hour_s, min_s, sec_s, dst_s;
 
 static val env_list;
@@ -9339,6 +9339,36 @@ val time_struct_utc(val time)
   return broken_time_struct(&tms);
 }
 
+static void time_fields_to_tm(struct tm *ptm,
+                              val year, val month, val day,
+                              val hour, val min, val sec, val dst)
+{
+  ptm->tm_year = c_num(year) - 1900;
+  ptm->tm_mon = c_num(month) - 1;
+  ptm->tm_mday = c_num(day);
+  ptm->tm_hour = c_num(hour);
+  ptm->tm_min = c_num(min);
+  ptm->tm_sec = c_num(sec);
+
+  if (!dst)
+    ptm->tm_isdst = 0;
+  else if (dst == auto_k)
+    ptm->tm_isdst = -1;
+  else
+    ptm->tm_isdst = 1;
+}
+
+static void time_struct_to_tm(struct tm *ptm, val time_struct)
+{
+  val year = slot(time_struct, year_s);
+  val month = slot(time_struct, month_s);
+  val day = slot(time_struct, day_s);
+  val hour = slot(time_struct, hour_s);
+  val min = slot(time_struct, min_s);
+  val sec = slot(time_struct, sec_s);
+  val dst = slot(time_struct, dst_s);
+  time_fields_to_tm(ptm, year, month, day, hour, min, sec, dst);
+}
 
 static val make_time_impl(time_t (*pmktime)(struct tm *),
                           val year, val month, val day,
@@ -9348,20 +9378,8 @@ static val make_time_impl(time_t (*pmktime)(struct tm *),
   struct tm local = { 0 };
   time_t time;
 
-  local.tm_year = c_num(year) - 1900;
-  local.tm_mon = c_num(month) - 1;
-  local.tm_mday = c_num(day);
-  local.tm_hour = c_num(hour);
-  local.tm_min = c_num(minute);
-  local.tm_sec = c_num(second);
-
-  if (!isdst)
-    local.tm_isdst = 0;
-  else if (isdst == auto_k)
-    local.tm_isdst = -1;
-  else
-    local.tm_isdst = 1;
-
+  time_fields_to_tm(&local, year, month, day,
+                    hour, minute, second, isdst);
   time = pmktime(&local);
 
   return time == -1 ? nil : num(time);
@@ -9464,6 +9482,21 @@ static val time_meth(val utc_p, val time_struct)
                                              hour, min, sec, dst);
 }
 
+static val time_string_meth(val time_struct, val format)
+{
+  struct tm tms = { 0 };
+  time_struct_to_tm(&tms, time_struct);
+  char buffer[512] = "";
+  char *fmt = utf8_dup_to(c_str(format));
+
+  if (strftime(buffer, sizeof buffer, fmt, &tms) == 0)
+    buffer[0] = 0;
+
+  free(fmt);
+
+  return string_own(utf8_dup_from(buffer));
+}
+
 static void time_init(void)
 {
   val time_st;
@@ -9471,6 +9504,7 @@ static void time_init(void)
   time_s = intern(lit("time"), user_package);
   time_local_s = intern(lit("time-local"), user_package);
   time_utc_s = intern(lit("time-utc"), user_package);
+  time_string_s = intern(lit("time-string"), user_package);
   year_s = intern(lit("year"), user_package);
   month_s = intern(lit("month"), user_package);
   day_s = intern(lit("day"), user_package);
@@ -9480,13 +9514,15 @@ static void time_init(void)
   dst_s = intern(lit("dst"), user_package);
 
   time_st = make_struct_type(time_s, nil,
-                             list(time_local_s, time_utc_s, nao),
+                             list(time_local_s, time_utc_s,
+                                  time_string_s, nao),
                              list(year_s, month_s, day_s,
                                   hour_s, min_s, sec_s, dst_s, nao),
                              nil, nil, nil, nil);
 
   static_slot_set(time_st, time_local_s, func_f1(nil, time_meth));
   static_slot_set(time_st, time_utc_s, func_f1(t, time_meth));
+  static_slot_set(time_st, time_string_s, func_n2(time_string_meth));
 }
 
 void init(mem_t *(*oom)(mem_t *, size_t), val *stack_bottom)

@@ -36579,6 +36579,28 @@ which are applied to
 or
 .codn make-time-utc .
 
+.coNP Method @ time-string
+.synb
+.mets << time-struct .(time-string << format )
+.syne
+.desc
+The
+.code time
+structure has a method called
+.codn time-string .
+
+This method accepts a
+.meta format
+string argument, which it uses to convert
+the fields to a character string representation
+which is returned.
+
+The
+.meta format
+argument is a string, and follows exactly the same conventions as
+the format string of the C library function
+.codn strftime .
+
 .coNP Functions @ make-time and @ make-time-utc
 .synb
 .mets (make-time < year < month < day < hour < minute < second << dst-advice )
