@@ -36516,6 +36516,34 @@ function or from the
 .code time-usec
 function.
 
+.coNP Function @ time-parse
+.synb
+.mets (time-parse < format << string )
+.syne
+.desc
+The
+.code time-parse
+function scans a time description in
+.meta string
+according to the specification given in the
+.meta format
+string. If the scan is successful, a structure
+of type
+.code time
+is returned, otherwise
+.codn nil .
+
+The
+.meta format
+argument follows the same conventions as the POSIX
+C library function
+.codn strptime .
+
+Note: the availability of
+.code time-parse
+depends on the availability of
+.codn strptime .
+
 .coNP Methods @ time-local and @ time-utc
 .synb
 .mets << time-struct .(time-local)

@@ -9374,6 +9374,24 @@ val make_time(val year, val month, val day,
   return make_time_impl(mktime, year, month, day, hour, minute, second, isdst);
 }
 
+#if HAVE_STRPTIME
+
+val time_parse(val format, val string)
+{
+  struct tm tms = { 0 };
+  const wchar_t *w_str = c_str(string);
+  const wchar_t *w_fmt = c_str(format);
+  char *str = utf8_dup_to(w_str);
+  char *fmt = utf8_dup_to(w_fmt);
+  char *ptr = strptime(str, fmt, &tms);
+  int ret = ptr != 0;
+  free(fmt);
+  free(str);
+  return ret ? broken_time_struct(&tms) : nil;
+}
+
+#endif
+
 #if !HAVE_SETENV
 
 void setenv(const char *name, const char *value, int overwrite)

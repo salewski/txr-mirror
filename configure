@@ -1688,6 +1688,24 @@ else
   printf "no\n"
 fi
 
+printf "Checking for strptime function ... "
+
+cat > conftest.c <<!
+#include <time.h>
+
+int main(int argc, char **argv)
+{
+  struct tm stm = { 0 };
+  strptime("2016-08-20 00:00:00", "%Y-%m-%d %H:%M:%S", &stm);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_STRPTIME 1\n" >> $config_h
+else
+  printf "no\n"
+fi
 
 printf "Checking for POSIX sleep function ... "
 

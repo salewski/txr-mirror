@@ -5337,6 +5337,7 @@ void eval_init(void)
   reg_fun(intern(lit("time-struct-utc"), user_package), func_n1(time_struct_utc));
   reg_fun(intern(lit("make-time"), user_package), func_n7(make_time));
   reg_fun(intern(lit("make-time-utc"), user_package), func_n7(make_time_utc));
+  reg_fun(intern(lit("time-parse"), user_package), func_n2(time_parse));
 
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
   reg_fun(intern(lit("source-loc-str"), user_package), func_n2o(source_loc_str, 1));

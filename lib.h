@@ -992,6 +992,9 @@ val make_time(val year, val month, val day,
 val make_time_utc(val year, val month, val day,
                   val hour, val minute, val second,
                   val isdst);
+#if HAVE_STRPTIME
+val time_parse(val format, val string);
+#endif
 
 void init(mem_t *(*oom_realloc)(mem_t *, size_t), val *stack_bottom);
 int compat_fixup(int compat_ver);
