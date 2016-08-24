@@ -2365,6 +2365,9 @@ static val me_def_variable(val form, val menv)
   if (op != defvar_s && length(args) != two)
     eval_error(form, lit("~s: two arguments expected"), op, nao);
 
+  if (!bindable(sym))
+    eval_error(form, lit("~s: ~s is not a bindable symbol"), op, sym, nao);
+
   if (op == defparm_s || op == defvar_s)
     mark_special(sym);
 
