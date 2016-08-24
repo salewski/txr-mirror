@@ -2365,17 +2365,14 @@ static val me_def_variable(val form, val menv)
   if (op != defvar_s && length(args) != two)
     eval_error(form, lit("~s: two arguments expected"), op, nao);
 
+  if (op == defparm_s || op == defvar_s)
+    mark_special(sym);
+
   return apply_frob_args(list(prog1_s,
                               cons(defvarl_s,
                                    cons(sym, if2(op == defvar_s,
                                                  cons(initform, nil)))),
-                              if3(op == defparm_s || op == defvar_s,
-                                  cons(list(sys_mark_special_s,
-                                            list(quote_s, sym, nao),
-                                            nao),
-                                       setval),
-                                  setval),
-                              nao));
+                              setval, nao));
 }
 
 static val me_gen(val form, val menv)
@@ -3446,8 +3443,6 @@ static val do_expand(val form, val menv)
                               form_ex, form),
                           make_env(nil, nil, nil), form);
         return cons(quote_s, cons(result, nil));
-      } else {
-        mark_special(name);
       }
 
       return form_ex;
