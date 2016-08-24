@@ -1543,7 +1543,7 @@ static val op_defvarl(val form, val env)
   val sym = first(args);
 
   if (!bindable(sym))
-    eval_error(form, lit("let: ~s is not a bindable symbol"), sym, nao);
+    eval_error(form, lit("defvarl: ~s is not a bindable symbol"), sym, nao);
 
   {
     if (!gethash(top_vb, sym)) {
@@ -1564,7 +1564,7 @@ static val op_defsymacro(val form, val env)
   (void) env;
 
   if (!bindable(sym))
-    eval_error(form, lit("let: ~s is not a bindable symbol"), sym, nao);
+    eval_error(form, lit("defsymacro: ~s is not a bindable symbol"), sym, nao);
 
   remhash(top_vb, sym);
   if (!opt_compat || opt_compat > 143)
