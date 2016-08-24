@@ -3435,6 +3435,9 @@ static val do_expand(val form, val menv)
       val init_ex = expand(init, menv);
       val form_ex = form;
 
+      if (sym == defsymacro_s && length(form) != three)
+        eval_error(form, lit("~s: two arguments expected"), sym, nao);
+
       if (init != init_ex)
         form_ex = rlcp(cons(sym, cons(name, cons(init_ex, nil))), form);
 
