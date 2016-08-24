@@ -2932,6 +2932,10 @@ static val me_op(val form, val menv)
   val is_op = and3(sym == do_s, consp(body_trans),
                    gethash(op_table, car(body_trans)));
 
+  if (c_num(max) > 1024)
+    eval_error(form, lit("~a: @~a calls for function with too many arguments"),
+               sym, max, nao);
+
   if (!eql(max, length(nums)) && !zerop(min))
     ssyms = supplement_op_syms(ssyms, max);
 
