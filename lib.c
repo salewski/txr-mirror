@@ -115,7 +115,7 @@ val list_f, less_f, greater_f;
 
 val prog_string;
 
-val time_s, time_local_s, time_utc_s, time_string_s;
+val time_s, time_local_s, time_utc_s, time_string_s, time_parse_s;
 val year_s, month_s, day_s, hour_s, min_s, sec_s, dst_s;
 
 static val env_list;
@@ -9279,18 +9279,23 @@ static val broken_time_list(struct tm *tms)
               nao);
 }
 
+static void tm_to_time_struct(val time_struct, struct tm *ptm)
+{
+  slotset(time_struct, year_s, num(ptm->tm_year + 1900));
+  slotset(time_struct, month_s, num_fast(ptm->tm_mon + 1));
+  slotset(time_struct, day_s, num_fast(ptm->tm_mday));
+  slotset(time_struct, hour_s, num_fast(ptm->tm_hour));
+  slotset(time_struct, min_s, num_fast(ptm->tm_min));
+  slotset(time_struct, sec_s, num_fast(ptm->tm_sec));
+  slotset(time_struct, dst_s, tnil(ptm->tm_isdst));
+}
+
 static val broken_time_struct(struct tm *tms)
 {
   args_decl(args, ARGS_MIN);
   val ts = make_struct(time_s, nil, args);
 
-  slotset(ts, year_s, num(tms->tm_year + 1900));
-  slotset(ts, month_s, num_fast(tms->tm_mon + 1));
-  slotset(ts, day_s, num_fast(tms->tm_mday));
-  slotset(ts, hour_s, num_fast(tms->tm_hour));
-  slotset(ts, min_s, num_fast(tms->tm_min));
-  slotset(ts, sec_s, num_fast(tms->tm_sec));
-  slotset(ts, dst_s, tnil(tms->tm_isdst));
+  tm_to_time_struct(ts, tms);
 
   return ts;
 }
@@ -9343,12 +9348,13 @@ static void time_fields_to_tm(struct tm *ptm,
                               val year, val month, val day,
                               val hour, val min, val sec, val dst)
 {
-  ptm->tm_year = c_num(year) - 1900;
-  ptm->tm_mon = c_num(month) - 1;
-  ptm->tm_mday = c_num(day);
-  ptm->tm_hour = c_num(hour);
-  ptm->tm_min = c_num(min);
-  ptm->tm_sec = c_num(sec);
+  uses_or2;
+  ptm->tm_year = c_num(or2(year, zero)) - 1900;
+  ptm->tm_mon = c_num(or2(month, zero)) - 1;
+  ptm->tm_mday = c_num(or2(day, zero));
+  ptm->tm_hour = c_num(or2(hour, zero));
+  ptm->tm_min = c_num(or2(min, zero));
+  ptm->tm_sec = c_num(or2(sec, zero));
 
   if (!dst)
     ptm->tm_isdst = 0;
@@ -9358,7 +9364,7 @@ static void time_fields_to_tm(struct tm *ptm,
     ptm->tm_isdst = 1;
 }
 
-static void time_struct_to_tm(struct tm *ptm, val time_struct)
+static void time_struct_to_tm(struct tm *ptm, val time_struct, val strict)
 {
   val year = slot(time_struct, year_s);
   val month = slot(time_struct, month_s);
@@ -9367,6 +9373,16 @@ static void time_struct_to_tm(struct tm *ptm, val time_struct)
   val min = slot(time_struct, min_s);
   val sec = slot(time_struct, sec_s);
   val dst = slot(time_struct, dst_s);
+
+  if (!strict) {
+    year = (year ? year : zero);
+    month = (month ? month : zero);
+    day = (day ? day : zero);
+    hour = (hour ? hour : zero);
+    min = (min ? min : zero);
+    sec = (sec ? sec : zero);
+  }
+
   time_fields_to_tm(ptm, year, month, day, hour, min, sec, dst);
 }
 
@@ -9485,7 +9501,7 @@ static val time_meth(val utc_p, val time_struct)
 static val time_string_meth(val time_struct, val format)
 {
   struct tm tms = { 0 };
-  time_struct_to_tm(&tms, time_struct);
+  time_struct_to_tm(&tms, time_struct, t);
   char buffer[512] = "";
   char *fmt = utf8_dup_to(c_str(format));
 
@@ -9497,6 +9513,35 @@ static val time_string_meth(val time_struct, val format)
   return string_own(utf8_dup_from(buffer));
 }
 
+#if HAVE_STRPTIME
+
+static val time_parse_meth(val time_struct, val format, val string)
+{
+  struct tm tms = { 0 };
+  time_struct_to_tm(&tms, time_struct, nil);
+  val ret = nil;
+
+  {
+    const wchar_t *w_str = c_str(string);
+    const wchar_t *w_fmt = c_str(format);
+    char *str = utf8_dup_to(w_str);
+    char *fmt = utf8_dup_to(w_fmt);
+    char *ptr = strptime(str, fmt, &tms);
+
+    if (ptr != 0) {
+      tm_to_time_struct(time_struct, &tms);
+      ret = string_utf8(ptr);
+    }
+
+    free(fmt);
+    free(str);
+  }
+
+  return ret;
+}
+
+#endif
+
 static void time_init(void)
 {
   val time_st;
@@ -9505,6 +9550,7 @@ static void time_init(void)
   time_local_s = intern(lit("time-local"), user_package);
   time_utc_s = intern(lit("time-utc"), user_package);
   time_string_s = intern(lit("time-string"), user_package);
+  time_parse_s = intern(lit("time-parse"), user_package);
   year_s = intern(lit("year"), user_package);
   month_s = intern(lit("month"), user_package);
   day_s = intern(lit("day"), user_package);
@@ -9515,7 +9561,7 @@ static void time_init(void)
 
   time_st = make_struct_type(time_s, nil,
                              list(time_local_s, time_utc_s,
-                                  time_string_s, nao),
+                                  time_string_s, time_parse_s, nao),
                              list(year_s, month_s, day_s,
                                   hour_s, min_s, sec_s, dst_s, nao),
                              nil, nil, nil, nil);
@@ -9523,6 +9569,9 @@ static void time_init(void)
   static_slot_set(time_st, time_local_s, func_f1(nil, time_meth));
   static_slot_set(time_st, time_utc_s, func_f1(t, time_meth));
   static_slot_set(time_st, time_string_s, func_n2(time_string_meth));
+#if HAVE_STRPTIME
+  static_slot_set(time_st, time_parse_s, func_n3(time_parse_meth));
+#endif
 }
 
 void init(mem_t *(*oom)(mem_t *, size_t), val *stack_bottom)

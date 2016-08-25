@@ -36601,6 +36601,57 @@ argument is a string, and follows exactly the same conventions as
 the format string of the C library function
 .codn strftime .
 
+.coNP Method @ time-parse
+.synb
+.mets << time-struct .(time-parse < format << string )
+.syne
+.desc
+The
+.code time-parse
+method scans a time description in
+.meta string
+according to the specification given in the
+.meta format
+string.
+
+If the scan is successful, the structure
+is updated with the parsed information, and
+the remaining unmatched portion of
+.meta string
+is returned. If all of
+.meta string
+is matched, then an empty string is returned.
+Slots of
+.meta time-struct
+which are originally
+.code nil
+are replaced with zero, even if these
+zero values are not actually parsed from
+.metn string .
+
+If the scan is unsuccessful, then
+.code nil
+is returned and the structure is not
+altered.
+
+The
+.meta format
+argument follows the same conventions as the POSIX
+C library function
+.codn strptime .
+
+Note: the
+.code time-parse
+method may be unavailable if the host system does not
+provide the
+.code strptime
+function. In this case, the
+.code time-parse
+static slot of the
+.code time
+struct is
+.codn nil .
+
 .coNP Functions @ make-time and @ make-time-utc
 .synb
 .mets (make-time < year < month < day < hour < minute < second << dst-advice )
