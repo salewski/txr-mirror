@@ -20186,6 +20186,12 @@ arranged by
 by a non-local exit such as an exception throw, the object's
 finalizers, if any, are invoked.
 
+Lazy initialization does not detect cycles. Immediately prior to the lazy
+initialization of a struct, the struct is marked as no longer requiring
+initialization. Thus, during initialization, its instance slots may be
+freely accessed. Slots not yet initialized evaluate as
+.codn nil .
+
 .coNP Macro @ with-slots
 .synb
 .mets (with-slots >> ({ slot | >> ( sym << slot )}*) < struct-expr

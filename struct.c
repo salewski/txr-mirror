@@ -436,7 +436,6 @@ static void lazy_struct_init(val sinst, struct struct_inst *si)
   val cell = funcall(si->slot[0]);
   cons_bind (plist, args, cell);
 
-  si->lazy = 0;
   si->slot[0] = nil;
 
   if (args && !st->boactor) {
@@ -471,8 +470,10 @@ static void lazy_struct_init(val sinst, struct struct_inst *si)
 
 INLINE void check_init_lazy_struct(val sinst, struct struct_inst *si)
 {
-  if (si->lazy)
+  if (si->lazy) {
+    si->lazy = 0;
     lazy_struct_init(sinst, si);
+  }
 }
 
 val make_lazy_struct(val type, val argfun)
