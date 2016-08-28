@@ -87,7 +87,7 @@ val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val append_each_s, append_each_star_s, while_s, while_star_s, until_star_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s, sys_abscond_from_s, block_star_s;
-val list_s, append_s, apply_s, sys_apply_s, iapply_s;
+val list_s, list_star_s, append_s, apply_s, sys_apply_s, iapply_s;
 val gen_s, gun_s, generate_s, rest_s, plus_s;
 val promise_s, promise_forced_s, promise_inprogress_s, force_s;
 val op_s, ap_s, identity_s, apf_s, ipf_s;
@@ -4674,6 +4674,7 @@ void eval_init(void)
   not_s = intern(lit("not"), user_package);
   vecref_s = intern(lit("vecref"), user_package);
   list_s = intern(lit("list"), user_package);
+  list_star_s = intern(lit("list*"), user_package);
   append_s = intern(lit("append"), user_package);
   apply_s = intern(lit("apply"), user_package);
   sys_apply_s = intern(lit("apply"), system_package);
@@ -4837,7 +4838,7 @@ void eval_init(void)
   reg_fun(intern(lit("revappend"), user_package), func_n2(revappend));
   reg_fun(intern(lit("nreconc"), user_package), func_n2(nreconc));
   reg_fun(list_s, list_f);
-  reg_fun(intern(lit("list*"), user_package), func_n0v(list_star_intrinsic));
+  reg_fun(list_star_s, func_n0v(list_star_intrinsic));
   reg_fun(identity_s, identity_f);
   reg_fun(intern(lit("use"), user_package), identity_f);
   reg_fun(intern(lit("typeof"), user_package), func_n1(typeof));
