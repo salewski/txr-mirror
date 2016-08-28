@@ -2616,6 +2616,41 @@ static val expand_cond_pairs(val form, val menv)
   }
 }
 
+static val consp_f, second_f, list_form_p_f, quote_form_p_f;
+static val xform_listed_quote_f;
+
+static void qquote_init(void)
+{
+  val eq_to_list_f = curry_12_1(eq_f, list_s);
+  val eq_to_quote_f = curry_12_1(eq_f, quote_s);
+  val cons_f = func_n2(cons);
+
+  protect(&consp_f, &second_f, &list_form_p_f,
+          &quote_form_p_f, &xform_listed_quote_f, convert(val *, 0));
+
+  eq_to_list_f = curry_12_1(eq_f, list_s);
+  consp_f = func_n1(consp);
+  second_f = func_n1(second);
+  list_form_p_f = andf(consp_f,
+                       chain(car_f, eq_to_list_f, nao),
+                       nao);
+  quote_form_p_f = andf(consp_f,
+                        chain(car_f, eq_to_quote_f, nao),
+                        nao);
+  xform_listed_quote_f = iffi(andf(consp_f,
+                                   chain(car_f, eq_to_list_f, nao),
+                                   chain(cdr_f, consp_f, nao),
+                                   chain(cdr_f, cdr_f, null_f, nao),
+                                   chain(cdr_f, car_f, consp_f, nao),
+                                   chain(cdr_f, car_f, car_f, eq_to_quote_f, nao),
+                                   nao),
+                              chain(cdr_f, car_f, cdr_f,
+                                    curry_12_1(cons_f, nil),
+                                    curry_12_2(cons_f, quote_s),
+                                    nao),
+                              nil);
+}
+
 static val optimize_qquote_form(val form)
 {
   if (atom(form)) {
@@ -2625,33 +2660,22 @@ static val optimize_qquote_form(val form)
     val args = cdr(form);
 
     if (sym == append_s) {
-      val eq_to_list = curry_12_1(eq_f, list_s);
-
-      if (all_satisfy(args, andf(func_n1(consp),
-                                 chain(car_f, eq_to_list, nao),
-                                 nao),
-                      nil))
+      if (all_satisfy(args, list_form_p_f, nil))
       {
         sym = list_s;
-        args = mapcar(func_n1(second), args);
+        args = mapcar(second_f, args);
       } else {
         val blargs = butlast(args);
 
-        if (all_satisfy(blargs, andf(func_n1(consp),
-                                     chain(car_f, eq_to_list, nao),
-                                     nao),
-                        nil))
-          return rlcp_tree(cons(list_star_s, nappend2(mapcar(func_n1(second), blargs),
+        if (all_satisfy(blargs, list_form_p_f, nil))
+          return rlcp_tree(cons(list_star_s, nappend2(mapcar(second_f, blargs),
                                                       last(args))), form);
       }
     }
 
     if (sym == list_s) {
-      if (all_satisfy(args, andf(func_n1(consp),
-                                 chain(car_f, curry_12_1(eq_f, quote_s), nao),
-                                 nao),
-                      nil))
-        return rlcp_tree(cons(quote_s, cons(mapcar(func_n1(second), args), nil)), form);
+      if (all_satisfy(args, quote_form_p_f, nil))
+        return rlcp_tree(cons(quote_s, cons(mapcar(second_f, args), nil)), form);
       return rlcp_tree(cons(list_s, args), form);
     }
 
@@ -2667,23 +2691,8 @@ static val optimize_qquote_args(val form)
     val sym = car(form);
     val args = cdr(form);
 
-    if (sym == list_s || sym == append_s || sym == list_star_s) {
-      val consp_f = func_n1(consp);
-      val cons_f = func_n2(cons);
-      val if_fun = andf(consp_f,
-                        chain(car_f, curry_12_1(eq_f, list_s), nao),
-                        chain(cdr_f, consp_f, nao),
-                        chain(cdr_f, cdr_f, null_f, nao),
-                        chain(cdr_f, car_f, consp_f, nao),
-                        chain(cdr_f, car_f, car_f, curry_12_1(eq_f, quote_s), nao),
-                        nao);
-      val xform_fun = chain(cdr_f, car_f, cdr_f,
-                            curry_12_1(cons_f, nil),
-                            curry_12_2(cons_f, quote_s),
-                            nao);
-      val xform = iffi(if_fun, xform_fun, nil);
-      return rlcp_tree(cons(sym, mapcar(xform, args)), form);
-    }
+    if (sym == list_s || sym == append_s || sym == list_star_s)
+      return rlcp_tree(cons(sym, mapcar(xform_listed_quote_f, args)), form);
 
     return form;
   }
@@ -4808,6 +4817,8 @@ void eval_init(void)
   self_load_path_s = intern(lit("self-load-path"), user_package);
   sys_lisp1_value_s = intern(lit("lisp1-value"), system_package);
 
+  qquote_init();
+
   reg_op(macrolet_s, op_error);
   reg_op(symacrolet_s, op_error);
   reg_op(macro_time_s, op_error);
@@ -4970,7 +4981,7 @@ void eval_init(void)
   reg_fun(intern(lit("zip"), user_package), func_n0v(transposev));
   reg_fun(intern(lit("interpose"), user_package), func_n2(interpose));
 
-  reg_fun(intern(lit("second"), user_package), func_n1(second));
+  reg_fun(intern(lit("second"), user_package), second_f);
   reg_fun(intern(lit("third"), user_package), func_n1(third));
   reg_fun(intern(lit("fourth"), user_package), func_n1(fourth));
   reg_fun(intern(lit("fifth"), user_package), func_n1(fifth));
