@@ -367,7 +367,8 @@ if_clause : IF n_exprs_opt ')'
             elif_clauses_opt
             else_clause_opt
             END newl            { if (opt_compat && opt_compat <= 136)
-                                  { val req = rlcp(cons(require_s, $2), $2);
+                                  { val xexp = expand_meta($2, nil);
+                                    val req = rlcp(cons(require_s, xexp), $2);
                                     val iff = rlcp(cons(cons(cons(req, nil), $5), nil), $2);
                                     val elifs = $6;
                                     val els = cons($7, nil);
@@ -391,7 +392,8 @@ if_clause : IF n_exprs_opt ')'
 elif_clauses_opt : ELIF n_exprs_opt ')' newl
                    clauses_opt
                    elif_clauses_opt  { if (opt_compat && opt_compat <= 136)
-                                       { val req = rlcp(cons(require_s, $2), $2);
+                                       { val xexp = expand_meta($2, nil);
+                                         val req = rlcp(cons(require_s, xexp), $2);
                                          $$ = cons(cons(cons(req, nil), $5), $6); }
                                        else
                                        { val expr = expand(car($2), nil);
