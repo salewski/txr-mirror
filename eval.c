@@ -2635,6 +2635,8 @@ static void qquote_init(void)
                        chain(car_f, eq_to_list_f, nao),
                        nao);
   quote_form_p_f = andf(consp_f,
+                        chain(cdr_f, consp_f, nao),
+                        chain(cdr_f, cdr_f, null_f, nao),
                         chain(car_f, eq_to_quote_f, nao),
                         nao);
   xform_listed_quote_f = iffi(andf(consp_f,
@@ -2663,12 +2665,12 @@ static val optimize_qquote_form(val form)
       if (all_satisfy(args, list_form_p_f, nil))
       {
         sym = list_s;
-        args = mapcar(second_f, args);
+        args = mappend(cdr_f, args);
       } else {
         val blargs = butlast(args);
 
         if (all_satisfy(blargs, list_form_p_f, nil))
-          return rlcp_tree(cons(list_star_s, nappend2(mapcar(second_f, blargs),
+          return rlcp_tree(cons(list_star_s, nappend2(mappend(cdr_f, blargs),
                                                       last(args))), form);
       }
     }
