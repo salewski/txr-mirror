@@ -362,7 +362,7 @@ additional_parts : END newl                     { $$ = nil; }
                                                     yyerr("empty or subclause"); }
                  ;
 
-if_clause : IF exprs_opt ')'
+if_clause : IF n_exprs_opt ')'
             newl clauses_opt
             elif_clauses_opt
             else_clause_opt
@@ -384,11 +384,11 @@ if_clause : IF exprs_opt ')'
                                     $$ = cons(if_s,
                                               nappend2(branch, nappend2(elifs, els)));
                                     rl($$, num($1)); } }
-          | IF exprs_opt ')'
+          | IF n_exprs_opt ')'
             newl error          { $$ = nil; yybadtok(yychar, lit("if clause")); }
           ;
 
-elif_clauses_opt : ELIF exprs_opt ')' newl
+elif_clauses_opt : ELIF n_exprs_opt ')' newl
                    clauses_opt
                    elif_clauses_opt  { if (opt_compat && opt_compat <= 136)
                                        { val req = rlcp(cons(require_s, $2), $2);
@@ -631,7 +631,7 @@ out_clause : repeat_clause              { $$ = cons($1, nil); }
            | o_line                     { $$ = $1; }
            ;
 
-repeat_clause : REPEAT exprs_opt ')' newl
+repeat_clause : REPEAT n_exprs_opt ')' newl
                 out_clauses_opt
                 repeat_parts_opt
                 END newl                { $$ = repeat_rep_helper(repeat_s,
@@ -706,7 +706,7 @@ o_elem : TEXT                   { $$ = string_own($1);
        | rep_elem               { $$ = $1; }
        ;
 
-rep_elem : REP exprs_opt ')' o_elems_opt
+rep_elem : REP n_exprs_opt ')' o_elems_opt
            rep_parts_opt END    { $$ = repeat_rep_helper(rep_s, $2, $4, $5);
                                   rl($$, num($1)); }
          | REP error            { $$ = nil;
