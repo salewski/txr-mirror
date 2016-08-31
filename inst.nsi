@@ -62,12 +62,12 @@ section "TXR"
   File share\txr\stdlib\*.tl
   Delete /REBOOTOK $INSTDIR\txr\bin\sh.exe
   WriteUninstaller $INSTDIR\txr\uninstall.exe
-  CreateDirectory "$SMPROGRAMS\TXR"
-  CreateShortCut "$SMPROGRAMS\TXR\txr.lnk" "$INSTDIR\txr\bin\txr.exe"
-  CreateShortCut "$SMPROGRAMS\TXR\uninstall.lnk" "$INSTDIR\TXR\uninstall.exe"
-  CreateShortCut "$SMPROGRAMS\TXR\install-root.lnk" "$INSTDIR\txr"
+  CreateDirectory "$SMPROGRAMS\txr"
+  CreateShortCut "$SMPROGRAMS\txr\txr.lnk" "$INSTDIR\txr\bin\txr.exe"
+  CreateShortCut "$SMPROGRAMS\txr\uninstall.lnk" "$INSTDIR\txr\uninstall.exe"
+  CreateShortCut "$SMPROGRAMS\txr\install-root.lnk" "$INSTDIR\txr"
   CreateShortCut "$STARTMENU\txr.lnk" "$INSTDIR\txr\bin\txr.exe"
-  ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\TXR\bin"
+  ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\txr\bin"
 sectionEnd
 
 section "Uninstall"
@@ -77,7 +77,7 @@ section "Uninstall"
 
   ${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\bin"
   RMDir /r "$INSTDIR"
-  Delete "$SMPROGRAMS\TXR\txr.lnk"
+  Delete "$SMPROGRAMS\txr\txr.lnk"
   Delete "$STARTMENU\txr.lnk"
   IfErrors errors removeInstaller
 errors:
