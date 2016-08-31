@@ -52,8 +52,6 @@ section "TXR"
   SetOutPath $INSTDIR\txr\doc
   File txr-manpage.html
   File txr-manpage.pdf
-  SetOutPath $INSTDIR\txr\share\man\man1
-  File txr.1
   SetOutPath $INSTDIR\txr\share\txr
   File LICENSE
   File METALICENSE
@@ -61,6 +59,7 @@ section "TXR"
   File share\txr\stdlib\*.txr
   File share\txr\stdlib\*.tl
   Delete /REBOOTOK $INSTDIR\txr\bin\sh.exe
+  RmDir /r /REBOOTOK $INSTDIR\txr\share\man
   WriteUninstaller $INSTDIR\txr\uninstall.exe
   CreateDirectory "$SMPROGRAMS\txr"
   CreateShortCut "$SMPROGRAMS\txr\txr.lnk" "$INSTDIR\txr\bin\txr.exe"
