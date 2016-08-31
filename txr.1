@@ -42264,6 +42264,9 @@ function. This method allows a termination status to be specified:
   os-shell $
 .cble
 
+However, if a \*(TX interactive session is terminated this way, it will not
+save the listener history.
+
 Raising a fatal signal with the
 .code raise
 function is another way to quit:
@@ -42273,6 +42276,8 @@ function is another way to quit:
   Aborted (core dumped)
   os-shell $
 .cble
+
+The previous remark about not saving the listener history applies here also.
 
 .SS* Interrupting Evaluation
 
