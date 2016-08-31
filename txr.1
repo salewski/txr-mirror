@@ -345,7 +345,7 @@
 
 .SH* SYNOPSIS
 .cblk
-.meti txr >> [ options ] < query-file < data-files ..
+.meti txr [ < options ] [ < script-file [ < data-files ... ]]
 .cble
 
 .SH* DESCRIPTION
@@ -385,6 +385,13 @@ strings, vectors, hash tables with weak reference support, lazy lists, and
 arbitrary-precision (bignum integers).
 
 .SH* ARGUMENTS AND OPTIONS
+
+If \*(TX is given no arguments, it will enter into an interactive
+mode. See the INTERACTIVE LISTENER section for a
+description of this mode.  When \*(TX enters interactive mode this
+way, it prints a one-line banner is printed announcing the program
+name and version, and one line of help text instructing the user
+how to exit.
 
 Options which don't take an argument may be combined together.
 The
@@ -42182,7 +42189,9 @@ the trailing slash.
 On some target platforms, \*(TX provides an interactive listener, which is
 invoked using the
 .code -i
-command line option. The interactive listener provides features like visual
+command line option, or by executing
+.code txr
+with no arguments.  The interactive listener provides features like visual
 editing of the command line, tab completion on \*(TL symbols, and history
 recall.
 
