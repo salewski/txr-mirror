@@ -349,14 +349,19 @@
 .cble
 
 .SH* DESCRIPTION
-\*(TX is a language oriented toward processing text from files or streams, using
-multiple programming paradigms.
+\*(TX is a language oriented toward processing text from files or streams,
+supporting multiple programming paradigms.
+It is a combination of two programming languages: an text scanning
+and extraction language referred to as the \*(TX pattern language, or
+sometimes just \*(TX when it is clear, and a general-purpose dialect of Lisp
+called \*(TL.
 
-A \*(TX script is called a query, and it specifies a pattern which matches (a
-prefix of) an entire file, or multiple files.  Patterns can consists of large
-chunks of multi-line free-form text, which is matched literally against
-material in the input sources. Free variables occurring in the pattern
-(denoted by the
+A script written in the \*(TX pattern language is referred to in this
+document as a query, and it
+specifies a pattern which matches (a prefix of) an entire file, or multiple
+files.  Patterns can consists of large chunks of multi-line free-form text,
+which is matched literally against material in the input sources. Free
+variables occurring in the pattern (denoted by the
 .code @
 symbol) are bound to the pieces of text occurring in the
 corresponding positions. If the overall match is successful, then
@@ -371,9 +376,8 @@ recursive. \*(TX patterns can work horizontally (characters within a line)
 or vertically (spanning multiple lines). Multiple lines can be treated
 as a single line.
 
-
 In addition to embedded variables which implicitly match text, the
-\*(TX query language supports a number of directives, for matching text using
+\*(TX pattern language supports a number of directives, for matching text using
 regular expressions, for continuing a match in another file, for searching
 through a file for the place where an entire sub-query matches, for collecting
 lists, and for combining sub-queries using logical conjunction, disjunction and
@@ -552,7 +556,9 @@ the dimension order is:
 
 .meIP -c < query
 Specifies the query in the form of a command line argument. If this option is
-used, the query-file argument is omitted. The first non-option argument,
+used, the
+.meta script-file
+argument is omitted. The first non-option argument,
 if there is one, now specifies the first input source rather than a query.
 Unlike queries read from a file, (non-empty) queries specified as arguments
 using -c do not have to properly end in a newline. Internally,
@@ -607,9 +613,9 @@ comment syntax can be used for better formatting:
 .cble
 .RE
 
-.meIP -f < query-file
+.meIP -f < script-file
 Specifies the file from which the query is to be read, instead of the
-.meta query-file
+.meta script-file
 argument. This is useful in
 .code #!
 ("hash bang") scripts. (See Hash Bang Support below).
@@ -617,13 +623,13 @@ argument. This is useful in
 .meIP -e < expression
 Evaluates a \*(TL expression for its side effects, without printing
 its value. Can be specified more than once. The
-.meta query-file
+.meta script-file
 argument becomes optional if
 .code -e
 is used at least once. If the evaluation of every
 .meta expression
 evaluated this way terminates normally, and there is no
-.meta query-file
+.meta script-file
 argument, then \*(TX terminates with a successful status.
 
 .meIP -p < expression
@@ -819,7 +825,9 @@ if another argument looks like an option, it is treated as a name.
 This special argument
 .code -
 means "read from standard input" instead of a file.
-The query file, or any of the data files, may be specified using this option.
+The
+.metn script-file ,
+or any of the data files, may be specified using this option.
 If two or more files are specified as
 .codn - ,
 the behavior is system-dependent.
@@ -828,34 +836,36 @@ then specify more input which is interpreted as the second file, and so forth.
 
 .PP
 After the options, the remaining arguments are files. The first file argument
-specifies the query, and is mandatory if the
+specifies the script file, and is mandatory if the
 .code -f
-option has not been specified.  A file argument consisting of a single
+option has not been specified, and \*(TX isn't operating in interactive
+mode or evaluating expressions from the command line via
+.code -e
+or one of the related options.  A file argument consisting of a single
 .code -
-means to read the standard input instead of opening a file. A file argument
-which begins with an exclamation symbol means that the rest of the argument is
-a shell command which is to be run as a coprocess, and its output read like a
-file.
+means to read the standard input instead of opening a file.
 
 .PP
-\*(TX begins by reading the query. The entire query is scanned, internalized
-and then begins executing, if it is free of syntax errors.  The reading of
-data, on the other hand, is lazy.  A file isn't opened until the query demands
-material from that file, and then the contents are read on demand, not all at
-once.
+\*(TX begins by reading the script. In the case of the \*(TX pattern language,
+the entire query is scanned, internalized and then begins executing, if it is
+free of syntax errors. (\*(TL is processed differently, form by form).  On the
+other hand, the pattern language reads data files in a lazy manner. A file
+isn't opened until the query demands material from that file, and then the
+contents are read on demand, not all at once.
 
-The suffix of the query file is significant. If the query file name has no
-suffix, or if it has a
+The suffix of the
+.meta script-file
+is significant. If the name has no suffix, or if it has a
 .str .txr
-suffix, then it is assumed to be in the \*(TX query language. If it has
+suffix, then it is assumed to be in the \*(TX pattern language. If it has
 the
 .str .tl
 suffix, then it is assumed to be \*(TL.  The
 .code --lisp
-option changes the treatment of unsuffixed query file names, causing them
+option changes the treatment of unsuffixed script file names, causing them
 to be interpreted as \*(TL .
 
-If an unsuffixed query file name is specified, and cannot be opened, then
+If an unsuffixed script file name is specified, and cannot be opened, then
 \*(TX will add the
 .str .txr
 suffix and try again. If that fails, it will be tried with the
@@ -875,8 +885,8 @@ the \*(TX process or throw an exception, and there are no syntax errors, then
 are encountered in a form, then \*(TX terminates unsuccessfully.
 \*(TL is documented in the section TXR LISP.
 
-If no files arguments are specified on the command line, it is up to the
-query to open a file, pipe or standard input via the
+If a query file is specified, but no file arguments,
+it is up to the query to open a file, pipe or standard input via the
 .code @(next)
 directive
 prior to attempting to make a match. If a query attempts to match text,
@@ -892,8 +902,13 @@ bindings with
 or
 .codn -a .
 
-If the command line arguments are incorrect, or the query has a malformed
-syntax, \*(TX issues an error diagnostic and terminates with a failed status.
+If the command line arguments are incorrect, \*(TX issues an error diagnostic
+and terminates with a failed status.
+
+If the
+.meta script-file
+specifies a query, and the query has a malformed syntax, \*(TX likewise
+issues error diagnostics and terminates with a failed status.
 
 If the query fails due to a mismatch, \*(TX terminates
 with a failed status. No diagnostics are issued.
@@ -915,6 +930,14 @@ or
 if the query fails, and exits with a failed
 termination status. If the query succeeds, the variable bindings, if any,
 are output on standard output.
+
+If the
+.meta script-file
+is \*(TL, then it is processed form by form. Each top-level Lisp form
+is evaluated after it is read. If any form is syntactically malformed,
+\*(TX issues diagnostics and terminates unsuccessfully.  This is somewhat
+different from how the pattern language is treated: a script in the pattern
+language is parsed in its entirety before being executed.
 
 .SH* BASIC TXR SYNTAX
 .SS* Comments
@@ -1347,8 +1370,8 @@ in
 .SS* Character Handling and International Characters
 
 \*(TX represents text internally using wide characters, which are used to
-represent Unicode code points. The query language, as well as all data sources,
-are assumed to be in the UTF-8 encoding.  In the query language, extended
+represent Unicode code points. Script source code, as well as all data sources,
+are assumed to be in the UTF-8 encoding.  In \*(TX and \*(TL source, extended
 characters can be used directly in comments, literal text, string literals,
 quasiliterals and regular expressions.  Extended characters can also be
 expressed indirectly using hexadecimal or octal escapes.
@@ -42122,7 +42145,7 @@ If
 .meta target
 has a
 .str .txr
-suffix, it is assumed to be a \*(TX query language file, and
+suffix, it is assumed to be a \*(TX pattern language file, and
 an exception of type
 .code eval-error
 is thrown, since this is not supported.
@@ -43819,7 +43842,7 @@ In \*(TX 124 and earlier versions, the
 .code @(next)
 directive didn't evaluate the
 .meta source
-argument as a Lisp expression, but as a \*(TX Pattern Language
+argument as a Lisp expression, but as a \*(TX pattern language
 expression. Lisp expressions thus had to be delimited by
 .codn @ .
 The current behavior is that the argument is treated as Lisp.
