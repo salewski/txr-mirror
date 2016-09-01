@@ -5764,13 +5764,56 @@ Example (with
 
 .dir merge
 
+The syntax of
+.code merge
+follows the pattern:
+
+.cblk
+.meti @(merge < destination >> [ sources ...])
+.cble
+
+.meta destination
+is a variable, which receives a new binding.
+.meta sources
+are bind expressions.
+
 The
 .code merge
-directive provides a way of combining two or more variables
-in a somewhat complicated but very useful way.
+directive provides a way of combining two or more variables or
+expressions in a somewhat complicated but very useful way.
+A new binding is created for the
+.meta destination
+variable, which holds the result of the operation.
 
-To understand what merge does we first have to define a property called depth.
-The depth of an atom such as a string is defined as
+This directive is useful for combining the results from collects at different
+levels of nesting into a single nested list such that parallel elements are at
+equal depth.
+
+The
+.code merge
+directive performs its special function if invoked with at least three
+arguments: a destination and two sources.
+
+The one-argument case
+.code "@(merge x)"
+binds a new variable
+.code x
+and initializes it with the empty list and is thus equivalent to
+.codn "@(bind x)" .
+Likewise, the two-argument case
+.code "@(merge x y)"
+is equivalent to
+.codn "@(bind x y)" ,
+establishing a binding for
+.code x
+which is initialized with the value of
+.codn y .
+
+To understand what merge does when two sources are given, as in
+.codn "@(merge C A B)" ,
+we first have
+to define a property called depth.  The depth of an atom such as a string is
+defined as
 .codn 1 .
 The depth of an empty
 list is
@@ -5788,41 +5831,33 @@ has depth 2, and
 .cble
 has depth three.
 
-We can now define the binary (two argument) merge operation as follows.
-.IP 1
-.code "(merge A B)"
-first normalizes the values
-.code A
-and
-.code B
-such that they have equal depth.
-.IP 2
-A value which has depth zero is put into a one element list. 
-.IP 3
-If either value has a smaller depth than the other, it is wrapped
-in a list as many times as needed to give it equal depth.
-Finally, the values are appended together to produce the
-resulting list.
-.IP 4
-The resulting list is stored back into
-.codn A .
-.PP
+We can now define a binary (two argument) merge(A, B) function as follows.
+First, merge(A, B) normalizes the values A and B
+to produce a pair of values which have equal depth, as defined above.
+If either value is an atom it is first converted
+to a one-element list containing that atom. After this step, both
+values are lists; and the only way an argument has depth zero is if it is an
+empty list.  Next, if either value has a smaller depth than the
+other, it is wrapped in a list as many times as needed to give it equal depth.
+For instance if A is
+.code ("a")
+and B is
+.code "((((\(dqb\(dq \(dqc\(dq) (\(dqd\(dq \(dqe))))"
+then A is converted to
+.codn "((((\(dqa\(dq))))" .
+Finally, the list values are appended together to produce the merged result.
+In the case of the preceding two example values, the result is:
+.codn "((((\(dqa\(dq))) (((\(dqb\(dq \(dqc\(dq) (\(dqd\(dq \(dqe))))" .
+The result is stored into a the newly bound destination variable
+.codn C .
 
-Merge takes more than two arguments. These are merged by a left reduction. The
-leftmost two values are merged, and then this result is merged with the third
-value, and so on. The leftmost expression is always a target variable.
-The remaining expressions are bind expressions.
-
-It is permitted for the leftmost argument to be an unbound variable. In that
-case the remaining arguments are merged, and the leftmost variable is then
-bound and initialized with the result of the merge. If there are only
-two arguments and the left argument is an unbound symbol, then effectively
-.code merge
-behaves like
-.codn bind .
-
-Merge is useful for combining the results from collects at different
-levels of nesting such that elements are at the appropriate depth.
+If more than two source arguments are given, these are merged by a left-associative
+reduction, which is to say that a three argument
+.code "merge(X, Y, Z)"
+is defined as
+.codn "merge(merge(X, Y), Z)" .
+The leftmost two values are merged, and then this result is merged with the third
+value, and so on.
 
 .dir cat
 
