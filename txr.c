@@ -749,6 +749,12 @@ int txr_main(int argc, char **argv)
           return EXIT_FAILURE;
         break;
       case 'c':
+        if (txr_lisp_p) {
+          format(std_error,
+                 lit("~a: -c not compatible with --lisp; use -e\n"),
+                 prog_string, nao);
+          return EXIT_FAILURE;
+        }
         specstring = arg;
         break;
       case 'f':
