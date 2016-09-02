@@ -1,3 +1,30 @@
+                                    TXR 148
+                                   2016-09-01
+
+
+  Features
+
+  - time-parse function
+  - time-string and time-parse methods on time struct
+  - optimization added to quasiquote expander to generate better code.
+
+  Bugs
+
+  - Broken defvarl and defparml marking variables special, thus behaving like
+    defvar and defparm, respectively.
+  - Put limit on numeric range of @<num> arguments in op/do syntax, because
+    this generates huge formal parameter
+    lists. Found by AFL(fast) fuzzing tool.
+  - Fixed generation of huge lists by trivial cases of nested quasiquote
+    like ^^^^^^^^^^x. Found by AFL(fast) fuzzing tool.
+  - Fixed runaway recursion that can occur in lazy struct initialization when
+    cycles are present.
+  - Fixed broken Lisp macro expansion in @(if) and output-side
+    @(repeat) directives.
+  - Rewrote poor, incorrect documentation of @(merge) directive.
+
+
+
                                     TXR 147
                                    2016-08-12
 
