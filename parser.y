@@ -472,14 +472,14 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                             $2, nao);
                                   rl($$, num($1));
                                   rl($6, car($5)); }
-     | REP exprs_opt ')' elems END     { if (nilp($2))
+     | REP exprs_opt ')' elems END     { if (nilp($4))
                                             yyerr("empty rep clause");
                                          $$ = list(rep_s, $4, nil, $2, nao);
                                          rl($$, num($1)); }
      | REP exprs_opt ')' elems
        until_last exprs_opt ')'
        elems END
-                                { if (nilp($2))
+                                { if (nilp($4))
                                     yyerr("empty rep clause");
                                   if (nilp($8))
                                     yyerr("empty until/last in rep");
