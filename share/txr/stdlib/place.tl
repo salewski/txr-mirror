@@ -29,6 +29,7 @@
   (defvar *place-delete-expander* (hash))
   (defvar *place-macro* (hash))
   (defvar sys:*lisp1* nil)
+  (defvar sys:*pl-env* nil)
 
   (defun sys:eval-err (. params)
     (throwf 'eval-error . params))
@@ -155,17 +156,20 @@
 
   (defun call-update-expander (getter setter unex-place env body)
     (let* ((place (sys:pl-expand unex-place env))
-           (expander (get-update-expander place)))
+           (expander (get-update-expander place))
+           (sys:*pl-env* env))
       (sys:cp-origin [expander getter setter place body] place setter getter)))
 
   (defun call-clobber-expander (ssetter unex-place env body)
     (let* ((place (sys:pl-expand unex-place env))
-           (expander (get-clobber-expander place)))
+           (expander (get-clobber-expander place))
+           (sys:*pl-env* env))
       (sys:cp-origin [expander ssetter place body] place ssetter)))
 
   (defun call-delete-expander (deleter unex-place env body)
     (let* ((place (sys:pl-expand unex-place env))
-           (expander (get-delete-expander place)))
+           (expander (get-delete-expander place))
+           (sys:*pl-env* env))
       (sys:cp-origin [expander deleter place body] place deleter))))
 
 (defmacro with-update-expander ((getter setter) unex-place env body)
@@ -386,10 +390,10 @@
                          (prog1 (cdr ,tmp) (,csetter (car ,tmp))))))))
        ,body)))
 
-(defplace (nthcdr index list :env env) body
+(defplace (nthcdr index list) body
   (getter setter
     (with-gensyms (index-sym sentinel-head-sym parent-cell-sym)
-      (if (place-form-p list env)
+      (if (place-form-p list sys:*pl-env*)
         (with-update-expander (lgetter lsetter) list nil
           ^(rlet ((,index-sym ,index))
              (let* ((,sentinel-head-sym (cons nil (,lgetter)))
