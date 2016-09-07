@@ -34,13 +34,16 @@
   (defun sys:eval-err (. params)
     (throwf 'eval-error . params))
 
-  (defmacro sys:l1-setq (sym new-val :env e)
-    (caseq (lexical-lisp1-binding e sym)
-      (:var ^(sys:setq ,sym ,new-val))
-      (:symacro (sys:eval-err "sys:l1-setq: invalid use on symbol macro"))
-      (t (if (boundp sym)
-           ^(sys:setq ,sym ,new-val)
-           ^(sys:lisp1-setq ,sym ,new-val)))))
+  (defmacro sys:l1-setq (u-expr new-val :env e)
+    (let ((e-expr (macroexpand u-expr e)))
+      (if (symbolp e-expr)
+        (caseq (lexical-lisp1-binding e e-expr)
+          (:var ^(sys:setq ,e-expr ,new-val))
+          (:symacro (sys:eval-err "sys:l1-setq: invalid use on symbol macro"))
+          (t (if (boundp e-expr)
+               ^(sys:setq ,e-expr ,new-val)
+               ^(sys:lisp1-setq ,e-expr ,new-val))))
+        ^(set ,u-expr ,new-val))))
 
   (defmacro sys:l1-val (u-expr :env e)
     (let ((e-expr (macroexpand u-expr e)))
@@ -500,7 +503,7 @@
                    oldval-sym newval-sym
                    index-sym index-sym
                    oldval-sym dflval-sym)
-      (let ((sys:*lisp1* (or (symbolp obj-place) sys:*lisp1*)))
+      (let ((sys:*lisp1* t))
         (with-update-expander (ogetter-sym osetter-sym) obj-place nil
           ^(rlet ((,index-sym (sys:l1-val ,index))
                   ,*(if have-default-p
@@ -518,7 +521,7 @@
   (ssetter
     (with-gensyms (osetter-sym ogetter-sym
                    obj-sym newval-sym index-sym)
-      (let ((sys:*lisp1* (or (symbolp obj-place) sys:*lisp1*)))
+      (let ((sys:*lisp1* t))
         (with-update-expander (ogetter-sym osetter-sym) obj-place nil
           ^(macrolet ((,ssetter (val)
                        ^(rlet ((,',index-sym (sys:l1-val ,',index))
@@ -538,7 +541,7 @@
     (with-gensyms (osetter-sym ogetter-sym
                    obj-sym index-sym oldval-sym
                    dflval-sym)
-      (let ((sys:*lisp1* (or (symbolp obj-place) sys:*lisp1*)))
+      (let ((sys:*lisp1* t))
         (with-update-expander (ogetter-sym osetter-sym) obj-place nil
           ^(macrolet ((,deleter ()  ;; todo: place must not have optional val
                        ^(rlet ((,',obj-sym (,',ogetter-sym)))
