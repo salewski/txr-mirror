@@ -255,3 +255,30 @@
                                    (ret ^(,@1 (slot ,obj-sym ',@1)))]
                               slot-specs))
          ,*body))))
+
+(macro-time
+  (defun sys:rslotset (struct sym meth-sym val)
+    (slotset struct sym val)
+    (call (umethod meth-sym) struct)))
+
+(defmacro rslot (struct sym meth-sym)
+  ^(slot ,struct ,sym))
+
+(define-place-macro rslot (struct sym meth-sym)
+  ^(sys:rslot ,struct ,sym ,meth-sym))
+
+(defplace (sys:rslot struct sym meth-sym) body
+  (getter setter
+    (with-gensyms (struct-sym slot-sym meth-sym)
+      ^(rlet ((,struct-sym ,struct)
+              (,slot-sym ,sym)
+              (,meth-sym ,meth-sym))
+         (macrolet ((,getter () ^(slot ,',struct-sym ,',slot-sym))
+                    (,setter (val) ^(sys:rslotset ,',struct-sym
+                                                  ,',slot-sym ,val)))
+           ,body))))
+  (ssetter
+    ^(macrolet ((,ssetter (val) ^(progn
+                                   (sys:rslotset ,',struct ,',sym
+                                             ,',meth-sym ,val))))
+       ,body)))
