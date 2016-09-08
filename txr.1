@@ -11230,6 +11230,46 @@ Logically toggles the Boolean value of
 .metn place ,
 and returns the new value.
 
+.meIP (test-set << place )
+If
+.meta place
+contains
+.codn nil ,
+stores
+.code t
+into the place and returns
+.code t
+to indicate that the store took place.
+Otherwise does nothing and returns
+.codn nil .
+
+.meIP (test-clear << place )
+If
+.meta place
+contains a Boolean true value, stores
+.code nil
+into the place and returns
+.code t
+to indicate that the store took place.
+Otherwise does nothing and returns
+.codn nil .
+
+.meIP (compare-swap < place < cmp-fun < cmp-val << store-val )
+Examines the value of
+.meta place
+and compares it to
+.meta cmp-val
+using the comparison function given by the function name
+.metn cmp-fun .
+If the comparison is false, returns
+.codn nil .
+Otherwise, stores the
+.meta store-val
+value into
+.meta place
+and returns
+.codn t .
+
 .meIP (inc < place <> [ delta ])
 Increments
 .meta place
@@ -11243,6 +11283,56 @@ Decrements
 by
 .metn delta ,
 which defaults to 1, and returns the new value.
+
+.meIP (pinc < place <> [ delta ])
+Increments
+.meta place
+by
+.metn delta ,
+which defaults to 1, and returns the old value.
+
+.meIP (pdec < place <> [ delta ])
+Decrements
+.meta place
+by
+.metn delta ,
+which defaults to 1, and returns the old value.
+
+.meIP (test-inc < place >> [ delta <> [ from-val ]])
+Increments
+.meta place
+by
+.meta delta
+and returns
+.code t
+if the previous value was
+.code eql
+to
+.metn from-val ,
+where
+.meta delta
+defaults to 1
+and
+.meta from-val
+defaults to zero.
+
+.meIP (test-dec < place >> [ delta <> [ to-val ]])
+Decrements
+.meta place
+by
+.meta delta
+and returns
+.code t
+if the new value is
+.code eql
+to
+.metn to-val ,
+where
+.meta delta
+defaults to 1
+and
+.meta to-val
+defaults to 0.
 
 .meIP (swap < left-place << right-place )
 Exchanges the values of
@@ -25981,6 +26071,79 @@ and if it previously held a value other than
 it is set to
 .codn nil .
 
+.coNP Macros @ test-set and @ test-clear
+.synb
+.mets (test-set << place )
+.mets (test-clear << place )
+.syne
+.desc
+The
+.code test-set
+macro examines the value of
+.metn place .
+If it is
+.code nil
+then it stores
+.code t
+into the place, and returns
+.codn t .
+Otherwise it leaves
+.meta place
+unchanged and returns
+.codn nil .
+
+The
+.code test-clear
+macro examines the value of
+.metn place .
+If it is Boolean true (any value except
+.codn nil )
+then it stores
+.code nil
+into the place, and returns
+.codn t .
+Otherwise it leaves
+.meta place
+unchanged and returns
+.codn nil .
+
+.coNP Macro @ compare-swap
+.synb
+.mets (compare-swap < place < cmp-fun < cmp-val << store-val )
+.syne
+.desc
+The
+.code compare-swap
+macro examines the value of
+.meta place
+and compares it to
+.meta cmp-val
+using the comparison function given by the function name
+.metn cmp-fun .
+
+This comparison takes places as if by evaluating the expression
+.meti >> ( cmp-fun < value << cmp-val )
+where
+.meta value
+denotes the current value of
+.metn place .
+
+If the comparison is false,
+.meta place
+is not modified, the
+.meta store-val
+expression is not evaluated, and the macro returns
+.codn nil .
+
+If the comparison is true, then
+.code compare-swap
+evaluates the
+.meta store-val
+expression, stores the resulting value into
+.meta place
+and returns
+.codn t .
+
 .coNP Macros @ inc and @ dec
 .synb
 .mets (inc < place <> [ delta ])
@@ -26016,6 +26179,77 @@ works exactly like
 except that addition is replaced by subtraction. The similarly defaulted
 .meta delta
 value is subtracted from the previous value of the place.
+
+.coNP Macros @ pinc and @ pdec
+.synb
+.mets (pinc < place <> [ delta ])
+.mets (pdec < place <> [ delta ])
+.syne
+.desc
+The macros
+.code pinc
+and
+.code pdec
+are very similar to
+.code inc
+and
+.codn dec .
+
+The only difference is that they return the previous value of
+.meta place
+rather than the incremented value.
+
+.coNP Macros @ test-inc and @ test-dec
+.synb
+.mets (test-inc < place >> [ delta <> [ from-val ]])
+.mets (test-dec < place >> [ delta <> [ to-val ]])
+.syne
+.desc
+The
+.code test-inc
+and
+.code test-dec
+macros provide combined operations which change the value of a place and
+provide a test whether, respectively, a certain previous value was
+overwritten, or a certain new value was attained. By default, this tested
+value is zero.
+
+The
+.code test-inc
+macro notes the prior value of
+.meta place
+and then updates it with that value, plus
+.metn delta ,
+which defaults to 1. If the prior value is
+.code eql
+to
+.meta from-val
+then it returns
+.codn t ,
+otherwise
+.codn nil .
+The default value of
+.meta from-val
+is zero.
+
+The
+.code test-dec
+macro produces a new value by subtracting
+.meta delta
+from the value of
+.metn place .
+The argument
+.meta delta
+defaults to 1. The new value is stored into
+.metn place .
+If the new value is
+.code eql
+to
+.meta to-val
+then
+.code t
+is returned, otherwise
+.codn nil .
 
 .coNP Macro @ swap
 .synb

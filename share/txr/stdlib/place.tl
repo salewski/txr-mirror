@@ -244,6 +244,26 @@
       (3 ^(,setter (pppred (,getter))))
       (t ^(,setter (- (,getter) ,delta))))))
 
+(defmacro pinc (place : (delta 1) :env env)
+  (with-gensyms (oldval)
+    (with-update-expander (getter setter) place env
+      (caseql delta
+        (0 place)
+        (1 ^(let ((,oldval (,getter))) (,setter (succ ,oldval)) ,oldval))
+        (2 ^(let ((,oldval (,getter))) (,setter (ssucc ,oldval)) ,oldval))
+        (3 ^(let ((,oldval (,getter))) (,setter (sssucc ,oldval)) ,oldval))
+        (t ^(let ((,oldval (,getter))) (,setter (+ ,oldval, delta)) ,oldval))))))
+
+(defmacro pdec (place : (delta 1) :env env)
+  (with-gensyms (oldval)
+    (with-update-expander (getter setter) place env
+      (caseql delta
+        (0 place)
+        (1 ^(let ((,oldval (,getter))) (,setter (pred ,oldval)) ,oldval))
+        (2 ^(let ((,oldval (,getter))) (,setter (ppred ,oldval)) ,oldval))
+        (3 ^(let ((,oldval (,getter))) (,setter (pppred ,oldval)) ,oldval))
+        (t ^(let ((,oldval (,getter))) (,setter (- ,oldval, delta)) ,oldval))))))
+
 (defmacro swap (place-0 place-1 :env env)
   (with-gensyms (tmp)
     (with-update-expander (getter-0 setter-0) place-0 env
@@ -297,6 +317,29 @@
          ^(let ((,tmp (,getter-f)))
             (,setter-f (shift ,*rplaces ,tmp))
             ,tmp))))))
+
+(defmacro test-set (:env env place)
+  (with-update-expander (getter setter) place env
+    ^(unless (,getter)
+       (,setter t))))
+
+(defmacro test-clear (:env env place)
+  (with-update-expander (getter setter) place env
+    ^(when (,getter)
+       (,setter nil)
+       t)))
+
+(defmacro compare-swap (:env env comp-fun place comp-val store-val)
+  (with-update-expander (getter setter) place env
+    ^(when (,comp-fun (,getter) ,comp-val)
+       (,setter ,store-val)
+       t)))
+
+(defmacro test-inc (place : (delta 1) (upfrom-val 0))
+  ^(eql (pinc ,place ,delta) ,above-val))
+
+(defmacro test-dec (place : (delta 1) (downto-val 0))
+  ^(eql (dec ,place ,delta) ,downto-val))
 
 (defmacro del (place :env env)
   (with-delete-expander (deleter) place env
