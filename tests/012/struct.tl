@@ -38,30 +38,24 @@
 
 (set *gensym-counter* 0)
 (stest (sys:expand 's.(a))
-       "(let ((#:g0004 s))\n                    \
-       \  (call (slot #:g0004 'a)\n             \
-       \        #:g0004))")
+       "(call (slot s 'a)\n                     \
+       \      s)")
 (set *gensym-counter* 0)
 (stest (sys:expand 's.(a b c))
-       "(let ((#:g0004 s))\n                    \
-       \  (call (slot #:g0004 'a)\n             \
-       \        #:g0004 b c))")
+       "(call (slot s 'a)\n                     \
+       \      s b c)")
 (test (sys:expand 's.[a].d)
       (slot [(slot s 'a)] 'd))
 (test (sys:expand 's.[a b c].d)
       (slot [(slot s 'a) b c] 'd))
 (set *gensym-counter* 0)
 (stest (sys:expand 's.(a).d)
-       "(slot (let ((#:g0004 s))\n              \
-       \        (call (slot #:g0004 'a)\n       \
-       \              #:g0004))\n               \
-       \      'd)")
+       "(slot (call (slot s 'a)\n               \
+       \            s) 'd)")
 (set *gensym-counter* 0)
 (stest (sys:expand 's.(a b c).d)
-       "(slot (let ((#:g0004 s))\n              \
-       \        (call (slot #:g0004 'a)\n       \
-       \              #:g0004 b c))\n           \
-       \      'd)")
+       "(slot (call (slot s 'a)\n               \
+       \            s b c)\n      'd)")
 
 (test s.a 100)
 

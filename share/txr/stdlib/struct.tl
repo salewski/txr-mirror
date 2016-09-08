@@ -196,11 +196,11 @@
      (if (eq dw 'dwim) ^(qref [(slot ,obj ',sym) ,*args] ,*more) :))
     (((sym . args))
      (let ((osym (gensym)))
-       ^(let ((,osym ,obj))
+       ^(slet ((,osym ,obj))
           (call (slot ,osym ',sym) ,osym ,*args))))
     (((sym . args) . more)
      (let ((osym (gensym)))
-       ^(qref (let ((,osym ,obj))
+       ^(qref (slet ((,osym ,obj))
                 (call (slot ,osym ',sym) ,osym ,*args)) ,*more)))
     ((sym) ^(slot ,obj ',sym))
     ((sym . more) ^(qref (slot ,obj ',sym) ,*more))
@@ -270,7 +270,7 @@
 (defplace (sys:rslot struct sym meth-sym) body
   (getter setter
     (with-gensyms (struct-sym slot-sym meth-sym)
-      ^(rlet ((,struct-sym ,struct)
+      ^(slet ((,struct-sym ,struct)
               (,slot-sym ,sym)
               (,meth-sym ,meth-sym))
          (macrolet ((,getter () ^(slot ,',struct-sym ,',slot-sym))
