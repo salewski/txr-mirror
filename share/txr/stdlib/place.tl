@@ -229,7 +229,7 @@
 (defmacro inc (place : (delta 1) :env env)
   (with-update-expander (getter setter) place env
     (caseql delta
-      (0 ^(,setter (,getter)))
+      (0 place)
       (1 ^(,setter (succ (,getter))))
       (2 ^(,setter (ssucc (,getter))))
       (3 ^(,setter (sssucc (,getter))))
@@ -238,7 +238,7 @@
 (defmacro dec (place : (delta 1) :env env)
   (with-update-expander (getter setter) place env
     (caseql delta
-      (0 ^(,setter (,getter)))
+      (0 place)
       (1 ^(,setter (pred (,getter))))
       (2 ^(,setter (ppred (,getter))))
       (3 ^(,setter (pppred (,getter))))
