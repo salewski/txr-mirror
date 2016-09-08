@@ -32,7 +32,13 @@
   (file-num 0)
   (file-rec-num 0)
   (rec-num 0)
-  rec fields nf)
+  rec fields nf rng-vec (rng-n 0)
+  (:postinit (self)
+    (if (plusp self.rng-n)
+      (set self.rng-vec (vector self.rng-n)))))
+
+(defstruct sys:awk-compile-time ()
+  (nranges 0))
 
 (defmeth sys:awk-state rec-to-f (self)
   (cond
@@ -107,13 +113,14 @@
                                           ^(,pattern (prn)))
                                         pattern-actions))))
         (junk (throwf 'eval-error "awk: bad clause syntax ~s" junk))))
-    (list inputs output name
+    (list (new sys:awk-compile-time)
+          inputs output name
           [apply append (nreverse lets)]
           [apply append (nreverse begin-actions)]
           [apply append (nreverse end-actions)]
           (nreverse pattern-actions))))
 
-(defmacro sys:awk-let (aws-sym . body)
+(defmacro sys:awk-let (awc aws-sym . body)
   ^(symacrolet ((rec (rslot ,aws-sym 'rec 'rec-to-f))
                 (f (rslot ,aws-sym 'fields 'f-to-rec))
                 (nf (rslot ,aws-sym 'nf 'nf-to-f))
@@ -125,21 +132,29 @@
                 (ofs (qref ,aws-sym ofs)))
      (macrolet ((next () '(return-from :awk-rec))
                 (next-file () '(return-from :awk-file))
-                (prn (. args) ^(qref ,',aws-sym (prn ,*args))))
+                (prn (. args) ^(qref ,',aws-sym (prn ,*args)))
+                (rng (from-expr to-expr)
+                  (let ((ix (pinc (qref ,awc nranges))))
+                    ^(symacrolet ((flag (vecref (qref ,',aws-sym rng-vec) ,ix)))
+                       (cond
+                         (,from-expr (set flag t))
+                         (,to-expr (zap flag) t)
+                         (flag))))))
        ,*body)))
 
 (defmacro awk (. clauses)
-  (tree-bind (inputs output name lets b-actions e-actions p-actions)
+  (tree-bind (awc inputs output name lets b-actions e-actions p-actions)
              (sys:awk-expander clauses)
     (with-gensyms (aws-sym awk-fun awk-retval)
       ^(let* (,*lets ,awk-retval)
-         (let ((,aws-sym (new sys:awk-state
+         (let ((,awk-fun (lambda (,aws-sym)
+                           (sys:awk-let ,awc ,aws-sym
+                             ,*(mapcar (aret ^(when ,@1 ,*@rest)) p-actions))))
+               (,aws-sym (new sys:awk-state
                               ,*(if inputs ^(inputs (list ,*inputs)))
-                              ,*(if output ^(output ,output))))
-               (,awk-fun (lambda (,aws-sym)
-                           (sys:awk-let ,aws-sym
-                             ,*(mapcar (aret ^(when ,@1 ,*@rest)) p-actions)))))
-           (sys:awk-let ,aws-sym
+                              ,*(if output ^(output ,output))
+                              rng-n (macro-time (qref ,awc nranges)))))
+           (sys:awk-let ,awc ,aws-sym
              ,*b-actions)
            (block ,name
              (unwind-protect
