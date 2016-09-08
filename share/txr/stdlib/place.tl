@@ -139,7 +139,7 @@
             (sys:setq place (sys:set-macro-ancestor
                               [pm-expander unex-place]
                               unex-place))))
-        (sys:setq place (macroexpand place env))
+        (sys:setq place (macroexpand-1 place env))
         (when (or (eq place unex-place)
                   (null place)
                   (and (atom place) (not (symbolp place)))

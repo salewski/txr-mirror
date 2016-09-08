@@ -27430,15 +27430,21 @@ symbol in its leftmost position.
 Forms which are used as syntactic places are subject to a modified
 macro-expansion algorithm. If a place macro applies to a place, then it is
 expanded, otherwise it is taken as-is. Then the place is expanded as a ordinary
-macro (possibly a symbol macro). Then the process is repeated from the
-beginning, as necessary.  Thus, the output of the ordinary macro expansion may
-potentially be, again, a place macro. Place macros can expand to other place
+macro (possibly a symbol macro), if possible, but only through at most
+one round of macro-expansion, as if by
+.codn macroexpand-1 .
+If the macro-expansion succeeds, its its output might be, again, a place
+macro form, and so the process is tried again. Place macros can expand to other place
 macros or ordinary macros and vice versa.
 
 Place macro expansion doesn't use an environment; place macros are in a single
 global namespace, special to place macros. There are no lexically scoped place
 macros. Such an effect can be achieved by having a place macro expand to
 an a form which is the target of a global or local macro, as necessary.
+That said, it needs to be made clear that the ordinary macro-expansion
+that may be interleaved within place-macro-expansion does take place
+in the surrounding macro environment. A place macro can expand to a form
+which matches a lexical macro visible at that point.
 
 The
 .code define-place-macro
