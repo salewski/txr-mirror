@@ -19897,29 +19897,30 @@ The
 .code :postinit
 specifier is very similar to
 .codn :init .
-There are two differences. The first difference
-is that
+Both specify forms which are evaluated during object instantiation.
+The difference is that the
 .codn body-form -s
+of a
+.code :postinit
 are evaluated after other initializations have taken
-place. The argument material from the
+place, including the
+.code :init
+initializations, as a second pass. By the time
+.code :postinit
+initialization runs, the argument material from the
 .codn make-struct ,
 .code new
 or
 .code lnew
 invocation has already been processed and stored
 into slots.
-The second difference is that
+Like
+.code :init
+actions,
 .code :postinit
 actions registered at different levels of the type's
-inheritance hierarchy are invoked in the opposite
-order compared to
-.code :init
-action. The
-.code :postinit
-specific to a derived struct type is called before
-the
-.code :postinit
-of its base type.
+inheritance hierarchy are invoked in the base-to-derived
+order.
 .meIP (:fini <> ( param ) << body-form *)
 The
 .code :fini
@@ -43747,6 +43748,16 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 148
+Up until version 148, the
+.code :postinit
+handlers specified in a
+.code defstruct
+were executed in derived-to-base order, opposite to the
+order of execution of
+.code :init
+handlers. Specifying 148 or earlier compatibility provides this
+old behavior.
 .IP 145
 In versions 144 and 145, \*(TX opened files in text mode on Cygwin,
 enabling conversion between CR-LF line endings and abstract newline

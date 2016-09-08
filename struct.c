@@ -366,10 +366,14 @@ static void call_initfun_chain(struct struct_type *st, val strct)
 static void call_postinitfun_chain(struct struct_type *st, val strct)
 {
   if (st) {
-    if (st->postinitfun)
+    int derived_first = (opt_compat && opt_compat <= 148);
+
+    if (derived_first && st->postinitfun)
       funcall1(st->postinitfun, strct);
     if (st->super)
       call_postinitfun_chain(st->super_handle, strct);
+    if (!derived_first && st->postinitfun)
+      funcall1(st->postinitfun, strct);
   }
 }
 
