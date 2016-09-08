@@ -115,16 +115,23 @@
                          (sys:eval-err "~s is not a deletable place" place)))
       (t (sys:eval-err "form ~s is not syntax denoting a deletable place" place)))))
 
-(defmacro rlet (bindings :env e . body)
-  (let ((exp-bindings (mapcar (aret ^(,@1 ,(macroexpand @2 e))) bindings)))
-    (let ((renames [keep-if constantp exp-bindings second])
-          (regular [remove-if constantp exp-bindings second]))
+(macro-time
+  (defun sys:r-s-let-expander (bindings body e pred)
+    (let ((exp-bindings (mapcar (aret ^(,@1 ,(macroexpand @2 e))) bindings)))
+      (let ((renames [keep-if pred exp-bindings second])
+            (regular [remove-if pred exp-bindings second]))
       (cond ((and renames regular)
               ^(symacrolet ,renames
                  (let ,regular ,*body)))
             (renames ^(symacrolet ,renames ,*body))
             (regular ^(let ,regular ,*body))
-            (t ^(progn ,*body))))))
+            (t ^(progn ,*body)))))))
+
+(defmacro rlet (bindings :env e . body)
+  [sys:r-s-let-expander bindings body e constantp])
+
+(defmacro slet (bindings :env e . body)
+  (sys:r-s-let-expander bindings body e [orf constantp bindable]))
 
 (defmacro with-gensyms (syms . body)
   ^(let ,(zip syms (repeat '((gensym)))) ,*body))

@@ -27738,8 +27738,10 @@ in that
 .code rlet
 assumes that those
 .metn sym -s
-which have constant
-.metn init-form -s
+whose
+.metn init-form -s,
+after macro expansion,
+are constant expressions
 (according to the
 .code constantp
 function) may be safely implemented as a symbol macro rather than a lexical
@@ -27753,16 +27755,16 @@ code with fewer temporary variables.
 
 On the other hand,
 .code rlet
-is not suitable in situations when true variables are required, which
+is not suitable in some situations when true variables are required, which
 are assignable, and provide temporary storage.
 
 .TP* "Example:"
 
 .cblk
   ;; WRONG! Exchange two variables, a and b:
-  (rlet ((temp a))
-    (set a b)
-    (set b temp))
+  (rlet ((flag nil))
+    ;; code which mutates flag
+    (flip flag)) ;; error: flag macro-expands to nil
 
   ;; Demonstration of constant-propagation
   (let ((a 42))
@@ -27790,6 +27792,25 @@ turning the expression
 .code "(+ x y)"
 into
 .codn "(+ 1 y)" .
+
+.coNP Macro @ slet
+.synb
+.mets (slet >> ({( sym << init-form )}*) << body-form *)
+.syne
+.desc
+The macro
+.code slet
+a weaker form of the
+.code rlet
+macro. Just like
+.codn rlet ,
+.code slet
+reduces bindings initialized by constant expressions
+to symbol macros. In addition, unlike
+.codn rlet ,
+.code slet
+also reduces to symbol macros those bindings which
+are initialized by symbol expressions (values of variables).
 
 .coNP Macro @ define-accessor
 .synb
