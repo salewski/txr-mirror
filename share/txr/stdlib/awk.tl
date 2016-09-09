@@ -48,7 +48,7 @@
 (defmeth sys:awk-state rec-to-f (self)
   (cond
     ((equal self.rec "")
-     (zap self.fields)
+     (set self.fields nil)
      (set self.nf 0))
     (t
       (set self.fields (split-str self.rec self.fs))
