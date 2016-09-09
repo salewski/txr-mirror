@@ -27,6 +27,7 @@
   (rs "\n")
   (fs #/[ \t\n]+/)
   (ofs " ")
+  (ors "\n")
   (inputs (or *args* (list *stdin*)))
   (output *stdout*)
   (file-num 0)
@@ -77,7 +78,7 @@
               [func aws])))))))
 
 (defmeth sys:awk-state prn (self . args)
-  (put-line `@{(if args args self.rec) self.ofs}`))
+  (put-string `@{(if args args self.rec) self.ofs}@{self.ors}`))
 
 (defun sys:awk-expander (clauses)
   (let (inputs output name lets begin-actions end-actions pattern-actions)
@@ -129,7 +130,8 @@
                 (arg (qref ,aws-sym file-num))
                 (rs (qref ,aws-sym rs))
                 (fs (qref ,aws-sym fs))
-                (ofs (qref ,aws-sym ofs)))
+                (ofs (qref ,aws-sym ofs))
+                (ors (qref ,aws-sym ors)))
      (macrolet ((next () '(return-from :awk-rec))
                 (next-file () '(return-from :awk-file))
                 (prn (. args) ^(qref ,',aws-sym (prn ,*args)))
