@@ -145,7 +145,7 @@
                         (from-expr-ex (sys:expand from-expr e))
                         (to-expr-ex (sys:expand to-expr e)))
                     (push rng-temp (qref ,awc rng-expr-temps))
-                    (push ^(symacrolet ((flag (vecref (qref ,',aws-sym rng-vec) ,ix)))
+                    (push ^(placelet ((flag (vecref (qref ,',aws-sym rng-vec) ,ix)))
                              (cond
                                (,from-expr-ex (set flag t))
                                (,to-expr-ex (zap flag) t)
