@@ -36,7 +36,9 @@
   rec fields nf rng-vec (rng-n 0)
   (:postinit (self)
     (if (plusp self.rng-n)
-      (set self.rng-vec (vector self.rng-n)))))
+      (set self.rng-vec (vector self.rng-n)))
+    (unless (streamp self.output)
+      (set self.output (open-file self.output "w")))))
 
 (defstruct sys:awk-compile-time ()
   (nranges 0))
