@@ -37053,6 +37053,702 @@ It may or may not have any effect
 on the output (since the UTC zone by definition doesn't have daylight
 savings time).
 
+.coSS The Awk Utility
+
+The \*(TL library provides a macro called
+.code awk
+which is inspired by the Unix utility Awk. The macro implements
+a processing paradigm very similar to that of the utility: it scans
+one or more input streams, which are divided into records or fields,
+under the control of user-settable regular-expression-based delimiters.
+The records and fields are matched against a sequence of programmer-defined
+conditions (called "patterns" in the original Awk), which have associated
+actions. Like in Awk, the default action is to print the current record.
+
+Unlike Awk, the
+.code awk
+macro is a robust, self-contained language feature which can be used
+anywhere where a \*(TL expression is called for, cleanly nests
+with itself and can produce a return value when done. By contrast,
+a function in the Awk language, or an action body, cannot instantiate
+an local Awk processing machine.
+
+The
+.code awk
+macro implements some of the most important Awk
+conventions and semantics, in Lisp syntax, while eschewing others.
+It does not implement implement the Awk convention that
+variables become defined upon first mention; variables must be
+defined to be used. It doesn't implement Awk's weak type system.
+A character string which looks like a number isn't a number,
+and an empty string or undefined variable doesn't serve as zero
+in arithmetic expressions enclosed in the macro.
+All expression evaluation within
+.code awk
+is the usual \*(TL evaluation.
+
+The
+.code awk
+macro also does not provide a library of functions corresponding to
+those in the Awk library, nor does it provide counterparts various
+global variables in Awk such as the
+.code ENVIRON
+and
+.code PROCINFO
+arrays, or
+.code RSTART
+and
+.codn RLENGTH .
+Such features of Awk are extraneous to its central paradigm.
+
+.coNP Macro @ awk
+.synb
+.mets (awk >> {( condition << action *)}*)
+.syne
+.desc
+The
+.code awk
+macro processes one or more input sources, which may be streams or
+files. Each input source is scanned into records, and each record
+is broken into fields. For each record, the sequence of condition-action
+clauses (except for certain special clauses) is processed. Every
+.meta condition
+is evaluated, and if it yields true, the corresponding
+.metn action -s
+are evaluated.
+
+The
+.meta condition
+and
+.meta action
+forms are understood to be in a scope in which certain local
+identifiers exist in the variable namespace as well as in the function
+namespace. These are called
+.I "awk functions"
+and
+.IR "awk macros" .
+
+If
+.meta condition
+is one of the following keyword symbols, then it is a special clause,
+with special semantics:
+.codn :name ,
+.codn :let ,
+.codn :inputs ,
+.codn :outputs ,
+.codn :begin ,
+.codn :end .
+These clause types are explained below.
+In such a clause, the
+.meta action
+expressions are not necessarily forms to be evaluated; the treatment
+of these expressions depends on the clause.  Otherwise, if
+.meta condition
+is not one of the above keyword symbols, the clause is an ordinary
+condition-action clause, and
+.meta condition
+is a \*(TL expression, evaluated to determine a Boolean value
+which controls whether the
+.meta action
+forms are evaluated. In every ordinary condition-action clause which
+contains no
+.meta action
+forms, the
+.code awk
+macro substitutes the single action equivalent to the form
+.codn "(prn)" :
+a call to the local awk macro
+.codn prn .
+The behavior of this macro, when called with no arguments, as above,
+is to print the current
+record (contents of the variable
+.codn rec )
+followed by the output record terminator from the variable
+.codn ors .
+
+The following is a description of the special clauses:
+.RS
+.meIP (:name << sym )
+The
+.code :name
+clause establishes the name of the implicit block contained
+within the expansion of the
+.code awk
+macro. Forms enclosed in the macro can use
+.code return-from
+to abandon the
+.code awk
+form, specifying this symbol as the argument.
+
+If the
+.code :name
+form is omitted, the implicit block is named
+.codn nil .
+
+It is an error for two or more
+.code :name
+forms to appear.
+.meIP (:let >> { sym | >> ( sym << init-form )}*)
+Regardless of what order they appear in relation to
+other clauses in the same
+.code awk
+macro,
+.code :let
+clauses are evaluated first before the macro takes any other action. The
+argument forms of this clause are variables or variable-init forms. They are
+treated the same way as analogous forms in the
+.code let*
+special form. Note that these are not enclosed in an extra list
+as they are in the that form. The bindings established by the
+.code :let
+clause have a scope which extends over all the other clauses in the
+.code awk
+macro.
+
+If multiple
+.code :let
+clauses are present, they are effectively consolidated into
+a single clause, in the order they appear.
+
+Note that the lexical variables and macros established by the
+.code awk
+macro
+(awk macros and awk variables) are in an inner scope relative to
+.code :let
+bindings. For instance if
+.code :let
+creates a binding for a variable called
+.codn fs ,
+that variable will be visible only to subsequent forms appearing
+in the same
+.code :let
+clause or later
+.code :let
+clauses, and also visible in
+.code :inputs
+and
+.code :output
+clauses.
+In
+.codn :begin ,
+.codn :end ,
+and ordinary clauses, it will be shadowed by the
+.code awk
+variable
+.codn fs ,
+which holds the field separator regular expression or string.
+.meIP (:inputs << source-form *)
+The
+.code :inputs
+clause is evaluated by the
+.code awk
+macro after processing the
+.code :let
+clauses. Each
+.meta source-form
+is evaluated and the values of these forms are gathered into a list.
+This list then comprises the list of input sources for the
+.code awk
+processing task. The input sources are either character strings,
+denoting file system path names to be opened for reading, or else
+input stream objects.
+
+If the
+.code :inputs
+clause is omitted, then a defaulting behavior occurs for obtaining
+the list of input sources. If the special variable
+.code *args*
+isn't the empty list, then
+.code *args*
+is taken as the input sources. Otherwise, the
+.code *stdin*
+stream is taken as the one and only input source.
+
+It is an error to specify more than one
+.code :inputs
+clause.
+.meIP (:output << output-form )
+The
+.code :output
+clause is processed just after the
+.code :inputs
+clause. It must have exactly one argument, which is an expression
+that evaluates to a string, or else to an output stream.
+If it evaluates to a string, then that string is used as the name
+of a file to open for writing.
+
+If the
+.code :output
+clause is omitted, then the
+.code *stdout*
+stream is used as the output.
+
+The output serves the destination for the local
+.code prn
+macro established by the
+.code awk
+macro.
+.meIP (:begin << form *)
+Begin forms are all processed in the order in which they appear, just before
+any records are processed. Each
+.code form
+is evaluated. These forms have in their scope the awk local variables
+and macros.
+.meIP (:end << form *)
+End forms are processed when the
+.code awk
+form terminates, which occurs when all records
+from all input sources are either processed or skipped, or else
+by an explicit termination such
+as a dynamic non-local transfer, such as
+.codn return-from ,
+or the throwing of an exception, issued from an ordinary clause.
+
+Upon termination, the
+.code :end
+clauses are processed in the order they appear. Each
+.code form
+is evaluated, left to right.
+
+In the normal termination case, the value of the last
+.meta form
+of the last
+.code :end
+clause appears as the return value of the
+.code awk
+macro.
+
+Note that if termination of the
+.code awk
+macro is initiated from within a
+.codn :let ,
+.codn :inputs ,
+.code :output
+or
+.code :begin
+clause, then
+.code :end
+clauses are not processed.
+.meIP >> ( condition << action *)
+Clauses which do not have one of the specially recognized keywords
+in the first position are ordinary condition-action clauses. After
+processing the
+.code :begin
+clauses, the awk enters a loop in which it extracts successive records
+from the input sources according to the
+.code rs
+(record separator) variable. Each record is divided into fields according
+to the
+.code fs
+(field separator)
+variable, and various
+.code awk
+variables are updated. Then, the condition-action clauses are processed, in the order
+in which they appear. Each
+.meta condition
+is evaluated. If it yields true, then its associated
+.meta action
+forms are evaluated. Either way, processing passes to the next condition
+clause (unless an explicit step is taken in one of the
+.metn action -s
+to prevent this, for instance by invoking the
+.code next
+and
+.code next-file
+macros).
+When an input source runs out of records,
+.code awk
+switches to the next input source. When there are no more input sources,
+the macro terminates.
+.RE
+
+.coNP Variable @ rec
+.desc
+The awk variable
+.code rec
+holds the current record. It is automatically updated prior to the
+processing of the condition-pattern clauses. Prior to the extraction
+of the first record, its value is
+.codn nil .
+
+It is possible to assign to
+.codn rec .
+The value assigned to
+.code rec
+must be a character string. Immediately upon the assignment, the character
+string is delimited into fields according to the field separator
+awk variable
+.codn fs ,
+and these fields are assigned to the field list
+.codn f .
+At the same time, the
+.code nf
+variable is updated to reflect the new number of fields.
+
+.coNP Variable @ f
+.desc
+The awk variable
+.code f
+holds the list of fields. Prior to the first record being read,
+its value is
+.codn nil .
+Whenever a new record is read, it is divided into fields according
+to the field separator variable
+.codn fs ,
+and these fields are stored in
+.code f
+as a list of character strings.
+
+If the variable
+.code f
+is assigned, the new value must be a sequence. The variable
+.code nf
+is automatically updated to reflect the length of this sequence.
+Furthermore, the
+.code rec
+variable is updated by catenating a string representation of the
+elements of this sequence, separated by the contents of the
+.code ofs
+(output field separator)
+awk variable.
+
+Note that assigning to a DWIM bracket form which indexes
+.codn f ,
+such as for instance
+.code "[f 0]"
+constitutes an implicit modification of
+.codn f ,
+and triggers the recalculation of
+.codn rec .
+Modifications of the
+.code f
+list which do not involve an implicit or explicit assignment to the variable
+.code f
+itself do not have this recalculating effect.
+
+.coNP Variable @ nf
+.desc
+The awk variable
+.code nf
+holds the current number of fields in the sequence
+.codn f .
+Prior to the first record being read, it is initially zero.
+
+If
+.code nf
+is assigned, then
+.code f
+is modified to reflect the new number of fields. Fields are deleted from
+.code f
+if the new value of
+.code nf
+is smaller. If the new value of
+.code nf
+is larger, then fields are added. The added fields are empty strings,
+which means that
+.code f
+must be a sequence of a type capable of holding elements which are
+strings.
+
+If
+.code nf
+is assigned, then
+.code rec
+is also recalculated, in the same way as described in the documentation for the
+.code f
+variable.
+
+.coNP Variable @ nr
+.desc
+The awk variable
+.code nr
+holds the current absolute record number. Record numbers start at 1.
+Absolute means that this value does not reset to 1 when
+.code awk
+switches to a new input source; it keeps incrementing for each record.
+See the
+.code fnr
+variable.
+
+Prior to the first record being read, the value of
+.code nr
+is zero.
+
+.coNP Variable @ fnr
+.desc
+The awk variable
+.code fnr
+holds the current record number within the file. The first record is 1.
+
+Prior to the first record being read from the first input source,
+the value of
+.code fnr
+is zero. Thereafter, it resets to 1 for the first record of each input
+source and increments for the remaining records of the same input
+source.
+
+.coNP Variable @ arg
+.desc
+The awk variable
+.code arg
+is an integer which indicates what input source is being processed.
+Prior to input processing, it holds the value zero. When the first
+record is extracted from the first input source, it is set to 1.
+Thereafter, it is incremented whenever
+.code awk
+switches to a new input source.
+
+.coNP Variable @ rs
+.desc
+The awk variable
+.code rs
+specifies a string or regular expression which is used for
+delimiting characters read from the inputs into pieces called records.
+
+Note: the record extraction is internally implemented using record streams
+instantiated by the
+.code record-adapter
+function.
+
+The meaning of
+.code rs
+is that it matches substrings in the input which separate records. Records
+consist of the non-matching extents between matches for
+.codn rs .
+
+The initial value of
+.code rs
+is
+.strn "\en" :
+the newline character. This means that, by default, records are lines.
+
+.coNP Variable @ fs
+.desc
+The awk variable
+.code fs
+specifies a string or regular expression which is used for
+delimiting records into fields.
+
+Regardless of the value of
+.codn fs ,
+an empty record produces no fields:
+.code f
+is the empty list, and
+.code nf
+is zero.
+
+When a record is not empty, matches for the
+.code fs
+pattern are identified in it, and those matching parts separate fields:
+the fields are the possibly empty non-matching parts between the matches.
+
+If
+.code fs
+is not found in the record, then the entire record is taken as a single
+field.
+
+The initial value of
+.code fs
+is the regular expression
+.codn "#/[ \et\en]+/" .
+This means that, by default, fields are separated by one or more consecutive
+whitespace characters, which can be any mixture of spaces, tabs or newlines.
+Newlines are included because they can occur in a record when the value of the
+record separator
+.code rs
+is customized.
+
+.coNP Variable @ ofs
+.desc
+The awk variable
+.code ofs
+hold the output field separator. Its initial value is a string
+consisting of a single space character.
+
+When the
+.code prn
+macro prints two or more arguments, or fields,
+the value of
+.code ofs
+is used to separate them.
+
+Whenever
+.code rec
+is implicitly updated due to a change in the variable
+.code f
+or
+.codn nf ,
+.code ofs
+is used to separate the fields, as they appear in
+.codn rec .
+
+.coNP Variable @ ors
+.desc
+The awk variable
+.codn ors ,
+though it stands for "output record separator" holds what
+is in fact the output record terminator. It is named after the
+.code ORS
+variable in Awk.
+
+Each call to the
+.code prn
+macro terminates its output by emitting the value of
+.codn ors .
+
+The initial value of
+.code ors
+is a character string consisting of a single newline,
+and so the
+.code prn
+macro prints lines.
+
+.coNP Macro @ prn
+.synb
+.mets (prn << form *)
+.syne
+.desc
+The awk macro
+.code prn
+performs output into the
+.code awk
+macro's output stream, which may be elected using the
+.code :output
+clause.
+
+If called with no arguments, it prints
+.code rec
+followed by
+.codn ors .
+
+Otherwise, it prints the values of the arguments, separated by
+.codn ofs ,
+followed by
+.codn ors .
+
+When a condition-action clause specifies no action forms,
+then a call to
+.code prn
+with no arguments is the default action.
+
+.coNP Macro @ next
+.synb
+.mets (next)
+.syne
+.desc
+The awk macro
+.code next
+may be invoked in a condition-pattern clause. It terminates
+the processing of that clause, and all subsequent clauses,
+causing
+.code awk
+to process the next record, if there is one. If there is no next
+record,
+.code awk
+terminates.
+
+.coNP Macro @ next-file
+.synb
+.mets (next-file)
+.syne
+.desc
+The awk macro
+.code next-file
+may be invoked in a condition-pattern clause. It terminates
+the processing of that clause, and all subsequent clauses.
+Awk then abandons the current input source, and moves to the
+next one.  If there is no next input source,
+.code awk
+terminates.
+
+.coNP Macro @ rng
+.synb
+.mets (rng < from-condition << to-condition )
+.syne
+.desc
+The awk macro
+.code rng
+may be used anywhere within an ordinary condition-pattern
+.code awk
+clause.
+It provides a Boolean test which is true if the current record lands within
+a range of records, delimited by conditions.
+The range begins when
+.meta from-condition
+is found to be true, and ends when
+.meta to-condition
+is true. Over this interval, range is said to be
+.IR active .
+
+Ranges expressed using
+.code rng
+may combine with other expressions, including
+other ranges, and allow arbitrary nesting: the
+.meta from-condition
+or
+.meta to-condition
+can be a range, or an expression containing ranges.
+
+The expressions
+.meta from-condition
+and
+.meta to-condition
+are ordinary expressions which are evaluated; however, the are evaluated
+out of order with respect to the surrounding expression
+in which they occur.  Ranges and their constituent
+.meta from-condition
+and
+.meta to-condition
+are evaluated just prior to the processing of the condition-action clauses.
+Each
+.code rng
+expression is reduced to a Boolean value.
+Then, when the condition-action clauses are processed and their
+.meta condition
+and
+.meta action
+forms are evaluated, each occurrence of a
+.code rng
+expression simply denotes its previously evaluated Boolean value.
+
+Therefore, it is not possible for expressions to short circuit
+the evaluation of ranges. Ranges cannot "miss" their starting or
+terminating conditions; every range occurring anywhere in the condition-action
+clauses is tested against every record that is processed.
+
+Because of this perturbed evaluation order, code which happens to place side
+effects into ranges may produce surprising results.
+
+For instance, the expression
+.code "(if nil (rng (prinl 'hello) (prinl 'world)))"
+will produce output even though the
+.code if
+condition is
+.codn nil ,
+and, moreover, this output will happen before the clauses are processed in
+which this
+.code if
+expression appears. At the time when the
+.code if
+itself is evaluated, the
+.code rng
+expression merely fetches a previously computed Boolean value which indicates
+whether the range is active for this record.
+
+Evaluation of ranges obeys the following logic, which is applied to
+each range, prior to the processing of condition-action clauses.
+If a range is not currently active, its
+.meta from-condition
+is evaluated. If it yields true, the range is activated.
+If a range is currently active (either already so, from a previous
+record-processing pass, or because it was just activated by
+.metn from-condition )
+then the
+.meta to-condition
+is evaluated. If it is true, then the range stays active for
+the current record, but is deactivated when the processing of
+the record completes.
+
 .SS* Environment Variables and Command Line
 
 Note that environment variable names, their values, and command line
