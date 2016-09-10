@@ -116,7 +116,7 @@ Content-type: text/html
               `<a href="#/" onclick="toggle(this, '@id')" class="toggle">@(if closed closedtxt opentxt)</a>`))
 @    (output :into TOC)
 @TOC
-<dl id="@id"@(if closed " style=\"display: none\"")>
+<dd><dl id="@id"@(if closed " style=\"display: none\"")>
 @    (end)
 @  (end)
 @(until)
