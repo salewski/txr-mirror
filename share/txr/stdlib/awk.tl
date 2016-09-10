@@ -41,6 +41,7 @@
       (set self.output (open-file self.output "w")))))
 
 (defstruct sys:awk-compile-time ()
+  inputs output name lets begin-actions end-actions cond-actions
   (nranges 0)
   rng-expr-temps
   rng-exprs)
@@ -85,45 +86,44 @@
   (put-string `@{(if args args self.rec) self.ofs}@{self.ors}`))
 
 (defun sys:awk-expander (clauses)
-  (let (inputs output name lets begin-actions end-actions pattern-actions)
+  (let ((awc (new sys:awk-compile-time)))
     (each ((cl clauses))
       (tree-case cl
         ((pattern . actions) (caseql pattern
                                (:inputs
-                                 (when inputs
+                                 (when awc.inputs
                                    (throwf 'eval-error
                                            "awk: duplicate :input clauses"))
-                                 (set inputs actions))
+                                 (set awc.inputs actions))
                                (:output
-                                 (when output
+                                 (when awc.output
                                    (throwf 'eval-error
                                            "awk: duplicate :input clauses"))
                                  (when (or (atom actions) (cdr actions))
                                    (throwf 'eval-error
                                            "awk: bad :output syntax"))
-                                 (set output (car actions)))
+                                 (set awc.output (car actions)))
                                (:name
-                                 (when name
+                                 (when awc.name
                                    (throwf 'eval-error
                                            "awk: duplicate :name clauses"))
                                  (when (or (atom actions) (cdr actions))
                                    (throwf 'eval-error
                                            "awk: bad :name syntax"))
-                                 (set name (car actions)))
-                               (:let (push actions lets))
-                               (:begin (push actions begin-actions))
-                               (:end (push actions end-actions))
+                                 (set awc.name (car actions)))
+                               (:let (push actions awc.lets))
+                               (:begin (push actions awc.begin-actions))
+                               (:end (push actions awc.end-actions))
                                (t (push (if actions
                                           cl
                                           ^(,pattern (prn)))
-                                        pattern-actions))))
+                                        awc.cond-actions))))
         (junk (throwf 'eval-error "awk: bad clause syntax ~s" junk))))
-    (list (new sys:awk-compile-time)
-          inputs output name
-          [apply append (nreverse lets)]
-          [apply append (nreverse begin-actions)]
-          [apply append (nreverse end-actions)]
-          (nreverse pattern-actions))))
+    (set awc.lets [apply append (nreverse awc.lets)]
+         awc.begin-actions [apply append (nreverse awc.begin-actions)]
+         awc.end-actions [apply append (nreverse awc.end-actions)]
+         awc.cond-actions (nreverse awc.cond-actions))
+    awc))
 
 (defmacro sys:awk-let (awc aws-sym . body)
   ^(symacrolet ((rec (rslot ,aws-sym 'rec 'rec-to-f))
@@ -159,19 +159,18 @@
        ,*body)))
 
 (defmacro awk (:env e . clauses)
-  (tree-bind (awc inputs output name lets b-actions e-actions p-actions)
-             (sys:awk-expander clauses)
+  (let ((awc (sys:awk-expander clauses)))
     (with-gensyms (aws-sym awk-fun awk-retval)
       (let* ((p-actions-xform-unex (mapcar (aret ^(when ,@1 ,*@rest))
-                                           p-actions))
+                                           awc.cond-actions))
              (p-actions-xform (sys:expand
                                 ^(sys:awk-let ,awc ,aws-sym
                                    ,*p-actions-xform-unex)
                                 e)))
-        ^(let* (,*lets ,awk-retval)
+        ^(let* (,*awc.lets ,awk-retval)
            (let* ((,aws-sym (new sys:awk-state
-                                ,*(if inputs ^(inputs (list ,*inputs)))
-                                ,*(if output ^(output ,output))
+                                ,*(if awc.inputs ^(inputs (list ,*awc.inputs)))
+                                ,*(if awc.output ^(output ,awc.output))
                                 rng-n (macro-time (qref ,awc nranges))))
                   (,awk-fun (lambda (,aws-sym)
                               (sys:awk-let ,awc ,aws-sym
@@ -182,9 +181,9 @@
                                       ,p-actions-xform)
                                    p-actions-xform)))))
              (sys:awk-let ,awc ,aws-sym
-               ,*b-actions)
-             (block ,name
+               ,*awc.begin-actions)
+             (block ,awc.name
                (unwind-protect
                  (qref ,aws-sym (loop ,awk-fun))
-                 (set ,awk-retval (progn ,*e-actions)))
+                 (set ,awk-retval (progn ,*awc.end-actions)))
                ,awk-retval)))))))
