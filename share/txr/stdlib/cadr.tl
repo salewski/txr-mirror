@@ -28,7 +28,7 @@
 (defplace (caar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (car ,cell)))
+      ^(let ((,cell-sym (car ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -46,7 +46,7 @@
 (defplace (cadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdr ,cell)))
+      ^(let ((,cell-sym (cdr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -64,7 +64,7 @@
 (defplace (cdar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (car ,cell)))
+      ^(let ((,cell-sym (car ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -82,7 +82,7 @@
 (defplace (cddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdr ,cell)))
+      ^(let ((,cell-sym (cdr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -100,7 +100,7 @@
 (defplace (caaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caar ,cell)))
+      ^(let ((,cell-sym (caar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -118,7 +118,7 @@
 (defplace (caadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cadr ,cell)))
+      ^(let ((,cell-sym (cadr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -136,7 +136,7 @@
 (defplace (cadar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdar ,cell)))
+      ^(let ((,cell-sym (cdar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -154,7 +154,7 @@
 (defplace (caddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cddr ,cell)))
+      ^(let ((,cell-sym (cddr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -172,7 +172,7 @@
 (defplace (cdaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caar ,cell)))
+      ^(let ((,cell-sym (caar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -190,7 +190,7 @@
 (defplace (cdadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cadr ,cell)))
+      ^(let ((,cell-sym (cadr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -208,7 +208,7 @@
 (defplace (cddar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdar ,cell)))
+      ^(let ((,cell-sym (cdar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -226,7 +226,7 @@
 (defplace (cdddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cddr ,cell)))
+      ^(let ((,cell-sym (cddr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -244,7 +244,7 @@
 (defplace (caaaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caaar ,cell)))
+      ^(let ((,cell-sym (caaar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -262,7 +262,7 @@
 (defplace (caaadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caadr ,cell)))
+      ^(let ((,cell-sym (caadr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -280,7 +280,7 @@
 (defplace (caadar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cadar ,cell)))
+      ^(let ((,cell-sym (cadar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -298,7 +298,7 @@
 (defplace (caaddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caddr ,cell)))
+      ^(let ((,cell-sym (caddr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -316,7 +316,7 @@
 (defplace (cadaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdaar ,cell)))
+      ^(let ((,cell-sym (cdaar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -334,7 +334,7 @@
 (defplace (cadadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdadr ,cell)))
+      ^(let ((,cell-sym (cdadr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -352,7 +352,7 @@
 (defplace (caddar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cddar ,cell)))
+      ^(let ((,cell-sym (cddar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -370,7 +370,7 @@
 (defplace (cadddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdddr ,cell)))
+      ^(let ((,cell-sym (cdddr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -388,7 +388,7 @@
 (defplace (cdaaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caaar ,cell)))
+      ^(let ((,cell-sym (caaar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -406,7 +406,7 @@
 (defplace (cdaadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caadr ,cell)))
+      ^(let ((,cell-sym (caadr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -424,7 +424,7 @@
 (defplace (cdadar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cadar ,cell)))
+      ^(let ((,cell-sym (cadar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -442,7 +442,7 @@
 (defplace (cdaddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caddr ,cell)))
+      ^(let ((,cell-sym (caddr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -460,7 +460,7 @@
 (defplace (cddaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdaar ,cell)))
+      ^(let ((,cell-sym (cdaar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -478,7 +478,7 @@
 (defplace (cddadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdadr ,cell)))
+      ^(let ((,cell-sym (cdadr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -496,7 +496,7 @@
 (defplace (cdddar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cddar ,cell)))
+      ^(let ((,cell-sym (cddar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -514,7 +514,7 @@
 (defplace (cddddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdddr ,cell)))
+      ^(let ((,cell-sym (cdddr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -532,7 +532,7 @@
 (defplace (caaaaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caaaar ,cell)))
+      ^(let ((,cell-sym (caaaar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -550,7 +550,7 @@
 (defplace (caaaadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caaadr ,cell)))
+      ^(let ((,cell-sym (caaadr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -568,7 +568,7 @@
 (defplace (caaadar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caadar ,cell)))
+      ^(let ((,cell-sym (caadar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -586,7 +586,7 @@
 (defplace (caaaddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caaddr ,cell)))
+      ^(let ((,cell-sym (caaddr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -604,7 +604,7 @@
 (defplace (caadaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cadaar ,cell)))
+      ^(let ((,cell-sym (cadaar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -622,7 +622,7 @@
 (defplace (caadadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cadadr ,cell)))
+      ^(let ((,cell-sym (cadadr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -640,7 +640,7 @@
 (defplace (caaddar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caddar ,cell)))
+      ^(let ((,cell-sym (caddar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -658,7 +658,7 @@
 (defplace (caadddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cadddr ,cell)))
+      ^(let ((,cell-sym (cadddr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -676,7 +676,7 @@
 (defplace (cadaaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdaaar ,cell)))
+      ^(let ((,cell-sym (cdaaar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -694,7 +694,7 @@
 (defplace (cadaadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdaadr ,cell)))
+      ^(let ((,cell-sym (cdaadr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -712,7 +712,7 @@
 (defplace (cadadar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdadar ,cell)))
+      ^(let ((,cell-sym (cdadar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -730,7 +730,7 @@
 (defplace (cadaddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdaddr ,cell)))
+      ^(let ((,cell-sym (cdaddr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -748,7 +748,7 @@
 (defplace (caddaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cddaar ,cell)))
+      ^(let ((,cell-sym (cddaar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -766,7 +766,7 @@
 (defplace (caddadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cddadr ,cell)))
+      ^(let ((,cell-sym (cddadr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -784,7 +784,7 @@
 (defplace (cadddar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdddar ,cell)))
+      ^(let ((,cell-sym (cdddar ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -802,7 +802,7 @@
 (defplace (caddddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cddddr ,cell)))
+      ^(let ((,cell-sym (cddddr ,cell)))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -820,7 +820,7 @@
 (defplace (cdaaaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caaaar ,cell)))
+      ^(let ((,cell-sym (caaaar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -838,7 +838,7 @@
 (defplace (cdaaadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caaadr ,cell)))
+      ^(let ((,cell-sym (caaadr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -856,7 +856,7 @@
 (defplace (cdaadar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caadar ,cell)))
+      ^(let ((,cell-sym (caadar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -874,7 +874,7 @@
 (defplace (cdaaddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caaddr ,cell)))
+      ^(let ((,cell-sym (caaddr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -892,7 +892,7 @@
 (defplace (cdadaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cadaar ,cell)))
+      ^(let ((,cell-sym (cadaar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -910,7 +910,7 @@
 (defplace (cdadadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cadadr ,cell)))
+      ^(let ((,cell-sym (cadadr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -928,7 +928,7 @@
 (defplace (cdaddar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (caddar ,cell)))
+      ^(let ((,cell-sym (caddar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -946,7 +946,7 @@
 (defplace (cdadddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cadddr ,cell)))
+      ^(let ((,cell-sym (cadddr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -964,7 +964,7 @@
 (defplace (cddaaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdaaar ,cell)))
+      ^(let ((,cell-sym (cdaaar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -982,7 +982,7 @@
 (defplace (cddaadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdaadr ,cell)))
+      ^(let ((,cell-sym (cdaadr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -1000,7 +1000,7 @@
 (defplace (cddadar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdadar ,cell)))
+      ^(let ((,cell-sym (cdadar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -1018,7 +1018,7 @@
 (defplace (cddaddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdaddr ,cell)))
+      ^(let ((,cell-sym (cdaddr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -1036,7 +1036,7 @@
 (defplace (cdddaar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cddaar ,cell)))
+      ^(let ((,cell-sym (cddaar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -1054,7 +1054,7 @@
 (defplace (cdddadr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cddadr ,cell)))
+      ^(let ((,cell-sym (cddadr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -1072,7 +1072,7 @@
 (defplace (cddddar cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cdddar ,cell)))
+      ^(let ((,cell-sym (cdddar ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -1090,7 +1090,7 @@
 (defplace (cdddddr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (cddddr ,cell)))
+      ^(let ((,cell-sym (cddddr ,cell)))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))

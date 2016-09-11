@@ -414,7 +414,7 @@
 (defplace (car cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym ,cell))
+      ^(slet ((,cell-sym ,cell))
          (macrolet ((,getter () ^(car ,',cell-sym))
                     (,setter (val) ^(sys:rplaca ,',cell-sym ,val)))
            ,body))))
@@ -428,7 +428,7 @@
 (defplace (cdr cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym ,cell))
+      ^(slet ((,cell-sym ,cell))
          (macrolet ((,getter () ^(cdr ,',cell-sym))
                     (,setter (val) ^(sys:rplacd ,',cell-sym ,val)))
            ,body))))
@@ -456,8 +456,8 @@
                             ^(progn (sys:rplacd ,',parent-cell-sym ,val)
                                     (,',lsetter (cdr ,',sentinel-head-sym)))))
                  ,body))))
-        ^(rlet ((,index-sym ,index))
-           (let* ((,parent-cell-sym (nthcdr (pred ,index-sym) ,list)))
+        ^(slet ((,index-sym ,index))
+           (let ((,parent-cell-sym (nthcdr (pred ,index-sym) ,list)))
              (macrolet ((,getter () ^(cdr ,',parent-cell-sym))
                         (,setter (val)
                           ^(sys:rplacd ,',parent-cell-sym ,val)))
@@ -555,9 +555,9 @@
                    oldval-sym dflval-sym)
       (let ((sys:*lisp1* t))
         (with-update-expander (ogetter-sym osetter-sym) obj-place nil
-          ^(rlet ((,index-sym (sys:l1-val ,index))
-                  ,*(if have-default-p
-                      ^((,dflval-sym (sys:l1-val ,default)))))
+          ^(let ((,index-sym (sys:l1-val ,index))
+                 ,*(if have-default-p
+                     ^((,dflval-sym (sys:l1-val ,default)))))
              (macrolet ((,getter ()
                          '[(,ogetter-sym) ,index-sym
                                           ,*(if have-default-p ^(,dflval-sym))])
@@ -567,7 +567,7 @@
                                 (sys:dwim-set (,',ogetter-sym)
                                               ,',index-sym ,',newval-sym))
                               ,',newval-sym)))
-                ,body))))))
+               ,body))))))
   (ssetter
     (with-gensyms (osetter-sym ogetter-sym
                    obj-sym newval-sym index-sym)
@@ -594,7 +594,7 @@
       (let ((sys:*lisp1* t))
         (with-update-expander (ogetter-sym osetter-sym) obj-place nil
           ^(macrolet ((,deleter ()  ;; todo: place must not have optional val
-                       ^(rlet ((,',obj-sym (,',ogetter-sym)))
+                       ^(let ((,',obj-sym (,',ogetter-sym)))
                           (let* ((,',index-sym (sys:l1-val ,',index))
                                  (,',oldval-sym [,',obj-sym
                                                  ,',index-sym
@@ -629,7 +629,7 @@
     ^(macrolet ((,getter () '(errno))
                 (,setter (val-expr)
                    (with-gensyms (val-sym)
-                     ^(rlet ((,val-sym ,val-expr))
+                     ^(slet ((,val-sym ,val-expr))
                          (progn (errno ,val-sym) ,val-sym)))))
        ,body)))
 

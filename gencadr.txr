@@ -90,7 +90,7 @@ void cadr_init(void);
 (defplace (c@{ad}r cell) body
   (getter setter
     (with-gensyms (cell-sym)
-      ^(rlet ((,cell-sym (c@{ad [1..:]}r ,cell)))
+      ^(let ((,cell-sym (c@{ad [1..:]}r ,cell)))
          (macrolet ((,getter () ^(c@{ad [0]}r ,',cell-sym))
                     (,setter (val) ^(sys:rplac@{ad [0]} ,',cell-sym ,val)))
            ,body))))
