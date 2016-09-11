@@ -41,7 +41,10 @@
       (set self.output (open-file self.output "w")))))
 
 (defstruct sys:awk-compile-time ()
-  inputs output name lets begin-actions end-actions cond-actions
+  inputs output name lets
+  begin-file-actions end-file-actions
+  begin-actions end-actions
+  cond-actions
   (nranges 0)
   rng-expr-temps
   rng-exprs)
@@ -62,25 +65,30 @@
   (set self.fields (take self.nf (append self.fields (repeat '("")))))
   self.(f-to-rec))
 
-(defmeth sys:awk-state loop (aws func)
+(defmeth sys:awk-state loop (aws func beg-file-func end-file-func)
   (whilet ((in (pop aws.inputs)))
     (block :awk-file
       (inc aws.file-num)
-      (let ((recin (record-adapter (if (regexp aws.rs)
-                                     aws.rs
-                                     (regex-compile aws.rs))
-                                   (if (streamp in)
-                                     in
-                                     (open-file in)))))
-        (set aws.file-rec-num 0)
-        (whilet ((rec (get-line recin)))
-          (set aws.rec rec)
-          (inc aws.rec-num)
-          (inc aws.file-rec-num)
-          aws.(rec-to-f)
-          (block :awk-rec
-            (let ((*stdout* aws.output))
-              [func aws])))))))
+      (when beg-file-func
+        [beg-file-func aws])
+      (unwind-protect
+        (let ((recin (record-adapter (if (regexp aws.rs)
+                                       aws.rs
+                                       (regex-compile aws.rs))
+                                     (if (streamp in)
+                                       in
+                                       (open-file in)))))
+          (set aws.file-rec-num 0)
+          (whilet ((rec (get-line recin)))
+            (set aws.rec rec)
+            (inc aws.rec-num)
+            (inc aws.file-rec-num)
+            aws.(rec-to-f)
+            (block :awk-rec
+              (let ((*stdout* aws.output))
+                [func aws]))))
+        (when end-file-func
+          [end-file-func aws])))))
 
 (defmeth sys:awk-state prn (self . args)
   (put-string `@{(if args args self.rec) self.ofs}@{self.ors}`))
@@ -114,6 +122,8 @@
                                (:let (push actions awc.lets))
                                (:begin (push actions awc.begin-actions))
                                (:end (push actions awc.end-actions))
+                               (:begin-file (push actions awc.begin-file-actions))
+                               (:end-file (push actions awc.end-file-actions))
                                (t (push (if actions
                                           cl
                                           ^(,pattern (prn)))
@@ -122,6 +132,8 @@
     (set awc.lets [apply append (nreverse awc.lets)]
          awc.begin-actions [apply append (nreverse awc.begin-actions)]
          awc.end-actions [apply append (nreverse awc.end-actions)]
+         awc.begin-file-actions [apply append (nreverse awc.begin-file-actions)]
+         awc.end-file-actions [apply append (nreverse awc.end-file-actions)]
          awc.cond-actions (nreverse awc.cond-actions))
     awc))
 
@@ -160,7 +172,7 @@
 
 (defmacro awk (:env e . clauses)
   (let ((awc (sys:awk-expander clauses)))
-    (with-gensyms (aws-sym awk-fun awk-retval)
+    (with-gensyms (aws-sym awk-begf-fun awk-fun awk-endf-fun awk-retval)
       (let* ((p-actions-xform-unex (mapcar (aret ^(when ,@1 ,*@rest))
                                            awc.cond-actions))
              (p-actions-xform (sys:expand
@@ -168,22 +180,31 @@
                                    ,*p-actions-xform-unex)
                                 e)))
         ^(let* (,*awc.lets ,awk-retval)
-           (let* ((,aws-sym (new sys:awk-state
-                                ,*(if awc.inputs ^(inputs (list ,*awc.inputs)))
-                                ,*(if awc.output ^(output ,awc.output))
-                                rng-n (macro-time (qref ,awc nranges))))
-                  (,awk-fun (lambda (,aws-sym)
-                              (sys:awk-let ,awc ,aws-sym
+           (sys:awk-let ,awc ,aws-sym
+             (let* ((,aws-sym (new sys:awk-state
+                                  ,*(if awc.inputs ^(inputs (list ,*awc.inputs)))
+                                  ,*(if awc.output ^(output ,awc.output))
+                                  rng-n (macro-time (qref ,awc nranges))))
+                    ,*(if awc.begin-file-actions
+                        ^((,awk-begf-fun (lambda (,aws-sym)
+                            ,*awc.begin-file-actions))))
+                    ,*(if awc.end-file-actions
+                        ^((,awk-endf-fun (lambda (,aws-sym)
+                            ,*awc.end-file-actions))))
+                    (,awk-fun (lambda (,aws-sym)
                                 ,(if awc.rng-exprs
                                    ^(let* ,(nreverse
                                              (zip awc.rng-expr-temps
                                                   awc.rng-exprs))
                                       ,p-actions-xform)
-                                   p-actions-xform)))))
-             (sys:awk-let ,awc ,aws-sym
-               ,*awc.begin-actions)
-             (block ,awc.name
-               (unwind-protect
-                 (qref ,aws-sym (loop ,awk-fun))
-                 (set ,awk-retval (progn ,*awc.end-actions)))
-               ,awk-retval)))))))
+                                   p-actions-xform))))
+               ,*awc.begin-actions
+               (block ,awc.name
+                 (unwind-protect
+                   (qref ,aws-sym (loop ,awk-fun
+                                        ,(if awc.begin-file-actions
+                                           awk-begf-fun)
+                                        ,(if awc.end-file-actions
+                                           awk-endf-fun)))
+                   (set ,awk-retval (progn ,*awc.end-actions)))
+                 ,awk-retval))))))))

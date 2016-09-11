@@ -37137,7 +37137,10 @@ with special semantics:
 .codn :inputs ,
 .codn :outputs ,
 .codn :begin ,
-.codn :end .
+.codn :end ,
+.code :begin-file
+and
+.codn :end-file .
 These clause types are explained below.
 In such a clause, the
 .meta action
@@ -37289,36 +37292,46 @@ macro established by the
 .code awk
 macro.
 .meIP (:begin << form *)
-Begin forms are all processed in the order in which they appear, just before
-any records are processed. Each
+All
+.code :begin
+clauses are processed in the order in which they appear, before
+input processing begins.
+Each
 .code form
 is evaluated. These forms have in their scope the awk local variables
 and macros.
 .meIP (:end << form *)
-End forms are processed when the
-.code awk
-form terminates, which occurs when all records
+All
+.code :end
+clauses are processed, in the order in which they appear,
+when the input processing loop terminates.
+This termination occurs when all records
 from all input sources are either processed or skipped, or else
 by an explicit termination such
 as a dynamic non-local transfer, such as
 .codn return-from ,
-or the throwing of an exception, issued from an ordinary clause.
+or the throwing of an exception.
 
-Upon termination, the
-.code :end
-clauses are processed in the order they appear. Each
+Upon termination, the end clauses are processed in the order they appear. Each
 .code form
 is evaluated, left to right.
 
 In the normal termination case, the value of the last
 .meta form
-of the last
-.code :end
-clause appears as the return value of the
+of the last end clause appears as the return value of the
 .code awk
 macro.
 
-Note that if termination of the
+Note that only termination of the
+.code awk
+macro initiated from condition-action clauses,
+.code :begin-file
+clauses, or
+.code :end-file
+clauses triggers
+.code :end
+clause processing.
+If termination of the
 .code awk
 macro is initiated from within a
 .codn :let ,
@@ -37326,9 +37339,62 @@ macro is initiated from within a
 .code :output
 or
 .code :begin
-clause, then
-.code :end
+clause, then end
 clauses are not processed.
+If an
+.code :end
+clause performs a non-local transfer, the remaining
+.code :end
+forms in that clause and
+.code :end
+clauses which follow are not evaluated.
+.meIP (:begin-file << form *)
+All
+.code :begin-file
+clauses are processed in the order in which they appear, before
+.code awk
+switches to each new input.
+
+If both
+.code :begin
+and
+.code :begin-file
+forms are specified, then before the first input is processed,
+.code :begin
+clauses are processed first, then the
+.code :begin-file
+clauses.
+.meIP (:end-file << form *)
+All
+.code :end-file
+clauses are processed after the processing of an input
+source finishes.
+
+If both
+.code :end
+and
+.code :end-file
+forms are specified, then before after the last input is processed,
+.code :end-file
+clauses are processed first, then the
+.code :end
+clauses.
+
+The
+:end-file
+clauses are processed unconditionally, no matter how
+the processing of an input source terminates, whether terminated
+naturally by running out of records, prematurely by invocation of the
+.code next-file
+macro, or via a dynamic non-local control transfer such as a block
+return or exception throw.
+
+If a
+.code :begin-file
+clause performs a non-local transfer,
+.code :end-file
+processing is not triggered, because the processing of the input
+source is deemed not to have taken place.
 .meIP >> ( condition << action *)
 Clauses which do not have one of the specially recognized keywords
 in the first position are ordinary condition-action clauses. After
