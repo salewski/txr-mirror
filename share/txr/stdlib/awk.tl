@@ -72,12 +72,13 @@
       (when beg-file-func
         [beg-file-func aws])
       (unwind-protect
-        (let ((recin (record-adapter (if (regexp aws.rs)
-                                       aws.rs
-                                       (regex-compile aws.rs))
-                                     (if (streamp in)
-                                       in
-                                       (open-file in)))))
+        (let* ((stin (if (streamp in) in (open-file in)))
+               (recin (if (equal aws.rs "\n")
+                        stin
+                        (record-adapter (if (regexp aws.rs)
+                                          aws.rs
+                                          (regex-compile aws.rs))
+                                        stin))))
           (set aws.file-rec-num 0)
           (whilet ((rec (get-line recin)))
             (set aws.rec rec)
