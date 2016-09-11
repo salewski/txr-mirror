@@ -108,6 +108,9 @@ Content-type: text/html
            (set [tochash n-tag] rest)))
 @  (and)
 <dt><a href="#@tag">@num @nil
+@    (maybe)
+</a><dd>
+@    (end)
 <dl>
 @    (cat TOC)
 @    (bind pos @(car (search-regex TOC #/<a/)))
