@@ -37203,11 +37203,19 @@ form, specifying this symbol as the argument.
 If the
 .code :name
 form is omitted, the implicit block is named
-.codn nil .
+.codn awk .
 
 It is an error for two or more
 .code :name
 forms to appear.
+
+The
+.code :name
+clause must have an argument which is a symbol;
+the symbol
+.code nil
+is not permitted.
+
 .meIP (:let >> { sym | >> ( sym << init-form )}*)
 Regardless of what order they appear in relation to
 other clauses in the same

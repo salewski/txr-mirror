@@ -131,6 +131,12 @@
                                  (when (or (atom actions) (cdr actions))
                                    (throwf 'eval-error
                                            "awk: bad :name syntax"))
+                                 (unless (car actions)
+                                   (throwf 'eval-error
+                                           "awk: null :name not permitted"))
+                                 (unless (symbolp (car actions))
+                                   (throwf 'eval-error
+                                           "awk: :name must be a symbol"))
                                  (set awc.name (car actions)))
                                (:let (push actions awc.lets))
                                (:begin (push actions awc.begin-actions))
@@ -198,33 +204,33 @@
                                 ^(sys:awk-let ,awc ,aws-sym
                                    ,*p-actions-xform-unex)
                                 e)))
-        ^(let* (,*awc.lets ,awk-retval)
-           (sys:awk-let ,awc ,aws-sym
-             (let* ((,aws-sym (new sys:awk-state
-                                  ,*(if awc.inputs ^(inputs (list ,*awc.inputs)))
-                                  ,*(if awc.output ^(output ,awc.output))
-                                  rng-n (macro-time (qref ,awc nranges))))
-                    (*stdout* (qref ,aws-sym output))
-                    ,*(if awc.begin-file-actions
-                        ^((,awk-begf-fun (lambda (,aws-sym)
-                            ,*awc.begin-file-actions))))
-                    ,*(if awc.end-file-actions
-                        ^((,awk-endf-fun (lambda (,aws-sym)
-                            ,*awc.end-file-actions))))
-                    (,awk-fun (lambda (,aws-sym)
-                                ,(if awc.rng-exprs
-                                   ^(let* ,(nreverse
-                                             (zip awc.rng-expr-temps
-                                                  awc.rng-exprs))
-                                      ,p-actions-xform)
-                                   p-actions-xform))))
-               ,*awc.begin-actions
-               (block ,awc.name
-                 (unwind-protect
-                   (qref ,aws-sym (loop ,awk-fun
-                                        ,(if awc.begin-file-actions
-                                           awk-begf-fun)
-                                        ,(if awc.end-file-actions
-                                           awk-endf-fun)))
-                   (set ,awk-retval (progn ,*awc.end-actions)))
-                 ,awk-retval))))))))
+        ^(block ,(or awc.name 'awk)
+           (let* (,*awc.lets ,awk-retval)
+             (sys:awk-let ,awc ,aws-sym
+               (let* ((,aws-sym (new sys:awk-state
+                                     ,*(if awc.inputs ^(inputs (list ,*awc.inputs)))
+                                     ,*(if awc.output ^(output ,awc.output))
+                                     rng-n (macro-time (qref ,awc nranges))))
+                      (*stdout* (qref ,aws-sym output))
+                      ,*(if awc.begin-file-actions
+                          ^((,awk-begf-fun (lambda (,aws-sym)
+                              ,*awc.begin-file-actions))))
+                      ,*(if awc.end-file-actions
+                          ^((,awk-endf-fun (lambda (,aws-sym)
+                              ,*awc.end-file-actions))))
+                      (,awk-fun (lambda (,aws-sym)
+                                  ,(if awc.rng-exprs
+                                     ^(let* ,(nreverse
+                                               (zip awc.rng-expr-temps
+                                                    awc.rng-exprs))
+                                        ,p-actions-xform)
+                                     p-actions-xform))))
+                 ,*awc.begin-actions
+                   (unwind-protect
+                     (qref ,aws-sym (loop ,awk-fun
+                                          ,(if awc.begin-file-actions
+                                             awk-begf-fun)
+                                          ,(if awc.end-file-actions
+                                             awk-endf-fun)))
+                     (set ,awk-retval (progn ,*awc.end-actions)))
+                   ,awk-retval))))))))
