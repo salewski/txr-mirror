@@ -37865,6 +37865,69 @@ is evaluated. If it is true, then the range stays active for
 the current record, but is deactivated when the processing of
 the record completes.
 
+.coNP Macro @ ff
+.synb
+.mets (ff < opip-arg *)
+.syne
+.desc
+The awk macro
+.code ff
+(filter fields)
+provides a shorthand for filtering the field list
+.code f
+trough a pipeline of chained functions expressed using
+.code opip
+argument syntax.
+
+The following equivalence holds, except that
+.code f
+refers to the awk variable even if the
+.code mf
+invocation occurs in code which establishes
+a binding which shadows
+.codn f .
+
+.cblk
+  (ff a b c ...)  <-->  (set f [(opip a b c ...) f])
+.cble
+
+.TP* Example:
+.cblk
+  ;; convert all fields from string to floating-point
+  (ff (mapcar flo-str))
+.cble
+
+.coNP Macro @ mf
+.synb
+.mets (mf < opip-arg *)
+.syne
+.desc
+The awk macro
+.code mf
+(map fields)
+provides a shorthand for mapping each field
+individually trough a pipeline of chained functions expressed using
+.code opip
+argument syntax.
+
+The following equivalence holds, except that
+.code f
+refers to the awk variable even if the
+.code mf
+invocation occurs in code which establishes
+a binding which shadows
+.codn f .
+
+.cblk
+  (mf a b c ...)  <-->  (set f (mapcar (opip a b c ...) f))
+.cble
+
+.TP* Example:
+.cblk
+  ;; convert all fields from string to floating-point
+  (mf flo-str)
+.cble
+
 .SS* Environment Variables and Command Line
 
 Note that environment variable names, their values, and command line
