@@ -25,7 +25,7 @@
 
 (defstruct sys:awk-state ()
   (rs "\n")
-  (fs #/[ \t\n]+/)
+  (fs)
   (ofs " ")
   (ors "\n")
   (inputs (or *args* (list *stdin*)))
@@ -52,11 +52,19 @@
 (defmeth sys:awk-state rec-to-f (self)
   (cond
     ((equal self.rec "")
-     (set self.fields nil)
-     (set self.nf 0))
-    (t
-      (set self.fields (split-str self.rec self.fs))
-      (set self.nf (length self.fields)))))
+     (set self.fields nil
+          self.nf 0))
+    (self.fs
+      (set self.fields (split-str self.rec self.fs)
+           self.nf (length self.fields)))
+    ((let ((trimmed (trim-str self.rec)))
+       (cond
+         ((equal trimmed "")
+          (set self.fields nil
+               self.nf 0))
+         (t
+           (set self.fields (split-str trimmed #/[ \t\n]+/)
+                self.nf (length self.fields))))))))
 
 (defmeth sys:awk-state f-to-rec (self)
   (set self.rec (cat-str self.fields self.ofs)))

@@ -37618,15 +37618,45 @@ The awk variable
 specifies a string or regular expression which is used for
 delimiting records into fields.
 
+The
+.code fs
+variable is initially
+.codn nil .
+
+If
+.code fs
+is nil, then, prior to field splitting, leading and trailing
+whitespace is trimmed from the value of
+.codn rec ,
+using the
+.code trim-str
+function. The subsequent field splitting operates on this
+trimmed value, which isn't stored back into
+.codn rec .
+
 Regardless of the value of
 .codn fs ,
-an empty record produces no fields:
+a record which is empty (tested after the trimming described above, if that
+takes place) produces no fields:
 .code f
 is the empty list, and
 .code nf
 is zero.
 
-When a record is not empty, matches for the
+If
+.code fs
+is nil, then 
+In this special case, the splitting is performed using
+the regular expression
+This means that, by default, fields are separated by one or more consecutive
+whitespace characters, which can be any mixture of spaces, tabs or newlines.
+Newlines are included because they can occur in a record when the value of the
+record separator
+.code rs
+is customized.
+
+When a record is not empty,
+matches for the
 .code fs
 pattern are identified in it, and those matching parts separate fields:
 the fields are the possibly empty non-matching parts between the matches.
@@ -37636,16 +37666,19 @@ If
 is not found in the record, then the entire record is taken as a single
 field.
 
-The initial value of
+If
 .code fs
-is the regular expression
-.codn "#/[ \et\en]+/" .
-This means that, by default, fields are separated by one or more consecutive
-whitespace characters, which can be any mixture of spaces, tabs or newlines.
-Newlines are included because they can occur in a record when the value of the
-record separator
-.code rs
-is customized.
+is not
+.codn nil ,
+it must specify a string, or a regular expression.
+If it is
+.codn nil ,
+then the regular expression
+.code "#/[ \et\en]+/"
+is used. A string value of
+.code fs
+denotes an exact match for that string; it isn't treated
+as a regular expression.
 
 .coNP Variable @ ofs
 .desc
