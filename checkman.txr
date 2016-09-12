@@ -67,7 +67,7 @@
 @  (cases)
 .@{type /code|meta/} "@(assert bad ln `.@type needs one argument`)@x"@(eol)
 @  (or)
-.@{type /code|meta/} @(assert bad ln `.@type needs one argument`)@{x /\S+/}@(eol)
+.@{type /code|meta/}@(assert bad ln `.@type needs one argument`) @{x /\S+/}@(eol)
 @  (or)
 .cod3 @(assert bad ln `.cod3 needs three arguments`)@x @y @{z /\S+/}@(eol)
 @  (or)

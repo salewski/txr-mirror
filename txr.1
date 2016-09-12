@@ -1128,9 +1128,9 @@ Then, when
 .code --eargs
 processing takes place, firstly the argument sequence
 
-.code
+.cblk
   -B {} --foo 42
-.code
+.cble
 
 is produced. Then, all occurrences of
 .code {}
@@ -1138,15 +1138,15 @@ are replaced with
 .codn script.txr ,
 resulting in:
 
-.code
+.cblk
   -B script.txr --foo 42
-.code
+.cble
 
 The resulting \*(TX invocation is
 
-.code
+.cblk
   /usr/bin/txr -B script.txr --foo 42 a b c
-.code
+.cble
 
 Thus,
 .code --eargs
@@ -3533,8 +3533,7 @@ the
 .str "abc"
 is matched in the previous input stream which was in effect before
 the
-.code
-@(next)
+.code @(next)
 directive:
 
 .cblk
@@ -15309,8 +15308,7 @@ types, the situation is an error.
 .syne
 .desc
 The
-.code
-greater
+.code greater
 function is equivalent to
 .code less
 with the arguments reversed. That is to say, the following
@@ -16890,8 +16888,7 @@ function.
 This function is like
 .codn acons-new ,
 except that the
-.code
-eql
+.code eql
 function is used
 for equality testing. Thus, the list is searched for an existing cell
 as if using the
@@ -17857,8 +17854,7 @@ If called with a single sequence, it returns the elements of that sequence
 as a new lazy list.
 
 When called with two or more sequences,
-.code
-weave
+.code weave
 returns a lazy list which draws elements from the sequences in a round-robin
 fashion, repeatedly scanning the sequences from left to right, and
 taking an item from each one, removing it from the sequence.
@@ -19706,8 +19702,7 @@ name, its list of slots, its initialization and "boa constructor" functions,
 and the structure type it inherits from (the "super").
 
 The
-.code
-struct-type
+.code struct-type
 object is then used to generate instances.
 
 Structures instances are not only containers which hold named slots, but they
@@ -25961,8 +25956,8 @@ and then the value is stored in that location. Finally,
 the value is also returned as the result value.
 
 If there are more than two arguments, then
-.code
-set performs multiple assignments in left to right order.
+.code set
+performs multiple assignments in left to right order.
 Effectively,
 .code "(set v1 e1 v2 e2 ... vn en)"
 is precisely equivalent to
@@ -31440,8 +31435,7 @@ matching substring of
 The
 .code regsub
 function searches
-.meta
-string
+.meta string
 for multiple occurrences of
 non-overlapping matches for
 .metn regex .
@@ -42798,7 +42792,6 @@ The
 macro is based on
 .codn txr-if .
 It is equivalent to
-.code
 
 .cblk
 .meti \ \ (txr-if < name <> ( argument *) < input (progn << form *))
@@ -44219,7 +44212,6 @@ This special variable determines how many lines of history are
 retained by the listener. Changing this variable from within the listener
 has an instant effect. If the number is reduced from its current value,
 history lines are immediately discarded. The default value is 500.
-.code
 
 .coNP Special variable @ *listener-multi-line-p*
 .desc
