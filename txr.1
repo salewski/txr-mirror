@@ -37778,6 +37778,20 @@ then a call to
 .code prn
 with no arguments is the default action.
 
+Each argument
+.meta form
+is printed by conversion to a string, as if by the expression
+.code `@val`
+where
+.code val
+is some variable which holds the value produced by the
+evaluation of
+.metn form .
+Thus if the value is
+.codn nil ,
+the output for that argument is an empty string, rather than the text
+.strn nil .
+
 .coNP Macro @ next
 .synb
 .mets (next)

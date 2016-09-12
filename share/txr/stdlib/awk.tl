@@ -99,7 +99,12 @@
           [end-file-func aws])))))
 
 (defmeth sys:awk-state prn (self . args)
-  (put-string `@{(if args args self.rec) self.ofs}@{self.ors}`))
+  (cond
+    (args (for ((a args) next) (a) ((set a next))
+            (put-string `@(car a)`)
+            (put-string (if (set next (cdr a)) self.ofs self.ors))))
+    (t (put-string self.rec)
+       (put-string self.ors))))
 
 (defun sys:awk-expander (clauses)
   (let ((awc (new sys:awk-compile-time)))
