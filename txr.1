@@ -27812,6 +27812,31 @@ to symbol macros. In addition, unlike
 also reduces to symbol macros those bindings which
 are initialized by symbol expressions (values of variables).
 
+.coNP Macro @ alet
+.synb
+.mets (alet >> ({( sym << init-form )}*) << body-form *)
+.syne
+.desc
+The macro
+.code alet
+("atomic" or "all") is a stronger form of the
+.code slet
+macro. The transformation of any of the bindings to symbol macros takes place
+under the same conditions as under
+.codn slet .
+However,
+.code alet
+imposes the restriction that all the bindings must be transformed
+to symbol macros, or not at all.
+
+The
+.code alet
+macro can be used to avoid introducing temporary variables in situations when
+it is suspected that the initializing forms for the variables have side
+effects through which they affect each others' evaluations. The suspicion is
+lifted if the all initializing forms (after expansion) are constants, or
+accesses to symbols.
+
 .coNP Macro @ define-accessor
 .synb
 .mets (define-accessor < get-function << set-function )

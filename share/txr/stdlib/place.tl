@@ -133,6 +133,12 @@
 (defmacro slet (bindings :env e . body)
   (sys:r-s-let-expander bindings body e [orf constantp bindable]))
 
+(defmacro alet (bindings :env e . body)
+  (let ((exp-bindings (mapcar (aret ^(,@1 ,(macroexpand @2 e))) bindings)))
+    ^(,(if [all exp-bindings [orf constantp bindable] second]
+         'symacrolet 'let)
+       ,exp-bindings ,*body)))
+
 (defmacro with-gensyms (syms . body)
   ^(let ,(zip syms (repeat '((gensym)))) ,*body))
 
