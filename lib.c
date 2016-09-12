@@ -3916,11 +3916,19 @@ val trim_str(val str)
   const wchar_t *start = c_str(str);
   const wchar_t *end = start + c_num(length_str(str));
 
-  while (start[0] && iswspace(start[0]))
-    start++;
+  if (opt_compat && opt_compat <= 148) {
+    while (start[0] && iswspace(start[0]))
+      start++;
 
-  while (end > start && iswspace(end[-1]))
-    end--;
+    while (end > start && iswspace(end[-1]))
+      end--;
+  } else {
+    while (start[0] && wcschr(L" \t\n", start[0]))
+      start++;
+
+    while (end > start && wcschr(L" \t\n", end[-1]))
+      end--;
+  }
 
   if (end == start) {
     return null_string;

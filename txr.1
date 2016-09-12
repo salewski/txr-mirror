@@ -18632,8 +18632,7 @@ The
 function produces a copy of
 .meta string
 from which leading and
-trailing whitespace is removed. Whitespace consists of spaces, tabs,
-carriage returns, linefeeds, vertical tabs and form feeds.
+trailing tabs, spaces and newlines are removed.
 
 .coNP Function @ chrp
 .synb
@@ -44798,7 +44797,11 @@ were executed in derived-to-base order, opposite to the
 order of execution of
 .code :init
 handlers. Specifying 148 or earlier compatibility provides this
-old behavior.
+old behavior. Also, until version 148, the
+.code trim-str
+function stripped leading and trailing whitespace from a string
+consisting of not only spaces, tabs and newlines, but also carriage
+returns, vertical tabs and form feeds.
 .IP 145
 In versions 144 and 145, \*(TX opened files in text mode on Cygwin,
 enabling conversion between CR-LF line endings and abstract newline
