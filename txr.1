@@ -52,11 +52,11 @@
 \f[4]\\$1\f[]
 ..
 .\" like .code typesets meta-syntax
-.\" which is done in angle brackets in nroff or oblique
+.\" which is done in angle brackets + italic in nroff or oblique
 .\" courier in PDF/HTML.
 .de meta
 .  ie n \{\
-<\\$1>
+\fI<\\$1>\fP
 .  \}
 .  el \{\
 \f[5]\\$1\f[]
@@ -65,7 +65,7 @@
 .\" like .meta but tack on second argument with no space.
 .de metn
 .  ie n \{\
-<\\$1>\\$2
+\fI<\\$1>\fP\\$2
 .  \}
 .  el \{\
 \f[5]\\$1\f[]\\$2
@@ -146,27 +146,27 @@
 .    while (\\n[.$]>0) \{\
 .      ie "\\$1"<" \{\
 .        shift
-.        as s <\\$1> 
+.        as s \fI<\\$1>\fP 
 .        shift
 .      \}
 .      el \{\
 .        ie "\\$1"<<" \{\
 .          shift
-.          as s <\\$1>\\$2 
+.          as s \fI<\\$1>\fP\\$2 
 .          shift
 .          shift
 .        \}
 .        el \{\
 .          ie "\\$1">>" \{\
 .            shift
-.            as s \\$1<\\$2> 
+.            as s \\$1\fI<\\$2>\fP 
 .            shift
 .            shift
 .          \}
 .          el \{\
 .            ie "\\$1"<>" \{\
 .              shift
-.              as s \\$1<\\$2>\\$3 
+.              as s \\$1\fI<\\$2>\fP\\$3 
 .              shift
 .              shift
 .              shift
