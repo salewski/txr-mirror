@@ -94,8 +94,7 @@
             (inc aws.file-rec-num)
             aws.(rec-to-f)
             (block :awk-rec
-              (let ((*stdout* aws.output))
-                [func aws]))))
+              [func aws])))
         (when end-file-func
           [end-file-func aws])))))
 
@@ -200,6 +199,7 @@
                                   ,*(if awc.inputs ^(inputs (list ,*awc.inputs)))
                                   ,*(if awc.output ^(output ,awc.output))
                                   rng-n (macro-time (qref ,awc nranges))))
+                    (*stdout* (qref ,aws-sym output))
                     ,*(if awc.begin-file-actions
                         ^((,awk-begf-fun (lambda (,aws-sym)
                             ,*awc.begin-file-actions))))
