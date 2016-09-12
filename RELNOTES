@@ -1,3 +1,51 @@
+                                    TXR 149
+                                   2016-09-12
+
+
+  Features
+
+  - Implementation of Awk paradigm in Lisp syntax, in the form of awk macro.
+    - TXR programs can now integrate the strategies used in Awk
+      as part of their logic.
+    - Awk one-liners from the command line possible.
+  - New place-mutating operators:
+    - pinc and pdec provide post-increment and post-decrement.
+    - test-set, test-clear and compare-swap provide a conditional update of a
+      place with useful return value.
+    - test-inc and test-dec provide increment combined with a test
+      of the value.
+  - New slet and alet macros
+    - companions to rlet, providing more aggressive ways
+      than rlet for eliminating unnecessary temporary variables
+      in macro expansions.
+  - Change in trim-str function: what it considers whitespace.
+  - Doc improvements:
+    - Formatting problems.
+    - Table of contents display issue under Chrome web browser.
+    - meta-keywords now italicized in nroff man page output,
+      allowing them to be colorized via customizing the less pager.
+
+  Bugs
+
+  - Fixed regression: @(rep) wrongly complains about an empty
+    clause when it's not in fact empty.
+    - Workaround: use @(coll) or add parameters inside @(rep).
+  - Fixed bug in nthcdr defplace: not obtaining macro environment
+    in valid way, breaking the test whether the list argument
+    is a place.
+  - Fixed symbol macros not being expanded in the X position
+    of (set [X i] Y) and related situations.
+  - Fixed semantic issue in the expansion of place macros.
+    - Place macro calls are put only through at most one round of
+      regular macro-expansion before being tested again for
+      place macro expansion.
+    - This allows macros to produce place macro calls.
+  - Changed order of calls to :postinit handlers in struct
+    instantiation: base first, then derived.
+
+
+
+
                                     TXR 148
                                    2016-09-01
 
