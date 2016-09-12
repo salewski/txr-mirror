@@ -451,19 +451,21 @@
 
 (defplace (nthcdr index list) body
   (getter setter
-    (with-gensyms (index-sym sentinel-head-sym parent-cell-sym)
+    (with-gensyms (index-sym list-sym sentinel-head-sym parent-cell-sym)
       (if (place-form-p list sys:*pl-env*)
         (with-update-expander (lgetter lsetter) list nil
-          ^(rlet ((,index-sym ,index))
-             (let* ((,sentinel-head-sym (cons nil (,lgetter)))
+          ^(alet ((,index-sym ,index)
+                  (,list-sym (,lgetter)))
+             (let* ((,sentinel-head-sym (cons nil ,list-sym))
                     (,parent-cell-sym (nthcdr ,index-sym ,sentinel-head-sym)))
                (macrolet ((,getter () ^(cdr ,',parent-cell-sym))
                           (,setter (val)
                             ^(progn (sys:rplacd ,',parent-cell-sym ,val)
                                     (,',lsetter (cdr ,',sentinel-head-sym)))))
                  ,body))))
-        ^(slet ((,index-sym ,index))
-           (let ((,parent-cell-sym (nthcdr (pred ,index-sym) ,list)))
+        ^(alet ((,index-sym ,index)
+                (,list-sym ,list))
+           (let ((,parent-cell-sym (nthcdr (pred ,index-sym) ,list-sym)))
              (macrolet ((,getter () ^(cdr ,',parent-cell-sym))
                         (,setter (val)
                           ^(sys:rplacd ,',parent-cell-sym ,val)))
@@ -472,7 +474,7 @@
 (defplace (vecref vector index :whole args) body
   (getter setter
     (with-gensyms (vec-sym ind-sym)
-      ^(rlet ((,vec-sym ,vector)
+      ^(alet ((,vec-sym ,vector)
               (,ind-sym ,index))
          (macrolet ((,getter () ^(vecref ,',vec-sym ,',ind-sym))
                     (,setter (val) ^(refset ,',vec-sym ,',ind-sym ,val)))
@@ -482,7 +484,7 @@
        ,body))
   (deleter
     (with-gensyms (vec-sym ind-sym)
-      ^(rlet ((,vec-sym ,vector)
+      ^(alet ((,vec-sym ,vector)
               (,ind-sym ,index))
          (macrolet ((,deleter ()
                        ^(prog1 (vecref ,',vec-sym ,',ind-sym)
@@ -493,7 +495,7 @@
 (defplace (chr-str string index :whole args) body
   (getter setter
     (with-gensyms (str-sym ind-sym)
-      ^(rlet ((,str-sym ,string)
+      ^(alet ((,str-sym ,string)
               (,ind-sym ,index))
          (macrolet ((,getter () ^(chr-str ,',str-sym ,',ind-sym))
                     (,setter (val) ^(chr-str-set ,',str-sym ,',ind-sym ,val)))
@@ -503,7 +505,7 @@
        ,body))
   (deleter
     (with-gensyms (str-sym ind-sym)
-      ^(rlet ((,str-sym ,string)
+      ^(alet ((,str-sym ,string)
               (,ind-sym ,index))
          (macrolet ((,deleter ()
                        ^(prog1 (chr-str ,',str-sym ,',ind-sym)
@@ -514,7 +516,7 @@
 (defplace (ref seq index :whole args) body
   (getter setter
     (with-gensyms (seq-sym ind-sym)
-      ^(rlet ((,seq-sym ,seq)
+      ^(alet ((,seq-sym ,seq)
               (,ind-sym ,index))
          (macrolet ((,getter () ^(ref ,',seq-sym ,',ind-sym))
                     (,setter (val) ^(refset ,',seq-sym ,',ind-sym ,val)))
@@ -524,7 +526,7 @@
        ,body))
   (deleter
     (with-gensyms (seq-sym ind-sym)
-      ^(rlet ((,seq-sym ,seq)
+      ^(alet ((,seq-sym ,seq)
               (,ind-sym ,index))
          (macrolet ((,deleter ()
                        ^(prog1 (ref ,',seq-sym ,',ind-sym)
@@ -545,7 +547,7 @@
                   (if ,have-default-p
                     (with-gensyms (entry-sym
                                    dfl-sym)
-                      ^(rlet ((,entry-sym (inhash ,',hash ,',key))
+                      ^(alet ((,entry-sym (inhash ,',hash ,',key))
                               (,dfl-sym ,',default))
                          (if ,entry-sym
                            (remhash ,',hash ,',key)
@@ -705,7 +707,7 @@
 (defplace (slot struct sym) body
   (getter setter
     (with-gensyms (struct-sym slot-sym)
-      ^(rlet ((,struct-sym ,struct)
+      ^(alet ((,struct-sym ,struct)
               (,slot-sym ,sym))
          (macrolet ((,getter () ^(slot ,',struct-sym ,',slot-sym))
                     (,setter (val) ^(slotset ,',struct-sym ,',slot-sym ,val)))
