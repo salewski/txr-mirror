@@ -67,7 +67,7 @@
                 self.nf (length self.fields))))))))
 
 (defmeth sys:awk-state f-to-rec (self)
-  (set self.rec (cat-str self.fields self.ofs)))
+  (set self.rec `@{self.fields self.ofs}`))
 
 (defmeth sys:awk-state nf-to-f (self)
   (set self.fields (take self.nf (append self.fields (repeat '("")))))
