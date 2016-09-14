@@ -11369,6 +11369,11 @@ goes to the rightmost place, and that value is returned.
 Deletes a place which supports deletion, and returns
 the value which existed in that place prior to deletion.
 
+.meIP (lset <> { place }+ << list-expr )
+Sets multiple places to values obtained from successive
+elements of
+.metn sequence .
+
 .PP
 
 .SS* Namespaces and Environments
@@ -26508,33 +26513,36 @@ that value. If the entry is identified by a key, that key is also removed.
 
 .coNP Macro @ lset
 .synb
-.mets (lset <> { place }+ << list-expr )
+.mets (lset <> { place }+ << sequence-expr )
 .syne
 .desc
 The
 .code lset
 operator's parameter list consists of one or more places followed
 by an expression
-.metn list-expr .
+.metn sequence-expr .
 
 The macro evaluates
-.codn list-expr ,
-which is expected to produce a proper list.
+.codn sequence-expr ,
+which is expected to produce a sequence.
 
 Successive elements of the resulting list are then assigned to each
 successive
 .codn place .
 
-If there are fewer elements in the list than places, the
+If there are fewer elements in the sequence than places, the
 unmatched places receive the value
 .codn nil .
 
-Excess elements in the list are ignored.
+Excess elements in the sequence are ignored.
+
+An error exception occurs if the sequence is an improper list with fewer
+elements than places.
 
 A
 .code lset
 form produces the value of
-.meta list-expr
+.meta sequence-expr
 as its result value.
 
 .SS* User-Defined Places and Place Operators
