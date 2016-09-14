@@ -371,6 +371,11 @@
                            places))
        ,orig)))
 
+(defmacro upd (place . opip-args)
+  (with-gensyms (pl)
+    ^(placelet ((,pl ,place))
+       (set ,pl (call (opip ,*opip-args) ,pl)))))
+
 (defmacro defplace (place-destructuring-args body-sym
                     (getter-sym setter-sym update-body) :
                     ((ssetter-sym clobber-body))

@@ -11374,6 +11374,14 @@ Sets multiple places to values obtained from successive
 elements of
 .metn sequence .
 
+.meIP (upd < place << opip-arg *)
+Applies an
+.codn opip -style
+operational pipeline to the value of
+.meta place
+and stores the result back into
+.metn place .
+
 .PP
 
 .SS* Namespaces and Environments
@@ -26544,6 +26552,32 @@ A
 form produces the value of
 .meta sequence-expr
 as its result value.
+
+.coNP Macro @ upd
+.synb
+.mets (upd < place << opip-arg *)
+.syne
+.desc
+The
+.code upd
+macro evaluates
+.meta place
+and passes the value as an argument to the operational pipeline
+function formed,
+as if by the
+.code opip
+macro, from the
+.meta opip-arg
+arguments.  The result of this function is then stored back into
+.metn place .
+
+The following equivalence holds, except that place
+.code p
+is evaluated only once:
+
+.cblk
+  (upd p x y z ...)  <-->  (set p (call (opip x y z ...) p))
+.cble
 
 .SS* User-Defined Places and Place Operators
 \*(TL provides a number of place-modifying operators such as
