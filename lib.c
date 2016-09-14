@@ -1476,13 +1476,12 @@ val rmember_if(val pred, val list, val key)
   return found;
 }
 
-val remq(val obj, val list)
+val remq(val obj, val list_orig)
 {
   list_collect_decl (out, ptail);
-  val list_orig = list;
+  val list = tolist(list_orig);
   val lastmatch = cons(nil, list);
 
-  list = nullify(list);
 
   gc_hint(list);
 
@@ -1496,13 +1495,11 @@ val remq(val obj, val list)
   return make_like(out, list_orig);
 }
 
-val remql(val obj, val list)
+val remql(val obj, val list_orig)
 {
   list_collect_decl (out, ptail);
-  val list_orig = list;
+  val list = tolist(list_orig);
   val lastmatch = cons(nil, list);
-
-  list = nullify(list);
 
   gc_hint(list);
 
@@ -1516,13 +1513,11 @@ val remql(val obj, val list)
   return make_like(out, list_orig);
 }
 
-val remqual(val obj, val list)
+val remqual(val obj, val list_orig)
 {
   list_collect_decl (out, ptail);
-  val list_orig = list;
+  val list = tolist(list_orig);
   val lastmatch = cons(nil, list);
-
-  list = nullify(list);
 
   gc_hint(list);
 
@@ -1536,15 +1531,13 @@ val remqual(val obj, val list)
   return make_like(out, list_orig);
 }
 
-val remove_if(val pred, val list, val key)
+val remove_if(val pred, val list_orig, val key)
 {
   list_collect_decl (out, ptail);
-  val list_orig = list;
+  val list = tolist(list_orig);
   val lastmatch = cons(nil, list);
 
   key = default_arg(key, identity_f);
-
-  list = nullify(list);
 
   gc_hint(list);
 
@@ -1561,15 +1554,13 @@ val remove_if(val pred, val list, val key)
   return make_like(out, list_orig);
 }
 
-val keep_if(val pred, val list, val key)
+val keep_if(val pred, val list_orig, val key)
 {
   list_collect_decl (out, ptail);
-  val list_orig = list;
+  val list = tolist(list_orig);
   val lastmatch = cons(nil, list);
 
   key = default_arg(key, identity_f);
-
-  list = nullify(list);
 
   gc_hint(list);
 
