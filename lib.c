@@ -1554,6 +1554,67 @@ val remove_if(val pred, val list_orig, val key)
   return make_like(out, list_orig);
 }
 
+val keepq(val obj, val list_orig, val key)
+{
+  list_collect_decl (out, ptail);
+  val list = tolist(list_orig);
+  val lastmatch = cons(nil, list);
+
+  key = default_arg(key, identity_f);
+
+  gc_hint(list);
+
+  for (; list; list = cdr(list)) {
+    if (funcall1(key, car(list)) != obj) {
+      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      lastmatch = list;
+    }
+  }
+  ptail = list_collect_nconc(ptail, cdr(lastmatch));
+  return make_like(out, list_orig);
+}
+
+val keepql(val obj, val list_orig, val key)
+{
+  list_collect_decl (out, ptail);
+  val list = tolist(list_orig);
+  val lastmatch = cons(nil, list);
+
+  key = default_arg(key, identity_f);
+
+  gc_hint(list);
+
+  for (; list; list = cdr(list)) {
+    if (!eql(funcall1(key, car(list)), obj)) {
+      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      lastmatch = list;
+    }
+  }
+  ptail = list_collect_nconc(ptail, cdr(lastmatch));
+  return make_like(out, list_orig);
+}
+
+val keepqual(val obj, val list_orig, val key)
+{
+  list_collect_decl (out, ptail);
+  val list = tolist(list_orig);
+  val lastmatch = cons(nil, list);
+
+  key = default_arg(key, identity_f);
+
+  gc_hint(list);
+
+  for (; list; list = cdr(list)) {
+    if (!equal(funcall1(key, car(list)), obj)) {
+      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+      lastmatch = list;
+    }
+  }
+  ptail = list_collect_nconc(ptail, cdr(lastmatch));
+  return make_like(out, list_orig);
+}
+
 val keep_if(val pred, val list_orig, val key)
 {
   list_collect_decl (out, ptail);

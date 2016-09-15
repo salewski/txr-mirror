@@ -22497,6 +22497,49 @@ does not have to be deleted, in order to instantiate the first lazy value.
   [(remql* 13 (range 1)) 0..100]
 .cble
 
+.coNP Functions @, keepq @ keepql and @ keepqual
+.synb
+.mets (keepq < object < list <> [ key-function ])
+.mets (keepql < object < list <> [ key-function ])
+.mets (keepqual < object < list <> [ key-function ])
+.syne
+.desc
+The
+.codn keepq ,
+.code keepql
+and
+.code keepqual
+functions produce a new list based on
+.metn list ,
+removing the items whose keys are not
+.codn eq ,
+.code eql
+or
+.code equal
+to
+.metn object .
+
+The input
+.meta list
+is unmodified, but the returned list may share substructure
+with it. If no items are removed, it is possible that the return value
+is
+.meta list
+itself.
+
+The optional
+.meta key-function
+is applied to each element from the
+.meta list
+to convert it to a key which is compared to
+.metn object .
+If
+.meta key-function
+is omitted, then each element itself of
+.meta list
+is compared to
+.metn object .
+
 .coNP Functions @, remove-if @, keep-if @ remove-if* and @ keep-if*
 .synb
 .mets (remove-if < predicate-function < list <> [ key-function ])
