@@ -149,7 +149,7 @@ val at_exit_call(val func)
 val at_exit_do_not_call(val func)
 {
   val old = at_exit_list;
-  at_exit_list = remq(func, old);
+  at_exit_list = remq(func, old, nil);
   return tnil(old == at_exit_list);
 }
 

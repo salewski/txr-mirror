@@ -202,11 +202,11 @@ val debug(val ctx, val bindings, val data, val line, val pos, val base)
           }
 
           if (equal(command, lit("b"))) {
-            breakpoints = remqual(l, breakpoints);
+            breakpoints = remqual(l, breakpoints, nil);
             push(l, &breakpoints);
           } else if (equal(command, lit("d"))) {
             val breakpoints_old = breakpoints;
-            breakpoints = remqual(l, breakpoints);
+            breakpoints = remqual(l, breakpoints, nil);
             if (breakpoints == breakpoints_old)
               format(std_debug, lit("no such breakpoint\n"));
           } else {

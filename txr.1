@@ -22429,9 +22429,9 @@ The sequence or hash table is returned.
 
 .coNP Functions @, remq @ remql and @ remqual
 .synb
-.mets (remq < object << list )
-.mets (remql < object << list )
-.mets (remqual < object << list )
+.mets (remq < object << list <> [ key-function ])
+.mets (remql < object << list <> [ key-function ])
+.mets (remqual < object << list <> [ key-function ])
 .syne
 .desc
 The
@@ -22441,7 +22441,7 @@ and
 .code remqual
 functions produce a new list based on
 .metn list ,
-removing the items which are
+removing the elements whose associated keys are
 .codn eq ,
 .code eql
 or
@@ -22457,11 +22457,22 @@ is
 .meta list
 itself.
 
+If
+.meta key-function
+is omitted, then the element keys compared to
+.meta object
+are the elements themselves.
+Otherwise,
+.meta key-function
+is applied to each element and the resulting value
+is that element's key which is compared to
+.metn object .
+
 .coNP Functions @, remq* @ remql* and @ remqual*
 .synb
-.mets (remq* < object << list )
-.mets (remql* < object << list )
-.mets (remqual* < object << list )
+.mets (remq* < object < list )
+.mets (remql* < object < list )
+.mets (remqual* < object < list )
 .syne
 .desc
 The

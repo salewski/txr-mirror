@@ -1476,17 +1476,21 @@ val rmember_if(val pred, val list, val key)
   return found;
 }
 
-val remq(val obj, val list_orig)
+val remq(val obj, val list_orig, val keyfun)
 {
   list_collect_decl (out, ptail);
   val list = tolist(list_orig);
   val lastmatch = cons(nil, list);
 
+  keyfun = default_bool_arg(keyfun);
 
   gc_hint(list);
 
   for (; list; list = cdr(list)) {
-    if (car(list) == obj) {
+    val elem = car(list);
+    val key = keyfun ? funcall1(keyfun, elem) : elem;
+
+    if (key == obj) {
       ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
       lastmatch = list;
     }
@@ -1495,16 +1499,21 @@ val remq(val obj, val list_orig)
   return make_like(out, list_orig);
 }
 
-val remql(val obj, val list_orig)
+val remql(val obj, val list_orig, val keyfun)
 {
   list_collect_decl (out, ptail);
   val list = tolist(list_orig);
   val lastmatch = cons(nil, list);
 
+  keyfun = default_bool_arg(keyfun);
+
   gc_hint(list);
 
   for (; list; list = cdr(list)) {
-    if (eql(car(list), obj)) {
+    val elem = car(list);
+    val key = keyfun ? funcall1(keyfun, elem) : elem;
+
+    if (eql(key, obj)) {
       ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
       lastmatch = list;
     }
@@ -1513,16 +1522,21 @@ val remql(val obj, val list_orig)
   return make_like(out, list_orig);
 }
 
-val remqual(val obj, val list_orig)
+val remqual(val obj, val list_orig, val keyfun)
 {
   list_collect_decl (out, ptail);
   val list = tolist(list_orig);
   val lastmatch = cons(nil, list);
 
+  keyfun = default_bool_arg(keyfun);
+
   gc_hint(list);
 
   for (; list; list = cdr(list)) {
-    if (equal(car(list), obj)) {
+    val elem = car(list);
+    val key = keyfun ? funcall1(keyfun, elem) : elem;
+
+    if (equal(key, obj)) {
       ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
       lastmatch = list;
     }

@@ -4414,7 +4414,7 @@ static val weave_while(val env)
   if (!tuples)
     return nil;
 
-  tuple = remq(uniq, car(tuples));
+  tuple = remq(uniq, car(tuples), nil);
 
   if (!tuple)
     return nil;
@@ -5021,9 +5021,9 @@ void eval_init(void)
   reg_fun(intern(lit("rmember"), user_package), func_n4o(rmember, 2));
   reg_fun(intern(lit("member-if"), user_package), func_n3o(member_if, 2));
   reg_fun(intern(lit("rmember-if"), user_package), func_n3o(rmember_if, 2));
-  reg_fun(intern(lit("remq"), user_package), func_n2(remq));
-  reg_fun(intern(lit("remql"), user_package), func_n2(remql));
-  reg_fun(intern(lit("remqual"), user_package), func_n2(remqual));
+  reg_fun(intern(lit("remq"), user_package), func_n3o(remq, 2));
+  reg_fun(intern(lit("remql"), user_package), func_n3o(remql, 2));
+  reg_fun(intern(lit("remqual"), user_package), func_n3o(remqual, 2));
   reg_fun(intern(lit("remove-if"), user_package), func_n3o(remove_if, 2));
   reg_fun(intern(lit("keepq"), user_package), func_n3o(keepq, 2));
   reg_fun(intern(lit("keepql"), user_package), func_n3o(keepql, 2));
