@@ -3807,8 +3807,10 @@ val scat(val sep, ...)
   return ret;
 }
 
-val split_str(val str, val sep)
+val split_str_keep(val str, val sep, val keep_sep)
 {
+  keep_sep = default_bool_arg(keep_sep);
+
   if (regexp(sep)) {
     list_collect_decl (out, iter);
     val pos = zero;
@@ -3824,6 +3826,8 @@ val split_str(val str, val sep)
 
       if (len) {
         pos = plus(pos, len);
+        if (keep_sep)
+          iter = list_collect(iter, sub_str(str, new_pos, pos));
         continue;
       }
       break;
@@ -3846,6 +3850,8 @@ val split_str(val str, val sep)
             val piece = mkustring(one);
             init_str(piece, cstr);
             iter = list_collect(iter, piece);
+            if (keep_sep && *(cstr+1))
+              iter = list_collect(iter, null_string);
           }
 
           gc_hint(str);
@@ -3870,6 +3876,8 @@ val split_str(val str, val sep)
         cstr += span;
         if (psep != 0) {
           cstr += len_sep;
+          if (keep_sep)
+            iter = list_collect(iter, sep);
           continue;
         }
         break;
@@ -3881,6 +3889,11 @@ val split_str(val str, val sep)
       return out;
     }
   }
+}
+
+val split_str(val str, val sep)
+{
+  return split_str_keep(str, sep, nil);
 }
 
 val split_str_set(val str, val set)

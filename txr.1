@@ -18436,7 +18436,7 @@ which is interposed between the catenated strings.
 
 .coNP Function @ split-str
 .synb
-.mets (split-str < string << sep )
+.mets (split-str < string < sep <> [ keep-between ])
 .syne
 .desc
 The
@@ -18490,6 +18490,18 @@ cuts with an empty piece between them.
 This operation is nondestructive:
 .meta string
 is not modified in any way.
+
+If the optional
+.meta keep-between
+argument is specified and is not
+.codn nil ,
+If an argument is given and is true, then
+.meta split-str
+incorporates the matching separating pieces of
+.meta string
+into the resulting list, such that if the resulting
+list is catenated, a string equivalent to the original
+string will be produced.
 
 Note: To split a string into pieces of length one such that an empty string
 produces

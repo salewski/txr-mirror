@@ -716,6 +716,7 @@ val sub_str(val str_in, val from_num, val to_num);
 val cat_str(val list, val sep);
 val scat(val sep, ...);
 val split_str(val str, val sep);
+val split_str_keep(val str, val sep, val keep_sep);
 val split_str_set(val str, val set);
 val tok_str(val str, val tok_regex, val keep_sep);
 val tok_where(val str, val tok_regex);
