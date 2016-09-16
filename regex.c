@@ -1713,8 +1713,10 @@ static val reg_derivative(val exp, val ch)
       val d_arg = reg_derivative(first(args), ch);
       if (reg_matches_all(d_arg))
         return t;
+      if (d_arg == nil)
+        return cons(oneplus_s, cons(wild_s, nil));
       if (d_arg == t)
-        return nil;
+        return cons(zeroplus_s, cons(wild_s, nil));
       return cons(sym, cons(d_arg, nil));
     } else if (sym == or_s) {
       val d_arg1 = reg_derivative(first(args), ch);
