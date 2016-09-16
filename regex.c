@@ -1897,6 +1897,8 @@ static val reg_optimize(val exp)
         return t;
       if (arg == nil)
         return cons(oneplus_s, cons(wild_s, nil));
+      if (arg == t)
+        return cons(zeroplus_s, cons(wild_s, nil));
       if (reg_single_char_p(arg))
         return list(or_s,
                     list(optional_s, invert_single(arg), nao),
