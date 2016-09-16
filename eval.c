@@ -2447,39 +2447,26 @@ static val me_unless(val form, val menv)
   return list(if_s, test, nil, maybe_progn(body), nao);
 }
 
-static val me_while(val form, val menv)
+static val me_while_until(val form, val menv)
 {
+  val cond = cadr(form);
+  val test = if3(car(form) == until_s, cons(not_s, cons(cond, nil)), cond);
+
   (void) menv;
-  return apply_frob_args(list(for_s, nil, cons(second(form), nil), nil,
+  return apply_frob_args(list(for_s, nil, cons(test, nil), nil,
                               rest(rest(form)), nao));
 }
 
-static val me_while_star(val form, val menv)
+static val me_while_until_star(val form, val menv)
 {
   val once = gensym(lit("once-"));
+  val cond = cadr(form);
+  val test = if3(car(form) == until_star_s, cons(not_s, cons(cond, nil)), cond);
+
   (void) menv;
   return apply_frob_args(list(for_s, cons(list(once, t, nao), nil),
-                              cons(list(or_s, once, second(form), nao), nil),
-                              cons(list(zap_s, once, nao), nil),
-                              rest(rest(form)), nao));
-}
-
-static val me_until(val form, val menv)
-{
-  val inv = cons(not_s, cons(second(form), nil));
-  (void) menv;
-  return apply_frob_args(list(for_s, nil, cons(inv, nil), nil,
-                              rest(rest(form)), nao));
-}
-
-static val me_until_star(val form, val menv)
-{
-  val once = gensym(lit("once-"));
-  val inv = cons(not_s, cons(second(form), nil));
-  (void) menv;
-  return apply_frob_args(list(for_s, cons(list(once, t, nao), nil),
-                              cons(list(or_s, once, inv, nao), nil),
-                              cons(list(zap_s, once, nao), nil),
+                              cons(list(or_s, once, test, nao), nil),
+                              cons(list(set_s, once, nil, nao), nil),
                               rest(rest(form)), nao));
 }
 
@@ -4897,10 +4884,10 @@ void eval_init(void)
   reg_mac(intern(lit("pprof"), user_package), me_pprof);
   reg_mac(when_s, me_when);
   reg_mac(intern(lit("unless"), user_package), me_unless);
-  reg_mac(while_s, me_while);
-  reg_mac(while_star_s, me_while_star);
-  reg_mac(until_s, me_until);
-  reg_mac(until_star_s, me_until_star);
+  reg_mac(while_s, me_while_until);
+  reg_mac(while_star_s, me_while_until_star);
+  reg_mac(until_s, me_while_until);
+  reg_mac(until_star_s, me_while_until_star);
   reg_mac(quasilist_s, me_quasilist);
   reg_mac(flet_s, me_flet_labels);
   reg_mac(labels_s, me_flet_labels);
