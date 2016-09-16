@@ -2459,7 +2459,7 @@ static val me_while_star(val form, val menv)
   val once = gensym(lit("once-"));
   (void) menv;
   return apply_frob_args(list(for_s, cons(list(once, t, nao), nil),
-                              list(or_s, once, second(form), nao),
+                              cons(list(or_s, once, second(form), nao), nil),
                               cons(list(zap_s, once, nao), nil),
                               rest(rest(form)), nao));
 }
@@ -2478,7 +2478,7 @@ static val me_until_star(val form, val menv)
   val inv = cons(not_s, cons(second(form), nil));
   (void) menv;
   return apply_frob_args(list(for_s, cons(list(once, t, nao), nil),
-                              list(or_s, once, inv, nao),
+                              cons(list(or_s, once, inv, nao), nil),
                               cons(list(zap_s, once, nao), nil),
                               rest(rest(form)), nao));
 }
