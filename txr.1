@@ -44685,7 +44685,7 @@ it has to be running with a root effective user ID somehow. In order
 to execute a file which is setuid to a non-root user, \*(TX has to be
 running effectively as root or else as that user.   It doesn't matter whether
 these privileges are achieved effectively using the setuid mechanism, or
-whether \*(TX is running with the require user ID as its real ID.
+whether \*(TX is running with the required user ID as its real ID.
 However, if \*(TX is running setuid, it takes special care to temporarily
 drop the privileges as early as possible, and eventually to drop the
 privileges permanently before executing any code, other that the setuid
