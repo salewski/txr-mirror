@@ -3814,24 +3814,25 @@ val split_str_keep(val str, val sep, val keep_sep)
   if (regexp(sep)) {
     list_collect_decl (out, iter);
     val pos = zero;
+    val slen = length(str);
 
-    do {
+    for (;;) {
       cons_bind (new_pos, len, search_regex(str, sep, pos, nil));
 
-      if (eql(pos, new_pos) && len == zero)
+      if (len == zero && new_pos != slen)
         new_pos = plus(new_pos, one);
 
       iter = list_collect(iter, sub_str(str, pos, new_pos));
       pos = new_pos;
 
-      if (len) {
+      if (len && pos != slen) {
         pos = plus(pos, len);
         if (keep_sep)
           iter = list_collect(iter, sub_str(str, new_pos, pos));
         continue;
       }
       break;
-    } while (le(pos, length_str(str)));
+    }
 
     return out;
   } else {

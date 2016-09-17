@@ -18469,11 +18469,16 @@ characters. In this case, if
 .meta string
 is of length one or zero, then it is considered to have no such pieces, and a
 list of one element is returned containing the original string.
+These remarks also apply to the situation when
+.meta sep
+is a regular expression which matches only an empty
+substring of
+.metn string .
 
 If a match for
 .meta sep
-is not found in the string at all, then the string is not
-split at all: a list of one element is returned containing the original
+is not found in the string at all (not even an empty match), then the string is
+not split at all: a list of one element is returned containing the original
 string.
 
 If
