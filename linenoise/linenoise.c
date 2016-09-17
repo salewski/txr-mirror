@@ -58,6 +58,9 @@
 #if HAVE_POLL
 #include <poll.h>
 #endif
+#ifdef __CYGWIN__
+#include <sys/utsname.h>
+#endif
 #include "linenoise.h"
 
 #ifdef __cplusplus
@@ -1606,6 +1609,20 @@ static void tr(char *s, int find, int rep)
             *s = rep;
 }
 
+static const char *get_home(void)
+{
+#ifdef __CYGWIN__
+  struct utsname un;
+
+  if (uname(&un) >= 0) {
+    if (strncmp(un.sysname, "CYGNAL", 6) == 0)
+      return getenv("USERPROFILE");
+  }
+#endif
+  return getenv("HOME");
+}
+
+
 static void edit_in_editor(lino_t *l) {
     const char *templ = ".linotmpXXXXXX";
     FILE *fo = 0;
@@ -1613,7 +1630,7 @@ static void edit_in_editor(lino_t *l) {
     char path[128];
 
     if (ed) {
-        char *ho = getenv("HOME");
+        const char *ho = get_home();
         int fd;
 #if HAVE_MKSTEMPS
         const char *suffix = l->suffix ? l->suffix : "";
