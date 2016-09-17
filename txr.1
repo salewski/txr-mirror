@@ -37759,7 +37759,9 @@ variable is initially
 
 If
 .code fs
-is nil, then, prior to field splitting, leading and trailing
+is
+.codn nil ,
+then, prior to field splitting, leading and trailing
 whitespace is trimmed from the value of
 .codn rec ,
 using the
@@ -37779,15 +37781,25 @@ is zero.
 
 If
 .code fs
-is nil, then 
-In this special case, the splitting is performed using
-the regular expression
+is nil, then the splitting into fields is performed as if
+the variable held the regular expression
+.codn "/[\en\et ]+/" .
 This means that, by default, fields are separated by one or more consecutive
 whitespace characters, which can be any mixture of spaces, tabs or newlines.
 Newlines are included because they can occur in a record when the value of the
 record separator
 .code rs
 is customized.
+
+If
+.code fs
+is not
+.codn nil ,
+it must specify a string, or a regular expression.
+A string value of
+.code fs
+denotes an exact match for that string; it isn't treated
+as a regular expression.
 
 When a record is not empty,
 matches for the
@@ -37797,7 +37809,7 @@ the fields are the possibly empty non-matching parts between the matches.
 
 If
 .code fs
-is not found in the record, then the entire record is taken as a single
+is not found in the record, then the entire record is taken as a one
 field.
 
 If
