@@ -37751,6 +37751,26 @@ The awk variable
 .code fs
 specifies a string or regular expression which is used for
 delimiting records into fields.
+Another variable called
+.code fs
+also specifies a string or regular expression which is used for
+delimiting records into fields in a different way.
+It is an error for both of these variables to simultaneously
+have a value other than
+.codn nil .
+
+If
+.code fs
+is
+.code nil
+and the variable
+.code ft
+isn't, then delimiting is done using the tokenizing logic associated with the
+.code ft
+variable. The remaining description assumes that
+.code ft
+is
+.codn nil .
 
 The
 .code fs
@@ -37777,7 +37797,9 @@ takes place) produces no fields:
 .code f
 is the empty list, and
 .code nf
-is zero.
+is zero. However, this behavior is altered by the
+.code kfs
+variable.
 
 If
 .code fs
@@ -37806,6 +37828,10 @@ matches for the
 .code fs
 pattern are identified in it, and those matching parts separate fields:
 the fields are the possibly empty non-matching parts between the matches.
+It is possible to keep the non-matching parts as fields also, by
+setting the
+.code kfs
+variable.
 
 If
 .code fs
@@ -37814,17 +37840,134 @@ field.
 
 If
 .code fs
-is not
-.codn nil ,
-it must specify a string, or a regular expression.
-If it is
-.codn nil ,
-then the regular expression
-.code "#/[ \et\en]+/"
-is used. A string value of
+finds only an empty string match in the record, then it is considered
+to match each of the empty strings between the characters. Consequently,
+the record is split into its individual characters, each one becoming
+a field.
+
+.coNP Variable @ ft
+.desc
+The awk variable
 .code fs
-denotes an exact match for that string; it isn't treated
-as a regular expression.
+specifies a string or regular expression which is used for
+delimiting records into fields. Its initial value is
+.codn nil ,
+and in that state, it is not active. It is an error
+for both
+.code fs
+and
+.code ft
+to both be set to a value which is not
+.codn nil .
+
+The
+.code ft
+variable, if not
+.codn nil ,
+must be set to a regular expression value.
+
+It specifies a pattern which is used to positively recognize tokens within the
+input record, rather than to match separating material between them.
+
+Tokens do not have to be consecutive; non matching material between them
+is skipped. The skipped material can be be retained and turned into
+fields, by setting the
+.code kfs
+variable.
+
+The tokenizing is performed using the
+.code tok-str
+function.
+
+.coNP Variable @ kfs
+.desc
+The awk variable
+.code kfs
+is a Boolean flag which is initialized to
+.codn nil .
+
+If it is set to any other value, it indicates a request to retain
+the pieces of the record which separate the fields (even when they
+empty strings).  The retained pieces appear as fields, interspersed
+among the regular fields so that all of the fields appear in the order
+in which they were extracted from the record.
+
+When
+.code kfs
+is set, it prevents the behavior of an empty record
+automatically giving rise to zero fields. Empty records are
+still split or tokenized according to
+.code fs
+or
+.codn ft ,
+respectively.
+
+When
+.code kfs
+is set, and tokenization-style delimiting is in effect due to
+.code ft
+being set, there is always at least one field, even if the record is empty.
+If the record doesn't match the tokenizing regular expression in
+.code ft
+then a single field is generated, then the entire record is
+taken as one field, denoting the non-matching space, even
+if the record is the empty string.
+
+If the record matches one or more tokens, then the first and
+last field will always contain the non-matching material before
+the first and last token, respectively. This is true even if
+the material is empty. Thus
+.code "[f 0]"
+always has the material before the first token, whether or not
+the first token is matched immediately at the first character
+position in the record. This behavior follows from the semantics
+of the
+.code keep-sep
+parameter of the
+.code tok-str
+function.
+
+Similarly, when splitting based on
+.code fs
+is in effect and
+.code kfs
+is set, there is always at least one field, even if the record
+is empty. If
+.code fs
+finds no match in the record, then the entire record,
+even if empty, is taken as one field. In that case, there
+are no separator to retain. When
+.code fs
+finds one or more
+matches, then these are included as fields. Separators are
+always between the fields. If a separator finds a nonempty
+match at the beginning of a record, that causes an empty field
+to be split off: the separator is understood as intervening
+between an empty string before the first character of the
+record, and subsequent material which follows the text
+matched by the separator. Thus the first field is an empty
+field, and the second is the matched text which is
+included due to
+.code kfs
+being set.  An analogous situation occurs at the end of the record: if
+.code fs
+matches a nonempty string at the tail of the record, it splits off an empty
+last field, preceded by a field holding the matched separator portion.
+Empty matches are only permitted to occur between the characters
+of the record, not before the first character of after the last.
+If
+.code fs
+matches the entire record, then there will be three fields:
+the first and last of these three will be empty strings,
+and the middle field, the separator, will be a copy of the record.
+Under
+.codn kfs ,
+empty matches cause empty string to be included among the
+fields. All of this follows from the semantics of the
+.code keep-sep
+parameter of the
+.code split-str
+function.
 
 .coNP Variable @ ofs
 .desc

@@ -25,7 +25,7 @@
 
 (defstruct sys:awk-state ()
   (rs "\n")
-  (fs)
+  fs ft kfs
   (ofs " ")
   (ors "\n")
   (inputs (or *args* (list *stdin*)))
@@ -51,19 +51,24 @@
 
 (defmeth sys:awk-state rec-to-f (self)
   (cond
-    ((equal self.rec "")
+    ((and (equal self.rec "") (not self.kfs))
      (set self.fields nil
           self.nf 0))
     (self.fs
-      (set self.fields (split-str self.rec self.fs)
+      (when self.ft
+        (throwf 'eval-error "awk: both fs and ft set"))
+      (set self.fields (split-str self.rec self.fs self.kfs)
+           self.nf (length self.fields)))
+    (self.ft
+      (set self.fields (tok-str self.rec self.ft self.kfs)
            self.nf (length self.fields)))
     ((let ((trimmed (trim-str self.rec)))
        (cond
-         ((equal trimmed "")
+         ((and (equal trimmed "") (not self.kfs))
           (set self.fields nil
                self.nf 0))
          (t
-           (set self.fields (split-str trimmed #/[ \t\n]+/)
+           (set self.fields (split-str trimmed #/[ \t\n]+/ self.kfs)
                 self.nf (length self.fields))))))))
 
 (defmeth sys:awk-state f-to-rec (self)
@@ -165,6 +170,8 @@
                 (arg (qref ,aws-sym file-num))
                 (rs (qref ,aws-sym rs))
                 (fs (qref ,aws-sym fs))
+                (ft (qref ,aws-sym ft))
+                (kfs (qref ,aws-sym kfs))
                 (ofs (qref ,aws-sym ofs))
                 (ors (qref ,aws-sym ors)))
      (macrolet ((next () '(return-from :awk-rec))
