@@ -3926,30 +3926,27 @@ val tok_str(val str, val tok_regex, val keep_sep)
 {
   list_collect_decl (out, iter);
   val pos = zero;
+  val slen = length(str);
 
   keep_sep = default_bool_arg(keep_sep);
 
   for (;;) {
     cons_bind (new_pos, len, search_regex(str, tok_regex, pos, nil));
-    val end;
 
-    if (!len) {
+    if (len == zero && new_pos != slen)
+      new_pos = plus(new_pos, one);
+
+    if (new_pos == slen || !len) {
       if (keep_sep)
         iter = list_collect(iter, sub_str(str, pos, t));
       break;
     }
 
-    end = plus(new_pos, len);
-
     if (keep_sep)
       iter = list_collect(iter, sub_str(str, pos, new_pos));
 
-    iter = list_collect(iter, sub_str(str, new_pos, end));
-
-    pos = end;
-
-    if (len == zero)
-      pos = plus(pos, one);
+    pos = plus(new_pos, len);
+    iter = list_collect(iter, sub_str(str, new_pos, pos));
   }
 
   return out;
