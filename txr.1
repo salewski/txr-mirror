@@ -44264,11 +44264,14 @@ The editor is determined from the
 environment variable. If this variable doesn't exist,
 the command does nothing.
 
-If the
-.code HOME
-environment variable exists, then the temporary file is created in the home
-directory. Otherwise it is created in the current working directory. If the
+The temporary file is created in the home directory, if that can
+be determined. Otherwise it is created in the current working directory. If the
 creation of the file fails, then the command silently returns to edit mode.
+The home directory is determined from the
+.code HOME
+environment variable in POSIX environments. On MS Windows, the
+.code USERPROFILE
+variable is probed for the user's directory.
 
 If the command line contains embedded carriage returns (which denote
 line breaks in multi-line mode) these are replaced with newline characters
@@ -44519,8 +44522,10 @@ When the listener starts up, it looks for file called
 .code .txr_profile
 in the user's home directory, as determined by the
 .code HOME
-environment variable. If that variable doesn't exist, no further attempt is
-made to locate this file.
+environment variable in POSIX environments or the
+.code USERPROFILE
+environment variable on MS Windows. If that variable doesn't exist, no further
+attempt is made to locate this file.
 
 If the file exists, it is subject to a security check.
 The function
@@ -44557,7 +44562,9 @@ this file, making the commands of a previous session available for recall.
 The home directory is determined from the
 contents of the
 .code HOME
-environment variable. If this variable doesn't exist, or the user doesn't
+environment variable in POSIX environments or
+.code USERPROFILE
+on MS Windows. If this variable doesn't exist, or the user doesn't
 have permissions to write to this directory or to an existing history file
 in that directory, then the history isn't saved.
 
