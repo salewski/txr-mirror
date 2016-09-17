@@ -37733,17 +37733,37 @@ instantiated by the
 .code record-adapter
 function.
 
-The meaning of
+The regular expression pattern stored in
 .code rs
-is that it matches substrings in the input which separate records. Records
-consist of the non-matching extents between matches for
-.codn rs .
+is used to matches substrings in the input which separate or terminate records.
+Unless the
+.code krs
+variable is set true, the substrings which match
+.code rs
+are discarded and the records consist of the non-matching extents between
+them.
 
 The initial value of
 .code rs
 is
 .strn "\en" :
 the newline character. This means that, by default, records are lines.
+
+If a match for the record separator occurs at the end of the stream,
+it is not considered to delimit an empty record, but acts as the
+terminator for the previous record.
+
+.coNP Variable @ krs
+.desc
+The awk variable
+.code krs
+stands for "keep record separator". It is a Boolean variable, initialized to
+.codn nil .
+
+If it is set to a true value, then the separating text matched
+by the pattern in the
+.code rs
+variable is retained as part of the preceding record rather than removed.
 
 .coNP Variable @ fs
 .desc

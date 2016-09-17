@@ -24,7 +24,7 @@
 ;; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defstruct sys:awk-state ()
-  (rs "\n")
+  (rs "\n") krs
   fs ft kfs
   (ofs " ")
   (ors "\n")
@@ -86,12 +86,14 @@
         [beg-file-func aws])
       (unwind-protect
         (let* ((stin (if (streamp in) in (open-file in)))
-               (recin (if (equal aws.rs "\n")
+               (recin (if (and (equal aws.rs "\n")
+                               (not aws.krs))
                         stin
                         (record-adapter (if (regexp aws.rs)
                                           aws.rs
                                           (regex-compile aws.rs))
-                                        stin))))
+                                        stin
+                                        aws.krs))))
           (set aws.file-rec-num 0)
           (whilet ((rec (get-line recin)))
             (set aws.rec rec)
@@ -169,6 +171,7 @@
                 (fnr (qref ,aws-sym file-rec-num))
                 (arg (qref ,aws-sym file-num))
                 (rs (qref ,aws-sym rs))
+                (krs (qref ,aws-sym krs))
                 (fs (qref ,aws-sym fs))
                 (ft (qref ,aws-sym ft))
                 (kfs (qref ,aws-sym kfs))
