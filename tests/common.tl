@@ -20,6 +20,9 @@
 (defmacro stest (expr expected)
   ^(vtest ,^(tostring ,expr) ,expected))
 
+(defmacro mtest (. pairs)
+  ^(progn ,*(mapcar (op cons 'test) (tuples 2 pairs))))
+
 (defun osname ()
   (with-stream (u (open-command "(uname -o || uname) 2> /dev/null"))
     (get-line u)))
