@@ -38260,6 +38260,119 @@ a binding which shadows
   (mf flo-str)
 .cble
 
+.coNP Macro @ fconv
+.synb
+.mets (fconv >> { clause | : | - }*)
+.syne
+.desc
+The awk macro
+.code fconv
+provides a succinct way to request conversions of the textual fields.
+Conversions are expressed by clauses which correspond with fields.
+
+Each
+.code clause
+is an expression which must evaluate to a function. The clause is evaluated
+in the same manner as the argument a
+.code dwim
+operator, using Lisp-1-style name lookup. Thus, functions may be
+specified simply by using their name as a
+.metn clause .
+
+Furthermore, several local functions exist in the scope of each
+.codn clause ,
+providing a short-hand notation. These are described below.
+
+Conversion proceeds by applying the function produced by
+a clause to the field to which that clause corresponds, positionally.
+The return value of the function applied to the field replaces
+the field.
+
+When a clause is specified as the symbol
+.code -
+(minus)
+it has a special meaning: this minus clause occupies a field
+position and corresponds to a field, but performs no conversion
+on its field.
+
+The
+.code :
+(colon)
+symbol isn't a clause and does not correspond to a field position.
+Rather, it acts as a separator among clauses. It need not appear at
+all. If it appears, it may appear at most twice. Thus, the
+clauses may be separated into up to three sequences.
+
+If the colon does not appear, then all the clauses are
+.IR "prefix clauses" .
+Prefix clauses line up with fields from left to right.  If there are fewer
+fields than prefix clauses, the values of the excess clauses are evaluated, but
+ignored.
+.IR "Vice versa" ,
+if there are fewer prefix clauses than fields, then the excess
+fields are not subject to conversions.
+
+If the colon appears once, then the clauses before the colon, if any, are
+prefix clauses, as described in the previous paragraph.  Clauses after the
+colon, if any, are
+.IR "interior clauses" .
+Interior clauses apply to any fields which are left unconverted by the prefix
+clauses. All interior clauses are evaluated.  If there are fewer fields than
+interior clauses, then the values of the excess interior clauses are ignored.
+If there are more fields than clauses, then the clause values are cycled:
+re-used from the beginning against the excess fields, enough times to convert
+all the fields.
+
+If the colon appears twice, then the clauses before the first colon, if any,
+are prefix clauses, the clauses between the two clause are interior clauses,
+and those after the second colon are
+.IR "suffix clauses" .
+The presence of suffix clauses change the behavior relative to the one-colon
+case as follows. After the conversions are performed according to the prefix
+clauses, the remaining fields are counted.  If there are are only as many
+fields as there are suffix clauses, or fewer, then the interior clauses are
+evaluated, but ignored.  The remaining fields are processed against the suffix
+clauses.  If after processing the prefix clauses there are more fields
+remaining than suffix clauses, then a number of rightmost fields equal to the
+number of suffix clauses is reserved for those clauses.  The interior fields
+are applied only to the unreserved middle fields which precede these reserved
+rightmost fields, using the same repeating behavior as in the one-colon case.
+Finally, the previously reserved rightmost fields are processed using
+the suffix clauses.
+
+The following special convenience functions are in scope of the clauses,
+effectively providing a short-hand for commonly-needed conversions:
+.RS
+.coIP i
+Provides conversion to integer. It is identical to the
+.code toint
+function.
+.coIP o
+Converts a string value holding an octal representation
+to the integer which it denotes. The expression
+.code "(o str)"
+is equivalent to
+.codn "(toint str 8)" .
+.coIP x
+Converts a string value holding a hexadecimal representation
+to the integer which it denotes. The expression
+.code "(x str)"
+is equivalent to
+.codn "(toint str 16)" .
+.coIP b
+Converts a string value holding a binary (base two) representation
+to the integer which it denotes. The expression
+.code "(c str)"
+is equivalent to
+.codn "(toint str 2)" .
+.coIP r
+Converts a string holding a floating-point representation to
+the floating-point value which it denotes. The expression
+.code "(r str)"
+is equivalent to
+.codn "(tofloat str)" .
+.RE
+
 .SS* Environment Variables and Command Line
 
 Note that environment variable names, their values, and command line

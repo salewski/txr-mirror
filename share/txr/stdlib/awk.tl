@@ -23,6 +23,8 @@
 ;; AND UNDER ANY THEORY OF LIABILITY, ARISING IN ANY WAY OUT OF THE USE OF THIS
 ;; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+(load "conv.tl")
+
 (defstruct sys:awk-state ()
   (rs "\n") krs
   fs ft kfs
@@ -202,7 +204,9 @@
                      (set f [(opip ,*opip-args) f])))
                 (mf (. opip-args)
                   ^(symacrolet ((f (rslot ,',aws-sym 'fields 'f-to-rec)))
-                     (set f (mapcar (opip ,*opip-args) f)))))
+                     (set f (mapcar (opip ,*opip-args) f))))
+                (fconv (. conv-args)
+                  ^(set f (sys:conv (,*conv-args) f))))
        ,*body)))
 
 (defmacro awk (:env e . clauses)
