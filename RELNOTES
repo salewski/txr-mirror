@@ -1,3 +1,41 @@
+                                    TXR 150
+                                   2016-09-18
+
+
+  Features
+
+  - Awk macro:
+    - New ft variable to optionally specify field tokenization
+      as alternative to field separation via fs.
+    - New kfs variable to arrange for field separators to be
+      retained and represented as fields.
+    - New krs variable to keep record separator matched by rs
+      as part of record.
+    - New fconv operator for succinct and flexible
+      conversion of awk fields.
+    - Don't rebind *output* if :output clause not specified.
+  - New place-mutating macro: upd.
+  - New keepq, keepql and keepqual functions.
+  - Functions remq, remql and remqual take key argument.
+  - split-str take boolean arg to keep separators, like tok-str.
+
+  Bugs
+
+  - Fixed incorrect behavior of functionsremq, remql, remqual, remove_if,
+    and keep_if on strings.
+  - Fixed broken regex complement operator.
+  - Fixed broken while* and until* macro expanders.
+  - Fixed bugs in split-str and tok-str.
+  - Windows:
+    - TXR's standard input, output and error will now be text
+      streams, CR-LF externally.
+      - This comes from a fix in the Cygnal library being picked up
+        into the installer package.
+    - Interactive mode uses USERPROFILE env variable for
+      location of home directory for edit-in-editor feature.
+
+
+
                                     TXR 149
                                    2016-09-12
 
