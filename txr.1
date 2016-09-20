@@ -24734,6 +24734,305 @@ sequences using
 and tests for termination with
 .codn nil .
 
+.SS* Procedural List Construction
+
+\*(TL provides an a structure type called
+.code list-builder
+which encapsulates state and methods for constructing lists procedurally.
+Among the advantages of using
+.code list-builder
+is that lists can be constructed in the left to right direction without
+requiring multiple traversals or reversal. For example,
+.code list-builder
+naturally combines with iteration or recursion: items visited in an
+iterative or recursive process can be collected easily using
+.code list-builder
+in the order they are visited.
+
+The basic workflow begins with the instantiation of a
+.code list-builder
+object. This object may be initialized with a piece of list material which
+begins the to-be-constructed list, or it may be initialized to begin with an
+empty list.  Methods such as
+.code add
+and
+.code pend
+are invoked on this object to extend the list with new elements.  At any point,
+the list constructed so far is available using the
+.code get
+method, which is also how the final version of the list is eventually
+retrieved.
+
+The
+.code build
+macro is provided which syntactically streamlines the process.
+It implicitly creates a
+.code list-builder
+instance and binds it to a hidden lexical variable.
+It then evaluates forms in a lexical scope in which
+short-hand macros are available for building the list.
+
+.coNP Structure @ list-builder
+.synb
+.mets (defstruct list-builder nil
+.mets \ \ head tail)
+.syne
+.desc
+The
+.code list-builder
+structure encapsulates the state for a list building process.
+Programs should use the
+.code build-list
+function for creating an instance of
+.codn list-builder .
+The
+.code head
+and
+.code tail
+members should be regarded as internal variables.
+
+.coNP Function @ build-list
+.synb
+.mets (build-list <> [ initial-list ])
+.syne
+.desc
+The
+.code build-list
+function instantiates and returns an object of struct type
+.codn list-builder .
+
+If no
+.meta initial-list
+argument is supplied, then the object is implicitly
+with an empty list.
+
+If the argument is supplied, then it is equivalent
+to calling
+.code build-list
+without an argument to produce an object
+.meta obj
+the invoking the method call
+.cblk
+.meti << obj .(ncon << list )
+.cble
+on this object. The object produced by the expression
+.meta list
+is installed (without being copied) into the
+object as the prefix of the list to be constructed.
+
+.TP* Example:
+
+.cblk
+   ;; build the list (a b) trivially
+
+   (let ((lb (build-list '(a b))))
+     lb.(get)
+   -> (a b)
+.cble
+
+.coNP Methods @ add and @ add*
+.synb
+.mets << list-builder .(add << element *)
+.mets << list-builder .(add* << element *)
+.syne
+.desc
+The
+.code add
+and
+.code add*
+methods extend the list being constructed by a
+.code list-builder
+object by adding individual
+elements to it. The
+.code add
+method adds elements at the tail of the list,
+whereas
+.code add*
+adds elements at the front.
+
+.TP* Example:
+
+.cblk
+  ;; Build the list (1 2 3 4)
+
+  (let ((lb (build-list)))
+    lb.(add 3 4)
+    lb.(add* 1 2)
+    lb.(get))
+  -> (1 2 3 4)
+.cble
+
+.coNP Methods @ pend and @ pend*
+.synb
+.mets << list-builder .(pend << list *)
+.mets << list-builder .(pend* << list *)
+.syne
+.desc
+The
+.code pend
+and
+.code pend*
+methods extend the list being constructed by a
+.code list-builder
+object by adding lists to it. The
+.code pend
+method catenates the
+.code list
+arguments together as if by the
+.code append
+function, then appends the resulting list to
+the end of the list being constructed.
+The
+.code pend*
+method is similar, except it prepends the
+catenated lists to the front of the list
+being constructed.
+
+Both methods have the property that the
+constructed list does not share structure
+with the input lists.
+
+.TP* Example:
+
+.cblk
+  ;; Build the list (1 2 3 4)
+
+  (let ((lb (build-list)))
+    lb.(pend '(3 4))
+    lb.(pend* '(1 2))
+    lb.(get))
+  -> (1 2 3 4)
+.cble
+
+.coNP Methods @ ncon and @ ncon*
+.synb
+.mets << list-builder .(ncon << list *)
+.mets << list-builder .(ncon* << list *)
+.syne
+.desc
+The
+.code ncon
+and
+.code ncon*
+methods extend the list being constructed by a
+.code list-builder
+object by adding lists to it. The
+.code ncon
+method destructively catenates the
+.meta list
+arguments as if by the
+.code nconc
+function. The resulting list is appended
+to the list being constructed.
+The
+.code ncon*
+method is similar, except it prepends
+the catenated lists to the front of the
+list being constructed.
+
+These methods destructively manipulate
+the input lists. Moreover, they cause the
+list being constructed to share substructure
+with the input lists.
+
+Additionally, the
+.code ncon*
+function can be called with a single argument
+which is an atom. This atom will simply be
+installed as the terminating atom of the
+list being constructed.
+
+.TP* Example:
+
+.cblk
+  ;; Build the list (1 2 3 4 . 5)
+
+  (let ((lb (build-list)))
+    lb.(ncon* (list 1 2))
+    lb.(ncon (list 3 4))
+    lb.(ncon 5)
+    lb.(get))
+  -> (1 2 3 4 . 5)
+.cble
+
+.coNP Method @ get
+.synb
+.mets << list-builder .(get)
+.syne
+.desc
+The
+.code get
+method retrieves the list constructed so far by a
+.code list-builder
+object. It doesn't change the state of the object.
+The retrieved list may be passed as an argument
+into the construction methods on the same object.
+
+.TP* Examples:
+
+.cblk
+  ;; Build the circular list (1 1 1 1 ...)
+  ;; by appending (1) to itself destructively:
+
+  (let ((lb (build-list '(1))))
+    lb.(ncon* lb.(get))
+    lb.(get))
+  -> (1 1 1 1 ...)
+
+  ;; build the list (1 2 1 2 1 2 1 2)
+  ;; by doubling (1 2) twice:
+
+  (let ((lb (build-list)))
+    lb.(add 1 2)
+    lb.(pend lb.(get))
+    lb.(pend lb.(get))
+    lb.(get))
+  -> (1 2 1 2 1 2 1 2)
+.cble
+
+.coNP Macro @ build
+.synb
+.mets (build << form *)
+.syne
+.desc
+The
+.code build
+macro provides a shorthand notation for constructing lists using the
+.code list-builder
+structure. It eliminates the explicit call to the
+.code build-list
+function to construct the object, and eliminates the explicit
+references to the object.
+
+Instead,
+.code build
+creates a lexical environment in which a
+.code list-builder
+object is implicitly constructed and bound to a hidden variable.
+Local macros which mimic the
+.code list-builder
+methods operate implicitly on this hidden variable, so that
+the object need not be mentioned as an argument.
+
+.TP* Examples:
+
+.cblk
+  ;; Build the circular list (1 1 1 1 ...)
+  ;; by appending (1) to itself destructively:
+
+  (build
+    (add 1)
+    (ncon* (get))) -> (1 1 1 1 ...)
+
+  ;; build the list (1 2 1 2 1 2 1 2)
+  ;; by doubling (1 2) twice:
+
+  (build
+    (add 1 2)
+    (pend (get))
+    (pend (get))) -> (1 2 1 2 1 2 1 2)
+.cble
+
 .SS* Permutations and Combinations
 
 .coNP Function @ perm

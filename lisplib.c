@@ -353,6 +353,24 @@ static val awk_instantiate(val set_fun)
   return nil;
 }
 
+static val build_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("list-builder"), lit("build-list"), lit("build"), nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val build_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~abuild.tl"), stdlib_path, nao));
+  sock_load_init();
+  return nil;
+}
+
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -383,6 +401,7 @@ void lisplib_init(void)
   dlt_register(dl_table, termios_instantiate, termios_set_entries);
 #endif
   dlt_register(dl_table, awk_instantiate, awk_set_entries);
+  dlt_register(dl_table, build_instantiate, build_set_entries);
 }
 
 val lisplib_try_load(val sym)
