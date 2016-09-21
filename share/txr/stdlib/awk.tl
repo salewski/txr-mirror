@@ -53,25 +53,19 @@
 
 (defmeth sys:awk-state rec-to-f (self)
   (cond
-    ((and (equal self.rec "") (not self.kfs))
-     (set self.fields nil
-          self.nf 0))
     (self.fs
       (when self.ft
         (throwf 'eval-error "awk: both fs and ft set"))
-      (set self.fields (split-str self.rec self.fs self.kfs)
-           self.nf (length self.fields)))
+      (if (and (not self.kfs) (equal self.rec ""))
+        (set self.fields nil
+             self.nf 0)
+        (set self.fields (split-str self.rec self.fs self.kfs)
+             self.nf (length self.fields))))
     (self.ft
       (set self.fields (tok-str self.rec self.ft self.kfs)
            self.nf (length self.fields)))
-    ((let ((trimmed (trim-str self.rec)))
-       (cond
-         ((and (equal trimmed "") (not self.kfs))
-          (set self.fields nil
-               self.nf 0))
-         (t
-           (set self.fields (split-str trimmed #/[ \t\n]+/ self.kfs)
-                self.nf (length self.fields))))))))
+    ((set self.fields (tok-str self.rec #/[^ \t\n]+/ self.kfs)
+          self.nf (length self.fields)))))
 
 (defmeth sys:awk-state f-to-rec (self)
   (set self.rec `@{self.fields self.ofs}`))
