@@ -225,7 +225,7 @@
                                  pvtgs '(nil nil)))
                 (lets (first ls))
                 (stores (second ls))
-                (body-form ^(let (,*lets) ,*stores)))
+                (body-form ^(rlet (,*lets) ,*stores)))
            (reduce-left (tb (accum-form (place value temp getter setter))
                           (call-update-expander getter setter
                                                 place env accum-form))
@@ -287,7 +287,7 @@
 
 (defmacro push (new-item place :env env)
   (with-gensyms (new-sym)
-    ^(let ((,new-sym ,new-item))
+    ^(rlet ((,new-sym ,new-item))
        ,(with-update-expander (getter setter) place env
           ^(,setter (cons ,new-sym (,getter)))))))
 
@@ -302,7 +302,7 @@
                             (keyfun :))
   (with-update-expander (getter setter) place env
     (with-gensyms (new-item-sym old-list-sym)
-      ^(let ((,new-item-sym ,new-item))
+      ^(rlet ((,new-item-sym ,new-item))
          ,(with-update-expander (getter setter) place env
             ^(let ((,old-list-sym (,getter)))
                (if (member ,new-item-sym ,old-list-sym ,testfun ,keyfun)
