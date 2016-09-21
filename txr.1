@@ -38064,139 +38064,93 @@ by the pattern in the
 .code rs
 variable is retained as part of the preceding record rather than removed.
 
-.coNP Variable @ fs
+.coNP Variables @ fs and @ ft
 .desc
 The awk variable
-.code fs
-specifies a string or regular expression which is used for
-delimiting records into fields.
-Another variable called
-.code fs
-also specifies a string or regular expression which is used for
-delimiting records into fields in a different way.
-It is an error for both of these variables to simultaneously
-have a value other than
-.codn nil .
-
-If
-.code fs
-is
-.code nil
-and the variable
-.code ft
-isn't, then delimiting is done using the tokenizing logic associated with the
-.code ft
-variable. The remaining description assumes that
-.code ft
-is
-.codn nil .
-
-The
-.code fs
-variable is initially
-.codn nil .
-
-If
-.code fs
-is
-.codn nil ,
-then, prior to field splitting, leading and trailing
-whitespace is trimmed from the value of
-.codn rec ,
-using the
-.code trim-str
-function. The subsequent field splitting operates on this
-trimmed value, which isn't stored back into
-.codn rec .
-
-Regardless of the value of
-.codn fs ,
-a record which is empty (tested after the trimming described above, if that
-takes place) produces no fields:
-.code f
-is the empty list, and
-.code nf
-is zero. However, this behavior is altered by the
-.code kfs
-variable.
-
-If
-.code fs
-is nil, then the splitting into fields is performed as if
-the variable held the regular expression
-.codn "/[\en\et ]+/" .
-This means that, by default, fields are separated by one or more consecutive
-whitespace characters, which can be any mixture of spaces, tabs or newlines.
-Newlines are included because they can occur in a record when the value of the
-record separator
-.code rs
-is customized.
-
-If
-.code fs
-is not
-.codn nil ,
-it must specify a string, or a regular expression.
-A string value of
-.code fs
-denotes an exact match for that string; it isn't treated
-as a regular expression.
-
-When a record is not empty,
-matches for the
-.code fs
-pattern are identified in it, and those matching parts separate fields:
-the fields are the possibly empty non-matching parts between the matches.
-It is possible to keep the non-matching parts as fields also, by
-setting the
-.code kfs
-variable.
-
-If
-.code fs
-is not found in the record, then the entire record is taken as a one
-field.
-
-If
-.code fs
-finds only an empty string match in the record, then it is considered
-to match each of the empty strings between the characters. Consequently,
-the record is split into its individual characters, each one becoming
-a field.
-
-.coNP Variable @ ft
-.desc
-The awk variable
-.code fs
-specifies a string or regular expression which is used for
-delimiting records into fields. Its initial value is
-.codn nil ,
-and in that state, it is not active. It is an error
-for both
 .code fs
 and
 .code ft
-to both be set to a value which is not
-.codn nil .
+each specify a string or regular expression which is used for each
+record that is stored in the
+.code rec
+variable into fields.
 
-The
-.code ft
-variable, if not
+Both variables are initialized to
 .codn nil ,
-must be set to a regular expression value.
+in which case a default behavior is in effect, described below.
 
-It specifies a pattern which is used to positively recognize tokens within the
-input record, rather than to match separating material between them.
+Use of these variable is mutually exclusive; it is an error for both of these
+variables to simultaneously have a value other than
+.codn nil .
+The value stored in either variable must be
+.codn nil ,
+a character string or a regular expression. If it contains a string or
+regex, it is said to contain a pattern. A string value effectively behaves
+as a fixed regular expression which matches the sequence of characters
+in the string verbatim, without treating any of them as regex operators.
 
-Tokens do not have to be consecutive; non matching material between them
-is skipped. The skipped material can be be retained and turned into
-fields, by setting the
+The splitting of
+.code rec
+into fields is influenced by the Boolean
 .code kfs
-variable.
+("keep field separators")
+variable, whose effect is discussed in its description.
+If
+.code kfs
+is false, the splitting is carried out as follows.
 
+If
+.code fs
+contains a pattern, then
+.code rec
+is treated specially when it is the empty string: in that case,
+the pattern in
+.code fs
+is ignored, and no fields are produced: the field list
+.code f
+is the empty list, and
+.code nf
+is zero.  A non-empty record is split by searching it for matches for the
+.code fs
+pattern. If a match does not occur, then the entire record is a field.
+If one match occurs, then the record is split into two fields, either of which,
+or both, might be empty. If two matches occur, the record is split into
+three fields, and so on. If
+.code fs
+finds only an empty string match in the record, then it is considered
+to match each of the empty strings between two consecutive characters of the
+record. Consequently, the record is split into its individual characters, each
+one becoming a field. Note: all of these behaviors, except for the special
+treatment of the empty record, are accomplished by a call to the
+.code split-str
+function.
+
+If the variable
+.code ft
+("field tokenize") contains a pattern, that pattern is used to positively
+recognize tokens within the input record, rather than to match separating
+material between them. Those matching tokens then constitute the fields.
 The tokenizing is performed using the
 .code tok-str
 function.
+
+If
+.code fs
+and
+.code ft
+are both
+.codn nil ,
+as is initially the case, then the splitting into fields is performed
+as if the
+.code ft
+variable held the regular expression
+.codn "/[^\en\et ]+/" .
+This means that, by default, fields are sequences of consecutive characters
+which are not spaces, tabs or newlines.
+Newlines are excluded from fields (and thus separate them) because they can
+occur in a record when the value of the record separator
+.code rs
+is customized.
 
 .coNP Variable @ kfs
 .desc
@@ -38210,16 +38164,6 @@ the pieces of the record which separate the fields (even when they
 empty strings).  The retained pieces appear as fields, interspersed
 among the regular fields so that all of the fields appear in the order
 in which they were extracted from the record.
-
-When
-.code kfs
-is set, it prevents the behavior of an empty record
-automatically giving rise to zero fields. Empty records are
-still split or tokenized according to
-.code fs
-or
-.codn ft ,
-respectively.
 
 When
 .code kfs
