@@ -37948,6 +37948,16 @@ list which do not involve an implicit or explicit assignment to the variable
 .code f
 itself do not have this recalculating effect.
 
+Unlike in Awk, assigning to the nonexistent field
+.cblk
+.meti [f << m ]
+.cble
+where
+.meta m
+>=
+.code nf
+is erroneous.
+
 .coNP Variable @ nf
 .desc
 The awk variable
