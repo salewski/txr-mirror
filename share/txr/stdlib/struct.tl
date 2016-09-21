@@ -269,13 +269,13 @@
 
 (defplace (sys:rslot struct sym meth-sym) body
   (getter setter
-    (with-gensyms (struct-sym slot-sym meth-sym)
+    (with-gensyms (struct-sym slot-sym meth-slot-sym)
       ^(slet ((,struct-sym ,struct)
               (,slot-sym ,sym)
-              (,meth-sym ,meth-sym))
+              (,meth-slot-sym ,meth-sym))
          (macrolet ((,getter () ^(slot ,',struct-sym ,',slot-sym))
-                    (,setter (val) ^(sys:rslotset ,',struct-sym
-                                                  ,',slot-sym ,val)))
+                    (,setter (val) ^(sys:rslotset ,',struct-sym ,',slot-sym
+                                                  ,',meth-slot-sym ,val)))
            ,body))))
   (ssetter
     ^(macrolet ((,ssetter (val) ^(progn
