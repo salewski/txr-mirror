@@ -2523,34 +2523,52 @@ val match_regex_right(val str, val regex, val end)
 
 val regsub(val regex, val repl, val str)
 {
-  list_collect_decl (out, ptail);
-  val pos = zero;
   val isfunc = functionp(repl);
 
-  do {
-    cons_bind (find, len, search_regex(str, regex, pos, nil));
-    if (!find) {
-      if (pos == zero)
-        return str;
-      ptail = list_collect(ptail, sub_str(str, pos, nil));
-      break;
-    }
-    ptail = list_collect(ptail, sub_str(str, pos, find));
-    ptail = list_collect(ptail, if3(isfunc,
-                                    funcall1(repl, sub_str(str, find,
-                                                           plus(find, len))),
-                                    repl));
-    if (len == zero && eql(find, pos)) {
-      if (lt(pos, length_str(str))) {
-        ptail = list_collect(ptail, chr_str(str, pos));
-        pos = plus(pos, one);
-      }
-    } else {
-      pos = plus(find, len);
-    }
-  } while (lt(pos, length_str(str)));
+  if (functionp(regex)) {
+    val range = funcall1(regex, str);
 
-  return cat_str(out, nil);
+    if (!range)
+      return str;
+
+    {
+      val rf = from(range);
+      val rt = to(range);
+
+      return replace_str(str, if3(isfunc,
+                                  funcall1(repl, sub_str(str, rf, rt)),
+                                  repl),
+                         rf, rt);
+    }
+  } else {
+    list_collect_decl (out, ptail);
+    val pos = zero;
+
+    do {
+      cons_bind (find, len, search_regex(str, regex, pos, nil));
+      if (!find) {
+        if (pos == zero)
+          return str;
+        ptail = list_collect(ptail, sub_str(str, pos, nil));
+        break;
+      }
+      ptail = list_collect(ptail, sub_str(str, pos, find));
+      ptail = list_collect(ptail, if3(isfunc,
+                                      funcall1(repl, sub_str(str, find,
+                                                             plus(find, len))),
+                                      repl));
+      if (len == zero && eql(find, pos)) {
+        if (lt(pos, length_str(str))) {
+          ptail = list_collect(ptail, chr_str(str, pos));
+          pos = plus(pos, one);
+        }
+      } else {
+        pos = plus(find, len);
+      }
+    } while (lt(pos, length_str(str)));
+
+    return cat_str(out, nil);
+  }
 }
 
 val search_regst(val haystack, val needle_regex, val start_num, val from_end)

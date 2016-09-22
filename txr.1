@@ -31860,15 +31860,18 @@ matching substring of
 
 .coNP Function @ regsub
 .synb
-.mets (regsub < regex < replacement << string )
+.mets (regsub >> { regex | << function } < replacement << string )
 .syne
 .desc
 The
 .code regsub
-function searches
+function operates in two modes, depending on whether
+the second argument is a regular expression,
+or function.
+
+If the second argument is a regular expression it searches
 .meta string
-for multiple occurrences of
-non-overlapping matches for
+for multiple occurrences of non-overlapping matches for that
 .metn regex .
 A new string is constructed
 similar to
@@ -31890,6 +31893,17 @@ object may be a function of one argument, in
 which case for every match which is found, this function is invoked,
 with the matching piece of text as an argument. The function's
 return value is then taken to be the replacement text.
+
+If the second argument is a function, then it is called, with
+.meta string
+as its argument. The return value must be either a range
+object (see the
+.code rcons
+function) which indicates the extent of
+.meta string
+to be replaced, or else
+.code nil
+which indicates that no replacement is to take place.
 
 .TP* Examples:
 
