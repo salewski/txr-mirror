@@ -5357,6 +5357,22 @@ val generic_funcall(val fun, struct args *args_in)
       default:
         callerror(fun, lit("too many arguments"));
       }
+    } else if (fun->co.cls == regex_s) {
+      bug_unless (args->argc >= ARGS_MIN);
+      args_normalize(args, 3);
+
+      switch (args->fill) {
+      case 0:
+        callerror(fun, lit("missing required arguments"));
+      case 1:
+        return search_regst(z(args->arg[0]), fun, nil, nil);
+      case 2:
+        return search_regst(z(args->arg[1]), fun, z(args->arg[0]), nil);
+      case 3:
+        return search_regst(z(args->arg[2]), fun, z(args->arg[0]), z(args->arg[1]));
+      default:
+        callerror(fun, lit("too many arguments"));
+      }
     } else if (structp(fun)) {
       fun = method(fun, lambda_s);
       break;

@@ -10759,12 +10759,13 @@ they produce lazy lists.
 
 .SS* Callable Objects
 
-In \*(TL, sequences (strings, vectors and lists) and hashes can be used
-as functions everywhere, not just with the DWIM brackets. Sequences work
-as one or two-argument functions. With a single argument, an element is
-selected by position and returned. With two arguments, a range is extracted and
-returned. Hashes also work as one or two argument functions, corresponding
-to the arguments of the gethash function.
+In \*(TL, sequences (strings, vectors and lists) as well as hashes and
+regular expressions can be used as functions everywhere, not just with the DWIM
+brackets.
+
+Sequences work as one or two-argument functions. With a single argument, an
+element is selected by position and returned. With two arguments, a range is
+extracted and returned.
 
 Moreover, when a sequence is used as a function of one argument, and the
 argument is a range object rather than an integer, then the call is equivalent
@@ -10772,6 +10773,14 @@ to the two-argument form.  This is the basis for array slice syntax like
 .cblk
 ["abc" 0..1] .
 .cble
+
+Hashes also work as one or two argument functions, corresponding to the
+arguments of the gethash function.
+
+A regular expression behaves as a one, two, or three argument function, which
+operates on a string argument.
+It returns the leftmost matching substring, or else
+.codn nil .
 
 .B Example 1:
 
@@ -10822,6 +10831,18 @@ A list of indices applied to a sequence is equivalent to using the
 select function, as if
 .code "(select '(1 2 3 4) '(0 2))"
 were called.
+
+.B Example 4:
+
+.cblk
+  (call #/b./ "abcd") -> "bc"
+.cble
+
+Here, the regular expression, called as a function, finds the matching
+substring
+.str bc
+within the argument
+.strn abcd .
 
 .SS* Special Variables
 Similarly to Common Lisp, \*(TL is lexically scoped by default, but
@@ -12524,6 +12545,33 @@ or else return
 if there is no such entry. The expression
 .meta alt
 is always evaluated, whether or not its value is used.
+
+.meIP >> [ regex >> [ start <> [ from-end ]] < string ]
+Determine whether regular expression
+.meta regex
+matches
+.metn string ,
+and in that case return the
+(possibly empty) leftmost matching substring.
+Otherwise, return
+.codn nil .
+
+If
+.meta start
+is specified, it gives the starting position where
+the search begins, and if
+.meta from-end
+is given, and has a value other than
+.codn nil ,
+it specifies a search from right to left. These optional
+arguments have the same conventions and semantics as
+their equivalents in the
+.code search-regst
+function.
+
+Note that
+.meta string
+is always required, and is always the rightmost argument.
 
 .RE
 .PP
@@ -31676,6 +31724,46 @@ non-deterministically:
 .cble
 
 .SS* Regular Expression Library
+.NP* Regular Expressions as Functions
+.synb
+.mets >> [ regex >> [ start <> [ from-end ]] < string ]
+.syne
+.desc
+A regular expression is callable as a function in \*(TL.
+When used this way, it requires a string argument. It searches
+the string for the leftmost match for itself, and returns
+the matching substring, which could be empty. If no match is
+found, it returns
+.codn nil .
+
+A regex takes one, two, or three arguments. The required
+.meta string
+is always the rightmost argument. This allows for convenient
+partial application of the optional arguments using
+macros in the
+.code op
+family, and macros in which the
+.code op
+syntax is implicit.
+
+The optional arguments
+.meta start
+and
+.meta from-end
+are treated exactly as their like-named counterparts in the
+.code search-regst
+function.
+
+.TP* Example:
+Keep those elements from a list of strings which match
+the regular expression
+.codn #/a.*b/ :
+
+.cblk
+  (keep-if #/a.*b/ '#"abracadabra zebra hat adlib adobe deer")
+  --> ("abracadabra" "adlib" "adobe")
+.cble
+
 .coNP Functions @ search-regex and @ range-regex
 .synb
 .mets (search-regex < string < regex >> [ start <> [ from-end ]])
