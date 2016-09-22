@@ -2720,6 +2720,20 @@ void regex_init(void)
   cdigit_k = intern(lit("cdigit"), keyword_package);
   cword_char_k = intern(lit("cword-char"), keyword_package);
 
+  reg_fun(intern(lit("regex-compile"), user_package), func_n2o(regex_compile, 1));
+  reg_fun(intern(lit("regexp"), user_package), func_n1(regexp));
+  reg_fun(intern(lit("search-regex"), user_package), func_n4o(search_regex, 2));
+  reg_fun(intern(lit("range-regex"), user_package), func_n4o(range_regex, 2));
+  reg_fun(intern(lit("search-regst"), user_package), func_n4o(search_regst, 2));
+  reg_fun(intern(lit("match-regex"), user_package), func_n3o(match_regex, 2));
+  reg_fun(intern(lit("match-regst"), user_package), func_n3o(match_regst, 2));
+  reg_fun(intern(lit("match-regex-right"), user_package),
+          func_n3o(match_regex_right, 2));
+  reg_fun(intern(lit("match-regst-right"), user_package),
+          func_n3o(match_regst_right, 2));
+  reg_fun(intern(lit("regsub"), user_package), func_n3(regsub));
+  reg_fun(intern(lit("regex-parse"), user_package), func_n2o(regex_parse, 1));
+
   reg_fun(intern(lit("reg-expand-nongreedy"), system_package),
           func_n1(reg_expand_nongreedy));
   reg_fun(intern(lit("reg-optimize"), system_package), func_n1(reg_optimize));
