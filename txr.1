@@ -31748,9 +31748,18 @@ matches at
 .meta position
 in
 .metn string .
+
 If
 .meta position
-is not specified, it is taken to be zero.
+is not specified, it is taken to be zero. Negative values
+of
+.meta position
+index from the right end of the string such that -1
+refers to the last character. Excessively negative
+values which index before the first character cause
+.code nil
+to be returned.
+
 If the regex matches, then the length of the match is returned.
 If it does not match, then
 .code nil
@@ -31778,10 +31787,20 @@ function tests whether
 contains a match which ends
 precisely on the character just before
 .metn end-position .
+
 If
 .meta end-position
 is not specified, it defaults to the length of the string, and the function
 performs a right-anchored regex match.
+The
+.meta end-position
+argument can be a negative integer, in which case it denotes
+positions from the end of the string, such that -1 refers
+to the last character. If the value is excessively negative such
+that the position immediately before it is before the start
+of the string, then
+.code nil
+is returned.
 
 If a match is found, then the length of the match is returned.
 

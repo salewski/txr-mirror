@@ -2464,7 +2464,13 @@ val match_regex(val str, val reg, val pos)
   val i, retval;
   regm_result_t last_res = REGM_INCOMPLETE;
 
-  pos = default_arg(pos, zero);
+  if (null_or_missing_p(pos)) {
+    pos = zero;
+  } else if (lt(pos, zero)) {
+    pos = plus(pos, length_str(str));
+    if (lt(pos, zero))
+      return nil;
+  }
 
   regex_machine_init(&regm, reg);
 
@@ -2497,6 +2503,8 @@ val match_regex_right(val str, val regex, val end)
 
   if (null_or_missing_p(end) || gt(end, slen))
     end = slen;
+  else if (lt(end, zero))
+    end = plus(end, slen);
 
   while (le(pos, end)) {
     cons_bind (from, len, search_regex(str, regex, pos, nil));
