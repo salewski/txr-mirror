@@ -31724,6 +31724,19 @@ non-deterministically:
 .cble
 
 .SS* Regular Expression Library
+
+\*(TX provides a "pure" regular expression implementation based on automata
+theory, which equates regular expressions, finite automata and sets of strings.
+A regular expression determines whether or not a string of input characters
+belongs to a set. \*(TX regular expressions do not support features such
+as as "anchoring" a match to the start or end of a string, or capture of
+parenthesized sub-expression matches into registers. Parenthesis syntax
+denotes only grouping, with no additional meaning.
+
+The semantics of whether a regular expression is used for a substring
+search, prefix match, suffix match, spring splitting and so forth comes from
+the functions which use regular expressions to perform these operations.
+
 .NP* Regular Expressions as Functions
 .synb
 .mets >> [ regex >> [ start <> [ from-end ]] < string ]
