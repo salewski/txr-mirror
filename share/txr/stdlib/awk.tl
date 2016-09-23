@@ -48,6 +48,7 @@
   begin-actions end-actions
   cond-actions
   (nranges 0)
+  (rng-rec-temp (gensym))
   rng-expr-temps
   rng-exprs)
 
@@ -108,6 +109,11 @@
             (put-string (if (set next (cdr a)) self.ofs self.ors))))
     (t (put-string self.rec)
        (put-string self.ors))))
+
+(defun sys:range-test (val rec)
+  (caseq (typeof val)
+    ((regex fun) (call val rec))
+    (t val)))
 
 (defun sys:awk-expander (clauses)
   (let ((awc (new sys:awk-compile-time)))
@@ -176,7 +182,7 @@
      (macrolet ((next () '(return-from :awk-rec))
                 (next-file () '(return-from :awk-file))
                 (prn (. args) ^(qref ,',aws-sym (prn ,*args)))
-                (rng (from-expr to-expr :env e)
+                (sys:rng (from-expr to-expr :env e)
                   (let ((ix (pinc (qref ,awc nranges)))
                         (rng-temp (gensym))
                         (from-expr-ex (sys:expand from-expr e))
@@ -193,6 +199,9 @@
                                (or (set flag ,flag-new) ,flag-old)))
                           (qref ,awc rng-exprs))
                     rng-temp))
+                (rng (from-expr to-expr)
+                  ^(sys:rng (sys:range-test ,from-expr ,(qref ,awc rng-rec-temp))
+                            (sys:range-test ,to-expr ,(qref ,awc rng-rec-temp))))
                 (ff (. opip-args)
                   ^(symacrolet ((f (rslot ,',aws-sym 'fields 'f-to-rec)))
                      (set f [(opip ,*opip-args) f])))
@@ -229,9 +238,10 @@
                               ,*awc.end-file-actions))))
                       (,awk-fun (lambda (,aws-sym)
                                   ,(if awc.rng-exprs
-                                     ^(let* ,(nreverse
-                                               (zip awc.rng-expr-temps
-                                                    awc.rng-exprs))
+                                     ^(let* ((,awc.rng-rec-temp rec)
+                                             ,*(nreverse
+                                                 (zip awc.rng-expr-temps
+                                                      awc.rng-exprs)))
                                         ,p-actions-xform)
                                      p-actions-xform))))
                  ,*awc.begin-actions

@@ -38771,7 +38771,25 @@ The expressions
 .meta from-condition
 and
 .meta to-condition
-are ordinary expressions which are evaluated; however, the are evaluated
+are ordinary expressions which are evaluated. However, their
+evaluation is unusual in two ways.
+
+Firstly, if either expression
+produces, as its result, a function or regular expression object,
+then that function or regular expression object is applied to
+the current record (value of the
+.code rec
+variable), and the result of that application is then taken
+as the result of the condition. This allows for expressions like
+.code "(rng (f^ #/start/) #/end/)"
+which denotes a range which begins with a record which
+begins with the prefix
+.str start
+and ends with a record which contains
+.str end
+as a substring.
+
+Secondly, the conditions are evaluated
 out of order with respect to the surrounding expression
 in which they occur.  Ranges and their constituent
 .meta from-condition
@@ -38812,6 +38830,16 @@ itself is evaluated, the
 .code rng
 expression merely fetches a previously computed Boolean value which indicates
 whether the range is active for this record.
+
+Also, the behavior is unspecified if range expressions attempt to modify
+the awk-special variables.
+.codn rec ,
+.codn f ,
+.codn fs ,
+.code ft
+or
+.codn kfs .
+It is not recommended to place any side effects into range expressions.
 
 Evaluation of ranges obeys the following logic, which is applied to
 each range, prior to the processing of condition-action clauses.
