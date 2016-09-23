@@ -8698,7 +8698,7 @@ static void obj_init(void)
   rcons_s = intern(lit("rcons"), user_package);
   var_s = intern(lit("var"), system_package);
   expr_s = intern(lit("expr"), system_package);
-  regex_s = intern(lit("regex"), system_package);
+  regex_s = intern(lit("regex"), user_package);
   nongreedy_s = intern(lit("ng0+"), user_package);
   quote_s = intern(lit("quote"), user_package);
   qquote_s = intern(lit("qquote"), user_package);
