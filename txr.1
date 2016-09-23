@@ -31869,17 +31869,19 @@ matching substring of
 .syne
 .desc
 The
-.code match-regex
-function tests whether
+.code match-regex-right
+function tests whether some substring of
 .meta string
-contains a match which ends
-precisely on the character just before
-.metn end-position .
+which terminates at the character position just before
+.meta end-position
+matches
+.metn regex .
 
 If
 .meta end-position
 is not specified, it defaults to the length of the string, and the function
 performs a right-anchored regex match.
+
 The
 .meta end-position
 argument can be a negative integer, in which case it denotes
@@ -31890,23 +31892,26 @@ of the string, then
 .code nil
 is returned.
 
-If a match is found, then the length of the match is returned.
-
-The match must terminate just before
+If
 .meta end-position
-in the sense that
-additional characters at
-.meta end-position
-and beyond can no longer satisfy the
-regular expression. More formally, the function searches, starting from
-position zero, for positions where there occurs a match for the regular
-expression, taking the longest possible match. The length of first such a match
-which terminates on the character just before
-.meta end-position
-is returned.
-If no such a match is found, then
+is a positive value beyond the length of
+.metn string ,
+then, likewise,
 .code nil
 is returned.
+
+If a match is found, then the length of the match is returned.
+
+A more precise way of articulating the role of
+.meta end-position
+is that for the purposes of matching,
+.code string
+is considered to terminate just before
+.metn end-position :
+in other words, that
+.meta end-position
+is the length of the string. The match is then anchored to the
+end of this effective string.
 
 The
 .code match-regst-right
@@ -31914,7 +31919,7 @@ differs from
 .code match-regst-right
 in the representation of the return value in the matching case.
 Rather than returning the length of the match, it returns
-matching substring of
+the matching substring of
 .metn string .
 
 .TP* Examples:
@@ -45715,6 +45720,13 @@ the behavior. The
 function was also affected by this issue; however, since it returned nonsense
 result not corresponding to the matching text, it was repaired without
 backward compatibility.
+Also affected by version 150 compatibility are the
+.code match-regex-right
+and
+.code match-regst-right
+functions. These functions worked as documented; however, their
+specification changes after version 150 to a semantics which is
+more useful and less surprising to the programmer.
 .IP 148
 Up until version 148, the
 .code :postinit

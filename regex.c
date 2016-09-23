@@ -2506,7 +2506,7 @@ val match_regex_len(val str, val regex, val pos)
   }
 }
 
-val match_regex_right(val str, val regex, val end)
+static val match_regex_right_old(val str, val regex, val end)
 {
   val pos = zero;
   val slen = length(str);
@@ -2526,6 +2526,52 @@ val match_regex_right(val str, val regex, val end)
       return len;
 
     pos = plus(pos, one);
+  }
+
+  return nil;
+}
+
+val match_regex_right(val str, val regex, val end)
+{
+  val pos = zero;
+  val len = length(str);
+
+  if (null_or_missing_p(end)) {
+    end = len;
+  } else if (minusp(end)) {
+    end = plus(end, len);
+    if (lt(end, zero))
+      return nil;
+  } else if (gt(end, len)) {
+    return nil;
+  }
+
+  while (lt(pos, end)) {
+    regex_machine_t regm;
+    val i ;
+    regm_result_t last_res = REGM_INCOMPLETE;
+
+    regex_machine_init(&regm, regex);
+
+    for (i = pos; lt(i, end); i = plus(i, one)) {
+      last_res = regex_machine_feed(&regm, c_chr(chr_str(str, i)));
+      if (last_res == REGM_FAIL)
+        break;
+    }
+
+    last_res = regex_machine_feed(&regm, 0);
+
+    switch (last_res) {
+    case REGM_MATCH:
+      regex_machine_cleanup(&regm);
+      return minus(end, pos);
+    case REGM_INCOMPLETE:
+    case REGM_FAIL:
+      regex_machine_cleanup(&regm);
+      break;
+    }
+
+    pos = succ(pos);
   }
 
   return nil;
@@ -2592,6 +2638,14 @@ val match_regst(val str, val regex, val pos_in)
   val pos = default_arg(pos_in, zero);
   val new_pos = match_regex(str, regex, pos);
   return if2(new_pos, sub_str(str, pos, new_pos));
+}
+
+static val match_regst_right_old(val str, val regex, val end)
+{
+  val len = match_regex_right_old(str, regex, end);
+  return if2(len, if3(null_or_missing_p(end),
+                      sub_str(str, neg(len), t),
+                      sub_str(str, minus(end, len), end)));
 }
 
 val match_regst_right(val str, val regex, val end)
@@ -2766,9 +2820,11 @@ void regex_init(void)
                    match_regex : match_regex_len, 2));
   reg_fun(intern(lit("match-regst"), user_package), func_n3o(match_regst, 2));
   reg_fun(intern(lit("match-regex-right"), user_package),
-          func_n3o(match_regex_right, 2));
+          func_n3o((opt_compat && opt_compat <= 150) ?
+                   match_regex_right_old : match_regex_right, 2));
   reg_fun(intern(lit("match-regst-right"), user_package),
-          func_n3o(match_regst_right, 2));
+          func_n3o((opt_compat && opt_compat <= 150) ?
+                   match_regst_right_old : match_regst_right, 2));
   reg_fun(intern(lit("regsub"), user_package), func_n3(regsub));
   reg_fun(intern(lit("regex-parse"), user_package), func_n2o(regex_parse, 1));
 
