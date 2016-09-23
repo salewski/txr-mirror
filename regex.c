@@ -2496,6 +2496,16 @@ val match_regex(val str, val reg, val pos)
   return nil;
 }
 
+val match_regex_len(val str, val regex, val pos)
+{
+  if (null_or_missing_p(pos)) {
+    return match_regex(str, regex, pos);
+  } else {
+    val new_pos = match_regex(str, regex, pos);
+    return if2(new_pos, minus(new_pos, pos));
+  }
+}
+
 val match_regex_right(val str, val regex, val end)
 {
   val pos = zero;
@@ -2580,8 +2590,8 @@ val search_regst(val haystack, val needle_regex, val start_num, val from_end)
 val match_regst(val str, val regex, val pos_in)
 {
   val pos = default_arg(pos_in, zero);
-  val len = match_regex(str, regex, pos);
-  return if2(len, sub_str(str, pos, plus(pos, len)));
+  val new_pos = match_regex(str, regex, pos);
+  return if2(new_pos, sub_str(str, pos, new_pos));
 }
 
 val match_regst_right(val str, val regex, val end)
@@ -2751,7 +2761,9 @@ void regex_init(void)
   reg_fun(intern(lit("search-regex"), user_package), func_n4o(search_regex, 2));
   reg_fun(intern(lit("range-regex"), user_package), func_n4o(range_regex, 2));
   reg_fun(intern(lit("search-regst"), user_package), func_n4o(search_regst, 2));
-  reg_fun(intern(lit("match-regex"), user_package), func_n3o(match_regex, 2));
+  reg_fun(intern(lit("match-regex"), user_package),
+          func_n3o((opt_compat && opt_compat <= 150) ?
+                   match_regex : match_regex_len, 2));
   reg_fun(intern(lit("match-regst"), user_package), func_n3o(match_regst, 2));
   reg_fun(intern(lit("match-regex-right"), user_package),
           func_n3o(match_regex_right, 2));

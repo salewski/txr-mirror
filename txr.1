@@ -45702,6 +45702,19 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 150
+Until version 150, the
+.code match-regex
+function behaved in a different way from what was documented. Rather
+than returning the length of the match, it returned the index one
+past the last matching character. In the case when the starting position
+is zero, these values coincide; they are different if the match begins
+at some position inside the string. Compatibility with 150 restores
+the behavior. The
+.code match-regst
+function was also affected by this issue; however, since it returned nonsense
+result not corresponding to the matching text, it was repaired without
+backward compatibility.
 .IP 148
 Up until version 148, the
 .code :postinit
