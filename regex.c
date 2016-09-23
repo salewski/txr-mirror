@@ -2655,6 +2655,127 @@ val match_regst_right(val str, val regex, val end)
                       sub_str(str, neg(len), t),
                       sub_str(str, minus(end, len), end)));
 }
+static val do_match_full(val regex, val str)
+{
+   return if2(eql(match_regex(str, regex, zero), length_str(str)), str);
+}
+
+static val do_match_full_offs(val env, val str)
+{
+  cons_bind (regex, pos_in, env);
+  val len = length_str(str);
+  val pos = if3(minusp(pos_in), plus(pos_in, len), pos_in);
+  return if2(eql(match_regex(str, regex, pos), len),
+             sub_str(str, pos, t));
+}
+
+val regex_match_full_fun(val regex, val pos)
+{
+  if (null_or_missing_p(pos))
+    return func_f1(regex, do_match_full);
+  return func_f1(cons(regex, pos), do_match_full_offs);
+}
+
+static val do_match_left(val regex, val str)
+{
+  return match_regst(str, regex, zero);
+}
+
+static val do_match_left_offs(val env, val str)
+{
+  cons_bind (regex, pos, env);
+  return match_regst(str, regex, pos);
+}
+
+val regex_match_left_fun(val regex, val pos)
+{
+  if (null_or_missing_p(pos))
+    return func_f1(regex, do_match_left);
+  return func_f1(cons(regex, pos), do_match_left_offs);
+}
+
+static val do_match_right(val regex, val str)
+{
+  return match_regst_right(str, regex, nil);
+}
+
+static val do_match_right_offs(val env, val str)
+{
+  cons_bind (regex, end, env);
+  return match_regst_right(str, regex, end);
+}
+
+val regex_match_right_fun(val regex, val end)
+{
+  if (null_or_missing_p(end))
+    return func_f1(regex, do_match_right);
+  return func_f1(cons(regex, end), do_match_right_offs);
+}
+
+val regex_match_full(val regex, val arg1, val arg2)
+{
+  if (null_or_missing_p(arg2)) {
+    val str = arg1;
+    return if2(eql(match_regex(arg1, regex, arg2), length_str(str)), str);
+  } else {
+    val str = arg2;
+    val len = length_str(str);
+    val pos = if3(minusp(arg1), plus(len, arg1), arg1);
+    return if2(eql(match_regex(str, regex, pos), len), sub_str(str, pos, t));
+  }
+}
+
+val regex_match_left(val regex, val arg1, val arg2)
+{
+  if (null_or_missing_p(arg2))
+    return match_regst(arg1, regex, arg2);
+  return match_regst(arg2, regex, arg1);
+}
+
+val regex_match_right(val regex, val arg1, val arg2)
+{
+  if (null_or_missing_p(arg2))
+    return match_regst_right(arg1, regex, arg2);
+  return match_regst_right(arg2, regex, arg1);
+}
+
+val regex_range_full(val regex, val arg1, val arg2)
+{
+  if (null_or_missing_p(arg2)) {
+    val str = arg1;
+    val len = length_str(str);
+    return if2(eql(match_regex(str, regex, zero), len), rcons(zero, len));
+  } else {
+    val str = arg2;
+    val len = length_str(str);
+    val pos = if3(minusp(arg1), plus(len, arg1), arg1);
+    return if2(eql(match_regex(str, regex, pos), len), rcons(pos, len));
+  }
+}
+
+val regex_range_left(val regex, val arg1, val arg2)
+{
+  if (null_or_missing_p(arg2)) {
+    val len = match_regex(arg1, regex, arg2);
+    return if2(len, rcons(zero, len));
+  } else {
+    val pos = if3(lt(arg1, zero), plus(arg1, length_str(arg2)), arg1);
+    val new_pos = match_regex(arg2, regex, pos);
+    return if2(new_pos, rcons(pos, new_pos));
+  }
+}
+
+val regex_range_right(val regex, val arg1, val arg2)
+{
+  if (null_or_missing_p(arg2)) {
+    val len = match_regex_right(arg1, regex, arg2);
+    return if2(len, rcons(zero, len));
+  } else {
+    val end = if3(lt(arg1, zero), plus(arg1, length_str(arg2)), arg1);
+    val len = match_regex_right(arg2, regex, end);
+    return if2(len, rcons(minus(end, len), end));
+  }
+}
 
 val read_until_match(val regex, val stream_in, val include_match_in)
 {
@@ -2832,6 +2953,15 @@ void regex_init(void)
           func_n1(reg_expand_nongreedy));
   reg_fun(intern(lit("reg-optimize"), system_package), func_n1(reg_optimize));
   reg_fun(intern(lit("read-until-match"), user_package), func_n3o(read_until_match, 1));
+  reg_fun(intern(lit("f^$"), user_package), func_n2o(regex_match_full_fun, 1));
+  reg_fun(intern(lit("f^"), user_package), func_n2o(regex_match_left_fun, 1));
+  reg_fun(intern(lit("f$"), user_package), func_n2o(regex_match_right_fun, 1));
+  reg_fun(intern(lit("m^$"), user_package), func_n3o(regex_match_full, 2));
+  reg_fun(intern(lit("m^"), user_package), func_n3o(regex_match_left, 2));
+  reg_fun(intern(lit("m$"), user_package), func_n3o(regex_match_right, 2));
+  reg_fun(intern(lit("r^$"), user_package), func_n3o(regex_range_full, 2));
+  reg_fun(intern(lit("r^"), user_package), func_n3o(regex_range_left, 2));
+  reg_fun(intern(lit("r$"), user_package), func_n3o(regex_range_right, 2));
   init_special_char_sets();
 }
 

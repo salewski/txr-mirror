@@ -32216,6 +32216,239 @@ removed from the stream.  If
 is true, that matching text is included in
 the returned string. Otherwise, it is discarded.
 
+.coNP Functions @, m^$ @ m^ and @ m$
+.synb
+.mets (m^$ < regex <> [ position ] << string )
+.mets (m^ < regex <> [ position ] << string )
+.mets (m$ < regex <> [ end-position ] << string )
+.syne
+.desc
+These functions provide functionality similar to the
+.meta match-regst
+and
+.meta match-regst-right
+functions, but under alternative interfaces which are more
+convenient.
+
+The
+.code ^
+and
+.code $
+notation used in their names are an allusion to the
+regular expression search anchoring operators found in
+familiar POSIX utilities such as
+.codn grep .
+
+The
+.meta position
+argument, if omitted,
+defaults to zero, so that the
+entire
+.meta string
+is operated upon.
+
+The
+.meta end-position
+argument defaults to the length of
+.metn string ,
+so that the end position coincides with the end of the
+string.
+
+If the
+.meta position
+or
+.meta end-position
+arguments are negative, they index backwards
+from the length of
+.meta string
+so that -1 denotes the last character.
+
+A value in either parameter which is excessively
+negative or positive, such that it indexes before
+the start of the string or exceeds its length
+results in a failed match and consequently
+.code nil
+being returned.
+
+
+The
+.code m^$
+function tests whether the entire portion of
+.meta string
+starting at
+.meta position
+through to the end of the string is in the set of strings
+matched by
+.metn regex .
+If this is true, then that portion of the string is
+returned. Otherwise
+.code nil
+is returned.
+
+The
+.code m^
+function tests whether the portion of the
+.meta string
+starting at
+.meta position
+has a prefix which matches
+.metn regex .
+If so, then this matching prefix is returned.
+Otherwise
+.code nil
+is returned.
+
+The
+.code m$
+function tests whether the portion of
+.meta string
+ending just before
+.meta end-position
+has a suffix which matches
+.metn regex .
+If so, then this matching suffix is returned.
+Otherwise
+.code nil
+is returned.
+
+.coNP Functions @, r^$ @ r^ and @ r$
+.synb
+.mets (r^$ < regex <> [ position ] << string )
+.mets (r^ < regex <> [ position ] << string )
+.mets (r$ < regex <> [ end-position ] << string )
+.syne
+.desc
+These functions perform the same operations as,
+respectively,
+.codn m^$ ,
+.code m^
+and
+.codn m$ ,
+with the same argument conventions. They differ
+in return value. When a match is found, they
+return a range value indicating the extent of
+the matching substring within
+.meta string
+rather than the matching substring itself.
+
+The
+.meta position
+argument, if omitted,
+defaults to zero, so that the
+entire
+.meta string
+is operated upon.
+
+The
+.meta end-position
+argument defaults to the length of
+.metn string ,
+so that the end position coincides with the end of the
+string.
+
+A value in either parameter which is excessively
+negative or positive, such that it indexes before
+the start of the string or exceeds its length
+results in a failed match and consequently
+.code nil
+
+being returned.
+The
+.code r^$
+function tests whether the entire portion of
+.meta string
+starting at
+.meta position
+through to the end of the string is in the set of strings
+matched by
+.metn regex .
+If this is true, then the matching range is returned,
+as a range object.
+
+The
+.code r^
+function tests whether the portion of the
+.meta string
+starting at
+.meta position
+has a prefix which matches
+.metn regex .
+If so, then the matching range is returned, as a range object.
+Otherwise
+.code nil
+is returned.
+
+The
+.code m$
+function tests whether the portion of
+.meta string
+ending just before
+.meta end-position
+has a suffix which matches
+.metn regex .
+If so, then the matching range is returned.
+Otherwise
+.code nil
+is returned.
+
+.coNP Functions @, f^$ @ f^ and @ f$
+.synb
+.mets (f^$ < regex <> [ position ])
+.mets (f^ < regex <> [ position ])
+.mets (f$ < regex <> [ end-position ])
+.syne
+.desc
+These regular expression functions do not directly
+perform regex operations. Rather, they each return
+a function of one argument which performs a regex
+operation.
+
+The returned functions perform the same operations as,
+respectively,
+.codn m^$ ,
+.code m^
+and
+.codn m$ .
+
+The following equivalences nearly hold, except that the functions
+on the right side produced by
+.code op
+can accept two arguments when only
+.code r
+is curried, whereas the functions on the left take only
+one argument:
+
+.cblk
+  [f^$ r]    <-->  (op m^$ r)
+  [f^$ r p]  <-->  (op m^$ r p)
+  [f^ r]     <-->  (op m^ r)
+  [f^ r p]   <-->  (op m^ r p)
+  [f$ r]     <-->  (op m$ r)
+  [f$ r p]   <-->  (op m$ r p)
+.cble
+
+That is to say,
+.code f^$
+returns a function which binds
+.meta regex
+and possibly the optional
+.metn position .
+When this function is invoked, it must be given an argument
+which is a string. It performs the same operation as
+.code m^$
+being called on
+.meta regex
+and possibly
+.metn position .
+The same holds between
+.code f^
+and
+.codn m^ ,
+and between
+.code f$
+and
+.codn m$ .
+
 .SS* Hashing Library
 .coNP Functions @ make-hash and @ hash
 .synb
