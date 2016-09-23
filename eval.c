@@ -1164,7 +1164,7 @@ static val do_eval(val form, val env, val ctx,
       val fbinding = lookup_fun(env, oper);
       if (!fbinding) {
         last_form_evaled = form;
-        eval_error(form, lit("no such function or operator: ~s"), oper, nao);
+        eval_error(form, lit("~s does not name a function or operator"), oper, nao);
         abort();
       } else {
         val arglist = rest(form);
