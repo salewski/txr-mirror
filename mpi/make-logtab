@@ -7,7 +7,8 @@
 # estimating the output sizes of various bases.
 #
 # by Michael J. Fromberger <sting@linguist.dartmouth.edu>
-# Copyright (C) 1999 Michael J. Fromberger, All Rights Reserved
+# Developed 1999-2006.
+# Assigned to the public domain as of 2002; see README.
 #
 # $Id: make-logtab,v 1.2 2006/07/07 19:35:02 sting Exp $
 #

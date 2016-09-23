@@ -23,13 +23,13 @@ Function .onInstSuccess
 FunctionEnd
 
 PageEx license
-  LicenseText "Use and redistribution of TXR requires agreement with terms of the license." "Agree"
+  LicenseText "Redistribution of TXR requires agreement with terms of the license." "Acknowledge"
   LicenseData LICENSE
   Caption ": Licensing"
 PageExEnd
 
 PageEx license
-  LicenseText "Use and redistribution of this version of TXR also requires agreement with Cygwin's license." "Agree"
+  LicenseText "Redistribution of this version of TXR also requires agreement with Cygwin's license." "Acknowledge"
   LicenseData LICENSE-CYG
   Caption ": Licensing"
 PageExEnd

@@ -1,41 +1,14 @@
 Copyright (C) 2009-2016, Kaz Kylheku <kaz@kylheku.com>.
 All rights reserved.
 
-The document named LICENSE specifies the license for the TXR program.
+The document named LICENSE specifies the license for the TXR program,
+including the linenoise library which it uses, found in the
+linenoise/ subdirectory. Linenoise uses exactly the same Two-Clause
+BSD License, and so the two licenses are combined.
 
-This METALICENSE document provides explanatory notes about the license, and
-does not constitute part of that license.
-
-The license is closely based on the two-clause BSD license, and is believed to
-be identical to that license in intent. For all practical intents and purposes,
-excluding situations of legal proceedings in a court of law or elsewhere, it is
-accurate to say that this software is "BSD licensed".
-
-Here is a summary, not guaranteed to be complete and correct, of the
-differences between the TXR LICENSE file and the BSD license.
-
-1. The introductory paragraph uses the phrase "of this software" to clarify
-   what the license refers to. The BSD license does not (but it does use
-   "THIS SOFTWARE" several times in the disclaimer).
-
-2. The introductory paragraph has been modified.  The original introductory
-   paragraph states that the redistribution and use are subject to
-   the conditions.  The modified paragraph states that only redistribution is
-   subject to the conditions, which is obvious from the interpretation of the
-   meaning of those conditions.
-
-4. The second, new, introductory paragraph states that use of the program
-   constitutes agreement with the disclaimer. The original BSD two-clause
-   license neglects to make such an assertion explicitly. However, it is
-   obvious that it has this intent.
-
-3. The conditions are unmodified.
-
-4. The disclaimer is substantially abridged from the verbose original.
-   Interested parties are hereby encouraged to research the differences.
-
-Regarding the MPI library, the README file in the mpi-1.8.6.tar.gz
-archive states:
+The MPI library, found in the mpi/ subdirectory, was developed over
+the yeras 1998-2006 by Michael J. Fromberger. Its license consists
+of the mpi/README file, which states:
 
    This software is in the public domain.  It is entirely free, and you
    may use it and/or redistribute it for whatever purpose you choose;
@@ -44,11 +17,14 @@ archive states:
    a particular purpose.
 
 Whether or not software can be explicitly deposited into the public domain is
-legally questionable, so the MPI library must be regarded as being copyrighted
+controversial, so the MPI library may have to be regarded as being copyrighted
 by Michael J. Fromberger. The above text can be reasonably understood to
-constitute a license which is compatible with the TXR LICENSE file
-in the sense that it is at least as permissive.
+constitute a license grant which is compatible with TXR's Two-Clause BSD
+license in the sense that it is at least as permissive.
 
-TXR is ported to Windows with the help of the Cygwin library.  For user
-conveninence, a packaged version of TXR includes the CYGWIN.DLL, in accordance
-with the terms of Cywgin's license, the GNU Lesser Public License, Version 3.
+TXR is ported to Windows with the help of a derivative of the Cygwin library.
+For user convenience, a packaged version of TXR includes the CYGWIN1.DLL, in
+accordance with the terms of Cygwin's license, the GNU Lesser Public License,
+Version 3.  More details are in the document LICENSE-CYG, which is incorporated
+into the Windows installer and displayed to users during installation to inform
+them of the dependency on a LGPL-ed library.

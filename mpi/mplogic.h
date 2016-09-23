@@ -2,7 +2,8 @@
     mplogic.h
 
     by Michael J. Fromberger <http://www.dartmouth.edu/~sting/>
-    Copyright (C) 1998 Michael J. Fromberger, All Rights Reserved
+    Developed 1998-2004.
+    Assigned to the public domain as of 2002; see README.
 
     Bitwise logical operations on MPI values
 
