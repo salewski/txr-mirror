@@ -230,26 +230,28 @@
                                      rng-n (macro-time (qref ,awc nranges))))
                       ,*(if awc.output
                           ^((*stdout* (qref ,aws-sym output))))
-                      ,*(if awc.begin-file-actions
+                      ,*(if (and awc.cond-actions awc.begin-file-actions)
                           ^((,awk-begf-fun (lambda (,aws-sym)
                               ,*awc.begin-file-actions))))
-                      ,*(if awc.end-file-actions
+                      ,*(if (and awc.cond-actions awc.end-file-actions)
                           ^((,awk-endf-fun (lambda (,aws-sym)
                               ,*awc.end-file-actions))))
-                      (,awk-fun (lambda (,aws-sym)
-                                  ,(if awc.rng-exprs
-                                     ^(let* ((,awc.rng-rec-temp rec)
-                                             ,*(nreverse
-                                                 (zip awc.rng-expr-temps
-                                                      awc.rng-exprs)))
-                                        ,p-actions-xform)
-                                     p-actions-xform))))
+                      ,*(if awc.cond-actions
+                          ^((,awk-fun (lambda (,aws-sym)
+                                        ,(if awc.rng-exprs
+                                           ^(let* ((,awc.rng-rec-temp rec)
+                                                   ,*(nreverse
+                                                       (zip awc.rng-expr-temps
+                                                            awc.rng-exprs)))
+                                              ,p-actions-xform)
+                                           p-actions-xform))))))
                  ,*awc.begin-actions
                    (unwind-protect
-                     (qref ,aws-sym (loop ,awk-fun
+                     ,(if awc.cond-actions
+                        ^(qref ,aws-sym (loop ,awk-fun
                                           ,(if awc.begin-file-actions
                                              awk-begf-fun)
                                           ,(if awc.end-file-actions
-                                             awk-endf-fun)))
+                                             awk-endf-fun))))
                      (set ,awk-retval (progn ,*awc.end-actions)))
                    ,awk-retval))))))))
