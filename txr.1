@@ -22433,6 +22433,13 @@ The
 and
 .code refset
 functions perform array-like indexing into sequences.
+If the
+.meta seq
+parameter is a hash, then these functions perform
+has retrieval and storage; in that case
+.meta index
+isn't restricted to an integer value.
+
 The
 .code ref
 function retrieves an element of
@@ -22444,17 +22451,42 @@ element of
 .meta seq
 with a new value.
 
-The
+If
+.meta seq
+is a sequence then
 .meta index
-argument is based from zero, and negative values are permitted,
-with a special meaning as described in the Range Indexing section under the
+argument must be an integer. The first element of the sequence
+is indexed by zero. Negative values are permitted,
+denoting backward indexing from the end of the sequence, such that
+the last element is indexed by -1, the second last by -2 and so on.
+See also the Range Indexing section under the
 description of the
 .code dwim
 operator.
 
+If
+.meta seq
+is a list, then out-of-range indices, whether positive or negative,
+are treated leniently by
+.codn ref :
+such accesses produce the value
+.codn nil ,
+rather than an error. For other sequence types, such accesses
+are erroneous. For hashes, accesses to nonexistent elements
+are treated leniently, and produce
+.codn nil .
+
 The
 .code refset
-function returns the new value.
+function is strict for out-of-range indices over all sequences,
+including lists. In the case of hashes, a
+.code refset
+of a nonexistent key creates the key.
+
+The
+.code refset
+function returns
+.codn new-value .
 
 The following equivalences hold between
 .code ref

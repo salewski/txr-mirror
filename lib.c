@@ -520,8 +520,11 @@ val lazy_conses(val list)
 val listref(val list, val ind)
 {
   gc_hint(list);
-  if (lt(ind, zero))
+  if (lt(ind, zero)) {
     ind = plus(ind, length_list(list));
+    if (lt(ind, zero))
+      return nil;
+  }
   for (; gt(ind, zero); ind = minus(ind, one))
     list = cdr(list);
   return car(list);
@@ -537,7 +540,7 @@ loc listref_l(val list, val ind)
 
   for (; gt(ind, zero) && list; ind = minus(ind, one))
     list = cdr(list);
-  if (consp(list))
+  if (ge(ind, zero) && consp(list))
     return car_l(list);
 
   uw_throwf(error_s, lit("~s has no assignable location at ~s"),
