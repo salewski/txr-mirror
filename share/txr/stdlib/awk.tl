@@ -35,7 +35,8 @@
   (file-num 0)
   (file-rec-num 0)
   (rec-num 0)
-  rec fields nf rng-vec (rng-n 0)
+  rec orig-rec fields nf
+  rng-vec (rng-n 0)
   (:postinit (self)
     (if (plusp self.rng-n)
       (set self.rng-vec (vector self.rng-n)))
@@ -93,7 +94,7 @@
                                         aws.krs))))
           (set aws.file-rec-num 0)
           (whilet ((rec (get-line recin)))
-            (set aws.rec rec)
+            (set aws.rec rec aws.orig-rec rec)
             (inc aws.rec-num)
             (inc aws.file-rec-num)
             aws.(rec-to-f)
@@ -167,6 +168,7 @@
 
 (defmacro sys:awk-let (awc aws-sym . body)
   ^(symacrolet ((rec (rslot ,aws-sym 'rec 'rec-to-f))
+                (orec (rslot ,aws-sym 'orig-rec 'rec-to-f))
                 (f (rslot ,aws-sym 'fields 'f-to-rec))
                 (nf (rslot ,aws-sym 'nf 'nf-to-f))
                 (nr (qref ,aws-sym rec-num))

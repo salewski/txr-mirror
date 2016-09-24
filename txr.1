@@ -38346,7 +38346,7 @@ switches to the next input source. When there are no more input sources,
 the macro terminates.
 .RE
 
-.coNP Variable @ rec
+.coNP Variables @ rec and @ orec
 .desc
 The awk variable
 .code rec
@@ -38368,6 +38368,33 @@ and these fields are assigned to the field list
 At the same time, the
 .code nf
 variable is updated to reflect the new number of fields.
+Likewise, modification of these variables causes
+.code rec
+to be reconstructed by a catenation of the textual representation
+of the fields in
+.code f
+separated by copies of the output field separator
+.codn ofs .
+
+The
+.code orec
+variable ("original record") also holds the current record. It is automatically
+updated prior to the processing of the condition-clauses at the same time as
+.code rec
+with the same contents. Like
+.codn rec ,
+it is initially
+.code nil
+before the first record is read. The
+.code orec
+variable is unaffected by modification of
+the variables
+.codn rec ,
+.code f
+and
+.codn nf .
+It may be assigned. Doing so has no effect on any other
+variable.
 
 .coNP Variable @ f
 .desc
