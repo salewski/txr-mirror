@@ -39104,6 +39104,22 @@ the floating-point value which it denotes. The expression
 .code "(r str)"
 is equivalent to
 .codn "(tofloat str)" .
+.ccIP @, iz @, oz @, xz @ bz and @ rz
+Conversion similar to
+.codn i ,
+.codn o ,
+.codn x ,
+.code b
+and
+.codn r ,
+but using
+.code tointz
+and
+.codn tofloatz .
+Thus fields which are non-numeric strings or the object
+.code nil
+get converted to 0, or 0.0 in the case of
+.codn rz .
 .RE
 
 .SS* Environment Variables and Command Line
