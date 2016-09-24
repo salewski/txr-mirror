@@ -667,7 +667,6 @@ val repl(val bindings, val in_stream, val out_stream)
   lino_t *ls = lino_make(c_num(ifd), c_num(ofd));
   char *line_u8 = 0;
   char *prompt_u8 = 0;
-  val repl_env = make_env(bindings, nil, nil);
   val quit_k = intern(lit("quit"), keyword_package);
   val read_k = intern(lit("read"), keyword_package);
   val counter_sym = intern(lit("*n"), user_package);
@@ -685,6 +684,11 @@ val repl(val bindings, val in_stream, val out_stream)
   val hist_len_var = lookup_global_var(listener_hist_len_s);
   val multi_line_var = lookup_global_var(listener_multi_line_p_s);
   val sel_inclusive_var = lookup_global_var(listener_sel_inclusive_p_s);
+
+  for (; bindings; bindings = cdr(bindings)) {
+    val binding = car(bindings);
+    reg_varl(car(binding), cdr(binding));
+  }
 
   reg_varl(result_hash_sym, result_hash);
 
@@ -761,8 +765,8 @@ val repl(val bindings, val in_stream, val out_stream)
         done = t;
       } else {
         val value = if3(form != read_k,
-                        eval_intrinsic(form, repl_env),
-                        read_eval_ret_last(repl_env, prev_counter,
+                        eval_intrinsic(form, nil),
+                        read_eval_ret_last(nil, prev_counter,
                                            in_stream, out_stream));
         reg_varl(var_sym, value);
         sethash(result_hash, var_counter, value);

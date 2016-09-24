@@ -979,6 +979,11 @@ int txr_main(int argc, char **argv)
     }
   }
 
+  for (; bindings; bindings = cdr(bindings)) {
+    val binding = car(bindings);
+    reg_varl(car(binding), cdr(binding));
+  }
+
   {
     val result = read_eval_stream(parse_stream, std_error, t);
 
