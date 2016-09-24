@@ -38320,7 +38320,17 @@ variable, and various
 variables are updated. Then, the condition-action clauses are processed, in the order
 in which they appear. Each
 .meta condition
-is evaluated. If it yields true, then its associated
+is evaluated. If the resulting value is a regular expression
+or a function, then this regular expression or function is invoked on the value
+stored in the record variable
+.codn rec ,
+and the result is taken to be the truth value of
+.metn condition .
+Otherwise, if the resulting value of
+.meta condition
+is other than a function or regular expression, it is taken directly
+to be the truth value.
+If the condition is true, then its associated
 .meta action
 forms are evaluated. Either way, processing passes to the next condition
 clause (unless an explicit step is taken in one of the

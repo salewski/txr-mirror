@@ -110,7 +110,7 @@
     (t (put-string self.rec)
        (put-string self.ors))))
 
-(defun sys:range-test (val rec)
+(defun sys:awk-test (val rec)
   (caseq (typeof val)
     ((regex fun) (call val rec))
     (t val)))
@@ -200,8 +200,8 @@
                           (qref ,awc rng-exprs))
                     rng-temp))
                 (rng (from-expr to-expr)
-                  ^(sys:rng (sys:range-test ,from-expr ,(qref ,awc rng-rec-temp))
-                            (sys:range-test ,to-expr ,(qref ,awc rng-rec-temp))))
+                  ^(sys:rng (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
+                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
                 (ff (. opip-args)
                   ^(symacrolet ((f (rslot ,',aws-sym 'fields 'f-to-rec)))
                      (set f [(opip ,*opip-args) f])))
@@ -215,7 +215,8 @@
 (defmacro awk (:env e . clauses)
   (let ((awc (sys:awk-expander clauses)))
     (with-gensyms (aws-sym awk-begf-fun awk-fun awk-endf-fun awk-retval)
-      (let* ((p-actions-xform-unex (mapcar (aret ^(when ,@1 ,*@rest))
+      (let* ((p-actions-xform-unex (mapcar (aret ^(when (sys:awk-test ,@1 rec)
+                                                    ,*@rest))
                                            awc.cond-actions))
              (p-actions-xform (sys:expand
                                 ^(sys:awk-let ,awc ,aws-sym
