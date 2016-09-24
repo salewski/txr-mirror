@@ -39171,7 +39171,14 @@ utility given in IEEE Std 1003.1, 2013 Edition.
 Print lines for which field 3 is greater than 5:
 
 .cblk
+  ;; print lines with fields separated by ofs,
+  ;; and [f 2] converted to integer:
   (awk ((and [f 2] (fconv - - iz) (> [f 2] 5))))
+
+  ;; print strictly original lines from orec
+  (awk ((and [f 2] (fconv - - iz) (> [f 2] 5))
+        (prn orec)))
+
 .cble
 .IP 2.
 Print every tenth line:
