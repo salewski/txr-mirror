@@ -2297,6 +2297,22 @@ val toint(val obj, val base)
   }
 }
 
+val tofloatz(val obj)
+{
+  uses_or2;
+  if (nilp(obj))
+    return flo(0.0);
+  return or2(tofloat(obj), flo(0.0));
+}
+
+val tointz(val obj, val base)
+{
+  uses_or2;
+  if (nilp(obj))
+    return zero;
+  return or2(toint(obj, base), zero);
+}
+
 val width(val obj)
 {
   switch (tag(obj)) {

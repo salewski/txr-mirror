@@ -5239,6 +5239,8 @@ void eval_init(void)
   reg_fun(intern(lit("flo-int"), user_package), func_n1(flo_int));
   reg_fun(intern(lit("tofloat"), user_package), func_n1(tofloat));
   reg_fun(intern(lit("toint"), user_package), func_n2o(toint, 1));
+  reg_fun(intern(lit("tofloatz"), user_package), func_n1(tofloatz));
+  reg_fun(intern(lit("tointz"), user_package), func_n2o(tointz, 1));
   reg_fun(intern(lit("less"), user_package), func_n1v(lessv));
   reg_fun(intern(lit("greater"), user_package), func_n1v(greaterv));
   reg_fun(intern(lit("lequal"), user_package), func_n1v(lequalv));

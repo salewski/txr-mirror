@@ -29721,6 +29721,49 @@ Integers outside of this range are
 .code bignum
 integers.
 
+.coNP Functions @ tofloatz and @ tointz
+.synb
+.mets (tofloatz << value )
+.mets (tointz < value <> [ radix ])
+.syne
+.desc
+These functions are closely related to, respectively,
+.code tofloat
+and
+.codn toint .
+They differ in that these functions return a floating-point
+or integer zero, respectively, in some situations
+in which those functions would return
+.code nil
+or throw an error.
+
+Whereas those functions reject a
+.meta value
+argument of
+.codn nil ,
+for that same argument
+.code tofloatz
+function returns 0.0 and
+.code tointz
+returns 0.
+
+Likewise, in cases when
+.code value
+contains a string or character which cannot be
+converted to a number, and
+.code tofloat
+and
+.code toint
+would return
+.codn nil ,
+these functions return 0.0 and 0, respectively.
+
+In other situations, these functions behave
+exactly like
+.code tofloat
+and
+.codn toint .
+
 .coNP Variables @, flo-min @ flo-max and @ flo-epsilon
 .desc
 These variables hold, respectively: the smallest positive floating-point

@@ -39,6 +39,8 @@ val n_choose_k(val n, val k);
 val n_perm_k(val n, val k);
 val tofloat(val obj);
 val toint(val obj, val base);
+val tofloatz(val obj);
+val tointz(val obj, val base);
 val width(val num);
 void arith_init(void);
 void arith_free_all(void);
