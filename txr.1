@@ -39132,6 +39132,219 @@ get converted to 0, or 0.0 in the case of
 .codn rz .
 .RE
 
+.coNP Examples of @ awk Macro Usage
+The following examples are
+.code awk
+macro equivalents of the examples of the POSIX
+.code awk
+utility given in IEEE Std 1003.1, 2013 Edition.
+
+.RS
+.IP 1.
+Print lines for which field 3 is greater than 5:
+
+.cblk
+  (awk ((and [f 2] (fconv - - iz) (> [f 2] 5))))
+.cble
+.IP 2.
+Print every tenth line:
+
+.cblk
+  (awk ((zerop (mod nr 10))))
+.cble
+.IP 3.
+Print any line with a substring matching a regex:
+
+.cblk
+  (awk (#/(G|D)(2\ed[\ew]*)/))
+.cble
+Note the subtle flaw here: the
+.code [\ew]*
+portion of the regular expression contributes nothing
+to what lines are matched. The following example
+has a similar flaw.
+.IP 4.
+Print any line with a substring beginning with a
+.code G
+or
+.code D
+followed by a sequence of digits and characters:
+
+.cblk
+  (awk (#/(G|D)([\ed\ew]*)/))
+.cble
+.IP 5.
+Print lines where the second field matches a regex,
+while the fourth one doesn't:
+
+.cblk
+  (awk (:let (r #/xyz/))
+       ((and [f 3] [r [f 1]] (not [r [f 3]]))))
+.cble
+.IP 6.
+Print lines containing a backslash in the second field:
+
+.cblk
+  (awk ((and [f 1] (find #\e\e [f 1]))))
+.cble
+.IP 7.
+Print lines containing a backslash using a regex constructed
+from a string. Note that backslash escapes are interpreted
+twice: once in the string literal, and once in the parsing
+of the regex, requiring four backslashes to encode one:
+
+.cblk
+  (awk (:let (r (regex-compile "\e\e\e\e")))
+       ((and [f 1] [r [f 1]])))
+.cble
+.IP 8.
+Print penultimate and ultimate field in each record,
+separating then by a colon:
+
+.cblk
+  ;; original: {OFS=":";print $(NF-1), $NF}
+  ;;
+  (awk (t (set ofs ":") (prn [f -2] [f -1])))
+.cble
+.IP
+Note that the above behaves
+more correctly than the original Awk example because in the
+when there is only one field,
+.code $(NF-1)
+reduces to
+.code $0
+which refers to the entire record, not to the field.
+This sort of bug is why the \*(TL
+.code awk
+does not imitate the design decision to make the record
+the first numbered field.
+.IP 9.
+Output the line number and number of fields separated by colon,
+by producing a single string first:
+
+.cblk
+  (awk (t (prn `@nr:@nf`)))
+.cble
+.IP 10.
+Print lines longer than 72 characters:
+
+.cblk
+  (awk ((> (length rec) 72)))
+.cble
+.IP 11.
+Print first two fields in reverse order, separated by
+.codn ofs :
+
+.cblk
+  (awk (t (prn [f 1] [f 0])))
+.cble
+.IP 12.
+Same as 11, but with field separation consisting of a
+comma, or spaces and tabs, or both in sequence:
+
+.cblk
+  (awk (:begin (set fs #/,[ \et]*|[ \et]+/))
+       (t (prn [f 1] [f 0])))
+.cble
+.IP 13.
+Add the values in the first column, then print sum and
+average:
+
+.cblk
+  ;; original:
+  ;; {s += $1}
+  ;; END {print "sum is ", s, " average is", s/NR}
+  ;;
+  (awk (:let (s 0) (n 0))
+       ([f 0] (fconv r) (inc s [f 0]) (inc n))
+       (:end (prn `sum is @s average is @(/ s n)`)))
+.cble
+
+Note that the original is not robust against blank lines
+in the input. Blank lines are treated as if they had a
+first column field of zero, and are counted toward the
+denominator in the calculation of the average.
+.IP 14.
+Print fields in reverse order, one per line:
+
+.cblk
+  (awk (t (tprint (reverse f))))
+.cble
+.IP 15.
+Print all lines between occurrences of
+.code start
+and
+.codn stop :
+
+.cblk
+  (awk ((rng #/start/ #/stop/)))
+.cble
+.IP 16.
+Print lines whose first field is different from
+the corresponding field in the previous line:
+
+.cblk
+  (awk (:let prev)
+       ((not (equal [f 0] prev)) (prn) (set prev [f 0])))
+.cble
+.IP 17.
+Simulate the
+.code echo
+utility:
+
+.cblk
+  (awk (:begin (prn `@{*args* " "}`)))
+.cble
+
+Note: if this is evaluated in the command line, for instance with the
+.code -e
+option, an explicit exit is required to prevent the arguments from being
+processed by
+\*(TX after
+.code awk
+completes:
+
+.cblk
+  (awk (:begin (prn `@{*args* " "}`) (exit 0)))
+.cble
+.IP 18.
+Pint the components of the
+.code PATH
+environment variable, one per line:
+
+.cblk
+  ;; Process variable as if it were a file:
+  (awk (:inputs (make-string-input-stream (getenv "PATH")))
+       (:begin (set fs ":"))
+       (t (tprint f)))
+
+  ;; Just get, split and print; awk macro is irrelevant
+  (awk (:begin (tprint (split-str (getenv "PATH") ":"))))
+.cble
+.IP 19.
+Given a file called
+.code input
+which contains page headers of the format
+.str "Page #"
+and a \*(TL file called
+.code prog.tl
+which contains:
+
+.cblk
+  (awk (:let (n (toint n)))
+       (#/Page/ (set [f 1] (pinc n)))
+       (t))
+.cble
+
+the command line:
+
+.cblk
+  txr -Dn=5 prog.tl input
+.cble
+
+prints the file, filling in page numbers starting at 5.
+.RE
+
 .SS* Environment Variables and Command Line
 
 Note that environment variable names, their values, and command line
