@@ -38563,6 +38563,12 @@ If a match for the record separator occurs at the end of the stream,
 it is not considered to delimit an empty record, but acts as the
 terminator for the previous record.
 
+When a new value is assigned to
+.codn rs ,
+it has no effect on the most recently scanned and delimited record which is
+still current, or previous records. The new value applies to the next, not yet
+read record.
+
 .coNP Variable @ krs
 .desc
 The awk variable
@@ -38574,6 +38580,12 @@ If it is set to a true value, then the separating text matched
 by the pattern in the
 .code rs
 variable is retained as part of the preceding record rather than removed.
+
+When a new value is assigned to
+.codn krs ,
+it has no effect on the most recently scanned and delimited record which is
+still current, or previous records. The new value applies to the next, not yet
+read record.
 
 .coNP Variables @ fs and @ ft
 .desc
