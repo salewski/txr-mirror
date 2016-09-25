@@ -82,34 +82,38 @@
       (inc aws.file-num)
       (when beg-file-func
         [beg-file-func aws])
-      (flet ((get-stream (stin)
-               (if (and (equal aws.rs "\n")
-                        (not aws.krs))
-                 stin
-                 (record-adapter (if (regexp aws.rs)
-                                   aws.rs
-                                   (regex-compile aws.rs))
-                                 stin
-                                 aws.krs))))
-        (unwind-protect
-          (let* ((stin (if (streamp in) in (open-file in)))
-                 (recin (get-stream stin))
-                 (noted-rs aws.rs)
-                 (noted-krs aws.krs))
-            (set aws.file-rec-num 0)
-            (whilet ((rec (get-line recin)))
+      (let* ((stin (if (streamp in) in (open-file in)))
+             (noted-rs (not aws.rs))
+             (noted-krs (not aws.krs))
+             (cached-rr nil))
+        (flet ((get-rec-reader (stin)
+                 (cond
+                   ((and (equal noted-rs aws.rs) (eq noted-krs aws.krs))
+                    cached-rr)
+                   (t
+                     (set noted-rs aws.rs noted-krs aws.krs)
+                     (set cached-rr
+                          (if (and (equal aws.rs "\n")
+                                   (not aws.krs))
+                            (lambda () (get-line stin))
+                            (let ((rin (record-adapter (if (regexp aws.rs)
+                                                         aws.rs
+                                                         (regex-compile aws.rs))
+                                                       stin
+                                                       aws.krs)))
+                              (lambda () (get-line rin)))))))))
+          (set aws.file-rec-num 0)
+          (unwind-protect
+            (whilet ((rr (get-rec-reader stin))
+                     (rec (call rr)))
               (set aws.rec rec aws.orig-rec rec)
               (inc aws.rec-num)
               (inc aws.file-rec-num)
               aws.(rec-to-f)
               (block :awk-rec
-                [func aws])
-              (unless (and (equal noted-rs aws.rs)
-                           (eq noted-krs aws.krs))
-                (set recin (get-stream stin))
-                (set noted-rs aws.rs noted-krs aws.krs))))
-          (when end-file-func
-            [end-file-func aws]))))))
+                [func aws]))
+            (when end-file-func
+              [end-file-func aws])))))))
 
 (defmeth sys:awk-state prn (self . args)
   (cond
