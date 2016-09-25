@@ -38559,6 +38559,14 @@ is
 .strn "\en" :
 the newline character. This means that, by default, records are lines.
 
+If
+.code rs
+is changed to the value
+.codn nil ,
+then record separation operates in
+.IR "paragraph mode" ,
+which is described below.
+
 If a match for the record separator occurs at the end of the stream,
 it is not considered to delimit an empty record, but acts as the
 terminator for the previous record.
@@ -38568,6 +38576,33 @@ When a new value is assigned to
 it has no effect on the most recently scanned and delimited record which is
 still current, or previous records. The new value applies to the next, not yet
 read record.
+
+In paragraph mode, records are separated by a newline character followed by one
+or more blank lines (empty lines or lines containing only a mixture of
+tabs and spaces). This means that, effectively, the record-separating
+sequences match the regular expression
+.codn "/\en[ \en\et]*\en/" .
+There is a difference between paragraph mode and simply using the above
+regular expression as
+.codn rs .
+The difference is that if the first record which is read upon entering
+paragraph mode is empty (because the input begins with a match for the
+separator regex), then that record is thrown away, and the next record
+is read.
+
+Note that the POSIX Awk paragraph mode (which occurs when
+.code RS
+is blank) there is an additional difference: regardless of the value
+of the field separator
+.codn FS ,
+newline characters separate fields. This behavior is not implemented
+in the
+.code awk
+macro. Since newlines are included as separators in under the default field
+separation, the behaviors match in that case. Code using a custom
+.code fs
+must explicitly include a match for newline to obtain that as a field
+separator.
 
 .coNP Variable @ krs
 .desc

@@ -93,15 +93,28 @@
                    (t
                      (set noted-rs aws.rs noted-krs aws.krs)
                      (set cached-rr
-                          (if (and (equal aws.rs "\n")
-                                   (not aws.krs))
-                            (lambda () (get-line stin))
-                            (let ((rin (record-adapter (if (regexp aws.rs)
-                                                         aws.rs
-                                                         (regex-compile aws.rs))
-                                                       stin
-                                                       aws.krs)))
-                              (lambda () (get-line rin)))))))))
+                          (cond
+                            ((and (equal aws.rs "\n") (not aws.krs))
+                               (lambda () (get-line stin)))
+                            ((null aws.rs)
+                             (let ((rin (record-adapter #/\n[ \n\t]*\n/))
+                                   (flag t))
+                               (lambda ()
+                                 (let ((r (get-line rin)))
+                                   (cond
+                                     (flag
+                                       (set flag nil)
+                                       (if (equal r "")
+                                         (get-line rin)
+                                         r))
+                                     (t r))))))
+                            (t
+                              (let ((rin (record-adapter (if (regexp aws.rs)
+                                                           aws.rs
+                                                           (regex-compile aws.rs))
+                                                         stin
+                                                         aws.krs)))
+                                (lambda () (get-line rin))))))))))
           (set aws.file-rec-num 0)
           (unwind-protect
             (whilet ((rr (get-rec-reader stin))
