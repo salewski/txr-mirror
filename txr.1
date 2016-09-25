@@ -39158,6 +39158,20 @@ Thus fields which are non-numeric strings or the object
 get converted to 0, or 0.0 in the case of
 .codn rz .
 .RE
+.IP
+Because
+.code fconv
+macro destructively operates on the elements of the field list
+.codn f ,
+it has the same effect as an assignment to the fields:
+the value of
+.code rec
+is updated.
+
+The return value of
+.code fconv
+is
+.codn f .
 
 .coNP Examples of @ awk Macro Usage
 The following examples are
