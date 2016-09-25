@@ -37,6 +37,7 @@
   (rec-num 0)
   rec orig-rec fields nf
   rng-vec (rng-n 0)
+  par-mode par-mode-fs par-mode-prev-fs
   (:postinit (self)
     (if (plusp self.rng-n)
       (set self.rng-vec (vector self.rng-n)))
@@ -61,8 +62,18 @@
       (if (and (not self.kfs) (equal self.rec ""))
         (set self.fields nil
              self.nf 0)
-        (set self.fields (split-str self.rec self.fs self.kfs)
-             self.nf (length self.fields))))
+        (let ((eff-fs (if self.par-mode
+                        (if (equal self.fs self.par-mode-prev-fs)
+                          self.par-mode-fs
+                          (set self.par-mode-prev-fs self.fs
+                               self.par-mode-fs
+                               (regex-compile ^(or ,(if (regexp self.fs)
+                                                      (regex-source self.fs)
+                                                      self.fs)
+                                                   "\n"))))
+                        self.fs)))
+          (set self.fields (split-str self.rec eff-fs self.kfs)
+               self.nf (length self.fields)))))
     (self.ft
       (set self.fields (tok-str self.rec self.ft self.kfs)
            self.nf (length self.fields)))
@@ -95,20 +106,23 @@
                      (set cached-rr
                           (cond
                             ((and (equal aws.rs "\n") (not aws.krs))
+                               (set aws.par-mode nil)
                                (lambda () (get-line stin)))
                             ((null aws.rs)
-                             (let ((rin (record-adapter #/\n[ \n\t]*\n/))
-                                   (flag t))
-                               (lambda ()
-                                 (let ((r (get-line rin)))
-                                   (cond
-                                     (flag
-                                       (set flag nil)
-                                       (if (equal r "")
-                                         (get-line rin)
-                                         r))
-                                     (t r))))))
+                               (set aws.par-mode t)
+                               (let ((rin (record-adapter #/\n[ \n\t]*\n/))
+                                     (flag t))
+                                 (lambda ()
+                                   (let ((r (get-line rin)))
+                                     (cond
+                                       (flag
+                                         (set flag nil)
+                                         (if (equal r "")
+                                           (get-line rin)
+                                           r))
+                                       (t r))))))
                             (t
+                              (set aws.par-mode nil)
                               (let ((rin (record-adapter (if (regexp aws.rs)
                                                            aws.rs
                                                            (regex-compile aws.rs))

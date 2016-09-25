@@ -38597,27 +38597,22 @@ or more blank lines (empty lines or lines containing only a mixture of
 tabs and spaces). This means that, effectively, the record-separating
 sequences match the regular expression
 .codn "/\en[ \en\et]*\en/" .
-There is a difference between paragraph mode and simply using the above
+
+There are two differences between paragraph mode and simply using the above
 regular expression as
 .codn rs .
-The difference is that if the first record which is read upon entering
+The first difference is that if the first record which is read upon entering
 paragraph mode is empty (because the input begins with a match for the
-separator regex), then that record is thrown away, and the next record
-is read.
-
-Note that the POSIX Awk paragraph mode (which occurs when
-.code RS
-is blank) there is an additional difference: regardless of the value
-of the field separator
-.codn FS ,
-newline characters separate fields. This behavior is not implemented
-in the
-.code awk
-macro. Since newlines are included as separators in under the default field
-separation, the behaviors match in that case. Code using a custom
+separator regex), then that record is thrown away, and the next record is read.
+The second difference is that, if field separation based on the
 .code fs
-must explicitly include a match for newline to obtain that as a field
-separator.
+variable is in effect, then regardless of the value of
+.codn fs ,
+newline characters separate fields. Therefore, the programmer-defined
+.code fs
+doesn't have to include a match for newline. Moreover, if it is a simple
+fixed string, it need not be converted to a regular expression which also
+matches a newline.
 
 .coNP Variable @ krs
 .desc
