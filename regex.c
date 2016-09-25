@@ -2212,7 +2212,7 @@ static void print_rec(val exp, val stream, int *semi_flag)
     } else if (sym == and_s) {
       val arg1 = pop(&args);
       val arg2 = pop(&args);
-      if (consp(arg1) && car(arg2) == or_s)
+      if (consp(arg1) && car(arg1) == or_s)
         paren_print_rec(arg1, stream, semi_flag);
       else
         print_rec(arg1, stream, semi_flag);
