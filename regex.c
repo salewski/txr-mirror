@@ -2082,6 +2082,12 @@ val regexp(val obj)
   return typeof(obj) == regex_s ? t : nil;
 }
 
+val regex_source(val compiled_regex)
+{
+  regex_t *regex = coerce(regex_t *, cobj_handle(compiled_regex, regex_s));
+  return regex->source;
+}
+
 static void puts_clear_flag(val str, val stream, int *semi_flag)
 {
   *semi_flag = 0;
@@ -2933,6 +2939,7 @@ void regex_init(void)
 
   reg_fun(intern(lit("regex-compile"), user_package), func_n2o(regex_compile, 1));
   reg_fun(intern(lit("regexp"), user_package), func_n1(regexp));
+  reg_fun(intern(lit("regex-source"), user_package), func_n1(regex_source));
   reg_fun(intern(lit("search-regex"), user_package), func_n4o(search_regex, 2));
   reg_fun(intern(lit("range-regex"), user_package), func_n4o(range_regex, 2));
   reg_fun(intern(lit("search-regst"), user_package), func_n4o(search_regst, 2));

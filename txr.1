@@ -32173,6 +32173,21 @@ stream.
   (regex-compile "a|b|c")
 .cble
 
+.coNP Function @ regex-source
+.synb
+.mets (regex-source << regex )
+.syne
+.desc
+The
+.code regex-source
+function returns the source code of compiled regular expression
+.metn regex .
+
+The source code isn't the textual notation, but the Lisp
+data structure representing the abstract syntax tree: the
+same representation as what is returned by
+.codn regex-parse .
+
 .coNP Function @ regex-parse
 .synb
 .mets (regex-parse < string <> [ error-stream ])

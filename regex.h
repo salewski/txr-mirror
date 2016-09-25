@@ -31,6 +31,7 @@ extern wchar_t spaces[];
 
 val regex_compile(val regex, val error_stream);
 val regexp(val);
+val regex_source(val regex);
 val search_regex(val haystack, val needle_regex, val start_num, val from_end);
 val range_regex(val haystack, val needle_regex, val start_num, val from_end);
 val match_regex(val str, val regex, val pos);
