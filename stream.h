@@ -147,6 +147,7 @@ val sock_set_peer(val stream, val peer);
 #endif
 val make_string_input_stream(val);
 val make_string_byte_input_stream(val);
+val make_strlist_input_stream(val);
 val make_string_output_stream(void);
 val get_string_from_stream(val);
 val make_strlist_output_stream(void);

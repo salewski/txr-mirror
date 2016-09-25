@@ -1769,6 +1769,141 @@ val make_string_byte_input_stream(val string)
   }
 }
 
+struct strlist_in {
+  struct strm_base a;
+  val string;
+  val pos;
+  val list;
+};
+
+static void strlist_in_stream_mark(val stream)
+{
+  struct strlist_in *s = coerce(struct strlist_in *, stream->co.handle);
+  strm_base_mark(&s->a);
+  gc_mark(s->string);
+  gc_mark(s->pos);
+  gc_mark(s->list);
+}
+
+static val strlist_in_get_line(val stream)
+{
+  struct strlist_in *s = coerce(struct strlist_in *, stream->co.handle);
+
+  if (s->string) {
+    val result = sub_str(s->string, s->pos, t);
+    s->string = pop(&s->list);
+    s->pos = zero;
+    return result;
+  }
+
+  return nil;
+}
+
+static val strlist_in_get_char(val stream)
+{
+  struct strlist_in *s = coerce(struct strlist_in *, stream->co.handle);
+
+  if (!s->string)
+    return nil;
+
+  if (length_str_le(s->string, s->pos)) {
+    s->string = pop(&s->list);
+    s->pos = zero;
+    return chr('\n');
+  } else {
+    val pos = s->pos;
+    set(mkloc(s->pos, stream), plus(pos, one));
+    return chr_str(s->string, pos);
+  }
+
+  return nil;
+}
+
+static val strlist_in_unget_char(val stream, val ch)
+{
+  struct strlist_in *s = coerce(struct strlist_in *, stream->co.handle);
+  val pos = s->pos;
+
+  if (pos == zero) {
+    if (ch == chr('\n')) {
+      if (s->string)
+        mpush(s->string, mkloc(s->list, stream));
+      s->string = null_string;
+    } else {
+      if (!s->string)
+        goto mismatch;
+      set(mkloc(s->string, stream), scat(nil, ch, s->string, nao));
+    }
+    return ch;
+  }
+
+  pos = minus(pos, one);
+
+  if (chr_str(s->string, pos) != ch)
+    goto mismatch;
+
+  set(mkloc(s->pos, stream), pos);
+  return ch;
+mismatch:
+  uw_throwf(file_error_s,
+            lit("unget-char: ~s doesn't match the character that was read"),
+            ch, nao);
+}
+
+static val strlist_in_get_prop(val stream, val ind)
+{
+  if (ind == name_k) {
+    struct strlist_in *s = coerce(struct strlist_in *, stream->co.handle);
+    struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
+    val name = static_str(ops->name);
+    return format(nil, lit("~a ~s"), name, s->string, nao);
+  }
+
+  return nil;
+}
+
+static val strlist_in_get_error(val stream)
+{
+  struct strlist_in *s = coerce(struct strlist_in *, stream->co.handle);
+  return if2(!s->string, t);
+}
+
+static val strlist_in_get_error_str(val stream)
+{
+  return if3(strlist_in_get_error(stream), lit("eof"), lit("no error"));
+}
+
+static struct strm_ops strlist_in_ops =
+  strm_ops_init(cobj_ops_init(eq,
+                              stream_print_op,
+                              stream_destroy_op,
+                              strlist_in_stream_mark,
+                              cobj_hash_op),
+                wli("strlist-input-stream"),
+                0, 0, 0,
+                strlist_in_get_line,
+                strlist_in_get_char,
+                0,
+                strlist_in_unget_char,
+                0, 0, 0,
+                0, /* TODO: seek */
+                0, /* TODO: truncate */
+                strlist_in_get_prop,
+                0,
+                strlist_in_get_error,
+                strlist_in_get_error_str,
+                0, 0);
+
+val make_strlist_input_stream(val list)
+{
+  struct strlist_in *s = coerce(struct strlist_in *, chk_malloc(sizeof *s));
+  strm_base_init(&s->a);
+  s->string = car(list);
+  s->pos = zero;
+  s->list = cdr(list);
+  return cobj(coerce(mem_t *, s), stream_s, &strlist_in_ops.cobj_ops);
+}
+
 struct string_out {
   struct strm_base a;
   wchar_t *buf;
@@ -4019,6 +4154,7 @@ void stream_init(void)
   reg_fun(intern(lit("fmt"), user_package), func_n1v(fmt));
   reg_fun(intern(lit("make-string-input-stream"), user_package), func_n1(make_string_input_stream));
   reg_fun(intern(lit("make-string-byte-input-stream"), user_package), func_n1(make_string_byte_input_stream));
+  reg_fun(intern(lit("make-strlist-input-stream"), user_package), func_n1(make_strlist_input_stream));
   reg_fun(intern(lit("make-string-output-stream"), user_package), func_n0(make_string_output_stream));
   reg_fun(intern(lit("get-string-from-stream"), user_package), func_n1(get_string_from_stream));
   reg_fun(intern(lit("make-strlist-output-stream"), user_package), func_n0(make_strlist_output_stream));
@@ -4094,6 +4230,7 @@ void stream_init(void)
   fill_stream_ops(&pipe_ops);
   fill_stream_ops(&string_in_ops);
   fill_stream_ops(&byte_in_ops);
+  fill_stream_ops(&strlist_in_ops);
   fill_stream_ops(&string_out_ops);
   fill_stream_ops(&strlist_out_ops);
   fill_stream_ops(&dir_ops);

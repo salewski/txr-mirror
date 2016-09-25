@@ -35702,6 +35702,18 @@ this stream object read successive byte values obtained by encoding
 into UTF-8. Character read operations are not supported, and neither
 are output operations.
 
+.coNP Function @ make-strlist-input-stream
+.synb
+.mets (make-strlist-input-stream << list )
+.syne
+.desc
+The
+.code make-strlist-input-stream
+function produces an input stream object based on a list of strings.
+Through the character read operations invoked on this stream,
+the list of strings appears as a list of newline-terminated lines.
+Output operations and byte operations are not supported.
+
 .coNP Function @ make-string-output-stream
 .synb
 .mets (make-string-output-stream)
