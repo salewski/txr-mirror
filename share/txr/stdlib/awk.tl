@@ -274,7 +274,7 @@
                           ^((*stdout* (qref ,aws-sym output))))
                       ,*(if (and awc.cond-actions awc.begin-file-actions)
                           ^((,awk-begf-fun (lambda (,aws-sym)
-                              ,*awc.begin-file-actions))))
+                               ,*awc.begin-file-actions))))
                       ,*(if (and awc.cond-actions awc.end-file-actions)
                           ^((,awk-endf-fun (lambda (,aws-sym)
                               ,*awc.end-file-actions))))
@@ -282,9 +282,9 @@
                           ^((,awk-fun (lambda (,aws-sym)
                                         ,(if awc.rng-exprs
                                            ^(let* ((,awc.rng-rec-temp rec)
-                                                   ,*(nreverse
-                                                       (zip awc.rng-expr-temps
-                                                            awc.rng-exprs)))
+                                               ,*(nreverse
+                                                   (zip awc.rng-expr-temps
+                                                        awc.rng-exprs)))
                                               ,p-actions-xform)
                                            p-actions-xform))))))
                  ,*awc.begin-actions
