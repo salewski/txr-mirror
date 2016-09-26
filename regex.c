@@ -2476,6 +2476,8 @@ val match_regex(val str, val reg, val pos)
     pos = plus(pos, length_str(str));
     if (lt(pos, zero))
       return nil;
+  } else if (length_str_lt(str, pos)) {
+    return nil;
   }
 
   regex_machine_init(&regm, reg);
@@ -2552,7 +2554,7 @@ val match_regex_right(val str, val regex, val end)
     return nil;
   }
 
-  while (lt(pos, end)) {
+  while (le(pos, end)) {
     regex_machine_t regm;
     val i ;
     regm_result_t last_res = REGM_INCOMPLETE;
@@ -2641,8 +2643,11 @@ val search_regst(val haystack, val needle_regex, val start_num, val from_end)
 
 val match_regst(val str, val regex, val pos_in)
 {
-  val pos = default_arg(pos_in, zero);
-  val new_pos = match_regex(str, regex, pos);
+  val pos = if3(null_or_missing_p(pos_in),
+                zero,
+                if3(minusp(pos_in),
+                    plus(pos_in, length_str(str)), pos_in));
+  val new_pos = if3(minusp(pos), nil, match_regex(str, regex, pos));
   return if2(new_pos, sub_str(str, pos, new_pos));
 }
 
@@ -2650,7 +2655,7 @@ static val match_regst_right_old(val str, val regex, val end)
 {
   val len = match_regex_right_old(str, regex, end);
   return if2(len, if3(null_or_missing_p(end),
-                      sub_str(str, neg(len), t),
+                      sub_str(str, neg(len), zero),
                       sub_str(str, minus(end, len), end)));
 }
 
@@ -2658,7 +2663,7 @@ val match_regst_right(val str, val regex, val end)
 {
   val len = match_regex_right(str, regex, end);
   return if2(len, if3(null_or_missing_p(end),
-                      sub_str(str, neg(len), t),
+                      sub_str(str, neg(len), zero),
                       sub_str(str, minus(end, len), end)));
 }
 static val do_match_full(val regex, val str)
@@ -2671,8 +2676,10 @@ static val do_match_full_offs(val env, val str)
   cons_bind (regex, pos_in, env);
   val len = length_str(str);
   val pos = if3(minusp(pos_in), plus(pos_in, len), pos_in);
-  return if2(eql(match_regex(str, regex, pos), len),
-             sub_str(str, pos, t));
+  return if3(minusp(pos),
+             nil,
+             if2(eql(match_regex(str, regex, pos), len),
+                 sub_str(str, pos, t)));
 }
 
 val regex_match_full_fun(val regex, val pos)
@@ -2727,7 +2734,10 @@ val regex_match_full(val regex, val arg1, val arg2)
     val str = arg2;
     val len = length_str(str);
     val pos = if3(minusp(arg1), plus(len, arg1), arg1);
-    return if2(eql(match_regex(str, regex, pos), len), sub_str(str, pos, t));
+    return if3(minusp(pos),
+               nil,
+               if2(eql(match_regex(str, regex, pos), len),
+                   sub_str(str, pos, t)));
   }
 }
 
@@ -2755,7 +2765,8 @@ val regex_range_full(val regex, val arg1, val arg2)
     val str = arg2;
     val len = length_str(str);
     val pos = if3(minusp(arg1), plus(len, arg1), arg1);
-    return if2(eql(match_regex(str, regex, pos), len), rcons(pos, len));
+    return if3(minusp(pos), nil,
+               if2(eql(match_regex(str, regex, pos), len), rcons(pos, len)));
   }
 }
 
@@ -2766,7 +2777,7 @@ val regex_range_left(val regex, val arg1, val arg2)
     return if2(len, rcons(zero, len));
   } else {
     val pos = if3(lt(arg1, zero), plus(arg1, length_str(arg2)), arg1);
-    val new_pos = match_regex(arg2, regex, pos);
+    val new_pos = if3(minusp(pos), nil, match_regex(arg2, regex, pos));
     return if2(new_pos, rcons(pos, new_pos));
   }
 }
@@ -2775,7 +2786,12 @@ val regex_range_right(val regex, val arg1, val arg2)
 {
   if (null_or_missing_p(arg2)) {
     val len = match_regex_right(arg1, regex, arg2);
-    return if2(len, rcons(zero, len));
+    if (len) {
+      val slen = length_str(arg1);
+      return rcons(minus(slen, len), slen);
+    } else {
+      return nil;
+    }
   } else {
     val end = if3(lt(arg1, zero), plus(arg1, length_str(arg2)), arg1);
     val len = match_regex_right(arg2, regex, end);
