@@ -2091,7 +2091,7 @@ val regex_source(val compiled_regex)
 static void puts_clear_flag(val str, val stream, int *semi_flag)
 {
   *semi_flag = 0;
-    put_string(str, stream);
+  put_string(str, stream);
 }
 
 static void putc_clear_flag(val ch, val stream, int *semi_flag)
