@@ -353,7 +353,7 @@ static int license(void)
 #endif
 
     if (!path_list)
-      uw_throwf(error_s, lit("Error: pattern ~a didn't match any files."),
+      uw_throwf(error_s, lit("pattern ~a didn't match any files."),
                 glob_pattern, nao);
 
     put_char(chr('\n'), std_output);
@@ -368,8 +368,8 @@ static int license(void)
 
   uw_catch (esym, eargs) {
     format(std_output,
-           lit("~a\nThis TXR installation might be unlicensed.\n"),
-           car(eargs), nao);
+           lit("~a: unable to display license file: ~a\n"),
+           prog_string, car(eargs), nao);
     retval = EXIT_FAILURE;
   }
 
