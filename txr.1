@@ -39242,6 +39242,31 @@ The return value of
 is
 .codn f .
 
+.TP* Examples:
+
+.cblk
+  ;; convert up to first three fields to integer:
+  (awk ((fconv i i i)))
+
+  ;; convert all fields to floating-point
+  (awk ((fconv : r :)))
+
+  ;; convert first and second fields to integer
+  ;; from hexadecimal;
+  ;; convert last field to integer from octal;
+  ;; process pairs of fields in between
+  ;; these by leaving the first element of
+  ;; each pair unconverted and converting second
+  ;; to floating-point;
+  (awk ((fconv x x : - r : o)))
+
+  ;; convert all fields, except the first,
+  ;; from integer, turning empty strings
+  ;; and non-integer junk as zero;
+  ;; leave first field unconverted:
+  (awk ((fconv - : iz)))
+.cble
+
 .coNP Examples of @ awk Macro Usage
 The following examples are
 .code awk
