@@ -32544,6 +32544,27 @@ and between
 and
 .codn m$ .
 
+.TP* Examples:
+
+.cblk
+  ;; produce list which contains only strings
+  ;; beginning with "cat":
+  (keep-if (f^ #/cat/) '#"dog catalog cat fox catapult")
+  --> ("catalog" "cat" "catapult")
+
+  ;; map all strings in a list to just their trailing
+  ;; digits.
+  (mapcar (f$ #/\ed*/) '#"a123 4 z bc465")
+  --> ("123" "4" "" "465")
+
+  ;; check that all strings consist of digits after
+  ;; the third position.
+  (all '#"ABC123 DFE45 12379" (f^$ #/\ed*/ 3))
+  --> "79"  ; i.e. true
+  (all '#"ABC123 DFE45 12379A" (f^$ #/\ed*/ 3))
+  --> nil
+.cble
+
 .SS* Hashing Library
 .coNP Functions @ make-hash and @ hash
 .synb
