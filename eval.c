@@ -98,7 +98,7 @@ val macro_time_s, with_saved_vars_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
-val sys_load_s, load_path_s, sys_lisp1_value_s;
+val load_path_s, sys_lisp1_value_s;
 
 val special_s, unbound_s;
 val whole_k, form_k, symacro_k;
@@ -3343,10 +3343,10 @@ static val me_mlet(val form, val menv)
                                    nao)), nao);
 }
 
-static val sys_load(val target, val sloc)
+val load(val target)
 {
   uses_or2;
-  val parent = or2(sloc, null_string);
+  val parent = or2(load_path, null_string);
   val path = if3(abs_path_p(target),
                  target,
                  cat_str(nappend2(sub_list(split_str(parent, lit("/")),
@@ -3360,8 +3360,8 @@ static val sys_load(val target, val sloc)
 
   if (!txr_lisp_p) {
     close_stream(stream, nil);
-    rlset(sloc, sloc);
-    eval_error(sloc, lit("load doesn't process .txr files"), nao);
+    uw_throwf(error_s, lit("load: cannot process .txr file ~a"),
+              path, nao);
   }
 
   uw_simple_catch_begin;
@@ -3370,9 +3370,8 @@ static val sys_load(val target, val sloc)
   env_vbind(dyn_env, load_path_s, path);
 
   if (!read_eval_stream(stream, std_error, nil)) {
-    rlset(sloc, sloc);
     close_stream(stream, nil);
-    eval_error(sloc, lit("load: ~a contains errors"), path, nao);
+    uw_throwf(error_s, lit("load: ~a contains errors"), path, nao);
   }
 
   dyn_env = saved_dyn_env;
@@ -3384,24 +3383,6 @@ static val sys_load(val target, val sloc)
   uw_catch_end;
 
   return nil;
-}
-
-static val me_load(val form, val menv)
-{
-  val args = cdr(form);
-  val name = pop(&args);
-
-  (void) menv;
-
-  if (args)
-    uw_throwf(error_s, lit("load: too many arguments"), nao);
-
-  return list(sys_load_s, name, load_path_s, nao);
-}
-
-val load(val target)
-{
-  return sys_load(target, nil);
 }
 
 static val me_defex(val form, val menv)
@@ -4797,7 +4778,6 @@ void eval_init(void)
   oand_s = intern(lit("oand"), user_package);
   chain_s = intern(lit("chain"), user_package);
   chand_s = intern(lit("chand"), user_package);
-  sys_load_s = intern(lit("load"), system_package);
   load_path_s = intern(lit("*load-path*"), user_package);
   sys_lisp1_value_s = intern(lit("lisp1-value"), system_package);
 
@@ -4900,7 +4880,6 @@ void eval_init(void)
   reg_mac(intern(lit("dotimes"), user_package), me_dotimes);
   reg_mac(intern(lit("lcons"), user_package), me_lcons);
   reg_mac(intern(lit("mlet"), user_package), me_mlet);
-  reg_mac(intern(lit("load"), user_package), me_load);
   reg_mac(intern(lit("defex"), user_package), me_defex);
 
   reg_fun(cons_s, func_n2(cons));
@@ -5126,7 +5105,7 @@ void eval_init(void)
   reg_fun(intern(lit("lisp-parse"), user_package), func_n5o(lisp_parse, 0));
   reg_fun(intern(lit("read"), user_package), func_n5o(lisp_parse, 0));
   reg_fun(intern(lit("iread"), user_package), func_n5o(iread, 0));
-  reg_fun(sys_load_s, func_n2(sys_load));
+  reg_fun(intern(lit("load"), user_package), func_n1(load));
   reg_var(load_path_s, nil);
   reg_symacro(intern(lit("self-load-path"), user_package), load_path_s);
   reg_fun(intern(lit("expand"), system_package), func_n2o(expand, 1));
