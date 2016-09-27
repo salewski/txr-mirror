@@ -3347,7 +3347,7 @@ val load(val target)
 {
   uses_or2;
   val parent = or2(load_path, null_string);
-  val path = if3(abs_path_p(target),
+  val path = if3(!pure_rel_path_p(target),
                  target,
                  cat_str(nappend2(sub_list(split_str(parent, lit("/")),
                                            zero, negone),

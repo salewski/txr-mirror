@@ -7638,13 +7638,15 @@ If the
 .code *load-path*
 has a current value which is not
 .code nil
-and the path is relative, then the path is interpreted relative
+and the path is pure relative according to the
+.code pure-rel-path-p
+function, then the path is interpreted relative
 to the directory portion of the path which is stored in
 .codn *load-path* .
 
 If
 .code *load-path*
-is nil, or the load path is absolute, then it the path is
+is nil, or the load path is not pure relative, then it the path is
 taken as-is.
 
 If the file named by the path cannot be opened, then the
@@ -44966,7 +44968,9 @@ argument is a string.
 
 If
 .meta target
-specifies a relative pathname, then a special behavior applies.
+specifies a pure relative pathname, as defined by the
+.code pure-rel-path-p
+function, then a special behavior applies.
 If an existing load operation is in progress, then the special variable
 .code *load-path*
 has a binding. In this case,
@@ -44977,7 +44981,7 @@ If
 .code *load-path*
 has the value
 .codn nil ,
-then a relative
+then a pure relative
 .meta target
 pathname is used as-is, and thus resolved relative to the current working
 directory.

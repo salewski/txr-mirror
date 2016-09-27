@@ -3878,7 +3878,7 @@ static val v_load(match_files_ctx *c)
     sem_error(specline, lit("~s: null string path given"), sym, nao);
 
   {
-    val path = if3(abs_path_p(target),
+    val path = if3(!pure_rel_path_p(target),
                    target,
                    cat_str(nappend2(sub_list(split_str(parent, lit("/")),
                                          zero, negone),
