@@ -98,7 +98,7 @@ val macro_time_s, with_saved_vars_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
-val sys_load_s, self_load_path_s, sys_lisp1_value_s;
+val sys_load_s, load_path_s, sys_lisp1_value_s;
 
 val special_s, unbound_s;
 val whole_k, form_k, symacro_k;
@@ -3346,7 +3346,7 @@ static val me_mlet(val form, val menv)
 static val sys_load(val target, val sloc)
 {
   uses_or2;
-  val parent = or2(cdr(sloc), null_string);
+  val parent = or2(sloc, null_string);
   val path = if3(abs_path_p(target),
                  target,
                  cat_str(nappend2(sub_list(split_str(parent, lit("/")),
@@ -3354,7 +3354,7 @@ static val sys_load(val target, val sloc)
                                   cons(target, nil)), lit("/")));
   val name, stream;
   val txr_lisp_p = t;
-  val self_load_path_old = nil;
+  val saved_dyn_env = dyn_env;
 
   open_txr_file(path, &txr_lisp_p, &name, &stream);
 
@@ -3366,7 +3366,8 @@ static val sys_load(val target, val sloc)
 
   uw_simple_catch_begin;
 
-  self_load_path_old = set_get_symacro(self_load_path_s, path);
+  dyn_env = make_env(nil, nil, dyn_env);
+  env_vbind(dyn_env, load_path_s, path);
 
   if (!read_eval_stream(stream, std_error, nil)) {
     rlset(sloc, sloc);
@@ -3374,8 +3375,9 @@ static val sys_load(val target, val sloc)
     eval_error(sloc, lit("load: ~a contains errors"), path, nao);
   }
 
+  dyn_env = saved_dyn_env;
+
   uw_unwind {
-    set_get_symacro(self_load_path_s, self_load_path_old);
     close_stream(stream, nil);
   }
 
@@ -3394,7 +3396,7 @@ static val me_load(val form, val menv)
   if (args)
     uw_throwf(error_s, lit("load: too many arguments"), nao);
 
-  return list(sys_load_s, name, list(quote_s, source_loc(form), nao), nao);
+  return list(sys_load_s, name, load_path_s, nao);
 }
 
 val load(val target)
@@ -4506,22 +4508,15 @@ void reg_var(val sym, val val)
   mark_special(sym);
 }
 
-val set_get_symacro(val sym, val form)
+static void reg_symacro(val sym, val form)
 {
   val cell = gethash_c(top_smb, sym, nulloc);
   val binding = cdr(cell);
-  val old = cdr(binding);
 
-  if (form) {
-    if (binding)
-      rplacd(binding, form);
-    else
-      rplacd(cell, cons(sym, form));
-  } else {
-    remhash(top_smb, sym);
-  }
-
-  return old;
+  if (binding)
+    rplacd(binding, form);
+  else
+    rplacd(cell, cons(sym, form));
 }
 
 static val if_fun(val cond, val then, val alt)
@@ -4803,7 +4798,7 @@ void eval_init(void)
   chain_s = intern(lit("chain"), user_package);
   chand_s = intern(lit("chand"), user_package);
   sys_load_s = intern(lit("load"), system_package);
-  self_load_path_s = intern(lit("self-load-path"), user_package);
+  load_path_s = intern(lit("*load-path*"), user_package);
   sys_lisp1_value_s = intern(lit("lisp1-value"), system_package);
 
   qquote_init();
@@ -5132,6 +5127,8 @@ void eval_init(void)
   reg_fun(intern(lit("read"), user_package), func_n5o(lisp_parse, 0));
   reg_fun(intern(lit("iread"), user_package), func_n5o(iread, 0));
   reg_fun(sys_load_s, func_n2(sys_load));
+  reg_var(load_path_s, nil);
+  reg_symacro(intern(lit("self-load-path"), user_package), load_path_s);
   reg_fun(intern(lit("expand"), system_package), func_n2o(expand, 1));
   reg_fun(intern(lit("macro-form-p"), user_package), func_n2o(macro_form_p, 1));
   reg_fun(intern(lit("macroexpand-1"), user_package),

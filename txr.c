@@ -907,7 +907,8 @@ int txr_main(int argc, char **argv)
     if (wcscmp(c_str(spec_file), L"-") != 0) {
       open_txr_file(spec_file, &txr_lisp_p, &spec_file_str, &parse_stream);
       simulate_setuid_setgid(parse_stream);
-      set_get_symacro(self_load_path_s, spec_file_str);
+      dyn_env = make_env(nil, nil, dyn_env);
+      env_vbind(dyn_env, load_path_s, spec_file_str);
     } else {
       drop_privilege();
       spec_file_str = lit("stdin");
@@ -933,7 +934,8 @@ int txr_main(int argc, char **argv)
     if (!equal(arg, lit("-"))) {
       open_txr_file(arg, &txr_lisp_p, &spec_file_str, &parse_stream);
       simulate_setuid_setgid(parse_stream);
-      set_get_symacro(self_load_path_s, spec_file_str);
+      dyn_env = make_env(nil, nil, dyn_env);
+      env_vbind(dyn_env, load_path_s, spec_file_str);
     } else {
       drop_privilege();
       spec_file_str = lit("stdin");

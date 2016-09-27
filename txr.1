@@ -7633,36 +7633,72 @@ Where
 .meta expr
 is a Lisp expression that
 evaluates to a string giving the path of the file to load.
-Unless the path is absolute, it is interpreted relative to the directory of the
-source file from which the
-.code @(load)
-syntax was read. If there was no such
-source file (for instance, the script was read from standard input),
-then it is resolved relative to the current working directory.
 
-If the file cannot be opened, then the
+If the
+.code *load-path*
+has a current value which is not
+.code nil
+and the path is relative, then the path is interpreted relative
+to the directory portion of the path which is stored in
+.codn *load-path* .
+
+If
+.code *load-path*
+is nil, or the load path is absolute, then it the path is
+taken as-is.
+
+If the file named by the path cannot be opened, then the
 .code .txr
 suffix is added and another
 attempt is made. Thus load expressions need not refer to the suffix.
 In the future, additional suffixes may be searched (compiled versions
 of a file).
 
-The two directives differ as follows. The action of
+Both the
+.code load
+and
+.code include
+directives bind the
+.code *load-path*
+variable to the path of the loaded file just before parsing syntax from it,
+and remove the binding when their processing of the file is complete.
+Processing \*(TL code means that each of its forms is read, and evaluated.
+Processing \*(TX code means parsing the entire file in its entirety,
+and then executing its directives against the current input.
+
+The
+.code load
+and
+.code include
+directives differ as follows.
+The action of
 .code load
 is not performed immediately but at evaluation time. Evaluation time
 occurs after a \*(TX program is read from beginning to end and parsed.
-The action of
+That is to say, when a \*(TX query is parsed, any embedded
+.code "@(load ...)"
+forms in it are parsed and constitute part of its syntax tree.
+They are executed when that query is executed and its execution
+reaches those
+.code load
+directives.
+
+By contrast, the action of
 .code include
-is performed immediately, as the code is being scanned and parsed.
-That is to say, as the \*(TX parser encounters
-.code @(include)
-it processes it immediately. The included material is read and parsed, and its
-syntax tree is substituted in place of the
+is performed immediately, right after the
+.code "@(include ...)"
+directive syntax is parsed.  That is to say, as the \*(TX parser encounters
+this syntax it processes it immediately. The included material is read
+and processed. If it is \*(TX syntax, then it is parsed and incorporated
+into the syntax tree in place of the
 .code include
 directive. The parser then
 continues processing the original file after the
 .code include
-directive.
+directive. If \*(TL code is processed by the
+.code include
+directive, then its forms are read and evaluated. An empty directive
+is substituted into the syntax tree in this case.
 
 Note: the
 .code include
@@ -7675,9 +7711,10 @@ takes place prior to evaluation time, whereas
 doesn't execute until evaluation time.
 
 See also: the
-.code self-path
-and
+.codn self-path ,
 .code stdlib
+and
+.code *load-path*
 variables in \*(TL.
 
 .SS* Output
@@ -44879,12 +44916,25 @@ The
 macro causes a file of \*(TL code to be read and evaluated.
 The
 .meta target
-argument is a string. If
+argument is a string.
+
+If
 .meta target
-specifies a relative pathname, then it is assumed to be a reference relative
-to the directory of the file in which the
+specifies a relative pathname, then a special behavior applies.
+If an existing load operation is in progress, then the special variable
+.code *load-path*
+has a binding. In this case,
 .code load
-macro form occurs.
+will assume that the relative pathname is a reference relative to the
+directory portion of that path name.
+If
+.code *load-path*
+has the value
+.codn nil ,
+then a relative
+.meta target
+pathname is used as-is, and thus resolved relative to the current working
+directory.
 
 If
 .meta target
@@ -44914,43 +44964,54 @@ If a syntax error is encountered, an exception of type
 .code eval-error
 is thrown.
 
+Over the evaluation of the forms, the special variable
+.code *load-path*
+to the path name of that file.
+
 Parser error messages are directed to the
 .code *stderr*
 stream.
 
-.coNP Symbol Macro @ self-load-path
+.coNP Special Variable @ *load-path*
 .desc
 The
-.code self-load-path
-symbol macro expands to a string which holds the name of the file being
-loaded. This is a symbol macro rather than a variable so that it can
-be replaced during the macro-expansion process, thereby permanently embedding
-the file name into the expanded code.
+.code *load-path*
+special variable has a top-level value which is
+.codn nil .
 
-An expansion for
-.code self-load-path
-is established for a \*(TX or \*(TL file which is loaded from the
-command line.
+When a file is being loaded, it is dynamically bound to the
+path name of that file. This value is visible to the forms
+are evaluated in that file during the loading process.
+
+The
+.code *load-path*
+variable is is bound when a \*(TX or \*(TL file is loaded from the command
+line.
 
 If the
 .code -i
 command line option is used to enter the interactive listener,
 and a file to be loaded is also specified, then the
-.code self-load-path
-macro remains bound to the name of that file.
+.code *load-path*
+macro remains bound to the name of that file inside the
+listener.
 
-An expansion for
-.code self-load-path
-is also established by the
+The
 .code load
-function and the
-.code @(load)
-directive, referring to the file being loaded.  When loading completes, the
-previous expansion of
-.code self-load-path
-is restored.
+macro establishes a binding for
+.code *load-path*
+prior to processing and evaluating all the top-level forms
+in the target file. When the forms are evaluated, the binding
+is discarded and
+.code load
+returns.
 
-During the processing of the profile file (see Interactive Profile File),
+The
+.code @(load)
+directive, also similarly establishes a binding around the
+parsing and processing of a loaded \*(TX source file.
+
+Also, during the processing of the profile file (see Interactive Profile File),
 the variable is bound to the name of that file.
 
 .coNP Variable @ txr-path

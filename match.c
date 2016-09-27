@@ -3886,13 +3886,14 @@ static val v_load(match_files_ctx *c)
     val stream, name;
     val txr_lisp_p = nil;
     val ret = nil;
-    val self_load_path_old = nil;
+    val saved_dyn_env = dyn_env;
 
     open_txr_file(path, &txr_lisp_p, &name, &stream);
 
     uw_simple_catch_begin;
 
-    self_load_path_old = set_get_symacro(self_load_path_s, name);
+    dyn_env = make_env(nil, nil, dyn_env);
+    env_vbind(dyn_env, load_path_s, name);
 
     if (!txr_lisp_p) {
       int gc = gc_state(0);
@@ -3942,8 +3943,9 @@ static val v_load(match_files_ctx *c)
       ret = (sym == include_s) ? nil : next_spec_k;
     }
 
+    dyn_env = saved_dyn_env;
+
     uw_unwind {
-      set_get_symacro(self_load_path_s, self_load_path_old);
       close_stream(stream, nil);
     }
 

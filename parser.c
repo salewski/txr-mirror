@@ -408,7 +408,6 @@ static void load_rcfile(val name)
   val catch_syms = cons(error_s, nil);
   val path_private_to_me_p =  intern(lit("path-private-to-me-p"), user_package);
   val path_exists_p =  intern(lit("path-exists-p"), user_package);
-  val self_load_path_old = nil;
 
   if (!funcall1(path_exists_p, name))
     return;
@@ -417,15 +416,16 @@ static void load_rcfile(val name)
 
   open_txr_file(name, &lisp_p, &resolved_name, &stream);
 
-  self_load_path_old = set_get_symacro(self_load_path_s, resolved_name);
-
   if (stream) {
     if (!funcall1(path_private_to_me_p, statf(stream))) {
       format(std_output,
              lit("** possible security problem: ~a is writable to others\n"),
              name, nao);
     } else {
+      val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
+      env_vbind(dyn_env, load_path_s, resolved_name);
       read_eval_stream(stream, std_output, nil);
+      dyn_env = saved_dyn_env;
     }
   }
 
@@ -438,7 +438,6 @@ static void load_rcfile(val name)
   }
 
   uw_unwind {
-    set_get_symacro(self_load_path_s, self_load_path_old);
     if (stream)
       close_stream(stream, nil);
   }
