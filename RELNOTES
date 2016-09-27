@@ -1,3 +1,68 @@
+                                    TXR 151
+                                   2016-09-27
+
+
+  Features
+
+  - Licensing:
+    - TXR returns to unmodified BSD 2-Clause
+  - Better code generation for simple cases of place mutation.
+  - Regex facelift:
+    - regex objects are callable like functions.
+    - Support for negative start or end positions in regex matching
+      operations.
+    - regsub function takes functional argument for more flexibility.
+    - Numerous new convenience regex functions: m^, m$, m^$, r^, r$,
+      r^$, f^, f$ and f^$.
+      - these simulate full matching and anchoring in various situations.
+    - New regex-source function, for obtaining a regex's original AST.
+  - Awk macro:
+    - conditions in cond-action clauses and in (rng start-cond end-cond)
+      expressions can be functions or regular expressions, which are
+      invoked on the record.
+    - New fconv conversions: iz, rz and others which yield a zero value
+      for empty, nonexistent or junk fields.
+    - orec variable provides access to original record, useful when rec
+      has been modified.
+    - rs variable can be dynamically changed now, taking effect for the
+      next record.
+    - paragraph mode implemented based on POSIX description and
+      observations of GNU Awk behavior.
+  - Library:
+    - New functions tointz and tofloatz.
+    - New build macro for procedural list building.
+    - New *load-path* special variable replaces the self-load-path
+      symbol macro (which still exists but simply expands to
+      *load-path*).
+    - load is now a function rather than macro.
+    - @(load)/@(include) directives now pull parent path from
+      *load-path* variable, rather than own source location.
+    - loading uses stricter criteria for deciding what relative paths
+      are automatically resolved relative to *load-path*.
+  - Streams:
+    - New strlist input streams: treat a list of strings as multi-line
+      text stream.
+
+  Bugs
+
+  - Awk macro:
+    - fixed broken updating assignments to awk variables, such as
+      (push item f).
+    - awk now exits if there are no cond-action clauses.
+  - Regex:
+    - match-regex function now returns match length as documented.
+    - Broken return value of match-regst fixed.
+    - Type of a regex object is now regex, rather than sys:regex.
+    - Exception in pretty-printing a correct expression, due to bug in
+      handling the & operator.
+  - Lists:
+    - out-of-range negative indices over lists now yield nil rather than
+      the first item.
+  - Command line:
+    - -Dvar=val binding are now visible to Lisp files.
+
+
+
                                     TXR 150
                                    2016-09-18
 
