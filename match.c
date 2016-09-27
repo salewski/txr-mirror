@@ -3865,7 +3865,7 @@ static val v_load(match_files_ctx *c)
   spec_bind (specline, first_spec, c->spec);
   val sym = first(first_spec);
   val args = rest(first_spec);
-  val parent = or2(cdr(source_loc(specline)), null_string);
+  val parent = or2(load_path, null_string);
   val target = tleval(specline, first(args), c->bindings);
 
   if (rest(specline))
