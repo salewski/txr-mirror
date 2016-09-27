@@ -202,5 +202,6 @@ val catenated_stream_push(val new_stream, val cat_stream);
 val remove_path(val path, val throw_on_error);
 val rename_path(val from, val to);
 val abs_path_p(val path);
+val pure_rel_path_p(val path);
 
 void stream_init(void);

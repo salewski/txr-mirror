@@ -4102,9 +4102,39 @@ val abs_path_p(val path)
   return nil;
 }
 
+static val plp_regex;
+
+val pure_rel_path_p(val path)
+{
+  val ch;
+  val len = length_str(path);
+
+  if (len == zero)
+    return t;
+
+  if ((ch = chr_str(path, zero)) == chr('/') || ch == chr('\\'))
+    return nil;
+
+  if (len == one)
+    return ch == chr('.') ? nil : t;
+
+  if (ch == chr('.') &&
+      ((ch = chr_str(path, one)) == chr('/') || ch == chr('\\')))
+    return nil;
+
+  if (!plp_regex)
+    plp_regex = regex_compile(lit("[A-Za-z0-9]+:"), nil);
+
+  if (match_regex(path, plp_regex, zero))
+    return nil;
+
+  return t;
+}
+
 void stream_init(void)
 {
   prot1(&ap_regex);
+  prot1(&plp_regex);
 
   detect_format_string();
 
@@ -4208,6 +4238,7 @@ void stream_init(void)
   reg_fun(intern(lit("open-files"), user_package), func_n2o(open_files, 1));
   reg_fun(intern(lit("open-files*"), user_package), func_n2o(open_files_star, 1));
   reg_fun(intern(lit("abs-path-p"), user_package), func_n1(abs_path_p));
+  reg_fun(intern(lit("pure-rel-path-p"), user_package), func_n1(pure_rel_path_p));
 
   reg_fun(intern(lit("get-indent-mode"), user_package), func_n1(get_indent_mode));
   reg_fun(intern(lit("test-set-indent-mode"), user_package), func_n3(test_set_indent_mode));

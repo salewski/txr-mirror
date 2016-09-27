@@ -36701,6 +36701,8 @@ An absolute path is a string which either begins with a slash or backslash
 character, or which begins with an alphanumeric word, followed by a colon,
 followed by a slash or backslash.
 
+The empty string isn't an absolute path.
+
 Examples of absolute paths:
 
 .cblk
@@ -36711,13 +36713,57 @@ Examples of absolute paths:
   Z:\eUsers
 .cble
 
-Examples of strings which are not absolute paths.
+Examples of strings which are not absolute paths:
 
 .cblk
-.mets < (the < empty < string)
+.mets >> ( the < empty << string )
   .
   abc
   foo:bar/x
+  $:\eabc
+.cble
+
+.coNP Function @ pure-rel-path-p
+.synb
+.mets (pure-rel-path-p << path )
+.syne
+.desc
+The
+.code pure-rel-path-p
+function tests whether the string
+.meta path
+represents a
+.IR "pure relative path" ,
+which is defined as a path which isn't absolute according to
+.codn abs-path-p ,
+which isn't the string
+.str .
+(single period),
+which doesn't begin with a period followed by a slash or backslash,
+and which doesn't begin with alphanumeric word
+terminated by a colon.
+
+The empty string is a pure relative path.
+
+Other examples of pure relative paths:
+
+.cblk
+  abc.d
+  .tmp/bar
+  1234
+  x
+  $:/xyz
+.cble
+
+Examples of strings which are not pure relative paths:
+
+.cblk
+  .
+  /
+  /etc
+  ./abc
+  .\e
+  foo:
   $:\eabc
 .cble
 
