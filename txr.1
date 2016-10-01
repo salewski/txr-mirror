@@ -19888,9 +19888,52 @@ read from a stream, if static slots are present, they will be processed
 and their values stored in the static locations they represent, thus
 changing their values for all instances.
 
-Static slots are inherited just like instance slots. However, when one
-structure type inherits a static slot from another, that structure type
-has its own storage location for that slot.
+Static slots are inherited just like instance slots. If a given structure
+.meta B
+has some static slot
+.metn s ,
+and a new structure
+.meta D
+is derived from
+.metn B ,
+using
+.codn defstruct ,
+and does not define a slot
+.metn s ,
+then
+.meta D
+inherits
+.metn s .
+This means that
+.meta D
+shares the static slot with
+.metn B :
+both types share a single instance of that slot.
+
+On the other hand if
+.code D
+defines a static slot
+.meta s
+then that slot will have its own instance in the
+.meta D
+structure type;
+.meta D
+will not inherit the
+.meta B
+instance of slot
+.metn s .
+Moreover, if the the definition of
+.code D
+omits the
+.meta init-form
+for slot
+.metn s ,
+then that slot will be initialized with a copy of the current value of slot
+.meta s
+of the
+.meta B
+base type, which allows derived types to obtain the value of base type's
+static slot, yet have that in their own instance.
 
 The slot type can be overridden. A structure type deriving from another
 type can introduce slots which have the same names as the supertype,
@@ -19902,13 +19945,6 @@ which may be used to store initial values into static slots. This function
 is invoked once in a type's life time, when the type is created.
 The function is also inherited by derived struct types and invoked when
 they are created.
-
-If a newly introduced (that is to say, non-inherited) static slot isn't
-initialized by the static initialization function, its value defaults to
-.codn nil .
-If an inherited slot isn't initialized by its supertype's initialization
-function, then its initial value in the new type is a copy of the current
-value of the supertype's corresponding slot.
 
 .coNP Macro @ defstruct
 .synb
@@ -19955,7 +19991,7 @@ symbol, as defined by the
 .code bindable
 function. This form is a short form for the
 .cblk
-.meti (:instance < name nil)
+.meti (:instance << name )
 .cble
 syntax.
 .meIP >> ( symbol << init-form )
@@ -19964,7 +20000,7 @@ This syntax is a short form for the
 .meti (:instance < name << init-form )
 .cble
 syntax.
-.meIP (:instance < name << init-form )
+.meIP (:instance < name <> [ init-form ])
 This syntax specifies an instance slot called
 .meta name
 whose initial value is obtained by evaluating
@@ -19972,15 +20008,36 @@ whose initial value is obtained by evaluating
 whenever a new instance of the structure is created.
 This evaluation takes place in the original lexical environment in which the
 .code defstruct
-form occurs.
-.meIP (:static < name << init-form )
+form occurs. If
+.meta init-form
+is omitted, the slot is initialized to
+.codn nil .
+.meIP (:static < name <> [ init-form ])
 This syntax specifies a static slot called
 .meta name
 whose initial value is obtained by evaluating
 .meta init-form
 once, during the evaluation of the
 .code defstruct
-form in which it occurs.
+form in which it occurs, if the
+.meta init-form
+is present. If
+.meta init-form
+is absent, and a static slot with the same name
+exists in the
+.meta super
+base type, then this slot is initialized
+with the value of that slot.
+Otherwise it is initialized to
+.codn nil .
+
+The definition of a static slot in a
+.code defstruct
+causes the new type to have its own instance
+that slot, even if a same-named static
+slot occurs in the
+.meta super
+base type, or its bases.
 .meIP (:method < name <> ( param +) << body-form *)
 This syntax creates a static slot called
 .meta name
@@ -20011,6 +20068,11 @@ Methods are invoked
 using the
 .code "instance.(name arg ...)"
 syntax, which implicitly inserts the instance into the argument list.
+
+Due to the semantics of static slots, methods are naturally
+inherited from a base structure to a derived one,
+and defining a method in a derived class which also exists
+in a base class performs OOP-style overriding.
 .meIP (:function < name <> ( param *) << body-form *)
 This syntax creates a static slot called
 .meta name
@@ -20041,6 +20103,12 @@ Such functions are called using the
 .code "instance.[name arg ...]"
 syntax which doesn't insert the instance into
 the argument list.
+
+The remarks about inheritance and overriding
+in the description of
+.code :method
+also apply to
+.codn :function .
 .meIP (:init <> ( param ) << body-form *)
 The
 .code :init
@@ -20183,29 +20251,33 @@ in the
 type or that type's chain of ancestors, it is called a
 .IR "repeated slot" .
 
-A repeated slot inherits initialization forms from all of its ancestors.
-
 The kind of the repeated slot (static or instance) is not inherited; it
 is established by the
 .code defstruct
 and may be different from the type of the same-named slot in the
 supertype or its ancestors.
 
-A repeated slot only inherits the initializations which correspond to
-its kind. If a repeated slot is introduced as a static slot, then
-all of the static initializations in the ancestry chain are performed
-on that slot, which takes place during the evaluation of the
-.code defstruct
-form. If that slot is an instance slot in any of the
-ancestor structure types, their initializations do not apply and are not
-evaluated.
+If a repeated slot is introduced as a static slot, and
+has no
+.meta init-form
+then it receives the current of the a static of the same name from
+the nearest supertype which has such a slot.
 
-If a repeated slot is introduced as an instance slot then none of the static
-initializations in the ancestry chain are performed on it; none of the forms
-are evaluated. Those initializations target a static slot, which the derived
-type doesn't have.  When an instance of the structure is created, then the
-instance initializations are performed on that slot from all of the ancestor
-structure types in which that slot is also an instance slot.
+If a repeated slot is an instance slot, no such inheritance of value
+takes place; only the local
+.meta init-form
+applies to it; if it is absent, the slot it initialized to
+.code nil
+in each newly created instance of the new type.
+
+However,
+.code :init
+and
+.code :postinit
+initializations are inherited from a base type and they apply to
+the repeated slots, regardless of their kind.  These initializations
+take place on the instantiated object, and the slot references
+resolve accordingly.
 
 The initialization for slots which are specified using the
 .code :method
@@ -20379,10 +20451,8 @@ If
 is used to redefine an existing method, the semantics can be inferred
 from that of
 .codn static-slot-ensure .
-In particular, the method will be imposed into all subtypes which do not
-override the method using an instance slot, overwriting any subtype-specific
-methods stored in static slots of the same name. These subtype methods
-have to be individually reinstated, if they are required.
+In particular, the method will be imposed into all subtypes which inherit
+(do not override) the method.
 
 .coNP Macros @ new and @ lnew
 .synb
@@ -20884,11 +20954,9 @@ which is equivalent to specifying a function which does nothing.
 
 Prior to the invocation of
 .metn static-initfun ,
-each new static slot shall be initialized to the value
-.code nil
-and each inherited static slot shall be initialized to
-the current value which the corresponding static slot
-holds in the supertype.
+each new static slot shall be initialized the value
+.codn nil .
+Inherited static slots retain their values from the supertype.
 
 If specified,
 .meta static-initfun
@@ -20896,11 +20964,10 @@ function must
 accept one argument. When the structure type is created (before
 the
 .code make-struct-type
-function returns) all of the
+function returns) the
 .meta static-initfun
-functions in the chain of supertype ancestry are invoked, in
-order of inheritance. Each is passed the structure type as an argument. The
-purpose is to initialize the static slots.
+functions is invoked, passed the newly created
+structure type as its argument.
 
 The
 .meta initfun
@@ -21521,36 +21588,88 @@ must be a static slot of this type.
 .desc
 The
 .code static-slot-ensure
-first ensures that the struct type
-.meta type
-and all struct types derived from it have a static slot called
-.metn name .
-The slot is added as a static slot to every eligible type which doesn't already
-have an instance or static slot by that name.
+ensures, if possible, that the struct type
+.metn type ,
+as well as possibly one or more struct types derived from it,
+have a static slot called
+.metn name ,
+that this slot is not shared with a supertype,
+and that the value stored in it is
+.metn new-value .
 
-Then,
-.meta new-value
-is stored into all of the
-.meta name
-static slots of
-.meta type
-and all its derived types.
+Note: this function supports the redefinition of methods,
+as the implementation underlying the
+.code defmeth
+macro; its semantics is designed to harmonize with expected
+behaviors in that usage.
+
+The function operates as follows.
 
 If
 .meta type
 itself already has an instance slot called
 .meta name
-then an error is thrown, and the function has no effect.  If the same situation
-is true of the subtypes of
-.meta type
-then the situation is ignored: for those subtypes, no static slot is added, and
-.meta new-value
-is not stored. If the
+then an error is thrown, and the function has no effect, unless a
+true argument is specified for the
 .meta no-error-p
-argument is present, and its value is true, then
+Boolean parameter. In that case, in the same situation, the function
+has no effect and simply returns
+.metn new-value .
+
+If
 .meta type
-is treated just like the subtypes: if it has a conflicting instance slot,
-then the situation is ignored and the subtypes are processed anyway.
+already has a non-inherited static slot called
+.meta name
+then this slot is overwritten with
+.meta new-value
+and the function returns
+.metn new-value .
+Types derived from
+.meta type
+may also have this slot, via inheritance; consequently, its value
+changes in those types also.
+
+If
+.meta type
+already has an inherited static slot called
+.meta name
+then its inheritance is severed; the slot is converted
+to a non-inherited static slot of
+.meta type
+and initialized with
+.metn new-value .
+Then all struct types derived from
+.meta type
+are scanned. In each such type, if the original inherited
+static slot is found, it is replaced with the same
+newly converted static slot that was just introduced into
+.metn type ,
+so that all these types now inherit this new slot from
+.meta type
+rather than the original slot from some supertype of
+.metn type .
+These types all share a single instance of the slot with
+.metn type ,
+but not with supertypes of
+.metn type .
+
+In the remaining case,
+.meta type
+has no slot called
+.metn name .
+The slot is added as a static slot to
+.metn type .
+Then it is added to every struct type derived from
+.meta type
+which does not already have a slot by that name, as if
+by inheritance.  That is to say, types to which this slot is introduced share a
+single instance of that slot.  The value of the new slot is
+.metn new-value ,
+which is also returned from the function.  Any subtypes of
+.meta type
+which already have a slot called
+.meta name
+are ignored, as are their subtypes.
 
 .coNP Function @ call-super-method
 .synb
@@ -46577,6 +46696,42 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 151
+After version 151, changes were implemented to the way static slots work
+in \*(TL structs. Selecting compatibility with 151 restores most of the behaviors.
+Until 151, each structure type had its own instance of static slots whether
+they were newly defined or inherited. Under the new scheme, a derived struct
+shares one instance of each inherited static slot with its base type.
+Under the old scheme, a struct inherits the static
+initialization functions of its bases (the
+.meta static-initfun
+argument passed in
+.codn make-struct-type ).
+These are invoked invoked because they are relied upon by the
+.code defstruct
+macro to perform the initializations of all the inherited static slots.
+Under the new scheme, the static initialization functions are not inherited.
+Only the type's own
+.meta static-initfun
+is invoked to initialize its newly defined static slots that it doesn't
+share with the parent. The inherited static slots simply preserve their
+current values they have in the base type; their values are untouched by
+the introduction of a derived type. The
+.code static-slot-ensure
+also changed semantics after version 151. The old behavior was problematic
+because it affected all static slots throughout the inheritance hierarchy
+matching the name passed in by argument. Since this function is the basis
+for redefining methods, its behavior broke the semantics of overriding.
+Selecting 151 compatibility only restores the behavior of this
+function and macros based on it like
+.codn defmeth :
+in the situation when it introduces a new static slot into one or more
+struct types, in compatibility mode it introduces the slot separately into each
+type without sharing, and it recurses over the entire type hierarchy,
+storing
+.meta new-val
+into all static slots which match
+.metn name .
 .IP 150
 Until version 150, the
 .code match-regex

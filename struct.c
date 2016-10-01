@@ -51,13 +51,23 @@
 
 #define STATIC_SLOT_BASE 0x10000000
 
+struct stslot {
+  val home_type;
+  cnum home_offs;
+  val *home;
+  val store;
+};
+
+#define stslot_loc(s) mkloc(*(s)->home, (s)->home_type)
+#define stslot_place(s) (*(s)->home)
+
 struct struct_type {
   val self;
   val name;
   cnum id;
   cnum nslots;
   cnum nstslots;
-  cnum eqmslot;
+  struct stslot *eqmslot;
   val super;
   struct struct_type *super_handle;
   val slots;
@@ -66,7 +76,7 @@ struct struct_type {
   val boactor;
   val postinitfun;
   val dvtypes;
-  val *stslot;
+  struct stslot *stslot;
 };
 
 struct struct_inst {
@@ -167,7 +177,7 @@ static val struct_type_finalize(val obj)
 static void call_stinitfun_chain(struct struct_type *st, val stype)
 {
   if (st) {
-    if (st->super)
+    if (st->super && opt_compat && opt_compat <= 151)
       call_stinitfun_chain(st->super_handle, stype);
     if (st->stinitfun)
       funcall1(st->stinitfun, stype);
@@ -197,6 +207,20 @@ static struct struct_type *stype_handle(val *pobj, val ctx)
   }
 }
 
+static void static_slot_home_fixup(struct struct_type *st)
+{
+  cnum i;
+  for (i = 0; i < st->nstslots; i++) {
+    struct stslot *s = &st->stslot[i];
+    if (s->home_type == st->self) {
+      s->home = &s->store;
+    } else {
+      struct struct_type *shome = coerce(struct struct_type *,
+                                         s->home_type->co.handle);
+      *s = shome->stslot[s->home_offs];
+    }
+  }
+}
 
 val make_struct_type(val name, val super,
                      val static_slots, val slots,
@@ -235,12 +259,15 @@ val make_struct_type(val name, val super,
     val id = num_fast(++struct_id_counter);
     val iter;
     cnum sl, stsl;
-    val null_ptr = 0;
+    cnum stsl_upb = c_num(plus(length(static_slots),
+                               num(if3(su, su->nstslots, 0))));
+    struct stslot null_ptr = { nil, 0, 0, nil };
 
     st->self = stype;
     st->name = name;
     st->id = c_num(id);
-    st->nslots = st->nstslots = st->eqmslot = 0;
+    st->nslots = st->nstslots = 0;
+    st->eqmslot = 0;
     st->slots = all_slots;
     st->super = super;
     st->stslot = 0;
@@ -253,6 +280,10 @@ val make_struct_type(val name, val super,
 
     gc_finalize(stype, struct_type_finalize_f, nil);
 
+    st->stslot = coerce(struct stslot *,
+                        chk_manage_vec(0, 0, stsl_upb, sizeof *st->stslot,
+                                       coerce(mem_t *, &null_ptr)));
+
     for (sl = 0, stsl = STATIC_SLOT_BASE, iter = all_slots;
          iter;
          iter = cdr(iter))
@@ -264,27 +295,43 @@ val make_struct_type(val name, val super,
                      static_slot_p(super, slot),
                      memq(slot, static_slots));
 
-      if (ts_p)
-        sethash(slot_hash, cons(slot, id), num(stsl++));
-      else
+      if (ts_p) {
+        cnum n = stsl++ - STATIC_SLOT_BASE;
+        struct stslot *ss = &st->stslot[n];
+        val key = if2(su, cons(slot, num_fast(su->id)));
+        val msl = if2(su, gethash(slot_hash, key));
+        cnum m = (coerce(cnum, msl) >> TAG_SHIFT) - STATIC_SLOT_BASE;
+
+        if (!inherited_p || (opt_compat && opt_compat <= 151)) {
+          ss->home_type = stype;
+          ss->home_offs = n;
+          ss->home = &ss->store;
+          ss->store = if2(msl, stslot_place(&su->stslot[m]));
+        } else {
+          *ss = su->stslot[m];
+        }
+        sethash(slot_hash, cons(slot, id), num(n + STATIC_SLOT_BASE));
+      } else {
         sethash(slot_hash, cons(slot, id), num_fast(sl++));
+      }
 
       if (sl >= STATIC_SLOT_BASE)
         uw_throwf(error_s, lit("~a: too many slots"), self, nao);
     }
 
     stsl -= STATIC_SLOT_BASE;
-    st->stslot = coerce(val *, chk_manage_vec(0, 0, stsl, sizeof (val),
-                                              coerce(mem_t *, &null_ptr)));
+    st->stslot = coerce(struct stslot *,
+                        chk_manage_vec(coerce(mem_t *, st->stslot), stsl_upb,
+                                       stsl, sizeof *st->stslot,
+                                       coerce(mem_t *, &null_ptr)));
     st->nslots = sl;
     st->nstslots = stsl;
+    static_slot_home_fixup(st);
 
     sethash(struct_type_hash, name, stype);
 
-    if (super) {
+    if (super)
       mpush(stype, mkloc(su->dvtypes, super));
-      memcpy(st->stslot, su->stslot, sizeof (val) * su->nstslots);
-    }
 
     call_stinitfun_chain(st, stype);
 
@@ -349,8 +396,14 @@ static void struct_type_mark(val obj)
   gc_mark(st->postinitfun);
   gc_mark(st->dvtypes);
 
-  for (stsl = 0; stsl < st->nstslots; stsl++)
-    gc_mark(st->stslot[stsl]);
+  for (stsl = 0; stsl < st->nstslots; stsl++) {
+    struct stslot *sl = &st->stslot[stsl];
+
+    if (sl->home_type == st->self)
+      gc_mark(sl->store);
+    else
+      bug_unless (sl->store != nil);
+  }
 }
 
 static void call_initfun_chain(struct struct_type *st, val strct)
@@ -639,7 +692,8 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
 
     if (slot >= STATIC_SLOT_BASE) {
       struct struct_type *st = si->type;
-      return mkloc(st->stslot[slot - STATIC_SLOT_BASE], st->self);
+      struct stslot *stsl = &st->stslot[slot - STATIC_SLOT_BASE];
+      return stslot_loc(stsl);
     } else if (slot >= 0) {
       check_init_lazy_struct(inst, si);
       return mkloc(si->slot[slot], inst);
@@ -651,7 +705,8 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
         cache_set_insert(*set, id, slnum);
         if (slnum >= STATIC_SLOT_BASE) {
           struct struct_type *st = si->type;
-          return mkloc(st->stslot[slnum - STATIC_SLOT_BASE], st->self);
+          struct stslot *stsl = &st->stslot[slnum - STATIC_SLOT_BASE];
+          return stslot_loc(stsl);
         }
         check_init_lazy_struct(inst, si);
         return mkloc(si->slot[slnum], inst);
@@ -672,7 +727,8 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
       cache_set_insert(*set, id, slnum);
       if (slnum >= STATIC_SLOT_BASE) {
         struct struct_type *st = si->type;
-        return mkloc(st->stslot[slnum - STATIC_SLOT_BASE], st->self);
+        struct stslot *stsl = &st->stslot[slnum - STATIC_SLOT_BASE];
+        return stslot_loc(stsl);
       }
       check_init_lazy_struct(inst, si);
       return mkloc(si->slot[slnum], inst);
@@ -682,7 +738,8 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
   return nulloc;
 }
 
-static loc lookup_static_slot(val stype, struct struct_type *st, val sym)
+static struct stslot *lookup_static_slot_desc(val stype,
+                                              struct struct_type *st, val sym)
 {
   slot_cache_t slot_cache = sym->s.slot_cache;
   cnum id = st->id;
@@ -692,7 +749,7 @@ static loc lookup_static_slot(val stype, struct struct_type *st, val sym)
     cnum slot = cache_set_lookup(*set, id);
 
     if (slot >= STATIC_SLOT_BASE) {
-      return mkloc(st->stslot[slot - STATIC_SLOT_BASE], stype);
+      return &st->stslot[slot - STATIC_SLOT_BASE];
     } else if (slot < 0) {
       val key = cons(sym, num_fast(id));
       val sl = gethash(slot_hash, key);
@@ -700,7 +757,7 @@ static loc lookup_static_slot(val stype, struct struct_type *st, val sym)
       if (sl) {
         cache_set_insert(*set, id, slnum);
         if (slnum >= STATIC_SLOT_BASE)
-          return mkloc(st->stslot[slnum - STATIC_SLOT_BASE], stype);
+          return &st->stslot[slnum - STATIC_SLOT_BASE];
       }
     }
   } else {
@@ -717,11 +774,17 @@ static loc lookup_static_slot(val stype, struct struct_type *st, val sym)
     if (sl) {
       cache_set_insert(*set, id, slnum);
       if (slnum >= STATIC_SLOT_BASE)
-        return mkloc(st->stslot[slnum - STATIC_SLOT_BASE], stype);
+        return &st->stslot[slnum - STATIC_SLOT_BASE];
     }
   }
 
-  return nulloc;
+  return 0;
+}
+
+static loc lookup_static_slot(val stype, struct struct_type *st, val sym)
+{
+  struct stslot *stsl = lookup_static_slot_desc(stype, st, sym);
+  return stsl ? stslot_loc(stsl) : nulloc;
 }
 
 static loc lookup_slot_load(val inst, struct struct_inst *si, val sym)
@@ -814,7 +877,7 @@ val static_slot_set(val stype, val sym, val newval)
   if (symbolp(sym)) {
     loc ptr = lookup_static_slot(stype, st, sym);
     if (!nullocp(ptr)) {
-      if (st->eqmslot == -1)
+      if (st->eqmslot == (struct stslot *) -1)
         st->eqmslot = 0;
       return set(ptr, newval);
     }
@@ -823,11 +886,56 @@ val static_slot_set(val stype, val sym, val newval)
   no_such_slot(self, stype, sym);
 }
 
-val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
+static void static_slot_home_fixup_rec(struct struct_type *st)
 {
-  val self = lit("static-slot-ensure");
+  static_slot_home_fixup(st);
+
+  {
+    val iter;
+
+    for (iter = st->dvtypes; iter; iter = cdr(iter)) {
+      val stype = car(iter);
+      struct struct_type *st = coerce(struct struct_type *, stype->co.handle);
+      static_slot_home_fixup_rec(st);
+    }
+  }
+}
+
+static void static_slot_rewrite_rec(struct struct_type *st,
+                                    struct stslot *from,
+                                    struct stslot *to)
+{
+  cnum i;
+
+  for (i = 0; i < st->nstslots; i++) {
+    struct stslot *s = &st->stslot[i];
+
+    if (s->home_type == from->home_type &&
+        s->home == from->home &&
+        s->home_offs == from->home_offs)
+    {
+      *s = *to;
+    }
+  }
+
+  {
+    val iter;
+
+    for (iter = st->dvtypes; iter; iter = cdr(iter)) {
+      val stype = car(iter);
+      struct struct_type *st = coerce(struct struct_type *, stype->co.handle);
+      static_slot_rewrite_rec(st, from, to);
+    }
+  }
+}
+
+
+static val static_slot_ens_rec(val stype, val sym, val newval,
+                               val no_error_p, val self,
+                               struct stslot *inh_stsl)
+{
   struct struct_type *st = stype_handle(&stype, self);
-  loc ptr;
+  struct stslot *stsl = lookup_static_slot_desc(stype, st, sym);
 
   if (!bindable(sym))
     uw_throwf(error_s, lit("~a: ~s isn't a valid slot name"),
@@ -835,36 +943,79 @@ val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
 
   no_error_p = default_bool_arg(no_error_p);
 
-  if (st->eqmslot == -1)
+  if (st->eqmslot == (struct stslot *) -1)
     st->eqmslot = 0;
 
-  if (nullocp((ptr = lookup_static_slot(stype, st, sym)))) {
-    val null_ptr = 0;
-    if (!memq(sym, st->slots)) {
-      st->stslot = coerce(val *, chk_manage_vec(coerce(mem_t *, st->stslot),
-                                                st->nstslots, st->nstslots + 1,
-                                                sizeof (val),
-                                                coerce(mem_t *, &null_ptr)));
-      set(mkloc(st->slots, stype), append2(st->slots, cons(sym, nil)));
-      ptr = mkloc(st->stslot[st->nstslots], stype);
-      sethash(slot_hash, cons(sym, num_fast(st->id)),
-              num(st->nstslots++ + STATIC_SLOT_BASE));
-    } else {
-      if (!no_error_p)
-        uw_throwf(error_s, lit("~a: ~s is an instance slot of ~s"),
-                  self, sym, stype, nao);
-    }
-  }
+  if (stsl != 0 && opt_compat && opt_compat <= 151) {
+    set(stslot_loc(stsl), newval);
+  } else if (stsl != 0 && inh_stsl != 0) {
+    return newval;
+  } else if (stsl != 0 && stsl->home_type == stype) {
+    set(stslot_loc(stsl), newval);
+    return newval;
+  } else if (stsl == 0 && memq(sym, st->slots)) {
+    if (!no_error_p)
+      uw_throwf(error_s, lit("~a: ~s is an instance slot of ~s"),
+                self, sym, stype, nao);
+    return newval;
+  } else if (stsl != 0) {
+    struct stslot to;
+    to.store = nil;
+    to.home_type = stype;
+    to.home = &stsl->store;
+    to.home_offs = stsl->home_offs;
+    static_slot_rewrite_rec(st, stsl, &to);
+    set(stslot_loc(stsl), newval);
+    return newval;
+  } else {
+    struct stslot null_ptr = { nil, 0, 0, nil };
+    st->stslot = coerce(struct stslot *,
+                        chk_manage_vec(coerce(mem_t *, st->stslot),
+                                       st->nstslots, st->nstslots + 1,
+                                       sizeof *st->stslot,
+                                       coerce(mem_t *, &null_ptr)));
+    static_slot_home_fixup_rec(st);
+    set(mkloc(st->slots, stype), append2(st->slots, cons(sym, nil)));
+    stsl = &st->stslot[st->nstslots];
 
-  set(ptr, newval);
+    if (inh_stsl == 0) {
+      stsl->store = newval;
+      stsl->home_type = stype;
+      stsl->home_offs = st->nstslots;
+      stsl->home = &stsl->store;
+      if (!opt_compat || opt_compat > 151)
+        inh_stsl = stsl;
+    } else {
+      stsl->store = nil;
+      stsl->home_type = inh_stsl->home_type;
+      stsl->home_offs = inh_stsl->home_offs;
+      stsl->home = inh_stsl->home;
+    }
+
+    sethash(slot_hash, cons(sym, num_fast(st->id)),
+            num(st->nstslots++ + STATIC_SLOT_BASE));
+  }
 
   {
     val iter;
-    for (iter = st->dvtypes; iter; iter = cdr(iter))
-      static_slot_ensure(car(iter), sym, newval, t);
-  }
 
-  return newval;
+    for (iter = st->dvtypes; iter; iter = cdr(iter))
+      static_slot_ens_rec(car(iter), sym, newval, t, self, inh_stsl);
+
+    return newval;
+  }
+}
+
+val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
+{
+  val self = lit("static-slot-ensure");
+
+  if (!bindable(sym))
+    uw_throwf(error_s, lit("~a: ~s isn't a valid slot name"),
+              self, sym, nao);
+
+  no_error_p = default_bool_arg(no_error_p);
+  return static_slot_ens_rec(stype, sym, newval, no_error_p, self, 0);
 }
 
 static val call_super_method(val inst, val sym, struct args *args)
@@ -1091,17 +1242,18 @@ static cnum struct_inst_hash(val obj, int *count)
 
 static val get_equal_method(val stype, struct struct_type *st)
 {
-  if (st->eqmslot == -1) {
+  if (st->eqmslot == (struct stslot *) -1) {
     return nil;
   } else if (st->eqmslot) {
-    return st->stslot[st->eqmslot];
+    struct stslot *stsl = st->eqmslot;
+    return stslot_place(stsl);
   } else {
-    loc ptr = lookup_static_slot(stype, st, equal_s);
-    if (!nullocp(ptr)) {
-      st->eqmslot = valptr(ptr) - st->stslot;
-      return deref(ptr);
+    struct stslot *stsl = lookup_static_slot_desc(stype, st, equal_s);
+    if (stsl != 0) {
+      st->eqmslot = stsl;
+      return stslot_place(stsl);
     }
-    st->eqmslot = -1;
+    st->eqmslot = (struct stslot *) -1;
     return nil;
   }
 }
