@@ -1775,7 +1775,7 @@ static int edit(lino_t *l, const char *prompt)
             continue;
         }
 
-        if (extended && c != TAB) {
+        if (extended && c != TAB && c != ESC) {
             switch (c) {
             case CTL('E'):
                 extended = 0;
@@ -1983,6 +1983,7 @@ static int edit(lino_t *l, const char *prompt)
             edit_history_next(l, LINENOISE_HISTORY_NEXT);
             break;
         case ESC:
+            extended = 0;
             /* Read the next two bytes representing the escape sequence.
              * Use two calls to handle slow terminals returning the two
              * chars at different times. */
