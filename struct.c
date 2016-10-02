@@ -316,7 +316,10 @@ val make_struct_type(val name, val super,
       }
 
       if (sl >= STATIC_SLOT_BASE)
-        uw_throwf(error_s, lit("~a: too many slots"), self, nao);
+        uw_throwf(error_s, lit("~a: too many instance slots"), self, nao);
+
+      if (stsl >= NUM_MAX)
+        uw_throwf(error_s, lit("~a: too many static slots"), self, nao);
     }
 
     stsl -= STATIC_SLOT_BASE;
@@ -969,6 +972,10 @@ static val static_slot_ens_rec(val stype, val sym, val newval,
     return newval;
   } else {
     struct stslot null_ptr = { nil, 0, 0, nil };
+
+    if (st->nstslots >= NUM_MAX)
+      uw_throwf(error_s, lit("~a: too many static slots"), self, nao);
+
     st->stslot = coerce(struct stslot *,
                         chk_manage_vec(coerce(mem_t *, st->stslot),
                                        st->nstslots, st->nstslots + 1,
