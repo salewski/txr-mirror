@@ -2812,6 +2812,17 @@ val regex_range_right(val regex, val arg1, val arg2)
   }
 }
 
+val regex_range_search(val regex, val arg1, val arg2, val arg3)
+{
+  if (missingp(arg2)) {
+    return range_regex(arg1, regex, zero, nil);
+  } else if (missingp(arg3)) {
+    return range_regex(arg2, regex, arg1, nil);
+  } else {
+    return range_regex(arg3, regex, arg1, arg2);
+  }
+}
+
 val read_until_match(val regex, val stream_in, val include_match_in)
 {
   regex_machine_t regm;
@@ -2998,6 +3009,7 @@ void regex_init(void)
   reg_fun(intern(lit("r^$"), user_package), func_n3o(regex_range_full, 2));
   reg_fun(intern(lit("r^"), user_package), func_n3o(regex_range_left, 2));
   reg_fun(intern(lit("r$"), user_package), func_n3o(regex_range_right, 2));
+  reg_fun(intern(lit("rr"), user_package), func_n4o(regex_range_search, 2));
   init_special_char_sets();
 }
 

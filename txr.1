@@ -32236,6 +32236,12 @@ indicates the position one element past the
 last character of the match. If the match is empty, the two integers
 are equal.
 
+Also see the
+.code rr
+function, which provides an alternative argument syntax for
+the semantics of
+.codn range-regex .
+
 The
 .code search-regst
 differs from
@@ -32698,7 +32704,6 @@ results in a failed match and consequently
 .code nil
 being returned.
 
-
 The
 .code m^$
 function tests whether the entire portion of
@@ -32739,14 +32744,15 @@ Otherwise
 .code nil
 is returned.
 
-.coNP Functions @, r^$ @ r^ and @ r$
+.coNP Functions @, r^$ @, r^ @ r$ and @ rr
 .synb
 .mets (r^$ < regex <> [ position ] << string )
 .mets (r^ < regex <> [ position ] << string )
 .mets (r$ < regex <> [ end-position ] << string )
+.mets (rr < regex >> [ position <> [ from-end ]] << string )
 .syne
 .desc
-These functions perform the same operations as,
+The first three of these functions perform the same operations as,
 respectively,
 .codn m^$ ,
 .code m^
@@ -32758,6 +32764,13 @@ return a range value indicating the extent of
 the matching substring within
 .meta string
 rather than the matching substring itself.
+
+The
+.code rr
+function performs the same operation as
+.code range-regex
+with different conventions with regard to argument
+order, harmonizing with those of the other three functions above.
 
 The
 .meta position
@@ -32777,7 +32790,7 @@ string.
 With one exception, a value in either parameter which is excessively negative
 or positive, such that it indexes before the start of the string or exceeds its
 length results in a failed match and consequently
-.codn nil
+.code nil
 being returned. The exception is that the
 .code rr
 function permits a negative
@@ -32816,7 +32829,7 @@ Otherwise
 is returned.
 
 The
-.code m$
+.code r$
 function tests whether the portion of
 .meta string
 ending just before
@@ -32827,6 +32840,37 @@ If so, then the matching range is returned.
 Otherwise
 .code nil
 is returned.
+
+The
+.code rr
+function searches
+.meta string
+starting at
+.meta position
+for a matches for
+.codn regex .
+If
+.meta from-end
+is specified and true, the rightmost
+match is reported.
+If a match is found, it is reported
+as a range.
+
+A regular expression which matches empty
+strings matches at the start position,
+and every other position, including
+the position just after the last
+character, coinciding with the length of
+.metn string .
+
+Except for the different argument order such that
+.meta string
+is always the rightmost argument, the
+.code rr
+function is equivalent to the
+.code range-regex
+function, such that correspondingly named
+arguments have the same semantics.
 
 .coNP Functions @, f^$ @ f^ and @ f$
 .synb

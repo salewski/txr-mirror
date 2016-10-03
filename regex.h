@@ -52,6 +52,7 @@ val regex_match_right(val regex, val arg1, val arg2);
 val regex_range_full(val regex, val arg1, val arg2);
 val regex_range_left(val regex, val arg1, val arg2);
 val regex_range_right(val regex, val arg1, val arg2);
+val regex_range_search(val regex, val arg1, val arg2, val arg3);
 int wide_display_char_p(wchar_t ch);
 void regex_init(void);
 void regex_free_all(void);
