@@ -15385,12 +15385,32 @@ is the outcome of comparing those differing elements themselves
 with
 .codn less .
 
+Two ranges are compared by
+.code less
+using lexicographic logic similar to conses and vectors.
+The
+.code from
+fields of the ranges are first compared. If they are not
+.codn equal ,
+equal then
+.code less
+is applied to those fields and the result is returned.
+If the
+.code from
+fields are
+.codn equal ,
+then
+.code less
+is applied to the
+.code to
+fields and that result is returned.
+
 If the two arguments are of the above types, but of mutually different types,
 then
 .code less
 resolves the situation based on the following precedence: numbers and
-characters are less than strings, which are less than symbols,
-which are less than conses, which are less than vectors.
+characters are less than ranges, which are less than strings, which are less
+than symbols, which are less than conses, which are less than vectors.
 
 Note that since
 .code nil
