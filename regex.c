@@ -2394,62 +2394,74 @@ static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
 val search_regex(val haystack, val needle_regex, val start,
                  val from_end)
 {
+  val slen = nil;
   start = default_arg(start, zero);
   from_end = default_bool_arg(from_end);
 
-  if (length_str_lt(haystack, start)) {
-    return nil;
+  if (minusp(start)) {
+    slen = length_str(haystack);
+    start = plus(start, slen);
+    if (minusp(start))
+      start = zero;
+  }
+
+  if (from_end) {
+    cnum i;
+    cnum s = c_num(start);
+    const wchar_t *h = c_str(haystack);
+
+    slen = (slen ? slen : length_str(haystack));
+
+    if (regex_run(needle_regex, L"") >= 0)
+      return cons(slen, zero);
+
+    for (i = c_num(slen) - 1; i >= s; i--) {
+      cnum span = regex_run(needle_regex, h + i);
+      if (span >= 0)
+        return cons(num(i), num(span));
+    }
+
+    gc_hint(haystack);
   } else {
-    if (from_end) {
-      cnum i;
-      cnum s = c_num(start);
-      const wchar_t *h = c_str(haystack);
+    regex_machine_t regm;
+    val i, pos = start, retval;
+    regm_result_t last_res = REGM_INCOMPLETE;
 
-      for (i = c_num(length_str(haystack)) - 1; i >= s; i--) {
-        cnum span = regex_run(needle_regex, h + i);
-        if (span >= 0)
-          return cons(num(i), num(span));
-      }
+    if (length_str_lt(haystack, pos))
+      return nil;
 
-      gc_hint(haystack);
-    } else {
-      regex_machine_t regm;
-      val i, pos = start, retval;
-      regm_result_t last_res = REGM_INCOMPLETE;
-
-      regex_machine_init(&regm, needle_regex);
+    regex_machine_init(&regm, needle_regex);
 
 again:
-      for (i = pos; length_str_gt(haystack, i); i = plus(i, one)) {
-        last_res = regex_machine_feed(&regm, c_chr(chr_str(haystack, i)));
+    for (i = pos; length_str_gt(haystack, i); i = plus(i, one)) {
+      last_res = regex_machine_feed(&regm, c_chr(chr_str(haystack, i)));
 
+      if (last_res == REGM_FAIL) {
+        last_res = regex_machine_feed(&regm, 0);
         if (last_res == REGM_FAIL) {
-          last_res = regex_machine_feed(&regm, 0);
-          if (last_res == REGM_FAIL) {
-            regex_machine_reset(&regm);
-            pos = plus(pos, one);
-            goto again;
-          }
-          break;
+          regex_machine_reset(&regm);
+          pos = plus(pos, one);
+          goto again;
         }
-      }
-
-      last_res = regex_machine_feed(&regm, 0);
-
-      switch (last_res) {
-      case REGM_INCOMPLETE:
-      case REGM_MATCH:
-        retval = cons(pos, num(regex_machine_match_span(&regm)));
-        regex_machine_cleanup(&regm);
-        return retval;
-      case REGM_FAIL:
-        regex_machine_cleanup(&regm);
-        return nil;
+        break;
       }
     }
 
-    return nil;
+    last_res = regex_machine_feed(&regm, 0);
+
+    switch (last_res) {
+    case REGM_INCOMPLETE:
+    case REGM_MATCH:
+      retval = cons(pos, num(regex_machine_match_span(&regm)));
+      regex_machine_cleanup(&regm);
+      return retval;
+    case REGM_FAIL:
+      regex_machine_cleanup(&regm);
+      return nil;
+    }
   }
+
+  return nil;
 }
 
 val range_regex(val haystack, val needle_regex, val start,

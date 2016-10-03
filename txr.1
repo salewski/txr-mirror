@@ -32162,6 +32162,7 @@ at position
 .meta start
 for a match for
 .metn regex .
+
 If
 .meta start
 is omitted, the search starts at position 0. If
@@ -32169,9 +32170,37 @@ is omitted, the search starts at position 0. If
 is specified and has a
 .cod2 non- nil
 value, the search
-proceeds in reverse, from the last position in the string, toward
+proceeds in reverse, from the position just beyond the last character of
+.metn string ,
+toward
 .metn start .
-This function returns
+
+if
+.meta start
+exceeds the length of the string, then
+.code search-regex
+returns
+.codn nil .
+
+If
+.meta start
+is negative then it indicates positions from the end of the string,
+such that -1 is the last character, -2 the second last and so forth.
+If the value is so negative that it refers beyond the start of
+the string, then the starting position is deemed to be zero.
+
+If
+.meta start
+is equal to the length of
+.metn string ,
+and thus refers to the position one character past its
+length, then a match occurs at that position if
+.meta regex
+admits such a match.
+
+The
+.code search-regex
+function returns
 .code nil
 if no match is found, otherwise it returns
 a cons, whose
@@ -32179,6 +32208,18 @@ a cons, whose
 indicates the position of the match, and whose
 .code cdr
 indicates the length of the match.
+
+If
+.meta regex
+is capable of matching empty strings, and no other kind of match
+is found within
+.metn string ,
+then search regex reports a zero length match. If
+.meta from-end
+is false, then this match is reported at
+.metn start ,
+otherwise it is reported at the position one character beyond
+the end of the string.
 
 The
 .code range-regex
@@ -32733,13 +32774,22 @@ argument defaults to the length of
 so that the end position coincides with the end of the
 string.
 
-A value in either parameter which is excessively
-negative or positive, such that it indexes before
-the start of the string or exceeds its length
-results in a failed match and consequently
-.code nil
+With one exception, a value in either parameter which is excessively negative
+or positive, such that it indexes before the start of the string or exceeds its
+length results in a failed match and consequently
+.codn nil
+being returned. The exception is that the
+.code rr
+function permits a negative
+.meta position
+value which refers before the start of the string; this is effectively
+treated as zero.
 
-being returned.
+The
+.meta from-end
+argument defaults to
+.codn nil .
+
 The
 .code r^$
 function tests whether the entire portion of
