@@ -15369,10 +15369,15 @@ Note that the empty
 list nil compared to a cons is handled by type-based precedence, described
 below.
 
-If the arguments are vectors, they are compared lexicographically, similar
+
+Two vectors are compared by
+.code less
+lexicographically, similarly
 to strings. Corresponding elements, starting with element 0, of the
-vectors are compared until an index position is found where the vectors
-differ. If this differing position is beyond the end of one of the two vectors,
+vectors are compared until an index position is found where corresponding
+elements of the two vectors are not
+.metn equal .
+If this differing position is beyond the end of one of the two vectors,
 then the shorter vector is considered to be lesser. Otherwise, the result
 of
 .code less
