@@ -447,9 +447,7 @@ tail:
         return normalize(n);
       }
     case TYPE_PAIR(FLNUM, FLNUM):
-      {
-        return flo(c_flo(anum) + c_flo(bnum));
-      }
+      return flo(c_flo(anum) + c_flo(bnum));
     case TYPE_PAIR(BGNUM, FLNUM):
       anum = flo_int(anum);
       goto tail;
