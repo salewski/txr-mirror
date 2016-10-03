@@ -399,6 +399,8 @@ tail:
       }
     case FLNUM:
       return flo(c_num(anum) + c_flo(bnum));
+    case RNG:
+      return rcons(plus(anum, from(bnum)), plus(anum, to(bnum)));
     default:
       break;
     }
@@ -429,6 +431,8 @@ tail:
       }
     case FLNUM:
       return flo(c_num(bnum) + c_flo(anum));
+    case RNG:
+      return rcons(plus(from(anum), bnum), plus(to(anum), bnum));
     default:
       break;
     }
@@ -452,6 +456,14 @@ tail:
     case TYPE_PAIR(FLNUM, BGNUM):
       bnum = flo_int(bnum);
       goto tail;
+    case TYPE_PAIR(RNG, RNG):
+      return rcons(plus(from(anum), from(bnum)), plus(to(anum), to(bnum)));
+    case TYPE_PAIR(BGNUM, RNG):
+    case TYPE_PAIR(FLNUM, RNG):
+      return rcons(plus(anum, from(bnum)), plus(anum, to(bnum)));
+    case TYPE_PAIR(RNG, BGNUM):
+    case TYPE_PAIR(RNG, FLNUM):
+      return rcons(plus(from(anum), bnum), plus(to(anum), bnum));
     default:
       break;
     }
@@ -476,6 +488,12 @@ tail:
         goto char_range;
       return chr(sum);
     }
+  case TAG_PAIR(TAG_CHR, TAG_PTR):
+    if (type(bnum) == RNG)
+      return rcons(plus(anum, from(bnum)), plus(anum, to(bnum)));
+  case TAG_PAIR(TAG_PTR, TAG_CHR):
+    if (type(anum) == RNG)
+      return rcons(plus(from(anum), bnum), plus(to(anum), bnum));
   }
   uw_throwf(error_s, lit("+: invalid operands ~s ~s"), anum, bnum, nao);
 char_range:
@@ -528,6 +546,8 @@ tail:
       }
     case FLNUM:
       return flo(c_num(anum) - c_flo(bnum));
+    case RNG:
+      return rcons(minus(anum, from(bnum)), minus(anum, to(bnum)));
     default:
       break;
     }
@@ -558,6 +578,8 @@ tail:
       }
     case FLNUM:
       return flo(c_flo(anum) - c_num(bnum));
+    case RNG:
+      return rcons(minus(from(anum), bnum), minus(to(anum), bnum));
     default:
       break;
     }
@@ -579,6 +601,14 @@ tail:
     case TYPE_PAIR(FLNUM, BGNUM):
       bnum = flo_int(bnum);
       goto tail;
+    case TYPE_PAIR(RNG, RNG):
+      return rcons(minus(from(anum), from(bnum)), minus(to(anum), to(bnum)));
+    case TYPE_PAIR(BGNUM, RNG):
+    case TYPE_PAIR(FLNUM, RNG):
+      return rcons(minus(anum, from(bnum)), minus(anum, to(bnum)));
+    case TYPE_PAIR(RNG, BGNUM):
+    case TYPE_PAIR(RNG, FLNUM):
+      return rcons(minus(from(anum), bnum), minus(to(anum), bnum));
     default:
       break;
     }
@@ -595,6 +625,12 @@ tail:
                   anum, bnum, nao);
       return chr(sum);
     }
+  case TAG_PAIR(TAG_CHR, TAG_PTR):
+    if (type(bnum) == RNG)
+      return rcons(minus(anum, from(bnum)), minus(anum, to(bnum)));
+  case TAG_PAIR(TAG_PTR, TAG_CHR):
+    if (type(anum) == RNG)
+      return rcons(minus(from(anum), bnum), minus(to(anum), bnum));
   }
   uw_throwf(error_s, lit("-: invalid operands ~s ~s"), anum, bnum, nao);
 }
@@ -612,6 +648,8 @@ val neg(val anum)
     return flo(-c_flo(anum));
   case NUM:
     return num(-c_num(anum));
+  case RNG:
+    return rcons(neg(from(anum)), neg(to(anum)));
   default:
     uw_throwf(error_s, lit("-: ~s is not a number"), anum, nao);
   }
@@ -633,6 +671,8 @@ val abso(val anum)
       cnum n = c_num(anum);
       return num(n < 0 ? -n : n);
     }
+  case RNG:
+    return rcons(abso(from(anum)), abso(to(anum)));
   default:
     uw_throwf(error_s, lit("abs: ~s is not a number"), anum, nao);
   }
@@ -696,6 +736,8 @@ tail:
       }
     case FLNUM:
       return flo(c_num(anum) * c_flo(bnum));
+    case RNG:
+      return rcons(mul(anum, from(bnum)), mul(anum, to(bnum)));
     default:
       break;
     }
@@ -725,6 +767,8 @@ tail:
       }
     case FLNUM:
       return flo(c_flo(anum) * c_num(bnum));
+    case RNG:
+      return rcons(mul(from(anum), bnum), mul(to(anum), bnum));
     default:
       break;
     }
@@ -746,6 +790,14 @@ tail:
     case TYPE_PAIR(FLNUM, BGNUM):
       bnum = flo_int(bnum);
       goto tail;
+    case TYPE_PAIR(RNG, RNG):
+      return rcons(mul(from(anum), from(bnum)), mul(to(anum), to(bnum)));
+    case TYPE_PAIR(BGNUM, RNG):
+    case TYPE_PAIR(FLNUM, RNG):
+      return rcons(mul(anum, from(bnum)), mul(anum, to(bnum)));
+    case TYPE_PAIR(RNG, BGNUM):
+    case TYPE_PAIR(RNG, FLNUM):
+      return rcons(mul(from(anum), bnum), mul(to(anum), bnum));
     default:
       break;
     }
@@ -824,6 +876,8 @@ tail:
         else
           return flo((x - fmod(x, y))/y);
       }
+    case RNG:
+      return rcons(trunc(from(anum), bnum), trunc(to(anum), bnum));
     default:
       break;
     }
@@ -852,6 +906,9 @@ tail:
     case TYPE_PAIR(FLNUM, BGNUM):
       bnum = flo_int(bnum);
       goto tail;
+    case TYPE_PAIR(RNG, BGNUM):
+    case TYPE_PAIR(RNG, FLNUM):
+      return rcons(trunc(from(anum), bnum), trunc(to(anum), bnum));
     }
   }
   uw_throwf(error_s, lit("trunc: invalid operands ~s ~s"), anum, bnum, nao);
@@ -1054,6 +1111,8 @@ val divi(val anum, val bnum)
     if (b == 0.0)
       uw_throw(numeric_error_s, lit("/: division by zero"));
     return flo(1.0 / b);
+  } else if (type(anum) == RNG) {
+    return rcons(divi(from(anum), bnum), divi(to(anum), bnum));
   } else {
     double a = c_flo(to_float(lit("/"), anum));
     double b = c_flo(to_float(lit("/"), bnum));
@@ -1078,6 +1137,8 @@ val zerop(val num)
     return if2(c_flo(num) == 0.0, t);
   case CHR:
     return if2(num == chr(0), t);
+  case RNG:
+    return and2(zerop(from(num)), zerop(to(num)));
   default:
     uw_throwf(error_s, lit("zerop: ~s is not a number"), num, nao);
   }
@@ -1202,6 +1263,19 @@ tail:
   case TYPE_PAIR(BGNUM, FLNUM):
     anum = flo_int(anum);
     goto tail;
+  case TYPE_PAIR(RNG, RNG):
+    {
+      val fl = from(anum);
+      val fr = from(bnum);
+
+      if (gt(fl, fr))
+        return t;
+
+      if (numeq(fl, fr))
+        return gt(to(anum), to(bnum));
+
+      return nil;
+    }
   }
 
   uw_throwf(error_s, lit(">: invalid operands ~s ~s"), anum, bnum, nao);
@@ -1238,6 +1312,19 @@ tail:
   case TYPE_PAIR(BGNUM, FLNUM):
     anum = flo_int(anum);
     goto tail;
+  case TYPE_PAIR(RNG, RNG):
+    {
+      val fl = from(anum);
+      val fr = from(bnum);
+
+      if (lt(fl, fr))
+        return t;
+
+      if (numeq(fl, fr))
+        return lt(to(anum), to(bnum));
+
+      return nil;
+    }
   }
 
   uw_throwf(error_s, lit("<: invalid operands ~s ~s"), anum, bnum, nao);
@@ -1279,6 +1366,19 @@ tail:
   case TYPE_PAIR(BGNUM, FLNUM):
     anum = flo_int(anum);
     goto tail;
+  case TYPE_PAIR(RNG, RNG):
+    {
+      val fl = from(anum);
+      val fr = from(bnum);
+
+      if (gt(fl, fr))
+        return t;
+
+      if (numeq(fl, fr))
+        return ge(to(anum), to(bnum));
+
+      return nil;
+    }
   }
 
   uw_throwf(error_s, lit(">=: invalid operands ~s ~s"), anum, bnum, nao);
@@ -1320,6 +1420,19 @@ tail:
   case TYPE_PAIR(BGNUM, FLNUM):
     anum = flo_int(anum);
     goto tail;
+  case TYPE_PAIR(RNG, RNG):
+    {
+      val fl = from(anum);
+      val fr = from(bnum);
+
+      if (lt(fl, fr))
+        return t;
+
+      if (numeq(fl, fr))
+        return le(to(anum), to(bnum));
+
+      return nil;
+    }
   }
 
   uw_throwf(error_s, lit("<=: invalid operands ~s ~s"), anum, bnum, nao);
@@ -1356,6 +1469,9 @@ tail:
   case TYPE_PAIR(BGNUM, FLNUM):
     anum = flo_int(anum);
     goto tail;
+  case TYPE_PAIR(RNG, RNG):
+    return and2(numeq(from(anum), from(bnum)),
+                numeq(to(anum), to(bnum)));
   }
 
   uw_throwf(error_s, lit("=: invalid operands ~s ~s"), anum, bnum, nao);

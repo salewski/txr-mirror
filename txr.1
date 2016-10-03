@@ -18174,6 +18174,111 @@ therefore never attain it. In this situation, the sequence also stops, and the
 excess value which surpasses the endpoint is excluded from the sequence.
 
 .SS* Ranges
+Ranges are a objects which each aggregate two values, not unlike
+.code cons
+cells. However, they are atoms, and are primarily intended to hold numeric or
+character values. The two values of a range are called
+.code from
+and
+.codn to .
+
+The printed notation for a range object consists of the prefix
+.code #R
+(hash R) followed by the two values expressed as a two-element
+list.  Ranges can be constructed using the
+.code rcons
+function. The notation
+.code x..y
+corresponds to
+.codn "(rcons x y)" .
+
+Ranges behave as a numeric type and support a subset of the numeric
+operations. Two ranges can be added or subtracted, which obeys
+these equivalences:
+
+.cblk
+  (+ a..b c..d)  <-->  (+ a c)..(+ b d)
+  (- a..b c..d)  <-->  (- a c)..(- b d)
+.cble
+
+A range
+.code a..b
+can be combined with a character or number
+.code n
+using addition or subtractions, which obeys these equivalences:
+
+.cblk
+  (+ a..b n)  <-->  (+ n a..b)  <-->  (+ a n)..(+ b n)
+  (- a..b n)  <-->  (- a n)..(- b n)
+  (- n a..b)  <-->  (- n a)..(- n b)
+.cble
+
+A range can be multiplied by a number:
+
+.cblk
+  (* a..b n)  <-->  (* n a..b)  <-->  (* a n)..(* b n)
+.cble
+
+A range can be divided by a number using the
+.code /
+or
+.code trunc
+functions, but a number cannot be divided by a range:
+
+.cblk
+  (trunc a..b n)  <-->  (trunc a n)..(trunc b n)
+  (/ a..b n)      <-->  (/ a n)..(/ b n)
+.cble
+
+Ranges can be compared using the equality and inequality functions
+.codn = ,
+.codn < ,
+.codn > ,
+.code <=
+and
+.codn >= .
+Equality obeys this equivalence:
+
+.cblk
+  (= a..b c..d)  <-->  (and (= a c) (= b d))
+.cble
+
+Inequality comparisons treat the
+.code from
+component with precedence over
+.code to
+such that only if the
+.code from
+components of the two ranges are not equal under the
+.code =
+function, then the inequality is based solely on them.
+If they are equal, then the inequality is based on the
+.code to
+components. This gives rise to the following equivalences:
+
+.cblk
+  (< a..b c..d)   <-->  (if (= a c) (< b d) (< a c))
+  (> a..b c..d)   <-->  (if (= a c) (> b d) (> a c))
+  (>= a..b c..d)  <-->  (if (= a c) (>= b d) (> a c))
+  (<= a..b c..d)  <-->  (if (= a c) (<= b d) (< a c))
+.cble
+
+Ranges can be negated with the one-argument form of the
+.code -
+function, which is equivalent to subtraction from zero:
+the negation distributes over the two range components.
+
+The
+.code abs
+function also applies to ranges and distributes into
+their components.
+
+The
+.code succ
+and
+.code pred
+family of functions also operate on ranges.
+
 .coNP Function @ rcons
 .synb
 .mets (rcons < from << to )
