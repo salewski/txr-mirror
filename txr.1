@@ -18202,10 +18202,13 @@ excess value which surpasses the endpoint is excluded from the sequence.
 Ranges are a objects which each aggregate two values, not unlike
 .code cons
 cells. However, they are atoms, and are primarily intended to hold numeric or
-character values. The two values of a range are called
+character values in their two fields. These fields are called
 .code from
 and
-.codn to .
+.code to
+which are the names of the functions which access them. These fields
+are not mutable; a new value cannot be stored into either field of
+a range.
 
 The printed notation for a range object consists of the prefix
 .code #R
