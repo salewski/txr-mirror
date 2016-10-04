@@ -2477,6 +2477,44 @@ val range_regex(val haystack, val needle_regex, val start,
   return result;
 }
 
+val range_regex_all(val haystack, val needle_regex, val start, val end)
+{
+  list_collect_decl (out, ptail);
+  val slen = length_str(haystack);
+
+  if (null_or_missing_p(start)) {
+    start = zero;
+  } else if (minusp(start)) {
+    start = minus(start, slen);
+    if (minusp(start))
+      start = zero;
+  }
+
+  if (null_or_missing_p(end)) {
+    end = slen;
+  } else if (minusp(end)) {
+    end = minus(start, slen);
+    if (minusp(end))
+      return nil;
+  }
+
+  for (;;) {
+    val range = range_regex(haystack, needle_regex, start, nil);
+
+    if (!range)
+      break;
+
+    ptail = list_collect(ptail, range);
+
+    {
+      val rt = to(range);
+      start = if3(eql(start, rt), succ(start), rt);
+    }
+  }
+
+  return out;
+}
+
 val match_regex(val str, val reg, val pos)
 {
   regex_machine_t regm;
@@ -2823,6 +2861,17 @@ val regex_range_search(val regex, val arg1, val arg2, val arg3)
   }
 }
 
+val regex_range_all(val regex, val arg1, val arg2, val arg3)
+{
+  if (missingp(arg2)) {
+    return range_regex_all(arg1, regex, zero, nil);
+  } else if (missingp(arg3)) {
+    return range_regex_all(arg2, regex, arg1, nil);
+  } else {
+    return range_regex_all(arg3, regex, arg1, arg2);
+  }
+}
+
 val read_until_match(val regex, val stream_in, val include_match_in)
 {
   regex_machine_t regm;
@@ -3010,6 +3059,7 @@ void regex_init(void)
   reg_fun(intern(lit("r^"), user_package), func_n3o(regex_range_left, 2));
   reg_fun(intern(lit("r$"), user_package), func_n3o(regex_range_right, 2));
   reg_fun(intern(lit("rr"), user_package), func_n4o(regex_range_search, 2));
+  reg_fun(intern(lit("rra"), user_package), func_n4o(regex_range_all, 2));
   init_special_char_sets();
 }
 

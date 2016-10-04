@@ -32872,6 +32872,67 @@ function is equivalent to the
 function, such that correspondingly named
 arguments have the same semantics.
 
+.coNP Function @ rra
+.synb
+.mets (rra < regex >> [ start <> [ end ]] << string )
+.syne
+.desc
+The
+.code rra
+function searches
+.meta string
+between the
+.meta start
+and
+.meta end
+position for matches for the regular expression
+.metn regex .
+
+The matches are returned as a list of range objects.
+
+The
+.meta start
+argument defaults to zero, and
+.meta end
+defaults to the length of the string (the position one
+past the last character).
+
+Negative values of
+.meta start
+and
+.meta end
+indicate positions from the end of the string, such that -1
+denotes the last character, -2 the second-to-last and so forth.
+
+If
+.meta start
+is so negative that it refers before the start of
+.metn string ,
+it is treated as zero. If this situation is true of the
+.meta end
+argument, then the function returns
+.codn nil .
+
+If
+.meta start
+refers to a character position beyond the length of
+.meta string
+(two characters or more beyond the end of the string),
+then the function returns
+.codn nil .
+If this situation is true of
+.metn end ,
+then
+.meta end
+is is curtailed to the the string length.
+
+The
+.code rra
+function returns all non-overlapping matches, including
+zero length matches. Zero length matches may occur before
+the first character of the string, or after the last
+character. If so, these are included.
+
 .coNP Functions @, f^$ @ f^ and @ f$
 .synb
 .mets (f^$ < regex <> [ position ])
