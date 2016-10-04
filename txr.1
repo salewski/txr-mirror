@@ -18304,6 +18304,20 @@ and
 .code pred
 family of functions also operate on ranges.
 
+The length of a range may be obtained with the
+.code length
+function;
+
+The length of the range
+.code a..b
+is defined as
+.codn "(- b a)" ,
+and may be obtained using the
+.code length
+function. The
+.code empty
+function accepts ranges and tests them for zero length.
+
 .coNP Function @ rcons
 .synb
 .mets (rcons < from << to )
@@ -22121,35 +22135,70 @@ the empty list and so is a sequence.
 
 .coNP Function @ length
 .synb
-.mets (length << sequence )
+.mets (length << object )
 .syne
 .desc
-The
+If
+.meta object
+is a sequence, the
 .code length
-function returns the number of items in
-.metn sequence ,
-and
-returns it.
-.meta sequence
-may be a hash, in which case
+function returns the number of items it
+contains.
+
+If
+.meta object
+is a hash then the value of
 .cblk
-.meti (hash-count << sequence )
+.meti (hash-count << object )
 .cble
 is returned.
 
+If
+.meta object
+is a range, then the length of the interval
+represented by the range is returned.
+The length of a range
+.code r
+is defined as
+.codn "(- (to r) (from r))" ,
+and thus may be negative.
+The length of
+.code "#R(1 -10)"
+is -11 and of
+.codn "#R(0.5 3)" ,
+2.5.
+
+For other types,
+.code length
+throws an error exception.
+
 .coNP Function @ empty
 .synb
-.mets (empty << sequence )
+.mets (empty << object )
 .syne
 .desc
+If
+.meta object
+is a suitable argument for the
+.code length
+function, then the
+.code empty
 Returns
 .code t
 if
 .cblk
-.meti (length << sequence )
+.meti (length << object )
 .cble
 is zero, otherwise
 .codn nil .
+
+If
+.meta object
+is not a suitable argument for
+.codn length ,
+then
+.code empty
+throws an error exception.
 
 .coNP Function @ copy
 .synb

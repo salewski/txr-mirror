@@ -8150,6 +8150,8 @@ val length(val seq)
     return length_str(seq);
   case VEC:
     return length_vec(seq);
+  case RNG:
+    return minus(to(seq), from(seq));
   case COBJ:
     if (seq->co.cls == hash_s)
       return hash_count(seq);
@@ -8176,6 +8178,8 @@ val empty(val seq)
     return length_str_le(seq, zero);
   case VEC:
     return eq(length_vec(seq), zero);
+  case RNG:
+    return eql(from(seq), to(seq));
   case COBJ:
     if (seq->co.cls == hash_s)
       return eq(hash_count(seq), zero);
