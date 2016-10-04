@@ -1,3 +1,41 @@
+                                    TXR 152
+                                   2016-10-04
+
+  Features
+
+  - Licensing:
+    - All license headers in source files reverted to BSD 2-Clause,
+      not just the LICENSE file.
+  - OOP:
+    - Inheritance model for static slots has been revised.
+      This is also a bugfix.
+  - Range objects support a degree of arithmetic, and can be
+    queried with zerop, length and empty.
+  - Regexes:
+    - Improvements in search-regex function and functions
+      based on it: support for negative indices and more.
+    - New rr function: regex search which returns a range,
+      like range-regex, but better interface for currying.
+    - New rra function: return all regex matches as range
+      objects.
+  - Awk macro:
+    - New convenience clauses :set and :set-file,
+      to reduce the verbosity of (:begin (set fs ":" ofs ":")).
+      to just (:set fs ":" ofs ":").
+
+  Bugs
+
+  - Interactive listener:
+    - VT100 arrow key can be issued after Ctrl-X extended mode prefix:
+      cancels the Ctrl-X and is carried out.
+  - OOP:
+    - New static slot inheritance model fixes issues like
+      method redefinition with (defmeth ...) inappropriately
+      clobbering overridden derived methods differing from the
+      original method being redefined.
+
+
+
                                     TXR 151
                                    2016-09-27
 
