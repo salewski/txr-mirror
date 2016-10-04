@@ -38559,8 +38559,10 @@ with special semantics:
 .codn :inputs ,
 .codn :output ,
 .codn :begin ,
+.codn :set ,
 .codn :end ,
-.code :begin-file
+.codn :begin-file ,
+.code :set-file
 and
 .codn :end-file .
 These clause types are explained below.
@@ -38664,6 +38666,7 @@ and
 clauses.
 In
 .codn :begin ,
+.codn :set ,
 .codn :end ,
 and ordinary clauses, it will be shadowed by the
 .code awk
@@ -38749,6 +38752,13 @@ Each
 .code form
 is evaluated. These forms have in their scope the awk local variables
 and macros.
+.meIP (:set >> { place << new-value }*)
+The
+.code :set
+clause provides a shorthand which allows the frequently occurring pattern
+.code "(:begin (set ...))"
+to be condensed to
+.codn "(:set ...)" .
 .meIP (:end << form *)
 All
 .code :end
@@ -38813,6 +38823,13 @@ forms are specified, then before the first input is processed,
 clauses are processed first, then the
 .code :begin-file
 clauses.
+.meIP (:set-file >> { place << new-value }*)
+The
+.code :set-file
+clause is a shorthand which translates
+.code "(:set-file ...)"
+to
+.codn "(:begin-file (set ...))" .
 .meIP (:end-file << form *)
 All
 .code :end-file
@@ -39899,7 +39916,7 @@ Same as 11, but with field separation consisting of a
 comma, or spaces and tabs, or both in sequence:
 
 .cblk
-  (awk (:begin (set fs #/,[ \et]*|[ \et]+/))
+  (awk (:set fs #/,[ \et]*|[ \et]+/)
        (t (prn [f 1] [f 0])))
 .cble
 .IP 13.
@@ -39971,7 +39988,7 @@ environment variable, one per line:
 .cblk
   ;; Process variable as if it were a file:
   (awk (:inputs (make-string-input-stream (getenv "PATH")))
-       (:begin (set fs ":"))
+       (:set fs ":")
        (t (tprint f)))
 
   ;; Just get, split and print; awk macro is irrelevant

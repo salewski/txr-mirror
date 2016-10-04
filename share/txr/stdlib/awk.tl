@@ -190,8 +190,10 @@
                                  (set awc.name (car actions)))
                                (:let (push actions awc.lets))
                                (:begin (push actions awc.begin-actions))
+                               (:set (push ^((set ,*actions)) awc.begin-actions))
                                (:end (push actions awc.end-actions))
                                (:begin-file (push actions awc.begin-file-actions))
+                               (:set-file (push ^((set ,*actions)) awc.begin-actions))
                                (:end-file (push actions awc.end-file-actions))
                                (t (push (if actions
                                           cl
