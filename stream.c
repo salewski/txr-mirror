@@ -126,7 +126,7 @@ void stream_mark_op(val stream)
 
 static noreturn void unimpl(val stream, val op)
 {
-  uw_throwf(file_error_s, lit("~a: not supported by stream ~s\n"),
+  uw_throwf(file_error_s, lit("~a: not supported by stream ~s"),
             op, stream, nao);
   abort();
 }
@@ -3066,7 +3066,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
               break;
             default:
               uw_throwf(error_s, lit("format: ~~~a conversion requires "
-                                     "numeric arg: ~s given\n"),
+                                     "numeric arg: ~s given"),
                         chr(ch), obj, nao);
             }
 
@@ -3078,7 +3078,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
 
             /* guard against num_buf overflow */
             if (precision > 128)
-              uw_throwf(error_s, lit("excessive precision in format: ~s\n"),
+              uw_throwf(error_s, lit("excessive precision in format: ~s"),
                         num(precision), nao);
 
             if (ch == 'e') {
@@ -3168,7 +3168,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
             }
 
             if (precision > 500)
-              uw_throwf(error_s, lit("excessive precision in format: ~s\n"),
+              uw_throwf(error_s, lit("excessive precision in format: ~s"),
                         num(precision), nao);
 
             sprintf(num_buf, "%.*g", precision, obj->fl.n);
@@ -3236,7 +3236,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
         case 0:
           uw_throwf(error_s, lit("missing format directive character"), nao);
         default:
-          uw_throwf(error_s, lit("unknown format directive character ~s\n"),
+          uw_throwf(error_s, lit("unknown format directive character ~s"),
                     chr(ch), nao);
         output_num:
           {
