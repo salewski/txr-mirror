@@ -987,10 +987,10 @@ static val static_slot_ens_rec(val stype, val sym, val newval,
     stsl = &st->stslot[st->nstslots];
 
     if (inh_stsl == 0) {
-      stsl->store = newval;
       stsl->home_type = stype;
       stsl->home_offs = st->nstslots;
       stsl->home = &stsl->store;
+      set(stslot_loc(stsl), newval);
       if (!opt_compat || opt_compat > 151)
         inh_stsl = stsl;
     } else {
