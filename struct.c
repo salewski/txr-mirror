@@ -406,7 +406,7 @@ static void struct_type_mark(val obj)
     if (sl->home_type == st->self)
       gc_mark(sl->store);
     else
-      bug_unless (sl->store != nil);
+      bug_unless (sl->store == nil);
   }
 }
 
