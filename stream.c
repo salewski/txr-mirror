@@ -3233,6 +3233,8 @@ val formatv(val stream_in, val fmtstr, struct args *al)
           else
             inc_indent(stream, num(width));
           continue;
+        case 0:
+          uw_throwf(error_s, lit("missing format directive character"), nao);
         default:
           uw_throwf(error_s, lit("unknown format directive character ~s\n"),
                     chr(ch), nao);
