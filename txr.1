@@ -21521,6 +21521,17 @@ prior to using
 .codn replace-struct ,
 or to take other measures to handle the situation.
 
+If the
+.meta target-obj
+and
+.meta source-obj
+arguments are the same object,
+.code replace-struct
+has no effect.
+
+The return value is
+.metn target-obj .
+
 .coNP Function @ method
 .synb
 .mets (method < struct-obj << slot-name )

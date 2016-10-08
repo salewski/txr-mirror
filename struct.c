@@ -605,20 +605,24 @@ val clear_struct(val strct, val value)
 val replace_struct(val target, val source)
 {
   const val self = lit("replace-struct");
-  struct struct_inst *tsi = struct_handle(target, self);
-  struct struct_inst *ssi = struct_handle(source, self);
-  struct struct_type *sst = ssi->type;
-  cnum nslots = sst->nslots;
-  size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
-  struct struct_inst *ssi_copy = coerce(struct struct_inst *, chk_malloc(size));
 
-  check_init_lazy_struct(source, ssi);
-  check_init_lazy_struct(target, tsi);
+  if (target != source) {
+    struct struct_inst *tsi = struct_handle(target, self);
+    struct struct_inst *ssi = struct_handle(source, self);
+    struct struct_type *sst = ssi->type;
+    cnum nslots = sst->nslots;
+    size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
+    struct struct_inst *ssi_copy = coerce(struct struct_inst *, chk_malloc(size));
 
-  memcpy(ssi_copy, ssi, size);
-  free(tsi);
-  target->co.handle = coerce(mem_t *, ssi_copy);
-  target->co.cls = source->co.cls;
+    check_init_lazy_struct(source, ssi);
+    check_init_lazy_struct(target, tsi);
+
+    memcpy(ssi_copy, ssi, size);
+    free(tsi);
+    target->co.handle = coerce(mem_t *, ssi_copy);
+    target->co.cls = source->co.cls;
+  }
+
   return target;
 }
 
