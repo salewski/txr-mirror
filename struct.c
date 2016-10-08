@@ -599,6 +599,8 @@ val clear_struct(val strct, val value)
   for (i = 0; i < st->nslots; i++)
     si->slot[i] = clear_val;
 
+  mut(strct);
+
   return strct;
 }
 
@@ -621,6 +623,7 @@ val replace_struct(val target, val source)
     free(tsi);
     target->co.handle = coerce(mem_t *, ssi_copy);
     target->co.cls = source->co.cls;
+    mut(target);
   }
 
   return target;
