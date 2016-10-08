@@ -1,3 +1,18 @@
+                                    TXR 153
+                                   2016-10-07
+
+
+  Bugs
+
+  - GC-related regression in static-slot-ensure fixed,
+    affecting code which uses defmeth also, causing
+    instability.
+  - Fixed long-time GC-related issues in replace-struct
+    and clear-struct which threaten stability.
+  - Check for self-assignment in replace-struct.
+
+
+
                                     TXR 152
                                    2016-10-04
 
