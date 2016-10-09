@@ -40,6 +40,9 @@
 
 (pprinl (new poodle))
 
+(mapcar (umeth print *stdout*) (list (new collie) (new dog)))
+(put-line)
+
 (defstruct b nil
   (:instance a 1)
   (:instance b 2)

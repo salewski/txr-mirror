@@ -154,7 +154,7 @@ void struct_init(void)
   reg_fun(intern(lit("method"), user_package), func_n2(method));
   reg_fun(intern(lit("super-method"), user_package), func_n2(super_method));
   reg_fun(intern(lit("uslot"), user_package), func_n1(uslot));
-  reg_fun(intern(lit("umethod"), user_package), func_n1(umethod));
+  reg_fun(intern(lit("umethod"), user_package), func_n1v(umethod));
 }
 
 static noreturn void no_such_struct(val ctx, val sym)
@@ -1158,9 +1158,42 @@ static val umethod_fun(val sym, struct args *args)
   }
 }
 
-val umethod(val slot)
+static val umethod_args_fun(val env, struct args *args)
 {
-  return func_f0v(slot, umethod_fun);
+  val self = lit("umethod");
+  cons_bind (sym, curried_args, env);
+
+  if (!args_more(args, 0)) {
+    uw_throwf(error_s, lit("~a: object argument required to call ~s"),
+              self, env, nao);
+  } else {
+    cnum ca_len = c_num(length(curried_args));
+    cnum index = 0;
+    val strct = args_get(args, &index);
+    args_decl(args_call, max(args->fill + ca_len, ARGS_MIN));
+    args_add(args_call, strct);
+    args_add_list(args_call, curried_args);
+    args_normalize(args_call, ca_len + 1);
+    args_cat_zap_from(args_call, args, index);
+
+    struct struct_inst *si = struct_handle(strct, self);
+
+    if (symbolp(sym)) {
+      loc ptr = lookup_slot(strct, si, sym);
+      if (!nullocp(ptr))
+        return generic_funcall(deref(ptr), args_call);
+    }
+
+    no_such_slot(self, si->type->self, sym);
+  }
+}
+
+val umethod(val slot, struct args *args)
+{
+  if (!args_more(args, 0))
+    return func_f0v(slot, umethod_fun);
+  else
+    return func_f0v(cons(slot, args_get_list(args)), umethod_args_fun);
 }
 
 static void struct_inst_print(val obj, val out, val pretty)

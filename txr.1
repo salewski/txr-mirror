@@ -20963,7 +20963,7 @@ in a function slot.
 
 .coNP Macro @ umeth
 .synb
-.mets (umeth << slot )
+.mets (umeth << slot << curried-expr *)
 .syne
 .desc
 The
@@ -20972,24 +20972,37 @@ macro binds the symbol
 .meta slot
 to a function and returns that function.
 
+The
+.meta curried-expr
+arguments, if present, are evaluated as if they were
+arguments to the
+.code dwim
+operator.
+
 When that function is called, it expects at least one argument.
 The leftmost argument must be an object of struct type.
 
 The slot named
 .meta slot
 is retrieved from that object, and is expected to be a function.
-That function is called with the same arguments.
+That function is called with the object, followed by the values
+of the
+.metn curried-expr -s,
+if any, followed by that function's arguments.
 
 The syntax can be understood as a translation to a call of the
 .code umethod
 function:
 
 .cblk
-  (umeth s)  <-->  (umethod 's)
+  (umeth s ...)  <-->  [umethod 's ...]
 .cble
 
 The macro merely provides the syntactic sugar of not having to quote the
-symbol.
+symbol, and automatically treating the curried argument expressions
+using Lisp-1 semantics of the
+.code dwim
+operator.
 
 .TP* Example:
 
@@ -21598,7 +21611,7 @@ own arguments.
 
 .coNP Function @ umethod
 .synb
-.mets (umethod << slot-name )
+.mets (umethod << slot-name << curried-arg *)
 .syne
 .desc
 The
@@ -21611,12 +21624,19 @@ The
 .meta slot-name
 argument must be a symbol.
 
-This function must be called with at least one argument. The leftmost
+If one or more
+.meta curried-arg
+argument are present, these values represent the
+.I "curried arguments"
+which are stored in the function object which is returned.
+
+This returned function must be called with at least one argument. Its leftmost
 argument must be an object of structure type, which has a slot named
 .metn slot-name .
 The function will retrieve the value of the slot from that object,
-expecting it to be a function, and calls it, passing to it all of its
-arguments.
+expecting it to be a function, and calls it, passing to it the following
+arguments: the object itself; all of the curried arguments, if any; and
+all of its remaining arguments.
 
 Note: the
 .code umethod

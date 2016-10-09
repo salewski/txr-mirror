@@ -11,6 +11,7 @@ animal
 canine
 collie
 poodle
+colliecanine
 #S(b a 1 b 2 c 3)
 #S(d a nil b -2 c 3)
 (10 20 300 42 42)

@@ -236,8 +236,8 @@
 (defmacro usl (slot)
   ^(uslot ',slot))
 
-(defmacro umeth (slot)
-  ^(umethod ',slot))
+(defmacro umeth (slot . bound-args)
+  ^[(fun umethod) ',slot ,*bound-args])
 
 (defun sys:defmeth (type-sym name fun)
   (let ((type (find-struct-type type-sym)))
