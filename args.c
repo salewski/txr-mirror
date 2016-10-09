@@ -97,6 +97,16 @@ struct args *args_cat_zap(struct args *to, struct args *from)
   return to;
 }
 
+struct args *args_cat_zap_from(struct args *to, struct args *from, cnum index)
+{
+  size_t size = sizeof *from->arg * (from->fill - index);
+  to->list = from->list;
+  memcpy(to->arg + to->fill, from->arg + index, size);
+  to->fill += from->fill - index;
+  memset(from->arg, 0, size);
+  return to;
+}
+
 val args_copy_to_list(struct args *args)
 {
   list_collect_decl (out, ptail);

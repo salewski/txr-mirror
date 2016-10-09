@@ -185,4 +185,5 @@ val args_get_checked(val name, struct args *args, cnum *arg_index);
 struct args *args_copy(struct args *to, struct args *from);
 struct args *args_copy_zap(struct args *to, struct args *from);
 struct args *args_cat_zap(struct args *to, struct args *from);
+struct args *args_cat_zap_from(struct args *to, struct args *from, cnum index);
 val args_copy_to_list(struct args *args);
