@@ -1434,6 +1434,68 @@ static val reg_expand_nongreedy(val exp)
     uw_throwf(error_s, lit("bad object in regex syntax: ~s"), exp, nao);
   }
 }
+
+static val reg_nary_to_bin(val regex);
+
+static val reg_nary_unfold(val sym, val args, val orig)
+{
+  if (atom(args)) {
+    return t; /* Nullary intersection and union are both empty. */
+  } else if (!cdr(args)) {
+    return reg_nary_to_bin(car(args));
+  } else if (!cddr(args)) {
+    val rx1 = pop(&args);
+    val rx2 = pop(&args);
+    val newrx1 = reg_nary_to_bin(rx1);
+    val newrx2 = reg_nary_to_bin(rx2);
+    if (!orig || rx1 != newrx1 || rx2 != newrx2)
+      return list(sym, newrx1, newrx2, nao);
+    return orig;
+  } else {
+    return list(sym,
+                reg_nary_to_bin(car(args)),
+                reg_nary_unfold(sym, cdr(args), nil), nao);
+  }
+}
+
+static val reg_nary_to_bin(val regex)
+{
+  if (atom(regex)) {
+    return regex;
+  } else {
+    val sym = first(regex);
+    val args = rest(regex);
+
+    if (sym == or_s || sym == and_s) {
+      return reg_nary_unfold(sym, args, regex);
+    } else if (sym == compound_s || sym == zeroplus_s || sym == oneplus_s ||
+               sym == optional_s || sym == compl_s || sym == nongreedy_s)
+    {
+     list_collect_decl (out, ptail);
+      val args_orig = args;
+      val nochange = t;
+
+      for (; args; args = cdr(args))  {
+        val rx = car(args);
+        val newrx = reg_nary_to_bin(car(args));
+
+        if (nochange && rx != newrx) {
+          ptail = list_collect_nconc(ptail, ldiff(args_orig, args));
+          nochange = nil;
+        }
+
+        if (!nochange)
+          ptail = list_collect(ptail, newrx);
+      }
+
+      if (!nochange)
+        return cons(sym, out);
+    }
+
+    return regex;
+  }
+}
+
 static val reg_compile_csets(val exp)
 {
   if (exp == space_k) {
@@ -2044,7 +2106,7 @@ val regex_compile(val regex_sexp, val error_stream)
     return if2(regex_sexp, regex_compile(regex_sexp, error_stream));
   }
 
-  regex_sexp = reg_optimize(reg_expand_nongreedy(regex_sexp));
+  regex_sexp = reg_optimize(reg_expand_nongreedy(reg_nary_to_bin(regex_sexp)));
 
   if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
     regex_t *regex = coerce(regex_t *, chk_malloc(sizeof *regex));
