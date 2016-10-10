@@ -1393,19 +1393,15 @@ static val reg_expand_nongreedy(val exp)
 
     if (sym == set_s || sym == cset_s) {
       return exp;
-    } else if (sym == compound_s) {
+    } else if (sym == compound_s || sym == zeroplus_s || sym == oneplus_s ||
+               sym == optional_s || sym == compl_s ||
+               sym == or_s || sym == and_s)
+    {
       list_collect_decl (out, iter);
-      iter = list_collect(iter, compound_s);
+      iter = list_collect(iter, sym);
       for (; args; args = cdr(args))
         iter = list_collect(iter, reg_expand_nongreedy(first(args)));
       return out;
-    } else if (sym == zeroplus_s || sym == oneplus_s ||
-               sym == optional_s || sym == compl_s) {
-      return cons(sym, cons(reg_expand_nongreedy(first(args)), nil));
-    } else if (sym == or_s || sym == and_s) {
-      val xfirst = reg_expand_nongreedy(first(args));
-      val xsecond = reg_expand_nongreedy(second(args));
-      return cons(sym, cons(xfirst, cons(xsecond, nil)));
     } else if (sym == nongreedy_s) {
       val xfirst = reg_expand_nongreedy(first(args));
       val xsecond = reg_expand_nongreedy(second(args));
@@ -1463,19 +1459,15 @@ static val reg_compile_csets(val exp)
     if (sym == set_s || sym == cset_s) {
       char_set_t *set = char_set_compile(args, eq(sym, cset_s));
       return cobj(coerce(mem_t *, set), chset_s, &char_set_obj_ops);
-    } else if (sym == compound_s) {
+    } else if (sym == compound_s || sym == zeroplus_s || sym == oneplus_s ||
+               sym == optional_s || sym == compl_s || sym == nongreedy_s ||
+               sym == or_s || sym == and_s)
+    {
       list_collect_decl (out, iter);
-      iter = list_collect(iter, compound_s);
+      iter = list_collect(iter, sym);
       for (; args; args = cdr(args))
         iter = list_collect(iter, reg_compile_csets(first(args)));
       return out;
-    } else if (sym == zeroplus_s || sym == oneplus_s ||
-               sym == optional_s || sym == compl_s || sym == nongreedy_s) {
-      return cons(sym, cons(reg_compile_csets(first(args)), nil));
-    } else if (sym == or_s || sym == and_s) {
-      val xfirst = reg_compile_csets(first(args));
-      val xsecond = reg_compile_csets(second(args));
-      return cons(sym, cons(xfirst, cons(xsecond, nil)));
     } else {
       uw_throwf(error_s, lit("bad operator in regex syntax: ~s"), sym, nao);
     }
