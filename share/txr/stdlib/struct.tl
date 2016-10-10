@@ -230,8 +230,8 @@
                                                 (list ,*args)))))
       (atom ^(make-lazy-struct ',atom (lambda () (list (list ,*qpairs))))))))
 
-(defmacro meth (obj slot)
-  ^(method ,obj ',slot))
+(defmacro meth (obj slot . bound-args)
+  ^[(fun method) ,obj ',slot ,*bound-args])
 
 (defmacro usl (slot)
   ^(uslot ',slot))

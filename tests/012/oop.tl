@@ -43,6 +43,16 @@
 (mapcar (umeth print *stdout*) (list (new collie) (new dog)))
 (put-line)
 
+(let* ((ssl (gun (make-string-output-stream)))
+       (s1 (pop ssl))
+       (s2 (pop ssl))
+       (s3 (pop ssl))
+       (d (new collie)))
+  [(meth d print s1)]
+  [(meth d print s2)]
+  [(meth d print s3)]
+  (tprint [mapcar get-string-from-stream (list s1 s2 s3)]))
+
 (defstruct b nil
   (:instance a 1)
   (:instance b 2)

@@ -151,7 +151,7 @@ void struct_init(void)
   reg_fun(intern(lit("static-slot-p"), user_package), func_n2(static_slot_p));
   reg_fun(intern(lit("structp"), user_package), func_n1(structp));
   reg_fun(intern(lit("struct-type"), user_package), func_n1(struct_type));
-  reg_fun(intern(lit("method"), user_package), func_n2(method));
+  reg_fun(intern(lit("method"), user_package), func_n2v(method_args));
   reg_fun(intern(lit("super-method"), user_package), func_n2(super_method));
   reg_fun(intern(lit("uslot"), user_package), func_n1(uslot));
   reg_fun(intern(lit("umethod"), user_package), func_n1v(umethod));
@@ -1106,10 +1106,33 @@ static val method_fun(val env, varg args)
   return generic_funcall(fun, args_copy);
 }
 
+static val method_args_fun(val env, varg args)
+{
+  cons_bind (curried_args, fun_strct, env);
+  cons_bind (fun, strct, fun_strct);
+  cnum ca_len = c_num(length(curried_args));
+  args_decl(args_call, max(args->fill + 1 + ca_len, ARGS_MIN));
+  args_add(args_call, strct);
+  args_add_list(args_call, curried_args);
+  args_normalize(args_call, ca_len + 1);
+  args_cat_zap(args_call, args);
+  return generic_funcall(fun, args_call);
+}
+
 val method(val strct, val slotsym)
 {
   return func_f0v(cons(slot(strct, slotsym), strct), method_fun);
 }
+
+val method_args(val strct, val slotsym, struct args *args)
+{
+  if (!args_more(args, 0))
+    return func_f0v(cons(slot(strct, slotsym), strct), method_fun);
+  else
+    return func_f0v(cons(args_get_list(args),
+                         cons(slot(strct, slotsym), strct)), method_args_fun);
+}
+
 
 val super_method(val strct, val slotsym)
 {

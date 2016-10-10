@@ -20889,9 +20889,14 @@ leftmost argument, so that the function has access to the object.
 
 .coNP Macro @ meth
 .synb
-.mets (meth < struct << slot )
+.mets (meth < struct < slot << curried-expr *)
 .syne
 .desc
+The
+.code meth
+macro allows indirection upon a method-like function stored
+in a function slot.
+
 The
 .code meth
 macro binds
@@ -20903,15 +20908,48 @@ That is to say, it returns a function
 .meta f
 such that
 .cblk
-.meti >> ( f < arg ... )
+.meti >> [ f < arg ... ]
 .cble
 calls
 .cblk
-.meti >> ( struct.slot < struct < arg ... )
+.meti >> [ struct.slot < struct < arg ... ]
 .cble
 except that
 .meta struct
 is evaluated only once.
+
+If one or more
+.meta curried-expr
+expressions are present, their values are bound inside
+.meta f
+also, and when
+.meta f
+is invoked, these are passed to the function stored in the slot.
+Thus if
+.meta f
+is produced by
+.code "(meth struct slot c1 c2 c3 ...)"
+then
+.cblk
+.meti >> [ f < arg ... ]
+.cble
+calls
+.cblk
+.meti >> [ struct.slot < struct < c1v < c2v < c3v ... arg ... ]
+.cble
+.cble
+except that
+.meta struct
+is evaluated only once, and
+.metn c1v ,
+.meta c2v
+and
+.meta c3v
+are the values of expressions
+.codn c1 ,
+.code c2
+and
+.codn c3 .
 
 The argument
 .meta struct
@@ -20927,10 +20965,20 @@ function:
   (meth a b)  <-->  (method a 'b)
 .cble
 
-The
-.code meth
-macro allows indirection upon a method-like function stored
-in a function slot.
+If
+.meta curried-arg
+expressions are present, the translation may be be understood
+as:
+
+.cblk
+  (meth a b c1 c2 ...)  <-->  [(fun method) a 'b c1 c2 ...]
+.cble
+
+In other words the
+.meta curried-arg
+expressions are evaluated under the
+.code dwim
+operator evaluation rules.
 
 .TP* Example:
 
@@ -21547,14 +21595,20 @@ The return value is
 
 .coNP Function @ method
 .synb
-.mets (method < struct-obj << slot-name )
+.mets (method < struct-obj < slot-name << curried-arg *)
 .syne
 .desc
 The
 .code method
-function retrieves a function from a structure's slot
-and binds that function's left argument to the
-structure.
+function retrieves a function
+.meta m
+from a structure's slot
+and returns a new function which binds that function's
+left argument. If
+.meta curried-arg
+arguments are present, then they are also stored in
+the returned function. These are the
+.IR "curried arguments" .
 
 The
 .meta struct-obj
@@ -21564,13 +21618,19 @@ must be a symbol denoting a slot in that structure.
 The slot must hold a function of at least one
 argument.
 
-The
+The function
+.meta f
+which
 .code method
-function returns a function which, when invoked,
-calls the function previously retrieved from the object's
+function returns, when invoked,
+calls the function
+.meta m
+previously retrieved from the object's
 slot, passing to that function
 .meta struct-obj
-as the leftmost argument, followed by the function's
+as the leftmost argument, followed by the curried
+arguments, followed by all of
+.metn f 's
 own arguments.
 
 Note: the
