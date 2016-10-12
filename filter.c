@@ -116,6 +116,55 @@ static val trie_compress_intrinsic(val ptrie)
   return ptrie;
 }
 
+static val regex_from_trie(val trie)
+{
+  switch (type(trie)) {
+  case NIL:
+    return nil;
+  case CONS:
+    {
+      val a = car(trie);
+      val d = cdr(trie);
+      switch (type(d)) {
+      case CONS:
+        {
+          val rx = regex_from_trie(d);
+          if (consp(rx) && car(rx) == compound_s)
+            return cons(compound_s, cons(a, cdr(rx)));
+          return list(compound_s, a, rx, nao);
+        }
+      case COBJ:
+        if (d->co.cls == hash_s)
+          return list(compound_s, a, regex_from_trie(d), nao);
+        /* fallthrough */
+      default:
+        return a;
+      }
+    }
+  case COBJ:
+    if (trie->co.cls == hash_s) {
+      if (zerop(hash_count(trie))) {
+        return nil;
+      } else {
+        list_collect_decl (out, ptail);
+        val iter = hash_begin(trie);
+        val cell;
+        while ((cell = hash_next(iter)) != nil) {
+          val rx = regex_from_trie(cdr(cell));
+          ptail = list_collect(ptail,
+                               if3(consp(rx) && car(rx) == compound_s,
+                                   cons(compound_s, cons(car(cell), cdr(rx))),
+                                   list(compound_s, car(cell), rx, nao)));
+        }
+        return cons(or_s, out);
+      }
+    }
+    /* fallthrough */
+  default:
+    uw_throwf(error_s, lit("regex-from-trie: bad trie element ~s"), trie, nao);
+  }
+}
+
 val trie_lookup_begin(val trie)
 {
   return trie;
@@ -881,6 +930,7 @@ void filter_init(void)
   reg_fun(intern(lit("trie-add"), user_package), func_n3(trie_add));
   reg_fun(intern(lit("trie-compress"), user_package),
           func_n1(trie_compress_intrinsic));
+  reg_fun(intern(lit("regex-from-trie"), user_package), func_n1(regex_from_trie));
   reg_fun(intern(lit("trie-lookup-begin"), user_package), func_n1(trie_lookup_begin));
   reg_fun(intern(lit("trie-value-at"), user_package), func_n1(trie_value_at));
   reg_fun(intern(lit("trie-lookup-feed-char"), user_package), func_n2(trie_lookup_feed_char));

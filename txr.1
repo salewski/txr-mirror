@@ -44849,6 +44849,34 @@ using
 .codn equal ,
 and the result of that is returned.
 
+.coNP Function @ regex-from-trie
+.synb
+.mets (regex-from-trie << trie )
+.syne
+.desc
+The
+.code regex-from-trie
+function returns a representation of
+.meta trie
+as regular expression abstract syntax, suitable for
+processing by the
+.code regex-compile
+function.
+
+The values stored in the trie nodes are not represented in
+the regular expression.
+
+The
+.meta trie
+may be one that has been compressed via
+.codn trie-compress ;
+in fact, a compressed
+.meta trie
+results in more compact syntax.
+
+Note: this function is useful for creating a compact, prefix-compressed
+regular expression which matches a list of strings.
+
 .SS* Access To TXR Pattern Language From Lisp
 
 It is useful to be able to invoke the abilities of the \*(TX pattern Language
