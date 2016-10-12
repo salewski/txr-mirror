@@ -38352,7 +38352,8 @@ function.
 .coNP Structure @ time
 .synb
   (defstruct time nil
-    year month day hour min sec dst)
+    year month day hour min sec dst
+    gmtoff zone)
 .syne
 .desc
 The
@@ -38377,7 +38378,7 @@ January, whereas the C member
 .code tm_mon
 uses a zero-based month.  The
 .code dst
-slot is a \*(TL Boolean value. The remaining slots
+slot is a \*(TL Boolean value. The slots
 .codn hour ,
 .codn min ,
 and
@@ -38387,6 +38388,37 @@ correspond directly to
 .codn tm_min ,
 and
 .codn tm_sec .
+
+The slot
+.code gmtoff
+represents the number of seconds east of UTC, and
+.code zone
+holds a string giving the abbreviated time zone name.
+On platform where the C type
+.code "struct tm"
+has fields corresponding to these slots, values for
+these slots are calculated and stored into them by the
+.code time-struct-local
+and
+.code time-struct-utc
+functions, and also the related
+.code time-local
+and
+.code time-utc
+methods. On platform where the corresponding fields are not
+present in the C language
+.codn "struct tm" ,
+these slots are unaffected by those functions,
+retaining the default initial value
+.code nil
+or a previously stored value, if applicable.
+Lastly, the values of
+.code gmtoff
+and
+.code zone
+are not ignored by functions which accept a
+.code time
+structure as a source of input values.
 
 .coNP Functions @ time-struct-local and @ time-struct-utc
 .synb

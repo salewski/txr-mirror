@@ -117,7 +117,7 @@ val list_f, less_f, greater_f;
 val prog_string;
 
 val time_s, time_local_s, time_utc_s, time_string_s, time_parse_s;
-val year_s, month_s, day_s, hour_s, min_s, sec_s, dst_s;
+val year_s, month_s, day_s, hour_s, min_s, sec_s, dst_s, gmtoff_s, zone_s;
 
 static val env_list;
 static val recycled_conses;
@@ -9397,6 +9397,12 @@ static void tm_to_time_struct(val time_struct, struct tm *ptm)
   slotset(time_struct, min_s, num_fast(ptm->tm_min));
   slotset(time_struct, sec_s, num_fast(ptm->tm_sec));
   slotset(time_struct, dst_s, tnil(ptm->tm_isdst));
+#if HAVE_TM_GMTOFF
+  slotset(time_struct, gmtoff_s, num_fast(ptm->TM_GMTOFF));
+#endif
+#if HAVE_TM_ZONE
+  slotset(time_struct, zone_s, if2(ptm->TM_ZONE, string_utf8(ptm->TM_ZONE)));
+#endif
 }
 
 static val broken_time_struct(struct tm *tms)
@@ -9471,6 +9477,13 @@ static void time_fields_to_tm(struct tm *ptm,
     ptm->tm_isdst = -1;
   else
     ptm->tm_isdst = 1;
+
+#if HAVE_TM_GMTOFF
+  ptm->TM_GMTOFF = 0;
+#endif
+#if HAVE_TM_ZONE
+  ptm->TM_ZONE = 0;
+#endif
 }
 
 static void time_struct_to_tm(struct tm *ptm, val time_struct, val strict)
@@ -9667,12 +9680,15 @@ static void time_init(void)
   min_s = intern(lit("min"), user_package);
   sec_s = intern(lit("sec"), user_package);
   dst_s = intern(lit("dst"), user_package);
+  gmtoff_s = intern(lit("gmtoff"), user_package);
+  zone_s = intern(lit("zone"), user_package);
 
   time_st = make_struct_type(time_s, nil,
                              list(time_local_s, time_utc_s,
                                   time_string_s, time_parse_s, nao),
                              list(year_s, month_s, day_s,
-                                  hour_s, min_s, sec_s, dst_s, nao),
+                                  hour_s, min_s, sec_s, dst_s,
+                                  gmtoff_s, zone_s, nao),
                              nil, nil, nil, nil);
 
   static_slot_set(time_st, time_local_s, func_f1(nil, time_meth));
