@@ -2359,8 +2359,10 @@ int lino_hist_add(lino_t *ls, const char *line) {
         memset(ls->history, 0, size);
     }
 
-    /* Don't add duplicated lines. */
-    if (ls->history_len && !strcmp(ls->history[ls->history_len-1], line)) return 0;
+    /* Don't add duplicated lines, unless we are resubmitting historic lines. */
+    if (ls->history_len && !ls->save_hist_idx &&
+        !strcmp(ls->history[ls->history_len-1], line))
+        return 0;
 
     /* Add an heap allocated copy of the line in the history.
      * If we reached the max length, remove the older line. */
