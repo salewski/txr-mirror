@@ -10414,9 +10414,19 @@ The first item in the syntax is a list of keywords. These are the same
 keywords as are used when calling the function hash to construct
 a hash table. Allowed keywords are:
 .codn :equal-based ,
-.code :weak-keys
+.codn :weak-keys ,
+.codn :weak-values ,
 and
-.codn :weak-values .
+.codn :userdata .
+If the
+.code :userdata
+keyword is present,
+it must be followed by an object; that object
+specifies the hash table's user data, which
+can be retrieved using the
+.code get-hash-userdata
+function.
+
 An empty list can be specified as
 .code nil
 or
@@ -33159,7 +33169,8 @@ and
 .coNP Functions @ make-hash and @ hash
 .synb
 .mets (make-hash < weak-keys < weak-vals << equal-based )
-.mets (hash { :weak-keys | :weak-vals | :equal-based }*)
+.mets (hash {:weak-keys | :weak-vals | :equal-based |
+.mets \ \ \ \ \ \  :userdata << obj }*)
 .syne
 .desc
 These functions construct a new hash table.
@@ -33190,15 +33201,22 @@ It is an error to attempt to construct an
 hash table which has weak keys.
 
 The hash function provides an alternative interface. It accepts optional
-arguments which are keyword symbols. Any combination of the three symbols
+arguments which are keyword symbols. Any combination of the four symbols
 .codn :weak-keys ,
-.code :weak-vals
-and
+.codn :weak-vals ,
 .code :equal-based
+and
+.code :userdata
 can be specified in any order
 to turn on the corresponding properties in the newly constructed hash table.
 If any of the keywords is not specified, the corresponding property defaults to
 .codn nil .
+If
+.code :userdata
+is present, it must be followed by an argument value; that value
+specifies the user data for the hash table, which can be retrieved using the
+.code get-hash-userdata
+function.
 
 If a hash table has weak keys, this means that from the point of view
 of garbage collection, that table holds only weak references to the keys

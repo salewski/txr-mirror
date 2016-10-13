@@ -41,6 +41,7 @@
 #include "unwind.h"
 #include "stream.h"
 #include "eval.h"
+#include "cadr.h"
 #include "hash.h"
 
 typedef enum hash_flags {
@@ -71,7 +72,7 @@ struct hash_iter {
   val cons;
 };
 
-val weak_keys_k, weak_vals_k, equal_based_k;
+val weak_keys_k, weak_vals_k, equal_based_k, userdata_k;
 
 /*
  * Dynamic lists built up during gc.
@@ -394,6 +395,7 @@ static void hash_print_op(val hash, val out, val pretty)
   if (h->flags != hash_weak_none) {
     if (need_space)
       put_char(chr(' '), out);
+    need_space = 1;
     switch (h->flags) {
     case hash_weak_both:
       obj_print_impl(weak_keys_k, out, pretty);
@@ -407,6 +409,13 @@ static void hash_print_op(val hash, val out, val pretty)
     default:
       break;
     }
+  }
+  if (h->userdata) {
+    if (need_space)
+      put_char(chr(' '), out);
+    obj_print_impl(userdata_k, out, pretty);
+    put_char(chr(' '), out);
+    obj_print_impl(h->userdata, out, pretty);
   }
   put_string(lit(")"), out);
   maphash(curry_123_23(func_n3(print_key_val), out), hash);
@@ -982,7 +991,11 @@ val hashv(struct args *args)
   val wkeys = memq(weak_keys_k, arglist);
   val wvals = memq(weak_vals_k, arglist);
   val equal = memq(equal_based_k, arglist);
-  return make_hash(wkeys, wvals, equal);
+  val userdata = cadr(memq(userdata_k, arglist));
+  val hash = make_hash(wkeys, wvals, equal);
+  if (userdata)
+    set_hash_userdata(hash, userdata);
+  return hash;
 }
 
 val hashl(val arglist)
@@ -1340,6 +1353,7 @@ void hash_init(void)
   weak_keys_k = intern(lit("weak-keys"), keyword_package);
   weak_vals_k = intern(lit("weak-vals"), keyword_package);
   equal_based_k = intern(lit("equal-based"), keyword_package);
+  userdata_k = intern(lit("userdata"), keyword_package);
 
   reg_fun(intern(lit("make-hash"), user_package), func_n3(make_hash));
   reg_fun(intern(lit("make-similar-hash"), user_package), func_n1(make_similar_hash));
