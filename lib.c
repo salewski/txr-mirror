@@ -8544,25 +8544,54 @@ val where(val func, val seq)
     seq = f;
   }
 
-  if (hashp(seq)) {
-    val hiter = hash_begin(seq);
-    val cell;
+  seq = nullify(seq);
 
-    while ((cell = hash_next(hiter)))
-      if (funcall1(func, cdr(cell)))
-        ptail = list_collect(ptail, car(cell));
-  } else {
-    val idx = zero;
+  switch (type(seq)) {
+  case COBJ:
+    if (seq->co.cls == hash_s) {
+      val hiter = hash_begin(seq);
+      val cell;
 
-    seq = nullify(seq);
-
-    gc_hint(seq);
-
-    for (; seq; seq = cdr(seq), idx = plus(idx, one)) {
-      val elt = car(seq);
-      if (funcall1(func, elt))
-        ptail = list_collect(ptail, idx);
+      while ((cell = hash_next(hiter)))
+        if (funcall1(func, cdr(cell)))
+          ptail = list_collect(ptail, car(cell));
+      break;
     }
+    /* fallthrough */
+  case NIL:
+  case CONS:
+  case LCONS:
+    {
+      val idx = zero;
+
+      gc_hint(seq);
+
+      for (; seq; seq = cdr(seq), idx = plus(idx, one)) {
+        val elt = car(seq);
+        if (funcall1(func, elt))
+          ptail = list_collect(ptail, idx);
+      }
+    }
+    break;
+  case LIT:
+  case STR:
+  case LSTR:
+  case VEC:
+    {
+      val idx;
+      val len = length(seq);
+
+      gc_hint(seq);
+
+      for (idx = zero; lt(idx, len); idx = plus(idx, one)) {
+        val elt = ref(seq, idx);
+        if (funcall1(func, elt))
+          ptail = list_collect(ptail, idx);
+      }
+    }
+    break;
+  default:
+    type_mismatch(lit("where: ~s is not a sequence"), seq, nao);
   }
 
   return out;
