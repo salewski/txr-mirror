@@ -2752,6 +2752,31 @@ val length_list(val list)
   return bn_len;
 }
 
+static val length_proper_list(val list)
+{
+  cnum len = 0;
+  val bn_len;
+
+  gc_hint(list);
+
+  while (list && len < INT_PTR_MAX) {
+    len++;
+    list = cdr(list);
+  }
+
+  if (len < INT_PTR_MAX)
+    return num(len);
+
+  bn_len = num(INT_PTR_MAX);
+
+  while (list) {
+    bn_len = succ(bn_len);
+    list = cdr(list);
+  }
+
+  return bn_len;
+}
+
 val getplist(val list, val key)
 {
   gc_hint(list);
@@ -8178,6 +8203,8 @@ val copy(val seq)
   }
 }
 
+static val length_proper_list(val list);
+
 val length(val seq)
 {
   switch (type(seq)) {
@@ -8198,7 +8225,7 @@ val length(val seq)
     if (seq->co.cls == hash_s)
       return hash_count(seq);
     if (structp(seq) && maybe_slot(seq, car_s))
-      return length_list(nullify(seq));
+      return length_proper_list(nullify(seq));
     /* fallthrough */
   default:
     type_mismatch(lit("length: ~s is not a sequence"), seq, nao);
@@ -8240,6 +8267,8 @@ val sub(val seq, val from, val to)
   case NIL:
     return nil;
   case COBJ:
+    seq = nullify(seq);
+    /* fallthrough */
   case CONS:
   case LCONS:
     return sub_list(seq, from, to);
