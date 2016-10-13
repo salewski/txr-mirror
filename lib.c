@@ -7544,8 +7544,6 @@ val rfind(val item, val list, val testfun, val keyfun)
 
 val find_max(val seq, val testfun, val keyfun)
 {
-  val maxkey;
-  val maxelt;
 
   seq = nullify(seq);
 
@@ -7555,21 +7553,65 @@ val find_max(val seq, val testfun, val keyfun)
   testfun = default_arg(testfun, greater_f);
   keyfun = default_arg(keyfun, identity_f);
 
-  maxelt = car(seq);
-  maxkey = funcall1(keyfun, maxelt);
+  switch (type(seq)) {
+  case COBJ:
+    if (seq->co.cls == hash_s) {
+      val hiter = hash_begin(seq);
+      val cell = hash_next(hiter);
+      val maxelt = cell;
+      val maxkey = if2(cell, funcall1(keyfun, cell));
 
-  gc_hint(seq);
+      while (cell && (cell = hash_next(hiter))) {
+        val key = funcall1(keyfun, cell);
+        if (funcall2(testfun, key, maxkey)) {
+          maxkey = key;
+          maxelt = cell;
+        }
+      }
 
-  for (seq = cdr(seq); seq; seq = cdr(seq)) {
-    val elt = car(seq);
-    val key = funcall1(keyfun, elt);
-    if (funcall2(testfun, key, maxkey)) {
-      maxkey = key;
-      maxelt = elt;
+      return maxelt;
     }
-  }
+    /* fallthrough */
+  case CONS:
+  case LCONS:
+    {
+      val maxelt = car(seq);
+      val maxkey = funcall1(keyfun, maxelt);
 
-  return maxelt;
+      gc_hint(seq);
+
+      for (seq = cdr(seq); seq; seq = cdr(seq)) {
+        val elt = car(seq);
+        val key = funcall1(keyfun, elt);
+        if (funcall2(testfun, key, maxkey)) {
+          maxkey = key;
+          maxelt = elt;
+        }
+      }
+      return maxelt;
+    }
+  case STR:
+  case LSTR:
+  case VEC:
+    {
+      val maxelt = ref(seq, zero);
+      val maxkey = funcall1(keyfun, maxelt);
+      val len = length(seq);
+      val i;
+
+      for (i = zero; lt(i, len); i = succ(i)) {
+        val elt = ref(seq, i);
+        val key = funcall1(keyfun, elt);
+        if (funcall2(testfun, key, maxkey)) {
+          maxkey = key;
+          maxelt = elt;
+        }
+      }
+      return maxelt;
+    }
+  default:
+    uw_throwf(error_s, lit("find-max: unsupporte object ~s is a literal"), seq, nao);
+  }
 }
 
 val find_min(val seq, val testfun, val keyfun)

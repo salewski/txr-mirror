@@ -23877,8 +23877,8 @@ the leftmost.
 
 .coNP Functions @ find-max and @ find-min
 .synb
-.mets (find-max < sequence >> [ testfun <> [ keyfun ]])
-.mets (find-min < sequence >> [ testfun <> [ keyfun ]])
+.mets (find-max >> { sequence | << hash } >> [ testfun <> [ keyfun ]])
+.mets (find-min >> { sequence | << hash } >> [ testfun <> [ keyfun ]])
 .syne
 .desc
 The
@@ -23939,6 +23939,25 @@ from
 is passed through this one-argument function, and
 the resulting value is used in its place for the purposes of the
 comparison. However, the original element is returned.
+
+A hash table may be specified instead of a sequence.
+The
+.meta hash
+is treated as if it were a sequence of hash key and hash
+value pairs represented as cons cells, the
+.code car
+slots of which are the hash keys, and the
+.code cdr
+of which are the hash values.  If the caller doesn't specify a
+.meta keyfun
+then these cells are taken as their keys. To find the hash
+table's key-value cell with the maximum key, the
+.code car
+function can be specified as
+.metn keyfun .
+To find the entry holding the maximum value, the
+.code cdr
+function can be specified.
 
 .coNP Function @ set-diff
 .synb
