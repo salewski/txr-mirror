@@ -771,6 +771,7 @@ val repl(val bindings, val in_stream, val out_stream)
         reg_varl(var_sym, value);
         sethash(result_hash, var_counter, value);
         prinl(value, out_stream);
+        lino_set_result(ls, utf8_dup_to(c_str(tostring(value))));
         lino_hist_add(ls, line_u8);
       }
     }
