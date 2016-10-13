@@ -8054,6 +8054,13 @@ val in(val seq, val item, val testfun, val keyfun)
   switch (type(seq)) {
   case NIL:
     return nil;
+  case COBJ:
+    if (seq->co.cls == hash_s) {
+      val found;
+      gethash_f(seq, item, mkcloc(found));
+      return if3(found, t, nil);
+    }
+    /* fallthrough */
   case CONS:
   case LCONS:
     {
@@ -8110,13 +8117,6 @@ val in(val seq, val item, val testfun, val keyfun)
 
       return nil;
     }
-  case COBJ:
-    if (seq->co.cls == hash_s) {
-      val found;
-      gethash_f(seq, item, mkcloc(found));
-      return if3(found, t, nil);
-    }
-    /* fallthrough */
   default:
     type_mismatch(lit("in: ~s is not a sequence or hash"), seq, nao);
   }
@@ -8239,6 +8239,7 @@ val sub(val seq, val from, val to)
   switch (type(seq)) {
   case NIL:
     return nil;
+  case COBJ:
   case CONS:
   case LCONS:
     return sub_list(seq, from, to);
@@ -8258,6 +8259,10 @@ val ref(val seq, val ind)
   switch (type(seq)) {
   case NIL:
     return nil;
+  case COBJ:
+    if (seq->co.cls == hash_s)
+      return gethash(seq, ind);
+    /* fallthrough */
   case CONS:
   case LCONS:
     return listref(seq, ind);
@@ -8267,9 +8272,6 @@ val ref(val seq, val ind)
     return chr_str(seq, ind);
   case VEC:
     return vecref(seq, ind);
-  case COBJ:
-    if (seq->co.cls == hash_s)
-      return gethash(seq, ind);
   default:
     type_mismatch(lit("ref: ~s is not a sequence"), seq, nao);
   }
@@ -8455,6 +8457,7 @@ val search(val seq, val key, val testfun, val keyfun)
   case STR:
   case LSTR:
   case VEC:
+  case COBJ:
     /* TODO: optimize me */
     return search_list(seq, key, testfun, keyfun);
   default:
@@ -8523,6 +8526,7 @@ val rsearch(val seq, val key, val testfun, val keyfun)
   case STR:
   case LSTR:
   case VEC:
+  case COBJ:
     /* TODO: optimize me */
     return rsearch_list(seq, key, testfun, keyfun);
   default:
@@ -8575,6 +8579,24 @@ val sel(val seq_in, val where_in)
   switch (type(seq)) {
   case NIL:
     return nil;
+  case COBJ:
+    if (hashp(seq))
+    {
+      val newhash = make_similar_hash(seq);
+
+      for (; where; where = cdr(where)) {
+        val found;
+        loc pfound = mkcloc(found);
+        val key = car(where);
+        val value = gethash_f(seq, key, pfound);
+
+        if (found)
+          sethash(newhash, key, value);
+      }
+
+      return newhash;
+    }
+    /* fallthrough */
   case CONS:
   case LCONS:
     {
@@ -8591,24 +8613,6 @@ val sel(val seq_in, val where_in)
       }
     }
     break;
-  case COBJ:
-    if (!hashp(seq))
-      type_mismatch(lit("select: ~s is not a sequence or hash"), seq, nao);
-    {
-      val newhash = make_similar_hash(seq);
-
-      for (; where; where = cdr(where)) {
-        val found;
-        loc pfound = mkcloc(found);
-        val key = car(where);
-        val value = gethash_f(seq, key, pfound);
-
-        if (found)
-          sethash(newhash, key, value);
-      }
-
-      return newhash;
-    }
   default:
     {
       val len = length(seq);
