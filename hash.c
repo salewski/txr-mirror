@@ -1354,6 +1354,7 @@ void hash_init(void)
   weak_vals_k = intern(lit("weak-vals"), keyword_package);
   equal_based_k = intern(lit("equal-based"), keyword_package);
   userdata_k = intern(lit("userdata"), keyword_package);
+  val ghu = func_n1(get_hash_userdata);
 
   reg_fun(intern(lit("make-hash"), user_package), func_n3(make_hash));
   reg_fun(intern(lit("make-similar-hash"), user_package), func_n1(make_similar_hash));
@@ -1368,8 +1369,8 @@ void hash_init(void)
   reg_fun(intern(lit("pushhash"), user_package), func_n3(pushhash));
   reg_fun(intern(lit("remhash"), user_package), func_n2(remhash));
   reg_fun(intern(lit("hash-count"), user_package), func_n1(hash_count));
-  reg_fun(intern(lit("get-hash-userdata"), user_package),
-          func_n1(get_hash_userdata));
+  reg_fun(intern(lit("get-hash-userdata"), user_package), ghu);
+  reg_fun(intern(lit("hash-userdata"), user_package), ghu);
   reg_fun(intern(lit("set-hash-userdata"), user_package),
           func_n2(set_hash_userdata));
   reg_fun(intern(lit("hashp"), user_package), func_n1(hashp));

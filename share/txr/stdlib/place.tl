@@ -561,6 +561,18 @@
                     ^(remhash ,',hash ,',key))))
        ,body)))
 
+(defplace (hash-userdata hash) body
+  (getter setter
+    (with-gensyms (hash-sym)
+      ^(slet ((,hash-sym ,hash))
+         (macrolet ((,getter () ^(hash-userdata ,',hash-sym))
+                    (,setter (val) ^(set-hash-userdata ,',hash-sym ,val)))
+            ,body))))
+  (ssetter
+    ^(macrolet ((,ssetter (val)
+                  ^(set-hash-userdata ,',hash ,val)))
+      ,body)))
+
 (defplace (dwim obj-place index : (default nil have-default-p) :env env) body
   (getter setter
     (with-gensyms (ogetter-sym osetter-sym obj-sym

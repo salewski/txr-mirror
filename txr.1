@@ -10424,7 +10424,7 @@ keyword is present,
 it must be followed by an object; that object
 specifies the hash table's user data, which
 can be retrieved using the
-.code get-hash-userdata
+.code hash-userdata
 function.
 
 An empty list can be specified as
@@ -15231,7 +15231,7 @@ if they use the same equality (both are
 or both are the default
 .codn :eql-based ),
 if their associated user data elements are equal (see the function
-.codn get-hash-userdata ),
+.codn hash-userdata ),
 if their sets of keys are identical, and if the data items associated with
 corresponding keys from each respective hash are
 .code equal
@@ -33215,7 +33215,7 @@ If
 .code :userdata
 is present, it must be followed by an argument value; that value
 specifies the user data for the hash table, which can be retrieved using the
-.code get-hash-userdata
+.code hash-userdata
 function.
 
 If a hash table has weak keys, this means that from the point of view
@@ -33729,15 +33729,44 @@ function returns an integer representing the number of
 key-value pairs stored in
 .metn hash .
 
+.coNP Accessor @ hash-userdata
+.synb
+.mets (hash-userdata << hash )
+.mets (set (hash-userdata << hash ) << new-value )
+.syne
+.desc
+The
+.code hash-userdata
+function retrieves the user data object associated with
+.metn hash .
+
+A hash table can be created with user data using the
+.code :userdata
+keyword in a hash table literal or in a call to the
+.code hash
+function, directly, or via other hash-constructing functions which take the
+hash construction keywords, such as
+.codn group-by .
+If a hash table is created without user data, its user
+data is initialized to
+.codn nil .
+
+Because
+.code hash-userdata
+is an accessor, a
+.code hash-userdata
+form can be used as a place. Assigning a value to this place
+causes the user data of
+.meta hash
+to be replaced with that value.
+
 .coNP Function @ get-hash-userdata
 .synb
 .mets (get-hash-userdata << hash )
 .syne
 .desc
-This function retrieves the user data object associated with
-.metn hash .
-The user data object of a newly-created hash table is initialized to
-.codn nil .
+This function is a deprecated synonym for
+.codn hash-userdata .
 
 .coNP Function @ set-hash-userdata
 .synb
