@@ -96,6 +96,7 @@ struct lino_state {
     int history_len;
     char **history;
     char *clip;         /* Selection */
+    char *result;       /* Previous command result. */
     int ifd;            /* Terminal stdin file descriptor. */
     int ofd;            /* Terminal stdout file descriptor. */
     int save_hist_idx;  /* Jump to history position on entry into edit */
@@ -1857,6 +1858,16 @@ static int edit(lino_t *l, const char *prompt)
                     }
                 }
                 break;
+            case CTL('P'): case 'p':
+                extended = 0;
+                if (l->result) {
+                    int res = edit_insert_str(l, l->result, strlen(l->result));
+                    if (res) {
+                        l->error = lino_ioerr;
+                        goto out;
+                    }
+                }
+                break;
             case CTL('Q'):
                 extended = 0;
                 {
@@ -2268,6 +2279,7 @@ lino_t *lino_copy(lino_t *le)
         ls->history = 0;
         ls->rawmode = 0;
         ls->clip = 0;
+        ls->result = 0;
         ls->undo_stack = 0;
 
         link_into_list(&lino_list, ls);
@@ -2286,6 +2298,8 @@ static void lino_cleanup(lino_t *ls)
     free_undo_stack(ls);
     free(ls->clip);
     ls->clip = 0;
+    free(ls->result);
+    ls->result = 0;
 }
 
 void lino_free(lino_t *ls)
@@ -2448,4 +2462,10 @@ int lino_hist_load(lino_t *ls, const char *filename) {
     }
     fclose(fp);
     return 0;
+}
+
+void lino_set_result(lino_t *ls, char *res)
+{
+    free(ls->result);
+    ls->result = res;
 }
