@@ -306,8 +306,8 @@ static val sock_set_entries(val dlt, val fun)
 static val sock_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~asocket.tl"), stdlib_path, nao));
   sock_load_init();
+  load(format(nil, lit("~asocket.tl"), stdlib_path, nao));
   return nil;
 }
 

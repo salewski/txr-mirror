@@ -24,16 +24,20 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(defstruct sockaddr nil)
+(defstruct sockaddr nil
+  (:static family nil))
 
 (defstruct sockaddr-in sockaddr
-  (addr 0) (port 0))
+  (addr 0) (port 0)
+  (:static family af-inet))
 
 (defstruct sockaddr-in6 sockaddr
-  (addr 0) (port 0) (flow-info 0) (scope-id 0))
+  (addr 0) (port 0) (flow-info 0) (scope-id 0)
+  (:static family af-inet6))
 
 (defstruct sockaddr-un sockaddr
-  path)
+  path
+  (:static family af-unix))
 
 (defstruct addrinfo nil
   (flags 0)

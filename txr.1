@@ -43009,7 +43009,8 @@ newly created datagram socket which is returned.
 
 .coNP Structure @ sockaddr
 .synb
-.mets (defstruct sockaddr nil)
+.mets (defstruct sockaddr nil
+.mets \ \  (:static family nil))
 .syne
 .desc
 The
@@ -43021,10 +43022,16 @@ several other types are derived:
 and
 .codn sockaddr-un .
 
+It has a single slot called
+.code family
+which is static, and initialized to
+.codn nil .
+
 .coNP Structure @ sockaddr-in
 .synb
 .mets (defstruct sockaddr-in sockaddr
-.mets \ \  (addr 0) (port 0))
+.mets \ \  (addr 0) (port 0)
+.mets \ \  (:static family af-inet))
 .syne
 .desc
 The
@@ -43056,10 +43063,16 @@ for instance, when the
 function is used with the aim of looking up the address of a host, without
 caring about the port number.
 
+The
+.code family
+static slot holds the value
+.codn af-inet .
+
 .coNP Structure @ sockaddr-in6
 .synb
 .mets (defstruct sockaddr-in6 sockaddr
-.mets \ \  (addr 0) (port 0) (flow-info 0) (scope-id 0))
+.mets \ \  (addr 0) (port 0) (flow-info 0) (scope-id 0)
+.mets \ \  (:static family af-inet6))
 .syne
 .desc
 The
@@ -43092,10 +43105,16 @@ members of the
 .code sockaddr_in6
 C language structure. Their meaning and use are beyond the scope of this document.
 
+The
+.code family
+static slot holds the value
+.codn af-inet .
+
 .coNP Structure @ sockaddr-un
 .synb
 .mets (defstruct sockaddr-un sockaddr
-.mets \ \  path)
+.mets \ \  path
+.mets \ \  (:static family af-unix))
 .syne
 .desc
 The
@@ -43143,6 +43162,11 @@ For example, the path
 is valid and represents an abstract address consisting of the three bytes
 .str "foo"
 followed by null padding bytes.
+
+The
+.code family
+static slot holds the value
+.codn af-inet .
 
 .coNP Structure @ addrinfo
 .synb
