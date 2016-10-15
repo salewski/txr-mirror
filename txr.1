@@ -26492,7 +26492,7 @@ form, just like
 
 Note: if a symbol macro expands to itself directly, expansion stops. However,
 if a symbol macro expands to itself through a chain of expansions,
-an infinite expansion time loop results.
+runaway expansion-time recursion will occur.
 
 If a global variable exists by the name
 .metn sym ,
