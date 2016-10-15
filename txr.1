@@ -26456,16 +26456,20 @@ namespace established by
 .desc
 A
 .code defsymacro
-form introduces a symbol macro: a symbol macro is a parameterless
-substitution keyed to a symbol.  In contexts where a symbol macro
-definition of
+form introduces a symbol macro. A symbol macro consists of a binding
+between a symbol
 .meta sym
-is visible, if the form
-.meta sym
-appears such that its evaluation is called for, it is subject
-to replacement by
+and and a
 .metn form .
-After replacement takes place,
+The binding denotes the form itself, rather than its value. How the
+symbol macro works is that if
+.meta sym
+occurs as a form in a scope where the symbol macro definition is
+in scope,
+.meta sym
+is replaced by
+.metn form .
+Immediately after this replacement takes place,
 .meta form
 itself is then processed for further replacement of macros and
 symbol macros.
@@ -26497,7 +26501,7 @@ then
 first removes that variable from the global environment, and if that
 variable is special, the symbol's special marking is removed.
 .code defsymacro
-doesn't alter a dynamic binding of a special variable. Any such
+doesn't alter the dynamic binding of a special variable. Any such
 a binding remains intact.
 If
 .code defsymacro
