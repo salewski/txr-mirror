@@ -1,3 +1,49 @@
+                                    TXR 154
+                                   2016-10-15
+
+
+  Features
+
+  - OOP:
+    - Functions method and umethodk, and the macros meth and umeth,
+      now take additional arguments which are curried into the method call.
+  - Regex:
+    - In the regex abstract syntax, the and and or operators are now
+      n-ary, rather than being strictly binary.
+    - New regex-from-trie function.
+  - Listener:
+    - New Ctrl-X Ctrl-P feature to paste the result of the previous
+      evaluation into the current command line.
+  - Time:
+    - time struct supports gmtoff and zone fields, on systems where these
+      are available in the C struct tm.
+  - Hash tables:
+    - the hash user data is now included in the printed notation for hash
+      tables; thus, hash literals can specify user data.
+    - new hash construction keyword :userdata supported alongside :equal-based
+      and others, so hashes can be constructed with user data in various
+      situations.
+    - New function hash-userdata is an accessor (serves as a place);
+      get-hash-userdata is deprecated.
+   - Sockets:
+     - address structures (sockaddr, sockaddr-in, sockaddr-in6, sockaddr-unix)
+       now all have a family slot, so programs don't have to switch on
+       the object type to map to a numeric address family.
+
+  Bugs
+
+  - Bugfix in argument handling affecting struct method calls.
+  - Listener:
+    - Fixed bug in Ctrl-X Enter (submit historic line and stay in history).
+      - If the line being submitted is a duplicate, it would not submit
+        the line, and the position in history wouldn't advance to the next.
+  - OOP:
+    - Fixed various situations in which abstract sequence objects
+      (object supporting car, cdr and nullify methods) didn't work as expected.
+      - for instance: length, sub and where functions.
+
+
+
                                     TXR 153
                                    2016-10-07
 
