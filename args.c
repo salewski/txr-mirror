@@ -103,7 +103,7 @@ struct args *args_cat_zap_from(struct args *to, struct args *from, cnum index)
   to->list = from->list;
   memcpy(to->arg + to->fill, from->arg + index, size);
   to->fill += from->fill - index;
-  memset(from->arg, 0, size);
+  memset(from->arg + index, 0, size);
   return to;
 }
 
