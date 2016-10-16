@@ -156,10 +156,7 @@
         (sys:setq place (macroexpand-1 place env))
         (when (or (eq place unex-place)
                   (null place)
-                  (and (atom place) (not (symbolp place)))
-                  (and (consp place)
-                       (consp unex-place)
-                       (eq (car place) (car unex-place))))
+                  (and (atom place) (not (symbolp place))))
           (return place))
         (sys:setq unex-place place))))
 
