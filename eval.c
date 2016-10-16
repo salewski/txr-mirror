@@ -149,20 +149,34 @@ static val make_env_intrinsic(val vbindings, val fbindings, val up_env)
 
 val env_fbind(val env, val sym, val fun)
 {
-  val cell;
-  type_check(env, ENV);
-  cell = acons_new_c(sym, nulloc, mkloc(env->e.fbindings, env));
-  rplacd(cell, fun);
-  return cell;
+  if (env) {
+    val cell;
+    type_check(env, ENV);
+    cell = acons_new_c(sym, nulloc, mkloc(env->e.fbindings, env));
+    return rplacd(cell, fun);
+  } else {
+    val hcell = gethash_c(top_fb, sym, nulloc);
+    val cell = cdr(hcell);
+    if (cell)
+      return rplacd(cell, fun);
+    return sys_rplacd(hcell, cons(sym, fun));
+  }
 }
 
 val env_vbind(val env, val sym, val obj)
 {
-  val cell;
-  type_check(env, ENV);
-  cell = acons_new_c(sym, nulloc, mkloc(env->e.vbindings, env));
-  rplacd(cell, obj);
-  return cell;
+  if (env) {
+    val cell;
+    type_check(env, ENV);
+    cell = acons_new_c(sym, nulloc, mkloc(env->e.vbindings, env));
+    return rplacd(cell, obj);
+  } else {
+    val hcell = gethash_c(top_vb, sym, nulloc);
+    val cell = cdr(hcell);
+    if (cell)
+      return rplacd(cell, obj);
+    return sys_rplacd(hcell, cons(sym, obj));
+  }
 }
 
 static void env_vb_to_fb(val env)
