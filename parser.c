@@ -200,6 +200,16 @@ void prime_parser_post(parser_t *p, enum prime_parser prim)
     p->recent_tok.yy_char = 0;
 }
 
+int parser_callgraph_circ_check(struct circ_stack *rs, val obj)
+{
+  for (; rs; rs = rs->up) {
+    if (rs->obj == obj)
+      return 0;
+  }
+
+  return 1;
+}
+
 void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
 {
   enum { none, tl, txr } suffix;

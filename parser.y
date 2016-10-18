@@ -1501,15 +1501,28 @@ val rlrec(parser_t *parser, val form, val line)
   return form;
 }
 
-val rlcp_tree(val to, val from)
+static val rlcp_tree_rec(val to, val from, struct circ_stack *up)
 {
   val ret = to;
 
-  for (; consp(to); to = cdr(to)) {
+  while (consp(to)) {
+    val a = car(to);
+    struct circ_stack rlcs = { up, a };
     rlcp(to, from);
-    rlcp_tree(car(to), from);
+    if (!parser_callgraph_circ_check(up, a))
+      break;
+    rlcp_tree_rec(a, from, &rlcs);
+    to = cdr(to);
+    if (!parser_callgraph_circ_check(up, to))
+      break;
   }
   return ret;
+}
+
+
+val rlcp_tree(val to, val from)
+{
+  return rlcp_tree_rec(to, from, 0);
 }
 
 static wchar_t char_from_name(const wchar_t *name)

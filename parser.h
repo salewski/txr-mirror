@@ -41,6 +41,11 @@ struct yy_token {
   YYSTYPE yy_lval;
 };
 
+struct circ_stack {
+  struct circ_stack *up;
+  val obj;
+};
+
 struct parser {
   val parser;
   cnum lineno;
@@ -83,6 +88,9 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream);
 void prime_parser(parser_t *, val name, enum prime_parser);
 void prime_parser_post(parser_t *, enum prime_parser);
 void prime_scanner(scanner_t *, enum prime_parser);
+#ifdef SPACE
+int parser_callgraph_circ_check(struct circ_stack *rs, val obj);
+#endif
 void scrub_scanner(scanner_t *, int yy_char, wchar_t *lexeme);
 int parse_once(val stream, val name, parser_t *parser);
 int parse(parser_t *parser, val name, enum prime_parser);
