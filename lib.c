@@ -5768,7 +5768,7 @@ val reduce_left(val fun, val list, val init, val key)
 
   if (missingp(init)) {
     if (list)
-      init = pop(&list);
+      init = funcall1(key, pop(&list));
     else
       return funcall(fun);
   }
