@@ -54,6 +54,8 @@ struct parser {
   val name;
   val prepared_msg;
   val syntax_tree;
+  val circ_ref_hash;
+  cnum circ_count;
   scanner_t *scanner;
   struct yy_token recent_tok;
   struct yy_token tok_pushback[4];
@@ -66,8 +68,7 @@ enum prime_parser { prime_lisp, prime_interactive, prime_regex };
 extern const int have_yydebug;
 extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
-extern val parser_s;
-extern val unique_s;
+extern val parser_s, unique_s, circref_s;
 void yydebug_onoff(int);
 void yyerror(scanner_t *scanner, parser_t *, const char *s);
 void yyerr(scanner_t *scanner, const char *s);
@@ -87,10 +88,13 @@ void parser_l_init(void);
 void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream);
 void prime_parser(parser_t *, val name, enum prime_parser);
 void prime_parser_post(parser_t *, enum prime_parser);
-void prime_scanner(scanner_t *, enum prime_parser);
 #ifdef SPACE
 int parser_callgraph_circ_check(struct circ_stack *rs, val obj);
 #endif
+void prime_scanner(scanner_t *, enum prime_parser);
+void parser_resolve_circ(parser_t *);
+void parser_circ_def(parser_t *, val num, val expr);
+val parser_circ_ref(parser_t *, val num);
 void scrub_scanner(scanner_t *, int yy_char, wchar_t *lexeme);
 int parse_once(val stream, val name, parser_t *parser);
 int parse(parser_t *parser, val name, enum prime_parser);

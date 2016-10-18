@@ -108,6 +108,7 @@ int yyparse(scanner_t *, parser_t *);
 %token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E SECRET_ESCAPE_I
 
 %token <val> NUMBER METANUM
+%token <val> HASH_N_EQUALS HASH_N_HASH
 
 %token <chr> REGCHAR REGTOKEN LITCHAR SPLICE CONSDOT LAMBDOT
 
@@ -136,7 +137,7 @@ int yyparse(scanner_t *, parser_t *);
 %right SYMTOK '{' '}'
 %right ALL SOME NONE MAYBE CASES CHOOSE AND OR END COLLECT UNTIL COLL
 %right OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE IF ELIF ELSE
-%right SPACE TEXT NUMBER METANUM
+%right SPACE TEXT NUMBER METANUM HASH_N_EQUALS HASH_N_HASH
 %nonassoc '[' ']' '(' ')'
 %left '-' ',' '\'' '^' SPLICE '@'
 %left '|' '/'
@@ -934,6 +935,10 @@ i_expr : SYMTOK                 { $$ = symhlpr($1, t); }
                                           num(parser->lineno)); }
        | SPLICE i_expr          { $$ = rl(rlcp(list(sys_splice_s, $2, nao), $2),
                                           num(parser->lineno)); }
+       | HASH_N_EQUALS          { parser_circ_def(parser, $1, unique_s); }
+         i_expr                 { parser_circ_def(parser, $1, $3);
+                                  $$ = $3; }
+       | HASH_N_HASH            { $$ = parser_circ_ref(parser, $1); }
        ;
 
 n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
@@ -972,6 +977,10 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
                                                  or2($1, $3)),
                                                  num(parser->lineno));
                                   } }
+       | HASH_N_EQUALS          { parser_circ_def(parser, $1, unique_s); }
+         n_expr                 { parser_circ_def(parser, $1, $3);
+                                  $$ = $3; }
+       | HASH_N_HASH            { $$ = parser_circ_ref(parser, $1); }
        ;
 
 n_exprs_opt : n_exprs           { $$ = $1; }
@@ -1664,6 +1673,8 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case HASH_SLASH:     problem = lit("#/"); break;
   case HASH_H:         problem = lit("#H"); break;
   case HASH_S:         problem = lit("#S"); break;
+  case HASH_N_EQUALS:  problem = lit("#<n>="); break;
+  case HASH_N_HASH:    problem = lit("#<n>#"); break;
   case WORDS:   problem = lit("#\""); break;
   case WSPLICE: problem = lit("#*\""); break;
   case QWORDS:         problem = lit("#`"); break;
@@ -1710,6 +1721,8 @@ int parse_once(val stream, val name, parser_t *parser)
 
   res = yyparse(parser->scanner, parser);
 
+  parser_resolve_circ(parser);
+
   uw_catch(esym, eobj) {
     yyerrorf(parser->scanner, lit("exception during parse"), nao);
     uw_throw(esym, eobj);
@@ -1733,6 +1746,8 @@ int parse(parser_t *parser, val name, enum prime_parser prim)
 
   parser->errors = 0;
   parser->prepared_msg = nil;
+  parser->circ_ref_hash = nil;
+  parser->circ_count = 0;
   parser->syntax_tree = nil;
 
   prime_parser(parser, name, prim);
@@ -1742,6 +1757,8 @@ int parse(parser_t *parser, val name, enum prime_parser prim)
   res = yyparse(parser->scanner, parser);
 
   prime_parser_post(parser, prim);
+
+  parser_resolve_circ(parser);
 
   uw_catch(esym, eobj) {
     yyerrorf(parser->scanner, lit("exception during parse"), nao);

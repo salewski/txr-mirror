@@ -51,12 +51,14 @@
 #include "stream.h"
 #include "y.tab.h"
 #include "sysif.h"
+#include "cadr.h"
+#include "struct.h"
 #include "parser.h"
 #if HAVE_TERMIOS
 #include "linenoise/linenoise.h"
 #endif
 
-val parser_s, unique_s;
+val parser_s, unique_s, circref_s;
 val listener_hist_len_s, listener_multi_line_p_s, listener_sel_inclusive_p_s;
 val intr_s;
 
@@ -76,6 +78,7 @@ static void parser_mark(val obj)
   gc_mark(p->stream);
   gc_mark(p->name);
   gc_mark(p->prepared_msg);
+  gc_mark(p->circ_ref_hash);
   if (p->syntax_tree != nao)
     gc_mark(p->syntax_tree);
   yy_tok_mark(&p->recent_tok);
@@ -109,6 +112,8 @@ void parser_common_init(parser_t *p)
   p->stream = nil;
   p->name = nil;
   p->prepared_msg = nil;
+  p->circ_ref_hash = nil;
+  p->circ_count = 0;
   p->syntax_tree = nil;
   yylex_init(&yyscan);
   p->scanner = convert(scanner_t *, yyscan);
@@ -208,6 +213,168 @@ int parser_callgraph_circ_check(struct circ_stack *rs, val obj)
   }
 
   return 1;
+}
+
+static val patch_ref(parser_t *p, val obj)
+{
+  if (consp(obj)) {
+    val a = pop(&obj);
+    if (a == circref_s) {
+      val num = car(obj);
+      val rep = gethash(p->circ_ref_hash, num);
+      if (!rep)
+        yyerrorf(p->scanner, lit("dangling #~s# ref"), num, nao);
+      if (consp(rep) && car(rep) == circref_s)
+        yyerrorf(p->scanner, lit("absurd #~s# ref"), num, nao);
+      if (!p->circ_count--)
+        yyerrorf(p->scanner, lit("unexpected surplus #~s# ref"), num, nao);
+      return rep;
+    }
+  }
+  return nil;
+}
+
+static void circ_backpatch(parser_t *p, val obj)
+{
+tail:
+  if (!p->circ_count)
+    return;
+  if (!is_ptr(obj))
+    return;
+  switch (type(obj)) {
+  case CONS:
+    {
+      val a = car(obj);
+      val d = cdr(obj);
+      val ra = patch_ref(p, a);
+      val rd = patch_ref(p, d);
+
+      if (ra)
+        rplaca(obj, ra);
+      else
+        circ_backpatch(p, a);
+
+      if (rd) {
+        rplacd(obj, rd);
+        break;
+      }
+
+      obj = d;
+      goto tail;
+    }
+  case VEC:
+    {
+      cnum i;
+      cnum l = c_num(length_vec(obj));
+
+      for (i = 0; i < l; i++) {
+        val in = num(i);
+        val v = vecref(obj, in);
+        val rv = patch_ref(p, v);
+        if (rv)
+          set(vecref_l(obj, in), rv);
+        else
+          circ_backpatch(p, v);
+        if (!p->circ_count)
+          break;
+      }
+
+      break;
+    }
+  case RNG:
+    {
+      val s = from(obj);
+      val e = to(obj);
+      val rs = patch_ref(p, s);
+      val re = patch_ref(p, e);
+
+      if (rs)
+        set_from(obj, rs);
+      else
+        circ_backpatch(p, s);
+
+      if (re) {
+        set_to(obj, re);
+        break;
+      }
+
+      obj = e;
+      goto tail;
+    }
+  case COBJ:
+    if (hashp(obj)) {
+      val u = get_hash_userdata(obj);
+      val ru = patch_ref(p, u);
+      if (ru)
+        set_hash_userdata(obj, ru);
+      if (p->circ_count) {
+        val iter = hash_begin(obj);
+        val cell;
+        while ((cell = hash_next(iter)))
+          circ_backpatch(p, cell);
+      }
+    } else if (structp(obj)) {
+      val stype = struct_type(obj);
+      val iter;
+
+      for (iter = slots(stype); iter; iter = cdr(iter)) {
+        val sn = car(iter);
+        val sv = slot(obj, sn);
+        val rsv = patch_ref(p, sv);
+        if (rsv)
+          slotset(obj, sn, rsv);
+        else
+          circ_backpatch(p, sv);
+      }
+    }
+    break;
+  default:
+    break;
+  }
+  return;
+}
+
+void parser_resolve_circ(parser_t *p)
+{
+  if (p->circ_count == 0)
+    return;
+
+  circ_backpatch(p, p->syntax_tree);
+
+  if (p->circ_count > 0)
+    yyerrorf(p->scanner, lit("not all #<num># refs replaced in object ~s"),
+             p->syntax_tree, nao);
+}
+
+void parser_circ_def(parser_t *p, val num, val expr)
+{
+  if (!p->circ_ref_hash)
+    p->circ_ref_hash = make_hash(nil, nil, nil);
+
+  {
+    val new_p = nil;
+    val cell = gethash_c(p->circ_ref_hash, num, mkcloc(new_p));
+
+    if (!new_p && cdr(cell) != unique_s)
+      yyerrorf(p->scanner, lit("duplicate #~s= def"), num, nao);
+
+    rplacd(cell, expr);
+  }
+}
+
+val parser_circ_ref(parser_t *p, val num)
+{
+  val obj = if2(p->circ_ref_hash, gethash(p->circ_ref_hash, num));
+
+  if (!obj)
+    yyerrorf(p->scanner, lit("dangling #~s# ref"), num, nao);
+
+  if (obj == unique_s) {
+    p->circ_count++;
+    return cons(circref_s, cons(num, nil));
+  }
+
+  return obj;
 }
 
 void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
@@ -845,9 +1012,16 @@ val parser_eof(val parser)
   return tnil(p->recent_tok.yy_char == 0);
 }
 
+static val circref(val n)
+{
+  uw_throwf(error_s, lit("unresolved #~s# reference in object syntax"),
+            n, nao);
+}
+
 void parse_init(void)
 {
   parser_s = intern(lit("parser"), user_package);
+  circref_s = intern(lit("circref"), system_package);
   intr_s = intern(lit("intr"), user_package);
   listener_hist_len_s = intern(lit("*listener-hist-len*"), user_package);
   listener_multi_line_p_s = intern(lit("*listener-multi-line-p*"), user_package);
@@ -860,4 +1034,5 @@ void parse_init(void)
   reg_var(listener_hist_len_s, num_fast(500));
   reg_var(listener_multi_line_p_s, nil);
   reg_var(listener_sel_inclusive_p_s, nil);
+  reg_fun(circref_s, func_n1(circref));
 }
