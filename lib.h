@@ -971,6 +971,8 @@ val rcons(val from, val to);
 val rangep(val obj);
 val from(val range);
 val to(val range);
+val set_from(val range, val from);
+val set_to(val range, val to);
 val env(void);
 void out_str_char(wchar_t ch, val out, int *semi_flag);
 val obj_print_impl(val obj, val out, val pretty);

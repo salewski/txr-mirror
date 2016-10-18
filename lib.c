@@ -8712,6 +8712,20 @@ val to(val range)
   return range->rn.to;
 }
 
+val set_from(val range, val from)
+{
+  type_check(range, RNG);
+  set(mkloc(range->rn.from, range), from);
+  return range;
+}
+
+val set_to(val range, val to)
+{
+  type_check(range, RNG);
+  set(mkloc(range->rn.to, range), to);
+  return range;
+}
+
 val env(void)
 {
   if (env_list) {
