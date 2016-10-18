@@ -1085,6 +1085,12 @@ val static_slot_p(val type, val sym)
   return nil;
 }
 
+val slots(val stype)
+{
+  struct struct_type *st = stype_handle(&stype, lit("static-slot-p"));
+  return st->slots;
+}
+
 val structp(val obj)
 {
   return tnil(cobjp(obj) && obj->co.ops == &struct_inst_ops);

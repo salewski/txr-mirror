@@ -47,6 +47,7 @@ val static_slot_set(val stype, val sym, val newval);
 val static_slot_ensure(val stype, val sym, val newval, val no_error_p);
 val slotp(val type, val sym);
 val static_slot_p(val type, val sym);
+val slots(val stype);
 val structp(val obj);
 val struct_type(val strct);
 val method(val strct, val slotsym);
