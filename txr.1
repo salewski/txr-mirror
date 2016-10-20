@@ -24639,8 +24639,10 @@ If
 is specified, then the items of
 .meta list
 are
-mapped to a new values through
-.metn key-function .
+mapped to new values through
+.metn key-function ,
+as if by
+.codn mapcar .
 If
 .meta init-value
 is supplied,
@@ -24657,6 +24659,10 @@ the effective operand list is produced by appending
 .meta init-value
 to
 .metn list .
+The
+.meta init-value
+isn't mapped through
+.metn key-function .
 
 The production of the effective list can be expressed like this,
 though this is not to be understood as the actual implementation:
