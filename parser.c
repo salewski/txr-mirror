@@ -234,8 +234,13 @@ static val patch_ref(parser_t *p, val obj)
   return nil;
 }
 
-static void circ_backpatch(parser_t *p, val obj)
+static void circ_backpatch(parser_t *p, struct circ_stack *up, val obj)
 {
+  struct circ_stack cs = { up, obj };
+
+  if (!parser_callgraph_circ_check(up, obj))
+    return;
+
 tail:
   if (!p->circ_count)
     return;
@@ -252,7 +257,7 @@ tail:
       if (ra)
         rplaca(obj, ra);
       else
-        circ_backpatch(p, a);
+        circ_backpatch(p, &cs, a);
 
       if (rd) {
         rplacd(obj, rd);
@@ -274,7 +279,7 @@ tail:
         if (rv)
           set(vecref_l(obj, in), rv);
         else
-          circ_backpatch(p, v);
+          circ_backpatch(p, &cs, v);
         if (!p->circ_count)
           break;
       }
@@ -291,7 +296,7 @@ tail:
       if (rs)
         set_from(obj, rs);
       else
-        circ_backpatch(p, s);
+        circ_backpatch(p, &cs, s);
 
       if (re) {
         set_to(obj, re);
@@ -311,7 +316,7 @@ tail:
         val iter = hash_begin(obj);
         val cell;
         while ((cell = hash_next(iter)))
-          circ_backpatch(p, cell);
+          circ_backpatch(p, &cs, cell);
       }
     } else if (structp(obj)) {
       val stype = struct_type(obj);
@@ -324,7 +329,7 @@ tail:
         if (rsv)
           slotset(obj, sn, rsv);
         else
-          circ_backpatch(p, sv);
+          circ_backpatch(p, &cs, sv);
       }
     }
     break;
@@ -339,7 +344,8 @@ void parser_resolve_circ(parser_t *p)
   if (p->circ_count == 0)
     return;
 
-  circ_backpatch(p, p->syntax_tree);
+
+  circ_backpatch(p, 0, p->syntax_tree);
 
   if (p->circ_count > 0)
     yyerrorf(p->scanner, lit("not all #<num># refs replaced in object ~s"),
