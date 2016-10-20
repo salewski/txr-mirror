@@ -320,13 +320,14 @@ static val make_dgram_sock_stream(int fd, val family, val peer,
   return stream;
 }
 
-static void dgram_print(val stream, val out, val pretty)
+static void dgram_print(val stream, val out, val pretty, struct strm_ctx *ctx)
 {
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
   val name = static_str(ops->name);
   val descr = ops->get_prop(stream, name_k);
 
   (void) pretty;
+  (void) ctx;
 
   format(out, lit("#<~a ~a ~p>"), name, descr, stream, nao);
 }

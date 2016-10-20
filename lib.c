@@ -6808,10 +6808,10 @@ struct cobj_ops *cobj_ops(val cobj, val cls_sym)
   return cobj->co.ops;
 }
 
-void cobj_print_op(val obj, val out, val pretty)
+void cobj_print_op(val obj, val out, val pretty, struct strm_ctx *ctx)
 {
   put_string(lit("#<"), out);
-  obj_print_impl(obj->co.cls, out, pretty);
+  obj_print_impl(obj->co.cls, out, pretty, ctx);
   format(out, lit(": ~p>"), coerce(val, obj->co.handle), nao);
 }
 
@@ -9012,7 +9012,7 @@ static void out_lazy_str(val lstr, val out)
   put_char(chr('"'), out);
 }
 
-static void out_quasi_str(val args, val out)
+static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
 {
   val iter, next;
 
@@ -9040,25 +9040,25 @@ static void out_quasi_str(val args, val out)
         put_char(chr('@'), out);
         if (need_brace)
           put_char(chr('{'), out);
-        obj_print_impl(name, out, nil);
+        obj_print_impl(name, out, nil, ctx);
         while (mods) {
           put_char(chr(' '), out);
-          obj_print_impl(car(mods), out, nil);
+          obj_print_impl(car(mods), out, nil, ctx);
           mods = cdr(mods);
         }
         if (need_brace)
           put_char(chr('}'), out);
       } else if (sym == expr_s) {
         put_char(chr('@'), out);
-        obj_print_impl(rest(elem), out, nil);
+        obj_print_impl(rest(elem), out, nil, ctx);
       }
     } else {
-      obj_print_impl(elem, out, nil);
+      obj_print_impl(elem, out, nil, ctx);
     }
   }
 }
 
-val obj_print_impl(val obj, val out, val pretty)
+val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
 {
   val ret = obj;
 
@@ -9078,62 +9078,62 @@ val obj_print_impl(val obj, val out, val pretty)
 
       if (sym == quote_s && two_elem) {
         put_char(chr('\''), out);
-        obj_print_impl(second(obj), out, pretty);
+        obj_print_impl(second(obj), out, pretty, ctx);
       } else if (sym == sys_qquote_s && two_elem) {
         put_char(chr('^'), out);
-        obj_print_impl(second(obj), out, pretty);
+        obj_print_impl(second(obj), out, pretty, ctx);
       } else if (sym == sys_unquote_s && two_elem) {
         put_char(chr(','), out);
-        obj_print_impl(second(obj), out, pretty);
+        obj_print_impl(second(obj), out, pretty, ctx);
       } else if (sym == sys_splice_s && two_elem) {
         put_string(lit(",*"), out);
-        obj_print_impl(second(obj), out, pretty);
+        obj_print_impl(second(obj), out, pretty, ctx);
       } else if (sym == vector_lit_s && two_elem) {
         put_string(lit("#"), out);
-        obj_print_impl(second(obj), out, pretty);
+        obj_print_impl(second(obj), out, pretty, ctx);
       } else if (sym == hash_lit_s) {
         put_string(lit("#H"), out);
-        obj_print_impl(rest(obj), out, pretty);
+        obj_print_impl(rest(obj), out, pretty, ctx);
       } else if (sym == var_s && two_elem &&
                  (symbolp(second(obj)) || integerp(second(obj))))
       {
         put_char(chr('@'), out);
-        obj_print_impl(second(obj), out, pretty);
+        obj_print_impl(second(obj), out, pretty, ctx);
       } else if (sym == expr_s) {
         put_char(chr('@'), out);
-        obj_print_impl(rest(obj), out, pretty);
+        obj_print_impl(rest(obj), out, pretty, ctx);
       } else if (sym == rcons_s && consp(cdr(obj))
                  && consp(cddr(obj)) && !(cdddr(obj)))
       {
-        obj_print_impl(second(obj), out, pretty);
+        obj_print_impl(second(obj), out, pretty, ctx);
         put_string(lit(".."), out);
-        obj_print_impl(third(obj), out, pretty);
+        obj_print_impl(third(obj), out, pretty, ctx);
       } else if (sym == qref_s && simple_qref_args_p(cdr(obj), zero)) {
         val iter, next;
         for (iter = cdr(obj); iter; iter = next) {
           next = cdr(iter);
-          obj_print_impl(car(iter), out, pretty);
+          obj_print_impl(car(iter), out, pretty, ctx);
           if (next)
             put_string(lit("."), out);
           iter = next;
         }
       } else if (sym == quasi_s) {
         put_char(chr('`'), out);
-        out_quasi_str(obj, out);
+        out_quasi_str(obj, out, ctx);
         put_char(chr('`'), out);
       } else if (sym == quasilist_s) {
         val args = cdr(obj);
         put_string(lit("#`"), out);
         if (args) {
-          out_quasi_str(car(args), out);
+          out_quasi_str(car(args), out, ctx);
           args = cdr(args);
         }
         while (args) {
           put_char(chr(' '), out);
-          out_quasi_str(car(args), out);
+          out_quasi_str(car(args), out, ctx);
           args = cdr(args);
         }
-        out_quasi_str(cdr(obj), out);
+        out_quasi_str(cdr(obj), out, ctx);
         put_char(chr('`'), out);
       } else {
         val iter;
@@ -9152,10 +9152,10 @@ val obj_print_impl(val obj, val out, val pretty)
           indent = one;
           save_indent = inc_indent(out, indent);
           set_indent_mode(out, num_fast(indent_code));
-          obj_print_impl(sym, out, pretty);
+          obj_print_impl(sym, out, pretty, ctx);
           if (second(obj)) {
             put_string(lit(" (. "), out);
-            obj_print_impl(second(obj), out, pretty);
+            obj_print_impl(second(obj), out, pretty, ctx);
             put_char(chr(')'), out);
           } else {
             put_string(lit(" ()"), out);
@@ -9166,7 +9166,7 @@ val obj_print_impl(val obj, val out, val pretty)
           indent = one;
           set_indent_mode(out, num_fast(indent_code));
         } else if (fboundp(sym)) {
-          obj_print_impl(sym, out, pretty);
+          obj_print_impl(sym, out, pretty, ctx);
           indent = one;
           save_indent = inc_indent(out, indent);
           set_indent_mode(out, num_fast(indent_code));
@@ -9177,7 +9177,7 @@ val obj_print_impl(val obj, val out, val pretty)
         save_indent = inc_indent(out, indent);
 
         for (iter = obj; consp(iter); iter = cdr(iter)) {
-          obj_print_impl(car(iter), out, pretty);
+          obj_print_impl(car(iter), out, pretty, ctx);
 finish:
           if (nilp(cdr(iter))) {
             put_char(closepar, out);
@@ -9185,7 +9185,7 @@ finish:
             width_check(out, chr(' '));
           } else {
             put_string(lit(" . "), out);
-            obj_print_impl(cdr(iter), out, pretty);
+            obj_print_impl(cdr(iter), out, pretty, ctx);
             put_char(closepar, out);
           }
         }
@@ -9302,7 +9302,7 @@ finish:
 
       for (i = 0; i < length; i++) {
         val elem = obj->v.vec[i];
-        obj_print_impl(elem, out, pretty);
+        obj_print_impl(elem, out, pretty, ctx);
         if (i < length - 1)
           width_check(out, chr(' '));
       }
@@ -9321,7 +9321,7 @@ finish:
     }
     break;
   case COBJ:
-    obj->co.ops->print(obj, out, pretty);
+    obj->co.ops->print(obj, out, pretty, ctx);
     break;
   case ENV:
     format(out, lit("#<environment: ~p>"), obj, nao);
@@ -9347,7 +9347,7 @@ val obj_print(val obj, val stream)
 
   uw_simple_catch_begin;
 
-  ret = obj_print_impl(obj, out, nil);
+  ret = obj_print_impl(obj, out, nil, 0);
 
   uw_unwind {
     set_indent_mode(out, save_mode);
@@ -9368,7 +9368,7 @@ val obj_pprint(val obj, val stream)
 
   uw_simple_catch_begin;
 
-  ret = obj_print_impl(obj, out, t);
+  ret = obj_print_impl(obj, out, t, 0);
 
   uw_unwind {
     set_indent_mode(out, save_mode);

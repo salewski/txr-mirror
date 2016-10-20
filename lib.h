@@ -228,9 +228,11 @@ struct cobj {
   val cls;
 };
 
+struct strm_ctx;
+
 struct cobj_ops {
   val (*equal)(val self, val other);
-  void (*print)(val self, val stream, val pretty);
+  void (*print)(val self, val stream, val pretty, struct strm_ctx *);
   void (*destroy)(val self);
   void (*mark)(val self);
   cnum (*hash)(val self, int *count);
@@ -248,7 +250,7 @@ struct cobj_ops {
  * Default equal is eq
  */
 
-void cobj_print_op(val, val, val);
+void cobj_print_op(val, val, val, struct strm_ctx *);
 void cobj_destroy_stub_op(val);
 void cobj_destroy_free_op(val);
 void cobj_mark_op(val);
@@ -975,7 +977,7 @@ val set_from(val range, val from);
 val set_to(val range, val to);
 val env(void);
 void out_str_char(wchar_t ch, val out, int *semi_flag);
-val obj_print_impl(val obj, val out, val pretty);
+val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *);
 val obj_print(val obj, val stream);
 val obj_pprint(val obj, val stream);
 val tostring(val obj);

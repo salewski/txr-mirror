@@ -374,7 +374,7 @@ static cnum hash_hash_op(val obj, int *count)
   return out;
 }
 
-static void hash_print_op(val hash, val out, val pretty)
+static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
 {
   struct hash *h = coerce(struct hash *, hash->co.handle);
   int need_space = 0;
@@ -398,13 +398,13 @@ static void hash_print_op(val hash, val out, val pretty)
     need_space = 1;
     switch (h->flags) {
     case hash_weak_both:
-      obj_print_impl(weak_keys_k, out, pretty);
+      obj_print_impl(weak_keys_k, out, pretty, ctx);
       /* fallthrough */
     case hash_weak_vals:
-      obj_print_impl(weak_vals_k, out, pretty);
+      obj_print_impl(weak_vals_k, out, pretty, ctx);
       break;
     case hash_weak_keys:
-      obj_print_impl(weak_keys_k, out, pretty);
+      obj_print_impl(weak_keys_k, out, pretty, ctx);
       break;
     default:
       break;
@@ -413,9 +413,9 @@ static void hash_print_op(val hash, val out, val pretty)
   if (h->userdata) {
     if (need_space)
       put_char(chr(' '), out);
-    obj_print_impl(userdata_k, out, pretty);
+    obj_print_impl(userdata_k, out, pretty, ctx);
     put_char(chr(' '), out);
-    obj_print_impl(h->userdata, out, pretty);
+    obj_print_impl(h->userdata, out, pretty, ctx);
   }
   put_string(lit(")"), out);
   maphash(curry_123_23(func_n3(print_key_val), out), hash);

@@ -37,12 +37,18 @@ enum indent_mode {
   indent_code
 };
 
+struct strm_ctx {
+  val obj_hash;
+  val counter;
+};
+
 struct strm_base {
   enum indent_mode indent_mode;
   cnum data_width;
   cnum code_width;
   cnum indent_chars;
   cnum column;
+  struct strm_ctx *ctx;
 };
 
 struct strm_ops {
@@ -126,7 +132,7 @@ void strm_base_init(struct strm_base *s);
 void strm_base_cleanup(struct strm_base *s);
 void strm_base_mark(struct strm_base *s);
 void fill_stream_ops(struct strm_ops *ops);
-void stream_print_op(val stream, val out, val pretty);
+void stream_print_op(val stream, val out, val pretty, struct strm_ctx *);
 void stream_mark_op(val stream);
 void stream_destroy_op(val stream);
 struct stdio_mode parse_mode(val mode_str, struct stdio_mode m_dfl);
@@ -189,6 +195,8 @@ val get_indent(val stream);
 val set_indent(val stream, val indent);
 val inc_indent(val stream, val delta);
 val width_check(val stream, val alt);
+struct strm_ctx *get_set_ctx(val stream, struct strm_ctx *);
+struct strm_ctx *get_ctx(val stream);
 val get_string(val stream, val nchars, val close_after_p);
 val open_directory(val path);
 val open_file(val path, val mode_str);

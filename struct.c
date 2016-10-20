@@ -373,9 +373,10 @@ val super(val type)
   }
 }
 
-static void struct_type_print(val obj, val out, val pretty)
+static void struct_type_print(val obj, val out, val pretty, struct strm_ctx *c)
 {
   struct struct_type *st = coerce(struct struct_type *, obj->co.handle);
+  (void) c;
   format(out, lit("#<struct-type ~s>"), st->name, nao);
 }
 
@@ -1225,7 +1226,8 @@ val umethod(val slot, struct args *args)
     return func_f0v(cons(slot, args_get_list(args)), umethod_args_fun);
 }
 
-static void struct_inst_print(val obj, val out, val pretty)
+static void struct_inst_print(val obj, val out, val pretty,
+                              struct strm_ctx *ctx)
 {
   struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
   struct struct_type *st = si->type;
@@ -1242,7 +1244,7 @@ static void struct_inst_print(val obj, val out, val pretty)
   }
 
   put_string(lit("#S("), out);
-  obj_print_impl(st->name, out, pretty);
+  obj_print_impl(st->name, out, pretty, ctx);
   save_indent = inc_indent(out, one);
 
   for (iter = st->slots, once = t; iter; iter = cdr(iter)) {
@@ -1254,9 +1256,9 @@ static void struct_inst_print(val obj, val out, val pretty)
       } else {
         width_check(out, chr(' '));
       }
-      obj_print_impl(sym, out, pretty);
+      obj_print_impl(sym, out, pretty, ctx);
       put_char(chr(' '), out);
-      obj_print_impl(slot(obj, sym), out, pretty);
+      obj_print_impl(slot(obj, sym), out, pretty, ctx);
     }
   }
   put_char(chr(')'), out);

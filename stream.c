@@ -90,13 +90,13 @@ val shell, shell_arg;
 
 void strm_base_init(struct strm_base *s)
 {
-  static struct strm_base init = { indent_off, 60, 10, 0, 0 };
+  static struct strm_base init = { indent_off, 60, 10, 0, 0, 0 };
   *s = init;
 }
 
 void strm_base_cleanup(struct strm_base *s)
 {
-  (void) s;
+  bug_unless (s->ctx == 0);
 }
 
 void strm_base_mark(struct strm_base *s)
@@ -104,10 +104,11 @@ void strm_base_mark(struct strm_base *s)
   (void) s;
 }
 
-void stream_print_op(val stream, val out, val pretty)
+void stream_print_op(val stream, val out, val pretty, struct strm_ctx *ctx)
 {
   val name = stream_get_prop(stream, name_k);
   (void) pretty;
+  (void) ctx;
   format(out, lit("#<~a ~p>"), name, stream, nao);
 }
 
@@ -388,7 +389,8 @@ struct stdio_handle {
 #endif
 };
 
-static void stdio_stream_print(val stream, val out, val pretty)
+static void stdio_stream_print(val stream, val out, val pretty,
+                               struct strm_ctx *ctx)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
@@ -396,6 +398,7 @@ static void stdio_stream_print(val stream, val out, val pretty)
   val descr = ops->get_prop(stream, name_k);
 
   (void) pretty;
+  (void) ctx;
 
   if (h->pid)
     format(out, lit("#<~a ~a ~a ~p>"), name, descr, num(h->pid), stream, nao);
@@ -2181,13 +2184,15 @@ struct cat_strm {
   val streams;
 };
 
-static void cat_stream_print(val stream, val out, val pretty)
+static void cat_stream_print(val stream, val out, val pretty,
+                             struct strm_ctx *ctx)
 {
   struct cat_strm *s = coerce(struct cat_strm *, stream->co.handle);
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
   val name = static_str(ops->name);
 
   (void) pretty;
+  (void) ctx;
 
   format(out, lit("#<~a ~s>"), name, s->streams, nao);
 }
@@ -3533,6 +3538,22 @@ val width_check(val stream, val alt)
   }
 
   return t;
+}
+
+struct strm_ctx *get_set_ctx(val stream, struct strm_ctx *ctx)
+{
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(stream, stream_s));
+  struct strm_ctx *ret = s->ctx;
+  s->ctx = ctx;
+  return ret;
+}
+
+struct strm_ctx *get_ctx(val stream)
+{
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(stream, stream_s));
+  return s->ctx;
 }
 
 val get_string(val stream_in, val nchars, val close_after_p)
