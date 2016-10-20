@@ -186,7 +186,7 @@
                          ,*(cdr instance-postinit-form)))))))))))
 
 (defmacro sys:struct-lit (name . plist)
-  ^(make-struct ',name ',plist))
+  ^(sys:make-struct-lit ',name ',plist))
 
 (defmacro qref (:whole form obj . refs)
   (when (null refs)

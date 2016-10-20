@@ -10388,20 +10388,22 @@ followed by a nested list syntax denotes a struct literal.
 The first item in the syntax is a symbol denoting the struct type
 name. This must be the name of a struct type, otherwise the
 literal is erroneous.  Followed by the struct type are slot names
-interleaved with their values. Each slot name which is present in the
+interleaved with their values. The values are literal expressions,
+not subject to evaluation.
+Each slot name which is present in the
 literal must name a slot in the struct type, though not
 all slots in the struct type must be present in the literal.
+
 When a struct literal is read, the denoted struct type is
 constructed as if by a call to
 .code make-struct
-whose
+with an empty
 .meta plist
-argument is formed from the
+argument, followed by a sequence of assignments which store into each
 .meta slot
-and
+the corresponding
 .meta value
-elements of the literal, individually quoted to suppress their
-evaluation as forms.
+expression.
 
 .NP* Hash Literals
 
@@ -47305,6 +47307,25 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 154
+After version 154, changes were introduced in the semantics of struct
+literals. Previously, the syntax
+.code "#S(abc x a y b)"
+denoted the construction of an instance of
+.code abc
+with
+.code "x a y b"
+as the constructor parameters, similarly to
+.codn "(new abc x 'a y 'b)" .
+The new behavior is that
+.code abc
+is constructed using no parameters, as if  by
+.code "(new abc)"
+and then the slot values are assigned. This means that the values
+specified in the literal override any manipulations of those slots by
+the type's user-defined
+.code :postinit
+handlers.
 .IP 151
 After version 151, changes were implemented to the way static slots work
 in \*(TL structs. Selecting compatibility with 151 restores most of the behaviors.

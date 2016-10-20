@@ -15,7 +15,7 @@
         bar b 4))
 
 (test (sys:expand ^#S(bar b ,(+ 2 2)))
-      (make-struct 'bar '(b 4)))
+      (sys:make-struct-lit 'bar '(b 4)))
 
 (defvar s (eval ^#S(bar b ,(+ 2 2))))
 

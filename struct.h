@@ -34,6 +34,7 @@ val struct_type_p(val obj);
 val super(val type);
 val make_struct(val type, val plist, struct args *);
 val make_lazy_struct(val type, val argfun);
+val make_struct_lit(val type, val plist);
 val copy_struct(val strct);
 val clear_struct(val strct, val value);
 val replace_struct(val target, val source);

@@ -825,10 +825,8 @@ struct : HASH_S list            { if (unquotes_occur($2, 0))
                                     $$ = rl(cons(struct_lit_s, $2),
                                               num($1));
                                   else
-                                  { args_decl(args, 0);
-                                    val strct = make_struct(first($2),
-                                                            rest($2),
-                                                            args);
+                                  { val strct = make_struct_lit(first($2),
+                                                                rest($2));
                                     $$ = rl(strct, num($1)); } }
        ;
 

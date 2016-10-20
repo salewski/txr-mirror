@@ -130,6 +130,7 @@ void struct_init(void)
   reg_fun(intern(lit("make-struct"), user_package), func_n2v(make_struct));
   reg_fun(intern(lit("make-lazy-struct"), user_package),
           func_n2(make_lazy_struct));
+  reg_fun(intern(lit("make-struct-lit"), system_package), func_n2(make_struct_lit));
   reg_fun(intern(lit("copy-struct"), user_package), func_n1(copy_struct));
   reg_fun(intern(lit("replace-struct"), user_package), func_n2(replace_struct));
   reg_fun(intern(lit("clear-struct"), user_package), func_n2o(clear_struct, 1));
@@ -561,6 +562,22 @@ val make_lazy_struct(val type, val argfun)
   si->slot[0] = argfun;
 
   return sinst;
+}
+
+val make_struct_lit(val type, val plist)
+{
+  args_decl(args, 0);
+  val strct;
+
+  if (opt_compat && opt_compat <= 154) {
+    strct = make_struct(type, plist, args);
+  } else {
+    strct = make_struct(type, nil, args);
+    for (; plist; plist = cddr(plist))
+      slotset(strct, car(plist), cadr(plist));
+  }
+
+  return strct;
 }
 
 static struct struct_inst *struct_handle(val obj, val ctx)
