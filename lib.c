@@ -9062,6 +9062,21 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
 {
   val ret = obj;
 
+  if (ctx && is_ptr(obj)) {
+    val cell = gethash_c(ctx->obj_hash, obj, nulloc);
+    val label = cdr(cell);
+
+    if (label == t) {
+      val counter = succ(ctx->counter);
+      ctx->counter = counter;
+      rplacd(cell, counter);
+      format(out, lit("#~s="), counter, nao);
+    } else if (label) {
+      format(out, lit("#~s#"), label, nao);
+      return ret;
+    }
+  }
+
   switch (type(obj)) {
   case NIL:
     put_string(if3(get_indent_mode(out) == num_fast(indent_code),
@@ -9177,15 +9192,21 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         save_indent = inc_indent(out, indent);
 
         for (iter = obj; consp(iter); iter = cdr(iter)) {
+          val d;
           obj_print_impl(car(iter), out, pretty, ctx);
 finish:
-          if (nilp(cdr(iter))) {
+          d = cdr(iter);
+          if (nilp(d)) {
             put_char(closepar, out);
-          } else if (consp(cdr(iter))) {
+          } else if (ctx && gethash(ctx->obj_hash, d)) {
+            iter = nil;
+            goto dot;
+          } else if (consp(d)) {
             width_check(out, chr(' '));
           } else {
+dot:
             put_string(lit(" . "), out);
-            obj_print_impl(cdr(iter), out, pretty, ctx);
+            obj_print_impl(d, out, pretty, ctx);
             put_char(closepar, out);
           }
         }
@@ -9338,20 +9359,101 @@ finish:
   return ret;
 }
 
+static void populate_obj_hash(val obj, struct strm_ctx *ctx)
+{
+tail:
+  if (is_ptr(obj) && (!symbolp(obj) || !symbol_package(obj))) {
+    val new_p;
+    val cell = gethash_c(ctx->obj_hash, obj, mkcloc(new_p));
+
+    if (!new_p) {
+      rplacd(cell, t);
+      return;
+    }
+  } else {
+    return;
+  }
+
+  switch (type(obj)) {
+  case CONS:
+  case LCONS:
+    {
+      populate_obj_hash(car(obj), ctx);
+      obj = cdr(obj);
+      goto tail;
+    }
+  case VEC:
+    {
+      cnum i;
+      cnum l = c_num(length_vec(obj));
+
+      for (i = 0; i < l; i++) {
+        val in = num(i);
+        populate_obj_hash(vecref(obj, in), ctx);
+      }
+
+      break;
+    }
+  case RNG:
+    {
+      populate_obj_hash(from(obj), ctx);
+      obj = to(obj);
+      goto tail;
+    }
+  case COBJ:
+    if (hashp(obj)) {
+      val iter = hash_begin(obj);
+      val cell;
+      while ((cell = hash_next(iter))) {
+        populate_obj_hash(car(cell), ctx);
+        populate_obj_hash(cdr(cell), ctx);
+      }
+      obj = get_hash_userdata(obj);
+      goto tail;
+    } else if (structp(obj)) {
+      val stype = struct_type(obj);
+      val iter;
+
+      for (iter = slots(stype); iter; iter = cdr(iter)) {
+        val sn = car(iter);
+        populate_obj_hash(slot(obj, sn), ctx);
+      }
+    }
+    break;
+  default:
+    break;
+  }
+}
+
 val obj_print(val obj, val stream)
 {
   volatile val ret = nil;
   val out = default_arg(stream, std_output);
   val save_mode = get_indent_mode(out);
   val save_indent = get_indent(out);
+  struct strm_ctx *ctx_orig = get_ctx(out), *ctx = ctx_orig, ctx_struct;
 
   uw_simple_catch_begin;
 
-  ret = obj_print_impl(obj, out, nil, 0);
+  if (ctx) {
+    populate_obj_hash(obj, ctx);
+  } else {
+    if (cdr(lookup_var(nil, print_circle_s))) {
+      ctx = &ctx_struct;
+      ctx->obj_hash = make_hash(nil, nil, nil);
+      ctx->counter = zero;
+      get_set_ctx(out, ctx);
+      populate_obj_hash(obj, ctx);
+    }
+  }
+
+  ret = obj_print_impl(obj, out, nil, ctx);
 
   uw_unwind {
     set_indent_mode(out, save_mode);
     set_indent(out, save_indent);
+    if (ctx != ctx_orig)
+      get_set_ctx(out, ctx_orig);
   }
 
   uw_catch_end;
@@ -9365,14 +9467,29 @@ val obj_pprint(val obj, val stream)
   val out = default_arg(stream, std_output);
   val save_mode = get_indent_mode(out);
   val save_indent = get_indent(out);
+  struct strm_ctx *ctx_orig = get_ctx(out), *ctx = ctx_orig, ctx_struct;
 
   uw_simple_catch_begin;
 
-  ret = obj_print_impl(obj, out, t, 0);
+  if (ctx) {
+    populate_obj_hash(obj, ctx);
+  } else {
+    if (cdr(lookup_var(nil, print_circle_s))) {
+      ctx = &ctx_struct;
+      ctx->obj_hash = make_hash(nil, nil, nil);
+      ctx->counter = zero;
+      get_set_ctx(out, ctx);
+      populate_obj_hash(obj, ctx);
+    }
+  }
+
+  ret = obj_print_impl(obj, out, t, ctx);
 
   uw_unwind {
     set_indent_mode(out, save_mode);
     set_indent(out, save_indent);
+    if (ctx != ctx_orig)
+      get_set_ctx(out, ctx_orig);
   }
 
   uw_catch_end;
