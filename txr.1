@@ -10436,7 +10436,14 @@ or
 which defaults to a
 hash table based on the
 .code eql
-function, with no weak semantics.
+function, with no weak semantics or user data.
+
+The hash table key-value contents are specified as zero or more
+two-element lists, whose first element specifies the
+.meta key
+and whose second specifies the
+.metn value .
+Both expressions are literal objects, not subject to evaluation.
 
 .NP* Range Literals
 
