@@ -691,7 +691,7 @@ val generic_get_line(val stream)
   const size_t min_size = 512;
   size_t size = 0;
   size_t fill = 0;
-  wchar_t *buf = 0;
+  wchar_t *volatile buf = 0;
   val out = nil;
 
   uw_simple_catch_begin;
@@ -3650,9 +3650,9 @@ val open_tail(val path, val mode_str, val seek_end_p)
 }
 
 struct save_fds {
-  int in;
-  int out;
-  int err;
+  volatile int in;
+  volatile int out;
+  volatile int err;
 };
 
 #define FDS_IN  1

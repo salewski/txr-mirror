@@ -408,7 +408,7 @@ static int dgram_get_byte_callback(mem_t *ctx)
   } else {
     const int dgram_size = d->rx_max;
     mem_t *dgram = chk_malloc(dgram_size);
-    ssize_t nbytes = -1;
+    volatile ssize_t nbytes = -1;
 
     uw_simple_catch_begin;
 
@@ -895,7 +895,7 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
 
   if (type == num_fast(SOCK_DGRAM)) {
     struct dgram_stream *d = coerce(struct dgram_stream *, sock->co.handle);
-    ssize_t nbytes = -1;
+    volatile ssize_t nbytes = -1;
     const int dgram_size = d->rx_max;
     mem_t *dgram = chk_malloc(dgram_size);
 
