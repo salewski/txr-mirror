@@ -9451,6 +9451,9 @@ val obj_print(val obj, val out, val pretty)
   val save_indent = get_indent(out);
   struct strm_ctx *ctx_orig = get_ctx(out);
   struct strm_ctx *volatile ctx = ctx_orig, ctx_struct;
+  uw_frame_t cont_guard;
+
+  uw_push_guard(&cont_guard);
 
   uw_simple_catch_begin;
 
@@ -9480,6 +9483,8 @@ val obj_print(val obj, val out, val pretty)
   }
 
   uw_catch_end;
+
+  uw_pop_frame(&cont_guard);
 
   return ret;
 }
