@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <signal.h>
+#include <assert.h>
 #include "config.h"
 #include ALLOCA_H
 #include "lib.h"
@@ -220,6 +221,7 @@ static void static_slot_home_fixup(struct struct_type *st)
       struct struct_type *shome = coerce(struct struct_type *,
                                          s->home_type->co.handle);
       *s = shome->stslot[s->home_offs];
+      s->store = nil;
     }
   }
 }
@@ -311,6 +313,7 @@ val make_struct_type(val name, val super,
           ss->store = if2(msl, stslot_place(&su->stslot[m]));
         } else {
           *ss = su->stslot[m];
+          ss->store = nil;
         }
         sethash(slot_hash, cons(slot, id), num(n + STATIC_SLOT_BASE));
       } else {
@@ -408,7 +411,7 @@ static void struct_type_mark(val obj)
     if (sl->home_type == st->self)
       gc_mark(sl->store);
     else
-      bug_unless (sl->store == nil);
+      assert (sl->store == nil);
   }
 }
 
