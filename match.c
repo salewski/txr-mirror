@@ -166,7 +166,7 @@ static void dump_var(val var, char *pfx1, size_t len1,
     val ss = make_string_output_stream();
     val str;
 
-    obj_pprint(value, ss);
+    pprint(value, ss);
     str = get_string_from_stream(ss);
 
     put_string(var, std_output);

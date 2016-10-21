@@ -22104,7 +22104,7 @@ hash table, searches for those keys will not work reliably.
 
 .coNP Method @ print
 .synb
-.mets << object .(print << stream )
+.mets << object .(print < stream << pretty-p )
 .syne
 .desc
 If a method named by the symbol
@@ -22113,9 +22113,22 @@ is defined for a structure type, then it is used for pretty-printing instances
 of that type.
 
 The
-.code stream
+.meta stream
 argument specifies the output stream to which the printed representation
 is to be written.
+
+The
+.meta pretty-p
+argument is a Boolean flag indicating whether pretty-printing
+is requested. Its value may simply be passed to recursive calls to
+.codn print ,
+or used to select between
+.code ~s
+or
+.code ~a
+formatting if
+.code format
+is used.
 
 The value returned by the
 .code print
@@ -35970,7 +35983,7 @@ and
 
 .coNP Functions @, print @, pprint @, prinl @, pprinl @ tostring and @ tostringp
 .synb
-.mets (print < obj <> [ stream ])
+.mets (print < obj >> [ stream <> [ pretty-p ]])
 .mets (pprint < obj <> [ stream ])
 .mets (prinl < obj <> [ stream ])
 .mets (pprinl < obj <> [ stream ])
@@ -35986,33 +35999,59 @@ functions render a printed character representation of the
 .meta obj
 argument into
 .metn stream .
-If a stream argument is not supplied, then
+
+If the
+.meta stream
+argument is not supplied, then
 the destination is the stream currently stored in the
 .code *stdout*
-variable. The
+variable.
+
+If Boolean argument
+.meta pretty-p
+is not supplied or is explicitly specified as
+.codn nil ,
+then the
 .code print
 function renders in a way which strives for read-print
 consistency: an object is printed in a notation which is recognized as
 a similar object of the same kind when it appears in \*(TX source code.
+If
+.meta pretty-p
+is true, then
+.code print
+performs does not strive for read-print consistency.  For instance, it prints a
+string object simply by dumping its characters, rather than by adding the
+surrounding quotes and rendering escape syntax for special characters.
+
 The
-.code pprint
-function ("pretty print") does not strive for read-print consistency.
-For instance it prints a string object simply by dumping its characters, rather
-than by adding the surrounding quotes and rendering escape syntax for
-special characters. Both functions return
+.code print
+function returns
 .metn obj .
 
 The
+.code pprint
+("pretty print") function is equivalent to
+.codn print ,
+with the
+.meta pretty-p
+argument hard-coded true.
+
+The
 .code prinl
-and
-.code pprinl
-functions are like
+function ("print and new line") behaves like a call to
 .code print
-and
-.codn pprint ,
-except that they issue a newline character after printing the object.
-These functions also return
-.metn obj .
+with
+.meta pretty-p
+defaulting to
+.codn nil ,
+followed by issuing a newline characters to the stream.
+
+The
+.code pprinl
+function ("pretty print and new line") behaves like
+.code pprint
+followed by issuing a newline to the stream.
 
 The
 .code tostring
@@ -47348,7 +47387,16 @@ and then the slot values are assigned. This means that the values
 specified in the literal override any manipulations of those slots by
 the type's user-defined
 .code :postinit
-handlers.
+handlers. Also, after 154,
+.code print
+methods are expected to take three arguments and are invoked for both
+pretty printing and regular machine-readable printing. Until 154, a struct's
+.code print
+methods was called only when that struct was being pretty-printed, and
+only with two arguments; ordinary printing side-stepped the method and rendered
+the standard
+.code #S
+syntax featuring all instance slots.
 .IP 151
 After version 151, changes were implemented to the way static slots work
 in \*(TL structs. Selecting compatibility with 151 restores most of the behaviors.

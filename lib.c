@@ -9425,10 +9425,9 @@ tail:
   }
 }
 
-val obj_print(val obj, val stream)
+val obj_print(val obj, val out, val pretty)
 {
   val ret = nil;
-  val out = default_arg(stream, std_output);
   val save_mode = get_indent_mode(out);
   val save_indent = get_indent(out);
   struct strm_ctx *ctx_orig = get_ctx(out);
@@ -9448,7 +9447,7 @@ val obj_print(val obj, val stream)
     }
   }
 
-  ret = obj_print_impl(obj, out, nil, ctx);
+  ret = obj_print_impl(obj, out, pretty, ctx);
 
   uw_unwind {
     set_indent_mode(out, save_mode);
@@ -9462,54 +9461,28 @@ val obj_print(val obj, val stream)
   return ret;
 }
 
-val obj_pprint(val obj, val stream)
+val print(val obj, val stream, val pretty)
 {
-  volatile val ret = nil;
-  val out = default_arg(stream, std_output);
-  val save_mode = get_indent_mode(out);
-  val save_indent = get_indent(out);
-  struct strm_ctx *ctx_orig = get_ctx(out);
-  struct strm_ctx *volatile ctx = ctx_orig, ctx_struct;
+  return obj_print(obj, default_arg(stream, std_output),
+                   default_bool_arg(pretty));
+}
 
-  uw_simple_catch_begin;
-
-  if (ctx) {
-    populate_obj_hash(obj, ctx);
-  } else {
-    if (cdr(lookup_var(nil, print_circle_s))) {
-      ctx = &ctx_struct;
-      ctx->obj_hash = make_hash(nil, nil, nil);
-      ctx->counter = zero;
-      get_set_ctx(out, ctx);
-      populate_obj_hash(obj, ctx);
-    }
-  }
-
-  ret = obj_print_impl(obj, out, t, ctx);
-
-  uw_unwind {
-    set_indent_mode(out, save_mode);
-    set_indent(out, save_indent);
-    if (ctx != ctx_orig)
-      get_set_ctx(out, ctx_orig);
-  }
-
-  uw_catch_end;
-
-  return ret;
+val pprint(val obj, val stream)
+{
+  return obj_print(obj, default_arg(stream, std_output), t);
 }
 
 val tostring(val obj)
 {
   val ss = make_string_output_stream();
-  obj_print(obj, ss);
+  obj_print(obj, ss, nil);
   return get_string_from_stream(ss);
 }
 
 val tostringp(val obj)
 {
   val ss = make_string_output_stream();
-  obj_pprint(obj, ss);
+  pprint(obj, ss);
   return get_string_from_stream(ss);
 }
 
@@ -10001,7 +9974,7 @@ int compat_fixup(int compat_ver)
 
 void dump(val obj, val out)
 {
-  obj_print(obj, out);
+  obj_print(obj, out, nil);
   put_char(chr('\n'), out);
 }
 

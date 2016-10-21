@@ -1251,11 +1251,15 @@ static void struct_inst_print(val obj, val out, val pretty,
   val save_mode = test_set_indent_mode(out, num_fast(indent_off),
                                        num_fast(indent_data));
   val save_indent, iter, once;
+  int compat = opt_compat && opt_compat <= 154;
 
-  if (pretty) {
+  if (!compat || pretty) {
     loc ptr = lookup_static_slot_load(st->self, st, print_s);
     if (!nullocp(ptr)) {
-      funcall2(deref(ptr), obj, out);
+      if (compat)
+        funcall2(deref(ptr), obj, out);
+      else
+        funcall3(deref(ptr), obj, out, pretty);
       return;
     }
   }

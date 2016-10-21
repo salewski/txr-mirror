@@ -389,7 +389,7 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
   put_char(chr('('), out);
 
   if (h->hash_fun == equal_hash) {
-    obj_print(equal_based_k, out);
+    obj_print_impl(equal_based_k, out, pretty, ctx);
     need_space = 1;
   }
   if (h->flags != hash_weak_none) {

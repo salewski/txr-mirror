@@ -3218,10 +3218,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
               continue;
             }
           }
-          if (ch == 'a')
-            obj_pprint(obj, stream);
-          else
-            obj_print(obj, stream);
+          obj_print(obj, stream, if2(ch == 'a', t));
           continue;
         case 'p':
           {

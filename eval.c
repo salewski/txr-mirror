@@ -4615,14 +4615,14 @@ static val mapf(val fun, struct args *funlist)
 
 val prinl(val obj, val stream)
 {
-  val ret = obj_print(obj, stream);
+  val ret = obj_print(obj, default_arg(stream, std_output), nil);
   put_char(chr('\n'), stream);
   return ret;
 }
 
 val pprinl(val obj, val stream)
 {
-  val ret = obj_pprint(obj, stream);
+  val ret = obj_print(obj, default_arg(stream, std_output), t);
   put_char(chr('\n'), stream);
   return ret;
 }
@@ -5158,8 +5158,8 @@ void eval_init(void)
   reg_fun(intern(lit("tf"), user_package), func_n0v(tf));
   reg_fun(intern(lit("nilf"), user_package), func_n0v(nilf));
 
-  reg_fun(intern(lit("print"), user_package), func_n2o(obj_print, 1));
-  reg_fun(intern(lit("pprint"), user_package), func_n2o(obj_pprint, 1));
+  reg_fun(intern(lit("print"), user_package), func_n3o(print, 1));
+  reg_fun(intern(lit("pprint"), user_package), func_n2o(pprint, 1));
   reg_fun(intern(lit("tostring"), user_package), func_n1(tostring));
   reg_fun(intern(lit("tostringp"), user_package), func_n1(tostringp));
   reg_fun(intern(lit("prinl"), user_package), func_n2o(prinl, 1));

@@ -2,7 +2,7 @@
 
 (defstruct animal nil
   (:function whoami () "n/a")
-  (:method print (self stream) (put-string self.[whoami] stream)))
+  (:method print (self stream : pretty-p) (put-string self.[whoami] stream)))
 
 (defstruct dog animal
   (:function whoami () "dog"))
