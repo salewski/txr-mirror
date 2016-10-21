@@ -9436,7 +9436,17 @@ val obj_print(val obj, val out, val pretty)
   uw_simple_catch_begin;
 
   if (ctx) {
+    val cell, iter;
+    val prev_hash = ctx->obj_hash;
+    ctx->obj_hash = make_hash(nil, nil, nil);
     populate_obj_hash(obj, ctx);
+    for (iter = hash_begin(ctx->obj_hash); (cell = hash_next(iter));) {
+      val new_p;
+      val pcell = gethash_c(prev_hash, car(cell), mkcloc(new_p));
+      if (new_p)
+        rplacd(pcell, cdr(cell));
+    }
+    ctx->obj_hash = prev_hash;
   } else {
     if (cdr(lookup_var(nil, print_circle_s))) {
       ctx = &ctx_struct;
