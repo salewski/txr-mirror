@@ -10709,6 +10709,109 @@ syntax is not used for denoting regular expressions; rather, the
 .code #/regex/
 syntax is used.
 
+.NP* Notation for Circular and Shared Structure
+
+\*(TL supports a printed notation called
+.I "circle notation"
+which accurately articulates
+the representation of objects which contain shared substructures as well
+as circular references. The notation is supported as a means of
+input, and is also optionally produced as output, controlled by the
+.code *print-circle*
+variable.
+
+Ordinarily, shared substructure in printed objects is not
+evident, except in the case of multiple occurrences of interned symbols,
+in whose semantics it is implicit that they refer to the same object.
+Other shared structure is printed as separate copies which look like
+distinct objects. For instance, the object produced by
+.code "(let ((shared '(1 2))) (list shared shared))"
+is printed as
+.codn "((1 2) (1 2))" ,
+where it is not clear that the two occurrences of
+.code "(1 2)"
+are actually the same object. Under the circle notation, this object
+can be represented as
+.codn "(#5=(1 2) #5#)" .
+The
+.code #5=
+part introduces a reference label, associating the arbitrarily
+chosen non-negative integer 5 with the object which follows.
+The subsequent notation
+.code #5#
+simply refers to the object labeled by 5, reproducing that object
+by reference. The result is a two-element list which has the same
+.code "(1 2)"
+in two places.
+
+Circular structure presents a greater challenge to printing: namely, if it is
+printed by a naive recursive descent, it results in infinite output, and
+possibly stack exhaustion due to recursion. The circle notation detects
+and handles circular references. For instance, the object produced by
+.code "(let ((c (list 1))) (rplacd c c))"
+produces a circular list which looks like an infinite list of 1's:
+.codn "(1 1 1 1 ...)" .
+This cannot be printed. However, under the circle notation, it can
+be represented as
+.codn "#1=(1 . #1#)" .
+The entire object itself is labeled by the integer 1. Then, enclosed
+within the syntax of that labeled object itself, a reference occurs
+to the label. This circular label reference represents the corresponding
+circular reference in the object.
+
+A detailed description of the notational elements follows:
+
+.meIP <> # digits = < object
+
+The
+.code #=
+syntax introduces an object label which denotes the
+object whose printed representation follows. The label is identified by
+the integer value arising from digits
+.meta digits
+which are one or more decimal digits. Note: the value zero is permitted;
+even though when the notation is produced by the \*(TL printer, labeling
+begins at 1. Negative values are not possible because a leading sign
+is not part of the syntax.
+
+There may be no more than one definition for a given label within the syntactic
+scope being parsed, otherwise a syntax error occurs.
+In \*(TX pattern language code,
+an entire source file is parsed as one unit, and so scope for the circular
+notation's references is the entire source file. Files processed by
+.code @(include)
+have their own scope. The scope for labels in \*(TL source code is the
+top-level expression in which they appear.  Consequently, references
+in one \*(TL top-level expression cannot reach definitions in another.
+
+.meIP <> # digits #
+
+The
+.code ##
+syntax denotes a label reference: the repetition of an object that was
+previously labeled by the integer given by
+.metn digits .
+If no such label had been introduced in the syntactic scope,
+a syntax error occurs.
+An object was previously labeled by
+.meta digits
+if a
+.code #=
+definition occurs in the same syntactic scope as the reference,
+and is applied to an object which either encloses the reference,
+or lexically precedes the reference.  Forward references such as
+.code "(#1# #1=(1 2))"
+are not supported.
+
+.TP* "Dialect note:"
+Circle notation is taken from Common Lisp, 
+intended to be unsurprising to users familiar with that
+language.
+The impelmentation is based on descriptions in the ANSI Common Lisp
+document, judiciously taking into account the content of the X3J13 Cleanup
+Issues named PRINT-CIRCLE-STRUCTURE:USER-FUNCTIONS-WORK and
+PRINT-CIRCLE-SHARED:RESPECT-PRINT-CIRCLE.
+
 .SS* Generalization of List Accessors
 In ancient Lisp in the 1960's, it was not possible to apply the operations
 .code car
@@ -35585,6 +35688,47 @@ and
 
 When base 16 is selected, hexadecimal digits are printed as upper-case
 characters.
+
+.coNP Special variable @ *print-circle*
+.desc
+The
+.code *print-circle*
+variable is a Boolean which controls whether the circle notation is
+in effect for printing aggregate objects: conses, ranges, vectors, hash tables
+and structs. The initial value of this variable is
+.codn nil :
+circle notation printing is disabled.
+
+The circle notation works for structs also, including structs which have
+user-defined
+.code print
+methods. When a
+.code print
+method calls functions which print objects, such as
+.codn print ,
+.code pprinl
+or
+.code format
+on the same stream, the detection of circularity and substructure sharing
+continues in these recursive invocations.
+
+However, there are limitations in the degree of support for circle notation
+printing across
+.code print
+methods. Namely, a
+.code print
+method of a struct
+.meta S
+must not procure and submit for printing objects which are not part of the
+ordinary structure that is reachable from the (static or instance) slots of
+.metn S ,
+if those objects have already been printed prior to invoking the
+.code print
+method, and have been printed without a
+.code #=
+circle notation label.  The "ordinary structure that is reachable from the
+slots" denotes structure that is directly reachable by traversing conses,
+ranges, vectors, hashes and struct slots: all printable aggregate objects.
 
 .coNP Function @ format
 .synb
