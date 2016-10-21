@@ -968,7 +968,7 @@ val repl(val bindings, val in_stream, val out_stream)
       if (uw_exception_subtype_p(exsym, syntax_error_s)) {
         put_line(lit("** syntax error"), out_stream);
       } else if (uw_exception_subtype_p(exsym, error_s)) {
-        error_trace(exsym, exvals, std_error, lit("**"));
+        error_trace(exsym, exvals, out_stream, lit("**"));
       } else {
         format(out_stream, lit("** ~!~s exception, args: ~!~s\n"),
                exsym, exvals, nao);
