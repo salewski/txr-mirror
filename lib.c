@@ -9427,11 +9427,12 @@ tail:
 
 val obj_print(val obj, val stream)
 {
-  volatile val ret = nil;
+  val ret = nil;
   val out = default_arg(stream, std_output);
   val save_mode = get_indent_mode(out);
   val save_indent = get_indent(out);
-  struct strm_ctx *ctx_orig = get_ctx(out), *ctx = ctx_orig, ctx_struct;
+  struct strm_ctx *ctx_orig = get_ctx(out);
+  struct strm_ctx *volatile ctx = ctx_orig, ctx_struct;
 
   uw_simple_catch_begin;
 
@@ -9467,7 +9468,8 @@ val obj_pprint(val obj, val stream)
   val out = default_arg(stream, std_output);
   val save_mode = get_indent_mode(out);
   val save_indent = get_indent(out);
-  struct strm_ctx *ctx_orig = get_ctx(out), *ctx = ctx_orig, ctx_struct;
+  struct strm_ctx *ctx_orig = get_ctx(out);
+  struct strm_ctx *volatile ctx = ctx_orig, ctx_struct;
 
   uw_simple_catch_begin;
 
