@@ -1,3 +1,36 @@
+                                    TXR 155
+                                   2016-10-21
+
+
+  Features
+
+  - Common-Lisp-style circle notation supported now both on input and output.
+    - *print-circle* special variable now exists.
+    - supported across print methods.
+  - OOP:
+    - print methods now take three arguments rather than two, and are called
+      for readable and pretty printing, not only pretty printing.
+  - env-fbind and env-vbind functions allow nil env argument to denote toplevel
+    bindings; thus they can be used to bind global variables.
+
+  Bugs
+
+  - fixed regression: inability to work with places denoted by compounded
+    referencing dot; e.g.  (set a.b.c val)
+  - fixed showstopper regression: inheritance of static slots causes assertion
+    and crash at garbage collection time (while simply checking for a condition
+    that is harmless in and of itself).
+  - reduce-left: initial value pulled from the input list itself was not passed
+    through key function.
+  - fixed some places where a volatile qualifier on a local variable was
+    missing, found by inspection: actual impact not determined.
+  - Listener was sending error traces to *stderr* stream instead of the
+    listener's configured output stream; that was causing confusing output
+    sometimes.
+
+
+
+
                                     TXR 154
                                    2016-10-15
 
