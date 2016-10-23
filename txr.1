@@ -38756,6 +38756,16 @@ argument follows the same conventions as the POSIX
 C library function
 .codn strptime .
 
+Prior to obtaining the time from
+.meta format
+and
+.meta string
+the returned structure is created and initialized
+with a time which represents time 0 ("the epoch")
+if interpreted in the UTC timezone as by the
+.meta time-utc
+method.
+
 Note: the availability of
 .code time-parse
 depends on the availability of

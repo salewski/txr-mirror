@@ -9770,9 +9770,17 @@ val make_time(val year, val month, val day,
 
 #if HAVE_STRPTIME
 
+static struct tm epoch_tm(void)
+{
+  struct tm ep = { 0 };
+  ep.tm_year = 70;
+  ep.tm_mday = 1;
+  return ep;
+}
+
 val time_parse(val format, val string)
 {
-  struct tm tms = { 0 };
+  struct tm tms = epoch_tm();
   const wchar_t *w_str = c_str(string);
   const wchar_t *w_fmt = c_str(format);
   char *str = utf8_dup_to(w_str);
