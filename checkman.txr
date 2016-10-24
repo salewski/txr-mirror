@@ -51,11 +51,15 @@
 @  (cases)
 .coNP Operator/function @(skip)
 @    (or)
+.coNP Operator @@ @op and macro @@ @mac
+@    (or)
 .coNP @{type /Function|Operator|Macro/}s@(assert bad ln `bad @{type}s heading`)@(rep :gap 0) @@, @{x /\S+/}@(last :mandatory) @@ @y and @@ @{z /\S+/}@(end)
 @      (assert bad ln `no .synb after @{type}s heading`)
 @      (check-synb)
 @    (or)
-.coNP @{type /Function|Operator|Macro/}@(assert bad ln `bad @type heading`) @@ @{x /\S+/}
+.coNP @{type /Function|Operator|Macro/}@(assert bad ln `bad @type heading`) @@ @{x /\S+/}@junk
+@      (assert bad ln `extra elements in singular @type heading`)
+@      (bind junk "")
 @      (assert bad ln `no .synb after @type heading`)
 @      (check-synb)
 @  (end)
