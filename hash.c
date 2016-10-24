@@ -1360,7 +1360,7 @@ void hash_init(void)
   reg_fun(intern(lit("make-similar-hash"), user_package), func_n1(make_similar_hash));
   reg_fun(intern(lit("copy-hash"), user_package), func_n1(copy_hash));
   reg_fun(intern(lit("hash"), user_package), func_n0v(hashv));
-  reg_fun(intern(lit("hash-construct"), user_package), func_n2(hash_construct));
+  reg_fun(hash_construct_s, func_n2(hash_construct));
   reg_fun(intern(lit("hash-from-pairs"), user_package), func_n1v(hash_from_pairs_v));
   reg_fun(intern(lit("hash-list"), user_package), func_n1v(hash_list));
   reg_fun(intern(lit("gethash"), user_package), func_n3o(gethash_n, 2));
