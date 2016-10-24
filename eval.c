@@ -2742,6 +2742,10 @@ static val expand_qquote_rec(val qquoted_form, val menv,
     } else if (sym == vector_lit_s) {
       val args = expand_qquote(second(qquoted_form), menv, qq, unq, spl);
       return rlcp(list(vec_list_s, args, nao), qquoted_form);
+    } else if (sym == struct_lit_s) {
+      val args = expand_qquote(second(qquoted_form), menv, qq, unq, spl);
+      val pairs = expand_qquote(rest(rest(qquoted_form)), menv, qq, unq, spl);
+      return rlcp(list(make_struct_lit_s, args, pairs, nao), qquoted_form);
     } else {
       val f = sym;
       val r = cdr(qquoted_form);

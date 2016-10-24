@@ -11,11 +11,10 @@
     (b (inc x))))
 
 (test ^#S(bar b ,(+ 2 2))
-      (sys:struct-lit
-        bar b 4))
+      #S(bar a 103 b 4))
 
-(test (sys:expand ^#S(bar b ,(+ 2 2)))
-      (sys:make-struct-lit 'bar '(b 4)))
+(test (sys:expand '^#S(bar b ,(+ 2 2)))
+      (sys:make-struct-lit 'bar (list 'b (+ 2 2))))
 
 (defvar s (eval ^#S(bar b ,(+ 2 2))))
 

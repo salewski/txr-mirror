@@ -88,7 +88,7 @@ struct struct_inst {
   val slot[1];
 };
 
-val struct_type_s, meth_s, print_s;
+val struct_type_s, meth_s, print_s, make_struct_lit_s;
 
 static cnum struct_id_counter;
 static val struct_type_hash;
@@ -111,6 +111,7 @@ void struct_init(void)
   struct_type_s = intern(lit("struct-type"), user_package);
   meth_s = intern(lit("meth"), user_package);
   print_s = intern(lit("print"), user_package);
+  make_struct_lit_s = intern(lit("make-struct-lit"), system_package);
   struct_type_hash = make_hash(nil, nil, nil);
   slot_hash = make_hash(nil, nil, t);
   struct_type_finalize_f = func_n1(struct_type_finalize);
@@ -131,7 +132,7 @@ void struct_init(void)
   reg_fun(intern(lit("make-struct"), user_package), func_n2v(make_struct));
   reg_fun(intern(lit("make-lazy-struct"), user_package),
           func_n2(make_lazy_struct));
-  reg_fun(intern(lit("make-struct-lit"), system_package), func_n2(make_struct_lit));
+  reg_fun(make_struct_lit_s, func_n2(make_struct_lit));
   reg_fun(intern(lit("copy-struct"), user_package), func_n1(copy_struct));
   reg_fun(intern(lit("replace-struct"), user_package), func_n2(replace_struct));
   reg_fun(intern(lit("clear-struct"), user_package), func_n2o(clear_struct, 1));
