@@ -38395,7 +38395,9 @@ may be similar or identical ("problem 2").
 
 .TP* Notes:
 
-The default value of .code *random-warmup* is only 8.  This is insufficient to
+The default value of
+.code *random-warmup*
+is only 8.  This is insufficient to
 ensure good initial PRNG behavior for seeds even as large as 64 bits or more.
 That is to say, even if as many as eight bytes' worth of true random bits are
 used as the seed, the PRNG will exhibit predictable behaviors, and a poor
