@@ -467,7 +467,7 @@
                     (,parent-cell-sym (nthcdr ,index-sym ,sentinel-head-sym)))
                (macrolet ((,getter () ^(cdr ,',parent-cell-sym))
                           (,setter (val)
-                            ^(progn (sys:rplacd ,',parent-cell-sym ,val)
+                            ^(prog1 (sys:rplacd ,',parent-cell-sym ,val)
                                     (,',lsetter (cdr ,',sentinel-head-sym)))))
                  ,body))))
         ^(alet ((,index-sym ,index)
