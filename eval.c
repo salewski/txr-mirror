@@ -2707,11 +2707,9 @@ static val optimize_qquote(val form)
   return optimize_qquote_args(optimize_qquote_form(form));
 }
 
-static val expand_qquote(val qquoted_form, val menv,
-                         val qq, val unq, val spl);
+static val expand_qquote(val qquoted_form, val qq, val unq, val spl);
 
-static val expand_qquote_rec(val qquoted_form, val menv,
-                             val qq, val unq, val spl)
+static val expand_qquote_rec(val qquoted_form, val qq, val unq, val spl)
 {
   if (nilp(qquoted_form)) {
     return nil;
@@ -2729,45 +2727,45 @@ static val expand_qquote_rec(val qquoted_form, val menv,
         eval_error(qquoted_form, error_msg,
                    second(qquoted_form), nao);
     } else if (sym == unq) {
-      return rlcp(expand(second(qquoted_form), menv), qquoted_form);
+      return second(qquoted_form);
     } else if (sym == qq) {
       return rlcp(expand_qquote_rec(expand_qquote(second(qquoted_form),
-                                                  menv, qq, unq, spl),
-                                    menv, qq, unq, spl),
+                                                  qq, unq, spl),
+                                    qq, unq, spl),
                   qquoted_form);
     } else if (sym == hash_lit_s) {
-      val args = expand_qquote(second(qquoted_form), menv, qq, unq, spl);
-      val pairs = expand_qquote(rest(rest(qquoted_form)), menv, qq, unq, spl);
+      val args = expand_qquote(second(qquoted_form), qq, unq, spl);
+      val pairs = expand_qquote(rest(rest(qquoted_form)), qq, unq, spl);
       return rlcp(list(hash_construct_s, args, pairs, nao), qquoted_form);
     } else if (sym == vector_lit_s) {
-      val args = expand_qquote(second(qquoted_form), menv, qq, unq, spl);
+      val args = expand_qquote(second(qquoted_form), qq, unq, spl);
       return rlcp(list(vec_list_s, args, nao), qquoted_form);
     } else if (sym == struct_lit_s) {
-      val args = expand_qquote(second(qquoted_form), menv, qq, unq, spl);
-      val pairs = expand_qquote(rest(rest(qquoted_form)), menv, qq, unq, spl);
+      val args = expand_qquote(second(qquoted_form), qq, unq, spl);
+      val pairs = expand_qquote(rest(rest(qquoted_form)), qq, unq, spl);
       return rlcp(list(make_struct_lit_s, args, pairs, nao), qquoted_form);
     } else {
       val f = sym;
       val r = cdr(qquoted_form);
       val f_ex;
-      val r_ex = expand_qquote_rec(r, menv, qq, unq, spl);
+      val r_ex = expand_qquote_rec(r, qq, unq, spl);
 
       if (consp(f)) {
         val qsym = car(f);
         if (qsym == spl) {
-          f_ex = expand(second(f), menv);
+          f_ex = second(f);
         } else if (qsym == unq) {
-          f_ex = cons(list_s, cons(expand(second(f), menv), nil));
+          f_ex = cons(list_s, cons(second(f), nil));
         } else if (qsym == qq) {
           f_ex = cons(list_s, cons(expand_qquote_rec(expand_qquote(second(f),
-                                                                   menv, qq,
-                                                                   unq, spl),
-                                                     menv, qq, unq, spl), nil));
+                                                                   qq, unq,
+                                                                   spl),
+                                                     qq, unq, spl), nil));
         } else {
-          f_ex = cons(list_s, cons(expand_qquote(f, menv, qq, unq, spl), nil));
+          f_ex = cons(list_s, cons(expand_qquote(f, qq, unq, spl), nil));
         }
       } else {
-        f_ex = cons(list_s, cons(expand_qquote(f, menv, qq, unq, spl), nil));
+        f_ex = cons(list_s, cons(expand_qquote(f, qq, unq, spl), nil));
       }
 
       if (nilp(r_ex)) {
@@ -2788,21 +2786,20 @@ static val expand_qquote_rec(val qquoted_form, val menv,
   abort();
 }
 
-static val expand_qquote(val qquoted_form, val menv,
-                         val qq, val unq, val spl)
+static val expand_qquote(val qquoted_form, val qq, val unq, val spl)
 {
-  val exp = expand_qquote_rec(qquoted_form, menv, qq, unq, spl);
+  val exp = expand_qquote_rec(qquoted_form, qq, unq, spl);
   return optimize_qquote(exp);
 }
 
 
 static val me_qquote(val form, val menv)
 {
+  (void) menv;
   if (first(form) == sys_qquote_s)
-    return expand_qquote(second(form), menv,
-                         sys_qquote_s, sys_unquote_s, sys_splice_s);
-  return expand_qquote(second(form), menv,
-                       qquote_s, unquote_s, splice_s);
+    return expand_qquote(second(form), sys_qquote_s,
+                         sys_unquote_s, sys_splice_s);
+  return expand_qquote(second(form), qquote_s, unquote_s, splice_s);
 }
 
 static val expand_vars(val vars, val menv, val form,
