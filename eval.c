@@ -4977,7 +4977,9 @@ void eval_init(void)
   reg_fun(intern(lit("ldiff"), user_package), func_n2(ldiff));
   reg_fun(intern(lit("last"), user_package), func_n1(last));
   reg_fun(intern(lit("butlast"), user_package), func_n1(butlast));
+  reg_fun(intern(lit("nthlast"), user_package), func_n2(nthlast));
   reg_fun(intern(lit("nthcdr"), user_package), func_n2(nthcdr));
+  reg_fun(intern(lit("butlastn"), user_package), func_n2(butlastn));
   reg_fun(intern(lit("flatten"), user_package), func_n1(flatten));
   reg_fun(intern(lit("flatten*"), user_package), func_n1(lazy_flatten));
   reg_fun(intern(lit("flatcar"), user_package), func_n1(flatcar));

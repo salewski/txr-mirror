@@ -599,6 +599,37 @@ val nthcdr(val pos, val list)
   return list;
 }
 
+val nthlast(val pos, val list)
+{
+  val iter = list;
+
+  while (plusp(pos) && consp(list)) {
+    list = cdr(list);
+    pos = pred(pos);
+  }
+
+  if (plusp(pos))
+    return iter;
+
+  if (list == iter) {
+    while (consp(iter))
+      iter = cdr(iter);
+  } else {
+    while (consp(list)) {
+      iter = cdr(iter);
+      list = cdr(list);
+    }
+  }
+
+  return iter;
+}
+
+val butlastn(val n, val list)
+{
+  val tail = nthlast(n, list);
+  return ldiff(list, tail);
+}
+
 loc ltail(loc cons)
 {
   while (cdr(deref(cons)))

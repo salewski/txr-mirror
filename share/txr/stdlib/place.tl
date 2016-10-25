@@ -478,6 +478,45 @@
                           ^(sys:rplacd ,',parent-cell-sym ,val)))
                ,body)))))))
 
+(defplace (nthlast index list) body
+  (getter setter
+    (with-gensyms (index-sym list-sym sentinel-head-sym parent-cell-sym)
+      (if (place-form-p list sys:*pl-env*)
+        (with-update-expander (lgetter lsetter) list nil
+          ^(alet ((,index-sym ,index)
+                  (,list-sym (,lgetter)))
+             (let* ((,sentinel-head-sym (cons nil ,list-sym))
+                    (,parent-cell-sym (nthlast (succ ,index-sym)
+                                               ,sentinel-head-sym)))
+               (macrolet ((,getter () ^(cdr ,',parent-cell-sym))
+                          (,setter (val)
+                            ^(prog1 (sys:rplacd ,',parent-cell-sym ,val)
+                                    (,',lsetter (cdr ,',sentinel-head-sym)))))
+                 ,body))))
+        ^(alet ((,index-sym index)
+                (,list-sym ,list))
+           (let ((,parent-cell-sym (nthlast (succ ,index-sym) ,list-sym)))
+             (macrolet ((,getter () ^(cdr ,',parent-cell-sym))
+                        (,setter (val)
+                          ^(sys:rplacd ,',parent-cell-sym ,val)))
+               ,body)))))))
+
+(defplace (butlastn num list) body
+  (getter setter
+    (with-gensyms (num-sym list-sym head-sym tail-sym val-sym)
+      (with-update-expander (lgetter lsetter) list nil
+        ^(alet ((,num-sym ,num)
+                (,list-sym (,lgetter)))
+           (let* ((,tail-sym (nthlast ,num-sym ,list-sym))
+                  (,head-sym (ldiff ,list-sym ,tail-sym)))
+             (macrolet ((,getter () ,head-sym)
+                        (,setter (val)
+                           ^(alet ((,',val-sym ,val))
+                              (progn (,',lsetter (append ,',val-sym
+                                                         ,',tail-sym))
+                                     ,',val-sym))))
+               ,body)))))))
+
 (defplace (vecref vector index :whole args) body
   (getter setter
     (with-gensyms (vec-sym ind-sym)

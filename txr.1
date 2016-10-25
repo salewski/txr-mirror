@@ -16614,6 +16614,171 @@ is returned, or an empty suffix if
 .code seq
 is an empty sequence.
 
+.coNP Accessor @ nthlast
+.synb
+.mets (nthlast < index << list )
+.mets (set (nthlast < index << list ) << new-value )
+.syne
+.desc
+The
+.code nthlast
+function retrieves the n-th last cons cell of a list,
+indexed from one.
+The
+.meta index
+parameter must be a an integer. If
+.meta index
+is positive and so large that it specifies a nonexistent cons beyond the
+beginning of the list,
+.code nthlast
+returns
+.metn list .
+Effectively, values of
+.meta index
+larger than the length of the list are clamped to the length.
+If
+.meta index
+is negative, then
+.code nthlast
+yields nil. An
+.meta index
+value of zero retrieves the terminating atom of
+.meta list
+or else the value
+.meta list
+itself, if
+.meta list
+is an atom.
+
+The following equivalences hold:
+
+.cblk
+  (nthlast 1 list) <--> (last list)
+.cble
+
+An
+.code nthlast
+place designates the storage location which holds the n-th cell,
+as indicated by the value of
+.metn index .
+
+A negative
+.meta index
+doesn't denote a place.
+
+A positive
+.meta index
+greater than the length of the list is treated as if it were
+equal to the length of the list.
+
+If
+.meta list
+is itself a syntactic place, then the
+.meta index
+value
+.I n
+is permitted for a list of length
+.IR n .
+This index value denotes the
+.meta list
+place itself.  Storing to this value overwrites
+.metn list .
+If
+.meta list
+isn't a syntactic place, then storing to position
+.I n
+isn't permitted.
+
+If
+.meta list
+is is of length zero, or an atom (in which case its
+length is considered to be zero) then the above
+remarks about position
+.I n
+apply to an
+.meta index
+value of zero: if
+.meta list
+is a syntactic place, then the position denotes
+.meta list
+itself, otherwise the position doesn't exist as a place.
+
+If
+.meta list
+contains one or more elements, then
+.meta index
+value of zero denotes the
+.code cdr
+field of its last cons cell. Storing a value to this
+place overwrites the terminating atom.
+
+.coNP Accessor @ butlastn
+.synb
+.mets (butlastn < num << list )
+.mets (set (butlastn < num << list ) new-value )
+.syne
+.desc
+The
+.code butlastn
+function calculates that initial portion of
+.meta list
+which excludes the last
+.meta num
+elements.
+
+Note: the
+.code butlastn
+function doesn't support non-list sequences as sequences;
+it treats them as the terminating atom of a zero-length improper list.
+The
+.code butlast
+sequence function supports non-list sequences. If
+.code x
+is a list, then the following equivalence holds:
+
+.cblk
+  (butlastn n x)  <-->  (butlast x n)
+.cble
+
+If
+.meta num
+is zero, or negative, then
+.code butlastn
+returns
+.metn list .
+
+If
+.meta num
+is positive, and meets or exceeds the length of
+.metn list ,
+then
+.code butlastn
+returns
+.codn nil .
+
+If a
+.code butlastn
+form is used as a syntactic place, then
+.meta list
+must be a place. Assigning to the form causes
+.meta list
+to be replaced with a new list which is a catenation
+of the new value and the last
+.meta num
+elements of the original list, according to the following equivalence:
+
+.cblk
+  (set (butlastn n x) v)  <--> (progn (set x (append v (nthlast n x)))
+                                      v)
+.cble
+
+except that
+.codn n ,
+.code x
+and
+.code v
+are evaluated only once, in left-to-right order.
+
 .coNP Accessor @ nthcdr
 .synb
 .mets (nthcdr < index << list )
