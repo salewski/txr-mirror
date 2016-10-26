@@ -79,6 +79,12 @@ struct uw_cont_copy {
   void (*copy)(mem_t *ptr, int parent);
 };
 
+struct uw_guard {
+  uw_frame_t *up;
+  uw_frtype_t type;
+  int uw_ok;
+};
+
 struct uw_debug {
   uw_frame_t *up;
   uw_frtype_t type;
@@ -98,6 +104,7 @@ union uw_frame {
   struct uw_catch ca;
   struct uw_handler ha;
   struct uw_cont_copy cp;
+  struct uw_guard gu;
   struct uw_debug db;
 };
 
@@ -124,7 +131,7 @@ noreturn val uw_errorfv(val fmt, struct args *args);
 val uw_register_subtype(val sub, val super);
 val uw_exception_subtype_p(val sub, val sup);
 void uw_continue(uw_frame_t *target);
-void uw_push_guard(uw_frame_t *);
+void uw_push_guard(uw_frame_t *, int uw_ok);
 void uw_push_debug(uw_frame_t *, val func, struct args *,
                    val ub_p_a_pairs, val env, val data,
                    val line, val chr);

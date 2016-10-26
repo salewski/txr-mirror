@@ -47,7 +47,7 @@ static int errfunc_thunk(const char *errpath, int errcode)
   val result = t;
   uw_frame_t cont_guard;
 
-  uw_push_guard(&cont_guard);
+  uw_push_guard(&cont_guard, 0);
 
   uw_simple_catch_begin;
 

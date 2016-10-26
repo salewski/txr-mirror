@@ -9497,7 +9497,7 @@ val obj_print(val obj, val out, val pretty)
   struct strm_ctx *volatile ctx = ctx_orig, ctx_struct;
   uw_frame_t cont_guard;
 
-  uw_push_guard(&cont_guard);
+  uw_push_guard(&cont_guard, 1);
 
   uw_simple_catch_begin;
 

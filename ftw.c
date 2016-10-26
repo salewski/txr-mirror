@@ -52,7 +52,7 @@ static int ftw_callback(const char *c_path, const struct stat *c_sb,
   int c_result = 1;
   uw_frame_t cont_guard;
 
-  uw_push_guard(&cont_guard);
+  uw_push_guard(&cont_guard, 0);
 
   uw_simple_catch_begin;
 

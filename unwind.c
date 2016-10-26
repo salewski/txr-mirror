@@ -95,6 +95,8 @@ static void uw_unwind_to_exit_point(void)
       uw_env_stack = uw_env_stack->ev.up_env;
       break;
     case UW_GUARD:
+      if (uw_stack->gu.uw_ok)
+        break;
       format(std_error, lit("~a: cannot unwind across foreign stack frames\n"),
              prog_string, nao);
       abort();
@@ -234,11 +236,12 @@ val uw_set_match_context(val context)
   return context;
 }
 
-void uw_push_guard(uw_frame_t *fr)
+void uw_push_guard(uw_frame_t *fr, int uw_ok)
 {
   memset(fr, 0, sizeof *fr);
   fr->uw.type = UW_GUARD;
   fr->uw.up = uw_stack;
+  fr->gu.uw_ok = uw_ok;
   uw_stack = fr;
 }
 
