@@ -16584,36 +16584,6 @@ See the relevant examples below.
   (ldiff "abc" #(#\eb #\ec)) -> "abc"
 .cble
 
-.coNP Function @ last
-.synb
-.mets (last << seq )
-.syne
-.desc
-If
-.meta seq
-is a nonempty proper or improper list, the
-.code last
-function
-returns the last cons cell in the list: that cons cell whose
-.code cdr
-field is a terminating atom.
-
-If
-.meta seq
-is
-.codn nil ,
-then
-.code nil
-is returned.
-
-If
-.meta seq
-is a non-list sequence, then a one-element suffix of
-.code seq
-is returned, or an empty suffix if
-.code seq
-is an empty sequence.
-
 .coNP Accessor @ nthlast
 .synb
 .mets (nthlast < index << list )
@@ -23061,29 +23031,128 @@ is returned, which may be
 .meta sequence
 itself or a copy.
 
-.coNP Function @ butlast
+.coNP Accessor @ last
 .synb
-.mets (butlast << sequence )
+.mets (last << seq <> [ num ])
+.mets (set (last << seq <> [ num ]) << new-value)
+.syne
+.desc
+The
+.meta last
+function returns a subsequence of
+.meta seq
+consisting of the last
+.meta num
+of its elements, where
+.meta num
+defaults to 1.
+
+If
+.meta num
+is zero or negative, then an empty sequence is returned.
+If
+.meta num
+is positive, and greater than or equal to the length of seq,
+then seq
+.meta seq
+is returned.
+
+If a
+.code last
+form is used as a place, then
+.code seq
+must be a place. The following equivalence gives the semantics
+of assignment to a
+.codn last :
+
+.cble
+  (set (last x n) v)   <-->  (set (sub x (- (max n 0)) t) v)
+.cblk
+
+A
+.code last
+place is deletable. The semantics of deletion may be understood
+in terms of the following equivalence:
+
+.cble
+  (del (last x n))   <-->  (del (sub x (- (max n 0)) t))
+.cble
+
+.coNP Accessor @ butlast
+.synb
+.mets (butlast << sequence <> [ num ])
+.mets (set (butlast << sequence <> [ num ]) << new-value )
 .syne
 .desc
 The
 .code butlast
 function returns the prefix of
 .meta sequence
-consisting of a copy of it, with the last item omitted.
+consisting of a copy of it, with the last
+.meta num
+items removed.
+
+The parameter
+.meta num
+defaults to 1
+if an argument is omitted.
+
 If
 .meta sequence
 is empty, an empty sequence is returned.
 
-Dialect note: the Common Lisp function
-.code nbutlast
-is not provided. The \*(TL
+If
+.meta num
+is zero or negative, then
+.meta sequence
+is returned.
+
+If
+.meta num
+is positive, and meets or exceeds the length of
+.metn sequence ,
+then an empty sequence is returned.
+
+If a
+.code butlast
+form is used as a place, then
+.meta sequence
+must itself be a place. The following equivalence gives the semantics
+of assignment to a
+.codn last :
+
+.cble
+  (set (butlast x n) v)   <-->  (set (sub x 0 (- (max n 0))) v)
+.cblk
+
+A
+.code butlast
+place is deletable. The semantics of deletion may be understood
+in terms of the following equivalence:
+
+.cble
+  (del (last x n))   <-->  (del (sub x 0 (- (max n 0))))
+.cble
+
+Note: the \*(TL
 .code take
-function provides the same functionality for lists (only with the
-arguments reversed relative to
-.codn nbutlast ),
-and additionally provides lazy semantics, and works with vectors
-and strings.
+function also computes the prefix of a list; however, it counts items
+from the beginning, and provides lazy semantics which allow it
+to work with infinite lists.
+
+See also: the
+.code butlastn
+accessor, which operates on lists. That function has useful semantics for
+improper lists and treats an atom as the terminator of a zero-length improper
+list.
+
+Dialect note: a destructive function similar to Common Lisp's
+.code nbutlast
+isn't provided. Of course, assignment to an
+.code butlast
+form is destructive; Common Lisp doesn't support
+.code butlast
+as a place.
 
 .coNP Function @ search
 .synb

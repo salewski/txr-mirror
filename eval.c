@@ -2669,11 +2669,11 @@ static val optimize_qquote_form(val form)
         sym = list_s;
         args = mappend(cdr_f, args);
       } else {
-        val blargs = butlast(args);
+        val blargs = butlast(args, nil);
 
         if (all_satisfy(blargs, list_form_p_f, nil))
           return rlcp_tree(cons(list_star_s, nappend2(mappend(cdr_f, blargs),
-                                                      last(args))), form);
+                                                      last(args, one))), form);
       }
     }
 
@@ -3229,7 +3229,7 @@ static val me_whilet(val form, val env)
   val body = form;
   val sym = pop(&body);
   val lets = pop(&body);
-  val lastlet = last(lets);
+  val lastlet = last(lets, nil);
   val not_done = gensym(lit("not-done"));
 
   if (nilp(lastlet))
@@ -3253,7 +3253,7 @@ static val me_iflet_whenlet(val form, val env)
     return apply_frob_args(list(if3(sym == iflet_s, if_s, when_s),
                                 lets, args, nao));
   } else {
-    val lastlet = last(lets);
+    val lastlet = last(lets, nil);
 
     if (nilp(lastlet))
       eval_error(form, lit("~s: empty binding list"), sym, nao);
@@ -4975,8 +4975,8 @@ void eval_init(void)
   reg_fun(intern(lit("nreverse"), user_package), func_n1(nreverse));
   reg_fun(intern(lit("reverse"), user_package), func_n1(reverse));
   reg_fun(intern(lit("ldiff"), user_package), func_n2(ldiff));
-  reg_fun(intern(lit("last"), user_package), func_n1(last));
-  reg_fun(intern(lit("butlast"), user_package), func_n1(butlast));
+  reg_fun(intern(lit("last"), user_package), func_n2o(last, 1));
+  reg_fun(intern(lit("butlast"), user_package), func_n2o(butlast, 1));
   reg_fun(intern(lit("nthlast"), user_package), func_n2(nthlast));
   reg_fun(intern(lit("nthcdr"), user_package), func_n2(nthcdr));
   reg_fun(intern(lit("butlastn"), user_package), func_n2(butlastn));

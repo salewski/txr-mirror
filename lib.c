@@ -575,13 +575,21 @@ loc lastcons(val list)
   return ret;
 }
 
-val last(val seq)
+val last(val seq, val n)
 {
-  if (listp(seq)) {
-    loc p = lastcons(seq);
-    return nullocp(p) ? seq : deref(p);
+  if (null_or_missing_p(n)) {
+    if (listp(seq)) {
+      loc p = lastcons(seq);
+      return nullocp(p) ? seq : deref(p);
+    }
+    return sub(seq, negone, t);
+  } else {
+    if (listp(seq))
+      return nthlast(n, seq);
+    return if3(plusp(n),
+               sub(seq, neg(n), t),
+               sub(seq, t, t));
   }
-  return sub(seq, negone, t);
 }
 
 val nthcdr(val pos, val list)
@@ -8414,9 +8422,14 @@ val dwim_del(val seq, val ind_range)
   }
 }
 
-val butlast(val seq)
+val butlast(val seq, val idx)
 {
-  return sub(seq, zero, negone);
+  if (listp(seq)) {
+    return butlastn(default_arg(idx, one), seq);
+  } else {
+    val nidx = if3(null_or_missing_p(idx), negone, neg(idx));
+    return sub(seq, zero, if3(plusp(nidx), zero, nidx));
+  }
 }
 
 val update(val seq, val fun)
