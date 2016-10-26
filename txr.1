@@ -22694,9 +22694,10 @@ a deeper copy than just duplicating the
 value itself,
 but it is not a deep copy.
 
-.coNP Function @ sub
+.coNP Accessor @ sub
 .synb
 .mets (sub < sequence >> [ from <> [ to ]])
+.mets (set (sub < sequence >> [ from <> [ to ]]) << new-val )
 .syne
 .desc
 The
@@ -22721,10 +22722,13 @@ Thus
 means
 .codn "(sub a 0 t)" .
 
-The following equivalence holds between the
+The following semantic equivalence exists between a call to the
 .code sub
 function and
-the DWIM-bracket syntax:
+the DWIM-bracket syntax, except that
+.code sub
+is an ordinary function call form, which doesn't apply the
+Lisp-1 evaluation semantics to its arguments:
 
 .cblk
   ;; from is not a list
@@ -22738,6 +22742,29 @@ on Range Indexing\(emexplains the semantics of the range specification.
 
 If the sequence is a list, the output sequence may share substructure
 with the input sequence.
+
+When a
+.code sub
+form is used as a syntactic place, that place denotes a slice of
+.metn seq ,
+which must be a syntactic place itself.
+Overwriting that slice is equivalent to using the
+.code replace
+function. The following equivalences give the semantics, except that
+.codn x ,
+.codn a ,
+.code b
+and
+.code v
+are evaluated only once, in left-to-right order:
+
+.cblk
+  (set (sub x a b) v)  <-->  (progn (replace x v a b)
+                                    v)
+
+  (del (sub x a b))    <-->  (prog1 (sub x a b)
+                                    (replace x nil a b))
+.cble
 
 .coNP Function @ replace
 .synb

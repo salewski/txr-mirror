@@ -580,6 +580,45 @@
                                         ,',ind-sym (succ ,',ind-sym)))))
            ,body)))))
 
+(defplace (sub seq :whole args : (from 0) (to t)) body
+  (getter setter
+    (with-gensyms (seq-sym from-sym to-sym v-sym)
+      (with-update-expander (seq-getter seq-setter) seq nil
+        ^(alet ((,seq-sym (,seq-getter))
+                (,from-sym ,from)
+                (,to-sym ,to))
+           (macrolet ((,getter () ^(sub ,',seq-sym ,',from-sym ,',to-sym))
+                      (,setter (val)
+                        ^(alet ((,',v-sym ,val))
+                           (,seq-setter (replace ,',seq-sym ,',v-sym
+                                                 ,',from-sym ,',to-sym))
+                           ,',v-sym)))
+              ,body)))))
+  (ssetter
+    (with-gensyms (seq-sym from-sym to-sym v-sym)
+      (with-update-expander (seq-getter seq-setter) seq nil
+        ^(macrolet ((,ssetter (val)
+                     ^(alet ((,',seq-sym (,',seq-getter))
+                             (,',from-sym ,',from)
+                             (,',to-sym ,',to)
+                             (,',v-sym ,val))
+                        (,',seq-setter (replace ,',seq-sym ,',v-sym
+                                                ,',from-sym ,',to-sym))
+                        ,',v-sym)))
+        ,body))))
+  (deleter
+    (with-gensyms (seq-sym from-sym to-sym)
+      (with-update-expander (seq-getter seq-setter) seq nil
+        ^(alet ((,seq-sym (,seq-getter))
+                (,from-sym ,from)
+                (,to-sym ,to))
+           (macrolet ((,deleter ()
+                         ^(prog1
+                            (sub ,',seq-sym ,',from-sym ,',to-sym)
+                            (,',seq-setter (replace ,',seq-sym nil
+                                                    ,',from-sym ,',to-sym)))))
+             ,body))))))
+
 (defplace (gethash hash key : (default nil have-default-p)) body
   (getter setter
     (with-gensyms (entry-sym)
