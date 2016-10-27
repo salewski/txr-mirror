@@ -123,34 +123,34 @@
   (split-str "abcacabcac" #/ab?/ t) ("" "ab" "c" "a" "c" "ab" "c" "a" "c"))
 
 (mtest
-  (tok-str "" #//) nil
-  (tok-str "a" #//) nil
+  (tok-str "" #//) ("")
+  (tok-str "a" #//) ("" "")
   (tok-str "" #/a/) nil
   (tok-str "a" #/a/) ("a"))
 
 (mtest
-  (tok-str "" #// t) ("")
-  (tok-str "a" #// t) ("a")
+  (tok-str "" #// t) ("" "" "")
+  (tok-str "a" #// t) ("" "" "a" "" "")
   (tok-str "" #/a/ t) ("")
   (tok-str "a" #/a/ t) ("" "a" ""))
 
 (mtest
-  (tok-str "ab" #//) ("")
+  (tok-str "ab" #//) ("" "" "")
   (tok-str "ab" #/a/) ("a")
   (tok-str "ab" #/b/) ("b")
   (tok-str "ab" #/ab/) ("ab")
   (tok-str "ab" #/abc/) nil)
 
 (mtest
-  (tok-str "ab" #// t) ("a" "" "b")
+  (tok-str "ab" #// t) ("" "" "a" "" "b" "" "")
   (tok-str "ab" #/a/ t) ("" "a" "b")
   (tok-str "ab" #/b/ t) ("a" "b" "")
   (tok-str "ab" #/ab/ t) ("" "ab" "")
   (tok-str "ab" #/abc/ t) ("ab"))
 
 (mtest
-  (tok-str "abc" #//) ("" "")
-  (tok-str "abc" #// t) ("a" "" "b" "" "c"))
+  (tok-str "abc" #//) ("" "" "" "")
+  (tok-str "abc" #// t) ("" "" "a" "" "b" "" "c" "" ""))
 
 (mtest
   (tok-str "abc" #/a/) ("a")

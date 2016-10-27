@@ -3994,11 +3994,13 @@ val tok_str(val str, val tok_regex, val keep_sep)
 {
   list_collect_decl (out, iter);
   val pos = zero;
+  val last_end = zero;
   val slen = length(str);
+  int prev_empty = 1;
 
   keep_sep = default_bool_arg(keep_sep);
 
-  for (;;) {
+  if (opt_compat && opt_compat <= 155) for (;;) {
     cons_bind (new_pos, len, search_regex(str, tok_regex, pos, nil));
 
     if (len == zero && new_pos != slen)
@@ -4015,6 +4017,29 @@ val tok_str(val str, val tok_regex, val keep_sep)
 
     pos = plus(new_pos, len);
     iter = list_collect(iter, sub_str(str, new_pos, pos));
+  } else for (;;) {
+    cons_bind (new_pos, len, search_regex(str, tok_regex, pos, nil));
+
+    if (!len || (new_pos == slen && !prev_empty)) {
+      if (keep_sep)
+        iter = list_collect(iter, sub_str(str, last_end, t));
+      break;
+    }
+
+    if (len != zero || prev_empty) {
+      if (keep_sep)
+        iter = list_collect(iter, sub_str(str, last_end, new_pos));
+      last_end = plus(new_pos, len);
+      iter = list_collect(iter, sub_str(str, new_pos, last_end));
+      prev_empty = (len == zero);
+    } else {
+      prev_empty = 1;
+    }
+
+    pos = plus(new_pos, len);
+
+    if (len == zero)
+      pos = succ(pos);
   }
 
   return out;

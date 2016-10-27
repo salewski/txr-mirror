@@ -19021,7 +19021,7 @@ into the resulting list, such that if the resulting
 list is catenated, a string equivalent to the original
 string will be produced.
 
-Note: To split a string into pieces of length one such that an empty string
+Note: to split a string into pieces of length one such that an empty string
 produces
 .code nil
 rather than
@@ -19031,6 +19031,31 @@ use the
 .meti (tok-str < string #/./)
 .cble
 pattern.
+
+Note: the function call
+.code "(split-str s r t)"
+produces a resulting list identical to
+.codn "(tok-str s r t)" ,
+for all values of
+.code r
+and
+.codn s ,
+provided that
+.code r
+does not match empty strings. If
+.code r
+matches empty strings, then the
+.code tok-str
+call returns extra elements compared to
+.codn split-str ,
+because
+.code tok-str
+allows empty matches to take place and extract empty tokens
+before the first character of the string, and after the
+last character, whereas
+.code split-str
+does not recognize empty separators at these outer limits
+of the string.
 
 .coNP Function @ split-str-set
 .synb
@@ -19089,25 +19114,36 @@ matches an empty string, then an empty token is returned, and
 the search for another token within
 .meta string
 resumes after advancing by one
-character position. So for instance,
+character position. However, if an empty match occurs immediately
+after a non-empty token, that empty match is not turned into
+a token.
+
+So for instance,
 .cblk
 (tok-str "abc" #/a?/)
 .cble
-returns the
+returns
 .cblk
-("a" "" "" "").
+("a" "" "").
 .cble
 After the token
 .str "a"
 is extracted from a non-empty match
-for the regex, the regex is considered to match three more times: before the
-.strn "b" ,
-between
-.str "b"
+for the regex, an empty match for the regex occurs just
+before the character
+.codn b .
+This match is discarded because it is an empty match which
+immediately follows the non-empty match. The character
+.code b
+is skipped. The next match is an empty match between the
+.code b
 and
-.strn "c" ,
-and after the
-.strn "c" .
+.code c
+characters. This match causes an empty token to be
+extracted. The character
+.code c
+is skipped, and one more empty match occurs after that
+character and is extracted.
 
 If the
 .meta keep-between
@@ -47785,6 +47821,17 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 155
+After version 155, the
+.code tok-str
+and
+.code tok-where
+functions changed semantics. Previously, these functions exhibited the
+flaw that under some conditions they extracted an empty token immediately
+following a non-empty token. This behavior was working as designed and
+documented, but the design was flawed, creating a major difficulty in simple
+tokenizing tasks when tokens may be empty strings.  Requesting compatibility
+with version 155 or earlier restores the behavior.
 .IP 154
 After version 154, changes were introduced in the semantics of struct
 literals. Previously, the syntax
