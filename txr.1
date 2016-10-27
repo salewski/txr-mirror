@@ -7479,7 +7479,7 @@ Example:
  @(end)
  @(define fun)
  @  (output)
- toplevel fun!
+ top-level fun!
  @  (end)
  @(end)
  @(define callee)
@@ -7496,7 +7496,7 @@ Example:
 .IP output:
 .cblk
 \ local fun!
- toplevel fun!
+ top-level fun!
 .cble
 .PP
 
@@ -7504,11 +7504,11 @@ Here, the function
 .code which
 is defined which calls
 .codn fun .
-A toplevel definition of
+A top-level definition of
 .code fun
 is introduced which
 outputs
-.strn "toplevel fun!" .
+.strn "top-level fun!" .
 The function
 .code callee
 provides its own local
@@ -7529,7 +7529,7 @@ local definition.  When
 .code which
 is called directly from the top level, its
 .code fun
-call goes to the toplevel definition.
+call goes to the top-level definition.
 
 .NP* Indirect Calls
 
@@ -9597,7 +9597,7 @@ is done in the context of the catch.
 
 In the above example,
 .code c
-has a toplevel binding to the string
+has a top-level binding to the string
 .strn "c" ,
 but then becomes unbound
 via
@@ -37957,7 +37957,7 @@ function ("interactive read") is similar to
 .code read
 except that it parses a modified version of the syntax. The modified
 syntax does not support the application of the dot and dotdot operators
-on a toplevel expression. For instance, if the input is
+on a top-level expression. For instance, if the input is
 .code a.b
 or
 .code "a .. b"
