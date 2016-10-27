@@ -4052,17 +4052,20 @@ val tok_where(val str, val tok_regex)
 
   for (;;) {
     val range = range_regex(str, tok_regex, pos, nil);
-    range_bind (match_start, match_end, range);
 
-    if (!match_start)
-      break;
+    if (range) {
+      range_bind (match_start, match_end, range);
 
-    iter = list_collect(iter, range);
+      iter = list_collect(iter, range);
 
-    pos = match_end;
+      pos = match_end;
 
-    if (numeq(match_end, match_start))
-      pos = plus(pos, one);
+      if (numeq(match_end, match_start))
+        pos = plus(pos, one);
+      continue;
+    }
+
+    break;
   }
 
   return out;
