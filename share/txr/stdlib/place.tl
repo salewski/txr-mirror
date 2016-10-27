@@ -657,21 +657,20 @@
 (defplace (dwim obj-place index : (default nil have-default-p) :env env) body
   (getter setter
     (with-gensyms (ogetter-sym osetter-sym obj-sym
-                   oldval-sym newval-sym
-                   index-sym index-sym
-                   oldval-sym dflval-sym)
+                   index-sym dflval-sym newval-sym)
       (let ((sys:*lisp1* t))
         (with-update-expander (ogetter-sym osetter-sym) obj-place nil
-          ^(let ((,index-sym (sys:l1-val ,index))
-                 ,*(if have-default-p
-                     ^((,dflval-sym (sys:l1-val ,default)))))
+          ^(rlet ((,obj-sym (,ogetter-sym))
+                  (,index-sym (sys:l1-val ,index))
+                  ,*(if have-default-p
+                      ^((,dflval-sym (sys:l1-val ,default)))))
              (macrolet ((,getter ()
-                         '[(,ogetter-sym) ,index-sym
-                                          ,*(if have-default-p ^(,dflval-sym))])
+                         '[,obj-sym ,index-sym
+                                    ,*(if have-default-p ^(,dflval-sym))])
                         (,setter (val)
                            ^(rlet ((,',newval-sym ,val))
                               (,',osetter-sym
-                                (sys:dwim-set (,',ogetter-sym)
+                                (sys:dwim-set ,',obj-sym
                                               ,',index-sym ,',newval-sym))
                               ,',newval-sym)))
                ,body))))))
@@ -681,10 +680,11 @@
       (let ((sys:*lisp1* t))
         (with-update-expander (ogetter-sym osetter-sym) obj-place nil
           ^(macrolet ((,ssetter (val)
-                       ^(rlet ((,',index-sym (sys:l1-val ,',index))
+                       ^(rlet ((,',obj-sym (,',ogetter-sym))
+                               (,',index-sym (sys:l1-val ,',index))
                                (,',newval-sym ,val))
                           (,',osetter-sym
-                            (sys:dwim-set (,',ogetter-sym)
+                            (sys:dwim-set ,',obj-sym
                                           ,*(if ,have-default-p
                                               ^((prog1
                                                   ,',index-sym
@@ -696,17 +696,16 @@
 
   (deleter
     (with-gensyms (osetter-sym ogetter-sym
-                   obj-sym index-sym oldval-sym
-                   dflval-sym)
+                   obj-sym index-sym oldval-sym)
       (let ((sys:*lisp1* t))
         (with-update-expander (ogetter-sym osetter-sym) obj-place nil
           ^(macrolet ((,deleter ()  ;; todo: place must not have optional val
-                       ^(let ((,',obj-sym (,',ogetter-sym)))
-                          (let* ((,',index-sym (sys:l1-val ,',index))
-                                 (,',oldval-sym [,',obj-sym
-                                                 ,',index-sym
-                                                 ,*(if ,have-default-p
-                                                     ^(,',default))]))
+                       ^(rlet ((,',obj-sym (,',ogetter-sym))
+                               (,',index-sym (sys:l1-val ,',index)))
+                          (let ((,',oldval-sym [,',obj-sym
+                                                ,',index-sym
+                                                ,*(if ,have-default-p
+                                                    ^(,',default))]))
                             (progn
                               (,',osetter-sym
                                 (sys:dwim-del ,',obj-sym ,',index-sym))
