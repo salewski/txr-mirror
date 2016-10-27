@@ -117,28 +117,30 @@
       (t (sys:eval-err "form ~s is not syntax denoting a deletable place" place)))))
 
 (macro-time
-  (defun sys:r-s-let-expander (bindings body e pred)
+  (defun sys:r-s-let-expander (bindings body e letsym pred)
     (let ((exp-bindings (mapcar (aret ^(,@1 ,(macroexpand @2 e))) bindings)))
       (let ((renames [keep-if pred exp-bindings second])
             (regular [remove-if pred exp-bindings second]))
       (cond ((and renames regular)
               ^(symacrolet ,renames
-                 (let ,regular ,*body)))
+                 (,letsym ,regular ,*body)))
             (renames ^(symacrolet ,renames ,*body))
-            (regular ^(let ,regular ,*body))
+            (regular ^(,letsym ,regular ,*body))
             (t ^(progn ,*body)))))))
 
 (defmacro rlet (bindings :env e . body)
-  [sys:r-s-let-expander bindings body e constantp])
+  [sys:r-s-let-expander bindings body e 'let constantp])
 
 (defmacro slet (bindings :env e . body)
-  (sys:r-s-let-expander bindings body e [orf constantp bindable]))
+  (sys:r-s-let-expander bindings body e 'let [orf constantp bindable]))
 
 (defmacro alet (bindings :env e . body)
   (let ((exp-bindings (mapcar (aret ^(,@1 ,(macroexpand @2 e))) bindings)))
-    ^(,(if [all exp-bindings [orf constantp bindable] second]
-         'symacrolet 'let)
-       ,exp-bindings ,*body)))
+    (if [some exp-bindings constantp second]
+      [sys:r-s-let-expander exp-bindings body e 'alet constantp]
+      ^(,(if [all exp-bindings bindable second]
+           'symacrolet 'let)
+         ,exp-bindings ,*body))))
 
 (defmacro with-gensyms (syms . body)
   ^(let ,(zip syms (repeat '((gensym)))) ,*body))
