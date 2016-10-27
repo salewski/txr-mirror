@@ -592,8 +592,8 @@
            (macrolet ((,getter () ^(sub ,',seq-sym ,',from-sym ,',to-sym))
                       (,setter (val)
                         ^(alet ((,',v-sym ,val))
-                           (,seq-setter (replace ,',seq-sym ,',v-sym
-                                                 ,',from-sym ,',to-sym))
+                           (,',seq-setter (replace ,',seq-sym ,',v-sym
+                                                   ,',from-sym ,',to-sym))
                            ,',v-sym)))
               ,body)))))
   (ssetter
