@@ -4060,7 +4060,7 @@ val tok_where(val str, val tok_regex)
 
       pos = match_end;
 
-      if (numeq(match_end, match_start))
+      if (match_end == match_start)
         pos = plus(pos, one);
       continue;
     }
