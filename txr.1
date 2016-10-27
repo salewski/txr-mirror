@@ -11374,6 +11374,8 @@ defined by \*(TX programs.
 .mets (third << object )
 .mets ...
 .mets (tenth << object )
+.mets (last << object <> [ num ])
+.mets (butlast << object <> [ num ])
 .mets (cdr << object )
 .mets (caar << object )
 .mets (cadr << object )
@@ -11382,10 +11384,14 @@ defined by \*(TX programs.
 .mets ...
 .mets (cdddddr << object )
 .mets (nthcdr < index << list )
-.mets (rest << object )
+.mets (nthlast < index << list )
+.mets (butlastn < num << list )
+.mets (ref < seq << idx )
+.mets (sub < sequence >> [ from <> [ to ]])
 .mets (vecref < vec << idx )
 .mets (chr-str < str << idx )
 .mets (gethash < hash < key <> [ alt ])
+.mets (hash-userdata << hash )
 .mets (dwim < obj-place < index <> [ alt ])
 .mets >> [ obj-place < index <> [ alt ]] ;; equivalent to dwim
 .mets (symbol-value << symbol-valued-form )
@@ -11394,6 +11400,10 @@ defined by \*(TX programs.
 .mets (fun << function-name )
 .mets (force << promise )
 .mets (errno)
+.mets (slot < struct-obj << slot-name-valued-form )
+.mets (qref < struct-obj << slot-name ) ;; by macro-expansion to (slot ...)
+.mets < struct-obj . < slot-name ;; equivalent to qref
+.mets (sock-peer << socket )
 .cble
 
 .NP* Built-In Place-Mutating Operators
