@@ -4049,14 +4049,36 @@ val tok_where(val str, val tok_regex)
 {
   list_collect_decl (out, iter);
   val pos = zero;
+  int prev_empty = 1;
 
-  for (;;) {
+  if (opt_compat && opt_compat <= 155) for (;;) {
     val range = range_regex(str, tok_regex, pos, nil);
 
     if (range) {
       range_bind (match_start, match_end, range);
 
       iter = list_collect(iter, range);
+
+      pos = match_end;
+
+      if (match_end == match_start)
+        pos = plus(pos, one);
+      continue;
+    }
+
+    break;
+  } else for (;;) {
+    val range = range_regex(str, tok_regex, pos, nil);
+
+    if (range) {
+      range_bind (match_start, match_end, range);
+
+      if (match_end != match_start || prev_empty) {
+        iter = list_collect(iter, range);
+        prev_empty = (match_end == match_start);
+      } else {
+        prev_empty = 1;
+      }
 
       pos = match_end;
 
