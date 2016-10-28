@@ -40579,6 +40579,160 @@ is
   (awk ((fconv - : iz)))
 .cble
 
+.coNP Macros @, -> @, ->> @, <- @ !> and @ <!
+.synb
+.mets (-> < path << form *)
+.mets (->> < path << form *)
+.mets (<- < path << form *)
+.mets (!> < command << form *)
+.mets (<! < command << form *)
+.syne
+.desc
+These awk macros provide convenient redirection of output and input to and from
+files and commands.
+
+When at least one
+.meta form
+argument is present, the functions
+.codn -> ,
+.code ->>
+and
+.code !>
+evaluate each
+.meta form
+in a dynamic environment in which the
+.code *stdout*
+variable is bound to a file output stream, for the first two
+functions, or output command pipe in the case of the last one.
+
+Similarly, when at least
+.meta form
+argument is present, the remaining functions
+.code <-
+and
+.code <!
+evaluate each
+.meta form
+in a dynamic environment in which
+.code *stdin*
+is bound to to a file input stream or input command pipe, respectively.
+
+The
+.meta path
+and
+.meta command
+arguments are treated as forms, and evaluated.
+They should evaluate to strings.
+
+The first evaluation of one of these macros for a given
+.meta path
+or
+.meta command
+being used in a particular direction (input or output) and type (file or
+command) creates a stream.  That stream is then associated with the given
+.meta path
+or
+.meta command
+string, together with the direction and type. Upon a subsequent evaluation
+of one of these macros for the same
+.meta path
+or
+.meta command
+string, direction and type, a new stream is not opened; rather, the
+previously associated stream is used.
+
+The
+.code ->
+macro indicates that the file named
+.meta path
+is to be opened for writing and overwritten, or created if it doesn't exist.
+The
+.code ->>
+macro indicates that the file named by
+.meta path
+is to be opened in append mode, created if necessary.
+The
+.code <-
+macro indicates that the file given by
+.meta path
+is to be opened for reading.
+
+The
+.code !>
+macro indicates that
+.meta command
+is to be opened as an output command pipe. The
+.code <!
+macro indicates that
+.meta command
+is to be opened as an input command pipe.
+
+If any of these macros is invoked without any
+.meta form
+arguments, then it yields the stream object associated with
+.meta path
+or
+.meta command
+argument, direction and type. If the association doesn't exist,
+the stream is first created.
+
+If
+.meta form
+arguments are present, then the value of the last one is yielded
+as a value, except in the case when the last form yields the
+.code :close
+keyword symbol.
+
+If the last
+.meta form
+yields the
+.code :close
+keyword symbol, the the association between the
+.meta path
+or
+.metn command ,
+direction and type and the stream is removed, and the stream
+is closed. In this case, the result value of the macro isn't the
+.code :close
+symbol, but rather the return value of the
+.meta close-stream
+call that is implicitly applied to the stream.
+
+Even if there is only one
+.meta form
+which yields
+.codn :close ,
+the stream is created, if it doesn't exist prior to the macro
+invocation.
+
+In each invocation of these macros, after every
+.meta form
+is evaluated, the stream is implicitly flushed, if it is an output stream.
+
+The association between the
+.meta pipe
+or
+.meta command
+strings, direction and type is scoped to the inner-most enclosing
+.code awk
+macro. An inner
+.code awk
+macro cannot refer to the associations established in an outer
+.code awk
+macro. An outer
+.code awk
+macro can, of course, obtain an association's stream object and communicate
+that stream to the nested macro where it can be used.
+
+When the
+.meta awk
+surrounding macro terminates, all of the streams opened by these
+redirection macros are closed, without breaking those associations.
+If lexical closures are captured inside the macro, and then invoked after the
+macro has terminated, and inside those closures the redirection macros are
+used, those macro instances will with closed stream objects, and so
+attempts to perform I/O will fail.
+
 .coNP Examples of @ awk Macro Usage
 The following examples are
 .code awk

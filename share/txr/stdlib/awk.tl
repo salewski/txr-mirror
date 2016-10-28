@@ -39,6 +39,10 @@
   rec orig-rec fields nf
   rng-vec (rng-n 0)
   par-mode par-mode-fs par-mode-prev-fs
+  (streams (hash :equal-based))
+  (:fini (self)
+    (dohash (k v self.streams)
+      (close-stream v)))
   (:postinit (self)
     (if (plusp self.rng-n)
       (set self.rng-vec (vector self.rng-n)))
@@ -151,10 +155,35 @@
     (t (put-string self.rec)
        (put-string self.ors))))
 
+(defmeth sys:awk-state ensure-stream (self kind path mode)
+  (hash-update-1 self.streams
+                 ^(,kind ,path)
+                 (do or @1 (caseq kind
+                             (:inf (open-file path "r"))
+                             (:outf (open-file path "w"))
+                             (:inp (open-command path "r"))
+                             (:outp (open-command path "w"))))
+                 nil))
+
+(defmeth sys:awk-state close-or-flush (self stream kind path val)
+  (cond
+    ((eq val :close) (whenlet ((s (del [self.streams ^(,kind ,path)])))
+                       (close-stream s)))
+    ((memq kind '(:outf outp)) (flush-stream stream) val)
+    (val)))
+
 (defun sys:awk-test (val rec)
   (caseq (typeof val)
     ((regex fun) (call val rec))
     (t val)))
+
+(defmacro sys:awk-redir (aws-sym stream-var kind mode path body)
+  (with-gensyms (res-sym)
+    ^(let ((,stream-var (qref ,aws-sym (ensure-stream ,kind ,path, mode))))
+       ,(if body
+          ^(qref ,aws-sym (close-or-flush ,stream-var ,kind ,path
+                                          (progn ,*body)))
+          stream-var))))
 
 (defun sys:awk-expander (clauses)
   (let ((awc (new sys:awk-compile-time)))
@@ -253,7 +282,17 @@
                   ^(symacrolet ((f (rslot ,',aws-sym 'fields 'f-to-rec)))
                      (set f (mapcar (opip ,*opip-args) f))))
                 (fconv (. conv-args)
-                  ^(set f (sys:conv (,*conv-args) f))))
+                  ^(set f (sys:conv (,*conv-args) f)))
+                (-> (path . body)
+                  ^(sys:awk-redir ,',aws-sym *stdout* :outf "w" ,path ,body))
+                (->> (path . body)
+                  ^(sys:awk-redir ,',aws-sym *stdout* :apf "a" ,path ,body))
+                (<- (path . body)
+                  ^(sys:awk-redir ,',aws-sym *stdin* :inf "r" ,path ,body))
+                (!> (path . body)
+                  ^(sys:awk-redir ,',aws-sym *stdout* :outp "w" ,path ,body))
+                (<! (path . body)
+                  ^(sys:awk-redir ,',aws-sym *stdin* :inp "w" ,path ,body)))
        ,*body)))
 
 (defmacro awk (:env e . clauses)
@@ -298,5 +337,6 @@
                                              awk-begf-fun)
                                           ,(if awc.end-file-actions
                                              awk-endf-fun))))
-                     (set ,awk-retval (progn ,*awc.end-actions)))
+                     (set ,awk-retval (progn ,*awc.end-actions))
+                     (call-finalizers ,aws-sym))
                    ,awk-retval))))))))
