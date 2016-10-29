@@ -371,6 +371,21 @@ static val build_instantiate(val set_fun)
   return nil;
 }
 
+static val trace_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("*trace-output*"), lit("trace"), lit("untrace"), nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val trace_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~atrace.tl"), stdlib_path, nao));
+  return nil;
+}
 
 val dlt_register(val dlt,
                  val (*instantiate)(val),
@@ -403,6 +418,7 @@ void lisplib_init(void)
 #endif
   dlt_register(dl_table, awk_instantiate, awk_set_entries);
   dlt_register(dl_table, build_instantiate, build_set_entries);
+  dlt_register(dl_table, trace_instantiate, trace_set_entries);
 }
 
 val lisplib_try_load(val sym)

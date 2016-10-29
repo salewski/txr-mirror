@@ -46479,6 +46479,68 @@ This variable holds the absolute path name of the directory which
 holds the executable file of the current process. This path includes
 the trailing slash.
 
+.SS* Function Tracing
+
+.coNP Special variable *trace-output*
+.desc
+The
+.code *trace-output*
+special variable holds a stream to which all trace output
+is sent. Trace output consists of diagnostics enabled by the
+.code trace
+macro.
+
+.coNP Macros @ trace and @ untrace
+.synb
+.mets (trace << function-name *)
+.mets (untrace << function-name *)
+.syne
+.desc
+The
+.code trace
+and
+.code untrace
+macros control function tracing.
+
+When
+.code trace
+is called with one or more arguments, it considers each
+argument to be the name of a global function. For each
+function, it turns on tracing, if it is not already turned on.
+
+When
+.code trace
+is called with no arguments, it lists the names of functions
+for which tracing is currently enabled.
+
+When
+.code untrace
+is called with one or more arguments, it considers each
+argument to be the name of a global function. For each
+function, it turns off tracing, if tracing is enabled.
+
+When
+.code untrace
+is called with no arguments, it disables tracing for all
+functions.
+
+Tracing a function consists of printing a message prior to entry into the
+function indicating its name and arguments, and another message upon leaving
+the function indicating its return value, which is syntactically correlated
+with the entry message, using a combination of matching and indentation.
+These messages are posted to the
+.code *trace-output*
+stream.
+
+When traced functions call each other or recurse, these trace messages
+nest. The nesting is detected and translated into indentation levels.
+
+Tracing works by replacing a function definition with a trace hook function, and
+retaining the previous definition. The trace hook calls the previous definition
+and produces the diagnostics around it. When
+.code untrace
+is used to disable tracing, the previous definition is restored.
+
 .SH* INTERACTIVE LISTENER
 
 .SS* Overview
