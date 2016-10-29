@@ -754,16 +754,26 @@
                     ^(fmakunbound ',',sym)))
        ,body)))
 
-(defun sys:get-fb (sym)
-  (or (gethash sys:top-fb sym)
-      (sys:eval-err "unbound function ~s" sym)))
+(defun sys:get-fun-getter-setter (sym)
+  (tree-case sym
+    ((type struct slot)
+      (if (eq type 'meth)
+        (cons (op static-slot struct slot)
+              (op static-slot-set struct slot @1))
+        :))
+    (else
+      (let ((cell (gethash sys:top-fb sym)))
+        (unless cell
+          (sys:eval-err "unbound function ~s" sym))
+        (cons (op cdr)
+              (op sys:rplacd cell @1))))))
 
 (defplace (symbol-function sym-expr) body
   (getter setter
-    (with-gensyms (binding-sym)
-      ^(let ((,binding-sym (sys:get-fb ,sym-expr)))
-          (macrolet ((,getter () ^(cdr ,',binding-sym))
-                     (,setter (val) ^(sys:rplacd ,',binding-sym ,val)))
+    (with-gensyms (gs-sym)
+      ^(let ((,gs-sym (sys:get-fun-getter-setter ,sym-expr)))
+          (macrolet ((,getter () ^(call (car ,',gs-sym)))
+                     (,setter (val) ^(call (cdr ,',gs-sym) ,val)))
             ,body))))
   :
   (deleter

@@ -401,6 +401,14 @@ val lookup_fun(val env, val sym)
   uses_or2;
 
   if (nilp(env)) {
+    if (consp(sym) && car(sym) == meth_s) {
+      val strct = cadr(sym);
+      val slot = caddr(sym);
+      val type = or2(find_struct_type(strct),
+                     if2(lisplib_try_load(strct),
+                         find_struct_type(strct)));
+      return if2(type, cons(sym, static_slot(type, slot)));
+    }
     return or2(gethash(top_fb, sym),
                if2(lisplib_try_load(sym), gethash(top_fb, sym)));
   } else  {

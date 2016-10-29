@@ -11395,7 +11395,7 @@ defined by \*(TX programs.
 .mets (dwim < obj-place < index <> [ alt ])
 .mets >> [ obj-place < index <> [ alt ]] ;; equivalent to dwim
 .mets (symbol-value << symbol-valued-form )
-.mets (symbol-function << symbol-valued-form )
+.mets (symbol-function << function-name-valued-form )
 .mets (symbol-macro << symbol-valued-form )
 .mets (fun << function-name )
 .mets (force << promise )
@@ -14386,7 +14386,7 @@ then the binding takes place in the global environment.
 .SS* Global Environment
 .coNP Accessors @, symbol-function @ symbol-macro and @ symbol-value
 .synb
-.mets (symbol-function << symbol )
+.mets (symbol-function >> { symbol | << method-name } )
 .mets (symbol-macro << symbol )
 .mets (symbol-value << symbol )
 .mets (set (symbol-function << symbol ) << new-value )
@@ -14395,7 +14395,9 @@ then the binding takes place in the global environment.
 .syne
 .desc
 
-The
+If given a
+.meta symbol
+argument, the
 .code symbol-function
 function retrieves the value of the global function binding of the
 given
@@ -14406,7 +14408,20 @@ If
 .meta symbol
 has no global function binding, then
 .code nil
-is returned.
+is returned. The
+.code symbol-function
+function also supports method names of the form
+.cblk
+.meti (meth < struct << slot )
+.cble
+where
+.meta struct
+names a struct type, and
+.meta slot
+a static slot. Names in this format are returned by the
+.meta func-get-name
+function.
+
 
 The
 .code symbol-macro
@@ -14487,6 +14502,10 @@ macro, nothing happens, and instead of the prior value
 of the place, which doesn't exist, the macro yields
 the value
 .codn nil .
+
+Deleting a method via
+.code symbol-function
+is not possible; an attempt to do so has no effect.
 
 .TP* "Dialect note:"
 
@@ -46540,6 +46559,14 @@ retaining the previous definition. The trace hook calls the previous definition
 and produces the diagnostics around it. When
 .code untrace
 is used to disable tracing, the previous definition is restored.
+
+Methods can be traced; their names are given using
+.cblk
+.meti (meth < struct << slot )
+.cble
+syntax: see the
+.code func-get-name
+function.
 
 .SH* INTERACTIVE LISTENER
 
