@@ -102,7 +102,7 @@ val error_s, type_error_s, internal_error_s, panic_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s, syntax_error_s;
 val timeout_error_s, system_error_s;
-val gensym_counter_s, nullify_s, from_list_s;
+val gensym_counter_s, nullify_s, from_list_s, lambda_set_s;
 
 val nothrow_k, args_k, colon_k, auto_k, fun_k;
 val wrap_k, reflect_k;
@@ -8435,28 +8435,59 @@ val replace(val seq, val items, val from, val to)
   }
 }
 
-val dwim_set(val seq, val ind_range, val newval)
+val dwim_set(val seq, varg vargs)
 {
-  switch (type(ind_range)) {
-  case NIL:
-  case CONS:
-  case LCONS:
-  case VEC:
-    if (hashp(seq)) {
-      (void) sethash(seq, ind_range, newval);
-      return seq;
-    }
-    return replace(seq, newval, ind_range, colon_k);
-  case RNG:
-    if (!hashp(seq))
-    {
-      range_bind (x, y, ind_range);
-      return replace(seq, newval, x, y);
+  switch (type(seq)) {
+  case COBJ:
+    if (type(seq) == COBJ) {
+      if (seq->co.cls == hash_s) {
+        cnum nva = args_count(vargs);
+
+        if (nva < 2)
+          uw_throwf(error_s, lit("sethash: missing required arguments"), nao);
+
+        if (nva > 3)
+            uw_throwf(error_s, lit("sethash: too many arguments"), nao);
+
+        if (nva == 2) {
+          args_normalize(vargs, 2);
+          (void) sethash(seq, vargs->arg[0], vargs->arg[1]);
+        } else {
+          args_normalize(vargs, 3);
+          (void) sethash(seq, vargs->arg[0], vargs->arg[2]);
+        }
+
+        return seq;
+      }
+      if (structp(seq))
+        return funcall(method_args(seq, lambda_set_s, vargs));
     }
     /* fallthrough */
   default:
-    (void) refset(seq, ind_range, newval);
-    return seq;
+    {
+      cnum index = 0;
+      val ind_range, newval;
+      if (!args_two_more(vargs, 0))
+        uw_throwf(error_s, lit("dwim place assignment: missing required arguments"), nao);
+      ind_range = args_get(vargs, &index);
+      newval = args_get(vargs, &index);
+
+      switch (type(ind_range)) {
+      case NIL:
+      case CONS:
+      case LCONS:
+      case VEC:
+        return replace(seq, newval, ind_range, colon_k);
+      case RNG:
+        {
+          range_bind (x, y, ind_range);
+          return replace(seq, newval, x, y);
+        }
+      default:
+        (void) refset(seq, ind_range, newval);
+        return seq;
+      }
+    }
   }
 }
 
@@ -8994,6 +9025,7 @@ static void obj_init(void)
   name_s = intern(lit("name"), user_package);
   nullify_s = intern(lit("nullify"), user_package);
   from_list_s = intern(lit("from-list"), user_package);
+  lambda_set_s = intern(lit("lambda-set"), user_package);
 
   args_k = intern(lit("args"), keyword_package);
   nothrow_k = intern(lit("nothrow"), keyword_package);

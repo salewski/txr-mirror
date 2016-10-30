@@ -181,6 +181,11 @@ INLINE void args_clear(struct args *args)
   args->fill = 0;
 }
 
+INLINE cnum args_count(struct args *args)
+{
+  return args->fill + c_num(length_list(args->list));
+}
+
 val args_get_checked(val name, struct args *args, cnum *arg_index);
 struct args *args_copy(struct args *to, struct args *from);
 struct args *args_copy_zap(struct args *to, struct args *from);

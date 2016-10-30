@@ -962,7 +962,7 @@ val empty(val seq);
 val sub(val seq, val from, val to);
 val ref(val seq, val ind);
 val refset(val seq, val ind, val newval);
-val dwim_set(val seq, val ind_range, val newval);
+val dwim_set(val seq, varg);
 val dwim_del(val seq, val ind_range);
 val butlast(val seq, val idx);
 val replace(val seq, val items, val from, val to);

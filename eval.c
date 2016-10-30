@@ -5347,7 +5347,7 @@ void eval_init(void)
   reg_fun(intern(lit("ref"), user_package), func_n2(ref));
   reg_fun(intern(lit("refset"), user_package), func_n3(refset));
   reg_fun(intern(lit("replace"), user_package), func_n4o(replace, 2));
-  reg_fun(intern(lit("dwim-set"), system_package), func_n3(dwim_set));
+  reg_fun(intern(lit("dwim-set"), system_package), func_n1v(dwim_set));
   reg_fun(intern(lit("dwim-del"), system_package), func_n2(dwim_del));
   reg_fun(intern(lit("update"), user_package), func_n2(update));
   reg_fun(intern(lit("search"), user_package), func_n4o(search, 2));

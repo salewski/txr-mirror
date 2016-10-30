@@ -12755,6 +12755,21 @@ Note that
 .meta string
 is always required, and is always the rightmost argument.
 
+.meIP >> [ struct << arg *]
+The structure instance
+.meta struct
+is inquired whether it supports a method named by the symbol
+.metn lambda .
+If so, that method is invoked on the object. The method
+receives
+.meta struct
+followed by the value of every
+.metn arg .
+If this form is used as a place, then the object must
+support a
+.code lambda-set
+method.
+
 .RE
 .PP
 
@@ -22467,6 +22482,118 @@ is evaluated only once:
   [s args ...]  <-->  [s.lambda s args ...]
 
   (mapcar s list)  <-->  (mapcar (meth s lambda) list)
+.cble
+
+Note: a form such as
+.code "[s args ...]"
+where
+.code s
+is a structure can be treated as a place if the method
+.code lambda-set
+is also implemented.
+
+.coNP Method @ lambda-set
+.synb
+.mets << object .(lambda-set << arg * << new-value)
+.syne
+.desc
+The
+.code lambda-set
+method, in conjunction with a
+.code lambda
+method, allows structures to be used as place accessors. If
+structure
+.code s
+supports a
+.meta lambda-set
+with four arguments, then the following use of the
+.code dwim
+operator is possible:
+
+.cblk
+  (set [s a b c d] v)
+  (set (dwim s a b c d) v) ;; precisely equivalently
+.cble
+
+This has an effect which can be described by the following code:
+
+.cblk
+  (progn
+    (set s s.(lambda-set a b c d v))
+    v)
+.cble
+
+except that
+.code s
+and
+.code v
+are evaluated only once, and
+.code a
+through
+.code d
+are evaluated using the Lisp-1 semantics due the
+.code dwim
+operator.
+
+If a place-mutating operator is used on this form which requires the prior
+value, such as the
+.code inc
+macro, then the structure must support the
+.code lambda
+function also.
+
+If
+.code lambda
+takes
+.I n
+arguments, then
+.code lambda-set
+should take
+.I n+1
+arguments. The first
+.I n
+arguments of these two methods are congruent; the extra rightmost argument
+of
+.code lambda-set
+is the new value to be stored into the place denoted by the prior
+arguments.
+
+The return value of
+.code lambda-set
+is significant. Unless there is a very good reason for the method to
+do otherwise, it should return the structure itself. This is because
+the place-mutating operators store this returned value back to the place
+which holds the structure itself.
+
+.TP* Example
+
+The following defines a structure with a single instance
+slot
+.code hash
+which holds a hash table, as well as
+.code lambda
+and
+.code lambda-set
+methods:
+
+.cblk
+  (defstruct hash-wrapper nil
+    (hash (hash))
+
+    (:method lambda (self key)
+      [self.hash key])
+
+    (:method lambda-set (self key new-val)
+      (set [self.hash key] new-val) self))
+.cble
+
+An instance of this structure can now be used as follows:
+
+.cblk
+   (let ((s (new hash-wrapper)))
+     (set [s "apple"] 3
+          [s "orange] 4)
+     [s "apple"]) -> 3
 .cble
 
 .coNP Methods @, car @, cdr and @ nullify
