@@ -659,32 +659,54 @@
     (with-gensyms (ogetter-sym osetter-sym obj-sym newval-sym)
       (let ((arg-syms (mapcar (ret (gensym)) args))
             (sys:*lisp1* t))
-        (with-update-expander (ogetter-sym osetter-sym) obj-place nil
-          ^(rlet ((,obj-sym (,ogetter-sym))
+        (if (place-form-p obj-place sys:*pl-env*)
+          (with-update-expander (ogetter-sym osetter-sym) obj-place nil
+            ^(rlet ((,obj-sym (,ogetter-sym))
+                    ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2))) arg-syms args))
+               (macrolet ((,getter ()
+                            '[,obj-sym ,*arg-syms])
+                          (,setter (val)
+                            ^(rlet ((,',newval-sym ,val))
+                               (,',osetter-sym
+                                 (sys:dwim-set t ,',obj-sym
+                                               ,*',arg-syms ,',newval-sym))
+                               ,',newval-sym)))
+                 ,body)))
+          ^(rlet ((,obj-sym ,obj-place)
                   ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2))) arg-syms args))
              (macrolet ((,getter ()
                           '[,obj-sym ,*arg-syms])
                         (,setter (val)
                           ^(rlet ((,',newval-sym ,val))
-                             (,',osetter-sym
-                               (sys:dwim-set ,',obj-sym
-                                             ,*',arg-syms ,',newval-sym))
+                             (sys:dwim-set nil ,',obj-sym
+                                           ,*',arg-syms ,',newval-sym)
                              ,',newval-sym)))
                ,body))))))
   (ssetter
     (with-gensyms (osetter-sym ogetter-sym obj-sym newval-sym)
       (let ((arg-syms (mapcar (ret (gensym)) args))
             (sys:*lisp1* t))
-        (with-update-expander (ogetter-sym osetter-sym) obj-place nil
+        (if (place-form-p obj-place sys:*pl-env*)
+          (with-update-expander (ogetter-sym osetter-sym) obj-place nil
+            ^(macrolet ((,ssetter (val)
+                         ^(rlet ((,',obj-sym (,',ogetter-sym))
+                                 ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2)))
+                                           ',arg-syms ',args)
+                                 (,',newval-sym ,val))
+                            (,',osetter-sym
+                              (sys:dwim-set t ,',obj-sym
+                                            ,*',arg-syms
+                                            ,',newval-sym))
+                            ,',newval-sym)))
+                 ,body))
           ^(macrolet ((,ssetter (val)
-                       ^(rlet ((,',obj-sym (,',ogetter-sym))
+                       ^(rlet ((,',obj-sym ,',obj-place)
                                ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2)))
                                          ',arg-syms ',args)
                                (,',newval-sym ,val))
-                          (,',osetter-sym
-                            (sys:dwim-set ,',obj-sym
-                                          ,*',arg-syms
-                                          ,',newval-sym))
+                          (sys:dwim-set nil ,',obj-sym
+                                        ,*',arg-syms
+                                        ,',newval-sym)
                           ,',newval-sym)))
                ,body)))))
 
@@ -692,17 +714,27 @@
     (with-gensyms (osetter-sym ogetter-sym obj-sym oldval-sym)
       (let ((arg-syms (mapcar (ret (gensym)) args))
             (sys:*lisp1* t))
-        (with-update-expander (ogetter-sym osetter-sym) obj-place nil
-          ^(macrolet ((,deleter ()  ;; todo: place must not have optional val
-                       ^(rlet ((,',obj-sym (,',ogetter-sym))
-                               ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2)))
-                                         ',arg-syms ',args))
-                          (let ((,',oldval-sym [,',obj-sym ,*',arg-syms]))
-                            (progn
-                              (,',osetter-sym
-                                (sys:dwim-del ,',obj-sym ,*',arg-syms))
-                              ,',oldval-sym)))))
-               ,body))))))
+        (if (place-form-p obj-place sys:*pl-env*)
+          (with-update-expander (ogetter-sym osetter-sym) obj-place nil
+            ^(macrolet ((,deleter ()
+                         ^(rlet ((,',obj-sym (,',ogetter-sym))
+                                 ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2)))
+                                           ',arg-syms ',args))
+                            (let ((,',oldval-sym [,',obj-sym ,*',arg-syms]))
+                              (progn
+                                (,',osetter-sym
+                                  (sys:dwim-del t ,',obj-sym ,*',arg-syms))
+                                ,',oldval-sym)))))
+                 ,body))
+            ^(macrolet ((,deleter ()
+                         ^(rlet ((,',obj-sym ,',obj-place)
+                                 ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2)))
+                                           ',arg-syms ',args))
+                            (let ((,',oldval-sym [,',obj-sym ,*',arg-syms]))
+                              (progn
+                                (sys:dwim-del nil ,',obj-sym ,*',arg-syms)
+                                ,',oldval-sym)))))
+                 ,body))))))
 
 (defplace (force promise) body
   (getter setter

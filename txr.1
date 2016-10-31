@@ -12634,14 +12634,18 @@ at the specified
 .metn index ,
 which is a nonnegative integer.
 
-This form is also a place if the
-.meta sequence
-subform is a place. If a value is stored to this place, it replaces the
+This form is also a syntactic place.
+If a value is stored to this place, it replaces the
 element.
 
 The place may also be deleted, which has the effect of removing the element
 from the sequence, shifting the elements at higher indices, if any, down one
 element position, and shortening the sequence by one.
+If the place is deleted, and if
+.meta sequence
+is a list, then the
+.meta sequence
+form itself must be a place.
 
 .meIP >> [ sequence << from-index..to-below-index ]
 Retrieve the specified range of elements.
@@ -12655,14 +12659,17 @@ fields of a range object. The
 .code rcons
 function.  See the section on Range Indexing below.
 
-This form is also a syntactic place, if the
-.meta sequence
-subform is a place. Storing a value in this place
+This form is also a syntactic place.  Storing a value in this place
 has the effect of replacing the subsequence with
 a new subsequence. Deleting the place has the
 effect of removing the specified subsequence
 from
 .metn sequence .
+If
+.meta sequence
+is a list, then the
+.meta sequence
+form must itself be a place.
 The
 .meta new-value
 argument in a range assignment can be a string, vector or list,
@@ -22519,7 +22526,7 @@ This has an effect which can be described by the following code:
 
 .cblk
   (progn
-    (set s s.(lambda-set a b c d v))
+    s s.(lambda-set a b c d v)
     v)
 .cble
 
@@ -22560,10 +22567,7 @@ arguments.
 
 The return value of
 .code lambda-set
-is significant. Unless there is a very good reason for the method to
-do otherwise, it should return the structure itself. This is because
-the place-mutating operators store this returned value back to the place
-which holds the structure itself.
+is ignored.
 
 .TP* Example
 

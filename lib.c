@@ -8435,7 +8435,7 @@ val replace(val seq, val items, val from, val to)
   }
 }
 
-val dwim_set(val seq, varg vargs)
+val dwim_set(val place_p, val seq, varg vargs)
 {
   switch (type(seq)) {
   case COBJ:
@@ -8459,8 +8459,10 @@ val dwim_set(val seq, varg vargs)
 
         return seq;
       }
-      if (structp(seq))
-        return funcall(method_args(seq, lambda_set_s, vargs));
+      if (structp(seq)) {
+        (void) funcall(method_args(seq, lambda_set_s, vargs));
+        return seq;
+      }
     }
     /* fallthrough */
   default:
@@ -8468,7 +8470,7 @@ val dwim_set(val seq, varg vargs)
       cnum index = 0;
       val ind_range, newval;
       if (!args_two_more(vargs, 0))
-        uw_throwf(error_s, lit("dwim place assignment: missing required arguments"), nao);
+        uw_throwf(error_s, lit("index/range assignment: missing required arguments"), nao);
       ind_range = args_get(vargs, &index);
       newval = args_get(vargs, &index);
 
@@ -8477,10 +8479,14 @@ val dwim_set(val seq, varg vargs)
       case CONS:
       case LCONS:
       case VEC:
+        if (!place_p && listp(seq))
+          goto notplace;
         return replace(seq, newval, ind_range, colon_k);
       case RNG:
         {
           range_bind (x, y, ind_range);
+          if (!place_p && listp(seq))
+            goto notplace;
           return replace(seq, newval, x, y);
         }
       default:
@@ -8489,14 +8495,33 @@ val dwim_set(val seq, varg vargs)
       }
     }
   }
+notplace:
+  uw_throwf(error_s, lit("range assignment: list form must be place"), nao);
 }
 
-val dwim_del(val seq, val ind_range)
+val dwim_del(val place_p, val seq, val ind_range)
 {
-  if (hashp(seq)) {
-    (void) remhash(seq, ind_range);
-    return seq;
-  } else if (rangep(ind_range)) {
+  switch (type(seq)) {
+  case NIL:
+  case CONS:
+  case LCONS:
+    if (!place_p)
+      uw_throwf(error_s, lit("index/range delete: list form must be place"),
+                nao);
+    break;
+  case COBJ:
+    if (seq->co.cls == hash_s) {
+      (void) remhash(seq, ind_range);
+      return seq;
+    }
+    if (structp(seq))
+      uw_throwf(error_s, lit("index/range delete: not supported for structs"),
+                nao);
+  default:
+    break;
+  }
+
+  if (rangep(ind_range)) {
     return replace(seq, nil, from(ind_range), to(ind_range));
   } else {
     return replace(seq, nil, ind_range, succ(ind_range));
