@@ -248,17 +248,6 @@ cnum cobj_hash_op(val obj, int *count)
   abort();
 }
 
-static val print_key_val(val out, val key, val value)
-{
-  width_check(out, chr(' '));
-
-  if (value)
-    format(out, lit("(~s ~s)"), key, value, nao);
-  else
-    format(out, lit("(~s)"), key, nao);
-  return nil;
-}
-
 static val hash_equal_op(val left, val right)
 {
   uses_or2;
@@ -418,7 +407,24 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
     obj_print_impl(h->userdata, out, pretty, ctx);
   }
   put_string(lit(")"), out);
-  maphash(curry_123_23(func_n3(print_key_val), out), hash);
+  {
+    val iter = hash_begin(hash), cell;
+    while ((cell = hash_next(iter))) {
+      val key = car(cell);
+      val value = cdr(cell);
+      width_check(out, chr(' '));
+
+      put_string(lit("("), out);
+      obj_print_impl(key, out, pretty, ctx);
+
+      if (value) {
+        put_string(lit(" "), out);
+        obj_print_impl(value, out, pretty, ctx);
+      }
+
+      put_string(lit(")"), out);
+    }
+  }
   put_string(lit(")"), out);
 
   set_indent_mode(out, save_mode);
