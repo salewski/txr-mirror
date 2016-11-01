@@ -39,6 +39,7 @@ enum indent_mode {
 
 struct strm_ctx {
   val obj_hash;
+  val obj_hash_prev;
   val counter;
 };
 

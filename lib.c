@@ -9521,12 +9521,23 @@ static void populate_obj_hash(val obj, struct strm_ctx *ctx)
 {
 tail:
   if (circle_print_eligible(obj)) {
-    val new_p;
-    val cell = gethash_c(ctx->obj_hash, obj, mkcloc(new_p));
+    if (ctx->obj_hash_prev) {
+      val prev_cell;
+      val label = gethash_f(ctx->obj_hash_prev, obj, mkcloc(prev_cell));
 
-    if (!new_p) {
-      rplacd(cell, t);
-      return;
+      if (label == colon_k)
+        uw_throwf(error_s, lit("print: unexpected duplicate object "
+                               "(misbehaving print method?)"), nao);
+      if (prev_cell)
+        return;
+    } else {
+      val new_p;
+      val cell = gethash_c(ctx->obj_hash, obj, mkcloc(new_p));
+
+      if (!new_p) {
+        rplacd(cell, t);
+        return;
+      }
     }
   } else {
     return;
@@ -9592,11 +9603,9 @@ static void obj_hash_merge(val parent_hash, val child_hash)
     val pcell = gethash_c(parent_hash, car(cell), mkcloc(new_p));
     if (new_p)
       rplacd(pcell, cdr(cell));
-    else if (cdr(pcell) == colon_k)
+    else
       uw_throwf(error_s, lit("print: unexpected duplicate object "
-                             "(misbehaving print method?)"), nao);
-    else if (!cdr(pcell))
-      rplacd(pcell, t);
+                             "(internal error?)"), nao);
   }
 }
 
@@ -9615,15 +9624,17 @@ val obj_print(val obj, val out, val pretty)
   uw_simple_catch_begin;
 
   if (ctx) {
-    val prev_hash = ctx->obj_hash;
+    ctx->obj_hash_prev = ctx->obj_hash;
     ctx->obj_hash = make_hash(nil, nil, nil);
     populate_obj_hash(obj, ctx);
-    obj_hash_merge(prev_hash, ctx->obj_hash);
-    ctx->obj_hash = prev_hash;
+    obj_hash_merge(ctx->obj_hash_prev, ctx->obj_hash);
+    ctx->obj_hash = ctx->obj_hash_prev;
+    ctx->obj_hash_prev = nil;
   } else {
     if (cdr(lookup_var(nil, print_circle_s))) {
       ctx = &ctx_struct;
       ctx->obj_hash = make_hash(nil, nil, nil);
+      ctx->obj_hash_prev = nil;
       ctx->counter = zero;
       get_set_ctx(out, ctx);
       populate_obj_hash(obj, ctx);
