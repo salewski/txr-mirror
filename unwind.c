@@ -112,6 +112,7 @@ static void uw_unwind_to_exit_point(void)
     if (opt_loglevel >= 1) {
       val prefix = format(nil, lit("~a:"), prog_string, nao);
 
+      flush_stream(std_output);
       format(std_error, lit("~a unhandled exception of type ~a:\n"),
              prefix, sym, nao);
 
