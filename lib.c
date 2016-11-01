@@ -9209,11 +9209,16 @@ static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
   }
 }
 
+INLINE int circle_print_eligible(val obj)
+{
+  return is_ptr(obj) && (!symbolp(obj) || !symbol_package(obj));
+}
+
 val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
 {
   val ret = obj;
 
-  if (ctx && is_ptr(obj)) {
+  if (ctx && circle_print_eligible(obj)) {
     val cell = gethash_c(ctx->obj_hash, obj, nulloc);
     val label = cdr(cell);
 
@@ -9515,7 +9520,7 @@ dot:
 static void populate_obj_hash(val obj, struct strm_ctx *ctx)
 {
 tail:
-  if (is_ptr(obj) && (!symbolp(obj) || !symbol_package(obj))) {
+  if (circle_print_eligible(obj)) {
     val new_p;
     val cell = gethash_c(ctx->obj_hash, obj, mkcloc(new_p));
 
