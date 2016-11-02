@@ -5043,6 +5043,9 @@ void eval_init(void)
   reg_fun(eq_s, eq_f);
   reg_fun(eql_s, eql_f);
   reg_fun(equal_s, equal_f);
+  reg_fun(intern(lit("neq"), user_package), func_n2(neq));
+  reg_fun(intern(lit("neql"), user_package), func_n2(neql));
+  reg_fun(intern(lit("nequal"), user_package), func_n2(nequal));
 
   reg_fun(plus_s = intern(lit("+"), user_package), func_n0v(plusv));
   reg_fun(intern(lit("-"), user_package), func_n1v(minusv));

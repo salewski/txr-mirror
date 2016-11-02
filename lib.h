@@ -1017,7 +1017,9 @@ void breakpt(void);
 #define nil convert(obj_t *, 0)
 
 INLINE val eq(val a, val b) { return a == b ? t : nil; }
-
+INLINE val neq(val a, val b) { return a != b ? t : nil; }
+INLINE val neql(val left, val right) { return eql(left, right) ? nil : t; }
+INLINE val nequal(val left, val right) { return equal(left, right) ? nil : t; }
 INLINE val null(val v) { return v ? nil : t; }
 
 #define nilp(o) ((o) == nil)

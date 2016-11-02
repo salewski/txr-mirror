@@ -15433,6 +15433,54 @@ Certain object types have a custom
 .code equal
 function.
 
+.coNP Functions @, neq @ neql and @ nequal
+.synb
+.mets (neq < left-obj << right-obj )
+.mets (neql < left-obj << right-obj )
+.mets (nequal < left-obj << right-obj )
+.syne
+.desc
+The functions
+.codn neq ,
+.code neql
+and
+.code nequal
+are logically negated counterparts of, respectively,
+.codn eq ,
+.code eql
+and
+.codn equal .
+
+If
+.code eq
+returns
+.code t
+for a given pair of arguments
+.meta left-obj
+and
+.metn right-obj ,
+then
+.code neq
+returns
+.codn nil .
+.IR "Vice versa" ,
+if
+.code eq
+returns
+.codn nil ,
+.code neq
+returns
+.codn t .
+
+The same relationship exits between
+.code eql
+and
+.codn neql ,
+and between
+.code equal
+and
+.codn nequal .
+
 .coNP Function @ less
 .synb
 .mets (less < left-obj << right-obj )
