@@ -41322,6 +41322,392 @@ is restored by the
 .code unwind-protect
 cleanup form.
 
+.SS* Command Line Option Processing
+
+\*(TL provides a support for recognizing, extracting and validating
+the POSIX-style options from a list of command-line arguments.
+
+The supported options can be defined as a list of option descriptor
+objects each of which is constructed by a call to the
+.code opt
+function. Each option can have a long or short name, or both,
+a type, and a description.
+
+The
+.code getopts
+function takes a list of option descriptors, and a list of arguments,
+producing a parse, or else throwing an exception of type
+.code opt-error
+if an error is detected. The returned object, an instance of struct type
+.codn opts ,
+can then be queried for specific option values, or for the remaining non-option
+arguments.
+
+The
+.code opthelp
+function takes a list of option descriptors and an output stream,
+and generates help text on that stream. A program supporting a
+.code --help
+option can use this to generate that portion of its help text which
+describes the available options, as well as the conventions that they use.
+
+.NP* Command Line Option Conventions
+
+A command line option can have a short or long name. A short name is always
+one-character long, and treated specially in the command line syntax.  Long
+options have names two or more characters long.  An option can have both a long
+and short name. Options may not begin with the
+.code -
+(ASCII dash) character. A long option may not contain the
+.code =
+character.
+
+Short options are invoked by specifying an argument with a single leading
+.code -
+followed by the option character.  Multiple short options which take
+no argument can be "clumped": combined into a single argument consisting of
+a single
+.code -
+followed by multiple short option characters.
+
+An option can take an argument, in which case the argument is required.
+An option which takes no argument is Boolean, and a Boolean option
+never takes an argument: "takes argument" and "Boolean" are synonymous.
+
+Long options are invoked as an argument which begins with a
+.code --
+(double dash)
+immediately followed by the name. When a long option takes an argument,
+it is mandatory. It must be specified in the same argument, separated
+from the name by the
+.code =
+character. If that is omitted, then the next command line argument
+is taken as the argument. That argument is removed, and not recognized as
+an option, even if it looks like one.
+
+A Boolean long option can be explicitly specified as false using the
+.code --no-
+prefix rather than the
+.code --
+prefix.
+
+Short options may be invoked using long name syntax; if
+.code a
+is a short option, then it may be referenced on the command line as
+.code --a
+and treated as a long option in all other ways, including the use
+of
+.code --no-
+to explicitly specify false for a Boolean option.
+
+If a short option takes an argument, it may not clump with other
+short option. The following command line argument is taken as the
+options argument. That argument is removed and is not recognized as
+an option even if it looks like one.
+
+If the command line argument
+.code --
+occurs in the command line where an option would otherwise be recognized,
+it signifies the end of the options. The subsequent arguments are the
+non-option arguments, even if they resemble options.
+
+.NP* Command Line Processing Example
+
+The following example illustrates a complete \*(TL program which
+parses command line options:
+
+.cblk
+  (defvarl options
+    (list (opt "v" "verbose" :dec
+               "Verbosity level. Higher values produce more chatter.")
+          (opt nil "help" :bool
+               "List this help text.")
+          (opt "x" nil :hex
+               "The X factor: a number with a mysterious\e \e
+                interpretation, affecting the program\e \e
+                behavior in strange ways.")
+          (opt "z" nil) ;; undocumented option
+          (opt nil "cee" :cint
+               "C style integer.")
+          (opt "g" "gravity" :float
+               "Gravitational constant. This gives\e \e
+                the gravitational field\e \e
+                strength at the Earth's surface.")
+          (opt "l" "lit" :str
+               "A character string given in TXR Lisp notation.")
+          (opt "c" nil 'upcase-str
+               "Custom treatment: ARG is converted to upper case.")
+          (opt "b" "bool" :bool
+               "A flag you can flip true.")))
+
+  (defvarl prog-name *load-path*)
+
+  (let ((o (getopts options *args*)))
+    (when [o "help"]
+      (put-line "Usage:\en")
+      (put-line `  @{prog-name} [options] arg*`)
+      (opthelp options)
+      (exit 0))
+    (put-line `args after opts are: @{o.out-args ", "}`))
+.cble
+
+.coNP Structure @ opt-desc
+.synb
+.mets (defstruct opt-desc
+.mets \ \  short long helptext type
+.mets \ \  ... < unspecified << slots )
+.syne
+.desc
+The
+.code opt-desc
+structure describes a single command line option.
+
+The
+.code short
+and
+.code long
+slots are either
+.code nil
+or else hold strings.
+The
+.code short
+slot gives the option's short name: a one-character-long
+string which may not be the ASCII dash character
+.codn - .
+The
+.code long
+slot gives the option's long name: a string two or more
+characters long which doesn't begin with a dash.
+An option must have at least one of these names.
+
+The
+.code helptext
+slot provides a descriptive string. This string may be long. The
+.code opthelp
+function displays this text, formatting into multiple lines as necessary.
+If
+.code helptext
+is
+.codn nil ,
+the option is considered undocumented.
+
+The
+.code type
+slot may be a symbol naming a global function which takes one argument,
+or it may be such a function object. Otherwise it must be one of the
+following keyword symbols:
+.RS
+.coIP :bool
+This indicates that the type of the option is Boolean. Such
+an option doesn't take any argument. Its value is
+.code t
+or
+.codn nil .
+.coIP :dec
+This indicates that the option requires an argument, which is a
+decimal integer with an optional positive or negative sign.
+This argument is converted to an integer object.
+.coIP :hex
+This type indicates that the option requires an argument consisting
+of a hexadecimal integer with an optional positive or negative sign.
+This is converted to an integer object.
+.coIP :oct
+This type indicates that the option requires an argument consisting
+of a octal integer with an optional positive or negative sign.
+This is converted to an integer object.
+.coIP :cint
+This type indicates that the option requires an integer argument
+whose format conforms to one of three C language conventions in most respects,
+other than that this integer may have an arbitrary range.
+All forms may carry an optional positive or negative leading sign
+at the very beginning.
+The first convention consists of decimal digits, which must not have
+a superfluous leading zero. The second convention consists of octal
+digits which are introduced by an extra leading zero.
+The third convention consists of hexadecimal digits introduced by the
+.code 0x
+prefix.
+.coIP :float
+This type indicates a decimal floating-point argument, which is converted to
+a floating-point number. Its basic form is: an optional leading plus or
+minus sign, followed by a sequence of one or more digits which may contain
+a single decimal point anywhere, including the very beginning of the
+sequence or at the end, optionally followed by the letter
+.code e
+or
+.code E
+followed by a decimal integer which may have a leading positive or negative
+sign, and include leading zeros.
+
+.coIP :str
+This type indicates that the argument consists of the interior notation of
+a TXR Lisp character string. It is processed by adding a double quote
+at the beginning or end, and parsed as a string literal. This parsing must
+successfully yield a string object, otherwise the argument is ill-formed.
+.RE
+.PP
+
+If
+.code type
+is a function, then the option requires an argument. The argument string
+is passed to the function, and the value is whatever the function returns.
+
+The
+.code opt-desc
+structure may have additional slots which are not specified.
+
+The
+.code opt
+convenience function is provided for constructing
+.code opt-desc
+objects.
+
+.coNP Structure @ opts
+.synb
+.mets (defstruct opts nil
+.mets \ \  in-args out-args
+.mets \ \  ... < unspecified << slots )
+.syne
+.desc
+The
+.code opts
+structure represents a parsed command line, containing decoded
+information obtained from the options, and an indication where
+the non-option arguments start.
+
+The
+.code opts
+structure supports direct indexing for option retrieval.
+That is the only documented interface for accessing the parsed
+options; the implementation of the information set describing
+the parsed options is unspecified.
+
+The
+.code in-args
+slot holds the original argument list.
+
+The
+.code out-args
+member holds the tail of the argument list consisting of the non-option
+arguments.
+
+The mechanism by means of which
+.code out-args
+is calculated, and by means of which the information about the
+options is populated, is unspecified. The only interface to that
+mechanism is the
+.code getopts
+function.
+
+The
+.code opts
+object supports indexing, including indexed assignment.
+
+If
+.code o
+is an instance of
+.code opts
+returned by
+.codn getopts ,
+then the expression
+.code "[o \(dqv\(dq]"
+tests whether the option
+.str v
+is available in
+.codn o ;
+that is, whether it has been specified in the command line.
+If so, then its associated value is returned, otherwise
+.code nil
+is returned. This
+.code nil
+is ambiguous: for a Boolean option it indicates that either
+the option was not specified, or that it was explicitly
+specified as false. For a Boolean option that was specified
+(positively), the value
+.code t
+is returned.
+
+The expression
+.code "[o \(dqv\(dq dfl]"
+yields the value of option
+.str v
+if that option has been specified. If the option hasn't
+been specified, then the expression yields the value
+.codn dfl .
+
+Assigning to
+.code "[o \(dqv\(dq]"
+is possible. This replaces the value associated with option
+.strn v .
+The assignment is erroneous if no such option was parsed
+from the command line, even if it is a valid option.
+
+.coNP Function @ getopts
+.synb
+.mets (getopts < option-desc-list << arg-list )
+.syne
+.desc
+The
+.code getopts
+function takes a list of
+.code opt-desc
+structures and a list of strings
+.meta arg-list
+representing command line arguments.
+
+The
+.meta arg-list
+is parsed. If the parse is unsuccessful, an exception of type
+.code opt-error
+is thrown, derived from
+.codn error .
+
+If there are problems in
+.code option-desc-list
+itself, then an exception of type
+.code error
+is thrown.
+
+If the parse is successful,
+.code getopts
+returns an instance of the
+.code opts
+structure describing the parsed opts, and listing the non-option
+arguments.
+
+.coNP Function @ opthelp
+.synb
+.mets (opthelp < opt-desc-list <> [ stream ])
+.syne
+.desc
+The
+.code opthelp
+function processes the list of
+.code opt-desc
+structures
+.meta opt-desc-list
+and compiles a customized body of help text describing all of the
+options, as well as general description of the command line option
+conventions to guide the user in in the correct use of command
+line options.
+
+The text is formatted to fit within 79 columns, and begins and ends with a
+blank line. Its format consists of headings which begin in the first column,
+and paragraphs and tables which feature a two space left margin.
+A blank line follows each section heading. The heading begins with a capital
+letter. Its remaining words are uncapitalized, and it ends with a colon.
+
+The text is sent to
+.metn stream ,
+if specified. This argument defaults to
+.codn *stdout* .
+
+If there are problems in
+.code option-desc-list
+itself, then an exception of type
+.code error
+is thrown.
+
 .SS* System Programming
 .coNP Accessor @ errno
 .synb

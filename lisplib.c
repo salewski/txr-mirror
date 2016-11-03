@@ -387,6 +387,24 @@ static val trace_instantiate(val set_fun)
   return nil;
 }
 
+static val getopts_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("opt-desc"), lit("opts"),
+    lit("opt"), lit("getopts"), lit("opthelp"),
+    nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val getopts_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~agetopts.tl"), stdlib_path, nao));
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -419,6 +437,7 @@ void lisplib_init(void)
   dlt_register(dl_table, awk_instantiate, awk_set_entries);
   dlt_register(dl_table, build_instantiate, build_set_entries);
   dlt_register(dl_table, trace_instantiate, trace_set_entries);
+  dlt_register(dl_table, getopts_instantiate, getopts_set_entries);
 }
 
 val lisplib_try_load(val sym)
