@@ -37,10 +37,11 @@
     me.(check)
     (set me.arg-p (neq me.type :bool))))
 
-(defstruct (sys:opt-parsed name arg desc) nil
+(defstruct (sys:opt-parsed name arg desc : eff-type) nil
   name
   arg  ;; string, integer, real, ...
   desc ;; opt-desc
+  eff-type
   (:postinit (me) me.(convert-type)))
 
 (defstruct opts nil
@@ -64,6 +65,7 @@
 (defmeth opt-desc check (me)
   (unless (or (functionp me.type)
               (fboundp me.type)
+              (and (consp me.type) (eq (car me.type) 'list))
               (member me.type me.valid-types))
     (error "getopts: type must be a function or valid keyword, not ~s"
            me.type))
@@ -79,11 +81,12 @@
       (error "getopts: short option ~a starts with - character" me.short))))
 
 (defmeth sys:opt-parsed convert-type (me)
-  (let ((name (sys:opt-dash me.name)))
-    (when (and (neq me.desc.type :bool)
+  (let ((name (sys:opt-dash me.name))
+        (type (or me.eff-type me.desc.type)))
+    (when (and (neq type :bool)
                (eq me.arg :explicit-no))
       (sys:opt-err "Non-Boolean option ~a explicitly specified as false" name))
-    (caseql me.desc.type
+    (caseql type
       (:bool
         (set me.arg (neq me.arg :explicit-no)))
       (:dec (set me.arg
@@ -122,7 +125,17 @@
                  (or (ignerr (read `"@{me.arg}"`))
                      (sys:opt-err "option ~a needs string lit syntax, ~a given"
                               name me.arg))))
-      (t (set me.arg (call me.desc.type me.arg))))))
+      (t (cond
+           ((and (consp type) (eq (car type) 'list))
+              (let* ((rec-type (cadr type))
+                     (pieces (split-str me.arg #/,/))
+                     (sub-opts (mapcar (do new (sys:opt-parsed me.name @1
+                                                               me.desc
+                                                               rec-type))
+                                       pieces)))
+                (set me.arg (mapcar (usl arg) sub-opts))))
+           ((or (symbolp me.type) (functionp me.type))
+              (set me.arg (call me.desc.type me.arg))))))))
 
 (defmeth opts lambda (me key : dfl)
   (iflet ((o [me.opt-hash key])) o.arg dfl))
@@ -230,9 +243,12 @@
         (undocumented (keep-if (op null @1.helptext) opt-desc-list)))
     (put-line "\nOptions:\n")
     (each ((od sorted))
-      (let* ((type (if (keywordp od.type)
-                     (upcase-str (tostringp od.type))
-                     "ARG"))
+      (let* ((type (cond
+                     ((keywordp od.type) (upcase-str (tostringp od.type)))
+                     ((and (consp od.type) (eq (car od.type) 'list))
+                        (let ((ts (upcase-str (tostringp (cadr od.type)))))
+                          `@ts[,@ts...]`))
+                     (t "ARG")))
              (long (if od.long
                      `--@{od.long}@(if od.arg-p `=@type`)`))
              (short (if od.short
@@ -301,7 +317,8 @@
       (mapdo (do put-line `  @1`)
              (sys:wdwrap `@{(flatten texts)}` 77)))
     (put-line)
-    (whenlet ((types (remq :bool (uniq (mapcar (usl type) sorted)))))
+    (whenlet ((types (keep-if [andf keywordp (op neq :bool)]
+                              (uniq (mapcar (usl type) sorted)))))
       (put-line "Type legend:\n")
       (each ((ty types))
         (iflet ((ln (caseql ty

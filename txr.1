@@ -41538,12 +41538,25 @@ or
 .code E
 followed by a decimal integer which may have a leading positive or negative
 sign, and include leading zeros.
-
 .coIP :str
 This type indicates that the argument consists of the interior notation of
 a TXR Lisp character string. It is processed by adding a double quote
 at the beginning or end, and parsed as a string literal. This parsing must
 successfully yield a string object, otherwise the argument is ill-formed.
+.meIP (list << type )
+If the type is specified as a compound form headed by the
+.code list
+symbol, it indicates that the command line option's argument is a list
+of elements.  The argument appears on the command line as a single string
+contained within one argument.  It may contain commas, and is split into pieces
+using the comma character as a separator. The pieces are then individually
+treated as of type
+.meta type
+and converted accordingly. The option's argument is then a list object
+whose elements are the converted pieces. For instance
+.code "(list :dec)"
+will convert a list of comma-separated decimal integer tokens into
+a list of integer objects.
 .RE
 .PP
 
