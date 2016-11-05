@@ -48,7 +48,7 @@ static val cadr_register(val set_fun)
 @  (repeat)
   reg_fun(intern(lit("c@{ad}r"), user_package), func_n1(c@{ad}r));
 @  (end)
-  load(format(nil, lit("~a/cadr.tl"), stdlib_path, nao));
+  load(format(nil, lit("~acadr.tl"), stdlib_path, nao));
   return nil;
 }
 

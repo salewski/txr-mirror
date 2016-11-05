@@ -404,7 +404,7 @@ static val cadr_register(val set_fun)
   reg_fun(intern(lit("cdddadr"), user_package), func_n1(cdddadr));
   reg_fun(intern(lit("cddddar"), user_package), func_n1(cddddar));
   reg_fun(intern(lit("cdddddr"), user_package), func_n1(cdddddr));
-  load(format(nil, lit("~a/cadr.tl"), stdlib_path, nao));
+  load(format(nil, lit("~acadr.tl"), stdlib_path, nao));
   return nil;
 }
 
