@@ -1735,12 +1735,10 @@ static void builtin_reject_test(val op, val sym, val form)
 
 static val expand_macrolet(val form, val menv)
 {
-  uses_or2;
   val op = car(form);
   val body = cdr(form);
   val macs = pop(&body);
   val new_env = make_env(nil, nil, menv);
-  val form_origin = lookup_origin(form);
 
   for (; macs; macs = cdr(macs)) {
     val macro = car(macs);
@@ -1759,8 +1757,7 @@ static val expand_macrolet(val form, val menv)
               cons(nil, cons(params, cons(block, nil)))), block);
   }
 
-  return set_origin(rlcp_tree(maybe_progn(expand_forms(body, new_env)), body),
-                    or2(form_origin, form));
+  return rlcp_tree(maybe_progn(expand_forms(body, new_env)), body);
 }
 
 static val expand_symacrolet(val form, val menv)
