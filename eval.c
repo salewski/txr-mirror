@@ -239,7 +239,9 @@ val lookup_origin(val form)
 
 static val set_origin(val form, val origin)
 {
-  if (origin && form != origin)
+  if (origin && form != origin && is_ptr(form) &&
+      (!symbolp(form) || !symbol_package(form)) &&
+      is_ptr(origin) && (!symbolp(origin) || !symbol_package(origin)))
     sethash(origin_hash, form, origin);
   return form;
 }
