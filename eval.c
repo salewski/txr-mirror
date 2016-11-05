@@ -297,12 +297,19 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
   }
 
   if (last_form_expanded) {
-    uses_or2;
     val ex_info = source_loc_str(last_form_expanded, nil);
     val form = last_form_expanded;
 
-    format(out_stream, lit("~a during expansion at ~a of form ~!~s\n"),
-           prefix, or2(info, ex_info), last_form_expanded, nao);
+    if (ex_info)
+      format(out_stream, lit("~a during expansion at ~a of form ~!~s\n"),
+             prefix, ex_info, last_form_expanded, nao);
+    else
+      format(out_stream, lit("~a during expansion of form ~!~s\n"),
+             prefix, last_form_expanded, nao);
+
+    if (info)
+      format(out_stream, lit("~a by macro code located at ~a\n"), prefix,
+             info, nao);
 
     for (;;) {
       val origin = lookup_origin(form);
