@@ -280,8 +280,8 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
       }
 
       if (origin) {
-        format(out_stream, lit("~a ... an expansion at ~a of ~!~s\n"),
-               prefix, info, origin, nao);
+        format(out_stream, lit("~a ... an expansion of ~!~s\n"),
+               prefix, origin, nao);
       } else if (!first) {
         if (info)
           format(out_stream, lit("~a which is located at ~a\n"), prefix,
