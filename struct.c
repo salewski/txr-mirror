@@ -158,6 +158,7 @@ void struct_init(void)
   reg_fun(intern(lit("super-method"), user_package), func_n2(super_method));
   reg_fun(intern(lit("uslot"), user_package), func_n1(uslot));
   reg_fun(intern(lit("umethod"), user_package), func_n1v(umethod));
+  reg_fun(intern(lit("slots"), user_package), func_n1(slots));
 }
 
 static noreturn void no_such_struct(val ctx, val sym)
@@ -1109,7 +1110,7 @@ val static_slot_p(val type, val sym)
 
 val slots(val stype)
 {
-  struct struct_type *st = stype_handle(&stype, lit("static-slot-p"));
+  struct struct_type *st = stype_handle(&stype, lit("slots"));
   return st->slots;
 }
 
