@@ -1,3 +1,46 @@
+                                    TXR 156
+                                   2016-11-05
+
+
+  Features
+
+  - time-parse function defaults to epoch time.
+  - new accessors nthlast and butlastn.
+  - sub function is now an accessor.
+  - last and butlast functions are accessors, and get optional index argument.
+  - Awk macro:
+    - now supports pipe/file redirection.
+  - Function tracing support: trace, untrace macros, *trace-output* stream.
+  - symbol-function accessor can refer to methods via (meth ...) syntax.
+  - restrictions in dwim places relaxed:
+    in (set [x y] z), x doesn't necessarily have to be a place.
+  - OOP:
+    - new lambda-set method can treat [obj ...] expressions as places when obj
+      is a struct.
+    - new slots function for getting complete list of slots of a struct type.
+  - New neq, neql and nequal functions for negated equality tests: for all
+    those times you hate writing (not (equal a b)).
+  - New command-line argument processing library.
+  - Improved printing of error location, and tracing locations across place
+    expansions.
+
+  Bugs
+
+  - quasiquote now works properly over struct literals.
+  - wrong return value of nthcdr place fixed.
+  - fixed circular printer blocking unwinding.
+  - tok-str semantics adjusted once again to eliminate
+    spurious empty tokens in some situations.
+  - fixed broken tok-where (regression).
+  - fixed potential incorrect evaluation order in dwim places.
+  - fixed bugs in circular printing that traverses hash tables and objects with
+    print methods
+  - *stdout* now flushed when processing unhandled exceptions, so that
+    diagnostics sent to *stderr* appear properly ordered w.r.t. prior
+    *stdout* output.
+
+
+
                                     TXR 155
                                    2016-10-21
 
