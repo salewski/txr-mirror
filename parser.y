@@ -1671,6 +1671,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case HASH_SLASH:     problem = lit("#/"); break;
   case HASH_H:         problem = lit("#H"); break;
   case HASH_S:         problem = lit("#S"); break;
+  case HASH_R:         problem = lit("#R"); break;
   case HASH_N_EQUALS:  problem = lit("#<n>="); break;
   case HASH_N_HASH:    problem = lit("#<n>#"); break;
   case WORDS:   problem = lit("#\""); break;
