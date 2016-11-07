@@ -165,12 +165,14 @@
   (defun sys:cp-origin (to-tree from-form : circ-check)
     (unless (memq to-tree circ-check)
       (tree-case to-tree
-        ((a . d) (whenlet (next-orig
-                            (orig (macro-ancestor to-tree)))
-                   (while (and (neq orig from-form)
+        ((a . d) (whenlet ((next-orig nil)
+                           (visited-stack (list from-form))
+                           (orig (macro-ancestor to-tree)))
+                   (while (and (not (memq orig visited-stack))
                                (sys:setq next-orig (macro-ancestor orig)))
+                     (sys:setq visited-stack (cons next-orig visited-stack))
                      (sys:setq orig next-orig))
-                   (unless (eq orig from-form)
+                   (unless (memq orig visited-stack)
                      (sys:set-macro-ancestor orig from-form)))
                  (sys:cp-origin a from-form (cons to-tree circ-check))
                  (sys:cp-origin d from-form (cons to-tree circ-check)))))
