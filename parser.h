@@ -56,6 +56,7 @@ struct parser {
   val syntax_tree;
   val circ_ref_hash;
   cnum circ_count;
+  int circ_suppress;
   scanner_t *scanner;
   struct yy_token recent_tok;
   struct yy_token tok_pushback[4];

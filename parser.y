@@ -103,7 +103,7 @@ int yyparse(scanner_t *, parser_t *);
 %token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY IF
 %token <lineno> ERRTOK /* deliberately not used in grammar */
-%token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S HASH_R
+%token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S HASH_R HASH_SEMI
 %token <lineno> WORDS WSPLICE QWORDS QWSPLICE
 %token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E SECRET_ESCAPE_I
 
@@ -112,7 +112,9 @@ int yyparse(scanner_t *, parser_t *);
 
 %token <chr> REGCHAR REGTOKEN LITCHAR SPLICE CONSDOT LAMBDOT
 
-%type <val> spec clauses_rev clauses_opt clause
+%type <val> spec hash_semis_n_expr hash_semis_i_expr
+%type <val> ignored_i_exprs ignored_n_exprs
+%type <val> clauses_rev clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause block_clause
 %type <val> cases_clause choose_clause gather_clause collect_clause until_last
 %type <val> collect_repeat
@@ -150,9 +152,11 @@ int yyparse(scanner_t *, parser_t *);
 
 spec : clauses_opt              { parser->syntax_tree = $1; }
      | SECRET_ESCAPE_R regexpr  { parser->syntax_tree = $2; end_of_regex(scnr); }
-     | SECRET_ESCAPE_E n_expr   { parser->syntax_tree = $2; YYACCEPT; }
+     | SECRET_ESCAPE_E hash_semis_n_expr
+                                { parser->syntax_tree = $2; YYACCEPT; }
        byacc_fool               { internal_error("notreached"); }
-     | SECRET_ESCAPE_I i_expr   { parser->syntax_tree = $2; YYACCEPT; }
+     | SECRET_ESCAPE_I hash_semis_i_expr
+                                { parser->syntax_tree = $2; YYACCEPT; }
        byacc_fool               { internal_error("notreached"); }
      | SECRET_ESCAPE_E          { if (yychar == YYEOF) {
                                     parser->syntax_tree = nao;
@@ -175,6 +179,30 @@ spec : clauses_opt              { parser->syntax_tree = $1; }
                                   yybadtok(yychar, nil); }
 
      ;
+
+hash_semis_n_expr : ignored_n_exprs n_expr      { $$ = $2; }
+                  | n_expr                      { $$ = $1; }
+                  ;
+
+ignored_n_exprs : ignored_n_exprs HASH_SEMI     { parser->circ_suppress = 1; }
+                  n_expr                        { parser->circ_suppress = 0;
+                                                  $$ = nil; }
+                | HASH_SEMI                     { parser->circ_suppress = 1; }
+                  n_expr                        { parser->circ_suppress = 0;
+                                                  $$ = nil; }
+                ;
+
+hash_semis_i_expr : ignored_i_exprs i_expr      { $$ = $2; }
+                  | i_expr                      { $$ = $1; }
+                  ;
+
+ignored_i_exprs : ignored_i_exprs HASH_SEMI     { parser->circ_suppress = 1; }
+                  i_expr                        { parser->circ_suppress = 0;
+                                                  $$ = nil; }
+                | HASH_SEMI                     { parser->circ_suppress = 1; }
+                  i_expr                        { parser->circ_suppress = 0;
+                                                  $$ = nil; }
+                ;
 
 /* Hack needed for Berkeley Yacc */
 byacc_fool : n_expr { internal_error("notreached"); }
@@ -876,6 +904,12 @@ n_exprs : r_exprs               { val term_atom = pop(&$1);
 r_exprs : n_expr                { val exprs = cons($1, nil);
                                   rlcp(exprs, $1);
                                   $$ = rlcp(cons(unique_s, exprs), exprs); }
+        | HASH_SEMI             { parser->circ_suppress = 1; }
+          n_expr                { parser->circ_suppress = 0;
+                                  $$ = cons(unique_s, nil); }
+        | r_exprs HASH_SEMI     { parser->circ_suppress = 1; }
+          n_expr                { parser->circ_suppress = 0;
+                                  $$ = $1; }
         | r_exprs n_expr        { uses_or2;
                                   val term_atom_cons = $1;
                                   val exprs = cdr($1);
@@ -1672,6 +1706,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case HASH_H:         problem = lit("#H"); break;
   case HASH_S:         problem = lit("#S"); break;
   case HASH_R:         problem = lit("#R"); break;
+  case HASH_SEMI:      problem = lit("#;"); break;
   case HASH_N_EQUALS:  problem = lit("#<n>="); break;
   case HASH_N_HASH:    problem = lit("#<n>#"); break;
   case WORDS:   problem = lit("#\""); break;
@@ -1747,6 +1782,7 @@ int parse(parser_t *parser, val name, enum prime_parser prim)
   parser->prepared_msg = nil;
   parser->circ_ref_hash = nil;
   parser->circ_count = 0;
+  parser->circ_suppress = 0;
   parser->syntax_tree = nil;
 
   prime_parser(parser, name, prim);

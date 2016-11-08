@@ -10812,6 +10812,88 @@ document, judiciously taking into account the content of the X3J13 Cleanup
 Issues named PRINT-CIRCLE-STRUCTURE:USER-FUNCTIONS-WORK and
 PRINT-CIRCLE-SHARED:RESPECT-PRINT-CIRCLE.
 
+.NP* Notation for Erasing Objects
+
+.meIP #; < expr
+
+The \*(TL notation
+.code #;
+in TXR Lisp indicates that the expression
+.meta expr
+is to be read and then discarded, as if it were replaced by whitespace.
+
+This is useful for temporarily "commenting out" an expression.
+
+.TP* Notes:
+Whereas it is valid for a \*(TL source file to be empty, it is
+a syntax error if a \*(TL source file contains nothing but one or more
+objects which are each suppressed by a preceding
+.codn #; .
+In the interactive listener, an input line consisting of nothing but
+commented-out objects is similarly a syntax error.
+
+The notation does not cascade; consecutive occurrences of
+.code #;
+trigger a syntax error.
+
+The notation interacts with the circle notation. Firstly, if an object
+which is erased by
+.code #;
+contains circular-referencing instances of the label notation,
+those instances refer to
+.codn nil .
+Secondly, commented-out objects may introduce labels
+which are subsequently referenced in
+.metn expr .
+An example of the first situation occurs in:
+
+.cblk
+  #;(#1=(#1#))
+.cble
+
+Here the
+.code #1#
+label is a circular reference because it refers to an object which
+is a parent of the object which contains that reference. Such a reference
+is only satisfied by a "backpatching" process once the entire surrounding syntax
+is processed to the top level. The erasure perpetrated by
+.code #;
+causes the
+.code #1#
+label reference to be replaced by
+.codn nil ,
+and therefore the labeled object is the object
+.codn (nil) .
+
+An example of the second situation is
+
+.cblk
+  #;(#2=(a b c)) #2#
+.cble
+
+Here, even though the expression
+.code "(#2=(a b c))"
+is suppressed, the label definition which it has introduced persists into the
+following object, where the label reference
+.code #2#
+resolves to
+.codn "(a b c)" .
+
+A combination of the two situations occurs in
+
+.cblk
+  #;(#1=(#1#)) #1#
+.cble
+
+which yields
+.codn "(nil)" .
+This is because the
+.code #1=
+label is available; but the earlier
+.code #1#
+reference, being a circular reference inside an erased object, had lapsed to
+.codn nil .
+
 .SS* Generalization of List Accessors
 In ancient Lisp in the 1960's, it was not possible to apply the operations
 .code car

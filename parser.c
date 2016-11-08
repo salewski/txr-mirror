@@ -375,7 +375,7 @@ val parser_circ_ref(parser_t *p, val num)
   if (!obj)
     yyerrorf(p->scanner, lit("dangling #~s# ref"), num, nao);
 
-  if (obj == unique_s) {
+  if (obj == unique_s && !p->circ_suppress) {
     p->circ_count++;
     return cons(circref_s, cons(num, nil));
   }

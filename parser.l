@@ -708,6 +708,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return HASH_R;
 }
 
+<NESTED,BRACED>#; {
+  yylval->lineno = yyextra->lineno;
+  return HASH_SEMI;
+}
+
 <NESTED,BRACED>#{DIG}+= {
   val str = string_own(utf8_dup_from(yytext + 1));
   yylval->val = int_str(str, num(10));
