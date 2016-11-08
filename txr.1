@@ -10056,6 +10056,84 @@ variable syntax. Within \*(TL, regular expressions are written with
 a leading
 .codn # .
 
+.NP* Package Prefixes
+
+If a symbol name contains a colon, the
+.I lident
+characters, if any, before that colon constitute the package prefix.
+It is erroneous to read a symbol whose package doesn't exist.
+If the package exist, the symbol is interned in that package.
+
+If the package name is an empty identifier, the package is understood to be the
+.code keyword
+package and the symbol is a self-evaluating keyword symbol.
+
+For example
+.code foo:bar
+is the
+.code bar
+symbol in the
+.code foo
+package.
+
+The syntax
+.code :test
+denotes the symbol
+.code test
+in the
+.code keyword
+package, the same as
+.codn keyword:test .
+
+The syntax
+.code @foo:bar
+denotes the meta prefix
+.code @
+being applied to the
+.code foo:bar
+symbol, not to a symbol in the
+.code @foo
+package.
+
+The syntax
+.code #:bar
+denotes an uninterned symbol named
+.codn bar ,
+described in the next section.
+
+.TP* "Dialect note:"
+In ANSI Common Lisp, the
+.code foo:bar
+syntax does not create the symbol
+.code bar
+in the
+.code foo
+package; the symbol must exist or else the syntax is erroneous.
+In \*(TL, only the package has to exist; the symbol will be interned
+in that package.
+
+.NP* Uninterned Symbols
+
+Uninterned symbols are written with the
+.code #:
+prefix, followed by zero or more
+.I lident
+characters.
+When an uninterned symbol is read, a new, unique symbol is constructed,
+with the specified name. Even if two uninterned symbols have the same name,
+they are different objects. The
+.code make-sym
+and
+.code gensym
+functions produce uninterned symbols.
+
+"Uninterned" means "not entered into a package". Interning refers to a
+process which combines package lookup with symbol creation, which ensures
+that multiple occurrences of a symbol name in written syntax are all converted
+to the same object: the first occurrence creates the symbol and associates it
+with its name in a package. Subsequent occurrences do not create a new symbol,
+but retrieve the existing one.
+
 .NP* Consing Dot
 
 Unlike other major Lisp dialects, \*(TL allows a consing dot with no forms

@@ -206,14 +206,14 @@ BT0     {BSCHR}({BSCHR}|{EXTRA})*
 BT1     @{BT0}+
 BT2     ({BSCHR}|{EXTRA})+
 BTREG   ({BT0}|{BT1})?:{BT2}?|({BT0}|{BT1})(:{BT2})?
-BTKEY   @?:{BT2}?
-BTOK    {BTREG}|{BTKEY}
+BTKWUN  @?#?:{BT2}?
+BTOK    {BTREG}|{BTKWUN}
 NT0     {NSCHR}({NSCHR}|{EXTRA})*
 NT1     @{NT0}+
 NT2     ({NSCHR}|{EXTRA})+
 NTREG   ({NT0}|{NT1})?:{NT2}?|({NT0}|{NT1})(:{NT2})?
-NTKEY   @?:{NT2}?
-NTOK    {NTREG}|{NTKEY}
+NTKWUN  @?#?:{NT2}?
+NTOK    {NTREG}|{NTKWUN}
 WS      [\t ]*
 REQWS   [\t ]+
 NL      (\n|\r|\r\n)
