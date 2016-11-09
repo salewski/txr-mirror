@@ -9631,7 +9631,7 @@ val obj_print(val obj, val out, val pretty)
     ctx->obj_hash = ctx->obj_hash_prev;
     ctx->obj_hash_prev = nil;
   } else {
-    if (cdr(lookup_var(nil, print_circle_s))) {
+    if (print_circle_s && cdr(lookup_var(nil, print_circle_s))) {
       ctx = &ctx_struct;
       ctx->obj_hash = make_hash(nil, nil, nil);
       ctx->obj_hash_prev = nil;
