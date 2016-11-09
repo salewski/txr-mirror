@@ -4752,12 +4752,16 @@ val symbol_package(val sym)
 
 val make_sym(val name)
 {
-  val obj = make_obj();
-  obj->s.type = SYM;
-  obj->s.name = name;
-  obj->s.package = nil;
-  obj->s.slot_cache = 0;
-  return obj;
+  if (t && !stringp(name)) {
+    uw_throwf(error_s, lit("make-sym: name ~s isn't a string"), name, nao);
+  } else {
+    val obj = make_obj();
+    obj->s.type = SYM;
+    obj->s.name = name;
+    obj->s.package = nil;
+    obj->s.slot_cache = 0;
+    return obj;
+  }
 }
 
 val gensym(val prefix)
@@ -4773,6 +4777,11 @@ val make_package(val name)
 {
   if (find_package(name)) {
     uw_throwf(error_s, lit("make-package: ~s exists already"), name, nao);
+  } else if (t && !stringp(name)) {
+    uw_throwf(error_s, lit("make-package: name ~s isn't a string"), name, nao);
+  } else if (length(name) == zero) {
+    uw_throwf(error_s, lit("make-package: package name can't be empty string"),
+              nao);
   } else {
     val obj = make_obj();
     obj->pk.type = PKG;
@@ -4830,6 +4839,9 @@ val intern(val str, val package)
 {
   val new_p;
   loc place;
+
+  if (!stringp(str))
+    uw_throwf(error_s, lit("intern: name ~s isn't a string"), str, nao);
 
   if (null_or_missing_p(package)) {
     package = cur_package;
