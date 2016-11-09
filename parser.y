@@ -1249,7 +1249,7 @@ static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)
   int leading_at = *lexeme == L'@';
   wchar_t *tokfree = lexeme;
   wchar_t *colon = wcschr(lexeme, L':');
-  val sym_name = nil, pkg_name = nil, package = user_package, sym;
+  val sym_name = nil, pkg_name = nil, package = cur_package, sym;
 
   if (leading_at) {
     if (!meta_allowed) {

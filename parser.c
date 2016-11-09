@@ -634,7 +634,7 @@ static void find_matching_syms(lino_completions_t *cpl,
                                val line_prefix, char par,
                                val force_qualify)
 {
-  val qualify = tnil(force_qualify || package != user_package);
+  val qualify = tnil(force_qualify || package != cur_package);
   val pkg_name = if2(qualify,
                      if3(package == keyword_package && !force_qualify,
                          lit(""),
@@ -761,7 +761,7 @@ static void provide_completions(const char *data,
       int dwim = (prev == '[');
       char par = (!pprev || (!quote && !meth && !ppar) || dwim) ? prev : 0;
 
-      find_matching_syms(cpl, or2(package, user_package),
+      find_matching_syms(cpl, or2(package, cur_package),
                          sym_pfx, line_pfx, par, if2(package, null(keyword)));
     }
   }

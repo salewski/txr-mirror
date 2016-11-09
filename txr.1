@@ -38743,6 +38743,25 @@ a leading colon. The
 is for internal symbols, helping
 the implementation avoid name clashes with user code in some situations.
 
+These variables shouldn't be modified.  If they are modified, the consequences
+are unspecified.
+
+.coNP Special variable @ *package*
+.desc
+This variable holds the current package. The top-level binding of this
+variable is initialized to the user package: the same package object
+which is held in the
+.code user-package
+variable.
+
+The current package is used as the default package for interning symbol tokens
+which do not carry the colon-delimited package prefix.
+
+The current package also affects printing. When a symbol is printed whose
+home package matches the current package, it is printed without a package
+prefix. (Keyword symbols are always printed with the colon prefix, even if the
+keyword package is current.)
+
 .coNP Function @ make-sym
 .synb
 .mets (make-sym << name )
@@ -38901,7 +38920,7 @@ should be a package. If
 .meta package
 is not supplied, then the value
 taken is that of
-.codn *user-package* .
+.codn *package* .
 
 The
 .code intern
@@ -38930,7 +38949,7 @@ must be a symbol and package object,
 respectively. If
 .meta package
 is not given, then it defaults to the value of
-.codn *user-package* .
+.codn *package* .
 
 The
 .code rehome-sym

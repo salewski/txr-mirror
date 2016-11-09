@@ -79,7 +79,7 @@ int async_sig_enabled = 0;
 val packages;
 
 val system_package_var, keyword_package_var, user_package_var;
-val system_package_s, keyword_package_s, user_package_s;
+val package_s, system_package_s, keyword_package_s, user_package_s;
 
 val null_s, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 val lit_s, stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
@@ -4832,7 +4832,7 @@ val intern(val str, val package)
   loc place;
 
   if (null_or_missing_p(package)) {
-    package = user_package;
+    package = cur_package;
   } else if (stringp(package)) {
     val p = find_package(package);
     if (!p)
@@ -4859,7 +4859,7 @@ val rehome_sym(val sym, val package)
     return nil;
 
   if (null_or_missing_p(package)) {
-    package = user_package;
+    package = cur_package;
   } else if (stringp(package)) {
     val p = find_package(package);
     if (!p)
@@ -4893,25 +4893,9 @@ val keywordp(val sym)
   return tnil(sym && symbolp(sym) && sym->s.package == keyword_package_var);
 }
 
-loc get_user_package(void)
+val get_current_package(void)
 {
-  if (nilp(user_package_s))
-    return mkcloc(user_package_var);
-  return lookup_global_var_l(user_package_s);
-}
-
-loc get_system_package(void)
-{
-  if (nilp(system_package_s))
-    return mkcloc(system_package_var);
-  return lookup_global_var_l(system_package_s);
-}
-
-loc get_keyword_package(void)
-{
-  if (nilp(keyword_package_s))
-    return mkcloc(keyword_package_var);
-  return lookup_global_var_l(keyword_package_s);
+  return cdr(lookup_var(nil, package_s));
 }
 
 val func_f0(val env, val (*fun)(val))
@@ -9435,11 +9419,12 @@ dot:
     break;
   case SYM:
     if (!pretty) {
-      if (obj->s.package != user_package) {
-        if (!obj->s.package)
-          put_char(chr('#'), out);
-        else if (obj->s.package != keyword_package)
-          put_string(obj->s.package->pk.name, out);
+      if (!obj->s.package) {
+        put_string(lit("#:"), out);
+      } else if (obj->s.package == keyword_package) {
+        put_char(chr(':'), out);
+      } else if (obj->s.package != cur_package) {
+        put_string(obj->s.package->pk.name, out);
         put_char(chr(':'), out);
       }
     }

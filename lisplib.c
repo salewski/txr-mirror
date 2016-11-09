@@ -29,9 +29,11 @@
 #include <wchar.h>
 #include <dirent.h>
 #include <stdarg.h>
+#include <signal.h>
 #include "config.h"
 #include "lib.h"
 #include "eval.h"
+#include "signal.h"
 #include "stream.h"
 #include "hash.h"
 #include "gc.h"
@@ -443,9 +445,16 @@ void lisplib_init(void)
 val lisplib_try_load(val sym)
 {
   val fun = gethash(dl_table, sym);
-  debug_state_t ds;
-  return if2(fun, (ds = debug_set_state(opt_dbg_autoload ? 0 : -1,
-                                        opt_dbg_autoload),
-                   funcall(fun),
-                   debug_restore_state(ds), t));
+
+  if (fun) {
+     debug_state_t ds = debug_set_state(opt_dbg_autoload ? 0 : -1, opt_dbg_autoload);
+     val saved_dyn_env = dyn_env;
+     dyn_env = make_env(nil, nil, dyn_env);
+     env_vbind(dyn_env, package_s, user_package);
+     funcall(fun);
+     dyn_env = saved_dyn_env;
+     debug_restore_state(ds);
+     return t;
+  }
+  return nil;
 }
