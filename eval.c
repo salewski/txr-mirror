@@ -5194,9 +5194,11 @@ void eval_init(void)
   reg_varl(keyword_package_s = intern(lit("keyword-package"), user_package_var),
            keyword_package_var);
 
-  reg_varl(intern(lit("*user-package*"), user_package), user_package_var);
-  reg_varl(intern(lit("*system-package*"), user_package), system_package_var);
-  reg_varl(intern(lit("*keyword-package*"), user_package), keyword_package_var);
+  if (opt_compat && opt_compat <= 156) {
+    reg_varl(intern(lit("*user-package*"), user_package), user_package_var);
+    reg_varl(intern(lit("*system-package*"), user_package), system_package_var);
+    reg_varl(intern(lit("*keyword-package*"), user_package), keyword_package_var);
+  }
 
   reg_fun(intern(lit("make-sym"), user_package), func_n1(make_sym));
   reg_fun(intern(lit("gensym"), user_package), func_n1o(gensym, 0));

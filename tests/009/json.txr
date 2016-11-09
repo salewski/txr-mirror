@@ -53,7 +53,7 @@
 @(define keyword (k))@\
   @(local tok)@\
   @(all)@(ws)@{tok /true|false|null/}@(trailer)@/[^A-Za-z0-9_]/@(end)@(ws)@\
-  @(bind k @(intern tok *keyword-package*))@\
+  @(bind k @(intern tok keyword-package))@\
 @(end)
 @;
 @; Recognize an object: a collection of string/value pairs,
