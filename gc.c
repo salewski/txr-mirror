@@ -355,6 +355,7 @@ tail_call:
     mark_obj_tail(obj->s.package);
   case PKG:
     mark_obj(obj->pk.name);
+    mark_obj(obj->pk.hidhash);
     mark_obj_tail(obj->pk.symhash);
   case FUN:
     mark_obj(obj->f.env);

@@ -132,6 +132,7 @@ struct package {
   obj_common;
   val name;
   val symhash;
+  val hidhash;
 };
 
 typedef struct args *varg;
@@ -783,7 +784,14 @@ val delete_package(val package);
 val package_alist(void);
 val package_name(val package);
 val package_symbols(val package);
+val package_local_symbols(val package);
+val package_foreign_symbols(val package);
+val use_sym(val use_list, val package);
+val unuse_sym(val symbol, val package);
+val use_package(val use_list, val package);
+val unuse_package(val unuse_list, val package);
 val intern(val str, val package);
+val unintern(val sym, val package);
 val rehome_sym(val sym, val package);
 val symbolp(val sym);
 val symbol_name(val sym);

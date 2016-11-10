@@ -4786,8 +4786,10 @@ val make_package(val name)
     val obj = make_obj();
     obj->pk.type = PKG;
     obj->pk.name = name;
-    obj->pk.symhash = nil; /* make_hash call below could trigger gc! */
+    obj->pk.symhash = nil; /* make_hash calls below could trigger gc! */
+    obj->pk.hidhash = nil;
     obj->pk.symhash = make_hash(nil, nil, lit("t")); /* don't have t yet! */
+    obj->pk.hidhash = make_hash(nil, nil, lit("t"));
 
     push(cons(name, obj), &packages);
     return obj;
@@ -4799,22 +4801,42 @@ val packagep(val obj)
   return type(obj) == PKG ? t : nil;
 }
 
-val find_package(val name)
+static val lookup_package(val name)
 {
   return cdr(assoc(name, packages));
 }
 
-val delete_package(val package)
+val find_package(val package)
 {
-  if (stringp(package)) {
-    val p = find_package(package);
-    if (!p)
-      uw_throwf(error_s, lit("delete-package: no such package: ~s"), package, nao);
-    package = p;
-  }
+  if (stringp(package) || (symbolp(package) &&
+                           (package = symbol_name(package))))
+    return lookup_package(package);
+  return nil;
+}
 
+static val get_package(val fname, val package, val missing_ok)
+{
+  if (missing_ok && null_or_missing_p(package))
+    return cur_package;
+  if (stringp(package) || (symbolp(package) &&
+                           (package = symbol_name(package))))
+  {
+    val p = lookup_package(package);
+    if (!p)
+      uw_throwf(error_s, lit("~a: no such package: ~s"), fname, package, nao);
+    return p;
+  }
   type_check (package, PKG);
-  packages = alist_nremove(packages, package->pk.name);
+  return package;
+}
+
+val delete_package(val package_in)
+{
+  val package = get_package(lit("delete-package"), package_in, nil);
+  val iter;
+  packages = alist_nremove1(packages, package->pk.name);
+  for (iter = packages; iter; iter = cdr(iter))
+    unuse_package(package, cdar(iter));
   return nil;
 }
 
@@ -4829,30 +4851,178 @@ val package_name(val package)
   return package->pk.name;
 }
 
-val package_symbols(val package)
+val package_symbols(val package_in)
 {
-  type_check (package, PKG);
+  val package = get_package(lit("package-symbols"), package_in, t);
   return hash_values(package->pk.symhash);
 }
 
-val intern(val str, val package)
+val package_local_symbols(val package_in)
+{
+  val package = get_package(lit("package-local-symbols"), package_in, t);
+  list_collect_decl (out, ptail);
+  val hiter = hash_begin(package->pk.symhash);
+  val cell;
+
+  while ((cell = hash_next(hiter))) {
+    val sym = cdr(cell);
+    if (symbol_package(sym) == package)
+      ptail = list_collect(ptail, sym);
+  }
+
+  return out;
+}
+
+val package_foreign_symbols(val package_in)
+{
+  val package = get_package(lit("package-foreign-symbols"), package_in, t);
+  list_collect_decl (out, ptail);
+  val hiter = hash_begin(package->pk.symhash);
+  val cell;
+
+  while ((cell = hash_next(hiter))) {
+    val sym = cdr(cell);
+    if (symbol_package(sym) != package)
+      ptail = list_collect(ptail, sym);
+  }
+
+  return out;
+}
+
+val use_sym(val symbol, val package_in)
+{
+  val self = lit("use-sym");
+  val package = get_package(self, package_in, t);
+
+  if (symbol_package(symbol) != package) {
+    val name = symbol_name(symbol);
+    val found;
+    val existing = gethash_f(package->pk.symhash, name, mkcloc(found));
+
+    if (found && symbol_package(existing) == package) {
+      if (existing == nil)
+        uw_throwf(error_s, lit("~a: cannot hide ~s"), self, existing);
+      sethash(package->pk.hidhash, name, existing);
+      existing->s.package = nil;
+    }
+
+    sethash(package->pk.symhash, name, symbol);
+  }
+
+  return symbol;
+}
+
+val unuse_sym(val symbol, val package_in)
+{
+  val self = lit("unuse-sym");
+  val package = get_package(self, package_in, t);
+  val name = symbol_name(symbol);
+  val found_visible, found_hidden;
+  val visible = gethash_f(package->pk.symhash, name, mkcloc(found_visible));
+  val hidden = gethash_f(package->pk.hidhash, name, mkcloc(found_hidden));
+
+  if (!found_visible || visible != symbol)
+    return nil;
+
+  if (symbol_package(symbol) == package)
+    uw_throwf(error_s, lit("~a: cannot unuse ~s from its home package ~s"),
+              self, symbol, package, nao);
+
+  if (found_hidden) {
+    remhash(package->pk.hidhash, name);
+    sethash(package->pk.symhash, name, hidden);
+    set(mkloc(hidden->s.package, hidden), package);
+    return hidden;
+  }
+
+  remhash(package->pk.symhash, name);
+  return symbol;
+}
+
+static val resolve_package_designators(val fname, val designator_list)
+{
+  if (consp(designator_list)) {
+    list_collect_decl (out, ptail);
+
+    for (; designator_list; designator_list = cdr(designator_list))
+      ptail = list_collect(ptail, get_package(fname, car(designator_list), nil));
+
+    return out;
+  }
+  return cons(get_package(fname, designator_list, nil), nil);
+}
+
+val use_package(val use_list, val package_in)
+{
+  val self = lit("use-package");
+  val package = get_package(self, package_in, t);
+  val use_package_list = resolve_package_designators(self, use_list);
+  val iter;
+
+  if (package == keyword_package)
+    uw_throwf(error_s, lit("~a: keyword package cannot use packages"),
+              self, nao);
+
+  if (memq(keyword_package, use_package_list))
+    uw_throwf(error_s, lit("~a: keyword package cannot be target of use"),
+              self, nao);
+
+  if (memq(package, use_package_list))
+    uw_throwf(error_s, lit("~a: invalid request for package ~s to use itself"),
+              self, package, nao);
+
+  for (iter = use_package_list; iter; iter = cdr(iter)) {
+    val use_syms = package_local_symbols(car(iter));
+    val use_iter;
+    for (use_iter = use_syms; use_iter; use_iter = cdr(use_iter))
+      use_sym(car(use_iter), package);
+  }
+
+  return use_package_list;
+}
+
+val unuse_package(val unuse_list, val package_in)
+{
+  val self = lit("unuse-package");
+  val package = get_package(self, package_in, t);
+  val unuse_package_list = resolve_package_designators(self, unuse_list);
+  val iter;
+
+  if (memq(package, unuse_package_list))
+    uw_throwf(error_s, lit("~a: invalid request for package ~s to unuse itself"),
+              self, package, nao);
+
+  for (iter = unuse_package_list; iter; iter = cdr(iter)) {
+    val unuse_syms = package_local_symbols(car(iter));
+    val unuse_iter;
+    for (unuse_iter = unuse_syms; unuse_iter; unuse_iter = cdr(unuse_iter))
+      unuse_sym(car(unuse_iter), package);
+  }
+
+  return unuse_package_list;
+}
+
+static val symbol_present(val package, val sym)
+{
+  type_check (package, PKG);
+
+  if (symbol_package(sym) == package)
+    return t;
+
+  if (gethash(package->pk.symhash, symbol_name(sym)) == sym)
+    return t;
+
+  return nil;
+}
+
+val intern(val str, val package_in)
 {
   val new_p;
   loc place;
+  val package = get_package(lit("intern"), package_in, t);
 
   if (!stringp(str))
     uw_throwf(error_s, lit("intern: name ~s isn't a string"), str, nao);
-
-  if (null_or_missing_p(package)) {
-    package = cur_package;
-  } else if (stringp(package)) {
-    val p = find_package(package);
-    if (!p)
-      uw_throwf(error_s, lit("intern: ~s no such package"), package, nao);
-    package = p;
-  }
-
-  type_check (package, PKG);
 
   place = gethash_l(package->pk.symhash, str, mkcloc(new_p));
 
@@ -4865,27 +5035,57 @@ val intern(val str, val package)
   }
 }
 
-val rehome_sym(val sym, val package)
+val unintern(val symbol, val package_in)
 {
-  if (!sym)
-    return nil;
+  val package = get_package(lit("unintern"), package_in, t);
+  val name = symbol_name(symbol);
+  val found_visible, found_hidden;
+  val visible = gethash_f(package->pk.symhash, name, mkcloc(found_visible));
+  val hidden = gethash_f(package->pk.hidhash, name, mkcloc(found_hidden));
 
-  if (null_or_missing_p(package)) {
-    package = cur_package;
-  } else if (stringp(package)) {
-    val p = find_package(package);
-    if (!p)
-      uw_throwf(error_s, lit("rehome-sym: no such package: ~s"), package, nao);
-    package = p;
+  if (!found_visible || visible != symbol) {
+    if (found_hidden && hidden == symbol) {
+      remhash(package->pk.hidhash, name);
+      return hidden;
+    }
+    return nil;
   }
 
-  type_check (package, PKG);
-  type_check (sym, SYM);
+  if (found_hidden) {
+    remhash(package->pk.hidhash, name);
+    sethash(package->pk.symhash, name, hidden);
+    set(mkloc(hidden->s.package, hidden), package);
+    return hidden;
+  }
 
-  if (sym->s.package)
-    remhash(sym->s.package->pk.symhash, symbol_name(sym));
+  if (symbol_package(symbol) == package) {
+    if (symbol == nil)
+      uw_throwf(error_s, lit("unintern: cannot unintern ~s from ~s"),
+                symbol, package, nao);
+    symbol->s.package = nil;
+  }
+
+  remhash(package->pk.symhash, name);
+
+  return symbol;
+}
+
+val rehome_sym(val sym, val package_in)
+{
+  val package = get_package(lit("rehome-sym"), package_in, t);
+  val name = symbol_name(sym);
+
+  if (!sym)
+    uw_throwf(error_s, lit("rehome-sym: cannot rehome ~s"), sym, nao);
+
+  if (sym->s.package) {
+    val name = symbol_name(sym);
+    if (sym->s.package == package)
+      return sym;
+    remhash(sym->s.package->pk.symhash, name);
+  }
   set(mkloc(sym->s.package, sym), package);
-  sethash(package->pk.symhash, symbol_name(sym), sym);
+  sethash(package->pk.symhash, name, sym);
   return sym;
 }
 
@@ -9435,7 +9635,7 @@ dot:
         put_string(lit("#:"), out);
       } else if (obj->s.package == keyword_package) {
         put_char(chr(':'), out);
-      } else if (obj->s.package != cur_package) {
+      } else if (!symbol_present(cur_package, obj)) {
         put_string(obj->s.package->pk.name, out);
         put_char(chr(':'), out);
       }

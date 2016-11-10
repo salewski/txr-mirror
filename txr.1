@@ -38706,19 +38706,37 @@ situation also.
 If a coprocess terminates abnormally or unsuccessfully, an exception is raised.
 
 .SS* Symbols and Packages
-A package is an object which serves as a container of symbols.
+\*(TL has a package system inspired by the salient features of ANSI Common
+Lisp, but substantially simpler.
+
+Each symbol has a name, which is a string.
+
+A package is an object which serves as a container of symbols; the package
+associates the name strings with symbols.
 
 A symbol which exists inside a package is said to be interned in that package.
-A symbol can be interned in at most one package at a time.
+A symbol can be interned in more than one package.
 
-Each symbol has a name, which is a string. It is not necessarily unique:
-two distinct symbols can have the same name.  However, a symbol name is unique
-within a package, because it serves as the key which associates the
-symbol with the package. Two symbols cannot be in the same package if they
-have the same name.  Moreover, a symbol cannot exist in more than one package
-at at time, although it can be relocated from one package to another.  A
-symbols exist which is not entered into any package: such a symbol is
-called "uninterned".
+A symbol may also have a home package. A symbol which has a home package
+is always interned in that package.
+
+A symbol which has a home package is called an
+.IR "interned symbol" .
+
+A symbol which is interned in one or more packages, but has no home package,
+is a
+.IR "quasi-interned symbol" .
+When a quasi-interned symbol is printed, if it is not interned in
+the package currently held in the
+.code *package*
+variable, it will appear in uninterned notation denoted by a
+.code #:
+prefix, even though it is interned in one or more packages.
+This is because in any situation when a symbol is printed with a package
+prefix, that prefix corresponds to the name of its home package.
+The reverse isn't true: when a symbol token is read bearing a package
+prefix, the token denotes any interned symbol in the indicated package,
+whether or not the package is the home package of that symbol.
 
 Packages are held in a global list which can be used to search for a package by
 name. The
@@ -38728,13 +38746,104 @@ deleted from the list with the
 .code delete-package
 function, but it continues
 to exist until the program loses the last reference to that package.
+When a package is deleted with
+.codn delete-package ,
+its symbols are uninterned from all other packages.
+
+An existing symbol can be brought into a package via the
+.code use-sym
+function, causing it to be interned in that package. A symbol which thus exists
+inside a package which is not its home package is called a
+.IR "foreign symbol" ,
+relative to that package.
+The contrasting term with
+.I "foreign symbol"
+is
+.IR "local symbol" ,
+which refers to a symbol, relative to a package, which is interned in that
+package and that package is also its home. Every symbol interned in
+a package is either foreign or local.
+
+If a foreign symbol is introduced into a package, and has the same name
+as an existing local symbol, the local symbol continues to exist, but
+is hidden: it is not accessible via a name lookup on that package.
+While hidden, a symbol loses its home package and is thus
+degraded to either quasi-interned or uninterned status, depending
+on whether that symbol is interned in other packages.
+
+When a foreign symbol is removed from a package via
+.codn unuse-sym ,
+then if a hidden symbol exists in that package of the same name,
+that hidden symbol is re-interned in that package and re-acquires
+that package as its home package, becoming an interned symbol again.
+
+.TP* "Dialect Notes:"
+
+The \*(TL package system doesn't support the ANSI Common Lisp
+concept of package use. Though the
+.code use-package
+and
+.code unuse-package
+functions exist and are similar to the ones in ANSI CL,
+they actually operate on individual foreign symbols, bringing
+them in or removing them, respectively. These functions effectively
+iterate over the local symbols of the used or unused package, and invoke
+.code use-sym
+or
+.codn unuse-sym ,
+respectively.
+
+The \*(TL package system consequently doesn't support the concept
+of shadowing symbols, and conflicts do not exist.  When a foreign symbol is
+introduced into a package which already has a symbol by that name, that symbol
+is silently removed from that package if it is itself foreign, or else hidden
+if it is local.
+
+The \*(TL package system also doesn't feature the concept of
+internal and external symbols.
+
+.NP* Package Library Conventions
+Various functions in the package and symbol area of the library have a
+.meta package
+parameter.  When the argument is optional, it defaults to the current
+value of the
+.code *package*
+special variable.
+
+If specified, the argument may be a character string, which is taken as the
+name of a package. It may also be a symbol, in which case the symbol's name,
+which is a character string, is used. Thus the objects
+.codn :sys ,
+.codn usr:sys ,
+.code abc:sys
+and
+.str sys
+all refer to the same package, the system package which is named
+.strn sys .
+
+A
+.code package
+parameter may also simply be a package object.
+
+Some functions, like
+.code use-package
+and
+.code unuse-package
+functions accept a list of packages as their first argument.
+This may be a list of objects which follow the above conventions:
+strings, symbols or package objects.
+Also, instead of a list, an atom may be passed: a string, symbol
+or package object. It is treated as a singleton list consisting
+of that object.
 
 .coNP Variables @, user-package @ keyword-package and @ system-package
 .desc
 These variables hold predefined packages. The
 .code user-package
-is the one
-in which symbols are read when a \*(TX program is being scanned.
+contains all of the public symbols in the \*(TL library,
+and is also the initial value of the
+.code *package*
+special variable.
 The
 .code keyword-package
 holds keyword symbols, which are printed with
@@ -38745,6 +38854,12 @@ the implementation avoid name clashes with user code in some situations.
 
 These variables shouldn't be modified.  If they are modified, the consequences
 are unspecified.
+
+The names of these packages, respectively, are
+.strn usr ,
+.strn sys ,
+and
+.strn keyword .
 
 .coNP Special variable @ *package*
 .desc
@@ -38841,6 +38956,34 @@ where
 .meta name
 is a string. It is an error if a package by that name exists already.
 
+.coNP Function @ delete-package
+.synb
+.mets (make-package << package )
+.syne
+.desc
+The
+.code delete-package
+breaks the association between a package and its name.
+After
+.codn delete-package ,
+the
+.meta package
+object continues to exist, but cannot be found using
+.codn find-package .
+
+Furthermore,
+.code delete-package
+iterates over all remaining packages. For each remaining package
+.metn p ,
+it performs the semantic action of the
+.cblk
+.meti (unuse-package < package << p)
+.cble
+expression. That is to say, all of the remaining packages
+are scrubbed of any foreign symbols which are the local symbols
+of the deleted
+.metn package .
+
 .coNP Function @ packagep
 .synb
 .mets (packagep << obj )
@@ -38898,7 +39041,7 @@ function retrieves the name of a package.
 
 .coNP Function @ package-symbols
 .synb
-.mets (package-symbols << package )
+.mets (package-symbols <> [ package ])
 .syne
 .desc
 The
@@ -38906,6 +39049,33 @@ The
 function returns a list of all the symbols
 which are interned in
 .metn package .
+
+.coNP Functions @ package-local-symbols and @ package-foreign-symbols
+.synb
+.mets (package-local-symbols <> [ package ])
+.mets (package-foreign-symbols <> [ package ])
+.syne
+.desc
+The
+.code package-local-symbols
+function returns a list of all the symbols
+which are interned in
+.metn package ,
+and whose home package is that package.
+
+The
+.code package-foreign-symbols
+function returns a list of all the symbols which
+are interned in
+.metn package ,
+which do not have that package as their home package,
+or do not have a home package at all.
+
+The union of the local and foreign symbols contains exactly
+the same elements as the list returned by
+.codn package-symbols :
+the symbols interned in a package are partitioned into
+local and foreign.
 
 .coNP Function @ intern
 .synb
@@ -38936,6 +39106,69 @@ is created and inserted into
 and that symbol is returned. In this case, the package becomes the
 symbol's home package.
 
+.coNP Function @ unintern
+.synb
+.mets (unintern < symbol <> [ package ])
+.syne
+.desc
+The
+.code unintern
+function removes
+.meta symbol
+from
+.metn package .
+
+The
+.code nil
+symbol may not be removed from the
+.code usr
+package; an error exception is thrown in this case.
+
+If
+.code symbol
+isn't
+.codn nil ,
+then
+.meta package
+is searched to determine whether it contains
+.meta symbol
+as an interned symbol (either local or foreign), or a hidden symbol.
+
+If
+.meta symbol
+is a hidden symbol, then it is removed from the hidden symbol store.
+Thereafter, even if a same-named foreign symbol is removed from the
+package via
+.code unuse-sym
+or
+.codn unuse-package ,
+those operations will no longer restore the hidden symbol to interned
+status. In this case,
+.meta unintern
+returns the hidden symbol that was removed from the hidden store.
+
+If
+.meta symbol
+is a foreign symbol, then it is removed from the package. If the package
+has a hidden symbol of the same name, that hidden symbol is re-interned
+in the package, and the package once again becomes its home package.
+In this case,
+.meta symbol
+is returned.
+
+If
+.meta symbol
+is a local symbol, the symbol is removed from the package.
+In this case also,
+.meta symbol
+is returned.
+
+If
+.meta symbol
+is not found in the package as either an interned or hidden
+symbol, then the function has no effect and returns
+.codn nil .
+
 .coNP Function @ rehome-sym
 .synb
 .mets (rehome-sym < symbol <> [ package ])
@@ -38946,10 +39179,10 @@ The arguments
 and
 .meta package
 must be a symbol and package object,
-respectively. If
-.meta package
-is not given, then it defaults to the value of
-.codn *package* .
+respectively, and
+.meta symbol
+must not be the symbol
+.codn nil .
 
 The
 .code rehome-sym
@@ -38959,11 +39192,35 @@ into
 .metn package .
 If
 .meta symbol
-is already in a package, it is first removed from that package.
+is already interned in a package, it is first removed from that package.
+
 If a symbol of the same name exists in
-.meta package
+.metn package ,
 that symbol is first removed
 from
+.metn package .
+
+Also, if a symbol of the sane name exists in the hidden symbol store of
+.metn package ,
+that hidden symbol is removed.
+
+Then
+.code symbol
+is interned into
+.metn package ,
+and
+.meta package
+becomes its home package, making it a local symbol of
+.metn package .
+
+Note: if
+.code symbol
+is currently the hidden symbol of some package, it is not removed
+from the hidden symbol store of that package. This is a degenerate
+case. The implication is that if that hidden symbol is ever
+restored in that package, it will once again have that package as
+its home package, and consequently it will turn into a foreign
+symbol of
 .metn package .
 
 .coNP Function @ symbolp
@@ -38999,6 +39256,10 @@ The
 .code symbol-package
 function returns the home package of
 .metn symbol .
+If
+.meta symbol
+has no home package, it returns
+.codn nil .
 
 .coNP Function @ keywordp
 .synb
@@ -39034,6 +39295,139 @@ special symbols
 .code t
 and
 .codn nil .
+
+.coNP Function @ use-sym
+.synb
+.mets (use-sym < symbol <> [ package ])
+.syne
+.desc
+The
+.code use-sym
+function brings an existing
+.code symbol
+into
+.metn package .
+
+In all cases, the function returns
+.codn symbol .
+
+If
+.meta symbol
+is already interned in
+.metn package ,
+then the function has no effect.
+
+Otherwise
+.meta symbol
+is interned in
+.metn package .
+
+If a symbol having the same name as
+.meta symbol
+already exists in
+.metn package ,
+then it is replaced.
+If that replaced symbol is a local symbol of
+.metn package ,
+then the replaced symbol turns into a hidden symbol associated
+with the package. It is placed into a special hidden symbol store
+associated with
+.meta package
+and is stripped of its home package, becoming quasi-interned or uninterned.
+
+An odd case is possible whereby
+.meta symbol
+is already a hidden symbol of
+.metn package .
+In this case, the hidden symbol replaces some foreign symbol and
+is interned in
+.metn package .
+Thus it simultaneously exists as both an interned
+foreign symbol and as a hidden symbol of
+.metn package .
+
+.coNP Function @ unuse-sym
+.synb
+.mets (unuse-sym < symbol <> [ package ])
+.syne
+.desc
+The
+.code unuse-sym
+function removes
+.meta symbol
+from
+.metn package .
+
+If
+.meta symbol
+is not interned in
+.metn package ,
+the function does nothing and returns
+.codn nil .
+
+If
+.meta symbol
+is a local symbol of
+.metn package ,
+an error is thrown: a package cannot "unuse" its own symbol. Removing
+a symbol from its own home package requires the
+.code unintern
+function.
+
+Otherwise
+.meta symbol
+is a foreign symbol interned in
+.meta package
+and is removed.
+
+If the package has a hidden symbol of the same name as
+.metn symbol ,
+that symbol is re-interned into
+.meta package
+as a local symbol. In this case, that previously hidden symbol is
+returned.
+
+If the package has no hidden symbol matching the removed
+.metn symbol ,
+then
+.meta symbol
+itself is returned.
+
+.coNP Functions @ use-package and @ unuse-package
+.synb
+.mets (use-package < package-list <> [ package ])
+.mets (unuse-package < package-list <> [ package ])
+.syne
+.desc
+The
+.meta use-package
+and
+.meta unuse-package
+are convenience functions which perform a mass import of symbols from one
+package to another, or a mass removal, respectively.
+
+The
+.code use-package
+function iterates over all of the local symbols of the packages in
+.metn package-list .
+For each symbol
+.metn s ,
+it performs the semantic action implied by the
+.cblk
+.meti (use-sym < s << package )
+.cble
+expression.
+
+Similarly
+.code unuse-package
+iterates
+.meta package-list
+in the same way, performing, effectively, the semantic action
+of the
+.cblk
+.meti (unuse-sym < s << package )
+.cble
+expression.
 
 .SS* Pseudo-random Numbers
 .coNP Special variable @ *random-state*
