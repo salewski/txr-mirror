@@ -38955,6 +38955,11 @@ function creates and returns a package named
 where
 .meta name
 is a string. It is an error if a package by that name exists already.
+Note: ordinary creation of packages for everyday program modularization
+should be performed with the
+.code defpackage
+macro rather than by direct use of
+.codn make-package .
 
 .coNP Function @ delete-package
 .synb
@@ -39428,6 +39433,73 @@ of the
 .meti (unuse-sym < s << package )
 .cble
 expression.
+
+.coNP Macro @ defpackage
+.synb
+.mets (defpackage < name << clause *)
+.syne
+.desc
+The
+.code defpackage
+macro provides a convenient means to create a package and establish its
+properties in a single construct. It is intended for the ordinary situations
+in which packages support the organization of programs into modules.
+
+The
+.code name
+argument, giving the package name, may be a symbol or a character string.
+If it is a symbol, then the symbol's name is taken to be name for the
+package.
+
+If a package called
+.code name
+already exists, then
+.code defpackage
+selects that package for further operations. Otherwise, a new,
+empty package is created.
+
+The
+.code name
+may be optionally followed by one or more clauses, which are processed
+in the order that they appear. Each clause is a compound form headed
+by a keyword. If no
+.code :use
+clauses are present, then an implicit
+.code "(:use \(dqusr\(dq)"
+clause is inserted ahead of all other clauses.
+
+The supported clauses are as follows:
+.RS
+.meIP (:use << package-name *)
+The
+.code :use
+clause specifies packages whose local symbols are to be interned
+into the package as foreign symbols. Each
+.meta package-name
+may be a string or symbol naming an existing package.
+The list of package names is processed as if by a call to
+.codn use-package .
+.meIP (:use-syms << symbol *)
+The
+.code :use-syms
+clause specifies individual symbols to be interned in the new package.
+The arguments are symbols.
+.meIP (:local << symbol-name *)
+The
+.code :local
+clause specifies the names of symbols to be interned in the new package
+as local symbols. Each
+.meta symbol-name
+argument must be either a character string or a symbol. If it is a symbol, its
+name is taken, thereby reducing the argument to a character string.
+The arguments are processed in the order in which they appear. Each name is
+first interned in the newly created package using the
+.code intern
+function. Then, if the resulting symbol is foreign to the package, it is
+removed with
+.code unuse-sym
+and the name is interned again.
+.RE
 
 .SS* Pseudo-random Numbers
 .coNP Special variable @ *random-state*
