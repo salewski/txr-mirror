@@ -9794,6 +9794,13 @@ tail:
       }
     }
     break;
+  case FUN:
+    if (obj->f.functype == FINTERP) {
+      val fun = obj->f.f.interp_fun;
+      populate_obj_hash(car(fun), ctx);
+      obj = cadr(fun);
+      goto tail;
+    }
   default:
     break;
   }

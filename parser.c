@@ -333,6 +333,13 @@ tail:
       }
     }
     break;
+  case FUN:
+    if (obj->f.functype == FINTERP) {
+      val fun = obj->f.f.interp_fun;
+      circ_backpatch(p, &cs, car(fun));
+      obj = cadr(fun);
+      goto tail;
+    }
   default:
     break;
   }
