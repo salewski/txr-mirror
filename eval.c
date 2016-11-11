@@ -4469,7 +4469,7 @@ static val force(val promise)
     deref(pstate) = promise_inprogress_s;
     ret = funcall(deref(pval));
     deref(pstate) = promise_forced_s;
-    deref(pval) = ret;
+    set(pval, ret);
     return ret;
   } else if (deref(pstate) == promise_inprogress_s) {
     val form = second(cdr(cd));

@@ -7249,7 +7249,7 @@ val alist_nremove(val list, val keys)
 
   while (deref(plist)) {
     if (memqual(car(car(deref(plist))), keys))
-      deref(plist) = cdr(deref(plist));
+      set(plist, cdr(deref(plist)));
     else
       plist = cdr_l(deref(plist));
   }
@@ -7268,7 +7268,7 @@ val alist_nremove1(val list, val key)
 
   while (deref(plist)) {
     if (equal(car(car(deref(plist))), key))
-      deref(plist) = cdr(deref(plist));
+      set(plist, cdr(deref(plist)));
     else
       plist = cdr_l(deref(plist));
   }
