@@ -5107,7 +5107,15 @@ val keywordp(val sym)
 
 val get_current_package(void)
 {
-  return cdr(lookup_var(nil, package_s));
+  val pkg_binding = lookup_var(nil, package_s);
+  val pkg = cdr(pkg_binding);
+  if (type(pkg) != PKG) {
+    rplacd(pkg_binding, user_package);
+    uw_throwf(error_s, lit("variable *package* non-package "
+                           "value ~s (reset to sane value)"),
+              pkg, nao);
+  }
+  return pkg;
 }
 
 val func_f0(val env, val (*fun)(val))
