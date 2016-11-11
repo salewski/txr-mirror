@@ -9651,7 +9651,7 @@ dot:
     put_string(symbol_name(obj), out);
     break;
   case PKG:
-    format(out, lit("#<package: ~s>"), obj->pk.name, nao);
+    format(out, lit("#<package: ~a>"), obj->pk.name, nao);
     break;
   case FUN:
     {
