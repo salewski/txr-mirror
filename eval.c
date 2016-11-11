@@ -1905,15 +1905,13 @@ static val op_setq(val form, val env)
   val args = rest(form);
   val var = pop(&args);
   val newval = pop(&args);
-
-  if (!bindable(var)) {
-    eval_error(form, lit("sys:setq: ~s is not a bindable symbol"), var, nao);
-  } else {
-    val binding = lookup_var(env, var);
-    if (nilp(binding))
-      eval_error(form, lit("unbound variable ~s"), var, nao);
-    return sys_rplacd(binding, eval(newval, env, form));
+  val binding = lookup_var(env, var);
+  if (nilp(binding)) {
+    if (!bindable(var))
+      eval_error(form, lit("sys:setq: ~s is not a bindable symbol"), var, nao);
+    eval_error(form, lit("unbound variable ~s"), var, nao);
   }
+  return sys_rplacd(binding, eval(newval, env, form));
 }
 
 static val op_lisp1_setq(val form, val env)
@@ -1922,14 +1920,13 @@ static val op_lisp1_setq(val form, val env)
   val var = pop(&args);
   val newval = pop(&args);
 
-  if (!bindable(var)) {
-    eval_error(form, lit("sys:lisp1-setq: ~s is not a bindable symbol"), var, nao);
-  } else {
-    val binding = lookup_sym_lisp1(env, var);
-    if (nilp(binding))
-      eval_error(form, lit("unbound variable ~s"), var, nao);
-    return sys_rplacd(binding, eval(newval, env, form));
+  val binding = lookup_sym_lisp1(env, var);
+  if (nilp(binding)) {
+    if (!bindable(var))
+      eval_error(form, lit("sys:lisp1-setq: ~s is not a bindable symbol"), var, nao);
+    eval_error(form, lit("unbound variable ~s"), var, nao);
   }
+  return sys_rplacd(binding, eval(newval, env, form));
 }
 
 static val expand_lisp1_value(val form, val menv)
