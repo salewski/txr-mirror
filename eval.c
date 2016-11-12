@@ -3132,6 +3132,7 @@ static val me_case(val form, val menv)
   val testform = pop(&form);
   val tformsym = gensym(lit("test-"));
   val memfuncsym, eqfuncsym;
+  val lofnil = cons(nil, nil);
   list_collect_decl (condpairs, ptail);
 
   if (casesym == caseq_s) {
@@ -3167,12 +3168,13 @@ static val me_case(val form, val menv)
                                      nao),
                                 forms));
     } else {
+      uses_or2;
       ptail = list_collect(ptail,
                            cons(list(if3(atom(keys), eqfuncsym, memfuncsym),
                                      tformsym,
                                      list(quote_s, keys, nao),
                                      nao),
-                                forms));
+                                or2(forms, lofnil)));
     }
   }
 

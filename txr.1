@@ -13178,6 +13178,9 @@ If all these clauses are exhausted, and there is no
 then the value nil is returned. Otherwise, the forms in the
 .meta else-clause
 are evaluated, and the value of the last one is returned.
+If there are no forms, then
+.code nil
+is returned.
 
 The syntax of a
 .meta normal-clause
@@ -49313,13 +49316,15 @@ is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
 .IP 156
-After version 156, a bug was fixed in the macro expander for
+After version 156, two behaviors changed in the in the macro expander for
 .codn caseq ,
 .code caseql
 and
-.codn casequal .
-Selecting a compatibility value of 156 or less restores the buggy
-behavior. The bug was that single-atom case keys were undergoing
+.codn casequal :
+one outright bug was fixed, and one hitherto undocumented behavior
+was changed and specified in the documentation at the same time.
+Selecting a compatibility value of 156 or less restores the previous
+behaviors. The bug was that single-atom case keys were undergoing
 evaluation. For instance
 .code "(caseql x (a 0))"
 would arrange for the evaluation of
@@ -49330,6 +49335,15 @@ itself. Beside using the compatibility mechanism, a workaround is to
 use a list of keys, exemplified by a rewrite of the foregoing
 expression to
 .codn "(caseql x ((a) 0))" .
+The other behavior was that empty lists of forms in a clause were
+producing a result value of
+.codn t .
+For example
+.code "(case 1 (1))"
+previously yielded
+.codn t ,
+but now yields
+.codn nil .
 .IP 155
 After version 155, the
 .code tok-str
