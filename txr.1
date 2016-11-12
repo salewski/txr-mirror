@@ -39459,7 +39459,10 @@ If a package called
 already exists, then
 .code defpackage
 selects that package for further operations. Otherwise, a new,
-empty package is created.
+empty package is created. In either case, this package is referred
+to as the
+.I "present package"
+in the following descriptions.
 
 The
 .code name
@@ -39477,7 +39480,7 @@ The supported clauses are as follows:
 The
 .code :use
 clause specifies packages whose local symbols are to be interned
-into the package as foreign symbols. Each
+into the present package as foreign symbols. Each
 .meta package-name
 may be a string or symbol naming an existing package.
 The list of package names is processed as if by a call to
@@ -39485,8 +39488,27 @@ The list of package names is processed as if by a call to
 .meIP (:use-syms << symbol *)
 The
 .code :use-syms
-clause specifies individual symbols to be interned in the new package.
+clause specifies individual symbols to be interned in the present package.
 The arguments are symbols.
+.meIP (:use-from < package-name << symbol-name *)
+The
+.code :use-from
+clause specifies the names of local symbols in a package denoted by
+.meta package-name
+to be used in the present package. All arguments of
+.code :use-from
+are either strings or symbols which are reduced to strings by mapping
+to their names. Each
+.meta symbol-name
+is interned in the package identified by
+.metn package-name ,
+which may have the effect of creating that symbol.
+This symbol is expected to be a local symbol of that package. If
+that is so, the symbol is brought into the present package via
+.codn use-symbol .
+Otherwise if the symbol is foreign to package identified by
+.metn package-name ,
+then an error exception is thrown.
 .meIP (:local << symbol-name *)
 The
 .code :local

@@ -37,6 +37,23 @@
          (name-str (sys:name-str 'package name))
          (exp-clauses (append-each ((c clauses))
                         (tree-case c
+                          ((keyword package . rest)
+                            (caseql keyword
+                              (:use-from
+                                ^((let ((p (find-package ',package)))
+                                    (unless p
+                                      (throwf 'eval-error
+                                              "~s: no such package: ~s"
+                                              'defpackage ',package))
+                                    (each ((n ',(mapcar (op sys:name-str 'symbol)
+                                                        rest)))
+                                      (let ((s (intern n p)))
+                                        (unless (eq (symbol-package s) p)
+                                          (throwf 'eval-error
+                                                  "~s: won't use non-local ~s from ~s"
+                                                  'defpackage s p))
+                                        (use-sym s ,pkg))))))
+                              (t :)))
                           ((keyword . rest)
                             (caseql keyword
                               (:use
@@ -50,7 +67,12 @@
                                     (let ((s (intern n ,pkg)))
                                       (unless (eq (symbol-package s) ,pkg)
                                         (unuse-sym s ,pkg)
-                                        (intern n ,pkg))))))))
+                                        (intern n ,pkg))))))
+                              (:use-from
+                                 (throwf 'eval-error
+                                         "~s: :use-from clause needs package argument"
+                                          'defpackage))
+                              (t :)))
                           (atom
                             (throwf 'eval-error "~s: invalid clause: ~s"
                                     'defpackage atom))))))
