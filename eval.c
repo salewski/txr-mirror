@@ -3157,12 +3157,23 @@ static val me_case(val form, val menv)
     if (keys == t)
       eval_error(form_orig, lit("~s: symbol t used as key"), casesym, nao);
 
-    ptail = list_collect(ptail,
-                         cons(list(if3(atom(keys), eqfuncsym, memfuncsym),
-                                   tformsym,
-                                   if3(atom(keys), keys, list(quote_s, keys, nao)),
-                                   nao),
-                              forms));
+    if (opt_compat && opt_compat <= 156) {
+      ptail = list_collect(ptail,
+                           cons(list(if3(atom(keys), eqfuncsym, memfuncsym),
+                                     tformsym,
+                                     if3(atom(keys),
+                                         keys,
+                                         list(quote_s, keys, nao)),
+                                     nao),
+                                forms));
+    } else {
+      ptail = list_collect(ptail,
+                           cons(list(if3(atom(keys), eqfuncsym, memfuncsym),
+                                     tformsym,
+                                     list(quote_s, keys, nao),
+                                     nao),
+                                forms));
+    }
   }
 
   if (form && atom(form))

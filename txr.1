@@ -49312,6 +49312,24 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 156
+After version 156, a bug was fixed in the macro expander for
+.codn caseq ,
+.code caseql
+and
+.codn casequal .
+Selecting a compatibility value of 156 or less restores the buggy
+behavior. The bug was that single-atom case keys were undergoing
+evaluation. For instance
+.code "(caseql x (a 0))"
+would arrange for the evaluation of
+.code a
+as a variable, rather than treating it as the symbol
+.code a
+itself. Beside using the compatibility mechanism, a workaround is to
+use a list of keys, exemplified by a rewrite of the foregoing
+expression to
+.codn "(caseql x ((a) 0))" .
 .IP 155
 After version 155, the
 .code tok-str
