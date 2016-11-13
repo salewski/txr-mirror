@@ -80,6 +80,7 @@ val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s;
 val tree_case_s, tree_bind_s;
 val sys_mark_special_s;
 val caseq_s, caseql_s, casequal_s;
+val caseq_star_s, caseql_star_s, casequal_star_s;
 val memq_s, memql_s, memqual_s;
 val eq_s, eql_s, equal_s;
 val car_s, cdr_s, not_s, vecref_s;
@@ -3133,12 +3134,14 @@ static val me_case(val form, val menv)
   val tformsym = gensym(lit("test-"));
   val memfuncsym, eqfuncsym;
   val lofnil = cons(nil, nil);
+  val star = tnil(casesym == caseq_star_s || casesym == caseql_star_s ||
+                  casesym == casequal_star_s);
   list_collect_decl (condpairs, ptail);
 
-  if (casesym == caseq_s) {
+  if (casesym == caseq_s || casesym == caseq_star_s) {
     memfuncsym = memq_s;
     eqfuncsym = eq_s;
-  } else if (casesym == caseql_s) {
+  } else if (casesym == caseql_s || casesym == caseql_star_s) {
     memfuncsym = memql_s;
     eqfuncsym = eql_s;
   } else {
@@ -3158,7 +3161,14 @@ static val me_case(val form, val menv)
     if (keys == t)
       eval_error(form_orig, lit("~s: symbol t used as key"), casesym, nao);
 
-    if (opt_compat && opt_compat <= 156) {
+    if (star) {
+      if (atom(keys))
+        keys = eval(keys, nil, form);
+      else
+        keys = eval(cons(list_s, keys), nil, form);
+    }
+
+    if (opt_compat && opt_compat <= 156 && !star) {
       ptail = list_collect(ptail,
                            cons(list(if3(atom(keys), eqfuncsym, memfuncsym),
                                      tformsym,
@@ -4734,6 +4744,9 @@ void eval_init(void)
   caseq_s = intern(lit("caseq"), user_package);
   caseql_s = intern(lit("caseql"), user_package);
   casequal_s = intern(lit("casequal"), user_package);
+  caseq_star_s = intern(lit("caseq*"), user_package);
+  caseql_star_s = intern(lit("caseql*"), user_package);
+  casequal_star_s = intern(lit("casequal*"), user_package);
   memq_s = intern(lit("memq"), user_package);
   memql_s = intern(lit("memql"), user_package);
   memqual_s = intern(lit("memqual"), user_package);
@@ -4910,6 +4923,9 @@ void eval_init(void)
   reg_mac(caseq_s, me_case);
   reg_mac(caseql_s, me_case);
   reg_mac(casequal_s, me_case);
+  reg_mac(caseq_star_s, me_case);
+  reg_mac(caseql_star_s, me_case);
+  reg_mac(casequal_star_s, me_case);
   reg_mac(intern(lit("tb"), user_package), me_tb);
   reg_mac(intern(lit("tc"), user_package), me_tc);
   reg_mac(opip_s, me_opip);

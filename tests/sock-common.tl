@@ -1,5 +1,5 @@
 (defun local-addr (family port)
-  (caseql family
+  (caseql* family
     (af-inet (new sockaddr-in addr inaddr-loopback port port))
     (af-inet6 (new sockaddr-in6 addr in6addr-loopback port port))))
 

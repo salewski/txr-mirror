@@ -13243,6 +13243,81 @@ uses
     ...)
 .cble
 
+.coNP Macros @, caseq* @ caseql* and @ casequal*
+.synb
+.mets (caseq* < test-form << normal-clause * <> [ else-clause ])
+.mets (caseql* < test-form << normal-clause * <> [ else-clause ])
+.mets (casequal* < test-form << normal-clause * <> [ else-clause ])
+.syne
+.desc
+The
+.codn caseq* ,
+.codn caseql* ,
+and
+.code casequal*
+macros are similar to the macros
+.codn caseq ,
+.codn caseql ,
+and
+.codn casequal ,
+differing from them in only the following regard. The
+.metn normal-clause ,
+of these macros has the form
+.cblk
+.mets >> ( evaluated-key << form *)
+.cble
+where
+.code evaluated-key
+is either an atom, which is evaluated to produce a key, or else
+else a compound form, whose elements are evaluated as forms, producing
+multiple keys.  This evaluation takes place at macro-expansion time,
+in the dynamic environment.
+
+The
+.meta else-clause
+works the same way under these macros as under
+.code caseq
+.IR "et al" .
+
+Note that although in a
+.metn normal-clause ,
+.meta evaluated-key
+must not be the atom
+.codn t ,
+there is no restriction against it being
+an atom which evaluates to
+.code t.
+In this situation, the value
+.code t
+has no special meaning.
+
+The
+.meta evaluated-key
+expressions are evaluated in the order in which they appear in
+the construct, at the time the
+.codn caseq* ,
+.code caseql*
+or
+.code casequal*
+macro is expanded.
+
+Note: these macros allow the use of variables and global symbol
+macros as case keys.
+
+.TP* Example:
+
+.cblk
+  (defvarl red 0)
+  (defvarl green 1)
+  (defvarl blue 2)
+
+  (let ((color blue))
+    (caseql* color
+      (red "hot")
+      ((green blue) "cool")))
+  --> "cool"
+.cble
+
 .coNP Operator/function @ if
 .synb
 .mets (if < cond < t-form <> [ e-form ])
