@@ -38783,6 +38783,202 @@ situation also.
 
 If a coprocess terminates abnormally or unsuccessfully, an exception is raised.
 
+.SS* I/O-Related Convenience Functions
+
+The functions in this group create a stream, perform an I/O operation
+on it, and ensure that it is closed, in one convenient operation. They
+operate on files or command streams.
+
+.coNP Functions @, file-get @ file-get-string and @ file-get-lines
+.synb
+.mets (file-get << name )
+.mets (file-get-string << name )
+.mets (file-get-lines << name )
+.syne
+.desc
+The
+.code file-get
+function opens a text stream over the file indicated by the string argument
+.meta name
+for reading, reads the printed representation of a  \*(TL object from it,
+and returns that object, ensuring that the stream is closed.
+
+The
+.code file-get-string
+is similar to
+.code file-get
+except that it reads the entire file as a text stream and returns
+its contents in a single character string.
+
+The
+.code file-get-lines
+function opens a text stream over the file indicated by
+.meta name
+and returns produces a lazy list of strings representing the lines
+of text of that file as if by a call to the
+.code get-lines
+function, and returns that list. The stream remains open until the
+list is consumed to the end, as indicated in the description of
+.codn get-lines .
+
+.coNP Functions @, file-put @ file-put-string and @ file-put-lines
+.synb
+.mets (file-put < name << obj )
+.mets (file-put-string < name << string )
+.mets (file-put-lines < name << list )
+.syne
+.desc
+The
+.codn file-put ,
+.code file-put-string
+and
+.code file-put-lines
+functions open a text stream over the file indicated by the string argument
+.metn name ,
+write the argument object into the file in their specific manner,
+and then close the file.
+
+If the file doesn't exist, it is created.
+If it exists, it is truncated to zero length and overwritten.
+
+The
+.code file-put
+function writes a printed representation of
+.meta obj
+using the
+.code prinl
+function. The return value is that of
+.codn prinl .
+
+The
+.code file-put-string
+function writes
+.meta string
+to the stream using the
+.code put-string
+function. The return value is that of
+.codn put-string .
+
+The
+.code file-put-lines
+function writes
+.meta list
+to the stream using the
+.code put-lines
+function. The return value is that of
+.codn put-lines .
+
+.coNP Functions @, file-append @ file-append-string and @ file-append-lines
+.synb
+.mets (file-append < name << obj )
+.mets (file-append-string < name << string )
+.mets (file-append-lines < name << list )
+.syne
+.desc
+The
+.codn file-append ,
+.code file-append-string
+and
+.code file-append-lines
+functions open a text stream over the file indicated by the string argument
+.metn name ,
+write the argument object into the stream in their specific manner,
+and then close the stream.
+
+These functions are close counterparts of, respectively,
+.codn file-get ,
+.code file-append-string
+and
+.codn file-append-lines .
+
+These functions behave differently when the indicated file
+already exists. Rather than being truncated and overwritten,
+the file is extended by appending the new data to its end.
+
+.coNP Functions @, command-get @ command-get-string and @ command-get-lines
+.synb
+.mets (command-get << cmd )
+.mets (command-get-string << cmd )
+.mets (command-get-lines << cmd )
+.syne
+.desc
+The
+.code command-get
+function opens text stream over an input command pipe created for
+the command string
+.metn cmd ,
+as if by the
+.code open-command
+function.  It reads the printed representation of a  \*(TL object from it, and
+returns that object, ensuring that the stream is closed.
+
+The
+.code command-get-string
+is similar to
+.code command-get
+except that it reads the entire file as a text stream and returns
+its contents in a single character string.
+
+The
+.code command-get-lines
+function opens a text stream over an input command pipe created for the
+command string
+.meta cmd
+and returns produces a lazy list of strings representing the lines
+of text of that file as if by a call to the
+.code get-lines
+function, and returns that list. The stream remains open until the
+list is consumed to the end, as indicated in the description of
+.codn get-lines .
+
+.coNP Functions @, command-put @ command-put-string and @ command-put-lines
+.synb
+.mets (command-put < cmd << obj )
+.mets (command-put-string < cmd << string )
+.mets (command-put-lines < cmd << list )
+.syne
+.desc
+The
+.codn command-put ,
+.code command-put-string
+and
+.code command-put-lines
+functions open an output text stream over an output command pipe created
+for the command specified in the string argument
+.metn cmd ,
+as if by the
+.code open-command
+function.
+They write the argument object into the stream in their specific manner,
+and then close the stream.
+
+The
+.code command-put
+function writes a printed representation of
+.meta obj
+using the
+.code prinl
+function. The return value is that of
+.codn prinl .
+
+The
+.code command-put-string
+function writes
+.meta string
+to the stream using the
+.code put-string
+function. The return value is that of
+.codn put-string .
+
+The
+.code command-put-lines
+function writes
+.meta list
+to the stream using the
+.code put-lines
+function. The return value is that of
+.codn put-lines .
+
 .SS* Symbols and Packages
 \*(TL has a package system inspired by the salient features of ANSI Common
 Lisp, but substantially simpler.
