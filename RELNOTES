@@ -1,3 +1,48 @@
+                                    TXR 157
+                                   2016-11-14
+
+
+  Features
+
+  - New #; syntax for commenting out Lisp object.
+  - #: syntax for uninterned symbols now works as an input notation.
+  - Packages:
+    - Overhauled implementation with increased scope.
+    - New *package* special variable holds current package.
+    - New concepts in package system: foreign symbols, hidden symbols.
+    - New functions: package-local-symbols, package-foreign-symbols, use-sym,
+      unuse-sym, use-package, unuse-package, unintern.
+    - New defpackage macro.
+  - Improvements in Vim syntax coloring; don't forget to install new txr.vim
+    and tl.vim files.
+  - New convenience functions for file or process I/O in one call: file-get,
+    file-put, file-append, file-get-string, file-put-string,
+    file-append-string, file-get-lines, file-put-lines, file-append-lines,
+    command-get, command-put, command-get-string, command-put-string,
+    command-get-lines, and command-put-lines.
+
+  Bugs
+
+  - Fixed an infinite loop in the processing of syntactic places: regression
+    introduced in 156.
+  - Fixed bug in processing of nested syntactic places like [place arg] where
+    the inner place is a macro.
+  - Fixed regression in awk macro introduced in 156, related to the above bug:
+    not being able to assign to a field as in (set [f 3] "foo"). The bug was
+    there before, but the change suddenly removed the accidental circumstances
+    which protected the awk macro from reproducing the problem.
+  - Fixed some additional problems in circle printing, in the printing
+    of package objects and and interpreted functions.
+  - A few GC-unsafe mutations were found in the TXR kernel, by inspection, and
+    fixed. No actual instability was reproduced.
+  - Fixed a bug in the caseq, caseql and casequal macros: single-atom key
+    values were being exposed to evaluation rather than taken as themselves.
+    This behavior can still be obtained with the compatibility switch;
+    but it is recommended to first see whether switching to one of the new
+    case constructs caseq*, caseql* or casequal* is feasible.
+
+
+
                                     TXR 156
                                    2016-11-05
 
