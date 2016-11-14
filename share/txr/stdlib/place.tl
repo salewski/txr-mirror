@@ -472,7 +472,7 @@
   (getter setter
     (with-gensyms (index-sym list-sym sentinel-head-sym parent-cell-sym)
       (if (place-form-p list sys:*pl-env*)
-        (with-update-expander (lgetter lsetter) list nil
+        (with-update-expander (lgetter lsetter) list sys:*pl-env*
           ^(alet ((,index-sym ,index)
                   (,list-sym (,lgetter)))
              (let* ((,sentinel-head-sym (cons nil ,list-sym))
@@ -494,7 +494,7 @@
   (getter setter
     (with-gensyms (index-sym list-sym sentinel-head-sym parent-cell-sym)
       (if (place-form-p list sys:*pl-env*)
-        (with-update-expander (lgetter lsetter) list nil
+        (with-update-expander (lgetter lsetter) list sys:*pl-env*
           ^(alet ((,index-sym ,index)
                   (,list-sym (,lgetter)))
              (let* ((,sentinel-head-sym (cons nil ,list-sym))
@@ -516,7 +516,7 @@
 (defplace (butlastn num list) body
   (getter setter
     (with-gensyms (num-sym list-sym head-sym tail-sym val-sym)
-      (with-update-expander (lgetter lsetter) list nil
+      (with-update-expander (lgetter lsetter) list sys:*pl-env*
         ^(alet ((,num-sym ,num)
                 (,list-sym (,lgetter)))
            (let* ((,tail-sym (nthlast ,num-sym ,list-sym))
@@ -595,7 +595,7 @@
 (defplace (sub seq :whole args : (from 0) (to t)) body
   (getter setter
     (with-gensyms (seq-sym from-sym to-sym v-sym)
-      (with-update-expander (seq-getter seq-setter) seq nil
+      (with-update-expander (seq-getter seq-setter) seq sys:*pl-env*
         ^(alet ((,seq-sym (,seq-getter))
                 (,from-sym ,from)
                 (,to-sym ,to))
@@ -608,7 +608,7 @@
               ,body)))))
   (ssetter
     (with-gensyms (seq-sym from-sym to-sym v-sym)
-      (with-update-expander (seq-getter seq-setter) seq nil
+      (with-update-expander (seq-getter seq-setter) seq sys:*pl-env*
         ^(macrolet ((,ssetter (val)
                      ^(alet ((,',seq-sym (,',seq-getter))
                              (,',from-sym ,',from)
@@ -620,7 +620,7 @@
         ,body))))
   (deleter
     (with-gensyms (seq-sym from-sym to-sym)
-      (with-update-expander (seq-getter seq-setter) seq nil
+      (with-update-expander (seq-getter seq-setter) seq sys:*pl-env*
         ^(alet ((,seq-sym (,seq-getter))
                 (,from-sym ,from)
                 (,to-sym ,to))
@@ -670,7 +670,7 @@
       (let ((arg-syms (mapcar (ret (gensym)) args))
             (sys:*lisp1* t))
         (if (place-form-p obj-place sys:*pl-env*)
-          (with-update-expander (ogetter-sym osetter-sym) obj-place nil
+          (with-update-expander (ogetter-sym osetter-sym) obj-place sys:*pl-env*
             ^(rlet ((,obj-sym (,ogetter-sym))
                     ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2))) arg-syms args))
                (macrolet ((,getter ()
@@ -697,7 +697,7 @@
       (let ((arg-syms (mapcar (ret (gensym)) args))
             (sys:*lisp1* t))
         (if (place-form-p obj-place sys:*pl-env*)
-          (with-update-expander (ogetter-sym osetter-sym) obj-place nil
+          (with-update-expander (ogetter-sym osetter-sym) obj-place sys:*pl-env*
             ^(macrolet ((,ssetter (val)
                          ^(rlet ((,',obj-sym (,',ogetter-sym))
                                  ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2)))
@@ -725,7 +725,7 @@
       (let ((arg-syms (mapcar (ret (gensym)) args))
             (sys:*lisp1* t))
         (if (place-form-p obj-place sys:*pl-env*)
-          (with-update-expander (ogetter-sym osetter-sym) obj-place nil
+          (with-update-expander (ogetter-sym osetter-sym) obj-place sys:*pl-env*
             ^(macrolet ((,deleter ()
                          ^(rlet ((,',obj-sym (,',ogetter-sym))
                                  ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2)))
