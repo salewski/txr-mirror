@@ -410,7 +410,7 @@ static val getopts_instantiate(val set_fun)
 static val package_set_entries(val dlt, val fun)
 {
   val name[] = {
-    lit("defpackage"),
+    lit("defpackage"), lit("in-package"),
     nil
   };
   set_dlt_entries(dlt, name, fun);

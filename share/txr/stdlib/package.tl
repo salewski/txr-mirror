@@ -81,3 +81,10 @@
        ,*(unless (assoc :use clauses) ^((use-package "usr" ,pkg)))
        ,*exp-clauses
        ,pkg)))
+
+(defmacro in-package (pkg)
+  (unless (or (symbolp pkg) (stringp pkg))
+    (throwf 'eval-error "~s: ~s isn't a package name" 'in-package pkg))
+  ^(set *package* (or (find-package ',pkg)
+                      (throwf 'eval-error "~s: no such package: ~s"
+                              'in-package ',pkg))))
