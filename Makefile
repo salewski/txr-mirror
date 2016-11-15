@@ -318,6 +318,7 @@ tst/tests/012/%: TXR_DBG_OPTS :=
 tst/tests/013/%: TXR_DBG_OPTS :=
 tst/tests/014/%: TXR_DBG_OPTS :=
 tst/tests/015/%: TXR_DBG_OPTS :=
+tst/tests/016/%: TXR_DBG_OPTS :=
 
 .PRECIOUS: tst/%.out
 tst/%.out: %.txr
