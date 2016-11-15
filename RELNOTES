@@ -1,3 +1,26 @@
+                                    TXR 158
+                                   2016-11-15
+
+
+  Features
+
+  - OOP:
+    - New feature: dirty flag bit on struct instances. Code can tell if any
+      instance slots were modified since last time dirty flag was cleared.
+  - Packages:
+    - New in-package macro.
+
+  Bugs
+
+  - Interactive txr switches *package* to user package before entering
+    the listener, in case the specified script file alters it.
+  - Fixed broken bignum addition.
+  - Fixed breakage in fixnum to bignum conversion affecting 64 bit targets.
+  - Fixed invalid mutation of applied argument list, affecting
+    some functions. Test case: [apply lcm (list 1)] mutates (1) to (nil).
+
+
+
                                     TXR 157
                                    2016-11-14
 
