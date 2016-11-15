@@ -2,7 +2,7 @@
 /* $Id: mpi-config.h,v 1.1 2004/02/08 04:29:29 sting Exp $ */
 
 /*
-  For boolean options, 
+  For boolean options,
   0 = no
   1 = yes
 
