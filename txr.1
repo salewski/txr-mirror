@@ -20740,6 +20740,30 @@ is invoked once in a type's life time, when the type is created.
 The function is also inherited by derived struct types and invoked when
 they are created.
 
+.NP* Dirty Flags
+All structure instances contain a Boolean flag called the
+.IR "dirty flag" .
+This flag is not a slot, but rather a meta-data property that is exposed
+to program access. When the flag is set, an object is said to be dirty;
+otherwise it is clean.
+
+Newly constructed objects come into existence dirty. The dirty flag
+state can be tested with the function
+.codn test-dirty .
+An object can be marked as clean by clearing its dirty flag with
+.codn clear-dirty .
+A combined operation
+.code test-clear-dirty
+is provided which clears the dirty flag, and
+returns its previous value.
+
+The dirty flag is set whenever a new value is stored into the instance
+slot of an object.
+
+Note: the dirty flag can be used to support support the caching of values
+derived from an object's slots. The derived values don't have to be
+re-computed while an object remains clean.
+
 .coNP Macro @ defstruct
 .synb
 .mets (defstruct >> { name | >> ( name << arg *)} < super
@@ -22111,6 +22135,60 @@ must be a symbol which names a slot in that structure.
 The
 .meta new-value
 argument specifies the value to be stored in the slot.
+
+If a successful store takes place to an instance slot of
+.metn struct-obj ,
+then the dirty flag of that object is set, causing the
+.code test-dirty
+function to report true for that object.
+
+.coNP Functions @, test-dirty @ clear-dirty and @ test-clear-dirty
+.synb
+.mets (test-dirty << struct-obj )
+.mets (clear-dirty << struct-obj )
+.mets (test-clear-dirty << struct-obj )
+.syne
+.desc
+The
+.codn test-dirty ,
+.code clear-dirty
+and
+.code test-clear-dirty
+functions comprise the interface for interacting with structure
+dirty flags.
+
+Each structure instance has a dirty flag. When this flag is set, the
+structure instance is said to be dirty, otherwise it is said to be clean. A
+newly created structure is dirty.  A structure remains dirty until its dirty
+flag is explicitly reset.  If a structure is clean, and one of its instance
+slots is overwritten with a new value, it becomes dirty.
+
+The
+.code test-dirty
+function returns the dirty flag of
+.metn struct-obj :
+.code t
+if
+.meta struct-obj
+is dirty, otherwise
+.codn nil .
+
+The
+.code clear-dirty
+function clears the dirty flag of
+.meta struct-obj
+and returns
+.meta struct-obj
+itself.
+
+The
+.code test-clear-dirty
+flag combines these operations: it makes a note of the dirty flag of
+.meta struct-obj
+and clears it. Then it returns the noted value,
+.code t
+or
+.codn nil .
 
 .coNP Function @ structp
 .synb

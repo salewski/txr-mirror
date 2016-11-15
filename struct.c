@@ -85,6 +85,7 @@ struct struct_inst {
   struct struct_type *type;
   cnum id : sizeof (cnum) * CHAR_BIT - 1 ;
   unsigned lazy : 1;
+  unsigned dirty : 1;
   val slot[1];
 };
 
@@ -142,6 +143,9 @@ void struct_init(void)
   reg_fun(intern(lit("static-slot"), user_package), func_n2(static_slot));
   reg_fun(intern(lit("static-slot-set"), user_package),
           func_n3(static_slot_set));
+  reg_fun(intern(lit("test-dirty"), user_package), func_n1(test_dirty));
+  reg_fun(intern(lit("test-clear-dirty"), user_package), func_n1(test_clear_dirty));
+  reg_fun(intern(lit("clear-dirty"), user_package), func_n1(clear_dirty));
   reg_fun(intern(lit("static-slot-ensure"), user_package),
           func_n4o(static_slot_ensure, 3));
   reg_fun(intern(lit("call-super-method"), user_package),
@@ -463,6 +467,7 @@ val make_struct(val type, val plist, struct args *args)
   si->type = st;
   si->id = st->id;
   si->lazy = 0;
+  si->dirty = 1;
 
   sinst = cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
 
@@ -882,8 +887,16 @@ val slotset(val strct, val sym, val newval)
 
   if (symbolp(sym)) {
     loc ptr = lookup_slot(strct, si, sym);
-    if (!nullocp(ptr))
+    if (!nullocp(ptr)) {
+      if (!si->dirty) {
+        if (valptr(ptr) >= &si->slot[0] &&
+            valptr(ptr) < &si->slot[si->type->nslots])
+        {
+          si->dirty = 1;
+        }
+      }
       return set(ptr, newval);
+    }
   }
 
   no_such_slot(self, si->type->self, sym);
@@ -918,6 +931,30 @@ val static_slot_set(val stype, val sym, val newval)
   }
 
   no_such_slot(self, stype, sym);
+}
+
+val test_dirty(val strct)
+{
+  const val self = lit("test-dirty");
+  struct struct_inst *si = struct_handle(strct, self);
+  return tnil(si->dirty);
+}
+
+val test_clear_dirty(val strct)
+{
+  const val self = lit("test-clear-dirty");
+  struct struct_inst *si = struct_handle(strct, self);
+  val ret = tnil(si->dirty);
+  si->dirty = 0;
+  return ret;
+}
+
+val clear_dirty(val strct)
+{
+  const val self = lit("clear-dirty");
+  struct struct_inst *si = struct_handle(strct, self);
+  si->dirty = 0;
+  return strct;
 }
 
 static void static_slot_home_fixup_rec(struct struct_type *st)
