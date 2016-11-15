@@ -22779,7 +22779,9 @@ that structure type support
 
 The
 .code equal
-method must not take any arguments.  Moreover, the method must never return
+method must not require any arguments other than
+.metn object .
+Moreover, the method must never return
 .codn nil .
 
 When a struct which supports equality substitution is compared using
@@ -22796,7 +22798,7 @@ The same applies when an struct is hashed using the
 .code hash-equal
 function, or implicitly by an
 .code :equal-hash
-hash tables.
+hash table.
 
 Note: if an
 .code equal
