@@ -164,8 +164,7 @@ INLINE val args_atz(struct args *args, cnum arg_index)
   if (arg_index < args->fill) {
     return z(args->arg[arg_index]);
   } else {
-    loc l = car_l(args->list);
-    return zap(valptr(l));
+    return car(z(args->list));
   }
 }
 
