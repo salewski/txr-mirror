@@ -4130,7 +4130,7 @@ mp_err   s_mp_add(mp_int *a, mp_int *b)        /* magnitude addition      */
   pa = DIGITS(a);
   pb = DIGITS(b);
   for(ix = 0; ix < used; ++ix) {
-    w += *pa + *pb++;
+    w += *pa + convert(mp_word, *pb++);
     *pa++ = ACCUM(w);
     w = CARRYOUT(w);
   }
