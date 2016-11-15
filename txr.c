@@ -1005,6 +1005,7 @@ repl:
            num(opt_compat), nao);
   reg_var(args_s, or2(orig_args, arg_list));
   reg_varl(intern(lit("self-path"), user_package), lit("listener"));
+  env_vbind(dyn_env, package_s, user_package);
   repl(bindings, std_input, std_output);
 #endif
   return 0;
