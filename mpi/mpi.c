@@ -566,6 +566,7 @@ mp_err mp_set_uintptr(mp_int *mp, uint_ptr_t z)
 	DIGIT(mp, ix) = (z >> shift) & MP_DIGIT_MAX;
     }
 
+    s_mp_clamp(mp);
   } else {
     mp_set(mp, z);
   }
@@ -634,6 +635,8 @@ mp_err mp_set_double_intptr(mp_int *mp, double_intptr_t z)
   {
     DIGIT(mp, ix) = (v >> shift) & MP_DIGIT_MAX;
   }
+
+  s_mp_clamp(mp);
 
   if(z < 0)
     SIGN(mp) = MP_NEG;
