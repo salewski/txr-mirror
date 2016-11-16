@@ -1278,10 +1278,24 @@ static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)
     } else {
       val package = find_package(pkg_name);
       if (!package) {
-        yyerrorf(scnr, lit("~a:~a: package ~a not found"), pkg_name, sym_name, pkg_name, nao);
+        yyerrorf(scnr, lit("~a:~a: package ~a not found"),
+                 pkg_name, sym_name, pkg_name, nao);
         return nil;
       }
-      sym = intern(sym_name, package);
+
+      sym = find_symbol(sym_name, package);
+
+      if (sym == zero) {
+        if (!package_fallback_list(package)) {
+          sym = intern(sym_name, package);
+        } else {
+          yyerrorf(scnr, lit("~a:~a: cannot intern symbol using qualified symbol syntax,"),
+                   pkg_name, sym_name, nao);
+          yyerrorf(scnr, lit("~a:~a: because package ~a has a fallback list"),
+                   pkg_name, sym_name, pkg_name, nao);
+          return nil;
+        }
+      }
     }
   } else {
     val sym_name = string(lexeme);

@@ -10061,20 +10061,27 @@ a leading
 If a symbol name contains a colon, the
 .I lident
 characters, if any, before that colon constitute the package prefix.
-It is erroneous to read a symbol whose package doesn't exist.
-If the package exist, the symbol is interned in that package.
 
-If the package name is an empty identifier, the package is understood to be the
-.code keyword
-package and the symbol is a self-evaluating keyword symbol.
-
-For example
+For example, the syntax
 .code foo:bar
-is the
+denotes
 .code bar
 symbol in the
 .code foo
 package.
+
+It is a syntax error to read a symbol whose package doesn't exist.
+
+If the package exists, but the symbol name doesn't exist in that package,
+the behavior depends on whether that package has a fallback list.
+If the package has an empty fallback list, then the symbol is interned in
+that package. If the package has non-empty fallback list, then the situation is
+a syntax error.
+
+If the package name is an empty string (the colon is preceded by nothing), the
+package is understood to be the
+.code keyword
+package. The symbol is interned in that package.
 
 The syntax
 .code :test
@@ -10084,6 +10091,19 @@ in the
 .code keyword
 package, the same as
 .codn keyword:test .
+
+Symbols in the keyword package are self-evaluating. This means that
+when a keyword symbol is evaluated as a form, the value of that form
+is the keyword symbol itself. Exactly two non-keyword symbols also
+have this special self-evaluating behavior:
+the symbols
+.code t
+and
+.code nil
+in the user package, whose fully qualified names are
+.code usr:t
+and
+.codn usr:nil .
 
 The syntax
 .code @foo:bar
@@ -10104,13 +10124,13 @@ described in the next section.
 .TP* "Dialect note:"
 In ANSI Common Lisp, the
 .code foo:bar
-syntax does not create the symbol
+syntax does not intern the symbol
 .code bar
 in the
 .code foo
 package; the symbol must exist or else the syntax is erroneous.
-In \*(TL, only the package has to exist; the symbol will be interned
-in that package.
+In \*(TL, this strictness is only imposed if the package has a fallback
+list. If the package has an empty fallback list, the symbol will be interned.
 
 .NP* Uninterned Symbols
 
@@ -39131,10 +39151,67 @@ then if a hidden symbol exists in that package of the same name,
 that hidden symbol is re-interned in that package and re-acquires
 that package as its home package, becoming an interned symbol again.
 
+Finally, packages have a
+.IR "fallback package list" :
+a list of associated packages, which may be empty. The fallback package
+list is manipulated with the functions
+.code package-fallback-list
+and
+.codn set-package-fallback-list ,
+and with the
+.code :fallback
+clause of the
+.code defpackage
+macro.  The fallback package list plays a role only in two situations
+in the \*(TL parser, one in the printer, and one in the interactive
+listener.
+
+The first parser situation involving a package fallback list occurs when the
+\*(TL parser resolves an unqualified symbol token: a symbol token not carrying
+a package prefix. Such a symbol name is resolved against the current package
+(the package currently stored in the .code *package* special variable). If the
+symbol is not found in the current package, then the packages in the fallback
+package list are searched for the symbol.  The first matching symbol which is
+found in the fallback list is returned.  If no matching symbol is found in the
+fallback list, then the symbol is interned in the current package and returned.
+The packages in the current package's fallback list may themselves have
+fallback lists. Those fallback lists are not involved; no such recursion takes
+place.
+
+The second parser situation involving a package fallback list occurs when the
+\*(TL parser resolves a qualified symbol token. If a qualified symbol token
+refers to a nonexistent symbol (meaning that the denoted package exists, but
+has no such symbol) a check is performed whether the package has a non-empty
+fallback list. If a the package has a non-empty fallback list, then a syntax
+error occurs in this nonexistent symbol case. However, if the package has an
+empty fallback list, then the qualified symbol syntax is permitted to newly
+intern the nonexistent symbol in that package. For instance, the
+.code usr
+package has no fallbacks. Therefore the syntax
+.code usr:foobar
+will intern a symbol named
+.str foobar
+in the
+.code usr
+package and denote that symbol, rather than producing a syntax error.
+
+The printer situation involving the fallback list is as follows.
+If a symbol is being printed in a machine-readable way (not "pretty"),
+has a home package and is not a keyword symbol, then a search takes place
+through the current package and its fallback list. If the symbol is found
+in any of those places, then it is printed without a package prefix.
+
+The listener situation involving the fallback list is a follows.
+When tab completion is used on a symbol without a package
+prefix, the listener searches for completions not only in the current
+package, but in the fallback list also.
+
 .TP* "Dialect Notes:"
 
 The \*(TL package system doesn't support the ANSI Common Lisp
-concept of package use. Though the
+concept of package use, replacing that concept with fallback packages.
+
+Though the
 .code use-package
 and
 .code unuse-package
@@ -39154,7 +39231,79 @@ is silently removed from that package if it is itself foreign, or else hidden
 if it is local.
 
 The \*(TL package system also doesn't feature the concept of
-internal and external symbols.
+internal and external symbols. The rationale is that this distinction
+divides symbols into subsets in a redundant way. Packages are already
+subsets of symbols. A module can use two packages to simulate private
+symbols. An example of this is given in the Package Examples section below.
+
+The \*(TL fallback package list mechanism resembles ANSI CL package use,
+and satisfies similar use scenarios. However, this mechanism does not cause
+a symbol to be considered visible in a package. If a package
+.code foo
+contains no symbol
+.codn bar ,
+but one of the packages in
+.codn foo 's
+fallback list does contain
+.codn bar ,
+that symbol is nevertheless not considered visible in
+.codn foo .
+The syntax
+.code foo:bar
+will not resolve.
+
+The fallback mechanism only comes into play when a package is installed
+as the current package in the
+.code *package*
+variable. It then allows unqualified symbol references to refer across
+the fallback list.
+
+.NP* Package Examples
+The following example illustrates a simple scenario of a module
+whose identifies are in a package, and which also has private identifiers
+in a private package.
+
+.cblk
+  ;; Define three packages.
+  (defpackage mod-priv)
+
+  (defpackage mod
+    (:fallback mod-priv usr))
+
+  (defpackage client
+    (:fallback mod usr)
+    (:use-from mod-priv other-priv))
+
+  ;; Switch to mod package
+  (in-package mod)
+
+  ;; Note that we don't have to change to the mod-priv package,
+  ;; to define functions with names in that package.
+  ;; We rely on interning being allowed for the qualified
+  ;; mod-priv:priv-fun syntax, which is permitted because
+  ;; mod-priv has no fallback list. This is useful precisely
+  ;; It is useful precisely for this type of package.
+  (defun mod-priv:priv-fun (arg)
+    (list arg))
+
+  ;; Another function with a name in the mod-priv package.
+  (defun mod-priv:other-priv (arg)
+    (cons arg arg))
+
+  ;; This is mod:public-fun
+  (defun public-fun (arg)
+    (priv-fun arg))
+
+  ;; Switch to client package
+  (in-package client)
+
+  (priv-fun) ;; ERROR: refers to client:priv-fun, not defined
+  (mod:priv-fun) ;; ERROR: mod-priv:priv-fun not used in mod
+  (mod-priv:priv-fun 3) ;; OK: direct reference via qualifier
+  (public-fun 3) ;; OK: mod:public-fun symbol via fallback
+  (other-priv 3) ;; OK: foreign symbol mod-priv:other-priv
+                 ;; present in client due to :use-from
+.cble
 
 .NP* Package Library Conventions
 Various functions in the package and symbol area of the library have a
@@ -39435,6 +39584,33 @@ the same elements as the list returned by
 .codn package-symbols :
 the symbols interned in a package are partitioned into
 local and foreign.
+
+.coNP Functions @ package-fallback-list and @ set-package-fallback-list
+.synb
+.mets (package-fallback-list << package )
+.mets (set-package-fallback-list < package << package-list )
+.syne
+.desc
+The
+.code package-fallback-list
+returns the current
+.I "fallback package list"
+associated with
+.metn package .
+
+The
+.code set-package-fallback-list
+replaces the fallback package list of
+.meta package
+with
+.metn package-list .
+
+The
+.meta package-list
+argument must be a list which is a mixture of symbols, strings or
+package objects. Strings are taken to be package names, which must
+resolve to existing packages. Symbols are reduced to strings via
+.codn symbol-name .
 
 .coNP Function @ intern
 .synb
@@ -39788,6 +39964,13 @@ of the
 .cble
 expression.
 
+The
+.meta package-list
+argument must be a list which is a mixture of symbols, strings or
+package objects. Strings are taken to be package names, which must
+resolve to existing packages. Symbols are reduced to strings via
+.codn symbol-name .
+
 .coNP Macro @ defpackage
 .synb
 .mets (defpackage < name << clause *)
@@ -39819,14 +40002,23 @@ The
 .code name
 may be optionally followed by one or more clauses, which are processed
 in the order that they appear. Each clause is a compound form headed
-by a keyword. If no
-.code :use
-clauses are present, then an implicit
-.code "(:use \(dqusr\(dq)"
-clause is inserted ahead of all other clauses.
-
+by a keyword.
 The supported clauses are as follows:
 .RS
+.meIP (:fallback << package-name *)
+The
+.code :fallback
+clause specifies the packages to comprise the fallback list of
+the present package. If this clause is omitted, or if it is present
+with not
+.meta package-name
+arguments, then the present package has an empty fallback list.
+Each
+.meta package-name
+may be a string or symbol naming an existing package. It is permitted
+for the present package itself to appear in its own fallback list.
+This is useful for creating a package with a non-empty fallback list
+which doesn't actually provide access to any other package.
 .meIP (:use << package-name *)
 The
 .code :use

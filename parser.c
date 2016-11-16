@@ -636,19 +636,45 @@ static void load_rcfile(val name)
   uw_catch_end;
 }
 
+static val get_visible_syms(val package, int is_cur)
+{
+  val fblist;
+
+  if (!is_cur || nilp((fblist = package_fallback_list(package)))) {
+    return package_symbols(package);
+  } else {
+    val symhash = copy_hash(package->pk.symhash);
+
+    for (; fblist; fblist = cdr(fblist))
+    {
+      val fb_pkg = car(fblist);
+      val hiter = hash_begin(fb_pkg->pk.symhash);
+      val fcell;
+      val new_p;
+      while ((fcell = hash_next(hiter))) {
+        val scell = gethash_c(symhash, car(fcell), mkcloc(new_p));
+        if (new_p)
+          rplacd(scell, cdr(fcell));
+      }
+    }
+    return hash_values(symhash);
+  }
+}
+
 static void find_matching_syms(lino_completions_t *cpl,
                                val package, val prefix,
                                val line_prefix, char par,
                                val force_qualify)
 {
-  val qualify = tnil(force_qualify || package != cur_package);
+  int is_cur = package == cur_package;
+  val qualify = tnil(force_qualify || !is_cur);
   val pkg_name = if2(qualify,
                      if3(package == keyword_package && !force_qualify,
                          lit(""),
                          package_name(package)));
   val syms;
 
-  for (syms = package_symbols(package); syms; syms = cdr(syms)) {
+  for (syms = get_visible_syms(package, is_cur); syms; syms = cdr(syms)) {
     val sym = car(syms);
     val name = symbol_name(sym);
     val found = if3(cpl->substring,

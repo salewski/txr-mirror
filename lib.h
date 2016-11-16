@@ -789,6 +789,7 @@ val use_sym(val use_list, val package);
 val unuse_sym(val symbol, val package);
 val use_package(val use_list, val package);
 val unuse_package(val unuse_list, val package);
+val find_symbol(val str, val package);
 val intern(val str, val package);
 val unintern(val sym, val package);
 val rehome_sym(val sym, val package);

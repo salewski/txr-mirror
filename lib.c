@@ -5006,13 +5006,38 @@ static val symbol_present(val package, val sym)
 {
   type_check (package, PKG);
 
-  if (symbol_package(sym) == package)
+  if (sym->s.package == package)
     return t;
 
   if (gethash(package->pk.symhash, symbol_name(sym)) == sym)
     return t;
 
+  {
+    val fallback = get_hash_userdata(package->pk.symhash);
+
+    for (; fallback; fallback = cdr(fallback)) {
+      val fb_pkg = car(fallback);
+      if (gethash(fb_pkg->pk.symhash, symbol_name(sym)) == sym)
+        return t;
+    }
+  }
+
   return nil;
+}
+
+val find_symbol(val str, val package_in)
+{
+  val self = lit("find-symbol");
+  val package = get_package(self, package_in, nil);
+  val found, sym;
+
+  if (!stringp(str))
+    uw_throwf(error_s, lit("~s: name ~s isn't a string"), self, str, nao);
+
+  if ((sym = gethash_f(package->pk.symhash, str, mkcloc(found))) || found)
+    return sym;
+
+  return zero;
 }
 
 val intern(val str, val package_in)

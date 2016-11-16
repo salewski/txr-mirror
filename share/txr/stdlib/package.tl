@@ -81,7 +81,6 @@
                                     'defpackage atom))))))
     ^(let ((,pkg (or (find-package ,name-str)
                      (make-package ,name-str))))
-       ,*(unless (assoc :use clauses) ^((use-package "usr" ,pkg)))
        ,*exp-clauses
        ,pkg)))
 
