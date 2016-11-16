@@ -1249,7 +1249,7 @@ static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)
   int leading_at = *lexeme == L'@';
   wchar_t *tokfree = lexeme;
   wchar_t *colon = wcschr(lexeme, L':');
-  val sym_name = nil, pkg_name = nil, package = cur_package, sym;
+  val sym;
 
   if (leading_at) {
     if (!meta_allowed) {
@@ -1264,31 +1264,31 @@ static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)
     *colon = 0;
 
   if (colon == lexeme) {
-    package = keyword_package_var;
-    sym_name = string(colon + 1);
+    val sym_name = string(colon + 1);
     scrub_scanner(parser->scanner, SYMTOK, tokfree);
     free(tokfree);
+    sym = intern(sym_name, keyword_package_var);
   } else if (colon != 0) {
-    pkg_name = string(lexeme);
-    sym_name = string(colon + 1);
+    val pkg_name = string(lexeme);
+    val sym_name = string(colon + 1);
     scrub_scanner(parser->scanner, SYMTOK, tokfree);
     free(tokfree);
     if (equal(pkg_name, lit("#"))) {
-      package = nil;
+      sym = make_sym(sym_name);
     } else {
-      package = find_package(pkg_name);
+      val package = find_package(pkg_name);
       if (!package) {
         yyerrorf(scnr, lit("~a:~a: package ~a not found"), pkg_name, sym_name, pkg_name, nao);
         return nil;
       }
+      sym = intern(sym_name, package);
     }
   } else {
-    sym_name = string(lexeme);
+    val sym_name = string(lexeme);
     scrub_scanner(parser->scanner, SYMTOK, tokfree);
     free(tokfree);
+    sym = intern_fallback(sym_name, cur_package);
   }
-
-  sym = package ? intern(sym_name, package) : make_sym(sym_name);
 
   return leading_at ? rl(list(var_s, sym, nao), num(parser->lineno)) : sym;
 }

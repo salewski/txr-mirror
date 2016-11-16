@@ -5089,6 +5089,59 @@ val rehome_sym(val sym, val package_in)
   return sym;
 }
 
+val package_fallback_list(val package_in)
+{
+  val package = get_package(lit("package-fallback-list"), package_in, t);
+  return get_hash_userdata(package->pk.symhash);
+}
+
+val set_package_fallback_list(val package_in, val list_in)
+{
+  val self = lit("set-package-fallback-list");
+  val package = get_package(self, package_in, t);
+  val list = resolve_package_designators(self, list_in);
+  return set_hash_userdata(package->pk.symhash, list);
+}
+
+val intern_fallback(val str, val package_in)
+{
+  val self = lit("intern-fallback");
+  val package = get_package(self, package_in, nil);
+  val fblist = get_hash_userdata(package->pk.symhash);
+
+  if (!stringp(str))
+    uw_throwf(error_s, lit("~s: name ~s isn't a string"), self, str, nao);
+
+  if (fblist) {
+    val found;
+    val sym;
+
+    if ((sym = gethash_f(package->pk.symhash, str, mkcloc(found))) || found)
+      return sym;
+
+    for (; fblist; fblist = cdr(fblist)) {
+      val otherpkg = car(fblist);
+      if ((sym = gethash_f(otherpkg->pk.symhash, str, mkcloc(found))) || found)
+        return sym;
+    }
+  }
+
+  {
+    val new_p;
+    loc place;
+
+    place = gethash_l(package->pk.symhash, str, mkcloc(new_p));
+
+    if (!new_p) {
+      return deref(place);
+    } else {
+      val newsym = make_sym(str);
+      newsym->s.package = package;
+      return set(place, newsym);
+    }
+  }
+}
+
 val symbolp(val sym)
 {
   switch (type(sym)) {

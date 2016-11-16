@@ -68,6 +68,9 @@
                                       (unless (eq (symbol-package s) ,pkg)
                                         (unuse-sym s ,pkg)
                                         (intern n ,pkg))))))
+                              (:fallback
+                                (if rest ^((set-package-fallback-list ,pkg
+                                                                      ',rest))))
                               (:use-from
                                  (throwf 'eval-error
                                          "~s: :use-from clause needs package argument"

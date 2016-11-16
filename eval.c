@@ -5246,6 +5246,8 @@ void eval_init(void)
   reg_fun(intern(lit("intern"), user_package), func_n2o(intern, 1));
   reg_fun(intern(lit("unintern"), user_package), func_n2o(unintern, 1));
   reg_fun(intern(lit("rehome-sym"), user_package), func_n2o(rehome_sym, 1));
+  reg_fun(intern(lit("package-fallback-list"), user_package), func_n1(package_fallback_list));
+  reg_fun(intern(lit("set-package-fallback-list"), user_package), func_n2(set_package_fallback_list));
   reg_fun(intern(lit("symbolp"), user_package), func_n1(symbolp));
   reg_fun(intern(lit("symbol-name"), user_package), func_n1(symbol_name));
   reg_fun(intern(lit("symbol-package"), user_package), func_n1(symbol_package));
