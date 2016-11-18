@@ -2576,7 +2576,7 @@ static val expand_progn(val form, val menv)
       return rlcp(cdr(ex_f), form);
     }
 
-    if ((symbolp(ex_f) || constantp(ex_f, nil)) && ex_r)
+    if ((symbolp(ex_f) || constantp(ex_f, menv)) && ex_r)
       return rlcp(ex_r, form);
 
     if (ex_f == f && ex_r == r)
