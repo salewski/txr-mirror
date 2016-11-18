@@ -446,6 +446,22 @@ static val getput_instantiate(val set_fun)
   return nil;
 }
 
+static val tagbody_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("tagbody"), lit("go"), nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val tagbody_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~atagbody.tl"), stdlib_path, nao));
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -481,6 +497,7 @@ void lisplib_init(void)
   dlt_register(dl_table, getopts_instantiate, getopts_set_entries);
   dlt_register(dl_table, package_instantiate, package_set_entries);
   dlt_register(dl_table, getput_instantiate, getput_set_entries);
+  dlt_register(dl_table, tagbody_instantiate, tagbody_set_entries);
 }
 
 val lisplib_try_load(val sym)

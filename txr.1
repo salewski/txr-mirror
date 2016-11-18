@@ -14546,6 +14546,172 @@ arguments to
 which do not simply quote a symbol have no equivalent in
 .codn return-from .
 
+.coNP Macros @ tagbody and @ go
+.synb
+.mets (tagbody >> { form | << label }*)
+.mets (go << label )
+.syne
+.desc
+The
+.code tagbody
+macro provides a form of the "go to" control construct. The arguments of a
+.code tagbody
+form are a mixture of zero or more forms and
+.IR "go labels" .
+The latter consist of those arguments which are symbols, integers or
+characters.  Labels are not considered by
+.code tagbody
+and
+.code go
+to be forms, and are not subject to macro expansion or evaluation.
+
+The
+.code go
+macro is available inside
+.codn tagbody .
+It is erroneous for a
+.code go
+form to occurs outside of a
+.codn tagbody .
+This situation is diagnosed by global macro called
+.codn go ,
+which unconditionally throws an error.
+
+In the absence of invocations of
+.code go
+or other control transfers, the
+.code tagbody
+macro evaluates each
+.meta form
+in left to right order. The go labels are ignored.
+After the last
+.meta form
+is evaluated, the
+.code tagbody
+form terminates, and yields
+.codn nil .
+
+Any
+.meta form
+itself, or else one of its sub-forms, may be the form
+.cblk
+.meti (go << label )
+.cble
+where
+.meta label
+matches one of the go labels of a surrounding
+.codn tagbody .
+When this
+.code go
+form is evaluated, then the evaluation of
+.meta form
+is immediately abandoned, and control transfers to the specified
+label. The forms are then evaluated in left-to-right order starting
+with the form immediately after that label. If the label is not
+followed by any forms, then the
+.code tagbody
+terminates. If
+.meta label
+doesn't match to any label in any surrounding
+.codn tagbody ,
+the
+.code go
+form is erroneous.
+
+The abandonment of a
+.meta form
+by invocation of
+.code go
+is a dynamic transfer. All necessary unwinding inside
+.meta form
+takes place.
+
+The go labels are lexically scoped, but dynamically bound. Their scope
+being lexical means that the labels are not visible to forms which are not
+enclosed within the
+.codn tagbody ,
+even if their evaluation is invoked from that
+.codn tagbody .
+The dynamic binding means that the labels of a
+.code tagbody
+form are established when it begins evaluating, and removed when
+that form terminates. Once a label is removed, it is not available
+to be the target of a
+.code go
+control transfer, even if that
+.code go
+form has the label in its lexical scope. Such an attempted transfer
+is erroneous.
+
+It is permitted for
+.code tagbody
+forms to nest arbitrarily. The labels of an inner
+.code tagbody
+are not visible to an outer
+.codn tagbody .
+However, the reverse is true: a
+.code go
+form in an inner
+.code tagbody
+may branch to a label in an outer
+.codn tagbody ,
+in which case the entire inner
+.code tagbody
+terminates.
+
+In cases where the same objects are used as labels
+by an inner and outer
+.codn tagbody ,
+the inner labels shadow the outer labels.
+
+.TP* "Dialect Note:"
+
+ANSI Common Lisp
+.code tagbody
+supports only symbols and integers as labels (which are called "go tags");
+characters are not supported.
+
+.TP* Examples:
+.cblk
+  ;; print the numbers 1 to 10
+  (let ((i 0))
+    (tagbody
+      (go skip) ;; forward goto skips 0
+     again
+      (prinl i)
+     skip
+      (when (<= (inc i) 10)
+        (go again))))
+
+  ;; Example of erroneous usage: by the time func is invoked
+  ;; by (call func) the tagbody has already terminated. The
+  ;; lambda body can still "see" the label, but it doesn't
+  ;; have a binding.
+  (let (func)
+    (tagbody
+      (set func (lambda () (go label)))
+      (go out)
+     label
+      (prinl 'never-reached)
+      out)
+    (call func))
+
+  ;; Example of unwinding when the unwind-protect
+  ;; form is abandoned by (go out). Output is:
+  ;;   reached
+  ;;   cleanup
+  ;;   out
+  (tagbody
+     (unwind-protect
+       (progn
+         (prinl 'reached)
+         (go out)
+         (prinl 'notreached))
+       (prinl 'cleanup))
+   out
+     (prinl 'out))
+.cble
+
 .SS* Evaluation
 
 .coNP Function @ eval

@@ -97,7 +97,7 @@ val ret_s, aret_s;
 val hash_lit_s, hash_construct_s, struct_lit_s, qref_s;
 val vector_lit_s, vec_list_s;
 val macro_time_s, with_saved_vars_s, macrolet_s;
-val defsymacro_s, symacrolet_s, prof_s;
+val defsymacro_s, symacrolet_s, prof_s, switch_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
 val load_path_s, sys_lisp1_value_s;
@@ -2378,6 +2378,16 @@ static val op_prof(val form, val env)
               nao);
 }
 
+static val op_switch(val form, val env)
+{
+  val args = cdr(form);
+  val expr = pop(&args);
+  val branches = car(args);
+  val index = eval(expr, env, expr);
+  val forms = ref(branches, index);
+  return eval_progn(forms, env, forms);
+}
+
 static val me_def_variable(val form, val menv)
 {
   val args = rest(form);
@@ -3484,6 +3494,38 @@ static val expand_save_specials(val form, val specials)
   return rlcp(cons(with_saved_vars_s, cons(form, nil)), form);
 }
 
+static val expand_list_of_form_lists(val lofl, val menv)
+{
+  list_collect_decl (out, ptail);
+
+  for (; lofl; lofl = cdr(lofl)) {
+    val forms = car(lofl);
+    val forms_ex = expand_forms(forms, menv);
+    ptail = list_collect(ptail, forms_ex);
+  }
+
+  return out;
+}
+
+static val expand_switch(val form, val menv)
+{
+  val sym = first(form);
+  val args = rest(form);
+  val expr = first(args);
+  val branches = second(args);
+  val expr_ex = expand(expr, menv);
+  val branches_ex;
+
+  if (listp(branches)) {
+    branches_ex = expand_list_of_form_lists(branches, menv);
+  } else if (vectorp(branches)) {
+    branches_ex = vec_list(expand_list_of_form_lists(list_vec(branches), menv));
+  } else {
+    eval_error(form, lit("~s: representation of branches"), sym, nao);
+  }
+  return rlcp(cons(sym, cons(expr_ex, cons(branches_ex, nil))), form);
+}
+
 static val do_expand(val form, val menv)
 {
   val macro = nil;
@@ -3720,6 +3762,8 @@ static val do_expand(val form, val menv)
       if (args == args_ex)
         return form;
       return rlcp(cons(sym, args_ex), form);
+    } else if (sym == switch_s) {
+      return expand_switch(form, menv);
     } else if ((macro = lookup_mac(menv, sym))) {
       val mac_expand = expand_macro(form, macro, menv);
       if (mac_expand == form)
@@ -4828,6 +4872,7 @@ void eval_init(void)
   unbound_s = intern(lit("unbound"), system_package);
   symacro_k = intern(lit("symacro"), keyword_package);
   prof_s = intern(lit("prof"), user_package);
+  switch_s = intern(lit("switch"), system_package);
   opip_s = intern(lit("opip"), user_package);
   oand_s = intern(lit("oand"), user_package);
   chain_s = intern(lit("chain"), user_package);
@@ -4893,6 +4938,7 @@ void eval_init(void)
   reg_op(handler_bind_s, op_handler_bind);
   reg_op(with_saved_vars_s, op_with_saved_vars);
   reg_op(prof_s, op_prof);
+  reg_op(switch_s, op_switch);
 
   reg_mac(defvar_s, me_def_variable);
   reg_mac(defparm_s, me_def_variable);
