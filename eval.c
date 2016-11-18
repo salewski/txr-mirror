@@ -2558,6 +2558,36 @@ val expand_forms(val form, val menv)
   }
 }
 
+static val expand_forms_ss(val form, val menv, val ss_hash)
+{
+  uses_or2;
+
+  if (atom(form)) {
+    if (!form)
+      return form;
+    uw_throwf(error_s, lit("dotted argument ~!~s "
+                           "was not converted to apply form"), form, nao);
+  } else {
+    val f = car(form);
+    val r = cdr(form);
+    val ss_f = gethash(ss_hash, f);
+    val ss_r = gethash(ss_hash, r);
+    val ex_f = or2(ss_f, expand(f, menv));
+    val ex_r = or2(ss_r, expand_forms_ss(r, menv, ss_hash));
+
+    if (!ss_f)
+      sethash(ss_hash, f, ex_f);
+
+    if (!ss_r)
+      sethash(ss_hash, r, ex_r);
+
+    if (ex_f == f && ex_r == r)
+      return form;
+
+    return sethash(ss_hash, form, rlcp(cons(ex_f, ex_r), form));
+  }
+}
+
 static val constantp(val form, val env_in);
 
 static val expand_progn(val form, val menv)
@@ -3494,13 +3524,13 @@ static val expand_save_specials(val form, val specials)
   return rlcp(cons(with_saved_vars_s, cons(form, nil)), form);
 }
 
-static val expand_list_of_form_lists(val lofl, val menv)
+static val expand_list_of_form_lists(val lofl, val menv, val ss_hash)
 {
   list_collect_decl (out, ptail);
 
   for (; lofl; lofl = cdr(lofl)) {
     val forms = car(lofl);
-    val forms_ex = expand_forms(forms, menv);
+    val forms_ex = expand_forms_ss(forms, menv, ss_hash);
     ptail = list_collect(ptail, forms_ex);
   }
 
@@ -3515,11 +3545,13 @@ static val expand_switch(val form, val menv)
   val branches = second(args);
   val expr_ex = expand(expr, menv);
   val branches_ex;
+  val ss_hash = make_hash(nil, nil, nil);
 
   if (listp(branches)) {
-    branches_ex = expand_list_of_form_lists(branches, menv);
+    branches_ex = expand_list_of_form_lists(branches, menv, ss_hash);
   } else if (vectorp(branches)) {
-    branches_ex = vec_list(expand_list_of_form_lists(list_vec(branches), menv));
+    branches_ex = vec_list(expand_list_of_form_lists(list_vec(branches),
+                                                     menv, ss_hash));
   } else {
     eval_error(form, lit("~s: representation of branches"), sym, nao);
   }
