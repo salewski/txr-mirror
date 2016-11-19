@@ -14873,15 +14873,7 @@ The
 .code symbol-macro
 function retrieves the value of the global macro binding of
 .meta symbol
-if it has one.  The value of a macro binding isn't a function object, but a
-list of the following form:
-
-.cblk
-.mets (#<environment object> < macro-parameter-list << body-form *)
-.cble
-
-This representation is likely to change or expand to include other
-forms in future \*(TX versions.
+if it has one.
 
 Note: the name of this function has nothing to do with symbol macros;
 it is named for consistency with
@@ -14889,6 +14881,26 @@ it is named for consistency with
 and
 .codn symbol-value ,
 referring to the "macro-expander binding of the symbol cell".
+
+The value of a macro binding is a function object.
+Intrinsic macros are C functions in the \*(TX kernel, which receive
+the entire macro call form and macro environment, performing their
+own destructuring. Currently, macros written in \*(TL are represented
+as curried C functions which carry the following list object in their
+environment cell:
+
+.cblk
+.mets (#<environment object> < macro-parameter-list << body-form *)
+.cble
+
+Local macros created by
+.code macrolet
+have
+.code nil
+in place of the environment object.
+
+This representation is likely to change or expand to include other
+forms in future \*(TX versions.
 
 The
 .code symbol-value

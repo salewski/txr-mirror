@@ -1634,6 +1634,28 @@ static val op_defun(val form, val env)
   }
 }
 
+static val me_interp_macro(val expander, val form, val menv)
+{
+  debug_enter;
+  val name = car(form);
+  val arglist = rest(form);
+  val env = car(expander);
+  val params = cadr(expander);
+  val body = cddr(expander);
+  val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
+  val exp_env = bind_macro_params(env, menv, params, arglist, nil, form);
+  val result;
+  args_decl_list(args, ARGS_MIN, arglist);
+
+  debug_frame(name, args, nil, env, nil, nil, nil);
+  result = eval_progn(body, exp_env, body);
+  debug_end;
+  set_dyn_env(saved_de);
+  set_origin(result, form);
+  debug_return(result);
+  debug_leave;
+}
+
 static val op_defmacro(val form, val env)
 {
   val args = rest(form);
@@ -1650,7 +1672,8 @@ static val op_defmacro(val form, val env)
 
   /* defmacro captures lexical environment, so env is passed */
   sethash(top_mb, name,
-          rlcp_tree(cons(name, cons(env, cons(params, cons(block, nil)))),
+          rlcp_tree(cons(name, func_f2(cons(env, cons(params, cons(block, nil))),
+                                       me_interp_macro)),
                     block));
   if (eval_initing)
     sethash(builtin, name, defmacro_s);
@@ -1660,31 +1683,9 @@ static val op_defmacro(val form, val env)
 static val expand_macro(val form, val mac_binding, val menv)
 {
   val expander = cdr(mac_binding);
-
-  if (functionp(expander)) {
-    val expanded = funcall2(expander, form, menv);
-    set_origin(expanded, form);
-    return expanded;
-  } else {
-    debug_enter;
-    val name = car(form);
-    val arglist = rest(form);
-    val env = car(expander);
-    val params = cadr(expander);
-    val body = cddr(expander);
-    val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
-    val exp_env = bind_macro_params(env, menv, params, arglist, nil, form);
-    val result;
-    args_decl_list(args, ARGS_MIN, arglist);
-
-    debug_frame(name, args, nil, env, nil, nil, nil);
-    result = eval_progn(body, exp_env, body);
-    debug_end;
-    set_dyn_env(saved_de);
-    set_origin(result, form);
-    debug_return(result);
-    debug_leave;
-  }
+  val expanded = funcall2(expander, form, menv);
+  set_origin(expanded, form);
+  return expanded;
 }
 
 static val maybe_progn(val forms)
@@ -1751,11 +1752,13 @@ static val expand_macrolet(val form, val menv)
     builtin_reject_test(op, name, form);
 
     /* We store the macrolet in the same form as a top level defmacro,
-     * so they can be treated uniformly. The nil after the name is
-     * the ordinary lexical environment: a macrolet doesn't capture that.
+     * so they can be treated uniformly. The nil at the head of the
+     * environment object is the ordinary lexical environment: a macrolet
+     * doesn't capture that.
      */
     rlcp_tree(env_fbind(new_env, name,
-              cons(nil, cons(params, cons(block, nil)))), block);
+                        func_f2(cons(nil, cons(params, cons(block, nil))),
+                                me_interp_macro)), block);
   }
 
   return rlcp_tree(maybe_progn(expand_forms(body, new_env)), body);
