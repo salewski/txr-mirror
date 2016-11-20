@@ -92,14 +92,14 @@ mandir='share/man'
 make=
 cross=
 compiler_prefix=
-ccname=gcc
+ccname='$(CC)'
 cc='$(cross)$(compiler_prefix)$(ccname)'
 intptr=
 exe=
 tool_prefix=
-lex='$(cross)$(tool_prefix)flex'
+lex='$(cross)$(tool_prefix)$(LEX)'
 yaccname_given=
-yaccname=
+yaccname='' # test tries $(YACC) first
 yacc='$(cross)$(tool_prefix)$(yaccname)'
 yacc_given=
 nm='$(cross)$(tool_prefix)nm'
@@ -307,7 +307,7 @@ cc [$cc]
 
   Specifies the name of the toolchain front-end driver command to use for
   compiling C sources to object files, and for linking object files to
-  executables. This becomes the CC variable in $config_make.
+  executables. This becomes the TXR_CC variable in $config_make.
 
 intptr [$intptr]
 
@@ -682,10 +682,10 @@ have_git := $have_git
 
 add_win_res := $([ -n "$have_windows_h" -a -n "$have_windres" ] && echo "y")
 
-CC := $cc
-LEX := $lex
-YACC := $yacc
-NM := $nm
+TXR_CC := $cc
+TXR_LEX := $lex
+TXR_YACC := $yacc
+TXR_NM := $nm
 
 PROG := txr
 
@@ -1352,7 +1352,7 @@ printf "Checking for yacc program ... "
 
 if [ -z "$yacc_given" -a -z "$yaccname_given" ] ; then
   rm -f conftest.yacc
-  for yaccname in "yacc" "byacc" "bison -y" "" ; do
+  for yaccname in '$(YACC)' "yacc" "byacc" "bison -y" "" ; do
     yaccpath=$($make yaccname="$yaccname" conftest.yacc)
     if command -v $yaccpath > /dev/null ; then
       break;
@@ -1364,7 +1364,7 @@ if [ -z "$yacc_given" -a -z "$yaccname_given" ] ; then
     exit 1
   fi
 
-  printf '"%s"\n' "$yaccpath"
+  printf '"%s" (path "%s")\n' "$yaccname" "$yaccpath"
 else
   yaccpath=$($make conftest.yacc)
   case $yaccpath in

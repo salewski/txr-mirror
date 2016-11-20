@@ -27,14 +27,16 @@
 -include config/config.make
 
 VERBOSE :=
-CFLAGS := -iquote $(conf_dir) $(if $(top_srcdir),-iquote $(top_srcdir)) \
-          $(LANG_FLAGS) $(DIAG_FLAGS) \
-          $(DBG_FLAGS) $(PLATFORM_CFLAGS) $(EXTRA_FLAGS)
-CFLAGS := $(filter-out $(REMOVE_FLAGS),$(CFLAGS))
-LDFLAGS := -lm $(CONF_LDFLAGS) $(PLATFORM_LDFLAGS) $(EXTRA_LDFLAGS)
+TXR_CFLAGS := $(CFLAGS)
+TXR_CFLAGS += -iquote $(conf_dir) $(if $(top_srcdir),-iquote $(top_srcdir)) \
+              $(LANG_FLAGS) $(DIAG_FLAGS) \
+              $(DBG_FLAGS) $(PLATFORM_CFLAGS) $(EXTRA_FLAGS)
+TXR_CFLAGS += $(filter-out $(REMOVE_FLAGS),$(TXR_CFLAGS))
+TXR_LDFLAGS := $(LDFLAGS)
+TXR_LDFLAGS := -lm $(CONF_LDFLAGS) $(PLATFORM_LDFLAGS) $(EXTRA_LDFLAGS)
 
-ifneq ($(subst g++,@,$(notdir $(CC))),$(notdir $(CC)))
-CFLAGS := $(filter-out -Wmissing-prototypes -Wstrict-prototypes,$(CFLAGS))
+ifneq ($(subst g++,@,$(notdir $(TXR_CC))),$(notdir $(TXR_CC)))
+TXR_CFLAGS := $(filter-out -Wmissing-prototypes -Wstrict-prototypes,$(TXR_CFLAGS))
 endif
 
 # TXR objects
@@ -100,19 +102,19 @@ endef
 
 define COMPILE_C
 $(call ABBREV,CC)
-$(V)$(CC) $(OPT_FLAGS) $(CFLAGS) -c -o $@ $<
+$(V)$(TXR_CC) $(OPT_FLAGS) $(TXR_CFLAGS) -c -o $@ $<
 endef
 
 define COMPILE_C_WITH_DEPS
 $(call ABBREV,CC)
 $(V)mkdir -p $(dir $@)
-$(V)$(CC) -MMD -MT $@ $(1) $(CFLAGS) -c -o $@ $<
+$(V)$(TXR_CC) -MMD -MT $@ $(1) $(TXR_CFLAGS) -c -o $@ $<
 $(call DEPGEN,${@:.o=.d})
 endef
 
 define LINK_PROG
 $(call ABBREV,LINK)
-$(V)$(CC) $(1) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+$(V)$(TXR_CC) $(1) $(TXR_CFLAGS) -o $@ $^ $(TXR_LDFLAGS)
 endef
 
 define WINDRES
@@ -210,7 +212,7 @@ $(eval $(foreach item,y.tab.c y.tab.h lex.yy.c,\
 lex.yy.c: $(top_srcdir)parser.l
 	$(call ABBREV,LEX)
 	$(V)rm -f $@
-	$(V)if $(LEX) $(LEX_DBG_FLAGS) $< ; then \
+	$(V)if $(TXR_LEX) $(LEX_DBG_FLAGS) $< ; then \
 	  sed -e s@//.*@@ < $@ > $@.tmp ; \
 	  mv $@.tmp $@ ; \
 	else \
@@ -228,7 +230,7 @@ y.tab.h: y.tab.c
 y.tab.c: $(top_srcdir)parser.y
 	$(call ABBREV,YACC)
 	$(V)rm -f y.tab.c
-	$(V)if $(YACC) -v -d $< ; then                            \
+	$(V)if $(TXR_YACC) -v -d $< ; then                        \
 	  chmod a-w y.tab.c ;                                     \
 	  sed -e '/yyparse/d' < y.tab.h > y.tab.h.tmp &&          \
 	    mv y.tab.h.tmp y.tab.h ;                              \
@@ -239,23 +241,23 @@ y.tab.c: $(top_srcdir)parser.y
 
 # Suppress useless sccs id array and unused label warning in byacc otuput.
 # Bison-generated parser also tests for this lint define.
-$(call EACH_CONF,y.tab.o): CFLAGS += -Dlint
+$(call EACH_CONF,y.tab.o): TXR_CFLAGS += -Dlint
 
 # txr.c needs to know the relative datadir path to do some sysroot
 # calculations.
 
-opt/txr.o: CFLAGS += -DPROG_NAME=\"$(PROG)\" \
-                     -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)$(EXE)\"
-dbg/txr.o: CFLAGS += -DPROG_NAME=\"$(PROG)-dbg\" \
-                     -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-dbg$(EXE)\"
-opt/txr-win.o: CFLAGS += -DPROG_NAME=\"$(PROG)-win\" \
-                         -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-win$(EXE)\"
-dbg/txr-win.o: CFLAGS += -DPROG_NAME=\"$(PROG)-win-dbg\" \
-                         -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-win-dbg$(EXE)\"
-$(call EACH_CONF,txr.o txr-win.o): CFLAGS += -DEXE_SUFF=\"$(EXE)\"
-$(call EACH_CONF,txr.o txr-win.o): CFLAGS += -DTXR_VER=\"$(txr_ver)\"
+opt/txr.o: TXR_CFLAGS += -DPROG_NAME=\"$(PROG)\" \
+                         -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)$(EXE)\"
+dbg/txr.o: TXR_CFLAGS += -DPROG_NAME=\"$(PROG)-dbg\" \
+                         -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-dbg$(EXE)\"
+opt/txr-win.o: TXR_CFLAGS += -DPROG_NAME=\"$(PROG)-win\" \
+                             -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-win$(EXE)\"
+dbg/txr-win.o: TXR_CFLAGS += -DPROG_NAME=\"$(PROG)-win-dbg\" \
+                             -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-win-dbg$(EXE)\"
+$(call EACH_CONF,txr.o txr-win.o): TXR_CFLAGS += -DEXE_SUFF=\"$(EXE)\"
+$(call EACH_CONF,txr.o txr-win.o): TXR_CFLAGS += -DTXR_VER=\"$(txr_ver)\"
 
-$(call EACH_CONF,linenoise/linenoise.o): CFLAGS += -D$(termios_define)
+$(call EACH_CONF,linenoise/linenoise.o): TXR_CFLAGS += -D$(termios_define)
 .PHONY: rebuild clean repatch distclean
 
 ifeq ($(PROG),)
@@ -457,15 +459,15 @@ conftest2: conftest1.c conftest2.c
 	$(call LINK_PROG,)
 
 conftest.syms: conftest.o
-	$(NM) -n -t o -P $^ > $@
+	$(TXR_NM) -n -t o -P $^ > $@
 
 .PHONY: conftest.yacc
 conftest.yacc:
-	$(V)echo $(YACC)
+	$(V)echo $(TXR_YACC)
 
 .PHONY: conftest.ccver
 conftest.ccver:
-	$(V)$(CC) --version
+	$(V)$(TXR_CC) --version
 
 .PHONY: conftest.clean
 conftest.clean:
