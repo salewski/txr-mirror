@@ -1,6 +1,6 @@
 (defvar *trace-output* *stdout*)
 
-(defvar sys:*trace-hash* (hash))
+(defvar sys:*trace-hash* (hash :equal-based))
 (defvar sys:*trace-level* -1)
 
 (defun sys:trace-enter (name args)
