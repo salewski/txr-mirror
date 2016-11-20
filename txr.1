@@ -48586,11 +48586,19 @@ When
 is called with one or more arguments, it considers each
 argument to be the name of a global function. For each
 function, it turns on tracing, if it is not already turned on.
+If an argument denotes a nonexistent function, or is invalid
+function name syntax,
+.code trace
+terminates by throwing an exception, without processing the
+subsequent arguments, or undoing the effects already applied
+due to processing the previous arguments.
 
 When
 .code trace
 is called with no arguments, it lists the names of functions
-for which tracing is currently enabled.
+for which tracing is currently enabled. In other cases it
+returns
+.codn nil .
 
 When
 .code untrace
@@ -48602,6 +48610,13 @@ When
 .code untrace
 is called with no arguments, it disables tracing for all
 functions.
+
+The
+.code untrace
+macro always returns
+.code nil
+and silently tolerates arguments which are not names of functions
+currently being traced.
 
 Tracing a function consists of printing a message prior to entry into the
 function indicating its name and arguments, and another message upon leaving
@@ -48637,6 +48652,13 @@ syntax. Note that
 will not show the destructured internal macro arguments, but only the
 two arguments passed to the expander function: the whole form, and the
 environment.
+
+The
+.code trace
+and
+.code untrace
+functions return
+.codn nil .
 
 .SH* INTERACTIVE LISTENER
 

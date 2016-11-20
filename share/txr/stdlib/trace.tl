@@ -16,7 +16,9 @@
       (each ((n names))
         (unless [sys:*trace-hash* n]
           (let* ((name n)
-                 (prev (symbol-function n))
+                 (prev (or (symbol-function n)
+                           (throwf 'eval-error
+                                   "~s: ~s does not name a function" 'trace n)))
                  (hook (lambda (. args)
                          (let ((abandoned t)
                                (sys:*trace-level* (succ sys:*trace-level*)))
