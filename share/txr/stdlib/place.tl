@@ -795,6 +795,14 @@
         (cons (op static-slot struct slot)
               (op static-slot-set struct slot @1))
         :))
+    ((type sym)
+      (if (eq type 'macro)
+        (let ((cell (gethash sys:top-mb sym)))
+          (unless cell
+            (sys:eval-err "unbound macro ~s" sym))
+          (cons (op cdr)
+                (op sys:rplacd cell @1)))
+        :))
     (else
       (let ((cell (gethash sys:top-fb sym)))
         (unless cell

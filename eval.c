@@ -75,7 +75,7 @@ val eval_initing;
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
 val handler_bind_s, cond_s, if_s, iflet_s, when_s;
-val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s;
+val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s, macro_s;
 val tree_case_s, tree_bind_s;
 val sys_mark_special_s;
 val caseq_s, caseql_s, casequal_s;
@@ -405,18 +405,24 @@ loc lookup_global_var_l(val sym)
   return if3(binding, cdr_l(binding), nulloc);
 }
 
+static val lookup_mac(val menv, val sym);
+
 val lookup_fun(val env, val sym)
 {
   uses_or2;
 
   if (nilp(env)) {
-    if (consp(sym) && car(sym) == meth_s) {
-      val strct = cadr(sym);
-      val slot = caddr(sym);
-      val type = or2(find_struct_type(strct),
-                     if2(lisplib_try_load(strct),
+    if (consp(sym)) {
+      if (car(sym) == meth_s) {
+        val strct = cadr(sym);
+        val slot = caddr(sym);
+        val type = or2(find_struct_type(strct),
+                       if2(lisplib_try_load(strct),
                          find_struct_type(strct)));
-      return if2(type, cons(sym, static_slot(type, slot)));
+        return if2(type, cons(sym, static_slot(type, slot)));
+      } else if (car(sym) == macro_s) {
+        return lookup_mac(nil, cadr(sym));
+      }
     }
     return or2(gethash(top_fb, sym),
                if2(lisplib_try_load(sym), gethash(top_fb, sym)));
@@ -450,11 +456,15 @@ val func_get_name(val fun, val env)
       return func_get_name(fun, env->e.up_env);
     }
   } else {
-    uses_or2;
-    val name = or2(hash_revget(top_fb, fun, eq_f, cdr_f),
-                   method_name(fun));
+    val name;
 
-    if (name)
+    if ((name = hash_revget(top_fb, fun, eq_f, cdr_f)))
+      return name;
+
+    if ((name = hash_revget(top_mb, fun, eq_f, cdr_f)))
+      return list(macro_s, name, nao);
+
+    if ((name = method_name(fun)))
       return name;
 
     if (interp_fun_p(fun))
@@ -1605,6 +1615,8 @@ static val op_defsymacro(val form, val env)
   return sym;
 }
 
+static val op_defmacro(val form, val env);
+
 static val op_defun(val form, val env)
 {
   val args = rest(form);
@@ -1621,7 +1633,7 @@ static val op_defun(val form, val env)
     if (eval_initing)
       sethash(builtin, name, defun_s);
     return name;
-  } else {
+  } else if (car(name) == meth_s) {
     val binding = lookup_fun(nil, intern(lit("defmeth"), system_package));
     val type_sym = second(name);
     val meth_name = third(name);
@@ -1631,6 +1643,26 @@ static val op_defun(val form, val env)
     bug_unless (binding);
 
     return funcall3(cdr(binding), type_sym, meth_name, func_interp(env, fun));
+  } else if (car(name) == macro_s) {
+    val sym = cadr(name);
+    val block = cons(block_s, cons(sym, body));
+    val fun = cons(name, cons(params, cons(block, nil)));
+
+    if (!bindable(sym))
+      eval_error(form, lit("defun: ~s isn't a bindable symbol in ~s"),
+                 sym, name, nao);
+
+    if (gethash(op_table, sym))
+      eval_error(form, lit("defun: ~s is a special operator in ~s"),
+                 sym, name, nao);
+
+    sethash(top_mb, sym, cons(name, func_interp(env, fun)));
+    if (eval_initing)
+      sethash(builtin, sym, defmacro_s);
+    return name;
+  } else {
+    eval_error(form, lit("defun: ~s isn't recognized function name syntax"),
+               name, nao);
   }
 }
 
@@ -1719,11 +1751,13 @@ static void builtin_reject_test(val op, val sym, val form)
     val builtin_kind = gethash(builtin, sym);
     val is_operator = gethash(op_table, sym);
 
-    if (op == defun_s && consp(sym) && car(sym) == meth_s) {
+    if (op == defun_s && consp(sym) &&
+        (car(sym) == meth_s || car(sym) == macro_s))
+    {
       return;
     } else if (!bindable(sym)) {
       eval_error(form, lit("~s: cannot bind ~s, which is not a bindable symbol"),
-                 is_operator, sym, nao);
+                 op, sym, nao);
     } else if (opt_compat && opt_compat <= 107) {
       /* empty */
     } else if (builtin_kind) {
@@ -4840,6 +4874,7 @@ void eval_init(void)
   sys_mark_special_s = intern(lit("mark-special"), system_package);
   defun_s = intern(lit("defun"), user_package);
   defmacro_s = intern(lit("defmacro"), user_package);
+  macro_s = intern(lit("macro"), user_package);
   defsymacro_s = intern(lit("defsymacro"), user_package);
   tree_case_s = intern(lit("tree-case"), user_package);
   tree_bind_s = intern(lit("tree-bind"), user_package);

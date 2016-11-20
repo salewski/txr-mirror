@@ -12354,11 +12354,13 @@ and
 .code nil
 may not be used as function names. Neither can keyword symbols.
 
-It is possible to define methods with
+It is possible to define methods as well as macros with
 .codn defun ,
 as an alternative to the
 .code defmeth
-macro.
+and
+.code defmacro
+forms.
 
 To define a method, the syntax
 .cblk
@@ -12366,15 +12368,35 @@ To define a method, the syntax
 .cble
 should be used as the argument to the
 .meta name
-parameter.
-
-The syntax
+parameter. This gives rise to the syntax
 .cblk
-.meti (defun (meth type name) args forms)
+.meti (defun (meth < type << name ) < args << form *)
 .cble
-is equivalent to the
+which is equivalent to the
 .cblk
-.meti (defmeth type name args forms)
+.meti (defmeth < type < name < args << form *)
+.cble
+syntax.
+
+Macros can be defined using
+.cblk
+.meti (macro << name )
+.cble
+as the
+.meta name
+parameter of
+.codn defun .
+This way of defining a macro doesn't support destructuring;
+it defines the expander as an ordinary function with an ordinary
+argument list. To work, the function must accept two arguments:
+the entire macro call form that is to be expanded, and the
+macro environment. Thus, the macro definition syntax is
+.cblk
+.meti (defun (macro << name ) < form < env << form *)
+.cble
+which is equivalent to the
+.cblk
+.meti (defmacro < name (:form < form :env << env ) << form *)
 .cble
 syntax.
 
@@ -14854,9 +14876,11 @@ If
 .meta symbol
 has no global function binding, then
 .code nil
-is returned. The
+is returned.
+
+The
 .code symbol-function
-function also supports method names of the form
+function supports method names of the form
 .cblk
 .meti (meth < struct << slot )
 .cble
@@ -14866,8 +14890,15 @@ names a struct type, and
 .meta slot
 a static slot. Names in this format are returned by the
 .meta func-get-name
-function.
-
+function.  The
+.code symbol-function
+function also supports names of the form
+.cblk
+.meti (macro << name )
+.cble
+which denote macros. Thus,
+.code symbol-function
+provides unified access to functions, methods and macros.
 
 The
 .code symbol-macro
@@ -15201,7 +15232,28 @@ symbols in the global environment resolve to the function,
 it is not specified which one is returned.
 
 If the global function environment search fails,
-then the function is considered as a possible method.
+then the function is considered as a possible macro.
+The global macro environment is searched for a macro
+binding whose expander function is
+.metn func ,
+similarly to the way the function environment was
+searched. If a binding is found, then the syntax
+.cblk
+.meti (macro << name )
+.cble
+is returned, where
+.meta name
+is the name of the global macro binding that was found
+which resolves to
+.metn func .
+If two or more global macro bindings share
+.metn func ,
+it is not specified which of those bindings provides
+.metn name .
+
+If the global macro search fails, then
+.meta func
+is considered as a possible method.
 The static slot space of all struct types is searched for
 a slot which contains
 .metn func .
@@ -48575,6 +48627,16 @@ Methods can be traced; their names are given using
 syntax: see the
 .code func-get-name
 function.
+
+Macros can be traced; their names are given using
+.cblk
+.meti (macro << name )
+.cble
+syntax. Note that
+.code trace
+will not show the destructured internal macro arguments, but only the
+two arguments passed to the expander function: the whole form, and the
+environment.
 
 .SH* INTERACTIVE LISTENER
 
