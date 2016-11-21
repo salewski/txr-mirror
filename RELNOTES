@@ -1,3 +1,36 @@
+                                    TXR 159
+                                   2016-11-21
+
+
+  Features
+
+  - Tweaks in generational GC.
+  - Rounding out of package system with "fallback" concept.
+  - TXR Lisp now has a tagbody macro.
+  - Macro bindings now hold first-class functions.
+  - Global macros have (macro <sym>) function names
+    - symbol-function works with (macro <sym>).
+    - Possible to (trace (macro <sym>)) to trace a macro.
+    - Posible to (defun (macro <sym>) args body ...) to
+      write a raw macro expander as a plain function.
+    - func-get-name applied to global macro expander function
+      calculates its (macro <sym>) name.
+  - Trace macro now throws error if an undefined function occurs
+    in the argument list.
+  - The previously deprecated -b option has been revived and repurposed:
+    - use "-b sym=obj" syntax to pre-define a Lisp variable.
+  - Build system:
+    - TXR now honors standard Make variables like CC and CFLAGS.
+
+  Bugs
+
+  - Fixed macro-expansion bug in which forms are expanded
+    at macro time, to determine whether or not they are constant,
+    wrongly using the global macro environment rather than
+    the lexical one.
+
+
+
                                     TXR 158
                                    2016-11-15
 
