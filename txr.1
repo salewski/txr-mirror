@@ -482,12 +482,30 @@ of this function.
 Verbose operation. Detailed logging is enabled.
 
 .coIP -b
-This is a deprecated option, which is silently ignored. In \*(TX versions
-prior to 90, the printing of variable bindings (see
-.code -B
-option) was
-implicit behavior which was automatically suppressed in certain situations.
-The -b option suppressed it unconditionally.
+This option binds a Lisp global lexical variable (as if by the
+.code defparml
+function) to an object described by Lisp syntax. It requires an argument
+of the form
+.meta sym=value
+where
+.code sym
+must be, syntactically, a token denoting a bindable symbol, and
+.meta value
+is arbitrary \*(TL syntax. The
+.meta sym
+syntax is converted to the symbol it denotes, which is bound as a global
+lexical variable, if it is not already a variable.
+The
+.meta value
+syntax is parsed to the Lisp object it denotes. This object is not subject
+to evaluation; the object itself is stored into the variable binding denoted
+by
+.metn sym .
+Note that if
+.meta sym
+already exists as a global variable, then it is simply overwritten. If
+.meta sym
+is marked special, then it stays special.
 
 .coIP -B
 If the query is successful, print the variable bindings as a sequence

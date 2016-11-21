@@ -728,7 +728,7 @@ int txr_main(int argc, char **argv)
     }
 
     /* Single letter options with args: non-clumping. */
-    if (length(arg) == two && find(ref(arg, one), lit("acfepPtC"), nil, nil))
+    if (length(arg) == two && find(ref(arg, one), lit("abcfepPtC"), nil, nil))
     {
       val opt = chr_str(arg, one);
 
@@ -748,6 +748,25 @@ int txr_main(int argc, char **argv)
       case 'C':
         if (!do_fixnum_opt(compat, opt, arg))
           return EXIT_FAILURE;
+        break;
+      case 'b':
+        drop_privilege();
+        {
+          val pair = partition_star(arg, pos(chr('='), arg, nil, nil));
+          val sym = lisp_parse(pop(&pair), std_error,
+                               colon_k, lit("cmdline-expr"), colon_k);
+          val obj = lisp_parse(pop(&pair), std_error,
+                               colon_k, lit("cmdline-expr"), colon_k);
+
+          if (!bindable(sym)) {
+            format(std_error,
+                   lit("~a: ~s isn't a bindable symbol\n"),
+                   prog_string, sym, nao);
+            return EXIT_FAILURE;
+          }
+
+          reg_var(sym, obj);
+        }
         break;
       case 'c':
         if (txr_lisp_p) {
@@ -827,8 +846,6 @@ int txr_main(int argc, char **argv)
         case 'q':
           match_loglevel = 0;
           break;
-        case 'b': /* deprecated */
-          break;
         case 'B':
           opt_print_bindings = 1;
           break;
@@ -861,6 +878,7 @@ int txr_main(int argc, char **argv)
           stream_set_prop(std_input, real_time_k, nil);
           break;
         case 'a':
+        case 'b':
         case 'c':
         case 'e':
         case 'p':
