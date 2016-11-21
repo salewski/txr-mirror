@@ -469,6 +469,12 @@ conftest.yacc:
 conftest.ccver:
 	$(V)$(TXR_CC) --version
 
+.PHONY: conftest.darwin
+conftest.darwin:
+	$(V)if echo | $(CC) -dM -E - | grep -s __APPLE__ >  /dev/null 2>&1 ; then \
+	  echo yes ; \
+	fi
+
 .PHONY: conftest.clean
 conftest.clean:
 	$(V)rm -f conftest$(EXE) conftest.[co] \

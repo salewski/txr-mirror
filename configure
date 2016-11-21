@@ -887,21 +887,17 @@ fi
 # Detect Apple environment. We need _DARWIN_C_SOURCE.
 #
 
-case "$ccname" in
-  *gcc )
-     printf "Checking for Apple environment ... "
-     if echo | gcc -dM -E - | grep -s __APPLE__ > /dev/null 2>&1 ; then
-       printf "yes\n"
-       need_darwin_c_source=y
-       lang_flags="$lang_flags -D_DARWIN_C_SOURCE"
-       printf "Regenerating %s ..." $config_make
-       gen_config_make
-       printf "done\n"
-     else
-       printf "no\n"
-     fi
-     ;;
-esac
+printf "Checking for Apple environment ... "
+if [ "$(make conftest.darwin)" = "yes" ] ; then
+  printf "yes\n"
+  need_darwin_c_source=y
+  lang_flags="$lang_flags -D_DARWIN_C_SOURCE"
+  printf "Regenerating %s ..." $config_make
+  gen_config_make
+  printf "done\n"
+else
+  printf "no\n"
+fi
 
 #
 # Detect stupid FreeBSD problem: no defined way to reveal
