@@ -97,7 +97,10 @@ cc='$(cross)$(compiler_prefix)$(ccname)'
 intptr=
 exe=
 tool_prefix=
-lex='$(cross)$(tool_prefix)$(LEX)'
+lexname_given=
+lexname=
+lex_given=
+lex='$(cross)$(tool_prefix)$(lexname)'
 yaccname_given=
 yaccname='' # test tries $(YACC) first
 yacc='$(cross)$(tool_prefix)$(yaccname)'
@@ -337,6 +340,12 @@ tool-prefix [$tool_prefix]
 
   Specifies a prefix to be added to tool commands other than the
   compiler, like lex and yacc, in addition to \$cross.
+
+lexname [$lexname]
+
+  Specifies just the name of the lex program without the path.
+  The following variable, lex, specifies the full name.
+  If blank, the choice lex program will be auto-detected.
 
 lex [$lex]
 
@@ -644,6 +653,9 @@ cross := $cross
 
 # compiler name
 ccname = $ccname
+
+# name of lex program
+lexname = $lexname
 
 # name of yacc program
 yaccname = $yaccname
@@ -1341,8 +1353,35 @@ syntax error
 fi
 
 #
-# Yacc tests
+# Lex and Yacc tests
 #
+
+printf "Checking for lex ... "
+
+if [ -z "$lex_given" -a -z "$lexname_given" ] ; then
+  for lexname in '$(LEX)' "lex" "flex" "" ; do
+    rm -f lex.yy.c
+    if make lexname="$lexname" lex.yy.c > /dev/null 2>&1; then
+      break;
+    fi
+  done
+  if [ -z "$lexname" ] ; then
+    printf "not found\n"
+    exit 1
+  fi
+else
+  rm -f lex.yy.c
+  if ! make lexname="$lexname" lex.yy.c > /dev/null 2>&1; then
+    printf "error\n\n"
+    printf 'values --lexname="%s" --lex="%s" are not working\n\n' "$lexname" "$lex"
+    printf 'A GNU Flex compatible lex is required\n\n'
+    exit 1
+  fi
+fi
+
+rm -f lex.yy.c
+
+printf '"%s"\n' "$lexname"
 
 printf "Checking for yacc program ... "
 
