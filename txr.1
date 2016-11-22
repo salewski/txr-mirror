@@ -39417,7 +39417,9 @@ listener.
 The first parser situation involving a package fallback list occurs when the
 \*(TL parser resolves an unqualified symbol token: a symbol token not carrying
 a package prefix. Such a symbol name is resolved against the current package
-(the package currently stored in the .code *package* special variable). If the
+(the package currently stored in the
+.code *package*
+special variable). If the
 symbol is not found in the current package, then the packages in the fallback
 package list are searched for the symbol.  The first matching symbol which is
 found in the fallback list is returned.  If no matching symbol is found in the
@@ -39530,7 +39532,7 @@ in a private package.
   ;; We rely on interning being allowed for the qualified
   ;; mod-priv:priv-fun syntax, which is permitted because
   ;; mod-priv has no fallback list. This is useful precisely
-  ;; It is useful precisely for this type of package.
+  ;; for this type of package.
   (defun mod-priv:priv-fun (arg)
     (list arg))
 
