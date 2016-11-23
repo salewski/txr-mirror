@@ -15066,9 +15066,11 @@ yields true if its argument has a function, macro or operator
 binding. The behavior of the Common Lisp expression
 .code "(fboundp x)"
 in Common Lisp can be obtained in \*(TL using the
+
 .cblk
   (or (fboundp x) (mboundp x) (special-operator-p x))
 .cble
+
 expression.
 
 The
