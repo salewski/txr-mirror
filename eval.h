@@ -61,6 +61,7 @@ val func_get_name(val fun, val env);
 void reg_varl(val sym, val val);
 void reg_var(val sym, val val);
 void reg_fun(val sym, val fun);
+void reg_mac(val sym, val fun);
 val set_get_symacro(val sym, val form);
 val apply(val fun, val arglist);
 val apply_intrinsic(val fun, val args);

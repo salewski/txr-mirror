@@ -693,6 +693,24 @@ val uw_register_subtype(val sub, val sup)
   return sup;
 }
 
+static val register_exception_subtypes(struct args *args)
+{
+  val types = args_copy_to_list(args);
+  reduce_left(func_n2(uw_register_subtype), types, nil, nil);
+  return nil;
+}
+
+static val me_defex(val form, val menv)
+{
+  val types = cdr(form);
+
+  if (!all_satisfy(types, func_n1(symbolp), nil))
+    eval_error(form, lit("defex: arguments must all be symbols"), nao);
+
+  return cons(intern(lit("register-exception-subtypes"), user_package),
+              mapcar(curry_12_2(list_f, quote_s), types));
+}
+
 void uw_continue(uw_frame_t *cont)
 {
   uw_exit_point = cont;
@@ -941,8 +959,16 @@ void uw_late_init(void)
                                        frame_type, nil,
                                        list(types_s, fun_s, nao),
                                        nil, nil, nil, nil);
+  reg_mac(intern(lit("defex"), user_package), func_n2(me_defex));
   reg_var(unhandled_hook_s = intern(lit("*unhandled-hook*"),
           user_package), nil);
+  reg_fun(throw_s, func_n1v(uw_throwv));
+  reg_fun(intern(lit("throwf"), user_package), func_n2v(uw_throwfv));
+  reg_fun(error_s, func_n1v(uw_errorfv));
+  reg_fun(intern(lit("register-exception-subtypes"), user_package),
+          func_n0v(register_exception_subtypes));
+  reg_fun(intern(lit("exception-subtype-p"), user_package),
+          func_n2(uw_exception_subtype_p));
   reg_fun(intern(lit("get-frames"), user_package), func_n0(uw_get_frames));
   reg_fun(intern(lit("find-frame"), user_package), func_n2o(uw_find_frame, 0));
   reg_fun(intern(lit("invoke-catch"), user_package),
