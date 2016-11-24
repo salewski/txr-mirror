@@ -838,8 +838,11 @@ static val get_opt_param_syms(val params)
         return cons(spec, rest_syms);
       return rest_syms;
     } else {
-      val pat = car(spec);
-      return nappend2(get_param_syms(pat), get_opt_param_syms(cdr(params)));
+      val pat_var = car(spec);
+      val pat_p_var = caddr(spec);
+      val syms = nappend2(get_param_syms(pat_p_var),
+                          get_opt_param_syms(cdr(params)));
+      return nappend2(get_param_syms(pat_var), syms);
     }
   }
 }
