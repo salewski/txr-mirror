@@ -1772,53 +1772,6 @@ static void builtin_reject_test(val op, val sym, val form)
     }
 }
 
-static val expand_macrolet(val form, val menv)
-{
-  val op = car(form);
-  val body = cdr(form);
-  val macs = pop(&body);
-  val new_env = make_env(nil, nil, menv);
-
-  for (; macs; macs = cdr(macs)) {
-    val macro = car(macs);
-    val name = pop(&macro);
-    val params = expand_params(pop(&macro), menv);
-    val macro_ex = expand_forms(macro, menv);
-    val block = rlcp_tree(cons(block_s, cons(name, macro_ex)), macro_ex);
-
-    builtin_reject_test(op, name, form);
-
-    /* We store the macrolet in the same form as a top level defmacro,
-     * so they can be treated uniformly. The nil at the head of the
-     * environment object is the ordinary lexical environment: a macrolet
-     * doesn't capture that.
-     */
-    rlcp_tree(env_fbind(new_env, name,
-                        func_f2(cons(nil, cons(params, cons(block, nil))),
-                                me_interp_macro)), block);
-  }
-
-  return rlcp_tree(maybe_progn(expand_forms(body, new_env)), body);
-}
-
-static val expand_symacrolet(val form, val menv)
-{
-  val body = cdr(form);
-  val symacs = pop(&body);
-  val new_env = make_env(nil, nil, menv);
-
-  for (; symacs; symacs = cdr(symacs)) {
-    val macro = car(symacs);
-    val name = pop(&macro);
-    val repl = pop(&macro);
-    env_vbind(new_env, name,
-              if3(opt_compat && opt_compat <= 137,
-                  expand(repl, menv), repl));
-  }
-
-  return maybe_progn(expand_forms(body, new_env));
-}
-
 /*
  * Generate a symbol macro environment in which every
  * variable in the binding list vars is listed
@@ -1843,6 +1796,55 @@ static val make_var_shadowing_env(val menv, val vars)
 
     return make_env(shadows, nil, menv);
   }
+}
+
+static val expand_macrolet(val form, val menv)
+{
+  val op = car(form);
+  val body = cdr(form);
+  val macs = pop(&body);
+  val new_env = make_env(nil, nil, menv);
+
+  for (; macs; macs = cdr(macs)) {
+    val macro = car(macs);
+    val name = pop(&macro);
+    val params = pop(&macro);
+    val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
+    val params_ex = expand_params(params, menv);
+    val macro_ex = expand_forms(macro, new_menv);
+    val block = rlcp_tree(cons(block_s, cons(name, macro_ex)), macro_ex);
+
+    builtin_reject_test(op, name, form);
+
+    /* We store the macrolet in the same form as a top level defmacro,
+     * so they can be treated uniformly. The nil at the head of the
+     * environment object is the ordinary lexical environment: a macrolet
+     * doesn't capture that.
+     */
+    rlcp_tree(env_fbind(new_env, name,
+                        func_f2(cons(nil, cons(params_ex, cons(block, nil))),
+                                me_interp_macro)), block);
+  }
+
+  return rlcp_tree(maybe_progn(expand_forms(body, new_env)), body);
+}
+
+static val expand_symacrolet(val form, val menv)
+{
+  val body = cdr(form);
+  val symacs = pop(&body);
+  val new_env = make_env(nil, nil, menv);
+
+  for (; symacs; symacs = cdr(symacs)) {
+    val macro = car(symacs);
+    val name = pop(&macro);
+    val repl = pop(&macro);
+    env_vbind(new_env, name,
+              if3(opt_compat && opt_compat <= 137,
+                  expand(repl, menv), repl));
+  }
+
+  return maybe_progn(expand_forms(body, new_env));
 }
 
 static val make_fun_shadowing_env(val menv, val funcs)
