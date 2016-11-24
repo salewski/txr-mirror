@@ -363,7 +363,7 @@
        t)))
 
 (defmacro test-inc (place : (delta 1) (upfrom-val 0))
-  ^(eql (pinc ,place ,delta) ,above-val))
+  ^(eql (pinc ,place ,delta) ,upfrom-val))
 
 (defmacro test-dec (place : (delta 1) (downto-val 0))
   ^(eql (dec ,place ,delta) ,downto-val))
