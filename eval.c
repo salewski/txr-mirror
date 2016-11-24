@@ -3821,8 +3821,12 @@ static val do_expand(val form, val menv)
                                           body, body_ex)))), form);
     } else if (sym == macro_time_s) {
       val args = rest(form);
-      val args_ex = expand_forms(args, menv);
-      val result = eval_progn(args_ex, make_env(nil, nil, nil), args);
+      val result = nil;
+      for (; args; args = cdr(args)) {
+        val arg = car(args);
+        val arg_ex = expand(arg, menv);
+        result = eval(arg_ex, nil, args);
+      }
       return maybe_quote(result);
     } else if (sym == macrolet_s) {
       return expand_macrolet(form, menv);

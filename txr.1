@@ -27262,6 +27262,19 @@ The special behavior of
 is that the evaluation takes place during
 the expansion phase, rather than during the evaluation phase.
 
+Also,
+.code macro-time
+macro-expands each
+.meta form
+and evaluates it before processing the next
+.meta form
+in the same way. Thus, for instance, if a
+.meta form
+introduces a global definition, that definition will be visible not
+only during the evaluation of a subsequent
+.metn form ,
+but also during its macro-expansion time.
+
 During the expansion phase, all
 .code macro-time
 expressions which occur in a context
