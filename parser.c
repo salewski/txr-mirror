@@ -315,8 +315,19 @@ tail:
       if (p->circ_count) {
         val iter = hash_begin(obj);
         val cell;
-        while ((cell = hash_next(iter)))
+        val pairs = nil;
+
+        while ((cell = hash_next(iter))) {
           circ_backpatch(p, &cs, cell);
+          push(cell, &pairs);
+        }
+
+        clearhash(obj);
+
+        while (pairs) {
+          val cell = pop(&pairs);
+          sethash(obj, car(cell), cdr(cell));
+        }
       }
     } else if (structp(obj)) {
       val stype = struct_type(obj);
