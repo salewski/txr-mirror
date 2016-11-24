@@ -76,7 +76,7 @@ val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
 val handler_bind_s, cond_s, if_s, iflet_s, when_s;
 val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s, macro_s;
-val tree_case_s, tree_bind_s;
+val tree_case_s, tree_bind_s, mac_param_bind_s;
 val sys_mark_special_s;
 val caseq_s, caseql_s, casequal_s;
 val caseq_star_s, caseql_star_s, casequal_star_s;
@@ -3725,14 +3725,26 @@ static val do_expand(val form, val menv)
       }
     } else if (sym == tree_case_s) {
       return expand_tree_case(form, menv);
-    } else if (sym == tree_bind_s) {
-      val params = second(form);
-      val expr = third(form);
-      val body = rest(rest(rest(form)));
+    } else if (sym == tree_bind_s || sym == mac_param_bind_s) {
+      val args = rest(form);
+      val ctx_expr = if3(sym == mac_param_bind_s, pop(&args), nil);
+      val params = pop(&args);
+      val expr = pop(&args);
+      val body = args;
       val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
+      val ctx_expr_ex = expand(expr, menv);
       val params_ex = expand_params(params, menv);
       val expr_ex = expand(expr, new_menv);
       val body_ex = expand_progn(body, new_menv);
+
+      if (sym == mac_param_bind_s) {
+        if (ctx_expr_ex == ctx_expr && params_ex == params &&
+            expr_ex == expr && body_ex == body)
+          return form;
+        return rlcp(cons(sym, cons(ctx_expr_ex,
+                                   cons(params_ex,
+                                        cons(expr_ex, body_ex)))), form);
+      }
 
       if (params_ex == params && expr_ex == expr && body_ex == body)
         return form;
@@ -4865,6 +4877,7 @@ void eval_init(void)
   defsymacro_s = intern(lit("defsymacro"), user_package);
   tree_case_s = intern(lit("tree-case"), user_package);
   tree_bind_s = intern(lit("tree-bind"), user_package);
+  mac_param_bind_s = intern(lit("mac-param-bind"), user_package);
   setq_s = intern(lit("setq"), system_package);
   inc_s = intern(lit("inc"), user_package);
   zap_s = intern(lit("zap"), user_package);
@@ -4973,7 +4986,7 @@ void eval_init(void)
   reg_op(defsymacro_s, op_defsymacro);
   reg_op(tree_case_s, op_tree_case);
   reg_op(tree_bind_s, op_tree_bind);
-  reg_op(intern(lit("mac-param-bind"), user_package), op_mac_param_bind);
+  reg_op(mac_param_bind_s, op_mac_param_bind);
   reg_op(setq_s, op_setq);
   reg_op(intern(lit("lisp1-setq"), system_package), op_lisp1_setq);
   reg_op(sys_lisp1_value_s, op_lisp1_value);
