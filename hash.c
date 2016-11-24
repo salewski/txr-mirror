@@ -754,6 +754,18 @@ val remhash(val hash, val key)
   return nil;
 }
 
+val clearhash(val hash)
+{
+  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
+  val mod = num_fast(256);
+  val table = vector(mod, nil);
+  cnum oldcount = h->count;
+  h->modulus = c_num(mod);
+  h->count = 0;
+  h->table = table;
+  return oldcount ? num(oldcount) : nil;
+}
+
 val hash_count(val hash)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
@@ -1374,6 +1386,7 @@ void hash_init(void)
   reg_fun(intern(lit("sethash"), user_package), func_n3(sethash));
   reg_fun(intern(lit("pushhash"), user_package), func_n3(pushhash));
   reg_fun(intern(lit("remhash"), user_package), func_n2(remhash));
+  reg_fun(intern(lit("clearhash"), user_package), func_n1(clearhash));
   reg_fun(intern(lit("hash-count"), user_package), func_n1(hash_count));
   reg_fun(intern(lit("get-hash-userdata"), user_package), ghu);
   reg_fun(intern(lit("hash-userdata"), user_package), ghu);

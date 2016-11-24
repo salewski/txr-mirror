@@ -34998,6 +34998,27 @@ is returned. Otherwise
 .code nil
 is returned.
 
+.coNP Function @ clearhash
+.synb
+.mets (clearhash << hash )
+.syne
+.desc
+The
+.code clearhash
+function removes all keys-value pairs from
+.metn hash ,
+causing it to be empty.
+
+If
+.meta hash
+is already empty prior to the operation, then
+.codn nil ,
+is returned.
+
+Otherwise an integer is returned indicating the number of entries
+that were purged from
+.metn hash .
+
 .coNP Function @ hash-count
 .synb
 .mets (hash-count << hash )

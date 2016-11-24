@@ -39,6 +39,7 @@ val gethash_f(val hash, val key, loc found);
 val sethash(val hash, val key, val value);
 val pushhash(val hash, val key, val value);
 val remhash(val hash, val key);
+val clearhash(val hash);
 val hash_count(val hash);
 val get_hash_userdata(val hash);
 val set_hash_userdata(val hash, val data);
