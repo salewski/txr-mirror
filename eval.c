@@ -3048,7 +3048,7 @@ static val transform_op(val forms, val syms, val rg)
 
     /* This handles improper list forms like (a b c . @42)
        when the recursion hits the @42 part. */
-    if (fi == var_s && integerp(car(re))) {
+    if (fi == var_s && (integerp(car(re)) || car(re) == rest_s)) {
       cons_bind (outsyms, outforms, transform_op(cons(forms, nil), syms, rg));
       return cons(outsyms, rlcp(car(outforms), outforms));
     }
