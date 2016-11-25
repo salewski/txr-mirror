@@ -3116,7 +3116,9 @@ static val supplement_op_syms(val ssyms, val max)
 static val me_op(val form, val menv)
 {
   cons_bind (sym, body, form);
-  val body_ex = if3(sym == op_s, expand_forms(body, menv), expand(body, menv));
+  val body_ex = if3(sym == op_s,
+                    expand_forms_lisp1(body, menv),
+                    expand(body, menv));
   val rest_gensym = gensym(lit("rest-"));
   cons_bind (syms, body_trans, transform_op(body_ex, nil, rest_gensym));
   val ssyms = sort(syms, func_n2(lt), car_f);
