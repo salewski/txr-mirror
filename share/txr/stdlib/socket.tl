@@ -101,12 +101,12 @@
     (set mask (logior mask (ash mask 4)))
     (set mask (logior mask (ash mask 8)))
     (set mask (logior mask (ash mask 16)))
-    (let ((w (- 32 (width (lognot mask 32))))
-          (d (logand addr #xFF))
-          (c (logand (ash addr -8) #xFF))
-          (b (logand (ash addr -16) #xFF))
-          (a         (ash addr -24))
-          (we (or weff (+ w wextra))))
+    (let* ((w (- 32 (width (lognot mask 32))))
+           (d (logand addr #xFF))
+           (c (logand (ash addr -8) #xFF))
+           (b (logand (ash addr -16) #xFF))
+           (a         (ash addr -24))
+           (we (or weff (+ w wextra))))
       (cond
         ((or (> a 255) (minusp a))
          (throwf 'eval-error "str-inaddr-net: ~a out of range for IPv4 address"
