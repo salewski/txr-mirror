@@ -3865,7 +3865,7 @@ static val do_expand(val form, val menv)
       return expand(first(args), menv);
     } else if (sym == sys_lisp1_value_s) {
       return expand_lisp1_value(form, menv);
-    } else if (sym == var_s) {
+    } else if (sym == var_s || sym == expr_s) {
       return form;
     } else {
       /* funtion call
