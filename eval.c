@@ -2365,18 +2365,13 @@ val subst_vars(val forms, val env, val filter)
         iter = list_collect_append(iter, nested);
         forms = cdr(forms);
         continue;
-      } else if (sym == expr_s) {
-        val str = eval(rest(form), env, form);
+      } else {
+        val str = eval(form, env, form);
         if (listp(str))
           str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
         else if (!stringp(str))
           str = tostringp(str);
         forms = cons(filter_string_tree(filter, tostringp(str)), rest(forms));
-        continue;
-      } else {
-        val nested = subst_vars(form, env, filter);
-        iter = list_collect_append(iter, nested);
-        forms = cdr(forms);
         continue;
       }
     } else if (bindable(form)) {
@@ -2983,12 +2978,8 @@ static val expand_quasi(val quasi_forms, val menv)
 
     if (consp(form)) {
       val sym = car(form);
-      if (sym == expr_s) {
-        val expr_ex = expand(rest(form), menv);
 
-        if (expr_ex != rest(form))
-          form_ex = rlcp(cons(sym, expr_ex), form);
-      } else if (sym == var_s) {
+      if (sym == var_s) {
         val param = second(form);
         val mods = third(form);
         val param_ex = expand(param, menv);

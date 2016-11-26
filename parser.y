@@ -68,7 +68,6 @@ static val rlrec(parser_t *, val form, val line);
 static wchar_t char_from_name(const wchar_t *name);
 static val make_expr(parser_t *, val sym, val rest, val lineno);
 static val check_for_include(val spec_rev);
-static val quasi_meta_helper(val obj);
 static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons);
 
 #if YYBISON
@@ -1165,7 +1164,11 @@ quasi_item : litchars           { $$ = lit_char_helper($1); }
            | q_var              { $$ = $1; }
            | METANUM            { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(parser->lineno)); }
-           | '@' n_expr         { $$ = quasi_meta_helper($2); }
+           | '@' n_expr         { if (integerp($2) || symbolp($2))
+                                    $$ = rlcp_tree(cons(var_s, cons($2, nil)),
+                                                   $2);
+                                  else
+                                    $$ = $2; }
            ;
 
 litchars : LITCHAR              { $$ = rl(cons(chr($1), nil), num(parser->lineno)); }
@@ -1642,24 +1645,6 @@ static val check_for_include(val spec_rev)
     }
   }
   return spec_rev;
-}
-
-static val quasi_meta_helper(val obj)
-{
-  if (integerp(obj) || symbolp(obj))
-    goto var;
-
-  if (atom(obj))
-    goto expr;
-
-  if (first(obj) == var_s || first(obj) == expr_s)
-    return obj;
-
-expr:
-  return rlcp(cons(expr_s, obj), obj);
-
-var:
-  return rlcp_tree(cons(var_s, cons(obj, nil)), obj);
 }
 
 static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons)

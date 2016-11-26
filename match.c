@@ -1493,13 +1493,13 @@ static val tx_subst_vars(val spec, val bindings, val filter)
           iter = list_collect_append(iter, nested);
           spec = cdr(spec);
           continue;
-        } else if (sym == expr_s) {
+        } else {
           if (opt_compat && opt_compat < 100) {
-            val result = tleval(spec, rest(elem), bindings);
+            val result = tleval(spec, elem, bindings);
             spec = cons(filter_string_tree(filter, tostringp(result)), rest(spec));
             continue;
           } else {
-            val str = tleval(spec, rest(elem), bindings);
+            val str = tleval(spec, elem, bindings);
             if (listp(str))
               str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
             else if (!stringp(str))
@@ -1507,11 +1507,6 @@ static val tx_subst_vars(val spec, val bindings, val filter)
             spec = cons(filter_string_tree(filter, tostringp(str)), rest(spec));
             continue;
           }
-        } else {
-          val nested = tx_subst_vars(elem, bindings, filter);
-          iter = list_collect_append(iter, nested);
-          spec = cdr(spec);
-          continue;
         }
       }
 

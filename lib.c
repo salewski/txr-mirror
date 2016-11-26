@@ -9481,9 +9481,9 @@ static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
         }
         if (need_brace)
           put_char(chr('}'), out);
-      } else if (sym == expr_s) {
+      } else {
         put_char(chr('@'), out);
-        obj_print_impl(rest(elem), out, nil, ctx);
+        obj_print_impl(elem, out, nil, ctx);
       }
     } else {
       obj_print_impl(elem, out, nil, ctx);
