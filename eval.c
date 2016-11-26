@@ -3785,7 +3785,8 @@ static val do_expand(val form, val menv)
       val body = rest(rest(form));
       val hashform_ex = expand(hashform, menv);
       val resform_ex = expand(resform, menv);
-      val body_ex = expand_progn(body, menv);
+      val new_menv = make_var_shadowing_env(menv, list(keysym, valsym, nao));
+      val body_ex = expand_progn(body, new_menv);
 
       if (hashform == hashform_ex && resform == resform_ex && body == body_ex)
         return form;
