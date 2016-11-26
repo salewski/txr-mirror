@@ -732,8 +732,8 @@ o_elem : TEXT                   { $$ = string_own($1);
        | SPACE                  { $$ = string_own($1);
                                   rl($$, num(parser->lineno)); }
        | o_var                  { $$ = $1; }
-       | list                   { $$ = rlcp(cons(expr_s,
-                                                 expand($1, nil)), $1); }
+       | list                   { $$ = rlcp(list(expr_s,
+                                                 expand($1, nil), nao), $1); }
        | rep_elem               { $$ = $1; }
        ;
 
@@ -874,7 +874,7 @@ list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '[' n_exprs ']'          { $$ = rl(cons(dwim_s, $2), num($1)); }
      | '[' ']'                  { $$ = rl(cons(dwim_s, nil), num($1)); }
      | '@' n_expr               { if (consp($2))
-                                    $$ = rl(cons(expr_s, $2), num($1));
+                                    $$ = rl(cons(expr_s, cons($2, nil)), num($1));
                                   else
                                     $$ = rl(cons(var_s, cons($2, nil)),
                                             num($1)); }
@@ -1520,9 +1520,9 @@ static val expand_meta(val form, val menv)
   }
 
   if ((sym = car(form)) == expr_s) {
-    val exp_x = expand(rest(form), menv);
+    val exp_x = expand(second(form), menv);
     if (!bindable(exp_x))
-      return rlcp(cons(sym, exp_x), form);
+      return rlcp(cons(sym, cons(exp_x, nil)), form);
     return rlcp(cons(var_s, cons(exp_x, nil)), form);
   }
 
@@ -1620,7 +1620,7 @@ static wchar_t char_from_name(const wchar_t *name)
 static val make_expr(parser_t *parser, val sym, val rest, val lineno)
 {
   val expr = cons(sym, rest);
-  val ret = cons(expr_s, expand(expr, nil));
+  val ret = cons(expr_s, cons(expand(expr, nil), nil));
 
   if (rest) {
     rlcp(expr, rest);

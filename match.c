@@ -353,7 +353,7 @@ static val dest_bind(val spec, val bindings, val pattern,
     }
 
     if (first(pattern) == expr_s) {
-      ret = tleval(spec, rest(pattern), bindings);
+      ret = tleval(spec, second(pattern), bindings);
       lisp_evaled = t;
     }
 
@@ -1561,10 +1561,8 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
         for (iter = rest(form); iter != nil; iter = cdr(iter))
           tail = list_collect(tail, tx_subst_vars(cdr(car(iter)), bindings, nil));
         ret = out;
-      } else if (sym == var_s) {
+      } else if (sym == var_s || sym == expr_s) {
         ret = tleval(spec, second(form), bindings);
-      } else if (sym == expr_s) {
-        ret = tleval(spec, rest(form), bindings);
       } else {
         ret =  mapcar(curry_123_2(func_n3(txeval), spec, bindings), form);
       }
@@ -1878,9 +1876,9 @@ static void do_output_line(val bindings, val specline, val filter, val out)
         } else if (directive == expr_s) {
           if (opt_compat && opt_compat < 100) {
             format(out, lit("~a"),
-                   tleval(elem, rest(elem), bindings), nao);
+                   tleval(elem, second(elem), bindings), nao);
           } else {
-            val str = cat_str(tx_subst_vars(cons(elem, nil),
+            val str = cat_str(tx_subst_vars(cdr(elem),
                                             bindings, filter), nil);
             if (str == nil)
               sem_error(specline, lit("bad substitution: ~a"),

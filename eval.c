@@ -2249,7 +2249,7 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
     } else if ((!opt_compat || opt_compat > 128) &&
                consp(item) && car(item) == expr_s)
     {
-      item = cdr(item);
+      item = cadr(item);
       goto eval;
     } else if (consp(item) && car(item) == dwim_s) {
       val arg_expr = second(item);
@@ -3034,8 +3034,8 @@ static val transform_op(val forms, val syms, val rg)
     val fi = first(forms);
     val re = rest(forms);
 
-    if (fi == expr_s && meta_meta_p(re))
-      return cons(syms, rlcp(meta_meta_strip(re), forms));
+    if (fi == expr_s && meta_meta_p(car(re)))
+      return cons(syms, rlcp(meta_meta_strip(car(re)), forms));
 
     /* This handles improper list forms like (a b c . @42)
        when the recursion hits the @42 part. */
