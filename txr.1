@@ -39712,34 +39712,34 @@ in a private package.
 
 .cblk
   ;; Define three packages.
-  (defpackage mod-priv)
+  (defpackage mod-priv
+    (:fallback usr))
 
-  (defpackage mod
-    (:fallback mod-priv usr))
+  (defpackage mod)
 
   (defpackage client
     (:fallback mod usr)
     (:use-from mod-priv other-priv))
 
-  ;; Switch to mod package
-  (in-package mod)
+  ;; Switch to mod-priv package
+  (in-package mod-priv)
 
-  ;; Note that we don't have to change to the mod-priv package,
-  ;; to define functions with names in that package.
-  ;; We rely on interning being allowed for the qualified
-  ;; mod-priv:priv-fun syntax, which is permitted because
-  ;; mod-priv has no fallback list. This is useful precisely
-  ;; for this type of package.
-  (defun mod-priv:priv-fun (arg)
+  (defun priv-fun (arg)
     (list arg))
 
   ;; Another function with a name in the mod-priv package.
-  (defun mod-priv:other-priv (arg)
+  (defun other-priv (arg)
     (cons arg arg))
 
-  ;; This is mod:public-fun
-  (defun public-fun (arg)
-    (priv-fun arg))
+  ;; Define a function in mod; a public function.
+  ;; Note that we don't have to change to the mod package,
+  ;; to define functions with names in that package.
+  ;; We rely on interning being allowed for the qualified
+  ;; mod:priv-fun syntax, which is permitted because
+  ;; mod has no fallback list. This is useful precisely
+  ;; for this type of package.
+  (defun mod:public-fun (arg)
+    (priv-fun arg)) ;; priv-fun here is mod-priv:priv-fun
 
   ;; Switch to client package
   (in-package client)
