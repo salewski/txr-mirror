@@ -9575,11 +9575,11 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
             put_string(lit("."), out);
           iter = next;
         }
-      } else if (sym == quasi_s) {
+      } else if (sym == quasi_s && consp(cdr(obj))) {
         put_char(chr('`'), out);
         out_quasi_str(obj, out, ctx);
         put_char(chr('`'), out);
-      } else if (sym == quasilist_s) {
+      } else if (sym == quasilist_s && consp(cdr(obj))) {
         val args = cdr(obj);
         put_string(lit("#`"), out);
         if (args) {
