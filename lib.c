@@ -9557,7 +9557,7 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
       {
         put_char(chr('@'), out);
         obj_print_impl(second(obj), out, pretty, ctx);
-      } else if (sym == expr_s) {
+      } else if (sym == expr_s && two_elem && consp(second(obj))) {
         put_char(chr('@'), out);
         obj_print_impl(second(obj), out, pretty, ctx);
       } else if (sym == rcons_s && consp(cdr(obj))
