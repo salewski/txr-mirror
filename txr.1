@@ -31950,8 +31950,10 @@ consisting of unwinding, and then printing some informational messages and
 terminating.
 .PP
 
-From the above it should be evident that there are two ways by which exceptions
-are handled: catches and handlers. Catches and handlers are similar, but different.
+.NP* Catches and Handlers
+
+There are two ways by which exceptions are handled: catches and handlers.
+Catches and handlers are similar, but different.
 A catch is an exit point associated with an active scope. When an exception is
 handled by a catch, the form which threw the exception is abandoned, and unwinding
 takes place to the catch site, which receives the exception type and arguments.
@@ -31969,7 +31971,9 @@ to the outermost. When an eligible handle is encountered, it is called. If
 it returns, the search continues. When an eligible catch is encountered,
 the search stops and a control transfer takes place to the catch site.
 
-Exception types are arranged
+.NP* Exception Type Hierarchy
+
+Exception type symbols are arranged
 in an inheritance hierarchy, at whose top the symbol
 .code t
 is is the supertype of every exception type, and the
@@ -31983,6 +31987,53 @@ subtype of Y, it is possible that X is exactly Y.
 The
 .code defex
 macro registers exception supertype/subtype relationships among symbols.
+
+The following tree diagram shows the relationships among \*(TL's built-in
+exception symbols. Not shown is the exception symbol
+.codn nil ,
+subtype of every exception type:
+
+.cblk
+  t ----+--- warning
+        |
+        +--- restart --- continue
+        |
+        +--- error ---+--- type-error
+                      |
+                      +--- internal-error
+                      |
+                      +--- panic
+                      |
+                      +--- numeric-error
+                      |
+                      +--- range-error
+                      |
+                      +--- query-error
+                      |
+                      +--- file-error
+                      |
+                      +--- process-error
+                      |
+                      +--- socket-error
+                      |
+                      +--- system-error
+                      |
+                      +--- timeout-error
+                      |
+                      +--- assert
+                      |
+                      +--- syntax-error
+                      |
+                      +--- eval-error
+.cble
+
+Program designers are encouraged to derive new error exceptions from the
+.code error
+type. The
+.code restart
+type is intended to be the root of a hierarchy of exception
+types used for denoting restart points: designers are encouraged
+to derive restarts from this type.
 
 .coNP Functions @, throw @ throwf and @ error
 .synb
@@ -32564,6 +32615,66 @@ If that is the case, then
 .code t
 is returned, otherwise
 .codn nil .
+
+.coNP Function @ exception-subtype-map
+.synb
+.mets (exception-subtype-map)
+.syne
+.desc
+The
+.code exception-subtype-map
+function returns a tree structure which captures information
+about all registered exception types.
+
+The map appears as an association list which contains an entry
+for every exception symbol, paired with that type's supertype path.
+The first element in the supertype path is the exception's immediate
+supertype. The next element is that type's supertype and so on. The
+last element in every path is the grand supertype
+.codn t .
+
+For instance, if only the types
+.codn a ,
+.code b
+and
+.code c
+existed in the system, and were linked according to this inheritance graph:
+
+.cblk
+  t ----+--- b --- a
+        |
+        +--- c
+.cble
+
+such that the supertype of
+.code b
+and
+.code c
+is
+.codn t ,
+and
+.code a
+has
+.code b
+as supertype, then the function might return:
+
+.cblk
+  ((a b t) (b t) (c t) (t))
+.cble
+
+or any other equivalent permutation.
+
+The returned list may share substructure, so that the
+.code "(t)"
+sublist is shared among all four entries, and
+.code "(b t)"
+between the first two.
+
+If the program alters the tree structure returned by
+.codn exception-map-p ,
+the consequences are unspecified; this structure may in fact
+be the very object which actually represents the type hierarchy,
+and not a derived representation.
 
 .coNP Structures @, frame @ catch-frame and @ handle-frame
 .synb

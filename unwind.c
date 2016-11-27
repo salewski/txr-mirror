@@ -714,6 +714,11 @@ static val me_defex(val form, val menv)
               mapcar(curry_12_2(list_f, quote_s), types));
 }
 
+static val exception_subtype_map(void)
+{
+  return exception_subtypes;
+}
+
 void uw_continue(uw_frame_t *cont)
 {
   uw_exit_point = cont;
@@ -972,6 +977,7 @@ void uw_late_init(void)
           func_n0v(register_exception_subtypes));
   reg_fun(intern(lit("exception-subtype-p"), user_package),
           func_n2(uw_exception_subtype_p));
+  reg_fun(intern(lit("exception-subtype-map"), user_package), func_n0(exception_subtype_map));
   reg_fun(intern(lit("get-frames"), user_package), func_n0(uw_get_frames));
   reg_fun(intern(lit("find-frame"), user_package), func_n2o(uw_find_frame, 0));
   reg_fun(intern(lit("invoke-catch"), user_package),
