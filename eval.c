@@ -3726,7 +3726,10 @@ static val do_expand(val form, val menv)
         check_lambda_list(form, sym, params);
 
       {
-        val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
+        val inter_env = make_var_shadowing_env(menv, get_param_syms(params));
+        val new_menv = if3(sym == defun_s,
+                           make_fun_shadowing_env(inter_env, cons(name, nil)),
+                           inter_env);
         val params_ex = expand_params(params, menv);
         val body = rest(rest(rest(form)));
         val body_ex = expand_progn(body, new_menv);
