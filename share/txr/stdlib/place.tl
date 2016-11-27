@@ -88,6 +88,22 @@
                      (makunbound ',',place-expr))))
        ,*op-body))
 
+  (defun sys:pl-expand (unex-place env)
+    (while t
+      (let ((place unex-place))
+        (let ((pm-expander [*place-macro* (if (consp unex-place)
+                                            (car unex-place))]))
+          (when pm-expander
+            (sys:setq place (sys:set-macro-ancestor
+                              [pm-expander unex-place]
+                              unex-place))))
+        (sys:setq place (macroexpand-1 place env))
+        (when (or (eq place unex-place)
+                  (null place)
+                  (and (atom place) (not (symbolp place))))
+          (return place))
+        (sys:setq unex-place place))))
+
   (defun place-form-p (unex-place env)
     (let ((place (sys:pl-expand unex-place env)))
       (or (bindable place)
@@ -146,22 +162,6 @@
   ^(let ,(zip syms (repeat '((gensym)))) ,*body))
 
 (macro-time
-  (defun sys:pl-expand (unex-place env)
-    (while t
-      (let ((place unex-place))
-        (let ((pm-expander [*place-macro* (if (consp unex-place)
-                                            (car unex-place))]))
-          (when pm-expander
-            (sys:setq place (sys:set-macro-ancestor
-                              [pm-expander unex-place]
-                              unex-place))))
-        (sys:setq place (macroexpand-1 place env))
-        (when (or (eq place unex-place)
-                  (null place)
-                  (and (atom place) (not (symbolp place))))
-          (return place))
-        (sys:setq unex-place place))))
-
   (defun sys:cp-origin (to-tree from-form : circ-check)
     (unless (memq to-tree circ-check)
       (tree-case to-tree
@@ -885,10 +885,11 @@
                       ,tmp-body)))
         (call-update-expander pl-getter pl-setter place env
           ^(macrolet ((,tmp-place () ^(,',pl-getter)))
-             ,(sys:expand
-                ^(symacrolet ((,sym (,tmp-place)))
-                   ,*body)
-                env))))
+             ,(ignwarn
+                (sys:expand
+                  ^(symacrolet ((,sym (,tmp-place)))
+                     ,*body)
+                  env)))))
       (remhash *place-update-expander* tmp-place))))
 
 (defmacro placelet* (sym-place-pairs . body)

@@ -3898,8 +3898,11 @@ static val do_expand(val form, val menv)
       val args = rest(form_ex);
       val args_ex = expand_forms(args, menv);
 
-      if (form_ex == form && args_ex == args)
+      if (form_ex == form && args_ex == args) {
+        if (!lookup_fun(menv, sym) && !special_operator_p(sym))
+          eval_warn(last_form_expanded, lit("unbound function ~s"), sym, nao);
         return form;
+      }
 
       if (args_ex == args)
         return form_ex;
