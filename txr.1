@@ -10919,6 +10919,19 @@ or lexically precedes the reference.  Forward references such as
 .code "(#1# #1=(1 2))"
 are not supported.
 
+.TP* "Note:"
+Circular notation can span hash table literals. The syntax
+.code "#1=#H(() (#1# #1#))"
+denotes an
+.codn eql -based
+hash table which contains one entry, in which that
+same table itself is both the key and value. This kind of
+circularity is not supported for
+.codn equal -based
+hash tables. The analogous syntax
+.code "#1=#H((:equal-based) (#1# #1#))"
+produces a hash table in an inconsistent state.
+
 .TP* "Dialect note:"
 Circle notation is taken from Common Lisp, 
 intended to be unsurprising to users familiar with that
