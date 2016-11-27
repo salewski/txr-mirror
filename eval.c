@@ -211,25 +211,48 @@ val ctx_name(val obj)
   return nil;
 }
 
-noreturn val eval_error(val ctx, val fmt, ...)
+noreturn static void eval_exception(val sym, val ctx, val fmt, va_list vl)
 {
   uses_or2;
-  va_list vl;
   val form = ctx_form(ctx);
   val stream = make_string_output_stream();
   val loc = or2(source_loc_str(form, nil),
                 source_loc_str(last_form_evaled, nil));
 
-  va_start (vl, fmt);
-
   if (loc)
     format(stream, lit("(~a) "), loc, nao);
 
   (void) vformat(stream, fmt, vl);
+
+  uw_throw(sym, get_string_from_stream(stream));
+}
+
+noreturn val eval_error(val ctx, val fmt, ...)
+{
+  va_list vl;
+  va_start (vl, fmt);
+  eval_exception(eval_error_s, ctx, fmt, vl);
+  va_end (vl);
+  abort();
+}
+
+static val eval_warn(val ctx, val fmt, ...)
+{
+  va_list vl;
+
+  uw_catch_begin (cons(continue_s, nil), exsym, exvals);
+
+  va_start (vl, fmt);
+  eval_exception(warning_s, ctx, fmt, vl);
   va_end (vl);
 
-  uw_throw(eval_error_s, get_string_from_stream(stream));
-  abort();
+  uw_catch(exsym, exvals) { (void) exsym; (void) exvals; }
+
+  uw_unwind;
+
+  uw_catch_end;
+
+  return nil;
 }
 
 val lookup_origin(val form)
@@ -3107,9 +3130,10 @@ static val supplement_op_syms(val ssyms, val max)
 static val me_op(val form, val menv)
 {
   cons_bind (sym, body, form);
+  val new_menv = make_var_shadowing_env(menv, cons(rest_s, nil));
   val body_ex = if3(sym == op_s,
-                    expand_forms_lisp1(body, menv),
-                    expand(body, menv));
+                    expand_forms_lisp1(body, new_menv),
+                    expand(body, new_menv));
   val rest_gensym = gensym(lit("rest-"));
   cons_bind (syms, body_trans, transform_op(body_ex, nil, rest_gensym));
   val ssyms = sort(syms, func_n2(lt), car_f);
@@ -3597,6 +3621,8 @@ static val do_expand(val form, val menv)
         return form;
       return expand(rlcp_tree(symac, form), menv);
     }
+    if (!lookup_var(menv, form))
+      eval_warn(last_form_expanded, lit("unbound variable ~s"), form, nao);
     return form;
   } else if (atom(form)) {
     return form;
@@ -3886,7 +3912,8 @@ val expand(val form, val menv)
   val ret = nil;
   val lfe_save = last_form_expanded;
 
-  last_form_expanded = form;
+  if (consp(form))
+    last_form_expanded = form;
   ret = do_expand(form, menv);
   last_form_expanded = lfe_save;
 

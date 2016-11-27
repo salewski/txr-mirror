@@ -1740,9 +1740,15 @@ void yybadtoken(parser_t *parser, int tok, val context)
         yyerrorf(scnr, lit("unexpected character ~a"), chr(tok), nao);
 }
 
+static val warning_continue(val exc, val arg)
+{
+  uw_throw(continue_s, nil);
+}
+
 int parse_once(val stream, val name, parser_t *parser)
 {
   int res = 0;
+  uw_frame_t uw_handler;
 #if CONFIG_DEBUG_SUPPORT
   debug_state_t ds = debug_set_state(opt_dbg_expansion ? 0 : -1,
                                      opt_dbg_expansion);
@@ -1753,6 +1759,7 @@ int parse_once(val stream, val name, parser_t *parser)
   parser->stream = stream;
   parser->name = name;
 
+  uw_push_handler(&uw_handler, cons(warning_s, nil), func_n2(warning_continue));
 
   uw_catch_begin(cons(error_s, nil), esym, eobj);
 
@@ -1773,6 +1780,8 @@ int parse_once(val stream, val name, parser_t *parser)
   }
 
   uw_catch_end;
+
+  uw_pop_frame(&uw_handler);
 
   return res;
 }

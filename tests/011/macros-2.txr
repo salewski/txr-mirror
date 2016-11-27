@@ -20,13 +20,14 @@
        (prinl i)))
 
    (prinl
-     (sys:expand
-       '(whilst ((< i 100))
-          (if (< (inc i) 20)
-            continue)
-          (if (> i 30)
-            break)
-          (prinl i))))
+     (ignwarn
+       (sys:expand
+         '(whilst ((< i 100))
+            (if (< (inc i) 20)
+              continue)
+            (if (> i 30)
+              break)
+            (prinl i)))))
 
    (let ((i 0))
      (whilst ((< i 5))

@@ -238,7 +238,10 @@ static val hash_instantiate(val set_fun)
 
 static val except_set_entries(val dlt, val fun)
 {
-  val name[] = { lit("handle"), nil };
+  val name[] = {
+    lit("handle"), lit("ignwarn"), lit("macro-time-ignwarn"),
+    nil
+  };
   set_dlt_entries(dlt, name, fun);
   return nil;
 }

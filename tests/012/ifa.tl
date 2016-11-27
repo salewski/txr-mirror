@@ -11,7 +11,7 @@
       7)
 
 ;; ambiguous: is "it" x or is "it" y?
-(test (ifa (> x y) (print it)) :error)
+(test (let (x y) (ifa (> x y) (print it))) :error)
 
 ;; "it" is (+ 3 (* 2 x))
 (test (let ((x 5))

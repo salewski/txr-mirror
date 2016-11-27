@@ -32183,6 +32183,42 @@ form terminates without evaluating the remaining
 forms, and yields
 .codn nil .
 
+.coNP Macro @ ignwarn
+.synb
+.mets (ignwarn << form *)
+.syne
+.desc
+The
+.code ignwarn
+macro resembles
+.codn ignerr .
+It arranges for the evaluation of each
+.meta form
+in left-to-right order. If all the forms are evaluated, then the
+value of the last one is returned. If no forms are present, then
+.code nil
+is returned.
+
+If any
+.meta form
+throws an exception of type
+.code warning
+then this exception is intercepted by a handler established by
+.codn ignwarn .
+This handler reacts by throwing an exception of type
+.codn continue .
+
+The effect is that the warning is ignored, since the handler
+doesn't issue any diagnostic, and passes control to the warning's
+continue point.
+
+Note: all sites within \*(TX which throw a
+.code warning
+also provide a nearby catch for a
+.code continue
+exception, for resuming evaluation at the point where the warning
+was issued.
+
 .coNP Operator @ handler-bind
 .synb
 .mets (handler-bind < function-form < symbol-list << body-form *)

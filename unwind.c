@@ -556,6 +556,13 @@ val uw_throw(val sym, val args)
       abort();
     }
 
+    if (sym == warning_s) {
+      --reentry_count;
+      format(std_error, lit("warning: ~a\n"), car(args), nao);
+      uw_throw(continue_s, nil);
+      abort();
+    }
+
     {
       loc pfun = lookup_var_l(nil, unhandled_hook_s);
       val fun = deref(pfun);
@@ -666,10 +673,6 @@ val uw_register_subtype(val sub, val sup)
               lit("cannot define ~s as an exception subtype of ~s"),
               sub, sup, nao);
   }
-
-  if (uw_exception_subtype_p(sub, sup))
-    uw_throwf(type_error_s, lit("~s is already an exception subtype of ~s"),
-              sub, sup, nao);
 
   if (uw_exception_subtype_p(sup, sub))
     uw_throwf(type_error_s, lit("~s is already an exception supertype of ~s"),
@@ -975,4 +978,6 @@ void uw_late_init(void)
           func_n2v(uw_invoke_catch));
   reg_fun(sys_capture_cont_s = intern(lit("capture-cont"), system_package),
           func_n3o(uw_capture_cont, 2));
+  uw_register_subtype(continue_s, restart_s);
+  uw_register_subtype(warning_s, t);
 }

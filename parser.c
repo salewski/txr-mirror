@@ -887,6 +887,12 @@ static val get_home_path(void)
   return getenv_wrap(lit("HOME"));
 }
 
+static val repl_warning(val out_stream, val exc, val arg)
+{
+  format(out_stream, lit("** warning: ~!~a\n"), arg, nao);
+  uw_throw(continue_s, nil);
+}
+
 val repl(val bindings, val in_stream, val out_stream)
 {
   val ifd = stream_get_prop(in_stream, fd_k);
@@ -911,6 +917,7 @@ val repl(val bindings, val in_stream, val out_stream)
   val hist_len_var = lookup_global_var(listener_hist_len_s);
   val multi_line_var = lookup_global_var(listener_multi_line_p_s);
   val sel_inclusive_var = lookup_global_var(listener_sel_inclusive_p_s);
+  val rw_f = func_f2(out_stream, repl_warning);
 
   for (; bindings; bindings = cdr(bindings)) {
     val binding = car(bindings);
@@ -937,6 +944,7 @@ val repl(val bindings, val in_stream, val out_stream)
     val var_counter = mod(counter, num_fast(100));
     val var_name = format(nil, lit("*~d"), var_counter, nao);
     val var_sym = intern(var_name, user_package);
+    uw_frame_t uw_handler;
 
     char *prompt_u8 = utf8_dup_to(c_str(prompt));
 
@@ -984,6 +992,8 @@ val repl(val bindings, val in_stream, val out_stream)
 
     uw_catch_begin (catch_all, exsym, exvals);
 
+    uw_push_handler(&uw_handler, cons(warning_s, nil), rw_f);
+
     {
       val name = format(nil, lit("expr-~d"), prev_counter, nao);
       val line = string_utf8(line_u8);
@@ -1002,6 +1012,8 @@ val repl(val bindings, val in_stream, val out_stream)
         lino_hist_add(ls, line_u8);
       }
     }
+
+    uw_pop_frame(&uw_handler);
 
     uw_catch (exsym, exvals) {
       val exinfo = cons(exsym, exvals);

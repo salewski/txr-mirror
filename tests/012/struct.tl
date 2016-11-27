@@ -24,7 +24,7 @@
 (test s
       #S(bar a 100 b 4))
 
-(test (sys:expand 'a.b.c.d)
+(test (ignwarn (sys:expand 'a.b.c.d))
       (slot (slot (slot a 'b)
                   'c) 'd))
 
@@ -36,11 +36,11 @@
       [(slot s 'a) b c])
 
 (set *gensym-counter* 0)
-(stest (sys:expand 's.(a))
+(stest (ignwarn (sys:expand 's.(a)))
        "(call (slot s 'a)\n                     \
        \      s)")
 (set *gensym-counter* 0)
-(stest (sys:expand 's.(a b c))
+(stest (ignwarn (sys:expand 's.(a b c)))
        "(call (slot s 'a)\n                     \
        \      s b c)")
 (test (sys:expand 's.[a].d)
@@ -48,11 +48,11 @@
 (test (sys:expand 's.[a b c].d)
       (slot [(slot s 'a) b c] 'd))
 (set *gensym-counter* 0)
-(stest (sys:expand 's.(a).d)
+(stest (ignwarn (sys:expand 's.(a).d))
        "(slot (call (slot s 'a)\n               \
        \            s) 'd)")
 (set *gensym-counter* 0)
-(stest (sys:expand 's.(a b c).d)
+(stest (ignwarn (sys:expand 's.(a b c).d))
        "(slot (call (slot s 'a)\n               \
        \            s b c)\n      'd)")
 

@@ -44,3 +44,6 @@
                                  syms-fragments)))
                    ,[mapcar car syms-fragments]
                    ,try-form)))
+
+(defmacro ignwarn (. forms)
+  ^(handler-bind (lambda (exc-sym arg) (throw 'continue)) (warning) ,*forms))
