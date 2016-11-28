@@ -1,3 +1,13 @@
+                                    TXR 161
+                                   2016-11-28
+
+
+  Bugs
+
+  - Regression: awk macro spews warnings.
+
+
+
                                     TXR 160
                                    2016-11-27
 
