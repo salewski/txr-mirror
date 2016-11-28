@@ -1,3 +1,53 @@
+                                    TXR 160
+                                   2016-11-27
+
+
+  Features
+
+  - New hash table function clearhash.
+  - TXR Lisp macro-expanding code walker now generates warnings
+    about unbound variables and functions.
+    - ignwarn macro provided for ignoring warnings.
+  - macro-time macro now interleaves expansion and evaluation, so that the
+    evaluation effects of forms occurring earlier in the
+    macro-time form are visible to the macro-expansion-time of later forms.
+  - New exception-subtype-map function for retrieving type symbol hiearchy.
+
+  Bugs
+
+  - Fixed numerous bugs in macro expander:
+    - not including symbols in macro-time environment:
+      - macrolet arguments
+      - dohash key and value variables
+      - function name in defun
+      - the auxiliary Boolean parameters that can exist on optional parameters
+        which indicate whether the optional argument is present.
+    - not expanding:
+      - mac-param-bind special forms at all.
+    - wrongly traversing and expanding:
+      - @var and @(expr) syntax
+    - incorrectly expanding:
+      - arguments of op using Lisp-2 expansion style rather than Lisp-1.
+  - Fixed a number of library functions broken due to using nonexistent
+    variables: test-inc macro, str-inaddr-net, str-inaddr6-net,
+  - Fixed broken read-print consistency of quasiliterals.
+    - example: `@@@a` would print as `@@a` which is a different object.
+  - Fixed op and related macros not handling @rest in the dot position.
+  - Fixed interaction between circular notation and hash literals.
+    - literals denoting eql-based hash tables which contain themselves
+      as keys now work.
+    - literals denoting equal-based hash tables doing the same thing
+      are not supported for now; they produce junk hash tables.
+  - Build system:
+    - Changes in 159 caused builds to fail on some systems unless lex
+      was manually specified.
+      - On some systems the $(LEX) make variable points to something
+        which isn't GNU Flex compatible.
+      - On some systems $(LEX) points to a nonexistent lex even if
+        Flex is installed.
+
+
+
                                     TXR 159
                                    2016-11-21
 
