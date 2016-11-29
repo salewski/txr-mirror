@@ -183,7 +183,7 @@
            (expander (get-update-expander place))
            (sys:*pl-env* env)
            (expansion [expander getter setter place body])
-           (expansion-ex (ignwarn (sys:expand expansion env))))
+           (expansion-ex (sys:expand expansion env)))
       (sys:cp-origin expansion-ex place)))
 
   (defun call-clobber-expander (ssetter unex-place env body)
@@ -191,7 +191,7 @@
            (expander (get-clobber-expander place))
            (sys:*pl-env* env)
            (expansion [expander ssetter place body])
-           (expansion-ex (ignwarn (sys:expand expansion env))))
+           (expansion-ex (sys:expand expansion env)))
       (sys:cp-origin expansion-ex place)))
 
   (defun call-delete-expander (deleter unex-place env body)
@@ -199,7 +199,7 @@
            (expander (get-delete-expander place))
            (sys:*pl-env* env)
            (expansion [expander deleter place body])
-           (expansion-ex (ignwarn (sys:expand expansion env))))
+           (expansion-ex (sys:expand expansion env)))
       (sys:cp-origin expansion-ex place))))
 
 (defmacro with-update-expander ((getter setter) unex-place env body)
@@ -885,11 +885,8 @@
                       ,tmp-body)))
         (call-update-expander pl-getter pl-setter place env
           ^(macrolet ((,tmp-place () ^(,',pl-getter)))
-             ,(ignwarn
-                (sys:expand
-                  ^(symacrolet ((,sym (,tmp-place)))
-                     ,*body)
-                  env)))))
+             ,(sys:expand ^(symacrolet ((,sym (,tmp-place)))
+                             ,*body) env))))
       (remhash *place-update-expander* tmp-place))))
 
 (defmacro placelet* (sym-place-pairs . body)

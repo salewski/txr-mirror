@@ -3929,6 +3929,21 @@ val expand(val form, val menv)
   return ret;
 }
 
+static val warning_continue(val exc, val arg)
+{
+  uw_throw(continue_s, nil);
+}
+
+static val no_warn_expand(val form, val menv)
+{
+  val ret;
+  uw_frame_t uw_handler;
+  uw_push_handler(&uw_handler, cons(warning_s, nil), func_n2(warning_continue));
+  ret = expand(form, menv);
+  uw_pop_frame(&uw_handler);
+  return ret;
+}
+
 val macro_form_p(val form, val menv)
 {
   menv = default_bool_arg(menv);
@@ -5315,7 +5330,7 @@ void eval_init(void)
   reg_fun(intern(lit("load"), user_package), func_n1(load));
   reg_var(load_path_s, nil);
   reg_symacro(intern(lit("self-load-path"), user_package), load_path_s);
-  reg_fun(intern(lit("expand"), system_package), func_n2o(expand, 1));
+  reg_fun(intern(lit("expand"), system_package), func_n2o(no_warn_expand, 1));
   reg_fun(intern(lit("macro-form-p"), user_package), func_n2o(macro_form_p, 1));
   reg_fun(intern(lit("macroexpand-1"), user_package),
           func_n2o(macroexpand_1, 1));
