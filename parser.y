@@ -1740,11 +1740,6 @@ void yybadtoken(parser_t *parser, int tok, val context)
         yyerrorf(scnr, lit("unexpected character ~a"), chr(tok), nao);
 }
 
-static val warning_continue(val exc, val arg)
-{
-  uw_throw(continue_s, nil);
-}
-
 int parse_once(val stream, val name, parser_t *parser)
 {
   int res = 0;
@@ -1759,7 +1754,8 @@ int parse_once(val stream, val name, parser_t *parser)
   parser->stream = stream;
   parser->name = name;
 
-  uw_push_handler(&uw_handler, cons(warning_s, nil), func_n2(warning_continue));
+  uw_push_handler(&uw_handler, cons(warning_s, nil),
+                  func_n1v(uw_muffle_warning));
 
   uw_catch_begin(cons(error_s, nil), esym, eobj);
 

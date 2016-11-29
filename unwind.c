@@ -406,6 +406,13 @@ val uw_invoke_catch(val catch_frame, val sym, struct args *args)
   abort();
 }
 
+val uw_muffle_warning(val exc, struct args *args)
+{
+  (void) exc;
+  (void) args;
+  uw_throw(continue_s, nil);
+}
+
 void uw_push_cont_copy(uw_frame_t *fr, mem_t *ptr,
                        void (*copy)(mem_t *ptr, int parent))
 {

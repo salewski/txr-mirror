@@ -3929,16 +3929,12 @@ val expand(val form, val menv)
   return ret;
 }
 
-static val warning_continue(val exc, val arg)
-{
-  uw_throw(continue_s, nil);
-}
-
 static val no_warn_expand(val form, val menv)
 {
   val ret;
   uw_frame_t uw_handler;
-  uw_push_handler(&uw_handler, cons(warning_s, nil), func_n2(warning_continue));
+  uw_push_handler(&uw_handler, cons(warning_s, nil),
+                  func_n1v(uw_muffle_warning));
   ret = expand(form, menv);
   uw_pop_frame(&uw_handler);
   return ret;
