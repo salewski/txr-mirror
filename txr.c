@@ -435,6 +435,7 @@ static int compat(val optval)
 
   sysroot_compat_fixup(compat);
   opt_compat = compat;
+  reg_varl(intern(lit("compat"), system_package), num(compat));
   return 1;
 }
 
@@ -516,6 +517,7 @@ int txr_main(int argc, char **argv)
   while (*argv)
     arg_tail = list_collect(arg_tail, string_utf8(*argv++));
 
+  reg_varl(intern(lit("compat"), system_package), zero);
   reg_var(intern(lit("*full-args*"), user_package), arg_list);
   reg_var(intern(lit("*args-full*"), user_package), arg_list);
 
