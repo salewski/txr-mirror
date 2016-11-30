@@ -259,8 +259,8 @@
                               slot-specs))
          ,*body))))
 
-(macro-time
-  (defun sys:rslotset (struct sym meth-sym val)
+(defun sys:rslotset (struct sym meth-sym val)
+  (prog1
     (slotset struct sym val)
     (call (umethod meth-sym) struct)))
 
