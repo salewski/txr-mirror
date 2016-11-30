@@ -331,7 +331,8 @@
                                            p-actions-xform))))))
                  ,*awc.begin-actions
                    (unwind-protect
-                     ,(if awc.cond-actions
+                     ,(if (or awc.cond-actions awc.begin-file-actions
+                              awc.end-file-actions awc.end-actions)
                         ^(qref ,aws-sym (loop ,awk-fun
                                           ,(if awc.begin-file-actions
                                              awk-begf-fun)
