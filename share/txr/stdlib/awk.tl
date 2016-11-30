@@ -31,7 +31,7 @@
   fs ft kfs
   (ofs " ")
   (ors "\n")
-  (inputs (or *args* (list *stdin*)))
+  (inputs)
   (output *stdout*)
   (file-num 0)
   (file-rec-num 0)
@@ -44,6 +44,7 @@
     (dohash (k v self.streams)
       (close-stream v)))
   (:postinit (self)
+    (set self.inputs (or self.inputs (zap *args*) (list *stdin*)))
     (if (plusp self.rng-n)
       (set self.rng-vec (vector self.rng-n)))
     (unless (streamp self.output)

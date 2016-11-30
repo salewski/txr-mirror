@@ -41383,6 +41383,38 @@ is taken as the input sources. Otherwise, the
 .code *stdin*
 stream is taken as the one and only input source.
 
+If the
+.code awk
+macro uses
+.code *args*
+via the above defaulting behavior, it copies
+.code *args*
+and sets that variable to
+.codn nil .
+This is done in order that if
+.code awk
+is used from the \*(TX command line, for example using the
+.code -e
+command line option, after
+.code awk
+terminates, \*(TX will not try to open the next argument
+as a script file or treat it as an option.
+Note: programs which want
+.code awk
+not to modify
+.code *args*
+can explicitly specify
+.code *args*
+as the argument to the
+.code :inputs
+keyword, rather than allow
+.code *args*
+to be used through the defaulting behavior. Only the
+defaulting behavior consumes the arguments by overwriting
+.code *args*
+with
+.codn nil .
+
 It is an error to specify more than one
 .code :inputs
 clause.
