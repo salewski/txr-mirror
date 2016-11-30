@@ -8,7 +8,7 @@
 (test
   (handle (list (cont (throw 'd 1))
                 (cont (throw 'c 2)))
-    (a (exc arg)
+    (a (arg)
       (let ((cont (find-frame 'cont)))
         (if cont
           (progn

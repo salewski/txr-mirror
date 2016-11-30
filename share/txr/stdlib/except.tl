@@ -36,7 +36,10 @@
                              (unless (symbolp name)
                                (sys:handle-bad-syntax hc))
                              (list name ^(apply (lambda ,arglist ,*body)
-                                                ,exc-sym ,exc-args)))
+                                                ,*(if (and (plusp sys:compat)
+                                                           (<= 161 sys:compat))
+                                                    ^(,exc-sym))
+                                                ,exc-args)))
                             (else (sys:handle-bad-syntax hc))))))
     ^(handler-bind (lambda (,exc-sym . ,exc-args)
                      (cond

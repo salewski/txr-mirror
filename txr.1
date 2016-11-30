@@ -50389,6 +50389,27 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 161
+Version 161 was the last version in which a bug existed in the
+.code handle
+macro. In spite of the documentation claiming that
+.code handle
+has the same syntax as
+.codn catch ,
+the clauses of
+.code handle
+were being passed the exception symbol as the leftmost argument, followed
+by the exception arguments. This convention is different from
+.code catch
+clauses which do not receive the exception symbol, only the arguments.
+The discrepancy was corrected by making
+.code handle
+behave like
+.codn catch ,
+as documented. Requesting compatibility with 161 or earlier restores
+the previous behavior of the
+.code handle
+macro.
 .IP 156
 After version 156, two behaviors changed in the in the macro expander for
 .codn caseq ,
