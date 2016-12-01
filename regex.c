@@ -2928,6 +2928,30 @@ val regex_range_all(val regex, val arg1, val arg2, val arg3)
   }
 }
 
+val regex_range_full_fun(val regex, val pos)
+{
+  return curry_123_3(func_n3(regex_range_full),
+                     regex, default_arg(pos, zero));
+}
+
+val regex_range_left_fun(val regex, val pos)
+{
+  return curry_123_3(func_n3(regex_range_left),
+                     regex, default_arg(pos, zero));
+}
+
+val regex_range_right_fun(val regex, val end)
+{
+  if (null_or_missing_p(end))
+    return curry_123_2(func_n3(regex_range_right), regex, end);
+  return curry_123_3(func_n3(regex_range_left), regex, end);
+}
+
+val regex_range_search_fun(val regex, val start, val from_end)
+{
+  return curry_1234_1(func_n4(range_regex), regex, start, from_end);
+}
+
 val read_until_match(val regex, val stream_in, val include_match_in)
 {
   regex_machine_t regm;
@@ -3116,6 +3140,10 @@ void regex_init(void)
   reg_fun(intern(lit("r$"), user_package), func_n3o(regex_range_right, 2));
   reg_fun(intern(lit("rr"), user_package), func_n4o(regex_range_search, 2));
   reg_fun(intern(lit("rra"), user_package), func_n4o(regex_range_all, 2));
+  reg_fun(intern(lit("fr^$"), user_package), func_n2o(regex_range_full_fun, 1));
+  reg_fun(intern(lit("fr^"), user_package), func_n2o(regex_range_left_fun, 1));
+  reg_fun(intern(lit("fr$"), user_package), func_n2o(regex_range_right_fun, 1));
+  reg_fun(intern(lit("frr"), user_package), func_n3o(regex_range_search_fun, 1));
   init_special_char_sets();
 }
 

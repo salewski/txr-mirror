@@ -34623,6 +34623,83 @@ and
   --> nil
 .cble
 
+.coNP Functions @, fr^$ @, fr^ @ fr$ and @ frr
+.synb
+.mets (fr^$ < regex <> [ position ])
+.mets (fr^ < regex <> [ position ])
+.mets (fr$ < regex <> [ end-position ])
+.mets (frr < regex <> [[ start-position ] << from-end ])
+.syne
+.desc
+These regular expression functions do not directly
+perform regex operations. Rather, they each return
+a function of one argument which performs a regex
+operation.
+
+The returned functions perform the same operations as,
+respectively,
+.codn r^$ ,
+.codn r^ ,
+.code r$
+and
+.codn rr .
+
+The following equivalences nearly hold, except that some of the 
+functions on the right side produced by op
+.code op
+can accept additional arguments after the input string,
+whereas the functions on the left produced by
+.code f^$
+.I "et al."
+accept only one parameter: the input string.
+
+.cblk
+  [fr^$ r]     <-->  (op m^$ r)
+  [fr^$ r p]   <-->  (op m^$ r p)
+  [fr^ r]      <-->  (op m^ r)
+  [fr^ r p]    <-->  (op m^ r p)
+  [fr$ r]      <-->  (op m$ r)
+  [fr$ r p]    <-->  (op m$ r p)
+  [frr r]      <-->  (op m$ r)
+  [frr r s]    <-->  (op m$ r s)
+  [frr r s fe] <-->  (op m$ r s fe)
+.cble
+
+That is to say,
+.code fr^$
+returns a function which binds
+.meta regex
+and possibly the optional
+.metn position .
+When this function is invoked, it must be given an argument
+which is a string. It performs the same operation as
+.code r^$
+being called on
+.meta regex
+and possibly
+.metn position ,
+and the string.
+The same holds between
+.code fr^
+and
+.codn r^ ,
+between
+.code fr$
+and
+.codn r$ ,
+and between
+.code frr
+and
+.codn rr .
+
+.TP* Examples:
+
+.cblk
+  ;; Remove leading digits from "123A456", other than first digit:
+  (regsub (fr^ #/\ed+/ 1) "" "123A456")
+  --> "1A456"
+.cble
+
 .SS* Hashing Library
 .coNP Functions @ make-hash and @ hash
 .synb
