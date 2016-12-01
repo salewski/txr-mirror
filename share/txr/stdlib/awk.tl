@@ -321,7 +321,8 @@
                       ,*(if (and awc.cond-actions awc.end-file-actions)
                           ^((,awk-endf-fun (lambda (,aws-sym)
                               ,*awc.end-file-actions))))
-                      ,*(if awc.cond-actions
+                      ,*(if (or awc.cond-actions awc.begin-file-actions
+                                awc.end-file-actions awc.end-actions)
                           ^((,awk-fun (lambda (,aws-sym)
                                         ,(if awc.rng-exprs
                                            ^(let* ((,awc.rng-rec-temp rec)
