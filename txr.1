@@ -41267,7 +41267,7 @@ forms, the
 .code awk
 macro substitutes the single action equivalent to the form
 .codn "(prn)" :
-a call to the local awk macro
+a call to the local awk function
 .codn prn .
 The behavior of this macro, when called with no arguments, as above,
 is to print the current
@@ -41328,10 +41328,15 @@ If multiple
 clauses are present, they are effectively consolidated into
 a single clause, in the order they appear.
 
-Note that the lexical variables and macros established by the
+Note that the lexical variables, functions and macros established by the
 .code awk
 macro
-(awk macros and awk variables) are in an inner scope relative to
+(called, respectively,
+.IR "awk macros" ,
+.I "awk functions"
+and
+.IR "awk variables" )
+are in an inner scope relative to
 .code :let
 bindings. For instance if
 .code :let
@@ -42055,7 +42060,7 @@ consisting of a single space character.
 
 When the
 .code prn
-macro prints two or more arguments, or fields,
+function prints two or more arguments, or fields,
 the value of
 .code ofs
 is used to separate them.
@@ -42081,7 +42086,7 @@ variable in Awk.
 
 Each call to the
 .code prn
-macro terminates its output by emitting the value of
+function terminates its output by emitting the value of
 .codn ors .
 
 The initial value of
@@ -42089,14 +42094,14 @@ The initial value of
 is a character string consisting of a single newline,
 and so the
 .code prn
-macro prints lines.
+function prints lines.
 
-.coNP Macro @ prn
+.coNP Function @ prn
 .synb
 .mets (prn << form *)
 .syne
 .desc
-The awk macro
+The awk function
 .code prn
 performs output into the
 .code *stdout*
