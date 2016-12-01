@@ -6251,6 +6251,21 @@ val curry_123_23(val fun3, val arg1)
   return func_f2(cons(fun3, arg1), do_curry_123_23);
 }
 
+static val do_curry_1234_1(val fcons, val arg1)
+{
+  cons_bind (fun, dr, fcons);
+  cons_bind (arg2, ddr, dr);
+  cons_bind (arg3, dddr, ddr);
+  val arg4 = car(dddr);
+
+  return funcall4(fun, arg1, arg2, arg3, arg4);
+}
+
+val curry_1234_1(val fun4, val arg2, val arg3, val arg4)
+{
+  return func_f1(list(fun4, arg2, arg3, arg4, nao), do_curry_1234_1);
+}
+
 static val do_curry_1234_34(val fcons, val arg3, val arg4)
 {
   return funcall4(car(fcons), car(cdr(fcons)), cdr(cdr(fcons)), arg3, arg4);

@@ -866,6 +866,7 @@ val curry_123_3(val fun3, val arg1, val arg2);
 val curry_123_2(val fun3, val arg1, val arg3);
 val curry_123_1(val fun3, val arg2, val arg3);
 val curry_123_23(val fun3, val arg1);
+val curry_1234_1(val fun4, val arg2, val arg3, val arg4);
 val curry_1234_34(val fun3, val arg1, val arg2);
 val chain(val first_fun, ...);
 val chainv(struct args *funlist);
