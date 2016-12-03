@@ -161,22 +161,26 @@ static wchar_t char_esc(int letter)
 
 static wchar_t num_esc(scanner_t *scn, char *num)
 {
-  long val;
+  long val = 0;
 
   if (num[0] == 'x') {
     if (strlen(num) > 7)
       yyerror(scn, yyget_extra(scn), "too many digits in hex character escape");
-    val = strtol(num + 1, 0, 16);
+    else
+      val = strtol(num + 1, 0, 16);
   } else {
     if (num[0] == 'o')
       num++;
     if (strlen(num) > 8)
       yyerror(scn, yyget_extra(scn), "too many digits in octal character escape");
-    val = strtol(num, 0, 8);
+    else
+      val = strtol(num, 0, 8);
   }
 
-  if (val < 0 || val > 0x10FFFF || (wchar_t) val != val)
+  if (val < 0 || val > 0x10FFFF || (wchar_t) val != val) {
     yyerror(scn, yyget_extra(scn), "numeric character escape out of range");
+    val = 0;
+  }
 
   return val;
 }
