@@ -381,7 +381,6 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <SPECIAL,QSPECIAL>{TOK}/{DOTFLO} |
 <BRACED>{BTOK}/{DOTFLO} |
 <NESTED>{NTOK}/{DOTFLO} {
-  printf("yytext: %s\n", yytext);
   yyerrorf(yyg, lit("cramped floating-point literal: "
                     "space needed between ~a and dot."),
                     string_own(utf8_dup_from(yytext)),
