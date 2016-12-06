@@ -10401,6 +10401,19 @@ to apply the ordinary non-splicing unquote to the symbol
 whitespace must be used:
 .codn ", *abc" .
 
+In \*(TX, the unquoting and splicing forms may freely appear outside of
+a quasiquote template. If they are evaluated as forms, however, they
+throw an exception:
+
+.cblk
+   ,(+ 2 2) ;; error!
+
+   ',(+ 2 2) --> ,(+ 2 2)
+.cble
+
+In other Lisp dialects, a comma not enclosed by backquote syntax is
+treated as a syntax error by the reader.
+
 .NP* Quasiquoting non-List Objects
 Quasiquoting is supported over hash table and vector literals (see Vectors
 and Hashes below).  A hash table or vector literal can be quoted, like any
