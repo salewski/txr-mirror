@@ -10357,7 +10357,7 @@ splice
 the value of
 .codn x* .
 In this situation, whitespace between the comma and the
-variable name should be used:
+variable name must be used:
 .codn ", *x*" .
 
 .meIP >> ,* expr
@@ -10376,13 +10376,30 @@ is evaluated to produce the list
 .codn "(6 8)" ,
 and this list is spliced into the quoted template.
 
-Dialect note: in other Lisp dialects, the equivalent syntax is usually
+.TP* "Dialect Notes:"
+
+In other Lisp dialects, like Scheme and ANSI Common Lisp, the equivalent syntax
+is usually
 .code ,@
 (comma at). The
 .code @
-character already has an assigned meaning, so
+character already has an assigned meaning in \*(TX, so
 .code *
 is used.
+
+However,
+.code *
+is also a character that may appear in a symbol name, which creates
+a potential for ambiguity. The syntax
+.code ,*abc
+denotes the application of the
+.code ,*
+splicing operator to the symbolic expression
+.codn abc ;
+to apply the ordinary non-splicing unquote to the symbol
+.codn *abc ,
+whitespace must be used:
+.codn ", *abc" .
 
 .NP* Quasiquoting non-List Objects
 Quasiquoting is supported over hash table and vector literals (see Vectors

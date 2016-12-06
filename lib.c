@@ -9514,6 +9514,15 @@ INLINE int circle_print_eligible(val obj)
   return is_ptr(obj) && (!symbolp(obj) || !symbol_package(obj));
 }
 
+static int unquote_star_check(val obj, val pretty)
+{
+  if (!obj || !symbolp(obj))
+    return 0;
+  if (car(obj->s.name) != chr('*'))
+    return 0;
+  return pretty || symbol_present(cur_package, obj);
+}
+
 val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
 {
   val ret = obj;
@@ -9556,7 +9565,10 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         put_char(chr('^'), out);
         obj_print_impl(second(obj), out, pretty, ctx);
       } else if (sym == sys_unquote_s && two_elem) {
+        val arg = second(obj);
         put_char(chr(','), out);
+        if (unquote_star_check(arg, pretty))
+          put_char(chr(' '), out);
         obj_print_impl(second(obj), out, pretty, ctx);
       } else if (sym == sys_splice_s && two_elem) {
         put_string(lit(",*"), out);
@@ -9660,10 +9672,14 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
             unq = lit(". ,*");
 
           if (unq) {
-            d = cdr(iter);
+            val d = cdr(iter);
+            val ad = car(d);
+
             if (consp(d) && !cdr(d)) {
               put_string(unq, out);
-              obj_print_impl(car(d), out, pretty, ctx);
+              if (a == sys_unquote_s && unquote_star_check(ad, pretty))
+                put_char(chr(' '), out);
+              obj_print_impl(ad, out, pretty, ctx);
               put_char(closepar, out);
               break;
             }
