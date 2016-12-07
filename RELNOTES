@@ -1,3 +1,45 @@
+                                    TXR 162
+                                   2016-12-07
+
+
+  Features
+
+  - Awk:
+    - Awk prn macro is now a function: can be used as a functional argument
+
+  - Regex:
+    - New functions fr^$, fr^, fr$ and frr.
+
+
+  Bugs
+
+  - Awk:
+    - fixed assignment to field list f not yielding the new value as a result,
+      returning another object instead.
+    - input processing loop containing no cond-action clauses was being elided,
+      even if it contained :begin, :end, :beginfile or :endfile clauses which
+      must be executed.
+    - awk macro implicitly obtaining its input sources from the command line
+      wasn't consuming the command line, causing problems when macro is used
+      from the command line.
+  - Syntax, input:
+    - Fixed robustness issue in handling of out-of-range hex/octal character
+      escapes.
+      - This fixes a crash that could be triggered in the regex module by
+        a regex containing out-of-range character escapes in a character class.
+    - Stray debug printf removed from lexical analyzer.
+      - Occurred only when diagnosing certain invalid floating-point syntax.
+    - Fixed syntax error being reported when last item in a Lisp source
+      file or :read paste in the REPL is an object erased with #; notation.
+  - Syntax, output:
+    - Fixed ^(a . ,b) being printed as ^(a sys:unquote b).
+    - Fixed ^(,* a) and ^(, *a) both printing as ^(,*a).
+  - Exceptions:
+    - fixed handle macro's deviation from documented syntax.
+      - subject to compat option.
+
+
+
                                     TXR 161
                                    2016-11-28
 
