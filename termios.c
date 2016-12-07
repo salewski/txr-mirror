@@ -190,7 +190,7 @@ static val termios_unpack(struct termios *in)
 {
   args_decl(args, ARGS_MIN);
   val out = make_struct(termios_s, nil, args);
-  int i, cc_sz = (int) (sizeof in->c_cc / sizeof in->c_cc[0]);
+  int i, cc_sz = convert(int, sizeof in->c_cc / sizeof in->c_cc[0]);
   val cc = vector(num_fast(cc_sz), nil);
 
   slotset(out, iflag_s, num(in->c_iflag));
@@ -209,7 +209,7 @@ static val termios_unpack(struct termios *in)
 
 static void termios_pack(struct termios *out, val in)
 {
-  int i, cc_sz = (int) (sizeof out->c_cc / sizeof out->c_cc[0]);
+  int i, cc_sz = convert(int, sizeof out->c_cc / sizeof out->c_cc[0]);
   val cc = slot(in, cc_s);
 
   out->c_iflag = c_num(slot(in, iflag_s));

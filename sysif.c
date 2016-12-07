@@ -1048,7 +1048,7 @@ static val setgroups_wrap(val list)
   cnum len = c_num(length(list));
   size_t size = len;
 
-  if ((cnum) size != len) {
+  if (convert(cnum, size) != len) {
     uw_throwf(system_error_s, lit("setgroups: list too long"), nao);
   } else {
     gid_t *arr = coerce(gid_t *, chk_malloc(size *sizeof *arr));

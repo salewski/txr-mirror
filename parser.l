@@ -177,7 +177,7 @@ static wchar_t num_esc(scanner_t *scn, char *num)
       val = strtol(num, 0, 8);
   }
 
-  if (val < 0 || val > 0x10FFFF || (wchar_t) val != val) {
+  if (val < 0 || val > 0x10FFFF || convert(wchar_t, val) != val) {
     yyerror(scn, yyget_extra(scn), "numeric character escape out of range");
     val = 0;
   }
@@ -895,7 +895,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <SREGEX>. {
   /* Allow non-UTF-8 byte for regexes scanned from string */
-  yylval->chr = (unsigned char) yytext[0] + 0xDC00;
+  yylval->chr = convert(unsigned char, yytext[0]) + 0xDC00;
   return REGCHAR;
 }
 

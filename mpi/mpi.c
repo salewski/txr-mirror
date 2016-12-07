@@ -609,7 +609,7 @@ mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z)
   uint_ptr_t tmp = 0;
   mp_get_uintptr(mp, &tmp);
   /* Reliance on bitwise unsigned to two's complement conversion */
-  *z = (int_ptr_t) tmp;
+  *z = convert(int_ptr_t, tmp);
   return MP_OKAY;
 }
 

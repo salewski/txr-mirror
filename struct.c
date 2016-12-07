@@ -924,7 +924,7 @@ val static_slot_set(val stype, val sym, val newval)
   if (symbolp(sym)) {
     loc ptr = lookup_static_slot(stype, st, sym);
     if (!nullocp(ptr)) {
-      if (st->eqmslot == (struct stslot *) -1)
+      if (st->eqmslot == coerce(struct stslot *, -1))
         st->eqmslot = 0;
       return set(ptr, newval);
     }
@@ -1014,7 +1014,7 @@ static val static_slot_ens_rec(val stype, val sym, val newval,
 
   no_error_p = default_bool_arg(no_error_p);
 
-  if (st->eqmslot == (struct stslot *) -1)
+  if (st->eqmslot == coerce(struct stslot *, -1))
     st->eqmslot = 0;
 
   if (stsl != 0 && opt_compat && opt_compat <= 151) {
@@ -1384,7 +1384,7 @@ static cnum struct_inst_hash(val obj, int *count)
 
 static val get_equal_method(val stype, struct struct_type *st)
 {
-  if (st->eqmslot == (struct stslot *) -1) {
+  if (st->eqmslot == coerce(struct stslot *, -1)) {
     return nil;
   } else if (st->eqmslot) {
     struct stslot *stsl = st->eqmslot;
@@ -1395,7 +1395,7 @@ static val get_equal_method(val stype, struct struct_type *st)
       st->eqmslot = stsl;
       return stslot_place(stsl);
     }
-    st->eqmslot = (struct stslot *) -1;
+    st->eqmslot = coerce(struct stslot *, -1);
     return nil;
   }
 }

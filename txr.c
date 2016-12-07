@@ -304,7 +304,7 @@ static void sysroot_init(void)
 #if HAVE_WINDOWS_H
   val slash = regex_compile(lit("\\\\"), nil);
 #endif
-  protect(&prog_path, &sysroot_path, &stdlib_path, (val *) 0);
+  protect(&prog_path, &sysroot_path, &stdlib_path, convert(val *, 0));
   prog_path = get_self_path();
 #if HAVE_WINDOWS_H
   prog_path = regsub(slash, lit("/"), prog_path);
