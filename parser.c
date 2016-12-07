@@ -109,6 +109,7 @@ void parser_common_init(parser_t *p)
   p->parser = nil;
   p->lineno = 1;
   p->errors = 0;
+  p->eof = 0;
   p->stream = nil;
   p->name = nil;
   p->prepared_msg = nil;
@@ -201,6 +202,7 @@ void prime_parser(parser_t *p, val name, enum prime_parser prim)
 
 void prime_parser_post(parser_t *p, enum prime_parser prim)
 {
+  p->eof = (p->recent_tok.yy_char == 0);
   if (prim == prime_interactive)
     p->recent_tok.yy_char = 0;
 }
@@ -524,13 +526,19 @@ static val lisp_parse_impl(val interactive, val source_in, val error_stream,
 
   env_vbind(dyn_env, stderr_s, error_stream);
 
-  {
+  for (;;) {
     int gc = gc_state(0);
     enum prime_parser prime = if3(interactive, prime_interactive, prime_lisp);
     parse(pi, if3(std_error != std_null, name, lit("")), prime);
     gc_state(gc);
-    parsed = t;
+
+    if (pi->syntax_tree == nao && pi->errors == 0 && !parser_eof(parser))
+      continue;
+
+    break;
   }
+
+  parsed = t;
 
   uw_unwind {
     dyn_env = saved_dyn;
@@ -587,12 +595,15 @@ val read_eval_stream(val stream, val error_stream, val hash_bang_support)
     val parser = get_parser(stream);
 
     if (form == error_val) {
-      if (parser_errors(parser) == zero)
+      if (parser_errors(parser) != zero)
+        return nil;
+      if (parser_eof(parser))
         break;
-      return nil;
+      continue;
     }
 
     (void) eval_intrinsic(form, nil);
+
     if (parser_eof(parser))
       break;
   }
@@ -858,19 +869,27 @@ static val read_eval_ret_last(val env, val counter,
                               val in_stream, val out_stream)
 {
   val lineno = one;
+  val error_val = gensym(nil);
   val name = format(nil, lit("paste-~a"), counter, nao);
+  val value = nil;
 
   for (;; lineno = succ(lineno)) {
-    val form = lisp_parse(in_stream, out_stream, colon_k, name, lineno);
+    val form = lisp_parse(in_stream, out_stream, error_val, name, lineno);
     val parser = get_parser(in_stream);
-    val value = eval_intrinsic(form, nil);
 
-    if (parser_eof(parser)) {
-      prinl(value, out_stream);
-      break;
+    if (form == error_val) {
+      if (parser_errors(parser) != zero || parser_eof(parser))
+        break;
+      continue;
     }
+
+    value = eval_intrinsic(form, nil);
+
+    if (parser_eof(parser))
+      break;
   }
 
+  prinl(value, out_stream);
   return t;
 }
 
@@ -1071,7 +1090,7 @@ val parser_errors(val parser)
 val parser_eof(val parser)
 {
   parser_t *p = coerce(parser_t *, cobj_handle(parser, parser_s));
-  return tnil(p->recent_tok.yy_char == 0);
+  return tnil(p->eof);
 }
 
 static val circref(val n)

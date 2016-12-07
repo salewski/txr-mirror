@@ -50,6 +50,7 @@ struct parser {
   val parser;
   cnum lineno;
   int errors;
+  int eof;
   val stream;
   val name;
   val prepared_msg;

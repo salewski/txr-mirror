@@ -111,8 +111,7 @@ int yyparse(scanner_t *, parser_t *);
 
 %token <chr> REGCHAR REGTOKEN LITCHAR SPLICE CONSDOT LAMBDOT
 
-%type <val> spec hash_semis_n_expr hash_semis_i_expr
-%type <val> ignored_i_exprs ignored_n_exprs
+%type <val> spec hash_semi_or_n_expr hash_semi_or_i_expr
 %type <val> clauses_rev clauses_opt clause
 %type <val> all_clause some_clause none_clause maybe_clause block_clause
 %type <val> cases_clause choose_clause gather_clause collect_clause until_last
@@ -151,10 +150,10 @@ int yyparse(scanner_t *, parser_t *);
 
 spec : clauses_opt              { parser->syntax_tree = $1; }
      | SECRET_ESCAPE_R regexpr  { parser->syntax_tree = $2; end_of_regex(scnr); }
-     | SECRET_ESCAPE_E hash_semis_n_expr
+     | SECRET_ESCAPE_E hash_semi_or_n_expr
                                 { parser->syntax_tree = $2; YYACCEPT; }
        byacc_fool               { internal_error("notreached"); }
-     | SECRET_ESCAPE_I hash_semis_i_expr
+     | SECRET_ESCAPE_I hash_semi_or_i_expr
                                 { parser->syntax_tree = $2; YYACCEPT; }
        byacc_fool               { internal_error("notreached"); }
      | SECRET_ESCAPE_E          { if (yychar == YYEOF) {
@@ -179,29 +178,19 @@ spec : clauses_opt              { parser->syntax_tree = $1; }
 
      ;
 
-hash_semis_n_expr : ignored_n_exprs n_expr      { $$ = $2; }
-                  | n_expr                      { $$ = $1; }
-                  ;
 
-ignored_n_exprs : ignored_n_exprs HASH_SEMI     { parser->circ_suppress = 1; }
-                  n_expr                        { parser->circ_suppress = 0;
-                                                  $$ = nil; }
-                | HASH_SEMI                     { parser->circ_suppress = 1; }
-                  n_expr                        { parser->circ_suppress = 0;
-                                                  $$ = nil; }
-                ;
+hash_semi_or_n_expr : HASH_SEMI                 { parser->circ_suppress = 1; }
+                      n_expr                    { parser->circ_suppress = 0;
+                                                  $$ = nao; }
+                    | n_expr                    { $$ = $1; }
+                    ;
 
-hash_semis_i_expr : ignored_i_exprs i_expr      { $$ = $2; }
-                  | i_expr                      { $$ = $1; }
-                  ;
+hash_semi_or_i_expr : HASH_SEMI                 { parser->circ_suppress = 1; }
+                      i_expr                    { parser->circ_suppress = 0;
+                                                  $$ = nao; }
+                    | i_expr                    { $$ = $1; }
+                    ;
 
-ignored_i_exprs : ignored_i_exprs HASH_SEMI     { parser->circ_suppress = 1; }
-                  i_expr                        { parser->circ_suppress = 0;
-                                                  $$ = nil; }
-                | HASH_SEMI                     { parser->circ_suppress = 1; }
-                  i_expr                        { parser->circ_suppress = 0;
-                                                  $$ = nil; }
-                ;
 
 /* Hack needed for Berkeley Yacc */
 byacc_fool : n_expr { internal_error("notreached"); }
@@ -1787,6 +1776,7 @@ int parse(parser_t *parser, val name, enum prime_parser prim)
   int res = 0;
 
   parser->errors = 0;
+  parser->eof = 0;
   parser->prepared_msg = nil;
   parser->circ_ref_hash = nil;
   parser->circ_count = 0;
