@@ -9663,29 +9663,31 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
 
         for (iter = obj; consp(iter); iter = cdr(iter)) {
           val d;
-          val a = car(iter);
-          val unq = nil;
+          {
+            val a = car(iter);
+            val unq = nil;
 
-          if (a == sys_unquote_s)
-            unq = lit(". ,");
-          else if (a == sys_splice_s)
-            unq = lit(". ,*");
+            if (a == sys_unquote_s)
+              unq = lit(". ,");
+            else if (a == sys_splice_s)
+              unq = lit(". ,*");
 
-          if (unq) {
-            val d = cdr(iter);
-            val ad = car(d);
+            if (unq) {
+              val d = cdr(iter);
+              val ad = car(d);
 
-            if (consp(d) && !cdr(d)) {
-              put_string(unq, out);
-              if (a == sys_unquote_s && unquote_star_check(ad, pretty))
-                put_char(chr(' '), out);
-              obj_print_impl(ad, out, pretty, ctx);
-              put_char(closepar, out);
-              break;
+              if (consp(d) && !cdr(d)) {
+                put_string(unq, out);
+                if (a == sys_unquote_s && unquote_star_check(ad, pretty))
+                  put_char(chr(' '), out);
+                obj_print_impl(ad, out, pretty, ctx);
+                put_char(closepar, out);
+                break;
+              }
             }
-          }
 
-          obj_print_impl(a, out, pretty, ctx);
+            obj_print_impl(a, out, pretty, ctx);
+          }
 finish:
           d = cdr(iter);
           if (nilp(d)) {
