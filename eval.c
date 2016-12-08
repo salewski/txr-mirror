@@ -2912,6 +2912,14 @@ static val me_qquote(val form, val menv)
   return expand_qquote(second(form), qquote_s, unquote_s, splice_s);
 }
 
+static val me_equot(val form, val menv)
+{
+  if (!cdr(form) || cddr(form))
+    eval_error(form, lit("~s: one argument required"), car(form));
+
+  return rlcp(cons(quote_s, cons(expand(cadr(form), menv), nil)), form);
+}
+
 static val expand_vars(val vars, val menv, val form,
                        val *spec_p, int seq_p)
 {
@@ -5068,6 +5076,7 @@ void eval_init(void)
   reg_mac(aret_s, func_n2(me_ret_aret));
   reg_mac(qquote_s, func_n2(me_qquote));
   reg_mac(sys_qquote_s, func_n2(me_qquote));
+  reg_mac(intern(lit("equot"), user_package), func_n2(me_equot));
   reg_mac(intern(lit("pprof"), user_package), func_n2(me_pprof));
   reg_mac(when_s, func_n2(me_when));
   reg_mac(intern(lit("unless"), user_package), func_n2(me_unless));

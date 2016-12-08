@@ -27990,6 +27990,57 @@ emanating from the
 .code delta
 form.
 
+.coNP Macro @ equot
+.synb
+.mets (equot << form )
+.syne
+.desc
+The
+.code equot
+macro ("expand and quote") performs a full expansion of
+.code form
+in the surrounding macro environment. Then it constructs a
+.code quote
+form whose argument is the expansion. This quote form is
+then returned as the macro replacement for the original
+.code equot
+form.
+
+.TP* Example:
+
+.cblk
+  (symacrolet ((a (+ 2 2)))
+    (list (quote a) (equot a) a))
+  --> (a (+ 2 2) 4)
+.cble
+
+Above, the expansion of
+.code a
+is
+.codn "(+ 2 2)" .
+Thus the macro call
+.code "(equot a)"
+expands to
+.codn "(quote (+ 2 2))" .
+When that is evaluated, it yields
+.codn "(+ 2 2)" .
+
+If
+.code a
+is quoted, then of course the result is
+.codn a :
+no expansion or evaluation takes place.
+Whereas if
+.code a
+is presented for evaluation, then not only is it expanded to
+.codn "(+ 2 2)" ,
+but that expansion is reduced to 4.
+
+The
+.code equot
+operator is a mongrel of these two semantics: it permits expansion to proceed,
+but then suppresses evaluation of the result.
+
 .coNP Operators @ tree-bind and @ mac-param-bind
 .synb
 .mets (tree-bind < macro-style-params < expr << form *)
