@@ -17010,9 +17010,13 @@ The
 .code listp
 test is weaker, and executes without having to traverse
 the object.
+The value produced by the expression
 .code "(listp x)"
-is equivalent to
-.codn "(or (null x) (consp x))" .
+is the same as that of
+.codn "(or (null x) (consp x))" ,
+except that
+.code x
+is evaluated only once.
 The empty list
 .code nil
 is a list, and a cons cell is a list.
