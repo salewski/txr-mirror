@@ -606,6 +606,7 @@ val consp(val obj);
 val lconsp(val obj);
 val atom(val obj);
 val listp(val obj);
+val endp(val obj);
 val proper_list_p(val obj);
 val length_list(val list);
 val getplist(val list, val key);

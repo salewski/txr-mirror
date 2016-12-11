@@ -5139,6 +5139,7 @@ void eval_init(void)
   reg_fun(intern(lit("consp"), user_package), func_n1(consp));
   reg_fun(intern(lit("lconsp"), user_package), func_n1(lconsp));
   reg_fun(intern(lit("listp"), user_package), func_n1(listp));
+  reg_fun(intern(lit("endp"), user_package), func_n1(endp));
   {
     val proper_list_p_f = func_n1(proper_list_p);
     reg_fun(intern(lit("proper-listp"), user_package), proper_list_p_f);

@@ -2758,6 +2758,16 @@ val listp(val obj)
   return if2(obj == nil || consp(obj), t);
 }
 
+val endp(val obj)
+{
+  if (obj == nil)
+    return t;
+  if (consp(obj))
+    return nil;
+  uw_throwf(error_s, lit("endp: list improperly terminated by ~s"),
+            obj, nao);
+}
+
 val proper_list_p(val obj)
 {
   while (consp(obj))

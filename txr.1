@@ -17046,6 +17046,31 @@ installations should use
 .codn proper-listp ,
 but its use going forward is deprecated.
 
+.coNP Function @ endp
+.synb
+.mets (endp << object )
+.syne
+.desc
+The
+.code endp
+function returns
+.code t
+if
+.meta object
+is the object
+.codn nil .
+
+If
+.meta object
+is a cons cell, then
+.code endp
+returns
+.codn t .
+
+Otherwise,
+.code endp
+function throws an exception.
+
 .coNP Function @ length-list
 .synb
 .mets (length-list << list )
