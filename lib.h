@@ -961,6 +961,7 @@ val pos_if(val pred, val list, val key);
 val rpos_if(val pred, val list, val key);
 val pos_max(val seq, val testfun, val keyfun);
 val pos_min(val seq, val testfun, val keyfun);
+val mismatch(val left, val right, val testfun, val keyfun);
 val take(val count, val seq);
 val take_while(val pred, val seq, val keyfun);
 val take_until(val pred, val seq, val keyfun);

@@ -24729,6 +24729,47 @@ from
 is passed through this one-argument function, and
 the resulting value is used in its place.
 
+.coNP Function @ mismatch
+.synb
+.mets (mismatch < left-seq < right-seq >> [ testfun <> [ keyfun ]])
+.syne
+.desc
+The
+.code mismatch
+function compares corresponding elements from the sequences
+.meta left-seq
+and
+.metn right-seq ,
+returning the position at which the first mismatch occurs.
+
+If the sequences are of the same length, and their corresponding
+elements are the same, then
+.code nil
+is returned.
+
+If one sequence is shorter than the other, and matches a prefix
+of the other, then the mismatching position returned is one position
+after the last element of the shorter sequence, the same value
+as its length. An empty sequence is a prefix of every sequence.
+
+The
+.meta keyfun
+argument defaults to the
+.code identity
+function. Each element
+from
+.meta sequence
+is passed to
+.meta keyfun
+and the resulting value is used in its place.
+
+After being converted through
+.metn keyfun ,
+items are then compared using
+.metn testfun ,
+which must accept two arguments, and defaults to
+.codn equal .
+
 .coNP Function @ where
 .synb
 .mets (where < function << object )
