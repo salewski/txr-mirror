@@ -3909,7 +3909,11 @@ static val do_expand(val form, val menv)
 
       if (form_ex == form && args_ex == args) {
         if (!lookup_fun(menv, sym) && !special_operator_p(sym))
-          eval_warn(last_form_expanded, lit("unbound function ~s"), sym, nao);
+          eval_warn(last_form_expanded,
+                    if3(bindable(sym_ex),
+                                 lit("unbound function ~s"),
+                                 lit("~s appears in operator position")),
+                    sym, nao);
         return form;
       }
 
