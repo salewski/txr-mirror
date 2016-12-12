@@ -8013,6 +8013,7 @@ val find_max(val seq, val testfun, val keyfun)
     }
   case STR:
   case LSTR:
+  case LIT:
   case VEC:
     {
       val maxelt = ref(seq, zero);
@@ -8031,7 +8032,7 @@ val find_max(val seq, val testfun, val keyfun)
       return maxelt;
     }
   default:
-    uw_throwf(error_s, lit("find-max: unsupporte object ~s is a literal"), seq, nao);
+    uw_throwf(error_s, lit("find-max: unsupported object ~s"), seq, nao);
   }
 }
 
