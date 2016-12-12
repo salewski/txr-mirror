@@ -82,6 +82,7 @@ static alloc_bytes_t prev_malloc_bytes;
 alloc_bytes_t opt_gc_delta = DFL_MALLOC_DELTA_THRESH;
 
 int gc_enabled = 1;
+static int inprogress;
 
 static struct fin_reg {
   struct fin_reg *next;
@@ -690,6 +691,9 @@ void gc(void)
 
   assert (gc_enabled);
 
+  if (inprogress++)
+    assert(0 && "gc re-entered");
+
 #if CONFIG_GEN_GC
   if (malloc_bytes - prev_malloc_bytes >= opt_gc_delta)
     full_gc = 1;
@@ -730,6 +734,8 @@ void gc(void)
   call_finals();
   gc_enabled = 1;
   prev_malloc_bytes = malloc_bytes;
+
+  inprogress--;
 }
 
 int gc_state(int enabled)
@@ -737,6 +743,11 @@ int gc_state(int enabled)
   int old = gc_enabled;
   gc_enabled = enabled;
   return old;
+}
+
+int gc_inprogress(void)
+{
+  return inprogress;
 }
 
 void gc_init(val *stack_bottom)
@@ -910,9 +921,21 @@ void unmark(void)
          block < end;
          block++)
     {
-      block->t.type = convert(type_t, block->t.type & ~(FREE | REACHABLE));
+      block->t.type = convert(type_t, block->t.type & ~REACHABLE);
     }
   }
+}
+
+void gc_cancel(void)
+{
+  unmark();
+#if CONFIG_GEN_GC
+  checkobj_idx = 0;
+  mutobj_idx = 0;
+  freshobj_idx = 0;
+  full_gc = 1;
+#endif
+  inprogress = 0;
 }
 
 void dheap(heap_t *heap, int start, int end);

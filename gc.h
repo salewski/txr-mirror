@@ -32,6 +32,7 @@ void protect(val *, ...);
 val make_obj(void);
 void gc(void);
 int gc_state(int);
+int gc_inprogress(void);
 void gc_mark(val);
 void gc_conservative_mark(val);
 void gc_mark_mem(val *low, val *high);
@@ -47,6 +48,7 @@ extern int full_gc;
 #endif
 
 void unmark(void);
+void gc_cancel(void);
 void gc_hint_func(val *);
 void gc_report_copies(val *pvar);
 void gc_free_all(void);

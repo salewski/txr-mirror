@@ -94,6 +94,8 @@ static void sig_handler(int sig)
     if (!in_interrupt && async_sig_enabled) {
       uw_simple_catch_begin;
       async_sig_enabled = 0;
+      if (gc_inprogress())
+        gc_cancel();
       if (funcall2(lambda, num_fast(sig), t))
         sig_deferred |= (1UL << sig);
       uw_unwind {
