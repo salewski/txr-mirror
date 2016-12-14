@@ -452,7 +452,7 @@ static val getput_instantiate(val set_fun)
 static val tagbody_set_entries(val dlt, val fun)
 {
   val name[] = {
-    lit("tagbody"), lit("go"), nil
+    lit("tagbody"), lit("go"), lit("prog"), lit("prog*"), nil
   };
   set_dlt_entries(dlt, name, fun);
   return nil;

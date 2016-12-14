@@ -73,3 +73,12 @@
   (if [[orf symbolp integerp chrp] label]
     (throwf 'eval-error "~s: no ~s label visible" 'go label)
     (throwf 'eval-error "~s: ~s isn't a symbol, integer or character" 'go label)))
+
+
+(defmacro prog (vars . body)
+  ^(block nil
+     (let ,vars (tagbody ,*body))))
+
+(defmacro prog* (vars . body)
+  ^(block nil
+     (let* ,vars (tagbody ,*body))))

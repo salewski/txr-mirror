@@ -14795,6 +14795,71 @@ characters are not supported.
      (prinl 'out))
 .cble
 
+.coNP Macros @ prog and @ prog*
+.synb
+.mets (prog >> ({ sym | >> ( sym << init-form )}*)
+.mets \ \  >> { body-form | << label }*)
+.mets (prog* >> ({ sym | >> ( sym << init-form )}*)
+.mets \ \  >> { body-form | << label }*)
+.syne
+.desc
+The
+.code prog
+and
+.code progn*
+macros combine the features of
+.code let
+and
+.codn let* ,
+respectively,
+anonymous block and
+.codn tagbody .
+
+The
+.code prog
+macro treats the
+.meta sym
+and
+.code init-form
+expressions similarly to
+.codn let ,
+establishing variable bindings in parallel.
+The
+.code prog*
+macro treats these expressions in a similar way to
+.codn let* .
+
+The forms enclosed are treated like the argument forms of the
+.code tagbody
+macro: labels are permitted, along with use of
+.codn go .
+
+Finally, an anonymous block is established around all of the enclosed
+forms (both the
+.metn init-form -s
+and
+.metn body-forms -s)
+allowing the use of
+.code return
+to terminate evaluation with a value.
+
+The
+.code prog
+macro may be understood according to the following equivalence:
+
+.cblk
+   (prog vars forms ...)  <-->  (block nil
+                                  (let vars
+                                    (tagbody forms ...)))
+.cble
+
+Likewise, the
+.code prog*
+macro follows an analogous equivalence, with
+.code let
+replaced by
+.codn let* .
+
 .SS* Evaluation
 
 .coNP Function @ eval
