@@ -10,15 +10,16 @@
 29
 30
 (block #:brk-blk-0002
-  (for () ((< i 100) ())
-    () (block #:cnt-blk-0001
-         (if (< (sys:setq i (succ i))
-                20) (return-from
-                      #:cnt-blk-0001))
-         (if (> i 30)
-           (return-from
-             #:brk-blk-0002))
-         (prinl i))))
+  (block () (let () (sys:for-op ()
+                      ((< i 100) ())
+                      () (block #:cnt-blk-0001
+                           (if (< (sys:setq i (succ i))
+                                  20) (return-from
+                                        #:cnt-blk-0001))
+                           (if (> i 30)
+                             (return-from
+                               #:brk-blk-0002))
+                           (prinl i))))))
 (whilst break)
 (whilst break)
 (whilst break)

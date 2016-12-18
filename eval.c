@@ -85,6 +85,7 @@ val eq_s, eql_s, equal_s;
 val car_s, cdr_s, not_s, vecref_s;
 val setq_s, inc_s, zap_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
+val for_op_s, each_op_s;
 val append_each_s, append_each_star_s, while_s, while_star_s, until_star_s;
 val dohash_s;
 val uw_protect_s, return_s, return_from_s, sys_abscond_from_s, block_star_s;
@@ -1461,21 +1462,26 @@ static val op_fbind(val form, val env)
   return eval_progn(body, new_env, form);
 }
 
+static val get_bindings(val vars, val env)
+{
+  list_collect_decl (out, iter);
+  for (; vars; vars = cdr(vars))
+    iter = list_collect(iter, lookup_var(env, car(vars)));
+  return out;
+}
+
 static val op_each(val form, val env)
 {
-  uses_or2;
-  val each = first(form);
   val args = rest(form);
-  val vars = first(args);
-  val body = rest(args);
-  val star = or3(eq(each, each_star_s),
-                 eq(each, collect_each_star_s),
-                 eq(each, append_each_star_s));
-  val collect = or2(eq(each, collect_each_s), eq(each, collect_each_star_s));
-  val append = or2(eq(each, append_each_s), eq(each, append_each_star_s));
-  val new_env;
-  val new_bindings = bindings_helper(vars, env, star, &new_env, t, form);
-  val lists = mapcar(cdr_f, new_bindings);
+  val each = pop(&args);
+  val vars = pop(&args);
+  val body = args;
+  val collect = eq(each, collect_each_s);
+  val append = eq(each, append_each_s);
+  val bindings = if3(vars,
+                     get_bindings(vars, env),
+                     env->e.vbindings);
+  val lists = mapcar(cdr_f, bindings);
   list_collect_decl (collection, ptail);
 
   uw_block_begin (nil, result);
@@ -1483,7 +1489,7 @@ static val op_each(val form, val env)
   for (;;) {
     val biter, liter;
 
-    for (biter = new_bindings, liter = lists; biter;
+    for (biter = bindings, liter = lists; biter;
          biter = cdr(biter), liter = cdr(liter))
     {
       val binding = car(biter);
@@ -1495,7 +1501,7 @@ static val op_each(val form, val env)
     }
 
     {
-      val res = eval_progn(body, new_env, form);
+      val res = eval_progn(body, env, form);
       if (collect)
         ptail = list_collect(ptail, res);
       else if (append)
@@ -2050,31 +2056,34 @@ static val op_setqf(val form, val env)
 
 static val op_for(val form, val env)
 {
-  val forsym = first(form);
-  val vars = second(form);
-  val cond = third(form);
-  val incs = fourth(form);
-  val forms = rest(rest(rest(rest(form))));
-  val new_env;
+  val args = rest(form);
+  val inits = pop(&args);
+  val cond = pop(&args);
+  val incs = pop(&args);
+  val forms = args;
   int oldscope = opt_compat && opt_compat <= 123;
 
-  if (oldscope)
-    (void) bindings_helper(vars, env, eq(forsym, for_star_s), &new_env, t, form);
+  eval_progn(inits, env, form);
 
-  uw_block_begin (nil, result);
+  if (oldscope) {
+    uw_block_begin (nil, result);
 
-  if (!oldscope)
-    (void) bindings_helper(vars, env, eq(forsym, for_star_s), &new_env, t, form);
+    for (; cond == nil || eval(car(cond), env, form);
+         eval_progn(incs, env, form))
+      eval_progn(forms, env, form);
 
-  for (; cond == nil || eval(car(cond), new_env, form);
-       eval_progn(incs, new_env, form))
-    eval_progn(forms, new_env, form);
+    result = eval_progn(rest(cond), env, form);
 
-  result = eval_progn(rest(cond), new_env, form);
+    uw_block_end;
 
-  uw_block_end;
+    return result;
+  }
 
-  return result;
+  for (; cond == nil || eval(car(cond), env, form);
+       eval_progn(incs, env, form))
+    eval_progn(forms, env, form);
+
+  return eval_progn(rest(cond), env, form);
 }
 
 static val op_dohash(val form, val env)
@@ -2472,6 +2481,55 @@ static val me_def_variable(val form, val menv)
                                    cons(sym, if2(op == defvar_s,
                                                  cons(initform, nil)))),
                               setval, nao));
+}
+
+static val get_var_syms(val vars)
+{
+  list_collect_decl (out, iter);
+  for (; vars; vars = cdr(vars)) {
+    val spec = car(vars);
+    if (atom(spec))
+      iter = list_collect(iter, spec);
+    else
+      iter = list_collect(iter, car(spec));
+  }
+  return out;
+}
+
+static val me_each(val form, val menv)
+{
+  uses_or2;
+  val each = first(form);
+  val args = rest(form);
+  val vars = pop(&args);
+  val star = or3(eq(each, each_star_s),
+                 eq(each, collect_each_star_s),
+                 eq(each, append_each_star_s));
+  val var_syms = get_var_syms(vars);
+  val specials_occur = some_satisfy(var_syms, func_n1(special_var_p), identity_f);
+  val collect = or2(eq(each, collect_each_s), eq(each, collect_each_star_s));
+  val append = or2(eq(each, append_each_s), eq(each, append_each_star_s));
+  val eff_each = if3(collect, collect_each_s,
+                     if3(append, append_each_s, each_s));
+
+  return list(if3(star, let_star_s, let_s), vars,
+              cons(each_op_s, cons(eff_each,
+                                   cons(if2(star || specials_occur, var_syms),
+                                        args))), nao);
+}
+
+static val me_for(val form, val menv)
+{
+  val forsym = first(form);
+  val args = rest(form);
+  val vars = first(args);
+  val body = rest(args);
+  int oldscope = opt_compat && opt_compat <= 123;
+  val basic = list(if3(forsym == for_star_s, let_star_s, let_s),
+                   vars, cons(for_op_s, cons(nil, body)), nao);
+  return if3(oldscope,
+             basic,
+             list(block_s, nil, basic, nao));
 }
 
 static val me_gen(val form, val menv)
@@ -3638,15 +3696,11 @@ static val do_expand(val form, val menv)
   } else {
     val sym = car(form);
 
-    if (sym == let_s || sym == let_star_s ||
-        sym == each_s || sym == each_star_s || sym == collect_each_s ||
-        sym == collect_each_star_s || sym == append_each_s ||
-        sym == append_each_star_s)
+    if (sym == let_s || sym == let_star_s)
     {
       val body = rest(rest(form));
       val vars = second(form);
-      int seq_p = sym == let_star_s || sym == each_star_s ||
-                  sym == collect_each_star_s || sym == append_each_star_s;
+      int seq_p = sym == let_star_s;
       val new_menv = make_var_shadowing_env(menv, vars);
       val body_ex = expand_progn(body, new_menv);
       val specials_p = nil;
@@ -3657,6 +3711,17 @@ static val do_expand(val form, val menv)
         val basic_form = rlcp(cons(sym, cons(vars_ex, body_ex)), form);
         return expand_save_specials(basic_form, specials_p);
       }
+    } else if (sym == each_op_s) {
+      val args = rest(form);
+      val eachsym = first(args);
+      val vars = second(args);
+      val body = rest(rest(args));
+      val body_ex = expand_progn(body, menv);
+
+      if (body == body_ex)
+        return form;
+
+      return rlcp(cons(sym, cons(eachsym, cons(vars, body_ex))), form);
     } else if (sym == fbind_s || sym == lbind_s) {
       val body = rest(rest(form));
       val funcs = second(form);
@@ -3782,28 +3847,21 @@ static val do_expand(val form, val menv)
       return rlcp(cons(sym, cons(params_ex, cons(expr_ex, body_ex))), form);
     } else if (sym == quote_s || sym == fun_s) {
       return form;
-    } else if (sym == for_s || sym == for_star_s) {
+    } else if (sym == for_op_s) {
       val vars = second(form);
       val cond = third(form);
       val incs = fourth(form);
       val forms = rest(rest(rest(rest(form))));
-      val specials_p = nil;
-      val vars_ex = expand_vars(vars, menv, form, &specials_p,
-                                sym == for_star_s);
-      val new_menv = make_var_shadowing_env(menv, vars);
-      val cond_ex = expand_forms(cond, new_menv);
-      val incs_ex = expand_forms(incs, new_menv);
-      val forms_ex = expand_progn(forms, new_menv);
+      val cond_ex = expand_forms(cond, menv);
+      val incs_ex = expand_forms(incs, menv);
+      val forms_ex = expand_progn(forms, menv);
 
-      if (vars == vars_ex && cond == cond_ex &&
-          incs == incs_ex && forms == forms_ex && !specials_p) {
+      if (cond == cond_ex && incs == incs_ex && forms == forms_ex) {
         return form;
       } else {
-        val basic_form = rlcp(cons(sym,
-                                   cons(vars_ex,
-                                        cons(cond_ex,
-                                             cons(incs_ex, forms_ex)))), form);
-        return expand_save_specials(basic_form, specials_p);
+        return rlcp(cons(sym, cons(vars, cons(cond_ex,
+                                              cons(incs_ex,
+                                                   forms_ex)))), form);
       }
     } else if (sym == dohash_s) {
       val spec = second(form);
@@ -4877,6 +4935,8 @@ static val merge_wrap(val seq1, val seq2, val lessfun, val keyfun)
 void eval_init(void)
 {
   val not_null_f = func_n1(not_null);
+  val me_each_f = func_n2(me_each);
+  val me_for_f = func_n2(me_for);
 
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
           &op_table, &last_form_evaled, &last_form_expanded,
@@ -4946,6 +5006,8 @@ void eval_init(void)
   collect_each_star_s = intern(lit("collect-each*"), user_package);
   append_each_s = intern(lit("append-each"), user_package);
   append_each_star_s = intern(lit("append-each*"), user_package);
+  for_op_s = intern(lit("for-op"), system_package);
+  each_op_s = intern(lit("each-op"), system_package);
   dohash_s = intern(lit("dohash"), user_package);
   while_s = intern(lit("while"), user_package);
   while_star_s = intern(lit("while*"), user_package);
@@ -5022,12 +5084,7 @@ void eval_init(void)
   reg_op(progn_s, op_progn);
   reg_op(prog1_s, op_prog1);
   reg_op(let_s, op_let);
-  reg_op(each_s, op_each);
-  reg_op(each_star_s, op_each);
-  reg_op(collect_each_s, op_each);
-  reg_op(collect_each_star_s, op_each);
-  reg_op(append_each_s, op_each);
-  reg_op(append_each_star_s, op_each);
+  reg_op(each_op_s, op_each);
   reg_op(let_star_s, op_let);
   reg_op(fbind_s, op_fbind);
   reg_op(lbind_s, op_fbind);
@@ -5048,8 +5105,7 @@ void eval_init(void)
   reg_op(intern(lit("lisp1-setq"), system_package), op_lisp1_setq);
   reg_op(sys_lisp1_value_s, op_lisp1_value);
   reg_op(intern(lit("setqf"), system_package), op_setqf);
-  reg_op(for_s, op_for);
-  reg_op(for_star_s, op_for);
+  reg_op(for_op_s, op_for);
   reg_op(dohash_s, op_dohash);
   reg_op(uw_protect_s, op_unwind_protect);
   reg_op(block_s, op_block);
@@ -5068,6 +5124,14 @@ void eval_init(void)
   reg_mac(defvar_s, func_n2(me_def_variable));
   reg_mac(defparm_s, func_n2(me_def_variable));
   reg_mac(defparml_s, func_n2(me_def_variable));
+  reg_mac(each_s, me_each_f);
+  reg_mac(each_star_s, me_each_f);
+  reg_mac(collect_each_s, me_each_f);
+  reg_mac(collect_each_star_s, me_each_f);
+  reg_mac(append_each_s, me_each_f);
+  reg_mac(append_each_star_s, me_each_f);
+  reg_mac(for_s, me_for_f);
+  reg_mac(for_star_s, me_for_f);
   reg_mac(gen_s, func_n2(me_gen));
   reg_mac(gun_s, func_n2(me_gun));
   reg_mac(intern(lit("delay"), user_package), func_n2(me_delay));
