@@ -30417,6 +30417,24 @@ then forms beginning with
 are not syntactic places. (The situation of a clobber accessor or delete
 accessor being defined without an update expander is improper).
 
+.coNP Special variable @ *place-macro*
+.desc
+The
+.code *place-macro*
+special variable holds the hash table of associations between
+symbols and place macro expanders.
+
+If the expression
+.code "[*place-macro* 'sym]"
+yields a function, then symbol
+.code sym
+has a binding as a place macro. If that
+expression yields
+.codn nil ,
+then there is no such binding: compound forms beginning with
+.code sym
+do not undergo place macro expansion.
+
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote
 .synb
