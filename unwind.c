@@ -335,10 +335,11 @@ val uw_get_frames(void)
   return out;
 }
 
-val uw_find_frame(val extype, val frtype)
+static val uw_find_frames_impl(val extype, val frtype, val just_one)
 {
   uw_frame_t *ex;
   uw_frtype_t et;
+  list_collect_decl (out, ptail);
 
   extype = default_bool_arg(extype);
   frtype = default_arg_strict(frtype, catch_frame_type);
@@ -373,12 +374,24 @@ val uw_find_frame(val extype, val frtype)
           slotset(fr, jump_s, cptr(coerce(mem_t *, ex)));
         else
           slotset(fr, fun_s, ex->ha.fun);
-        return fr;
+        if (just_one)
+          return fr;
+        ptail = list_collect(ptail, fr);
       }
     }
   }
 
-  return nil;
+  return out;
+}
+
+val uw_find_frame(val extype, val frtype)
+{
+  return uw_find_frames_impl(extype, frtype, t);
+}
+
+val uw_find_frames(val extype, val frtype)
+{
+  return uw_find_frames_impl(extype, frtype, nil);
 }
 
 val uw_invoke_catch(val catch_frame, val sym, struct args *args)
@@ -987,6 +1000,7 @@ void uw_late_init(void)
   reg_fun(intern(lit("exception-subtype-map"), user_package), func_n0(exception_subtype_map));
   reg_fun(intern(lit("get-frames"), user_package), func_n0(uw_get_frames));
   reg_fun(intern(lit("find-frame"), user_package), func_n2o(uw_find_frame, 0));
+  reg_fun(intern(lit("find-frames"), user_package), func_n2o(uw_find_frames, 0));
   reg_fun(intern(lit("invoke-catch"), user_package),
           func_n2v(uw_invoke_catch));
   reg_fun(sys_capture_cont_s = intern(lit("capture-cont"), system_package),

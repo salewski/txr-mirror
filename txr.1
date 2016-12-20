@@ -33019,9 +33019,10 @@ structure may be passed as an argument to the
 .code invoke-catch
 function.
 
-.coNP Function @ find-frame
+.coNP Functions @ find-frame and @ find-frames
 .synb
 .mets (find-frame >> [ exception-symbol <> [ frame-type ]])
+.mets (find-frames >> [ exception-symbol <> [ frame-type ]])
 .syne
 .desc
 The
@@ -33069,6 +33070,14 @@ Thus, if
 is called with no arguments at all it finds the innermost catch frame,
 if any exists, or else returns
 .codn nil .
+
+The
+.code find-frames
+function is similar to
+.code find-frame
+except that it returns all matching frames, ordered from the inner-most nesting
+level to the outer-most nesting. If called with no arguments, it returns a
+list of the catch frames.
 
 .coNP Function @ invoke-catch
 .synb
