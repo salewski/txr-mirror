@@ -28362,6 +28362,38 @@ should be understood to be a globally unique symbol:
                                       clause1 clause2 ...))
 .cble
 
+.coNP Macro @ with-gensyms
+.synb
+.mets (with-gensyms <> ( sym *) << body-form *)
+.syne
+.desc
+The
+.code with-gensyms
+evaluates the
+.metn body-form -s
+in an environment in which each variable name symbol
+.meta sym
+is bound to a new uninterned symbol ("gensym").
+
+.TP* "Example:"
+
+The code:
+
+.cblk
+  (let ((x (gensym))
+        (y (gensym))
+        (z (gensym)))
+    ^(,x ,y ,z))
+.cble
+
+may be expressed more conveniently using the
+.code with-gensyms
+shorthand:
+
+.cblk
+  (with-gensyms (x y z)
+    ^(,x ,y ,z))
+.cble
 
 .SS* Mutation of Syntactic Places
 .coNP Macro @ set
@@ -30367,39 +30399,6 @@ treat the situation  in a satisfactory way using a
 .code define-place-macro
 definition, which effectively then supplies inline code whenever a certain form
 is used as a place, and that code itself is treated as a place.
-
-.coNP Macro @ with-gensyms
-.synb
-.mets (with-gensyms <> ( sym *) << body-form *)
-.syne
-.desc
-The
-.code with-gensyms
-evaluates the
-.metn body-form -s
-in an environment in which each variable name symbol
-.meta sym
-is bound to a new uninterned symbol ("gensym").
-
-.TP* "Example:"
-
-The code:
-
-.cblk
-  (let ((x (gensym))
-        (y (gensym))
-        (z (gensym)))
-    ^(,x ,y ,z))
-.cble
-
-may be expressed more conveniently using the
-.code with-gensyms
-shorthand:
-
-.cblk
-  (with-gensyms (x y z)
-    ^(,x ,y ,z))
-.cble
 
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote
