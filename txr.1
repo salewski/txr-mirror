@@ -42464,9 +42464,12 @@ next one.  If there is no next input source,
 .code awk
 terminates.
 
-.coNP Macro @ rng
+.coNP Macros @, rng @, -rng @ rng- and @ -rng-
 .synb
 .mets (rng < from-condition << to-condition )
+.mets (-rng < from-condition << to-condition )
+.mets (rng- < from-condition << to-condition )
+.mets (-rng- < from-condition << to-condition )
 .syne
 .desc
 The awk macro
@@ -42482,6 +42485,31 @@ is found to be true, and ends when
 .meta to-condition
 is true. Over this interval, range is said to be
 .IR active .
+
+The
+.code rng
+macro's result value is true for the starting record which matches
+.metn from-condition ,
+the final record which matches
+.metn to-condition ,
+and all records in between, if any.
+The remaining macros work exactly like
+.codn rng ,
+identifying the active range in the same manner. They differ
+in that the Boolean value they produce excludes the starting record,
+final record, or both, depending on which macro. The
+.code -rng
+macro yields
+.code nil
+for the initial record. The
+.code rng-
+macro yields
+.code nil
+for the final record. The
+.code -rng-
+macro yields
+.code nil
+for both the initial and final record.
 
 Ranges expressed using
 .code rng
