@@ -1314,15 +1314,12 @@ static val op_unquote_error(val form, val env)
 }
 
 struct bindings_helper_vars {
-  val de;
   val ne;
 };
 
 static void copy_bh_env_handler(mem_t *ptr, int parent)
 {
   struct bindings_helper_vars *pv = coerce(struct bindings_helper_vars *, ptr);
-  if (pv->de)
-    pv->de = copy_env(pv->de);
   pv->ne = copy_env(pv->ne);
 }
 
@@ -1334,7 +1331,6 @@ static val bindings_helper(val vars, val env, val sequential,
   struct bindings_helper_vars v;
   list_collect_decl (new_bindings, ptail);
   uw_frame_t uw_cc;
-  v.de = if3(sequential, dyn_env, nil);
   v.ne = if3(sequential, env, make_env(nil, nil, env));
 
   uw_push_cont_copy(&uw_cc, coerce(mem_t *, &v), copy_bh_env_handler);
@@ -1362,8 +1358,6 @@ static val bindings_helper(val vars, val env, val sequential,
     }
   }
 
-  if (v.de && v.de != dyn_env)
-    dyn_env = v.de;
   if (env_out)
     *env_out = v.ne;
 
