@@ -30400,6 +30400,23 @@ treat the situation  in a satisfactory way using a
 definition, which effectively then supplies inline code whenever a certain form
 is used as a place, and that code itself is treated as a place.
 
+.coNP Special variables @, *place-update-expander* @ *place-clobber-expander* and @ *place-delete-expander*
+.desc
+These variables hold hash tables, by means of which update expanders,
+clobber expanders and delete expanders are registered, as associations
+between symbols and functions.
+
+If
+.code "[*place-update-expander* 'sym]"
+yields a function, then symbol
+.code sym
+is the basis for a syntactic place. If the expression yields
+.codn nil ,
+then forms beginning with
+.code sym
+are not syntactic places. (The situation of a clobber accessor or delete
+accessor being defined without an update expander is improper).
+
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote
 .synb
