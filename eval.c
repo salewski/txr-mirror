@@ -73,7 +73,7 @@ val dyn_env;
 val eval_initing;
 
 val eval_error_s;
-val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s;
+val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s, dvbind_s;
 val handler_bind_s, cond_s, if_s, iflet_s, when_s;
 val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s, macro_s;
 val tree_case_s, tree_bind_s, mac_param_bind_s;
@@ -1324,8 +1324,7 @@ static void copy_bh_env_handler(mem_t *ptr, int parent)
 }
 
 static val bindings_helper(val vars, val env, val sequential,
-                           val *env_out, val ret_new_bindings,
-                           val ctx)
+                           val ret_new_bindings, val ctx)
 {
   val iter;
   struct bindings_helper_vars v;
@@ -1358,11 +1357,8 @@ static val bindings_helper(val vars, val env, val sequential,
     }
   }
 
-  if (env_out)
-    *env_out = v.ne;
-
   uw_pop_frame(&uw_cc);
-  return new_bindings;
+  return v.ne;
 }
 
 static val fbindings_helper(val vars, val env, val lbind, val ctx)
@@ -1403,9 +1399,11 @@ static val op_let(val form, val env)
   val args = rest(form);
   val vars = first(args);
   val body = rest(args);
-  val new_env;
-  (void) bindings_helper(vars, env, eq(let, let_star_s), &new_env, nil, form);
-  return eval_progn(body, new_env, form);
+  val saved_de = dyn_env;
+  val new_env = bindings_helper(vars, env, eq(let, let_star_s), nil, form);
+  val ret = eval_progn(body, new_env, form);
+  dyn_env = saved_de;
+  return ret;
 }
 
 static val op_fbind(val form, val env)
@@ -1416,6 +1414,18 @@ static val op_fbind(val form, val env)
   val body = rest(args);
   val new_env = fbindings_helper(vars, env, eq(oper, lbind_s), form);
   return eval_progn(body, new_env, form);
+}
+
+static val op_dvbind(val form, val env)
+{
+  val args = rest(form);
+  val sym = pop(&args);
+  val initform = pop(&args);
+  val initval = eval(initform, env, form);
+  val de = make_env(nil, nil, dyn_env);
+  env_vbind(de, sym, initval);
+  dyn_env = de;
+  return unbound_s;
 }
 
 static val get_bindings(val vars, val env)
@@ -2948,8 +2958,7 @@ static val me_equot(val form, val menv)
   return rlcp(cons(quote_s, cons(expand(cadr(form), menv), nil)), form);
 }
 
-static val expand_vars(val vars, val menv, val form,
-                       val *pspecials, int seq_p)
+static val expand_vars(val vars, val menv, val form, int seq_p)
 {
   val sym;
 
@@ -2961,30 +2970,39 @@ static val expand_vars(val vars, val menv, val form,
     return vars;
   } else if (symbolp(sym = car(vars))) {
     val rest_vars = rest(vars);
-    val rest_vars_ex = expand_vars(rest_vars, menv, form, pspecials, seq_p);
+    val rest_vars_ex = expand_vars(rest_vars, menv, form, seq_p);
     if (special_var_p(sym))
-      push(sym, pspecials);
-    if (rest_vars == rest_vars_ex)
+      sym = list(sym, list(dvbind_s, sym, nil, nao), nao);
+    else if (rest_vars == rest_vars_ex)
       return vars;
     return rlcp(cons(sym, rest_vars_ex), vars);
-  } else {
-    cons_bind (var, init, sym);
+  } else if (consp(sym)) {
+    val stuff = sym;
+    val var = pop(&stuff);
+    val init = pop(&stuff);
     val rest_vars = rest(vars);
     /* This var's init form sees a previous symbol macro whose name is
        the same as the variable, so menv is used. */
-    val init_ex = rlcp(expand_forms(init, menv), init);
+    val init_ex = rlcp(expand(init, menv), init);
     /* The initforms of subsequent vars in a sequential binding
        do not see a previous symbol macro; they see the var. */
     val menv_new = seq_p ? make_var_shadowing_env(menv, cons(var, nil)) : menv;
-    val rest_vars_ex = rlcp(expand_vars(rest_vars, menv_new, form,
-                                        pspecials, seq_p),
+    val rest_vars_ex = rlcp(expand_vars(rest_vars, menv_new, form, seq_p),
                             rest_vars);
 
-    if (special_var_p(var))
-      push(var, pspecials);
-    if (init == init_ex && rest_vars == rest_vars_ex)
+    if (stuff)
+      eval_warn(form, lit("extra forms in var-init pair ~s"), sym, nao);
+
+    if (special_var_p(var) && (atom(init_ex) || car(init_ex) != dvbind_s ||
+                               cadr(init_ex) != var))
+    {
+      init_ex = rlcp(list(dvbind_s, var, init_ex, nao), init_ex);
+    } else if (init == init_ex && rest_vars == rest_vars_ex) {
       return vars;
-    return rlcp(cons(cons(var, init_ex), rest_vars_ex), vars);
+    }
+    return rlcp(cons(cons(var, cons(init_ex, nil)), rest_vars_ex), vars);
+  } else {
+    eval_error(form, lit("variable binding expected, not ~s"), sym, nao);
   }
 }
 
@@ -3657,18 +3675,10 @@ static val do_expand(val form, val menv)
       int seq_p = sym == let_star_s;
       val new_menv = make_var_shadowing_env(menv, vars);
       val body_ex = expand_progn(body, new_menv);
-      val specials = nil;
-      val vars_ex = expand_vars(vars, menv, form, &specials, seq_p);
-      int have_rebinds = consp(car(body)) && caar(body) == with_dyn_rebinds_s;
-      if (body == body_ex && vars == vars_ex && (!specials || have_rebinds)) {
+      val vars_ex = expand_vars(vars, menv, form, seq_p);
+      if (body == body_ex && vars == vars_ex)
         return form;
-      } else if (!specials || have_rebinds) {
-        return rlcp(cons(sym, cons(vars_ex, body_ex)), form);
-      } else {
-        val body_rebinds = rlcp(cons(with_dyn_rebinds_s,
-                                     cons(specials, body_ex)), form);
-        return rlcp(cons(sym, cons(vars_ex, cons(body_rebinds, nil))), form);
-      }
+      return rlcp(cons(sym, cons(vars_ex, body_ex)), form);
     } else if (sym == each_op_s) {
       val args = rest(form);
       val eachsym = first(args);
@@ -3802,7 +3812,8 @@ static val do_expand(val form, val menv)
       if (params_ex == params && expr_ex == expr && body_ex == body)
         return form;
       return rlcp(cons(sym, cons(params_ex, cons(expr_ex, body_ex))), form);
-    } else if (sym == quote_s || sym == fun_s || sym == with_dyn_rebinds_s) {
+    } else if (sym == quote_s || sym == fun_s || sym == with_dyn_rebinds_s ||
+               sym == dvbind_s) {
       return form;
     } else if (sym == for_op_s) {
       val vars = second(form);
@@ -4923,6 +4934,7 @@ void eval_init(void)
   flet_s = intern(lit("flet"), user_package);
   labels_s = intern(lit("labels"), user_package);
   call_s = intern(lit("call"), user_package);
+  dvbind_s = intern(lit("dvbind"), system_package);
   handler_bind_s = intern(lit("handler-bind"), user_package);
   cond_s = intern(lit("cond"), user_package);
   caseq_s = intern(lit("caseq"), user_package);
@@ -5045,6 +5057,7 @@ void eval_init(void)
   reg_op(let_star_s, op_let);
   reg_op(fbind_s, op_fbind);
   reg_op(lbind_s, op_fbind);
+  reg_op(dvbind_s, op_dvbind);
   reg_op(lambda_s, op_lambda);
   reg_op(fun_s, op_fun);
   reg_op(cond_s, op_cond);
