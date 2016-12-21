@@ -4897,7 +4897,7 @@ void eval_init(void)
 
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
           &op_table, &last_form_evaled, &last_form_expanded,
-          &call_f, &origin_hash, convert(val *, 0));
+          &call_f, &unbound_s, &origin_hash, convert(val *, 0));
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
   top_mb = make_hash(t, nil, nil);
@@ -5013,7 +5013,7 @@ void eval_init(void)
   whole_k = intern(lit("whole"), keyword_package);
   form_k = intern(lit("form"), keyword_package);
   special_s = intern(lit("special"), system_package);
-  unbound_s = intern(lit("unbound"), system_package);
+  unbound_s = make_sym(lit("unbound"));
   symacro_k = intern(lit("symacro"), keyword_package);
   prof_s = intern(lit("prof"), user_package);
   switch_s = intern(lit("switch"), system_package);
