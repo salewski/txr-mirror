@@ -55,7 +55,7 @@
                ;; protect those (go ...)forms from falling victim to the
                ;; global macro, by wrapping this with a harmless local go macro.
                (pass-one (sys:expand ^(macrolet ((go (:form form label) form))
-                                        ,basic-code)) env))
+                                        ,basic-code) env)))
           ;; pass two: now expand the remaining go forms at this level, against
           ;; this tagbody. If any go forms remain, they must refer to nonexistent
           ;; labels. By calling sys:expand one more time, we flush these out
