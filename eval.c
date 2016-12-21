@@ -3924,10 +3924,9 @@ static val do_expand(val form, val menv)
     } else if (sym == var_s || sym == expr_s) {
       return form;
     } else {
-      /* funtion call
-         also handles: prog1, call, if, and, or,
-         unwind-protect, return, dwim, set, inc, dec,
-         push, pop, flip, and with-saved-vars. */
+      /* funtion call expansion also handles: prog1, call, if, and, or,
+         unwind-protect, return and other special forms whose arguments
+         are evaluated */
       val form_ex = dot_to_apply(form, nil);
       val sym_ex = first(form_ex);
       val args = rest(form_ex);
