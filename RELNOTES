@@ -1,3 +1,36 @@
+                                    TXR 163
+                                   2016-12-20
+
+
+  Features
+
+  - New equot macro: quote after macro expansion.
+  - CL compatibility:
+    - New function endp.
+    - New function mismatch.
+    - New prog and prog* macros.
+  - Signal handling:
+    - If an async signal is caught and handled by Lisp code during gc, gc is
+      canceled.
+      - Allows recovery from segfault due to stack overflow during gc.
+  - Exception handling:
+    - New function find frames.
+  - Awk macro:
+    - New awk local macros -rng, rng- and -rng-, providing endpoint-exclusive
+      variants of rng.
+  - Redesigned binding of special variables.
+    - Fixes subtle bugs
+    - Reduces number of variable binding special forms.
+    - Removes special var handling responsibility from binding special forms.
+
+  Bugs
+
+  - Method lookup doesn't throw on nonexistent slots.
+  - Fixed find-max not handling interpreter literal strings.
+  - Expansion bugfix in tagbody.
+
+
+
                                     TXR 162
                                    2016-12-07
 
