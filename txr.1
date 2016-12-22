@@ -18131,6 +18131,24 @@ found, or due to the property being present with a
 value.
 
 .SS* List Sorting
+
+Note: these functions operate on lists. The principal sorting function
+in \*(TL is
+.codn sort ,
+described under Sequence Manipulation.
+
+The
+.code merge
+function described here provides access to an elementary step
+of the algorithm used internally by
+.code sort
+when operating on lists.
+
+The
+.code multi-sort
+operation sorts multiple lists in parallel. It is implemented using
+.codn sort .
+
 .coNP Function @ merge
 .synb
 .mets (merge < seq1 < seq2 >> [ lessfun <> [ keyfun ]])
