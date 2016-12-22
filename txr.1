@@ -13810,6 +13810,28 @@ Then, the last variable's value is tested. If it is not
 .code nil
 then the test is true, otherwise false.
 
+In the syntax, a small convenience is permitted. Instead of the last
+.cblk
+.meti >> ( sym << init-form )
+.cble
+it is permissible for the syntax
+.cblk
+.meti <> ( init-form )
+.cble
+to appear, the
+.meta sym
+being omitted. A machine-generated variable is substituted
+in place of the missing
+.meta sym
+and that variable is then initialized from
+.meta init-form
+and used as the basis of the test. This is intended to be useful
+in situations in which
+.meta then-form
+or
+.meta else-form
+do not require access to the tested value.
+
 In the case of the
 .code iflet
 operator, if the test is true, the operator evaluates
@@ -13852,6 +13874,12 @@ is returned.
   ;; print frobosity value if it exceeds 150
   (whenlet ((fv (get-frobosity-value))
             (exceeds-p (> fv 150)))
+    (format t "frobosity value ~a exceeds 150\en" fv))
+
+  ;; same as above, taking advantage of the
+  ;; last variable being optional:
+  (whenlet ((fv (get-frobosity-value))
+            ((> fv 150)))
     (format t "frobosity value ~a exceeds 150\en" fv))
 
   ;; yield 4: 3 interpreted as atom-form

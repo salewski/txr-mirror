@@ -3430,16 +3430,30 @@ static val me_iflet_whenlet(val form, val env)
     return apply_frob_args(list(if3(sym == iflet_s, if_s, when_s),
                                 lets, args, nao));
   } else {
-    val lastlet = last(lets, nil);
+    val lastlet_cons = last(lets, nil);
+    val lastlet = car(lastlet_cons);
 
     if (nilp(lastlet))
       eval_error(form, lit("~s: empty binding list"), sym, nao);
 
+    if (!consp(lastlet))
+      eval_error(form, lit("~s: bad binding syntax ~s"), sym, lastlet, nao);
 
+    {
+      val var = car(lastlet);
+
+      if (!cdr(lastlet)) {
+        if (symbolp(var) && bindable(var))
+          eval_warn(form, lit("~s: ~s is init-form here, not new variable"),
+                    sym, var, nao);
+        push(gensym(nil), &lastlet);
+        lets = append2(butlast(lets, nil), cons(lastlet, nil));
+      }
+    }
 
     return list(let_star_s, lets,
                 cons(if3(sym == iflet_s, if_s, when_s),
-                     cons(car(car(lastlet)), args)), nao);
+                     cons(car(lastlet), args)), nao);
   }
 }
 
