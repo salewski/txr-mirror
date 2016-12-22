@@ -274,6 +274,7 @@ rebuild: clean repatch $(PROG)
 
 clean: conftest.clean tests.clean
 	rm -f $(PROG)$(EXE) $(PROG)-dbg$(EXE) y.tab.c lex.yy.c y.tab.h y.output
+	rm -f $(PROG)-win$(EXE) $(PROG)-win-dbg$(EXE)
 	rm -rf opt dbg $(EXTRA_OBJS-y)
 
 distclean: clean
