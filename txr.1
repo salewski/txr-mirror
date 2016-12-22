@@ -14129,7 +14129,7 @@ form.
 .cblk
   (ifa t 1 0)  ->  1
 
-  ;; Rule 7: it binds to (* x x), which is
+  ;; Rule 6: it binds to (* x x), which is
   ;; the only it-candidate.
   (let ((x 6) (y 49))
     (ifa (> y (* x x)) ;; it binds to (* x x)
@@ -14147,6 +14147,13 @@ form.
     (list it))
   -> (4)
 
+  ;; Rule 7: no candidates: choose leftmost
+  (let ((x 6) (y 49))
+    (ifa (< 1 x y)
+      (list it)))
+  -> (1)
+
+  -> (4)
   ;; Violation of Rule 1:
   ;; while is not a function
   (ifa (while t (print 42))
