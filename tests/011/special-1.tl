@@ -1,0 +1,9 @@
+(defmacro with-output-to-string ((var) . forms)
+  ^(let ((,var (make-string-output-stream)))
+     (progn ,*forms (get-string-from-stream ,var))))
+
+(let ((x (with-output-to-string (*stdout*)
+           [format *stdout* "wo"]
+           (format t "rld!"))))
+  (format *stdout* "Hello, ")
+  (put-line x))
