@@ -572,6 +572,12 @@ static val lookup_symac_lisp1(val menv, val sym)
   }
 }
 
+static val reparent_env(val child, val parent)
+{
+  child->e.up_env = parent;
+  return child;
+}
+
 static val lexical_var_p(val menv, val sym)
 {
   if (nilp(menv)) {
@@ -1326,7 +1332,7 @@ static void copy_bh_env_handler(mem_t *ptr, int parent)
 static val bindings_helper(val vars, val env, val sequential,
                            val ret_new_bindings, val ctx)
 {
-  val iter;
+  val iter, var;
   struct bindings_helper_vars v;
   list_collect_decl (new_bindings, ptail);
   uw_frame_t uw_cc;
@@ -1334,31 +1340,64 @@ static val bindings_helper(val vars, val env, val sequential,
 
   uw_push_cont_copy(&uw_cc, coerce(mem_t *, &v), copy_bh_env_handler);
 
-  for (iter = vars; iter; iter = cdr(iter)) {
-    val item = car(iter);
-    val var, value = nil;
+  if (sequential) {
+    for (iter = vars; iter; iter = cdr(iter)) {
+      val item = car(iter);
+      val value = nil;
 
-    if (consp(item)) {
-      var = pop(&item);
-      value = eval(pop(&item), if3(sequential, v.ne, env), ctx);
-    } else {
-      var = item;
-    }
+      if (consp(item)) {
+        var = pop(&item);
+        value = eval(pop(&item), v.ne, ctx);
+      } else {
+        var = item;
+      }
 
-    if (bindable(var)) {
-      val le = if3(sequential, make_env(nil, nil, v.ne), v.ne);
-      val binding = env_vbind(le, var, value);
-      if (ret_new_bindings)
-        ptail = list_collect (ptail, binding);
-      v.ne = le;
-    } else {
-      eval_error(ctx, lit("~s: ~s is not a bindable symbol"),
-                 ctx_name(ctx), var, nao);
+      if (bindable(var)) {
+        val le = make_env(nil, nil, v.ne);
+        val binding = env_vbind(le, var, value);
+        if (ret_new_bindings)
+          ptail = list_collect (ptail, binding);
+        v.ne = le;
+      } else {
+        goto notbindable;
+      }
     }
+  } else {
+    val de_in = dyn_env, new_de = de_in;
+
+    for (iter = vars; iter; iter = cdr(iter)) {
+      val item = car(iter);
+      val value = nil;
+
+      if (consp(item)) {
+        var = pop(&item);
+        value = eval(pop(&item), env, ctx);
+        if (dyn_env != de_in) {
+          reparent_env(dyn_env, new_de);
+          new_de = dyn_env;
+          dyn_env = de_in;
+        }
+      } else {
+        var = item;
+      }
+
+      if (bindable(var)) {
+        val binding = env_vbind(v.ne, var, value);
+        if (ret_new_bindings)
+          ptail = list_collect (ptail, binding);
+      } else {
+        goto notbindable;
+      }
+    }
+    dyn_env = new_de;
   }
 
   uw_pop_frame(&uw_cc);
+
   return v.ne;
+notbindable:
+  eval_error(ctx, lit("~s: ~s is not a bindable symbol"),
+             ctx_name(ctx), var, nao);
 }
 
 static val fbindings_helper(val vars, val env, val lbind, val ctx)
