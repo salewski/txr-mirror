@@ -32356,6 +32356,159 @@ type is intended to be the root of a hierarchy of exception
 types used for denoting restart points: designers are encouraged
 to derive restarts from this type.
 
+.NP* Dialect Notes
+
+Exception handling in \*(TL provides capabilities similar to the condition
+system in ANSI Common Lisp. The implementation and terminology differ.
+
+Most obviously, ANSI CL uses the "condition" term, whereas \*(TL uses "exception".
+
+In ANSI CL, a condition is "raised", whereas a \*(TL exception is "thrown".
+
+In ANSI CL, when a condition is raised, a condition object is created. Condition
+object are similar to class objects, but are not required to be in the Common Lisp
+Object System. They are related by inheritance and can have properties. \*(TL
+exceptions are unencapsulated: they consist of a symbol, plus zero or more
+arguments. The symbols are related by inheritance.
+
+When a condition is raised in ANSI CL, the dynamic scope is searched for a
+handler, which is an ordinary function which receives the condition. No
+unwinding or non-local transfer takes place.  The handler can return, in which
+case the search continues. Matching the condition to the handler is by
+inheritance. Handler functions are bound to exception type names.
+If a handler chooses to actually handle a condition (thereby terminating
+the search) it must itself perform some kind of dynamic control transfer,
+rather than return normally. ANSI CL provides a dynamic control mechanism
+known as restarts which is usually used for this purpose. A condition handler
+may invoke a particular restart handler. Restart handlers are similar to
+exception handlers: they are functions associated with symbols in the
+dynamic environment.
+
+In \*(TL exceptions are a unification of conditions and restarts. From an ANSI CL
+perspective, \*(TL exceptions are a lot like CL restarts, except that the
+symbols are arranged in an inheritance hierarchy. \*(TL exceptions are used
+both as the equivalent of ANSI CL conditions and as restarts.
+
+In \*(TL the terminology "catch" and "handle" is used in a very specific way.
+To handle an exception means to receive it without unwinding, with the possibility
+of declining to handle it, so that the search continues for another handler.
+To catch an exception means to match an exception to a catch handler, terminate
+the search, unwind and pass control to the handler.
+
+\*(TL provides an operator called
+.code handler-bind
+for specifying handlers. It has a different syntax from ANSI CL's
+.codn handler-bind .
+\*(TL provides a macro called
+.code handle
+which simplifies the use of
+.codn handler-bind .
+This macro superficially resembles ANSI CL's
+.codn handler-case ,
+but is semantically different. The most notable difference is that the bodies
+of handlers established by
+.code handler-bind
+execute without any unwinding taking place and may return normally, thereby
+declining to take the exception. In other words,
+.code handle
+has the same semantics as
+.codn handler-bind ,
+providing only convenient syntax.
+
+\*(TL provides an operator called
+.code catch
+which has the same syntax as
+.code handle
+but specifies a catch point for exceptions. If, during an exception search, a
+.code catch
+clause matches an exception, a dynamic control transfer takes place
+from the throw site to the catch site. Then the clause body is executed.
+The
+.code catch
+operator resembles ANSI CL's
+.code restart-case
+or possibly
+.codn handler-case ,
+depending on point of view.
+
+\*(TL provides unified introspection over handler and catch frames.
+A program can programmatically discover what handler and catches are
+available in a given dynamic scope. ANSI CL provides introspection
+over restarts only; the standard doesn't specify any mechanism for
+inquiring what condition handlers are bound at a given point in
+the execution.
+
+.TP* Example:
+
+The following two examples express a similar approach  implemented
+using ANSI Common Lisp conditions and restarts, and then using \*(TL
+exceptions.
+
+.cblk
+  ;; Common Lisp
+  (define-condition foo-error (error)
+    ((arg :initarg :arg :reader foo-error-arg)))
+
+  (defun raise-foo-error (arg)
+    (restart-case
+      (let ((c (make-condition 'foo-error :arg arg)))
+        (error c))
+      (recover (recover-arg)
+        (format t "recover, arg: ~s~%" recover-arg))))
+
+  (handler-bind ((foo-error
+                   (lambda (cond)
+                     (format t "handling foo-error, arg: ~s~%"
+                             (foo-error-arg cond))
+                     (invoke-restart 'recover 100))))
+    (raise-foo-error 200))
+.cble
+
+The output of the above is:
+
+.cblk
+  handling foo-error, arg: 200
+  recover, arg: 100
+.cble
+
+The following is possible \*(TL equivalent for the above Common Lisp example.
+It produces identical output.
+
+.cblk
+  (defex foo-error error)
+
+  (defex recover restart) ;; recommended practice
+
+  (defun raise-foo-error (arg)
+    (catch
+      (throw 'foo-error arg)
+      (recover (recover-arg)
+        (format t "recover, arg: ~s\en" recover-arg))))
+
+  (handle
+    (raise-foo-error 200)
+    (foo-error (arg)
+      (format t "handling foo-error, arg: ~s\en" arg)
+      (throw 'recover 100)))
+.cble
+
+To summarize the differences: exceptions serve as both
+conditions and restarts in \*(TX. The same
+.code throw
+function is used to initiate exception handling for
+.code foo-error
+and then to transfer control out of the handler
+to the recovery code. The handler accepts one exception
+by raising another.
+
+When an exception symbol is used for restarting, it is
+a recommended practice to insert it into the inheritance
+hierarchy rooted at the
+.code restart
+symbol, either by inheriting directly from
+.code restart
+or from an exception subtype of that symbol.
+
 .coNP Functions @, throw @ throwf and @ error
 .synb
 .mets (throw < symbol << arg *)
