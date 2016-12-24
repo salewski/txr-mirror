@@ -557,7 +557,7 @@ define_clause : DEFINE exprs ')' newl
                 END newl        { $$ = list(define_s, nil, $4, nao);
                                   rl($$, num($1)); }
               | DEFINE error    { $$ = nil;
-                                  yybadtok(yychar, lit("list expression")); }
+                                  yybadtok(yychar, lit("define directive")); }
               | DEFINE exprs ')' newl
                 error           { $$ = nil; yybadtok(yychar, lit("define")); }
               | DEFINE ')' newl
@@ -628,7 +628,7 @@ output_clause : OUTPUT ')' o_elems '\n'
                                   yyerr("invalid combination of old and "
                                                "new syntax in output directive"); }
               | OUTPUT error    { $$ = nil;
-                                  yybadtok(yychar, lit("list expression")); }
+                                  yybadtok(yychar, lit("output directive")); }
               | OUTPUT ')' o_elems '\n'
                 error           { $$ = nil;
                                   yybadtok(yychar, lit("output clause")); }
@@ -868,7 +868,7 @@ list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
                                     $$ = rl(cons(var_s, cons($2, nil)),
                                             num($1)); }
      | '(' error                { $$ = nil;
-                                  yybadtok(yychar, lit("list expression")); }
+                                  yybadtok(yychar, lit("expression")); }
      | '[' error                { $$ = nil;
                                   yybadtok(yychar, lit("DWIM expression")); }
      | '@' error                { $$ = nil;
