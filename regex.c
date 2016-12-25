@@ -2101,12 +2101,18 @@ static val regex_requires_dv(val exp)
 
 val regex_compile(val regex_sexp, val error_stream)
 {
+  val regex_source;
+
   if (stringp(regex_sexp)) {
     regex_sexp = regex_parse(regex_sexp, default_bool_arg(error_stream));
     return if2(regex_sexp, regex_compile(regex_sexp, error_stream));
   }
 
   regex_sexp = reg_optimize(reg_expand_nongreedy(reg_nary_to_bin(regex_sexp)));
+
+  regex_source = if3(stringp(regex_sexp),
+                     cons(compound_s, cons(regex_sexp, nil)),
+                     regex_sexp);
 
   if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
     regex_t *regex = coerce(regex_t *, chk_malloc(sizeof *regex));
@@ -2117,7 +2123,7 @@ val regex_compile(val regex_sexp, val error_stream)
     regex->source = nil;
     ret = cobj(coerce(mem_t *, regex), regex_s, &regex_obj_ops);
     regex->r.dv = dv;
-    regex->source = regex_sexp;
+    regex->source = regex_source;
     return ret;
   } else {
     regex_t *regex = coerce(regex_t *, chk_malloc(sizeof *regex));
@@ -2127,7 +2133,7 @@ val regex_compile(val regex_sexp, val error_stream)
     ret = cobj(coerce(mem_t *, regex), regex_s, &regex_obj_ops);
     regex->r.nfa = nfa_compile_regex(regex_sexp);
     regex->nstates = nfa_count_states(regex->r.nfa.start);
-    regex->source = regex_sexp;
+    regex->source = regex_source;
     return ret;
   }
 }
