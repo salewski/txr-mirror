@@ -848,10 +848,6 @@ struct : HASH_S list            { if (unquotes_occur($2, 0))
 
 range : HASH_R list             { if (length($2) != two)
                                     yyerr("range literal needs two elements");
-
-                                  if (unquotes_occur($2, 0))
-                                    $$ = rl(cons(rcons_s, $2), num($1));
-                                  else
                                   { val range = rcons(first($2), second($2));
                                     $$ = rl(range, num($1)); } }
        ;

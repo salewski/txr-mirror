@@ -2900,7 +2900,11 @@ static val expand_qquote_rec(val qquoted_form, val qq, val unq, val spl)
 {
   if (nilp(qquoted_form)) {
     return nil;
-  } if (atom(qquoted_form)) {
+  } else if (rangep(qquoted_form)) {
+    val frexp = expand_qquote(from(qquoted_form), qq, unq, spl);
+    val toexp = expand_qquote(to(qquoted_form), qq, unq, spl);
+    return rlcp(list(rcons_s, frexp, toexp, nao), qquoted_form);
+  } else if (atom(qquoted_form)) {
     return cons(quote_s, cons(qquoted_form, nil));
   } else {
     val sym = car(qquoted_form);
