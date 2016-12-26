@@ -2870,6 +2870,16 @@ static val optimize_qquote_form(val form)
       return rlcp_tree(cons(list_s, args), form);
     }
 
+    if (sym == rcons_s) {
+      if (args && cdr(args) && !cddr(args) &&
+          all_satisfy(args, quote_form_p_f, nil))
+      {
+        val args_noq = mapcar(second_f, args);
+        return rlcp(rcons(first(args_noq), second(args_noq)), form);
+      }
+      return form;
+    }
+
     return form;
   }
 }
