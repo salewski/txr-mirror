@@ -29,6 +29,7 @@
 (defstruct sys:awk-state ()
   (rs "\n") krs
   fs ft kfs
+  fw fw-prev fw-ranges
   (ofs " ")
   (ors "\n")
   (inputs)
@@ -62,6 +63,27 @@
 
 (defmeth sys:awk-state rec-to-f (self)
   (cond
+    (self.fw
+      (unless (eq self.fw-prev self.fw)
+        (let ((ranges (reduce-left
+                        (tb ((list . sum) item)
+                          (let ((ns (+ sum item)))
+                            ^((,*list #R(,sum ,ns)) . ,ns)))
+                        self.fw '(nil . 0))))
+        (set self.fw-prev self.fw
+             self.fw-ranges (car ranges))))
+      (let ((i 0) end
+            (l (length self.rec)))
+        (set self.fields
+             (build (each ((r self.fw-ranges))
+                      (set end (to r))
+                      (if (>= (from r) l)
+                        (return nil))
+                      (add [self.rec r])
+                      (inc i))
+               (if (< end l)
+                 (add [self.rec end..:])))
+             self.nf i)))
     (self.fs
       (when self.ft
         (throwf 'eval-error "awk: both fs and ft set"))
@@ -250,6 +272,7 @@
                 (krs (qref ,aws-sym krs))
                 (fs (qref ,aws-sym fs))
                 (ft (qref ,aws-sym ft))
+                (fw (qref ,aws-sym fw))
                 (kfs (qref ,aws-sym kfs))
                 (ofs (qref ,aws-sym ofs))
                 (ors (qref ,aws-sym ors)))

@@ -42593,6 +42593,83 @@ parameter of the
 .code split-str
 function.
 
+.coNP Variable @ fw
+.desc
+The awk variable
+.code fw
+controls the fixed-width-based delimiting of records into fields.
+
+The variable is initialized to
+.codn nil .
+In that state, it has no effect.
+When this variable holds a
+.cod2 non- nil
+value, it is expected to be a list of integers.
+The use of the
+.code fs
+or
+.code ft
+variables is suppressed, and fields are extracted according
+to the widths indicated by the list. The fields are consecutive,
+such that if the list is
+.code "(5 3)"
+then the first five characters of the record are identified
+as field
+.code "[f 0]"
+and the next three characters after that as
+.codn "[f 1]" .
+
+Only complete fields are extracted from the record. If, after
+the extraction of the maximum possible complete fields, more characters
+remain, those characters are assigned to an extra field.
+
+An empty record produces an empty list of fields regardless
+of the integers stored in fw.
+
+A zero width extracts a zero length field, except when
+no more characters remain in the record.
+
+If
+.code nil
+is stored into
+.code fw
+then control over field separation is relinquished to the
+.code fs
+or
+.code ft
+variables, according to their current values.
+
+If
+.code fw
+holds a value other than
+.code nil
+or else a list of non-negative integers, the behavior is unspecified.
+
+.TP* Examples
+
+The following table shows examples of delimiting for
+various combinations of
+.code fw
+and input record
+.codn rec :
+
+.cblk
+.TS
+tab(!);
+l l l.
+rec!fw!f
+"abc"!(0)!("" "abc")
+"abc"!(2)!("ab" "c")
+"abc"!(1 2)!("a" "bc")
+"abc"!(1 3)!("a" "bc")
+"abc"!(1 1)!("a" "b" "c")
+"abc"!(3)!("abc")
+"abc"!(4)!("abc")
+""!(4)!nil
+""!(0)!nil
+.TE
+.cble
+
 .coNP Variable @ ofs
 .desc
 The awk variable
