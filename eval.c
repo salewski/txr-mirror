@@ -806,6 +806,13 @@ static val expand_opt_params_rec(val params, val menv,
         not_bindable_error(form, sym);
       if (special_var_p(sym))
         push(sym, pspecials);
+      if (cddr(pair)) {
+        val opt_sym = caddr(pair);
+        if (!bindable(opt_sym))
+          not_bindable_error(form, opt_sym);
+        if (special_var_p(opt_sym))
+          push(opt_sym, pspecials);
+      }
       return rlcp(cons(form_ex, expand_opt_params_rec(rest(params), menv,
                                                       form, pspecials)),
                   cdr(params));
