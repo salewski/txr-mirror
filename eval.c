@@ -83,7 +83,7 @@ val caseq_star_s, caseql_star_s, casequal_star_s;
 val memq_s, memql_s, memqual_s;
 val eq_s, eql_s, equal_s;
 val car_s, cdr_s, not_s, vecref_s;
-val setq_s, inc_s, zap_s;
+val setq_s, lisp1_setq_s, setqf_s, inc_s, zap_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val for_op_s, each_op_s;
 val append_each_s, append_each_star_s, while_s, while_star_s, until_star_s;
@@ -1609,15 +1609,10 @@ static val op_defvarl(val form, val env)
   val args = rest(form);
   val sym = first(args);
 
-  if (!bindable(sym))
-    not_bindable_error(form, sym);
-
-  {
-    if (!gethash(top_vb, sym)) {
-      val value = eval(second(args), env, form);
-      remhash(top_smb, sym);
-      sethash(top_vb, sym, cons(sym, value));
-    }
+  if (!gethash(top_vb, sym)) {
+    val value = eval(second(args), env, form);
+    remhash(top_smb, sym);
+    sethash(top_vb, sym, cons(sym, value));
   }
 
   return sym;
@@ -1629,9 +1624,6 @@ static val op_defsymacro(val form, val env)
   val sym = first(args);
 
   (void) env;
-
-  if (!bindable(sym))
-    not_bindable_error(form, sym);
 
   remhash(top_vb, sym);
   if (!opt_compat || opt_compat > 143)
@@ -1720,9 +1712,6 @@ static val op_defmacro(val form, val env)
   val params = second(args);
   val body = rest(rest(args));
   val block = rlcp(cons(block_s, cons(name, body)), body);
-
-  if (!bindable(name))
-    not_bindable_error(form, name);
 
   if (gethash(op_table, name))
     eval_error(form, lit("defmacro: ~s is a special operator"), name, nao);
@@ -1971,11 +1960,8 @@ static val op_setq(val form, val env)
   val var = pop(&args);
   val newval = pop(&args);
   val binding = lookup_var(env, var);
-  if (nilp(binding)) {
-    if (!bindable(var))
-      not_bindable_error(form, var);
+  if (nilp(binding))
     eval_error(form, lit("unbound variable ~s"), var, nao);
-  }
   return sys_rplacd(binding, eval(newval, env, form));
 }
 
@@ -1986,11 +1972,8 @@ static val op_lisp1_setq(val form, val env)
   val newval = pop(&args);
 
   val binding = lookup_sym_lisp1(env, var);
-  if (nilp(binding)) {
-    if (!bindable(var))
-      not_bindable_error(form, var);
+  if (nilp(binding))
     eval_error(form, lit("unbound variable ~s"), var, nao);
-  }
   return sys_rplacd(binding, eval(newval, env, form));
 }
 
@@ -2037,15 +2020,10 @@ static val op_setqf(val form, val env)
   val args = rest(form);
   val var = pop(&args);
   val newval = pop(&args);
-
-  if (!bindable(var)) {
-    not_bindable_error(form, var);
-  } else {
-    val binding = lookup_fun(env, var);
-    if (nilp(binding))
-      eval_error(form, lit("unbound function ~s"), var, nao);
-    return sys_rplacd(binding, eval(newval, env, form));
-  }
+  val binding = lookup_fun(env, var);
+  if (nilp(binding))
+    eval_error(form, lit("unbound function ~s"), var, nao);
+  return sys_rplacd(binding, eval(newval, env, form));
 }
 
 static val op_for(val form, val env)
@@ -3785,6 +3763,9 @@ static val do_expand(val form, val menv)
       if (sym == defsymacro_s && length(form) != three)
         eval_error(form, lit("~s: two arguments expected"), sym, nao);
 
+      if (!bindable(name))
+        not_bindable_error(form, name);
+
       if (init != init_ex)
         form_ex = rlcp(cons(sym, cons(name, cons(init_ex, nil))), form);
 
@@ -3988,6 +3969,17 @@ static val do_expand(val form, val menv)
       val sym_ex = first(form_ex);
       val args = rest(form_ex);
       val args_ex = expand_forms(args, menv);
+
+      if (sym == setq_s || sym == lisp1_setq_s || sym == setqf_s) {
+        if (!args)
+          eval_error(form, lit("~s: missing argument"), sym, nao);
+
+        if (cddr(args))
+          eval_error(form, lit("~s: excess arguments"), sym, nao);
+
+        if (!bindable(car(args)))
+          not_bindable_error(form, car(args));
+      }
 
       if (form_ex == form && args_ex == args) {
         if (!lookup_fun(menv, sym) && !special_operator_p(sym))
@@ -5021,6 +5013,8 @@ void eval_init(void)
   tree_bind_s = intern(lit("tree-bind"), user_package);
   mac_param_bind_s = intern(lit("mac-param-bind"), user_package);
   setq_s = intern(lit("setq"), system_package);
+  lisp1_setq_s = intern(lit("lisp1-setq"), system_package);
+  setqf_s = intern(lit("setqf"), system_package);
   inc_s = intern(lit("inc"), user_package);
   zap_s = intern(lit("zap"), user_package);
   for_s = intern(lit("for"), user_package);
@@ -5128,9 +5122,9 @@ void eval_init(void)
   reg_op(tree_bind_s, op_tree_bind);
   reg_op(mac_param_bind_s, op_mac_param_bind);
   reg_op(setq_s, op_setq);
-  reg_op(intern(lit("lisp1-setq"), system_package), op_lisp1_setq);
+  reg_op(lisp1_setq_s, op_lisp1_setq);
   reg_op(sys_lisp1_value_s, op_lisp1_value);
-  reg_op(intern(lit("setqf"), system_package), op_setqf);
+  reg_op(setqf_s, op_setqf);
   reg_op(for_op_s, op_for);
   reg_op(dohash_s, op_dohash);
   reg_op(uw_protect_s, op_unwind_protect);
