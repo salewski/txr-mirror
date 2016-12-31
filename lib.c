@@ -9606,15 +9606,22 @@ static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
         val mods = third(elem);
         val next_elem_char = and3(next_elem && !mods, stringp(next_elem),
                                   chr_str(next_elem, zero));
+        val osstrm = make_string_output_stream();
+        val namestr = (obj_print_impl(name, osstrm, nil, ctx),
+                       get_string_from_stream(osstrm));
         int need_brace = mods ||
           (next_elem_char &&
            (chr_isalpha(next_elem_char) ||
             chr_isdigit(next_elem_char) ||
-            next_elem_char == chr('_')));
+            next_elem_char == chr('_'))) ||
+          (span_str(namestr, lit("0123456789_"
+                                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                "abcdefghijklmnopqrstuvwxyz"))
+           != length(namestr));
         put_char(chr('@'), out);
         if (need_brace)
           put_char(chr('{'), out);
-        obj_print_impl(name, out, nil, ctx);
+        obj_print_impl(namestr, out, t, ctx);
         while (mods) {
           put_char(chr(' '), out);
           obj_print_impl(car(mods), out, nil, ctx);
