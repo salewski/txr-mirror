@@ -3623,6 +3623,8 @@ static val expand_catch_clause(val form, val menv)
   val body_ex0 = expand_forms(body, new_menv);
   cons_bind (params_ex, body_ex,
              expand_params(params, body_ex0, menv, nil, form));
+  if (!symbolp(sym))
+    eval_error(form, lit("catch: ~s isn't a symbol"), sym, nao);
   if (body == body_ex && params == params_ex)
     return form;
   return rlcp(cons(sym, cons(params_ex, body_ex)), form);
