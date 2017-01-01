@@ -755,6 +755,12 @@ noreturn static val not_bindable_error(val form, val sym)
              car(form), sym, nao);
 }
 
+static val not_bindable_warning(val form, val sym)
+{
+  return eval_warn(form, lit("~s: ~s is not a bindable symbol"),
+                   car(form), sym, nao);
+}
+
 static val expand_params_rec(val params, val menv,
                              val macro_style_p, val form,
                              val *pspecials);
@@ -3984,7 +3990,7 @@ static val do_expand(val form, val menv)
           eval_error(form, lit("~s: excess arguments"), sym, nao);
 
         if (!bindable(car(args)))
-          not_bindable_error(form, car(args));
+          not_bindable_warning(form, car(args));
       }
 
       if (form_ex == form && args_ex == args) {
