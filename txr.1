@@ -32246,7 +32246,7 @@ A
 is found which matches the exception, and control is transferred
 to the catch. Catches are defined by the
 .code catch
-operator.
+macro.
 .IP -
 A handler accepts the exception by performing a non-local transfer.
 Handlers are defined by the
@@ -32415,7 +32415,7 @@ has the same semantics as
 .codn handler-bind ,
 providing only convenient syntax.
 
-\*(TL provides an operator called
+\*(TL provides a macro called
 .code catch
 which has the same syntax as
 .code handle
@@ -32425,7 +32425,7 @@ clause matches an exception, a dynamic control transfer takes place
 from the throw site to the catch site. Then the clause body is executed.
 The
 .code catch
-operator resembles ANSI CL's
+macro resembles ANSI CL's
 .code restart-case
 or possibly
 .codn handler-case ,
@@ -32551,7 +32551,7 @@ using the
 .code format
 string and additional arguments.
 
-.coNP Operator @ catch
+.coNP Macro @ catch
 .synb
 .mets (catch < try-expression
 .mets \ \  >> {( symbol <> ( arg *) << body-form *)}*)
@@ -32559,7 +32559,7 @@ string and additional arguments.
 .desc
 The
 .code catch
-operator establishes an exception catching block around
+macro establishes an exception catching block around
 the
 .metn try-expression .
 The

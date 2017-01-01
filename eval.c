@@ -74,7 +74,7 @@ val eval_initing;
 
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s, dvbind_s;
-val handler_bind_s, cond_s, if_s, iflet_s, when_s;
+val sys_catch_s, handler_bind_s, cond_s, if_s, iflet_s, when_s;
 val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s, macro_s;
 val tree_case_s, tree_bind_s, mac_param_bind_s;
 val sys_mark_special_s;
@@ -3630,21 +3630,25 @@ static val expand_catch_clause(val form, val menv)
   return rlcp(cons(sym, cons(params_ex, body_ex)), form);
 }
 
-static val expand_catch(val body, val menv)
+static val expand_catch(val form, val menv)
 {
-  val try_form = first(body);
-  val catch_clauses = rest(body);
-  val catch_syms = mapcar(car_f, catch_clauses);
+  val args = form;
+  val sym = pop(&args);
+  val catch_syms = pop(&args);
+  val try_form = pop(&args);
+  val catch_clauses = args;
   val try_form_ex = expand(try_form, menv);
   val catch_clauses_ex = rlcp(mapcar(curry_12_1(func_n2(expand_catch_clause),
                                                 menv),
                                      catch_clauses),
                               catch_clauses);
 
-  val expanded = cons(catch_s,
-                      cons(catch_syms,
-                           cons(try_form_ex, catch_clauses_ex)));
-  return rlcp(expanded, body);
+  if (try_form_ex == try_form && catch_clauses_ex == catch_clauses)
+    return form;
+
+  return rlcp(cons(sym,
+                   cons(catch_syms,
+                        cons(try_form_ex, catch_clauses_ex))), form);
 }
 
 static val expand_list_of_form_lists(val lofl, val menv, val ss_hash)
@@ -3896,8 +3900,8 @@ static val do_expand(val form, val menv)
       if (quasi == quasi_ex)
         return form;
       return rlcp(cons(sym, quasi_ex), form);
-    } else if (sym == catch_s) {
-      return expand_catch(rest(form), menv);
+    } else if (sym == sys_catch_s) {
+      return expand_catch(form, menv);
     } else if (sym == handler_bind_s) {
       val args = rest(form);
       val fun = pop(&args);
@@ -4985,6 +4989,7 @@ void eval_init(void)
   labels_s = intern(lit("labels"), user_package);
   call_s = intern(lit("call"), user_package);
   dvbind_s = intern(lit("dvbind"), system_package);
+  sys_catch_s = intern(lit("catch"), system_package);
   handler_bind_s = intern(lit("handler-bind"), user_package);
   cond_s = intern(lit("cond"), user_package);
   caseq_s = intern(lit("caseq"), user_package);
@@ -5137,7 +5142,7 @@ void eval_init(void)
   reg_op(sys_abscond_from_s, op_abscond_from);
   reg_op(dwim_s, op_dwim);
   reg_op(quasi_s, op_quasi_lit);
-  reg_op(catch_s, op_catch);
+  reg_op(sys_catch_s, op_catch);
   reg_op(handler_bind_s, op_handler_bind);
   reg_op(with_dyn_rebinds_s, op_with_dyn_rebinds);
   reg_op(prof_s, op_prof);
