@@ -1,3 +1,36 @@
+                                    TXR 164
+                                   2017-01-01
+
+
+  Features
+
+
+  - Awk macro: new variable fw for delimiting records according to fixed field
+    widths.
+  - The last variable may now be omitted in the bindings list of iflet, whenlet
+    and condlet, leaving just the controlling expression, not bound to a
+    variable.
+  - Various syntax checks over function and macro parameter lists, and variable
+    bindings, have been moved out of run time and into expansion time.
+
+  Bugs
+
+  - Build: "make clean" now removes txr-win.exe
+  - Fixed a lingering bug in the handling of special variables in parallel
+    binding, not fixed in the work done in this area for the previous release.
+  - Fixed a bug in the handling of optional-argument presence indicating
+    arguments: not binding them dynamically when they are special variables.
+  - Fixed inconsistency in the regex-source function: the source of the
+    (compound "str") regex was reported as "str", which isn't the same thing
+    when fed to the compiler.
+  - Fixed completely broken quasi-quoting over #R range literal syntax.
+  - Fixed a read/print consistency problem in quasiliterals.
+  - Fixed a problem with catch operator form not being fixed-point stable
+    under repeated passes through the expander. To fix the problem, catch
+    has turned into a macro which expands to an internal sys:catch operator.
+
+
+
                                     TXR 163
                                    2016-12-20
 
