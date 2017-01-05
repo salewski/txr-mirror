@@ -465,6 +465,22 @@ static val tagbody_instantiate(val set_fun)
   return nil;
 }
 
+static val pmac_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("define-param-expander"), nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val pmac_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~apmac.tl"), stdlib_path, nao));
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -501,6 +517,7 @@ void lisplib_init(void)
   dlt_register(dl_table, package_instantiate, package_set_entries);
   dlt_register(dl_table, getput_instantiate, getput_set_entries);
   dlt_register(dl_table, tagbody_instantiate, tagbody_set_entries);
+  dlt_register(dl_table, pmac_instantiate, pmac_set_entries);
 }
 
 val lisplib_try_load(val sym)

@@ -12393,6 +12393,10 @@ and semantics as the
 .code lambda
 operator.
 
+Note that the above syntax synopsis describes only the canonical
+parameter syntax which remains after parameter list macros are
+expanded. See the section Parameter List Macros.
+
 Unlike in
 .codn lambda ,
 the
@@ -12486,6 +12490,10 @@ operator produces a value which is a function.  Like in most other
 Lisps, functions are objects in \*(TL.  They can be passed to functions as
 arguments, returned from functions, aggregated into lists, stored in variables,
 et cetera.
+
+Note that the above syntax synopsis describes only the canonical
+parameter syntax which remains after parameter list macros are
+expanded. See the section Parameter List Macros.
 
 The first argument of
 .code lambda
@@ -12623,6 +12631,11 @@ The
 and
 .code labels
 macros bind local, named functions in the lexical scope.
+
+Note that the above syntax synopsis describes only the canonical
+parameter syntax which remains after parameter list macros are
+expanded. See the section Parameter List Macros.
+
 The difference between
 .code flet
 and
@@ -27573,6 +27586,10 @@ macro-expander function under the name
 .metn name ,
 effectively creating a new operator.
 
+Note that the above syntax synopsis describes only the canonical
+parameter syntax which remains after parameter list macros are
+expanded. See the section Parameter List Macros.
+
 Note that the parameter list is a macro parameter list, and not a
 function parameter list. This means that each
 .meta param
@@ -28447,6 +28464,200 @@ shorthand:
   (with-gensyms (x y z)
     ^(,x ,y ,z))
 .cble
+
+.SS* Parameter List Macros
+
+Parameter list macros, also more briefly called
+.I "parameter macros"
+are an original feature of \*(TL.
+
+If the first element of a function or macro parameter list is a keyword
+symbol other than
+.codn :env ,
+.codn :whole ,
+.code :form
+or
+.code :
+(the colon symbol),
+it denotes a parameter macro. This keyword symbol is expected to
+have a binding in the parameter macro namespace: a global namespace
+which associates keyword symbols with parameter list expander
+functions.
+
+Expansion of a parameter list macro occurs at macro-expansion
+time, when a function's parameter list is traversed by the
+macro expander. It takes place as follows.
+First, the keyword is removed from the parameter list.
+The keyword's binding in the parameter macro namespace is
+retrieved. If it doesn't exist, an exception is thrown.
+Otherwise, the remaining parameter list is first recursively
+processed for more occurrences of parameter macros.
+This expansion produces a transformed parameter list,
+along with a transformed function body. These two artifacts
+are then passed to the transformer function retrieved from
+the keyword symbol's binding. The function returns a
+further transformed version of the parameter list and
+body. These are processed for more parameter macros.
+The process terminates when no more expansion is
+possible, because a parameter list has been produced
+which does not begin with a parameter macro. This
+final parameter list and its accompanying body are then
+taken in place of the original parameter list and
+body.
+
+.coNP Special variable @ *param-macro*
+.desc
+The variable
+.code *param-macro*
+holds a hash table which associates keyword symbols with
+parameter list expander functions.
+
+The functions are expected to conform to the following
+syntax:
+
+.cblk
+.mets (lambda >> ( params < body < env << form ) << form *)
+.cble
+
+The
+.meta params
+parameter receives the parameter list of the function
+which is undergoing parameter expansion. All other
+parameter macros have already been expanded.
+
+The
+.meta body
+parameter receives the list of body forms.
+The function is expected to return a
+.code cons
+cell whose
+.code car
+contains the transformed parameter list, and whose
+.code cdr
+contains the transformed list of body forms.
+Parameter expansion takes place at macro expansion time.
+
+The
+.meta env
+parameter receives the macro-expansion-time environment
+which surrounds the function being expanded.
+Note that this environment doesn't take into account the
+parameters themselves; therefore, it is not the correct environment
+for expanding macros among the
+.meta body
+forms. For that purpose, it must be extended with
+shadowing entries, the manner of doing which is
+undocumented. However
+.meta env
+may be used directly for expanding init forms
+for optional parameters occurring in
+.metn params .
+
+The
+.meta form
+parameter receives the overall function-defining
+form that is being processes, such as a
+.code defun
+or
+.code lambda
+form. This is intended for error reporting.
+
+.coNP Macro @ define-param-expander
+.synb
+.mets (define-param-expander < name >> ( pvar < bvar : < evar << fvar )
+.mets \ \  << form *)
+.syne
+.desc
+The
+.code define-param-expander
+macro provides syntax for defining parameter macros. Invocations
+of this macro expand to code which constructs an anonymous
+function and installs it into the
+.code *param-macro*
+hash table, under the key given by
+.metn name .
+
+The
+.meta name
+parameter's argument should be a keyword symbol that is valid for use
+as a parameter macro name.
+
+The
+.metn pvar ,
+.metn bvar ,
+.meta evar
+and
+.meta fvar
+arguments must be symbols suitable for variable
+binding. These symbols define the parameters of the
+expander function which shall, respectively, receive
+the parameter list, body forms, macro environment
+and function form. If
+.meta evar
+is omitted, a symbol generated by the
+.code gensym
+function is used. Likewise if
+.meta fvar
+is omitted.
+
+The
+.meta form
+arguments constitute the body of the expander.
+
+The
+.code define-param-expander
+form returns
+.metn name .
+
+.TP* Example:
+
+The following example shows the implementation
+of a parameter macro
+.code :memo
+which provides rudimentary memoization.
+Using the macro is extremely easy. It is a matter
+of simply inserting the
+.code :memo
+keyword at the front of a function's parameter list.
+The function is then memoized.
+
+.cblk
+  (defvarl %memo% (hash :weak-keys))
+
+  (defun ensure-memo (sym)
+    (or (gethash %memo% sym)
+        (sethash %memo% sym (hash :equal-based))))
+
+  (define-param-expander :memo (param body)
+    (let* ((piter param)
+           ;; memoize over required args
+           (memo-parm (build
+                        (whilet ((p (pop piter))
+                                 (x (and p (neq p :))))
+                          (add p))))
+           (hash (gensym))
+           (key (gensym)))
+      ^(,param (let  ((,hash (ensure-memo ',hash))
+                      (,key (list ,*memo-parm)))
+                 (or (gethash ,hash ,key)
+                     (sethash ,hash ,key (progn ,*body)))))))
+.cble
+
+The above
+.code :memo
+macro may be used to define a memoized Fibonacci function
+as follows:
+
+.cble
+  (defun fib (:memo n)
+    (if (< n 2)
+      (clamp 0 1 n)
+      (+ (fib (pred n)) (fib (ppred n)))))
+.cble
+
+All that is required is the insertion of the
+.code :memo
+keyword.
 
 .SS* Mutation of Syntactic Places
 .coNP Macro @ set

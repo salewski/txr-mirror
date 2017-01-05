@@ -68,7 +68,7 @@ struct c_var {
 };
 
 val top_vb, top_fb, top_mb, top_smb, special, builtin;
-val op_table;
+val op_table, pm_table;
 val dyn_env;
 val eval_initing;
 
@@ -895,17 +895,48 @@ static val expand_params_rec(val params, val menv,
   }
 }
 
+static val expand_param_macro(val params, val body, val menv, val form)
+{
+  if (atom(params)) {
+    return cons(params, body);
+  } else {
+    val sym = car(params);
+    val pmac = gethash(pm_table, sym);
+
+    if (!keywordp(sym) || sym == whole_k || sym == form_k ||
+        sym == env_k ||sym == colon_k)
+      return cons(params, body);
+
+    if (!pmac)
+      eval_error(form, lit("~s: keyword ~s has no param macro binding"),
+                 car(form), sym, nao);
+
+    {
+      val prest = cdr(params);
+      cons_bind (prest_ex0, body_ex0, expand_param_macro(prest, body,
+                                                         menv, form));
+      cons_bind (prest_ex, body_ex, funcall4(pmac, prest_ex0, body_ex0,
+                                             menv, form));
+      if (body_ex != body)
+        rlcp(body_ex, body);
+      return expand_param_macro(prest_ex, body_ex, menv, form);
+    }
+  }
+}
+
 static val expand_params(val params, val body, val menv,
                          val macro_style_p, val form)
 {
   val specials = nil;
-  int have_rebinds = consp(body) && consp(car(body)) && caar(body) == with_dyn_rebinds_s;
-  val params_ex = expand_params_rec(params, menv, macro_style_p,
+  cons_bind (params_ex0, body_ex0, expand_param_macro(params, body,
+                                                      menv, form));
+  int have_rebinds = consp(body_ex0) && consp(car(body_ex0)) && caar(body_ex0) == with_dyn_rebinds_s;
+  val params_ex = expand_params_rec(params_ex0, menv, macro_style_p,
                                     form, &specials);
   val body_out = if3(!have_rebinds && specials,
-                     rlcp(cons(cons(with_dyn_rebinds_s, cons(specials, body)),
+                     rlcp(cons(cons(with_dyn_rebinds_s, cons(specials, body_ex0)),
                                nil), nil),
-                     body);
+                     body_ex0);
   return cons(params_ex, body_out);
 }
 
@@ -4967,7 +4998,7 @@ void eval_init(void)
   val me_for_f = func_n2(me_for);
 
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
-          &op_table, &last_form_evaled, &last_form_expanded,
+          &op_table, &pm_table, &last_form_evaled, &last_form_expanded,
           &call_f, &unbound_s, &origin_hash, convert(val *, 0));
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
@@ -4976,6 +5007,7 @@ void eval_init(void)
   special = make_hash(t, nil, nil);
   builtin = make_hash(t, nil, nil);
   op_table = make_hash(nil, nil, nil);
+  pm_table = make_hash(nil, nil, nil);
 
   eval_initing = t;
 
@@ -5431,6 +5463,8 @@ void eval_init(void)
   reg_fun(intern(lit("sort-group"), user_package), func_n3o(sort_group, 1));
   reg_fun(intern(lit("unique"), user_package), func_n2ov(unique, 1));
   reg_fun(intern(lit("uniq"), user_package), func_n1(uniq));
+
+  reg_var(intern(lit("*param-macro*"), user_package), pm_table);
 
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
   reg_fun(intern(lit("lisp-parse"), user_package), func_n5o(lisp_parse, 0));
