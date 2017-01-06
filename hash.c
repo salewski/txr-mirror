@@ -388,6 +388,7 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
     switch (h->flags) {
     case hash_weak_both:
       obj_print_impl(weak_keys_k, out, pretty, ctx);
+      put_char(chr(' '), out);
       /* fallthrough */
     case hash_weak_vals:
       obj_print_impl(weak_vals_k, out, pretty, ctx);
