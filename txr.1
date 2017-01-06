@@ -13757,6 +13757,23 @@ loop is thus terminated by an explicit
 a return value can be specified. Under normal termination, the return value is
 .codn nil .
 
+In the syntax, a small convenience is permitted. Instead of the last
+.cblk
+.meti >> ( sym << init-form )
+.cble
+it is permissible for the syntax
+.cblk
+.meti <> ( init-form )
+.cble
+to appear, the
+.meta sym
+being omitted. A machine-generated variable is substituted
+in place of the missing
+.meta sym
+and that variable is then initialized from
+.meta init-form
+and used as the basis of the test.
+
 .TP* Examples:
 .cblk
   ;; read lines of text from *std-input* and print them,

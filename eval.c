@@ -3466,16 +3466,26 @@ static val me_whilet(val form, val env)
   val body = form;
   val sym = pop(&body);
   val lets = pop(&body);
-  val lastlet = last(lets, nil);
+  val lastlet_cons = last(lets, nil);
+  val lastlet = car(lastlet_cons);
   val not_done = gensym(lit("not-done"));
 
-  if (nilp(lastlet))
+  if (nilp(lastlet_cons))
     eval_error(form, lit("~s: empty binding list"), sym, nao);
+
+  if (!cdr(lastlet)) {
+    val var = car(lastlet);
+    if (symbolp(var) && bindable(var))
+      eval_warn(form, lit("~s: ~s is init-form here, not new variable"),
+                sym, var, nao);
+    push(gensym(nil), &lastlet);
+    lets = append2(butlast(lets, nil), cons(lastlet, nil));
+  }
 
   return list(let_s, cons(list(not_done, t, nao), nil),
               list(while_s, not_done,
                    list(let_star_s, lets,
-                        list(if_s, car(car(lastlet)),
+                        list(if_s, car(lastlet),
                              cons(progn_s, body),
                              list(set_s, not_done, nil, nao), nao), nao), nao), nao);
 }
