@@ -1,9 +1,31 @@
+                                    TXR 165
+                                   2017-01-10
+
+
+  Features
+
+  - New Lisp concept: parameter list expander macros.
+    - customize function behavior with attribute-like keywords which invoke
+      custom expanders to transform bodies and parameter lists.
+  - Throughout the TXR pattern language parser, checks against empty clauses
+    have been eliminated. Empty clauses in numerous situations are not
+    considered syntax errors.
+  - The last variable in whilet can be omitted in the same way like in iflet
+    and whenlet.
+
+  Bugs
+
+  - Fixed missing space between attribute keywords in the printed
+    representation of a hash.
+  - Windows native version picks up fix for Cygnal issue 15.
+
+
+
                                     TXR 164
                                    2017-01-01
 
 
   Features
-
 
   - Awk macro: new variable fw for delimiting records according to fixed field
     widths.
