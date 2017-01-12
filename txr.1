@@ -22096,7 +22096,6 @@ calls
 .cblk
 .meti >> [ struct.slot < struct < c1v < c2v < c3v ... arg ... ]
 .cble
-.cble
 except that
 .meta struct
 is evaluated only once, and
@@ -24135,16 +24134,16 @@ must be a place. The following equivalence gives the semantics
 of assignment to a
 .codn last :
 
-.cble
-  (set (last x n) v)   <-->  (set (sub x (- (max n 0)) t) v)
 .cblk
+  (set (last x n) v)   <-->  (set (sub x (- (max n 0)) t) v)
+.cble
 
 A
 .code last
 place is deletable. The semantics of deletion may be understood
 in terms of the following equivalence:
 
-.cble
+.cblk
   (del (last x n))   <-->  (del (sub x (- (max n 0)) t))
 .cble
 
@@ -24191,16 +24190,16 @@ must itself be a place. The following equivalence gives the semantics
 of assignment to a
 .codn last :
 
-.cble
-  (set (butlast x n) v)   <-->  (set (sub x 0 (- (max n 0))) v)
 .cblk
+  (set (butlast x n) v)   <-->  (set (sub x 0 (- (max n 0))) v)
+.cble
 
 A
 .code butlast
 place is deletable. The semantics of deletion may be understood
 in terms of the following equivalence:
 
-.cble
+.cblk
   (del (last x n))   <-->  (del (sub x 0 (- (max n 0))))
 .cble
 
@@ -25725,11 +25724,11 @@ function takes variable arguments, and is equivalent to calling
 .code transpose
 on a list of the arguments. The following equivalences hold:
 
-.synb
+.cblk
    (zip . x) <--> (transpose x)
 
    [apply zip x] <--> (transpose x)
-.syne
+.cble
 
 .TP* Examples:
 .cblk
