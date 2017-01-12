@@ -50,14 +50,18 @@
 @(define check-func ())
 @  (cases)
 .coNP Operator/function @(skip)
+@      (assert bad ln `no .synb after Operator/function heading`)
+@      (check-synb)
 @    (or)
 .coNP Operator @@ @op and macro @@ @mac
+@      (assert bad ln `no .synb after Operator and macro heading`)
+@      (check-synb)
 @    (or)
-.coNP @{type /Function|Operator|Macro/}s@(assert bad ln `bad @{type}s heading`)@(rep :gap 0) @@, @{x /\S+/}@(last :mandatory) @@ @y and @@ @{z /\S+/}@(end)
+.coNP @{type /Function|Operator|Macro|Accessor|Method|Structure/}s@(assert bad ln `bad @{type}s heading`)@(rep :gap 0) @@, @{x /\S+/}@(last :mandatory) @@ @y and @@ @{z /\S+/}@(end)
 @      (assert bad ln `no .synb after @{type}s heading`)
 @      (check-synb)
 @    (or)
-.coNP @{type /Function|Operator|Macro/}@(assert bad ln `bad @type heading`) @@ @{x /\S+/}@junk
+.coNP @{type /Function|Operator|Macro|Accessor|Method|Structure/}@(assert bad ln `bad @type heading`) @@ @{x /\S+/}@junk
 @      (assert bad ln `extra elements in singular @type heading`)
 @      (bind junk "")
 @      (assert bad ln `no .synb after @type heading`)
@@ -91,9 +95,17 @@
 @    (none)
 .cblk
 @    (end)
-@  (until :mandatory)
+@  (last :mandatory)
 .cble
 @  (end)
+@(end)
+@;;
+@;; Check for various dangling
+@;; macros.
+@;;
+@(define check-spurious ())
+@  {mac /.(cble|syne)/}@(skip)
+@  (throw bad ln `dangling @mac`)
 @(end)
 @;;
 @;; Main
@@ -110,6 +122,10 @@
 @      (check-code)
 @    (or)
 @      (check-cblk)
+@    (or)
+@      (check-synb)
+@    (or)
+@      (check-spurious)
 @    (end)
 @  (catch bad (line msg))
 @    (do (inc errors)
