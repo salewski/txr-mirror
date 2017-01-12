@@ -28646,12 +28646,7 @@ The function is then memoized.
         (sethash %memo% sym (hash :equal-based))))
 
   (define-param-expander :memo (param body)
-    (let* ((piter param)
-           ;; memoize over required args
-           (memo-parm (build
-                        (whilet ((p (pop piter))
-                                 (x (and p (neq p :))))
-                          (add p))))
+    (let* ((memo-parm [param 0..(posq : param)])
            (hash (gensym))
            (key (gensym)))
       ^(,param (let  ((,hash (ensure-memo ',hash))
