@@ -4079,22 +4079,22 @@ static val do_expand(val form, val menv)
           not_bindable_warning(form, car(args));
       }
 
-      if (form_ex == form && args_ex == args) {
-        if (!lookup_fun(menv, sym) && !special_operator_p(sym)) {
-          if (!bindable(sym_ex))
-            eval_warn(last_form_expanded,
-                      lit("~s appears in operator position"), sym, nao);
-          else
-            eval_defr_warn(last_form_expanded,
-                           cons(fun_s, sym),
-                           lit("unbound function ~s"),
-                           sym, nao);
-        }
-        return form;
+      if (!lookup_fun(menv, sym) && !special_operator_p(sym)) {
+        if (!bindable(sym))
+          eval_warn(last_form_expanded,
+                    lit("~s appears in operator position"), sym, nao);
+        else
+          eval_defr_warn(last_form_expanded,
+                         cons(fun_s, sym),
+                         lit("unbound function ~s"),
+                         sym, nao);
       }
 
-      if (args_ex == args)
+      if (args_ex == args) {
+        if (form_ex == form)
+          return form;
         return form_ex;
+      }
 
       return rlcp(cons(sym_ex, args_ex), form);
     }
