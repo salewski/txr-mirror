@@ -59,6 +59,8 @@ static val sys_cont_free_s, sys_capture_cont_s;
 
 static val frame_type, catch_frame_type, handle_frame_type;
 
+static val deferred_warnings;
+
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
 val uw_block_return(val tag, val result);
@@ -578,7 +580,10 @@ val uw_throw(val sym, val args)
 
     if (sym == warning_s) {
       --reentry_count;
-      format(std_error, lit("warning: ~a\n"), car(args), nao);
+      if (cdr(args))
+        uw_defer_warning(args);
+      else
+        format(std_error, lit("warning: ~a\n"), car(args), nao);
       uw_throw(continue_s, nil);
       abort();
     }
@@ -667,6 +672,30 @@ val type_mismatch(val fmt, ...)
 
   uw_throw(type_error_s, get_string_from_stream(stream));
   abort();
+}
+
+val uw_defer_warning(val args)
+{
+  push(args, &deferred_warnings);
+  return nil;
+}
+
+val uw_dump_deferred_warnings(val stream)
+{
+  val wl = nreverse(zap(&deferred_warnings));
+
+  for (; wl; wl = cdr(wl)) {
+    val args = car(wl);
+    format(stream, lit("warning: ~a\n"), car(args), nao);
+  }
+
+  return nil;
+}
+
+val uw_purge_deferred_warning(val tag)
+{
+  deferred_warnings = remqual(tag, deferred_warnings, cdr_f);
+  return nil;
 }
 
 val uw_register_subtype(val sub, val sup)
@@ -969,7 +998,7 @@ void uw_init(void)
 void uw_late_init(void)
 {
   protect(&frame_type, &catch_frame_type, &handle_frame_type,
-          convert(val *, 0));
+          &deferred_warnings, convert(val *, 0));
   types_s = intern(lit("types"), user_package);
   jump_s = intern(lit("jump"), user_package);
   sys_cont_s = intern(lit("cont"), system_package);

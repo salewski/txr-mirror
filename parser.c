@@ -45,6 +45,7 @@
 #include "signal.h"
 #include "unwind.h"
 #include "gc.h"
+#include "args.h"
 #include "utf8.h"
 #include "hash.h"
 #include "eval.h"
@@ -906,9 +907,16 @@ static val get_home_path(void)
   return getenv_wrap(lit("HOME"));
 }
 
-static val repl_warning(val out_stream, val exc, val arg)
+static val repl_warning(val out_stream, val exc, struct args *rest)
 {
-  format(out_stream, lit("** warning: ~!~a\n"), arg, nao);
+  val args = args_get_list(rest);
+  val loading = cdr(lookup_var(dyn_env, load_recursive_s));
+
+  if (loading && cdr(args))
+    uw_defer_warning(args);
+  else
+    format(out_stream, lit("** warning: ~!~a\n"), car(args), nao);
+
   uw_throw(continue_s, nil);
 }
 
@@ -936,7 +944,7 @@ val repl(val bindings, val in_stream, val out_stream)
   val hist_len_var = lookup_global_var(listener_hist_len_s);
   val multi_line_var = lookup_global_var(listener_multi_line_p_s);
   val sel_inclusive_var = lookup_global_var(listener_sel_inclusive_p_s);
-  val rw_f = func_f2(out_stream, repl_warning);
+  val rw_f = func_f1v(out_stream, repl_warning);
 
   for (; bindings; bindings = cdr(bindings)) {
     val binding = car(bindings);

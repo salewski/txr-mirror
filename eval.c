@@ -100,7 +100,7 @@ val macro_time_s, with_dyn_rebinds_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s, switch_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
-val load_path_s, sys_lisp1_value_s;
+val load_path_s, load_recursive_s, sys_lisp1_value_s;
 
 val special_s, unbound_s;
 val whole_k, form_k, symacro_k;
@@ -252,6 +252,40 @@ static val eval_warn(val ctx, val fmt, ...)
   uw_unwind;
 
   uw_catch_end;
+
+  return nil;
+}
+
+static val eval_defr_warn(val ctx, val tag, val fmt, ...)
+{
+  uses_or2;
+  va_list vl;
+
+  va_start (vl, fmt);
+
+  uw_catch_begin (cons(continue_s, nil), exsym, exvals);
+
+  {
+    val form = ctx_form(ctx);
+    val stream = make_string_output_stream();
+    val loc = or2(source_loc_str(form, nil),
+                  source_loc_str(last_form_evaled, nil));
+
+    if (loc)
+      format(stream, lit("(~a) "), loc, nao);
+
+    (void) vformat(stream, fmt, vl);
+
+    uw_throw(warning_s, cons(get_string_from_stream(stream), tag));
+  }
+
+  uw_catch(exsym, exvals) { (void) exsym; (void) exvals; }
+
+  uw_unwind;
+
+  uw_catch_end;
+
+  va_end (vl);
 
   return nil;
 }
@@ -1650,6 +1684,7 @@ static val op_defvarl(val form, val env)
     val value = eval(second(args), env, form);
     remhash(top_smb, sym);
     sethash(top_vb, sym, cons(sym, value));
+    uw_purge_deferred_warning(cons(var_s, sym));
   }
 
   return sym;
@@ -1686,6 +1721,7 @@ static val op_defun(val form, val env)
     sethash(top_fb, name, cons(name, func_interp(env, fun)));
     if (eval_initing)
       sethash(builtin, name, defun_s);
+    uw_purge_deferred_warning(cons(fun_s, name));
     return name;
   } else if (car(name) == meth_s) {
     val binding = lookup_fun(nil, intern(lit("defmeth"), system_package));
@@ -3630,6 +3666,7 @@ val load(val target)
   val name, stream;
   val txr_lisp_p = t;
   val saved_dyn_env = dyn_env;
+  val rec = cdr(lookup_var(saved_dyn_env, load_recursive_s));
 
   open_txr_file(path, &txr_lisp_p, &name, &stream);
 
@@ -3643,6 +3680,7 @@ val load(val target)
 
   dyn_env = make_env(nil, nil, dyn_env);
   env_vbind(dyn_env, load_path_s, path);
+  env_vbind(dyn_env, load_recursive_s, t);
   env_vbind(dyn_env, package_s, cur_package);
 
   if (!read_eval_stream(stream, std_error, nil)) {
@@ -3652,8 +3690,13 @@ val load(val target)
 
   dyn_env = saved_dyn_env;
 
+  if (!rec)
+    uw_dump_deferred_warnings(std_error);
+
   uw_unwind {
     close_stream(stream, nil);
+    if (!rec)
+      uw_dump_deferred_warnings(std_null);
   }
 
   uw_catch_end;
@@ -3750,7 +3793,9 @@ static val do_expand(val form, val menv)
       return expand(rlcp_tree(symac, form), menv);
     }
     if (!lookup_var(menv, form))
-      eval_warn(last_form_expanded, lit("unbound variable ~s"), form, nao);
+      eval_defr_warn(last_form_expanded,
+                     cons(var_s, form),
+                     lit("unbound variable ~s"), form, nao);
     return form;
   } else if (atom(form)) {
     return form;
@@ -4035,12 +4080,16 @@ static val do_expand(val form, val menv)
       }
 
       if (form_ex == form && args_ex == args) {
-        if (!lookup_fun(menv, sym) && !special_operator_p(sym))
-          eval_warn(last_form_expanded,
-                    if3(bindable(sym_ex),
-                                 lit("unbound function ~s"),
-                                 lit("~s appears in operator position")),
-                    sym, nao);
+        if (!lookup_fun(menv, sym) && !special_operator_p(sym)) {
+          if (!bindable(sym_ex))
+            eval_warn(last_form_expanded,
+                      lit("~s appears in operator position"), sym, nao);
+          else
+            eval_defr_warn(last_form_expanded,
+                           cons(fun_s, sym),
+                           lit("unbound function ~s"),
+                           sym, nao);
+        }
         return form;
       }
 
@@ -5139,6 +5188,7 @@ void eval_init(void)
   chain_s = intern(lit("chain"), user_package);
   chand_s = intern(lit("chand"), user_package);
   load_path_s = intern(lit("*load-path*"), user_package);
+  load_recursive_s = intern(lit("*load-recursive*"), system_package);
   sys_lisp1_value_s = intern(lit("lisp1-value"), system_package);
 
   qquote_init();

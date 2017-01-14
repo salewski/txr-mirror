@@ -1012,6 +1012,8 @@ int txr_main(int argc, char **argv)
 
     close_stream(parse_stream, nil);
 
+    uw_dump_deferred_warnings(std_error);
+
     if (!enter_repl)
       return result ? 0 : EXIT_FAILURE;
   }
