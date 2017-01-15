@@ -349,6 +349,8 @@ val make_struct_type(val name, val super,
 
     call_stinitfun_chain(st, stype);
 
+    uw_purge_deferred_warning(cons(struct_type_s, name));
+
     return stype;
   }
 }

@@ -5795,6 +5795,8 @@ void eval_init(void)
   reg_fun(intern(lit("func-set-env"), user_package), func_n2(func_set_env));
   reg_fun(intern(lit("functionp"), user_package), func_n1(functionp));
   reg_fun(intern(lit("interp-fun-p"), user_package), func_n1(interp_fun_p));
+  reg_fun(intern(lit("ctx-form"), system_package), func_n1(ctx_form));
+  reg_fun(intern(lit("ctx-name"), system_package), func_n1(ctx_name));
 
   reg_fun(intern(lit("range"), user_package), func_n3o(range, 0));
   reg_fun(intern(lit("range*"), user_package), func_n3o(range_star, 0));

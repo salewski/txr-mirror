@@ -1022,6 +1022,8 @@ void uw_late_init(void)
   reg_fun(throw_s, func_n1v(uw_throwv));
   reg_fun(intern(lit("throwf"), user_package), func_n2v(uw_throwfv));
   reg_fun(error_s, func_n1v(uw_errorfv));
+  reg_fun(intern(lit("purge-deferred-warning"), user_package),
+          func_n1(uw_purge_deferred_warning));
   reg_fun(intern(lit("register-exception-subtypes"), user_package),
           func_n0v(register_exception_subtypes));
   reg_fun(intern(lit("exception-subtype-p"), user_package),
