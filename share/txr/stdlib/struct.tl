@@ -241,13 +241,16 @@
   ^[(fun umethod) ',slot ,*bound-args])
 
 (defun sys:defmeth (type-sym name fun)
-  (let ((type (find-struct-type type-sym)))
-    (unless type
-      (throwf 'eval-error "~s: ~s isn't a struct type" 'defmeth type-sym))
-    (static-slot-ensure type-sym name fun)
-    ^(meth ,type-sym ,name)))
+  (static-slot-ensure type-sym name fun)
+  ^(meth ,type-sym ,name))
 
-(defmacro defmeth (type-sym name arglist . body)
+(defmacro defmeth (:form form type-sym name arglist . body)
+  (cond
+    ((not (bindable type-sym))
+      (compile-error form "~s isn't a valid struct name" type-sym))
+    ((not (find-struct-type type-sym))
+      (compile-defr-warning form ^(struct-type . ,type-sym)
+                            "definition of struct ~s not seen here" type-sym)))
   ^(sys:defmeth ',type-sym ',name (lambda ,arglist
                                     (block ,name ,*body))))
 
