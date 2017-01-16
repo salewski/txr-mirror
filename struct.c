@@ -241,7 +241,7 @@ val make_struct_type(val name, val super,
 
   if (super && symbolp(super)) {
     val supertype = find_struct_type(super);
-    if (!super)
+    if (!supertype)
       no_such_struct(self, super);
     super = supertype;
   } else if (super) {
