@@ -131,6 +131,8 @@ noreturn val uw_errorfv(val fmt, struct args *args);
 val uw_defer_warning(val args);
 val uw_dump_deferred_warnings(val stream);
 val uw_purge_deferred_warning(val tag);
+val uw_register_tentative_def(val tag);
+val uw_tentative_def_exists(val tag);
 val uw_register_subtype(val sub, val super);
 val uw_exception_subtype_p(val sub, val sup);
 void uw_continue(uw_frame_t *target);

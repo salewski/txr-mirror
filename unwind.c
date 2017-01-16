@@ -59,7 +59,7 @@ static val sys_cont_free_s, sys_capture_cont_s;
 
 static val frame_type, catch_frame_type, handle_frame_type;
 
-static val deferred_warnings;
+static val deferred_warnings, tentative_defs;
 
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
@@ -676,8 +676,21 @@ val type_mismatch(val fmt, ...)
 
 val uw_defer_warning(val args)
 {
-  push(args, &deferred_warnings);
+  val tag = cdr(args);
+  if (!memqual(tag, tentative_defs))
+    push(args, &deferred_warnings);
   return nil;
+}
+
+val uw_register_tentative_def(val tag)
+{
+  push(tag, &tentative_defs);
+  return nil;
+}
+
+val uw_tentative_def_exists(val tag)
+{
+  return memqual(tag, tentative_defs);
 }
 
 val uw_dump_deferred_warnings(val stream)
@@ -695,6 +708,7 @@ val uw_dump_deferred_warnings(val stream)
 val uw_purge_deferred_warning(val tag)
 {
   deferred_warnings = remqual(tag, deferred_warnings, cdr_f);
+  tentative_defs = remqual(tag, tentative_defs, nil);
   return nil;
 }
 
@@ -998,7 +1012,7 @@ void uw_init(void)
 void uw_late_init(void)
 {
   protect(&frame_type, &catch_frame_type, &handle_frame_type,
-          &deferred_warnings, convert(val *, 0));
+          &deferred_warnings, &tentative_defs, convert(val *, 0));
   types_s = intern(lit("types"), user_package);
   jump_s = intern(lit("jump"), user_package);
   sys_cont_s = intern(lit("cont"), system_package);
@@ -1024,6 +1038,8 @@ void uw_late_init(void)
   reg_fun(error_s, func_n1v(uw_errorfv));
   reg_fun(intern(lit("purge-deferred-warning"), user_package),
           func_n1(uw_purge_deferred_warning));
+  reg_fun(intern(lit("register-tentative-def"), user_package), func_n1(uw_register_tentative_def));
+  reg_fun(intern(lit("tentative-def-exists"), user_package), func_n1(uw_tentative_def_exists));
   reg_fun(intern(lit("register-exception-subtypes"), user_package),
           func_n0v(register_exception_subtypes));
   reg_fun(intern(lit("exception-subtype-p"), user_package),
