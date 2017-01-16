@@ -138,6 +138,7 @@
                 'defstruct bad))
       (let ((arg-sym (gensym))
             (type-sym (gensym)))
+        (register-tentative-def ^(struct-type . ,name))
         ^(sys:make-struct-type
            ',name ',super ',stat-slots ',inst-slots
            ,(if (or func-si-forms val-si-forms)
