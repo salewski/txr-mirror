@@ -3866,6 +3866,9 @@ static val do_expand(val form, val menv)
       if (!bindable(name))
         not_bindable_error(form, name);
 
+      if (sym == defvarl_s)
+        uw_register_tentative_def(cons(var_s, name));
+
       if (init != init_ex)
         form_ex = rlcp(cons(sym, cons(name, cons(init_ex, nil))), form);
 
@@ -3901,6 +3904,9 @@ static val do_expand(val form, val menv)
       val params = third(form);
 
       builtin_reject_test(sym, name, form);
+
+      if (sym == defun_s)
+        uw_register_tentative_def(cons(fun_s, name));
 
       {
         val inter_env = make_var_shadowing_env(menv, get_param_syms(params));
