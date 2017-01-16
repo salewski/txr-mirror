@@ -114,10 +114,10 @@
                                   ^(:instance ,name nil)))))
            (super-type (if super
                          (or (find-struct-type super)
-                             (compile-error form
-                                            "inheritance base ~s \
-                                            \ does not name a struct type"
-                                            super))))
+                             (compile-defr-warning form ^(struct-type . ,super)
+                                                   "inheritance base ~s \
+                                                   \ does not name a struct type"
+                                                   super))))
            (stat-si-forms [keep-if (op member @1 '(:static :function))
                                    slot-init-forms car])
            (pruned-si-forms (sys:prune-missing-inits stat-si-forms))
