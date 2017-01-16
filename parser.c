@@ -945,6 +945,9 @@ val repl(val bindings, val in_stream, val out_stream)
   val multi_line_var = lookup_global_var(listener_multi_line_p_s);
   val sel_inclusive_var = lookup_global_var(listener_sel_inclusive_p_s);
   val rw_f = func_f1v(out_stream, repl_warning);
+  val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
+
+  env_vbind(dyn_env, stderr_s, out_stream);
 
   for (; bindings; bindings = cdr(bindings)) {
     val binding = car(bindings);
@@ -1070,6 +1073,7 @@ val repl(val bindings, val in_stream, val out_stream)
 
   set_sig_handler(num(SIGINT), old_sig_handler);
 
+  dyn_env = saved_dyn_env;
 
   if (histfile_u8)
     lino_hist_save(ls, histfile_u8);
