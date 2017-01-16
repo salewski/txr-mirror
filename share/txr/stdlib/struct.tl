@@ -25,8 +25,8 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (macro-time
-  (defun sys:bad-slot-syntax (arg)
-    (throwf 'eval-error "~s: bad slot syntax: ~s" 'defstruct arg))
+  (defun sys:bad-slot-syntax (form arg)
+    (compile-error form "bad slot syntax ~s" arg))
 
   (defun sys:prune-missing-inits (slot-init-forms)
     (remove-if (tb ((kind name : (init-form nil init-form-present)))
@@ -34,14 +34,14 @@
                       (not init-form-present)))
                slot-init-forms)))
 
-(defmacro defstruct (name-spec super . slot-specs)
+(defmacro defstruct (:form form name-spec super . slot-specs)
   (tree-bind (name args) (tree-case name-spec
                            ((atom . args) (list atom args))
                            (atom (list atom nil)))
     (unless (bindable name)
-      (throwf 'eval-error "~s: ~s isn't a bindable symbol" 'defstruct name))
+      (compile-error form "~s isn't a bindable symbol" name))
     (unless (proper-listp slot-specs)
-      (throwf 'eval-error "~s: bad slot syntax" 'defstruct))
+      (compile-error form "bad syntax: dotted form"))
     (let* ((instance-init-form nil)
            (instance-postinit-form nil)
            (instance-fini-form nil)
@@ -51,10 +51,10 @@
                                  (caseq word
                                    (:method
                                      (when (not args)
-                                       (throwf 'eval-error
-                                               "~s: method ~s needs \
-                                               \ at least one parameter"
-                                               'defstruct name))
+                                       (compile-error form
+                                                      "method ~s needs \
+                                                      \ at least one parameter"
+                                                      name))
                                      ^(:function ,name
                                         (lambda ,args
                                               (block ,name ,*body))))
@@ -64,43 +64,40 @@
                                                      ,*body))))
                                    ((:static :instance)
                                      (when body
-                                       (sys:bad-slot-syntax slot))
+                                       (sys:bad-slot-syntax form slot))
                                      ^(,word ,name ,args))
                                    (t :)))
                                 ((word (arg) . body)
                                  (caseq word
                                    (:init
                                      (unless (bindable arg)
-                                       (sys:bad-slot-syntax slot))
+                                       (sys:bad-slot-syntax form slot))
                                      (when instance-init-form
-                                       (throwf 'eval-error
-                                               "~s: duplicate :init"
-                                               'defstruct))
+                                       (compile-error form
+                                                      "duplicate :init"))
                                      (set instance-init-form
                                           (cons arg body))
                                      ^(,word nil nil))
                                    (:postinit
                                      (unless (bindable arg)
-                                       (sys:bad-slot-syntax slot))
+                                       (sys:bad-slot-syntax form slot))
                                      (when instance-postinit-form
-                                       (throwf 'eval-error
-                                               "~s: duplicate :postinit"
-                                               'defstruct))
+                                       (compile-error form
+                                                      "duplicate :postinit"))
                                      (set instance-postinit-form
                                           (cons arg body))
                                      ^(,word nil nil))
                                    (:fini
                                      (unless (bindable arg)
-                                       (sys:bad-slot-syntax slot))
+                                       (sys:bad-slot-syntax form slot))
                                      (when instance-fini-form
-                                       (throwf 'eval-error
-                                               "~s: duplicate :fini"
-                                               'defstruct))
+                                       (compile-error form
+                                                      "duplicate :fini"))
                                      (set instance-fini-form
                                           (cons arg body))
                                      ^(,word nil nil))
                                    (t (when body
-                                        (sys:bad-slot-syntax slot))
+                                        (sys:bad-slot-syntax form slot))
                                       :)))
                                 ((word name)
                                    (caseq word
@@ -109,7 +106,7 @@
                                      ((:instance)
                                       ^(,word ,name nil))
                                      ((:method :function)
-                                      (sys:bad-slot-syntax slot))
+                                      (sys:bad-slot-syntax form slot))
                                      (t ^(:instance ,word ,name))))
                                 ((name)
                                   ^(:instance ,name nil))
@@ -117,10 +114,10 @@
                                   ^(:instance ,name nil)))))
            (super-type (if super
                          (or (find-struct-type super)
-                             (throwf 'eval-error
-                                     "~a: inheritance base ~s \
-                                     \ does not name a struct type"
-                                     'defstruct super))))
+                             (compile-error form
+                                            "inheritance base ~s \
+                                            \ does not name a struct type"
+                                            super))))
            (stat-si-forms [keep-if (op member @1 '(:static :function))
                                    slot-init-forms car])
            (pruned-si-forms (sys:prune-missing-inits stat-si-forms))
@@ -131,11 +128,11 @@
            (inst-slots [mapcar second inst-si-forms]))
       (whenlet ((bad [find-if [notf bindable]
                               (append stat-slots inst-slots)]))
-        (throwf 'eval-error
-                (if (symbolp bad)
-                  "~s: slot name ~s isn't a bindable symbol"
-                  "~s: invalid slot specifier syntax: ~s")
-                'defstruct bad))
+        (compile-error form
+                       (if (symbolp bad)
+                         "slot name ~s isn't a bindable symbol"
+                         "invalid slot specifier syntax: ~s")
+                       bad))
       (let ((arg-sym (gensym))
             (type-sym (gensym)))
         (register-tentative-def ^(struct-type . ,name))
@@ -162,8 +159,8 @@
                          ,*(cdr instance-init-form))))))
            ,(when args
               (when (> (countql : args) 1)
-                (throwf 'eval-error "~s: multiple colons in boa syntax"
-                        'defstruct))
+                (compile-error form
+                               "multiple colons in boa syntax"))
               (let ((col-pos (posq : args)))
                 (let ((req-args [args 0..col-pos])
                       (opt-args (if col-pos [args (succ col-pos)..:])))
