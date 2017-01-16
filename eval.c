@@ -1263,7 +1263,9 @@ val eval_intrinsic(val form, val env)
   val lfx_save = last_form_expanded;
   val form_ex = (last_form_expanded = last_form_evaled = nil,
                  expand(form, nil));
-  val ret = eval(form_ex, default_bool_arg(env), form);
+  val loading = cdr(lookup_var(dyn_env, load_recursive_s));
+  val ret = ((void) (loading || uw_dump_deferred_warnings(std_error)),
+             eval(form_ex, default_bool_arg(env), form));
   last_form_expanded = lfx_save;
   last_form_evaled = lfe_save;
   return ret;

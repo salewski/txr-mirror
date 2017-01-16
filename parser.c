@@ -873,6 +873,9 @@ static val read_eval_ret_last(val env, val counter,
   val error_val = gensym(nil);
   val name = format(nil, lit("paste-~a"), counter, nao);
   val value = nil;
+  val loading = cdr(lookup_var(dyn_env, load_recursive_s));
+  val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
+  env_vbind(dyn_env, load_recursive_s, t);
 
   for (;; lineno = succ(lineno)) {
     val form = lisp_parse(in_stream, out_stream, error_val, name, lineno);
@@ -889,6 +892,11 @@ static val read_eval_ret_last(val env, val counter,
     if (parser_eof(parser))
       break;
   }
+
+  dyn_env = saved_dyn_env;
+
+  if (!loading)
+    uw_dump_deferred_warnings(out_stream);
 
   prinl(value, out_stream);
   return t;
@@ -910,9 +918,8 @@ static val get_home_path(void)
 static val repl_warning(val out_stream, val exc, struct args *rest)
 {
   val args = args_get_list(rest);
-  val loading = cdr(lookup_var(dyn_env, load_recursive_s));
 
-  if (loading && cdr(args))
+  if (cdr(args))
     uw_defer_warning(args);
   else
     format(out_stream, lit("** warning: ~!~a\n"), car(args), nao);
