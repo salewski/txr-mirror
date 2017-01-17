@@ -33593,6 +33593,241 @@ The frame receives control even if it it is not otherwise eligible for
 catching the exception type denoted by
 .metn symbol .
 
+.SS* Static Error Diagnosis
+
+This section describes a number of features related to the diagnosis
+of errors during the static processing of program code prior to evaluation.
+The material is of interest to developers of macros intended for broad
+reuse.
+
+.NP* Error Exceptions
+
+\*(TL uses exceptions of type
+.code eval-error
+to identify erroneous situations during both transformation of code
+and its evaluation. These exceptions have one argument, which is a
+character string. If not handled by program code,
+.code eval-error
+exceptions are specially recognized and treated by the built-in handling logic.
+The message is incorporated into diagnostic output which includes
+more information which is deduced.
+
+.NP* Warning Exceptions
+
+\*(TL uses exceptions of type
+.code warning
+to identify certain situations of interest. Ordinary non-deferrable
+warnings have a structure identical to errors, except for the exception
+symbol. \*(TX's built-in handling of warnings expects these exceptions
+to be continuable. What this means is that a
+.code catch
+for the
+.code continue
+exception is expected to be visible. The handler for a warning exception
+issues a diagnostic which incorporates the warning message. Then the
+handler throws a
+.code continue
+exception to resume the computation which generated the warning.
+
+The generation of a warning thus conforms to the following pattern:
+
+.cblk
+  (catch
+    (throw 'warning "message")
+    (continue ()))
+.cble
+
+.NP* Deferrable Warnings
+
+\*(TX supports a form of diagnostic known as a
+.IR "deferrable warning" .
+A deferrable warning, like an ordinary warning, is an exception of type
+.code warning
+or subtyped from that type. It is distinguished from a regular
+warning by the presence of additional argument material after
+the exception message. Specifically, a deferrable exception
+is thrown according to this pattern:
+
+.cblk
+  (catch
+    (throw 'warning "message" . tag)
+    (continue ()))
+.cble
+
+\*(TX's built-in exception handling logic reacts specially to the
+presence of the tag material in the exception. First, the global
+.I "tentative definition list"
+is searched for the presence of the tag, using
+.code equal
+equality. If the tag is found, then the warning is discarded.
+If the tag is not found, then the exception argument list is added
+to the global
+.IR "deferred exception list" .
+In either case,
+the
+.code continue
+exception is thrown to resume the computation which threw the warning,
+as in the case of an ordinary non-deferrable warning.
+
+The purpose of this mechanism is to suppress warnings which
+become superfluous when more of the program code is examined.
+For instance, a warning about a call to an undefined function is
+superfluous if a definition of that function is supplied later,
+yet before that function call is executed.
+
+Deferred warnings accumulate in the deferred warning list
+from which they can be removed. The list is displays at
+various times such as when a top-level load completes.
+
+.coNP Functions @ compile-error and @ compile-warning
+.synb
+.mets (compile-error < context-obj < fmt-string << fmt-arg *)
+.mets (compile-warning < context-obj < fmt-string << fmt-arg *)
+.syne
+.desc
+The functions
+.code compile-error
+and
+.code compile-warning
+provide a convenient and uniform way for code transforming
+functions such as macro-expanders to generate diagnostics.
+The
+.code compile-error
+function throws an exception of type
+.codn eval-error .
+The
+.code compile-warning
+function throws an exception of type
+.code warning
+and internally provides the expected
+.code catch
+for the
+.code continue
+exception needed to resume after the warning.
+
+The argument conventions are the same for both functions.
+The
+.meta context-obj
+is typically a compound form to which the diagnostic
+applies.
+
+The functions produce a diagnostic message which
+incorporates the location information and symbol
+obtained from
+.meta context-obj
+and the
+.codn format -style
+arguments
+.meta fmt-string
+and its
+.metn fmt-arg -s.
+
+.coNP Function @ compile-defr-warning
+.synb
+.mets (compile-defr-warning < context-obj < tag
+.mets \ \  < fmt-string << fmt-arg *)
+.syne
+.desc
+The
+.code compile-defr-warning
+is very similar to
+.codn compile-warning .
+The difference is that it features a
+.meta tag
+parameter whose argument it incorporates into the
+.code warning
+exception to mark it as a deferrable warning.
+
+.coNP Function @ purge-deferred-warning
+.synb
+.mets (purge-deferred-warning << tag )
+.syne
+.desc
+The
+.code purge-deferred-warning
+removes all warnings marked with
+.meta tag
+from the deferred list. It also removes all tags
+matching
+.meta tag
+from the tentative definition list.
+Tags are compared using the
+.code equal
+function.
+
+.coNP Function @ register-tentative-def
+.synb
+.mets (register-tentative-def << tag )
+.syne
+.desc
+The
+.code register-tentative-def
+function adds
+.meta tag
+to the list of tentative definitions which are
+used to suppress deferrable warnings.
+
+The idea is that a definition of some construct has been seen,
+but not yet executed. Thus the construct is not defined, but
+it can reasonably be expects that it will be defined;
+hence, warnings about its nonexistence can be suppressed.
+
+For example, in the following code, when the expression
+.code "(foo)"
+is being expanded and transformed, the
+.code foo
+function
+.code foo
+does not exist:
+
+.cblk
+  (progn (defun foo ()) (foo))
+.cble
+
+The function won't be defined until the
+.code progn
+is evaluated. Thus a warning is generated that
+.code "(foo)"
+refers to an undefined function.
+However, this warning is discarded, because the
+expander for
+.code defun
+registers a tentative definition tag for
+.codn foo .
+
+When the definition of
+.code foo
+takes place, the
+.code defun
+operator will call
+.code purge-deferred-warning
+which will remove not only all accumulated warnings
+related to the undefinedness of
+.code foo
+but also remove the tentative definition.
+
+Note: this mechanism isn't perfect because it will
+still suppresses the warning in situations like
+
+.cblk
+  (progn (if nil (defun foo ())) (foo))
+.cble
+
+
+.coNP Function @ tentative-def-exists
+.synb
+.mets (tentative-def-exists << tag )
+.syne
+.desc
+The
+.code tentative-def-exists
+function checks whether
+.meta tag
+has been registered via
+.code register-tentative-def
+and not yet purged by
+.codn purge-deferred-warning .
+
 .SS* Delimited Continuations
 
 \*(TL supports delimited continuations, which are integrated with the
