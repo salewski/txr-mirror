@@ -3278,10 +3278,13 @@ static val supplement_op_syms(val ssyms, val max)
 static val me_op(val form, val menv)
 {
   cons_bind (sym, body, form);
+  uw_frame_t uw_handler;
   val new_menv = make_var_shadowing_env(menv, cons(rest_s, nil));
-  val body_ex = if3(sym == op_s,
+  val body_ex = (uw_push_handler(&uw_handler, cons(warning_s, nil),
+                                 func_n1v(uw_muffle_warning)),
+                 if3(sym == op_s,
                     expand_forms_lisp1(body, new_menv),
-                    expand(body, new_menv));
+                    expand(body, new_menv)));
   val rest_gensym = gensym(lit("rest-"));
   cons_bind (syms, body_trans, transform_op(body_ex, nil, rest_gensym));
   val ssyms = sort(syms, func_n2(lt), car_f);
@@ -3291,6 +3294,7 @@ static val me_op(val form, val menv)
   val has_rest = cons_find(rest_gensym, body_trans, eq_f);
   val is_op = and3(sym == do_s, consp(body_trans),
                    gethash(op_table, car(body_trans)));
+  uw_pop_frame(&uw_handler);
 
   if (c_num(max) > 1024)
     eval_error(form, lit("~a: @~a calls for function with too many arguments"),
