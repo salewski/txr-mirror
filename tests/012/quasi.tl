@@ -25,3 +25,14 @@
 (test
   [(ret [(ret `@1 @rest @@1 @@rest @@@rest @@@1`) 1 10]) 2 20]
   "1 10 1 10 20 2")
+
+(test
+  (let ((s))
+    (mapcar (ret `@(push (inc @1) s)`) (range 0 2)))
+  ("1" "2 1" "3 2 1"))
+
+(test
+  (symacrolet ((d "-"))
+    (let ((s))
+      (mapcar (ret `<@{(push (inc @1) s) d}>`) (range 0 2))))
+  ("<1>" "<2-1>" "<3-2-1>"))
