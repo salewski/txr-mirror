@@ -282,20 +282,22 @@ choose_clause : CHOOSE exprs_opt ')'
 
 gather_clause : GATHER exprs_opt ')'
                 newl gather_parts
-                END newl                { $$ = list(gather_s,
+                END newl                { val args = match_expand_keyword_args($2);
+                                          $$ = list(gather_s,
                                                     append2(mapcar(curry_12_1(func_n2(cons), nil),
                                                                    first($5)), rest($5)),
-                                                    $2, nao);
+                                                    args, nao);
                                           rl($$, num($1)); }
 
               | GATHER exprs_opt ')'
                 newl gather_parts
                 until_last exprs_opt ')' newl
                 clauses_opt
-                END newl                { $$ = list(gather_s,
+                END newl                { val args = match_expand_keyword_args($2);
+                                          $$ = list(gather_s,
                                                     append2(mapcar(curry_12_1(func_n2(cons), nil),
                                                                    first($5)), rest($5)),
-                                                    $2, cons(cdr($6),
+                                                    args, cons(cdr($6),
                                                              cons($7, $10)), nao);
                                           rl($$, num($1)); }
 
@@ -314,19 +316,21 @@ additional_gather_parts : AND newl gather_parts { $$ = $3; }
                         ;
 
 collect_clause : collect_repeat exprs_opt ')' newl
-                 clauses_opt END newl            { $$ = list(car($1),
-                                                             $5, nil, $2,
-                                                             nao);
-                                                   rl($$, cdr($1)); }
+                 clauses_opt END newl     { val args = match_expand_keyword_args($2);
+                                            $$ = list(car($1),
+                                                      $5, nil, args,
+                                                      nao);
+                                            rl($$, cdr($1)); }
                | collect_repeat exprs_opt ')'
                  newl clauses_opt until_last exprs_opt ')'
                  newl clauses_opt END newl
-                                          { if (nilp($10))
+                                          { val args = match_expand_keyword_args($2);
+                                            if (nilp($10))
                                               yyerr("empty until/last in collect");
                                             $$ = list(car($1), $5,
                                                       cons(cdr($6),
                                                            cons($7, $10)),
-                                                      $2, nao);
+                                                      args, nao);
                                             rl($$, cdr($1));
                                             rl($10, car($6)); }
                | collect_repeat exprs_opt ')'
@@ -445,23 +449,27 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                     $$ = rlcp(cons(sym,
                                                    expand_meta(rest($1), nil)),
                                               $1); }
-     | COLL exprs_opt ')' elems_opt END { $$ = list(coll_s, $4, nil, $2, nao);
+     | COLL exprs_opt ')' elems_opt END { val args = match_expand_keyword_args($2);
+                                          $$ = list(coll_s, $4, nil, args, nao);
                                           rl($$, num($1)); }
      | COLL exprs_opt ')' elems_opt
        until_last exprs_opt ')'
-       elems_opt END            { $$ = list(coll_s, $4, cons(cdr($5),
+       elems_opt END            { val args = match_expand_keyword_args($2);
+                                  $$ = list(coll_s, $4, cons(cdr($5),
                                                              cons($6, $8)),
-                                            $2, nao);
+                                            args, nao);
                                   rl($$, num($1));
                                   rl($6, car($5)); }
-     | REP exprs_opt ')' elems END     { $$ = list(rep_s, $4, nil, $2, nao);
+     | REP exprs_opt ')' elems END     { val args = match_expand_keyword_args($2);
+                                         $$ = list(rep_s, $4, nil, args, nao);
                                          rl($$, num($1)); }
      | REP exprs_opt ')' elems
        until_last exprs_opt ')'
        elems END
-                                { $$ = list(rep_s, $4, cons(cdr($5),
+                                { val args = match_expand_keyword_args($2);
+                                  $$ = list(rep_s, $4, cons(cdr($5),
                                                             cons($6, $8)),
-                                            $2, nao);
+                                            args, nao);
                                   rl($$, num($1));
                                   rl($6, car($5)); }
      | COLL error               { $$ = nil;

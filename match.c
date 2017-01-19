@@ -2860,6 +2860,58 @@ static val v_gather(match_files_ctx *c)
   return next_spec_k;
 }
 
+
+static val match_expand_vars(val vars)
+{
+  list_collect_decl (out, ptail);
+
+  for (; vars; vars = cdr(vars)) {
+    val var = car(vars);
+    if (consp(var)) {
+      val sym = car(var);
+      val dfl = cadr(var);
+      val dfl_ex = expand(dfl, nil);
+
+      ptail = list_collect(ptail, if3(dfl == dfl_ex,
+                                      var, list(sym, dfl_ex, nao)));
+    } else {
+      ptail = list_collect(ptail, var);
+    }
+  }
+
+  return out;
+}
+
+val match_expand_keyword_args(val args)
+{
+  list_collect_decl (out, ptail);
+
+  if (opt_compat && opt_compat <= 165)
+    return args;
+
+  while (consp(args)) {
+    val sym = car(args);
+    if (sym == maxgap_k || sym == mingap_k || sym == gap_k || sym == times_k ||
+        sym == mintimes_k || sym == maxtimes_k || sym == lines_k ||
+        sym == counter_k || sym == vars_k)
+    {
+      val d = cdr(args);
+      val form = car(d);
+      val form_ex = if3(sym == vars_k,
+                        match_expand_vars(form),
+                        expand(form, nil));
+      ptail = list_collect(ptail, sym);
+      ptail = list_collect(ptail, form_ex);
+      args = cdr(d);
+    } else {
+      ptail = list_collect(ptail, sym);
+      args = cdr(args);
+    }
+  }
+
+  return out;
+}
+
 static val v_collect(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
