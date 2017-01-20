@@ -82,6 +82,13 @@ int yyparse(scanner_t *, parser_t *);
 #define yyerr(msg) yyerror(scnr, parser, msg)
 #define yybadtok(tok, context) yybadtoken(parser, tok, context)
 
+INLINE val expand_forms_ver(val forms, int ver)
+{
+  if (!opt_compat || opt_compat >= ver)
+    return expand_forms(forms, nil);
+  return forms;
+}
+
 %}
 
 %pure-parser
@@ -635,13 +642,15 @@ repeat_parts_opt : SINGLE newl
                    newl
                    out_clauses_opt
                    repeat_parts_opt     { $$ = cons(cons(mod_s,
-                                                         cons($2, $5)), $6);
+                                                         cons(expand_forms_ver($2, 166),
+                                                              $5)), $6);
                                           rl($$, num($1)); }
                  | MODLAST exprs_opt ')'
                    newl
                    out_clauses_opt
                    repeat_parts_opt     { $$ = cons(cons(modlast_s,
-                                                         cons($2, $5)), $6);
+                                                         cons(expand_forms_ver($2, 166),
+                                                              $5)), $6);
                                           rl($$, num($1)); }
                  | /* empty */          { $$ = nil; }
                  ;
@@ -701,12 +710,14 @@ rep_parts_opt : SINGLE o_elems_opt
               | MOD exprs_opt ')'
                 o_elems_opt
                 rep_parts_opt           { $$ = cons(cons(mod_s,
-                                                         cons($2, $4)), $5);
+                                                         cons(expand_forms_ver($2, 166),
+                                                              $4)), $5);
                                           rl($$, num($1)); }
               | MODLAST exprs_opt ')'
                 o_elems_opt
                 rep_parts_opt           { $$ = cons(cons(modlast_s,
-                                                         cons($2, $4)), $5);
+                                                         cons(expand_forms_ver($2, 166),
+                                                              $4)), $5);
                                           rl($$, num($1)); }
               | /* empty */             { $$ = nil; }
               ;
