@@ -86,7 +86,7 @@ static void debuglf(val form, val fmt, ...)
   }
 }
 
-static void sem_error(val form, val fmt, ...)
+noreturn static void sem_error(val form, val fmt, ...)
 {
   va_list vl;
   val stream = make_string_output_stream();
@@ -240,12 +240,21 @@ static val tx_lookup_var(val sym, val bindings)
              if2(!opt_compat || opt_compat <= 138, lookup_var(nil, bindings)));
 }
 
+static val tx_lookup_var_ubc(val sym, val bindings, val spec)
+{
+  val binding = tx_lookup_var(sym, bindings);
+  if (binding)
+    return binding;
+  sem_error(spec, if3(bindable(sym),
+                      lit("~s: unbound variable ~s"),
+                      lit("~s: bindable symbol expected, not ~s")),
+            car(spec), sym, nao);
+}
+
 static val dest_set(val spec, val bindings, val pattern, val value)
 {
   if (bindable(pattern)) {
-    val existing = tx_lookup_var(pattern, bindings);
-    if (!existing)
-      sem_error(spec, lit("cannot set unbound variable ~s"), pattern, nao);
+    val existing = tx_lookup_var_ubc(pattern, bindings, spec);
     set(cdr_l(existing), value);
   } else if (consp(pattern)) {
     if (first(pattern) == var_s) {
@@ -2490,13 +2499,7 @@ static val v_next(match_files_ctx *c)
       }
 
       if (from_var) {
-        val existing = tx_lookup_var(from_var, c->bindings);
-
-        if (!symbolp(from_var))
-          sem_error(specline, lit(":var requires a variable, not ~s"), from_var, nao);
-
-        if (!existing)
-          sem_error(specline, lit(":var specifies unbound variable ~s"), from_var, nao);
+        val existing = tx_lookup_var_ubc(from_var, c->bindings, first_spec);
 
         {
           cons_bind (new_bindings, success,
@@ -3170,10 +3173,8 @@ static val v_flatten(match_files_ctx *c)
       sem_error(specline,
                 lit("flatten: ~s is not a bindable symbol"), sym, nao);
     } else {
-      val existing = tx_lookup_var(sym, c->bindings);
-
-      if (existing)
-        set(cdr_l(existing), flatten(cdr(existing)));
+      val existing = tx_lookup_var_ubc(sym, c->bindings, first_spec);
+      set(cdr_l(existing), flatten(cdr(existing)));
     }
   }
 
@@ -3299,7 +3300,7 @@ static val v_set(match_files_ctx *c)
   val form = second(args);
   val val = txeval(specline, form, c->bindings);
 
-  dest_set(specline, c->bindings, pattern, val);
+  dest_set(first_spec, c->bindings, pattern, val);
 
   return next_spec_k;
 }
@@ -3328,14 +3329,10 @@ static val v_cat(match_files_ctx *c)
   if (!bindable(sym)) {
     sem_error(specline, lit("cat: ~s is not a bindable symbol"), sym, nao);
   } else {
-    val existing = tx_lookup_var(sym, c->bindings);
-    if (existing) {
-      val sep = if3(sep_form, tleval_144(specline, sep_form, c->bindings),
-                    lit(" "));
-      set(cdr_l(existing), cat_str(flatten(cdr(existing)), sep));
-    } else {
-      sem_error(specline, lit("cat: unbound variable ~s"), sym, nao);
-    }
+    val existing = tx_lookup_var_ubc(sym, c->bindings, first_spec);
+    val sep = if3(sep_form, tleval_144(specline, sep_form, c->bindings),
+                  lit(" "));
+    set(cdr_l(existing), cat_str(flatten(cdr(existing)), sep));
   }
 
   return next_spec_k;
@@ -3716,15 +3713,7 @@ static val v_filter(match_files_ctx *c)
 
   for (; vars; vars = cdr(vars)) {
     val var = car(vars);
-    val existing = tx_lookup_var(var, c->bindings);
-
-    if (!bindable(var))
-      sem_error(specline, lit("filter: ~a is not a variable name"),
-                var, nao);
-
-    if (!existing)
-      sem_error(specline, lit("filter: variable ~a is unbound"), var, nao);
-
+    val existing = tx_lookup_var_ubc(var, c->bindings, first_spec);
     set(cdr_l(existing), filter_string_tree(filter, cdr(existing)));
   }
 
