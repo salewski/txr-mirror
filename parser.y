@@ -89,6 +89,13 @@ INLINE val expand_forms_ver(val forms, int ver)
   return forms;
 }
 
+INLINE val expand_form_ver(val form, int ver)
+{
+  if (!opt_compat || opt_compat >= ver)
+    return expand(form, nil);
+  return form;
+}
+
 %}
 
 %pure-parser
@@ -574,7 +581,11 @@ output_clause : OUTPUT ')' o_elems '\n'
                 END newl        { $$ = rl(list(output_s, $4, nao), num($1)); }
               | OUTPUT exprs ')' newl
                 out_clauses
-                END newl        { $$ = list(output_s, $5, $2, nao);
+                END newl        { cons_bind (dest, rest, $2);
+                                  val dest_ex = expand_form_ver(dest, 166);
+                                  val args = if3(dest_ex == dest,
+                                                 $2, cons(dest_ex, rest));
+                                  $$ = list(output_s, $5, args, nao);
                                   rl($$, num($1)); }
 
               | OUTPUT exprs ')' o_elems '\n'
