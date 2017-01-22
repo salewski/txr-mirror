@@ -1290,14 +1290,16 @@ static val expand_repeat_rep_args(val args)
       } else {
         ptail = list_collect(ptail, arg);
       }
-    } else if (arg == counter_k) {
-      exp_pair = t;
-      ptail = list_collect(ptail, arg);
-      continue;
-    } else if (arg == vars_k) {
-      exp_pairs = t;
-      ptail = list_collect(ptail, arg);
-      continue;
+    } else if (!exp_pair && !exp_pairs) {
+      if (arg == counter_k) {
+        exp_pair = t;
+        ptail = list_collect(ptail, arg);
+        continue;
+      } else if (arg == vars_k) {
+        exp_pairs = t;
+        ptail = list_collect(ptail, arg);
+        continue;
+      }
     }
 
     exp_pair = exp_pairs = nil;
