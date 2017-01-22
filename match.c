@@ -3995,6 +3995,7 @@ static val v_load(match_files_ctx *c)
     dyn_env = make_env(nil, nil, dyn_env);
     env_vbind(dyn_env, load_path_s, name);
     env_vbind(dyn_env, load_recursive_s, t);
+    env_vbind(dyn_env, package_s, cur_package);
 
     if (!txr_lisp_p) {
       int gc = gc_state(0);
