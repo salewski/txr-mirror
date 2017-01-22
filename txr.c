@@ -591,6 +591,8 @@ int txr_main(int argc, char **argv)
       else
         bindings = cons(cons(sym, t), bindings);
 
+      match_reg_var(sym);
+
       continue;
     }
 
@@ -975,6 +977,8 @@ int txr_main(int argc, char **argv)
     gc_state(gc);
 
     close_stream(parse_stream, nil);
+
+    uw_dump_deferred_warnings(std_error);
 
     if (parser.errors)
       return EXIT_FAILURE;

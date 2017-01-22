@@ -71,7 +71,7 @@ val filter_s;
 val noval_s;
 
 static val h_directive_table, v_directive_table;
-static val non_matching_directive_table;
+static val non_matching_directive_table, binding_directive_table;
 
 static void debuglf(val form, val fmt, ...)
 {
@@ -4401,6 +4401,55 @@ val extract(val spec, val files, val predefined_bindings)
   return result;
 }
 
+void match_reg_var(val sym)
+{
+  if (bindable(sym) && !uw_tentative_def_exists(sym)) {
+    val tag = cons(var_s, sym);
+    uw_purge_deferred_warning(tag);
+    uw_register_tentative_def(tag);
+  }
+}
+
+static void match_reg_var_rec(val sym)
+{
+  if (consp(sym)) {
+    match_reg_var_rec(car(sym));
+    match_reg_var_rec(cdr(sym));
+    return;
+  }
+  match_reg_var(sym);
+}
+
+void match_reg_params(val params)
+{
+  for (; params; params = cdr(params)) {
+    val var = car(params);
+    if (atom(var))
+      match_reg_var(var);
+    else
+      match_reg_var(car(var));
+  }
+}
+
+void match_reg_elem(val elem)
+{
+  if (consp(elem)) {
+    val sym = car(elem);
+    val vpos = gethash(binding_directive_table, sym);
+    if (vpos) {
+      val var = ref(elem, vpos);
+      match_reg_var_rec(var);
+    } else if (!gethash(h_directive_table, sym) &&
+               !gethash(v_directive_table, sym))
+    {
+      elem = cdr(elem);
+      for (; consp(elem); elem = cdr(elem))
+        match_reg_var(car(elem));
+      match_reg_var(elem);
+    }
+  }
+}
+
 static void syms_init(void)
 {
   decline_k = intern(lit("decline"), keyword_package);
@@ -4452,12 +4501,14 @@ static void syms_init(void)
 
 static void dir_tables_init(void)
 {
+  protect(&h_directive_table, &v_directive_table,
+          &non_matching_directive_table, &binding_directive_table,
+          convert(val *, 0));
+
   h_directive_table = make_hash(nil, nil, nil);
   v_directive_table = make_hash(nil, nil, nil);
   non_matching_directive_table = make_hash(nil, nil, nil);
-
-  protect(&h_directive_table, &v_directive_table,
-          &non_matching_directive_table, convert(val *, 0));
+  binding_directive_table = make_hash(nil, nil, nil);
 
   sethash(v_directive_table, skip_s, cptr(coerce(mem_t *, v_skip)));
   sethash(v_directive_table, fuzz_s, cptr(coerce(mem_t *, v_fuzz)));
@@ -4558,6 +4609,15 @@ static void dir_tables_init(void)
   sethash(non_matching_directive_table, do_s, t);
   sethash(non_matching_directive_table, load_s, t);
   sethash(non_matching_directive_table, close_s, t);
+
+  sethash(binding_directive_table, var_s, one);
+  sethash(binding_directive_table, merge_s, one);
+  sethash(binding_directive_table, bind_s, one);
+  sethash(binding_directive_table, rebind_s, one);
+  sethash(binding_directive_table, line_s, one);
+  sethash(binding_directive_table, chr_s, one);
+  sethash(binding_directive_table, data_s, one);
+  sethash(binding_directive_table, name_s, one);
 }
 
 void match_init(void)

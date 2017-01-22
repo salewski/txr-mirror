@@ -59,6 +59,7 @@
 
 static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed);
 static val repeat_rep_helper(val sym, val args, val main, val parts);
+static void process_catch_exprs(val exprs);
 static val define_transform(parser_t *parser, val define_form);
 static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
@@ -452,14 +453,16 @@ texts : text %prec LOW          { $$ = rlcp(cons($1, nil), $1); }
 
 elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                   $$ = rlcp(optimize_text($$), $$); }
-     | var                      { $$ = rl($1, num(parser->lineno)); }
+     | var                      { $$ = rl($1, num(parser->lineno));
+                                  match_reg_elem($$); }
      | list                     { val sym = first($1);
                                   if (sym ==  do_s || sym == require_s)
                                     $$ = rlcp(cons(sym,
                                                    expand_forms(rest($1), nil)),
                                               $1);
                                   else
-                                    $$ = match_expand_elem($1); }
+                                  { $$ = match_expand_elem($1);
+                                    match_reg_elem($$); } }
      | COLL exprs_opt ')' elems_opt END { val args = match_expand_keyword_args($2);
                                           $$ = list(coll_s, $4, nil, args, nao);
                                           rl($$, num($1)); }
@@ -498,7 +501,8 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                   rl($$, num($1)); }
      | DEFINE exprs ')' elems END
                                 { $$ = list(define_s, t, $4, $2, nao);
-                                  rl($$, num($1)); }
+                                  rl($$, num($1));
+                                  match_reg_params($2); }
      ;
 
 clause_parts_h : elems_opt additional_parts_h   { $$ = if2($1, cons($1, $2)); }
@@ -512,7 +516,8 @@ additional_parts_h : END                        { $$ = nil; }
 define_clause : DEFINE exprs ')' newl
                 clauses_opt
                 END newl        { $$ = list(define_s, $2, $5, nao);
-                                  rl($$, num($1)); }
+                                  rl($$, num($1));
+                                  match_reg_params($2); }
               | DEFINE ')' newl
                 clauses_opt
                 END newl        { $$ = list(define_s, nil, $4, nao);
@@ -548,6 +553,7 @@ catch_clauses_opt : CATCH ')' newl
                     clauses_opt
                     catch_clauses_opt   { $$ = cons(list(catch_s, $2, $5, nao),
                                                     $6);
+                                          process_catch_exprs($2);
                                           rl($$, num($1)); }
                   | FINALLY newl
                     clauses_opt         { $$ = cons(list(finally_s, nil,
@@ -583,8 +589,11 @@ output_clause : OUTPUT ')' o_elems '\n'
                                   val args = if3(dest_ex == dest,
                                                  $2, cons(dest_ex, rest));
                                   $$ = list(output_s, $5, args, nao);
-                                  rl($$, num($1)); }
-
+                                  rl($$, num($1));
+                                  { val into_var = second(memql(into_k, args));
+                                    val named_var = second(memql(named_k, args));
+                                    match_reg_var(into_var);
+                                    match_reg_var(named_var); } }
               | OUTPUT exprs ')' o_elems '\n'
                 out_clauses
                 END newl        { $$ = nil;
@@ -1287,6 +1296,7 @@ static val expand_repeat_rep_args(val args)
         ptail = list_collect(ptail, list(first(arg),
                                          expand(second(arg), nil),
                                          nao));
+        match_reg_var(first(arg));
       } else {
         ptail = list_collect(ptail, arg);
       }
@@ -1300,6 +1310,8 @@ static val expand_repeat_rep_args(val args)
         ptail = list_collect(ptail, arg);
         continue;
       }
+    } else if (exp_pair) {
+      match_reg_var(arg);
     }
 
     exp_pair = exp_pairs = nil;
@@ -1359,6 +1371,18 @@ static val repeat_rep_helper(val sym, val args, val main, val parts)
   return list(sym, exp_args, main, single_parts, first_parts,
               last_parts, empty_parts, nreverse(mod_parts),
               nreverse(modlast_parts), nao);
+}
+
+static void process_catch_exprs(val exprs)
+{
+  val params = rest(exprs);
+  for (; params; params = cdr(params)) {
+    val param = first(params);
+    if (consp(param))
+      match_reg_var(car(param));
+    else
+      match_reg_var(param);
+  }
 }
 
 static val define_transform(parser_t *parser, val define_form)
@@ -1697,7 +1721,6 @@ void yybadtoken(parser_t *parser, int tok, val context)
 int parse_once(val stream, val name, parser_t *parser)
 {
   int res = 0;
-  uw_frame_t uw_handler;
 #if CONFIG_DEBUG_SUPPORT
   debug_state_t ds = debug_set_state(opt_dbg_expansion ? 0 : -1,
                                      opt_dbg_expansion);
@@ -1707,9 +1730,6 @@ int parse_once(val stream, val name, parser_t *parser)
 
   parser->stream = stream;
   parser->name = name;
-
-  uw_push_handler(&uw_handler, cons(warning_s, nil),
-                  func_n1v(uw_muffle_warning));
 
   uw_catch_begin(cons(error_s, nil), esym, eobj);
 
@@ -1730,8 +1750,6 @@ int parse_once(val stream, val name, parser_t *parser)
   }
 
   uw_catch_end;
-
-  uw_pop_frame(&uw_handler);
 
   return res;
 }
