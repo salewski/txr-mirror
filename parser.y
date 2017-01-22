@@ -784,7 +784,7 @@ o_var : SYMTOK                  { val expr = symhlpr($1, nil);
                                   else
                                   { $$ = list(var_s,
                                               expand($2, nil),
-                                              expand($3, nil), nao); }
+                                              expand_forms($3, nil), nao); }
                                   rl($$, num(parser->lineno)); }
       | SYMTOK error            { $$ = nil;
                                   yybadtok(yychar, lit("variable spec")); }
