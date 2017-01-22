@@ -3365,6 +3365,7 @@ and takes various arguments, according to these possibilities:
 .mets @(next :list << lisp-expr )
 .mets @(next :tlist << bind-expr )
 .mets @(next :string << lisp-expr )
+.mets @(next :var << var )
 .mets @(next nil)
 .cble
 
@@ -3462,6 +3463,30 @@ is very similar to
 except that
 .meta bind-expr
 is not a \*(TL expression, but a \*(TX bind expression.
+
+The syntax
+.cblk
+.meti @(next :var << var )
+.cble
+requires
+.meta var
+to be a previously bound variable. The value of the
+variable is retrieved and treated like a list, in the
+same manner as under
+.codn "@(next :list ...)" .
+Note that
+.code "@(next :var x)"
+is not always the same as
+.codn "@(next :tlist x)" ,
+because
+.code ":var x"
+strictly requires
+.code x
+to be a \*(TX variable, whereas the
+.code x
+in
+.code ":tlist x"
+is an expression which can potentially refer to Lisp variable.
 
 The syntax
 .cblk
