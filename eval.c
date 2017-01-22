@@ -3137,6 +3137,32 @@ static val expand_fbind_vars(val vars, val menv, val form)
   }
 }
 
+static val expand_var_mods(val mods, val menv)
+{
+  if (atom(mods))
+    return mods;
+
+  {
+    val mod = car(mods);
+    val modr = cdr(mods);
+
+    if (mod == filter_k && consp(modr)) {
+      val modrr = cdr(modr);
+      val modrr_ex = expand_var_mods(modrr, menv);
+      if (modrr_ex == modrr)
+        return mods;
+
+      return rlcp(cons(mod, cons(car(modr), modrr_ex)), mods);
+    } else {
+      val mod_ex = expand(mod, menv);
+      val modr_ex = expand_var_mods(modr, menv);
+      if (mod_ex == mod && modr_ex == modr)
+        return mods;
+      return rlcp(cons(mod_ex, modr_ex), mods);
+    }
+  }
+}
+
 static val expand_quasi(val quasi_forms, val menv)
 {
   if (nilp(quasi_forms)) {
@@ -3152,7 +3178,7 @@ static val expand_quasi(val quasi_forms, val menv)
         val param = second(form);
         val mods = third(form);
         val param_ex = expand(param, menv);
-        val mods_ex = expand_forms(mods, menv);
+        val mods_ex = expand_var_mods(mods, menv);
 
         if (param_ex != param || mods_ex != mods)
           form_ex = rlcp(list(sym, param_ex, mods_ex, nao), form);
