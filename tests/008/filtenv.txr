@@ -1,5 +1,5 @@
 @(bind a "x")
 @(define f (in out))
-@(bind out a)
+@(bind out @(upcase-str a))
 @(end)
 @(bind b `@{a :filter (:fun f)}`)
