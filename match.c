@@ -3986,6 +3986,7 @@ static val v_load(match_files_ctx *c)
     val txr_lisp_p = nil;
     val ret = nil;
     val saved_dyn_env = dyn_env;
+    val rec = cdr(lookup_var(saved_dyn_env, load_recursive_s));
 
     open_txr_file(path, &txr_lisp_p, &name, &stream);
 
@@ -3993,6 +3994,7 @@ static val v_load(match_files_ctx *c)
 
     dyn_env = make_env(nil, nil, dyn_env);
     env_vbind(dyn_env, load_path_s, name);
+    env_vbind(dyn_env, load_recursive_s, t);
 
     if (!txr_lisp_p) {
       int gc = gc_state(0);
@@ -4046,6 +4048,8 @@ static val v_load(match_files_ctx *c)
 
     uw_unwind {
       close_stream(stream, nil);
+      if (!rec)
+        uw_dump_deferred_warnings(std_null);
     }
 
     uw_catch_end;
