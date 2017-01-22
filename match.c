@@ -2894,25 +2894,89 @@ val match_expand_keyword_args(val args)
 
   while (consp(args)) {
     val sym = car(args);
-    if (sym == maxgap_k || sym == mingap_k || sym == gap_k || sym == times_k ||
-        sym == mintimes_k || sym == maxtimes_k || sym == lines_k ||
-        sym == counter_k || sym == vars_k)
+    val next = cdr(args);
+    val more = consp(next);
+
+    if (more &&
+        (sym == maxgap_k || sym == mingap_k || sym == gap_k ||
+         sym == times_k || sym == mintimes_k || sym == maxtimes_k ||
+         sym == lines_k || sym == counter_k || sym == vars_k ||
+         sym == list_k || sym == string_k))
     {
-      val d = cdr(args);
-      val form = car(d);
+      val form = car(next);
       val form_ex = if3(sym == vars_k,
                         match_expand_vars(form),
                         expand(form, nil));
       ptail = list_collect(ptail, sym);
       ptail = list_collect(ptail, form_ex);
-      args = cdr(d);
-    } else {
+      args = cdr(next);
+    } else if (more &&
+               (sym == tlist_k)) {
       ptail = list_collect(ptail, sym);
-      args = cdr(args);
+      ptail = list_collect(ptail, expand_meta(car(next), nil));
+      args = cdr(next);
+    } else if (more &&
+               (sym == var_k)) {
+      ptail = list_collect(ptail, sym);
+      ptail = list_collect(ptail, car(next));
+      args = cdr(next);
+    } else {
+      ptail = list_collect(ptail, expand(sym, nil));
+      args = next;
     }
   }
 
   return out;
+}
+
+val match_expand_elem(val elem)
+{
+  if (atom(elem)) {
+    return elem;
+  } else {
+    val sym = car(elem);
+    val args = cdr(elem);
+
+    if (opt_compat && opt_compat < 166) {
+      goto out;
+    } else if (sym == skip_s || sym == fuzz_s || sym == load_s ||
+               sym == close_s)
+    {
+      val args_ex = expand_forms(args, nil);
+      if (args == args_ex)
+        return elem;
+      return rlcp(cons(sym, args_ex), elem);
+    } else if (sym == call_s) {
+      if (atom(args)) {
+        return elem;
+      } else {
+        val arg1 = car(args);
+        val arg1_ex = expand(arg1, nil);
+        if (arg1 == arg1_ex)
+          return elem;
+        return rlcp(cons(sym, cons(arg1_ex, cdr(args))), elem);
+      }
+    } else if (sym == cat_s) {
+      if (atom(args) || atom(cdr(args))) {
+        return elem;
+      } else {
+        val arg1 = car(args);
+        val arg2 = cadr(args);
+        val arg2_ex = expand(arg2, nil);
+        if (arg2 == arg2_ex)
+          return elem;
+        return rlcp(cons(sym, cons(arg1, cons(arg2_ex, cddr(args)))), elem);
+      }
+    } else if (sym == next_s) {
+      val args_ex = match_expand_keyword_args(args);
+      if (args == args_ex)
+        return elem;
+      return rlcp(cons(sym, args_ex), elem);
+    } else {
+out:
+      return rlcp(cons(sym, expand_meta(args, nil)), elem);
+    }
+  }
 }
 
 static val v_collect(match_files_ctx *c)

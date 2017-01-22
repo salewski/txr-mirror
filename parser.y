@@ -63,7 +63,6 @@ static val define_transform(parser_t *parser, val define_form);
 static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
 static val unquotes_occur(val quoted_form, int level);
-static val expand_meta(val form, val menv);
 static val rlrec(parser_t *, val form, val line);
 static wchar_t char_from_name(const wchar_t *name);
 static val make_expr(parser_t *, val sym, val rest, val lineno);
@@ -460,9 +459,7 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                                    expand_forms(rest($1), nil)),
                                               $1);
                                   else
-                                    $$ = rlcp(cons(sym,
-                                                   expand_meta(rest($1), nil)),
-                                              $1); }
+                                    $$ = match_expand_elem($1); }
      | COLL exprs_opt ')' elems_opt END { val args = match_expand_keyword_args($2);
                                           $$ = list(coll_s, $4, nil, args, nao);
                                           rl($$, num($1)); }
@@ -1445,7 +1442,7 @@ static val unquotes_occur(val quoted_form, int level)
   }
 }
 
-static val expand_meta(val form, val menv)
+val expand_meta(val form, val menv)
 {
   val sym;
 

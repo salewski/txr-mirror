@@ -102,6 +102,7 @@ int parse_once(val stream, val name, parser_t *parser);
 int parse(parser_t *parser, val name, enum prime_parser);
 val source_loc(val form);
 val source_loc_str(val form, val alt);
+val expand_meta(val form, val menv);
 val rlset(val form, val info);
 void parser_reset(parser_t *);
 INLINE val rlcp(val to, val from)
