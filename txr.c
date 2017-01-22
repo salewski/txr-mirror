@@ -582,13 +582,14 @@ int txr_main(int argc, char **argv)
       val dopt_arg = sub(arg, two, t);
       cons_bind(var, def, split_str(dopt_arg, lit("=")));
       val deflist = if2(def, split_str(car(def), lit(",")));
+      val sym = intern(var, nil);
 
       if (rest(deflist))
-        bindings = cons(cons(intern(var, nil), deflist), bindings);
+        bindings = cons(cons(sym, deflist), bindings);
       else if (deflist)
-        bindings = cons(cons(intern(var, nil), car(deflist)), bindings);
+        bindings = cons(cons(sym, car(deflist)), bindings);
       else
-        bindings = cons(cons(intern(var, nil), t), bindings);
+        bindings = cons(cons(sym, t), bindings);
 
       continue;
     }
