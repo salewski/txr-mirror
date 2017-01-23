@@ -1895,10 +1895,10 @@ static val expand_macrolet(val form, val menv)
     val macro = car(macs);
     val name = pop(&macro);
     val params = pop(&macro);
-    val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
-    val macro_ex = expand_forms(macro, new_menv);
-    cons_bind (params_ex, macro_out,
-               expand_params(params, macro_ex, menv, t, form));
+    cons_bind (params_ex, macro_ex,
+               expand_params(params, macro, menv, t, form));
+    val new_menv = make_var_shadowing_env(menv, get_param_syms(params_ex));
+    val macro_out = expand_forms(macro_ex, new_menv);
     val block = rlcp_tree(cons(block_s, cons(name, macro_out)), macro_ex);
 
     builtin_reject_test(op, name, form);
@@ -1978,10 +1978,10 @@ static val expand_tree_cases(val cases, val menv, val form)
     } else {
       val dstr_args = car(onecase);
       val forms = cdr(onecase);
-      val new_menv = make_var_shadowing_env(menv, get_param_syms(dstr_args));
-      val forms_ex0 = expand_forms(forms, new_menv);
-      cons_bind (dstr_args_ex, forms_ex,
-                 expand_params(dstr_args, forms_ex0, menv, t, form));
+      cons_bind (dstr_args_ex, forms_ex0,
+                 expand_params(dstr_args, forms, menv, t, form));
+      val new_menv = make_var_shadowing_env(menv, get_param_syms(dstr_args_ex));
+      val forms_ex = expand_forms(forms_ex0, new_menv);
       val rest_ex = expand_tree_cases(cdr(cases), menv, form);
 
       if (dstr_args_ex == dstr_args && forms_ex == forms &&
@@ -3743,10 +3743,10 @@ static val expand_catch_clause(val form, val menv)
   val sym = first(form);
   val params = second(form);
   val body = rest(rest(form));
-  val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
-  val body_ex0 = expand_forms(body, new_menv);
-  cons_bind (params_ex, body_ex,
-             expand_params(params, body_ex0, menv, nil, form));
+  cons_bind (params_ex, body_ex0,
+             expand_params(params, body, menv, nil, form));
+  val new_menv = make_var_shadowing_env(menv, get_param_syms(params_ex));
+  val body_ex = expand_forms(body_ex0, new_menv);
   if (!symbolp(sym))
     eval_error(form, lit("catch: ~s isn't a symbol"), sym, nao);
   if (body == body_ex && params == params_ex)
@@ -3922,10 +3922,10 @@ static val do_expand(val form, val menv)
       {
         val params = second(form);
         val body = rest(rest(form));
-        val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
-        val body_ex0 = expand_progn(body, new_menv);
-        cons_bind (params_ex, body_ex,
-                   expand_params(params, body_ex0, menv, nil, form));
+        cons_bind (params_ex, body_ex0,
+                   expand_params(params, body, menv, nil, form));
+        val new_menv = make_var_shadowing_env(menv, get_param_syms(params_ex));
+        val body_ex = expand_progn(body_ex0, new_menv);
 
         if (body == body_ex && params == params_ex)
           return form;
@@ -3941,15 +3941,15 @@ static val do_expand(val form, val menv)
         uw_register_tentative_def(cons(fun_s, name));
 
       {
-        val inter_env = make_var_shadowing_env(menv, get_param_syms(params));
+        val body = rest(rest(rest(form)));
+        cons_bind (params_ex, body_ex0,
+                   expand_params(params, body, menv,
+                                 eq(sym, defmacro_s), form));
+        val inter_env = make_var_shadowing_env(menv, get_param_syms(params_ex));
         val new_menv = if3(sym == defun_s,
                            make_fun_shadowing_env(inter_env, cons(name, nil)),
                            inter_env);
-        val body = rest(rest(rest(form)));
-        val body_ex0 = expand_progn(body, new_menv);
-        cons_bind (params_ex, body_ex,
-                   expand_params(params, body_ex0, menv,
-                                 eq(sym, defmacro_s), form));
+        val body_ex = expand_progn(body_ex0, new_menv);
         val form_ex = form;
 
         if (body != body_ex || params != params_ex)
@@ -3971,9 +3971,9 @@ static val do_expand(val form, val menv)
       val body = args;
       val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
       val ctx_expr_ex = expand(expr, menv);
-      val body_ex0 = expand_progn(body, new_menv);
-      cons_bind (params_ex, body_ex,
-                 expand_params(params, body_ex0, menv, t, form));
+      cons_bind (params_ex, body_ex0,
+                 expand_params(params, body, menv, t, form));
+      val body_ex = expand_progn(body_ex0, new_menv);
       val expr_ex = expand(expr, new_menv);
 
       if (sym == mac_param_bind_s) {
@@ -3988,8 +3988,14 @@ static val do_expand(val form, val menv)
       if (params_ex == params && expr_ex == expr && body_ex == body)
         return form;
       return rlcp(cons(sym, cons(params_ex, cons(expr_ex, body_ex))), form);
-    } else if (sym == quote_s || sym == fun_s || sym == with_dyn_rebinds_s ||
-               sym == dvbind_s) {
+    } else if (sym == with_dyn_rebinds_s) {
+      val body = rest(form);
+      val syms = pop(&body);
+      val body_ex = expand_progn(body, menv);
+      if (body_ex == body)
+        return form;
+      return rlcp(cons(sym, cons(syms, body_ex)), form);
+    } else if (sym == quote_s || sym == fun_s || sym == dvbind_s) {
       return form;
     } else if (sym == for_op_s) {
       val vars = second(form);
