@@ -6,11 +6,11 @@ comes from Cygwin. Neither Cygnal nor the GCC redistributable run-time are a
 component of TXR; the TXR source code base contains no portion of these
 libraries, and other ports of TXR to other platforms do not use them.
 
-Cygwin is Copyright (C) 1995-2016 Red Hat Inc. and the Cygnal version
+Cygwin is Copyright (C) 1995-2017 Red Hat Inc. and the Cygnal version
 is distributed and used with TXR in accordance with the Lesser GNU Public
 License (LGPL), Version 3 <https://cygwin.com/COPYING.LIB>.
 
 The Cygnal project is hosted at <http://www.kylheku.com/cygnal>.
 
 The redistributable GCC runtime is also under the Lesser GNU Public License,
-and is Copyright (C) 2016 The Free Software Foundation, Inc.
+and is Copyright (C) 2017 The Free Software Foundation, Inc.
