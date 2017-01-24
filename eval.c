@@ -821,7 +821,7 @@ static val expand_opt_params_rec(val params, val menv,
         if (!consp(cdr(params)))
           eval_error(form, lit("~s: ~s parameter requires name"),
                      car(form), pair, nao);
-        if (!bindable(cadr(params)))
+        if (pair == env_k && !bindable(cadr(params)))
           eval_error(form, lit("~s: ~s parameter requires bindable symbol"),
                      car(form), pair, nao);
       } else if (!bindable(pair)) {
@@ -884,8 +884,6 @@ static val expand_params_rec(val params, val menv,
   if (!params) {
     return params;
   } else if (atom(params)) {
-    if (params == whole_k || params == form_k || params == env_k)
-      return params;
     if (!bindable(params))
       not_bindable_error(form, params);
     if (special_var_p(params))
@@ -902,29 +900,31 @@ static val expand_params_rec(val params, val menv,
     eval_error(form, lit("~s: parameter symbol expected, not ~s"),
                car(form), car(params), nao);
   } else {
-    val car_ex = expand_params_rec(car(params), menv,
-                                   macro_style_p,
-                                   form, pspecials);
+    val param = car(params);
+    val param_ex;
 
-    if (car_ex == whole_k || car_ex == form_k || car_ex == env_k) {
+    if (param == whole_k || param == form_k || param == env_k) {
       if (!macro_style_p)
         eval_error(form, lit("~s: ~s not usable in function parameter list"),
-                   car(form), car_ex, nao);
+                   car(form), param, nao);
       if (!consp(cdr(params)))
         eval_error(form, lit("~s: ~s parameter requires name"),
-                   car(form), car_ex, nao);
-      if (!bindable(cadr(params)))
+                   car(form), param, nao);
+      if (param == env_k && !bindable(cadr(params)))
         eval_error(form, lit("~s: ~s parameter requires bindable symbol"),
-                   car(form), car_ex, nao);
+                   car(form), param, nao);
+      param_ex = param;
+    } else {
+      param_ex = expand_params_rec(param, menv, macro_style_p, form, pspecials);
     }
 
     {
       val params_ex = expand_params_rec(cdr(params), menv,
                                         macro_style_p,
                                         form, pspecials);
-      if (car_ex == car(params) && params_ex == cdr(params))
+      if (param_ex == car(params) && params_ex == cdr(params))
         return params;
-      return rlcp(cons(car_ex, params_ex), params);
+      return rlcp(cons(param_ex, params_ex), params);
     }
   }
 }
