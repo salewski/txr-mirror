@@ -1375,7 +1375,7 @@ static val repeat_rep_helper(val sym, val args, val main, val parts)
 
 static void process_catch_exprs(val exprs)
 {
-  val params = rest(exprs);
+  val params = second(exprs);
   for (; params; params = cdr(params)) {
     val param = first(params);
     if (consp(param))
