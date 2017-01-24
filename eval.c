@@ -941,9 +941,13 @@ static val expand_param_macro(val params, val body, val menv, val form)
         sym == env_k ||sym == colon_k)
       return cons(params, body);
 
-    if (!pmac)
-      eval_error(form, lit("~s: keyword ~s has no param macro binding"),
-                 car(form), sym, nao);
+    if (!pmac) {
+      lisplib_try_load(sym);
+      pmac = gethash(pm_table, sym);
+      if (!pmac)
+        eval_error(form, lit("~s: keyword ~s has no param macro binding"),
+                   car(form), sym, nao);
+    }
 
     {
       val prest = cdr(params);

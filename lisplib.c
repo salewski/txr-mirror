@@ -498,6 +498,23 @@ static val error_instantiate(val set_fun)
   return nil;
 }
 
+static val keyparams_set_entries(val dlt, val fun)
+{
+  val key_k = intern(lit("key"), keyword_package);
+  if (fun)
+    sethash(dlt, key_k, fun);
+  else
+    remhash(dlt, key_k);
+  return nil;
+}
+
+static val keyparams_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~akeyparams.tl"), stdlib_path, nao));
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -536,6 +553,7 @@ void lisplib_init(void)
   dlt_register(dl_table, tagbody_instantiate, tagbody_set_entries);
   dlt_register(dl_table, pmac_instantiate, pmac_set_entries);
   dlt_register(dl_table, error_instantiate, error_set_entries);
+  dlt_register(dl_table, keyparams_instantiate, keyparams_set_entries);
 }
 
 val lisplib_try_load(val sym)

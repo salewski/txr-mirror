@@ -28544,6 +28544,14 @@ final parameter list and its accompanying body are then
 taken in place of the original parameter list and
 body.
 
+\*(TL provides a built-in parameter list macro bound to the symbol
+.code :key
+which endows a function keyword parameters. The implementation is
+written entirely using this parameter list macro mechanism, by means
+of the
+.code define-parameter-macro
+macro.
+
 .coNP Special variable @ *param-macro*
 .desc
 The variable
@@ -28692,6 +28700,153 @@ as follows:
 All that is required is the insertion of the
 .code :memo
 keyword.
+
+.coNP Parameter list macro @ :key
+.synb
+.mets (:key << param *
+.mets \ \  [ -- >> { sym | >> ( sym >> [ init-form <> [ p-sym ]])}* ]
+.mets \ \  [ . rest-param ])
+.syne
+.desc
+Parameter list macro
+.code :key
+injects keyword parameter support into functions and macros.
+
+When
+.code :key
+appears as the first item in a function parameter list, a special syntax is
+recognized in the parameter list. After any required and optional parameters,
+the symbol
+.code --
+(two dashes) may appear. Parameters after this symbol are interpreted
+as keyword parameters. After the keyword parameters, a rest parameter
+may appear in the usual way as a symbol in the dotted position.
+
+Keyword parameters use the same syntax as optional parameters, except
+that if used in a macro parameter list, they do not support
+destructuring whereas optional parameters do. That is to say, regardless
+whether
+.code :key
+is used in a function or macro, keyword parameters are symbols.
+
+A keyword parameter takes three possible forms:
+
+.RS
+.meIP < sym
+A keyword parameter may be specified as a simple symbol
+.metn sym .
+If the argument for such a keyword parameter is missing,
+it takes on the value
+.codn nil .
+.meIP >> ( sym << init-form )
+If the keyword parameter symbol
+.meta sym
+is enclosed in a list, then the second element of that list
+specifies a default value, similarly to the default value for
+an optional argument. If the function is called in such a way
+that the argument for the parameter is missing, the
+.meta init-form
+is evaluated and the resulting value is bound to the keyword parameter.
+The evaluation takes place in a lexical scope in which the
+required and optional parameters are are already visible,
+and their values are bound. If there is a
+.meta rest-param
+it is also visible in this scope, even though in the parameter
+list it appears to the left.
+.meIP >> ( sym < init-form << p-sym )
+The three-element form of the keyword parameter specifies
+an additional symbol
+.metn p-sym ,
+which names an argument that implicitly receives a Boolean
+argument indicating the presence of the keyword argument.
+If an argument is not passed for the keyword parameter
+.metn sym ,
+then parameter
+.meta sym-p
+takes on the value
+.codn nil .
+If an argument is given for
+.metn sym ,
+then the
+.meta sym-p
+argument takes on the value
+.codn t .
+This mechanism also closely resembles the analogous
+one supported in optional arguments. See the previous
+paragraph regarding the evaluation scope of
+.metn init-form .
+.RE
+
+.IP
+Arguments to keyword appear as a property list which begins
+after the last required or optional argument. A property list
+consists of interleaved indicators and values. The indicators
+for keyword parameters are keyword symbols whose names match
+the parameter names. For instance, the indicator-value pair
+.code ":xyz 42"
+passes the value
+.code 42
+to a keyword parameter that may be named
+.code xyz
+in any package: it may be
+.code usr:xyz
+or
+.code mypackage:xyz
+and so forth.
+
+If the function has a
+.meta rest-param
+then that param receives the keyword parameter list. That is to say, the
+.code :key
+mechanism generates a regular variadic function which receives the keyword
+parameters as the trailing arguments. The function is endowed with code which
+parses these extra arguments out of the trailing list, and binds them to
+the keyword parameter symbols. If a
+.meta rest-param
+argument present, then it specifies a symbol to be used as the name of
+the rest parameter, making the entire keyword argument list available
+under that name. If there is no
+.meta rest-param
+then a machine-generated rest parameter is substituted; the keyword argument
+parsing logic refers to that instead.
+
+.TP* Example:
+
+Define a function
+.code fun
+with two required arguments
+.codn "a b" ,
+one optional argument
+.codn c ,
+two keyword arguments
+.code foo
+and
+.codn bar ,
+and a rest parameter
+.codn klist :
+
+.cblk
+  (defun fun (:key a b : c -- foo bar . klist)
+    (list a b c foo bar klist))
+
+  (fun 1 2 3 :bar 4) -> (1 2 3 nil 4 (:bar 4))
+.cble
+
+Define a function with only keyword arguments, with default expressions and
+Boolean indicator params:
+
+.cblk
+  (defun keyfun (:key -- (a 10 a-p) (b 20 b-p))
+    (list a a-p b b-p))
+
+  (keyfun :a 3) -> (3 t 20 nil)
+
+  (keyfun :b 4) -> (10 nil 4 t)
+
+  (keyfun :c 4) -> (10 nil 20 nil)
+
+  (keyfun) -> (10 nil 20 nil)
+.cble
 
 .SS* Mutation of Syntactic Places
 .coNP Macro @ set
