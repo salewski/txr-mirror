@@ -5801,6 +5801,8 @@ void eval_init(void)
   reg_fun(intern(lit("copy-alist"), user_package), func_n1(copy_alist));
   reg_fun(intern(lit("prop"), user_package), func_n2(getplist));
   reg_fun(intern(lit("memp"), user_package), func_n2(memp));
+  reg_fun(intern(lit("plist-to-alist"), user_package), func_n1(plist_to_alist));
+  reg_fun(intern(lit("improper-plist-to-alist"), user_package), func_n2(improper_plist_to_alist));
   reg_fun(intern(lit("merge"), user_package), func_n4o(merge_wrap, 2));
   reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 1));
   reg_fun(intern(lit("shuffle"), user_package), func_n1(shuffle));

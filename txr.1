@@ -18184,10 +18184,35 @@ function applied to the corresponding
 element of the input list.
 
 .SS* Property Lists
-A property list a flat list of even length consisting of interleaved
+A
+.IR "property list",
+also referred to as a
+.IR plist ,
+is a flat list of even length consisting of interleaved
 pairs of property names (usually symbols) and their values (arbitrary
 objects). An example property list is (:a 1 :b "two") which contains
 two properties, :a having value 1, and :b having value "two".
+
+An
+.I "improper plist"
+represents Boolean properties in a condensed way, as property
+indicators which are not followed by a value. Such properties
+only indicate their presence or absence, which is useful for
+encoding a Boolean value. If it is absent, then the property
+is false. Correctly using an improper plist requires that the
+exact set of Boolean keys is established by convention.
+
+In this document, the unqualified terms
+.I "property list"
+and
+.I "plist"
+refer strictly to an ordinary plist, not to an improper plist.
+
+.TP* "Dialect Note:"
+
+Unlike in some other Lisp dialects, including ANSI Common Lisp,
+symbols do not have property lists in \*(TL. Improper plists
+aren't a concept in ANSI CL.
 
 .coNP Function @ prop
 .synb
@@ -18248,6 +18273,47 @@ Note the reversed argument convention relative to the
 function, harmonizing with functions in the
 .code member
 family.
+
+.coNP Functions @ plist-to-alist and @ improper-plist-to-alist
+.synb
+.mets (plist-to-alist << plist )
+.mets (improper-plist-to-alist < imp-plist << bool-keys )
+.syne
+.desc
+The functions
+.code plist-to-alist
+and
+.code improper-plist-to-alist
+convert, respectively, a property list and improper property
+list to an association list.
+
+The
+.code plist-to-alist
+function scans
+.meta plist
+and returns the indicator-property pairs as a list of cons
+cells, such that each
+.code car
+is the indicator, and each
+.code cdr
+is the value.
+
+The
+.code improper-plist-to-alist
+is similar, except that it handles the Boolean properties
+which, by convention, aren't followed by a value. The list of
+all such indicators is specified by the
+.code bool-keys
+argument.
+
+.TP* "Examples:"
+.cblk
+  (plist-to-alist '(a 1 b 2))  -->  ((a . 1) (b . 2))
+
+  (improper-plist-to-alist '(:x 1 :blue :y 2) '(:blue))
+  -->  ((:x . 1) (:blue) (:y . 2))
+.cble
+
 
 .SS* List Sorting
 
