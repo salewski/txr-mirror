@@ -795,6 +795,10 @@ static val not_bindable_warning(val form, val sym)
                    car(form), sym, nao);
 }
 
+static val make_var_shadowing_env(val menv, val vars);
+
+static val get_param_syms(val params);
+
 static val expand_params_rec(val params, val menv,
                              val macro_style_p, val form,
                              val *pspecials);
@@ -814,6 +818,8 @@ static val expand_opt_params_rec(val params, val menv,
   } else {
     val pair = car(params);
     if (atom(pair)) {
+      val new_menv = menv;
+
       if (pair == whole_k || pair == form_k || pair == env_k) {
         if (!macro_style_p)
           eval_error(form, lit("~s: ~s not usable in function parameter list"),
@@ -829,13 +835,15 @@ static val expand_opt_params_rec(val params, val menv,
           eval_error(form, lit("~s: multiple colons in parameter list"),
                      car(form), nao);
         not_bindable_error(form, pair);
+      } else {
+        new_menv = make_var_shadowing_env(menv, pair);
       }
 
       if (special_var_p(pair))
         push(pair, pspecials);
 
       {
-        val params_ex = expand_opt_params_rec(cdr(params), menv,
+        val params_ex = expand_opt_params_rec(cdr(params), new_menv,
                                               macro_style_p,
                                               form, pspecials);
 
@@ -848,15 +856,17 @@ static val expand_opt_params_rec(val params, val menv,
       eval_error(form, lit("~s: parameter symbol expected, not ~s"),
                  car(form), car(pair), nao);
     } else {
-      val car_ex = expand_params_rec(car(pair), menv,
-                                     macro_style_p,
-                                     form, pspecials);
+      val param = car(pair);
+      val param_ex = expand_params_rec(param, menv,
+                                       macro_style_p,
+                                       form, pspecials);
       val initform = cadr(pair);
       val initform_ex = rlcp(expand(initform, menv), initform);
       val opt_sym = caddr(pair);
-      val form_ex = rlcp(cons(car_ex, cons(initform_ex,
-                                           cons(opt_sym, nil))),
+      val form_ex = rlcp(cons(param_ex, cons(initform_ex,
+                                             cons(opt_sym, nil))),
                          pair);
+      val new_menv = make_var_shadowing_env(menv, get_param_syms(param_ex));
 
       if (cdddr(pair))
         eval_error(form, lit("~s: extra forms ~s in ~s"),
@@ -869,7 +879,7 @@ static val expand_opt_params_rec(val params, val menv,
           push(opt_sym, pspecials);
       }
 
-      return rlcp(cons(form_ex, expand_opt_params_rec(rest(params), menv,
+      return rlcp(cons(form_ex, expand_opt_params_rec(rest(params), new_menv,
                                                       macro_style_p, form,
                                                       pspecials)),
                   cdr(params));
@@ -902,6 +912,7 @@ static val expand_params_rec(val params, val menv,
   } else {
     val param = car(params);
     val param_ex;
+    val new_menv = menv;
 
     if (param == whole_k || param == form_k || param == env_k) {
       if (!macro_style_p)
@@ -916,10 +927,11 @@ static val expand_params_rec(val params, val menv,
       param_ex = param;
     } else {
       param_ex = expand_params_rec(param, menv, macro_style_p, form, pspecials);
+      new_menv = make_var_shadowing_env(menv, get_param_syms(param_ex));
     }
 
     {
-      val params_ex = expand_params_rec(cdr(params), menv,
+      val params_ex = expand_params_rec(cdr(params), new_menv,
                                         macro_style_p,
                                         form, pspecials);
       if (param_ex == car(params) && params_ex == cdr(params))
@@ -977,8 +989,6 @@ static val expand_params(val params, val body, val menv,
                      body_ex0);
   return cons(params_ex, body_out);
 }
-
-static val get_param_syms(val params);
 
 static val get_opt_param_syms(val params)
 {
@@ -1873,6 +1883,8 @@ static val make_var_shadowing_env(val menv, val vars)
 {
   if (nilp(vars)) {
     return menv;
+  } else if (atom(vars)) {
+    return make_env(cons(cons(vars, special_s), nil), nil, menv);
   } else {
     list_collect_decl (shadows, ptail);
 
