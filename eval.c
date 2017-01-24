@@ -1104,7 +1104,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
       val bform = if3(param == whole_k, whole,
                       if3(param == form_k,
                           ctx_form, menv));
-      if (!next)
+      if (!consp(next))
         eval_error(ctx_form, lit("~s: dangling ~s in param list"),
                    car(ctx_form), param, nao);
       nparam = car(next);
