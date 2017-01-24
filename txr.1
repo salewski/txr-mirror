@@ -18184,16 +18184,16 @@ function applied to the corresponding
 element of the input list.
 
 .SS* Property Lists
-.coNP Function @ prop
-.synb
-.mets (prop < plist << key )
-.syne
-.desc
 A property list a flat list of even length consisting of interleaved
 pairs of property names (usually symbols) and their values (arbitrary
 objects). An example property list is (:a 1 :b "two") which contains
 two properties, :a having value 1, and :b having value "two".
 
+.coNP Function @ prop
+.synb
+.mets (prop < plist << key )
+.syne
+.desc
 The
 .code prop
 function searches property list
@@ -18210,6 +18210,44 @@ is returned due to the property not being
 found, or due to the property being present with a
 .code nil
 value.
+
+The indicators in
+.meta plist
+are compared with
+.meta key
+using
+.code eq
+equality, allowing them to be symbols, characters or
+.code fixnum
+integers.
+
+.coNP Function @ memp
+.synb
+.mets (memp < key << plist )
+.syne
+.desc
+The
+.code memp
+function searches property list
+.meta plist
+for key
+.metn key ,
+using
+.code eq
+equality.
+
+If the key is found, then the entire suffix of
+.meta plist
+beginning with the indicator is returned, such that the first
+element of the returned list is
+.meta key
+and the second element is the property value.
+
+Note the reversed argument convention relative to the
+.code prop
+function, harmonizing with functions in the
+.code member
+family.
 
 .SS* List Sorting
 

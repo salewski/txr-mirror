@@ -2855,6 +2855,15 @@ val getplist_f(val list, val key, loc found)
   return nil;
 }
 
+val memp(val key, val plist)
+{
+  for (; plist; plist = cddr(plist)) {
+    if (car(plist) == key)
+      return plist;
+  }
+  return nil;
+}
+
 val proper_plist_to_alist(val list)
 {
   list_collect_decl (out, ptail);
