@@ -2864,7 +2864,7 @@ val memp(val key, val plist)
   return nil;
 }
 
-val proper_plist_to_alist(val list)
+val plist_to_alist(val list)
 {
   list_collect_decl (out, ptail);
 

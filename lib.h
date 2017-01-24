@@ -612,7 +612,7 @@ val length_list(val list);
 val getplist(val list, val key);
 val getplist_f(val list, val key, loc found);
 val memp(val key, val plist);
-val proper_plist_to_alist(val list);
+val plist_to_alist(val list);
 val improper_plist_to_alist(val list, val boolean_keys);
 val num(cnum val);
 val flo(double val);
