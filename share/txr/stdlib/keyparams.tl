@@ -27,14 +27,14 @@
 (defun sys:extract-keys (keys args)
   (build
     (each ((k keys))
-      (iflet ((f (memq (car k) args)))
+      (iflet ((f (memp (car k) args)))
         (add (cadr f))
         (add (cdr k))))))
 
 (defun sys:extract-keys-p (keys args)
   (build
     (each ((k keys))
-      (add (if (memq k args) t)))))
+      (add (if (memp k args) t)))))
 
 (defun sys:build-key-list (key-params)
   (let ((constant (group-by [chain second constantp] key-params)))
