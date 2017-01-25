@@ -8449,7 +8449,7 @@ static val take_while_list_fun(val env, val lcons)
 
   rplaca(lcons, pop(&list));
 
-  if (!funcall1(pred, funcall1(keyfun, car(list))))
+  if (!list || !funcall1(pred, funcall1(keyfun, car(list))))
     rplacd(lcons, nil);
   else
     rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
@@ -8493,7 +8493,7 @@ static val take_until_list_fun(val env, val lcons)
 
   rplaca(lcons, item);
 
-  if (funcall1(pred, funcall1(keyfun, item)))
+  if (!list || funcall1(pred, funcall1(keyfun, item)))
     rplacd(lcons, nil);
   else
     rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
