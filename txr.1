@@ -33315,10 +33315,12 @@ exception search as if it didn't exist.  When the handler function terminates,
 either via a normal return or a nonlocal control transfer, then the handler is
 re-enabled.
 
-.coNP Macro @ handle
+.coNP Macros @ handle and @ handle*
 .synb
 .mets (handle < try-expression
 .mets \ \  >> {( symbol <> ( arg *) << body-form *)}*)
+.mets (handle* < try-expression
+.mets \ \  >> {( symbol >> ( type-arg << arg *) << body-form *)}*)
 .syne
 .desc
 The
@@ -33369,6 +33371,18 @@ macro must perform a dynamic control transfer, such returning from a block
 via
 .code return
 or throwing an exception.
+
+The
+.code handle*
+macro is a variant of
+.code handle
+with the following difference: when
+.code handle*
+invokes a clause, it passes the exception symbol as the leftmost argument
+.metn type-arg .
+Then the exception arguments follow. In contrast,
+only the exception arguments are passed to the clauses of
+.codn handle .
 
 .coNP Macro @ with-resources
 .synb

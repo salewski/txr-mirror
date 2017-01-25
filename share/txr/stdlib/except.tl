@@ -38,8 +38,9 @@
   (let ((catch-syms [mapcar car catch-clauses]))
     ^(sys:catch ,catch-syms ,try-form ,*catch-clauses)))
 
-(defmacro handle (:whole form try-form . handle-clauses)
-  (let* ((exc-sym (gensym))
+(defun sys:expand-handle (form try-form handle-clauses)
+  (let* ((oper (car form))
+         (exc-sym (gensym))
          (exc-args (gensym))
          (syms-fragments (collect-each ((hc handle-clauses))
                           (tree-case hc
@@ -47,8 +48,9 @@
                              (unless (symbolp name)
                                (sys:handle-bad-syntax hc))
                              (list name ^(apply (lambda ,arglist ,*body)
-                                                ,*(if (and (plusp sys:compat)
-                                                           (<= 161 sys:compat))
+                                                ,*(if (or (eq oper 'handle*)
+                                                          (and (plusp sys:compat)
+                                                               (<= 161 sys:compat)))
                                                     ^(,exc-sym))
                                                 ,exc-args)))
                             (else (sys:handle-bad-syntax hc))))))
@@ -58,6 +60,12 @@
                                  syms-fragments)))
                    ,[mapcar car syms-fragments]
                    ,try-form)))
+
+(defmacro handle (:form form try-form . handle-clauses)
+  (sys:expand-handle form try-form handle-clauses))
+
+(defmacro handle* (:form form try-form . handle-clauses)
+  (sys:expand-handle form try-form handle-clauses))
 
 (defmacro ignwarn (. forms)
   ^(handler-bind (lambda (exc-sym arg) (throw 'continue)) (warning) ,*forms))
