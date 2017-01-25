@@ -67,13 +67,13 @@
   (:method get (self)
     (cdr self.head)))
 
-(defun sys:list-builder-macrolets (lb-form)
+(defun sys:list-builder-flets (lb-form)
   (nconc
     (collect-each ((op '(add add* pend pend* ncon ncon*)))
-      ^(,op (. forms)
-         ^(qref ,',lb-form (,',op ,*forms))))
+      ^(,op (. args)
+         (qref ,lb-form (,op . args))))
     ^((get ()
-        ^(qref ,',lb-form (get))))))
+        (qref ,lb-form (get))))))
 
 (defun build-list (: init)
   (new list-builder head init))
@@ -81,6 +81,6 @@
 (defmacro build (. forms)
   (with-gensyms (name)
     ^(let ((,name (new list-builder)))
-       (macrolet ,(sys:list-builder-macrolets name)
+       (flet ,(sys:list-builder-flets name)
          ,*forms
          (qref ,name (get))))))

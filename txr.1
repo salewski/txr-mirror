@@ -27203,7 +27203,7 @@ Instead,
 creates a lexical environment in which a
 .code list-builder
 object is implicitly constructed and bound to a hidden variable.
-Local macros which mimic the
+Local functions which mimic the
 .code list-builder
 methods operate implicitly on this hidden variable, so that
 the object need not be mentioned as an argument.
@@ -27225,6 +27225,11 @@ the object need not be mentioned as an argument.
     (add 1 2)
     (pend (get))
     (pend (get))) -> (1 2 1 2 1 2 1 2)
+
+  ;; build a list by mapping over the local
+  ;; add function:
+
+  (build [mapdo add (range 1 3)]) -> (1 2 3)
 .cble
 
 .SS* Permutations and Combinations
