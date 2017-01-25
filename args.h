@@ -49,11 +49,6 @@ INLINE struct args *args_init_list(struct args *args, cnum argc, val list)
   return args;
 }
 
-INLINE struct args *args_init(struct args *args, cnum argc)
-{
-  return args_init_list(args, argc, nil);
-}
-
 INLINE void args_set_fill(struct args *args, cnum fill)
 {
   args->fill = fill;
