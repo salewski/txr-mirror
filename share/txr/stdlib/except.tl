@@ -27,9 +27,16 @@
 (defun sys:handle-bad-syntax (item)
   (throwf 'eval-error "~s: bad clause syntax: ~s" 'handle item))
 
-(defmacro catch (try-form . handle-clauses)
-  (let ((catch-syms [mapcar car handle-clauses]))
-    ^(sys:catch ,catch-syms ,try-form ,*handle-clauses)))
+(defmacro catch (:form form try-form . catch-clauses)
+  (let ((catch-syms [mapcar car catch-clauses])
+        (sys-catch-clauses (mapcar (do mac-param-bind @1 (type args . body) @1
+                                     ^(,type (,(gensym) ,*args) ,*body))
+                                   catch-clauses)))
+    ^(sys:catch ,catch-syms ,try-form ,*sys-catch-clauses)))
+
+(defmacro catch* (try-form . catch-clauses)
+  (let ((catch-syms [mapcar car catch-clauses]))
+    ^(sys:catch ,catch-syms ,try-form ,*catch-clauses)))
 
 (defmacro handle (:whole form try-form . handle-clauses)
   (let* ((exc-sym (gensym))

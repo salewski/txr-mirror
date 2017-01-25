@@ -33055,10 +33055,12 @@ using the
 .code format
 string and additional arguments.
 
-.coNP Macro @ catch
+.coNP Macros @ catch and @ catch*
 .synb
 .mets (catch < try-expression
 .mets \ \  >> {( symbol <> ( arg *) << body-form *)}*)
+.mets (catch* < try-expression
+.mets \ \  >> {( symbol >> ( type-arg << arg *) << body-form *)}*)
 .syne
 .desc
 The
@@ -33112,6 +33114,18 @@ If there is only one element,
 .code b
 takes on the value
 .codn nil .
+
+The
+.code catch*
+macro is a variant of
+.code catch
+with the following difference: when
+.code catch*
+invokes a clause, it passes the exception symbol as the leftmost argument
+.metn type-arg .
+Then the exception arguments follow. In contrast,
+only the exception arguments are passed to the clauses of
+.codn catch .
 
 Also see: the
 .code unwind-protect

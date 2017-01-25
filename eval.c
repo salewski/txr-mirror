@@ -2285,9 +2285,12 @@ static val op_catch(val form, val env)
   result = eval(try_form, env, try_form);
 
   uw_catch(exsym, exvals) {
-    args_decl_list(args, ARGS_MIN, exvals);
+    args_decl(args, ARGS_MIN);
     val catches = rest(rest(rest(form)));
     val iter;
+
+    args_add(args, exsym);
+    args_add_list(args, exvals);
 
     for (iter = catches; iter; iter = cdr(iter)) {
       val clause = car(iter);

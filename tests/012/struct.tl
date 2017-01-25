@@ -64,20 +64,20 @@
 (stest (sys:expand '(defstruct (boa x y) nil
                       (x 0) (y 0)))
        "(sys:make-struct-type 'boa '() '()\n                                            \
-       \                      '(x y) () (lambda (#:g0004)\n                             \
-       \                                  (let ((#:g0005 (struct-type #:g0004)))\n      \
-       \                                    (if (static-slot-p #:g0005 'x)\n            \
-       \                                      () (slotset #:g0004 'x\n                  \
+       \                      '(x y) () (lambda (#:g0008)\n                             \
+       \                                  (let ((#:g0009 (struct-type #:g0008)))\n      \
+       \                                    (if (static-slot-p #:g0009 'x)\n            \
+       \                                      () (slotset #:g0008 'x\n                  \
        \                                                  0))\n                         \
-       \                                    (if (static-slot-p #:g0005 'y)\n            \
-       \                                      () (slotset #:g0004 'y\n                  \
+       \                                    (if (static-slot-p #:g0009 'y)\n            \
+       \                                      () (slotset #:g0008 'y\n                  \
        \                                                  0))))\n                       \
-       \                      (lambda (#:g0004 #:g0006\n                                \
-       \                               #:g0007)\n                                       \
-       \                        (slotset #:g0004 'x\n                                   \
-       \                                 #:g0006)\n                                     \
-       \                        (slotset #:g0004 'y\n                                   \
-       \                                 #:g0007))\n                                    \
+       \                      (lambda (#:g0008 #:g0010\n                                \
+       \                               #:g0011)\n                                       \
+       \                        (slotset #:g0008 'x\n                                   \
+       \                                 #:g0010)\n                                     \
+       \                        (slotset #:g0008 'y\n                                   \
+       \                                 #:g0011))\n                                    \
        \                      ())")
 
 (defstruct (boa x y) nil
