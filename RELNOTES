@@ -1,3 +1,61 @@
+                                    TXR 166
+                                   2017-01-26
+
+
+  Features
+
+  - Deferred warnings
+    - System of deferred warnings implemented allowing forward references
+      to functions, variables and anything else (extensible).
+  - New error reporting convenience functions for macro writing: compile-error,
+    compile-warning, compile-defr-warning.
+  - A parameter list macro called :key is provided, allowing functions
+    and macros to easily take keyword parameters.
+  - New memp function for searching a property list.
+  - New functions plist-to-alist and improper-plist-to-alist.
+  - New macros catch* and handle* which provide catches and handlers access
+    to the exception symbol.
+  - Local macrolets established by the build macro such as add, pend,
+    pend* and others are now functions.
+  - Awk macro:
+    - *stdin* now bound to current input stream.
+    - new fname variable analogous to FILENAME.
+
+  Bugs
+
+  - Unbound functions diagnosed consistently between
+    dotted (fun ... . x) forms and ordinary.
+  - *stderr* bound on entry into the repl, so errors sent to *stderr* go
+    to the repl's output stream.
+  - Better error reporting for nonexistent base in defmeth.
+  - Fixed broken supertype check in make-struct-type also affecting
+    defstruct, a nonexistent base to be treated as if it were nil.
+  - Fixed compound forms not being expanded in quasiliterals. This is a
+    TXR 160 regression breaking `@(macro ...)` usage.
+  - Muffle expansion-time warnings in op macro expander.
+  - Fixed missing macro expansion of TXR Lisp forms in collect, coll, gather,
+    output, and numerous other TXR directives.
+  - doc: missing documentation for :var argument of @(next) written.
+  - Fixed small ambguity issue in expansion of keyword args in
+    @(repeat)/@(rep).
+  - Fixed an expansion issue affecting output vars.
+  - *package* subject to rebinding in @(load) just like in the Lisp
+    load function.
+  - Cleaned up sloppy expansion in braced variables.
+    The argument of the :filter keyword isn't expanded.
+  - Fixed poor expansion order of parameter list macros, and a related bug.
+  - Fixed :whole and :form arguments in macro parameters lists not allowing
+    destructuring (due to an exception being thrown at expansion time
+    if their arguments are not bindable symbols).
+  - Fixed init-forms of optional arguments being expanded in an
+    incorrect macro environment, in which earlier arguments are not
+    visible as they should be.
+  - Fixed broken termination tests in take-while and take-until.
+  - Fixed wrong form being taken as the to-be-destructured form in
+    mac-param-bind.
+
+
+
                                     TXR 165
                                    2017-01-10
 
