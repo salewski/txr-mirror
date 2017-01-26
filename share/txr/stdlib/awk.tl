@@ -121,11 +121,11 @@
       (inc aws.file-num)
       (when beg-file-func
         [beg-file-func aws])
-      (let* ((stin (if (streamp in) in (open-file in)))
+      (let* ((*stdin* (if (streamp in) in (open-file in)))
              (noted-rs (not aws.rs))
              (noted-krs (not aws.krs))
              (cached-rr nil))
-        (flet ((get-rec-reader (stin)
+        (flet ((get-rec-reader (*stdin*)
                  (cond
                    ((and (equal noted-rs aws.rs) (eq noted-krs aws.krs))
                     cached-rr)
@@ -135,7 +135,7 @@
                           (cond
                             ((and (equal aws.rs "\n") (not aws.krs))
                                (set aws.par-mode nil)
-                               (lambda () (get-line stin)))
+                               (lambda () (get-line *stdin*)))
                             ((null aws.rs)
                                (set aws.par-mode t)
                                (let ((rin (record-adapter #/\n[ \n\t]*\n/))
@@ -154,12 +154,12 @@
                               (let ((rin (record-adapter (if (regexp aws.rs)
                                                            aws.rs
                                                            (regex-compile aws.rs))
-                                                         stin
+                                                         *stdin*
                                                          aws.krs)))
                                 (lambda () (get-line rin))))))))))
           (set aws.file-rec-num 0)
           (unwind-protect
-            (whilet ((rr (get-rec-reader stin))
+            (whilet ((rr (get-rec-reader *stdin*))
                      (rec (call rr)))
               (set aws.rec rec aws.orig-rec rec)
               (inc aws.rec-num)

@@ -42590,6 +42590,17 @@ record (contents of the variable
 followed by the output record terminator from the variable
 .codn ors .
 
+While the processing loop in
+.code awk
+scans an input source, it also binds the special variable
+.code *stdin*
+to the open stream associated with that source. This binding is
+in effect across all ordinary clauses, as well as across the
+special clauses
+.code :begin-file
+and
+.codn :end-file .
+
 The following is a description of the special clauses:
 .RS
 .meIP (:name << sym )
