@@ -35,6 +35,7 @@
   (inputs)
   (output *stdout*)
   (file-num 0)
+  file-name
   (file-rec-num 0)
   (rec-num 0)
   rec orig-rec fields nf
@@ -119,6 +120,9 @@
   (whilet ((in (pop aws.inputs)))
     (block :awk-file
       (inc aws.file-num)
+      (set aws.file-name (if (streamp in)
+                           (stream-get-prop in :name)
+                           in))
       (when beg-file-func
         [beg-file-func aws])
       (let* ((*stdin* (if (streamp in) in (open-file in)))
@@ -268,6 +272,7 @@
                 (nr (qref ,aws-sym rec-num))
                 (fnr (qref ,aws-sym file-rec-num))
                 (arg (qref ,aws-sym file-num))
+                (fname (qref ,aws-sym file-name))
                 (rs (qref ,aws-sym rs))
                 (krs (qref ,aws-sym krs))
                 (fs (qref ,aws-sym fs))

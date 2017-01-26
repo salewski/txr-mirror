@@ -43122,6 +43122,30 @@ Thereafter, it is incremented whenever
 .code awk
 switches to a new input source.
 
+.coNP Variable @ fname
+.desc
+The awk variable
+.code fname
+provides access to a character string which, if the current input is
+a file stream, is the name of the underlying file. Assigning to this
+variable changes its value, but has no effect on the input stream.
+Whenever a new input source is used by
+.code awk
+it sets this variable either from the file name on which it is opening
+a stream.. When using an existing stream rather than opening a file,
+.code awk
+sets this variable from the
+.code :name
+property of the stream.
+
+Note that the redirection macros
+.code <-
+and
+.code <!
+have no effect on this variable. Within their scope,
+.code fname
+retains its value.
+
 .coNP Variable @ rs
 .desc
 The awk variable
