@@ -51845,6 +51845,22 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 165
+A value of 165 restores the following behaviors, which changed starting in 166.
+There was a in Lisp evaluation support of the \*(TX pattern language.
+Specifically, Lisp argument forms were not subject to expansion prior to
+evaluation in these directives:
+.codn output ,
+.codn mod ,
+.codn modlast ,
+.codn skip ,
+.codn fuzz ,
+.codn load ,
+.codn close ,
+.codn call ,
+.code cat
+and
+.codn next .
 .IP 161
 Version 161 was the last version in which a bug existed in the
 .code handle
