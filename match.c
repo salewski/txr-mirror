@@ -4410,7 +4410,6 @@ void match_reg_var(val sym)
 {
   if (bindable(sym) && !uw_tentative_def_exists(sym)) {
     val tag = cons(var_s, sym);
-    uw_purge_deferred_warning(tag);
     uw_register_tentative_def(tag);
   }
 }

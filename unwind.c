@@ -684,6 +684,7 @@ val uw_defer_warning(val args)
 
 val uw_register_tentative_def(val tag)
 {
+  uw_purge_deferred_warning(tag);
   push(tag, &tentative_defs);
   return nil;
 }
