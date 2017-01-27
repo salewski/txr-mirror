@@ -3182,7 +3182,7 @@ static val expand_var_mods(val mods, val menv)
   }
 }
 
-static val expand_quasi(val quasi_forms, val menv)
+val expand_quasi(val quasi_forms, val menv)
 {
   if (nilp(quasi_forms)) {
     return nil;

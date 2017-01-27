@@ -782,10 +782,9 @@ o_var : SYMTOK                  { val expr = symhlpr($1, nil);
                                               expand_meta($2, nil),
                                               expand_meta($3, nil), nao); }
                                   else
-                                  { $$ = list(var_s,
-                                              expand($2, nil),
-                                              expand_forms($3, nil), nao); }
-                                  rl($$, num(parser->lineno)); }
+                                  { val quasi_var = list(var_s, $2, $3, nao);
+                                    val quasi_items = cons(quasi_var, nil);
+                                    $$ = car(expand_quasi(quasi_items, nil)); } }
       | SYMTOK error            { $$ = nil;
                                   yybadtok(yychar, lit("variable spec")); }
       ;
