@@ -34145,6 +34145,59 @@ has been registered via
 and not yet purged by
 .codn purge-deferred-warning .
 
+.coNP Function @ defer-warning
+.synb
+.mets (defer-warning << args )
+.syne
+.desc
+The
+.code defer-warning
+function attempts to register a deferred warning. The
+.meta args
+argument corresponds to the arguments which are passed to the
+.code throw
+function in order to generate a warning exception, not including the exception
+symbol.
+
+Args is expected to have at least two elements, the second of which
+is a deferred warning tag.
+
+The
+.code defer-warning
+function returns
+.codn nil .
+
+Note: this functions is intended for use in exception handlers. The
+following example shows a handler which intercepts warnings. It defers
+deferrable warnings, and prints ordinary warnings:
+
+.cblk
+  (handle
+    (some-form ..) ;; some code which might generate warnings
+    (warning (msg . args)
+      (if (car args)
+        (defer-warning (cons msg args)) ;; tag present: defer
+        (put-line `warning: @msg`)) ;; print immediately
+      (throw 'continue))) ;; warning processed: resume execution
+.cble
+
+.coNP Function @ dump-deferred-warnings
+.synb
+.mets (dump-deferred-warning << stream )
+.syne
+.desc
+The
+.code dump-deferred-warnings
+converts the list of pending warnings into diagnostic messages
+sent to
+.metn stream .
+After the diagnostics are issued, the list of pending warnings
+is cleared.
+
+Note: there is normally no need for user programs to use this
+function since deferred warnings are printed in various necessary
+circumstances.
+
 .SS* Delimited Continuations
 
 \*(TL supports delimited continuations, which are integrated with the

@@ -1041,6 +1041,8 @@ void uw_late_init(void)
           func_n1(uw_purge_deferred_warning));
   reg_fun(intern(lit("register-tentative-def"), user_package), func_n1(uw_register_tentative_def));
   reg_fun(intern(lit("tentative-def-exists"), user_package), func_n1(uw_tentative_def_exists));
+  reg_fun(intern(lit("defer-warning"), user_package), func_n1(uw_defer_warning));
+  reg_fun(intern(lit("dump-deferred-warnings"), user_package), func_n1(uw_dump_deferred_warnings));
   reg_fun(intern(lit("register-exception-subtypes"), user_package),
           func_n0v(register_exception_subtypes));
   reg_fun(intern(lit("exception-subtype-p"), user_package),
