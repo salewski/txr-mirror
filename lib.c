@@ -5021,23 +5021,30 @@ val unuse_package(val unuse_list, val package_in)
   return unuse_package_list;
 }
 
-static val symbol_present(val package, val sym)
+static val symbol_visible(val package, val sym)
 {
+  val name = symbol_name(sym);
   type_check (package, PKG);
 
   if (sym->s.package == package)
     return t;
 
-  if (gethash(package->pk.symhash, symbol_name(sym)) == sym)
-    return t;
+  {
+    val cell = gethash_e(package->pk.symhash, name);
+
+    if (cell)
+      return eq(car(cell), sym);
+  }
 
   {
     val fallback = get_hash_userdata(package->pk.symhash);
 
     for (; fallback; fallback = cdr(fallback)) {
       val fb_pkg = car(fallback);
-      if (gethash(fb_pkg->pk.symhash, symbol_name(sym)) == sym)
-        return t;
+      val cell = gethash_e(fb_pkg->pk.symhash, name);
+
+      if (cell)
+        return eq(car(cell), sym);
     }
   }
 
@@ -9659,7 +9666,7 @@ static int unquote_star_check(val obj, val pretty)
     return 0;
   if (car(obj->s.name) != chr('*'))
     return 0;
-  return pretty || symbol_present(cur_package, obj);
+  return pretty || symbol_visible(cur_package, obj);
 }
 
 val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
@@ -9914,7 +9921,7 @@ dot:
         put_string(lit("#:"), out);
       } else if (obj->s.package == keyword_package) {
         put_char(chr(':'), out);
-      } else if (!symbol_present(cur_package, obj)) {
+      } else if (!symbol_visible(cur_package, obj)) {
         put_string(obj->s.package->pk.name, out);
         put_char(chr(':'), out);
       }
