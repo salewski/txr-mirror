@@ -41124,6 +41124,45 @@ in a private package.
                  ;; present in client due to :use-from
 .cble
 
+The following example shows how to create a package called
+.code custom
+in which the
+.code +
+symbol from the
+.code usr
+package is replaced with a local symbol. A function is
+then defined using the local symbol, which allows strings
+to be catenated with
+.codn + :
+
+.cblk
+  (defpackage custom
+    (:fallback usr)
+    (:local + - * /))
+
+  (defmacro outside-macro (x) ^(+ ,x 42))
+
+  (in-package custom)
+
+  (defun binary-+ (: (left 0) (right 0))
+    (if (and (numberp left) (numberp right))
+      (usr:+ left right)
+      `@left@right`))
+
+  (defun + (. args)
+    [reduce-left binary-+ args])
+
+  (+) -> 0
+  (+ 1) -> 1
+  (+ 1 "a") -> "1a"
+  (+ 1 2) -> 3
+  (+ "a") -> "a"
+  (+ "a" "b" "c") -> "abc"
+
+  ;; macro expansions using usr:+ are not affected
+  (outside-macro "a") -> ;; error: + invalid operands "a" 42
+.cble
+
 .NP* Package Library Conventions
 Various functions in the package and symbol area of the library have a
 .meta package
