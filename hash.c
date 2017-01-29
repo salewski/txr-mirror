@@ -676,13 +676,18 @@ val gethash_c(val hash, val key, loc new_p)
   return cell;
 }
 
-val gethash(val hash, val key)
+val gethash_e(val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = hash_rec_limit;
   cnum hv = h->hash_fun(key, &lim);
   val chain = vecref(h->table, num_fast(hv % h->modulus));
-  val found = h->assoc_fun(key, hv, chain);
+  return h->assoc_fun(key, hv, chain);
+}
+
+val gethash(val hash, val key)
+{
+  val found = gethash_e(hash, key);
   return cdr(found);
 }
 
@@ -704,21 +709,13 @@ val inhash(val hash, val key, val init)
 
 val gethash_f(val hash, val key, loc found)
 {
-  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
-  int lim = hash_rec_limit;
-  cnum hv = h->hash_fun(key, &lim);
-  val chain = vecref(h->table, num_fast(hv % h->modulus));
-  set(found, h->assoc_fun(key, hv, chain));
+  set(found, gethash_e(hash, key));
   return cdr(deref(found));
 }
 
 val gethash_n(val hash, val key, val notfound_val)
 {
-  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
-  int lim = hash_rec_limit;
-  cnum hv = h->hash_fun(key, &lim);
-  val chain = vecref(h->table, num_fast(hv % h->modulus));
-  val existing = h->assoc_fun(key, hv, chain);
+  val existing = gethash_e(hash, key);
   return if3(existing, cdr(existing), default_bool_arg(notfound_val));
 }
 
