@@ -5604,6 +5604,7 @@ void eval_init(void)
           func_n2o(macroexpand_1, 1));
   reg_fun(intern(lit("macroexpand"), user_package),
           func_n2o(macroexpand, 1));
+  reg_fun(intern(lit("expand-params"), system_package), func_n5(expand_params));
   reg_fun(intern(lit("constantp"), user_package), func_n2o(constantp, 1));
   reg_fun(intern(lit("make-env"), user_package), func_n3o(make_env_intrinsic, 0));
   reg_fun(intern(lit("env-fbind"), user_package), func_n3(env_fbind));
