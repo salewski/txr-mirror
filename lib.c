@@ -7637,13 +7637,15 @@ val merge(val list1, val list2, val lessfun, val keyfun)
     val el2 = funcall1(keyfun, first(list2));
 
     if (funcall2(lessfun, el2, el1)) {
-      val next = cdr(list2);
-      deref(cdr_l(list2)) = nil;
+      loc pnext = cdr_l(list2);
+      val next = deref(pnext);
+      deref(pnext) = nil;
       ptail = list_collect_nconc(ptail, list2);
       list2 = next;
     } else {
-      val next = cdr(list1);
-      deref(cdr_l(list1)) = nil;
+      loc pnext = cdr_l(list1);
+      val next = deref(pnext);
+      deref(pnext) = nil;
       ptail = list_collect_nconc(ptail, list1);
       list1 = next;
     }
