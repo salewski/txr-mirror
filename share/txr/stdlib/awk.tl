@@ -125,7 +125,10 @@
                            in))
       (when beg-file-func
         [beg-file-func aws])
-      (let* ((*stdin* (if (streamp in) in (open-file in)))
+      (let* ((*stdin* (cond
+                        ((streamp in) in)
+                        ((listp in) (make-strlist-input-stream in))
+                        ((open-file in))))
              (noted-rs (not aws.rs))
              (noted-krs (not aws.krs))
              (cached-rr nil))

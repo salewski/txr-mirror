@@ -42790,9 +42790,19 @@ clauses. Each
 is evaluated and the values of these forms are gathered into a list.
 This list then comprises the list of input sources for the
 .code awk
-processing task. The input sources are either character strings,
-denoting file system path names to be opened for reading, or else
-input stream objects.
+processing task.
+
+Each input source must be one of three kinds of objects.
+It may be a stream object, which must be capable of character
+input. It may be a list of strings, which
+.code awk
+will convert to an input stream as if by the
+.code make-strlist-input-stream
+function.
+Or else it must be a character
+string, which denotes a filesystem path name which
+.code awk
+will open for reading.
 
 If the
 .code :inputs
