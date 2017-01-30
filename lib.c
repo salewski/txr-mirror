@@ -7636,16 +7636,16 @@ val merge(val list1, val list2, val lessfun, val keyfun)
     val el1 = funcall1(keyfun, first(list1));
     val el2 = funcall1(keyfun, first(list2));
 
-    if (funcall2(lessfun, el1, el2)) {
-      val next = cdr(list1);
-      deref(cdr_l(list1)) = nil;
-      ptail = list_collect_nconc(ptail, list1);
-      list1 = next;
-    } else {
+    if (funcall2(lessfun, el2, el1)) {
       val next = cdr(list2);
       deref(cdr_l(list2)) = nil;
       ptail = list_collect_nconc(ptail, list2);
       list2 = next;
+    } else {
+      val next = cdr(list1);
+      deref(cdr_l(list1)) = nil;
+      ptail = list_collect_nconc(ptail, list1);
+      list1 = next;
     }
   }
 
@@ -7664,19 +7664,19 @@ static val sort_list(val list, val lessfun, val keyfun)
   if (!cdr(list))
     return list;
   if (!cdr(cdr(list))) {
-    if (funcall2(lessfun, funcall1(keyfun, first(list)),
-                          funcall1(keyfun, second(list))))
+    if (funcall2(lessfun, funcall1(keyfun, second(list)),
+                          funcall1(keyfun, first(list))))
     {
-      return list;
-    } else {
       val cons2 = cdr(list);
-      /* This assignent is a dangerous mutation since the list
+      /* This assignment is a dangerous mutation since the list
          may contain mixtures of old and new objects, and
          so we could be reversing a newer->older pointer
          relationship. */
       set(cdr_l(cons2), list);
       deref(cdr_l(list)) = nil;
       return cons2;
+    } else {
+      return list;
     }
   }
 
