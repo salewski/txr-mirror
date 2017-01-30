@@ -1012,6 +1012,8 @@ int txr_main(int argc, char **argv)
     reg_varl(car(binding), cdr(binding));
   }
 
+  env_vbind(dyn_env, load_recursive_s, t);
+
   {
     val result = read_eval_stream(parse_stream, std_error, t);
 
@@ -1033,6 +1035,7 @@ repl:
   reg_var(args_s, or2(orig_args, arg_list));
   reg_varl(intern(lit("self-path"), user_package), lit("listener"));
   env_vbind(dyn_env, package_s, user_package);
+  env_vbind(dyn_env, load_recursive_s, nil);
   repl(bindings, std_input, std_output);
 #endif
   return 0;
