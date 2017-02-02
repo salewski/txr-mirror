@@ -1,3 +1,46 @@
+                                    TXR 167
+                                   2017-02-02
+
+
+  Features
+
+  - New functions defer-warning and dump-deferred-warnings.
+  - Awk macro:
+    - small convenience: an input source given in :inputs can now be a list of
+      strings, which the macro converts to a stream.
+  - Tightening in syntax:
+    - When floating-point tokens are followed by a period and a non-period
+      character, this is now a "trailing junk" syntax error:
+        SYNTAX         OLD BEHAVIOR             NEW BEHAVIOR
+        1.$            "trailing junk" error    "trailing junk" error
+        1.0.$          (qref 1.0 $)             "trailing junk" error
+        1.0.a          (qref 1.0 a)             "trailing junk" error
+        1.0.0          1.0 0.0                  "trailing junk" error
+        1.1.<EOF>      generic syntax error     "trailing junk" error
+    - Spliced symbols are diagnosed as "bad token" syntax errors
+        SYNTAX         OLD BEHAVIOR             NEW BEHAVIOR
+        :a:a           :a :a                    "bad token"
+        @a@a           @a @a                    "bad token"
+        usr:foo:bar    usr:foo :bar             "bad token"
+   - These changes are not subject to -C option: code must be fixed
+     if it contains these incorrect lexical forms.
+
+  Bugs
+
+  - The sort function now actually implements a stable sort over lists,
+    as has been documented for a long time.
+  - Missing autoload registrations for catch* and handle* added.
+  - Parameter list macros now recognized in the parameter list of a catch
+    clause.
+  - Fixed incorrect printing of a symbol that is not visible in the current
+    package due to being hidden by a like-named symbol: such as symbol must be
+    printed with its package qualifier.
+  - Fixed issue: Lisp files loaded from the command line were showing spurious
+    undefined warnings that wouldn't appear if the same files were loaded with
+    (load ...).
+
+
+
                                     TXR 166
                                    2017-01-26
 
