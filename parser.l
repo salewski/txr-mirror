@@ -409,6 +409,20 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return SYMTOK;
 }
 
+<BRACED>{BTOK}{BTOK} |
+<NESTED>{NTOK}{NTOK} {
+  if (yy_top_state(yyscanner) == INITIAL
+      || yy_top_state(yyscanner) == QSILIT
+      || yy_top_state(yyscanner) == QWLIT)
+    yy_pop_state(yyscanner);
+
+  yyerrorf(yyg, lit("bad token: ~a"),
+                    string_own(utf8_dup_from(yytext)),
+                    nao);
+  yylval->lexeme = utf8_dup_from(yytext);
+  return SYMTOK;
+}
+
 <SPECIAL>\({WS}all{WS}\) {
   yy_pop_state(yyscanner);
   yylval->lineno = yyextra->lineno;
