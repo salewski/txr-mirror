@@ -1,3 +1,35 @@
+                                    TXR 168
+                                   2017-02-05
+
+  Features
+
+  - Mutation of lexical functions is forbidden and diagnosed.
+    - e.g. (set (fun f) ...) when f is lexical.
+  - Improved diagnostics during place expansion and when
+    exceptions occur at macro-expansion time.
+  - New function rlcp-tree.
+  - New macro whena, complements ifa and conda.
+  - Functions remq, remql, remqual, remove-if, keepq,
+    keepql, keepqual and keep-if were rewritten and work
+    more efficiently for vectors and strings.
+
+
+  Bugs
+
+  - Fixed an issue in the the expansion of Lisp-1 forms as places.
+  - Fixed ocurrence of "expansion at nil" diagnostic in some
+    error traces.
+  - Fixed printing of unnecessary package prefix on symbols which
+    are visible in the current package, but not interned in it.
+  - Fixed rehome-sym not removing symbol from hidden list of
+    destination package, as documetned.
+  - Fixed broken keepql function.
+  - Fixed bug in poll function: rejecting stdio-stream type
+    objects as non-streams due to strict type check rather
+    than subtype.
+
+
+
                                     TXR 167
                                    2017-02-02
 
