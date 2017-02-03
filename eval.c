@@ -2077,8 +2077,12 @@ static val expand_lisp1_value(val form, val menv)
     val sym = second(form);
     val binding_type = lexical_lisp1_binding(menv, sym);
 
-    if (nilp(binding_type))
+    if (nilp(binding_type)) {
+      if (!bindable(sym))
+        eval_error(form, lit("~s: misapplied to form ~s"),
+                   first(form), sym, nao);
       return form;
+    }
 
     if (binding_type == var_k)
       return sym;
