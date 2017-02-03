@@ -225,6 +225,8 @@ noreturn static void eval_exception(val sym, val ctx, val fmt, va_list vl)
 
   (void) vformat(stream, fmt, vl);
 
+  uw_dump_deferred_warnings(std_error);
+
   uw_throw(sym, get_string_from_stream(stream));
 }
 

@@ -31,6 +31,7 @@
 (defun compile-error (ctx fmt . args)
   (let ((loc (sys:loc ctx))
         (name (sys:ctx-name ctx)))
+    (dump-deferred-warnings *stderr*)
     (throwf 'eval-error `@loc~s: @fmt` name . args)))
 
 (defun compile-warning (ctx fmt . args)
