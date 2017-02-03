@@ -29,7 +29,6 @@
   (defvar *place-update-expander* (hash))
   (defvar *place-delete-expander* (hash))
   (defvar *place-macro* (hash))
-  (defvar sys:*lisp1* nil)
   (defvar sys:*pl-env* nil)
 
   (defun sys:eval-err (. params)
@@ -60,21 +59,15 @@
 
   (defun sys:sym-update-expander (getter-name setter-name
                                   place-expr op-body)
-    (if sys:*lisp1*
-      ^(macrolet ((,getter-name () ^(sys:l1-val ,',place-expr))
-                  (,setter-name (val-expr) ^(sys:l1-setq ,',place-expr
-                                                         ,val-expr)))
-         ,op-body)
-      ^(macrolet ((,getter-name () ',place-expr)
-                  (,setter-name (val-expr) ^(sys:setq ,',place-expr
-                                                      ,val-expr)))
-         ,op-body)))
+    ^(macrolet ((,getter-name () ',place-expr)
+                (,setter-name (val-expr) ^(sys:setq ,',place-expr
+                                                    ,val-expr)))
+       ,op-body))
 
   (defun sys:sym-clobber-expander (simple-setter-name
                                    place-expr op-body)
     ^(macrolet ((,simple-setter-name (val-expr)
-                   ^(,(if sys:*lisp1* 'sys:l1-setq 'sys:setq)
-                      ,',place-expr ,val-expr)))
+                   ^(sys:setq ,',place-expr ,val-expr)))
        ,op-body))
 
   (defun sys:sym-delete-expander (deleter-name
@@ -182,7 +175,6 @@
     (let* ((place (sys:pl-expand unex-place env))
            (expander (get-update-expander place))
            (sys:*pl-env* env)
-           (sys:*lisp1* nil)
            (expansion [expander getter setter place body])
            (expansion-ex (sys:expand expansion env)))
       (sys:cp-origin expansion-ex place)))
@@ -191,7 +183,6 @@
     (let* ((place (sys:pl-expand unex-place env))
            (expander (get-clobber-expander place))
            (sys:*pl-env* env)
-           (sys:*lisp1* nil)
            (expansion [expander ssetter place body])
            (expansion-ex (sys:expand expansion env)))
       (sys:cp-origin expansion-ex place)))
@@ -200,7 +191,6 @@
     (let* ((place (sys:pl-expand unex-place env))
            (expander (get-delete-expander place))
            (sys:*pl-env* env)
-           (sys:*lisp1* nil)
            (expansion [expander deleter place body])
            (expansion-ex (sys:expand expansion env)))
       (sys:cp-origin expansion-ex place))))
@@ -439,6 +429,24 @@
                 (,setter (val) ^(sys:setq ,'(sys:var ,arg) ,val)))
        ,body)))
 
+(defplace (sys:l1-val arg) body
+  (getter setter
+    ^(macrolet ((,getter () ^(sys:l1-val ,',arg))
+                (,setter (val) ^(sys:l1-setq ,',arg ,val)))
+         ,body))
+  (ssetter
+    ^(macrolet ((,ssetter (val) ^(sys:l1-setq ,',arg ,val)))
+       ,body)))
+
+(defplace (sys:lisp1-value arg) body
+  (getter setter
+    ^(macrolet ((,getter () ^(sys:lisp1-value ,',arg))
+                (,setter (val) ^(sys:lisp1-setq ,',arg ,val)))
+         ,body))
+  (ssetter
+    ^(macrolet ((,ssetter (val) ^(sys:lisp1-setq ,',arg ,val)))
+       ,body)))
+
 (defplace (car cell) body
   (getter setter
     (with-gensyms (cell-sym)
@@ -670,10 +678,10 @@
 (defplace (dwim obj-place :env env . args) body
   (getter setter
     (with-gensyms (ogetter-sym osetter-sym obj-sym newval-sym)
-      (let ((arg-syms (mapcar (ret (gensym)) args))
-            (sys:*lisp1* t))
+      (let ((arg-syms (mapcar (ret (gensym)) args)))
         (if (place-form-p obj-place sys:*pl-env*)
-          (with-update-expander (ogetter-sym osetter-sym) obj-place sys:*pl-env*
+          (with-update-expander (ogetter-sym osetter-sym)
+                                ^(sys:l1-val ,obj-place) sys:*pl-env*
             ^(rlet ((,obj-sym (,ogetter-sym))
                     ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2))) arg-syms args))
                (macrolet ((,getter ()
@@ -697,10 +705,10 @@
                ,body))))))
   (ssetter
     (with-gensyms (osetter-sym ogetter-sym obj-sym newval-sym)
-      (let ((arg-syms (mapcar (ret (gensym)) args))
-            (sys:*lisp1* t))
+      (let ((arg-syms (mapcar (ret (gensym)) args)))
         (if (place-form-p obj-place sys:*pl-env*)
-          (with-update-expander (ogetter-sym osetter-sym) obj-place sys:*pl-env*
+          (with-update-expander (ogetter-sym osetter-sym)
+                                ^(sys:l1-val ,obj-place) sys:*pl-env*
             ^(macrolet ((,ssetter (val)
                          ^(rlet ((,',obj-sym (,',ogetter-sym))
                                  ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2)))
@@ -725,10 +733,10 @@
 
   (deleter
     (with-gensyms (osetter-sym ogetter-sym obj-sym oldval-sym)
-      (let ((arg-syms (mapcar (ret (gensym)) args))
-            (sys:*lisp1* t))
+      (let ((arg-syms (mapcar (ret (gensym)) args)))
         (if (place-form-p obj-place sys:*pl-env*)
-          (with-update-expander (ogetter-sym osetter-sym) obj-place sys:*pl-env*
+          (with-update-expander (ogetter-sym osetter-sym)
+                                ^(sys:l1-val ,obj-place) sys:*pl-env*
             ^(macrolet ((,deleter ()
                          ^(rlet ((,',obj-sym (,',ogetter-sym))
                                  ,*(mapcar (ret ^(,@1 (sys:l1-val ,@2)))
