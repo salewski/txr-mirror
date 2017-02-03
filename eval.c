@@ -2095,6 +2095,40 @@ static val expand_lisp1_value(val form, val menv)
   }
 }
 
+static val expand_lisp1_setq(val form, val menv)
+{
+  if (!consp(cdr(form)) || !consp(cddr(form)) || cdddr(form))
+    eval_error(form, lit("~s: invalid syntax"), car(form), nao);
+
+  {
+    val op = car(form);
+    val sym = cadr(form);
+    val newval = caddr(form);
+    val binding_type = lexical_lisp1_binding(menv, sym);
+
+    if (nilp(binding_type)) {
+      if (!bindable(sym))
+        eval_error(form, lit("~s: misapplied to form ~s"),
+                   op, sym, nao);
+      if (!lookup_var(nil, sym) && !lookup_fun(nil, sym))
+        eval_defr_warn(last_form_expanded,
+                       cons(var_s, sym),
+                       lit("~s: unbound variable/function ~s"),
+                       op, sym, nao);
+      return rlcp(cons(op, cons(sym, cons(expand(newval, menv), nil))),
+                  form);
+    }
+
+    if (binding_type == var_k)
+      return expand(rlcp(cons(setq_s, cddr(form)), form), menv);
+
+    if (binding_type == fun_k)
+      eval_error(form, lit("~s: cannot assign lexical function ~s"), op, sym, nao);
+
+    eval_error(form, lit("~s: misapplied to symbol macro ~s"), op, sym, nao);
+  }
+}
+
 static val op_lisp1_value(val form, val env)
 {
   val args = rest(form);
@@ -2118,6 +2152,8 @@ static val op_setqf(val form, val env)
   val binding = lookup_fun(env, var);
   if (nilp(binding))
     eval_error(form, lit("unbound function ~s"), var, nao);
+  if (binding != lookup_fun(env, nil))
+    eval_error(form, lit("cannot assign lexical function ~s"), var, nao);
   return sys_rplacd(binding, eval(newval, env, form));
 }
 
@@ -4126,6 +4162,8 @@ static val do_expand(val form, val menv)
       return expand(first(args), menv);
     } else if (sym == sys_lisp1_value_s) {
       return expand_lisp1_value(form, menv);
+    } else if (sym == lisp1_setq_s) {
+      return expand_lisp1_setq(form, menv);
     } else if (sym == var_s || sym == expr_s) {
       return form;
     } else {
@@ -4137,7 +4175,7 @@ static val do_expand(val form, val menv)
       val args = rest(form_ex);
       val args_ex = expand_forms(args, menv);
 
-      if (sym == setq_s || sym == lisp1_setq_s || sym == setqf_s) {
+      if (sym == setq_s || sym == setqf_s) {
         if (!args)
           eval_error(form, lit("~s: missing argument"), sym, nao);
 
