@@ -2129,6 +2129,28 @@ static val expand_lisp1_setq(val form, val menv)
   }
 }
 
+static val expand_setqf(val form, val menv)
+{
+  if (!consp(cdr(form)) || !consp(cddr(form)) || cdddr(form))
+    eval_error(form, lit("~s: invalid syntax"), car(form), nao);
+
+  {
+    val op = car(form);
+    val sym = cadr(form);
+    val newval = caddr(form);
+
+    if (lexical_fun_p(menv, sym))
+      eval_error(form, lit("~s: cannot assign lexical function ~s"), op, sym, nao);
+
+    if (!lookup_fun(nil, sym))
+      eval_defr_warn(last_form_expanded,
+                     cons(fun_s, sym), lit("~s: unbound function ~s"),
+                     op, sym, nao);
+
+    return rlcp(cons(op, cons(sym, cons(expand(newval, menv), nil))), form);
+  }
+}
+
 static val op_lisp1_value(val form, val env)
 {
   val args = rest(form);
@@ -4164,6 +4186,8 @@ static val do_expand(val form, val menv)
       return expand_lisp1_value(form, menv);
     } else if (sym == lisp1_setq_s) {
       return expand_lisp1_setq(form, menv);
+    } else if (sym == setqf_s) {
+      return expand_setqf(form, menv);
     } else if (sym == var_s || sym == expr_s) {
       return form;
     } else {
@@ -4175,7 +4199,7 @@ static val do_expand(val form, val menv)
       val args = rest(form_ex);
       val args_ex = expand_forms(args, menv);
 
-      if (sym == setq_s || sym == setqf_s) {
+      if (sym == setq_s) {
         if (!args)
           eval_error(form, lit("~s: missing argument"), sym, nao);
 
