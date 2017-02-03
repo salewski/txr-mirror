@@ -2064,7 +2064,7 @@ static val op_lisp1_setq(val form, val env)
 
   val binding = lookup_sym_lisp1(env, var);
   if (nilp(binding))
-    eval_error(form, lit("unbound variable ~s"), var, nao);
+    eval_error(form, lit("unbound variable/function ~s"), var, nao);
   return sys_rplacd(binding, eval(newval, env, form));
 }
 
@@ -2101,7 +2101,7 @@ static val op_lisp1_value(val form, val env)
   } else {
     val binding = lookup_sym_lisp1(env, arg);
     if (nilp(binding))
-      eval_error(form, lit("unbound variable ~s"), arg, nao);
+      eval_error(form, lit("unbound variable/function ~s"), arg, nao);
     return cdr(binding);
   }
 }
