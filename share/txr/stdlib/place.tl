@@ -165,6 +165,7 @@
     to-tree)
 
   (defun call-update-expander (getter setter unex-place env body)
+    (sys:propagate-ancestor body unex-place getter setter)
     (let* ((place (sys:pl-expand unex-place env))
            (expander (get-update-expander place))
            (sys:*pl-env* env)
@@ -173,6 +174,7 @@
       (sys:propagate-ancestor expansion-ex place getter setter)))
 
   (defun call-clobber-expander (ssetter unex-place env body)
+    (sys:propagate-ancestor body unex-place ssetter)
     (let* ((place (sys:pl-expand unex-place env))
            (expander (get-clobber-expander place))
            (sys:*pl-env* env)
@@ -181,6 +183,7 @@
       (sys:propagate-ancestor expansion-ex place ssetter)))
 
   (defun call-delete-expander (deleter unex-place env body)
+    (sys:propagate-ancestor body unex-place deleter)
     (let* ((place (sys:pl-expand unex-place env))
            (expander (get-delete-expander place))
            (sys:*pl-env* env)
