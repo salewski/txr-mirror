@@ -378,7 +378,7 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
       val oinfo = source_loc_str(origin, nil);
 
       if (origin) {
-        if (info)
+        if (oinfo)
           format(out_stream, lit("~a ... an expansion at ~a of ~!~s\n"),
                  prefix, oinfo, origin, nao);
         else
