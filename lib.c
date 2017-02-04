@@ -5137,6 +5137,7 @@ val rehome_sym(val sym, val package_in)
   }
   set(mkloc(sym->s.package, sym), package);
   sethash(package->pk.symhash, name, sym);
+  remhash(package->pk.hidhash, name);
   return sym;
 }
 
