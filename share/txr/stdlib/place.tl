@@ -155,20 +155,13 @@
   ^(let ,(zip syms (repeat '((gensym)))) ,*body))
 
 (macro-time
-  (defun sys:cp-origin (to-tree from-form : circ-check)
-    (unless (memq to-tree circ-check)
-      (tree-case to-tree
-        ((a . d) (whenlet ((next-orig nil)
-                           (visited-stack (list from-form))
-                           (orig (macro-ancestor to-tree)))
-                   (while (and (not (memq orig visited-stack))
-                               (sys:setq next-orig (macro-ancestor orig)))
-                     (sys:setq visited-stack (cons next-orig visited-stack))
-                     (sys:setq orig next-orig))
-                   (unless (memq orig visited-stack)
-                     (sys:set-macro-ancestor orig from-form)))
-                 (sys:cp-origin a from-form (cons to-tree circ-check))
-                 (sys:cp-origin d from-form (cons to-tree circ-check)))))
+  (defun sys:propagate-ancestor (to-tree from-form . syms)
+    (tree-case to-tree
+      ((a . d)
+       (when (memq a syms)
+         (sys:set-macro-ancestor to-tree from-form))
+       (sys:propagate-ancestor a from-form . syms)
+       (sys:propagate-ancestor d from-form . syms)))
     to-tree)
 
   (defun call-update-expander (getter setter unex-place env body)
@@ -177,7 +170,7 @@
            (sys:*pl-env* env)
            (expansion [expander getter setter place body])
            (expansion-ex (sys:expand expansion env)))
-      (sys:cp-origin expansion-ex place)))
+      (sys:propagate-ancestor expansion-ex place getter setter)))
 
   (defun call-clobber-expander (ssetter unex-place env body)
     (let* ((place (sys:pl-expand unex-place env))
@@ -185,7 +178,7 @@
            (sys:*pl-env* env)
            (expansion [expander ssetter place body])
            (expansion-ex (sys:expand expansion env)))
-      (sys:cp-origin expansion-ex place)))
+      (sys:propagate-ancestor expansion-ex place ssetter)))
 
   (defun call-delete-expander (deleter unex-place env body)
     (let* ((place (sys:pl-expand unex-place env))
@@ -193,7 +186,7 @@
            (sys:*pl-env* env)
            (expansion [expander deleter place body])
            (expansion-ex (sys:expand expansion env)))
-      (sys:cp-origin expansion-ex place))))
+      (sys:propagate-ancestor expansion-ex place deleter))))
 
 (defmacro with-update-expander ((getter setter) unex-place env body)
   ^(with-gensyms (,getter ,setter)
