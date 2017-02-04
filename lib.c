@@ -5033,7 +5033,7 @@ static val symbol_visible(val package, val sym)
     val cell = gethash_e(package->pk.symhash, name);
 
     if (cell)
-      return eq(car(cell), sym);
+      return eq(cdr(cell), sym);
   }
 
   {
@@ -5044,7 +5044,7 @@ static val symbol_visible(val package, val sym)
       val cell = gethash_e(fb_pkg->pk.symhash, name);
 
       if (cell)
-        return eq(car(cell), sym);
+        return eq(cdr(cell), sym);
     }
   }
 
