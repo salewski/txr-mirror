@@ -49952,9 +49952,10 @@ available. If the
 .meta alternative
 argument is present, it is returned.
 
-.coNP Function @ rlcp
+.coNP Functions @ rlcp and @ rlcp-tree
 .synb
 .mets (rlcp < dest-form << source-form )
+.mets (rlcp < dest-tree << source-form )
 .syne
 .desc
 The
@@ -49966,8 +49967,28 @@ object to the
 .meta dest-form
 object. These objects
 are pieces of list-based syntax.
+If
+.meta dest-form
+already has source code location info, then no copying
+takes place.
 
-Note: the function is intended to be used in macros. If a macro transforms
+The
+.code rlcp-tree
+function copies the source code location info from
+.code rlcp
+into every cons cell in the
+.meta dest-tree
+tree structure which doesn't already have location info.
+It may be regarded as a recursive application of
+.code rlcp
+via
+.cod3 car / cdr
+recursion on the tree structure. However, the traversal performed by
+.code rlcp-tree
+gracefully handles circular structures.
+
+Note: these functions are intended to be used in certain kinds of macros. If a
+macro transforms
 .meta source-form
 to
 .metn dest-form ,
@@ -49975,6 +49996,11 @@ this function can be used to propagate the
 source code location info also, so that when the \*(TL evaluator
 encounters errors in transformed code, it can give diagnostics which refer
 to the original untransformed source code.
+
+The macro expander already performs this transfer. If a macro call form
+has location info, the expander propagates that info to that form's
+expansion. In some situations, it is useful for a macro or other code
+transformer to perform this action explicitly.
 
 .coNP Function @ macro-ancestor
 .synb

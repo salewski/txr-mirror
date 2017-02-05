@@ -5979,6 +5979,7 @@ void eval_init(void)
   reg_fun(intern(lit("macro-ancestor"), user_package), func_n1(lookup_origin));
   reg_fun(intern(lit("set-macro-ancestor"), system_package), func_n2(set_origin));
   reg_fun(intern(lit("rlcp"), user_package), func_n2(rlcp));
+  reg_fun(intern(lit("rlcp-tree"), user_package), func_n2(rlcp_tree));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
