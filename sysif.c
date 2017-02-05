@@ -790,7 +790,7 @@ static val poll_wrap(val poll_list, val timeout_in)
       pfd[i].fd = c_num(obj);
       break;
     case COBJ:
-      if (obj->co.cls == stream_s) {
+      if (subtypep(obj->co.cls, stream_s)) {
         val fdval = stream_get_prop(obj, fd_k);
         if (!fdval) {
           free(pfd);
