@@ -2468,6 +2468,12 @@ val width(val obj)
   uw_throwf(error_s, lit("integer-length: ~s isn't an integer"), obj, nao);
 }
 
+static val bits(val obj)
+{
+  return normalize(bignum_from_uintptr(coerce(uint_ptr_t, obj)));
+}
+
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);
@@ -2500,6 +2506,8 @@ void arith_init(void)
 #endif
   reg_varl(intern(lit("*e*"), user_package), flo(M_E));
   reg_varl(intern(lit("%e%"), user_package), flo(M_E));
+
+  reg_fun(intern(lit("bits"), system_package), func_n1(bits));
 }
 
 void arith_free_all(void)
