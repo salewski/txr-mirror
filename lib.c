@@ -1519,179 +1519,177 @@ val rmember_if(val pred, val list, val key)
   return found;
 }
 
-val remq(val obj, val list_orig, val keyfun)
+static val rem_impl(val (*eqfun)(val, val),
+                    val obj, val seq_in, val keyfun_in)
 {
-  list_collect_decl (out, ptail);
-  val list = tolist(list_orig);
-  val lastmatch = cons(nil, list);
+  val keyfun = default_bool_arg(keyfun_in);
 
-  keyfun = default_bool_arg(keyfun);
+  switch (type(seq_in)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+  case COBJ:
+    {
+      list_collect_decl (out, ptail);
+      val list = seq_in;
+      val lastmatch = cons(nil, list);
 
-  gc_hint(list);
+      gc_hint(list);
 
-  for (; list; list = cdr(list)) {
-    val elem = car(list);
-    val key = keyfun ? funcall1(keyfun, elem) : elem;
+      for (; list; list = cdr(list)) {
+        val elem = car(list);
+        val key = keyfun ? funcall1(keyfun, elem) : elem;
 
-    if (key == obj) {
-      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
-      lastmatch = list;
+        if (eqfun(key, obj)) {
+          ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+          lastmatch = list;
+        }
+      }
+      ptail = list_collect_nconc(ptail, cdr(lastmatch));
+      return out;
     }
+  case LIT:
+  case STR:
+  case LSTR:
+    {
+      val out = mkustring(zero);
+      val str = seq_in;
+      cnum len = c_num(length_str(str)), i;
+
+      for (i = 0; i < len; i++) {
+        val elem = chr_str(str, num_fast(i));
+        val key = keyfun ? funcall1(keyfun, elem) : elem;
+
+        if (!eqfun(key, obj))
+          string_extend(out, elem);
+      }
+
+      return out;
+    }
+  case VEC:
+    {
+      val out = vector(zero, nil);
+      val vec = seq_in;
+      cnum len = c_num(length_vec(vec)), i;
+
+      for (i = 0; i < len; i++) {
+        val elem = vecref(vec, num_fast(i));
+        val key = keyfun ? funcall1(keyfun, elem) : elem;
+
+        if (!eqfun(key, obj))
+          vec_push(out, elem);
+      }
+
+      return out;
+    }
+  default:
+    uw_throwf(error_s, lit("remq: ~s isn't a sequence"), in, nao);
   }
-  ptail = list_collect_nconc(ptail, cdr(lastmatch));
-  return make_like(out, list_orig);
 }
 
-val remql(val obj, val list_orig, val keyfun)
+val remove_if(val pred, val seq_in, val keyfun_in)
 {
-  list_collect_decl (out, ptail);
-  val list = tolist(list_orig);
-  val lastmatch = cons(nil, list);
+  val keyfun = default_bool_arg(keyfun_in);
 
-  keyfun = default_bool_arg(keyfun);
+  switch (type(seq_in)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+  case COBJ:
+    {
+      list_collect_decl (out, ptail);
+      val list = seq_in;
+      val lastmatch = cons(nil, list);
 
-  gc_hint(list);
+      gc_hint(list);
 
-  for (; list; list = cdr(list)) {
-    val elem = car(list);
-    val key = keyfun ? funcall1(keyfun, elem) : elem;
+      for (; list; list = cdr(list)) {
+        val elem = car(list);
+        val key = keyfun ? funcall1(keyfun, elem) : elem;
 
-    if (eql(key, obj)) {
-      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
-      lastmatch = list;
+        if (funcall1(pred, key)) {
+          ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
+          lastmatch = list;
+        }
+      }
+      ptail = list_collect_nconc(ptail, cdr(lastmatch));
+      return out;
     }
+  case LIT:
+  case STR:
+  case LSTR:
+    {
+      val out = mkustring(zero);
+      val str = seq_in;
+      cnum len = c_num(length_str(str)), i;
+
+      for (i = 0; i < len; i++) {
+        val elem = chr_str(str, num_fast(i));
+        val key = keyfun ? funcall1(keyfun, elem) : elem;
+
+        if (!funcall1(pred, key))
+          string_extend(out, elem);
+      }
+
+      return out;
+    }
+  case VEC:
+    {
+      val out = vector(zero, nil);
+      val vec = seq_in;
+      cnum len = c_num(length_vec(vec)), i;
+
+      for (i = 0; i < len; i++) {
+        val elem = vecref(vec, num_fast(i));
+        val key = keyfun ? funcall1(keyfun, elem) : elem;
+
+        if (!funcall1(pred, key))
+          vec_push(out, elem);
+      }
+
+      return out;
+    }
+  default:
+    uw_throwf(error_s, lit("remq: ~s isn't a sequence"), in, nao);
   }
-  ptail = list_collect_nconc(ptail, cdr(lastmatch));
-  return make_like(out, list_orig);
 }
 
-val remqual(val obj, val list_orig, val keyfun)
+
+val remq(val obj, val seq, val keyfun)
 {
-  list_collect_decl (out, ptail);
-  val list = tolist(list_orig);
-  val lastmatch = cons(nil, list);
-
-  keyfun = default_bool_arg(keyfun);
-
-  gc_hint(list);
-
-  for (; list; list = cdr(list)) {
-    val elem = car(list);
-    val key = keyfun ? funcall1(keyfun, elem) : elem;
-
-    if (equal(key, obj)) {
-      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
-      lastmatch = list;
-    }
-  }
-  ptail = list_collect_nconc(ptail, cdr(lastmatch));
-  return make_like(out, list_orig);
+  return rem_impl(eq, obj, seq, keyfun);
 }
 
-val remove_if(val pred, val list_orig, val key)
+val remql(val obj, val seq, val keyfun)
 {
-  list_collect_decl (out, ptail);
-  val list = tolist(list_orig);
-  val lastmatch = cons(nil, list);
-
-  key = default_arg(key, identity_f);
-
-  gc_hint(list);
-
-  for (; list; list = cdr(list)) {
-    val subj = funcall1(key, car(list));
-    val satisfies = funcall1(pred, subj);
-
-    if (satisfies) {
-      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
-      lastmatch = list;
-    }
-  }
-  ptail = list_collect_nconc(ptail, cdr(lastmatch));
-  return make_like(out, list_orig);
+  return rem_impl(eql, obj, seq, keyfun);
 }
 
-val keepq(val obj, val list_orig, val key)
+val remqual(val obj, val seq, val keyfun)
 {
-  list_collect_decl (out, ptail);
-  val list = tolist(list_orig);
-  val lastmatch = cons(nil, list);
-
-  key = default_arg(key, identity_f);
-
-  gc_hint(list);
-
-  for (; list; list = cdr(list)) {
-    if (funcall1(key, car(list)) != obj) {
-      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
-      lastmatch = list;
-    }
-  }
-  ptail = list_collect_nconc(ptail, cdr(lastmatch));
-  return make_like(out, list_orig);
+  return rem_impl(equal, obj, seq, keyfun);
 }
 
-val keepql(val obj, val list_orig, val key)
+val keepq(val obj, val seq, val keyfun)
 {
-  list_collect_decl (out, ptail);
-  val list = tolist(list_orig);
-  val lastmatch = cons(nil, list);
-
-  key = default_arg(key, identity_f);
-
-  gc_hint(list);
-
-  for (; list; list = cdr(list)) {
-    if (!eql(funcall1(key, car(list)), obj)) {
-      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
-      lastmatch = list;
-    }
-  }
-  ptail = list_collect_nconc(ptail, cdr(lastmatch));
-  return make_like(out, list_orig);
+  return rem_impl(neq, obj, seq, keyfun);
 }
 
-val keepqual(val obj, val list_orig, val key)
+val keepql(val obj, val seq, val keyfun)
 {
-  list_collect_decl (out, ptail);
-  val list = tolist(list_orig);
-  val lastmatch = cons(nil, list);
-
-  key = default_arg(key, identity_f);
-
-  gc_hint(list);
-
-  for (; list; list = cdr(list)) {
-    if (!equal(funcall1(key, car(list)), obj)) {
-      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
-      lastmatch = list;
-    }
-  }
-  ptail = list_collect_nconc(ptail, cdr(lastmatch));
-  return make_like(out, list_orig);
+  return rem_impl(neql, obj, seq, keyfun);
 }
 
-val keep_if(val pred, val list_orig, val key)
+val keepqual(val obj, val seq, val keyfun)
 {
-  list_collect_decl (out, ptail);
-  val list = tolist(list_orig);
-  val lastmatch = cons(nil, list);
+  return rem_impl(nequal, obj, seq, keyfun);
+}
 
-  key = default_arg(key, identity_f);
-
-  gc_hint(list);
-
-  for (; list; list = cdr(list)) {
-    val subj = funcall1(key, car(list));
-    val satisfies = funcall1(pred, subj);
-
-    if (!satisfies) {
-      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
-      lastmatch = list;
-    }
-  }
-  ptail = list_collect_nconc(ptail, cdr(lastmatch));
-  return make_like(out, list_orig);
+val keep_if(val pred, val seq, val keyfun)
+{
+  return remove_if(notf(pred), seq, keyfun);
 }
 
 static val rem_lazy_rec(val obj, val list, val env, val func);
