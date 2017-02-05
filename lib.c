@@ -1644,7 +1644,6 @@ val keepql(val obj, val list_orig, val key)
   for (; list; list = cdr(list)) {
     if (!eql(funcall1(key, car(list)), obj)) {
       ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
-      ptail = list_collect_nconc(ptail, ldiff(cdr(lastmatch), list));
       lastmatch = list;
     }
   }
