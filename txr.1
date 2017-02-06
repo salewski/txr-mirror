@@ -14283,6 +14283,23 @@ as well as the anaphoric
 .code it
 variable feature.
 
+.coNP Macro @ whena
+.synb
+.mets (whena < test << form *)
+.syne
+.desc
+The
+.code whena
+macro is similar to the
+.code when
+macro, except that it is anaphoric in exactly the same manner as the
+.code ifa
+macro. It may be understood as conforming to the following equivalence:
+
+.cblk
+  (whena x f0 f2 ...)  <-->  (if x (progn f0 f2 ...))
+.cble
+
 .coNP Macro @ dotimes
 .synb
 .mets (dotimes >> ( var < count-form <> [ result-form ]) << body-form *)

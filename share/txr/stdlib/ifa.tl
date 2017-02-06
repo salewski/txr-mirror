@@ -66,6 +66,9 @@
                   (if (,sym ,*(if (eq 'dwim sym) ^(,(second test)))
                             ,*temps) ,then ,else)))))))))
 
+(defmacro whena (test . body)
+  ^(ifa ,test (progn ,*body)))
+
 (macro-time
   (defun sys:if-to-cond (if-oper cond-oper pairs)
     (tree-case pairs

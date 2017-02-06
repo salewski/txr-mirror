@@ -106,7 +106,9 @@ static val ver_instantiate(val set_fun)
 
 static val ifa_set_entries(val dlt, val fun)
 {
-  val name[] = { lit("ifa"), lit("conda"), lit("condlet"), nil };
+  val name[] = {
+    lit("ifa"), lit("whena"), lit("conda"), lit("condlet"), nil
+  };
   set_dlt_entries(dlt, name, fun);
   return nil;
 }
