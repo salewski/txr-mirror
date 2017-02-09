@@ -692,6 +692,56 @@ static void copy_env_handler(mem_t *ptr, int parent)
   *penv = copy_env(*penv);
 }
 
+static val squash_menv_deleting_range(val menv, val upto_menv)
+{
+  val varshadows = nil, funshadows = nil;
+  val iter, next, out_env;
+
+  if (!upto_menv)
+    return nil;
+
+  out_env = make_env(nil, nil, nil);
+
+  for (iter = menv; iter && iter != upto_menv; iter = next) {
+    type_check(iter, ENV);
+    varshadows = append2(varshadows, mapcar(car_f, iter->e.vbindings));
+    funshadows = append2(funshadows, mapcar(car_f, iter->e.fbindings));
+    next = iter->e.up_env;
+  }
+
+  if (!iter)
+    return nil;
+
+  for (; iter; iter = next) {
+    val viter, fiter;
+
+    for (viter = iter->e.vbindings; viter; viter = cdr(viter)) {
+      val binding = car(viter);
+      val sym = car(binding);
+      if (memq(sym, varshadows))
+        continue;
+      if (cdr(binding) != special_s)
+        continue;
+      push(sym, &varshadows);
+      env_vbind(out_env, sym, special_s);
+    }
+
+    for (fiter = iter->e.fbindings; fiter; fiter = cdr(fiter)) {
+      val binding = car(fiter);
+      val sym = car(binding);
+      if (memq(sym, funshadows))
+        continue;
+      if (cdr(binding) != special_s)
+        continue;
+      push(sym, &funshadows);
+      env_fbind(out_env, sym, special_s);
+    }
+    next = iter->e.up_env;
+  }
+
+  return out_env;
+}
+
 static val bind_args(val env, val params, struct args *args, val ctx)
 {
   val new_env = make_env(nil, nil, env);
@@ -4289,21 +4339,36 @@ static val gather_free_refs(val info_cons, val exc, struct args *args)
       if (!memq(sym, deref(dl)))
         mpush(sym, dl);
     }
+    uw_throw(continue_s, nil);
   }
 
+  return nil;
+}
+
+static val gather_free_refs_nw(val info_cons, val exc,
+                               struct args *args)
+{
+  gather_free_refs(info_cons, exc, args);
   uw_throw(continue_s, nil);
 }
 
-static val expand_with_free_refs(val form, val menv)
+static val expand_with_free_refs(val form, val menv, val upto_menv)
 {
   val ret;
   uw_frame_t uw_handler;
-  val info_cons = cons(nil, nil);
+  val info_cons_free = cons(nil, nil);
+  val info_cons_bound = cons(nil, nil);
   uw_push_handler(&uw_handler, cons(warning_s, nil),
-                  func_f1v(info_cons, gather_free_refs));
+                  func_f1v(info_cons_free, gather_free_refs));
   ret = expand(form, menv);
   uw_pop_frame(&uw_handler);
-  return list(ret, car(info_cons), cdr(info_cons), nao);
+  uw_push_handler(&uw_handler, cons(warning_s, nil),
+                  func_f1v(info_cons_bound, gather_free_refs_nw));
+  (void) expand(ret,
+                squash_menv_deleting_range(menv, upto_menv));
+  uw_pop_frame(&uw_handler);
+  return list(ret, car(info_cons_free), cdr(info_cons_free),
+              car(info_cons_bound), cdr(info_cons_bound), nao);
 }
 
 val macro_form_p(val form, val menv)
@@ -5711,7 +5776,8 @@ void eval_init(void)
   reg_var(load_path_s, nil);
   reg_symacro(intern(lit("self-load-path"), user_package), load_path_s);
   reg_fun(intern(lit("expand"), system_package), func_n2o(no_warn_expand, 1));
-  reg_fun(intern(lit("expand-with-free-refs"), system_package), func_n2o(expand_with_free_refs, 1));
+  reg_fun(intern(lit("expand-with-free-refs"), system_package),
+          func_n3o(expand_with_free_refs, 1));
   reg_fun(intern(lit("macro-form-p"), user_package), func_n2o(macro_form_p, 1));
   reg_fun(intern(lit("macroexpand-1"), user_package),
           func_n2o(macroexpand_1, 1));
