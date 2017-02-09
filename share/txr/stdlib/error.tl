@@ -37,7 +37,9 @@
 (defun compile-warning (ctx fmt . args)
   (let ((loc (sys:loc ctx))
         (name (sys:ctx-name ctx)))
-    (throwf 'warning `@loc~s: @fmt` name . args)))
+    (catch
+      (throwf 'warning `@loc~s: @fmt` name . args)
+      (continue ()))))
 
 (defun compile-defr-warning (ctx tag fmt . args)
   (let ((loc (sys:loc ctx))
