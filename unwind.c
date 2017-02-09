@@ -428,6 +428,14 @@ val uw_muffle_warning(val exc, struct args *args)
   uw_throw(continue_s, nil);
 }
 
+val uw_muffle_deferrable_warning(val exc, struct args *args)
+{
+  (void) exc;
+  if (args_count(args) == 2)
+    uw_throw(continue_s, nil);
+  return nil;
+}
+
 void uw_push_cont_copy(uw_frame_t *fr, mem_t *ptr,
                        void (*copy)(mem_t *ptr, int parent))
 {

@@ -4260,7 +4260,7 @@ static val no_warn_expand(val form, val menv)
   val ret;
   uw_frame_t uw_handler;
   uw_push_handler(&uw_handler, cons(warning_s, nil),
-                  func_n1v(uw_muffle_warning));
+                  func_n1v(uw_muffle_deferrable_warning));
   ret = expand(form, menv);
   uw_pop_frame(&uw_handler);
   return ret;
