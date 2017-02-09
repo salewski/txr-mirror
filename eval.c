@@ -3390,7 +3390,7 @@ static val me_op(val form, val menv)
   uw_frame_t uw_handler;
   val new_menv = make_var_shadowing_env(menv, cons(rest_s, nil));
   val body_ex = (uw_push_handler(&uw_handler, cons(warning_s, nil),
-                                 func_n1v(uw_muffle_warning)),
+                                 func_n1v(uw_muffle_deferrable_warning)),
                  if3(sym == op_s,
                     expand_forms_lisp1(body, new_menv),
                     expand(body, new_menv)));
