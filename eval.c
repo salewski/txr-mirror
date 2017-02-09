@@ -4208,12 +4208,18 @@ static val do_expand(val form, val menv)
         if (cddr(args))
           eval_error(form, lit("~s: excess arguments"), sym, nao);
 
-        if (!bindable(car(args)))
-          not_bindable_warning(form, car(args));
+        {
+          val target = car(args);
 
-        if (car(args_ex) != car(args))
-          eval_error(form, lit("~s: misapplied to symbol macro ~a"), sym,
-                     car(args), nao);
+          if (!consp(target) || car(target) != var_s) {
+            if (!bindable(target))
+              not_bindable_warning(form, car(args));
+
+            if (car(args_ex) != target)
+              eval_error(form, lit("~s: misapplied to symbol macro ~a"), sym,
+                         car(args), nao);
+          }
+        }
       }
 
       if (!lookup_fun(menv, sym) && !special_operator_p(sym)) {
