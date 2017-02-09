@@ -4266,6 +4266,40 @@ static val no_warn_expand(val form, val menv)
   return ret;
 }
 
+static val gather_free_refs(val info_cons, val exc, struct args *args)
+{
+  (void) exc;
+
+  if (args_count(args) == 2) {
+    val sym = args_get_rest(args, 2);
+    val tag = args_at(args, 1);
+
+    if (tag == var_s) {
+      loc al = car_l(info_cons);
+      if (!memq(sym, deref(al)))
+        mpush(sym, al);
+    } else if (tag == fun_s) {
+      loc dl = cdr_l(info_cons);
+      if (!memq(sym, deref(dl)))
+        mpush(sym, dl);
+    }
+  }
+
+  uw_throw(continue_s, nil);
+}
+
+static val expand_with_free_refs(val form, val menv)
+{
+  val ret;
+  uw_frame_t uw_handler;
+  val info_cons = cons(nil, nil);
+  uw_push_handler(&uw_handler, cons(warning_s, nil),
+                  func_f1v(info_cons, gather_free_refs));
+  ret = expand(form, menv);
+  uw_pop_frame(&uw_handler);
+  return list(ret, car(info_cons), cdr(info_cons), nao);
+}
+
 val macro_form_p(val form, val menv)
 {
   menv = default_bool_arg(menv);
@@ -5671,6 +5705,7 @@ void eval_init(void)
   reg_var(load_path_s, nil);
   reg_symacro(intern(lit("self-load-path"), user_package), load_path_s);
   reg_fun(intern(lit("expand"), system_package), func_n2o(no_warn_expand, 1));
+  reg_fun(intern(lit("expand-with-free-refs"), system_package), func_n2o(expand_with_free_refs, 1));
   reg_fun(intern(lit("macro-form-p"), user_package), func_n2o(macro_form_p, 1));
   reg_fun(intern(lit("macroexpand-1"), user_package),
           func_n2o(macroexpand_1, 1));
