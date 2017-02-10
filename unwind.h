@@ -130,6 +130,7 @@ noreturn val uw_errorf(val fmt, ...);
 noreturn val uw_errorfv(val fmt, struct args *args);
 val uw_defer_warning(val args);
 val uw_dump_deferred_warnings(val stream);
+val uw_release_deferred_warnings(void);
 val uw_purge_deferred_warning(val tag);
 val uw_register_tentative_def(val tag);
 val uw_tentative_def_exists(val tag);

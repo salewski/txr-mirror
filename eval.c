@@ -225,7 +225,7 @@ noreturn static void eval_exception(val sym, val ctx, val fmt, va_list vl)
 
   (void) vformat(stream, fmt, vl);
 
-  uw_dump_deferred_warnings(std_error);
+  uw_release_deferred_warnings();
 
   uw_throw(sym, get_string_from_stream(stream));
 }
@@ -1330,7 +1330,7 @@ val eval_intrinsic(val form, val env)
   val form_ex = (last_form_expanded = last_form_evaled = nil,
                  expand(form, nil));
   val loading = cdr(lookup_var(dyn_env, load_recursive_s));
-  val ret = ((void) (loading || uw_dump_deferred_warnings(std_error)),
+  val ret = ((void) (loading || uw_release_deferred_warnings()),
              eval(form_ex, default_bool_arg(env), form));
   last_form_expanded = lfx_save;
   last_form_evaled = lfe_save;
@@ -3858,7 +3858,7 @@ val load(val target)
   dyn_env = saved_dyn_env;
 
   if (!rec)
-    uw_dump_deferred_warnings(std_error);
+    uw_release_deferred_warnings();
 
   uw_unwind {
     close_stream(stream, nil);

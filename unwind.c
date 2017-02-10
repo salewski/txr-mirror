@@ -45,6 +45,7 @@
 #include "signal.h"
 #include "eval.h"
 #include "struct.h"
+#include "cadr.h"
 #include ALLOCA_H
 #include "unwind.h"
 
@@ -714,6 +715,26 @@ val uw_dump_deferred_warnings(val stream)
   return nil;
 }
 
+val uw_release_deferred_warnings(void)
+{
+  val wl = nreverse(zap(&deferred_warnings));
+
+  for (; wl; wl = cdr(wl)) {
+
+    uw_catch_begin (cons(continue_s, nil), exsym, exvals);
+
+    uw_throw(warning_s, caar(wl));
+
+    uw_catch(exsym, exvals) { (void) exsym; (void) exvals; }
+
+    uw_unwind;
+
+    uw_catch_end;
+  }
+
+  return nil;
+}
+
 val uw_purge_deferred_warning(val tag)
 {
   deferred_warnings = remqual(tag, deferred_warnings, cdr_f);
@@ -1051,6 +1072,7 @@ void uw_late_init(void)
   reg_fun(intern(lit("tentative-def-exists"), user_package), func_n1(uw_tentative_def_exists));
   reg_fun(intern(lit("defer-warning"), user_package), func_n1(uw_defer_warning));
   reg_fun(intern(lit("dump-deferred-warnings"), user_package), func_n1(uw_dump_deferred_warnings));
+  reg_fun(intern(lit("release-deferred-warnings"), user_package), func_n0(uw_release_deferred_warnings));
   reg_fun(intern(lit("register-exception-subtypes"), user_package),
           func_n0v(register_exception_subtypes));
   reg_fun(intern(lit("exception-subtype-p"), user_package),

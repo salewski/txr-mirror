@@ -34199,6 +34199,19 @@ deferrable warnings, and prints ordinary warnings:
       (throw 'continue))) ;; warning processed: resume execution
 .cble
 
+.coNP Function @ release-deferred-warnings
+.synb
+.mets (release-deferred-warnings)
+.syne
+.desc
+The
+.code release-deferred-warnings
+removes all warnings from the deferred list.
+Then, it issues each deferred warning as an ordinary warning.
+
+Note: there is normally no need for user programs to use this
+function since deferred warnings are issued automatically.
+
 .coNP Function @ dump-deferred-warnings
 .synb
 .mets (dump-deferred-warning << stream )
@@ -34206,15 +34219,15 @@ deferrable warnings, and prints ordinary warnings:
 .desc
 The
 .code dump-deferred-warnings
-converts the list of pending warnings into diagnostic messages
+empties the list of deferred warnings, and converts each one
+into a diagnostic message sent to
 sent to
 .metn stream .
-After the diagnostics are issued, the list of pending warnings
+After the diagnostics are printed, the list of pending warnings
 is cleared.
 
 Note: there is normally no need for user programs to use this
-function since deferred warnings are printed in various necessary
-circumstances.
+function since deferred warnings are issued automatically.
 
 .SS* Delimited Continuations
 

@@ -896,7 +896,7 @@ static val read_eval_ret_last(val env, val counter,
   dyn_env = saved_dyn_env;
 
   if (!loading)
-    uw_dump_deferred_warnings(out_stream);
+    uw_release_deferred_warnings();
 
   prinl(value, out_stream);
   return t;
