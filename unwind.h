@@ -151,7 +151,6 @@ val uw_find_frame(val extype, val frtype);
 val uw_find_frames(val extype, val frtype);
 val uw_invoke_catch(val catch_frame, val sym, struct args *);
 val uw_muffle_warning(val exc, struct args *);
-val uw_muffle_deferrable_warning(val exc, struct args *);
 val uw_capture_cont(val tag, val fun, val ctx_form);
 void uw_push_cont_copy(uw_frame_t *, mem_t *ptr,
                        void (*copy)(mem_t *ptr, int parent));

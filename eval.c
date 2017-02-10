@@ -278,7 +278,8 @@ static val eval_defr_warn(val ctx, val tag, val fmt, ...)
 
     (void) vformat(stream, fmt, vl);
 
-    uw_throw(warning_s, cons(get_string_from_stream(stream), tag));
+    uw_throw(defr_warning_s,
+             cons(get_string_from_stream(stream), cons(tag, nil)));
   }
 
   uw_catch(exsym, exvals) { (void) exsym; (void) exvals; }
@@ -3439,8 +3440,8 @@ static val me_op(val form, val menv)
   cons_bind (sym, body, form);
   uw_frame_t uw_handler;
   val new_menv = make_var_shadowing_env(menv, cons(rest_s, nil));
-  val body_ex = (uw_push_handler(&uw_handler, cons(warning_s, nil),
-                                 func_n1v(uw_muffle_deferrable_warning)),
+  val body_ex = (uw_push_handler(&uw_handler, cons(defr_warning_s, nil),
+                                 func_n1v(uw_muffle_warning)),
                  if3(sym == op_s,
                     expand_forms_lisp1(body, new_menv),
                     expand(body, new_menv)));
@@ -4315,8 +4316,8 @@ static val no_warn_expand(val form, val menv)
 {
   val ret;
   uw_frame_t uw_handler;
-  uw_push_handler(&uw_handler, cons(warning_s, nil),
-                  func_n1v(uw_muffle_deferrable_warning));
+  uw_push_handler(&uw_handler, cons(defr_warning_s, nil),
+                  func_n1v(uw_muffle_warning));
   ret = expand(form, menv);
   uw_pop_frame(&uw_handler);
   return ret;
@@ -4326,15 +4327,17 @@ static val gather_free_refs(val info_cons, val exc, struct args *args)
 {
   (void) exc;
 
-  if (args_count(args) == 2) {
-    val sym = args_get_rest(args, 2);
-    val tag = args_at(args, 1);
+  args_normalize(args, 2);
 
-    if (tag == var_s) {
+  if (args_count(args) == 2) {
+    val tag = args_at(args, 1);
+    cons_bind (kind, sym, tag);
+
+    if (kind == var_s) {
       loc al = car_l(info_cons);
       if (!memq(sym, deref(al)))
         mpush(sym, al);
-    } else if (tag == fun_s) {
+    } else if (kind == fun_s) {
       loc dl = cdr_l(info_cons);
       if (!memq(sym, deref(dl)))
         mpush(sym, dl);
@@ -4360,11 +4363,11 @@ static val expand_with_free_refs(val form, val menv_in, val upto_menv_in)
   uw_frame_t uw_handler;
   val info_cons_free = cons(nil, nil);
   val info_cons_bound = cons(nil, nil);
-  uw_push_handler(&uw_handler, cons(warning_s, nil),
+  uw_push_handler(&uw_handler, cons(defr_warning_s, nil),
                   func_f1v(info_cons_free, gather_free_refs));
   ret = expand(form, menv);
   uw_pop_frame(&uw_handler);
-  uw_push_handler(&uw_handler, cons(warning_s, nil),
+  uw_push_handler(&uw_handler, cons(defr_warning_s, nil),
                   func_f1v(info_cons_bound, gather_free_refs_nw));
   (void) expand(ret,
                 squash_menv_deleting_range(menv, upto_menv));

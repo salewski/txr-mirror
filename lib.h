@@ -441,7 +441,8 @@ extern val eof_s, eol_s, assert_s, name_s;
 extern val error_s, type_error_s, internal_error_s, panic_s;
 extern val numeric_error_s, range_error_s;
 extern val query_error_s, file_error_s, process_error_s, syntax_error_s;
-extern val system_error_s, timeout_error_s, warning_s, restart_s, continue_s;
+extern val timeout_error_s, system_error_s;
+extern val warning_s, defr_warning_s, restart_s, continue_s;
 extern val gensym_counter_s;
 
 #define gensym_counter (deref(lookup_var_l(nil, gensym_counter_s)))

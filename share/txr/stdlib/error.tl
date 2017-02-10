@@ -45,5 +45,5 @@
   (let ((loc (sys:loc ctx))
         (name (sys:ctx-name ctx)))
     (catch
-      (throw 'warning (fmt `@loc~s: @fmt` name . args) . tag)
+      (throw 'defr-warning (fmt `@loc~s: @fmt` name . args)  tag)
       (continue ()))))

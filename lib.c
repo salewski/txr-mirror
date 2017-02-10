@@ -101,7 +101,8 @@ val eof_s, eol_s, assert_s, name_s;
 val error_s, type_error_s, internal_error_s, panic_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s, syntax_error_s;
-val timeout_error_s, system_error_s, warning_s, restart_s, continue_s;
+val timeout_error_s, system_error_s;
+val warning_s, defr_warning_s, restart_s, continue_s;
 val gensym_counter_s, nullify_s, from_list_s, lambda_set_s;
 
 val nothrow_k, args_k, colon_k, auto_k, fun_k;
@@ -9484,6 +9485,7 @@ static void obj_init(void)
   timeout_error_s = intern(lit("timeout-error"), user_package);
   assert_s = intern(lit("assert"), user_package);
   warning_s = intern(lit("warning"), user_package);
+  defr_warning_s = intern(lit("defr-warning"), user_package);
   restart_s = intern(lit("restart"), user_package);
   continue_s = intern(lit("continue"), user_package);
   name_s = intern(lit("name"), user_package);

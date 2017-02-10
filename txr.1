@@ -33976,16 +33976,21 @@ The generation of a warning thus conforms to the following pattern:
 
 \*(TX supports a form of diagnostic known as a
 .IR "deferrable warning" .
-A deferrable warning, like an ordinary warning, is an exception of type
-.code warning
-or subtyped from that type. It is distinguished from a regular
-warning by the presence of additional argument material after
-the exception message. Specifically, a deferrable exception
-is thrown according to this pattern:
+A deferrable warning is distinguished in two ways. Firstly, it is
+either of the type
+.code defr-warning
+or subtyped from that type. The
+.code defr-warning
+type itself is a direct subtype of
+.codn warning .
+
+Secondly, a deferrable warning carries an additional tag argument after the
+exception message. A deferrable exception is thrown according to
+this pattern:
 
 .cblk
   (catch
-    (throw 'warning "message" . tag)
+    (throw 'defr-warning "message" . tag)
     (continue ()))
 .cble
 
@@ -33997,7 +34002,7 @@ is searched for the presence of the tag, using
 equality. If the tag is found, then the warning is discarded.
 If the tag is not found, then the exception argument list is added
 to the global
-.IR "deferred exception list" .
+.IR "deferred warning list" .
 In either case,
 the
 .code continue
@@ -34011,8 +34016,11 @@ superfluous if a definition of that function is supplied later,
 yet before that function call is executed.
 
 Deferred warnings accumulate in the deferred warning list
-from which they can be removed. The list is displays at
-various times such as when a top-level load completes.
+from which they can be removed. The list is purged at various
+times such as when a top-level load completes, and the
+deferred warnings are released, as if by a call to the
+.code release-deferred-warnings
+function.
 
 .coNP Functions @ compile-error and @ compile-warning
 .synb
@@ -34065,13 +34073,28 @@ and its
 .desc
 The
 .code compile-defr-warning
-is very similar to
-.codn compile-warning .
-The difference is that it features a
+function throws an exception of type
+.code defr-warning
+and internally provides the expected
+.code catch
+for the
+.code continue
+exception needed to resume after the warning.
+
+The function produces a diagnostic message which
+incorporates the location information and symbol
+obtained from
+.meta context-obj
+and the
+.codn format -style
+arguments
+.meta fmt-string
+and its
+.metn fmt-arg -s.
+This diagnostic message constitutes the first
+argument of the exception. The
 .meta tag
-parameter whose argument it incorporates into the
-.code warning
-exception to mark it as a deferrable warning.
+argument is taken as the second argument.
 
 .coNP Function @ purge-deferred-warning
 .synb
@@ -34192,10 +34215,11 @@ deferrable warnings, and prints ordinary warnings:
 .cblk
   (handle
     (some-form ..) ;; some code which might generate warnings
-    (warning (msg . args)
-      (if (car args)
-        (defer-warning (cons msg args)) ;; tag present: defer
-        (put-line `warning: @msg`)) ;; print immediately
+    (defr-warning (msg tag) ;; catch deferrable and defer
+      (defer-warning (cons msg tag))
+      (throw 'continue)) ;; warning processed: resume execution
+    (warning (msg)
+      (put-line `warning: @msg`) ;; print non-deferrable
       (throw 'continue))) ;; warning processed: resume execution
 .cble
 

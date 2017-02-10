@@ -429,14 +429,6 @@ val uw_muffle_warning(val exc, struct args *args)
   uw_throw(continue_s, nil);
 }
 
-val uw_muffle_deferrable_warning(val exc, struct args *args)
-{
-  (void) exc;
-  if (args_count(args) == 2)
-    uw_throw(continue_s, nil);
-  return nil;
-}
-
 void uw_push_cont_copy(uw_frame_t *fr, mem_t *ptr,
                        void (*copy)(mem_t *ptr, int parent))
 {
@@ -587,9 +579,9 @@ val uw_throw(val sym, val args)
       abort();
     }
 
-    if (sym == warning_s) {
+    if (uw_exception_subtype_p(sym, warning_s)) {
       --reentry_count;
-      if (cdr(args))
+      if (uw_exception_subtype_p(sym, defr_warning_s))
         uw_defer_warning(args);
       else
         format(std_error, lit("warning: ~a\n"), car(args), nao);
@@ -685,9 +677,10 @@ val type_mismatch(val fmt, ...)
 
 val uw_defer_warning(val args)
 {
-  val tag = cdr(args);
+  val msg = car(args);
+  val tag = cadr(args);
   if (!memqual(tag, tentative_defs))
-    push(args, &deferred_warnings);
+    push(cons(msg, tag), &deferred_warnings);
   return nil;
 }
 
@@ -1087,4 +1080,5 @@ void uw_late_init(void)
           func_n3o(uw_capture_cont, 2));
   uw_register_subtype(continue_s, restart_s);
   uw_register_subtype(warning_s, t);
+  uw_register_subtype(defr_warning_s, warning_s);
 }
