@@ -268,12 +268,13 @@
          awc.cond-actions (nreverse awc.cond-actions))
     awc))
 
-(defun sys:awk-code-move-check (awc aws-sym form suspicious-vars)
+(defun sys:awk-code-move-check (awc aws-sym mainform subform
+                                suspicious-vars kind)
   (when suspicious-vars
-    (compile-warning form "~!form ~s\n\
-                           is moved out of the apparent scope\n\
-                           and thus cannot refer to variables ~s"
-                     form suspicious-vars)))
+    (compile-warning mainform "~!form ~s\n\
+                               is moved out of the apparent scope\n\
+                               and thus cannot refer to ~s ~s"
+                     subform kind suspicious-vars)))
 
 (defmacro sys:awk-mac-let (awc aws-sym . body)
   ^(symacrolet ((rec (rslot ,aws-sym 'rec 'rec-to-f))
@@ -303,16 +304,30 @@
                         (flag-old (gensym))
                         (flag-new (gensym)))
                     (tree-bind ((from-expr-ex fe-fv fe-ff fe-ev fe-ef)
-                                (to-expr-ex te-fv te-ff te-ev te-ef))
+                                (to-expr-ex te-fv te-ff te-ev te-ef)
+                                (from-expr-orig to-expr-orig))
                                (list
                                  (sys:expand-with-free-refs from-expr e
                                                             ,awc.outer-env)
                                  (sys:expand-with-free-refs to-expr e
-                                                            ,awc.outer-env))
-                      (sys:awk-code-move-check ,awc ',aws-sym form
-                                               (set-diff fe-ev fe-fv))
-                      (sys:awk-code-move-check ,awc ',aws-sym form
-                                               (set-diff te-ev te-fv))
+                                                            ,awc.outer-env)
+                                 (list (cadr form) (caddr form)))
+                      (sys:awk-code-move-check ,awc ',aws-sym
+                                               form from-expr-orig
+                                               (set-diff fe-ev fe-fv)
+                                               'variables)
+                      (sys:awk-code-move-check ,awc ',aws-sym
+                                               form from-expr-orig
+                                               (set-diff fe-ef fe-ff)
+                                               'functions)
+                      (sys:awk-code-move-check ,awc ',aws-sym
+                                               form to-expr-orig
+                                               (set-diff te-ev te-fv)
+                                               'variables)
+                      (sys:awk-code-move-check ,awc ',aws-sym
+                                               form to-expr-orig
+                                               (set-diff te-ef te-ff)
+                                               'functions)
                       (push rng-temp (qref ,awc rng-expr-temps))
                       (push ^(placelet ((flag (vecref (qref ,',aws-sym rng-vec) ,ix)))
                                (let* ((,flag-old flag) ,flag-new)
