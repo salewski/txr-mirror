@@ -4352,9 +4352,11 @@ static val gather_free_refs_nw(val info_cons, val exc,
   uw_throw(continue_s, nil);
 }
 
-static val expand_with_free_refs(val form, val menv, val upto_menv)
+static val expand_with_free_refs(val form, val menv_in, val upto_menv_in)
 {
   val ret;
+  val menv = default_bool_arg(menv_in);
+  val upto_menv = default_bool_arg(upto_menv_in);
   uw_frame_t uw_handler;
   val info_cons_free = cons(nil, nil);
   val info_cons_bound = cons(nil, nil);
