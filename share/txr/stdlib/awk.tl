@@ -60,7 +60,8 @@
   (nranges 0)
   (rng-rec-temp (gensym))
   rng-expr-temps
-  rng-exprs)
+  rng-exprs
+  outer-env)
 
 (defmeth sys:awk-state rec-to-f (self)
   (cond
@@ -215,8 +216,8 @@
                                           (progn ,*body)))
           stream-var))))
 
-(defun sys:awk-expander (clauses)
-  (let ((awc (new sys:awk-compile-time)))
+(defun sys:awk-expander (outer-env clauses)
+  (let ((awc (new sys:awk-compile-time outer-env outer-env)))
     (each ((cl clauses))
       (tree-case cl
         ((pattern . actions) (caseql pattern
@@ -267,6 +268,13 @@
          awc.cond-actions (nreverse awc.cond-actions))
     awc))
 
+(defun sys:awk-code-move-check (awc aws-sym form suspicious-vars)
+  (when suspicious-vars
+    (compile-warning form "~!form ~s\n\
+                           is moved out of the apparent scope\n\
+                           and thus cannot refer to variables ~s"
+                     form suspicious-vars)))
+
 (defmacro sys:awk-mac-let (awc aws-sym . body)
   ^(symacrolet ((rec (rslot ,aws-sym 'rec 'rec-to-f))
                 (orec (rslot ,aws-sym 'orig-rec 'rec-to-f))
@@ -286,41 +294,53 @@
                 (ors (qref ,aws-sym ors)))
      (macrolet ((next () '(return-from :awk-rec))
                 (next-file () '(return-from :awk-file))
-                (sys:rng (style from-expr to-expr :env e)
-                  (let ((ix (pinc (qref ,awc nranges)))
+                (sys:rng (form from-expr to-expr :env e)
+                  (let ((style (car form))
+                        (ix (pinc (qref ,awc nranges)))
                         (rng-temp (gensym))
                         (from-expr-ex (sys:expand from-expr e))
                         (to-expr-ex (sys:expand to-expr e))
                         (flag-old (gensym))
                         (flag-new (gensym)))
-                    (push rng-temp (qref ,awc rng-expr-temps))
-                    (push ^(placelet ((flag (vecref (qref ,',aws-sym rng-vec) ,ix)))
-                             (let* ((,flag-old flag) ,flag-new)
-                               (when (or ,flag-old ,from-expr-ex)
-                                 (set ,flag-new t))
-                               (when (and ,flag-new ,to-expr-ex)
-                                 (set ,flag-new nil))
-                               ,*(caseq style
-                                   (rng ^((or (set flag ,flag-new) ,flag-old)))
-                                   (-rng- ^((and (set flag ,flag-new) ,flag-old)))
-                                   (rng- ^((set flag ,flag-new)))
-                                   (-rng ^((set flag ,flag-new) ,flag-old)))))
-                          (qref ,awc rng-exprs))
-                    rng-temp))
-                (rng (from-expr to-expr)
-                  ^(sys:rng rng
+                    (tree-bind ((from-expr-ex fe-fv fe-ff fe-ev fe-ef)
+                                (to-expr-ex te-fv te-ff te-ev te-ef))
+                               (list
+                                 (sys:expand-with-free-refs from-expr e
+                                                            ,awc.outer-env)
+                                 (sys:expand-with-free-refs to-expr e
+                                                            ,awc.outer-env))
+                      (sys:awk-code-move-check ,awc ',aws-sym form
+                                               (set-diff fe-ev fe-fv))
+                      (sys:awk-code-move-check ,awc ',aws-sym form
+                                               (set-diff te-ev te-fv))
+                      (push rng-temp (qref ,awc rng-expr-temps))
+                      (push ^(placelet ((flag (vecref (qref ,',aws-sym rng-vec) ,ix)))
+                               (let* ((,flag-old flag) ,flag-new)
+                                 (when (or ,flag-old ,from-expr-ex)
+                                   (set ,flag-new t))
+                                 (when (and ,flag-new ,to-expr-ex)
+                                   (set ,flag-new nil))
+                                 ,*(caseq style
+                                     (rng ^((or (set flag ,flag-new) ,flag-old)))
+                                     (-rng- ^((and (set flag ,flag-new) ,flag-old)))
+                                     (rng- ^((set flag ,flag-new)))
+                                     (-rng ^((set flag ,flag-new) ,flag-old)))))
+                            (qref ,awc rng-exprs))
+                      rng-temp)))
+                (rng (:form form from-expr to-expr)
+                  ^(sys:rng ,form
                             (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
                             (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
-                (-rng (from-expr to-expr)
-                  ^(sys:rng -rng
+                (-rng (:form form from-expr to-expr)
+                  ^(sys:rng ,form
                             (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
                             (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
-                (rng- (from-expr to-expr)
-                  ^(sys:rng rng-
+                (rng- (:form form from-expr to-expr)
+                  ^(sys:rng ,form
                             (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
                             (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
-                (-rng- (from-expr to-expr)
-                  ^(sys:rng -rng-
+                (-rng- (:form form from-expr to-expr)
+                  ^(sys:rng ,form
                             (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
                             (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
                 (ff (. opip-args)
@@ -351,8 +371,8 @@
 (defun sys:awk-fun-shadowing-env (up-env)
   (make-env nil '((prn . sys:special)) up-env))
 
-(defmacro awk (:env e . clauses)
-  (let ((awc (sys:awk-expander clauses)))
+(defmacro awk (:env outer-env . clauses)
+  (let ((awc (sys:awk-expander outer-env clauses)))
     (with-gensyms (aws-sym awk-begf-fun awk-fun awk-endf-fun awk-retval)
       (let* ((p-actions-xform-unex (mapcar (aret ^(when (sys:awk-test ,@1 rec)
                                                     ,*@rest))
@@ -360,7 +380,7 @@
              (p-actions-xform (sys:expand
                                 ^(sys:awk-mac-let ,awc ,aws-sym
                                    ,*p-actions-xform-unex)
-                                (sys:awk-fun-shadowing-env e))))
+                                (sys:awk-fun-shadowing-env outer-env))))
         ^(block ,(or awc.name 'awk)
            (let* (,*awc.lets ,awk-retval
                   (,aws-sym (new sys:awk-state
