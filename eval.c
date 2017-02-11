@@ -115,8 +115,8 @@ val make_env(val vbindings, val fbindings, val up_env)
 {
   val env = make_obj();
   env->e.type = ENV;
-  env->e.fbindings = fbindings;
   env->e.vbindings = vbindings;
+  env->e.fbindings = fbindings;
   env->e.up_env = up_env;
   return env;
 }
@@ -129,8 +129,8 @@ val copy_env(val oenv)
     val nenv = make_obj();
 
     nenv->e.type = ENV;
-    nenv->e.fbindings = copy_alist(oenv->e.fbindings);
     nenv->e.vbindings = copy_alist(oenv->e.vbindings);
+    nenv->e.fbindings = copy_alist(oenv->e.fbindings);
     nenv->e.up_env = oenv->e.up_env;
     return nenv;
   }
