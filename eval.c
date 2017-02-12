@@ -5980,6 +5980,8 @@ void eval_init(void)
 
   reg_fun(intern(lit("assoc"), user_package), func_n2(assoc));
   reg_fun(intern(lit("assql"), user_package), func_n2(assql));
+  reg_fun(intern(lit("rassoc"), user_package), func_n2(rassoc));
+  reg_fun(intern(lit("rassql"), user_package), func_n2(rassql));
   reg_fun(intern(lit("acons"), user_package), func_n3(acons));
   reg_fun(intern(lit("acons-new"), user_package), func_n3(acons_new));
   reg_fun(intern(lit("aconsql-new"), user_package), func_n3(aconsql_new));

@@ -18072,10 +18072,13 @@ The
 function searches an association list
 .meta alist
 for a cons cell whose
-car field is equivalent to
+.code car
+field is equivalent to
 .meta key
-(with equality determined by the equal
-function). The first such cons is returned. If no such cons is found,
+under the
+.code equal
+function.
+The first such cons is returned. If no such cons is found,
 .code nil
 is returned.
 
@@ -18092,6 +18095,50 @@ except that the equality test
 is determined using the
 .code eql
 function rather than
+.codn equal .
+
+.coNP Functions @ rassql and @ rassoc
+.synb
+.mets (rassql < value << alist )
+.mets (rassoc < value << alist )
+.syne
+.desc
+The
+.code rassql
+and
+.code rassoc
+functions are reverse lookup counterparts to
+.code assql
+and
+.codn assoc .
+When searching, they examine the
+.code cdr
+field of the pairs of
+.meta alist
+rather than the
+.code car
+field.
+
+The
+.code rassql
+function searches association list
+.meta alist
+for a cons whose
+.code cdr
+field equivalent to
+.meta value
+according to the
+.code eql
+function. If such a cons is found, it is returned.
+Otherwise
+.code nil
+is returned.
+
+The
+.code rassoc
+function searches in the same way as
+.code rassql
+but compares values using
 .codn equal .
 
 .coNP Function @ acons

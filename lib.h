@@ -917,6 +917,8 @@ val cptr(mem_t *ptr);
 mem_t *cptr_get(val cptr);
 val assoc(val key, val list);
 val assql(val key, val list);
+val rassoc(val key, val list);
+val rassql(val key, val list);
 val acons(val car, val cdr, val list);
 val acons_new(val key, val value, val list);
 val acons_new_c(val key, loc new_p, loc list);

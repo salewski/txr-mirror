@@ -7277,6 +7277,34 @@ val assql(val key, val list)
   return nil;
 }
 
+val rassoc(val key, val list)
+{
+  list = nullify(list);
+
+  while (list) {
+    val elem = car(list);
+    if (equal(cdr(elem), key))
+      return elem;
+    list = cdr(list);
+  }
+
+  return nil;
+}
+
+val rassql(val key, val list)
+{
+  list = nullify(list);
+
+  while (list) {
+    val elem = car(list);
+    if (eql(cdr(elem), key))
+      return elem;
+    list = cdr(list);
+  }
+
+  return nil;
+}
+
 val acons(val car, val cdr, val list)
 {
   return cons(cons(car, cdr), list);
