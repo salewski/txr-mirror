@@ -1,5 +1,27 @@
+                                    TXR 169
+                                   2017-02-11
+
+
+  Features
+
+  - Improvements in area of warnings and deferrable warnings.
+    - Representation of deferrable warnings changes; the defr-warning exception
+      type derived from warning is used.
+  - Awk macro:
+    - Now provides a warning when a rng expression appears to refer to a local
+      variable or function that is unreachable due to the code relocation.
+  - New functions rassoc and rassql.
+
+  Bugs
+
+  - compile-warning function: added missing catch in compile-warning
+    functionfor continuing after warning is handled.
+
+
+
                                     TXR 168
                                    2017-02-05
+
 
   Features
 
