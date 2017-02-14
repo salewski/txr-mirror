@@ -4580,6 +4580,7 @@ static void dir_tables_init(void)
   sethash(h_directive_table, choose_s, cptr(coerce(mem_t *, h_parallel)));
   sethash(h_directive_table, trailer_s, cptr(coerce(mem_t *, h_trailer)));
   sethash(h_directive_table, define_s, cptr(coerce(mem_t *, h_define)));
+  sethash(h_directive_table, throw_s, cptr(coerce(mem_t *, hv_trampoline)));
   sethash(h_directive_table, eol_s, cptr(coerce(mem_t *, h_eol)));
   sethash(h_directive_table, chr_s, cptr(coerce(mem_t *, h_chr)));
   sethash(h_directive_table, do_s, cptr(coerce(mem_t *, h_do)));

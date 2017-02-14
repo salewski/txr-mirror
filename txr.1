@@ -9688,6 +9688,20 @@ can take
 whatever value the corresponding throw argument provides, so it ends up with
 .strn lc .
 
+There is a horizontal form of
+.codn throw .
+For instance:
+
+.cblk
+  abc@(throw e 1)
+.cble
+
+throws exception
+.code e
+if
+.code abc
+matches.
+
 .dir defex
 
 The
