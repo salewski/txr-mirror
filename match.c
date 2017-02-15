@@ -810,6 +810,48 @@ static val h_skip(match_line_ctx *c)
   return nil;
 }
 
+static val h_block(match_line_ctx *c)
+{
+  val elem = first(c->specline);
+  val name = second(elem);
+  val specs = car(third(elem));
+
+  {
+    uw_block_begin(name, result);
+    result = match_line(ml_specline(*c, specs));
+    uw_block_end;
+    if (result) {
+      cons_bind (bindings, new_pos, result);
+      c->bindings = bindings;
+      c->pos = minus(new_pos, c->base);
+      return next_spec_k;
+    }
+    return nil;
+  }
+}
+
+static val h_accept_fail(match_line_ctx *c)
+{
+  val elem = first(c->specline);
+  val sym = first(elem);
+  val target = second(elem);
+
+  uw_block_return_proto(target,
+                        if2(sym == accept_s,
+                            cons(c->bindings, c->pos)),
+                        sym);
+
+  /* TODO: uw_block_return could just throw this */
+  if (target)
+    sem_error(elem, lit("~a: no block named ~a in scope"),
+              sym, target, nao);
+  else
+    sem_error(elem, lit("~a: no anonymous block in scope"),
+              sym, nao);
+  return nil;
+}
+
+
 static val h_coll(match_line_ctx *c)
 {
   val elem = first(c->specline);
@@ -4561,6 +4603,9 @@ static void dir_tables_init(void)
   sethash(h_directive_table, text_s, cptr(coerce(mem_t *, h_text)));
   sethash(h_directive_table, var_s, cptr(coerce(mem_t *, h_var)));
   sethash(h_directive_table, skip_s, cptr(coerce(mem_t *, h_skip)));
+  sethash(h_directive_table, block_s, cptr(coerce(mem_t *, h_block)));
+  sethash(h_directive_table, accept_s, cptr(coerce(mem_t *, h_accept_fail)));
+  sethash(h_directive_table, fail_s, cptr(coerce(mem_t *, h_accept_fail)));
   sethash(h_directive_table, coll_s, cptr(coerce(mem_t *, h_coll)));
   sethash(h_directive_table, rep_s, cptr(coerce(mem_t *, h_coll)));
   sethash(h_directive_table, flatten_s, cptr(coerce(mem_t *, hv_trampoline)));

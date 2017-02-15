@@ -486,9 +486,14 @@ elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
                                             args, nao);
                                   rl($$, num($1));
                                   rl($6, car($5)); }
+     | BLOCK exprs_opt ')' elems END { $$ = list(block_s, car($2),
+                                                 cons($4, nil), nao);
+                                       rl($$, num($1)); }
      | COLL error               { $$ = nil;
                                   yybadtok(yychar, lit("coll clause")); }
      | REP error               { $$ = nil;
+                                 yybadtok(yychar, lit("rep clause")); }
+     | BLOCK error             { $$ = nil;
                                  yybadtok(yychar, lit("rep clause")); }
      | ALL clause_parts_h       { $$ = rl(list(all_s, t, $2, nao), num($1)); }
      | SOME exprs_opt ')'
