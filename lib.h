@@ -893,6 +893,7 @@ val vec_push(val vec, val item);
 val length_vec(val vec);
 val size_vec(val vec);
 val vectorv(struct args *);
+val vec(val first, ...);
 val vec_list(val list);
 val list_vec(val vector);
 val copy_vec(val vec);

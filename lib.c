@@ -6668,6 +6668,28 @@ val vectorv(struct args *args)
   return vec;
 }
 
+val vec(val first, ...)
+{
+  va_list vl;
+  val vec = vector(zero, nil);
+  val next;
+  int count;
+
+  va_start (vl, first);
+
+  for (next = first, count = 0;
+       next != nao && count < 32;
+       next = va_arg(vl, val), count++)
+  {
+    vec_push(vec, next);
+  }
+
+  if (count == 32 && next != nao)
+    internal_error("runaway arguments in vec function");
+
+  return vec;
+}
+
 val vec_list(val list)
 {
   val vec = vector(zero, nil);
