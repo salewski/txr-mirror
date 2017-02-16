@@ -416,11 +416,11 @@ static val vars_to_bindings(val spec, val vars, val bindings)
 }
 
 typedef struct {
-  val bindings, specline, dataline, base, pos, data_lineno, file;
+  val bindings, specline, dataline, base, pos, data, data_lineno, file;
 } match_line_ctx;
 
-static match_line_ctx ml_all(val bindings, val specline, val dataline,
-                             val pos, val data_lineno, val file)
+static match_line_ctx ml_all(val bindings, val specline, val dataline, val pos,
+                             val data, val data_lineno, val file)
 {
   match_line_ctx c;
   c.bindings = bindings;
@@ -428,6 +428,7 @@ static match_line_ctx ml_all(val bindings, val specline, val dataline,
   c.dataline = dataline;
   c.base = zero;
   c.pos = pos;
+  c.data = data;
   c.data_lineno = data_lineno;
   c.file = file;
 
@@ -820,7 +821,24 @@ static val h_block(match_line_ctx *c)
     uw_block_begin(name, result);
     result = match_line(ml_specline(*c, specs));
     uw_block_end;
-    if (result) {
+
+    if (vectorp(result)) {
+      val bindings = vecref(result, zero);
+      val vpos = vecref(result, one);
+      val hpos = vecref(result, two);
+      c->bindings = bindings;
+
+      if (hpos && car(vpos) == c->data) {
+        debuglf(elem, lit("accept from horiz. context in same line: advancing"),
+                nao);
+        c->pos = minus(hpos, c->base);
+      } else if (hpos) {
+        debuglf(elem, lit("accept from horiz. context in diff line"), nao);
+      } else {
+        debuglf(elem, lit("accept from vertical context"), nao);
+      }
+      return next_spec_k;
+    } else if (result) {
       cons_bind (bindings, new_pos, result);
       c->bindings = bindings;
       c->pos = minus(new_pos, c->base);
@@ -838,7 +856,10 @@ static val h_accept_fail(match_line_ctx *c)
 
   uw_block_return_proto(target,
                         if2(sym == accept_s,
-                            cons(c->bindings, c->pos)),
+                            vec(c->bindings,
+                                if3(c->data, cons(c->data, c->data_lineno), t),
+                                plus(c->pos, c->base),
+                                nao)),
                         sym);
 
   /* TODO: uw_block_return could just throw this */
@@ -2319,8 +2340,10 @@ static val v_trailer(match_files_ctx *c)
      */
     uw_unwind {
       uw_frame_t *ex = uw_current_exit_point();
-      if (ex && ex->uw.type == UW_BLOCK && ex->bl.protocol == accept_s)
-        rplacd(ex->bl.result, cons(c->data, c->data_lineno));
+      if (ex && ex->uw.type == UW_BLOCK && ex->bl.protocol == accept_s) {
+        set(vecref_l(ex->bl.result, one), cons(c->data, c->data_lineno));
+        set(vecref_l(ex->bl.result, two), nil);
+      }
     }
 
     uw_catch_end;
@@ -2382,7 +2405,8 @@ val freeform_prepare(val vals, match_files_ctx *c, match_line_ctx *mlc)
   val term = or2(if2(stringp(first(vals)), first(vals)),
                  if2(stringp(second(vals)), second(vals)));
   val dataline = lazy_str(c->data, term, limit);
-  *mlc = ml_all(c->bindings, first_spec, dataline, zero, c->data_lineno, c->curfile);
+  *mlc = ml_all(c->bindings, first_spec, dataline, zero,
+                c->data, c->data_lineno, c->curfile);
   return limit;
 }
 
@@ -2420,6 +2444,31 @@ static val v_block(match_files_ctx *c)
     result = match_files(mf_spec(*c, spec));
     uw_block_end;
 
+    if (vectorp(result))
+    {
+      val bindings = vecref(result, zero);
+      val vpos = vecref(result, one);
+      val hpos = vecref(result, two);
+      c->bindings = bindings;
+
+      if (hpos && car(vpos) == c->data) {
+        debuglf(specline, lit("accept from horiz. context in same line: advancing"),
+                nao);
+        c->data = cdr(c->data);
+      } else if (hpos) {
+        debuglf(specline, lit("accept from horiz. context in diff line"), nao);
+      } else {
+        debuglf(specline, lit("accept from vertical context"), nao);
+        if (vpos == t) {
+          c->data = nil;
+        } else {
+          c->data = car(vpos);
+          c->data_lineno = cdr(vpos);
+        }
+      }
+      return next_spec_k;
+    }
+
     return maybe_next(c, result);
   }
 }
@@ -2435,9 +2484,10 @@ static val v_accept_fail(match_files_ctx *c)
 
   uw_block_return_proto(target,
                         if2(sym == accept_s,
-                            cons(c->bindings,
-                                 if3(c->data, cons(c->data, c->data_lineno),
-                                     t))),
+                            vec(c->bindings,
+                                if3(c->data, cons(c->data, c->data_lineno), t),
+                                nil,
+                                nao)),
                         sym);
 
   /* TODO: uw_block_return could just throw this */
@@ -4340,7 +4390,7 @@ repeat_spec_same_data:
       cons_bind (new_bindings, success,
                  match_line_completely(ml_all(c.bindings, specline,
                                               dataline, zero,
-                                              c.data_lineno, c.curfile)));
+                                              c.data, c.data_lineno, c.curfile)));
 
       if (!success)
         debug_return (nil);
