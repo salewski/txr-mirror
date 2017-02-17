@@ -1201,17 +1201,35 @@ static val h_parallel(match_line_ctx *c)
 
 static val h_trailer(match_line_ctx *c)
 {
-  val result = match_line(ml_specline(*c, rest(c->specline)));
-  cons_bind (new_bindings, new_pos, result);
-  val elem = first(c->specline);
+  val ret = nil;
 
-  if (!new_pos) {
-    LOG_MISMATCH("trailer");
-    return nil;
+  uw_simple_catch_begin;
+
+  {
+    val result = match_line(ml_specline(*c, rest(c->specline)));
+    cons_bind (new_bindings, new_pos, result);
+    val elem = first(c->specline);
+
+    if (!new_pos) {
+      LOG_MISMATCH("trailer");
+      ret = nil;
+    }
+
+    LOG_MATCH("trailer", new_pos);
+    ret = cons(new_bindings, plus(c->pos, c->base));
   }
 
-  LOG_MATCH("trailer", new_pos);
-  return cons(new_bindings, plus(c->pos, c->base));
+  uw_unwind {
+    uw_frame_t *ex = uw_current_exit_point();
+    if (ex && ex->uw.type == UW_BLOCK && ex->bl.protocol == accept_s) {
+      set(vecref_l(ex->bl.result, one), cons(c->data, c->data_lineno));
+      set(vecref_l(ex->bl.result, two), plus(c->pos, c->base));
+    }
+  }
+
+  uw_catch_end;
+
+  return ret;
 }
 
 static val h_fun(match_line_ctx *c)
