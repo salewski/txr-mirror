@@ -859,7 +859,7 @@ val slot(val strct, val sym)
   const val self = lit("slot");
   struct struct_inst *si = struct_handle(strct, self);
 
-  if (symbolp(sym)) {
+  if (sym && symbolp(sym)) {
     loc ptr = lookup_slot_load(strct, si, sym);
     if (!nullocp(ptr))
       return deref(ptr);
@@ -873,7 +873,7 @@ val maybe_slot(val strct, val sym)
   const val self = lit("slot");
   struct struct_inst *si = struct_handle(strct, self);
 
-  if (symbolp(sym)) {
+  if (sym && symbolp(sym)) {
     loc ptr = lookup_slot_load(strct, si, sym);
     if (!nullocp(ptr))
       return deref(ptr);
@@ -887,7 +887,7 @@ val slotset(val strct, val sym, val newval)
   const val self = lit("slotset");
   struct struct_inst *si = struct_handle(strct, self);
 
-  if (symbolp(sym)) {
+  if (sym && symbolp(sym)) {
     loc ptr = lookup_slot(strct, si, sym);
     if (!nullocp(ptr)) {
       if (!si->dirty) {
@@ -1213,7 +1213,7 @@ static val uslot_fun(val sym, val strct)
   val self = lit("uslot");
   struct struct_inst *si = struct_handle(strct, self);
 
-  if (symbolp(sym)) {
+  if (sym && symbolp(sym)) {
     loc ptr = lookup_slot(strct, si, sym);
     if (!nullocp(ptr))
       return deref(ptr);
@@ -1239,7 +1239,7 @@ static val umethod_fun(val sym, struct args *args)
 
     struct struct_inst *si = struct_handle(strct, self);
 
-    if (symbolp(sym)) {
+    if (sym && symbolp(sym)) {
       loc ptr = lookup_slot(strct, si, sym);
       if (!nullocp(ptr))
         return generic_funcall(deref(ptr), args);
@@ -1269,7 +1269,7 @@ static val umethod_args_fun(val env, struct args *args)
 
     struct struct_inst *si = struct_handle(strct, self);
 
-    if (symbolp(sym)) {
+    if (sym && symbolp(sym)) {
       loc ptr = lookup_slot(strct, si, sym);
       if (!nullocp(ptr))
         return generic_funcall(deref(ptr), args_call);
