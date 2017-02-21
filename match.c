@@ -2555,7 +2555,7 @@ static val v_accept_fail(match_files_ctx *c)
   return nil;
 }
 
-static val v_next(match_files_ctx *c)
+static val v_next_impl(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
 
@@ -2744,6 +2744,27 @@ static val v_next(match_files_ctx *c)
                   if3(c->data, cons(c->data, c->data_lineno), t));
     return nil;
   }
+}
+
+static val v_next(match_files_ctx *c)
+{
+  val result = nil;
+
+  uw_simple_catch_begin;
+
+  result = v_next_impl(c);
+
+  uw_unwind {
+    uw_frame_t *ex = uw_current_exit_point();
+    if (ex && ex->uw.type == UW_BLOCK && ex->bl.protocol == accept_s) {
+      set(vecref_l(ex->bl.result, one), cons(c->data, c->data_lineno));
+      set(vecref_l(ex->bl.result, two), nil);
+    }
+  }
+
+  uw_catch_end;
+
+  return result;
 }
 
 static val v_parallel(match_files_ctx *c)
