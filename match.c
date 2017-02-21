@@ -1258,6 +1258,21 @@ static val fun_resolve_bindings(val bindings, val ub_p_a_pairs,
   return bindings;
 }
 
+static void fun_intercept_accept(val bindings, val ub_p_a_pairs,
+                                 val sym, val elem)
+{
+  uw_frame_t *ex = uw_current_exit_point();
+  if (ex && ex->uw.type == UW_BLOCK && ex->bl.protocol == accept_s) {
+    loc ab_loc = vecref_l(ex->bl.result, zero);
+    val accept_bindings = deref(ab_loc);
+    bindings = fun_resolve_bindings(bindings, ub_p_a_pairs,
+                                    accept_bindings, sym, elem);
+    if (bindings == t)
+      bindings = nil;
+
+    set(ab_loc, bindings);
+  }
+}
 
 static val h_fun(match_line_ctx *c)
 {
@@ -1303,7 +1318,15 @@ static val h_fun(match_line_ctx *c)
       uw_env_begin;
       debug_frame(sym, args, ub_p_a_pairs, c->bindings, c->dataline, c->data_lineno, c->pos);
 
+      uw_simple_catch_begin;
+
       result = match_line(ml_bindings_specline(*c, bindings_cp, body));
+
+      uw_unwind {
+        fun_intercept_accept(c->bindings, ub_p_a_pairs, sym, elem);
+      }
+
+      uw_catch_end;
 
       debug_end;
       uw_env_end;
@@ -3962,7 +3985,17 @@ static val v_fun(match_files_ctx *c)
       uw_env_begin;
       debug_frame(sym, args, ub_p_a_pairs, c->bindings, if2(consp(c->data), car(c->data)),
                   c->data_lineno, nil);
+
+      uw_simple_catch_begin;
+
       result = match_files(mf_spec_bindings(*c, body, bindings_cp));
+
+      uw_unwind {
+        fun_intercept_accept(c->bindings, ub_p_a_pairs, sym, specline);
+      }
+
+      uw_catch_end;
+
       debug_end;
       uw_env_end;
       uw_block_end;
