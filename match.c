@@ -1232,6 +1232,33 @@ static val h_trailer(match_line_ctx *c)
   return ret;
 }
 
+static val fun_resolve_bindings(val bindings, val ub_p_a_pairs,
+                                val new_bindings, val sym, val elem)
+{
+  val piter;
+
+  for (piter = ub_p_a_pairs; piter; piter = cdr(piter))
+  {
+    cons_bind (param, arg, car(piter));
+
+    if (symbolp(arg)) {
+      val newbind = tx_lookup_var(param, new_bindings);
+      if (newbind) {
+        bindings = dest_bind(elem, bindings, arg, cdr(newbind), equal_f);
+        if (bindings == t) {
+          debuglf(elem,
+              lit("binding mismatch on ~a "
+                  "when returning from ~a"), arg, sym, nao);
+          break;
+        }
+      }
+    }
+  }
+
+  return bindings;
+}
+
+
 static val h_fun(match_line_ctx *c)
 {
   val elem = first(c->specline);
@@ -1290,24 +1317,11 @@ static val h_fun(match_line_ctx *c)
       {
         cons_bind (new_bindings, success, result);
 
-        for (piter = ub_p_a_pairs; piter; piter = cdr(piter))
-        {
-          cons_bind (param, arg, car(piter));
+        c->bindings = fun_resolve_bindings(c->bindings, ub_p_a_pairs,
+                                           new_bindings, sym, elem);
 
-          if (symbolp(arg)) {
-            val newbind = tx_lookup_var(param, new_bindings);
-            if (newbind) {
-              c->bindings = dest_bind(elem, c->bindings,
-                                      arg, cdr(newbind), equal_f);
-              if (c->bindings == t) {
-                debuglf(elem,
-                        lit("binding mismatch on ~a "
-                            "when returning from ~a"), arg, sym, nao);
-                return nil;
-              }
-            }
-          }
-        }
+        if (c->bindings == t)
+          return nil;
 
         c->pos = minus(success, c->base);
       }
@@ -3961,24 +3975,11 @@ static val v_fun(match_files_ctx *c)
       {
         cons_bind (new_bindings, success, result);
 
-        for (piter = ub_p_a_pairs; piter; piter = cdr(piter))
-        {
-          cons_bind (param, arg, car(piter));
+        c->bindings = fun_resolve_bindings(c->bindings, ub_p_a_pairs,
+                                           new_bindings, sym, specline);
 
-          if (symbolp(arg)) {
-            val newbind = tx_lookup_var(param, new_bindings);
-            if (newbind) {
-              c->bindings = dest_bind(specline, c->bindings,
-                                     arg, cdr(newbind), equal_f);
-              if (c->bindings == t) {
-                debuglf(specline,
-                        lit("binding mismatch on ~a "
-                            "when returning from ~a"), arg, sym, nao);
-                return nil;
-              }
-            }
-          }
-        }
+        if (c->bindings == t)
+          return nil;
 
         if (consp(success)) {
           debuglf(specline,
