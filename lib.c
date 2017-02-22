@@ -1520,7 +1520,7 @@ val rmember_if(val pred, val list, val key)
   return found;
 }
 
-static val rem_impl(val (*eqfun)(val, val),
+static val rem_impl(val (*eqfun)(val, val), val name,
                     val obj, val seq_in, val keyfun_in)
 {
   val keyfun = default_bool_arg(keyfun_in);
@@ -1585,7 +1585,7 @@ static val rem_impl(val (*eqfun)(val, val),
       return out;
     }
   default:
-    uw_throwf(error_s, lit("remq: ~s isn't a sequence"), in, nao);
+    uw_throwf(error_s, lit("~a: ~s isn't a sequence"), name, seq_in, nao);
   }
 }
 
@@ -1653,39 +1653,39 @@ val remove_if(val pred, val seq_in, val keyfun_in)
       return out;
     }
   default:
-    uw_throwf(error_s, lit("remq: ~s isn't a sequence"), in, nao);
+    uw_throwf(error_s, lit("remove-if: ~s isn't a sequence"), seq_in, nao);
   }
 }
 
 
 val remq(val obj, val seq, val keyfun)
 {
-  return rem_impl(eq, obj, seq, keyfun);
+  return rem_impl(eq, lit("remq"), obj, seq, keyfun);
 }
 
 val remql(val obj, val seq, val keyfun)
 {
-  return rem_impl(eql, obj, seq, keyfun);
+  return rem_impl(eql, lit("remq"), obj, seq, keyfun);
 }
 
 val remqual(val obj, val seq, val keyfun)
 {
-  return rem_impl(equal, obj, seq, keyfun);
+  return rem_impl(equal, lit("remqual"), obj, seq, keyfun);
 }
 
 val keepq(val obj, val seq, val keyfun)
 {
-  return rem_impl(neq, obj, seq, keyfun);
+  return rem_impl(neq, lit("keepq"), obj, seq, keyfun);
 }
 
 val keepql(val obj, val seq, val keyfun)
 {
-  return rem_impl(neql, obj, seq, keyfun);
+  return rem_impl(neql, lit("keepql"), obj, seq, keyfun);
 }
 
 val keepqual(val obj, val seq, val keyfun)
 {
-  return rem_impl(nequal, obj, seq, keyfun);
+  return rem_impl(nequal, lit("keepqual"), obj, seq, keyfun);
 }
 
 val keep_if(val pred, val seq, val keyfun)
