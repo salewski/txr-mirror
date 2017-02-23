@@ -936,15 +936,19 @@ void repress_privilege(void)
   real_uid = getuid();
   orig_euid = geteuid();
 
-  if (real_gid != orig_egid)
-    setegid(real_gid);
-  else
+  if (real_gid != orig_egid) {
+    if (setegid(real_gid))
+      panic("setegid failed when trying to repress privilege");
+  } else {
     is_setgid = 0;
+  }
 
-  if (real_uid != orig_euid)
-    seteuid(real_uid);
-  else
+  if (real_uid != orig_euid) {
+    if (seteuid(real_uid))
+      panic("setegid failed when trying to repress privilege");
+  } else {
     is_setuid = 0;
+  }
 
   repress_called = RC_MAGIC;
 }
