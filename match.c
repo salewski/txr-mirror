@@ -2483,6 +2483,30 @@ static val maybe_next(match_files_ctx *c, val match_result)
   return next_spec_k;
 }
 
+static void v_take_accept(match_files_ctx *c, val specline, val result)
+{
+  val bindings = vecref(result, zero);
+  val vpos = vecref(result, one);
+  val hpos = vecref(result, two);
+  c->bindings = bindings;
+
+  if (hpos && car(vpos) == c->data) {
+    debuglf(specline, lit("accept from horiz. context in same line: advancing"),
+            nao);
+    c->data = cdr(c->data);
+  } else if (hpos) {
+    debuglf(specline, lit("accept from horiz. context in diff line"), nao);
+  } else {
+    debuglf(specline, lit("accept from vertical context"), nao);
+    if (vpos == t) {
+      c->data = nil;
+    } else {
+      c->data = car(vpos);
+      c->data_lineno = cdr(vpos);
+    }
+  }
+}
+
 static val v_block(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
@@ -2501,26 +2525,7 @@ static val v_block(match_files_ctx *c)
 
     if (vectorp(result))
     {
-      val bindings = vecref(result, zero);
-      val vpos = vecref(result, one);
-      val hpos = vecref(result, two);
-      c->bindings = bindings;
-
-      if (hpos && car(vpos) == c->data) {
-        debuglf(specline, lit("accept from horiz. context in same line: advancing"),
-                nao);
-        c->data = cdr(c->data);
-      } else if (hpos) {
-        debuglf(specline, lit("accept from horiz. context in diff line"), nao);
-      } else {
-        debuglf(specline, lit("accept from vertical context"), nao);
-        if (vpos == t) {
-          c->data = nil;
-        } else {
-          c->data = car(vpos);
-          c->data_lineno = cdr(vpos);
-        }
-      }
+      v_take_accept(c, specline, result);
       return next_spec_k;
     }
 
@@ -3775,6 +3780,9 @@ static val v_try(match_files_ctx *c)
 
     uw_unwind {
       val iter;
+      uw_frame_t *ex = uw_current_exit_point();
+      int acc_intercept = (ex && ex->uw.type == UW_BLOCK &&
+                           ex->bl.protocol == accept_s);
 
       /* result may be t, from catch above. */
       if (consp(result)) {
@@ -3801,6 +3809,9 @@ static val v_try(match_files_ctx *c)
         }
       }
 
+      if (finally_clause && acc_intercept)
+        v_take_accept(c, specline, ex->bl.result);
+
       if (finally_clause) {
         cons_bind (new_bindings, success,
                    match_files(mf_spec(*c, finally_clause)));
@@ -3813,6 +3824,15 @@ static val v_try(match_files_ctx *c)
             c->data_lineno = cdr(success);
           } else {
             c->data = nil;
+          }
+
+          if (acc_intercept && finally_clause) {
+            ex->bl.result = if2(success,
+                                vec(c->bindings,
+                                    if3(c->data, cons(c->data, c->data_lineno), t),
+                                    nil,
+                                    nao));
+            ex->bl.protocol = if3(success, accept_s, fail_s);
           }
         }
       }
