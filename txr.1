@@ -7060,6 +7060,50 @@ transfer is converted to a
 .codn fail ,
 with exactly the same block as its destination.
 
+.coNP Vertical-Horizontal Mismatch Between @ block and @ accept
+The
+.codn block ,
+.code accept
+and
+.code fail
+directives comes in horizontal and vertical forms.
+
+This creates the possibility than an
+.code accept
+in horizontal context targets a vertical
+.code block
+or vice-versa, raising the question of how the input position
+is treated.  The semantics of this is defined.
+
+If a horizontal-context
+.code accept
+targets a vertical block, the current position at the target block will be the
+following line. That is to say, when the horizontal
+.code accept
+occurs, there is a current input line which may have unconsumed
+material past the current position. If the
+.code accept
+communicates its input position to a vertical context, that unconsumed
+material is skipped, as if it had been matched and the vertical position
+is advanced to the next line.
+
+If a horizontal block catches a vertical accept, it rejects that
+.codn accept 's
+position and stays at the current backtracking position for that block.
+Only the bindings from the
+.code accept
+are retained.
+
+.coNP Horizontal-Horizontal Mismatch between @ block and @ accept
+It is possible for a horizontal
+.code accept
+to terminate in a horizontal block which is processing
+a different line of input (or even a different input stream).
+This situation is treated the same way as vertical accept terminating
+in a horizontal block: the position communicated by
+.code accept
+is ignored, and only the bindings are taken.
+
 .SS* Functions
 
 .NP* Overview
