@@ -31690,27 +31690,60 @@ returned: a positive number of the same type with exactly the same magnitude.
 
 .coNP Functions @ floor and @ ceil
 .synb
-.mets (floor << number )
-.mets (ceil << number )
+.mets (floor < dividend <> [ divisor ])
+.mets (ceil < dividend <> [ divisor ])
 .syne
 .desc
 The
 .code floor
+and
+.code ceiling
+functions perform division of the
+.meta dividend
+by the
+.metn divisor ,
+returning an integer quotient.
+
+If the
+.meta divisor
+is omitted, it defaults to 1.
+
+If both inputs are integers,
+the result is of type integer.
+
+If all inputs are numbers and at least one of them is
+floating-point, the others are converted to floating-point
+and the result is floating-point.
+
+The
+.code dividend
+input may be a range. In this situation, the operation is
+recursively distributed over the
+.code from
+and
+.code to
+fields of the range, individually matched against the
+.metn divisor ,
+and the result is a range composed of these two individual
+quotients.
+
+When the quotient is a scalar value,
+.code floor
 function returns the highest integer which does not exceed
-the value of
-.metn number .
-The ceiling function returns the lowest integer which
+the value of the quotient. That is to say, the division is
+truncated to an integer value toward negative infinity.
+The
+.code ceil
+function the lowest integer which is not below the value
+of the quotient.
 does not exceed the value of
-.metn number .
+.metn dividend .
+That is to say, the division is truncated to an integer
+value toward positive infinity.
 
-If
-.meta number
-an integer, it is simply returned.
-
-If the argument is a float, then the value returned is a float.
-For instance
-.code "(floor 1.1)"
-returns 1.0 rather than 1.
+Note that for large floating point values, due to the limited
+precision, the integer value corresponding to the mathematical
+floor or ceiling may not be available.
 
 .coNP Functions @, sin @, cos @, tan @, asin @, acos @ atan and @ atan2
 .synb

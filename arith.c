@@ -1076,6 +1076,161 @@ val trunc_rem(val anum, val bnum)
   return list(quot, rem, nao);
 }
 
+val floordiv(val anum, val bnum)
+{
+  if (missingp(bnum))
+    return floorf(anum);
+tail:
+  switch (TAG_PAIR(tag(anum), tag(bnum))) {
+  case TAG_PAIR(TAG_NUM, TAG_NUM):
+    {
+      cnum a = c_num(anum);
+      cnum b = c_num(bnum);
+      cnum ap = ABS(a);
+      cnum bp = ABS(b);
+      int neg = ((a < 0 && b > 0) || (a > 0 && b < 0));
+
+      if (b == 0)
+        goto divzero;
+
+      {
+        cnum quot = ap / bp;
+        if (neg) {
+          if (quot * bp != ap)
+            return num(-quot - 1);
+          return num(-quot);
+        }
+        return num(quot);
+      }
+    }
+  case TAG_PAIR(TAG_NUM, TAG_PTR):
+    switch (type(bnum)) {
+    case BGNUM:
+      {
+        cnum a = c_num(anum);
+        if (a == 0)
+          return zero;
+        if (a < 0 && !ISNEG(mp(bnum)))
+          return negone;
+        if (a > 0 && ISNEG(mp(bnum)))
+          return negone;
+        return zero;
+      }
+    case FLNUM:
+      {
+        double x = c_num(anum), y = c_flo(bnum);
+        if (y == 0.0)
+          goto divzero;
+        else
+          return flo((x - dmod(x, y))/y);
+      }
+    default:
+      break;
+    }
+    break;
+  case TAG_PAIR(TAG_PTR, TAG_NUM):
+    switch (type(anum)) {
+    case BGNUM:
+      {
+        val n;
+        if (bnum == one)
+          return anum;
+        n = make_bignum();
+        if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
+          cnum b = c_num(bnum);
+          cnum bp = ABS(b);
+          mp_digit rem;
+          if (mp_div_d(mp(anum), bp, mp(n), &rem) != MP_OKAY)
+            goto divzero;
+          if (b < 0)
+            mp_neg(mp(n), mp(n));
+          if (rem && ((ISNEG(mp(anum)) && b > 0) ||
+                      (!ISNEG(mp(anum)) && b < 0)))
+            mp_sub_d(mp(n), 1, mp(n));
+        } else {
+          int err;
+          cnum b = c_num(bnum);
+          mp_int tmp, rem;
+          mp_init(&tmp);
+          mp_init(&rem);
+          mp_set_intptr(&tmp, b);
+          err = mp_div(mp(anum), &tmp, mp(n), 0);
+          mp_clear(&tmp);
+          if (err != MP_OKAY) {
+            mp_clear(&rem);
+            goto divzero;
+          }
+          if (mp_cmp_z(&rem) != MP_EQ &&
+              ((ISNEG(mp(anum)) && b > 0) ||
+               (!ISNEG(mp(anum)) && b < 0)))
+            mp_sub_d(mp(n), 1, mp(n));
+          mp_clear(&rem);
+        }
+        return normalize(n);
+      }
+    case FLNUM:
+      {
+        double x = c_flo(anum), y = c_num(bnum);
+        if (y == 0.0)
+          goto divzero;
+        else
+          return flo((x - dmod(x, y))/y);
+      }
+    case RNG:
+      return rcons(floordiv(from(anum), bnum), floordiv(to(anum), bnum));
+    default:
+      break;
+    }
+    break;
+  case TAG_PAIR(TAG_PTR, TAG_PTR):
+    switch (TYPE_PAIR(type(anum), type (bnum))) {
+    case TYPE_PAIR(BGNUM, BGNUM):
+      {
+        val n = make_bignum();
+        mp_int rem;
+        mp_init(&rem);
+        if (mp_div(mp(anum), mp(bnum), mp(n), &rem) != MP_OKAY) {
+          mp_clear(&rem);
+          goto divzero;
+        }
+        if (mp_cmp_z(&rem) != MP_EQ &&
+              ((ISNEG(mp(anum)) && !ISNEG(mp(bnum))) ||
+               (!ISNEG(mp(anum)) && ISNEG(mp(bnum)))))
+            mp_sub_d(mp(n), 1, mp(n));
+        mp_clear(&rem);
+        return normalize(n);
+      }
+    case TYPE_PAIR(FLNUM, FLNUM):
+      {
+        double x = c_flo(anum), y = c_flo(bnum);
+        if (y == 0.0)
+          goto divzero;
+        else
+          return flo((x - dmod(x, y))/y);
+      }
+    case TYPE_PAIR(BGNUM, FLNUM):
+      anum = flo_int(anum);
+      goto tail;
+    case TYPE_PAIR(FLNUM, BGNUM):
+      bnum = flo_int(bnum);
+      goto tail;
+    case TYPE_PAIR(RNG, BGNUM):
+    case TYPE_PAIR(RNG, FLNUM):
+      return rcons(floordiv(from(anum), bnum), floordiv(to(anum), bnum));
+    }
+  }
+  uw_throwf(error_s, lit("floor: invalid operands ~s ~s"), anum, bnum, nao);
+divzero:
+  uw_throw(numeric_error_s, lit("floor: division by zero"));
+}
+
+val ceildiv(val anum, val bnum)
+{
+  if (missingp(bnum))
+    return ceili(anum);
+  return neg(floordiv(neg(anum), bnum));
+}
+
 val wrap_star(val start, val end, val num)
 {
   val modulus = minus(end, start);
@@ -1688,16 +1843,34 @@ val lcm(val anum, val bnum)
 
 val floorf(val num)
 {
-  if (integerp(num))
+  switch (type(num)) {
+  case NUM:
+  case BGNUM:
     return num;
-  return flo(floor(c_flo(to_float(lit("floor"), num))));
+  case FLNUM:
+    return flo(floor(c_flo(num)));
+  case RNG:
+    return rcons(floorf(from(num)), floorf(to(num)));
+  default:
+    break;
+  }
+  uw_throwf(error_s, lit("floor: invalid operand ~s"), num);
 }
 
 val ceili(val num)
 {
-  if (integerp(num))
+  switch (type(num)) {
+  case NUM:
+  case BGNUM:
     return num;
-  return flo(ceil(c_flo(to_float(lit("ceil"), num))));
+  case FLNUM:
+    return flo(ceil(c_flo(num)));
+  case RNG:
+    return rcons(ceili(from(num)), ceili(to(num)));
+  default:
+    break;
+  }
+  uw_throwf(error_s, lit("ceil: invalid operand ~s"), num);
 }
 
 val sine(val num)
