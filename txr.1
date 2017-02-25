@@ -6662,23 +6662,36 @@ Immediately terminate the enclosing query block called
 .metn name ,
 as if that block
 successfully matched. If more than one block by that name encloses the
-directive, the inner-most block is terminated.  Any bindings established within
-that block until this point emerge from that block.
+directive, the inner-most block is terminated.
 
 .coIP @(accept)
 Immediately terminate the innermost enclosing anonymous block, as if
-that block successfully matched. Any bindings established within
-that block until this point emerge from that block.
+that block successfully matched.
+
+.code @(accept)
+communicates the current bindings and input position to the terminated
+block. These bindings and current position may be altered by special
+interactions between certain directives and
+.codn @(accept) ,
+described in the following section. Communicating the current bindings
+and input position means that the block which is terminated by
+.code @(accept)
+exhibits the bindings which were collected just prior to the execution
+of that
+.code @(accept)
+and the input position which was in effect at that time.
 
 If the implicit block introduced by
 .code @(skip)
-is terminated in this manner,
+is terminated by
+.codn @(accept) ,
 this has the effect of causing the skip itself to succeed, as if
 all of the trailing material had successfully matched.
 
 If the implicit block associated with a
 .code @(collect)
-is terminated this way,
+is terminated by
+.codn @(accept) ,
 then the collection stops. All bindings collected in the current iteration of
 the collect are discarded. Bindings collected in previous iterations are
 retained, and collated into lists in accordance with the semantics of collect.
@@ -6745,15 +6758,8 @@ action of collecting the last
 binding into the list is not performed.
 .PP
 
-.NP* Data Extent of Terminated Blocks
+Example: communication of bindings and input position:
 
-A query block may have matched some material prior to being terminated by
-.codn accept .
-In that case, it is deemed to have only matched that material,
-and not any material which follows. This may matter, depending on the context
-in which the block occurs.
-
-Example:
 .IP code:
 .cblk
 \ @(some)
@@ -6797,6 +6803,11 @@ bindings and position. Thus the
 which follows then matches the second
 line and takes the text
 .strn 2 .
+
+Example: abandonment of
+.code @(some)
+clause by
+.codn @(accept) :
 
 In the following query, the foo block occurs inside a maybe clause.
 Inside the foo block there is a
@@ -6961,9 +6972,93 @@ and adjusted back to the first line. Neglecting to do this adjustment
 would violate the semantics of
 .codn trailer .
 
-Directives other than
-.code @(trailer)
-have no such special interaction with accept.
+.coNP Interaction Between the @ next and @ accept Directives
+
+When the clauses under a
+.code next
+directive are terminated by an
+.codn accept ,
+such that control passes to a block which surrounds that
+.codn next ,
+the
+.code accept
+is intercepted by
+.codn next .
+
+The input position being communicated by the
+.code accept
+is replaced with the original input position in the original
+stream which is in effect prior to the
+.code next
+directive. The
+.code accept
+transfer is then resumed.
+
+In other words,
+.code accept
+cannot be used to "leak" the new stream out of a
+.code next
+scope.
+
+However,
+.code next
+has no effect on the bindings being communicated.
+
+.coNP Interaction Between Functions and the @ accept directive
+If a pattern function is terminated due to
+.codn accept ,
+the function return mechanism intercepts the
+.codn accept .
+The bindings being communicated by that
+.code accept
+are then subject to the special resolution with respect to the
+function parameters, exactly as if the bindings were being
+returned normally out of the function. The resolved bindings
+then replace those being communicated by the
+.code accept
+and the
+.code accept
+transfer is resumed.
+
+.coNP Interaction Between @ finally and the @ accept directive
+If the exception handling
+.code try
+directive protected body is terminated by an
+.code accept
+transfer, and if that
+.code try
+has a
+.code finally
+block, then there is a special interaction between the
+.code finally
+block and the
+.code accept
+transfer.
+
+The processing of the
+.code finally
+block detects that it has been triggered by an
+.code accept
+transfer. Consequently, it retrieves the current input position
+and bindings from that transfer, and uses that position and those
+bindings for the processing of the
+.code finally
+clauses.
+
+If the
+.code finally
+clauses succeed, then the new input position and new bindings
+are installed into the
+.code accept
+control transfer and that transfer resumes.
+
+If the
+.code finally
+clauses fail, then the
+.code accept
+transfer is converted to a
+.codn fail ,
+with exactly the same block as its destination.
 
 .SS* Functions
 
@@ -9124,6 +9219,17 @@ which executes unconditionally, no matter how the try block
 terminates. The
 .code finally
 clause performs some output, which is seen.
+
+Note that
+.code finally
+interacts with
+.code accept
+in subtle ways not revealed in this example; they are documented in
+the description of
+.code accept
+under the
+.code block
+directive documentation.
 
 .coNP The @ finally clause
 
