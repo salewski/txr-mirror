@@ -682,6 +682,7 @@ val floorf(val);
 val floordiv(val, val);
 val ceili(val);
 val ceildiv(val anum, val bnum);
+val roundiv(val anum, val bnum);
 val sine(val);
 val cosi(val);
 val tang(val);

@@ -31688,16 +31688,18 @@ is positive, it is returned. If
 is negative, its additive inverse is
 returned: a positive number of the same type with exactly the same magnitude.
 
-.coNP Functions @ floor and @ ceil
+.coNP Functions @, floor @ ceil and @ round
 .synb
 .mets (floor < dividend <> [ divisor ])
 .mets (ceil < dividend <> [ divisor ])
+.mets (round < dividend <> [ divisor ])
 .syne
 .desc
 The
-.code floor
-and
+.codn floor ,
 .code ceiling
+and
+.code round
 functions perform division of the
 .meta dividend
 by the
@@ -31739,11 +31741,30 @@ of the quotient.
 does not exceed the value of
 .metn dividend .
 That is to say, the division is truncated to an integer
-value toward positive infinity.
+value toward positive infinity. The
+.code round
+function returns the nearest integer to the quotient.
+Exact halfway cases are rounded to the integer away from
+zero so that
+.code "(round -1 2)"
+yields
+.code -1
+and
+.code "(round 1 2)"
+yields 1,
 
 Note that for large floating point values, due to the limited
 precision, the integer value corresponding to the mathematical
 floor or ceiling may not be available.
+
+.TP* "Dialect note:"
+In ANSI Common Lisp, the
+.code round
+function chooses the nearest even integer, rather than
+rounding halfway cases away from zero. \*(TX's choice
+harmonizes with the semantics of the
+.code round
+function in the C language.
 
 .coNP Functions @, sin @, cos @, tan @, asin @, acos @ atan and @ atan2
 .synb

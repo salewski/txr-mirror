@@ -1231,6 +1231,66 @@ val ceildiv(val anum, val bnum)
   return neg(floordiv(neg(anum), bnum));
 }
 
+static val round1(val num)
+{
+  switch (type(num)) {
+  case NUM:
+  case BGNUM:
+    return num;
+  case FLNUM:
+#if HAVE_ROUND
+    return flo(round(c_flo(num)));
+#else
+    {
+      double n = c_flo(num);
+      return if3(n >= 0,
+                 flo(floor(0.5 + n)),
+                 flo(-floor(0.5 + fabs(n))));
+    }
+#endif
+  case RNG:
+    return rcons(round1(from(num)), round1(to(num)));
+  default:
+    break;
+  }
+  uw_throwf(error_s, lit("round: invalid operand ~s"), num);
+}
+
+
+val roundiv(val anum, val bnum)
+{
+  if (missingp(bnum))
+    return round1(anum);
+
+  if (minusp(bnum)) {
+    anum = neg(anum);
+    bnum = neg(bnum);
+  }
+
+  if (rangep(anum)) {
+    return rcons(roundiv(from(anum), bnum), roundiv(to(anum), bnum));
+  } else if (floatp(anum) || floatp(bnum)) {
+    val quot = divi(anum, bnum);
+#if HAVE_ROUND
+    return flo(round(c_flo(quot)));
+#else
+    {
+      double q = c_flo(quot);
+      return if3(q >= 0,
+                 flo(floor(0.5 + q)),
+                 flo(-ceil(0.5 + fabs(q))));
+    }
+#endif
+  } else {
+    val quot = floordiv(anum, bnum);
+    val rem = minus(anum, mul(quot, bnum));
+    val drem = ash(rem, one);
+    return if3(eq(drem, bnum),
+               if3(minusp(quot), quot, succ(quot)),
+               if3(lt(drem, bnum), quot, succ(quot)));
+  }
+}
+
 val wrap_star(val start, val end, val num)
 {
   val modulus = minus(end, start);

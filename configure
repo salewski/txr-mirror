@@ -2128,6 +2128,25 @@ else
   printf "no\n"
 fi
 
+printf "Checking for round ... "
+cat > conftest.c <<!
+#include <math.h>
+
+int main(void)
+{
+  double x = round(0.5);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_ROUND 1\n" >> $config_h
+else
+  printf "no\n"
+fi
+
+
+
 printf "Checking for glob ... "
 
 cat > conftest.c <<!
