@@ -31617,87 +31617,35 @@ A character may not be an operand of multiplication.
 
 .PP
 
-.coNP Functions @, / @ trunc, @ mod and @ trunc-rem
+.coNP Function @ /
 .synb
-.mets (/ <> [ dividend ] << divisor *)
-.mets (trunc < dividend << divisor )
-.mets (mod < dividend << divisor )
-.mets (trunc-rem < dividend << divisor )
+.mets (/ << divisor )
+.mets (/ < dividend << divisor *)
 .syne
 .desc
-The arguments to these functions are numbers. Characters are not permitted.
-
 The
 .code /
 function performs floating-point division. Each operands is first
-converted to floating-point type, if necessary. If
+converted to floating-point type, if necessary. In the one-argument
+form, the
 .meta dividend
-is omitted,
-then it is taken to be
-.code 1.0
-and the function calculates the reciprocal. Of these division functions,
-only this one may be called with just one argument, or with more than two
-arguments.  If there are more than two arguments, then each additional argument
-is treated as an additional divisor which further divides the result of the
-division by the previous divisors.
+argument is omitted. An implicit dividend is present, whose value is
+.codn 1.0 ,
+such that the one-argument form
+.code "(/ x)"
+is equivalent to the two-argument form
+.codn "(/ 1.0 x)" .
 
-The
-.code trunc
-function performs a division of
-.meta dividend
-by
+If there are two or more arguments, explicitly or by the above equivalence,
+then a cumulative division is performed. The
 .meta divisor
-whose result
-is truncated to integer toward zero. If both operands are integers, then an
-integer division is performed and the result is an integer. If either operand
-is a floating point value,  a floating point division occurs, and the result is
-truncated toward zero to a floating-point integral value.
-
-The
-.code mod
-function performs a modulus operation. Firstly, the absolute value
-of
-.meta divisor
-is taken to be a modulus. Then a residue of
-.meta dividend
-with respect to
-.meta modulus
-is calculated. The residue's sign follows
-that of the sign of
-.metn divisor .
-That is, it is the smallest magnitude
-(closest to zero) residue of
-.meta dividend
-with respect to the absolute
-value of
-.metn divisor ,
-having the same sign as
-.metn divisor .
-If the operands are integer, the result is an integer. If either operand
-is of type float, then the result is a float. The modulus operation is
-then generalized into the floating point domain. For instance the expression
-.code "(mod 0.75 0.5)"
-yields a residue of 0.25 because 0.5 "goes into" 0.75 only
-once, with a "remainder" of 0.25.
-
-The
-.code trunc-rem
-function returns a list of two values: a
-.meta quotient
-and a
-.metn remainder .
-The
-.meta quotient
-is exactly the same value as what
-.code trunc
-would return for the same inputs.
-The
-.meta remainder
-obeys the following identity:
-
-.cblk
-.mets (eql < remainder (- < dividend >> (* divisor << quotient )))
-.cble
+value is taken into consideration, and divided by the first
+.codn divisor .
+If another
+.code divisor
+follows, then that value is divided by that subsequent divisor.
+This process repeats until all divisors are exhausted, and the
+value of the last division is returned.
 
 .coNP Functions @ wrap and @ wrap*
 .synb
@@ -31838,14 +31786,16 @@ is positive, it is returned. If
 is negative, its additive inverse is
 returned: a positive number of the same type with exactly the same magnitude.
 
-.coNP Functions @, floor @ ceil and @ round
+.coNP Functions @, trunc @, floor @ ceil and @ round
 .synb
+.mets (trunc < dividend <> [ divisor ])
 .mets (floor < dividend <> [ divisor ])
 .mets (ceil < dividend <> [ divisor ])
 .mets (round < dividend <> [ divisor ])
 .syne
 .desc
 The
+.codn trunc ,
 .codn floor ,
 .code ceiling
 and
@@ -31880,6 +31830,10 @@ and the result is a range composed of these two individual
 quotients.
 
 When the quotient is a scalar value,
+.code trunc
+returns the closest integer, in the zero direction,
+from the value of the quotient.
+The
 .code floor
 function returns the highest integer which does not exceed
 the value of the quotient. That is to say, the division is
@@ -31915,6 +31869,62 @@ rounding halfway cases away from zero. \*(TX's choice
 harmonizes with the semantics of the
 .code round
 function in the C language.
+
+.coNP Function @ mod
+.synb
+.mets (mod < dividend << divisor )
+.syne
+.desc
+The
+.code mod
+function performs a modulus operation. Firstly, the absolute value
+of
+.meta divisor
+is taken to be a modulus. Then a residue of
+.meta dividend
+with respect to
+.meta modulus
+is calculated. The residue's sign follows
+that of the sign of
+.metn divisor .
+That is, it is the smallest magnitude
+(closest to zero) residue of
+.meta dividend
+with respect to the absolute
+value of
+.metn divisor ,
+having the same sign as
+.metn divisor .
+If the operands are integer, the result is an integer. If either operand
+is of type float, then the result is a float. The modulus operation is
+then generalized into the floating point domain. For instance the expression
+.code "(mod 0.75 0.5)"
+yields a residue of 0.25 because 0.5 "goes into" 0.75 only
+once, with a "remainder" of 0.25.
+
+.coNP Function @ trunc-rem
+.synb
+.mets (trunc-rem < dividend << divisor )
+.syne
+.desc
+The
+.code trunc-rem
+function returns a list of two values: a
+.meta quotient
+and a
+.metn remainder .
+The
+.meta quotient
+is exactly the same value as what
+.code trunc
+would return for the same inputs.
+The
+.meta remainder
+obeys the following identity:
+
+.cblk
+.mets (eql < remainder (- < dividend >> (* divisor << quotient )))
+.cble
 
 .coNP Functions @, sin @, cos @, tan @, asin @, acos @ atan and @ atan2
 .synb

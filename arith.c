@@ -803,8 +803,29 @@ tail:
   uw_throwf(error_s, lit("*: invalid operands ~s ~s"), anum, bnum, nao);
 }
 
+static val trunc1(val num)
+{
+  switch (type(num)) {
+  case NUM:
+  case BGNUM:
+    return num;
+  case FLNUM:
+    {
+      double n = c_flo(num);
+      return flo(n - fmod(n, 1.0));
+    }
+  case RNG:
+    return rcons(trunc1(from(num)), trunc1(to(num)));
+  default:
+    break;
+  }
+  uw_throwf(error_s, lit("trunc: invalid operand ~s"), num);
+}
+
 val trunc(val anum, val bnum)
 {
+  if (missingp(bnum))
+    return trunc1(anum);
 tail:
   switch (TAG_PAIR(tag(anum), tag(bnum))) {
   case TAG_PAIR(TAG_NUM, TAG_NUM):
