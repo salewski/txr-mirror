@@ -5693,7 +5693,6 @@ void eval_init(void)
   reg_fun(intern(lit("abs"), user_package), func_n1(abso));
   reg_fun(intern(lit("trunc"), user_package), func_n2o(trunc, 1));
   reg_fun(intern(lit("mod"), user_package), func_n2(mod));
-  reg_fun(intern(lit("trunc-rem"), user_package), func_n2(trunc_rem));
   reg_fun(intern(lit("wrap"), user_package), func_n3(wrap));
   reg_fun(intern(lit("wrap*"), user_package), func_n3(wrap_star));
   reg_fun(intern(lit("/"), user_package), func_n1v(divv));
@@ -5705,6 +5704,10 @@ void eval_init(void)
   reg_fun(intern(lit("floor"), user_package), func_n2o(floordiv, 1));
   reg_fun(intern(lit("ceil"), user_package), func_n2o(ceildiv, 1));
   reg_fun(intern(lit("round"), user_package), func_n2o(roundiv, 1));
+  reg_fun(intern(lit("trunc-rem"), user_package), func_n2o(trunc_rem, 1));
+  reg_fun(intern(lit("floor-rem"), user_package), func_n2o(floor_rem, 1));
+  reg_fun(intern(lit("ceil-rem"), user_package), func_n2o(ceil_rem, 1));
+  reg_fun(intern(lit("round-rem"), user_package), func_n2o(round_rem, 1));
   reg_fun(intern(lit("sin"), user_package), func_n1(sine));
   reg_fun(intern(lit("cos"), user_package), func_n1(cosi));
   reg_fun(intern(lit("tan"), user_package), func_n1(tang));

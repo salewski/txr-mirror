@@ -31902,25 +31902,39 @@ then generalized into the floating point domain. For instance the expression
 yields a residue of 0.25 because 0.5 "goes into" 0.75 only
 once, with a "remainder" of 0.25.
 
-.coNP Function @ trunc-rem
+.coNP Functions @, trunc-rem @, floor-rem @ ceil-rem and @ round-rem
 .synb
-.mets (trunc-rem < dividend << divisor )
+.mets (trunc-rem < dividend <> [ divisor ])
+.mets (floor-rem < dividend <> [ divisor ])
+.mets (ceil-rem < dividend <> [ divisor ])
+.mets (round-rem < dividend <> [ divisor ])
 .syne
 .desc
-The
-.code trunc-rem
-function returns a list of two values: a
+These functions, respectively, perform the same division operation
+as
+.codn trunc ,
+.codn floor ,
+.codn ceil ,
+and
+.codn round ,
+referred to here as the respective target functions.
+
+If the
+.meta divisor
+is missing, it defaults to 1.
+
+Each function returns a list of two values: a
 .meta quotient
 and a
 .metn remainder .
 The
 .meta quotient
-is exactly the same value as what
-.code trunc
-would return for the same inputs.
+is exactly the same value as what would be returned by the
+respective target function for the same inputs.
+
 The
 .meta remainder
-obeys the following identity:
+value obeys the following identity:
 
 .cblk
 .mets (eql < remainder (- < dividend >> (* divisor << quotient )))

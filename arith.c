@@ -1090,13 +1090,6 @@ divzero:
   uw_throw(numeric_error_s, lit("mod: division by zero"));
 }
 
-val trunc_rem(val anum, val bnum)
-{
-  val quot = trunc(anum, bnum);
-  val rem = minus(anum, mul(quot, bnum));
-  return list(quot, rem, nao);
-}
-
 val floordiv(val anum, val bnum)
 {
   if (missingp(bnum))
@@ -1310,6 +1303,34 @@ val roundiv(val anum, val bnum)
                if3(minusp(quot), quot, succ(quot)),
                if3(lt(drem, bnum), quot, succ(quot)));
   }
+}
+
+val trunc_rem(val anum, val bnum)
+{
+  val quot = trunc(anum, bnum);
+  val rem = minus(anum, mul(quot, if3(missingp(bnum), one, bnum)));
+  return list(quot, rem, nao);
+}
+
+val floor_rem(val anum, val bnum)
+{
+  val quot = floordiv(anum, bnum);
+  val rem = minus(anum, mul(quot, if3(missingp(bnum), one, bnum)));
+  return list(quot, rem, nao);
+}
+
+val ceil_rem(val anum, val bnum)
+{
+  val quot = ceildiv(anum, bnum);
+  val rem = minus(anum, mul(quot, if3(missingp(bnum), one, bnum)));
+  return list(quot, rem, nao);
+}
+
+val round_rem(val anum, val bnum)
+{
+  val quot = roundiv(anum, bnum);
+  val rem = minus(anum, mul(quot, if3(missingp(bnum), one, bnum)));
+  return list(quot, rem, nao);
 }
 
 val wrap_star(val start, val end, val num)
