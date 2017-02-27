@@ -6538,6 +6538,22 @@ and
 directives introduce implicit anonymous blocks,
 as do function bodies.
 
+Blocks must be terminated by
+.code "@(end)"
+and can be vertical:
+
+.cblk
+.mets @(block <> [ name ])
+  ...
+.mets @(end)
+.cble
+
+or horizontal:
+
+.cblk
+.mets @(block <> [ name ])...@(end)
+.cble
+
 .NP* Block Scope
 
 The names of blocks are in a distinct namespace from the variable binding
@@ -6635,6 +6651,10 @@ a failed block.
 Immediately terminate the innermost enclosing anonymous block, as if
 that block failed to match.
 
+The
+.code @(fail)
+directive has a vertical and horizontal form.
+
 If the implicit block introduced by
 .code @(skip)
 is terminated in this manner,
@@ -6680,6 +6700,12 @@ exhibits the bindings which were collected just prior to the execution
 of that
 .code @(accept)
 and the input position which was in effect at that time.
+
+.code @(accept)
+has a vertical and horizontal form. In the horizontal form,
+it communicates a horizontal input position. A horizontal input
+position thus communicated will only take effect if the block being
+terminated had been suspended on the same line of input.
 
 If the implicit block introduced by
 .code @(skip)
