@@ -3006,7 +3006,7 @@ the
 and
 .code @(fail)
 directives.
-Blocks are described in the section BLOCKS below.
+Blocks are described in the section Blocks below.
 
 .coIP @(skip)
 Treat the remaining query as a subquery unit, and search the lines (or
@@ -3162,12 +3162,12 @@ and
 
 .coIP @(fail)
 Terminate the processing of a block, as if it were a failed match.
-Blocks are described in the section BLOCKS below.
+Blocks are described in the section Blocks below.
 
 .coIP @(accept)
 Terminate the processing of a block, as if it were a successful match.
 What bindings emerge may depend on the kind of block: collect
-has special semantics.  Blocks are described in the section BLOCKS below.
+has special semantics.  Blocks are described in the section Blocks below.
 
 .coIP @(try)
 Indicates the start of a try block, which is related to exception
@@ -7336,7 +7336,7 @@ Functions may be nested within function bodies. Such local functions have
 dynamic scope. They are visible in the function body in which they are defined,
 and in any functions invoked from that body.
 
-The body of a function is an anonymous block. (See BLOCKS above).
+The body of a function is an anonymous block. (See Blocks above).
 
 .NP* Two Forms of The Horizontal Function
 
@@ -9102,7 +9102,7 @@ to upper case and HTML encode:
 
 The exceptions mechanism in \*(TX is another
 disciplined form of non-local transfer, in addition to the blocks
-mechanism (see BLOCKS above).  Like blocks, exceptions provide a construct
+mechanism (see Blocks above).  Like blocks, exceptions provide a construct
 which serves as the target for a dynamic exit.  Both blocks and exceptions
 can be used to bail out of deep nesting when some condition occurs.
 However, exceptions provide more complexity. Exceptions are useful for
@@ -9207,7 +9207,7 @@ clause looks like:
 
 The main clause may not be empty, but the catch and finally may be.
 
-A try clause is surrounded by an implicit anonymous block (see BLOCKS section
+A try clause is surrounded by an implicit anonymous block (see Blocks section
 above). So for instance, the following is a no-op (an operation with no effect,
 other than successful execution):
 
