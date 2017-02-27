@@ -3908,6 +3908,32 @@ cause
 .code @(collect)
 to match partially overlapping regions.
 
+Trailer can be used in vertical context:
+
+.cblk
+.mets @(trailer)
+.mets < directives
+.mets ...
+.cble
+
+or horizontal:
+
+.cblk
+.mets @(trailer) < directives ...
+.cble
+
+A vertical
+.code trailer
+prevents the vertical input position from
+advancing as it is matched by
+.metn directives ,
+whereas a horizontal
+.code trailer
+prevents the horizontal position from advancing. In other words,
+.code trailer
+performs matching without consuming the input, providing a
+look-ahead mechanism.
+
 Example:
 
 .cblk
