@@ -1,3 +1,28 @@
+                                    TXR 170
+                                   2017-02-28
+
+
+  Features
+
+  - Horizontal-mode @(throw) directive.
+  - Horizontal @(block)...@(end) syntax.
+  - Second argument of trunc function is now optional:
+    (trunc -1.5) yields -1.0.
+  - floor and ceil functions take optional second argument,
+    which acts as a divisor: (floor 10 3) -> 3; (ceil 10 3) -> 4.
+  - New round function: (round 0.7) -> 1; (round 3 4) -> 1; (round 1 3) -> 0.
+  - New functions floor-rem, ceil-rem and round-rem.
+
+  Bugs
+
+  - Requirements for special interaction between @(accept)
+    and @(next), function calls, and @(finally) have been
+    identified and implemented.
+  - Fixed segfault (C null pointer dereference) when nil
+    symbol used to look up a struct slot.
+
+
+
                                     TXR 169
                                    2017-02-11
 
