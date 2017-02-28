@@ -7056,6 +7056,50 @@ However,
 .code next
 has no effect on the bindings being communicated.
 
+Example:
+
+.cblk
+\ @(next "file-x")
+ @(block b)
+ @(next "file-y")
+ @line
+ @(accept b)
+ @(end)
+.cble
+
+Here, the variable
+.code line
+matches the first line of the file
+.strn file-y ,
+after which an
+.code accept
+transfer is initiated, targeting block
+.codn b .
+This transfer communicates the
+.code line
+binding, as well as the position within
+.codn file-y ,
+pointing at the second line.
+However, the
+.code accept
+traverses the
+.code next
+directive, causing it to be abandoned. The special unwinding
+action within that directive detects this transfer and rewrites
+the input position to be the original one within the stream
+associated with
+.strn file-x .
+Note that this special handling exists in order for the behavior to be
+consistent with what would happen if the
+.code "@(accept b)"
+were removed, and the block
+.code b
+terminated normally: because the inner
+.code next
+is nested within that block, \*(TX would backtrack to the
+previous input position within
+.strn file-x .
+
 .coNP Interaction Between Functions and the @ accept directive
 If a pattern function is terminated due to
 .codn accept ,
@@ -7071,6 +7115,63 @@ then replace those being communicated by the
 and the
 .code accept
 transfer is resumed.
+
+Example:
+
+.cblk
+\ @(define fun (a))
+ @  (bind a "a")
+ @  (bind b "b")
+ @  (accept blk)
+ @(end)
+ @(block blk)
+ @(fun x)
+ this line is skipped by accept
+ @(end)
+.cble
+
+Here, the
+.code accept
+initiates a control transfer which communicates the
+.code a
+and
+.code b
+variable bindings which are visible in that scope. This transfer is
+intercepted by the function, and the treatment of the bindings follows
+to the same rules as a normal return (which, in the given function, would
+readily take place if the
+.code accept
+directive were removed). The
+.code b
+variable is suppressed, because
+.code b
+isn't a parameter of the function. Because
+.code a
+.B is
+a parameter, and the argument to that parameter is the unbound
+variable
+.codn x ,
+the effect is that
+.code x
+is bound to the value of
+.codn a .
+When the accept transfer reaches block
+.code blk
+and terminates it, all that emerges is the
+.code x
+binding carrying
+.strn a .
+
+If the
+.code accept
+invocation is removed from
+.codn fun ,
+then of course the function returns normally, producing the
+.code x
+binding. In that case, the line
+.code "this line is skipped by accept"
+isn't skipped since the block isn't being terminated; that
+line must match something.
 
 .coNP Interaction Between @ finally and the @ accept directive
 If the exception handling
