@@ -1086,7 +1086,6 @@ val group_reduce(val hash, val by_fun, val reduce_fun, val seq,
                  val initval, val filter_fun)
 {
   initval = default_bool_arg(initval);
-  filter_fun = default_arg(filter_fun, identity_f);
 
   if (vectorp(seq)) {
     cnum i, len;
@@ -1116,7 +1115,7 @@ val group_reduce(val hash, val by_fun, val reduce_fun, val seq,
     }
   }
 
-  if (filter_fun != identity_f) {
+  if (!null_or_missing_p(filter_fun)) {
     val iter = hash_begin(hash);
     val cell;
 
