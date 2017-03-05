@@ -3073,7 +3073,7 @@ val match_expand_keyword_args(val args)
     if (more &&
         (sym == maxgap_k || sym == mingap_k || sym == gap_k ||
          sym == times_k || sym == mintimes_k || sym == maxtimes_k ||
-         sym == lines_k || sym == counter_k || sym == vars_k ||
+         sym == lines_k || sym == vars_k ||
          sym == list_k || sym == string_k))
     {
       val form = car(next);
@@ -3082,6 +3082,15 @@ val match_expand_keyword_args(val args)
                         expand(form, nil));
       ptail = list_collect(ptail, sym);
       ptail = list_collect(ptail, form_ex);
+      args = cdr(next);
+    } else if (more &&
+               (sym == counter_k)) {
+      val form = car(next);
+      val vars_like_wrap = cons(form, nil);
+      val vars_like_ex = match_expand_vars(vars_like_wrap);
+
+      ptail = list_collect(ptail, sym);
+      ptail = list_collect(ptail, car(vars_like_ex));
       args = cdr(next);
     } else if (more &&
                (sym == tlist_k)) {
