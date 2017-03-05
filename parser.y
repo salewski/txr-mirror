@@ -1288,12 +1288,16 @@ static val expand_repeat_rep_args(val args)
         list_collect_decl (iout, iptail);
         for (; arg; arg = cdr(arg)) {
           val iarg = car(arg);
-          if (consp(iarg))
-            iptail = list_collect(iptail, list(first(iarg),
+          if (consp(iarg)) {
+            val sym = first(iarg);
+            iptail = list_collect(iptail, list(sym,
                                                expand(second(iarg), nil),
                                                nao));
-          else
+            match_reg_var(sym);
+          } else {
             iptail = list_collect(iptail, iarg);
+            match_reg_var(iarg);
+          }
         }
         ptail = list_collect(ptail, iout);
       } else if (exp_pair) {
