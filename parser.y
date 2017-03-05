@@ -1301,10 +1301,11 @@ static val expand_repeat_rep_args(val args)
         }
         ptail = list_collect(ptail, iout);
       } else if (exp_pair) {
-        ptail = list_collect(ptail, list(first(arg),
+        val sym = first(arg);
+        ptail = list_collect(ptail, list(sym,
                                          expand(second(arg), nil),
                                          nao));
-        match_reg_var(first(arg));
+        match_reg_var(sym);
       } else {
         ptail = list_collect(ptail, arg);
       }
