@@ -36795,9 +36795,23 @@ is invoked with two arguments: the accumulator from step 2, and the
 original element from
 .metn seq .
 .IP 4.
-The resulting value is stored back into the hash table under the
-same key.
+The resulting value from step 3 is stored back into the hash table under the
+key from step 2.
 .RE
+
+.IP
+After the above processing, one more step is performed if the
+.meta filter-fun
+argument is present. In this case, the hash table is destructively mapped through
+.meta filter-fun
+before being returned. That is to say, every value in the hash table is
+projected through
+.meta filter-fun
+and stored back in the table under the same key, as if by an invocation the
+.cblk
+.meti (hash-update < hash << filter-fun )
+.cble
+expression.
 
 .IP
 If
