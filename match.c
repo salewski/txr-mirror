@@ -3092,6 +3092,10 @@ val match_expand_keyword_args(val args)
       ptail = list_collect(ptail, sym);
       ptail = list_collect(ptail, car(vars_like_ex));
       args = cdr(next);
+      if (consp(form))
+        match_reg_var(car(form));
+      else
+        match_reg_var(form);
     } else if (more &&
                (sym == tlist_k)) {
       ptail = list_collect(ptail, sym);
