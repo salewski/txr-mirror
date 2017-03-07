@@ -743,7 +743,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return HASH_N_HASH;
 }
 
-<NESTED>\.\. {
+<NESTED>{WS}\.\. {
   yylval->lineno = yyextra->lineno;
   return DOTDOT;
 }
@@ -771,6 +771,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <SPECIAL,QSPECIAL,NESTED>\.{REQWS} {
   yylval->chr = '.';
   return LAMBDOT;
+}
+
+<SPECIAL,QSPECIAL,NESTED,BRACED>{REQWS}\. {
+  yylval->chr = '.';
+  return UREFDOT;
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>\. {

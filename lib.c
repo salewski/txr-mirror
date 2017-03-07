@@ -9572,7 +9572,10 @@ static val simple_qref_args_p(val args, val pos)
     return nil;
   } else {
     val arg = car(args);
-    if (symbolp(arg) || (consp(arg) && car(arg) != qref_s)) {
+    if (symbolp(arg) || (consp(arg) &&
+                         car(arg) != qref_s &&
+                         car(arg) != uref_s))
+    {
       return simple_qref_args_p(cdr(args), succ(pos));
     }
     return nil;
@@ -9799,6 +9802,12 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
           if (next)
             put_string(lit("."), out);
           iter = next;
+        }
+      } else if (sym == uref_s && simple_qref_args_p(cdr(obj), one)) {
+        val iter;
+        for (iter = cdr(obj); iter; iter = cdr(iter)) {
+          put_string(lit("."), out);
+          obj_print_impl(car(iter), out, pretty, ctx);
         }
       } else if (sym == quasi_s && consp(cdr(obj))) {
         put_char(chr('`'), out);

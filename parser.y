@@ -123,7 +123,7 @@ INLINE val expand_form_ver(val form, int ver)
 %token <val> NUMBER METANUM
 %token <val> HASH_N_EQUALS HASH_N_HASH
 
-%token <chr> REGCHAR REGTOKEN LITCHAR SPLICE CONSDOT LAMBDOT
+%token <chr> REGCHAR REGTOKEN LITCHAR SPLICE CONSDOT LAMBDOT UREFDOT
 
 %type <val> spec hash_semi_or_n_expr hash_semi_or_i_expr
 %type <val> clauses_rev clauses_opt clause
@@ -135,7 +135,8 @@ INLINE val expand_form_ver(val form, int ver)
 %type <val> if_clause elif_clauses_opt else_clause_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers vector hash struct range
-%type <val> list exprs exprs_opt n_exprs r_exprs i_expr n_expr n_exprs_opt
+%type <val> list exprs exprs_opt n_exprs r_exprs i_expr i_dot_expr
+%type <val> n_expr n_exprs_opt n_dot_expr
 %type <val> out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems o_elem o_var q_var rep_elem rep_parts_opt
@@ -157,7 +158,7 @@ INLINE val expand_form_ver(val form, int ver)
 %left '|' '/'
 %left '&'
 %right '~' '*' '?' '+' '%'
-%right '.' CONSDOT LAMBDOT REGCHAR REGTOKEN LITCHAR
+%right '.' CONSDOT LAMBDOT UREFDOT REGCHAR REGTOKEN LITCHAR
 %right DOTDOT
 
 %%
@@ -833,6 +834,23 @@ range : HASH_R list             { if (length($2) != two)
        ;
 
 list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
+     | '(' '.' n_exprs ')'      { val a = car($3);
+                                  if (consp(a) && car(a) == qref_s) {
+                                    rplaca(a, uref_s);
+                                    $$ = $3;
+                                  } else {
+                                    $$ = cons(rl(rlcp(list(uref_s, a, nao), a),
+                                                 num(parser->lineno)), cdr($3));
+                                  } }
+     | '[' '.' n_exprs ']'      { val a = car($3);
+                                  if (consp(a) && car(a) == qref_s) {
+                                    rplaca(a, uref_s);
+                                    $$ = rl(cons(dwim_s, $3), num($1));
+                                  } else {
+                                    val ur = cons(rl(rlcp(list(uref_s, a, nao), a),
+                                                  num(parser->lineno)), cdr($3));
+                                    $$ = rl(cons(dwim_s, ur), num($1));
+                                  } }
      | '(' ')'                  { $$ = nil; }
      | '(' LAMBDOT n_expr ')'   { $$ = $3; }
      | '(' CONSDOT n_expr ')'   { $$ = $3; }
@@ -923,20 +941,28 @@ i_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | quasilit               { $$ = $1; }
        | WORDS wordslit         { $$ = rl($2, num($1)); }
        | QWORDS wordsqlit       { $$ = rl(cons(quasilist_s, $2), num($1)); }
-       | '\'' i_expr            { $$ = rl(rlcp(list(quote_s, $2, nao), $2),
+       | '\'' i_dot_expr        { $$ = rl(rlcp(list(quote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | '^' i_expr             { $$ = rl(rlcp(list(sys_qquote_s, $2, nao), $2),
+       | '^' i_dot_expr         { $$ = rl(rlcp(list(sys_qquote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | ',' i_expr             { $$ = rl(rlcp(list(sys_unquote_s, $2, nao), $2),
+       | ',' i_dot_expr         { $$ = rl(rlcp(list(sys_unquote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | SPLICE i_expr          { $$ = rl(rlcp(list(sys_splice_s, $2, nao), $2),
+       | SPLICE i_dot_expr      { $$ = rl(rlcp(list(sys_splice_s, $2, nao), $2),
                                           num(parser->lineno)); }
        | HASH_N_EQUALS          { parser_circ_def(parser, $1, unique_s); }
-         i_expr                 { parser_circ_def(parser, $1, $3);
+         i_dot_expr             { parser_circ_def(parser, $1, $3);
                                   $$ = $3; }
        | HASH_N_HASH            { $$ = parser_circ_ref(parser, $1); }
        ;
 
+i_dot_expr : '.' i_expr         { if (consp($2) && car($2) == qref_s) {
+                                    $$ = rplaca($2, uref_s);
+                                  } else {
+                                    $$ = rl(rlcp(list(uref_s, $2, nao), $2),
+                                            num(parser->lineno));
+                                  } }
+           | i_expr %prec LOW   { $$ = $1; }
+           ;
 n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | METANUM                { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(parser->lineno)); }
@@ -952,13 +978,13 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | quasilit               { $$ = $1; }
        | WORDS wordslit         { $$ = rl($2, num($1)); }
        | QWORDS wordsqlit       { $$ = rl(cons(quasilist_s, $2), num($1)); }
-       | '\'' n_expr            { $$ = rl(rlcp(list(quote_s, $2, nao), $2),
+       | '\'' n_dot_expr        { $$ = rl(rlcp(list(quote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | '^' n_expr             { $$ = rl(rlcp(list(sys_qquote_s, $2, nao), $2),
+       | '^' n_dot_expr         { $$ = rl(rlcp(list(sys_qquote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | ',' n_expr             { $$ = rl(rlcp(list(sys_unquote_s, $2, nao), $2),
+       | ',' n_dot_expr         { $$ = rl(rlcp(list(sys_unquote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | SPLICE n_expr          { $$ = rl(rlcp(list(sys_splice_s, $2, nao), $2),
+       | SPLICE n_dot_expr      { $$ = rl(rlcp(list(sys_splice_s, $2, nao), $2),
                                           num(parser->lineno)); }
        | n_expr DOTDOT n_expr   { uses_or2;
                                   $$ = rlcp(list(rcons_s, $1, $3, nao),
@@ -973,8 +999,14 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
                                                  or2($1, $3)),
                                                  num(parser->lineno));
                                   } }
+       | UREFDOT n_expr           { if (consp($2) && car($2) == qref_s) {
+                                    $$ = rplaca($2, uref_s);
+                                  } else {
+                                    $$ = rl(rlcp(list(uref_s, $2, nao), $2),
+                                            num(parser->lineno));
+                                  } }
        | HASH_N_EQUALS          { parser_circ_def(parser, $1, unique_s); }
-         n_expr                 { parser_circ_def(parser, $1, $3);
+         n_dot_expr             { parser_circ_def(parser, $1, $3);
                                   $$ = $3; }
        | HASH_N_HASH            { $$ = parser_circ_ref(parser, $1); }
        ;
@@ -982,6 +1014,15 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
 n_exprs_opt : n_exprs           { $$ = $1; }
             | /* empty */       { $$ = nil; }
           ;
+
+n_dot_expr : '.' n_expr         { if (consp($2) && car($2) == qref_s) {
+                                    $$ = rplaca($2, uref_s);
+                                  } else {
+                                    $$ = rl(rlcp(list(uref_s, $2, nao), $2),
+                                            num(parser->lineno));
+                                  } }
+           | n_expr %prec LOW   { $$ = $1; }
+           ;
 
 regex : '/' regexpr '/'         { $$ = regex_compile($2, nil);
                                   end_of_regex(scnr);

@@ -10595,6 +10595,56 @@ Such ambiguous uses of floating-point tokens are diagnosed as syntax errors:
   (a .4)  ;; good: a followed by 0.4
 .cble
 
+.NP* Unbound Referencing Dot
+
+Closely related to the referencing dot syntax is the unbound
+referencing dot. This is a dot which is flanked by an expression on the right,
+without any intervening whitespace, but is not preceded by an expression
+Rather, it is preceded by whitespace,
+or some punctuation such as
+.codn [ ,
+.code (
+or
+.codn ' .
+This is a syntactic sugar which translates to
+.code uref
+syntax:
+
+.cblk
+  .a            <--> (uref a)
+  .a.b          <--> (uref a b)
+.cble
+
+When the unbound referencing dot is applied to a dotted expression,
+this can be understood as a conversion of
+.code qref
+to
+.codn uref .
+
+Indeed, this is exactly what happens if the unbound dot is applied to an
+explicit
+.code qref
+expression:
+
+  .(qref a b)   <--> (uref a b)
+
+The unbound referencing dot takes its name from the semantics of the
+.code uref
+macro, which produces a function that implements late binding of an
+object to a method slot. Whereas the expression
+.code obj.a.b
+denotes accessing object
+.code obj
+to retrieve slot
+.code a
+and then accessing slot
+.code b
+of the object from that slot, the expression
+.code .a.b.
+represents a "disembodied" reference: it produces a function which takes an
+object as an argument and then performs the implied slot referencing on that
+argument. When the function is called, it is said to bind the referencing to
+the object. Hence that referencing is "unbound".
 
 .NP* Quote and Quasiquote
 
@@ -21632,9 +21682,12 @@ For more convenient and clutter-free expression of structure-based
 program code, macros are also provided.
 
 Furthermore, concise and expressive slot access syntax is provided courtesy of
-the referencing dot syntax, a syntactic sugar for the
+the referencing dot and unbound referencing dot syntax, a syntactic sugar
+for the
 .code qref
-macro.
+and
+.code uref
+macros.
 
 Structure types have a name, which is a symbol. The
 .code typeof
@@ -22556,6 +22609,91 @@ function which is particular to the
 .code s
 object.  Secondly, the object is passed to the selected function as the
 leftmost argument, so that the function has access to the object.
+
+.coNP Macro @ uref
+.synb
+.mets (uref >> { slot | >> ( slot << arg *) | >> [ slot << arg *]}+)
+.syne
+.desc
+The
+.code uref
+macro expands to an expression which evaluates to a function.
+The function takes exactly one argument: an object.
+When the function is invoked on an object, it references slots
+or methods relative to that object.
+
+Note: the
+.code uref
+syntax may be used directly, but it is also produced by the unbound referencing
+dot syntactic sugar:
+
+.cblk
+  .a          -->  (uref a)
+  .(f x)      -->  (uref (f x))
+  .(f x).b    -->  (uref (f x) b)
+  .a.(f x).b  -->  (uref a (f x) b)
+.cble
+
+The macro may be understood in terms of the following translation
+scheme:
+
+.cblk
+  (uref a b c ...)  -->  (lambda (o) (qref o a b c ...))
+.cble
+
+where
+.code o
+is understood to be a unique symbol (for instance, as produced by the
+.code gensym
+function).
+
+When only one
+.code uref
+argument is present, these equivalences also hold:
+
+.cblk
+  (uref (f a b c ...))  <-->  (umeth f a b c ...)
+  (uref s)  <-->  (usl s)
+.cble
+
+.TP* Examples:
+
+Suppose that the objects in
+.code list
+have slots
+.code a
+and
+.codn b .
+Then, a list of the
+.code a
+slot values may be obtained using:
+
+.cblk
+  (mapcar .a list)
+.cble
+
+because this is equivalent to
+
+.cblk
+  (mapcar (lambda (o) o.a) list)
+.cble
+
+Because
+.code uref
+produces a function, its result can be operated upon by
+functional combinators. For instance, we can use the
+.code juxt
+combinator to produce a list of two-element lists,
+which hold the
+.code a
+and
+.code b
+slots from each object in
+.codn list :
+
+.cblk
+  (mapcar (juxt .a .b) list)
+.cble
 
 .coNP Macro @ meth
 .synb

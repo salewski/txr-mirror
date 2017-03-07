@@ -94,7 +94,7 @@ val gen_s, gun_s, generate_s, rest_s, plus_s;
 val promise_s, promise_forced_s, promise_inprogress_s, force_s;
 val op_s, ap_s, identity_s, apf_s, ipf_s;
 val ret_s, aret_s;
-val hash_lit_s, hash_construct_s, struct_lit_s, qref_s;
+val hash_lit_s, hash_construct_s, struct_lit_s, qref_s, uref_s;
 val vector_lit_s, vec_list_s;
 val macro_time_s, with_dyn_rebinds_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s, switch_s;
@@ -5417,6 +5417,7 @@ void eval_init(void)
   hash_construct_s = intern(lit("hash-construct"), user_package);
   struct_lit_s = intern(lit("struct-lit"), system_package);
   qref_s = intern(lit("qref"), user_package);
+  uref_s = intern(lit("uref"), user_package);
   vector_lit_s = intern(lit("vector-lit"), system_package);
   vec_list_s = intern(lit("vec-list"), user_package);
   macro_time_s = intern(lit("macro-time"), user_package);

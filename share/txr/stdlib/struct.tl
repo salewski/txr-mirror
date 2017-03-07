@@ -207,6 +207,16 @@
     ((sym . more) ^(qref (slot ,obj ',sym) ,*more))
     (obj (throwf 'eval-error "~s: bad syntax: ~s" 'qref refs))))
 
+(defmacro uref (:whole form . args)
+  (cond
+    ((null args) (throwf 'eval-error "~s: bad syntax" 'uref))
+    ((null (cdr args))
+     (if (consp (car args))
+       ^(umeth ,*(car args))
+       ^(usl ,(car args))))
+    (t (with-gensyms (ovar)
+         ^(lambda (,ovar) (qref ,ovar ,*args))))))
+
 (defmacro new (spec . pairs)
   (if (oddp (length pairs))
     (throwf 'eval-error "~s: slot initform arguments must occur pairwise"
