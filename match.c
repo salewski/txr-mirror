@@ -4423,7 +4423,7 @@ static void open_data_source(match_files_ctx *c)
       if ((c->data = lazy_stream_cons(name)))
         c->data_lineno = one;
     } else {
-      c->data = nil;
+      sem_error(specline, lit("~s doesn't denote a valid data source"), name, nao);
     }
   } else if (c->data == t && c->files == nil) {
     if (opt_compat && opt_compat <= 170) {
