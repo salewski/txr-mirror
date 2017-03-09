@@ -4427,7 +4427,15 @@ static void open_data_source(match_files_ctx *c)
       c->data = nil;
     }
   } else if (c->data == t && c->files == nil) {
-    c->data = nil;
+    if (opt_compat && opt_compat <= 170) {
+      c->data = nil;
+    } else {
+      spec_bind (specline, first_spec, c->spec);
+      debuglf(first_spec, lit("opening standard input as data source"), nao);
+      c->curfile = lit("-");
+      c->data = lazy_stream_cons(std_input);
+      c->data_lineno = one;
+    }
   }
 }
 

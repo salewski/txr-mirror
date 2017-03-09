@@ -443,7 +443,7 @@ install-tests:
 # Generate web page from man page
 #
 txr-manpage.html: txr.1 genman.txr
-	man2html $< | $(TXR) genman.txr - > $@
+	man2html $< | $(TXR) genman.txr > $@
 
 txr-manpage.pdf: txr.1 checkman.txr
 	$(TXR) checkman.txr $<

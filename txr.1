@@ -864,6 +864,12 @@ or one of the related options.  A file argument consisting of a single
 .code -
 means to read the standard input instead of opening a file.
 
+Specifying standard input as a source with an explicit
+.code -
+argument is unnecessary. If no data source arguments are present, then
+\*(TX scans standard input by default. This was not true in versions of \*(TX
+prior to 171; see the COMPATIBILITY section.
+
 .PP
 \*(TX begins by reading the script. In the case of the \*(TX pattern language,
 the entire query is scanned, internalized and then begins executing, if it is
@@ -52657,6 +52663,18 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 170
+A value of 170 or lower disables the behavior that \*(TX scans standard input
+when no input sources are specified on the command line. Standard input must
+be requested explicitly using the
+.code -
+argument. This is how it was in all versions of \*(TX up to 170.
+Some programs may behave differently because of this. Specifically, programs
+which do not take any arguments, and do not select an input source using the
+.code @(next)
+directive, or suppress the use of an input source using
+.codn "@(next nil)" ,
+may now accidentally read from standard input.
 .IP 165
 A value of 165 restores the following behaviors, which changed starting in 166.
 There was a in Lisp evaluation support of the \*(TX pattern language.
