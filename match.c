@@ -4382,6 +4382,10 @@ static val h_assert(match_line_ctx *c)
 static void open_data_source(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
+  int non_matching_dir = (consp(first_spec) &&
+                          (gethash(non_matching_directive_table,
+                                   first(first_spec))) &&
+                          !rest(specline));
 
   /* c->data == t is set up by the top level call to match_files.
    * It indicates that we have not yet opened any data source.
@@ -4393,32 +4397,27 @@ static void open_data_source(match_files_ctx *c)
     val name = ss_consp ? cdr(source_spec) : source_spec;
     val nothrow = tnil(ss_consp && car(source_spec) == nothrow_k);
 
-    if (stringp(name)) {
-      if (consp(first_spec) &&
-          (gethash(non_matching_directive_table, first(first_spec))) &&
-          !rest(specline))
-      {
-        debuglf(first_spec, lit("not opening source ~a "
-                                "since query starts with non-matching "
-                                "directive."), name, nao);
-      } else {
-        val stream = complex_open(name, nil, nil, nothrow, t);
+    if (non_matching_dir) {
+      debuglf(first_spec, lit("not opening source ~a "
+                              "since query starts with non-matching "
+                              "directive."), name, nao);
+    } else if (stringp(name)) {
+      val stream = complex_open(name, nil, nil, nothrow, t);
 
-        debuglf(specline, lit("opening data source ~a"), name, nao);
+      debuglf(specline, lit("opening data source ~a"), name, nao);
 
-        if (!stream) {
-          debuglf(first_spec, lit("could not open ~a: "
-                                  "treating as failed match due to nothrow"), name, nao);
-          c->data = nil;
-          return;
-        }
-
-        c->files = cons(name, cdr(c->files)); /* Get rid of cons and nothrow */
-        c->curfile = source_spec;
-
-        if ((c->data = lazy_stream_cons(stream)) != nil)
-          c->data_lineno = one;
+      if (!stream) {
+        debuglf(first_spec, lit("could not open ~a: "
+                                "treating as failed match due to nothrow"), name, nao);
+        c->data = nil;
+        return;
       }
+
+      c->files = cons(name, cdr(c->files)); /* Get rid of cons and nothrow */
+      c->curfile = source_spec;
+
+      if ((c->data = lazy_stream_cons(stream)) != nil)
+        c->data_lineno = one;
     } else if (streamp(name)) {
       if ((c->data = lazy_stream_cons(name)))
         c->data_lineno = one;
@@ -4428,6 +4427,10 @@ static void open_data_source(match_files_ctx *c)
   } else if (c->data == t && c->files == nil) {
     if (opt_compat && opt_compat <= 170) {
       c->data = nil;
+    } else if (non_matching_dir) {
+      debuglf(first_spec, lit("not opening standard input "
+                              "since query starts with non-matching "
+                              "directive."), nao);
     } else {
       debuglf(first_spec, lit("opening standard input as data source"), nao);
       c->curfile = lit("-");
