@@ -8465,6 +8465,106 @@ val mismatch(val left, val right, val testfun_in, val keyfun_in)
             left, right, nao);
 }
 
+val rmismatch(val left, val right, val testfun_in, val keyfun_in)
+{
+  val testfun = default_arg(testfun_in, equal_f);
+  val keyfun = default_arg(keyfun_in, identity_f);
+
+  switch (type(left)) {
+  case NIL:
+    switch (type(right)) {
+    case NIL:
+      return nil;
+    case CONS:
+    case LCONS:
+      return negone;
+    case VEC:
+    case LIT:
+    case STR:
+      return if3(length(right) == zero, nil, negone);
+    case LSTR:
+      return if3(length_str_lt(right, one), nil, negone);
+    default:
+      break;
+    }
+    break;
+  case CONS:
+  case LCONS:
+  default:
+    switch (type(right)) {
+    case NIL:
+      return negone;
+    case CONS:
+    case LCONS:
+      {
+        val mm = mismatch(reverse(left), reverse(right), testfun, keyfun);
+        return if2(mm, minus(negone, mm));
+      }
+    case VEC:
+    case LIT:
+    case STR:
+    case LSTR:
+      {
+        val rleft = reverse(left);
+        val rlen = length(right);
+        val rpos = pred(rlen);
+
+        for (; !endp(rleft) && !minusp(rpos);
+             rleft = cdr(rleft), rpos = pred(rpos))
+        {
+          val lelt = funcall1(keyfun, car(rleft));
+          val relt = funcall1(keyfun, ref(right, rpos));
+          if (!funcall2(testfun, lelt, relt))
+            break;
+        }
+
+        return if2(rleft || !minusp(rpos), minus(rpos, rlen));
+      }
+    default:
+      break;
+    }
+    break;
+  case STR:
+  case LSTR:
+  case LIT:
+  case VEC:
+    switch (type(right)) {
+    case NIL:
+      return if3(length(left) == zero, nil, zero);
+    case CONS:
+    case LCONS:
+      return rmismatch(right, left, testfun, keyfun);
+    case VEC:
+    case LIT:
+    case STR:
+    case LSTR:
+      {
+        val llen = length(left);
+        val rlen = length(right);
+        val lpos = pred(llen);
+        val rpos = pred(rlen);
+
+        for (; !minusp(lpos) && !minusp(rpos);
+             lpos = pred(lpos), rpos = pred(rpos))
+        {
+          val lelt = funcall1(keyfun, ref(left, lpos));
+          val relt = funcall1(keyfun, ref(right, rpos));
+          if (!funcall2(testfun, lelt, relt))
+            break;
+        }
+
+        return if2(!minusp(lpos) || !minusp(rpos), minus(lpos, llen));
+      }
+    default:
+      break;
+    }
+    break;
+  }
+
+  uw_throwf(error_s, lit("rmismatch: invalid arguments ~!~s and ~s"),
+            left, right, nao);
+}
+
 static val take_list_fun(val env, val lcons)
 {
   cons_bind (list, count, env);

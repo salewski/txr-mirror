@@ -25648,6 +25648,36 @@ as an argument.  If a
 value is returned, then the zero-based index of
 that element is added to a list. Finally, the list is returned.
 
+.coNP Function @ rmismatch
+.synb
+.mets (rmismatch < left-seq < right-seq >> [ testfun <> [ keyfun ]])
+.syne
+.desc
+Similarly to
+.codn mismatch ,
+the
+.code rmismatch
+function compares corresponding elements from the sequences
+.meta left-seq
+and
+.metn right-seq ,
+returning the position at which the first mismatch occurs.
+All of the arguments have the same semantics as that of
+.codn mismatch .
+
+Unlike
+.codn mismatch ,
+.code rmismatch
+compares the sequences right-to-left, finding the suffix
+which they have in common, rather than prefix.
+
+If the sequences match, then
+.code nil
+is returned. Otherwise, a negative index is returned giving the
+mismatching position, regarded from the end. If the sequences
+match only in the rightmost element, then -1 is returned. If they
+match in two elements then -2 and so forth.
+
 .coNP Function @ select
 .synb
 .mets (select < object >> { index-list <> | function })

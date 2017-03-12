@@ -5753,6 +5753,7 @@ void eval_init(void)
   reg_fun(intern(lit("pos-max"), user_package), func_n3o(pos_max, 1));
   reg_fun(intern(lit("pos-min"), user_package), func_n3o(pos_min, 1));
   reg_fun(intern(lit("mismatch"), user_package), func_n4o(mismatch, 2));
+  reg_fun(intern(lit("rmismatch"), user_package), func_n4o(rmismatch, 2));
   reg_fun(intern(lit("take"), user_package), func_n2(take));
   reg_fun(intern(lit("take-while"), user_package), func_n3o(take_while, 2));
   reg_fun(intern(lit("take-until"), user_package), func_n3o(take_until, 2));
