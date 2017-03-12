@@ -4562,13 +4562,17 @@ val match_fun(val name, val args, val input_in, val files_in)
   val call = cons(name, args);
   val spec = cons(cons(call, nil), nil);
   val input = default_bool_arg(input_in);
-  val files = default_bool_arg(files_in);
+  val in_stream_p = streamp(input);
+  val curfile = if3(in_stream_p,
+                    stream_get_prop(input, name_k),
+                    lit("list"));
+  val files = cons(curfile, default_bool_arg(files_in));
   val in_bindings = cdr(uw_get_match_context());
   val data = if3(streamp(input),
                  lazy_stream_cons(input),
                  input);
   /* TODO: pass through source location context */
-  match_files_ctx c = mf_all(spec, files, in_bindings, data, nil);
+  match_files_ctx c = mf_all(spec, files, in_bindings, data, curfile);
   val ret;
 
   debug_enter;
