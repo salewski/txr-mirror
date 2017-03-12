@@ -4581,7 +4581,7 @@ val match_fun(val name, val args, val input_in, val files_in)
     debug_return (nil);
 
   if (ret == decline_k)
-    sem_error(nil, lit("match_fun: function ~s not found"), name, nao);
+    sem_error(nil, lit("match-fun: function ~s not found"), name, nao);
 
   debug_return (cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t)));
 
