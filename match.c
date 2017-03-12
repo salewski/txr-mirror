@@ -4557,10 +4557,12 @@ val match_filter(val name, val arg, val other_args)
   }
 }
 
-val match_fun(val name, val args, val input, val files)
+val match_fun(val name, val args, val input_in, val files_in)
 {
   val call = cons(name, args);
   val spec = cons(cons(call, nil), nil);
+  val input = default_bool_arg(input_in);
+  val files = default_bool_arg(files_in);
   val in_bindings = cdr(uw_get_match_context());
   val data = if3(streamp(input),
                  lazy_stream_cons(input),

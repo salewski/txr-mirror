@@ -50264,7 +50264,7 @@ and
 
 .coNP Function @ match-fun
 .synb
-.mets (match-fun < name < args < input << files )
+.mets (match-fun < name < args >> [ input <> [ files ]])
 .syne
 .desc
 The
@@ -50284,15 +50284,18 @@ pattern language, not \*(TL) and evaluated accordingly.
 The
 .meta input
 argument is a list of strings, which may be lazy. It represents the
-lines of the text stream to be processed.
+lines of the text stream to be processed. If omitted, it defaults to
+.codn nil .
 
 The
-.meta file
+.meta files
 argument is a list of filename specifications, which follow
 the same conventions as files given on the \*(TX command line. If the pattern
 function uses the
 .code @(next)
-directive, it can process these additional files.
+directive, it can process these additional files. If this argument is
+omitted, it defaults to
+.codn nil .
 
 The
 .code match-fun

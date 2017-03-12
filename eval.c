@@ -6079,7 +6079,7 @@ void eval_init(void)
   reg_fun(intern(lit("return*"), user_package), func_n2o(return_star, 1));
   reg_fun(intern(lit("abscond*"), system_package), func_n2o(abscond_star, 1));
 
-  reg_fun(intern(lit("match-fun"), user_package), func_n4(match_fun));
+  reg_fun(intern(lit("match-fun"), user_package), func_n4o(match_fun, 2));
 
   reg_fun(intern(lit("time"), user_package), func_n0(time_sec));
   reg_fun(intern(lit("time-usec"), user_package), func_n0(time_sec_usec));
