@@ -23214,6 +23214,51 @@ invocation. Initialization of the structure proceeds as described
 in the description of
 .codn make-struct .
 
+.coNP Functions @ struct-from-plist and @ struct-from-args
+.synb
+.mets (struct-from-plist < type >> { slot << value }*)
+.mets (struct-from-arg < type << arg *)
+.syne
+.desc
+The
+.code struct-from-plist
+and
+.code struct-from-arg
+are interfaces to the
+.code make-struct
+function.
+
+The
+.code struct-from-plist
+function passes its
+.meta slot
+and
+.meta value
+arguments as the
+.meta slot-init-plist
+argument of
+.codn make-struct .
+It passes no boa constructor arguments.
+
+The
+.code struct-from-plist
+function calls
+.meta make-struct
+with an empty
+.metn slot-init-plist ,
+passing down the list of
+.metn arg -s.
+
+The following equivalences hold:
+
+.cblk
+  (struct-from-plist a s0 v0 s1 v1 ...)
+  <-->  (make-struct a (list s0 v0 s1 v1 ...))
+
+  (struct-from-args a v0 v1 v2 ...)
+  <-->  (make-struct a nil v0 v1 v2 ...)
+.cble
+
 .coNP Function @ copy-struct
 .synb
 .mets (copy-struct << struct-obj )

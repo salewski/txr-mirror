@@ -131,6 +131,8 @@ void struct_init(void)
   reg_fun(intern(lit("struct-type-p"), user_package), func_n1(struct_type_p));
   reg_fun(intern(lit("super"), user_package), func_n1(super));
   reg_fun(intern(lit("make-struct"), user_package), func_n2v(make_struct));
+  reg_fun(intern(lit("struct-from-plist"), user_package), func_n1v(struct_from_plist));
+  reg_fun(intern(lit("struct-from-args"), user_package), func_n1v(struct_from_args));
   reg_fun(intern(lit("make-lazy-struct"), user_package),
           func_n2(make_lazy_struct));
   reg_fun(make_struct_lit_s, func_n2(make_struct_lit));
@@ -501,6 +503,18 @@ val make_struct(val type, val plist, struct args *args)
   uw_catch_end;
 
   return sinst;
+}
+
+val struct_from_plist(val type, struct args *plist)
+{
+  val list = args_get_list(plist);
+  args_decl(boa, 0);
+  return make_struct(type, list, boa);
+}
+
+val struct_from_args(val type, struct args *boa)
+{
+  return make_struct(type, nil, boa);
 }
 
 static void lazy_struct_init(val sinst, struct struct_inst *si)
