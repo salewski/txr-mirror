@@ -1316,9 +1316,8 @@ static void struct_inst_print(val obj, val out, val pretty,
     if (!nullocp(ptr)) {
       if (compat)
         funcall2(deref(ptr), obj, out);
-      else
-        funcall3(deref(ptr), obj, out, pretty);
-      return;
+      else if (funcall3(deref(ptr), obj, out, pretty) != colon_k)
+        return;
     }
   }
 

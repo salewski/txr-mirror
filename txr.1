@@ -24112,7 +24112,23 @@ is used.
 
 The value returned by the
 .code print
-method is ignored.
+method is significant. If the special keyword symbol
+.code :
+(colon) is returned, then the system will print the object
+in the default way, as if no
+.code print
+method existed: it is understood that the method declined
+the responsibility for printing the object.
+
+If any other value is returned, then it is understood
+that the method
+.code print
+method accepted the responsibility for printing the object,
+and the system consequently will generate into
+.meta stream
+any output output pertaining to
+.metn object 's
+representation.
 
 .coNP Method @ lambda
 .synb
