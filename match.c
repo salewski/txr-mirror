@@ -60,7 +60,7 @@ val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
 val text_s, choose_s, gather_s, do_s, mdo_s, mod_s, modlast_s;
 val line_s, data_s, fuzz_s, load_s;
-val include_s, close_s, require_s;
+val include_s, close_s, require_s, in_package_s;
 val longest_k, shortest_k, greedy_k;
 val vars_k, resolve_k;
 val append_k, into_k, var_k, list_k, tlist_k, string_k, env_k, counter_k;
@@ -4689,6 +4689,7 @@ static void syms_init(void)
   include_s = intern(lit("include"), user_package);
   close_s = intern(lit("close"), user_package);
   require_s = intern(lit("require"), user_package);
+  in_package_s = intern(lit("in-package"), user_package);
   longest_k = intern(lit("longest"), keyword_package);
   shortest_k = intern(lit("shortest"), keyword_package);
   greedy_k = intern(lit("greedy"), keyword_package);

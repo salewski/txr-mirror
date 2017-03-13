@@ -25,7 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern val text_s, choose_s, gather_s, do_s, mdo_s, require_s;
+extern val text_s, choose_s, gather_s, do_s, mdo_s, require_s, in_package_s;
 extern val close_s, load_s, include_s, mod_s, modlast_s, line_s;
 extern val counter_k, vars_k, env_k, var_k, into_k, named_k;
 val match_expand_keyword_args(val elem);

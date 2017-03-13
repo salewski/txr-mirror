@@ -1676,6 +1676,10 @@ static val check_parse_time_action(val spec_rev)
         eval_intrinsic(cons(progn_s, cdr(elem)), nil);
         return nil;
       }
+      if (sym == in_package_s) {
+        eval_intrinsic(elem, nil);
+        return nil;
+      }
     }
   }
   return spec_rev;

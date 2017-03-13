@@ -3276,6 +3276,12 @@ The
 directive evaluates \*(TL expressions immediately, during the parsing
 of the \*(TX syntax in which it occurs.
 
+.coIP @(in-package)
+The
+.code in-package
+directive is used to switch to a different symbol package.
+It mirrors the \*(TL macro of the same name.
+
 .PP
 
 .SS* Subexpression Evaluation
@@ -6579,6 +6585,34 @@ Another difference is that
 can be used as a horizontal or vertical directive, whereas
 .code mdo
 is only vertical.
+
+.dir in-package
+
+The
+.code in-package
+directive shares the same syntax and semantics as the \*(TL macro
+of the same name:
+
+.cblk
+.mets (in-package << name )
+.cble
+
+The
+.code in-package
+directive is evaluated immediately upon being parsed,
+leaving no trace in the syntax tree of the surrounding \*(TX
+query.
+
+It causes the
+.code *package*
+special variable to take on the package denoted by
+.metn name .
+
+The directive that
+.meta name
+is either a string or symbol. An error exception is thrown if
+this isn't the case.  Otherwise it searches for the package.
+If the package is not found, an error exception is thrown.
 
 .SS* Blocks
 
