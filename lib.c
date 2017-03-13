@@ -4918,7 +4918,7 @@ val use_sym(val symbol, val package_in)
 
     if (found && symbol_package(existing) == package) {
       if (existing == nil)
-        uw_throwf(error_s, lit("~a: cannot hide ~s"), self, existing);
+        uw_throwf(error_s, lit("~a: cannot hide ~s"), self, existing, nao);
       sethash(package->pk.hidhash, name, existing);
       existing->s.package = nil;
     }

@@ -923,7 +923,7 @@ static val expand_opt_params_rec(val params, val menv,
 
       if (cdddr(pair))
         eval_error(form, lit("~s: extra forms ~s in ~s"),
-                   car(form), pair, cdddr(pair));
+                   car(form), pair, cdddr(pair), nao);
 
       if (opt_sym) {
         if (!bindable(opt_sym))
@@ -3181,7 +3181,7 @@ static val me_qquote(val form, val menv)
 static val me_equot(val form, val menv)
 {
   if (!cdr(form) || cddr(form))
-    eval_error(form, lit("~s: one argument required"), car(form));
+    eval_error(form, lit("~s: one argument required"), car(form), nao);
 
   return rlcp(cons(quote_s, cons(expand(cadr(form), menv), nil)), form);
 }

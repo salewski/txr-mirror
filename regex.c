@@ -1741,7 +1741,7 @@ static val reg_derivative(val exp, val ch)
     val args = rest(exp);
 
     if (sym == set_s || sym == cset_s) {
-      uw_throwf(error_s, lit("uncompiled regex passed to reg_derivative"));
+      uw_throwf(error_s, lit("uncompiled regex passed to reg_derivative"), nao);
     } else if (sym == compound_s) {
       return reg_derivative_list(args, ch);
     } else if (sym == optional_s) {

@@ -209,7 +209,7 @@ val debug(val ctx, val bindings, val data, val line, val pos, val base)
             val breakpoints_old = breakpoints;
             breakpoints = remqual(l, breakpoints, nil);
             if (breakpoints == breakpoints_old)
-              format(std_debug, lit("no such breakpoint\n"));
+              format(std_debug, lit("no such breakpoint\n"), nao);
           } else {
             opt_loglevel = c_num(n);
           }

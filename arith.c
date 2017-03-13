@@ -819,7 +819,7 @@ static val trunc1(val num)
   default:
     break;
   }
-  uw_throwf(error_s, lit("trunc: invalid operand ~s"), num);
+  uw_throwf(error_s, lit("trunc: invalid operand ~s"), num, nao);
 }
 
 val trunc(val anum, val bnum)
@@ -1267,7 +1267,7 @@ static val round1(val num)
   default:
     break;
   }
-  uw_throwf(error_s, lit("round: invalid operand ~s"), num);
+  uw_throwf(error_s, lit("round: invalid operand ~s"), num, nao);
 }
 
 
@@ -1956,7 +1956,7 @@ val floorf(val num)
   default:
     break;
   }
-  uw_throwf(error_s, lit("floor: invalid operand ~s"), num);
+  uw_throwf(error_s, lit("floor: invalid operand ~s"), num, nao);
 }
 
 val ceili(val num)
@@ -1972,7 +1972,7 @@ val ceili(val num)
   default:
     break;
   }
-  uw_throwf(error_s, lit("ceil: invalid operand ~s"), num);
+  uw_throwf(error_s, lit("ceil: invalid operand ~s"), num, nao);
 }
 
 val sine(val num)
