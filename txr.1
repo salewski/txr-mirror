@@ -25678,6 +25678,53 @@ mismatching position, regarded from the end. If the sequences
 match only in the rightmost element, then -1 is returned. If they
 match in two elements then -2 and so forth.
 
+.coNP Functions @ starts-with and @ ends-with
+.synb
+.mets (starts-with < short-seq < long-seq >> [ testfun <> [ keyfun ]])
+.mets (ends-with < short-seq < long-seq >> [ testfun <> [ keyfun ]])
+.syne
+.desc
+The
+.code starts-with
+and
+.code ends-with
+functions compare corresponding elements from sequences
+.meta short-seq
+and
+.metn long-seq .
+
+The
+.code starts-with
+function returns
+.code t
+if
+.meta short-seq
+is prefix of
+.metn long-seq ;
+otherwise, it returns
+.codn nil .
+
+The
+.code ends-with
+function returns
+.code t
+if
+.meta short-seq
+is suffix of
+.metn long-seq ;
+otherwise, it returns
+.codn nil .
+
+Element from both sequences are mapped to comparison keys using
+.metn keyfun ,
+which defaults to
+.codn identity .
+
+Comparison keys are compared using
+.meta testfun
+which defaults to
+.codn equal .
+
 .coNP Function @ select
 .synb
 .mets (select < object >> { index-list <> | function })

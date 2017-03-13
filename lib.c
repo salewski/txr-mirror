@@ -8565,6 +8565,18 @@ val rmismatch(val left, val right, val testfun_in, val keyfun_in)
             left, right, nao);
 }
 
+val starts_with(val little, val big, val testfun, val keyfun)
+{
+  val mm = mismatch(little, big, testfun, keyfun);
+  return tnil(!mm || eql(mm, length(little)));
+}
+
+val ends_with(val little, val big, val testfun, val keyfun)
+{
+  val mm = rmismatch(little, big, testfun, keyfun);
+  return tnil(!mm || eql(pred(neg(mm)), length(little)));
+}
+
 static val take_list_fun(val env, val lcons)
 {
   cons_bind (list, count, env);
