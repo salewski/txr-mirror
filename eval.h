@@ -25,7 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern val dwim_s, lambda_s, vector_lit_s, vec_list_s, list_s;
+extern val dwim_s, lambda_s, progn_s, vector_lit_s, vec_list_s, list_s;
 extern val hash_lit_s, hash_construct_s, struct_lit_s, qref_s, uref_s;
 extern val eval_error_s, if_s, call_s;
 extern val eq_s, eql_s, equal_s;

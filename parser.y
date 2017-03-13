@@ -67,7 +67,7 @@ static val unquotes_occur(val quoted_form, int level);
 static val rlrec(parser_t *, val form, val line);
 static wchar_t char_from_name(const wchar_t *name);
 static val make_expr(parser_t *, val sym, val rest, val lineno);
-static val check_for_include(val spec_rev);
+static val check_parse_time_action(val spec_rev);
 static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons);
 
 #if YYBISON
@@ -212,8 +212,8 @@ byacc_fool : n_expr { internal_error("notreached"); }
            | { internal_error("notreached"); }
            ;
 
-clauses_rev : clause                    { $$ = check_for_include(cons($1, nil)); }
-            | clauses_rev clause        { $$ = check_for_include(cons($2, $1));  }
+clauses_rev : clause                    { $$ = check_parse_time_action(cons($1, nil)); }
+            | clauses_rev clause        { $$ = check_parse_time_action(cons($2, $1));  }
             ;
 
 clauses_opt : clauses_rev       { $$ = nreverse($1); }
@@ -1661,15 +1661,21 @@ static val make_expr(parser_t *parser, val sym, val rest, val lineno)
   return ret;
 }
 
-static val check_for_include(val spec_rev)
+static val check_parse_time_action(val spec_rev)
 {
   val line = first(spec_rev);
 
   if (consp(line)) {
     val elem = first(line);
     if (consp(elem)) {
-      if (car(elem) == include_s)
+      val sym = car(elem);
+      if (sym == include_s) {
         return nappend2(nreverse(include(line)), rest(spec_rev));
+      }
+      if (sym == mdo_s) {
+        eval_intrinsic(cons(progn_s, cdr(elem)), nil);
+        return nil;
+      }
     }
   }
   return spec_rev;

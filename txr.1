@@ -3263,8 +3263,18 @@ These directives allow \*(TX programs to be modularized. They bring in
 code from a file, in two different ways.
 
 .coIP @(do)
-The do directive is used to evaluate \*(TL expressions, discarding their
+The
+.code do
+directive is used to evaluate \*(TL expressions, discarding their
 result values. See the TXR LISP section far below.
+
+.coIP @(mdo)
+The
+.code mdo
+(macro
+.codn do )
+directive evaluates \*(TL expressions immediately, during the parsing
+of the \*(TX syntax in which it occurs.
 
 .PP
 
@@ -6508,10 +6518,12 @@ The syntax of
 is:
 
 .cblk
-.mets @(do << lisp-expression )
+.mets @(do << lisp-expression *)
 .cble
 
-The do directive evaluates a \*(TL expression. (See TXR LISP far
+The
+.code do
+directive evaluates zero or more \*(TL expressions. (See TXR LISP far
 below.) The value of the expression is ignored, and matching continues
 continues with the directives which follow the
 .code do
@@ -6531,6 +6543,42 @@ Example:
   @a:@b
   @(do (set [h a] b))
 .cble
+
+.dir mdo
+
+The syntax of
+.code @(mdo)
+is:
+
+.cblk
+.mets @(mdo << lisp-expression *)
+.cble
+
+Like the
+.code do
+directive,
+.code mdo
+(macro-time
+.codn do )
+evaluates zero or more \*(TL expressions. Unlike
+.codn do ,
+.code mdo
+performs this evaluation immediately upon being parsed.
+Then it disappears from the syntax.
+
+The effect of
+.code "@(mdo e0 e1 e2 ...)"
+is exactly like
+.code "@(do (macro-time e0 e1 e2 ...))"
+except that
+.code do
+doesn't disappear from the syntax.
+
+Another difference is that
+.code do
+can be used as a horizontal or vertical directive, whereas
+.code mdo
+is only vertical.
 
 .SS* Blocks
 

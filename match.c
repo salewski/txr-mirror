@@ -58,7 +58,7 @@ int opt_arraydims = 1;
 val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
-val text_s, choose_s, gather_s, do_s, mod_s, modlast_s;
+val text_s, choose_s, gather_s, do_s, mdo_s, mod_s, modlast_s;
 val line_s, data_s, fuzz_s, load_s;
 val include_s, close_s, require_s;
 val longest_k, shortest_k, greedy_k;
@@ -4684,6 +4684,7 @@ static void syms_init(void)
   choose_s = intern(lit("choose"), user_package);
   gather_s = intern(lit("gather"), user_package);
   do_s = intern(lit("do"), user_package);
+  mdo_s = intern(lit("mdo"), user_package);
   load_s = intern(lit("load"), user_package);
   include_s = intern(lit("include"), user_package);
   close_s = intern(lit("close"), user_package);
