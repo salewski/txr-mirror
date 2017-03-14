@@ -3029,7 +3029,9 @@ query line to that string. The newline characters (or custom separators) appear
 explicitly in that string.
 
 .coIP @(fuzz)
-The fuzz directive, inspired by the patch utility, specifies a partial
+The
+.code fuzz
+directive, inspired by the patch utility, specifies a partial
 match for some lines.
 
 .ccIP @ @(line) and @ @(chr)
@@ -3068,7 +3070,11 @@ Multiple clauses are applied to the same input. Evaluation stops on the
 first successful clause.
 
 .coIP @(require)
-The require directive is similar to the do directive: it evaluates one or more
+The
+.code require
+directive is similar to the
+.code do
+directive in that it evaluates one or more
 \*(TL expressions.  If the result of the rightmost expression is nil,
 then require triggers a match failure.  See the TXR LISP section far below.
 
@@ -3188,7 +3194,9 @@ See Exceptions below.
 Define custom exception types; throw an exception.  See Exceptions below.
 
 .coIP @(assert)
-The assert directive requires the following material to match, otherwise
+The
+.code assert
+directive requires the following material to match, otherwise
 it throws an exception. It is useful for catching mistakes or omissions
 in parts of a query that are sure-fire matches.
 
@@ -3247,7 +3255,9 @@ and
 respectively.
 
 .coIP @(deffilter)
-This directive is used for defining named filters, which are useful
+The
+.code deffilter
+directive is used for defining named filters, which are useful
 for filtering variable substitutions in output blocks. Filters are useful
 when data must be translated between different representations that
 have different special characters or other syntax, requiring escaping
@@ -3255,11 +3265,17 @@ or similar treatment. Note that it is also possible to use a function
 as a filter. See Function Filters below.
 
 .coIP @(filter)
-The filter directive passes one or more variables through a given
+The
+.code filter
+directive passes one or more variables through a given
 filter or chain or filters, updating them with the filtered values.
 
 .ccIP @ @(load) and @ @(include)
-These directives allow \*(TX programs to be modularized. They bring in
+The
+.code load
+and
+.code include
+directives allow \*(TX programs to be modularized. They bring in
 code from a file, in two different ways.
 
 .coIP @(do)
@@ -3584,13 +3600,14 @@ first command line argument as a data source.
 
 Note that the
 .code @(next)
-directive only redirect the source of input over the scope of subquery in which
-the next directive appears, not necessarily all remaining directives.  For
+directive only redirects the source of input over the scope of subquery in which
+the that directive appears.  For
 example, the following query looks for the line starting with
 .str "xyz"
 at the top of the file
 .strn "foo.txt" ,
-within a some
+within a
+.code some
 directive.  After the
 .code @(end)
 which terminates the
@@ -3636,7 +3653,9 @@ of the query will successfully match. If no such line is found, the
 directive fails. If a matching position is found, the remainder of
 the query is processed from that point.
 
-Of course, the remainder of the query can itself contain skip directives.
+Of course, the remainder of the query can itself contain
+.code skip
+directives.
 Each such directive performs a recursive subsearch.
 
 Skip comes in vertical and horizontal flavors. For instance, skip and match the
@@ -3654,7 +3673,9 @@ Skip and match the last character of the line:
   @(skip)@{last 1}@(eol)
 .cble
 
-The skip directive has two optional arguments, which are evaluated as \*(TL
+The
+.code skip
+directive has two optional arguments, which are evaluated as \*(TL
 expressions. If the first argument evaluates to an integer,
 its value limits the range of lines scanned for a match. Judicious use
 of this feature can improve the performance of queries.
@@ -3797,7 +3818,9 @@ is the same as
 .codn "@(skip 1)" ,
 which is a noop, because it means: "the remainder of the query must match
 starting on the very next line", or, more briefly, "skip exactly zero lines",
-which is the behavior if the skip directive is omitted altogether.
+which is the behavior if the
+.code skip
+directive is omitted altogether.
 
 Here is one trick for grabbing the fourth line from the bottom of the input:
 
@@ -4000,7 +4023,9 @@ iteration, only consumes the lines matched prior to
 The
 .code freeform
 directive provides a useful alternative to
-\*(TX's line-oriented matching discipline. The freeform directive treats all
+\*(TX's line-oriented matching discipline. The
+.code freeform
+directive treats all
 remaining input from the current input source as one big line. The query line
 which immediately follows freeform is applied to that line.
 
@@ -4613,7 +4638,9 @@ is:
 .mets @(require << lisp-expression )
 .cble
 
-The require directive evaluates a \*(TL expression. (See TXR LISP far
+The
+.code require
+directive evaluates a \*(TL expression. (See TXR LISP far
 below.) If the expression yields a true value, then it succeeds, and matching
 continues with the directives which follow. Otherwise the directive fails.
 
@@ -5661,7 +5688,9 @@ the variable, the extent of the match being zero. In this situation, the
 .code coll
 directive proceeds character by character. The solution is to use
 positive matching: specify the regular expression which matches the item,
-rather than a trying to match whatever follows.  The collect directive will
+rather than a trying to match whatever follows.  The
+.code collect
+directive will
 recognize all items which match the regular expression:
 .IP code:
 .cblk
@@ -6500,7 +6529,11 @@ this can be written
   @(local a b c)
 .cble
 
-Directives which follow the forget or local directive no longer see
+Directives which follow the
+.code forget
+or
+.code local
+directive no longer see
 any bindings for the symbols mentioned in that directive, and
 can establish new bindings.
 
@@ -7533,7 +7566,9 @@ syntax are:
   @(define match (a b c))
 .cble
 
-If the define directive is followed by more material on the same line, then
+If the
+.code define
+directive is followed by more material on the same line, then
 it defines a horizontal function:
 
 .cblk
@@ -8200,7 +8235,9 @@ do not have an argument, or keywords with arguments.
 The following Boolean keywords are supported:
 
 .coIP :nothrow
-The output directive throws an exception if the output destination
+The
+.code output
+directive throws an exception if the output destination
 cannot be opened, unless the
 .code :nothrow
 keyword is present, in which
@@ -8622,7 +8659,9 @@ name and Lisp expression. For every variable paired with a Lisp expression,
 the expression is evaluated, and a binding is introduced, associating
 that variable with the expression's value.
 
-The repeat directive then processes the list of variables, selecting from it
+The
+.code repeat
+directive then processes the list of variables, selecting from it
 those which have a binding, either a previously existing binding or one just
 introduced from a Lisp expression. For each selected variable, repeat
 will assume that the variable occur in the repeat block and contains
@@ -9117,7 +9156,9 @@ This is a simple filter.
 To use the filter, use the syntax
 .code "(:fun foo_to_bar)"
 in place of a filter name.
-For instance in the bind directive:
+For instance in the
+.code bind
+directive:
 
 .cblk
   @(bind "foo" "bar" :lfilt (:fun foo_to_bar))
@@ -9213,7 +9254,9 @@ can then be used in
 .code output
 clauses to transform substituted data.
 
-This directive's syntax is illustrated in this example:
+The syntax of
+.code deffilter
+is illustrated in this example:
 .IP code:
 .cblk
 \ @(deffilter rot13
@@ -9562,8 +9605,9 @@ The overall
 directive succeeds as a match if either the main clause
 or the
 .code finally
-clause succeed. If both fail, then the try directive is
-a failed match.
+clause succeed. If both fail, then the
+.code try
+directive is a failed match.
 
 Example:
 .IP code:
@@ -10287,15 +10331,19 @@ definitions are in error:
 The
 .code assert
 directive requires the remaining query or sub-query which follows it
-to match. If the remainder fails to match, the assert directive throws an
-exception. If the directive is simply
+to match. If the remainder fails to match, the
+.code assert
+directive throws an exception. If the directive is simply
 
 .cblk
   @(assert)
 .cble
 
 Then it throws an assertion of type assert, which is a subtype of error.
-The assert directive also takes arguments similar to the throw
+The
+.code assert
+directive also takes arguments similar to the
+.code throw
 directive: an exception symbol and additional arguments which are bind
 expressions, and may be unbound variables. The following assert directive, if
 it triggers, will throw an exception of type
