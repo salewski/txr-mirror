@@ -25981,8 +25981,15 @@ to the original is produced.
 If the second argument is of the form
 .metn index-list ,
 it shall be a sequence of
-strictly non-decreasing, integers. First, any leading negative or zero values
-in this sequence are dropped. The
+strictly non-decreasing, integers.
+
+First, the length of
+.meta sequence
+is added to every value in
+.meta index-list
+that is negative.
+Then, any leading negative or zero values are dropped.
+The
 .code partition
 function then divides
 .meta sequence
@@ -26084,6 +26091,10 @@ includes an index greater than or equal to the length of
 .meta sequence
 (equivalently, an index beyond the last element of the sequence)
 then an additional empty last piece is generated.
+The length of
+.meta sequence
+is added to any negative indices. An index which is still negative
+after being thus displaced is discarded.
 
 If
 .meta index-list
@@ -26160,6 +26171,12 @@ If
 is empty then a one-element list containing the entire
 .meta sequence
 is returned.
+
+If
+.meta index-list
+contains negative values, these are displaced by adding to them
+the length of
+.metn sequence .
 
 If the second argument is a function, then this function is applied
 to
@@ -52897,6 +52914,17 @@ which do not take any arguments, and do not select an input source using the
 directive, or suppress the use of an input source using
 .codn "@(next nil)" ,
 may now accidentally read from standard input.
+Until version 170, the functions
+.codn split ,
+.codn split* ,
+.code partition
+and
+.code partition*
+ignored negative indices in their
+.meta index-list
+argument. The new behavior is that the length of the input sequence
+is added to any negative index values. The resulting values are then
+ignored if they are still negative.
 .IP 165
 A value of 165 restores the following behaviors, which changed starting in 166.
 There was a in Lisp evaluation support of the \*(TX pattern language.

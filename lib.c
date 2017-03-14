@@ -2208,7 +2208,23 @@ static val partition_split_common(val seq, val indices,
   if (!seqp(indices))
     indices = cons(indices, nil);
 
-  return make_lazy_cons(func_f1(cons(seq, cons(indices, zero)), split_fptr));
+  {
+    val len = nil;
+    list_collect_decl (out, ptail);
+
+    if (!opt_compat || opt_compat > 170) {
+      for (; indices; indices = cdr(indices)) {
+        val idx_raw = car(indices);
+        val idx = if3(minusp(idx_raw),
+                      plus(idx_raw, if3(len, len, len = length(seq))),
+                      idx_raw);
+        if (!minusp(idx))
+          ptail = list_collect(ptail, idx);
+      }
+    }
+
+    return make_lazy_cons(func_f1(cons(seq, cons(out, zero)), split_fptr));
+  }
 }
 
 val partition(val seq, val indices)
@@ -2289,22 +2305,38 @@ val partition_star(val seq, val indices)
   if (!seqp(indices))
     indices = cons(indices, nil);
 
-  while (indices && lt(car(indices), zero))
-    pop(&indices);
+  {
+    val len = nil;
+    list_collect_decl (tindices, ptail);
 
-  while (indices && eql(car(indices), base)) {
-    seq = nullify(cdr(seq));
-    if (!seq)
-      return nil;
-    base = plus(base, one);
-    pop(&indices);
+    if (!opt_compat || opt_compat > 170) {
+      for (; indices; indices = cdr(indices)) {
+        val idx_raw = car(indices);
+        val idx = if3(minusp(idx_raw),
+                      plus(idx_raw, if3(len, len, len = length(seq))),
+                      idx_raw);
+        if (!minusp(idx))
+          ptail = list_collect(ptail, idx);
+      }
+    }
+
+    while (tindices && lt(car(tindices), zero))
+      pop(&tindices);
+
+    while (tindices && eql(car(tindices), base)) {
+      seq = nullify(cdr(seq));
+      if (!seq)
+        return nil;
+      base = plus(base, one);
+      pop(&tindices);
+    }
+
+    if (!tindices)
+      return cons(seq, nil);
+
+    return make_lazy_cons(func_f1(cons(seq, cons(tindices, base)),
+                                  partition_star_func));
   }
-
-  if (!indices)
-    return cons(seq, nil);
-
-  return make_lazy_cons(func_f1(cons(seq, cons(indices, base)),
-                                partition_star_func));
 }
 
 cnum c_num(val num);
