@@ -1,3 +1,58 @@
+                                    TXR 171
+                                   2017-03-14
+
+
+  Features
+
+  - New unbound referencing dot syntax: .a.b.c.d
+    corresponding to (uref a b c d) macro operator
+    - Produces a function which curries slot references,
+      binding them to an object passed to it as argument.
+  - Command line:
+    - The argument - (dash) is no longer required to specify
+      that standard input is to be scanned; it is default behavior.
+  - TXR access from Lisp:
+    - last two arguments are now optional in match-fun.
+  - OOP:
+    - new functions struct-from-args and struct-from-plist
+      provide slightly simplified interfaces to make-struct.
+    - A structure's print method can now return : (the colon symbol)
+      to indicate that it declines printing, so the built-in structure
+      printing takes place.
+      - suppresed by -C 170 (or lower) compat option.
+  - Sequences library:
+    - new rmismatch function: compares tails of sequences and
+      reports mismatching position as a negative value.
+    - new functions starts-with and ends-with.
+    - split, split*, partition, partition*: now allow negative
+      indices.
+      - previous behavior of ignoring negative indices can be selected
+        using -C 170 (or lower).
+  - TXR Pattern Language:
+    - New directive @(mdo): "macro-time do": evaluates Lisp code
+      immediately after being parsed and disappears from syntax tree.
+    - New @(in-package) directive, allows pattern language files to
+      succinctly express being in an alternative package.
+
+  Bugs
+
+  - Fixed spurious warnings about :vars set up in @(repeat)
+    being unbound as well as the :counter variable in @(collect).
+  - Fixed lack of macro-expansion on the init expression
+    in @(collect :counter (var init)).
+  - The TXR matcher now refuses to open input sources that are
+    streams, or standard input default, for non-matching directives,
+    in the same manner that file name sources are treated.
+    Thus @(next s) (where s is a stream) not cause any input
+    to be pulles from s until a matching directive is encountered.
+  - match-fun: @(next) in the invoked pattern function now correctly
+    switches to the first file in the list of files passed
+    to match-fun.
+  - Fixed numerous instances of improperly terminated formatted
+    printing in the TXR internals (missing "nao" argument).
+
+
+
                                     TXR 170
                                    2017-02-28
 
