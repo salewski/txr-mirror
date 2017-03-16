@@ -69,6 +69,7 @@ static wchar_t char_from_name(const wchar_t *name);
 static val make_expr(parser_t *, val sym, val rest, val lineno);
 static val check_parse_time_action(val spec_rev);
 static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons);
+static val uref_helper(parser_t *, val expr);
 
 #if YYBISON
 union YYSTYPE;
@@ -835,22 +836,15 @@ range : HASH_R list             { if (length($2) != two)
 
 list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' '.' n_exprs ')'      { val a = car($3);
-                                  if (consp(a) && car(a) == qref_s) {
-                                    rplaca(a, uref_s);
+                                  val ur = uref_helper(parser, a);
+                                  if (ur == a)
                                     $$ = $3;
-                                  } else {
-                                    $$ = cons(rl(rlcp(list(uref_s, a, nao), a),
-                                                 num(parser->lineno)), cdr($3));
-                                  } }
+                                  else
+                                    $$ = rlcp(cons(ur, cdr($3)), ur); }
      | '[' '.' n_exprs ']'      { val a = car($3);
-                                  if (consp(a) && car(a) == qref_s) {
-                                    rplaca(a, uref_s);
-                                    $$ = rl(cons(dwim_s, $3), num($1));
-                                  } else {
-                                    val ur = cons(rl(rlcp(list(uref_s, a, nao), a),
-                                                  num(parser->lineno)), cdr($3));
-                                    $$ = rl(cons(dwim_s, ur), num($1));
-                                  } }
+                                  val ur = uref_helper(parser, a);
+                                  $$ = rlcp_tree(cons(dwim_s,
+                                                      cons(ur, cdr($3))), ur); }
      | '(' ')'                  { $$ = nil; }
      | '(' LAMBDOT n_expr ')'   { $$ = $3; }
      | '(' CONSDOT n_expr ')'   { $$ = $3; }
@@ -955,12 +949,7 @@ i_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | HASH_N_HASH            { $$ = parser_circ_ref(parser, $1); }
        ;
 
-i_dot_expr : '.' i_expr         { if (consp($2) && car($2) == qref_s) {
-                                    $$ = rplaca($2, uref_s);
-                                  } else {
-                                    $$ = rl(rlcp(list(uref_s, $2, nao), $2),
-                                            num(parser->lineno));
-                                  } }
+i_dot_expr : '.' i_expr         { $$ = uref_helper(parser, $2); }
            | i_expr %prec LOW   { $$ = $1; }
            ;
 n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
@@ -999,12 +988,7 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
                                                  or2($1, $3)),
                                                  num(parser->lineno));
                                   } }
-       | UREFDOT n_expr           { if (consp($2) && car($2) == qref_s) {
-                                    $$ = rplaca($2, uref_s);
-                                  } else {
-                                    $$ = rl(rlcp(list(uref_s, $2, nao), $2),
-                                            num(parser->lineno));
-                                  } }
+       | UREFDOT n_expr         { $$ = uref_helper(parser, $2); }
        | HASH_N_EQUALS          { parser_circ_def(parser, $1, unique_s); }
          n_dot_expr             { parser_circ_def(parser, $1, $3);
                                   $$ = $3; }
@@ -1015,12 +999,7 @@ n_exprs_opt : n_exprs           { $$ = $1; }
             | /* empty */       { $$ = nil; }
           ;
 
-n_dot_expr : '.' n_expr         { if (consp($2) && car($2) == qref_s) {
-                                    $$ = rplaca($2, uref_s);
-                                  } else {
-                                    $$ = rl(rlcp(list(uref_s, $2, nao), $2),
-                                            num(parser->lineno));
-                                  } }
+n_dot_expr : '.' n_expr         { $$ = uref_helper(parser, $2); }
            | n_expr %prec LOW   { $$ = $1; }
            ;
 
@@ -1690,6 +1669,15 @@ static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons)
   if (car(term_atom_cons) != unique_s) {
     yyerrorf(scanner, lit("misplaced consing dot"), nao);
     rplaca(term_atom_cons, unique_s);
+  }
+}
+
+static val uref_helper(parser_t *parser, val expr)
+{
+  if (consp(expr) && car(expr) == qref_s) {
+    return rplaca(expr, uref_s);
+  } else {
+    return rl(rlcp(list(uref_s, expr, nao), expr), num(parser->lineno));
   }
 }
 
