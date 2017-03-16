@@ -155,7 +155,7 @@ dbg/%-win.o: $(top_srcdir)%.c
 opt/%-win.o: $(top_srcdir)%.c
 	$(call COMPILE_C_WITH_DEPS,-DCONFIG_WIN_MAIN=1 $(OPT_FLAGS))
 
-win/%.res: $(top_srcdir)win/%.rc
+win/%.res: $(top_srcdir)win/%.rc $(top_srcdir)win/%.ico
 	$(call WINDRES)
 
 # The following pattern rule is used for test targets built by configure
