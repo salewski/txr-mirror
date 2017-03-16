@@ -718,8 +718,12 @@ val statf(val stream)
 
 static val umask_wrap(val mask)
 {
-  (void) umask(c_num(mask));
-  return t;
+  if (missingp(mask)) {
+    mode_t m = umask(0777);
+    (void) umask(m);
+    return num(m);
+  }
+  return num(umask(c_num(mask)));
 }
 
 #endif
@@ -1755,7 +1759,7 @@ void sysif_init(void)
 #endif
 
 #if HAVE_SYS_STAT
-  reg_fun(intern(lit("umask"), user_package), func_n1(umask_wrap));
+  reg_fun(intern(lit("umask"), user_package), func_n1o(umask_wrap, 0));
 #endif
 
 #if HAVE_FNMATCH
