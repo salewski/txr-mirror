@@ -198,13 +198,21 @@ spec : clauses_opt              { parser->syntax_tree = $1; }
 hash_semi_or_n_expr : HASH_SEMI                 { parser->circ_suppress = 1; }
                       n_expr                    { parser->circ_suppress = 0;
                                                   $$ = nao; }
+                    | HASH_SEMI '.'             { parser->circ_suppress = 1; }
+                      n_expr                    { parser->circ_suppress = 0;
+                                                  $$ = nao; }
                     | n_expr                    { $$ = $1; }
+                    | '.' n_expr                { $$ = uref_helper(parser, $2); }
                     ;
 
 hash_semi_or_i_expr : HASH_SEMI                 { parser->circ_suppress = 1; }
                       i_expr                    { parser->circ_suppress = 0;
                                                   $$ = nao; }
+                    | HASH_SEMI '.'             { parser->circ_suppress = 1; }
+                      i_expr                    { parser->circ_suppress = 0;
+                                                  $$ = nao; }
                     | i_expr                    { $$ = $1; }
+                    | '.' i_expr                { $$ = uref_helper(parser, $2); }
                     ;
 
 
