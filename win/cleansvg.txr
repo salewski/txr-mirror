@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+@(skip)
+   xmlns="@xmlns"
+@(skip)
+   width="@width"
+   height="@height"
+   id="@id"
+   version="@ver"
+@(skip)
+  <g
+@(skip)
+     transform="@outertrans">
+@(skip)
+      <g
+         style="@nil"
+         id="@nil"
+         transform="@innertrans">
+        <path
+           d="@pathdata"
+@(skip)
+</svg>
+@(output)
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<!-- TXR Logo
+     Copyright 2017 Kaz Kylheku <kaz@@kylheku.com> -->
+
+<svg xmlns="@xmlns"
+     viewBox="0 0 @width @height"
+     id="@id"
+     version="@ver">
+  <g transform="@outertrans">
+    <g transform="@innertrans">
+      <path d="@pathdata"/>
+    </g>
+  </g>
+</svg>
+@(end)
