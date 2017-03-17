@@ -1666,6 +1666,9 @@ static void edit_in_editor(lino_t *l) {
             FILE *fi;
             int nread;
 
+            fclose(fo);
+            fo = 0;
+
             if (system(cmd) == 0 && (fi = fopen(path, "r")) != 0) {
                 nread = fread(l->data, 1, sizeof l->data - 1, fi);
                 fclose(fi);
@@ -1682,7 +1685,9 @@ static void edit_in_editor(lino_t *l) {
             }
         }
 
-        fclose(fo);
+        if (fo != 0)
+            fclose(fo);
+
         remove(path);
         clear_sel(l);
     }
