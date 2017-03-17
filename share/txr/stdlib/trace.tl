@@ -9,14 +9,30 @@
 (defun sys:trace-leave (name val)
   (format *trace-output* "~*a  ~s)\n" (* sys:*trace-level* 2) "" val))
 
+(defun sys:trace-canonicalize-name (name)
+  (if (and (consp name)
+           (eq (car name) 'meth))
+    (let* ((req-type (cadr name))
+           (sym (caddr name)))
+      (let ((actual-type (static-slot-home req-type sym)))
+        (if (eq req-type actual-type)
+          name
+          ^(meth ,actual-type ,sym))))
+    name))
+
 (defun sys:trace (names)
   (cond
     ((null names) (hash-keys sys:*trace-hash*))
     (t
-      (each ((n names))
+      (each ((orig-n names)
+             (n [mapcar sys:trace-canonicalize-name names]))
         (unless [sys:*trace-hash* n]
-          (let* ((name n)
-                 (prev (or (symbol-function n)
+          (when (neq n orig-n)
+            (catch
+              (throwf 'warning "~s: ~s is actually ~s: tracing that instead"
+                      'trace orig-n n)
+              (continue ())))
+          (let* ((prev (or (symbol-function n)
                            (throwf 'eval-error
                                    "~s: ~s does not name a function" 'trace n)))
                  (hook (lambda (. args)
@@ -24,26 +40,32 @@
                                (sys:*trace-level* (succ sys:*trace-level*)))
                            (unwind-protect
                              (progn
-                               (sys:trace-enter name args)
+                               (sys:trace-enter n args)
                                (let ((val (apply prev args)))
-                                 (sys:trace-leave name val)
+                                 (sys:trace-leave n val)
                                  (set abandoned nil)
                                  val))
                              (if abandoned
-                               (sys:trace-leave name :abandoned)))))))
+                               (sys:trace-leave n :abandoned)))))))
             (set [sys:*trace-hash* n] prev)
             (set (symbol-function n) hook)))))))
 
 (defun sys:untrace (names)
-  (flet ((disable (name)
+  (flet ((disable (name-orig name)
            (let ((prev (del [sys:*trace-hash* name])))
              (when prev
+               (when (neq name-orig name)
+                 (catch
+                   (throwf 'warning "~s: ~s is actually ~s: untracing that instead"
+                           'trace name-orig name)
+                   (continue ())))
                (set (symbol-function name) prev)))))
     (if names
-      (each ((n names))
-        (disable n))
+      (each ((n-orig names)
+             (n [mapcar sys:trace-canonicalize-name names]))
+        (disable n-orig n))
       (dohash (n v sys:*trace-hash*)
-        (disable n)))))
+        (disable n n)))))
 
 (defmacro trace (. names)
   ^(sys:trace ',names))
