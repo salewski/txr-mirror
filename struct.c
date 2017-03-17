@@ -868,6 +868,12 @@ static noreturn void no_such_slot(val ctx, val type, val slot)
             ctx, type, slot, nao);
 }
 
+static noreturn void no_such_static_slot(val ctx, val type, val slot)
+{
+  uw_throwf(error_s, lit("~a: ~s has no static slot named ~s"),
+            ctx, type, slot, nao);
+}
+
 val slot(val strct, val sym)
 {
   const val self = lit("slot");
@@ -929,7 +935,7 @@ val static_slot(val stype, val sym)
       return deref(ptr);
   }
 
-  no_such_slot(self, stype, sym);
+  no_such_static_slot(self, stype, sym);
 }
 
 val static_slot_set(val stype, val sym, val newval)
@@ -946,7 +952,7 @@ val static_slot_set(val stype, val sym, val newval)
     }
   }
 
-  no_such_slot(self, stype, sym);
+  no_such_static_slot(self, stype, sym);
 }
 
 val test_dirty(val strct)
