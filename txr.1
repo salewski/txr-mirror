@@ -23971,6 +23971,40 @@ which already have a slot called
 .meta name
 are ignored, as are their subtypes.
 
+.coNP Function @ static-slot-home
+.synb
+.mets (static-slot-ensure < type << name )
+.syne
+.desc
+The
+.code static-slot-home
+method determines which structure type actually defines the
+static slot
+.meta name
+present in struct type
+.metn type .
+
+If
+.meta type
+isn't a struct type, or the name of a struct type,
+the function throws an error. Likewise, if
+.meta name
+isn't a static slot of
+.metn type .
+
+If
+.meta name
+is a static slot of
+.meta type
+then the function returns a struct type name symbol which is either
+then name of
+.meta type
+itself, if the slot is defined specifically for
+.meta type
+or else the most distant ancestor of
+.meta type
+from which the slot is inherited.
+
 .coNP Function @ call-super-method
 .synb
 .mets (call-super-method < struct-obj < name << argument *)

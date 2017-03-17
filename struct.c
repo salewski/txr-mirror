@@ -150,6 +150,8 @@ void struct_init(void)
   reg_fun(intern(lit("clear-dirty"), user_package), func_n1(clear_dirty));
   reg_fun(intern(lit("static-slot-ensure"), user_package),
           func_n4o(static_slot_ensure, 3));
+  reg_fun(intern(lit("static-slot-home"), user_package),
+          func_n2(static_slot_home));
   reg_fun(intern(lit("call-super-method"), user_package),
           func_n2v(call_super_method));
   reg_fun(intern(lit("call-super-fun"), user_package),
@@ -861,6 +863,17 @@ static loc lookup_static_slot_load(struct struct_type *st, val sym)
   return ptr;
 }
 
+static struct stslot *lookup_static_slot_desc_load(struct struct_type *st,
+                                                   val sym)
+{
+  struct stslot *stsl = lookup_static_slot_desc(st, sym);
+  if (stsl == 0) {
+    lisplib_try_load(sym);
+    return lookup_static_slot_desc(st, sym);
+  }
+  return stsl;
+}
+
 static noreturn void no_such_slot(val ctx, val type, val slot)
 {
   uw_throwf(error_s, lit("~a: ~s has no slot named ~s"),
@@ -1112,6 +1125,19 @@ val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
 
   no_error_p = default_bool_arg(no_error_p);
   return static_slot_ens_rec(stype, sym, newval, no_error_p, self, 0);
+}
+
+val static_slot_home(val stype, val sym)
+{
+  val self = lit("static-slot-home");
+  struct struct_type *st = stype_handle(&stype, self);
+  struct stslot *stsl = lookup_static_slot_desc_load(st, sym);
+  if (stsl) {
+    val home = stsl->home_type;
+    struct struct_type *sh = stype_handle(&home, self);
+    return sh->name;
+  }
+  no_such_static_slot(self, stype, sym);
 }
 
 static val call_super_method(val inst, val sym, struct args *args)

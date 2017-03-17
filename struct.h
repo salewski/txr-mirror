@@ -48,6 +48,7 @@ val slotset(val strct, val sym, val newval);
 val static_slot(val stype, val sym);
 val static_slot_set(val stype, val sym, val newval);
 val static_slot_ensure(val stype, val sym, val newval, val no_error_p);
+val static_slot_home(val stype, val sym);
 val test_dirty(val strct);
 val test_clear_dirty(val strct);
 val clear_dirty(val strct);
