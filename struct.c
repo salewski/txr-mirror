@@ -793,8 +793,7 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
   return nulloc;
 }
 
-static struct stslot *lookup_static_slot_desc(val stype,
-                                              struct struct_type *st, val sym)
+static struct stslot *lookup_static_slot_desc(struct struct_type *st, val sym)
 {
   slot_cache_t slot_cache = sym->s.slot_cache;
   cnum id = st->id;
@@ -836,9 +835,9 @@ static struct stslot *lookup_static_slot_desc(val stype,
   return 0;
 }
 
-static loc lookup_static_slot(val stype, struct struct_type *st, val sym)
+static loc lookup_static_slot(struct struct_type *st, val sym)
 {
-  struct stslot *stsl = lookup_static_slot_desc(stype, st, sym);
+  struct stslot *stsl = lookup_static_slot_desc(st, sym);
   return stsl ? stslot_loc(stsl) : nulloc;
 }
 
@@ -852,14 +851,14 @@ static loc lookup_slot_load(val inst, struct struct_inst *si, val sym)
   return ptr;
 }
 
-static loc lookup_static_slot_load(val stype, struct struct_type *st, val sym)
+static loc lookup_static_slot_load(struct struct_type *st, val sym)
 {
-    loc ptr = lookup_static_slot(stype, st, sym);
-    if (nullocp(ptr)) {
-      lisplib_try_load(sym);
-      return lookup_static_slot(stype, st, sym);
-    }
-    return ptr;
+  loc ptr = lookup_static_slot(st, sym);
+  if (nullocp(ptr)) {
+    lisplib_try_load(sym);
+    return lookup_static_slot(st, sym);
+  }
+  return ptr;
 }
 
 static noreturn void no_such_slot(val ctx, val type, val slot)
@@ -930,7 +929,7 @@ val static_slot(val stype, val sym)
   struct struct_type *st = stype_handle(&stype, self);
 
   if (symbolp(sym)) {
-    loc ptr = lookup_static_slot_load(stype, st, sym);
+    loc ptr = lookup_static_slot_load(st, sym);
     if (!nullocp(ptr))
       return deref(ptr);
   }
@@ -944,7 +943,7 @@ val static_slot_set(val stype, val sym, val newval)
   struct struct_type *st = stype_handle(&stype, self);
 
   if (symbolp(sym)) {
-    loc ptr = lookup_static_slot(stype, st, sym);
+    loc ptr = lookup_static_slot(st, sym);
     if (!nullocp(ptr)) {
       if (st->eqmslot == coerce(struct stslot *, -1))
         st->eqmslot = 0;
@@ -1028,7 +1027,7 @@ static val static_slot_ens_rec(val stype, val sym, val newval,
                                struct stslot *inh_stsl)
 {
   struct struct_type *st = stype_handle(&stype, self);
-  struct stslot *stsl = lookup_static_slot_desc(stype, st, sym);
+  struct stslot *stsl = lookup_static_slot_desc(st, sym);
 
   if (!bindable(sym))
     uw_throwf(error_s, lit("~a: ~s isn't a valid slot name"),
@@ -1318,7 +1317,7 @@ static void struct_inst_print(val obj, val out, val pretty,
   int compat = opt_compat && opt_compat <= 154;
 
   if (!compat || pretty) {
-    loc ptr = lookup_static_slot_load(st->self, st, print_s);
+    loc ptr = lookup_static_slot_load(st, print_s);
     if (!nullocp(ptr)) {
       if (compat)
         funcall2(deref(ptr), obj, out);
@@ -1403,7 +1402,7 @@ static cnum struct_inst_hash(val obj, int *count)
   return out;
 }
 
-static val get_equal_method(val stype, struct struct_type *st)
+static val get_equal_method(struct struct_type *st)
 {
   if (st->eqmslot == coerce(struct stslot *, -1)) {
     return nil;
@@ -1411,7 +1410,7 @@ static val get_equal_method(val stype, struct struct_type *st)
     struct stslot *stsl = st->eqmslot;
     return stslot_place(stsl);
   } else {
-    struct stslot *stsl = lookup_static_slot_desc(stype, st, equal_s);
+    struct stslot *stsl = lookup_static_slot_desc(st, equal_s);
     if (stsl != 0) {
       st->eqmslot = stsl;
       return stslot_place(stsl);
@@ -1425,7 +1424,7 @@ static val struct_inst_equalsub(val obj)
 {
   struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
   struct struct_type *st = si->type;
-  val equal_method = get_equal_method(obj, st);
+  val equal_method = get_equal_method(st);
   if (equal_method) {
     val sub = funcall1(equal_method, obj);
     if (nilp(sub)) {
@@ -1450,7 +1449,7 @@ val method_name(val fun)
 
     for (sl_iter = st->slots; sl_iter; sl_iter = cdr(sl_iter)) {
       val slot = car(sl_iter);
-      loc ptr = lookup_static_slot(stype, st, slot);
+      loc ptr = lookup_static_slot(st, slot);
 
       if (!nullocp(ptr) && deref(ptr) == fun) {
         val sstype;
@@ -1458,7 +1457,7 @@ val method_name(val fun)
         while ((sstype = super(stype)) != nil) {
           struct struct_type *sst = coerce(struct struct_type *,
                                            sstype->co.handle);
-          loc sptr = lookup_static_slot(sstype, sst, slot);
+          loc sptr = lookup_static_slot(sst, slot);
           if (!nullocp(sptr) && deref(sptr) == fun) {
             stype = sstype;
             sym = sst->name;
