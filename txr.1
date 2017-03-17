@@ -45845,6 +45845,44 @@ convenience function is provided for constructing
 .code opt-desc
 objects.
 
+.coNP Function @ opt
+.synb
+.mets (opt < short < long >> [ type <> [ helptext ]])
+.syne
+.desc
+The
+.code opt
+function provides a slightly condensed syntax for constructing
+an object of type
+.codn opt-desc .
+
+The required arguments
+.meta short
+and
+.meta long
+are strings, corresponding to
+.code opt-desc
+slots of the same name.
+
+The optional parameter
+.meta type
+corresponds to the same-named slot and defaults to
+.codn :bool .
+
+The optional parameter
+.meta helptext
+corresponds to the same-named slot, and defaults to
+.code nil
+(no help text provided for the option).
+
+The
+.code opt
+function follows this equivalence:
+
+.cblk
+  (opt a b c d)  <-->  (new opt-desc short a long b type c helptext d)
+.cble
+
 .coNP Structure @ opts
 .synb
 .mets (defstruct opts nil
