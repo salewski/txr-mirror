@@ -26,6 +26,7 @@
  */
 
 extern val dl_table;
+extern val trace_loaded;
 void lisplib_init(void);
 val lisplib_try_load(val sym);
 void set_dlt_entries(val dlt, val *name, val fun);

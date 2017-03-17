@@ -1775,12 +1775,25 @@ static val op_defsymacro(val form, val env)
 
 static val op_defmacro(val form, val env);
 
+void trace_check(val name)
+{
+  if (trace_loaded) {
+    val trcheck = lookup_fun(nil,
+                             intern(lit("trace-redefine-check"),
+                                    system_package));
+    if (trcheck)
+      funcall1(cdr(trcheck), name);
+  }
+}
+
 static val op_defun(val form, val env)
 {
   val args = rest(form);
   val name = first(args);
   val params = second(args);
   val body = rest(rest(args));
+
+  trace_check(name);
 
   if (!consp(name)) {
     val block = cons(block_s, cons(name, body));
@@ -1857,6 +1870,8 @@ static val op_defmacro(val form, val env)
 
   if (gethash(op_table, name))
     eval_error(form, lit("defmacro: ~s is a special operator"), name, nao);
+
+  trace_check(name);
 
   /* defmacro captures lexical environment, so env is passed */
   sethash(top_mb, name,

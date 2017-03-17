@@ -67,6 +67,21 @@
       (dohash (n v sys:*trace-hash*)
         (disable n n)))))
 
+(defun sys:trace-redefine-check (orig-name)
+  (let ((name (sys:trace-canonicalize-name orig-name)))
+    (when [sys:*trace-hash* name]
+      (catch
+        (cond
+          ((neq name orig-name)
+             (throwf 'warning "~!~s won't be traced, though it overrides\n\
+                               ~s which is currently traced"
+                      name orig-name))
+          (t (throwf 'warning "previously traced ~s is redefined and no\ \
+                               longer traced"
+                      name)
+             (sys:untrace (list name))))
+        (continue ())))))
+
 (defmacro trace (. names)
   ^(sys:trace ',names))
 

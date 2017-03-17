@@ -1123,6 +1123,12 @@ val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
     uw_throwf(error_s, lit("~a: ~s isn't a valid slot name"),
               self, sym, nao);
 
+  if (trace_loaded) {
+    struct struct_type *st = stype_handle(&stype, self);
+    val name = list(meth_s, st->name, sym, nao);
+    trace_check(name);
+  }
+
   no_error_p = default_bool_arg(no_error_p);
   return static_slot_ens_rec(stype, sym, newval, no_error_p, self, 0);
 }

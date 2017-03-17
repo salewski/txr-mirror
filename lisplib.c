@@ -44,6 +44,7 @@
 
 val dl_table;
 int opt_dbg_autoload;
+val trace_loaded;
 
 void set_dlt_entries(val dlt, val *name, val fun)
 {
@@ -392,6 +393,7 @@ static val trace_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
   load(format(nil, lit("~atrace.tl"), stdlib_path, nao));
+  trace_loaded = t;
   return nil;
 }
 
