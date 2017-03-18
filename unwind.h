@@ -70,6 +70,7 @@ struct uw_handler {
   val matches; /* Same position as in uw_catch! */
   int visible; /* Likewise. */
   val fun;
+  val package, package_alist;
 };
 
 struct uw_cont_copy {

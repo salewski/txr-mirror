@@ -502,6 +502,8 @@ void uw_push_handler(uw_frame_t *fr, val matches, val fun)
   fr->ha.fun = fun;
   fr->ha.visible = 1;
   fr->ha.up = uw_stack;
+  fr->ha.package = cur_package;
+  fr->ha.package_alist = deref(cur_package_alist_loc);
   uw_stack = fr;
 }
 
@@ -519,14 +521,22 @@ val uw_exception_subtype_p(val sub, val sup)
 
 static void invoke_handler(uw_frame_t *fr, struct args *args)
 {
+  val saved_dyn_env = dyn_env;
+
   fr->ha.visible = 0;
 
   uw_simple_catch_begin;
+
+  dyn_env = make_env(nil, nil, dyn_env);
+
+  env_vbind(dyn_env, package_s, fr->ha.package);
+  env_vbind(dyn_env, package_alist_s, fr->ha.package_alist);
 
   generic_funcall(fr->ha.fun, args);
 
   uw_unwind {
     fr->ha.visible = 1;
+    dyn_env = saved_dyn_env;
   }
 
   uw_catch_end;

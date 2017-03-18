@@ -33724,6 +33724,34 @@ to the outermost. When an eligible handle is encountered, it is called. If
 it returns, the search continues. When an eligible catch is encountered,
 the search stops and a control transfer takes place to the catch site.
 
+.NP* Handlers and Sandboxing
+
+Because handlers execute in the dynamic context of the exception origin,
+without any unwinding having taken place, they expose a potential route
+of sandbox escape via the package system, unless special steps are taken.
+The threat is that code at the handler site could take advantage of
+the current value of the
+.code *package*
+and
+.code *package-list*
+variables established at the exception throw site to gain inappropriate access
+to symbols.
+
+For this reason, when a handler is established, the current values of
+.code *package*
+and
+.code *package-list*
+are recorded into the handler frame.
+When that handler is later invoked, it executes in a dynamic environment
+in which those variables are bound to the previously noted values.
+
+The catch mechanism doesn't do any such thing because the unwinding
+which is performed prior to the invocation of a catch implicitly
+restores the values of
+.B all
+special variables to the values they had at the time the frame was
+established.
+
 .NP* Exception Type Hierarchy
 
 Exception type symbols are arranged
