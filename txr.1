@@ -42352,14 +42352,11 @@ then it is returned. Otherwise
 .code nil
 is returned.
 
-.coNP Function @ package-alist
-.synb
-.mets (package-alist)
-.syne
+.coNP Special variable @ *package-alist*
 .desc
 The
-.code package-alist
-function returns an association list
+.code *package-alist*
+variable contains the master association list
 which contains an entry about each existing
 package.
 
@@ -42369,6 +42366,65 @@ whose
 field is the name of a package and whose
 .code cdr
 is a package object.
+
+Note: the \*(TL application can overwrite or re-bind this
+variable to manipulate the active package list.  This is
+very useful for
+.IR sandboxing :
+safely evaluating code that is obtained as an input
+from an untrusted source, or calculated from such an input.
+
+The contents of
+.code *package-alist*
+have security implications because textual source code
+can refer to any symbol in any package by invoking
+a package prefix. For instance, even if the
+.code open
+function's name is not available in the current package
+(established by the
+.code *package*
+variable) that symbol can easily be obtained using the
+syntax
+.codn usr:open .
+
+However, the entire
+.code usr
+package itself can be removed from
+.codn *package-alist* .
+In that situation, the syntax
+.code usr:open
+is no longer valid.
+
+At the same time, selected symbols from the original
+.code usr
+can be nevertheless made available via some intermediate
+package, which is present in
+.code *package-alist*
+and which contains a subset of the
+.code usr
+symbols that has been curated for safety. That curated package may even
+be called
+.codn usr ,
+so that if for instance
+.code cons
+is present in that package, it may be referred to as
+.code usr:cons
+in the usual way.
+
+.coNP Function @ package-alist
+.synb
+.mets (package-alist)
+.syne
+.desc
+The
+.code package-alist
+function retrieves the value of
+.codn *package-alist* .
+
+Note: this function is obsolescent. There is no reason to use it
+in new code instead of just accessing
+.code *package-alist*
+directly.
 
 .coNP Function @ package-name
 .synb

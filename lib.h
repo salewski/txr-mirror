@@ -417,8 +417,10 @@ INLINE val chr(wchar_t ch)
 #define user_package user_package_var
 #define system_package system_package_var
 #define cur_package (get_current_package())
+#define cur_package_alist_loc (get_current_package_alist_loc())
 
-extern val system_package_var, keyword_package_var, user_package_var;
+extern val packages, system_package_var, keyword_package_var, user_package_var;
+extern val package_alist_s;
 extern val package_s, keyword_package_s, system_package_s, user_package_s;
 extern val null_s, t, cons_s, str_s, chr_s, fixnum_sl;
 extern val sym_s, pkg_s, fun_s, vec_s;
@@ -811,6 +813,7 @@ val symbol_name(val sym);
 val symbol_package(val sym);
 val keywordp(val sym);
 val get_current_package(void);
+loc get_current_package_alist_loc(void);
 val func_f0(val, val (*fun)(val env));
 val func_f1(val, val (*fun)(val env, val));
 val func_f2(val, val (*fun)(val env, val, val));

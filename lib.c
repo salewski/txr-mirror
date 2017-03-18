@@ -79,6 +79,7 @@ int async_sig_enabled = 0;
 val packages;
 
 val system_package_var, keyword_package_var, user_package_var;
+val package_alist_s;
 val package_s, system_package_s, keyword_package_s, user_package_s;
 
 val null_s, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
@@ -4840,7 +4841,7 @@ val make_package(val name)
     obj->pk.symhash = make_hash(nil, nil, lit("t")); /* don't have t yet! */
     obj->pk.hidhash = make_hash(nil, nil, lit("t"));
 
-    push(cons(name, obj), &packages);
+    mpush(cons(name, obj), cur_package_alist_loc);
     return obj;
   }
 }
@@ -4852,7 +4853,7 @@ val packagep(val obj)
 
 static val lookup_package(val name)
 {
-  return cdr(assoc(name, packages));
+  return cdr(assoc(name, deref(cur_package_alist_loc)));
 }
 
 val find_package(val package)
@@ -4883,15 +4884,16 @@ val delete_package(val package_in)
 {
   val package = get_package(lit("delete-package"), package_in, nil);
   val iter;
-  packages = alist_nremove1(packages, package->pk.name);
-  for (iter = packages; iter; iter = cdr(iter))
+  loc cpll = cur_package_alist_loc;
+  set(cpll, alist_nremove1(deref(cpll), package->pk.name));
+  for (iter = deref(cpll); iter; iter = cdr(iter))
     unuse_package(package, cdar(iter));
   return nil;
 }
 
 val package_alist(void)
 {
-  return packages;
+  return deref(cur_package_alist_loc);
 }
 
 val package_name(val package)
@@ -5251,6 +5253,16 @@ val get_current_package(void)
               pkg, nao);
   }
   return pkg;
+}
+
+loc get_current_package_alist_loc(void)
+{
+  if (package_alist_s) {
+    loc var_loc = lookup_var_l(nil, package_alist_s);
+    if (!nullocp(var_loc))
+      return var_loc;
+  }
+  return mkcloc(packages);
 }
 
 val func_f0(val env, val (*fun)(val))
