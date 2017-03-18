@@ -1078,7 +1078,7 @@ INLINE int null_or_missing_p(val v) { return (nilp(v) || missingp(v)); }
 
 #define default_arg(arg, dfl) if3(null_or_missing_p(arg), dfl, arg)
 
-INLINE val default_bool_arg(val arg)
+INLINE val default_null_arg(val arg)
 {
   return if3(missingp(arg), nil, arg);
 }

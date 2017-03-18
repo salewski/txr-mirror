@@ -143,7 +143,7 @@ val chr(wchar_t ch);
 val eq(val a, val b);
 val null(val v);
 int null_or_missing_p(val v);
-val default_bool_arg(val arg);
+val default_null_arg(val arg);
 #endif
 
 val identity(val obj)
@@ -1523,7 +1523,7 @@ val rmember_if(val pred, val list, val key)
 static val rem_impl(val (*eqfun)(val, val), val name,
                     val obj, val seq_in, val keyfun_in)
 {
-  val keyfun = default_bool_arg(keyfun_in);
+  val keyfun = default_null_arg(keyfun_in);
 
   switch (type(seq_in)) {
   case NIL:
@@ -1591,7 +1591,7 @@ static val rem_impl(val (*eqfun)(val, val), val name,
 
 val remove_if(val pred, val seq_in, val keyfun_in)
 {
-  val keyfun = default_bool_arg(keyfun_in);
+  val keyfun = default_null_arg(keyfun_in);
 
   switch (type(seq_in)) {
   case NIL:
@@ -3436,7 +3436,7 @@ const wchar_t *c_str(val obj)
 
 val search_str(val haystack, val needle, val start_num, val from_end)
 {
-  from_end = default_bool_arg(from_end);
+  from_end = default_null_arg(from_end);
   start_num = default_arg(start_num, zero);
 
   if (length_str_lt(haystack, start_num)) {
@@ -3926,7 +3926,7 @@ val scat(val sep, ...)
 
 val split_str_keep(val str, val sep, val keep_sep)
 {
-  keep_sep = default_bool_arg(keep_sep);
+  keep_sep = default_null_arg(keep_sep);
 
   if (regexp(sep)) {
     list_collect_decl (out, iter);
@@ -4047,7 +4047,7 @@ val tok_str(val str, val tok_regex, val keep_sep)
   val slen = length(str);
   int prev_empty = 1;
 
-  keep_sep = default_bool_arg(keep_sep);
+  keep_sep = default_null_arg(keep_sep);
 
   if (opt_compat && opt_compat <= 155) for (;;) {
     cons_bind (new_pos, len, search_regex(str, tok_regex, pos, nil));
@@ -6558,7 +6558,7 @@ static val do_iff(val env, struct args *args_in)
 val iff(val condfun, val thenfun, val elsefun)
 {
   thenfun = default_arg(thenfun, identity_f);
-  elsefun = default_bool_arg(elsefun);
+  elsefun = default_null_arg(elsefun);
   return func_f0v(cons(condfun, cons(thenfun, elsefun)), do_iff);
 }
 
@@ -6591,7 +6591,7 @@ val vector(val length, val initval)
                                      length, nao));
   val vec = make_obj();
   vec->v.type = VEC;
-  initval = default_bool_arg(initval);
+  initval = default_null_arg(initval);
 #if HAVE_VALGRIND
   vec->v.vec_true_start = v;
 #endif
@@ -7028,7 +7028,7 @@ val lazy_str(val lst, val term, val limit)
                          chk_calloc(1, sizeof *obj->ls.props));
 
   term = default_arg(term, lit("\n"));
-  limit = default_bool_arg(limit);
+  limit = default_null_arg(limit);
 
   if (nilp(lst)) {
     obj->ls.prefix = null_string;
@@ -7960,7 +7960,7 @@ val multi_sort(val lists, val funcs, val key_funcs)
 {
   val tuples = mapcarl(list_f, nullify(lists));
 
-  key_funcs = default_bool_arg(key_funcs);
+  key_funcs = default_null_arg(key_funcs);
 
   if (functionp(funcs))
     funcs = cons(funcs, nil);
@@ -10356,7 +10356,7 @@ val obj_print(val obj, val out, val pretty)
 val print(val obj, val stream, val pretty)
 {
   return obj_print(obj, default_arg(stream, std_output),
-                   default_bool_arg(pretty));
+                   default_null_arg(pretty));
 }
 
 val pprint(val obj, val stream)

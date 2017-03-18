@@ -112,7 +112,7 @@ static val at_exit_list;
 static val errno_wrap(val newval)
 {
   val oldval = num(errno);
-  if (default_bool_arg(newval))
+  if (default_null_arg(newval))
     errno = c_num(newval);
   return oldval;
 }
@@ -558,7 +558,7 @@ static val dup_wrap(val old, val neu)
 
 val exec_wrap(val file, val args_opt)
 {
-  val args = default_bool_arg(args_opt);
+  val args = default_null_arg(args_opt);
   int nargs = c_num(length(args)) + 1;
   char **argv = coerce(char **, chk_malloc((nargs + 1) * sizeof *argv));
   val iter;

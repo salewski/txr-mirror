@@ -716,7 +716,7 @@ val gethash_f(val hash, val key, loc found)
 val gethash_n(val hash, val key, val notfound_val)
 {
   val existing = gethash_e(hash, key);
-  return if3(existing, cdr(existing), default_bool_arg(notfound_val));
+  return if3(existing, cdr(existing), default_null_arg(notfound_val));
 }
 
 val sethash(val hash, val key, val value)
@@ -1085,7 +1085,7 @@ val group_by(val func, val seq, struct args *hashv_args)
 val group_reduce(val hash, val by_fun, val reduce_fun, val seq,
                  val initval, val filter_fun)
 {
-  initval = default_bool_arg(initval);
+  initval = default_null_arg(initval);
 
   if (vectorp(seq)) {
     cnum i, len;

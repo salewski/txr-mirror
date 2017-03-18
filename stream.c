@@ -2584,7 +2584,7 @@ val record_adapter(val regex, val stream, val include_match)
                                           rec_adapter->co.handle);
 
   rb->regex = regex;
-  rb->include_match = default_bool_arg(include_match);
+  rb->include_match = default_null_arg(include_match);
   return rec_adapter;
 }
 
@@ -3557,7 +3557,7 @@ val get_string(val stream_in, val nchars, val close_after_p)
 {
   val stream = default_arg(stream_in, std_input);
   val strstream = make_string_output_stream();
-  nchars = default_bool_arg(nchars);
+  nchars = default_null_arg(nchars);
   val ch;
 
   if (nchars) {
@@ -3633,7 +3633,7 @@ val open_tail(val path, val mode_str, val seek_end_p)
   val stream;
   unsigned long state = 0;
 
-  if (f && default_bool_arg(seek_end_p))
+  if (f && default_null_arg(seek_end_p))
     if (fseek(f, 0, SEEK_END) < 0)
       uw_throwf(file_error_s, lit("error seeking to end of ~a: ~d/~s"),
                 path, num(errno), string_utf8(strerror(errno)), nao);
@@ -3755,7 +3755,7 @@ val open_process(val name, val mode_str, val args)
   struct save_fds sfds;
   val ret = nil;
 
-  args = default_bool_arg(args);
+  args = default_null_arg(args);
   nargs = c_num(length(args)) + 1;
 
   fds_init(&sfds);
@@ -3937,7 +3937,7 @@ static val win_make_cmdline(val args)
 
 val open_process(val name, val mode_str, val args)
 {
-  val win_cmdline = win_make_cmdline(cons(name, default_bool_arg(args)));
+  val win_cmdline = win_make_cmdline(cons(name, default_null_arg(args)));
   return open_command(win_cmdline, mode_str);
 }
 #endif
@@ -3952,7 +3952,7 @@ static val run(val name, val args)
   struct save_fds sfds;
   val ret = nil;
 
-  args = default_bool_arg(args);
+  args = default_null_arg(args);
   nargs = c_num(length(args)) + 1;
 
   argv = coerce(char **, chk_malloc((nargs + 1) * sizeof *argv));
@@ -4023,7 +4023,7 @@ static val run(val command, val args)
   int i, nargs, status;
   struct save_fds sfds;
 
-  args = default_bool_arg(args);
+  args = default_null_arg(args);
   nargs = c_num(length(args)) + 1;
 
   fds_init(&sfds);
@@ -4083,7 +4083,7 @@ val rename_path(val from, val to)
 
 static val open_files(val file_list, val substitute_stream)
 {
-  substitute_stream = default_bool_arg(substitute_stream);
+  substitute_stream = default_null_arg(substitute_stream);
 
   if (nilp(file_list) && substitute_stream) {
     return substitute_stream;
@@ -4094,7 +4094,7 @@ static val open_files(val file_list, val substitute_stream)
 
 static val open_files_star(val file_list, val substitute_stream)
 {
-  substitute_stream = default_bool_arg(substitute_stream);
+  substitute_stream = default_null_arg(substitute_stream);
 
   if (nilp(file_list) && substitute_stream) {
     return substitute_stream;

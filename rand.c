@@ -117,8 +117,8 @@ val make_random_state(val seed, val warmup)
   struct rand_state *r = coerce(struct rand_state *,
                                 cobj_handle(rs, random_state_s));
 
-  seed = default_bool_arg(seed);
-  warmup = default_bool_arg(warmup);
+  seed = default_null_arg(seed);
+  warmup = default_null_arg(warmup);
 
   if (bignump(seed)) {
     int dig, bit;

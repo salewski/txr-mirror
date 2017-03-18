@@ -476,7 +476,7 @@ val regex_parse(val string, val error_stream)
   val stream = make_string_byte_input_stream(string);
   parser_t parser;
 
-  error_stream = default_bool_arg(error_stream);
+  error_stream = default_null_arg(error_stream);
   std_error = if3(error_stream == t, std_output, or2(error_stream, std_null));
 
   parser_common_init(&parser);
@@ -501,11 +501,11 @@ static val lisp_parse_impl(val interactive, val source_in, val error_stream,
                            val error_return_val, val name_in, val lineno)
 {
   uses_or2;
-  val source = default_bool_arg(source_in);
+  val source = default_null_arg(source_in);
   val input_stream = if3(stringp(source),
                          make_string_byte_input_stream(source),
                          or2(source, std_input));
-  val name = or2(default_bool_arg(name_in),
+  val name = or2(default_null_arg(name_in),
                  if3(stringp(source),
                      lit("string"),
                      stream_get_prop(input_stream, name_k)));
@@ -518,7 +518,7 @@ static val lisp_parse_impl(val interactive, val source_in, val error_stream,
 
   dyn_env = make_env(nil, nil, dyn_env);
 
-  error_stream = default_bool_arg(error_stream);
+  error_stream = default_null_arg(error_stream);
   error_stream = if3(error_stream == t, std_output, or2(error_stream, std_null));
   class_check (error_stream, stream_s);
 

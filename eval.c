@@ -142,9 +142,9 @@ val copy_env(val oenv)
  */
 static val make_env_intrinsic(val vbindings, val fbindings, val up_env)
 {
-  vbindings = default_bool_arg(vbindings);
-  fbindings = default_bool_arg(fbindings);
-  up_env = default_bool_arg(up_env);
+  vbindings = default_null_arg(vbindings);
+  fbindings = default_null_arg(fbindings);
+  up_env = default_null_arg(up_env);
   return make_env(vbindings, fbindings, up_env);
 }
 
@@ -508,7 +508,7 @@ val lookup_fun(val env, val sym)
 
 val func_get_name(val fun, val env)
 {
-  env = default_bool_arg(env);
+  env = default_null_arg(env);
 
   if (env) {
     type_check(env, ENV);
@@ -1332,7 +1332,7 @@ val eval_intrinsic(val form, val env)
                  expand(form, nil));
   val loading = cdr(lookup_var(dyn_env, load_recursive_s));
   val ret = ((void) (loading || uw_release_deferred_warnings()),
-             eval(form_ex, default_bool_arg(env), form));
+             eval(form_ex, default_null_arg(env), form));
   last_form_expanded = lfx_save;
   last_form_evaled = lfe_save;
   return ret;
@@ -3962,7 +3962,7 @@ static val do_expand(val form, val menv)
 {
   val macro = nil;
 
-  menv = default_bool_arg(menv);
+  menv = default_null_arg(menv);
 
   if (nilp(form)) {
     return nil;
@@ -4373,8 +4373,8 @@ static val gather_free_refs_nw(val info_cons, val exc,
 static val expand_with_free_refs(val form, val menv_in, val upto_menv_in)
 {
   val ret;
-  val menv = default_bool_arg(menv_in);
-  val upto_menv = default_bool_arg(upto_menv_in);
+  val menv = default_null_arg(menv_in);
+  val upto_menv = default_null_arg(upto_menv_in);
   uw_frame_t uw_handler;
   val info_cons_free = cons(nil, nil);
   val info_cons_bound = cons(nil, nil);
@@ -4393,7 +4393,7 @@ static val expand_with_free_refs(val form, val menv_in, val upto_menv_in)
 
 val macro_form_p(val form, val menv)
 {
-  menv = default_bool_arg(menv);
+  menv = default_null_arg(menv);
 
   if (bindable(form) && lookup_symac(menv, form))
     return t;
@@ -4406,7 +4406,7 @@ static val macroexpand_1(val form, val menv)
 {
   val macro;
 
-  menv = default_bool_arg(menv);
+  menv = default_null_arg(menv);
 
   if (consp(form) && (macro = lookup_mac(menv, car(form)))) {
     val mac_expand = expand_macro(form, macro, menv);
@@ -4448,7 +4448,7 @@ static val constantp_noex(val form)
 
 static val constantp(val form, val env_in)
 {
-  val env = default_bool_arg(env_in);
+  val env = default_null_arg(env_in);
 
   if (consp(form)) {
     if (car(form) == quote_s) {
@@ -4762,7 +4762,7 @@ static val range_func(val env, val lcons)
 static val range(val from_in, val to_in, val step_in)
 {
   val from = default_arg(from_in, zero);
-  val to = default_bool_arg(to_in);
+  val to = default_null_arg(to_in);
   val step = default_arg(step_in, if3(to && gt(from, to), negone, one));
   val env = cons(from, cons(to, step));
 
@@ -4796,7 +4796,7 @@ static val range_star_func(val env, val lcons)
 static val range_star(val from_in, val to_in, val step_in)
 {
   val from = default_arg(from_in, zero);
-  val to = default_bool_arg(to_in);
+  val to = default_null_arg(to_in);
 
   if (eql(from, to)) {
     return nil;
@@ -4850,7 +4850,7 @@ static val giterate_func(val env, val lcons)
 
 static val giterate(val while_pred, val gen_fun, val init_val)
 {
-  init_val = default_bool_arg(init_val);
+  init_val = default_null_arg(init_val);
 
   if (!funcall1(while_pred, init_val)) {
     return nil;
@@ -4878,7 +4878,7 @@ static val ginterate_func(val env, val lcons)
 
 static val ginterate(val while_pred, val gen_fun, val init_val)
 {
-  init_val = default_bool_arg(init_val);
+  init_val = default_null_arg(init_val);
 
   if (!funcall1(while_pred, init_val)) {
     return cons(init_val, nil);
@@ -5021,7 +5021,7 @@ static val pad_func(val env, val lcons)
 
 static val pad(val list, val item_in, val count)
 {
-  val item = default_bool_arg(item_in);
+  val item = default_null_arg(item_in);
 
   switch (type(list)) {
   case NIL:
@@ -5158,7 +5158,7 @@ static void reg_symacro(val sym, val form)
 
 static val if_fun(val cond, val then, val alt)
 {
-  return if3(cond, then, default_bool_arg(alt));
+  return if3(cond, then, default_null_arg(alt));
 }
 
 static val or_fun(struct args *vals)

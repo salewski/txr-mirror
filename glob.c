@@ -77,7 +77,7 @@ val glob_wrap(val pattern, val flags, val errfunc)
                            "its error callback function"), nao);
   }
 
-  s_errfunc = default_bool_arg(errfunc);
+  s_errfunc = default_null_arg(errfunc);
 
   (void) glob(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
 

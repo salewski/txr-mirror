@@ -289,7 +289,7 @@ val make_struct_type(val name, val super,
     st->stinitfun = static_initfun;
     st->initfun = initfun;
     st->boactor = boactor;
-    st->postinitfun = default_bool_arg(postinitfun);
+    st->postinitfun = default_null_arg(postinitfun);
     st->dvtypes = nil;
 
     gc_finalize(stype, struct_type_finalize_f, nil);
@@ -637,7 +637,7 @@ val clear_struct(val strct, val value)
   const val self = lit("clear-struct");
   struct struct_inst *si = struct_handle(strct, self);
   struct struct_type *st = si->type;
-  val clear_val = default_bool_arg(value);
+  val clear_val = default_null_arg(value);
   cnum i;
 
   check_init_lazy_struct(strct, si);
@@ -1046,7 +1046,7 @@ static val static_slot_ens_rec(val stype, val sym, val newval,
     uw_throwf(error_s, lit("~a: ~s isn't a valid slot name"),
               self, sym, nao);
 
-  no_error_p = default_bool_arg(no_error_p);
+  no_error_p = default_null_arg(no_error_p);
 
   if (st->eqmslot == coerce(struct stslot *, -1))
     st->eqmslot = 0;
@@ -1129,7 +1129,7 @@ val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
     trace_check(name);
   }
 
-  no_error_p = default_bool_arg(no_error_p);
+  no_error_p = default_null_arg(no_error_p);
   return static_slot_ens_rec(stype, sym, newval, no_error_p, self, 0);
 }
 

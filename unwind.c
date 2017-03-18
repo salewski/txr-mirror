@@ -344,7 +344,7 @@ static val uw_find_frames_impl(val extype, val frtype, val just_one)
   uw_frtype_t et;
   list_collect_decl (out, ptail);
 
-  extype = default_bool_arg(extype);
+  extype = default_null_arg(extype);
   frtype = default_arg_strict(frtype, catch_frame_type);
 
   if (symbolp(frtype)) {
@@ -987,7 +987,7 @@ val uw_capture_cont(val tag, val fun, val ctx_form)
       break;
     case UW_GUARD:
       {
-        val sym = or2(car(default_bool_arg(ctx_form)), sys_capture_cont_s);
+        val sym = or2(car(default_null_arg(ctx_form)), sys_capture_cont_s);
         eval_error(ctx_form, lit("~s: cannot capture continuation "
                                  "spanning external library stack frames"),
                    sym, nao);
@@ -1000,7 +1000,7 @@ val uw_capture_cont(val tag, val fun, val ctx_form)
   }
 
   if (!fr) {
-    val sym = or2(car(default_bool_arg(ctx_form)), sys_capture_cont_s);
+    val sym = or2(car(default_null_arg(ctx_form)), sys_capture_cont_s);
 
     if (tag)
       eval_error(ctx_form, lit("~s: no block ~s is visible"), sym, tag, nao);

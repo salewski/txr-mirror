@@ -846,7 +846,7 @@ val gc_finalize(val obj, val fun, val rev_order_p)
 {
   type_check(fun, FUN);
 
-  rev_order_p = default_bool_arg(rev_order_p);
+  rev_order_p = default_null_arg(rev_order_p);
 
   if (is_ptr(obj)) {
     struct fin_reg *f = coerce(struct fin_reg *, chk_malloc(sizeof *f));

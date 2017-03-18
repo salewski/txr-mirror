@@ -787,7 +787,7 @@ static val sock_connect(val sock, val sockaddr, val timeout)
     sockaddr_pack(sockaddr, family, &sa, &salen);
 
     if (to_connect(c_num(sfd), coerce(struct sockaddr *, &sa), salen,
-                   sock, sockaddr, default_bool_arg(timeout)) != 0)
+                   sock, sockaddr, default_null_arg(timeout)) != 0)
       uw_throwf(socket_error_s, lit("sock-connect ~s to addr ~s: ~d/~s"),
                 sock, sockaddr, num(errno), string_utf8(strerror(errno)), nao);
 
@@ -861,7 +861,7 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
   struct sockaddr_storage sa;
   socklen_t salen = sizeof sa;
   val peer = nil;
-  val timeout = default_bool_arg(timeout_in);
+  val timeout = default_null_arg(timeout_in);
 
   if (!sfd)
     goto badfd;

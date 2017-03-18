@@ -2104,7 +2104,7 @@ val regex_compile(val regex_sexp, val error_stream)
   val regex_source;
 
   if (stringp(regex_sexp)) {
-    regex_sexp = regex_parse(regex_sexp, default_bool_arg(error_stream));
+    regex_sexp = regex_parse(regex_sexp, default_null_arg(error_stream));
     return if2(regex_sexp, regex_compile(regex_sexp, error_stream));
   }
 
@@ -2458,7 +2458,7 @@ val search_regex(val haystack, val needle_regex, val start,
 {
   val slen = nil;
   start = default_arg(start, zero);
-  from_end = default_bool_arg(from_end);
+  from_end = default_null_arg(from_end);
 
   if (minusp(start)) {
     slen = length_str(haystack);
@@ -2965,7 +2965,7 @@ val read_until_match(val regex, val stream_in, val include_match_in)
   val stack = nil;
   val match = nil;
   val stream = default_arg(stream_in, std_input);
-  val include_match = default_bool_arg(include_match_in);
+  val include_match = default_null_arg(include_match_in);
 
   regex_machine_init(&regm, regex);
 
