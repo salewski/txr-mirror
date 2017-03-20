@@ -1,3 +1,56 @@
+                                    TXR 172
+                                   2017-03-19
+
+
+  Features
+
+  - Argument of umask function is optional
+    - if omitted, function returns current umask.
+  - OOP:
+    - new static-slot-home function
+      - reports the base class which actually
+        defines a slot.
+  - Sandboxing support:
+    - New *package-alist* variable gives application control
+      over what packages exist over a dynamic scope.
+      - Makes possible safe evaluation of TXR Lisp code obtained
+        as input from untrusted source.
+      - Special behavior worked into exception handling to
+        close a potential sandbox hole.
+  - Tracing:
+    - trace now canonicalizes a method name to the
+      base class which defines a method and produces
+      a warning if this is different from what was requested.
+      - E.g. (trace (meth dog speak)) is issued, but dog
+        just inherits (meth animal speak) which is what is
+        actually traced.
+    - warnings issued when traced functions are redefined.
+  - Windows:
+    - New icons, redesigned from scratch.
+    - SVG logo now in source tree.
+
+  Bugs
+
+  - Parser fix in relation to new unbound reference
+    dot syntax: now it may be a top-level expression,
+    so entering .a.b.c into the REPL isn't a syntax error.
+  - Missing documentation for opt function added.
+  - Windows:
+    - Fixes from Cygnal:
+      - dir and shell fields in password structure
+        returned by getpwent are Windows paths that
+        make sense.
+      - HOME environment variable has same value as USERPROFILE.
+      - Fixes issue when Windows Vim is invoked out of txr,
+        of Vim being confused by nonsensical HOME value.
+    - Linenoise fix: Ctrl-X Ctr-E (edit in external editor)
+      - Now temp file closed before spawning external editor.
+      - Fixes issue of editor reporting that the file is
+        in use by another application and not being able to save.
+      - Fixes issue that Vim reports the file as readonly.
+
+
+
                                     TXR 171
                                    2017-03-14
 
