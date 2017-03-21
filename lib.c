@@ -5053,7 +5053,10 @@ val unuse_package(val unuse_list, val package_in)
   return unuse_package_list;
 }
 
-static val symbol_visible(val package, val sym)
+/* symbol_visible assumes the perspective that package
+ * is the current package!
+ */
+val symbol_visible(val package, val sym)
 {
   val name = symbol_name(sym);
   type_check (package, PKG);

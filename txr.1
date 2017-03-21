@@ -52097,11 +52097,19 @@ sequence Ctrl-X Tab.
 When completion is invoked with Tab or Ctrl-X Tab, the listener looks at a few
 of the trailing characters to the left of the cursor position to determine the
 applicable list of completions. Completions are determined from among the \*(TL symbols which have
-global variable, function, macro and symbolic macro bindings.  Symbols which
-have operator binding are also taken into consideration.  If a
+global variable, function, macro and symbolic macro bindings, as well
+as the static and instance slots of structures.  Symbols which
+have operator bindings are also taken into consideration.  If a
 package-qualified symbol is completed, then completion is restricted to that
 package. Keyword symbol completion is restricted to the contents of the keyword
-package.
+package. The namespaces which are searched for symbols are restricted according
+to preceding character syntax. For instance if the characters
+.code ".("
+or
+.code ".["
+immediately precede the prefix, then only those symbols are considered
+which are methods: that is, each is the static slot of at least one structure,
+in which that static slots holds a function.
 
 The difference between Tab and Ctrl-X Tab is that Tab completion looks only for
 prefix matches among the eligible identifiers. Thus it is a pure completion in

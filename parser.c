@@ -686,18 +686,20 @@ static val get_visible_syms(val package, int is_cur)
 
 static void find_matching_syms(lino_completions_t *cpl,
                                val package, val prefix,
-                               val line_prefix, char par,
+                               val line_prefix, char kind,
                                val force_qualify)
 {
-  int is_cur = package == cur_package;
+  val is_cur = tnil(package == cur_package);
   val qualify = tnil(force_qualify || !is_cur);
   val pkg_name = if2(qualify,
                      if3(package == keyword_package && !force_qualify,
                          lit(""),
                          package_name(package)));
-  val syms;
+  val syms = ((kind == 'S' || kind == 'M')
+              ? hash_keys((get_slot_syms(package, is_cur, tnil(kind == 'M'))))
+              : get_visible_syms(package, is_cur != nil));
 
-  for (syms = get_visible_syms(package, is_cur); syms; syms = cdr(syms)) {
+  for ( ; syms; syms = cdr(syms)) {
     val sym = car(syms);
     val name = symbol_name(sym);
     val found = if3(cpl->substring,
@@ -707,7 +709,7 @@ static void find_matching_syms(lino_completions_t *cpl,
     if (found) {
       val comple;
 
-      switch (par) {
+      switch (kind) {
       case '(':
         if (!fboundp(sym) && !mboundp(sym) && !special_operator_p(sym))
           continue;
@@ -715,6 +717,9 @@ static void find_matching_syms(lino_completions_t *cpl,
       case '[':
         if (!boundp(sym) && !lookup_fun(nil, sym))
           continue;
+        break;
+      case 'M':
+      case 'S':
         break;
       default:
         break;
@@ -812,13 +817,19 @@ static void provide_completions(const char *data,
       char prev = (end > data) ? end[-1] : 0;
       char pprev = (end > data + 1) ? end[-2] : 0;
       int quote = (pprev == '^' || pprev == '\'' || pprev == '#');
-      int meth = (pprev == '.');
       int ppar = (pprev == '(');
       int dwim = (prev == '[');
-      char par = (!pprev || (!quote && !meth && !ppar) || dwim) ? prev : 0;
+      int par = (prev == '(');
+      int slot = (prev == '.');
+      int meth = (pprev == '.') && (dwim || par);
+      char kind = (slot
+                   ? 'S'
+                   : (meth
+                      ? 'M'
+                      : (!pprev || (!quote && !ppar) || dwim) ? prev : 0));
 
       find_matching_syms(cpl, or2(package, cur_package),
-                         sym_pfx, line_pfx, par, if2(package, null(keyword)));
+                         sym_pfx, line_pfx, kind, if2(package, null(keyword)));
     }
   }
 }

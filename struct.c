@@ -1507,6 +1507,44 @@ val method_name(val fun)
   return nil;
 }
 
+val get_slot_syms(val package, val is_current, val method_only)
+{
+  val result_hash = make_hash(nil, nil, nil);
+  val sth_iter = hash_begin(struct_type_hash);
+  val sth_cell;
+
+  while ((sth_cell = hash_next(sth_iter))) {
+    val stype = cdr(sth_cell);
+    val sl_iter;
+    struct struct_type *st = coerce(struct struct_type *, stype->co.handle);
+
+    for (sl_iter = st->slots; sl_iter; sl_iter = cdr(sl_iter)) {
+      val slot = car(sl_iter);
+
+      if (gethash(result_hash, slot))
+        continue;
+
+      if (!is_current && symbol_package(slot) != package)
+        continue;
+
+      if (!symbol_visible(package, slot))
+        continue;
+
+      if (method_only) {
+        loc ptr = lookup_static_slot(st, slot);
+        if (nullocp(ptr))
+          continue;
+        if (!functionp(deref(ptr)))
+          continue;
+      }
+
+      sethash(result_hash, slot, t);
+    }
+  }
+
+  return result_hash;
+}
+
 static_def(struct cobj_ops struct_type_ops =
            cobj_ops_init(eq, struct_type_print, struct_type_destroy,
                          struct_type_mark, cobj_hash_op))
