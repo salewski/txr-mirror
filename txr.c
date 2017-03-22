@@ -969,6 +969,8 @@ int txr_main(int argc, char **argv)
   reg_var(args_s, or2(orig_args, arg_list));
   reg_varl(intern(lit("self-path"), user_package), spec_file_str);
 
+  env_vbind(dyn_env, load_recursive_s, t);
+
   if (!txr_lisp_p)
   {
     int gc = gc_state(0);
@@ -1011,8 +1013,6 @@ int txr_main(int argc, char **argv)
     val binding = car(bindings);
     reg_varl(car(binding), cdr(binding));
   }
-
-  env_vbind(dyn_env, load_recursive_s, t);
 
   {
     val result = read_eval_stream(parse_stream, std_error, t);

@@ -4245,6 +4245,9 @@ static val v_load(match_files_ctx *c)
 
     dyn_env = saved_dyn_env;
 
+    if (!rec)
+      uw_release_deferred_warnings();
+
     uw_unwind {
       close_stream(stream, nil);
       if (!rec)
