@@ -529,8 +529,6 @@ static val search_match(match_line_ctx *c, val from_end, val spec)
       new_pos = minus(new_pos, c->base);
       return cons(pos, minus(new_pos, pos));
     }
-
-    consume_prefix(c);
   }
 
   return nil;
