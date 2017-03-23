@@ -51335,8 +51335,42 @@ If any finalizers are called, it returns
 otherwise
 .codn nil .
 
-Note: the behavior is unspecified if a finalizer function calls
+It is permissible for a finalizer function itself to call
 .codn call-finalizers .
+Such a call can happen in two possible contexts: during actual
+reclamation driven by garbage collection, or under the scope of a
+.code call-finalizers
+invocation from application code.
+
+Under the scope of garbage-collection-driven reclamation, the
+order of finalizer calls may not be what the application logic
+expects. For instance even though a finalizer registered for some object
+.code A
+itself invokes
+.codn "(call-finalizers B)" ,
+it may be the case during GC reclamation that both
+.code A
+and
+.code B
+are identified as unreachable objects at the same time, and some or all
+finalizers registered against
+.code B
+have already been called before the given
+.code A
+finalizer performs the explicit
+.code call-finalizers
+invocation against
+.codn B .
+Thus the the call either has no effect at all, or only calls some remaining
+.code B
+finalizers that have not yet been processed, rather than all of them,
+as the application expects.
+
+The application must avoid creating a dependency on the order of
+finalization calls, to prevent the situation that the finalization actions are
+only correct under an explicit
+.code call-finalizers
+but incorrect under spontaneous reclamation driven by garbage collection.
 
 .SS* Modularization
 .coNP Variable @ self-path

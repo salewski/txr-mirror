@@ -650,32 +650,54 @@ static void prepare_finals(void)
   }
 }
 
-static void call_finals(void)
+static val call_finalizers_impl(val ctx,
+                                int (*should_call)(struct fin_reg *, val))
 {
-  struct fin_reg *new_list = 0, *old_list = final_list;
-  struct fin_reg **tail = &new_list, *f, *next;
+  struct fin_reg *f, **tail;
+  struct fin_reg *found = 0, **ftail = &found;
+  val ret = nil;
 
   if (!final_list)
-    return;
+    return ret;
 
-  final_list = 0;
-  final_tail = &final_list;
+  for (f = final_list, tail = &final_list; f; ) {
+    struct fin_reg *next = f->next;
 
-  for (f = old_list; f; f = next) {
-    next = f->next;
-
-    if (!f->reachable) {
-      funcall1(f->fun, f->obj);
-      free(f);
+    if (should_call(f, ctx)) {
+      *ftail = f;
+      ftail = &f->next;
+      f->next = 0;
     } else {
       *tail = f;
       tail = &f->next;
     }
+
+    f = next;
   }
 
   *tail = 0;
-  *final_tail = new_list;
   final_tail = tail;
+
+  while (found) {
+    struct fin_reg *next = found->next;
+    funcall1(found->fun, found->obj);
+    free(found);
+    found = next;
+    ret = t;
+  }
+
+  return ret;
+}
+
+static int is_unreachable_final(struct fin_reg *f, val ctx)
+{
+  (void) ctx;
+  return !f->reachable;
+}
+
+static void call_finals(void)
+{
+  (void) call_finalizers_impl(nil, is_unreachable_final);
 }
 
 void gc(void)
@@ -868,35 +890,14 @@ val gc_finalize(val obj, val fun, val rev_order_p)
   return obj;
 }
 
+static int is_matching_final(struct fin_reg *f, val obj)
+{
+  return f->obj == obj;
+}
+
 val gc_call_finalizers(val obj)
 {
-  struct fin_reg *new_list = 0, *old_list = final_list;
-  struct fin_reg **tail = &new_list, *f, *next;
-  val ret = nil;
-
-  if (!final_list)
-    return ret;
-
-  final_list = 0;
-  final_tail = &final_list;
-
-  for (f = old_list; f; f = next) {
-    next = f->next;
-
-    if (f->obj == obj) {
-      funcall1(f->fun, f->obj);
-      free(f);
-      ret = t;
-    } else {
-      *tail = f;
-      tail = &f->next;
-    }
-  }
-
-  *tail = 0;
-  *final_tail = new_list;
-  final_tail = tail;
-  return ret;
+  return call_finalizers_impl(obj, is_matching_final);
 }
 
 void gc_late_init(void)
