@@ -53114,6 +53114,17 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 172
+A value of 172 or lower restores a behavior of the \*(TX pattern
+matching language when matching a variable followed by a directive, such as
+.codn "@a@(fun b)" .
+The old behavior is that the scan for a match for the directive
+takes place in an environment in which a binding for
+.code a
+has not yet been established. The new behavior is that the variable
+is always bound prior to the processing of the directive. During
+the search, it is bound to the range of text spanning between the
+starting position and the position being tried.
 .IP 170
 A value of 170 or lower disables the behavior that \*(TX scans standard input
 when no input sources are specified on the command line. Standard input must

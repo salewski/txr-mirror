@@ -460,6 +460,16 @@ static match_line_ctx ml_bindings_specline(match_line_ctx c, val bindings,
   return nc;
 }
 
+static match_line_ctx ml_bindings_specline_pos(match_line_ctx c, val bindings,
+                                               val specline, val pos)
+{
+  match_line_ctx nc = c;
+  nc.bindings = bindings;
+  nc.specline = specline;
+  nc.pos = pos;
+  return nc;
+}
+
 static val do_match_line(match_line_ctx *c);
 static val match_line(match_line_ctx c);
 
@@ -523,6 +533,30 @@ static val search_match(match_line_ctx *c, val from_end, val spec)
        pos = plus(pos, step))
   {
     val new_pos = cdr(match_line(ml_specline_pos(*c, spec, pos)));
+    if (new_pos == t) {
+      return cons(pos, t);
+    } else if (new_pos) {
+      new_pos = minus(new_pos, c->base);
+      return cons(pos, minus(new_pos, pos));
+    }
+  }
+
+  return nil;
+}
+
+static val search_match_binding_var(match_line_ctx *c, val sym,
+                                    val from_end, val spec)
+{
+  val pos = from_end ? length_str(c->dataline) : c->pos;
+  val step = from_end ? negone : one;
+
+  for (; (from_end && ge(pos, c->pos)) ||
+         (!from_end && length_str_ge(c->dataline, pos));
+       pos = plus(pos, step))
+  {
+    val nbind = acons(sym, sub_str(c->dataline, c->pos, pos), c->bindings);
+    val new_pos = cdr(match_line(ml_bindings_specline_pos(*c, nbind,
+                                                          spec, pos)));
     if (new_pos == t) {
       return cons(pos, t);
     } else if (new_pos) {
@@ -722,7 +756,9 @@ static val h_var(match_line_ctx *c)
         c->bindings = acons(sym, sub_str(c->dataline, c->pos, find), c->bindings);
       c->pos = plus(find, len);
     } else {
-      val find = search_match(c, modifier, c->specline);
+      val find = if3(opt_compat && opt_compat <= 172,
+                     search_match(c, modifier, c->specline),
+                     search_match_binding_var(c, sym, modifier, c->specline));
       val fpos = car(find);
       if (!find) {
         LOG_MISMATCH("var delimiting spec");
