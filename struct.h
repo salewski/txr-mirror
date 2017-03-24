@@ -25,7 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern val struct_type_s, meth_s, make_struct_lit_s;
+extern val struct_type_s, meth_s, print_s, make_struct_lit_s;
+extern val slot_s, static_slot_s;
 val make_struct_type(val name, val super,
                      val static_slots, val slots,
                      val static_initfun, val initfun, val boactor,
@@ -64,4 +65,8 @@ val uslot(val slot);
 val umethod(val slot, struct args *);
 val method_name(val fun);
 val get_slot_syms(val package, val is_current, val method_only);
+val slot_types(val slot);
+val static_slot_types(val slot);
+val slot_type_reg(val slot, val strct);
+val static_slot_type_reg(val slot, val strct);
 void struct_init(void);

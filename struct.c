@@ -90,11 +90,14 @@ struct struct_inst {
 };
 
 val struct_type_s, meth_s, print_s, make_struct_lit_s;
+val slot_s, static_slot_s;
 
 static cnum struct_id_counter;
 static val struct_type_hash;
 static val slot_hash;
 static val struct_type_finalize_f;
+static val slot_type_hash;
+static val static_slot_type_hash;
 
 static val struct_type_finalize(val obj);
 static_forward(struct cobj_ops struct_type_ops);
@@ -107,14 +110,20 @@ static val call_super_fun(val type, val sym, struct args *);
 
 void struct_init(void)
 {
-  protect(&struct_type_hash, &slot_hash, &struct_type_finalize_f,
+  protect(&struct_type_hash, &slot_hash, &slot_type_hash,
+          &static_slot_type_hash, &struct_type_finalize_f,
           convert(val *, 0));
   struct_type_s = intern(lit("struct-type"), user_package);
   meth_s = intern(lit("meth"), user_package);
   print_s = intern(lit("print"), user_package);
   make_struct_lit_s = intern(lit("make-struct-lit"), system_package);
+  slot_s = intern(lit("slot"), system_package);
+  static_slot_s = intern(lit("static-slot"), system_package);
   struct_type_hash = make_hash(nil, nil, nil);
   slot_hash = make_hash(nil, nil, t);
+  slot_type_hash = make_hash(nil, nil, nil);
+  slot_type_hash = make_hash(nil, nil, nil);
+  static_slot_type_hash = make_hash(nil, nil, nil);
   struct_type_finalize_f = func_n1(struct_type_finalize);
 
   if (opt_compat && opt_compat <= 117)
@@ -167,6 +176,8 @@ void struct_init(void)
   reg_fun(intern(lit("uslot"), user_package), func_n1(uslot));
   reg_fun(intern(lit("umethod"), user_package), func_n1v(umethod));
   reg_fun(intern(lit("slots"), user_package), func_n1(slots));
+  reg_fun(intern(lit("slot-types"), system_package), func_n1(slot_types));
+  reg_fun(intern(lit("static-slot-types"), system_package), func_n1(static_slot_types));
 }
 
 static noreturn void no_such_struct(val ctx, val sym)
@@ -326,8 +337,10 @@ val make_struct_type(val name, val super,
           ss->store = nil;
         }
         sethash(slot_hash, cons(slot, id), num(n + STATIC_SLOT_BASE));
+        static_slot_type_reg(slot, name);
       } else {
         sethash(slot_hash, cons(slot, id), num_fast(sl++));
+        slot_type_reg(slot, name);
       }
 
       if (sl >= STATIC_SLOT_BASE)
@@ -1103,6 +1116,7 @@ static val static_slot_ens_rec(val stype, val sym, val newval,
 
     sethash(slot_hash, cons(sym, num_fast(st->id)),
             num(st->nstslots++ + STATIC_SLOT_BASE));
+    static_slot_type_reg(sym, st->name);
   }
 
   {
@@ -1543,6 +1557,41 @@ val get_slot_syms(val package, val is_current, val method_only)
   }
 
   return result_hash;
+}
+
+val slot_types(val slot)
+{
+  return gethash(slot_type_hash, slot);
+}
+
+val static_slot_types(val slot)
+{
+  return gethash(static_slot_type_hash, slot);
+}
+
+val slot_type_reg(val slot, val strct)
+{
+  val typelist = gethash(slot_type_hash, slot);
+
+  if (!memq(strct, typelist)) {
+    sethash(slot_type_hash, slot, cons(strct, typelist));
+    uw_purge_deferred_warning(cons(slot_s, slot));
+  }
+
+  return slot;
+}
+
+val static_slot_type_reg(val slot, val strct)
+{
+  val typelist = gethash(static_slot_type_hash, slot);
+
+  if (!memq(strct, typelist)) {
+    sethash(slot_type_hash, slot, cons(strct, typelist));
+    uw_purge_deferred_warning(cons(static_slot_s, slot));
+    uw_purge_deferred_warning(cons(slot_s, slot));
+  }
+
+  return slot;
 }
 
 static_def(struct cobj_ops struct_type_ops =

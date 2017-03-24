@@ -136,6 +136,10 @@
       (let ((arg-sym (gensym))
             (type-sym (gensym)))
         (register-tentative-def ^(struct-type . ,name))
+        (each ((s stat-slots))
+          (register-tentative-def ^(sys:slot . ,s)))
+        (each ((s inst-slots))
+          (register-tentative-def ^(sys:slot . ,s)))
         ^(sys:make-struct-type
            ',name ',super ',stat-slots ',inst-slots
            ,(if (or func-si-forms val-si-forms)
@@ -186,28 +190,46 @@
 (defmacro sys:struct-lit (name . plist)
   ^(sys:make-struct-lit ',name ',plist))
 
-(defmacro qref (:whole form obj . refs)
+(defun sys:check-slot (form slot)
+  (unless (or (sys:slot-types slot)
+              (sys:static-slot-types slot))
+    (compile-defr-warning form ^(sys:slot . ,slot)
+                          "symbol ~s isn't the name of a struct slot"
+                          slot))
+  slot)
+
+(defmacro qref (:form form obj . refs)
   (when (null refs)
     (throwf 'eval-error "~s: bad syntax" 'qref))
   (tree-case refs
     (() ())
     (((dw sym . args))
-     (if (eq dw 'dwim) ^[(slot ,obj ',sym) ,*args] :))
+     (if (eq dw 'dwim)
+       ^[(slot ,obj ',(sys:check-slot form sym)) ,*args]
+       :))
     (((dw sym . args) . more)
-     (if (eq dw 'dwim) ^(qref [(slot ,obj ',sym) ,*args] ,*more) :))
+     (if (eq dw 'dwim)
+       ^(qref [(slot ,obj ',(sys:check-slot form sym)) ,*args] ,*more)
+       :))
     (((sym . args))
      (let ((osym (gensym)))
+       (sys:check-slot form sym)
        ^(slet ((,osym ,obj))
           (call (slot ,osym ',sym) ,osym ,*args))))
     (((sym . args) . more)
      (let ((osym (gensym)))
+       (sys:check-slot form sym)
        ^(qref (slet ((,osym ,obj))
                 (call (slot ,osym ',sym) ,osym ,*args)) ,*more)))
-    ((sym) ^(slot ,obj ',sym))
-    ((sym . more) ^(qref (slot ,obj ',sym) ,*more))
+    ((sym)
+     (sys:check-slot form sym)
+     ^(slot ,obj ',sym))
+    ((sym . more)
+     (sys:check-slot form sym)
+     ^(qref (slot ,obj ',sym) ,*more))
     (obj (throwf 'eval-error "~s: bad syntax: ~s" 'qref refs))))
 
-(defmacro uref (:whole form . args)
+(defmacro uref (. args)
   (cond
     ((null args) (throwf 'eval-error "~s: bad syntax" 'uref))
     ((null (cdr args))
@@ -241,10 +263,12 @@
 (defmacro meth (obj slot . bound-args)
   ^[(fun method) ,obj ',slot ,*bound-args])
 
-(defmacro usl (slot)
+(defmacro usl (:form form slot)
+  (sys:check-slot form slot)
   ^(uslot ',slot))
 
-(defmacro umeth (slot . bound-args)
+(defmacro umeth (:form form slot . bound-args)
+  (sys:check-slot form slot)
   ^[(fun umethod) ',slot ,*bound-args])
 
 (defun sys:defmeth (type-sym name fun)
@@ -258,6 +282,7 @@
     ((not (find-struct-type type-sym))
       (compile-defr-warning form ^(struct-type . ,type-sym)
                             "definition of struct ~s not seen here" type-sym)))
+  (register-tentative-def ^(sys:slot . ,name))
   ^(sys:defmeth ',type-sym ',name (lambda ,arglist
                                     (block ,name ,*body))))
 
