@@ -1,3 +1,37 @@
+                                    TXR 173
+                                   2017-03-25
+
+
+  Features
+
+  - Listener:
+    - Completion is now sensitive to slot or method context: .(abc[TAB] and
+      .abc[TAB] searches appropriate spaces.
+  - TXR Pattern Language
+    - Unbound variable followed by directive is now bound to partial
+      match result while searching for match for directive.
+  - GC:
+    - Finalizers may now invoke call-finalizers; behavior no longer unspecified.
+  - Lisp code processing:
+    - Warnings issued when expanding code that accesses nonexistent struct slots.
+      - Not a form of type checking at all, but catches many typos.
+  - Windows:
+    - Improved 16x16 icon.
+
+  Bugs
+
+  - Lisp code processing:
+    - Fixed missing warnings when main module is a .txr file.
+    - Fixed missing unbound variable/function warnings for unbound symbols that
+      are the direct operands of [...] syntax.
+    - Fixed wrong name being printed in trace messages, when trace is used
+      to simultaneously enable tracing for two or more functions.
+  - Windows:
+    - Start menu shortcut now starts in user profile dir, rather than
+      incorrectly in TXR standard library installation dir.
+
+
+
                                     TXR 172
                                    2017-03-19
 
