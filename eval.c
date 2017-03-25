@@ -2961,6 +2961,9 @@ tail:
     return form;
   }
 
+  if (atom(form))
+    return form;
+
   return expand(form, menv);
 }
 
