@@ -35,18 +35,19 @@
           (let* ((prev (or (symbol-function n)
                            (throwf 'eval-error
                                    "~s: ~s does not name a function" 'trace n)))
+                 (lex-n n)
                  (hook (lambda (. args)
                          (let ((abandoned t)
                                (sys:*trace-level* (succ sys:*trace-level*)))
                            (unwind-protect
                              (progn
-                               (sys:trace-enter n args)
+                               (sys:trace-enter lex-n args)
                                (let ((val (apply prev args)))
-                                 (sys:trace-leave n val)
+                                 (sys:trace-leave lex-n val)
                                  (set abandoned nil)
                                  val))
                              (if abandoned
-                               (sys:trace-leave n :abandoned)))))))
+                               (sys:trace-leave lex-n :abandoned)))))))
             (set [sys:*trace-hash* n] prev)
             (set (symbol-function n) hook)))))))
 
