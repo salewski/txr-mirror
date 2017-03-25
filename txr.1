@@ -33733,14 +33733,14 @@ The threat is that code at the handler site could take advantage of
 the current value of the
 .code *package*
 and
-.code *package-list*
+.code *package-alist*
 variables established at the exception throw site to gain inappropriate access
 to symbols.
 
 For this reason, when a handler is established, the current values of
 .code *package*
 and
-.code *package-list*
+.code *package-alist*
 are recorded into the handler frame.
 When that handler is later invoked, it executes in a dynamic environment
 in which those variables are bound to the previously noted values.
