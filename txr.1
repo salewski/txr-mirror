@@ -51284,6 +51284,10 @@ as its only argument.
 
 Multiple finalizer functions can be registered for the same object.
 They are all called when the object becomes unreachable.
+Finalizers registered against an object may also be invoked
+and removed using the
+.code call-finalizers
+function.
 
 If the
 .meta reverse-order-p
