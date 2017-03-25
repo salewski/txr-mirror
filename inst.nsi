@@ -62,6 +62,7 @@ section "TXR"
   RmDir /r /REBOOTOK $INSTDIR\txr\share\man
   WriteUninstaller $INSTDIR\txr\uninstall.exe
   CreateDirectory "$SMPROGRAMS\txr"
+  SetOutPath $PROFILE
   CreateShortCut "$SMPROGRAMS\txr\txr.lnk" "$INSTDIR\txr\bin\txr.exe"
   CreateShortCut "$SMPROGRAMS\txr\uninstall.lnk" "$INSTDIR\txr\uninstall.exe"
   CreateShortCut "$SMPROGRAMS\txr\install-root.lnk" "$INSTDIR\txr"
