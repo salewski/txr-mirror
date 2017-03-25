@@ -62,7 +62,7 @@
 (defmeth termios go-cbreak (tio)
   tio.(clear-iflags icrnl)
   tio.(clear-lflags icanon)
-  tio.(set-lfags isig)
+  tio.(set-lflags isig)
   (set tio.[cc vmin] 1)
   (set tio.[cc vtime] 0))
 
