@@ -2954,6 +2954,10 @@ tail:
       form = rlcp_tree(symac, form);
       goto tail;
     }
+    if (!lookup_var(menv, form) && !lookup_fun(menv, form))
+      eval_defr_warn(last_form_expanded,
+                     cons(var_s, form),
+                     lit("unbound variable/function ~s"), form, nao);
     return form;
   }
 
