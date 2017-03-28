@@ -69,6 +69,8 @@ int opt_loglevel = 1;   /* 0 - quiet; 1 - normal; 2 - verbose */
 
 val form_to_ln_hash;
 
+static int directive_tok(scanner_t *yyg, int tok, int state);
+
 #define FLEX_NUM_VERSION 10000*YY_FLEX_MAJOR_VERSION + \
                          100*YY_FLEX_MINOR_VERSION + \
                          YY_FLEX_SUBMINOR_VERSION
@@ -424,183 +426,123 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <SPECIAL>\({WS}all{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return ALL;
+  return directive_tok(yyscanner, ALL, 0);
 }
 
 <SPECIAL>\({WS}some/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return SOME;
+  return directive_tok(yyscanner, SOME, NESTED);
 }
 
 <SPECIAL>\({WS}none{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return NONE;
+  return directive_tok(yyscanner, NONE, 0);
 }
 
 <SPECIAL>\({WS}maybe{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return MAYBE;
+  return directive_tok(yyscanner, MAYBE, 0);
 }
 
 <SPECIAL>\({WS}cases{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return CASES;
+  return directive_tok(yyscanner, CASES, 0);
 }
 
 <SPECIAL>\({WS}block/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return BLOCK;
+  return directive_tok(yyscanner, BLOCK, NESTED);
 }
 
 <SPECIAL>\({WS}choose/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return CHOOSE;
+  return directive_tok(yyscanner, CHOOSE, NESTED);
 }
 
 <SPECIAL>\({WS}gather/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return GATHER;
+  return directive_tok(yyscanner, GATHER, NESTED);
 }
 
 <SPECIAL>\({WS}and{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return AND;
+  return directive_tok(yyscanner, AND, 0);
 }
 
 <SPECIAL>\({WS}or{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return OR;
+  return directive_tok(yyscanner, OR, 0);
 }
 
 <SPECIAL>\({WS}end{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return END;
+  return directive_tok(yyscanner, END, 0);
 }
 
 <SPECIAL>\({WS}collect/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return COLLECT;
+  return directive_tok(yyscanner, COLLECT, NESTED);
 }
 
 <SPECIAL>\({WS}coll/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return COLL;
+  return directive_tok(yyscanner, COLL, NESTED);
 }
 
 <SPECIAL>\({WS}until/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return UNTIL;
+  return directive_tok(yyscanner, UNTIL, NESTED);
 }
 
 <SPECIAL>\({WS}output/{ID_END}  {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return OUTPUT;
+  return directive_tok(yyscanner, OUTPUT, NESTED);
 }
 
 <SPECIAL>\({WS}repeat/{ID_END}  {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return REPEAT;
+  return directive_tok(yyscanner, REPEAT, NESTED);
 }
 
 <SPECIAL>\({WS}rep/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return REP;
+  return directive_tok(yyscanner, REP, NESTED);
 }
 
 <SPECIAL>\({WS}single{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return SINGLE;
+  return directive_tok(yyscanner, SINGLE, 0);
 }
 
 <SPECIAL>\({WS}first{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return FIRST;
+  return directive_tok(yyscanner, FIRST, 0);
 }
 
 <SPECIAL>\({WS}last/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return LAST;
+  return directive_tok(yyscanner, LAST, NESTED);
 }
 
 <SPECIAL>\({WS}empty{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return EMPTY;
+  return directive_tok(yyscanner, EMPTY, 0);
 }
 
 <SPECIAL>\({WS}mod/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return MOD;
+  return directive_tok(yyscanner, MOD, NESTED);
 }
 
 <SPECIAL>\({WS}modlast/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return MODLAST;
+  return directive_tok(yyscanner, MODLAST, NESTED);
 }
 
 <SPECIAL>\({WS}define/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return DEFINE;
+  return directive_tok(yyscanner, DEFINE, NESTED);
 }
 
 <SPECIAL>\({WS}try{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return TRY;
+  return directive_tok(yyscanner, TRY, 0);
 }
 
 <SPECIAL>\({WS}catch/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return CATCH;
+  return directive_tok(yyscanner, CATCH, NESTED);
 }
 
 <SPECIAL>\({WS}finally{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return FINALLY;
+  return directive_tok(yyscanner, FINALLY, 0);
 }
 
 <SPECIAL>\({WS}if/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return IF;
+  return directive_tok(yyscanner, IF, NESTED);
 }
 
 <SPECIAL>\({WS}elif/{ID_END} {
-  yy_push_state(NESTED, yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return ELIF;
+  return directive_tok(yyscanner, ELIF, NESTED);
 }
 
 <SPECIAL>\({WS}else{WS}\) {
-  yy_pop_state(yyscanner);
-  yylval->lineno = yyextra->lineno;
-  return ELSE;
+  return directive_tok(yyscanner, ELSE, 0);
 }
 
 <SPECIAL,QSPECIAL>[{] {
@@ -1074,6 +1016,17 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 %%
+
+static int directive_tok(scanner_t *yyscanner, int tok, int state)
+{
+  struct yyguts_t *yyg = convert(struct yyguts_t *, yyscanner);
+  if (state != 0)
+    yy_push_state(state, yyscanner);
+  else
+    yy_pop_state(yyscanner);
+  yylval->lineno = yyextra->lineno;
+  return tok;
+}
 
 void end_of_regex(scanner_t *yyg)
 {
