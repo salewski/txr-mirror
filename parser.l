@@ -425,123 +425,123 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return SYMTOK;
 }
 
-<SPECIAL>\({WS}all{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?all{WS}\) {
   return directive_tok(yyscanner, ALL, 0);
 }
 
-<SPECIAL>\({WS}some/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?some/{ID_END} {
   return directive_tok(yyscanner, SOME, NESTED);
 }
 
-<SPECIAL>\({WS}none{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?none{WS}\) {
   return directive_tok(yyscanner, NONE, 0);
 }
 
-<SPECIAL>\({WS}maybe{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?maybe{WS}\) {
   return directive_tok(yyscanner, MAYBE, 0);
 }
 
-<SPECIAL>\({WS}cases{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?cases{WS}\) {
   return directive_tok(yyscanner, CASES, 0);
 }
 
-<SPECIAL>\({WS}block/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?block/{ID_END} {
   return directive_tok(yyscanner, BLOCK, NESTED);
 }
 
-<SPECIAL>\({WS}choose/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?choose/{ID_END} {
   return directive_tok(yyscanner, CHOOSE, NESTED);
 }
 
-<SPECIAL>\({WS}gather/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?gather/{ID_END} {
   return directive_tok(yyscanner, GATHER, NESTED);
 }
 
-<SPECIAL>\({WS}and{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?and{WS}\) {
   return directive_tok(yyscanner, AND, 0);
 }
 
-<SPECIAL>\({WS}or{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?or{WS}\) {
   return directive_tok(yyscanner, OR, 0);
 }
 
-<SPECIAL>\({WS}end{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?end{WS}\) {
   return directive_tok(yyscanner, END, 0);
 }
 
-<SPECIAL>\({WS}collect/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?collect/{ID_END} {
   return directive_tok(yyscanner, COLLECT, NESTED);
 }
 
-<SPECIAL>\({WS}coll/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?coll/{ID_END} {
   return directive_tok(yyscanner, COLL, NESTED);
 }
 
-<SPECIAL>\({WS}until/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?until/{ID_END} {
   return directive_tok(yyscanner, UNTIL, NESTED);
 }
 
-<SPECIAL>\({WS}output/{ID_END}  {
+<SPECIAL>\({WS}({NT0}?:)?output/{ID_END}  {
   return directive_tok(yyscanner, OUTPUT, NESTED);
 }
 
-<SPECIAL>\({WS}repeat/{ID_END}  {
+<SPECIAL>\({WS}({NT0}?:)?repeat/{ID_END}  {
   return directive_tok(yyscanner, REPEAT, NESTED);
 }
 
-<SPECIAL>\({WS}rep/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?rep/{ID_END} {
   return directive_tok(yyscanner, REP, NESTED);
 }
 
-<SPECIAL>\({WS}single{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?single{WS}\) {
   return directive_tok(yyscanner, SINGLE, 0);
 }
 
-<SPECIAL>\({WS}first{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?first{WS}\) {
   return directive_tok(yyscanner, FIRST, 0);
 }
 
-<SPECIAL>\({WS}last/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?last/{ID_END} {
   return directive_tok(yyscanner, LAST, NESTED);
 }
 
-<SPECIAL>\({WS}empty{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?empty{WS}\) {
   return directive_tok(yyscanner, EMPTY, 0);
 }
 
-<SPECIAL>\({WS}mod/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?mod/{ID_END} {
   return directive_tok(yyscanner, MOD, NESTED);
 }
 
-<SPECIAL>\({WS}modlast/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?modlast/{ID_END} {
   return directive_tok(yyscanner, MODLAST, NESTED);
 }
 
-<SPECIAL>\({WS}define/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?define/{ID_END} {
   return directive_tok(yyscanner, DEFINE, NESTED);
 }
 
-<SPECIAL>\({WS}try{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?try{WS}\) {
   return directive_tok(yyscanner, TRY, 0);
 }
 
-<SPECIAL>\({WS}catch/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?catch/{ID_END} {
   return directive_tok(yyscanner, CATCH, NESTED);
 }
 
-<SPECIAL>\({WS}finally{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?finally{WS}\) {
   return directive_tok(yyscanner, FINALLY, 0);
 }
 
-<SPECIAL>\({WS}if/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?if/{ID_END} {
   return directive_tok(yyscanner, IF, NESTED);
 }
 
-<SPECIAL>\({WS}elif/{ID_END} {
+<SPECIAL>\({WS}({NT0}?:)?elif/{ID_END} {
   return directive_tok(yyscanner, ELIF, NESTED);
 }
 
-<SPECIAL>\({WS}else{WS}\) {
+<SPECIAL>\({WS}({NT0}?:)?else{WS}\) {
   return directive_tok(yyscanner, ELSE, 0);
 }
 
@@ -1020,6 +1020,37 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 static int directive_tok(scanner_t *yyscanner, int tok, int state)
 {
   struct yyguts_t *yyg = convert(struct yyguts_t *, yyscanner);
+  char *pstart = yytext + 1 + strspn(yytext + 1, " \t");
+  char *pcolon = strchr(pstart, ':');
+  char *pend = pstart + strspn(pstart, ":-abcdefghijklmnopqrstuvwxyz");
+
+  *pend = 0;
+
+  if (pcolon != 0) {
+    val pkgname = string_utf8((*pcolon = 0, pstart));
+    val package = if3(pstart[0], find_package(pkgname), keyword_package);
+    if (!package) {
+      yyerrprepf(yyg, lit("package ~a not found"), pkgname, nao);
+      tok = ERRTOK;
+    }
+    if (package != user_package && package != keyword_package) {
+      val sym = string_utf8(pcolon + 1);
+      yyerrprepf(yyg, lit("~a:~a: original usr package expected, not ~a"),
+                 pkgname, sym, pkgname, nao);
+      tok = ERRTOK;
+    }
+  } else {
+    val symname = string_utf8(pstart);
+    val sym = intern_fallback(symname, cur_package);
+    val package = symbol_package(sym);
+
+    if (package != user_package && package != keyword_package) {
+      yyerrprepf(yyg, lit("~s: this is ~a:~s: not from the usr package"),
+                 sym, package_name(package), sym, nao);
+      tok = ERRTOK;
+    }
+  }
+
   if (state != 0)
     yy_push_state(state, yyscanner);
   else

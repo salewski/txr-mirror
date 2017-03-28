@@ -42165,6 +42165,106 @@ to be catenated with
   (outside-macro "a") -> ;; error: + invalid operands "a" 42
 .cble
 
+.NP* Packages and the Extraction Language
+The \*(TX extraction language has a syntax in which certain Lisp symbolic
+expressions denoting directives
+.code "@(collect ...)"
+or
+.code "@(end)"
+behave as if they were the tokens of a phrase structure.  As a matter of
+implementation, these are processed specially in the parser and lexical
+analyzer, and are not read in the same way as ordinary Lisp forms.
+
+On the other hand, some directives are not this way. For instance the
+.codn "@(bind ...)" ,
+syntax is processed as a true Lisp expression, in which the
+.code bind
+token is subject to the usual rules for interning a symbol, sensitive to
+.code *package*
+in the usual way.
+
+The following notes describe the treatment of "special" directives that are
+involved in phrase structure syntax. It applies to all directives which head
+off a block that must be terminated by
+.codn "@(end)" ,
+all "punctuation" directives like
+.code "@(and)"
+or
+.code "@(end)"
+and all sub-phrase indicators like
+.code "@(last)"
+or
+.codn "@(elif)" .
+
+Firstly, each such directive may have a package prefix on its main symbol, yet
+is still recognized as the same token. That is to say,
+.code "@(foo:collect)"
+is still treated by the tokenizer and parser as the
+.code "@(collect)"
+token, regardless of the package prefix, and regardless of whether
+.code foo:end
+is the same symbol as the
+.code usr:end
+symbol.
+
+However, this doesn't mean that any
+.code foo:collect
+is allowed to denote the
+.code collect
+directive.
+
+A qualified symbol such as
+.code foo:collect
+must correspond to (be the same object as) precisely one of two symbols:
+either the same-named symbol in the
+.code usr
+package, or else the same-named symbol in the
+.code keyword
+package. If this condition isn't satisfied, the situation is a syntax
+error. Note that this check uses the original
+.code usr
+and
+.code keyword
+packages, not the packages which are currently named
+.str "usr"
+or
+.str "keyword"
+in the current
+.codn *package-alist* .
+
+A check is also performed for an unqualified symbol.
+An unqualified symbol like
+.code collect
+must also resolve, in the context of the current value of the
+.code *package*
+variable, to the same named-symbol in either the original
+.code usr
+or
+.code keyword
+package. Thus if the current package isn't
+.codn usr ,
+and
+.code "@(collect)"
+is being processed, the current package must be such that
+.code collect
+resolves to
+.codn usr:collect .
+either because that symbol is present in the current pack via
+import, or else visible via the fallback list.
+
+These rules are designed to approximate what the behavior would be
+if these directives were actually scanned as Lisp forms in the usual
+way and then recognized as phrase structure tokens according to
+the identity of their leading symbol. The additional restriction is added that
+that the directive symbol names are treated as reserved. If there exists a
+user-defined pattern function called
+.code mypackage:end
+it may not be invoked using the syntax
+.codn "@(mypackage:end)" ,
+which is erroneous; though it is invokable indirectly via the
+.code "@(call)"
+directive.
+
 .NP* Package Library Conventions
 Various functions in the package and symbol area of the library have a
 .meta package
