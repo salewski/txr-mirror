@@ -3665,7 +3665,7 @@ static val me_opip(val form, val menv)
       uses_or2;
       val sym = car(clause);
 
-      if (sym == dwim_s) {
+      if (sym == dwim_s || sym == uref_s || sym == qref_s) {
         list_collect(ptail, clause);
       } else {
         val opdo = if3(or2(macro_form_p(clause, menv),

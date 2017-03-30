@@ -38542,6 +38542,10 @@ notation denotes the following transformation applied to each argument:
   (macro ...)    -> (do macro ...)
   (dwim ...)     -> (dwim ...)
   [...]          -> [...]
+  (qref ...)     -> (qref ...)
+  (uref ...)     -> (uref ...)
+  .slot          -> .slot
+  .(method ...)  -> .(method ...)
   atom           -> atom
 .cble
 
@@ -38553,7 +38557,12 @@ notation. Compound forms denoting function calls are translated to the
 notation. Compound forms which are
 .code dwim
 invocations, either explicit or via the DWIM brackets notation, are
-preserved, as are any forms which are atoms.
+used without transformation. Used without transformation also are forms
+denoting struct slot access, either explicitly using
+.code uref
+or
+.code qref
+or the respective dot notations, as well as any atom forms.
 
 Note: the
 .code opip
