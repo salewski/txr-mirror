@@ -170,6 +170,17 @@ notconfigured:
 	$(V)exit 1
 endif
 
+ifneq ($(top_srcdir),)
+ifneq ($(wildcard $(top_srcdir)/config.h $(top_srcdir)/y.tab.h),)
+.PHONY: tainted
+tainted:
+	$(V)echo "Source directory $(top_srcdir) is in a configured state."
+	$(V)echo "Generated files there with interfere with the build here."
+	$(V)echo "Please do a \"make distclean\" in $(top_srcdir) first."
+	$(V)exit 1
+endif
+endif
+
 .PHONY: all
 all: $(BUILD_TARGETS)
 
