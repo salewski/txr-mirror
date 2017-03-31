@@ -28,7 +28,8 @@
 
 VERBOSE :=
 TXR_CFLAGS := $(CFLAGS)
-TXR_CFLAGS += -iquote $(conf_dir) $(if $(top_srcdir),-iquote $(top_srcdir)) \
+TXR_CFLAGS += -iquote $(conf_dir) \
+              -iquote . $(if $(top_srcdir), -iquote $(top_srcdir)) \
               $(LANG_FLAGS) $(DIAG_FLAGS) \
               $(DBG_FLAGS) $(PLATFORM_CFLAGS) $(EXTRA_FLAGS)
 TXR_CFLAGS += $(filter-out $(REMOVE_FLAGS),$(TXR_CFLAGS))
