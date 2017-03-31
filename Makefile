@@ -24,12 +24,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
--include config/config.make
+-include config.make
 
 VERBOSE :=
 TXR_CFLAGS := $(CFLAGS)
-TXR_CFLAGS += -iquote $(conf_dir) \
-              -iquote . $(if $(top_srcdir), -iquote $(top_srcdir)) \
+TXR_CFLAGS += -iquote . $(if $(top_srcdir), -iquote $(top_srcdir)) \
               $(LANG_FLAGS) $(DIAG_FLAGS) \
               $(DBG_FLAGS) $(PLATFORM_CFLAGS) $(EXTRA_FLAGS)
 TXR_CFLAGS += $(filter-out $(REMOVE_FLAGS),$(TXR_CFLAGS))
@@ -212,14 +211,13 @@ endef
 -include $(OBJS:.o=.d) $(OBJS:.o=.v)
 
 # Add dependencies
-$(call DEP,$(OBJS) $(EXTRA_OBJS-y),\
-           $(conf_dir)/config.make $(conf_dir)/config.h)
+$(call DEP,$(OBJS) $(EXTRA_OBJS-y),config.make config.h)
 
 $(eval $(foreach item,lex.yy.o txr.o match.o parser.o,\
           $(call DEP,opt/$(item) dbg/$(item),y.tab.h)))
 
 $(eval $(foreach item,y.tab.c y.tab.h lex.yy.c,\
-          $(call DEP,$(item),$(conf_dir)/config.make $(conf_dir)/config.h)))
+          $(call DEP,$(item),config.make config.h)))
 
 lex.yy.c: $(top_srcdir)parser.l
 	$(call ABBREV,LEX)
@@ -277,9 +275,10 @@ rebuild clean repatch: notconfigured
 
 distclean:
 	$(V)echo "executing generic cleanup for non-configured directory"
-	rm -f txr txr.exe txr-dbg txr-dbg.exe y.tab.c lex.yy.c y.tab.h y.output
-	rm -rf config
-	rm -rf config.*
+	rm -f txr txr.exe txr-dbg txr-dbg.exe txr-win.exe txr-win-dbg.exe
+	rm -rf y.tab.c lex.yy.c y.tab.h y.output
+	rm -rf config opt dbg
+	rm -f config.*
 	rm -rf mpi-1.?.?
 else
 rebuild: clean repatch $(PROG)
@@ -290,7 +289,7 @@ clean: conftest.clean tests.clean
 	rm -rf opt dbg $(EXTRA_OBJS-y)
 
 distclean: clean
-	rm -rf $(conf_dir)
+	rm -f config.h config.make config.log
 endif
 
 TESTS_TMP := txr.test.out
