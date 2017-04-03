@@ -24162,7 +24162,8 @@ Note: if an
 method is defined or redefined with different semantics for a struct
 type whose instances have already been inserted as keys in an
 .code :equal-based
-hash table, searches for those keys will not work reliably.
+hash table, the behavior of subsequent insertion and lookup operations
+on that hash table become unspecified.
 
 .coNP Method @ print
 .synb
@@ -37090,6 +37091,24 @@ is fully instantiated. In the meanwhile, the
 \*(TX program can mutate the hash table from which the lazy list
 is being generated.
 
+Certain hash operations expose access to the internal key-value association
+entries of a hash table, which are represented as ordinary
+.code cons
+cells. Modifying the
+.code car
+field of such a cell potentially violates the integrity of the hash table;
+the behavior of subsequent lookup and insertion operations becomes unspecified.
+
+Similarly, if an object is used as a key in an
+.codn equal -based
+hash table, and that object is mutated in such a way that its equality to
+other objects under the
+.code equal
+function is affected or its hash value under
+.code hash-equal
+is altered, the behavior of subsequent lookup and insertion operations on the
+becomes unspecified.
+
 .coNP Functions @ hash-construct and @ hash-from-pairs
 .synb
 .mets (hash-construct < hash-args << key-val-pairs )
@@ -37404,7 +37423,10 @@ continues to exist inside
 modifying the
 .code car
 field of the returned cons has ramifications for the logical integrity of
-the hash. Modifying the
+the hash; doing so results in unspecified behavior for subsequent
+insertion and lookup operations.
+
+Modifying the
 .code cdr
 field has the effect of updating the association with a new value.
 
@@ -37779,7 +37801,9 @@ conses. Modifying the
 fields of these conses constitutes modifying the hash values
 in the original hash table. Modifying the
 .code car
-fields interferes with the integrity of the hash table.
+fields interferes with the integrity of the hash table,
+resulting in unspecified behavior for subsequent hash insertion
+and lookup operations.
 
 These functions all retrieve the keys and values in the
 same order. For example, if the keys are retrieved with
