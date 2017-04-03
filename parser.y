@@ -986,6 +986,12 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | n_expr DOTDOT n_expr   { uses_or2;
                                   $$ = rlcp(list(rcons_s, $1, $3, nao),
                                             or2($1, $3)); }
+       | n_expr DOTDOT '.' n_expr
+                                { uses_or2;
+                                  $$ = rlcp(list(rcons_s, $1,
+                                                          uref_helper(parser, $4),
+                                                          nao),
+                                            or2($1, $4)); }
        | n_expr '.' n_expr      { uses_or2;
                                   if (consp($3) && car($3) == qref_s) {
                                     rplacd($3, rlcp(cons($1, cdr($3)), $1));
