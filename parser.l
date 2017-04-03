@@ -310,8 +310,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <SPECIAL>{WS}({FLO}[.]?|{FLODOT}){TOK} |
 <BRACED>{WS}({FLO}[.]?|{FLODOT}){BTOK} |
-<NESTED>{WS}({FLO}[.]?|{FLODOT}){NTOK} |
-<SPECIAL,NESTED,BRACED>{FLO}[.][^.]? {
+<NESTED>{WS}({FLO}[.]?|{FLODOT}){NTOK} {
   val str = string_utf8(yytext);
 
   yyerrorf(yyg, lit("trailing junk in floating-point literal: ~a"), str, nao);
