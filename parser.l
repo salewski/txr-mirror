@@ -296,7 +296,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL,NESTED,BRACED>{FLO} {
+<SPECIAL,NESTED,BRACED>{WS}{FLO} {
   val str = string_own(utf8_dup_from(yytext));
 
   if (yy_top_state(yyscanner) == INITIAL
@@ -308,9 +308,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<SPECIAL>({FLO}|{FLODOT}){TOK} |
-<BRACED>({FLO}|{FLODOT}){BTOK} |
-<NESTED>({FLO}|{FLODOT}){NTOK} |
+<SPECIAL>{WS}({FLO}|{FLODOT}){TOK} |
+<BRACED>{WS}({FLO}|{FLODOT}){BTOK} |
+<NESTED>{WS}({FLO}|{FLODOT}){NTOK} |
 <SPECIAL,NESTED,BRACED>{FLO}[.][^.]? {
   val str = string_utf8(yytext);
 
