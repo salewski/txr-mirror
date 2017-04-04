@@ -23411,6 +23411,48 @@ Only instance slots participate in the duplication. Since
 the original structure and copy are of the same structure type,
 they already share static slots.
 
+This is a low-level, "shallow" copying mechanism. If an object design
+calls for a higher level cloning mechanism with deep copying or other
+additional semantics, one can be built on top of
+.codn copy-struct .
+For instance, a structure can have a
+.code copy
+method similar to the following:
+
+.cblk
+  (:method copy (me)
+    (let ((my-copy (copy-struct me)))
+      ;; inform the copy that it has been created
+      ;; by invoking its copied method.
+      my-copy.(copied)
+      my-copy))
+.cble
+
+since this logic is generic, it can be placed in a base
+method. The
+.code copied
+method which it calls is the means by which the new object is notified that it
+is a copy. This method takes on whatever special responsibilities are required
+when a copy is produced, such as registering the object in various necessary
+associations, or performing a deeper copy of some of the objects held
+in the slots.
+
+The
+.code copied
+handler can be implemented at multiple levels of an inheritance hierarchy. The
+initial call to
+.code copied
+from
+.code copy
+will call the most derived override of that method.
+
+A derived method can use the
+.code call-super-method
+to call the corresponding method in the base class.
+
+Thus derived structs can inherit the copy handling logic from base structs, and
+extend it with their own.
+
 .coNP Accessor @ slot
 .synb
 .mets (slot < struct-obj << slot-name )
