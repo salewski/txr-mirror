@@ -43587,9 +43587,11 @@ function or from the
 .code time-usec
 function.
 
-.coNP Function @ time-parse
+.coNP Functions @, time-parse @ time-parse-local and @ time-parse-utc
 .synb
 .mets (time-parse < format << string )
+.mets (time-parse-local < format << string )
+.mets (time-parse-utc < format << string )
 .syne
 .desc
 The
@@ -43620,8 +43622,26 @@ if interpreted in the UTC timezone as by the
 .meta time-utc
 method.
 
-Note: the availability of
-.code time-parse
+The
+.code time-parse-local
+and
+.code time-parse-utc
+functions return an integer time value: the same value
+that would be returned by the
+.code time-local
+and
+.code time-utc
+methods, respectively, when applied to the structure
+object returned by
+.codn time-parse .
+Thus, these equivalences hold:
+
+.cblk
+  (time-parse-local f s)  <-->  (time-parse f s).(time-local)
+  (time-parse-utc f s)  <-->  (time-parse f s).(time-utc)
+.cble
+
+Note: the availability of these three functions
 depends on the availability of
 .codn strptime .
 

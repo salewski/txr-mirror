@@ -10657,17 +10657,23 @@ static struct tm epoch_tm(void)
   return ep;
 }
 
-val time_parse(val format, val string)
+static int strptime_wrap(val string, val format, struct tm *ptms)
 {
-  struct tm tms = epoch_tm();
   const wchar_t *w_str = c_str(string);
   const wchar_t *w_fmt = c_str(format);
   char *str = utf8_dup_to(w_str);
   char *fmt = utf8_dup_to(w_fmt);
-  char *ptr = strptime(str, fmt, &tms);
+  char *ptr = strptime(str, fmt, ptms);
   int ret = ptr != 0;
   free(fmt);
   free(str);
+  return ret;
+}
+
+val time_parse(val format, val string)
+{
+  struct tm tms = epoch_tm();
+  int ret = strptime_wrap(string, format, &tms);
   return ret ? broken_time_struct(&tms) : nil;
 }
 
@@ -10785,6 +10791,26 @@ static val time_parse_meth(val time_struct, val format, val string)
   }
 
   return ret;
+}
+
+val time_parse_local(val format, val string)
+{
+  struct tm tms = epoch_tm();
+  if (!strptime_wrap(string, format, &tms))
+    return nil;
+  return num(mktime(&tms));
+}
+
+val time_parse_utc(val format, val string)
+{
+  struct tm tms = epoch_tm();
+  if (!strptime_wrap(string, format, &tms))
+    return nil;
+#if HAVE_TIMEGM
+  return num(timegm(&tms));
+#else
+  return num(timegm_hack(&tms));
+#endif
 }
 
 #endif

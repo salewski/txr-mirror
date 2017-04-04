@@ -1038,6 +1038,8 @@ val make_time_utc(val year, val month, val day,
                   val isdst);
 #if HAVE_STRPTIME
 val time_parse(val format, val string);
+val time_parse_local(val format, val string);
+val time_parse_utc(val format, val string);
 #endif
 
 void init(mem_t *(*oom_realloc)(mem_t *, size_t), val *stack_bottom);
