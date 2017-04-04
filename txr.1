@@ -27062,7 +27062,10 @@ Secondly, if
 .meta trailing-args
 is a list, but an improper list, then the terminating atom of
 .meta trailing-args
-becomes an ordinary argument. Thus, in all possible cases,
+becomes an individual argument.
+This terminating atom is not split into multiple arguments,
+even if it is a sequence.
+Thus, in all possible cases,
 .code iapply
 treats an extra
 .cod2 non- nil

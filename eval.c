@@ -1106,9 +1106,24 @@ static val apply_frob_args(val args)
   }
 }
 
+static val apply_intrinsic_frob_args(val args)
+{
+  if (!cdr(args)) {
+    return tolist(car(args));
+  } else {
+    list_collect_decl (out, ptail);
+
+    for (; cdr(args); args = cdr(args))
+      ptail = list_collect(ptail, car(args));
+
+    list_collect_nconc(ptail, tolist(car(args)));
+    return out;
+  }
+}
+
 val apply_intrinsic(val fun, val args)
 {
-  return apply(fun, apply_frob_args(z(args)));
+  return apply(fun, apply_intrinsic_frob_args(z(args)));
 }
 
 static val applyv(val fun, struct args *args)
@@ -1129,7 +1144,7 @@ static val iapply(val fun, struct args *args)
   saved_ptail = ptail;
 
   if (args_more(args, index)) {
-    last_arg = args_get(args, &index);
+    last_arg = tolist(args_get(args, &index));
     ptail = list_collect_nconc(ptail, last_arg);
   }
 
