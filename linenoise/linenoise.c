@@ -100,6 +100,7 @@ struct lino_state {
     int ifd;            /* Terminal stdin file descriptor. */
     int ofd;            /* Terminal stdout file descriptor. */
     int save_hist_idx;  /* Jump to history position on entry into edit */
+    FILE *ifs;          /* Input stream, used for non-tty mode */
 
     /* Volatile state pertaining to just one linenoise call */
     char buf[LINENOISE_MAX_DISP];       /* Displayed line bufer. */
@@ -2185,25 +2186,28 @@ char *linenoise(lino_t *ls, const char *prompt)
 {
     int count;
 
-    if (!isatty(ls->ifd)) {
-        int fd = dup(ls->ifd);
-        FILE *fi = (fd > 0) ? fdopen(fd, "r") : 0;
+    if (ls->ifs || !isatty(ls->ifd)) {
+        if (!ls->ifs) {
+            int fd = dup(ls->ifd);
+            FILE *fi = (fd > 0) ? fdopen(fd, "r") : 0;
 
-        if (!fi) {
-            ls->error = lino_error;
-            if (fd > 0)
-                close(fd);
-            return 0;
+            if (!fi) {
+                ls->error = lino_error;
+                if (fd > 0)
+                    close(fd);
+                return 0;
+            }
+
+            ls->ifs = fi;
         }
+
 
         /* Not a tty: read from file / pipe. */
-        if (fgets(ls->data, sizeof ls->data, fi) == NULL) {
-            ls->error = (ferror(fi) ? lino_ioerr : lino_eof);
-            fclose(fi);
+        if (fgets(ls->data, sizeof ls->data, ls->ifs) == NULL) {
+            ls->error = (ferror(ls->ifs) ? lino_ioerr : lino_eof);
             return 0;
         }
 
-        fclose(fi);
         count = strlen(ls->data);
 
         if (count && ls->data[count-1] == '\n')
@@ -2305,6 +2309,8 @@ static void lino_cleanup(lino_t *ls)
     ls->clip = 0;
     free(ls->result);
     ls->result = 0;
+    if (ls->ifs)
+        fclose(ls->ifs);
 }
 
 void lino_free(lino_t *ls)
