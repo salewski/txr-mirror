@@ -336,7 +336,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return NUMBER;
 }
 
-<NESTED,BRACED,QSILIT,QWLIT,QSPECIAL>@{NUM} {
+<NESTED,BRACED,QSILIT,QWLIT>@{NUM} |
+<QSPECIAL>{NUM} {
   val str = string_own(utf8_dup_from(yytext + 1));
 
   if (yy_top_state(yyscanner) == INITIAL
@@ -347,7 +348,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return METANUM;
 }
 
-<NESTED,QSILIT,QWLIT,QSPECIAL>@{XNUM} {
+<NESTED,QSILIT,QWLIT>@{XNUM} |
+<QSPECIAL>{XNUM} {
   val str = string_own(utf8_dup_from(yytext + 3));
 
   if (yy_top_state(yyscanner) == INITIAL
@@ -358,7 +360,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return METANUM;
 }
 
-<NESTED,QSILIT,QWLIT,QSPECIAL>@{ONUM} {
+<NESTED,QSILIT,QWLIT>@{ONUM} |
+<QSPECIAL>{ONUM} {
   val str = string_own(utf8_dup_from(yytext + 3));
 
   if (yy_top_state(yyscanner) == INITIAL
