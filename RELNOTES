@@ -1,3 +1,41 @@
+                                    TXR 174
+                                   2017-04-04
+
+
+  Features
+
+  - TXR Pattern Language:
+    - The special phrase forms like @(collect) and @(end) are now integrated
+      with the package system.
+  - opip macro:
+      - forms like .a.b or .(meth x y) occurring in opip
+        now evaluate to functional pipeline terms as expected.
+  - Lexical syntax:
+    - Dubious run-on lexical forms like 0.1.2 and .1.1 now diagnosed.
+  - Time:
+    - New functions time-parse-local and time-parse-utc.
+  - Listener:
+    - The -n option now has the additional effect of forcing the listener
+      into plain input mode (no editing, history, or completion) even if
+      the input device is a TTY.
+
+  Bugs
+
+  - Fixed broken support for building in separate directory.
+  - Floating-point constant regression: .123 being misinterpreted as a slot
+    access if preceded by whitespace.
+  - Fixed rejection of 0.1..0.2 range syntax with floating-point operands.
+  - Fixed a...b syntax error. This is a .. .b.
+  - Fixed apply and iapply broken behavior: not splitting non-list
+    sequences into individual arguments, like documentation says.
+  - Linenoise issue fixed: when reading from a non-tty mode without
+    editing, the continuous instantiation of a new buffere stream
+    was causing input data to be discarded.
+  - Scanner issue fixed: `@@1abc` was being interpreted as `@{@1}abc`
+    rather than `@{@1abc}`.
+
+
+
                                     TXR 173
                                    2017-03-25
 
