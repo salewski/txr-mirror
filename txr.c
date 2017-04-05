@@ -125,6 +125,8 @@ static void help(void)
 "-d                     Debugger mode.\n"
 "-n                     Noninteractive input mode for standard input stream,\n"
 "                       even if its connected to a terminal device.\n"
+"                       Also, forces the interactive listener into\n"
+"                       'plain mode' without editing features.\n"
 "-a N                   Generate array variables up to N dimensions.\n"
 "                       N is a decimal integer. The default value is 1.\n"
 "                       Additional dimensions beyond N are fudged\n"

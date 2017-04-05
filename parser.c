@@ -55,6 +55,7 @@
 #include "cadr.h"
 #include "struct.h"
 #include "parser.h"
+#include "txr.h"
 #if HAVE_TERMIOS
 #include "linenoise/linenoise.h"
 #endif
@@ -985,6 +986,8 @@ val repl(val bindings, val in_stream, val out_stream)
 
   if (histfile_u8)
     lino_hist_load(ls, histfile_u8);
+
+  lino_set_noninteractive(ls, opt_noninteractive);
 
   while (!done) {
     val prompt = format(nil, lit("~d> "), counter, nao);
