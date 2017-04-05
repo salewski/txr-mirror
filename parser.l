@@ -428,123 +428,123 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <SPECIAL>\({WS}({NT0}?:)?all{WS}\) {
-  return directive_tok(yyscanner, ALL, 0);
+  return directive_tok(yyg, ALL, 0);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?some/{ID_END} {
-  return directive_tok(yyscanner, SOME, NESTED);
+  return directive_tok(yyg, SOME, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?none{WS}\) {
-  return directive_tok(yyscanner, NONE, 0);
+  return directive_tok(yyg, NONE, 0);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?maybe{WS}\) {
-  return directive_tok(yyscanner, MAYBE, 0);
+  return directive_tok(yyg, MAYBE, 0);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?cases{WS}\) {
-  return directive_tok(yyscanner, CASES, 0);
+  return directive_tok(yyg, CASES, 0);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?block/{ID_END} {
-  return directive_tok(yyscanner, BLOCK, NESTED);
+  return directive_tok(yyg, BLOCK, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?choose/{ID_END} {
-  return directive_tok(yyscanner, CHOOSE, NESTED);
+  return directive_tok(yyg, CHOOSE, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?gather/{ID_END} {
-  return directive_tok(yyscanner, GATHER, NESTED);
+  return directive_tok(yyg, GATHER, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?and{WS}\) {
-  return directive_tok(yyscanner, AND, 0);
+  return directive_tok(yyg, AND, 0);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?or{WS}\) {
-  return directive_tok(yyscanner, OR, 0);
+  return directive_tok(yyg, OR, 0);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?end{WS}\) {
-  return directive_tok(yyscanner, END, 0);
+  return directive_tok(yyg, END, 0);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?collect/{ID_END} {
-  return directive_tok(yyscanner, COLLECT, NESTED);
+  return directive_tok(yyg, COLLECT, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?coll/{ID_END} {
-  return directive_tok(yyscanner, COLL, NESTED);
+  return directive_tok(yyg, COLL, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?until/{ID_END} {
-  return directive_tok(yyscanner, UNTIL, NESTED);
+  return directive_tok(yyg, UNTIL, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?output/{ID_END}  {
-  return directive_tok(yyscanner, OUTPUT, NESTED);
+  return directive_tok(yyg, OUTPUT, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?repeat/{ID_END}  {
-  return directive_tok(yyscanner, REPEAT, NESTED);
+  return directive_tok(yyg, REPEAT, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?rep/{ID_END} {
-  return directive_tok(yyscanner, REP, NESTED);
+  return directive_tok(yyg, REP, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?single{WS}\) {
-  return directive_tok(yyscanner, SINGLE, 0);
+  return directive_tok(yyg, SINGLE, 0);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?first{WS}\) {
-  return directive_tok(yyscanner, FIRST, 0);
+  return directive_tok(yyg, FIRST, 0);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?last/{ID_END} {
-  return directive_tok(yyscanner, LAST, NESTED);
+  return directive_tok(yyg, LAST, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?empty{WS}\) {
-  return directive_tok(yyscanner, EMPTY, 0);
+  return directive_tok(yyg, EMPTY, 0);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?mod/{ID_END} {
-  return directive_tok(yyscanner, MOD, NESTED);
+  return directive_tok(yyg, MOD, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?modlast/{ID_END} {
-  return directive_tok(yyscanner, MODLAST, NESTED);
+  return directive_tok(yyg, MODLAST, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?define/{ID_END} {
-  return directive_tok(yyscanner, DEFINE, NESTED);
+  return directive_tok(yyg, DEFINE, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?try{WS}\) {
-  return directive_tok(yyscanner, TRY, 0);
+  return directive_tok(yyg, TRY, 0);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?catch/{ID_END} {
-  return directive_tok(yyscanner, CATCH, NESTED);
+  return directive_tok(yyg, CATCH, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?finally{WS}\) {
-  return directive_tok(yyscanner, FINALLY, 0);
+  return directive_tok(yyg, FINALLY, 0);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?if/{ID_END} {
-  return directive_tok(yyscanner, IF, NESTED);
+  return directive_tok(yyg, IF, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?elif/{ID_END} {
-  return directive_tok(yyscanner, ELIF, NESTED);
+  return directive_tok(yyg, ELIF, NESTED);
 }
 
 <SPECIAL>\({WS}({NT0}?:)?else{WS}\) {
-  return directive_tok(yyscanner, ELSE, 0);
+  return directive_tok(yyg, ELSE, 0);
 }
 
 <SPECIAL,QSPECIAL>[{] {
