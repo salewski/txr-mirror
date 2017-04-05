@@ -124,6 +124,7 @@ struct lino_state {
     int need_refresh;   /* Need refresh. */
     int selmode;        /* Visual selection being made. */
     int selinclusive;   /* Selections include character right of endpoint. */
+    int noninteractive; /* No character editing, even if input is tty. */
     struct lino_undo *undo_stack;
     lino_error_t error; /* Most recent error. */
 };
@@ -172,6 +173,16 @@ void lino_set_selinclusive(lino_t *ls, int si) {
 int lino_get_selinculsive(lino_t *ls)
 {
     return ls->selinclusive;
+}
+
+void lino_set_noninteractive(lino_t *ls, int ni)
+{
+    ls->noninteractive = ni;
+}
+
+int lino_get_noninteractive(lino_t *ls)
+{
+    return ls->noninteractive;
 }
 
 void lino_set_atom_cb(lino_t *l, lino_atom_cb_t *cb, void *ctx)
@@ -2186,7 +2197,7 @@ char *linenoise(lino_t *ls, const char *prompt)
 {
     int count;
 
-    if (ls->ifs || !isatty(ls->ifd)) {
+    if (ls->ifs || ls->noninteractive || !isatty(ls->ifd)) {
         if (!ls->ifs) {
             int fd = dup(ls->ifd);
             FILE *fi = (fd > 0) ? fdopen(fd, "r") : 0;
