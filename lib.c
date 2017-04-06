@@ -9816,6 +9816,37 @@ static void out_lazy_str(val lstr, val out)
   put_char(chr('"'), out);
 }
 
+static void out_quasi_str_sym(val name, val mods, val rem_args,
+                              val out, struct strm_ctx *ctx)
+{
+  val next_elem = car(rem_args);
+  val next_elem_char = and3(next_elem && !mods, stringp(next_elem),
+                            chr_str(next_elem, zero));
+  val osstrm = make_string_output_stream();
+  val namestr = (obj_print_impl(name, osstrm, nil, ctx),
+                 get_string_from_stream(osstrm));
+  int need_brace = mods ||
+    (next_elem_char &&
+     (chr_isalpha(next_elem_char) ||
+      chr_isdigit(next_elem_char) ||
+      next_elem_char == chr('_'))) ||
+    (span_str(namestr, lit("0123456789_"
+                          "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                          "abcdefghijklmnopqrstuvwxyz"))
+     != length(namestr));
+  put_char(chr('@'), out);
+  if (need_brace)
+    put_char(chr('{'), out);
+  obj_print_impl(namestr, out, t, ctx);
+  while (mods) {
+    put_char(chr(' '), out);
+    obj_print_impl(car(mods), out, nil, ctx);
+    mods = cdr(mods);
+  }
+  if (need_brace)
+    put_char(chr('}'), out);
+}
+
 static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
 {
   val iter, next;
@@ -9831,38 +9862,14 @@ static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
       val sym = car(elem);
       if (sym == var_s)
       {
-        val next_elem = car(next);
-        val name = second(elem);
-        val mods = third(elem);
-        val next_elem_char = and3(next_elem && !mods, stringp(next_elem),
-                                  chr_str(next_elem, zero));
-        val osstrm = make_string_output_stream();
-        val namestr = (obj_print_impl(name, osstrm, nil, ctx),
-                       get_string_from_stream(osstrm));
-        int need_brace = mods ||
-          (next_elem_char &&
-           (chr_isalpha(next_elem_char) ||
-            chr_isdigit(next_elem_char) ||
-            next_elem_char == chr('_'))) ||
-          (span_str(namestr, lit("0123456789_"
-                                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                                "abcdefghijklmnopqrstuvwxyz"))
-           != length(namestr));
-        put_char(chr('@'), out);
-        if (need_brace)
-          put_char(chr('{'), out);
-        obj_print_impl(namestr, out, t, ctx);
-        while (mods) {
-          put_char(chr(' '), out);
-          obj_print_impl(car(mods), out, nil, ctx);
-          mods = cdr(mods);
-        }
-        if (need_brace)
-          put_char(chr('}'), out);
+        out_quasi_str_sym(second(elem), third(elem), next,
+                          out, ctx);
       } else {
         put_char(chr('@'), out);
         obj_print_impl(elem, out, nil, ctx);
       }
+    } else if (symbolp(elem)) {
+      out_quasi_str_sym(elem, nil, next, out, ctx);
     } else {
       obj_print_impl(elem, out, nil, ctx);
     }
