@@ -53367,6 +53367,23 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 174
+A value of 174 or lower restores a previous behavior of variable substitution
+in the
+.code output
+directive and in quasiliterals in both the \*(TX pattern language and \*(TL.
+The behavior in question is the evaluation of the element indexing or
+range selection modifier, exemplified by
+.codn "@{a [2]}" .
+The previous behavior was that if the variable is of any type other
+than list, it is converted to a string (unless it already is one).
+The indexing then applies to the string. If it is a list then the
+indexing or range selection applies to the original list value,
+prior to conversion to text. The current behavior is that indexing
+and range selection is applied to the original value if that value
+is any sequence type which satisfies the
+.code seqp
+function, otherwise to the string representation.
 .IP 172
 A value of 172 or lower restores a behavior of the \*(TX pattern
 matching language when matching a variable followed by a directive, such as

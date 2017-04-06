@@ -1631,19 +1631,26 @@ static val tx_subst_vars(val spec, val bindings, val filter)
           val modifiers = third(elem);
           val str = txeval(spec, expr, bindings);
 
-          /* If the object is a list, we let format_field deal with the
+          /* If the object is a sequence, we let format_field deal with the
              conversion to text, because the modifiers influence how
              it is done. */
-          if (!stringp(str) && !listp(str))
-            str = tostringp(str);
+          str = if3(stringp(str),
+                    str,
+                    if3(if3(opt_compat && opt_compat <= 174,
+                            listp(str), seqp(str)),
+                        str,
+                        tostringp(str)));
 
           if (modifiers) {
             spec = cons(format_field(str, modifiers, filter,
                                      curry_123_2(func_n3(txeval), spec, bindings)),
                         rest(spec));
           } else {
-            if (listp(str))
-              str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
+            if (!stringp(str))
+              str = if3(if3(opt_compat && opt_compat <= 174,
+                            listp(str), seqp(str)),
+                        cat_str(mapcar(func_n1(tostringp), str), lit(" ")),
+                        str);
 
             spec = cons(filter_string_tree(filter, str), rest(spec));
           }

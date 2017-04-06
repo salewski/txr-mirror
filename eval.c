@@ -2528,10 +2528,11 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
     }
   }
 
-  if (listp(obj))
-    str = cat_str(mapcar(func_n1(tostringp), obj), sep);
-  else
-    str = if3(stringp(obj), obj, tostringp(obj));
+  str = if3(stringp(obj),
+            obj,
+            if3(if3(opt_compat && opt_compat <= 174, listp(obj), seqp(obj)),
+                cat_str(mapcar(func_n1(tostringp), obj), sep),
+                tostringp(obj)));
 
   {
     val filter_sym = getplist(plist, filter_k);
@@ -2587,19 +2588,27 @@ val subst_vars(val forms, val env, val filter)
         val modifiers = third(form);
         val str = eval(expr, env, form);
 
-        /* If the object is a list, we let format_field deal with the
+        /* If the object is a sequence, we let format_field deal with the
            conversion to text, because the modifiers influence how
            it is done. */
-        if (!stringp(str) && !listp(str))
-          str = tostringp(str);
+        str = if3(stringp(str),
+                  str,
+                  if3(if3(opt_compat && opt_compat <= 174,
+                          listp(str), seqp(str)),
+                      str,
+                      tostringp(str)));
 
         if (modifiers) {
           forms = cons(format_field(str, modifiers, filter,
                                     curry_123_1(func_n3(eval), env, form)),
                        rest(forms));
         } else {
-          if (listp(str))
-            str = cat_str(mapcar(func_n1(tostringp), str), lit(" "));
+          if (!stringp(str))
+            str = if3(if3(opt_compat && opt_compat <= 174,
+                          listp(str), seqp(str)),
+                      cat_str(mapcar(func_n1(tostringp), str), lit(" ")),
+                      str);
+
           forms = cons(filter_string_tree(filter, str), rest(forms));
         }
 
