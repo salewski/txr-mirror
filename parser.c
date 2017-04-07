@@ -948,6 +948,8 @@ val repl(val bindings, val in_stream, val out_stream)
   char *prompt_u8 = 0;
   val quit_k = intern(lit("quit"), keyword_package);
   val read_k = intern(lit("read"), keyword_package);
+  val prompt_k = intern(lit("prompt"), keyword_package);
+  val p_k = intern(lit("p"), keyword_package);
   val counter_sym = intern(lit("*n"), user_package);
   val var_counter_sym = intern(lit("*v"), user_package);
   val result_hash_sym = intern(lit("*r"), user_package);
@@ -1051,6 +1053,12 @@ val repl(val bindings, val in_stream, val out_stream)
       val form = lisp_parse(line, out_stream, colon_k, name, colon_k);
       if (form == quit_k) {
         done = t;
+      } else if (form == prompt_k) {
+        pprinl(prompt, out_stream);
+        counter = prev_counter;
+      } else if (form == p_k) {
+        pprinl(prev_counter, out_stream);
+        counter = prev_counter;
       } else {
         val value = if3(form != read_k,
                         eval_intrinsic(form, nil),

@@ -52668,6 +52668,40 @@ command in GNU Bash.
 When \*(TX is resumed, the interactive listener will re-display the edited
 line and restore the previous cursor position.
 
+.SS* Print the Prompt
+
+The
+.code :print
+command prints the current prompt, followed by a newline, without
+incrementing the prompt number. The
+.code :p
+command prints just the current prompt number, followed by a newline,
+without incrementing the number.
+
+These comments are useful in plain mode, in which no prompts are
+printed. See Plain Mode below.
+
+.SS* Plain Mode
+
+When the input device isn't an interactive terminal, or if the
+.code -n
+or
+.code --noninteractive
+command line operations are used when invoking \*(TX,
+the listener operates in
+.IR "plain mode" .
+It reads input without providing any editing features: no completion,
+history recall, selection, or copy and paste.  Only the line editing
+features provided by the operating system are available.
+No prompts appear; however, there is still an incrementing counter,
+and the numbered variables
+.codn *1 ,
+.codn *2 ,
+.code ...
+for accessing evaluation results are established.
+Lines are still entered into the history, and the interactive profile
+is still processed, as usual.
+
 .SS* Interactive Profile File
 
 When the listener starts up, it looks for file called
