@@ -136,8 +136,9 @@ INLINE val expand_form_ver(val form, int ver)
 %type <val> if_clause elif_clauses_opt else_clause_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers vector hash struct range
-%type <val> list exprs exprs_opt n_exprs r_exprs i_expr i_dot_expr
+%type <val> exprs exprs_opt n_exprs r_exprs i_expr i_dot_expr
 %type <val> n_expr n_exprs_opt n_dot_expr
+%type <val> list dwim meta compound
 %type <val> out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
 %type <val> o_elems_opt o_elems o_elem o_var q_var rep_elem rep_parts_opt
@@ -710,7 +711,7 @@ o_elem : TEXT                   { $$ = string_own($1);
        | SPACE                  { $$ = string_own($1);
                                   rl($$, num(parser->lineno)); }
        | o_var                  { $$ = $1; }
-       | list                   { $$ = rlcp(list(expr_s,
+       | compound               { $$ = rlcp(list(expr_s,
                                                  expand($1, nil), nao), $1); }
        | rep_elem               { $$ = $1; }
        ;
@@ -782,7 +783,7 @@ var_op : '*'                    { $$ = list(t, nao); }
 modifiers : NUMBER              { $$ = cons($1, nil); }
           | regex               { $$ = cons($1, nil);
                                   rlcp($$, $1); }
-          | list                { $$ = rlcp(cons(expand_meta($1, nil),
+          | compound            { $$ = rlcp(cons(expand_meta($1, nil),
                                                  nil), $1); }
           ;
 
@@ -849,27 +850,36 @@ list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
                                     $$ = $3;
                                   else
                                     $$ = rlcp(cons(ur, cdr($3)), ur); }
-     | '[' '.' n_exprs ']'      { val a = car($3);
-                                  val ur = uref_helper(parser, a);
-                                  $$ = rlcp_tree(cons(dwim_s,
-                                                      cons(ur, cdr($3))), ur); }
      | '(' ')'                  { $$ = nil; }
      | '(' LAMBDOT n_expr ')'   { $$ = $3; }
      | '(' CONSDOT n_expr ')'   { $$ = $3; }
-     | '[' n_exprs ']'          { $$ = rl(cons(dwim_s, $2), num($1)); }
-     | '[' ']'                  { $$ = rl(cons(dwim_s, nil), num($1)); }
-     | '@' n_expr               { if (consp($2))
+     | '(' error                { $$ = nil;
+                                  yybadtok(yychar, lit("expression")); }
+     ;
+
+meta : '@' n_expr               { if (consp($2))
                                     $$ = rl(cons(expr_s, cons($2, nil)), num($1));
                                   else
                                     $$ = rl(cons(var_s, cons($2, nil)),
                                             num($1)); }
-     | '(' error                { $$ = nil;
-                                  yybadtok(yychar, lit("expression")); }
-     | '[' error                { $$ = nil;
-                                  yybadtok(yychar, lit("DWIM expression")); }
      | '@' error                { $$ = nil;
                                   yybadtok(yychar, lit("meta expression")); }
      ;
+
+dwim : '[' '.' n_exprs ']'      { val a = car($3);
+                                  val ur = uref_helper(parser, a);
+                                  $$ = rlcp_tree(cons(dwim_s,
+                                                      cons(ur, cdr($3))), ur); }
+     | '[' n_exprs ']'          { $$ = rl(cons(dwim_s, $2), num($1)); }
+     | '[' ']'                  { $$ = rl(cons(dwim_s, nil), num($1)); }
+     | '[' error                { $$ = nil;
+                                  yybadtok(yychar, lit("DWIM expression")); }
+     ;
+
+compound : list
+         | dwim
+         | meta
+         ;
 
 exprs : n_exprs                 { $$ = rlcp(expand_meta($1, nil), $1); }
       ;
@@ -932,7 +942,7 @@ i_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | METANUM                { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(parser->lineno)); }
        | NUMBER                 { $$ = $1; }
-       | list                   { $$ = $1; }
+       | compound               { $$ = $1; }
        | vector                 { $$ = $1; }
        | hash                   { $$ = $1; }
        | struct                 { $$ = $1; }
@@ -964,7 +974,7 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | METANUM                { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(parser->lineno)); }
        | NUMBER                 { $$ = $1; }
-       | list                   { $$ = $1; }
+       | compound               { $$ = $1; }
        | vector                 { $$ = $1; }
        | hash                   { $$ = $1; }
        | struct                 { $$ = $1; }
