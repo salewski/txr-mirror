@@ -92,7 +92,7 @@ val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 val atime_k, mtime_k, ctime_k;
 val dev_s, ino_s, mode_s, nlink_s, uid_s;
 val gid_s, rdev_s, size_s, blksize_s, blocks_s;
-val atime_s, mtime_s, ctime_s;
+val atime_s, mtime_s, ctime_s, path_s;
 
 #if HAVE_PWUID
 val passwd_s, gecos_s, dir_s, shell_s;
@@ -654,7 +654,7 @@ static val stat_to_list(struct stat st)
               nao);
 }
 
-val stat_to_struct(struct stat st)
+val stat_to_struct(struct stat st, val path)
 {
   args_decl(args, ARGS_MIN);
   val strct = make_struct(stat_s, nil, args);
@@ -676,13 +676,15 @@ val stat_to_struct(struct stat st)
   slotset(strct, atime_s, num(st.st_atime));
   slotset(strct, mtime_s, num(st.st_mtime));
   slotset(strct, ctime_s, num(st.st_ctime));
+  if (path)
+    slotset(strct, path_s, path);
 
   return strct;
 }
 #endif
 
 static val stat_impl(val obj, int (*statfn)(val, struct stat *),
-                     val name)
+                     val name, val path)
 {
 #if HAVE_SYS_STAT
   struct stat st;
@@ -693,7 +695,7 @@ static val stat_impl(val obj, int (*statfn)(val, struct stat *),
               name, obj, num(errno), string_utf8(strerror(errno)), nao);
 
   return if3(opt_compat && opt_compat <= 113,
-             stat_to_list(st), stat_to_struct(st));
+             stat_to_list(st), stat_to_struct(st, path));
 #else
   uw_throwf(file_error_s, lit("~a is not implemented"), name, nao);
 #endif
@@ -701,17 +703,17 @@ static val stat_impl(val obj, int (*statfn)(val, struct stat *),
 
 val statp(val path)
 {
-  return stat_impl(path, w_stat, lit("stat"));
+  return stat_impl(path, w_stat, lit("stat"), path);
 }
 
 static val statl(val path)
 {
-  return stat_impl(path, w_lstat, lit("lstat"));
+  return stat_impl(path, w_lstat, lit("lstat"), path);
 }
 
 val statf(val stream)
 {
-  return stat_impl(stream, w_fstat, lit("fstat"));
+  return stat_impl(stream, w_fstat, lit("fstat"), nil);
 }
 
 #if HAVE_SYS_STAT
@@ -1483,6 +1485,7 @@ void sysif_init(void)
   atime_s = intern(lit("atime"), user_package);
   mtime_s = intern(lit("mtime"), user_package);
   ctime_s = intern(lit("ctime"), user_package);
+  path_s = intern(lit("path"), user_package);
 #if HAVE_PWUID
   passwd_s = intern(lit("passwd"), user_package);
   gecos_s = intern(lit("gecos"), user_package);
@@ -1506,7 +1509,7 @@ void sysif_init(void)
   make_struct_type(stat_s, nil, nil,
                    list(dev_s, ino_s, mode_s, nlink_s, uid_s, gid_s,
                         rdev_s, size_s, blksize_s, blocks_s, atime_s,
-                        mtime_s, ctime_s, nao), nil, nil, nil, nil);
+                        mtime_s, ctime_s, path_s, nao), nil, nil, nil, nil);
 #if HAVE_PWUID
   make_struct_type(passwd_s, nil, nil,
                    list(name_s, passwd_s, uid_s, gid_s,

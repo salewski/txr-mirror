@@ -46646,7 +46646,7 @@ as a way of specifying a command to execute.
 .mets (defstruct stat nil
 .mets \ \  dev ino mod nlink uid gid
 .mets \ \  rdev size blksize blocks atime
-.mets \ \  mtime ctime)
+.mets \ \  mtime ctime path)
 .syne
 .desc
 The
@@ -46657,13 +46657,24 @@ by the
 .codn lstat ,
 and
 .code fstat
-functions.  The slots are the direct counterparts of the
+functions.  Except for
+.codn path ,
+the slots are the direct counterparts of the
 members of POSIX C structure
 .codn "struct stat" .
 For instance the slot
 .code dev
 corresponds to
 .codn st_dev .
+The
+.code path
+slot is set by the functions
+.code stat
+and
+.codn lstat .
+Its value is
+.code nil
+when the path is not available.
 
 .coNP Functions @, stat @ lstat and @ fstat
 .synb
@@ -46709,6 +46720,17 @@ The stream must be of a kind from which the
 function can retrieve a file descriptor, otherwise an exception of type
 .code file-error
 is thrown.
+
+The
+.code path
+slot of the returned structure
+holds a copy of their
+.meta path
+argument value.
+In the case of
+.codn fstat ,
+this slot is
+.codn nil .
 
 .coNP Variables @, s-ifmt @, s-iflnk @, s-ifreg @, s-ifblk ... , @ s-ixoth
 .desc

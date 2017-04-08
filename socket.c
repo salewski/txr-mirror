@@ -50,6 +50,7 @@
 #include "args.h"
 #include "struct.h"
 #include "arith.h"
+#include "sysif.h"
 #include "socket.h"
 
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
@@ -76,7 +77,7 @@ struct dgram_stream {
 
 val sockaddr_in_s, sockaddr_in6_s, sockaddr_un_s, addrinfo_s;
 val flags_s, family_s, socktype_s, protocol_s, addr_s, canonname_s;
-val port_s, flow_info_s, scope_id_s, path_s;
+val port_s, flow_info_s, scope_id_s;
 
 static val ipv4_addr_to_num(struct in_addr *src)
 {
@@ -1073,7 +1074,6 @@ void sock_load_init(void)
   port_s = intern(lit("port"), user_package);
   flow_info_s = intern(lit("flow-info"), user_package);
   scope_id_s = intern(lit("scope-id"), user_package);
-  path_s = intern(lit("path"), user_package);
 
 #ifdef HAVE_GETADDRINFO
   reg_fun(intern(lit("getaddrinfo"), user_package), func_n3o(getaddrinfo_wrap, 1));
