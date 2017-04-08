@@ -818,6 +818,8 @@ vector : '#' list               { if (unquotes_occur($2, 0))
                                                    cons($2, nil)), $2);
                                   else
                                     $$ = rlcp(vec_list($2), $2); }
+       | '#' error              { $$ = nil;
+                                  yybadtok(yychar, lit("unassigned/reserved # notation")); }
        ;
 
 hash : HASH_H list              { if (unquotes_occur($2, 0))
@@ -826,6 +828,8 @@ hash : HASH_H list              { if (unquotes_occur($2, 0))
                                     $$ = rl(hash_construct(first($2),
                                                              rest($2)),
                                             num($1)); }
+     | HASH_H error              { $$ = nil;
+                                    yybadtok(yychar, lit("hash literal")); }
      ;
 
 struct : HASH_S list            { if (unquotes_occur($2, 0))
@@ -835,13 +839,17 @@ struct : HASH_S list            { if (unquotes_occur($2, 0))
                                   { val strct = make_struct_lit(first($2),
                                                                 rest($2));
                                     $$ = rl(strct, num($1)); } }
+       | HASH_S error           { $$ = nil;
+                                    yybadtok(yychar, lit("struct literal")); }
        ;
 
 range : HASH_R list             { if (length($2) != two)
                                     yyerr("range literal needs two elements");
                                   { val range = rcons(first($2), second($2));
                                     $$ = rl(range, num($1)); } }
-       ;
+      | HASH_R error            { $$ = nil;
+                                  yybadtok(yychar, lit("range literal")); }
+      ;
 
 list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' '.' n_exprs ')'      { val a = car($3);
