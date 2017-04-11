@@ -4760,6 +4760,12 @@ static void syms_init(void)
   data_s = intern(lit("data"), user_package);
   fuzz_s = intern(lit("fuzz"), user_package);
   counter_k = intern(lit("counter"), keyword_package);
+
+  /* These symbols must exist when TXR code is parsed
+   * in the context of an alternative package, rather than usr.
+   */
+  intern(lit("end"), user_package);
+  intern(lit("single"), user_package);
 }
 
 static void dir_tables_init(void)
