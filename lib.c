@@ -10341,12 +10341,16 @@ val obj_print(val obj, val out, val pretty)
   uw_simple_catch_begin;
 
   if (ctx) {
-    ctx->obj_hash_prev = ctx->obj_hash;
-    ctx->obj_hash = make_hash(nil, nil, nil);
-    populate_obj_hash(obj, ctx);
-    obj_hash_merge(ctx->obj_hash_prev, ctx->obj_hash);
-    ctx->obj_hash = ctx->obj_hash_prev;
-    ctx->obj_hash_prev = nil;
+    if (cdr(lookup_var(nil, print_circle_s))) {
+      ctx->obj_hash_prev = ctx->obj_hash;
+      ctx->obj_hash = make_hash(nil, nil, nil);
+      populate_obj_hash(obj, ctx);
+      obj_hash_merge(ctx->obj_hash_prev, ctx->obj_hash);
+      ctx->obj_hash = ctx->obj_hash_prev;
+      ctx->obj_hash_prev = nil;
+    } else {
+      ctx = 0;
+    }
   } else {
     if (print_circle_s && cdr(lookup_var(nil, print_circle_s))) {
       ctx = &ctx_struct;
