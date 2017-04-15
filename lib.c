@@ -4940,6 +4940,27 @@ val package_foreign_symbols(val package_in)
   return out;
 }
 
+static void prot_sym_check(val func, val symname, val package)
+{
+  extern val *protected_sym[];
+  val **iter = protected_sym;
+
+  if (package == user_package ||
+      package == system_package ||
+      package == keyword_package)
+  {
+    val sym = gethash(package->pk.symhash, symname);
+
+    for (; sym && *iter; iter++) {
+      if (**iter == sym)
+        uw_throwf(error_s,
+                  lit("~a: cannot remove built-in symbol ~s "
+                      "from ~a package"),
+                  func, sym, package_name(package), nao);
+    }
+  }
+}
+
 val use_sym(val symbol, val package_in)
 {
   val self = lit("use-sym");
@@ -4953,6 +4974,7 @@ val use_sym(val symbol, val package_in)
     if (found && symbol_package(existing) == package) {
       if (existing == nil)
         uw_throwf(error_s, lit("~a: cannot hide ~s"), self, existing, nao);
+      prot_sym_check(self, name, package);
       sethash(package->pk.hidhash, name, existing);
       existing->s.package = nil;
     }
@@ -5123,11 +5145,14 @@ val intern(val str, val package_in)
 
 val unintern(val symbol, val package_in)
 {
-  val package = get_package(lit("unintern"), package_in, t);
+  val unint = lit("unintern");
+  val package = get_package(unint, package_in, t);
   val name = symbol_name(symbol);
   val found_visible, found_hidden;
   val visible = gethash_f(package->pk.symhash, name, mkcloc(found_visible));
   val hidden = gethash_f(package->pk.hidhash, name, mkcloc(found_hidden));
+
+  prot_sym_check(unint, name, package);
 
   if (!found_visible || visible != symbol) {
     if (found_hidden && hidden == symbol) {
@@ -5158,11 +5183,15 @@ val unintern(val symbol, val package_in)
 
 val rehome_sym(val sym, val package_in)
 {
-  val package = get_package(lit("rehome-sym"), package_in, t);
+  val self = lit("rehome-sym");
+  val package = get_package(self, package_in, t);
   val name = symbol_name(sym);
 
   if (!sym)
     uw_throwf(error_s, lit("rehome-sym: cannot rehome ~s"), sym, nao);
+
+  prot_sym_check(self, name, sym->s.package);
+  prot_sym_check(self, name, package);
 
   if (sym->s.package) {
     val name = symbol_name(sym);

@@ -49,7 +49,7 @@ EXTRA_OBJS-y :=
 
 OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
 OBJS += arith.o hash.o utf8.o filter.o eval.o parser.o rand.o combi.o sysif.o
-OBJS += args.o lisplib.o cadr.o struct.o jmp.o
+OBJS += args.o lisplib.o cadr.o struct.o jmp.o protsym.o
 OBJS-$(debug_support) += debug.o
 OBJS-$(have_syslog) += syslog.o
 OBJS-$(have_glob) += glob.o
