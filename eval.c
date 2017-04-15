@@ -1947,11 +1947,11 @@ static void builtin_reject_test(val op, val sym, val form)
     } else if (opt_compat && opt_compat <= 107) {
       /* empty */
     } else if (builtin_kind) {
-      eval_error(form, lit("~s: cannot bind ~s, which is a built-in ~s"),
-                 op, sym, builtin_kind, nao);
+      eval_warn(form, lit("~s: redefining ~s, which is a built-in ~s"),
+                op, sym, builtin_kind, nao);
     } else if (is_operator) {
-      eval_error(form, lit("~s: cannot bind ~s, which is a built-in operator"),
-                 op, sym, nao);
+      eval_warn(form, lit("~s: redefining ~s, which is a built-in operator"),
+                op, sym, nao);
     }
 }
 
