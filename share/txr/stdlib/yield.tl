@@ -86,5 +86,5 @@
 
 (defmacro suspend (:form form name var . body)
   ^(sys:capture-cont ',name (lambda (,var)
-                              (sys:abscond-from ,name ,*body))
+                              (sys:abscond-from ,name (progn ,*body)))
                      ',form))
