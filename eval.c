@@ -4050,15 +4050,20 @@ static val do_expand(val form, val menv)
       } else {
         return rlcp(cons(sym, cons(funcs_ex, body_ex)), form);
       }
-    } else if (sym == block_s || sym == return_from_s ||
-               sym == sys_abscond_from_s || sym == block_star_s)
-    {
+    } else if (sym == block_s) {
       val name = second(form);
       val body = rest(rest(form));
       val body_ex = expand_progn(body, menv);
       if (body == body_ex)
         return form;
       return rlcp(cons(sym, cons(name, body_ex)), form);
+    } else if (sym == return_from_s || sym == sys_abscond_from_s) {
+      val name = second(form);
+      val ret = third(form);
+      val ret_ex = expand(ret, menv);
+      if (ret == ret_ex)
+        return form;
+      return rlcp(list(sym, name, ret_ex, nao), form);
     } else if (sym == cond_s) {
       val pairs = rest(form);
       val pairs_ex = expand_cond_pairs(pairs, menv);
