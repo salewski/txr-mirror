@@ -107,6 +107,44 @@ static unsigned long hash_c_str(const wchar_t *str)
   return h;
 }
 
+static unsigned long hash_buf(const mem_t *ptr, cnum size)
+{
+  int count = hash_str_limit;
+  unsigned long h = 0;
+
+  for (; size >= 4 && count--; size -= 4, ptr += 4) {
+    unsigned long el = (((unsigned long) ptr[0]) << 24 |
+                        ((unsigned long) ptr[1]) << 16 |
+                        ((unsigned long) ptr[2]) << 8 |
+                        ((unsigned long) ptr[3]));
+    unsigned long g;
+    h = (h << 4) + el;
+    g = h & 0x7C000000;
+    h = h ^ (g >> 26) ^ g;
+    ptr += 4;
+  }
+
+  if (count) {
+    unsigned long el = 0;
+    unsigned long g;
+    switch (size) {
+    case 0:
+      break;
+    case 3:
+      el = *ptr++;
+    case 2:
+      el = el << 8 | *ptr++;
+    case 1:
+      el = el << 8 | *ptr++;
+      h = (h << 4) + el;
+      g = h & 0x7C000000;
+      h = h ^ (g >> 26) ^ g;
+      ptr += 4;
+    }
+  }
+  return h;
+}
+
 static cnum hash_double(double n)
 {
 #ifdef HAVE_UINTPTR_T
@@ -191,6 +229,8 @@ cnum equal_hash(val obj, int *count)
   case RNG:
     return (equal_hash(obj->rn.from, count)
             + 32 * (equal_hash(obj->rn.to, count) & (NUM_MAX / 16))) & NUM_MAX;
+  case BUF:
+    return hash_buf(obj->b.data, c_num(obj->b.len));
   }
 
   internal_error("unhandled case in equal function");

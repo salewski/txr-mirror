@@ -85,7 +85,7 @@ val package_s, system_package_s, keyword_package_s, user_package_s;
 val null_s, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 val lit_s, stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 val atom_s, integer_s, number_s, sequence_s, string_s;
-val env_s, bignum_s, float_s, range_s, rcons_s;
+val env_s, bignum_s, float_s, range_s, rcons_s, buf_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s;
 val quote_s, qquote_s, unquote_s, splice_s;
@@ -172,6 +172,7 @@ static val code2type(int code)
   case BGNUM: return bignum_s;
   case FLNUM: return float_s;
   case RNG: return range_s;
+  case BUF: return buf_s;
   }
   return nil;
 }
@@ -2493,6 +2494,14 @@ val equal(val left, val right)
           equal(to(left), to(right)))
         return t;
       return nil;
+    }
+    break;
+  case BUF:
+    if (type(right) == BUF) {
+      cnum ll = c_num(left->b.len);
+      cnum rl = c_num(right->b.len);
+      if (ll == rl && memcmp(left->b.data, right->b.data, ll) == 0)
+        return t;
     }
     break;
   case COBJ:
@@ -9647,6 +9656,7 @@ static void obj_init(void)
   float_s = intern(lit("float"), user_package);
   range_s = intern(lit("range"), user_package);
   rcons_s = intern(lit("rcons"), user_package);
+  buf_s = intern(lit("buf"), user_package);
   var_s = intern(lit("var"), system_package);
   expr_s = intern(lit("expr"), system_package);
   regex_s = intern(lit("regex"), user_package);

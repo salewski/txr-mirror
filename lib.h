@@ -59,7 +59,7 @@ typedef int_ptr_t cnum;
 typedef enum type {
   NIL = TAG_PTR, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
   STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV,
-  BGNUM, FLNUM, RNG, MAXTYPE = RNG
+  BGNUM, FLNUM, RNG, BUF, MAXTYPE = BUF
   /* If extending, check TYPE_SHIFT */
 } type_t;
 
@@ -279,6 +279,13 @@ struct range {
   val from, to;
 };
 
+struct buf {
+  obj_common;
+  mem_t *data;
+  val len;
+  val size;
+};
+
 union obj {
   struct any t;
   struct cons c;
@@ -295,6 +302,7 @@ union obj {
   struct bignum bn;
   struct flonum fl;
   struct range rn;
+  struct buf b;
 };
 
 #if CONFIG_GEN_GC
@@ -426,7 +434,7 @@ extern val null_s, t, cons_s, str_s, chr_s, fixnum_sl;
 extern val sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 extern val atom_s, integer_s, number_s, sequence_s, string_s;
-extern val env_s, bignum_s, float_s, range_s, rcons_s;
+extern val env_s, bignum_s, float_s, range_s, rcons_s, buf_s;
 extern val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 extern val nongreedy_s;
 extern val quote_s, qquote_s, unquote_s, splice_s;

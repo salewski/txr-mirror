@@ -244,7 +244,7 @@ val make_obj(void)
 
 static void finalize(val obj)
 {
-  switch (obj->t.type) {
+  switch (convert(type_t, obj->t.type)) {
   case NIL:
   case CONS:
   case CHR:
@@ -279,6 +279,12 @@ static void finalize(val obj)
     return;
   case BGNUM:
     mp_clear(mp(obj));
+    return;
+  case BUF:
+    if (obj->b.size) {
+      free(obj->b.data);
+      obj->b.data = 0;
+    }
     return;
   }
 
@@ -395,6 +401,9 @@ tail_call:
   case RNG:
     mark_obj(obj->rn.from);
     mark_obj_tail(obj->rn.to);
+  case BUF:
+    mark_obj(obj->b.len);
+    mark_obj_tail(obj->b.size);
   }
 
   assert (0 && "corrupt type field");
