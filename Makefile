@@ -239,11 +239,15 @@ y.tab.h: y.tab.c
 
 y.tab.c: $(top_srcdir)parser.y
 	$(call ABBREV,YACC)
+	$(V)if [ -e y.tab.h ]; then mv y.tab.h y.tab.h.old ; fi
 	$(V)rm -f y.tab.c
 	$(V)if $(TXR_YACC) -v -d $< ; then                        \
 	  chmod a-w y.tab.c ;                                     \
 	  sed -e '/yyparse/d' < y.tab.h > y.tab.h.tmp &&          \
 	    mv y.tab.h.tmp y.tab.h ;                              \
+	  if cmp -s y.tab.h y.tab.h.old ; then                    \
+	    mv y.tab.h.old y.tab.h ;                              \
+	  fi ;                                                    \
 	else                                                      \
 	  rm y.tab.c ;                                            \
 	  false ;                                                 \
@@ -285,6 +289,7 @@ rebuild: clean repatch $(PROG)
 
 clean: conftest.clean tests.clean
 	rm -f $(PROG)$(EXE) $(PROG)-dbg$(EXE) y.tab.c lex.yy.c y.tab.h y.output
+	rm -f y.tab.h.old
 	rm -f $(PROG)-win$(EXE) $(PROG)-win-dbg$(EXE)
 	rm -rf opt dbg $(EXTRA_OBJS-y)
 
