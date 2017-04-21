@@ -2432,9 +2432,10 @@ val ash(val a, val bits)
   } else {
     switch (type(a)) {
     case NUM:
+      bn = -bn;
       an = c_num(a);
       if (bn <= num_bits)
-        return num_fast(an >> -bn);
+        return num_fast(an >> bn);
       return num_fast(an >> num_bits);
     case BGNUM:
       b = make_bignum();
