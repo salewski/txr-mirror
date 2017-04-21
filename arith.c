@@ -2267,7 +2267,7 @@ static val comp_trunc(val a, val bits)
   cnum an, bn;
   val b;
   const cnum num_mask = (NUM_MAX << 1) | 1;
-  const int num_bits = CHAR_BIT * sizeof (cnum) - 2;
+  const int num_bits = CHAR_BIT * sizeof (cnum) - TAG_SHIFT;
 
   if (!fixnump(bits))
     goto bad2;
@@ -2330,7 +2330,7 @@ val logtrunc(val a, val bits)
   cnum an, bn;
   val b;
   const cnum num_mask = (NUM_MAX << 1) | 1;
-  const int num_bits = CHAR_BIT * sizeof (cnum) - 2;
+  const int num_bits = CHAR_BIT * sizeof (cnum) - TAG_SHIFT;
 
   if (!fixnump(bits))
     goto bad2;
@@ -2397,7 +2397,7 @@ val ash(val a, val bits)
   cnum an, bn;
   val b;
   int hb;
-  const int num_bits = CHAR_BIT * sizeof (cnum) - 2;
+  const int num_bits = CHAR_BIT * sizeof (cnum) - TAG_SHIFT;
 
   if (!fixnump(bits))
     goto bad2;
