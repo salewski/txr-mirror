@@ -239,7 +239,8 @@ UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
-%x      SPECIAL BRACED NESTED REGEX SREGEX STRLIT CHRLIT QSILIT QSPECIAL WLIT QWLIT
+%x      SPECIAL BRACED NESTED REGEX SREGEX STRLIT CHRLIT
+%x      QSILIT QSPECIAL WLIT QWLIT BUFLIT
 
 %%
 
@@ -619,6 +620,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <SPECIAL,QSPECIAL,NESTED,BRACED>#\\ {
   yy_push_state(CHRLIT, yyscanner);
   return HASH_BACKSLASH;
+}
+
+<SPECIAL,QSPECIAL,NESTED,BRACED>#b' {
+  yy_push_state(BUFLIT, yyscanner);
+  return HASH_B_QUOTE;
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>#[/] {
@@ -1011,6 +1017,27 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return LITCHAR;
 }
 
+<BUFLIT>{HEX} {
+  yylval->chr = strtol(yytext, 0, 16);
+  return LITCHAR;
+}
+
+<BUFLIT>' {
+  return '\'';
+}
+
+<BUFLIT>{WS} {
+}
+
+<BUFLIT>{NL} {
+  yyextra->lineno++;
+}
+
+<BUFLIT>. {
+  yyerrorf(yyg, lit("bad character in buffer literal: \\~a"),
+           chr(yytext[0]), nao);
+}
+
 <STRLIT,CHRLIT,QSILIT,WLIT,QWLIT>. {
   yyerrprepf(yyg, lit("non-UTF-8 byte in literal: '\\x~02x'"),
              num(convert(unsigned char, yytext[0])), nao);
@@ -1080,6 +1107,14 @@ void end_of_char(scanner_t *yyg)
 {
   if (YYSTATE != CHRLIT)
     internal_error("end_of_char called in wrong scanner state");
+
+  yy_pop_state(yyg);
+}
+
+void end_of_buflit(scanner_t *yyg)
+{
+  if (YYSTATE != BUFLIT)
+    internal_error("end_of_buflit called in wrong scanner state");
 
   yy_pop_state(yyg);
 }

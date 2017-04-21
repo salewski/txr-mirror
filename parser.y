@@ -55,6 +55,8 @@
 #include "cadr.h"
 #include "debug.h"
 #include "txr.h"
+#include "itypes.h"
+#include "buf.h"
 #include "parser.h"
 
 static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed);
@@ -118,6 +120,7 @@ INLINE val expand_form_ver(val form, int ver)
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY IF
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S HASH_R HASH_SEMI
+%token <lineno> HASH_B_QUOTE
 %token <lineno> WORDS WSPLICE QWORDS QWSPLICE
 %token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E SECRET_ESCAPE_I
 
@@ -145,7 +148,7 @@ INLINE val expand_form_ver(val form, int ver)
 %type <val> regex lisp_regex regexpr regbranch
 %type <val> regterm regtoken regclass regclassterm regrange
 %type <val> strlit chrlit quasilit quasi_items quasi_item litchars wordslit
-%type <val> wordsqlit not_a_clause
+%type <val> wordsqlit buflit buflit_items buflit_item not_a_clause
 %type <chr> regchar
 %type <val> byacc_fool
 %type <lineno> '(' '[' '@'
@@ -154,7 +157,7 @@ INLINE val expand_form_ver(val form, int ver)
 %right SYMTOK '{' '}'
 %right ALL SOME NONE MAYBE CASES CHOOSE AND OR END COLLECT UNTIL COLL
 %right OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE IF ELIF ELSE
-%right SPACE TEXT NUMBER METANUM HASH_N_EQUALS HASH_N_HASH
+%right SPACE TEXT NUMBER METANUM HASH_N_EQUALS HASH_N_HASH HASH_B_QUOTE
 %nonassoc '[' ']' '(' ')'
 %left '-' ',' '\'' '^' SPLICE '@'
 %left '|' '/'
@@ -961,6 +964,7 @@ i_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | quasilit               { $$ = $1; }
        | WORDS wordslit         { $$ = rl($2, num($1)); }
        | QWORDS wordsqlit       { $$ = rl(cons(quasilist_s, $2), num($1)); }
+       | buflit                 { $$ = $1; }
        | '\'' i_dot_expr        { $$ = rl(rlcp(list(quote_s, $2, nao), $2),
                                           num(parser->lineno)); }
        | '^' i_dot_expr         { $$ = rl(rlcp(list(sys_qquote_s, $2, nao), $2),
@@ -993,6 +997,7 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | quasilit               { $$ = $1; }
        | WORDS wordslit         { $$ = rl($2, num($1)); }
        | QWORDS wordsqlit       { $$ = rl(cons(quasilist_s, $2), num($1)); }
+       | buflit                 { $$ = $1; }
        | '\'' n_dot_expr        { $$ = rl(rlcp(list(quote_s, $2, nao), $2),
                                           num(parser->lineno)); }
        | '^' n_dot_expr         { $$ = rl(rlcp(list(sys_qquote_s, $2, nao), $2),
@@ -1209,6 +1214,34 @@ wordsqlit : '`'                  { $$ = nil; }
                                  { val qword = cons(quasi_s, $1);
                                    $$ = rlcp(cons(qword, $3), $1); }
           ;
+
+buflit : HASH_B_QUOTE '\''               { $$ = make_buf(zero, nil, nil); }
+       | HASH_B_QUOTE buflit_items '\''  { val len = length($2);
+                                           val bytes = nreverse($2);
+                                           val buf = make_buf(len, nil, nil);
+                                           cnum i;
+                                           end_of_buflit(scnr);
+
+                                           for (i = 0; i < c_num(len); i++)
+                                           { buf_put_u8(buf, num(i),
+                                                         pop(&bytes)); }
+                                           $$ = buf; }
+       | HASH_B_QUOTE error              { yyerr("unterminated buffer literal");
+                                           end_of_buflit(scnr);
+                                           yyerrok; }
+       ;
+
+buflit_items : buflit_items buflit_item { $$ = cons($2, $1); }
+             | buflit_item              { $$ = cons($1, nil); }
+             ;
+
+buflit_item  : LITCHAR LITCHAR          { $$ = num($1 << 4 | $2); }
+             | LITCHAR error            { $$ = zero;
+                                          yyerr("unpaired digit in buffer literal");
+                                          yyerrok; }
+             ;
+
+
 
 not_a_clause : ALL              { $$ = mkexp(all_s, nil, num(parser->lineno)); }
              | SOME             { $$ = mkexp(some_s, nil, num(parser->lineno)); }
@@ -1770,6 +1803,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case HASH_SEMI:      problem = lit("#;"); break;
   case HASH_N_EQUALS:  problem = lit("#<n>="); break;
   case HASH_N_HASH:    problem = lit("#<n>#"); break;
+  case HASH_B_QUOTE:   problem = lit("#b'"); break;
   case WORDS:   problem = lit("#\""); break;
   case WSPLICE: problem = lit("#*\""); break;
   case QWORDS:         problem = lit("#`"); break;

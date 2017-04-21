@@ -78,6 +78,7 @@ void yyerrorf(scanner_t *scanner, val s, ...);
 void yybadtoken(parser_t *, int tok, val context);
 void end_of_regex(scanner_t *scanner);
 void end_of_char(scanner_t *scanner);
+void end_of_buflit(scanner_t *scanner);
 #ifdef SPACE
 int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner);
 #endif

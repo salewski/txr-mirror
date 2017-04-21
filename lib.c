@@ -67,6 +67,8 @@
 #include "termios.h"
 #include "cadr.h"
 #include "struct.h"
+#include "itypes.h"
+#include "buf.h"
 #include "txr.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -10258,6 +10260,12 @@ dot:
     format(out, if3(pretty, lit("#R(~a ~a)"), lit("#R(~s ~s)")),
            from(obj), to(obj), nao);
     break;
+  case BUF:
+    if (pretty)
+      buf_pprint(obj, out);
+    else
+      buf_print(obj, out);
+    break;
   default:
     format(out, lit("#<garbage: ~p>"), obj, nao);
     break;
@@ -10912,6 +10920,8 @@ void init(mem_t *(*oom)(mem_t *, size_t), val *stack_bottom)
   eval_init();
   hash_init();
   struct_init();
+  itypes_init();
+  buf_init();
   sysif_init();
   arith_init();
   rand_init();
