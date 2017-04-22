@@ -156,7 +156,7 @@ static val in_uint_ptr_range(val bignum)
           mp_cmp_mag(mp(bignum), &UINT_PTR_MAX_MP) == MP_GT) ? nil : t;
 }
 
-uint_ptr_t c_uint_ptr_num(val num)
+ucnum c_unum(val num)
 {
   switch (type(num)) {
   case CHR: case NUM:

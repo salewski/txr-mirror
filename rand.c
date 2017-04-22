@@ -163,7 +163,7 @@ val make_random_state(val seed, val warmup)
                 seed, nao);
 
     for (i = 0; i < 16; i++)
-      r->state[i] = c_uint_ptr_num(seed->v.vec[i]);
+      r->state[i] = c_unum(seed->v.vec[i]);
 
     r->cur = c_num(seed->v.vec[i]);
     return rs;

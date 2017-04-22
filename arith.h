@@ -34,7 +34,7 @@ int num_to_buffer(val num, mem_t *buf, int bytes);
 int highest_bit(int_ptr_t n);
 val normalize(val bignum);
 val in_int_ptr_range(val bignum);
-uint_ptr_t c_uint_ptr_num(val num);
+ucnum c_unum(val num);
 val cum_norm_dist(val x);
 val n_choose_k(val n, val k);
 val n_perm_k(val n, val k);

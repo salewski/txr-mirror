@@ -28,6 +28,7 @@
 #include "mpi/mpi.h"
 
 typedef int_ptr_t cnum;
+typedef uint_ptr_t ucnum;
 
 #ifdef __cplusplus
 #define strip_qual(TYPE, EXPR) (const_cast<TYPE>(EXPR))
