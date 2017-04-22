@@ -354,85 +354,185 @@ val buf_put_double(val buf, val pos, val num)
   return num;
 }
 
+static void buf_get_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
+{
+  struct buf *b = buf_handle(buf, self);
+  cnum p = buf_check_index(pos, self);
+  cnum e = p + size;
+  cnum l = c_num(b->len);
+
+  if (e >= l || e < 0)
+    uw_throwf(error_s, lit("~a: attempted read past buffer end"), self, nao);
+
+  memcpy(ptr, b->data + p, size);
+}
+
 #if HAVE_I8
 val buf_get_i8(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-i8");
+  struct buf *b = buf_handle(buf, self);
+  cnum p = buf_check_index(pos, self);
+  if (p >= c_num(b->len))
+    uw_throwf(error_s, lit("~a: attempted read past buffer end"), self, nao);
+  return num_fast((i8_t) b->data[p]);
 }
+
 val buf_get_u8(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-u8");
+  struct buf *b = buf_handle(buf, self);
+  cnum p = buf_check_index(pos, self);
+  if (p >= c_num(b->len))
+    uw_throwf(error_s, lit("~a: attempted read past buffer end"), self, nao);
+  return num_fast((u8_t) b->data[p]);
 }
 #endif
 
 #if HAVE_I16
 val buf_get_i16(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-i16");
+  i16_t n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+  return num_fast(n);
 }
+
 val buf_get_u16(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-u16");
+  u16_t n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+  return num_fast(n);
 }
 #endif
 
 #if HAVE_I32
 val buf_get_i32(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-i32");
+  i32_t n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+  return num(n);
 }
+
 val buf_get_u32(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-u32");
+  u32_t n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+  return unum(n);
 }
 #endif
 
 #if HAVE_I64
 val buf_get_i64(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-i64");
+  i64_t n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+
+  if (sizeof (i64_t) <= sizeof (cnum)) {
+    return num(n);
+  } else {
+    val high = num(n >> 32);
+    val low = unum(n & 0xFFFFFFFF);
+    return logior(ash(high, num_fast(32)), low);
+  }
 }
+
 val buf_get_u64(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-u64");
+  u64_t n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+
+  if (sizeof (u64_t) <= sizeof (uint_ptr_t)) {
+    return unum(n);
+  } else {
+    val high = unum(n >> 32);
+    val low = unum(n & 0xFFFFFFFF);
+    return logior(ash(high, num_fast(32)), low);
+  }
 }
 #endif
 
 val buf_get_char(val buf, val pos)
 {
-  return nil;
+#if CHAR_MAX == UCHAR_MAX
+  return buf_get_u8(buf, pos);
+#else
+  return buf_get_i8(buf, pos);
+#endif
 }
+
 val buf_get_uchar(val buf, val pos)
 {
-  return nil;
+  return buf_get_u8(buf, pos);
 }
+
 val buf_get_short(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-short");
+  short n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+#if SIZEOF_SHORT < SIZEOF_PTR
+  return num_fast(n);
+#else
+  return num(n);
+#endif
 }
+
 val buf_get_ushort(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-ushort");
+  unsigned short n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+#if SIZEOF_SHORT < SIZEOF_PTR
+  return num_fast(n);
+#else
+  return unum(n);
+#endif
 }
+
 val buf_get_int(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-int");
+  int n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+  return num(n);
 }
+
 val buf_get_uint(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-uint");
+  unsigned n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+  return unum(n);
 }
+
 val buf_get_long(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-long");
+  long n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+  return num(n);
 }
+
 val buf_get_ulong(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-long");
+  unsigned long n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+  return unum(n);
 }
+
 val buf_get_double(val buf, val pos)
 {
-  return nil;
+  val self = lit("buf-get-double");
+  double n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+  return flo(n);
 }
 
 val buf_print(val buf, val stream_in)

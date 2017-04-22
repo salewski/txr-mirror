@@ -179,6 +179,17 @@ ucnum c_unum(val num)
   }
 }
 
+val unum(ucnum u)
+{
+  if (u <= INT_PTR_MAX) {
+    return num(u);
+  } else {
+    val n = make_bignum();
+    mp_set_uintptr(mp(n), u);
+    return n;
+  }
+}
+
 int highest_bit(int_ptr_t n)
 {
 #if SIZEOF_PTR == 8
