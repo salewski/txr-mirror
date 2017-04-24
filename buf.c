@@ -28,6 +28,7 @@
 #include <stddef.h>
 #include <wchar.h>
 #include <limits.h>
+#include <float.h>
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -346,12 +347,34 @@ val buf_put_ulong(val buf, val pos, val num)
   return num;
 }
 
+val buf_put_float(val buf, val pos, val num)
+{
+  val self = lit("buf-put-float");
+  double n;
+  double f = c_flo(num);
+  if (f > FLT_MAX || f < FLT_MIN)
+    uw_throwf(error_s, lit("~a: ~s is out of float range"), self, num, nao);
+
+  n = f;
+
+  buf_put_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+  return num;
+}
+
 val buf_put_double(val buf, val pos, val num)
 {
   val self = lit("buf-put-double");
   double n = c_flo(num);
   buf_put_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
   return num;
+}
+
+val buf_put_cptr(val buf, val pos, val cptr)
+{
+  val self = lit("buf-put-cptr");
+  mem_t *p = cptr_get(cptr);
+  buf_put_bytes(buf, pos, coerce(mem_t *, &p), sizeof p, self);
+  return cptr;
 }
 
 static void buf_get_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
@@ -527,12 +550,28 @@ val buf_get_ulong(val buf, val pos)
   return unum(n);
 }
 
+val buf_get_float(val buf, val pos)
+{
+  val self = lit("buf-get-float");
+  float n;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
+  return flo(n);
+}
+
 val buf_get_double(val buf, val pos)
 {
   val self = lit("buf-get-double");
   double n;
   buf_get_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
   return flo(n);
+}
+
+val buf_get_cptr(val buf, val pos)
+{
+  val self = lit("buf-get-cptr");
+  mem_t *p;
+  buf_get_bytes(buf, pos, coerce(mem_t *, &p), sizeof p, self);
+  return cptr(p);
 }
 
 val buf_print(val buf, val stream_in)
@@ -609,7 +648,9 @@ void buf_init(void)
   reg_fun(intern(lit("buf-put-uint"), user_package), func_n3(buf_put_uint));
   reg_fun(intern(lit("buf-put-long"), user_package), func_n3(buf_put_long));
   reg_fun(intern(lit("buf-put-ulong"), user_package), func_n3(buf_put_ulong));
+  reg_fun(intern(lit("buf-put-float"), user_package), func_n3(buf_put_float));
   reg_fun(intern(lit("buf-put-double"), user_package), func_n3(buf_put_double));
+  reg_fun(intern(lit("buf-put-cptr"), user_package), func_n3(buf_put_cptr));
 
 #if HAVE_I8
   reg_fun(intern(lit("buf-get-i8"), user_package), func_n2(buf_get_i8));
@@ -639,6 +680,7 @@ void buf_init(void)
   reg_fun(intern(lit("buf-get-uint"), user_package), func_n2(buf_get_uint));
   reg_fun(intern(lit("buf-get-long"), user_package), func_n2(buf_get_long));
   reg_fun(intern(lit("buf-get-ulong"), user_package), func_n2(buf_get_ulong));
+  reg_fun(intern(lit("buf-get-float"), user_package), func_n2(buf_get_float));
   reg_fun(intern(lit("buf-get-double"), user_package), func_n2(buf_get_double));
   reg_fun(intern(lit("buf-get-cptr"), user_package), func_n2(buf_get_cptr));
 }

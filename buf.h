@@ -59,7 +59,9 @@ val buf_put_int(val buf, val pos, val num);
 val buf_put_uint(val buf, val pos, val num);
 val buf_put_long(val buf, val pos, val num);
 val buf_put_ulong(val buf, val pos, val num);
+val buf_put_float(val buf, val pos, val num);
 val buf_put_double(val buf, val pos, val num);
+val buf_put_cptr(val buf, val pos, val cptr);
 
 #if HAVE_I8
 val buf_get_i8(val buf, val pos);
@@ -89,7 +91,9 @@ val buf_get_int(val buf, val pos);
 val buf_get_uint(val buf, val pos);
 val buf_get_long(val buf, val pos);
 val buf_get_ulong(val buf, val pos);
+val buf_get_float(val buf, val pos);
 val buf_get_double(val buf, val pos);
+val buf_get_cptr(val buf, val pos);
 
 val buf_print(val buf, val stream);
 val buf_pprint(val buf, val stream);
