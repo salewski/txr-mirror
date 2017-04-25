@@ -142,6 +142,7 @@ have_alloca=
 have_termios=
 have_winsize=
 termios_define=
+have_libffi=
 
 #
 # Parse configuration variables
@@ -676,6 +677,8 @@ have_posix_sigs := $have_posix_sigs
 have_sockets := $have_sockets
 have_termios := $have_termios
 termios_define := $termios_define
+
+have_libffi := $have_libffi
 
 # do we compile in debug support?
 debug_support := $debug_support
@@ -2739,6 +2742,37 @@ int main(void)
 if conftest ; then
   printf "yes\n"
   printf "#define HAVE_UTSNAME_DOMAINNAME 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
+printf "Checking for libffi ... "
+
+cat > conftest.c <<!
+#include <stdio.h>
+#include <ffi.h>
+
+int main(void)
+{
+  ffi_cif cif;
+  ffi_type *args[1];
+  void *values[1];
+  char *s;
+  args[0] = &ffi_type_pointer;
+  values[0] = &s;
+  return ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, &ffi_type_sint, args) == FFI_OK;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_LIBFFI 1\n" >> config.h
+  have_libffi=y
+elif conftest EXTRA_LDFLAGS=-lffi ; then
+  printf "yes\n"
+  printf "#define HAVE_LIBFFI 1\n" >> config.h
+  have_libffi=y
+  conf_ldflags="${conf_ldflags:+"$conf_ldflags "}-lffi"
 else
   printf "no\n"
 fi

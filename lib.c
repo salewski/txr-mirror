@@ -69,6 +69,9 @@
 #include "struct.h"
 #include "itypes.h"
 #include "buf.h"
+#if HAVE_LIBFFI
+#include "ffi.h"
+#endif
 #include "txr.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -10922,6 +10925,9 @@ void init(mem_t *(*oom)(mem_t *, size_t), val *stack_bottom)
   struct_init();
   itypes_init();
   buf_init();
+#if HAVE_LIBFFI
+  ffi_init();
+#endif
   sysif_init();
   arith_init();
   rand_init();

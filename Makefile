@@ -58,6 +58,7 @@ OBJS-$(have_posix_sigs) += signal.o
 OBJS-$(have_sockets) += socket.o
 OBJS-$(have_termios) += termios.o
 OBJS-$(have_termios) += linenoise/linenoise.o
+OBJS-$(have_libffi) += ffi.o
 EXTRA_OBJS-$(add_win_res) += win/txr.res
 
 ifneq ($(have_git),)
