@@ -7338,13 +7338,13 @@ void cobj_print_op(val obj, val out, val pretty, struct strm_ctx *ctx)
   format(out, lit(": ~p>"), coerce(val, obj->co.handle), nao);
 }
 
-static val cptr_equal_op(val left, val right)
+val cobj_equal_handle_op(val left, val right)
 {
   return (left->co.handle == right->co.handle) ? t : nil;
 }
 
 static struct cobj_ops cptr_ops = {
-  cptr_equal_op,
+  cobj_equal_handle_op,
   cobj_print_op,
   cobj_destroy_stub_op,
   cobj_mark_op,

@@ -71,6 +71,9 @@
 #if HAVE_UNAME
 #include <sys/utsname.h>
 #endif
+#if HAVE_DLOPEN
+#include <dlfcn.h>
+#endif
 #include ALLOCA_H
 #include "lib.h"
 #include "stream.h"
@@ -1452,6 +1455,79 @@ static val uname_wrap(void)
 }
 #endif
 
+#if HAVE_DLOPEN
+
+static void cptr_dl_destroy_op(val obj)
+{
+  if (obj->co.handle != 0) {
+    (void) dlclose(obj->co.handle);
+    obj->co.handle = 0;
+  }
+}
+
+static struct cobj_ops cptr_dl_ops = {
+  cobj_equal_handle_op,
+  cobj_print_op,
+  cptr_dl_destroy_op,
+  cobj_mark_op,
+  cobj_hash_op
+};
+
+static val dlopen_wrap(val name, val flags)
+{
+  const wchar_t *name_ws = c_str(name);
+  char *name_u8 = utf8_dup_to(name_ws);
+  cnum f = c_num(flags);
+  mem_t *ptr = coerce(mem_t *, dlopen(name_u8, f));
+  free(name_u8);
+  return cobj(ptr, cptr_s, &cptr_dl_ops);
+}
+
+static val dlclose_wrap(val cptr)
+{
+  mem_t *ptr = cptr_get(cptr);
+  if (cptr->co.ops != &cptr_dl_ops)
+    uw_throwf(error_s, lit("dlclose: object ~s isn't a handle from dlopen"),
+              cptr, nao);
+  if (ptr != 0) {
+    int res = dlclose(ptr);
+    cptr->co.handle = 0;
+    return tnil(res == 0);
+  }
+  return nil;
+}
+
+static val dlsym_wrap(val dlptr, val name)
+{
+  const wchar_t *name_ws = c_str(name);
+  char *name_u8 = utf8_dup_to(name_ws);
+  mem_t *dl = cptr_get(dlptr);
+  mem_t *sym = coerce(mem_t *, dlsym(dl, name_u8));
+  free(name_u8);
+  return cptr(sym);
+}
+
+#if HAVE_DLVSYM
+static val dlvsym_wrap(val dlptr, val name, val ver)
+{
+  if (null_or_missing_p(ver)) {
+    return dlsym_wrap(dlptr, name);
+  } else {
+    const wchar_t *name_ws = c_str(name);
+    const wchar_t *ver_ws = c_str(ver);
+    char *name_u8 = utf8_dup_to(name_ws);
+    char *ver_u8 = utf8_dup_to(ver_ws);
+    mem_t *dl = cptr_get(dlptr);
+    mem_t *sym = coerce(mem_t *, dlvsym(dl, name_u8, ver_u8));
+    free(name_u8);
+    free(ver_u8);
+    return cptr(sym);
+  }
+}
+#endif
+
+#endif
+
 void sysif_init(void)
 {
   prot1(&at_exit_list);
@@ -1792,5 +1868,31 @@ void sysif_init(void)
 
 #if HAVE_UNAME
   reg_fun(intern(lit("uname"), user_package), func_n0(uname_wrap));
+#endif
+
+#if HAVE_DLOPEN
+  reg_fun(intern(lit("dlopen"), user_package), func_n2(dlopen_wrap));
+  reg_fun(intern(lit("dlclose"), user_package), func_n1(dlclose_wrap));
+  reg_fun(intern(lit("dlsym"), user_package), func_n2(dlsym_wrap));
+#if HAVE_DLVSYM
+  reg_fun(intern(lit("dlvsym"), user_package), func_n3o(dlvsym_wrap, 2));
+#endif
+  reg_varl(intern(lit("rtld-lazy"), user_package), num_fast(RTLD_LAZY));
+  reg_varl(intern(lit("rtld-now"), user_package), num_fast(RTLD_NOW));
+#ifdef RTLD_GLOBAL
+  reg_varl(intern(lit("rtld-global"), user_package), num_fast(RTLD_GLOBAL));
+#endif
+#ifdef RTLD_LOCAL
+  reg_varl(intern(lit("rtld-local"), user_package), num_fast(RTLD_LOCAL));
+#endif
+#ifdef RTLD_NODELETE
+  reg_varl(intern(lit("rtld-nodelete"), user_package), num_fast(RTLD_NODELETE));
+#endif
+#ifdef RTLD_NOLOAD
+  reg_varl(intern(lit("rtld-noload"), user_package), num_fast(RTLD_NOLOAD));
+#endif
+#ifdef RTLD_DEEPBIND
+  reg_varl(intern(lit("rtld-deepbind"), user_package), num_fast(RTLD_DEEPBIND));
+#endif
 #endif
 }

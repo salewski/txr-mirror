@@ -2746,6 +2746,42 @@ else
   printf "no\n"
 fi
 
+printf "Checking for dlopen ... "
+
+cat > conftest.c <<!
+#include <dlfcn.h>
+
+int main(void)
+{
+  void *lib = dlopen("foo.so", 0);
+  void *sym = dlsym(lib, "bar");
+#if TEST_DLVSYM
+  void *vsym = dlsvym(lib, "bar", "1");
+#endif
+  dlclose(lib);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_DLOPEN 1\n" >> config.h
+elif conftest EXTRA_LDFLAGS=-ldl ; then
+  printf "yes\n"
+  printf "#define HAVE_DLOPEN 1\n" >> config.h
+  conf_ldflags="${conf_ldflags:+"$conf_ldflags "}-ldl"
+else
+  printf "no\n"
+fi
+
+printf "Checking for dlsvsym ... "
+if conftest CONF_LDFLAGS="$conf_ldflags" EXTRA_CFLAGS=-DTEST_DLVSYM=1 ; then
+  printf "yes\n"
+  printf "#define HAVE_DLVSYM 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
 printf "Checking for libffi ... "
 
 cat > conftest.c <<!

@@ -253,6 +253,7 @@ struct cobj_ops {
  */
 
 void cobj_print_op(val, val, val, struct strm_ctx *);
+val cobj_equal_handle_op(val left, val right);
 void cobj_destroy_stub_op(val);
 void cobj_destroy_free_op(val);
 void cobj_mark_op(val);
