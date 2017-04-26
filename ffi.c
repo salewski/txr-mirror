@@ -556,19 +556,19 @@ static void ffi_str_put(struct txr_ffi_type *tft,
                         val s, mem_t *dst, val self)
 {
   const wchar_t *ws = c_str(s);
-  char *u8s = utf8_dup_to(ws);
+  const char *u8s = utf8_dup_to(ws);
   free(tft->buf);
   tft->buf = coerce(mem_t *, u8s);
   tft->in = ffi_freeing_in;
-  memcpy(dst, &u8s, sizeof u8s);
+  *coerce(const char **, dst) = u8s;
 }
 
 static val ffi_str_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   (void) tft;
   (void) self;
-  char *p;
-  memcpy(&p, src, sizeof p);
+  const char *p;
+  p = *coerce(const char **, src);
   return string_utf8(p);
 }
 
@@ -576,15 +576,14 @@ static void ffi_wstr_put(struct txr_ffi_type *tft,
                         val s, mem_t *dst, val self)
 {
   const wchar_t *ws = c_str(s);
-  memcpy(dst, &ws, sizeof ws);
+  *coerce(const wchar_t **, dst) = ws;
 }
 
 static val ffi_wstr_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   (void) tft;
   (void) self;
-  wchar_t *p;
-  memcpy(&p, src, sizeof p);
+  const wchar_t *p = *coerce(wchar_t **, src);
   return string(p);
 }
 
