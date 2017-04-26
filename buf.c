@@ -107,6 +107,18 @@ val make_borrowed_buf(val len, mem_t *data)
   return obj;
 }
 
+val make_duplicate_buf(val len, mem_t *data)
+{
+  val obj = make_obj();
+
+  obj->b.type = BUF;
+  obj->b.data = chk_copy_obj(data, c_num(len));
+  obj->b.len = len;
+  obj->b.size = nil;
+
+  return obj;
+}
+
 static struct buf *buf_handle(val buf, val ctx)
 {
   if (type(buf) == BUF)
@@ -184,6 +196,18 @@ val length_buf(val buf)
   val self = lit("buf-set-len");
   struct buf *b = buf_handle(buf, self);
   return b->len;
+}
+
+mem_t *buf_get(val buf, val self)
+{
+  struct buf *b = buf_handle(buf, self);
+  return b->data;
+}
+
+void buf_fill(val buf, mem_t *src, val self)
+{
+  struct buf *b = buf_handle(buf, self);
+  memcpy(b->data, src, c_num(b->len));
 }
 
 static void buf_put_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)

@@ -27,9 +27,12 @@
 
 val make_buf(val len, val init_val, val alloc_size);
 val make_borrowed_buf(val len, mem_t *data);
+val make_duplicate_buf(val len, mem_t *data);
 val buf_trim(val buf);
 val buf_set_length(val obj, val len, val init_val);
 val length_buf(val buf);
+mem_t *buf_get(val buf, val self);
+void buf_fill(val buf, mem_t *src, val self);
 
 #if HAVE_I8
 val buf_put_i8(val buf, val pos, val num);

@@ -83,6 +83,7 @@ struct txr_ffi_type {
   val mnames;
   val mtypes;
   cnum size, align;
+  cnum nelem;
   void (*put)(struct txr_ffi_type *, val obj, mem_t *dst, val self);
   val (*get)(struct txr_ffi_type *, mem_t *src, val self);
   void (*fill)(struct txr_ffi_type *, mem_t *src, val obj, val self);
@@ -587,6 +588,28 @@ static val ffi_wstr_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return string(p);
 }
 
+static void ffi_buf_put(struct txr_ffi_type *tft,
+                        val buf, mem_t *dst, val self)
+{
+  mem_t *b = buf_get(buf, self);
+  *coerce(const mem_t **, dst) = b;
+}
+
+static val ffi_buf_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  (void) tft;
+  (void) self;
+  mem_t *p = *coerce(mem_t **, src);
+  return make_duplicate_buf(num(tft->nelem), p);
+}
+
+static void ffi_buf_fill(struct txr_ffi_type *tft, mem_t *src,
+                         val buf, val self)
+{
+  (void) tft;
+  buf_fill(buf, src, self);
+}
+
 static void ffi_ptr_in_put(struct txr_ffi_type *tft,
                            val s, mem_t *dst, val self)
 {
@@ -866,6 +889,15 @@ val ffi_type_compile(val syntax)
                                    &ffi_type_pointer,
                                    ffi_ptr_in_out_put, ffi_ptr_out_get,
                                    target_type);
+    } else if (sym == buf_s) {
+      cnum nelem = c_num(cadr(syntax));
+      val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
+                                       &ffi_type_pointer,
+                                       ffi_buf_put, ffi_buf_get);
+      struct txr_ffi_type *tft = ffi_type_struct(type);
+      tft->fill = ffi_buf_fill;
+      tft->nelem = nelem;
+      return type;
     }
 
     uw_throwf(error_s, lit("~a: unimplemented case"), self, nao);
@@ -965,6 +997,13 @@ val ffi_type_compile(val syntax)
     return make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
                                  &ffi_type_pointer,
                                  ffi_wstr_put, ffi_wstr_get);
+  } else if (syntax == buf_s) {
+    val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
+                                     &ffi_type_pointer,
+                                     ffi_buf_put, ffi_void_get);
+    struct txr_ffi_type *tft = ffi_type_struct(type);
+    tft->fill = ffi_buf_fill;
+    return type;
   } else if (syntax == void_s) {
     return make_ffi_type_builtin(syntax, nil, 0, &ffi_type_void,
                                  ffi_void_put, ffi_void_get);
