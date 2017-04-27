@@ -88,8 +88,10 @@ struct txr_ffi_type {
   cnum nelem;
   void (*put)(struct txr_ffi_type *, val obj, mem_t *dst, val self);
   val (*get)(struct txr_ffi_type *, mem_t *src, val self);
-  void (*fill)(struct txr_ffi_type *, mem_t *src, val obj, val self);
   void (*in)(struct txr_ffi_type *, val obj, val self);
+  mem_t *(*alloc)(struct txr_ffi_type *, val obj, val self);
+  void (*free)(void *);
+  void (*fill)(struct txr_ffi_type *, mem_t *src, val obj, val self);
   mem_t *buf;
 };
 
@@ -197,6 +199,18 @@ static void ffi_void_put(struct txr_ffi_type *tft,
   (void) n;
   (void) dst;
   (void) self;
+}
+
+static mem_t *ffi_fixed_alloc(struct txr_ffi_type *tft, val obj, val self)
+{
+  (void) obj;
+  (void) self;
+  return chk_malloc(tft->size);
+}
+
+static void ffi_noop_free(void *ptr)
+{
+  (void) ptr;
 }
 
 static val ffi_void_get(struct txr_ffi_type *tft, mem_t *src, val self)
@@ -607,6 +621,12 @@ static val ffi_buf_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return make_duplicate_buf(num(tft->nelem), p);
 }
 
+static mem_t *ffi_buf_alloc(struct txr_ffi_type *tft, val buf, val self)
+{
+  (void) tft;
+  return buf_get(buf, self);
+}
+
 static void ffi_buf_fill(struct txr_ffi_type *tft, mem_t *src,
                          val buf, val self)
 {
@@ -614,15 +634,23 @@ static void ffi_buf_fill(struct txr_ffi_type *tft, mem_t *src,
   buf_fill(buf, src, self);
 }
 
+static void ffi_ptr_in_in(struct txr_ffi_type *tft, val obj, val self)
+{
+  val tgttype = tft->mtypes;
+  struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
+  tgtft->free(tft->buf);
+  tft->buf = 0;
+}
+
 static void ffi_ptr_in_put(struct txr_ffi_type *tft,
                            val s, mem_t *dst, val self)
 {
   val tgttype = tft->mtypes;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
-  mem_t *buf = chk_malloc(tgtft->size);
+  mem_t *buf = tgtft->alloc(tgtft, s, self);
   tgtft->put(tgtft, s, buf, self);
   tft->buf = buf;
-  tft->in = ffi_freeing_in;
+  tft->in = ffi_ptr_in_in;
 }
 
 static void ffi_ptr_out_in(struct txr_ffi_type *tft, val obj, val self)
@@ -631,7 +659,7 @@ static void ffi_ptr_out_in(struct txr_ffi_type *tft, val obj, val self)
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   if (tgtft->fill != 0)
     tgtft->fill(tgtft, tft->buf, obj, self);
-  free(tft->buf);
+  tgtft->free(tft->buf);
   tft->buf = 0;
 }
 
@@ -640,7 +668,7 @@ static void ffi_ptr_out_put(struct txr_ffi_type *tft,
 {
   val tgttype = tft->mtypes;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
-  mem_t *buf = chk_malloc(tgtft->size);
+  mem_t *buf = tgtft->alloc(tgtft, s, self);
   tft->buf = buf;
   tft->in = ffi_ptr_out_in;
   *coerce(mem_t **, dst) = buf;
@@ -659,7 +687,7 @@ static void ffi_ptr_in_out_put(struct txr_ffi_type *tft,
 {
   val tgttype = tft->mtypes;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
-  mem_t *buf = chk_malloc(tgtft->size);
+  mem_t *buf = tgtft->alloc(tgtft, s, self);
   tgtft->put(tgtft, s, buf, self);
   tft->buf = buf;
   tft->in = ffi_ptr_out_in;
@@ -798,6 +826,8 @@ static val make_ffi_type_builtin(val syntax, val lisp_type,
   tft->size = tft->align = size;
   tft->put = put;
   tft->get = get;
+  tft->alloc = ffi_fixed_alloc;
+  tft->free = free;
 
   return obj;
 }
@@ -823,6 +853,8 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
   tft->put = put;
   tft->get = get;
   tft->mtypes = tgtype;
+  tft->alloc = ffi_fixed_alloc;
+  tft->free = free;
 
   return obj;
 }
@@ -852,6 +884,8 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   tft->mtypes = types;
   tft->put = ffi_struct_put;
   tft->get = ffi_struct_get;
+  tft->alloc = ffi_fixed_alloc;
+  tft->free = free;
   tft->fill = ffi_struct_fill;
 
   for (i = 0; i < nmemb; i++) {
@@ -903,6 +937,8 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->mtypes = eltype;
   tft->put = ffi_array_put;
   tft->get = ffi_array_get;
+  tft->alloc = ffi_fixed_alloc;
+  tft->free = free;
   tft->fill = ffi_array_fill;
 
   for (i = 0; i < nelem; i++)
@@ -994,6 +1030,8 @@ val ffi_type_compile(val syntax)
                                        &ffi_type_pointer,
                                        ffi_buf_put, ffi_buf_get);
       struct txr_ffi_type *tft = ffi_type_struct(type);
+      tft->alloc = ffi_buf_alloc;
+      tft->free = ffi_noop_free;
       tft->fill = ffi_buf_fill;
       tft->nelem = nelem;
       return type;
@@ -1101,6 +1139,8 @@ val ffi_type_compile(val syntax)
                                      &ffi_type_pointer,
                                      ffi_buf_put, ffi_void_get);
     struct txr_ffi_type *tft = ffi_type_struct(type);
+    tft->alloc = ffi_buf_alloc;
+    tft->free = ffi_noop_free;
     tft->fill = ffi_buf_fill;
     return type;
   } else if (syntax == void_s) {
