@@ -41,6 +41,8 @@ extern val wstr_s;
 
 extern val ptr_in_s, ptr_out_s, ptr_in_out_s;
 
+extern val array_s;
+
 extern val void_s;
 
 extern val ffi_type_s, ffi_call_desc_s;

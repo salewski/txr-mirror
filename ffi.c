@@ -64,6 +64,8 @@ val long_s, ulong_s;
 
 val float_s, double_s;
 
+val array_s;
+
 val void_s;
 
 val struct_s;
@@ -726,6 +728,57 @@ static void ffi_struct_fill(struct txr_ffi_type *tft, mem_t *src,
   }
 }
 
+static void ffi_array_put(struct txr_ffi_type *tft,
+                          val vec, mem_t *dst, val self)
+{
+  val eltype = tft->mtypes;
+  struct txr_ffi_type *etft = ffi_type_struct(eltype);
+  cnum nelem = tft->nelem, i;
+  cnum elsize = etft->size;
+  ucnum offs = 0;
+
+  for (i = 0; i < nelem; i++) {
+    val elval = ref(vec, num_fast(i));
+    etft->put(etft, elval, dst + offs, self);
+    offs += elsize;
+  }
+}
+
+static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  val eltype = tft->mtypes;
+  struct txr_ffi_type *etft = ffi_type_struct(eltype);
+  cnum nelem = tft->nelem, i;
+  val vec = vector(num_fast(nelem), nil);
+  cnum elsize = etft->size;
+  ucnum offs = 0;
+
+  for (i = 0; i < nelem; i++) {
+    val elval = etft->get(etft, src + offs, self);
+    refset(vec, num_fast(i), elval);
+    offs += elsize;
+  }
+
+  return vec;
+}
+
+static void ffi_array_fill(struct txr_ffi_type *tft, mem_t *src,
+                           val vec, val self)
+{
+  val eltype = tft->mtypes;
+  struct txr_ffi_type *etft = ffi_type_struct(eltype);
+  cnum nelem = tft->nelem, i;
+  cnum elsize = etft->size;
+  ucnum offs = 0;
+
+  for (i = 0; i < nelem; i++) {
+    val elval = etft->get(etft, src + offs, self);
+    refset(vec, num_fast(i), elval);
+    offs += elsize;
+  }
+}
+
+
 static val make_ffi_type_builtin(val syntax, val lisp_type,
                                  cnum size, ffi_type *ft,
                                  void (*put)(struct txr_ffi_type *,
@@ -827,6 +880,44 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   return obj;
 }
 
+static val make_ffi_type_array(val syntax, val lisp_type,
+                               val dim, val eltype)
+{
+  struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
+                                    chk_malloc(sizeof *tft));
+  ffi_type *ft = coerce(ffi_type *, chk_calloc(1, sizeof *ft));
+
+  cnum nelem = c_num(dim), i;
+  ffi_type **elements = coerce(ffi_type **, chk_malloc(sizeof *elements *
+                                                       (nelem + 1)));
+  val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
+  struct txr_ffi_type *etft = ffi_type_struct(eltype);
+
+  ft->type = FFI_TYPE_STRUCT;
+  ft->size = 0;
+
+  tft->ft = ft;
+  tft->syntax = syntax;
+  tft->lt = lisp_type;
+  tft->mnames = nil;
+  tft->mtypes = eltype;
+  tft->put = ffi_array_put;
+  tft->get = ffi_array_get;
+  tft->fill = ffi_array_fill;
+
+  for (i = 0; i < nelem; i++)
+    elements[i] = etft->ft;
+  elements[i] = 0;
+
+  ft->elements = elements;
+
+  tft->size = etft->size * nelem;
+  tft->align = etft->align;
+  tft->nelem = nelem;
+
+  return obj;
+}
+
 static val ffi_struct_compile(val membs, val *ptypes, val self)
 {
   list_collect_decl (slots, pstail);
@@ -867,6 +958,10 @@ val ffi_type_compile(val syntax)
       val xsyntax = cons(struct_s,
                          cons(sname, membs));
       return make_ffi_type_struct(xsyntax, stype, slots, types);
+    } else if (sym == array_s) {
+      val dim = cadr(syntax);
+      val eltype = ffi_type_compile(caddr(syntax));
+      return make_ffi_type_array(syntax, eltype, dim, eltype);
     } else if (sym == ptr_in_s) {
       val target_type = ffi_type_compile(cadr(syntax));
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
@@ -1162,6 +1257,7 @@ void ffi_init(void)
   ulong_s = intern(lit("ulong"), user_package);
   float_s = intern(lit("float"), user_package);
   double_s = intern(lit("double"), user_package);
+  array_s = intern(lit("array"), user_package);
   void_s = intern(lit("void"), user_package);
   struct_s = intern(lit("struct"), user_package);
   wstr_s = intern(lit("wstr"), user_package);
