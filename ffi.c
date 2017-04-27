@@ -131,10 +131,13 @@ static void ffi_type_struct_destroy_op(val obj)
   ffi_type *ft = tft->ft;
 
   if (ft != 0) {
-    cnum size = ft->size, i;
-
-    for (i = 0; i < size; i++)
-      free(ft->elements[i]);
+    int i;
+    for (i = 0; ; i++) {
+      ffi_type *el = ft->elements[i];
+      if (!el)
+        break;
+      free(el);
+    }
     ft->elements = 0;
   }
 
@@ -781,13 +784,13 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
   cnum nmemb = c_num(length(types)), i;
   ffi_type **elements = coerce(ffi_type **, chk_malloc(sizeof *elements *
-                                                       nmemb));
+                                                       (nmemb + 1)));
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
   cnum total_size = 0;
   cnum most_align = 0;
 
   ft->type = FFI_TYPE_STRUCT;
-  ft->size = nmemb;
+  ft->size = 0;
 
   tft->ft = ft;
   tft->syntax = syntax;
@@ -811,6 +814,8 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
     total_size = (total_size + align - 1) / align * align + size;
   }
+
+  elements[i] = 0;
 
   ft->elements = elements;
 
