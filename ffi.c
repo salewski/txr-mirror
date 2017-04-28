@@ -561,6 +561,12 @@ static val ffi_ptr_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return cptr(p);
 }
 
+static mem_t *ffi_ptr_alloc(struct txr_ffi_type *tft, val ptr, val self)
+{
+  (void) tft;
+  return coerce(mem_t *, cptr_addr_of(ptr));
+}
+
 static void ffi_freeing_in(struct txr_ffi_type *tft, val obj, val self)
 {
   (void) obj;
@@ -1157,9 +1163,13 @@ val ffi_type_compile(val syntax)
                                  &ffi_type_double,
                                  ffi_double_put, ffi_double_get);
   } else if (syntax == cptr_s) {
-    return make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
-                                 &ffi_type_pointer,
-                                 ffi_ptr_put, ffi_ptr_get);
+    val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
+                                     &ffi_type_pointer,
+                                     ffi_ptr_put, ffi_ptr_get);
+    struct txr_ffi_type *tft = ffi_type_struct(type);
+    tft->alloc = ffi_ptr_alloc;
+    tft->free = ffi_noop_free;
+    return type;
   } else if (syntax == str_s) {
     return make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
                                  &ffi_type_pointer,
@@ -1309,6 +1319,11 @@ val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
   return rtft->get(rtft, convert(mem_t *, rc), self);
 }
 
+static val cptr_make(val n)
+{
+  return if3(missingp(n), cptr(0), cptr(coerce(mem_t *, c_num(n))));
+}
+
 void ffi_init(void)
 {
   uint8_s = intern(lit("uint8"), user_package);
@@ -1341,4 +1356,6 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-type-compile"), user_package), func_n1(ffi_type_compile));
   reg_fun(intern(lit("ffi-make-call-desc"), user_package), func_n4(ffi_make_call_desc));
   reg_fun(intern(lit("ffi-call"), user_package), func_n3(ffi_call_wrap));
+  reg_fun(intern(lit("cptr"), user_package), func_n1o(cptr_make, 0));
+  reg_varl(intern(lit("cptr-null"), user_package), cptr(0));
 }

@@ -7361,6 +7361,12 @@ mem_t *cptr_get(val cptr)
   return cobj_handle(cptr, cptr_s);
 }
 
+mem_t **cptr_addr_of(val cptr)
+{
+  (void) cobj_handle(cptr, cptr_s);
+  return &cptr->co.handle;
+}
+
 val assoc(val key, val list)
 {
   list = nullify(list);

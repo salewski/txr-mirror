@@ -936,6 +936,7 @@ mem_t *cobj_handle(val cobj, val cls_sym);
 struct cobj_ops *cobj_ops(val cobj, val cls_sym);
 val cptr(mem_t *ptr);
 mem_t *cptr_get(val cptr);
+mem_t **cptr_addr_of(val cptr);
 val assoc(val key, val list);
 val assql(val key, val list);
 val rassoc(val key, val list);
