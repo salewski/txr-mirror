@@ -544,7 +544,7 @@ static val ffi_double_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return flo(n);
 }
 
-static void ffi_ptr_put(struct txr_ffi_type *tft,
+static void ffi_cptr_put(struct txr_ffi_type *tft,
                         val n, mem_t *dst, val self)
 {
   mem_t *p = cptr_get(n);
@@ -552,7 +552,7 @@ static void ffi_ptr_put(struct txr_ffi_type *tft,
   memcpy(dst, &p, sizeof p);
 }
 
-static val ffi_ptr_get(struct txr_ffi_type *tft, mem_t *src, val self)
+static val ffi_cptr_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   (void) tft;
   (void) self;
@@ -561,7 +561,7 @@ static val ffi_ptr_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return cptr(p);
 }
 
-static mem_t *ffi_ptr_alloc(struct txr_ffi_type *tft, val ptr, val self)
+static mem_t *ffi_cptr_alloc(struct txr_ffi_type *tft, val ptr, val self)
 {
   (void) tft;
   return coerce(mem_t *, cptr_addr_of(ptr));
@@ -1165,9 +1165,9 @@ val ffi_type_compile(val syntax)
   } else if (syntax == cptr_s) {
     val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
                                      &ffi_type_pointer,
-                                     ffi_ptr_put, ffi_ptr_get);
+                                     ffi_cptr_put, ffi_cptr_get);
     struct txr_ffi_type *tft = ffi_type_struct(type);
-    tft->alloc = ffi_ptr_alloc;
+    tft->alloc = ffi_cptr_alloc;
     tft->free = ffi_noop_free;
     return type;
   } else if (syntax == str_s) {
