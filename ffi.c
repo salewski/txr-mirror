@@ -625,13 +625,6 @@ static mem_t *ffi_buf_alloc(struct txr_ffi_type *tft, val buf, val self)
   return buf_get(buf, self);
 }
 
-static void ffi_buf_fill(struct txr_ffi_type *tft, mem_t *src,
-                         val buf, val self)
-{
-  (void) tft;
-  buf_fill(buf, src, self);
-}
-
 static void ffi_ptr_in_in(struct txr_ffi_type *tft, val obj, val self)
 {
   val tgttype = tft->mtypes;
@@ -1051,7 +1044,7 @@ val ffi_type_compile(val syntax)
     } else if (sym == ptr_out_s) {
       val target_type = ffi_type_compile(cadr(syntax));
       struct txr_ffi_type *tft = ffi_type_struct(target_type);
-      if (tft->fill == 0)
+      if (tft->fill == 0 && tft->alloc == ffi_fixed_alloc)
         uw_throwf(error_s, lit("~a: ~s cannot be ptr-out target"),
                   self, cadr(syntax), nao);
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
@@ -1061,7 +1054,7 @@ val ffi_type_compile(val syntax)
     } else if (sym == ptr_in_out_s) {
       val target_type = ffi_type_compile(cadr(syntax));
       struct txr_ffi_type *tft = ffi_type_struct(target_type);
-      if (tft->fill == 0)
+      if (tft->fill == 0 && tft->alloc == ffi_fixed_alloc)
         uw_throwf(error_s, lit("~a: ~s cannot be ptr-in-out target"),
                   self, cadr(syntax), nao);
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
@@ -1076,7 +1069,6 @@ val ffi_type_compile(val syntax)
       struct txr_ffi_type *tft = ffi_type_struct(type);
       tft->alloc = ffi_buf_alloc;
       tft->free = ffi_noop_free;
-      tft->fill = ffi_buf_fill;
       tft->nelem = nelem;
       return type;
     }
@@ -1185,7 +1177,6 @@ val ffi_type_compile(val syntax)
     struct txr_ffi_type *tft = ffi_type_struct(type);
     tft->alloc = ffi_buf_alloc;
     tft->free = ffi_noop_free;
-    tft->fill = ffi_buf_fill;
     return type;
   } else if (syntax == void_s) {
     return make_ffi_type_builtin(syntax, nil, 0, &ffi_type_void,
