@@ -62,7 +62,7 @@ val short_s, ushort_s;
 val int_s, uint_s;
 val long_s, ulong_s;
 
-val float_s, double_s;
+val double_s;
 
 val array_s;
 
@@ -73,8 +73,6 @@ val struct_s;
 val wstr_s;
 
 val ptr_in_s, ptr_out_s, ptr_in_out_s;
-
-val ffi_type_s;
 
 val ffi_type_s, ffi_call_desc_s;
 
@@ -575,7 +573,7 @@ static void ffi_str_put(struct txr_ffi_type *tft,
                         val s, mem_t *dst, val self)
 {
   const wchar_t *ws = c_str(s);
-  const char *u8s = utf8_dup_to(ws);
+  char *u8s = utf8_dup_to(ws);
   free(tft->buf);
   tft->buf = coerce(mem_t *, u8s);
   tft->in = ffi_freeing_in;
@@ -1242,7 +1240,7 @@ val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
   struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(ffi_call_desc);
   mem_t *fp = cptr_get(fptr);
   cnum n = tfcd->ntotal, i;
-  void **values = alloca(sizeof *values * tfcd->ntotal);
+  void **values = convert(void **, alloca(sizeof *values * tfcd->ntotal));
   val args = args_in;
   val types = tfcd->argtypes;
   val rtype = tfcd->rettype;
@@ -1273,7 +1271,7 @@ val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
     }
   }
 
-  return rtft->get(rtft, rc, self);
+  return rtft->get(rtft, convert(mem_t *, rc), self);
 }
 
 void ffi_init(void)
@@ -1295,7 +1293,6 @@ void ffi_init(void)
   uint_s = intern(lit("uint"), user_package);
   long_s = intern(lit("long"), user_package);
   ulong_s = intern(lit("ulong"), user_package);
-  float_s = intern(lit("float"), user_package);
   double_s = intern(lit("double"), user_package);
   array_s = intern(lit("array"), user_package);
   void_s = intern(lit("void"), user_package);

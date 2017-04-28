@@ -35,7 +35,7 @@ extern val short_s, ushort_s;
 extern val int_s, uint_s;
 extern val long_s, ulong_s;
 
-extern val float_s, double_s;
+extern val double_s;
 
 extern val wstr_s;
 
