@@ -582,7 +582,6 @@ static void ffi_str_put(struct txr_ffi_type *tft,
   char *u8s = utf8_dup_to(ws);
   free(tft->buf);
   tft->buf = coerce(mem_t *, u8s);
-  tft->in = ffi_freeing_in;
   *coerce(const char **, dst) = u8s;
 }
 
@@ -647,7 +646,6 @@ static void ffi_ptr_in_put(struct txr_ffi_type *tft,
   mem_t *buf = tgtft->alloc(tgtft, s, self);
   tgtft->put(tgtft, s, buf, self);
   tft->buf = buf;
-  tft->in = ffi_ptr_in_in;
 }
 
 static void ffi_ptr_out_in(struct txr_ffi_type *tft, val obj, val self)
@@ -667,7 +665,6 @@ static void ffi_ptr_out_put(struct txr_ffi_type *tft,
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t *buf = tgtft->alloc(tgtft, s, self);
   tft->buf = buf;
-  tft->in = ffi_ptr_out_in;
   *coerce(mem_t **, dst) = buf;
 }
 
@@ -687,7 +684,6 @@ static void ffi_ptr_in_out_put(struct txr_ffi_type *tft,
   mem_t *buf = tgtft->alloc(tgtft, s, self);
   tgtft->put(tgtft, s, buf, self);
   tft->buf = buf;
-  tft->in = ffi_ptr_out_in;
   *coerce(mem_t **, dst) = buf;
 }
 
@@ -709,7 +705,6 @@ static void ffi_struct_put(struct txr_ffi_type *tft,
   val slots = tft->mnames;
   val types = tft->mtypes;
   ucnum offs = 0;
-  int in_pass_needed = 0;
 
   while (slots) {
     val slsym = pop(&slots);
@@ -720,10 +715,7 @@ static void ffi_struct_put(struct txr_ffi_type *tft,
     offs = (offs + almask) & ~almask;
     mtft->put(mtft, slval, dst + offs, self);
     offs += mtft->size;
-    in_pass_needed = in_pass_needed || mtft->in != 0;
   }
-
-  tft->in = (in_pass_needed ? ffi_struct_in : 0);
 }
 
 static val ffi_struct_get(struct txr_ffi_type *tft, mem_t *src, val self)
@@ -788,7 +780,6 @@ static void ffi_array_put(struct txr_ffi_type *tft,
   val eltypes = tft->mtypes;
   cnum nelem = tft->nelem, i;
   ucnum offs = 0;
-  int in_pass_needed = 0;
 
   for (i = 0; i < nelem; i++) {
     val eltype = pop(&eltypes);
@@ -797,10 +788,7 @@ static void ffi_array_put(struct txr_ffi_type *tft,
     val elval = ref(vec, num_fast(i));
     etft->put(etft, elval, dst + offs, self);
     offs += elsize;
-    in_pass_needed = in_pass_needed || etft->in != 0;
   }
-
-  tft->in = (in_pass_needed ? ffi_array_in : 0);
 }
 
 static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
@@ -870,6 +858,8 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
                                              val obj, mem_t *dst, val self),
                                  val (*get)(struct txr_ffi_type *,
                                             mem_t *src, val self),
+                                 void (*in)(struct txr_ffi_type *,
+                                            val obj, val self),
                                  val tgtype)
 {
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
@@ -885,6 +875,7 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
   tft->put = put;
   tft->get = get;
   tft->mtypes = tgtype;
+  tft->in = in;
   tft->alloc = ffi_fixed_alloc;
   tft->free = free;
 
@@ -905,6 +896,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
   cnum total_size = 0;
   cnum most_align = 0;
+  int in_handler_needed = 0;
 
   ft->type = FFI_TYPE_STRUCT;
   ft->size = 0;
@@ -932,9 +924,13 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       most_align = align;
 
     total_size = (total_size + align - 1) / align * align + size;
+    in_handler_needed = in_handler_needed || mtft->in != 0;
   }
 
   elements[i] = 0;
+
+  if (in_handler_needed)
+    tft->in = ffi_struct_in;
 
   ft->elements = elements;
 
@@ -980,6 +976,8 @@ static val make_ffi_type_array(val syntax, val lisp_type,
       tft->size = etft->size * nelem;
       tft->align = etft->align;
     }
+    if (i == 0 && etft->in != 0)
+      tft->in = ffi_array_in;
   }
 
   elements[i] = 0;
@@ -1044,7 +1042,7 @@ val ffi_type_compile(val syntax)
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
                                    &ffi_type_pointer,
                                    ffi_ptr_in_put, ffi_void_get,
-                                   target_type);
+                                   ffi_ptr_in_in, target_type);
     } else if (sym == ptr_out_s) {
       val target_type = ffi_type_compile(cadr(syntax));
       struct txr_ffi_type *tft = ffi_type_struct(target_type);
@@ -1054,7 +1052,7 @@ val ffi_type_compile(val syntax)
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
                                    &ffi_type_pointer,
                                    ffi_ptr_out_put, ffi_ptr_out_get,
-                                   target_type);
+                                   ffi_ptr_out_in, target_type);
     } else if (sym == ptr_in_out_s) {
       val target_type = ffi_type_compile(cadr(syntax));
       struct txr_ffi_type *tft = ffi_type_struct(target_type);
@@ -1064,7 +1062,7 @@ val ffi_type_compile(val syntax)
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
                                    &ffi_type_pointer,
                                    ffi_ptr_in_out_put, ffi_ptr_out_get,
-                                   target_type);
+                                   ffi_ptr_out_in, target_type);
     } else if (sym == buf_s) {
       cnum nelem = c_num(cadr(syntax));
       val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
@@ -1171,9 +1169,12 @@ val ffi_type_compile(val syntax)
     tft->free = ffi_noop_free;
     return type;
   } else if (syntax == str_s) {
-    return make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
-                                 &ffi_type_pointer,
-                                 ffi_str_put, ffi_str_get);
+    val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
+                                     &ffi_type_pointer,
+                                     ffi_str_put, ffi_str_get);
+    struct txr_ffi_type *tft = ffi_type_struct(type);
+    tft->in = ffi_freeing_in;
+    return type;
   } else if (syntax == wstr_s) {
     return make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
                                  &ffi_type_pointer,
