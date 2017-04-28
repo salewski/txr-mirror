@@ -890,7 +890,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
                                 val slots, val types)
 {
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
-                                    chk_malloc(sizeof *tft));
+                                    chk_calloc(1, sizeof *tft));
   ffi_type *ft = coerce(ffi_type *, chk_calloc(1, sizeof *ft));
 
   cnum nmemb = c_num(length(types)), i;
@@ -944,7 +944,7 @@ static val make_ffi_type_array(val syntax, val lisp_type,
                                val dim, val eltypes)
 {
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
-                                    chk_malloc(sizeof *tft));
+                                    chk_calloc(1, sizeof *tft));
   ffi_type *ft = coerce(ffi_type *, chk_calloc(1, sizeof *ft));
 
   cnum nelem = c_num(dim), i;
@@ -965,8 +965,6 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->alloc = ffi_fixed_alloc;
   tft->free = free;
   tft->fill = ffi_array_fill;
-  tft->size = 0;
-  tft->align = 0;
 
   for (i = 0; i < nelem; i++) {
     val eltype = pop(&eltypes);
