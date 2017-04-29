@@ -74,7 +74,7 @@ val str_d_s, wstr_s, wstr_d_s;
 
 val buf_d_s;
 
-val ptr_in_s, ptr_out_s, ptr_s;
+val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_s;
 
 val ffi_type_s, ffi_call_desc_s;
 
@@ -720,6 +720,17 @@ static void ffi_ptr_in_put(struct txr_ffi_type *tft, val s, mem_t *dst,
   *coerce(mem_t **, dst) = buf;
 }
 
+static void ffi_ptr_in_d_put(struct txr_ffi_type *tft, val s, mem_t *dst,
+                             mem_t *rtvec[], val self)
+{
+  val tgttype = tft->mtypes;
+  struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
+  mem_t *buf = tgtft->alloc(tgtft, s, self);
+  (void) rtvec;
+  tgtft->put(tgtft, s, buf, rtvec, self);
+  *coerce(mem_t **, dst) = buf;
+}
+
 static void ffi_ptr_out_in(struct txr_ffi_type *tft, val obj,
                            mem_t *rtvec[], val self)
 {
@@ -748,6 +759,16 @@ static val ffi_ptr_out_get(struct txr_ffi_type *tft, mem_t *src, val self)
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t *ptr = *coerce(mem_t **, src);
   return tgtft->get(tgtft, ptr, self);
+}
+
+static val ffi_ptr_out_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  val tgttype = tft->mtypes;
+  struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
+  mem_t *ptr = *coerce(mem_t **, src);
+  val ret = tgtft->get(tgtft, ptr, self);
+  free(ptr);
+  return ret;
 }
 
 static void ffi_ptr_put(struct txr_ffi_type *tft, val s, mem_t *dst,
@@ -964,7 +985,7 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
   tft->lt = lisp_type;
   tft->mnames = tft->mtypes = nil;
   tft->size = tft->align = size;
-  tft->rtsize = 1;
+  tft->rtsize = (in != 0);
   tft->walk = ffi_ptr_walk;
   tft->put = put;
   tft->get = get;
@@ -1147,11 +1168,23 @@ val ffi_type_compile(val syntax)
                                    &ffi_type_pointer,
                                    ffi_ptr_in_put, ffi_void_get,
                                    ffi_ptr_in_in, target_type);
+    } else if (sym == ptr_in_d_s) {
+      val target_type = ffi_type_compile(cadr(syntax));
+      return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
+                                   &ffi_type_pointer,
+                                   ffi_ptr_in_d_put, ffi_void_get,
+                                   0, target_type);
     } else if (sym == ptr_out_s) {
       val target_type = ffi_type_compile(cadr(syntax));
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
                                    &ffi_type_pointer,
                                    ffi_ptr_out_put, ffi_ptr_out_get,
+                                   ffi_ptr_out_in, target_type);
+    } else if (sym == ptr_out_d_s) {
+      val target_type = ffi_type_compile(cadr(syntax));
+      return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
+                                   &ffi_type_pointer,
+                                   ffi_ptr_out_put, ffi_ptr_out_d_get,
                                    ffi_ptr_out_in, target_type);
     } else if (sym == ptr_s) {
       val target_type = ffi_type_compile(cadr(syntax));
@@ -1492,6 +1525,8 @@ void ffi_init(void)
   buf_d_s = intern(lit("buf-d"), user_package);
   ptr_in_s = intern(lit("ptr-in"), user_package);
   ptr_out_s = intern(lit("ptr-out"), user_package);
+  ptr_in_d_s = intern(lit("ptr-in-d"), user_package);
+  ptr_out_d_s = intern(lit("ptr-out-d"), user_package);
   ptr_s = intern(lit("ptr"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);
