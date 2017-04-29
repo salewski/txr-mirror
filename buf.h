@@ -32,6 +32,7 @@ val buf_trim(val buf);
 val buf_set_length(val obj, val len, val init_val);
 val length_buf(val buf);
 mem_t *buf_get(val buf, val self);
+mem_t **buf_addr_of(val buf, val self);
 void buf_fill(val buf, mem_t *src, val self);
 
 #if HAVE_I8

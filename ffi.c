@@ -642,7 +642,7 @@ static val ffi_buf_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static mem_t *ffi_buf_alloc(struct txr_ffi_type *tft, val buf, val self)
 {
   (void) tft;
-  return buf_get(buf, self);
+  return coerce(mem_t *, buf_addr_of(buf, self));
 }
 
 static void ffi_ptr_walk(struct txr_ffi_type *tft, mem_t *ctx,

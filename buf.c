@@ -204,6 +204,12 @@ mem_t *buf_get(val buf, val self)
   return b->data;
 }
 
+mem_t **buf_addr_of(val buf, val self)
+{
+  struct buf *b = buf_handle(buf, self);
+  return &b->data;
+}
+
 void buf_fill(val buf, mem_t *src, val self)
 {
   struct buf *b = buf_handle(buf, self);
