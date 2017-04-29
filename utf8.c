@@ -207,6 +207,14 @@ wchar_t *utf8_dup_from(const char *str)
   return wstr;
 }
 
+wchar_t *utf8_dup_from_buf(const char *str, size_t size)
+{
+  size_t nchar = utf8_from_buf(0, coerce(const unsigned char *, str), size);
+  wchar_t *wstr = chk_wmalloc(nchar);
+  utf8_from_buf(wstr, coerce(const unsigned char *, str), size);
+  return wstr;
+}
+
 unsigned char *utf8_dup_to_buf(const wchar_t *wstr, size_t *pnbytes,
                                int null_term)
 {

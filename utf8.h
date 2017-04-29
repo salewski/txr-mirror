@@ -30,6 +30,7 @@ size_t utf8_from(wchar_t *, const char *);
 size_t utf8_to_buf(unsigned char *dst, const wchar_t *wsrc, int null_term);
 size_t utf8_to(char *, const wchar_t *);
 wchar_t *utf8_dup_from(const char *);
+wchar_t *utf8_dup_from_buf(const char *str, size_t size);
 char *utf8_dup_to(const wchar_t *);
 unsigned char *utf8_dup_to_buf(const wchar_t *, size_t *pnbytes,
                                int null_term);

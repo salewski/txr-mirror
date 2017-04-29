@@ -88,6 +88,8 @@ struct txr_ffi_type {
   cnum nelem;
   int rtidx, rtsize;
   unsigned null_term : 1;
+  unsigned char_conv : 1;
+  unsigned wchar_conv : 1;
   void (*walk)(struct txr_ffi_type *, mem_t *ctx,
                void (*visit)(struct txr_ffi_type *, mem_t *ctx));
   void (*put)(struct txr_ffi_type *, val obj, mem_t *dst,
@@ -958,20 +960,49 @@ static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
 static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   val eltypes = tft->mtypes;
-  cnum nelem = tft->nelem, i;
-  val vec = vector(num_fast(nelem), nil);
-  ucnum offs = 0;
 
-  for (i = 0; i < nelem; i++) {
-    val eltype = pop(&eltypes);
-    struct txr_ffi_type *etft = ffi_type_struct(eltype);
-    cnum elsize = etft->size;
-    val elval = etft->get(etft, src + offs, self);
-    refset(vec, num_fast(i), elval);
-    offs += elsize;
+  if (tft->char_conv) {
+    if (!eltypes) {
+      return null_string;
+    } else {
+      const char *chptr = coerce(const char *, src);
+      if (chptr[tft->size - 1] == 0) {
+        return string_utf8(chptr);
+      } else {
+        wchar_t *wch = utf8_dup_from_buf(chptr, tft->size);
+        return string_own(wch);
+      }
+    }
+  } else if (tft->wchar_conv) {
+    if (!eltypes) {
+      return null_string;
+    } else {
+      cnum nchar = tft->size / sizeof (wchar_t);
+      const wchar_t *wchptr = coerce(const wchar_t *, src);
+
+      if (wchptr[nchar - 1] == 0) {
+        return string(wchptr);
+      } else {
+        val ustr = mkustring(num_fast(nchar));
+        return init_str(ustr, wchptr);
+      }
+    }
+  } else {
+    cnum nelem = tft->nelem;
+    val vec = vector(num_fast(nelem), nil);
+    cnum offs, i;
+
+    for (i = 0, offs = 0; i < nelem; i++) {
+      val eltype = pop(&eltypes);
+      struct txr_ffi_type *etft = ffi_type_struct(eltype);
+      cnum elsize = etft->size;
+      val elval = etft->get(etft, src + offs, self);
+      refset(vec, num_fast(i), elval);
+      offs += elsize;
+    }
+
+    return vec;
   }
-
-  return vec;
 }
 
 static void ffi_array_fill(struct txr_ffi_type *tft, mem_t *src,
@@ -1220,6 +1251,10 @@ val ffi_type_compile(val syntax)
         struct txr_ffi_type *tft = ffi_type_struct(type);
         if (sym == zarray_s)
           tft->null_term = 1;
+        if (eltype_syntax == char_s)
+          tft->char_conv = 1;
+        else if (eltype_syntax == wchar_s)
+          tft->wchar_conv = 1;
         return type;
       }
     } else if (sym == ptr_in_s) {
