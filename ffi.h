@@ -37,7 +37,9 @@ extern val long_s, ulong_s;
 
 extern val double_s;
 
-extern val wstr_s;
+extern val str_d_s, wstr_s, wstr_d_s;
+
+extern val buf_d_s;
 
 extern val ptr_in_s, ptr_out_s, ptr_in_out_s;
 

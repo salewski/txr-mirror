@@ -70,7 +70,9 @@ val void_s;
 
 val struct_s;
 
-val wstr_s;
+val str_d_s, wstr_s, wstr_d_s;
+
+val buf_d_s;
 
 val ptr_in_s, ptr_out_s, ptr_in_out_s;
 
@@ -601,9 +603,18 @@ static val ffi_str_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   (void) tft;
   (void) self;
-  const char *p;
-  p = *coerce(const char **, src);
+  const char *p = *coerce(const char **, src);
   return string_utf8(p);
+}
+
+static val ffi_str_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  (void) tft;
+  (void) self;
+  char *p = *coerce(char **, src);
+  val ret = string_utf8(p);
+  free(p);
+  return ret;
 }
 
 static void ffi_wstr_put(struct txr_ffi_type *tft, val s, mem_t *dst,
@@ -623,6 +634,23 @@ static val ffi_wstr_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return string(p);
 }
 
+static void ffi_wstr_d_put(struct txr_ffi_type *tft, val s, mem_t *dst,
+                           mem_t *rtvec[], val self)
+{
+  (void) tft;
+  (void) rtvec;
+  const wchar_t *ws = c_str(s);
+  *coerce(const wchar_t **, dst) = chk_strdup(ws);
+}
+
+static val ffi_wstr_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  (void) tft;
+  (void) self;
+  wchar_t *p = *coerce(wchar_t **, src);
+  return string_own(p);
+}
+
 static void ffi_buf_put(struct txr_ffi_type *tft, val buf, mem_t *dst,
                         mem_t *rtvec[], val self)
 {
@@ -637,6 +665,22 @@ static val ffi_buf_get(struct txr_ffi_type *tft, mem_t *src, val self)
   (void) self;
   mem_t *p = *coerce(mem_t **, src);
   return make_duplicate_buf(num(tft->nelem), p);
+}
+
+static void ffi_buf_d_put(struct txr_ffi_type *tft, val buf, mem_t *dst,
+                        mem_t *rtvec[], val self)
+{
+  (void) rtvec;
+  mem_t *b = buf_get(buf, self);
+  *coerce(const mem_t **, dst) = chk_copy_obj(b, c_num(length(buf)));
+}
+
+static val ffi_buf_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  (void) tft;
+  (void) self;
+  mem_t *p = *coerce(mem_t **, src);
+  return make_borrowed_buf(num(tft->nelem), p);
 }
 
 static mem_t *ffi_buf_alloc(struct txr_ffi_type *tft, val buf, val self)
@@ -1115,11 +1159,14 @@ val ffi_type_compile(val syntax)
                                    &ffi_type_pointer,
                                    ffi_ptr_in_out_put, ffi_ptr_out_get,
                                    ffi_ptr_out_in, target_type);
-    } else if (sym == buf_s) {
+    } else if (sym == buf_s || sym == buf_d_s) {
       cnum nelem = c_num(cadr(syntax));
       val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
                                        &ffi_type_pointer,
-                                       ffi_buf_put, ffi_buf_get);
+                                       if3(sym == buf_s,
+                                           ffi_buf_put, ffi_buf_d_put),
+                                       if3(sym == buf_s,
+                                           ffi_buf_get, ffi_buf_d_get));
       struct txr_ffi_type *tft = ffi_type_struct(type);
       tft->alloc = ffi_buf_alloc;
       tft->free = ffi_noop_free;
@@ -1228,14 +1275,25 @@ val ffi_type_compile(val syntax)
     tft->in = ffi_freeing_in;
     tft->rtsize = 1;
     return type;
+  } else if (syntax == str_d_s) {
+    val type = make_ffi_type_builtin(syntax, str_s, sizeof (mem_t *),
+                                     &ffi_type_pointer,
+                                     ffi_str_put, ffi_str_d_get);
+    return type;
   } else if (syntax == wstr_s) {
     return make_ffi_type_builtin(syntax, str_s, sizeof (mem_t *),
                                  &ffi_type_pointer,
                                  ffi_wstr_put, ffi_wstr_get);
-  } else if (syntax == buf_s) {
+  } else if (syntax == wstr_d_s) {
+    return make_ffi_type_builtin(syntax, str_s, sizeof (mem_t *),
+                                 &ffi_type_pointer,
+                                 ffi_wstr_d_put, ffi_wstr_d_get);
+  } else if (syntax == buf_s || syntax == buf_d_s) {
     val type = make_ffi_type_builtin(syntax, buf_s, sizeof (mem_t *),
                                      &ffi_type_pointer,
-                                     ffi_buf_put, ffi_void_get);
+                                     if3(syntax == buf_s,
+                                         ffi_buf_put, ffi_buf_d_put),
+                                     ffi_void_get);
     struct txr_ffi_type *tft = ffi_type_struct(type);
     tft->alloc = ffi_buf_alloc;
     tft->free = ffi_noop_free;
@@ -1427,7 +1485,10 @@ void ffi_init(void)
   array_s = intern(lit("array"), user_package);
   void_s = intern(lit("void"), user_package);
   struct_s = intern(lit("struct"), user_package);
+  str_d_s = intern(lit("str-d"), user_package);
   wstr_s = intern(lit("wstr"), user_package);
+  wstr_d_s = intern(lit("wstr-d"), user_package);
+  buf_d_s = intern(lit("buf-d"), user_package);
   ptr_in_s = intern(lit("ptr-in"), user_package);
   ptr_out_s = intern(lit("ptr-out"), user_package);
   ptr_in_out_s = intern(lit("ptr-in-out"), user_package);
