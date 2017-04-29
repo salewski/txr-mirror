@@ -1104,20 +1104,12 @@ val ffi_type_compile(val syntax)
                                    ffi_ptr_in_in, target_type);
     } else if (sym == ptr_out_s) {
       val target_type = ffi_type_compile(cadr(syntax));
-      struct txr_ffi_type *tft = ffi_type_struct(target_type);
-      if (tft->fill == 0 && tft->alloc == ffi_fixed_alloc)
-        uw_throwf(error_s, lit("~a: ~s cannot be ptr-out target"),
-                  self, cadr(syntax), nao);
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
                                    &ffi_type_pointer,
                                    ffi_ptr_out_put, ffi_ptr_out_get,
                                    ffi_ptr_out_in, target_type);
     } else if (sym == ptr_in_out_s) {
       val target_type = ffi_type_compile(cadr(syntax));
-      struct txr_ffi_type *tft = ffi_type_struct(target_type);
-      if (tft->fill == 0 && tft->alloc == ffi_fixed_alloc)
-        uw_throwf(error_s, lit("~a: ~s cannot be ptr-in-out target"),
-                  self, cadr(syntax), nao);
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
                                    &ffi_type_pointer,
                                    ffi_ptr_in_out_put, ffi_ptr_out_get,
