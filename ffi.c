@@ -673,6 +673,7 @@ static void ffi_ptr_in_put(struct txr_ffi_type *tft, val s, mem_t *dst,
   mem_t *buf = tgtft->alloc(tgtft, s, self);
   tgtft->put(tgtft, s, buf, rtvec, self);
   rtvec[tft->rtidx] = buf;
+  *coerce(mem_t **, dst) = buf;
 }
 
 static void ffi_ptr_out_in(struct txr_ffi_type *tft, val obj,
