@@ -57,7 +57,7 @@ val uint16_s, int16_s;
 val uint32_s, int32_s;
 val uint64_s, int64_s;
 
-val char_s, uchar_s;
+val char_s, uchar_s, wchar_s;
 val short_s, ushort_s;
 val int_s, uint_s;
 val long_s, ulong_s;
@@ -555,6 +555,34 @@ static val ffi_double_get(struct txr_ffi_type *tft, mem_t *src, val self)
   double n;
   memcpy(&n, src, sizeof n);
   return flo(n);
+}
+
+#if SIZEOF_WCHAR_T == SIZEOF_SHORT
+#define ffi_type_wchar ffi_type_ushort
+#elif SIZEOF_WCHAR_T == SIZEOF_INT
+#define ffi_type_wchar ffi_type_uint
+#elif SIZEOF_WCHAR_T == SIZEOF_LONG
+#define ffi_type_wchar ffi_type_long
+#else
+#error portme
+#endif
+
+static void ffi_wchar_put(struct txr_ffi_type *tft, val ch, mem_t *dst,
+                          mem_t *rtvec[], val self)
+{
+  wchar_t c = c_chr(ch);
+  (void) tft;
+  (void) rtvec;
+  memcpy(dst, &c, sizeof c);
+}
+
+static val ffi_wchar_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  (void) tft;
+  (void) self;
+  wchar_t c;
+  memcpy(&c, src, sizeof c);
+  return chr(c);
 }
 
 static void ffi_cptr_put(struct txr_ffi_type *tft, val n, mem_t *dst,
@@ -1293,6 +1321,10 @@ val ffi_type_compile(val syntax)
 #endif
     return make_ffi_type_builtin(syntax, integer_s, 1, ffi_char,
                                  ffi_char_put, ffi_char_get);
+  } else if (syntax == wchar_s) {
+    return make_ffi_type_builtin(syntax, char_s, sizeof (wchar_t),
+                                 &ffi_type_wchar,
+                                 ffi_wchar_put, ffi_wchar_get);
   } else if (syntax == ushort_s) {
     return make_ffi_type_builtin(syntax, integer_s, sizeof (short),
                                  &ffi_type_ushort,
@@ -1541,6 +1573,7 @@ void ffi_init(void)
   int64_s = intern(lit("int64"), user_package);
   char_s = intern(lit("char"), user_package);
   uchar_s = intern(lit("uchar"), user_package);
+  wchar_s = intern(lit("wchar"), user_package);
   short_s = intern(lit("short"), user_package);
   ushort_s = intern(lit("ushort"), user_package);
   int_s = intern(lit("int"), user_package);
