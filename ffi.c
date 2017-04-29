@@ -74,7 +74,7 @@ val str_d_s, wstr_s, wstr_d_s;
 
 val buf_d_s;
 
-val ptr_in_s, ptr_out_s, ptr_in_out_s;
+val ptr_in_s, ptr_out_s, ptr_s;
 
 val ffi_type_s, ffi_call_desc_s;
 
@@ -750,8 +750,8 @@ static val ffi_ptr_out_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return tgtft->get(tgtft, ptr, self);
 }
 
-static void ffi_ptr_in_out_put(struct txr_ffi_type *tft, val s, mem_t *dst,
-                               mem_t *rtvec[], val self)
+static void ffi_ptr_put(struct txr_ffi_type *tft, val s, mem_t *dst,
+                        mem_t *rtvec[], val self)
 {
   val tgttype = tft->mtypes;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
@@ -1153,11 +1153,11 @@ val ffi_type_compile(val syntax)
                                    &ffi_type_pointer,
                                    ffi_ptr_out_put, ffi_ptr_out_get,
                                    ffi_ptr_out_in, target_type);
-    } else if (sym == ptr_in_out_s) {
+    } else if (sym == ptr_s) {
       val target_type = ffi_type_compile(cadr(syntax));
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
                                    &ffi_type_pointer,
-                                   ffi_ptr_in_out_put, ffi_ptr_out_get,
+                                   ffi_ptr_put, ffi_ptr_out_get,
                                    ffi_ptr_out_in, target_type);
     } else if (sym == buf_s || sym == buf_d_s) {
       cnum nelem = c_num(cadr(syntax));
@@ -1491,7 +1491,7 @@ void ffi_init(void)
   buf_d_s = intern(lit("buf-d"), user_package);
   ptr_in_s = intern(lit("ptr-in"), user_package);
   ptr_out_s = intern(lit("ptr-out"), user_package);
-  ptr_in_out_s = intern(lit("ptr-in-out"), user_package);
+  ptr_s = intern(lit("ptr"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);
   reg_fun(intern(lit("ffi-type-compile"), user_package), func_n1(ffi_type_compile_toplevel));
