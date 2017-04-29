@@ -43,7 +43,7 @@ extern val buf_d_s;
 
 extern val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_s;
 
-extern val array_s;
+extern val array_s, zarray_s;
 
 extern val void_s;
 

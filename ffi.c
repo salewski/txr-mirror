@@ -64,7 +64,7 @@ val long_s, ulong_s;
 
 val double_s;
 
-val array_s;
+val array_s, zarray_s;
 
 val void_s;
 
@@ -87,6 +87,7 @@ struct txr_ffi_type {
   cnum size, align;
   cnum nelem;
   int rtidx, rtsize;
+  unsigned null_term : 1;
   void (*walk)(struct txr_ffi_type *, mem_t *ctx,
                void (*visit)(struct txr_ffi_type *, mem_t *ctx));
   void (*put)(struct txr_ffi_type *, val obj, mem_t *dst,
@@ -880,6 +881,8 @@ static void ffi_array_in(struct txr_ffi_type *tft, val obj,
   for (i = 0; i < nelem; i++) {
     val eltype = pop(&eltypes);
     struct txr_ffi_type *etft = ffi_type_struct(eltype);
+    if (i == nelem - 1 && tft->null_term)
+      break;
     if (etft->in != 0)
       etft->in(etft, obj, rtvec, self);
   }
@@ -890,6 +893,7 @@ static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
 {
   val eltypes = tft->mtypes;
   cnum nelem = tft->nelem, i;
+  int nt = tft->null_term;
   ucnum offs = 0;
 
   for (i = 0; i < nelem; i++) {
@@ -897,6 +901,10 @@ static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
     struct txr_ffi_type *etft = ffi_type_struct(eltype);
     cnum elsize = etft->size;
     val elval = ref(vec, num_fast(i));
+    if (nt && i == nelem - 1) {
+      memset(dst + offs, 0, elsize);
+      break;
+    }
     etft->put(etft, elval, dst + offs, rtvec, self);
     offs += elsize;
   }
@@ -1154,14 +1162,21 @@ val ffi_type_compile(val syntax)
       val xsyntax = cons(struct_s,
                          cons(sname, membs));
       return make_ffi_type_struct(xsyntax, stype, slots, types);
-    } else if (sym == array_s) {
+    } else if (sym == array_s || sym == zarray_s) {
       val dim = cadr(syntax);
       val eltype_syntax = caddr(syntax);
       list_collect_decl (eltypes, ptail);
       cnum dimn = c_num(dim), i;
       for (i = 0; i < dimn; i++)
         ptail = list_collect(ptail, ffi_type_compile(eltype_syntax));
-      return make_ffi_type_array(syntax, eltypes, dim, eltypes);
+
+      {
+        val type = make_ffi_type_array(syntax, eltypes, dim, eltypes);
+        struct txr_ffi_type *tft = ffi_type_struct(type);
+        if (sym == zarray_s)
+          tft->null_term = 1;
+        return type;
+      }
     } else if (sym == ptr_in_s) {
       val target_type = ffi_type_compile(cadr(syntax));
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
@@ -1517,6 +1532,7 @@ void ffi_init(void)
   ulong_s = intern(lit("ulong"), user_package);
   double_s = intern(lit("double"), user_package);
   array_s = intern(lit("array"), user_package);
+  zarray_s = intern(lit("zarray"), user_package);
   void_s = intern(lit("void"), user_package);
   struct_s = intern(lit("struct"), user_package);
   str_d_s = intern(lit("str-d"), user_package);
