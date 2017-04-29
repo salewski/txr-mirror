@@ -1174,7 +1174,8 @@ val ffi_type_compile(val syntax)
       return type;
     }
 
-    uw_throwf(error_s, lit("~a: unimplemented case"), self, nao);
+    uw_throwf(error_s, lit("~a: unrecognized type operator: ~s"),
+              self, sym, nao);
 #if HAVE_I8
   } else if (syntax == uint8_s) {
     return make_ffi_type_builtin(syntax, integer_s, sizeof (i8_t),
@@ -1302,7 +1303,7 @@ val ffi_type_compile(val syntax)
     return make_ffi_type_builtin(syntax, null_s, 0, &ffi_type_void,
                                  ffi_void_put, ffi_void_get);
   } else {
-    uw_throwf(error_s, lit("~a: bad type syntax: ~!~s"),
+    uw_throwf(error_s, lit("~a: unrecognized type specifier: ~!~s"),
               self, syntax, nao);
   }
 }
