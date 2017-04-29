@@ -944,7 +944,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
   cnum total_size = 0;
   cnum most_align = 0;
-  int rtsize = 0;
+  int need_in_handler = 0;
 
   ft->type = FFI_TYPE_STRUCT;
   ft->size = 0;
@@ -973,15 +973,13 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       most_align = align;
 
     total_size = (total_size + align - 1) / align * align + size;
-    rtsize += mtft->rtsize;
+    need_in_handler = need_in_handler || mtft->rtsize != 0 || mtft->in != 0;
   }
 
   elements[i] = 0;
 
-  if (rtsize != 0) {
-    tft->rtsize = rtsize;
+  if (need_in_handler)
     tft->in = ffi_struct_in;
-  }
 
   ft->elements = elements;
 
@@ -1027,10 +1025,8 @@ static val make_ffi_type_array(val syntax, val lisp_type,
     if (i == 0) {
       tft->size = etft->size * nelem;
       tft->align = etft->align;
-      if (etft->rtsize != 0) {
-        tft->rtsize = etft->rtsize * nelem;
+      if (etft->rtsize != 0 || etft->in != 0)
         tft->in = ffi_array_in;
-      }
     }
   }
 
@@ -1263,14 +1259,16 @@ val ffi_type_compile(val syntax)
 static void assign_rtindices_visit(struct txr_ffi_type *tft, mem_t *ctx)
 {
   int *counter = coerce(int *, ctx);
-  if (tft->in != 0)
+  if (tft->rtsize != 0)
     tft->rtidx = (*counter)++;
 }
 
 static void ffi_type_assign_rtindices(val type)
 {
+  struct txr_ffi_type *tft = ffi_type_struct(type);
   int counter = 0;
   ffi_type_walk(type, coerce(mem_t *, &counter), assign_rtindices_visit);
+  tft->rtsize = counter;
 }
 
 val ffi_type_compile_toplevel(val syntax)
