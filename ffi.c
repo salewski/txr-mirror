@@ -716,9 +716,13 @@ static void ffi_ptr_in_put(struct txr_ffi_type *tft, val s, mem_t *dst,
   val tgttype = tft->mtypes;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t *buf = tgtft->alloc(tgtft, s, self);
-  tgtft->put(tgtft, s, buf, rtvec, self);
-  rtvec[tft->rtidx] = buf;
-  *coerce(mem_t **, dst) = buf;
+  if (s == nil) {
+    *coerce(mem_t **, dst) = rtvec[tft->rtidx] = 0;
+  } else {
+    tgtft->put(tgtft, s, buf, rtvec, self);
+    rtvec[tft->rtidx] = buf;
+    *coerce(mem_t **, dst) = buf;
+  }
 }
 
 static void ffi_ptr_in_d_put(struct txr_ffi_type *tft, val s, mem_t *dst,
@@ -726,10 +730,15 @@ static void ffi_ptr_in_d_put(struct txr_ffi_type *tft, val s, mem_t *dst,
 {
   val tgttype = tft->mtypes;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
-  mem_t *buf = tgtft->alloc(tgtft, s, self);
-  (void) rtvec;
-  tgtft->put(tgtft, s, buf, rtvec, self);
-  *coerce(mem_t **, dst) = buf;
+
+  if (s == nil) {
+    *coerce(mem_t **, dst) = 0;
+  } else {
+    mem_t *buf = tgtft->alloc(tgtft, s, self);
+    (void) rtvec;
+    tgtft->put(tgtft, s, buf, rtvec, self);
+    *coerce(mem_t **, dst) = buf;
+  }
 }
 
 static void ffi_ptr_out_in(struct txr_ffi_type *tft, val obj,
@@ -749,9 +758,13 @@ static void ffi_ptr_out_put(struct txr_ffi_type *tft, val s, mem_t *dst,
 {
   val tgttype = tft->mtypes;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
-  mem_t *buf = tgtft->alloc(tgtft, s, self);
-  rtvec[tft->rtidx] = buf;
-  *coerce(mem_t **, dst) = buf;
+  if (s == nil) {
+    *coerce(mem_t **, dst) = rtvec[tft->rtidx] = 0;
+  } else {
+    mem_t *buf = tgtft->alloc(tgtft, s, self);
+    rtvec[tft->rtidx] = buf;
+    *coerce(mem_t **, dst) = buf;
+  }
 }
 
 static val ffi_ptr_out_get(struct txr_ffi_type *tft, mem_t *src, val self)
@@ -759,7 +772,7 @@ static val ffi_ptr_out_get(struct txr_ffi_type *tft, mem_t *src, val self)
   val tgttype = tft->mtypes;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t *ptr = *coerce(mem_t **, src);
-  return tgtft->get(tgtft, ptr, self);
+  return ptr ? tgtft->get(tgtft, ptr, self) : nil;
 }
 
 static val ffi_ptr_out_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
@@ -767,7 +780,7 @@ static val ffi_ptr_out_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
   val tgttype = tft->mtypes;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t *ptr = *coerce(mem_t **, src);
-  val ret = tgtft->get(tgtft, ptr, self);
+  val ret = ptr ? tgtft->get(tgtft, ptr, self) : nil;
   free(ptr);
   return ret;
 }
@@ -777,10 +790,14 @@ static void ffi_ptr_put(struct txr_ffi_type *tft, val s, mem_t *dst,
 {
   val tgttype = tft->mtypes;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
-  mem_t *buf = tgtft->alloc(tgtft, s, self);
-  tgtft->put(tgtft, s, buf, rtvec, self);
-  rtvec[tft->rtidx] = buf;
-  *coerce(mem_t **, dst) = buf;
+  if (s == nil) {
+    *coerce(mem_t **, dst) = 0;
+  } else {
+    mem_t *buf = tgtft->alloc(tgtft, s, self);
+    tgtft->put(tgtft, s, buf, rtvec, self);
+    rtvec[tft->rtidx] = buf;
+    *coerce(mem_t **, dst) = buf;
+  }
 }
 
 static void ffi_struct_walk(struct txr_ffi_type *tft, mem_t *ctx,
