@@ -1232,7 +1232,7 @@ val ffi_type_compile(val syntax)
     tft->free = ffi_noop_free;
     return type;
   } else if (syntax == str_s) {
-    val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
+    val type = make_ffi_type_builtin(syntax, str_s, sizeof (mem_t *),
                                      &ffi_type_pointer,
                                      ffi_str_put, ffi_str_get);
     struct txr_ffi_type *tft = ffi_type_struct(type);
@@ -1240,11 +1240,11 @@ val ffi_type_compile(val syntax)
     tft->rtsize = 1;
     return type;
   } else if (syntax == wstr_s) {
-    return make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
+    return make_ffi_type_builtin(syntax, str_s, sizeof (mem_t *),
                                  &ffi_type_pointer,
                                  ffi_wstr_put, ffi_wstr_get);
   } else if (syntax == buf_s) {
-    val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
+    val type = make_ffi_type_builtin(syntax, buf_s, sizeof (mem_t *),
                                      &ffi_type_pointer,
                                      ffi_buf_put, ffi_void_get);
     struct txr_ffi_type *tft = ffi_type_struct(type);
@@ -1252,7 +1252,7 @@ val ffi_type_compile(val syntax)
     tft->free = ffi_noop_free;
     return type;
   } else if (syntax == void_s) {
-    return make_ffi_type_builtin(syntax, nil, 0, &ffi_type_void,
+    return make_ffi_type_builtin(syntax, null_s, 0, &ffi_type_void,
                                  ffi_void_put, ffi_void_get);
   } else {
     uw_throwf(error_s, lit("~a: bad type syntax: ~!~s"),
