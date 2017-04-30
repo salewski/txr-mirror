@@ -74,7 +74,9 @@ val buf_d_s;
 
 val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_s;
 
-val ffi_type_s, ffi_call_desc_s;
+val closure_s;
+
+val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
 struct txr_ffi_type {
   ffi_type *ft;
@@ -181,6 +183,57 @@ static struct cobj_ops ffi_type_ptr_ops =
                 ffi_type_print_op,
                 cobj_destroy_free_op,
                 ffi_ptr_type_mark,
+                cobj_hash_op);
+
+struct txr_ffi_closure {
+  ffi_closure *clo;
+  mem_t *fptr;
+  cnum nparam;
+  val fun;
+  val call_desc;
+  struct txr_ffi_call_desc *tfcd;
+};
+
+static struct txr_ffi_closure *ffi_closure_struct(val obj)
+{
+  return coerce(struct txr_ffi_closure *, obj->co.handle);
+}
+
+static struct txr_ffi_closure *ffi_closure_struct_checked(val obj)
+{
+  return coerce(struct txr_ffi_closure *, cobj_handle(obj, ffi_closure_s));
+}
+
+static void ffi_closure_print_op(val obj, val out,
+                                 val pretty, struct strm_ctx *ctx)
+{
+  put_string(lit("#<"), out);
+  obj_print_impl(obj->co.cls, out, pretty, ctx);
+  put_string(lit("#>"), out);
+}
+
+static void ffi_closure_destroy_op(val obj)
+{
+  struct txr_ffi_closure *tfcl = ffi_closure_struct(obj);
+  if (tfcl->clo != 0) {
+    ffi_closure_free(tfcl->clo);
+    tfcl->clo = 0;
+    tfcl->fptr = 0;
+  }
+}
+
+static void ffi_closure_mark_op(val obj)
+{
+  struct txr_ffi_closure *tfcl = ffi_closure_struct(obj);
+  gc_mark(tfcl->fun);
+  gc_mark(tfcl->call_desc);
+}
+
+static struct cobj_ops ffi_closure_ops =
+  cobj_ops_init(eq,
+                ffi_closure_print_op,
+                ffi_closure_destroy_op,
+                ffi_closure_mark_op,
                 cobj_hash_op);
 
 static void ffi_void_put(struct txr_ffi_type *tft, val n, mem_t *dst,
@@ -752,6 +805,25 @@ static mem_t *ffi_buf_alloc(struct txr_ffi_type *tft, val buf, val self)
 {
   (void) tft;
   return coerce(mem_t *, buf_addr_of(buf, self));
+}
+
+static void ffi_closure_put(struct txr_ffi_type *tft, val ptr, mem_t *dst,
+                            mem_t *rtvec[], val self)
+{
+  val type = typeof(ptr);
+  mem_t *p = 0;
+
+  if (type == cptr_s) {
+    p = ptr->co.handle;
+  } else if (type == ffi_closure_s) {
+    struct txr_ffi_closure *tfcl = ffi_closure_struct(ptr);
+    p = tfcl->fptr;
+  } else {
+    uw_throwf(error_s, lit("~a: ~s cannot be used as function pointer"),
+              self, ptr, nao);
+  }
+
+  memcpy(dst, &p, sizeof p);
 }
 
 static void ffi_ptr_walk(struct txr_ffi_type *tft, mem_t *ctx,
@@ -1465,6 +1537,10 @@ val ffi_type_compile(val syntax)
     tft->alloc = ffi_buf_alloc;
     tft->free = ffi_noop_free;
     return type;
+  } else if (syntax == closure_s) {
+    return make_ffi_type_builtin(syntax, fun_s, sizeof (mem_t *),
+                                 &ffi_type_pointer,
+                                 ffi_closure_put, ffi_cptr_get);
   } else if (syntax == void_s) {
     return make_ffi_type_builtin(syntax, null_s, 0, &ffi_type_void,
                                  ffi_void_put, ffi_void_get);
@@ -1624,6 +1700,72 @@ val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
   return rtft->get(rtft, convert(mem_t *, rc), self);
 }
 
+static void ffi_closure_dispatch(ffi_cif *cif, void *cret,
+                                 void *cargs[], void *clo)
+{
+  val self = lit("ffi-closure-dispatch");
+  val closure = coerce(val, clo);
+  struct txr_ffi_closure *tfcl = ffi_closure_struct(closure);
+  cnum i, nargs = tfcl->nparam;
+  struct txr_ffi_call_desc *tfcd = tfcl->tfcd;
+  val types = tfcd->argtypes;
+  val rtype = tfcd->rettype;
+  struct txr_ffi_type *rtft = ffi_type_struct(rtype);
+  val retval = nil;
+  args_decl(args, tfcl->nparam);
+
+  for (i = 0; i < nargs; i++) {
+    val type = pop(&types);
+    struct txr_ffi_type *mtft = ffi_type_struct(type);
+    val arg = mtft->get(mtft, convert(mem_t *, cargs[i]), self);
+    args_add(args, arg);
+  }
+
+  retval = generic_funcall(tfcl->fun, args);
+
+  /* rtvec is purposely null in the following call.
+   * if the put placed any pointers into rtvec, it would
+   * be wrong.
+   */
+  rtft->put(rtft, retval, convert(mem_t *, cret), 0, self);
+}
+
+val ffi_make_closure(val fun, val call_desc)
+{
+  val self = lit("ffi-make-closure");
+  struct txr_ffi_closure *tfcl = coerce(struct txr_ffi_closure *,
+                                        chk_calloc(1, sizeof *tfcl));
+  struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(call_desc);
+  val obj = cobj(coerce(mem_t *, tfcl), ffi_closure_s, &ffi_closure_ops);
+  ffi_status ffis = FFI_OK;
+
+  tfcl->clo = convert(ffi_closure *,
+                      ffi_closure_alloc(sizeof *tfcl->clo,
+                                        coerce(void **, &tfcl->fptr)));
+
+  if (!tfcl->clo)
+    uw_throwf(error_s, lit("~a: failed to allocate special closure memory"),
+              self, nao);
+
+  if ((ffis = ffi_prep_closure_loc(tfcl->clo, &tfcd->cif, ffi_closure_dispatch, obj,
+                                   coerce(void *, tfcl->fptr))) != FFI_OK)
+    uw_throwf(error_s, lit("~a: ffi_prep_closure_loc failed: ~s"),
+              self, num(ffis), nao);
+
+  tfcl->nparam = tfcd->ntotal;
+  tfcl->fun = fun;
+  tfcl->call_desc = call_desc;
+  tfcl->tfcd = tfcd;
+
+  return obj;
+}
+
+mem_t *ffi_closure_get_fptr(val closure)
+{
+  struct txr_ffi_closure *tfcl = ffi_closure_struct_checked(closure);
+  return tfcl->fptr;
+}
+
 static val cptr_make(val n)
 {
   return if3(missingp(n), cptr(0), cptr(coerce(mem_t *, c_num(n))));
@@ -1663,11 +1805,14 @@ void ffi_init(void)
   ptr_in_d_s = intern(lit("ptr-in-d"), user_package);
   ptr_out_d_s = intern(lit("ptr-out-d"), user_package);
   ptr_s = intern(lit("ptr"), user_package);
+  closure_s = intern(lit("closure"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);
+  ffi_closure_s = intern(lit("ffi-closure"), user_package);
   reg_fun(intern(lit("ffi-type-compile"), user_package), func_n1(ffi_type_compile_toplevel));
   reg_fun(intern(lit("ffi-make-call-desc"), user_package), func_n4(ffi_make_call_desc));
   reg_fun(intern(lit("ffi-call"), user_package), func_n3(ffi_call_wrap));
+  reg_fun(intern(lit("ffi-make-closure"), user_package), func_n2(ffi_make_closure));
   reg_fun(intern(lit("cptr"), user_package), func_n1o(cptr_make, 0));
   reg_varl(intern(lit("cptr-null"), user_package), cptr(0));
 }

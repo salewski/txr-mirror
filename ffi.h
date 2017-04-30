@@ -47,9 +47,13 @@ extern val buf_d_s;
 
 extern val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_s;
 
-extern val ffi_type_s, ffi_call_desc_s;
+extern val closure_s;
+
+extern val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
 val ffi_type_compile(val syntax);
 val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes);
+val ffi_make_closure(val fun, val call_desc);
+mem_t *ffi_closure_get_fptr(val closure);
 val ffi_call_wrap(val ffi_call_desc, val fptr, val args);
 void ffi_init(void);
