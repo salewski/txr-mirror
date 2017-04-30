@@ -61,12 +61,10 @@ val char_s, uchar_s, wchar_s;
 val short_s, ushort_s;
 val int_s, uint_s;
 val long_s, ulong_s;
-
 val double_s;
+val void_s;
 
 val array_s, zarray_s;
-
-val void_s;
 
 val struct_s;
 
@@ -1637,9 +1635,9 @@ void ffi_init(void)
   long_s = intern(lit("long"), user_package);
   ulong_s = intern(lit("ulong"), user_package);
   double_s = intern(lit("double"), user_package);
+  void_s = intern(lit("void"), user_package);
   array_s = intern(lit("array"), user_package);
   zarray_s = intern(lit("zarray"), user_package);
-  void_s = intern(lit("void"), user_package);
   struct_s = intern(lit("struct"), user_package);
   str_d_s = intern(lit("str-d"), user_package);
   wstr_s = intern(lit("wstr"), user_package);

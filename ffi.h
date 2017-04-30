@@ -34,18 +34,18 @@ extern val char_s, uchar_s, wchar_s;
 extern val short_s, ushort_s;
 extern val int_s, uint_s;
 extern val long_s, ulong_s;
-
+extern val void_s;
 extern val double_s;
+
+extern val array_s, zarray_s;
+
+extern val struct_s;
 
 extern val str_d_s, wstr_s, wstr_d_s;
 
 extern val buf_d_s;
 
 extern val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_s;
-
-extern val array_s, zarray_s;
-
-extern val void_s;
 
 extern val ffi_type_s, ffi_call_desc_s;
 
