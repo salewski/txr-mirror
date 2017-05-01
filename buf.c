@@ -114,7 +114,7 @@ val make_duplicate_buf(val len, mem_t *data)
   obj->b.type = BUF;
   obj->b.data = chk_copy_obj(data, c_num(len));
   obj->b.len = len;
-  obj->b.size = nil;
+  obj->b.size = len;
 
   return obj;
 }
