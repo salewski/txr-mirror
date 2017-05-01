@@ -130,18 +130,8 @@ static void ffi_type_struct_destroy_op(val obj)
 {
   struct txr_ffi_type *tft = ffi_type_struct(obj);
   ffi_type *ft = tft->ft;
-
-  if (ft != 0) {
-    int i;
-    for (i = 0; ; i++) {
-      ffi_type *el = ft->elements[i];
-      if (!el)
-        break;
-      free(el);
-    }
-    ft->elements = 0;
-  }
-
+  free(ft->elements);
+  ft->elements = 0;
   free(ft);
   tft->ft = 0;
   free(tft);
@@ -1605,6 +1595,7 @@ static void ffi_call_desc_destroy_op(val obj)
   struct txr_ffi_call_desc *tfcd = ffi_call_desc(obj);
   free(tfcd->args);
   tfcd->args = 0;
+  free(tfcd);
 }
 
 static void ffi_call_desc_mark_op(val obj)
