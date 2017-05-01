@@ -210,6 +210,7 @@ static void ffi_closure_destroy_op(val obj)
     tfcl->clo = 0;
     tfcl->fptr = 0;
   }
+  free(tfcl);
 }
 
 static void ffi_closure_mark_op(val obj)
