@@ -963,11 +963,15 @@ static void ffi_struct_put(struct txr_ffi_type *tft, val strct, mem_t *dst,
   while (slots) {
     val slsym = pop(&slots);
     val type = pop(&types);
-    val slval = slot(strct, slsym);
     struct txr_ffi_type *mtft = ffi_type_struct(type);
     ucnum almask = mtft->align - 1;
     offs = (offs + almask) & ~almask;
-    mtft->put(mtft, slval, dst + offs, rtvec, self);
+    if (slsym) {
+      val slval = slot(strct, slsym);
+      mtft->put(mtft, slval, dst + offs, rtvec, self);
+    } else {
+      memset(dst + offs, 0, mtft->size);
+    }
     offs += mtft->size;
   }
 }
@@ -985,10 +989,11 @@ static val ffi_struct_get(struct txr_ffi_type *tft, mem_t *src, val self)
     val type = pop(&types);
     struct txr_ffi_type *mtft = ffi_type_struct(type);
     ucnum almask = mtft->align - 1;
-    val slval;
     offs = (offs + almask) & ~almask;
-    slval = mtft->get(mtft, src + offs, self);
-    slotset(strct, slsym, slval);
+    if (slsym) {
+      val slval = mtft->get(mtft, src + offs, self);
+      slotset(strct, slsym, slval);
+    }
     offs += mtft->size;
   }
 
@@ -1009,8 +1014,10 @@ static void ffi_struct_fill(struct txr_ffi_type *tft, mem_t *src,
     ucnum almask = mtft->align - 1;
     val slval;
     offs = (offs + almask) & ~almask;
-    slval = mtft->get(mtft, src + offs, self);
-    slotset(strct, slsym, slval);
+    if (slsym) {
+      slval = mtft->get(mtft, src + offs, self);
+      slotset(strct, slsym, slval);
+    }
     offs += mtft->size;
   }
 }
