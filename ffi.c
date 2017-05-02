@@ -100,6 +100,7 @@ struct txr_ffi_type {
   void (*out)(struct txr_ffi_type *, int copy, val obj, mem_t *dest, val self);
   mem_t *(*alloc)(struct txr_ffi_type *, val obj, val self);
   void (*free)(void *);
+  void (*dup)(struct txr_ffi_type *);
 };
 
 static struct txr_ffi_type *ffi_type_struct(val obj)
@@ -1217,6 +1218,24 @@ static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
   }
 }
 
+static void ffi_struct_dup(struct txr_ffi_type *tft)
+{
+  cnum nelem = c_num(length_list(tft->mtypes));
+  tft->mtypes = mapcar_listout(func_n1(ffi_copy_type), tft->mtypes);
+  if (tft->ft) {
+    ffi_type **elements = coerce(ffi_type **,
+                                 chk_copy_obj(coerce(mem_t *,
+                                                     tft->ft->elements),
+                                              sizeof *elements * (nelem + 1)));
+    tft->ft->elements = elements;
+  }
+}
+
+static void ffi_ptr_dup(struct txr_ffi_type *tft)
+{
+  tft->mtypes = ffi_copy_type(tft->mtypes);
+}
+
 static val make_ffi_type_builtin(val syntax, val lisp_type,
                                  cnum size, ffi_type *ft,
                                  void (*put)(struct txr_ffi_type *,
@@ -1275,6 +1294,7 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
   tft->out = out;
   tft->alloc = ffi_fixed_alloc;
   tft->free = free;
+  tft->dup = ffi_ptr_dup;
 
   return obj;
 }
@@ -1308,6 +1328,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   tft->in = ffi_struct_in;
   tft->alloc = ffi_fixed_alloc;
   tft->free = free;
+  tft->dup = ffi_struct_dup;
 
   for (i = 0; i < nmemb; i++) {
     val type = pop(&types);
@@ -1365,6 +1386,7 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->in = ffi_array_in;
   tft->alloc = ffi_fixed_alloc;
   tft->free = free;
+  tft->dup = ffi_struct_dup;
 
   for (i = 0; i < nelem; i++) {
     val eltype = pop(&eltypes);
@@ -1880,6 +1902,19 @@ static val cptr_make(val n)
   return if3(missingp(n), cptr(0), cptr(coerce(mem_t *, c_num(n))));
 }
 
+val ffi_copy_type(val type)
+{
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft_cp = coerce(struct txr_ffi_type *,
+                                       chk_copy_obj(coerce(mem_t *, tft),
+                                                    sizeof *tft));
+  val type_cp = cobj(coerce(mem_t *, tft_cp), ffi_type_s, type->co.ops);
+  if (tft_cp->dup)
+    tft_cp->dup(tft_cp);
+  gc_hint(type);
+  return type_cp;
+}
+
 void ffi_init(void)
 {
   uint8_s = intern(lit("uint8"), user_package);
@@ -1923,5 +1958,6 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-call"), user_package), func_n3(ffi_call_wrap));
   reg_fun(intern(lit("ffi-make-closure"), user_package), func_n2(ffi_make_closure));
   reg_fun(intern(lit("cptr"), user_package), func_n1o(cptr_make, 0));
+  reg_fun(intern(lit("ffi-copy-type"), user_package), func_n1(ffi_copy_type));
   reg_varl(intern(lit("cptr-null"), user_package), cptr(0));
 }
