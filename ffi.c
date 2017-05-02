@@ -50,6 +50,7 @@
 #include "arith.h"
 #include "args.h"
 #include "utf8.h"
+#include "hash.h"
 #include "ffi.h"
 
 val uint8_s, int8_s;
@@ -77,6 +78,8 @@ val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_s;
 val closure_s;
 
 val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
+
+static val ffi_typedef_hash;
 
 struct txr_ffi_type {
   ffi_type *ft;
@@ -1664,6 +1667,11 @@ val ffi_type_compile(val syntax)
     return make_ffi_type_builtin(syntax, null_s, 0, &ffi_type_void,
                                  ffi_void_put, ffi_void_get);
   } else {
+    val sub = gethash(ffi_typedef_hash, syntax);
+
+    if (sub != nil)
+      return ffi_copy_type(sub);
+
     uw_throwf(error_s, lit("~a: unrecognized type specifier: ~!~s"),
               self, syntax, nao);
   }
@@ -1915,8 +1923,14 @@ val ffi_copy_type(val type)
   return type_cp;
 }
 
+val ffi_typedef(val name, val type)
+{
+  return sethash(ffi_typedef_hash, name, type);
+}
+
 void ffi_init(void)
 {
+  prot1(&ffi_typedef_hash);
   uint8_s = intern(lit("uint8"), user_package);
   int8_s = intern(lit("int8"), user_package);
   int8_s = intern(lit("int8"), user_package);
@@ -1959,5 +1973,7 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-make-closure"), user_package), func_n2(ffi_make_closure));
   reg_fun(intern(lit("cptr"), user_package), func_n1o(cptr_make, 0));
   reg_fun(intern(lit("ffi-copy-type"), user_package), func_n1(ffi_copy_type));
+  reg_fun(intern(lit("ffi-typedef"), user_package), func_n2(ffi_typedef));
   reg_varl(intern(lit("cptr-null"), user_package), cptr(0));
+  ffi_typedef_hash = make_hash(nil, nil, nil);
 }

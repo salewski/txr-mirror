@@ -57,4 +57,5 @@ val ffi_make_closure(val fun, val call_desc);
 mem_t *ffi_closure_get_fptr(val closure);
 val ffi_call_wrap(val ffi_call_desc, val fptr, val args);
 val ffi_copy_type(val type);
+val ffi_typedef(val name, val type);
 void ffi_init(void);
