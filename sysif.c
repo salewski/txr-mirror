@@ -1480,6 +1480,8 @@ static val dlopen_wrap(val name, val flags)
   cnum f = c_num(flags);
   mem_t *ptr = coerce(mem_t *, dlopen(name_u8, f));
   free(name_u8);
+  if (ptr == 0)
+    uw_throwf(error_s, lit("dlopen failed on ~a"), name, nao);
   return cobj(ptr, cptr_s, &cptr_dl_ops);
 }
 
@@ -1507,6 +1509,15 @@ static val dlsym_wrap(val dlptr, val name)
   return cptr(sym);
 }
 
+static val dlsym_checked(val dlptr, val name)
+{
+  val ptr = dlsym_wrap(dlptr, name);
+  if (cptr_get(ptr) == 0)
+    uw_throwf(error_s, lit("dlsym: ~s not found in ~s"),
+              name, dlptr, nao);
+  return ptr;
+}
+
 #if HAVE_DLVSYM
 static val dlvsym_wrap(val dlptr, val name, val ver)
 {
@@ -1523,6 +1534,15 @@ static val dlvsym_wrap(val dlptr, val name, val ver)
     free(ver_u8);
     return cptr(sym);
   }
+}
+
+static val dlvsym_checked(val dlptr, val name, val ver)
+{
+  val ptr = dlvsym_wrap(dlptr, name, ver);
+  if (cptr_get(ptr) == 0)
+    uw_throwf(error_s, lit("dlvsym: ~s not found in ~s"),
+              name, dlptr, nao);
+  return ptr;
 }
 #endif
 
@@ -1874,8 +1894,10 @@ void sysif_init(void)
   reg_fun(intern(lit("dlopen"), user_package), func_n2(dlopen_wrap));
   reg_fun(intern(lit("dlclose"), user_package), func_n1(dlclose_wrap));
   reg_fun(intern(lit("dlsym"), user_package), func_n2(dlsym_wrap));
+  reg_fun(intern(lit("dlsym-checked"), user_package), func_n2(dlsym_checked));
 #if HAVE_DLVSYM
   reg_fun(intern(lit("dlvsym"), user_package), func_n3o(dlvsym_wrap, 2));
+  reg_fun(intern(lit("dlvsym-checked"), user_package), func_n3o(dlvsym_checked, 2));
 #endif
   reg_varl(intern(lit("rtld-lazy"), user_package), num_fast(RTLD_LAZY));
   reg_varl(intern(lit("rtld-now"), user_package), num_fast(RTLD_NOW));
