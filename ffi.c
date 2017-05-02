@@ -1067,21 +1067,59 @@ static void ffi_array_in(struct txr_ffi_type *tft, mem_t *src, val vec,
                          mem_t *rtvec[], val self)
 {
   val eltypes = tft->mtypes;
-  cnum nelem = tft->nelem, i;
-  ucnum offs = 0;
 
-  for (i = 0; i < nelem; i++) {
-    val eltype = pop(&eltypes);
-    struct txr_ffi_type *etft = ffi_type_struct(eltype);
-    cnum elsize = etft->size;
-    if (etft->in != 0) {
-      val elval = ref(vec, num_fast(i));
-      etft->in(etft, src + offs, elval, rtvec, self);
+  if (tft->char_conv) {
+    val str;
+
+    if (!eltypes) {
+      str = null_string;
     } else {
-      val elval = etft->get(etft, src + offs, self);
-      refset(vec, num_fast(i), elval);
+      const char *chptr = coerce(const char *, src);
+      if (chptr[tft->size - 1] == 0) {
+        str = string_utf8(chptr);
+      } else {
+        wchar_t *wch = utf8_dup_from_buf(chptr, tft->size);
+        str = string_own(wch);
+      }
     }
-    offs += elsize;
+    replace(vec, str, zero, t);
+  } else if (tft->wchar_conv) {
+    val str;
+
+    if (!eltypes) {
+      str = null_string;
+    } else {
+      cnum nchar = tft->size / sizeof (wchar_t);
+      const wchar_t *wchptr = coerce(const wchar_t *, src);
+
+      if (wchptr[nchar - 1] == 0) {
+        str = string(wchptr);
+      } else {
+        val ustr = mkustring(num_fast(nchar));
+        str = init_str(ustr, wchptr);
+      }
+    }
+    replace(vec, str, zero, t);
+  } else {
+    if (eltypes) {
+      cnum nelem = tft->nelem, i;
+      ucnum offs = 0;
+
+      for (i = 0; i < nelem; i++) {
+        val eltype = pop(&eltypes);
+        struct txr_ffi_type *etft = ffi_type_struct(eltype);
+        cnum elsize = etft->size;
+
+        if (etft->in != 0) {
+          val elval = ref(vec, num_fast(i));
+          etft->in(etft, src + offs, elval, rtvec, self);
+        } else {
+          val elval = etft->get(etft, src + offs, self);
+          refset(vec, num_fast(i), elval);
+        }
+        offs += elsize;
+      }
+    }
   }
 }
 
