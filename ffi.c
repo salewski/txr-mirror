@@ -89,12 +89,9 @@ struct txr_ffi_type {
   val mtypes;
   cnum size, align;
   cnum nelem;
-  int rtidx, rtsize;
   unsigned null_term : 1;
   unsigned char_conv : 1;
   unsigned wchar_conv : 1;
-  void (*walk)(struct txr_ffi_type *, mem_t *ctx,
-               void (*visit)(struct txr_ffi_type *, mem_t *ctx));
   void (*put)(struct txr_ffi_type *, val obj, mem_t *dst, val self);
   val (*get)(struct txr_ffi_type *, mem_t *src, val self);
   void (*in)(struct txr_ffi_type *, mem_t *src, val obj, val self);
@@ -687,16 +684,6 @@ static void ffi_closure_put(struct txr_ffi_type *tft, val ptr, mem_t *dst,
   memcpy(dst, &p, sizeof p);
 }
 
-static void ffi_ptr_walk(struct txr_ffi_type *tft, mem_t *ctx,
-                         void (*visit)(struct txr_ffi_type *, mem_t *ctx))
-{
-  val tgttype = tft->mtypes;
-  struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
-  if (tgtft->walk)
-    tgtft->walk(tgtft, ctx, visit);
-  visit(tgtft, ctx);
-}
-
 static void ffi_ptr_in_in(struct txr_ffi_type *tft, mem_t *src, val obj,
                           val self)
 {
@@ -812,20 +799,6 @@ static void ffi_ptr_put(struct txr_ffi_type *tft, val s, mem_t *dst, val self)
     mem_t *buf = tgtft->alloc(tgtft, s, self);
     tgtft->put(tgtft, s, buf, self);
     *coerce(mem_t **, dst) = buf;
-  }
-}
-
-static void ffi_struct_walk(struct txr_ffi_type *tft, mem_t *ctx,
-                            void (*visit)(struct txr_ffi_type *, mem_t *ctx))
-{
-  val types = tft->mtypes;
-
-  while (types) {
-    val type = pop(&types);
-    struct txr_ffi_type *mtft = ffi_type_struct(type);
-    if (mtft->walk != 0)
-      mtft->walk(mtft, ctx, visit);
-    visit(mtft, ctx);
   }
 }
 
@@ -1146,8 +1119,6 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
   tft->lt = lisp_type;
   tft->mnames = tft->mtypes = nil;
   tft->size = tft->align = size;
-  tft->rtsize = (in != 0);
-  tft->walk = ffi_ptr_walk;
   tft->put = put;
   tft->get = get;
   tft->mtypes = tgtype;
@@ -1183,7 +1154,6 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   tft->lt = lisp_type;
   tft->mnames = slots;
   tft->mtypes = types;
-  tft->walk = ffi_struct_walk;
   tft->put = ffi_struct_put;
   tft->get = ffi_struct_get;
   tft->in = ffi_struct_in;
@@ -1241,7 +1211,6 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->lt = lisp_type;
   tft->mnames = nil;
   tft->mtypes = eltypes;
-  tft->walk = ffi_struct_walk;
   tft->put = ffi_array_put;
   tft->get = ffi_array_get;
   tft->in = ffi_array_in;
@@ -1268,15 +1237,6 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->nelem = nelem;
 
   return obj;
-}
-
-static void ffi_type_walk(val type, mem_t *ctx,
-                          void (*visit)(struct txr_ffi_type *, mem_t *ctx))
-{
-  struct txr_ffi_type *tft = ffi_type_struct(type);
-  if (tft->walk != 0)
-    tft->walk(tft, ctx, visit);
-  visit(tft, ctx);
 }
 
 static val ffi_struct_compile(val membs, val *ptypes, val self)
@@ -1492,7 +1452,6 @@ val ffi_type_compile(val syntax)
                                      ffi_str_put, ffi_str_get);
     struct txr_ffi_type *tft = ffi_type_struct(type);
     tft->in = ffi_freeing_in;
-    tft->rtsize = 1;
     return type;
   } else if (syntax == str_d_s) {
     val type = make_ffi_type_builtin(syntax, str_s, sizeof (mem_t *),
@@ -1533,28 +1492,6 @@ val ffi_type_compile(val syntax)
     uw_throwf(error_s, lit("~a: unrecognized type specifier: ~!~s"),
               self, syntax, nao);
   }
-}
-
-static void assign_rtindices_visit(struct txr_ffi_type *tft, mem_t *ctx)
-{
-  int *counter = coerce(int *, ctx);
-  if (tft->rtsize != 0)
-    tft->rtidx = (*counter)++;
-}
-
-static void ffi_type_assign_rtindices(val type)
-{
-  struct txr_ffi_type *tft = ffi_type_struct(type);
-  int counter = 0;
-  ffi_type_walk(type, coerce(mem_t *, &counter), assign_rtindices_visit);
-  tft->rtsize = counter;
-}
-
-val ffi_type_compile_toplevel(val syntax)
-{
-  val type = ffi_type_compile(syntax);
-  ffi_type_assign_rtindices(type);
-  return type;
 }
 
 struct txr_ffi_call_desc {
@@ -1821,7 +1758,7 @@ void ffi_init(void)
   ffi_type_s = intern(lit("ffi-type"), user_package);
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);
   ffi_closure_s = intern(lit("ffi-closure"), user_package);
-  reg_fun(intern(lit("ffi-type-compile"), user_package), func_n1(ffi_type_compile_toplevel));
+  reg_fun(intern(lit("ffi-type-compile"), user_package), func_n1(ffi_type_compile));
   reg_fun(intern(lit("ffi-make-call-desc"), user_package), func_n4(ffi_make_call_desc));
   reg_fun(intern(lit("ffi-call"), user_package), func_n3(ffi_call_wrap));
   reg_fun(intern(lit("ffi-make-closure"), user_package), func_n2(ffi_make_closure));
