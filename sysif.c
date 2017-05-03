@@ -50,7 +50,7 @@
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
-#if HAVE_MAKEDEV
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
 #if HAVE_POLL

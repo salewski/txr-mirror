@@ -126,6 +126,7 @@ debug_support=y
 gen_gc=y
 have_dbl_decimal_dig=
 have_unistd=
+have_sys_types=
 have_sys_time=
 have_syslog=
 have_glob=
@@ -1535,6 +1536,7 @@ if conftest ; then
   printf "yes\n"
   printf "#define HAVE_FORK_STUFF 1\n" >> config.h
   have_unistd=y
+  have_sys_types=y
 else
   printf "no\n"
 fi
@@ -1556,6 +1558,7 @@ if conftest ; then
   printf "yes\n"
   printf "#define HAVE_GETPPID 1\n" >> config.h
   have_unistd=y
+  have_sys_types=y
 else
   printf "no\n"
 fi
@@ -1943,6 +1946,7 @@ int main(void)
 if conftest ; then
   printf "yes\n"
   printf "#define HAVE_MAKEDEV 1\n" >> config.h
+  have_sys_types=y
 else
   printf "no\n"
 fi
@@ -2257,6 +2261,7 @@ if conftest ; then
   printf "yes\n"
   printf "#define HAVE_GETEUID 1\n" >> config.h
   have_unistd=y
+  have_sys_types=y
 else
   printf "no\n"
 fi
@@ -2283,6 +2288,7 @@ if conftest ; then
   printf "yes\n"
   printf "#define HAVE_SETRESUID 1\n" >> config.h
   have_unistd=y
+  have_sys_types=y
 else
   printf "no\n"
 fi
@@ -2310,6 +2316,7 @@ elif conftest EXTRA_FLAGS=-D__EXTENSIONS__=1 ; then
   printf "#define HAVE_SETGROUPS 1\n" >> config.h
   lang_flags="$lang_flags -D__EXTENSIONS__=1" # Solaris buggery
   have_unistd=y
+  have_sys_types=y
 else
   printf "no\n"
 fi
@@ -2335,6 +2342,7 @@ if conftest ; then
   printf "yes\n"
   printf "#define HAVE_PWUID 1\n" >> config.h
   have_pwuid=y
+  have_sys_types=y
 else
   printf "no\n"
 fi
@@ -2572,10 +2580,12 @@ int main(int argc, char **argv)
 if conftest ; then
   printf "yes\n"
   printf "#define HAVE_FSEEKO 1\n" >> config.h
+  have_sys_types=y
 elif conftest EXTRA_FLAGS=-D_LARGEFILE_SOURCE ; then
   printf "yes\n"
   printf "#define HAVE_FSEEKO 1\n" >> config.h
   lang_flags="$lang_flags -D_LARGEFILE_SOURCE"
+  have_sys_types=y
 else
   printf "no\n"
 fi
@@ -2663,10 +2673,12 @@ if conftest ; then
   printf "yes\n"
   printf "#define HAVE_SOCKETS 1\n" >> config.h
   have_sockets=y
+  have_sys_types=y
 elif conftest EXTRA_LDFLAGS="-lsocket -lnsl" ; then
   printf "yes\n"
   printf "#define HAVE_SOCKETS 1\n" >> config.h
   have_sockets=y
+  have_sys_types=y
   conf_ldflags="${conf_ldflags:+"$conf_ldflags "}-lsocket -lnsl"
   printf "Need libs for sockets: regenerating config.make ..."
   gen_config_make
@@ -2819,6 +2831,10 @@ fi
 
 if [ -n "$have_unistd" ] ; then
   printf "#define HAVE_UNISTD_H 1\n" >> config.h
+fi
+
+if [ -n "$have_sys_types" ] ; then
+  printf "#define HAVE_SYS_TYPES_H 1\n" >> config.h
 fi
 
 if [ -n "$have_sys_time" ] ; then
