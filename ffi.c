@@ -699,20 +699,6 @@ static val ffi_ptr_in_in(struct txr_ffi_type *tft, mem_t *src, val obj,
   return obj;
 }
 
-static void ffi_ptr_in_put(struct txr_ffi_type *tft, val s, mem_t *dst,
-                           val self)
-{
-  val tgttype = tft->mtypes;
-  struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
-  mem_t *buf = tgtft->alloc(tgtft, s, self);
-  if (s == nil) {
-    *coerce(mem_t **, dst) = 0;
-  } else {
-    tgtft->put(tgtft, s, buf, self);
-    *coerce(mem_t **, dst) = buf;
-  }
-}
-
 static void ffi_ptr_in_out(struct txr_ffi_type *tft, int copy, val s,
                            mem_t *dst, val self)
 {
@@ -721,21 +707,6 @@ static void ffi_ptr_in_out(struct txr_ffi_type *tft, int copy, val s,
   if (tgtft->out != 0) {
     mem_t *buf = *coerce(mem_t **, dst);
     tgtft->out(tgtft, 0, s, buf, self);
-  }
-}
-
-static void ffi_ptr_in_d_put(struct txr_ffi_type *tft, val s, mem_t *dst,
-                             val self)
-{
-  val tgttype = tft->mtypes;
-  struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
-
-  if (s == nil) {
-    *coerce(mem_t **, dst) = 0;
-  } else {
-    mem_t *buf = tgtft->alloc(tgtft, s, self);
-    tgtft->put(tgtft, s, buf, self);
-    *coerce(mem_t **, dst) = buf;
   }
 }
 
@@ -1289,14 +1260,14 @@ val ffi_type_compile(val syntax)
       val target_type = ffi_type_compile(cadr(syntax));
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
                                    &ffi_type_pointer,
-                                   ffi_ptr_in_put, ffi_ptr_get,
+                                   ffi_ptr_put, ffi_ptr_get,
                                    ffi_ptr_in_in, ffi_ptr_in_out,
                                    target_type);
     } else if (sym == ptr_in_d_s) {
       val target_type = ffi_type_compile(cadr(syntax));
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
                                    &ffi_type_pointer,
-                                   ffi_ptr_in_d_put, ffi_ptr_d_get,
+                                   ffi_ptr_put, ffi_ptr_d_get,
                                    0, ffi_ptr_in_out,
                                    target_type);
     } else if (sym == ptr_out_s) {
