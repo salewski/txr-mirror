@@ -1475,9 +1475,10 @@ static struct cobj_ops cptr_dl_ops = {
 
 static val dlopen_wrap(val name, val flags)
 {
-  const wchar_t *name_ws = c_str(name);
-  char *name_u8 = utf8_dup_to(name_ws);
-  cnum f = c_num(flags);
+  const wchar_t *name_ws = if3(null_or_missing_p(name),
+                               0, c_str(name));
+  char *name_u8 = if3(name_ws != 0, utf8_dup_to(name_ws), 0);
+  cnum f = if3(missingp(flags), RTLD_LAZY, c_num(flags));
   mem_t *ptr = coerce(mem_t *, dlopen(name_u8, f));
   free(name_u8);
   if (ptr == 0)
@@ -1891,7 +1892,7 @@ void sysif_init(void)
 #endif
 
 #if HAVE_DLOPEN
-  reg_fun(intern(lit("dlopen"), user_package), func_n2(dlopen_wrap));
+  reg_fun(intern(lit("dlopen"), user_package), func_n2o(dlopen_wrap, 0));
   reg_fun(intern(lit("dlclose"), user_package), func_n1(dlclose_wrap));
   reg_fun(intern(lit("dlsym"), user_package), func_n2(dlsym_wrap));
   reg_fun(intern(lit("dlsym-checked"), user_package), func_n2(dlsym_checked));
