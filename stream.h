@@ -123,7 +123,7 @@ extern val stdio_stream_s;
 extern val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
 extern val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
-extern val print_base_s, print_circle_s;
+extern val pprint_flo_format_s, print_base_s, print_circle_s;
 
 #if HAVE_SOCKETS
 extern val socket_error_s;

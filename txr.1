@@ -39351,7 +39351,7 @@ the
 .code /dev/null
 device on Unix, but does not involve the operating system.
 
-.coNP Special variable @ *print-flo-format*
+.coNP Special variables @ *print-flo-format* and @ *pprint-flo-format*
 .desc
 The
 .code *print-flo-format*
@@ -39359,23 +39359,37 @@ variable determines the conversion format which is applied when
 a floating-point value is converted to decimal text by the
 functions
 .codn print ,
-.codn pprint ,
 .codn prinl ,
-.codn pprinl ,
-.code tostring
 and
-.codn tostringp .
+.codn tostring .
 
 The default value is
 .codn "~s" .
 
-The format string must specify the consumption of exactly one argument.
+The related variable
+.code *pprint-flo-format*
+similarly determines the conversion format applied to floating-point
+values by the functions
+.codn pprint ,
+.codn pprinl ,
+and
+.codn tostringp .
+
+The default value is
+.codn "~a" .
+
+The format string in either variable must specify the consumption of
+exactly one
+.code format
+argument.
 
 The conversion string may use embedded width and precision values:
 for instance,
 .code "~3,4f"
 is a valid value for
-.codn *print-flo-format* .
+.code *print-flo-format*
+or
+.codn *pprint-flo-format* .
 
 .coNP Special variable @ *print-flo-precision*
 .desc
@@ -40011,7 +40025,18 @@ the equivalence is produced by using
 in format rather than
 .codn ~s .
 
-Note: for characters, the print function behaves as follows: most control
+.TP* Notes:
+For floating-point numbers, the above description of the behavior in
+terms of the format specifiers
+.code ~s
+and
+.code ~a
+only applies with respect to the default values of the variables
+.code *print-flo-format*
+and
+.codn *pprint-flo-format* .
+
+For characters, the print function behaves as follows: most control
 characters in the Unicode
 .code C0
 and

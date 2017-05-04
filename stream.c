@@ -74,7 +74,7 @@
 val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
 val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
-val print_base_s, print_circle_s;
+val pprint_flo_format_s, print_base_s, print_circle_s;
 
 val from_start_k, from_current_k, from_end_k;
 val real_time_k, name_k, addr_k, fd_k, byte_oriented_k;
@@ -4193,6 +4193,9 @@ void stream_init(void)
   reg_var(print_flo_format_s = intern(lit("*print-flo-format*"),
                                       user_package),
           lit("~s"));
+  reg_var(pprint_flo_format_s = intern(lit("*pprint-flo-format*"),
+                                       user_package),
+          lit("~a"));
   reg_var(print_base_s = intern(lit("*print-base*"), user_package),
           num_fast(10));
   reg_var(print_circle_s = intern(lit("*print-circle*"), user_package), nil);

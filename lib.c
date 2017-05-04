@@ -10188,7 +10188,9 @@ dot:
     break;
   case FLNUM:
     {
-      val fmt = cdr(lookup_var(nil, print_flo_format_s));
+      val fmt = cdr(lookup_var(nil,
+                               if3(pretty,
+                                   pprint_flo_format_s, print_flo_format_s)));
       format(out, fmt, obj, nao);
     }
     break;
