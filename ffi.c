@@ -34,8 +34,12 @@
 #include <signal.h>
 #include <wchar.h>
 #include <dirent.h>
+#include <time.h>
 #include <ffi.h>
 #include "config.h"
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
 #include ALLOCA_H
 #include "lib.h"
 #include "stream.h"
@@ -1458,6 +1462,98 @@ static void ffi_init_types(void)
                                             ffi_void_put, ffi_void_get));
 }
 
+static val ffi_type_lookup(val sym)
+{
+  return gethash(ffi_typedef_hash, sym);
+}
+
+static void ffi_init_extra_types(void)
+{
+  val type_by_size[2][18] = { { 0 }, { 0 } };
+
+#if HAVE_I64
+  type_by_size[0][sizeof (i64_t)] = ffi_type_lookup(int64_s);
+  type_by_size[1][sizeof (i64_t)] = ffi_type_lookup(uint64_s);
+#endif
+#if HAVE_I32
+  type_by_size[0][sizeof (i32_t)] = ffi_type_lookup(int32_s);
+  type_by_size[1][sizeof (i32_t)] = ffi_type_lookup(uint32_s);
+#endif
+#if HAVE_I16
+  type_by_size[0][sizeof (i16_t)] = ffi_type_lookup(int16_s);
+  type_by_size[1][sizeof (i16_t)] = ffi_type_lookup(uint16_s);
+#endif
+#if HAVE_I8
+  type_by_size[0][sizeof (i8_t)] = ffi_type_lookup(int8_s);
+  type_by_size[1][sizeof (i8_t)] = ffi_type_lookup(uint8_s);
+#endif
+  type_by_size[0][sizeof (long)] = ffi_type_lookup(long_s);
+  type_by_size[1][sizeof (long)] = ffi_type_lookup(ulong_s);
+  type_by_size[0][sizeof (int)] = ffi_type_lookup(int_s);
+  type_by_size[1][sizeof (int)] = ffi_type_lookup(uint_s);
+  type_by_size[0][sizeof (short)] = ffi_type_lookup(short_s);
+  type_by_size[1][sizeof (short)] = ffi_type_lookup(ushort_s);
+
+  ffi_typedef(intern(lit("size-t"), user_package),
+              type_by_size[1][sizeof (size_t)]);
+  ffi_typedef(intern(lit("time-t"), user_package),
+              type_by_size[(time_t) -1 > 0][sizeof (time_t)]);
+  ffi_typedef(intern(lit("clock-t"), user_package),
+              if3((clock_t) 0.5 == 0,
+                  type_by_size[(clock_t) -1 > 0][sizeof (clock_t)],
+                  if3(sizeof (clock_t) == sizeof (float),
+                      ffi_type_lookup(float_s),
+                      if2(sizeof (clock_t) == sizeof (double),
+                          ffi_type_lookup(double_s)))));
+  ffi_typedef(intern(lit("int-ptr-t"), user_package),
+              type_by_size[(int_ptr_t) -1 > 0][sizeof (int_ptr_t)]);
+  ffi_typedef(intern(lit("uint-ptr-t"), user_package),
+              type_by_size[(uint_ptr_t) -1 > 0][sizeof (uint_ptr_t)]);
+  ffi_typedef(intern(lit("sig-atomic-t"), user_package),
+              type_by_size[(sig_atomic_t) -1 > 0][sizeof (sig_atomic_t)]);
+  ffi_typedef(intern(lit("ptrdiff-t"), user_package),
+              type_by_size[(ptrdiff_t) -1 > 0][sizeof (ptrdiff_t)]);
+  ffi_typedef(intern(lit("wint-t"), user_package),
+              type_by_size[(wint_t) -1 > 0][sizeof (wint_t)]);
+
+#if HAVE_SYS_TYPES_H
+  ffi_typedef(intern(lit("blkcnt-t"), user_package),
+              type_by_size[(blkcnt_t) -1 > 0][sizeof (blkcnt_t)]);
+  ffi_typedef(intern(lit("blksize-t"), user_package),
+              type_by_size[(blksize_t) -1 > 0][sizeof (blksize_t)]);
+  ffi_typedef(intern(lit("clockid-t"), user_package),
+              type_by_size[(clockid_t) -1 > 0][sizeof (clockid_t)]);
+  ffi_typedef(intern(lit("dev-t"), user_package),
+              type_by_size[(dev_t) -1 > 0][sizeof (dev_t)]);
+  ffi_typedef(intern(lit("fsblkcnt-t"), user_package),
+              type_by_size[(fsblkcnt_t) -1 > 0][sizeof (fsblkcnt_t)]);
+  ffi_typedef(intern(lit("fsfilcnt-t"), user_package),
+              type_by_size[(fsfilcnt_t) -1 > 0][sizeof (fsfilcnt_t)]);
+  ffi_typedef(intern(lit("gid-t"), user_package),
+              type_by_size[(gid_t) -1 > 0][sizeof (gid_t)]);
+  ffi_typedef(intern(lit("id-t"), user_package),
+              type_by_size[(id_t) -1 > 0][sizeof (id_t)]);
+  ffi_typedef(intern(lit("ino-t"), user_package),
+              type_by_size[(ino_t) -1 > 0][sizeof (ino_t)]);
+  ffi_typedef(intern(lit("key-t"), user_package),
+              type_by_size[(key_t) -1 > 0][sizeof (key_t)]);
+  ffi_typedef(intern(lit("loff-t"), user_package),
+              type_by_size[(loff_t) -1 > 0][sizeof (loff_t)]);
+  ffi_typedef(intern(lit("mode-t"), user_package),
+              type_by_size[(mode_t) -1 > 0][sizeof (mode_t)]);
+  ffi_typedef(intern(lit("nlink-t"), user_package),
+              type_by_size[(nlink_t) -1 > 0][sizeof (nlink_t)]);
+  ffi_typedef(intern(lit("off-t"), user_package),
+              type_by_size[(off_t) -1 > 0][sizeof (off_t)]);
+  ffi_typedef(intern(lit("pid-t"), user_package),
+              type_by_size[(pid_t) -1 > 0][sizeof (pid_t)]);
+  ffi_typedef(intern(lit("ssize-t"), user_package),
+              type_by_size[(ssize_t) -1 > 0][sizeof (ssize_t)]);
+  ffi_typedef(intern(lit("uid-t"), user_package),
+              type_by_size[(uid_t) -1 > 0][sizeof (uid_t)]);
+#endif
+}
+
 struct txr_ffi_call_desc {
   ffi_cif cif;
   ffi_type **args;
@@ -1718,4 +1814,5 @@ void ffi_init(void)
   reg_varl(intern(lit("cptr-null"), user_package), cptr(0));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
+  ffi_init_extra_types();
 }
