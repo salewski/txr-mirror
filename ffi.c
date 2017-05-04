@@ -569,19 +569,6 @@ static void ffi_str_put(struct txr_ffi_type *tft, val s, mem_t *dst,
   }
 }
 
-static void ffi_str_d_put(struct txr_ffi_type *tft, val s, mem_t *dst,
-                          val self)
-{
-  if (s == nil) {
-    *coerce(const char **, dst) = 0;
-  } else {
-    const wchar_t *ws = c_str(s);
-    char *u8s = utf8_dup_to(ws);
-    *coerce(const char **, dst) = u8s;
-  }
-}
-
-
 static val ffi_str_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   const char *p = *coerce(const char **, src);
@@ -1440,7 +1427,7 @@ static void ffi_init_types(void)
 
   ffi_typedef(str_d_s, make_ffi_type_builtin(str_d_s, str_s,
                                              sizeof (mem_t *), &ffi_type_pointer,
-                                             ffi_str_d_put, ffi_str_d_get));
+                                             ffi_str_put, ffi_str_d_get));
   ffi_typedef(wstr_s, make_ffi_type_builtin(wstr_s, str_s,
                                             sizeof (mem_t *), &ffi_type_pointer,
                                             ffi_wstr_put, ffi_wstr_get));
