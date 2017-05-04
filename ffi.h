@@ -45,7 +45,7 @@ extern val str_d_s, wstr_s, wstr_d_s;
 
 extern val buf_d_s;
 
-extern val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_s;
+extern val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_out_s_s, ptr_s;
 
 extern val closure_s;
 

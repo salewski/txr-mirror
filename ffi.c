@@ -77,7 +77,7 @@ val str_d_s, wstr_s, wstr_d_s;
 
 val buf_d_s;
 
-val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_s;
+val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_out_s_s, ptr_s;
 
 val closure_s;
 
@@ -786,6 +786,18 @@ static void ffi_ptr_out_null_put(struct txr_ffi_type *tft, val s, mem_t *dst,
   *coerce(mem_t **, dst) =  0;
 }
 
+static val ffi_ptr_out_s_in(struct txr_ffi_type *tft, mem_t *src, val obj,
+                            val self)
+{
+  val tgttype = tft->mtypes;
+  struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
+  mem_t **loc = coerce(mem_t **, src);
+  if (tgtft->in != 0)
+    obj = tgtft->in(tgtft, *loc, obj, self);
+  return obj;
+}
+
+
 static val ffi_struct_in(struct txr_ffi_type *tft, mem_t *src, val strct,
                          val self)
 {
@@ -1298,6 +1310,13 @@ val ffi_type_compile(val syntax)
                                    ffi_ptr_in_put, ffi_ptr_get,
                                    ffi_ptr_out_in, ffi_ptr_out_out,
                                    target_type);
+    } else if (sym == ptr_out_s_s) {
+      val target_type = ffi_type_compile(cadr(syntax));
+      return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
+                                   &ffi_type_pointer,
+                                   ffi_ptr_out_null_put, ffi_ptr_get,
+                                   ffi_ptr_out_s_in, ffi_ptr_out_out,
+                                   target_type);
     } else if (sym == buf_s || sym == buf_d_s) {
       cnum nelem = c_num(cadr(syntax));
       val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
@@ -1792,6 +1811,7 @@ void ffi_init(void)
   ptr_out_s = intern(lit("ptr-out"), user_package);
   ptr_in_d_s = intern(lit("ptr-in-d"), user_package);
   ptr_out_d_s = intern(lit("ptr-out-d"), user_package);
+  ptr_out_s_s = intern(lit("ptr-out-s"), user_package);
   ptr_s = intern(lit("ptr"), user_package);
   closure_s = intern(lit("closure"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);
