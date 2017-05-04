@@ -780,6 +780,12 @@ static void ffi_ptr_in_put(struct txr_ffi_type *tft, val s, mem_t *dst,
   }
 }
 
+static void ffi_ptr_out_null_put(struct txr_ffi_type *tft, val s, mem_t *dst,
+                                 val self)
+{
+  *coerce(mem_t **, dst) =  0;
+}
+
 static val ffi_struct_in(struct txr_ffi_type *tft, mem_t *src, val strct,
                          val self)
 {
@@ -1282,7 +1288,7 @@ val ffi_type_compile(val syntax)
       val target_type = ffi_type_compile(cadr(syntax));
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
                                    &ffi_type_pointer,
-                                   ffi_ptr_out_put, ffi_ptr_d_get,
+                                   ffi_ptr_out_null_put, ffi_ptr_d_get,
                                    ffi_ptr_out_in, ffi_ptr_out_out,
                                    target_type);
     } else if (sym == ptr_s) {
