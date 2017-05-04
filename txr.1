@@ -34193,6 +34193,17 @@ a dynamic control transfer such as an exception, and that
 initiates its own dynamic control transfer, the original control transfer
 is aborted and replaced with the new one.
 
+The exit points for dynamic control transfers are removed as unwinding takes
+place. That is to say, at the start of a dynamic control transfer, a search
+takes place for the target exit point. That search might skip other exit points
+which aren't targets of the control transfer. Those skipped exit points are left
+undisturbed and are still visible during unwinding until their individual
+binding forms are abandoned. Thus at the time of execution of an
+.code unwind-protect
+.metn cleanup-form ,
+all of the exit points of dynamically surrounding forms are still visible, even
+ones which are nearer than the targeted exit point.
+
 .TP* Example:
 .cblk
   (block foo
