@@ -379,7 +379,7 @@ static void ffi_char_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 
 static val ffi_char_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  return num_fast(*coerce(char *, src));
+  return chr(*coerce(char *, src));
 }
 
 static void ffi_uchar_put(struct txr_ffi_type *tft, val n, mem_t *dst,
