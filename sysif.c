@@ -1479,10 +1479,15 @@ static val dlopen_wrap(val name, val flags)
                                0, c_str(name));
   char *name_u8 = if3(name_ws != 0, utf8_dup_to(name_ws), 0);
   cnum f = if3(missingp(flags), RTLD_LAZY, c_num(flags));
-  mem_t *ptr = coerce(mem_t *, dlopen(name_u8, f));
+  mem_t *ptr = coerce(mem_t *, (dlerror(), dlopen(name_u8, f)));
   free(name_u8);
-  if (ptr == 0)
-    uw_throwf(error_s, lit("dlopen failed on ~a"), name, nao);
+  if (ptr == 0) {
+    char *err = dlerror();
+    if (err)
+      uw_throwf(error_s, lit("dlopen failed: ~a"), string_utf8(err), nao);
+    else
+      uw_throwf(error_s, lit("dlopen failed on ~a"), name, nao);
+  }
   return cobj(ptr, cptr_s, &cptr_dl_ops);
 }
 
@@ -1510,12 +1515,21 @@ static val dlsym_wrap(val dlptr, val name)
   return cptr(sym);
 }
 
+static void dlsym_error(val dlptr, val name, val self)
+{
+  char *err = dlerror();
+  if (err)
+    uw_throwf(error_s, lit("~a: ~a"), self, string_utf8(err), nao);
+  else
+    uw_throwf(error_s, lit("~a: ~a not found in ~s"),
+              self, name, dlptr, nao);
+}
+
 static val dlsym_checked(val dlptr, val name)
 {
-  val ptr = dlsym_wrap(dlptr, name);
+  val ptr = (dlerror(), dlsym_wrap(dlptr, name));
   if (cptr_get(ptr) == 0)
-    uw_throwf(error_s, lit("dlsym: ~s not found in ~s"),
-              name, dlptr, nao);
+    dlsym_error(dlptr, name, lit("dlsym-checked"));
   return ptr;
 }
 
@@ -1539,10 +1553,9 @@ static val dlvsym_wrap(val dlptr, val name, val ver)
 
 static val dlvsym_checked(val dlptr, val name, val ver)
 {
-  val ptr = dlvsym_wrap(dlptr, name, ver);
+  val ptr = (dlerror(), dlvsym_wrap(dlptr, name, ver));
   if (cptr_get(ptr) == 0)
-    uw_throwf(error_s, lit("dlvsym: ~s not found in ~s"),
-              name, dlptr, nao);
+    dlsym_error(dlptr, name, lit("dlvsym-checked"));
   return ptr;
 }
 #endif
