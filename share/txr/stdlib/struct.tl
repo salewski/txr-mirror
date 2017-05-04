@@ -198,6 +198,12 @@
                           slot))
   slot)
 
+(defun sys:check-struct (form stype)
+  (unless (find-struct-type stype)
+    (compile-defr-warning form ^(struct-type . ,stype)
+                          "~s does not name a struct type"
+                          stype)))
+
 (defmacro qref (:form form obj . refs)
   (when (null refs)
     (throwf 'eval-error "~s: bad syntax" 'qref))
@@ -239,26 +245,34 @@
     (t (with-gensyms (ovar)
          ^(lambda (,ovar) (qref ,ovar ,*args))))))
 
-(defmacro new (spec . pairs)
+(defmacro new (:form form spec . pairs)
   (if (oddp (length pairs))
     (throwf 'eval-error "~s: slot initform arguments must occur pairwise"
             'new))
   (let ((qpairs (mappend (aret ^(',@1 ,@2)) (tuples 2 pairs))))
     (tree-case spec
-      ((atom . args) ^(make-struct ',atom (list ,*qpairs) ,*args))
-      (atom ^(make-struct ',atom (list ,*qpairs))))))
+      ((atom . args)
+        (sys:check-struct form atom)
+        ^(make-struct ',atom (list ,*qpairs) ,*args))
+      (atom
+        (sys:check-struct form atom)
+        ^(make-struct ',atom (list ,*qpairs))))))
 
-(defmacro lnew (spec . pairs)
+(defmacro lnew (:form form spec . pairs)
   (if (oddp (length pairs))
     (throwf 'eval-error "~s: slot initform arguments must occur pairwise"
             'lnew))
   (let ((qpairs (mappend (aret ^(',@1 ,@2)) (tuples 2 pairs))))
     (tree-case spec
-      ((atom . args) ^(make-lazy-struct ',atom
-                                        (lambda ()
-                                          (cons (list ,*qpairs)
-                                                (list ,*args)))))
-      (atom ^(make-lazy-struct ',atom (lambda () (list (list ,*qpairs))))))))
+      ((atom . args)
+        (sys:check-struct form atom)
+        ^(make-lazy-struct ',atom
+                           (lambda ()
+                             (cons (list ,*qpairs)
+                                   (list ,*args)))))
+      (atom
+        (sys:check-struct form atom)
+        ^(make-lazy-struct ',atom (lambda () (list (list ,*qpairs))))))))
 
 (defmacro meth (obj slot . bound-args)
   ^[(fun method) ,obj ',slot ,*bound-args])
