@@ -9051,6 +9051,8 @@ val length(val seq)
     return length_vec(seq);
   case RNG:
     return minus(to(seq), from(seq));
+  case BUF:
+    return length_buf(seq);
   case COBJ:
     if (seq->co.cls == hash_s)
       return hash_count(seq);
