@@ -73,7 +73,7 @@ val array_s, zarray_s;
 
 val struct_s;
 
-val str_d_s, wstr_s, wstr_d_s;
+val str_d_s, wstr_s, wstr_d_s, bstr_s, bstr_d_s;
 
 val buf_d_s;
 
@@ -620,6 +620,32 @@ static val ffi_wstr_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   wchar_t *p = *coerce(wchar_t **, src);
   return p ? string_own(p) : nil;
+}
+
+static void ffi_bstr_put(struct txr_ffi_type *tft, val s, mem_t *dst,
+                         val self)
+{
+  if (s == nil) {
+    *coerce(unsigned char **, dst) = 0;
+  } else {
+    const wchar_t *ws = c_str(s);
+    unsigned char *u8s = chk_strdup_8bit(ws);
+    *coerce(unsigned char **, dst) = u8s;
+  }
+}
+
+static val ffi_bstr_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  unsigned char *p = *coerce(unsigned char **, src);
+  return p ? string_8bit(p) : nil;
+}
+
+static val ffi_bstr_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  unsigned char *p = *coerce(unsigned char **, src);
+  val ret = p ? string_8bit(p) : nil;
+  free(p);
+  return ret;
 }
 
 static void ffi_buf_put(struct txr_ffi_type *tft, val buf, mem_t *dst,
@@ -1442,6 +1468,12 @@ static void ffi_init_types(void)
   ffi_typedef(wstr_d_s, make_ffi_type_builtin(wstr_d_s, str_s,
                                               sizeof (mem_t *), &ffi_type_pointer,
                                               ffi_wstr_d_put, ffi_wstr_d_get));
+  ffi_typedef(bstr_s, make_ffi_type_builtin(bstr_s, str_s,
+                                            sizeof (mem_t *), &ffi_type_pointer,
+                                            ffi_bstr_put, ffi_bstr_get));
+  ffi_typedef(bstr_d_s, make_ffi_type_builtin(bstr_d_s, str_s,
+                                              sizeof (mem_t *), &ffi_type_pointer,
+                                              ffi_bstr_put, ffi_bstr_d_get));
 
   {
     val iter;
@@ -1802,6 +1834,8 @@ void ffi_init(void)
   str_d_s = intern(lit("str-d"), user_package);
   wstr_s = intern(lit("wstr"), user_package);
   wstr_d_s = intern(lit("wstr-d"), user_package);
+  bstr_s = intern(lit("bstr"), user_package);
+  bstr_d_s = intern(lit("bstr-d"), user_package);
   buf_d_s = intern(lit("buf-d"), user_package);
   ptr_in_s = intern(lit("ptr-in"), user_package);
   ptr_out_s = intern(lit("ptr-out"), user_package);

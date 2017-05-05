@@ -605,6 +605,7 @@ mem_t *chk_manage_vec(mem_t *old, size_t oldfilled, size_t newfilled,
 wchar_t *chk_wmalloc(size_t nwchar);
 wchar_t *chk_strdup(const wchar_t *str);
 char *chk_strdup_utf8(const char *str);
+unsigned char *chk_strdup_8bit(const wchar_t *str);
 mem_t *chk_copy_obj(mem_t *orig, size_t size);
 val cons(val car, val cdr);
 val make_lazy_cons(val func);
@@ -724,6 +725,7 @@ val maskv(struct args *bits);
 val string_own(wchar_t *str);
 val string(const wchar_t *str);
 val string_utf8(const char *str);
+val string_8bit(const unsigned char *str);
 val mkstring(val len, val ch);
 val mkustring(val len); /* must initialize immediately with init_str! */
 val init_str(val str, const wchar_t *);

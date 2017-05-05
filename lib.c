@@ -2673,6 +2673,21 @@ char *chk_strdup_utf8(const char *str)
   return copy;
 }
 
+unsigned char *chk_strdup_8bit(const wchar_t *str)
+{
+  size_t nchar = wcslen(str) + 1, i;
+  unsigned char *copy = coerce(unsigned char *, chk_malloc(nchar));
+  for (i = 0; i < nchar; i++) {
+    if (str[i] < 0 || str[i] > 255) {
+      free(copy);
+      uw_throwf(error_s, lit("cannot coerce ~s to 8 bit"),
+                string(str), nao);
+    }
+    copy[i] = str[i];
+  }
+  return copy;
+}
+
 mem_t *chk_copy_obj(mem_t *orig, size_t size)
 {
   mem_t *copy = chk_malloc(size);
@@ -3274,6 +3289,15 @@ val string_utf8(const char *str)
   obj->st.len = nil;
   obj->st.alloc = nil;
   return obj;
+}
+
+val string_8bit(const unsigned char *str)
+{
+  size_t l = strlen(coerce(const char *, str)), i;
+  wchar_t *wstr = chk_wmalloc(l + 1);
+  for (i = 0; i <= l; i++)
+    wstr[i] = str[i];
+  return string_own(wstr);
 }
 
 val mkstring(val len, val ch)
