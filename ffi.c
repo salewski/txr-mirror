@@ -1384,6 +1384,11 @@ val ffi_type_compile(val syntax)
                                        if3(sym == buf_s,
                                            ffi_buf_get, ffi_buf_d_get));
       struct txr_ffi_type *tft = ffi_type_struct(type);
+
+      if (nelem < 0)
+        uw_throwf(error_s, lit("~a: negative size in ~s"),
+                  self, syntax, nao);
+
       tft->alloc = ffi_buf_alloc;
       tft->free = ffi_noop_free;
       tft->nelem = nelem;
