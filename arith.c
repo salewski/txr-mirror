@@ -2285,6 +2285,9 @@ static val comp_trunc(val a, val bits)
 
   bn = c_num(bits);
 
+  if (bn < 0)
+    goto bad4;
+
   switch (type(a)) {
   case NUM:
     an = c_num(a);
@@ -2311,6 +2314,9 @@ bad2:
 
 bad3:
   uw_throwf(error_s, lit("lognot: non-integral operand ~s"), a, nao);
+
+bad4:
+  uw_throwf(error_s, lit("lognot: negative bits value ~s"), bits, nao);
 }
 
 val lognot(val a, val bits)
@@ -2348,6 +2354,9 @@ val logtrunc(val a, val bits)
 
   bn = c_num(bits);
 
+  if (bn < 0)
+    goto bad4;
+
   switch (type(a)) {
   case NUM:
     an = c_num(a);
@@ -2374,6 +2383,9 @@ bad2:
 
 bad3:
   uw_throwf(error_s, lit("logtrunc: non-integral operand ~s"), a, nao);
+
+bad4:
+  uw_throwf(error_s, lit("logtrunc: negative bits value ~s"), bits, nao);
 }
 
 val sign_extend(val n, val nbits)
