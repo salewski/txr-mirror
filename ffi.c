@@ -1310,11 +1310,21 @@ val ffi_type_compile(val syntax)
       val eltype_syntax = caddr(syntax);
       val eltype = ffi_type_compile(eltype_syntax);
 
+      if (minusp(dim))
+        uw_throwf(error_s, lit("~a: negative dimension in ~s"),
+                  self, syntax, nao);
+
       {
         val type = make_ffi_type_array(syntax, vec_s, dim, eltype);
         struct txr_ffi_type *tft = ffi_type_struct(type);
-        if (sym == zarray_s)
+
+        if (sym == zarray_s) {
           tft->null_term = 1;
+          if (zerop(dim))
+            uw_throwf(error_s, lit("~a: zero dimension in ~s"),
+                      self, syntax, nao);
+        }
+
         if (eltype_syntax == char_s)
           tft->char_conv = 1;
         else if (eltype_syntax == wchar_s)
