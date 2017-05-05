@@ -963,11 +963,13 @@ static val ffi_array_in(struct txr_ffi_type *tft, mem_t *src, val vec,
     ucnum offs = 0;
     struct txr_ffi_type *etft = ffi_type_struct(eltype);
     cnum elsize = etft->size, i;
+    cnum znelem = if3(tft->null_term && nelem > 0 &&
+                      vec && length(vec) < num_fast(nelem), nelem - 1, nelem);
 
     if (vec == nil)
-      vec = vector(num_fast(nelem), nil);
+      vec = vector(num_fast(znelem), nil);
 
-    for (i = 0; i < nelem; i++) {
+    for (i = 0; i < znelem; i++) {
       if (etft->in != 0) {
         val elval = ref(vec, num_fast(i));
         refset(vec, num_fast(i), etft->in(etft, src + offs, elval, self));
@@ -993,13 +995,14 @@ static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
   ucnum offs = 0;
 
   for (i = 0; i < nelem; i++) {
-    val elval = ref(vec, num_fast(i));
     if (nt && i == nelem - 1) {
       memset(dst + offs, 0, elsize);
       break;
+    } else {
+      val elval = ref(vec, num_fast(i));
+      etft->put(etft, elval, dst + offs, self);
+      offs += elsize;
     }
-    etft->put(etft, elval, dst + offs, self);
-    offs += elsize;
   }
 }
 
@@ -1058,12 +1061,13 @@ static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
       }
     }
   } else {
-    val vec = vector(num_fast(nelem), nil);
+    cnum znelem = if3(tft->null_term && nelem > 0, nelem - 1, nelem);
+    val vec = vector(num_fast(znelem), nil);
     struct txr_ffi_type *etft = ffi_type_struct(eltype);
     cnum elsize = etft->size;
     cnum offs, i;
 
-    for (i = 0, offs = 0; i < nelem; i++) {
+    for (i = 0, offs = 0; i < znelem; i++) {
       val elval = etft->get(etft, src + offs, self);
       refset(vec, num_fast(i), elval);
       offs += elsize;
