@@ -51,7 +51,7 @@ u8_t c_u8(val n, val self)
 {
   cnum v = c_num(n);
   if (v < 0 || v > 255)
-    uw_throwf(error_s, lit("~a: value ~s out of signed 8 bit range"),
+    uw_throwf(error_s, lit("~a: value ~s out of unsigned 8 bit range"),
               self, n, nao);
   return v;
 }
@@ -71,7 +71,7 @@ u16_t c_u16(val n, val self)
 {
   cnum v = c_num(n);
   if (v < 0 || v > 0xFFFF)
-    uw_throwf(error_s, lit("~a: value ~s is out of signed 16 bit range"),
+    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 16 bit range"),
               self, n, nao);
   return v;
 }
@@ -91,7 +91,7 @@ u32_t c_u32(val n, val self)
 {
   uint_ptr_t v = c_unum(n);
   if (v < 0 || v > 0xFFFFFFFF)
-    uw_throwf(error_s, lit("~a: value ~s is out of signed 32 bit range"),
+    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 32 bit range"),
               self, n, nao);
   return v;
 }
@@ -112,7 +112,7 @@ u64_t c_u64(val n, val self)
 {
   uint_ptr_t v = c_unum(n);
   if (v < (cnum) -0x8000000000000000 || v > (cnum) 0x7FFFFFFFFFFFFFFF)
-    uw_throwf(error_s, lit("~a: value ~s is out of signed 64 bit range"),
+    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 64 bit range"),
               self, n, nao);
   return v;
 }
@@ -183,7 +183,7 @@ unsigned int c_uint(val n, val self)
 {
   uint_ptr_t v = c_unum(n);
   if (v < 0 || v > UINT_MAX)
-    uw_throwf(error_s, lit("~a: value ~s is out of int range"),
+    uw_throwf(error_s, lit("~a: value ~s is out of unsigned int range"),
               self, n, nao);
   return v;
 }
