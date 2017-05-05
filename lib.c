@@ -3311,7 +3311,10 @@ val string_8bit_size(const unsigned char *str, size_t sz)
 
 val mkstring(val len, val ch)
 {
-  size_t l = c_num(len);
+  size_t l = if3(minusp(len),
+                 (uw_throwf(error_s, lit("mkstring: negative size ~s specified"),
+                            len, nao), 0),
+                 c_num(len));
   wchar_t *str = chk_wmalloc(l + 1);
   val s = string_own(str);
   wmemset(str, c_chr(ch), l);
@@ -3323,7 +3326,10 @@ val mkstring(val len, val ch)
 
 val mkustring(val len)
 {
-  cnum l = c_num(len);
+  cnum l = if3(minusp(len),
+               (uw_throwf(error_s, lit("mkustring: negative size ~s specified"),
+                          len, nao), 0),
+               c_num(len));
   wchar_t *str = chk_wmalloc(l + 1);
   val s = string_own(str);
   str[l] = 0;
@@ -6675,7 +6681,10 @@ val vector(val length, val initval)
 {
   int i;
   cnum alloc_plus = c_num(length) + 2;
-  size_t size = alloc_plus * sizeof (val);
+  size_t size = if3(alloc_plus > 0,
+                    alloc_plus * sizeof (val),
+                    (uw_throwf(error_s, lit("vector: negative length ~a specified"),
+                               length, nao), 0));
   val *v = (convert(cnum, size / sizeof *v) == alloc_plus)
            ? coerce(val *, chk_malloc(size))
            : coerce(val *, uw_throwf(error_s, lit("vector: length ~a is too large"),
@@ -6708,6 +6717,10 @@ val vec_set_length(val vec, val length)
     cnum new_length = c_num(length);
     cnum old_length = c_num(vec->v.vec[vec_length]);
     cnum old_alloc = c_num(vec->v.vec[vec_alloc]);
+
+    if (new_length < 0)
+      uw_throwf(error_s, lit("vec-set-length: negative length ~s specified"),
+                length, nao);
 
     if (new_length > convert(cnum, (convert(size_t, -1)/sizeof (val) - 2)))
       uw_throwf(error_s, lit("vec-set-length: cannot extend to length ~s"),
