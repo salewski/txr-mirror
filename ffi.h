@@ -30,7 +30,7 @@ extern val uint16_s, int16_s;
 extern val uint32_s, int32_s;
 extern val uint64_s, int64_s;
 
-extern val char_s, uchar_s, wchar_s;
+extern val char_s, uchar_s, bchar_s, wchar_s;
 extern val short_s, ushort_s;
 extern val int_s, uint_s;
 extern val long_s, ulong_s;

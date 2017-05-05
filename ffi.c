@@ -62,7 +62,7 @@ val uint16_s, int16_s;
 val uint32_s, int32_s;
 val uint64_s, int64_s;
 
-val char_s, uchar_s, wchar_s;
+val char_s, uchar_s, bchar_s, wchar_s;
 val short_s, ushort_s;
 val int_s, uint_s;
 val long_s, ulong_s;
@@ -392,6 +392,11 @@ static void ffi_uchar_put(struct txr_ffi_type *tft, val n, mem_t *dst,
 static val ffi_uchar_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   return num_fast(*src);
+}
+
+static val ffi_bchar_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  return chr(*src);
 }
 
 static void ffi_short_put(struct txr_ffi_type *tft, val n, mem_t *dst,
@@ -1378,6 +1383,9 @@ static void ffi_init_types(void)
                                              ffi_uchar_put, ffi_uchar_get));
   ffi_typedef(char_s, make_ffi_type_builtin(char_s, integer_s, 1,
                                             ffi_char, ffi_char_put, ffi_char_get));
+  ffi_typedef(bchar_s, make_ffi_type_builtin(bchar_s, char_s,
+                                             sizeof (char), &ffi_type_uchar,
+                                             ffi_uchar_put, ffi_bchar_get));
   ffi_typedef(wchar_s, make_ffi_type_builtin(wchar_s, char_s,
                                              sizeof (wchar_t), &ffi_type_wchar,
                                              ffi_wchar_put, ffi_wchar_get));
@@ -1778,6 +1786,7 @@ void ffi_init(void)
   int64_s = intern(lit("int64"), user_package);
   char_s = intern(lit("char"), user_package);
   uchar_s = intern(lit("uchar"), user_package);
+  bchar_s = intern(lit("bchar"), user_package);
   wchar_s = intern(lit("wchar"), user_package);
   short_s = intern(lit("short"), user_package);
   ushort_s = intern(lit("ushort"), user_package);
