@@ -726,6 +726,7 @@ val string_own(wchar_t *str);
 val string(const wchar_t *str);
 val string_utf8(const char *str);
 val string_8bit(const unsigned char *str);
+val string_8bit_size(const unsigned char *str, size_t sz);
 val mkstring(val len, val ch);
 val mkustring(val len); /* must initialize immediately with init_str! */
 val init_str(val str, const wchar_t *);

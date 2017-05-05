@@ -3300,6 +3300,15 @@ val string_8bit(const unsigned char *str)
   return string_own(wstr);
 }
 
+val string_8bit_size(const unsigned char *str, size_t sz)
+{
+  size_t i;
+  wchar_t *wstr = chk_wmalloc(sz);
+  for (i = 0; i < sz; i++)
+    wstr[i] = str[i];
+  return string_own(wstr);
+}
+
 val mkstring(val len, val ch)
 {
   size_t l = c_num(len);
