@@ -201,9 +201,10 @@ size_t utf8_to(char *dst, const wchar_t *wsrc)
 
 wchar_t *utf8_dup_from(const char *str)
 {
-  size_t nchar = utf8_from(0, str);
+  size_t len = strlen(str);
+  size_t nchar = utf8_from_buf(0, coerce(unsigned char *, str), len);
   wchar_t *wstr = chk_wmalloc(nchar);
-  utf8_from(wstr, str);
+  utf8_from_buf(wstr, coerce(unsigned char *, str), len);
   return wstr;
 }
 
