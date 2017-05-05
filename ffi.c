@@ -1849,6 +1849,62 @@ val ffi_typedef(val name, val type)
   return sethash(ffi_typedef_hash, name, type);
 }
 
+val ffi_put_into(val dstbuf, val obj, val type)
+{
+  val self = lit("ffi-put-into");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  mem_t *dst = buf_get(dstbuf, self);
+  if (lt(length_buf(dstbuf), num_fast(tft->size)))
+    uw_throwf(lit("~a: buffer ~s is too small for type ~s"),
+              self, dstbuf, type, nao);
+  tft->put(tft, obj, dst, self);
+  return dstbuf;
+}
+
+val ffi_put(val obj, val type)
+{
+  val self = lit("ffi-put");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  val buf = make_buf(num_fast(tft->size), zero, nil);
+  mem_t *dst = buf_get(buf, self);
+  tft->put(tft, obj, dst, self);
+  return buf;
+}
+
+val ffi_in(val srcbuf, val obj, val type)
+{
+  val self = lit("ffi-in");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  mem_t *src = buf_get(srcbuf, self);
+  if (lt(length_buf(srcbuf), num_fast(tft->size)))
+    uw_throwf(lit("~a: buffer ~s is too small for type ~s"),
+              self, srcbuf, type, nao);
+  return tft->in(tft, src, obj, self);
+}
+
+val ffi_get(val srcbuf, val type)
+{
+  val self = lit("ffi-get");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  mem_t *src = buf_get(srcbuf, self);
+  if (lt(length_buf(srcbuf), num_fast(tft->size)))
+    uw_throwf(lit("~a: buffer ~s is too small for type ~s"),
+              self, srcbuf, type, nao);
+  return tft->get(tft, src, self);
+}
+
+val ffi_out(val dstbuf, val obj, val type, val copy_p)
+{
+  val self = lit("ffi-out");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  mem_t *dst = buf_get(dstbuf, self);
+  if (lt(length_buf(dstbuf), num_fast(tft->size)))
+    uw_throwf(lit("~a: buffer ~s is too small for type ~s"),
+              self, dstbuf, type, nao);
+  tft->out(tft, copy_p != nil, obj, dst, self);
+  return dstbuf;
+}
+
 void ffi_init(void)
 {
   prot1(&ffi_typedef_hash);
@@ -1898,6 +1954,11 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-make-closure"), user_package), func_n2(ffi_make_closure));
   reg_fun(intern(lit("cptr"), user_package), func_n1o(cptr_make, 0));
   reg_fun(intern(lit("ffi-typedef"), user_package), func_n2(ffi_typedef));
+  reg_fun(intern(lit("ffi-put-into"), user_package), func_n3(ffi_put_into));
+  reg_fun(intern(lit("ffi-put"), user_package), func_n2(ffi_put));
+  reg_fun(intern(lit("ffi-in"), user_package), func_n3(ffi_in));
+  reg_fun(intern(lit("ffi-get"), user_package), func_n2(ffi_get));
+  reg_fun(intern(lit("ffi-out"), user_package), func_n4(ffi_out));
   reg_varl(intern(lit("cptr-null"), user_package), cptr(0));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
