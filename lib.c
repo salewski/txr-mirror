@@ -10089,7 +10089,6 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
           out_quasi_str(car(args), out, ctx);
           args = cdr(args);
         }
-        out_quasi_str(cdr(obj), out, ctx);
         put_char(chr('`'), out);
       } else {
         val iter;
