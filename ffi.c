@@ -1317,15 +1317,13 @@ val ffi_type_compile(val syntax)
                          cons(sname, membs));
       return make_ffi_type_struct(xsyntax, stype, slots, types);
     } else if (sym == array_s || sym == zarray_s) {
-      val dim = cadr(syntax);
-      val eltype_syntax = caddr(syntax);
-      val eltype = ffi_type_compile(eltype_syntax);
-
-      if (dim == void_s) {
-          val type = make_ffi_type_pointer(syntax, vec_s, sizeof (mem_t *),
-                                           ffi_array_put, ffi_void_get,
-                                           ffi_array_in, ffi_array_out,
-                                           eltype);
+      if (length(syntax) == two) {
+        val eltype_syntax = cadr(syntax);
+        val eltype = ffi_type_compile(eltype_syntax);
+        val type = make_ffi_type_pointer(syntax, vec_s, sizeof (mem_t *),
+                                         ffi_array_put, ffi_void_get,
+                                         ffi_array_in, ffi_array_out,
+                                         eltype);
         struct txr_ffi_type *tft = ffi_type_struct(type);
         if (sym == zarray_s)
           tft->null_term = 1;
@@ -1333,30 +1331,37 @@ val ffi_type_compile(val syntax)
         tft->alloc = ffi_varray_alloc;
         tft->free = free;
         return type;
-      }
+      } else if (length(syntax) == three) {
+        val dim = cadr(syntax);
+        val eltype_syntax = caddr(syntax);
+        val eltype = ffi_type_compile(eltype_syntax);
 
-      if (minusp(dim))
+        if (minusp(dim))
         uw_throwf(error_s, lit("~a: negative dimension in ~s"),
                   self, syntax, nao);
 
-      {
-        val type = make_ffi_type_array(syntax, vec_s, dim, eltype);
-        struct txr_ffi_type *tft = ffi_type_struct(type);
+        {
+          val type = make_ffi_type_array(syntax, vec_s, dim, eltype);
+          struct txr_ffi_type *tft = ffi_type_struct(type);
 
-        if (sym == zarray_s) {
-          tft->null_term = 1;
-          if (zerop(dim))
-            uw_throwf(error_s, lit("~a: zero dimension in ~s"),
-                      self, syntax, nao);
+          if (sym == zarray_s) {
+            tft->null_term = 1;
+            if (zerop(dim))
+              uw_throwf(error_s, lit("~a: zero dimension in ~s"),
+                        self, syntax, nao);
+          }
+
+          if (eltype_syntax == char_s)
+            tft->char_conv = 1;
+          else if (eltype_syntax == wchar_s)
+            tft->wchar_conv = 1;
+          else if (eltype_syntax == bchar_s)
+            tft->bchar_conv = 1;
+          return type;
         }
-
-        if (eltype_syntax == char_s)
-          tft->char_conv = 1;
-        else if (eltype_syntax == wchar_s)
-          tft->wchar_conv = 1;
-        else if (eltype_syntax == bchar_s)
-          tft->bchar_conv = 1;
-        return type;
+      } else {
+        uw_throwf(error_s, lit("~a: excess elements in ~s"),
+                  self, syntax, nao);
       }
     } else if (sym == ptr_in_s) {
       val target_type = ffi_type_compile(cadr(syntax));
