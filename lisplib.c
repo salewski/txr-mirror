@@ -520,6 +520,24 @@ static val keyparams_instantiate(val set_fun)
   return nil;
 }
 
+static val ffi_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("with-dyn-lib"), lit("deffi"), lit("deffi-type"), lit("deffi-cb"),
+    lit("sizeof"),
+    nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val ffi_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~affi.tl"), stdlib_path, nao));
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -559,6 +577,7 @@ void lisplib_init(void)
   dlt_register(dl_table, pmac_instantiate, pmac_set_entries);
   dlt_register(dl_table, error_instantiate, error_set_entries);
   dlt_register(dl_table, keyparams_instantiate, keyparams_set_entries);
+  dlt_register(dl_table, ffi_instantiate, ffi_set_entries);
 }
 
 val lisplib_try_load(val sym)
