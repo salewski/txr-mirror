@@ -94,6 +94,7 @@ struct txr_ffi_type {
   cnum size, align;
   cnum nelem;
   unsigned null_term : 1;
+  unsigned is_varray : 1;
   unsigned char_conv : 1;
   unsigned wchar_conv : 1;
   unsigned bchar_conv : 1;
@@ -237,6 +238,15 @@ static void ffi_void_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 static mem_t *ffi_fixed_alloc(struct txr_ffi_type *tft, val obj, val self)
 {
   return chk_malloc(tft->size);
+}
+
+static mem_t *ffi_varray_alloc(struct txr_ffi_type *tft, val obj, val self)
+{
+  ucnum len = c_unum(length(obj));
+  size_t size = tft->size * len;
+  if (size < len || size < tft->size)
+    uw_throwf(error_s, lit("~s: array size overflow"), self, nao);
+  return chk_malloc(size);
 }
 
 static void ffi_noop_free(void *ptr)
@@ -926,7 +936,7 @@ static val ffi_array_in(struct txr_ffi_type *tft, mem_t *src, val vec,
                         val self)
 {
   val eltype = tft->mtypes;
-  cnum nelem = tft->nelem;
+  cnum nelem = if3(tft->is_varray, c_num(length(vec)), tft->nelem);
 
   if (tft->char_conv) {
     val str;
@@ -1004,7 +1014,7 @@ static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
   val eltype = tft->mtypes;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size;
-  cnum nelem = tft->nelem, i;
+  cnum i, nelem = if3(tft->is_varray, c_num(length(vec)), tft->nelem);
   int nt = tft->null_term;
   ucnum offs = 0;
 
@@ -1026,7 +1036,7 @@ static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
   val eltype = tft->mtypes;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size;
-  cnum nelem = tft->nelem, i;
+  cnum i, nelem = if3(tft->is_varray, c_num(length(vec)), tft->nelem);
   int nt = tft->null_term;
   ucnum offs = 0;
 
@@ -1308,6 +1318,20 @@ val ffi_type_compile(val syntax)
       val dim = cadr(syntax);
       val eltype_syntax = caddr(syntax);
       val eltype = ffi_type_compile(eltype_syntax);
+
+      if (dim == void_s) {
+          val type = make_ffi_type_pointer(syntax, vec_s, sizeof (mem_t *),
+                                           ffi_array_put, ffi_void_get,
+                                           ffi_array_in, ffi_array_out,
+                                           eltype);
+        struct txr_ffi_type *tft = ffi_type_struct(type);
+        if (sym == zarray_s)
+          tft->null_term = 1;
+        tft->is_varray = 1;
+        tft->alloc = ffi_varray_alloc;
+        tft->free = free;
+        return type;
+      }
 
       if (minusp(dim))
         uw_throwf(error_s, lit("~a: negative dimension in ~s"),
