@@ -564,10 +564,12 @@ static mem_t *ffi_cptr_alloc(struct txr_ffi_type *tft, val ptr, val self)
   return coerce(mem_t *, cptr_addr_of(ptr));
 }
 
-static val ffi_freeing_in(struct txr_ffi_type *tft, int copy,
-                          mem_t *src, val obj, val self)
+static val ffi_str_in(struct txr_ffi_type *tft, int copy,
+                      mem_t *src, val obj, val self)
 {
-  mem_t **loc = coerce(mem_t **, src);
+  char **loc = coerce(char **, src);
+  if (copy)
+    obj = if2(*loc, string_utf8(*loc));
   free(*loc);
   *loc = 0;
   return obj;
@@ -1517,7 +1519,7 @@ static void ffi_init_types(void)
                                      &ffi_type_pointer,
                                      ffi_str_put, ffi_str_get);
     struct txr_ffi_type *tft = ffi_type_struct(type);
-    tft->in = ffi_freeing_in;
+    tft->in = ffi_str_in;
     ffi_typedef(str_s, type);
   }
 
