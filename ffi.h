@@ -57,6 +57,7 @@ val ffi_make_closure(val fun, val call_desc);
 mem_t *ffi_closure_get_fptr(val closure);
 val ffi_call_wrap(val ffi_call_desc, val fptr, val args);
 val ffi_typedef(val name, val type);
+val ffi_size(val type);
 val ffi_put_into(val dstbuf, val obj, val type);
 val ffi_put(val obj, val type);
 val ffi_in(val srcbuf, val obj, val type);

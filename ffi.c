@@ -1849,6 +1849,12 @@ val ffi_typedef(val name, val type)
   return sethash(ffi_typedef_hash, name, type);
 }
 
+val ffi_size(val type)
+{
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  return num(tft->size);
+}
+
 val ffi_put_into(val dstbuf, val obj, val type)
 {
   val self = lit("ffi-put-into");
@@ -1954,6 +1960,7 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-make-closure"), user_package), func_n2(ffi_make_closure));
   reg_fun(intern(lit("cptr"), user_package), func_n1o(cptr_make, 0));
   reg_fun(intern(lit("ffi-typedef"), user_package), func_n2(ffi_typedef));
+  reg_fun(intern(lit("ffi-size"), user_package), func_n1(ffi_size));
   reg_fun(intern(lit("ffi-put-into"), user_package), func_n3(ffi_put_into));
   reg_fun(intern(lit("ffi-put"), user_package), func_n2(ffi_put));
   reg_fun(intern(lit("ffi-in"), user_package), func_n3(ffi_in));
