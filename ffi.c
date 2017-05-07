@@ -736,8 +736,21 @@ static val ffi_ptr_in_in(struct txr_ffi_type *tft, int copy, mem_t *src,
   val tgttype = tft->mtypes;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t **loc = coerce(mem_t **, src);
+  if (tgtft->in != 0)
+    tgtft->in(tgtft, 0, *loc, obj, self);
   tgtft->free(*loc);
   *loc = 0;
+  return obj;
+}
+
+static val ffi_ptr_in_d_in(struct txr_ffi_type *tft, int copy, mem_t *src,
+                           val obj, val self)
+{
+  val tgttype = tft->mtypes;
+  struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
+  mem_t **loc = coerce(mem_t **, src);
+  if (tgtft->in != 0)
+    tgtft->in(tgtft, 0, *loc, obj, self);
   return obj;
 }
 
@@ -1394,7 +1407,7 @@ val ffi_type_compile(val syntax)
       val target_type = ffi_type_compile(cadr(syntax));
       return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
                                    ffi_ptr_in_put, ffi_ptr_d_get,
-                                   0, ffi_ptr_in_out,
+                                   ffi_ptr_in_d_in, ffi_ptr_in_out,
                                    target_type);
     } else if (sym == ptr_out_s) {
       val target_type = ffi_type_compile(cadr(syntax));
