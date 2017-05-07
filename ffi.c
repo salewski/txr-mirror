@@ -1820,7 +1820,8 @@ static void ffi_closure_dispatch(ffi_cif *cif, void *cret,
       val type = pop(&types);
       val arg = args_at(args_cp, i);
       struct txr_ffi_type *mtft = ffi_type_struct(type);
-      mtft->out(mtft, 0, arg, convert(mem_t *, cargs[i]), self);
+      if (mtft->out != 0)
+        mtft->out(mtft, 0, arg, convert(mem_t *, cargs[i]), self);
     }
   }
 
@@ -1931,7 +1932,10 @@ val ffi_out(val dstbuf, val obj, val type, val copy_p)
   if (lt(length_buf(dstbuf), num_fast(tft->size)))
     uw_throwf(lit("~a: buffer ~s is too small for type ~s"),
               self, dstbuf, type, nao);
-  tft->out(tft, copy_p != nil, obj, dst, self);
+  if (tft->out != 0)
+    tft->out(tft, copy_p != nil, obj, dst, self);
+  else
+    tft->put(tft, obj, dst, self);
   return dstbuf;
 }
 
