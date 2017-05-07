@@ -862,7 +862,7 @@ static val ffi_struct_in(struct txr_ffi_type *tft, int copy, mem_t *src,
       if (mtft->in != 0) {
         val slval = slot(strct, slsym);
         slotset(strct, slsym, mtft->in(mtft, copy, src + offs, slval, self));
-      } else {
+      } else if (copy) {
         val slval = mtft->get(mtft, src + offs, self);
         slotset(strct, slsym, slval);
       }
@@ -1013,7 +1013,7 @@ static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
       if (etft->in != 0) {
         val elval = ref(vec, num_fast(i));
         refset(vec, num_fast(i), etft->in(etft, copy, src + offs, elval, self));
-      } else {
+      } else if (copy) {
         val elval = etft->get(etft, src + offs, self);
         refset(vec, num_fast(i), elval);
       }
