@@ -909,13 +909,16 @@ static void ffi_struct_out(struct txr_ffi_type *tft, int copy, val strct,
     struct txr_ffi_type *mtft = ffi_type_struct(type);
     ucnum almask = mtft->align - 1;
     offs = (offs + almask) & ~almask;
-    if (mtft->out != 0) {
-      if (slsym) {
+    if (slsym) {
+      if (mtft->out != 0) {
         val slval = slot(strct, slsym);
         mtft->out(mtft, copy, slval, dst + offs, self);
-      } else {
-        memset(dst + offs, 0, mtft->size);
+      } else if (copy) {
+        val slval = slot(strct, slsym);
+        mtft->put(mtft, slval, dst + offs, self);
       }
+    } else if (copy) {
+      memset(dst + offs, 0, mtft->size);
     }
     offs += mtft->size;
   }
@@ -1061,6 +1064,9 @@ static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
     if (etft->out != 0) {
       val elval = ref(vec, num_fast(i));
       etft->out(etft, copy, elval, dst + offs, self);
+    } else if (copy) {
+      val elval = ref(vec, num_fast(i));
+      etft->put(etft, elval, dst + offs, self);
     }
     offs += elsize;
   }
