@@ -672,6 +672,18 @@ static val ffi_bstr_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return ret;
 }
 
+static val ffi_buf_in(struct txr_ffi_type *tft, int copy, mem_t *src,
+                      val obj, val self)
+{
+  mem_t **loc = coerce(mem_t **, src);
+  mem_t *origptr = buf_get(obj, self);
+
+  if (copy && *loc != origptr)
+    obj = make_duplicate_buf(length_buf(obj), *loc);
+
+  return obj;
+}
+
 static void ffi_buf_put(struct txr_ffi_type *tft, val buf, mem_t *dst,
                         val self)
 {
@@ -689,6 +701,22 @@ static val ffi_buf_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return p ? make_duplicate_buf(num(tft->nelem), p) : nil;
 }
 
+static val ffi_buf_d_in(struct txr_ffi_type *tft, int copy, mem_t *src,
+                        val obj, val self)
+{
+  mem_t **loc = coerce(mem_t **, src);
+  mem_t *origptr = buf_get(obj, self);
+
+  if (*loc != origptr) {
+    if (copy)
+      obj = make_borrowed_buf(length_buf(obj), *loc);
+    else
+      free(*loc);
+  }
+
+  return obj;
+}
+
 static void ffi_buf_d_put(struct txr_ffi_type *tft, val buf, mem_t *dst,
                           val self)
 {
@@ -704,11 +732,6 @@ static val ffi_buf_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   mem_t *p = *coerce(mem_t **, src);
   return p ? make_borrowed_buf(num(tft->nelem), p) : nil;
-}
-
-static mem_t *ffi_buf_alloc(struct txr_ffi_type *tft, val buf, val self)
-{
-  return coerce(mem_t *, buf_addr_of(buf, self));
 }
 
 static void ffi_closure_put(struct txr_ffi_type *tft, val ptr, mem_t *dst,
@@ -1447,8 +1470,7 @@ val ffi_type_compile(val syntax)
         uw_throwf(error_s, lit("~a: negative size in ~s"),
                   self, syntax, nao);
 
-      tft->alloc = ffi_buf_alloc;
-      tft->free = ffi_noop_free;
+      tft->in = if3(sym == buf_s, ffi_buf_in, ffi_buf_d_in);
       tft->nelem = nelem;
       return type;
     }
@@ -1589,15 +1611,11 @@ static void ffi_init_types(void)
 
     for (iter = list(buf_s, buf_d_s, nao); iter; iter = cdr(iter)) {
       val sym = car(iter);
-      val type = make_ffi_type_builtin(sym, buf_s, sizeof (mem_t *),
-                                       &ffi_type_pointer,
-                                       if3(sym == buf_s,
-                                           ffi_buf_put, ffi_buf_d_put),
-                                       ffi_void_get);
-      struct txr_ffi_type *tft = ffi_type_struct(type);
-      tft->alloc = ffi_buf_alloc;
-      tft->free = ffi_noop_free;
-      ffi_typedef(sym, type);
+      ffi_typedef(sym, make_ffi_type_builtin(sym, buf_s, sizeof (mem_t *),
+                                             &ffi_type_pointer,
+                                             if3(sym == buf_s,
+                                                 ffi_buf_put, ffi_buf_d_put),
+                                             ffi_void_get));
     }
   }
 
