@@ -760,6 +760,8 @@ static val ffi_ptr_out_in(struct txr_ffi_type *tft, int copy, mem_t *src,
   mem_t **loc = coerce(mem_t **, src);
   if (tgtft->in != 0)
     obj = tgtft->in(tgtft, 1, *loc, obj, self);
+  else
+    obj = tgtft->get(tgtft, *loc, self);
   tgtft->free(*loc);
   *loc = 0;
   return obj;
@@ -836,6 +838,8 @@ static val ffi_ptr_out_s_in(struct txr_ffi_type *tft, int copy,
   mem_t **loc = coerce(mem_t **, src);
   if (tgtft->in != 0)
     obj = tgtft->in(tgtft, 1, *loc, obj, self);
+  else
+    obj = tgtft->get(tgtft, *loc, self);
   return obj;
 }
 
@@ -1925,7 +1929,7 @@ val ffi_put(val obj, val type)
   return buf;
 }
 
-val ffi_in(val srcbuf, val obj, val type)
+val ffi_in(val srcbuf, val obj, val type, val copy_p)
 {
   val self = lit("ffi-in");
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
@@ -1933,7 +1937,11 @@ val ffi_in(val srcbuf, val obj, val type)
   if (lt(length_buf(srcbuf), num_fast(tft->size)))
     uw_throwf(lit("~a: buffer ~s is too small for type ~s"),
               self, srcbuf, type, nao);
-  return tft->in(tft, 1, src, obj, self);
+  if (tft->in != 0)
+    return tft->in(tft, copy_p != nil, src, obj, self);
+  else if (copy_p)
+    return tft->get(tft, src, self);
+  return obj;
 }
 
 val ffi_get(val srcbuf, val type)
@@ -2014,7 +2022,7 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-size"), user_package), func_n1(ffi_size));
   reg_fun(intern(lit("ffi-put-into"), user_package), func_n3(ffi_put_into));
   reg_fun(intern(lit("ffi-put"), user_package), func_n2(ffi_put));
-  reg_fun(intern(lit("ffi-in"), user_package), func_n3(ffi_in));
+  reg_fun(intern(lit("ffi-in"), user_package), func_n4(ffi_in));
   reg_fun(intern(lit("ffi-get"), user_package), func_n2(ffi_get));
   reg_fun(intern(lit("ffi-out"), user_package), func_n4(ffi_out));
   reg_varl(intern(lit("cptr-null"), user_package), cptr(0));

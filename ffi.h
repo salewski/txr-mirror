@@ -60,7 +60,7 @@ val ffi_typedef(val name, val type);
 val ffi_size(val type);
 val ffi_put_into(val dstbuf, val obj, val type);
 val ffi_put(val obj, val type);
-val ffi_in(val srcbuf, val obj, val type);
+val ffi_in(val srcbuf, val obj, val type, val copy_p);
 val ffi_get(val srcbuf, val type);
 val ffi_out(val dstbuf, val obj, val type, val copy_p);
 void ffi_init(void);
