@@ -51910,6 +51910,745 @@ and
 functions return
 .codn nil .
 
+.SS* Buffers
+
+Buffers are vector-like objects specialized for holding binary data. Buffers
+support operations specialized toward the encoding of Lisp values into
+machine-oriented data types, and decoding such data types into Lisp values.
+
+Buffers are of type
+.code buf
+and, have a printed representation consisting of a
+.code #b'
+("hash b quote")
+prefix, immediately followed by data, followed by a closing quote.
+The data consists of hexadecimal digits, which may be separated by
+whitespace: newlines, tabs and spaces.
+If no hexadecimal digits occur, the notation denotes a zero-length buffer.
+There must be an even number of hexadecimal digits; if there is an odd number,
+the notation is ill-formed.  Successive pairs of hex digits denote bytes.
+
+Buffers are particularly useful in conjunction with the Foreign Function
+Interface (FFI), since they can be used to prepare arbitrary data which
+can be passed into and out of a function by pointer. They are also useful for
+binary I/O.
+
+.coNP Conventions Used by the @ buf-put- Functions
+
+Buffers support a number of similar functions for converting Lisp numeric
+values into common data types, which are placed into the buffer. These
+functions are named starting with the
+.code buf-put-
+prefix, followed by an abbreviated type name.
+
+Each of these functions takes three arguments:
+.meta buf
+specifies the buffer,
+.meta pos
+specifies the byte offset position into the buffer which receives
+the low-order byte of the data transfer, and
+.meta val
+indicates the value.
+
+If
+.meta pos
+has a value such that any portion of the data transfer would
+like outside of the buffer, the buffer is automatically extended
+in length to contain the data transfer. If this extension causes
+any padding bytes to appear between the previous length of the
+buffer and
+.metn pos ,
+those bytes are initialized to zero.
+
+The argument
+.meta val
+giving the value to be stored must be an integer or character,
+except in the case of the types
+.meta float
+and
+.metn double (the
+functions
+.code buf-put-float
+and
+.codn buf-put-double )
+for which it is required to be of type
+.codn float ,
+and in case of the function
+.code buf-put-cptr
+which expects the
+.meta val
+argument to be a
+.code cptr
+object.
+
+The
+.meta val
+argument must be in range for the data type, or an exception
+results.
+
+Unless otherwise indicated, the stored datum is in the local format
+used by the machine with regard to byte order and other representational
+details.
+
+.coNP Conventions Used by the @ buf-get- Functions
+
+Buffers support a number of similar functions for extracting
+common data types, and converting them into Lisp values.
+These functions are named starting with the
+.code buf-get-
+prefix, followed by an abbreviated type name.
+
+Each of these functions takes two arguments:
+.meta buf
+specifies the buffer and
+.meta pos
+specifies the byte offset position into the buffer which holds
+the low-order byte of the datum to be extracted.
+
+If any portion of requested datum lies outside of the boundaries
+of the buffer, an error exception is thrown.
+
+The extracted value is converted to a Lisp datum. For the
+majority of these functions, the returned value is of type
+integer. The
+.code buf-get-float
+and
+.code buf-get-double
+return a floating-point value.
+The
+.code buf-get-cptr
+function returns a value of type
+.codn cptr .
+
+.coNP Function @ make-buf
+.synb
+.mets (make-buf < len >> [ init-val <> [ alloc-size ]])
+.syne
+.desc
+The
+.code make-buf
+function creates a new buffer object which holds
+.meta len
+bytes. This argument may be zero.
+
+If
+.meta init-val
+is present, it specifies the value with which every
+byte of the buffer is initialized. If omitted, it
+defaults to zero.
+bytes. The value of
+.meta init-val
+must lie in the range 0 to 255.
+
+The
+.meta alloc-size
+parameter indicates how much memory to actually allocate for
+the buffer. If an argument is specified, its value must not
+be less than
+.metn len .
+
+.coNP Function @ length-buf
+.synb
+.mets (length-buf << buf )
+.syne
+.desc
+The
+.code length-buf
+function retrieves the buffer length: how many bytes are stored
+in the buffer.
+
+Note: the generic
+.code length
+function is also applicable to buffers.
+
+.coNP Function @ buf-trim
+.synb
+.mets (buf-trim << buf )
+.syne
+.desc
+The
+.code buf-trim
+function reduces the amount of memory allocated to the buffer
+to the minimum required to hold it contents, effectively
+setting the allocation size to the current length.
+
+The previous allocation size is returned.
+
+.coNP Function @ buf-set-length
+.synb
+.mets (buf-set-length < buf < len <> [ init-val ])
+.syne
+.desc
+The
+.code buf-set-length
+function changes the length of the buffer. If the buffer
+is made longer, the newly added bytes appear at the end,
+and are initialized to the value given by
+.metn init-val .
+If
+.meta init-val
+is specified, its value must be in the range 0 to 255.
+It defaults to zero.
+
+.coNP Function @ buf-put-i8
+.synb
+.mets (buf-put-i8 < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-i8
+converts
+.meta val
+into an eight bit signed integer, and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+The return value is
+.metn val .
+
+.coNP Function @ buf-put-u8
+.synb
+.mets (buf-put-u8 < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-u8
+converts
+.meta val
+into an eight bit unsigned integer, and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+The return value is
+.metn val .
+
+.coNP Function @ buf-put-i16
+.synb
+.mets (buf-put-i16 < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-i16
+converts
+.meta val
+into a sixteen bit signed integer, and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+The return value is
+.metn val .
+
+.coNP Function @ buf-put-u16
+.synb
+.mets (buf-put-u16 < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-u16
+converts
+.meta val
+into a sixteen bit unsigned integer, and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+The return value is
+.metn val .
+
+.coNP Function @ buf-put-i32
+.synb
+.mets (buf-put-i32 < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-i32
+converts
+.meta val
+into a 32 bit signed integer, and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+The return value is
+.metn val .
+
+.coNP Function @ buf-put-u32
+.synb
+.mets (buf-put-u32 < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-u32
+converts
+.meta val
+into a 32 bit unsigned integer, and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+The return value is
+.metn val .
+
+.coNP Function @ buf-put-i64
+.synb
+.mets (buf-put-i64 < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-i64
+converts
+.meta val
+into a 64 bit signed integer, and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+The return value is
+.metn val .
+
+.coNP Function @ buf-put-u64
+.synb
+.mets (buf-put-u64 < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-u64
+converts the value
+.meta val
+into a 64 bit unsigned integer, and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+The return value is
+.metn val .
+
+.coNP Function @ buf-put-char
+.synb
+.mets (buf-put-char < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-char
+converts
+.meta val
+into a value of the C type
+.code char
+and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+The return value is
+.metn val .
+
+Note that the
+.code char
+type may be signed or unsigned.
+
+.coNP Function @ buf-put-uchar
+.synb
+.mets (buf-put-uchar < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-uchar
+converts
+.meta val
+into a value of the C type
+.code "unsigned char"
+and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+.coNP Function @ buf-put-short
+.synb
+.mets (buf-put-short < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-short
+converts
+.meta val
+into a value of the C type
+.code short
+and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+.coNP Function @ buf-put-ushort
+.synb
+.mets (buf-put-ushort < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-ushort
+converts
+.meta val
+into a value of the C type
+.code "unsigned short"
+and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+.coNP Function @ buf-put-int
+.synb
+.mets (buf-put-int < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-int
+converts
+.meta val
+into a value of the C type
+.code int
+and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+.coNP Function @ buf-put-uint
+.synb
+.mets (buf-put-uint < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-uint
+converts
+.meta val
+into a value of the C type
+.code "unsigned int"
+and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+.coNP Function @ buf-put-long
+.synb
+.mets (buf-put-long < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-long
+converts
+.meta val
+into a value of the C type
+.code long
+and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+.coNP Function @ buf-put-ulong
+.synb
+.mets (buf-put-ulong < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-ulong
+converts
+.meta val
+into a value of the C type
+.code "unsigned long"
+and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+.coNP Function @ buf-put-float
+.synb
+.mets (buf-put-float < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-float
+converts
+.meta val
+into a value of the C type
+.code float
+and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+Note: the conversion of a \*(TL floating-point value
+to the C type float may be inexact, reducing the
+numeric precision.
+
+.coNP Function @ buf-put-double
+.synb
+.mets (buf-put-double < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-double
+converts
+.meta val
+into a value of the C type
+.code double
+and stores it into the buffer at
+the offset indicated by
+.metn pos .
+
+.coNP Function @ buf-put-cptr
+.synb
+.mets (buf-put-cptr < buf < pos << val )
+.syne
+.desc
+The
+.code buf-put-cptr
+expects
+.meta val
+to be of type
+.codn cptr .
+It stores the object's pointer value into the buffer at
+the offset indicated by
+.metn pos .
+
+.coNP Function @ buf-get-i8
+.synb
+.mets (buf-get-i8 < buf << pos )
+.syne
+.desc
+The
+.code buf-get-i8
+function extracts and returns signed eight bit integer from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-u8
+.synb
+.mets (buf-get-u8 < buf << pos )
+.syne
+.desc
+The
+.code buf-get-u8
+function extracts and returns an unsigned eight bit integer from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-i16
+.synb
+.mets (buf-get-i16 < buf << pos )
+.syne
+.desc
+The
+.code buf-get-i16
+function extracts and returns a signed 16 bit integer  from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-u16
+.synb
+.mets (buf-get-u16 < buf << pos )
+.syne
+.desc
+The
+.code buf-get-u16
+function extracts and returns an unsigned 16 bit integer  from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-i32
+.synb
+.mets (buf-get-i32 < buf << pos )
+.syne
+.desc
+The
+.code buf-get-i32
+function extracts and returns a signed 32 bit integer  from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-u32
+.synb
+.mets (buf-get-u32 < buf << pos )
+.syne
+.desc
+The
+.code buf-get-u32
+function extracts and returns an unsigned 32 bit integer  from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-i64
+.synb
+.mets (buf-get-i64 < buf << pos )
+.syne
+.desc
+The
+.code buf-get-i64
+function extracts and returns a signed 64 bit integer  from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-u64
+.synb
+.mets (buf-get-u64 < buf << pos )
+.syne
+.desc
+The
+.code buf-get-u64
+function extracts and returns an unsigned 64 bit integer  from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-char
+.synb
+.mets (buf-get-char < buf << pos )
+.syne
+.desc
+The
+.code buf-get-char
+function extracts and returns a value of the C type
+.code char
+from
+.meta buf
+at the offset given by
+.metn pos .
+Note that
+.code char
+may be signed or unsigned.
+
+.coNP Function @ buf-get-uchar
+.synb
+.mets (buf-get-uchar < buf << pos )
+.syne
+.desc
+The
+.code buf-get-uchar
+function extracts and returns a value of the C type
+.code "unsigned char"
+from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-short
+.synb
+.mets (buf-get-short < buf << pos )
+.syne
+.desc
+The
+.code buf-get-short
+function extracts and returns a value of the C type
+.code short
+from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-ushort
+.synb
+.mets (buf-get-ushort < buf << pos )
+.syne
+.desc
+The
+.code buf-get-ushort
+function extracts and returns a value of the C type
+.code "unsigned short"
+from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-int
+.synb
+.mets (buf-get-int < buf << pos )
+.syne
+.desc
+The
+.code buf-get-int
+function extracts and returns a value of the C type
+.code int
+from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-uint
+.synb
+.mets (buf-get-uint < buf << pos )
+.syne
+.desc
+The
+.code buf-get-uint
+function extracts and returns a value of the C type
+.code "unsigned int"
+from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-long
+.synb
+.mets (buf-get-long < buf << pos )
+.syne
+.desc
+The
+.code buf-get-long
+function extracts and returns a value of the C type
+.code long
+from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-ulong
+.synb
+.mets (buf-get-ulong < buf << pos )
+.syne
+.desc
+The
+.code buf-get-ulong
+function extracts and returns a value of the C type
+.code "unsigned long"
+from
+.meta buf
+at the offset given by
+.metn pos .
+
+.coNP Function @ buf-get-float
+.synb
+.mets (buf-get-float < buf << pos )
+.syne
+.desc
+The
+.code buf-get-float
+function extracts and returns a value of the C type
+.code float
+from
+.meta buf
+at the offset given by
+.metn pos ,
+returning that value as a Lisp floating-point number.
+
+.coNP Function @ buf-get-double
+.synb
+.mets (buf-get-double < buf << pos )
+.syne
+.desc
+The
+.code buf-get-double
+function extracts and returns a value of the C type
+.code double
+from
+.meta buf
+at the offset given by
+.metn pos ,
+returning that value as a Lisp floating-point number.
+
+.coNP Function @ buf-get-cptr
+.synb
+.mets (buf-get-cptr < buf << pos )
+.syne
+.desc
+The
+.code buf-get-cptr
+function extracts a C pointer from
+.meta buf
+at the offset given by
+.metn pos ,
+returning that value as a Lisp object of type
+.codn cnum .
+
 .SH* INTERACTIVE LISTENER
 
 .SS* Overview
