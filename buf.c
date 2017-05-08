@@ -150,11 +150,13 @@ static void buf_grow(struct buf *b, val init_val, val self)
 
 static void buf_shrink(struct buf *b)
 {
-  cnum oldsize = c_num(b->size);
-  cnum len = c_num(b->len);
+  val len = b->len;
 
-  if (len != oldsize) {
-    b->data = chk_realloc(b->data, len);
+  if (len == zero)
+    len = succ(len);
+
+  if (len != b->size) {
+    b->data = chk_realloc(b->data, c_num(len));
     b->size = b->len;
   }
 }
