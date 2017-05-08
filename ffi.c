@@ -1070,8 +1070,8 @@ static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
   val eltype = tft->mtypes;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size;
-  cnum i, nelem = if3(tft->is_varray, c_num(length(vec)), tft->nelem);
   int nt = tft->null_term;
+  cnum i, nelem = if3(tft->is_varray, c_num(length(vec)) + nt, tft->nelem);
   ucnum offs = 0;
 
   for (i = 0; i < nelem; i++) {
@@ -1092,8 +1092,8 @@ static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
   val eltype = tft->mtypes;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size;
-  cnum i, nelem = if3(tft->is_varray, c_num(length(vec)), tft->nelem);
   int nt = tft->null_term;
+  cnum i, nelem = if3(tft->is_varray, c_num(length(vec)) + nt, tft->nelem);
   ucnum offs = 0;
 
   for (i = 0; i < nelem; i++) {
