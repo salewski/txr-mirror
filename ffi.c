@@ -929,8 +929,6 @@ static void ffi_struct_put(struct txr_ffi_type *tft, val strct, mem_t *dst,
     if (slsym) {
       val slval = slot(strct, slsym);
       mtft->put(mtft, slval, dst + offs, self);
-    } else {
-      memset(dst + offs, 0, mtft->size);
     }
     offs += mtft->size;
   }
@@ -957,8 +955,6 @@ static void ffi_struct_out(struct txr_ffi_type *tft, int copy, val strct,
         val slval = slot(strct, slsym);
         mtft->put(mtft, slval, dst + offs, self);
       }
-    } else if (copy) {
-      memset(dst + offs, 0, mtft->size);
     }
     offs += mtft->size;
   }
