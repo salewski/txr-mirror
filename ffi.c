@@ -201,9 +201,10 @@ static struct txr_ffi_closure *ffi_closure_struct_checked(val obj)
 static void ffi_closure_print_op(val obj, val out,
                                  val pretty, struct strm_ctx *ctx)
 {
+  struct txr_ffi_closure *tfcl = ffi_closure_struct(obj);
   put_string(lit("#<"), out);
   obj_print_impl(obj->co.cls, out, pretty, ctx);
-  put_string(lit("#>"), out);
+  format(out, lit(" ~s ~s>"), tfcl->fun, tfcl->call_desc, nao);
 }
 
 static void ffi_closure_destroy_op(val obj)
