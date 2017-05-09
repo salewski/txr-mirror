@@ -1929,11 +1929,6 @@ mem_t *ffi_closure_get_fptr(val closure)
   return tfcl->fptr;
 }
 
-static val cptr_make(val n)
-{
-  return if3(missingp(n), cptr(0), cptr(coerce(mem_t *, c_num(n))));
-}
-
 val ffi_typedef(val name, val type)
 {
   return sethash(ffi_typedef_hash, name, type);
@@ -2055,7 +2050,6 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-make-call-desc"), user_package), func_n4(ffi_make_call_desc));
   reg_fun(intern(lit("ffi-call"), user_package), func_n3(ffi_call_wrap));
   reg_fun(intern(lit("ffi-make-closure"), user_package), func_n2(ffi_make_closure));
-  reg_fun(intern(lit("cptr"), user_package), func_n1o(cptr_make, 0));
   reg_fun(intern(lit("ffi-typedef"), user_package), func_n2(ffi_typedef));
   reg_fun(intern(lit("ffi-size"), user_package), func_n1(ffi_size));
   reg_fun(intern(lit("ffi-put-into"), user_package), func_n3(ffi_put_into));
@@ -2063,7 +2057,6 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-in"), user_package), func_n4(ffi_in));
   reg_fun(intern(lit("ffi-get"), user_package), func_n2(ffi_get));
   reg_fun(intern(lit("ffi-out"), user_package), func_n4(ffi_out));
-  reg_varl(intern(lit("cptr-null"), user_package), cptr(0));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
   ffi_init_extra_types();
