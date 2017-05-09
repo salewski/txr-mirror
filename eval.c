@@ -6157,6 +6157,12 @@ void eval_init(void)
   reg_fun(intern(lit("rlcp"), user_package), func_n2(rlcp));
   reg_fun(intern(lit("rlcp-tree"), user_package), func_n2(rlcp_tree));
 
+  reg_fun(intern(lit("cptr-int"), user_package), func_n1(cptr_int));
+  reg_fun(intern(lit("cptr-obj"), user_package), func_n1(cptr_obj));
+  reg_fun(intern(lit("cptr-zap"), user_package), func_n1(cptr_zap));
+  reg_fun(intern(lit("cptr-free"), user_package), func_n1(cptr_free));
+  reg_varl(intern(lit("cptr-null"), user_package), cptr(0));
+
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
 

@@ -7402,6 +7402,31 @@ val cptr(mem_t *ptr)
   return cobj(ptr, cptr_s, &cptr_ops);
 }
 
+val cptr_int(val n)
+{
+  return if3(missingp(n), cptr(0), cptr(coerce(mem_t *, c_num(n))));
+}
+
+val cptr_obj(val obj)
+{
+  return cptr(coerce(mem_t *, obj));
+}
+
+val cptr_zap(val cptr)
+{
+  (void) cobj_handle(cptr, cptr_s);
+  cptr->co.handle = 0;
+  return cptr;
+}
+
+val cptr_free(val cptr)
+{
+  (void) cobj_handle(cptr, cptr_s);
+  free(cptr->co.handle);
+  cptr->co.handle = 0;
+  return cptr;
+}
+
 mem_t *cptr_get(val cptr)
 {
   return cobj_handle(cptr, cptr_s);
