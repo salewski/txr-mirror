@@ -52882,9 +52882,9 @@ They convert like integer types: both Lisp integers and characters
 convert to these types, if in a suitable range; and under
 the reverse conversion, the foreign values become Lisp integers.
 .ccIP @ float and @ double
-These types correspond to the same-named C types. Only the \*(TL type
-.code float
-converts to these types. Because the \*(TL
+These types correspond to the same-named C types. They convert
+Lisp integers, characters and floating-point numbers to these C types.
+Because the \*(TL
 .code float
 is represented as a C
 .code double

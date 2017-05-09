@@ -481,11 +481,23 @@ static val ffi_ulong_get(struct txr_ffi_type *tft, mem_t *src, val self)
 
 static void ffi_float_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 {
-  double f = c_flo(n);
   double v;
-  if (f > FLT_MAX || f < FLT_MIN)
+
+  switch (type(n)) {
+  case NUM:
+  case CHR:
+    v = c_num(n);
+    break;
+  case BGNUM:
+    n = int_flo(n);
+    /* fallthrough */
+  default:
+    v = c_flo(n);
+    break;
+  }
+
+  if (v > FLT_MAX || v < FLT_MIN)
     uw_throwf(error_s, lit("~a: ~s is out of float range"), self, num, nao);
-  v = f;
   *coerce(float *, dst) = v;
 }
 
@@ -498,7 +510,21 @@ static val ffi_float_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_double_put(struct txr_ffi_type *tft, val n, mem_t *dst,
                            val self)
 {
-  double v = c_flo(n);
+  double v;
+
+  switch (type(n)) {
+  case NUM:
+  case CHR:
+    v = c_num(n);
+    break;
+  case BGNUM:
+    n = int_flo(n);
+    /* fallthrough */
+  default:
+    v = c_flo(n);
+    break;
+  }
+
   *coerce(double *, dst) = v;
 }
 
