@@ -52649,6 +52649,1624 @@ at the offset given by
 returning that value as a Lisp object of type
 .codn cnum .
 
+.SS* Foreign Function Interface
+
+On platforms where it is supported, \*(TX provides a feature called the
+.IR "foreign function interface" ,
+or FFI. This refers to the ability to interoperate with programming
+interfaces which are defined by the binary data type representations
+and calling conventions of the platform's principal C language compiler.
+
+\*(TX's FFI module provides a succinct Lisp-based type notation for expressing C
+data types, together with memory-management semantics pertinent to the transfer
+of data between software components. The notation is used to describe the
+arguments and return values of functions in external libraries, and of Lisp
+callback functions that can be called from those libraries.  Driven by the
+compiled representation of the type notation, The FFI module performs
+transparent conversions between Lisp data types and C data types, and
+automatically manages memory around foreign calls and incoming callbacks.
+
+The FFI module consists of a library of functions which provide all of its
+semantics.  On top of these functions, the FFI module provides a number of
+macros which comprise an expressive, convenient language for defining
+foreign interfaces.
+
+The FFI module supports passing and returning both structures and arrays
+by value. Passing arrays by value isn't a feature of the C language syntax;
+from the C point of view, these by-value array objects in the \*(TX FFI
+type system are equivalent to C arrays encapsulated in
+.codn struct -s.
+
+.NP* Cautionary Notes
+
+The FFI feature is inherently unsafe. If the FFI type language is used to write
+incorrect type definitions which do not match the actual binary interface of a
+foreign function, undefined behavior results. Incorrect use of FFI can corrupt
+memory, creating instability and security problems. Also, incorrect use of FFI
+can cause memory leaks and/or use-after-free errors due to inappropriate
+deallocation of memory.
+
+The implicit memory management behaviors encoded in the FFI type system
+are convenient, but risky. A minor declarative detail such as writing
+.code str
+instead of
+.code str-d
+in the middle of some nested type can make the difference between correct code
+and code which causes a memory leak, or instability by freeing memory which is
+in use.
+
+FFI developers are encouraged to unit-test their FFI definitions carefully
+and use tools such as Valgrind to detect memory misuses and leaks.
+
+.NP* Key Concepts
+
+.IP "The \fIput\fP operation"
+
+When a function call takes place from the \*(TL arena into a foreign
+library function, argument values must be prepared in the foreign
+representation. This takes place by converting Lisp objects into
+stack-allocated temporary buffers representing C objects. For aggregate objects
+containing pointers, additional buffers are allocated dynamically. For
+instance, suppose a structure contains a string and is passed by value. The
+structure will be converted to a stack allocated equivalent C structure, in
+which the string will appear as a pointer.  That pointer may use dynamically
+allocated (via
+.codn malloc )
+string data.  The operation which prepares argument material before a foreign
+function call is the
+.I put
+operation. In FFI callback dispatch, the operation which propagates the
+callback return value to the foreign caller is also the put operation.
+
+.IP "The \fIin\fP operation"
+
+After a foreign function call returns from a foreign library back to the \*(TL
+arena, the arguments have to be examined one more time, because two-way
+communication is possible, and because some of the material has temporary
+dynamically-allocated buffers associated with it which must be released. For
+instance a structure passed by pointer may be updated by the foreign function.
+FFI needs to propagate the changes which the foreign function performed to the
+C version of the structure, back to the original Lisp structure. Furthermore,
+a structure passed by pointer uses a dynamically allocated buffer. This buffer
+must be freed.  The operation which handles the responsibility for propagating
+argument data back into \*(TL objects, and frees any temporary memory that had
+been arranged by the
+.I put
+operation is the
+.I in
+operation.
+
+The in operation has two nuances: by-value nuance and by-pointer nuance.
+Data passed into a function by value such as function arguments or via
+.code ptr-in
+are subject to the by-value nuance. Updates to these objects themselves
+do not propagate from the Lisp representation to the external representation;
+however, those objects may contain pointers requiring the by-pointer
+nuance of the out operation to be invoked.
+
+.IP "The \fIget\fP operation"
+
+After a foreign call completes, it is also necessary to retrieve the call's
+return value, convert it to a Lisp object, and free any dynamic memory.
+This is preformed by the
+.I get
+operation.
+
+The
+.I get
+operation is also used by a Lisp callback function, called from a foreign
+library, to convert the arguments to Lisp objects.
+
+.IP "The \fIout\fP operation"
+
+When a Lisp callback invoked by a foreign library completes, it must
+provide a return value, and also update any argument objects with new
+values. The return value is propagated using the put operation. Updates
+to arguments is performed by the
+.code out
+operation. This operation is like the reverse of the in operation. Like
+that operation, it has a by-value and by-pointer nuance.
+
+For instance, if a callback receives a structure by value, upon return, there
+is no use in reconstructing a new version of the structure; the caller will not
+receive the change. However, if the structure contains pointers to data that
+was updated, by the callback, those changes must materialize. This is achieved
+by triggering the by-value nuance of the structure type's out operation, which
+will recursively invoke the in operation of embedded pointers, which will
+in turn invoke the by-pointer nuance.
+
+.PP
+
+.NP* The FFI Type System
+
+The FFI type system consists of a notation built using Lisp syntax. Basic,
+unparametrized types are denoted by symbolic atoms. Similarly to a concept
+in the C language,
+.code typedef
+names can be globally defined, using the
+.code ffi-typedef
+function, or the macro
+.codn deffi-type .
+These
+.code typedef
+names are also symbols.
+
+Like in the C language,
+.code typedef
+names are aliases for an existing type, and not distinct types. However,
+this is of no consequence, since the FFI doesn't perform any type checking
+between two foreign types, and thus never takes into consideration whether two
+such types are equal. The main concern in FFI is correspondence between Lisp
+values and foreign types. For instance, a Lisp string argument will not convert
+to a foreign function parameter of type
+.codn int .
+
+Compound expressions denote the construction of derived types, or types which
+are instantiated with parameters. Each such expression has a type constructor
+symbol in the operator position, from a limited, fixed vocabulary, which cannot
+be extended.
+
+Some predefined types which are provided are in fact typedef names.
+For instance, the
+.code size-t
+type is a typedef name for some other integral type, defined in a
+platform-specific way. Which type that is may be determined by passing
+the syntax to the type compiler function using the expression
+.codn "(ffi-type-compile 'size-t)" .
+The type compiler converts the
+.code size-t
+syntax to the compiled type object, resolving the typedef name to
+the type which it denotes. The printed representation of that object
+reveals the identity of the type. For instance, it might be
+.codn "#<ffi-type uint>" ,
+indicating that
+.code size-t
+is an alias for the
+.code uint
+basic type, which corresponds to the C type
+.codn "unsigned int" .
+
+The following are basic types:
+
+.ccIP @, char @ uchar and @ bchar
+These first of these two types correspond to the C character types
+.code char
+and
+.codn "unsigned char" ,
+respectively. The
+.code bchar
+type (byte char)
+also corresponds to
+.codn "unsigned char" .
+Both Lisp integers and character values
+convert to these representation, if they are in their numeric range.
+Out-of-range values produce an exception.
+A foreign
+.code char
+and
+.code bchar
+value converts to a Lisp character, whereas a
+.code uchar
+value converts to an integer. Moreover,
+.code array
+and
+.code zarray
+type constructors treat
+.code char
+and
+.code bchar
+specially, but apply no special treatment to
+.codn uchar .
+.ccIP @, short @, ushort @, int @, uint @, long @, ulong
+These types correspond to the C integer types
+.codn short ,
+.codn "unsigned short" ,
+.codn int ,
+.codn "unsigned int" ,
+.code long
+and
+.codn "unsigned long" .
+Lisp characters and integers convert to these foreign representations, if they
+are in their numeric range.  Foreign values of these types convert
+to Lisp integers.
+
+.ccIP @ int8 and @ uint8
+These types correspond to 8 bit signed and unsigned integers.
+They convert like integer types: both Lisp integers and characters
+convert to these types, if in a suitable range; and under
+the reverse conversion, the foreign values become Lisp integers.
+
+.ccIP @, int16 @, uint16 @, int32 @, uint32 @ int64 and @ uint64
+These types correspond denote precisely sized C integer types.
+They convert like integer types: both Lisp integers and characters
+convert to these types, if in a suitable range; and under
+the reverse conversion, the foreign values become Lisp integers.
+.ccIP @ float and @ double
+These types correspond to the same-named C types. Only the \*(TL type
+.code float
+converts to these types. Because the \*(TL
+.code float
+is represented as a C
+.code double
+it converts directly to
+.code double
+without the possibility of range error or loss of precision.
+A conversion to type
+.code float
+is subject to a range check; an exception is thrown if the Lisp
+floating-point value is out of range of this type. Even when the
+conversion is possible, it alters the value, results in a loss of precision.
+In the reverse direction, values of both types convert to the one and
+only \*(TL
+.code float
+type.
+
+.ccIP @ cptr
+This type corresponds to a C pointer of any type, including a function pointer;
+\*(TX doesn't run on any exotic platforms in which there is a representational
+difference among C pointers.
+This foreign type converts between the \*(TL type
+.code cptr
+and C pointers.
+Note: the
+.code cptr
+type, in the context of FFI, is particularly useful for representing
+C pointers that are used in C library interfaces as "opaque" handles.
+For instance a FFI binding for the C functions
+.code fopen
+and
+.code fclose
+may use the
+.code cptr
+to represent the
+.code "FILE *"
+type. That is to say,
+.code cptr
+can be specified as the return type for
+.codn fopen ,
+thereby capturing the stream handle in a
+.code cptr
+object when that function is invoked through FFI. Then, the captured
+.code cptr
+object can be passed as the argument of
+.code fclose
+to close the stream.
+
+.ccIP @, str @, bstr @ str-d and @ bstr-d
+These FFI types correspond to the C pointer type
+.codn "char *" ,
+providing automatic conversion between Lisp strings and null-terminated
+C strings. The
+.code str
+and
+.code str-d
+types use UTF-8 encoding. The
+.code bstr
+and
+.code bstr-d
+types do not use UTF-8: only Lisp strings which contain strictly
+code points in the range U+0000 to U+00FF may convert to these types;
+out-of-range characters trigger an error exception.
+The
+.code -d
+suffixed types differ from the unsuffixed variants
+in that they denote the transfer of ownership of dynamically allocated memory,
+and thus the responsibility for freeing that memory.
+
+The
+.code str
+type behaves as follows. The put operation allocates, using
+.codn malloc ,
+a buffer large enough to hold the UTF-8 encoded version of the Lisp
+string, encodes the string into that buffer, and then stores the
+.code "char *"
+pointer into the argument space. The in operation deallocates the
+buffer. If
+.code str
+is passed by pointer, the in operation also takes the current value of the
+.code "char *"
+pointer, which may have been replaced by a different pointer, and creates a new
+Lisp string by decoding UTF-8 from that buffer. The get operation retrieves the
+C pointer and duplicates a new string by decoding the UTF-8 contents. The type
+has no out operation: a string is not expected to be modified in-place.
+
+The type
+.code str-d
+type differs in behavior from
+.code str
+as follows. Firstly, it has no in operation. Consequently,
+.code str-d
+doesn't deallocate the buffer that had been allocated by put.
+Under the get operation, the
+.code str-d
+type assumes that ownership over the C pointer has been granted, and
+after duplicating a new string from the decoded UTF-8 data in the C string,
+it deallocates that C string by invoking the C library function
+.code free
+on it.
+
+The type
+.code bstr-d
+behaves like
+.code str-d
+with regard to memory management; it differs from
+.code str-d
+in the same way that
+.code str
+differs from
+.codn bstr :
+it doesn't perform UTF-8 encoding or decoding.
+
+Like other types, the string types combine with the
+.code ptr
+type family. Because the
+.code ptr
+family has memory management semantics, as does the string family,
+it is important to understand the memory management implications
+of the combination of the two.
+
+The types
+.code "(ptr str-d)"
+and
+.code "(ptr str)"
+are effectively equivalent. They denote a string passed by pointer,
+with in-out semantics. The effect is that the string is dynamic in both
+directions. What that means is that the foreign function either must not
+free the pointer it was given, or else it replace it with one which the
+caller can also free (or with a null pointer). The two are equivalent
+because
+.code str-d
+has no in operation, so its get operation is used instead; but that operation
+is similar to the in operation of the
+.code str
+type:
+both decode the string currently referenced by the
+.code "char *"
+pointer, and then pass that pointer to the C
+.code free
+function.
+
+To receive a string pointer by pointer from a foreign
+function, one of the types
+.code "(ptr-out str)"
+or
+.code "(ptr-out str-d)"
+should be used, which have different semantics. In either situation, FFI will
+prepare a pointer-sized uninitialized buffer, which the called function fills
+with a
+.code "char *"
+pointer. In the
+.code str
+case, FFI will duplicate that string to a Lisp string. In the
+.code str-d
+case, FFI will also free the string received from the foreign function.
+
+The type combination
+.code "(ptr-in str-d)"
+refers to a string pointer passed to a foreign function by pointer,
+whereby the foreign function will retain and free the pointer. The type
+combination
+.code "(ptr-in str)"
+passes the string pointer in the same way, but the foreign module mustn't
+use the pointer after returning. FFI will free the pointer that had been
+passed.
+
+.ccIP @ wstr and @ wstr-d
+The FFI type
+.code wstr
+corresponds to the C type
+.code "wchar_t *"
+pointing to the first character of a null terminated wide string.
+It converts between Lisp strings and symbols, and C strings.
+Since \*(TX represents strings in this format natively, the
+.code wstr
+type has a different memory management profile from that of
+.code str
+and
+.codn bstr .
+
+Under the
+.code wstr
+type's put operation, no memory allocation takes place. The internal string
+pointer is retrieved from within the Lisp object, and written into the argument
+space as-is. The type has no in operation, since there is no memory to clean
+up. The get semantics of
+.code wstr
+duplicate the C string, producing a new Lisp object which doesn't share
+storage with the original.
+
+Under the
+.code wstr-d
+type's put operation, memory allocation does take place. A new C string
+is allocated via
+.code malloc
+and that pointer is written into the argument space. The type has no in
+operation. The get semantics of
+.code wstr-d
+produces a Lisp string object which directly takes ownership of the C string.
+The C string will be freed if and when that Lisp string is recognized as
+unreachable by \*(TX's garbage collector.
+
+.ccIP @ buf and @ buf-d
+The
+.code buf
+type creates a correspondence between the \*(TL
+.code buf
+type and a C pointer to a block of arbitrary data. Note that there is a
+parametrized version of the
+.code buf
+and
+.code buf-d
+type which specified a size.
+
+Under the
+.code buf
+type's put operation, no memory allocation takes place. The pointer to the
+buffer object's data is is written into the argument space, so the foreign
+function can manipulate the buffer directly. The in operation has usefully
+nuanced semantics. In the situation when it is required to extract an updated
+object, it compares the original buffer pointer to the pointer
+that had been written to the argument space. If they are identical, then
+it yields the original object. Otherwise it allocates a buffer equal in size
+to the original one and copies in the new data from the new pointer.
+In all other cases it yields the original object.  The get operation is
+not meaningful for an unsized
+.codn buf :
+it yields a zero length
+.code buf
+object. For this reason, parametrized
+.code buf
+type should be used for retrieving a buffer with a specific fixed size.
+
+The
+.code buf-d
+type differs from
+.code buf
+in that the in operation, in the case when the buffer pointer has changed,
+assumes ownership of the new pointer. When called upon to product an updated
+object (pass by pointer), it creates a buffer which owns that buffer, rather
+than creating a copy. If an updated object is not required (pass by value), it
+releases the memory by passing the pointer to the
+.code free
+function.
+
+.ccIP @ closure
+The
+.code closure
+type converts to kinds of Lisp objects to a C pointer: the
+.code cptr
+type, and the special
+.code ffi-closure
+type, whose instances are produced by the
+.code ffi-make-closure
+function, or by calls to functions defined by the
+.code deffi-cb
+macro. The
+.code closure
+type is useful for passing callbacks to foreign functions: Lisp functions
+which appear to be C functions to foreign code.
+
+.ccIP @ void
+The
+.code void
+type is useful for indicating the return type of foreign functions and
+callbacks which return no value. It corresponds to a zero-sized object.
+It will convert any lisp value into zero bytes, and convert
+zero bytes into
+.codn nil .
+
+.PP
+The following following parametrized types are available:
+.meIP (struct < name >> {( slot << type )}*)
+The FFI
+.code struct
+type maps between a Lisp
+.code struct
+and a C
+.codn struct .
+The
+.meta name
+argument of the syntax gives the structure a name. This name is significant
+because it specifies the Lisp
+.code struct
+name associated with the FFI type. The association isn't unique:
+More than one FFI
+.code struct
+definition can use the same name.
+
+The
+.meta slot
+and
+.code type
+pairs specify the structure members. The
+.code slot
+elements must be symbols, and the
+.code type
+elements must be FFI type expressions.
+
+When a Lisp object is converted to a struct, it must, firstly, be of the struct
+type specified by
+.codn name .
+Secondly, that type must have all of the slots defined in the FFI type.
+The slots are pulled from the Lisp structure in the order that they appear
+in the FFI
+.code struct
+definition. They are placed into the target memory area in that order,
+with all required padding between the members, and possibly after
+the last member, for alignment.
+
+Whenever a member is defined using
+.code nil
+as the
+.meta slot
+name, that member represents anonymous padding. The corresponding
+.code type
+expression is used only to determine the size of the padding only. Its data
+transfer semantics is completely suppressed. When converting from Lisp, the
+anonymous padding member simply generates a skip of the number of byte
+corresponding to the size of its type, plus any necessary additional padding
+for the alignment of the subsequent member.
+
+.meIP (array < dim << type )
+The FFI
+.code array
+type creates a correspondence between Lisp sequences and
+"by value" fixed size arrays in C. It converts Lisp sequences to C arrays, and
+C arrays to Lisp vectors.
+
+Of course, arrays passed by values do not exist
+in the C language syntax. Rather, the C type which corresponds to the
+FFI array is a C array that is encapsulated in a
+.codn struct .
+For instance the type
+.code "(array 3 char)"
+can be visualized as corresponding to the C type
+.codn "struct { char anonymous[3]; }" .
+
+Thus, in the FFI syntax, we can specify arrays as function parameters
+passed by value and as return values.
+
+On conversion from Lisp to the foreign type, the FFI
+.code array
+simply iterates over the Lisp sequence, and performs an element for
+element conversion to
+.metn type .
+
+Since Lisp arrays and C arrays do not share the same representation,
+temporary buffers are automatically created and destroyed by FFI
+to manage the conversion.
+
+In addition, several types are treated specially: when
+.meta type
+is one of
+.codn char ,
+.code bchar
+or
+.codn wchar ,
+the array type establishes a special correspondence with Lisp strings.
+When the C array is decoded, a Lisp string is created or updated in place
+to reflect the new contents.
+
+.meIP (array << type )
+When the
+.meta dim
+element is omitted from the syntax, it denotes a variable length
+array. This doesn't use a "by value" array representation, but corresponds
+to a C pointer. This type is mainly useful for passing a variable-length array
+of objects to a foreign function.  Since it has an unknown length, it
+cannot be decoded from a return value, or from an argument in a callback.
+
+.meIP (zarray < dim << type )
+The
+.code zarray
+type is a variant of
+.codn array .
+When converting from Lisp to C, it ensures that the array is null-terminated.
+This means that the last element of the array is written out as all zero bytes.
+The
+.code zarray
+type also allows the Lisp object to be one element short. For instance,
+when a
+.code "(zarray 5 int)"
+passed by pointer a foreign function is converted back to Lisp,
+the Lisp object is required to have only four elements. If the Lisp object
+has five elements, then the fifth one will be decoded from the C array
+in earnest; it is not expected to be null.
+The
+.code zarray
+type is useful for handling null terminated character arrays representing
+strings, and for null terminated vectors.
+
+.meIP (zarray << type )
+The
+.code zarray
+is a null-terminated variant of the variable-length array. When a Lisp
+sequence is encoded to the foreign representation under control of this
+type, an extra element of all-zero bytes is written out after the
+representation of the last element.
+
+.meIP (ptr << type )
+The
+.meta ptr
+denotes the passage of a value by pointer. The
+.meta type
+argument gives the pointer's target type. The
+.code ptr
+type converts a single Lisp value, to and from the target type,
+using a C pointer as the external representation.
+
+When used for passing a value to a foreign function, the
+.code ptr
+type has in-out semantics: it supports the interfacing concept that
+the called function can update datum which has been passed to it "by pointer",
+thereby altering the caller's object. Since a Lisp value requires a conversion
+to the FFI external representation, it cannot be directly passed by pointer.
+Instead, this semantics is simulated. The put semantics of
+.code ptr
+allocates a temporary buffer, large enough to hold the representation of
+.metn type .
+The Lisp value is then encoded into this buffer, recursively relying on
+the type's put semantics. After the foreign call,
+.code ptr
+triggers the in semantics of
+.meta type
+to update the Lisp object from the temporary buffer, and releases the
+buffer.
+
+The get semantics of
+.code ptr
+is used in retrieving a
+.code ptr
+return value, or, in a FFI callback, for retrieving the values of
+incoming arguments that are of
+.code ptr
+type. The get semantics assumes that the memory referenced by the C
+pointer is owned by foreign code. The Lisp object is merely decoded from the
+data area, which is then not touched.
+
+The
+.code out
+semantics of
+.codn ptr ,
+used by callbacks for updating the values of arguments
+passed by pointer, assumes that the argument space already contains a
+valid pointer. The pointer is retrieved from the argument space, and the
+Lisp value is encoded into the memory referenced by that pointer.
+
+Note that only Lisp objects with mutable slots can be meaningfully passed by
+pointer with in-out semantics. If a Lisp objects without immutable slots, such
+as an integer, is passed using
+.code ptr
+the incoming updated value of the external representation will be ignored.
+Concretely, if a C function has the argument signature
+.code "(int *)"
+with in-out semantics such that it updates the
+.code int
+object which is passed in, this function can be called as a foreign function
+using a
+.code "(ptr int)"
+FFI type for the argument. However, the argument of the foreign call on the
+\*(TL side is just an integer value, and that cannot be updated.
+
+On the other hand, if a FFI
+.code struct
+member is declared as of type
+.code "(ptr int)"
+then the Lisp
+.code struct
+is expected to have an integer-valued slot corresponding to that member.
+The slot is then subject to a bi-directional transfer. FFI will create an
+.codn int -sized
+temporary data area, encode the slot into that area and place that area's
+pointer into the encoded structure.  After the call, the new value of the
+.code int
+will be extracted from the temporary buffer, which will then be released.
+The Lisp structure's slot will be updated with the new integer.
+This will happen even if the Lisp structure is being passed as a by-value
+argument.
+
+.meIP (ptr-in << type )
+The
+.code ptr-in
+type is a variation of
+.code ptr
+which denotes the passing of a value by pointer into a function, but
+not out. The put semantics of
+.code ptr-in
+is the same as that of
+.codn ptr ,
+but after the completion of the foreign function call, the in semantics
+differs. The
+.code ptr-in
+type only frees the temporary buffer, without decoding from it.
+
+The out semantics of
+.code ptr-in
+differs also. It effectively treats the object as if it were "by value",
+since the reverse data transfer is ruled out. In other words,
+.code ptr-in
+simply triggers the by-value nuance of
+.metn type 's
+out semantics.
+
+The get semantics of
+.code ptr-in
+is the same as that of
+.codn ptr .
+
+.meIP (ptr-out << type )
+The
+.code ptr-out
+type is a variant of
+.code ptr
+which denotes a by pointer data transfer out of a function only, not into.
+The put semantics of
+.code ptr-out
+prepares a data area large enough to hold
+.meta type
+and stores a pointer to that area into the argument space.
+The Lisp value isn't encoded into the data area.
+
+The in semantics is the same as that of
+.codn ptr :
+the by-pointer nuance of
+.metn type 's
+in semantics is invoked to decode the external representation to
+Lisp data.
+
+.meIP (ptr-in-d << type )
+The
+.code ptr-in-d
+type is a variant of
+.code ptr-in
+which transfers ownership of the allocated buffer to the invoked
+function. That is to say, the in semantics of
+.code ptr-in-d
+doesn't involve the freeing of memory that was allocated by put
+semantics.
+
+The
+.code ptr-in-d
+type is useful when a function expects a pointer to an object that
+was allocated by
+.code malloc
+and expects to take responsibility for freeing that object.
+
+Since the function may free the object even before returning,
+the pointer must not be used once the function is called. This is
+ensured by the in semantics of
+.code ptr-in-d
+which is the same as that of
+.codn ptr-in .
+
+The
+.code ptr-in-d
+type also has get semantics which assumes that ownership of the
+C object is to be seized. FFI will automatically free the C object
+when get semantics is invoked to retrieve a value through a
+.codn ptr-in-d .
+
+.meIP (ptr-out-d << type )
+The
+.code ptr-out-d
+type is a variant of
+.code ptr-out
+which is useful for capturing return values or, in a callback
+producing return values.
+
+The
+.code ptr-out-d
+type has empty put semantics. If it put semantics is invoked, it does
+nothing: no area is allocated for
+.meta type
+and no pointer is stored into the argument space.
+
+The in semantics is the same as that of
+.codn ptr :
+a pointer is retrieved from the argument space, the object is subject to
+.metn type 's
+in semantics to recover the updated Lisp value, and then the object
+is freed.
+
+The get semantics of
+.code ptr-out-d
+is identical to that of
+.codn ptr-in-d .
+
+The out semantics is identical to that of
+.codn ptr .
+
+.meIP (ptr-out-s << type )
+The
+.code ptr-out-d
+type is a variant of
+.code ptr-out
+similar to
+.codn ptr-out-d ,
+which assumes that the C object being received has an indefinite
+lifetime, and doesn't need to be freed. The suffix stands for "static".
+
+Like
+.codn ptr-out-d ,
+the
+.code ptr-out-s
+has no put semantics.
+
+Its in semantics recovers a Lisp value from the external object whose pointer
+has been stored by the foreign function, but doesn't free the external
+object.
+
+The get semantics retrieves a Lisp value without freeing.
+
+.meIP ({buf | buf-d} << size )
+The parametrized
+.code buf
+and
+.code buf-d
+parts are variants of the unparametrized
+.code buf
+and
+.codn buf-d ,
+respectively. The
+.meta size
+argument must be an integer literal, which specifies the buffer
+size. Because they have a size, these types have useful get
+semantics.
+
+The get semantics of
+.code buf-d
+is that a Lisp object of type
+.code buf
+is created which takes direct ownership of the memory.
+
+The get semantics of
+.code buf
+is that a Lisp object is created using a dynamically allocated copy
+of the memory.
+.PP
+
+The following additional typedef names are defined denoting some common
+C types:
+.codn size-t ,
+.codn ptrdiff-t ,
+.codn int-ptr-t ,
+.codn uint-ptr-t ,
+.codn wint-t ,
+.codn sig-atomic-t ,
+.code time-t
+and
+.codn clock-t .
+
+The additional names of various common POSIX types may also be available,
+depending on platform:
+.codn blkcnt-t ,
+.codn blksize-t ,
+.codn clockid-t ,
+.codn dev-t ,
+.codn fsblkcnt-t ,
+.codn fsfilcnt-t ,
+.codn gid-t ,
+.codn id-t ,
+.codn ino-t ,
+.codn key-t ,
+.codn loff-t ,
+.codn mode-t ,
+.codn nlink-t ,
+.codn off-t ,
+.codn pid-t ,
+.code ssize-t
+and
+.codn uid-t .
+
+.NP* FFI Call Descriptors
+
+The FFI mechanism makes use of a type-like representation called the "call
+descriptor". A call descriptor is an object which uses FFI types to describe
+function arguments and return values. A FFI descriptor is required to call
+a foreign function, and to create a FFI closure to use as a callback
+function from a foreign function back into \*(TL.
+
+A FFI descriptor object can be constructed from a return value type, and a list
+of argument types, and several other pieces of information using the
+function
+.codn ffi-make-call-desc .
+
+This object can then be passed to
+.code ffi-call
+to specify the C type signature of a foreign function, or to
+.code ffi-make-closure
+to specify the C type signature of a FFI closure to bind to a Lisp function.
+
+The FFI macros
+.code deffi
+and
+.code deffi-cb
+provide a simplified syntax for expressing FFI call descriptors,
+which includes a notation for expressing variadic calls.
+
+A note about variadic foreign functions: although there is support
+in the call descriptor mechanism for expressing a variadic function,
+it expresses a particular
+.B instance
+of a variadic function, rather than the variadic function's type
+.IR "per se" .
+To call the same variadic function using different variadic arguments,
+different call descriptors are required. For instance to perform
+the equivalent of the C function call
+.str printf("hello\en")
+requires a certain descriptor. To perform the equivalent of
+.str printf("hello, %s\en", name)
+requires a different descriptor.
+
+.coNP Function @ ffi-type-compile
+.synb
+.mets (ffi-type-compile << syntax )
+.syne
+.desc
+The
+.code ffi-type-compile
+function produces and returns a compiled type object from a
+.meta syntax
+argument which specifies valid FFI syntax.
+If the type syntax is invalid, or specifies a nonexistent
+type specifier or operator, an exception is thrown.
+
+Note: whenever a function argument is required to be of FFI type,
+what it means is that it must be a compiled object, and not
+a Lisp expression denoting FFI syntax.
+
+.TP* Examples:
+
+.cblk
+  (ffi-type-compile 'int) -> #<ffi-type int>
+  (ffi-type-compile
+    '(array 3 double)) -> #<ffi-type (array 3 double)>
+  (ffi-type-compile 'blarg) -> ;; error
+.cble
+
+.coNP Function @ ffi-make-call-desc
+.synb
+.mets (ffi-make-call-desc < ntotal < nfixed < rettype << argtypes )
+.syne
+.desc
+The
+.code ffi-make-call-desc
+function constructs a FFI call descriptor.
+
+The
+.meta ntotal
+argument must be a non-negative integer; it indicates the number
+of arguments in the call.
+
+If the call denotes a variadic function, the
+.meta nfixed
+argument must be an integer between 1 and
+.metn ntotal ,
+denoting the number of fixed arguments.
+If the call denotes an ordinary, non-variadic function, then
+.meta nfixed
+must be specified as
+.codn nil .
+
+The
+.meta rettype
+parameter must be an FFI type. It specifies the function
+return type. Functions which don't return a value are specified
+by the (compiled version of) the return type
+.codn void .
+
+The
+.meta argtypes
+argument must be a list of types, containing at least
+.meta ntotal
+elements. If the function takes no arguments, this list is empty.
+If the function is variadic, then the first
+.meta nfixed
+elements of this list specify the types of the fixed arguments;
+the remaining elements specify the variadic arguments.
+
+Note: variadic functions must not be called using a non-variadic
+descriptor, and vice versa, even if the return types and
+argument types match.
+
+.TP* Example:
+
+.cblk
+  ;;
+  ;; describe a call to the variadic function
+  ;;
+  ;;   type void (*)(char *, ...)
+  ;;
+  ;; with these actual arguments
+  ;;
+  ;;   (char *, int)
+  ;;
+  (ffi-make-call-desc
+    2 ;; two arguments
+    1 ;; one fixed
+   (ffi-type-compile 'void)        ;; returns nothing
+   (list (ffi-type-compile 'str)   ;; str -> char *
+         (ffi-type-compile 'int))) ;; int
+  -->
+  #<ffi-call-desc #<ffi-type void>
+    (#<ffi-type str> #<ffi-type int>)>
+.cble
+
+.coNP Function @ ffi-make-closure
+.synb
+.mets (ffi-make-closure < lisp-fun << call-desc )
+.syne
+.desc
+The
+.code ffi-make-closure
+function binds a Lisp function
+.metn lisp-fun ,
+which may be a lexical closure, or any callable object, with a FFI call
+descriptor
+.meta call-desc
+to produce a FFI closure.
+
+A FFI closure is an object of type
+.code ffi-closure
+which is suitable as an argument for the type denoted by the
+.code closure
+type specifier keyword in the FFI type language.
+
+This type appears a C function pointer in the foreign code,
+and may be called as such. When it is called by foreign
+code, it triggers a call to
+.meta lisp-fun.
+
+Note: the C function pointer is called a "closure" because it carries
+environment information. For instance, if
+.code lisp-fun
+is a lexical closure, invocations of it through the FFI closure
+occur in its proper lexical environment, even though its external
+representation is a simple C function pointer. This requires a special
+trampoline trick: a piece of dynamically constructed machine code with the
+closure binding embedded inside it, with the C function pointer pointing
+to the machine code.
+
+Note: the same call descriptor can be reused multiple times to create
+different closures. The same Lisp function can be involved in multiple
+FFI closures.
+
+.TP* Example:
+
+.cblk
+  ;; Package the TXR cmp-str function as a string
+  ;; comparison callback compatible with:
+  ;;
+  ;;   int (*)(const char *, const char *)
+  ;;
+  (ffi-make-closure
+    (fun cmp-str)
+    (ffi-make-call-desc 2 nil ;; two args, non-variadic
+      (ffi-type-compile 'int) ;; int return
+      [mapcar ffi-type-compile '(str str)])) ;; args
+.cble
+
+.coNP Function @ ffi-typedef
+.synb
+.mets (ffi-typedef < name << type )
+.syne
+.desc
+The
+.code ffi-typedef
+function installs the compiled FFI type given by
+.meta type
+as a typedef name under the symbol given by
+.metn name .
+
+After this registration, whenever the type compiler encounters that
+symbol being used as a type specifier, it will replace it by the
+type object it represents.
+
+The
+.code ffi-typedef
+function returns type.
+
+.TP* Example:
+
+.cblk
+  ;; define refcount-t as an alias for uint32
+  (ffi-typedef 'refcount-t (ffi-type-compile 'uint32))
+.cble
+
+.coNP Function @ ffi-size
+.synb
+.mets (ffi-size << type )
+.syne
+.desc
+The
+.code ffi-size
+function returns an integer which gives the storage size of
+the given FFI type: the amount of storage required for the
+external representation of that type.
+
+.TP* Example:
+
+.cblk
+  (ffi-size '(ffi-type-compile 'double)) -> 8
+  (ffi-size '(ffi-type-compile 'char)) -> 1
+  (ffi-size '(ffi-type-compile
+               '(array 42 char))) -> 42
+.cble
+
+.coNP Macro @ with-dyn-lib
+.synb
+.mets (with-dyn-lib < lib-expr << body-form *)
+.syne
+.desc
+The
+.code with-dyn-lib
+macro works in conjunction with the
+.code deffi
+macro. When a
+.code deffi
+form appears as one of the
+.metn body-form -s
+of the
+.code with-dyn-lib
+macro, that
+.code deffi
+form is permitted to use the simplified forms of the
+.meta fun-expr
+argument, to refer to library functions succinctly, without having
+to specify the library.
+
+A form invoking the
+.code with-dyn-lib
+macro should be a top-level form.  The macro creates a global variable named
+by a symbol generated by
+.code gensym
+whose initializing expression binds it to a dynamic library handle.
+The macro then creates an environment in which the enclosed
+.code deffi
+forms can implicitly refer to that library via the global variable.
+
+The
+.meta lib-expr
+argument can take on three different forms:
+.RS
+.meIP nil
+If
+.meta lib-expr
+is
+.codn nil ,
+then
+.code with-dyn-lib
+arranges for the library to refer to the \*(TX executable itself.
+.meIP < string
+If
+.meta lib-expr
+is a literal string, then
+.code with-dyn-lib
+will arrange for the hidden variable to be initialized with
+an expression which opens a handle to the specified library.
+
+.meIP < form
+If
+.meta lib-expr
+is any other form, then it is assumed to denote syntax for
+opening the handle to a library. That syntax is used verbatim
+as the initializing expression for the generated global variable
+which holds the library handle.
+.RE
+
+.IP
+The result value of a
+.code with-dyn-lib
+form is the symbol which names the generated variable which
+holds the library handle.
+
+.TP* Examples:
+
+.cblk
+  ;; refer to malloc and free functions
+  ;; in the executable
+
+  (with-dyn-lib nil
+    (deffi malloc "malloc" cptr (size-t))
+    (deffi free "free" void (cptr)))
+
+  ;; refer to "draw" function in fictitious
+  ;; "libgraphics" library:
+
+  (with-dyn-lib "libgraphics.so.5"
+    (deffi draw "draw" int (cptr cptr)))
+
+  ;; refer to "init_foo" function via specific
+  ;; library handle.
+
+  (defvarl foo-lib (dlopen "libfoo.so.1"))
+
+  (with-dyn-lib foo-lib
+    (deffi init-foo "init_foo" void (void)))
+.cble
+
+.coNP Macro @ deffi
+.synb
+.mets (defmacro deffi < name < fun-expr < rettype << argtypes )
+.syne
+.desc
+The
+.code deffi
+macro arranges for a Lisp function to be defined, via
+.codn defun ,
+which calls a foreign function.
+
+The
+.meta name
+argument must be a symbol suitable as a function name in a
+.code defun
+form. This specifies the function's Lisp name.
+
+The
+.meta fun-expr
+parameter specifies the foreign function which is to be called.
+The syntactic variants permitted for its argument are
+described below.
+
+The
+.meta rettype
+argument must specify the return type, using the FFI type syntax,
+as an unquoted literal.  The macro arranges for the compilation of this
+syntax via
+.codn ffi-type-compile .
+
+The
+.meta argtypes
+argument must specify a list of the argument types, as an unquoted
+literal list, using FFI type syntax. The macro arranges for these types
+to be compiled. Furthermore, a special convention may be used for
+specifying a variadic function: if the
+.code :
+(colon keyword)
+symbol appears as one of the elements of
+.metn argtypes ,
+then the
+.code deffi
+form specifies a fixed call to a foreign function which is variadic. The
+argument types before the colon keyword are the fixed arguments. The types
+after the colon, if any, are the variadic arguments.
+
+The following syntactic variants are permitted of the
+.meta fun-expr
+argument:
+.RS
+.meIP < name-string
+If
+.meta fun-expr
+is a literal string, then the
+.code deffi
+form must be enclosed in the
+.code with-dyn-lib
+macro, appearing as one of that macro's
+.metn body-form -s.
+In this situation the literal character string
+.meta name-string
+specifies a symbol to be found within the library established by the
+.meta with-dyn-lib
+macro.
+.meIP >> ( name-string << ver-string )
+This manner of specifying the
+.meta fun-expr
+also requires the
+.code deffi
+form to be enclosed in a
+.codn with-dyn-lib .
+It selects a particular version of a symbol from the library.
+.meIP < form
+If
+.meta fun-expr
+is any other form, then it must specify an expression which evaluates to a
+.code cptr
+object giving the address of a foreign library symbol. If this form
+is used, then the
+.code deffi
+form need not be surrounded by a call to the
+.code with-dyn-lib
+macro.
+.RE
+
+.IP
+The result value of a
+.code deffi
+form is
+.metn name .
+
+.coNP Macro @ deffi-type
+.synb
+.mets (deffi-type < name << type-syntax )
+.syne
+.desc
+The
+.code deffi-type
+macro provides a convenient way to define type aliases.
+
+The
+.meta type-syntax
+expression is compiled as FFI syntax, and the
+.meta name
+symbol is installed as an alias denoting that type.
+
+The
+.code deffi-type
+macro yields the compiled version of
+.meta type-syntax
+as its value.
+
+.coNP Macro @ deffi-cb
+.synb
+.mets (deffi-cb < name < rettype << argtypes )
+.syne
+.desc
+The
+.code deffi-cb
+macro defines, using
+.code defun
+a Lisp function called
+.metn name .
+
+Thus the
+.meta name
+argument must be a symbol suitable as a function name in a
+.code defun
+form.
+
+The
+.meta rettype
+and
+.meta argtypes
+arguments are processed exactly as in the corresponding arguments in the
+.meta deffi
+macro.
+
+The
+.meta deffi-cb
+arranges for
+.meta rettype
+and
+.meta argtypes
+to be compiled into a FFI call descriptor.
+The generated function called
+.meta name
+then serves as a combinator which takes a Lisp function as its argument,
+and binds it to the FFI call descriptor to produce a FFI closure.
+That closure may then be passed to foreign functions as a callback.
+
+.TP* Example:
+
+.cblk
+  ;; create a closure combinator which binds
+  ;; Lisp functions to a call descriptor has the C type
+  ;; signature void (*)(int).
+
+  (deffi-cb void-int-closure void (int))
+
+  ;; use the combinator
+  ;; some-foreign-function's second arg is
+  ;; of type closure, specifying a callback:
+
+  (some-foreign-function
+    42
+    (void-int-closure (lambda (x)
+                        (puts `callback! @x`))))
+
+.cble
+
+.coNP Macro @ sizeof
+.synb
+.mets (sizeof << type-syntax )
+.syne
+.desc
+The macro
+.code sizeof
+compiles the FFI type expression
+.meta type-syntax
+at macro-expansion time using
+.codn ffi-type-compile ,
+and then retrieves the type's size using
+.codn ffi-size .
+The resulting integer is the return value of the
+macro expander. That is to say, the macro expands
+to that integer, such that there is no run-time
+computation.
+
+.coNP Functions @ ffi-put and @ ffi-put-into
+.synb
+.mets (ffi-put < obj << type )
+.mets (ffi-put-into < dst-buf < obj << type )
+.syne
+.desc
+The
+.code ffi-put
+function encodes the Lisp object
+.meta obj
+according to the FFI type
+.meta type
+and returns a new buffer object of type
+.code buf
+which holds the foreign representation.
+
+The
+.code ffi-put-into
+function is similar, except that it uses an existing buffer
+.meta dst-buf
+which must be large enough to hold the foreign representation.
+
+The
+.meta type
+argument must be a compiled FFI type.
+
+The
+.meta obj
+argument must be an object compatible with the conversions
+implied by
+.metn type .
+
+These functions perform the "put semantics" encoding action very similar to
+what happens to the arguments of an outgoing foreign function call.
+
+Caution: incorrect use of this this function, or its use in isolation
+without a matching
+.code ffi-in
+call, can cause memory leaks, because, depending on
+.metn type ,
+temporary resources may be allocated, and pointers to those resources
+will be stored in the buffer. \*(TX's garbage collector doesn't know
+about these resources; it doesn't traverse buffer contents looking for
+pointers, and those pointers aren't references to Lisp heap objects anyway.
+
+.coNP Function @ ffi-in
+.synb
+.mets (ffi-in < src-buf < obj < type << copy-p )
+.syne
+.desc
+The
+.code ffi-in
+function performs the "in semantics" encoding action, very similar to the
+treatment applied to the arguments of a foreign function call after
+it returns, in order to free temporary resources and recover the new
+values of objects that have been modified by the foreign function.
+
+It is assumed that
+.meta src-buf
+is a buffer that was prepared by a call to
+.code ffi-put
+or
+.codn ffi-put-into ,
+and that
+.meta type
+and
+.meta obj
+are the same values that were passed as the
+corresponding arguments of those functions.
+
+The
+.code ffi-in
+function releases the temporary memory resources that were allocated by
+.code ffi-put
+or
+.codn ffi-put-into ,
+which are obtained from the buffer itself, where they appear as pointers.
+The function recursively performs the in semantics across the entire type,
+and the entire object graph rooted at the buffer.
+
+The
+.meta copy-p
+argument is a Boolean flag which is true if the buffer represents a datum
+that is being passed by pointer. If it is false, it indicates that the
+buffer itself is a pass-by-value object. Under pass-by-pointer semantics,
+either a whole new object is extracted from the buffer and returned,
+or else the slots of
+.meta obj
+are updated with new values from the buffer.
+Under pass-by-value semantics, no such extraction takes place, and
+.meta obj
+is returned.
+However, regardless of the value of
+.codn copy-p ,
+if the object is an aggregate which contains pointers, the recursive
+treatment through those pointers involves pass-by-pointer semantics.
+
+This is consistent with the idea that we can pass a structure by value,
+but that structure can have pointers to objects which are updated by
+the called function. Those indirect objects are passed by pointer.
+They get updated, but the parent structure cannot.
+
+The
+.code ffi-in
+function returns either
+.meta obj
+or a new object which is understood to have been produced as its
+replacement.
+
+.coNP Function @ ffi-get
+.synb
+.mets (ffi-get < src-buf << type )
+.syne
+.desc
+The
+.code ffi-get
+function extracts a Lisp value from buffer
+.meta src-buf
+according to the FFI type
+.metn type .
+The
+.meta src-buf
+argument is an object of type
+.meta buf
+large enough to hold a foreign representation of
+.metn type .
+The
+.meta type
+argument is compiled FFI type.
+
+The external representation in
+.meta src-buf
+is scanned according to
+.meta type
+and converted to a Lisp value which is returned.
+
+The
+.code ffi-get
+operation is similar to the "get semantics" performed by FFI
+in order to extract the return value of foreign function
+calls, and by the FFI callback mechanism to extract the
+arguments coming into a callback.
+
+.coNP Function @ ffi-out
+.synb
+.mets (ffi-out < dst-buf < obj < type << copy-p )
+.syne
+.desc
+The
+.meta ffi-out
+function places an foreign representation of Lisp object
+.meta obj
+into the buffer
+.metn dst-buf ,
+according to the FFI type
+.metn type .
+
+The
+.meta dst-buf
+argument must be a buffer large enough to hold the representation.
+The
+.meta type
+argument must be a compiled FFI type.
+The
+.meta obj
+argument must be a value compatible with the conversions implied by
+.metn type .
+
+The
+.meta copy-p
+argument is a Boolean flag described below.
+
+The
+.code ffi-out
+operation corresponds to the "out semantics" performed by the FFI
+callback mechanism when a callback returns. It is performed on all
+arguments, and also used to produce the callback's return value.
+
+The
+.meta copy-p
+flag being true is consistent with the semantics of producing
+a return value: this means that
+.meta obj
+itself must be encoded into the buffer.
+The
+.meta copy-p
+flag being false conveys the semantics that the destination buffer
+represents a function argument that was previously decoded with
+"get semantics" to produce
+.meta obj
+and that the "out semantics" operation only updates the indirect,
+by-pointer parts of the object.
+
 .SH* INTERACTIVE LISTENER
 
 .SS* Overview
