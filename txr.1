@@ -52832,6 +52832,155 @@ at the offset given by
 returning that value as a Lisp object of type
 .codn cnum .
 
+.coSS The @ cptr type
+
+Objects of type
+.code cptr
+are Lisp values which contain a C pointer. This data type is used by the
+.code dlopen
+function and is generally useful in conjunction with the Foreign Function
+Interface (FFI).  An arbitrary pointer emanating from a foreign function
+can be captured as a
+.code cptr
+value, which can be passed back into foreign code.
+
+.coNP Function @ cptr-int
+.synb
+.mets (cptr-int << integer )
+.syne
+.desc
+The
+.code cptr-int
+function converts
+.meta integer
+into a pointer in a system-specific way
+which is consistent with its addressing structure. Then it returns that
+pointer contained in a
+.code cptr
+object.
+
+The
+.meta integer
+parameter must be an integer which is in range for a pointer value.
+Note: this range is wider than the
+.code fixnum
+range; a portion of the range of
+.code bignum
+integers can denote pointers.
+
+.coNP Function @ cptr-obj
+.synb
+.mets (cptr-int << object )
+.syne
+.desc
+The
+.code cptr-obj
+function converts
+.meta object
+object directly to a
+.codn cptr .
+
+The
+.meta object
+argument may be of any type.
+
+The raw representation of
+.meta object
+is simply stored in a new instance of
+.code cptr
+and returned.
+
+.coNP Function @ cptr-zap
+.synb
+.mets (cptr-zap << cptr )
+.syne
+.desc
+The
+.code cptr-zap
+function changes the pointer value of the
+.meta cptr
+object to the null pointer.
+
+The
+.meta cptr
+argument must be of
+.code cptr
+type.
+
+The return value is
+.meta cptr
+itself.
+
+Note: it is recommended to use
+.code cptr-zap
+when the program has taken some action which invalidates the pointer value
+stored in a
+.code cptr
+object, where a risk exists that the value may be subsequently misused.
+
+.coNP Function @ cptr-free
+.synb
+.mets (cptr-free << cptr )
+.syne
+.desc
+The
+.code cptr-free
+function passes the
+.meta cptr
+object's pointer to the C library
+.code free
+function. After this action, it behaves exactly like
+.codn cptr-zap .
+
+The
+.meta cptr
+argument must be of
+.code cptr
+type.
+
+The return value is
+.meta cptr
+itself.
+
+Note: this function is unsafe. If the pointer didn't originate from the
+.code malloc
+family of memory allocation functions, or has already been freed, or
+copies of the pointer exist which are still in use, the consequences are
+likely catastrophic.
+
+.coNP Variable @ cptr-null
+.desc
+The
+.code cptr-null
+variable holds a null pointer as a
+.code cptr
+instance.
+
+Two
+.code cptr
+objects may be compared for equality using the
+.code equal
+function, which tests whether their pointers are equal.
+
+The
+.code cptr-null
+variable compares
+.code equal
+to values which have been subject to
+.code cptr-zap
+or
+.codn cptr-free .
+
+A null
+.code cptr
+may be produced by the expression
+.codn "(cptr-obj nil)" ;
+however, this creates a freshly allocated object on each evaluation.
+
+The expression
+.code "(cptr-int 0)"
+also produces a null pointer on all platforms where \*(TX is found.
+
 .SS* Foreign Function Interface
 
 On platforms where it is supported, \*(TX provides a feature called the
