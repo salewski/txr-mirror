@@ -51910,6 +51910,172 @@ and
 functions return
 .codn nil .
 
+.SS* Dynamic Library Access
+
+.coNP Function @ dlopen
+.synb
+.mets (dlopen >> [{ lib-name | nil} <> [ flags ])
+.syne
+.desc
+The
+.code dlopen
+function provides access to the POSIX C library function of the
+same name.
+
+The argument to the optional
+.meta lib-name
+parameter may be a character string, or
+.codn nil .
+
+If it is
+.codn nil ,
+then the POSIX function is called with a null pointer for
+its name argument, returning the handle for the main program,
+if possible.
+
+The
+.meta flags
+argument should be expressed as some bitwise combination of the values
+of the variables
+.codn rtld-lazy ,
+.codn rtld-now ,
+or other
+.code rtld-
+variables which give names to the
+.codn dlopen -related
+flags.  If the
+.meta flags
+argument is omitted, the default value used is
+.codn rtld-lazy .
+
+If the function succeeds, it returns an object of type
+.code cptr
+which represents the open library handle ("dlhandle").
+
+Otherwise it throws an exception, whose message incorporates, if possible,
+error text retrieved from the
+.code dlerror
+POSIX function.
+
+The
+.code cptr
+handle returned by
+.code dlopen
+will automatically be subject to
+.code dlclose
+when reclaimed by the garbage collector.
+
+.coNP Function @ dlclose
+.synb
+.mets (dlclose << dlhandle )
+.syne
+.desc
+The
+.code dlclose
+closes the library indicated by
+.metn dlhandle ,
+which must be a
+.code cptr
+object previously returned by
+.codn dlopen .
+
+The handle is closed by passing the stored pointer to the POSIX
+.code dlclose
+function. The internal pointer contained in the
+.code cptr
+object is then reset to null.
+
+It is permissible to invoke
+.code dlclose
+more than once on a
+.code cptr
+object which was created by
+.codn dlopen .
+The first invocation resets the
+.code cptr
+object's pointer to null; the subsequent invocations
+do nothing.
+
+The
+.code dlclose
+function returns
+.code t
+if the POSIX function reports a successful result (zero), otherwise
+it returns
+.codn nil .
+It also returns
+.code nil
+if invoked on a previously closed, and hence nulled-out
+.code cptr
+handle.
+
+.coNP Functions @ dlsym and @ dlvsym
+.synb
+.mets (dlsym < dlhandle << sym-name )
+.mets (dlvsym < dlhandle < sym-name << ver-name )
+.syne
+.desc
+The
+.code dlsym
+function provides access to the same-named POSIX function. The
+.code dlvsym
+function provides access to the same-named GNU C Library function,
+if available.
+
+The
+.meta dlhandle
+argument must be a
+.code cptr
+handle previously returned by
+.code dlopen
+and not subsequently closed by
+.code dlclose
+or altered in any way.
+
+The
+.meta sym-name
+and
+.meta ver-name
+arguments are character strings.
+
+If these functions succeed, they return a
+.code cptr
+value which holds the address of the symbol which was found
+in the library.
+
+If they fail, they return a
+.code cptr
+object containing a null pointer.
+
+.coNP Functions @ dlsym-checked and @ dlvsym-checked
+.synb
+.mets (dlsym-checked < dlhandle << sym-name )
+.mets (dlvsym-checked < dlhandle < sym-name << ver-name )
+.syne
+.desc
+The
+.code dlsym-checked
+and
+.code dlvsym-checked
+functions are alternatives to
+.code dlsym
+and
+.codn dlvsym ,
+respectively. Instead of returning a null
+.code cptr
+on failure, these functions throw an exception.
+
+.coNP Variables @, rtld-lazy @, rtld-now @, rtld-global @, rtld-local @, rtld-nodelete @ rtld-noload and @ rtld-deepbind
+.desc
+These variables provide the same values as constants in the POSIX C library
+header
+.code "<dlfcn.h>"
+named
+.codn RTLD_LAZY ,
+.codn RTLD_NOW ,
+.codn RTLD_LOCAL ,
+.IR "et cetera" .
+
 .SS* Buffers
 
 Buffers are vector-like objects specialized for holding binary data. Buffers
