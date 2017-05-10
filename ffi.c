@@ -1822,6 +1822,7 @@ val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
   struct txr_ffi_type *rtft = ffi_type_struct(rtype);
   void *rc = alloca(rtft->size);
   int in_pass_needed = 0;
+  val ret;
 
   for (i = 0; i < n; i++) {
     val type = pop(&types);
@@ -1833,6 +1834,8 @@ val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
   }
 
   ffi_call(&tfcd->cif, coerce(void (*)(void), fp), rc, values);
+
+  ret = rtft->get(rtft, convert(mem_t *, rc), self);
 
   if (in_pass_needed) {
     types = tfcd->argtypes;
@@ -1846,7 +1849,7 @@ val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
     }
   }
 
-  return rtft->get(rtft, convert(mem_t *, rc), self);
+  return ret;
 }
 
 static void ffi_closure_dispatch(ffi_cif *cif, void *cret,
