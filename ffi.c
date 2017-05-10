@@ -1008,7 +1008,7 @@ static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
       str = null_string;
     } else {
       const char *chptr = coerce(const char *, src);
-      if (chptr[tft->size - 1] == 0) {
+      if (tft->null_term) {
         str = string_utf8(chptr);
       } else {
         wchar_t *wch = utf8_dup_from_buf(chptr, tft->size);
@@ -1022,13 +1022,12 @@ static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
     if (nelem == 0) {
       str = null_string;
     } else {
-      cnum nchar = tft->size / sizeof (wchar_t);
       const wchar_t *wchptr = coerce(const wchar_t *, src);
 
-      if (wchptr[nchar - 1] == 0) {
+      if (tft->null_term) {
         str = string(wchptr);
       } else {
-        val ustr = mkustring(num_fast(nchar));
+        val ustr = mkustring(num_fast(nelem));
         str = init_str(ustr, wchptr);
       }
     }
@@ -1040,7 +1039,7 @@ static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
       str = null_string;
     } else {
       const unsigned char *chptr = coerce(const unsigned char *, src);
-      if (chptr[tft->size - 1] == 0)
+      if (tft->null_term)
         str = string_8bit(chptr);
       else
         str = string_8bit_size(chptr, tft->size);
@@ -1129,7 +1128,7 @@ static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
       return null_string;
     } else {
       const char *chptr = coerce(const char *, src);
-      if (chptr[tft->size - 1] == 0) {
+      if (tft->null_term) {
         return string_utf8(chptr);
       } else {
         wchar_t *wch = utf8_dup_from_buf(chptr, tft->size);
@@ -1140,13 +1139,12 @@ static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
     if (nelem == 0) {
       return null_string;
     } else {
-      cnum nchar = tft->size / sizeof (wchar_t);
       const wchar_t *wchptr = coerce(const wchar_t *, src);
 
-      if (wchptr[nchar - 1] == 0) {
+      if (tft->null_term) {
         return string(wchptr);
       } else {
-        val ustr = mkustring(num_fast(nchar));
+        val ustr = mkustring(num_fast(nelem));
         return init_str(ustr, wchptr);
       }
     }
@@ -1155,7 +1153,7 @@ static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
       return null_string;
     } else {
       const unsigned char *chptr = coerce(const unsigned char *, src);
-      if (chptr[tft->size - 1] == 0)
+      if (tft->null_term)
         return string_8bit(chptr);
       else
         return string_8bit_size(chptr, tft->size);

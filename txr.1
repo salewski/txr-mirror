@@ -53597,17 +53597,39 @@ When converting from Lisp to C, it ensures that the array is null-terminated.
 This means that the last element of the array is written out as all zero bytes.
 The
 .code zarray
-type also allows the Lisp object to be one element short. For instance,
+type is useful for handling null terminated character arrays representing
+strings, and for null terminated vectors.
+Unlike
+.codn array ,
+.code zarray
+allows the Lisp object to be one element short. For instance,
 when a
 .code "(zarray 5 int)"
 passed by pointer a foreign function is converted back to Lisp,
 the Lisp object is required to have only four elements. If the Lisp object
 has five elements, then the fifth one will be decoded from the C array
 in earnest; it is not expected to be null.
-The
+Lastly, the
 .code zarray
-type is useful for handling null terminated character arrays representing
-strings, and for null terminated vectors.
+further extends the special treatment which the
+.code array
+type applies to the types
+.codn char ,
+.code wchar
+and
+.codn bchar .
+Namely,
+.code zarray
+assumes, and depends on the incoming data being null-terminated, and converts it to a Lisp
+string accordingly. The regular
+.code array
+type doesn't assume null termination. In particular, this means that an
+.code "(array 42 char)"
+will decode 42 bytes of UTF-8, even if some of them are null. The null bytes
+convert to U+DC00. In contrast, a
+.code zarray
+will treat the 42 bytes as a null-terminated string, and decode UTF-8 only
+up to the first null.
 
 .meIP (zarray << type )
 The
