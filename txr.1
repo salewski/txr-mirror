@@ -11152,6 +11152,31 @@ and
 .code from
 fields are the objects denoted by these expressions.
 
+.NP* Buffer Literals
+
+.meIP <> #b' hex-data '
+
+The notation
+.code #b'
+introduces a buffer object: a data representation for a
+block of bytes. This
+.code #b'
+prefix must be followed
+by a data section and a closing quote.
+The data section consists of hexadecimal digits, among which
+may be interspersed whitespace: tabs, spaces and newlines.
+There must be an even number of digits, or else the
+notation is ill-formed. The whitespace is ignored, and
+pairs of successive hex digits specify bytes.
+If there are no hex digits, then a zero length buffer
+is specified.
+
+Buffers may be constructed by the
+.code make-buffer
+function, and other means such as the
+.code ffi-get
+function.
+
 .coNP The @ .. notation
 In \*(TL, there is a special "dotdot" notation consisting of a pair of dots.
 This can be written between successive atoms or compound expressions, and is a
@@ -52085,18 +52110,6 @@ named
 Buffers are vector-like objects specialized for holding binary data. Buffers
 support operations specialized toward the encoding of Lisp values into
 machine-oriented data types, and decoding such data types into Lisp values.
-
-Buffers are of type
-.code buf
-and, have a printed representation consisting of a
-.code #b'
-("hash b quote")
-prefix, immediately followed by data, followed by a closing quote.
-The data consists of hexadecimal digits, which may be separated by
-whitespace: newlines, tabs and spaces.
-If no hexadecimal digits occur, the notation denotes a zero-length buffer.
-There must be an even number of hexadecimal digits; if there is an odd number,
-the notation is ill-formed.  Successive pairs of hex digits denote bytes.
 
 Buffers are particularly useful in conjunction with the Foreign Function
 Interface (FFI), since they can be used to prepare arbitrary data which
