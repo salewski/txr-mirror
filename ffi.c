@@ -94,7 +94,6 @@ struct txr_ffi_type {
   cnum size, align;
   cnum nelem;
   unsigned null_term : 1;
-  unsigned is_varray : 1;
   unsigned char_conv : 1;
   unsigned wchar_conv : 1;
   unsigned bchar_conv : 1;
@@ -1074,22 +1073,18 @@ static val ffi_array_in_common(struct txr_ffi_type *tft, int copy,
 static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
                         val vec, val self)
 {
-  cnum nelem = if3(tft->is_varray, c_num(length(vec)), tft->nelem);
-
   if (tft->char_conv) {
-    val str = ffi_char_array_get(tft, src, nelem);
-    vec = if3(vec, replace(vec, str, zero, t), str);
+    val str = ffi_char_array_get(tft, src, tft->nelem);
+    return if3(vec, replace(vec, str, zero, t), str);
   } else if (tft->wchar_conv) {
-    val str = ffi_wchar_array_get(tft, src, nelem);
-    vec = if3(vec, replace(vec, str, zero, t), str);
+    val str = ffi_wchar_array_get(tft, src, tft->nelem);
+    return if3(vec, replace(vec, str, zero, t), str);
   } else if (tft->bchar_conv) {
-    val str = ffi_bchar_array_get(tft, src, nelem);
-    vec = if3(vec, replace(vec, str, zero, t), str);
+    val str = ffi_bchar_array_get(tft, src, tft->nelem);
+    return if3(vec, replace(vec, str, zero, t), str);
   } else {
-    vec = ffi_array_in_common(tft, copy, src, vec, self, nelem);
+    return ffi_array_in_common(tft, copy, src, vec, self, tft->nelem);
   }
-
-  return vec;
 }
 
 static void ffi_array_put_common(struct txr_ffi_type *tft, val vec, mem_t *dst,
@@ -1117,9 +1112,7 @@ static void ffi_array_put_common(struct txr_ffi_type *tft, val vec, mem_t *dst,
 static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
                           val self)
 {
-  int nt = tft->null_term;
-  cnum nelem = if3(tft->is_varray, c_num(length(vec)) + nt, tft->nelem);
-  ffi_array_put_common(tft, vec, dst, self, nelem);
+  ffi_array_put_common(tft, vec, dst, self, tft->nelem);
 }
 
 static void ffi_array_out_common(struct txr_ffi_type *tft, int copy, val vec,
@@ -1151,9 +1144,7 @@ static void ffi_array_out_common(struct txr_ffi_type *tft, int copy, val vec,
 static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
                           mem_t *dst, val self)
 {
-  int nt = tft->null_term;
-  cnum nelem = if3(tft->is_varray, c_num(length(vec)) + nt, tft->nelem);
-  ffi_array_out_common(tft, copy, vec, dst, self, nelem);
+  ffi_array_out_common(tft, copy, vec, dst, self, tft->nelem);
 }
 
 static val ffi_array_get_common(struct txr_ffi_type *tft, mem_t *src, val self,
@@ -1188,6 +1179,20 @@ static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   cnum nelem = tft->nelem;
   return ffi_array_get_common(tft, src, self, nelem);
+}
+
+static void ffi_varray_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
+                           val self)
+{
+  cnum nelem = c_num(length(vec)) + tft->null_term;
+  ffi_array_put_common(tft, vec, dst, self, nelem);
+}
+
+static val ffi_varray_in(struct txr_ffi_type *tft, int copy, mem_t *src,
+                         val vec, val self)
+{
+  cnum nelem = c_num(length(vec)) + tft->null_term;
+  return ffi_array_in_common(tft, copy, src, vec, self, nelem);
 }
 
 static val make_ffi_type_builtin(val syntax, val lisp_type,
@@ -1398,15 +1403,15 @@ val ffi_type_compile(val syntax)
         val eltype_syntax = cadr(syntax);
         val eltype = ffi_type_compile(eltype_syntax);
         val type = make_ffi_type_pointer(syntax, vec_s, sizeof (mem_t *),
-                                         ffi_array_put, ffi_void_get,
-                                         ffi_array_in, ffi_array_out,
+                                         ffi_varray_put, ffi_void_get,
+                                         ffi_varray_in, 0,
                                          eltype);
         struct txr_ffi_type *tft = ffi_type_struct(type);
         if (sym == zarray_s)
           tft->null_term = 1;
-        tft->is_varray = 1;
         tft->alloc = ffi_varray_alloc;
         tft->free = free;
+        tft->size = 0;
         return type;
       } else if (length(syntax) == three) {
         val dim = cadr(syntax);
