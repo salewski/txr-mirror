@@ -1042,10 +1042,36 @@ static val ffi_bchar_array_get(struct txr_ffi_type *tft, mem_t *src,
   }
 }
 
+static val ffi_array_in_common(struct txr_ffi_type *tft, int copy,
+                               mem_t *src, val vec, val self, cnum nelem)
+{
+  val eltype = tft->mtypes;
+  ucnum offs = 0;
+  struct txr_ffi_type *etft = ffi_type_struct(eltype);
+  cnum elsize = etft->size, i;
+  cnum znelem = if3(tft->null_term && nelem > 0 &&
+                    vec && length(vec) < num_fast(nelem), nelem - 1, nelem);
+
+  if (vec == nil)
+    vec = vector(num_fast(znelem), nil);
+
+  for (i = 0; i < znelem; i++) {
+    if (etft->in != 0) {
+      val elval = ref(vec, num_fast(i));
+      refset(vec, num_fast(i), etft->in(etft, copy, src + offs, elval, self));
+    } else if (copy) {
+      val elval = etft->get(etft, src + offs, self);
+      refset(vec, num_fast(i), elval);
+    }
+    offs += elsize;
+  }
+
+  return vec;
+}
+
 static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
                         val vec, val self)
 {
-  val eltype = tft->mtypes;
   cnum nelem = if3(tft->is_varray, c_num(length(vec)), tft->nelem);
 
   if (tft->char_conv) {
@@ -1058,38 +1084,20 @@ static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
     val str = ffi_bchar_array_get(tft, src, nelem);
     vec = if3(vec, replace(vec, str, zero, t), str);
   } else {
-    ucnum offs = 0;
-    struct txr_ffi_type *etft = ffi_type_struct(eltype);
-    cnum elsize = etft->size, i;
-    cnum znelem = if3(tft->null_term && nelem > 0 &&
-                      vec && length(vec) < num_fast(nelem), nelem - 1, nelem);
-
-    if (vec == nil)
-      vec = vector(num_fast(znelem), nil);
-
-    for (i = 0; i < znelem; i++) {
-      if (etft->in != 0) {
-        val elval = ref(vec, num_fast(i));
-        refset(vec, num_fast(i), etft->in(etft, copy, src + offs, elval, self));
-      } else if (copy) {
-        val elval = etft->get(etft, src + offs, self);
-        refset(vec, num_fast(i), elval);
-      }
-      offs += elsize;
-    }
+    vec = ffi_array_in_common(tft, copy, src, vec, self, nelem);
   }
 
   return vec;
 }
 
-static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
-                          val self)
+static void ffi_array_put_common(struct txr_ffi_type *tft, val vec, mem_t *dst,
+                                 val self, cnum nelem)
 {
   val eltype = tft->mtypes;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size;
   int nt = tft->null_term;
-  cnum i, nelem = if3(tft->is_varray, c_num(length(vec)) + nt, tft->nelem);
+  cnum i;
   ucnum offs = 0;
 
   for (i = 0; i < nelem; i++) {
@@ -1104,14 +1112,22 @@ static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
   }
 }
 
-static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
-                          mem_t *dst, val self)
+static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
+                          val self)
+{
+  int nt = tft->null_term;
+  cnum nelem = if3(tft->is_varray, c_num(length(vec)) + nt, tft->nelem);
+  ffi_array_put_common(tft, vec, dst, self, nelem);
+}
+
+static void ffi_array_out_common(struct txr_ffi_type *tft, int copy, val vec,
+                                 mem_t *dst, val self, cnum nelem)
 {
   val eltype = tft->mtypes;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size;
   int nt = tft->null_term;
-  cnum i, nelem = if3(tft->is_varray, c_num(length(vec)) + nt, tft->nelem);
+  cnum i;
   ucnum offs = 0;
 
   for (i = 0; i < nelem; i++) {
@@ -1130,10 +1146,18 @@ static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
   }
 }
 
-static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
+static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
+                          mem_t *dst, val self)
+{
+  int nt = tft->null_term;
+  cnum nelem = if3(tft->is_varray, c_num(length(vec)) + nt, tft->nelem);
+  ffi_array_out_common(tft, copy, vec, dst, self, nelem);
+}
+
+static val ffi_array_get_common(struct txr_ffi_type *tft, mem_t *src, val self,
+                                cnum nelem)
 {
   val eltype = tft->mtypes;
-  cnum nelem = tft->nelem;
 
   if (tft->char_conv) {
     return ffi_char_array_get(tft, src, nelem);
@@ -1156,6 +1180,12 @@ static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
 
     return vec;
   }
+}
+
+static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  cnum nelem = tft->nelem;
+  return ffi_array_get_common(tft, src, self, nelem);
 }
 
 static val make_ffi_type_builtin(val syntax, val lisp_type,
