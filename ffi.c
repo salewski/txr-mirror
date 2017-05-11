@@ -1012,6 +1012,24 @@ static val ffi_char_array_get(struct txr_ffi_type *tft, mem_t *src,
   }
 }
 
+static void ffi_char_array_put(struct txr_ffi_type *tft, val str, mem_t *dst,
+                               cnum nelem)
+{
+  int nt = tft->null_term;
+  const wchar_t *wstr = c_str(str);
+  size_t needed = utf8_to_buf(0, wstr, nt);
+
+  if (needed <= nelem) {
+    utf8_to_buf(dst, wstr, nt);
+    memset(dst + needed, 0, nelem - needed);
+  } else {
+    char *u8str = utf8_dup_to(wstr);
+    memcpy(dst, u8str, nelem);
+    dst[nelem - 1] = 0;
+    free(u8str);
+  }
+}
+
 static val ffi_wchar_array_get(struct txr_ffi_type *tft, mem_t *src,
                                cnum nelem)
 {
@@ -1029,6 +1047,15 @@ static val ffi_wchar_array_get(struct txr_ffi_type *tft, mem_t *src,
   }
 }
 
+static void ffi_wchar_array_put(struct txr_ffi_type *tft, val str, mem_t *dst,
+                                cnum nelem)
+{
+  const wchar_t *wstr = c_str(str);
+  wcsncpy(coerce(wchar_t *, dst), wstr, nelem);
+  if (tft->null_term)
+    dst[nelem - 1] = 0;
+}
+
 static val ffi_bchar_array_get(struct txr_ffi_type *tft, mem_t *src,
                                cnum nelem)
 {
@@ -1040,6 +1067,28 @@ static val ffi_bchar_array_get(struct txr_ffi_type *tft, mem_t *src,
       return string_8bit(chptr);
     else
       return string_8bit_size(chptr, nelem);
+  }
+}
+
+static void ffi_bchar_array_put(struct txr_ffi_type *tft, val str, mem_t *dst,
+                                cnum nelem, val self)
+{
+  const wchar_t *wstr = c_str(str);
+  cnum i;
+
+  for (i = 0; i < nelem && wstr[i]; i++) {
+    wchar_t wch = wstr[i];
+    if (wch < 0 || wch > 255)
+      uw_throwf(error_s, lit("~a: character ~s out of unsigned 8 bit range"),
+                self, chr(wch), nao);
+    dst[i] = wch;
+  }
+
+  if (i < nelem) {
+    for (; i < nelem; i++)
+      dst[i] = 0;
+  } else if (tft->null_term) {
+    dst[nelem - 1] = 0;
   }
 }
 
@@ -1112,7 +1161,14 @@ static void ffi_array_put_common(struct txr_ffi_type *tft, val vec, mem_t *dst,
 static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
                           val self)
 {
-  ffi_array_put_common(tft, vec, dst, self, tft->nelem);
+  if (tft->char_conv && stringp(vec))
+    ffi_char_array_put(tft, vec, dst, tft->nelem);
+  else if (tft->wchar_conv && stringp(vec))
+    ffi_wchar_array_put(tft, vec, dst, tft->nelem);
+  else if (tft->bchar_conv && stringp(vec))
+    ffi_bchar_array_put(tft, vec, dst, tft->nelem, self);
+  else
+    ffi_array_put_common(tft, vec, dst, self, tft->nelem);
 }
 
 static void ffi_array_out_common(struct txr_ffi_type *tft, int copy, val vec,
@@ -1144,7 +1200,14 @@ static void ffi_array_out_common(struct txr_ffi_type *tft, int copy, val vec,
 static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
                           mem_t *dst, val self)
 {
-  ffi_array_out_common(tft, copy, vec, dst, self, tft->nelem);
+  if (tft->char_conv && stringp(vec))
+    ffi_char_array_put(tft, vec, dst, tft->nelem);
+  else if (tft->wchar_conv && stringp(vec))
+    ffi_wchar_array_put(tft, vec, dst, tft->nelem);
+  else if (tft->bchar_conv && stringp(vec))
+    ffi_bchar_array_put(tft, vec, dst, tft->nelem, self);
+  else
+    ffi_array_out_common(tft, copy, vec, dst, self, tft->nelem);
 }
 
 static val ffi_array_get_common(struct txr_ffi_type *tft, mem_t *src, val self,
