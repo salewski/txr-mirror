@@ -995,6 +995,53 @@ static val ffi_struct_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return strct;
 }
 
+static val ffi_char_array_get(struct txr_ffi_type *tft, mem_t *src,
+                              cnum nelem)
+{
+  if (nelem == 0) {
+    return null_string;
+  } else {
+    const char *chptr = coerce(const char *, src);
+    if (tft->null_term) {
+      return string_utf8(chptr);
+    } else {
+      wchar_t *wch = utf8_dup_from_buf(chptr, nelem);
+      return string_own(wch);
+    }
+  }
+}
+
+static val ffi_wchar_array_get(struct txr_ffi_type *tft, mem_t *src,
+                               cnum nelem)
+{
+  if (nelem == 0) {
+    return null_string;
+  } else {
+    const wchar_t *wchptr = coerce(const wchar_t *, src);
+
+    if (tft->null_term) {
+      return string(wchptr);
+    } else {
+      val ustr = mkustring(num_fast(nelem));
+      return init_str(ustr, wchptr);
+    }
+  }
+}
+
+static val ffi_bchar_array_get(struct txr_ffi_type *tft, mem_t *src,
+                               cnum nelem)
+{
+  if (nelem == 0) {
+    return null_string;
+  } else {
+    const unsigned char *chptr = coerce(const unsigned char *, src);
+    if (tft->null_term)
+      return string_8bit(chptr);
+    else
+      return string_8bit_size(chptr, nelem);
+  }
+}
+
 static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
                         val vec, val self)
 {
@@ -1002,48 +1049,13 @@ static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
   cnum nelem = if3(tft->is_varray, c_num(length(vec)), tft->nelem);
 
   if (tft->char_conv) {
-    val str;
-
-    if (nelem == 0) {
-      str = null_string;
-    } else {
-      const char *chptr = coerce(const char *, src);
-      if (tft->null_term) {
-        str = string_utf8(chptr);
-      } else {
-        wchar_t *wch = utf8_dup_from_buf(chptr, nelem);
-        str = string_own(wch);
-      }
-    }
+    val str = ffi_char_array_get(tft, src, nelem);
     vec = if3(vec, replace(vec, str, zero, t), str);
   } else if (tft->wchar_conv) {
-    val str;
-
-    if (nelem == 0) {
-      str = null_string;
-    } else {
-      const wchar_t *wchptr = coerce(const wchar_t *, src);
-
-      if (tft->null_term) {
-        str = string(wchptr);
-      } else {
-        val ustr = mkustring(num_fast(nelem));
-        str = init_str(ustr, wchptr);
-      }
-    }
+    val str = ffi_wchar_array_get(tft, src, nelem);
     vec = if3(vec, replace(vec, str, zero, t), str);
   } else if (tft->bchar_conv) {
-    val str;
-
-    if (nelem == 0) {
-      str = null_string;
-    } else {
-      const unsigned char *chptr = coerce(const unsigned char *, src);
-      if (tft->null_term)
-        str = string_8bit(chptr);
-      else
-        str = string_8bit_size(chptr, nelem);
-    }
+    val str = ffi_bchar_array_get(tft, src, nelem);
     vec = if3(vec, replace(vec, str, zero, t), str);
   } else {
     ucnum offs = 0;
@@ -1124,40 +1136,11 @@ static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
   cnum nelem = tft->nelem;
 
   if (tft->char_conv) {
-    if (nelem == 0) {
-      return null_string;
-    } else {
-      const char *chptr = coerce(const char *, src);
-      if (tft->null_term) {
-        return string_utf8(chptr);
-      } else {
-        wchar_t *wch = utf8_dup_from_buf(chptr, tft->nelem);
-        return string_own(wch);
-      }
-    }
+    return ffi_char_array_get(tft, src, nelem);
   } else if (tft->wchar_conv) {
-    if (nelem == 0) {
-      return null_string;
-    } else {
-      const wchar_t *wchptr = coerce(const wchar_t *, src);
-
-      if (tft->null_term) {
-        return string(wchptr);
-      } else {
-        val ustr = mkustring(num_fast(nelem));
-        return init_str(ustr, wchptr);
-      }
-    }
+    return ffi_wchar_array_get(tft, src, nelem);
   } else if (tft->bchar_conv) {
-    if (nelem == 0) {
-      return null_string;
-    } else {
-      const unsigned char *chptr = coerce(const unsigned char *, src);
-      if (tft->null_term)
-        return string_8bit(chptr);
-      else
-        return string_8bit_size(chptr, nelem);
-    }
+    return ffi_bchar_array_get(tft, src, nelem);
   } else {
     cnum znelem = if3(tft->null_term && nelem > 0, nelem - 1, nelem);
     val vec = vector(num_fast(znelem), nil);
