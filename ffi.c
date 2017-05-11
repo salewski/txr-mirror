@@ -1775,8 +1775,21 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
   tfcd->rettype = rettype;
   tfcd->args = args;
 
-  for (i = 0; i < nt; i++)
-    args[i] = ffi_get_type(pop(&argtypes));
+  for (i = 0; i < nt; i++) {
+    val type = pop(&argtypes);
+    struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+    if (tft->size == 0)
+      uw_throwf(error_s, lit("~a: can't pass type ~s by value"),
+                self, type, nao);
+    args[i] = tft->ft;
+  }
+
+  {
+    struct txr_ffi_type *tft = ffi_type_struct_checked(rettype);
+    if (tft->size == 0 && tft->ft != &ffi_type_void)
+      uw_throwf(error_s, lit("~a: can't return type ~s by value"),
+                self, rettype, nao);
+  }
 
   if (tfcd->variadic)
     ffis = ffi_prep_cif_var(&tfcd->cif, FFI_DEFAULT_ABI, nf, nt,
