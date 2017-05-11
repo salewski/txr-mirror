@@ -244,9 +244,11 @@ static mem_t *ffi_fixed_alloc(struct txr_ffi_type *tft, val obj, val self)
 static mem_t *ffi_varray_alloc(struct txr_ffi_type *tft, val obj, val self)
 {
   ucnum len = c_unum(length(obj));
-  size_t size = tft->size * len;
+  val eltype = tft->mtypes;
+  struct txr_ffi_type *etft = ffi_type_struct(eltype);
+  size_t size = etft->size * len;
   if (size < len || size < tft->size)
-    uw_throwf(error_s, lit("~s: array size overflow"), self, nao);
+    uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
   return chk_malloc(size);
 }
 
