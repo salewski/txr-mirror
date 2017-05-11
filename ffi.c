@@ -1011,7 +1011,7 @@ static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
       if (tft->null_term) {
         str = string_utf8(chptr);
       } else {
-        wchar_t *wch = utf8_dup_from_buf(chptr, tft->size);
+        wchar_t *wch = utf8_dup_from_buf(chptr, nelem);
         str = string_own(wch);
       }
     }
@@ -1042,7 +1042,7 @@ static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
       if (tft->null_term)
         str = string_8bit(chptr);
       else
-        str = string_8bit_size(chptr, tft->size);
+        str = string_8bit_size(chptr, nelem);
     }
     vec = if3(vec, replace(vec, str, zero, t), str);
   } else {
@@ -1131,7 +1131,7 @@ static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
       if (tft->null_term) {
         return string_utf8(chptr);
       } else {
-        wchar_t *wch = utf8_dup_from_buf(chptr, tft->size);
+        wchar_t *wch = utf8_dup_from_buf(chptr, tft->nelem);
         return string_own(wch);
       }
     }
@@ -1156,7 +1156,7 @@ static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
       if (tft->null_term)
         return string_8bit(chptr);
       else
-        return string_8bit_size(chptr, tft->size);
+        return string_8bit_size(chptr, nelem);
     }
   } else {
     cnum znelem = if3(tft->null_term && nelem > 0, nelem - 1, nelem);
