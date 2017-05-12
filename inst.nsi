@@ -49,6 +49,7 @@ section "TXR"
   File txr-win.exe
   File win\cygwin1.dll
   File c:\cygwin\bin\cyggcc_s-1.dll
+  File c:\cygwin\bin\cygffi-6.dll
   SetOutPath $INSTDIR\txr\doc
   File txr-manpage.html
   File txr-manpage.pdf
