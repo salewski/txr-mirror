@@ -2768,7 +2768,7 @@ int main(void)
   void *lib = dlopen("foo.so", 0);
   void *sym = dlsym(lib, "bar");
 #if TEST_DLVSYM
-  void *vsym = dlsvym(lib, "bar", "1");
+  void *vsym = dlvsym(lib, "bar", "1");
 #endif
   dlclose(lib);
   return 0;
@@ -2786,8 +2786,8 @@ else
   printf "no\n"
 fi
 
-printf "Checking for dlsvsym ... "
-if conftest CONF_LDFLAGS="$conf_ldflags" EXTRA_CFLAGS=-DTEST_DLVSYM=1 ; then
+printf "Checking for dlvsym ... "
+if conftest CONF_LDFLAGS="$conf_ldflags" EXTRA_FLAGS=-DTEST_DLVSYM=1 ; then
   printf "yes\n"
   printf "#define HAVE_DLVSYM 1\n" >> config.h
 else
