@@ -54048,7 +54048,7 @@ argument types match.
 
 .coNP Function @ ffi-make-closure
 .synb
-.mets (ffi-make-closure < lisp-fun << call-desc )
+.mets (ffi-make-closure < lisp-fun < call-desc <> [ safe-p ])
 .syne
 .desc
 The
@@ -54070,6 +54070,41 @@ This type appears a C function pointer in the foreign code,
 and may be called as such. When it is called by foreign
 code, it triggers a call to
 .meta lisp-fun.
+
+The optional
+.meta safe-p
+parameter controls whether the closure dispatch is "safe", the meaning of
+which is described shortly. The default value is
+.code t
+so that unsafe closure dispatch must be explicitly requested with a
+.code nil
+argument for this parameter.
+
+A a callback closure which is is safely dispatched, firstly, does not permit
+the capture of delimited continuations across foreign code. Delimited
+continuations can be captured inside a closure dispatched that way, but the
+delimiting prompt must be within the callback's local stack frame, without
+traversing across the foreign stack frames.  Secondly, a callback closure which
+is safely dispatched doesn't permit direct non-local control transfers across
+foreign code, such as exception handling. Such transfers, however, appear to
+work anyway (with caveats): this is because they are specially handled. The
+closure dispatch mechanism intercepts all dynamic control transfers, converts
+them to an ordinary return from the callback to the foreign code, and resumes
+the control transfer when the foreign code itself finishes and returns.
+If the callback returns a value (its return type is other than
+.codn void )
+then in this situation, the callback returns an all-zero-bits return
+value to the foreign caller.
+
+An unsafely dispatched closure permits the capture of continuations from
+the callback across the foreign code and direct dynamic control transfers which
+abandon the foreign stack frames.
+
+Unsafe closure dispatch is only compatible with foreign code which is
+designed with that usage in mind. For instance foreign code which holds
+dynamic resources in stack variables will leak those resources if abandoned
+this way. There are also issues with capturing continuations across foreign
+code.
 
 Note: the C function pointer is called a "closure" because it carries
 environment information. For instance, if
@@ -54351,9 +54386,10 @@ macro yields the compiled version of
 .meta type-syntax
 as its value.
 
-.coNP Macro @ deffi-cb
+.coNP Macros @ deffi-cb and @ deffi-cb-unsafe
 .synb
 .mets (deffi-cb < name < rettype << argtypes )
+.mets (deffi-cb-unsafe < name < rettype << argtypes )
 .syne
 .desc
 The
@@ -54374,12 +54410,12 @@ The
 and
 .meta argtypes
 arguments are processed exactly as in the corresponding arguments in the
-.meta deffi
+.code deffi
 macro.
 
 The
-.meta deffi-cb
-arranges for
+.code deffi-cb
+macro arranges for
 .meta rettype
 and
 .meta argtypes
@@ -54389,6 +54425,18 @@ The generated function called
 then serves as a combinator which takes a Lisp function as its argument,
 and binds it to the FFI call descriptor to produce a FFI closure.
 That closure may then be passed to foreign functions as a callback.
+
+The
+.code deffi-cb-unsafe
+macro is a variant of
+.code deffi-cb
+with exactly the same conventions. The difference is that it arranges for
+.code ffi-make-closure
+to be invoked with
+.code nil
+for the
+.meta safe-p
+parameter.
 
 .TP* Example:
 

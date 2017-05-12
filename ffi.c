@@ -85,6 +85,8 @@ val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
 static val ffi_typedef_hash;
 
+static uw_frame_t *s_exit_point;
+
 struct txr_ffi_type {
   ffi_type *ft;
   val lt;
@@ -1945,6 +1947,12 @@ val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
     }
   }
 
+  if (s_exit_point) {
+    uw_frame_t *ep = s_exit_point;
+    s_exit_point = 0;
+    uw_continue(ep);
+  }
+
   return ret;
 }
 
@@ -1990,13 +1998,75 @@ static void ffi_closure_dispatch(ffi_cif *cif, void *cret,
   rtft->put(rtft, retval, convert(mem_t *, cret), self);
 }
 
-val ffi_make_closure(val fun, val call_desc)
+static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
+                                      void *cargs[], void *clo)
+{
+  val self = lit("ffi-closure-dispatch-safe");
+  val closure = coerce(val, clo);
+  struct txr_ffi_closure *tfcl = ffi_closure_struct(closure);
+  cnum i, nargs = tfcl->nparam;
+  struct txr_ffi_call_desc *tfcd = tfcl->tfcd;
+  val types = tfcd->argtypes;
+  val rtype = tfcd->rettype;
+  struct txr_ffi_type *volatile rtft = 0;
+  val retval = nil;
+  int out_pass_needed = 0;
+  uw_frame_t cont_guard;
+
+  uw_push_guard(&cont_guard, 0);
+
+  uw_simple_catch_begin;
+
+  args_decl(args, tfcl->nparam);
+  args_decl(args_cp, tfcl->nparam);
+  rtft = ffi_type_struct(rtype);
+
+  for (i = 0; i < nargs; i++) {
+    val type = pop(&types);
+    struct txr_ffi_type *mtft = ffi_type_struct(type);
+    val arg = mtft->get(mtft, convert(mem_t *, cargs[i]), self);
+    args_add(args, arg);
+    if (mtft->out != 0)
+      out_pass_needed = 1;
+  }
+
+  args_copy(args_cp, args);
+
+  retval = generic_funcall(tfcl->fun, args);
+
+  if (out_pass_needed) {
+    for (types = tfcd->argtypes, i = 0; i < nargs; i++) {
+      val type = pop(&types);
+      val arg = args_at(args_cp, i);
+      struct txr_ffi_type *mtft = ffi_type_struct(type);
+      if (mtft->out != 0)
+        mtft->out(mtft, 0, arg, convert(mem_t *, cargs[i]), self);
+    }
+  }
+
+  rtft->put(rtft, retval, convert(mem_t *, cret), self);
+
+  uw_unwind {
+    s_exit_point = uw_curr_exit_point;
+    if (s_exit_point && rtft != 0)
+      memset(cret, 0, rtft->size);
+    uw_curr_exit_point = 0; /* stops unwinding */
+  }
+
+  uw_catch_end;
+
+  uw_pop_frame(&cont_guard);
+}
+
+
+val ffi_make_closure(val fun, val call_desc, val safe_p_in)
 {
   val self = lit("ffi-make-closure");
   struct txr_ffi_closure *tfcl = coerce(struct txr_ffi_closure *,
                                         chk_calloc(1, sizeof *tfcl));
   struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(call_desc);
   val obj = cobj(coerce(mem_t *, tfcl), ffi_closure_s, &ffi_closure_ops);
+  val safe_p = default_arg(safe_p_in, t);
   ffi_status ffis = FFI_OK;
 
   tfcl->clo = convert(ffi_closure *,
@@ -2007,7 +2077,11 @@ val ffi_make_closure(val fun, val call_desc)
     uw_throwf(error_s, lit("~a: failed to allocate special closure memory"),
               self, nao);
 
-  if ((ffis = ffi_prep_closure_loc(tfcl->clo, &tfcd->cif, ffi_closure_dispatch, obj,
+  if ((ffis = ffi_prep_closure_loc(tfcl->clo, &tfcd->cif,
+                                   if3(safe_p,
+                                       ffi_closure_dispatch_safe,
+                                       ffi_closure_dispatch),
+                                   obj,
                                    coerce(void *, tfcl->fptr))) != FFI_OK)
     uw_throwf(error_s, lit("~a: ffi_prep_closure_loc failed: ~s"),
               self, num(ffis), nao);
@@ -2146,7 +2220,7 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-type-compile"), user_package), func_n1(ffi_type_compile));
   reg_fun(intern(lit("ffi-make-call-desc"), user_package), func_n4(ffi_make_call_desc));
   reg_fun(intern(lit("ffi-call"), user_package), func_n3(ffi_call_wrap));
-  reg_fun(intern(lit("ffi-make-closure"), user_package), func_n2(ffi_make_closure));
+  reg_fun(intern(lit("ffi-make-closure"), user_package), func_n3o(ffi_make_closure, 2));
   reg_fun(intern(lit("ffi-typedef"), user_package), func_n2(ffi_typedef));
   reg_fun(intern(lit("ffi-size"), user_package), func_n1(ffi_size));
   reg_fun(intern(lit("ffi-put-into"), user_package), func_n3(ffi_put_into));

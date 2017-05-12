@@ -72,20 +72,26 @@
 (defmacro deffi-type (name type-expr)
   ^(ffi-typedef ',name (ffi-type-compile ',type-expr)))
 
-(defmacro deffi-cb (:form f name rettype argtypes)
+(defun sys:deffi-cb-expander (f name rettype argtypes safe-p)
   (let ((ret-type-sym (gensym "ret-type-"))
         (arg-types-sym (gensym "arg-types-"))
         (call-desc-sym (gensym "call-desc-"))
         (fun-sym (gensym "fun-")))
-  (tree-bind (nargs nvariadic . argtypes) (sys:analyze-argtypes f argtypes)
-    ^(progn
-       (defvarl ,ret-type-sym (ffi-type-compile ',rettype))
-       (defvarl ,arg-types-sym [mapcar ffi-type-compile ',argtypes])
-       (defvarl ,call-desc-sym (ffi-make-call-desc ,nargs ,nvariadic
-                                                   ,ret-type-sym
-                                                   ,arg-types-sym))
-       (defun ,name (,fun-sym)
-         [ffi-make-closure ,fun-sym ,call-desc-sym])))))
+    (tree-bind (nargs nvariadic . argtypes) (sys:analyze-argtypes f argtypes)
+      ^(progn
+         (defvarl ,ret-type-sym (ffi-type-compile ',rettype))
+         (defvarl ,arg-types-sym [mapcar ffi-type-compile ',argtypes])
+         (defvarl ,call-desc-sym (ffi-make-call-desc ,nargs ,nvariadic
+                                                     ,ret-type-sym
+                                                     ,arg-types-sym))
+         (defun ,name (,fun-sym)
+           [ffi-make-closure ,fun-sym ,call-desc-sym ,safe-p])))))
+
+(defmacro deffi-cb (:form f name rettype argtypes)
+  (sys:deffi-cb-expander f name rettype argtypes t))
+
+(defmacro deffi-cb-unsafe (:form f name rettype argtypes)
+  (sys:deffi-cb-expander f name rettype argtypes nil))
 
 (defmacro sizeof (type)
   (ffi-size (ffi-type-compile type)))
