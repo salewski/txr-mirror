@@ -101,7 +101,7 @@ u32_t c_u32(val n, val self)
 #if SIZEOF_PTR == 8
 i64_t c_i64(val n, val self)
 {
-  cnum v = c_num(num);
+  cnum v = c_num(n);
   if (v < (cnum) -0x8000000000000000 || v > (cnum) 0x7FFFFFFFFFFFFFFF)
     uw_throwf(error_s, lit("~a: value ~s is out of signed 64 bit range"),
               self, n, nao);
