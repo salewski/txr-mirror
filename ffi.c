@@ -1779,8 +1779,10 @@ static void ffi_init_extra_types(void)
               type_by_size[(blkcnt_t) -1 > 0][sizeof (blkcnt_t)]);
   ffi_typedef(intern(lit("blksize-t"), user_package),
               type_by_size[(blksize_t) -1 > 0][sizeof (blksize_t)]);
+#if HAVE_CLOCKID_T
   ffi_typedef(intern(lit("clockid-t"), user_package),
               type_by_size[(clockid_t) -1 > 0][sizeof (clockid_t)]);
+#endif
   ffi_typedef(intern(lit("dev-t"), user_package),
               type_by_size[(dev_t) -1 > 0][sizeof (dev_t)]);
   ffi_typedef(intern(lit("fsblkcnt-t"), user_package),
@@ -1795,8 +1797,10 @@ static void ffi_init_extra_types(void)
               type_by_size[(ino_t) -1 > 0][sizeof (ino_t)]);
   ffi_typedef(intern(lit("key-t"), user_package),
               type_by_size[(key_t) -1 > 0][sizeof (key_t)]);
+#if HAVE_LOFF_T
   ffi_typedef(intern(lit("loff-t"), user_package),
               type_by_size[(loff_t) -1 > 0][sizeof (loff_t)]);
+#endif
   ffi_typedef(intern(lit("mode-t"), user_package),
               type_by_size[(mode_t) -1 > 0][sizeof (mode_t)]);
   ffi_typedef(intern(lit("nlink-t"), user_package),

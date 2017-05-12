@@ -2825,6 +2825,44 @@ else
   printf "no\n"
 fi
 
+printf "Checking for clockid_t ... "
+cat > conftest.c <<!
+#include <sys/types.h>
+
+int main(void)
+{
+  clockid_t cid = CLOCK_REALTIME;
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_CLOCKID_T 1\n" >> config.h
+  have_sys_types=y
+else
+  printf "no\n"
+fi
+
+printf "Checking for loff_t ... "
+cat > conftest.c <<!
+#include <sys/types.h>
+
+int main(void)
+{
+  loff_t lo = 0;
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_LOFF_T 1\n" >> config.h
+  have_sys_types=y
+else
+  printf "no\n"
+fi
+
 #
 # Dependent variables
 #
