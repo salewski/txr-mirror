@@ -72,7 +72,7 @@
 (defmacro deffi-type (name type-expr)
   ^(ffi-typedef ',name (ffi-type-compile ',type-expr)))
 
-(defun sys:deffi-cb-expander (f name rettype argtypes safe-p)
+(defun sys:deffi-cb-expander (f name rettype argtypes safe-p abort-retval)
   (let ((ret-type-sym (gensym "ret-type-"))
         (arg-types-sym (gensym "arg-types-"))
         (call-desc-sym (gensym "call-desc-"))
@@ -85,13 +85,13 @@
                                                      ,ret-type-sym
                                                      ,arg-types-sym))
          (defun ,name (,fun-sym)
-           [ffi-make-closure ,fun-sym ,call-desc-sym ,safe-p])))))
+           [ffi-make-closure ,fun-sym ,call-desc-sym ,safe-p ,abort-retval])))))
 
-(defmacro deffi-cb (:form f name rettype argtypes)
-  (sys:deffi-cb-expander f name rettype argtypes t))
+(defmacro deffi-cb (:form f name rettype argtypes : abort-retval)
+  (sys:deffi-cb-expander f name rettype argtypes t abort-retval))
 
 (defmacro deffi-cb-unsafe (:form f name rettype argtypes)
-  (sys:deffi-cb-expander f name rettype argtypes nil))
+  (sys:deffi-cb-expander f name rettype argtypes nil nil))
 
 (defmacro sizeof (type)
   (ffi-size (ffi-type-compile type)))

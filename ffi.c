@@ -186,6 +186,7 @@ struct txr_ffi_closure {
   cnum nparam;
   val fun;
   val call_desc;
+  val abort_retval;
   struct txr_ffi_call_desc *tfcd;
 };
 
@@ -224,6 +225,7 @@ static void ffi_closure_mark_op(val obj)
   struct txr_ffi_closure *tfcl = ffi_closure_struct(obj);
   gc_mark(tfcl->fun);
   gc_mark(tfcl->call_desc);
+  gc_mark(tfcl->abort_retval);
 }
 
 static struct cobj_ops ffi_closure_ops =
@@ -2048,8 +2050,12 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
 
   uw_unwind {
     s_exit_point = uw_curr_exit_point;
-    if (s_exit_point && rtft != 0)
-      memset(cret, 0, rtft->size);
+    if (s_exit_point && rtft != 0) {
+      if (!tfcl->abort_retval)
+        memset(cret, 0, rtft->size);
+      else
+        rtft->put(rtft, tfcl->abort_retval, cret, self);
+    }
     uw_curr_exit_point = 0; /* stops unwinding */
   }
 
@@ -2059,7 +2065,7 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
 }
 
 
-val ffi_make_closure(val fun, val call_desc, val safe_p_in)
+val ffi_make_closure(val fun, val call_desc, val safe_p_in, val abort_ret_in)
 {
   val self = lit("ffi-make-closure");
   struct txr_ffi_closure *tfcl = coerce(struct txr_ffi_closure *,
@@ -2090,6 +2096,7 @@ val ffi_make_closure(val fun, val call_desc, val safe_p_in)
   tfcl->fun = fun;
   tfcl->call_desc = call_desc;
   tfcl->tfcd = tfcd;
+  tfcl->abort_retval = default_null_arg(abort_ret_in);
 
   return obj;
 }
@@ -2220,7 +2227,7 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-type-compile"), user_package), func_n1(ffi_type_compile));
   reg_fun(intern(lit("ffi-make-call-desc"), user_package), func_n4(ffi_make_call_desc));
   reg_fun(intern(lit("ffi-call"), user_package), func_n3(ffi_call_wrap));
-  reg_fun(intern(lit("ffi-make-closure"), user_package), func_n3o(ffi_make_closure, 2));
+  reg_fun(intern(lit("ffi-make-closure"), user_package), func_n4o(ffi_make_closure, 2));
   reg_fun(intern(lit("ffi-typedef"), user_package), func_n2(ffi_typedef));
   reg_fun(intern(lit("ffi-size"), user_package), func_n1(ffi_size));
   reg_fun(intern(lit("ffi-put-into"), user_package), func_n3(ffi_put_into));

@@ -54048,7 +54048,8 @@ argument types match.
 
 .coNP Function @ ffi-make-closure
 .synb
-.mets (ffi-make-closure < lisp-fun < call-desc <> [ safe-p ])
+.mets (ffi-make-closure < lisp-fun < call-desc
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \  >> [ safe-p <> [ abort-val ]])
 .syne
 .desc
 The
@@ -54094,7 +54095,12 @@ the control transfer when the foreign code itself finishes and returns.
 If the callback returns a value (its return type is other than
 .codn void )
 then in this situation, the callback returns an all-zero-bits return
-value to the foreign caller.
+value to the foreign caller. If the
+.meta abort-val
+parameter is specified and its value is other than
+.codn nil ,
+then that value will be used as the return value instead of an all-zero
+bit pattern.
 
 An unsafely dispatched closure permits the capture of continuations from
 the callback across the foreign code and direct dynamic control transfers which
@@ -54388,7 +54394,7 @@ as its value.
 
 .coNP Macros @ deffi-cb and @ deffi-cb-unsafe
 .synb
-.mets (deffi-cb < name < rettype << argtypes )
+.mets (deffi-cb < name < rettype < argtypes <> [ abort-val ])
 .mets (deffi-cb-unsafe < name < rettype << argtypes )
 .syne
 .desc
@@ -54425,18 +54431,34 @@ The generated function called
 then serves as a combinator which takes a Lisp function as its argument,
 and binds it to the FFI call descriptor to produce a FFI closure.
 That closure may then be passed to foreign functions as a callback.
+The
+.code deffi-cb
+macro generates a callback which uses safe dispatch, which is explained
+in the description of the
+.code ffi-make-callback
+function. The optional
+.meta abort-val
+parameter specifies an expression which evaluates to the value
+to be returned by the callback in the event that a dynamic control
+transfer is intercepted. The purpose of this value is to indicate
+to the foreign code that the callback wishes to abort operation;
+it is useful in situations when a suitable return value will induce
+the foreign code to co-operate and itself return to the Lisp code
+which will then continue the dynamic control transfer.
 
 The
 .code deffi-cb-unsafe
 macro is a variant of
 .code deffi-cb
-with exactly the same conventions. The difference is that it arranges for
+with the same argument conventions. The difference is that it arranges for
 .code ffi-make-closure
 to be invoked with
 .code nil
 for the
 .meta safe-p
-parameter.
+parameter. This macro has no
+.meta abort-val
+parameter, since unsafe callbacks do not use it.
 
 .TP* Example:
 
