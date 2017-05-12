@@ -31,6 +31,7 @@
 #include <float.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <signal.h>
 #include <stdio.h>
 #include <dirent.h>
