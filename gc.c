@@ -998,7 +998,7 @@ void gc_free_all(void)
 
 #if HAVE_VALGRIND
       if (opt_vg_debug)
-        VALGRIND_MAKE_MEM_DEFINED(&next->block, sizeof next->block);
+        VALGRIND_MAKE_MEM_DEFINED(&iter->block, sizeof iter->block);
 #endif
 
       for (block = iter->block, end = iter->block + HEAP_SIZE;
