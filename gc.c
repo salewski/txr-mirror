@@ -371,12 +371,12 @@ tail_call:
     return;
   case VEC:
     {
-      val alloc_size = obj->v.vec[-2];
-      val fill_ptr = obj->v.vec[-1];
-      cnum i, fp = c_num(fill_ptr);
+      val alloc_size = obj->v.vec[vec_alloc];
+      val len = obj->v.vec[vec_length];
+      cnum i, fp = c_num(len);
 
       mark_obj(alloc_size);
-      mark_obj(fill_ptr);
+      mark_obj(len);
 
       for (i = 0; i < fp; i++)
         mark_obj(obj->v.vec[i]);
