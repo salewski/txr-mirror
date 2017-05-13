@@ -612,9 +612,10 @@ static val ffi_str_get(struct txr_ffi_type *tft, mem_t *src, val self)
 
 static val ffi_str_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  char *p = *coerce(char **, src);
-  val ret = p ? string_utf8(p) : nil;
-  free(p);
+  char **loc = coerce(char **, src);
+  val ret = *loc ? string_utf8(*loc) : nil;
+  free(*loc);
+  *loc = 0;
   return ret;
 }
 
@@ -648,8 +649,10 @@ static void ffi_wstr_put(struct txr_ffi_type *tft, val s, mem_t *dst,
 
 static val ffi_wstr_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  wchar_t *p = *coerce(wchar_t **, src);
-  return p ? string_own(p) : nil;
+  wchar_t **loc = coerce(wchar_t **, src);
+  val ret = *loc ? string_own(*loc) : nil;
+  *loc = 0;
+  return ret;
 }
 
 static val ffi_bstr_in(struct txr_ffi_type *tft, int copy,
@@ -683,9 +686,10 @@ static val ffi_bstr_get(struct txr_ffi_type *tft, mem_t *src, val self)
 
 static val ffi_bstr_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  unsigned char *p = *coerce(unsigned char **, src);
-  val ret = p ? string_8bit(p) : nil;
-  free(p);
+  unsigned char **loc = coerce(unsigned char **, src);
+  val ret = *loc ? string_8bit(*loc) : nil;
+  free(*loc);
+  *loc = 0;
   return ret;
 }
 
@@ -725,10 +729,12 @@ static val ffi_buf_d_in(struct txr_ffi_type *tft, int copy, mem_t *src,
   mem_t *origptr = buf_get(obj, self);
 
   if (*loc != origptr) {
-    if (copy)
+    if (copy) {
       obj = make_borrowed_buf(length_buf(obj), *loc);
-    else
+    } else {
       free(*loc);
+      *loc = 0;
+    }
   }
 
   return obj;
@@ -747,8 +753,10 @@ static void ffi_buf_d_put(struct txr_ffi_type *tft, val buf, mem_t *dst,
 
 static val ffi_buf_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  mem_t *p = *coerce(mem_t **, src);
-  return p ? make_borrowed_buf(num(tft->nelem), p) : nil;
+  mem_t **loc = coerce(mem_t **, src);
+  val ret = *loc ? make_borrowed_buf(num(tft->nelem), *loc) : nil;
+  *loc = 0;
+  return ret;
 }
 
 static void ffi_closure_put(struct txr_ffi_type *tft, val ptr, mem_t *dst,
@@ -857,9 +865,10 @@ static val ffi_ptr_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   val tgttype = tft->mtypes;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
-  mem_t *ptr = *coerce(mem_t **, src);
-  val ret = ptr ? tgtft->get(tgtft, ptr, self) : nil;
-  free(ptr);
+  mem_t **loc = coerce(mem_t **, src);
+  val ret = *loc ? tgtft->get(tgtft, *loc, self) : nil;
+  free(*loc);
+  *loc = 0;
   return ret;
 }
 
