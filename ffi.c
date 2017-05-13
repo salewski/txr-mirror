@@ -618,15 +618,15 @@ static val ffi_str_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return ret;
 }
 
-static void ffi_wstr_put(struct txr_ffi_type *tft, val s, mem_t *dst,
-                         val self)
+static val ffi_wstr_in(struct txr_ffi_type *tft, int copy,
+                       mem_t *src, val obj, val self)
 {
-  if (s == nil) {
-    *coerce(const wchar_t **, dst) = 0;
-  } else {
-    const wchar_t *ws = c_str(s);
-    *coerce(const wchar_t **, dst) = ws;
-  }
+  wchar_t **loc = coerce(wchar_t **, src);
+  if (copy)
+    obj = if2(*loc, string(*loc));
+  free(*loc);
+  *loc = 0;
+  return obj;
 }
 
 static val ffi_wstr_get(struct txr_ffi_type *tft, mem_t *src, val self)
@@ -635,7 +635,7 @@ static val ffi_wstr_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return p ? string(p) : 0;
 }
 
-static void ffi_wstr_d_put(struct txr_ffi_type *tft, val s, mem_t *dst,
+static void ffi_wstr_put(struct txr_ffi_type *tft, val s, mem_t *dst,
                            val self)
 {
   if (s == nil) {
@@ -1689,12 +1689,20 @@ static void ffi_init_types(void)
   ffi_typedef(str_d_s, make_ffi_type_builtin(str_d_s, str_s,
                                              sizeof (mem_t *), &ffi_type_pointer,
                                              ffi_str_put, ffi_str_d_get));
-  ffi_typedef(wstr_s, make_ffi_type_builtin(wstr_s, str_s,
-                                            sizeof (mem_t *), &ffi_type_pointer,
-                                            ffi_wstr_put, ffi_wstr_get));
+  {
+    val type = ffi_typedef(wstr_s, make_ffi_type_builtin(wstr_s, str_s,
+                                                         sizeof (mem_t *),
+                                                         &ffi_type_pointer,
+                                                         ffi_wstr_put,
+                                                         ffi_wstr_get));
+    struct txr_ffi_type *tft = ffi_type_struct(type);
+    tft->in = ffi_wstr_in;
+    ffi_typedef(wstr_s, type);
+  }
+
   ffi_typedef(wstr_d_s, make_ffi_type_builtin(wstr_d_s, str_s,
                                               sizeof (mem_t *), &ffi_type_pointer,
-                                              ffi_wstr_d_put, ffi_wstr_d_get));
+                                              ffi_wstr_put, ffi_wstr_d_get));
   ffi_typedef(bstr_d_s, make_ffi_type_builtin(bstr_d_s, str_s,
                                               sizeof (mem_t *), &ffi_type_pointer,
                                               ffi_bstr_put, ffi_bstr_d_get));

@@ -53390,34 +53390,11 @@ corresponds to the C type
 .code "wchar_t *"
 pointing to the first character of a null terminated wide string.
 It converts between Lisp strings and symbols, and C strings.
-Since \*(TX represents strings in this format natively, the
-.code wstr
-type has a different memory management profile from that of
+The memory management is similar to the
 .code str
 and
-.codn bstr .
-
-Under the
-.code wstr
-type's put operation, no memory allocation takes place. The internal string
-pointer is retrieved from within the Lisp object, and written into the argument
-space as-is. The type has no in operation, since there is no memory to clean
-up. The get semantics of
-.code wstr
-duplicate the C string, producing a new Lisp object which doesn't share
-storage with the original.
-
-Under the
-.code wstr-d
-type's put operation, memory allocation does take place. A new C string
-is allocated via
-.code malloc
-and that pointer is written into the argument space. The type has no in
-operation. The get semantics of
-.code wstr-d
-produces a Lisp string object which directly takes ownership of the C string.
-The C string will be freed if and when that Lisp string is recognized as
-unreachable by \*(TX's garbage collector.
+.code str-d
+types, except that no UTF-8 conversion takes place.
 
 .ccIP @ buf and @ buf-d
 The
