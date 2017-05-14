@@ -35,7 +35,7 @@
 
 (if (and (fboundp 'open-socket)
          (fboundp 'fork))
-  (let ((maybe-ipv6 (if (memqual (osname) '("GNU/Linux" "Darwin" "Cygwin"))
+  (let ((maybe-ipv6 (if (memq (os-symbol) '(:linux :macos :cygwin :cygnal))
                       (list af-inet6))))
     (each ((family ^(,af-inet ,*maybe-ipv6)))
       (unless (dgram-test)
