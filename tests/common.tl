@@ -32,3 +32,8 @@
           (iff (f^ #/Darwin/) (ret :macos))
           (ret :unknown))
      u.sysname]))
+
+(defun libc ()
+  (caseql (os-symbol)
+    ((:linux :solaris :macos) (dlopen nil))
+    ((:cygwin) (dlopen "cygwin1.dll"))))

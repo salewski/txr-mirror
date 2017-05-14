@@ -1,0 +1,10 @@
+#("the" "quick" "brown" "fox" "jumped" "over" "the" "lazy" "dogs")
+#("brown" "dogs" "fox" "jumped" "lazy" "over" "quick" "the" "the")
+#("the" "quick" "brown" "fox" "jumped" "over" "the" "lazy" "dogs")
+#("brown" "dogs" "fox" "jumped" "lazy" "over" "quick" "the" "the")
+#("the" "quick" "brown" "fox" "jumped" "over" "the" "lazy" "dogs")
+42
+#(nil nil nil nil nil nil nil nil nil)
+#("the" "quick")
+42
+#(nil nil)
