@@ -2343,9 +2343,12 @@ static struct strm_ops cat_stream_ops =
 val make_catenated_stream(val stream_list)
 {
   struct cat_strm *s = coerce(struct cat_strm *, chk_malloc(sizeof *s));
+  val catstrm = nil;
   strm_base_init(&s->a);
+  s->streams = nil;
+  catstrm = cobj(coerce(mem_t *, s), stream_s, &cat_stream_ops.cobj_ops);
   s->streams = stream_list;
-  return cobj(coerce(mem_t *, s), stream_s, &cat_stream_ops.cobj_ops);
+  return catstrm;
 }
 
 val make_catenated_stream_v(struct args *streams)
