@@ -1,3 +1,57 @@
+                                    TXR 175
+                                   2017-05-15
+
+
+  Features
+
+  - New: Foreign Function Interface (FFI)
+    - Declare bindings to C-compatible functions in other software
+      components (dynamic libraries).
+    - Use Lisp functions as C-compatible from foreign software
+      components.
+  - New :prompt command in listener, nicknamed :p, which
+    turns on prompts, useful in the plain mode listener.
+  - stat structure has a path slot now, for convenience;
+    - answers question: if the stat was obtained from a path,
+      what was that path?
+  - Built in functions and macros can now be redefined:
+    only a warning occurs, rather than error.
+  - New buffer data type.
+  - Functions related to cptr type exposed.
+  - Funtions dlopen, dlsym and related functions exposed.
+  - OOP:
+    - new and lnew macros now check nonexistence of base type at
+      expansion time and generate immediate warning.
+
+  Bugs
+
+  - Printing issue with embdedded symbols in quasiliterals.
+  - Fixed broken printing of quasi-word-list literals.
+  - @{expr [index]} substitution syntax now indexes into
+    any kind of sequence, not only lists.
+  - Tightening in parser to reject certain unassigned syntax
+    like #[], and better error checking over hash literals.
+  - Bugfixes in area of processing TXR pattern language in context
+    of user-defined package.
+  - OOP print methods can now disable *print-circle* over
+    recursive print calls.
+  - Unintering built-in symbols is now possible without
+    catastrophic results.
+  - Fixed error in macro-expander's traversal of the special
+    forms return-from, sys:abscond-from and block*.
+  - Fixed bug in expander for suspend macro.
+  - Fixed bug in the ash function when right shifting fixnum integers.
+  - Fixed tostringp not behaving for float numbers in documented manner.
+  - mkstring and vec-set-length defend against negative argument.
+  - lognot and logtrunc defend against negative number of bits.
+  - Fixed bug in --free-all logic when --vg-debug in effect.
+  - Fixed incorrectly ordered logic in make-catenated-stream, exposing
+    a Lisp object to premature reclamation.
+    - Reproduced as actual issue on Darwin, under the --gc-debug
+      GC torture test.
+
+
+
                                     TXR 174
                                    2017-04-04
 
