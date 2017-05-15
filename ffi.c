@@ -247,10 +247,10 @@ static mem_t *ffi_fixed_alloc(struct txr_ffi_type *tft, val obj, val self)
 
 static mem_t *ffi_varray_alloc(struct txr_ffi_type *tft, val obj, val self)
 {
-  ucnum len = c_unum(length(obj));
+  cnum len = c_num(length(obj));
   val eltype = tft->mtypes;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
-  size_t size = etft->size * len;
+  cnum size = etft->size * len;
   if (size < len || size < tft->size)
     uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
   return chk_malloc(size);
@@ -1031,7 +1031,7 @@ static void ffi_char_array_put(struct txr_ffi_type *tft, val str, mem_t *dst,
 {
   int nt = tft->null_term;
   const wchar_t *wstr = c_str(str);
-  size_t needed = utf8_to_buf(0, wstr, nt);
+  cnum needed = utf8_to_buf(0, wstr, nt);
 
   if (needed <= nelem) {
     utf8_to_buf(dst, wstr, nt);
@@ -2041,34 +2041,36 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
 
   uw_simple_catch_begin;
 
-  args_decl(args, tfcl->nparam);
-  args_decl(args_cp, tfcl->nparam);
-  rtft = ffi_type_struct(rtype);
+  {
+    args_decl(args, tfcl->nparam);
+    args_decl(args_cp, tfcl->nparam);
+    rtft = ffi_type_struct(rtype);
 
-  for (i = 0; i < nargs; i++) {
-    val type = pop(&types);
-    struct txr_ffi_type *mtft = ffi_type_struct(type);
-    val arg = mtft->get(mtft, convert(mem_t *, cargs[i]), self);
-    args_add(args, arg);
-    if (mtft->out != 0)
-      out_pass_needed = 1;
-  }
-
-  args_copy(args_cp, args);
-
-  retval = generic_funcall(tfcl->fun, args);
-
-  if (out_pass_needed) {
-    for (types = tfcd->argtypes, i = 0; i < nargs; i++) {
+    for (i = 0; i < nargs; i++) {
       val type = pop(&types);
-      val arg = args_at(args_cp, i);
       struct txr_ffi_type *mtft = ffi_type_struct(type);
+      val arg = mtft->get(mtft, convert(mem_t *, cargs[i]), self);
+      args_add(args, arg);
       if (mtft->out != 0)
-        mtft->out(mtft, 0, arg, convert(mem_t *, cargs[i]), self);
+        out_pass_needed = 1;
     }
-  }
 
-  rtft->put(rtft, retval, convert(mem_t *, cret), self);
+    args_copy(args_cp, args);
+
+    retval = generic_funcall(tfcl->fun, args);
+
+    if (out_pass_needed) {
+      for (types = tfcd->argtypes, i = 0; i < nargs; i++) {
+        val type = pop(&types);
+        val arg = args_at(args_cp, i);
+        struct txr_ffi_type *mtft = ffi_type_struct(type);
+        if (mtft->out != 0)
+          mtft->out(mtft, 0, arg, convert(mem_t *, cargs[i]), self);
+      }
+    }
+
+    rtft->put(rtft, retval, convert(mem_t *, cret), self);
+  }
 
   uw_unwind {
     s_exit_point = uw_curr_exit_point;
@@ -2076,7 +2078,7 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
       if (!tfcl->abort_retval)
         memset(cret, 0, rtft->size);
       else
-        rtft->put(rtft, tfcl->abort_retval, cret, self);
+        rtft->put(rtft, tfcl->abort_retval, convert(mem_t *, cret), self);
     }
     uw_curr_exit_point = 0; /* stops unwinding */
   }
