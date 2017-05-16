@@ -124,6 +124,12 @@ static ffi_type *ffi_get_type(val obj)
   return tffi->ft;
 }
 
+static val ffi_get_lisp_type(val obj)
+{
+  struct txr_ffi_type *tffi = ffi_type_struct_checked(obj);
+  return tffi->lt;
+}
+
 static void ffi_type_print_op(val obj, val out, val pretty, struct strm_ctx *ctx)
 {
   struct txr_ffi_type *tft = ffi_type_struct(obj);
@@ -1524,43 +1530,50 @@ val ffi_type_compile(val syntax)
       }
     } else if (sym == ptr_in_s) {
       val target_type = ffi_type_compile(cadr(syntax));
-      return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
+      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
+                                   sizeof (mem_t *),
                                    ffi_ptr_in_put, ffi_ptr_get,
                                    ffi_ptr_in_in, ffi_ptr_in_out,
                                    target_type);
     } else if (sym == ptr_in_d_s) {
       val target_type = ffi_type_compile(cadr(syntax));
-      return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
+      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
+                                   sizeof (mem_t *),
                                    ffi_ptr_in_put, ffi_ptr_d_get,
                                    ffi_ptr_in_d_in, ffi_ptr_in_out,
                                    target_type);
     } else if (sym == ptr_out_s) {
       val target_type = ffi_type_compile(cadr(syntax));
-      return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
+      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
+                                   sizeof (mem_t *),
                                    ffi_ptr_out_put, ffi_ptr_get,
                                    ffi_ptr_out_in, ffi_ptr_out_out,
                                    target_type);
     } else if (sym == ptr_out_d_s) {
       val target_type = ffi_type_compile(cadr(syntax));
-      return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
+      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
+                                   sizeof (mem_t *),
                                    ffi_ptr_out_null_put, ffi_ptr_d_get,
                                    ffi_ptr_out_in, ffi_ptr_out_out,
                                    target_type);
     } else if (sym == ptr_s) {
       val target_type = ffi_type_compile(cadr(syntax));
-      return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
+      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
+                                   sizeof (mem_t *),
                                    ffi_ptr_in_put, ffi_ptr_get,
                                    ffi_ptr_out_in, ffi_ptr_out_out,
                                    target_type);
     } else if (sym == ptr_out_s_s) {
       val target_type = ffi_type_compile(cadr(syntax));
-      return make_ffi_type_pointer(syntax, cptr_s, sizeof (mem_t *),
+      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
+                                   sizeof (mem_t *),
                                    ffi_ptr_out_null_put, ffi_ptr_get,
                                    ffi_ptr_out_s_in, ffi_ptr_out_out,
                                    target_type);
     } else if (sym == buf_s || sym == buf_d_s) {
       cnum nelem = c_num(cadr(syntax));
-      val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
+      val type = make_ffi_type_builtin(syntax, buf_s,
+                                       sizeof (mem_t *),
                                        &ffi_type_pointer,
                                        if3(sym == buf_s,
                                            ffi_buf_put, ffi_buf_d_put),
