@@ -1588,6 +1588,14 @@ val ffi_type_compile(val syntax)
       tft->in = if3(sym == buf_s, ffi_buf_in, ffi_buf_d_in);
       tft->nelem = nelem;
       return type;
+    } else if (sym == cptr_s) {
+      val tag = cadr(syntax);
+      val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
+                                       &ffi_type_pointer,
+                                       ffi_cptr_put, ffi_cptr_get);
+      struct txr_ffi_type *tft = ffi_type_struct(type);
+      tft->mtypes = tag;
+      return type;
     }
 
     uw_throwf(error_s, lit("~a: unrecognized type operator: ~s"),
