@@ -274,7 +274,7 @@ static cnum eql_hash(val obj, int *count)
   abort();
 }
 
-cnum cobj_hash_op(val obj, int *count)
+cnum cobj_eq_hash_op(val obj, int *count)
 {
   (void) count;
 
@@ -843,7 +843,7 @@ static struct cobj_ops hash_iter_ops = cobj_ops_init(eq,
                                                      cobj_print_op,
                                                      cobj_destroy_free_op,
                                                      hash_iter_mark,
-                                                     cobj_hash_op);
+                                                     cobj_eq_hash_op);
 
 val hash_begin(val hash)
 {

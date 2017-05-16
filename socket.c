@@ -648,7 +648,7 @@ static_def(struct strm_ops dgram_strm_ops =
                               dgram_print,
                               dgram_destroy,
                               dgram_mark,
-                              cobj_hash_op),
+                              cobj_eq_hash_op),
                 wli("dgram-sock"),
                 dgram_put_string,
                 dgram_put_char,

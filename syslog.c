@@ -223,7 +223,7 @@ static_def(struct strm_ops syslog_strm_ops =
                               stream_print_op,
                               cobj_destroy_free_op,
                               syslog_mark,
-                              cobj_hash_op),
+                              cobj_eq_hash_op),
                 wli("syslog-stream"),
                 syslog_put_string,
                 syslog_put_char,

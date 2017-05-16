@@ -165,21 +165,21 @@ static struct cobj_ops ffi_type_builtin_ops =
                 ffi_type_print_op,
                 cobj_destroy_free_op,
                 cobj_mark_op,
-                cobj_hash_op);
+                cobj_eq_hash_op);
 
 static struct cobj_ops ffi_type_struct_ops =
   cobj_ops_init(eq,
                 ffi_type_print_op,
                 ffi_type_struct_destroy_op,
                 ffi_struct_type_mark,
-                cobj_hash_op);
+                cobj_eq_hash_op);
 
 static struct cobj_ops ffi_type_ptr_ops =
   cobj_ops_init(eq,
                 ffi_type_print_op,
                 cobj_destroy_free_op,
                 ffi_ptr_type_mark,
-                cobj_hash_op);
+                cobj_eq_hash_op);
 
 struct txr_ffi_closure {
   ffi_closure *clo;
@@ -234,7 +234,7 @@ static struct cobj_ops ffi_closure_ops =
                 ffi_closure_print_op,
                 ffi_closure_destroy_op,
                 ffi_closure_mark_op,
-                cobj_hash_op);
+                cobj_eq_hash_op);
 
 static void ffi_void_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 {
@@ -1881,7 +1881,7 @@ static struct cobj_ops ffi_call_desc_ops =
                 ffi_call_desc_print_op,
                 ffi_call_desc_destroy_op,
                 ffi_call_desc_mark_op,
-                cobj_hash_op);
+                cobj_eq_hash_op);
 
 val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
 {

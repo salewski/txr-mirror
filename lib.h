@@ -257,7 +257,7 @@ val cobj_equal_handle_op(val left, val right);
 void cobj_destroy_stub_op(val);
 void cobj_destroy_free_op(val);
 void cobj_mark_op(val);
-cnum cobj_hash_op(val, int *);
+cnum cobj_eq_hash_op(val, int *);
 
 struct env {
   obj_common;

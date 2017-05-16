@@ -1596,7 +1596,7 @@ val static_slot_type_reg(val slot, val strct)
 
 static_def(struct cobj_ops struct_type_ops =
            cobj_ops_init(eq, struct_type_print, struct_type_destroy,
-                         struct_type_mark, cobj_hash_op))
+                         struct_type_mark, cobj_eq_hash_op))
 
 static_def(struct cobj_ops struct_inst_ops =
            cobj_ops_init_ex(struct_inst_equal, struct_inst_print,

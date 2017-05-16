@@ -1470,7 +1470,7 @@ static struct cobj_ops cptr_dl_ops = {
   cobj_print_op,
   cptr_dl_destroy_op,
   cobj_mark_op,
-  cobj_hash_op
+  cobj_eq_hash_op
 };
 
 static val dlopen_wrap(val name, val flags)

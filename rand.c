@@ -65,7 +65,7 @@ static struct cobj_ops random_state_ops = cobj_ops_init(eq,
                                                         cobj_print_op,
                                                         cobj_destroy_free_op,
                                                         cobj_mark_op,
-                                                        cobj_hash_op);
+                                                        cobj_eq_hash_op);
 
 /* Source: bits from /dev/random on a Linux server */
 static rand32_t rand_tab[16] = {

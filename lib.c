@@ -7394,7 +7394,7 @@ static struct cobj_ops cptr_ops = {
   cobj_print_op,
   cobj_destroy_stub_op,
   cobj_mark_op,
-  cobj_hash_op
+  cobj_eq_hash_op
 };
 
 val cptr(mem_t *ptr)
