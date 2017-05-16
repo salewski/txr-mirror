@@ -7389,12 +7389,18 @@ val cobj_equal_handle_op(val left, val right)
   return (left->co.handle == right->co.handle) ? t : nil;
 }
 
+cnum cobj_handle_hash_op(val obj, int *count)
+{
+  mem_t *handle = obj->co.handle;
+  return cobj_eq_hash_op(coerce(val, handle), count);
+}
+
 static struct cobj_ops cptr_ops = {
   cobj_equal_handle_op,
   cobj_print_op,
   cobj_destroy_stub_op,
   cobj_mark_op,
-  cobj_eq_hash_op
+  cobj_handle_hash_op
 };
 
 val cptr(mem_t *ptr)

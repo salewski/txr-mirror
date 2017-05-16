@@ -258,6 +258,7 @@ void cobj_destroy_stub_op(val);
 void cobj_destroy_free_op(val);
 void cobj_mark_op(val);
 cnum cobj_eq_hash_op(val, int *);
+cnum cobj_handle_hash_op(val, int *);
 
 struct env {
   obj_common;
