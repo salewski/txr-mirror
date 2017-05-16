@@ -1,5 +1,5 @@
-@(bind prepro-sym @(hash :equal-based))
-@(bind file-of @(hash :equal-based))
+@(bind pp-sym-of-file @(hash :equal-based))
+@(bind pp-syms-of-sym @(hash :equal-based))
 @(next "Makefile")
 @(repeat)
 @  (cases)
@@ -9,14 +9,26 @@ OBJS-$(have_@sym) += @file.o
 OBJS-$(@sym) += @file.o
 @    (bind ppsym @(upcase-str `CONFIG_@sym`))
 @  (end)
-@  (do (set [prepro-sym `@file.c`] ppsym))
+@  (do (set [pp-sym-of-file `@file.c`] ppsym))
 @(end)
 @(next :list (glob "*.c"))
+@(bind pp-stack nil)
 @(collect)
 @file
 @  (next file)
+@  (do (whenlet ((pp [pp-sym-of-file file]))
+         (set pp-stack (list pp))))
 @  (collect :vars ((sym nil)))
-val @(coll)@{sym /[A-Za-z0-9_]+_[sk]/}@/[,;]/@(do (set [file-of sym] file))@(end)
+@    (cases)
+val @(coll)@{sym /[A-Za-z0-9_]+_[sk]/}@/[,;]/@\
+           @(do (set [pp-syms-of-sym sym] pp-stack))@(end)
+@    (or)
+#if @ppsym
+@      (do (push ppsym pp-stack))
+@    (or)
+#endif
+@      (do (pop pp-stack))
+@    (end)
 @  (end)
 @  (flatten sym)
 @(end)
@@ -27,7 +39,7 @@ val @(coll)@{sym /[A-Za-z0-9_]+_[sk]/}@/[,;]/@(do (set [file-of sym] file))@(end
 
 @(end)
 @(flatten sym)
-@(bind pp-groups @[group-by [chain file-of prepro-sym] sym])
+@(bind pp-groups @[group-by pp-syms-of-sym sym])
 @(bind gsym @[mapcar (opip sort (tuples 5)) (hash-values pp-groups)])
 @(bind gpp @(hash-keys pp-groups))
 @(output "protsym.c")
@@ -40,7 +52,7 @@ val @(coll)@{sym /[A-Za-z0-9_]+_[sk]/}@/[,;]/@(do (set [file-of sym] file))@(end
 #include "lib.h"
 
 @  (repeat :vars (gpp))
-@    (if gpp `#if @gpp`)
+@    (if gpp `#if @{gpp " && "}`)
 @    (repeat)
 extern val @(rep)@gsym, @(last)@gsym;@(end)
 @    (end)
@@ -49,7 +61,7 @@ extern val @(rep)@gsym, @(last)@gsym;@(end)
 
 val *protected_sym[] = {
 @  (repeat :vars (gpp))
-@    (if gpp `#if @gpp`)
+@    (if gpp `#if @{gpp " && "}`)
 @    (repeat)
   @(rep)&@gsym, @(last)&@gsym,@(end)
 @    (end)
