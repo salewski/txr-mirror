@@ -61,7 +61,7 @@ typedef enum type {
   NIL = TAG_PTR, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
   STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV,
   BGNUM, FLNUM, RNG, BUF, MAXTYPE = BUF
-  /* If extending, check TYPE_SHIFT */
+  /* If extending, check TYPE_SHIFT and all ocurrences of MAX_TYPE */
 } type_t;
 
 #define TYPE_SHIFT 5

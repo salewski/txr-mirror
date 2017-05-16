@@ -4406,25 +4406,20 @@ static enum less_handling less_tab[MAXTYPE+1][MAXTYPE+1];
 static void less_tab_init(void)
 {
   int l, r;
-  static int type_prec[MAXTYPE+1] = {
-    4, /* NIL */
-    1, /* NUM */
-    1, /* CHR */
-    3, /* LIT */
-    5, /* CONS */
-    3, /* STR */
-    4, /* SYM */
-    0, /* PKG */
-    0, /* FUN */
-    6, /* VEC */
-    5, /* LCONS */
-    3, /* LSTR */
-    0, /* COBJ */
-    0, /* ENV */
-    1, /* BGNUM */
-    1, /* FLNUM */
-    2, /* RNG */
-  };
+  static int type_prec[MAXTYPE+1];
+
+  type_prec[NIL] = 4;
+  type_prec[NUM] = 1;
+  type_prec[CHR] = 1;
+  type_prec[LIT] = 3;
+  type_prec[CONS] = 5;
+  type_prec[STR] = 3;
+  type_prec[SYM] = 4;
+  type_prec[LCONS] = 5;
+  type_prec[LSTR] = 3;
+  type_prec[BGNUM] = 1;
+  type_prec[FLNUM] = 1;
+  type_prec[RNG] = 2;
 
   for (l = 0; l <= MAXTYPE; l++)
     for (r = 0; r <= MAXTYPE; r++) {
