@@ -566,19 +566,19 @@ static val ffi_wchar_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_cptr_put(struct txr_ffi_type *tft, val n, mem_t *dst,
                          val self)
 {
-  mem_t *p = cptr_get(n);
+  mem_t *p = cptr_handle(n, tft->mtypes, self);
   *coerce(mem_t **, dst) = p;
 }
 
 static val ffi_cptr_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   mem_t *p = *coerce(mem_t **, src);
-  return cptr(p);
+  return cptr_typed(p, tft->mtypes, 0);
 }
 
 static mem_t *ffi_cptr_alloc(struct txr_ffi_type *tft, val ptr, val self)
 {
-  return coerce(mem_t *, cptr_addr_of(ptr));
+  return coerce(mem_t *, cptr_addr_of(ptr, tft->mtypes, self));
 }
 
 static val ffi_str_in(struct txr_ffi_type *tft, int copy,

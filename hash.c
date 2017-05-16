@@ -220,6 +220,7 @@ cnum equal_hash(val obj, int *count)
   case FLNUM:
     return hash_double(obj->fl.n);
   case COBJ:
+  case CPTR:
     if (obj->co.ops->equalsub) {
       val sub = obj->co.ops->equalsub(obj);
       if (sub)

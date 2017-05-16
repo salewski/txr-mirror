@@ -274,6 +274,7 @@ static void finalize(val obj)
     obj->v.vec = 0;
     return;
   case COBJ:
+  case CPTR:
     obj->co.ops->destroy(obj);
     obj->co.handle = 0;
     return;
@@ -392,6 +393,7 @@ tail_call:
     mark_obj(obj->ls.props->term);
     mark_obj_tail(obj->ls.list);
   case COBJ:
+  case CPTR:
     obj->co.ops->mark(obj);
     mark_obj_tail(obj->co.cls);
   case ENV:

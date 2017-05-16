@@ -110,6 +110,10 @@ val utsname_s, sysname_s, nodename_s, release_s, version_s, machine_s;
 val domainname_s;
 #endif
 
+#if HAVE_DLOPEN
+val dlhandle_s, dlsym_s;
+#endif
+
 static val at_exit_list;
 
 static val errno_wrap(val newval)
@@ -1467,7 +1471,7 @@ static void cptr_dl_destroy_op(val obj)
 
 static struct cobj_ops cptr_dl_ops = {
   cobj_equal_handle_op,
-  cobj_print_op,
+  cptr_print_op,
   cptr_dl_destroy_op,
   cobj_mark_op,
   cobj_handle_hash_op
@@ -1488,15 +1492,16 @@ static val dlopen_wrap(val name, val flags)
     else
       uw_throwf(error_s, lit("dlopen failed on ~a"), name, nao);
   }
-  return cobj(ptr, cptr_s, &cptr_dl_ops);
+  return cptr_typed(ptr, dlhandle_s, &cptr_dl_ops);
 }
 
 static val dlclose_wrap(val cptr)
 {
-  mem_t *ptr = cptr_get(cptr);
+  val self = lit("dlclose");
+  mem_t *ptr = cptr_handle(cptr, dlhandle_s, self);
   if (cptr->co.ops != &cptr_dl_ops)
-    uw_throwf(error_s, lit("dlclose: object ~s isn't a handle from dlopen"),
-              cptr, nao);
+    uw_throwf(error_s, lit("~s: object ~s isn't a handle from dlopen"),
+              self, cptr, nao);
   if (ptr != 0) {
     int res = dlclose(ptr);
     cptr->co.handle = 0;
@@ -1507,12 +1512,13 @@ static val dlclose_wrap(val cptr)
 
 static val dlsym_wrap(val dlptr, val name)
 {
+  val self = lit("dlsym");
   const wchar_t *name_ws = c_str(name);
   char *name_u8 = utf8_dup_to(name_ws);
-  mem_t *dl = cptr_get(dlptr);
+  mem_t *dl = cptr_handle(dlptr, dlhandle_s, self);
   mem_t *sym = coerce(mem_t *, dlsym(dl, name_u8));
   free(name_u8);
-  return cptr(sym);
+  return cptr_typed(sym, dlsym_s, 0);
 }
 
 static void dlsym_error(val dlptr, val name, val self)
@@ -1527,15 +1533,18 @@ static void dlsym_error(val dlptr, val name, val self)
 
 static val dlsym_checked(val dlptr, val name)
 {
+  val self = lit("dlsym-checked");
   val ptr = (dlerror(), dlsym_wrap(dlptr, name));
-  if (cptr_get(ptr) == 0)
-    dlsym_error(dlptr, name, lit("dlsym-checked"));
+  if (cptr_handle(ptr, dlsym_s, self) == 0)
+    dlsym_error(dlptr, name, self);
   return ptr;
 }
 
 #if HAVE_DLVSYM
 static val dlvsym_wrap(val dlptr, val name, val ver)
 {
+  val self = lit("dlvsym");
+
   if (null_or_missing_p(ver)) {
     return dlsym_wrap(dlptr, name);
   } else {
@@ -1543,7 +1552,7 @@ static val dlvsym_wrap(val dlptr, val name, val ver)
     const wchar_t *ver_ws = c_str(ver);
     char *name_u8 = utf8_dup_to(name_ws);
     char *ver_u8 = utf8_dup_to(ver_ws);
-    mem_t *dl = cptr_get(dlptr);
+    mem_t *dl = cptr_handle(dlptr, dlhandle_s, self);
     mem_t *sym = coerce(mem_t *, dlvsym(dl, name_u8, ver_u8));
     free(name_u8);
     free(ver_u8);
@@ -1553,9 +1562,10 @@ static val dlvsym_wrap(val dlptr, val name, val ver)
 
 static val dlvsym_checked(val dlptr, val name, val ver)
 {
+  val self = lit("dlvsym-checked");
   val ptr = (dlerror(), dlvsym_wrap(dlptr, name, ver));
-  if (cptr_get(ptr) == 0)
-    dlsym_error(dlptr, name, lit("dlvsym-checked"));
+  if (cptr_handle(ptr, dlsym_s, self) == 0)
+    dlsym_error(dlptr, name, self);
   return ptr;
 }
 #endif
@@ -1905,9 +1915,11 @@ void sysif_init(void)
 #endif
 
 #if HAVE_DLOPEN
+  dlhandle_s = intern(lit("dlhandle"), user_package);
+  dlsym_s = intern(lit("dlsym"), user_package);
   reg_fun(intern(lit("dlopen"), user_package), func_n2o(dlopen_wrap, 0));
   reg_fun(intern(lit("dlclose"), user_package), func_n1(dlclose_wrap));
-  reg_fun(intern(lit("dlsym"), user_package), func_n2(dlsym_wrap));
+  reg_fun(dlsym_s, func_n2(dlsym_wrap));
   reg_fun(intern(lit("dlsym-checked"), user_package), func_n2(dlsym_checked));
 #if HAVE_DLVSYM
   reg_fun(intern(lit("dlvsym"), user_package), func_n3o(dlvsym_wrap, 2));

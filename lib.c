@@ -173,6 +173,7 @@ static val code2type(int code)
   case LCONS: return lcons_s;
   case LSTR: return lstr_s;
   case COBJ: return cobj_s;
+  case CPTR: return cptr_s;
   case ENV: return env_s;
   case BGNUM: return bignum_s;
   case FLNUM: return float_s;
@@ -2520,6 +2521,9 @@ val equal(val left, val right)
       return left->co.ops->equal(left, right);
 
     return nil;
+  case CPTR:
+    if (type(right) == CPTR && left->co.ops == right->co.ops)
+      return left->co.ops->equal(left, right);
   }
 
   if (type(right) != COBJ)
@@ -7379,6 +7383,17 @@ void cobj_print_op(val obj, val out, val pretty, struct strm_ctx *ctx)
   format(out, lit(": ~p>"), coerce(val, obj->co.handle), nao);
 }
 
+void cptr_print_op(val obj, val out, val pretty, struct strm_ctx *ctx)
+{
+  put_string(lit("#<cptr"), out);
+  if (obj->co.cls) {
+    put_char(chr(' '), out);
+    obj_print_impl(obj->co.cls, out, pretty, ctx);
+  }
+  format(out, lit(": ~p>"), coerce(val, obj->co.handle), nao);
+}
+
+
 val cobj_equal_handle_op(val left, val right)
 {
   return (left->co.handle == right->co.handle) ? t : nil;
@@ -7392,15 +7407,36 @@ cnum cobj_handle_hash_op(val obj, int *count)
 
 static struct cobj_ops cptr_ops = {
   cobj_equal_handle_op,
-  cobj_print_op,
+  cptr_print_op,
   cobj_destroy_stub_op,
   cobj_mark_op,
   cobj_handle_hash_op
 };
 
+val cptr_typed(mem_t *handle, val type_sym, struct cobj_ops *ops)
+{
+  val obj = make_obj();
+  obj->co.type = CPTR;
+  obj->co.handle = handle;
+  obj->co.ops = (ops != 0 ? ops : &cptr_ops);
+  obj->co.cls = type_sym;
+  return obj;
+}
+
 val cptr(mem_t *ptr)
 {
-  return cobj(ptr, cptr_s, &cptr_ops);
+  return cptr_typed(ptr, nil, &cptr_ops);
+}
+
+val cptrp(val obj)
+{
+  return type(obj) == CPTR ? t : nil;
+}
+
+val cptr_type(val cptr)
+{
+  (void) cptr_handle(cptr, nil, lit("cptr-type"));
+  return cptr->co.cls;
 }
 
 val cptr_int(val n)
@@ -7415,27 +7451,37 @@ val cptr_obj(val obj)
 
 val cptr_zap(val cptr)
 {
-  (void) cobj_handle(cptr, cptr_s);
+  (void) cptr_handle(cptr, nil, lit("cptr-zap"));
   cptr->co.handle = 0;
   return cptr;
 }
 
 val cptr_free(val cptr)
 {
-  (void) cobj_handle(cptr, cptr_s);
+  (void) cptr_handle(cptr, nil, lit("cptr-free"));
   free(cptr->co.handle);
   cptr->co.handle = 0;
   return cptr;
 }
 
-mem_t *cptr_get(val cptr)
+mem_t *cptr_handle(val cptr, val type_sym, val self)
 {
-  return cobj_handle(cptr, cptr_s);
+  if (type(cptr) != CPTR)
+    uw_throwf(error_s, lit("~a: ~s isn't a cptr"), self, cptr, nao);
+  if (type_sym && cptr->co.cls != type_sym)
+    uw_throwf(error_s, lit("~a: cptr ~s isn't of type ~s"), self, cptr,
+              type_sym, nao);
+  return cptr->co.handle;
 }
 
-mem_t **cptr_addr_of(val cptr)
+mem_t *cptr_get(val cptr)
 {
-  (void) cobj_handle(cptr, cptr_s);
+  return cptr_handle(cptr, nil, lit("cptr-get"));
+}
+
+mem_t **cptr_addr_of(val cptr, val type_sym, val self)
+{
+  (void) cptr_handle(cptr, type_sym, self);
   return &cptr->co.handle;
 }
 
@@ -10335,6 +10381,7 @@ dot:
     }
     break;
   case COBJ:
+  case CPTR:
     obj->co.ops->print(obj, out, pretty, ctx);
     break;
   case ENV:

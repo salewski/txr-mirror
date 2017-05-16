@@ -59,7 +59,7 @@ typedef uint_ptr_t ucnum;
 
 typedef enum type {
   NIL = TAG_PTR, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
-  STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, ENV,
+  STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, CPTR, ENV,
   BGNUM, FLNUM, RNG, BUF, MAXTYPE = BUF
   /* If extending, check TYPE_SHIFT and all ocurrences of MAX_TYPE */
 } type_t;
@@ -253,6 +253,7 @@ struct cobj_ops {
  */
 
 void cobj_print_op(val, val, val, struct strm_ctx *);
+void cptr_print_op(val, val, val, struct strm_ctx *);
 val cobj_equal_handle_op(val left, val right);
 void cobj_destroy_stub_op(val);
 void cobj_destroy_free_op(val);
@@ -939,12 +940,16 @@ val cobjp(val obj);
 mem_t *cobj_handle(val cobj, val cls_sym);
 struct cobj_ops *cobj_ops(val cobj, val cls_sym);
 val cptr(mem_t *ptr);
+val cptr_typed(mem_t *handle, val type_sym, struct cobj_ops *ops);
+val cptrp(val obj);
+val cptr_type(val cptr);
 val cptr_int(val n);
 val cptr_obj(val obj);
 val cptr_zap(val cptr);
 val cptr_free(val cptr);
 mem_t *cptr_get(val cptr);
-mem_t **cptr_addr_of(val cptr);
+mem_t *cptr_handle(val cobj, val type_sym, val self);
+mem_t **cptr_addr_of(val cptr, val type_sym, val self);
 val assoc(val key, val list);
 val assql(val key, val list);
 val rassoc(val key, val list);
