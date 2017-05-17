@@ -1281,7 +1281,7 @@ static val ffi_varray_in(struct txr_ffi_type *tft, int copy, mem_t *src,
 static val ffi_carray_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   mem_t *p = *coerce(mem_t **, src);
-  return make_carray(tft->mtypes, p, -1);
+  return make_carray(tft->mtypes, p, -1, nil);
 }
 
 static void ffi_carray_put(struct txr_ffi_type *tft, val carray, mem_t *dst,
@@ -2251,6 +2251,7 @@ struct carray {
   struct txr_ffi_type *eltft;
   mem_t *data;
   cnum nelem;
+  val ref;
 };
 
 static struct carray *carray_struct(val carray)
@@ -2277,6 +2278,7 @@ static void carray_mark_op(val obj)
 {
   struct carray *scry = carray_struct(obj);
   gc_mark(scry->eltype);
+  gc_mark(scry->ref);
 }
 
 static void carray_destroy_op(val obj)
@@ -2301,7 +2303,7 @@ static struct cobj_ops carray_owned_ops =
                 carray_mark_op,
                 cobj_eq_hash_op);
 
-val make_carray(val type, mem_t *data, cnum nelem)
+val make_carray(val type, mem_t *data, cnum nelem, val ref)
 {
   struct carray *scry = coerce(struct carray *, chk_malloc(sizeof *scry));
   val obj;
@@ -2309,8 +2311,10 @@ val make_carray(val type, mem_t *data, cnum nelem)
   scry->eltft = ffi_type_struct_checked(type);
   scry->data = data;
   scry->nelem = nelem;
+  scry->ref = nil;
   obj = cobj(coerce(mem_t *, scry), carray_s, &carray_borrowed_ops);
   scry->eltype = type;
+  scry->ref = ref;
   return obj;
 }
 
@@ -2356,13 +2360,18 @@ val carray_dup(val carray)
 
     carray->co.ops = &carray_owned_ops;
     scry->data = dup;
+    scry->ref = nil;
     return t;
   }
 }
 
 val carray_own(val carray)
 {
-  (void) carray_struct_checked(carray);
+  val self = lit("carray-own");
+  struct carray *scry = carray_struct_checked(carray);
+  if (scry->ref)
+    uw_throwf(error_s, lit("~a: cannot own buffer belonging to ~s"),
+              self, scry->ref, nao);
   carray->co.ops = &carray_owned_ops;
   return nil;
 }
@@ -2430,7 +2439,7 @@ val carray_blank(val nelem, val type)
     uw_throwf(error_s, lit("~a: negative array size"), self, nao);
   } else {
     mem_t *data = chk_calloc(nel, tft->size);
-    val carray = make_carray(type, data, nel);
+    val carray = make_carray(type, data, nel, nil);
     carray->co.ops = &carray_owned_ops;
     return carray;
   }
