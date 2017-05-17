@@ -73,6 +73,7 @@ val length_carray(val carray);
 mem_t *carray_get(val carray, val type, val self);
 val carray_vec(val vec, val type, val null_term_p);
 val carray_blank(val nelem, val type);
+val carray_buf(val buf, val type);
 val vec_carray(val carray, val null_term_p);
 val list_carray(val carray, val null_term_p);
 val carray_ref(val carray, val idx);
