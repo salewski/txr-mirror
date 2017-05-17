@@ -70,7 +70,7 @@ val long_s, ulong_s;
 val double_s;
 val void_s;
 
-val array_s, zarray_s;
+val array_s, zarray_s, carray_s;
 
 val struct_s;
 
@@ -1278,6 +1278,19 @@ static val ffi_varray_in(struct txr_ffi_type *tft, int copy, mem_t *src,
   return ffi_array_in_common(tft, copy, src, vec, self, nelem);
 }
 
+static val ffi_carray_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  mem_t *p = *coerce(mem_t **, src);
+  return make_carray(tft->mtypes, p, -1);
+}
+
+static void ffi_carray_put(struct txr_ffi_type *tft, val carray, mem_t *dst,
+                           val self)
+{
+  mem_t *p = carray_get(carray, tft->mtypes, self);
+  *coerce(mem_t **, dst) = p;
+}
+
 static val make_ffi_type_builtin(val syntax, val lisp_type,
                                  cnum size, ffi_type *ft,
                                  void (*put)(struct txr_ffi_type *,
@@ -1596,8 +1609,15 @@ val ffi_type_compile(val syntax)
       struct txr_ffi_type *tft = ffi_type_struct(type);
       tft->mtypes = tag;
       return type;
+    } else if (sym == carray_s) {
+      val element_type = ffi_type_compile(cadr(syntax));
+      val type = make_ffi_type_builtin(syntax, carray_s, sizeof (mem_t *),
+                                       &ffi_type_pointer,
+                                       ffi_carray_put, ffi_carray_get);
+      struct txr_ffi_type *tft = ffi_type_struct(type);
+      tft->mtypes = element_type;
+      return type;
     }
-
     uw_throwf(error_s, lit("~a: unrecognized type operator: ~s"),
               self, sym, nao);
   } else {
@@ -2226,6 +2246,261 @@ val ffi_out(val dstbuf, val obj, val type, val copy_p)
   return dstbuf;
 }
 
+struct carray {
+  val eltype;
+  struct txr_ffi_type *eltft;
+  mem_t *data;
+  cnum nelem;
+};
+
+static struct carray *carray_struct(val carray)
+{
+  return coerce(struct carray*, carray->co.handle);
+}
+
+static struct carray *carray_struct_checked(val carray)
+{
+  return coerce(struct carray*, cobj_handle(carray, carray_s));
+}
+
+static void carray_print_op(val obj, val out, val pretty, struct strm_ctx *ctx)
+{
+  struct carray *scry = carray_struct(obj);
+  put_string(lit("#<"), out);
+  obj_print_impl(obj->co.cls, out, pretty, ctx);
+  format(out, lit(" ~a"), if3(scry->nelem < 0,
+                              lit("unknown-len"), num(scry->nelem)), nao);
+  format(out, lit(" ~s>"), scry->eltype, nao);
+}
+
+static void carray_mark_op(val obj)
+{
+  struct carray *scry = carray_struct(obj);
+  gc_mark(scry->eltype);
+}
+
+static void carray_destroy_op(val obj)
+{
+  struct carray *scry = carray_struct(obj);
+  free(scry->data);
+  scry->data = 0;
+  free(scry);
+}
+
+static struct cobj_ops carray_borrowed_ops =
+  cobj_ops_init(eq,
+                carray_print_op,
+                cobj_destroy_free_op,
+                carray_mark_op,
+                cobj_eq_hash_op);
+
+static struct cobj_ops carray_owned_ops =
+  cobj_ops_init(eq,
+                carray_print_op,
+                carray_destroy_op,
+                carray_mark_op,
+                cobj_eq_hash_op);
+
+val make_carray(val type, mem_t *data, cnum nelem)
+{
+  struct carray *scry = coerce(struct carray *, chk_malloc(sizeof *scry));
+  val obj;
+  scry->eltype = nil;
+  scry->eltft = ffi_type_struct_checked(type);
+  scry->data = data;
+  scry->nelem = nelem;
+  obj = cobj(coerce(mem_t *, scry), carray_s, &carray_borrowed_ops);
+  scry->eltype = type;
+  return obj;
+}
+
+val carray_set_length(val carray, val nelem)
+{
+  struct carray *scry = carray_struct_checked(carray);
+  val self = lit("carray-set-length");
+  cnum nel = c_num(nelem);
+
+  if (carray->co.ops == &carray_owned_ops)
+    uw_throwf(error_s,
+              lit("~a: can't set length of owned carray ~s"), self,
+              carray, nao);
+
+  if (nel < 0)
+    uw_throwf(error_s,
+              lit("~a: can't set length of ~s to negative value"), self,
+              carray, nao);
+
+  scry->nelem = nel;
+  return nil;
+}
+
+val carray_dup(val carray)
+{
+  val self = lit("carray-dup");
+  struct carray *scry = carray_struct_checked(carray);
+
+  if (carray->co.ops == &carray_owned_ops) {
+    return nil;
+  } else if (scry->nelem < 0) {
+    uw_throwf(error_s, lit("~a: size of ~s array unknown"), self, carray, nao);
+  } else if (scry->data == 0) {
+    uw_throwf(error_s, lit("~a: ~s: array data pointer is null"),
+              self, carray, nao);
+  } else {
+    cnum elsize = scry->eltft->size;
+    cnum size = scry->nelem * elsize;
+    mem_t *dup = chk_copy_obj(scry->data, scry->nelem * scry->eltft->size);
+
+    if (size < scry->nelem || size < elsize)
+      uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
+
+    carray->co.ops = &carray_owned_ops;
+    scry->data = dup;
+    return t;
+  }
+}
+
+val carray_own(val carray)
+{
+  (void) carray_struct_checked(carray);
+  carray->co.ops = &carray_owned_ops;
+  return nil;
+}
+
+val carray_free(val carray)
+{
+  val self = lit("carray-free");
+  struct carray *scry = carray_struct_checked(carray);
+
+  if (carray->co.ops == &carray_owned_ops) {
+    free(scry->data);
+    scry->data = 0;
+  } else {
+    uw_throwf(error_s, lit("~a: cannot free unowned carray ~s"),
+              self, carray, nao);
+  }
+
+  return nil;
+}
+
+val carray_type(val carray)
+{
+  struct carray *scry = carray_struct_checked(carray);
+  return scry->eltype;
+}
+
+val length_carray(val carray)
+{
+  struct carray *scry = carray_struct_checked(carray);
+  return num(scry->nelem);
+}
+
+mem_t *carray_get(val carray, val type, val self)
+{
+  struct carray *scry = carray_struct_checked(carray);
+  if (scry->eltype != type)
+    uw_throwf(error_s, lit("~a: ~s is not of element type ~!~s"),
+              self, carray, type, nao);
+  return scry->data;
+}
+
+val carray_vec(val vec, val type, val null_term_p)
+{
+  val len = length(vec);
+  val nt_p = default_null_arg(null_term_p);
+  cnum i, l = c_num(if3(nt_p, succ(len), len));
+  val carray = carray_blank(len, type);
+
+  for (i = 0; i < l; i++) {
+    val ni = num_fast(i);
+    val el = ref(vec, ni);
+    carray_refset(carray, ni, el);
+  }
+
+  return carray;
+}
+
+val carray_blank(val nelem, val type)
+{
+  val self = lit("carray-blank");
+  cnum nel = c_num(nelem);
+  struct txr_ffi_type *tft = ffi_type_struct(type);
+
+  if (nel < 0) {
+    uw_throwf(error_s, lit("~a: negative array size"), self, nao);
+  } else {
+    mem_t *data = chk_calloc(nel, tft->size);
+    val carray = make_carray(type, data, nel);
+    carray->co.ops = &carray_owned_ops;
+    return carray;
+  }
+}
+
+val vec_carray(val carray, val null_term_p)
+{
+  val nt_p = default_null_arg(null_term_p);
+  struct carray *scry = carray_struct_checked(carray);
+  cnum i, l = if3(nt_p, scry->nelem - 1, scry->nelem);
+  val vec = vector(num(l), nil);
+  for (i = 0; i < l; i++) {
+    val ni = num_fast(i);
+    val el = carray_ref(carray, ni);
+    set(vecref_l(vec, ni), el);
+  }
+  return vec;
+}
+
+val list_carray(val carray, val null_term_p)
+{
+  val nt_p = default_null_arg(null_term_p);
+  struct carray *scry = carray_struct_checked(carray);
+  cnum i, l = if3(nt_p, scry->nelem - 1, scry->nelem);
+  list_collect_decl (list, ptail);
+  for (i = 0; i < l; i++) {
+    val ni = num_fast(i);
+    val el = carray_ref(carray, ni);
+    ptail = list_collect(ptail, el);
+  }
+  return list;
+}
+
+val carray_ref(val carray, val idx)
+{
+  val self = lit("carray-ref");
+  struct carray *scry = carray_struct_checked(carray);
+  cnum ix = c_num(idx);
+
+  if (ix < 0 || (scry->nelem >= 0 && ix >= scry->nelem)) {
+    uw_throwf(error_s, lit("~a: ~s: index ~s out of bounds"),
+              self, carray, idx, nao);
+  } else {
+    struct txr_ffi_type *eltft = scry->eltft;
+    if (scry->data == 0)
+      uw_throwf(error_s, lit("~a: ~s: array was freed"),
+                self, carray, nao);
+    return eltft->get(eltft, scry->data + eltft->size * ix, self);
+  }
+}
+
+val carray_refset(val carray, val idx, val newval)
+{
+  val self = lit("carray-refset");
+  struct carray *scry = carray_struct_checked(carray);
+  cnum ix = c_num(idx);
+
+  if (ix < 0 || (scry->nelem >= 0 && ix >= scry->nelem)) {
+    uw_throwf(error_s, lit("~a: ~s: index ~s out of bounds"),
+              self, carray, idx, nao);
+  } else {
+    struct txr_ffi_type *eltft = scry->eltft;
+    if (scry->data == 0)
+      uw_throwf(error_s, lit("~a: ~s: array was freed"),
+                self, carray, nao);
+    eltft->put(eltft, newval, scry->data + eltft->size * ix, self);
+    return newval;
+  }
+}
+
 void ffi_init(void)
 {
   prot1(&ffi_typedef_hash);
@@ -2252,6 +2527,7 @@ void ffi_init(void)
   void_s = intern(lit("void"), user_package);
   array_s = intern(lit("array"), user_package);
   zarray_s = intern(lit("zarray"), user_package);
+  carray_s = intern(lit("carray"), user_package);
   struct_s = intern(lit("struct"), user_package);
   str_d_s = intern(lit("str-d"), user_package);
   wstr_s = intern(lit("wstr"), user_package);
@@ -2280,6 +2556,18 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-in"), user_package), func_n4(ffi_in));
   reg_fun(intern(lit("ffi-get"), user_package), func_n2(ffi_get));
   reg_fun(intern(lit("ffi-out"), user_package), func_n4(ffi_out));
+  reg_fun(intern(lit("carray-set-length"), user_package), func_n2(carray_set_length));
+  reg_fun(intern(lit("carray-dup"), user_package), func_n1(carray_dup));
+  reg_fun(intern(lit("carray-own"), user_package), func_n1(carray_own));
+  reg_fun(intern(lit("carray-free"), user_package), func_n1(carray_free));
+  reg_fun(intern(lit("carray-type"), user_package), func_n1(carray_type));
+  reg_fun(intern(lit("length-carray"), user_package), func_n1(length_carray));
+  reg_fun(intern(lit("carray-vec"), user_package), func_n3o(carray_vec, 2));
+  reg_fun(intern(lit("carray-blank"), user_package), func_n2(carray_blank));
+  reg_fun(intern(lit("vec-carray"), user_package), func_n2o(vec_carray, 1));
+  reg_fun(intern(lit("list-carray"), user_package), func_n2o(list_carray, 1));
+  reg_fun(intern(lit("carray-ref"), user_package), func_n2(carray_ref));
+  reg_fun(intern(lit("carray-refset"), user_package), func_n3(carray_refset));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
   ffi_init_extra_types();

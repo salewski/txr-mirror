@@ -37,7 +37,7 @@ extern val long_s, ulong_s;
 extern val void_s;
 extern val double_s;
 
-extern val array_s, zarray_s;
+extern val array_s, zarray_s, carray_s;
 
 extern val struct_s;
 
@@ -63,4 +63,18 @@ val ffi_put(val obj, val type);
 val ffi_in(val srcbuf, val obj, val type, val copy_p);
 val ffi_get(val srcbuf, val type);
 val ffi_out(val dstbuf, val obj, val type, val copy_p);
+val make_carray(val type, mem_t *data, cnum nelem);
+val carray_set_length(val carray, val nelem);
+val carray_dup(val carray);
+val carray_own(val carray);
+val carray_free(val carray);
+val carray_type(val carray);
+val length_carray(val carray);
+mem_t *carray_get(val carray, val type, val self);
+val carray_vec(val vec, val type, val null_term_p);
+val carray_blank(val nelem, val type);
+val vec_carray(val carray, val null_term_p);
+val list_carray(val carray, val null_term_p);
+val carray_ref(val carray, val idx);
+val carray_refset(val carray, val idx, val newval);
 void ffi_init(void);
