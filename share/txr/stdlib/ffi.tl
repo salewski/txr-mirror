@@ -98,3 +98,6 @@
 
 (defmacro sizeof (type)
   (ffi-size (ffi-type-compile type)))
+
+(defmacro ffi (type)
+  ^(ffi-type-compile ',type))

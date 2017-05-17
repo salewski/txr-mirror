@@ -54473,6 +54473,21 @@ macro expander. That is to say, the macro expands
 to that integer, such that there is no run-time
 computation.
 
+.coNP Macro @ ffi
+.synb
+.mets (ffi << type-syntax )
+.syne
+.desc
+The
+.code ffi
+macro provides a shorthand notation for compiling a literal
+FFI type expression to the corresponding type object. The
+following equivalence holds:
+
+.cblk
+  (ffi expr)  <-->  (ffi-type-compile 'expr)
+.cble
+
 .coNP Functions @ ffi-put and @ ffi-put-into
 .synb
 .mets (ffi-put < obj << type )
