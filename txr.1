@@ -53117,11 +53117,9 @@ in the C language,
 .code typedef
 names can be globally defined, using the
 .code ffi-typedef
-function, or the macro
-.codn deffi-type .
-These
+function, or the
 .code typedef
-names are also symbols.
+macro.
 
 Like in the C language,
 .code typedef
@@ -54348,13 +54346,13 @@ The result value of a
 form is
 .metn name .
 
-.coNP Macro @ deffi-type
+.coNP Macro @ typedef
 .synb
-.mets (deffi-type < name << type-syntax )
+.mets (typedef < name << type-syntax )
 .syne
 .desc
 The
-.code deffi-type
+.code typedef
 macro provides a convenient way to define type aliases.
 
 The
@@ -54364,7 +54362,7 @@ expression is compiled as FFI syntax, and the
 symbol is installed as an alias denoting that type.
 
 The
-.code deffi-type
+.code typedef
 macro yields the compiled version of
 .meta type-syntax
 as its value.

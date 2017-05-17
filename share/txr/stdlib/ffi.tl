@@ -72,6 +72,9 @@
 (defmacro deffi-type (name type-expr)
   ^(ffi-typedef ',name (ffi-type-compile ',type-expr)))
 
+(defmacro typedef (name type-expr)
+  ^(ffi-typedef ',name (ffi-type-compile ',type-expr)))
+
 (defun sys:deffi-cb-expander (f name rettype argtypes safe-p abort-retval)
   (let ((ret-type-sym (gensym "ret-type-"))
         (arg-types-sym (gensym "arg-types-"))

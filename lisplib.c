@@ -524,7 +524,7 @@ static val ffi_set_entries(val dlt, val fun)
 {
   val name[] = {
     lit("with-dyn-lib"), lit("deffi"), lit("deffi-type"), lit("deffi-cb"),
-    lit("sizeof"),
+    lit("typedef"), lit("sizeof"),
     nil
   };
   set_dlt_entries(dlt, name, fun);
