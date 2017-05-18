@@ -619,16 +619,19 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>#\\ {
   yy_push_state(CHRLIT, yyscanner);
+  yylval->lineno = yyextra->lineno;
   return HASH_BACKSLASH;
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>#b' {
   yy_push_state(BUFLIT, yyscanner);
+  yylval->lineno = yyextra->lineno;
   return HASH_B_QUOTE;
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>#[/] {
   yy_push_state(REGEX, yyscanner);
+  yylval->lineno = yyextra->lineno;
   return HASH_SLASH;
 }
 
@@ -639,21 +642,25 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>#\" {
   yy_push_state(WLIT, yyscanner);
+  yylval->lineno = yyextra->lineno;
   return WORDS;
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>#\*\" {
   yy_push_state(WLIT, yyscanner);
+  yylval->lineno = yyextra->lineno;
   return WSPLICE;
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>#\` {
   yy_push_state(QWLIT, yyscanner);
+  yylval->lineno = yyextra->lineno;
   return QWORDS;
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>#\*\` {
   yy_push_state(QWLIT, yyscanner);
+  yylval->lineno = yyextra->lineno;
   return QWSPLICE;
 }
 
