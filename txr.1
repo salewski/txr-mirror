@@ -52994,9 +52994,10 @@ data types, together with memory-management semantics pertinent to the transfer
 of data between software components. The notation is used to describe the
 arguments and return values of functions in external libraries, and of Lisp
 callback functions that can be called from those libraries.  Driven by the
-compiled representation of the type notation, The FFI module performs
+compiled representation of the type notation, the FFI module performs
 transparent conversions between Lisp data types and C data types, and
-automatically manages memory around foreign calls and incoming callbacks.
+automatically manages memory around foreign calls and incoming callbacks,
+for many common interfacing conventions.
 
 The FFI module consists of a library of functions which provide all of its
 semantics.  On top of these functions, the FFI module provides a number of
@@ -53008,6 +53009,14 @@ by value. Passing arrays by value isn't a feature of the C language syntax;
 from the C point of view, these by-value array objects in the \*(TX FFI
 type system are equivalent to C arrays encapsulated in
 .codn struct -s.
+
+A
+.code carray
+type is provided for situations when foreign code generates arrays of
+undeclared, dynamic length, other than strings, and returns these arrays
+by the usual convention of pointer to the first element.  The handling of
+.code carray
+requires more responsibility from the application.
 
 .NP* Cautionary Notes
 
@@ -53906,6 +53915,92 @@ The get semantics of
 .code buf
 is that a Lisp object is created using a dynamically allocated copy
 of the memory.
+
+.meIP (carray << type )
+The
+.code carray
+type corresponds to a C pointer, in connection with the concept
+of representing a variable length array that is passed and returned
+as a pointer to the base element. On the Lisp side, the
+.code carray
+FFI type corresponds to the
+.code carray
+Lisp type. The
+.code carray
+Lisp type is similar to
+.codn cptr ,
+but supports array indexing operations, and some other features.
+It can be regarded as a semantic cross between
+.code cptr
+and
+.codn buf .
+
+The get semantics of
+.code carray
+is simply that a pointer is retrieved from memory and converted to
+a freshly allocated
+.code carray
+object which holds that pointer, and is marked as having an unknown
+size. No copy is made of the underlying array.  When the application
+determines the size of the array, it can inform that object by means
+of calling the
+.code carray-set-length
+function.
+
+The put semantics of the
+.code carray
+FFI type is simply to write, into the argument space, the pointer which the
+object holds.  The object must be a
+.code carray
+whose element type matches that of the FFI type.
+
+The
+.code carray
+type lacks in or out semantics, since FFI doesn't manage any foreign
+memory for the passage of a
+.code carray
+and any two-directional communication of data through the array
+handled by performing direct operations on the
+.code carray
+Lisp object in application code.
+
+The
+.code carray
+type is particularly useful in situations when
+foreign code generates such an array, and the size of that array
+isn't known from the object itself.
+
+It is also useful, instead of
+.code varray
+for passing a dynamic array to foreign code in situations when the application benefits
+from managing the memory for the array. The
+.code varray
+FFI type's disadvantage relative to
+.code carray
+is that
+.code varray
+converts an entire Lisp sequence to a temporarily allocated
+array, which is used only for one call. By contrast, the
+.code carray
+object holds the C representation which Lisp code can manipulate;
+and that representation is passed directly, just like in the case of
+.codn buf .
+
+Unlike
+.codn buf ,
+there is no dynamic variant of
+.codn carray .
+The transfer of ownership of a
+.code carray
+requires the use of explicit operations like
+.code carray-free
+and
+.codn carray-own .
+
+It is possible to create a
+.code carray
+view over a buffer, using
+.codn carray-buf .
 .PP
 
 The following additional typedef names are defined denoting some common
@@ -54685,55 +54780,481 @@ in order to extract the return value of foreign function
 calls, and by the FFI callback mechanism to extract the
 arguments coming into a callback.
 
-.coNP Function @ ffi-out
+.coNP Function @ carray-vec
 .synb
-.mets (ffi-out < dst-buf < obj < type << copy-p )
+.mets (carray-vec < vec < type <> [ null-term-p ])
 .syne
 .desc
 The
-.meta ffi-out
-function places an foreign representation of Lisp object
-.meta obj
-into the buffer
-.metn dst-buf ,
-according to the FFI type
-.metn type .
+.code carray-vec
+function allocates storage for the representation of a foreign array, and
+returns a
+.code carray
+object which holds a pointer to that storage.
+
+The argument
+.metn type ,
+which must be a compiled FFI type,
+is retained as the
+.code carray
+object's element type.
+
+Prior to returning, the function
+initializes the foreign array by converting the elements of
+.meta vec
+into elements of the foreign array.
+The conversion is performed using the put semantics of
+.metn type ,
+which is a compiled FFI type.
+
+The length of the returned
+.code carray
+is determined from the length of
+.meta vec
+and from the value of the Boolean argument
+.metn null-term-p .
+
+If
+.meta null-term-p
+is
+.codn nil ,
+then the length of the
+.code carray
+is the same as that of
+.metn vec .
+
+A true value of
+.meta null-term-p
+indicates null termination.
+This causes the length of the
+.code carray
+to be one greater than that of
+.metn vec ,
+and the extra element allocated to the foreign array is filled with zero bytes.
+
+.coNP Function @ carray-blank
+.synb
+.mets (carray-blank < length << type )
+.syne
+.desc
+The
+.code carray-blank
+function allocates storage for the representation of a foreign array,
+filling that storage with zero bytes, and returns a
+.code carray
+object which holds a pointer to that storage.
+
+The argument
+.metn type ,
+which must be a compiled FFI type,
+is retained as the
+.code carray
+object's element type.
 
 The
-.meta dst-buf
-argument must be a buffer large enough to hold the representation.
+.meta length
+argument must be a nonnegative integer; it specifies the number
+of elements in the foreign array and is retained as the
+.code carray
+object's length.
+
+The size of the foreign array is the product of the size of
+.meta type
+as reported by the
+.code ffi-size
+function, and of
+.metn length .
+
+.coNP Function @ carray-buf
+.synb
+.mets (carray-buf < buf << type )
+.syne
+.desc
+The
+.code carray-buf
+function creates a
+.code carray
+object which refers to the storage provided and managed by the buffer object
+.metn buf ,
+providing a view of that storage, and manipulation thereof, as an array.
+
 The
 .meta type
-argument must be a compiled FFI type.
+argument must be a compiled FFI type whose size is nonzero.
+The bytewise length of
+.metn buf ,
+as reported by
+.code length-buf
+function ,
+is divided by the size of
+.metn type ,
+as reported by
+.codn ffi-size .
+The resulting quotient represents the length (number of elements) of the
+.code carray
+object.
+
+Note: the returned
+.code carray
+object holds a reference to
+.metn buf ,
+preventing
+.meta buf
+from being reclaimed by garbage collection, thereby protecting the
+underlying storage from becoming invalid. A subsequent invocation of
+.code carray-own
+operation releases this reference.
+
+Note: the relationship between the
+.code carray
+object and
+.meta buf
+is inherently unsafe: if
+.meta buf
+is subsequently subject to operations which reallocate the storage,
+such as
+.code buf-set-length
+the pointer stored inside the referencing
+.code carray
+object becomes invalid, and operations involving that pointer
+have undefined behavior.
+
+Note: if the length of the buffer is not evenly divisible by the size of the
+type, the calculated number of elements is rounded down. The trailing portion
+of the buffer corresponding to the division remainder, being insufficient
+to constitute a whole array element, is excluded from the array view.
+
+.coNP Function @ length-carray
+.synb
+.mets (length-carray << carray )
+.syne
+.desc
 The
-.meta obj
-argument must be a value compatible with the conversions implied by
-.metn type .
+.code length-carry
+function returns the length of the
+.meta carray
+argument, which must be an object of type
+.codn carray .
+
+If
+.meta carray
+has an unknown length, then
+.code nil
+is returned.
+
+.coNP Function @ carray-set-length
+.synb
+.mets (carray-set-length < carray << length )
+.syne
+.desc
+The
+.code carry-set-length
+attempts to change the length of
+.metn carray ,
+which must be an object of
+.code carray
+type.
 
 The
-.meta copy-p
-argument is a Boolean flag described below.
+.meta length
+argument indicates the new length, which must be
+a non-negative integer.
+
+The operation throws an
+.code error
+exception if
+.meta length
+is negative.
+
+An
+.code error
+exception is also thrown if
+.meta carray
+is an object which owns the underlying storage. There is no provision in the
+.code carray
+type to change the storage size.
+
+It is permissible to change the length of a
+.code carray
+object which acts as a view into a buffer (as constructed via the
+.code carray-buf
+operation).
+
+This creates a potentially unsafe situation in which the length requires
+a larger amount of backing storage than is provided by the buffer.
+
+.coNP Function @ carray-ref
+.synb
+.mets (carray-ref < carray << idx )
+.syne
+.desc
+The
+.code carray-ref
+function accesses an element of the foreign array
+.metn carray ,
+converting that element to a Lisp value, which is returned.
 
 The
-.code ffi-out
-operation corresponds to the "out semantics" performed by the FFI
-callback mechanism when a callback returns. It is performed on all
-arguments, and also used to produce the callback's return value.
+.meta idx
+argument must be a non-negative integer. If
+.meta carray
+has a known length,
+.meta idx
+must be less than the length.
+
+If
+.meta carray
+has an unknown length, then the the access is permitted regardless of how
+positive is the value of
+.metn idx .
+Whether the access has well-defined behavior depends on the actual extent of
+the underlying array storage.
+
+The validity of any access to the underlying storage depends on the
+validity of the pointer to that storage.
+
+The access to the array storage proceeds as follows. Every
+.code carray
+object has an element type, which is a compiled FFI type.
+A byte offset
+address is calculated by multiplying the size of the element type of
+.meta carray
+by
+.metn idx .
+Then, the get semantics of the element type is invoked to convert, to
+a Lisp object, a region of data starting at calculated byte offset in the array
+storage. The resulting object is returned.
+
+.coNP Function @ carray-refset
+.synb
+.mets (carray-refset < carray < idx << new-val )
+.syne
+.desc
+The
+.code carray-refset
+function accesses an element of the foreign array
+.metn carray ,
+overwriting that element with a new value obtained
+from a conversion of the Lisp value
+.metn new-val .
+
+The return value is
+.metn new-val .
 
 The
-.meta copy-p
-flag being true is consistent with the semantics of producing
-a return value: this means that
-.meta obj
-itself must be encoded into the buffer.
+.meta idx
+argument must be a non-negative integer. If
+.meta carray
+has a known length,
+.meta idx
+must be less than the length.
+
+If
+.meta carray
+has an unknown length, then the the access is permitted regardless of how
+positive is the value of
+.metn idx .
+Whether the access has well-defined behavior depends on the actual extent of
+the underlying array storage.
+
+The validity of any access to the underlying storage depends on the
+validity of the pointer to that storage.
+
+The access to the array storage proceeds as follows. Every
+.code carray
+object has an element type, which is a compiled FFI type.
+A byte offset
+address is calculated by multiplying the size of the element type of
+.meta carray
+by
+.metn idx .
+Then, the put semantics of the element type is invoked to convert
+.meta new-val
+to a foreign representation, which is written into the array storage
+started at the calculated byte offset.
+
+If
+.meta new-val
+has a type which is not compatible with the element type, or a value which
+is out of range or otherwise unsuitable, an exception is thrown.
+
+.coNP Functions @ carray-dup and @ carray-own
+.synb
+.mets (carray-dup << carray )
+.mets (carray-own << carray )
+.syne
+.desc
 The
-.meta copy-p
-flag being false conveys the semantics that the destination buffer
-represents a function argument that was previously decoded with
-"get semantics" to produce
-.meta obj
-and that the "out semantics" operation only updates the indirect,
-by-pointer parts of the object.
+.code carray-dup
+function acts upon a
+.code carray
+object which doesn't own its underlying array storage.
+It allocates a duplicate copy of the array storage referenced by
+.metn carray ,
+and assigns to
+.meta carray
+the new copy. Then it marks
+.meta carray
+as owning that storage. Lastly, if
+.meta carray
+references another object, that reference is removed;
+.meta carray
+no longer prevents the other object from being reclaimed by
+the garbage collector.
+
+If
+.meta carray
+already owns its storage, then this function has no effect.
+
+If
+.meta carray
+has an unknown size, then an error exception is thrown.
+
+A
+.code carray
+produced by the functions
+.code carray-vec
+or
+.code carray-blank
+already owns its storage.
+
+A
+.code carray
+object does not own its storage if it is produced by
+.code carray-buf
+or by the conversion of a foreign pointer under the control of the
+.code carray
+FFI type.
+
+Because
+.code carray
+objects derived from foreign pointers via FFI have an unknown size,
+before using
+.codn carray-dup ,
+the application must determine the length of the array, and call
+.code carray-set-length
+to establish that length.
+
+After
+.codn carray-dup ,
+the length may not be altered.
+
+The
+.code carray-dup
+function returns
+.code t
+if it has performed the duplication operation. If it has done
+nothing, it returns
+.codn nil .
+
+The
+.code carray-own
+function closely resembles
+.codn carray-dup ,
+differing from that function only in one crucial detail:
+instead of allocating a duplicate copy of the underlying array storage,
+the
+.code carray-own
+function causes
+.meta carray
+to
+.B assume
+ownership of the existing storage. Also,
+.meta carray-own
+returns
+.codn nil .
+
+In all other regards, the descriptions of
+.code carray-dup
+apply to
+.codn carray-own .
+
+.coNP Function @ carray-free
+.synb
+.mets (carray-free << carray )
+.syne
+.desc
+If
+.meta carray
+is a
+.code carray
+object which owns the storage to which it refers, then
+.code carray-free
+function liberates that storage by passing the pointer to the C
+library function
+.codn free .
+It then replaces that pointer with a null pointer, and
+changes the size to zero.
+
+If
+.meta carray
+doesn't own the storage, an exception is thrown.
+
+.coNP Function @ carray-type
+.synb
+.mets (carray-type << carray )
+.syne
+.desc
+The
+.code carray-type
+function returns the element type of
+.metn carray ,
+a compiled FFI type.
+
+.coNP Functions @ vec-carray and @ list-carray
+.synb
+.mets (vec-carray < carray <> [ null-term-p ])
+.mets (list-carray < carray <> [ null-term-p ])
+.syne
+.desc
+The
+.code vec-carray
+and
+.code list-carray
+functions convert the array storage of
+.meta carray
+to a freshly constructed object representation: vector, and list, respectively.
+The new vector or list is returned.
+
+The
+.meta carray
+object must have a known size; an
+.code error
+exception is thrown if these functions are invoked on a
+.code carray
+object of unknown size.
+
+The effective length of the new vector or list is derived
+from the length of
+.metn carray ,
+taking into account the value of
+.metn null-term-p .
+
+The
+.meta null-term-p
+Boolean parameter defaults to
+.codn nil .
+If specified as true, then it has the effect that the
+effective length of the returned vector or list is
+one less than that of
+.metn carray :
+in other words, a true value of
+.meta null-term-p
+indicates that
+.meta carray
+holds storage which represents a null-terminated array, and the
+terminating null element is to be excluded from the conversion.
+
+If
+.meta null-term-p
+is true, but the length of
+.meta carray
+is already zero, then it has no effect; the effective length remains zero,
+and a zero-length vector or list is returned.
+
+Conversion of the foreign array to the vector or list is performed
+by iterating over all of its elements, starting from element zero, up to the
+element before the effective length, 
 
 .SH* INTERACTIVE LISTENER
 
