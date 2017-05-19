@@ -2379,6 +2379,7 @@ val carray_free(val carray)
   if (carray->co.ops == &carray_owned_ops) {
     free(scry->data);
     scry->data = 0;
+    scry->nelem = 0;
   } else {
     uw_throwf(error_s, lit("~a: cannot free unowned carray ~s"),
               self, carray, nao);
