@@ -2397,7 +2397,7 @@ val carray_type(val carray)
 val length_carray(val carray)
 {
   struct carray *scry = carray_struct_checked(carray);
-  return num(scry->nelem);
+  return if3(scry->nelem < 0, nil, num(scry->nelem));
 }
 
 mem_t *carray_get(val carray, val type, val self)
