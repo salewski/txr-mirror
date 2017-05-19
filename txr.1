@@ -53399,25 +53399,39 @@ The
 .code buf
 type creates a correspondence between the \*(TL
 .code buf
-type and a C pointer to a block of arbitrary data. Note that there is a
-parametrized version of the
+type and a C pointer to a block of arbitrary data. Note that there also
+exists a parametrized version of the
 .code buf
 and
 .code buf-d
-type which specified a size.
+type syntax which specifies a size.
 
 Under the
 .code buf
 type's put operation, no memory allocation takes place. The pointer to the
 buffer object's data is is written into the argument space, so the foreign
-function can manipulate the buffer directly. The in operation has usefully
-nuanced semantics. In the situation when it is required to extract an updated
-object, it compares the original buffer pointer to the pointer
-that had been written to the argument space. If they are identical, then
-it yields the original object. Otherwise it allocates a buffer equal in size
-to the original one and copies in the new data from the new pointer.
-In all other cases it yields the original object.  The get operation is
-not meaningful for an unsized
+function can manipulate the buffer directly. If the object isn't a buffer
+but rather the symbol
+.codn nil ,
+then a null pointer is written.
+
+The
+.code buf
+in operation has semantics
+as follows. In the pass-by-pointer nuance, buffer pointer currently in the
+argument space is compared to the original one which had been written there
+from the buffer object.  If they are identical, then the in operation
+yields yields the original buffer object. Otherwise, if the altered
+pointer is non-null,
+it allocates a new buffer equal in size to the original one and copies in the
+new data from the new pointer that was placed into the argument space by the
+foreign function.  If the altered pointer is null, then instead of allocating a
+new buffer, the object
+.code nil
+is returned.
+The by-value nuance of the in operation does nothing.
+
+The get operation is not meaningful for an unsized
 .codn buf :
 it yields a zero length
 .code buf
@@ -53427,15 +53441,55 @@ type should be used for retrieving a buffer with a specific fixed size.
 
 The
 .code buf-d
-type differs from
-.code buf
-in that the in operation, in the case when the buffer pointer has changed,
-assumes ownership of the new pointer. When called upon to product an updated
-object (pass by pointer), it creates a buffer which owns that buffer, rather
-than creating a copy. If an updated object is not required (pass by value), it
-releases the memory by passing the pointer to the
-.code free
-function.
+type has different memory management from
+.codn buf .
+The put operation of
+.code buf-d
+allocates a copy of the buffer and writes into the argument space
+a pointer to the copy. It is assumed that the foreign function takes
+ownership of the copy.
+
+The in operation of
+.code buf-d
+is also different. The by-value nuance of the in operation
+is a no-op, like that of
+.codn buf .
+The by-pointer nuance doesn't attempt to compare the previously written
+pointer to the current value. Rather, it assumes that if there is any non-null
+pointer value in the argument space, then it should take ownership of
+that object and return it as a new buffer. Thus if two-way dynamic buffer
+passing is requested using
+.code "(buf buf-d)"
+it means that the foreign function must replace the pointer with a null
+to indicate that it has consumed the buffer. Any non-null value in the
+argument space indicates that the foreign function has either rejected
+the pointer (not taken ownership), or has replaced it with a new object,
+whose ownership is being passed.
+
+Unidirectional by-pointer passing of a
+.code buf-d
+can be performed using the types
+.code "(ptr-out buf-d)"
+or
+.codn "(ptr-int buf-d)" .
+The former type will not invoke
+.codn buf-d 's
+put operation. It will only allocate a pointer-sized space, without
+initializing it. After the foreign call, the by-pointer semantics of the
+in operation will be triggered If the foreign function places a non-null
+pointer into the space, its ownership will be seized by a newly instantiated
+buffer object. Otherwise the function must place a null pointer, which
+results in a
+.code nil
+value emerging from the in operation as documented above. The latter type will
+achieve a transfer of ownership in the other direction, by invoking the
+.code buf-d
+put operation, which places a copy of the buffer into the pointer-sized
+location prepared in the argument space. After
+the call, it will invoke the by-value in semantics of
+.codn buf-d ,
+which is a no-op: thus no attempt is made to extract a buffer, even if
+the foreign function alters the pointer.
 
 .ccIP @ closure
 The
