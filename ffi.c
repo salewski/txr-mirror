@@ -703,7 +703,7 @@ static val ffi_buf_in(struct txr_ffi_type *tft, int copy, mem_t *src,
                       val obj, val self)
 {
   mem_t **loc = coerce(mem_t **, src);
-  mem_t *origptr = buf_get(obj, self);
+  mem_t *origptr = if3(obj, buf_get(obj, self), 0);
 
   if (copy && *loc != origptr)
     obj = if2(*loc, make_duplicate_buf(length_buf(obj), *loc));
@@ -734,7 +734,7 @@ static val ffi_buf_d_in(struct txr_ffi_type *tft, int copy, mem_t *src,
   mem_t **loc = coerce(mem_t **, src);
 
   if (copy) {
-    obj = if2(*loc, make_borrowed_buf(length_buf(obj), *loc));
+    obj = if2(*loc, make_borrowed_buf(num(tft->nelem), *loc));
     *loc = 0;
   }
 
