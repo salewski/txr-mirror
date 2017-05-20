@@ -54686,6 +54686,50 @@ parameter, since unsafe callbacks do not use it.
 
 .cble
 
+.coNP Macro @ deffi-var
+.synb
+.mets (deffi-var < name < var-expr << type )
+.syne
+.desc
+The
+.code deffi-var
+macro defines a global symbol macro which expands to an expression
+accessing a foreign variable, creating the illusion that the
+variable is available as a Lisp variable holding a Lisp data type.
+
+The
+.meta name
+argument gives the name of the macro.
+
+The
+.meta var-expr
+argument must evaluate to a
+.code cptr
+object which holds a pointer to the address of the foreign
+variable.
+
+The
+.meta type
+argument expresses the variable type in FFI type syntax.
+
+Once the variable is defined, accessing the macro symbol
+.meta name
+performs a get operation on the foreign variable, yielding
+the conversion of that variable to a Lisp value.
+An assignment to the symbol performs a put operation,
+converting a Lisp object to a value which overwrites
+the object.
+
+Note: FFI memory management is not helpful in the use of
+variables. Suppose a string value is
+stored in a variable of type
+.codn str .
+This means that FFI dynamically allocates a buffer which
+stores the UTF-8 encoded version of the string, and this
+buffer is placed into the foreign variable.
+Then suppose another such assignment takes place.
+The previous value is simply overwritten without being
+freed.
 .coNP Macro @ typedef
 .synb
 .mets (typedef < name << type-syntax )

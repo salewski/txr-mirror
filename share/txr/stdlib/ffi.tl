@@ -96,6 +96,21 @@
 (defmacro deffi-cb-unsafe (:form f name rettype argtypes)
   (sys:deffi-cb-expander f name rettype argtypes nil nil))
 
+(defmacro deffi-var (:form f name var-expr type)
+  (let ((var-ref (cond
+                   ((stringp var-expr)
+                      ^(dlsym-checked sys:ffi-lib ,var-expr))
+                   ((consp var-expr)
+                      (mac-param-bind f (sym ver) var-expr
+                        ^(dlvsym-checked sys:ffi-lib ,sym ,ver)))
+                   (t var-expr)))
+        (type-sym (gensym "type-"))
+        (var-sym (gensym "var-")))
+    ^(progn
+       (defvarl ,type-sym (ffi ,type))
+       (defvarl ,var-sym (carray-cptr ,var-ref ,type-sym 1))
+       (defsymacro ,name (carray-ref ,var-sym 0)))))
+
 (defmacro sizeof (type)
   (ffi-size (ffi-type-compile type)))
 
