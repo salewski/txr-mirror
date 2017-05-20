@@ -45022,6 +45022,31 @@ record,
 .code awk
 terminates.
 
+.coNP Macro @ again
+.synb
+.mets (again)
+.syne
+.desc
+The awk macro
+.code again
+may be invoked in a condition-pattern clause. It terminates the
+processing of that clause, and all subsequent clauses.
+Then, the current value of the record, namely the datum stored
+in the Awk variable
+.codn rec ,
+is delimited into fields, and all of the condition-pattern clauses
+are processed again.
+
+No other state is modified. In particular, the record number
+.code nr
+and the
+.code orec
+variable holding the original record both retain their current values.
+
+Note: this is an original feature in the \*(TL
+.code awk
+macro, which has no counterpart in POSIX or GNU Awk.
+
 .coNP Macro @ next-file
 .synb
 .mets (next-file)
