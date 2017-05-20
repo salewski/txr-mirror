@@ -2615,6 +2615,14 @@ val carray_buf(val buf, val type)
   return make_carray(type, data, nelem, buf);
 }
 
+val carray_cptr(val cptr, val type, val len)
+{
+  mem_t *data = cptr_get(cptr);
+  cnum nelem = c_num(default_arg(len, negone));
+  (void) ffi_type_struct(type);
+  return make_carray(type, data, nelem, 0);
+}
+
 val vec_carray(val carray, val null_term_p)
 {
   val nt_p = default_null_arg(null_term_p);
@@ -2744,6 +2752,7 @@ void ffi_init(void)
   reg_fun(intern(lit("carray-vec"), user_package), func_n3o(carray_vec, 2));
   reg_fun(intern(lit("carray-blank"), user_package), func_n2(carray_blank));
   reg_fun(intern(lit("carray-buf"), user_package), func_n2(carray_buf));
+  reg_fun(intern(lit("carray-cptr"), user_package), func_n3o(carray_cptr, 2));
   reg_fun(intern(lit("vec-carray"), user_package), func_n2o(vec_carray, 1));
   reg_fun(intern(lit("list-carray"), user_package), func_n2o(list_carray, 1));
   reg_fun(intern(lit("carray-ref"), user_package), func_n2(carray_ref));

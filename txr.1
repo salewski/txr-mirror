@@ -54968,6 +54968,47 @@ type, the calculated number of elements is rounded down. The trailing portion
 of the buffer corresponding to the division remainder, being insufficient
 to constitute a whole array element, is excluded from the array view.
 
+.coNP Function @ carray-cptr
+.synb
+.mets (carray-cptr < cptr < type <> [ length ])
+.syne
+.desc
+The
+.code carray-cptr
+function creates a
+.code carray
+object based on a pointer derived from a
+.code cptr
+object.
+
+The
+.meta cptr
+argument must be of type
+.codn cptr .
+The object's
+.code cptr
+type tag is ignored.
+
+The
+.meta type
+argument must specify a compiled FFI type, which will become
+the element type of the returned
+.codn carray .
+
+If
+.meta length
+is specified as
+.codn nil ,
+or not specified,
+then the returned
+.code carray
+object will be of unknown length. Otherwise,
+.meta length
+must be a non-negative integer which will be taken as the
+length of the array.
+
+Note: this conversion is inherently unsafe.
+
 .coNP Function @ length-carray
 .synb
 .mets (length-carray << carray )
