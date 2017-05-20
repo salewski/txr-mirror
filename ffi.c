@@ -1345,6 +1345,39 @@ static val ffi_varray_in(struct txr_ffi_type *tft, int copy, mem_t *src,
   return ffi_array_in_common(tft, copy, src, vec, self, nelem);
 }
 
+static val ffi_varray_null_term_in(struct txr_ffi_type *tft, int copy, mem_t *src,
+                                   val vec_in, val self)
+{
+  val vec = vector(zero, nil);
+  val eltype = tft->mtypes;
+  struct txr_ffi_type *etft = ffi_type_struct(eltype);
+  cnum elsize = etft->size;
+  cnum offs, i;
+
+  for (i = 0, offs = 0; ; i++) {
+    mem_t *el = src + offs, *p;
+
+    for (p = el; p < el + elsize; p++)
+      if (*p)
+        break;
+
+    if (p == el + elsize)
+      break;
+
+    if (etft->in != 0) {
+      val elval = ref(vec, num_fast(i));
+      vec_push(vec, elval);
+    } else if (copy) {
+      val elval = etft->get(etft, src + offs, self);
+      vec_push(vec, elval);
+    }
+
+    offs += elsize;
+  }
+
+  return replace(vec_in, vec, 0, length_vec(vec));
+}
+
 static val ffi_varray_null_term_get(struct txr_ffi_type *tft, mem_t *src,
                                     val self)
 {
@@ -1623,6 +1656,7 @@ val ffi_type_compile(val syntax)
         if (sym == zarray_s) {
           tft->null_term = 1;
           tft->get = ffi_varray_null_term_get;
+          tft->in = ffi_varray_null_term_in;
         }
         tft->alloc = ffi_varray_alloc;
         tft->free = free;

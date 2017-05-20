@@ -53719,7 +53719,19 @@ the
 .code zarray
 type supports the get operation, which extracts elements, accumulating them
 into a resulting vector, until it encounters an element consisting of all zero
-bytes.
+bytes. That element terminates the decoding, and isn't included in the
+resulting array.
+
+The variable-length
+.code zarray
+also has a special in operation. Like the get operation, the in operation
+extracts all elements until a terminating null, decoding them to a vector.
+Then, a range of the original vector object is replaced with the decoded vector.
+If the decoded vector is as long, or longer, than the original, all of the
+elements of the original are replaced and its length is extended as necessary
+to contain all of the new elements. If the decoded vector is shorter than the
+decoded one, then it replaces a range of the original one corresponding to
+its length.
 
 .meIP (ptr << type )
 The
