@@ -54968,6 +54968,33 @@ type, the calculated number of elements is rounded down. The trailing portion
 of the buffer corresponding to the division remainder, being insufficient
 to constitute a whole array element, is excluded from the array view.
 
+.coNP Function @ carray-buf-sync
+.synb
+.mets (carray-buf-sync << carray )
+.syne
+.desc
+The
+.code carray-buf-sync
+function requires
+.meta carray
+to be a
+.code carray
+object which refers to a
+.code buf
+object for its storage. Such objects are created by the function
+.codn carray-buf .
+
+The
+.code carray-buf-sync
+function retrieves and returns the buffer object associated with
+.meta carray
+and at the same time also updates the internal properties of
+.meta carray
+using the current information: the pointer to the data, and the
+length of
+.meta carray
+are altered to reflect the current state of the buffer.
+
 .coNP Function @ carray-cptr
 .synb
 .mets (carray-cptr < cptr < type <> [ length ])
