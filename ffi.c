@@ -2612,6 +2612,10 @@ val carray_buf(val buf, val type)
   cnum blen = c_num(length_buf(buf));
   struct txr_ffi_type *tft = ffi_type_struct(type);
   cnum nelem = if3(tft->size, blen / tft->size, 0);
+  if (tft->size == 0)
+    uw_throwf(error_s,
+              lit("~a: incomplete type ~s cannot be carray element"),
+              self, tft->syntax, nao);
   return make_carray(type, data, nelem, buf);
 }
 
