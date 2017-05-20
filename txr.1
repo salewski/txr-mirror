@@ -54598,27 +54598,6 @@ The result value of a
 form is
 .metn name .
 
-.coNP Macro @ typedef
-.synb
-.mets (typedef < name << type-syntax )
-.syne
-.desc
-The
-.code typedef
-macro provides a convenient way to define type aliases.
-
-The
-.meta type-syntax
-expression is compiled as FFI syntax, and the
-.meta name
-symbol is installed as an alias denoting that type.
-
-The
-.code typedef
-macro yields the compiled version of
-.meta type-syntax
-as its value.
-
 .coNP Macros @ deffi-cb and @ deffi-cb-unsafe
 .synb
 .mets (deffi-cb < name < rettype < argtypes <> [ abort-val ])
@@ -54706,6 +54685,27 @@ parameter, since unsafe callbacks do not use it.
                         (puts `callback! @x`))))
 
 .cble
+
+.coNP Macro @ typedef
+.synb
+.mets (typedef < name << type-syntax )
+.syne
+.desc
+The
+.code typedef
+macro provides a convenient way to define type aliases.
+
+The
+.meta type-syntax
+expression is compiled as FFI syntax, and the
+.meta name
+symbol is installed as an alias denoting that type.
+
+The
+.code typedef
+macro yields the compiled version of
+.meta type-syntax
+as its value.
 
 .coNP Macro @ sizeof
 .synb
