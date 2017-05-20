@@ -101,3 +101,5 @@
 
 (defmacro ffi (type)
   ^(ffi-type-compile ',type))
+
+(define-accessor carray-ref carray-refset)

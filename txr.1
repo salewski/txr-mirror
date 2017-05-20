@@ -55107,9 +55107,10 @@ operation).
 This creates a potentially unsafe situation in which the length requires
 a larger amount of backing storage than is provided by the buffer.
 
-.coNP Function @ carray-ref
+.coNP Accessor @ carray-ref
 .synb
 .mets (carray-ref < carray << idx )
+.mets (set (carray-ref < carray << idx ) << new-val )
 .syne
 .desc
 The
@@ -55148,6 +55149,12 @@ by
 Then, the get semantics of the element type is invoked to convert, to
 a Lisp object, a region of data starting at calculated byte offset in the array
 storage. The resulting object is returned.
+
+Assigning an a value to a
+.code caddr-ref
+form is equivalent to using
+.code caddr-refset
+to store the value.
 
 .coNP Function @ carray-refset
 .synb
