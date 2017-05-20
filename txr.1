@@ -53646,10 +53646,16 @@ to reflect the new contents.
 When the
 .meta dim
 element is omitted from the syntax, it denotes a variable length
-array. This doesn't use a "by value" array representation, but corresponds
-to a C pointer. This type is mainly useful for passing a variable-length array
-of objects to a foreign function.  Since it has an unknown length, it
-cannot be decoded from a return value, or from an argument in a callback.
+array. It corresponds to the concept of an incomplete array
+in the C language, except that no implicit array-to-pointer conversion
+concept is implemented in the FFI type system. This type may not
+be used as an array element or structure member. It also may not
+be passed or returned by value, only by pointer.
+
+Since the type has unknown length, it has a trivial get operation which returns
+.codn nil .
+It is useful for passing a variable amount of data into a foreign
+function by pointer.
 
 .meIP (zarray < dim << type )
 The
@@ -53697,10 +53703,23 @@ up to the first null.
 .meIP (zarray << type )
 The
 .code zarray
-is a null-terminated variant of the variable-length array. When a Lisp
-sequence is encoded to the foreign representation under control of this
-type, an extra element of all-zero bytes is written out after the
+is a null-terminated variant of the variable-length array.
+Like that type, it corresponds to the concept of an incomplete
+array in the C language. It may not be used as an array element
+or structure member, and cannot be passed as an argument or returned
+as a value.
+
+When a Lisp sequence is encoded to the foreign representation under control of
+this type, an extra element of all-zero bytes is written out after the
 representation of the last element.
+
+Unlike the ordinary variable-length
+.codn array ,
+the
+.code zarray
+type supports the get operation, which extracts elements, accumulating them
+into a resulting vector, until it encounters an element consisting of all zero
+bytes.
 
 .meIP (ptr << type )
 The
