@@ -53,21 +53,21 @@
                       (mac-param-bind f (sym ver) fun-expr
                         ^(dlvsym-checked sys:ffi-lib ,sym ,ver)))
                    (t fun-expr)))
-        (args-sym (gensym "args-"))
         (ret-type-sym (gensym "ret-type-"))
         (arg-types-sym (gensym "arg-types-"))
         (call-desc-sym (gensym "call-desc-"))
         (fun-sym (gensym "ffi-fun-")))
     (tree-bind (nargs nvariadic . argtypes) (sys:analyze-argtypes f argtypes)
-      ^(progn
-         (defvarl ,ret-type-sym (ffi-type-compile ',rettype))
-         (defvarl ,arg-types-sym [mapcar ffi-type-compile ',argtypes])
-         (defvarl ,call-desc-sym (ffi-make-call-desc ,nargs ,nvariadic
-                                                     ,ret-type-sym
-                                                     ,arg-types-sym))
-         (defvarl ,fun-sym ,fun-ref)
-         (defun ,name ,args-sym
-           (ffi-call ,fun-sym ,call-desc-sym . ,args-sym))))))
+      (let ((arg-syms (take nargs (gun (gensym)))))
+        ^(progn
+           (defvarl ,ret-type-sym (ffi-type-compile ',rettype))
+           (defvarl ,arg-types-sym [mapcar ffi-type-compile ',argtypes])
+           (defvarl ,call-desc-sym (ffi-make-call-desc ,nargs ,nvariadic
+                                                       ,ret-type-sym
+                                                       ,arg-types-sym))
+           (defvarl ,fun-sym ,fun-ref)
+           (defun ,name ,arg-syms
+             (ffi-call ,fun-sym ,call-desc-sym ,*arg-syms)))))))
 
 (defmacro deffi-type (name type-expr)
   ^(ffi-typedef ',name (ffi-type-compile ',type-expr)))
