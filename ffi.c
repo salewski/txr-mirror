@@ -2181,10 +2181,13 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
   struct txr_ffi_call_desc *tfcd = tfcl->tfcd;
   val types = tfcd->argtypes;
   val rtype = tfcd->rettype;
-  struct txr_ffi_type *volatile rtft = 0;
-  val retval = nil;
+  struct txr_ffi_type *rtft = ffi_type_struct(rtype);
+  volatile val retval = nao;
   int out_pass_needed = 0;
   uw_frame_t cont_guard;
+
+  if (rtft->release != 0)
+    memset(cret, 0, rtft->size);
 
   uw_push_guard(&cont_guard, 0);
 
@@ -2193,7 +2196,6 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
   {
     args_decl(args, tfcl->nparam);
     args_decl(args_cp, tfcl->nparam);
-    rtft = ffi_type_struct(rtype);
 
     for (i = 0; i < nargs; i++) {
       val type = pop(&types);
@@ -2223,7 +2225,9 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
 
   uw_unwind {
     s_exit_point = uw_curr_exit_point;
-    if (s_exit_point && rtft != 0) {
+    if (s_exit_point) {
+      if (rtft->release != 0 && retval != nao)
+        rtft->release(rtft, retval, convert(mem_t *, cret));
       if (!tfcl->abort_retval)
         memset(cret, 0, rtft->size);
       else
