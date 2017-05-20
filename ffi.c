@@ -2140,14 +2140,13 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
   return obj;
 }
 
-val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
+val ffi_call_wrap(val fptr, val ffi_call_desc, struct args *args)
 {
   val self = lit("ffi-call");
   struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(ffi_call_desc);
   mem_t *fp = cptr_get(fptr);
   cnum n = tfcd->ntotal;
   void **values = convert(void **, alloca(sizeof *values * tfcd->ntotal));
-  val args = args_in;
   val types = tfcd->argtypes;
   val rtype = tfcd->rettype;
   struct txr_ffi_type *rtft = ffi_type_struct(rtype);
@@ -2159,9 +2158,20 @@ val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
   struct txr_ffi_type **type = convert(struct txr_ffi_type **,
                                        alloca(n * sizeof *type));
 
+  if (args->argc < n) {
+    args_decl(args_copy, n);
+    args_copy_zap(args_copy, args);
+    args = args_copy;
+  }
+
+  args_normalize(args, n);
+
+  if (args->fill < n || args->list)
+    uw_throwf(error_s, lit("~a: ~s requires ~s arguments"),
+              self, ffi_call_desc, num(n), nao);
+
   for (i = 0; i < n; i++) {
     struct txr_ffi_type *mtft = type[i] = ffi_type_struct(pop(&types));
-    arg[i] = pop(&args);
     values[i] = zalloca(mtft->size);
     in_pass_needed = in_pass_needed || mtft->in != 0;
   }
@@ -2170,7 +2180,7 @@ val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
 
   for (i = 0; i < n; i++) {
     struct txr_ffi_type *mtft = type[i];
-    mtft->put(mtft, arg[i], convert(mem_t *, values[i]), self);
+    mtft->put(mtft, args->arg[i], convert(mem_t *, values[i]), self);
     in_pass_needed = in_pass_needed || mtft->in != 0;
   }
 
@@ -2182,7 +2192,7 @@ val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
       for (i = 0; i < nreached; i++) {
         struct txr_ffi_type *mtft = type[i];
         if (mtft->release != 0)
-          mtft->release(mtft, arg[i], convert(mem_t *, values[i]));
+          mtft->release(mtft, args->arg[i], convert(mem_t *, values[i]));
       }
     }
   }
@@ -2197,7 +2207,7 @@ val ffi_call_wrap(val ffi_call_desc, val fptr, val args_in)
     for (i = 0; i < n; i++) {
       struct txr_ffi_type *mtft = type[i];
       if (mtft->in != 0)
-        mtft->in(mtft, 0, convert(mem_t *, values[i]), arg[i], self);
+        mtft->in(mtft, 0, convert(mem_t *, values[i]), args->arg[i], self);
     }
   }
 
@@ -2785,7 +2795,7 @@ void ffi_init(void)
   ffi_closure_s = intern(lit("ffi-closure"), user_package);
   reg_fun(intern(lit("ffi-type-compile"), user_package), func_n1(ffi_type_compile));
   reg_fun(intern(lit("ffi-make-call-desc"), user_package), func_n4(ffi_make_call_desc));
-  reg_fun(intern(lit("ffi-call"), user_package), func_n3(ffi_call_wrap));
+  reg_fun(intern(lit("ffi-call"), user_package), func_n2v(ffi_call_wrap));
   reg_fun(intern(lit("ffi-make-closure"), user_package), func_n4o(ffi_make_closure, 2));
   reg_fun(intern(lit("ffi-typedef"), user_package), func_n2(ffi_typedef));
   reg_fun(intern(lit("ffi-size"), user_package), func_n1(ffi_size));

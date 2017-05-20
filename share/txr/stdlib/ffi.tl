@@ -67,7 +67,7 @@
                                                      ,arg-types-sym))
          (defvarl ,fun-sym ,fun-ref)
          (defun ,name ,args-sym
-           (ffi-call ,call-desc-sym ,fun-sym ,args-sym))))))
+           (ffi-call ,fun-sym ,call-desc-sym . ,args-sym))))))
 
 (defmacro deffi-type (name type-expr)
   ^(ffi-typedef ',name (ffi-type-compile ',type-expr)))

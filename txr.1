@@ -54321,6 +54321,53 @@ FFI closures.
       [mapcar ffi-type-compile '(str str)])) ;; args
 .cble
 
+
+.coNP Function @ ffi-call
+.synb
+.mets (ffi-call < fun-cptr < call-desc <> { arg }*)
+.syne
+.desc
+The
+.code ffi-call
+function invokes a foreign function.
+
+The
+.meta fun-cptr
+argument which must be a
+.code cptr
+object. It is assumed to point to a foreign function.
+
+The
+.meta call-desc
+argument must be a FFI call descriptor, produced by
+.codn ffi-call-desc .
+
+The
+.meta call-desc
+must correctly describe the foreign function.
+
+The zero or more
+.meta arg
+arguments are values which are converted into foreign
+argument values. There must be exactly as many of these arguments
+as are required by
+.metn call-desc .
+
+The
+.code ffi-call
+function converts every
+.meta arg
+to a corresponding foreign object. If these conversions are
+successful, the converted foreign arguments are passed by value
+to the foreign function indicated by
+.metn fun-cptr .
+An unsuccessful conversion throws an error.
+
+When the call returns, the foreign function's return value is
+converted to a Lisp object and returned, in accordance with the
+return type that is declared inside
+.metn call-desc .
+
 .coNP Function @ ffi-typedef
 .synb
 .mets (ffi-typedef < name << type )
