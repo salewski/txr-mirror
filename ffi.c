@@ -1345,6 +1345,35 @@ static val ffi_varray_in(struct txr_ffi_type *tft, int copy, mem_t *src,
   return ffi_array_in_common(tft, copy, src, vec, self, nelem);
 }
 
+static val ffi_varray_null_term_get(struct txr_ffi_type *tft, mem_t *src,
+                                    val self)
+{
+  val vec = vector(zero, nil);
+  val eltype = tft->mtypes;
+  struct txr_ffi_type *etft = ffi_type_struct(eltype);
+  cnum elsize = etft->size;
+  cnum offs, i;
+
+  for (i = 0, offs = 0; ; i++) {
+    mem_t *el = src + offs, *p;
+
+    for (p = el; p < el + elsize; p++)
+      if (*p)
+        break;
+
+    if (p == el + elsize)
+      break;
+
+    {
+      val elval = etft->get(etft, src + offs, self);
+      vec_push(vec, elval);
+      offs += elsize;
+    }
+  }
+
+  return vec;
+}
+
 static void ffi_varray_release(struct txr_ffi_type *tft, val vec, mem_t *dst)
 {
   cnum nelem = c_num(length(vec)) + tft->null_term;
@@ -1591,8 +1620,10 @@ val ffi_type_compile(val syntax)
           uw_throwf(error_s,
                     lit("~a: incomplete type ~s cannot be array element"),
                     self, eltype_syntax, nao);
-        if (sym == zarray_s)
+        if (sym == zarray_s) {
           tft->null_term = 1;
+          tft->get = ffi_varray_null_term_get;
+        }
         tft->alloc = ffi_varray_alloc;
         tft->free = free;
         tft->size = 0;
