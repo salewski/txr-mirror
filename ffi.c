@@ -2608,8 +2608,8 @@ val carray_blank(val nelem, val type)
 val carray_buf(val buf, val type)
 {
   val self = lit("carray-buf");
-  cnum blen = c_num(length_buf(buf));
   mem_t *data = buf_get(buf, self);
+  cnum blen = c_num(length_buf(buf));
   struct txr_ffi_type *tft = ffi_type_struct(type);
   cnum nelem = if3(tft->size, blen / tft->size, 0);
   return make_carray(type, data, nelem, buf);
