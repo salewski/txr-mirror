@@ -1541,9 +1541,14 @@ static val ffi_struct_compile(val membs, val *ptypes, val self)
     val mp = car(membs);
     val name = car(mp);
     val type = cadr(mp);
+    val comp_type = ffi_type_compile(type);
+    struct txr_ffi_type *ctft = ffi_type_struct(comp_type);
     if (cddr(mp))
       uw_throwf(error_s, lit("~a: excess elements in type-member pair ~s"),
                 self, mp, nao);
+    if (ctft->size == 0)
+      uw_throwf(error_s, lit("~a: incomplete type ~s cannot be struct member"),
+                self, type, nao);
     pttail = list_collect(pttail, ffi_type_compile(type));
     pstail = list_collect(pstail, name);
   }
@@ -1581,6 +1586,11 @@ val ffi_type_compile(val syntax)
                                          ffi_varray_in, 0, ffi_varray_release,
                                          eltype);
         struct txr_ffi_type *tft = ffi_type_struct(type);
+        struct txr_ffi_type *etft = ffi_type_struct(eltype);
+        if (etft->size == 0)
+          uw_throwf(error_s,
+                    lit("~a: incomplete type ~s cannot be array element"),
+                    self, eltype_syntax, nao);
         if (sym == zarray_s)
           tft->null_term = 1;
         tft->alloc = ffi_varray_alloc;
@@ -1591,6 +1601,12 @@ val ffi_type_compile(val syntax)
         val dim = cadr(syntax);
         val eltype_syntax = caddr(syntax);
         val eltype = ffi_type_compile(eltype_syntax);
+        struct txr_ffi_type *etft = ffi_type_struct(eltype);
+
+        if (etft->size == 0)
+          uw_throwf(error_s,
+                    lit("~a: incomplete type ~s cannot be array element"),
+                    self, eltype_syntax, nao);
 
         if (minusp(dim))
         uw_throwf(error_s, lit("~a: negative dimension in ~s"),
