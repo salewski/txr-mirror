@@ -1,0 +1,4 @@
+0
+#S(glob-t pathc 4 pathv #<carray 4 #<ffi-type str-d>> reserve 0)
+#("tests/001/query-1.txr" "tests/001/query-2.txr" "tests/001/query-3.txr"
+  "tests/001/query-4.txr")

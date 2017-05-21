@@ -1,0 +1,3 @@
+0
+#S(glob-t pathc 4 pathv #("tests/001/query-1.txr" "tests/001/query-2.txr" "tests/001/query-3.txr"
+                          "tests/001/query-4.txr") reserve 0)
