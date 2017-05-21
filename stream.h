@@ -129,6 +129,8 @@ extern val pprint_flo_format_s, print_base_s, print_circle_s;
 extern val socket_error_s;
 #endif
 
+extern const wchli_t *path_sep_chars;
+
 void strm_base_init(struct strm_base *s);
 void strm_base_cleanup(struct strm_base *s);
 void strm_base_mark(struct strm_base *s);
@@ -213,5 +215,7 @@ val remove_path(val path, val throw_on_error);
 val rename_path(val from, val to);
 val abs_path_p(val path);
 val pure_rel_path_p(val path);
+val base_name(val path);
+val dir_name(val path);
 
 void stream_init(void);

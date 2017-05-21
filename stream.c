@@ -89,6 +89,8 @@ val stdio_stream_s;
 val socket_error_s;
 #endif
 
+const wchli_t *path_sep_chars = wli("/");
+
 val shell, shell_arg;
 
 void strm_base_init(struct strm_base *s)
@@ -4158,12 +4160,89 @@ val pure_rel_path_p(val path)
   return t;
 }
 
+static void detect_path_separators(void)
+{
+#ifdef __CYGWIN__
+  struct utsname un;
+
+  if (uname(&un) >= 0) {
+    if (strncmp(un.sysname, "CYGNAL", 6) == 0)
+      path_sep_chars = wli("\\/");
+    return;
+  }
+#endif
+}
+
+val base_name(val path)
+{
+  const wchar_t *wpath = c_str(path);
+  const wchar_t *end = wpath + c_num(length_str(path));
+  const wchar_t *rsep;
+  const wchar_t *psc = wref(coerce(const wchar_t *, path_sep_chars));
+
+  if (end == wpath)
+    return null_string;
+
+  while (wpath < end && wcschr(psc, end[-1]))
+    end--;
+
+  if (end == wpath)
+    return lit("/");
+
+  for (rsep = end;
+       wpath < rsep && wcschr(psc, rsep[-1]) == 0;
+       rsep--)
+    ; /* *empty */
+
+
+  {
+    val base = mkustring(num_fast(end - rsep));
+    return init_str(base, rsep);
+  }
+}
+
+val dir_name(val path)
+{
+  const wchar_t *wpath = c_str(path);
+  const wchar_t *rsep = wpath + c_num(length_str(path));
+  const wchar_t *psc = wref(coerce(const wchar_t *, path_sep_chars));
+
+  if (rsep == wpath)
+    return lit(".");
+
+  if (wcschr(psc, rsep[-1]))
+    rsep--;
+
+  if (rsep == wpath) {
+    wchar_t root[2] = { psc[0] };
+    return string(root);
+  }
+
+  for (; rsep > wpath && wcschr(psc, rsep[-1]) == 0; rsep--)
+    ; /* *empty */
+
+  if (rsep == wpath + 1) {
+    wchar_t root[2] = { psc[0] };
+    return string(root);
+  }
+
+  if (rsep == wpath)
+    return lit(".");
+
+
+  {
+    val base = mkustring(num_fast(rsep - wpath - 1));
+    return init_str(base, wpath);
+  }
+}
+
 void stream_init(void)
 {
   prot1(&ap_regex);
   prot1(&plp_regex);
 
   detect_format_string();
+  detect_path_separators();
 
   from_start_k = intern(lit("from-start"), keyword_package);
   from_current_k = intern(lit("from-current"), keyword_package);
@@ -4270,7 +4349,9 @@ void stream_init(void)
   reg_fun(intern(lit("open-files*"), user_package), func_n2o(open_files_star, 1));
   reg_fun(intern(lit("abs-path-p"), user_package), func_n1(abs_path_p));
   reg_fun(intern(lit("pure-rel-path-p"), user_package), func_n1(pure_rel_path_p));
-
+  reg_fun(intern(lit("base-name"), user_package), func_n1(base_name));
+  reg_fun(intern(lit("dir-name"), user_package), func_n1(dir_name));
+  reg_varl(intern(lit("path-sep-chars"), user_package), static_str(path_sep_chars));
   reg_fun(intern(lit("get-indent-mode"), user_package), func_n1(get_indent_mode));
   reg_fun(intern(lit("test-set-indent-mode"), user_package), func_n3(test_set_indent_mode));
   reg_fun(intern(lit("set-indent-mode"), user_package), func_n2(set_indent_mode));

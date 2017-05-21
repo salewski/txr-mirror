@@ -41445,6 +41445,85 @@ Examples of strings which are not pure relative paths:
   $:\eabc
 .cble
 
+.coNP Functions @ dir-name and @ base-name
+.synb
+.mets (dir-name << path )
+.mets (base-name << path )
+.syne
+.desc
+The
+.code dir-name
+and
+.code base-name
+functions calculate, respective, the directory part and
+base name part of a path name.
+
+The calculation is performed in a platform-dependent way, using the
+characters in the variable
+.code path-sep-chars
+as path component separators.
+
+Both functions first remove from any further consideration all superfluous
+trailing occurrences of the directory separator characters from
+.codn path .
+Thus input such as
+.str "a////"
+is reduced to just
+.strn "a" ,
+and
+.str "///"
+is reduced to
+.strn "/" .
+
+The resulting trimmed path is the
+.I "effective path" .
+
+If the effective path is an empty string, then
+.code dir-name
+returns
+.str "."
+and
+.code base-name
+returns the empty string.
+
+If the effective path is not empty, and contains no path separator
+characters, then
+.code dir-name
+returns
+.str "."
+and
+.code base-name
+returns the effective path.
+
+Otherwise, the effective path is divided into two parts: the
+.I "raw directory prefix"
+and the remainder.
+
+The raw directory path is the maximally long prefix of the effective
+path which ends in a separator character.
+
+The
+.code dir-name
+function returns the raw directory prefix, if that prefix consists of
+nothing but a single directory separator character. Otherwise it
+returns the raw directory prefix, with the trailing path separator
+removed.
+
+The
+.code base-name
+function returns the remaining part of the effective path, after
+the raw directory prefix.
+
+.coNP Variable @ path-sep-chars
+.desc
+The
+.code path-sep-chars
+variable holds a string consisting of the characters which the underlying
+operating system recognizes as path name separators.
+
+Altering the value of this variable has no effect on any \*(TL library
+function.
+
 .coNP Functions @ read and @ iread
 .synb
 .mets (read >> [ source >> [ error-stream >> [ error-retval <> [ name ]]]])

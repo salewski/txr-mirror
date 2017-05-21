@@ -273,12 +273,6 @@ static val maybe_sysroot(val exepart)
              sysroot_path = sub_str(prog_path, 0, neg(length(exepart))));
 }
 
-static val dirname(val path)
-{
-  val rslash = rpos(chr('/'), path, nil, nil);
-  return if3(rslash, sub_str(path, zero, succ(rslash)), path);
-}
-
 static val substitute_basename(val edited_path, val source_path)
 {
   val lslash = rpos(chr('/'), edited_path, nil, nil);
@@ -311,7 +305,7 @@ static void sysroot_init(void)
 #if HAVE_WINDOWS_H
   prog_path = regsub(slash, lit("/"), prog_path);
 #endif
-  prog_dir = dirname(prog_path);
+  prog_dir = dir_name(prog_path);
 
   if (!(maybe_sysroot(lit(TXR_REL_PATH)) ||
         maybe_sysroot(lit(TXR_REL_PATH EXE_SUFF)) ||
