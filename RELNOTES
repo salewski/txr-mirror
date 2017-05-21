@@ -1,3 +1,55 @@
+                                    TXR 176
+                                   2017-05-21
+
+
+  Features
+
+  FFI:
+  - New tagged variant of cptr type, for improved safety.
+  - New carray type for handling arrays of unknown size,
+    where FFI's automatic memory handling isn't of help.
+  - deffi-type is just called typedef
+  - New ffi macro providing a shorthand for ffi-type-compile.
+  - Variable length arrays that are null-terminated (zarray <type>)
+    now have useful semantics: the type can extract an arbitrarily
+    long null-terminated array from foreign memory.
+  - Previously undocumented ffi-call function is now documented,
+    and has undergone an API change.
+  - deffi macro now generates Lisp functions with fixed number of
+    arguments, so a mismatch in number of arguments is caught
+    at the wrapper level, rather than down inside ffi-call.
+  - New deffi-var macro for defining a Lisp variable connected
+    to a foreign variable.
+  Awk macro:
+  - New (again) operator for repeating all the rules against
+    the same record.
+  Filesystem:
+  - New functions dir-name, base-name and variable path-sep-chars.
+  - New function realpath, wrapper for the POSIX one.
+
+  Bugs
+
+  - fixed corrupt line numbers being reported in some
+    situations, like unbound variables inside quasi-word-list literals.
+  - FFI:
+    - fixed broken in semantics of buf type.
+    - fixed broken alignment of basic types leading to wrong
+      struct layouts.
+    - nil value now handled by FFI buf type, mapped to null pointer.
+    - A ffi call now releases up temporary local memory when an
+      exception occurs in the argument preparation phase.
+    - A ffi callback similarly releases any temporary memory
+      allocated during the preparation of the return value, if
+      the preparation terminates due to an exception.
+    - Defense in the type system against incomplete (i.e. zero sized)
+      types being passed or returned by value, or used as array
+      elements or struct slots.
+    - Fixed wrong documentation about variable-length arrays corresponding
+      to pointers.
+    - FFI calls are now checked for proper number of arguments.
+
+
+
                                     TXR 175
                                    2017-05-15
 
