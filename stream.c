@@ -40,6 +40,9 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef __CYGWIN__
+#include <sys/utsname.h>
+#endif
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
