@@ -1572,6 +1572,19 @@ static val dlvsym_checked(val dlptr, val name, val ver)
 
 #endif
 
+#if HAVE_REALPATH
+static val realpath_wrap(val path)
+{
+  const wchar_t *path_ws = c_str(path);
+  char *path_u8 = utf8_dup_to(path_ws);
+  char *rp_u8 = realpath(path_u8, 0);
+  val rp = if2(rp_u8, string_utf8(rp_u8));
+  free(rp_u8);
+  free(path_u8);
+  return rp;
+}
+#endif
+
 void sysif_init(void)
 {
   prot1(&at_exit_list);
@@ -1942,5 +1955,9 @@ void sysif_init(void)
 #ifdef RTLD_DEEPBIND
   reg_varl(intern(lit("rtld-deepbind"), user_package), num_fast(RTLD_DEEPBIND));
 #endif
+#endif
+
+#if HAVE_REALPATH
+  reg_fun(intern(lit("realpath"), user_package), func_n1(realpath_wrap));
 #endif
 }

@@ -2863,6 +2863,24 @@ else
   printf "no\n"
 fi
 
+printf "Checking for realpath ... "
+cat > conftest.c <<!
+#include <stdlib.h>
+
+int main(void)
+{
+  char *rp = realpath("/var/lib", 0);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_REALPATH 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
 #
 # Dependent variables
 #

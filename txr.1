@@ -47135,6 +47135,31 @@ function reads the contents of that symbolic link and returns it
 as a string.  Otherwise, it fails by throwing an exception of type
 .codn file-error .
 
+.coNP Function @ realpath
+.synb
+.mets (realpath << path )
+.syne
+.desc
+The
+.code realpath
+function provides access to the same-named POSIX function.
+It processes the input string
+.meta path
+by expanding all symbolic links, removes all superfluous
+.str ".."
+and
+.str "."
+path components, and extra path-separating slash characters,
+to produce a canonical absolute path name.
+
+If the underlying POSIX function indicates failure, then
+.code nil
+is returned. In that situation the
+.code errno
+value is available using the
+.code errno
+function.
+
 .SS* Unix Filesystem Object Existence, Type and Access Tests
 
 The following functions all accept, as the
