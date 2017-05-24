@@ -54254,9 +54254,13 @@ of a variadic function, rather than the variadic function's type
 To call the same variadic function using different variadic arguments,
 different call descriptors are required. For instance to perform
 the equivalent of the C function call
-.str printf("hello\en")
+.cblk
+printf("hello\en")
+.cble
 requires a certain descriptor. To perform the equivalent of
-.str printf("hello, %s\en", name)
+.cblk
+printf("hello, %s\en", name)
+.cble
 requires a different descriptor.
 
 .coNP Function @ ffi-type-compile
