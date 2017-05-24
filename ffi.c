@@ -74,6 +74,8 @@ val long_s, ulong_s;
 val double_s;
 val void_s;
 
+val val_s;
+
 val array_s, zarray_s, carray_s;
 
 val struct_s;
@@ -81,6 +83,7 @@ val struct_s;
 val str_d_s, wstr_s, wstr_d_s, bstr_s, bstr_d_s;
 
 val buf_d_s;
+
 
 val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_out_s_s, ptr_s;
 
@@ -553,6 +556,16 @@ static val ffi_double_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   double n = *coerce(double *, src);
   return flo(n);
+}
+
+static void ffi_val_put(struct txr_ffi_type *tft, val v, mem_t *dst, val self)
+{
+  *coerce(val *, dst) = v;
+}
+
+static val ffi_val_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  return *coerce(val *, src);
 }
 
 #if SIZEOF_WCHAR_T == SIZEOF_SHORT
@@ -1894,7 +1907,11 @@ static void ffi_init_types(void)
                                               alignof (double),
                                               &ffi_type_double,
                                               ffi_double_put, ffi_double_get));
-
+  ffi_typedef(val_s, make_ffi_type_builtin(val_s, t,
+                                           sizeof (val),
+                                           alignof (val),
+                                           &ffi_type_pointer,
+                                           ffi_val_put, ffi_val_get));
   {
     val type = make_ffi_type_builtin(cptr_s, cptr_s, sizeof (mem_t *),
                                      alignof (mem_t *),
@@ -2804,6 +2821,7 @@ void ffi_init(void)
   long_s = intern(lit("long"), user_package);
   ulong_s = intern(lit("ulong"), user_package);
   double_s = intern(lit("double"), user_package);
+  val_s = intern(lit("val"), user_package);
   void_s = intern(lit("void"), user_package);
   array_s = intern(lit("array"), user_package);
   zarray_s = intern(lit("zarray"), user_package);

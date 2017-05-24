@@ -37,6 +37,8 @@ extern val long_s, ulong_s;
 extern val void_s;
 extern val double_s;
 
+extern val val_s;
+
 extern val array_s, zarray_s, carray_s;
 
 extern val struct_s;

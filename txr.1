@@ -53374,6 +53374,24 @@ only \*(TL
 .code float
 type.
 
+.ccIP @ val
+The FFI
+.code val
+type denotes the machine representation of a Lisp value cell, which is
+corresponds to a C pointer. Not all cell values are actually pointers, but
+values that are heap objects, such as vectors and conses, are.
+The
+.code val
+type transparently converts any Lisp object to a foreign pointer value
+with no representation change at all; and performs the reverse conversion
+from pointer to Lisp value.
+
+Note: this is utterly dangerous. Lisp values that aren't pointers must not
+be dereferenced by foreign code. Foreign code must not generate Lisp pointer
+values that aren't objects which came from a Lisp heap.
+Interpreting a Lisp value in foreign code requires a correct decoding of
+its type tag, and, if necessary, stripping the tag bits to recover a heap
+pointer and interpreting the type code stored in the heap object.
 .ccIP @ cptr
 This type corresponds to a C pointer of any type, including a function pointer;
 \*(TX doesn't run on any exotic platforms in which there is a representational
