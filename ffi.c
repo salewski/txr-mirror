@@ -565,7 +565,11 @@ static void ffi_val_put(struct txr_ffi_type *tft, val v, mem_t *dst, val self)
 
 static val ffi_val_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  return *coerce(val *, src);
+  val v = *coerce(val *, src);
+  if (!valid_object_p(v))
+    uw_throwf(error_s, lit("~a: bit pattern ~0,0*x isn't a valid Lisp object"),
+              self, num_fast(sizeof (v) * 2), bits(v), nao);
+  return v;
 }
 
 #if SIZEOF_WCHAR_T == SIZEOF_SHORT

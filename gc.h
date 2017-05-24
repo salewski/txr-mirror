@@ -47,6 +47,8 @@ val gc_mutated(val);
 extern int full_gc;
 #endif
 
+val valid_object_p(val obj);
+
 void unmark(void);
 void gc_cancel(void);
 void gc_hint_func(val *);

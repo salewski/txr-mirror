@@ -911,6 +911,20 @@ val gc_call_finalizers(val obj)
   return call_finalizers_impl(obj, is_matching_final);
 }
 
+val valid_object_p(val obj)
+{
+  if (!is_ptr(obj))
+    return t;
+
+  if (!in_heap(obj))
+    return nil;
+
+  if (obj->t.type & (REACHABLE | FREE))
+    return nil;
+
+  return t;
+}
+
 void gc_late_init(void)
 {
   reg_fun(intern(lit("gc"), system_package), func_n0(gc_wrap));

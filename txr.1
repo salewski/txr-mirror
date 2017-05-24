@@ -53414,6 +53414,12 @@ values that aren't objects which came from a Lisp heap.
 Interpreting a Lisp value in foreign code requires a correct decoding of
 its type tag, and, if necessary, stripping the tag bits to recover a heap
 pointer and interpreting the type code stored in the heap object.
+
+The conversion from foreign bit pattern to Lisp value is subject to a
+validity checks; an exception will be thrown if the bit pattern isn't a valid
+Lisp object. Nevertheless, the checks has cases which report as false
+positives: admit some invalid objects may be admitted into the Lisp realm,
+possibly with catastrophic results.
 .ccIP @ cptr
 This type corresponds to a C pointer of any type, including a function pointer;
 \*(TX doesn't run on any exotic platforms in which there is a representational
