@@ -38956,6 +38956,12 @@ implementation:
               funcs)))
 .cble
 
+The
+.code callf
+function generalizes
+.code juxt
+by allowing the combining function to be specified.
+
 .TP* Example:
 
 .cblk
@@ -39301,6 +39307,22 @@ arguments:
   (keep-if [callf eql first second] '((1 1) (2 3) (4 4) (5 6)))
   -> ((1 1) (4 4))
 .cble
+
+The following equivalence holds between
+.code juxt
+and
+.codn callf :
+
+.cblk
+  [juxt f0 f1 f2 ...]  <-->  [callf list f0 f1 f2 ...]:w
+.cble
+
+Thus,
+.code juxt
+may be regarded as a specialization of
+.code callf
+in which the main function is implicitly
+.codn list .
 
 .coNP Function @ mapf
 .synb
