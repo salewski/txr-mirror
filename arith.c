@@ -2767,11 +2767,10 @@ val width(val obj)
   uw_throwf(error_s, lit("integer-length: ~s isn't an integer"), obj, nao);
 }
 
-static val bits(val obj)
+val bits(val obj)
 {
   return normalize(bignum_from_uintptr(coerce(uint_ptr_t, obj)));
 }
-
 
 void arith_init(void)
 {
