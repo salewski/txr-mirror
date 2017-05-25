@@ -1583,7 +1583,7 @@ which are not allowed in a
 .metn sident :
 
 .cblk
- ! $ % & * + - < = > ? \e _ ~
+ ! $ % & * + - < = > ? \e ~
 .cble
 
 The rule still holds that a name cannot look like a number so
@@ -10552,18 +10552,31 @@ all the same characters, as well as the
 .metn bident .
 Thus a
 .meta lident
-may consist of these characters, in addition to letters and numbers:
+may consist of these characters, in addition to letters, numbers and
+underscores:
 
 .cblk
- ! $ % & * + - < = > ? \e _ ~ /
+ ! $ % & * + - < = > ? \e ~ /
 .cble
 
-and of course, may not look like a number. A lone
+and of course, may not look like a number.
+
+The character allowed in a
+.meta lident
+but not in a
+.meta bident
+is
 .code /
-is a symbol in \*(TL. The token
+(forward slash).
+
+A lone
+.code /
+is a valid
+.meta lident
+and consequently a symbol token in \*(TL. The token
 .code /abc/
-is also a symbol, and not a regular expression, like it is in the braced
-variable syntax. Within \*(TL, regular expressions are written with
+is also a symbol, and, unlike in a braced expression, is not a regular
+expression. In \*(TL expressions, regular expressions are written with
 a leading
 .codn # .
 
