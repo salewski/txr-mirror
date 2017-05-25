@@ -2436,7 +2436,7 @@ val ffi_put_into(val dstbuf, val obj, val type)
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
   mem_t *dst = buf_get(dstbuf, self);
   if (lt(length_buf(dstbuf), num_fast(tft->size)))
-    uw_throwf(lit("~a: buffer ~s is too small for type ~s"),
+    uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s"),
               self, dstbuf, type, nao);
   tft->put(tft, obj, dst, self);
   return dstbuf;
@@ -2458,7 +2458,7 @@ val ffi_in(val srcbuf, val obj, val type, val copy_p)
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
   mem_t *src = buf_get(srcbuf, self);
   if (lt(length_buf(srcbuf), num_fast(tft->size)))
-    uw_throwf(lit("~a: buffer ~s is too small for type ~s"),
+    uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s"),
               self, srcbuf, type, nao);
   if (tft->in != 0)
     return tft->in(tft, copy_p != nil, src, obj, self);
@@ -2473,7 +2473,7 @@ val ffi_get(val srcbuf, val type)
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
   mem_t *src = buf_get(srcbuf, self);
   if (lt(length_buf(srcbuf), num_fast(tft->size)))
-    uw_throwf(lit("~a: buffer ~s is too small for type ~s"),
+    uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s"),
               self, srcbuf, type, nao);
   return tft->get(tft, src, self);
 }
@@ -2484,7 +2484,7 @@ val ffi_out(val dstbuf, val obj, val type, val copy_p)
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
   mem_t *dst = buf_get(dstbuf, self);
   if (lt(length_buf(dstbuf), num_fast(tft->size)))
-    uw_throwf(lit("~a: buffer ~s is too small for type ~s"),
+    uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s"),
               self, dstbuf, type, nao);
   if (tft->out != 0)
     tft->out(tft, copy_p != nil, obj, dst, self);
