@@ -100,6 +100,7 @@ struct txr_ffi_type {
   val lt;
   val syntax;
   val mnames;
+  val eltype;
   val mtypes;
   cnum size, align;
   cnum nelem;
@@ -162,6 +163,7 @@ static void ffi_struct_type_mark(val obj)
   struct txr_ffi_type *tft = ffi_type_struct(obj);
   gc_mark(tft->lt);
   gc_mark(tft->syntax);
+  gc_mark(tft->eltype);
   gc_mark(tft->mnames);
   gc_mark(tft->mtypes);
 }
@@ -171,7 +173,7 @@ static void ffi_ptr_type_mark(val obj)
   struct txr_ffi_type *tft = ffi_type_struct(obj);
   gc_mark(tft->lt);
   gc_mark(tft->syntax);
-  gc_mark(tft->mtypes);
+  gc_mark(tft->eltype);
 }
 
 static struct cobj_ops ffi_type_builtin_ops =
@@ -262,7 +264,7 @@ static mem_t *ffi_fixed_alloc(struct txr_ffi_type *tft, val obj, val self)
 static mem_t *ffi_varray_alloc(struct txr_ffi_type *tft, val obj, val self)
 {
   cnum len = c_num(length(obj));
-  val eltype = tft->mtypes;
+  val eltype = tft->eltype;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   return chk_calloc(len, etft->size);
 }
@@ -598,19 +600,19 @@ static val ffi_wchar_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_cptr_put(struct txr_ffi_type *tft, val n, mem_t *dst,
                          val self)
 {
-  mem_t *p = cptr_handle(n, tft->mtypes, self);
+  mem_t *p = cptr_handle(n, tft->eltype, self);
   *coerce(mem_t **, dst) = p;
 }
 
 static val ffi_cptr_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   mem_t *p = *coerce(mem_t **, src);
-  return cptr_typed(p, tft->mtypes, 0);
+  return cptr_typed(p, tft->eltype, 0);
 }
 
 static mem_t *ffi_cptr_alloc(struct txr_ffi_type *tft, val ptr, val self)
 {
-  return coerce(mem_t *, cptr_addr_of(ptr, tft->mtypes, self));
+  return coerce(mem_t *, cptr_addr_of(ptr, tft->eltype, self));
 }
 
 static val ffi_str_in(struct txr_ffi_type *tft, int copy,
@@ -808,7 +810,7 @@ static void ffi_closure_put(struct txr_ffi_type *tft, val ptr, mem_t *dst,
 static val ffi_ptr_in_in(struct txr_ffi_type *tft, int copy, mem_t *src,
                          val obj, val self)
 {
-  val tgttype = tft->mtypes;
+  val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t **loc = coerce(mem_t **, src);
   if (tgtft->in != 0)
@@ -821,7 +823,7 @@ static val ffi_ptr_in_in(struct txr_ffi_type *tft, int copy, mem_t *src,
 static val ffi_ptr_in_d_in(struct txr_ffi_type *tft, int copy, mem_t *src,
                            val obj, val self)
 {
-  val tgttype = tft->mtypes;
+  val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t **loc = coerce(mem_t **, src);
   if (tgtft->in != 0)
@@ -832,7 +834,7 @@ static val ffi_ptr_in_d_in(struct txr_ffi_type *tft, int copy, mem_t *src,
 static void ffi_ptr_in_out(struct txr_ffi_type *tft, int copy, val s,
                            mem_t *dst, val self)
 {
-  val tgttype = tft->mtypes;
+  val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   if (tgtft->out != 0) {
     mem_t *buf = *coerce(mem_t **, dst);
@@ -843,7 +845,7 @@ static void ffi_ptr_in_out(struct txr_ffi_type *tft, int copy, val s,
 static val ffi_ptr_out_in(struct txr_ffi_type *tft, int copy, mem_t *src,
                           val obj, val self)
 {
-  val tgttype = tft->mtypes;
+  val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t **loc = coerce(mem_t **, src);
   if (tgtft->in != 0)
@@ -858,7 +860,7 @@ static val ffi_ptr_out_in(struct txr_ffi_type *tft, int copy, mem_t *src,
 static void ffi_ptr_out_put(struct txr_ffi_type *tft, val s, mem_t *dst,
                             val self)
 {
-  val tgttype = tft->mtypes;
+  val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   if (s == nil) {
     *coerce(mem_t **, dst) =  0;
@@ -871,7 +873,7 @@ static void ffi_ptr_out_put(struct txr_ffi_type *tft, val s, mem_t *dst,
 static void ffi_ptr_out_out(struct txr_ffi_type *tft, int copy, val s,
                             mem_t *dst, val self)
 {
-  val tgttype = tft->mtypes;
+  val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t *buf = *coerce(mem_t **, dst);
   if (tgtft->out != 0)
@@ -882,7 +884,7 @@ static void ffi_ptr_out_out(struct txr_ffi_type *tft, int copy, val s,
 
 static val ffi_ptr_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  val tgttype = tft->mtypes;
+  val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t *ptr = *coerce(mem_t **, src);
   return ptr ? tgtft->get(tgtft, ptr, self) : nil;
@@ -890,7 +892,7 @@ static val ffi_ptr_get(struct txr_ffi_type *tft, mem_t *src, val self)
 
 static val ffi_ptr_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  val tgttype = tft->mtypes;
+  val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t **loc = coerce(mem_t **, src);
   val ret = *loc ? tgtft->get(tgtft, *loc, self) : nil;
@@ -902,7 +904,7 @@ static val ffi_ptr_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_ptr_in_put(struct txr_ffi_type *tft, val s, mem_t *dst,
                            val self)
 {
-  val tgttype = tft->mtypes;
+  val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   if (s == nil) {
     *coerce(mem_t **, dst) = 0;
@@ -922,7 +924,7 @@ static void ffi_ptr_out_null_put(struct txr_ffi_type *tft, val s, mem_t *dst,
 static val ffi_ptr_out_s_in(struct txr_ffi_type *tft, int copy,
                             mem_t *src, val obj, val self)
 {
-  val tgttype = tft->mtypes;
+  val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t **loc = coerce(mem_t **, src);
   if (tgtft->in != 0)
@@ -934,7 +936,7 @@ static val ffi_ptr_out_s_in(struct txr_ffi_type *tft, int copy,
 
 static void ffi_ptr_in_release(struct txr_ffi_type *tft, val obj, mem_t *dst)
 {
-  struct txr_ffi_type *tgtft = ffi_type_struct(tft->mtypes);
+  struct txr_ffi_type *tgtft = ffi_type_struct(tft->eltype);
   mem_t **loc = coerce(mem_t **, dst);
 
   if (tgtft->release != 0 && *loc != 0)
@@ -1171,7 +1173,7 @@ static void ffi_bchar_array_put(struct txr_ffi_type *tft, val str, mem_t *dst,
 static val ffi_array_in_common(struct txr_ffi_type *tft, int copy,
                                mem_t *src, val vec, val self, cnum nelem)
 {
-  val eltype = tft->mtypes;
+  val eltype = tft->eltype;
   ucnum offs = 0;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size, i;
@@ -1215,7 +1217,7 @@ static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
 static void ffi_array_put_common(struct txr_ffi_type *tft, val vec, mem_t *dst,
                                  val self, cnum nelem)
 {
-  val eltype = tft->mtypes;
+  val eltype = tft->eltype;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size;
   int nt = tft->null_term;
@@ -1250,7 +1252,7 @@ static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
 static void ffi_array_out_common(struct txr_ffi_type *tft, int copy, val vec,
                                  mem_t *dst, val self, cnum nelem)
 {
-  val eltype = tft->mtypes;
+  val eltype = tft->eltype;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size;
   int nt = tft->null_term;
@@ -1289,7 +1291,7 @@ static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
 static val ffi_array_get_common(struct txr_ffi_type *tft, mem_t *src, val self,
                                 cnum nelem)
 {
-  val eltype = tft->mtypes;
+  val eltype = tft->eltype;
 
   if (tft->char_conv) {
     return ffi_char_array_get(tft, src, nelem);
@@ -1323,7 +1325,7 @@ static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_array_release_common(struct txr_ffi_type *tft, val vec,
                                      mem_t *dst, cnum nelem)
 {
-  val eltype = tft->mtypes;
+  val eltype = tft->eltype;
   ucnum offs = 0;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size, i;
@@ -1368,7 +1370,7 @@ static val ffi_varray_null_term_in(struct txr_ffi_type *tft, int copy, mem_t *sr
                                    val vec_in, val self)
 {
   val vec = vector(zero, nil);
-  val eltype = tft->mtypes;
+  val eltype = tft->eltype;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size;
   cnum offs, i;
@@ -1401,7 +1403,7 @@ static val ffi_varray_null_term_get(struct txr_ffi_type *tft, mem_t *src,
                                     val self)
 {
   val vec = vector(zero, nil);
-  val eltype = tft->mtypes;
+  val eltype = tft->eltype;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size;
   cnum offs, i;
@@ -1435,13 +1437,13 @@ static void ffi_varray_release(struct txr_ffi_type *tft, val vec, mem_t *dst)
 static val ffi_carray_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   mem_t *p = *coerce(mem_t **, src);
-  return make_carray(tft->mtypes, p, -1, nil);
+  return make_carray(tft->eltype, p, -1, nil);
 }
 
 static void ffi_carray_put(struct txr_ffi_type *tft, val carray, mem_t *dst,
                            val self)
 {
-  mem_t *p = carray_get(carray, tft->mtypes, self);
+  mem_t *p = carray_get(carray, tft->eltype, self);
   *coerce(mem_t **, dst) = p;
 }
 
@@ -1460,7 +1462,6 @@ static val make_ffi_type_builtin(val syntax, val lisp_type,
   tft->ft = ft;
   tft->syntax = syntax;
   tft->lt = lisp_type;
-  tft->mnames = tft->mtypes = nil;
   tft->size = size;
   tft->align = align;
   tft->put = put;
@@ -1492,11 +1493,10 @@ static val make_ffi_type_pointer(val syntax, val lisp_type, cnum size,
   tft->ft = &ffi_type_pointer;
   tft->syntax = syntax;
   tft->lt = lisp_type;
-  tft->mnames = tft->mtypes = nil;
   tft->size = tft->align = size;
   tft->put = put;
   tft->get = get;
-  tft->mtypes = tgtype;
+  tft->eltype = tgtype;
   tft->in = in;
   tft->out = out;
   tft->release = release;
@@ -1587,7 +1587,7 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->syntax = syntax;
   tft->lt = lisp_type;
   tft->mnames = nil;
-  tft->mtypes = eltype;
+  tft->eltype = eltype;
   tft->put = ffi_array_put;
   tft->get = ffi_array_get;
   tft->in = ffi_array_in;
@@ -1794,7 +1794,7 @@ val ffi_type_compile(val syntax)
                                        &ffi_type_pointer,
                                        ffi_cptr_put, ffi_cptr_get);
       struct txr_ffi_type *tft = ffi_type_struct(type);
-      tft->mtypes = tag;
+      tft->eltype = tag;
       return type;
     } else if (sym == carray_s) {
       val element_type = ffi_type_compile(cadr(syntax));
@@ -1803,7 +1803,7 @@ val ffi_type_compile(val syntax)
                                        &ffi_type_pointer,
                                        ffi_carray_put, ffi_carray_get);
       struct txr_ffi_type *tft = ffi_type_struct(type);
-      tft->mtypes = element_type;
+      tft->eltype = element_type;
       return type;
     }
     uw_throwf(error_s, lit("~a: unrecognized type operator: ~s"),
