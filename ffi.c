@@ -1784,22 +1784,14 @@ val ffi_type_compile(val syntax)
       return type;
     } else if (sym == cptr_s) {
       val tag = cadr(syntax);
-      val type = make_ffi_type_builtin(syntax, cptr_s, sizeof (mem_t *),
-                                       alignof (mem_t *),
-                                       &ffi_type_pointer,
-                                       ffi_cptr_put, ffi_cptr_get);
-      struct txr_ffi_type *tft = ffi_type_struct(type);
-      tft->eltype = tag;
-      return type;
+      return make_ffi_type_pointer(syntax, cptr_s,
+                                   ffi_cptr_put, ffi_cptr_get,
+                                   0, 0, 0, tag);
     } else if (sym == carray_s) {
-      val element_type = ffi_type_compile(cadr(syntax));
-      val type = make_ffi_type_builtin(syntax, carray_s, sizeof (mem_t *),
-                                       alignof (mem_t *),
-                                       &ffi_type_pointer,
-                                       ffi_carray_put, ffi_carray_get);
-      struct txr_ffi_type *tft = ffi_type_struct(type);
-      tft->eltype = element_type;
-      return type;
+      val eltype = ffi_type_compile(cadr(syntax));
+      return make_ffi_type_pointer(syntax, carray_s,
+                                   ffi_carray_put, ffi_carray_get,
+                                   0, 0, 0, eltype);
     }
     uw_throwf(error_s, lit("~a: unrecognized type operator: ~s"),
               self, sym, nao);
