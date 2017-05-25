@@ -1636,7 +1636,7 @@ static val ffi_struct_compile(val membs, val *ptypes, val self)
     if (ctft->size == 0)
       uw_throwf(error_s, lit("~a: incomplete type ~s cannot be struct member"),
                 self, type, nao);
-    pttail = list_collect(pttail, ffi_type_compile(type));
+    pttail = list_collect(pttail, comp_type);
     pstail = list_collect(pstail, name);
   }
 
