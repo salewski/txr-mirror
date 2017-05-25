@@ -95,15 +95,20 @@ static val ffi_typedef_hash;
 
 static uw_frame_t *s_exit_point;
 
+struct smemb {
+  val mname;
+  val mtype;
+  struct txr_ffi_type *mtft;
+};
+
 struct txr_ffi_type {
   ffi_type *ft;
   val lt;
   val syntax;
-  val mnames;
   val eltype;
-  val mtypes;
   cnum size, align;
   cnum nelem;
+  struct smemb *memb;
   unsigned null_term : 1;
   unsigned char_conv : 1;
   unsigned wchar_conv : 1;
@@ -155,17 +160,27 @@ static void ffi_type_struct_destroy_op(val obj)
   ft->elements = 0;
   free(ft);
   tft->ft = 0;
+  free(tft->memb);
+  tft->memb = 0;
   free(tft);
 }
 
 static void ffi_struct_type_mark(val obj)
 {
   struct txr_ffi_type *tft = ffi_type_struct(obj);
+  cnum i;
   gc_mark(tft->lt);
   gc_mark(tft->syntax);
-  gc_mark(tft->eltype);
-  gc_mark(tft->mnames);
-  gc_mark(tft->mtypes);
+
+  if (tft->eltype)
+    gc_mark(tft->eltype);
+
+  if (tft->memb != 0) {
+    for (i = 0; i < tft->nelem; i++) {
+      gc_mark(tft->memb[i].mname);
+      gc_mark(tft->memb[i].mtype);
+    }
+  }
 }
 
 static void ffi_ptr_type_mark(val obj)
@@ -948,8 +963,8 @@ static void ffi_ptr_in_release(struct txr_ffi_type *tft, val obj, mem_t *dst)
 static val ffi_struct_in(struct txr_ffi_type *tft, int copy, mem_t *src,
                          val strct, val self)
 {
-  val slots = tft->mnames;
-  val types = tft->mtypes;
+  cnum i, nmemb = tft->nelem;
+  struct smemb *memb = tft->memb;
   ucnum offs = 0;
 
   if (strct == nil) {
@@ -957,10 +972,9 @@ static val ffi_struct_in(struct txr_ffi_type *tft, int copy, mem_t *src,
     strct = make_struct(tft->lt, nil, args);
   }
 
-  while (slots) {
-    val slsym = pop(&slots);
-    val type = pop(&types);
-    struct txr_ffi_type *mtft = ffi_type_struct(type);
+  for (i = 0; i < nmemb; i++) {
+    val slsym = memb[i].mname;
+    struct txr_ffi_type *mtft = memb[i].mtft;
     ucnum almask = mtft->align - 1;
     offs = (offs + almask) & ~almask;
     if (slsym) {
@@ -981,14 +995,13 @@ static val ffi_struct_in(struct txr_ffi_type *tft, int copy, mem_t *src,
 static void ffi_struct_put(struct txr_ffi_type *tft, val strct, mem_t *dst,
                            val self)
 {
-  val slots = tft->mnames;
-  val types = tft->mtypes;
+  cnum i, nmemb = tft->nelem;
+  struct smemb *memb = tft->memb;
   ucnum offs = 0;
 
-  while (slots) {
-    val slsym = pop(&slots);
-    val type = pop(&types);
-    struct txr_ffi_type *mtft = ffi_type_struct(type);
+  for (i = 0; i < nmemb; i++) {
+    val slsym = memb[i].mname;
+    struct txr_ffi_type *mtft = memb[i].mtft;
     ucnum almask = mtft->align - 1;
     offs = (offs + almask) & ~almask;
     if (slsym) {
@@ -1002,14 +1015,13 @@ static void ffi_struct_put(struct txr_ffi_type *tft, val strct, mem_t *dst,
 static void ffi_struct_out(struct txr_ffi_type *tft, int copy, val strct,
                            mem_t *dst, val self)
 {
-  val slots = tft->mnames;
-  val types = tft->mtypes;
+  cnum i, nmemb = tft->nelem;
+  struct smemb *memb = tft->memb;
   ucnum offs = 0;
 
-  while (types) {
-    val slsym = pop(&slots);
-    val type = pop(&types);
-    struct txr_ffi_type *mtft = ffi_type_struct(type);
+  for (i = 0; i < nmemb; i++) {
+    val slsym = memb[i].mname;
+    struct txr_ffi_type *mtft = memb[i].mtft;
     ucnum almask = mtft->align - 1;
     offs = (offs + almask) & ~almask;
     if (slsym) {
@@ -1027,16 +1039,15 @@ static void ffi_struct_out(struct txr_ffi_type *tft, int copy, val strct,
 
 static val ffi_struct_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  val slots = tft->mnames;
-  val types = tft->mtypes;
+  cnum i, nmemb = tft->nelem;
+  struct smemb *memb = tft->memb;
   ucnum offs = 0;
   args_decl(args, 0);
   val strct = make_struct(tft->lt, nil, args);
 
-  while (slots) {
-    val slsym = pop(&slots);
-    val type = pop(&types);
-    struct txr_ffi_type *mtft = ffi_type_struct(type);
+  for (i = 0; i < nmemb; i++) {
+    val slsym = memb[i].mname;
+    struct txr_ffi_type *mtft = memb[i].mtft;
     ucnum almask = mtft->align - 1;
     offs = (offs + almask) & ~almask;
     if (slsym) {
@@ -1051,17 +1062,16 @@ static val ffi_struct_get(struct txr_ffi_type *tft, mem_t *src, val self)
 
 static void ffi_struct_release(struct txr_ffi_type *tft, val strct, mem_t *dst)
 {
-  val slots = tft->mnames;
-  val types = tft->mtypes;
+  cnum i, nmemb = tft->nelem;
+  struct smemb *memb = tft->memb;
   ucnum offs = 0;
 
   if (strct == nil)
     return;
 
-  while (slots) {
-    val slsym = pop(&slots);
-    val type = pop(&types);
-    struct txr_ffi_type *mtft = ffi_type_struct(type);
+  for (i = 0; i < nmemb; i++) {
+    val slsym = memb[i].mname;
+    struct txr_ffi_type *mtft = memb[i].mtft;
     ucnum almask = mtft->align - 1;
     offs = (offs + almask) & ~almask;
     if (slsym) {
@@ -1515,8 +1525,10 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   ffi_type *ft = coerce(ffi_type *, chk_calloc(1, sizeof *ft));
 
   cnum nmemb = c_num(length(types)), i;
-  ffi_type **elements = coerce(ffi_type **, chk_malloc(sizeof *elements *
-                                                       (nmemb + 1)));
+  ffi_type **elements = coerce(ffi_type **,
+                               chk_malloc(sizeof *elements * (nmemb + 1)));
+  struct smemb *memb = coerce(struct smemb *,
+                              chk_malloc(sizeof *memb * nmemb));
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
   cnum total_size = 0;
   cnum most_align = 0;
@@ -1528,8 +1540,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   tft->ft = ft;
   tft->syntax = syntax;
   tft->lt = lisp_type;
-  tft->mnames = slots;
-  tft->mtypes = types;
+  tft->nelem = nmemb;
   tft->put = ffi_struct_put;
   tft->get = ffi_struct_get;
   tft->in = ffi_struct_in;
@@ -1539,11 +1550,16 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
   for (i = 0; i < nmemb; i++) {
     val type = pop(&types);
+    val slot = pop(&slots);
     struct txr_ffi_type *mtft = ffi_type_struct(type);
     cnum align = mtft->align;
     cnum size = mtft->size;
 
     elements[i] = mtft->ft;
+
+    memb[i].mtype = type;
+    memb[i].mname = slot;
+    memb[i].mtft = mtft;
 
     if (align > most_align)
       most_align = align;
@@ -1563,6 +1579,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
   tft->size = total_size;
   tft->align = most_align;
+  tft->memb = memb;
 
   return obj;
 }
@@ -1587,7 +1604,6 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->ft = ft;
   tft->syntax = syntax;
   tft->lt = lisp_type;
-  tft->mnames = nil;
   tft->eltype = eltype;
   tft->put = ffi_array_put;
   tft->get = ffi_array_get;
