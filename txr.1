@@ -53770,6 +53770,11 @@ anonymous padding member simply generates a skip of the number of byte
 corresponding to the size of its type, plus any necessary additional padding
 for the alignment of the subsequent member.
 
+Structure members may be bitfields, which are described using the
+.code ubit
+and
+.code sbit
+compound type operators.
 .meIP (array < dim << type )
 The FFI
 .code array
@@ -54113,6 +54118,130 @@ has been stored by the foreign function, but doesn't free the external
 object.
 
 The get semantics retrieves a Lisp value without freeing.
+
+.meIP ({ubit | sbit} << width )
+The
+.code ubit
+and
+.code sbit
+types denote C language style bitfields. These types can only appear
+as members of structures. A bitfield type cannot be the argument or return
+value of a foreign function or closure, and cannot be a foreign variable.
+Arrays of bitfields and pointers, of any kind, to bitfields are a forbidden
+type combination that is rejected by the type system.
+
+The
+.code ubit
+type denotes a bitfield of type
+.codn uint ,
+corresponding to an
+.code unsigned
+bitfield in the C language.
+
+The
+.code sbit
+type denotes a bitfield of type
+.codn int .
+Unlike in the C language, it is not implementation-defined whether such
+a bit-field represents signed values; it converts between Lisp integers
+that may be positive or negative, and a foreign representation which is
+two's complement.
+
+Bitfields of any other type are not supported.
+
+The
+.meta width
+parameter of the type indicates the number of bits. It may range from
+zero to the number of bits in the
+.code uint
+type.
+
+In a structure, bitfields are allocated out in storage units which have the
+same width and alignment requirements as a
+.codn uint .
+These storage units themselves can be regarded as anonymous members of the
+structure.  When a new unit needs to be allocated in a structure to hold
+bitfields, it is allocated in the same manner as a named member of type
+.code uint
+would be at the same position.
+
+If a bitfield with non-zero width is not preceded by any non-zero-width
+bitfield, then a new unit is allocated, and the bitfield is placed into the
+first available position in that unit.  On a big-endian machine, the first
+available position starts at the most significant bit of the underlying
+storage word.  On a little-endian machine, the first available bit position
+is the least significant bit of the storage word.
+
+If a non-zero-width bitfield is preceded by a non-zero-width bitfield, then
+the new bitfield is packed into the same storage unit as that bitfield if
+there is enough remaining room in that unit. Otherwise, it is placed into a
+new unit. Bitfields are not split across unit boundaries.
+
+A zero-length bitfield is permitted. It may be given a name, but the field
+will not perform any conversions to and from the corresponding slot in the
+Lisp structure.  Note that the FFI struct definition itself causes the
+corresponding Lisp structure type to come into existence, then the Lisp
+structure type will have slots for all the zero width named bitfields,
+even though those slots don't participate in any conversions in conjunction
+with the FFI type.
+
+A zero-length bitfield functions in a similar manner in the FFI type
+system as in the C language.  If it is placed between two bitfields, then it
+forces them to be in separate storage units. That is to say, the bitfield
+which follows is placed into a new storage unit, even if the previous
+bitfield leaves enough room in it storage unit. 
+
+A zero-length bitfield that does not appear between non-zero-length
+bitfields has no effect.
+
+A
+.code ubit
+field stores values which follow a pure binary enumeration. For instance,
+a bit field of width 4 stores values from 0 to 15. On conversion from
+the Lisp structure to the foreign structure, the corresponding member
+must be a integer value in this range, or an error exception is thrown.
+
+On conversion from the foreign representation to Lisp, the integer
+corresponding to the bit pattern is recovered. Bitfields follow the
+bit order of the underlying storage word. That is to say, the most
+significant binary digit of the bitfield is the one which is closest
+to the the most significant bit of the underlying storage unit.
+If a four-bit field is placed into an empty storage unit and the value
+8 its stored, then on a big-endian machine, this has the effect of
+setting to 1 the most significant bit of the underlying storage word.
+On a little-endian machine, it has the effect of setting bit 3 of
+the word (where bit 0 is the least significant bit).
+
+The
+.code sbit
+field creates a correspondence between a range of Lisp integers,
+and a foreign representation based on the two's complement system.
+The most significant bit of the bit field functions as a sign bit.
+Values whose most significant bit is clear are positive, and use
+a pure binary representation just like their
+.code ubit
+counterparts. The representation of negative values is defined
+by the "two's complement" operation, which maps each value to
+its additive inverse. The operation consists of temporarily treating the
+entire bitfield as unsigned, and inverting the logical value of all the
+bits, and then adding 1 with "wrap-around" to zero if 1 is added to a field
+consisting of all 1 bits. (Thus zero maps to zero, as expected).
+An anomaly in the two's complement system is that the most negative
+value has no positive counterpart. The two's complement operation
+on the most negative value produces that same value itself.
+
+A
+.code sbit
+field of width 1
+can only store two values: -1 and 0, represented by the bit patterns
+1 and 0. An attempt to convert any other integer value to a
+.code sbit
+field of width 1 results in an error.
+
+A
+.code sbit
+field of width 2 can represent the values -2, -1, 0 and 1, which are
+stored as the bit patterns 10, 11, 00 and 01, respectively.
 
 .meIP ({buf | buf-d} << size )
 The parametrized

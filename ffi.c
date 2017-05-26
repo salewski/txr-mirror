@@ -89,6 +89,8 @@ val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_out_s_s, ptr_s;
 
 val closure_s;
 
+val sbit_s, ubit_s;
+
 val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
 static val ffi_typedef_hash;
@@ -108,6 +110,7 @@ struct txr_ffi_type {
   val syntax;
   val eltype;
   cnum size, align;
+  unsigned shift, mask;
   cnum nelem;
   struct smemb *memb;
   unsigned null_term : 1;
@@ -611,6 +614,91 @@ static val ffi_wchar_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   wchar_t c = *coerce(wchar_t *, src);
   return chr(c);
+}
+
+static void ffi_sbit_put(struct txr_ffi_type *tft, val n,
+                         mem_t *dst, val self)
+{
+  unsigned mask = tft->mask;
+  unsigned sbmask = mask ^ (mask >> 1);
+  int shift = tft->shift;
+  cnum cn = c_num(n);
+  int in = cn;
+  unsigned uput = (((unsigned) in) << shift) & mask;
+
+  if (in != cn)
+    goto range;
+
+  if (uput & sbmask) {
+    int icheck = -(int)(((uput ^ mask) >> shift) + 1);
+    if (icheck != cn)
+      goto range;
+  } else if (uput >> shift != cn) {
+    goto range;
+  }
+
+  {
+    unsigned field = *coerce(unsigned *, dst);
+    field &= ~mask;
+    field |= uput;
+    *coerce(unsigned *, dst) = field;
+  }
+
+  return;
+range:
+  uw_throwf(error_s, lit("~a: value ~s is out of range of "
+                         "signed ~s bit-field"),
+            self, n, num_fast(tft->nelem), nao);
+}
+
+static val ffi_sbit_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  unsigned mask = tft->mask;
+  unsigned sbmask = mask ^ (mask >> 1);
+  int shift = tft->shift;
+  unsigned uget = *coerce(unsigned *, src) & mask;
+
+  if (uget & sbmask)
+    return num(-(int)(((uget ^ mask) >> shift) + 1));
+  return unum(uget >> shift);
+}
+
+static void ffi_ubit_put(struct txr_ffi_type *tft, val n,
+                         mem_t *dst, val self)
+{
+  unsigned mask = tft->mask;
+  int shift = tft->shift;
+  ucnum cn = c_unum(n);
+  unsigned un = cn;
+  unsigned uput = (un << shift) & mask;
+
+  if (un != cn)
+    goto range;
+
+  if (uput >> shift != cn)
+    goto range;
+
+  {
+    unsigned field = *coerce(unsigned *, dst);
+    field &= ~mask;
+    field |= uput;
+    *coerce(unsigned *, dst) = field;
+  }
+
+  return;
+
+range:
+  uw_throwf(error_s, lit("~a: value ~s is out of range of "
+                         "unsigned ~s bit-field"),
+            self, n, num_fast(tft->nelem), nao);
+}
+
+static val ffi_ubit_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  unsigned mask = tft->mask;
+  int shift = tft->shift;
+  unsigned uget = *coerce(unsigned *, src) & mask;
+  return unum(uget >> shift);
 }
 
 static void ffi_cptr_put(struct txr_ffi_type *tft, val n, mem_t *dst,
@@ -1443,6 +1531,16 @@ static void ffi_carray_put(struct txr_ffi_type *tft, val carray, mem_t *dst,
   *coerce(mem_t **, dst) = p;
 }
 
+static val bitfield_syntax_p(val syntax)
+{
+  if (!consp(syntax)) {
+    return nil;
+  } else {
+    val sym = car(syntax);
+    return tnil(sym == sbit_s || sym == ubit_s);
+  }
+}
+
 static val make_ffi_type_builtin(val syntax, val lisp_type,
                                  cnum size, cnum align, ffi_type *ft,
                                  void (*put)(struct txr_ffi_type *,
@@ -1481,26 +1579,34 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
                                                  val obj, mem_t *dst),
                                  val tgtype)
 {
-  struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
-                                    chk_calloc(1, sizeof *tft));
+  val self = lit("ffi-type-compile");
+  struct txr_ffi_type *tgtft = ffi_type_struct(tgtype);
 
-  val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_ptr_ops);
+  if (tgtft->size == 0 && bitfield_syntax_p(tgtft->syntax)) {
+    uw_throwf(error_s, lit("~a: type combination ~s not allowed"),
+              self, syntax, nao);
+  } else {
+    struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
+                                      chk_calloc(1, sizeof *tft));
 
-  tft->ft = &ffi_type_pointer;
-  tft->syntax = syntax;
-  tft->lt = lisp_type;
-  tft->size = sizeof (mem_t *);
-  tft->align = alignof (mem_t *);
-  tft->put = put;
-  tft->get = get;
-  tft->eltype = tgtype;
-  tft->in = in;
-  tft->out = out;
-  tft->release = release;
-  tft->alloc = ffi_fixed_alloc;
-  tft->free = free;
+    val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_ptr_ops);
 
-  return obj;
+    tft->ft = &ffi_type_pointer;
+    tft->syntax = syntax;
+    tft->lt = lisp_type;
+    tft->size = sizeof (mem_t *);
+    tft->align = alignof (mem_t *);
+    tft->put = put;
+    tft->get = get;
+    tft->eltype = tgtype;
+    tft->in = in;
+    tft->out = out;
+    tft->release = release;
+    tft->alloc = ffi_fixed_alloc;
+    tft->free = free;
+
+    return obj;
+  }
 }
 
 static val make_ffi_type_struct(val syntax, val lisp_type,
@@ -1519,6 +1625,8 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   ucnum offs = 0;
   ucnum most_align = 0;
   int need_out_handler = 0;
+  int bit_offs = 0;
+  const int bits_int = 8 * sizeof(int);
 
   ft->type = FFI_TYPE_STRUCT;
   ft->size = 0;
@@ -1539,25 +1647,76 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     val type = pop(&types);
     val slot = pop(&slots);
     struct txr_ffi_type *mtft = ffi_type_struct(type);
-    cnum align = mtft->align;
     cnum size = mtft->size;
-    ucnum almask = align - 1;
 
     elements[i] = mtft->ft;
 
     memb[i].mtype = type;
     memb[i].mname = slot;
     memb[i].mtft = mtft;
-    memb[i].offs = offs;
 
-    if (align > most_align)
-      most_align = align;
+    if (size == 0 && bitfield_syntax_p(mtft->syntax)) {
+      int bits = mtft->nelem;
+      int room = bits_int - bit_offs;
+
+      if (bits == 0) {
+        if (bit_offs > 0) {
+          offs += sizeof (int);
+          bit_offs = 0;
+        }
+        nmemb--, i--;
+        continue;
+      }
+
+      if (bit_offs == 0) {
+        ucnum almask = alignof (int) - 1;
+        offs = (offs + almask) & ~almask;
+      }
+
+      if (most_align < alignof (int))
+        most_align = alignof (int);
+
+      if (bits > room) {
+        offs += sizeof (int);
+        bit_offs = 0;
+      }
+
+      memb[i].offs = offs;
+
+#if HAVE_LITTLE_ENDIAN
+      mtft->shift = bit_offs;
+#else
+      mtft->shift = bits_int - bit_offs - bits;
+#endif
+      if (bits == bits_int)
+        mtft->mask = UINT_MAX;
+      else
+        mtft->mask = ((1U << bits) - 1) << mtft->shift;
+      bit_offs += bits;
+    } else {
+      cnum align = mtft->align;
+      ucnum almask = align - 1;
+
+      if (bit_offs > 0) {
+        offs += sizeof (int);
+        bit_offs = 0;
+      }
+
+      offs = (offs + almask) & ~almask;
+      memb[i].offs = offs;
+      offs += size;
+
+      if (align > most_align)
+        most_align = align;
+    }
 
     need_out_handler = need_out_handler || mtft->out != 0;
-
-    offs += size;
-    offs = (offs + almask) & ~almask;
   }
+
+  if (bit_offs > 0)
+    offs += sizeof (int);
+
+  tft->nelem = i;
 
   elements[i] = 0;
 
@@ -1633,7 +1792,7 @@ static val ffi_struct_compile(val membs, val *ptypes, val self)
     if (cddr(mp))
       uw_throwf(error_s, lit("~a: excess elements in type-member pair ~s"),
                 self, mp, nao);
-    if (ctft->size == 0)
+    if (ctft->size == 0 && !bitfield_syntax_p(ctft->syntax))
       uw_throwf(error_s, lit("~a: incomplete type ~s cannot be struct member"),
                 self, type, nao);
     pttail = list_collect(pttail, comp_type);
@@ -1797,7 +1956,25 @@ val ffi_type_compile(val syntax)
       return make_ffi_type_pointer(syntax, carray_s,
                                    ffi_carray_put, ffi_carray_get,
                                    0, 0, 0, eltype);
+    } else if (sym == sbit_s || sym == ubit_s) {
+      val nbits = cadr(syntax);
+      cnum nb = c_num(nbits);
+      val type = make_ffi_type_builtin(syntax, integer_s, 0, 0,
+                                       &ffi_type_void,
+                                       if3(sym == sbit_s,
+                                           ffi_sbit_put, ffi_ubit_put),
+                                       if3(sym == sbit_s,
+                                           ffi_sbit_get, ffi_ubit_get));
+      struct txr_ffi_type *tft = ffi_type_struct(type);
+      const int bits_int = 8 * sizeof(int);
+      if (nb < 0 || nb > bits_int)
+        uw_throwf(error_s, lit("~a: invalid bitfield size ~s; "
+                               "must be 0 to ~s"),
+                  self, nbits, num_fast(bits_int), nao);
+      tft->nelem = c_num(nbits);
+      return type;
     }
+
     uw_throwf(error_s, lit("~a: unrecognized type operator: ~s"),
               self, sym, nao);
   } else {
@@ -2422,6 +2599,11 @@ mem_t *ffi_closure_get_fptr(val closure)
 
 val ffi_typedef(val name, val type)
 {
+  val self = lit("ffi-typedef");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  if (tft->size == 0 && bitfield_syntax_p(tft->syntax))
+    uw_throwf(error_s, lit("~a: cannot create a typedef for bitfield type"),
+              self, nao);
   return sethash(ffi_typedef_hash, name, type);
 }
 
@@ -2836,6 +3018,8 @@ void ffi_init(void)
   ptr_out_s_s = intern(lit("ptr-out-s"), user_package);
   ptr_s = intern(lit("ptr"), user_package);
   closure_s = intern(lit("closure"), user_package);
+  sbit_s = intern(lit("sbit"), user_package);
+  ubit_s = intern(lit("ubit"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);
   ffi_closure_s = intern(lit("ffi-closure"), user_package);
