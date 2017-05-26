@@ -1246,6 +1246,43 @@ printf "%d\n" "$lit_align"
 printf "#define LIT_ALIGN %d\n" "$lit_align" >> config.h
 
 #
+# Endianness.
+#
+
+printf "Checking target machine endianness ... "
+cat > conftest.c <<!
+#define USPELL(C0, C1, C2, C3) \
+  ((unsigned) C0 << 24 | \
+   (unsigned) C1 << 16 | \
+   (unsigned) C2 << 8 | (unsigned) C3)
+
+unsigned x[6] = {
+  0,
+  USPELL('L', 'I', 'S', 'P'),
+  USPELL('U', 'N', 'I', 'X'),
+  USPELL('C', 'O', 'R', 'E'),
+  USPELL('D', 'W', 'I', 'M'),
+  0
+};
+!
+
+if ! conftest_o ; then
+  printf "failed\n";
+  exit 1;
+else
+  if grep -q 'PSILXINUEROCMIWD' conftest.o ; then
+    printf "little\n";
+    printf "#define HAVE_LITTLE_ENDIAN 1\n" >> config.h
+  elif grep -q 'LISPUNIXCOREDWIM' conftest.o ; then
+    printf "big\n";
+    printf "#define HAVE_LITTLE_ENDIAN 0\n" >> config.h
+  else
+    printf "failed\n"
+    exit 1
+  fi
+fi
+
+#
 # Inline functions
 # 
 
