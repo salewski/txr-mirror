@@ -1514,7 +1514,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   ffi_type **elements = coerce(ffi_type **,
                                chk_malloc(sizeof *elements * (nmemb + 1)));
   struct smemb *memb = coerce(struct smemb *,
-                              chk_malloc(sizeof *memb * nmemb));
+                              chk_calloc(nmemb, sizeof *memb));
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
   ucnum offs = 0;
   ucnum most_align = 0;
@@ -1533,6 +1533,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   tft->release = ffi_struct_release;
   tft->alloc = ffi_fixed_alloc;
   tft->free = free;
+  tft->memb = memb;
 
   for (i = 0; i < nmemb; i++) {
     val type = pop(&types);
@@ -1567,7 +1568,6 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
   tft->size = (offs + most_align - 1) & ~(most_align - 1);
   tft->align = most_align;
-  tft->memb = memb;
 
   return obj;
 }
