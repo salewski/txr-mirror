@@ -1659,7 +1659,8 @@ val ffi_type_compile(val syntax)
       val sname = if3(name, name, gensym(lit("ffi-struct-")));
       val slots = ffi_struct_compile(membs, &types, self);
       val stype = or2(if2(name, find_struct_type(sname)),
-                      make_struct_type(sname, nil, nil, slots,
+                      make_struct_type(sname, nil, nil,
+                                       remq(nil, slots, nil),
                                        nil, nil, nil, nil));
       val xsyntax = cons(struct_s,
                          cons(sname, membs));
