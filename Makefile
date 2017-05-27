@@ -358,7 +358,10 @@ tst/%.out: %.tl
 	$(V)mv $(TESTS_TMP) $@
 
 %.ok: %.out
-	$(V)diff -u $(patsubst tst/%.out,%.expected,$<) $<
+	$(V)if ! diff -u $(patsubst tst/%.out,%.expected,$<) $< ; then \
+	  rm $< ; \
+	  exit 1 ; \
+	fi
 	$(V)touch $@
 
 %.expected: %.out
