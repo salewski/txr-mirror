@@ -2403,7 +2403,6 @@ val ffi_call_wrap(val fptr, val ffi_call_desc, struct args *args)
   for (i = 0; i < n; i++) {
     struct txr_ffi_type *mtft = type[i];
     mtft->put(mtft, args->arg[i], convert(mem_t *, values[i]), self);
-    in_pass_needed = in_pass_needed || mtft->in != 0;
   }
 
   cleanup_needed = 0;
