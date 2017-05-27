@@ -53246,7 +53246,8 @@ operation is the
 .I in
 operation.
 
-The in operation has two nuances: by-value nuance and by-pointer nuance.
+The in operation has two nuances: the by-value nuance and the
+by-pointer nuance.
 Data passed into a function by value such as function arguments or via
 .code ptr-in
 are subject to the by-value nuance. Updates to these objects themselves
@@ -53272,7 +53273,7 @@ library, to convert the arguments to Lisp objects.
 When a Lisp callback invoked by a foreign library completes, it must
 provide a return value, and also update any argument objects with new
 values. The return value is propagated using the put operation. Updates
-to arguments is performed by the
+to arguments are performed by the
 .code out
 operation. This operation is like the reverse of the in operation. Like
 that operation, it has a by-value and by-pointer nuance.
@@ -53544,7 +53545,7 @@ and
 are effectively equivalent. They denote a string passed by pointer,
 with in-out semantics. The effect is that the string is dynamic in both
 directions. What that means is that the foreign function either must not
-free the pointer it was given, or else it replace it with one which the
+free the pointer it was given, or else it must replace it with one which the
 caller can also free (or with a null pointer). The two are equivalent
 because
 .code str-d
@@ -53620,10 +53621,10 @@ then a null pointer is written.
 The
 .code buf
 in operation has semantics
-as follows. In the pass-by-pointer nuance, buffer pointer currently in the
+as follows. In the pass-by-pointer nuance, the buffer pointer currently in the
 argument space is compared to the original one which had been written there
 from the buffer object.  If they are identical, then the in operation
-yields yields the original buffer object. Otherwise, if the altered
+yields the original buffer object. Otherwise, if the altered
 pointer is non-null,
 it allocates a new buffer equal in size to the original one and copies in the
 new data from the new pointer that was placed into the argument space by the
@@ -53696,7 +53697,7 @@ the foreign function alters the pointer.
 .ccIP @ closure
 The
 .code closure
-type converts to kinds of Lisp objects to a C pointer: the
+type converts two kinds of Lisp objects to a C pointer: the
 .code cptr
 type, and the special
 .code ffi-closure
