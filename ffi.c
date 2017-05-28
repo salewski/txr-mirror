@@ -2800,7 +2800,7 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
       if (rtft->release != 0 && retval != nao)
         rtft->release(rtft, retval, convert(mem_t *, cret));
       if (!tfcl->abort_retval)
-        memset(cret, 0, rtft->size);
+        memset(cret, 0, pad_retval(rtft->size));
       else
         ifbe2(rtft->rput, rtft->put)(rtft, tfcl->abort_retval,
                                      convert(mem_t *, cret), self);
