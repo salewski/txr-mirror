@@ -62,6 +62,18 @@
 
 #define alignof(type) offsetof(struct {char x; type y;}, y)
 
+#if HAVE_LITTLE_ENDIAN
+#define pad_retval(size) (size)
+#define ifbe(expr) (0)
+#define ifbe2(expr1, expr2) (expr2)
+#else
+#define pad_retval(size) ((size) > sizeof (ffi_arg) \
+                          ? (size) \
+                          : sizeof (ffi_arg))
+#define ifbe(expr) (expr)
+#define ifbe2(expr1, expr2) (expr1)
+#endif
+
 val uint8_s, int8_s;
 val uint16_s, int16_s;
 val uint32_s, int32_s;
@@ -124,6 +136,10 @@ struct txr_ffi_type {
   void (*release)(struct txr_ffi_type *, val obj, mem_t *dst);
   mem_t *(*alloc)(struct txr_ffi_type *, val obj, val self);
   void (*free)(void *);
+#if !HAVE_LITTLE_ENDIAN
+  void (*rput)(struct txr_ffi_type *, val obj, mem_t *dst, val self);
+  val (*rget)(struct txr_ffi_type *, mem_t *src, val self);
+#endif
 };
 
 static struct txr_ffi_type *ffi_type_struct(val obj)
@@ -700,6 +716,199 @@ static val ffi_ubit_get(struct txr_ffi_type *tft, mem_t *src, val self)
   unsigned uget = *coerce(unsigned *, src) & mask;
   return unum(uget >> shift);
 }
+
+#if !HAVE_LITTLE_ENDIAN
+
+static void ffi_i8_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  i8_t v = c_i8(n, self);
+  *coerce(i8_t *, dst) = v;
+}
+
+static val ffi_i8_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  return num_fast(*src);
+}
+
+static void ffi_u8_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  u8_t v = c_u8(n, self);
+  *coerce(u8_t *, dst) = v;
+}
+
+static val ffi_u8_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  return num_fast(*coerce(u8_t *, src));
+}
+
+#if HAVE_I16
+static void ffi_i16_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  i16_t v = c_i16(n, self);
+  *coerce(ffi_arg *, dst) = v;
+}
+
+static val ffi_i16_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  i16_t n = *coerce(ffi_arg *, src);
+  return num_fast(n);
+}
+
+static void ffi_u16_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  u16_t v = c_u16(n, self);
+  *coerce(ffi_arg *, dst) = v;
+}
+
+static val ffi_u16_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  u16_t n = *coerce(ffi_arg *, src);
+  return num_fast(n);
+}
+#endif
+
+#if HAVE_I32
+static void ffi_i32_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  i32_t v = c_i32(n, self);
+  *coerce(ffi_arg *, dst) = v;
+}
+
+static val ffi_i32_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  i32_t n = *coerce(ffi_arg *, src);
+  return num(n);
+}
+#endif
+
+static void ffi_u32_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  u32_t v = c_u32(n, self);
+  *coerce(ffi_arg *, dst) = v;
+}
+
+static val ffi_u32_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  u32_t n = *coerce(ffi_arg *, src);
+  return unum(n);
+}
+
+static void ffi_char_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  char v = c_char(n, self);
+  *coerce(ffi_arg *, dst) = v;
+}
+
+static val ffi_char_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  return chr((char) *coerce(ffi_arg *, src));
+}
+
+static void ffi_uchar_rput(struct txr_ffi_type *tft, val n, mem_t *dst,
+                          val self)
+{
+  unsigned char v = c_uchar(n, self);
+  *coerce(ffi_arg *, dst) = v;
+}
+
+static val ffi_uchar_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  return num_fast((unsigned char) *coerce(ffi_arg *, src));
+}
+
+static val ffi_bchar_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  return chr((unsigned char) *coerce(ffi_arg *, src));
+}
+
+static void ffi_short_rput(struct txr_ffi_type *tft, val n, mem_t *dst,
+                          val self)
+{
+  short v = c_short(n, self);
+  *coerce(ffi_arg *, dst) = v;
+}
+
+static val ffi_short_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  short n = *coerce(ffi_arg *, src);
+  return num_fast(n);
+}
+
+static void ffi_ushort_rput(struct txr_ffi_type *tft, val n, mem_t *dst,
+                           val self)
+{
+  unsigned short v = c_ushort(n, self);
+  *coerce(ffi_arg *, dst) = v;
+}
+
+static val ffi_ushort_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  unsigned short n = *coerce(ffi_arg *, src);
+  return num_fast(n);
+}
+
+static void ffi_int_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  int v = c_int(n, self);
+  *coerce(ffi_arg *, dst) = v;
+}
+
+static val ffi_int_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  int n = *coerce(ffi_arg *, src);
+  return num(n);
+}
+
+static void ffi_uint_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  unsigned v = c_uint(n, self);
+  *coerce(ffi_arg *, dst) = v;
+}
+
+static val ffi_uint_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  unsigned n = *coerce(ffi_arg *, src);
+  return unum(n);
+}
+
+static void ffi_long_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  long v = c_long(n, self);
+  *coerce(ffi_arg *, dst) = v;
+}
+
+static val ffi_long_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  long n = *coerce(ffi_arg *, src);
+  return num(n);
+}
+
+static void ffi_ulong_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  unsigned long v = c_ulong(n, self);
+  *coerce(ffi_arg *, dst) = v;
+}
+
+static val ffi_ulong_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  unsigned long n = *coerce(ffi_arg *, src);
+  return unum(n);
+}
+
+static void ffi_wchar_rput(struct txr_ffi_type *tft, val ch, mem_t *dst,
+                           val self)
+{
+  wchar_t c = c_chr(ch);
+  *coerce(ffi_arg *, dst) = c;
+}
+
+static val ffi_wchar_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  wchar_t c = *coerce(ffi_arg *, src);
+  return chr(c);
+}
+
+#endif
 
 static void ffi_cptr_put(struct txr_ffi_type *tft, val n, mem_t *dst,
                          val self)
@@ -1546,7 +1755,11 @@ static val make_ffi_type_builtin(val syntax, val lisp_type,
                                  void (*put)(struct txr_ffi_type *,
                                              val obj, mem_t *dst, val self),
                                  val (*get)(struct txr_ffi_type *,
-                                            mem_t *src, val self))
+                                            mem_t *src, val self),
+                                 void (*rput)(struct txr_ffi_type *,
+                                             val obj, mem_t *dst, val self),
+                                 val (*rget)(struct txr_ffi_type *,
+                                             mem_t *src, val self))
 {
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
                                     chk_calloc(1, sizeof *tft));
@@ -1562,6 +1775,10 @@ static val make_ffi_type_builtin(val syntax, val lisp_type,
   tft->get = get;
   tft->alloc = ffi_fixed_alloc;
   tft->free = free;
+#if !HAVE_LITTLE_ENDIAN
+  tft->rput = (rput ? rput : put);
+  tft->rget = (rget ? rget : get);
+#endif
 
   return obj;
 }
@@ -1930,7 +2147,8 @@ val ffi_type_compile(val syntax)
                                        if3(sym == buf_s,
                                            ffi_buf_put, ffi_buf_d_put),
                                        if3(sym == buf_s,
-                                           ffi_buf_get, ffi_buf_d_get));
+                                           ffi_buf_get, ffi_buf_d_get),
+                                       0, 0);
       struct txr_ffi_type *tft = ffi_type_struct(type);
 
       if (nelem < 0)
@@ -1964,7 +2182,8 @@ val ffi_type_compile(val syntax)
                                        if3(sym == sbit_s,
                                            ffi_sbit_put, ffi_ubit_put),
                                        if3(sym == sbit_s,
-                                           ffi_sbit_get, ffi_ubit_get));
+                                           ffi_sbit_get, ffi_ubit_get),
+                                       0, 0);
       struct txr_ffi_type *tft = ffi_type_struct(type);
       const int bits_int = 8 * sizeof(int);
       if (nb < 0 || nb > bits_int)
@@ -1999,97 +2218,133 @@ static void ffi_init_types(void)
 #if HAVE_I8
   ffi_typedef(uint8_s, make_ffi_type_builtin(uint8_s, integer_s, sizeof (i8_t),
                                              alignof (i8_t), &ffi_type_uint8,
-                                             ffi_u8_put, ffi_u8_get));
+                                             ffi_u8_put, ffi_u8_get,
+                                             ifbe(ffi_u8_rput),
+                                             ifbe(ffi_u8_rget)));
   ffi_typedef(int8_s, make_ffi_type_builtin(int8_s, integer_s, sizeof (i8_t),
                                             alignof (i8_t), &ffi_type_sint8,
-                                            ffi_i8_put, ffi_i8_get));
+                                            ffi_i8_put, ffi_i8_get,
+                                            ifbe(ffi_i8_rput),
+                                            ifbe(ffi_i8_rget)));
 #endif
 #if HAVE_I16
   ffi_typedef(uint16_s, make_ffi_type_builtin(uint16_s, integer_s,
                                               sizeof (i16_t), alignof (i16_t),
                                               &ffi_type_uint16,
-                                              ffi_u16_put, ffi_u16_get));
+                                              ffi_u16_put, ffi_u16_get,
+                                              ifbe(ffi_u16_rput),
+                                              ifbe(ffi_u16_rget)));
   ffi_typedef(int16_s, make_ffi_type_builtin(int16_s, integer_s,
                                              sizeof (i16_t), alignof (i16_t),
                                              &ffi_type_sint16,
-                                             ffi_i16_put, ffi_i16_get));
+                                             ffi_i16_put, ffi_i16_get,
+                                             ifbe(ffi_i16_rput),
+                                             ifbe(ffi_i16_rget)));
 #endif
 #if HAVE_I32
   ffi_typedef(uint32_s, make_ffi_type_builtin(uint32_s, integer_s,
                                               sizeof (i32_t), alignof (i32_t),
                                               &ffi_type_uint32,
-                                              ffi_u32_put, ffi_u32_get));
+                                              ffi_u32_put, ffi_u32_get,
+                                              ifbe(ffi_u32_rput),
+                                              ifbe(ffi_u32_rget)));
   ffi_typedef(int32_s, make_ffi_type_builtin(int32_s, integer_s,
                                              sizeof (i32_t), alignof (i32_t),
                                              &ffi_type_sint32,
-                                             ffi_i32_put, ffi_i32_get));
+                                             ffi_i32_put, ffi_i32_get,
+                                             ifbe(ffi_i32_rput),
+                                             ifbe(ffi_i32_rget)));
 #endif
 #if HAVE_I64
   ffi_typedef(uint64_s, make_ffi_type_builtin(uint64_s, integer_s,
                                               sizeof (i64_t), alignof (i64_t),
                                               &ffi_type_uint64,
-                                              ffi_u64_put, ffi_u64_get));
+                                              ffi_u64_put, ffi_u64_get, 0, 0));
   ffi_typedef(int64_s, make_ffi_type_builtin(int64_s, integer_s,
-                                              sizeof (i64_t), alignof (i64_t),
-                                              &ffi_type_sint64,
-                                              ffi_i64_put, ffi_i64_get));
+                                             sizeof (i64_t), alignof (i64_t),
+                                             &ffi_type_sint64,
+                                             ffi_i64_put, ffi_i64_get, 0, 0));
 #endif
   ffi_typedef(uchar_s, make_ffi_type_builtin(uchar_s, integer_s, 1, 1,
                                              &ffi_type_uchar,
-                                             ffi_uchar_put, ffi_uchar_get));
+                                             ffi_uchar_put, ffi_uchar_get,
+                                             ifbe(ffi_uchar_rput),
+                                             ifbe(ffi_uchar_rget)));
   ffi_typedef(char_s, make_ffi_type_builtin(char_s, integer_s, 1, 1,
-                                            ffi_char, ffi_char_put, ffi_char_get));
+                                            ffi_char, ffi_char_put,
+                                            ffi_char_get,
+                                            ifbe(ffi_char_rput),
+                                            ifbe(ffi_char_rget)));
   ffi_typedef(bchar_s, make_ffi_type_builtin(bchar_s, char_s, 1, 1,
                                              &ffi_type_uchar,
-                                             ffi_uchar_put, ffi_bchar_get));
+                                             ffi_uchar_put, ffi_bchar_get,
+                                             ifbe(ffi_uchar_rput),
+                                             ifbe(ffi_bchar_rget)));
   ffi_typedef(wchar_s, make_ffi_type_builtin(wchar_s, char_s,
                                              sizeof (wchar_t),
                                              alignof (wchar_t),
                                              &ffi_type_wchar,
-                                             ffi_wchar_put, ffi_wchar_get));
+                                             ffi_wchar_put, ffi_wchar_get,
+                                             ifbe(ffi_wchar_rput),
+                                             ifbe(ffi_wchar_rget)));
   ffi_typedef(ushort_s, make_ffi_type_builtin(ushort_s, integer_s,
                                               sizeof (short), alignof (short),
                                               &ffi_type_ushort,
-                                              ffi_ushort_put, ffi_ushort_get));
+                                              ffi_ushort_put, ffi_ushort_get,
+                                              ifbe(ffi_ushort_rput),
+                                              ifbe(ffi_ushort_rget)));
   ffi_typedef(short_s, make_ffi_type_builtin(short_s, integer_s,
                                              sizeof (short), alignof (short),
                                              &ffi_type_sshort,
-                                             ffi_short_put, ffi_short_get));
+                                             ffi_short_put, ffi_short_get,
+                                             ifbe(ffi_short_rput),
+                                             ifbe(ffi_short_rget)));
   ffi_typedef(int_s, make_ffi_type_builtin(int_s, integer_s,
                                            sizeof (int), alignof (int),
                                            &ffi_type_sint,
-                                           ffi_int_put, ffi_int_get));
+                                           ffi_int_put, ffi_int_get,
+                                           ifbe(ffi_int_rput),
+                                           ifbe(ffi_int_rget)));
   ffi_typedef(uint_s, make_ffi_type_builtin(uint_s, integer_s,
                                             sizeof (int), alignof (int),
                                             &ffi_type_uint,
-                                            ffi_uint_put, ffi_uint_get));
+                                            ffi_uint_put, ffi_uint_get,
+                                            ifbe(ffi_uint_rput),
+                                            ifbe(ffi_uint_rget)));
   ffi_typedef(ulong_s, make_ffi_type_builtin(ulong_s, integer_s,
                                              sizeof (long), alignof (long),
                                              &ffi_type_ulong,
-                                             ffi_ulong_put, ffi_ulong_get));
+                                             ffi_ulong_put, ffi_ulong_get,
+                                             ifbe(ffi_ulong_rput),
+                                             ifbe(ffi_ulong_rget)));
   ffi_typedef(long_s, make_ffi_type_builtin(long_s, integer_s,
                                             sizeof (long), alignof (long),
                                             &ffi_type_slong,
-                                            ffi_long_put, ffi_long_get));
+                                            ffi_long_put, ffi_long_get,
+                                            ifbe(ffi_long_rput),
+                                            ifbe(ffi_long_rget)));
   ffi_typedef(float_s, make_ffi_type_builtin(float_s, float_s,
                                              sizeof (float), alignof (float),
                                              &ffi_type_float,
-                                             ffi_float_put, ffi_float_get));
+                                             ffi_float_put, ffi_float_get,
+                                             0, 0));
   ffi_typedef(double_s, make_ffi_type_builtin(double_s, float_s,
                                               sizeof (double),
                                               alignof (double),
                                               &ffi_type_double,
-                                              ffi_double_put, ffi_double_get));
+                                              ffi_double_put, ffi_double_get,
+                                              0, 0));
   ffi_typedef(val_s, make_ffi_type_builtin(val_s, t,
                                            sizeof (val),
                                            alignof (val),
                                            &ffi_type_pointer,
-                                           ffi_val_put, ffi_val_get));
+                                           ffi_val_put, ffi_val_get,
+                                           0, 0));
   {
     val type = make_ffi_type_builtin(cptr_s, cptr_s, sizeof (mem_t *),
                                      alignof (mem_t *),
                                      &ffi_type_pointer,
-                                     ffi_cptr_put, ffi_cptr_get);
+                                     ffi_cptr_put, ffi_cptr_get, 0, 0);
     struct txr_ffi_type *tft = ffi_type_struct(type);
     tft->alloc = ffi_cptr_alloc;
     tft->free = ffi_noop_free;
@@ -2100,7 +2355,7 @@ static void ffi_init_types(void)
     val type = make_ffi_type_builtin(str_s, str_s, sizeof (mem_t *),
                                      alignof (mem_t *),
                                      &ffi_type_pointer,
-                                     ffi_str_put, ffi_str_get);
+                                     ffi_str_put, ffi_str_get, 0, 0);
     struct txr_ffi_type *tft = ffi_type_struct(type);
     tft->in = ffi_str_in;
     tft->release = ffi_simple_release;
@@ -2111,7 +2366,7 @@ static void ffi_init_types(void)
     val type = make_ffi_type_builtin(bstr_s, str_s, sizeof (mem_t *),
                                      alignof (mem_t *),
                                      &ffi_type_pointer,
-                                     ffi_bstr_put, ffi_bstr_get);
+                                     ffi_bstr_put, ffi_bstr_get, 0, 0);
     struct txr_ffi_type *tft = ffi_type_struct(type);
     tft->in = ffi_bstr_in;
     tft->release = ffi_simple_release;
@@ -2121,14 +2376,14 @@ static void ffi_init_types(void)
   ffi_typedef(str_d_s, make_ffi_type_builtin(str_d_s, str_s, sizeof (mem_t *),
                                              alignof (mem_t *),
                                              &ffi_type_pointer,
-                                             ffi_str_put, ffi_str_d_get));
+                                             ffi_str_put, ffi_str_d_get, 0, 0));
   {
     val type = ffi_typedef(wstr_s, make_ffi_type_builtin(wstr_s, str_s,
                                                          sizeof (mem_t *),
                                                          alignof (mem_t *),
                                                          &ffi_type_pointer,
                                                          ffi_wstr_put,
-                                                         ffi_wstr_get));
+                                                         ffi_wstr_get, 0, 0));
     struct txr_ffi_type *tft = ffi_type_struct(type);
     tft->in = ffi_wstr_in;
     tft->release = ffi_simple_release;
@@ -2138,11 +2393,13 @@ static void ffi_init_types(void)
   ffi_typedef(wstr_d_s, make_ffi_type_builtin(wstr_d_s, str_s, sizeof (mem_t *),
                                               alignof (mem_t *),
                                               &ffi_type_pointer,
-                                              ffi_wstr_put, ffi_wstr_d_get));
+                                              ffi_wstr_put, ffi_wstr_d_get,
+                                              0, 0));
   ffi_typedef(bstr_d_s, make_ffi_type_builtin(bstr_d_s, str_s, sizeof (mem_t *),
                                               alignof (mem_t *),
                                               &ffi_type_pointer,
-                                              ffi_bstr_put, ffi_bstr_d_get));
+                                              ffi_bstr_put, ffi_bstr_d_get,
+                                              0, 0));
 
   {
     val iter;
@@ -2154,7 +2411,7 @@ static void ffi_init_types(void)
                                              &ffi_type_pointer,
                                              if3(sym == buf_s,
                                                  ffi_buf_put, ffi_buf_d_put),
-                                             ffi_void_get));
+                                             ffi_void_get, 0, 0));
     }
   }
 
@@ -2162,10 +2419,12 @@ static void ffi_init_types(void)
                                                sizeof (mem_t *),
                                                alignof (mem_t *),
                                                &ffi_type_pointer,
-                                               ffi_closure_put, ffi_cptr_get));
+                                               ffi_closure_put, ffi_cptr_get,
+                                               0, 0));
   ffi_typedef(void_s, make_ffi_type_builtin(void_s, null_s, 0, 0,
                                             &ffi_type_void,
-                                            ffi_void_put, ffi_void_get));
+                                            ffi_void_put, ffi_void_get,
+                                            0, 0));
 }
 
 static val ffi_type_lookup(val sym)
@@ -2372,7 +2631,7 @@ val ffi_call_wrap(val fptr, val ffi_call_desc, struct args *args)
   val types = tfcd->argtypes;
   val rtype = tfcd->rettype;
   struct txr_ffi_type *rtft = ffi_type_struct(rtype);
-  void *rc = alloca(rtft->size);
+  void *rc = alloca(pad_retval(rtft->size));
   int in_pass_needed = 0;
   volatile int cleanup_needed = 1;
   volatile cnum i;
@@ -2422,7 +2681,7 @@ val ffi_call_wrap(val fptr, val ffi_call_desc, struct args *args)
 
   ffi_call(&tfcd->cif, coerce(void (*)(void), fp), rc, values);
 
-  ret = rtft->get(rtft, convert(mem_t *, rc), self);
+  ret = ifbe2(rtft->rget, rtft->get)(rtft, convert(mem_t *, rc), self);
 
   if (in_pass_needed) {
     for (i = 0; i < n; i++) {
@@ -2480,7 +2739,7 @@ static void ffi_closure_dispatch(ffi_cif *cif, void *cret,
     }
   }
 
-  rtft->put(rtft, retval, convert(mem_t *, cret), self);
+  ifbe2(rtft->rput, rtft->put)(rtft, retval, convert(mem_t *, cret), self);
 }
 
 static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
@@ -2532,7 +2791,7 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
       }
     }
 
-    rtft->put(rtft, retval, convert(mem_t *, cret), self);
+    ifbe2(rtft->rput, rtft->put)(rtft, retval, convert(mem_t *, cret), self);
   }
 
   uw_unwind {
@@ -2543,7 +2802,8 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
       if (!tfcl->abort_retval)
         memset(cret, 0, rtft->size);
       else
-        rtft->put(rtft, tfcl->abort_retval, convert(mem_t *, cret), self);
+        ifbe2(rtft->rput, rtft->put)(rtft, tfcl->abort_retval,
+                                     convert(mem_t *, cret), self);
     }
     uw_curr_exit_point = 0; /* stops unwinding */
   }
