@@ -62,17 +62,18 @@
 
 #define alignof(type) offsetof(struct {char x; type y;}, y)
 
-#if HAVE_LITTLE_ENDIAN
-#define pad_retval(size) (size)
-#define ifbe(expr) (0)
-#define ifbe2(expr1, expr2) (expr2)
-#else
 #define pad_retval(size) ((size) > sizeof (ffi_arg) \
                           ? (size) \
                           : sizeof (ffi_arg))
+
+#if HAVE_LITTLE_ENDIAN
+#define ifbe(expr) (0)
+#define ifbe2(expr1, expr2) (expr2)
+#else
 #define ifbe(expr) (expr)
 #define ifbe2(expr1, expr2) (expr1)
 #endif
+
 
 val uint8_s, int8_s;
 val uint16_s, int16_s;
