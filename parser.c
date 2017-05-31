@@ -577,20 +577,10 @@ val iread(val source_in, val error_stream, val error_return_val,
                          name_in, lineno);
 }
 
-val read_eval_stream(val stream, val error_stream, val hash_bang_support)
+val read_eval_stream(val stream, val error_stream)
 {
   val error_val = gensym(nil);
   val name = stream_get_prop(stream, name_k);
-
-  if (hash_bang_support) {
-    val firstline = get_line(stream);
-
-    if (firstline && !match_str(firstline, lit("#!"), nil)) {
-      val flwnl = scat(nil, firstline, lit("\n"), nao);
-      val string_stream = make_string_byte_input_stream(flwnl);
-      stream = make_catenated_stream(list(string_stream, stream, nao));
-    }
-  }
 
   for (;;) {
     val form = lisp_parse(stream, error_stream, error_val, name, colon_k);
@@ -639,7 +629,7 @@ static void load_rcfile(val name)
     } else {
       val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
       env_vbind(dyn_env, load_path_s, resolved_name);
-      read_eval_stream(stream, std_output, nil);
+      read_eval_stream(stream, std_output);
       dyn_env = saved_dyn_env;
     }
   }

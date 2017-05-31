@@ -3897,7 +3897,7 @@ val load(val target)
   env_vbind(dyn_env, load_recursive_s, t);
   env_vbind(dyn_env, package_s, cur_package);
 
-  if (!read_eval_stream(stream, std_error, nil)) {
+  if (!read_eval_stream(stream, std_error)) {
     close_stream(stream, nil);
     uw_throwf(error_s, lit("load: ~a contains errors"), path, nao);
   }

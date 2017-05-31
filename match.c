@@ -4276,7 +4276,7 @@ static val v_load(match_files_ctx *c)
         }
       }
     } else {
-      if (!read_eval_stream(stream, std_error, nil)){
+      if (!read_eval_stream(stream, std_error)){
         close_stream(stream, nil);
         sem_error(specline, lit("load: ~a contains errors"), path, nao);
       }

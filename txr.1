@@ -1023,13 +1023,24 @@ character can be used. This is an obsolescent feature.
 \*(TX has several features which support use of the "hash bang" convention
 for creating apparently stand-alone executable programs.
 
-If the first line of a query begins with the characters
+.NP* Basic Hash Bang
+Special processing is applied to \*(TX query or \*(TL script files that are
+specified on the command line via the
+.code -f
+option or as the first non-option argument. If the first line of such
+a file begins with the characters
 .codn #! ,
-that entire line is deleted from the query. This allows
-for \*(TX queries to be turned into standalone executable programs in the POSIX
-environment.
+that entire line is consumed and processed specially.
 
-Shell example: create a simple executable program called
+This removal
+for \*(TX queries to be turned into standalone executable programs in the POSIX
+environment using the "hash bang" mechanism.  Unlike most interpreters,
+\*(TX applies special processing to the
+.code #!
+line, which is described below, in the section
+.BR "Argument Generation with the Null Hack" .
+
+Shell session example: create a simple executable program called
 .str "twoline.txr"
 and
 run it. This assumes \*(TX is installed in
@@ -1088,6 +1099,7 @@ The
 .code -B
 option is honored.
 
+.coNP Argument Generation with @ --args and @ --eargs
 On some operating systems, it is not possible to pass more than one
 argument through the hash bang mechanism. That is to say, this will
 not work.
@@ -1211,6 +1223,172 @@ script name is inserted anywhere among them, possibly multiple times. Arguments
 for the interpreter can be encoded, as well as arguments to be processed by the
 script.
 
+.coNP Argument Generation with the Null Hack
+The
+.code --args
+and
+.code --eargs
+mechanisms do not solve the following problem: the POSIX
+.code env
+utility is often exploited for its
+.code PATH
+searching capability, and used to express hash bang scripts in the following
+way:
+
+.cblk
+  #!/usr/bin/env txr
+.cble
+
+Here, the
+.code env
+utility searches for the
+.code txr
+program in the directories indicated by the
+.code PATH
+variable, which liberates the script from having encode the exact location
+where the program is installed.  However, if the operating system allows only
+one argument in the hash bang mechanism, then no arguments can be passed
+to the program.
+
+To mitigate this problem,
+\*(TX
+supports a special feature in its hash bang support. If the hash bang
+.code #!
+line contains a null byte, then text after the null byte, to the end of the
+line, is split into fields using the space character as a separator, and these
+fields are inserted into the command line. This manipulation happens during
+command line processing, prior to the execution of the file, which happens
+after command-line processing. If this processing is applied to a file
+that is specified using the
+.code -f
+option, then the arguments which arise from the special processing
+are inserted after that option and its argument.  If this processing is
+applied to the file which is the first non-option argument, then the
+options are inserted before that argument. However, care is taken not
+to process that argument a second time.
+In either situation, processing of the command line options continues, and the
+arguments which are processed next are the ones which were just inserted.  This
+is true even if the options had been inserted as a result of processing the
+first non-option argument, which would ordinarily signal the termination of
+option processing.
+
+In the following examples, it is assumed that the script is
+named, and invoked, as
+.codn /home/jenny/foo.txr ,
+and is given arguments
+.codn "--bar abc" ,
+and that
+.code txr
+resolves to
+.codn /usr/bin/txr .
+The
+.code <NUL>
+code indicates a literal ASCII NUL character, or zero bytes.
+
+Basic example:
+
+.cblk
+  #!/usr/bin/env txr<NUL>-a 3
+.cble
+
+Here,
+.code env
+searches for 
+.code txr
+receives, from the operating system the arguments:
+
+.cblk
+  /usr/bin/txr /home/jenny/foo.txr --bar abc
+.cble
+
+The first non-option argument is the name of the script. \*(TX opens
+the script, and notices that it begins with a hash bang line.
+It consumes the hash bang line and finds the null byte inside it,
+retrieving the character string after it, which is
+.strn "-a 3" .
+This is split into the two arguments
+.code -a
+and
+.codn 3 ,
+which are then inserted into the command line ahead of the
+the script name. The effective command line then becomes:
+
+.cblk
+  /usr/bin/txr -a 3 /home/jenny/foo.txr --bar abc
+.cble
+
+Command line option processing continues, beginning with the
+.code -a
+option. After the option is processed,
+.code /home/amy/foo.txr
+is encountered again. This time it is not opened a second time;
+it signals the end of option processing, exactly as it would immediately
+do if it hadn't triggered the insertion of any arguments.
+
+Advanced example: use
+.code env
+to invoke
+.code txr
+passing options to interpreter and to the script:
+
+.cblk
+  #!/usr/bin/env txr<NUL>--eargs:-C:175:{}:--debug
+.cble
+
+This example shows how
+.code --eargs
+can be used in conjunction with the null hack. When
+.code txr
+begins executing, it receives the arguments
+
+.cblk
+  /usr/bin/txr /home/amy/foo.txr
+.cble
+
+The script file is opened, and the arguments delimited by the
+null character in the hash bang line are inserted, resulting 
+in the effective command line:
+
+.cblk
+  /usr/bin/txr --eargs:-C:175:{}:--debug /home/amy/foo.txr
+.cble
+
+Next,
+.code --eargs
+is processed in the ordinary way, transforming the command line
+into:
+
+.cblk
+  /usr/bin/txr -C 175 /home/amy/foo.txr --debug
+.cble
+
+The name of the script file is encountered, and signals the end
+of option processing. Thus
+.code txr
+receives the
+.code -C
+option, instructing it to emulate some behaviors from version 175,
+and the
+.code /home/amy/foo.txr
+script receives
+.code --debug
+as
+.B its
+argument: it executes with the
+.code *args*
+list containing one element, the character string
+.strn --debug .
+
+The hash bang null hack feature was introduced in \*(TX 177.
+Previous versions ignore the hash bang line, performing no special
+processing. Where a risk exists that programs which depend on the
+feature might be executed by an older version of \*(TX, care must
+be taken to detect and handle that situation, either by means of the
+.code txr-version
+variable, or else by some logic which infers that the processing of the hash
+bang line hadn't been performed.
+
+.NP* Hash Bang and Setuid
 \*(TX supports setuid hash bang scripting, even on platforms that do not
 support setuid and setgid attributes on hash bang scripts. On such
 platforms, \*(TX has to be installed setuid/setgid. See the section

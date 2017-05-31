@@ -198,31 +198,21 @@ static void hint(void)
 }
 #endif
 
-static val remove_hash_bang_line(val spec)
+static val check_hash_bang(val stream, val args)
 {
-  if (!consp(spec))
-    return spec;
+  val line = get_line(stream);
+  if (match_str(line, lit("#!"), nil)) {
+    val pos = search_str(line, lit("\xdc00"), nil, nil);
 
-  {
-    val firstline = first(spec);
-    val firstelem = first(firstline);
-    val item;
-
-    if (stringp(firstelem))
-      item = firstelem;
-    else if (consp(firstelem) && first(firstelem) == text_s)
-      item = second(firstelem);
-    else
-      return spec;
-
-    if (stringp(item)) {
-      val twochars = sub_str(item, zero, two);
-      if (equal(twochars, lit("#!")))
-        return rest(spec);
+    if (pos) {
+      val after_null = sub_str(line, succ(pos), t);
+      val prepend_args = split_str(after_null, lit(" "));
+      args = nappend2(prepend_args, args);
     }
-
-    return spec;
+  } else {
+    seek_stream(stream, zero, from_start_k);
   }
+  return args;
 }
 
 #if __linux__
@@ -481,7 +471,7 @@ int txr_main(int argc, char **argv)
   val spec_file_str;
   int match_loglevel = opt_loglevel;
   val arg_undo = nil, arg;
-  val parse_stream = std_input;
+  val parse_stream = nil;
   val txr_lisp_p = nil;
   val enter_repl = nil;
   val args_s = intern(lit("*args*"), user_package);
@@ -539,13 +529,27 @@ int txr_main(int argc, char **argv)
   }
 
   for (ref_arg_list = arg_list, arg = upop(&arg_list, &arg_undo);
-       arg && car(arg) == chr('-');
+       arg;
        arg = upop(&arg_list, &arg_undo))
   {
     eff_arg_tail = list_collect(eff_arg_tail, arg);
 
     if (equal(arg, lit("--")))
       break;
+
+    if (car(arg) != chr('-')) {
+      if (!parse_stream) {
+        spec_file_str = arg;
+        open_txr_file(arg, &txr_lisp_p, &spec_file_str, &parse_stream);
+        simulate_setuid_setgid(parse_stream);
+        dyn_env = make_env(nil, nil, dyn_env);
+        env_vbind(dyn_env, load_path_s, spec_file_str);
+        arg_list = check_hash_bang(parse_stream, arg_undo);
+        set(eff_arg_tail, butlastn(one, deref(eff_arg_tail)));
+        continue;
+      }
+      break;
+    }
 
     if (equal(arg, lit("-")))
       break;
@@ -786,10 +790,39 @@ int txr_main(int argc, char **argv)
                  prog_string, nao);
           return EXIT_FAILURE;
         }
+        if (parse_stream) {
+          format(std_error,
+                 lit("~a: -c ~a: input file has already been established\n"),
+                 prog_string, spec_file, nao);
+          return EXIT_FAILURE;
+        }
         specstring = arg;
+        drop_privilege();
+        spec_file_str = lit("cmdline");
+        if (gt(length_str(specstring), zero) &&
+            chr_str(specstring, minus(length_str(specstring), one)) != chr('\n'))
+          specstring = cat_str(list(specstring, string(L"\n"), nao), nil);
+        parse_stream = make_string_byte_input_stream(specstring);
         break;
       case 'f':
+        if (parse_stream) {
+          format(std_error,
+                 lit("~a: -f ~a: input file has already been established\n"),
+                 prog_string, spec_file, nao);
+          return EXIT_FAILURE;
+        }
         spec_file = arg;
+        if (wcscmp(c_str(spec_file), L"-") != 0) {
+          open_txr_file(spec_file, &txr_lisp_p, &spec_file_str, &parse_stream);
+          simulate_setuid_setgid(parse_stream);
+          dyn_env = make_env(nil, nil, dyn_env);
+          env_vbind(dyn_env, load_path_s, spec_file_str);
+          arg_list = check_hash_bang(parse_stream, arg_list);
+        } else {
+          drop_privilege();
+          spec_file_str = lit("stdin");
+          parse_stream = std_input;
+        }
         break;
       case 'e':
         drop_privilege();
@@ -922,35 +955,7 @@ int txr_main(int argc, char **argv)
   if (!equal(cdr(eff_arg_list), ref_arg_list))
     reg_var(intern(lit("*args-eff*"), user_package), eff_arg_list);
 
-  if (specstring && spec_file) {
-    drop_privilege();
-    format(std_error, lit("~a: cannot specify both -f and -c\n"),
-           prog_string, nao);
-    return EXIT_FAILURE;
-  }
-
-  if (specstring) {
-    drop_privilege();
-    spec_file_str = lit("cmdline");
-    if (gt(length_str(specstring), zero) &&
-        chr_str(specstring, minus(length_str(specstring), one)) != chr('\n'))
-      specstring = cat_str(list(specstring, string(L"\n"), nao), nil);
-    parse_stream = make_string_byte_input_stream(specstring);
-    if (arg)
-      arg_list = arg_undo;
-  } else if (spec_file) {
-    if (wcscmp(c_str(spec_file), L"-") != 0) {
-      open_txr_file(spec_file, &txr_lisp_p, &spec_file_str, &parse_stream);
-      simulate_setuid_setgid(parse_stream);
-      dyn_env = make_env(nil, nil, dyn_env);
-      env_vbind(dyn_env, load_path_s, spec_file_str);
-    } else {
-      drop_privilege();
-      spec_file_str = lit("stdin");
-    }
-    if (arg)
-      arg_list = arg_undo;
-  } else {
+  if (!parse_stream) {
     if (!arg) {
       drop_privilege();
       if (enter_repl)
@@ -966,15 +971,11 @@ int txr_main(int argc, char **argv)
 #endif
     }
 
-    if (!equal(arg, lit("-"))) {
-      open_txr_file(arg, &txr_lisp_p, &spec_file_str, &parse_stream);
-      simulate_setuid_setgid(parse_stream);
-      dyn_env = make_env(nil, nil, dyn_env);
-      env_vbind(dyn_env, load_path_s, spec_file_str);
-    } else {
-      drop_privilege();
-      spec_file_str = lit("stdin");
-    }
+    drop_privilege();
+    spec_file_str = lit("stdin");
+    parse_stream = std_input;
+  } else if (specstring || spec_file) {
+    arg_list = arg_undo;
   }
 
   reg_var(args_s, or2(orig_args, arg_list));
@@ -996,7 +997,7 @@ int txr_main(int argc, char **argv)
     if (parser.errors)
       return EXIT_FAILURE;
 
-    spec = remove_hash_bang_line(parser.syntax_tree);
+    spec = parser.syntax_tree;
 
     opt_loglevel = match_loglevel;
 
@@ -1026,7 +1027,7 @@ int txr_main(int argc, char **argv)
   }
 
   {
-    val result = read_eval_stream(parse_stream, std_error, t);
+    val result = read_eval_stream(parse_stream, std_error);
 
     close_stream(parse_stream, nil);
 
