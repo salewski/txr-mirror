@@ -5246,7 +5246,7 @@ static val do_retf(val ret, struct args *args)
   return ret;
 }
 
-static val retf(val ret)
+val retf(val ret)
 {
   return func_f0v(ret, do_retf);
 }

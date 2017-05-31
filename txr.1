@@ -769,10 +769,10 @@ option (extended
 .codn --args )
 is like
 .code --args
-but must be followed by an argument. The argument is substituted
-in place of occurrences of
+but must be followed by an argument. The argument is removed from
+the argument list and substituted in place of occurrences of
 .code {}
-in the
+among the arguments expanded from the
 .code --eargs
 syntax.
 
@@ -1136,11 +1136,17 @@ The
 mechanism allows an additional flexibility. An
 .code --eargs
 argument must be followed by one more argument.
-Occurrences of the two-character sequence
+
+After
+.code --eargs
+performs the argument splitting in the same manner as
+.codn --args ,
+any of the arguments which it produces which are the
+two-character sequence
 .code {}
-in the encoded argument string are replaced with that
-following argument. This replacement occurs after
-the argument splitting.
+are replaced with that following argument. Whether
+or not the replacement occurs, that following argument
+is then removed.
 
 Example:
 
@@ -1172,9 +1178,11 @@ processing takes place, firstly the argument sequence
   -B {} --foo 42
 .cble
 
-is produced. Then, all occurrences of
+is produced by splitting into four fields using the
+.code :
+character as the separator.  Then, within these four fields, all occurrences of
 .code {}
-are replaced with
+are replaced with the following argument
 .codn script.txr ,
 resulting in:
 
@@ -1182,7 +1190,15 @@ resulting in:
   -B script.txr --foo 42
 .cble
 
-The resulting \*(TX invocation is
+Furthermore, that
+.code script.txr
+argument is removed from the remaining argument list.
+
+The four arguments are then substituted in place of the original
+.code --eargs:-B:{}:--foo:42
+syntax.
+
+The resulting \*(TX invocation is, therefore:
 
 .cblk
   /usr/bin/txr -B script.txr --foo 42 a b c

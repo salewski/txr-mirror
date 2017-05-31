@@ -573,9 +573,8 @@ int txr_main(int argc, char **argv)
       }
       arg = sub_str(arg, num(8), nil);
       arg2 = upop(&arg_list, &arg_undo);
-      arg_list = append2(mapcar(curry_123_3(func_n3(regsub),
-                                            regex_compile(lit("{}"), nil),
-                                            arg2),
+      arg_list = append2(mapcar(iffi(curry_12_2(equal_f, lit("{}")),
+                                     retf(arg2), nil),
                                 split_str(arg, sep)),
                          arg_list);
       set(eff_arg_tail, butlastn(one, deref(eff_arg_tail)));
