@@ -488,8 +488,9 @@ int txr_main(int argc, char **argv)
   val self_path_s = intern(lit("self-path"), user_package);
   val compat_var = lit("TXR_COMPAT");
   val compat_val = getenv_wrap(compat_var);
-  val orig_args = nil;
+  val orig_args = nil, ref_arg_list = nil;
   list_collect_decl(arg_list, arg_tail);
+  list_collect_decl(eff_arg_list, eff_arg_tail);
 
   static char alt_args_buf[128 + 7] = "@(txr):", *alt_args = alt_args_buf + 7;
 
@@ -516,8 +517,12 @@ int txr_main(int argc, char **argv)
   reg_varl(intern(lit("compat"), system_package), zero);
   reg_var(intern(lit("*full-args*"), user_package), arg_list);
   reg_var(intern(lit("*args-full*"), user_package), arg_list);
+  reg_var(intern(lit("*args-eff*"), user_package), eff_arg_list);
 
-  arg_list = cdr(arg_list);
+  if (arg_list) {
+    eff_arg_tail = list_collect(eff_arg_tail, car(arg_list));
+    arg_list = cdr(arg_list);
+  }
 
   if (*alt_args) {
     orig_args = arg_list;
@@ -533,10 +538,12 @@ int txr_main(int argc, char **argv)
 #endif
   }
 
-  for (arg = upop(&arg_list, &arg_undo);
+  for (ref_arg_list = arg_list, arg = upop(&arg_list, &arg_undo);
        arg && car(arg) == chr('-');
        arg = upop(&arg_list, &arg_undo))
   {
+    eff_arg_tail = list_collect(eff_arg_tail, arg);
+
     if (equal(arg, lit("--")))
       break;
 
@@ -549,6 +556,7 @@ int txr_main(int argc, char **argv)
       val sep = sub_str(arg, num(6), num(7));
       arg = sub_str(arg, num(7), nil);
       arg_list = append2(split_str(arg, sep), arg_list);
+      set(eff_arg_tail, butlastn(one, deref(eff_arg_tail)));
       continue;
     }
 
@@ -570,6 +578,7 @@ int txr_main(int argc, char **argv)
                                             arg2),
                                 split_str(arg, sep)),
                          arg_list);
+      set(eff_arg_tail, butlastn(one, deref(eff_arg_tail)));
       continue;
     }
 
@@ -741,6 +750,8 @@ int txr_main(int argc, char **argv)
 
       arg = upop(&arg_list, &arg_undo);
 
+      eff_arg_tail = list_collect(eff_arg_tail, arg);
+
       switch (c_chr(opt)) {
       case 'a':
         if (!do_fixnum_opt(array_dim, opt, arg))
@@ -906,6 +917,11 @@ int txr_main(int argc, char **argv)
       }
     }
   }
+
+  eff_arg_tail = list_collect_nconc(eff_arg_tail, arg_list);
+
+  if (!equal(cdr(eff_arg_list), ref_arg_list))
+    reg_var(intern(lit("*args-eff*"), user_package), eff_arg_list);
 
   if (specstring && spec_file) {
     drop_privilege();

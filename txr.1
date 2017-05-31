@@ -45935,18 +45935,44 @@ Note that environment variable names, their values, and command line
 arguments are all regarded as being externally encoded in UTF-8. \*(TX performs
 the encoding and decoding automatically.
 
-.coNP Special variables @ *args* and @ *args-full*
+.coNP Special variables @, *args-full* @ *args-eff* @ *args*
 .desc
+The
+.code *args-full*
+variable holds the original, complete list of arguments passed
+from the operating system, including the program executable
+name.
+
+During command line option processing, \*(TX may transform the
+argument list. The hash bang mechanism, and the
+.code --args
+and
+.code --eargs
+options can inject new command line arguments, as can code
+which is executed during argument processing via the
+.code -e
+options and others.
+
+The
+.code *args-eff*
+variable holds the list of
+.I "effective arguments" ,
+which is the argument list after these transformations are applied.
+This variable is established and set to the same value as
+.code *args-full*
+prior to command line processing, but is not updated with its final
+value until after command line processing.
+
 The
 .code *args*
 variable holds a list of strings representing the remaining
 arguments which follow any options processed by the \*(TX executable,
-and the script name.
-
-The
-.code *args-full*
-variable holds the original, complete list of arguments passed
-from the operating system.
+and the script name. This list is a suffix of
+.codn *args-eff* .
+Thus, the arguments before
+.code *args*
+can be calculated using the expression
+.codn "(ldiff *args-eff* *args*)" .
 
 The
 .code *args*
