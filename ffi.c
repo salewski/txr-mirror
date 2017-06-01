@@ -186,12 +186,23 @@ static void ffi_type_struct_destroy_op(val obj)
   free(tft);
 }
 
+static void ffi_type_common_mark(struct txr_ffi_type *tft)
+{
+  gc_mark(tft->lt);
+  gc_mark(tft->syntax);
+}
+
+static void ffi_type_mark(val obj)
+{
+  struct txr_ffi_type *tft = ffi_type_struct(obj);
+  ffi_type_common_mark(tft);
+}
+
 static void ffi_struct_type_mark(val obj)
 {
   struct txr_ffi_type *tft = ffi_type_struct(obj);
   cnum i;
-  gc_mark(tft->lt);
-  gc_mark(tft->syntax);
+  ffi_type_common_mark(tft);
 
   if (tft->eltype)
     gc_mark(tft->eltype);
@@ -207,8 +218,7 @@ static void ffi_struct_type_mark(val obj)
 static void ffi_ptr_type_mark(val obj)
 {
   struct txr_ffi_type *tft = ffi_type_struct(obj);
-  gc_mark(tft->lt);
-  gc_mark(tft->syntax);
+  ffi_type_common_mark(tft);
   gc_mark(tft->eltype);
 }
 
@@ -216,7 +226,7 @@ static struct cobj_ops ffi_type_builtin_ops =
   cobj_ops_init(eq,
                 ffi_type_print_op,
                 cobj_destroy_free_op,
-                cobj_mark_op,
+                ffi_type_mark,
                 cobj_eq_hash_op);
 
 static struct cobj_ops ffi_type_struct_ops =
