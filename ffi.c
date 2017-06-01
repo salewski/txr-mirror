@@ -104,6 +104,8 @@ val closure_s;
 
 val sbit_s, ubit_s;
 
+val enum_s;
+
 val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
 static val ffi_typedef_hash;
@@ -126,6 +128,7 @@ struct txr_ffi_type {
   unsigned shift, mask;
   cnum nelem;
   struct smemb *memb;
+  val sym_num, num_sym;
   unsigned null_term : 1;
   unsigned char_conv : 1;
   unsigned wchar_conv : 1;
@@ -222,6 +225,14 @@ static void ffi_ptr_type_mark(val obj)
   gc_mark(tft->eltype);
 }
 
+static void ffi_enum_type_mark(val obj)
+{
+  struct txr_ffi_type *tft = ffi_type_struct(obj);
+  ffi_type_common_mark(tft);
+  gc_mark(tft->sym_num);
+  gc_mark(tft->num_sym);
+}
+
 static struct cobj_ops ffi_type_builtin_ops =
   cobj_ops_init(eq,
                 ffi_type_print_op,
@@ -241,6 +252,13 @@ static struct cobj_ops ffi_type_ptr_ops =
                 ffi_type_print_op,
                 cobj_destroy_free_op,
                 ffi_ptr_type_mark,
+                cobj_eq_hash_op);
+
+static struct cobj_ops ffi_type_enum_ops =
+  cobj_ops_init(eq,
+                ffi_type_print_op,
+                cobj_destroy_free_op,
+                ffi_enum_type_mark,
                 cobj_eq_hash_op);
 
 struct txr_ffi_closure {
@@ -1751,6 +1769,46 @@ static void ffi_carray_put(struct txr_ffi_type *tft, val carray, mem_t *dst,
   *coerce(mem_t **, dst) = p;
 }
 
+static void ffi_enum_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  if (symbolp(n)) {
+    n = gethash(tft->num_sym, n);
+    if (!n)
+      uw_throwf(error_s, lit("~s: ~s has no member ~s"), self,
+                tft->syntax, n, nao);
+  }
+  ffi_int_put(tft, n, dst, self);
+}
+
+static val ffi_enum_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  val n = ffi_int_get(tft, src, self);
+  val sym = gethash(tft->sym_num, n);
+  return if3(sym, sym, n);
+}
+
+#if !HAVE_LITTLE_ENDIAN
+
+static void ffi_enum_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
+{
+  if (symbolp(n)) {
+    n = gethash(tft->num_sym, n);
+    if (!n)
+      uw_throwf(error_s, lit("~s: ~s has no member ~s"), self,
+                tft->syntax, n, nao);
+  }
+  ffi_int_rput(tft, n, dst, self);
+}
+
+static val ffi_enum_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  val n = ffi_int_rget(tft, src, self);
+  val sym = gethash(tft->sym_num, n);
+  return if3(sym, sym, n);
+}
+
+#endif
+
 static val bitfield_syntax_p(val syntax)
 {
   if (!consp(syntax)) {
@@ -2006,6 +2064,89 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   return obj;
 }
 
+static val make_ffi_type_enum(val syntax, val enums, val self)
+{
+  struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
+                                    chk_calloc(1, sizeof *tft));
+
+  val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_enum_ops);
+  cnum lowest = INT_PTR_MAX;
+  cnum highest = INT_PTR_MIN;
+  cnum cur = -1;
+  ucnum count = 0;
+  val iter;
+  val sym_num = make_hash(nil, nil, t);
+  val num_sym = make_hash(nil, nil, nil);
+
+  tft->ft = &ffi_type_sint;
+  tft->syntax = syntax;
+  tft->lt = sym_s;
+  tft->size = sizeof (int);
+  tft->align = alignof (int);
+  tft->put = ffi_enum_put;
+  tft->get = ffi_enum_get;
+  tft->alloc = ffi_fixed_alloc;
+  tft->free = free;
+#if !HAVE_LITTLE_ENDIAN
+  tft->rput = ffi_enum_rput;
+  tft->rget = ffi_enum_rget;
+#endif
+
+  for (iter = enums; !endp(iter); iter = cdr(iter), count++) {
+    val en = car(iter);
+    val nn;
+    if (symbolp(en)) {
+      val sym = en;
+      if (!bindable(sym) && !keywordp(sym))
+        uw_throwf(error_s, lit("~s: ~s member ~s isn't bindable or a keyword"),
+                  self, syntax, sym, nao);
+      if (cur == INT_MAX)
+        uw_throwf(error_s, lit("~s: ~s overflow at member ~s"),
+                  self, syntax, sym, nao);
+      if (gethash(num_sym, sym))
+        uw_throwf(error_s, lit("~s: ~s duplicate member ~s"),
+                  self, syntax, sym, nao);
+      sethash(num_sym, sym, nn = num(++cur));
+      sethash(sym_num, nn, sym);
+      if (cur > highest)
+        highest = cur;
+    } else {
+      val n = cadr(en);
+      val sym = car(en);
+      if (!bindable(sym) && !keywordp(sym))
+        uw_throwf(error_s, lit("~s: ~s member ~s isn't bindable or a keyword"),
+                  self, syntax, sym, nao);
+      if (gethash(num_sym, sym))
+        uw_throwf(error_s, lit("~s: ~s duplicate member ~s"),
+                  self, syntax, sym, nao);
+      if (symbolp(n)) {
+        n = gethash(num_sym, n);
+        if (!n)
+          uw_throwf(error_s, lit("~s: ~s member ~s value ~s not defined"),
+                    self, syntax, n, nao);
+      } else if (!integerp(n)) {
+        uw_throwf(error_s, lit("~s: ~s member ~s value ~s not integer"),
+                  self, syntax, n, nao);
+      }
+
+      cur = c_num(n);
+      if (cur > INT_MAX)
+        uw_throwf(error_s, lit("~s: ~s member ~s value ~s too large"),
+                  self, syntax, n, nao);
+      sethash(num_sym, sym, nn = num(cur));
+      sethash(sym_num, nn, sym);
+      if (cur < lowest)
+        lowest = cur;
+    }
+  }
+
+  tft->num_sym = num_sym;
+  tft->sym_num = sym_num;
+
+  return obj;
+}
+
+
 static val ffi_struct_compile(val membs, val *ptypes, val self)
 {
   list_collect_decl (slots, pstail);
@@ -2203,6 +2344,15 @@ val ffi_type_compile(val syntax)
                   self, nbits, num_fast(bits_int), nao);
       tft->nelem = c_num(nbits);
       return type;
+    } else if (sym == enum_s) {
+      val name = cadr(syntax);
+      val enums = cddr(syntax);
+      val xsyntax = cons(enum_s, cons(name, nil));
+      if (name && !bindable(name))
+        uw_throwf(error_s,
+                  lit("~a: enum name ~s must be bindable symbol or nil"),
+                  self, name, nao);
+      return make_ffi_type_enum(xsyntax, enums, self);
     }
 
     uw_throwf(error_s, lit("~a: unrecognized type operator: ~s"),
@@ -3290,6 +3440,7 @@ void ffi_init(void)
   closure_s = intern(lit("closure"), user_package);
   sbit_s = intern(lit("sbit"), user_package);
   ubit_s = intern(lit("ubit"), user_package);
+  enum_s = intern(lit("enum"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);
   ffi_closure_s = intern(lit("ffi-closure"), user_package);

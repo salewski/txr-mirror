@@ -53941,6 +53941,66 @@ zero bytes into
 
 .PP
 The following following parametrized types are available:
+.meIP (enum < name >> {( sym << value ) | << sym }*)
+The type
+.code enum
+specifies an enumerated type, which establishes a correspondence between
+a set of Lisp symbols and foreign integer values of type
+.codn int .
+
+The
+.meta name
+argument must either be
+.code nil
+or a symbol for which the
+.code bindable
+function returns true. It gives the tag name of the enumerated
+type. The remaining arguments specify the enumeration constants.
+
+In the enumeration constant syntax, each occurrence of
+.meta sym
+They must be either a keyword symbol, or a symbols for which the
+.code bindable
+function returns true. The symbols may not repeat.
+
+If a
+.meta sym
+is given, it is associated with an integer value which is one greater
+than the integer value associated with the previous symbol.
+If there is no previous symbol, then the value is zero.
+
+If
+.meti >> ( sym << value )
+is given, then
+.code sym
+is given the specified value. The
+.meta value
+argument may be either an integer token, or a symbol. If it is an integer
+token, then the value must be in range of the FFI
+.code int
+type.  If a symbol is given, it must be be one of the symbols already defined
+in the same enumerated type. The new symbol is given the same value as that
+symbol.
+
+The FFI
+.code enum
+type converts two kinds of Lisp values to the foreign type
+.codn int :
+symbols which are in the set defined by the type, and integer values
+which are in the range which that foreign type can represent.
+Out-of-range integer values, symbols not defined in the enumeration, and
+objects not of symbol or integer type all trigger an exception.
+
+In the reverse direction, the
+.code enum
+type extracts from the foreign representation values of FFI type
+.codn int ,
+and converts them, if possible, to symbols. If an integer value occurs
+which is not assigned to any enumeration symbol, then the conversion produces
+that integer value itself rather than a symbol. If an integer value occurs
+which is assigned to multiple enumeration symbols, it is not specified which
+of those symbols is produced.
+
 .meIP (struct < name >> {( slot << type )}*)
 The FFI
 .code struct
