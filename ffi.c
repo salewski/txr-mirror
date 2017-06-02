@@ -3029,7 +3029,11 @@ val ffi_typedef(val name, val type)
 
 val ffi_size(val type)
 {
+  val self = lit("ffi-size");
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  if (tft->size == 0 && bitfield_syntax_p(tft->syntax))
+    uw_throwf(error_s, lit("~a: bitfield type ~s has no size"),
+              self, type, nao);
   return num(tft->size);
 }
 
