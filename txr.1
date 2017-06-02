@@ -20427,7 +20427,7 @@ ranges are immutable.
 .SS* Characters and Strings
 .coNP Function @ mkstring
 .synb
-.mets (mkstring < length << char )
+.mets (mkstring < length <> [ char ])
 .syne
 .desc
 The
@@ -20439,6 +20439,10 @@ parameter.  Every position in the string is initialized
 with
 .metn char ,
 which must be a character value.
+
+If the optional argument
+.meta char
+is not specified, it defaults to the space character.
 
 .coNP Function @ copy-str
 .synb

@@ -5927,7 +5927,7 @@ void eval_init(void)
   reg_fun(intern(lit("packagep"), user_package), func_n1(packagep));
   reg_fun(intern(lit("keywordp"), user_package), func_n1(keywordp));
   reg_fun(intern(lit("bindable"), user_package), func_n1(bindable));
-  reg_fun(intern(lit("mkstring"), user_package), func_n2(mkstring));
+  reg_fun(intern(lit("mkstring"), user_package), func_n2o(mkstring, 1));
   reg_fun(intern(lit("copy-str"), user_package), func_n1(copy_str));
   reg_fun(intern(lit("upcase-str"), user_package), func_n1(upcase_str));
   reg_fun(intern(lit("downcase-str"), user_package), func_n1(downcase_str));

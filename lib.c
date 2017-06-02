@@ -3313,7 +3313,7 @@ val string_8bit_size(const unsigned char *str, size_t sz)
   return string_own(wstr);
 }
 
-val mkstring(val len, val ch)
+val mkstring(val len, val ch_in)
 {
   size_t l = if3(minusp(len),
                  (uw_throwf(error_s, lit("mkstring: negative size ~s specified"),
@@ -3321,6 +3321,7 @@ val mkstring(val len, val ch)
                  c_num(len));
   wchar_t *str = chk_wmalloc(l + 1);
   val s = string_own(str);
+  val ch = default_arg_strict(ch_in, chr(' '));
   wmemset(str, c_chr(ch), l);
   str[l] = 0;
   s->st.len = len;
