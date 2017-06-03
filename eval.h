@@ -32,6 +32,7 @@ extern val eq_s, eql_s, equal_s;
 extern val car_s, cdr_s;
 extern val last_form_evaled, last_form_expanded;
 extern val load_path_s, load_recursive_s;
+extern val special_s;
 
 #define load_path (deref(lookup_var_l(nil, load_path_s)))
 

@@ -53539,6 +53539,12 @@ are instantiated with parameters. Each such expression has a type constructor
 symbol in the operator position, from a limited, fixed vocabulary, which cannot
 be extended.
 
+Some constituents of compound type syntax are expressions which evaluate to
+integer values: the dimension value for array types, the size for buffers,
+and the value expressions for enumeration constants are such expressions.
+These expressions allow full use of \*(TL. They are evaluated without
+visibility into any apparent surrounding lexical scope.
+
 Some predefined types which are provided are in fact typedef names.
 For instance, the
 .code size-t
@@ -53963,15 +53969,20 @@ type. The remaining arguments specify the enumeration constants.
 
 In the enumeration constant syntax, each occurrence of
 .meta sym
-They must be either a keyword symbol, or a symbols for which the
+They must be a bindable symbol according to the
 .code bindable
-function returns true. The symbols may not repeat.
+function. The symbols may not repeat within the same enumerated type.
+Unlike in the C language, different enumerations may use the same symbols;
+they are in separate spaces.
 
 If a
 .meta sym
 is given, it is associated with an integer value which is one greater
 than the integer value associated with the previous symbol.
-If there is no previous symbol, then the value is zero.
+If there is no previous symbol, then the value is zero. If the previous
+symbol has been assigned the highest possible value of the FFI
+.code int
+type, then an error exception is thrown.
 
 If
 .meti >> ( sym << value )
@@ -53979,12 +53990,13 @@ is given, then
 .code sym
 is given the specified value. The
 .meta value
-argument may be either an integer token, or a symbol. If it is an integer
-token, then the value must be in range of the FFI
+is an expression which must evaluate to an integer value in range of the FFI
 .code int
-type.  If a symbol is given, it must be be one of the symbols already defined
-in the same enumerated type. The new symbol is given the same value as that
-symbol.
+type. 
+It is evaluated in an environment in which the previous
+symbols from the same enumeration appear as variables whose binding are the
+their enumeration values, making it possible to use earlier enumerations in the
+definition of later enumerations.
 
 The FFI
 .code enum
@@ -54088,6 +54100,11 @@ element conversion to
 Since Lisp arrays and C arrays do not share the same representation,
 temporary buffers are automatically created and destroyed by FFI
 to manage the conversion.
+
+The
+.code dim
+argument is an ordinary Lisp expression expanded and evaluated in the
+top-level environment. It must produce a non-negative integer value.
 
 In addition, several types are treated specially: when
 .meta type
@@ -54539,8 +54556,10 @@ and
 .codn buf-d ,
 respectively. The
 .meta size
-argument must be an integer literal, which specifies the buffer
-size. Because they have a size, these types have useful get
+argument is an expression which is evaluated in the top-level
+environment, and must produce a non-negative integer.
+
+Because they have a size, these types have useful get
 semantics.
 
 The get semantics of

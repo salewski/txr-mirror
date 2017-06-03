@@ -2064,6 +2064,12 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   return obj;
 }
 
+static val ffi_eval_expr(val expr, val menv, val env)
+{
+  val expr_ex = expand(expr, menv);
+  return eval(expr_ex, env, expr_ex);
+}
+
 static val make_ffi_type_enum(val syntax, val enums, val self)
 {
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
@@ -2077,6 +2083,8 @@ static val make_ffi_type_enum(val syntax, val enums, val self)
   val iter;
   val sym_num = make_hash(nil, nil, t);
   val num_sym = make_hash(nil, nil, nil);
+  val enum_env = make_env(nil, nil, nil);
+  val shadow_menv = make_env(nil, nil, nil);
 
   tft->ft = &ffi_type_sint;
   tft->syntax = syntax;
@@ -2097,8 +2105,8 @@ static val make_ffi_type_enum(val syntax, val enums, val self)
     val nn;
     if (symbolp(en)) {
       val sym = en;
-      if (!bindable(sym) && !keywordp(sym))
-        uw_throwf(error_s, lit("~s: ~s member ~s isn't bindable or a keyword"),
+      if (!bindable(sym))
+        uw_throwf(error_s, lit("~s: ~s member ~s isn't a bindable symbol"),
                   self, syntax, sym, nao);
       if (cur == INT_MAX)
         uw_throwf(error_s, lit("~s: ~s overflow at member ~s"),
@@ -2108,23 +2116,24 @@ static val make_ffi_type_enum(val syntax, val enums, val self)
                   self, syntax, sym, nao);
       sethash(num_sym, sym, nn = num(++cur));
       sethash(sym_num, nn, sym);
+      env_vbind(enum_env, sym, nn);
+      env_vbind(shadow_menv, sym, special_s);
       if (cur > highest)
         highest = cur;
     } else {
-      val n = cadr(en);
+      val expr = cadr(en);
       val sym = car(en);
-      if (!bindable(sym) && !keywordp(sym))
-        uw_throwf(error_s, lit("~s: ~s member ~s isn't bindable or a keyword"),
+      val n;
+      if (!bindable(sym))
+        uw_throwf(error_s, lit("~s: ~s member ~s isn't a bindable symbol"),
                   self, syntax, sym, nao);
       if (gethash(num_sym, sym))
         uw_throwf(error_s, lit("~s: ~s duplicate member ~s"),
                   self, syntax, sym, nao);
-      if (symbolp(n)) {
-        n = gethash(num_sym, n);
-        if (!n)
-          uw_throwf(error_s, lit("~s: ~s member ~s value ~s not defined"),
-                    self, syntax, n, nao);
-      } else if (!integerp(n)) {
+
+      n = ffi_eval_expr(expr, shadow_menv, enum_env);
+
+      if (!integerp(n)) {
         uw_throwf(error_s, lit("~s: ~s member ~s value ~s not integer"),
                   self, syntax, n, nao);
       }
@@ -2135,6 +2144,8 @@ static val make_ffi_type_enum(val syntax, val enums, val self)
                   self, syntax, n, nao);
       sethash(num_sym, sym, nn = num(cur));
       sethash(sym_num, nn, sym);
+      env_vbind(enum_env, sym, nn);
+      env_vbind(shadow_menv, sym, special_s);
       if (cur < lowest)
         lowest = cur;
     }
@@ -2217,9 +2228,10 @@ val ffi_type_compile(val syntax)
         tft->size = 0;
         return type;
       } else if (length(syntax) == three) {
-        val dim = cadr(syntax);
+        val dim = ffi_eval_expr(cadr(syntax), nil, nil);
         val eltype_syntax = caddr(syntax);
         val eltype = ffi_type_compile(eltype_syntax);
+        val xsyntax = list(sym, dim, eltype_syntax, nao);
         struct txr_ffi_type *etft = ffi_type_struct(eltype);
 
         if (etft->size == 0)
@@ -2232,7 +2244,7 @@ val ffi_type_compile(val syntax)
                     self, syntax, nao);
 
         {
-          val type = make_ffi_type_array(syntax, vec_s, dim, eltype);
+          val type = make_ffi_type_array(xsyntax, vec_s, dim, eltype);
           struct txr_ffi_type *tft = ffi_type_struct(type);
 
           if (sym == zarray_s) {
@@ -2291,8 +2303,10 @@ val ffi_type_compile(val syntax)
                                    ffi_ptr_out_s_in, ffi_ptr_out_out,
                                    0, target_type);
     } else if (sym == buf_s || sym == buf_d_s) {
-      cnum nelem = c_num(cadr(syntax));
-      val type = make_ffi_type_builtin(syntax, buf_s,
+      val size = ffi_eval_expr(cadr(syntax), nil, nil);
+      val xsyntax = list(sym, size, nao);
+      cnum nelem = c_num(size);
+      val type = make_ffi_type_builtin(xsyntax, buf_s,
                                        sizeof (mem_t *),
                                        alignof (mem_t *),
                                        &ffi_type_pointer,
