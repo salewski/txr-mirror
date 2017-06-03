@@ -2341,7 +2341,7 @@ val ffi_type_compile(val syntax)
                                    ffi_carray_put, ffi_carray_get,
                                    0, 0, 0, eltype);
     } else if (sym == sbit_s || sym == ubit_s) {
-      val nbits = cadr(syntax);
+      val nbits = ffi_eval_expr(cadr(syntax), nil, nil);
       cnum nb = c_num(nbits);
       val type = make_ffi_type_builtin(syntax, integer_s, 0, 0,
                                        &ffi_type_void,

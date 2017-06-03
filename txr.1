@@ -53541,9 +53541,9 @@ be extended.
 
 Some constituents of compound type syntax are expressions which evaluate to
 integer values: the dimension value for array types, the size for buffers,
-and the value expressions for enumeration constants are such expressions.
-These expressions allow full use of \*(TL. They are evaluated without
-visibility into any apparent surrounding lexical scope.
+the width for bitfields and the value expressions for enumeration constants are
+such expressions. These expressions allow full use of \*(TL. They are
+evaluated without visibility into any apparent surrounding lexical scope.
 
 Some predefined types which are provided are in fact typedef names.
 For instance, the
@@ -54453,7 +54453,8 @@ Bitfields of any other type are not supported.
 
 The
 .meta width
-parameter of the type indicates the number of bits. It may range from
+parameter of is an expression evaluated in the top-level environment,
+indicates the number of bits. It may range from
 zero to the number of bits in the
 .code uint
 type.
