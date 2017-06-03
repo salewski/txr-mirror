@@ -3037,6 +3037,75 @@ val ffi_size(val type)
   return num(tft->size);
 }
 
+val ffi_alignof(val type)
+{
+  val self = lit("ffi-alignof");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  if (tft->size == 0 && bitfield_syntax_p(tft->syntax))
+    uw_throwf(error_s, lit("~a: bitfield type ~s has no alignment"),
+              self, type, nao);
+  return num(tft->align);
+}
+
+val ffi_offsetof(val type, val memb)
+{
+  val self = lit("ffi-offsetof");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  cnum i;
+
+  if (!tft->memb)
+    uw_throwf(error_s, lit("~a: ~s isn't a struct type"), self, type, nao);
+
+  for (i = 0; i < tft->nelem; i++) {
+    struct smemb *pmemb = tft->memb + i;
+
+    if (pmemb->mname == memb) {
+      if (pmemb->mtft->mask != 0)
+        uw_throwf(error_s, lit("~a: ~s is a bitfield in ~s"), self,
+                  memb, type, nao);
+      return num(tft->memb[i].offs);
+    }
+  }
+
+  uw_throwf(error_s, lit("~a: ~s has no member ~s"), self, type, memb, nao);
+}
+
+val ffi_arraysize(val type)
+{
+  val self = lit("ffi-put-into");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  if (!tft->eltype)
+    uw_throwf(error_s, lit("~a: ~s isn't an array"), self, type, nao);
+  return num(tft->nelem);
+}
+
+val ffi_elemsize(val type)
+{
+  val self = lit("ffi-elemsize");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  if (!tft->eltype) {
+    uw_throwf(error_s, lit("~a: ~s isn't an array or pointer"),
+              self, type, nao);
+  } else {
+    struct txr_ffi_type *etft = ffi_type_struct(tft->eltype);
+    return num(etft->size);
+  }
+}
+
+val ffi_elemtype(val type)
+{
+  val self = lit("ffi-elemtype");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  val eltype = tft->eltype;
+
+  if (!eltype) {
+    uw_throwf(error_s, lit("~a: ~s isn't an array or pointer"),
+              self, type, nao);
+  }
+
+  return eltype;
+}
+
 val ffi_put_into(val dstbuf, val obj, val type)
 {
   val self = lit("ffi-put-into");
@@ -3454,6 +3523,11 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-make-closure"), user_package), func_n4o(ffi_make_closure, 2));
   reg_fun(intern(lit("ffi-typedef"), user_package), func_n2(ffi_typedef));
   reg_fun(intern(lit("ffi-size"), user_package), func_n1(ffi_size));
+  reg_fun(intern(lit("ffi-alignof"), user_package), func_n1(ffi_alignof));
+  reg_fun(intern(lit("ffi-offsetof"), user_package), func_n2(ffi_offsetof));
+  reg_fun(intern(lit("ffi-arraysize"), user_package), func_n1(ffi_arraysize));
+  reg_fun(intern(lit("ffi-elemsize"), user_package), func_n1(ffi_elemsize));
+  reg_fun(intern(lit("ffi-elemtype"), user_package), func_n1(ffi_elemtype));
   reg_fun(intern(lit("ffi-put-into"), user_package), func_n3(ffi_put_into));
   reg_fun(intern(lit("ffi-put"), user_package), func_n2(ffi_put));
   reg_fun(intern(lit("ffi-in"), user_package), func_n4(ffi_in));

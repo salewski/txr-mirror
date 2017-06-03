@@ -54992,6 +54992,11 @@ function returns an integer which gives the storage size of
 the given FFI type: the amount of storage required for the
 external representation of that type.
 
+Bitfield types do not have a size; it is an error to apply
+this function to a bitfield.
+
+The size is machine:specific.
+
 .TP* Example:
 
 .cblk
@@ -54999,6 +55004,169 @@ external representation of that type.
   (ffi-size '(ffi-type-compile 'char)) -> 1
   (ffi-size '(ffi-type-compile
                '(array 42 char))) -> 42
+.cble
+
+.coNP Function @ ffi-alignof
+.synb
+.mets (ffi-alignof << type )
+.syne
+.desc
+The
+.code ffi-alignof
+function returns an integer which gives the alignment
+the given FFI type. When an instance of
+.meta type
+is placed into a structure as a member, it is placed after the previous member
+at the smallest available offset which is divisible by the alignment.
+The bytes skipped from the smallest available offset to the smallest
+available aligned offset are referred to as
+.IR padding .
+
+Bitfield types do not have an alignment; it is an error to apply
+this function to a bitfield. Bitfields are allocated in
+storage cells, and those cells have alignment which is the
+same as that of the type
+.codn int .
+
+The alignment is machine-specific. It may be more strict than what the
+hardware architecture requires, yet at the same time be smaller than the size
+of the type. For instance, the size of the type
+.code double
+is commonly 8, yet the alignment is often 4, and this is so
+even on processors like Intel x86 which can load and store
+a double at a misaligned address.
+
+The alignment of an array is the same as that of its element type.
+
+The alignment of a structure is that of its member which has the
+most strict (largest-valued) alignment.
+
+It is a property of arrays, derived from requirements governing the C
+language, that if the first element of an array is at a correctly aligned
+address, then all elements are. To ensure that this property holds for
+for arrays of structures, structures sometimes must include
+padding at the end. This is because the size of a structure without any
+padding might not be multiple of its alignment, which is derived from the most
+strictly aligned member. For instance, if we assume an architecture on which
+the size and alignment of
+.code int
+is 4, the size of the structure type
+.code "(struct ab (a int) (b char))"
+would be 5 if no padding were included.  However,
+in an array of these structures, the second element's
+.code a
+member would be placed at offset 5, rendering it misaligned.
+To ensure that every
+.code a
+is placed at an offset which is multiple of 4, the struct type is extended
+with anonymous padding so that its size is 8.
+
+.TP* Example:
+
+.cblk
+  (ffi-alignof (ffi double)) -> 4
+.cble
+
+.coNP Function @ ffi-offsetof
+.synb
+.mets (ffi-offsetof < type << member )
+.syne
+.desc
+The
+.code ffi-alignof
+function calculates the byte offset of
+.meta member
+within the FFI type
+.metn type .
+
+If
+.meta type
+isn't a FFI struct type, or if
+.meta member
+isn't a symbol naming a member of that type,
+the function throws an exception.
+
+An exception is also thrown if
+.meta member
+is a bitfield.
+
+.TP* Example:
+
+.cblk
+  (ffi-offsetof (ffi (struct ab (a int) (b char))) 'b) -> 4
+.cble
+
+.coNP Function @ ffi-arraysize
+.synb
+.mets (ffi-arraysize << type )
+.syne
+.desc
+The
+.code ffi-arraysize
+function reports the number of elements in
+.metn type ,
+which must be an array type: an
+.codn array ,
+.code zarray
+or
+.codn carray .
+
+.TP* Example:
+
+.cblk
+  (ffi-arraysize (ffi (array 5 int))) -> 5
+.cble
+
+.coNP Function @ ffi-elemsize
+.synb
+.mets (ffi-elemsize << type )
+.syne
+.desc
+The
+.code ffi-elemsize
+function reports the size of the element type of an array,
+or of the target type of pointer.
+The
+.meta type
+argument must be an array or pointer type: an
+.codn array ,
+.codn zarray ,
+.codn carray ,
+.codn ptr ,
+.code ptr-in
+or
+.codn ptr-out .
+
+.TP* Example:
+
+.cblk
+  (ffi-elemsize (ffi (array 5 int))) -> 4 ;; (sizeof int)
+.cble
+
+.coNP Function @ ffi-elemtype
+.synb
+.mets (ffi-elemtype << type )
+.syne
+.desc
+The
+.code ffi-elemtype
+function retrieves the element type of an array type,
+or target type of a pointer type.
+The
+.meta type
+argument must be an array or pointer type: an
+.codn array ,
+.codn zarray ,
+.codn carray ,
+.codn ptr ,
+.code ptr-in
+or
+.codn ptr-out .
+
+.TP* Example:
+
+.cblk
+  (ffi-elemtype (ffi (ptr int))) -> #<ffi-type int>
 .cble
 
 .coNP Macro @ with-dyn-lib
@@ -55344,16 +55512,90 @@ as its value.
 .desc
 The macro
 .code sizeof
-compiles the FFI type expression
-.meta type-syntax
-at macro-expansion time using
-.codn ffi-type-compile ,
-and then retrieves the type's size using
-.codn ffi-size .
-The resulting integer is the return value of the
-macro expander. That is to say, the macro expands
-to that integer, such that there is no run-time
-computation.
+calculates the size of the FFI type denoted by
+.code type-syntax
+at macro-expansion time, and produces that
+integer value as its expansion, such that there is no
+run-time computation. It uses the
+.code ffi-sizeof
+function.
+
+.coNP Macro @ alignof
+.synb
+.mets (alignof << type-syntax )
+.syne
+.desc
+The macro
+.code alignof
+calculates the alignment of the FFI type denoted by
+.code type-syntax
+at macro-expansion time, and produces that
+integer value as its expansion, such that there is no
+run-time computation. It uses the
+.code ffi-alignof
+function.
+
+.coNP Macro @ offsetof
+.synb
+.mets (offsetof < type-syntax << member-name )
+.syne
+.desc
+The macro
+.code sizeof
+calculates the offset of the structure member indicated by
+.metn member-name ,
+a symbol, inside the FFI struct type indicated by
+.metn type-syntax .
+This calculation is performed by a macro-expansion-time call to the
+.code ffi-offsetof
+function, and produces that
+integer value as its expansion, such that there is no
+run-time computation.
+
+.coNP Macro @ arraysize
+.synb
+.mets (arraysize << type-syntax )
+.syne
+.desc
+The macro
+.code arraysize
+calculates the number of elements of the array type indicated by
+.metn type-syntax .
+This calculation is performed by a macro-expansion-time call to the
+.code ffi-arraysize
+function, and produces that
+integer value as its expansion, such that there is no
+run-time computation.
+
+.coNP Macro @ elemsize
+.synb
+.mets (elemsize << type-syntax )
+.syne
+.desc
+The macro
+.code elemsize
+calculates the size of the element type of an array type, or
+the size of target type of a pointer type indicated by
+.metn type-syntax .
+This calculation is performed by a macro-expansion-time call to the
+.code ffi-elemsize
+function, and produces that
+integer value as its expansion, such that there is no
+run-time computation.
+
+.coNP Macro @ elemtype
+.synb
+.mets (elemtype << type-syntax )
+.syne
+.desc
+The macro
+.code elemtype
+produce the element type of an array type, or
+the target type of a pointer type indicated by
+.metn type-syntax ,
+using the
+.code ffi-elemsize
+function.
 
 .coNP Macro @ ffi
 .synb

@@ -114,6 +114,21 @@
 (defmacro sizeof (type)
   (ffi-size (ffi-type-compile type)))
 
+(defmacro alignof (type)
+  (ffi-alignof (ffi-type-compile type)))
+
+(defmacro offsetof (struct memb)
+  (ffi-offsetof (ffi-type-compile struct) memb))
+
+(defmacro arraysize (arr)
+  (ffi-arraysize (ffi-type-compile arr)))
+
+(defmacro elemtype (type)
+  ^(ffi-elemtype (ffi-type-compile ',type)))
+
+(defmacro elemsize (type)
+  (ffi-elemsize (ffi-type-compile type)))
+
 (defmacro ffi (type)
   ^(ffi-type-compile ',type))
 
