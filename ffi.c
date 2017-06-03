@@ -2228,8 +2228,8 @@ val ffi_type_compile(val syntax)
                     self, eltype_syntax, nao);
 
         if (minusp(dim))
-        uw_throwf(error_s, lit("~a: negative dimension in ~s"),
-                  self, syntax, nao);
+          uw_throwf(error_s, lit("~a: negative dimension in ~s"),
+                    self, syntax, nao);
 
         {
           val type = make_ffi_type_array(syntax, vec_s, dim, eltype);
