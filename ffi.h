@@ -55,6 +55,8 @@ extern val sbit_s, ubit_s;
 
 extern val enum_s;
 
+extern val align_s;
+
 extern val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
 val ffi_type_compile(val syntax);

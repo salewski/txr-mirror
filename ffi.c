@@ -106,6 +106,8 @@ val sbit_s, ubit_s;
 
 val enum_s;
 
+val align_s;
+
 val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
 static val ffi_typedef_hash;
@@ -133,6 +135,7 @@ struct txr_ffi_type {
   unsigned char_conv : 1;
   unsigned wchar_conv : 1;
   unsigned bchar_conv : 1;
+  struct txr_ffi_type *(*clone)(struct txr_ffi_type *);
   void (*put)(struct txr_ffi_type *, val obj, mem_t *dst, val self);
   val (*get)(struct txr_ffi_type *, mem_t *src, val self);
   val (*in)(struct txr_ffi_type *, int copy, mem_t *src, val obj, val self);
@@ -1819,6 +1822,12 @@ static val bitfield_syntax_p(val syntax)
   }
 }
 
+static struct txr_ffi_type *ffi_simple_clone(struct txr_ffi_type *orig)
+{
+  return coerce(struct txr_ffi_type *, chk_copy_obj(coerce(mem_t *, orig),
+                                                    sizeof *orig));
+}
+
 static val make_ffi_type_builtin(val syntax, val lisp_type,
                                  cnum size, cnum align, ffi_type *ft,
                                  void (*put)(struct txr_ffi_type *,
@@ -1840,6 +1849,7 @@ static val make_ffi_type_builtin(val syntax, val lisp_type,
   tft->lt = lisp_type;
   tft->size = size;
   tft->align = align;
+  tft->clone = ffi_simple_clone;
   tft->put = put;
   tft->get = get;
   tft->alloc = ffi_fixed_alloc;
@@ -1882,6 +1892,7 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
     tft->lt = lisp_type;
     tft->size = sizeof (mem_t *);
     tft->align = alignof (mem_t *);
+    tft->clone = ffi_simple_clone;
     tft->put = put;
     tft->get = get;
     tft->eltype = tgtype;
@@ -1893,6 +1904,26 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
 
     return obj;
   }
+}
+
+static struct txr_ffi_type *ffi_struct_clone(struct txr_ffi_type *orig)
+{
+  cnum nmemb = orig->nelem;
+  struct txr_ffi_type *copy = ffi_simple_clone(orig);
+  size_t elements_size = sizeof *orig->ft->elements * (nmemb + 1);
+  size_t memb_size = sizeof *orig->memb * nmemb;
+  ffi_type *ft = coerce(ffi_type *, chk_copy_obj(coerce(mem_t *, orig->ft),
+                                                 sizeof *orig->ft));
+
+  copy->ft = ft;
+  ft->elements = coerce(ffi_type **, chk_copy_obj(coerce(mem_t *,
+                                                         ft->elements),
+                                                  elements_size));
+  copy->memb = coerce(struct smemb *, chk_copy_obj(coerce(mem_t *,
+                                                          orig->memb),
+                                                   memb_size));
+
+  return copy;
 }
 
 static val make_ffi_type_struct(val syntax, val lisp_type,
@@ -1921,6 +1952,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   tft->syntax = syntax;
   tft->lt = lisp_type;
   tft->nelem = nmemb;
+  tft->clone = ffi_struct_clone;
   tft->put = ffi_struct_put;
   tft->get = ffi_struct_get;
   tft->in = ffi_struct_in;
@@ -2017,6 +2049,21 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   return obj;
 }
 
+static struct txr_ffi_type *ffi_array_clone(struct txr_ffi_type *orig)
+{
+  cnum nmemb = orig->nelem;
+  struct txr_ffi_type *copy = ffi_simple_clone(orig);
+  size_t elements_size = sizeof *orig->ft->elements * (nmemb + 1);
+  ffi_type *ft = coerce(ffi_type *, chk_copy_obj(coerce(mem_t *, orig->ft),
+                                                 sizeof *orig->ft));
+
+  copy->ft = ft;
+  ft->elements = coerce(ffi_type **, chk_copy_obj(coerce(mem_t *,
+                                                         ft->elements),
+                                                  elements_size));
+  return copy;
+}
+
 static val make_ffi_type_array(val syntax, val lisp_type,
                                val dim, val eltype)
 {
@@ -2038,6 +2085,7 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->syntax = syntax;
   tft->lt = lisp_type;
   tft->eltype = eltype;
+  tft->clone = ffi_array_clone;
   tft->put = ffi_array_put;
   tft->get = ffi_array_get;
   tft->in = ffi_array_in;
@@ -2091,6 +2139,7 @@ static val make_ffi_type_enum(val syntax, val enums, val self)
   tft->lt = sym_s;
   tft->size = sizeof (int);
   tft->align = alignof (int);
+  tft->clone = ffi_simple_clone;
   tft->put = ffi_enum_put;
   tft->get = ffi_enum_get;
   tft->alloc = ffi_fixed_alloc;
@@ -2157,6 +2206,12 @@ static val make_ffi_type_enum(val syntax, val enums, val self)
   return obj;
 }
 
+static val ffi_type_copy(val orig)
+{
+  struct txr_ffi_type *otft = ffi_type_struct(orig);
+  struct txr_ffi_type *ctft = otft->clone(otft);
+  return cobj(coerce(mem_t *, ctft), orig->co.cls, orig->co.ops);
+}
 
 static val ffi_struct_compile(val membs, val *ptypes, val self)
 {
@@ -2367,6 +2422,23 @@ val ffi_type_compile(val syntax)
                   lit("~a: enum name ~s must be bindable symbol or nil"),
                   self, name, nao);
       return make_ffi_type_enum(xsyntax, enums, self);
+    } else if (sym == align_s) {
+      val align = ffi_eval_expr(cadr(syntax), nil, nil);
+      ucnum al = c_num(align);
+      if (al <= 0) {
+        uw_throwf(error_s, lit("~a: alignment must be positive"),
+                  self, nao);
+      } else if (al != 0 && (al & (al - 1)) != 0) {
+        uw_throwf(error_s, lit("~a: alignment must be a power of two"),
+                  self, nao);
+      } else {
+        val alsyntax = caddr(syntax);
+        val altype = ffi_type_compile(alsyntax);
+        val altype_copy = ffi_type_copy(altype);
+        struct txr_ffi_type *atft = ffi_type_struct(altype_copy);
+        atft->align = al;
+        return altype_copy;
+      }
     }
 
     uw_throwf(error_s, lit("~a: unrecognized type operator: ~s"),
@@ -3528,6 +3600,7 @@ void ffi_init(void)
   sbit_s = intern(lit("sbit"), user_package);
   ubit_s = intern(lit("ubit"), user_package);
   enum_s = intern(lit("enum"), user_package);
+  align_s = intern(lit("align"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);
   ffi_closure_s = intern(lit("ffi-closure"), user_package);
