@@ -658,6 +658,8 @@ static_def(struct strm_ops dgram_strm_ops =
                 dgram_get_byte,
                 dgram_unget_char,
                 dgram_unget_byte,
+                0,
+                0,
                 dgram_close,
                 dgram_flush,
                 0,

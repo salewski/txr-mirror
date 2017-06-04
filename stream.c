@@ -68,6 +68,8 @@
 #include "eval.h"
 #include "regex.h"
 #include "txr.h"
+#include "arith.h"
+#include "buf.h"
 
 /* Adhere to ISO C rules about direction switching on update streams. */
 #ifndef __gnu_linux__
@@ -175,6 +177,16 @@ static noreturn val unimpl_unget_char(val stream, val ch)
 static noreturn val unimpl_unget_byte(val stream, int byte)
 {
   unimpl(stream, lit("unget-byte"));
+}
+
+static noreturn val unimpl_put_buf(val stream, val buf)
+{
+  unimpl(stream, lit("put-buf"));
+}
+
+static noreturn val unimpl_fill_buf(val stream, val buf)
+{
+  unimpl(stream, lit("fill-buf"));
 }
 
 static noreturn val unimpl_seek(val stream, val off, enum strm_whence whence)
@@ -292,6 +304,36 @@ static val null_get_fd(val stream)
   return nil;
 }
 
+static val generic_put_buf(val stream, val buf)
+{
+  val self = lit("put-buf");
+  struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
+  cnum len = c_num(length_buf(buf)), i;
+  mem_t *ptr = buf_get(buf, self);
+
+  for (i = 0; i < len; i++)
+    ops->put_byte(stream, *ptr++);
+
+  return t;
+}
+
+static val generic_fill_buf(val stream, val buf)
+{
+  val self = lit("fill-buf");
+  struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
+  cnum len = c_num(length_buf(buf)), i;
+  mem_t *ptr = buf_get(buf, self);
+
+  for (i = 0; i < len; i++) {
+    val byte = ops->get_byte(stream);
+    if (!byte)
+      break;
+    *ptr++ = c_num(byte);
+  }
+
+  return num(i);
+}
+
 void fill_stream_ops(struct strm_ops *ops)
 {
   if (!ops->put_string)
@@ -310,6 +352,10 @@ void fill_stream_ops(struct strm_ops *ops)
     ops->unget_char = unimpl_unget_char;
   if (!ops->unget_byte)
     ops->unget_byte = unimpl_unget_byte;
+  if (!ops->put_buf)
+    ops->put_buf = (ops->get_byte ? generic_put_buf : unimpl_put_buf);
+  if (!ops->fill_buf)
+    ops->fill_buf = (ops->put_byte ? generic_fill_buf : unimpl_fill_buf);
   if (!ops->close)
     ops->close = null_close;
   if (!ops->flush)
@@ -350,6 +396,7 @@ static struct strm_ops null_ops =
                 null_put_string, null_put_char, null_put_byte, null_get_line,
                 null_get_char, null_get_byte,
                 unimpl_unget_char, unimpl_unget_byte,
+                unimpl_put_buf, unimpl_fill_buf,
                 null_close, null_flush, null_seek, unimpl_truncate,
                 null_get_prop, null_set_prop,
                 null_get_error, null_get_error_str, null_clear_error,
@@ -795,7 +842,37 @@ static val stdio_unget_byte(val stream, int byte)
   errno = 0;
   return h->f != 0 && ungetc(byte, coerce(FILE *, h->f)) != EOF
          ? num_fast(byte)
-         : stdio_maybe_error(stream, lit("pushing back byte into"));
+         : stdio_maybe_error(stream, lit("writing"));
+}
+
+static val stdio_put_buf(val stream, val buf)
+{
+  val self = lit("put-buf");
+  ucnum len = c_unum(length_buf(buf));
+  mem_t *ptr = buf_get(buf, self);
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  if ((size_t) len != len)
+    uw_throwf(error_s, lit("~a: buffer too large"), self, nao);
+  errno = 0;
+  return h->f != 0 && fwrite(ptr, 1, len, h->f) == len
+         ? t : stdio_maybe_error(stream, lit("writing"));
+}
+
+static val stdio_fill_buf(val stream, val buf)
+{
+  val self = lit("fill-buf");
+  ucnum len = c_unum(length_buf(buf));
+  mem_t *ptr = buf_get(buf, self);
+  struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
+  size_t nread = 0;
+  if ((size_t) len != len)
+    uw_throwf(error_s, lit("~a: buffer too large"), self, nao);
+  errno = 0;
+  if (h->f != 0)
+    nread = fread(ptr, 1, len, h->f);
+  if (nread == len || nread < len || feof(h->f))
+    return unum(len);
+  return stdio_maybe_read_error(stream);
 }
 
 static val stdio_close(val stream, val throw_on_error)
@@ -925,6 +1002,8 @@ static struct strm_ops stdio_ops =
                 stdio_get_byte,
                 stdio_unget_char,
                 stdio_unget_byte,
+                stdio_put_buf,
+                stdio_fill_buf,
                 stdio_close,
                 stdio_flush,
                 stdio_seek,
@@ -1114,6 +1193,8 @@ static struct strm_ops tail_ops =
                 tail_get_byte,
                 stdio_unget_char,
                 stdio_unget_byte,
+                stdio_put_buf,
+                stdio_fill_buf,
                 stdio_close,
                 stdio_flush,
                 stdio_seek,
@@ -1209,6 +1290,8 @@ static struct strm_ops pipe_ops =
                 stdio_get_byte,
                 stdio_unget_char,
                 stdio_unget_byte,
+                stdio_put_buf,
+                stdio_fill_buf,
                 pipe_close,
                 stdio_flush,
                 0, /* seek: not on pipes */
@@ -1559,7 +1642,7 @@ static struct strm_ops dir_ops =
                 wli("dir-stream"),
                 0, 0, 0,
                 dir_get_line,
-                0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
                 dir_close,
                 0, 0, 0, 0, 0,
                 dir_get_error,
@@ -1681,7 +1764,7 @@ static struct strm_ops string_in_ops =
                 string_in_get_char,
                 0,
                 string_in_unget_char,
-                0, 0, 0,
+                0, 0, 0, 0, 0,
                 0, /* TODO: seek */
                 0, /* TODO: truncate */
                 string_in_get_prop,
@@ -1758,7 +1841,7 @@ static struct strm_ops byte_in_ops =
                 0, 0, 0, 0, 0,
                 byte_in_get_byte,
                 0,
-                byte_in_unget_byte,
+                byte_in_unget_byte, 0, 0,
                 0, 0, 0, 0, 0, 0,
                 byte_in_get_error,
                 byte_in_get_error_str,
@@ -1894,7 +1977,7 @@ static struct strm_ops strlist_in_ops =
                 strlist_in_get_char,
                 0,
                 strlist_in_unget_char,
-                0, 0, 0,
+                0, 0, 0, 0, 0,
                 0, /* TODO: seek */
                 0, /* TODO: truncate */
                 strlist_in_get_prop,
@@ -2033,7 +2116,7 @@ static struct strm_ops string_out_ops =
                 string_out_put_string,
                 string_out_put_char,
                 string_out_put_byte,
-                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, /* TODO: seek; fill-with-spaces semantics if past end. */
                 0,
                 0, 0, 0, 0, 0, 0);
@@ -2153,7 +2236,7 @@ static struct strm_ops strlist_out_ops =
                 wli("strlist-output-stream"),
                 strlist_out_put_string,
                 strlist_out_put_char,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 val make_strlist_output_stream(void)
 {
@@ -2337,6 +2420,7 @@ static struct strm_ops cat_stream_ops =
                 cat_get_byte,
                 cat_unget_char,
                 cat_unget_byte,
+                0, 0,
                 0, 0, 0, 0,
                 cat_get_prop,
                 0,
@@ -2432,6 +2516,18 @@ static val delegate_unget_byte(val stream, int byte)
 {
   struct delegate_base *s = coerce(struct delegate_base *, stream->co.handle);
   return s->target_ops->unget_byte(s->target_stream, byte);
+}
+
+static val delegate_put_buf(val stream, val buf)
+{
+  struct delegate_base *s = coerce(struct delegate_base *, stream->co.handle);
+  return s->target_ops->put_buf(s->target_stream, buf);
+}
+
+static val delegate_fill_buf(val stream, val buf)
+{
+  struct delegate_base *s = coerce(struct delegate_base *, stream->co.handle);
+  return s->target_ops->fill_buf(s->target_stream, buf);
 }
 
 static val delegate_close(val stream, val throw_on_error)
@@ -2578,6 +2674,7 @@ static struct strm_ops record_adapter_ops =
                 delegate_put_string, delegate_put_char, delegate_put_byte,
                 record_adapter_get_line, delegate_get_char, delegate_get_byte,
                 delegate_unget_char, delegate_unget_byte,
+                delegate_put_buf, delegate_fill_buf,
                 delegate_close, delegate_flush, delegate_seek,
                 delegate_truncate, delegate_get_prop, delegate_set_prop,
                 delegate_get_error, delegate_get_error_str,
@@ -2688,6 +2785,20 @@ val unget_byte(val byte, val stream_in)
               stream, byte, nao);
 
   return ops->unget_byte(stream, b);
+}
+
+val put_buf(val buf, val stream_in)
+{
+  val stream = default_arg(stream_in, std_output);
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->put_buf(stream, buf);
+}
+
+val fill_buf(val buf, val stream_in)
+{
+  val stream = default_arg(stream_in, std_input);
+  struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  return ops->fill_buf(stream, buf);
 }
 
 struct fmt {
@@ -4315,6 +4426,8 @@ void stream_init(void)
   reg_fun(intern(lit("put-strings"), user_package), func_n2o(put_strings, 1));
   reg_fun(intern(lit("unget-char"), user_package), func_n2o(unget_char, 1));
   reg_fun(intern(lit("unget-byte"), user_package), func_n2o(unget_byte, 1));
+  reg_fun(intern(lit("put-buf"), user_package), func_n2o(put_buf, 1));
+  reg_fun(intern(lit("fill-buf"), user_package), func_n2o(fill_buf, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1o(flush_stream, 0));
   reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));
   reg_fun(intern(lit("truncate-stream"), user_package), func_n2(truncate_stream));

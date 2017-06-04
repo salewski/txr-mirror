@@ -63,6 +63,8 @@ struct strm_ops {
   val (*get_byte)(val);
   val (*unget_char)(val, val);
   val (*unget_byte)(val, int);
+  val (*put_buf)(val, val);
+  val (*fill_buf)(val, val);
   val (*close)(val, val);
   val (*flush)(val);
   val (*seek)(val, val, enum strm_whence);
@@ -81,11 +83,12 @@ struct strm_ops {
 
 #define strm_ops_init(cobj_init_macro, name, put_string, put_char, put_byte, \
                       get_line, get_char, get_byte, unget_char, unget_byte,  \
+                      put_buf, fill_buf,                                     \
                       close, flush, seek, truncate, get_prop, set_prop,      \
                       get_error, get_error_str, clear_error, get_fd)         \
 {                                                                            \
     cobj_init_macro, name, put_string, put_char, put_byte, get_line,         \
-    get_char, get_byte, unget_char, unget_byte,                              \
+    get_char, get_byte, unget_char, unget_byte, put_buf, fill_buf,           \
     close, flush, seek, truncate, get_prop, set_prop,                        \
     get_error, get_error_str, clear_error, get_fd, 0, 0, 0, 0                \
 }
@@ -177,6 +180,8 @@ val get_char(val);
 val get_byte(val);
 val unget_char(val ch, val stream);
 val unget_byte(val byte, val stream);
+val put_buf(val buf, val stream);
+val fill_buf(val buf, val stream);
 val vformat(val stream, val string, va_list);
 val vformat_to_string(val string, va_list);
 val format(val stream, val string, ...);
