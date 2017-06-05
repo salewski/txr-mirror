@@ -89,6 +89,16 @@ val void_s;
 
 val val_s;
 
+val be_uint16_s, be_int16_s;
+val be_uint32_s, be_int32_s;
+val be_uint64_s, be_int64_s;
+val be_float_s, be_double_s;
+
+val le_uint16_s, le_int16_s;
+val le_uint32_s, le_int32_s;
+val le_uint64_s, le_int64_s;
+val le_float_s, le_double_s;
+
 val array_s, zarray_s, carray_s;
 
 val struct_s;
@@ -639,6 +649,553 @@ static val ffi_val_get(struct txr_ffi_type *tft, mem_t *src, val self)
     uw_throwf(error_s, lit("~a: bit pattern ~0,0*x isn't a valid Lisp object"),
               self, num_fast(sizeof (v) * 2), bits(v), nao);
   return v;
+}
+
+static void ffi_be_i16_put(struct txr_ffi_type *tft, val n,
+                           mem_t *dst, val self)
+{
+  cnum v = c_num(n);
+
+  if (v < -32768 || v > 32767)
+    uw_throwf(error_s, lit("~a: value ~s is out of signed 16 bit range"),
+              self, n, nao);
+
+  dst[0] = (v >> 8) & 0xff;
+  dst[1] = v & 0xff;
+}
+
+static val ffi_be_i16_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  cnum n = (src[0] << 8) | src[1];
+  if ((n & 0x8000) != 0)
+    n = -((n ^ 0xFFFF) + 1);
+  return num(n);
+}
+
+static void ffi_be_u16_put(struct txr_ffi_type *tft, val n,
+                           mem_t *dst, val self)
+{
+  cnum v = c_num(n);
+
+  if (v < -32768 || v > 32767)
+    uw_throwf(error_s, lit("~a: value ~s is out of signed 16 bit range"),
+              self, n, nao);
+
+  dst[0] = (v >> 8) & 0xff;
+  dst[1] = v & 0xff;
+}
+
+static val ffi_be_u16_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  cnum n = (src[0] << 8) | src[1];
+  return num(n);
+}
+
+static void ffi_le_i16_put(struct txr_ffi_type *tft, val n,
+                           mem_t *dst, val self)
+{
+  cnum v = c_num(n);
+
+  if (v < -32768 || v > 32767)
+    uw_throwf(error_s, lit("~a: value ~s is out of signed 16 bit range"),
+              self, n, nao);
+
+  dst[1] = (v >> 8) & 0xff;
+  dst[0] = v & 0xff;
+}
+
+static val ffi_le_i16_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  cnum n = (src[1] << 8) | src[0];
+  if ((n & 0x8000) != 0)
+    n = -((n ^ 0xFFFF) + 1);
+  return num(n);
+}
+
+static void ffi_le_u16_put(struct txr_ffi_type *tft, val n,
+                           mem_t *dst, val self)
+{
+  cnum v = c_num(n);
+
+  if (v < 0|| v > 65535)
+    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 16 bit range"),
+              self, n, nao);
+
+  dst[1] = (v >> 8) & 0xff;
+  dst[0] = v & 0xff;
+}
+
+static val ffi_le_u16_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  cnum n = (src[1] << 8) | src[0];
+  return num(n);
+}
+
+static void ffi_be_i32_put(struct txr_ffi_type *tft, val n,
+                           mem_t *dst, val self)
+{
+  cnum v = c_num(n);
+
+  if (v < (- (cnum) 0x7FFFFFFF - 1) || v > 0x7FFFFFFF)
+    uw_throwf(error_s, lit("~a: value ~s is out of signed 32 bit range"),
+              self, n, nao);
+
+  dst[0] = (v >> 24) & 0xff;
+  dst[1] = (v >> 16) & 0xff;
+  dst[2] = (v >> 8) & 0xff;
+  dst[3] = v & 0xff;
+}
+
+static val ffi_be_i32_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  cnum n = ((cnum) src[0] << 24 | (cnum) src[1] << 16 |
+            (cnum) src[2] << 8 | src[3]);
+  if ((n & 0x80000000) != 0)
+    n = -((n ^ 0xFFFFFFFF) + 1);
+  return num(n);
+}
+
+static void ffi_be_u32_put(struct txr_ffi_type *tft, val n,
+                           mem_t *dst, val self)
+{
+  ucnum v = c_unum(n);
+
+  if (v > 0xFFFFFFFF)
+    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 32 bit range"),
+              self, n, nao);
+
+  dst[0] = (v >> 24) & 0xff;
+  dst[1] = (v >> 16) & 0xff;
+  dst[2] = (v >> 8) & 0xff;
+  dst[3] = v & 0xff;
+}
+
+static val ffi_be_u32_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  ucnum n = ((ucnum) src[0] << 24 | (ucnum) src[1] << 16 |
+             (ucnum) src[2] << 8 | src[3]);
+  return unum(n);
+}
+
+static void ffi_le_i32_put(struct txr_ffi_type *tft, val n,
+                           mem_t *dst, val self)
+{
+  cnum v = c_num(n);
+
+  if (v < (- (cnum) 0x7fffffff - 1) || v > 0x7FFFFFFF)
+    uw_throwf(error_s, lit("~a: value ~s is out of signed 32 bit range"),
+              self, n, nao);
+
+  dst[3] = (v >> 24) & 0xff;
+  dst[2] = (v >> 16) & 0xff;
+  dst[1] = (v >> 8) & 0xff;
+  dst[0] = v & 0xff;
+}
+
+static val ffi_le_i32_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  cnum n = ((cnum) src[3] << 24 | (cnum) src[2] << 16 |
+            (cnum) src[1] << 8 | src[0]);
+  if ((n & 0x80000000) != 0)
+    n = -((n ^ 0xFFFFFFFF) + 1);
+  return num(n);
+}
+
+static void ffi_le_u32_put(struct txr_ffi_type *tft, val n,
+                           mem_t *dst, val self)
+{
+  ucnum v = c_unum(n);
+
+  if (v > 0xFFFFFFFF)
+    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 32 bit range"),
+              self, n, nao);
+
+  dst[3] = (v >> 24) & 0xff;
+  dst[2] = (v >> 16) & 0xff;
+  dst[1] = (v >> 8) & 0xff;
+  dst[0] = v & 0xff;
+}
+
+static val ffi_le_u32_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  ucnum n = ((ucnum) src[3] << 24 | (ucnum) src[2] << 16 |
+             (ucnum) src[1] << 8 | src[0]);
+  return unum(n);
+}
+
+static void ffi_be_i64_put(struct txr_ffi_type *tft, val n,
+                           mem_t *dst, val self)
+{
+#if SIZEOF_PTR >= 8
+  cnum v = c_num(n);
+
+  if (v < (- (cnum) 0x7FFFFFFFFFFFFFFF - 1) || v > 0x7FFFFFFFFFFFFFFF)
+    goto range;
+
+  dst[0] = (v >> 56) & 0xff;
+  dst[1] = (v >> 48) & 0xff;
+  dst[2] = (v >> 40) & 0xff;
+  dst[3] = (v >> 32) & 0xff;
+  dst[4] = (v >> 24) & 0xff;
+  dst[5] = (v >> 16) & 0xff;
+  dst[6] = (v >> 8) & 0xff;
+  dst[7] = v & 0xff;
+#else
+  cnum hi32 = c_num(ash(n, num_fast(-32)));
+  ucnum lo32 = c_unum(logtrunc(n, num_fast(32)));
+
+  if (hi32 < (- (cnum) 0x7FFFFFFF - 1) || hi32 > 0x7FFFFFFF)
+    goto range;
+
+  dst[0] = (hi32 >> 24) & 0xff;
+  dst[1] = (hi32 >> 16) & 0xff;
+  dst[2] = (hi32 >> 8) & 0xff;
+  dst[3] = hi32 & 0xff;
+  dst[4] = (lo32 >> 24) & 0xff;
+  dst[5] = (lo32 >> 16) & 0xff;
+  dst[6] = (lo32 >> 8) & 0xff;
+  dst[7] = lo32 & 0xff;
+#endif
+  return;
+range:
+    uw_throwf(error_s, lit("~a: value ~s is out of signed 64 bit range"),
+              self, n, nao);
+}
+
+static val ffi_be_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+#if SIZEOF_PTR >= 8
+  cnum n = ((cnum) src[0] << 56 | (cnum) src[1] << 48 |
+            (cnum) src[2] << 40 | (cnum) src[3] << 32 |
+            (cnum) src[4] << 24 | (cnum) src[5] << 16 |
+            (cnum) src[6] << 8 | src[7]);
+  if ((n & 0x8000000000000000) != 0)
+    n = -((n ^ 0xFFFFFFFFFFFFFFFF) + 1);
+  return num(n);
+#else
+  cnum hi32 = ((cnum) src[0] << 24 | (cnum) src[1] << 16 |
+               (cnum) src[2] << 8 | src[3]);
+  cnum lo32 = ((cnum) src[4] << 24 | (cnum) src[5] << 16 |
+               (cnum) src[6] << 8 | src[7]);
+  return logior(ash(num(hi32), num_fast(32)), unum(lo32));
+#endif
+}
+
+static void ffi_be_u64_put(struct txr_ffi_type *tft, val n,
+                           mem_t *dst, val self)
+{
+#if SIZEOF_PTR >= 8
+  ucnum v = c_unum(n);
+
+  if (v > 0xFFFFFFFFFFFFFFFF)
+    goto range;
+
+  dst[0] = (v >> 56) & 0xff;
+  dst[1] = (v >> 48) & 0xff;
+  dst[2] = (v >> 40) & 0xff;
+  dst[3] = (v >> 32) & 0xff;
+  dst[4] = (v >> 24) & 0xff;
+  dst[5] = (v >> 16) & 0xff;
+  dst[6] = (v >> 8) & 0xff;
+  dst[7] = v & 0xff;
+#else
+  ucnum hi32 = c_unum(ash(n, num_fast(-32)));
+  ucnum lo32 = c_unum(logtrunc(n, num_fast(32)));
+
+  if (hi32 > 0xFFFFFFFF)
+    goto range;
+
+  dst[0] = (hi32 >> 24) & 0xff;
+  dst[1] = (hi32 >> 16) & 0xff;
+  dst[2] = (hi32 >> 8) & 0xff;
+  dst[3] = hi32 & 0xff;
+  dst[4] = (lo32 >> 24) & 0xff;
+  dst[5] = (lo32 >> 16) & 0xff;
+  dst[6] = (lo32 >> 8) & 0xff;
+  dst[7] = lo32 & 0xff;
+#endif
+  return;
+range:
+    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 64 bit range"),
+              self, n, nao);
+}
+
+static val ffi_be_u64_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+#if SIZEOF_PTR >= 8
+  ucnum n = ((ucnum) src[0] << 56 | (ucnum) src[1] << 48 |
+             (ucnum) src[2] << 40 | (ucnum) src[3] << 32 |
+             (ucnum) src[4] << 24 | (ucnum) src[5] << 16 |
+             (ucnum) src[6] << 8 | src[7]);
+  return unum(n);
+#else
+  ucnum hi32 = ((ucnum) src[0] << 24 | (ucnum) src[1] << 16 |
+                (ucnum) src[2] << 8 | src[3]);
+  ucnum lo32 = ((ucnum) src[4] << 24 | (ucnum) src[5] << 16 |
+                (ucnum) src[6] << 8 | src[7]);
+  return logior(ash(unum(hi32), num_fast(32)), unum(lo32));
+#endif
+}
+
+static void ffi_le_i64_put(struct txr_ffi_type *tft, val n,
+                           mem_t *dst, val self)
+{
+#if SIZEOF_PTR >= 8
+  cnum v = c_num(n);
+
+  if (v < (- (cnum) 0x7FFFFFFFFFFFFFFF - 1) || v > 0x7FFFFFFFFFFFFFFF)
+    goto range;
+
+  dst[7] = (v >> 56) & 0xff;
+  dst[6] = (v >> 48) & 0xff;
+  dst[5] = (v >> 40) & 0xff;
+  dst[4] = (v >> 32) & 0xff;
+  dst[3] = (v >> 24) & 0xff;
+  dst[2] = (v >> 16) & 0xff;
+  dst[1] = (v >> 8) & 0xff;
+  dst[0] = v & 0xff;
+#else
+  cnum hi32 = c_num(ash(n, num_fast(-32)));
+  ucnum lo32 = c_unum(logtrunc(n, num_fast(32)));
+
+  if (hi32 < (- (cnum) 0x7FFFFFFF - 1) || hi32 > 0x7FFFFFFF)
+    goto range;
+
+  dst[7] = (hi32 >> 24) & 0xff;
+  dst[6] = (hi32 >> 16) & 0xff;
+  dst[5] = (hi32 >> 8) & 0xff;
+  dst[4] = hi32 & 0xff;
+  dst[3] = (lo32 >> 24) & 0xff;
+  dst[2] = (lo32 >> 16) & 0xff;
+  dst[1] = (lo32 >> 8) & 0xff;
+  dst[0] = lo32 & 0xff;
+#endif
+  return;
+range:
+    uw_throwf(error_s, lit("~a: value ~s is out of signed 64 bit range"),
+              self, n, nao);
+}
+
+static val ffi_le_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+#if SIZEOF_PTR >= 8
+  cnum n = ((cnum) src[7] << 56 | (cnum) src[6] << 48 |
+            (cnum) src[5] << 40 | (cnum) src[4] << 32 |
+            (cnum) src[3] << 24 | (cnum) src[2] << 16 |
+            (cnum) src[1] << 8 | src[0]);
+  if ((n & 0x8000000000000000) != 0)
+    n = -((n ^ 0xFFFFFFFFFFFFFFFF) + 1);
+  return num(n);
+#else
+  cnum hi32 = ((cnum) src[3] << 24 | (cnum) src[2] << 16 |
+               (cnum) src[1] << 8 | src[0]);
+  cnum lo32 = ((cnum) src[3] << 24 | (cnum) src[2] << 16 |
+               (cnum) src[1] << 8 | src[0]);
+  return logior(ash(num(hi32), num_fast(32)), unum(lo32));
+#endif
+}
+
+static void ffi_le_u64_put(struct txr_ffi_type *tft, val n,
+                           mem_t *dst, val self)
+{
+#if SIZEOF_PTR >= 8
+  ucnum v = c_unum(n);
+
+  if (v > 0xFFFFFFFFFFFFFFFF)
+    goto range;
+
+  dst[7] = (v >> 56) & 0xff;
+  dst[6] = (v >> 48) & 0xff;
+  dst[5] = (v >> 40) & 0xff;
+  dst[4] = (v >> 32) & 0xff;
+  dst[3] = (v >> 24) & 0xff;
+  dst[2] = (v >> 16) & 0xff;
+  dst[1] = (v >> 8) & 0xff;
+  dst[0] = v & 0xff;
+#else
+  ucnum hi32 = c_unum(ash(n, num_fast(-32)));
+  ucnum lo32 = c_unum(logtrunc(n, num_fast(32)));
+
+  if (hi32 > 0xFFFFFFFF)
+    goto range;
+
+  dst[7] = (hi32 >> 24) & 0xff;
+  dst[6] = (hi32 >> 16) & 0xff;
+  dst[5] = (hi32 >> 8) & 0xff;
+  dst[4] = hi32 & 0xff;
+  dst[3] = (lo32 >> 24) & 0xff;
+  dst[2] = (lo32 >> 16) & 0xff;
+  dst[1] = (lo32 >> 8) & 0xff;
+  dst[0] = lo32 & 0xff;
+#endif
+  return;
+range:
+    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 64 bit range"),
+              self, n, nao);
+}
+
+static val ffi_le_u64_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+#if SIZEOF_PTR >= 8
+  ucnum n = ((ucnum) src[7] << 56 | (ucnum) src[6] << 48 |
+             (ucnum) src[5] << 40 | (ucnum) src[4] << 32 |
+             (ucnum) src[3] << 24 | (ucnum) src[2] << 16 |
+             (ucnum) src[1] << 8 | src[0]);
+  return unum(n);
+#else
+  ucnum hi32 = ((ucnum) src[3] << 24 | (ucnum) src[2] << 16 |
+                (ucnum) src[1] << 8 | src[0]);
+  ucnum lo32 = ((ucnum) src[3] << 24 | (ucnum) src[2] << 16 |
+                (ucnum) src[1] << 8 | src[0]);
+  return logior(ash(unum(hi32), num_fast(32)), unum(lo32));
+#endif
+}
+
+static void ffi_be_float_put(struct txr_ffi_type *tft, val n,
+                             mem_t *dst, val self)
+{
+#if HAVE_LITTLE_ENDIAN
+  mem_t *c = convert(mem_t *, alloca(4));
+  ffi_float_put(tft, n, c, self);
+
+  dst[0] = c[3];
+  dst[1] = c[2];
+  dst[2] = c[1];
+  dst[3] = c[0];
+#else
+  ffi_float_put(tft, n, dst, self);
+#endif
+}
+
+static val ffi_be_float_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+#if HAVE_LITTLE_ENDIAN
+  mem_t *c = convert(mem_t *, alloca(4));
+
+  c[0] = src[3];
+  c[1] = src[2];
+  c[2] = src[1];
+  c[3] = src[0];
+
+  return ffi_float_get(tft, c, self);
+#else
+  return ffi_float_get(tft, src, self);
+#endif
+}
+
+static void ffi_le_float_put(struct txr_ffi_type *tft, val n,
+                             mem_t *dst, val self)
+{
+#if !HAVE_LITTLE_ENDIAN
+  mem_t *c = convert(mem_t *, alloca(4));
+
+  ffi_float_put(tft, n, c, self);
+
+  dst[0] = c[3];
+  dst[1] = c[2];
+  dst[2] = c[1];
+  dst[3] = c[0];
+#else
+  ffi_float_put(tft, n, dst, self);
+#endif
+}
+
+static val ffi_le_float_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+#if !HAVE_LITTLE_ENDIAN
+  mem_t *c = convert(mem_t *, alloca(4));
+
+  c[0] = src[3];
+  c[1] = src[2];
+  c[2] = src[1];
+  c[3] = src[0];
+
+  return ffi_float_get(tft, c, self);
+#else
+  return ffi_float_get(tft, src, self);
+#endif
+}
+
+static void ffi_be_double_put(struct txr_ffi_type *tft, val n,
+                             mem_t *dst, val self)
+{
+#if HAVE_LITTLE_ENDIAN
+  mem_t *c = convert(mem_t *, alloca(8));
+
+  ffi_double_put(tft, n, c, self);
+
+  dst[0] = c[7];
+  dst[1] = c[6];
+  dst[2] = c[5];
+  dst[3] = c[4];
+  dst[4] = c[3];
+  dst[5] = c[2];
+  dst[6] = c[1];
+  dst[7] = c[0];
+#else
+  ffi_double_put(tft, n, dst, self);
+#endif
+}
+
+static val ffi_be_double_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+#if HAVE_LITTLE_ENDIAN
+  mem_t *c = convert(mem_t *, alloca(8));
+
+  c[0] = src[7];
+  c[1] = src[6];
+  c[2] = src[5];
+  c[3] = src[4];
+  c[4] = src[3];
+  c[5] = src[2];
+  c[6] = src[1];
+  c[7] = src[0];
+
+  return ffi_double_get(tft, c, self);
+#else
+  return ffi_double_get(tft, src, self);
+#endif
+}
+
+static void ffi_le_double_put(struct txr_ffi_type *tft, val n,
+                              mem_t *dst, val self)
+{
+#if !HAVE_LITTLE_ENDIAN
+  mem_t *c = convert(mem_t *, alloca(8));
+
+  ffi_double_put(tft, n, c, self);
+
+  dst[0] = c[7];
+  dst[1] = c[6];
+  dst[2] = c[5];
+  dst[3] = c[4];
+  dst[4] = c[3];
+  dst[5] = c[2];
+  dst[6] = c[1];
+  dst[7] = c[0];
+#else
+  ffi_double_put(tft, n, dst, self);
+#endif
+}
+
+static val ffi_le_double_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+#if !HAVE_LITTLE_ENDIAN
+  mem_t *c = convert(mem_t *, alloca(8));
+
+  c[0] = src[7];
+  c[1] = src[6];
+  c[2] = src[5];
+  c[3] = src[4];
+  c[4] = src[3];
+  c[5] = src[2];
+  c[6] = src[1];
+  c[7] = src[0];
+
+  return ffi_double_get(tft, c, self);
+#else
+  return ffi_double_get(tft, src, self);
+#endif
 }
 
 #if SIZEOF_WCHAR_T == SIZEOF_SHORT
@@ -2587,6 +3144,102 @@ static void ffi_init_types(void)
                                            &ffi_type_pointer,
                                            ffi_val_put, ffi_val_get,
                                            0, 0));
+  ffi_typedef(be_uint16_s, make_ffi_type_builtin(be_uint16_s, integer_s,
+                                                 sizeof (u16_t),
+                                                 alignof (u16_t),
+                                                 &ffi_type_uint16,
+                                                 ffi_be_u16_put,
+                                                 ffi_be_u16_get, 0, 0));
+  ffi_typedef(be_int16_s, make_ffi_type_builtin(be_int16_s, integer_s,
+                                                sizeof (i16_t),
+                                                alignof (i16_t),
+                                                &ffi_type_sint16,
+                                                ffi_be_i16_put,
+                                                ffi_be_i16_get, 0, 0));
+  ffi_typedef(be_uint32_s, make_ffi_type_builtin(be_uint32_s, integer_s,
+                                                 sizeof (u32_t),
+                                                 alignof (u32_t),
+                                                 &ffi_type_uint32,
+                                                 ffi_be_u32_put,
+                                                 ffi_be_u32_get, 0, 0));
+  ffi_typedef(be_int32_s, make_ffi_type_builtin(be_int32_s, integer_s,
+                                                sizeof (i32_t),
+                                                alignof (i32_t),
+                                                &ffi_type_sint32,
+                                                ffi_be_i32_put,
+                                                ffi_be_i32_get, 0, 0));
+  ffi_typedef(be_uint64_s, make_ffi_type_builtin(be_uint64_s, integer_s,
+                                                 sizeof (u64_t),
+                                                 alignof (u64_t),
+                                                 &ffi_type_uint64,
+                                                 ffi_be_u64_put,
+                                                 ffi_be_u64_get, 0, 0));
+  ffi_typedef(be_int64_s, make_ffi_type_builtin(be_int64_s, integer_s,
+                                                sizeof (i64_t),
+                                                alignof (i64_t),
+                                                &ffi_type_sint64,
+                                                ffi_be_i64_put,
+                                                ffi_be_i64_get, 0, 0));
+  ffi_typedef(be_float_s, make_ffi_type_builtin(be_float_s, integer_s,
+                                                sizeof (float),
+                                                alignof (float),
+                                                &ffi_type_float,
+                                                ffi_be_float_put,
+                                                ffi_be_float_get, 0, 0));
+  ffi_typedef(be_double_s, make_ffi_type_builtin(be_double_s, integer_s,
+                                                 sizeof (double),
+                                                 alignof (double),
+                                                 &ffi_type_double,
+                                                 ffi_be_double_put,
+                                                 ffi_be_double_get, 0, 0));
+  ffi_typedef(le_uint16_s, make_ffi_type_builtin(le_uint16_s, integer_s,
+                                                 sizeof (u16_t),
+                                                 alignof (u16_t),
+                                                 &ffi_type_uint16,
+                                                 ffi_le_u16_put,
+                                                 ffi_le_u16_get, 0, 0));
+  ffi_typedef(le_int16_s, make_ffi_type_builtin(le_int16_s, integer_s,
+                                                sizeof (i16_t),
+                                                alignof (i16_t),
+                                                &ffi_type_sint16,
+                                                ffi_le_i16_put,
+                                                ffi_le_i16_get, 0, 0));
+  ffi_typedef(le_uint32_s, make_ffi_type_builtin(le_uint32_s, integer_s,
+                                                 sizeof (u32_t),
+                                                 alignof (u32_t),
+                                                 &ffi_type_uint32,
+                                                 ffi_le_u32_put,
+                                                 ffi_le_u32_get, 0, 0));
+  ffi_typedef(le_int32_s, make_ffi_type_builtin(le_int32_s, integer_s,
+                                                sizeof (i32_t),
+                                                alignof (i32_t),
+                                                &ffi_type_sint32,
+                                                ffi_le_i32_put,
+                                                ffi_le_i32_get, 0, 0));
+  ffi_typedef(le_uint64_s, make_ffi_type_builtin(le_uint64_s, integer_s,
+                                                 sizeof (u64_t),
+                                                 alignof (u64_t),
+                                                 &ffi_type_uint64,
+                                                 ffi_le_u64_put,
+                                                 ffi_le_u64_get, 0, 0));
+  ffi_typedef(le_int64_s, make_ffi_type_builtin(le_int64_s, integer_s,
+                                                sizeof (i64_t),
+                                                alignof (i64_t),
+                                                &ffi_type_sint64,
+                                                ffi_le_i64_put,
+                                                ffi_le_i64_get, 0, 0));
+  ffi_typedef(le_float_s, make_ffi_type_builtin(le_float_s, integer_s,
+                                                sizeof (float),
+                                                alignof (float),
+                                                &ffi_type_float,
+                                                ffi_le_float_put,
+                                                ffi_le_float_get, 0, 0));
+  ffi_typedef(le_double_s, make_ffi_type_builtin(le_double_s, integer_s,
+                                                 sizeof (double),
+                                                 alignof (double),
+                                                 &ffi_type_double,
+                                                 ffi_le_double_put,
+                                                 ffi_le_double_get, 0, 0));
   {
     val type = make_ffi_type_builtin(cptr_s, cptr_s, sizeof (mem_t *),
                                      alignof (mem_t *),
@@ -3579,6 +4232,22 @@ void ffi_init(void)
   ulong_s = intern(lit("ulong"), user_package);
   double_s = intern(lit("double"), user_package);
   val_s = intern(lit("val"), user_package);
+  be_uint16_s = intern(lit("be-uint16"), user_package);
+  be_int16_s = intern(lit("be-int16"), user_package);
+  be_uint32_s = intern(lit("be-uint32"), user_package);
+  be_int32_s = intern(lit("be-int32"), user_package);
+  be_uint64_s = intern(lit("be-uint64"), user_package);
+  be_int64_s = intern(lit("be-int64"), user_package);
+  be_float_s = intern(lit("be-float"), user_package);
+  be_double_s = intern(lit("be-double"), user_package);
+  le_uint16_s = intern(lit("le-uint16"), user_package);
+  le_int16_s = intern(lit("le-int16"), user_package);
+  le_uint32_s = intern(lit("le-uint32"), user_package);
+  le_int32_s = intern(lit("le-int32"), user_package);
+  le_uint64_s = intern(lit("le-uint64"), user_package);
+  le_int64_s = intern(lit("le-int64"), user_package);
+  le_float_s = intern(lit("le-float"), user_package);
+  le_double_s = intern(lit("le-double"), user_package);
   void_s = intern(lit("void"), user_package);
   array_s = intern(lit("array"), user_package);
   zarray_s = intern(lit("zarray"), user_package);

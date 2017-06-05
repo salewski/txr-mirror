@@ -39,6 +39,16 @@ extern val double_s;
 
 extern val val_s;
 
+extern val be_uint16_s, be_int16_s;
+extern val be_uint32_s, be_int32_s;
+extern val be_uint64_s, be_int64_s;
+extern val be_float_s, be_double_s;
+
+extern val le_uint16_s, le_int16_s;
+extern val le_uint32_s, le_int32_s;
+extern val le_uint64_s, le_int64_s;
+extern val le_float_s, le_double_s;
+
 extern val array_s, zarray_s, carray_s;
 
 extern val struct_s;
