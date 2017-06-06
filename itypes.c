@@ -110,8 +110,8 @@ i64_t c_i64(val n, val self)
 
 u64_t c_u64(val n, val self)
 {
-  uint_ptr_t v = c_unum(n);
-  if (v < (cnum) -0x8000000000000000 || v > (cnum) 0x7FFFFFFFFFFFFFFF)
+  ucnum v = c_unum(n);
+  if (v > (ucnum) 0xFFFFFFFFFFFFFFFF)
     uw_throwf(error_s, lit("~a: value ~s is out of unsigned 64 bit range"),
               self, n, nao);
   return v;
