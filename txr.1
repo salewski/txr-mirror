@@ -54739,6 +54739,75 @@ depending on platform:
 and
 .codn uid-t .
 
+.NP* Endian Types
+In addition to the type system described in the previous section.
+the FFI type system supports
+.IR "endian types" ,
+which are useful for dealing with
+data formats defined by networking protocols and other kinds of standards,
+or data structure definitions from other machines. 
+
+There are two kinds of
+.IR endianness :
+.I "Little endian"
+refers to the least-significant byte of a data type being
+stored at the lowest address in memory, lowest offset in a buffer, lowest
+offset in a file, or earlier byte in a communication stream.
+.I "Big endian"
+is the opposite: it refers to the most significant byte occurring
+at the lowest address, offset or stream position.
+For each of the signed integral types
+
+.code int16
+through
+.codn int64 ,
+the corresponding unsigned types
+.code uint16
+through
+.codn uint64 ,
+and the two floating-point types
+.code float
+and
+.codn double ,
+the FFI type system provides a big-endian and little endian version,
+whose names are derived by prefixing the
+.code be-
+or
+.code le-
+prefix to its related type.
+
+Thus, the exhaustive list of the endian types is:
+.codn be-int16 ,
+.codn be-uint16 ,
+.codn be-int32 ,
+.codn be-uint32 ,
+.codn be-int64 ,
+.codn be-uint64 ,
+.codn be-float ,
+.codn be-double ,
+.codn le-int16 ,
+.codn le-uint16 ,
+.codn le-int32 ,
+.codn le-uint32 ,
+.codn le-int64 ,
+.codn le-uint64 ,
+.code le-float
+and
+.codn le-double .
+
+These types have the same size and alignment as their plain, unprefixed
+counterparts. Alignment can be overridden with the
+.code align
+type construction operator to create versions of these types with alternative
+alignment.
+
+Endian types are supported as arguments to functions, return values,
+members of structs and elements of arrays.
+
+\*(TL's FFI performs the automatic conversion from the abstract Lisp integer
+representation to the foreign representations exhibiting the specified
+endianness.
+
 .NP* FFI Call Descriptors
 
 The FFI mechanism makes use of a type-like representation called the "call
