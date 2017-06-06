@@ -2868,7 +2868,7 @@ cat > conftest.c <<!
 
 int main(void)
 {
-  clockid_t cid = CLOCK_REALTIME;
+  clockid_t cid = 0;
   return 0;
 }
 !
