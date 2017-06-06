@@ -53225,6 +53225,84 @@ at the offset given by
 returning that value as a Lisp object of type
 .codn cnum .
 
+.coNP Function @ put-buf
+.synb
+.mets (put-buf < buf <> [ stream ])
+.syne
+.desc
+The
+.code put-buf
+function writes the contents of buffer
+.code buf
+to a stream. Each byte of the buffer starting with the first
+is written to the stream as if by a
+.code put-byte
+operation.
+
+If
+.meta stream
+is omitted, it defaults to
+.codn *stdout* .
+
+The stream must support the
+.code put-byte
+operation. Buffers which support
+.code put-byte
+can be expected to support
+.code put-buf
+and, conversely, streams which do not support
+.code put-byte
+do not support
+.codn put-buf .
+
+The
+.code put-buf
+function returns
+.code t
+if the buffer is successfully written in its entirety.
+Otherwise, it throws an error.
+
+.coNP Function @ fill-buf
+.synb
+.mets (fill-buf < buf <> [ stream ])
+.syne
+.desc
+The
+.code fill-buf
+function examines the length of
+.meta buf
+and attempts to read that many bytes from the stream,
+placing them into the buffer. The bytes are read as if using the
+.code get-byte
+function, and are placed into consecutive bytes within the buffer,
+starting at the first.
+
+If the
+.meta stream
+argument is omitted, it defaults to
+.codn *stdin* .
+
+The stream must support the
+.code get-byte
+operation. Buffers which support
+.code get-byte
+can be expected to support
+.code fill-buf
+and, conversely, streams which do not support
+.code get-byte
+do not support
+.codn fill-buf .
+
+The
+.code put-buf
+function returns the number of bytes which were read.  If an end-of-file
+condition occurs before the buffer is filled, then the value returned is
+smaller than the buffer length. In this case, the area of the buffer beyond the
+read size retains its previous content.
+
+If an error situation occurs other than a premature end-of-file,
+an exception is thrown.
+
 .coSS The @ cptr type
 
 Objects of type
