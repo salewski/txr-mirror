@@ -54659,6 +54659,51 @@ It is possible to create a
 .code carray
 view over a buffer, using
 .codn carray-buf .
+.meIP (align < width << type )
+The FFI type operator
+.code align
+defines a type which is a copy of
+.metn type ,
+but with the alignment requirement replaced by the
+.metn width .
+
+The
+.meta width
+argument is an expression which is evaluated in the top-level
+environment. It must produce a positive integer which is a power of two.
+
+The
+.code align
+operator can be used to create a version of
+.meta type
+with stricter or weaker alignment. Alignment affects the placement of
+the type as a structure member, and as an array element.
+
+A type with alignment 1 can be placed at any byte offset. A type with
+alignment 2 can be placed only at even addresses and offsets.
+
+Alignment can be applied to all types, including arrays and structs. However,
+out of the elementary types, only the integer and floating point types are
+required to support a weakening of alignment. Whether a type which corresponds
+to a pointer, such as a
+.code str
+or
+.codn buf ,
+can be written at an offset which doesn't meet that type's default alignment
+is machine-dependent.
+
+If a FFI struct type is declared with a weakened alignment, whether or not such
+a structure can be read or written at the misaligned offsets depends on whether
+the individual members support it. If they are integer or floating-point types,
+or aggregates thereof, the usage is supported in a machine-independent manner.
+
+A struct type declared to have a weaker alignment, such as 1, does not
+lose any of the padding at its end. That is to say, alignment has no effect
+on structure size. It affects the offset at which a structure is placed as
+a member of an array or another structure, with its padding intact. To
+eliminate the padding at the end of a structure, it is necessary to use
+.code align
+to manipulate the alignment of individual members.
 .PP
 
 The following additional typedef names are defined denoting some common
