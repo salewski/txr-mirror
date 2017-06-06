@@ -62,7 +62,7 @@
 
 #define alignof(type) offsetof(struct {char x; type y;}, y)
 
-#define pad_retval(size) ((size) > sizeof (ffi_arg) \
+#define pad_retval(size) (convert(size_t, size) > sizeof (ffi_arg) \
                           ? (size) \
                           : sizeof (ffi_arg))
 
@@ -1295,7 +1295,7 @@ static void ffi_sbit_put(struct txr_ffi_type *tft, val n,
     int icheck = -(int)(((uput ^ mask) >> shift) + 1);
     if (icheck != cn)
       goto range;
-  } else if (uput >> shift != cn) {
+  } else if (convert(cnum, uput >> shift) != cn) {
     goto range;
   }
 
@@ -2730,7 +2730,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
         mtft->mask = ((1U << bits) - 1) << mtft->shift;
       bit_offs += bits;
     } else {
-      cnum align = mtft->align;
+      ucnum align = mtft->align;
       ucnum almask = align - 1;
 
       if (bit_offs > 0) {
