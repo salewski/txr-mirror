@@ -860,7 +860,7 @@ static val stdio_put_buf(val stream, val buf, cnum pos)
   ucnum len = c_unum(length_buf(buf));
   mem_t *ptr = buf_get(buf, self);
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-  if ((size_t) len != len || len > INT_PTR_MAX)
+  if (convert(size_t, len) != len || len > INT_PTR_MAX)
     uw_throwf(error_s, lit("~a: buffer too large"), self, nao);
   if (convert(ucnum, pos) >= len)
     return num(len);
@@ -880,7 +880,7 @@ static val stdio_fill_buf(val stream, val buf, cnum pos)
   ucnum len = c_unum(length_buf(buf));
   mem_t *ptr = buf_get(buf, self);
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-  if ((size_t) len != len || len > INT_PTR_MAX)
+  if (convert(size_t, len) != len || len > INT_PTR_MAX)
     uw_throwf(error_s, lit("~a: buffer too large"), self, nao);
   if (convert(ucnum, pos) >= len)
     return num(len);

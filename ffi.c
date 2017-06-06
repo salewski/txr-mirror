@@ -363,7 +363,7 @@ static void ffi_simple_release(struct txr_ffi_type *tft, val obj, mem_t *dst)
 }
 
 #define align_sw_get(type, src)  {                                      \
-  const int al = ((alignof (type) - 1) & ((uint_ptr_t) src)) == 0;      \
+  const int al = ((alignof (type) - 1) & coerce(uint_ptr_t, src)) == 0; \
   const size_t sz = sizeof (type);                                      \
   mem_t *src_prev = src;                                                \
   mem_t *buf = al ? src : convert(mem_t *, alloca(sz));                 \
@@ -378,7 +378,7 @@ static void ffi_simple_release(struct txr_ffi_type *tft, val obj, mem_t *dst)
 }
 
 #define align_sw_put(type, dst, expr) {                                 \
-  if (((alignof (type) - 1) & ((uint_ptr_t) dst)) == 0) {               \
+  if (((alignof (type) - 1) & coerce(uint_ptr_t, dst)) == 0) {          \
     expr;                                                               \
   } else {                                                              \
     mem_t *prev_dst = dst;                                              \
@@ -791,7 +791,7 @@ static void ffi_be_i32_put(struct txr_ffi_type *tft, val n,
 {
   cnum v = c_num(n);
 
-  if (v < (- (cnum) 0x7FFFFFFF - 1) || v > 0x7FFFFFFF)
+  if (v < -convert(cnum, 0x7FFFFFFF) - 1 || v > 0x7FFFFFFF)
     uw_throwf(error_s, lit("~a: value ~s is out of signed 32 bit range"),
               self, n, nao);
 
@@ -803,8 +803,8 @@ static void ffi_be_i32_put(struct txr_ffi_type *tft, val n,
 
 static val ffi_be_i32_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  cnum n = ((cnum) src[0] << 24 | (cnum) src[1] << 16 |
-            (cnum) src[2] << 8 | src[3]);
+  cnum n = (convert(cnum, src[0]) << 24 | convert(cnum, src[1]) << 16 |
+            convert(cnum, src[2]) << 8 | src[3]);
   if ((n & 0x80000000) != 0)
     n = -((n ^ 0xFFFFFFFF) + 1);
   return num(n);
@@ -827,8 +827,8 @@ static void ffi_be_u32_put(struct txr_ffi_type *tft, val n,
 
 static val ffi_be_u32_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  ucnum n = ((ucnum) src[0] << 24 | (ucnum) src[1] << 16 |
-             (ucnum) src[2] << 8 | src[3]);
+  ucnum n = (convert(ucnum, src[0]) << 24 | convert(ucnum, src[1]) << 16 |
+             convert(ucnum, src[2]) << 8 | src[3]);
   return unum(n);
 }
 
@@ -837,7 +837,7 @@ static void ffi_le_i32_put(struct txr_ffi_type *tft, val n,
 {
   cnum v = c_num(n);
 
-  if (v < (- (cnum) 0x7fffffff - 1) || v > 0x7FFFFFFF)
+  if (v < - convert(cnum, 0x7fffffff) - 1 || v > 0x7FFFFFFF)
     uw_throwf(error_s, lit("~a: value ~s is out of signed 32 bit range"),
               self, n, nao);
 
@@ -849,8 +849,8 @@ static void ffi_le_i32_put(struct txr_ffi_type *tft, val n,
 
 static val ffi_le_i32_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  cnum n = ((cnum) src[3] << 24 | (cnum) src[2] << 16 |
-            (cnum) src[1] << 8 | src[0]);
+  cnum n = (convert(cnum, src[3]) << 24 | convert(cnum, src[2]) << 16 |
+            convert(cnum, src[1]) << 8 | src[0]);
   if ((n & 0x80000000) != 0)
     n = -((n ^ 0xFFFFFFFF) + 1);
   return num(n);
@@ -873,8 +873,8 @@ static void ffi_le_u32_put(struct txr_ffi_type *tft, val n,
 
 static val ffi_le_u32_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  ucnum n = ((ucnum) src[3] << 24 | (ucnum) src[2] << 16 |
-             (ucnum) src[1] << 8 | src[0]);
+  ucnum n = (convert(ucnum, src[3]) << 24 | convert(ucnum, src[2]) << 16 |
+             convert(ucnum, src[1]) << 8 | src[0]);
   return unum(n);
 }
 
@@ -884,7 +884,7 @@ static void ffi_be_i64_put(struct txr_ffi_type *tft, val n,
 #if SIZEOF_PTR >= 8
   cnum v = c_num(n);
 
-  if (v < (- (cnum) 0x7FFFFFFFFFFFFFFF - 1) || v > 0x7FFFFFFFFFFFFFFF)
+  if (v < -convert(cnum, 0x7FFFFFFFFFFFFFFF - 1) || v > 0x7FFFFFFFFFFFFFFF)
     goto range;
 
   dst[0] = (v >> 56) & 0xff;
@@ -899,7 +899,7 @@ static void ffi_be_i64_put(struct txr_ffi_type *tft, val n,
   cnum hi32 = c_num(ash(n, num_fast(-32)));
   ucnum lo32 = c_unum(logtrunc(n, num_fast(32)));
 
-  if (hi32 < (- (cnum) 0x7FFFFFFF - 1) || hi32 > 0x7FFFFFFF)
+  if (hi32 < -convert(cnum, 0x7FFFFFFF - 1) || hi32 > 0x7FFFFFFF)
     goto range;
 
   dst[0] = (hi32 >> 24) & 0xff;
@@ -920,18 +920,18 @@ range:
 static val ffi_be_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
 #if SIZEOF_PTR >= 8
-  cnum n = ((cnum) src[0] << 56 | (cnum) src[1] << 48 |
-            (cnum) src[2] << 40 | (cnum) src[3] << 32 |
-            (cnum) src[4] << 24 | (cnum) src[5] << 16 |
-            (cnum) src[6] << 8 | src[7]);
+  cnum n = (convert(cnum, src[0]) << 56 | convert(cnum, src[1]) << 48 |
+            convert(cnum, src[2]) << 40 | convert(cnum, src[3]) << 32 |
+            convert(cnum, src[4]) << 24 | convert(cnum, src[5]) << 16 |
+            convert(cnum, src[6]) << 8 | src[7]);
   if ((n & 0x8000000000000000) != 0)
     n = -((n ^ 0xFFFFFFFFFFFFFFFF) + 1);
   return num(n);
 #else
-  cnum hi32 = ((cnum) src[0] << 24 | (cnum) src[1] << 16 |
-               (cnum) src[2] << 8 | src[3]);
-  cnum lo32 = ((cnum) src[4] << 24 | (cnum) src[5] << 16 |
-               (cnum) src[6] << 8 | src[7]);
+  cnum hi32 = (convert(cnum, src[0]) << 24 | convert(cnum, src[1]) << 16 |
+               convert(cnum, src[2]) << 8 | src[3]);
+  cnum lo32 = (convert(cnum, src[4]) << 24 | convert(cnum, src[5]) << 16 |
+               convert(cnum, src[6]) << 8 | src[7]);
   return logior(ash(num(hi32), num_fast(32)), unum(lo32));
 #endif
 }
@@ -978,16 +978,16 @@ range:
 static val ffi_be_u64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
 #if SIZEOF_PTR >= 8
-  ucnum n = ((ucnum) src[0] << 56 | (ucnum) src[1] << 48 |
-             (ucnum) src[2] << 40 | (ucnum) src[3] << 32 |
-             (ucnum) src[4] << 24 | (ucnum) src[5] << 16 |
-             (ucnum) src[6] << 8 | src[7]);
+  ucnum n = (convert(ucnum, src[0]) << 56 | convert(ucnum, src[1]) << 48 |
+             convert(ucnum, src[2]) << 40 | convert(ucnum, src[3]) << 32 |
+             convert(ucnum, src[4]) << 24 | convert(ucnum, src[5]) << 16 |
+             convert(ucnum, src[6]) << 8 | src[7]);
   return unum(n);
 #else
-  ucnum hi32 = ((ucnum) src[0] << 24 | (ucnum) src[1] << 16 |
-                (ucnum) src[2] << 8 | src[3]);
-  ucnum lo32 = ((ucnum) src[4] << 24 | (ucnum) src[5] << 16 |
-                (ucnum) src[6] << 8 | src[7]);
+  ucnum hi32 = (convert(ucnum, src[0]) << 24 | convert(ucnum, src[1]) << 16 |
+                convert(ucnum, src[2]) << 8 | src[3]);
+  ucnum lo32 = (convert(ucnum, src[4]) << 24 | convert(ucnum, src[5]) << 16 |
+                convert(ucnum, src[6]) << 8 | src[7]);
   return logior(ash(unum(hi32), num_fast(32)), unum(lo32));
 #endif
 }
@@ -998,7 +998,7 @@ static void ffi_le_i64_put(struct txr_ffi_type *tft, val n,
 #if SIZEOF_PTR >= 8
   cnum v = c_num(n);
 
-  if (v < (- (cnum) 0x7FFFFFFFFFFFFFFF - 1) || v > 0x7FFFFFFFFFFFFFFF)
+  if (v < -convert(cnum, 0x7FFFFFFFFFFFFFFF - 1) || v > 0x7FFFFFFFFFFFFFFF)
     goto range;
 
   dst[7] = (v >> 56) & 0xff;
@@ -1013,7 +1013,7 @@ static void ffi_le_i64_put(struct txr_ffi_type *tft, val n,
   cnum hi32 = c_num(ash(n, num_fast(-32)));
   ucnum lo32 = c_unum(logtrunc(n, num_fast(32)));
 
-  if (hi32 < (- (cnum) 0x7FFFFFFF - 1) || hi32 > 0x7FFFFFFF)
+  if (hi32 < -convert(cnum, 0x7FFFFFFF - 1) || hi32 > 0x7FFFFFFF)
     goto range;
 
   dst[7] = (hi32 >> 24) & 0xff;
@@ -1034,18 +1034,18 @@ range:
 static val ffi_le_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
 #if SIZEOF_PTR >= 8
-  cnum n = ((cnum) src[7] << 56 | (cnum) src[6] << 48 |
-            (cnum) src[5] << 40 | (cnum) src[4] << 32 |
-            (cnum) src[3] << 24 | (cnum) src[2] << 16 |
-            (cnum) src[1] << 8 | src[0]);
+  cnum n = (convert(cnum, src[7]) << 56 | convert(cnum, src[6]) << 48 |
+            convert(cnum, src[5]) << 40 | convert(cnum, src[4]) << 32 |
+            convert(cnum, src[3]) << 24 | convert(cnum, src[2]) << 16 |
+            convert(cnum, src[1]) << 8 | src[0]);
   if ((n & 0x8000000000000000) != 0)
     n = -((n ^ 0xFFFFFFFFFFFFFFFF) + 1);
   return num(n);
 #else
-  cnum hi32 = ((cnum) src[3] << 24 | (cnum) src[2] << 16 |
-               (cnum) src[1] << 8 | src[0]);
-  cnum lo32 = ((cnum) src[3] << 24 | (cnum) src[2] << 16 |
-               (cnum) src[1] << 8 | src[0]);
+  cnum hi32 = (convert(cnum, src[3]) << 24 | convert(cnum, src[2]) << 16 |
+               convert(cnum, src[1]) << 8 | src[0]);
+  cnum lo32 = (convert(cnum, src[3]) << 24 | convert(cnum, src[2]) << 16 |
+               convert(cnum, src[1]) << 8 | src[0]);
   return logior(ash(num(hi32), num_fast(32)), unum(lo32));
 #endif
 }
@@ -1092,16 +1092,16 @@ range:
 static val ffi_le_u64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
 #if SIZEOF_PTR >= 8
-  ucnum n = ((ucnum) src[7] << 56 | (ucnum) src[6] << 48 |
-             (ucnum) src[5] << 40 | (ucnum) src[4] << 32 |
-             (ucnum) src[3] << 24 | (ucnum) src[2] << 16 |
-             (ucnum) src[1] << 8 | src[0]);
+  ucnum n = (convert(ucnum, src[7]) << 56 | convert(ucnum, src[6]) << 48 |
+             convert(ucnum, src[5]) << 40 | convert(ucnum, src[4]) << 32 |
+             convert(ucnum, src[3]) << 24 | convert(ucnum, src[2]) << 16 |
+             convert(ucnum, src[1]) << 8 | src[0]);
   return unum(n);
 #else
-  ucnum hi32 = ((ucnum) src[3] << 24 | (ucnum) src[2] << 16 |
-                (ucnum) src[1] << 8 | src[0]);
-  ucnum lo32 = ((ucnum) src[3] << 24 | (ucnum) src[2] << 16 |
-                (ucnum) src[1] << 8 | src[0]);
+  ucnum hi32 = (convert(ucnum, src[3]) << 24 | convert(ucnum, src[2]) << 16 |
+                convert(ucnum, src[1]) << 8 | src[0]);
+  ucnum lo32 = (convert(ucnum, src[3]) << 24 | convert(ucnum, src[2]) << 16 |
+                convert(ucnum, src[1]) << 8 | src[0]);
   return logior(ash(unum(hi32), num_fast(32)), unum(lo32));
 #endif
 }
@@ -1286,13 +1286,13 @@ static void ffi_sbit_put(struct txr_ffi_type *tft, val n,
   int shift = tft->shift;
   cnum cn = c_num(n);
   int in = cn;
-  unsigned uput = (((unsigned) in) << shift) & mask;
+  unsigned uput = (convert(unsigned, in) << shift) & mask;
 
   if (in != cn)
     goto range;
 
   if (uput & sbmask) {
-    int icheck = -(int)(((uput ^ mask) >> shift) + 1);
+    int icheck = -convert(int, ((uput ^ mask) >> shift) + 1);
     if (icheck != cn)
       goto range;
   } else if (convert(cnum, uput >> shift) != cn) {
@@ -1324,7 +1324,7 @@ static val ffi_sbit_get(struct txr_ffi_type *tft, mem_t *src, val self)
   unsigned uget = *coerce(unsigned *, src) & mask;
 
   if (uget & sbmask)
-    return num(-(int)(((uget ^ mask) >> shift) + 1));
+    return num(-convert(int, ((uget ^ mask) >> shift) + 1));
   return unum(uget >> shift);
   align_sw_end;
 }
@@ -3539,64 +3539,64 @@ static void ffi_init_extra_types(void)
   ffi_typedef(intern(lit("size-t"), user_package),
               type_by_size[1][sizeof (size_t)]);
   ffi_typedef(intern(lit("time-t"), user_package),
-              type_by_size[(time_t) -1 > 0][sizeof (time_t)]);
+              type_by_size[convert(time_t, -1) > 0][sizeof (time_t)]);
   ffi_typedef(intern(lit("clock-t"), user_package),
-              if3((clock_t) 0.5 == 0,
-                  type_by_size[(clock_t) -1 > 0][sizeof (clock_t)],
+              if3(convert(clock_t, 0.5) == 0,
+                  type_by_size[convert(clock_t, -1) > 0][sizeof (clock_t)],
                   if3(sizeof (clock_t) == sizeof (float),
                       ffi_type_lookup(float_s),
                       if2(sizeof (clock_t) == sizeof (double),
                           ffi_type_lookup(double_s)))));
   ffi_typedef(intern(lit("int-ptr-t"), user_package),
-              type_by_size[(int_ptr_t) -1 > 0][sizeof (int_ptr_t)]);
+              type_by_size[convert(int_ptr_t, -1) > 0][sizeof (int_ptr_t)]);
   ffi_typedef(intern(lit("uint-ptr-t"), user_package),
-              type_by_size[(uint_ptr_t) -1 > 0][sizeof (uint_ptr_t)]);
+              type_by_size[convert(uint_ptr_t, -1) > 0][sizeof (uint_ptr_t)]);
   ffi_typedef(intern(lit("sig-atomic-t"), user_package),
-              type_by_size[(sig_atomic_t) -1 > 0][sizeof (sig_atomic_t)]);
+              type_by_size[convert(sig_atomic_t, -1) > 0][sizeof (sig_atomic_t)]);
   ffi_typedef(intern(lit("ptrdiff-t"), user_package),
-              type_by_size[(ptrdiff_t) -1 > 0][sizeof (ptrdiff_t)]);
+              type_by_size[convert(ptrdiff_t, -1) > 0][sizeof (ptrdiff_t)]);
   ffi_typedef(intern(lit("wint-t"), user_package),
-              type_by_size[(wint_t) -1 > 0][sizeof (wint_t)]);
+              type_by_size[convert(wint_t, -1) > 0][sizeof (wint_t)]);
 
 #if HAVE_SYS_TYPES_H
   ffi_typedef(intern(lit("blkcnt-t"), user_package),
-              type_by_size[(blkcnt_t) -1 > 0][sizeof (blkcnt_t)]);
+              type_by_size[convert(blkcnt_t, -1) > 0][sizeof (blkcnt_t)]);
   ffi_typedef(intern(lit("blksize-t"), user_package),
-              type_by_size[(blksize_t) -1 > 0][sizeof (blksize_t)]);
+              type_by_size[convert(blksize_t, -1) > 0][sizeof (blksize_t)]);
 #if HAVE_CLOCKID_T
   ffi_typedef(intern(lit("clockid-t"), user_package),
-              type_by_size[(clockid_t) -1 > 0][sizeof (clockid_t)]);
+              type_by_size[convert(clockid_t, -1) > 0][sizeof (clockid_t)]);
 #endif
   ffi_typedef(intern(lit("dev-t"), user_package),
-              type_by_size[(dev_t) -1 > 0][sizeof (dev_t)]);
+              type_by_size[convert(dev_t, -1) > 0][sizeof (dev_t)]);
   ffi_typedef(intern(lit("fsblkcnt-t"), user_package),
-              type_by_size[(fsblkcnt_t) -1 > 0][sizeof (fsblkcnt_t)]);
+              type_by_size[convert(fsblkcnt_t, -1) > 0][sizeof (fsblkcnt_t)]);
   ffi_typedef(intern(lit("fsfilcnt-t"), user_package),
-              type_by_size[(fsfilcnt_t) -1 > 0][sizeof (fsfilcnt_t)]);
+              type_by_size[convert(fsfilcnt_t, -1) > 0][sizeof (fsfilcnt_t)]);
   ffi_typedef(intern(lit("gid-t"), user_package),
-              type_by_size[(gid_t) -1 > 0][sizeof (gid_t)]);
+              type_by_size[convert(gid_t, -1) > 0][sizeof (gid_t)]);
   ffi_typedef(intern(lit("id-t"), user_package),
-              type_by_size[(id_t) -1 > 0][sizeof (id_t)]);
+              type_by_size[convert(id_t, -1) > 0][sizeof (id_t)]);
   ffi_typedef(intern(lit("ino-t"), user_package),
-              type_by_size[(ino_t) -1 > 0][sizeof (ino_t)]);
+              type_by_size[convert(ino_t, -1) > 0][sizeof (ino_t)]);
   ffi_typedef(intern(lit("key-t"), user_package),
-              type_by_size[(key_t) -1 > 0][sizeof (key_t)]);
+              type_by_size[convert(key_t, -1) > 0][sizeof (key_t)]);
 #if HAVE_LOFF_T
   ffi_typedef(intern(lit("loff-t"), user_package),
-              type_by_size[(loff_t) -1 > 0][sizeof (loff_t)]);
+              type_by_size[convert(loff_t, -1) > 0][sizeof (loff_t)]);
 #endif
   ffi_typedef(intern(lit("mode-t"), user_package),
-              type_by_size[(mode_t) -1 > 0][sizeof (mode_t)]);
+              type_by_size[convert(mode_t, -1) > 0][sizeof (mode_t)]);
   ffi_typedef(intern(lit("nlink-t"), user_package),
-              type_by_size[(nlink_t) -1 > 0][sizeof (nlink_t)]);
+              type_by_size[convert(nlink_t, -1) > 0][sizeof (nlink_t)]);
   ffi_typedef(intern(lit("off-t"), user_package),
-              type_by_size[(off_t) -1 > 0][sizeof (off_t)]);
+              type_by_size[convert(off_t, -1) > 0][sizeof (off_t)]);
   ffi_typedef(intern(lit("pid-t"), user_package),
-              type_by_size[(pid_t) -1 > 0][sizeof (pid_t)]);
+              type_by_size[convert(pid_t, -1) > 0][sizeof (pid_t)]);
   ffi_typedef(intern(lit("ssize-t"), user_package),
-              type_by_size[(ssize_t) -1 > 0][sizeof (ssize_t)]);
+              type_by_size[convert(ssize_t, -1) > 0][sizeof (ssize_t)]);
   ffi_typedef(intern(lit("uid-t"), user_package),
-              type_by_size[(uid_t) -1 > 0][sizeof (uid_t)]);
+              type_by_size[convert(uid_t, -1) > 0][sizeof (uid_t)]);
 #endif
 }
 

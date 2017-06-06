@@ -91,7 +91,7 @@ val make_buf(val len, val init_val, val alloc_size)
   obj->b.size = num(size);
 
   if (iv != 0)
-    memset(data, (unsigned char) iv, c_num(len));
+    memset(data, convert(unsigned char, iv), c_num(len));
 
   return obj;
 }
@@ -145,7 +145,7 @@ static void buf_grow(struct buf *b, val init_val, val self)
   if (size > oldsize) {
     b->data = chk_realloc(b->data, size);
     b->size = num(size);
-    memset(b->data + oldsize, (unsigned char) iv, size - oldsize);
+    memset(b->data + oldsize, convert(unsigned char, iv), size - oldsize);
   }
 }
 
@@ -426,7 +426,7 @@ val buf_get_i8(val buf, val pos)
   cnum p = buf_check_index(pos, self);
   if (p >= c_num(b->len))
     uw_throwf(error_s, lit("~a: attempted read past buffer end"), self, nao);
-  return num_fast((i8_t) b->data[p]);
+  return num_fast(convert(i8_t, b->data[p]));
 }
 
 val buf_get_u8(val buf, val pos)
@@ -436,7 +436,7 @@ val buf_get_u8(val buf, val pos)
   cnum p = buf_check_index(pos, self);
   if (p >= c_num(b->len))
     uw_throwf(error_s, lit("~a: attempted read past buffer end"), self, nao);
-  return num_fast((u8_t) b->data[p]);
+  return num_fast(convert(u8_t, b->data[p]));
 }
 #endif
 

@@ -113,10 +113,10 @@ static unsigned long hash_buf(const mem_t *ptr, cnum size)
   unsigned long h = 0;
 
   for (; size >= 4 && count--; size -= 4, ptr += 4) {
-    unsigned long el = (((unsigned long) ptr[0]) << 24 |
-                        ((unsigned long) ptr[1]) << 16 |
-                        ((unsigned long) ptr[2]) << 8 |
-                        ((unsigned long) ptr[3]));
+    unsigned long el = (convert(unsigned long, ptr[0]) << 24 |
+                        convert(unsigned long, ptr[1]) << 16 |
+                        convert(unsigned long, ptr[2]) << 8 |
+                        convert(unsigned long, ptr[3]));
     unsigned long g;
     h = (h << 4) + el;
     g = h & 0x7C000000;

@@ -81,7 +81,7 @@ u16_t c_u16(val n, val self)
 i32_t c_i32(val n, val self)
 {
   cnum v = c_num(n);
-  if (v < (- (cnum) 0x7FFFFFFF - 1) || v > (cnum) 0x7FFFFFFF)
+  if (v < (-convert(cnum, 0x7FFFFFFF) - 1) || v > 0x7FFFFFFF)
     uw_throwf(error_s, lit("~a: value ~s is out of signed 32 bit range"),
               self, n, nao);
   return v;
@@ -121,14 +121,14 @@ i64_t c_i64(val n, val self)
 {
   val low32 = logtrunc(n, num_fast(32));
   val high32 = ash(n, num_fast(-32));
-  return ((i64_t) c_i32(high32, self)) << 32 | c_u32(low32, self);
+  return convert(i64_t, c_i32(high32, self)) << 32 | c_u32(low32, self);
 }
 
 u64_t c_u64(val n, val self)
 {
   val low32 = logtrunc(n, num_fast(32));
   val high32 = ash(n, num_fast(-32));
-  return ((u64_t) c_u32(high32, self)) << 32 | c_u32(low32, self);
+  return convert(u64_t, c_u32(high32, self)) << 32 | c_u32(low32, self);
 }
 #endif
 #endif
