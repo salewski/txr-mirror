@@ -179,12 +179,12 @@ static noreturn val unimpl_unget_byte(val stream, int byte)
   unimpl(stream, lit("unget-byte"));
 }
 
-static noreturn val unimpl_put_buf(val stream, val buf)
+static noreturn val unimpl_put_buf(val stream, val buf, cnum pos)
 {
   unimpl(stream, lit("put-buf"));
 }
 
-static noreturn val unimpl_fill_buf(val stream, val buf)
+static noreturn val unimpl_fill_buf(val stream, val buf, cnum pos)
 {
   unimpl(stream, lit("fill-buf"));
 }
@@ -304,32 +304,41 @@ static val null_get_fd(val stream)
   return nil;
 }
 
-static val generic_put_buf(val stream, val buf)
+static val generic_put_buf(val stream, val buf, cnum pos)
 {
   val self = lit("put-buf");
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
   cnum len = c_num(length_buf(buf)), i;
   mem_t *ptr = buf_get(buf, self);
 
-  for (i = 0; i < len; i++)
+  if (pos >= len)
+    return num(len);
+
+  for (i = pos; i < len; i++)
     ops->put_byte(stream, *ptr++);
 
-  return t;
+  if (i > len)
+    i = len;
+
+  return num(i);
 }
 
-static val generic_fill_buf(val stream, val buf)
+static val generic_fill_buf(val stream, val buf, cnum pos)
 {
   val self = lit("fill-buf");
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
   cnum len = c_num(length_buf(buf)), i;
   mem_t *ptr = buf_get(buf, self);
 
-  for (i = 0; i < len; i++) {
+  for (i = pos; i < len; i++) {
     val byte = ops->get_byte(stream);
     if (!byte)
       break;
     *ptr++ = c_num(byte);
   }
+
+  if (i > len)
+    i = len;
 
   return num(i);
 }
@@ -845,7 +854,7 @@ static val stdio_unget_byte(val stream, int byte)
          : stdio_maybe_error(stream, lit("writing"));
 }
 
-static val stdio_put_buf(val stream, val buf)
+static val stdio_put_buf(val stream, val buf, cnum pos)
 {
   val self = lit("put-buf");
   ucnum len = c_unum(length_buf(buf));
@@ -853,26 +862,36 @@ static val stdio_put_buf(val stream, val buf)
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   if ((size_t) len != len)
     uw_throwf(error_s, lit("~a: buffer too large"), self, nao);
+  if (pos >= len)
+    return num(len);
   errno = 0;
-  return h->f != 0 && fwrite(ptr, 1, len, h->f) == len
-         ? t : stdio_maybe_error(stream, lit("writing"));
+  if (h->f != 0) {
+    cnum nwrit = fwrite(ptr + pos, 1, len - pos, h->f);
+    if (nwrit > 0)
+      return num(pos + nwrit);
+  }
+  stdio_maybe_error(stream, lit("writing"));
+  return zero;
 }
 
-static val stdio_fill_buf(val stream, val buf)
+static val stdio_fill_buf(val stream, val buf, cnum pos)
 {
   val self = lit("fill-buf");
   ucnum len = c_unum(length_buf(buf));
   mem_t *ptr = buf_get(buf, self);
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-  size_t nread = 0;
   if ((size_t) len != len)
     uw_throwf(error_s, lit("~a: buffer too large"), self, nao);
+  if (pos >= len)
+    return num(len);
   errno = 0;
-  if (h->f != 0)
-    nread = fread(ptr, 1, len, h->f);
-  if (nread == len || nread < len || feof(h->f))
-    return unum(len);
-  return stdio_maybe_read_error(stream);
+  if (h->f != 0) {
+    cnum nread = fread(ptr + pos, 1, len - pos, h->f);
+    if (nread > 0)
+      return unum(pos + nread);
+  }
+  stdio_maybe_read_error(stream);
+  return zero;
 }
 
 static val stdio_close(val stream, val throw_on_error)
@@ -2518,16 +2537,16 @@ static val delegate_unget_byte(val stream, int byte)
   return s->target_ops->unget_byte(s->target_stream, byte);
 }
 
-static val delegate_put_buf(val stream, val buf)
+static val delegate_put_buf(val stream, val buf, cnum pos)
 {
   struct delegate_base *s = coerce(struct delegate_base *, stream->co.handle);
-  return s->target_ops->put_buf(s->target_stream, buf);
+  return s->target_ops->put_buf(s->target_stream, buf, pos);
 }
 
-static val delegate_fill_buf(val stream, val buf)
+static val delegate_fill_buf(val stream, val buf, cnum pos)
 {
   struct delegate_base *s = coerce(struct delegate_base *, stream->co.handle);
-  return s->target_ops->fill_buf(s->target_stream, buf);
+  return s->target_ops->fill_buf(s->target_stream, buf, pos);
 }
 
 static val delegate_close(val stream, val throw_on_error)
@@ -2787,18 +2806,20 @@ val unget_byte(val byte, val stream_in)
   return ops->unget_byte(stream, b);
 }
 
-val put_buf(val buf, val stream_in)
+val put_buf(val buf, val pos_in, val stream_in)
 {
   val stream = default_arg(stream_in, std_output);
+  cnum pos = c_num(default_arg(pos_in, zero));
   struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
-  return ops->put_buf(stream, buf);
+  return ops->put_buf(stream, buf, pos);
 }
 
-val fill_buf(val buf, val stream_in)
+val fill_buf(val buf, val pos_in, val stream_in)
 {
   val stream = default_arg(stream_in, std_input);
+  cnum pos = c_num(default_arg(pos_in, zero));
   struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
-  return ops->fill_buf(stream, buf);
+  return ops->fill_buf(stream, buf, pos);
 }
 
 struct fmt {
@@ -4426,8 +4447,8 @@ void stream_init(void)
   reg_fun(intern(lit("put-strings"), user_package), func_n2o(put_strings, 1));
   reg_fun(intern(lit("unget-char"), user_package), func_n2o(unget_char, 1));
   reg_fun(intern(lit("unget-byte"), user_package), func_n2o(unget_byte, 1));
-  reg_fun(intern(lit("put-buf"), user_package), func_n2o(put_buf, 1));
-  reg_fun(intern(lit("fill-buf"), user_package), func_n2o(fill_buf, 1));
+  reg_fun(intern(lit("put-buf"), user_package), func_n3o(put_buf, 1));
+  reg_fun(intern(lit("fill-buf"), user_package), func_n3o(fill_buf, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1o(flush_stream, 0));
   reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));
   reg_fun(intern(lit("truncate-stream"), user_package), func_n2(truncate_stream));
