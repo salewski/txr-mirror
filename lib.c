@@ -3307,9 +3307,10 @@ val string_8bit(const unsigned char *str)
 val string_8bit_size(const unsigned char *str, size_t sz)
 {
   size_t i;
-  wchar_t *wstr = chk_wmalloc(sz);
+  wchar_t *wstr = chk_wmalloc(sz + 1);
   for (i = 0; i < sz; i++)
     wstr[i] = str[i];
+  wstr[i] = 0;
   return string_own(wstr);
 }
 
