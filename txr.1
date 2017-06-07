@@ -54571,34 +54571,21 @@ bitfields, it is allocated in the same manner as a named member of type
 .code uint
 would be at the same position.
 
-If a bitfield with non-zero width is not preceded by any non-zero-width
-bitfield, then a new unit is allocated, and the bitfield is placed into the
-first available position in that unit.  On a big-endian machine, the first
-available position starts at the most significant bit of the underlying
-storage word.  On a little-endian machine, the first available bit position
-is the least significant bit of the storage word.
-
-If a non-zero-width bitfield is preceded by a non-zero-width bitfield, then
-the new bitfield is packed into the same storage unit as that bitfield if
-there is enough remaining room in that unit. Otherwise, it is placed into a
-new unit. Bitfields are not split across unit boundaries.
-
 A zero-length bitfield is permitted. It may be given a name, but the field
 will not perform any conversions to and from the corresponding slot in the
-Lisp structure.  Note that the FFI struct definition itself causes the
-corresponding Lisp structure type to come into existence, then the Lisp
-structure type will have slots for all the zero width named bitfields,
+Lisp structure.  Note that in situations when the FFI struct definition 
+causes the corresponding Lisp structure type to come into existence, the
+Lisp structure type will have slots for all the zero width named bitfields,
 even though those slots don't participate in any conversions in conjunction
 with the FFI type.
 
-A zero-length bitfield functions in a similar manner in the FFI type
-system as in the C language.  If it is placed between two bitfields, then it
-forces them to be in separate storage units. That is to say, the bitfield
-which follows is placed into a new storage unit, even if the previous
-bitfield leaves enough room in it storage unit. 
+The presence of a zero-length bitfield ensures that a subsequent
+structure member, whether bitfield or not, is placed in a new storage
+unit of the size of the bitfield's base type.
 
-A zero-length bitfield that does not appear between non-zero-length
-bitfields has no effect.
+Details about the algorithm by which bitfields are allocated within a structure
+are given in the paragraph below entitled
+.BR "Bitfield Allocation Rules" .
 
 A
 .code ubit
@@ -54692,23 +54679,11 @@ and
 .code sbit
 apply to
 .code bit
-also. The existence of
-.code bit
-creates the possibility that bitfields of different sizes may be
-placed adjacently within a structure. The rule is that whenever a non-zero-width
-bitfield follows another non-zero-width bitfield of a different storage
-unit size, a new storage unit begins for the new bitfield, even if the
-previous storage unit has room for the new bitfield. Bitfields occupying
-units of different sizes are never placed into the same unit.
+also.
 
-For this consideration, only size matters, not type or signedness. If two
-consecutive non-zero-width bitfields have storage unit types of the same
-size, they can be packed into the same storage unit.
-
-The alignment of the storage units follows that of type from which
-they are derived, unless overridden with the
-.code align
-operator.
+Details about the algorithm by which bitfields are allocated within a structure
+are given in the paragraph below entitled
+.BR "Bitfield Allocation Rules" .
 
 .meIP ({buf | buf-d} << size )
 The parametrized
@@ -54876,11 +54851,10 @@ to manipulate the alignment of individual members.
 When
 .code align
 is applied to the type of a bitfield member of a structure, it has no effect on
-placement, except when applied to the leading bitfield which begins a new
-storage unit.  The alignment of such a leading bitfield determines the
-alignment of that storage unit, and is taken into account for determining the
-most strictly aligned member of the structure. The alignment of all other
-bitfields is ignored.
+placement. The alignment of a non-zero bitfield which begins a new
+storage unit is taken into consideration for the purpose of determining
+the most strictly alignment member of the structure.  The alignment of all
+other bitfields is ignored.
 .PP
 
 The following additional typedef names are defined denoting some common
@@ -54984,6 +54958,100 @@ members of structs and elements of arrays.
 \*(TL's FFI performs the automatic conversion from the abstract Lisp integer
 representation to the foreign representations exhibiting the specified
 endianness.
+
+.NP* Bitfield Allocation Rules
+The \*(TL FFI type system follows rules for bitfield allocation which were
+experimentally derived from the behavior of the GNU C compiler on several
+mainstream architectures.
+
+The allocation algorithm can be imagined to walk through the structure
+from the first member to the last, maintaining a byte offset
+.I O
+which indicates how many whole bytes have been allocated to members so far,
+and a bit offset
+.I B
+which indicates, additionally, how many bits have been allocated in the
+byte which follows these
+.I O
+bytes, between 0 and 7.
+
+When a non-bitfield member is placed, then there are two cases: either
+.I B
+is zero (only
+.I O
+bytes have been allocated, with no fractional byte) or else
+.I B
+is nonzero. In this latter case,
+.I B
+is reset to zero and
+.I O
+is incremented by one. In either case,
+.I O
+is adjusted up to the required alignment boundary for the new member.
+The member is placed, and
+.I O
+is incremented again by the size of that member.
+
+When a bitfield member is placed, the algorithm considers the structure
+to be allocated in units of the base type of that bitfield member.
+For instance if the bitfield is derived from type
+.code uint16
+then the structure's layout is considered to have been allocated in
+.code uint16
+units. The algorithm examines the value of
+.I O
+and
+.I B
+to determine the first available unit in which at least
+one bit of unallocated space remains.
+Then, if the unit at that offset has enough space to hold the new
+bitfield, according to the bitfield's width, then the bitfield is
+placed into that unit. Otherwise, the bitfield is placed into the
+next available unit.
+
+Whenever a bitfield is placed at the start of new unit of its size,
+it is called the
+.IR "leading bitfield" .
+The alignment of the leading bitfield is taken into account for
+the purposes of determining the most strictly aligned member of
+the structure. This alignment property of the leading bitfield
+can be altered with the
+.code align
+type operator, applied either to the bitfield type, or to its base type.
+
+After a bitfield is placed, the values of
+.I O
+and
+.I B
+are adjusted so that
+.I O
+reflects the whole number of bytes which have been allocated to the
+structure so far, and
+.I B
+indicates the 0 to 7 additional bits of any bitfield material protruding
+past those whole bytes.
+
+A zero-width bitfield is also considered with regard to the storage
+unit size indicated by its type. As in the case of the nonzero-width
+bitfield, the offset of the first available unit is found which
+has at least one bit of unallocated space. Then, if that unit is
+entirely empty, the zero-width bitfield has no effect. If that unit is
+partially filled, then
+.I O
+is adjusted to point to the next unit after that, and
+.I B
+is reset to zero. Note that according to this semantics, a zero-width bitfield
+can have an effect even if placed between non-bitfield members.
+
+If, after the placement of all structure members,
+.I B
+has a nonzero value, then the offset
+.I O
+is incremented by one to cover that byte.
+
+Lastly, the size of the structure is then padded up to a size
+which is a multiple of the alignment of the most strictly aligned
+member.
 
 .NP* FFI Call Descriptors
 

@@ -2695,7 +2695,6 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   ucnum most_align = 0;
   int need_out_handler = 0;
   int bit_offs = 0;
-  int prev_size = 0;
   const int bits_int = 8 * sizeof(int);
 
   ft->type = FFI_TYPE_STRUCT;
@@ -2727,53 +2726,55 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     memb[i].mtft = mtft;
 
     if (bitfield_syntax_p(mtft->syntax)) {
-      int bits_type = 8 * mtft->size;
-      int bits = mtft->nelem;
-      int room = bits_type - bit_offs; /* assuming same size, checked below */
+      ucnum size = mtft->size;
+      ucnum bits_type = 8 * size;
+      ucnum bits = mtft->nelem;
+      ucnum offs_mask = size - 1;
+      ucnum align_mask = ~offs_mask;
+      ucnum unit_offs = offs & align_mask;
+      ucnum bits_alloc = 8 * (offs - unit_offs) + bit_offs;
+      ucnum room = bits_type - bits_alloc;
 
       if (bits == 0) {
-        if (bit_offs > 0) {
-          offs += prev_size;
-          bit_offs = 0;
-          prev_size = 0;
-        }
+        if (offs != unit_offs)
+          offs = unit_offs + size;
+        bit_offs = 0;
         nmemb--, i--;
         continue;
       }
 
-      if ((prev_size && prev_size != mtft->size) || bits > room) {
-        offs += prev_size;
+      if (bits > room) {
+        offs = unit_offs + size;
         bit_offs = 0;
       }
 
-      if (bit_offs == 0) {
-        ucnum almask = mtft->align - 1;
-        offs = (offs + almask) & ~almask;
+      if (bits_alloc == 0) {
         if (most_align < mtft->align)
           most_align = mtft->align;
       }
 
-      memb[i].offs = offs;
+      memb[i].offs = unit_offs;
 
 #if HAVE_LITTLE_ENDIAN
-      mtft->shift = bit_offs;
+      mtft->shift = bits_alloc;
 #else
-      mtft->shift = bits_int - bit_offs - bits;
+      mtft->shift = bits_int - bits_alloc - bits;
 #endif
       if (bits == bits_int)
         mtft->mask = UINT_MAX;
       else
         mtft->mask = ((1U << bits) - 1) << mtft->shift;
       bit_offs += bits;
-      prev_size = mtft->size;
+      offs += bit_offs / 8;
+      bit_offs %= 8;
     } else {
       ucnum align = mtft->align;
       ucnum almask = align - 1;
 
       if (bit_offs > 0) {
-        offs += prev_size;
+        bug_unless (bit_offs < 8);
+        offs++;
         bit_offs = 0;
-        prev_size = 0;
       }
 
       offs = (offs + almask) & ~almask;
@@ -2787,8 +2788,10 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     need_out_handler = need_out_handler || mtft->out != 0;
   }
 
-  if (bit_offs > 0)
-    offs += prev_size;
+  if (bit_offs > 0) {
+    bug_unless (bit_offs < 8);
+    offs++;
+  }
 
   tft->nelem = i;
 
