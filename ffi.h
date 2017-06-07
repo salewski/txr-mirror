@@ -61,7 +61,7 @@ extern val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_out_s_s, ptr_s;
 
 extern val closure_s;
 
-extern val sbit_s, ubit_s;
+extern val sbit_s, ubit_s, bit_s;
 
 extern val enum_s;
 

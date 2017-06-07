@@ -112,7 +112,7 @@ val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_out_s_s, ptr_s;
 
 val closure_s;
 
-val sbit_s, ubit_s;
+val sbit_s, ubit_s, bit_s;
 
 val enum_s;
 
@@ -1371,6 +1371,40 @@ static val ffi_ubit_get(struct txr_ffi_type *tft, mem_t *src, val self)
   align_sw_end;
 }
 
+static void ffi_generic_sbit_put(struct txr_ffi_type *tft, val n,
+                                 mem_t *dst, val self)
+{
+  mem_t *tmp = zalloca(sizeof (int));
+  memcpy(tmp, dst, tft->size);
+  ffi_sbit_put(tft, n, tmp, self);
+  memcpy(dst, tmp, tft->size);
+}
+
+static val ffi_generic_sbit_get(struct txr_ffi_type *tft,
+                                mem_t *src, val self)
+{
+  mem_t *tmp = zalloca(sizeof (int));
+  memcpy(tmp, src, tft->size);
+  return ffi_sbit_get(tft, tmp, self);
+}
+
+static void ffi_generic_ubit_put(struct txr_ffi_type *tft, val n,
+                                 mem_t *dst, val self)
+{
+  mem_t *tmp = zalloca(sizeof (int));
+  memcpy(tmp, dst, tft->size);
+  ffi_ubit_put(tft, n, tmp, self);
+  memcpy(dst, tmp, tft->size);
+}
+
+static val ffi_generic_ubit_get(struct txr_ffi_type *tft,
+                                mem_t *src, val self)
+{
+  mem_t *tmp = zalloca(sizeof (int));
+  memcpy(tmp, src, tft->size);
+  return ffi_ubit_get(tft, tmp, self);
+}
+
 #if !HAVE_LITTLE_ENDIAN
 
 static void ffi_i8_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
@@ -2536,7 +2570,7 @@ static val bitfield_syntax_p(val syntax)
     return nil;
   } else {
     val sym = car(syntax);
-    return tnil(sym == sbit_s || sym == ubit_s);
+    return tnil(sym == sbit_s || sym == ubit_s || sym == bit_s);
   }
 }
 
@@ -2596,7 +2630,7 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
   val self = lit("ffi-type-compile");
   struct txr_ffi_type *tgtft = ffi_type_struct(tgtype);
 
-  if (tgtft->size == 0 && bitfield_syntax_p(tgtft->syntax)) {
+  if (bitfield_syntax_p(tgtft->syntax)) {
     uw_throwf(error_s, lit("~a: type combination ~s not allowed"),
               self, syntax, nao);
   } else {
@@ -2661,6 +2695,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   ucnum most_align = 0;
   int need_out_handler = 0;
   int bit_offs = 0;
+  int prev_size = 0;
   const int bits_int = 8 * sizeof(int);
 
   ft->type = FFI_TYPE_STRUCT;
@@ -2691,30 +2726,31 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     memb[i].mname = slot;
     memb[i].mtft = mtft;
 
-    if (size == 0 && bitfield_syntax_p(mtft->syntax)) {
+    if (bitfield_syntax_p(mtft->syntax)) {
+      int bits_type = 8 * mtft->size;
       int bits = mtft->nelem;
-      int room = bits_int - bit_offs;
+      int room = bits_type - bit_offs; /* assuming same size, checked below */
 
       if (bits == 0) {
         if (bit_offs > 0) {
-          offs += sizeof (int);
+          offs += prev_size;
           bit_offs = 0;
+          prev_size = 0;
         }
         nmemb--, i--;
         continue;
       }
 
-      if (bit_offs == 0) {
-        ucnum almask = alignof (int) - 1;
-        offs = (offs + almask) & ~almask;
+      if ((prev_size && prev_size != mtft->size) || bits > room) {
+        offs += prev_size;
+        bit_offs = 0;
       }
 
-      if (most_align < alignof (int))
-        most_align = alignof (int);
-
-      if (bits > room) {
-        offs += sizeof (int);
-        bit_offs = 0;
+      if (bit_offs == 0) {
+        ucnum almask = mtft->align - 1;
+        offs = (offs + almask) & ~almask;
+        if (most_align < mtft->align)
+          most_align = mtft->align;
       }
 
       memb[i].offs = offs;
@@ -2729,13 +2765,15 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       else
         mtft->mask = ((1U << bits) - 1) << mtft->shift;
       bit_offs += bits;
+      prev_size = mtft->size;
     } else {
       ucnum align = mtft->align;
       ucnum almask = align - 1;
 
       if (bit_offs > 0) {
-        offs += sizeof (int);
+        offs += prev_size;
         bit_offs = 0;
+        prev_size = 0;
       }
 
       offs = (offs + almask) & ~almask;
@@ -2750,7 +2788,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   }
 
   if (bit_offs > 0)
-    offs += sizeof (int);
+    offs += prev_size;
 
   tft->nelem = i;
 
@@ -2945,7 +2983,7 @@ static val ffi_struct_compile(val membs, val *ptypes, val self)
     if (cddr(mp))
       uw_throwf(error_s, lit("~a: excess elements in type-member pair ~s"),
                 self, mp, nao);
-    if (ctft->size == 0 && !bitfield_syntax_p(ctft->syntax))
+    if (ctft->size == 0)
       uw_throwf(error_s, lit("~a: incomplete type ~s cannot be struct member"),
                 self, type, nao);
     pttail = list_collect(pttail, comp_type);
@@ -3117,7 +3155,8 @@ val ffi_type_compile(val syntax)
       val nbits = ffi_eval_expr(cadr(syntax), nil, nil);
       cnum nb = c_num(nbits);
       val xsyntax = list(sym, nbits, nao);
-      val type = make_ffi_type_builtin(xsyntax, integer_s, 0, 0,
+      val type = make_ffi_type_builtin(xsyntax, integer_s,
+                                       sizeof (int), alignof (int),
                                        &ffi_type_void,
                                        if3(sym == sbit_s,
                                            ffi_sbit_put, ffi_ubit_put),
@@ -3132,6 +3171,39 @@ val ffi_type_compile(val syntax)
                   self, nbits, num_fast(bits_int), nao);
       tft->nelem = c_num(nbits);
       return type;
+    } else if (sym == bit_s) {
+      val nbits = ffi_eval_expr(cadr(syntax), nil, nil);
+      cnum nb = c_num(nbits);
+      val type_syntax = caddr(syntax);
+      val xsyntax = list(sym, nbits, type_syntax, nao);
+      val type = ffi_type_compile(type_syntax);
+      struct txr_ffi_type *tft = ffi_type_struct(type);
+      const cnum max_bits = 8 * tft->size;
+      val type_copy = ffi_type_copy(type);
+      struct txr_ffi_type *tft_cp = ffi_type_struct(type_copy);
+      val syn = tft->syntax;
+      int unsgnd = 0;
+
+      if (syn == uint8_s || syn == uint16_s || syn == uint32_s ||
+          syn == uchar_s || syn == ushort_s || syn == uint_s)
+      {
+        unsgnd = 1;
+      } else if (syn != int8_s && syn != int16_s && syn != int32_s &&
+                 syn != char_s && syn != short_s && syn != int_s)
+      {
+        uw_throwf(error_s, lit("~a: ~s not supported as bitfield type"),
+                  self, type, nao);
+      }
+
+      if (nb < 0 || nb > max_bits)
+        uw_throwf(error_s, lit("~a: invalid bitfield size ~s; "
+                               "must be 0 to ~s"),
+                  self, nbits, num_fast(max_bits), nao);
+      tft_cp->syntax = xsyntax;
+      tft_cp->nelem = nb;
+      tft_cp->put = if3(unsgnd, ffi_generic_ubit_put, ffi_generic_sbit_put);
+      tft_cp->get = if3(unsgnd, ffi_generic_ubit_get, ffi_generic_sbit_get);
+      return type_copy;
     } else if (sym == enum_s) {
       val name = cadr(syntax);
       val enums = cddr(syntax);
@@ -3938,7 +4010,7 @@ val ffi_typedef(val name, val type)
 {
   val self = lit("ffi-typedef");
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
-  if (tft->size == 0 && bitfield_syntax_p(tft->syntax))
+  if (bitfield_syntax_p(tft->syntax))
     uw_throwf(error_s, lit("~a: cannot create a typedef for bitfield type"),
               self, nao);
   return sethash(ffi_typedef_hash, name, type);
@@ -3948,7 +4020,7 @@ val ffi_size(val type)
 {
   val self = lit("ffi-size");
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
-  if (tft->size == 0 && bitfield_syntax_p(tft->syntax))
+  if (bitfield_syntax_p(tft->syntax))
     uw_throwf(error_s, lit("~a: bitfield type ~s has no size"),
               self, type, nao);
   return num(tft->size);
@@ -3958,7 +4030,7 @@ val ffi_alignof(val type)
 {
   val self = lit("ffi-alignof");
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
-  if (tft->size == 0 && bitfield_syntax_p(tft->syntax))
+  if (bitfield_syntax_p(tft->syntax))
     uw_throwf(error_s, lit("~a: bitfield type ~s has no alignment"),
               self, type, nao);
   return num(tft->align);
@@ -4446,6 +4518,7 @@ void ffi_init(void)
   closure_s = intern(lit("closure"), user_package);
   sbit_s = intern(lit("sbit"), user_package);
   ubit_s = intern(lit("ubit"), user_package);
+  bit_s = intern(lit("bit"), user_package);
   enum_s = intern(lit("enum"), user_package);
   align_s = intern(lit("align"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);

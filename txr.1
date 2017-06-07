@@ -54164,9 +54164,10 @@ corresponding to the size of its type, plus any necessary additional padding
 for the alignment of the subsequent member.
 
 Structure members may be bitfields, which are described using the
-.code ubit
-and
+.codn ubit ,
 .code sbit
+and
+.code bit
 compound type operators.
 .meIP (array < dim << type )
 The FFI
@@ -54541,11 +54542,13 @@ The
 type denotes a bitfield of type
 .codn int .
 Unlike in the C language, it is not implementation-defined whether such
-a bit-field represents signed values; it converts between Lisp integers
+a bitfield represents signed values; it converts between Lisp integers
 that may be positive or negative, and a foreign representation which is
 two's complement.
 
-Bitfields of any other type are not supported.
+Bitfields based on some other types are supported using the more general
+.code bit
+operator, which is described below.
 
 The
 .meta width
@@ -54555,7 +54558,11 @@ zero to the number of bits in the
 .code uint
 type.
 
-In a structure, bitfields are allocated out in storage units which have the
+In a structure, bitfields produced by
+.code sbit
+and
+.code ubit
+are allocated out in storage units which have the
 same width and alignment requirements as a
 .codn uint .
 These storage units themselves can be regarded as anonymous members of the
@@ -54641,6 +54648,67 @@ A
 .code sbit
 field of width 2 can represent the values -2, -1, 0 and 1, which are
 stored as the bit patterns 10, 11, 00 and 01, respectively.
+
+.meIP (bit < width << type )
+The
+.code bit
+operator is more general than
+.code ubit
+and
+.codn sbit .
+It allows for bitfields based on integer units smaller than or equal to 
+.codn uint .
+
+The
+.meta type
+argument may be any of the types
+.codn char ,
+.codn short ,
+.codn int ,
+.codn uchar ,
+.codn ushort ,
+.codn uint ,
+.codn int8 ,
+.codn int16 ,
+.codn int32 ,
+.codn uint8 ,
+.code uint16
+and 
+.codn uint32 .
+
+When the character types
+.code char
+and
+.code uchar
+are used as the basis of bitfields, they convert integer values, not
+characters.
+In the case of
+.codn char ,
+the bitfield is signed. 
+
+All remarks about
+.code ubit
+and
+.code sbit
+apply to
+.code bit
+also. The existence of
+.code bit
+creates the possibility that bitfields of different sizes may be
+placed adjacently within a structure. The rule is that whenever a non-zero-width
+bitfield follows another non-zero-width bitfield of a different storage
+unit size, a new storage unit begins for the new bitfield, even if the
+previous storage unit has room for the new bitfield. Bitfields occupying
+units of different sizes are never placed into the same unit.
+
+For this consideration, only size matters, not type or signedness. If two
+consecutive non-zero-width bitfields have storage unit types of the same
+size, they can be packed into the same storage unit.
+
+The alignment of the storage units follows that of type from which
+they are derived, unless overridden with the
+.code align
+operator.
 
 .meIP ({buf | buf-d} << size )
 The parametrized
@@ -54755,6 +54823,7 @@ It is possible to create a
 .code carray
 view over a buffer, using
 .codn carray-buf .
+
 .meIP (align < width << type )
 The FFI type operator
 .code align
@@ -54778,7 +54847,10 @@ the type as a structure member, and as an array element.
 A type with alignment 1 can be placed at any byte offset. A type with
 alignment 2 can be placed only at even addresses and offsets.
 
-Alignment can be applied to all types, including arrays and structs. However,
+Alignment can be applied to all types, including arrays and structs.
+It may also be applied to bitfields, but special considerations have
+to be observed to obtain the intended effect, described below.
+However,
 out of the elementary types, only the integer and floating point types are
 required to support a weakening of alignment. Whether a type which corresponds
 to a pointer, such as a
@@ -54800,6 +54872,15 @@ a member of an array or another structure, with its padding intact. To
 eliminate the padding at the end of a structure, it is necessary to use
 .code align
 to manipulate the alignment of individual members.
+
+When
+.code align
+is applied to the type of a bitfield member of a structure, it has no effect on
+placement, except when applied to the leading bitfield which begins a new
+storage unit.  The alignment of such a leading bitfield determines the
+alignment of that storage unit, and is taken into account for determining the
+most strictly aligned member of the structure. The alignment of all other
+bitfields is ignored.
 .PP
 
 The following additional typedef names are defined denoting some common
