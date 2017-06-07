@@ -173,7 +173,7 @@ ucnum c_unum(val num)
       return out;
     }
   range:
-    uw_throwf(error_s, lit("~s is out of uint_ptr_t range"), num, nao);
+    uw_throwf(error_s, lit("~s given, non-negative expected"), num, nao);
   default:
     type_mismatch(lit("~s is not an integer"), num, nao);
   }
