@@ -3116,7 +3116,8 @@ val ffi_type_compile(val syntax)
     } else if (sym == sbit_s || sym == ubit_s) {
       val nbits = ffi_eval_expr(cadr(syntax), nil, nil);
       cnum nb = c_num(nbits);
-      val type = make_ffi_type_builtin(syntax, integer_s, 0, 0,
+      val xsyntax = list(sym, nbits, nao);
+      val type = make_ffi_type_builtin(xsyntax, integer_s, 0, 0,
                                        &ffi_type_void,
                                        if3(sym == sbit_s,
                                            ffi_sbit_put, ffi_ubit_put),
