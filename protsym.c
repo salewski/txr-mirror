@@ -31,8 +31,34 @@
 #include "config.h"
 #include "lib.h"
 
+#if HAVE_SYSLOG
+extern val prio_k;
+#endif
+#if HAVE_SOCKETS
+extern val addr_s, addrinfo_s, canonname_s, family_s, flags_s;
+extern val flow_info_s, port_s, protocol_s, scope_id_s, sockaddr_in6_s;
+extern val sockaddr_in_s, sockaddr_un_s, socktype_s;
+#endif
 #if HAVE_GRGID
 extern val group_s, mem_s;
+#endif
+#if HAVE_LIBFFI
+extern val align_s, array_s, bchar_s, be_double_s, be_float_s;
+extern val be_int16_s, be_int32_s, be_int64_s, be_uint16_s, be_uint32_s;
+extern val be_uint64_s, bit_s, bstr_d_s, bstr_s, buf_d_s;
+extern val carray_s, char_s, closure_s, double_s, downcase_k;
+extern val enum_s, ffi_call_desc_s, ffi_closure_s, ffi_type_s, filter_k;
+extern val frombase64_k, fromhtml_k, frompercent_k, fromurl_k, hextoint_k;
+extern val int16_s, int32_s, int64_s, int8_s, int_s;
+extern val le_double_s, le_float_s, le_int16_s, le_int32_s, le_int64_s;
+extern val le_uint16_s, le_uint32_s, le_uint64_s, lfilt_k, long_s;
+extern val ptr_in_d_s, ptr_in_s, ptr_out_d_s, ptr_out_s, ptr_out_s_s;
+extern val ptr_s, rfilt_k, sbit_s, short_s, str_d_s;
+extern val struct_s, tobase64_k, tofloat_k, tohtml_k, tohtml_star_k;
+extern val toint_k, tonumber_k, topercent_k, tourl_k, ubit_s;
+extern val uchar_s, uint16_s, uint32_s, uint64_s, uint8_s;
+extern val uint_s, ulong_s, upcase_k, ushort_s, val_s;
+extern val void_s, wchar_s, wstr_d_s, wstr_s, zarray_s;
 #endif
 #if HAVE_PWUID
 extern val dir_s, gecos_s, passwd_s, shell_s;
@@ -40,41 +66,19 @@ extern val dir_s, gecos_s, passwd_s, shell_s;
 #if HAVE_SOCKETS
 extern val socket_error_s;
 #endif
-#if HAVE_UNAME
-extern val domainname_s, machine_s, nodename_s, release_s, sysname_s;
-extern val utsname_s, version_s;
+#if HAVE_DLOPEN
+extern val dlhandle_s, dlsym_s;
 #endif
 #if CONFIG_DEBUG_SUPPORT
 extern val debug_quit_s;
 #endif
-#if HAVE_LIBFFI
-extern val array_s, bchar_s, bstr_d_s, bstr_s, buf_d_s;
-extern val carray_s, char_s, closure_s, double_s, downcase_k;
-extern val ffi_call_desc_s, ffi_closure_s, ffi_type_s, filter_k, frombase64_k;
-extern val fromhtml_k, frompercent_k, fromurl_k, hextoint_k, int16_s;
-extern val int32_s, int64_s, int8_s, int_s, lfilt_k;
-extern val long_s, ptr_in_d_s, ptr_in_s, ptr_out_d_s, ptr_out_s;
-extern val ptr_out_s_s, ptr_s, rfilt_k, short_s, str_d_s;
-extern val struct_s, tobase64_k, tofloat_k, tohtml_k, tohtml_star_k;
-extern val toint_k, tonumber_k, topercent_k, tourl_k, uchar_s;
-extern val uint16_s, uint32_s, uint64_s, uint8_s, uint_s;
-extern val ulong_s, upcase_k, ushort_s, void_s, wchar_s;
-extern val wstr_d_s, wstr_s, zarray_s;
-#endif
-#if HAVE_SYSLOG
-extern val prio_k;
-#endif
-#if HAVE_DLOPEN
-extern val dlhandle_s, dlsym_s;
+#if HAVE_UNAME
+extern val domainname_s, machine_s, nodename_s, release_s, sysname_s;
+extern val utsname_s, version_s;
 #endif
 #if HAVE_TERMIOS
 extern val cc_s, cflag_s, iflag_s, ispeed_s, lflag_s;
 extern val oflag_s, ospeed_s, termios_s;
-#endif
-#if HAVE_SOCKETS
-extern val addr_s, addrinfo_s, canonname_s, family_s, flags_s;
-extern val flow_info_s, port_s, protocol_s, scope_id_s, sockaddr_in6_s;
-extern val sockaddr_in_s, sockaddr_un_s, socktype_s;
 #endif
 
 extern val accept_s, addr_k, all_s, and_s, ap_s;
@@ -156,8 +160,34 @@ extern val zone_s;
 
 
 val *protected_sym[] = {
+#if HAVE_SYSLOG
+  &prio_k,
+#endif
+#if HAVE_SOCKETS
+  &addr_s, &addrinfo_s, &canonname_s, &family_s, &flags_s,
+  &flow_info_s, &port_s, &protocol_s, &scope_id_s, &sockaddr_in6_s,
+  &sockaddr_in_s, &sockaddr_un_s, &socktype_s,
+#endif
 #if HAVE_GRGID
   &group_s, &mem_s,
+#endif
+#if HAVE_LIBFFI
+  &align_s, &array_s, &bchar_s, &be_double_s, &be_float_s,
+  &be_int16_s, &be_int32_s, &be_int64_s, &be_uint16_s, &be_uint32_s,
+  &be_uint64_s, &bit_s, &bstr_d_s, &bstr_s, &buf_d_s,
+  &carray_s, &char_s, &closure_s, &double_s, &downcase_k,
+  &enum_s, &ffi_call_desc_s, &ffi_closure_s, &ffi_type_s, &filter_k,
+  &frombase64_k, &fromhtml_k, &frompercent_k, &fromurl_k, &hextoint_k,
+  &int16_s, &int32_s, &int64_s, &int8_s, &int_s,
+  &le_double_s, &le_float_s, &le_int16_s, &le_int32_s, &le_int64_s,
+  &le_uint16_s, &le_uint32_s, &le_uint64_s, &lfilt_k, &long_s,
+  &ptr_in_d_s, &ptr_in_s, &ptr_out_d_s, &ptr_out_s, &ptr_out_s_s,
+  &ptr_s, &rfilt_k, &sbit_s, &short_s, &str_d_s,
+  &struct_s, &tobase64_k, &tofloat_k, &tohtml_k, &tohtml_star_k,
+  &toint_k, &tonumber_k, &topercent_k, &tourl_k, &ubit_s,
+  &uchar_s, &uint16_s, &uint32_s, &uint64_s, &uint8_s,
+  &uint_s, &ulong_s, &upcase_k, &ushort_s, &val_s,
+  &void_s, &wchar_s, &wstr_d_s, &wstr_s, &zarray_s,
 #endif
 #if HAVE_PWUID
   &dir_s, &gecos_s, &passwd_s, &shell_s,
@@ -165,41 +195,19 @@ val *protected_sym[] = {
 #if HAVE_SOCKETS
   &socket_error_s,
 #endif
-#if HAVE_UNAME
-  &domainname_s, &machine_s, &nodename_s, &release_s, &sysname_s,
-  &utsname_s, &version_s,
+#if HAVE_DLOPEN
+  &dlhandle_s, &dlsym_s,
 #endif
 #if CONFIG_DEBUG_SUPPORT
   &debug_quit_s,
 #endif
-#if HAVE_LIBFFI
-  &array_s, &bchar_s, &bstr_d_s, &bstr_s, &buf_d_s,
-  &carray_s, &char_s, &closure_s, &double_s, &downcase_k,
-  &ffi_call_desc_s, &ffi_closure_s, &ffi_type_s, &filter_k, &frombase64_k,
-  &fromhtml_k, &frompercent_k, &fromurl_k, &hextoint_k, &int16_s,
-  &int32_s, &int64_s, &int8_s, &int_s, &lfilt_k,
-  &long_s, &ptr_in_d_s, &ptr_in_s, &ptr_out_d_s, &ptr_out_s,
-  &ptr_out_s_s, &ptr_s, &rfilt_k, &short_s, &str_d_s,
-  &struct_s, &tobase64_k, &tofloat_k, &tohtml_k, &tohtml_star_k,
-  &toint_k, &tonumber_k, &topercent_k, &tourl_k, &uchar_s,
-  &uint16_s, &uint32_s, &uint64_s, &uint8_s, &uint_s,
-  &ulong_s, &upcase_k, &ushort_s, &void_s, &wchar_s,
-  &wstr_d_s, &wstr_s, &zarray_s,
-#endif
-#if HAVE_SYSLOG
-  &prio_k,
-#endif
-#if HAVE_DLOPEN
-  &dlhandle_s, &dlsym_s,
+#if HAVE_UNAME
+  &domainname_s, &machine_s, &nodename_s, &release_s, &sysname_s,
+  &utsname_s, &version_s,
 #endif
 #if HAVE_TERMIOS
   &cc_s, &cflag_s, &iflag_s, &ispeed_s, &lflag_s,
   &oflag_s, &ospeed_s, &termios_s,
-#endif
-#if HAVE_SOCKETS
-  &addr_s, &addrinfo_s, &canonname_s, &family_s, &flags_s,
-  &flow_info_s, &port_s, &protocol_s, &scope_id_s, &sockaddr_in6_s,
-  &sockaddr_in_s, &sockaddr_un_s, &socktype_s,
 #endif
 
   &accept_s, &addr_k, &all_s, &and_s, &ap_s,

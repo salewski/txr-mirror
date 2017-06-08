@@ -1,3 +1,64 @@
+                                    TXR 177
+                                   2017-06-07
+
+
+  Features
+
+  - FFI:
+    - bitfields:
+      - struct members may be bitfields, using 1, 2 or 4 byte storage cells.
+    - enums:
+      - enum types convert between sets of symbols denoting numeric values,
+        and FFI type int.
+    - align operator in type language:
+      - the alignment of types can be customized to achieve effects like
+        packed structures, or conformance with unusual alignment requirements.
+    - endian types:
+      - big and little endian versions of int16, uint16, ... int64, uint64,
+        float and double.
+      - FFI transparently handles conversion.
+    - new macros: alignof, offsetof, arraysize, elemsize, elemtype
+    - numeric values in type language such as array sizes are now
+      evaluated expressions.
+    - new val type for transparently passing raw Lisp values.
+  - Streams:
+    - New put-buf and fill-buf functions for I/O based on buf type.
+      - FFI-type-driven conversions to/from buffers combine with buf I/O,
+        allowing TXR to deal with binary data in files and over networks.
+  - Command Line:
+    - new *args-eff* variable provides access to transformed command
+      line arguments.
+    - "Hash bang" support rewritten, and now features a "hash bang null hack":
+      - Additional arguments to TXR may be encoded in a hash bang line
+        after a null byte.
+  - lib:
+    - mkstring's <char> argument now optional, defaulting to space.
+
+  Bugs
+
+  - FFI:
+    - lingering broken assumption that alignment of pointers is the same
+      as their size.
+    - GC integrity issue in carray and cptr objects.
+    - Another GC integrity issue affecting basic FFI types.
+    - fixed incorrectly coded exception throws affecting code which
+      misuses one of the four functions that connect FFI and buffers.
+    - slots named nil in a FFI struct are now culled when making the
+      corresponding Lisp struct type.
+    - fixed broken handling of return values on big-endian platorms,
+      related to a historic quirk in libffi.
+    - fixed some broken conversions and range checks affecting some
+      integer types.
+    - fixed broken get semantics for arrays of bchar.
+      - failure to null-terminate decoded string.
+    - fixed clockid-t type not being defined on platforms that do have
+      the corresponding clockid_t C type.
+  - Build system:
+    - "make tests" doesn't cache output of failed tests, so they are repeated
+      when re-invoked.
+
+
+
                                     TXR 176
                                    2017-05-21
 
