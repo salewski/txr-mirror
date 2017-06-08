@@ -58234,6 +58234,13 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 177
+A value of 177 or lower causes the emulation of a bug which was present in the
+.code rng
+awk macro. A range whose start and end condition matched on the same record failed
+to activate for that record, even though
+.code rng
+is inclusive. The behavior is incompatible with POSIX Awk.
 .IP 174
 A value of 174 or lower restores a previous behavior of variable substitution
 in the
