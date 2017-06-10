@@ -3068,11 +3068,11 @@ val ffi_type_compile(val syntax)
                         self, syntax, nao);
           }
 
-          if (eltype_syntax == char_s)
+          if (etft->syntax == char_s)
             tft->char_conv = 1;
-          else if (eltype_syntax == wchar_s)
+          else if (etft->syntax == wchar_s)
             tft->wchar_conv = 1;
-          else if (eltype_syntax == bchar_s)
+          else if (etft->syntax == bchar_s)
             tft->bchar_conv = 1;
           return type;
         }
