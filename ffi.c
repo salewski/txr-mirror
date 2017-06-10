@@ -36,8 +36,10 @@
 #include <wchar.h>
 #include <dirent.h>
 #include <time.h>
-#include <ffi.h>
 #include "config.h"
+#if HAVE_LIBFFI
+#include <ffi.h>
+#endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -74,6 +76,12 @@
 #define ifbe2(expr1, expr2) (expr1)
 #endif
 
+#if !HAVE_LIBFFI
+typedef struct ffi_type {
+  char type, size;
+} ffi_type;
+#define FFI_TYPE_STRUCT 0
+#endif
 
 val uint8_s, int8_s;
 val uint16_s, int16_s;
@@ -122,7 +130,22 @@ val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
 static val ffi_typedef_hash;
 
+#if HAVE_LIBFFI
 static uw_frame_t *s_exit_point;
+#endif
+
+#if !HAVE_LIBFFI
+static ffi_type ffi_type_void, ffi_type_pointer, ffi_type_sint;
+static ffi_type ffi_type_schar, ffi_type_uchar;
+static ffi_type ffi_type_sshort, ffi_type_ushort;
+static ffi_type ffi_type_sint, ffi_type_uint;
+static ffi_type ffi_type_slong, ffi_type_ulong;
+static ffi_type ffi_type_sint8, ffi_type_uint8;
+static ffi_type ffi_type_sint16, ffi_type_uint16;
+static ffi_type ffi_type_sint32, ffi_type_uint32;
+static ffi_type ffi_type_sint64, ffi_type_uint64;
+static ffi_type ffi_type_float, ffi_type_double;
+#endif
 
 struct smemb {
   val mname;
@@ -169,11 +192,13 @@ static struct txr_ffi_type *ffi_type_struct_checked(val obj)
   return coerce(struct txr_ffi_type *, cobj_handle(obj, ffi_type_s));
 }
 
+#if HAVE_LIBFFI
 static ffi_type *ffi_get_type(val obj)
 {
   struct txr_ffi_type *tffi = ffi_type_struct_checked(obj);
   return tffi->ft;
 }
+#endif
 
 static val ffi_get_lisp_type(val obj)
 {
@@ -192,11 +217,17 @@ static void ffi_type_print_op(val obj, val out, val pretty, struct strm_ctx *ctx
 static void ffi_type_struct_destroy_op(val obj)
 {
   struct txr_ffi_type *tft = ffi_type_struct(obj);
+#if HAVE_LIBFFI
   ffi_type *ft = tft->ft;
+#endif
+
+#if HAVE_LIBFFI
   free(ft->elements);
   ft->elements = 0;
   free(ft);
   tft->ft = 0;
+#endif
+
   free(tft->memb);
   tft->memb = 0;
   free(tft);
@@ -274,6 +305,8 @@ static struct cobj_ops ffi_type_enum_ops =
                 ffi_enum_type_mark,
                 cobj_eq_hash_op);
 
+#if HAVE_LIBFFI
+
 struct txr_ffi_closure {
   ffi_closure *clo;
   mem_t *fptr;
@@ -328,6 +361,8 @@ static struct cobj_ops ffi_closure_ops =
                 ffi_closure_destroy_op,
                 ffi_closure_mark_op,
                 cobj_eq_hash_op);
+
+#endif
 
 static void ffi_void_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 {
@@ -1885,6 +1920,7 @@ static val ffi_buf_d_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return ret;
 }
 
+#if HAVE_LIBFFI
 static void ffi_closure_put(struct txr_ffi_type *tft, val ptr, mem_t *dst,
                             val self)
 {
@@ -1903,6 +1939,7 @@ static void ffi_closure_put(struct txr_ffi_type *tft, val ptr, mem_t *dst,
 
   memcpy(dst, &p, sizeof p);
 }
+#endif
 
 static val ffi_ptr_in_in(struct txr_ffi_type *tft, int copy, mem_t *src,
                          val obj, val self)
@@ -2667,15 +2704,19 @@ static struct txr_ffi_type *ffi_struct_clone(struct txr_ffi_type *orig)
 {
   cnum nmemb = orig->nelem;
   struct txr_ffi_type *copy = ffi_simple_clone(orig);
+#if HAVE_LIBFFI
   size_t elements_size = sizeof *orig->ft->elements * (nmemb + 1);
+#endif
   size_t memb_size = sizeof *orig->memb * nmemb;
   ffi_type *ft = coerce(ffi_type *, chk_copy_obj(coerce(mem_t *, orig->ft),
                                                  sizeof *orig->ft));
 
   copy->ft = ft;
+#if HAVE_LIBFFI
   ft->elements = coerce(ffi_type **, chk_copy_obj(coerce(mem_t *,
                                                          ft->elements),
                                                   elements_size));
+#endif
   copy->memb = coerce(struct smemb *, chk_copy_obj(coerce(mem_t *,
                                                           orig->memb),
                                                    memb_size));
@@ -2691,8 +2732,10 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   ffi_type *ft = coerce(ffi_type *, chk_calloc(1, sizeof *ft));
 
   cnum nmemb = c_num(length(types)), i;
+#if HAVE_LIBFFI
   ffi_type **elements = coerce(ffi_type **,
                                chk_malloc(sizeof *elements * (nmemb + 1)));
+#endif
   struct smemb *memb = coerce(struct smemb *,
                               chk_calloc(nmemb, sizeof *memb));
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
@@ -2724,7 +2767,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     struct txr_ffi_type *mtft = ffi_type_struct(type);
     cnum size = mtft->size;
 
+#if HAVE_LIBFFI
     elements[i] = mtft->ft;
+#endif
 
     memb[i].mtype = type;
     memb[i].mname = slot;
@@ -2800,12 +2845,16 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
   tft->nelem = i;
 
+#if HAVE_LIBFFI
   elements[i] = 0;
+#endif
 
   if (need_out_handler)
     tft->out = ffi_struct_out;
 
+#if HAVE_LIBFFI
   ft->elements = elements;
+#endif
 
   tft->size = (offs + most_align - 1) & ~(most_align - 1);
   tft->align = most_align;
@@ -2815,16 +2864,20 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
 static struct txr_ffi_type *ffi_array_clone(struct txr_ffi_type *orig)
 {
-  cnum nmemb = orig->nelem;
   struct txr_ffi_type *copy = ffi_simple_clone(orig);
+#if HAVE_LIBFFI
+  cnum nmemb = orig->nelem;
   size_t elements_size = sizeof *orig->ft->elements * (nmemb + 1);
+#endif
   ffi_type *ft = coerce(ffi_type *, chk_copy_obj(coerce(mem_t *, orig->ft),
                                                  sizeof *orig->ft));
 
   copy->ft = ft;
+#if HAVE_LIBFFI
   ft->elements = coerce(ffi_type **, chk_copy_obj(coerce(mem_t *,
                                                          ft->elements),
                                                   elements_size));
+#endif
   return copy;
 }
 
@@ -2836,8 +2889,10 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   ffi_type *ft = coerce(ffi_type *, chk_calloc(1, sizeof *ft));
 
   cnum nelem = c_num(dim), i;
+#if HAVE_LIBFFI
   ffi_type **elements = coerce(ffi_type **, chk_malloc(sizeof *elements *
                                                        (nelem + 1)));
+#endif
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
 
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
@@ -2858,7 +2913,9 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->free = free;
 
   for (i = 0; i < nelem; i++) {
+#if HAVE_LIBFFI
     elements[i] = etft->ft;
+#endif
     if (i == 0) {
       tft->size = etft->size * nelem;
       tft->align = etft->align;
@@ -2867,9 +2924,11 @@ static val make_ffi_type_array(val syntax, val lisp_type,
     }
   }
 
+#if HAVE_LIBFFI
   elements[i] = 0;
 
   ft->elements = elements;
+#endif
 
   tft->nelem = nelem;
 
@@ -3579,12 +3638,15 @@ static void ffi_init_types(void)
     }
   }
 
+#if HAVE_LIBFFI
   ffi_typedef(closure_s, make_ffi_type_builtin(closure_s, fun_s,
                                                sizeof (mem_t *),
                                                alignof (mem_t *),
                                                &ffi_type_pointer,
                                                ffi_closure_put, ffi_cptr_get,
                                                0, 0));
+#endif
+
   ffi_typedef(void_s, make_ffi_type_builtin(void_s, null_s, 0, 0,
                                             &ffi_type_void,
                                             ffi_void_put, ffi_void_get,
@@ -3686,6 +3748,8 @@ static void ffi_init_extra_types(void)
               type_by_size[convert(uid_t, -1) > 0][sizeof (uid_t)]);
 #endif
 }
+
+#if HAVE_LIBFFI
 
 struct txr_ffi_call_desc {
   ffi_cif cif;
@@ -4019,6 +4083,8 @@ mem_t *ffi_closure_get_fptr(val closure)
   struct txr_ffi_closure *tfcl = ffi_closure_struct_checked(closure);
   return tfcl->fptr;
 }
+
+#endif
 
 val ffi_typedef(val name, val type)
 {
@@ -4539,9 +4605,11 @@ void ffi_init(void)
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);
   ffi_closure_s = intern(lit("ffi-closure"), user_package);
   reg_fun(intern(lit("ffi-type-compile"), user_package), func_n1(ffi_type_compile));
+#if HAVE_LIBFFI
   reg_fun(intern(lit("ffi-make-call-desc"), user_package), func_n4(ffi_make_call_desc));
   reg_fun(intern(lit("ffi-call"), user_package), func_n2v(ffi_call_wrap));
   reg_fun(intern(lit("ffi-make-closure"), user_package), func_n4o(ffi_make_closure, 2));
+#endif
   reg_fun(intern(lit("ffi-typedef"), user_package), func_n2(ffi_typedef));
   reg_fun(intern(lit("ffi-size"), user_package), func_n1(ffi_size));
   reg_fun(intern(lit("ffi-alignof"), user_package), func_n1(ffi_alignof));
