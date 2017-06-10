@@ -5866,6 +5866,7 @@ val generic_funcall(val fun, struct args *args_in)
   case STR:
   case LIT:
   case LSTR:
+  carray:
     bug_unless (args->argc >= ARGS_MIN);
     args_normalize(args, 3);
 
@@ -5928,6 +5929,10 @@ val generic_funcall(val fun, struct args *args_in)
       default:
         callerror(fun, lit("too many arguments"));
       }
+#if HAVE_LIBFFI
+    } else if (fun->co.cls == carray_s) {
+      goto carray;
+#endif
     } else if (structp(fun)) {
       fun = method(fun, lambda_s);
       break;
@@ -9197,6 +9202,10 @@ val ref(val seq, val ind)
   case COBJ:
     if (seq->co.cls == hash_s)
       return gethash(seq, ind);
+#if HAVE_LIBFFI
+    if (seq->co.cls == carray_s)
+      return carray_ref(seq, ind);
+#endif
     /* fallthrough */
   case CONS:
   case LCONS:
@@ -9228,6 +9237,10 @@ val refset(val seq, val ind, val newval)
   case COBJ:
     if (seq->co.cls == hash_s)
       return sethash(seq, ind, newval);
+#if HAVE_LIBFFI
+    if (seq->co.cls == carray_s)
+      return carray_refset(seq, ind, newval);
+#endif
   default:
     type_mismatch(lit("ref: ~s is not a sequence"), seq, nao);
   }
