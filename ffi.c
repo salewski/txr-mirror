@@ -2479,30 +2479,35 @@ static val ffi_varray_null_term_in(struct txr_ffi_type *tft, int copy, mem_t *sr
 static val ffi_varray_null_term_get(struct txr_ffi_type *tft, mem_t *src,
                                     val self)
 {
-  val vec = vector(zero, nil);
   val eltype = tft->eltype;
-  struct txr_ffi_type *etft = ffi_type_struct(eltype);
-  cnum elsize = etft->size;
-  cnum offs, i;
 
-  for (i = 0, offs = 0; ; i++) {
-    mem_t *el = src + offs, *p;
+  if (tft->char_conv || tft->wchar_conv || tft->bchar_conv) {
+    return ffi_array_get_common(tft, src, self, INT_PTR_MAX);
+  } else {
+    val vec = vector(zero, nil);
+    struct txr_ffi_type *etft = ffi_type_struct(eltype);
+    cnum elsize = etft->size;
+    cnum offs, i;
 
-    for (p = el; p < el + elsize; p++)
-      if (*p)
+    for (i = 0, offs = 0; ; i++) {
+      mem_t *el = src + offs, *p;
+
+      for (p = el; p < el + elsize; p++)
+        if (*p)
+          break;
+
+      if (p == el + elsize)
         break;
 
-    if (p == el + elsize)
-      break;
-
-    {
-      val elval = etft->get(etft, src + offs, self);
-      vec_push(vec, elval);
-      offs += elsize;
+      {
+        val elval = etft->get(etft, src + offs, self);
+        vec_push(vec, elval);
+        offs += elsize;
+      }
     }
-  }
 
-  return vec;
+    return vec;
+  }
 }
 
 static void ffi_varray_release(struct txr_ffi_type *tft, val vec, mem_t *dst)
@@ -3037,6 +3042,12 @@ val ffi_type_compile(val syntax)
           tft->get = ffi_varray_null_term_get;
           tft->in = ffi_varray_null_term_in;
         }
+        if (etft->syntax == char_s)
+          tft->char_conv = 1;
+        else if (etft->syntax == wchar_s)
+          tft->wchar_conv = 1;
+        else if (etft->syntax == bchar_s)
+          tft->bchar_conv = 1;
         tft->alloc = ffi_varray_alloc;
         tft->free = free;
         tft->size = 0;
