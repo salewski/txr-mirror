@@ -56578,19 +56578,24 @@ nothing, it returns
 
 The
 .code carray-own
-function closely resembles
+function resembles
 .codn carray-dup ,
-differing from that function only in one crucial detail:
-instead of allocating a duplicate copy of the underlying array storage,
-the
+differing from that function only in in two ways.
+Instead of allocating a duplicate copy of the underlying array storage,
 .code carray-own
-function causes
+causes
 .meta carray
 to
 .B assume
-ownership of the existing storage. Also,
+ownership of the existing storage. Secondly, it is an error to use
+.code carray-own
+on a
+.meta carray
+which references a buffer object.
+
+The
 .meta carray-own
-returns
+function always returns
 .codn nil .
 
 In all other regards, the descriptions of
