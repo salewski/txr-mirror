@@ -5864,6 +5864,7 @@ val generic_funcall(val fun, struct args *args_in)
   case STR:
   case LIT:
   case LSTR:
+  case BUF:
   carray:
     bug_unless (args->argc >= ARGS_MIN);
     args_normalize(args, 3);
@@ -9212,6 +9213,8 @@ val ref(val seq, val ind)
     return chr_str(seq, ind);
   case VEC:
     return vecref(seq, ind);
+  case BUF:
+    return buf_get_uchar(seq, ind);
   default:
     type_mismatch(lit("ref: ~s is not a sequence"), seq, nao);
   }
@@ -9230,6 +9233,8 @@ val refset(val seq, val ind, val newval)
     return chr_str_set(seq, ind, newval);
   case VEC:
     return set(vecref_l(seq, ind), newval);
+  case BUF:
+    return buf_put_uchar(seq, ind, newval);
   case COBJ:
     if (seq->co.cls == hash_s)
       return sethash(seq, ind, newval);
