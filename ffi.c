@@ -4558,6 +4558,48 @@ val carray_refset(val carray, val idx, val newval)
   }
 }
 
+val carray_sub(val carray, val from, val to)
+{
+  struct carray *scry = carray_struct_checked(carray);
+  cnum ln = scry->nelem;
+  val len = num(ln);
+
+  if (null_or_missing_p(from))
+    from = zero;
+
+  if (null_or_missing_p(to))
+    to = len;
+
+  if (minusp(to))
+    to = plus(to, len);
+
+  if (minusp(from))
+    from = plus(from, len);
+
+  {
+    cnum fn = c_num(from);
+    cnum tn = c_num(to);
+    cnum elsize = scry->eltft->size;
+
+    if (fn < 0)
+      fn = 0;
+
+    if (tn < 0)
+      tn = 0;
+
+    if (tn > ln)
+      tn = ln;
+
+    if (fn > ln)
+      fn = ln;
+
+    if (tn < fn)
+      tn = fn;
+
+    return make_carray(scry->eltype, scry->data + fn * elsize, tn - fn, carray);
+  }
+}
+
 static void carray_ensure_artype(val carray, struct carray *scry)
 {
   if (!scry->artype) {
@@ -4730,6 +4772,7 @@ void ffi_init(void)
   reg_fun(intern(lit("list-carray"), user_package), func_n2o(list_carray, 1));
   reg_fun(intern(lit("carray-ref"), user_package), func_n2(carray_ref));
   reg_fun(intern(lit("carray-refset"), user_package), func_n3(carray_refset));
+  reg_fun(intern(lit("carray-sub"), user_package), func_n3o(carray_sub, 1));
   reg_fun(intern(lit("carray-get"), user_package), func_n1(carray_get));
   reg_fun(intern(lit("carray-getz"), user_package), func_n1(carray_getz));
   reg_fun(intern(lit("carray-put"), user_package), func_n2(carray_put));

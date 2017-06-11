@@ -24971,6 +24971,13 @@ on Range Indexing\(emexplains the semantics of the range specification.
 If the sequence is a list, the output sequence may share substructure
 with the input sequence.
 
+If
+.meta sequence
+is a
+.code carray
+object, then the function behaves like
+.codn carray-sub .
+
 When a
 .code sub
 form is used as a syntactic place, that place denotes a slice of
@@ -25535,7 +25542,12 @@ The
 .code ref
 and
 .code refset
-functions perform array-like indexing into sequences.
+functions perform array-like indexing into sequences, as well as
+objects of type
+.code buf
+and
+.codn carray .
+
 If the
 .meta seq
 parameter is a hash, then these functions perform
@@ -26288,6 +26300,16 @@ All of
 is processed, even if it contains
 keys which are not in
 .metn object .
+
+The
+.code select
+function also supports objects of type
+.codn carray ,
+in a manner similar to vectors. The indicated elements are extracted
+from the input object, and a new
+.code carray
+is returned whose storage is initialized by converting the extracted
+values back to the foreign representation.
 
 .coNP Function @ in
 .synb
@@ -28028,6 +28050,36 @@ is converted to the same type of sequence and returned.
 Otherwise the original
 .meta list
 is returned.
+
+Conversion is supported to string and vector type.
+
+Conversion to a structure type is possible for structures. If
+.meta ref-sequence
+is an object of a structure type which has a static function
+.codn from-list ,
+then
+.code make-like
+calls that function, passing to it, and the resulting value is returned.
+.meta list
+and returns whatever value that function returns.
+
+If
+.meta ref-sequence
+is a
+.codn carray ,
+then
+.meta list
+is passed to the
+.code carray-list
+function, and the resulting value is returned. The second argument in the
+.code carray-list
+call is the element type taken from
+.metn ref-sequence .
+The third argument is
+.codn nil ,
+indicating that the resulting
+.code carray
+is not to be null terminated.
 
 Note: the
 .code make-like
@@ -56771,6 +56823,43 @@ then the expected string conversion semantics applies.
 
 Both of these functions return
 .metn carray .
+
+.coNP Function @ carray-sub
+.synb
+.mets (carray-sub < carray >> [ from <> [ to ]])
+.syne
+.desc
+The
+.code carray-sub
+function extracts a subrange of a
+.meta carray
+object, returning a new
+.code carray
+object denoting that subrange.
+
+The semantics of
+.meta from
+and
+.meta to
+work exactly like the corresponding arguments of the
+.code sub
+accessor, following the same conventions.
+
+The returned
+.code carray
+shares the array has the same element type as the original and
+shares the same array storage. If, subsequently, elements of the
+original array are modified which lie in the range, then the
+modifications will affect the previously returned subrange
+.codn carray .
+The returned
+.code carray
+references the original object, to ensure that as long as the returned object
+is reachable by the garbage collector, so is the original.  This relationship
+can be severed by invoking
+.code carray-dup
+on the returned object, after which the two no longer share storage,
+and modifications in the original are not reflected in the subrange.
 
 .SH* INTERACTIVE LISTENER
 

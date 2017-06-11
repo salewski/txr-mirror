@@ -9179,6 +9179,8 @@ val sub(val seq, val from, val to)
   case NIL:
     return nil;
   case COBJ:
+    if (seq->co.cls == carray_s)
+      return carray_sub(seq, from, to);
     seq = nullify(seq);
     /* fallthrough */
   case CONS:
