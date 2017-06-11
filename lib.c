@@ -9131,6 +9131,8 @@ val length(val seq)
   case COBJ:
     if (seq->co.cls == hash_s)
       return hash_count(seq);
+    if (seq->co.cls == carray_s)
+      return length_carray(seq);
     if (structp(seq) && maybe_slot(seq, car_s))
       return length_proper_list(nullify(seq));
     /* fallthrough */
