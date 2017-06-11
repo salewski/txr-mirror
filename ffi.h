@@ -93,7 +93,7 @@ val carray_own(val carray);
 val carray_free(val carray);
 val carray_type(val carray);
 val length_carray(val carray);
-mem_t *carray_get(val carray, val type, val self);
+mem_t *carray_ptr(val carray, val type, val self);
 val carray_vec(val vec, val type, val null_term_p);
 val carray_blank(val nelem, val type);
 val carray_buf(val buf, val type);

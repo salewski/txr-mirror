@@ -2562,7 +2562,7 @@ static val ffi_carray_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_carray_put(struct txr_ffi_type *tft, val carray, mem_t *dst,
                            val self)
 {
-  mem_t *p = carray_get(carray, tft->eltype, self);
+  mem_t *p = carray_ptr(carray, tft->eltype, self);
   *coerce(mem_t **, dst) = p;
 }
 
@@ -4397,7 +4397,7 @@ val length_carray(val carray)
   return if3(scry->nelem < 0, nil, num(scry->nelem));
 }
 
-mem_t *carray_get(val carray, val type, val self)
+mem_t *carray_ptr(val carray, val type, val self)
 {
   struct carray *scry = carray_struct_checked(carray);
   if (scry->eltype != type)
