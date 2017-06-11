@@ -56143,15 +56143,18 @@ in order to extract the return value of foreign function
 calls, and by the FFI callback mechanism to extract the
 arguments coming into a callback.
 
-.coNP Function @ carray-vec
+.coNP Functions @ carray-vec and @ carray-list
 .synb
 .mets (carray-vec < vec < type <> [ null-term-p ])
+.mets (carray-list < list < type <> [ null-term-p ])
 .syne
 .desc
 The
 .code carray-vec
-function allocates storage for the representation of a foreign array, and
-returns a
+and
+.code carray-list
+functions allocate storage for the representation of a foreign array, and
+return a
 .code carray
 object which holds a pointer to that storage.
 
@@ -56162,9 +56165,11 @@ is retained as the
 .code carray
 object's element type.
 
-Prior to returning, the function
+Prior to returning, the functions
 initializes the foreign array by converting the elements of
 .meta vec
+or, respectively,
+.meta list
 into elements of the foreign array.
 The conversion is performed using the put semantics of
 .metn type ,
@@ -56174,6 +56179,8 @@ The length of the returned
 .code carray
 is determined from the length of
 .meta vec
+or
+.meta list
 and from the value of the Boolean argument
 .metn null-term-p .
 
@@ -56183,8 +56190,10 @@ is
 .codn nil ,
 then the length of the
 .code carray
-is the same as that of
-.metn vec .
+is the same as that of the input
+.meta vec
+or
+.metn list .
 
 A true value of
 .meta null-term-p
@@ -56192,7 +56201,9 @@ indicates null termination.
 This causes the length of the
 .code carray
 to be one greater than that of
-.metn vec ,
+.meta vec
+or
+.metn list ,
 and the extra element allocated to the foreign array is filled with zero bytes.
 
 .coNP Function @ carray-blank

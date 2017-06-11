@@ -4425,6 +4425,23 @@ val carray_vec(val vec, val type, val null_term_p)
   return carray;
 }
 
+val carray_list(val list, val type, val null_term_p)
+{
+  val nt_p = default_null_arg(null_term_p);
+  val len = if3(nt_p, succ(length(list)), length(list));
+  val carray = carray_blank(len, type);
+  cnum i;
+
+  (void) c_num(len);
+
+  for (i = 0; !endp(list); list = cdr(list), i++) {
+    val el = car(list);
+    carray_refset(carray, num_fast(i), el);
+  }
+
+  return carray;
+}
+
 val carray_blank(val nelem, val type)
 {
   val self = lit("carray-blank");
@@ -4704,6 +4721,7 @@ void ffi_init(void)
   reg_fun(intern(lit("carray-type"), user_package), func_n1(carray_type));
   reg_fun(intern(lit("length-carray"), user_package), func_n1(length_carray));
   reg_fun(intern(lit("carray-vec"), user_package), func_n3o(carray_vec, 2));
+  reg_fun(intern(lit("carray-list"), user_package), func_n3o(carray_list, 2));
   reg_fun(intern(lit("carray-blank"), user_package), func_n2(carray_blank));
   reg_fun(intern(lit("carray-buf"), user_package), func_n2(carray_buf));
   reg_fun(intern(lit("carray-buf-sync"), user_package), func_n1(carray_buf_sync));

@@ -718,6 +718,8 @@ val make_like(val list, val thatobj)
         if (from_list_meth)
           return funcall1(from_list_meth, list);
       }
+      if (thatobj->co.cls == carray_s)
+        return carray_list(list, carray_type(thatobj), nil);
       break;
     case NIL:
     case CONS:
@@ -9633,6 +9635,8 @@ val sel(val seq_in, val where_in)
 
       return newhash;
     }
+    if (seq->co.cls == carray_s)
+      goto carray;
     /* fallthrough */
   case CONS:
   case LCONS:
@@ -9650,6 +9654,7 @@ val sel(val seq_in, val where_in)
       }
     }
     break;
+  carray:
   default:
     {
       val len = length(seq);
