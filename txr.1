@@ -24775,17 +24775,14 @@ is a sequence, the
 function returns the number of items it
 contains.
 
-If
-.meta object
-is a hash then the value of
-.cblk
-.meti (hash-count << object )
-.cble
+The function supports these additional types:
+.RS
+.coIP hash
+The value of
+.code hash-count
 is returned.
-
-If
-.meta object
-is a range, then the length of the interval
+.coIP range
+The length of the interval
 represented by the range is returned.
 The length of a range
 .code r
@@ -24797,7 +24794,13 @@ The length of
 is -11 and of
 .codn "#R(0.5 3)" ,
 2.5.
+.coIP buf
+The buffer length calculated by
+.code length-buf
+is returned.
+.RE
 
+.IP
 For other types,
 .code length
 throws an error exception.
