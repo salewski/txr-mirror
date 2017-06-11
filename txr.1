@@ -56690,6 +56690,68 @@ Conversion of the foreign array to the vector or list is performed
 by iterating over all of its elements, starting from element zero, up to the
 element before the effective length, 
 
+.coNP Functions @ carray-get and @ carray-getz
+.synb
+.mets (carray-get << carray )
+.mets (carray-getz << carray )
+.syne
+.desc
+The
+.code carray-get
+and
+.code carray-getz
+functions treat the contents of
+.meta carray
+as a FFI
+.code array
+and
+.code zarray
+type, respectively.
+
+They invoke the get semantics to convert the FFI array to a Lisp
+object, and return that object.
+
+If the element type is one of
+.codn char ,
+.code bchar
+or
+.codn wchar ,
+then the expected string conversion semantics applies.
+
+.coNP Functions @ carray-put and @ carray-putz
+.synb
+.mets (carray-put < carray << new-val )
+.mets (carray-putz < carray << new-val )
+.syne
+.desc
+The
+.code carray-put
+and
+.code carray-putz
+functions treat the contents of
+.meta carray
+as a FFI
+.code array
+and
+.code zarray
+type, respectively.
+
+They invoke the put semantics to convert the Lisp object
+.meta new-val
+array to the foreign array representation, which is placed into
+the array storage referenced by
+.metn carray .
+
+If the element type is one of
+.codn char ,
+.code bchar
+or
+.codn wchar ,
+then the expected string conversion semantics applies.
+
+Both of these functions return
+.metn carray .
+
 .SH* INTERACTIVE LISTENER
 
 .SS* Overview

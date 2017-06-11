@@ -4244,6 +4244,7 @@ struct carray {
   mem_t *data;
   cnum nelem;
   val ref;
+  val artype;
 };
 
 static struct carray *carray_struct(val carray)
@@ -4271,6 +4272,7 @@ static void carray_mark_op(val obj)
   struct carray *scry = carray_struct(obj);
   gc_mark(scry->eltype);
   gc_mark(scry->ref);
+  gc_mark(scry->artype);
 }
 
 static void carray_destroy_op(val obj)
@@ -4304,6 +4306,7 @@ val make_carray(val type, mem_t *data, cnum nelem, val ref)
   scry->data = data;
   scry->nelem = nelem;
   scry->ref = nil;
+  scry->artype = nil;
   obj = cobj(coerce(mem_t *, scry), carray_s, &carray_borrowed_ops);
   scry->eltype = type;
   scry->ref = ref;
@@ -4538,6 +4541,78 @@ val carray_refset(val carray, val idx, val newval)
   }
 }
 
+static void carray_ensure_artype(val carray, struct carray *scry)
+{
+  if (!scry->artype) {
+    val dim = num(scry->nelem);
+    val syntax = list(carray_s, dim, scry->eltft->syntax, nao);
+    struct txr_ffi_type *etft = scry->eltft;
+    set(mkloc(scry->artype, carray), make_ffi_type_array(syntax, vec_s, dim, scry->eltype));
+
+    {
+      struct txr_ffi_type *atft = ffi_type_struct(scry->artype);
+      if (etft->syntax == char_s)
+        atft->char_conv = 1;
+      else if (etft->syntax == wchar_s)
+        atft->wchar_conv = 1;
+      else if (etft->syntax == bchar_s)
+        atft->bchar_conv = 1;
+    }
+  }
+}
+
+static val carray_get_common(val carray, val self, unsigned null_term)
+{
+  struct carray *scry = carray_struct_checked(carray);
+
+  carray_ensure_artype(carray, scry);
+
+  {
+    struct txr_ffi_type *atft = ffi_type_struct(scry->artype);
+    atft->null_term = null_term;
+    return atft->get(atft, scry->data, self);
+  }
+}
+
+static void carray_put_common(val carray, val seq, val self, unsigned null_term)
+{
+  struct carray *scry = carray_struct_checked(carray);
+
+  carray_ensure_artype(carray, scry);
+
+  {
+    struct txr_ffi_type *atft = ffi_type_struct(scry->artype);
+    atft->null_term = null_term;
+    return atft->put(atft, seq, scry->data, self);
+  }
+}
+
+val carray_get(val carray)
+{
+  val self = lit("carray-get");
+  return carray_get_common(carray, self, 0);
+}
+
+val carray_getz(val carray)
+{
+  val self = lit("carray-getz");
+  return carray_get_common(carray, self, 1);
+}
+
+val carray_put(val carray, val seq)
+{
+  val self = lit("carray-put");
+  carray_put_common(carray, seq, self, 0);
+  return carray;
+}
+
+val carray_putz(val carray, val seq)
+{
+  val self = lit("carray-putz");
+  carray_put_common(carray, seq, self, 1);
+  return carray;
+}
+
 void ffi_init(void)
 {
   prot1(&ffi_typedef_hash);
@@ -4637,6 +4712,10 @@ void ffi_init(void)
   reg_fun(intern(lit("list-carray"), user_package), func_n2o(list_carray, 1));
   reg_fun(intern(lit("carray-ref"), user_package), func_n2(carray_ref));
   reg_fun(intern(lit("carray-refset"), user_package), func_n3(carray_refset));
+  reg_fun(intern(lit("carray-get"), user_package), func_n1(carray_get));
+  reg_fun(intern(lit("carray-getz"), user_package), func_n1(carray_getz));
+  reg_fun(intern(lit("carray-put"), user_package), func_n2(carray_put));
+  reg_fun(intern(lit("carray-putz"), user_package), func_n2(carray_putz));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
   ffi_init_extra_types();
