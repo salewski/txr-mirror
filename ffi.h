@@ -105,6 +105,7 @@ val list_carray(val carray, val null_term_p);
 val carray_ref(val carray, val idx);
 val carray_refset(val carray, val idx, val newval);
 val carray_sub(val carray, val from, val to);
+val carray_replace(val carray, val values, val from, val to);
 val carray_get(val carray);
 val carray_getz(val carray);
 val carray_put(val array, val seq);

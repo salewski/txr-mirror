@@ -9263,6 +9263,10 @@ val replace(val seq, val items, val from, val to)
     return replace_str(seq, items, from, to);
   case VEC:
     return replace_vec(seq, items, from, to);
+  case COBJ:
+    if (seq->co.cls == carray_s)
+      return carray_replace(seq, items, from, to);
+    /* fallthrough */
   default:
     type_mismatch(lit("replace: ~s is not a sequence"), seq, nao);
   }

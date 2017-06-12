@@ -4600,6 +4600,98 @@ val carray_sub(val carray, val from, val to)
   }
 }
 
+val carray_replace(val carray, val values, val from, val to)
+{
+  val self = lit("carray-replace");
+  struct carray *scry = carray_struct_checked(carray);
+  cnum ln = scry->nelem;
+  val len = num(ln);
+  val vlen = length(values);
+
+  if (null_or_missing_p(from))
+    from = zero;
+
+  if (null_or_missing_p(to))
+    to = len;
+
+  if (minusp(to))
+    to = plus(to, len);
+
+  if (minusp(from))
+    from = plus(from, len);
+
+  {
+    cnum fn = c_num(from);
+    cnum tn = c_num(to);
+    struct txr_ffi_type *eltft = scry->eltft;
+    cnum elsize = eltft->size;
+    cnum size = (ucnum) ln * (ucnum) elsize;
+    cnum vn = c_num(vlen);
+    cnum sn;
+    mem_t *ptr;
+
+    if (fn < 0)
+      fn = 0;
+
+    if (tn < 0)
+      tn = 0;
+
+    if (tn > ln)
+      tn = ln;
+
+    if (fn > ln)
+      fn = ln;
+
+    if (tn < fn)
+      tn = fn;
+
+    sn = fn + vn;
+
+    if (sn > ln)
+      sn = ln;
+
+    if ((ln != 0 && size / elsize != ln) || (sn < fn))
+      uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
+
+    ptr = scry->data + fn * elsize;
+
+    {
+      cnum oldrange = (tn - fn) * elsize;
+      cnum newrange = (sn - fn) * elsize;
+      cnum tail = (ln - tn) * elsize;
+      cnum whole = ln * elsize;
+
+      if (newrange > oldrange) {
+        cnum delta = newrange - oldrange;
+        memmove(ptr + newrange, ptr + oldrange, tail - delta);
+      } else if (newrange < oldrange) {
+        cnum delta = oldrange - newrange;
+        memmove(ptr + newrange, ptr + oldrange, tail);
+        memset(ptr + whole - delta, 0, delta);
+      }
+    }
+
+    if (consp(values)) {
+      val iter;
+
+      for (iter = values; fn < sn; iter = cdr(iter), fn++, ptr += elsize)
+      {
+        val newval = car(iter);
+        eltft->put(eltft, newval, ptr, self);
+      }
+    } else if (values) {
+      cnum i;
+
+      for (i = 0; fn < sn; i++, fn++, ptr += elsize) {
+        val newval = ref(values, num_fast(i));
+        eltft->put(eltft, newval, ptr, self);
+      }
+    }
+
+    return carray;
+  }
+}
+
 static void carray_ensure_artype(val carray, struct carray *scry)
 {
   if (!scry->artype) {
@@ -4793,6 +4885,7 @@ void ffi_init(void)
   reg_fun(intern(lit("carray-ref"), user_package), func_n2(carray_ref));
   reg_fun(intern(lit("carray-refset"), user_package), func_n3(carray_refset));
   reg_fun(intern(lit("carray-sub"), user_package), func_n3o(carray_sub, 1));
+  reg_fun(intern(lit("carray-replace"), user_package), func_n4o(carray_replace, 2));
   reg_fun(intern(lit("carray-get"), user_package), func_n1(carray_get));
   reg_fun(intern(lit("carray-getz"), user_package), func_n1(carray_getz));
   reg_fun(intern(lit("carray-put"), user_package), func_n2(carray_put));

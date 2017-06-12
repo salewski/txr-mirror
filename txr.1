@@ -25115,6 +25115,15 @@ is a list, then
 must
 be monotonically increasing.
 
+If
+.meta sequence
+is a
+.code carray
+object, then
+.code replace
+behaves like
+.codn carray-replace .
+
 .coNP Function @ take
 .synb
 .mets (take < count << sequence )
@@ -56860,6 +56869,74 @@ can be severed by invoking
 .code carray-dup
 on the returned object, after which the two no longer share storage,
 and modifications in the original are not reflected in the subrange.
+
+.coNP Function @ carray-replace
+.synb
+.mets (carray-replace < carray < item-sequence >> [ from <> [ to ]])
+.syne
+.desc
+The
+.code carray-replace
+function is a specialized version of
+.code replace
+which works on
+.code carray
+objects. It replaces a sub-range of 
+.meta carray
+with elements from
+.metn item-sequence .
+The replacement sequence need not have the same length
+as the range which it replaces.
+
+The semantics of
+.meta from
+and
+.meta to
+work exactly like the corresponding arguments of the
+.code replace
+function, following the same conventions.
+
+The semantics of the
+.code carray-replace
+operation itself differs from the
+.code replace
+semantics on sequences in one important regard: the
+.code carray
+object's length always remains the same.
+
+The range indicated by
+.meta from
+and
+.meta to
+is deleted from
+.meta carray
+and replaced by elements of
+.metn item-sequence ,
+which undergo conversion to the foreign type that defines the
+elements of
+.metn carray .
+
+If this operation would make the
+.code carray
+longer, any elements in excess of the object's length are discarded,
+whether they are the original elements, or whether they come from
+.metn item-sequence .
+Under no circumstances does
+.code carray-replace
+write an element beyond the length of the underlying storage.
+
+If this operation would make the
+.meta carray
+shorter (the range being replaced is longer than
+.metn item-sequence )
+then the downward relocation of items above the replacement range
+creates a gap at the end of
+.meta carray
+which is filled with zero bytes.
+
+The return value is
+.meta carray
+itself.
 
 .coNP Function @ carray-pun
 .synb
