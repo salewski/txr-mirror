@@ -4313,6 +4313,11 @@ val make_carray(val type, mem_t *data, cnum nelem, val ref)
   return obj;
 }
 
+val carrayp(val obj)
+{
+  return tnil(typeof(obj) == carray_s);
+}
+
 val carray_set_length(val carray, val nelem)
 {
   struct carray *scry = carray_struct_checked(carray);
@@ -4868,6 +4873,7 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-in"), user_package), func_n4(ffi_in));
   reg_fun(intern(lit("ffi-get"), user_package), func_n2(ffi_get));
   reg_fun(intern(lit("ffi-out"), user_package), func_n4(ffi_out));
+  reg_fun(intern(lit("carrayp"), user_package), func_n1(carrayp));
   reg_fun(intern(lit("carray-set-length"), user_package), func_n2(carray_set_length));
   reg_fun(intern(lit("carray-dup"), user_package), func_n1(carray_dup));
   reg_fun(intern(lit("carray-own"), user_package), func_n1(carray_own));

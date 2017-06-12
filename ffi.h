@@ -87,6 +87,7 @@ val ffi_in(val srcbuf, val obj, val type, val copy_p);
 val ffi_get(val srcbuf, val type);
 val ffi_out(val dstbuf, val obj, val type, val copy_p);
 val make_carray(val type, mem_t *data, cnum nelem, val ref);
+val carrayp(val obj);
 val carray_set_length(val carray, val nelem);
 val carray_dup(val carray);
 val carray_own(val carray);
