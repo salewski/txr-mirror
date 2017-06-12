@@ -565,9 +565,13 @@ static val dup_wrap(val old, val neu)
 
 val exec_wrap(val file, val args_opt)
 {
+  val self = lit("execvp");
   val args = default_null_arg(args_opt);
   int nargs = c_num(length(args)) + 1;
-  char **argv = coerce(char **, chk_malloc((nargs + 1) * sizeof *argv));
+  char **argv = if3(nargs < 0 || nargs == INT_MAX,
+                    (uw_throwf(file_error_s, lit("~s: argument list overflow"),
+                               self, nao), convert(char **, 0)),
+                    coerce(char **, chk_xalloc(nargs + 1, sizeof *argv, self)));
   val iter;
   int i;
 
@@ -578,9 +582,9 @@ val exec_wrap(val file, val args_opt)
   argv[i] = 0;
 
   if (execvp(argv[0], argv) < 0)
-    uw_throwf(file_error_s, lit("execvp ~a: ~d/~s"),
-                file, num(errno), string_utf8(strerror(errno)), nao);
-  uw_throwf(file_error_s, lit("execvp ~a returned"), file, nao);
+    uw_throwf(file_error_s, lit("~s ~a: ~d/~s"),
+              self, file, num(errno), string_utf8(strerror(errno)), nao);
+  uw_throwf(file_error_s, lit("~s ~a returned"), self, file, nao);
 }
 
 static val exit_star_wrap(val status)
@@ -877,13 +881,14 @@ static val getegid_wrap(void)
 
 static val getgroups_wrap(void)
 {
+  val self = lit("getgroups");
   gid_t dummy[1];
   int needed = getgroups(0, dummy);
 
   if (needed == 0) {
     return nil;
-  } else if (needed >  0) {
-    gid_t *arr = coerce(gid_t *, chk_malloc(needed *sizeof *arr));
+  } else if (needed > 0) {
+    gid_t *arr = coerce(gid_t *, chk_xalloc(needed, sizeof *arr, self));
     int obtained = getgroups(needed, arr);
     int i;
     list_collect_decl (out, ptail);
@@ -899,8 +904,8 @@ static val getgroups_wrap(void)
     free(arr);
   }
 
-  uw_throwf(system_error_s, lit("getgroups failed: ~d/~s"),
-            num(errno), string_utf8(strerror(errno)), nao);
+  uw_throwf(system_error_s, lit("~s failed: ~d/~s"),
+            self, num(errno), string_utf8(strerror(errno)), nao);
   abort();
 }
 
@@ -1062,13 +1067,13 @@ drop:
 
 static val setgroups_wrap(val list)
 {
-  cnum len = c_num(length(list));
-  size_t size = len;
+  val self = lit("setgroups");
+  ucnum len = c_num(length(list));
 
-  if (convert(cnum, size) != len) {
-    uw_throwf(system_error_s, lit("setgroups: list too long"), nao);
+  if (convert(ucnum, convert(size_t, len)) != len) {
+    uw_throwf(system_error_s, lit("~s: list too long"), self, nao);
   } else {
-    gid_t *arr = coerce(gid_t *, chk_malloc(size *sizeof *arr));
+    gid_t *arr = coerce(gid_t *, chk_xalloc(len, sizeof *arr, self));
     int i = 0, res;
 
     for (; list; i++, list = cdr(list)) {
@@ -1076,7 +1081,7 @@ static val setgroups_wrap(val list)
       arr[i] = gid;
     }
 
-    res = setgroups(size, arr);
+    res = setgroups(len, arr);
 
     free(arr);
 
