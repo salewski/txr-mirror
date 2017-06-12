@@ -4352,10 +4352,10 @@ val carray_dup(val carray)
               self, carray, nao);
   } else {
     cnum elsize = scry->eltft->size;
-    cnum size = scry->nelem * elsize;
+    cnum size = (ucnum) scry->nelem * (ucnum) elsize;
     mem_t *dup = chk_copy_obj(scry->data, scry->nelem * scry->eltft->size);
 
-    if (size < scry->nelem || size < elsize)
+    if (size < 0 || (elsize > 0 && size / elsize != scry->nelem))
       uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
 
     carray->co.ops = &carray_owned_ops;
@@ -4655,7 +4655,7 @@ val carray_replace(val carray, val values, val from, val to)
     if (sn > ln)
       sn = ln;
 
-    if ((ln != 0 && size / elsize != ln) || (sn < fn))
+    if (size < 0 || (ln != 0 && size / elsize != ln) || (sn < fn))
       uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
 
     ptr = scry->data + fn * elsize;
