@@ -609,6 +609,7 @@ wchar_t *chk_strdup(const wchar_t *str);
 char *chk_strdup_utf8(const char *str);
 unsigned char *chk_strdup_8bit(const wchar_t *str);
 mem_t *chk_copy_obj(mem_t *orig, size_t size);
+mem_t *chk_xalloc(ucnum m, ucnum n, val self);
 val cons(val car, val cdr);
 val make_lazy_cons(val func);
 val make_half_lazy_cons(val func, val car);

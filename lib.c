@@ -2699,6 +2699,18 @@ mem_t *chk_copy_obj(mem_t *orig, size_t size)
   return copy;
 }
 
+mem_t *chk_xalloc(ucnum m, ucnum n, val self)
+{
+  ucnum mn = m * n;
+  size_t size = mn;
+
+  if ((m > 0 && mn / m != n) || (ucnum) size != mn)
+    uw_throwf(error_s, lit("~s: memory allocation size overflow"),
+              self, nao);
+
+  return chk_malloc(size);
+}
+
 val cons(val car, val cdr)
 {
   val obj;
