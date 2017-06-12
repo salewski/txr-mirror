@@ -4672,6 +4672,26 @@ val carray_putz(val carray, val seq)
   return carray;
 }
 
+val carray_pun(val carray, val type)
+{
+  val self = lit("carray-pun");
+  struct carray *scry = carray_struct_checked(carray);
+  struct txr_ffi_type *tft = ffi_type_struct(type);
+  cnum len = scry->nelem;
+  cnum elsize = scry->eltft->size;
+  cnum size = (ucnum) len * (ucnum) elsize;
+
+  if (tft->size == 0)
+    uw_throwf(error_s,
+              lit("~a: incomplete type ~s cannot be carray element"),
+              self, tft->syntax, nao);
+
+  if (len != 0 && size / elsize != len)
+    uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
+
+  return make_carray(type, scry->data, size / tft->size, carray);
+}
+
 void ffi_init(void)
 {
   prot1(&ffi_typedef_hash);
@@ -4777,6 +4797,7 @@ void ffi_init(void)
   reg_fun(intern(lit("carray-getz"), user_package), func_n1(carray_getz));
   reg_fun(intern(lit("carray-put"), user_package), func_n2(carray_put));
   reg_fun(intern(lit("carray-putz"), user_package), func_n2(carray_putz));
+  reg_fun(intern(lit("carray-pun"), user_package), func_n2(carray_pun));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
   ffi_init_extra_types();

@@ -56861,6 +56861,44 @@ can be severed by invoking
 on the returned object, after which the two no longer share storage,
 and modifications in the original are not reflected in the subrange.
 
+.coNP Function @ carray-pun
+.synb
+.mets (carray-sub < carray << type )
+.syne
+.desc
+The
+.code carray-pun
+creates a new
+.code carray
+object which provides an aliased view of the same data that is referenced by
+the original
+.meta carray
+object.
+
+The
+.meta type
+argument specifies the element type used by the returned aliasing array.
+
+The
+.code carray-pun
+function considers the byte size of the array, which is a product of
+the original length and element size. It then calculates how many elements of
+.meta type
+fit into this size. This value becomes the length of the aliasing array
+which is returned.
+
+Since the returned aliasing array and the original refer to the same
+storage, modifications performed in one view are reflected in the other.
+
+The aliasing array holds a reference to the original, so that as long as
+it is reachable by the garbage collector, so is the original.
+That relationship is severed if
+.code carray-dup
+is invoked on the aliasing array.
+
+The meaning of the aliasing depends entirely on the bitwise representations of
+the types involved.
+
 .SH* INTERACTIVE LISTENER
 
 .SS* Overview
