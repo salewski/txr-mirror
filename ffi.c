@@ -2727,6 +2727,7 @@ static struct txr_ffi_type *ffi_struct_clone(struct txr_ffi_type *orig)
 static val make_ffi_type_struct(val syntax, val lisp_type,
                                 val slots, val types)
 {
+  val self = lit("ffi-type-compile");
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
                                     chk_calloc(1, sizeof *tft));
   ffi_type *ft = coerce(ffi_type *, chk_calloc(1, sizeof *ft));
@@ -2734,7 +2735,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   cnum nmemb = c_num(length(types)), i;
 #if HAVE_LIBFFI
   ffi_type **elements = coerce(ffi_type **,
-                               chk_malloc(sizeof *elements * (nmemb + 1)));
+                               chk_xalloc(sizeof *elements, (nmemb + 1), self));
 #endif
   struct smemb *memb = coerce(struct smemb *,
                               chk_calloc(nmemb, sizeof *memb));
@@ -2882,7 +2883,7 @@ static struct txr_ffi_type *ffi_array_clone(struct txr_ffi_type *orig)
 }
 
 static val make_ffi_type_array(val syntax, val lisp_type,
-                               val dim, val eltype)
+                               val dim, val eltype, val self)
 {
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
                                     chk_calloc(1, sizeof *tft));
@@ -2890,8 +2891,9 @@ static val make_ffi_type_array(val syntax, val lisp_type,
 
   cnum nelem = c_num(dim), i;
 #if HAVE_LIBFFI
-  ffi_type **elements = coerce(ffi_type **, chk_malloc(sizeof *elements *
-                                                       (nelem + 1)));
+  ffi_type **elements = coerce(ffi_type **, chk_xalloc((nelem + 1),
+                                                       sizeof *elements,
+                                                       self));
 #endif
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
 
@@ -3128,7 +3130,7 @@ val ffi_type_compile(val syntax)
                     self, syntax, nao);
 
         {
-          val type = make_ffi_type_array(xsyntax, vec_s, dim, eltype);
+          val type = make_ffi_type_array(xsyntax, vec_s, dim, eltype, self);
           struct txr_ffi_type *tft = ffi_type_struct(type);
 
           if (sym == zarray_s) {
@@ -3808,7 +3810,7 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
   cnum nt = c_num(ntotal), i;
   struct txr_ffi_call_desc *tfcd = coerce(struct txr_ffi_call_desc *,
                                           chk_calloc(1, sizeof *tfcd));
-  ffi_type **args = coerce(ffi_type **, chk_malloc(sizeof *args * nt));
+  ffi_type **args = coerce(ffi_type **, chk_xalloc(nt, sizeof *args, self));
   val obj = cobj(coerce(mem_t *, tfcd), ffi_call_desc_s, &ffi_call_desc_ops);
   ffi_status ffis = FFI_OK;
 
@@ -4697,13 +4699,15 @@ val carray_replace(val carray, val values, val from, val to)
   }
 }
 
-static void carray_ensure_artype(val carray, struct carray *scry)
+static void carray_ensure_artype(val carray, struct carray *scry, val self)
 {
   if (!scry->artype) {
     val dim = num(scry->nelem);
     val syntax = list(carray_s, dim, scry->eltft->syntax, nao);
     struct txr_ffi_type *etft = scry->eltft;
-    set(mkloc(scry->artype, carray), make_ffi_type_array(syntax, vec_s, dim, scry->eltype));
+    set(mkloc(scry->artype, carray), make_ffi_type_array(syntax, vec_s,
+                                                         dim, scry->eltype,
+                                                         self));
 
     {
       struct txr_ffi_type *atft = ffi_type_struct(scry->artype);
@@ -4721,7 +4725,7 @@ static val carray_get_common(val carray, val self, unsigned null_term)
 {
   struct carray *scry = carray_struct_checked(carray);
 
-  carray_ensure_artype(carray, scry);
+  carray_ensure_artype(carray, scry, self);
 
   {
     struct txr_ffi_type *atft = ffi_type_struct(scry->artype);
@@ -4734,7 +4738,7 @@ static void carray_put_common(val carray, val seq, val self, unsigned null_term)
 {
   struct carray *scry = carray_struct_checked(carray);
 
-  carray_ensure_artype(carray, scry);
+  carray_ensure_artype(carray, scry, self);
 
   {
     struct txr_ffi_type *atft = ffi_type_struct(scry->artype);
