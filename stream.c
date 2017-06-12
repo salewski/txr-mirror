@@ -3884,6 +3884,7 @@ val open_command(val path, val mode_str)
 #if HAVE_FORK_STUFF
 val open_process(val name, val mode_str, val args)
 {
+  val self = lit("open-process");
   struct stdio_mode m, m_r = stdio_mode_init_r;
   val mode = normalize_mode(&m, mode_str, m_r);
   int input = m.read != 0;
@@ -3904,12 +3905,16 @@ val open_process(val name, val mode_str, val args)
 
   fds_swizzle(&sfds, (input ? FDS_IN : FDS_OUT) | FDS_ERR);
 
+  if (nargs < 0 || nargs == INT_MAX)
+    uw_throwf(error_s, lit("~s: argument list overflow"), self, nao);
+
+  argv = coerce(char **, chk_xalloc(nargs + 1, sizeof *argv, self));
+
   if (pipe(fd) == -1) {
+    free(argv);
     uw_throwf(file_error_s, lit("opening pipe ~a, pipe syscall failed: ~d/~s"),
               name, num(errno), string_utf8(strerror(errno)), nao);
   }
-
-  argv = coerce(char **, chk_malloc((nargs + 1) * sizeof *argv));
 
   for (i = 0, iter = cons(name, args); iter; i++, iter = cdr(iter)) {
     val arg = car(iter);
@@ -4085,6 +4090,7 @@ val open_process(val name, val mode_str, val args)
 #if HAVE_FORK_STUFF
 static val run(val name, val args)
 {
+  val self = lit("run");
   pid_t pid;
   char **argv = 0;
   val iter;
@@ -4095,7 +4101,10 @@ static val run(val name, val args)
   args = default_null_arg(args);
   nargs = c_num(length(args)) + 1;
 
-  argv = coerce(char **, chk_malloc((nargs + 1) * sizeof *argv));
+  if (nargs < 0 || nargs == INT_MAX)
+    uw_throwf(error_s, lit("~s: argument list overflow"), self, nao);
+
+  argv = coerce(char **, chk_xalloc(nargs + 1, sizeof *argv, self));
 
   for (i = 0, iter = cons(name, args); iter; i++, iter = cdr(iter)) {
     val arg = car(iter);
@@ -4158,6 +4167,7 @@ static val sh(val command)
 #elif HAVE_WSPAWN
 static val run(val command, val args)
 {
+  val self = lit("run");
   const wchar_t **wargv = 0;
   val iter;
   int i, nargs, status;
@@ -4172,7 +4182,10 @@ static val run(val command, val args)
 
   fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR);
 
-  wargv = coerce(const wchar_t **, chk_malloc((nargs + 2) * sizeof *wargv));
+  if (nargs < 0 || nargs == INT_MAX)
+    uw_throwf(error_s, lit("~s: argument list overflow"), self, nao);
+
+  wargv = coerce(const wchar_t **, chk_xalloc(nargs + 1, sizeof *wargv, self));
 
   for (i = 0, iter = cons(command, args); iter; i++, iter = cdr(iter))
     wargv[i] = c_str(car(iter));
