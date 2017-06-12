@@ -2655,10 +2655,8 @@ mem_t *chk_manage_vec(mem_t *old, size_t oldfilled, size_t newfilled,
 
 wchar_t *chk_wmalloc(size_t nwchar)
 {
-  size_t size = nwchar * sizeof (wchar_t);
-  if (size < nwchar)
-    uw_throw(error_s, lit("string size overflow"));
-  return coerce(wchar_t *, chk_malloc(sizeof (wchar_t) * nwchar));
+  return coerce(wchar_t *, chk_xalloc(nwchar, sizeof (wchar_t),
+                                      lit("string operation")));
 }
 
 wchar_t *chk_strdup(const wchar_t *str)
