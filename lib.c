@@ -6695,15 +6695,10 @@ val dupl(val fun)
 val vector(val length, val initval)
 {
   int i;
-  cnum alloc_plus = c_num(length) + 2;
-  size_t size = if3(alloc_plus > 0,
-                    alloc_plus * sizeof (val),
-                    (uw_throwf(error_s, lit("vector: negative length ~a specified"),
-                               length, nao), 0));
-  val *v = (convert(cnum, size / sizeof *v) == alloc_plus)
-           ? coerce(val *, chk_malloc(size))
-           : coerce(val *, uw_throwf(error_s, lit("vector: length ~a is too large"),
-                                     length, nao));
+  ucnum len = c_unum(length);
+  ucnum alloc_plus = len + 2;
+  ucnum size = if3(alloc_plus > len, alloc_plus, -1);
+  val *v = coerce(val *, chk_xalloc(size, sizeof *v, lit("vector")));
   val vec = make_obj();
   vec->v.type = VEC;
   initval = default_null_arg(initval);
@@ -6869,8 +6864,8 @@ val list_vec(val vec)
 val copy_vec(val vec_in)
 {
   val length = length_vec(vec_in);
-  cnum alloc_plus = c_num(length) + 2;
-  val *v = coerce(val *, chk_malloc(alloc_plus * sizeof *v));
+  ucnum alloc_plus = c_unum(length) + 2;
+  val *v = coerce(val *, chk_xalloc(alloc_plus, sizeof *v, lit("copy-vec")));
   val vec = make_obj();
   vec->v.type = VEC;
 #if HAVE_VALGRIND
@@ -6911,7 +6906,7 @@ val sub_vec(val vec_in, val from, val to)
   } else {
     cnum cfrom = c_num(from);
     size_t nelem = c_num(to) - cfrom;
-    val *v = coerce(val *, chk_malloc((nelem + 2) * sizeof *v));
+    val *v = coerce(val *, chk_xalloc((nelem + 2), sizeof *v, lit("sub-vec")));
     val vec = make_obj();
     vec->v.type = VEC;
 #if HAVE_VALGRIND
@@ -7042,23 +7037,23 @@ val replace_vec(val vec_in, val items, val from, val to)
 
 val cat_vec(val list)
 {
-  size_t total = 0;
+  ucnum total = 0;
   val iter;
   val vec, *v;
 
   list = nullify(list);
 
   for (iter = list; iter != nil; iter = cdr(iter)) {
-    size_t newtot = total + c_num(length_vec(car(iter)));
+    ucnum newtot = total + c_unum(length_vec(car(iter)));
     if (newtot < total)
       goto toobig;
     total = newtot;
   }
 
-  if (total > (convert(size_t, -1)/(sizeof (val)) - 2))
+  if (total + 2 < total)
     goto toobig;
 
-  v = coerce(val *, chk_malloc((total + 2) * sizeof *v));
+  v = coerce(val *, chk_xalloc(total + 2, sizeof *v, lit("cat-vec")));
   vec = make_obj();
   vec->v.type = VEC;
 
