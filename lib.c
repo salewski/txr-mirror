@@ -6718,7 +6718,7 @@ val dupl(val fun)
 
 val vector(val length, val initval)
 {
-  int i;
+  unsigned i;
   ucnum len = c_unum(length);
   ucnum alloc_plus = len + 2;
   ucnum size = if3(alloc_plus > len, alloc_plus, -1);

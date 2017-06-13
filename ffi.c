@@ -1409,7 +1409,7 @@ static val ffi_ubit_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_generic_sbit_put(struct txr_ffi_type *tft, val n,
                                  mem_t *dst, val self)
 {
-  mem_t *tmp = zalloca(sizeof (int));
+  mem_t *tmp = coerce(mem_t *, zalloca(sizeof (int)));
   memcpy(tmp, dst, tft->size);
   ffi_sbit_put(tft, n, tmp, self);
   memcpy(dst, tmp, tft->size);
@@ -1418,7 +1418,7 @@ static void ffi_generic_sbit_put(struct txr_ffi_type *tft, val n,
 static val ffi_generic_sbit_get(struct txr_ffi_type *tft,
                                 mem_t *src, val self)
 {
-  mem_t *tmp = zalloca(sizeof (int));
+  mem_t *tmp = coerce(mem_t *, zalloca(sizeof (int)));
   memcpy(tmp, src, tft->size);
   return ffi_sbit_get(tft, tmp, self);
 }
@@ -1426,7 +1426,7 @@ static val ffi_generic_sbit_get(struct txr_ffi_type *tft,
 static void ffi_generic_ubit_put(struct txr_ffi_type *tft, val n,
                                  mem_t *dst, val self)
 {
-  mem_t *tmp = zalloca(sizeof (int));
+  mem_t *tmp = coerce(mem_t *, zalloca(sizeof (int)));
   memcpy(tmp, dst, tft->size);
   ffi_ubit_put(tft, n, tmp, self);
   memcpy(dst, tmp, tft->size);
@@ -1435,7 +1435,7 @@ static void ffi_generic_ubit_put(struct txr_ffi_type *tft, val n,
 static val ffi_generic_ubit_get(struct txr_ffi_type *tft,
                                 mem_t *src, val self)
 {
-  mem_t *tmp = zalloca(sizeof (int));
+  mem_t *tmp = coerce(mem_t *, zalloca(sizeof (int)));
   memcpy(tmp, src, tft->size);
   return ffi_ubit_get(tft, tmp, self);
 }
@@ -2744,7 +2744,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   ucnum most_align = 0;
   int need_out_handler = 0;
   int bit_offs = 0;
-  const int bits_int = 8 * sizeof(int);
+  const unsigned bits_int = 8 * sizeof(int);
 
   ft->type = FFI_TYPE_STRUCT;
   ft->size = 0;
@@ -2800,7 +2800,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       }
 
       if (bits_alloc == 0) {
-        if (most_align < mtft->align)
+        if (most_align < (ucnum) mtft->align)
           most_align = mtft->align;
       }
 
