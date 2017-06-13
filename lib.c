@@ -4327,34 +4327,53 @@ val int_str(val str, val base)
   wchar_t *ptr;
   long value;
   cnum b = c_num(default_arg(base, num_fast(10)));
+  int zerox = 0, octzero = 0, minus = 0, flip = 0;
 
-  /* Standard C idiocy: if base is 16, strtoul and its siblings
-     still recognize the 0x prefix. */
-  if (b == 16) {
-    switch (wcs[0]) {
-    case '+':
-    case '-':
-      switch (wcs[1]) {
-      case '0':
-        switch (wcs[2]) {
-        case 'x': case 'X':
-          return zero;
-        }
-      }
-      break;
+  switch (wcs[0]) {
+  case '-':
+    minus = 1;
+    /* fallthrough */
+  case '+':
+    switch (wcs[1]) {
     case '0':
-      switch (wcs[1]) {
+      switch (wcs[2]) {
       case 'x': case 'X':
-        return zero;
+        zerox = 1;
+        wcs += 3;
+        flip = minus;
+        break;
+      default:
+        octzero = 1;
+        break;
       }
-      break;
     }
+    break;
+  case '0':
+    switch (wcs[1]) {
+    case 'x': case 'X':
+      zerox = 1;
+      wcs += 2;
+    default:
+      octzero = 1;
+    }
+    break;
+  }
+
+  if (base == chr('c')) {
+    b = (zerox ? 16 : (octzero ? 8 : 10));
+  } else if (b == 16) {
+    /* If base is 16, strtoul and its siblings
+       still recognize the 0x prefix. We don't want that;
+       except if base is the character #\c. Otherwise,
+       it is a zero with trailing junk. */
+    if (zerox)
+      return zero;
   } else if (b < 2 || b > 36) {
      uw_throwf(error_s, lit("int-str: invalid base ~s"), base, nao);
   }
 
   /* TODO: detect if we have wcstoll */
-  value = wcstol(wcs, &ptr, b ? b : 10);
+  value = wcstol(wcs, &ptr, b);
 
   if (value == 0 && ptr == wcs)
     return nil;
@@ -4371,6 +4390,8 @@ val int_str(val str, val base)
     if (err != MP_OKAY)
       return nil;
 
+    if (flip)
+      mp_neg(mp(bignum), mp(bignum));
     /* If wcstol overflowed, but the range of long is smaller than
        that of fixnums, that means that the value might not
        actually be a bignum, and so we must normalize.
@@ -4378,6 +4399,9 @@ val int_str(val str, val base)
        never larger than LONG_MAX. */
     return (LONG_MAX < NUM_MAX) ? normalize(bignum) : bignum;
   }
+
+  if (flip)
+    value = -value;
 
   if (value >= NUM_MIN && value <= NUM_MAX)
     return num(value);

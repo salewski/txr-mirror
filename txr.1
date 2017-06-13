@@ -33489,8 +33489,13 @@ ignored.
 The
 .code int-str
 function converts a string of digits in the specified
-radix to an integer value. If the radix isn't specified, it defaults to 10.
-Otherwise it must be an integer in the range 2 to 36.
+.meta radix
+to an integer value. If
+.meta radix
+isn't specified, it defaults to 10.
+Otherwise it must be an integer in the range 2 to 36, or else the character
+.codn #\c .
+
 For radices above 10, letters of the alphabet
 are used for digits:
 .code A
@@ -33499,10 +33504,29 @@ represent a digit whose value is 10,
 represents 11 and
 so forth until
 .codn Z .
-For values of radix above 36, the returned value is
-unspecified. Upper and lower case letters are recognized.
+Upper and lower case letters are recognized.
 Any character which is not a digit of the specified radix is regarded
 as the start of trailing junk at which the extraction of the digits stops.
+
+When
+.meta radix
+is specified as the character object
+.codn #\c ,
+this indicates that a C-language-style integer constant should be
+recognized.  If, after any optional sign, the remainder of
+.meta string
+begins with the character pair
+.code 0x
+then that pair is considered removed from the string, and it is treated
+as base 16 (hexadecimal).  If, after any optional sign, the remainder of
+.meta string
+begins with a leading zero not followed by
+.codn x ,
+then the radix is taken to be 8 (octal). In scanning these formats,
+.code int-str
+function is not otherwise constrained by C language representational
+limitations. Specifically, the input values are taken to be the printed
+representation of arbitrary-precision integers and treated accordingly.
 
 The
 .code flo-str
