@@ -13826,7 +13826,31 @@ If this form is used as a place, then the object must
 support a
 .code lambda-set
 method.
-
+.meIP >> [ carray << index ]
+.meIP >> [ carray << from-index..to-below-index ]
+Element and range indexing is possible on object of type
+.code carray
+which manipulate arrays in a foreign ("C language") representation,
+and are closely associated with the Foreign Function Interface (FFI).
+Just like in the case of sequences, the semantics of referencing
+.code carray
+objects with the bracket notation is based on the functions
+.codn ref ,
+.codn refset ,
+.code sub
+and
+.codn replace .
+These, in turn, rely on the specialized functions.
+.codn carray-ref ,
+.codn carray-refset ,
+.code carray-sub
+and
+.codn carray-replace .
+.meIP >> [ buf << index ]
+Indexing is supported for objects of type
+.codn buf .
+This provides a way to access and store the individual bytes
+of a buffer.
 .RE
 .PP
 
