@@ -45805,21 +45805,36 @@ is equivalent to
 .coIP b
 Converts a string value holding a binary (base two) representation
 to the integer which it denotes. The expression
-.code "(c str)"
+.code "(b str)"
 is equivalent to
 .codn "(toint str 2)" .
+.coIP c
+Converts a string value holding a C-language-style representation
+to the integer which it denotes, meaning that the
+.code 0x
+prefix denotes a hexadecimal value, a leading zero octal, otherwise
+decimal. These prefixes follow the
+.code +
+or
+.code -
+sign, if present.
+The expression
+.code "(c str)"
+is equivalent to
+.codn "(toint str #\ec)" .
 .coIP r
 Converts a string holding a floating-point representation to
 the floating-point value which it denotes. The expression
 .code "(r str)"
 is equivalent to
 .codn "(tofloat str)" .
-.ccIP @, iz @, oz @, xz @ bz and @ rz
+.ccIP @, iz @, oz @, xz @, bz @ cz and @ rz
 Conversion similar to
 .codn i ,
 .codn o ,
 .codn x ,
-.code b
+.codn b ,
+.code c
 and
 .codn r ,
 but using
