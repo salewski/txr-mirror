@@ -96,6 +96,11 @@ val make_buf(val len, val init_val, val alloc_size)
   return obj;
 }
 
+val bufp(val object)
+{
+  return tnil(type(object) == BUF);
+}
+
 val make_borrowed_buf(val len, mem_t *data)
 {
   val obj = make_obj();
@@ -644,6 +649,7 @@ val buf_pprint(val buf, val stream_in)
 void buf_init(void)
 {
   reg_fun(intern(lit("make-buf"), user_package), func_n3o(make_buf, 1));
+  reg_fun(intern(lit("bufp"), user_package), func_n1(bufp));
   reg_fun(intern(lit("buf-trim"), user_package), func_n1(buf_trim));
   reg_fun(intern(lit("buf-set-length"), user_package), func_n3o(buf_set_length, 2));
   reg_fun(intern(lit("length-buf"), user_package), func_n1(length_buf));
