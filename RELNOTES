@@ -1,3 +1,45 @@
+                                    TXR 178
+                                   2017-06-12
+
+
+  Features
+
+  - FFI:
+    - carray objects greatly extended:
+      - element selection with select
+      - assignable indexing and range selection
+      - integration with the [...] syntax, ref, refset, sub and replace.
+      - carray-get and carray-put functions make carrays
+        more convenient for handling C arrays across FFI.
+      - length function supports carray.
+      - carray-pun function lets carray be reinterpreted as
+        an array of a different element type.
+      - carrayp function for testing whether object is carray.
+    - if libffi is missing at build configure time, much more functionality
+      from the FFI module is now retained.
+  - Buffers:
+    - ref and refset indexing supported, along with [...] syntax.
+    - bufp function.
+  - Awk macro:
+    - new fconv conversions c and cz for C notation 0x... hex, 0... octal.
+
+  Bugs
+
+  - Added missing overflow checks in memory allocation code in various
+    places in library: FFI, streams, system interface.
+  - Fixed bug in vector function, allowing the negative sizes -2 and -1
+    to get through.
+  - Awk macro:
+    - fixed broken rng (basic both-endpoint-inclusive form)
+  - FFI:
+    - fixed failure to trigger string conversion for arrays whose
+      element is a character typedef rather than direct character type.
+    - fixed broken get semantics of incomplete (zarray char),
+      and likewise for (zarray bchar) and (zarray wchar).
+      - was getting a vector rather than string.
+
+
+
                                     TXR 177
                                    2017-06-07
 
