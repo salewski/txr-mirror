@@ -52,18 +52,20 @@ val @(coll)@{sym /[A-Za-z0-9_]+_[sk]/}@/[,;]/@\
 #include "lib.h"
 
 @  (repeat :vars (gpp))
-@    (if gpp `#if @{gpp " && "}`)
 @    (repeat)
 extern val @(rep)@gsym, @(last)@gsym;@(end)
+@    (first)
+@(if gpp `#if @{gpp " && "}\n`)extern val @(rep)@gsym, @(last)@gsym;@(end)
 @    (end)
 @    (if gpp "#endif")
 @  (end)
 
 val *protected_sym[] = {
 @  (repeat :vars (gpp))
-@    (if gpp `#if @{gpp " && "}`)
 @    (repeat)
   @(rep)&@gsym, @(last)&@gsym,@(end)
+@    (first)
+@(if gpp `#if @{gpp " && "}\n`)  @(rep)&@gsym, @(last)&@gsym,@(end)
 @    (end)
 @    (if gpp "#endif")
 @  (end)
