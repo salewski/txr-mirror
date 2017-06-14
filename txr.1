@@ -56928,9 +56928,10 @@ then the expected string conversion semantics applies.
 Both of these functions return
 .metn carray .
 
-.coNP Function @ carray-sub
+.coNP Accessor @ carray-sub
 .synb
 .mets (carray-sub < carray >> [ from <> [ to ]])
+.mets (set (carray-sub < carray >> [ from <> [ to ]]) << new-val )
 .syne
 .desc
 The
@@ -56964,6 +56965,12 @@ can be severed by invoking
 .code carray-dup
 on the returned object, after which the two no longer share storage,
 and modifications in the original are not reflected in the subrange.
+
+If
+.code carray-sub
+is used as a syntactic place, behaves exactly like the
+.code sub
+accessor, via a place macro substitution to that form.
 
 .coNP Function @ carray-replace
 .synb

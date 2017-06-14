@@ -526,7 +526,7 @@ static val ffi_set_entries(val dlt, val fun)
     lit("with-dyn-lib"), lit("deffi"), lit("deffi-type"), lit("deffi-cb"),
     lit("deffi-var"), lit("typedef"), lit("sizeof"), lit("alignof"),
     lit("offsetof"), lit("arraysize"), lit("elemsize"), lit("elemtype"),
-    lit("ffi"), lit("carray-ref"),
+    lit("ffi"), lit("carray-ref"), lit("carray-sub"),
     nil
   };
   set_dlt_entries(dlt, name, fun);

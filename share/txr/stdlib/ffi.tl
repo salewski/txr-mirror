@@ -133,3 +133,6 @@
   ^(ffi-type-compile ',type))
 
 (define-accessor carray-ref carray-refset)
+
+(define-place-macro carray-sub (carray : (from 0) (to t))
+  ^(sub ,carray ,from ,to))
