@@ -187,7 +187,7 @@ static void banner(void)
 {
   format(std_output,
          lit("This is the TXR Lisp interactive listener of TXR ~a.\n"
-             "Use the :quit command or type Ctrl-D on empty line to exit.\n"),
+             "Quit with :quit or Ctrl-D on empty line. Ctrl-X ? for cheatsheet.\n"),
          static_str(version), nao);
 }
 #else
