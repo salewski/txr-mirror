@@ -580,6 +580,7 @@ void lisplib_init(void)
   dlt_register(dl_table, error_instantiate, error_set_entries);
   dlt_register(dl_table, keyparams_instantiate, keyparams_set_entries);
   dlt_register(dl_table, ffi_instantiate, ffi_set_entries);
+  reg_fun(intern(lit("try-load"), system_package), func_n1(lisplib_try_load));
 }
 
 val lisplib_try_load(val sym)

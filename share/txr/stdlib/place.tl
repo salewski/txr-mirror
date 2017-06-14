@@ -81,11 +81,15 @@
                      (makunbound ',',place-expr))))
        ,*op-body))
 
+  (defun sys:get-place-macro (sym)
+    (or [*place-macro* sym]
+        (progn (sys:try-load sym) [*place-macro* sym])))
+
   (defun sys:pl-expand (unex-place env)
     (while t
       (let ((place unex-place))
-        (let ((pm-expander [*place-macro* (if (consp unex-place)
-                                            (car unex-place))]))
+        (let ((pm-expander (sys:get-place-macro (if (consp unex-place)
+                                                  (car unex-place)))))
           (when pm-expander
             (sys:setq place (sys:set-macro-ancestor
                               [pm-expander unex-place]
