@@ -2796,7 +2796,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
       if (bits > room) {
         offs = unit_offs + size;
-        bit_offs = 0;
+        bit_offs = bits_alloc = 0;
       }
 
       if (bits_alloc == 0) {
@@ -2804,7 +2804,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
           most_align = mtft->align;
       }
 
-      memb[i].offs = unit_offs;
+      memb[i].offs = offs;
 
 #if HAVE_LITTLE_ENDIAN
       mtft->shift = bits_alloc;
