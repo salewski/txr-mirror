@@ -748,6 +748,103 @@ out:
     return c;
 }
 
+static void show_help(lino_t *l)
+{
+    lino_t *lc = lino_copy(l);
+    unsigned char byte;
+    int nread, i;
+    static const char *help[] = {
+        "^B left     ^A start buf/ln ^T char swap     ^U del ln beg  ^R  hist srch\r"
+        "^F forward  ^E end buf/ln   ^D del right     ^K del ln end  Tab complete\r"
+        "^5 parmatch ^] parmatch     ^W del word left ^V next ch verbatim [p. 1/3]",
+
+        "^L refresh  ^P hist prev    ^S select        ^Q paste   ^J multi ln toggle\r"
+        "^C cancel   ^N hist next    ^^ sel endpt swp ^D sel cut\r"
+        "^Z suspend  ^O undo         ^Y yank          ^W sel + word cut   [p. 2/3]",
+
+        "^X^V verbatim ins mode  ^X^A     ins prev ln atom      ^X^E extrn editor\r"
+        "^X^R ins prev ln        ^X+Enter submit; keep hist pos ^X^Q exch clip/sel\r"
+        "^X^W ins prev ln word   ^X+Tab   substring complete              [p. 3/3]"
+    };
+    lc->mlmode = 1;
+    lc->prompt = "";
+    for (i = 0; i < 3; i++) {
+        unsigned char seq[3];
+        lc->dlen = snprintf(lc->data, sizeof lc->data, "%s", help[i]);
+        lc->dpos = lc->dlen;
+        lc->need_refresh = 1;
+        refresh_line(lc);
+        nread = read(l->ifd, &byte, 1);
+        if (byte == CTL('C'))
+            break;
+        switch (byte) {
+        case CTL('C'):
+            break;
+        back:
+        case CTL('H'): case BACKSPACE:
+            if (i > 0)
+                i -= 2;
+            else
+                break;
+            continue;
+        case ESC:
+            if (read(l->ifd,seq,1) == -1) break;
+            if (read(l->ifd,seq+1,1) == -1) break;
+
+            if (seq[0] == '[') {
+                if (seq[1] >= '0' && seq[1] <= '9') {
+                    if (read(l->ifd,seq+2,1) == -1) break;
+                    if (seq[2] == '~') {
+                        switch(seq[1]) {
+                        case '3': /* Delete key. */
+                            goto back;
+                        }
+                    }
+                } else {
+                    switch(seq[1]) {
+                    case 'A': /* Up */
+                        goto back;
+                    case 'B': /* Down */
+                        continue;
+                    case 'C': /* Right */
+                        continue;
+                    case 'D': /* Left */
+                        goto back;
+                    case 'H': /* Home */
+                    home:
+                        i = -1;
+                        continue;
+                    case 'F': /* End*/
+                    end:
+                        i = 1;
+                        continue;
+                    }
+                }
+            } else if (seq[0] == 'O') {
+                switch(seq[1]) {
+                case 'H': /* Home */
+                    goto home;
+                case 'F': /* End*/
+                    goto end;
+                }
+            }
+            continue;
+        default:
+            continue;
+        }
+
+        break;
+    }
+    lc->prompt = l->prompt;
+    lc->dlen = l->dlen;
+    lc->dpos = l->dpos;
+    memcpy(lc->data, l->data, sizeof lc->data);
+    lc->need_refresh = 1;
+    refresh_line(lc);
+    lino_free(lc);
+    (void) nread;
+}
+
 /* =========================== Line editing ================================= */
 
 /* We define a very simple "append buffer" structure, that is an heap
@@ -1906,6 +2003,10 @@ static int edit(lino_t *l, const char *prompt)
                 ret = l->len;
                 l->save_hist_idx = l->history_index;
                 goto out;
+            case '?':
+                extended = 0;
+                show_help(l);
+                break;
             default:
                 if (isdigit(convert(unsigned char, c))) {
                     if (extend_num < 0)
