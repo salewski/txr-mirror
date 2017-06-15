@@ -2405,6 +2405,7 @@ val sign_extend(val n, val nbits)
       {
         val out = make_ubignum();
         mp_2comp(mp(ntrunc), mp(out), mp(ntrunc)->used);
+        mp_trunc(mp(out), mp(out), c_num(nbits));
         mp_neg(mp(out), mp(out));
         return normalize(out);
       }
