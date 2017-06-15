@@ -57175,6 +57175,45 @@ of the bytes are
 .codn #xFF ,
 the value -1 is returned.
 
+.coNP Functions @ fill-carray and @ put-carray
+.synb
+.mets (fill-array < carray >> [ pos <> [ stream ]])
+.mets (put-array < carray >> [ pos <> [ stream ]])
+.syne
+.desc
+The
+.code fill-array
+and
+.code put-array
+functions perform stream output using the
+.code carray
+object as a buffer.
+
+The semantics of these functions is as follows.
+A temporary buffer is created which aliases the storage of
+.meta carray
+and this buffer is used as an argument in an invocation of, respectively,
+the buffer I/O function
+.meta fill-buf
+or
+.metn put-buf .
+
+The value returned by buffer I/O function is returned.
+
+The
+.meta pos
+and
+.meta stream
+arguments are defaulted exactly in the same manner as by
+.code fill-buf
+and
+.codn put-buf ,
+and have the same meaning. In particular,
+.meta pos
+indicates a byte offset into the
+.meta carray
+object's storage, not an array index.
+
 .SH* INTERACTIVE LISTENER
 
 .SS* Overview

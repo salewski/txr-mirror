@@ -4899,6 +4899,30 @@ val num_carray(val carray)
   return sign_extend(normalize(ubn), unum(bits));
 }
 
+val put_carray(val carray, val offs, val stream)
+{
+  struct carray *scry = carray_struct_checked(carray);
+  struct txr_ffi_type *etft = scry->eltft;
+  ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
+  val buf = make_borrowed_buf(unum(size), scry->data);
+  val pos = default_arg(offs, zero);
+  val ret = put_buf(buf, pos, stream);
+  gc_hint(carray);
+  return ret;
+}
+
+val fill_carray(val carray, val offs, val stream)
+{
+  struct carray *scry = carray_struct_checked(carray);
+  struct txr_ffi_type *etft = scry->eltft;
+  ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
+  val buf = make_borrowed_buf(unum(size), scry->data);
+  val pos = default_arg(offs, zero);
+  val ret = fill_buf(buf, pos, stream);
+  gc_hint(carray);
+  return ret;
+}
+
 void ffi_init(void)
 {
   prot1(&ffi_typedef_hash);
@@ -5011,6 +5035,8 @@ void ffi_init(void)
   reg_fun(intern(lit("carray-num"), user_package), func_n2o(carray_num, 1));
   reg_fun(intern(lit("unum-carray"), user_package), func_n1(unum_carray));
   reg_fun(intern(lit("num-carray"), user_package), func_n1(num_carray));
+  reg_fun(intern(lit("put-carray"), user_package), func_n3o(put_carray, 1));
+  reg_fun(intern(lit("fill-carray"), user_package), func_n3o(fill_carray, 1));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
   ffi_init_extra_types();

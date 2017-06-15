@@ -116,4 +116,6 @@ val carray_unum(val num, val type);
 val carray_num(val num, val type);
 val unum_carray(val carray);
 val num_carray(val carray);
+val put_carray(val carray, val offs, val stream);
+val fill_carray(val carray, val offs, val stream);
 void ffi_init(void);
