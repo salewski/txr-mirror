@@ -57078,6 +57078,103 @@ is invoked on the aliasing array.
 The meaning of the aliasing depends entirely on the bitwise representations of
 the types involved.
 
+.coNP Functions @ carray-unum and @ carray-num
+.synb
+.mets (carray-unum < number <> [ type ])
+.mets (carray-num < number <> [ type ])
+.syne
+.desc
+The
+.code carray-unum
+and
+.code carray-num
+functions convert
+.metn number ,
+an integer, to a binary image, which is then used as
+the underlying storage for a
+.codn carray .
+
+The
+.meta type
+argument, a compiled FFI type, determines the element type for the returned
+.codn carray .
+If it is omitted, it defaults to the
+.code uint
+type, so that the array is effectively of bytes.
+
+Regardless of
+.metn type ,
+these functions first determine the number of bytes required to represent
+.meta number
+in a big endian format. Then the number of elements is determined for the
+array, so that it provides at least as that many bytes of storage. The
+representation of
+.meta number
+is then placed into this storage, such that its least significant byte
+coincides with the last byte of that storage. If the number is smaller
+than the storage provided by the array, it extended with padding bytes on the
+left, near the beginning of the array.
+
+In the case of
+.codn carray-unum ,
+.meta number
+must be a non-negative integer. An unsigned representation is produced
+which carries no sign bit. The representation is as many bytes wide as
+are required to cover the number up to its most significant bit whose
+value is 1. If any padding bytes are required due to the array being larger,
+they are always zero.
+
+The
+.code carray-num
+function encodes negative integers also, using a variable-length two's
+complement representation. The number of bits required to hold the number
+is calculated as the smallest width which can represent the value in two's
+complement, including a sign bit.  Any unused bits in the most significant
+byte are filled with copies of the sign bit: in other words, sign extension
+takes place up to the byte size.  The sign extension continues through the
+padding bytes if the array is larger than the number of bytes required to represent
+.metn number ;
+the padding bytes are filled with the value
+.code #b11111111
+(255) if the number is negative, or else 0 if it is non-negative.
+
+.coNP Functions @ unum-carray and @ num-carray
+.synb
+.mets (unum-carray << carray )
+.mets (num-carray < number <> [ type ])
+.syne
+.desc
+The
+.code unum-carray
+and
+.code num-carray
+functions treat the storage bytes
+.meta carray
+object as the representation of an integer.
+
+The
+.code unum-carray
+function simply treats all of the bytes as a big-endian unsigned integer in
+a pure binary representation, and returns that integer, which is necessarily
+always non-negative.
+
+The
+.code num-carray
+function treats the bytes as a two's complement representation. The returned
+number is negative if the first storage byte of
+.meta carray
+has a 1 in the most significant bit position: in other words, is in the
+range
+.code #x80
+to
+.codn #xFF .
+In this case, the two's complement of the entire representation is calculated:
+all of the bits are inverted, the resulting positive integer is extracted.
+Then 1 is added to that integer, and it is negated. Thus, for example, if all
+of the bytes are
+.codn #xFF ,
+the value -1 is returned.
+
 .SH* INTERACTIVE LISTENER
 
 .SS* Overview

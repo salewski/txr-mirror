@@ -112,4 +112,8 @@ val carray_getz(val carray);
 val carray_put(val array, val seq);
 val carray_putz(val array, val seq);
 val carray_pun(val carray, val type);
+val carray_unum(val num, val type);
+val carray_num(val num, val type);
+val unum_carray(val carray);
+val num_carray(val carray);
 void ffi_init(void);

@@ -4793,6 +4793,112 @@ val carray_pun(val carray, val type)
   return make_carray(type, scry->data, size / tft->size, carray);
 }
 
+val carray_unum(val num, val eltype_in)
+{
+  val self = lit("carray-unum");
+  val eltype = default_arg(eltype_in, ffi_type_compile(uchar_s));
+  struct txr_ffi_type *tft = ffi_type_struct(eltype);
+
+  if (tft->size == 0)
+    uw_throwf(error_s,
+              lit("~a: incomplete type ~s cannot be carray element"),
+              self, tft->syntax, nao);
+
+  switch (type(num)) {
+  case NUM: case CHR:
+    num = bignum(c_num(num));
+    /* fallthrough */
+  case BGNUM:
+    if (minusp(num))
+      uw_throwf(error_s,
+                lit("~a: negative number ~s passed; non-negative required"),
+                self, num, nao);
+    {
+      mp_int *m = mp(num);
+      ucnum size = mp_unsigned_bin_size(m);
+      ucnum nelem = (size + tft->size - 1) / tft->size;
+      mem_t *data = chk_xalloc(nelem, tft->size, self);
+      ucnum delta = nelem * tft->size - size;
+      val ca = make_carray(eltype, data, nelem, nil);
+      memset(data, 0, delta);
+      mp_to_unsigned_bin(m, data + delta);
+      gc_hint(num);
+      return ca;
+    }
+  default:
+    uw_throwf(type_error_s, lit("~a: ~s isn't an integer or character"),
+              self, num, nao);
+  }
+}
+
+val carray_num(val num, val eltype_in)
+{
+  val self = lit("carray-unum");
+  val eltype = default_arg(eltype_in, ffi_type_compile(uchar_s));
+  struct txr_ffi_type *tft = ffi_type_struct(eltype);
+
+  if (tft->size == 0)
+    uw_throwf(error_s,
+              lit("~a: incomplete type ~s cannot be carray element"),
+              self, tft->syntax, nao);
+
+  switch (type(num)) {
+  case NUM: case CHR:
+    num = bignum(c_num(num));
+    /* fallthrough */
+  case BGNUM:
+    {
+      val wi = width(num);
+      val bits = succ(wi);
+      val bytes = ash(plus(bits, num_fast(7)), num_fast(-3));
+      val bitsround = ash(bytes, num_fast(3));
+      val un = logtrunc(num, bitsround);
+      val ube = if3(bignump(un), un, bignum(c_num(un)));
+      mp_int *m = mp(ube);
+      ucnum size = mp_unsigned_bin_size(m);
+      ucnum nelem = (c_unum(bytes) + tft->size - 1) / tft->size;
+      mem_t *data = chk_xalloc(nelem, tft->size, self);
+      ucnum delta = nelem * tft->size - size;
+      val ca = make_carray(eltype, data, nelem, nil);
+      mp_to_unsigned_bin(m, data + delta);
+      memset(data, if3(bit(ube, wi), 0xff, 0), delta);
+      gc_hint(num);
+      gc_hint(ube);
+      return ca;
+    }
+  default:
+    uw_throwf(type_error_s, lit("~a: ~s isn't an integer or character"),
+              self, num, nao);
+  }
+}
+
+val unum_carray(val carray)
+{
+  val self = lit("unum-carray");
+  struct carray *scry = carray_struct_checked(carray);
+  struct txr_ffi_type *etft = scry->eltft;
+  ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
+  val ubn = make_bignum();
+  if ((ucnum) (int) size != size)
+    uw_throwf(error_s, lit("~a: bignum size overflow"), self, nao);
+  mp_read_unsigned_bin(mp(ubn), scry->data, size);
+  return normalize(ubn);
+}
+
+val num_carray(val carray)
+{
+  val self = lit("num-carray");
+  struct carray *scry = carray_struct_checked(carray);
+  struct txr_ffi_type *etft = scry->eltft;
+  ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
+  ucnum bits = size * 8;
+  val ubn = make_bignum();
+  if ((ucnum) (int) size != size || bits / 8 != size)
+    uw_throwf(error_s, lit("~a: bignum size overflow"), self, nao);
+  mp_read_unsigned_bin(mp(ubn), scry->data, size);
+  return sign_extend(normalize(ubn), unum(bits));
+}
+
 void ffi_init(void)
 {
   prot1(&ffi_typedef_hash);
@@ -4901,6 +5007,10 @@ void ffi_init(void)
   reg_fun(intern(lit("carray-put"), user_package), func_n2(carray_put));
   reg_fun(intern(lit("carray-putz"), user_package), func_n2(carray_putz));
   reg_fun(intern(lit("carray-pun"), user_package), func_n2(carray_pun));
+  reg_fun(intern(lit("carray-unum"), user_package), func_n2o(carray_unum, 1));
+  reg_fun(intern(lit("carray-num"), user_package), func_n2o(carray_num, 1));
+  reg_fun(intern(lit("unum-carray"), user_package), func_n1(unum_carray));
+  reg_fun(intern(lit("num-carray"), user_package), func_n1(num_carray));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
   ffi_init_extra_types();
