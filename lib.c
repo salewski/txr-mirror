@@ -9246,6 +9246,11 @@ val ref(val seq, val ind)
       return gethash(seq, ind);
     if (seq->co.cls == carray_s)
       return carray_ref(seq, ind);
+    if (structp(seq)) {
+      val lambda_meth = maybe_slot(seq, lambda_s);
+      if (lambda_meth)
+        return funcall2(lambda_meth, seq, ind);
+    }
     /* fallthrough */
   case CONS:
   case LCONS:
@@ -9283,6 +9288,12 @@ val refset(val seq, val ind, val newval)
       return sethash(seq, ind, newval);
     if (seq->co.cls == carray_s)
       return carray_refset(seq, ind, newval);
+    if (structp(seq)) {
+      val lambda_set_meth = maybe_slot(seq, lambda_set_s);
+      if (lambda_set_meth)
+        return funcall3(lambda_set_meth, seq, ind, newval);
+    }
+    /* fallthrough */
   default:
     type_mismatch(lit("ref: ~s is not a sequence"), seq, nao);
   }

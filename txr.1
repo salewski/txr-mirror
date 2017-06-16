@@ -25596,6 +25596,24 @@ has retrieval and storage; in that case
 .meta index
 isn't restricted to an integer value.
 
+If
+.meta seq
+is a structure, it supports
+.code ref
+if it has a
+.code lambda
+method. The
+.meta index
+argument is passed to that method, and the resulting value is
+returned. Similarly, a structure supports
+.code refset
+if it has a
+.code lambda-set
+method, which is called with
+.meta index
+and
+.metn new-value .
+
 The
 .code ref
 function retrieves an element of
