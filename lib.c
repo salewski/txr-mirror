@@ -1013,6 +1013,7 @@ val nreverse(val in)
 
       return rev;
     }
+  case COBJ:
   case VEC:
   case STR:
     {
@@ -1033,11 +1034,17 @@ val nreverse(val in)
   }
 }
 
-val reverse(val in)
+val reverse(val seq_in)
 {
+  val in = nullify(seq_in);
+
   switch (type(in)) {
   case NIL:
     return nil;
+  case COBJ:
+    if (in->co.cls == carray_s)
+      goto carray;
+    /* fallthrough */
   case CONS:
   case LCONS:
     {
@@ -1048,7 +1055,7 @@ val reverse(val in)
         in = cdr(in);
       }
 
-      return rev;
+      return make_like(rev, seq_in);
     }
   case LSTR:
     in = lazy_str_force(in);
@@ -1056,6 +1063,7 @@ val reverse(val in)
   case VEC:
   case STR:
   case LIT:
+  carray:
     {
       val obj = copy(in);
       cnum len = c_num(length(in));
