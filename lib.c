@@ -107,7 +107,7 @@ val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s, syntax_error_s;
 val timeout_error_s, system_error_s;
 val warning_s, defr_warning_s, restart_s, continue_s;
-val gensym_counter_s, nullify_s, from_list_s, lambda_set_s;
+val gensym_counter_s, nullify_s, from_list_s, lambda_set_s, length_s;
 
 val nothrow_k, args_k, colon_k, auto_k, fun_k;
 val wrap_k, reflect_k;
@@ -9175,8 +9175,17 @@ val length(val seq)
       return hash_count(seq);
     if (seq->co.cls == carray_s)
       return length_carray(seq);
-    if (structp(seq) && maybe_slot(seq, car_s))
-      return length_proper_list(nullify(seq));
+    if (structp(seq)) {
+      val length_meth = maybe_slot(seq, length_s);
+
+      if (length_meth)
+        return funcall1(length_meth, seq);
+
+      if (maybe_slot(seq, car_s))
+        return length_proper_list(nullify(seq));
+
+      type_mismatch(lit("length: ~s has no length or car method"), seq, nao);
+    }
     /* fallthrough */
   default:
     type_mismatch(lit("length: ~s is not a sequence"), seq, nao);
@@ -9204,7 +9213,10 @@ val empty(val seq)
     if (seq->co.cls == hash_s)
       return eq(hash_count(seq), zero);
     if (structp(seq)) {
-      val nullify_meth = maybe_slot(seq, nullify_s);
+      val length_meth = maybe_slot(seq, length_s);
+      val nullify_meth = if2(nilp(length_meth), maybe_slot(seq, nullify_s));
+      if (length_meth)
+        return eq(funcall1(length_meth, seq), zero);
       return if3(nullify_meth && funcall1(nullify_meth, seq), nil, seq);
     }
   default:
@@ -9946,6 +9958,7 @@ static void obj_init(void)
   nullify_s = intern(lit("nullify"), user_package);
   from_list_s = intern(lit("from-list"), user_package);
   lambda_set_s = intern(lit("lambda-set"), user_package);
+  length_s = intern(lit("length"), user_package);
 
   args_k = intern(lit("args"), keyword_package);
   nothrow_k = intern(lit("nothrow"), keyword_package);

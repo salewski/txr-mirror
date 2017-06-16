@@ -24675,6 +24675,51 @@ An instance of this structure can now be used as follows:
      [s "apple"]) -> 3
 .cble
 
+.coNP Method @ length
+.synb
+.mets << object .(length)
+.syne
+.desc
+If a structure has
+.code length
+method, then it can be used as an argument to the
+.code length
+function.
+
+Structures which implement the methods
+.codn lambda ,
+.code lambda-ref
+and
+.code length
+can be treated as abstract vector-like sequences, because such
+structures support the
+.codn ref ,
+.code refset
+and
+.code length
+functions.
+
+For instance, the
+.code nreverse
+function will operate on such objects.
+
+Note: a structure which supports the
+.code car
+method also supports the
+.code length
+function, in a different way. Such a structure is treated by
+.code length
+as a list-like sequence, and its length is measured by walking the
+sequence with
+.code cdr
+operations. If a structure supports both
+.code length
+and
+.codn car ,
+preference is given to
+.codn length ,
+which is likely to be much more efficient.
+
 .coNP Methods @, car @ cdr and @ nullify
 .synb
 .mets << object .(car)
@@ -24698,8 +24743,9 @@ by the functions
 and various other sequence manipulating functions derived from them, when those
 functions are applied to that object.
 
-An object which implements these three methods can be considered to denote
-an abstract sequence.
+An object which implements these three methods can be considered to represent a
+.I list-like
+abstract sequence.
 
 The object's
 .code car
