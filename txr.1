@@ -24908,6 +24908,14 @@ is a structure, it returns
 .cblk
 .meti (copy-struct << object ).
 .cble
+If
+.meta object
+is a
+.codn carray ,
+it returns
+.cblk
+.meti (copy-carray << object ).
+.cble
 Lastly, if
 .meta object
 is a random state, it returns
@@ -56539,6 +56547,23 @@ If
 has an unknown length, then
 .code nil
 is returned.
+
+.coNP Function @ copy-carray
+.synb
+.mets (copy-carray << carray )
+.syne
+.desc
+The
+.code copy-carray
+function returns a duplicate of
+.metn carray .
+
+The duplicate has the same element type and length, but has its own
+copy of the underlying storage. This is true whether or not
+.meta carray
+owns its storage or not. In either case, the duplicate owns
+.I its
+copy of the storage.
 
 .coNP Function @ carray-set-length
 .synb

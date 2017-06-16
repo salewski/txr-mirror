@@ -4407,6 +4407,14 @@ val length_carray(val carray)
   return if3(scry->nelem < 0, nil, num(scry->nelem));
 }
 
+val copy_carray(val carray)
+{
+  struct carray *scry = carray_struct_checked(carray);
+  val copy = make_carray(scry->eltype, scry->data, scry->nelem, nil);
+  carray_dup(copy);
+  return copy;
+}
+
 mem_t *carray_ptr(val carray, val type, val self)
 {
   struct carray *scry = carray_struct_checked(carray);
@@ -5014,6 +5022,7 @@ void ffi_init(void)
   reg_fun(intern(lit("carray-free"), user_package), func_n1(carray_free));
   reg_fun(intern(lit("carray-type"), user_package), func_n1(carray_type));
   reg_fun(intern(lit("length-carray"), user_package), func_n1(length_carray));
+  reg_fun(intern(lit("copy-carray"), user_package), func_n1(copy_carray));
   reg_fun(intern(lit("carray-vec"), user_package), func_n3o(carray_vec, 2));
   reg_fun(intern(lit("carray-list"), user_package), func_n3o(carray_list, 2));
   reg_fun(intern(lit("carray-blank"), user_package), func_n2(carray_blank));

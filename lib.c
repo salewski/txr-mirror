@@ -9131,6 +9131,8 @@ val copy(val seq)
       return copy_hash(seq);
     if (seq->co.cls == random_state_s)
       return make_random_state(seq, nil);
+    if (seq->co.cls == carray_s)
+      return copy_carray(seq);
     if (structp(seq))
       return copy_struct(seq);
     /* fallthrough */
