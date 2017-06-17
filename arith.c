@@ -2446,6 +2446,8 @@ val ash(val a, val bits)
       a = bignum(an);
       /* fallthrough */
     case BGNUM:
+      if (bn < INT_MIN || bn > INT_MAX)
+        goto bad4;
       b = make_bignum();
       if (mp_shift(mp(a), mp(b), bn) != MP_OKAY)
         goto bad;
@@ -2480,6 +2482,9 @@ bad2:
 
 bad3:
   uw_throwf(error_s, lit("ash: non-integral operand ~s"), a, nao);
+
+bad4:
+  uw_throwf(error_s, lit("ash: bit value too large ~s"), bits, nao);
 }
 
 val bit(val a, val bit)
