@@ -794,21 +794,16 @@ val make_like(val list, val thatobj)
 
 val toseq(val seq)
 {
-  switch (type(seq)) {
-  case VEC:
-  case STR:
-  case LIT:
-  case LSTR:
-  case NIL:
-  case CONS:
-  case LCONS:
-    return nullify(seq);
-  case COBJ:
-    if (structp(seq) && maybe_slot(seq, car_s))
-      return nullify(seq);
-    /* fallthrough */
+  seq_info_t si = seq_info(seq);
+
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_LISTLIKE:
+  case SEQ_VECLIKE:
+    return (si.type == COBJ) ? si.obj : nullify(si.obj);
   default:
-    return cons(seq, nil);
+    return cons(si.obj, nil);
   }
 }
 
@@ -1056,13 +1051,15 @@ loc list_collect_revappend(loc ptail, val obj)
 
 val nreverse(val in)
 {
-  switch (type(in)) {
-  case NIL:
+  seq_info_t si = seq_info(in);
+
+  switch (si.kind) {
+  case SEQ_NIL:
     return nil;
-  case CONS:
-  case LCONS:
+  case SEQ_LISTLIKE:
     {
       val rev = nil;
+      val in = si.obj;
 
       while (in) {
         val temp = cdr(in);
@@ -1073,10 +1070,9 @@ val nreverse(val in)
 
       return rev;
     }
-  case COBJ:
-  case VEC:
-  case STR:
+  case SEQ_VECLIKE:
     {
+      val in = si.obj;
       cnum len = c_num(length(in));
       cnum i;
 
@@ -1096,19 +1092,15 @@ val nreverse(val in)
 
 val reverse(val seq_in)
 {
-  val in = nullify(seq_in);
+  seq_info_t si = seq_info(seq_in);
 
-  switch (type(in)) {
-  case NIL:
+  switch (si.kind) {
+  case SEQ_NIL:
     return nil;
-  case COBJ:
-    if (in->co.cls == carray_s)
-      goto carray;
-    /* fallthrough */
-  case CONS:
-  case LCONS:
+  case SEQ_LISTLIKE:
     {
       val rev = nil;
+      val in = si.obj;
 
       while (in) {
         rev = cons(car(in), rev);
@@ -1117,16 +1109,13 @@ val reverse(val seq_in)
 
       return make_like(rev, seq_in);
     }
-  case LSTR:
-    in = lazy_str_force(in);
-    /* fallthrough */
-  case VEC:
-  case STR:
-  case LIT:
-  carray:
+  case SEQ_VECLIKE:
+    if (si.type == LSTR)
+      si.obj = lazy_str_force(si.obj);
+
     {
-      val obj = copy(in);
-      cnum len = c_num(length(in));
+      val obj = copy(si.obj);
+      cnum len = c_num(length(si.obj));
       cnum i;
 
       for (i = 0; i < len / 2; i++) {
