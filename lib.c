@@ -150,6 +150,28 @@ int null_or_missing_p(val v);
 val default_null_arg(val arg);
 #endif
 
+const seq_kind_t seq_kind_tab[MAXTYPE+1] = {
+  SEQ_NIL,      /* NIL */
+  SEQ_NOTSEQ,   /* NUM */
+  SEQ_NOTSEQ,   /* CHR */
+  SEQ_VECLIKE,  /* LIT */
+  SEQ_LISTLIKE, /* CONS */
+  SEQ_VECLIKE,  /* STR */
+  SEQ_NOTSEQ,   /* SYM */
+  SEQ_NOTSEQ,   /* PKG */
+  SEQ_NOTSEQ,   /* FUN */
+  SEQ_VECLIKE,  /* VEC */
+  SEQ_LISTLIKE, /* LCONS */
+  SEQ_VECLIKE,  /* LSTR */
+  SEQ_NOTSEQ,   /* COBJ */
+  SEQ_NOTSEQ,   /* CPTR */
+  SEQ_NOTSEQ,   /* ENV */
+  SEQ_NOTSEQ,   /* BGNUM */
+  SEQ_NOTSEQ,   /* FLNUM */
+  SEQ_NOTSEQ,   /* RNG */
+  SEQ_VECLIKE,  /* BUF */
+};
+
 val identity(val obj)
 {
   return obj;
@@ -255,6 +277,44 @@ val subtypep(val sub, val sup)
 val typep(val obj, val type)
 {
   return subtypep(typeof(obj), type);
+}
+
+seq_info_t seq_info(val obj)
+{
+  seq_info_t ret;
+  type_t to = type(obj);
+
+  if (to != COBJ) {
+    ret.obj = obj;
+    ret.type = to;
+    ret.kind = seq_kind_tab[to];
+    return ret;
+  }
+
+  ret.obj = obj = nullify(obj);
+
+  if (!obj || (ret.type = to = type(obj)) != COBJ) {
+    ret.kind = seq_kind_tab[to];
+  } else {
+    val cls = obj->co.cls;
+
+    if (cls == hash_s) {
+      ret.kind = SEQ_HASHLIKE;
+    } else if (cls == carray_s) {
+      ret.kind = SEQ_VECLIKE;
+    } else if (structp(cls)) {
+      if (maybe_slot(obj, length_s))
+        ret.kind = SEQ_VECLIKE;
+      if (maybe_slot(obj, car_s))
+        ret.kind = SEQ_LISTLIKE;
+      else
+      ret.kind = SEQ_NOTSEQ;
+    } else {
+      ret.kind = SEQ_NOTSEQ;
+    }
+  }
+
+  return ret;
 }
 
 val throw_mismatch(val obj, type_t t)

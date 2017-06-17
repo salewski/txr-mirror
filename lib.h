@@ -345,6 +345,18 @@ typedef val *loc;
 #define mpush(val, lo) (push(val, lo))
 #endif
 
+typedef enum seq_kind {
+  SEQ_NIL, SEQ_LISTLIKE, SEQ_VECLIKE, SEQ_HASHLIKE, SEQ_NOTSEQ
+} seq_kind_t;
+
+typedef struct seq_info {
+  val obj;
+  type_t type;
+  seq_kind_t kind;
+} seq_info_t;
+
+extern const seq_kind_t seq_kind_tab[MAXTYPE+1];
+
 INLINE cnum tag(val obj) { return coerce(cnum, obj) & TAG_MASK; }
 INLINE int is_ptr(val obj) { return obj && tag(obj) == TAG_PTR; }
 INLINE int is_num(val obj) { return tag(obj) == TAG_NUM; }
@@ -486,6 +498,7 @@ val identity(val obj);
 val typeof(val obj);
 val subtypep(val sub, val sup);
 val typep(val obj, val type);
+seq_info_t seq_info(val cobj);
 val throw_mismatch(val obj, type_t);
 INLINE val type_check(val obj, type_t typecode)
 {
