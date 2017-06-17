@@ -2473,13 +2473,13 @@ val ash(val a, val bits)
   }
 
 bad:
-  uw_throwf(error_s, lit("ashift: operation failed on ~s"), a, nao);
+  uw_throwf(error_s, lit("ash: operation failed on ~s"), a, nao);
 
 bad2:
-  uw_throwf(error_s, lit("ashift: bits value ~s is not a fixnum"), bits, nao);
+  uw_throwf(error_s, lit("ash: bits value ~s is not a fixnum"), bits, nao);
 
 bad3:
-  uw_throwf(error_s, lit("ashift: non-integral operand ~s"), a, nao);
+  uw_throwf(error_s, lit("ash: non-integral operand ~s"), a, nao);
 }
 
 val bit(val a, val bit)
