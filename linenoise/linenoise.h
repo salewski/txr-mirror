@@ -80,3 +80,6 @@ int lino_get_noninteractive(lino_t *);
 
 typedef char *lino_atom_cb_t(lino_t *, const char *line, int n, void *ctx);
 void lino_set_atom_cb(lino_t *, lino_atom_cb_t *, void *ctx);
+
+typedef int lino_enter_cb_t(const char *line, void *ctx);
+void lino_set_enter_cb(lino_t *, lino_enter_cb_t *, void *ctx);

@@ -89,6 +89,8 @@ struct lino_state {
     void *cb_ctx;               /* User context for completion callback */
     lino_atom_cb_t *atom_callback;
     void *ca_ctx;               /* User context for atom callback */
+    lino_enter_cb_t *enter_callback;
+    void *ce_ctx;               /* User context for enter callback */
     struct termios orig_termios;        /* In order to restore at exit.*/
     int rawmode;        /* For atexit() function to check if restore is needed*/
     int mlmode;         /* Multi line mode. Default is single line. */
@@ -189,6 +191,12 @@ void lino_set_atom_cb(lino_t *l, lino_atom_cb_t *cb, void *ctx)
 {
     l->atom_callback = cb;
     l->ca_ctx = ctx;
+}
+
+void lino_set_enter_cb(lino_t *l, lino_enter_cb_t *cb, void *ctx)
+{
+    l->enter_callback = cb;
+    l->ce_ctx = ctx;
 }
 
 static void atexit_handler(void);
@@ -1996,6 +2004,15 @@ static int edit(lino_t *l, const char *prompt)
                 }
                 break;
             case ENTER:
+                if (l->mlmode && l->enter_callback &&
+                    !l->enter_callback(l->data, l->ce_ctx))
+                {
+                    if (edit_insert(l,c)) {
+                        l->error = lino_ioerr;
+                        goto out;
+                    }
+                    break;
+                }
                 if (l->mlmode)
                     edit_move_end(l);
                 if (l->need_refresh)
@@ -2050,7 +2067,9 @@ static int edit(lino_t *l, const char *prompt)
 
         switch(c) {
         case ENTER:
-            if (paste) {
+            if (paste || (l->mlmode && l->enter_callback &&
+                          !l->enter_callback(l->data, l->ce_ctx)))
+            {
                 if (edit_insert(l,c)) {
                     l->error = lino_ioerr;
                     goto out;
