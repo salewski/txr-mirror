@@ -9,12 +9,12 @@
  * $Id: mplogic.c,v 1.1 2004/02/08 04:29:29 sting Exp $
  */
 
+#include <stdlib.h>
 #include "config.h"
 #include "mplogic.h"
 #if MP_ARGCHK == 2
 #include <assert.h>
 #endif
-#include <stdlib.h>
 
 #ifdef __cplusplus
 #define convert(TYPE, EXPR) (static_cast<TYPE>(EXPR))
@@ -67,7 +67,7 @@ static unsigned char bitc[] = {
 mp_err mpl_not(mp_int *a, mp_int *b)
 {
   mp_err res;
-  int ix;
+  mp_size ix;
 
   ARGCHK(a != NULL && b != NULL, MP_BADARG);
 
@@ -87,7 +87,7 @@ mp_err mpl_and(mp_int *a, mp_int *b, mp_int *c)
 {
   mp_int *which, *other;
   mp_err res;
-  int ix;
+  mp_size ix;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
@@ -114,7 +114,7 @@ mp_err mpl_or(mp_int *a, mp_int *b, mp_int *c)
 {
   mp_int *which, *other;
   mp_err res;
-  int ix;
+  mp_size ix;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
@@ -139,7 +139,7 @@ mp_err mpl_xor(mp_int *a, mp_int *b, mp_int *c)
 {
   mp_int *which, *other;
   mp_err res;
-  int ix;
+  mp_size ix;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
@@ -168,7 +168,7 @@ mp_err mpl_xor(mp_int *a, mp_int *b, mp_int *c)
 mp_err mpl_rsh(mp_int *a, mp_int *b, mp_digit d)
 {
   mp_err res;
-  mp_digit dshift, bshift;
+  mp_size dshift, bshift;
 
   ARGCHK(a != NULL && b != NULL, MP_BADARG);
 
@@ -186,14 +186,14 @@ mp_err mpl_rsh(mp_int *a, mp_int *b, mp_digit d)
   if (bshift)
   {
     mp_digit prev = 0, next, mask = (1 << bshift) - 1;
-    int ix;
+    mp_size ix;
 
     /* 'mask' is a digit with the lower bshift bits set, the rest
      * clear.  It is used to mask off the bottom bshift bits of each
      * digit, which are then shifted on to the top of the next lower
      * digit.
      */
-    for (ix = USED(b) - 1; ix >= 0; ix--) {
+    for (ix = USED(b) - 1; ix < MP_SIZE_MAX; ix--) {
       /* Take off the lower bits and shift them up... */
       next = (DIGIT(b, ix) & mask) << (DIGIT_BIT - bshift);
 
@@ -213,7 +213,7 @@ mp_err mpl_rsh(mp_int *a, mp_int *b, mp_digit d)
 mp_err mpl_lsh(mp_int *a, mp_int *b, mp_digit d)
 {
   mp_err res;
-  mp_digit dshift, bshift;
+  mp_size dshift, bshift;
 
   ARGCHK(a != NULL && b != NULL, MP_BADARG);
 
@@ -228,7 +228,7 @@ mp_err mpl_lsh(mp_int *a, mp_int *b, mp_digit d)
       return res;
 
   if (bshift) {
-    int ix;
+    mp_size ix;
     mp_digit prev = 0, next, mask = (1 << bshift) - 1;
 
     for (ix = 0; ix < USED(b); ix++) {
@@ -251,19 +251,20 @@ mp_err mpl_lsh(mp_int *a, mp_int *b, mp_digit d)
  *
  * mpl_num_clear() does basically the same thing for clear bits.
  */
-mp_err mpl_num_set(mp_int *a, int *num)
+mp_err mpl_num_set(mp_int *a, mp_size *num)
 {
-  int ix, db, nset = 0;
+  mp_size ix, nset = 0;
   mp_digit cur;
   unsigned char reg;
 
   ARGCHK(a != NULL, MP_BADARG);
 
   for (ix = 0; ix < USED(a); ix++) {
+    size_t i;
     cur = DIGIT(a, ix);
 
-    for (db = 0; db < convert(int, sizeof (mp_digit)); db++) {
-      reg = (cur >> (CHAR_BIT * db)) & UCHAR_MAX;
+    for (i = 0; i < sizeof (mp_digit); i++) {
+      reg = (cur >> (CHAR_BIT * i)) & UCHAR_MAX;
 
       nset += bitc[reg];
     }
@@ -275,19 +276,20 @@ mp_err mpl_num_set(mp_int *a, int *num)
   return MP_OKAY;
 }
 
-mp_err mpl_num_clear(mp_int *a, int *num)
+mp_err mpl_num_clear(mp_int *a, mp_size *num)
 {
-  int ix, db, nset = 0;
+  mp_size ix, nset = 0;
   mp_digit cur;
   unsigned char reg;
 
   ARGCHK(a != NULL, MP_BADARG);
 
   for (ix = 0; ix < USED(a); ix++) {
+    size_t i;
     cur = DIGIT(a, ix);
 
-    for (db = 0; db < convert(int, sizeof (mp_digit)); db++) {
-      reg = (cur >> (CHAR_BIT * db)) & UCHAR_MAX;
+    for (i = 0; i < sizeof (mp_digit); i++) {
+      reg = (cur >> (CHAR_BIT * i)) & UCHAR_MAX;
 
       nset += bitc[UCHAR_MAX - reg];
     }
@@ -305,13 +307,14 @@ mp_err mpl_num_clear(mp_int *a, int *num)
  */
 mp_err mpl_parity(mp_int *a)
 {
-  int ix, par = 0;
+  mp_size ix;
+  unsigned par = 0;
   mp_digit cur;
 
   ARGCHK(a != NULL, MP_BADARG);
 
   for (ix = 0; ix < USED(a); ix++) {
-    int shft = (sizeof (mp_digit) * CHAR_BIT) / 2;
+    unsigned shft = (sizeof (mp_digit) * CHAR_BIT) / 2;
 
     cur = DIGIT(a, ix);
 

@@ -56,7 +56,7 @@ extern mem_t *chk_calloc(size_t n, size_t size);
 #endif
 
 /* Default precision for newly created mp_int's */
-static unsigned int s_mp_defprec = MP_DEFPREC;
+static mp_size s_mp_defprec = MP_DEFPREC;
 
 #define NEG MP_NEG
 #define ZPOS MP_ZPOS
@@ -99,13 +99,13 @@ static const char *s_dmap_1 =
 #else
 
 #if MP_MEMSET == 0
-#define s_mp_setz(dp, count) {int ix;for (ix=0;ix<(count);ix++)(dp)[ix]=0;}
+#define s_mp_setz(dp, count) {mp_size ix;for (ix=0;ix<(count);ix++)(dp)[ix]=0;}
 #else
 #define s_mp_setz(dp, count) memset(dp, 0, (count) * sizeof (mp_digit))
 #endif
 
 #if MP_MEMCPY == 0
-#define s_mp_copy(sp, dp, count) {int ix;for (ix=0;ix<(count);ix++)(dp)[ix]=(sp)[ix];}
+#define s_mp_copy(sp, dp, count) {mp_size ix;for (ix=0;ix<(count);ix++)(dp)[ix]=(sp)[ix];}
 #else
 #define s_mp_copy(sp, dp, count) memcpy(dp, sp, (count) * sizeof (mp_digit))
 #endif
@@ -117,9 +117,9 @@ static const char *s_dmap_1 =
 mp_err s_mp_grow(mp_int *mp, mp_size min); /* increase allocated size */
 mp_err s_mp_pad(mp_int *mp, mp_size min); /* left pad with zeroes */
 
-static int s_highest_bit(mp_digit n);
-int s_highest_bit_mp(mp_int *a);
-mp_err s_mp_set_bit(mp_int *a, int bit);
+static mp_size s_highest_bit(mp_digit n);
+mp_size s_highest_bit_mp(mp_int *a);
+mp_err s_mp_set_bit(mp_int *a, mp_size bit);
 
 void s_mp_clamp(mp_int *mp); /* clip leading zeroes */
 
@@ -152,12 +152,12 @@ mp_err s_mp_div(mp_int *a, mp_int *b); /* magnitude divide */
 mp_err s_mp_2expt(mp_int *a, mp_digit k); /* a = 2^k */
 int s_mp_cmp(mp_int *a, mp_int *b); /* magnitude comparison */
 int s_mp_cmp_d(mp_int *a, mp_digit d); /* magnitude digit compare */
-int s_mp_ispow2(mp_int *v); /* is v a power of 2? */
+mp_size s_mp_ispow2(mp_int *v); /* is v a power of 2? */
 int s_mp_ispow2d(mp_digit d); /* is d a power of 2? */
 
 int s_mp_tovalue(int ch, int r); /* convert ch to value */
 char s_mp_todigit(int val, int r, int low); /* convert val to digit */
-int s_mp_outlen(int bits, int r); /* output length in bytes */
+size_t s_mp_outlen(mp_size bits, int r); /* output length in bytes */
 
 unsigned int mp_get_prec(void)
 {
@@ -207,7 +207,7 @@ mp_err mp_init_array(mp_int mp[], int count)
  */
 mp_err mp_init_size(mp_int *mp, mp_size prec)
 {
-  ARGCHK(mp != NULL && prec > 0, MP_BADARG);
+  ARGCHK(mp != NULL, MP_BADARG);
 
   if ((DIGITS(mp) = coerce(mp_digit *,
                            s_mp_alloc(prec, sizeof (mp_digit)))) == NULL)
@@ -361,7 +361,7 @@ void mp_set(mp_int *mp, mp_digit d)
 
 mp_err mp_set_int(mp_int *mp, long z)
 {
-  int ix;
+  mp_size ix;
   unsigned long v = abs(z);
   mp_err res;
 
@@ -371,7 +371,7 @@ mp_err mp_set_int(mp_int *mp, long z)
   if (z == 0)
     return MP_OKAY; /* shortcut for zero */
 
-  for (ix = sizeof (long) - 1; ix >= 0; ix--) {
+  for (ix = sizeof (long) - 1; ix < MP_SIZE_MAX; ix--) {
 
     if ((res = s_mp_mul_2d(mp, CHAR_BIT)) != MP_OKAY)
       return res;
@@ -392,8 +392,8 @@ mp_err mp_set_int(mp_int *mp, long z)
 mp_err mp_set_uintptr(mp_int *mp, uint_ptr_t z)
 {
   if (sizeof z > sizeof (mp_digit)) {
-    int ix, shift;
-    const int nd = (sizeof z + sizeof (mp_digit) - 1) / sizeof (mp_digit);
+    mp_size ix, shift;
+    const mp_size nd = (sizeof z + sizeof (mp_digit) - 1) / sizeof (mp_digit);
 
     ARGCHK(mp != NULL, MP_BADARG);
 
@@ -436,8 +436,8 @@ mp_err mp_get_uintptr(mp_int *mp, uint_ptr_t *z)
   uint_ptr_t out = 0;
 
 #if MP_DIGIT_SIZE < SIZEOF_PTR
-  int ix;
-  int nd = USED(mp);
+  mp_size ix;
+  mp_size nd = USED(mp);
   for (ix = 0; ix < nd; ix++, out <<= MP_DIGIT_BIT)
     out |= DIGIT(mp, ix);
 #else
@@ -460,9 +460,9 @@ mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z)
 #ifdef HAVE_DOUBLE_INTPTR_T
 mp_err mp_set_double_intptr(mp_int *mp, double_intptr_t z)
 {
-  int ix, shift;
+  mp_size ix, shift;
   double_intptr_t v = z > 0 ? z : -z;
-  const int nd = (sizeof v + sizeof (mp_digit) - 1) / sizeof (mp_digit);
+  const mp_size nd = (sizeof v + sizeof (mp_digit) - 1) / sizeof (mp_digit);
 
   ARGCHK(mp != NULL, MP_BADARG);
 
@@ -1094,7 +1094,7 @@ mp_err mp_expt(mp_int *a, mp_int *b, mp_int *c)
   mp_int s, x;
   mp_err res;
   mp_digit d;
-  int dig, bit;
+  mp_size dig, bit;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
@@ -1235,7 +1235,7 @@ mp_err mp_mod_d(mp_int *a, mp_digit d, mp_digit *c)
 
 mp_err mp_sqrt(mp_int *a, mp_int *b)
 {
-  int mask_shift;
+  mp_size mask_shift;
   mp_int root, guess, *proot = &root, *pguess = &guess;
   mp_int guess_sqr;
   mp_err err = MP_MEM;
@@ -1252,7 +1252,9 @@ mp_err mp_sqrt(mp_int *a, mp_int *b)
   if ((err = mp_init(&guess_sqr)))
     goto cleanup_guess;
 
-  for (mask_shift = s_highest_bit_mp(a) / 2; mask_shift >= 0; mask_shift--) {
+  for (mask_shift = s_highest_bit_mp(a) / 2;
+       mask_shift < MP_SIZE_MAX; mask_shift--)
+  {
     mp_int *temp;
     int cmp;
 
@@ -1364,7 +1366,7 @@ mp_err mp_exptmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
   mp_err res;
   mp_digit d, *db = DIGITS(b);
   mp_size ub = USED(b);
-  int dig, bit;
+  mp_size dig, bit;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
@@ -1569,7 +1571,7 @@ unsigned long mp_hash(mp_int *a)
 {
 #if SIZEOF_LONG > MP_DIGIT_SIZE
   unsigned long hash;
-  int ix;
+  mp_size ix;
 
   if (USED(a) >= 2 * SIZEOF_LONG / MP_DIGIT_SIZE) {
     unsigned long omega = 0;
@@ -1600,7 +1602,7 @@ mp_err mp_gcd(mp_int *a, mp_int *b, mp_int *c)
 {
   mp_err res;
   mp_int u, v, t;
-  mp_size k = 0;
+  mp_digit k = 0;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
@@ -2248,7 +2250,7 @@ mp_err mp_shift(mp_int *a, mp_int *b, int bits)
   }
 
   if (a_neg) {
-    int hb, msd;
+    mp_size hb, msd;
     mp_digit *db;
 
     mp_clear(&tmp);
@@ -2275,7 +2277,7 @@ mp_err mp_bit(mp_int *a, mp_digit bit)
   mp_int tmp;
   mp_err res;
   int a_neg = ISNEG(a);
-  int digit = bit / MP_DIGIT_BIT;
+  mp_digit digit = bit / MP_DIGIT_BIT;
   mp_digit mask = convert(mp_digit, 1) << (bit % MP_DIGIT_BIT);
 
   if (a_neg) {
@@ -2290,7 +2292,7 @@ mp_err mp_bit(mp_int *a, mp_digit bit)
 
 mp_err mp_to_double(mp_int *mp, double *d)
 {
-  int ix;
+  mp_size ix;
   mp_size used = USED(mp);
   mp_digit *dp = DIGITS(mp);
   static double mult;
@@ -2299,7 +2301,7 @@ mp_err mp_to_double(mp_int *mp, double *d)
   if (!mult)
     mult = pow(2.0, MP_DIGIT_BIT);
 
-  for (ix = convert(int, used) - 2; ix >= 0; ix--) {
+  for (ix = used - 2; ix < MP_SIZE_MAX - 1; ix--) {
     out = out * mult;
     out += convert(double, dp[ix]);
   }
@@ -2317,14 +2319,14 @@ mp_err mp_to_double(mp_int *mp, double *d)
  */
 void mp_print(mp_int *mp, FILE *ofp)
 {
-  int ix;
+  mp_size ix;
 
   if (mp == NULL || ofp == NULL)
     return;
 
   fputc((SIGN(mp) == MP_NEG) ? '-' : '+', ofp);
 
-  for (ix = USED(mp) - 1; ix >= 0; ix--) {
+  for (ix = USED(mp) - 1; ix < MP_SIZE_MAX; ix--) {
     fprintf(ofp, DIGIT_FMT, DIGIT(mp, ix));
   }
 }
@@ -2332,7 +2334,7 @@ void mp_print(mp_int *mp, FILE *ofp)
 #endif /* if MP_IOFUNC */
 
 /* Read in a raw value (base 256) into the given mp_int */
-mp_err mp_read_signed_bin(mp_int *mp, unsigned char *str, int len)
+mp_err mp_read_signed_bin(mp_int *mp, unsigned char *str, size_t len)
 {
   mp_err res;
 
@@ -2349,7 +2351,7 @@ mp_err mp_read_signed_bin(mp_int *mp, unsigned char *str, int len)
   return res;
 }
 
-int mp_signed_bin_size(mp_int *mp)
+size_t mp_signed_bin_size(mp_int *mp)
 {
   ARGCHK(mp != NULL, 0);
 
@@ -2367,9 +2369,9 @@ mp_err mp_to_signed_bin(mp_int *mp, unsigned char *str)
 }
 
 /* Read in an unsigned value (base 256) into the given mp_int */
-mp_err mp_read_unsigned_bin(mp_int *mp, unsigned char *str, int len)
+mp_err mp_read_unsigned_bin(mp_int *mp, unsigned char *str, size_t len)
 {
-  int ix;
+  mp_size ix;
   mp_err res;
 
   ARGCHK(mp != NULL && str != NULL && len > 0, MP_BADARG);
@@ -2387,10 +2389,10 @@ mp_err mp_read_unsigned_bin(mp_int *mp, unsigned char *str, int len)
   return MP_OKAY;
 }
 
-int mp_unsigned_bin_size(mp_int *mp)
+size_t mp_unsigned_bin_size(mp_int *mp)
 {
   mp_digit topdig;
-  int count;
+  size_t count;
 
   ARGCHK(mp != NULL, 0);
 
@@ -2428,10 +2430,10 @@ mp_err mp_to_unsigned_bin(mp_int *mp, unsigned char *str)
 
   /* Generate digits in reverse order */
   while (dp < end) {
-    int ix;
+    size_t i;
 
     d = *dp;
-    for (ix = 0; ix < convert(int, sizeof (mp_digit)); ++ix) {
+    for (i = 0; i < sizeof (mp_digit); i++) {
       *spos = d & UCHAR_MAX;
       d >>= CHAR_BIT;
       ++spos;
@@ -2460,18 +2462,18 @@ mp_err mp_to_unsigned_bin(mp_int *mp, unsigned char *str)
   return MP_OKAY;
 }
 
-mp_err mp_to_unsigned_buf(mp_int *mp, unsigned char *str, int size)
+mp_err mp_to_unsigned_buf(mp_int *mp, unsigned char *str, size_t size)
 {
   mp_digit *dp, *end;
   unsigned char *spos;
 
-  ARGCHK(mp != NULL && str != NULL && size >= 0, MP_BADARG);
+  ARGCHK(mp != NULL && str != NULL, MP_BADARG);
 
   for (spos = str + size, dp = DIGITS(mp), end = dp + USED(mp); dp < end; dp++) {
-    int ix;
+    size_t i;
     mp_digit d = *dp;
 
-    for (ix = 0; ix < convert(int, sizeof (mp_digit)); ++ix) {
+    for (i = 0; i < sizeof (mp_digit); i++) {
       if (dp + 1 == end && d == 0)
         break;
       ARGCHK(spos >= str, MP_RANGE);
@@ -2486,14 +2488,14 @@ mp_err mp_to_unsigned_buf(mp_int *mp, unsigned char *str, int size)
   return MP_OKAY;
 }
 
-int mp_count_bits(mp_int *mp)
+mp_size mp_count_bits(mp_int *mp)
 {
   ARGCHK(mp != NULL, MP_BADARG);
 
   return s_highest_bit_mp(mp);
 }
 
-int mp_is_pow_two(mp_int *mp)
+mp_size mp_is_pow_two(mp_int *mp)
 {
   return s_mp_ispow2(mp) >= 0;
 }
@@ -2505,7 +2507,8 @@ int mp_is_pow_two(mp_int *mp)
  */
 mp_err mp_read_radix(mp_int *mp, unsigned char *str, int radix)
 {
-  int ix = 0, val = 0;
+  size_t ix = 0;
+  int val = 0;
   mp_err res;
   mp_sign sig = MP_ZPOS;
 
@@ -2547,9 +2550,9 @@ mp_err mp_read_radix(mp_int *mp, unsigned char *str, int radix)
   return MP_OKAY;
 }
 
-int mp_radix_size(mp_int *mp, int radix)
+mp_size mp_radix_size(mp_int *mp, int radix)
 {
-  int len;
+  size_t len;
   ARGCHK(mp != NULL, 0);
 
   len = s_mp_outlen(mp_count_bits(mp), radix) + 1; /* for NUL terminator */
@@ -2563,16 +2566,16 @@ int mp_radix_size(mp_int *mp, int radix)
 /* Return the number of digits in the specified radix that would be
  * needed to express 'num' digits of 'qty' bits each.
  */
-int mp_value_radix_size(int num, int qty, int radix)
+mp_size mp_value_radix_size(mp_size num, mp_size qty, int radix)
 {
-  ARGCHK(num >= 0 && qty > 0 && radix >= 2 && radix <= MAX_RADIX, 0);
+  ARGCHK(radix >= 2 && radix <= MAX_RADIX, 0);
 
   return s_mp_outlen(num * qty, radix);
 }
 
 mp_err mp_toradix_case(mp_int *mp, unsigned char *str, int radix, int low)
 {
-  int ix, pos = 0;
+  size_t ix, pos = 0;
 
   ARGCHK(mp != NULL && str != NULL, MP_BADARG);
   ARGCHK(radix > 1 && radix <= MAX_RADIX, MP_RANGE);
@@ -2704,7 +2707,7 @@ mp_err s_mp_pad(mp_int *mp, mp_size min)
 void s_mp_setz(mp_digit *dp, mp_size count)
 {
 #if MP_MEMSET == 0
-  int ix;
+  mp_size ix;
 
   for (ix = 0; ix < count; ix++)
     dp[ix] = 0;
@@ -2719,7 +2722,7 @@ void s_mp_setz(mp_digit *dp, mp_size count)
 void s_mp_copy(mp_digit *sp, mp_digit *dp, mp_size count)
 {
 #if MP_MEMCPY == 0
-  int ix;
+  mp_size ix;
 
   for (ix = 0; ix < count; ix++)
     dp[ix] = sp[ix];
@@ -2759,7 +2762,7 @@ void s_mp_clamp(mp_int *mp)
   USED(mp) = du;
 }
 
-static int s_highest_bit(mp_digit n)
+static mp_size s_highest_bit(mp_digit n)
 {
 #if MP_DIGIT_SIZE == 8
   if (n & 0xFFFFFFFF00000000) {
@@ -2970,16 +2973,16 @@ static int s_highest_bit(mp_digit n)
   abort();
 }
 
-int s_highest_bit_mp(mp_int *a)
+mp_size s_highest_bit_mp(mp_int *a)
 {
-  int nd1 = USED(a) - 1;
+  mp_size nd1 = USED(a) - 1;
   return s_highest_bit(DIGIT(a, nd1)) + nd1 * MP_DIGIT_BIT;
 }
 
-mp_err s_mp_set_bit(mp_int *a, int bit)
+mp_err s_mp_set_bit(mp_int *a, mp_size bit)
 {
-  int nd = (bit + MP_DIGIT_BIT) / MP_DIGIT_BIT;
-  int nbit = bit - (nd - 1) * MP_DIGIT_BIT;
+  mp_size nd = (bit + MP_DIGIT_BIT) / MP_DIGIT_BIT;
+  mp_size nbit = bit - (nd - 1) * MP_DIGIT_BIT;
   mp_err res;
 
   if (nd == 0)
@@ -3011,7 +3014,7 @@ mp_err s_mp_lshd(mp_int *mp, mp_size p)
   mp_err res;
   mp_size pos;
   mp_digit *dp;
-  int ix;
+  mp_size ix;
 
   if (p == 0)
     return MP_OKAY;
@@ -3023,7 +3026,7 @@ mp_err s_mp_lshd(mp_int *mp, mp_size p)
   dp = DIGITS(mp);
 
   /* Shift all the significant figures over as needed */
-  for (ix = pos - p; ix >= 0; ix--)
+  for (ix = pos - p; ix < MP_SIZE_MAX - p; ix--)
     dp[ix + p] = dp[ix];
 
   /* Fill the bottom digits with zeroes */
@@ -3075,7 +3078,7 @@ void s_mp_div_2(mp_int *mp)
 
 mp_err s_mp_mul_2(mp_int *mp)
 {
-  int ix;
+  mp_size ix;
   mp_digit kin = 0, kout, *dp = DIGITS(mp);
   mp_err res;
 
@@ -3108,11 +3111,11 @@ mp_err s_mp_mul_2(mp_int *mp)
  */
 void s_mp_mod_2d(mp_int *mp, mp_digit d)
 {
-  unsigned int ndig = (d / DIGIT_BIT), nbit = (d % DIGIT_BIT);
-  int ix;
+  mp_digit ndig = (d / DIGIT_BIT), nbit = (d % DIGIT_BIT);
+  mp_size ix;
   mp_digit dmask, *dp = DIGITS(mp);
 
-  if (convert(int, ndig) >= USED(mp))
+  if (ndig >= USED(mp))
     return;
 
   /* Flush all the bits above 2^d in its digit */
@@ -3135,7 +3138,7 @@ mp_err s_mp_mul_2d(mp_int *mp, mp_digit d)
   mp_err res;
   mp_digit save, next, mask, *dp;
   mp_size used;
-  int ix;
+  mp_size ix;
 
   if ((res = s_mp_lshd(mp, d / DIGIT_BIT)) != MP_OKAY)
     return res;
@@ -3179,7 +3182,7 @@ mp_err s_mp_mul_2d(mp_int *mp, mp_digit d)
  */
 void s_mp_div_2d(mp_int *mp, mp_digit d)
 {
-  int ix;
+  mp_size ix;
   mp_digit save, next, mask, *dp = DIGITS(mp);
 
   s_mp_rshd(mp, d / DIGIT_BIT);
@@ -3188,7 +3191,7 @@ void s_mp_div_2d(mp_int *mp, mp_digit d)
   mask = (convert(mp_digit, 1) << d) - 1;
 
   save = 0;
-  for (ix = USED(mp) - 1; ix >= 0; ix--) {
+  for (ix = USED(mp) - 1; ix < MP_SIZE_MAX; ix--) {
     next = dp[ix] & mask;
     dp[ix] = (dp[ix] >> d) | (save << (DIGIT_BIT - d));
     save = next;
@@ -3335,7 +3338,7 @@ mp_err s_mp_div_d(mp_int *mp, mp_digit d, mp_digit *r)
   mp_int quot;
   mp_err res;
   mp_digit *dp = DIGITS(mp), *qp;
-  int ix;
+  mp_size ix;
 
   if (d == 0)
     return MP_RANGE;
@@ -3348,7 +3351,7 @@ mp_err s_mp_div_d(mp_int *mp, mp_digit d, mp_digit *r)
   qp = DIGITS(&quot);
 
   /* Divide without subtraction */
-  for (ix = USED(mp) - 1; ix >= 0; ix--) {
+  for (ix = USED(mp) - 1; ix < MP_SIZE_MAX; ix--) {
     w = (w << DIGIT_BIT) | dp[ix];
 
     if (w >= d) {
@@ -3626,13 +3629,13 @@ mp_err s_mp_div(mp_int *a, mp_int *b)
   mp_word q;
   mp_err res;
   mp_digit d;
-  int ix;
+  mp_size ix;
 
   if (mp_cmp_z(b) == 0)
     return MP_RANGE;
 
   /* Shortcut if b is power of two */
-  if ((ix = s_mp_ispow2(b)) >= 0) {
+  if ((ix = s_mp_ispow2(b)) < MP_SIZE_MAX) {
     mp_copy(a, b); /* need this for remainder */
     s_mp_div_2d(a, convert(mp_digit, ix));
     s_mp_mod_2d(b, convert(mp_digit, ix));
@@ -3658,9 +3661,9 @@ mp_err s_mp_div(mp_int *a, mp_int *b)
   /* Perform the division itself...woo! */
   ix = USED(a) - 1;
 
-  while (ix >= 0) {
+  while (ix < MP_SIZE_MAX) {
     /* Find a partial substring of a which is at least b */
-    while (s_mp_cmp(&rem, b) < 0 && ix >= 0) {
+    while (s_mp_cmp(&rem, b) < 0 && ix < MP_SIZE_MAX) {
       if ((res = s_mp_lshd(&rem, 1)) != MP_OKAY)
         goto CLEANUP;
 
@@ -3818,10 +3821,10 @@ int s_mp_cmp(mp_int *a, mp_int *b)
   else if (ua < ub)
     return MP_LT;
   else {
-    int ix = ua - 1;
+    mp_size ix = ua - 1;
     mp_digit *ap = DIGITS(a) + ix, *bp = DIGITS(b) + ix;
 
-    while (ix >= 0) {
+    while (ix < MP_SIZE_MAX) {
       if (*ap > *bp)
         return MP_GT;
       else if (*ap < *bp)
@@ -3851,29 +3854,29 @@ int s_mp_cmp_d(mp_int *a, mp_digit d)
     return MP_EQ;
 }
 
-/* Returns -1 if the value is not a power of two; otherwise, it returns
- * k such that v = 2^k, i.e. lg(v).
+/* Returns MP_SIZE_MAX if the value is not a power of two; otherwise, it
+ * returns k such that v = 2^k, i.e. lg(v).
  */
-int s_mp_ispow2(mp_int *v)
+mp_size s_mp_ispow2(mp_int *v)
 {
   mp_digit d, *dp;
   mp_size uv = USED(v);
-  int extra = 0, ix;
+  mp_size extra = 0, ix;
 
   d = DIGIT(v, uv - 1); /* most significant digit of v */
 
   /* quick test */
   if ((d & (d - 1)) != 0)
-    return -1; /* not a power of two */
+    return MP_SIZE_MAX; /* not a power of two */
 
   extra = s_highest_bit(d) - 1;
 
   ix = uv - 2;
   dp = DIGITS(v) + ix;
 
-  while (ix >= 0) {
+  while (ix < MP_SIZE_MAX - 1) {
     if (*dp)
-    return -1; /* not a power of two */
+    return MP_SIZE_MAX; /* not a power of two */
 
     --dp; --ix;
   }
@@ -3955,7 +3958,7 @@ char s_mp_todigit(int val, int r, int low)
  * r representation of a number with 'bits' significant bits.
  * Does not include space for a sign or a NUL terminator.
  */
-int s_mp_outlen(int bits, int r)
+size_t s_mp_outlen(mp_size bits, int r)
 {
-  return convert(int, convert(double, bits) * LOG_V_2(r) + 0.5);
+  return convert(size_t, convert(double, bits) * LOG_V_2(r) + 0.5);
 }

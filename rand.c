@@ -121,7 +121,7 @@ val make_random_state(val seed, val warmup)
   warmup = default_null_arg(warmup);
 
   if (bignump(seed)) {
-    int dig, bit;
+    mp_size dig, bit;
     mp_int *m = mp(seed);
 
     for (i = 0, dig = 0, bit = 0; i < 16 && dig < m->used; i++) {
@@ -222,15 +222,15 @@ val random(val state, val modulus)
 
   if (bignump(modulus)) {
     mp_int *m = mp(modulus);
-    int bits = mp_count_bits(m) - mp_is_pow_two(m);
-    int rands_needed = (bits + 32 - 1) / 32;
-    int msb_rand_bits = bits % 32;
+    ucnum bits = mp_count_bits(m) - mp_is_pow_two(m);
+    ucnum rands_needed = (bits + 32 - 1) / 32;
+    ucnum msb_rand_bits = bits % 32;
     rand32_t msb_rand_mask = convert(rand32_t, -1) >> (32 - msb_rand_bits);
     val out = make_bignum();
     mp_int *om = mp(out);
 
     for (;;) {
-      int i;
+      ucnum i;
       for (i = 0; i < rands_needed; i++) {
         rand32_t rnd = rand32(r);
 #if MP_DIGIT_SIZE >= 4
@@ -264,14 +264,14 @@ val random(val state, val modulus)
     } else if (m > 1) {
       int bits = highest_bit(m - 1);
 #if SIZEOF_PTR >= 8
-      int rands_needed = (bits + 32 - 1) / 32;
+      ucnum rands_needed = (bits + 32 - 1) / 32;
 #endif
-      int msb_rand_bits = bits % 32;
+      ucnum msb_rand_bits = bits % 32;
       rand32_t msb_rand_mask = convert(rand32_t, -1) >> (32 - msb_rand_bits);
       for (;;) {
         cnum out = 0;
 #if SIZEOF_PTR >= 8
-        int i;
+        ucnum i;
 
         for (i = 0; i < rands_needed; i++) {
           rand32_t rnd = rand32(r);

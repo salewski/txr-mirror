@@ -55,8 +55,8 @@ typedef struct {
 #define DIGITS(MP) ((MP)->dp)
 #define DIGIT(MP,N) (MP)->dp[(N)]
 
-unsigned int mp_get_prec(void);
-void mp_set_prec(unsigned int prec);
+mp_size mp_get_prec(void);
+void mp_set_prec(mp_size prec);
 
 mp_err mp_init(mp_int *mp);
 INLINE mp_err mp_init_minimal(mp_int *mp)
@@ -160,17 +160,17 @@ void mp_print(mp_int *mp, FILE *ofp);
 #define BITS 1
 #define BYTES CHAR_BIT
 
-mp_err mp_read_signed_bin(mp_int *mp, unsigned char *str, int len);
-int mp_signed_bin_size(mp_int *mp);
+mp_err mp_read_signed_bin(mp_int *mp, unsigned char *str, size_t len);
+size_t mp_signed_bin_size(mp_int *mp);
 mp_err mp_to_signed_bin(mp_int *mp, unsigned char *str);
 
-mp_err mp_read_unsigned_bin(mp_int *mp, unsigned char *str, int len);
-int mp_unsigned_bin_size(mp_int *mp);
+mp_err mp_read_unsigned_bin(mp_int *mp, unsigned char *str, size_t len);
+size_t mp_unsigned_bin_size(mp_int *mp);
 mp_err mp_to_unsigned_bin(mp_int *mp, unsigned char *str);
-mp_err mp_to_unsigned_buf(mp_int *mp, unsigned char *str, int size);
+mp_err mp_to_unsigned_buf(mp_int *mp, unsigned char *str, size_t size);
 
-int mp_count_bits(mp_int *mp);
-int mp_is_pow_two(mp_int *mp);
+mp_size mp_count_bits(mp_int *mp);
+mp_size mp_is_pow_two(mp_int *mp);
 
 #if MP_COMPAT_MACROS
 #define mp_read_raw(mp, str, len) mp_read_signed_bin((mp), (str), (len))
@@ -182,8 +182,8 @@ int mp_is_pow_two(mp_int *mp);
 #endif
 
 mp_err mp_read_radix(mp_int *mp, unsigned char *str, int radix);
-int mp_radix_size(mp_int *mp, int radix);
-int mp_value_radix_size(int num, int qty, int radix);
+mp_size mp_radix_size(mp_int *mp, int radix);
+mp_size mp_value_radix_size(mp_size num, mp_size qty, int radix);
 mp_err mp_toradix(mp_int *mp, unsigned char *str, int radix);
 mp_err mp_toradix_case(mp_int *mp, unsigned char *str, int radix, int low);
 

@@ -28,6 +28,6 @@ mp_err mpl_xor(mp_int *a, mp_int *b, mp_int *c);
 mp_err mpl_rsh(mp_int *a, mp_int *b, mp_digit d);
 mp_err mpl_lsh(mp_int *a, mp_int *b, mp_digit d);
 
-mp_err mpl_num_set(mp_int *a, int *num);
-mp_err mpl_num_clear(mp_int *a, int *num);
+mp_err mpl_num_set(mp_int *a, mp_size *num);
+mp_err mpl_num_clear(mp_int *a, mp_size *num);
 mp_err mpl_parity(mp_int *a);

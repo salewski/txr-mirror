@@ -3,7 +3,8 @@
  * bitfields inside the mp_int struct.
  */
 typedef int mp_sign;
-typedef int mp_size;
+typedef unsigned mp_size;
+#define MP_SIZE_MAX UINT_MAX
 
 /*
  * Universal. Does not need platform configuration.
@@ -48,9 +49,9 @@ typedef int mp_err;
   #error Failure to configure MPI types on this target platform
 #endif
 
-#define MP_DIGIT_BIT convert(int, CHAR_BIT*sizeof(mp_digit))
+#define MP_DIGIT_BIT convert(mp_size, CHAR_BIT*sizeof(mp_digit))
 #define MP_DIGIT_MAX convert(mp_digit, -1)
-#define MP_WORD_BIT convert(int, CHAR_BIT*sizeof(mp_word))
+#define MP_WORD_BIT convert(mp_size, CHAR_BIT*sizeof(mp_word))
 #define MP_WORD_MAX convert(mp_word, -1)
 
 #define RADIX (convert(mp_word, MP_DIGIT_MAX) + 1)

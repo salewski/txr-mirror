@@ -1341,7 +1341,7 @@ off_t off_t_num(val num)
     }
   case BGNUM:
     {
-      const int odig = (sizeof (off_t) / sizeof (mp_digit));
+      mp_size odig = (sizeof (off_t) / sizeof (mp_digit));
       int i;
       off_t out;
       mp_int *mpn = mp(num);

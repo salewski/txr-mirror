@@ -2750,10 +2750,10 @@ val width(val obj)
     }
   case TAG_PTR:
     if (type(obj) == BGNUM) {
-      int count;
+      mp_size count;
       if (mp_cmp_z(mp(obj)) == MP_LT) {
         mp_int tmp;
-        int i;
+        mp_size i;
 
         mp_2comp(mp(obj), &tmp, mp(obj)->used);
 
@@ -2765,7 +2765,7 @@ val width(val obj)
       } else {
         count = mp_count_bits(mp(obj));
       }
-      return num(count);
+      return unum(count);
     }
   default:
     break;
