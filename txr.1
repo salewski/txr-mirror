@@ -58049,9 +58049,10 @@ The listener operates in one of two modes: line mode and multi-line mode.
 This is determined by the special variable
 .code *listener-multi-line-p*
 whose default value is
-.code nil
-(line mode).  It is possible to toggle between
-line mode and multi-line mode using the Ctrl-J command.
+.code t
+(multi-line mode).  It is possible to toggle between
+line mode and multi-line mode using the Ctrl-J command. The default changed
+starting in \*(TX 179. Versions up to 178 defaulted to single-line mode.
 
 In line mode, all input given to a single prompt appears to be on a single
 line. When the line becomes longer than the screen width, it scrolls
@@ -58067,12 +58068,24 @@ mode, carriage return characters embedded in input are treated as line
 breaks rather than being rendered as
 .codn ^M .
 
-To insert a line break character, use the sequence: Ctrl-V, Ctrl-M.
-Or, equivalently: Ctrl-V, Enter.
-
 Because carriage returns are not line terminators in text files,
 lines which contain embedded carriage returns are correctly saved
 into and retrieved from the persistent history file.
+
+When Enter is typed in multi-line mode, the listener tries to determine whether
+the current input, taken as a whole, is an incomplete expression which requires
+closing punctuation for elements like compound expressions and string literals.
+
+If the input appears incomplete, then the Enter is inserted verbatim at
+the current cursor position, rather than signaling that the line is
+being submitted for evaluation. The Ctrl-X, Enter command sequence also has
+this behavior. This feature was introduced in \*(TX 179, at the same time
+when multi-line mode was made default. In versions prior to 178, Enter
+always submitted the line for evaluation; entering line breaks required
+the use of the Ctrl-V, Enter sequence, the use of extended verbatim mode using
+Ctrl-X, Ctrl-V, or else use of the
+.code :read
+command.
 
 .SS* Reading Forms Directly from the Terminal
 

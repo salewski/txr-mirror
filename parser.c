@@ -929,6 +929,155 @@ static val repl_warning(val out_stream, val exc, struct args *rest)
   uw_throw(continue_s, nil);
 }
 
+static int is_balanced_line(const char *line, void *ctx)
+{
+  enum state {
+    ST_START, ST_CMNT, ST_PAR, ST_BKT, ST_BRC, ST_HASH,
+    ST_LIT, ST_QLIT, ST_RGX, ST_CHR, ST_ESC, ST_AT
+  };
+  int count[32], sp = 0;
+  enum state state[32];
+  count[sp] = 0;
+  state[sp] = ST_START;
+  char ch;
+
+  while ((ch = *line++) != 0) {
+  again:
+    if (sp >= 30)
+      return 1;
+
+    count[sp+1] = 0;
+    count[sp+2] = 0;
+
+    switch (state[sp]) {
+    case ST_START:
+    case ST_PAR:
+    case ST_BKT:
+    case ST_BRC:
+      switch (ch) {
+      case ';':
+        state[++sp] = ST_CMNT;
+        break;
+      case '#':
+        state[++sp] = ST_HASH;
+        break;
+      case '"':
+        state[++sp] = ST_LIT;
+        break;
+      case '`':
+        state[++sp] = ST_QLIT;
+        break;
+      case '(':
+        if (state[sp] == ST_PAR)
+          count[sp]++;
+        else
+          state[++sp] = ST_PAR;
+        break;
+      case '[':
+        if (state[sp] == ST_BKT)
+          count[sp]++;
+        else
+          state[++sp] = ST_BKT;
+        break;
+      case ')': case ']': case '}':
+        {
+          enum state match = state[sp];
+
+          while (sp > 0 && state[sp] != match)
+            sp--;
+          if (state[sp] != match)
+            return 1;
+          if (count[sp] == 0)
+            sp--;
+          else
+            count[sp]--;
+          break;
+        }
+      }
+      break;
+    case ST_CMNT:
+      if (ch == '\r')
+        sp--;
+      break;
+    case ST_HASH:
+      switch (ch) {
+      case '\\':
+        state[sp] = ST_CHR;
+        break;
+      case '/':
+        state[sp] = ST_RGX;
+        break;
+      case ';':
+        --sp;
+        break;
+      default:
+        --sp;
+        goto again;
+      }
+      break;
+    case ST_LIT:
+      switch (ch) {
+      case '"':
+        sp--;
+        break;
+      case '\\':
+        state[++sp] = ST_ESC;
+        break;
+      }
+      break;
+    case ST_QLIT:
+      switch (ch) {
+      case '`':
+        sp--;
+        break;
+      case '\\':
+        state[++sp] = ST_ESC;
+        break;
+      case '@':
+        state[++sp] = ST_AT;
+        break;
+      }
+      break;
+    case ST_RGX:
+      switch (ch) {
+      case '/':
+        sp--;
+        break;
+      case '\\':
+        state[++sp] = ST_ESC;
+        break;
+      }
+      break;
+    case ST_CHR:
+      --sp;
+      break;
+    case ST_ESC:
+      --sp;
+      break;
+    case ST_AT:
+      switch (ch) {
+      case '(':
+        state[sp] = ST_PAR;
+        break;
+      case '[':
+        state[sp] = ST_BKT;
+        break;
+      case '{':
+        state[sp] = ST_BRC;
+        break;
+      default:
+        sp--;
+        break;
+      }
+    }
+  }
+
+  if (state[sp] == ST_CMNT)
+    sp--;
+
+  return sp == 0 && state[sp] == ST_START && count[sp] == 0;
+}
+
 val repl(val bindings, val in_stream, val out_stream)
 {
   val ifd = stream_get_prop(in_stream, fd_k);
@@ -969,6 +1118,7 @@ val repl(val bindings, val in_stream, val out_stream)
 
   lino_set_completion_cb(ls, provide_completions, 0);
   lino_set_atom_cb(ls, provide_atom, 0);
+  lino_set_enter_cb(ls, is_balanced_line, 0);
   lino_set_tempfile_suffix(ls, ".tl");
 
   if (rcfile)
@@ -1144,7 +1294,7 @@ void parse_init(void)
   stream_parser_hash = make_hash(t, nil, nil);
   parser_l_init();
   reg_var(listener_hist_len_s, num_fast(500));
-  reg_var(listener_multi_line_p_s, nil);
+  reg_var(listener_multi_line_p_s, t);
   reg_var(listener_sel_inclusive_p_s, nil);
   reg_fun(circref_s, func_n1(circref));
 }
