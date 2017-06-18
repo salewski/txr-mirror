@@ -41,7 +41,7 @@
 #endif
 
 #ifndef MP_DEFPREC
-#define MP_DEFPREC 16 /* default precision, in digits */
+#define MP_DEFPREC 8 /* default precision, in digits */
 #endif
 
 #ifndef MP_MACRO
