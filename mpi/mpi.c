@@ -3824,13 +3824,13 @@ int s_mp_cmp(mp_int *a, mp_int *b)
     mp_size ix = ua - 1;
     mp_digit *ap = DIGITS(a) + ix, *bp = DIGITS(b) + ix;
 
-    while (ix < MP_SIZE_MAX) {
+    for (;; ix--, ap--, bp--) {
       if (*ap > *bp)
         return MP_GT;
       else if (*ap < *bp)
         return MP_LT;
-
-      --ap; --bp; --ix;
+      if (ix == 0)
+        break;
     }
 
     return MP_EQ;
@@ -3871,14 +3871,16 @@ mp_size s_mp_ispow2(mp_int *v)
 
   extra = s_highest_bit(d) - 1;
 
-  ix = uv - 2;
-  dp = DIGITS(v) + ix;
+  if (uv >= 2) {
+    ix = uv - 2;
+    dp = DIGITS(v) + ix;
 
-  while (ix < MP_SIZE_MAX - 1) {
-    if (*dp)
-    return MP_SIZE_MAX; /* not a power of two */
-
-    --dp; --ix;
+    for (;; ix--, dp--) {
+      if (*dp)
+        return MP_SIZE_MAX; /* not a power of two */
+      if (ix == 0)
+        break;
+    }
   }
 
   return ((uv - 1) * DIGIT_BIT) + extra;
