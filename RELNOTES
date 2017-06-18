@@ -1,3 +1,52 @@
+                                    TXR 179
+                                   2017-06-18
+
+
+  Features
+
+  - FFI:
+    - carray-sub function becomes accessor.
+    - New functions num-carray and unum-carray to treat
+      carray as a binary blob holding an integer,
+      which is extracted.
+    - New functions carray-unum and carray-num, which
+      convert the binary image of an integer into a carray.
+    - New copy-carray function, hooked into copy function.
+  - Listener:
+    - Multi-line mode is now default.
+    - New Ctrl-X ? displays "cheat sheet" of interactive commands.
+    - Open syntax is now detected:
+      - when Enter is pressed in incomplete expression, a line
+        break is inserted.
+  - Sequences:
+    - Functions length and empty now check whether a structure has
+      a method called length and use it.
+    - New concept being introduced: sequence that are not vectors, strings or
+      lists can be "vector-like" or "list-like".
+      - A struct is a vector-like sequence if it has lambda and length
+        methods.
+    - reverse and nreverse handle generalized sequences:
+      - can be applied to carray
+    - ref and refset now work on structs, via lambda and lambda-set.
+      - could be considered a bugfix.
+
+  Bugs
+
+  - Numerics:
+    - Fixed sign-extend function, broken for bignums.
+    - Hardened the MPI library:
+      - Clamped the maximum digit size to prevent numeric overflows
+        in bignum sizes and bit counts.
+      - Introduced new MP_TOOBIG error into MPI library, which is
+        is handled in TXR Lisp runtime.
+      - bit count argument of ash function range checked,
+        since it must fit into the C type int.
+  - Fixed neglect to autload place macros.
+  - FFI:
+    - fixed bugs in bitfield layout.
+
+
+
                                     TXR 178
                                    2017-06-12
 
