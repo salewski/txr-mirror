@@ -4887,9 +4887,9 @@ val unum_carray(val carray)
   struct txr_ffi_type *etft = scry->eltft;
   ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
   val ubn = make_bignum();
-  if ((ucnum) (int) size != size)
-    uw_throwf(error_s, lit("~a: bignum size overflow"), self, nao);
-  mp_read_unsigned_bin(mp(ubn), scry->data, size);
+  mp_err mpe = mp_read_unsigned_bin(mp(ubn), scry->data, size);
+  if (mpe != MP_OKAY)
+    do_mp_error(self, mpe);
   return normalize(ubn);
 }
 
@@ -4901,9 +4901,9 @@ val num_carray(val carray)
   ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
   ucnum bits = size * 8;
   val ubn = make_bignum();
-  if ((ucnum) (int) size != size || bits / 8 != size)
-    uw_throwf(error_s, lit("~a: bignum size overflow"), self, nao);
-  mp_read_unsigned_bin(mp(ubn), scry->data, size);
+  mp_err mpe = mp_read_unsigned_bin(mp(ubn), scry->data, size);
+  if (mpe != MP_OKAY)
+    do_mp_error(self, mpe);
   return sign_extend(normalize(ubn), unum(bits));
 }
 

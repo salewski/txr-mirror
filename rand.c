@@ -217,6 +217,7 @@ val random_fixnum(val state)
 
 val random(val state, val modulus)
 {
+  val self = lit("random");
   struct rand_state *r = coerce(struct rand_state *,
                                 cobj_handle(state, random_state_s));
 
@@ -233,21 +234,28 @@ val random(val state, val modulus)
       ucnum i;
       for (i = 0; i < rands_needed; i++) {
         rand32_t rnd = rand32(r);
+        mp_err mpe = MP_OKAY;
 #if MP_DIGIT_SIZE >= 4
         if (i > 0)
-          mp_mul_2d(om, 32, om);
+          mpe = mp_mul_2d(om, 32, om);
         else
           rnd &= msb_rand_mask;
-        mp_add_d(om, rnd, om);
+        if (mpe == MP_OKAY)
+          mpe = mp_add_d(om, rnd, om);
 #else
         if (i > 0)
-          mp_mul_2d(om, 16, om);
+          mpe = mp_mul_2d(om, 16, om);
         else
           rnd &= msb_rand_mask;
-        mp_add_d(om, rnd & 0xFFFF, om);
-        mp_mul_2d(om, 16, om);
-        mp_add_d(om, rnd >> 16, om);
+        if (mpe == MP_OKAY)
+          mpe = mp_add_d(om, rnd & 0xFFFF, om);
+        if (mpe == MP_OKAY)
+          mpe = mp_mul_2d(om, 16, om);
+        if (mpe == MP_OKAY)
+          mp_add_d(om, rnd >> 16, om);
 #endif
+        if (mpe != MP_OKAY)
+          do_mp_error(self, mpe);
       }
       if (mp_cmp(om, m) != MP_LT) {
         mp_zero(om);
