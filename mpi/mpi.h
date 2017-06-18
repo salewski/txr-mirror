@@ -56,6 +56,12 @@ typedef struct {
 #define DIGITS(MP) ((MP)->dp)
 #define DIGIT(MP,N) (MP)->dp[(N)]
 
+#ifdef __GNUC__
+#define mp_nign __attribute__((warn_unused_result))
+#else
+#define mp_nign
+#endif
+
 mp_size mp_get_prec(void);
 void mp_set_prec(mp_size prec);
 
@@ -66,7 +72,7 @@ INLINE mp_err mp_init_minimal(mp_int *mp)
   return MP_OKAY;
 }
 mp_err mp_init_array(mp_int mp[], int count);
-mp_err mp_init_size(mp_int *mp, mp_size prec);
+mp_nign mp_err mp_init_size(mp_int *mp, mp_size prec);
 mp_err mp_init_copy(mp_int *mp, mp_int *from);
 mp_err mp_copy(mp_int *from, mp_int *to);
 void mp_exch(mp_int *mp1, mp_int *mp2);
@@ -84,45 +90,45 @@ mp_err mp_set_double_intptr(mp_int *mp, double_intptr_t z);
 #endif
 mp_err mp_set_word(mp_int *mp, mp_word w, int sign);
 
-mp_err mp_add_d(mp_int *a, mp_digit d, mp_int *b);
-mp_err mp_sub_d(mp_int *a, mp_digit d, mp_int *b);
-mp_err mp_mul_d(mp_int *a, mp_digit d, mp_int *b);
-mp_err mp_mul_2(mp_int *a, mp_int *c);
-mp_err mp_div_d(mp_int *a, mp_digit d, mp_int *q, mp_digit *r);
-mp_err mp_div_2(mp_int *a, mp_int *c);
-mp_err mp_expt_d(mp_int *a, mp_digit d, mp_int *c);
+mp_nign mp_err mp_add_d(mp_int *a, mp_digit d, mp_int *b);
+mp_nign mp_err mp_sub_d(mp_int *a, mp_digit d, mp_int *b);
+mp_nign mp_err mp_mul_d(mp_int *a, mp_digit d, mp_int *b);
+mp_nign mp_err mp_mul_2(mp_int *a, mp_int *c);
+mp_nign mp_err mp_div_d(mp_int *a, mp_digit d, mp_int *q, mp_digit *r);
+mp_nign mp_err mp_div_2(mp_int *a, mp_int *c);
+mp_nign mp_err mp_expt_d(mp_int *a, mp_digit d, mp_int *c);
 
 mp_err mp_abs(mp_int *a, mp_int *b);
 mp_err mp_neg(mp_int *a, mp_int *b);
 
-mp_err mp_add(mp_int *a, mp_int *b, mp_int *c);
-mp_err mp_sub(mp_int *a, mp_int *b, mp_int *c);
-mp_err mp_mul(mp_int *a, mp_int *b, mp_int *c);
-mp_err mp_mul_2d(mp_int *a, mp_digit d, mp_int *c);
+mp_nign mp_err mp_add(mp_int *a, mp_int *b, mp_int *c);
+mp_nign mp_err mp_sub(mp_int *a, mp_int *b, mp_int *c);
+mp_nign mp_err mp_mul(mp_int *a, mp_int *b, mp_int *c);
+mp_nign mp_err mp_mul_2d(mp_int *a, mp_digit d, mp_int *c);
 #if MP_SQUARE
-mp_err mp_sqr(mp_int *a, mp_int *b);
+mp_nign mp_err mp_sqr(mp_int *a, mp_int *b);
 #else
 #define mp_sqr(a, b) mp_mul(a, a, b)
 #endif
 mp_err mp_div(mp_int *a, mp_int *b, mp_int *q, mp_int *r);
 mp_err mp_div_2d(mp_int *a, mp_digit d, mp_int *q, mp_int *r);
-mp_err mp_expt(mp_int *a, mp_int *b, mp_int *c);
-mp_err mp_2expt(mp_int *a, mp_digit k);
-mp_err mp_sqrt(mp_int *a, mp_int *b);
+mp_nign mp_err mp_expt(mp_int *a, mp_int *b, mp_int *c);
+mp_nign mp_err mp_2expt(mp_int *a, mp_digit k);
+mp_nign mp_err mp_sqrt(mp_int *a, mp_int *b);
 
 #if MP_MODARITH
 mp_err mp_mod(mp_int *a, mp_int *m, mp_int *c);
 mp_err mp_mod_d(mp_int *a, mp_digit d, mp_digit *c);
-mp_err mp_addmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
-mp_err mp_submod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
-mp_err mp_mulmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
+mp_nign mp_err mp_addmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
+mp_nign mp_err mp_submod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
+mp_nign mp_err mp_mulmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
 #if MP_SQUARE
-mp_err mp_sqrmod(mp_int *a, mp_int *m, mp_int *c);
+mp_nign mp_err mp_sqrmod(mp_int *a, mp_int *m, mp_int *c);
 #else
 #define mp_sqrmod(a, m, c) mp_mulmod(a, a, m, c)
 #endif
-mp_err mp_exptmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
-mp_err mp_exptmod_d(mp_int *a, mp_digit d, mp_int *m, mp_int *c);
+mp_nign mp_err mp_exptmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
+mp_nign mp_err mp_exptmod_d(mp_int *a, mp_digit d, mp_int *m, mp_int *c);
 #endif
 
 int mp_cmp_z(mp_int *a);
@@ -137,9 +143,9 @@ unsigned long mp_hash(mp_int *a);
 
 #if MP_NUMTH
 mp_err mp_gcd(mp_int *a, mp_int *b, mp_int *c);
-mp_err mp_lcm(mp_int *a, mp_int *b, mp_int *c);
-mp_err mp_xgcd(mp_int *a, mp_int *b, mp_int *g, mp_int *x, mp_int *y);
-mp_err mp_invmod(mp_int *a, mp_int *m, mp_int *c);
+mp_nign mp_err mp_lcm(mp_int *a, mp_int *b, mp_int *c);
+mp_nign mp_err mp_xgcd(mp_int *a, mp_int *b, mp_int *g, mp_int *x, mp_int *y);
+mp_nign mp_err mp_invmod(mp_int *a, mp_int *m, mp_int *c);
 #endif
 
 mp_err mp_2comp(mp_int *a, mp_int *b, mp_size dig); /* peculiar semantics */
@@ -147,12 +153,12 @@ mp_err mp_and(mp_int *a, mp_int *b, mp_int *c);
 mp_err mp_or(mp_int *a, mp_int *b, mp_int *c);
 mp_err mp_xor(mp_int *a, mp_int *b, mp_int *c);
 mp_err mp_comp(mp_int *a, mp_int *b);
-mp_err mp_trunc_comp(mp_int *a, mp_int *b, mp_digit bits);
-mp_err mp_trunc(mp_int *a, mp_int *b, mp_digit bits);
-mp_err mp_shift(mp_int *a, mp_int *b, int bits); /* + left, - right */
+mp_nign mp_err mp_trunc_comp(mp_int *a, mp_int *b, mp_digit bits);
+mp_nign mp_err mp_trunc(mp_int *a, mp_int *b, mp_digit bits);
+mp_nign mp_err mp_shift(mp_int *a, mp_int *b, int bits); /* + left, - right */
 mp_err mp_bit(mp_int *a, mp_digit bit);
 
-mp_err mp_to_double(mp_int *mp, double *d);
+mp_nign mp_err mp_to_double(mp_int *mp, double *d);
 
 #if MP_IOFUNC
 void mp_print(mp_int *mp, FILE *ofp);
@@ -161,11 +167,11 @@ void mp_print(mp_int *mp, FILE *ofp);
 #define BITS 1
 #define BYTES CHAR_BIT
 
-mp_err mp_read_signed_bin(mp_int *mp, unsigned char *str, size_t len);
+mp_nign mp_err mp_read_signed_bin(mp_int *mp, unsigned char *str, size_t len);
 size_t mp_signed_bin_size(mp_int *mp);
 mp_err mp_to_signed_bin(mp_int *mp, unsigned char *str);
 
-mp_err mp_read_unsigned_bin(mp_int *mp, unsigned char *str, size_t len);
+mp_nign mp_err mp_read_unsigned_bin(mp_int *mp, unsigned char *str, size_t len);
 size_t mp_unsigned_bin_size(mp_int *mp);
 mp_err mp_to_unsigned_bin(mp_int *mp, unsigned char *str);
 mp_err mp_to_unsigned_buf(mp_int *mp, unsigned char *str, size_t size);
@@ -182,7 +188,7 @@ mp_size mp_is_pow_two(mp_int *mp);
 #define mp_tomag(mp, str) mp_to_unsigned_bin((mp), (str))
 #endif
 
-mp_err mp_read_radix(mp_int *mp, unsigned char *str, int radix);
+mp_nign mp_err mp_read_radix(mp_int *mp, unsigned char *str, int radix);
 mp_size mp_radix_size(mp_int *mp, int radix);
 mp_size mp_value_radix_size(mp_size num, mp_size qty, int radix);
 mp_err mp_toradix(mp_int *mp, unsigned char *str, int radix);
