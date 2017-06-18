@@ -85,7 +85,8 @@ static const char *mp_err_string[] = {
   "out of memory", /* MP_MEM */
   "argument out of range", /* MP_RANGE */
   "invalid input parameter", /* MP_BADARG */
-  "result is undefined" /* MP_UNDEF */
+  "result is undefined", /* MP_UNDEF */
+  "result is too large" /* MP_TOOBIG */
 };
 
 static const char *s_dmap_1 =
@@ -208,6 +209,9 @@ mp_err mp_init_array(mp_int mp[], int count)
 mp_err mp_init_size(mp_int *mp, mp_size prec)
 {
   ARGCHK(mp != NULL, MP_BADARG);
+
+  if (prec > MP_MAX_DIGITS)
+    return MP_TOOBIG;
 
   if ((DIGITS(mp) = coerce(mp_digit *,
                            s_mp_alloc(prec, sizeof (mp_digit)))) == NULL)
@@ -2663,6 +2667,9 @@ const char *mp_strerror(mp_err ec)
 /* Make sure there are at least 'min' digits allocated to mp */
 mp_err s_mp_grow(mp_int *mp, mp_size min)
 {
+  if (min > MP_MAX_DIGITS)
+    return MP_TOOBIG;
+
   if (min > ALLOC(mp)) {
     mp_digit *tmp;
 

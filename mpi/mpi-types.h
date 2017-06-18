@@ -54,4 +54,7 @@ typedef int mp_err;
 #define MP_WORD_BIT convert(mp_size, CHAR_BIT*sizeof(mp_word))
 #define MP_WORD_MAX convert(mp_word, -1)
 
+#define MP_MAX_BITS (MP_SIZE_MAX - 1)
+#define MP_MAX_DIGITS (MP_MAX_BITS / MP_DIGIT_BIT)
+
 #define RADIX (convert(mp_word, MP_DIGIT_MAX) + 1)

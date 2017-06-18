@@ -27,7 +27,8 @@
 #define MP_RANGE -3 /* argument out of range */
 #define MP_BADARG -4 /* invalid parameter */
 #define MP_UNDEF -5 /* answer is undefined */
-#define MP_LAST_CODE MP_UNDEF
+#define MP_TOOBIG -6 /* number is too large */
+#define MP_LAST_CODE MP_TOOBIG
 
 #define MP_LT -1
 #define MP_EQ 0
