@@ -1247,10 +1247,10 @@ static val h_trailer(match_line_ctx *c)
     if (!new_pos) {
       LOG_MISMATCH("trailer");
       ret = nil;
+    } else {
+      LOG_MATCH("trailer", new_pos);
+      ret = cons(new_bindings, plus(c->pos, c->base));
     }
-
-    LOG_MATCH("trailer", new_pos);
-    ret = cons(new_bindings, plus(c->pos, c->base));
   }
 
   uw_unwind {
