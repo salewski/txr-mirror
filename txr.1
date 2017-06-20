@@ -44734,6 +44734,38 @@ can rebind
 causing the definition provided by
 .code :output
 to be shadowed.
+
+In the case when the
+.code :output
+argument is a string such that a new stream is opened
+on the file, the
+.code awk
+macro will close that stream when it finishes executing.
+Moreover, that stream is treated uniformly as a member of
+the set of streams that are implicitly managed by the
+redirection macros in the same
+.code awk
+macro invocation. In brief, the implication is that if
+.code :output
+creates a stream for the file path name
+.str "out.txt"
+and somewhere in the same
+.code awk
+macro, there is a redirection of the form, or equivalent to
+.cblk
+(-> "out.txt")
+.cble
+then this redirection shall refer to the same stream
+that was established by
+.codn :output .
+Note also that in this example situation, the expression
+.cblk
+(-> "out.txt" :close)
+.cble
+has the effect of closing the
+.code :output
+stream.
+
 .meIP (:begin << form *)
 All
 .code :begin

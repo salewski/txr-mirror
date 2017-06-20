@@ -50,7 +50,9 @@
     (if (plusp self.rng-n)
       (set self.rng-vec (vector self.rng-n)))
     (unless (streamp self.output)
-      (set self.output (open-file self.output "w")))))
+      (let ((stream (open-file self.output "w")))
+        (set [self.streams ^(:outf ,self.output)] stream
+             self.output stream)))))
 
 (defstruct sys:awk-compile-time ()
   inputs output name lets
