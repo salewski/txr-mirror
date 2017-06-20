@@ -191,10 +191,8 @@
   (hash-update-1 self.streams
                  ^(,kind ,path)
                  (do or @1 (caseq kind
-                             (:inf (open-file path "r"))
-                             (:outf (open-file path "w"))
-                             (:inp (open-command path "r"))
-                             (:outp (open-command path "w"))))
+                             ((:inf :outf) (open-file path mode))
+                             ((:inp :outp) (open-command path mode))))
                  nil))
 
 (defmeth sys:awk-state close-or-flush (self stream kind path val)
@@ -383,7 +381,7 @@
                 (!> (path . body)
                   ^(sys:awk-redir ,',aws-sym *stdout* :outp "w" ,path ,body))
                 (<! (path . body)
-                  ^(sys:awk-redir ,',aws-sym *stdin* :inp "w" ,path ,body)))
+                  ^(sys:awk-redir ,',aws-sym *stdin* :inp "r" ,path ,body)))
        ,*body)))
 
 (defmacro sys:awk-fun-let (aws-sym . body)
