@@ -53584,11 +53584,32 @@ function and is generally useful in conjunction with the Foreign Function
 Interface (FFI).  An arbitrary pointer emanating from a foreign function
 can be captured as a
 .code cptr
-value, which can be passed back into foreign code.
+value, which can be passed back into foreign code. For this purpose, there
+exits also a matching FFI type called
+.codn cptr .
+
+The
+.code cptr
+type supports a symbolic type tag, which defaults to
+.codn nil .
+The type tag plays a role in FFI. The FFI
+.code cptr
+type supports a tag attribute. When a
+.code cptr
+object is converted to a foreign pointer under the control of the FFI
+type, an that FFI type has a tag other than
+.codn nil ,
+the object's tag must exactly match that of the FFI type, or the conversion
+throws an error. In the reverse direction, when a foreign pointer is
+converted to a
+.code cptr
+object under control of the FFI
+.code cptr
+type, the object inherits the type tag from the FFI type.
 
 .coNP Function @ cptr-int
 .synb
-.mets (cptr-int << integer )
+.mets (cptr-int < integer <> [ type-symbol ])
 .syne
 .desc
 The
@@ -53610,9 +53631,17 @@ range; a portion of the range of
 .code bignum
 integers can denote pointers.
 
+The
+.meta type-symbol
+argument should be a symbol. If omitted, it defaults to
+.codn nil .
+This symbol becomes the
+.code cptr
+object's type tag.
+
 .coNP Function @ cptr-obj
 .synb
-.mets (cptr-int << object )
+.mets (cptr-int < object <> [ type-symbol ])
 .syne
 .desc
 The
@@ -53631,6 +53660,14 @@ The raw representation of
 is simply stored in a new instance of
 .code cptr
 and returned.
+
+The
+.meta type-symbol
+argument should be a symbol. If omitted, it defaults to
+.codn nil .
+This symbol becomes the
+.code cptr
+object's type tag.
 
 .coNP Function @ cptr-zap
 .synb
@@ -54288,6 +54325,34 @@ macro. The
 .code closure
 type is useful for passing callbacks to foreign functions: Lisp functions
 which appear to be C functions to foreign code.
+
+.ccIP @ cptr
+The
+.code cptr
+type converts between a foreign pointer and a Lisp object of type
+.codn cptr .
+
+Lisp objects of type
+.code cptr
+are tagged with a symbolic tag, which may be
+.codn nil .
+
+The unparametrized
+.code cptr
+converts foreign pointers to
+.code cptr
+objects which are tagged with
+.codn nil .
+
+In the reverse direction, it converts
+.code cptr
+Lisp objects of type
+.code cptr
+to foreign pointer, without regard for their type tag.
+
+There is a parametrized version of the
+.code cptr
+FFI type, which provides a measure of type safety.
 
 .ccIP @ void
 The
@@ -55051,6 +55116,51 @@ It is possible to create a
 .code carray
 view over a buffer, using
 .codn carray-buf .
+
+.meIP (cptr << type-sym )
+The parametrized
+.code cptr
+type is very similar to the unparametrized
+.codn cptr .
+It also converts between Lisp objects of type
+.code cptr
+and foreign pointers. However, it provides a measure of type safety.
+
+When a foreign pointer is converted to a Lisp object under control of the
+parametrized
+.codn cptr ,
+the resulting Lisp
+.code cptr
+object is tagged with the
+.meta type-sym
+symbol.
+
+In the reverse direction, when a Lisp
+.code cptr
+object is converted to the parametrized type, its type tag must match
+.metn type-sym ,
+or else the conversion fails with an error exception.
+
+Note that if
+.meta type-sym
+is specified as
+.codn nil ,
+then this is precisely equivalent to the unparametrized
+.code cptr
+which doesn't provides the above safety measure.
+
+Pointer type safety is useful, because FFI can be used to create bindings
+to large application programming interfaces (APIs) in which objects of
+many different kinds are referenced using pointer handles. The erroneous
+situation can occur that a FFI call passes a handle of one kind to a function
+expecting a different kind of handle. If all pointer handles are represented
+by a single
+.code cptr
+type, then such a situation proceeds without diagnosis.
+If handles of different types are all mapped to
+.code cptr
+types with different tags, the situation is intercepted and diagnosed
+with an error exception.
 
 .meIP (align < width << type )
 The FFI type operator

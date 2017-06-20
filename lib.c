@@ -7531,14 +7531,16 @@ val cptr_type(val cptr)
   return cptr->co.cls;
 }
 
-val cptr_int(val n)
+val cptr_int(val n, val type_sym_in)
 {
-  return if3(missingp(n), cptr(0), cptr(coerce(mem_t *, c_num(n))));
+  val type_sym = default_null_arg(type_sym_in);
+  return cptr_typed(coerce(mem_t *, c_num(n)), type_sym, 0);
 }
 
-val cptr_obj(val obj)
+val cptr_obj(val obj, val type_sym_in)
 {
-  return cptr(coerce(mem_t *, obj));
+  val type_sym = default_null_arg(type_sym_in);
+  return cptr_typed(coerce(mem_t *, obj), type_sym, 0);
 }
 
 val cptr_zap(val cptr)
