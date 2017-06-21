@@ -27,6 +27,7 @@
 
 #include <limits.h>
 #include <float.h>
+#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -684,8 +685,11 @@ static void ffi_float_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
     break;
   }
 
-  if (v > FLT_MAX || v < FLT_MIN)
-    uw_throwf(error_s, lit("~a: ~s is out of float range"), self, num, nao);
+  {
+    double pv = fabs(v);
+    if (pv > FLT_MAX || (pv != 0.0 && pv < FLT_MIN))
+    uw_throwf(error_s, lit("~a: ~s is out of float range"), self, n, nao);
+  }
 
   align_sw_put(double, dst, *coerce(float *, dst) = v);
 }
