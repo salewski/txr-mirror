@@ -54026,6 +54026,16 @@ only \*(TL
 .code float
 type.
 
+.ccIP @ bool
+The type
+.code bool
+is a typedef name for the
+.code uchar
+instance of the parametrized
+.code bool
+type, which is to say,
+.codn "(bool uchar)" .
+
 .ccIP @ val
 The FFI
 .code val
@@ -54835,6 +54845,56 @@ has been stored by the foreign function, but doesn't free the external
 object.
 
 The get semantics retrieves a Lisp value without freeing.
+
+.meIP (bool << type )
+The parametrized type
+.code bool
+can be derived from any integer or floating-point type. There is also an
+unparametrized
+.code bool
+which is a
+.code typedef
+for the type
+.codn "(bool uchar)" .
+
+The
+.code bool
+type family represents Boolean values, converting between a Lisp Boolean
+and foreign Boolean. A given instance of the
+.code bool
+type inherits all of its characteristics from
+.metn type ,
+such as its size, alignment and foreign representation. It alters the
+get and put semantics, however. The get semantics converts a foreign zero
+value of
+.meta type
+to the Lisp symbol
+.codn nil ,
+and all other values to the symbol
+.codn t .
+The put semantics converts the Lisp symbol
+.code nil
+to a foreign value of zero. Any other Lisp object converts to the foreign
+value one.
+
+The
+.code bool
+types are not integers, and cannot be used as the basis of bitfields:
+syntax like
+.code "(bits 3 (bool uint))"
+is not permitted. However, Boolean bitfields are possible when this
+syntax is turned inside out: the
+.code bool
+type can be derived from a bitfield type, as exemplified by
+.codn "(bool (bits 3 uint))" .
+This simply applies the above described Boolean conversion semantics to a
+three-bit field.  A zero/nonzero value of the field converts to
+.cod3 nil / t
+and a
+.code nil
+or
+.cod2 non- nil
+Lisp value converts to a 0 or 1 field value.
 
 .meIP ({ubit | sbit} << width )
 The

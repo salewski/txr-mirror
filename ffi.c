@@ -126,6 +126,8 @@ val enum_s;
 
 val align_s;
 
+val bool_s;
+
 val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
 static val ffi_typedef_hash;
@@ -1438,6 +1440,21 @@ static val ffi_generic_ubit_get(struct txr_ffi_type *tft,
   mem_t *tmp = coerce(mem_t *, zalloca(sizeof (int)));
   memcpy(tmp, src, tft->size);
   return ffi_ubit_get(tft, tmp, self);
+}
+
+static void ffi_bool_put(struct txr_ffi_type *tft, val truth,
+                         mem_t *dst, val self)
+{
+  val n = truth ? one : zero;
+  struct txr_ffi_type *tgtft = ffi_type_struct(tft->eltype);
+  tgtft->put(tft, n, dst, self); /* tft deliberate */
+}
+
+static val ffi_bool_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  struct txr_ffi_type *tgtft = ffi_type_struct(tft->eltype);
+  val n = tgtft->get(tft, src, self); /* tft deliberate */
+  return null(zerop(n));
 }
 
 #if !HAVE_LITTLE_ENDIAN
@@ -3305,6 +3322,19 @@ val ffi_type_compile(val syntax)
         atft->align = al;
         return altype_copy;
       }
+    } else if (sym == bool_s) {
+      val type_syntax = cadr(syntax);
+      val type = ffi_type_compile(type_syntax);
+      val type_copy = ffi_type_copy(type);
+      struct txr_ffi_type *tft = ffi_type_struct(type_copy);
+      if (tft->eltype || tft->memb != 0)
+        uw_throwf(error_s, lit("~a: type ~s can't be basis for bool"),
+                  self, tft->syntax, nao);
+      tft->syntax = type_syntax;
+      tft->eltype = type;
+      tft->get = ffi_bool_get;
+      tft->put = ffi_bool_put;
+      return type_copy;
     }
 
     uw_throwf(error_s, lit("~a: unrecognized type operator: ~s"),
@@ -3653,6 +3683,8 @@ static void ffi_init_types(void)
                                             &ffi_type_void,
                                             ffi_void_put, ffi_void_get,
                                             0, 0));
+
+  ffi_typedef(bool_s, ffi_type_compile(cons(bool_s, cons(uchar_s, nil))));
 }
 
 static val ffi_type_lookup(val sym)
@@ -4994,6 +5026,7 @@ void ffi_init(void)
   bit_s = intern(lit("bit"), user_package);
   enum_s = intern(lit("enum"), user_package);
   align_s = intern(lit("align"), user_package);
+  bool_s = intern(lit("bool"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);
   ffi_closure_s = intern(lit("ffi-closure"), user_package);
