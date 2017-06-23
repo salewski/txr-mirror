@@ -110,7 +110,7 @@ val le_float_s, le_double_s;
 
 val array_s, zarray_s, carray_s;
 
-val struct_s;
+val struct_s, union_s;
 
 val str_d_s, wstr_s, wstr_d_s, bstr_s, bstr_d_s;
 
@@ -2628,6 +2628,52 @@ static val ffi_enum_rget(struct txr_ffi_type *tft, mem_t *src, val self)
 
 #endif
 
+static struct txr_ffi_type *ffi_find_memb(struct txr_ffi_type *tft, val name)
+{
+  cnum i;
+  for (i = 0; i < tft->nelem; i++) {
+    if (tft->memb[i].mname == name)
+      return tft->memb[i].mtft;
+  }
+
+  return 0;
+}
+
+static void ffi_memb_not_found(val type, val name, val self)
+{
+  uw_throwf(error_s, lit("~a: ~s doesn't name a member of ~s"),
+            type, name, self, nao);
+}
+
+static val make_union_tft(mem_t *buf, struct txr_ffi_type *tft);
+
+static val ffi_union_in(struct txr_ffi_type *tft, int copy, mem_t *src,
+                        val uni, val self)
+{
+  if (copy) {
+    if (uni == nil) {
+      uni = make_union_tft(src, tft);
+    } else {
+      mem_t *ptr = union_get_ptr(uni);
+      memcpy(ptr, src, tft->size);
+    }
+  }
+
+  return uni;
+}
+
+static void ffi_union_put(struct txr_ffi_type *tft, val uni,
+                          mem_t *dst, val self)
+{
+  mem_t *ptr = union_get_ptr(uni);
+  memcpy(dst, ptr, tft->size);
+}
+
+static val ffi_union_get(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  return make_union_tft(src, tft);
+}
+
 static val bitfield_syntax_p(val syntax)
 {
   if (!consp(syntax)) {
@@ -2870,6 +2916,86 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   return obj;
 }
 
+static val make_ffi_type_union(val syntax, val lisp_type,
+                               val slots, val types)
+{
+  struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
+                                    chk_calloc(1, sizeof *tft));
+  ffi_type *ft = coerce(ffi_type *, chk_calloc(1, sizeof *ft));
+
+  cnum nmemb = c_num(length(types)), i;
+  struct smemb *memb = coerce(struct smemb *,
+                              chk_calloc(nmemb, sizeof *memb));
+  val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_enum_ops);
+  ucnum most_align = 0;
+  ucnum biggest_size = 0;
+  const unsigned bits_int = 8 * sizeof(int);
+
+  tft->self = obj;
+  tft->ft = ft;
+  tft->syntax = syntax;
+  tft->lt = lisp_type;
+  tft->nelem = nmemb;
+  tft->clone = ffi_struct_clone;
+  tft->put = ffi_union_put;
+  tft->get = ffi_union_get;
+  tft->in = ffi_union_in;
+  tft->alloc = ffi_fixed_alloc;
+  tft->free = free;
+  tft->memb = memb;
+
+  for (i = 0; i < nmemb; i++) {
+    val type = pop(&types);
+    val slot = pop(&slots);
+    struct txr_ffi_type *mtft = ffi_type_struct(type);
+
+    memb[i].mtype = type;
+    memb[i].mname = slot;
+    memb[i].mtft = mtft;
+    memb[i].offs = 0;
+
+    if (most_align < (ucnum) mtft->align)
+      most_align = mtft->align;
+
+    if (biggest_size < (ucnum) mtft->size)
+      biggest_size = mtft->size;
+
+    if (bitfield_syntax_p(mtft->syntax)) {
+      ucnum bits = mtft->nelem;
+
+      if (bits == 0) {
+        nmemb--, i--;
+        continue;
+      }
+
+#if HAVE_LITTLE_ENDIAN
+      mtft->shift = 0;
+#else
+      mtft->shift = bits_int - bits;
+#endif
+      if (bits == bits_int)
+        mtft->mask = UINT_MAX;
+      else
+        mtft->mask = ((1U << bits) - 1) << mtft->shift;
+    }
+  }
+
+  tft->nelem = i;
+
+  tft->size = biggest_size;
+  tft->align = most_align;
+
+#if HAVE_LIBFFI
+  ft->type = FFI_TYPE_STRUCT;
+  ft->size = tft->size;
+  ft->alignment = tft->align;
+  ft->elements = tft->elements;
+#endif
+
+  return obj;
+}
+
+
 static struct txr_ffi_type *ffi_array_clone(struct txr_ffi_type *orig)
 {
   struct txr_ffi_type *copy = ffi_simple_clone(orig);
@@ -3045,7 +3171,8 @@ static val ffi_struct_compile(val membs, val *ptypes, val self)
       uw_throwf(error_s, lit("~a: excess elements in type-member pair ~s"),
                 self, mp, nao);
     if (ctft->size == 0)
-      uw_throwf(error_s, lit("~a: incomplete type ~s cannot be struct member"),
+      uw_throwf(error_s,
+                lit("~a: incomplete type ~s cannot be struct/union member"),
                 self, type, nao);
     pttail = list_collect(pttail, comp_type);
     pstail = list_collect(pstail, name);
@@ -3076,6 +3203,15 @@ val ffi_type_compile(val syntax)
       val xsyntax = cons(struct_s,
                          cons(sname, membs));
       return make_ffi_type_struct(xsyntax, stype, slots, types);
+    } else if (sym == union_s) {
+      val name = cadr(syntax);
+      val membs = cddr(syntax);
+      val sname = if3(name, name, gensym(lit("ffi-union-")));
+      val types;
+      val slots = ffi_struct_compile(membs, &types, self);
+      val xsyntax = cons(struct_s,
+                         cons(sname, membs));
+      return make_ffi_type_union(xsyntax, union_s, slots, types);
     } else if (sym == array_s || sym == zarray_s) {
       if (length(syntax) == two) {
         val eltype_syntax = cadr(syntax);
@@ -4938,6 +5074,130 @@ val fill_carray(val carray, val offs, val stream)
   return ret;
 }
 
+struct uni {
+  struct txr_ffi_type *tft;
+  mem_t *data;
+};
+
+static struct uni *uni_struct(val obj)
+{
+  return coerce(struct uni *, obj->co.handle);
+}
+
+static struct uni *uni_struct_checked(val obj)
+{
+  return coerce(struct uni *, cobj_handle(obj, union_s));
+}
+
+static void union_destroy_op(val obj)
+{
+  struct uni *us = uni_struct(obj);
+  free(us->data);
+  us->data = 0;
+  free(us);
+}
+
+static void union_mark_op(val obj)
+{
+  struct uni *us = uni_struct(obj);
+  gc_mark(us->tft->self);
+}
+
+static struct cobj_ops union_ops =
+  cobj_ops_init(eq,
+                cobj_print_op,
+                union_destroy_op,
+                union_mark_op,
+                cobj_eq_hash_op);
+
+static val make_union_common(mem_t *data, struct txr_ffi_type *tft)
+{
+  struct uni *us = coerce(struct uni *, chk_calloc(1, sizeof *us));
+  val obj = cobj(coerce(mem_t *, us), union_s, &union_ops);
+  us->tft = tft;
+  us->data = data;
+  return obj;
+}
+
+static val make_union_tft(mem_t *data_in, struct txr_ffi_type *tft)
+{
+  mem_t *data = chk_copy_obj(data_in, tft->size);
+  return make_union_common(data, tft);
+}
+
+mem_t *union_get_ptr(val uni)
+{
+  struct uni *us = uni_struct_checked(uni);
+  return us->data;
+}
+
+val make_union(val type)
+{
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  mem_t *data = chk_calloc(1, tft->size);
+  return make_union_common(data, tft);
+}
+
+val union_members(val uni)
+{
+  struct uni *us = uni_struct_checked(uni);
+  struct txr_ffi_type *tft = us->tft;
+  cnum i;
+  list_collect_decl (out, ptail);
+
+  for (i = 0; i < tft->nelem; i++)
+    ptail = list_collect(ptail, tft->memb[i].mname);
+
+  return out;
+}
+
+val union_get(val uni, val memb)
+{
+  val self = lit("union-get");
+  struct uni *us = uni_struct_checked(uni);
+  struct txr_ffi_type *tft = us->tft;
+  struct txr_ffi_type *mtft = ffi_find_memb(tft, memb);
+  if (mtft == 0)
+    ffi_memb_not_found(tft->self, memb, self);
+  return mtft->get(mtft, us->data, self);
+}
+
+val union_put(val uni, val memb, val newval)
+{
+  val self = lit("union-put");
+  struct uni *us = uni_struct_checked(uni);
+  struct txr_ffi_type *tft = us->tft;
+  struct txr_ffi_type *mtft = ffi_find_memb(tft, memb);
+  if (mtft == 0)
+    ffi_memb_not_found(tft->self, memb, self);
+  mtft->put(mtft, newval, us->data, self);
+  return newval;
+}
+
+val union_in(val uni, val memb, val memb_obj)
+{
+  val self = lit("union-in");
+  struct uni *us = uni_struct_checked(uni);
+  struct txr_ffi_type *tft = us->tft;
+  struct txr_ffi_type *mtft = ffi_find_memb(tft, memb);
+  if (mtft == 0)
+    ffi_memb_not_found(tft->self, memb, self);
+  return mtft->in(mtft, 0, us->data, memb_obj, self);
+}
+
+val union_out(val uni, val memb, val memb_obj)
+{
+  val self = lit("union-out");
+  struct uni *us = uni_struct_checked(uni);
+  struct txr_ffi_type *tft = us->tft;
+  struct txr_ffi_type *mtft = ffi_find_memb(tft, memb);
+  if (mtft == 0)
+    ffi_memb_not_found(tft->self, memb, self);
+  mtft->out(mtft, 0, memb_obj, us->data, self);
+  return memb_obj;
+}
+
+
 void ffi_init(void)
 {
   prot1(&ffi_typedef_hash);
@@ -4983,6 +5243,7 @@ void ffi_init(void)
   zarray_s = intern(lit("zarray"), user_package);
   carray_s = intern(lit("carray"), user_package);
   struct_s = intern(lit("struct"), user_package);
+  union_s = intern(lit("union"), user_package);
   str_d_s = intern(lit("str-d"), user_package);
   wstr_s = intern(lit("wstr"), user_package);
   wstr_d_s = intern(lit("wstr-d"), user_package);
@@ -5054,6 +5315,12 @@ void ffi_init(void)
   reg_fun(intern(lit("num-carray"), user_package), func_n1(num_carray));
   reg_fun(intern(lit("put-carray"), user_package), func_n3o(put_carray, 1));
   reg_fun(intern(lit("fill-carray"), user_package), func_n3o(fill_carray, 1));
+  reg_fun(intern(lit("make-union"), user_package), func_n1(make_union));
+  reg_fun(intern(lit("union-members"), user_package), func_n1(union_members));
+  reg_fun(intern(lit("union-get"), user_package), func_n2(union_get));
+  reg_fun(intern(lit("union-put"), user_package), func_n3(union_put));
+  reg_fun(intern(lit("union-in"), user_package), func_n3(union_in));
+  reg_fun(intern(lit("union-out"), user_package), func_n3(union_out));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
   ffi_init_extra_types();

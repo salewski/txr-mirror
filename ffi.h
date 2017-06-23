@@ -51,7 +51,7 @@ extern val le_float_s, le_double_s;
 
 extern val array_s, zarray_s, carray_s;
 
-extern val struct_s;
+extern val struct_s, union_s;
 
 extern val str_d_s, wstr_s, wstr_d_s, bstr_s, bstr_d_s;
 
@@ -121,4 +121,11 @@ val unum_carray(val carray);
 val num_carray(val carray);
 val put_carray(val carray, val offs, val stream);
 val fill_carray(val carray, val offs, val stream);
+mem_t *union_get_ptr(val uni);
+val make_union(val type);
+val union_members(val uni);
+val union_get(val uni, val memb);
+val union_put(val uni, val memb, val newval);
+val union_in(val uni, val memb, val memb_obj);
+val union_out(val uni, val memb, val memb_obj);
 void ffi_init(void);

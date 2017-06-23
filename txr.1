@@ -54497,6 +54497,67 @@ Structure members may be bitfields, which are described using the
 and
 .code bit
 compound type operators.
+
+.meIP (union < name >> {( slot << type )}*)
+The FFI
+.code union
+type resembles the
+.code struct
+type syntactically. It provides handling for foreign objects of C
+.code union
+type.
+
+Unlike the FFI
+.code struct
+type, the
+.code union
+type doesn't provide automatic conversion between C and Lisp data.
+This is because the
+.code union
+is inherently unsafe, due to its placement of multiple types into the
+same storage, and lack of any information to discriminate which type
+is currently stored. Instead, the FFI
+.code union
+creates a correspondence between a C union that is regarded as just
+a region of memory, and a \*(TL data type called
+.codn union .
+
+An instance of the Lisp
+.code union
+type holds a copy of the C union memory, and also contains type information
+about the unions members. Functions are provided to store and retrieve the
+members; it is these functions which provide the conversion between the
+Lisp types and the foreign representations stored in the C union.
+This is done under control of the application, because due to the inherent
+lack of safety of the C
+.codn union ,
+only the application program knows which member of the union may be accessed.
+
+Conversion between the C
+.code union
+and the Lisp
+.code union
+consists of just a memory copying operation.
+
+The following functions are provided for manipulating unions:
+.code make-union
+instantiates a new union object;
+.code union-members
+retrieves a list of the symbols serving as the union's member names;
+.code union-get
+retrieves a specified member from the union's storage, converting it
+to a Lisp object;
+.code union-put
+places a Lisp object into a union, using the specified member's type
+to convert it to a foreign representation;
+.code union-in
+performs the "in semantics" on the specified member of a union,
+propagating modifications in that member back to a Lisp object; and
+.code union-out
+performs "out semantics" on the specified member of a union,
+propagating modifications done on a previously retrieved Lisp object
+back into the union.
+
 .meIP (array < dim << type )
 The FFI
 .code array
@@ -55476,6 +55537,7 @@ Lastly, the size of the structure is then padded up to a size
 which is a multiple of the alignment of the most strictly aligned
 member.
 
+
 .NP* FFI Call Descriptors
 
 The FFI mechanism makes use of a type-like representation called the "call
@@ -56413,6 +56475,157 @@ following equivalence holds:
 .cblk
   (ffi expr)  <-->  (ffi-type-compile 'expr)
 .cble
+
+.coNP Function @ make-union
+.synb
+.mets (make-union << type )
+.syne
+.desc
+The
+.code make-union
+function instantiates a new object of type
+.codn union ,
+based on the FFI type specified by the
+.meta type
+parameter, which must be compiled FFI
+.code union
+type.
+
+The object provides storage for the foreign representation of
+.codn type ,
+and that storage is initialized to all zero bytes.
+
+.coNP Function @ union-members
+.synb
+.mets (union-members << union )
+.syne
+.desc
+The
+.code union-members
+function retrieves the list of symbols which name the members of
+.metn union .
+These are derived from the object's FFI type.
+It is unspecified whether the list is freshly allocated on each call,
+or whether the same list is returned; applications shouldn't
+destructively manipulate this list.
+
+.coNP Function @ union-get
+.synb
+.mets (union-get < union << member )
+.syne
+.desc
+The
+.code union-get
+function performs the get semantics (conversion from a foreign
+representation to Lisp) on the member of
+.meta union
+which is specified by the
+.meta member
+argument. That argument must be a symbol corresponding to one of the member
+names.
+
+The
+.meta union
+object's storage buffer is treated as an object of the foreign
+type indicated by that member's type information, and converted
+accordingly to a Lisp object that is returned.
+
+.coNP Function @ union-put
+.synb
+.mets (union-put < union < member << new-value )
+.syne
+.desc
+The
+.code union-put
+function performs the put semantics (conversion from a Lisp object
+to foreign representation) on the member of
+.meta union
+which is specified by the
+.meta member
+argument. That argument must be a symbol corresponding to one of the member
+names.
+
+The object given as
+.meta new-value
+is converted to the foreign representation according to the type
+information of the indicated member, and that representation is
+placed into the
+.meta union
+object's storage buffer.
+
+The return value is
+.metn new-value .
+
+.coNP Functions @ union-in and @ union-out
+.synb
+.mets (union-in < union < memb << memb-obj )
+.mets (union-out < union < memb << memb-obj )
+.syne
+.desc
+The
+.code union-in
+and
+.code union-out
+functions perform the FFI in semantics and out semantics, respectively.
+These semantics are involved in two-way data transfers between foreign
+representations and Lisp objects.
+
+The
+.meta union
+argument must be a
+.code union
+object and the
+.meta memb
+argument a symbol which matches one of that object's member names.
+
+In the case of
+.codn union-in ,
+.meta memb-obj
+is a Lisp object that was previously stored into
+.meta union
+using the
+.code union-put
+operation, into the same member that is currently indicated by
+.metn member .
+
+In the case of
+.codn union-out ,
+.meta memb-obj
+is a Lisp object that was previously retrieved from
+.meta union
+using the
+.code union-get
+operation, from the same member that is currently indicated by
+.metn member .
+
+The
+.code union-in
+performs the by-value nuance of the in semantics on the indicated
+member: if the member contains pointers to any objects, those
+objects are updated from their counterparts in
+.meta memb-obj
+using their respective by-reference in semantics, recursively.
+
+Similarly
+.code union-out
+performs the by-value nuance of the out semantics on the indicated
+member: if the member contains pointers to any objects, those
+objects are updated with their Lisp counterparts in
+.meta memb-obj
+using their respective by-reference out semantics, recursively.
+
+Note:
+.code union-in
+is intended to be used after a FFI call, on a union-typed by-value
+argument, or a union-typed object contained in an argument,
+in situations when the function is expected to have updated
+the contents of the union. The
+.code union-out
+function is intended to be used in a FFI callback, on a union-typed
+callback argument or union-typed object contained in such
+an argument, in cases when the callback has updated the Lisp
+object corresponding to a union member, and that change needs
+to be propagated to the foreign caller.
 
 .coNP Functions @ ffi-put and @ ffi-put-into
 .synb
