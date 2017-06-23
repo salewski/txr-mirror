@@ -158,6 +158,7 @@ struct smemb {
 };
 
 struct txr_ffi_type {
+  val self;
   ffi_type *ft;
   ffi_type *elements[1];
   val lt;
@@ -2659,6 +2660,7 @@ static val make_ffi_type_builtin(val syntax, val lisp_type,
 
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_builtin_ops);
 
+  tft->self = obj;
   tft->ft = ft;
   tft->syntax = syntax;
   tft->lt = lisp_type;
@@ -2702,6 +2704,7 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
 
     val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_ptr_ops);
 
+    tft->self = obj;
     tft->ft = &ffi_type_pointer;
     tft->syntax = syntax;
     tft->lt = lisp_type;
@@ -2757,6 +2760,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   int bit_offs = 0;
   const unsigned bits_int = 8 * sizeof(int);
 
+  tft->self = obj;
   tft->ft = ft;
   tft->syntax = syntax;
   tft->lt = lisp_type;
@@ -2890,6 +2894,7 @@ static val make_ffi_type_array(val syntax, val lisp_type,
 
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
 
+  tft->self = obj;
   tft->ft = ft;
   tft->syntax = syntax;
   tft->lt = lisp_type;
@@ -2945,6 +2950,7 @@ static val make_ffi_type_enum(val syntax, val enums, val self)
   val enum_env = make_env(nil, nil, nil);
   val shadow_menv = make_env(nil, nil, nil);
 
+  tft->self = obj;
   tft->ft = &ffi_type_sint;
   tft->syntax = syntax;
   tft->lt = sym_s;
