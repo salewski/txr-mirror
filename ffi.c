@@ -3908,6 +3908,10 @@ static void ffi_init_extra_types(void)
   ffi_typedef(intern(lit("uid-t"), user_package),
               type_by_size[convert(uid_t, -1) > 0][sizeof (uid_t)]);
 #endif
+  ffi_typedef(intern(lit("longlong"), user_package),
+              type_by_size[0][sizeof (long long)]);
+  ffi_typedef(intern(lit("ulonglong"), user_package),
+              type_by_size[1][sizeof (long long)]);
 }
 
 #if HAVE_LIBFFI

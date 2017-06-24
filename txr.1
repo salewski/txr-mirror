@@ -53995,6 +53995,14 @@ Lisp characters and integers convert to these foreign representations, if they
 are in their numeric range.  Foreign values of these types convert
 to Lisp integers.
 
+.ccIP @ longlong and @ulonglong
+These types are
+.code typedef
+names for integer types whose representation corresponds to the C types
+.code "long long"
+and
+.codn "unsigned long long" .
+
 .ccIP @ int8 and @ uint8
 These types correspond to 8 bit signed and unsigned integers.
 They convert like integer types: both Lisp integers and characters
