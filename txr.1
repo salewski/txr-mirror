@@ -42657,14 +42657,14 @@ The first parser situation involving a package fallback list occurs when the
 a package prefix. Such a symbol name is resolved against the current package
 (the package currently stored in the
 .code *package*
-special variable). If the
-symbol is not found in the current package, then the packages in the fallback
+special variable). If a symbol matching the token
+is not found in the current package, then the packages in the fallback
 package list are searched for the symbol.  The first matching symbol which is
 found in the fallback list is returned.  If no matching symbol is found in the
-fallback list, then the symbol is interned in the current package and returned.
-The packages in the current package's fallback list may themselves have
-fallback lists. Those fallback lists are not involved; no such recursion takes
-place.
+fallback list, then the token is interned as a new symbol is interned in the
+current package.  The packages in the current package's fallback list may
+themselves have fallback lists. Those fallback lists are not involved; no such
+recursion takes place.
 
 The second parser situation involving a package fallback list occurs when the
 \*(TL parser resolves a qualified symbol token. If a qualified symbol token
