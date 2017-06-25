@@ -3741,6 +3741,7 @@ static void ffi_init_types(void)
     struct txr_ffi_type *tft = ffi_type_struct(type);
     tft->in = ffi_str_in;
     tft->release = ffi_simple_release;
+    tft->by_value_in = 1;
     ffi_typedef(str_s, type);
   }
 
@@ -3752,6 +3753,7 @@ static void ffi_init_types(void)
     struct txr_ffi_type *tft = ffi_type_struct(type);
     tft->in = ffi_bstr_in;
     tft->release = ffi_simple_release;
+    tft->by_value_in = 1;
     ffi_typedef(bstr_s, type);
   }
 
@@ -3769,6 +3771,7 @@ static void ffi_init_types(void)
     struct txr_ffi_type *tft = ffi_type_struct(type);
     tft->in = ffi_wstr_in;
     tft->release = ffi_simple_release;
+    tft->by_value_in = 1;
     ffi_typedef(wstr_s, type);
   }
 
