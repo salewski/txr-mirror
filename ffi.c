@@ -168,6 +168,7 @@ struct txr_ffi_type {
   unsigned shift, mask;
   cnum nelem;
   struct smemb *memb;
+  val tag;
   val sym_num, num_sym;
   unsigned null_term : 1;
   unsigned by_value_in : 1;
@@ -1755,19 +1756,19 @@ static val ffi_le_u32_rget(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_cptr_put(struct txr_ffi_type *tft, val n, mem_t *dst,
                          val self)
 {
-  mem_t *p = cptr_handle(n, tft->eltype, self);
+  mem_t *p = cptr_handle(n, tft->tag, self);
   *coerce(mem_t **, dst) = p;
 }
 
 static val ffi_cptr_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   mem_t *p = *coerce(mem_t **, src);
-  return cptr_typed(p, tft->eltype, 0);
+  return cptr_typed(p, tft->tag, 0);
 }
 
 static mem_t *ffi_cptr_alloc(struct txr_ffi_type *tft, val ptr, val self)
 {
-  return coerce(mem_t *, cptr_addr_of(ptr, tft->eltype, self));
+  return coerce(mem_t *, cptr_addr_of(ptr, tft->tag, self));
 }
 
 static val ffi_str_in(struct txr_ffi_type *tft, int copy,
@@ -3362,9 +3363,15 @@ val ffi_type_compile(val syntax)
       return type;
     } else if (sym == cptr_s) {
       val tag = cadr(syntax);
-      return make_ffi_type_pointer(syntax, cptr_s,
-                                   ffi_cptr_put, ffi_cptr_get,
-                                   0, 0, 0, tag);
+      val type = make_ffi_type_builtin(cptr_s, cptr_s, sizeof (mem_t *),
+                                       alignof (mem_t *),
+                                       &ffi_type_pointer,
+                                       ffi_cptr_put, ffi_cptr_get, 0, 0);
+      struct txr_ffi_type *tft = ffi_type_struct(type);
+      tft->alloc = ffi_cptr_alloc;
+      tft->free = ffi_noop_free;
+      tft->tag = tag;
+      return type;
     } else if (sym == carray_s) {
       val eltype = ffi_type_compile(cadr(syntax));
       return make_ffi_type_pointer(syntax, carray_s,
@@ -3730,6 +3737,7 @@ static void ffi_init_types(void)
     struct txr_ffi_type *tft = ffi_type_struct(type);
     tft->alloc = ffi_cptr_alloc;
     tft->free = ffi_noop_free;
+    tft->tag = nil;
     ffi_typedef(cptr_s, type);
   }
 
