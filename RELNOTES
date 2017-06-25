@@ -1,3 +1,25 @@
+                                    TXR 180
+                                   2017-06-25
+
+
+  Features
+
+  - FFI:
+    - new types: bool, longlong, ulonglong.
+    - support for C unions.
+    - improved support for type-tagged cptr.
+    - some performance optimizations.
+
+  Bugs
+
+  - Fixed regression in horizontal @(trailer) introduced in 170.
+  - Fixed broken append redirection operator ->> in awk macro.
+  - FFI:
+    - fixed broken float put operation.
+    - fixed broken handling of cptr when parametrized by tag symbol.
+
+
+
                                     TXR 179
                                    2017-06-18
 
