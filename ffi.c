@@ -2942,7 +2942,7 @@ static val make_ffi_type_union(val syntax, val lisp_type,
   cnum nmemb = c_num(length(types)), i;
   struct smemb *memb = coerce(struct smemb *,
                               chk_calloc(nmemb, sizeof *memb));
-  val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_enum_ops);
+  val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
   ucnum most_align = 0;
   ucnum biggest_size = 0;
   const unsigned bits_int = 8 * sizeof(int);
