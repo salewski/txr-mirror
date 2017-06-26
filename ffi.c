@@ -2544,7 +2544,7 @@ static val ffi_varray_null_term_in(struct txr_ffi_type *tft, int copy, mem_t *sr
     offs += elsize;
   }
 
-  return replace(vec_in, vec, 0, length_vec(vec));
+  return replace(vec_in, vec, zero, length_vec(vec));
 }
 
 static val ffi_varray_null_term_get(struct txr_ffi_type *tft, mem_t *src,
