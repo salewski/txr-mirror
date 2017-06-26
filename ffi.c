@@ -381,7 +381,7 @@ static mem_t *ffi_fixed_alloc(struct txr_ffi_type *tft, val obj, val self)
 
 static mem_t *ffi_varray_alloc(struct txr_ffi_type *tft, val obj, val self)
 {
-  cnum len = c_num(length(obj));
+  cnum len = c_num(length(obj)) + tft->null_term;
   val eltype = tft->eltype;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   return chk_calloc(len, etft->size);
