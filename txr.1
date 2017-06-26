@@ -56438,6 +56438,48 @@ form need not be surrounded by a call to the
 macro.
 .RE
 
+.coNP Macro @ deffi-sym
+.synb
+.mets (deffi-sym < name < var-expr <> [ type-sym ])
+.syne
+.desc
+The
+.code deffi-sym
+macro defines a global lexical variable called
+.code name
+whose value is a
+.code cptr
+object that refers to a symbol in a foreign library.
+
+The
+.meta name
+argument gives the name for the variable to be defined.
+This definition takes place place as if by the
+.code defparml
+macro.
+
+The
+.meta var-expr
+is syntax which specifies the foreign pointer, using exactly the same
+conventions as described for the
+.code deffi-var
+macro, allowing for a short-hand notation if this form is
+enclosed in a
+.code with-dyn-lib
+macro invocation.
+
+The optional
+.meta type-sym
+argument must be a symbol. If it is absent, it defaults to nil.
+This argument specifies the type label for the
+.code cptr
+object which holds the pointer to the foreign symbol.
+
+The result value of
+.meta deffi-sym
+is the symbol
+.metn name .
+
 .coNP Macro @ typedef
 .synb
 .mets (typedef < name << type-syntax )
