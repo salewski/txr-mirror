@@ -53668,6 +53668,50 @@ This symbol becomes the
 .code cptr
 object's type tag.
 
+.coNP Function @ int-cptr
+.synb
+.mets (int-cptr << cptr )
+.syne
+.desc
+The
+.code int-cptr
+function retrieves the pointer value of the
+.meta cptr
+object as an integer.
+
+If an integer
+.meta n
+is in a range convertible to
+.code cptr
+type, then the expression
+.cblk
+.meti (int-cptr (cptr-int << n ))
+.cble
+reproduces
+.metn n .
+
+.coNP Function @ cptr-cast
+.synb
+.mets (cptr-cast < type-symbol << cptr )
+.syne
+.desc
+The
+.code cptr-cast
+function produces a new
+.code cptr
+object which has the same pointer as
+.meta cptr
+but whose type is given by
+.metn type-symbol .
+
+Casting
+.meta cptr
+objects with
+.code cptr-cast
+circumvents the safety mechanism which
+.code cptr
+type tagging provides.
+
 .coNP Function @ cptr-zap
 .synb
 .mets (cptr-zap << cptr )

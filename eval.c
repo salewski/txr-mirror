@@ -6161,6 +6161,8 @@ void eval_init(void)
   reg_fun(intern(lit("cptr-obj"), user_package), func_n2o(cptr_obj, 1));
   reg_fun(intern(lit("cptr-zap"), user_package), func_n1(cptr_zap));
   reg_fun(intern(lit("cptr-free"), user_package), func_n1(cptr_free));
+  reg_fun(intern(lit("cptr-cast"), user_package), func_n2(cptr_cast));
+  reg_fun(intern(lit("int-cptr"), user_package), func_n1(int_cptr));
   reg_fun(intern(lit("cptrp"), user_package), func_n1(cptrp));
   reg_fun(intern(lit("cptr-type"), user_package), func_n1(cptr_type));
   reg_varl(intern(lit("cptr-null"), user_package), cptr(0));

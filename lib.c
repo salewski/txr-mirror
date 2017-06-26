@@ -7558,6 +7558,17 @@ val cptr_free(val cptr)
   return cptr;
 }
 
+val cptr_cast(val to_type, val cptr)
+{
+  mem_t *ptr = cptr_handle(cptr, nil, lit("cptr-cast"));
+  return cptr_typed(ptr, to_type, 0);
+}
+
+val int_cptr(val cptr)
+{
+  return num(coerce(cnum, cptr_handle(cptr, nil, lit("int-cptr"))));
+}
+
 mem_t *cptr_handle(val cptr, val type_sym, val self)
 {
   if (type(cptr) != CPTR)
