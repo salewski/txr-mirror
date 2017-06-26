@@ -56368,14 +56368,13 @@ variable is available as a Lisp variable holding a Lisp data type.
 
 The
 .meta name
-argument gives the name of the macro.
+argument gives the name of the symbol macro to be defined.
 
 The
 .meta var-expr
-argument must evaluate to a
-.code cptr
-object which holds a pointer to the address of the foreign
-variable.
+argument is one of several permitted syntactic forms
+which specify the address of the foreign variable.
+They are described below.
 
 The
 .meta type
@@ -56399,6 +56398,46 @@ buffer is placed into the foreign variable.
 Then suppose another such assignment takes place.
 The previous value is simply overwritten without being
 freed.
+
+The following syntactic variants are permitted of the
+.meta var-expr
+argument:
+.RS
+.meIP < name-string
+If
+.meta var-expr
+is a literal string, then the
+.code deffi-var
+form must be enclosed in the
+.code with-dyn-lib
+macro, appearing as one of that macro's
+.metn body-form -s.
+In this situation the literal character string
+.meta name-string
+specifies a symbol to be found within the library established by the
+.meta with-dyn-lib
+macro.
+.meIP >> ( name-string << ver-string )
+This manner of specifying the
+.meta fun-expr
+also requires the
+.code deffi
+form to be enclosed in a
+.codn with-dyn-lib .
+It selects a particular version of a symbol from the library.
+.meIP < form
+If
+.meta var-expr
+is any other form, then it must specify an expression which evaluates to a
+.code cptr
+object giving the address of a foreign library symbol. If this form
+is used, then the
+.code deffi
+form need not be surrounded by a call to the
+.code with-dyn-lib
+macro.
+.RE
+
 .coNP Macro @ typedef
 .synb
 .mets (typedef < name << type-syntax )
