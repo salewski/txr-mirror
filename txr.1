@@ -54492,6 +54492,32 @@ that integer value itself rather than a symbol. If an integer value occurs
 which is assigned to multiple enumeration symbols, it is not specified which
 of those symbols is produced.
 
+.meIP (enumed < type < name >> {( sym << value ) | << sym }*)
+The
+.code enumed
+type operator is a generalization of
+.code enum
+which allows the base integer type of the enumeration to be specified.
+The following equivalence holds:
+
+.cblk
+  (enum n a b c ...)  <-->  (enumed int n a b c ...)
+.cble
+
+Any integer type or
+.meta typedef
+name may be specified for
+.metn type ,
+including any one of the endian types. The enumeration inherits its
+size, alignment and other foreign representation details from
+.metn type .
+
+The values associated with the enumeration symbols must be in
+the representation range of
+.metn type ,
+which is not checked until the conversion of a symbol
+through the enumeration is is attempted at run time.
+
 .meIP (struct < name >> {( slot << type )}*)
 The FFI
 .code struct

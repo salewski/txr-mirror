@@ -123,7 +123,7 @@ val closure_s;
 
 val sbit_s, ubit_s, bit_s;
 
-val enum_s;
+val enum_s, enumed_s;
 
 val align_s;
 
@@ -3487,6 +3487,17 @@ val ffi_type_compile(val syntax)
                   lit("~a: enum name ~s must be bindable symbol or nil"),
                   self, name, nao);
       return make_ffi_type_enum(xsyntax, enums, ffi_type_lookup(int_s), self);
+    } else if (sym == enumed_s) {
+      val base_type_syntax = cadr(syntax);
+      val name = caddr(syntax);
+      val enums = cdddr(syntax);
+      val xsyntax = list(enumed_s, base_type_syntax, name, nao);
+      val base_type = ffi_type_compile(base_type_syntax);
+      if (name && !bindable(name))
+        uw_throwf(error_s,
+                  lit("~a: enum name ~s must be bindable symbol or nil"),
+                  self, name, nao);
+      return make_ffi_type_enum(xsyntax, enums, base_type, self);
     } else if (sym == align_s) {
       val align = ffi_eval_expr(cadr(syntax), nil, nil);
       ucnum al = c_num(align);
@@ -5339,6 +5350,7 @@ void ffi_init(void)
   ubit_s = intern(lit("ubit"), user_package);
   bit_s = intern(lit("bit"), user_package);
   enum_s = intern(lit("enum"), user_package);
+  enumed_s = intern(lit("enumed"), user_package);
   align_s = intern(lit("align"), user_package);
   bool_s = intern(lit("bool"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);

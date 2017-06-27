@@ -63,7 +63,7 @@ extern val closure_s;
 
 extern val sbit_s, ubit_s, bit_s;
 
-extern val enum_s;
+extern val enum_s, enumed_s;
 
 extern val align_s;
 
