@@ -1751,6 +1751,21 @@ static val ffi_le_u32_rget(struct txr_ffi_type *tft, mem_t *src, val self)
   return ffi_le_u32_get(tft, src + 4, self);
 }
 
+static void ffi_bool_rput(struct txr_ffi_type *tft, val truth,
+                          mem_t *dst, val self)
+{
+  val n = truth ? one : zero;
+  struct txr_ffi_type *tgtft = ffi_type_struct(tft->eltype);
+  tgtft->rput(tft, n, dst, self); /* tft deliberate */
+}
+
+static val ffi_bool_rget(struct txr_ffi_type *tft, mem_t *src, val self)
+{
+  struct txr_ffi_type *tgtft = ffi_type_struct(tft->eltype);
+  val n = tgtft->rget(tft, src, self); /* tft deliberate */
+  return null(zerop(n));
+}
+
 #endif
 
 static void ffi_cptr_put(struct txr_ffi_type *tft, val n, mem_t *dst,
@@ -2772,6 +2787,10 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
     tft->clone = ffi_simple_clone;
     tft->put = put;
     tft->get = get;
+#if !HAVE_LITTLE_ENDIAN
+    tft->rput = put;
+    tft->rget = get;
+#endif
     tft->eltype = tgtype;
     tft->in = in;
     tft->out = out;
@@ -2828,6 +2847,10 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   tft->clone = ffi_struct_clone;
   tft->put = ffi_struct_put;
   tft->get = ffi_struct_get;
+#if !HAVE_LITTLE_ENDIAN
+  tft->rput = ffi_struct_put;
+  tft->rget = ffi_struct_get;
+#endif
   tft->in = ffi_struct_in;
   tft->release = ffi_struct_release;
   tft->alloc = ffi_fixed_alloc;
@@ -2956,6 +2979,10 @@ static val make_ffi_type_union(val syntax, val lisp_type,
   tft->clone = ffi_struct_clone;
   tft->put = ffi_union_put;
   tft->get = ffi_union_get;
+#if !HAVE_LITTLE_ENDIAN
+  tft->rput = ffi_union_put;
+  tft->rget = ffi_union_get;
+#endif
   tft->in = ffi_union_in;
   tft->alloc = ffi_fixed_alloc;
   tft->free = free;
@@ -3045,6 +3072,10 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->clone = ffi_array_clone;
   tft->put = ffi_array_put;
   tft->get = ffi_array_get;
+#if !HAVE_LITTLE_ENDIAN
+  tft->rput = ffi_array_put;
+  tft->rget = ffi_array_get;
+#endif
   tft->in = ffi_array_in;
   tft->release = ffi_array_release;
   tft->alloc = ffi_fixed_alloc;
@@ -3469,6 +3500,10 @@ val ffi_type_compile(val syntax)
       tft->eltype = type;
       tft->get = ffi_bool_get;
       tft->put = ffi_bool_put;
+#if !HAVE_LITTLE_ENDIAN
+      tft->rget = ffi_bool_rget;
+      tft->rput = ffi_bool_rput;
+#endif
       return type_copy;
     }
 
