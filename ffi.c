@@ -2522,6 +2522,7 @@ static val ffi_varray_null_term_in(struct txr_ffi_type *tft, int copy, mem_t *sr
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size;
   cnum offs, i;
+  cnum nelem_orig = c_num(length(vec_in));
 
   for (i = 0, offs = 0; ; i++) {
     mem_t *el = src + offs, *p;
@@ -2533,9 +2534,9 @@ static val ffi_varray_null_term_in(struct txr_ffi_type *tft, int copy, mem_t *sr
     if (p == el + elsize)
       break;
 
-    if (etft->in != 0) {
-      val elval = ref(vec, num_fast(i));
-      vec_push(vec, elval);
+    if (etft->in != 0 && i < nelem_orig) {
+      val elval = ref(vec_in, num_fast(i));
+      vec_push(vec, etft->in(etft, copy, src + offs, elval, self));
     } else if (copy) {
       val elval = etft->get(etft, src + offs, self);
       vec_push(vec, elval);
