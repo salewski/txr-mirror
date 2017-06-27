@@ -2618,6 +2618,8 @@ static void ffi_carray_put(struct txr_ffi_type *tft, val carray, mem_t *dst,
 
 static void ffi_enum_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 {
+  struct txr_ffi_type *etft = ffi_type_struct(tft->eltype);
+
   if (symbolp(n)) {
     val n_num = gethash(tft->num_sym, n);
     if (!n_num)
@@ -2625,12 +2627,13 @@ static void ffi_enum_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
                 tft->syntax, n, nao);
     n = n_num;
   }
-  ffi_int_put(tft, n, dst, self);
+  etft->put(tft, n, dst, self); /* tft deliberate */
 }
 
 static val ffi_enum_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  val n = ffi_int_get(tft, src, self);
+  struct txr_ffi_type *etft = ffi_type_struct(tft->eltype);
+  val n = etft->get(tft, src, self); /* tft deliberate */
   val sym = gethash(tft->sym_num, n);
   return if3(sym, sym, n);
 }
@@ -2639,6 +2642,8 @@ static val ffi_enum_get(struct txr_ffi_type *tft, mem_t *src, val self)
 
 static void ffi_enum_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 {
+  struct txr_ffi_type *etft = ffi_type_struct(tft->eltype);
+
   if (symbolp(n)) {
     val n_num = gethash(tft->num_sym, n);
     if (!n_num)
@@ -2646,12 +2651,13 @@ static void ffi_enum_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
                 tft->syntax, n, nao);
     n = n_num;
   }
-  ffi_int_rput(tft, n, dst, self);
+  etft->rput(tft, n, dst, self); /* tft deliberate */
 }
 
 static val ffi_enum_rget(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-  val n = ffi_int_rget(tft, src, self);
+  struct txr_ffi_type *etft = ffi_type_struct(tft->eltype);
+  val n = etft->rget(tft, src, self); /* tft deliberate */
   val sym = gethash(tft->sym_num, n);
   return if3(sym, sym, n);
 }
@@ -3111,10 +3117,12 @@ static val ffi_eval_expr(val expr, val menv, val env)
   return eval(expr_ex, env, expr_ex);
 }
 
-static val make_ffi_type_enum(val syntax, val enums, val self)
+static val make_ffi_type_enum(val syntax, val enums,
+                              val base_type, val self)
 {
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
                                     chk_calloc(1, sizeof *tft));
+  struct txr_ffi_type *btft = ffi_type_struct(base_type);
 
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_enum_ops);
   cnum lowest = INT_PTR_MAX;
@@ -3128,20 +3136,21 @@ static val make_ffi_type_enum(val syntax, val enums, val self)
   val shadow_menv = make_env(nil, nil, nil);
 
   tft->self = obj;
-  tft->ft = &ffi_type_sint;
+  tft->ft = btft->ft;
   tft->syntax = syntax;
   tft->lt = sym_s;
-  tft->size = sizeof (int);
-  tft->align = alignof (int);
-  tft->clone = ffi_simple_clone;
+  tft->size = btft->size;
+  tft->align = btft->align;
+  tft->clone = btft->clone;
   tft->put = ffi_enum_put;
   tft->get = ffi_enum_get;
-  tft->alloc = ffi_fixed_alloc;
-  tft->free = free;
 #if !HAVE_LITTLE_ENDIAN
   tft->rput = ffi_enum_rput;
   tft->rget = ffi_enum_rget;
 #endif
+  tft->alloc = btft->alloc;
+  tft->free = btft->free;
+  tft->eltype = base_type;
 
   for (iter = enums; !endp(iter); iter = cdr(iter), count++) {
     val en = car(iter);
@@ -3231,6 +3240,11 @@ static val ffi_struct_compile(val membs, val *ptypes, val self)
 
   *ptypes = types;
   return slots;
+}
+
+static val ffi_type_lookup(val sym)
+{
+  return gethash(ffi_typedef_hash, sym);
 }
 
 val ffi_type_compile(val syntax)
@@ -3472,7 +3486,7 @@ val ffi_type_compile(val syntax)
         uw_throwf(error_s,
                   lit("~a: enum name ~s must be bindable symbol or nil"),
                   self, name, nao);
-      return make_ffi_type_enum(xsyntax, enums, self);
+      return make_ffi_type_enum(xsyntax, enums, ffi_type_lookup(int_s), self);
     } else if (sym == align_s) {
       val align = ffi_eval_expr(cadr(syntax), nil, nil);
       ucnum al = c_num(align);
@@ -3861,11 +3875,6 @@ static void ffi_init_types(void)
                                             0, 0));
 
   ffi_typedef(bool_s, ffi_type_compile(cons(bool_s, cons(uchar_s, nil))));
-}
-
-static val ffi_type_lookup(val sym)
-{
-  return gethash(ffi_typedef_hash, sym);
 }
 
 static void ffi_init_extra_types(void)
