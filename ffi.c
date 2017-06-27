@@ -2619,10 +2619,11 @@ static void ffi_carray_put(struct txr_ffi_type *tft, val carray, mem_t *dst,
 static void ffi_enum_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 {
   if (symbolp(n)) {
-    n = gethash(tft->num_sym, n);
-    if (!n)
-      uw_throwf(error_s, lit("~s: ~s has no member ~s"), self,
+    val n_num = gethash(tft->num_sym, n);
+    if (!n_num)
+      uw_throwf(error_s, lit("~a: ~s has no member ~s"), self,
                 tft->syntax, n, nao);
+    n = n_num;
   }
   ffi_int_put(tft, n, dst, self);
 }
@@ -2639,10 +2640,11 @@ static val ffi_enum_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_enum_rput(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 {
   if (symbolp(n)) {
-    n = gethash(tft->num_sym, n);
-    if (!n)
-      uw_throwf(error_s, lit("~s: ~s has no member ~s"), self,
+    val n_num = gethash(tft->num_sym, n);
+    if (!n_num)
+      uw_throwf(error_s, lit("~a: ~s has no member ~s"), self,
                 tft->syntax, n, nao);
+    n = n_num;
   }
   ffi_int_rput(tft, n, dst, self);
 }
