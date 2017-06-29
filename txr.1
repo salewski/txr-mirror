@@ -27040,7 +27040,8 @@ and so doesn't return.
   (mapcar (lambda (item) (* 2 item)) '(1 2 3)) -> (4 6 8)
 
   ;; "zipper" two lists together
-  (mapcar (lambda (le ri) (list le ri)) '(1 2 3) '(a b c)) '((1 a) (2 b) (3 c)))
+  (mapcar (lambda (le ri) (list le ri)) '(1 2 3) '(a b c))
+  -> '((1 a) (2 b) (3 c)))
 
   ;; like append, mappend allows a lone atom or a trailing atom:
   (mappend (fun identity) 3) -> (3)
