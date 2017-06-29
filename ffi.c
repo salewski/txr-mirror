@@ -5270,11 +5270,20 @@ mem_t *union_get_ptr(val uni)
   return us->data;
 }
 
-val make_union(val type)
+val make_union(val type, val init, val memb)
 {
+  val self = lit("make-union");
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
   mem_t *data = chk_calloc(1, tft->size);
-  return make_union_common(data, tft);
+  val uni = make_union_common(data, tft);
+  if (!missingp(init)) {
+    if (tft->nelem == 0)
+      uw_throwf(error_s, lit("~a: ~s cannot be initialized: no members"),
+                self, type, nao);
+    memb = default_arg(memb, tft->memb[0].mname);
+    union_put(uni, memb, init);
+  }
+  return uni;
 }
 
 val union_members(val uni)
@@ -5455,7 +5464,7 @@ void ffi_init(void)
   reg_fun(intern(lit("num-carray"), user_package), func_n1(num_carray));
   reg_fun(intern(lit("put-carray"), user_package), func_n3o(put_carray, 1));
   reg_fun(intern(lit("fill-carray"), user_package), func_n3o(fill_carray, 1));
-  reg_fun(intern(lit("make-union"), user_package), func_n1(make_union));
+  reg_fun(intern(lit("make-union"), user_package), func_n3o(make_union, 1));
   reg_fun(intern(lit("union-members"), user_package), func_n1(union_members));
   reg_fun(intern(lit("union-get"), user_package), func_n2(union_get));
   reg_fun(intern(lit("union-put"), user_package), func_n3(union_put));

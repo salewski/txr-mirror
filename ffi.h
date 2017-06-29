@@ -122,7 +122,7 @@ val num_carray(val carray);
 val put_carray(val carray, val offs, val stream);
 val fill_carray(val carray, val offs, val stream);
 mem_t *union_get_ptr(val uni);
-val make_union(val type);
+val make_union(val type, val init, val memb);
 val union_members(val uni);
 val union_get(val uni, val memb);
 val union_put(val uni, val memb, val newval);

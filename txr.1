@@ -56749,7 +56749,7 @@ following equivalence holds:
 
 .coNP Function @ make-union
 .synb
-.mets (make-union << type )
+.mets (make-union < type >> [ initval <> [ member ]])
 .syne
 .desc
 The
@@ -56765,6 +56765,25 @@ type.
 The object provides storage for the foreign representation of
 .codn type ,
 and that storage is initialized to all zero bytes.
+
+Additionally, if
+.meta initval
+is specified, but
+.meta member
+is not, then
+.meta initval
+is stored into the union's via the first member, as if by
+.codn union-put .
+If the union type has no members, an error exception is thrown.
+
+If both
+.meta initval
+and
+.meta member
+are specified, then
+.meta initval
+is stored into the union using the specified member, as if by
+.codn union-put .
 
 .coNP Function @ union-members
 .synb
