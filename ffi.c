@@ -3277,7 +3277,7 @@ val ffi_type_compile(val syntax)
       val sname = if3(name, name, gensym(lit("ffi-union-")));
       val types;
       val slots = ffi_struct_compile(membs, &types, self);
-      val xsyntax = cons(struct_s,
+      val xsyntax = cons(union_s,
                          cons(sname, membs));
       return make_ffi_type_union(xsyntax, union_s, slots, types);
     } else if (sym == array_s || sym == zarray_s) {
