@@ -3559,7 +3559,7 @@ val ffi_type_compile(val syntax)
       if (tft->eltype || tft->memb != 0)
         uw_throwf(error_s, lit("~a: type ~s can't be basis for bool"),
                   self, tft->syntax, nao);
-      tft->syntax = type_syntax;
+      tft->syntax = syntax;
       tft->eltype = type;
       tft->get = ffi_bool_get;
       tft->put = ffi_bool_put;
