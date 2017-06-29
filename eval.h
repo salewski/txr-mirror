@@ -80,6 +80,8 @@ val bindable(val obj);
 val mapcarv(val fun, struct args *lists);
 val mapcarl(val fun, val list_of_lists);
 val lazy_mapcar(val fun, val list);
+val maprodv(val fun, struct args *lists);
+val maprendv(val fun, struct args *lists);
 val generate(val while_pred, val gen_fun);
 val retf(val ret);
 val prinl(val obj, val stream);

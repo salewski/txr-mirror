@@ -4685,6 +4685,63 @@ static val mapdov(val fun, struct args *lists)
   }
 }
 
+static val prod_common(val fun, struct args *lists,
+                       loc (*collect_fptr)(loc ptail, val obj))
+{
+  if (!args_more(lists, 0)) {
+    return nil;
+  } else if (!args_two_more(lists, 0)) {
+    return mappendv(fun, lists);
+  } else {
+    cnum argc = args_count(lists), i;
+    args_decl(args_reset, max(argc, ARGS_MIN));
+    args_decl(args_work, max(argc, ARGS_MIN));
+    args_copy(args_reset, lists);
+    args_normalize(args_reset, argc);
+    args_copy(args_work, args_reset);
+    list_collect_decl (out, ptail);
+
+    for (i = 0; i < argc; i++)
+      args_work->arg[i] = nullify(args_work->arg[i]);
+
+    for (;;) {
+      args_decl(args_fun, max(argc, ARGS_MIN));
+      for (i = 0; i < argc; i++) {
+        val seq_i = args_work->arg[i];
+        if (!seq_i)
+          goto out;
+        args_fun->arg[i] = car(seq_i);
+      }
+
+      args_fun->fill = argc;
+      ptail = collect_fptr(ptail, generic_funcall(fun, args_fun));
+
+      for (i = argc - 1; ; i--) {
+        val cdr_i = cdr(args_work->arg[i]);
+        if (cdr_i) {
+          args_work->arg[i] = cdr_i;
+          break;
+        }
+        if (i == 0)
+          goto out;
+        args_work->arg[i] = args_reset->arg[i];
+      }
+    }
+  out:
+    return make_like(out, args_reset->arg[0]);
+  }
+}
+
+val maprodv(val fun, struct args *lists)
+{
+  return prod_common(fun, lists, list_collect);
+}
+
+val maprendv(val fun, struct args *lists)
+{
+  return prod_common(fun, lists, list_collect_append);
+}
+
 static val symbol_value(val sym)
 {
   uses_or2;
@@ -5645,6 +5702,8 @@ void eval_init(void)
   reg_fun(intern(lit("mappend"), user_package), func_n1v(mappendv));
   reg_fun(intern(lit("mappend*"), user_package), func_n1v(lazy_mappendv));
   reg_fun(intern(lit("mapdo"), user_package), func_n1v(mapdov));
+  reg_fun(intern(lit("maprod"), user_package), func_n1v(maprodv));
+  reg_fun(intern(lit("maprend"), user_package), func_n1v(maprendv));
   reg_fun(intern(lit("window-map"), user_package), func_n4(window_map));
   reg_fun(intern(lit("window-mappend"), user_package), func_n4(window_mappend));
   {

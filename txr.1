@@ -27051,6 +27051,118 @@ and so doesn't return.
   -> (2 4)
 .cble
 
+.coNP Functions @ maprod and @ maprend
+.synb
+.mets (maprod < function << sequence *)
+.mets (maprend < function << sequence *)
+.syne
+.desc
+The
+.code maprod
+and
+.code maprend
+functions resemble
+.code mapcar
+and
+.codn mappend ,
+respectively. When given no
+.meta sequence
+arguments or exactly one
+.meta sequence
+argument, they behave exactly like those two functions.
+
+When two or more
+.meta sequence
+arguments are present,
+.code maprod
+differs from
+.code mapcar
+in the following way. Whereas
+.code mapcar
+iterates over the
+.meta sequence
+values in parallel, taking successive tuples of element
+values and passing them to
+.metn function ,
+the
+.code maprod
+function iterates over all
+.I combinations
+of elements from the sequences: the Cartesian product. The
+.code prod
+suffix stands for "product".
+
+If one or more
+.meta sequence
+arguments specify an empty sequence, then the Cartesian product is empty.
+In this situation,
+.meta function
+is not called. The result of the function is then
+.code nil
+converted to the same kind of sequence as the leftmost
+.metn sequence .
+
+The
+.code maprod
+function collects the values into a list just as
+.code mapcar
+does. Just like
+.codn mapcar ,
+it converts the resulting list into the same kind of sequence
+as the leftmost
+.meta sequence
+argument, if possible. For instance, if the resulting list is
+a list or vector of characters, and the leftmost
+.meta sequence
+is a character string, then the list or vector of characters
+is converted to a character string and returned.
+
+The
+.code maprend
+function ("map product through function and append") iterates the
+.meta sequence
+element combinations exactly like
+.codn maprod ,
+passing them as arguments to
+.metn function .
+The values returned by
+.meta function
+are then treated exactly as by the
+.code mappend
+function. The return values are expected to be sequences which
+are appended together as if by
+.codn append ,
+and the final result is converted to the same kind of sequence as the leftmost
+.meta sequence
+if possible.
+
+The combination iteration gives priority to the rightmost
+.metn sequence ,
+which means that the rightmost element of each generated tuple varies
+fastest: the tuples are traversed in "rightmost major" order.
+This is made clear in the examples.
+
+.TP* Examples
+
+.cblk
+  [maprod list '(0 1 2) '(a b) '(i ii iii)]
+  ->
+  ((0 a i) (0 a ii) (0 a iii) (0 b i) (0 b ii) (0 b iii)
+   (1 a i) (1 a ii) (1 a iii) (1 b i) (1 b ii) (1 b iii)
+   (2 a i) (2 a ii) (2 a iii) (2 b i) (2 b ii) (2 b iii))
+
+  ;; Vectors #(#\ea #\ex) #(#\ea #\ey) ... are appended
+  ;; together resulting in #(#\ea #\ex #\ea #\ey ...)
+  ;; which is converted to a string:
+
+  [maprend vec "ab" "xy"] -> "axaybxby"
+
+  ;; One of the sequences is empty, so the product is an
+  ;; empty sequence of the same kind as the leftmost
+  ;; sequence argument, thus an empty string:
+  [maprend vec "ab" ""] -> ""
+.cble
+
 .coNP Function @ mapdo
 .synb
 .mets (mapdo < function << sequence *)
