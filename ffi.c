@@ -3254,6 +3254,9 @@ val ffi_type_compile(val syntax)
   if (consp(syntax)) {
     val sym = car(syntax);
 
+    if (!cdr(syntax))
+      goto toofew;
+
     if (sym == struct_s) {
       uses_or2;
       val name = cadr(syntax);
@@ -3342,41 +3345,52 @@ val ffi_type_compile(val syntax)
           return type;
         }
       } else {
-        uw_throwf(error_s, lit("~a: excess elements in ~s"),
-                  self, syntax, nao);
+        goto excess;
       }
     } else if (sym == ptr_in_s) {
       val target_type = ffi_type_compile(cadr(syntax));
+      if (cddr(syntax))
+        goto excess;
       return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
                                    ffi_ptr_in_put, ffi_ptr_get,
                                    ffi_ptr_in_in, ffi_ptr_in_out,
                                    ffi_ptr_in_release, target_type);
     } else if (sym == ptr_in_d_s) {
       val target_type = ffi_type_compile(cadr(syntax));
+      if (cddr(syntax))
+        goto excess;
       return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
                                    ffi_ptr_in_put, ffi_ptr_d_get,
                                    ffi_ptr_in_d_in, ffi_ptr_in_out,
                                    ffi_ptr_in_release, target_type);
     } else if (sym == ptr_out_s) {
       val target_type = ffi_type_compile(cadr(syntax));
+      if (cddr(syntax))
+        goto excess;
       return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
                                    ffi_ptr_out_put, ffi_ptr_get,
                                    ffi_ptr_out_in, ffi_ptr_out_out,
                                    ffi_simple_release, target_type);
     } else if (sym == ptr_out_d_s) {
       val target_type = ffi_type_compile(cadr(syntax));
+      if (cddr(syntax))
+        goto excess;
       return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
                                    ffi_ptr_out_null_put, ffi_ptr_d_get,
                                    ffi_ptr_out_in, ffi_ptr_out_out,
                                    0, target_type);
     } else if (sym == ptr_s) {
       val target_type = ffi_type_compile(cadr(syntax));
+      if (cddr(syntax))
+        goto excess;
       return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
                                    ffi_ptr_in_put, ffi_ptr_get,
                                    ffi_ptr_out_in, ffi_ptr_out_out,
                                    ffi_ptr_in_release, target_type);
     } else if (sym == ptr_out_s_s) {
       val target_type = ffi_type_compile(cadr(syntax));
+      if (cddr(syntax))
+        goto excess;
       return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
                                    ffi_ptr_out_null_put, ffi_ptr_get,
                                    ffi_ptr_out_s_in, ffi_ptr_out_out,
@@ -3395,6 +3409,9 @@ val ffi_type_compile(val syntax)
                                            ffi_buf_get, ffi_buf_d_get),
                                        0, 0);
       struct txr_ffi_type *tft = ffi_type_struct(type);
+
+      if (cddr(syntax))
+        goto excess;
 
       if (nelem < 0)
         uw_throwf(error_s, lit("~a: negative size in ~s"),
@@ -3419,9 +3436,13 @@ val ffi_type_compile(val syntax)
       tft->alloc = ffi_cptr_alloc;
       tft->free = ffi_noop_free;
       tft->tag = tag;
+      if (cddr(syntax))
+        goto excess;
       return type;
     } else if (sym == carray_s) {
       val eltype = ffi_type_compile(cadr(syntax));
+      if (cddr(syntax))
+        goto excess;
       return make_ffi_type_pointer(syntax, carray_s,
                                    ffi_carray_put, ffi_carray_get,
                                    0, 0, 0, eltype);
@@ -3439,12 +3460,16 @@ val ffi_type_compile(val syntax)
                                        0, 0);
       struct txr_ffi_type *tft = ffi_type_struct(type);
       const int bits_int = 8 * sizeof(int);
+      if (cddr(syntax))
+        goto excess;
       if (nb < 0 || nb > bits_int)
         uw_throwf(error_s, lit("~a: invalid bitfield size ~s; "
                                "must be 0 to ~s"),
                   self, nbits, num_fast(bits_int), nao);
       tft->nelem = c_num(nbits);
       return type;
+    } else if (sym == bit_s && !consp(cddr(syntax))) {
+      goto toofew;
     } else if (sym == bit_s) {
       val nbits = ffi_eval_expr(cadr(syntax), nil, nil);
       cnum nb = c_num(nbits);
@@ -3457,6 +3482,9 @@ val ffi_type_compile(val syntax)
       struct txr_ffi_type *tft_cp = ffi_type_struct(type_copy);
       val syn = tft->syntax;
       int unsgnd = 0;
+
+      if (cdddr(syntax))
+        goto excess;
 
       if (syn == uint8_s || syn == uint16_s || syn == uint32_s ||
           syn == uchar_s || syn == ushort_s || syn == uint_s)
@@ -3487,6 +3515,8 @@ val ffi_type_compile(val syntax)
                   lit("~a: enum name ~s must be bindable symbol or nil"),
                   self, name, nao);
       return make_ffi_type_enum(xsyntax, enums, ffi_type_lookup(int_s), self);
+    } else if (sym == enumed_s && !consp(cddr(syntax))) {
+      goto toofew;
     } else if (sym == enumed_s) {
       val base_type_syntax = cadr(syntax);
       val name = caddr(syntax);
@@ -3498,9 +3528,13 @@ val ffi_type_compile(val syntax)
                   lit("~a: enum name ~s must be bindable symbol or nil"),
                   self, name, nao);
       return make_ffi_type_enum(xsyntax, enums, base_type, self);
+    } else if (sym == align_s && !consp(cddr(syntax))) {
+      goto toofew;
     } else if (sym == align_s) {
       val align = ffi_eval_expr(cadr(syntax), nil, nil);
       ucnum al = c_num(align);
+      if (cdddr(syntax))
+        goto excess;
       if (al <= 0) {
         uw_throwf(error_s, lit("~a: alignment must be positive"),
                   self, nao);
@@ -3520,6 +3554,8 @@ val ffi_type_compile(val syntax)
       val type = ffi_type_compile(type_syntax);
       val type_copy = ffi_type_copy(type);
       struct txr_ffi_type *tft = ffi_type_struct(type_copy);
+      if (cddr(syntax))
+        goto excess;
       if (tft->eltype || tft->memb != 0)
         uw_throwf(error_s, lit("~a: type ~s can't be basis for bool"),
                   self, tft->syntax, nao);
@@ -3545,6 +3581,14 @@ val ffi_type_compile(val syntax)
     uw_throwf(error_s, lit("~a: unrecognized type specifier: ~!~s"),
               self, syntax, nao);
   }
+
+toofew:
+  uw_throwf(error_s, lit("~a: missing arguments in ~s"),
+            self, syntax, nao);
+
+excess:
+  uw_throwf(error_s, lit("~a: excess elements in ~s"),
+            self, syntax, nao);
 }
 
 static void ffi_init_types(void)
