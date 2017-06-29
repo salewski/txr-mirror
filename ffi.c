@@ -4103,6 +4103,9 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
     if (tft->size == 0)
       uw_throwf(error_s, lit("~a: can't pass type ~s by value"),
                 self, type, nao);
+    if (bitfield_syntax_p(tft->syntax))
+      uw_throwf(error_s, lit("~a: can't pass bitfield as argument"),
+                self, nao);
     args[i] = tft->ft;
   }
 
@@ -4111,6 +4114,9 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
     if (tft->size == 0 && tft->ft != &ffi_type_void)
       uw_throwf(error_s, lit("~a: can't return type ~s by value"),
                 self, rettype, nao);
+    if (bitfield_syntax_p(tft->syntax))
+      uw_throwf(error_s, lit("~a: can't return bitfield from function"),
+                self, nao);
   }
 
   if (tfcd->variadic)
