@@ -58837,6 +58837,17 @@ command in GNU Bash.
 When \*(TX is resumed, the interactive listener will re-display the edited
 line and restore the previous cursor position.
 
+.SS* Editing Help
+
+The Ctrl-X ? command shows a summary of commands, in a four-line
+display which temporarily replaces the editing area. The help text
+is divided into several pages. Ctrl-C dismisses the display, and
+returns to editing. The Ctrl-P, left arrow and up arrow keys return
+to the previous screen. Any other key advances to the next screen.
+Advancing from the last screen, dismisses the display, and returns
+to editing. Navigating to the previous screen when the first screen
+is being shown also dismisses the display and returns to editing.
+
 .SS* Print the Prompt
 
 The
