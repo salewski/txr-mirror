@@ -2906,9 +2906,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       memb[i].offs = offs;
 
 #if HAVE_LITTLE_ENDIAN
-      mtft->shift = bits_alloc;
+      mtft->shift = bit_offs;
 #else
-      mtft->shift = bits_int - bits_alloc - bits;
+      mtft->shift = bits_int - bit_offs - bits;
 #endif
       if (bits == bits_int)
         mtft->mask = UINT_MAX;
