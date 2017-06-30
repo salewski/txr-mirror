@@ -837,6 +837,17 @@ static void show_help(lino_t *l)
                 }
             }
             continue;
+        case CTL('Z'):
+            disable_raw_mode(l);
+            raise(SIGTSTP);
+            enable_raw_mode(l);
+            i -= 1;
+            continue;
+        case CTL('L'):
+            lino_clear_screen(l);
+            l->need_refresh = 1;
+            i -= 1;
+            continue;
         default:
             continue;
         }
