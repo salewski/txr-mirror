@@ -45544,27 +45544,26 @@ or else a list of non-negative integers, the behavior is unspecified.
 
 .TP* Examples
 
-The following table shows examples of delimiting for
-various combinations of
+The following table shows how various combinations of the
+value the input record
+.code rec
+and field widths in the variable
 .code fw
-and input record
-.codn rec :
+give rise to field values
+.codn f :
 
 .cblk
-.TS
-tab(!);
-l l l.
-rec!fw!f
-"abc"!(0)!("" "abc")
-"abc"!(2)!("ab" "c")
-"abc"!(1 2)!("a" "bc")
-"abc"!(1 3)!("a" "bc")
-"abc"!(1 1)!("a" "b" "c")
-"abc"!(3)!("abc")
-"abc"!(4)!("abc")
-""!(4)!nil
-""!(0)!nil
-.TE
+  rec    fw      f
+  ---------------------------------
+  "abc"  (0)     ("" "abc")
+  "abc"  (2)     ("ab" "c")
+  "abc"  (1 2)   ("a" "bc")
+  "abc"  (1 3)   ("a" "bc")
+  "abc"  (1 1)   ("a" "b" "c")
+  "abc"  (3)     ("abc")
+  "abc"  (4)     ("abc")
+  ""     (4)     nil
+  ""     (0)     nil
 .cble
 
 .coNP Variable @ ofs
