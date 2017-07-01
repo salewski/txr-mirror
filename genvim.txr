@@ -14,7 +14,8 @@ static void dir_tables_init(void)
           (append-each ((sym (package-symbols pkg)))
             (when (or (boundp sym) (fboundp sym)
                       (mboundp sym) (special-operator-p sym)
-                      (constantp sym))
+                      (constantp sym) (ffi-type-operator-p sym)
+                      (ffi-type-p sym))
               (list sym)))))
 @(bind tl-sym
        @(append-each ((sym tl-orig-sym))
@@ -46,7 +47,8 @@ static void dir_tables_init(void)
 @(bind lispwords @(append-each ((sym tl-orig-sym)
                                 (text tl-sym))
                     (if (or (special-operator-p sym)
-                            (mboundp sym))
+                            (mboundp sym)
+                            (ffi-type-operator-p sym))
                       (unless (memq sym '(and dwim inc oand opip or pset
                                               qquote quote qref rotate set
                                               shift swap sys:l1-setq
