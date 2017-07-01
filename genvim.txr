@@ -7,10 +7,6 @@ static void dir_tables_init(void)
 @(until)
 }
 @(end)
-@(do (each ((s '(*place-clobber-expander* *lib-version*
-                 ifa txr-if with-resources path-exists-p
-                 defstruct)))
-       (boundp s)))
 @(bind tl-orig-sym
        @(append-each* ((entry (package-alist))
                        (pkg-name [mapcar car entry])
