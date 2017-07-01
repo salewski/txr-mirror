@@ -1,3 +1,34 @@
+                                    TXR 181
+                                   2017-07-01
+
+
+  Features
+
+  - FFI:
+    - new cptr functions cptr-cast and int-cptr.
+    - new macro deffi-sym
+    - enums can be based on types other than int.
+    - make-union can specify an initial value, and optionally specify the
+      member for that value (defaulting to the first member).
+
+  - Lib:
+    - New Cartesian product mapping functions: maprod and maprend.
+
+  Bugs
+
+  - FFI:
+    - fixed broken "in" semantics of zarray types.
+    - fixed failure to null terminate zarrays.
+    - fixed broken struct/union returns on big endian.
+    - fixed bool types reporting as integers in the
+      printed #<ffi-type ...> notation.
+    - fixed more bugs in bitfield layout leading to
+      incorrect placement and retrieval of bitfield values.
+    - fixed union types reporting as struct types
+      in the #<ffi-type ...> notation.
+
+
+
                                     TXR 180
                                    2017-06-25
 
