@@ -3591,6 +3591,22 @@ excess:
             self, syntax, nao);
 }
 
+val ffi_type_operator_p(val sym)
+{
+  return tnil(sym == struct_s || sym == union_s || sym == array_s ||
+              sym == zarray_s || sym == ptr_in_s || sym == ptr_in_d_s ||
+              sym == ptr_out_s || sym == ptr_out_d_s || sym == ptr_s ||
+              sym == ptr_out_s_s || sym == buf_s || sym == buf_d_s ||
+              sym == cptr_s || sym == carray_s || sym == sbit_s ||
+              sym == ubit_s || sym == bit_s || sym == enum_s ||
+              sym == enumed_s || sym == align_s || sym == bool_s);
+}
+
+val ffi_type_p(val sym)
+{
+  return tnil(gethash(ffi_typedef_hash, sym));
+}
+
 static void ffi_init_types(void)
 {
 #if UCHAR_MAX == CHAR_MAX
@@ -5416,6 +5432,8 @@ void ffi_init(void)
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);
   ffi_closure_s = intern(lit("ffi-closure"), user_package);
   reg_fun(intern(lit("ffi-type-compile"), user_package), func_n1(ffi_type_compile));
+  reg_fun(intern(lit("ffi-type-operator-p"), user_package), func_n1(ffi_type_operator_p));
+  reg_fun(intern(lit("ffi-type-p"), user_package), func_n1(ffi_type_p));
 #if HAVE_LIBFFI
   reg_fun(intern(lit("ffi-make-call-desc"), user_package), func_n4(ffi_make_call_desc));
   reg_fun(intern(lit("ffi-call"), user_package), func_n2v(ffi_call_wrap));

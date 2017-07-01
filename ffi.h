@@ -72,6 +72,8 @@ extern val bool_s;
 extern val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
 val ffi_type_compile(val syntax);
+val ffi_type_operator_p(val sym);
+val ffi_type_p(val sym);
 val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes);
 val ffi_make_closure(val fun, val call_desc, val safe_p_in, val abort_ret_in);
 mem_t *ffi_closure_get_fptr(val closure);

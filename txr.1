@@ -55865,6 +55865,41 @@ argument types match.
     (#<ffi-type str> #<ffi-type int>)>
 .cble
 
+.coNP Function @ ffi-type-operator-p
+.synb
+.mets (ffi-type-operator-p << symbol )
+.syne
+.desc
+The
+.code ffi-type-operator-p
+function return
+.code t
+if
+.meta symbol
+is a type operator symbol: a symbol used in the first position of
+a recognized compound type form in the FFI type system.
+
+Otherwise, it returns
+.codn nil .
+
+.coNP Function @ ffi-type-p
+.synb
+.mets (ffi-type-p << symbol )
+.syne
+.desc
+The
+.code ffi-type-p
+function returns
+.code t
+if
+.meta symbol
+denotes a type in the FFI type system: either a built-in type or
+an alias type name established by
+.codn typedef .
+
+Otherwise, it returns
+.codn nil .
+
 .coNP Function @ ffi-make-closure
 .synb
 .mets (ffi-make-closure < lisp-fun < call-desc
