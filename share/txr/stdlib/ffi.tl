@@ -148,3 +148,10 @@
 
 (define-place-macro carray-sub (carray : (from 0) (to t))
   ^(sub ,carray ,from ,to))
+
+(defmacro znew (type . pairs)
+  (if (oddp (length pairs))
+    (throwf 'eval-error "~s: slot initform arguments must occur pairwise"
+            'znew))
+  (let ((qpairs (mappend (aret ^(',@1 ,@2)) (tuples 2 pairs))))
+    ^(make-zstruct (ffi ,type) ,*qpairs)))

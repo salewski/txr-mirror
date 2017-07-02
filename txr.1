@@ -54687,6 +54687,12 @@ and
 .code bit
 compound type operators.
 
+See also: the
+.code make-zstruct
+function and the
+.code znew
+macro.
+
 .meIP (union < name >> {( slot << type )}*)
 The FFI
 .code union
@@ -56779,6 +56785,128 @@ following equivalence holds:
 
 .cblk
   (ffi expr)  <-->  (ffi-type-compile 'expr)
+.cble
+
+.coNP Function @ make-zstruct
+.synb
+.mets (make-zstruct < type >> { slot-sym << init-value }*)
+.syne
+.desc
+The
+.code make-zstruct
+function provides a convenient means of instantiating a structure
+for use in foreign function calls, imitating a pattern of initialization
+often seen in the C language. It instantiates a Lisp
+.code struct
+by conversion of zero-filled memory through FFI, thus creating a Lisp
+structure which appears zero-filled when converted to the foreign representation.
+
+This simplifies application code, which is spared from providing individual
+slot initializations which have this effect.
+
+The
+.meta type
+argument must be a compiled FFI
+.code struct
+type. The remaining arguments must occur pairwise. Each
+.meta slot-sym
+argument must be a symbol naming a slot in the FFI
+.code struct
+type. The
+.meta init-value
+argument which follows it specifies the value for that
+slot.
+
+The
+.code make-zstruct
+function operates as follows. Firstly, the Lisp
+.code struct
+type is retrieved which corresponds to the FFI type given by
+.metn type .
+A new instance of the Lisp type is instantiated, as if by
+a one-argument call to
+.codn make-struct .
+Next, each members indicated by a
+.meta slot-sym
+argument is set to the corresponding
+.metn init-value .
+Finally, each member of the struct which is not initialized via
+.meta slot-sym
+and
+.meta init-value
+pair, and which is known to the FFI type, is re-initialized by a conversion
+from a foreign object of all-zero bits to a Lisp value.
+argument. The
+.code struct
+object is then returned.
+
+Note: the
+.code znew
+macro provides a less verbose notation based on
+.codn make-zstruct .
+
+Note: slots which are not known to the FFI
+.code struct
+type may be initialized by
+.codn make-zstruct .
+Each
+.meta slot-sym
+must be a slot of the Lisp
+.code struct
+type; but need not be declared as a member in the FFI
+.code struct
+type.
+
+.coNP Macro @ znew
+.synb
+.mets (znew < type-syntax >> { slot-sym << init-value }*)
+.syne
+.desc
+The
+.code znew
+macro provides a convenient way of using
+.codn make-zstruct ,
+using syntax which resembles that of the
+.code new
+macro.
+
+The
+.code znew
+macro generates a
+.code make-zstruct
+call, arranging for the
+.meta type-syntax
+argument to be compiled to a FFI type object, and
+applies quoting to every
+.meta slot-sym
+argument.
+
+
+The following equivalence holds:
+
+.cblk
+  (znew s a i b j ...)  <-->  (make-zstruct (ffi s) 'a i 'b j ...)
+.cble
+
+.TP* Example
+
+Given the following FFI type definition
+
+.cblk
+  (typedef foo (struct foo (a (cptr bar)) (b uint) (c bool)))
+.cble
+
+the following results are observed:
+
+.cblk
+  ;; ordinary instantiation
+  (new foo) -> #S(foo a nil b nil c nil)
+
+  ;; Under znew, a is null cptr of correct type:
+  (znew foo) -> #S(foo a #<cptr bar: 0> b 0 c nil)
+
+  ;; value of b is specified; others come from zeros:
+  (znew foo b 42) -> #S(foo a #<cptr bar: 0> b 42 c nil)
 .cble
 
 .coNP Function @ make-union

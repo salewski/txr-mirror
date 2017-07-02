@@ -130,4 +130,5 @@ val union_get(val uni, val memb);
 val union_put(val uni, val memb, val newval);
 val union_in(val uni, val memb, val memb_obj);
 val union_out(val uni, val memb, val memb_obj);
+val make_zstruct(val type, struct args *args);
 void ffi_init(void);

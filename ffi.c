@@ -5361,6 +5361,50 @@ val union_out(val uni, val memb, val memb_obj)
   return memb_obj;
 }
 
+val make_zstruct(val type, struct args *args)
+{
+  val self = lit("make-zstruct");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  val pairs = args_get_list(args);
+  args_decl(ms_args, 0);
+  val strct = make_struct(tft->lt, nil, ms_args);
+  mem_t *zbuf;
+  char *inited = coerce(char *, zalloca(tft->nelem));
+  cnum i, largest;
+
+  if (!tft->memb)
+    uw_throwf(error_s, lit("~a: ~s isn't a struct type"), self, type, nao);
+
+  for (i = largest = 0; i < tft->nelem; i++) {
+    cnum size =tft->memb[i].mtft->size;
+    if (size > largest)
+      largest = size;
+  }
+
+  zbuf = coerce(mem_t *, zalloca(largest));
+
+  while (pairs) {
+    val sym = pop(&pairs);
+    val initval = pop(&pairs);
+
+    slotset(strct, sym, initval);
+
+    for (i = 0; i < tft->nelem; i++)
+      if (tft->memb[i].mname == sym)
+        inited[i] = 1;
+  }
+
+  for (i = 0; i < tft->nelem; i++) {
+    if (!inited[i]) {
+      struct smemb *m = &tft->memb[i];
+      val slsym = m->mname;
+      val initval = m->mtft->get(m->mtft, zbuf, self);
+      slotset(strct, slsym, initval);
+    }
+  }
+
+  return strct;
+}
 
 void ffi_init(void)
 {
@@ -5488,6 +5532,7 @@ void ffi_init(void)
   reg_fun(intern(lit("union-put"), user_package), func_n3(union_put));
   reg_fun(intern(lit("union-in"), user_package), func_n3(union_in));
   reg_fun(intern(lit("union-out"), user_package), func_n3(union_out));
+  reg_fun(intern(lit("make-zstruct"), user_package), func_n1v(make_zstruct));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
   ffi_init_extra_types();
