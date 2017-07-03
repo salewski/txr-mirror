@@ -55456,6 +55456,14 @@ In the reverse direction, when a Lisp
 object is converted to the parametrized type, its type tag must match
 .metn type-sym ,
 or else the conversion fails with an error exception.
+This rule contains a slight relaxation: a
+.code cptr
+object with a
+.code nil
+tag can be converted to a foreign representation using any parametrized type,
+if its value is null. In other situations, the
+.code cptr-cast
+function must be used to coerce the pointer object to the matching type.
 
 Note that if
 .meta type-sym

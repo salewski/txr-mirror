@@ -7571,12 +7571,17 @@ val int_cptr(val cptr)
 
 mem_t *cptr_handle(val cptr, val type_sym, val self)
 {
-  if (type(cptr) != CPTR)
+  if (type(cptr) != CPTR) {
     uw_throwf(error_s, lit("~a: ~s isn't a cptr"), self, cptr, nao);
-  if (type_sym && cptr->co.cls != type_sym)
-    uw_throwf(error_s, lit("~a: cptr ~s isn't of type ~s"), self, cptr,
-              type_sym, nao);
-  return cptr->co.handle;
+  } else {
+    mem_t *ptr = cptr->co.handle;
+
+    if (type_sym && cptr->co.cls != type_sym && (ptr != 0 || cptr->co.cls))
+      uw_throwf(error_s, lit("~a: cptr ~s isn't of type ~s"), self, cptr,
+                type_sym, nao);
+
+    return ptr;
+  }
 }
 
 mem_t *cptr_get(val cptr)
