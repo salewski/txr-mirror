@@ -2855,7 +2855,7 @@ int main(void)
   char *s;
   args[0] = &ffi_type_pointer;
   values[0] = &s;
-  return ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, &ffi_type_sint, args) == FFI_OK;
+  return ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, &ffi_type_sint, args) != FFI_OK;
 }
 !
 
@@ -2869,8 +2869,7 @@ elif conftest EXTRA_LDFLAGS=-lffi ; then
 elif [ -n "$have_pkgconfig" ] && pkg-config --exists libffi ; then
   libffi_cflags=$(pkg-config --cflags libffi)
   libffi_ldflags=$(pkg-config --libs libffi)
-  if conftest EXTRA_CFLAGS="$libffi_cflags" EXTRA_LDFLAGS="$libffi_ldflags" ; then
-    set -x
+  if conftest EXTRA_FLAGS="$libffi_cflags" EXTRA_LDFLAGS="$libffi_ldflags" ; then
     printf "yes\n"
     printf "#define HAVE_LIBFFI 1\n" >> config.h
     conf_ldflags="${conf_ldflags:+"$conf_ldflags "}$libffi_ldflags"
