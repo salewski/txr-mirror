@@ -257,6 +257,10 @@ y.tab.c: $(top_srcdir)parser.y
 # Bison-generated parser also tests for this lint define.
 $(call EACH_CONF,y.tab.o): TXR_CFLAGS += -Dlint
 
+opt/ffi.o: TXR_CFLAGS += $(LIBFFI_CFLAGS)
+
+dbg/ffi.o: TXR_CFLAGS += $(LIBFFI_CFLAGS)
+
 # txr.c needs to know the relative datadir path to do some sysroot
 # calculations.
 

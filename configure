@@ -143,6 +143,8 @@ have_alloca=
 have_termios=
 have_winsize=
 termios_define=
+have_pkgconfig=
+libffi_cflags=
 
 #
 # Parse configuration variables
@@ -710,6 +712,8 @@ CONF_LDFLAGS := $conf_ldflags
 REMOVE_FLAGS := $remove_flags
 LEX_DBG_FLAGS := $lex_dbg_flags
 TXR_DBG_OPTS := $txr_dbg_opts
+
+LIBFFI_CFLAGS := $libffi_cflags
 !
 }
 
@@ -2828,6 +2832,15 @@ else
   printf "no\n"
 fi
 
+printf "Checking for pkg-config ... "
+
+if pkg-config --version > /dev/null 2>&1 ; then
+  printf "present\n"
+  have_pkgconfig=y
+else
+  printf "absent\n"
+fi
+
 printf "Checking for libffi ... "
 
 cat > conftest.c <<!
@@ -2853,6 +2866,18 @@ elif conftest EXTRA_LDFLAGS=-lffi ; then
   printf "yes\n"
   printf "#define HAVE_LIBFFI 1\n" >> config.h
   conf_ldflags="${conf_ldflags:+"$conf_ldflags "}-lffi"
+elif [ -n "$have_pkgconfig" ] && pkg-config --exists libffi ; then
+  libffi_cflags=$(pkg-config --cflags libffi)
+  libffi_ldflags=$(pkg-config --libs libffi)
+  if conftest EXTRA_CFLAGS="$libffi_cflags" EXTRA_LDFLAGS="$libffi_ldflags" ; then
+    set -x
+    printf "yes\n"
+    printf "#define HAVE_LIBFFI 1\n" >> config.h
+    conf_ldflags="${conf_ldflags:+"$conf_ldflags "}$libffi_ldflags"
+  else
+    printf "no\n"
+    libffi_cflags=
+  fi
 else
   printf "no\n"
 fi
