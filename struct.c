@@ -1024,6 +1024,13 @@ static void static_slot_rewrite_rec(struct struct_type *st,
                                     struct stslot *to)
 {
   cnum i;
+  val iter;
+
+  for (iter = st->dvtypes; iter; iter = cdr(iter)) {
+    val stype = car(iter);
+    struct struct_type *st = coerce(struct struct_type *, stype->co.handle);
+    static_slot_rewrite_rec(st, from, to);
+  }
 
   for (i = 0; i < st->nstslots; i++) {
     struct stslot *s = &st->stslot[i];
@@ -1033,16 +1040,6 @@ static void static_slot_rewrite_rec(struct struct_type *st,
         s->home_offs == from->home_offs)
     {
       *s = *to;
-    }
-  }
-
-  {
-    val iter;
-
-    for (iter = st->dvtypes; iter; iter = cdr(iter)) {
-      val stype = car(iter);
-      struct struct_type *st = coerce(struct struct_type *, stype->co.handle);
-      static_slot_rewrite_rec(st, from, to);
     }
   }
 }
