@@ -1081,7 +1081,7 @@ static val static_slot_ens_rec(val stype, val sym, val newval,
     to.store = nil;
     to.home_type = stype;
     to.home = &stsl->store;
-    to.home_offs = stsl->home_offs;
+    to.home_offs = stsl - st->stslot;
     static_slot_rewrite_rec(st, stsl, &to);
     set(stslot_loc(stsl), newval);
     return newval;
