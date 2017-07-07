@@ -4182,7 +4182,14 @@ static val do_expand(val form, val menv)
       if (body_ex == body)
         return form;
       return rlcp(cons(sym, cons(syms, body_ex)), form);
-    } else if (sym == quote_s || sym == fun_s || sym == dvbind_s) {
+    } else if (sym == fun_s) {
+      val arg = second(form);
+      if (consp(arg) && car(arg) == lambda_s) {
+        val arg_ex = expand(arg, menv);
+        return rlcp(list(sym, arg_ex, nao), form);
+      }
+      return form;
+    } else if (sym == quote_s || sym == dvbind_s) {
       return form;
     } else if (sym == for_op_s) {
       val vars = second(form);
@@ -4301,7 +4308,8 @@ static val do_expand(val form, val menv)
          unwind-protect, return and other special forms whose arguments
          are evaluated */
       val form_ex = dot_to_apply(form, nil);
-      val sym_ex = first(form_ex);
+      val insym = first(form_ex);
+      val insym_ex = insym;
       val args = rest(form_ex);
       val args_ex = expand_forms(args, menv);
 
@@ -4326,6 +4334,9 @@ static val do_expand(val form, val menv)
         }
       }
 
+      if (consp(insym) && car(insym) == lambda_s)
+        insym_ex = expand(insym, menv);
+
       if (!lookup_fun(menv, sym) && !special_operator_p(sym)) {
         if (!bindable(sym))
           eval_warn(last_form_expanded,
@@ -4337,13 +4348,13 @@ static val do_expand(val form, val menv)
                          sym, nao);
       }
 
-      if (args_ex == args) {
+      if (insym_ex == insym && args_ex == args) {
         if (form_ex == form)
           return form;
         return form_ex;
       }
 
-      return rlcp(cons(sym_ex, args_ex), form);
+      return rlcp(cons(insym_ex, args_ex), form);
     }
     abort();
   }
