@@ -13564,7 +13564,17 @@ operator yields that function.
 
 Note: the
 .code fun
-operator does not see macro bindings. It is possible to
+operator does not see macro bindings via their symbolic names
+with which they are defined by
+.codn defmacro .
+However, the name syntax
+.cblk
+.meti (macro << name )
+.cble
+may be used to refer to macros. This syntax is documented in the
+description of
+.codn func-get-name .
+It is also possible to
 retrieve a global macro expander using the function
 .codn symbol-macro .
 
