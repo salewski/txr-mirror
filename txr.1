@@ -24375,7 +24375,7 @@ not to the type against which the calling method is defined.
 .syne
 .desc
 The
-.code call-super-method
+.code call-super-fun
 retrieves the function stored in the slot
 .meta name
 of the supertype of
@@ -24394,6 +24394,28 @@ must name a static slot of that structure type.
 
 The object retrieved from that static slot must be
 callable as a function, and accept the arguments.
+
+.TP* Example:
+
+Print a message and call supertype method:
+
+.cblk
+  (defstruct base nil)
+
+  (defstruct derived base)
+
+  (defmeth base fun (obj arg)
+    (format t "base fun method called with arg ~s\en" arg))
+
+  (defmeth derived fun (obj arg)
+    (format t "derived fun method called with arg ~s\en" arg)
+    (call-super-fun 'derived 'fun obj arg))
+
+  ;; Interactive Listener:
+  1> (new derived).(fun 42)
+  derived fun method called with arg 42
+  base fun method called with arg 42
+.cble
 
 .coNP Macro @ with-objects
 .synb
