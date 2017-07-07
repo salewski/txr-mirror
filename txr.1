@@ -23726,7 +23726,7 @@ from
 will call the most derived override of that method.
 
 A derived method can use the
-.code call-super-method
+.code call-super-fun
 to call the corresponding method in the base class.
 
 Thus derived structs can inherit the copy handling logic from base structs, and
@@ -24331,6 +24331,11 @@ from which the slot is inherited.
 .mets (call-super-method < struct-obj < name << argument *)
 .syne
 .desc
+This function is deprecated. Solutions involving
+.code call-super-method
+should be reworked in terms of
+.codn call-super-fun .
+
 The
 .code call-super-method
 retrieves the function stored in the slot
@@ -24353,6 +24358,16 @@ must name a static slot of that structure type.
 
 The object retrieved from that static slot must be
 callable as a function, and accept the arguments.
+
+Note that it is not correct for a method that is defined
+against a particular type to use
+.code call-super-method
+to call the same method (or any other method) in the supertype
+of that particular type. This is because
+.code call-super-method
+refers to the type of the object instance
+.metn struct-obj ,
+not to the type against which the calling method is defined.
 
 .coNP Function @ call-super-fun
 .synb
