@@ -13544,21 +13544,25 @@ function in the current lexical environment.
 
 The
 .meta function-name
-is a symbol denoting a named function: a built in
+may be a symbol denoting a named function: a built in
 function, or one defined by
 .codn defun .
+
+The
+.meta function-name
+may also take any of the forms specified in the description of the
+.code func-get-name
+function. If such a
+.meta function-name
+refers to a function which exists, then the
+.code fun
+operator yields that function.
 
 Note: the
 .code fun
 operator does not see macro bindings. It is possible to
 retrieve a global macro expander using the function
 .codn symbol-macro .
-
-.TP* "Dialect Note:"
-A lambda expression is not a function name in \*(TL. The
-syntax
-.code "(fun (lambda ...))"
-is invalid.
 
 .coNP Operator @ dwim
 .synb
@@ -16278,7 +16282,18 @@ is a symbol denoting the struct type and
 is the static slot of the struct type which holds
 .metn func .
 
-If all the searches fail, then
+If
+.meta func
+is an interpreted function not found under any name,
+then a lambda expression denoting that function
+is returned in the syntax
+.cblk
+.meti (lambda < args << form *)
+.cble
+
+If
+.meta func
+cannot be identified as a function, then
 .code nil
 is returned.
 

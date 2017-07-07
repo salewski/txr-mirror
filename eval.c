@@ -490,6 +490,8 @@ val lookup_fun(val env, val sym)
                    cons(sym, static_slot(type, slot)));
       } else if (car(sym) == macro_s) {
         return lookup_mac(nil, cadr(sym));
+      } else if (car(sym) == lambda_s) {
+        return cons(sym, func_interp(env, sym));
       }
     }
     return or2(gethash(top_fb, sym),
