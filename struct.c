@@ -1176,15 +1176,17 @@ static val call_super_method(val inst, val sym, struct args *args)
 
 static val call_super_fun(val type, val sym, struct args *args)
 {
-  val suptype = super(type);
+  val self = lit("call-super-fun");
+  struct struct_type *st = stype_handle(&type, self);
+  val suptype = st->super;
 
   if (suptype) {
     val fun = static_slot(suptype, sym);
     return generic_funcall(fun, args);
   }
 
-  uw_throwf(error_s, lit("call-super-fun: ~s has no supertype"),
-            type, nao);
+  uw_throwf(error_s, lit("~a: ~s has no supertype"),
+            self, type, nao);
 }
 
 val slotp(val type, val sym)
