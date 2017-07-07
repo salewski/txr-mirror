@@ -23725,9 +23725,14 @@ from
 .code copy
 will call the most derived override of that method.
 
-A derived method can use the
+To call the corresponding method in the base class, a given derived method
+can use the
 .code call-super-fun
-to call the corresponding method in the base class.
+function, or else the
+.code "(meth ...)"
+syntax in the first position of a compound form, in place of a function name.
+Examples of both are given in the documentation for
+.codn call-super-fun .
 
 Thus derived structs can inherit the copy handling logic from base structs, and
 extend it with their own.
@@ -24415,6 +24420,20 @@ Print a message and call supertype method:
   1> (new derived).(fun 42)
   derived fun method called with arg 42
   base fun method called with arg 42
+.cble
+
+Note that a static method or function in any structure type
+can be invoked by using the
+.code "(meth ...)"
+name syntax in the first position of a compound form, as
+a function name. Thus, the above
+.code "derived fun"
+can also be written:
+
+.cblk
+  (defmeth derived fun (obj arg)
+    (format t "derived fun method called with arg ~s\en" arg)
+    ((meth base fun) obj arg))
 .cble
 
 .coNP Macro @ with-objects
