@@ -55951,7 +55951,10 @@ printf("hello, %s\en", name)
 .cble
 requires a different descriptor.
 
-.SS* Foreign Function Functions and Macros
+.SS* Foreign Function Type API
+
+This group of functions comprises the basic interface to the \*(TL's FFI
+type system module.
 
 .coNP Function @ ffi-type-compile
 .synb
@@ -56438,6 +56441,12 @@ or
 .cblk
   (ffi-elemtype (ffi (ptr int))) -> #<ffi-type int>
 .cble
+
+.SS* Foreign Function Macro Language
+
+This group of macros provides a higher-level language for working with
+FFI types and defining foreign function bindings. The macros are implemented
+using the Foreign Function Type API described in the previous section.
 
 .coNP Macro @ with-dyn-lib
 .synb
@@ -56963,6 +56972,8 @@ following equivalence holds:
   (ffi expr)  <-->  (ffi-type-compile 'expr)
 .cble
 
+.SS* Zero-filled Struct Initialization
+
 .coNP Function @ make-zstruct
 .synb
 .mets (make-zstruct < type >> { slot-sym << init-value }*)
@@ -57084,6 +57095,13 @@ the following results are observed:
   ;; value of b is specified; others come from zeros:
   (znew foo b 42) -> #S(foo a #<cptr bar: 0> b 42 c nil)
 .cble
+
+.SS* Foreign Unions
+
+The following group of functions provides the means for working
+with foreign unions, in conjunction with the
+.code union
+FFI type.
 
 .coNP Function @ make-union
 .synb
@@ -57255,6 +57273,13 @@ an argument, in cases when the callback has updated the Lisp
 object corresponding to a union member, and that change needs
 to be propagated to the foreign caller.
 
+.SS* Buffer Functions
+
+Functions in this area provide a way to perform conversion between
+Lisp objects and foreign representation to and from objects of the
+.code buf
+type.
+
 .coNP Functions @ ffi-put and @ ffi-put-into
 .synb
 .mets (ffi-put < obj << type )
@@ -57397,6 +57422,13 @@ operation is similar to the "get semantics" performed by FFI
 in order to extract the return value of foreign function
 calls, and by the FFI callback mechanism to extract the
 arguments coming into a callback.
+
+.SS* Foreign Arrays
+
+Functions in this area provide a means for working with
+foreign arrays, in connection with the FFI
+.code carray
+type.
 
 .coNP Functions @ carray-vec and @ carray-list
 .synb
