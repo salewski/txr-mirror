@@ -54000,7 +54000,7 @@ The expression
 .code "(cptr-int 0)"
 also produces a null pointer on all platforms where \*(TX is found.
 
-.SS* Foreign Function Interface
+.SH* FOREIGN FUNCTION INTERFACE
 
 On platforms where it is supported, \*(TX provides a feature called the
 .IR "foreign function interface" ,
@@ -54037,7 +54037,7 @@ by the usual convention of pointer to the first element.  The handling of
 .code carray
 requires more responsibility from the application.
 
-.NP* Cautionary Notes
+.SS* Cautionary Notes
 
 The FFI feature is inherently unsafe. If the FFI type language is used to write
 incorrect type definitions which do not match the actual binary interface of a
@@ -54058,9 +54058,9 @@ in use.
 FFI developers are encouraged to unit-test their FFI definitions carefully
 and use tools such as Valgrind to detect memory misuses and leaks.
 
-.NP* Key Concepts
+.SS* Key Concepts
 
-.IP "The \fIput\fP operation"
+.NP* The \fIput\fP operation
 
 When a function call takes place from the \*(TL arena into a foreign
 library function, argument values must be prepared in the foreign
@@ -54078,7 +54078,7 @@ function call is the
 operation. In FFI callback dispatch, the operation which propagates the
 callback return value to the foreign caller is also the put operation.
 
-.IP "The \fIin\fP operation"
+.NP* The \fIin\fP operation
 
 After a foreign function call returns from a foreign library back to the \*(TL
 arena, the arguments have to be examined one more time, because two-way
@@ -54105,7 +54105,7 @@ do not propagate from the Lisp representation to the external representation;
 however, those objects may contain pointers requiring the by-pointer
 nuance of the in operation to be invoked.
 
-.IP "The \fIget\fP operation"
+.NP* The \fIget\fP operation
 
 After a foreign call completes, it is also necessary to retrieve the call's
 return value, convert it to a Lisp object, and free any dynamic memory.
@@ -54118,7 +54118,7 @@ The
 operation is also used by a Lisp callback function, called from a foreign
 library, to convert the arguments to Lisp objects.
 
-.IP "The \fIout\fP operation"
+.NP* The \fIout\fP operation
 
 When a Lisp callback invoked by a foreign library completes, it must
 provide a return value, and also update any argument objects with new
@@ -54136,9 +54136,7 @@ by triggering the by-value nuance of the structure type's out operation, which
 will recursively invoke the in operation of embedded pointers, which will
 in turn invoke the by-pointer nuance.
 
-.PP
-
-.NP* The FFI Type System
+.SS* The FFI Type System
 
 The FFI type system consists of a notation built using Lisp syntax. Basic,
 unparametrized types are denoted by symbolic atoms. Similarly to a concept
@@ -54191,9 +54189,9 @@ is an alias for the
 basic type, which corresponds to the C type
 .codn "unsigned int" .
 
-The following are basic types:
+.SS* Simple FFI Types
 
-.ccIP @, char @ uchar and @ bchar
+.coNP FFI types @, char @ uchar and @ bchar
 These first of these two types correspond to the C character types
 .code char
 and
@@ -54222,7 +54220,8 @@ and
 .code bchar
 specially, but apply no special treatment to
 .codn uchar .
-.ccIP @, short @, ushort @, int @, uint @, long @, ulong
+
+.coNP FFI types @, short @, ushort @, int @, uint @, long @, ulong
 These types correspond to the C integer types
 .codn short ,
 .codn "unsigned short" ,
@@ -54235,7 +54234,7 @@ Lisp characters and integers convert to these foreign representations, if they
 are in their numeric range.  Foreign values of these types convert
 to Lisp integers.
 
-.ccIP @ longlong and @ulonglong
+.coNP FFI types @ longlong and @ ulonglong
 These types are
 .code typedef
 names for integer types whose representation corresponds to the C types
@@ -54243,18 +54242,19 @@ names for integer types whose representation corresponds to the C types
 and
 .codn "unsigned long long" .
 
-.ccIP @ int8 and @ uint8
+.coNP FFI types @ int8 and @ uint8
 These types correspond to 8 bit signed and unsigned integers.
 They convert like integer types: both Lisp integers and characters
 convert to these types, if in a suitable range; and under
 the reverse conversion, the foreign values become Lisp integers.
 
-.ccIP @, int16 @, uint16 @, int32 @, uint32 @ int64 and @ uint64
+.coNP FFI types @, int16 @, uint16 @, int32 @, uint32 @ int64 and @ uint64
 These types correspond denote precisely sized C integer types.
 They convert like integer types: both Lisp integers and characters
 convert to these types, if in a suitable range; and under
 the reverse conversion, the foreign values become Lisp integers.
-.ccIP @ float and @ double
+
+.coNP FFI types @ float and @ double
 These types correspond to the same-named C types. They convert
 Lisp integers, characters and floating-point numbers to these C types.
 Because the \*(TL
@@ -54274,7 +54274,7 @@ only \*(TL
 .code float
 type.
 
-.ccIP @ bool
+.coNP FFI type @ bool
 The type
 .code bool
 is a typedef name for the
@@ -54284,7 +54284,7 @@ instance of the parametrized
 type, which is to say,
 .codn "(bool uchar)" .
 
-.ccIP @ val
+.coNP FFI type @ val
 The FFI
 .code val
 type denotes the machine representation of a Lisp value cell, which is
@@ -54308,7 +54308,8 @@ validity checks; an exception will be thrown if the bit pattern isn't a valid
 Lisp object. Nevertheless, the checks has cases which report as false
 positives: admit some invalid objects may be admitted into the Lisp realm,
 possibly with catastrophic results.
-.ccIP @ cptr
+
+.coNP FFI type @ cptr
 This type corresponds to a C pointer of any type, including a function pointer;
 \*(TX doesn't run on any exotic platforms in which there is a representational
 difference among C pointers.
@@ -54339,7 +54340,7 @@ object can be passed as the argument of
 .code fclose
 to close the stream.
 
-.ccIP @, str @, bstr @ str-d and @ bstr-d
+.coNP FFI types @, str @, bstr @ str-d and @ bstr-d
 These FFI types correspond to the C pointer type
 .codn "char *" ,
 providing automatic conversion between Lisp strings and null-terminated
@@ -54458,7 +54459,7 @@ passes the string pointer in the same way, but the foreign module mustn't
 use the pointer after returning. FFI will free the pointer that had been
 passed.
 
-.ccIP @ wstr and @ wstr-d
+.coNP FFI types @ wstr and @ wstr-d
 The FFI type
 .code wstr
 corresponds to the C type
@@ -54471,7 +54472,7 @@ and
 .code str-d
 types, except that no UTF-8 conversion takes place.
 
-.ccIP @ buf and @ buf-d
+.coNP FFI types @ buf and @ buf-d
 The
 .code buf
 type creates a correspondence between the \*(TL
@@ -54568,7 +54569,7 @@ the call, it will invoke the by-value in semantics of
 which is a no-op: thus no attempt is made to extract a buffer, even if
 the foreign function alters the pointer.
 
-.ccIP @ closure
+.coNP FFI type @ closure
 The
 .code closure
 type converts two kinds of Lisp objects to a C pointer: the
@@ -54584,7 +54585,7 @@ macro. The
 type is useful for passing callbacks to foreign functions: Lisp functions
 which appear to be C functions to foreign code.
 
-.ccIP @ cptr
+.coNP FFI types @ cptr
 The
 .code cptr
 type converts between a foreign pointer and a Lisp object of type
@@ -54612,7 +54613,7 @@ There is a parametrized version of the
 .code cptr
 FFI type, which provides a measure of type safety.
 
-.ccIP @ void
+.coNP FFI type @ void
 The
 .code void
 type is useful for indicating the return type of foreign functions and
@@ -54621,9 +54622,15 @@ It will convert any lisp value into zero bytes, and convert
 zero bytes into
 .codn nil .
 
-.PP
-The following following parametrized types are available:
-.meIP (enum < name >> {( sym << value ) | << sym }*)
+.SS* Parametrized FFI Type Operators
+
+The following following parametrized type operators are available.
+
+.coNP FFI type @ enum
+.synb
+.mets (enum < name >> {( sym << value ) | << sym }*)
+.syne
+.desc
 The type
 .code enum
 specifies an enumerated type, which establishes a correspondence between
@@ -54689,7 +54696,11 @@ that integer value itself rather than a symbol. If an integer value occurs
 which is assigned to multiple enumeration symbols, it is not specified which
 of those symbols is produced.
 
-.meIP (enumed < type < name >> {( sym << value ) | << sym }*)
+.coNP FFI type @ enumed
+.synb
+.mets (enumed < type < name >> {( sym << value ) | << sym }*)
+.syne
+.desc
 The
 .code enumed
 type operator is a generalization of
@@ -54715,7 +54726,11 @@ the representation range of
 which is not checked until the conversion of a symbol
 through the enumeration is is attempted at run time.
 
-.meIP (struct < name >> {( slot << type )}*)
+.coNP FFI type @ struct
+.synb
+.mets (struct < name >> {( slot << type )}*)
+.syne
+.desc
 The FFI
 .code struct
 type maps between a Lisp
@@ -54778,7 +54793,11 @@ function and the
 .code znew
 macro.
 
-.meIP (union < name >> {( slot << type )}*)
+.coNP FFI type @ union
+.synb
+.mets (union < name >> {( slot << type )}*)
+.syne
+.desc
 The FFI
 .code union
 type resembles the
@@ -54838,7 +54857,12 @@ performs "out semantics" on the specified member of a union,
 propagating modifications done on a previously retrieved Lisp object
 back into the union.
 
-.meIP (array < dim << type )
+.coNP FFI type @ array
+.synb
+.mets (array < dim << type )
+.mets (array << type )
+.syne
+.desc
 The FFI
 .code array
 type creates a correspondence between Lisp sequences and
@@ -54883,10 +54907,9 @@ the array type establishes a special correspondence with Lisp strings.
 When the C array is decoded, a Lisp string is created or updated in place
 to reflect the new contents.
 
-.meIP (array << type )
-When the
+The second form, whose syntax omits the
 .meta dim
-element is omitted from the syntax, it denotes a variable length
+element, it denotes a variable length
 array. It corresponds to the concept of an incomplete array
 in the C language, except that no implicit array-to-pointer conversion
 concept is implemented in the FFI type system. This type may not
@@ -54898,7 +54921,12 @@ Since the type has unknown length, it has a trivial get operation which returns
 It is useful for passing a variable amount of data into a foreign
 function by pointer.
 
-.meIP (zarray < dim << type )
+.coNP FFI type @ zarray
+.synb
+.mets (zarray < dim << type )
+.mets (zarray << type )
+.syne
+.desc
 The
 .code zarray
 type is a variant of
@@ -54941,10 +54969,11 @@ convert to U+DC00. In contrast, a
 will treat the 42 bytes as a null-terminated string, and decode UTF-8 only
 up to the first null.
 
-.meIP (zarray << type )
-The
+The one-argument variant of the
 .code zarray
-is a null-terminated variant of the variable-length array.
+syntax which omits the
+.meta dim
+argument specifies a null-terminated variant of the variable-length array.
 Like that type, it corresponds to the concept of an incomplete
 array in the C language. It may not be used as an array element
 or structure member, and cannot be passed as an argument or returned
@@ -54974,7 +55003,11 @@ to contain all of the new elements. If the decoded vector is shorter than the
 decoded one, then it replaces a range of the original one corresponding to
 its length.
 
-.meIP (ptr << type )
+.coNP FFI type @ ptr
+.synb
+.mets (ptr << type )
+.syne
+.desc
 The
 .meta ptr
 denotes the passage of a value by pointer. The
@@ -55054,8 +55087,11 @@ The Lisp structure's slot will be updated with the new integer.
 This will happen even if the Lisp structure is being passed as a by-value
 argument.
 
-.meIP (ptr-in << type )
-The
+.coNP FFI type @ ptr-in
+.synb
+.mets (ptr-in << type )
+.syne
+.desc
 .code ptr-in
 type is a variation of
 .code ptr
@@ -55083,7 +55119,11 @@ The get semantics of
 is the same as that of
 .codn ptr .
 
-.meIP (ptr-out << type )
+.coNP FFI type @ ptr-out
+.synb
+.mets (ptr-out << type )
+.syne
+.desc
 The
 .code ptr-out
 type is a variant of
@@ -55103,7 +55143,11 @@ the by-pointer nuance of
 in semantics is invoked to decode the external representation to
 Lisp data.
 
-.meIP (ptr-in-d << type )
+.coNP FFI type @ ptr-in-d
+.synb
+.mets (ptr-in-d << type )
+.syne
+.desc
 The
 .code ptr-in-d
 type is a variant of
@@ -55135,7 +55179,11 @@ C object is to be seized. FFI will automatically free the C object
 when get semantics is invoked to retrieve a value through a
 .codn ptr-in-d .
 
-.meIP (ptr-out-d << type )
+.coNP FFI type @ ptr-out-d
+.synb
+.mets (ptr-out-d << type )
+.syne
+.desc
 The
 .code ptr-out-d
 type is a variant of
@@ -55165,7 +55213,11 @@ is identical to that of
 The out semantics is identical to that of
 .codn ptr .
 
-.meIP (ptr-out-s << type )
+.coNP FFI type @ ptr-out-s
+.synb
+.mets (ptr-out-s << type )
+.syne
+.desc
 The
 .code ptr-out-d
 type is a variant of
@@ -55187,7 +55239,11 @@ object.
 
 The get semantics retrieves a Lisp value without freeing.
 
-.meIP (bool << type )
+.coNP FFI type @ bool
+.synb
+.mets (bool << type )
+.syne
+.desc
 The parametrized type
 .code bool
 can be derived from any integer or floating-point type. There is also an
@@ -55237,7 +55293,11 @@ or
 .cod2 non- nil
 Lisp value converts to a 0 or 1 field value.
 
-.meIP ({ubit | sbit} << width )
+.coNP FFI types @ ubit and @ sbit
+.synb
+.mets ({ubit | sbit} << width )
+.syne
+.desc
 The
 .code ubit
 and
@@ -55355,7 +55415,11 @@ A
 field of width 2 can represent the values -2, -1, 0 and 1, which are
 stored as the bit patterns 10, 11, 00 and 01, respectively.
 
-.meIP (bit < width << type )
+.coNP FFI type @ bit
+.synb
+.mets (bit < width << type )
+.syne
+.desc
 The
 .code bit
 operator is more general than
@@ -55404,7 +55468,11 @@ Details about the algorithm by which bitfields are allocated within a structure
 are given in the paragraph below entitled
 .BR "Bitfield Allocation Rules" .
 
-.meIP ({buf | buf-d} << size )
+.coNP FFI types @ buf and @ buf-d
+.synb
+.mets ({buf | buf-d} << size )
+.syne
+.desc
 The parametrized
 .code buf
 and
@@ -55432,7 +55500,11 @@ The get semantics of
 is that a Lisp object is created using a dynamically allocated copy
 of the memory.
 
-.meIP (carray << type )
+.coNP FFI type @ carray
+.synb
+.mets (carray << type )
+.syne
+.desc
 The
 .code carray
 type corresponds to a C pointer, in connection with the concept
@@ -55518,7 +55590,11 @@ It is possible to create a
 view over a buffer, using
 .codn carray-buf .
 
-.meIP (cptr << type-sym )
+.coNP FFI type @ cptr
+.synb
+.mets (cptr << type-sym )
+.syne
+.desc
 The parametrized
 .code cptr
 type is very similar to the unparametrized
@@ -55571,7 +55647,11 @@ If handles of different types are all mapped to
 types with different tags, the situation is intercepted and diagnosed
 with an error exception.
 
-.meIP (align < width << type )
+.coNP FFI type @ align
+.synb
+.mets (align < width << type )
+.syne
+.desc
 The FFI type operator
 .code align
 defines a type which is a copy of
@@ -55629,6 +55709,7 @@ the most strictly alignment member of the structure.  The alignment of all
 other bitfields is ignored.
 .PP
 
+.SS* Additional FFI Types
 The following additional typedef names are defined denoting some common
 C types:
 .codn size-t ,
@@ -55662,7 +55743,7 @@ depending on platform:
 and
 .codn uid-t .
 
-.NP* Endian Types
+.SS* Endian Types
 In addition to the type system described in the previous section.
 the FFI type system supports
 .IR "endian types" ,
@@ -55731,7 +55812,7 @@ members of structs and elements of arrays.
 representation to the foreign representations exhibiting the specified
 endianness.
 
-.NP* Bitfield Allocation Rules
+.SS* Bitfield Allocation Rules
 The \*(TL FFI type system follows rules for bitfield allocation which were
 experimentally derived from the behavior of the GNU C compiler on several
 mainstream architectures.
@@ -55826,7 +55907,7 @@ which is a multiple of the alignment of the most strictly aligned
 member.
 
 
-.NP* FFI Call Descriptors
+.SS* FFI Call Descriptors
 
 The FFI mechanism makes use of a type-like representation called the "call
 descriptor". A call descriptor is an object which uses FFI types to describe
@@ -55869,6 +55950,8 @@ requires a certain descriptor. To perform the equivalent of
 printf("hello, %s\en", name)
 .cble
 requires a different descriptor.
+
+.SS* Foreign Function Functions and Macros
 
 .coNP Function @ ffi-type-compile
 .synb
