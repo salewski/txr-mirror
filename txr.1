@@ -54310,12 +54310,35 @@ positives: admit some invalid objects may be admitted into the Lisp realm,
 possibly with catastrophic results.
 
 .coNP FFI type @ cptr
-This type corresponds to a C pointer of any type, including a function pointer;
-\*(TX doesn't run on any exotic platforms in which there is a representational
-difference among C pointers.
-This foreign type converts between the \*(TL type
+This type corresponds to a foreign pointer of any type, including a pointer to a function.
+
+The
 .code cptr
-and C pointers.
+type converts between a foreign pointer and a Lisp object of type
+.codn cptr .
+
+Lisp objects of type
+.code cptr
+are tagged with a symbolic tag, which may be
+.codn nil .
+
+The unparametrized
+.code cptr
+converts foreign pointers to
+.code cptr
+objects which are tagged with
+.codn nil .
+
+In the reverse direction, it converts
+.code cptr
+Lisp objects of type
+.code cptr
+to foreign pointer, without regard for their type tag.
+
+There is a parametrized version of the
+.code cptr
+FFI type, which provides a measure of type safety.
+
 Note: the
 .code cptr
 type, in the context of FFI, is particularly useful for representing
@@ -54584,34 +54607,6 @@ macro. The
 .code closure
 type is useful for passing callbacks to foreign functions: Lisp functions
 which appear to be C functions to foreign code.
-
-.coNP FFI types @ cptr
-The
-.code cptr
-type converts between a foreign pointer and a Lisp object of type
-.codn cptr .
-
-Lisp objects of type
-.code cptr
-are tagged with a symbolic tag, which may be
-.codn nil .
-
-The unparametrized
-.code cptr
-converts foreign pointers to
-.code cptr
-objects which are tagged with
-.codn nil .
-
-In the reverse direction, it converts
-.code cptr
-Lisp objects of type
-.code cptr
-to foreign pointer, without regard for their type tag.
-
-There is a parametrized version of the
-.code cptr
-FFI type, which provides a measure of type safety.
 
 .coNP FFI type @ void
 The
