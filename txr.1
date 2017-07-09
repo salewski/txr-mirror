@@ -54666,7 +54666,7 @@ type, then an error exception is thrown.
 If
 .meti >> ( sym << value )
 is given, then
-.code sym
+.meta sym
 is given the specified value. The
 .meta value
 is an expression which must evaluate to an integer value in range of the FFI
@@ -54752,14 +54752,14 @@ The
 and
 .code type
 pairs specify the structure members. The
-.code slot
+.meta slot
 elements must be symbols, and the
-.code type
+.meta type
 elements must be FFI type expressions.
 
 When a Lisp object is converted to a struct, it must, firstly, be of the struct
 type specified by
-.codn name .
+.metn name .
 Secondly, that type must have all of the slots defined in the FFI type.
 The slots are pulled from the Lisp structure in the order that they appear
 in the FFI
@@ -54773,7 +54773,7 @@ Whenever a member is defined using
 as the
 .meta slot
 name, that member represents anonymous padding. The corresponding
-.code type
+.meta type
 expression is used only to determine the size of the padding only. Its data
 transfer semantics is completely suppressed. When converting from Lisp, the
 anonymous padding member simply generates a skip of the number of byte
@@ -54892,7 +54892,7 @@ temporary buffers are automatically created and destroyed by FFI
 to manage the conversion.
 
 The
-.code dim
+.meta dim
 argument is an ordinary Lisp expression expanded and evaluated in the
 top-level environment. It must produce a non-negative integer value.
 
