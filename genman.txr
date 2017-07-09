@@ -3,8 +3,8 @@
 @(bind symhash @(hash :equal-based))
 @(bind tagmap @(hash :equal-based))
 @(bind tochash @(hash :equal-based))
-@(bind closedtxt "<TT>[+]</TT>")
-@(bind opentxt "<TT>[-]</TT>")
+@(bind closedtxt " <TT>[+]</TT>")
+@(bind opentxt " <TT>[-]</TT>")
 @(bind xpnall "[expand all]")
 @(bind clpsall "[collapse all]")
 @(bind closed t)
@@ -113,7 +113,7 @@ Content-type: text/html
 @    (end)
 <dl>
 @    (cat TOC)
-@    (bind pos @(car (search-regex TOC #/<a/)))
+@    (bind pos @(car (search-regex TOC #/<\/dt/)))
 @    (bind id @(gensym))
 @    (do (set [TOC pos..pos]
               `<a href="#/" onclick="toggle(this, '@id')" class="toggle">@(if closed closedtxt opentxt)</a>`))
