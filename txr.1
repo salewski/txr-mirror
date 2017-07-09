@@ -52931,11 +52931,16 @@ named
 .codn RTLD_LOCAL ,
 .IR "et cetera" .
 
-.SS* Buffers
+.coSS The @ buf type
 
-Buffers are vector-like objects specialized for holding binary data. Buffers
-support operations specialized toward the encoding of Lisp values into
-machine-oriented data types, and decoding such data types into Lisp values.
+Object of the type
+.code buf
+are
+.IR buffers :
+vector-like objects specialized for holding binary data represented as
+a sequence of 8 bit bytes.  Buffers support operations specialized toward the
+encoding of Lisp values into machine-oriented data types, and decoding such
+data types into Lisp values.
 
 Buffers are particularly useful in conjunction with the Foreign Function
 Interface (FFI), since they can be used to prepare arbitrary data which
