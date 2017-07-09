@@ -55709,39 +55709,17 @@ the most strictly alignment member of the structure.  The alignment of all
 other bitfields is ignored.
 .PP
 
-.SS* Additional FFI Types
-The following additional typedef names are defined denoting some common
-C types:
-.codn size-t ,
-.codn ptrdiff-t ,
-.codn int-ptr-t ,
-.codn uint-ptr-t ,
-.codn wint-t ,
-.codn sig-atomic-t ,
-.code time-t
-and
-.codn clock-t .
+.SS* Additional Types
+.coNP FFI types @, size-t @, ptrdiff-t @, int-ptr-t @, uint-ptr-t @, wint-t @, sig-atomic-t @ time-t and @ clock-t .
+These additional FFI types for common C language types are provided as
+.code typedef
+aliases.
 
+.coNP FFI types @, blkcnt-t @, blksize-t @, clockid-t @, dev-t @, fsblkcnt-t @, fsfilcnt-t @, gid-t @, id-t @, ino-t @, key-t @, loff-t @, mode-t @, nlink-t @, off-t @, pid-t @ ssize-t and @ uid-t
 The additional names of various common POSIX types may also be available,
-depending on platform:
-.codn blkcnt-t ,
-.codn blksize-t ,
-.codn clockid-t ,
-.codn dev-t ,
-.codn fsblkcnt-t ,
-.codn fsfilcnt-t ,
-.codn gid-t ,
-.codn id-t ,
-.codn ino-t ,
-.codn key-t ,
-.codn loff-t ,
-.codn mode-t ,
-.codn nlink-t ,
-.codn off-t ,
-.codn pid-t ,
-.code ssize-t
-and
-.codn uid-t .
+depending on platform. They are provided as
+.code typedef
+aliases.
 
 .SS* Endian Types
 In addition to the type system described in the previous section.
