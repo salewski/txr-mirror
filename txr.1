@@ -23489,15 +23489,10 @@ function is similar to
 The difference is that
 .meta postinitfun
 functions are called after all other initialization processing,
-rather than before. Unlike
-.meta initfun
-functions, they are also called in the opposite
-in order of inheritance, so that the structure type's
-own specific
+rather than before. They are are also called in order of
+inheritance: the
 .meta postinitfun
-is called first, and root supertype's
-.meta initfun
-is called last.
+of a structure's supertype is called before its own.
 
 .coNP Function @ find-struct-type
 .synb
@@ -60158,7 +60153,14 @@ handlers specified in a
 were executed in derived-to-base order, opposite to the
 order of execution of
 .code :init
-handlers. Specifying 148 or earlier compatibility provides this
+handlers. Though described in terms of
+.code defstruct
+syntax and concepts, this is actually a change in how
+.code make-struct-type
+treats its
+.meta postinitfun
+argument.
+Specifying 148 or earlier compatibility provides this
 old behavior. Also, until version 148, the
 .code trim-str
 function stripped leading and trailing whitespace from a string
