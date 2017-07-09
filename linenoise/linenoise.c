@@ -2621,4 +2621,6 @@ void lino_set_result(lino_t *ls, char *res)
 {
     free(ls->result);
     ls->result = res;
+    while ((res = strchr(res, '\n')) != 0)
+        *res = '\r';
 }
