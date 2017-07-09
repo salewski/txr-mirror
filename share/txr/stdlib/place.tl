@@ -817,14 +817,14 @@
           (unless cell
             (sys:eval-err "unbound macro ~s" sym))
           (cons (op cdr)
-                (op sys:rplacd cell @1)))
+                (op sys:rplacd cell)))
         :))
     (else
       (let ((cell (gethash sys:top-fb sym)))
         (unless cell
           (sys:eval-err "unbound function ~s" sym))
         (cons (op cdr)
-              (op sys:rplacd cell @1))))))
+              (op sys:rplacd cell))))))
 
 (defplace (symbol-function sym-expr) body
   (getter setter
