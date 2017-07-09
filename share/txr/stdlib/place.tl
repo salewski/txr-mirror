@@ -803,8 +803,13 @@
   (tree-case sym
     ((type struct slot)
       (if (eq type 'meth)
-        (cons (op static-slot struct slot)
-              (op static-slot-set struct slot @1))
+        (caseql slot
+          (:init (cons (op struct-get-initfun struct)
+                       (op struct-set-initfun struct)))
+          (:postinit (cons (op struct-get-postinitfun struct)
+                           (op struct-set-postinitfun struct)))
+          (t (cons (op static-slot struct slot)
+                   (op static-slot-set struct slot))))
         :))
     ((type sym)
       (if (eq type 'macro)

@@ -26,12 +26,17 @@
  */
 
 extern val struct_type_s, meth_s, print_s, make_struct_lit_s;
+extern val init_k, postinit_k;
 extern val slot_s, static_slot_s;
 val make_struct_type(val name, val super,
                      val static_slots, val slots,
                      val static_initfun, val initfun, val boactor,
                      val postinitfun);
 val struct_type_p(val obj);
+val struct_get_initfun(val type);
+val struct_set_initfun(val type, val fun);
+val struct_get_postinitfun(val type);
+val struct_set_postinitfun(val type, val fun);
 val super(val type);
 val make_struct(val type, val plist, struct args *);
 val struct_from_plist(val type, struct args *plist);

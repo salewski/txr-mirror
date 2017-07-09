@@ -486,8 +486,14 @@ val lookup_fun(val env, val sym)
         val type = or2(find_struct_type(strct),
                        if2(lisplib_try_load(strct),
                          find_struct_type(strct)));
-        return if2(and2(type, static_slot_p(type, slot)),
-                   cons(sym, static_slot(type, slot)));
+        if (slot == init_k) {
+          return cons(sym, struct_get_initfun(type));
+        } else if (slot == postinit_k) {
+          return cons(sym, struct_get_postinitfun(type));
+        } else {
+          return if2(and2(type, static_slot_p(type, slot)),
+                     cons(sym, static_slot(type, slot)));
+        }
       } else if (car(sym) == macro_s) {
         return lookup_mac(nil, cadr(sym));
       } else if (car(sym) == lambda_s) {

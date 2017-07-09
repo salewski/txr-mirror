@@ -90,6 +90,7 @@ struct struct_inst {
 };
 
 val struct_type_s, meth_s, print_s, make_struct_lit_s;
+val init_k, postinit_k;
 val slot_s, static_slot_s;
 
 static cnum struct_id_counter;
@@ -117,6 +118,8 @@ void struct_init(void)
   meth_s = intern(lit("meth"), user_package);
   print_s = intern(lit("print"), user_package);
   make_struct_lit_s = intern(lit("make-struct-lit"), system_package);
+  init_k = intern(lit("init"), keyword_package);
+  postinit_k = intern(lit("postinit"), keyword_package);
   slot_s = intern(lit("slot"), system_package);
   static_slot_s = intern(lit("static-slot"), system_package);
   struct_type_hash = make_hash(nil, nil, nil);
@@ -138,6 +141,10 @@ void struct_init(void)
   reg_fun(intern(lit("find-struct-type"), user_package),
           func_n1(find_struct_type));
   reg_fun(intern(lit("struct-type-p"), user_package), func_n1(struct_type_p));
+  reg_fun(intern(lit("struct-get-initfun"), user_package), func_n1(struct_get_initfun));
+  reg_fun(intern(lit("struct-set-initfun"), user_package), func_n2(struct_set_initfun));
+  reg_fun(intern(lit("struct-get-postinitfun"), user_package), func_n1(struct_get_postinitfun));
+  reg_fun(intern(lit("struct-set-postinitfun"), user_package), func_n2(struct_set_postinitfun));
   reg_fun(intern(lit("super"), user_package), func_n1(super));
   reg_fun(intern(lit("make-struct"), user_package), func_n2v(make_struct));
   reg_fun(intern(lit("struct-from-plist"), user_package), func_n1v(struct_from_plist));
@@ -389,6 +396,32 @@ val find_struct_type(val sym)
 val struct_type_p(val obj)
 {
   return tnil(typeof(obj) == struct_type_s);
+}
+
+val struct_get_initfun(val type)
+{
+  struct struct_type *st = stype_handle(&type, lit("struct-get-initfun"));
+  return st->initfun;
+}
+
+val struct_set_initfun(val type, val fun)
+{
+  struct struct_type *st = stype_handle(&type, lit("struct-set-initfun"));
+  st->initfun = fun;
+  return fun;
+}
+
+val struct_get_postinitfun(val type)
+{
+  struct struct_type *st = stype_handle(&type, lit("struct-get-postinitfun"));
+  return st->postinitfun;
+}
+
+val struct_set_postinitfun(val type, val fun)
+{
+  struct struct_type *st = stype_handle(&type, lit("struct-set-postinitfun"));
+  st->postinitfun = fun;
+  return fun;
 }
 
 val super(val type)
@@ -1515,6 +1548,12 @@ val method_name(val fun)
         return list(meth_s, sym, slot, nao);
       }
     }
+
+    if (st->initfun == fun)
+      return list(meth_s, sym, init_k, nao);
+
+    if (st->postinitfun == fun)
+      return list(meth_s, sym, postinit_k, nao);
   }
 
   return nil;

@@ -286,7 +286,10 @@
   ^[(fun umethod) ',slot ,*bound-args])
 
 (defun sys:defmeth (type-sym name fun)
-  (static-slot-ensure type-sym name fun)
+  (caseq name
+    (:init (struct-set-initfun type-sym fun))
+    (:postinit (struct-set-postinitfun type-sym fun))
+    (t (static-slot-ensure type-sym name fun)))
   ^(meth ,type-sym ,name))
 
 (defmacro defmeth (:form form type-sym name arglist . body)
