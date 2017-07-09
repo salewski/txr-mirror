@@ -60037,12 +60037,21 @@ would arrange for the evaluation of
 .code a
 as a variable, rather than treating it as the symbol
 .code a
-itself. Beside using the compatibility mechanism, a workaround is to
-use a list of keys, exemplified by a rewrite of the foregoing
-expression to
+itself. Though the compatibility mechanism restores the behavior,
+applications depending on the evaluating behavior should be changed to
+instead use
+.codn caseq* ,
+.code caseql*
+or
+.codn casequal .
+A workaround for this bug for \*(TX versions 156 or older is to replace
+simple keys with a key list of length one, exemplified by a rewrite of the
+foregoing expression to
 .codn "(caseql x ((a) 0))" .
-The other behavior was that empty lists of forms in a clause were
-producing a result value of
+Here
+.code a
+is not evaluated.
+forms in a clause were producing a result value of
 .codn t .
 For example
 .code "(case 1 (1))"
