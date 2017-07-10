@@ -5406,6 +5406,38 @@ val make_zstruct(val type, struct args *args)
   return strct;
 }
 
+val zero_fill(val type, val obj)
+{
+  val self = lit("zero-fill");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  cnum size = tft->size;
+  int need_free = (size >= 1024);
+  mem_t *buf = if3(need_free, chk_calloc(1, size), coerce(mem_t *, zalloca(size)));
+  val ret = nil;
+
+  if (need_free) {
+    uw_simple_catch_begin;
+
+    if (tft->in != 0)
+      ret = tft->in(tft, 1, buf, obj, self);
+    else
+      ret = tft->get(tft, buf, self);
+
+    uw_unwind {
+      free(buf);
+    }
+
+    uw_catch_end;
+  } else {
+    if (tft->in != 0)
+      ret = tft->in(tft, 1, buf, obj, self);
+    else
+      ret = tft->get(tft, buf, self);
+  }
+
+  return ret;
+}
+
 void ffi_init(void)
 {
   prot1(&ffi_typedef_hash);
@@ -5533,6 +5565,7 @@ void ffi_init(void)
   reg_fun(intern(lit("union-in"), user_package), func_n3(union_in));
   reg_fun(intern(lit("union-out"), user_package), func_n3(union_out));
   reg_fun(intern(lit("make-zstruct"), user_package), func_n1v(make_zstruct));
+  reg_fun(intern(lit("zero-fill"), user_package), func_n2(zero_fill));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
   ffi_init_extra_types();

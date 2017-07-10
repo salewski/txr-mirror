@@ -57082,7 +57082,14 @@ following equivalence holds:
   (ffi expr)  <-->  (ffi-type-compile 'expr)
 .cble
 
-.SS* Zero-filled Struct Initialization
+.SS* Zero-filled Object Support
+
+Communicating with foreign interfaces sometimes requires representations
+to be initialized consisting of all zero bits, or mostly zero bits.
+
+\*(TX provides convenient ways to prepare Lisp objects such that when those
+objects are converted to a foreign representation, they generate zero-filled
+representations.
 
 .coNP Function @ make-zstruct
 .synb
@@ -57205,6 +57212,31 @@ the following results are observed:
   ;; value of b is specified; others come from zeros:
   (znew foo b 42) -> #S(foo a #<cptr bar: 0> b 42 c nil)
 .cble
+
+.coNP Function @ zero-fill
+.synb
+.mets (zero-fill < type << obj )
+.syne
+.desc
+The
+.code zero-fill
+function invokes the by-reference in semantics of FFI type
+.meta type
+against a zero-filled buffer, and a Lisp object
+.metn obj .
+
+This means that if
+.meta obj
+is an aggregate such as a vector, list or structure,
+it is updated as if from an all-zero-bit foreign representation.
+In that situation,
+.meta obj
+is also returned.
+
+An object which has by-value semantics, such as an integer,
+is not updated. In this case, nevertheless, the return value
+is a Lisp object produced by converting an all-zero-bit buffer to
+.metn type .
 
 .SS* Foreign Unions
 
