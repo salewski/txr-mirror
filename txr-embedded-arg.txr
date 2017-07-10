@@ -13,20 +13,17 @@
 @file
 @  (eof)
 @  (do
-     (let ((f (stream-positioned-to-right-place file)))
-       (with-in-string-byte-stream (s string)
-         (mapdo (op put-byte @1 f)
-                (take 127 (pad (gun (get-byte s)) 0)))
-         (put-byte 0 f))))
+     (let* ((f (stream-positioned-to-right-place file))
+            (b (ffi-put string (ffi (zarray 128 char)))))
+       (put-buf b 0 f)))
 @(or)
 @file
 @  (eof)
 @  (do
-     (let ((f (stream-positioned-to-right-place file)))
-       (let ((arg-str (with-out-string-stream (u8)
-                        (mapdo (op put-byte @1 u8)
-                               (take 127 (gun (get-byte f)))))))
-         (put-line arg-str))))
+     (let ((f (stream-positioned-to-right-place file))
+           (b (make-buf 128)))
+       (fill-buf b 0 f)
+       (put-line (ffi-get b (ffi (zarray 128 char))))))
 @(or)
 @   (output)
 usage: @{self-path} [-w string] txr-executable
