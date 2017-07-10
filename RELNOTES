@@ -1,3 +1,41 @@
+                                    TXR 182
+                                   2017-07-09
+
+
+  Features
+
+  - Lisp:
+    - Lambda expressions are function names now, improving compatibility
+      of TXR Lisp with other dialects.
+  - FFI:
+    - Support for preparing zero-filled objects for foreign functions:
+      - New functions zstruct and zero-fill, and new macro znew.
+    - Relaxation in cptr type allowing a nil-tagged cptr null pointer to
+      convert to foreign pointer through a cptr FFI type bearing any tag.
+  - OOP:
+    - New functions provided for accessing and storing a struct type's
+      initfun and postinitfun.
+    - The keywords :init and :postinit can be used in the place of
+      method names, allowing a struct type's initfun and postinitfun to be
+      redefined using defmeth syntax, and also referenced using
+      the (meth type slot) syntax.
+  - Doc improvements:
+    - FFI restructured into major section with better divisions.
+    - Better HTML TOC: [+] [-] open/collapse UI rearranged.
+
+  Bugs:
+
+  - OOP:
+    - bugfixes in static-slot-ensure also affecting defmethod.
+  - Listener:
+    - newlines occurring in material pasted with Ctrl-X P (result of previous
+      evaluation) are properly treated now as line breaks.
+  - build: configure script triest to detect deviant libffi installations,
+    like that of Arch Linux.
+  - call-super-method function deprecated.
+
+
+
                                     TXR 181
                                    2017-07-01
 
