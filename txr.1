@@ -5092,8 +5092,9 @@ The
 .code gather
 directive accepts the keyword parameter
 .codn :vars .
-The argument to vars is
-a list of required and optional variables. A required variable is specified
+The argument to
+.code :vars
+is a list of required and optional variables. A required variable is specified
 as a symbol. An optional variable is specified as a two element list which
 pairs a symbol with a Lisp expression. That Lisp expression is evaluated
 and specifies the default value for the variable.
@@ -5628,7 +5629,9 @@ The default values are expressions, and so can be quasiliterals.
 Lastly, if in the event that
 .code collect
 does not match anything, the variables
-specified in vars (whether or not they have a default value) are all bound to
+specified in
+.code :vars
+(whether or not they have a default value) are all bound to
 empty lists. (These bindings are established after the processing of the
 .cod3 until / last
 last clause, if present.)
