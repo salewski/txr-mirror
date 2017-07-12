@@ -62,7 +62,7 @@ val text_s, choose_s, gather_s, do_s, mdo_s, mod_s, modlast_s;
 val line_s, data_s, fuzz_s, load_s;
 val include_s, close_s, require_s, in_package_s;
 val longest_k, shortest_k, greedy_k;
-val vars_k, resolve_k;
+val vars_k, lists_k, resolve_k;
 val append_k, into_k, var_k, list_k, tlist_k, string_k, env_k, counter_k;
 val named_k, continue_k, finish_k, mandatory_k;
 
@@ -935,8 +935,9 @@ static val h_coll(match_line_ctx *c)
                                 c->bindings), zero);
   val counter_binding = if2(counter, cons(counter, nil));
   val bindings_with_counter = if2(counter, cons(counter_binding, nil));
-  val have_vars;
+  val have_vars, have_lists;
   val vars = getplist_f(args, vars_k, mkcloc(have_vars));
+  val lists = getplist_f(args, lists_k, mkcloc(have_lists));
   cnum cmax = if3(gap, c_num(gap), if3(max, c_num(max), 0));
   cnum cmin = if3(gap, c_num(gap), if3(min, c_num(min), 0));
   cnum mincounter = cmin, maxcounter = 0;
@@ -949,6 +950,9 @@ static val h_coll(match_line_ctx *c)
   if (op_sym == rep_s) {
     if (have_vars)
       sem_error(elem, lit("~s: coll takes :vars, rep does not"),
+                op_sym, nao);
+    if (have_lists)
+      sem_error(elem, lit("~s: coll takes :lists, rep does not"),
                 op_sym, nao);
     have_vars = t;
   }
@@ -1111,6 +1115,13 @@ next_coll:
       if (!exists)
         c->bindings = acons(sym, nil, c->bindings);
     }
+  }
+
+  for (iter = lists; iter; iter = cdr(iter)) {
+    val sym = car(iter);
+    val exists = tx_lookup_var(sym, c->bindings);
+    if (!exists)
+      c->bindings = acons(sym, nil, c->bindings);
   }
 
   return next_spec_k;
@@ -3114,11 +3125,11 @@ val match_expand_keyword_args(val args)
     if (more &&
         (sym == maxgap_k || sym == mingap_k || sym == gap_k ||
          sym == times_k || sym == mintimes_k || sym == maxtimes_k ||
-         sym == lines_k || sym == vars_k ||
+         sym == lines_k || sym == vars_k || sym == lists_k ||
          sym == list_k || sym == string_k))
     {
       val form = car(next);
-      val form_ex = if3(sym == vars_k,
+      val form_ex = if3(sym == vars_k || sym == lists_k,
                         match_expand_vars(form),
                         expand(form, nil));
       ptail = list_collect(ptail, sym);
@@ -3234,8 +3245,9 @@ static val v_collect(match_files_ctx *c)
                                 c->bindings), zero);
   val counter_binding = if2(counter, cons(counter, nil));
   val bindings_with_counter = if2(counter, cons(counter_binding, nil));
-  val have_vars;
+  val have_vars, have_lists;
   volatile val vars = getplist_f(args, vars_k, mkcloc(have_vars));
+  val lists = getplist_f(args, lists_k, mkcloc(have_lists));
   cnum cmax = if3(gap, c_num(gap), if3(max, c_num(max), 0));
   cnum cmin = if3(gap, c_num(gap), if3(min, c_num(min), 0));
   cnum mincounter = cmin, maxcounter = 0;
@@ -3255,6 +3267,9 @@ static val v_collect(match_files_ctx *c)
   if (op_sym == repeat_s) {
     if (have_vars)
       sem_error(specline, lit("~s: collect takes :vars, repeat does not"),
+                op_sym, nao);
+    if (have_lists)
+      sem_error(specline, lit("~s: collect takes :lists, repeat does not"),
                 op_sym, nao);
     have_vars = t;
   }
@@ -3447,6 +3462,13 @@ next_collect:
       if (!exists)
         c->bindings = acons(sym, nil, c->bindings);
     }
+  }
+
+  for (iter = lists; iter; iter = cdr(iter)) {
+    val sym = car(iter);
+    val exists = tx_lookup_var(sym, c->bindings);
+    if (!exists)
+      c->bindings = acons(sym, nil, c->bindings);
   }
 
   return next_spec_k;
@@ -4738,6 +4760,7 @@ static void syms_init(void)
   shortest_k = intern(lit("shortest"), keyword_package);
   greedy_k = intern(lit("greedy"), keyword_package);
   vars_k = intern(lit("vars"), keyword_package);
+  lists_k = intern(lit("lists"), keyword_package);
   resolve_k = intern(lit("resolve"), keyword_package);
   append_k = intern(lit("append"), keyword_package);
   into_k = intern(lit("into"), keyword_package);

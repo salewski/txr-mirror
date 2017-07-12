@@ -5526,6 +5526,24 @@ The behavior of the
 keyword is specified in the following section, "Specifying variables in
 .codn collect \(dq.
 
+.meIP :lists <> ( variable *)
+The
+.code :lists
+keyword indicates a list of variables. After the
+.code collect
+terminates, each
+.meta variable
+in the list which does not have a binding is bound to the empty
+list symbol
+.codn nil .
+Unlike
+.code :vars
+the
+.code :lists
+mechanism doesn't assert that only the listed variables may emanate
+from the collect. It also doesn't assert that each iteration of the
+collect must bind each of those variables.
+
 .meIP :counter >> { variable | >> ( variable << starting-value )}
 The
 .code :counter
