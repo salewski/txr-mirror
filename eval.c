@@ -1777,6 +1777,7 @@ static val op_defvarl(val form, val env)
     remhash(top_smb, sym);
     sethash(top_vb, sym, cons(sym, value));
     uw_purge_deferred_warning(cons(var_s, sym));
+    uw_purge_deferred_warning(cons(sym_s, sym));
   }
 
   return sym;
@@ -1827,6 +1828,7 @@ static val op_defun(val form, val env)
     if (eval_initing)
       sethash(builtin, name, defun_s);
     uw_purge_deferred_warning(cons(fun_s, name));
+    uw_purge_deferred_warning(cons(sym_s, name));
     return name;
   } else if (car(name) == meth_s) {
     val binding = lookup_fun(nil, intern(lit("defmeth"), system_package));
@@ -2986,10 +2988,14 @@ tail:
       form = rlcp_tree(symac, form);
       goto tail;
     }
-    if (!lookup_var(menv, form) && !lookup_fun(menv, form))
+    if (!lookup_var(menv, form) && !lookup_fun(menv, form) &&
+        !uw_tentative_def_exists(cons(var_s, form)) &&
+        !uw_tentative_def_exists(cons(fun_s, form)))
+    {
       eval_defr_warn(last_form_expanded,
-                     cons(var_s, form),
+                     cons(sym_s, form),
                      lit("unbound variable/function ~s"), form, nao);
+    }
     return form;
   }
 
