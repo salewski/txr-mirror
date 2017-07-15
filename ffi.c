@@ -4803,7 +4803,7 @@ val carray_cptr(val cptr, val type, val len)
   mem_t *data = cptr_get(cptr);
   cnum nelem = c_num(default_arg(len, negone));
   (void) ffi_type_struct(type);
-  return make_carray(type, data, nelem, 0);
+  return make_carray(type, data, nelem, nil);
 }
 
 val vec_carray(val carray, val null_term_p)
