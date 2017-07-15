@@ -2606,7 +2606,7 @@ static void ffi_varray_release(struct txr_ffi_type *tft, val vec, mem_t *dst)
 static val ffi_carray_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
   mem_t *p = *coerce(mem_t **, src);
-  return make_carray(tft->eltype, p, -1, nil);
+  return make_carray(tft->eltype, p, -1, nil, 0);
 }
 
 static void ffi_carray_put(struct txr_ffi_type *tft, val carray, mem_t *dst,
@@ -4544,6 +4544,7 @@ struct carray {
   mem_t *data;
   cnum nelem;
   val ref;
+  cnum offs;
   val artype;
 };
 
@@ -4597,7 +4598,7 @@ static struct cobj_ops carray_owned_ops =
                 carray_mark_op,
                 cobj_eq_hash_op);
 
-val make_carray(val type, mem_t *data, cnum nelem, val ref)
+val make_carray(val type, mem_t *data, cnum nelem, val ref, cnum offs)
 {
   struct carray *scry = coerce(struct carray *, chk_malloc(sizeof *scry));
   val obj;
@@ -4610,6 +4611,7 @@ val make_carray(val type, mem_t *data, cnum nelem, val ref)
   obj = cobj(coerce(mem_t *, scry), carray_s, &carray_borrowed_ops);
   scry->eltype = type;
   scry->ref = ref;
+  scry->offs = offs;
   return obj;
 }
 
@@ -4708,7 +4710,7 @@ val length_carray(val carray)
 val copy_carray(val carray)
 {
   struct carray *scry = carray_struct_checked(carray);
-  val copy = make_carray(scry->eltype, scry->data, scry->nelem, nil);
+  val copy = make_carray(scry->eltype, scry->data, scry->nelem, nil, 0);
   carray_dup(copy);
   return copy;
 }
@@ -4765,24 +4767,34 @@ val carray_blank(val nelem, val type)
     uw_throwf(error_s, lit("~a: negative array size"), self, nao);
   } else {
     mem_t *data = chk_calloc(nel, tft->size);
-    val carray = make_carray(type, data, nel, nil);
+    val carray = make_carray(type, data, nel, nil, 0);
     carray->co.ops = &carray_owned_ops;
     return carray;
   }
 }
 
-val carray_buf(val buf, val type)
+val carray_buf(val buf, val type, val offs_in)
 {
   val self = lit("carray-buf");
   mem_t *data = buf_get(buf, self);
-  cnum blen = c_num(length_buf(buf));
+  val offs = default_arg_strict(offs_in, zero);
+  cnum offsn = c_num(offs);
+  cnum blen = c_num(minus(length_buf(buf), offs));
   struct txr_ffi_type *tft = ffi_type_struct(type);
   cnum nelem = if3(tft->size, blen / tft->size, 0);
+  if (offsn < 0)
+    uw_throwf(error_s,
+              lit("~a: negative offset ~s not permitted"),
+              self, offs, nao);
+  if (blen < 0)
+    uw_throwf(error_s,
+              lit("~a: offset ~s past end of buffer ~s"),
+              self, offs, buf, nao);
   if (tft->size == 0)
     uw_throwf(error_s,
               lit("~a: incomplete type ~s cannot be carray element"),
               self, tft->syntax, nao);
-  return make_carray(type, data, nelem, buf);
+  return make_carray(type, data + offsn, nelem, buf, offsn);
 }
 
 val carray_buf_sync(val carray)
@@ -4791,10 +4803,14 @@ val carray_buf_sync(val carray)
   struct carray *scry = carray_struct_checked(carray);
   val buf = scry->ref;
   mem_t *data = buf_get(buf, self);
-  cnum blen = c_num(length_buf(buf));
+  cnum blen = c_num(minus(length_buf(buf), num(scry->offs)));
   struct txr_ffi_type *tft = ffi_type_struct(scry->eltype);
+  if (blen < 0)
+    uw_throwf(error_s,
+              lit("~a: offset ~s past end of buffer ~s"),
+              self, num(scry->offs), buf, nao);
   scry->nelem = blen / tft->size;
-  scry->data = data;
+  scry->data = data + scry->offs;
   return buf;
 }
 
@@ -4803,7 +4819,7 @@ val carray_cptr(val cptr, val type, val len)
   mem_t *data = cptr_get(cptr);
   cnum nelem = c_num(default_arg(len, negone));
   (void) ffi_type_struct(type);
-  return make_carray(type, data, nelem, nil);
+  return make_carray(type, data, nelem, nil, 0);
 }
 
 val vec_carray(val carray, val null_term_p)
@@ -4909,7 +4925,7 @@ val carray_sub(val carray, val from, val to)
     if (tn < fn)
       tn = fn;
 
-    return make_carray(scry->eltype, scry->data + fn * elsize, tn - fn, carray);
+    return make_carray(scry->eltype, scry->data + fn * elsize, tn - fn, carray, 0);
   }
 }
 
@@ -5096,7 +5112,7 @@ val carray_pun(val carray, val type)
   if (len != 0 && size / elsize != len)
     uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
 
-  return make_carray(type, scry->data, size / tft->size, carray);
+  return make_carray(type, scry->data, size / tft->size, carray, 0);
 }
 
 val carray_unum(val num, val eltype_in)
@@ -5125,7 +5141,7 @@ val carray_unum(val num, val eltype_in)
       ucnum nelem = (size + tft->size - 1) / tft->size;
       mem_t *data = chk_xalloc(nelem, tft->size, self);
       ucnum delta = nelem * tft->size - size;
-      val ca = make_carray(eltype, data, nelem, nil);
+      val ca = make_carray(eltype, data, nelem, nil, 0);
       memset(data, 0, delta);
       mp_to_unsigned_bin(m, data + delta);
       gc_hint(num);
@@ -5165,7 +5181,7 @@ val carray_num(val num, val eltype_in)
       ucnum nelem = (c_unum(bytes) + tft->size - 1) / tft->size;
       mem_t *data = chk_xalloc(nelem, tft->size, self);
       ucnum delta = nelem * tft->size - size;
-      val ca = make_carray(eltype, data, nelem, nil);
+      val ca = make_carray(eltype, data, nelem, nil, 0);
       mp_to_unsigned_bin(m, data + delta);
       memset(data, if3(bit(ube, wi), 0xff, 0), delta);
       gc_hint(num);
@@ -5538,7 +5554,7 @@ void ffi_init(void)
   reg_fun(intern(lit("carray-vec"), user_package), func_n3o(carray_vec, 2));
   reg_fun(intern(lit("carray-list"), user_package), func_n3o(carray_list, 2));
   reg_fun(intern(lit("carray-blank"), user_package), func_n2(carray_blank));
-  reg_fun(intern(lit("carray-buf"), user_package), func_n2(carray_buf));
+  reg_fun(intern(lit("carray-buf"), user_package), func_n3o(carray_buf, 2));
   reg_fun(intern(lit("carray-buf-sync"), user_package), func_n1(carray_buf_sync));
   reg_fun(intern(lit("carray-cptr"), user_package), func_n3o(carray_cptr, 2));
   reg_fun(intern(lit("vec-carray"), user_package), func_n2o(vec_carray, 1));

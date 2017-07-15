@@ -57707,7 +57707,7 @@ function, and of
 
 .coNP Function @ carray-buf
 .synb
-.mets (carray-buf < buf << type )
+.mets (carray-buf < buf < type <> [ offset ])
 .syne
 .desc
 The
@@ -57718,15 +57718,39 @@ object which refers to the storage provided and managed by the buffer object
 .metn buf ,
 providing a view of that storage, and manipulation thereof, as an array.
 
+The optional
+.meta offset
+parameter specifies an offset from the start of the buffer to the
+location which is interpreted as the start of the
+.codn carray ,
+which extends from that offset to the end of the buffer.
+
+The default value is zero: the
+.code carray
+covers the entire buffer.
+
+If a value is specified, it must be in the range zero to the length of
+.metn buf .
+
 The
 .meta type
 argument must be a compiled FFI type whose size is nonzero.
-The bytewise length of
+
+The
+.code carray
+is overlaid onto the storage of
+.meta buf
+as follows:
+
+First,
+.meta offs
+is subtracted from the bytewise length of
 .metn buf ,
 as reported by
 .code length-buf
-function ,
-is divided by the size of
+function to produce the effective length of the storage to be used for the array.
+
+The effective length is divided by the size of
 .metn type ,
 as reported by
 .codn ffi-size .
