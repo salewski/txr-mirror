@@ -891,7 +891,7 @@
            ^(,setter (,',function (,getter) ,,*cleaned-lambda-list)))))))
 
 (defmacro sys:placelet-1 (((sym place)) :env env . body)
-  (with-gensyms (tmp-place pl-getter pl-setter steal-getter)
+  (with-gensyms (tmp-place pl-getter pl-setter)
     (unwind-protect
       (progn
         (sethash *place-update-expander* tmp-place
