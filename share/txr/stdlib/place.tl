@@ -809,20 +809,18 @@
           (:postinit (cons (op struct-get-postinitfun struct)
                            (op struct-set-postinitfun struct)))
           (t (cons (op static-slot struct slot)
-                   (op static-slot-set struct slot))))
+                   (op static-slot-ensure struct slot))))
         :))
     ((type sym)
       (if (eq type 'macro)
-        (let ((cell (gethash sys:top-mb sym)))
-          (unless cell
-            (sys:eval-err "unbound macro ~s" sym))
+        (let ((cell (or (gethash sys:top-mb sym)
+                        (sethash sys:top-mb sym (cons sym nil)))))
           (cons (op cdr)
                 (op sys:rplacd cell)))
         :))
     (else
-      (let ((cell (gethash sys:top-fb sym)))
-        (unless cell
-          (sys:eval-err "unbound function ~s" sym))
+      (let ((cell (or (gethash sys:top-fb sym)
+                      (sethash sys:top-fb sym (cons sym nil)))))
         (cons (op cdr)
               (op sys:rplacd cell))))))
 
@@ -856,7 +854,7 @@
 
 (defun sys:get-vb (sym)
   (or (gethash sys:top-vb sym)
-      (sys:eval-err "unbound variable ~s" sym)))
+      (sethash sys:top-vb sym (cons sym nil))))
 
 (defplace (symbol-value sym-expr) body
   (getter setter

@@ -16028,23 +16028,21 @@ and a binding denoted by
 is removed using
 .codn makunbound .
 
-If one of these three accessors is applied to a
-.meta symbol
-which doesn't have a binding in the respective namespace corresponding
-to that accessor, then the form denotes a nonexistent place. An attempt to store
-a value to this place results in an exception being thrown.
-
-Deleting such a nonexistent place doesn't throw an exception.
-If a nonexistent place is deleted using the
-.code del
-macro, nothing happens, and instead of the prior value
-of the place, which doesn't exist, the macro yields
-the value
-.codn nil .
-
 Deleting a method via
 .code symbol-function
 is not possible; an attempt to do so has no effect.
+
+Storing a value, using any one of these three accessors, to a nonexistent
+variable, function or macro binding, is not erroneous. It has has the effect of
+creating that binding.
+
+Deleting a binding, using any of these three accessors, when the binding does not
+exist, also isn't erroneous. There is no effect and the
+.code del
+operator yields
+.code nil
+as the prior value, consistent with the behavior when accessors are used to
+retrieve a nonexistent value.
 
 .TP* "Dialect note:"
 
