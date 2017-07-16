@@ -3,11 +3,14 @@
 (defvar sys:*trace-hash* (hash :equal-based))
 (defvar sys:*trace-level* -1)
 
+(defvarl sys:tr* (fun *))
+(defvarl sys:trfm (fun format))
+
 (defun sys:trace-enter (name args)
-  (format *trace-output* "~*a(~s ~s\n" (* sys:*trace-level* 2) "" name args))
+  [sys:trfm *trace-output* "~*a(~s ~s\n" [sys:tr* sys:*trace-level* 2] "" name args])
 
 (defun sys:trace-leave (name val)
-  (format *trace-output* "~*a  ~s)\n" (* sys:*trace-level* 2) "" val))
+  [sys:trfm *trace-output* "~*a  ~s)\n" [sys:tr* sys:*trace-level* 2] "" val])
 
 (defun sys:trace-canonicalize-name (name)
   (if (and (consp name)
