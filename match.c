@@ -4687,9 +4687,10 @@ val extract(val spec, val files, val predefined_bindings)
 
 void match_reg_var(val sym)
 {
-  if (bindable(sym) && !uw_tentative_def_exists(sym)) {
+  if (bindable(sym)) {
     val tag = cons(var_s, sym);
-    uw_register_tentative_def(tag);
+    if (!uw_tentative_def_exists(tag))
+      uw_register_tentative_def(tag);
   }
 }
 
