@@ -40493,7 +40493,11 @@ or
 .codn s )
 is used. The details are
 documented in the description of each of these, below. The leading zero flag is
-ignored for floating-point values regardless of the conversion specifier.
+also taken into account for floating-point values, and treated uniformly by
+these directives.  If the flag is present, then the printed value's integer
+part will be padded with leading zeros up to the width of the field such that
+one character of unused space remains in the field, in case a positive or
+negative sign needs also to be rendered.
 
 For integer or floating-point arguments, if the precision specifier has a
 .code +
@@ -40560,6 +40564,15 @@ Floating point values which are integers are
 printed without a trailing
 .code .0
 (point zero).
+The
+.code +
+flag in the precision is honored for rendering an explicit
+.code +
+sign on non-negative values.
+If a leading zero is specified in the precision, and a nonzero width is
+specified, then the printed value's integer part will be padded with leading
+zeros up to one less than the field width. These zeros are placed before the
+sign.
 
 .coIP s
 Prints any object in a standard way, as if by the

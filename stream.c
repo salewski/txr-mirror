@@ -3259,7 +3259,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
               vformat_str(stream, lit("#<bad-float>"), width, align, 0);
               continue;
             }
-            precision = 0;
+            precision = (width ? width - 1 : 0);
             goto output_num;
           }
         case 'd':
@@ -3348,7 +3348,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
               continue;
             }
 
-            precision = 0;
+            precision = (width ? width - 1 : 0);
             goto output_num;
           default:
             if (width != 0 || precision_p) {
