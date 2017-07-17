@@ -134,8 +134,8 @@
                                                                rec-type))
                                        pieces)))
                 (set me.arg (mapcar (usl arg) sub-opts))))
-           ((or (symbolp me.type) (functionp me.type))
-              (set me.arg (call me.desc.type me.arg))))))))
+           ((or (symbolp type) (functionp type))
+              (set me.arg (call type me.arg))))))))
 
 (defmeth opts lambda (me key : dfl)
   (iflet ((o [me.opt-hash key])) o.arg dfl))
