@@ -47628,15 +47628,21 @@ which may be a file, directory or something else.
 If successful, it returns
 .codn t .
 
-A failure to remove the object results in an exception of type
-.codn file-error ,
-unless
-.meta throw-on-error-p
-is present, and its value is
+The optional Boolean parameter
+.metn throw-on-error-p ,
+which defaults to
 .codn nil .
-In that case, failure is indicated by a
+
+A failure to remove the object results in an exception of type
+.code file-error
+being thrown, unless the failure reason is that the object indicated by
+.meta path
+doesn't exist. In this non-existence case, the behavior is controlled by the
+.meta throw-on-error
+argument. If that argument is true, the exception is thrown. Otherwise,
+the function returns normally, producing the value
 .code nil
-return value.
+to indicate that it didn't perform a removal.
 
 .coNP Function @ rename-path
 .synb

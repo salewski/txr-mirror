@@ -4217,7 +4217,7 @@ static val sh(val command)
 val remove_path(val path, val throw_on_error)
 {
   if (w_remove(c_str(path)) < 0) {
-    if (throw_on_error)
+    if (default_null_arg(throw_on_error) || errno != ENOENT)
       uw_throwf(file_error_s, lit("trying to remove ~a: ~d/~s"),
                   path, num(errno), string_utf8(strerror(errno)), nao);
     return nil;
