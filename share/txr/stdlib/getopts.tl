@@ -32,7 +32,7 @@
   helptext
   arg-p
   (type :bool)
-  (:static valid-types '(:bool :dec :hex :oct :cint :float :str))
+  (:static valid-types '(:bool :dec :hex :oct :cint :float :str :text))
   (:postinit (me)
     me.(check)
     (set me.arg-p (neq me.type :bool))))
@@ -125,6 +125,7 @@
                  (or (ignerr (read `"@{me.arg}"`))
                      (sys:opt-err "option ~a needs string lit syntax, ~a given"
                               name me.arg))))
+      (:text)
       (t (cond
            ((and (consp type) (eq (car type) 'list))
               (let* ((rec-type (cadr type))
@@ -332,6 +333,7 @@
                               \ 3., .5, .12e9, 53.e-3, 3e-015")
                       (:str   "  STR    - String with embedded escapes, valid\
                               \ as TXR Lisp string literals\n\
-                              \           syntax: foo, foo\\tbar, abc\\nxyz"))))
+                              \           syntax: foo, foo\\tbar, abc\\nxyz")
+                      (:text  "  TEXT   - Unprocessed text"))))
            (put-line ln)))
     (put-line))))
