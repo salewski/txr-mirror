@@ -26652,6 +26652,64 @@ from the input object, and a new
 is returned whose storage is initialized by converting the extracted
 values back to the foreign representation.
 
+.coNP Function @ relate
+.synb
+.mets (relate < domain-seq < range-seq <> [ default-val ])
+.syne
+.desc
+The
+.code relate
+function returns a one-argument function which implements the relation formed
+by mapping the elements of
+.meta domain-seq
+to the positionally corresponding elements of
+.metn range-seq .
+That is to say, the function searches through the sequence
+.meta domain-seq
+to determine the position where its argument occurs, using
+.code equal
+as the comparison function.
+Then it returns the element from that position in the
+.meta range-seq
+sequence. This returned function is called the
+.IR "relation function" .
+
+If the relation function's argument is not found in
+.metn domain-seq ,
+then the behavior depends on the optional parameter
+.metn default-val .
+If an argument is given for
+.metn default-val ,
+then the relation function returns that value.
+Otherwise, the relation function returns its argument.
+
+Note: the
+.code relate
+function may be understood in terms of the following equivalences:
+
+.cblk
+  (relate d r)  <-->  (lambda (arg)
+                        (iflet ((p (posqual arg d)))
+                          [r p]
+                          arg))
+
+  (relate d r v)  <-->  (lambda (arg)
+                          (iflet ((p (posqual arg d)))
+                            [r p]
+                            v))
+.cble
+
+.TP* Examples:
+
+.cblk
+  (mapcar (relate "_" "-") "foo_bar")  ->  "foo-bar"
+
+  (mapcar (relate "0123456789" "ABCDEFGHIJ" "X") "139D-345")
+  -> "BJDXXDEF"
+
+  (mapcar (relate '(nil) '(0)) '(nil 1 2 nil 4)) -> (0 1 2 0 4)
+.cble
+
 .coNP Function @ in
 .synb
 .mets (in < sequence < key >> [ testfun <> [ keyfun ]])

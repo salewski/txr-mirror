@@ -9805,6 +9805,31 @@ val sel(val seq_in, val where_in)
   return make_like(out, seq_in);
 }
 
+static val do_relate(val env, val arg)
+{
+  cons_bind (dom, rng, env);
+  val pos = posqual(arg, dom);
+  return if3(pos, ref(rng, pos), arg);
+}
+
+static val do_relate_dfl(val env, val arg)
+{
+  val dom = env->v.vec[0];
+  val rng = env->v.vec[1];
+  val dfl = env->v.vec[2];
+  val pos = posqual(arg, dom);
+  return if3(pos, ref(rng, pos), dfl);
+}
+
+
+val relate(val domain_seq, val range_seq, val dfl_val)
+{
+  return if3(missingp(dfl_val),
+             func_f1(cons(domain_seq, range_seq), do_relate),
+             func_f1(vec(domain_seq, range_seq, dfl_val, nao),
+                     do_relate_dfl));
+}
+
 val rcons(val from, val to)
 {
   val obj = make_obj();

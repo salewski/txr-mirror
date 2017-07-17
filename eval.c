@@ -6164,6 +6164,7 @@ void eval_init(void)
   reg_fun(intern(lit("rsearch"), user_package), func_n4o(rsearch, 2));
   reg_fun(intern(lit("where"), user_package), func_n2(where));
   reg_fun(intern(lit("select"), user_package), func_n2(sel));
+  reg_fun(intern(lit("relate"), user_package), func_n3o(relate, 2));
 
   reg_fun(intern(lit("rcons"), user_package), func_n2(rcons));
   reg_fun(intern(lit("rangep"), user_package), func_n1(rangep));
