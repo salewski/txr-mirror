@@ -57457,7 +57457,7 @@ type.
 .coNP Functions @ ffi-put and @ ffi-put-into
 .synb
 .mets (ffi-put < obj << type )
-.mets (ffi-put-into < dst-buf < obj << type )
+.mets (ffi-put-into < dst-buf < obj < type <> [ offset ])
 .syne
 .desc
 The
@@ -57485,6 +57485,14 @@ The
 argument must be an object compatible with the conversions
 implied by
 .metn type .
+
+The optional
+.meta offset
+argument specifies a byte offset from the beginning of the data area of
+.meta dst-buf
+where the foreign-representation of
+.meta obj
+is stored. The default value is zero.
 
 These functions perform the "put semantics" encoding action very similar to
 what happens to the arguments of an outgoing foreign function call.
@@ -57565,7 +57573,7 @@ replacement.
 
 .coNP Function @ ffi-get
 .synb
-.mets (ffi-get < src-buf << type )
+.mets (ffi-get < src-buf < type <> [ offset ])
 .syne
 .desc
 The
@@ -57579,14 +57587,20 @@ The
 argument is an object of type
 .meta buf
 large enough to hold a foreign representation of
-.metn type .
+.metn type ,
+at the byte offset indicated by the
+.meta offset
+argument.
 The
 .meta type
 argument is compiled FFI type.
+The optional
+.meta offset
+argument defaults to zero.
 
 The external representation in
 .meta src-buf
-is scanned according to
+at the specified offset is scanned according to
 .meta type
 and converted to a Lisp value which is returned.
 

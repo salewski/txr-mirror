@@ -4475,15 +4475,21 @@ val ffi_elemtype(val type)
   return eltype;
 }
 
-val ffi_put_into(val dstbuf, val obj, val type)
+val ffi_put_into(val dstbuf, val obj, val type, val offset_in)
 {
   val self = lit("ffi-put-into");
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
   mem_t *dst = buf_get(dstbuf, self);
-  if (lt(length_buf(dstbuf), num_fast(tft->size)))
-    uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s"),
-              self, dstbuf, type, nao);
-  tft->put(tft, obj, dst, self);
+  val offset = default_arg(offset_in, zero);
+  cnum offsn = c_num(offset);
+  cnum room = c_num(minus(length_buf(dstbuf), offset));
+  if (offsn < 0)
+    uw_throwf(error_s, lit("~a: negative offset ~s specified"),
+              self, offset, nao);
+  if (room < tft->size)
+    uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s at offset ~s"),
+              self, dstbuf, type, offset, nao);
+  tft->put(tft, obj, dst + offsn, self);
   return dstbuf;
 }
 
@@ -4497,44 +4503,62 @@ val ffi_put(val obj, val type)
   return buf;
 }
 
-val ffi_in(val srcbuf, val obj, val type, val copy_p)
+val ffi_in(val srcbuf, val obj, val type, val copy_p, val offset_in)
 {
   val self = lit("ffi-in");
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
   mem_t *src = buf_get(srcbuf, self);
-  if (lt(length_buf(srcbuf), num_fast(tft->size)))
-    uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s"),
-              self, srcbuf, type, nao);
+  val offset = default_arg(offset_in, zero);
+  cnum offsn = c_num(offset);
+  cnum room = c_num(minus(length_buf(srcbuf), offset));
+  if (offsn < 0)
+    uw_throwf(error_s, lit("~a: negative offset ~s specified"),
+              self, offset, nao);
+  if (room < tft->size)
+    uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s at offset ~s"),
+              self, srcbuf, type, offset, nao);
   if (tft->in != 0)
-    return tft->in(tft, copy_p != nil, src, obj, self);
+    return tft->in(tft, copy_p != nil, src + offsn, obj, self);
   else if (copy_p)
-    return tft->get(tft, src, self);
+    return tft->get(tft, src + offsn, self);
   return obj;
 }
 
-val ffi_get(val srcbuf, val type)
+val ffi_get(val srcbuf, val type, val offset_in)
 {
   val self = lit("ffi-get");
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
   mem_t *src = buf_get(srcbuf, self);
-  if (lt(length_buf(srcbuf), num_fast(tft->size)))
-    uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s"),
-              self, srcbuf, type, nao);
-  return tft->get(tft, src, self);
+  val offset = default_arg(offset_in, zero);
+  cnum offsn = c_num(offset);
+  cnum room = c_num(minus(length_buf(srcbuf), offset));
+  if (offsn < 0)
+    uw_throwf(error_s, lit("~a: negative offset ~s specified"),
+              self, offset, nao);
+  if (room < tft->size)
+    uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s at offset ~s"),
+              self, srcbuf, type, offset, nao);
+  return tft->get(tft, src + offsn, self);
 }
 
-val ffi_out(val dstbuf, val obj, val type, val copy_p)
+val ffi_out(val dstbuf, val obj, val type, val copy_p, val offset_in)
 {
   val self = lit("ffi-out");
   struct txr_ffi_type *tft = ffi_type_struct_checked(type);
   mem_t *dst = buf_get(dstbuf, self);
-  if (lt(length_buf(dstbuf), num_fast(tft->size)))
-    uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s"),
-              self, dstbuf, type, nao);
+  val offset = default_arg(offset_in, zero);
+  cnum offsn = c_num(offset);
+  cnum room = c_num(minus(length_buf(dstbuf), offset));
+  if (offsn < 0)
+    uw_throwf(error_s, lit("~a: negative offset ~s specified"),
+              self, offset, nao);
+  if (room < tft->size)
+    uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s at offset ~s"),
+              self, dstbuf, type, offset, nao);
   if (tft->out != 0)
-    tft->out(tft, copy_p != nil, obj, dst, self);
+    tft->out(tft, copy_p != nil, obj, dst + offsn, self);
   else
-    tft->put(tft, obj, dst, self);
+    tft->put(tft, obj, dst + offsn, self);
   return dstbuf;
 }
 
@@ -5538,11 +5562,11 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-arraysize"), user_package), func_n1(ffi_arraysize));
   reg_fun(intern(lit("ffi-elemsize"), user_package), func_n1(ffi_elemsize));
   reg_fun(intern(lit("ffi-elemtype"), user_package), func_n1(ffi_elemtype));
-  reg_fun(intern(lit("ffi-put-into"), user_package), func_n3(ffi_put_into));
+  reg_fun(intern(lit("ffi-put-into"), user_package), func_n4o(ffi_put_into, 3));
   reg_fun(intern(lit("ffi-put"), user_package), func_n2(ffi_put));
-  reg_fun(intern(lit("ffi-in"), user_package), func_n4(ffi_in));
-  reg_fun(intern(lit("ffi-get"), user_package), func_n2(ffi_get));
-  reg_fun(intern(lit("ffi-out"), user_package), func_n4(ffi_out));
+  reg_fun(intern(lit("ffi-in"), user_package), func_n5o(ffi_in, 4));
+  reg_fun(intern(lit("ffi-get"), user_package), func_n3o(ffi_get, 2));
+  reg_fun(intern(lit("ffi-out"), user_package), func_n5o(ffi_out, 4));
   reg_fun(intern(lit("carrayp"), user_package), func_n1(carrayp));
   reg_fun(intern(lit("carray-set-length"), user_package), func_n2(carray_set_length));
   reg_fun(intern(lit("carray-dup"), user_package), func_n1(carray_dup));
