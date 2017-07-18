@@ -8318,24 +8318,69 @@ val uniq(val seq)
   return unique(seq, identity_f, hashv_args);
 }
 
-val find(val item, val list, val testfun, val keyfun)
+val find(val item, val seq, val testfun, val keyfun)
 {
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
 
-  list = nullify(list);
+  seq = nullify(seq);
 
-  gc_hint(list);
+  switch (type(seq)) {
+  case NIL:
+    break;
+  case COBJ:
+    if (!structp(seq))
+      break;
+    if (maybe_slot(seq, length_s))
+      goto vec;
+    if (!maybe_slot(seq, car_s))
+      break;
+    /* fallthrough */
+  case CONS:
+  case LCONS:
+    {
+      gc_hint(seq);
 
-  for (; list; list = cdr(list)) {
-    val elem = car(list);
-    val key = funcall1(keyfun, elem);
+      for (; seq; seq = cdr(seq)) {
+        val elem = car(seq);
+        val key = funcall1(keyfun, elem);
 
-    if (funcall2(testfun, item, key))
-      return elem;
+        if (funcall2(testfun, item, key))
+          return elem;
+      }
+      return nil;
+    }
+  case STR:
+  case LIT:
+    if (keyfun == identity_f &&
+        (testfun == equal_f || testfun == eql_f || testfun == eq_f))
+    {
+      const wchar_t ch = c_chr(item);
+      const wchar_t *cstr = c_str(seq);
+      if (wcschr(cstr, ch))
+        return item;
+      return nil;
+    }
+    /* fallthrough */
+  case LSTR:
+  vec:
+    {
+      cnum len = c_num(length(seq));
+      cnum i;
+
+      for (i = 0; i < len; i++) {
+        val elem = ref(seq, num(i));
+        val key = funcall1(keyfun, elem);
+        if (funcall2(testfun, item, key))
+          return elem;
+      }
+
+      return nil;
+    }
+  default:
+    break;
   }
-
-  return nil;
+  uw_throwf(error_s, lit("find: unsupported object ~s"), seq, nao);
 }
 
 val rfind(val item, val list, val testfun, val keyfun)
@@ -8567,24 +8612,72 @@ val rposq(val obj, val list)
   return found;
 }
 
-val pos(val item, val list, val testfun, val keyfun)
+val pos(val item, val seq, val testfun, val keyfun)
 {
-  val pos = zero;
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
-  list = nullify(list);
 
-  gc_hint(list);
+  seq = nullify(seq);
 
-  for (; list; list = cdr(list), pos = plus(pos, one)) {
-    val elem = car(list);
-    val key = funcall1(keyfun, elem);
+  switch (type(seq)) {
+  case NIL:
+    break;
+  case COBJ:
+    if (!structp(seq))
+      break;
+    if (maybe_slot(seq, length_s))
+      goto vec;
+    if (!maybe_slot(seq, car_s))
+      break;
+    /* fallthrough */
+  case CONS:
+  case LCONS:
+    {
+      val pos = zero;
+      gc_hint(seq);
 
-    if (funcall2(testfun, item, key))
-      return pos;
+      for (; seq; seq = cdr(seq), pos = plus(pos, one)) {
+        val elem = car(seq);
+        val key = funcall1(keyfun, elem);
+
+        if (funcall2(testfun, item, key))
+          return pos;
+      }
+      return nil;
+    }
+  case STR:
+  case LIT:
+    if (keyfun == identity_f &&
+        (testfun == equal_f || testfun == eql_f || testfun == eq_f))
+    {
+      const wchar_t ch = c_chr(item);
+      const wchar_t *cstr = c_str(seq);
+      const wchar_t *cpos = wcschr(cstr, ch);
+      if (cpos)
+        return num(cpos - cstr);
+      return nil;
+    }
+    /* fallthrough */
+  case LSTR:
+  vec:
+    {
+      cnum len = c_num(length(seq));
+      cnum i;
+
+      for (i = 0; i < len; i++) {
+        val in = num(i);
+        val elem = ref(seq, in);
+        val key = funcall1(keyfun, elem);
+        if (funcall2(testfun, item, key))
+          return in;
+      }
+
+      return nil;
+    }
+  default:
+    break;
   }
-
-  return nil;
+  uw_throwf(error_s, lit("find: unsupported object ~s"), seq, nao);
 }
 
 val rpos(val item, val list, val testfun, val keyfun)
