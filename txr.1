@@ -42357,6 +42357,90 @@ The
 function returns the remaining part of the effective path, after
 the raw directory prefix.
 
+.coNP Function @ path-cat
+.synb
+.mets (path-cat < dir-path << rel-path )
+.syne
+.desc
+The
+.code path-cat
+function joins the directory path name given by the character
+string argument
+.meta dir-path
+with the relative path name given by
+.metn rel-path ,
+returning the joined path.
+
+The function is related to the functions
+.code dir-name
+and
+.code base-name
+in the following way: if
+.meta p
+is some path denoting an object in the file system, then
+.code "(path-cat (dir-name p) (base-name p))"
+produces a path
+.meta p*
+which denotes the same object. The paths
+.meta p
+and
+.meta p*
+might not be equivalent strings.
+
+The
+.code path-cat
+function ensures that paths are joined without superfluous
+path separator characters, regardless of whether
+.meta dir-path
+ends in a separator.
+
+If a separator must be added, the character
+.code /
+(forward slash) is always used, even on platforms where
+.code \e
+(backslash) is also a pathname separator, and even if either argument includes
+backslashes.
+
+The
+.code path-cat
+function eliminates trivial occurrences of the
+.code .
+(dot) path component. It preserves trailing separators in the following
+way: if
+.meta rel-path
+ends in a path separator character, then the returned string shall
+end in that character; and if
+.meta rel-path
+vanishes entirely because it is equivalent to the dot, then the returned
+string is
+.meta dir-name
+itself.
+
+.TP* Examples:
+
+.cblk
+  (path-cat "" "")    -->  ""
+  (path-cat "" ".")   -->  ""
+  (path-cat "." "")   -->  ""
+  (path-cat "." ".")  -->  ""
+
+  (path-cat "abc" ".")  -->  "abc"
+  (path-cat "." "abc")  -->  "abc"
+
+  (path-cat "./" ".")   -->  "./"
+  (path-cat "."  "./")  -->  "./"
+
+  (path-cat "abc/" ".")  -->  "abc/"
+  (path-cat "./" "abc")  -->  "abc"
+
+  (path-cat "/" ".")    --> "/"
+
+  (path-cat "/" "abc")  --> "/abc"
+
+  (path-cat "ab/cd" "ef")  --> "ab/cd/ef"
+.cble
+
+
 .coNP Variable @ path-sep-chars
 .desc
 The

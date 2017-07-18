@@ -222,5 +222,6 @@ val abs_path_p(val path);
 val pure_rel_path_p(val path);
 val base_name(val path);
 val dir_name(val path);
+val path_cat(val dir_name, val base_name);
 
 void stream_init(void);

@@ -4381,6 +4381,45 @@ val dir_name(val path)
   }
 }
 
+val path_cat(val dir_name, val base_name)
+{
+  val dl = length(dir_name);
+  val bl = length(base_name);
+  val ps = static_str(path_sep_chars);
+
+  if (dl == zero)
+    return base_name;
+
+  if (bl == zero)
+    return dir_name;
+
+  if (find(chr_str(dir_name, pred(dl)), ps, nil, nil)) {
+    val bl0 = chr_str(base_name, zero);
+
+    if (bl == one && bl0 == chr('.'))
+      return dir_name;
+
+    if (dl == two && chr_str(dir_name, zero) == chr('.'))
+      return base_name;
+
+    if (!find(bl0, ps, nil, nil))
+      return scat(nil, dir_name, base_name, nao);
+
+    return scat(nil, dir_name, sub(base_name, one, t), nao);
+  }
+
+  if (find(chr_str(base_name, zero), ps, nil, nil))
+    return scat(nil, dir_name, base_name, nao);
+
+  if (bl == one && chr_str(base_name, zero) == chr('.'))
+    return dir_name;
+
+  if (dl == one && chr_str(dir_name, zero) == chr('.'))
+    return base_name;
+
+  return scat(lit("/"), dir_name, base_name, nao);
+}
+
 void stream_init(void)
 {
   prot1(&ap_regex);
@@ -4498,6 +4537,7 @@ void stream_init(void)
   reg_fun(intern(lit("pure-rel-path-p"), user_package), func_n1(pure_rel_path_p));
   reg_fun(intern(lit("base-name"), user_package), func_n1(base_name));
   reg_fun(intern(lit("dir-name"), user_package), func_n1(dir_name));
+  reg_fun(intern(lit("path-cat"), user_package), func_n2(path_cat));
   reg_varl(intern(lit("path-sep-chars"), user_package), static_str(path_sep_chars));
   reg_fun(intern(lit("get-indent-mode"), user_package), func_n1(get_indent_mode));
   reg_fun(intern(lit("test-set-indent-mode"), user_package), func_n3(test_set_indent_mode));
