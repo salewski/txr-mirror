@@ -18448,6 +18448,37 @@ and
 .code v
 are evaluated only once, in left-to-right order.
 
+.coNP Accessor @ nth
+.synb
+.mets (nth < index << object )
+.mets (set (nth < index << object ) << new-value )
+.syne
+.desc
+The
+.code nth
+function performs random access on a list, retrieving the n-th
+element indicated by the zero-based index value given by
+.metn index .
+The
+.meta index
+argument must be a non-negative integer.
+
+If
+.meta index
+indicates an element beyond the end of the list, then
+the function returns
+.codn nil .
+
+The following equivalences hold:
+
+.cblk
+  (nth 0 list) <--> (car 0) <--> (first list)
+  (nth 1 list) <--> (cadr list) <--> (second list)
+  (nth 2 list) <--> (caddr list) <--> (third list)
+
+  (nth x y) <--> (car (nthcdr x y))
+.cble
+
 .coNP Accessor @ nthcdr
 .synb
 .mets (nthcdr < index << list )
@@ -18465,12 +18496,15 @@ specifies a nonexistent cons beyond the end of the list,
 then
 .code nthcdr
 yields nil.
+
 The following equivalences hold:
 
 .cblk
   (nthcdr 0 list) <--> list
   (nthcdr 1 list) <--> (cdr list)
   (nthcdr 2 list) <--> (cddr list)
+
+  (car (nthcdr x y)) <--> (nth x y)
 .cble
 
 An

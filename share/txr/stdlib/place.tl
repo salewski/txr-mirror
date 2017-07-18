@@ -972,3 +972,6 @@
     (have-n
      ^(sub ,obj 0 (- (max ,n 0))))
     (t ^(sub ,obj 0 -1))))
+
+(define-place-macro nth (index obj)
+  ^(car (nthcdr ,index ,obj)))

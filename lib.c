@@ -674,6 +674,11 @@ val nthcdr(val pos, val list)
   return list;
 }
 
+val nth(val pos, val list)
+{
+  return car(nthcdr(pos, list));
+}
+
 val nthlast(val pos, val list)
 {
   val iter = list;

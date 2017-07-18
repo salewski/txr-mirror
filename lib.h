@@ -540,6 +540,7 @@ loc lastcons(val list);
 val last(val list, val n);
 val nthlast(val pos, val list);
 val nthcdr(val pos, val list);
+val nth(val pos, val list);
 val butlastn(val n, val list);
 loc ltail(loc cons);
 val pop(val *plist);
