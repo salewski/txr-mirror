@@ -25,7 +25,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern val filters;
+#define filters (deref(lookup_var_l(nil, filters_s)))
+
+extern val filters_s;
 extern val filter_k, lfilt_k, rfilt_k, to_html_k, from_html_k;
 extern val upcase_k, downcase_k;
 extern val topercent_k, frompercent_k, tourl_k, fromurl_k;

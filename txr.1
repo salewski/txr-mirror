@@ -3473,6 +3473,9 @@ have different special characters or other syntax, requiring escaping
 or similar treatment. Note that it is also possible to use a function
 as a filter. See Function Filters below.
 
+Named filters are stored in the hash table held in the Lisp special variable
+.codn *filters* .
+
 .coIP @(filter)
 The
 .code filter
@@ -52159,6 +52162,42 @@ results in more compact syntax.
 
 Note: this function is useful for creating a compact, prefix-compressed
 regular expression which matches a list of strings.
+
+.coNP Special variable @ *filters*
+.desc
+The
+.code *filters*
+special variable holds a hash table which associates symbols with
+filters. This hash table defines the named filters used in the
+\*(TX pattern language. The names are the hash table keys, and filter
+objects are the values. Filter objects are one of three representations.
+The value
+.code nil
+represents a null filter, which performs no filtering, passing the input
+string through. A filter object may be a raw or compressed trie.
+It may also be a Lisp function, which must be callable with one argument
+of string type, and must return a string.
+
+The application may define new filters by associating symbolic keys in
+.code *filters*
+with values which conform to the above representation of filters.
+
+The behavior is unspecified if any of the predefined filters
+are removed or redefined, and are subsequently used, or if the
+.code *filters*
+variable is replaced or rebound with a hash table value which omits
+those keys, or associates them with different values.
+
+Note that functions
+.codn html-encode ,
+.code html-encode*
+and
+.code html-decode
+use, respectively, the HTML-related
+.codn :tohtml ,
+.code :tohtml*
+and
+.codn :fromhtml .
 
 .SS* Access To TXR Pattern Language From Lisp
 

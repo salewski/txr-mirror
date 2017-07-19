@@ -43,7 +43,7 @@
 #include "eval.h"
 #include "stream.h"
 
-val filters;
+val filters_s;
 val filter_k, lfilt_k, rfilt_k, tohtml_k, fromhtml_k;
 val tohtml_star_k;
 val upcase_k, downcase_k;
@@ -879,9 +879,9 @@ static val html_decode(val str)
 
 void filter_init(void)
 {
-  protect(&filters, convert(val *, 0));
+  val fh = make_hash(nil, nil, nil);
 
-  filters = make_hash(nil, nil, nil);
+  filters_s = intern(lit("*filters*"), user_package);
   filter_k = intern(lit("filter"), keyword_package);
   lfilt_k = intern(lit("lfilt"), keyword_package);
   rfilt_k = intern(lit("rfilt"), keyword_package);
@@ -901,30 +901,32 @@ void filter_init(void)
   tofloat_k = intern(lit("tofloat"), keyword_package);
   hextoint_k = intern(lit("hextoint"), keyword_package);
 
-  sethash(filters, tohtml_k, build_filter(tohtml_table, t));
-  sethash(filters, tohtml_star_k, build_filter(tohtml_star_table, t));
+  reg_var(filters_s, fh);
+
+  sethash(fh, tohtml_k, build_filter(tohtml_table, t));
+  sethash(fh, tohtml_star_k, build_filter(tohtml_star_table, t));
   {
     val trie = build_filter(fromhtml_table, nil);
     trie_add(trie, lit("&#"), func_n1(html_numeric_handler));
     trie_compress(mkcloc(trie));
-    sethash(filters, fromhtml_k, trie);
+    sethash(fh, fromhtml_k, trie);
   }
-  sethash(filters, intern(lit("to_html"), keyword_package),
+  sethash(fh, intern(lit("to_html"), keyword_package),
           get_filter(tohtml_k));
-  sethash(filters, intern(lit("from_html"), keyword_package),
+  sethash(fh, intern(lit("from_html"), keyword_package),
           get_filter(fromhtml_k));
-  sethash(filters, upcase_k, func_n1(upcase_str));
-  sethash(filters, downcase_k, func_n1(downcase_str));
-  sethash(filters, topercent_k, curry_12_1(func_n2(url_encode), nil));
-  sethash(filters, frompercent_k, curry_12_1(func_n2(url_decode), nil));
-  sethash(filters, tourl_k, curry_12_1(func_n2(url_encode), t));
-  sethash(filters, fromurl_k, curry_12_1(func_n2(url_decode), t));
-  sethash(filters, tobase64_k, curry_12_1(func_n2(base64_encode), 0));
-  sethash(filters, frombase64_k, func_n1(base64_decode));
-  sethash(filters, tonumber_k, func_n1(num_str));
-  sethash(filters, toint_k, curry_12_1(func_n2(int_str), nil));
-  sethash(filters, tofloat_k, func_n1(flo_str));
-  sethash(filters, hextoint_k, curry_12_1(func_n2(int_str), num_fast(16)));
+  sethash(fh, upcase_k, func_n1(upcase_str));
+  sethash(fh, downcase_k, func_n1(downcase_str));
+  sethash(fh, topercent_k, curry_12_1(func_n2(url_encode), nil));
+  sethash(fh, frompercent_k, curry_12_1(func_n2(url_decode), nil));
+  sethash(fh, tourl_k, curry_12_1(func_n2(url_encode), t));
+  sethash(fh, fromurl_k, curry_12_1(func_n2(url_decode), t));
+  sethash(fh, tobase64_k, curry_12_1(func_n2(base64_encode), 0));
+  sethash(fh, frombase64_k, func_n1(base64_decode));
+  sethash(fh, tonumber_k, func_n1(num_str));
+  sethash(fh, toint_k, curry_12_1(func_n2(int_str), nil));
+  sethash(fh, tofloat_k, func_n1(flo_str));
+  sethash(fh, hextoint_k, curry_12_1(func_n2(int_str), num_fast(16)));
 
   reg_fun(intern(lit("make-trie"), user_package), func_n0(make_trie));
   reg_fun(intern(lit("trie-add"), user_package), func_n3(trie_add));
