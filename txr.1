@@ -55628,12 +55628,12 @@ The
 .code bool
 types are not integers, and cannot be used as the basis of bitfields:
 syntax like
-.code "(bits 3 (bool uint))"
+.code "(bit 3 (bool uint))"
 is not permitted. However, Boolean bitfields are possible when this
 syntax is turned inside out: the
 .code bool
 type can be derived from a bitfield type, as exemplified by
-.codn "(bool (bits 3 uint))" .
+.codn "(bool (bit 3 uint))" .
 This simply applies the above described Boolean conversion semantics to a
 three-bit field.  A zero/nonzero value of the field converts to
 .cod3 nil / t
