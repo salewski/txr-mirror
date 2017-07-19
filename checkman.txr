@@ -30,16 +30,16 @@
 @(define check-var ())
 @  (cases)
 @;   exception
-.coNP Variables @@, s-ifmt @(skip)
+.coNP @/Variables|Special variables/ @@, s-ifmt @(skip)
 @    (or)
 @;   exception
-.coNP Variables @@, *0 @(skip)
+.coNP @/Variables|Special variables/ @@, *0 @(skip)
 @    (or)
-.coNP Variables@(assert bad ln `bad Variables heading`)@(rep :gap 0) @@, @{x /\S+/}@(last :mandatory) @@ @y and @@ @{z /\S+/}@(end)
+.coNP @/Variables|Special variables/@(assert bad ln `bad Variables heading`)@(rep :gap 0) @@, @{x /\S+/}@(last :mandatory) @@ @y and @@ @{z /\S+/}@(end)
 @      (assert bad ln `no .desc after variables heading`)
 .desc
 @    (or)
-.coNP Variable@(assert bad ln `bad Variable heading`) @{x /\S+/}
+.coNP @/Variable|Special variable/@(assert bad ln `bad Variable heading`) @{x /\S+/}
 @      (assert bad ln `no .desc after variable heading`)
 .desc
 @  (end)
