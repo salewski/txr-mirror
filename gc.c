@@ -194,7 +194,6 @@ val make_obj(void)
         VALGRIND_MAKE_MEM_DEFINED(free_list, sizeof *free_list);
 #endif
       free_list = free_list->t.next;
-      assert (ret->t.type & FREE);
 
       if (free_list == 0)
         free_tail = &free_list;
