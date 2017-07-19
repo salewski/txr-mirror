@@ -54488,7 +54488,7 @@ is no use in reconstructing a new version of the structure; the caller will not
 receive the change. However, if the structure contains pointers to data that
 was updated, by the callback, those changes must materialize. This is achieved
 by triggering the by-value nuance of the structure type's out operation, which
-will recursively invoke the in operation of embedded pointers, which will
+will recursively invoke the out operation of embedded pointers, which will
 in turn invoke the by-pointer nuance.
 
 .SS* The FFI Type System
