@@ -1,3 +1,55 @@
+                                    TXR 183
+                                   2017-07-19
+
+
+  Features
+
+  - Extraction Language:
+    - New :lists parameter in @(collect)/@(coll)
+      - Specifies variables which are are ensured as bindings
+        to lists, even if they match nothing, without the
+        full blown discipline of :vars.
+  - FFI:
+    - carray-buf, ffi-get, ffi-put-into, and ffi-in get
+      an offset parameter for added flexibility.
+  - Environment:
+    - The accessors symbol-function, symbol-value and symbol-macro
+      can now create bindings that don't exist, when assigned,
+      rather than throwing errors.
+    - Storing to a (symbol-function (meth ...)) place can define
+      a method now.
+  - I/O:
+    - The format function can now pad floating-point numbers with
+      zeros, if a leading zero flag is specified on the precison.
+    - remove-path: exception semantics adjusted.
+    - New path-cat function for easy catenation of paths.
+  - getopts:
+    - New argument type :text for an option whose argument is
+      a string that is treated as raw text, and not TXR Lisp
+      literal syntax as with the :str type.
+  - List/Sequence processing:
+    - New function, relate: turns corresponding elements from
+      a pair of sequences into a translation function.
+    - New accessor nth, like ANSI Lisp nth.
+    - find and pos functions optimized and improved in
+      support of objects that implement sequences.
+  - Filters:
+    - New *filters* special variable exposed. This holds the
+      named filters used in the extraction language, as a hash
+      table.
+
+  Bugs
+
+  - Fixed spurious warnings occurring in some situations when
+    functions are invoked using square bracket syntax.
+  - Fixed runaway recursion when trace macro used
+    to trace the * or format functions.
+  - regex: regex printing no longer renders superfluous parentheses
+    around character classes.
+  - getopts: fixed broken custom option type.
+
+
+
                                     TXR 182
                                    2017-07-09
 
