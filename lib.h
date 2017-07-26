@@ -1029,6 +1029,8 @@ val drop_while(val pred, val seq, val keyfun);
 val drop_until(val pred, val seq, val keyfun);
 val in(val seq, val key, val testfun, val keyfun);
 val set_diff(val list1, val list2, val testfun, val keyfun);
+val isec(val list1, val list2, val testfun, val keyfun);
+val uni(val list1, val list2, val testfun, val keyfun);
 val copy(val seq);
 val length(val seq);
 val empty(val seq);

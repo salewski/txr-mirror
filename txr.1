@@ -27213,26 +27213,96 @@ To find the entry holding the maximum value, the
 .code cdr
 function can be specified.
 
-.coNP Function @ set-diff
+.coNP Functions @, uni @ isec and @ diff
 .synb
-.mets (set-diff < seq1 < seq2 >> [ testfun <> [ keyfun ]])
+.mets (uni < seq1 < seq2 >> [ testfun <> [ keyfun ]])
+.mets (isec < seq1 < seq2 >> [ testfun <> [ keyfun ]])
+.mets (diff < seq1 < seq2 >> [ testfun <> [ keyfun ]])
 .syne
 .desc
-The
-.code set-diff
-function treats the sequences
+The functions
+.codn diff ,
+.code isec
+and
+.code uni
+treats the sequences
 .meta seq1
 and
 .meta seq2
-as if they were sets
-and computes the set difference: a sequence which contains those elements in
-.meta seq1
-which do not occur in
-.metn seq2 .
+as if they were sets.
 
-.code set-diff
-returns a sequence of the same kind as
+They respectively compute the set union, set intersection
+and set difference of
+.meta seq1
+and
+.metn seq2 ,
+returning a new sequence: the union sequence,
+intersection sequence and difference sequence.
+
+The sequences
+.meta seq1
+and
+.meta seq2
+need not be of the same kind.
+The returned sequence is of the same kind as
 .metn seq1 .
+
+Since the input sequences are defined as representing sets, they are assumed
+not to contain duplicate elements. These functions are not required, but may,
+de-duplicate the sequences.
+
+The union sequence produced by
+.code uni
+contains all of the elements which occur in both
+.meta seq1
+and
+.metn seq2 .
+If a given element occurs exactly once only in
+.meta seq1
+or exactly once only in
+.metn seq2 ,
+or exactly once in both sequences, then it occurs exactly once in the union
+sequence.  If a given element occurs at least once in either
+.metn seq1 ,
+.meta seq2
+or both, then it occurs at least once in the union sequence.
+
+The intersection sequence produced by
+.code isec
+contains all of the elements which occur in both
+.meta seq1
+and
+.metn seq2 .
+If a given element occurs exactly once in
+.meta seq1
+and exactly once in
+.metn seq2 ,
+then in occurs exactly once in the intersection sequence.
+If a given element occurs at least once in
+.meta seq1
+and at least once in
+.metn seq2 ,
+then in occurs at least once in the intersection sequence.
+
+The difference sequence produced by
+.code diff
+contains all of the elements which occur in
+.meta seq1
+but do not occur in
+.metn seq2 .
+If an element occurs exactly once in
+.meta seq1
+and does not occur in
+.metn seq2 ,
+then it occurs exactly once in the difference sequence.
+If an element occurs at least once in
+.meta seq1
+and does not occur in
+.metn seq2 ,
+then it occurs at least once in the difference sequence.
+If an element occurs at least once in
+.metn seq2 ,
+then it does not occur in the difference sequence.
 
 Element equivalence is determined by a combination of
 .meta testfun
@@ -27253,15 +27323,24 @@ then the
 .code equal
 function is used.
 
-If
+Note: a function identical to
+.code diff
+named
+.code set-diff
+exists. This became deprecated starting in \*(TX 184.
+For the
+.code set-diff
+function, the requirement was specified to preserve the original
+order of items from
 .meta seq1
-contains duplicate elements which do not occur in
-.meta seq2
-(and thus are preserved in the set difference) then these duplicates appear
-in the resulting
-sequence. Furthermore, the order of the items from
-.meta seq1
-is preserved.
+that survive into the output sequence.
+This requirement is not documented for the
+.code diff
+function, but is
+.I "de facto"
+honored by the implementation for at as long as the
+.code set-diff
+synonym continues to be available.
 
 .coNP Functions @, mapcar @ mappend @ mapcar* and @ mappend*
 .synb

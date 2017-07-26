@@ -5435,6 +5435,7 @@ void eval_init(void)
   val not_null_f = func_n1(not_null);
   val me_each_f = func_n2(me_each);
   val me_for_f = func_n2(me_for);
+  val diff_f = func_n4o(set_diff, 2);
 
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
           &op_table, &pm_table, &last_form_evaled, &last_form_expanded,
@@ -6148,7 +6149,10 @@ void eval_init(void)
   reg_fun(intern(lit("find-max"), user_package), func_n3o(find_max, 1));
   reg_fun(intern(lit("find-min"), user_package), func_n3o(find_min, 1));
   reg_fun(intern(lit("multi-sort"), user_package), func_n3o(multi_sort, 2));
-  reg_fun(intern(lit("set-diff"), user_package), func_n4o(set_diff, 2));
+  reg_fun(intern(lit("set-diff"), user_package), diff_f);
+  reg_fun(intern(lit("diff"), user_package), diff_f);
+  reg_fun(intern(lit("isec"), user_package), func_n4o(isec, 2));
+  reg_fun(intern(lit("uni"), user_package), func_n4o(uni, 2));
 
   reg_fun(intern(lit("seqp"), user_package), func_n1(seqp));
   reg_fun(intern(lit("length"), user_package), func_n1(length));
