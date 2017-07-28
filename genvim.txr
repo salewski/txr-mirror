@@ -109,6 +109,8 @@ syn match txr_numesc "\\x[@hex]\+;\?" contained
 syn match txr_numesc "\\[@oct]\+;\?" contained
 syn match txr_regesc "\\[@chesc/sSdDwW()\|.*?+~&%\[\]\-]" contained
 
+syn match txr_error "#[^HSR]"@(if txr-p " contained")
+
 syn match txr_chr "#\\x[@hex]\+"@(if txr-p " contained")
 syn match txr_chr "#\\o[@oct]\+"@(if txr-p " contained")
 syn match txr_chr "#\\[^ \t\n@alnum]"@(if txr-p " contained")
