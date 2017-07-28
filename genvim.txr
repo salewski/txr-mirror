@@ -119,7 +119,7 @@ syn match txr_dot "\." contained
 syn match txr_ident "[@alnum@glyph]*[@alpha@glyph^][@alnum@glyph^]*" contained
 syn match tl_ident "[:@@][@alnum@glyph^/]\+"@(if txr-p " contained")
 syn match txr_braced_ident "[:][@alnum@glyph^/]\+" contained
-syn match tl_ident "[@alnum@glyph/]*[@alpha@glyph^/#][@alnum@glyph^/#]*"@(if txr-p " contained")
+syn match tl_ident "[@alnum@glyph/]\+[@alnum@glyph^/#]*"@(if txr-p " contained")
 syn match txr_num "#x[+\-]\?[@hex]\+"@(if txr-p " contained")
 syn match txr_num "#o[+\-]\?[@oct]\+"@(if txr-p " contained")
 syn match txr_num "#b[+\-]\?[01]\+"@(if txr-p " contained")
