@@ -116,13 +116,13 @@ syn match txr_chr "#\\[@alnum]\+"@(if txr-p " contained")
 syn match txr_ncomment ";.*"@(if txr-p " contained")
 
 syn match txr_dot "\." contained
-syn match txr_num "#x[+\-]\?[@hex]\+"@(if txr-p " contained")
-syn match txr_num "#o[+\-]\?[@oct]\+"@(if txr-p " contained")
-syn match txr_num "#b[+\-]\?[01]\+"@(if txr-p " contained")
 syn match txr_ident "[@alnum@glyph]*[@alpha@glyph^][@alnum@glyph^]*" contained
 syn match tl_ident "[:@@][@alnum@glyph^/]\+"@(if txr-p " contained")
 syn match txr_braced_ident "[:][@alnum@glyph^/]\+" contained
 syn match tl_ident "[@alnum@glyph/]*[@alpha@glyph^/#][@alnum@glyph^/#]*"@(if txr-p " contained")
+syn match txr_num "#x[+\-]\?[@hex]\+"@(if txr-p " contained")
+syn match txr_num "#o[+\-]\?[@oct]\+"@(if txr-p " contained")
+syn match txr_num "#b[+\-]\?[01]\+"@(if txr-p " contained")
 syn match txr_num "[+\-]\?[@dig]\+\([^@alnum@glyph^/#]\|\n\)"me=e-1@(if txr-p " contained")
 syn match txr_badnum "[+\-]\?[@dig]*[.][@dig]\+\([eE][+\-]\?[@dig]\+\)\?[@alpha@glyph^/#]\+"@(if txr-p " contained")
 syn match txr_num "[+\-]\?[@dig]*[.][@dig]\+\([eE][+\-]\?[@dig]\+\)\?\([^@alnum@glyph^/#]\|\n\)"me=e-1@(if txr-p " contained")
