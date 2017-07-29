@@ -122,9 +122,10 @@ syn match txr_ident "[@alnum@glyph]*[@alpha@glyph^][@alnum@glyph^]*" contained
 syn match tl_ident "[:@@][@alnum@glyph^/]\+"@(if txr-p " contained")
 syn match txr_braced_ident "[:][@alnum@glyph^/]\+" contained
 syn match tl_ident "[@alnum@glyph/]\+[@alnum@glyph^/#]*"@(if txr-p " contained")
-syn match txr_num "#x[+\-]\?[@hex]\+"@(if txr-p " contained")
-syn match txr_num "#o[+\-]\?[@oct]\+"@(if txr-p " contained")
-syn match txr_num "#b[+\-]\?[01]\+"@(if txr-p " contained")
+syn match txr_pnum "#[xob][+\-]\?[@alnum]\+" contains=txr_xnum,txr_bnum,txr_onum@(if txr-p " contained")
+syn match txr_xnum "#x[+\-]\?[@hex]\+" containedin=txr_pnum contained
+syn match txr_onum "#o[+\-]\?[@oct]\+" containedin=txr_pnum contained
+syn match txr_bnum "#b[+\-]\?[01]\+" containedin=txr_pnum contained
 syn match txr_num "[+\-]\?[@dig]\+\([^@alnum@glyph^/#]\|\n\)"me=e-1@(if txr-p " contained")
 syn match txr_badnum "[+\-]\?[@dig]*[.][@dig]\+\([eE][+\-]\?[@dig]\+\)\?[@alpha@glyph^/#]\+"@(if txr-p " contained")
 syn match txr_num "[+\-]\?[@dig]*[.][@dig]\+\([eE][+\-]\?[@dig]\+\)\?\([^@alnum@glyph^/#]\|\n\)"me=e-1@(if txr-p " contained")
@@ -143,18 +144,18 @@ syn match txr_circ "#[0-9]\+[#=]"
 syn match txr_buf_error "[^']" contained
 syn match txr_buf_interior "\([@hex][\n\t ]*[@hex]\|[\n\t ]\+\)" contained
 
-syn region txr_bracevar matchgroup=Delimiter start="@@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,tl_ident,tl_splice,tl_metanum,txr_metaat,txr_circ,txr_braced_ident,txr_dot,txr_dotdot,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_regex,txr_quasilit,txr_chr,txr_nested_error
+syn region txr_bracevar matchgroup=Delimiter start="@@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_pnum,tl_ident,tl_splice,tl_metanum,txr_metaat,txr_circ,txr_braced_ident,txr_dot,txr_dotdot,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_regex,txr_quasilit,txr_chr,txr_nested_error
 @  (end)
 @  (if txr-p)
 @    (output :continue out)
-syn region txr_directive matchgroup=Delimiter start="@@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_num,txr_badnum,tl_ident,tl_regex,txr_string,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
+syn region txr_directive matchgroup=Delimiter start="@@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_num,txr_pnum,txr_badnum,tl_ident,tl_regex,txr_string,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
 @    (end)
 @  (end)
 @  (output :continue out)
-syn region txr_list @(if txr-p "contained ")matchgroup=Delimiter start="\(#[HSR]\?\)\?(" matchgroup=Delimiter end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
-syn region txr_bracket @(if txr-p "contained ")matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
-syn region txr_mlist @(if txr-p "contained ")matchgroup=Delimiter start="@@[ \t^',]*(" matchgroup=Delimiter end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
-syn region txr_mbracket matchgroup=Delimiter start="@@[ \t^',]*\[" matchgroup=Delimiter end="\]" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
+syn region txr_list @(if txr-p "contained ")matchgroup=Delimiter start="\(#[HSR]\?\)\?(" matchgroup=Delimiter end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
+syn region txr_bracket @(if txr-p "contained ")matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
+syn region txr_mlist @(if txr-p "contained ")matchgroup=Delimiter start="@@[ \t^',]*(" matchgroup=Delimiter end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
+syn region txr_mbracket matchgroup=Delimiter start="@@[ \t^',]*\[" matchgroup=Delimiter end="\]" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
 syn region txr_string @(if txr-p "contained ")start=+#\?\*\?"+ end=+["\n]+ contains=txr_stresc,txr_numesc,txr_badesc
 syn region txr_quasilit @(if txr-p "contained ")start=+#\?\*\?`+ end=+[`\n]+ contains=txr_splicevar,txr_metanum,txr_bracevar,txr_mlist,txr_mbracket,txr_escat,txr_stresc,txr_numesc,txr_badesc
 syn region txr_regex @(if txr-p "contained ")start="/" end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
@@ -192,7 +193,11 @@ hi def link txr_badesc Error
 hi def link txr_ident Identifier
 hi def link tl_ident Identifier
 hi def link txr_num Number
+hi def link txr_xnum Number
+hi def link txr_bnum Number
+hi def link txr_onum Number
 hi def link txr_badnum Error
+hi def link txr_pnum Error
 hi def link txr_quote Special
 hi def link txr_unquote Special
 hi def link txr_splice Special
