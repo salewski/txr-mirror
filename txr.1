@@ -15365,6 +15365,170 @@ allowing the
 .code return
 operator to be used to terminate at any point.
 
+.coNP Macros @ doloop and @ doloop*
+.synb
+.mets ({doloop | doloop*}
+.mets \ \  ({ sym | >> ( sym >> [ init-form <> [ step-form ])}*)
+.mets \ \  >> ([ test-form << result-form *])
+.mets \ \  << body-form *)
+.syne
+.desc
+The
+.code doloop
+and
+.code doloop*
+macros provide an iteration construct inspired by the ANSI Common Lisp
+.code do
+and
+.code do*
+macros.
+
+Each
+.meta sym
+element in the form must be a symbol suitable for use as a variable name.
+
+The
+.code doloop
+macro binds each
+.meta sym
+to the value produced by evaluating the adjacent
+.metn init-form .
+Then, in the environment in which these variables now exist,
+.meta test-form
+is evaluated. If that form yields
+.codn nil ,
+then the loop terminates. The
+.metn result-form -s
+are evaluated, and the value of the last one is returned.
+
+If
+.metn result-form -s
+are absent, then
+.code nil
+is returned.
+
+If
+.meta test-form
+is also absent, then the loop terminates and returns
+.codn nil .
+
+If
+.meta test-form
+produces a true value, then
+.metn result-form -s
+are not evaluated. Instead, the
+.metn body-form -s
+are evaluated.  Next, the loop variables are updated by assigning
+to each
+.meta sym
+the value of
+.metn step-form .
+
+The following defaulting behaviors apply in regard to the variable
+syntax. For each
+.meta sym
+which has an associated
+.meta init-form
+but no
+.metn step-form ,
+the
+.meta init-form
+is duplicated and taken as the
+.metn step-form .
+Thus a variable specification like
+.code "(x y)"
+is equivalent to
+.codn "(x y y)" .
+If both forms are omitted, then the
+.meta init-form
+is taken to be
+.codn nil ,
+and the
+.meta step-form
+is taken to be
+.metn sym .
+This means that the variable form
+.code "(x)"
+is equivalent to
+.code "(x nil x)"
+which has the effect that
+.code x
+retains its current value when the next loop iteration begins.
+Lastly, the
+.meta sym
+variant is equivalent to
+.cblk
+.meti <> ( sym )
+.cble
+so that
+.code x
+is also equivalent to
+.codn "(x nil x)" .
+
+The differences between
+.code doloop
+and
+.code doloop*
+are:
+.code doloop
+binds the variables in parallel, similarly to
+.codn let ,
+whereas
+.code doloop*
+binds sequentially, like
+.codn let* ;
+moreover,
+.code doloop
+performs the
+.meta step-form
+assignments in parallel as if using a single
+.cblk
+.meti (pset < sym0 < step-form-0 < sym1 < step-form-1 ...)
+.cble
+form, whereas
+.code doloop*
+performs the assignment sequentially as if using
+.code set
+rather than
+.codn pset .
+
+The
+.code doloop
+and
+.code doloop*
+macros establish an anonymous
+.codn block ,
+allowing early return from the loop, with a value, via the
+.code return
+operator.
+
+.TP* "Dialect Note:"
+These macros are substantially different from the ANSI Common Lisp
+.code do
+and
+.code do*
+macros. Firstly, the termination logic is inverted; effectively they
+implement "while" loops, whereas their ANSI CL counterparts implement
+"until" loops. Secondly, in the ANSI CL macros, the defaulting of
+the missing
+.meta step-form
+is different. Variables with no
+.meta step-form
+are not updated. In particular, this means that the form
+.code "(x y)"
+is not equivalent to
+.codn "(x y y)" ;
+the ANSI CL macros do not feature the automatic replication of
+.meta init-form
+into the
+.meta step-form
+position.
+Lastly,
+.code doloop
+and
+.code doloop*
+do not implement an implicit
+.codn tagbody .
 
 .coNP Operators @ block and @ block*
 .synb

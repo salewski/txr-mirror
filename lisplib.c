@@ -541,6 +541,23 @@ static val ffi_instantiate(val set_fun)
   return nil;
 }
 
+static val doloop_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("doloop"), lit("doloop*"),
+    nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val doloop_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~adoloop.tl"), stdlib_path, nao));
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -581,6 +598,7 @@ void lisplib_init(void)
   dlt_register(dl_table, error_instantiate, error_set_entries);
   dlt_register(dl_table, keyparams_instantiate, keyparams_set_entries);
   dlt_register(dl_table, ffi_instantiate, ffi_set_entries);
+  dlt_register(dl_table, doloop_instantiate, doloop_set_entries);
   reg_fun(intern(lit("try-load"), system_package), func_n1(lisplib_try_load));
 }
 
