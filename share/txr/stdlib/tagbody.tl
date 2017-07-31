@@ -28,11 +28,10 @@
   (when forms
     (let* ((tb-id (gensym "tb-id-"))
            (next-var (gensym "next-"))
-           (bblocks [partition forms (op where [orf symbolp integerp chrp])])
-           (start-lbl (and (car bblocks) [[orf symbolp integerp chrp] (caar bblocks)]))
-           (entry-lbl (if start-lbl (caar bblocks) (gensym "entry-"))))
+           (bblocks (partition forms (op where [orf symbolp integerp chrp])))
+           (start-lbl (if bblocks [[orf symbolp integerp chrp] (caar bblocks)])))
       (unless start-lbl
-        (push entry-lbl (car bblocks)))
+        (push (gensym "entry-") (car bblocks)))
       (if (and (not start-lbl) (not (cdr bblocks)))
         ^(progn nil ,*forms nil)
         (let* ((lbls [mapcar car bblocks])
