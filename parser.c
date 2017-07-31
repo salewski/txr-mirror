@@ -933,7 +933,8 @@ static int is_balanced_line(const char *line, void *ctx)
 {
   enum state {
     ST_START, ST_CMNT, ST_PAR, ST_BKT, ST_BRC, ST_HASH,
-    ST_LIT, ST_QLIT, ST_RGX, ST_CHR, ST_ESC, ST_AT
+    ST_LIT, ST_QLIT, ST_RGX, ST_CHR, ST_ESC, ST_AT,
+    ST_HASH_B, ST_BUF
   };
   int count[32], sp = 0;
   enum state state[32];
@@ -1007,6 +1008,9 @@ static int is_balanced_line(const char *line, void *ctx)
       case '/':
         state[sp] = ST_RGX;
         break;
+      case 'b':
+        state[sp] = ST_HASH_B;
+        break;
       case ';':
         --sp;
         break;
@@ -1069,6 +1073,24 @@ static int is_balanced_line(const char *line, void *ctx)
         sp--;
         break;
       }
+      break;
+    case ST_HASH_B:
+      switch (ch) {
+      case '\'':
+        state[sp] = ST_BUF;
+        break;
+      default:
+        sp--;
+        break;
+      }
+      break;
+    case ST_BUF:
+      switch (ch) {
+      case '\'':
+        sp--;
+        break;
+      }
+      break;
     }
   }
 
