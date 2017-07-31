@@ -45,7 +45,7 @@
        ((,(if pllel 'pset 'set) ,*(mappend (ado unless (eq @1 @3)
                                              ^(,@1 ,@3))
                                            xvars)))
-       ,*body)))
+       (tagbody ,*body))))
 
 (defmacro doloop (:form f vars cexp . body)
   (sys:expand-doloop f vars cexp body))

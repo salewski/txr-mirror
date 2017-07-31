@@ -15370,7 +15370,7 @@ operator to be used to terminate at any point.
 .mets ({doloop | doloop*}
 .mets \ \  ({ sym | >> ( sym >> [ init-form <> [ step-form ])}*)
 .mets \ \  >> ([ test-form << result-form *])
-.mets \ \  << body-form *)
+.mets \ \  << tagbody-form *)
 .syne
 .desc
 The
@@ -15386,6 +15386,19 @@ macros.
 Each
 .meta sym
 element in the form must be a symbol suitable for use as a variable name.
+
+The
+.metn tagbody-form -s
+are placed into an implicit
+.codn tagbody ,
+meaning that a
+.meta tagbody-form
+which is an integer, character or symbol is interpreted
+as a
+.code tagbody
+label which may be the target of a control transfer via the
+.code go
+macro.
 
 The
 .code doloop
@@ -15416,10 +15429,13 @@ If
 .meta test-form
 produces a true value, then
 .metn result-form -s
-are not evaluated. Instead, the
-.metn body-form -s
-are evaluated.  Next, the loop variables are updated by assigning
-to each
+are not evaluated. Instead, the implicit
+.code tagbody
+comprised of the
+.metn tagbody-form -s
+is evaluated.
+If that evaluation terminates normally, the loop variables are
+then updated by assigning to each
 .meta sym
 the value of
 .metn step-form .
@@ -15523,12 +15539,6 @@ the ANSI CL macros do not feature the automatic replication of
 into the
 .meta step-form
 position.
-Lastly,
-.code doloop
-and
-.code doloop*
-do not implement an implicit
-.codn tagbody .
 
 .coNP Operators @ block and @ block*
 .synb
