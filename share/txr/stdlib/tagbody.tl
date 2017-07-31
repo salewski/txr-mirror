@@ -34,7 +34,7 @@
       (unless start-lbl
         (push entry-lbl (car bblocks)))
       (if (and (not start-lbl) (not (cdr bblocks)))
-        ^(block nil ,*forms nil)
+        ^(progn nil ,*forms nil)
         (let* ((lbls [mapcar car bblocks])
                (forms [mapcar cdr bblocks])
                ;; This trickery transform the individually labeled form
@@ -45,13 +45,14 @@
                (codes [mapcar car threaded-1]))
           (unless (eql (length (uniq lbls)) (length lbls))
             (throwf 'eval-error "~s: duplicate labels occur" 'tagbody))
-          (let* ((basic-code ^(let ((,tb-id (gensym "tb-dyn-id-")))
-                                (for ((,next-var 0))
-                                     (,next-var)
-                                     ((set ,next-var
-                                           (block* ,tb-id
-                                             (sys:switch ,next-var #(,*codes))
-                                             nil))))))
+          (let* ((basic-code ^(let ((,tb-id (gensym "tb-dyn-id-"))
+                                    (,next-var 0))
+                                (sys:for-op ()
+                                            (,next-var)
+                                            ((set ,next-var
+                                                  (block* ,tb-id
+                                                    (sys:switch ,next-var #(,*codes))
+                                                    nil))))))
                  ;; pass one: expand inner forms, including tagbody forms.
                  ;; if any inner tagbody forms leave (go ...) forms unexpanded,
                  ;; protect those (go ...)forms from falling victim to the
