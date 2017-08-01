@@ -72,7 +72,7 @@ static void debuglcf(obj_t *line, const char *fmt, ...)
   if (opt_loglevel >= 2) {
     va_list vl;
     va_start (vl, fmt);
-    format(std_error, "~a: (~a:~a)", prog_string, spec_file_str, line, nao);
+    format(std_error, "~a: (~a:~a) ", prog_string, spec_file_str, line, nao);
     vcformat(std_error, fmt, vl);
     put_cchar(std_error, '\n');
     va_end (vl);
@@ -906,6 +906,8 @@ obj_t *match_files(obj_t *spec, obj_t *files,
         return nil;
       }
 
+      files = cons(name, cdr(files)); /* Get rid of cons and nothrow */
+
       if ((data = complex_snarf(fp, name)) != nil)
         data_lineno = 1;
     }
@@ -938,14 +940,12 @@ repeat_spec_same_data:
           uw_block_begin(nil, result);
 
           while (dataline && (!max || reps++ < cmax)) {
-            cons_bind (new_bindings, success,
-                       match_files(spec, files, bindings,
-                                   data, num(data_lineno)));
+            result = match_files(spec, files, bindings,
+                                 data, num(data_lineno));
 
-            if (success) {
+            if (result) {
               debuglf(spec_linenum, "skip matched ~a:~a", first(files),
                       num(data_lineno), nao);
-              result = cons(new_bindings, cons(data, num(data_lineno)));
               break;
             }
 
@@ -1187,7 +1187,7 @@ repeat_spec_same_data:
 
           if (success) {
             debuglcf(spec_linenum, "collect matched %s:%ld",
-                     first(files), data_lineno);
+                     c_str(first(files)), data_lineno);
 
             for (iter = new_bindings; iter && iter != bindings;
                 iter = cdr(iter))
@@ -1202,11 +1202,22 @@ repeat_spec_same_data:
 
           if (success) {
             if (consp(success)) {
+              cons_bind (new_data, new_line, success);
+              long new_lineno = c_num(new_line);
+
+              bug_unless (new_lineno >= data_lineno);
+
+              if (new_lineno == data_lineno) {
+                new_data = cdr(new_data);
+                new_lineno++;
+              }
+
               debuglcf(spec_linenum,
-                       "collect advancing from line d to %ld",
-                       data_lineno, c_num(cdr(success)));
-              data = car(success);
-              data_lineno = c_num(cdr(success));
+                       "collect advancing from line %ld to %ld",
+                       data_lineno, new_lineno);
+
+              data = new_data;
+              data_lineno = new_lineno;
             } else {
               debuglf(spec_linenum, "collect consumed entire file", nao);
               data = nil;

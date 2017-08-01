@@ -1,6 +1,30 @@
 2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
 
-	Version 016
+	Version 018
+
+	Bugfixes: mistakes in debugging calls; infinite looping
+	bug in collect; skip directive not advancing match
+	by proper number of lines bug.
+
+	* match.c (debuglcf): Cosmetic fix.
+	(match_files): After recognizing nothrow in the file spec,
+	replace it by a string. A few places expect first(files) to be
+	a string. The skip directive must return whatever
+	return value it obtained from the nested match_files call,
+	and not substitute the current line number, so that the
+	caller can proceed past the correct number of lines that
+	were matched. Fixed obj_t * being passed to %s printf specifier
+	in debug printf. Collect directive must make progress even
+	if the nested spec makes no progress (returns successfully,
+	but with the original line number).
+	* txr.c (version): Bump.
+	* txr.1: Bump version and date.
+	* txr/tests/004/query-1.txr: New test case.
+	* tests/004/query-1.expected: Expected result for new test case.
+
+2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 017
 
 	Bugfix in exception subtype definition (defex).
 

@@ -62,6 +62,7 @@ tests: txr $(TESTS)
 
 tests/001/%: TXR_ARGS := tests/001/data
 tests/002/%: TXR_OPTS := -DTESTDIR=tests/002
+tests/004/%: TXR_ARGS := -a 123 -b -c
 
 %.ok: %.txr
 	./txr $(TXR_DBG_OPTS) $(TXR_OPTS) $^ $(TXR_ARGS) > $(@:.ok=.out)

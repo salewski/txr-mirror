@@ -1,0 +1,67 @@
+#!./txr
+@(next args)
+@#
+@# Define option_error exception, subtyped from error
+@#
+@(defex option_error error)
+@#
+@# Function for matching option that takes no argument
+@#
+@(define match_option (text opt_sym))
+@  (cases)
+@    (skip)
+@    text
+@    (bind opt_sym "y")
+@  (or)
+@    (bind opt_sym "n")
+@  (end)
+@(end)
+@#
+@# Function for matching option that takes an argument
+@#
+@(define match_option_arg (text opt_sym arg_sym))
+@  (cases)
+@    (skip)
+@    text
+@    arg_sym
+@    (bind opt_sym "y")
+@  (or)
+@    (skip)
+@    text
+@    (throw option_error `@text requires arg`)
+@  (or)
+@    (bind opt_sym "n")
+@  (end)
+@(end)
+@#
+@# Main query
+@#
+@(try)
+@  (maybe)
+@    (match_option_arg "-a" opt_a opt_arg_a)
+@  (or)
+@    (match_option "-b" opt_b)
+@  (or)
+@    (match_option "-c" opt_c)
+@  (end)
+@  (maybe)
+@    (bind opt_a "y")
+@    (output)
+option a was supplied, with argument @opt_arg_a
+@    (end)
+@  (or)
+@    (bind opt_b "y")
+@    (output)
+option b was supplied
+@    (end)
+@  (or)
+@    (bind opt_c "y")
+@    (output)
+option c was supplied
+@    (end)
+@  (end)
+@(catch option_error (arg))
+@(output)
+error: @arg
+@(end)
+@(end)
