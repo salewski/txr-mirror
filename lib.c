@@ -50,7 +50,7 @@ obj_t *skip, *trailer, *block, *next, *fail, *accept;
 obj_t *all, *some, *none, *maybe, *cases, *collect, *until, *coll;
 obj_t *define, *output, *single, *frst, *lst, *empty, *repeat, *rep;
 obj_t *flattn, *forget, *local, *mrge, *bind, *cat, *dir;
-obj_t *try, *catch, *finally, *nothrow;
+obj_t *try, *catch, *finally, *nothrow, *throw, *defex;
 obj_t *error, *type_error, *internal_err, *numeric_err, *range_err;
 obj_t *query_error, *file_error;
 
@@ -1521,6 +1521,8 @@ static void obj_init(void)
   catch = intern(string(strdup("catch")));
   finally = intern(string(strdup("finally")));
   nothrow = intern(string(strdup("nothrow")));
+  throw = intern(string(strdup("throw")));
+  defex = intern(string(strdup("defex")));
   error = intern(string(strdup("error")));
   type_error = intern(string(strdup("type_error")));
   internal_err = intern(string(strdup("internal_error")));

@@ -191,7 +191,7 @@ obj_t *uw_exception_subtype_p(obj_t *sub, obj_t *sup)
     return t;
   } else {
     obj_t *entry = assoc(exception_subtypes, sub);
-    return memq(sup, cdr(entry)) ? t : nil;
+    return memq(sup, entry) ? t : nil;
   }
 }
 
@@ -216,9 +216,11 @@ obj_t *uw_throw(obj_t *sym, obj_t *exception)
 
   if (ex == 0) {
     if (opt_loglevel >= 1) {
+      obj_t *s = stringp(exception);
       format(std_error, "~a: unhandled exception of type ~a:\n",
              prog_string, sym, nao);
-      format(std_error, "~a\n", exception, nao);
+      format(std_error, s ? "~a: ~a\n" : "~a: ~s\n",
+             prog_string, exception, nao);
     }
     if (uw_exception_subtype_p(sym, query_error) ||
         uw_exception_subtype_p(sym, file_error)) {
@@ -301,7 +303,7 @@ obj_t *type_mismatch(const char *fmt, ...)
   abort();
 }
 
-void uw_register_subtype(obj_t *sub, obj_t *sup)
+obj_t *uw_register_subtype(obj_t *sub, obj_t *sup)
 {
   obj_t *t_entry = assoc(exception_subtypes, t);
   obj_t *sub_entry = assoc(exception_subtypes, sub);
@@ -310,11 +312,11 @@ void uw_register_subtype(obj_t *sub, obj_t *sup)
   assert (t_entry != 0);
 
   if (sub == nil)
-    return;
+    return sup;
 
   if (sub == t) {
     if (sup == t)
-      return;
+      return sup;
     abort();
   }
 
@@ -334,6 +336,7 @@ void uw_register_subtype(obj_t *sub, obj_t *sup)
   /* Register sub as an immediate subtype of sup. */
   sub_entry = cons(sub, sup_entry);
   exception_subtypes = cons(sub_entry, exception_subtypes);
+  return sup;
 }
 
 void uw_continue(uw_frame_t *current, uw_frame_t *cont)
@@ -346,7 +349,7 @@ void uw_continue(uw_frame_t *current, uw_frame_t *cont)
 void uw_init(void)
 {
   protect(&toplevel_env.ev.func_bindings, &exception_subtypes, 0);
-  exception_subtypes = cons(cons(t, cons(t, nil)), exception_subtypes);
+  exception_subtypes = cons(cons(t, nil), exception_subtypes);
   uw_register_subtype(type_error, error);
   uw_register_subtype(internal_err, error);
   uw_register_subtype(numeric_err, error);

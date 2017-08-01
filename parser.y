@@ -58,7 +58,8 @@ static obj_t *parsed_spec;
 %token <num> NUMBER
 %token <chr> REGCHAR LITCHAR
 
-%type <obj> spec clauses clause all_clause some_clause none_clause maybe_clause
+%type <obj> spec clauses clauses_opt clause
+%type <obj> all_clause some_clause none_clause maybe_clause
 %type <obj> cases_clause collect_clause clause_parts additional_parts
 %type <obj> output_clause define_clause try_clause catch_clauses_opt
 %type <obj> line elems_opt elems elem var var_op
@@ -80,7 +81,7 @@ static obj_t *parsed_spec;
 %%
 
 spec : clauses                  { parsed_spec = $1; }
-     |                          { parsed_spec = nil; }
+     | /* empty */              { parsed_spec = nil; }
      | error                    { parsed_spec = nil;
                                   yybadtoken(yychar, 0); }
      ;
@@ -88,6 +89,10 @@ spec : clauses                  { parsed_spec = $1; }
 clauses : clause                { $$ = cons($1, nil); }
         | clause clauses        { $$ = cons($1, $2);  }
         ;
+
+clauses_opt : clauses           { $$ = $1; }
+            | /* empty */       { $$ = nil; }
+            ;
 
 clause : all_clause             { $$ = list(num(lineno - 1), $1, nao); }
        | some_clause            { $$ = list(num(lineno - 1), $1, nao); }
@@ -190,15 +195,11 @@ elem : TEXT                     { $$ = string($1); }
      ;
 
 define_clause : DEFINE exprs ')' newl
-                clauses
+                clauses_opt
                 END newl        { $$ = list(define, $2, $5, nao); }
               | DEFINE ')' newl
-                clauses
+                clauses_opt
                 END newl        { $$ = list(define, nil, $4, nao); }
-              | DEFINE exprs ')' newl
-                END newl        { $$ = list(define, $2, nao); }
-              | DEFINE ')' newl
-                END newl        { $$ = list(define, nao); }
               | DEFINE error    { yybadtoken(yychar, "list expression"); }
               | DEFINE exprs ')' newl
                 error           { yybadtoken(yychar, "define"); }
@@ -215,22 +216,36 @@ try_clause : TRY newl
                                             $3, $4, nao); }
            | TRY newl
              error              { $$ = nil;
+                                  if (yychar == END || yychar == CATCH ||
+                                      yychar == FINALLY)
+                                    yyerror("empty try clause");
+                                  else
+                                    yybadtoken(yychar, "try clause"); }
+           | TRY newl
+             clauses
+             error              { $$ = nil;
                                   yybadtoken(yychar, "try clause"); }
            ;
 
 catch_clauses_opt : CATCH ')' newl
-                    clauses
-                    catch_clauses_opt   { $$ = cons(list(catch, nil, $4, nao),
-                                                    $5); }
+                    clauses_opt
+                    catch_clauses_opt   { $$ = cons(list(catch, cons(t, nil),
+                                                         $4, nao), $5); }
                   | CATCH exprs ')' newl
-                    clauses
+                    clauses_opt
                     catch_clauses_opt   { $$ = cons(list(catch, $2, $5, nao),
                                                     $6); }
                   | FINALLY newl
-                    clauses             { $$ = cons(list(finally, nil,
+                    clauses_opt         { $$ = cons(list(finally, nil,
                                                          $3, nao),
                                                     nil); }
                   |                     { $$ = nil; }
+                  | CATCH ')' newl
+                    error               { yybadtoken(yychar, "try clause"); }
+                  | CATCH exprs ')' newl
+                    error               { yybadtoken(yychar, "try clause"); }
+                  | FINALLY newl
+                    error               { yybadtoken(yychar, "try clause"); }
                   ;
 
 

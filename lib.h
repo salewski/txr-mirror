@@ -149,7 +149,7 @@ extern obj_t *skip, *trailer, *block, *next, *fail, *accept;
 extern obj_t *all, *some, *none, *maybe, *cases, *collect, *until, *coll;
 extern obj_t *define, *output, *single, *frst, *lst, *empty, *repeat, *rep;
 extern obj_t *flattn, *forget, *local, *mrge, *bind, *cat, *dir;
-extern obj_t *try, *catch, *finally, *nothrow;
+extern obj_t *try, *catch, *finally, *nothrow, *throw, *defex;
 extern obj_t *error, *type_error, *internal_err, *numeric_err, *range_err;
 extern obj_t *query_error, *file_error;
 

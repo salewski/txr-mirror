@@ -21,7 +21,7 @@
 .\"IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 .\"WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-.TH txr 1 2009-10-14 "txr v. 015" "Text Extraction Utility"
+.TH txr 1 2009-10-14 "txr v. 016" "Text Extraction Utility"
 .SH NAME
 txr \- text extractor
 .SH SYNOPSIS
@@ -76,7 +76,7 @@ from their subqueries in special ways.
 
 .SH ARGUMENTS AND OPTIONS
 
-Options other than -D, -a and -f may be combined together into a single
+Options other than -D, -a and -c may be combined together into a single
 argument.  The -v and -q options are mutually exclusive. The one which occurs
 in the rightmost position in the argument list dominates.
 
@@ -135,12 +135,12 @@ reported as:
 The leftmost bracketed index is the most major index. That is to say,
 the dimension order is: NAME_m_m+1_..._n[1][2]...[m-1].
 
-.IP -f query
+.IP -c query
 Specifies the query in the form of a command line argument. If this option is
 used, the query-file argument is omitted. The first non-option argument,
 if there is one, now specifies the first input source rather than a query.
 Queries specified as arguments must properly end in a newline, as if they
-were read from a text file, thus -f "@a" is not a properly formed query.
+were read from a text file, thus -c "@a" is not a properly formed query.
 
 Example:
 
@@ -149,7 +149,7 @@ Example:
   # input is specified as - and the data
   # comes from shell "here document" redirection.
 
-  txr -f "@a
+  txr -c "@a
   @b
   " - <<!
   1
@@ -162,7 +162,7 @@ Example:
 
 The @# comment syntax can be used for better formatting:
 
-  txr -f "@#
+  txr -c "@#
   @a
   @b
   "
@@ -263,7 +263,7 @@ comment which follows does. Without this intuitive behavior,
 line comment would give rise to empty lines that must match empty
 lines in the data, leading to spurious mismatches.
 
-.SH Hash Bang Support
+.SS Hash Bang Support
 
 If the first line of a query begins with the characters #!,
 that entire line is deleted from the query. This allows
@@ -771,6 +771,9 @@ handling, discussed in the EXCEPTIONS section below.
 
 .IP @(catch), @(finally)
 Special clauses within @(try). See EXCEPTIONS below.
+
+.IP @(defex), @(throw)
+Define custom exception types; throw an exception.  See EXCEPTIONS below.
 
 .IP @(flatten)
 Normalizes a set of specified variables to one-dimensional lists. Those
@@ -1919,12 +1922,11 @@ Example:
 
 Here, the function "which" is defined which calls "fun".
 A toplevel definition of "fun" is introduced which
-outputs "toplevel fun!". Then, within the func
-The function "callee" provides its own local definition
-of "fun" which outputs "local fun!" before calling "which".
-When callee is invoked, it calls @(which), whose @(fun) call is routed to
-callee's local definition.  When @(which) is called directly from the top
-level, its @(fun) call goes to the toplevel definition.
+outputs "toplevel fun!".  The function "callee" provides its own local
+definition of "fun" which outputs "local fun!" before calling "which".  When
+callee is invoked, it calls @(which), whose @(fun) call is routed to callee's
+local definition.  When @(which) is called directly from the top level, its
+@(fun) call goes to the toplevel definition.
 
 .SH OUTPUT
 
@@ -2174,7 +2176,7 @@ the try clause terminates, no matter how it terminates.
 
 .SS The Try Directive
 
-The general syntax of the try directive is 
+The general syntax of the try directive is
 
   @(try)
   ... main clause, required ...
@@ -2205,7 +2207,7 @@ A finally clause looks like:
   .
   .
 
-None of the clauses may be empty.
+The main clause may not be empty, but the catch and finally may be.
 
 A try clause is surrounded by an implicit anonymous block (see BLOCKS section
 above). So for instance, the following is a no-op (an operation with no effect,
@@ -2239,7 +2241,7 @@ in order for the block to terminate. But the try has a finally clause,
 which executes unconditionally, no matter how the try block
 terminates. The finally clause performs some output, which is seen.
 
-.SH The Finally Clause
+.SS The Finally Clause
 
 A try directive can terminate in one of three ways. The main clause
 may match successfully, and possibly yield some new variable bindings.
@@ -2350,8 +2352,8 @@ exception which is headed for the @(catch file_error), the finally
 clause performs an anonymous accept. The exit point for the accept
 is the anonymous block surrounding the inner try.  So the original
 transfer to the catch clause is forgotten. The inner try terminates
-sucessfully, and since it constitutes the main clause of the outer try,
-that also terminates sucessfully. The "file error caught" message is
+successfully, and since it constitutes the main clause of the outer try,
+that also terminates successfully. The "file error caught" message is
 never printed.
 
 .SS Catch Clauses
@@ -2405,6 +2407,120 @@ exception from the @(next) directive.   This is handled by the
 catch clause, which binds variable a to the input line "1".
 Then the finally clause executes, binding b to "2". The try block
 then terminates successfully, and so @c takes "3".
+
+.SS Catch Clauses with Parameters
+
+A catch may have parameters following the type name, like this:
+
+  @(catch pair (a b))
+
+To write a catch-all with parameters, explicitly write the
+master supertype t:
+
+  @(catch t (arg ...))
+
+Parameters are useful in conjunction with throw. The built-in
+error exceptions generate one argument, which is a string containing
+the error message. Using throw, arbitrary parameters can be passed
+from the throw site to the catches.
+
+.SS The Throw Directive
+
+The throw directive generates an exception. A type must be specified,
+followed by optional arguments. For example,
+
+  @(throw pair "a" `@file.txt`)
+
+throws an exception of type pair, with two arguments, being "a"
+and the expansion of the quasiliteral `@file.txt`.
+
+The selection of the target catch is performed purely using the type
+name; the parameters are not involved in the selection.
+
+Binding takes place between the arguments given in throw, and the
+target catch.
+
+If any catch parameter, for which a throw argument is given, is a bound
+variable, it has to be identical to the argument, otherwise the catch fails.
+(Control still passes to the catch, but the catch is a failed match).
+
+  Query:        @(bind a "apple")
+                @(try)
+                @(throw e "banana")
+                @(catch e a)
+                @(end)
+
+  Output:       [unhandled exception diagnostic]
+
+If any argument is an unbound variable, the corresponding parameter
+in the catch is left alone: if it is an unbound variable, it remains
+unbound, and if it is bound, it stays as is.
+
+  Query:        @(try)
+                @(trow e "honda" unbound)
+                @(catch e (car1 car2))
+                @car1 @car2
+                @(end)
+
+  Data:         honda toyota
+
+  Output:       car1="honda"
+                car2="toyota"
+
+If a catch has fewer parameters than there are throw arguments,
+the excess arguments are ignored.
+
+  Query:         @(try)
+                 @(throw e "banana" "apple" "pear")
+                 @(catch e (fruit))
+                 @(end)
+
+  Output:        fruit="banana"
+
+If a catch has more parameters than there are throw arguments, the excess
+parameters are left alone. They may be bound or unbound variables.
+
+  Query:        @(try)
+                @(trow e "honda")
+                @(catch e (car1 car2))
+                @car1 @car2
+                @(end)
+
+  Data:         honda toyota
+
+  Output:       car1="honda"
+                car2="toyota"
+
+A throw argument passing a value to a catch parameter which is unbound causes
+that parameter to be bound to that value.
+
+Throw arguments are evaluated in the context of the throw, and the bindings
+which are available there. Consideration of what parameters are bound
+is done in the context of the catch.
+
+  Query:        @(bind c "c")
+                @(try)
+                @(forget c)
+                @(bind (a c) ("a" "lc"))
+                @(throw e a c)
+                @(catch e (b a))
+                @(end)
+
+   Output:      c="c"
+                b="a"
+                a="lc"
+
+In the above example, c has a toplevel binding to the string "c",
+but is then unbound within the try construct, and rebound to the value "c".
+Since the try construct is terminated by a throw, these modifications of the
+binding environment are discarded. Hence, at the end of the query, variable
+c ends up bound to the original value "c".  The throw still takes place
+within the scope of the bindings set up by the try clause, so the values of
+a and c that are thrown are "a" and "lc".  However, at the catch site, variable
+a does not have a binding.  At that point, the binding to "a" established in
+the try has disappeared already. Being unbound, the catch parameter a can take
+whatever value the corresponding throw argument provides, so it ends up with
+"lc".
 
 .SH NOTES ON FALSE
 

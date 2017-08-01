@@ -39,7 +39,7 @@
 #include "match.h"
 #include "txr.h"
 
-const char *version = "015";
+const char *version = "016";
 const char *progname = "txr";
 const char *spec_file = "stdin";
 obj_t *spec_file_str;
@@ -69,10 +69,12 @@ void help(void)
 "  %s [ options ] query-file { data-file }*\n"
 "\n"
 "The query-file or data-file arguments may be specified as -, in which case\n"
-"standard input is used. If these arguments end with a | character, then\n"
-"they are treated as command pipes. Leading arguments which begin with a -\n"
-"followed by one or more characters, and which are not arguments to options\n"
-"are interpreted as options. The -- option indicates the end of the options.\n"
+"standard input is used. All data-file arguments which begin with a !\n"
+"character are treated as command pipes. Those which begin with a $\n"
+"are interpreted as directories to read. Leading arguments which begin\n"
+"with a - followed by one or more characters, and which are not arguments to\n"
+"options are interpreted as options. The -- option indicates the end of the\n"
+"options.\n"
 "\n"
 "If no data-file arguments sare supplied, then the query itself must open a\n"
 "a data source prior to attempting to make any pattern match, or it will\n"
@@ -89,8 +91,9 @@ void help(void)
 "-a num                 Generate array variables up to num-dimensions.\n"
 "                       Default is 1. Additional dimensions are fudged\n"
 "                       by generating numeric suffixes\n"
-"-f query               Specify the query text as an argument.\n"
-"                       The query-file argument is omitted in this case.\n"
+"-c query-text          The query is read from the query-text argument\n"
+"                       itself. The query-file argument is omitted in\n"
+"                       this case; the first argument is a data file.\n"
 "--help                 You already know!\n"
 "--version              Display program version\n"
 "\n"
@@ -211,7 +214,7 @@ int main(int argc, char **argv)
       return 0;
     }
 
-    if (!strcmp(*argv, "-a") || !strcmp(*argv, "-f")) {
+    if (!strcmp(*argv, "-a") || !strcmp(*argv, "-c")) {
       long val;
       char *errp;
       char opt = (*argv)[1];
@@ -235,7 +238,7 @@ int main(int argc, char **argv)
 
         opt_arraydims = val;
         break;
-      case 'f':
+      case 'c':
         specstring = string(strdup(*argv));
         break;
       }
@@ -264,7 +267,7 @@ int main(int argc, char **argv)
           opt_nobindings = 1;
           break;
         case 'a':
-        case 'f':
+        case 'c':
         case 'D':
           fprintf(stderr, "%s: option -%c does not clump\n", progname, *popt);
           return EXIT_FAILURE;

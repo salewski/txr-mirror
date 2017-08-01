@@ -83,7 +83,7 @@ noreturn obj_t *uw_throwf(obj_t *sym, const char *fmt, ...);
 noreturn obj_t *uw_errorf(const char *fmt, ...);
 noreturn obj_t *uw_throwcf(obj_t *sym, const char *fmt, ...);
 noreturn obj_t *uw_errorcf(const char *fmt, ...);
-void uw_register_subtype(obj_t *sub, obj_t *super);
+obj_t *uw_register_subtype(obj_t *sub, obj_t *super);
 obj_t *uw_exception_subtype_p(obj_t *sub, obj_t *sup);
 void uw_continue(uw_frame_t *curr, uw_frame_t *target);
 void uw_pop_frame(uw_frame_t *);

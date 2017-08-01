@@ -1,3 +1,73 @@
+2009-10-16  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 016
+
+	Catch clauses with parameters.
+
+	Directive for throwing exceptions: throw.
+
+	Directive for defining exception types: defex.
+
+	-f option renamed to -c.
+
+	* txr.c: (version): Bump to 016
+	* txr.1: Bump version to 016.
+
+2009-10-16  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* txr.c (help, main): Changed -f argument to -c. This
+	is consistent with the -c argument of the shell;
+	-f looks like awk's -f option, which specifies a file,
+	not a literal script body.
+
+	* txr.1: Updated.
+
+2009-10-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* txr.1: Grammar, spelling.
+
+2009-10-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* parser.y (clauses_opt): Long overdue nonterminal added.
+	(define_clause) simplified with clauses_opt.
+	(try_clause): Error handling improved.
+	(catch_clauses_opt): Catch and finally clauses can be empty.
+	Error cases added.
+	* txr.1: Updated.
+
+2009-10-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* match.c (match_files): Use alist_remove1 for a one
+	element removal.
+
+2009-10-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* unwind.c (uw_throw): Add program prefix before
+	unhandled exception text. Print it in the
+	standard notation if it's not a string literal.
+	* match.c (sem_error, file_err): Don't stick program
+	prefix into exception text.
+
+2009-10-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* unwind.c (uw_exception_subtype_p, uw_init):
+	Slight change in representation for exception subtypes,
+	saving one node in the list.
+
+2009-10-15  Kaz Kylheku  <kkylheku@gmail.com>
+
+	New throw and defex directives, catches with arguments.
+
+	* lib.c (defex, throw): New symbol globals.
+	(obj_init): Symbols interned.
+	* lib.h (defex, throw): Declared.
+	* match.c (match_files): Implemented throw and defex.
+	Argument handling in catches.
+	* unwind.c (uw_register_subtype): Returns right
+	argument, so we can cleverly use it with reduce_left.
+	* unwind.h (uw_register_subtype): Declaration updated.
+	* txr.1: Updated.
+
 2009-10-14  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 015

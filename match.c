@@ -85,7 +85,6 @@ static void sem_error(obj_t *line, const char *fmt, ...)
   obj_t *stream = make_string_output_stream();
 
   va_start (vl, fmt);
-  format(stream, "~a: ", prog_string, nao);
   if (line)
     format(stream, "(~a:~a) ", spec_file_str, line, nao);
   (void) vformat(stream, fmt, vl);
@@ -101,7 +100,6 @@ static void file_err(obj_t *line, const char *fmt, ...)
   obj_t *stream = make_string_output_stream();
 
   va_start (vl, fmt);
-  format(stream, "~a: ", prog_string, nao);
   if (line)
     format(stream, "(~a:~a) ", spec_file_str, line, nao);
   (void) vformat(stream, fmt, vl);
@@ -1402,7 +1400,7 @@ repeat_spec_same_data:
 
         {
           uw_block_begin(nil, result);
-          uw_catch_begin(catch_syms, exsym, exception);
+          uw_catch_begin(catch_syms, exsym, exvals);
 
           {
             result = match_files(try_clause, files, bindings,
@@ -1410,32 +1408,54 @@ repeat_spec_same_data:
             uw_do_unwind;
           }
 
-          uw_catch(exsym, exception) {
+          uw_catch(exsym, exvals) {
             {
               obj_t *iter;
 
               for (iter = catch_fin; iter; iter = cdr(iter)) {
                 obj_t *clause = car(iter);
-                obj_t *matches = second(clause);
+                obj_t *type = first(second(clause));
+                obj_t *params = second(second(clause));
                 obj_t *body = third(clause);
+                obj_t *vals = if3(listp(exvals),
+                                  exvals,
+                                  cons(cons(t, exvals), nil));
 
                 if (first(clause) == catch) {
-                  obj_t *match;
-                  for (match = matches; match; match = cdr(match))
-                    if (uw_exception_subtype_p(exsym, car(match)))
-                      break;
-                  if (match) {
-                    cons_bind (new_bindings, success,
-                               match_files(body, files, bindings,
-                                           data, num(data_lineno)));
-                    if (success) {
-                      bindings = new_bindings;
-                      result = t; /* catch succeeded, so try succeeds */
-                      if (consp(success)) {
-                        data = car(success);
-                        data_lineno = c_num(cdr(success));
-                      } else {
-                        data = nil;
+                  if (uw_exception_subtype_p(exsym, type)) {
+                    obj_t *all_bind = t;
+                    obj_t *piter, *viter;
+
+                    for (piter = params, viter = vals;
+                         piter && viter;
+                         piter = cdr(piter), viter = cdr(viter))
+                    {
+                      obj_t *param = car(piter);
+                      obj_t *val = car(viter);
+
+                      if (val) {
+                        bindings = dest_bind(bindings, param, cdr(val));
+
+                        if (bindings == t) {
+                          all_bind = nil;
+                          break;
+                        }
+                      }
+                    }
+
+                    if (all_bind) {
+                      cons_bind (new_bindings, success,
+                                 match_files(body, files, bindings,
+                                             data, num(data_lineno)));
+                      if (success) {
+                        bindings = new_bindings;
+                        result = t; /* catch succeeded, so try succeeds */
+                        if (consp(success)) {
+                          data = car(success);
+                          data_lineno = c_num(cdr(success));
+                        } else {
+                          data = nil;
+                        }
                       }
                     }
                     break;
@@ -1504,6 +1524,25 @@ repeat_spec_same_data:
 
           goto repeat_spec_same_data;
         }
+      } else if (sym == defex) {
+        obj_t *types = rest(first_spec);
+        if (!all_satisfy(types, func_n1(symbolp), nil))
+          sem_error(spec_linenum, "defex arguments must all be symbols", nao);
+        (void) reduce_left(func_n2(uw_register_subtype), types, nil, nil);
+        if ((spec = rest(spec)) == nil)
+          break;
+        goto repeat_spec_same_data;
+      } else if (sym == throw) {
+        obj_t *type = second(first_spec);
+        obj_t *args = rest(rest(first_spec));
+        if (!symbolp(type))
+          sem_error(spec_linenum, "throw: ~a is not a type symbol",
+                    first(first_spec), nao);
+        {
+          obj_t *values = mapcar(bind2other(func_n2(eval_form), bindings),
+                                 args);
+          uw_throw(type, values);
+        }
       } else {
         obj_t *func = uw_get_func(sym);
 
@@ -1532,7 +1571,7 @@ repeat_spec_same_data:
                                         param,
                                         cdr(val));
               } else {
-                bindings_cp = alist_remove(bindings_cp, cons(param, nil));
+                bindings_cp = alist_remove1(bindings_cp, param);
                 ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
               }
             } else {
