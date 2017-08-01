@@ -1,0 +1,31 @@
+Name:	clock-applet
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	2726
+Pid:	2726
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	256
+Groups:	501 503 512 
+VmSize:	   19576 kB
+VmLck:	       0 kB
+VmRSS:	    8052 kB
+VmData:	    1012 kB
+VmStk:	      68 kB
+VmExe:	      92 kB
+VmLib:	   15472 kB
+StaBrk:	08064000 kB
+Brk:	0812b000 kB
+StaStk:	bffff7a0 kB
+ExecLim:	08060000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020001000
+SigCgt:	00000001800104f0
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

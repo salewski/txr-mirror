@@ -1,0 +1,31 @@
+Name:	X
+State:	S (sleeping)
+SleepAVG:	98%
+Tgid:	2354
+Pid:	2354
+PPid:	2184
+TracerPid:	0
+Uid:	0	0	0	0
+Gid:	0	0	0	0
+FDSize:	32
+Groups:	0 
+VmSize:	   23376 kB
+VmLck:	       0 kB
+VmRSS:	   20472 kB
+VmData:	   16472 kB
+VmStk:	      28 kB
+VmExe:	    1523 kB
+VmLib:	    4345 kB
+StaBrk:	08209000 kB
+Brk:	087b2000 kB
+StaStk:	bffffab0 kB
+ExecLim:	b7fbe000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020301000
+SigCgt:	00000000518066cb
+CapInh:	0000000000000000
+CapPrm:	00000000fffffeff
+CapEff:	00000000fffffeff

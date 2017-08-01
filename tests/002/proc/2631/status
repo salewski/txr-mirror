@@ -1,0 +1,31 @@
+Name:	gconfd-2
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	2631
+Pid:	2631
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	256
+Groups:	501 503 512 
+VmSize:	    9928 kB
+VmLck:	       0 kB
+VmRSS:	    6572 kB
+VmData:	    4792 kB
+VmStk:	       8 kB
+VmExe:	      47 kB
+VmLib:	    2873 kB
+StaBrk:	08056000 kB
+Brk:	084f8000 kB
+StaStk:	bffffb10 kB
+ExecLim:	08054000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020001002
+SigCgt:	00000001800046e9
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

@@ -1,0 +1,31 @@
+Name:	rpc.idmapd
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	1698
+Pid:	1698
+PPid:	1
+TracerPid:	0
+Uid:	0	0	0	0
+Gid:	0	0	0	0
+FDSize:	32
+Groups:	
+VmSize:	    3964 kB
+VmLck:	       0 kB
+VmRSS:	    1044 kB
+VmData:	     344 kB
+VmStk:	       8 kB
+VmExe:	      39 kB
+VmLib:	    3393 kB
+StaBrk:	08055000 kB
+Brk:	08076000 kB
+StaStk:	bffffe20 kB
+ExecLim:	08051000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000000000
+SigCgt:	0000000000000a01
+CapInh:	0000000000000000
+CapPrm:	00000000fffffeff
+CapEff:	00000000fffffeff

@@ -1,0 +1,31 @@
+Name:	xinetd
+State:	S (sleeping)
+SleepAVG:	76%
+Tgid:	1902
+Pid:	1902
+PPid:	1
+TracerPid:	0
+Uid:	0	0	0	0
+Gid:	0	0	0	0
+FDSize:	32
+Groups:	
+VmSize:	    2068 kB
+VmLck:	       0 kB
+VmRSS:	     860 kB
+VmData:	     316 kB
+VmStk:	      12 kB
+VmExe:	     143 kB
+VmLib:	    1533 kB
+StaBrk:	00137000 kB
+Brk:	08021000 kB
+StaStk:	bffffd90 kB
+ExecLim:	b8000000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000381000
+SigCgt:	000000007fc3eeff
+CapInh:	0000000000000000
+CapPrm:	00000000fffffeff
+CapEff:	00000000fffffeff

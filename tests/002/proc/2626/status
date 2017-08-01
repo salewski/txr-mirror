@@ -1,0 +1,31 @@
+Name:	dbus-daemon-1
+State:	S (sleeping)
+SleepAVG:	97%
+Tgid:	2626
+Pid:	2626
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	32
+Groups:	501 503 512 
+VmSize:	   12588 kB
+VmLck:	       0 kB
+VmRSS:	    1364 kB
+VmData:	   10408 kB
+VmStk:	      12 kB
+VmExe:	     478 kB
+VmLib:	    1614 kB
+StaBrk:	080c2000 kB
+Brk:	080e3000 kB
+StaStk:	bffffb30 kB
+ExecLim:	080c0000
+Threads:	2
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020001000
+SigCgt:	0000000180004001
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

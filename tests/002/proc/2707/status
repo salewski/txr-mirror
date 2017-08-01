@@ -1,0 +1,31 @@
+Name:	rhn-applet-gui
+State:	R (running)
+SleepAVG:	98%
+Tgid:	2707
+Pid:	2707
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	32
+Groups:	501 503 512 
+VmSize:	   28748 kB
+VmLck:	       0 kB
+VmRSS:	   16676 kB
+VmData:	    5364 kB
+VmStk:	     100 kB
+VmExe:	       1 kB
+VmLib:	   19507 kB
+StaBrk:	0804a000 kB
+Brk:	082aa000 kB
+StaStk:	bffffa50 kB
+ExecLim:	08049000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000021001000
+SigCgt:	00000001800104f0
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

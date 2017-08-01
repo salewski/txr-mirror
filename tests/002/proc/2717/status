@@ -1,0 +1,31 @@
+Name:	pam_timestamp_c
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	2717
+Pid:	2717
+PPid:	2701
+TracerPid:	0
+Uid:	524	0	0	0
+Gid:	503	503	503	503
+FDSize:	32
+Groups:	501 503 512 
+VmSize:	    1620 kB
+VmLck:	       0 kB
+VmRSS:	     640 kB
+VmData:	     156 kB
+VmStk:	      16 kB
+VmExe:	       4 kB
+VmLib:	    1392 kB
+StaBrk:	0804b000 kB
+Brk:	0806c000 kB
+StaStk:	bffffa70 kB
+ExecLim:	0804a000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020000000
+SigCgt:	0000000000000000
+CapInh:	0000000000000000
+CapPrm:	00000000fffffeff
+CapEff:	00000000fffffeff

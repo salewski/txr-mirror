@@ -1,0 +1,31 @@
+Name:	gam_server
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	2644
+Pid:	2644
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	256
+Groups:	501 503 512 
+VmSize:	    2304 kB
+VmLck:	       0 kB
+VmRSS:	    1264 kB
+VmData:	     288 kB
+VmStk:	      16 kB
+VmExe:	      40 kB
+VmLib:	    1880 kB
+StaBrk:	08054000 kB
+Brk:	08096000 kB
+StaStk:	bffff7e0 kB
+ExecLim:	08053000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020001000
+SigCgt:	0000000210000800
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

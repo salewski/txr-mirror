@@ -1,0 +1,31 @@
+Name:	notification-ar
+State:	S (sleeping)
+SleepAVG:	97%
+Tgid:	2728
+Pid:	2728
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	256
+Groups:	501 503 512 
+VmSize:	   17888 kB
+VmLck:	       0 kB
+VmRSS:	    6800 kB
+VmData:	     756 kB
+VmStk:	      68 kB
+VmExe:	      23 kB
+VmLib:	   14261 kB
+StaBrk:	08051000 kB
+Brk:	080db000 kB
+StaStk:	bffff780 kB
+ExecLim:	0804e000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020001000
+SigCgt:	00000001800104f0
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

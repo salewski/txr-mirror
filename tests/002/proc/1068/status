@@ -1,0 +1,31 @@
+Name:	dhclient
+State:	S (sleeping)
+SleepAVG:	90%
+Tgid:	1068
+Pid:	1068
+PPid:	1
+TracerPid:	0
+Uid:	0	0	0	0
+Gid:	0	0	0	0
+FDSize:	32
+Groups:	
+VmSize:	    2872 kB
+VmLck:	       0 kB
+VmRSS:	    1068 kB
+VmData:	     328 kB
+VmStk:	     736 kB
+VmExe:	     349 kB
+VmLib:	    1391 kB
+StaBrk:	080ae000 kB
+Brk:	099d7000 kB
+StaStk:	bff4ae00 kB
+ExecLim:	0809f000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000000000
+SigCgt:	0000000000000000
+CapInh:	0000000000000000
+CapPrm:	00000000fffffeff
+CapEff:	00000000fffffeff

@@ -1,0 +1,228 @@
+2009-09-25  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 011
+
+	New @(maybe) clause optionally matches (does not fail if none of
+	its clauses match anything).
+
+	New blocks feature: allows a query or subquery to be
+	abruptly terminated by invoking an exit to a named or anonymous
+	block. @(collect) and @(skip) have implicit anonymous blocks now.
+
+	The @(skip) directive takes a numeric argument now, which limits
+	how many lines are searched.
+
+	* Makefile, extract.l, extract.y, extract.h, gc.c, gc.h, lib.c, lib.h,
+	regex.c, regex.h, txr.1, unwind.c, unwind.h: Copyright notice and
+	license text updated or added, and version bumped up to 011.
+	* tests/001/query-1.txr, tests/001/query-2.txr, tests/001/query-3.txr,
+	tests/002/query-1.txr: Assigned to public domain.
+
+2009-09-25  Kaz Kylheku  <kkylheku@gmail.com>
+
+	New features:
+	- named blocks;
+	- maybe clause;
+	- optional iteration bound on skip.
+
+	* extract.y: includes added: "unwind.h", <setjmp.h>.
+	(MAYBE, OR): New grammar tokens.
+	(maybe_clause): New nonterminal grammar symbol.
+	(expr): A NUMBER can be an expression now, so that @(skip 42)
+	is valid syntax.
+	(match_files): Support for numeric argument in skip directive
+	to bound the search to a maximum number of lines.
+	Anonymous block established around skip.
+	New directives implemented: maybe, block, accept and fail.
+	Anonymous block established around collect.
+	* txr.1: Documentation updated with new features.
+	* Makefile: new object file unwind.o, and associated rules.
+	* extract.l (yybadtoken): New cases for MAYBE and OR.
+	(grammar): Likewise.
+	* lib.c (block, fail, accept): New symbol variables.
+	(obj_init): New symbols interned.
+	* lib.h (block, fail, accept): Declared.
+	(if2, if3): Macros fixed so test expression is not compared to nil,
+	but implicitly tested as boolean.
+	* unwind.c, unwind.h: New source files.
+
+2009-09-24  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Stability fixes.
+
+	* extract.y (match_files): Fixed invalid string("-") to
+	string(chk_strdup("-")) which caused a freeing of
+	a non-malloced string at gc finalization time.
+	* regex.c (nfa_state_shallow_free): New function: does not
+	free satellite objects, just the structure itself.
+	(nfa_combine): Use nfa_state_shallow_free instead of nfa_state_free,
+	because the merged state inherits ownership of objects from the state
+	being spliced out.
+	(nfa_state_set): Fix lack of initialization of s.visited member of the
+	state structure.
+
+2009-09-24  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 010
+
+	A file specs can start with $, which means read a directory.
+
+	Data sources are not into memory at once, but on demand,
+	which can reduce memory for many queries.
+
+	Regular expressions are now compiled once, when the
+	query is parsed.
+
+	Character escapes are now supported in regular expressions,
+	and as a special syntax.
+
+	* extract.l (version): Bumped to 010.
+	(grammar): 8 and 9 are not octal digits; handle all regex
+	backslash escaping in lexical grammar.
+	* extract.y (grammar): Get rid of backslash handling from
+	regex grammar. Lexer returns a REGCHAR for every escaped
+	item. In situations where an operator character is implicily
+	literal, like * in a character class, we use the grammar
+	to include that alongside REGCHAR. Bugfixes: the character ], when not
+	closing a class, is not a syntax error but stands for itself;
+	the character - stands for itself outside of character class;
+	the | character is literal in a character class.
+	* txr.1: Updated version. Documented character escapes.
+
+2009-09-24  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Lazy stream list improvement: no extra NIL element caused
+	by end-of-file. Requires push-back support in streams.
+	To avoid introducing a new structure member into streams,
+	we extend the semantics of the label member, and rename
+	it to label_pushback.
+
+	* lib.c (stdio_line_stream, pipe_line_stream,
+	dirent_stream): Follow rename of struct stream member;
+	assert that label is an atom.
+	(stream_get): Check pushback stack first and get item from there.
+	(stream_pushback): New function.
+	(lazy_stream_func): Pull one more item from the stream and
+	use /that/ to decide whether to continue the lazy stream.
+	The extra item is pushed back, if valid.
+	(lazy_stream_cons): Simplified: no hack involving regular cons. Starts
+	the induction by peeking into the stream. If something is there, it is
+	pushed back, and a lazy cons is constructed which will fetch it.
+	(obj_print): Made aware of the pushback, which must be skipped
+	to get to the terminating label.
+	* lib.h (struct stream): Member renamed from label to label_pushback.
+	(stream_pushback): New function declaration.
+
+2009-09-23  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Escape syntax in regexes, and text. The
+	standard seven character escapes are supported,
+	namely \a, \b, \t, \n, \v, \f, and \r,
+	as well as hex and octal escapes, plus
+	the code \e for ASCII ESC.
+
+	* extract.l (char_esc, num_esc): New functions.
+	(grammar): New lex cases.
+	* lib.c (obj_print): Support all character escapes in printing.
+	Bugfix: backslash printed as two backslashes, not one.
+
+2009-09-23  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* tests/002/query-1.txr: Modified to use $ to scan thread
+	subdirectories.
+	* tests/002/query-1.expected: Updated.
+
+2009-09-23  Kaz Kylheku  <kkylheku@gmail.com>
+
+	New COBJ type for wrapping arbitrary C objects into the
+	Lisp-like framework. Compiled regexes are objects now.
+	Regexes in a query are now compiled just once.
+
+	* extract.y (grammar): Regexes compiled while parsing.
+	(match_line): Modify with respect to the abstract syntax
+	tree change, and the interface changes in the match_regex,
+	and search_regex functions.
+	* gc.c (mark_obj, finalize): Handle marking and finalization
+	of COBJ objects.
+	* lib.c (typeof, equal, obj_print): Handle COBJ.
+	(cobj, cobj_print_op): New functions.
+	* lib.h (type_t): New enum element, COBJ.
+	(struct cobj, struct subj_ops): New types.
+	(union obj): New member, co.
+	(cobj, cobj_print_op): New functions declared.
+	* regex.c (regex_equal, regex_destroy, regex_compile, regex_nfa): New
+	functions.
+	(regex_obj_ops): New static struct.
+	(search_regex, match_regex): Interface change. Regex arguments
+	are now compiled regexes. Functions won't handle raw regexes.
+	* regex.h (regex_compile, regex_nfa): New functions declared.
+
+2009-09-23  Kaz Kylheku  <kkylheku@gmail.com>
+
+	New feature: file specs that start with $ read directories.
+	Reading from an ``ls'' pipe is too slow.
+
+	Streams and lazy conses implemented. Lazy conses allow us to treat a
+	file or other kind of stream exactly as if it were a list.
+	We can use car and cdr, etc. But only the parts of the list
+	that we actually touch are instantiated on-the-fly by
+	reading from the underlying stream.
+
+	* extract.l: inclusion of <dirent.h> added.
+	* extract.l: inclusion of <dirent.h> added.
+	* extract.y (fpip_closedir): new enumeration in struct fpip,
+	and fpip_noclose removed.
+	(complex_open): Check for leading $, use opendir.
+	(complex_open_failed): New function.
+	(complex_close): Handle fpip_closedir case. Not closing
+	stdin and stdout is handled by explicit comparison now.
+	(complex_snarf): New function, constructs stream of
+	a suitable type, over object returned from complex_close,
+	wraps it in a lazy list.
+	(match_files): Use complex_snarf instead of snarf to get a lazy list.
+	* gc.c: Handle LCONS and STREAM cases.
+	* lib.c (stream_t, lcons_t): New variables holding symbols.
+	(typeof, equal, obj_print): Handle LCONS and STREAM.
+	(car, cdr, car_l, cdr_l, consp, atom, listp): Rewritten to handle
+	LCONS.
+	(chk_strdup, stdio_line_read, stdio_line_write, stdio_close
+	stdio_line_stream, pipe_close, pipe_line_stream,
+	dirent_read, dirent_close, dirent_stream,
+	stream_get, stream_put, stream_close,
+	make_lazycons, lazy_stream_func, lazy_stream_cons): New functions.
+	(stdio_line_stream_ops, pipe_line_stream_ops,
+	dirent_stream_ops): New static structs.
+	(obj_init): Intern new symbols lstream, lcons, and dir.
+	* lib.h (type_t): New enum members STREAM and LCONS.
+	(struct stream, struct stream_ops, struct lazy_cons): New types.
+	(union obj): New members sm and lc.
+	(chk_strdup, stdio_line_stream, pipe_line_stream,
+	dirent_stream, stream_get, stream_put, stream_close,
+	lazy_stream_cons): New function declarations.
+	* regex.c: inclusion of <dirent.h> added
+
+2009-09-23  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 009
+
+	User-friendly error messages from parser.
+	Fixed -q option.
+
+	* extract.l (version): Bumped to 009.
+	* txr.1: Updated version.
+
+2009-09-22  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* Makefile (LIBLEX): New variable.
+	Refer to lex library as -lfl, using variable
+	that can be overridden.
+
+2009-09-22  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* extract.h (yybadtoken): New function declaration.
+	* extract.l (yybadtoken): New function.
+	(main): Fixed -q option.
+	* extract.y (grammar): Lots of new error productions, some
+	phrase rules refactored, resulting in much more user-friendly
+	error diagnosis.
+	* txr.1: -q option semantics clarified.

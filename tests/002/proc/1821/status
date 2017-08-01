@@ -1,0 +1,31 @@
+Name:	ypbind
+State:	S (sleeping)
+SleepAVG:	87%
+Tgid:	1821
+Pid:	1821
+PPid:	1
+TracerPid:	0
+Uid:	0	0	0	0
+Gid:	0	0	0	0
+FDSize:	32
+Groups:	
+VmSize:	   24164 kB
+VmLck:	       0 kB
+VmRSS:	     808 kB
+VmData:	   20652 kB
+VmStk:	      16 kB
+VmExe:	      27 kB
+VmLib:	    1377 kB
+StaBrk:	08050000 kB
+Brk:	08071000 kB
+StaStk:	bffffe30 kB
+ExecLim:	0804f000
+Threads:	3
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000014407
+SigIgn:	0000000000000000
+SigCgt:	0000000180000000
+CapInh:	0000000000000000
+CapPrm:	00000000fffffeff
+CapEff:	00000000fffffeff

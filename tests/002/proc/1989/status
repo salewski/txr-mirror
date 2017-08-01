@@ -1,0 +1,31 @@
+Name:	xfs
+State:	S (sleeping)
+SleepAVG:	88%
+Tgid:	1989
+Pid:	1989
+PPid:	1
+TracerPid:	0
+Uid:	43	43	43	43
+Gid:	43	43	43	43
+FDSize:	32
+Groups:	43 
+VmSize:	    3340 kB
+VmLck:	       0 kB
+VmRSS:	    1732 kB
+VmData:	     808 kB
+VmStk:	      24 kB
+VmExe:	      68 kB
+VmLib:	    2316 kB
+StaBrk:	0805e000 kB
+Brk:	08115000 kB
+StaStk:	bffffde0 kB
+ExecLim:	08059000
+Threads:	1
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000001000
+SigCgt:	0000000000014a03
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000

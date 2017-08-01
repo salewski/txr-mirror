@@ -1,0 +1,31 @@
+Name:	gnome-vfs-daemo
+State:	S (sleeping)
+SleepAVG:	87%
+Tgid:	2698
+Pid:	2698
+PPid:	1
+TracerPid:	0
+Uid:	524	524	524	524
+Gid:	503	503	503	503
+FDSize:	256
+Groups:	501 503 512 
+VmSize:	   20048 kB
+VmLck:	       0 kB
+VmRSS:	    3552 kB
+VmData:	   10664 kB
+VmStk:	      20 kB
+VmExe:	      74 kB
+VmLib:	    6790 kB
+StaBrk:	08066000 kB
+Brk:	080a8000 kB
+StaStk:	bffff7a0 kB
+ExecLim:	0805b000
+Threads:	2
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000020001000
+SigCgt:	0000000180010800
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000
