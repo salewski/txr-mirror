@@ -36,13 +36,14 @@
 #include "gc.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
 
 obj_t *interned_syms;
 
 obj_t *null, *t, *cons_t, *str_t, *chr_t, *num_t, *sym_t, *fun_t, *vec_t;
 obj_t *stream_t, *lcons_t, *var, *regex, *set, *cset, *wild, *oneplus;
 obj_t *zeroplus, *optional, *compound, *or;
-obj_t *skip, *block, *next, *fail, *accept;
+obj_t *skip, *trailer, *block, *next, *fail, *accept;
 obj_t *all, *some, *none, *maybe, *collect, *until, *coll;
 obj_t *output, *single, *frst, *lst, *empty, *repeat, *rep;
 obj_t *flattn, *forget, *mrge, *bind, *cat, *dir;
@@ -1502,6 +1503,7 @@ static void obj_init(void)
   compound = intern(string(strdup("compound")));
   or = intern(string(strdup("or")));
   skip = intern(string(strdup("skip")));
+  trailer = intern(string(strdup("trailer")));
   block = intern(string(strdup("block")));
   next = intern(string(strdup("next")));
   fail = intern(string(strdup("fail")));
@@ -1661,9 +1663,26 @@ void obj_print(obj_t *obj, FILE *out)
   }
 }
 
-void init(const char *pn, void *(*oom)(void *, size_t))
+void init(const char *pn, void *(*oom)(void *, size_t),
+          obj_t **maybe_bottom_0, obj_t **maybe_bottom_1)
 {
+  int growsdown;
+  obj_t *local_bottom = nil;
   progname = pn;
+
+  /* If the local_bottom variable has a smaller address than
+     either of the two possible top variables from
+     the initializing function, then the stack grows
+     downward in memory. In that case, we take the
+     greater of the two values to be the top.
+     Otherwise we take the smaller of the two values. */
+
+  growsdown = &local_bottom < maybe_bottom_0;
+
+  gc_init(growsdown
+          ? max(maybe_bottom_0, maybe_bottom_1)
+          : min(maybe_bottom_0, maybe_bottom_1));
+
   obj_init();
 }
 

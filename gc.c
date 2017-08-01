@@ -44,7 +44,7 @@ typedef struct heap {
 } heap_t;
 
 int opt_gc_debug;
-obj_t **gc_stack_top;
+static obj_t **gc_stack_bottom;
 
 static obj_t **prot_stack[PROT_STACK_SIZE];
 static obj_t ***prot_stack_limit = prot_stack + PROT_STACK_SIZE;
@@ -274,7 +274,7 @@ static void mark_mem_region(obj_t **bottom, obj_t **top)
 
 static void mark(void)
 {
-  obj_t *gc_stack_bottom;
+  obj_t *gc_stack_top;
   obj_t ***rootloc;
 
   /*
@@ -286,14 +286,13 @@ static void mark(void)
       mark_obj(**rootloc);
   }
 
-  mark_mem_region(&gc_stack_bottom, gc_stack_top);
+  mark_mem_region(&gc_stack_top, gc_stack_bottom);
 }
 
 static void sweep(void)
 {
   heap_t *heap;
   int dbg = opt_gc_debug;
-  long freed = 0;
 
   for (heap = heap_list; heap != 0; heap = heap->next) {
     obj_t *block, *end;
@@ -316,6 +315,13 @@ static void sweep(void)
       }
       finalize(block);
       block->t.type |= FREE;
+      /* If debugging is turned on, we want to catch instances
+         where a reachable object is wrongly freed. This is difficult
+         to do if the object is recycled soon after.
+         So when debugging is on, the free list is FIFO
+         rather than LIFO, which increases our chances that the
+         code which is still using the object will trip on
+         the freed object before it is recycled. */
       if (dbg) {
         *free_tail = block;
         block->t.next = nil;
@@ -324,12 +330,8 @@ static void sweep(void)
         block->t.next = free_list;
         free_list = block;
       }
-      freed++;
     }
   }
-
-  if (dbg)
-    fprintf(stderr, "%s: gc freed %ld blocks\n", progname, freed);
 }
 
 void gc(void)
@@ -347,6 +349,11 @@ int gc_state(int enabled)
   int old = gc_enabled;
   gc_enabled = enabled;
   return old;
+}
+
+void gc_init(obj_t **stack_bottom)
+{
+  gc_stack_bottom = stack_bottom;
 }
 
 /*

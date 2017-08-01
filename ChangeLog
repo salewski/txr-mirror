@@ -1,3 +1,82 @@
+2009-09-29  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 013
+
+	Some minor garbage collection issues fixed.
+
+	Infinite looping bug fixed.
+
+	New @(trailer) directive.
+
+	* extract.y (match_files): Implemented trailer directive.
+	* extract.l (version): Bump to 013.
+	* lib.h (trailer): Declaration added.
+	* lib.c (trailer): External definition added.
+	(obj_init): Initializer trailer with interned symbol.
+	* txr.1: Documented @(trailer) and bumped version to 013.
+
+2009-09-29  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Looping bug fixed. Certain directives could cause an infinite
+	loop if the query has run out of data.
+
+	* extract.y (match_files): The semantics of the first_file_parsed
+	argument changes a little bit. Previously, if nil was passed,
+	a new lazy stream would be opened for the first file.
+	But this is ambiguous because nil also means empty list;
+	sometimes when we recurse into match_files, the data has ran
+	out and this argument is thus nil. Now, that argument must be
+	the symbol t in order to mean ``open the first file''.
+	If the argument is nil, it unambiously means ``we are at the end of the
+	current file; don't open anything''.
+	(extract): The initial call to match_files now passes
+	the symbol t for the first_file_parsed argument.
+
+2009-09-29  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Fixing some gc issues. The test cases were found to bomb
+	with an assertion when run with --gc-debug enabled,
+	due to a garbage-collected object still being used.
+	This was due to the way the main function was structured.
+
+	Also, the stack ``top'' terminology in the gc was stupidly wrong. Leaf
+	function frames are at the stack top, and main is near the bottom.
+	I was thinking of the ``top caller''.
+
+	* Makefile (TXR_DBG_OPTS): New variable.
+	Tests are now run with --gc-debug, which makes them slower,
+	but has much greater chance of trapping gc problems.
+	* extract.l (main): Two variables are now used for determining the
+	stack bottom. We don't know in which order the compiler
+	places local variables into a stack frame.  (This is a separate
+	question from that of the direction of stack growth).
+	The call to the init function is now done right away.
+	The argument processing section of main does some processing
+	with GC objects, but the init function was being called afterward,
+	before the list of interned symbols is protected from garbage
+	collection! So with --gc-debug turned on, parts of the interned
+	symbol list were being garbage collected (since the variable
+	has not yet been added to the set of root pointers, which is
+	done in the init function).  Also, the use of an unknown --long-option
+	is diagnosed properly now.
+	* gc.c (gc_stack_top): Renamed to gc_stack_bottom, and converted from
+	extern to static.
+	(mark): Follows rename of gc_stack_top to gc_stack_bottom.
+	(sweep): Eliminated the freed variable for counting freed objects,
+	and the associated debug message, which was not useful.
+	Commented why the free list is managed differently when dbg
+	is turned on.
+	(gc_init): New function.
+	* gc.h (gc_stack_top): Declaration removed.
+	(gc_init): Declaration added.
+	* lib.c (min): New macro.
+	(init): Takes two additional arguments which are used to
+	determine the stack bottom. The function first determiens
+	whether the stack grows up or down. Then it takes the
+	greater or smaller of the two potential stack top pointers,
+	based on that. The result is passed go gc_init.
+	* lib.h (init): Declaration updated.
+
 2009-09-28  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 012

@@ -40,7 +40,7 @@
 
 #define YY_NO_UNPUT
 
-const char *version = "012";
+const char *version = "013";
 const char *progname = "txr";
 const char *spec_file = "stdin";
 long lineno = 1;
@@ -490,13 +490,14 @@ void hint(void)
 
 int main(int argc, char **argv)
 {
-  obj_t *stack_top = nil;
+  obj_t *stack_bottom_0 = nil;
   obj_t *spec = nil;
   obj_t *bindings = nil;
   int match_loglevel = opt_loglevel;
   progname = argv[0] ? argv[0] : progname;
+  obj_t *stack_bottom_1 = nil;
 
-  gc_stack_top = &stack_top;
+  init(progname, oom_realloc_handler, &stack_bottom_0, &stack_bottom_1);
 
   if (argc <= 1) {
     hint();
@@ -614,6 +615,10 @@ int main(int argc, char **argv)
         case 'b':
           opt_nobindings = 1;
           break;
+        case '-':
+          fprintf(stderr, "%s: unrecognized long option: --%s\n",
+                  progname, popt + 1);
+          return EXIT_FAILURE;
         default:
           fprintf(stderr, "%s: unrecognized option: %c\n", progname, *popt);
           return EXIT_FAILURE;
@@ -642,7 +647,6 @@ int main(int argc, char **argv)
 
   {
     int gc;
-    init(progname, oom_realloc_handler);
 
     gc = gc_state(0);
     yyparse();

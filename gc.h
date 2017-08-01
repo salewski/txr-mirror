@@ -25,8 +25,8 @@
  */
 
 extern int opt_gc_debug;
-extern obj_t **gc_stack_top;
 
+void gc_init(obj_t **stack_bottom);
 obj_t *prot1(obj_t **loc);
 void rel1(obj_t **loc);
 void protect(obj_t **, ...);

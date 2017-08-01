@@ -158,7 +158,7 @@ extern obj_t *interned_syms;
 extern obj_t *t, *cons_t, *str_t, *chr_t, *num_t, *sym_t, *fun_t, *vec_t;
 extern obj_t *stream_t, *lcons_t, *var, *regex, *set, *cset, *wild, *oneplus;
 extern obj_t *zeroplus, *optional, *compound, *or;
-extern obj_t *skip, *block, *next, *fail, *accept;
+extern obj_t *skip, *trailer, *block, *next, *fail, *accept;
 extern obj_t *all, *some, *none, *maybe, *collect, *until, *coll;
 extern obj_t *output, *single, *frst, *lst, *empty, *repeat, *rep;
 extern obj_t *flattn, *forget, *mrge, *bind, *cat, *dir;
@@ -287,7 +287,8 @@ obj_t *mappend(obj_t *fun, obj_t *list);
 obj_t *sort(obj_t *list, obj_t *lessfun, obj_t *keyfun);
 
 void obj_print(obj_t *obj, FILE *);
-void init(const char *progname, void *(*oom_realloc)(void *, size_t));
+void init(const char *progname, void *(*oom_realloc)(void *, size_t),
+          obj_t **maybe_bottom_0, obj_t **maybe_bottom_1);
 void dump(obj_t *obj, FILE *);
 char *snarf_line(FILE *in);
 obj_t *snarf(FILE *in);

@@ -29,6 +29,7 @@ OPT_FLAGS := -O2
 LANG_FLAGS := -ansi -D_GNU_SOURCE
 DIAG_FLAGS := -Wall
 DBG_FLAGS := -g
+TXR_DBG_OPTS := --gc-debug
 LEXLIB := fl
 
 CFLAGS := $(LANG_FLAGS) $(DIAG_FLAGS) $(OPT_FLAGS) $(DBG_FLAGS)
@@ -67,7 +68,7 @@ tests/001/%: TXR_ARGS := tests/001/data
 tests/002/%: TXR_OPTS := -DTESTDIR=tests/002
 
 %.ok: %.txr
-	./txr $(TXR_OPTS) $^ $(TXR_ARGS) > $(@:.ok=.out)
+	./txr $(TXR_DBG_OPTS) $(TXR_OPTS) $^ $(TXR_ARGS) > $(@:.ok=.out)
 	diff $(@:.ok=.expected) $(@:.ok=.out)
 
 %.expected: %.txr

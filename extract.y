@@ -1152,7 +1152,7 @@ obj_t *match_files(obj_t *spec, obj_t *files,
   obj_t *data = nil;
   long data_lineno = 0;
 
-  if (first_file_parsed) {
+  if (listp(first_file_parsed)) {
     data = first_file_parsed;
     data_lineno = c_num(data_linenum);
     first_file_parsed = nil;
@@ -1227,6 +1227,21 @@ repeat_spec_same_data:
 
         yyerrorlf(2, spec_lineno, "skip failed");
         return nil;
+      } else if (sym == trailer) {
+        if (rest(specline))
+          yyerrorlf(1, spec_lineno, "material after trailer directive ignored");
+        if ((spec = rest(spec)) == nil)
+          break;
+
+        {
+          cons_bind (new_bindings, success,
+                     match_files(spec, files, bindings,
+                                 data, num(data_lineno)));
+
+          if (success)
+            return cons(new_bindings, cons(data, num(data_lineno)));
+          return nil;
+        }
       } else if (sym == block) {
         obj_t *name = first(rest(first_spec));
         if (rest(specline))
@@ -1281,7 +1296,7 @@ repeat_spec_same_data:
            make a straight tail call here. */
         {
           cons_bind (new_bindings, success,
-                     match_files(spec, files, bindings, nil, nil));
+                     match_files(spec, files, bindings, t, nil));
           if (success)
             return cons(new_bindings,
                         if3(data, cons(data, num(data_lineno)), t));
@@ -1596,7 +1611,7 @@ repeat_spec_same_data:
 int extract(obj_t *spec, obj_t *files, obj_t *predefined_bindings)
 {
   cons_bind (bindings, success, match_files(spec, files, predefined_bindings,
-                                            nil, nil));
+                                            t, nil));
 
   if (!output_produced) {
     if (!opt_nobindings) {
