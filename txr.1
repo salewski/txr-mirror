@@ -21,7 +21,7 @@
 .\"IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 .\"WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-.TH txr 1 2009-09-09 "txr v. 013" "Text Extraction Utility"
+.TH txr 1 2009-09-09 "txr v. 014" "Text Extraction Utility"
 .SH NAME
 txr \- text extractor
 .SH SYNOPSIS
@@ -601,8 +601,9 @@ The general syntax of a directive is:
   @EXPR
 
 where expr is a parenthesized list of subexpressions. A subexpression
-is an symbol, number, regular expression, or a parenthesized expression.
-So, examples of valid directives are:
+is an symbol, number, string literal, character literal, regular expression, or
+a parenthesized expression.  So, examples of syntactically valid directives
+are:
 
   @(banana)
 
@@ -610,10 +611,17 @@ So, examples of valid directives are:
 
   @(  a (b (c d) (e  ) ))
 
+  @("apple" 'b' 3)
+
   @(a /[a-z]*/ b)
 
 A symbol is lexically the same thing as a variable and the same rules
 apply. Tokens that look like numbers are treated as numbers.
+
+String and character literals are delimited by double and single quotes,
+respectively, and may not span multiple lines. Character literals must contain
+exactly one character. Character and numeric escapes may be used within
+literals to escape the quotes, and to denote control characters.
 
 Some directives are involved in structuring the overall syntax of the query.
 
@@ -630,7 +638,7 @@ Continue matching in another file.
 .IP @(block)
 The remaining query is treated as an anonymous or named block.
 Blocks may be referenced by @(accept) and @(fail) directives.
-Blocks are discussed in the section Blocks below.
+Blocks are discussed in the section BLOCKS below.
 
 .IP @(skip)
 Treat the remaining query as a subquery unit, and search the lines of
@@ -651,7 +659,15 @@ Match some clauses in parallel. Each one must match.
 Match some clauses in parallel. None must match.
 
 .IP @(maybe)
-Match some clauses in parallel. None must match.
+Match some clauses in parallel, which may or may not match.
+No failure occurs if none match.
+
+.IP @(cases)
+Match some clauses sequentially, stopping if one of them
+matches successfully.
+
+.IP @(define NAME ( ARGUMENTS ...))
+Introduces a function. Functions are discussed in the FUNCTIONS section below.
 
 .IP @(collect)
 Search the data for multiple matches of a clause. Collect the
@@ -671,17 +687,17 @@ Separator of clauses for @(some), @(all), and @(none).
 Equivalent to @(and). Choice is stylistic.
 
 .IP @(end)
-Required terminator for @(some), @(all), @(none), @(maybe), @(collect),
-@(output), and @(repeat).
+Required terminator for @(some), @(all), @(none), @(maybe), @(cases),
+@(collect), @(output), and @(repeat).
 
 .IP @(fail)
 Terminate the processing of a block, as if it were a failed match.
-Blocks are discussed in the section Blocks below.
+Blocks are discussed in the section BLOCKS below.
 
 .IP @(accept)
 Terminate the processing of a block, as if it were a successful match.
 What bindings emerge may depend on the kind of block: collect
-has special semantics.  Blocks are discussed in the section Blocks below.
+has special semantics.  Blocks are discussed in the section BLOCKS below.
 
 .IP @(flatten)
 Normalizes a set of specified variables to one-dimensional lists. Those
@@ -890,7 +906,7 @@ line "a dark". The @(some) clause combines the text line "it",
 and a @(none) clause which contains just one clause consisting of
 the line "was".
 
-The semantics of the some, all, none and maybe directives is:
+The semantics of the some, all, none, maybe and cases directives is:
 
 .IP @(all)
 Each of the clauses is matched at the current position. If any of the
@@ -914,12 +930,20 @@ The directive succeeds even if all of the clauses fail.
 Whatever bindings are found in any of the clauses are
 retained.
 
-When a @(some) or @(all) directive matches successfully, or a @(maybe)
-directive matches something, the query advances by the greatest number of lines
-matched in any of the subclauses. For instance if there are two subclauses, and
-one of them matches three lines, but the other one matches five lines, then the
-overall clause is considered to have made a five line match at its position. If
-more directives follow, they begin matching five lines down from that position.
+.IP @(cases)
+The clauses are matched, in order, at the current position.
+If any clause matches, the matching stops and the bindings
+collected from that clause are retained. Any remaining clauses
+after that one are not processed. If no clause matches, the
+directive fails, and produces no bindings.
+
+When a @(some), @(all), or @(cases) directive matches successfully, or a
+@(maybe) directive matches in at least one of its clauses, the query advances
+by the greatest number of lines matched in any of the subclauses. For instance
+if there are two subclauses, and one of them matches three lines, but the other
+one matches five lines, then the overall clause is considered to have made a
+five line match at its position. If more directives follow, they begin matching
+five lines down from that position.
 
 .SS The Collect Directive
 
@@ -1253,6 +1277,15 @@ to match B, or the bind fails. Matching means that either
 - A and B are lists and are either identical, or one is
   found as substructure within the other.
 
+The right hand side does not have to be a variable. It may be some other
+object, like a string, or list of strings, et cetera. For instance
+
+  @(bind A "ab\tc")
+
+will bind the string "ab\tc" (the letter a, b, a tab character, and c)
+to the variable A if A is unbound. If A is bound, this will fail unless
+A already contains an identical string.
+
 The left hand side of a bind can be a nested list pattern containing variables.
 The last item of a list at any nesting level can be preceded by a dot, which
 means that the variable matches the rest of the list from that position.
@@ -1280,7 +1313,8 @@ The @(block NAME) directive introduces a named block, except when the name is
 the word nil.  The @(block) directive introduces an unnamed block, equivalent
 to @(block nil).
 
-The @(skip) and @(collect) directives introduce implicit anonymous blocks.
+The @(skip) and @(collect) directives introduce implicit anonymous blocks,
+as do function bodies.
 
 .SS Block Scope
 
@@ -1384,12 +1418,12 @@ that block until this point emerge from that block.
 .IP @(accept)
 
 Immediately terminate the innermost enclosing anonymous block, as if
-that block successfully mached. Any bindings established within
+that block successfully matched. Any bindings established within
 that block until this point emerge from that block.
 
 If the implicit block introduced by @(skip) is terminated in this manner,
 this has the effect of causing the skip itself to succeed, as if
-all of the trailing material succesfully matched.
+all of the trailing material successfully matched.
 
 If the implicit block associated with a @(collect)  is terminated this way,
 then the collection stops. All bindings collected in the current iteration of
@@ -1543,6 +1577,253 @@ Now, all clauses of the @(some) directive have the opportunity to match.
 The second clause grabs four lines, which is the longest match.
 And so, the next line of input available for matching is 5, which goes
 to the @second variable.
+
+.SH FUNCTIONS
+
+.SS Introduction
+
+.B txr
+functions allow a query to be structured to avoid repetition.
+On a theoretical note, because
+.B txr
+functions support recursion, functions enable txr to match some
+kinds of patterns which exhibit self-embedding, or nesting,
+and thus cannot be matched by a regular language.
+
+Functions in
+.B txr
+are not exactly like functions in mathematics or functional languages, and are
+not like procedures in imperative programming languages. They are not exactly
+like macros either. What it means for a
+.B txr
+function to take arguments and produce a result is different from
+the conventional notion of a function.
+
+A
+.B txr
+function may have one or more parameters. When such a function is invoked, an
+argument must be specified for each parameter.  However, a special behavior is
+at play here. Namely, some or all of the argument expressions may be unbound
+variables.  In that case, the corresponding parameters behave like unbound
+variables also.  Thus
+.B txr
+function calls can transmit the "unbound" state from argument to parameter.
+
+It should be mentioned that functions have access to all bindings that are
+visible in the caller; functions may refer to variables which are not
+mentioned in their parameter list.
+
+With regard to returning,
+.B txr
+functions are also unconventional. If the function fails, then the function
+call is considered to have failed. The function call behaves like a kind of
+match; if the function fails, then the call is like a failed match.
+
+When a function call succeeds, then the bindings emanating from that function
+are processed specially. Firstly, any bindings for variables which do not
+correspond to one of the function's parameters are thrown away. Functions may
+internally bind arbitrary variables in order to get their job done, but only
+those variables which are named in the function argument list may propagate out
+of the function call.  Thus, a function with no arguments can only indicate
+matching success or failure, but not produce any bindings. Secondly,
+variables do not propagate out of the function directly, but undergo
+a renaming. For each parameter which went into the function as an unbound
+variable (because its corresponding argument was an unbound variable),
+if that parameter now has a value, that value is bound onto the corresponding
+argument.
+
+Example:
+
+  @(define collect_words (list))
+  @(coll)@{list /[^ \t]/}@(end)
+  @(end)
+
+The above function "collect_words" contains a query which collects words from a
+line (sequences of characters other than space or tab), into the list variable
+called "list".  This variable is named in the parameter list of the function,
+therefore, its value, if it has one, is permitted to escape from the function
+call.
+
+Suppose the input data is:
+
+  Fine summer day
+
+and the function is called like this:
+
+  @(collect_words wordlist)
+
+The result is:
+
+  wordlist[0]=Fine
+  wordlist[1]=summer
+  wordlist[1]=day
+
+How it works is that in the function call @(collect_words wordlist),
+"wordlist" is an unbound variable. The parameter corresponding to that
+unbound variable is the parameter "list". Therefore, that parameter
+is unbound over the body of the function.  The function body collects the
+words of "Fine summer day" into the variable "list", and then
+yields the that binding.   Then the function call completes by
+noticing that the function parameter "list" now has a binding, and
+that the corresponding argument "wordlist" has no binding. The binding
+is thus transferred to the "wordlist" variable.  After that, the
+bindings produced by the function are thrown away. The only enduring
+effects are:
+
+.IP -
+the function matched and consumed some input; and
+
+.IP -
+the function succeeded; and
+
+.IP -
+the wordlist variable now has a binding.
+.PP
+
+Another way to understand the parameter behavior is that function
+parameters behave like proxies which represent their arguments.  If an argument
+is an established value, such as a character string or bound variable, the
+parameter is a proxy for that value and behaves just like that value. If an
+argument is an unbound variable, the function parameter acts as a proxy
+representing that unbound variable. The effect of binding the proxy is
+that the variable becomes bound, an effect which is settled when the
+function goes out of scope.
+
+Within the function, both the original variable and the proxy are
+visible simultaneously, and are independent.  What if a function binds both of
+them? Suppose a function has a parameter called P, which is called
+with an argument A, and then in the function @A and @P are bound.  This is
+permitted, and they can even be bound to different values.  However, when the
+function terminates, the local binding of A simply disappears (because,
+remember, the symbol A is not a member of the list of parameters).
+Only the value bound to P emerges, and is bound to A, which still appears
+unbound at that point.
+
+.SS Definition Syntax
+
+A function definition begins with a @(define ...) directive which must be the
+only element in its line. The define must be followed by a symbol, which is the
+name of the function being defined. After the symbol, there is a parenthesized
+optional argument list. If there is no such list, or if the list is specified
+as () or the symbol "nil" then the function has no parameters. Examples of
+valid define syntax are:
+
+  @(define foo)
+  @(define bar ())
+  @(define match (a b c))
+
+The define directive may be followed directly by the @(end) directive,
+also on a line by itself, in which case the function has an empty body.
+Or it may be followed by one or more query lines and then @(end).
+What is between a @(define ...) and its matching @(end) constitutes the
+function body.
+
+Functions may be nested within function bodies. Such local functions have
+dynamic scope. They are visible in the function body in which they are defined,
+and in any functions invoked from that body.
+
+The body of a function is an anonymous block. (See BLOCKS above).
+
+The following trivial function b produces no bindings and has a body which
+simply matches the line "begin".
+
+ @(define b)
+ begin
+ @(end)
+
+Thus the call:
+
+ @(b)
+
+matches an input line "begin".
+
+.SS Call Syntax
+
+A function is invoked by compound directive whose first symbol is the name of
+that function. Additional elements in the directive are the arguments.
+Arguments may be symbols, or other objects like string and character
+literals.
+
+Example:
+
+ Query:         @(define pair (a b))
+                @a @b
+                @(end)
+                @(pair first second)
+                @(pair "ice" cream)
+
+ Data:          one two
+                ice milk
+
+ Output:        first="one"
+                second="two"
+                cream="milk"
+
+The first call to the function takes the line "one two". The parameter "a"
+takes "one" and parameter b takes "two". These are rebound to the arguments
+first and second. The second call to the function binds the a parameter
+to the word "ice", and the b is unbound, because the
+corresponding argument "cream" is unbound. Thus inside the function, @a
+is forced to match "ice". Then a space is matched and @b collects the text
+"milk". When the function returns, the unbound "cream" variable gets this value.
+
+If a symbol occurs multiple times in the argument list, it constrains
+both parameters to bind to the same value. That is to say, all parameters
+which, in the body of the function, bind a value, and which are all derived
+from the same argument symbol must bind to the same value. This is settled when
+the function terminates, not while it is matching. Example:
+
+ Query:         @(define pair (a b))
+                @a @b
+                @(end)
+                @(pair same same)
+
+ Data:          one two
+
+ Output:        [query fails, prints "false"]
+
+.SS Nested Functions
+
+Function definitions may appear in a function. Such definitions
+are visible in all functions which are invoked from the body
+(and not necessarily enclosed in the body). In other words, the
+scope is dynamic, not lexical.  Inner definitions shadow outer
+definitions. This means that a caller can redirect the function
+calls that take place in a callee, by defining local functions
+which capture the references.
+
+Example:
+
+  Query:        @(define which)
+                @  (fun)
+                @(end)
+                @(define fun)
+                @  (output)
+                toplevel fun!
+                @  (end)
+                @(end)
+                @(define callee)
+                @  (define fun)
+                @    (output)
+                local fun!
+                @    (end)
+                @  (end)
+                @  (which)
+                @(end)
+                @(callee)
+                @(which)
+
+   Output:      local fun!
+                toplevel fun!
+
+Here, the function "which" is defined which calls "fun".
+A toplevel definition of "fun" is introduced which
+outputs "toplevel fun!". Then, within the func
+The function "callee" provides its own local definition
+of "fun" which outputs "local fun!" before calling "which".
+When callee is invoked, it calls @(which), whose @(fun) call is routed to
+callee's local definition.  When @(which) is called directly from the top
+level, its @(fun) call goes to the toplevel definition.
 
 .SH OUTPUT
 

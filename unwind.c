@@ -30,10 +30,12 @@
 #include <setjmp.h>
 #include <dirent.h>
 #include "lib.h"
+#include "gc.h"
 #include "unwind.h"
 
 static uw_frame_t *uw_stack;
 static uw_frame_t *uw_exit_point;
+static uw_frame_t toplevel_env;
 
 static void uw_unwind_to_exit_point()
 {
@@ -49,9 +51,16 @@ static void uw_unwind_to_exit_point()
   case UW_BLOCK:
     longjmp(uw_stack->bl.jb, 1);
     break;
+  case UW_ENV: /* env frame cannot be exit point */
+    abort();
+  default:
+    abort();
   }
+}
 
-  abort();
+void uw_init(void)
+{
+  protect(&toplevel_env.ev.func_bindings, 0);
 }
 
 void uw_push_block(uw_frame_t *fr, obj_t *tag)
@@ -61,6 +70,46 @@ void uw_push_block(uw_frame_t *fr, obj_t *tag)
   fr->bl.result = nil;
   fr->bl.up = uw_stack;
   uw_stack = fr;
+}
+
+static uw_frame_t *uw_find_env(void)
+{
+  uw_frame_t *fr;
+
+  for (fr = uw_stack; fr != 0; fr = fr->uw.up) {
+    if (fr->uw.type == UW_ENV)
+      break;
+  }
+
+  return fr ? fr : &toplevel_env;
+}
+
+void uw_push_env(uw_frame_t *fr)
+{
+  uw_frame_t *prev_env = uw_find_env();
+  fr->ev.type = UW_ENV;
+
+  if (prev_env) {
+    fr->ev.func_bindings = copy_alist(prev_env->ev.func_bindings);
+  } else {
+    fr->ev.func_bindings = nil;
+  }
+
+  fr->ev.up = uw_stack;
+  uw_stack = fr;
+}
+
+obj_t *uw_get_func(obj_t *sym)
+{
+  uw_frame_t *env = uw_find_env();
+  return cdr(assoc(env->ev.func_bindings, sym));
+}
+
+obj_t *uw_set_func(obj_t *sym, obj_t *value)
+{
+  uw_frame_t *env = uw_find_env();
+  env->ev.func_bindings = acons_new(env->ev.func_bindings, sym, value);
+  return value;
 }
 
 void uw_pop_frame(uw_frame_t *fr)

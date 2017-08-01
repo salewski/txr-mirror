@@ -32,8 +32,10 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <dirent.h>
+#include <setjmp.h>
 #include "lib.h"
 #include "gc.h"
+#include "unwind.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -44,8 +46,8 @@ obj_t *null, *t, *cons_t, *str_t, *chr_t, *num_t, *sym_t, *fun_t, *vec_t;
 obj_t *stream_t, *lcons_t, *var, *regex, *set, *cset, *wild, *oneplus;
 obj_t *zeroplus, *optional, *compound, *or;
 obj_t *skip, *trailer, *block, *next, *fail, *accept;
-obj_t *all, *some, *none, *maybe, *collect, *until, *coll;
-obj_t *output, *single, *frst, *lst, *empty, *repeat, *rep;
+obj_t *all, *some, *none, *maybe, *cases, *collect, *until, *coll;
+obj_t *define, *output, *single, *frst, *lst, *empty, *repeat, *rep;
 obj_t *flattn, *forget, *mrge, *bind, *cat, *dir;
 
 obj_t *zero, *one, *two, *negone, *maxint, *minint;
@@ -506,6 +508,14 @@ obj_t *listp(obj_t *obj)
          ? t : nil;
 }
 
+obj_t *proper_listp(obj_t *obj)
+{
+  while (consp(obj))
+    obj = cdr(obj);
+
+  return (obj == nil) ? t : nil;
+}
+
 obj_t *length(obj_t *list)
 {
   long len = 0;
@@ -616,9 +626,25 @@ obj_t *string(char *str)
 obj_t *mkstring(obj_t *len, obj_t *ch)
 {
   char *str = chk_malloc(c_num(len) + 1);
+  obj_t *s = string(str);
   memset(str, c_chr(ch), c_num(len));
   str[c_num(len)] = 0;
-  return string(str);
+  s->st.len = len;
+  return s;
+}
+
+obj_t *mkustring(obj_t *len)
+{
+  char *str = chk_malloc(c_num(len) + 1);
+  obj_t *s = string(str);
+  s->st.len = len;
+  return s;
+}
+
+obj_t *init_str(obj_t *str, const char *data)
+{
+  memcpy(str->st.str, data, c_num(str->st.len));
+  return str;
 }
 
 obj_t *copy_str(obj_t *str)
@@ -639,10 +665,18 @@ obj_t *length_str(obj_t *str)
   return str->st.len;
 }
 
-const char *c_str(obj_t *str)
+const char *c_str(obj_t *obj)
 {
-  assert (str && str->t.type == STR);
-  return str->st.str;
+  assert (obj);
+
+  switch (obj->t.type) {
+  case STR:
+    return obj->st.str;
+  case SYM:
+    return c_str(symbol_name(obj));
+  default:
+    abort();
+  }
 }
 
 obj_t *search_str(obj_t *haystack, obj_t *needle, obj_t *start_num,
@@ -721,11 +755,19 @@ obj_t *cat_str(obj_t *list, obj_t *sep)
     obj_t *item = car(iter);
     if (!item)
       continue;
-    if (!stringp(item))
-      return nil;
-    total += c_num(length_str(item));
-    if (len_sep && cdr(iter))
-      total += len_sep;
+    if (stringp(item)) {
+      total += c_num(length_str(item));
+      if (len_sep && cdr(iter))
+        total += len_sep;
+      continue;
+    }
+    if (chrp(item)) {
+      total += 1;
+      if (len_sep && cdr(iter))
+        total += len_sep;
+      continue;
+    }
+    return nil;
   }
 
   str = chk_malloc(total + 1);
@@ -735,9 +777,14 @@ obj_t *cat_str(obj_t *list, obj_t *sep)
     long len;
     if (!item)
       continue;
-    len = c_num(length_str(item));
-    memcpy(ptr, c_str(item), len);
-    ptr += len;
+    if (stringp(item)) {
+      len = c_num(length_str(item));
+      memcpy(ptr, c_str(item), len);
+      ptr += len;
+    } else {
+      *ptr++ = c_chr(item);
+    }
+
     if (len_sep && cdr(iter)) {
       memcpy(ptr, c_str(sep), len_sep);
       ptr += len_sep;
@@ -784,10 +831,39 @@ obj_t *chr(int ch)
   return obj;
 }
 
+obj_t *chrp(obj_t *chr)
+{
+  return (chr && chr->st.type == CHR) ? t : nil;
+}
+
 int c_chr(obj_t *chr)
 {
   assert (chr && chr->t.type == CHR);
   return chr->ch.ch;
+}
+
+obj_t *chr_str(obj_t *str, obj_t *index)
+{
+  long l = c_num(length_str(str));
+  long i = c_num(index);
+  const char *s = c_str(str);
+
+  assert (i < l);
+
+  return chr(s[i]);
+}
+
+obj_t *chr_str_set(obj_t *str, obj_t *index, obj_t *chr)
+{
+  long l = c_num(length_str(str));
+  long i = c_num(index);
+  char *s = str->st.str;
+
+  assert (i < l);
+
+  s[i] = c_chr(chr);
+
+  return chr;
 }
 
 obj_t *sym_name(obj_t *sym)
@@ -1372,6 +1448,30 @@ obj_t *alist_remove(obj_t *list, obj_t *keys)
   return list;
 }
 
+obj_t *alist_remove1(obj_t *list, obj_t *key)
+{
+  obj_t **plist = &list;
+
+  while (*plist) {
+    if (eq(car(car(*plist)), key))
+      *plist = cdr(*plist);
+    else
+      plist = cdr_l(*plist);
+  }
+
+  return list;
+}
+
+obj_t *copy_cons(obj_t *c)
+{
+  return cons(car(c), cdr(c));
+}
+
+obj_t *copy_alist(obj_t *list)
+{
+  return mapcar(func_n1(copy_cons), list);
+}
+
 obj_t *mapcar(obj_t *fun, obj_t *list)
 {
   list_collect_decl (out, iter);
@@ -1512,9 +1612,11 @@ static void obj_init(void)
   some = intern(string(strdup("some")));
   none = intern(string(strdup("none")));
   maybe = intern(string(strdup("maybe")));
+  cases = intern(string(strdup("cases")));
   collect = intern(string(strdup("collect")));
   until = intern(string(strdup("until")));
   coll = intern(string(strdup("coll")));
+  define = intern(string(strdup("define")));
   output = intern(string(strdup("output")));
   single = intern(string(strdup("single")));
   frst = intern(string(strdup("first")));
@@ -1591,10 +1693,10 @@ void obj_print(obj_t *obj, FILE *out)
         case '\\': fputs("\\\\", out); break;
         case 27: fputs("\\e", out); break;
         default:
-          if (iscntrl(*ptr))
-            fprintf(out, "\\%03o", (int) *ptr);
-          else
+          if (isprint(*ptr))
             putc(*ptr, out);
+          else
+            fprintf(out, "\\%03o", (int) *ptr);
         }
       }
       putc('"', out);
@@ -1617,10 +1719,10 @@ void obj_print(obj_t *obj, FILE *out)
       case '\\': fputs("\\\\", out); break;
       case 27: fputs("\\e", out); break;
       default:
-        if (iscntrl(ch))
-          fprintf(out, "\\%03o", ch);
-        else
+        if (isprint(ch))
           putc(ch, out);
+        else
+          fprintf(out, "\\%03o", ch);
       }
       putc('\'', out);
     }
@@ -1683,6 +1785,7 @@ void init(const char *pn, void *(*oom)(void *, size_t),
           ? max(maybe_bottom_0, maybe_bottom_1)
           : min(maybe_bottom_0, maybe_bottom_1));
 
+  uw_init();
   obj_init();
 }
 
@@ -1721,7 +1824,7 @@ char *snarf_line(FILE *in)
       size = newsize;
     }
 
-    if (ch == '\n') {
+    if (ch == '\n' || ch == EOF) {
       buf[fill++] = 0;
       break;
     }

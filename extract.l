@@ -40,7 +40,7 @@
 
 #define YY_NO_UNPUT
 
-const char *version = "013";
+const char *version = "014";
 const char *progname = "txr";
 const char *spec_file = "stdin";
 long lineno = 1;
@@ -111,6 +111,7 @@ void yybadtoken(int tok, const char *context)
   case SOME:    problem = "\"some\""; break;
   case NONE:    problem = "\"none\""; break;
   case MAYBE:   problem = "\"maybe\""; break;
+  case CASES:   problem = "\"cases\""; break;
   case AND:     problem = "\"and\""; break;
   case OR:      problem = "\"or\""; break;
   case END:     problem = "\"end\""; break;
@@ -124,6 +125,7 @@ void yybadtoken(int tok, const char *context)
   case FIRST:   problem = "\"first\""; break;
   case LAST:    problem = "\"last\""; break;
   case EMPTY:   problem = "\"empty\""; break;
+  case DEFINE:  problem = "\"define\""; break;
   case NUMBER:  problem = "\"number\""; break;
   case REGCHAR: problem = "regular expression character"; break;
   }
@@ -151,6 +153,8 @@ static int char_esc(int letter)
   case 'f': return '\f';
   case 'r': return '\r';
   case 'e': return 27;
+  case '"': return '"';
+  case '\'': return '\'';
   }
 
   abort();
@@ -172,34 +176,40 @@ static int num_esc(char *num)
 %}
 
 TOK     [a-zA-Z_][a-zA-Z0-9_]*|[+-]?[0-9]+
+ID_END  [^a-zA-Z0-9_]
+NUM_END [^0-9]
 WS      [\t ]*
-%x      SPECIAL REGEX REGCLASS
+HEX     [0-9A-Fa-f]
+OCT     [0-7]
+
+%x      SPECIAL NESTED REGEX REGCLASS STRLIT CHRLIT
 
 %%
 
-<SPECIAL>{TOK}  {
-                  long val;
-                  char *errp;
+<SPECIAL,NESTED>{TOK}   {
+                          long val;
+                          char *errp;
 
-                  errno = 0;
+                          errno = 0;
 
-                  val = strtol(yytext, &errp, 10);
+                          val = strtol(yytext, &errp, 10);
 
-                  if (nesting == 0)
-                    BEGIN(INITIAL);
+                          if (nesting == 0)
+                            BEGIN(INITIAL);
 
-                  if (*errp != 0) {
-                    /* not a number */
-                    yylval.lexeme = strdup(yytext);
-                    return IDENT;
-                  }
+                          if (*errp != 0) {
+                            /* not a number */
+                            yylval.lexeme = strdup(yytext);
+                            return IDENT;
+                          }
 
-                  if ((val == LONG_MAX || val == LONG_MIN) && errno == ERANGE)
-                    yyerror("numeric overflow in token");
+                          if ((val == LONG_MAX || val == LONG_MIN)
+                              && errno == ERANGE)
+                            yyerror("numeric overflow in token");
 
-                  yylval.num = val;
-                  return NUMBER;
-                }
+                          yylval.num = val;
+                          return NUMBER;
+                        }
 
 
 <SPECIAL>\({WS}all{WS}\)        {
@@ -222,12 +232,17 @@ WS      [\t ]*
                                   return MAYBE;
                                 }
 
+<SPECIAL>\({WS}cases{WS}\)      {
+                                  BEGIN(INITIAL);
+                                  return CASES;
+                                }
+
 <SPECIAL>\({WS}and{WS}\)        {
                                   BEGIN(INITIAL);
                                   return AND;
                                 }
 
-<SPECIAL>\({WS}or{WS}\)        {
+<SPECIAL>\({WS}or{WS}\)         {
                                   BEGIN(INITIAL);
                                   return OR;
                                 }
@@ -288,54 +303,74 @@ WS      [\t ]*
                                   return EMPTY;
                                 }
 
-<SPECIAL>\{|\(  {
-                  nesting++;
-                  if (yytext[0] == '{')
-                    closechar = '}';
-                  else
-                    closechar = ')';
-                  return yytext[0];
-                }
+<SPECIAL>\({WS}define/{ID_END}  {
+                                  nesting++;
+                                  closechar = ')';
+                                  BEGIN(NESTED);
+                                  return DEFINE;
+                                }
 
-<SPECIAL>\}|\)  {
-                  if (yytext[0] != closechar) {
-                    yyerror("paren mismatch");
-                    BEGIN(INITIAL);
-                  } else {
-                    if (--nesting == 0)
-                      BEGIN(INITIAL);
-                    return yytext[0];
-                  }
-                }
+<SPECIAL,NESTED>\{|\(   {
+                          nesting++;
+                          if (yytext[0] == '{')
+                            closechar = '}';
+                          else
+                            closechar = ')';
+                          BEGIN(NESTED);
+                          return yytext[0];
+                        }
 
-<SPECIAL>[\t ]+ {
-                  /* Eat whitespace in directive */
-                }
+<SPECIAL,NESTED>\}|\)   {
+                          if (yytext[0] != closechar) {
+                            yyerror("paren mismatch");
+                            BEGIN(INITIAL);
+                          } else {
+                            switch (--nesting) {
+                            case 1:
+                              BEGIN(SPECIAL);
+                              break;
+                            case 0:
+                              BEGIN(INITIAL);
+                              break;
+                            }
+
+                            return yytext[0];
+                          }
+                        }
+
+<SPECIAL,NESTED>[\t ]+  { /* Eat whitespace in directive */ }
+
+<SPECIAL,NESTED>\"      {
+                          BEGIN(STRLIT);
+                          return '"';
+                        }
+
+<SPECIAL,NESTED>\'      {
+                          BEGIN(CHRLIT);
+                          return '\'';
+                        }
 
 <SPECIAL>@      {
                   if (nesting == 0) {
                     BEGIN(INITIAL);
                     yylval.lexeme = strdup("@");
                     return TEXT;
-                  } else {
-                    yyerrorf(0, "bad character in directive: %c", yytext[0]);
                   }
                 }
 
-<SPECIAL>\n     {
-                  lineno++;
-                  yyerror("newline in directive");
-                }
+<SPECIAL,NESTED>\n      {
+                          lineno++;
+                        }
 
-<SPECIAL>[/]    {
-                  BEGIN(REGEX);
-                  return '/';
-                }
+<SPECIAL,NESTED>[/]     {
+                          BEGIN(REGEX);
+                          return '/';
+                        }
 
-<SPECIAL>\.     {
-                  yylval.chr = '.';
-                  return '.';
-                }
+<SPECIAL,NESTED>\.      {
+                          yylval.chr = '.';
+                          return '.';
+                        }
 
 <SPECIAL>[\\][abtnvfre] {
                           char lexeme[2];
@@ -346,24 +381,25 @@ WS      [\t ]*
                           return TEXT;
                         }
 
-<SPECIAL>[\\](x[0-9a-fA-F]+|[0-7]+)     {
-                                          char lexeme[2];
-                                          lexeme[0] = num_esc(yytext + 1);
-                                          lexeme[1] = 0;
-                                          yylval.lexeme = strdup(lexeme);
-                                          BEGIN(INITIAL);
-                                          return TEXT;
-                                        }
+<SPECIAL>[\\](x{HEX}+|{OCT}+)   {
+                                  char lexeme[2];
+                                  lexeme[0] = num_esc(yytext + 1);
+                                  lexeme[1] = 0;
+                                  yylval.lexeme = strdup(lexeme);
+                                  BEGIN(INITIAL);
+                                  return TEXT;
+                                }
 
-<SPECIAL>.      {
-                  yyerrorf(0, "bad character in directive: '%c'", yytext[0]);
-                }
+<SPECIAL,NESTED>.       {
+                          yyerrorf(0, "bad character in directive: '%c'",
+                                   yytext[0]);
+                        }
 
 <REGEX>[/]      {
                   if (nesting == 0)
                     BEGIN(INITIAL);
                   else
-                    BEGIN(SPECIAL);
+                    BEGIN(NESTED);
                   yylval.chr = '/';
                   return '/';
                 }
@@ -374,10 +410,10 @@ WS      [\t ]*
                           return REGCHAR;
                         }
 
-<REGEX>[\\](x[0-9a-fA-F]+|[0-9]+)       {
-                                          yylval.chr = num_esc(yytext + 1);
-                                          return REGCHAR;
-                                        }
+<REGEX>[\\](x{HEX}+|{OCT}+)     {
+                                  yylval.chr = num_esc(yytext + 1);
+                                  return REGCHAR;
+                                }
 
 <REGEX>\n       {
                   lineno++;
@@ -437,6 +473,48 @@ WS      [\t ]*
 <INITIAL>@#.*   {
                    /* comment to end of line */
                 }
+
+<STRLIT>\"      {
+                  if (nesting == 0)
+                    BEGIN(INITIAL);
+                  else
+                    BEGIN(NESTED);
+                  return '"';
+                }
+
+<CHRLIT>\'      {
+                  if (nesting == 0)
+                    BEGIN(INITIAL);
+                  else
+                    BEGIN(NESTED);
+                  return '\'';
+                }
+
+<STRLIT,CHRLIT>[\\][abtnvfre] {
+                                yylval.chr = char_esc(yytext[1]);
+                                return LITCHAR;
+                              }
+
+<STRLIT,CHRLIT>[\\](x{HEX}+|{OCT}+)     {
+                                          yylval.chr = num_esc(yytext + 1);
+                                          return LITCHAR;
+                                        }
+<STRLIT>\n              {
+                          yyerror("newline in string literal");
+                          lineno++;
+                          yylval.chr = yytext[0];
+                          return LITCHAR;
+                        }
+<CHRLIT>\n              {
+                          yyerror("newline in character literal");
+                          lineno++;
+                          yylval.chr = yytext[0];
+                          return LITCHAR;
+                        }
+<STRLIT,CHRLIT>.        {
+                          yylval.chr = yytext[0];
+                          return LITCHAR;
+                        }
 
 %%
 

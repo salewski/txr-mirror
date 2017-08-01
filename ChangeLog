@@ -1,3 +1,103 @@
+2009-10-03  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 014
+
+	New cases directive.
+
+	New define directive: user-defined dynamically scoped functions.
+
+	String literals in bind and function calls.
+
+	EOF in the middle of a line handled properly.
+
+	* extract.l (version): Bump to 014.
+	* txr.1: Bump version to 014.
+
+
+2009-10-02  Kaz Kylheku  <kkylheku@gmail.com>
+
+	New cases directive.
+
+	* extract.l (yybadtoken): Add case for CASES.
+	(grammar): Tokenize cases directive.
+	* extract.y (CASES): New token kind.
+	(cases_clause): New grammar symbol.
+	(grammar): Implement new grammar cases.
+	(match_files): Implement semantics for cases.
+	* lib.c (cases): New global.
+	(obj_init): Intern cases symbol.
+	* lib.h (cases): Declared.
+	* txr.1: Documented.
+
+2009-10-02  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Support for string and character literals.
+
+	* extract.l (char_esc): Support \' and \" escapes.
+	(STRLIT, CHRLIT): New flex start conditions.
+	(grammar): New rules for tokenizing string literals.
+	* extract.y (LITCHAR): New token kind.
+	(strlit, chrlit, litchars): New grammar symbols.
+	(grammar): Implement string literal parsing.
+	(dump_var): Support character objects, treating
+	them as one-character strings.
+	(eval_form): New function.
+	(match_files): In bind directive, allow the right
+	hand side to be an arbitrary object.
+	* lib.c (mkustring, init_str): New functions.
+	(cat_str): Allow characters in the mix, treating
+	them as one-character strings.
+	* lib.h (mkustring, init_str): Declared.
+	(chrp, chr_str, chr_str_set): New function.
+	* txr.1: Documented.
+
+2009-10-02  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Support for query-defined functions.
+
+	* extract.l (yybadtoken): New DEFINE case.
+	(NESTED): New flex start condition.  This allows for different lexing
+	rules in nested lists, so even though for instance @(collect) is a
+	special token @((collect)) isn't.
+	(grammar): Refactored with NESTED.
+	Tokenize define directive.
+	* extract.y (define_transform): New function.
+	(DEFINE): New token kind.
+	(define_clause): New grammar symbol.
+	(match_files): Implement define semantics, and function calls.
+	* lib.c (define): New global.
+	* lib.h (define): Declared.
+	(proper_listp, alist_remove1, copy_cons, copy_alist): New functions.
+	(obj_init): Intern define symbol.
+	(init): Call new function uw_init.
+	* unwind.c (toplevel_env): New static structure.
+	(uw_unwind_to_exit_point): Support new UW_ENV frame type.
+	(uw_init, uw_find_env, uw_push_env, uw_get_func, uw_set_func): New
+	functions.
+	* unwind.h (UW_ENV): New enumeration member in uw_frtype.
+	(uw_dynamic_env): New struct.
+	(uw_block_begin, uw_block_end): Renamed some variables.
+	(uw_env_begin, uw_env_end): New macros.
+	* txr.1: Documented.
+
+2009-10-02  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Misc. bugfixes and improvements.
+
+	* extract.l (grammar): Newline in a directive
+	no longer an error. Why not allow it.
+	* extract.y (grammar): Productions for catching empty bodies in some
+	constructs now end with END newl, rather
+	than just END, so parsing can continue sanely.
+	(match_lines): In diagnostics, don't say "ignored" about material which
+	causes an error that fails the query!
+	* lib.c (mkstring): Initialize length since we know it!
+	(c_str): Take a symbol as an arg, so we don't have
+	to keep writing c_str(symbol_name(sym)).
+	(obj_print): Use isprint rather than isctrl to decide
+	whether to print a character as an escape.
+	(snarf_line): Properly handle EOF in the middle of line.
+
 2009-09-29  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 013
