@@ -180,6 +180,13 @@ static void mark_obj(obj_t *obj)
 {
   type_t t;
 
+#if 1
+tail_call:
+#define mark_obj_tail(o) do { obj = (o); goto tail_call; } while (0)
+#else
+#define mark_obj_tail(o) return mark_obj(o)
+#endif
+
   if (obj == nil)
     return;
 
@@ -196,22 +203,19 @@ static void mark_obj(obj_t *obj)
   switch (t) {
   case CONS:
     mark_obj(obj->c.car);
-    mark_obj(obj->c.cdr);
-    break;
+    mark_obj_tail(obj->c.cdr);
   case STR:
-    mark_obj(obj->st.len);
-    break;
+    mark_obj_tail(obj->st.len);
   case CHR:
   case NUM:
     break;
   case SYM:
     mark_obj(obj->s.name);
-    mark_obj(obj->s.val);
-    break;
+    mark_obj_tail(obj->s.val);
   case FUN:
     mark_obj(obj->f.env);
     if (obj->f.functype == FINTERP)
-      mark_obj(obj->f.f.interp_fun);
+      mark_obj_tail(obj->f.f.interp_fun);
     break;
   case VEC:
     {
@@ -227,15 +231,13 @@ static void mark_obj(obj_t *obj)
     }
     break;
   case LCONS:
-    mark_obj(obj->lc.car);
-    mark_obj(obj->lc.cdr);
     mark_obj(obj->lc.func);
-    break;
+    mark_obj(obj->lc.car);
+    mark_obj_tail(obj->lc.cdr);
   case COBJ:
-    mark_obj(obj->co.cls);
     if (obj->co.ops->mark)
       obj->co.ops->mark(obj);
-    break;
+    mark_obj_tail(obj->co.cls);
   default:
     assert (0 && "corrupt type field");
   }

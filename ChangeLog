@@ -1,3 +1,73 @@
+2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 016
+
+	Bugfix in exception subtype definition (defex).
+
+	Tail recursion in marking function of garbage collector.
+
+	-f option for specifying query file, allowing more
+	options to follow, useful in hash-bang scripting and
+	other situations.
+
+	* txr.c: (version): Bump to 016
+	* txr.1: Bump version to 016.
+
+2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+
+	* txr.1: Documented defex.
+	* unwind.c (uw_register_subtype): Bugfix: if the subtype
+	exists already, we must not delete it and create a new entry, but
+	destructively point its entry to its assigned supertype.
+	An exceptions is thrown rather than abort for attempts
+	to make t a subtype of something other than itself.
+	An attempt to make something other than nil a subtype of nil
+	is diagnosed.  Attempts to redefine the relationship
+	between two types if they are already connected by one;
+	this covers circularity and other cases, while still allowing
+	a relaxed order of definition.
+
+2009-10-17 Kaz Kylheku  <kkylheku@gmail.com>
+
+	* gc.c (mark_obj_tail): New macro.
+	(mark_obj): Optimized with manual tail recursion.
+	The funtion will no longer generate long call stacks
+	for long lists. Descending to the car field of
+	a cons is still recursive, but ``car-heavy''
+	trees are rare.
+
+2009-10-16  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Resurrect -f option, with different meaning.
+	We need "-f query-file" so that hash-bang scripts
+	can be written which can pass options to txr.
+
+	* txr.c (help, main): Inplement and document -f.
+	Also bugfix: do not throw file open errors as exceptions
+	of type error, because these cause an abort, potentially leading to a
+	core dump. They are now thrown as file_error.
+	* txr.1: Documented -f.
+
+2009-10-16  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Implemented @(next arg) for treating the command line
+	as an input source.
+
+	* txr.1: Updated, and fixed a few unrelated mistakes.
+	* lib.c (dir): Removed unused symbol globa.
+	(args): New symbol global.
+	* lib.h (dir): Declaration removed.
+	(args): Declared.
+	match.c (match_files): Implemented @(next arg).
+	Had to hack laziness to the file opening logic in match_files.
+	If the function is entered with a spec whose first
+	directive is @(next), then it defers opening the first
+	file in the list of files (since it will be immediately
+	abandoned in favor of another input source).
+	This prevents an error in the situation when the
+	arguments do not name files, and there is a @(next args)
+	directive to process them as an input source.
+
 2009-10-16  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 016

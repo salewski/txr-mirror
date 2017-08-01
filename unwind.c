@@ -317,8 +317,22 @@ obj_t *uw_register_subtype(obj_t *sub, obj_t *sup)
   if (sub == t) {
     if (sup == t)
       return sup;
-    abort();
+    uw_throwf(type_error, "cannot define ~a as an exception subtype of ~a",
+              sub, sup, nao);
   }
+
+  if (sup == nil) {
+    uw_throwf(type_error, "cannot define ~a as an exception subtype of ~a",
+              sub, sup, nao);
+  }
+
+  if (uw_exception_subtype_p(sub, sup))
+    uw_throwf(type_error, "~a is already an exception subtype of ~a",
+              sub, sup, nao);
+
+  if (uw_exception_subtype_p(sup, sub))
+    uw_throwf(type_error, "~a is already an exception supertype of ~a",
+              sub, sup, nao);
 
   /* If sup symbol not registered, then we make it
      an immediate subtype of t. */
@@ -327,15 +341,14 @@ obj_t *uw_register_subtype(obj_t *sub, obj_t *sup)
     exception_subtypes = cons(sup_entry, exception_subtypes);
   }
 
-  /* If sub already registered, we delete that
-     registration. */
+  /* Make sub an immediate subtype of sup.
+     If sub already registered, we just repoint it. */
   if (sub_entry) {
-    exception_subtypes = alist_remove1(exception_subtypes, sub);
+    *cdr_l(sub_entry) = sup_entry;
+  } else {
+    sub_entry = cons(sub, sup_entry);
+    exception_subtypes = cons(sub_entry, exception_subtypes);
   }
-
-  /* Register sub as an immediate subtype of sup. */
-  sub_entry = cons(sub, sup_entry);
-  exception_subtypes = cons(sub_entry, exception_subtypes);
   return sup;
 }
 

@@ -21,7 +21,7 @@
 .\"IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 .\"WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-.TH txr 1 2009-10-14 "txr v. 016" "Text Extraction Utility"
+.TH txr 1 2009-10-14 "txr v. 017" "Text Extraction Utility"
 .SH NAME
 txr \- text extractor
 .SH SYNOPSIS
@@ -76,9 +76,11 @@ from their subqueries in special ways.
 
 .SH ARGUMENTS AND OPTIONS
 
-Options other than -D, -a and -c may be combined together into a single
-argument.  The -v and -q options are mutually exclusive. The one which occurs
-in the rightmost position in the argument list dominates.
+Options which don't take an argument may be combined together.
+The -v and -q options are mutually exclusive. Of these two, the one which
+occurs in the rightmost position in the argument list dominates.
+The -c and -f options are also mutually exclusive; if both are specified,
+it is a fatal error.
 
 .IP -Dvar=value
 Bind the variable
@@ -166,6 +168,11 @@ The @# comment syntax can be used for better formatting:
   @a
   @b
   "
+
+.IP -f query-file
+Specifies the file from which the query is to be read, instead of the
+query-file argument. This is useful in #! scripts. (See Hash Bang Support
+below).
 
 .IP --help
 Prints usage summary on standard output, and terminates successfully.
@@ -285,6 +292,23 @@ run it. This assumes txr is installed in /usr/bin.
   [Ctrl-D]
   a=1
   b=2
+
+A script written in this manner will not pass options to txr.  For
+instance, if the above script is invoked like this
+
+  ./twoline.txr -Da=42
+
+the -D option isn't passed down to txr; -Da=42 is an ordinary
+argument (which the script will try to open as an input file).
+This behavior is useful if the script author wants not to
+expose the txr options to the user of the script.
+
+However, if the hash bang line can use the -f option:
+
+  #!/usr/bin/txr -f
+
+Now, the name of the script is passed as an argument to the -f option,
+and txr will look for more options after that.
 
 .SS Text
 
@@ -810,7 +834,8 @@ produces repeated text within one line.
 .SS The Next Directive
 
 The next directive comes in two forms, one of which is obsolescent
-syntax.  This directive indicates that the remainder of the query.
+syntax.  The directive indicates that the remainder of the query
+is to be applied to a new input source.
 
 In the first form, it can occur by itself as the only element in a query line,
 with, or without arguments:
@@ -818,6 +843,7 @@ with, or without arguments:
   @(next)
   @(next SOURCE)
   @(next SOURCE nothrow)
+  @(next args)
 
 The lone @(next) without arguments switches to the next file in the
 argument list which was passed to the
@@ -841,6 +867,17 @@ terminate the program.  Often, such a drastic measure is inconvenient;
 if @(next) is invoked with the nothrow keyword, then if the input
 source cannot be opened, the situation is treated as a simple
 match failure.
+
+The variant @(next args) means that the remaining command line arguments are to
+be treated as a data source. For this purpose, each argument is considered to
+be a line of text. If an argument is currently being processed as an input
+source, that argument is included. Note that if the first entry in the argument
+list does not name an input source, then the query should begin with
+@(next args) or some other form of next directive, to prevent an attempt to
+open the input source named by that argument. If the very first directive of a query is any variant of the next directive, then
+.B txr
+avoids opening the first input source, but it does open the input source for
+any other directive, even one which does not consume any data.
 
 In the obsolescent second form, @(next) is followed by material on the same
 line, which may contain variables.  All of the variables must be bound. For
@@ -2447,10 +2484,10 @@ variable, it has to be identical to the argument, otherwise the catch fails.
   Query:        @(bind a "apple")
                 @(try)
                 @(throw e "banana")
-                @(catch e a)
+                @(catch e (a))
                 @(end)
 
-  Output:       [unhandled exception diagnostic]
+  Output:       false
 
 If any argument is an unbound variable, the corresponding parameter
 in the catch is left alone: if it is an unbound variable, it remains
@@ -2521,6 +2558,113 @@ a does not have a binding.  At that point, the binding to "a" established in
 the try has disappeared already. Being unbound, the catch parameter a can take
 whatever value the corresponding throw argument provides, so it ends up with
 "lc".
+
+.SS The Defex Directive
+
+The defex directive allows the query writer to invent custom exception types,
+which are arranged in a type hierarchy (meaning that some exception types are
+considered subtypes of other types).
+
+Subtyping means that if an exception type B is a subtype of A, then every
+exception of type B is also considered to be of type A. So a catch for type A
+will also catch exceptions of type B.  Every type is a supertype of itself: an
+A is a kind of A. This of course implies that ever type is a subtype of itself
+also.  Furthermore, every type is a subtype of the type t, which has no
+supertype other than itself. Type nil is is a subtype of every type, including
+itself.  The subtyping relationship is transitive also. If A is a subtype
+of B, and B is a subtype of C, then A is a subtype of C.
+
+Defex may be invoked with no arguments, in which case it does nothing:
+
+  @(defex)
+
+It may be invoked with one argument, which must be a symbol. This introduces a
+new exception type. Strictly speaking, such an introduction is not necessary;
+any symbol may be used as an exception type without being introduced by
+@(defex):
+
+  @(defex a)
+
+Therefore, this also does nothing, other than document the intent to use
+a as an exception.
+
+If two or more argument symbols are given, the symbols are all introduced as
+types, engaged in a subtype-supertype relationship from left to right.
+That is to say, the first (leftmost) symbol is a subtype of the next one,
+which is a subtype of the next one and so on. The last symbol, if it
+had not been already defined as a subtype of some type, becomes a
+direct subtype of the master supertype t. Example:
+
+  @(defex d e)
+  @(defex a b c d)
+
+The fist directive defines d as a subtype of e, and e as a subtype of t.
+The second defines a as a subtype of b, b as a subtype of c, and
+c as a subtype of d, which is already defined as a subtype of e.
+Thus a is now a subtype of e. It should be obvious that the above
+could be condensed to:
+
+  @(defex a b c d e)
+
+Example:
+
+  Query:        @(defex gorilla ape primate)
+                @(defex monkey primate)
+                @(defex human primate)
+                @(collect)
+                @(try)
+                @(skip)
+                @(cases)
+                gorilla @name
+                @(throw gorilla name)
+                @(or)
+                monkey @name
+                @(throw monkey name)
+                @(or)
+                human @name
+                @(throw human name)
+                @(end)@#cases
+                @(catch primate (name))
+                @kind @name
+                @(output)
+                we have a primate @name of kind @kind
+                @(end)@#output
+                @(end)@#try
+                @(end)@#collect
+
+
+  Input:        gorilla joe
+                human bob
+                monkey alice
+
+  Output:       we have a primate joe of kind gorilla
+                we have a primate bob of kind human
+                we have a primate alice of kind monkey
+
+Exception types have a pervasive scope. Once a type relationship is introduced,
+it is visible everywhere. Moreover, the defex directive is destructive,
+meaning that the supertype of a type can be redefined. This is necessary so
+that something like the following works right.
+
+  @(defex gorilla ape)
+  @(defex ape primate)
+
+These directives are evaluated in sequence. So after the first one, the ape
+type has the type t as its immediate supertype.  But in the second directive,
+ape appears again, and is assigned the primate supertype, while retaining
+gorilla as a subtype.  This situation could instead be diagnosed as an
+error, forcing the programmer to reorder the statements, but instead
+txr obliges. However, there are limitations.  It is an error to define a
+subtype-supertype relationship between two types if they are already connected
+by such a relationship, directly or transitively. So the following
+definitions are in error:
+
+  @(defex a b)
+  @(defex b c)
+  @(defex a c)@# error: a is already a subtype of c, through b
+
+  @(defex x y)
+  @(defex y x)@# error: circularity; y is already a supertype of x.
 
 .SH NOTES ON FALSE
 

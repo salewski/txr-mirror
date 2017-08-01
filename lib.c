@@ -49,7 +49,7 @@ obj_t *zeroplus, *optional, *compound, *or, *quasi;
 obj_t *skip, *trailer, *block, *next, *fail, *accept;
 obj_t *all, *some, *none, *maybe, *cases, *collect, *until, *coll;
 obj_t *define, *output, *single, *frst, *lst, *empty, *repeat, *rep;
-obj_t *flattn, *forget, *local, *mrge, *bind, *cat, *dir;
+obj_t *flattn, *forget, *local, *mrge, *bind, *cat, *args;
 obj_t *try, *catch, *finally, *nothrow, *throw, *defex;
 obj_t *error, *type_error, *internal_err, *numeric_err, *range_err;
 obj_t *query_error, *file_error;
@@ -1516,7 +1516,7 @@ static void obj_init(void)
   mrge = intern(string(strdup("merge")));
   bind = intern(string(strdup("bind")));
   cat = intern(string(strdup("cat")));
-  dir = intern(string(strdup("dir")));
+  args = intern(string(strdup("args")));
   try = intern(string(strdup("try")));
   catch = intern(string(strdup("catch")));
   finally = intern(string(strdup("finally")));

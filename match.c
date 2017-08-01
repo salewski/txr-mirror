@@ -882,27 +882,33 @@ obj_t *match_files(obj_t *spec, obj_t *files,
     data_lineno = c_num(data_linenum);
     first_file_parsed = nil;
   } else if (files) {
-    obj_t *spec = first(files);
-    obj_t *name = consp(spec) ? cdr(spec) : spec;
+    obj_t *source_spec = first(files);
+    obj_t *name = consp(source_spec) ? cdr(source_spec) : source_spec;
     fpip_t fp = (errno = 0, complex_open(name, nil));
+    obj_t *first_spec_item = second(first(spec));
 
-    debugf("opening data source ~a", name, nao);
+    if (consp(first_spec_item) && eq(first(first_spec_item), next)) {
+      debugf("not opening source ~a since query starts with next directive", 
+             name, nao);
+    } else {
+      debugf("opening data source ~a", name, nao);
 
-    if (complex_open_failed(fp)) {
-      if (consp(spec) && car(spec) == nothrow) {
-        debugf("could not open ~a: treating as failed match due to nothrow",
-               name, nao);
+      if (complex_open_failed(fp)) {
+        if (consp(source_spec) && car(source_spec) == nothrow) {
+          debugf("could not open ~a: treating as failed match due to nothrow",
+                 name, nao);
+          return nil;
+        } else if (errno != 0)
+          file_err(nil, "could not open ~a (error ~a/~a)", name,
+                   num(errno), string(strdup(strerror(errno))), nao);
+        else
+          file_err(nil, "could not open ~a", name, nao);
         return nil;
-      } else if (errno != 0)
-        file_err(nil, "could not open ~a (error ~a/~a)", name,
-                 num(errno), string(strdup(strerror(errno))), nao);
-      else
-        file_err(nil, "could not open ~a", name, nao);
-      return nil;
-    }
+      }
 
-    if ((data = complex_snarf(fp, name)) != nil)
-      data_lineno = 1;
+      if ((data = complex_snarf(fp, name)) != nil)
+        data_lineno = 1;
+    }
   }
 
   for (; spec;  spec = rest(spec), data = rest(data), data_lineno++)
@@ -1018,6 +1024,16 @@ repeat_spec_same_data:
 
           if (eq(first(source), nothrow))
             push(nil, &source);
+          else if (eq(first(source), args)) {
+            obj_t *input_name = string(strdup("args"));
+            cons_bind (new_bindings, success,
+                match_files(spec, cons(input_name, files), 
+                  bindings, files, one));
+            if (success)
+              return cons(new_bindings,
+                  if3(data, cons(data, num(data_lineno)), t));
+            return nil;
+          }
 
           {
             obj_t *val = eval_form(first(source), bindings);

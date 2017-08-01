@@ -39,7 +39,7 @@
 #include "match.h"
 #include "txr.h"
 
-const char *version = "016";
+const char *version = "017";
 const char *progname = "txr";
 const char *spec_file = "stdin";
 obj_t *spec_file_str;
@@ -94,6 +94,10 @@ void help(void)
 "-c query-text          The query is read from the query-text argument\n"
 "                       itself. The query-file argument is omitted in\n"
 "                       this case; the first argument is a data file.\n"
+"-f query-file          Specify the query-file as an option argument.\n"
+"                       option, instead of the query-file argument.\n"
+"                       This allows #! scripts to pass options through\n"
+"                       to the utility.\n"
 "--help                 You already know!\n"
 "--version              Display program version\n"
 "\n"
@@ -142,7 +146,6 @@ int main(int argc, char **argv)
   init(progname, oom_realloc_handler, &stack_bottom_0, &stack_bottom_1);
 
   protect(&spec_file_str, 0);
-  spec_file_str = string(strdup(spec_file));
 
   yyin_stream = std_input;
   protect(&yyin_stream, 0);
@@ -214,7 +217,7 @@ int main(int argc, char **argv)
       return 0;
     }
 
-    if (!strcmp(*argv, "-a") || !strcmp(*argv, "-c")) {
+    if (!strcmp(*argv, "-a") || !strcmp(*argv, "-c") || !strcmp(*argv, "-f")) {
       long val;
       char *errp;
       char opt = (*argv)[1];
@@ -240,6 +243,9 @@ int main(int argc, char **argv)
         break;
       case 'c':
         specstring = string(strdup(*argv));
+        break;
+      case 'f':
+        spec_file_str = string(strdup(*argv));
         break;
       }
 
@@ -285,9 +291,24 @@ int main(int argc, char **argv)
     }
   }
 
+  if (specstring && spec_file_str) {
+    fprintf(stderr, "%s: cannot specify both -f and -c\n", progname);
+    return EXIT_FAILURE;
+  }
+
   if (specstring) {
     spec_file = "cmdline";
+    spec_file_str = string(strdup(spec_file));
     yyin_stream = make_string_input_stream(specstring);
+  } else if (spec_file_str) {
+    if (strcmp(c_str(spec_file_str), "-") != 0) {
+      FILE *in = fopen(c_str(spec_file_str), "r");
+      if (in == 0)
+        uw_throwcf(file_error, "unable to open %s", c_str(spec_file_str));
+      yyin_stream = make_stdio_stream(in, t, nil);
+    } else {
+      spec_file = "stdin";
+    }
   } else {
     if (argc < 1) {
       hint();
@@ -296,17 +317,17 @@ int main(int argc, char **argv)
 
     if (strcmp(*argv, "-") != 0) {
       FILE *in = fopen(*argv, "r");
-      if (in == 0) {
-        uw_errorcf("%s: unable to open %s", progname, *argv);
-        fprintf(stderr, "%s: unable to open %s\n", progname, *argv);
-        return EXIT_FAILURE;
-      }
+      if (in == 0)
+        uw_throwcf(file_error, "unable to open %s", *argv);
       yyin_stream = make_stdio_stream(in, t, nil);
       spec_file = *argv;
-      spec_file_str = string(strdup(spec_file));
+    } else {
+      spec_file = "stdin";
     }
     argc--, argv++;
+    spec_file_str = string(strdup(spec_file));
   }
+
 
   {
     int gc = gc_state(0);
