@@ -1,4 +1,4 @@
-.\"Copyright (C) 2009, Kaz Kylheku <kkylheku@gmail.com>.
+5\"Copyright (C) 2009, Kaz Kylheku <kkylheku@gmail.com>.
 .\"All rights reserved.
 .\"
 .\"BSD License:
@@ -21,7 +21,7 @@
 .\"IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 .\"WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-.TH txr 1 2009-09-09 "txr v. 014" "Text Extraction Utility"
+.TH txr 1 2009-10-14 "txr v. 015" "Text Extraction Utility"
 .SH NAME
 txr \- text extractor
 .SH SYNOPSIS
@@ -76,8 +76,8 @@ from their subqueries in special ways.
 
 .SH ARGUMENTS AND OPTIONS
 
-Options other than -D may be combined together into a single argument.
-The -v and -q options are mutually exclusive. The one which occurs
+Options other than -D, -a and -f may be combined together into a single
+argument.  The -v and -q options are mutually exclusive. The one which occurs
 in the rightmost position in the argument list dominates.
 
 .IP -Dvar=value
@@ -134,6 +134,38 @@ reported as:
 
 The leftmost bracketed index is the most major index. That is to say,
 the dimension order is: NAME_m_m+1_..._n[1][2]...[m-1].
+
+.IP -f query
+Specifies the query in the form of a command line argument. If this option is
+used, the query-file argument is omitted. The first non-option argument,
+if there is one, now specifies the first input source rather than a query.
+Queries specified as arguments must properly end in a newline, as if they
+were read from a text file, thus -f "@a" is not a properly formed query.
+
+Example:
+
+  # read two lines "1" and "2" from standard input,
+  # binding them to variables a and b. Standard
+  # input is specified as - and the data
+  # comes from shell "here document" redirection.
+
+  txr -f "@a
+  @b
+  " - <<!
+  1
+  2
+  !
+
+  Output:
+  a=1
+  b=2
+
+The @# comment syntax can be used for better formatting:
+
+  txr -f "@#
+  @a
+  @b
+  "
 
 .IP --help
 Prints usage summary on standard output, and terminates successfully.
@@ -230,6 +262,29 @@ The comment after the @a does not consume the newline, but the
 comment which follows does. Without this intuitive behavior,
 line comment would give rise to empty lines that must match empty
 lines in the data, leading to spurious mismatches.
+
+.SH Hash Bang Support
+
+If the first line of a query begins with the characters #!,
+that entire line is deleted from the query. This allows
+for txr queries to be turned into standalone executable programs in the POSIX
+environment.
+
+Shell example: create a simple executable program called "twoline.txr" and
+run it. This assumes txr is installed in /usr/bin.
+
+  $ cat > twoline.txr
+  #!/usr/bin/txr
+  @a
+  @b
+  [Ctrl-D]
+  $ chmod a+x twoline.txr
+  $ ./twoline.txr -
+  1
+  2
+  [Ctrl-D]
+  a=1
+  b=2
 
 .SS Text
 
@@ -601,9 +656,9 @@ The general syntax of a directive is:
   @EXPR
 
 where expr is a parenthesized list of subexpressions. A subexpression
-is an symbol, number, string literal, character literal, regular expression, or
-a parenthesized expression.  So, examples of syntactically valid directives
-are:
+is an symbol, number, string literal, character literal, quasiliteral, regular
+expression, or a parenthesized expression.  So, examples of syntactically valid
+directives are:
 
   @(banana)
 
@@ -615,6 +670,8 @@ are:
 
   @(a /[a-z]*/ b)
 
+  @(_ `@file.txt`)
+
 A symbol is lexically the same thing as a variable and the same rules
 apply. Tokens that look like numbers are treated as numbers.
 
@@ -622,6 +679,15 @@ String and character literals are delimited by double and single quotes,
 respectively, and may not span multiple lines. Character literals must contain
 exactly one character. Character and numeric escapes may be used within
 literals to escape the quotes, and to denote control characters.
+
+Quasiliterals are similar to string literals, except that they may
+contain variable references denoted by the usual @ syntax. The quasiliteral
+represents a string formed by substituting the values of those variables
+into the literal template. If a is bound to "apple" and b to "banana",
+the quasiliteral `one@a and two @{b}s` represents the string
+"one apple and two bananas". A backquote escaped by a backslash represents
+itself, and two consecutive @ characters code for a literal @.
+There is no \e@ escape.
 
 Some directives are involved in structuring the overall syntax of the query.
 
@@ -699,6 +765,13 @@ Terminate the processing of a block, as if it were a successful match.
 What bindings emerge may depend on the kind of block: collect
 has special semantics.  Blocks are discussed in the section BLOCKS below.
 
+.IP @(try)
+Indicates the start of a try block, which is related to exception
+handling, discussed in the EXCEPTIONS section below.
+
+.IP @(catch), @(finally)
+Special clauses within @(try). See EXCEPTIONS below.
+
 .IP @(flatten)
 Normalizes a set of specified variables to one-dimensional lists. Those
 variables which have scalar value are reduced to lists of that value.
@@ -733,23 +806,51 @@ produces repeated text within one line.
 
 .SS The Next Directive
 
-The next directive comes in two forms. It can occur by itself as the
-only element in a query line:
+The next directive comes in two forms, one of which is obsolescent
+syntax.  This directive indicates that the remainder of the query.
+
+In the first form, it can occur by itself as the only element in a query line,
+with, or without arguments:
 
   @(next)
+  @(next SOURCE)
+  @(next SOURCE nothrow)
 
-Or it may be followed by material, which may contain variables.
-All of the variables must be bound. For example:
+The lone @(next) without arguments switches to the next file in the
+argument list which was passed to the
+.B txr
+utility. If SOURCE is given, it must be text-valued expression which denotes an
+input source; it may be a string literal, quasiliteral or a variable.
+For instance, if variable A contains the text "data", then
+
+  @(next A)
+
+means switch to the file called "data", and
+
+  @(next `@A.txt`)
+
+means to switch to the file "data.txt".
+
+If the input source cannot be opened for whatever reason,
+.B txr
+throws an exception (see EXCEPTIONS below). An unhandled exception will
+terminate the program.  Often, such a drastic measure is inconvenient;
+if @(next) is invoked with the nothrow keyword, then if the input
+source cannot be opened, the situation is treated as a simple
+match failure.
+
+In the obsolescent second form, @(next) is followed by material on the same
+line, which may contain variables.  All of the variables must be bound. For
+example:
 
   @(next)/path/to/@foo.txt
 
-Both forms indicate that the remainder of the query applies
-to a new file. The lone @(next) switches to the next file in the
-argument list which was passed to the
+The trailing material specifies gives the input source.
+The nothrow behavior is implicit in this form. The syntax will
+disappear in some future version of
 .B txr
-utility. The second form diverts the remainder of the query to a file whose
-name is given by the trailing material, after variable substitutions are
-performed.
+.
+
 
 Note that "remainder of the query" refers to the subquery in which
 the next directive appears, not necessarily the entire query.
@@ -760,7 +861,7 @@ After the @(end) which terminates the @(some), the "abc" is matched in the
 current file.
 
   @(some)
-  @(next)foo.txt
+  @(next "foo.txt")
   xyz@suffix
   @(end)
   abc
@@ -1845,6 +1946,14 @@ usual printing of the variable bindings or the word false.
 
 The syntax of the @(output) directive is:
 
+  @(output [ DESTINATION ] [ nothrow ])
+  .
+  . one or more output directives or lines
+  .
+  @(end)
+
+An obsolescent syntax is also supported:
+
   @(output)...optional destination...
   .
   . one or more output directives or lines
@@ -1853,7 +1962,16 @@ The syntax of the @(output) directive is:
 
 The optional destination is a filename, the special name, - which
 redirects to standard output, or a shell command preceded by the ! symbol.
-Variables are substituted in the directive.
+In the first form, the destination may be specified as a variable
+which holds text, a string literal or a quasiliteral
+
+In the second obsolescent form, the material to the right of @(output)
+is query text which may contain variables.
+
+The new syntax throws an exception if the output destination
+cannot be opened, unless the nothrow keyword is present, in which
+case the situation is treated as a match failure.  The old syntax throws an
+exception.
 
 .SS Output Text
 
@@ -2024,6 +2142,269 @@ If the list L has one or more items, then they are produced with
 spaces each one, except the last which has no space.
 If the list has exactly one item, then the @(last) applies to it
 instead of the main clause: it is produced with no trailing space.
+
+.SH EXCEPTIONS
+
+The exceptions mechanism in
+.B txr
+is disciplined way for representing and handling abnormal situations that may
+occur during query processing, such as using an unbound variable, or attempting
+to open a nonexistent file.
+
+An exception is a situation in the query which stops the query and
+demands handling. If handling is not provided for that exception,
+the execution of the program is terminated.
+
+An exception is always identified by a symbol, which is its type. Types are
+organized in a subtype-supertype hierarchy.  For instance, the file_error
+exception type is a subtype of the error type. This means that a file error is
+a kind of error. An exception handling block which catches exceptions of type
+error will catch exceptions of type file_error, but a block which catches
+file_error will not catch all exceptions of type error. A query_error is a kind
+of error, but not a kind of file_error. The symbol t is the supertype
+of every type: every exception type is considered to be a kind of t.
+(Mnemonic: t stands for type, as in any type).
+
+Exceptions are handled using @(catch) clauses within a @(try) directive.
+
+In addition to being useful for exception handling, the @(try) directive
+also provides unwind protection by means of a @(finally) clause,
+which specifies query material to be executed unconditionally when
+the try clause terminates, no matter how it terminates.
+
+.SS The Try Directive
+
+The general syntax of the try directive is 
+
+  @(try)
+  ... main clause, required ...
+  ... optional catch clauses ...
+  ... optional finally clause
+  @(end)
+
+A catch clause looks like:
+
+  @(catch TYPE)
+  .
+  .
+  .
+
+and also the this form, equivalent to @(catch (t)):
+
+  @(catch)
+  .
+  .
+  .
+
+which catches all exceptions.
+
+A finally clause looks like:
+
+  @(finally)
+  ...
+  .
+  .
+
+None of the clauses may be empty.
+
+A try clause is surrounded by an implicit anonymous block (see BLOCKS section
+above). So for instance, the following is a no-op (an operation with no effect,
+other than successful execution):
+
+  @(try)
+  @(accept)
+  @(end)
+
+The @(accept) causes a successful termination of the implicit anonymous block.
+Execution resumes with query lines or directives which follow, if any.
+
+Try clauses and blocks interact. For instance, a block accept from within
+a try clause invokes a finally.
+
+  Query:        @(block foo)
+                @  (try)
+                @    (accept foo)
+                @  (finally)
+                @     (output)
+                bye!
+                @     (end)
+                @  (end)
+
+  Output:       bye!
+
+How this works: the try block's main clause is @(accept foo). This causes
+the enclosing block named foo to terminate, as a successful match.
+Since the try is nested within this block, it too must terminate
+in order for the block to terminate. But the try has a finally clause,
+which executes unconditionally, no matter how the try block
+terminates. The finally clause performs some output, which is seen.
+
+.SH The Finally Clause
+
+A try directive can terminate in one of three ways. The main clause
+may match successfully, and possibly yield some new variable bindings.
+The main clause may fail to match. Or the main clause may be terminated
+by a non-local control transfer, like an exception being thrown or a block
+return (like the block foo example in the previous section).
+
+No matter how the try clause terminates, the finally clause is processed.
+
+Now, the finally clause is itself a query which binds variables, which leads to
+the question: what happens to such variables? What if the finally block fails
+as a query? Another question is: what if a finally clause itself initiates a
+control transfer?  Answers follow.
+
+Firstly, a finally clause will contribute variable bindings only if the main
+clause terminates normally (either as a successful or failed match).
+If the main clause successfully matches, then the finally block continues
+matching at the next position in the data, and contributes bindings.
+If the main clause fails, then the finally block matches at the
+same position.
+
+The overall try directive succeeds as a match if either the main clause
+or the finally clause succeed. If both fail, then the try directive is
+a failed match. The subquery in which it is located fails, et cetera.
+
+Example:
+
+  Query:        @(try)
+                @a
+                @(finally)
+                @b
+                @(end)
+                @c
+
+  Data:         1
+                2
+                3
+
+  Output:       a=1
+                b=2
+                c=3
+
+In this example, the main clause of the try captures line "1" of the data as
+variable a, then the finally clause captures "2" as b, and then the
+query continues with the @c variable after try block, and captures "3".
+
+
+Example:
+
+  Query:        @(try)
+                hello @a
+                @(finally)
+                @b
+                @(end)
+                @c
+
+  Data:         1
+                2
+
+  Output:       b=1
+                c=2
+
+In this example, the main clause of the try fails to match, because
+the input is not prefixed with "hello ". However, the finally clause
+matches, binding b to "1". This means that the try block is a successful
+match, and so processing continues with @c which captures "2".
+
+When finally clauses are processed during a non-local return,
+they have no externally visible effect if they do not bind variables.
+However, their execution makes itself known if they perform side effects,
+such as output.
+
+A finally clause guards only the main clause and the catch clauses. It does not
+guard itself.   Once the finally clause is executing, the try block is no
+longer guarded.  This means if a nonlocal transfer, such as a block accept
+or exception, is initiated within the finally clause, it will not re-execute
+the finally clause. The finally clause is simply abandoned.
+
+The disestablishment of blocks and try clauses is properly interleaved
+with the execution of finally clauses. This means that all surrounding
+exit points are visible in a finally clause, even if the finally clause
+is being invoked as part of a transfer to a distant exit point.
+The finally clause can make a control transfer to an exit point which
+is more near than the original one, thereby "hijacking" the control
+transfer. Also, the anonymous block established by the try directive
+is visible in the finally clause.
+
+Example:
+
+@(try)
+@  (try)
+@    (next "nonexistent-file")
+@  (finally)
+@    (accept)
+@  (end)
+@(catch file_error)
+@  (output)
+file error caught
+@  (end)
+@(end)
+
+In this example, the @(next) directive throws an exception of type file_error,
+because the given file does not exist. The exit point for this exception is the
+@(catch file_error) clause in the outer-most try block. The inner block is
+not eligible because it contains no catch clauses at all. However, the inner
+try block has a finally clause, and so during the processing of this
+exception which is headed for the @(catch file_error), the finally
+clause performs an anonymous accept. The exit point for the accept
+is the anonymous block surrounding the inner try.  So the original
+transfer to the catch clause is forgotten. The inner try terminates
+sucessfully, and since it constitutes the main clause of the outer try,
+that also terminates sucessfully. The "file error caught" message is
+never printed.
+
+.SS Catch Clauses
+
+Catch clauses establish a try block as a potential exit point for
+an exception-induced control transfer (called a ``throw'').
+
+A catch clause specifies an optional list of symbols which represent
+the exception types which it catches. The catch clause will catch
+exceptions which are a subtype of any one of those exception types.
+
+If a try block has more than one catch clause which can match a given
+exception, the first one will be invoked.
+
+The exception protection of a try block does not extend over the
+catch clauses.  Once a catch clause is being executed, if it throws
+an exception, that exception will not re-enter any catch within the
+same try block, even if it matches one.
+
+Catches are processed prior to finally.
+
+When a catch is invoked, it is of course understood that the main clause did
+not terminate normally, and so the main clause could not have produced any
+bindings.
+
+So the success or failure of the try block depends on the behavior of the catch
+clause or the finally, if there is one. If either of them succeed, then the try block is considered a successful match.
+
+Example:
+
+  Query:        @(try)
+                @  (next "nonexistent-file")
+                @  x
+                @  (catch file_error)
+                @a
+                @(finally)
+                @b
+                @(end)
+                @c
+
+  Data:         1
+                2
+                3
+
+  Output:       a=1
+                b=2
+                c=3
+
+Here, the try block's main clause is terminated abruptly by a file_error
+exception from the @(next) directive.   This is handled by the
+catch clause, which binds variable a to the input line "1".
+Then the finally clause executes, binding b to "2". The try block
+then terminates successfully, and so @c takes "3".
 
 .SH NOTES ON FALSE
 

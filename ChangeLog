@@ -1,3 +1,433 @@
+2009-10-14  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 015
+
+	Code restructuring.
+
+	Corruption bugfix in gc-debugging code.
+
+	The nil symbol more properly implemented.
+
+	Semantics change: collect treated as a failed match if it
+	does not collect anything.
+
+	Bugfix in function argument reconciliation: must only
+	be done for unbound parameters.
+
+	New @(local) directive (synonym of forget) for expressing
+	local variables in functions.
+
+	Quasi-literals: backquote-delimited literals that contain interpolated
+	variables. Useful in next, output, bind and function calls.
+
+	Hygiene: some implementation-inserted syntax tree elements
+	are now in their own namespace so they can't clash with user-defined
+	constructs.
+
+	Rewritten streams implementation.
+
+	Exception handling: try/catch/finally.
+
+	Exceptions used internally and externally.
+
+	File errors are mapped to exceptions now.
+
+	Hash bang (#!) scripting supported.
+
+	New -f paramater, allowing entire query to be specified
+	as argument rather than from a file or stdin.
+
+	* txr.c: (version): Bump to 014.
+	* txr.1: Bump version to 014. More documentation about
+	exceptions.
+
+2009-10-14  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Support for hash bang execution, and embedding query
+	in a command line argument.
+
+	* txr.c (remove_hash_bang_line): New function.
+	(main): Added -f option. Initialize and gc-protect yyin_stream, and
+	use it in all places where yyin was previously set up.
+	Diagnose when -a, -D and -f are wrongly clumped with other options.
+	Remove the first line of the query if it starts with #!.
+	* parser.h (yyin): Declaration removed.
+	(yyin_stream): Declared.
+	* parser.l (YY_INPUT): Macro defined.
+	(yyin_stream): New global.
+	* stream.c (string_in_get_line, string_in_get_char): Bugfix:
+	wrong length function used.
+	(string_in_ops): Bugfix: wrong get_char function wired in.
+	(get_char): New function.
+	* stream.h (get_char): Declared.
+	* txr.1: -f option documented.
+
+2009-10-14  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* lib.c (obj_print, obj_pprint): Print #<garbage ...>
+	syntax if an object has a bad type code; do not just return
+	without printing anything.
+
+2009-10-14  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Code cleanup and documentation.
+
+	* txr.1: Start documenting quasiliterals, exception handling and
+	nothrow in next and output.
+	* parser.y (catch_clauses_opt): Add missing empty production, so that
+	a try block doesn't have to have a finally clause.
+	* lib.h (or2, or3, or4): New macros.
+	* match.c (match_files): Allow output and next forms which just
+	have one argument that is nothrow, as documented.
+	* stream.c common_vformat, string_out_vcformat, string_out_vcformat,
+	make_string_output_stream, make_dir_stream, close_stream, get_line,
+	vformat, vcformat, format, cformat, put_string, put_cstring,
+	put_char): Switch to new style type assertions.
+
+2009-10-13  Kaz Kylheku  <kkylheku@gmail.com>
+
+	New syntax for next and output directives, taking advantage
+	of quasi-literals. Non-throwing behavior can be specified in
+	both using nothrow. The old syntax is supported, and has
+	the old semantics (non-throwing). Hence, the test cases
+	pass again without modification.
+
+	File open errors thrown as file_error type.
+
+	* lib.c (nothrow, file_error): New symbol globals.
+	(obj_init): New symbols interned.
+	* lib.h (nothrow, file_error): Declared.
+	* match.c (file_err): New function.
+	(eval_form): Bugfix: if input is nil, or an atom other than a symbol,
+	return the value hoisted into a cons. A nil return strictly means,
+	unbound variable.
+	(match_files): Support new syntax for next and and output.
+	Throw open errors as file_err.
+	* parser.l (grammar): Change how OUTPUT is returned to the
+	style similar to DEFINE, so interior forms can be parsed.
+	* parser.y (grammar): Fix up output_clause with new syntax.
+	* unwind.c (uw_throw): Do not abort on unhandled file_error,
+	but terminate with a failed status.
+	(uw_init): Register file_error as a subtype of error exception.
+
+2009-10-13  Kaz Kylheku  <kkylheku@gmail.com>
+
+	First cut at working try/catch/finally implementation.
+
+	* lib.c (try, catch, finally): New symbol globals.
+	(obj_init): New symbols interned.
+	* lib.h (try, catch, finally: Declared.
+	* parser.y (TRY, CATCH, FINALLY): New tokens.
+	(try_clause, catch_clauses_opt): New nonterminal grammar symbols.
+	* parser.l (yybadtoken): TRY, CATCH and FINALLY handled.
+	(grammar): New cases for try, catch and finally.
+	* unwind.h (struct uw_catch): New member called visible.
+	(uw_continue): New parameter added.
+	(uw_exception_subtype_p): Declared.
+	(uw_catch_begin): Macro rewritten to use switch logic
+	around setjmp.
+	(uw_do_unwind, uw_catch, uw_unwind): New macros.
+	(uw_catch_end): Rewritten to close switch, and automatically
+	continue the unwinding if the block is entered as an unwind.
+	* unwind.c (uw_unwind_to_exit_point): Exception catching
+	frames made invisible via new flag prior to control passing to them.
+	longjmp code 2 introduced for distinguishing a catch from
+	an unwind. Visibility flag is checked and invisible frames
+	are skipped.
+	(uw_push_catch): cont member of the unwind frame initialized to zero.
+	(exception_subtype_p): Renamed to uw_exception_subtype_p, changed
+	to extern. Fixed wrong order of arguments to assoc.
+	(uw_throw): Honor visibility flag: do not consider invisible
+	catch frames.
+	(uw_register_subtype): sup/sub mixup bugfix.
+	(uw_continue): Takes extra argument: the continuation frame
+	that (re)establishes the exit point for the unwinding.
+	This allows nested unwinding action to take place in a finally,
+	and then to continue to the original exit point.
+	* match.c (match_files): Handling for try directive added.
+
+2009-10-13  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* parser.l (yybadtoken): Bugfix: added missing LITCHAR case.
+	* unwind.h (internal_error): Fixed broken macro.
+	* match.c (match_line, match_files): sem_error bugfix: used %a instead
+	of ~a.
+	(match_files): Wrap block handler in compound statement, otherwise the
+	macroexpansion declares a variable in the middle of a statement, which
+	is a gcc extension to C90 (or a C99 feature,
+	but we aren't using C99).
+
+2009-10-08  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Exception handling for query errors.
+	Verbose logging decoupled from yyerror functions.
+	Superior object-oriented formatting used for cleaner code.
+
+	* lib.c (query_error): New symbol global.
+	(obj_init): New symbol interned.
+	* lib.h (query_error): Declared.
+	* match.c (output_produced): Variable changed to external linkage.
+	(debugf, debuglf, debuglcf, sem_error): New static functions.
+	(dest_bind, match_line, match_files): Regtargetted away from
+	the yyerrorf and yyerrorlf functions to use debugf,
+	debuglf, debuglcf for logging and sem_error for throwing
+	query errors as exceptions.
+	* parser.h (spec_file_str): New global declared.
+	* parser.l (yyerror): Calls yyerrorf instead of yyerrorlf;
+	lets yyerrorf increment error count.
+	(yyerrorf): Loses level argument.
+	(yyerrorlf): Function removed.
+	(yybadtoken): Retargetted from yyerrorlf to yyerrorf.
+	(grammar): yyerrorf call fixed up.
+	* txr.c (spec_file_str): New global defined.
+	(main): Protects new global against gc, and initializes it.
+	* unwind.c (uw_throw): If an unhandled exception is of
+	type query_error, it results in an exit rather than abort.
+	The false string is conditionally printed.
+	(uw_init): Register query_error as subtype of error.
+
+2009-10-08  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Exception handling framework implemented.
+
+	* lib.c (cobj_t, error, type_error, internal_err, numeric_err,
+	range_err): New symbol globals.
+	(prog_string): New string global.
+	(code2type): New static function.
+	(typeof): Rewritten using code2type.
+	(type_check, type_check2): New static functions.
+	(car, cdr, list, plus, minus, length_str, chr_p, chr_str,
+	chr_str_set, apply, funcall, funcall1, funcall2,
+	vec_get_fill, vecref_l, lazy_stream_cons): Checks and
+	assertions rewritten using new functions and macros.
+	(obj_init): prog_string protected from gc.
+	New symbols interned.
+	(init): uw_init() call moved after obj_init() because
+	it needs stable symbols.
+	* lib.h (cobj_t, error, type_error, internal_err, numeric_err,
+	range_err, prog_string, type_check, type_check2): Declared.
+	* match.c (dump_var, complex_snarf, complex_close): abort
+	calls rewritten to use exception handling.
+	* regex.c (nfa_all_states, nfa_closure, nfa_move): Likewise.
+	* stream.c (string_out_vcformat): Bugfix: fill index not updated.
+	(make_string_output_stream): Bugfix: initial buffer not null terminated.
+	(get_string_from_stream): New function.
+	* stream.h (get_string_from_stream): Declared.
+	* txr.c (main): Some error prints turned to throws.
+	* unwind.c (unwind_to_exit_point): Supports UW_CATCH frames,
+	whose finalization logic has to be invoked during unwinding,
+	and as target exit points.
+	(uw_init): Installs exception symbols into
+	subtyping hirearchy.
+	(uw_push_catch, exception_subtype_p, uw_throw, uw_throwf,
+	uw_errorf, uw_throwcf, uw_errorcf, type_mismatch,
+	uw_register_subtype, uw_continue): New functions.
+	(exception_subtypes): New static global.
+	* unwind.h (noreturn): New macro, conditionally defined on __GNUC__.
+	(enum uw_frtype): New member, UW_CATCH.
+	(struct uw_catch): New struct type.
+	(union uw_frame): New member, ca.
+	(uw_push_catch, exception_subtype_p, uw_throw, uw_throwf,
+	uw_errorf, uw_throwcf, uw_errorcf, type_mismatch,
+	uw_register_subtype, uw_continue): New functions declared.
+	(uw_catch_begin, uw_catch_end, internal_error, type_assert,
+	bug_unless, numeric_assert, range_bug_unless): New macros.
+
+2009-10-07  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Rewritten streams implementation.
+
+	* stream.h, stream.c: New files.
+	* Makefile (OBJS): New object file stream.o.
+	* dep.mk: Dependencies updated.
+	* gc.c (finalize): STREAM case removed.  Call destroy only if not null.
+	(mark_obj): STREAM case removed.
+	* lib.c (push, pop): New functions.
+	(equal): STREAM case removed.
+	(sub_str): Allow from parameter to be nil, defaulting to zero.
+	(stdio_line_read, stdio_line_write, stdio_close, stdio_line_stream,
+	pipe_close, pipe_line_stream, dirent_read, dirent_close,
+	dirent_stream, stream_get, stream_pushback, stream_put,
+	stream_close): Functions removed.
+	(stream_ops dirent_stream_ops, stdio_line_stream_ops,
+	struct stream_ops, pipe_line_stream_op): Static structs removed.
+	(lazy_stream_func, lazy_stream_cons): Retargetted to new streams.
+	(cobj_print_op): Likewise.
+	(init): Disables and restores GC, instead of doing it in obj_init.
+	(obj_print): Retargetted to new streams.
+	(obj_pprint): New function.
+	(obj_init): Does not manipulate gc_state any more, moved to init.
+	Call to stream_init added.
+	(d, snarf): Retargetted to new streams.
+	(snarf_line): Removed, now appears in stream.c, retargetted
+	to new streams.
+	* lib.h (enum type): STREAM removed.
+	(struct stream, struct stream_ops): Removed.
+	(struct cobj_ops): Retargetted to new streams.
+	(union obj): sm member removed.
+	(push, pop, obj_pprint): Declared.
+	(stdio_line_stream, pipe_line_stream, dirent_stream, stream_get,
+	stream_pushback, stream_put, stream_close, snarf_line): Removed.
+	(cobj_print_op, dump, snarf): Modified.
+	* match.c (dump_bindings, complex_snarf): Retargetted to new streams.
+	* txr.c (main): format used to dump bindings and specs in verbose mode.
+
+2009-10-07  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Implemented quasi-literals: string literals which may
+	contain variables to be interpolated.
+
+	Also, took care of a hygiene problem with respect to some
+	parser-generated forms, which must be invisible to the user.
+
+	* Makefile (LEX_DB_FLAGS): New variable; helpful
+	in generating a lexical analyzer with debug tracing.
+	* parser.l (nesting, closechar): Static variables removed.
+	(char_esc): Add \` escape for quasi-literals.
+	(stack): New %option, to generate a scanner which has
+	a start condition stack.
+	(QSILIT): New start condition.
+	(grammar): Refactored to use start condition stacks.
+	Quasi-literal lexical analysis added.
+	* parser.y (lit_char_helper): New function, for factoring out
+	some common logic between string literals and quasi literals.
+	(quasilit, quasi_item, quasi_items): New grammar symbols and
+	production rules.
+	(strlit): Rule shortened with new helper function.
+	Bugfix: error case assigns nil to $$.
+	(chrlist): Bugfix: error case assigns nil to $$.
+	(LITCHAR): Added to %prec table to fix shift-reduce problem.
+	(expr): Production now can generate a quasilit.
+	* lib.c (quasi): New symbol global.
+	(obj_init): Intern quasi as "$quasi", so the user can
+	make a function called quasi.  Also, var and regex are now interned
+	with the names "$var" and "$regex" for the same reason.
+	* lib.h (quasi): Declared.
+	* match.c (eval_form): Rewritten with recursive processing
+	to handle deeply embedded variables, as well as quasi-strings.
+	(subst_vars): Handles quasi-strings.
+	(match_files): Function calls now use eval_form for function
+	argument evaluation, except of course in the special case that if an
+	argument is a symbol, it may be unbound.
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* match.c (match_files): No error message for merging to
+	a symbol which is already bound; the existing behavior
+	is to destructively update the binding, which is useful,
+	and so the error is pointless.
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Introduce local as synonym to forget. It does exactly the
+	same thing; a previous binding is forgotten. This spelling
+	is nicer for functions.
+	* lib.h (local): Declared.
+	* lib.c (local): Defined.
+	(obj_init): New symbol interned.
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Bugfix: function parameter reconciliation (after function call
+	completes) must only consider the unbound parameters.
+	Otherwise false mismatches result if the function destructively
+	manipulated some bindings of bound parameters.
+	E.g. @(define foo (a)) is called as @(foo "bar") and internally
+	it rebinds bound parameter a to "baz". This situation is
+	not a mismatch. The rebinding is thrown away.
+
+	* match.c (match_files): When processing a function call,
+	keep an alist which associates arguments and unbound parameters.
+	Then, after the function call, process the alist, rather
+	than the full parameter list.
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Semantics change: collect fails if it does not collect
+	anything. Non-failing behavior can be obtained by
+	wrapping with @(maybe) (but no such workaround for coll yet).
+
+	* match.c (match_line): Return nil if coll collected nothing.
+	(match_files): Return nil if collect collected nothing.
+
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Bugfix: nil must be on the list of interned symbols.
+
+	* lib.c (sym_name): Function removed. This was like
+	symbol_name but did not accept nil.
+	(intern): Use symbol_name instead of sym_name, allowing
+	nil to be on the list of interned symbols.
+	(obj_init): Add nil to interned_syms list.
+	(nil_string): Changed from "NIL" to "nil".
+	* match.c (dest_bind): Treat nil as a value, not a symbol.
+	(match_files): Treat nil as a value when it's
+	a function argument.
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* gc.c (more): Bugfix: free_tail was incorectly calculated,
+	thereby destroying the validity of the FIFO recycling algorithm
+	used when GC debugging is enabled. This showed up as mysterious
+	assertions and crashes.
+	(mark_obj): Do not abort if a free object is marked.
+	(mark_mem_region): Renamed bottom and top variables to low
+	and high. The naming was confusing inverted relative
+	to that in the caller.
+	(sweep): Abort if somehow a block is free and marked reachable.
+
+2009-10-06  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* match.c (match_files): Fixed nonexitent symbol warning for merge
+	directive (complained about wrong symbol).
+
+2009-10-05  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Refactoring matching code.
+
+	* lib.h (cobj_ops): New function pointer, mark.
+	* gc.c (mark_obj): For a COBJ type, call the mark function
+	if the pointer is non-null.
+	(gc_mark): New public function, wrapper that calls
+	the private mark_obj. Implementations of mark for COBJ
+	objects will need to call this.
+	* gc.h (mark_obj): Declared.
+	* regex.c (regex_obj_ops): Explicitly initialize mark function pointer
+	 to null.
+
+2009-10-05  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Code restructuring.
+
+	* Makefile (match.o): New object file.
+	(depend): New rule for generating dep.mk, using txr.
+	(lib.o, lex.yy.o, regex.o, y.tab.o unwind.o, txr.o, match.o, gc.o):
+	Dependency rules removed.
+	* dep.mk: New make include file; captures dependencies. Generated
+	by new depend rule in Makefile, using txr.
+	* depend.txr: Txr query to generate dependencies.
+	* extract.y: File renamed to parser.y
+	(output_produced): Variable removed,
+	moved into new file match.c.
+	(dump_shell_string, dump_shell_string, dump_var, dump_bindings, depth,
+	weird_merge, map_leaf_lists, dest_bind, eval_form, match_line,
+	format_field, subs_vars, complex_open, complex_open_failed,
+	complex_close, complex_snarf, robust_length, bind_car, bind_cdr,
+	extract_vars, extract_bindings, do_output_line, do_output,
+	match_files, extract): Functions removed, added to match.c.
+	(struct fpip): Definition removed, added to match.c
+	(<stdlib.h>, <string.h>, <ctype.h>, <errno.h>, <setjmp.h>,
+	"gc.h", "unwind.h"): Unneeded headers removed.
+	* match.c: New file.
+	* extract.l: Renamed to parser.l.
+	* extract.h: Renamed to parser.h.
+	(opt_loglevel, opt_nobindings, opt_arraydims, version, progname):
+	Declarations moved to txr.h.
+	(extract): Dclaration moved to match.h.
+	* txr.h, match.h: New headers.
+	* gc.h (opt_gc_debug): Moved to txr.h.
+
 2009-10-03  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 014

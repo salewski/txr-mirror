@@ -36,43 +36,41 @@
 #include "y.tab.h"
 #include "lib.h"
 #include "gc.h"
-#include "extract.h"
+#include "stream.h"
+#include "parser.h"
 
 #define YY_NO_UNPUT
 
-const char *version = "014";
-const char *progname = "txr";
-const char *spec_file = "stdin";
+#define YY_INPUT(buf, result, max_size)						\
+	do {																						\
+		obj_t *c = nil;																\
+		int n, ch;																		\
+		for (n = 0; n < max_size && 									\
+								(c = get_char(yyin_stream)) && 		\
+								(ch = c_chr(c)) != '\n'; ++n)		  \
+			buf[n] = (char) ch;													\
+		if (ch == '\n')														  	\
+			buf[n++] = (char) ch;                       \
+		result = n;                                   \
+	} while (0)
+
+obj_t *yyin_stream;
+
 long lineno = 1;
 int opt_loglevel = 1;   /* 0 - quiet; 1 - normal; 2 - verbose */
 int opt_nobindings = 0;
 int opt_arraydims = 1;
 
-static int nesting;
-static int closechar;
-static int errors;
-
-/*
- * Can implement an emergency allocator here from a fixed storage
- * pool, which sets an OOM flag. Program can check flag
- * and gracefully terminate instead of aborting like this.
- */
-void *oom_realloc_handler(void *old, size_t size)
-{
-  fprintf(stderr, "%s: out of memory\n", progname);
-  puts("false");
-  abort();
-}
+int errors;
 
 void yyerror(const char *s)
 {
-  yyerrorlf(1, lineno, "%s", s);
-  errors++;
+  yyerrorf("%s", s);
 }
 
-void yyerrorf(int level, const char *s, ...)
+void yyerrorf(const char *s, ...)
 {
-  if (opt_loglevel >= level) {
+  if (opt_loglevel >= 1) {
     va_list vl;
     va_start (vl, s);
     fprintf(stderr, "%s: (%s:%ld): ", progname, spec_file, lineno);
@@ -80,24 +78,7 @@ void yyerrorf(int level, const char *s, ...)
     putc('\n', stderr);
     va_end (vl);
   }
-
-  if (level < 2)
-    errors++;
-}
-
-void yyerrorlf(int level, long spec_lineno, const char *s, ...)
-{
-  if (opt_loglevel >= level) {
-    va_list vl;
-    va_start (vl, s);
-    fprintf(stderr, "%s: (%s:%ld): ", progname, spec_file, spec_lineno);
-    vfprintf(stderr, s, vl);
-    putc('\n', stderr);
-    va_end (vl);
-  }
-
-  if (level < 2)
-    errors++;
+  errors++;
 }
 
 void yybadtoken(int tok, const char *context)
@@ -126,20 +107,24 @@ void yybadtoken(int tok, const char *context)
   case LAST:    problem = "\"last\""; break;
   case EMPTY:   problem = "\"empty\""; break;
   case DEFINE:  problem = "\"define\""; break;
+  case TRY:     problem = "\"try\""; break;
+  case CATCH:   problem = "\"catch\""; break;
+  case FINALLY: problem = "\"finally\""; break;
   case NUMBER:  problem = "\"number\""; break;
   case REGCHAR: problem = "regular expression character"; break;
+  case LITCHAR: problem = "string literal character"; break;
   }
 
   if (problem != 0)
     if (context)
-      yyerrorlf(1, lineno, "misplaced %s in %s", problem, context);
+      yyerrorf("misplaced %s in %s", problem, context);
     else
-      yyerrorlf(1, lineno, "unexpected %s", problem);
+      yyerrorf("unexpected %s", problem);
   else
     if (context)
-      yyerrorlf(1, lineno, "unterminated %s", context);
+      yyerrorf("unterminated %s", context);
     else
-      yyerrorlf(1, lineno, "unexpected end of input");
+      yyerrorf("unexpected end of input");
 }
 
 static int char_esc(int letter)
@@ -155,6 +140,7 @@ static int char_esc(int letter)
   case 'e': return 27;
   case '"': return '"';
   case '\'': return '\'';
+  case '`': return '`';
   }
 
   abort();
@@ -175,6 +161,8 @@ static int num_esc(char *num)
 
 %}
 
+%option stack
+
 TOK     [a-zA-Z_][a-zA-Z0-9_]*|[+-]?[0-9]+
 ID_END  [^a-zA-Z0-9_]
 NUM_END [^0-9]
@@ -182,7 +170,7 @@ WS      [\t ]*
 HEX     [0-9A-Fa-f]
 OCT     [0-7]
 
-%x      SPECIAL NESTED REGEX REGCLASS STRLIT CHRLIT
+%x      SPECIAL NESTED REGEX REGCLASS STRLIT CHRLIT QSILIT
 
 %%
 
@@ -194,8 +182,9 @@ OCT     [0-7]
 
                           val = strtol(yytext, &errp, 10);
 
-                          if (nesting == 0)
-                            BEGIN(INITIAL);
+                          if (yy_top_state() == INITIAL
+                              || yy_top_state() == QSILIT)
+                            yy_pop_state();
 
                           if (*errp != 0) {
                             /* not a number */
@@ -211,159 +200,162 @@ OCT     [0-7]
                           return NUMBER;
                         }
 
-
 <SPECIAL>\({WS}all{WS}\)        {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return ALL;
                                 }
 
 <SPECIAL>\({WS}some{WS}\)       {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return SOME;
                                 }
 
 <SPECIAL>\({WS}none{WS}\)       {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return NONE;
                                 }
 
 <SPECIAL>\({WS}maybe{WS}\)      {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return MAYBE;
                                 }
 
 <SPECIAL>\({WS}cases{WS}\)      {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return CASES;
                                 }
 
 <SPECIAL>\({WS}and{WS}\)        {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return AND;
                                 }
 
 <SPECIAL>\({WS}or{WS}\)         {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return OR;
                                 }
 
 <SPECIAL>\({WS}end{WS}\)        {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return END;
                                 }
 
 <SPECIAL>\({WS}collect{WS}\)    {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return COLLECT;
                                 }
 
 <SPECIAL>\({WS}coll{WS}\)       {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return COLL;
                                 }
 
 <SPECIAL>\({WS}until{WS}\)      {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return UNTIL;
                                 }
 
-<SPECIAL>\({WS}output{WS}\)     {
-                                  BEGIN(INITIAL);
+<SPECIAL>\({WS}output/{ID_END}  {
+                                  yy_push_state(NESTED);
                                   return OUTPUT;
                                 }
 
 <SPECIAL>\({WS}repeat{WS}\)     {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return REPEAT;
                                 }
 
 
 <SPECIAL>\({WS}rep{WS}\)        {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return REP;
                                 }
 
 <SPECIAL>\({WS}single{WS}\)     {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return SINGLE;
                                 }
 
 <SPECIAL>\({WS}first{WS}\)      {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return FIRST;
                                 }
 
 <SPECIAL>\({WS}last{WS}\)       {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return LAST;
                                 }
 
 <SPECIAL>\({WS}empty{WS}\)      {
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return EMPTY;
                                 }
 
 <SPECIAL>\({WS}define/{ID_END}  {
-                                  nesting++;
-                                  closechar = ')';
-                                  BEGIN(NESTED);
+                                  yy_push_state(NESTED);
                                   return DEFINE;
                                 }
 
+<SPECIAL>\({WS}try{WS}\)        {
+                                  yy_pop_state();
+                                  return TRY;
+                                }
+
+<SPECIAL>\({WS}catch/{ID_END}   {
+                                  yy_push_state(NESTED);
+                                  return CATCH;
+                                }
+
+<SPECIAL>\({WS}finally{WS}\)    {
+                                  yy_pop_state();
+                                  return FINALLY;
+                                }
+
 <SPECIAL,NESTED>\{|\(   {
-                          nesting++;
-                          if (yytext[0] == '{')
-                            closechar = '}';
-                          else
-                            closechar = ')';
-                          BEGIN(NESTED);
+                          yy_push_state(NESTED);
+                          if (yy_top_state() == INITIAL
+                              || yy_top_state() == QSILIT)
+                            yy_pop_state();
                           return yytext[0];
                         }
 
 <SPECIAL,NESTED>\}|\)   {
-                          if (yytext[0] != closechar) {
-                            yyerror("paren mismatch");
-                            BEGIN(INITIAL);
-                          } else {
-                            switch (--nesting) {
-                            case 1:
-                              BEGIN(SPECIAL);
-                              break;
-                            case 0:
-                              BEGIN(INITIAL);
-                              break;
-                            }
-
-                            return yytext[0];
-                          }
+                          yy_pop_state();
+                          if (yy_top_state() == INITIAL
+                              || yy_top_state() == QSILIT)
+                            yy_pop_state();
+                          return yytext[0];
                         }
 
 <SPECIAL,NESTED>[\t ]+  { /* Eat whitespace in directive */ }
 
 <SPECIAL,NESTED>\"      {
-                          BEGIN(STRLIT);
+                          yy_push_state(STRLIT);
                           return '"';
                         }
 
 <SPECIAL,NESTED>\'      {
-                          BEGIN(CHRLIT);
+                          yy_push_state(CHRLIT);
                           return '\'';
                         }
 
-<SPECIAL>@      {
-                  if (nesting == 0) {
-                    BEGIN(INITIAL);
-                    yylval.lexeme = strdup("@");
-                    return TEXT;
-                  }
-                }
+<SPECIAL,NESTED>`       {
+                          yy_push_state(QSILIT);
+                          return '`';
+                        }
+
+<SPECIAL>@              {
+                          yy_pop_state();
+                          yylval.lexeme = strdup("@");
+                          return TEXT;
+                        }
 
 <SPECIAL,NESTED>\n      {
                           lineno++;
                         }
 
 <SPECIAL,NESTED>[/]     {
-                          BEGIN(REGEX);
+                          yy_push_state(REGEX);
                           return '/';
                         }
 
@@ -377,7 +369,7 @@ OCT     [0-7]
                           lexeme[0] = char_esc(yytext[1]);
                           lexeme[1] = 0;
                           yylval.lexeme = strdup(lexeme);
-                          BEGIN(INITIAL);
+                          yy_pop_state();
                           return TEXT;
                         }
 
@@ -386,20 +378,20 @@ OCT     [0-7]
                                   lexeme[0] = num_esc(yytext + 1);
                                   lexeme[1] = 0;
                                   yylval.lexeme = strdup(lexeme);
-                                  BEGIN(INITIAL);
+                                  yy_pop_state();
                                   return TEXT;
                                 }
 
 <SPECIAL,NESTED>.       {
-                          yyerrorf(0, "bad character in directive: '%c'",
+                          yyerrorf("bad character in directive: '%c'",
                                    yytext[0]);
                         }
 
 <REGEX>[/]      {
-                  if (nesting == 0)
-                    BEGIN(INITIAL);
-                  else
-                    BEGIN(NESTED);
+                  yy_pop_state();
+                  if (yy_top_state() == INITIAL
+                      || yy_top_state() == QSILIT)
+                    yy_pop_state();
                   yylval.chr = '/';
                   return '/';
                 }
@@ -457,12 +449,12 @@ OCT     [0-7]
                 }
 
 <INITIAL>@{WS}\*        {
-                          BEGIN(SPECIAL);
+                          yy_push_state(SPECIAL);
                           return '*';
                         }
 
 <INITIAL>@      {
-                  BEGIN(SPECIAL);
+                  yy_push_state(SPECIAL);
                 }
 
 <INITIAL>^@#.*\n        {
@@ -475,25 +467,24 @@ OCT     [0-7]
                 }
 
 <STRLIT>\"      {
-                  if (nesting == 0)
-                    BEGIN(INITIAL);
-                  else
-                    BEGIN(NESTED);
-                  return '"';
+                  yy_pop_state();
+                  return yytext[0];
                 }
 
 <CHRLIT>\'      {
-                  if (nesting == 0)
-                    BEGIN(INITIAL);
-                  else
-                    BEGIN(NESTED);
-                  return '\'';
+                  yy_pop_state();
+                  return yytext[0];
                 }
 
-<STRLIT,CHRLIT>[\\][abtnvfre] {
-                                yylval.chr = char_esc(yytext[1]);
-                                return LITCHAR;
-                              }
+<QSILIT>`       {
+                  yy_pop_state();
+                  return yytext[0];
+                }
+
+<STRLIT,CHRLIT,QSILIT>[\\][abtnvfre"`'] {
+                                          yylval.chr = char_esc(yytext[1]);
+                                          return LITCHAR;
+                                        }
 
 <STRLIT,CHRLIT>[\\](x{HEX}+|{OCT}+)     {
                                           yylval.chr = num_esc(yytext + 1);
@@ -505,256 +496,28 @@ OCT     [0-7]
                           yylval.chr = yytext[0];
                           return LITCHAR;
                         }
+
 <CHRLIT>\n              {
                           yyerror("newline in character literal");
                           lineno++;
                           yylval.chr = yytext[0];
                           return LITCHAR;
                         }
-<STRLIT,CHRLIT>.        {
+
+<QSILIT>\n              {
+                          yyerror("newline in string quasiliteral");
+                          lineno++;
+                          yylval.chr = yytext[0];
+                          return LITCHAR;
+                        }
+
+<QSILIT>@               {
+                          yy_push_state(SPECIAL);
+                        }
+
+<STRLIT,CHRLIT,QSILIT>. {
                           yylval.chr = yytext[0];
                           return LITCHAR;
                         }
 
 %%
-
-void help(void)
-{
-  const char *text =
-"\n"
-"txr version %s\n"
-"\n"
-"copyright 2009, Kaz Kylheku <kkylheku@gmail.com>\n"
-"\n"
-"usage:\n"
-"\n"
-"  %s [ options ] query-file { data-file }*\n"
-"\n"
-"The query-file or data-file arguments may be specified as -, in which case\n"
-"standard input is used. If these arguments end with a | character, then\n"
-"they are treated as command pipes. Leading arguments which begin with a -\n"
-"followed by one or more characters, and which are not arguments to options\n"
-"are interpreted as options. The -- option indicates the end of the options.\n"
-"\n"
-"If no data-file arguments sare supplied, then the query itself must open a\n"
-"a data source prior to attempting to make any pattern match, or it will\n"
-"simply fail due to a match which has run out of data.\n"
-"\n"
-"options:\n"
-"\n"
-"-Dvar=value            Pre-define variable var, with the given value.\n"
-"                       A list value can be specified using commas.\n"
-"-Dvar                  Predefine variable var, with empty string value.\n"
-"-q                     Quiet: don't report errors during query matching.\n"
-"-v                     Verbose: extra logging from matcher.\n"
-"-b                     Don't dump list of bindings.\n"
-"-a num                 Generate array variables up to num-dimensions.\n"
-"                       Default is 1. Additional dimensions are fudged\n"
-"                       by generating numeric suffixes\n"
-"--help                 You already know!\n"
-"--version              Display program version\n"
-"\n"
-"Options that take no argument can be combined. The -q and -v options\n"
-"are mutually exclusive; the right-most one dominates.\n"
-"\n"
-  ;
-  fprintf(stdout, text, version, progname);
-}
-
-void hint(void)
-{
-  fprintf(stderr, "%s: incorrect arguments: try --help\n", progname);
-}
-
-int main(int argc, char **argv)
-{
-  obj_t *stack_bottom_0 = nil;
-  obj_t *spec = nil;
-  obj_t *bindings = nil;
-  int match_loglevel = opt_loglevel;
-  progname = argv[0] ? argv[0] : progname;
-  obj_t *stack_bottom_1 = nil;
-
-  init(progname, oom_realloc_handler, &stack_bottom_0, &stack_bottom_1);
-
-  if (argc <= 1) {
-    hint();
-    return EXIT_FAILURE;
-  }
-
-  argc--, argv++;
-
-  while (argc > 0 && (*argv)[0] == '-') {
-    if (!strcmp(*argv, "--")) {
-      argv++, argc--;
-      break;
-    }
-
-    if (!strcmp(*argv, "-"))
-      break;
-
-    if (!strncmp(*argv, "-D", 2)) {
-      char *var = *argv + 2;
-      char *equals = strchr(var, '=');
-      char *has_comma = (equals != 0) ? strchr(equals, ',') : 0;
-
-      if (has_comma) {
-        char *val = equals + 1;
-        obj_t *list = nil;
-
-        *equals = 0;
-
-        for (;;) {
-          size_t piece = strcspn(val, ",");
-          char comma_p = val[piece];
-
-          val[piece] = 0;
-
-          list = cons(string(strdup(val)), list);
-
-          if (!comma_p)
-            break;
-
-          val += piece + 1;
-        }
-
-        list = nreverse(list);
-        bindings = cons(cons(intern(string(strdup(var))), list), bindings);
-      } else if (equals) {
-        char *val = equals + 1;
-        *equals = 0;
-        bindings = cons(cons(intern(string(strdup(var))),
-                        string(strdup(val))), bindings);
-      } else {
-        bindings = cons(cons(intern(string(strdup(var))),
-                        null_string), bindings);
-      }
-
-      argc--, argv++;
-      continue;
-    }
-
-    if (!strcmp(*argv, "--version")) {
-      printf("%s: version %s\n", progname, version);
-      return 0;
-    }
-
-    if (!strcmp(*argv, "--help")) {
-      help();
-      return 0;
-    }
-
-    if (!strcmp(*argv, "-a")) {
-      long val;
-      char *errp;
-      char opt = (*argv)[1];
-
-      if (argc == 1) {
-        fprintf(stderr, "%s: option %c needs argument\n", progname, opt);
-
-        return EXIT_FAILURE;
-      }
-
-      argv++, argc--;
-
-      switch (opt) {
-      case 'a':
-        val = strtol(*argv, &errp, 10);
-        if (*errp != 0) {
-          fprintf(stderr, "%s: option %c needs numeric argument, not %s\n",
-                  progname, opt, *argv);
-          return EXIT_FAILURE;
-        }
-
-        opt_arraydims = val;
-        break;
-      }
-
-      argv++, argc--;
-      continue;
-    }
-
-    if (!strcmp(*argv, "--gc-debug")) {
-      opt_gc_debug = 1;
-      argv++, argc--;
-      continue;
-    }
-
-    {
-      char *popt;
-      for (popt = (*argv)+1; *popt != 0; popt++) {
-        switch (*popt) {
-        case 'v':
-          match_loglevel = 2;
-          break;
-        case 'q':
-          match_loglevel = 0;
-          break;
-        case 'b':
-          opt_nobindings = 1;
-          break;
-        case '-':
-          fprintf(stderr, "%s: unrecognized long option: --%s\n",
-                  progname, popt + 1);
-          return EXIT_FAILURE;
-        default:
-          fprintf(stderr, "%s: unrecognized option: %c\n", progname, *popt);
-          return EXIT_FAILURE;
-        }
-      }
-
-      argc--, argv++;
-    }
-  }
-
-  if (argc < 1) {
-    hint();
-    return EXIT_FAILURE;
-  }
-
-  if (strcmp(*argv, "-") != 0) {
-    yyin = fopen(*argv, "r");
-    if (yyin == 0) {
-      fprintf(stderr, "%s: unable to open %s\n", progname, *argv);
-      return EXIT_FAILURE;
-    }
-    spec_file = *argv;
-  }
-
-  argc--, argv++;
-
-  {
-    int gc;
-
-    gc = gc_state(0);
-    yyparse();
-    gc_state(gc);
-
-    if (errors)
-      return EXIT_FAILURE;
-    spec = get_spec();
-
-
-    opt_loglevel = match_loglevel;
-
-    if (opt_loglevel >= 2) {
-      fputs("spec:\n", stderr);
-      dump(spec, stderr);
-
-      fputs("bindings:\n", stderr);
-      dump(bindings, stderr);
-    }
-
-    {
-      int retval;
-      list_collect_decl(filenames, iter);
-
-      while (*argv)
-        list_collect(iter, string(*argv++));
-
-      retval = extract(spec, filenames, bindings);
-
-      return errors ? EXIT_FAILURE : retval;
-    }
-  }
-}

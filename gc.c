@@ -31,6 +31,8 @@
 #include <setjmp.h>
 #include <dirent.h>
 #include "lib.h"
+#include "stream.h"
+#include "txr.h"
 #include "gc.h"
 
 #define PROT_STACK_SIZE         1024
@@ -102,13 +104,15 @@ static void more()
   heap_t *heap = (heap_t *) chk_malloc(sizeof *heap);
   obj_t *block = heap->block, *end = heap->block + HEAP_SIZE;
 
+  assert (free_list == 0);
+
   while (block < end) {
     block->t.next = free_list;
     block->t.type = FREE;
     free_list = block++;
   }
 
-  free_tail = &block[-1].t.next;
+  free_tail = &heap->block[0].t.next;
 
   heap->next = heap_list;
   heap_list = heap;
@@ -161,13 +165,11 @@ static void finalize(obj_t *obj)
       obj->v.vec = 0;
     }
     break;
-  case STREAM:
-    stream_close(obj);
-    break;
   case LCONS:
     break;
   case COBJ:
-    obj->co.ops->destroy(obj);
+    if (obj->co.ops->destroy)
+      obj->co.ops->destroy(obj);
     break;
   default:
     assert (0 && "corrupt type field");
@@ -224,9 +226,6 @@ static void mark_obj(obj_t *obj)
         mark_obj(obj->v.vec[i]);
     }
     break;
-  case STREAM:
-    mark_obj(obj->sm.label_pushback);
-    break;
   case LCONS:
     mark_obj(obj->lc.car);
     mark_obj(obj->lc.cdr);
@@ -234,6 +233,8 @@ static void mark_obj(obj_t *obj)
     break;
   case COBJ:
     mark_obj(obj->co.cls);
+    if (obj->co.ops->mark)
+      obj->co.ops->mark(obj);
     break;
   default:
     assert (0 && "corrupt type field");
@@ -253,22 +254,22 @@ static int in_heap(obj_t *ptr)
   return 0;
 }
 
-static void mark_mem_region(obj_t **bottom, obj_t **top)
+static void mark_mem_region(obj_t **low, obj_t **high)
 {
-  if (bottom > top) {
-    obj_t **tmp = top;
-    top = bottom;
-    bottom = tmp;
+  if (low > high) {
+    obj_t **tmp = high;
+    high = low;
+    low = tmp;
   }
 
-  while (bottom < top) {
-    obj_t *maybe_obj = *bottom;
+  while (low < high) {
+    obj_t *maybe_obj = *low;
     if (in_heap(maybe_obj)) {
       type_t t = maybe_obj->t.type;
       if ((t & FREE) == 0)
         mark_obj(maybe_obj);
     }
-    bottom++;
+    low++;
   }
 }
 
@@ -300,6 +301,9 @@ static void sweep(void)
          block < end;
          block++)
     {
+      if ((block->t.type & (REACHABLE | FREE)) == (REACHABLE | FREE))
+        abort();
+
       if (block->t.type & REACHABLE) {
         block->t.type &= ~REACHABLE;
         continue;
@@ -310,7 +314,7 @@ static void sweep(void)
 
       if (0 && dbg) {
         fprintf(stderr, "%s: finalizing: ", progname);
-        obj_print(block, stderr);
+        obj_print(block, std_error);
         putc('\n', stderr);
       }
       finalize(block);
@@ -354,6 +358,11 @@ int gc_state(int enabled)
 void gc_init(obj_t **stack_bottom)
 {
   gc_stack_bottom = stack_bottom;
+}
+
+void gc_mark(obj_t *obj)
+{
+  mark_obj(obj);
 }
 
 /*

@@ -36,6 +36,7 @@
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
+#include "stream.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -43,12 +44,15 @@
 obj_t *interned_syms;
 
 obj_t *null, *t, *cons_t, *str_t, *chr_t, *num_t, *sym_t, *fun_t, *vec_t;
-obj_t *stream_t, *lcons_t, *var, *regex, *set, *cset, *wild, *oneplus;
-obj_t *zeroplus, *optional, *compound, *or;
+obj_t *stream_t, *lcons_t, *cobj_t, *var, *regex, *set, *cset, *wild, *oneplus;
+obj_t *zeroplus, *optional, *compound, *or, *quasi;
 obj_t *skip, *trailer, *block, *next, *fail, *accept;
 obj_t *all, *some, *none, *maybe, *cases, *collect, *until, *coll;
 obj_t *define, *output, *single, *frst, *lst, *empty, *repeat, *rep;
-obj_t *flattn, *forget, *mrge, *bind, *cat, *dir;
+obj_t *flattn, *forget, *local, *mrge, *bind, *cat, *dir;
+obj_t *try, *catch, *finally, *nothrow;
+obj_t *error, *type_error, *internal_err, *numeric_err, *range_err;
+obj_t *query_error, *file_error;
 
 obj_t *zero, *one, *two, *negone, *maxint, *minint;
 obj_t *null_string;
@@ -59,6 +63,8 @@ obj_t *identity_f;
 obj_t *equal_f;
 
 const char *progname;
+obj_t *prog_string;
+
 void *(*oom_realloc)(void *, size_t);
 
 
@@ -75,11 +81,9 @@ static obj_t *identity_tramp(obj_t *env, obj_t *obj)
 
 static obj_t *equal_tramp(obj_t *env, obj_t *, obj_t *);
 
-obj_t *typeof(obj_t *obj)
+static obj_t *code2type(int code)
 {
-  if (obj == nil)
-    return null;
-  switch (obj->t.type) {
+  switch (code) {
   case CONS: return cons_t;
   case STR: return str_t;
   case CHR: return chr_t;
@@ -87,11 +91,39 @@ obj_t *typeof(obj_t *obj)
   case SYM: return sym_t;
   case FUN: return fun_t;
   case VEC: return vec_t;
-  case STREAM: return stream_t;
   case LCONS: return lcons_t;
-  case COBJ: return obj->co.cls;
+  case COBJ: return cobj_t;
   }
-  assert (0 && "corrupt type field");
+  return nil;
+}
+
+obj_t *typeof(obj_t *obj)
+{
+  if (obj == nil) {
+    return null;
+  } else if (obj->t.type == COBJ) {
+    return obj->co.cls;
+  } else {
+    obj_t *type = code2type(obj->t.type);
+    if (!type)
+      internal_error("corrupt type field");
+    return type;
+  }
+}
+
+obj_t *type_check(obj_t *obj, int type)
+{
+  if (!obj || obj->t.type != type)
+    type_mismatch("~s is not of type ~s", obj, code2type(type), nao);
+  return t;
+}
+
+obj_t *type_check2(obj_t *obj, int t1, int t2)
+{
+  if (!obj || (obj->t.type != t1 && obj->t.type != t2))
+    type_mismatch("~s is not of type ~s or ~s", obj,
+                  code2type(t1), code2type(t2), nao);
+  return t;
 }
 
 obj_t *car(obj_t *cons)
@@ -110,7 +142,7 @@ obj_t *car(obj_t *cons)
       return cons->lc.car;
     }
   default:
-    assert (0 && "corrupt type field");
+    type_mismatch("~s is not a cons", cons, nao);
   }
 }
 
@@ -130,7 +162,7 @@ obj_t *cdr(obj_t *cons)
       return cons->lc.cdr;
     }
   default:
-    assert (0 && "corrupt type field");
+    type_mismatch("~s is not a cons", cons, nao);
   }
 }
 
@@ -143,7 +175,7 @@ obj_t **car_l(obj_t *cons)
     funcall1(cons->lc.func, cons);
     return &cons->lc.car;
   default:
-    assert (0 && "corrupt type field");
+    type_mismatch("~s is not a cons", cons, nao);
   }
 }
 
@@ -156,7 +188,7 @@ obj_t **cdr_l(obj_t *cons)
     funcall1(cons->lc.func, cons);
     return &cons->lc.cdr;
   default:
-    assert (0 && "corrupt type field");
+    type_mismatch("~s is not a cons", cons, nao);
   }
 }
 
@@ -200,6 +232,18 @@ obj_t **tail(obj_t *cons)
   while (cdr(cons))
     cons = cdr(cons);
   return cdr_l(cons);
+}
+
+obj_t *pop(obj_t **plist)
+{
+  obj_t *ret = car(*plist);
+  *plist = cdr(*plist);
+  return ret;
+}
+
+obj_t *push(obj_t *val, obj_t **plist)
+{
+  return *plist = cons(val, *plist);
 }
 
 obj_t *copy_list(obj_t *list)
@@ -407,16 +451,13 @@ obj_t *equal(obj_t *left, obj_t *right)
       return t;
     }
     return nil;
-  case STREAM:
-    return nil; /* Different stream objects never equal. */
   case COBJ:
     if (right->t.type == COBJ)
       return left->co.ops->equal(left, right);
     return nil;
   }
 
-  assert (0 && "notreached");
-  return nil;
+  internal_error("unhandled case in equal function");
 }
 
 static obj_t *equal_tramp(obj_t *env, obj_t *left, obj_t *right)
@@ -473,7 +514,7 @@ obj_t *list(obj_t *first, ...)
     do {
       *ptr++ = next;
       if (ptr == array + 32)
-        abort();
+        internal_error("runaway arguments in list function");
       next = va_arg(vl, obj_t *);
     } while (next != nao);
 
@@ -536,7 +577,7 @@ obj_t *num(long val)
 
 long c_num(obj_t *num)
 {
-  assert (num && num->t.type == NUM);
+  type_check(num, NUM);
   return num->n.val;
 }
 
@@ -550,8 +591,8 @@ obj_t *plus(obj_t *anum, obj_t *bnum)
   long a = c_num(anum);
   long b = c_num(bnum);
 
-  assert (a <= 0 || b <= 0 || LONG_MAX - b >= a);
-  assert (a >= 0 || b >= 0 || LONG_MIN - b >= a);
+  numeric_assert (a <= 0 || b <= 0 || LONG_MAX - b >= a);
+  numeric_assert (a >= 0 || b >= 0 || LONG_MIN - b >= a);
 
   return num(a + b);
 }
@@ -561,9 +602,9 @@ obj_t *minus(obj_t *anum, obj_t *bnum)
   long a = c_num(anum);
   long b = c_num(bnum);
 
-  assert (b != LONG_MIN || LONG_MIN == -LONG_MAX);
-  assert (a <= 0 || -b <= 0 || LONG_MAX + b >= a);
-  assert (a >= 0 || -b >= 0 || LONG_MIN + b >= a);
+  numeric_assert (b != LONG_MIN || LONG_MIN == -LONG_MAX);
+  numeric_assert (a <= 0 || -b <= 0 || LONG_MAX + b >= a);
+  numeric_assert (a >= 0 || -b >= 0 || LONG_MIN + b >= a);
 
   return num(a - b);
 }
@@ -659,7 +700,7 @@ obj_t *stringp(obj_t *str)
 
 obj_t *length_str(obj_t *str)
 {
-  assert (str && str->t.type == STR);
+  type_check (str, STR);
   if (!str->st.len)
     str->st.len = num(strlen(str->st.str));
   return str->st.len;
@@ -667,7 +708,7 @@ obj_t *length_str(obj_t *str)
 
 const char *c_str(obj_t *obj)
 {
-  assert (obj);
+  type_check2(obj, STR, SYM);
 
   switch (obj->t.type) {
   case STR:
@@ -721,7 +762,7 @@ obj_t *sub_str(obj_t *str_in, obj_t *from_num, obj_t *to_num)
 {
   const char *str = c_str(str_in);
   size_t len = c_num(length_str(str_in));
-  long from = c_num(from_num);
+  long from = from_num ? c_num(from_num) : 0;
   long to = to_num ? c_num(to_num) : len;
 
   if (to < 0)
@@ -838,7 +879,7 @@ obj_t *chrp(obj_t *chr)
 
 int c_chr(obj_t *chr)
 {
-  assert (chr && chr->t.type == CHR);
+  type_check(chr, CHR);
   return chr->ch.ch;
 }
 
@@ -848,7 +889,7 @@ obj_t *chr_str(obj_t *str, obj_t *index)
   long i = c_num(index);
   const char *s = c_str(str);
 
-  assert (i < l);
+  bug_unless (i < l);
 
   return chr(s[i]);
 }
@@ -859,17 +900,18 @@ obj_t *chr_str_set(obj_t *str, obj_t *index, obj_t *chr)
   long i = c_num(index);
   char *s = str->st.str;
 
-  assert (i < l);
+  bug_unless (i < l);
 
   s[i] = c_chr(chr);
 
   return chr;
 }
 
-obj_t *sym_name(obj_t *sym)
+obj_t *symbol_name(obj_t *sym)
 {
-  assert (sym && sym->t.type == SYM);
-  return sym->s.name;
+  if (sym)
+    type_check(sym, SYM);
+  return sym ? sym->s.name : nil_string;
 }
 
 obj_t *make_sym(obj_t *name)
@@ -887,7 +929,7 @@ obj_t *intern(obj_t *str)
 
   for (iter = interned_syms; iter != nil; iter = cdr(iter)) {
     obj_t *sym = car(iter);
-    if (equal(sym_name(sym), str))
+    if (equal(symbol_name(sym), str))
       return sym;
   }
 
@@ -898,12 +940,6 @@ obj_t *intern(obj_t *str)
 obj_t *symbolp(obj_t *sym)
 {
   return (sym == nil || sym->s.type == SYM) ? t : nil;
-}
-
-obj_t *symbol_name(obj_t *sym)
-{
-  assert (sym == nil || sym->t.type == SYM);
-  return sym ? sym->s.name : nil_string;
 }
 
 obj_t *func_f0(obj_t *env, obj_t *(*fun)(obj_t *))
@@ -1010,8 +1046,10 @@ obj_t *apply(obj_t *fun, obj_t *arglist)
 {
   obj_t *arg[4], **p = arg;
 
-  assert (fun && fun->f.type == FUN);
-  assert (arglist == nil || consp(arglist));
+  type_check (fun, FUN);
+
+  type_assert (listp(arglist),
+               ("apply arglist ~s is not a list", arglist, nao));
 
   *p++ = car(arglist); arglist = cdr(arglist);
   *p++ = car(arglist); arglist = cdr(arglist);
@@ -1040,15 +1078,15 @@ obj_t *apply(obj_t *fun, obj_t *arglist)
   case N4:
     return fun->f.f.n4(arg[0], arg[1], arg[2], arg[3]);
   case FINTERP:
-    abort();
+    internal_error("unsupported function type");
   }
 
-  assert (0 && "bad functype");
+  internal_error("corrupt function type field");
 }
 
 obj_t *funcall(obj_t *fun)
 {
-  assert (fun && fun->f.type == FUN);
+  type_check(fun, FUN);
 
   switch (fun->f.functype) {
   case F0:
@@ -1062,7 +1100,7 @@ obj_t *funcall(obj_t *fun)
 
 obj_t *funcall1(obj_t *fun, obj_t *arg)
 {
-  assert (fun && fun->f.type == FUN);
+  type_check(fun, FUN);
 
   switch (fun->f.functype) {
   case F1:
@@ -1076,7 +1114,7 @@ obj_t *funcall1(obj_t *fun, obj_t *arg)
 
 obj_t *funcall2(obj_t *fun, obj_t *arg1, obj_t *arg2)
 {
-  assert (fun && fun->f.type == FUN);
+  type_check(fun, FUN);
 
   switch (fun->f.functype) {
   case F2:
@@ -1147,13 +1185,13 @@ obj_t *vector(obj_t *alloc)
 
 obj_t *vec_get_fill(obj_t *vec)
 {
-  assert (vec && vec->v.type == VEC);
+  type_check(vec, VEC);
   return vec->v.vec[vec_fill];
 }
 
 obj_t *vec_set_fill(obj_t *vec, obj_t *fill)
 {
-  assert (vec && vec->v.type == VEC);
+  type_check(vec, VEC);
 
   {
     long new_fill = c_num(fill);
@@ -1185,8 +1223,8 @@ obj_t *vec_set_fill(obj_t *vec, obj_t *fill)
 
 obj_t **vecref_l(obj_t *vec, obj_t *ind)
 {
-  assert (vec && vec->v.type == VEC);
-  assert (c_num(ind) < c_num(vec->v.vec[vec_fill]));
+  type_check(vec, VEC);
+  range_bug_unless (c_num(ind) < c_num(vec->v.vec[vec_fill]));
   return vec->v.vec + c_num(ind);
 }
 
@@ -1198,160 +1236,6 @@ obj_t *vec_push(obj_t *vec, obj_t *item)
   return fill;
 }
 
-
-static obj_t *stdio_line_read(struct stream *sm)
-{
-  if (sm->handle == 0) {
-    return nil;
-  } else {
-    char *line = snarf_line((FILE *) sm->handle);
-
-    if (!line)
-      return nil;
-
-    return string(line);
-  }
-}
-
-static obj_t *stdio_line_write(struct stream *sm, obj_t *obj)
-{
-  assert (obj->t.type == STR);
-  if (sm->handle == 0)
-    return nil;
-  if (fputs(c_str(obj), (FILE *) sm->handle) == EOF)
-    return nil;
-  if (putc('\n', (FILE *) sm->handle) == EOF)
-    return nil;
-  return t;
-}
-
-static obj_t *stdio_close(struct stream *sm)
-{
-  FILE *f = (FILE *) sm->handle;
-
-  if (f != 0 && f != stdin && f != stdout) {
-    fclose((FILE *) sm->handle);
-    sm->handle = 0;
-    return t;
-  }
-  return nil;
-}
-
-static struct stream_ops stdio_line_stream_ops = {
-  stdio_line_read, stdio_line_write, stdio_close
-};
-
-obj_t *stdio_line_stream(FILE *f, obj_t *label)
-{
-  obj_t *sm = make_obj();
-  sm->sm.type = STREAM;
-  sm->sm.handle = f;
-  sm->sm.ops = &stdio_line_stream_ops;
-  sm->sm.label_pushback = label;
-  assert (atom(label));
-  return sm;
-}
-
-static obj_t *pipe_close(struct stream *sm)
-{
-  if (sm->handle != 0) {
-    pclose((FILE *) sm->handle);
-    sm->handle = 0;
-    return t;
-  }
-  return nil;
-}
-
-static struct stream_ops pipe_line_stream_ops = {
-  stdio_line_read, stdio_line_write, pipe_close
-};
-
-obj_t *pipe_line_stream(FILE *f, obj_t *label)
-{
-  obj_t *sm = make_obj();
-  sm->sm.type = STREAM;
-  sm->sm.handle = f;
-  sm->sm.ops = &pipe_line_stream_ops;
-  sm->sm.label_pushback = label;
-  assert (atom(label));
-  return sm;
-}
-
-obj_t *dirent_read(struct stream *sm)
-{
-  if (sm->handle == 0) {
-    return nil;
-  } else {
-    for (;;) {
-      struct dirent *e = readdir(sm->handle);
-      if (!e)
-        return nil;
-      if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
-        continue;
-      return string(chk_strdup(e->d_name));
-    }
-  }
-}
-
-obj_t *dirent_close(struct stream *sm)
-{
-  if (sm->handle != 0) {
-    closedir((DIR *) sm->handle);
-    sm->handle = 0;
-    return t;
-  }
-
-  return nil;
-}
-
-static struct stream_ops dirent_stream_ops = {
-  dirent_read, 0, dirent_close
-};
-
-obj_t *dirent_stream(DIR *d, obj_t *label)
-{
-  obj_t *sm = make_obj();
-  sm->sm.type = STREAM;
-  sm->sm.handle = d;
-  sm->sm.ops = &dirent_stream_ops;
-  sm->sm.label_pushback = label;
-  assert (atom(label));
-  return sm;
-}
-
-obj_t *stream_get(obj_t *sm)
-{
-  assert (sm->sm.type == STREAM);
-
-  if (consp(sm->sm.label_pushback)) {
-    obj_t *ret = car(sm->sm.label_pushback);
-    sm->sm.label_pushback = cdr(sm->sm.label_pushback);
-    return ret;
-  }
-
-  return sm->sm.ops->read(&sm->sm);
-}
-
-obj_t *stream_pushback(obj_t *sm, obj_t *obj)
-{
-  assert (sm->sm.type == STREAM);
-  sm->sm.label_pushback = cons(obj, sm->sm.label_pushback);
-  return obj;
-}
-
-obj_t *stream_put(obj_t *sm, obj_t *obj)
-{
-  assert (sm->sm.type == STREAM);
-  return sm->sm.ops->write(&sm->sm, obj);
-}
-
-obj_t *stream_close(obj_t *sm)
-{
-  assert (sm->sm.type == STREAM);
-  return sm->sm.ops->close(&sm->sm);
-}
-
-
 static obj_t *make_lazycons(obj_t *func)
 {
   obj_t *obj = make_obj();
@@ -1361,36 +1245,36 @@ static obj_t *make_lazycons(obj_t *func)
   return obj;
 }
 
-static obj_t *lazy_stream_func(obj_t *stream, obj_t *lcons)
+static obj_t *lazy_stream_func(obj_t *env, obj_t *lcons)
 {
-  obj_t *next = stream_get(stream);
-  obj_t *ahead = stream_get(stream);
+  obj_t *stream = car(env);
+  obj_t *next = cdr(env) ? pop(cdr_l(env)) : get_line(stream);
+  obj_t *ahead = get_line(stream);
 
   lcons->lc.car = next;
   lcons->lc.cdr = if2(ahead, make_lazycons(lcons->lc.func));
   lcons->lc.func = nil;
 
   if (!next || !ahead)
-    stream_close(stream);
+    close_stream(stream);
 
   if (ahead)
-    stream_pushback(stream, ahead);
+    push(ahead, cdr_l(env));
 
   return next;
 }
 
 obj_t *lazy_stream_cons(obj_t *stream)
 {
-  obj_t *first = stream_get(stream);
+  obj_t *first = get_line(stream);
 
   if (!first) {
-    stream_close(stream);
+    close_stream(stream);
     return nil;
   }
 
-  stream_pushback(stream, first);
-
-  return make_lazycons(func_f1(stream, lazy_stream_func));
+  return make_lazycons(func_f1(cons(stream, cons(first, nil)),
+                       lazy_stream_func));
 }
 
 obj_t *cobj(void *handle, obj_t *cls_sym, struct cobj_ops *ops)
@@ -1403,11 +1287,11 @@ obj_t *cobj(void *handle, obj_t *cls_sym, struct cobj_ops *ops)
   return obj;
 }
 
-void cobj_print_op(obj_t *obj, FILE *out)
+void cobj_print_op(obj_t *obj, obj_t *out)
 {
-  fprintf(out, "#<");
+  put_cstring(out, "#<");
   obj_print(obj->co.cls, out);
-  fprintf(out, ": %p>", obj->co.handle);
+  cformat(out, ": %p>", obj->co.handle);
 }
 
 obj_t *assoc(obj_t *list, obj_t *key)
@@ -1567,8 +1451,6 @@ obj_t *sort(obj_t *list, obj_t *lessfun, obj_t *keyfun)
 
 static void obj_init(void)
 {
-  int gc_save = gc_state(0);
-
   /*
    * No need to GC-protect the convenience variables which hold the interned
    * symbols, because the interned_syms list holds a reference to all the
@@ -1579,7 +1461,9 @@ static void obj_init(void)
           &two, &negone, &maxint, &minint,
           &null_string, &nil_string,
           &null_list, &equal_f,
-          &identity_f, 0);
+          &identity_f, &prog_string, 0);
+
+  nil_string = string(strdup("nil"));
 
   null = intern(string(strdup("null")));
   t = intern(string(strdup("t")));
@@ -1592,8 +1476,9 @@ static void obj_init(void)
   vec_t = intern(string(strdup("vec")));
   stream_t = intern(string(strdup("stream")));
   lcons_t = intern(string(strdup("lcons")));
-  var = intern(string(strdup("var")));
-  regex = intern(string(strdup("regex")));
+  cobj_t = intern(string(strdup("cobj")));
+  var = intern(string(strdup("$var")));
+  regex = intern(string(strdup("$regex")));
   set = intern(string(strdup("set")));
   cset = intern(string(strdup("cset")));
   wild = intern(string(strdup("wild")));
@@ -1602,6 +1487,7 @@ static void obj_init(void)
   optional = intern(string(strdup("?")));
   compound = intern(string(strdup("compound")));
   or = intern(string(strdup("or")));
+  quasi = intern(string(strdup("$quasi")));
   skip = intern(string(strdup("skip")));
   trailer = intern(string(strdup("trailer")));
   block = intern(string(strdup("block")));
@@ -1626,10 +1512,24 @@ static void obj_init(void)
   rep = intern(string(strdup("rep")));
   flattn = intern(string(strdup("flatten")));
   forget = intern(string(strdup("forget")));
+  local = intern(string(strdup("local")));
   mrge = intern(string(strdup("merge")));
   bind = intern(string(strdup("bind")));
   cat = intern(string(strdup("cat")));
   dir = intern(string(strdup("dir")));
+  try = intern(string(strdup("try")));
+  catch = intern(string(strdup("catch")));
+  finally = intern(string(strdup("finally")));
+  nothrow = intern(string(strdup("nothrow")));
+  error = intern(string(strdup("error")));
+  type_error = intern(string(strdup("type_error")));
+  internal_err = intern(string(strdup("internal_error")));
+  numeric_err = intern(string(strdup("numeric_error")));
+  range_err = intern(string(strdup("range_error")));
+  query_error = intern(string(strdup("query_error")));
+  file_error = intern(string(strdup("file_error")));
+
+  interned_syms = cons(nil, interned_syms);
 
   zero = num(0);
   one  = num(1);
@@ -1639,20 +1539,18 @@ static void obj_init(void)
   minint = num(LONG_MIN);
 
   null_string = string(strdup(""));
-  nil_string = string(strdup("NIL"));
 
   null_list = cons(nil, nil);
 
   equal_f = func_f2(nil, equal_tramp);
   identity_f = func_f1(nil, identity_tramp);
-
-  gc_state(gc_save);
+  prog_string = string(strdup(progname));
 }
 
-void obj_print(obj_t *obj, FILE *out)
+void obj_print(obj_t *obj, obj_t *out)
 {
   if (obj == nil) {
-    fputs("nil", out);
+    put_cstring(out, "nil");
     return;
   }
 
@@ -1661,108 +1559,161 @@ void obj_print(obj_t *obj, FILE *out)
   case LCONS:
     {
       obj_t *iter;
-      putc('(', out);
+      put_cchar(out, '(');
       for (iter = obj; consp(iter); iter = cdr(iter)) {
         obj_print(car(iter), out);
         if (nullp(cdr(iter))) {
-          putc(')', out);
+          put_cchar(out, ')');
         } else if (consp(cdr(iter))) {
-          putc(' ', out);
+          put_cchar(out, ' ');
         } else {
-          fputs(" . ", out);
+          put_cstring(out, " . ");
           obj_print(cdr(iter), out);
-          putc(')', out);
+          put_cchar(out, ')');
         }
       }
     }
-    break;
+    return;
   case STR:
     {
       const char *ptr;
-      putc('"', out);
+      put_cchar(out, '"');
       for (ptr = obj->st.str; *ptr; ptr++) {
         switch (*ptr) {
-        case '\a': fputs("\\a", out); break;
-        case '\b': fputs("\\b", out); break;
-        case '\t': fputs("\\t", out); break;
-        case '\n': fputs("\\n", out); break;
-        case '\v': fputs("\\v", out); break;
-        case '\f': fputs("\\f", out); break;
-        case '\r': fputs("\\r", out); break;
-        case '"': fputs("\\\"", out); break;
-        case '\\': fputs("\\\\", out); break;
-        case 27: fputs("\\e", out); break;
+        case '\a': put_cstring(out, "\\a"); break;
+        case '\b': put_cstring(out, "\\b"); break;
+        case '\t': put_cstring(out, "\\t"); break;
+        case '\n': put_cstring(out, "\\n"); break;
+        case '\v': put_cstring(out, "\\v"); break;
+        case '\f': put_cstring(out, "\\f"); break;
+        case '\r': put_cstring(out, "\\r"); break;
+        case '"': put_cstring(out, "\\\""); break;
+        case '\\': put_cstring(out, "\\\\"); break;
+        case 27: put_cstring(out, "\\e"); break;
         default:
           if (isprint(*ptr))
-            putc(*ptr, out);
+            put_cchar(out, *ptr);
           else
-            fprintf(out, "\\%03o", (int) *ptr);
+            cformat(out, "\\%03o", (int) *ptr);
         }
       }
-      putc('"', out);
+      put_cchar(out, '"');
     }
-    break;
+    return;
   case CHR:
     {
       int ch = obj->ch.ch;
 
-      putc('\'', out);
+      put_cchar(out, '\'');
       switch (ch) {
-      case '\a': fputs("\\a", out); break;
-      case '\b': fputs("\\b", out); break;
-      case '\t': fputs("\\t", out); break;
-      case '\n': fputs("\\n", out); break;
-      case '\v': fputs("\\v", out); break;
-      case '\f': fputs("\\f", out); break;
-      case '\r': fputs("\\r", out); break;
-      case '"': fputs("\\\"", out); break;
-      case '\\': fputs("\\\\", out); break;
-      case 27: fputs("\\e", out); break;
+      case '\a': put_cstring(out, "\\a"); break;
+      case '\b': put_cstring(out, "\\b"); break;
+      case '\t': put_cstring(out, "\\t"); break;
+      case '\n': put_cstring(out, "\\n"); break;
+      case '\v': put_cstring(out, "\\v"); break;
+      case '\f': put_cstring(out, "\\f"); break;
+      case '\r': put_cstring(out, "\\r"); break;
+      case '"': put_cstring(out, "\\\""); break;
+      case '\\': put_cstring(out, "\\\\"); break;
+      case 27: put_cstring(out, "\\e"); break;
       default:
         if (isprint(ch))
-          putc(ch, out);
+          put_cchar(out, ch);
         else
-          fprintf(out, "\\%03o", ch);
+          cformat(out, "\\%03o", ch);
       }
-      putc('\'', out);
+      put_cchar(out, '\'');
     }
-    break;
+    return;
   case NUM:
-    fprintf(out, "%ld", c_num(obj));
-    break;
+    cformat(out, "%ld", c_num(obj));
+    return;
   case SYM:
-    fputs(c_str(symbol_name(obj)), out);
-    break;
+    put_string(out, symbol_name(obj));
+    return;
   case FUN:
-    fprintf(out, "#<function: f%d>", (int) obj->f.functype);
-    break;
+    cformat(out, "#<function: f%d>", (int) obj->f.functype);
+    return;
   case VEC:
     {
       long i, fill = c_num(obj->v.vec[vec_fill]);
-      fputs("#(", out);
+      put_cstring(out, "#(");
       for (i = 0; i < fill; i++) {
         obj_print(obj->v.vec[i], out);
         if (i < fill - 1)
-          putc(' ', out);
+          put_cchar(out, ' ');
       }
-      putc(')', out);
+      put_cchar(out, ')');
     }
-    break;
-  case STREAM:
-    fprintf(out, "#<stream: ");
-    {
-      obj_t *iter;
-      /* skip stream pushback items to find label */
-      for (iter = obj->sm.label_pushback; consp(iter); iter = cdr(iter))
-        ;
-      obj_print(iter, out);
-    }
-    fprintf(out, ", %p>", (void *) obj->sm.handle);
-    break;
+    return;
   case COBJ:
     obj->co.ops->print(obj, out);
-    break;
+    return;
   }
+
+  cformat(out, "#<garbage: %p>", (void *) obj);
+}
+
+void obj_pprint(obj_t *obj, obj_t *out)
+{
+  if (obj == nil) {
+    put_cstring(out, "nil");
+    return;
+  }
+
+  switch (obj->t.type) {
+  case CONS:
+  case LCONS:
+    {
+      obj_t *iter;
+      put_cchar(out, '(');
+      for (iter = obj; consp(iter); iter = cdr(iter)) {
+        obj_pprint(car(iter), out);
+        if (nullp(cdr(iter))) {
+          put_cchar(out, ')');
+        } else if (consp(cdr(iter))) {
+          put_cchar(out, ' ');
+        } else {
+          put_cstring(out, " . ");
+          obj_pprint(cdr(iter), out);
+          put_cchar(out, ')');
+        }
+      }
+    }
+    return;
+  case STR:
+    put_string(out, obj);
+    return;
+  case CHR:
+    put_char(out, obj);
+    return;
+  case NUM:
+    cformat(out, "%ld", c_num(obj));
+    return;
+  case SYM:
+    put_string(out, symbol_name(obj));
+    return;
+  case FUN:
+    cformat(out, "#<function: f%d>", (int) obj->f.functype);
+    return;
+  case VEC:
+    {
+      long i, fill = c_num(obj->v.vec[vec_fill]);
+      put_cstring(out, "#(");
+      for (i = 0; i < fill; i++) {
+        obj_pprint(obj->v.vec[i], out);
+        if (i < fill - 1)
+          put_cchar(out, ' ');
+      }
+      put_cchar(out, ')');
+    }
+    return;
+  case COBJ:
+    obj->co.ops->print(obj, out);
+    return;
+  }
+
+  cformat(out, "#<garbage: %p>", (void *) obj);
 }
 
 void init(const char *pn, void *(*oom)(void *, size_t),
@@ -1771,6 +1722,7 @@ void init(const char *pn, void *(*oom)(void *, size_t),
   int growsdown;
   obj_t *local_bottom = nil;
   progname = pn;
+  int gc_save = gc_state(0);
 
   /* If the local_bottom variable has a smaller address than
      either of the two possible top variables from
@@ -1785,14 +1737,17 @@ void init(const char *pn, void *(*oom)(void *, size_t),
           ? max(maybe_bottom_0, maybe_bottom_1)
           : min(maybe_bottom_0, maybe_bottom_1));
 
-  uw_init();
   obj_init();
+  uw_init();
+  stream_init();
+
+  gc_state(gc_save);
 }
 
-void dump(obj_t *obj, FILE *out)
+void dump(obj_t *obj, obj_t *out)
 {
   obj_print(obj, out);
-  putc('\n', out);
+  put_cchar(out, '\n');
 }
 
 /*
@@ -1802,48 +1757,16 @@ void dump(obj_t *obj, FILE *out)
  */
 void d(obj_t *obj)
 {
-  dump(obj, stdout);
+  dump(obj, std_output);
 }
 
-char *snarf_line(FILE *in)
-{
-  const size_t min_size = 512;
-  size_t size = 0;
-  size_t fill = 0;
-  char *buf = 0;
-
-  for (;;) {
-    int ch = getc(in);
-
-    if (ch == EOF && buf == 0)
-      break;
-
-    if (fill >= size) {
-      size_t newsize = size ? size * 2 : min_size;
-      buf = chk_realloc(buf, newsize);
-      size = newsize;
-    }
-
-    if (ch == '\n' || ch == EOF) {
-      buf[fill++] = 0;
-      break;
-    }
-    buf[fill++] = ch;
-  }
-
-  if (buf)
-    buf = chk_realloc(buf, fill);
-
-  return buf;
-}
-
-obj_t *snarf(FILE *in)
+obj_t *snarf(obj_t *in)
 {
   list_collect_decl (list, iter);
-  char *str;
+  obj_t *str;
 
-  while ((str = snarf_line(in)) != 0)
-    list_collect (iter, string(str));
+  while ((str = get_line(in)) != 0)
+    list_collect (iter, str);
 
   return list;
 }

@@ -25,7 +25,7 @@
  */
 
 typedef enum type {
-  CONS = 1, STR, CHR, NUM, SYM, FUN, VEC, STREAM, LCONS, COBJ
+  CONS = 1, STR, CHR, NUM, SYM, FUN, VEC, LCONS, COBJ
 } type_t;
 
 typedef enum functype
@@ -99,19 +99,6 @@ struct vec {
   obj_t **vec;
 };
 
-struct stream {
-  type_t type;
-  void *handle;
-  struct stream_ops *ops;
-  obj_t *label_pushback;  /* label-terminated pushback stack */
-};
-
-struct stream_ops {
-  obj_t *(*read)(struct stream *);
-  obj_t *(*write)(struct stream *, obj_t *);
-  obj_t *(*close)(struct stream *);
-};
-
 /*
  * Lazy cons. When initially constructed, acts as a promise. The car and cdr
  * cache pointers are nil, and func points to a function. The job of the
@@ -135,8 +122,9 @@ struct cobj {
 
 struct cobj_ops {
   obj_t *(*equal)(obj_t *self, obj_t *other);
-  void (*print)(obj_t *self, FILE *);
+  void (*print)(obj_t *self, obj_t *stream);
   void (*destroy)(obj_t *self);
+  void (*mark)(obj_t *self);
 };
 
 union obj {
@@ -148,7 +136,6 @@ union obj {
   struct sym s;
   struct func f;
   struct vec v;
-  struct stream sm;
   struct lazy_cons lc;
   struct cobj co;
 };
@@ -157,24 +144,31 @@ extern obj_t *interned_syms;
 
 extern obj_t *t, *cons_t, *str_t, *chr_t, *num_t, *sym_t, *fun_t, *vec_t;
 extern obj_t *stream_t, *lcons_t, *var, *regex, *set, *cset, *wild, *oneplus;
-extern obj_t *zeroplus, *optional, *compound, *or;
+extern obj_t *zeroplus, *optional, *compound, *or, *quasi;
 extern obj_t *skip, *trailer, *block, *next, *fail, *accept;
 extern obj_t *all, *some, *none, *maybe, *cases, *collect, *until, *coll;
 extern obj_t *define, *output, *single, *frst, *lst, *empty, *repeat, *rep;
-extern obj_t *flattn, *forget, *mrge, *bind, *cat, *dir;
+extern obj_t *flattn, *forget, *local, *mrge, *bind, *cat, *dir;
+extern obj_t *try, *catch, *finally, *nothrow;
+extern obj_t *error, *type_error, *internal_err, *numeric_err, *range_err;
+extern obj_t *query_error, *file_error;
 
 extern obj_t *zero, *one, *two, *negone, *maxint, *minint;
 extern obj_t *null_string;
-extern obj_t *null_list; /* (NIL) */
+extern obj_t *null_list; /* (nil) */
 
 extern obj_t *identity_f;
 extern obj_t *equal_f;
 
 extern const char *progname;
+extern obj_t *prog_string;
+
 extern void *(*oom_realloc)(void *, size_t);
 
 obj_t *identity(obj_t *obj);
 obj_t *typeof(obj_t *obj);
+obj_t *type_check(obj_t *obj, int);
+obj_t *type_check2(obj_t *obj, int, int);
 obj_t *car(obj_t *cons);
 obj_t *cdr(obj_t *cons);
 obj_t **car_l(obj_t *cons);
@@ -187,6 +181,8 @@ obj_t *fourth(obj_t *cons);
 obj_t *fifth(obj_t *cons);
 obj_t *sixth(obj_t *cons);
 obj_t **tail(obj_t *cons);
+obj_t *pop(obj_t **plist);
+obj_t *push(obj_t *val, obj_t **plist);
 obj_t *copy_list(obj_t *list);
 obj_t *nreverse(obj_t *in);
 obj_t *reverse(obj_t *in);
@@ -275,16 +271,9 @@ obj_t *vec_get_fill(obj_t *vec);
 obj_t *vec_set_fill(obj_t *vec, obj_t *fill);
 obj_t **vecref_l(obj_t *vec, obj_t *ind);
 obj_t *vec_push(obj_t *vec, obj_t *item);
-obj_t *stdio_line_stream(FILE *f, obj_t *label);
-obj_t *pipe_line_stream(FILE *f, obj_t *label);
-obj_t *dirent_stream(DIR *d, obj_t *label);
-obj_t *stream_get(obj_t *sm);
-obj_t *stream_pushback(obj_t *sm, obj_t *obj);
-obj_t *stream_put(obj_t *sm, obj_t *obj);
-obj_t *stream_close(obj_t *sm);
 obj_t *lazy_stream_cons(obj_t *stream);
 obj_t *cobj(void *handle, obj_t *cls_sym, struct cobj_ops *ops);
-void cobj_print_op(obj_t *, FILE *); /* Print function for struct cobj_ops */
+void cobj_print_op(obj_t *, obj_t *); /* Default function for struct cobj_ops */
 obj_t *assoc(obj_t *list, obj_t *key);
 obj_t *acons_new(obj_t *list, obj_t *key, obj_t *value);
 obj_t *alist_remove(obj_t *list, obj_t *keys);
@@ -295,12 +284,12 @@ obj_t *mapcar(obj_t *fun, obj_t *list);
 obj_t *mappend(obj_t *fun, obj_t *list);
 obj_t *sort(obj_t *list, obj_t *lessfun, obj_t *keyfun);
 
-void obj_print(obj_t *obj, FILE *);
+void obj_print(obj_t *obj, obj_t *stream);
+void obj_pprint(obj_t *obj, obj_t *stream);
 void init(const char *progname, void *(*oom_realloc)(void *, size_t),
           obj_t **maybe_bottom_0, obj_t **maybe_bottom_1);
-void dump(obj_t *obj, FILE *);
-char *snarf_line(FILE *in);
-obj_t *snarf(FILE *in);
+void dump(obj_t *obj, obj_t *stream);
+obj_t *snarf(obj_t *in);
 obj_t *match(obj_t *spec, obj_t *data);
 
 #define nil ((obj_t *) 0)
@@ -312,6 +301,12 @@ obj_t *match(obj_t *spec, obj_t *data);
 #define if2(a, b) ((a) ? (b) : nil)
 
 #define if3(a, b, c) ((a) ? (b) : (c))
+
+#define or2(a, b) ((a) ? (a) : (b))
+
+#define or3(a, b, c) or2(a, or2(b, c))
+
+#define or4(a, b, c, d) or2(a, or3(b, c, d))
 
 #define list_collect_decl(OUT, PTAIL)           \
   obj_t *OUT = nil, **PTAIL = &OUT

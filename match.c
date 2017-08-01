@@ -24,505 +24,93 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-%{
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <assert.h>
-#include <limits.h>
 #include <errno.h>
 #include <dirent.h>
 #include <setjmp.h>
+#include <stdarg.h>
 #include "lib.h"
 #include "gc.h"
 #include "unwind.h"
 #include "regex.h"
-#include "extract.h"
+#include "stream.h"
+#include "parser.h"
+#include "txr.h"
+#include "match.h"
 
-int yylex(void);
-void yyerror(const char *);
+int output_produced;
 
-obj_t *repeat_rep_helper(obj_t *sym, obj_t *main, obj_t *parts);
-obj_t *define_transform(obj_t *define_form);
-
-static obj_t *parsed_spec;
-static int output_produced;
-
-%}
-
-%union {
-  char *lexeme;
-  union obj *obj;
-  char chr;
-  long num;
-}
-
-%token <lexeme> TEXT IDENT ALL SOME NONE MAYBE CASES AND OR END COLLECT
-%token <lexeme> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY DEFINE
-%token <num> NUMBER
-%token <chr> REGCHAR LITCHAR
-
-%type <obj> spec clauses clause all_clause some_clause none_clause maybe_clause
-%type <obj> cases_clause collect_clause clause_parts additional_parts
-%type <obj> output_clause define_clause line elems_opt elems elem var var_op
-%type <obj> list exprs expr out_clauses out_clauses_opt out_clause
-%type <obj> repeat_clause repeat_parts_opt o_line
-%type <obj> o_elems_opt o_elems_opt2 o_elems o_elem rep_elem rep_parts_opt
-%type <obj> regex regexpr regbranch
-%type <obj> regterm regclass regclassterm regrange
-%type <obj> strlit chrlit litchars
-%type <chr> regchar
-%nonassoc ALL SOME NONE MAYBE CASES AND OR END COLLECT UNTIL COLL
-%nonassoc OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE
-%nonassoc '{' '}' '[' ']' '(' ')'
-%right IDENT TEXT NUMBER
-%left '|' '/'
-%right '*' '?' '+'
-%right '^' '.' '\\' REGCHAR
-
-%%
-
-spec : clauses                  { parsed_spec = $1; }
-     |                          { parsed_spec = nil; }
-     | error                    { parsed_spec = nil;
-                                  yybadtoken(yychar, 0); }
-     ;
-
-clauses : clause                { $$ = cons($1, nil); }
-        | clause clauses        { $$ = cons($1, $2);  }
-        ;
-
-clause : all_clause             { $$ = list(num(lineno - 1), $1, nao); }
-       | some_clause            { $$ = list(num(lineno - 1), $1, nao); }
-       | none_clause            { $$ = list(num(lineno - 1), $1, nao); }
-       | maybe_clause           { $$ = list(num(lineno - 1), $1, nao); }
-       | cases_clause           { $$ = list(num(lineno - 1), $1, nao); }
-       | collect_clause         { $$ = list(num(lineno - 1), $1, nao); }
-       | define_clause          { $$ = list(num(lineno - 1),
-                                            define_transform($1), nao); }
-       | output_clause          { $$ = list(num(lineno - 1), $1, nao); }
-       | line                   { $$ = $1; }
-       | repeat_clause          { $$ = nil;
-                                  yyerror("repeat outside of output"); }
-       ;
-
-all_clause : ALL newl clause_parts      { $$ = cons(all, $3); }
-           | ALL newl error             { $$ = nil;
-                                          yybadtoken(yychar,
-                                                     "all clause"); }
-           | ALL newl END newl          { $$ = nil;
-                                          yyerror("empty all clause"); }
-
-           ;
-
-some_clause : SOME newl clause_parts    { $$ = cons(some, $3); }
-            | SOME newl error           { $$ = nil;
-                                          yybadtoken(yychar,
-                                                     "some clause"); }
-            | SOME newl END newl       { $$ = nil;
-                                          yyerror("empty some clause"); }
-            ;
-
-none_clause : NONE newl clause_parts    { $$ = cons(none, $3); }
-            | NONE newl error           { $$ = nil;
-                                          yybadtoken(yychar,
-                                                     "none clause"); }
-            | NONE newl END newl        { $$ = nil;
-                                          yyerror("empty none clause"); }
-            ;
-
-maybe_clause : MAYBE newl clause_parts  { $$ = cons(maybe, $3); }
-             | MAYBE newl error         { $$ = nil;
-                                          yybadtoken(yychar,
-                                                     "maybe clause"); }
-             | MAYBE newl END newl      { $$ = nil;
-                                          yyerror("empty maybe clause"); }
-             ;
-
-cases_clause : CASES newl clause_parts  { $$ = cons(cases, $3); }
-             | CASES newl error         { $$ = nil;
-                                          yybadtoken(yychar,
-                                                     "cases clause"); }
-             | CASES newl END newl      { $$ = nil;
-                                          yyerror("empty cases clause"); }
-             ;
-
-collect_clause : COLLECT newl clauses END newl  { $$ = list(collect, $3, nao); }
-               | COLLECT newl clauses
-                 UNTIL newl clauses END newl    { $$ = list(collect, $3,
-                                                            $6, nao); }
-               | COLLECT newl error     { $$ = nil;
-                                          if (yychar == UNTIL || yychar == END)
-                                            yyerror("empty collect");
-                                          else
-                                            yybadtoken(yychar,
-                                                       "collect clause"); }
-               ;
-
-clause_parts : clauses additional_parts { $$ = cons($1, $2); }
-             ;
-
-additional_parts : END newl                             { $$ = nil; }
-                 | AND newl clauses additional_parts    { $$ = cons($3, $4); }
-                 | OR newl clauses additional_parts    { $$ = cons($3, $4); }
-                 ;
-
-line : elems_opt '\n'           { $$ = $1; }
-     ;
-
-elems_opt : elems               { $$ = cons(num(lineno - 1), $1); }
-          |                     { $$ = nil; }
-          ;
-
-elems : elem                    { $$ = cons($1, nil); }
-      | elem elems              { $$ = cons($1, $2); }
-      | rep_elem                { $$ = nil;
-                                  yyerror("rep outside of output"); }
-      ;
-
-elem : TEXT                     { $$ = string($1); }
-     | var                      { $$ = $1; }
-     | list                     { $$ = $1; }
-     | regex                    { $$ = cons(regex_compile($1), $1); }
-     | COLL elems END           { $$ = list(coll, $2, nao); }
-     | COLL elems
-       UNTIL elems END          { $$ = list(coll, $2, $4, nao); }
-     | COLL error               { $$ = nil;
-                                  yybadtoken(yychar, "coll clause"); }
-     ;
-
-define_clause : DEFINE exprs ')' newl
-                clauses
-                END newl        { $$ = list(define, $2, $5, nao); }
-              | DEFINE ')' newl
-                clauses
-                END newl        { $$ = list(define, nil, $4, nao); }
-              | DEFINE exprs ')' newl
-                END newl        { $$ = list(define, $2, nao); }
-              | DEFINE ')' newl
-                END newl        { $$ = list(define, nao); }
-              | DEFINE error    { yybadtoken(yychar, "list expression"); }
-              | DEFINE exprs ')' newl
-                error           { yybadtoken(yychar, "define"); }
-              | DEFINE ')' newl
-                error           { yybadtoken(yychar, "define"); }
-              ;
-
-output_clause : OUTPUT o_elems '\n'
-                out_clauses
-                END newl        { $$ = list(output, $4, $2, nao); }
-              | OUTPUT newl
-                out_clauses
-                END newl        { $$ = list(output, $3, nao); }
-              | OUTPUT o_elems '\n'
-                error           { $$ = nil;
-                                  yybadtoken(yychar, "output clause"); }
-              | OUTPUT newl
-                error           { $$ = nil;
-                                  yybadtoken(yychar, "output clause"); }
-              ;
-
-out_clauses : out_clause                { $$ = cons($1, nil); }
-            | out_clause out_clauses    { $$ = cons($1, $2);  }
-            ;
-
-out_clause : repeat_clause              { $$ = list(num(lineno - 1), $1, nao); }
-           | o_line                     { $$ = $1; }
-           | all_clause                 { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | some_clause                { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | none_clause                { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | maybe_clause               { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | cases_clause               { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | collect_clause             { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | define_clause              { $$ = nil;
-                                          yyerror("match clause in output"); }
-           | output_clause              { $$ = nil;
-                                          yyerror("match clause in output"); }
-           ;
-
-repeat_clause : REPEAT newl
-                out_clauses
-                repeat_parts_opt
-                END newl                { $$ = repeat_rep_helper(repeat, $3, $4); }
-              | REPEAT newl
-                error           { $$ = nil;
-                                  yybadtoken(yychar, "repeat clause"); }
-              ;
-
-repeat_parts_opt : SINGLE newl
-                   out_clauses_opt
-                   repeat_parts_opt     { $$ = cons(cons(single, $3), $4); }
-                 | FIRST newl
-                   out_clauses_opt
-                   repeat_parts_opt     { $$ = cons(cons(frst, $3), $4); }
-                 | LAST newl
-                   out_clauses_opt
-                   repeat_parts_opt     { $$ = cons(cons(lst, $3), $4); }
-                 | EMPTY newl
-                   out_clauses_opt
-                   repeat_parts_opt     { $$ = cons(cons(empty, $3), $4); }
-                 | /* empty */          { $$ = nil; }
-                 ;
-
-
-out_clauses_opt : out_clauses   { $$ = $1; }
-                | /* empty */   { $$ = null_list; }
-
-o_line : o_elems_opt '\n'       { $$ = $1; }
-       ;
-
-o_elems_opt : o_elems           { $$ = cons(num(lineno - 1), $1); }
-            |                   { $$ = nil; }
-            ;
-
-o_elems_opt2 : o_elems          { $$ = $1; }
-             |                  { $$ = null_list; }
-             ;
-
-o_elems : o_elem                { $$ = cons($1, nil); }
-        | o_elem o_elems        { $$ = cons($1, $2); }
-        ;
-
-o_elem : TEXT                   { $$ = string($1); }
-       | var                    { $$ = $1; }
-       | rep_elem               { $$ = $1; }
-       ;
-
-rep_elem : REP o_elems
-           rep_parts_opt END    { $$ = repeat_rep_helper(rep, $2, $3); }
-         | REP error            { $$ = nil; yybadtoken(yychar, "rep clause"); }
-         ;
-
-rep_parts_opt : SINGLE o_elems_opt2
-                rep_parts_opt           { $$ = cons(cons(single, $2), $3); }
-              | FIRST o_elems_opt2
-                rep_parts_opt           { $$ = cons(cons(frst, $2), $3); }
-              | LAST o_elems_opt2
-                rep_parts_opt           { $$ = cons(cons(lst, $2), $3); }
-              | EMPTY o_elems_opt2
-                rep_parts_opt           { $$ = cons(cons(empty, $2), $3); }
-              | /* empty */             { $$ = nil; }
-              ;
-
-
-/* This sucks, but factoring '*' into a nonterminal
- * that generates an empty phrase causes reduce/reduce conflicts.
- */
-var : IDENT                     { $$ = list(var, intern(string($1)), nao); }
-    | IDENT elem                { $$ = list(var, intern(string($1)), $2, nao); }
-    | '{' IDENT '}'             { $$ = list(var, intern(string($2)), nao); }
-    | '{' IDENT '}' elem        { $$ = list(var, intern(string($2)), $4, nao); }
-    | '{' IDENT regex '}'       { $$ = list(var, intern(string($2)),
-                                            nil, cons(regex_compile($3), $3),
-                                            nao); }
-    | '{' IDENT NUMBER '}'      { $$ = list(var, intern(string($2)),
-                                            nil, num($3), nao); }
-    | var_op IDENT              { $$ = list(var, intern(string($2)),
-                                            nil, $1, nao); }
-    | var_op IDENT elem         { $$ = list(var, intern(string($2)),
-                                            $3, $1, nao); }
-    | var_op '{' IDENT '}'      { $$ = list(var, intern(string($3)),
-                                            nil, $1, nao); }
-    | var_op '{' IDENT '}' elem { $$ = list(var, intern(string($3)),
-                                            $5, $1, nao); }
-    | IDENT error               { $$ = nil;
-                                  yybadtoken(yychar, "variable spec"); }
-    | var_op error              { $$ = nil;
-                                  yybadtoken(yychar, "variable spec"); }
-    ;
-
-var_op : '*'                    { $$ = t; }
-       ;
-
-list : '(' exprs ')'            { $$ = $2; }
-     | '(' ')'                  { $$ = nil; }
-     | '(' error                { $$ = nil;
-                                  yybadtoken(yychar, "list expression"); }
-     ;
-
-exprs : expr                    { $$ = cons($1, nil); }
-      | expr exprs              { $$ = cons($1, $2); }
-      | expr '.' expr           { $$ = cons($1, $3); }
-      ;
-
-expr : IDENT                    { $$ = intern(string($1)); }
-     | NUMBER                   { $$ = num($1); }
-     | list                     { $$ = $1; }
-     | regex                    { $$ = cons(regex_compile($1), $1); }
-     | chrlit                   { $$ = $1; }
-     | strlit                   { $$ = $1; }
-     ;
-
-regex : '/' regexpr '/'         { $$ = $2; }
-      | '/' '/'                 { $$ = nil; }
-      | '/' error               { $$ = nil;
-                                  yybadtoken(yychar, "regex"); }
-      ;
-
-regexpr : regbranch                     { $$ = $1; }
-        | regbranch '|' regbranch       { $$ = list(list(or, $1,
-                                                         $3, nao), nao); }
-        ;
-
-regbranch : regterm             { $$ = cons($1, nil); }
-          | regterm regbranch   { $$ = cons($1, $2); }
-          ;
-
-regterm : '[' regclass ']'      { $$ = cons(set, $2); }
-        | '[' '^' regclass ']'  { $$ = cons(cset, $3); }
-        | '.'                   { $$ = wild; }
-        | '^'                   { $$ = chr('^'); }
-        | ']'                   { $$ = chr(']'); }
-        | '-'                   { $$ = chr('-'); }
-        | regterm '*'           { $$ = list(zeroplus, $1, nao); }
-        | regterm '+'           { $$ = list(oneplus, $1, nao); }
-        | regterm '?'           { $$ = list(optional, $1, nao); }
-        | REGCHAR               { $$ = chr($1); }
-        | '(' regexpr ')'       { $$ = cons(compound, $2); }
-        | '(' error             { $$ = nil;
-                                  yybadtoken(yychar, "regex subexpression"); }
-        | '[' error             { $$ = nil;
-                                  yybadtoken(yychar, "regex character class"); }
-        ;
-
-regclass : regclassterm                 { $$ = cons($1, nil); }
-         | regclassterm regclass        { $$ = cons($1, $2); }
-         ;
-
-regclassterm : regrange         { $$ = $1; }
-             | regchar          { $$ = chr($1); }
-             ;
-
-regrange : regchar '-' regchar  { $$ = cons(chr($1), chr($3)); }
-
-regchar : '?'                   { $$ = '?'; }
-        | '.'                   { $$ = '.'; }
-        | '*'                   { $$ = '*'; }
-        | '+'                   { $$ = '+'; }
-        | '('                   { $$ = '('; }
-        | ')'                   { $$ = ')'; }
-        | '^'                   { $$ = '^'; }
-        | '|'                   { $$ = '|'; }
-        | REGCHAR               { $$ = $1; }
-        ;
-
-newl : '\n'
-     | error '\n'       { yyerror("newline expected after directive");
-                          yyerrok; }
-     ;
-
-strlit : '"' '"'                { $$ = null_string; }
-       | '"' litchars '"'       {
-                                  if ($2) {
-                                    obj_t *len = length($2), *iter, *ix;
-                                    $$ = mkustring(len);
-                                    for (iter = $2, ix = zero;
-                                         iter;
-                                         iter = cdr(iter), ix = plus(ix, one))
-                                    {
-                                      chr_str_set($$, ix, car(iter));
-                                    }
-                                  } else {
-                                    $$ = nil;
-                                  }
-                                }
-       | '"' error              { yybadtoken(yychar, "string literal"); }
-       ;
-
-chrlit : '\'' '\''              { yyerror("empty character literal");
-                                  $$ = nil; }
-       | '\'' litchars '\''     { $$ = car($2);
-                                  if (cdr($2))
-                                    yyerror("multiple characters in "
-                                            "character literal"); }
-       | '\'' error              { yybadtoken(yychar, "character literal"); }
-       ;
-
-litchars : LITCHAR              { $$ = cons(chr($1), nil); }
-         | LITCHAR litchars     { $$ = cons(chr($1), $2); }
-         ;
-%%
-
-obj_t *repeat_rep_helper(obj_t *sym, obj_t *main, obj_t *parts)
+static void debugf(const char *fmt, ...)
 {
-  obj_t *single_parts = nil;
-  obj_t *first_parts = nil;
-  obj_t *last_parts = nil;
-  obj_t *empty_parts = nil;
-  obj_t *iter;
-
-  for (iter = parts; iter != nil; iter = cdr(iter)) {
-    obj_t *part = car(iter);
-    obj_t *sym = car(part);
-    obj_t *clauses = cdr(part);
-
-    if (sym == single)
-      single_parts = nappend2(single_parts, clauses);
-    else if (sym == frst)
-      first_parts = nappend2(first_parts, clauses);
-    else if (sym == lst)
-      last_parts = nappend2(last_parts, clauses);
-    else if (sym == empty)
-      empty_parts = nappend2(empty_parts, clauses);
-    else
-      abort();
+  if (opt_loglevel >= 2) {
+    va_list vl;
+    va_start (vl, fmt);
+    format(std_error, "~a: ", prog_string, nao);
+    vformat(std_error, fmt, vl);
+    put_cchar(std_error, '\n');
+    va_end (vl);
   }
-
-  return list(sym, main, single_parts, first_parts,
-              last_parts, empty_parts, nao);
 }
 
-obj_t *define_transform(obj_t *define_form)
+static void debuglf(obj_t *line, const char *fmt, ...)
 {
-  obj_t *sym = first(define_form);
-  obj_t *args = second(define_form);
-
-  if (define_form == nil)
-    return nil;
-
-  assert (sym == define);
-
-  if (args == nil) {
-    yyerror("define requires arguments");
-    return define_form;
+  if (opt_loglevel >= 2) {
+    va_list vl;
+    va_start (vl, fmt);
+    format(std_error, "~a: (~a:~a) ", prog_string, spec_file_str, line, nao);
+    vformat(std_error, fmt, vl);
+    put_cchar(std_error, '\n');
+    va_end (vl);
   }
-
-  if (!consp(args) || !listp(cdr(args))) {
-    yyerror("bad define argument syntax");
-    return define_form;
-  } else {
-    obj_t *name = first(args);
-    obj_t *params = second(args);
-
-    if (!symbolp(name)) {
-      yyerror("function name must be a symbol");
-      return define_form;
-    }
-
-    if (!proper_listp(params)) {
-      yyerror("invalid function parameter list");
-      return define_form;
-    }
-
-    if (!all_satisfy(params, func_n1(symbolp), nil))
-      yyerror("function parameters must be symbols");
-  }
-
-  return define_form;
 }
 
-obj_t *get_spec(void)
+static void debuglcf(obj_t *line, const char *fmt, ...)
 {
-  return parsed_spec;
+  if (opt_loglevel >= 2) {
+    va_list vl;
+    va_start (vl, fmt);
+    format(std_error, "~a: (~a:~a)", prog_string, spec_file_str, line, nao);
+    vcformat(std_error, fmt, vl);
+    put_cchar(std_error, '\n');
+    va_end (vl);
+  }
 }
+
+static void sem_error(obj_t *line, const char *fmt, ...)
+{
+  va_list vl;
+  obj_t *stream = make_string_output_stream();
+
+  va_start (vl, fmt);
+  format(stream, "~a: ", prog_string, nao);
+  if (line)
+    format(stream, "(~a:~a) ", spec_file_str, line, nao);
+  (void) vformat(stream, fmt, vl);
+  va_end (vl);
+
+  uw_throw(query_error, get_string_from_stream(stream));
+  abort();
+}
+
+static void file_err(obj_t *line, const char *fmt, ...)
+{
+  va_list vl;
+  obj_t *stream = make_string_output_stream();
+
+  va_start (vl, fmt);
+  format(stream, "~a: ", prog_string, nao);
+  if (line)
+    format(stream, "(~a:~a) ", spec_file_str, line, nao);
+  (void) vformat(stream, fmt, vl);
+  va_end (vl);
+
+  uw_throw(file_error, get_string_from_stream(stream));
+  abort();
+}
+
 
 void dump_shell_string(const char *str)
 {
@@ -545,7 +133,7 @@ void dump_var(const char *name, char *pfx1, size_t len1,
               char *pfx2, size_t len2, obj_t *value, int level)
 {
   if (len1 >= 112 || len2 >= 112)
-    abort();
+    internal_error("too much depth in bindings");
 
   if (stringp(value) || chrp(value)) {
     fputs(name, stdout);
@@ -584,7 +172,7 @@ void dump_bindings(obj_t *bindings)
 {
   if (opt_loglevel >= 2) {
     fputs("raw_bindings:\n", stderr);
-    dump(bindings, stderr);
+    dump(bindings, std_error);
   }
 
   while (bindings) {
@@ -655,7 +243,7 @@ obj_t *dest_bind(obj_t *bindings, obj_t *pattern, obj_t *value)
         return bindings;
       if (tree_find(cdr(existing), value))
         return bindings;
-      yyerrorf(2, "bind variable mismatch: %s", c_str(symbol_name(pattern)));
+      debugf("bind variable mismatch: ~a", pattern, nao);
       return t;
     }
     return cons(cons(pattern, value), bindings);
@@ -683,34 +271,25 @@ obj_t *dest_bind(obj_t *bindings, obj_t *pattern, obj_t *value)
   return bindings;
 }
 
-obj_t *eval_form(obj_t *form, obj_t *bindings)
-{
-  if (symbolp(form))
-    return assoc(bindings, form);
-  return cons(t, form);
-}
-
 obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
                   obj_t *pos, obj_t *spec_lineno, obj_t *data_lineno,
                   obj_t *file)
 {
 #define LOG_MISMATCH(KIND)                                              \
-  yyerrorlf(2, c_num(spec_lineno),                                      \
-            "%s mismatch, position %ld (%s:%ld)", (KIND), c_num(pos),   \
-            c_str(file), c_num(data_lineno));                           \
-  yyerrorlf(2, c_num(spec_lineno), "  %s", c_str(dataline));            \
+  debuglf(spec_lineno, KIND " mismatch, position ~a (~a:~a)", pos,      \
+            file, data_lineno, nao);                                    \
+  debuglf(spec_lineno, "  ~a", dataline, nao);                          \
   if (c_num(pos) < 77)                                                  \
-    yyerrorlf(2, c_num(spec_lineno), "  %*s^", (int) c_num(pos), "")
+    debuglcf(spec_lineno, "  %*s^", (int) c_num(pos), "")
 
 #define LOG_MATCH(KIND, EXTENT)                                         \
-  yyerrorlf(2, c_num(spec_lineno),                                      \
-            "%s matched, position %ld-%ld (%s:%ld)", (KIND),            \
-            c_num(pos), c_num(EXTENT), c_str(file),                     \
-            c_num(data_lineno));                                        \
-  yyerrorlf(2, c_num(spec_lineno), "  %s", c_str(dataline));            \
+  debuglf(spec_lineno, KIND " matched, position ~a-~a (~a:~a)",         \
+            pos, EXTENT, file, data_lineno, nao);                       \
+  debuglf(spec_lineno, "  ~a", dataline, nao);                          \
   if (c_num(EXTENT) < 77)                                               \
-    yyerrorlf(2, c_num(spec_lineno), "  %*s%-*s^", (int) c_num(pos),    \
+    debuglcf(spec_lineno, "  %*s%-*s^", (int) c_num(pos),               \
               "", (int) (c_num(EXTENT) - c_num(pos)), "^")
+
   for (;;) {
     obj_t *elem;
 
@@ -813,10 +392,8 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             obj_t *next_pat = third(pat);
             obj_t *pair = assoc(bindings, second_sym); /* var exists already? */
 
-            if (!pair) {
-              yyerrorlf(1, c_num(spec_lineno), "consecutive unbound variables");
-              return nil;
-            }
+            if (!pair)
+              sem_error(spec_lineno, "consecutive unbound variables", nao);
 
             /* Re-generate a new spec with an edited version of
                the element we just processed, and repeat. */
@@ -839,8 +416,8 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
             bindings = acons_new(bindings, sym, sub_str(dataline, pos, find));
             pos = plus(find, len);
           } else {
-            yyerrorlf(0, c_num(spec_lineno), "variable followed by invalid element");
-            return nil;
+            sem_error(spec_lineno,
+                      "variable followed by invalid element", nao);
           }
         } else if (typeof(directive) == regex) {
           obj_t *past = match_regex(dataline, directive, pos);
@@ -901,8 +478,10 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
           }
 
 
-          if (!bindings_coll)
-            yyerrorlf(2, c_num(spec_lineno), "nothing was collected");
+          if (!bindings_coll) {
+            debuglf(spec_lineno, "nothing was collected", nao);
+            return nil;
+          }
 
           for (iter = bindings_coll; iter; iter = cdr(iter)) {
             obj_t *pair = car(iter);
@@ -922,8 +501,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
           LOG_MATCH("string tree", newpos);
           pos = newpos;
         } else {
-          yyerrorlf(0, c_num(spec_lineno), "unknown directive: %s",
-                    c_str(symbol_name(directive)));
+          sem_error(spec_lineno, "unknown directive: ~a", directive, nao);
         }
       }
       break;
@@ -941,7 +519,7 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
         break;
       }
     default:
-      yyerrorlf(0, c_num(spec_lineno), "unsupported object in spec");
+      sem_error(spec_lineno, "unsupported object in spec: ~s", elem, nao);
     }
 
     specline = cdr(specline);
@@ -983,19 +561,31 @@ obj_t *subst_vars(obj_t *spec, obj_t *bindings)
   while (spec) {
     obj_t *elem = first(spec);
 
-    if (consp(elem) && first(elem) == var) {
-      obj_t *sym = second(elem);
-      obj_t *pat = third(elem);
-      obj_t *modifier = fourth(elem);
-      obj_t *pair = assoc(bindings, sym);
+    if (consp(elem)) {
+      if (first(elem) == var) {
+        obj_t *sym = second(elem);
+        obj_t *pat = third(elem);
+        obj_t *modifier = fourth(elem);
+        obj_t *pair = assoc(bindings, sym);
 
-      if (pair) {
-        if (pat)
-          spec = cons(cdr(pair), cons(pat, rest(spec)));
-        else if (nump(modifier))
-          spec = cons(format_field(cdr(pair), modifier), rest(spec));
-        else
-          spec = cons(cdr(pair), rest(spec));
+        if (pair) {
+          if (pat)
+            spec = cons(cdr(pair), cons(pat, rest(spec)));
+          else if (nump(modifier))
+            spec = cons(format_field(cdr(pair), modifier), rest(spec));
+          else
+            spec = cons(cdr(pair), rest(spec));
+          continue;
+        }
+      } else if (first(elem) == quasi) {
+        obj_t *nested = subst_vars(rest(elem), bindings);
+        list_collect_append(iter, nested);
+        spec = cdr(spec);
+        continue;
+      } else {
+        obj_t *nested = subst_vars(elem, bindings);
+        list_collect_append(iter, nested);
+        spec = cdr(spec);
         continue;
       }
     }
@@ -1005,6 +595,29 @@ obj_t *subst_vars(obj_t *spec, obj_t *bindings)
   }
 
   return out;
+}
+
+obj_t *eval_form(obj_t *form, obj_t *bindings)
+{
+  if (!form)
+    return cons(t, form);
+  else if (symbolp(form))
+    return assoc(bindings, form);
+  else if (consp(form)) {
+    if (car(form) == quasi) {
+      return cons(t, cat_str(subst_vars(rest(form), bindings), nil));
+    } else {
+      obj_t *subforms = mapcar(bind2other(func_n2(eval_form), bindings), form);
+
+      if (all_satisfy(subforms, identity_f, nil))
+        return cons(t, mapcar(func_n1(cdr), subforms));
+      return nil;
+    }
+  } if (stringp(form)) {
+    return cons(t, form);
+  }
+
+  return cons(t, form);
 }
 
 typedef struct fpip {
@@ -1065,21 +678,21 @@ void complex_close(fpip_t fp)
     return;
   }
 
-  abort();
+  internal_error("bad input source type code");
 }
 
 obj_t *complex_snarf(fpip_t fp, obj_t *name)
 {
   switch (fp.close) {
   case fpip_fclose:
-    return lazy_stream_cons(stdio_line_stream(fp.f, name));
+    return lazy_stream_cons(make_stdio_stream(fp.f, t, nil));
   case fpip_pclose:
-    return lazy_stream_cons(pipe_line_stream(fp.f, name));
+    return lazy_stream_cons(make_pipe_stream(fp.f, t, nil));
   case fpip_closedir:
-    return lazy_stream_cons(dirent_stream(fp.d, name));
+    return lazy_stream_cons(make_dir_stream(fp.d));
   }
 
-  abort();
+  internal_error("bad input source type");
 }
 
 obj_t *robust_length(obj_t *obj)
@@ -1146,11 +759,8 @@ void do_output_line(obj_t *bindings, obj_t *specline,
 
         if (directive == var) {
           obj_t *str = cat_str(subst_vars(cons(elem, nil), bindings), nil);
-          if (str == nil) {
-            yyerrorlf(1, c_num(spec_lineno), "bad substitution: %s",
-                      c_str(symbol_name(second(elem))));
-            continue;
-          }
+          if (str == nil)
+            sem_error(spec_lineno, "bad substitution: ~a", second(elem), nao);
           fputs(c_str(str), out);
         } else if (directive == rep) {
           obj_t *main_clauses = second(elem);
@@ -1190,8 +800,7 @@ void do_output_line(obj_t *bindings, obj_t *specline,
           }
 
         } else {
-          yyerrorlf(0, c_num(spec_lineno), "unknown directive: %s",
-                    c_str(symbol_name(directive)));
+          sem_error(spec_lineno, "unknown directive: ~a", directive, nao);
         }
       }
       break;
@@ -1201,7 +810,7 @@ void do_output_line(obj_t *bindings, obj_t *specline,
     case 0:
       break;
     default:
-      yyerrorlf(0, c_num(spec_lineno), "unsupported object in output spec");
+      sem_error(spec_lineno, "unsupported object in output spec: ~s", elem);
     }
   }
 }
@@ -1275,16 +884,22 @@ obj_t *match_files(obj_t *spec, obj_t *files,
     data_lineno = c_num(data_linenum);
     first_file_parsed = nil;
   } else if (files) {
-    obj_t *name = first(files);
+    obj_t *spec = first(files);
+    obj_t *name = consp(spec) ? cdr(spec) : spec;
     fpip_t fp = (errno = 0, complex_open(name, nil));
 
-    yyerrorf(2, "opening data source %s", c_str(name));
+    debugf("opening data source ~a", name, nao);
 
     if (complex_open_failed(fp)) {
-      if (errno != 0)
-        yyerrorf(2, "could not open %s: %s", c_str(name), strerror(errno));
+      if (consp(spec) && car(spec) == nothrow) {
+        debugf("could not open ~a: treating as failed match due to nothrow",
+               name, nao);
+        return nil;
+      } else if (errno != 0)
+        file_err(nil, "could not open ~a (error ~a/~a)", name,
+                 num(errno), string(strdup(strerror(errno))), nao);
       else
-        yyerrorf(2, "could not open %s", c_str(name));
+        file_err(nil, "could not open ~a", name, nao);
       return nil;
     }
 
@@ -1299,7 +914,6 @@ repeat_spec_same_data:
     obj_t *dataline = first(data);
     obj_t *spec_linenum = first(first(spec));
     obj_t *first_spec = first(specline);
-    long spec_lineno = spec_linenum ? c_num(spec_linenum) : 0;
 
     if (consp(first_spec)) {
       obj_t *sym = first(first_spec);
@@ -1310,7 +924,8 @@ repeat_spec_same_data:
         long reps = 0;
 
         if (rest(specline))
-          yyerrorlf(1, spec_lineno, "unexpected material after skip directive");
+          sem_error(spec_linenum,
+                    "unexpected material after skip directive", nao);
 
         if ((spec = rest(spec)) == nil)
           break;
@@ -1324,14 +939,14 @@ repeat_spec_same_data:
                                    data, num(data_lineno)));
 
             if (success) {
-              yyerrorlf(2, spec_lineno, "skip matched %s:%ld",
-                        c_str(first(files)), data_lineno);
+              debuglf(spec_linenum, "skip matched ~a:~a", first(files),
+                      num(data_lineno), nao);
               result = cons(new_bindings, cons(data, num(data_lineno)));
               break;
             }
 
-            yyerrorlf(2, spec_lineno, "skip didn't match %s:%ld",
-                      c_str(first(files)), data_lineno);
+            debuglf(spec_linenum, "skip didn't match ~a:~a", first(files),
+                    num(data_lineno), nao);
             data = rest(data);
             data_lineno++;
             dataline = first(data);
@@ -1343,11 +958,13 @@ repeat_spec_same_data:
             return result;
         }
 
-        yyerrorlf(2, spec_lineno, "skip failed");
+        debuglf(spec_linenum, "skip failed", nao);
         return nil;
       } else if (sym == trailer) {
         if (rest(specline))
-          yyerrorlf(1, spec_lineno, "unexpected material after trailer directive");
+          sem_error(spec_linenum,
+                    "unexpected material after trailer directive", nao);
+
         if ((spec = rest(spec)) == nil)
           break;
 
@@ -1363,49 +980,89 @@ repeat_spec_same_data:
       } else if (sym == block) {
         obj_t *name = first(rest(first_spec));
         if (rest(specline))
-          yyerrorlf(1, spec_lineno, "unexpected material after block directive");
+          sem_error(spec_linenum,
+                    "unexpected material after block directive", nao);
         if ((spec = rest(spec)) == nil)
           break;
-        uw_block_begin(name, result);
-        result = match_files(spec, files, bindings, data, num(data_lineno));
-        uw_block_end;
-        return result;
+        {
+          uw_block_begin(name, result);
+          result = match_files(spec, files, bindings, data, num(data_lineno));
+          uw_block_end;
+          return result;
+        }
       } else if (sym == fail || sym == accept) {
         obj_t *target = first(rest(first_spec));
 
         if (rest(specline))
-          yyerrorlf(1, spec_lineno, "unexpected material after %s",
-                    c_str(symbol_name(sym)));
+          sem_error(spec_linenum, "unexpected material after ~a", sym, nao);
 
         uw_block_return(target,
                         if2(sym == accept,
                             cons(bindings,
                                  if3(data, cons(data, num(data_lineno)), t))));
+        /* TODO: uw_block_return could just throw this */
         if (target)
-          yyerrorlf(1, spec_lineno, "%s: no block named %s in scope",
-                    c_str(symbol_name(sym)), c_str(symbol_name(target)));
+          sem_error(spec_linenum, "~a: no block named ~a in scope",
+                    sym, target, nao);
         else
-          yyerrorlf(1, spec_lineno, "%s: not anonymous block in scope",
-                    c_str(symbol_name(sym)));
-
+          sem_error(spec_linenum, "%~a: no anonymous block in scope", sym, nao);
         return nil;
       } else if (sym == next) {
-        if (rest(first_spec))
-          yyerrorlf(0, spec_lineno, "next takes no args");
+        if (rest(first_spec) && rest(specline))
+          sem_error(spec_linenum,
+                    "invalid combination of old and new next syntax", nao);
 
         if ((spec = rest(spec)) == nil)
           break;
 
-        if (rest(specline)) {
+        if (rest(first_spec)) {
+          obj_t *source = rest(first_spec);
+
+          if (eq(first(source), nothrow))
+            push(nil, &source);
+
+          {
+            obj_t *val = eval_form(first(source), bindings);
+            obj_t *name = cdr(val);
+
+            if (!val)
+              sem_error(spec_linenum, "next: unbound variable in form ~a",
+                        first(source), nao);
+
+            if (eq(second(source), nothrow)) {
+              if (name) {
+                files = cons(cons(nothrow, name), files);
+              } else {
+                files = rest(files);
+                if (!files) {
+                  debuglf(spec_linenum, "next: out of arguments", nao);
+                  return nil;
+                }
+                files = cons(cons(nothrow, first(files)), rest(files));
+              }
+            } else {
+              if (name) {
+                files = cons(name, files);
+              } else {
+                files = rest(files);
+                if (!files)
+                  sem_error(spec_linenum, "next: out of arguments", nao);
+                files = cons(cons(nothrow, first(files)), rest(files));
+              }
+            }
+          }
+        } else if (rest(specline)) {
           obj_t *sub = subst_vars(rest(specline), bindings);
           obj_t *str = cat_str(sub, nil);
           if (str == nil) {
-            yyerrorlf(2, spec_lineno, "bad substitution in next file spec");
+            sem_error(spec_linenum, "bad substitution in next file spec", nao);
             continue;
           }
-          files = cons(str, files);
+          files = cons(cons(nothrow, str), files);
         } else {
           files = rest(files);
+          if (!files)
+            sem_error(spec_linenum, "next: out of arguments", nao);
         }
 
         /* We recursively process the file list, but the new
@@ -1459,17 +1116,17 @@ repeat_spec_same_data:
         }
 
         if (sym == all && !all_match) {
-          yyerrorlf(2, spec_lineno, "all: some clauses didn't match");
+          debuglf(spec_linenum, "all: some clauses didn't match", nao);
           return nil;
         }
 
         if ((sym == some || sym == cases) && !some_match) {
-          yyerrorlf(2, spec_lineno, "some/cases: no clauses matched");
+          debuglf(spec_linenum, "some/cases: no clauses matched", nao);
           return nil;
         }
 
         if (sym == none && some_match) {
-          yyerrorlf(2, spec_lineno, "none: some clauses matched");
+          debuglf(spec_linenum, "none: some clauses matched", nao);
           return nil;
         }
 
@@ -1515,8 +1172,8 @@ repeat_spec_same_data:
           }
 
           if (success) {
-            yyerrorlf(2, spec_lineno, "collect matched %s:%ld",
-                      c_str(first(files)), data_lineno);
+            debuglcf(spec_linenum, "collect matched %s:%ld",
+                     first(files), data_lineno);
 
             for (iter = new_bindings; iter && iter != bindings;
                 iter = cdr(iter))
@@ -1531,15 +1188,14 @@ repeat_spec_same_data:
 
           if (success) {
             if (consp(success)) {
-              yyerrorlf(2, spec_lineno,
-                        "collect advancing from line %ld to %ld",
-                        data_lineno, c_num(cdr(success)));
+              debuglcf(spec_linenum,
+                       "collect advancing from line d to %ld",
+                       data_lineno, c_num(cdr(success)));
               data = car(success);
               data_lineno = c_num(cdr(success));
             } else {
-              yyerrorlf(2, spec_lineno, "collect consumed entire file");
+              debuglf(spec_linenum, "collect consumed entire file", nao);
               data = nil;
-              break;
             }
           } else {
             data = rest(data);
@@ -1550,12 +1206,14 @@ repeat_spec_same_data:
         uw_block_end;
 
         if (!result) {
-          yyerrorlf(2, spec_lineno, "collect explicitly failed");
+          debuglf(spec_linenum, "collect explicitly failed", nao);
           return nil;
         }
 
-        if (!bindings_coll)
-          yyerrorlf(2, spec_lineno, "nothing was collected");
+        if (!bindings_coll) {
+          debuglf(spec_linenum, "nothing was collected", nao);
+          return nil;
+        }
 
         for (iter = bindings_coll; iter; iter = cdr(iter)) {
           obj_t *pair = car(iter);
@@ -1574,8 +1232,7 @@ repeat_spec_same_data:
           obj_t *sym = first(iter);
 
           if (!symbolp(sym)) {
-            yyerrorlf(1, spec_lineno, "non-symbol in flatten directive");
-            continue;
+            sem_error(spec_linenum, "non-symbol in flatten directive", nao);
           } else {
             obj_t *existing = assoc(bindings, sym);
 
@@ -1588,7 +1245,7 @@ repeat_spec_same_data:
           break;
 
         goto repeat_spec_same_data;
-      } else if (sym == forget) {
+      } else if (sym == forget || sym == local) {
         bindings = alist_remove(bindings, rest(first_spec));
 
         if ((spec = rest(spec)) == nil)
@@ -1598,15 +1255,10 @@ repeat_spec_same_data:
       } else if (sym == mrge) {
         obj_t *target = first(rest(first_spec));
         obj_t *args = rest(rest(first_spec));
-        obj_t *exists = assoc(bindings, target);
         obj_t *merged = nil;
 
         if (!target || !symbolp(target))
-          yyerrorlf(1, spec_lineno, "bad merge directive");
-
-        if (exists)
-          yyerrorlf(1, spec_lineno, "merge: symbol %s already bound",
-                    c_str(symbol_name(target)));
+          sem_error(spec_linenum, "bad merge directive", nao);
 
         for (; args; args = rest(args)) {
           obj_t *other_sym = first(args);
@@ -1615,10 +1267,10 @@ repeat_spec_same_data:
             obj_t *other_lookup = assoc(bindings, other_sym);
 
             if (!symbolp(other_sym))
-              yyerrorlf(1, spec_lineno, "non-symbol in merge directive");
+              sem_error(spec_linenum, "non-symbol in merge directive", nao);
             else if (!other_lookup)
-              yyerrorlf(1, spec_lineno, "merge: nonexistent symbol %s",
-                        c_str(symbol_name(sym)));
+              sem_error(spec_linenum, "merge: nonexistent symbol ~a",
+                        other_sym, nao);
 
             if (merged)
               merged = weird_merge(merged, cdr(other_lookup));
@@ -1640,7 +1292,7 @@ repeat_spec_same_data:
         obj_t *val = eval_form(form, bindings);
 
         if (!val)
-          yyerrorlf(1, spec_lineno, "bind: unbound variable on right side");
+          sem_error(spec_linenum, "bind: unbound variable on right side", nao);
 
         bindings = dest_bind(bindings, pattern, cdr(val));
 
@@ -1658,8 +1310,7 @@ repeat_spec_same_data:
           obj_t *sym = first(iter);
 
           if (!symbolp(sym)) {
-            yyerrorlf(1, spec_lineno, "non-symbol in cat directive");
-            continue;
+            sem_error(spec_linenum, "non-symbol in cat directive", nao);
           } else {
             obj_t *existing = assoc(bindings, sym);
             obj_t *sep = nil;
@@ -1680,18 +1331,45 @@ repeat_spec_same_data:
         goto repeat_spec_same_data;
       } else if (sym == output) {
         obj_t *specs = second(first_spec);
-        obj_t *dest_opt = third(first_spec);
-        obj_t *dest = dest_opt ? cat_str(subst_vars(dest_opt, bindings), nil)
-                               : string(chk_strdup("-"));
+        obj_t *old_style_dest = third(first_spec);
+        obj_t *new_style_dest = fourth(first_spec);
+        obj_t *nt = nil;
+        obj_t *dest;
+
+        if (old_style_dest) {
+          dest = cat_str(subst_vars(old_style_dest, bindings), nil);
+        } else {
+          if (eq(first(new_style_dest), nothrow))
+            push(nil, &new_style_dest);
+
+          {
+            obj_t *form = first(new_style_dest);
+            obj_t *val = eval_form(form, bindings);
+
+            if (!val)
+              sem_error(spec_linenum, "output: unbound variable in form ~a",
+                        form, nao);
+
+            nt = eq(second(new_style_dest), nothrow);
+            dest = or2(cdr(val), string(strdup("-")));
+          }
+        }
+
         fpip_t fp = (errno = 0, complex_open(dest, t));
 
-        yyerrorf(2, "opening data sink %s", c_str(dest));
+        debugf("opening data sink ~a", dest, nao);
 
         if (complex_open_failed(fp)) {
-          if (errno != 0)
-            yyerrorf(2, "could not open %s: %s", c_str(dest), strerror(errno));
-          else
-            yyerrorf(2, "could not open %s", c_str(dest));
+          if (nt) {
+            debugf("could not open ~a: treating as failed match due to nothrow",
+                   dest, nao);
+            return nil;
+          } else if (errno != 0) {
+            file_err(nil, "could not open ~a (error ~a/~a)", dest,
+                     num(errno), string(strdup(strerror(errno))), nao);
+          } else {
+            file_err(nil, "could not open ~a", dest, nao);
+          }
         } else {
           do_output(bindings, specs, fp.f);
           complex_close(fp);
@@ -1708,7 +1386,7 @@ repeat_spec_same_data:
         obj_t *params = second(args);
 
         if (rest(specline))
-          yyerrorlf(1, spec_lineno, "unexpected material after define");
+          sem_error(spec_linenum, "unexpected material after define", nao);
 
         uw_set_func(name, cons(params, body));
 
@@ -1716,21 +1394,130 @@ repeat_spec_same_data:
           break;
 
         goto repeat_spec_same_data;
+      } else if (sym == try) {
+        obj_t *catch_syms = second(first_spec);
+        obj_t *try_clause = third(first_spec);
+        obj_t *catch_fin = fourth(first_spec);
+        obj_t *finally_clause = nil;
+
+        {
+          uw_block_begin(nil, result);
+          uw_catch_begin(catch_syms, exsym, exception);
+
+          {
+            result = match_files(try_clause, files, bindings,
+                                 data, num(data_lineno));
+            uw_do_unwind;
+          }
+
+          uw_catch(exsym, exception) {
+            {
+              obj_t *iter;
+
+              for (iter = catch_fin; iter; iter = cdr(iter)) {
+                obj_t *clause = car(iter);
+                obj_t *matches = second(clause);
+                obj_t *body = third(clause);
+
+                if (first(clause) == catch) {
+                  obj_t *match;
+                  for (match = matches; match; match = cdr(match))
+                    if (uw_exception_subtype_p(exsym, car(match)))
+                      break;
+                  if (match) {
+                    cons_bind (new_bindings, success,
+                               match_files(body, files, bindings,
+                                           data, num(data_lineno)));
+                    if (success) {
+                      bindings = new_bindings;
+                      result = t; /* catch succeeded, so try succeeds */
+                      if (consp(success)) {
+                        data = car(success);
+                        data_lineno = c_num(cdr(success));
+                      } else {
+                        data = nil;
+                      }
+                    }
+                    break;
+                  }
+                } else if (car(clause) == finally) {
+                  finally_clause = body;
+                }
+              }
+            }
+            uw_do_unwind;
+          }
+
+          uw_unwind {
+            obj_t *iter;
+
+            /* result may be t, from catch above. */
+            if (consp(result)) {
+              /* We process it before finally, as part of the unwinding, so
+                 finally can accumulate more bindings over top of any bindings
+                 produced by the main clause. */
+              cons_bind (new_bindings, success, result);
+              if (consp(success)) {
+                data = car(success);
+                data_lineno = c_num(cdr(success));
+              } else {
+                data = nil;
+              }
+              bindings = new_bindings;
+            }
+
+            if (!finally_clause) {
+              for (iter = catch_fin; iter; iter = cdr(iter)) {
+                obj_t *clause = car(iter);
+                if (first(clause) == finally) {
+                  finally_clause = third(clause);
+                  break;
+                }
+              }
+            }
+
+            if (finally_clause) {
+              cons_bind (new_bindings, success,
+                         match_files(finally_clause, files, bindings,
+                                     data, num(data_lineno)));
+              if (success) {
+                bindings = new_bindings;
+                result = t; /* finally succeeds, so try block succeeds */
+                if (consp(success)) {
+                  data = car(success);
+                  data_lineno = c_num(cdr(success));
+                } else {
+                  data = nil;
+                }
+              }
+            }
+          }
+
+          uw_catch_end;
+          uw_block_end;
+
+          if (!result)
+            return nil;
+
+          if ((spec = rest(spec)) == nil)
+            break;
+
+          goto repeat_spec_same_data;
+        }
       } else {
         obj_t *func = uw_get_func(sym);
 
         if (func) {
           obj_t *args = rest(first_spec);
           obj_t *params = car(func);
+          obj_t *ub_p_a_pairs = nil;
           obj_t *body = cdr(func);
           obj_t *piter, *aiter;
           obj_t *bindings_cp = copy_alist(bindings);
 
-          if (!equal(length(args), length(params))) {
-            yyerrorlf(1, spec_lineno, "function %s takes %ld argument(s)",
-                      c_str(sym), c_num(length(params)));
-            return nil;
-          }
+          if (!equal(length(args), length(params)))
+            sem_error(spec_linenum, "function ~a takes ~a argument(s)",
+                      sym, length(params), nao);
 
           for (piter = params, aiter = args; piter;
                piter = cdr(piter), aiter = cdr(aiter))
@@ -1738,17 +1525,22 @@ repeat_spec_same_data:
             obj_t *param = car(piter);
             obj_t *arg = car(aiter);
 
-            if (symbolp(arg)) {
-              obj_t *existing = assoc(bindings, arg);
-              if (existing) {
+            if (arg && symbolp(arg)) {
+              obj_t *val = eval_form(arg, bindings);
+              if (val) {
                 bindings_cp = acons_new(bindings_cp,
                                         param,
-                                        cdr(existing));
+                                        cdr(val));
               } else {
                 bindings_cp = alist_remove(bindings_cp, cons(param, nil));
+                ub_p_a_pairs = cons(cons(param, arg), ub_p_a_pairs);
               }
             } else {
-              bindings_cp = acons_new(bindings_cp, param, arg);
+              obj_t *val = eval_form(arg, bindings);
+              if (!val)
+                sem_error(spec_linenum,
+                          "unbound variable in function argument form", nao);
+              bindings_cp = acons_new(bindings_cp, param, cdr(val));
             }
           }
 
@@ -1761,37 +1553,38 @@ repeat_spec_same_data:
             uw_block_end;
 
             if (!result) {
-              yyerrorlf(2, spec_lineno, "function failed");
+              debuglf(spec_linenum, "function failed", nao);
               return nil;
             }
 
             {
               cons_bind (new_bindings, success, result);
 
-              for (piter = params, aiter = args; piter;
-                   piter = cdr(piter), aiter = cdr(aiter))
+              for (piter = ub_p_a_pairs; piter; piter = cdr(aiter))
               {
-                obj_t *param = car(piter);
-                obj_t *arg = car(aiter);
+                cons_bind (param, arg, car(piter));
 
                 if (symbolp(arg)) {
                   obj_t *newbind = assoc(new_bindings, param);
                   if (newbind) {
                     bindings = dest_bind(bindings, arg, cdr(newbind));
-                    if (bindings == t)
+                    if (bindings == t) {
+                      debuglf(spec_linenum, "binding mismatch on ~a "
+                                "when returning from ~a", arg, sym, nao);
                       return nil;
+                    }
                   }
                 }
               }
 
               if (consp(success)) {
-                yyerrorlf(2, spec_lineno,
-                          "function matched; advancing from line %ld to %ld",
-                          data_lineno, c_num(cdr(success)));
+                debuglcf(spec_linenum,
+                        "function matched; advancing from line %ld to %ld",
+                        data_lineno, c_num(cdr(success)));
                 data = car(success);
                 data_lineno = c_num(cdr(success));
               } else {
-                yyerrorlf(2, spec_lineno, "function consumed entire file");
+                debuglf(spec_linenum, "function consumed entire file", nao);
                 data = nil;
               }
             }
@@ -1814,8 +1607,8 @@ repeat_spec_same_data:
                             spec_linenum, num(data_lineno), first(files)));
 
       if (nump(success) && c_num(success) < c_num(length_str(dataline))) {
-        yyerrorf(2, "spec only matches line to position %ld: %s",
-                 c_num(success), c_str(dataline));
+        debuglf(spec_linenum, "spec only matches line to position ~a: ~a",
+                success, dataline, nao);
         return nil;
       }
 

@@ -23,12 +23,14 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
-void gc_init(obj_t **stack_bottom);
-obj_t *prot1(obj_t **loc);
-void rel1(obj_t **loc);
-void protect(obj_t **, ...);
-void release(obj_t **, ...);
-obj_t *make_obj(void);
-void gc(void);
-int gc_state(int);
-void gc_mark(obj_t *);
+
+#include <stdio.h>
+long lineno;
+extern int errors;
+extern obj_t *yyin_stream;
+extern const char *spec_file;
+extern obj_t *spec_file_str;
+int yyparse(void);
+obj_t *get_spec(void);
+void yyerrorf(const char *s, ...);
+void yybadtoken(int tok, const char *context);

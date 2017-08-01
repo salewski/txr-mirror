@@ -28,7 +28,10 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <dirent.h>
+#include <setjmp.h>
+#include <dirent.h>
 #include "lib.h"
+#include "unwind.h"
 #include "regex.h"
 
 #define NFA_SET_SIZE 512
@@ -340,7 +343,7 @@ int nfa_all_states(nfa_state_t **inout, int num, int visited)
     nfa_state_t *s = inout[i];
 
     if (num >= NFA_SET_SIZE)
-      abort();
+      internal_error("NFA set size exceeded");
 
     switch (s->a.kind) {
     case nfa_accept:
@@ -372,7 +375,7 @@ int nfa_all_states(nfa_state_t **inout, int num, int visited)
   }
 
   if (num > NFA_SET_SIZE)
-    abort();
+    internal_error("NFA set size exceeded");
 
   return num;
 }
@@ -417,7 +420,7 @@ int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
      push them on the stack, and mark them as visited. */
   for (i = 0; i < nin; i++) {
     if (stackp >= NFA_SET_SIZE)
-      abort();
+      internal_error("NFA set size exceeded");
     in[i]->a.visited = visited;
     stack[stackp++] = in[i];
     out[nout++] = in[i];
@@ -429,7 +432,7 @@ int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
     nfa_state_t *top = stack[--stackp];
 
     if (nout >= NFA_SET_SIZE)
-      abort();
+      internal_error("NFA set size exceeded");
 
     /* Only states of type nfa_empty are interesting.
        Each such state at most two epsilon transitions. */
@@ -457,7 +460,7 @@ int nfa_closure(nfa_state_t **stack, nfa_state_t **in, int nin,
   }
 
   if (nout > NFA_SET_SIZE)
-    abort();
+    internal_error("NFA set size exceeded");
 
   return nout;
 }
@@ -497,7 +500,7 @@ int nfa_move(nfa_state_t **in, int nin, nfa_state_t **out, int ch)
        among a common set of leading struct members in the union. */
 
     if (nmove >= NFA_SET_SIZE)
-      abort();
+      internal_error("NFA set size exceeded");
     out[nmove++] = s->o.trans;
   }
 
@@ -580,7 +583,7 @@ static void regex_destroy(obj_t *regex)
 }
 
 static struct cobj_ops regex_obj_ops = {
-  regex_equal, cobj_print_op, regex_destroy
+  regex_equal, cobj_print_op, regex_destroy, 0,
 };
 
 obj_t *regex_compile(obj_t *regex_sexp)

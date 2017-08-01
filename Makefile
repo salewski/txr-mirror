@@ -25,39 +25,35 @@
 
 # Test data in the tests/ directory is in the public domain,
 # unless it contains notices to the contrary.
+
 OPT_FLAGS := -O2
 LANG_FLAGS := -ansi -D_GNU_SOURCE
 DIAG_FLAGS := -Wall
 DBG_FLAGS := -g
+LEX_DBG_FLAGS :=
 TXR_DBG_OPTS := --gc-debug
 LEXLIB := fl
 
 CFLAGS := $(LANG_FLAGS) $(DIAG_FLAGS) $(OPT_FLAGS) $(DBG_FLAGS)
 
-txr: lex.yy.o y.tab.o lib.o regex.o gc.o unwind.o
+OBJS := txr.o lex.yy.o y.tab.o match.o lib.o regex.o gc.o unwind.o stream.o
+txr: $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ -l$(LEXLIB)
 
-lex.yy.o y.tab.o: y.tab.h extract.h lib.h gc.h
+-include dep.mk
 
-y.tab.o: regex.h
+lex.yy.c: parser.l
+	$(LEX) $(LEX_DBG_FLAGS) $<
 
-lib.o: lib.h gc.h
-
-regex.o: regex.h lib.h gc.h
-
-gc.o: gc.h lib.h gc.h
-
-unwind.o: unwind.h lib.h
-
-lex.yy.c: extract.l
-	$(LEX) $<
-
-y.tab.c y.tab.h: extract.y
+y.tab.c y.tab.h: parser.y
 	if $(YACC) -v -d $< ; then true ; else rm $@ ; false ; fi
 
 clean:
-	rm -f txr lex.yy.o y.tab.o lib.o regex.o gc.o unwind.o \
+	rm -f txr $(OBJS) \
 	  y.tab.c lex.yy.c y.tab.h y.output $(TESTS:.ok=.out)
+
+depend: txr
+	./txr depend.txr > dep.mk
 
 TESTS := $(patsubst %.txr,%.ok,$(shell find tests -name '*.txr' | sort))
 
