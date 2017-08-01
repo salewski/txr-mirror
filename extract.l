@@ -40,7 +40,7 @@
 
 #define YY_NO_UNPUT
 
-const char *version = "011";
+const char *version = "012";
 const char *progname = "txr";
 const char *spec_file = "stdin";
 long lineno = 1;

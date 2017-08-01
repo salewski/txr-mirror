@@ -505,7 +505,7 @@ obj_t *depth(obj_t *obj)
   return plus(dep, one);
 }
 
-obj_t *merge(obj_t *left, obj_t *right)
+obj_t *weird_merge(obj_t *left, obj_t *right)
 {
   obj_t *left_depth = depth(left);
   obj_t *right_depth = depth(right);
@@ -521,6 +521,15 @@ obj_t *merge(obj_t *left, obj_t *right)
   }
 
   return append2(left, right);
+}
+
+obj_t *map_leaf_lists(obj_t *func, obj_t *list)
+{
+  if (atom(list))
+    return list;
+  if (none_satisfy(list, func_n1(listp), nil))
+    return funcall1(func, list);
+  return mapcar(bind2(func_n2(map_leaf_lists), func), list);
 }
 
 obj_t *dest_bind(obj_t *bindings, obj_t *pattern, obj_t *value)
@@ -734,6 +743,20 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
                        match_line(bindings, coll_specline, dataline, pos,
                                   spec_lineno, data_lineno, file));
 
+            if (until_specline) {
+              cons_bind (until_bindings, until_pos,
+                         match_line(bindings, until_specline, dataline, pos,
+                                    spec_lineno, data_lineno, file));
+
+              if (until_pos) {
+                (void) until_bindings;
+                LOG_MATCH("until", until_pos);
+                break;
+              } else {
+                LOG_MISMATCH("until");
+              }
+            }
+
             if (new_pos) {
               LOG_MATCH("coll", new_pos);
 
@@ -746,27 +769,6 @@ obj_t *match_line(obj_t *bindings, obj_t *specline, obj_t *dataline,
                 bindings_coll = acons_new(bindings_coll, car(binding),
                                           cons(cdr(binding), cdr(existing)));
               }
-            }
-
-            if (until_specline) {
-              cons_bind (until_bindings, until_pos,
-                         match_line(bindings, until_specline, dataline, pos,
-                                    spec_lineno, data_lineno, file));
-
-              (void) until_bindings;
-              if (until_pos) {
-                /* The until specline matched. Special behavior:
-                   We throw away its bindings, and run it again.
-                   We run it again by incorporating it into the
-                   surrouding specline, just behind the collect
-                   item, which will be popped off. */
-                LOG_MATCH("until", until_pos);
-                (void) new_bindings;
-                specline = cons(first(specline),
-                                append2(until_specline, rest(specline)));
-                break;
-              }
-              LOG_MISMATCH("until");
             }
 
             if (new_pos && !equal(new_pos, pos)) {
@@ -1362,6 +1364,19 @@ repeat_spec_same_data:
                      match_files(coll_spec, files, bindings,
                                  data, num(data_lineno)));
 
+          /* Until clause sees un-collated bindings from collect. */
+          if (until_spec)
+          {
+            cons_bind (discarded_bindings, success,
+                       match_files(until_spec, files, new_bindings,
+                                   data, num(data_lineno)));
+
+            if (success) {
+              (void) discarded_bindings;
+              break;
+            }
+          }
+
           if (success) {
             yyerrorlf(2, spec_lineno, "collect matched %s:%ld",
                       c_str(first(files)), data_lineno);
@@ -1374,27 +1389,6 @@ repeat_spec_same_data:
 
               bindings_coll = acons_new(bindings_coll, car(binding),
                                         cons(cdr(binding), cdr(existing)));
-            }
-          }
-
-          /* Until clause sees un-collated bindings from collect. */
-          if (until_spec)
-          {
-            cons_bind (discarded_bindings, success,
-                       match_files(until_spec, files, new_bindings,
-                                   data, num(data_lineno)));
-
-            if (success) {
-              /* The until spec matched. Special behavior:
-                 We throw away its bindings, and run it again.
-                 We run it again by incorporating it into the
-                 surrouding spec, just behind the topmost one.
-                 When we bail out of this loop, the first(spec)
-                 will be popped, exposing the until_spec,
-                 and then the main loop is repeated. */
-              (void) discarded_bindings;
-              spec = cons(first(spec), append2(until_spec, rest(spec)));
-              break;
             }
           }
 
@@ -1490,7 +1484,7 @@ repeat_spec_same_data:
                         c_str(symbol_name(sym)));
 
             if (merged)
-              merged = merge(merged, cdr(other_lookup));
+              merged = weird_merge(merged, cdr(other_lookup));
             else
               merged = cdr(other_lookup);
           }

@@ -1,3 +1,44 @@
+2009-09-28  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Version 012
+
+	Semantics change of @(until) in @(collect) and @(coll).
+
+	Minor fixes.
+
+	* extract.y (match_line, match_files): The until clauses
+	continue to be processed after the main clauses of the collect
+	or coll (to see the bindings), but are processed before
+	the collection occurs, so that the until will veto
+	the bindings of the last iteration.  Moreover, the data
+	positions stays where it is when this happens, and no
+	arrangement is made to match the until material again.
+
+	* txr.1: Tried to document the change.
+
+
+2009-09-27  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* txr.1: following proofread, fixed various escaping problems and
+	instances of missing text.
+
+2009-09-26  Kaz Kylheku  <kkylheku@gmail.com>
+
+	* lib.c (equal): Bugfixes: wrong fallthrough of FUN case.
+	VEC case must return nil, not break.
+
+2009-09-26  Kaz Kylheku  <kkylheku@gmail.com>
+
+	Preparation for some sorting support.
+
+	* extract.y (merge): Renamed to weird_merge.
+	(map_leaf_lists): New functino.
+	(match_file): Follow weird_merge rename.
+	* lib.c (all_satisfy, none_satisfy, string_lt, do_bind2other,
+	bind2other, merge, do_sort, sort): New functions.
+	* lib.h (all_satsify, none_satisfy, string_lt,
+	bind2other, sort): Declared.
+
 2009-09-25  Kaz Kylheku  <kkylheku@gmail.com>
 
 	Version 011

@@ -21,7 +21,7 @@
 .\"IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 .\"WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-.TH txr 1 2009-09-09 "txr v. 011" "Text Extraction Utility"
+.TH txr 1 2009-09-09 "txr v. 012" "Text Extraction Utility"
 .SH NAME
 txr \- text extractor
 .SH SYNOPSIS
@@ -233,11 +233,12 @@ lines in the data, leading to spurious mismatches.
 
 .SS Text
 
-character for character. Text which occurs at the beginning of a line matches
-the beginning of a line.  Text which starts in the middle of a line, other than
-following a variable, must match exactly at the current position, where the
-previous match left off. Moreover, if the text is the last element in the line,
-its match is anchored to the end of the line.
+Query material which is not escaped by the special character @ is
+literal text, which matches input character for character. Text which occurs at
+the beginning of a line matches the beginning of a line.  Text which starts in
+the middle of a line, other than following a variable, must match exactly at
+the current position, where the previous match left off. Moreover, if the text
+is the last element in the line, its match is anchored to the end of the line.
 
 The semantics of text matching next to a variable is discussed in the following
 section.
@@ -286,34 +287,34 @@ Control characters may be embedded directly in a query (with the exception of
 newline characters). An alternative to embedding is to use escape syntax.
 The following escapes are supported:
 
-.IP @\\a
+.IP @\ea
 Alert character (ASCII 7, BEL).
-.IP @\\b
+.IP @\eb
 Backspace (ASCII 8, BS).
-.IP @\\t
+.IP @\et
 Horizontal tab (ASCII 9, HT).
-.IP @\\n
+.IP @\en
 Line feed (ASCII 10, LF). Serves as abstract newline on POSIX systems.
-.IP @\\v
+.IP @\ev
 Vertical tab (ASCII 11, VT).
-.IP @\\f
+.IP @\ef
 Form feed (ASCII 12, FF). This character clears the screen on many
 kinds of terminals, or ejects a page of text from a line printer.
-.IP @\\r
+.IP @\er
 Carriage return (ASCII 13, CR).
-.IP @\\e
+.IP @\ee
 Escape (ASCII 27, ESC)
-.IP @\\x<hex>
-A @\\x followed by a sequence of hex digits is interpreted as a hexadecimal
-numeric character code. For instance @\\x41 is the ASCII character A.
-.IP @\\<octal>
-A @\\ followed by a sequence of octal digits (0 through 7) is interpreted
-as an octal character code. For instance @\\010 is character 8, same as @\\b.
+.IP @\exHEX
+A @\ex followed by a sequence of hex digits is interpreted as a hexadecimal
+numeric character code. For instance @\ex41 is the ASCII character A.
+.IP @\eOCTAL
+A @\e followed by a sequence of octal digits (0 through 7) is interpreted
+as an octal character code. For instance @\e010 is character 8, same as @\eb.
 .PP
 
-Note that if a newline is embedded into a query line with @\\n, this
+Note that if a newline is embedded into a query line with @\en, this
 does not split the line into two; it's embedded into the line and
-thus cannot match anything. However, @\\n may be useful in the @(cat)
+thus cannot match anything. However, @\en may be useful in the @(cat)
 directive and in @(output).
 
 .SS Variables
@@ -505,8 +506,8 @@ or lowercase letter; the class [0-9a-f] means match a digit or
 a lowercase letter, the class [^0-9] means match a non-digit, et cetera.
 A ] or - can be used within a character class, but must be escaped
 with a backslash. Two backslashes code for one backslash. So
-for instance [\[\-] means match a [ or - character, [^^] means match
-any character other than ^, and [\^\\] means match either a ^ or a
+for instance [\e[\e-] means match a [ or - character, [^^] means match
+any character other than ^, and [\e^\e\e] means match either a ^ or a
 backslash.
 .IP (RE)
 If RE is a regular expression, then so is (RE).
@@ -531,8 +532,8 @@ a backslash to suppress its meaning and denote the character itself.
 
 Furthermore, all of the same escapes are as described in the section Special
 Characters in Text above---the difference is that in regular expressions, the @
-character is not required, so for example a tab is coded as \\t rather
-than @\\t.
+character is not required, so for example a tab is coded as \et rather
+than @\e\t.
 
 Any escaped character which does not fall into the above escaping conventions,
 or any unescaped character which is not a regular expression operator, denotes
@@ -808,17 +809,17 @@ be written instead:
 These directives combine multiple subqueries, which are applied at the same position in parallel. The syntax of all three follows this example:
 
   @(some)
-  <subquery1>
+  subquery1
   .
   .
   .
   @(and)
-  <subquery2>
+  subquery2
   .
   .
   .
   @(and)
-  <subquery3>
+  subquery3
   .
   .
   .
@@ -895,13 +896,13 @@ The syntax of the collect directive is:
 or with an until clause:
 
   @(collect)
-  ... lines of subquery
+  ... lines of subquery: main clause
   @(until)
-  ... lines of subquery
+  ... lines of subquery: until clause
   @(end)
 
 
-The the subquery is matched repeatedly, starting at the current line.
+The subquery is matched repeatedly, starting at the current line.
 If it fails to match, it is tried starting at the subsequent line.
 If it matches successfully, it is tried at the line following the
 entire extent of matched data, if there is one. Thus, the collected regions do
@@ -916,10 +917,10 @@ fail if it tries to match anything in the current file; but of course, it
 is possible to continue matching in another file by means of @(next).
 
 If an until clause is specified, the collection stops when that clause matches
-at the current position (and that last position is also collected, if it
-matches). If the collection is stopped by a match in the until clause,
-any variables bound in that clause also emerge out of the overall collect
-clause (but these bindings are single values, not lists).
+at the current position. When an until clause matches at a position,
+no bindings are collected at that position, even if the main clause
+matches at that position also. Moreover, the position is not advanced.
+The remainder of the query begins matching at that position.
 
 Example:
 
@@ -939,7 +940,8 @@ Example:
   Output:       a[0]="1"
                 a[1]="2"
                 a[2]="3"
-                a[3]="42"
+
+The line 42 is not collected, even though it matches @a.
 
 The binding variables within the clause of a collect are treated specially.
 The multiple matches for each variable are collected into lists,
@@ -981,8 +983,9 @@ a two dimensional list is a list of lists of strings, etc.
 
 It is important to note that the variables which are bound within the main
 clause of a collect---i.e. the variables which are subject to
-collection---appear as normal one-value bindings. The collation into lists
-happens outside of the collect. So for instance in the query:
+collection---appear, within the collect, as normal one-value bindings. The
+collation into lists happens outside of the collect. So for instance in the
+query:
 
  @(collect)
  @x=@x
@@ -994,17 +997,10 @@ iteration, and these values are collected. What finally comes out of the
 collect clause is list variable called x which holds each value that
 was ever instantiated under that name within the collect clause.
 
-If the collect stops before exhausting the data file---that is to say,
-it is terminated by a successful match in the until clause---then
-the material consumed by the until clause is considered consumed.
-The current position in the data set which now faces any further
-query material is located beyond the last line which matches
-the until clause. This is true even if the until clause and collect
-clause both match simultaneously, and the clause matches a different
-number of lines.   If this last collect matches a greater number of lines
-than the terminating until, then some of the material covered by this last
-collect will be again matched by query lines which follow the collect
-directive.
+Also note that the until clause has visibility over the bindings
+established in the main clause. This is true even in the terminating
+case when the until clause matches, and the bindings of the main clause
+are discarded.
 
 .SS The Coll Directive
 
@@ -1034,8 +1030,8 @@ position. Whenever a match occurs, it continues at the character position which
 follows the last character of the match, if such a position exists.
 
 If not bounded by an until clause, it will exhaust the entire line.  If the
-until clause matches, then the remainder of the data line following the extent
-consumed by the until clause is available for more matching.
+until clause matches, then the collection stops at that position,
+and any bindings from that iteration are discarded.
 
 Coll clauses nest, and variables bound within a coll are available to within
 the rest of the coll clause, including the until clause, and appear as single
@@ -1096,7 +1092,7 @@ or may not be terminated by a semicolon. We must exclude
 the semicolon from being a valid character inside an item, and
 add an until clause which recognizes a semicolon:
 
-  pattern:      @(coll)@{a /[^ ;]+/}@(until);@(end)
+  pattern:      @(coll)@{a /[^ ;]+/}@(until);@(end);
 
   data:         1 2 3 4 5;
   result:       a[0]="1"
@@ -1105,7 +1101,7 @@ add an until clause which recognizes a semicolon:
                 a[3]="4"
                 a[4]="5"
 
-  data:         1 2 3 4 5
+  data:         1 2 3 4 5;
   result:       a[0]="1"
                 a[1]="2"
                 a[2]="3"
@@ -1113,6 +1109,10 @@ add an until clause which recognizes a semicolon:
                 a[4]="5"
 
 Semicolon or not, the items are collected properly.
+
+Note that the @(end) is followed by a semicolon. That's because
+when the @(until) clause meets a match, the matching material
+is not consumed.
 
 .SS The Flatten Directive.
 
@@ -1240,7 +1240,7 @@ followed by a symbol: the forms (.) (. X) and (X .) are invalid.
 Blocks are sections of a query which are denoted by a name. Blocks denoted by
 the name nil are understood as anonymous.
 
-The @(block <name>) directive introduces a named block, except when the name is
+The @(block NAME) directive introduces a named block, except when the name is
 the word nil.  The @(block) directive introduces an unnamed block, equivalent
 to @(block nil).
 
@@ -1278,14 +1278,14 @@ to its matching @(end).
 Blocks may nest, and nested blocks may have the same names as blocks in
 which they are nested. For instance:
 
-@(block)
-@(block)
-...
+  @(block)
+  @(block)
+  ...
 
 is a nesting of two anonymous blocks, and
 
-@(block foo)
-@(block foo)
+  @(block foo)
+  @(block foo)
 
 is a nesting of two named blocks which happen to have the same name.
 When a nested block has the same name as an outer block, it creates
@@ -1295,12 +1295,12 @@ inner block, and not to the outer one.
 
 A more complicated example of nesting is:
 
-@(skip)
-abc
-@(block)
-@(some)
-@(block foo)
-@(end)
+  @(skip)
+  abc
+  @(block)
+  @(some)
+  @(block foo)
+  @(end)
 
 Here, the @(skip) introduces an anonymous block. The explicit anonymous
 @(block) is nested within skip's anonymous block and shadows it.
@@ -1314,9 +1314,9 @@ normally. However, a block serves as a termination point for @(fail) and
 
 The precise meaning of these directives is:
 
-.IP @(fail <name>)
+.IP @(fail\ NAME)
 
-Immediately terminate the enclosing query block called <name>, as if that block failed to match anything. If more than one block by that name encloses
+Immediately terminate the enclosing query block called NAME, as if that block failed to match anything. If more than one block by that name encloses
 the directive, the inner-most block is terminated. No bindings
 emerge from a failed block.
 
@@ -1338,9 +1338,9 @@ collect normally does not fail, even if it matches and collects nothing!
 To prematurely terminate a collect by means of its anonymous block, without
 failing it, use @(accept).
 
-.IP @(accept <name>)
+.IP @(accept\ NAME)
 
-Immediately terminate the enclosing query block called <name>, as if that block
+Immediately terminate the enclosing query block called NAME, as if that block
 successfully matched. If more than one block by that name encloses the
 directive, the inner-most block is terminated.  Any bindings established within
 that block until this point emerge from that block.
@@ -1373,13 +1373,16 @@ Example: alternative way to @(until) termination:
 This query will collect entire lines into a list called LINE. However,
 if the line --- is matched (by the embedded @(maybe)), the collection
 is terminated. Only the lines up to, and not including the --- line,
-are collected. The effect is similar to:
+are collected. The effect is identical to:
 
   @(collect)
   @LINE
   @(until)
   ---
   @(end)
+
+The difference (not relevant in these examples) is that the until clause has
+visibility into the bindings set up by the main clause.
 
 However, the following example has a different meaning:
 
@@ -1399,7 +1402,7 @@ action of collecting the last @LINE binding into the list is not performed.
 
 .SS Data Extent of Terminated Blocks
 
-A data block may have matched some material prior to being terminated by
+A query block may have matched some material prior to being terminated by
 accept. In that case, it is deemed to have only matched that material,
 and not any material which follows. This may matter, depending on the context
 in which the block occurs.

@@ -300,6 +300,32 @@ obj_t *some_satisfy(obj_t *list, obj_t *pred, obj_t *key)
   return nil;
 }
 
+obj_t *all_satisfy(obj_t *list, obj_t *pred, obj_t *key)
+{
+  if (!key)
+    key = identity_f;
+
+  for (; list; list = cdr(list)) {
+    if (!funcall1(pred, funcall1(key, car(list))))
+      return nil;
+  }
+
+  return t;
+}
+
+obj_t *none_satisfy(obj_t *list, obj_t *pred, obj_t *key)
+{
+  if (!key)
+    key = identity_f;
+
+  for (; list; list = cdr(list)) {
+    if (funcall1(pred, funcall1(key, car(list))))
+      return nil;
+  }
+
+  return t;
+}
+
 obj_t *flatten(obj_t *list)
 {
   if (atom(list))
@@ -364,6 +390,7 @@ obj_t *equal(obj_t *left, obj_t *right)
       }
       return nil;
     }
+    return nil;
   case VEC:
     if (right->t.type == VEC) {
       long i, fill;
@@ -376,12 +403,13 @@ obj_t *equal(obj_t *left, obj_t *right)
       }
       return t;
     }
-    break;
+    return nil;
   case STREAM:
     return nil; /* Different stream objects never equal. */
   case COBJ:
     if (right->t.type == COBJ)
       return left->co.ops->equal(left, right);
+    return nil;
   }
 
   assert (0 && "notreached");
@@ -741,6 +769,12 @@ obj_t *trim_str(obj_t *str)
   }
 }
 
+obj_t *string_lt(obj_t *astr, obj_t *bstr)
+{
+  int cmp = strcmp(c_str(astr), c_str(bstr));
+  return cmp == -1 ? t : nil;
+}
+
 obj_t *chr(int ch)
 {
   obj_t *obj = make_obj();
@@ -997,6 +1031,17 @@ obj_t *bind2(obj_t *fun2, obj_t *arg)
 {
   return func_f1(cons(fun2, arg), do_bind2);
 }
+
+obj_t *do_bind2other(obj_t *fcons, obj_t *arg1)
+{
+  return funcall2(car(fcons), arg1, cdr(fcons));
+}
+
+obj_t *bind2other(obj_t *fun2, obj_t *arg2)
+{
+  return func_f1(cons(fun2, arg2), do_bind2other);
+}
+
 
 static obj_t *do_chain(obj_t *fun1_list, obj_t *arg)
 {
@@ -1344,6 +1389,79 @@ obj_t *mappend(obj_t *fun, obj_t *list)
     list_collect_append (iter, funcall1(fun, car(list)));
 
   return out;
+}
+
+obj_t *merge(obj_t *list1, obj_t *list2, obj_t *lessfun, obj_t *keyfun)
+{
+  list_collect_decl (out, ptail);
+
+  while (list1 && list2) {
+    obj_t *el1 = funcall1(keyfun, first(list1));
+    obj_t *el2 = funcall1(keyfun, first(list2));
+
+    if (funcall2(lessfun, el1, el2)) {
+      obj_t *next = cdr(list1);
+      *cdr_l(list1) = nil;
+      list_collect_append(ptail, list1);
+      list1 = next;
+    } else {
+      obj_t *next = cdr(list2);
+      *cdr_l(list2) = nil;
+      list_collect_append(ptail, list2);
+      list2 = next;
+    }
+  }
+
+  if (list1)
+    list_collect_append(ptail, list1);
+  else
+    list_collect_append(ptail, list2);
+
+  return out;
+}
+
+static obj_t *do_sort(obj_t *list, obj_t *lessfun, obj_t *keyfun)
+{
+  if (list == nil)
+    return nil;
+  if (!cdr(list))
+    return list;
+  if (!cdr(cdr(list))) {
+    if (funcall2(lessfun, funcall1(keyfun, first(list)),
+                          funcall1(keyfun, second(list))))
+    {
+      return list;
+    } else {
+      obj_t *cons2 = cdr(list);
+      *cdr_l(cons2) = list;
+      *cdr_l(list) = nil;
+      return cons2;
+    }
+  }
+
+  {
+    obj_t *bisect, *iter;
+    obj_t *list2;
+
+    for (iter = cdr(cdr(list)), bisect = list; iter;
+         bisect = cdr(bisect), iter = cdr(cdr(iter)))
+      ; /* empty */
+
+    list2 = cdr(bisect);
+    *cdr_l(bisect) = nil;
+
+    return merge(sort(list, lessfun, keyfun),
+                 sort(list2, lessfun, keyfun),
+                 lessfun, keyfun);
+  }
+}
+
+obj_t *sort(obj_t *list, obj_t *lessfun, obj_t *keyfun)
+{
+  if (!keyfun)
+    keyfun = identity_f;
+
+  return do_sort(list, lessfun, keyfun);
 }
 
 static void obj_init(void)
