@@ -5137,23 +5137,24 @@ static val pad_func(val env, val lcons)
   return nil;
 }
 
-static val pad(val list, val item_in, val count)
+static val pad(val seq_in, val item_in, val count)
 {
   val item = default_null_arg(item_in);
+  val seq = nullify(seq_in);
 
-  switch (type(list)) {
+  switch (type(seq)) {
   case NIL:
     return repeat(cons(item, nil), count);
   case CONS:
-    return append2(list, repeat(cons(item, nil), count));
+    return append2(seq, repeat(cons(item, nil), count));
   case LCONS:
   case VEC:
   case LIT:
   case STR:
   case LSTR:
-    return make_lazy_cons(func_f1(cons(list, cons(item, count)), pad_func));
+    return make_lazy_cons(func_f1(cons(seq, cons(item, count)), pad_func));
   default:
-    uw_throwf(error_s, lit("pad: cannot pad ~s, only sequences"), list, nao);
+    uw_throwf(error_s, lit("pad: cannot pad ~s, only sequences"), seq, nao);
   }
 }
 
