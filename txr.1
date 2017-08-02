@@ -10640,9 +10640,9 @@ or else an exception is thrown.
 .SH* TXR LISP
 The \*(TX language contains an embedded Lisp dialect called \*(TL.
 
-This language is exposed in \*(TX in several ways.
+This language is exposed in \*(TX in a number of ways.
 
-Firstly, in any situation that calls for an expression, a Lisp 
+In any situation that calls for an expression, a Lisp
 expression can be used, if it is preceded by the
 .code @
 character. The Lisp expression
@@ -10654,7 +10654,7 @@ are embedded in directives using
 .code @
 also.
 
-Secondly, certain directives evaluate Lisp expressions without
+Furthermore, certain directives evaluate Lisp expressions without
 requiring
 .codn @ .
 These are
@@ -10665,12 +10665,14 @@ These are
 and
 .codn @(next) .
 
-Thirdly, \*(TL code can be placed into files. On the command
+\*(TL code can be placed into files. On the command
 line, \*(TX treats files with a
 .str ".tl"
 suffix as \*(TL code, and the
 .code @(load)
 directive does also.
+
+\*(TX also provides an interactive listener for Lisp evaluation.
 
 Lastly, \*(TL expressions can be evaluated via the
 command line, using the
