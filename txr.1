@@ -12713,6 +12713,10 @@ Symbol macros may be defined over the global variable namespace
 using
 .codn defsymacro .
 
+Note that whereas a symbol may simultaneously have both a function and macro
+binding in the global namespace, a symbol may not simultaneously have
+a variable and symbol macro binding.
+
 .NP* Lexical Environments
 
 In addition to global and dynamic namespaces, \*(TL provides lexically scoped
