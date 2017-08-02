@@ -23278,9 +23278,9 @@ once.
 .desc
 The
 .code qref
-macro performs structure slot access.  Structure slot access is more
-conveniently expressed using the referencing dot notation, which works
-by translating to qref
+macro ("quoted reference") performs structure slot access.  Structure slot
+access is more conveniently expressed using the referencing dot notation, which
+works by translating to qref
 .code qref
 syntax, according to the following equivalence:
 
@@ -23327,7 +23327,7 @@ following equivalence applies:
   (qref o n)  <-->  (slot o 'n)
 .cble
 
-Where
+where
 .code slot
 is the structure slot accessor function. Because
 .code slot
@@ -23335,6 +23335,11 @@ is an accessor, this form denotes the slot as a syntactic place;
 slots can be modified via assignment to the
 .code qref
 form and the referencing dot syntax.
+
+The slot name being implicitly quoted is the basis of the term
+"quoted reference", giving rise to the
+.code qref
+name.
 
 A compound designator indicates that the named slot is a function,
 and arguments are to be applied to it. The following equivalence applies
@@ -23394,8 +23399,8 @@ leftmost argument, so that the function has access to the object.
 .desc
 The
 .code uref
-macro expands to an expression which evaluates to a function.
-The function takes exactly one argument: an object.
+macro ("unbound reference") expands to an expression which evaluates to a
+function.  The function takes exactly one argument: an object.
 When the function is invoked on an object, it references slots
 or methods relative to that object.
 
@@ -23432,6 +23437,12 @@ argument is present, these equivalences also hold:
   (uref (f a b c ...))  <-->  (umeth f a b c ...)
   (uref s)  <-->  (usl s)
 .cble
+
+The terminology "unbound reference" refers to the property that
+.code uref
+expressions produce a function which isn't bound to a structure
+object.  The function binds a slot or method; the call to that function then
+binds an object to that function, as an argument.
 
 .TP* Examples:
 
