@@ -3061,6 +3061,10 @@ prefix:
   #b1110  ;; 14
 .cble
 
+Note that the
+.code #b
+prefix is also used for buffer literals.
+
 A floating-point constant is marked by the inclusion of a decimal point, the
 exponential "e notation", or both. It is an optional sign, followed
 by a mantissa consisting of digits, a decimal point, more digits, and then an
@@ -11407,6 +11411,15 @@ Buffers may be constructed by the
 function, and other means such as the
 .code ffi-get
 function.
+
+Note that the
+.code #b
+prefix is also used for binary numbers. In that syntax, it
+is followed by an optional sign, and then a mixture of one
+or more of the digits
+.code 0
+or
+.codn 1 .
 
 .coNP The @ .. notation
 In \*(TL, there is a special "dotdot" notation consisting of a pair of dots.
