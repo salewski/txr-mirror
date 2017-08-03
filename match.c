@@ -366,8 +366,14 @@ static val dest_bind(val spec, val bindings, val pattern,
       lisp_evaled = t;
     }
 
-    if (lisp_evaled)
-      return if3(tree_find(value, ret, swap_12_21(testfun)), bindings, t);
+    if (lisp_evaled) {
+      if (!opt_compat || opt_compat >= 184)
+        if (tree_find(ret, value, testfun))
+          return bindings;
+      if (tree_find(value, ret, swap_12_21(testfun)))
+        return bindings;
+      return t;
+    }
 
     while (consp(piter) && consp(viter))
     {
@@ -385,6 +391,10 @@ static val dest_bind(val spec, val bindings, val pattern,
     } else {
       return funcall2(testfun, piter, viter) ? bindings : t;
     }
+    return bindings;
+  } else if ((!opt_compat || opt_compat >= 184) &&
+             tree_find(pattern, value, testfun))
+  {
     return bindings;
   } else if (tree_find(value, pattern, swap_12_21(testfun))) {
     return bindings;

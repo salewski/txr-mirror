@@ -60685,6 +60685,34 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 183
+A value of 183 or lower restores an inconsistent behavior in the
+.code "@(bind)"
+directive and other places in the \*(TX pattern language where binding
+takes place. Prior to version 184, a string tree match was only tried in
+both directions when the left hand side of a binding (the "pattern") was a
+variable. For non-variable pattern terms, such as Lisp expressions or atoms,
+the string tree match was tried in one direction only: a string tree arising
+out of the pattern could match a string atom value on the right side.
+A string tree is a nested list structure whose leaves are strings: a list
+of strings, a list of lists of strings, and so on, in any mixture.
+Concretely, before \*(TX 184,
+.cblk
+@(bind "a" ("a" "b" "c"))
+.cble
+didn't match, but
+.cblk
+@(bind ("a" "b" "c") "a")
+.cble
+did. However, if the variable
+.code a
+contained
+.strn a
+then
+.cblk
+@(bind a ("a" "b" "c"))
+.cble
+did match: an inconsistency.
 .IP 177
 A value of 177 or lower causes the emulation of a bug which was present in the
 .code rng
