@@ -1601,7 +1601,7 @@ val expand_meta(val form, val menv)
   if (sym == var_s) {
     val var_x = expand(second(form), menv);
     if (!bindable(var_x))
-      return rlcp(cons(expr_s, var_x), form);
+      return rlcp(cons(expr_s, cons(var_x, nil)), form);
     return rlcp(cons(var_s, cons(var_x, nil)), form);
   }
 
