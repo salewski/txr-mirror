@@ -45,6 +45,9 @@ val tofloatz(val obj);
 val tointz(val obj, val base);
 val width(val num);
 val bits(val obj);
+val digpow(val n, val base);
+val digits(val n, val base);
+
 noreturn void do_mp_error(val self, mp_err code);
 void arith_init(void);
 void arith_free_all(void);

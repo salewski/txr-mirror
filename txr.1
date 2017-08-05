@@ -34532,6 +34532,96 @@ approximations are accurate to
 .code flo-dig
 decimal digits.
 
+.coNP Function @ digits
+.synb
+.mets (digits < number <> [ radix ])
+.syne
+.desc
+The
+.code digits
+function returns a list of the digits of
+.meta number
+represented in the base given by
+.metn radix .
+
+The
+.meta number
+argument must be a non-negative integer, and
+.meta radix
+must be an integer greater than one.
+
+If
+.meta radix
+is omitted, it defaults to 10.
+
+The return value is a list of the digits in descending order of significance:
+most significant to least significant.
+The digits are integers. For instance, if
+.meta radix
+is 42, then the digits are integer values in the range 0 to 41.
+
+The returned list always contains at least one element, and
+includes no leading zeros, except when
+.meta number
+is zero. In that case, a one-element list containing zero is returned.
+
+.TP* Examples:
+
+.cblk
+  (digits 1234) -> (1 2 3 4)
+  (digits 1234567 1000) -> (1 234 567)
+  (digits 30 2) -> (1 1 1 1 0)
+  (digits 0) -> (0)
+.cble
+
+.coNP Function @ digpow
+.synb
+.mets (digpow < number <> [ radix ])
+.syne
+.desc
+The
+.code digpow
+function decomposes the
+.meta number
+argument into a power series whose terms add up to
+.metn number .
+
+The
+.meta number
+argument must be a non-negative integer, and
+.meta radix
+must be an integer greater than one.
+
+The returned power series consists of a list of nonnegative
+integers.  It is formed from the digits of
+.meta number
+in the given
+.metn radix ,
+which serve as coefficients which multiply successive
+powers of the
+.metn radix ,
+starting at the zeroth power (one).
+
+The terms are given in decreasing order of significance:
+the term corresponding to the most significant digit of
+.metn number ,
+multiplying the highest power of
+.metn radix ,
+is listed first.
+
+The returned list always contains at least one element, and
+includes no leading zeros, except when
+.meta number
+is zero. In that case, a one-element list containing zero is returned.
+
+.cblk
+  (digpow 1234) -> (1000 200 30 4)
+  (digpow 1234567 1000) -> (1000000 234000 567)
+  (digpow 30 2) -> (16 8 4 2 0)
+  (digpow 0) -> (0)
+.cble
+
+
 .SS* Bit Operations
 In \*(TL, similarly to Common Lisp, bit operations on integers are based
 on a concept that might be called "infinite two's-complement".  

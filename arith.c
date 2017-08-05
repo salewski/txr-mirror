@@ -2848,6 +2848,54 @@ val bits(val obj)
   return normalize(bignum_from_uintptr(coerce(uint_ptr_t, obj)));
 }
 
+static val digcommon(int pow, val self, val n, val base_in)
+{
+  val r = default_arg_strict(base_in, num_fast(10));
+
+  if (!integerp(n) || minusp(n))
+    uw_throwf(error_s, lit("~a: value ~s must be positive integer"),
+              self, n, nao);
+  if (!integerp(r) || lt(r, one))
+    uw_throwf(error_s, lit("~a: base ~s must be positive integer"),
+              self, r, nao);
+
+  {
+    val k = r;
+    val p = nil, p0;
+    list_collect_decl (out, ptail);
+
+    while (lt(k, n)) {
+      push(k, &p);
+      k = mul(k, r);
+    }
+
+    while ((p0 = pop(&p))) {
+      cnum i = 0;
+      while (ge(n, p0)) {
+        i++;
+        n = minus(n, p0);
+      }
+      ptail = list_collect(ptail, if3(pow,
+                                      mul(num_fast(i), p0),
+                                      num_fast(i)));
+    }
+
+    list_collect(ptail, n);
+
+    return out;
+  }
+}
+
+val digpow(val n, val base)
+{
+  return digcommon(1, lit("digpow"), n, base);
+}
+
+val digits(val n, val base)
+{
+  return digcommon(0, lit("digits"), n, base);
+}
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);
@@ -2882,6 +2930,8 @@ void arith_init(void)
   reg_varl(intern(lit("%e%"), user_package), flo(M_E));
 
   reg_fun(intern(lit("bits"), system_package), func_n1(bits));
+  reg_fun(intern(lit("digpow"), user_package), func_n2o(digpow, 1));
+  reg_fun(intern(lit("digits"), user_package), func_n2o(digits, 1));
 }
 
 void arith_free_all(void)
