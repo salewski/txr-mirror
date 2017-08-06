@@ -691,6 +691,8 @@ val gev(val first, struct args *rest);
 val lev(val first, struct args *rest);
 val numeqv(val first, struct args *rest);
 val numneqv(struct args *list);
+val sum(val seq);
+val prod(val seq);
 val max2(val a, val b);
 val min2(val a, val b);
 val maxv(val first, struct args *rest);

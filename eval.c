@@ -5829,6 +5829,8 @@ void eval_init(void)
   reg_fun(plus_s = intern(lit("+"), user_package), func_n0v(plusv));
   reg_fun(intern(lit("-"), user_package), func_n1v(minusv));
   reg_fun(intern(lit("*"), user_package), func_n0v(mulv));
+  reg_fun(intern(lit("sum"), user_package), func_n1(sum));
+  reg_fun(intern(lit("prod"), user_package), func_n1(prod));
   reg_fun(intern(lit("abs"), user_package), func_n1(abso));
   reg_fun(intern(lit("trunc"), user_package), func_n2o(trunc, 1));
   reg_fun(intern(lit("mod"), user_package), func_n2(mod));

@@ -33472,6 +33472,50 @@ follows, then that value is divided by that subsequent divisor.
 This process repeats until all divisors are exhausted, and the
 value of the last division is returned.
 
+.coNP Functions @ sum and @ prod
+.synb
+.mets (sum << num-sequence )
+.mets (prod << num-sequence )
+.syne
+.desc
+The
+.code sum
+and
+.code prod
+functions operate on a single argument
+.metn num-sequence ,
+which is a sequence of numbers.
+
+The
+.code sum
+function returns the left-associative sum of the elements of
+.meta num-sequence
+calculated as if using the
+.code +
+function.  Similarly, the
+.code prod
+function calculates the left-associative product of the elements of
+.metn num-sequence ,
+as if using the
+.code *
+function.
+
+If
+.meta num-sequence
+is empty then
+.code sum
+returns
+.code 0
+and
+.code prod
+returns
+.codn 1 .
+
+If
+.meta num-sequence
+contains one number, then both functions
+return that number.
+
 .coNP Functions @ wrap and @ wrap*
 .synb
 .mets (wrap < start < end << number )

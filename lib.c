@@ -3277,6 +3277,18 @@ val numneqv(struct args *args)
   return t;
 }
 
+val sum(val seq)
+{
+  args_decl_list(args, ARGS_MIN, tolist(seq));
+  return plusv(args);
+}
+
+val prod(val seq)
+{
+  args_decl_list(args, ARGS_MIN, tolist(seq));
+  return mulv(args);
+}
+
 val max2(val a, val b)
 {
   return if3(less(a, b), b, a);
