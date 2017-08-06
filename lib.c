@@ -3117,7 +3117,9 @@ val numberp(val num)
   }
 }
 
-val nary_op(val (*cfunc)(val, val), struct args *args, val emptyval)
+val nary_op(val self, val (*bfun)(val, val),
+            val (*ufun)(val self, val),
+            struct args *args, val emptyval)
 {
   val fi, se, re;
   cnum index = 0;
@@ -3128,21 +3130,48 @@ val nary_op(val (*cfunc)(val, val), struct args *args, val emptyval)
   fi = args_get(args, &index);
 
   if (!args_more(args, index))
-    return fi;
+    return ufun(self, fi);
 
   se = args_get(args, &index);
 
   if (!args_more(args, index))
-    return cfunc(fi, se);
+    return bfun(fi, se);
 
   re = args_get_rest(args, index);
 
-  return reduce_left(func_n2(cfunc), re, cfunc(fi, se), nil);
+  return reduce_left(func_n2(bfun), re, bfun(fi, se), nil);
+}
+
+static val unary_num(val self, val arg)
+{
+  if (!numberp(arg))
+    uw_throwf(error_s, lit("~a: ~s isn't a number"), self, arg, nao);
+  return arg;
+}
+
+static val unary_arith(val self, val arg)
+{
+  switch (type(arg)) {
+  case NUM:
+  case CHR:
+  case BGNUM:
+  case FLNUM:
+    return arg;
+  default:
+    uw_throwf(error_s, lit("~a: invalid argument ~s"), self, arg, nao);
+  }
+}
+
+static val unary_int(val self, val arg)
+{
+  if (!integerp(arg))
+    uw_throwf(error_s, lit("~a: ~s isn't an integer"), self, arg, nao);
+  return arg;
 }
 
 val plusv(struct args *nlist)
 {
-  return nary_op(plus, nlist, zero);
+  return nary_op(lit("+"), plus, unary_arith, nlist, zero);
 }
 
 val minusv(val minuend, struct args *nlist)
@@ -3164,7 +3193,7 @@ val minusv(val minuend, struct args *nlist)
 
 val mulv(struct args *nlist)
 {
-  return nary_op(mul, nlist, one);
+  return nary_op(lit("*"), mul, unary_num, nlist, one);
 }
 
 val divv(val dividend, struct args *nlist)
@@ -3186,12 +3215,12 @@ val divv(val dividend, struct args *nlist)
 
 val logandv(struct args *nlist)
 {
-  return nary_op(logand, nlist, negone);
+  return nary_op(lit("logand"), logand, unary_int, nlist, negone);
 }
 
 val logiorv(struct args *nlist)
 {
-  return nary_op(logior, nlist, zero);
+  return nary_op(lit("logior"), logior, unary_int, nlist, zero);
 }
 
 val gtv(val first, struct args *rest)
@@ -3204,6 +3233,9 @@ val gtv(val first, struct args *rest)
       return nil;
     first = elem;
   }
+
+  if (index == 0)
+    (void) unary_arith(lit(">"), first);
 
   return t;
 }
@@ -3219,6 +3251,9 @@ val ltv(val first, struct args *rest)
     first = elem;
   }
 
+  if (index == 0)
+    (void) unary_arith(lit("<"), first);
+
   return t;
 }
 
@@ -3232,6 +3267,9 @@ val gev(val first, struct args *rest)
       return nil;
     first = elem;
   }
+
+  if (index == 0)
+    (void) unary_arith(lit(">="), first);
 
   return t;
 }
@@ -3247,6 +3285,9 @@ val lev(val first, struct args *rest)
     first = elem;
   }
 
+  if (index == 0)
+    (void) unary_arith(lit("<="), first);
+
   return t;
 }
 
@@ -3261,6 +3302,9 @@ val numeqv(val first, struct args *rest)
     first = elem;
   }
 
+  if (index == 0)
+    (void) unary_arith(lit("="), first);
+
   return t;
 }
 
@@ -3268,6 +3312,11 @@ val numneqv(struct args *args)
 {
   val i, j;
   val list = args_get_list(args);
+
+  if (list && !cdr(list)) {
+    (void) unary_arith(lit("/="), car(list));
+    return t;
+  }
 
   for (i = list; i; i = cdr(i))
     for (j = cdr(i); j; j = cdr(j))

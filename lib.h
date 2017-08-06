@@ -654,7 +654,9 @@ val bignump(val num);
 val floatp(val num);
 val integerp(val num);
 val numberp(val num);
-val nary_op(val (*cfunc)(val, val), struct args *args, val emptyval);
+val nary_op(val self, val (*bfun)(val, val),
+            val (*ufun)(val self, val),
+            struct args *args, val emptyval);
 val plus(val anum, val bnum);
 val plusv(struct args *);
 val minus(val anum, val bnum);
