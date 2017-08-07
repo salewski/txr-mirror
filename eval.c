@@ -5437,6 +5437,7 @@ void eval_init(void)
   val me_each_f = func_n2(me_each);
   val me_for_f = func_n2(me_for);
   val diff_f = func_n4o(set_diff, 2);
+  val length_f = func_n1(length);
 
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
           &op_table, &pm_table, &last_form_evaled, &last_form_expanded,
@@ -6160,7 +6161,8 @@ void eval_init(void)
   reg_fun(intern(lit("uni"), user_package), func_n4o(uni, 2));
 
   reg_fun(intern(lit("seqp"), user_package), func_n1(seqp));
-  reg_fun(intern(lit("length"), user_package), func_n1(length));
+  reg_fun(intern(lit("length"), user_package), length_f);
+  reg_fun(intern(lit("len"), user_package), length_f);
   reg_fun(intern(lit("empty"), user_package), func_n1(empty));
   reg_fun(intern(lit("copy"), user_package), func_n1(copy));
   reg_fun(intern(lit("sub"), user_package), func_n3o(sub, 1));
