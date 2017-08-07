@@ -4202,6 +4202,13 @@ val split_str_keep(val str, val sep, val keep_sep)
   }
 }
 
+val spl(val sep, val arg1, val arg2)
+{
+  return if3(missingp(arg2),
+             split_str_keep(arg1, sep, arg2),
+             split_str_keep(arg2, sep, arg1));
+}
+
 val split_str(val str, val sep)
 {
   return split_str_keep(str, sep, nil);
@@ -4285,6 +4292,13 @@ val tok_str(val str, val tok_regex, val keep_sep)
   }
 
   return out;
+}
+
+val tok(val tok_regex, val arg1, val arg2)
+{
+  return if3(missingp(arg2),
+             tok_str(arg1, tok_regex, arg2),
+             tok_str(arg2, tok_regex, arg1));
 }
 
 val tok_where(val str, val tok_regex)

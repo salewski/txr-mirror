@@ -21172,6 +21172,40 @@ last character, whereas
 does not recognize empty separators at these outer limits
 of the string.
 
+.coNP Function @ spl
+.synb
+.mets (spl < sep <> [ keep-between ] << string )
+.syne
+.desc
+The
+.code spl
+function performs the same computation as
+.codn split-str .
+The same-named parameters of
+.code spl
+and
+.code split-str
+have the same semantics. The difference is the argument order.
+The
+.code spl
+function takes the
+.meta sep
+argument first.
+The last argument is always
+.meta string
+whether or not there are two arguments or three. If there are
+three arguments, then
+.meta keep-between
+is the middle one.
+
+Note: the argument conventions of
+.code spl
+facilitate less verbose partial application, such as with macros in the
+.code op
+family, in the common situation when
+.meta string
+is the unbound argument.
+
 .coNP Function @ split-str-set
 .synb
 .mets (split-str-set < string << set )
@@ -21302,6 +21336,40 @@ two numbers are equal.
 The tok-where function does not support the
 .meta keep-between
 parameter.
+
+.coNP Function @ tok
+.synb
+.mets (tok-str < regex <> [ keep-between ] << string )
+.syne
+.desc
+The
+.code tok
+function performs the same computation as
+.codn tok-str .
+The same-named parameters of
+.code tok
+and
+.code tok-str
+have the same semantics. The difference is the argument order.
+The
+.code tok
+function takes the
+.meta regex
+argument first.
+The last argument is always
+.meta string
+whether or not there are two arguments or three. If there are
+three arguments, then
+.meta keep-between
+is the middle one.
+
+Note: the argument conventions of
+.code tok
+facilitate less verbose partial application, such as  with macros in the
+.code op
+family, in the common situation when
+.meta string
+is the unbound argument.
 
 .coNP Function @ list-str
 .synb
