@@ -2021,6 +2021,28 @@ val lcm(val anum, val bnum)
   }
 }
 
+val divides(val d, val n)
+{
+  if (n == zero) {
+    if (!integerp(d))
+      uw_throwf(error_s, lit("divides: ~s isn't an integer"),
+                d, nao);
+    return tnil(!zerop(d));
+  }
+
+  if (d == one) {
+    if (!integerp(n))
+      uw_throwf(error_s, lit("divides: ~s isn't an integer"),
+                n, nao);
+    return t;
+  }
+
+  if (minusp(d))
+    d = neg(d);
+
+  return eql(gcd(d, n), d);
+}
+
 val floorf(val num)
 {
   switch (type(num)) {
@@ -2929,6 +2951,7 @@ void arith_init(void)
   reg_varl(intern(lit("*e*"), user_package), flo(M_E));
   reg_varl(intern(lit("%e%"), user_package), flo(M_E));
 
+  reg_fun(intern(lit("divides"), user_package), func_n2(divides));
   reg_fun(intern(lit("bits"), system_package), func_n1(bits));
   reg_fun(intern(lit("digpow"), user_package), func_n2o(digpow, 1));
   reg_fun(intern(lit("digits"), user_package), func_n2o(digits, 1));

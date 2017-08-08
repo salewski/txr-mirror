@@ -39,6 +39,7 @@ val unum(ucnum u);
 val cum_norm_dist(val x);
 val n_choose_k(val n, val k);
 val n_perm_k(val n, val k);
+val divides(val d, val n);
 val tofloat(val obj);
 val toint(val obj, val base);
 val tofloatz(val obj);

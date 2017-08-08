@@ -33713,6 +33713,35 @@ If
 .code lcm
 has any argument which is zero, it yields zero.
 
+.coNP Function @ divides
+.synb
+.mets (divides < d << n )
+.syne
+.desc
+The
+.code divides
+function tests whether integer
+.meta d
+divides integer
+.metn n .
+If this is true,
+.code t
+is returned, otherwise
+.codn nil .
+
+The integers 1 and -1 divide every other integer and themselves.
+By established convention, every integer, except zero, divides zero.
+
+For other values,
+.meta d
+divides
+.meta n
+if division of
+.meta n
+by
+.meta d
+leaves no remainder.
+
 .coNP Function @ abs
 .synb
 .mets (abs << number )
