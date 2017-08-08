@@ -4838,6 +4838,14 @@ val carray_buf_sync(val carray)
   return buf;
 }
 
+val buf_carray(val carray)
+{
+  struct carray *scry = carray_struct_checked(carray);
+  struct txr_ffi_type *etft = scry->eltft;
+  cnum bytes = scry->nelem * etft->size;
+  return  make_duplicate_buf(num(bytes), scry->data);
+}
+
 val carray_cptr(val cptr, val type, val len)
 {
   mem_t *data = cptr_get(cptr);
@@ -5580,6 +5588,7 @@ void ffi_init(void)
   reg_fun(intern(lit("carray-blank"), user_package), func_n2(carray_blank));
   reg_fun(intern(lit("carray-buf"), user_package), func_n3o(carray_buf, 2));
   reg_fun(intern(lit("carray-buf-sync"), user_package), func_n1(carray_buf_sync));
+  reg_fun(intern(lit("buf-carray"), user_package), func_n1(buf_carray));
   reg_fun(intern(lit("carray-cptr"), user_package), func_n3o(carray_cptr, 2));
   reg_fun(intern(lit("vec-carray"), user_package), func_n2o(vec_carray, 1));
   reg_fun(intern(lit("list-carray"), user_package), func_n2o(list_carray, 1));

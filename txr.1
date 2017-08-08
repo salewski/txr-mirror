@@ -58598,6 +58598,24 @@ length of
 .meta carray
 are altered to reflect the current state of the buffer.
 
+.coNP Function @ buf-carray
+.synb
+.mets (buf-carray << carray )
+.syne
+.desc
+The
+.code buf-carray
+function duplicates the underlying storage of
+.meta carray
+and returns that storage represented as an object of
+.code buf
+type.
+
+The storage size is calculated by multiplying the
+.code carray
+object's element size by the number of elements.
+Only that extent of the storage is duplicated.
+
 .coNP Function @ carray-cptr
 .synb
 .mets (carray-cptr < cptr < type <> [ length ])
