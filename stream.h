@@ -28,7 +28,7 @@
 enum strm_whence {
   strm_start = SEEK_SET,
   strm_cur = SEEK_CUR,
-  strm_end = SEEK_SET
+  strm_end = SEEK_END
 };
 
 enum indent_mode {
