@@ -325,7 +325,7 @@ val buf_put_uchar(val buf, val pos, val num)
   val self = lit("buf-put-uchar");
   struct buf *b = buf_handle(buf, self);
   cnum p = buf_check_index(pos, self);
-  unsigned char v = c_char(num, self);
+  unsigned char v = c_uchar(num, self);
   if (p >= c_num(b->len))
     buf_do_set_len(buf, b, succ(pos), nil, self);
   b->data[p] = v;
