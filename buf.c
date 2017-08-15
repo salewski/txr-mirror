@@ -142,7 +142,7 @@ static void buf_grow(struct buf *b, val init_val, val self)
   while (size < len) {
     cnum delta = size / 4;
     if (INT_PTR_MAX - delta >= size)
-      size += size / 4;
+      size += delta;
     else
       size = len;
   }
