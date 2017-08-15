@@ -209,8 +209,10 @@ static val with_stream_set_entries(val dlt, val fun)
   val name[] = {
     lit("with-out-string-stream"),
     lit("with-out-strlist-stream"),
+    lit("with-out-buf-stream"),
     lit("with-in-string-stream"),
     lit("with-in-string-byte-stream"),
+    lit("with-in-buf-stream"),
     lit("with-stream"),
     nil
   };

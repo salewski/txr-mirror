@@ -44,6 +44,7 @@
 #include "eval.h"
 #include "stream.h"
 #include "arith.h"
+#include "utf8.h"
 #include "buf.h"
 
 static cnum buf_check_len(val len, val self)
@@ -646,6 +647,263 @@ val buf_pprint(val buf, val stream_in)
   return t;
 }
 
+struct buf_strm {
+  struct strm_base a;
+  utf8_decoder_t ud;
+  int is_byte_oriented;
+  val buf;
+  val pos;
+  val unget_c;
+};
+
+static void buf_strm_mark(val stream)
+{
+  struct buf_strm *b = coerce(struct buf_strm *, stream->co.handle);
+  strm_base_mark(&b->a);
+  gc_mark(b->buf);
+  gc_mark(b->pos);
+  gc_mark(b->unget_c);
+}
+
+static int buf_strm_put_byte_callback(int b, mem_t *ctx)
+{
+  struct buf_strm *s = coerce(struct buf_strm *, ctx);
+  (void) buf_put_uchar(s->buf, s->pos, num_fast(b));
+  s->pos = succ(s->pos);
+  return 1;
+}
+
+static val buf_strm_put_string(val stream, val str)
+{
+  struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+  const wchar_t *p = c_str(str);
+
+  while (*p) {
+    (void) utf8_encode(*p++, buf_strm_put_byte_callback, coerce(mem_t *, s));
+  }
+
+  return t;
+}
+
+static val buf_strm_put_char(val stream, val ch)
+{
+  struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+  (void) utf8_encode(c_chr(ch), buf_strm_put_byte_callback, coerce(mem_t *, s));
+  return t;
+}
+
+static val buf_strm_put_byte(val stream, int b)
+{
+  struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+  (void) buf_strm_put_byte_callback(b, coerce(mem_t *, s));
+  return t;
+}
+
+
+static int buf_strm_get_byte_callback(mem_t *ctx)
+{
+  val self = lit("get-byte");
+  struct buf_strm *s = coerce(struct buf_strm *, ctx);
+  struct buf *b = buf_handle(s->buf, self);
+  cnum p = buf_check_index(s->pos, self);
+  s->pos = num(p + 1);
+  return (p >= c_num(b->len)) ? EOF : b->data[p];
+}
+
+static val buf_strm_get_char(val stream)
+{
+  struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+
+  if (s->unget_c) {
+    return rcyc_pop(&s->unget_c);
+  } else {
+    wint_t ch;
+
+    if (s->is_byte_oriented) {
+      ch = buf_strm_get_byte_callback(coerce(mem_t *, s));
+      if (ch == 0)
+        ch = 0xDC00;
+    } else {
+      ch = utf8_decode(&s->ud, buf_strm_get_byte_callback,
+                       coerce(mem_t *, s));
+    }
+
+    return (ch != WEOF) ? chr(ch) : nil;
+  }
+}
+
+static val buf_strm_get_byte(val stream)
+{
+  struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+  int byte = buf_strm_get_byte_callback(coerce(mem_t *, s));
+  return byte == EOF ? nil : num_fast(byte);
+}
+
+static val buf_strm_unget_char(val stream, val ch)
+{
+  struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+  mpush(ch, mkloc(s->unget_c, stream));
+  return ch;
+}
+
+static val buf_strm_unget_byte(val stream, int byte)
+{
+  val self = lit("unget-byte");
+  struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+  struct buf *b = buf_handle(s->buf, self);
+  cnum p = c_num(s->pos);
+
+  if (p <= 0) {
+    uw_throwf(file_error_s,
+              lit("~a: cannot push back past start of stream ~s"),
+              self, stream, nao);
+  }
+
+  b->data[--p] = byte;
+  s->pos = num(p);
+  return num_fast(byte);
+}
+
+static val buf_strm_seek(val stream, val offset, enum strm_whence whence)
+{
+  val self = lit("seek-stream");
+  struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+  val npos;
+
+  switch (whence) {
+  case strm_start:
+    npos = offset;
+    break;
+  case strm_cur:
+    if (offset == zero)
+      return s->pos;
+    npos = plus(s->pos, offset);
+    break;
+  case strm_end:
+    {
+      struct buf *b = buf_handle(s->buf, self);
+      npos = minus(b->len, offset);
+    }
+    break;
+  default:
+    internal_error("invalid whence value");
+  }
+
+  (void) buf_check_index(npos, self);
+
+  s->pos = npos;
+  return t;
+}
+
+static val buf_strm_truncate(val stream, val len)
+{
+  struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+  buf_set_length(s->buf, len, zero);
+  return t;
+}
+
+static val buf_strm_get_prop(val stream, val ind)
+{
+  struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+
+  if (ind == name_k) {
+    return lit("buf-stream");
+  } else if (ind == byte_oriented_k) {
+    return tnil(s->is_byte_oriented);
+  }
+
+  return nil;
+}
+
+static val buf_strm_set_prop(val stream, val ind, val prop)
+{
+  struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+
+  if (ind == byte_oriented_k) {
+    s->is_byte_oriented = prop ? 1 : 0;
+    return t;
+  }
+
+  return nil;
+}
+
+
+static val buf_strm_get_error(val stream)
+{
+  val self = lit("get-error");
+  struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+  struct buf *b = buf_handle(s->buf, self);
+  return ge(s->pos, b->len);
+}
+
+static val buf_strm_get_error_str(val stream)
+{
+  return errno_to_string(buf_strm_get_error(stream));
+}
+
+static struct strm_ops buf_strm_ops =
+  strm_ops_init(cobj_ops_init(eq,
+                              stream_print_op,
+                              stream_destroy_op,
+                              buf_strm_mark,
+                              cobj_eq_hash_op),
+                wli("buf-stream"),
+                buf_strm_put_string,
+                buf_strm_put_char,
+                buf_strm_put_byte,
+                generic_get_line,
+                buf_strm_get_char,
+                buf_strm_get_byte,
+                buf_strm_unget_char,
+                buf_strm_unget_byte,
+                0,
+                0,
+                0,
+                0,
+                buf_strm_seek,
+                buf_strm_truncate,
+                buf_strm_get_prop,
+                buf_strm_set_prop,
+                buf_strm_get_error,
+                buf_strm_get_error_str,
+                0,
+                0);
+
+static struct buf_strm *buf_strm(val stream, val self)
+{
+  struct buf_strm *s = coerce(struct buf_strm *,
+                              cobj_handle(stream, stream_s));
+
+  type_assert (stream->co.ops == &buf_strm_ops.cobj_ops,
+               (lit("~a: ~a is not a buffer stream"), self, stream, nao));
+  return s;
+}
+
+val make_buf_stream(val buf_opt)
+{
+  val stream;
+  val buf = default_arg(buf_opt, make_buf(zero, zero, num_fast(64)));
+  struct buf_strm *s = coerce(struct buf_strm *, chk_malloc(sizeof *s));
+
+  strm_base_init(&s->a);
+  utf8_decoder_init(&s->ud);
+  s->buf = nil;
+  s->pos = zero;
+  s->is_byte_oriented = 0;
+  s->unget_c = nil;
+  stream = cobj(coerce(mem_t *, s), stream_s, &buf_strm_ops.cobj_ops);
+  s->buf = buf;
+
+  return stream;
+}
+
+val get_buf_from_stream(val stream)
+{
+  val self = lit("get-buf-from-stream");
+  struct buf_strm *s = buf_strm(stream, self);
+  return s->buf;
+}
+
 void buf_init(void)
 {
   reg_fun(intern(lit("make-buf"), user_package), func_n3o(make_buf, 1));
@@ -717,4 +975,9 @@ void buf_init(void)
   reg_fun(intern(lit("buf-get-float"), user_package), func_n2(buf_get_float));
   reg_fun(intern(lit("buf-get-double"), user_package), func_n2(buf_get_double));
   reg_fun(intern(lit("buf-get-cptr"), user_package), func_n2(buf_get_cptr));
+
+  reg_fun(intern(lit("make-buf-stream"), user_package), func_n1o(make_buf_stream, 0));
+  reg_fun(intern(lit("get-buf-from-stream"), user_package), func_n1(get_buf_from_stream));
+
+  fill_stream_ops(&buf_strm_ops);
 }

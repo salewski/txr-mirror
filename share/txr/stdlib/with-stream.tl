@@ -34,12 +34,21 @@
      ,*body
      (get-list-from-stream ,stream)))
 
+(defmacro with-out-buf-stream ((stream : buf) . body)
+  ^(let ((,stream (make-buf-stream ,*[[iff have list] buf])))
+     ,*body
+     (get-buf-from-stream ,stream)))
+
 (defmacro with-in-string-stream ((stream string) . body)
   ^(let ((,stream (make-string-input-stream ,string)))
      ,*body))
 
 (defmacro with-in-string-byte-stream ((stream string) . body)
   ^(let ((,stream (make-string-byte-input-stream ,string)))
+     ,*body))
+
+(defmacro with-in-buf-stream ((stream buf) . body)
+  ^(let ((,stream (make-buf-stream ,buf)))
      ,*body))
 
 (defmacro with-stream ((var stream) . body)
