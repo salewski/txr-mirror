@@ -5486,6 +5486,48 @@ val zero_fill(val type, val obj)
   return ret;
 }
 
+val put_obj(val obj, val type, val stream)
+{
+  val self = lit("put-obj");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  cnum size = tft->size;
+  val len = num(size);
+  mem_t *data = coerce(mem_t *, zalloca(size));
+  obj_t buf_obj;
+  val buf = init_borrowed_buf(&buf_obj, len, data);
+  tft->put(tft, obj, data, self);
+  return eql(put_buf(buf, zero, stream), len);
+}
+
+
+val get_obj(val type, val stream)
+{
+  val self = lit("get-obj");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  cnum size = tft->size;
+  val len = num(size);
+  mem_t *data = coerce(mem_t *, zalloca(size));
+  obj_t buf_obj;
+  val buf = init_borrowed_buf(&buf_obj, len, data);
+  if (neql(fill_buf(buf, zero, stream), len))
+    return nil;
+  return tft->get(tft, data, self);
+}
+
+val fill_obj(val obj, val type, val stream)
+{
+  val self = lit("fill-obj");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  cnum size = tft->size;
+  val len = num(size);
+  mem_t *data = coerce(mem_t *, zalloca(size));
+  obj_t buf_obj;
+  val buf = init_borrowed_buf(&buf_obj, len, data);
+  if (neql(fill_buf(buf, zero, stream), len))
+    return nil;
+  return tft->in(tft, 1, data, obj, self);
+}
+
 void ffi_init(void)
 {
   prot1(&ffi_typedef_hash);
@@ -5615,6 +5657,9 @@ void ffi_init(void)
   reg_fun(intern(lit("union-out"), user_package), func_n3(union_out));
   reg_fun(intern(lit("make-zstruct"), user_package), func_n1v(make_zstruct));
   reg_fun(intern(lit("zero-fill"), user_package), func_n2(zero_fill));
+  reg_fun(intern(lit("put-obj"), user_package), func_n3o(put_obj, 2));
+  reg_fun(intern(lit("get-obj"), user_package), func_n2o(get_obj, 1));
+  reg_fun(intern(lit("fill-obj"), user_package), func_n3o(fill_obj, 2));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
   ffi_init_extra_types();

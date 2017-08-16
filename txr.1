@@ -58325,6 +58325,97 @@ an argument, in cases when the callback has updated the Lisp
 object corresponding to a union member, and that change needs
 to be propagated to the foreign caller.
 
+.SS* FFI-type-driven I/O Functions
+
+These functions provide a way to perform I/O on stream using the foreign
+representation of Lisp objects, performing conversion between the Lisp
+representations in memory and the foreign representations in a stream.
+
+The
+.meta stream
+argument used with these functions must be a stream object which,
+in the case of input functions, supports
+.code get-byte
+and, in the case of output, supports
+.codn put-byte .
+
+.coNP Function @ put-obj
+.synb
+.mets (put-obj < object < type <> [ stream ])
+.syne
+.desc
+The
+.code put-obj
+function encodes
+.meta object
+into a foreign representation, according to the FFI type
+.metn type .
+The bytes of the foreign representation are then written to
+.metn stream .
+
+If
+.meta stream
+is omitted, it defaults to
+.codn *stdout* .
+
+If the operation successfully writes all bytes of the representation to
+.metn stream ,
+the value
+.code t
+is returned. A partial write causes the return value to be
+.codn nil .
+
+All other stream error situations throw exceptions.
+
+.coNP Function @ get-obj
+.synb
+.mets (get-obj < type <> [ stream ])
+.syne
+.desc
+The
+.code get-obj
+function reads from
+.meta stream
+the bytes corresponding to a foreign representation according to the FFI type
+.metn type .
+
+If
+.meta stream
+is omitted, it defaults to
+.codn *stdin* .
+
+If the read is successful, these bytes are decoded, producing a Lisp
+object, which is returned.
+
+If the read is incomplete, the value returned is
+.metn nil .
+
+All other stream error situations throw exceptions.
+
+.coNP Function @ fill-obj
+.synb
+.mets (fill-obj < object < type <> [ stream ])
+.syne
+.desc
+The
+.code get-obj
+function reads from
+.meta stream
+the bytes corresponding to a foreign representation according to the FFI type
+.metn type .
+
+If the read is successful, then
+.meta object
+is updated, if possible, from that representation, using the by-value in
+semantics of the FFI type and returned. If a by-value update of
+.meta object
+isn't possible, then a new object is decoded from the data and returned.
+
+If the read is incomplete, the value returned is
+.metn nil .
+
+All other stream error situations throw exceptions.
+
 .SS* Buffer Functions
 
 Functions in this area provide a way to perform conversion between

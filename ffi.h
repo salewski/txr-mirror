@@ -134,4 +134,7 @@ val union_in(val uni, val memb, val memb_obj);
 val union_out(val uni, val memb, val memb_obj);
 val make_zstruct(val type, struct args *args);
 val zero_fill(val type, val obj);
+val put_obj(val obj, val type, val stream);
+val get_obj(val type, val stream);
+val fill_obj(val obj, val type, val stream);
 void ffi_init(void);
