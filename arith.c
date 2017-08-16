@@ -2241,6 +2241,15 @@ val logand(val a, val b)
     return zero;
 
   switch (TYPE_PAIR(type(a), type(b))) {
+  case TYPE_PAIR(NUM, CHR):
+  case TYPE_PAIR(CHR, NUM):
+    if (a == b) {
+      return a;
+    } else {
+      cnum ac = c_num(a);
+      cnum bc = c_num(b);
+      return chr(ac & bc);
+    }
   case TYPE_PAIR(NUM, NUM):
     if (a == b) {
       return a;
@@ -2282,6 +2291,15 @@ val logior(val a, val b)
     return zero;
 
   switch (TYPE_PAIR(type(a), type(b))) {
+  case TYPE_PAIR(NUM, CHR):
+  case TYPE_PAIR(CHR, NUM):
+    if (a == b) {
+      return a;
+    } else {
+      cnum ac = c_num(a);
+      cnum bc = c_num(b);
+      return chr(ac | bc);
+    }
   case TYPE_PAIR(NUM, NUM):
     if (a == b) {
       return a;
@@ -2323,6 +2341,15 @@ val logxor(val a, val b)
     return zero;
 
   switch (TYPE_PAIR(type(a), type(b))) {
+  case TYPE_PAIR(NUM, CHR):
+  case TYPE_PAIR(CHR, NUM):
+    if (a == b) {
+      return a;
+    } else {
+      cnum ac = c_num(a);
+      cnum bc = c_num(b);
+      return chr(ac ^ bc);
+    }
   case TYPE_PAIR(NUM, NUM):
     if (a == b) {
       return a;
@@ -2593,6 +2620,7 @@ val bit(val a, val bit)
 
   switch (type(a)) {
   case NUM:
+  case CHR:
     {
       cnum an = c_num(a);
       if (bn < (SIZEOF_PTR * CHAR_BIT))

@@ -34865,6 +34865,20 @@ the value -1 (all bits 1). If
 is called with no arguments it produces
 zero. In the one-argument case, the functions just return their argument value.
 
+In the two-argument case, one of the operands may be a character, if the other
+operand is a fixnum integer. The character operand is taken to be an integer
+corresponding to the character value's Unicode code point value. The resulting
+value is regarded as a Unicode code point and converted to a character value
+accordingly.
+
+When three or more arguments are specified, the operation's semantics is
+that of a left-associative reduction through two-argument invocations,
+so that the three-argument case
+.code "(logand a b c)"
+is equivalent to the expression
+.codn "(logand (logand a b) c)" ,
+which features two two-argument cases..
+
 .coNP Function @ logtest
 .synb
 .mets (logtest < int1 << int2 )
@@ -35008,7 +35022,7 @@ and
 .desc
 The
 .code bit
-function tests whether the integer
+function tests whether the integer or character
 .meta value
 has a 1 in bit position
 .metn bit .
