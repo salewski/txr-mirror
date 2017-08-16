@@ -102,16 +102,19 @@ val bufp(val object)
   return tnil(type(object) == BUF);
 }
 
-val make_borrowed_buf(val len, mem_t *data)
+val init_borrowed_buf(obj_t *obj, val len, mem_t *data)
 {
-  val obj = make_obj();
-
   obj->b.type = BUF;
   obj->b.data = data;
   obj->b.len = len;
   obj->b.size = nil;
 
   return obj;
+}
+
+val make_borrowed_buf(val len, mem_t *data)
+{
+  return init_borrowed_buf(make_obj(), len, data);
 }
 
 val make_duplicate_buf(val len, mem_t *data)
