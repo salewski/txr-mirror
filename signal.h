@@ -127,6 +127,36 @@ struct jmp {
   unsigned long r31;
 };
 
+#elif __aarch64__
+
+struct jmp {
+  unsigned long x19;
+  unsigned long x20;
+  unsigned long x21;
+  unsigned long x22;
+  unsigned long x23;
+  unsigned long x24;
+  unsigned long x25;
+  unsigned long x26;
+  unsigned long x27;
+  unsigned long x28;
+  unsigned long x29;
+  unsigned long x30;
+  unsigned long d8;
+  unsigned long d9;
+  unsigned long d10;
+  unsigned long d11;
+  unsigned long d12;
+  unsigned long d13;
+  unsigned long d14;
+  unsigned long d15;
+  unsigned long x16;
+};
+
+/* Jump buffer contains:
+   x19-x28, x29(fp), x30(lr), (x31)sp, d8-d15.  Other registers are not
+   saved.  */
+
 #else
 #error port me!
 #endif

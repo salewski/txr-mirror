@@ -52,6 +52,12 @@
 #define FRESHOBJ_VEC_SIZE       (8 * HEAP_SIZE)
 #define DFL_MALLOC_DELTA_THRESH (64L * 1024 * 1024)
 
+#if __aarch64__
+#define STACK_TOP_EXTRA_WORDS 4
+#else
+#define STACK_TOP_EXTRA_WORDS 0
+#endif
+
 typedef struct heap {
   struct heap *next;
   obj_t block[HEAP_SIZE];
@@ -499,7 +505,7 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
   /*
    * Finally, the stack.
    */
-  mark_mem_region(gc_stack_top, gc_stack_bottom);
+  mark_mem_region(gc_stack_top - STACK_TOP_EXTRA_WORDS, gc_stack_bottom);
 }
 
 static int sweep_one(obj_t *block)
