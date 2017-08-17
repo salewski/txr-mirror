@@ -49,6 +49,9 @@
 #include ALLOCA_H
 #include "unwind.h"
 
+#define UW_CONT_FRAME_BEFORE (32 * sizeof (val))
+#define UW_CONT_FRAME_AFTER (16 * sizeof (val))
+
 static uw_frame_t *uw_stack;
 static uw_frame_t *uw_env_stack;
 static uw_frame_t *uw_exit_point;
@@ -862,7 +865,6 @@ static void call_copy_handlers(uw_frame_t *upto, int parent)
 
 static val revive_cont(val dc, val arg)
 {
-  const int frame_slack = 32 * sizeof (val);
   struct cont *cont = coerce(struct cont *, cobj_handle(dc, sys_cont_s));
 
   if (arg == sys_cont_free_s) {
@@ -870,15 +872,14 @@ static val revive_cont(val dc, val arg)
     cont->stack = 0;
     return nil;
   } else if (cont->stack) {
-    mem_t *space = coerce(mem_t *, alloca(cont->size + frame_slack)) + frame_slack;
+    mem_t *space = coerce(mem_t *, alloca(cont->size));
     uint_ptr_t orig_start = coerce(uint_ptr_t, cont->orig);
     uint_ptr_t orig_end = orig_start + cont->size;
     cnum delta = space - coerce(mem_t *, cont->orig);
     mem_t *ptr;
-    uw_frame_t *new_uw_stack = coerce(uw_frame_t *, space), *fr;
+    uw_frame_t *new_uw_stack = coerce(uw_frame_t *, space + UW_CONT_FRAME_BEFORE), *fr;
     int env_set = 0;
 
-    memset(space - frame_slack, 0, frame_slack);
     memcpy(space, cont->stack, cont->size);
 
     for (ptr = space; ptr < space + cont->size; ptr += sizeof (cnum))
@@ -895,7 +896,7 @@ static val revive_cont(val dc, val arg)
 #endif
       word = *wordptr;
 
-      if (word >= orig_start - frame_slack &&
+      if (word >= orig_start - UW_CONT_FRAME_BEFORE &&
           word < orig_end && is_ptr(coerce(val, word)))
         *wordptr = word + delta;
 
@@ -944,24 +945,24 @@ static val capture_cont(val tag, val fun, uw_frame_t *block)
 {
   volatile val cont_obj = nil;
   uw_block_begin (nil, result);
+  mem_t *stack = coerce(mem_t *, uw_stack) - UW_CONT_FRAME_BEFORE;
 
   bug_unless (uw_stack < block);
 
   {
-    const int capture_extra = 16 * sizeof (val);
-    mem_t *lim = coerce(mem_t *, block + 1) + capture_extra;
-    cnum bloff = coerce(mem_t *, block) - coerce(mem_t *, uw_stack);
-    cnum size = coerce(mem_t *, lim) - coerce(mem_t *, uw_stack);
-    mem_t *stack = chk_malloc(size);
-    uw_frame_t *blcopy = coerce(uw_frame_t *, stack + bloff);
+    mem_t *lim = coerce(mem_t *, block + 1) + UW_CONT_FRAME_AFTER;
+    cnum bloff = coerce(mem_t *, block) - coerce(mem_t *, stack);
+    cnum size = coerce(mem_t *, lim) - coerce(mem_t *, stack);
+    mem_t *stack_copy = chk_malloc(size);
+    uw_frame_t *blcopy = coerce(uw_frame_t *, stack_copy + bloff);
     struct cont *cont = coerce(struct cont *, chk_malloc(sizeof *cont));
 
-    cont->orig = uw_stack;
+    cont->orig = coerce(uw_frame_t *, stack);
     cont->size = size;
-    cont->stack = stack;
+    cont->stack = stack_copy;
     cont->tag = nil;
 
-    memcpy(stack, uw_stack, size);
+    memcpy(stack_copy, stack, size);
 
     blcopy->uw.up = 0;
     blcopy->uw.type = UW_CAPTURED_BLOCK;

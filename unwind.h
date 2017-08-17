@@ -98,6 +98,12 @@ struct uw_debug {
   val chr;
 };
 
+#if __aarch64__
+#define UW_FRAME_ALIGN __attribute__ ((aligned (16)))
+#else
+#define UW_FRAME_ALIGN
+#endif
+
 union uw_frame {
   struct uw_common uw;
   struct uw_block bl;
@@ -107,7 +113,7 @@ union uw_frame {
   struct uw_cont_copy cp;
   struct uw_guard gu;
   struct uw_debug db;
-};
+} UW_FRAME_ALIGN;
 
 void uw_push_block(uw_frame_t *, val tag);
 void uw_push_env(uw_frame_t *);
