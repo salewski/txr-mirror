@@ -6892,14 +6892,23 @@ val vec_set_length(val vec, val length)
       uw_throwf(error_s, lit("vec-set-length: negative length ~s specified"),
                 length, nao);
 
-    if (new_length > convert(cnum, (convert(size_t, -1)/sizeof (val) - 2)))
+    if (new_length > INT_PTR_MAX - 2)
+    {
       uw_throwf(error_s, lit("vec-set-length: cannot extend to length ~s"),
                 length, nao);
+    }
 
     if (new_length > old_alloc) {
-      cnum new_alloc = max(new_length, 2*old_alloc);
-      val *newvec = coerce(val *, chk_realloc(coerce(mem_t *, vec->v.vec - 2),
-                                              (new_alloc + 2) * sizeof *newvec));
+      cnum new_alloc;
+      val *newvec;
+
+      if (old_alloc > (INT_PTR_MAX - 2) - (INT_PTR_MAX - 2) / 5)
+        new_alloc = INT_PTR_MAX - 2;
+      else
+        new_alloc = max(new_length, old_alloc + old_alloc / 4);
+
+      newvec = coerce(val *, chk_realloc(coerce(mem_t *, vec->v.vec - 2),
+                                         (new_alloc + 2) * sizeof *newvec));
       vec->v.vec = newvec + 2;
       set(mkloc(vec->v.vec[vec_alloc], vec), num(new_alloc));
 #if HAVE_VALGRIND
