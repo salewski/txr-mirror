@@ -3522,45 +3522,44 @@ val string_extend(val str, val tail)
 {
   type_check(str, STR);
   {
+    val self = lit("string-extend");
     cnum len = c_num(length_str(str));
     cnum oalloc = c_num(str->st.alloc), alloc = oalloc;
-    val needed;
-    val room = zero;
+    cnum delta, needed;
 
     if (stringp(tail))
-      needed = length_str(tail);
+      delta = c_num(length_str(tail));
     else if (chrp(tail))
-      needed = one;
-    else if (fixnump(tail))
-      needed = tail;
+      delta = 1;
+    else if (integerp(tail))
+      delta = c_num(tail);
     else
-      uw_throwf(error_s, lit("string-extend: tail ~s bad type"), str, nao);
+      uw_throwf(error_s, lit("~s: tail ~s bad type"), self, str, nao);
 
-    room = num(alloc - len - 1);
+    if (INT_PTR_MAX - delta - 1 < len)
+      uw_throwf(error_s, lit("~s: overflow"), self, nao);
 
-    while (gt(needed, room) && alloc < NUM_MAX) {
-      if (alloc > NUM_MAX / 2) {
-        alloc = NUM_MAX;
-      } else {
-        alloc *= 2;
+    needed = len + delta + 1;
+
+    if (needed > alloc) {
+      if (alloc >= (INT_PTR_MAX - INT_PTR_MAX / 5))
+        alloc = INT_PTR_MAX;
+      else
+        alloc = max(alloc + alloc / 4, needed);
+
+      if (alloc != oalloc) {
+        str->st.str = coerce(wchar_t *,
+                             chk_grow_vec(coerce(mem_t *, str->st.str),
+                                          oalloc, alloc,
+                                          sizeof *str->st.str));
+        set(mkloc(str->st.alloc, str), num_fast(alloc));
       }
-      room = num(alloc - len - 1);
     }
 
-    if (gt(needed, room))
-      uw_throw(error_s, lit("string-extend: overflow"));
-
-    if (alloc != oalloc) {
-      str->st.str = coerce(wchar_t *, chk_grow_vec(coerce(mem_t *, str->st.str),
-                                                   oalloc, alloc,
-                                                   sizeof *str->st.str));
-      set(mkloc(str->st.alloc, str), num(alloc));
-    }
-
-    set(mkloc(str->st.len, str), plus(str->st.len, needed));
+    set(mkloc(str->st.len, str), num_fast(len + delta));
 
     if (stringp(tail)) {
-      wmemcpy(str->st.str + len, c_str(tail), c_num(needed) + 1);
+      wmemcpy(str->st.str + len, c_str(tail), delta + 1);
     } else if (chrp(tail)) {
       str->st.str[len] = c_chr(tail);
       str->st.str[len + 1] = 0;
