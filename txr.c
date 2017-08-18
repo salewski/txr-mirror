@@ -68,19 +68,6 @@ int opt_compat;
 int opt_dbg_expansion;
 val stdlib_path;
 
-/*
- * Can implement an emergency allocator here from a fixed storage
- * pool, which sets an OOM flag. Program can check flag
- * and gracefully terminate instead of aborting like this.
- */
-static mem_t *oom_realloc_handler(mem_t *old, size_t size)
-{
-  format(std_error, lit("~a: out of memory\n"), prog_string, nao);
-  if (opt_print_bindings)
-    put_line(lit("false"), std_output);
-  abort();
-}
-
 static void help(void)
 {
   val text = lit(
@@ -375,7 +362,7 @@ int main(int argc, char **argv)
   repress_privilege();
   progname = utf8_dup_from(argv[0] ? argv[0]: "txr");
   progname_u8 = argv[0];
-  init(oom_realloc_handler, &stack_bottom);
+  init(&stack_bottom);
   match_init();
   debug_init();
   sysroot_init();

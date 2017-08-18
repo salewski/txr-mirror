@@ -105,7 +105,7 @@ val eof_s, eol_s, assert_s, name_s;
 val error_s, type_error_s, internal_error_s, panic_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s, syntax_error_s;
-val timeout_error_s, system_error_s;
+val timeout_error_s, system_error_s, alloc_error_s;
 val warning_s, defr_warning_s, restart_s, continue_s;
 val gensym_counter_s, nullify_s, from_list_s, lambda_set_s, length_s;
 
@@ -126,8 +126,6 @@ val year_s, month_s, day_s, hour_s, min_s, sec_s, dst_s, gmtoff_s, zone_s;
 
 static val env_list;
 static val recycled_conses;
-
-mem_t *(*oom_realloc)(mem_t *, size_t);
 
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
@@ -2602,6 +2600,11 @@ val equal(val left, val right)
 
 alloc_bytes_t malloc_bytes;
 
+static void oom(void)
+{
+  uw_throwf(alloc_error_s, lit("out of memory"), nao);
+}
+
 mem_t *chk_malloc(size_t size)
 {
   mem_t *ptr = convert(mem_t *, malloc(size));
@@ -2609,7 +2612,7 @@ mem_t *chk_malloc(size_t size)
   assert (!async_sig_enabled);
 
   if (size && ptr == 0)
-    ptr = convert(mem_t *, oom_realloc(0, size));
+    oom();
   malloc_bytes += size;
   return ptr;
 }
@@ -2619,7 +2622,7 @@ mem_t *chk_malloc_gc_more(size_t size)
   mem_t *ptr = convert(mem_t *, malloc(size));
   assert (!async_sig_enabled);
   if (size && ptr == 0)
-    ptr = convert(mem_t *, oom_realloc(0, size));
+    oom();
   return ptr;
 }
 
@@ -2630,10 +2633,8 @@ mem_t *chk_calloc(size_t n, size_t size)
 
   assert (!async_sig_enabled);
 
-  if (size && ptr == 0) {
-    ptr = convert(mem_t *, oom_realloc(0, total));
-    memset(ptr, 0, total);
-  }
+  if (size && ptr == 0)
+    oom();
   malloc_bytes += total;
   return ptr;
 }
@@ -2645,7 +2646,7 @@ mem_t *chk_realloc(mem_t *old, size_t size)
   assert (!async_sig_enabled);
 
   if (size != 0 && newptr == 0)
-    newptr = oom_realloc(old, size);
+    oom();
   malloc_bytes += size;
   return newptr;
 }
@@ -10129,7 +10130,7 @@ val env(void)
     wchar_t *iter = env;
 
     if (iter == 0)
-      uw_throwf(error_s, lit("out of memory"), nao);
+      oom();
 
     for (; *iter; iter += wcslen(iter) + 1)
       ptail = list_collect(ptail, string(iter));
@@ -10281,6 +10282,7 @@ static void obj_init(void)
   syntax_error_s = intern(lit("syntax-error"), user_package);
   system_error_s = intern(lit("system-error"), user_package);
   timeout_error_s = intern(lit("timeout-error"), user_package);
+  alloc_error_s = intern(lit("alloc-error"), user_package);
   assert_s = intern(lit("assert"), user_package);
   warning_s = intern(lit("warning"), user_package);
   defr_warning_s = intern(lit("defr-warning"), user_package);
@@ -11459,12 +11461,11 @@ static void time_init(void)
 #endif
 }
 
-void init(mem_t *(*oom)(mem_t *, size_t), val *stack_bottom)
+void init(val *stack_bottom)
 {
   int gc_save;
   gc_save = gc_state(0);
 
-  oom_realloc = oom;
   gc_init(stack_bottom);
   obj_init();
   uw_init();

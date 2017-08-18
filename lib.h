@@ -467,7 +467,7 @@ extern val eof_s, eol_s, assert_s, name_s;
 extern val error_s, type_error_s, internal_error_s, panic_s;
 extern val numeric_error_s, range_error_s;
 extern val query_error_s, file_error_s, process_error_s, syntax_error_s;
-extern val timeout_error_s, system_error_s;
+extern val timeout_error_s, system_error_s, alloc_error_s;
 extern val warning_s, defr_warning_s, restart_s, continue_s;
 extern val gensym_counter_s;
 
@@ -482,8 +482,6 @@ extern val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
 extern val list_f, less_f, greater_f;
 
 extern val prog_string;
-
-extern mem_t *(*oom_realloc)(mem_t *, size_t);
 
 #if HAVE_ULONGLONG_T
 typedef ulonglong_t alloc_bytes_t;
@@ -1092,7 +1090,7 @@ val time_parse_local(val format, val string);
 val time_parse_utc(val format, val string);
 #endif
 
-void init(mem_t *(*oom_realloc)(mem_t *, size_t), val *stack_bottom);
+void init(val *stack_bottom);
 int compat_fixup(int compat_ver);
 void dump(val obj, val stream);
 void d(val obj);
