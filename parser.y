@@ -63,7 +63,6 @@ static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed);
 static val repeat_rep_helper(val sym, val args, val main, val parts);
 static void process_catch_exprs(val exprs);
 static val define_transform(parser_t *parser, val define_form);
-static val lit_char_helper(val litchars);
 static val optimize_text(val text_form);
 static val unquotes_occur(val quoted_form, int level);
 static val rlrec(parser_t *, val form, val line);
@@ -147,8 +146,8 @@ INLINE val expand_form_ver(val form, int ver)
 %type <val> o_elems_opt o_elems o_elem o_var q_var rep_elem rep_parts_opt
 %type <val> regex lisp_regex regexpr regbranch
 %type <val> regterm regtoken regclass regclassterm regrange
-%type <val> strlit chrlit quasilit quasi_items quasi_item litchars wordslit
-%type <val> wordsqlit buflit buflit_items buflit_item not_a_clause
+%type <val> strlit chrlit quasilit quasi_items quasi_item litchars restlitchar
+%type <val> wordslit wordsqlit buflit buflit_items buflit_item not_a_clause
 %type <chr> regchar
 %type <val> byacc_fool
 %type <lineno> '(' '[' '@'
@@ -1141,7 +1140,7 @@ newl : '\n'
      ;
 
 strlit : '"' '"'                { $$ = null_string; }
-       | '"' litchars '"'       { $$ = lit_char_helper($2);
+       | '"' litchars '"'       { $$ = $2;
                                   rl($$, num(parser->lineno)); }
        | '"' error              { $$ = nil;
                                   yybadtok(yychar, lit("string literal")); }
@@ -1181,7 +1180,7 @@ quasi_items : quasi_item                { $$ = cons($1, nil);
                                           rl($$, num(parser->lineno)); }
             ;
 
-quasi_item : litchars           { $$ = lit_char_helper($1); }
+quasi_item : litchars           { $$ = $1; }
            | TEXT               { $$ = string_own($1); }
            | q_var              { $$ = $1; }
            | METANUM            { $$ = cons(var_s, cons($1, nil));
@@ -1193,13 +1192,18 @@ quasi_item : litchars           { $$ = lit_char_helper($1); }
                                     $$ = $2; }
            ;
 
-litchars : LITCHAR              { $$ = rl(cons(chr($1), nil), num(parser->lineno)); }
-         | LITCHAR litchars     { $$ = rl(cons(chr($1), $2), num(parser->lineno)); }
+litchars : LITCHAR              { $$ = mkstring(one, chr($1)); }
+         | LITCHAR restlitchar  { val ch = mkstring(one, chr($1));
+                                  $$ = string_extend(ch, $2); }
          ;
+
+restlitchar : LITCHAR                   { $$ = mkstring(one, chr($1)); }
+            | restlitchar LITCHAR       { $$ = string_extend($1, chr($2)); }
+            ;
 
 wordslit : '"'                  { $$ = nil; }
          | ' ' wordslit         { $$ = $2; }
-         | litchars wordslit    { val word = lit_char_helper($1);
+         | litchars wordslit    { val word = $1;
                                   $$ = rlcp(cons(word, $2), $1); }
          | error                { $$ = nil;
                                   yybadtok(yychar, lit("word list")); }
@@ -1517,25 +1521,6 @@ static val define_transform(parser_t *parser, val define_form)
   }
 
   return define_form;
-}
-
-static val lit_char_helper(val litchars)
-{
-  val ret = nil;
-
-  if (litchars) {
-    val len = length_list(litchars), iter, ix;
-    ret = mkustring(len);
-    for (iter = litchars, ix = zero;
-        iter;
-        iter = cdr(iter), ix = plus(ix, one))
-    {
-      chr_str_set(ret, ix, car(iter));
-    }
-  } else {
-    ret = nil;
-  }
-  return ret;
 }
 
 static val optimize_text(val text_form)
