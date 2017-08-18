@@ -221,6 +221,7 @@ hash_semi_or_i_expr : HASH_SEMI                 { parser->circ_suppress = 1; }
 
 /* Hack needed for Berkeley Yacc */
 byacc_fool : n_expr { internal_error("notreached"); }
+           | HASH_SEMI { internal_error("notreached"); }
            | { internal_error("notreached"); }
            ;
 
