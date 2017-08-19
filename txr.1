@@ -9252,10 +9252,10 @@ reserved set, encodes to
 .codn %2B .
 
 .coIP :frombase64
-Decode from the Base 64 encoding described in RFC 4648.
+Decode from the Base64 encoding described in RFC 4648.
 
 .coIP :tobase64
-Encodes to the RFC 4648 Base 64 encoding.
+Encodes to the RFC 4648 Base64 encoding.
 
 .coIP :tonumber
 Converts strings to numbers. Strings that contain a period,
@@ -52381,15 +52381,15 @@ The
 .code base64-encode
 function converts the UTF-8 representation of
 .meta string
-to Base 64 and returns that representation as a string.
+to Base64 and returns that representation as a string.
 
 The
 .code base64-decode
 functions performs the opposite conversion; it extracts the
-bytes encoded in a Base 64 string, and decodes them as UTF-8
+bytes encoded in a Base64 string, and decodes them as UTF-8
 to return a character string.
 
-The Base 64 encoding divides the UTF-8 representation into groups of
+The Base64 encoding divides the UTF-8 representation into groups of
 six bits, each representing the values 0 to 63. Each value is then
 mapped to the characters
 .code A
@@ -52423,10 +52423,92 @@ If the
 .meta column-width
 argument is passed to
 .codn base64-encode ,
-then the Base 64 encoded string, unless empty, contains newline
+then the Base64 encoded string, unless empty, contains newline
 characters, which divide it into lines which are
 .meta column-width
 long, except possibly for the last line.
+
+.coNP Functions @ base64-stream-enc and @ base64-stream-dec
+.synb
+.mets (base64-stream-enc < out < in >> [ nbytes <> [ column-width ]])
+.mets (base64-stream-dec < out << in )
+.syne
+.desc
+The
+.code base64-stream-enc
+and
+.code base64-stream-dec
+perform, respectively, bulk Base64 encoding and decoding between streams.
+
+The
+.meta in
+and
+.meta out
+arguments must be stream objects.
+The
+.meta out
+stream must support output. In the decode operation, it must support
+byte output.
+The
+.meta in
+stream must support input. In in the encode operation it must support
+byte input.
+
+The
+.code base64-stream-enc
+function reads a sequence of bytes from the
+.meta in
+stream and writes characters to the
+.meta out
+stream comprising the Base64 encoding of that sequence. If the
+.meta nbytes
+argument is specified, it must be a non-negative integer. At most
+.meta nbytes
+bytes will be read from the
+.meta in
+stream. If
+.meta nbytes
+is omitted, then the operation will read from the
+.meta in
+stream without limit, until that stream indicates that no more bytes
+are available.
+
+The optional
+.meta column-with
+argument influences the formatting of Base64 output, in the same manner
+as documented for the
+.code base64-encode
+function.
+
+The
+.code base64-stream-dec
+function reads the characters of a Base64 encoding from the
+.meta in
+stream and writes the corresponding byte sequence to the
+.meta out
+stream. It keeps reading and decoding until it encounters the end of the
+stream, or a character not used in Base64: a character that is not whitespace
+according to
+.codn chr-isspace ,
+isn't any of the Base64 coding characters (not an alphanumeric character,
+and not one of the characters
+.codn + ,
+.code /
+or
+.codn = .
+If the function stops due to a non-Base64 character, that character is
+pushed back into the
+.meta in
+stream.
+
+The
+.code base64-stream-enc
+function returns
+.code t
+if the
+.meta nbytes
+argument is omitted. If the argument is specified,
+it returns the number of bytes that have been encoded.
 
 .SS* Filter Module
 The filter module provides a trie (pronounced "try") data structure,

@@ -45,7 +45,7 @@ val url_encode(val str, val space_plus);
 val url_decode(val str, val space_plus);
 
 val base64_stream_enc(val out_stream, val in_stream, val nbytes, val wrap_cols);
-val base64_stream_dec(val out_stream, val in_stream, val nchars);
+val base64_stream_dec(val out_stream, val in_stream);
 
 val base64_encode(val str, val wrap_cols);
 val base64_decode(val str);

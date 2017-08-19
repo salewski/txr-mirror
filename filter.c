@@ -743,6 +743,7 @@ val base64_stream_enc(val out, val in, val nbytes, val wrap_cols)
   int ulim = nilp(default_null_arg(nbytes));
   cnum col = 0;
   cnum nb = if3(ulim, 0, c_num(nbytes));
+  cnum nb_orig = nb;
   cnum wcol = c_num(default_arg(wrap_cols, zero));
 
   for (; ulim || nb > 0; ulim ? --nb : 0) {
@@ -784,7 +785,7 @@ val base64_stream_enc(val out, val in, val nbytes, val wrap_cols)
   if (wcol && col > 0)
     put_char(chr('\n'), out);
 
-  return if3(ulim, nil, num(nb));
+  return if3(ulim, t, num(nb_orig - nb));
 }
 
 val base64_encode(val str, val wrap_cols)
@@ -801,10 +802,14 @@ INLINE cnum get_base64_char(val in)
 {
   for (;;) {
     val ch = get_char(in);
-    if (ch == nil)
+    if (!ch)
       return 0;
-    if (!chr_isspace(ch) && ch != chr('='))
+    if (chr_isalnum(ch) || ch == chr('+') || ch == chr('/'))
       return c_chr(ch);
+    if (!chr_isspace(ch) && ch != chr('=')) {
+      unget_char(ch, in);
+      return 0;
+    }
   }
 }
 
@@ -822,21 +827,17 @@ INLINE int b64_code(cnum c)
   case '/':
     return 63;
   default:
-    uw_throwf(error_s, lit("base64-decode: invalid character ~s"),
-              chr(c), nao);
+    return 0;
   }
 }
 
-val base64_stream_dec(val out, val in, val nchars)
+val base64_stream_dec(val out, val in)
 {
-  int ulim = nilp(default_null_arg(nchars));
-  cnum nc = if3(ulim, 0, c_num(nchars));
-
-  for (; ulim || nc > 0; ulim ? --nc : 0) {
+  for (;;) {
     cnum c0 = get_base64_char(in);
-    cnum c1 = (c0 && (ulim || --nc > 0) ? get_base64_char(in) : 0);
-    cnum c2 = (c1 && (ulim || --nc > 0) ? get_base64_char(in) : 0);
-    cnum c3 = (c2 && (ulim || --nc > 0) ? get_base64_char(in) : 0);
+    cnum c1 = c0 ? get_base64_char(in) : 0;
+    cnum c2 = c1 ? get_base64_char(in) : 0;
+    cnum c3 = c2 ? get_base64_char(in) : 0;
 
     if (c3) {
       long f0 = b64_code(c0);
@@ -868,7 +869,7 @@ val base64_stream_dec(val out, val in, val nchars)
     }
   }
 
-  return if3(ulim, nil, num(nc));
+  return t;
 }
 
 val base64_decode(val str)
@@ -876,7 +877,7 @@ val base64_decode(val str)
   val in = make_string_input_stream(str);
   val out = make_string_output_stream();
 
-  (void) base64_stream_dec(out, in, nil);
+  (void) base64_stream_dec(out, in);
 
   return get_string_from_stream(out);
 }
@@ -959,6 +960,8 @@ void filter_init(void)
   reg_fun(intern(lit("filter-equal"), user_package), func_n4(filter_equal));
   reg_fun(intern(lit("url-encode"), user_package), func_n2o(url_encode, 1));
   reg_fun(intern(lit("url-decode"), user_package), func_n2o(url_decode, 1));
+  reg_fun(intern(lit("base64-stream-enc"), user_package), func_n4o(base64_stream_enc, 2));
+  reg_fun(intern(lit("base64-stream-dec"), user_package), func_n2(base64_stream_dec));
   reg_fun(intern(lit("base64-encode"), user_package), func_n2o(base64_encode, 1));
   reg_fun(intern(lit("base64-decode"), user_package), func_n1(base64_decode));
   reg_fun(intern(lit("html-encode"), user_package), func_n1(html_encode));
