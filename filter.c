@@ -743,7 +743,8 @@ val base64_stream_enc(val out, val in, val nbytes, val wrap_cols)
   int ulim = nilp(default_null_arg(nbytes));
   cnum col = 0;
   cnum nb = if3(ulim, 0, c_num(nbytes));
-  cnum nb_orig = nb;
+  cnum count = 0;
+  val ret = zero;
   cnum wcol = c_num(default_arg(wrap_cols, zero));
 
   for (; ulim || nb > 0; ulim ? --nb : 0) {
@@ -760,6 +761,7 @@ val base64_stream_enc(val out, val in, val nbytes, val wrap_cols)
       put_char(chr(b64[(word >> 12) & 0x3F]), out); col_check(&col, wcol, out);
       put_char(chr(b64[(word >>  6) & 0x3F]), out); col_check(&col, wcol, out);
       put_char(chr(b64[(word      ) & 0x3F]), out); col_check(&col, wcol, out);
+      count += 3;
     } else if (bv1) {
       cnum b0 = c_num(bv0);
       cnum b1 = c_num(bv1);
@@ -768,6 +770,7 @@ val base64_stream_enc(val out, val in, val nbytes, val wrap_cols)
       put_char(chr(b64[(word >> 12) & 0x3F]), out); col_check(&col, wcol, out);
       put_char(chr(b64[(word >>  6) & 0x3F]), out); col_check(&col, wcol, out);
       put_char(chr('='), out);                      col_check(&col, wcol, out);
+      count += 2;
       break;
     } else if (bv0) {
       cnum b0 = c_num(bv0);
@@ -776,16 +779,22 @@ val base64_stream_enc(val out, val in, val nbytes, val wrap_cols)
       put_char(chr(b64[(word >> 12) & 0x3F]), out); col_check(&col, wcol, out);
       put_char(chr('='), out);                      col_check(&col, wcol, out);
       put_char(chr('='), out);                      col_check(&col, wcol, out);
+      count++;
       break;
     } else {
       break;
+    }
+
+    if (count > NUM_MAX / 2) {
+      ret = plus(ret, num_fast(count));
+      count = 0;
     }
   }
 
   if (wcol && col > 0)
     put_char(chr('\n'), out);
 
-  return if3(ulim, t, num(nb_orig - nb));
+  return plus(ret, num_fast(count));
 }
 
 val base64_encode(val str, val wrap_cols)
@@ -833,6 +842,9 @@ INLINE int b64_code(cnum c)
 
 val base64_stream_dec(val out, val in)
 {
+  val ret = zero;
+  cnum count = 0;
+
   for (;;) {
     cnum c0 = get_base64_char(in);
     cnum c1 = c0 ? get_base64_char(in) : 0;
@@ -849,6 +861,7 @@ val base64_stream_dec(val out, val in)
       put_byte(num_fast((word >> 16)       ), out);
       put_byte(num_fast((word >>  8) & 0xff), out);
       put_byte(num_fast( word        & 0xff), out);
+      count += 3;
     } else if (c2) {
       long f0 = b64_code(c0);
       long f1 = b64_code(c1);
@@ -857,19 +870,26 @@ val base64_stream_dec(val out, val in)
 
       put_byte(num_fast((word >> 16)       ), out);
       put_byte(num_fast((word >>  8) & 0xff), out);
+      count += 2;
       break;
     } else if (c0 || c1) {
       long f0 = b64_code(c0);
       long f1 = b64_code(c1);
       long word = (f0 << 18) | (f1 << 12);
       put_byte(num_fast((word >> 16)       ), out);
+      count += 1;
       break;
     } else {
       break;
     }
+
+    if (count > NUM_MAX / 2) {
+      ret = plus(ret, num_fast(count));
+      count = 0;
+    }
   }
 
-  return t;
+  return plus(ret, num_fast(count));
 }
 
 val base64_decode(val str)
