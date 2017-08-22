@@ -1220,7 +1220,8 @@ wordsqlit : '`'                  { $$ = nil; }
                                    $$ = rlcp(cons(qword, $3), $1); }
           ;
 
-buflit : HASH_B_QUOTE '\''               { $$ = make_buf(zero, nil, nil); }
+buflit : HASH_B_QUOTE '\''               { $$ = make_buf(zero, nil, nil);
+                                           end_of_buflit(scnr); }
        | HASH_B_QUOTE buflit_items '\''  { val len = length($2);
                                            val bytes = nreverse($2);
                                            val buf = make_buf(len, nil, nil);
