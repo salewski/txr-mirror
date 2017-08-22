@@ -3600,6 +3600,8 @@ val seek_stream(val stream, val offset, val whence)
 val truncate_stream(val stream, val len)
 {
   struct strm_ops *ops = coerce(struct strm_ops *, cobj_ops(stream, stream_s));
+  if (missingp(len))
+    len = ops->seek(stream, zero, strm_cur);
   return ops->truncate(stream, len);
 }
 
@@ -4503,7 +4505,7 @@ void stream_init(void)
   reg_fun(intern(lit("fill-buf"), user_package), func_n3o(fill_buf, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1o(flush_stream, 0));
   reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));
-  reg_fun(intern(lit("truncate-stream"), user_package), func_n2(truncate_stream));
+  reg_fun(intern(lit("truncate-stream"), user_package), func_n2o(truncate_stream, 1));
   reg_fun(intern(lit("streamp"), user_package), func_n1(streamp));
   reg_fun(intern(lit("real-time-stream-p"), user_package), func_n1(real_time_stream_p));
   reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));

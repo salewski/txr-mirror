@@ -42537,7 +42537,7 @@ On failure, it throws an exception of type
 
 .coNP Function @ truncate-stream
 .synb
-.mets (truncate-stream < stream << length )
+.mets (truncate-stream < stream <> [ length ])
 .syne
 .desc
 The
@@ -42549,6 +42549,21 @@ to be set to
 bytes.
 
 The stream must be a file stream, and must be open for writing.
+
+If
+.meta length
+is omitted, then it defaults to the current position, retrieved
+as if by invoking the
+.code seek-stream
+with an
+.meta offset
+argument of zero and
+.meta whence
+argument of
+.codn :from-current .
+Hence, after the
+.code truncate-stream
+operation, that position is one byte past the end of the file.
 
 .coNP Functions @ stream-get-prop and @ stream-set-prop
 .synb
