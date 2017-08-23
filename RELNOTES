@@ -1,3 +1,75 @@
+                                    TXR 184
+                                   2017-08-23
+
+
+  Features
+
+  - TXR ported to 64 bit ARM8 ("aarch64").
+  - out-of-memory handling revised:
+    - throws exception rather than aborting.
+    - code for this was very old and long neglected.
+  - lib:
+    - set-diff is called diff now; old name deprecated
+    - isec and uni functions provide intersection and union.
+      - names harmonize with hash-diff, hash-isec and hash-uni
+    - len synonym for length
+    - spl and tok functions: variants on tok-str and split-str,
+      with argument order more suitable for currying.
+  - math:
+    - new functions digpow and digits
+      - (digpow 1234) -> (1000 200 30 4)
+      - (digits 1234) -> (1 2 3 4)
+      - other bases than ten via optional second arg.
+    - new functions sum and prod for adding or multiplying
+      sequence of numbers without having to apply or reduce
+      through + or *.
+    - new divides function for divisibility testing.
+    - bit functions logand, logior and loxor allow character operands.
+    - function bit can test bit of character
+  - control flow:
+    - new macros doloop and doloop*
+    - trivial case of tagbody optimized away.
+  - extraction language:
+    - bi-directional string tree match semantics for non-variables
+      in @(bind) and other contexts.
+  - FFI:
+    - new buf-carray-function
+    - new functions for reading and writing FFI types from and to streams.
+  - I/O streams:
+    - New stream type for doing I/O from and to a buffer.
+    - Functions for Base64 encoding and decoding from one stream to another.
+    - length argument in truncate-stream function now optional
+      - defaults to current read/write position
+  - parser:
+    - more efficient treatment of string literals.
+  - improvements in Vim syntax coloring.
+
+  Bugs:
+
+  - listener:
+    - recognizes incomplete buf literals properly as open syntax.
+  - tagbody:
+    - tagbody was setting up anonymous block, which it must not.
+  - pad function
+    - spurious instances of nil were occurring in its output.
+  - n-ary math-functions:
+    - were not checking the one-arg case, e.g. (+ "foo") -> "foo"
+      which should be an error.
+  - tok-str:
+    - wrongly permitted a call with just one argument.
+  - streams:
+    - seek-stream was not working when :from-end specified.
+  - buffers:
+    - buf-put-uchar was broken.
+  - parser:
+    - fixed "yacc stack overflow" when compiled with Byacc.
+    - fixed broken #; syntax handling when compiled with Byacc.
+    - fixed broken handling of empty buffer literals.
+  - buffers:
+    - fixed infinite loop in buf_grow function.
+
+
+
                                     TXR 183
                                    2017-07-19
 
