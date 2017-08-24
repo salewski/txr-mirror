@@ -3936,7 +3936,7 @@ val replace_str(val str_in, val items, val from, val to)
       cnum t = c_num(to);
       cnum l = c_num(len);
 
-      string_extend(str_in, plus(len, len_diff));
+      string_extend(str_in, len_diff);
       wmemmove(str_in->st.str + t + c_num(len_diff),
                str_in->st.str + t, (l - t) + 1);
       to = plus(from, len_it);
