@@ -11549,10 +11549,7 @@ for obvious reasons, namely that
 does not mean that there is
 a compound form in the dot position, but denotes an alternate spelling for
 .codn "(a b c foo z)" ,
-where foo behaves as a variable. (There exists a special exception to this,
-namely that the meta-numbers and meta-symbols of the
-.code op
-operator can be used in the dot position).
+where foo behaves as a variable.
 
 If the dot position of a compound form is an atom, then the behavior
 may be understood according to the following transformations:
@@ -11562,7 +11559,35 @@ may be understood according to the following transformations:
   [f a b c ... . x]  -->  [apply f a b c ... x]
 .cble
 
-Effectively, the dot notation constitutes a shorthand for
+In addition to atoms, meta-expressions and meta-variables can appear in the dot
+position, even though their underlying syntax is comprised of a compound
+expression. This appears to work according to a transformation pattern
+which superficially appears to be the same as that for atoms:
+
+.cblk
+  (f a b c ... . @x)  -->  (apply (fun f) a b c ... @x)
+.cble
+
+However, in this situation, the
+.code @x
+is actually the form
+.code "(sys:var x)"
+and the dotted form is actually a proper list. The transformation is
+in fact taking place over a proper list, like this:
+
+.cblk
+  (f a b c ... sys:var x)  -->  (apply (fun f) a b c ... (sys:var @x))
+.cble
+
+That is to say, the \*(TL form expander reacts to the presence of a
+.code sys:var
+or
+.code sys:expr
+atom in embedded in the form. That symbol and the items which follow it
+are wrapped in an additional level of nesting, converted into a single
+compound form element.
+
+Effectively, in all these cases, the dot notation constitutes a shorthand for
 .codn apply .
 
 Examples:

@@ -2883,18 +2883,49 @@ static val imp_list_to_list(val list)
   return out;
 }
 
+static val dot_meta_list_p(val list)
+{
+  if (!consp(list))
+    return list;
+
+  list = cdr(list);
+
+  for (; consp(list); list = cdr(list)) {
+    val a = car(list);
+    if (a == var_s || a == expr_s)
+      return list;
+  }
+
+  return nil;
+}
+
 static val dot_to_apply(val form, val lisp1_p)
 {
-  if ((opt_compat && opt_compat <= 137) || proper_list_p(form)) {
-    return form;
-  } else {
+  val args = nil, meta = nil;
+
+  if (opt_compat) {
+    if (opt_compat <= 137)
+      return form;
+    if (opt_compat <= 184 && proper_list_p(form))
+      return form;
+  }
+
+  if ((meta = dot_meta_list_p(form)) != nil) {
+    val pfx = ldiff(form, meta);
+    args = append2(cdr(pfx), cons(meta, nil));
+  } else if (!proper_list_p(form)) {
+    args = imp_list_to_list(cdr(form));
+  }
+
+  if (args) {
     val sym = car(form);
-    val args = imp_list_to_list(cdr(form));
     return cons(sys_apply_s, cons(if3(lisp1_p,
                                       sym,
                                       list(fun_s, sym, nao)),
                                   args));
   }
+
+  return form;
 }
 
 val expand_forms(val form, val menv)
