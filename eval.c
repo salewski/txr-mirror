@@ -1956,6 +1956,8 @@ static void builtin_reject_test(val op, val sym, val form)
                  op, sym, nao);
     } else if (opt_compat && opt_compat <= 107) {
       /* empty */
+    } else if (sym == expr_s || sym == var_s) {
+      /* empty */
     } else if (builtin_kind) {
       eval_warn(form, lit("~s: redefining ~s, which is a built-in ~s"),
                 op, sym, builtin_kind, nao);
