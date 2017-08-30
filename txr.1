@@ -39910,18 +39910,7 @@ embeds a metasymbol into the quasiliteral structure, whereas
 .code @@rest
 embeds the Lisp expression
 .code @rest
-into the quasiliteral. In ordinary circumstances, the former refers to the
-variable
-.codn rest .
-Contrast the previous example with:
-
-.cblk
-  (let ((rest "0"))
-    `rest: @rest`) -> "rest: 0"
-
-  (let ((rest "0"))
-    `rest: @@rest`) -> ;; error: no such function or operator: sys:var
-.cble
+into the quasiliteral.
 
 Under the
 .code op
