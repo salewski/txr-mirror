@@ -49,11 +49,11 @@
     (let ((e-expr (macroexpand u-expr e)))
       (if (and (symbolp e-expr) (not (constantp e-expr)))
         (caseq (lexical-lisp1-binding e e-expr)
-          (:fun ^(fun ,u-expr))
-          (:var u-expr)
+          (:fun ^(fun ,e-expr))
+          (:var e-expr)
           (nil (if (boundp e-expr)
                  u-expr
-                 ^(sys:lisp1-value ,u-expr)))
+                 ^(sys:lisp1-value ,e-expr)))
           (t (sys:eval-err "sys:l1-val: invalid case")))
         u-expr)))
 
