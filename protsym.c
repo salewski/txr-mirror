@@ -138,12 +138,12 @@ extern val group_s, mem_s;
 extern val dir_s, gecos_s, passwd_s, shell_s;
 #endif
 #if HAVE_SOCKETS
+extern val socket_error_s;
+#endif
+#if HAVE_SOCKETS
 extern val addr_s, addrinfo_s, canonname_s, family_s, flags_s;
 extern val flow_info_s, port_s, protocol_s, scope_id_s, sockaddr_in6_s;
 extern val sockaddr_in_s, sockaddr_un_s, socktype_s;
-#endif
-#if HAVE_SOCKETS
-extern val socket_error_s;
 #endif
 #if HAVE_SYSLOG
 extern val prio_k;
@@ -265,12 +265,12 @@ val *protected_sym[] = {
   &dir_s, &gecos_s, &passwd_s, &shell_s,
 #endif
 #if HAVE_SOCKETS
+  &socket_error_s,
+#endif
+#if HAVE_SOCKETS
   &addr_s, &addrinfo_s, &canonname_s, &family_s, &flags_s,
   &flow_info_s, &port_s, &protocol_s, &scope_id_s, &sockaddr_in6_s,
   &sockaddr_in_s, &sockaddr_un_s, &socktype_s,
-#endif
-#if HAVE_SOCKETS
-  &socket_error_s,
 #endif
 #if HAVE_SYSLOG
   &prio_k,
