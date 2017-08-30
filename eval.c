@@ -3400,6 +3400,10 @@ val expand_quasi(val quasi_forms, val menv)
 
     if (consp(form)) {
       val sym = car(form);
+      int comp_184 = opt_compat && opt_compat <= 184;
+
+      if (!comp_184)
+        form_ex = expand(form, menv);
 
       if (sym == var_s) {
         val param = second(form);
@@ -3410,7 +3414,8 @@ val expand_quasi(val quasi_forms, val menv)
         if (param_ex != param || mods_ex != mods)
           form_ex = rlcp(list(sym, param_ex, mods_ex, nao), form);
       } else {
-        form_ex = expand(form, menv);
+        if (comp_184)
+          form_ex = expand(form, menv);
       }
     }
 
@@ -5677,8 +5682,10 @@ void eval_init(void)
   reg_mac(gen_s, func_n2(me_gen));
   reg_mac(gun_s, func_n2(me_gun));
   reg_mac(intern(lit("delay"), user_package), func_n2(me_delay));
-  reg_mac(op_s, func_n2(me_op));
-  reg_mac(do_s, func_n2(me_op));
+  if (opt_compat && opt_compat <= 184) {
+    reg_mac(op_s, func_n2(me_op));
+    reg_mac(do_s, func_n2(me_op));
+  }
   reg_mac(ap_s, func_n2(me_ap));
   reg_mac(intern(lit("ip"), user_package), func_n2(me_ip));
   reg_mac(intern(lit("ado"), user_package), func_n2(me_ado));

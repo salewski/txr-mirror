@@ -39875,23 +39875,23 @@ can be used in the dot position of a function call, such as:
   [(op list 1 . @1) 2] -> (1 . 2)
 .cble
 
-Even though the notation
-.code @1
-produces a compound form, which the dot notation then splices into
-the surrounding form, the expander for the
-.code op
-and
-.code do
-macro takes recognizes and takes care of this special case.
+This is a consequence of the special transformations described
+in the paragraph
+.B "Dot Position in Function Calls"
+in the subsection
+.B "Additional Syntax"
+of the
+.BR "TXR Lisp"
+section.
 
 The
 .code op
-syntax interacts with quasiliterals which are nested within it.
+syntax works in conjunction with quasiliterals which are nested within it.
 The metanumber notation as well as
 .code @rest
 are recognized without requiring an additional
 .code @
-escape:
+escape, which is effectively optional:
 
 .cblk
   (apply (op list `@1-@rest`) '(1 2 3)) -> "1-2 3"
@@ -39899,29 +39899,19 @@ escape:
   (apply (op list `@@1-@@rest`) '(1 2 3)) -> "1-2 3"
 .cble
 
-This is because the
-.code op
-macro traverses the code structure produced by the literal without recognizing
-it specially, and there imposes its own meaning on these elements.
-
 Though they produce the same result, the above two examples differ in that
 .code @rest
 embeds a metasymbol into the quasiliteral structure, whereas
 .code @@rest
 embeds the Lisp expression
 .code @rest
-into the quasiliteral.
-
-Under the
-.code op
-macro and its relatives, occurrences of
+into the quasiliteral. Either way, in the scope of
+.codn op ,
 .code @rest
-are replaced with syntax which refers to the trailing arguments
-of the anonymous function. This happens before the interior of the
+undergoes the macro-expansion which renames it to the machine-generated
+function argument symbol of the implicit function denoted by the
 .code op
-syntax undergoes expansion. Therefore the quasiliteral expander never
-sees the
-.codn @rest .
+macro form.
 
 This convenient omission of the
 .code @
@@ -61276,6 +61266,23 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 184
+A value of 184 or lower switches to the old implementation of the
+.code op
+and
+.code do
+macros which was replaced starting in \*(TX 185. Also, this has the
+effect of disabling the special recognition of meta-expressions
+and meta-variables in the dot position of function calls, and
+the macro expansion of meta-variables in quasiliterals. This is
+because the old
+.code op
+implementation implements these behaviors itself. The implication
+is that user code which binds custom macros to
+.code sys:var
+or
+.code sys:expr
+may be affected by 184 or lower compatibility.
 .IP 183
 A value of 183 or lower restores an inconsistent behavior in the
 .code "@(bind)"

@@ -560,6 +560,23 @@ static val doloop_instantiate(val set_fun)
   return nil;
 }
 
+static val op_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("op"), lit("do"),
+    nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val op_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~aop.tl"), stdlib_path, nao));
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -601,6 +618,10 @@ void lisplib_init(void)
   dlt_register(dl_table, keyparams_instantiate, keyparams_set_entries);
   dlt_register(dl_table, ffi_instantiate, ffi_set_entries);
   dlt_register(dl_table, doloop_instantiate, doloop_set_entries);
+
+  if (!opt_compat || opt_compat >= 185)
+    dlt_register(dl_table, op_instantiate, op_set_entries);
+
   reg_fun(intern(lit("try-load"), system_package), func_n1(lisplib_try_load));
 }
 
