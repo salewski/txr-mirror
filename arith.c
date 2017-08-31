@@ -2725,6 +2725,30 @@ val cum_norm_dist(val arg)
   }
 }
 
+/*
+ * Source:
+ * Odeh and Evans approximation.
+ * 1974
+ */
+val inv_cum_norm(val arg)
+{
+  val arg_flo = to_float(lit("inv-cum-norm"), arg);
+  double p = c_flo(arg_flo);
+  int is_upper_half = (p >= 0.5);
+  double r = is_upper_half ? 1 - p : p;
+  if (r < 1E-20) {
+    return flo(is_upper_half ? 10 : -10);
+  } else {
+    double y = sqrt(-2*log(r));
+    double a = ((((4.53642210148e-5*y + 0.0204231210245)*y +
+                  0.342242088547)*y + 1)*y + 0.322232431088);
+    double b = ((((0.0038560700634*y + 0.10353775285)*y +
+                  0.531103462366)*y + 0.588581570495)*y + 0.099348462606);
+    double z = y - a / b;
+    return flo(is_upper_half ? z : -z);
+  }
+}
+
 static val rising_product(val m, val n)
 {
   val acc;

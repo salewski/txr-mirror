@@ -34099,6 +34099,25 @@ distribution function: the integral, of the normal distribution function, from
 negative infinity to the
 .metn argument .
 
+.coNP Function @ inv-cum-norm
+.synb
+.mets (inv-cum-norm << argument )
+.syne
+.desc
+The
+.code inv-cum-norm
+function calculates an approximate to the inverse of the cumulative
+normal distribution function.  The argument, a value expected to lie
+in the range [0, 1], represents the integral of the normal distribution
+function from negative infinity to some domain point
+.IR p .
+The function calculates the approximate value of
+.IR p .
+The minimum value returned is -10, and the maximum value returned is 10,
+regardless of how closely the argument approaches, respectively,
+the 0 or 1 integral endpoints.  For values less than zero, or exceeding 1, the
+values returned, respectively, are -10 and 10.
+
 .coNP Functions @ n-choose-k and @ n-perm-k
 .synb
 .mets (n-choose-k < n << k )
