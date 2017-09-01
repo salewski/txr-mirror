@@ -4501,7 +4501,7 @@ val macro_form_p(val form, val menv)
   return nil;
 }
 
-static val macroexpand_1(val form, val menv)
+static val do_macroexpand_1(val form, val menv, val (*lookup)(val, val))
 {
   val macro;
 
@@ -4514,7 +4514,7 @@ static val macroexpand_1(val form, val menv)
     return rlcp_tree(rlcp_tree(mac_expand, form), macro);
   }
 
-  if (bindable(form) && (macro = lookup_symac(menv, form))) {
+  if (bindable(form) && (macro = lookup(menv, form))) {
     val mac_expand = cdr(macro);
     if (mac_expand == form)
       return form;
@@ -4524,14 +4524,34 @@ static val macroexpand_1(val form, val menv)
   return form;
 }
 
-static val macroexpand(val form, val menv)
+static val macroexpand_1(val form, val menv)
+{
+  return do_macroexpand_1(form, menv, lookup_symac);
+}
+
+static val macroexpand_1_lisp1(val form, val menv)
+{
+  return do_macroexpand_1(form, menv, lookup_symac_lisp1);
+}
+
+static val do_macroexpand(val form, val menv, val (*lookup_sm)(val, val))
 {
   for (;;) {
-    val mac_expand = macroexpand_1(form, menv);
+    val mac_expand = do_macroexpand_1(form, menv, lookup_sm);
     if (mac_expand == form)
       return form;
     form = mac_expand;
   }
+}
+
+static val macroexpand(val form, val menv)
+{
+  return do_macroexpand(form, menv, lookup_symac);
+}
+
+static val macroexpand_lisp1(val form, val menv)
+{
+  return do_macroexpand(form, menv, lookup_symac_lisp1);
 }
 
 static val constantp_noex(val form)
@@ -5976,8 +5996,12 @@ void eval_init(void)
   reg_fun(intern(lit("macro-form-p"), user_package), func_n2o(macro_form_p, 1));
   reg_fun(intern(lit("macroexpand-1"), user_package),
           func_n2o(macroexpand_1, 1));
+  reg_fun(intern(lit("macroexpand-1-lisp1"), user_package),
+          func_n2o(macroexpand_1_lisp1, 1));
   reg_fun(intern(lit("macroexpand"), user_package),
           func_n2o(macroexpand, 1));
+  reg_fun(intern(lit("macroexpand-lisp1"), user_package),
+          func_n2o(macroexpand_lisp1, 1));
   reg_fun(intern(lit("expand-params"), system_package), func_n5(expand_params));
   reg_fun(intern(lit("constantp"), user_package), func_n2o(constantp, 1));
   reg_fun(intern(lit("make-env"), user_package), func_n3o(make_env_intrinsic, 0));

@@ -30172,6 +30172,45 @@ and
 .code a
 respectively.
 
+.coNP Functions @ macroexpand-1-lisp1 and @ macroexpand-lisp1
+.synb
+.mets (macroexpand-1-lisp1 < obj <> [ env ])
+.mets (macroexpand-lisp1 < obj <> [ env ])
+.syne
+.desc
+The
+.code macroexpand-1-lisp1
+and
+.code macroexpand-lisp1
+functions closely resemble, respectively,
+.code macroexpand-1
+and
+.codn macroexpand .
+
+The argument and return value syntax and semantics is almost
+identical, except for one difference. These functions consider argument
+.meta obj
+to be syntax in a Lisp-1 evaluation context, such as any argument
+position of the
+.code dwim
+operator, or the equivalent DWIM Brackets notation.
+
+This makes a difference because in a Lisp-1 evaluation context, an
+inner function binding is able to shadow an outer symbol macro binding
+of the same name.
+
+The requirements about this language area are given in more
+detail in the description of the
+.code dwim
+operator.
+
+Note: the
+.code macroexpand-lisp1
+function is useful to the implementor of a macro whose semantics requires
+one or more argument forms to be treated in a Lisp-1 context, in situations
+when such a macro needs to itself expand the material, rather than merely
+insert it as-is into the output code template.
+
 .coNP Functions @ lexical-var-p and @ lexical-fun-p
 .synb
 .mets (lexical-var-p < env << form )
