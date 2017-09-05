@@ -34851,6 +34851,72 @@ is zero. In that case, a one-element list containing zero is returned.
   (digpow 0) -> (0)
 .cble
 
+.coNP Functions @ poly and @ rpoly
+.synb
+.mets (poly < arg << coeffs )
+.mets (rpoly < arg << coeffs )
+.syne
+.desc
+The
+.code poly
+and
+.code rpoly
+functions evaluate a polynomial, for the given numeric argument value
+.meta arg
+and the coefficients given by
+.metn coeffs ,
+a sequence of numbers.
+
+If
+.meta coeffs
+is an empty sequence, it denotes the zero polynomial, whose value
+is zero everywhere; the functions return zero in this case.
+
+Otherwise, the
+.code poly
+function considers
+.meta coeffs
+to hold the coefficients in the conventional order, namely in order
+of decreasing degree of polynomial term. The first element of
+.meta coeffs
+is the leading coefficient, and the constant term appears as the last element.
+
+The
+.code rpoly
+function takes the coefficients in opposite order: the first element of
+.meta coeffs
+gives the constant term coefficient, and the last element gives the
+leading coefficient.
+
+Note: except in the case of
+.code rpoly
+operating on a list or list-like sequence of coefficients,
+Horner's method of evaluation is
+used: a single result accumulator is initialized with zero, and then for each
+successive coefficient, in order of decreasing term degree, the accumulator is
+multiplied by the argument, and the coefficient is added. When
+.code rpoly
+operates on a list or list-like sequence, it makes a single
+pass through the coefficients in order, thus taking them in increasing
+term degree.  It maintains two accumulators: one for successive powers of
+.meta arg
+and one for the resulting value. For each coefficient, the power
+accumulator is updated by a multiplication by
+.meta arg
+and then this value is multiplied by the coefficient, and
+that value is then added to the result accumulator.
+
+.TP* Examples:
+
+.cblk
+  ;;           2
+  ;; evaluate x  +  2x + 3  for x = 10.
+  (poly 10 '(1 2 3)) -> 123
+
+  ;;            2
+  ;; evaluate 3x  +  2x + 1  for x = 10.
+  (rpoly 10 '(1 2 3)) -> 321
+.cble
 
 .SS* Bit Operations
 In \*(TL, similarly to Common Lisp, bit operations on integers are based

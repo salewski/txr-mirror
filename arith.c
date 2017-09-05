@@ -2970,6 +2970,92 @@ val digits(val n, val base)
   return digcommon(0, lit("digits"), n, base);
 }
 
+val poly(val x, val seq)
+{
+  val self = lit("rpoly");
+  val acc = zero;
+  seq_info_t si = seq_info(seq);
+
+  if (!numberp(x))
+    uw_throwf(error_s, lit("~a: bad argument ~s; number required"),
+              self, x, nao);
+
+  switch (si.kind) {
+  case SEQ_NIL:
+    return acc;
+  case SEQ_LISTLIKE:
+    while (consp(seq)) {
+      val coeff = pop(&seq);
+      acc = plus(mul(acc, x), coeff);
+    }
+
+    (void) endp(seq);
+    return acc;
+  case SEQ_VECLIKE:
+    {
+      cnum len = c_num(length(seq)), i = 0;
+
+      while (i < len) {
+        val coeff = ref(seq, num(i++));
+        acc = plus(mul(acc, x), coeff);
+      }
+
+      return acc;
+    }
+  default:
+    uw_throwf(error_s, lit("~a: bad argument ~s; poly wants a sequence!"),
+              self, seq, nao);
+
+  }
+}
+
+val rpoly(val x, val seq)
+{
+  val self = lit("poly");
+  val acc = zero;
+  val pow = x;
+  seq_info_t si = seq_info(seq);
+
+  if (!numberp(x))
+    uw_throwf(error_s, lit("~a: bad argument ~s; poly wants a number!"),
+              self, x, nao);
+
+  switch (si.kind) {
+  case SEQ_NIL:
+    return acc;
+  case SEQ_LISTLIKE:
+    if (consp(seq))
+      acc = pop(&seq);
+
+    while (consp(seq)) {
+      val coeff = pop(&seq);
+      acc = plus(acc, mul(pow, coeff));
+      if (seq)
+        pow = mul(pow, x);
+    }
+
+    (void) endp(seq);
+    return acc;
+  case SEQ_VECLIKE:
+    {
+      cnum len = c_num(length(seq)), i = len;
+
+      while (i > 0) {
+        val coeff = ref(seq, num(--i));
+        acc = plus(mul(acc, x), coeff);
+      }
+
+      return acc;
+    }
+  default:
+    uw_throwf(error_s, lit("~a: bad argument ~s; poly wants a sequence!"),
+              self, seq, nao);
+
+  }
+
+  return acc;
+}
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);
@@ -3007,6 +3093,8 @@ void arith_init(void)
   reg_fun(intern(lit("bits"), system_package), func_n1(bits));
   reg_fun(intern(lit("digpow"), user_package), func_n2o(digpow, 1));
   reg_fun(intern(lit("digits"), user_package), func_n2o(digits, 1));
+  reg_fun(intern(lit("poly"), user_package), func_n2(poly));
+  reg_fun(intern(lit("rpoly"), user_package), func_n2(rpoly));
 }
 
 void arith_free_all(void)
