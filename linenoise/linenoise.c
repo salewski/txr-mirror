@@ -2015,6 +2015,7 @@ static int edit(lino_t *l, const char *prompt)
                 }
                 break;
             case ENTER:
+                extended = 0;
                 if (l->mlmode && l->enter_callback &&
                     !l->enter_callback(l->data, l->ce_ctx))
                 {
