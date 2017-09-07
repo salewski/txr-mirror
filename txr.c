@@ -447,6 +447,20 @@ static void no_dbg_support(val arg)
 }
 #endif
 
+static int parse_once_noerr(val stream, val name, parser_t *parser)
+{
+  val pfx = format(nil, lit("~a:"), name, nao);
+  ignerr_func_body(int, 0, parse_once(stream, name, parser),
+                   exsym, exargs, std_error, pfx);
+}
+
+static val read_eval_stream_noerr(val stream, val name, val error_stream)
+{
+  val pfx = format(nil, lit("~a:"), name, nao);
+  ignerr_func_body(val, nil, read_eval_stream(stream, error_stream),
+                   exsym, exargs, std_error, pfx);
+}
+
 int txr_main(int argc, char **argv)
 {
   uses_or2;
@@ -974,26 +988,29 @@ int txr_main(int argc, char **argv)
   {
     int gc = gc_state(0);
     parser_t parser;
-    parse_once(parse_stream, spec_file_str, &parser);
+    parse_once_noerr(parse_stream, spec_file_str, &parser);
     gc_state(gc);
 
     close_stream(parse_stream, nil);
 
     uw_release_deferred_warnings();
 
-    if (parser.errors)
-      return EXIT_FAILURE;
-
     spec = parser.syntax_tree;
 
     opt_loglevel = match_loglevel;
+
+    reg_var(intern(lit("*self-path*"), user_package), spec_file_str);
+
+    if (parser.errors) {
+      if (enter_repl)
+        goto repl;
+      return EXIT_FAILURE;
+    }
 
     if (opt_loglevel >= 2) {
       format(std_error, lit("spec:\n~s\n"), spec, nao);
       format(std_error, lit("bindings:\n~s\n"), bindings, nao);
     }
-
-    reg_var(intern(lit("*self-path*"), user_package), spec_file_str);
 
     {
       val result = extract(spec, arg_list, bindings);
@@ -1014,7 +1031,8 @@ int txr_main(int argc, char **argv)
   }
 
   {
-    val result = read_eval_stream(parse_stream, std_error);
+    val result = read_eval_stream_noerr(parse_stream, spec_file_str,
+                                        std_error);
 
     close_stream(parse_stream, nil);
 

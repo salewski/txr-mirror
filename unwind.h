@@ -276,3 +276,14 @@ noreturn val type_mismatch(val, ...);
     internal_error("assertion "         \
                             #EXPR       \
                             " failed")
+
+#define ignerr_func_body(type, init, expr, exsym,       \
+                         exargs, stream, prefix)        \
+   type (_r_e_t) = (init);                              \
+   uw_catch_begin (cons(error_s, nil), exsym, exargs);  \
+   _r_e_t = expr;                                       \
+   uw_catch(exsym, exargs)                              \
+   error_trace(exsym, exargs, stream, prefix);          \
+   uw_unwind { }                                        \
+   uw_catch_end;                                        \
+   return _r_e_t;

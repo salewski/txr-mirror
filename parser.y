@@ -1839,7 +1839,7 @@ int parse_once(val stream, val name, parser_t *parser)
   parser_resolve_circ(parser);
 
   uw_catch(esym, eobj) {
-    yyerrorf(parser->scanner, lit("exception during parse"), nao);
+    yyerrorf(parser->scanner, lit("error exception during parse"), nao);
     uw_throw(esym, eobj);
   }
 
@@ -1878,7 +1878,7 @@ int parse(parser_t *parser, val name, enum prime_parser prim)
   parser_resolve_circ(parser);
 
   uw_catch(esym, eobj) {
-    yyerrorf(parser->scanner, lit("exception during parse"), nao);
+    yyerrorf(parser->scanner, lit("error exception during parse"), nao);
     uw_throw(esym, eobj);
   }
 
