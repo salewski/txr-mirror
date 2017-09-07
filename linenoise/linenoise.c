@@ -76,6 +76,7 @@
 #define LINENOISE_MAX_LINE 1024
 #define LINENOISE_MAX_DISP (LINENOISE_MAX_LINE * 8)
 #define LINENOISE_PAREN_DELAY 400000
+#define LINENOISE_FLASH_DELAY 200000
 #define LINENOISE_MAX_UNDO 200
 
 /* The lino_state structure represents the state during line editing.
@@ -1355,6 +1356,26 @@ static void paren_jump(lino_t *l)
     }
 }
 
+static void flash(lino_t *l, int ch)
+{
+    int i;
+
+    if (l->dlen >= (int) sizeof l->data - 1)
+        return;
+
+    for (i = 0; i < 2; i++) {
+        if (i > 0)
+            usec_delay(l, LINENOISE_FLASH_DELAY);
+        l->data[l->dlen++] = ch;
+        l->data[l->dlen] = 0;
+        refresh_line(l);
+        usec_delay(l, LINENOISE_FLASH_DELAY);
+        l->data[--l->dlen] = 0;
+        refresh_line(l);
+    }
+}
+
+
 static void update_sel(lino_t *l)
 {
     if (l->selmode) {
@@ -2023,6 +2044,8 @@ static int edit(lino_t *l, const char *prompt)
                         l->error = lino_ioerr;
                         goto out;
                     }
+                    if (l->dpos == l->dlen)
+                        flash(l, '!');
                     break;
                 }
                 if (l->mlmode)
@@ -2086,6 +2109,8 @@ static int edit(lino_t *l, const char *prompt)
                     l->error = lino_ioerr;
                     goto out;
                 }
+                if (!paste && l->dpos == l->dlen)
+                    flash(l, '!');
                 break;
             }
             if (l->mlmode)
