@@ -702,7 +702,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <NESTED>{WS}\.\. {
   yylval->lineno = yyextra->lineno;
-  return DOTDOT;
+  return (opt_compat && opt_compat <= 185) ? OLD_DOTDOT : DOTDOT;
 }
 
 <SPECIAL>@ {

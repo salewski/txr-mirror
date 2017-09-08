@@ -122,6 +122,7 @@ INLINE val expand_form_ver(val form, int ver)
 %token <lineno> HASH_B_QUOTE
 %token <lineno> WORDS WSPLICE QWORDS QWSPLICE
 %token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E SECRET_ESCAPE_I
+%token <lineno> OLD_DOTDOT
 
 %token <val> NUMBER METANUM
 %token <val> HASH_N_EQUALS HASH_N_HASH
@@ -162,8 +163,9 @@ INLINE val expand_form_ver(val form, int ver)
 %left '|' '/'
 %left '&'
 %right '~' '*' '?' '+' '%'
-%right '.' CONSDOT LAMBDOT UREFDOT REGCHAR REGTOKEN LITCHAR
 %right DOTDOT
+%right '.' CONSDOT LAMBDOT UREFDOT REGCHAR REGTOKEN LITCHAR
+%right OLD_DOTDOT
 
 %%
 
@@ -1015,6 +1017,16 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
                                                           uref_helper(parser, $4),
                                                           nao),
                                             or2($1, $4)); }
+       | n_expr OLD_DOTDOT n_expr
+                                { uses_or2;
+                                  $$ = rlcp(list(rcons_s, $1, $3, nao),
+                                            or2($1, $3)); }
+       | n_expr OLD_DOTDOT '.' n_expr
+                                { uses_or2;
+                                  $$ = rlcp(list(rcons_s, $1,
+                                                          uref_helper(parser, $4),
+                                                          nao),
+                                            or2($1, $4)); }
        | n_expr '.' n_expr      { uses_or2;
                                   if (consp($3) && car($3) == qref_s) {
                                     rplacd($3, rlcp(cons($1, cdr($3)), $1));
@@ -1782,6 +1794,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case CONSDOT: problem = lit("consing dot"); break;
   case LAMBDOT: problem = lit("consing dot"); break;
   case DOTDOT: problem = lit(".."); break;
+  case OLD_DOTDOT:     problem = lit(".."); break;
   case HASH_BACKSLASH: problem = lit("#\\"); break;
   case HASH_SLASH:     problem = lit("#/"); break;
   case HASH_H:         problem = lit("#H"); break;

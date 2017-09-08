@@ -61407,6 +61407,25 @@ is that user code which binds custom macros to
 or
 .code sys:expr
 may be affected by 184 or lower compatibility.
+.IP 185
+A value of 185 or lower restores the old precedence of the
+double dot notation for expressing ranges, relative to the
+referencing dot. Until \*(TX 185, the expression
+.code a.b..c.d
+parsed as
+.codn "(qref a (rcons b c) d)" .
+What is worse, it parsed this way even if written as
+.codn "a.b .. c.d" .
+Starting in \*(TX 186,
+.code ..
+has a lower precedence, producing the more useful and intuitive parse
+.codn "(rcons (qref a b) (qref c d))" :
+in other words, the range with endpoints given by
+.code a.b
+and
+.codn c.d .
+
+
 .IP 183
 A value of 183 or lower restores an inconsistent behavior in the
 .code "@(bind)"
