@@ -2418,7 +2418,7 @@ static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
 
       regm->n.nclos = nfa_move_closure(regm->n.stack,
                                        regm->n.set, regm->n.nclos,
-                                       regm->n.nstates, ch, regm->n.visited++,
+                                       regm->n.nstates, ch, ++regm->n.visited,
                                        &accept);
 
       if (regm->n.nfa.start)
