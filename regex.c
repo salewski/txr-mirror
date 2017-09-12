@@ -1130,6 +1130,83 @@ static void nfa_free(nfa_t nfa, int nstates)
     nfa_state_free(all[i]);
 }
 
+static void nfa_thread_epsilons(nfa_state_t **ps, unsigned visited)
+{
+  nfa_state_t *s = *ps, **ps0 = 0, **ps1 = 0;
+
+  if (!s)
+    return;
+
+  switch (s->a.kind) {
+  case nfa_empty:
+    if (s->e.trans0 && s->e.trans1) {
+      ps0 = &s->e.trans0;
+      ps1 = &s->e.trans1;
+    } else if (s->e.trans0) {
+      *ps = s->e.trans0;
+      ps0 = ps;
+    } else if (s->e.trans1) {
+      *ps = s->e.trans1;
+      ps0 = ps;
+    } else {
+      *ps = 0;
+    }
+    break;
+  case nfa_single:
+  case nfa_wild:
+  case nfa_set:
+    ps0 = &s->o.trans;
+    break;
+  case nfa_accept:
+    break;
+  }
+
+  if (s->a.visited != visited) {
+    s->a.visited = visited;
+
+    if (ps1)
+      nfa_thread_epsilons(ps1, visited);
+    if (ps0)
+      nfa_thread_epsilons(ps0, visited);
+  }
+}
+
+static void nfa_noop(nfa_state_t *s, mem_t *ctx)
+{
+  (void) s;
+  (void) ctx;
+}
+
+static nfa_t nfa_optimize(nfa_t nfa)
+{
+  if (nfa.start) {
+    int nstates = nfa_count_states(nfa.start), i;
+    nfa_state_t **all = coerce(nfa_state_t **, alloca(nstates * sizeof *all));
+    nfa_state_t **pelem = all;
+    unsigned visited;
+
+    /* Get all states in flat array. */
+    nfa_map_states(nfa.start, coerce(mem_t *, &pelem), nfa_collect_one, nfa.start->a.visited + 1);
+
+    /* Eliminate useless epsilons from graph. */
+    nfa_thread_epsilons(&nfa.start, nfa.start->a.visited + 1);
+
+    /* Visit all reachable states. */
+    nfa_map_states(nfa.start, 0, nfa_noop, nfa.start->a.visited + 1);
+
+    /* Garbage-collect unreachable states. */
+    visited = nfa.start->a.visited;
+
+    for (i = 0; i < nstates; i++) {
+      nfa_state_t *s = all[i];
+      if (s->a.visited != visited)
+        nfa_state_free(s);
+    }
+  }
+  return nfa;
+}
+
+
 /*
  * Compute the epsilon-closure of the NFA states stored in the set, whose
  * size is given by nin. The results are stored back in the same array, the
@@ -2125,7 +2202,7 @@ val regex_compile(val regex_sexp, val error_stream)
     regex->kind = REGEX_NFA;
     regex->source = nil;
     ret = cobj(coerce(mem_t *, regex), regex_s, &regex_obj_ops);
-    regex->r.nfa = nfa_compile_regex(regex_sexp);
+    regex->r.nfa = nfa_optimize(nfa_compile_regex(regex_sexp));
     regex->nstates = nfa_count_states(regex->r.nfa.start);
     regex->source = regex_source;
     return ret;
