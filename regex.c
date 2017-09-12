@@ -1097,7 +1097,7 @@ static int nfa_count_states(nfa_state_t *s)
 
 static void nfa_handle_wraparound(nfa_state_t *s, unsigned *pvisited)
 {
-  if (s && *pvisited == UINT_MAX) {
+  if (s && *pvisited > UINT_MAX - 8) {
     s->a.visited = UINT_MAX - 1;
     (void) nfa_count_states(s);
     s->a.visited = UINT_MAX;
@@ -1307,7 +1307,7 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
 static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
 {
   const wchar_t *last_accept_pos = 0, *ptr = str;
-  unsigned visited = nfa.start ? (nfa.start->a.visited + 1) : 0;
+  unsigned visited = nfa.start ? nfa.start->a.visited : 0;
   nfa_state_t **set = coerce(nfa_state_t **, alloca(nstates * sizeof *set));
   nfa_state_t **stack = coerce(nfa_state_t **, alloca(nstates * sizeof *stack));
   int nclos = 0;
@@ -1317,7 +1317,7 @@ static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
 
   if (nfa.start) {
     set[0] = nfa.start;
-    nclos = nfa_closure(stack, set, 1, nstates, visited++, &accept);
+    nclos = nfa_closure(stack, set, 1, nstates, ++visited, &accept);
   }
 
   if (accept)
@@ -1331,7 +1331,7 @@ static cnum nfa_run(nfa_t nfa, int nstates, const wchar_t *str)
     nfa_handle_wraparound(nfa.start, &visited);
 
     nclos = nfa_move_closure(stack, set, nclos,
-                             nstates, ch, visited++, &accept);
+                             nstates, ch, ++visited, &accept);
 
     if (accept)
       last_accept_pos = ptr + 1;
@@ -2351,7 +2351,7 @@ static void regex_machine_reset(regex_machine_t *regm)
       regm->n.set[0] = s;
       regm->n.nclos = nfa_closure(regm->n.stack, regm->n.set, 1,
                                   regm->n.nstates,
-                                  regm->n.visited++, &accept);
+                                  regm->n.visited, &accept);
       s->a.visited = regm->n.visited;
     } else {
       regm->n.nclos = 0;
