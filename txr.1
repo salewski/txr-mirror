@@ -37915,6 +37915,75 @@ the matching substring of
   (match-regex-right-substring "ac" #/c*/) -> "c"
 .cble
 
+.coNP Function @ regex-prefix-match
+.synb
+.mets (regex-prefix-match < regex < string <> [ position ])
+.syne
+.desc
+The
+.code regex-prefix-match
+determines whether the input string might
+might be the prefix of a string which matches regular expression
+.metn regex .
+
+The result is true if the input string matches
+.meta regex
+exactly. However, it is also true in situations in which
+the input string doesn't match
+.metn regex ,
+yet can be extended with one or more additional characters beyond the end such
+that the extended string
+.B does
+match.
+
+The
+.meta string
+argument must be a character string. The function takes the input string to be
+the suffix of
+.meta string
+which starts at the character position indicated by the
+.meta position
+argument. If that argument is omitted, then
+.meta string
+is taken as the input in its entirety. Negative values index backwards from
+the end of
+.meta string
+according to the usual conventions elsewhere in the library.
+
+Note: this function is not to be confused for the semantics
+of a regex matching a prefix of a string: that capability is
+provided by the functions
+.codn match-regex ,
+.codn m^ ,
+.codn r^ ,
+.code f^
+and
+.codn fr^ .
+
+.TP* Examples:
+
+.cblk
+  ;; The empty string is not a viable prefix match for
+  ;; a regex that matches no strings at all:
+  (regex-prefix-match #/~.*/ "") -> nil
+  (regex-prefix-match #/[]/ "") -> nil
+
+  ;; The empty string is a viable prefix of any regex
+  ;; which matches at least one string:
+  (regex-prefix-match #// "") -> t
+  (regex-prefix-match #/abc/ "") -> t
+
+  ;; This string doesn't match the regex because
+  ;; it doesn't end in b, but is a viable prefix:
+  (regex-prefix-match #/a*b/ "aa") -> t
+
+  (regex-prefix-match #/a*b/ "ab") -> t
+
+  (regex-prefix-match #/a*b/ "ac") -> nil
+
+  (regex-prefix-match #/a*b/ "abc") -> nil
+.cble
+
 .coNP Function @ regsub
 .synb
 .mets (regsub >> { regex | << function } < replacement << string )

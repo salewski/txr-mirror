@@ -2398,6 +2398,14 @@ static void regex_machine_cleanup(regex_machine_t *regm)
   }
 }
 
+static regm_result_t regex_machine_infer_init_state(regex_machine_t *regm)
+{
+  if (regm->n.is_nfa)
+    return (regm->n.nclos != 0) ? REGM_INCOMPLETE : REGM_FAIL;
+  else
+    return (regm->d.deriv != t) ? REGM_INCOMPLETE : REGM_FAIL;
+}
+
 static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
 {
   int accept = 0;
@@ -2692,6 +2700,44 @@ val match_regex_right(val str, val regex, val end)
   }
 
   return nil;
+}
+
+val regex_prefix_match(val reg, val str, val pos)
+{
+  regex_machine_t regm;
+  val i;
+  regm_result_t last_res;
+
+  if (null_or_missing_p(pos)) {
+    pos = zero;
+  } else if (lt(pos, zero)) {
+    pos = plus(pos, length_str(str));
+    if (lt(pos, zero))
+      return nil;
+  } else if (length_str_lt(str, pos)) {
+    return nil;
+  }
+
+  regex_machine_init(&regm, reg);
+
+  last_res = regex_machine_infer_init_state(&regm);
+
+  for (i = pos; length_str_gt(str, i); i = plus(i, one)) {
+    last_res = regex_machine_feed(&regm, c_chr(chr_str(str, i)));
+    if (last_res == REGM_FAIL)
+      break;
+  }
+
+  regex_machine_cleanup(&regm);
+
+  switch (last_res) {
+  case REGM_INCOMPLETE:
+  case REGM_MATCH:
+    return t;
+  default:
+  case REGM_FAIL:
+    return nil;
+  }
 }
 
 val regsub(val regex, val repl, val str)
@@ -3124,6 +3170,8 @@ void regex_init(void)
   reg_fun(intern(lit("match-regst-right"), user_package),
           func_n3o((opt_compat && opt_compat <= 150) ?
                    match_regst_right_old : match_regst_right, 2));
+  reg_fun(intern(lit("regex-prefix-match"), user_package),
+          func_n3o(regex_prefix_match, 2));
   reg_fun(intern(lit("regsub"), user_package), func_n3(regsub));
   reg_fun(intern(lit("regex-parse"), user_package), func_n2o(regex_parse, 1));
 
