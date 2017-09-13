@@ -1058,13 +1058,21 @@ static nfa_t nfa_compile_regex(val exp)
   }
 }
 
+INLINE int nfa_test_set_visited(nfa_state_t *s, unsigned visited)
+{
+  if (s && s->a.visited != visited) {
+    s->a.visited = visited;
+    return 1;
+  }
+  return 0;
+}
+
 static void nfa_map_states(nfa_state_t *s,
                            mem_t *ctx, void (*fun)(nfa_state_t *,
                                                    mem_t *ctx),
                            unsigned visited)
 {
-  if (s && s->a.visited != visited) {
-    s->a.visited = visited;
+  if (nfa_test_set_visited(s, visited)) {
     fun(s, ctx);
 
     switch (s->a.kind) {
@@ -1167,9 +1175,7 @@ static void nfa_thread_epsilons(nfa_state_t **ps, unsigned visited)
     break;
   }
 
-  if (s->a.visited != visited) {
-    s->a.visited = visited;
-
+  if (nfa_test_set_visited(s, visited)) {
     if (ps1)
       nfa_thread_epsilons(ps1, visited);
     if (ps0)
@@ -1279,16 +1285,14 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
       nfa_state_t *e0 = top->e.trans0;
       nfa_state_t *e1 = top->e.trans1;
 
-      if (e0 && e0->a.visited != visited) {
-        e0->a.visited = visited;
+      if (nfa_test_set_visited(e0, visited)) {
         stack[stackp++] = e0;
         set[nout++] = e0;
         if (nfa_accept_state_p(e0))
           *accept = 1;
       }
 
-      if (e1 && e1->a.visited != visited) {
-        e1->a.visited = visited;
+      if (nfa_test_set_visited(e1, visited)) {
         stack[stackp++] = e1;
         set[nout++] = e1;
         if (nfa_accept_state_p(e1))
@@ -1367,16 +1371,14 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
       nfa_state_t *e0 = top->e.trans0;
       nfa_state_t *e1 = top->e.trans1;
 
-      if (e0 && e0->a.visited != visited) {
-        e0->a.visited = visited;
+      if (nfa_test_set_visited(e0, visited)) {
         stack[stackp++] = e0;
         set[nout++] = e0;
         if (nfa_accept_state_p(e0))
           *accept = 1;
       }
 
-      if (e1 && e1->a.visited != visited) {
-        e1->a.visited = visited;
+      if (nfa_test_set_visited(e1, visited)) {
         stack[stackp++] = e1;
         set[nout++] = e1;
         if (nfa_accept_state_p(e1))
