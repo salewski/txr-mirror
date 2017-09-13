@@ -190,7 +190,7 @@ typedef union char_set {
 } char_set_t;
 
 typedef enum {
-  nfa_empty, nfa_wild, nfa_single, nfa_set
+  nfa_empty, nfa_accept, nfa_wild, nfa_single, nfa_set
 } nfa_kind_t;
 
 struct nfa_state_any {
@@ -203,7 +203,6 @@ struct nfa_state_empty {
   unsigned visited;
   nfa_state_t *trans0;
   nfa_state_t *trans1;
-  int accept;
 };
 
 struct nfa_state_single {
@@ -227,7 +226,9 @@ union nfa_state {
   struct nfa_state_set s;
 };
 
-#define nfa_accept_state_p(s) ((s)->a.kind == nfa_empty && (s)->e.accept)
+#define nfa_accept_state_p(s) ((s)->a.kind == nfa_accept)
+#define nfa_empty_state_p(s) ((s)->a.kind == nfa_accept || \
+                              (s)->a.kind == nfa_empty)
 
 struct nfa_machine {
   int is_nfa;           /* common member */
@@ -812,10 +813,9 @@ static struct cobj_ops char_set_obj_ops = cobj_ops_init(eq,
 static nfa_state_t *nfa_state_accept(void)
 {
   nfa_state_t *st = coerce(nfa_state_t *, chk_malloc(sizeof *st));
-  st->e.kind = nfa_empty;
+  st->e.kind = nfa_accept;
   st->e.visited = 0;
   st->e.trans0 = st->e.trans1 = 0;
-  st->e.accept = 1;
   return st;
 }
 
@@ -826,7 +826,6 @@ static nfa_state_t *nfa_state_empty(nfa_state_t *t0, nfa_state_t *t1)
   st->e.visited = 0;
   st->e.trans0 = t0;
   st->e.trans1 = t1;
-  st->e.accept = 0;
   return st;
 }
 
@@ -887,7 +886,6 @@ static void nfa_state_empty_convert(nfa_state_t *acc, nfa_state_t *t0,
   acc->e.kind = nfa_empty;
   acc->e.trans0 = t0;
   acc->e.trans1 = t1;
-  acc->e.accept = 0;
 }
 
 /*
@@ -1071,6 +1069,7 @@ static void nfa_map_states(nfa_state_t *s,
 
     switch (s->a.kind) {
     case nfa_empty:
+    case nfa_accept:
       nfa_map_states(s->e.trans0, ctx, fun, visited);
       nfa_map_states(s->e.trans1, ctx, fun, visited);
       break;
@@ -1144,8 +1143,6 @@ static void nfa_thread_epsilons(nfa_state_t **ps, unsigned visited)
 
   switch (s->a.kind) {
   case nfa_empty:
-    if (nfa_accept_state_p(s))
-      break;
     if (s->e.trans0 && s->e.trans1) {
       ps0 = &s->e.trans0;
       ps1 = &s->e.trans1;
@@ -1158,6 +1155,10 @@ static void nfa_thread_epsilons(nfa_state_t **ps, unsigned visited)
     } else {
       *ps = 0;
     }
+    break;
+  case nfa_accept:
+    ps0 = &s->e.trans0;
+    ps1 = &s->e.trans1;
     break;
   case nfa_single:
   case nfa_wild:
@@ -1185,12 +1186,12 @@ static void nfa_fold_accept(nfa_state_t *s, mem_t *ctx)
     nfa_state_t *e1 = s->e.trans1;
 
     if (e0 && nfa_accept_state_p(e0)) {
-      s->e.accept = 1;
+      s->a.kind = nfa_accept;
       s->e.trans0 = 0;
     }
 
     if (e1 && nfa_accept_state_p(e1)) {
-      s->e.accept = 1;
+      s->a.kind = nfa_accept;
       s->e.trans1 = 0;
     }
   }
@@ -1274,7 +1275,7 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
     /* Only states of type nfa_empty are interesting.
        Each such state at most two epsilon transitions. */
 
-    if (top->a.kind == nfa_empty) {
+    if (nfa_empty_state_p(top)) {
       nfa_state_t *e0 = top->e.trans0;
       nfa_state_t *e1 = top->e.trans1;
 
@@ -1362,7 +1363,7 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
     /* Only states of type nfa_empty are interesting.
        Each such state at most two epsilon transitions. */
 
-    if (top->a.kind == nfa_empty) {
+    if (nfa_empty_state_p(top)) {
       nfa_state_t *e0 = top->e.trans0;
       nfa_state_t *e1 = top->e.trans1;
 
