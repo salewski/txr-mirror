@@ -2201,7 +2201,7 @@ static val regex_requires_dv(val exp)
 
 val regex_compile(val regex_sexp, val error_stream)
 {
-  val regex_source;
+  val regex_source = regex_sexp;
 
   if (stringp(regex_sexp)) {
     regex_sexp = regex_parse(regex_sexp, default_null_arg(error_stream));
@@ -2209,10 +2209,6 @@ val regex_compile(val regex_sexp, val error_stream)
   }
 
   regex_sexp = reg_optimize(reg_expand_nongreedy(reg_nary_to_bin(regex_sexp)));
-
-  regex_source = if3(stringp(regex_sexp),
-                     cons(compound_s, cons(regex_sexp, nil)),
-                     regex_sexp);
 
   if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
     regex_t *regex = coerce(regex_t *, chk_malloc(sizeof *regex));
