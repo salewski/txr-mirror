@@ -2502,6 +2502,40 @@ is
 .B not
 equivalent to
 .codn (R1%)R2 .
+Also note that
+.code A(XY%Z)B
+is equivalent to
+.codn AX(Y%Z)B .
+This is because the precedence of
+.code %
+is higher than that of catenation on its left side; this rule prevents the given
+syntax from expressing the
+.code XY
+catenation. The expression may be understood as:
+.code A(X(Y%Z))B
+where the inner parentheses clarify how the syntax surrounding the
+.code %
+operator is being parsed, and the outer parentheses are superfluous.
+The correct way to assert catenation of
+.code XY
+as the left operand of
+.code %
+is
+.codn A(XY)%ZB .
+To specify
+.code XY
+as the left operand, and limit the right operand to just
+.codn Z ,
+the correct syntax is
+.codn A((XY)%Z)B .
+By contrast, the expression
+.code A(X%YZ)B
+is not equivalent to
+.code A(X%Y)ZB
+because the precedence of
+.code %
+is lower than that of catenation on its right side. The operator is
+effectively "bi-precedential".
 .coIP ~R
 Match the opposite of the following expression
 .codn R ;
