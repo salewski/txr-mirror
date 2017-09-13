@@ -1351,8 +1351,7 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
 
       bug_unless (stackp < nstates);
 
-      if (mov != 0) {
-        mov->a.visited = visited;
+      if (nfa_test_set_visited(mov, visited)) {
         stack[stackp++] = mov;
         set[nout++] = mov;
         if (nfa_accept_state_p(mov))
