@@ -1176,6 +1176,26 @@ static void nfa_thread_epsilons(nfa_state_t **ps, unsigned visited)
   }
 }
 
+static void nfa_fold_accept(nfa_state_t *s, mem_t *ctx)
+{
+  (void) ctx;
+
+  if (s->a.kind == nfa_empty) {
+    nfa_state_t *e0 = s->e.trans0;
+    nfa_state_t *e1 = s->e.trans1;
+
+    if (e0 && nfa_accept_state_p(e0)) {
+      s->e.accept = 1;
+      s->e.trans0 = 0;
+    }
+
+    if (e1 && nfa_accept_state_p(e1)) {
+      s->e.accept = 1;
+      s->e.trans1 = 0;
+    }
+  }
+}
+
 static void nfa_noop(nfa_state_t *s, mem_t *ctx)
 {
   (void) s;
@@ -1195,6 +1215,9 @@ static nfa_t nfa_optimize(nfa_t nfa)
 
     /* Eliminate useless epsilons from graph. */
     nfa_thread_epsilons(&nfa.start, nfa.start->a.visited + 1);
+
+    /* Fold accept states into empty transitions which reference them. */
+    nfa_map_states(nfa.start, 0, nfa_fold_accept, nfa.start->a.visited + 1);
 
     /* Visit all reachable states. */
     nfa_map_states(nfa.start, 0, nfa_noop, nfa.start->a.visited + 1);
