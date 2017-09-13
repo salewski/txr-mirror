@@ -190,10 +190,10 @@ typedef union char_set {
 } char_set_t;
 
 typedef enum {
-  nfa_accept, nfa_empty, nfa_wild, nfa_single, nfa_set
+  nfa_empty, nfa_wild, nfa_single, nfa_set
 } nfa_kind_t;
 
-struct nfa_state_accept {
+struct nfa_state_any {
   nfa_kind_t kind;
   unsigned visited;
 };
@@ -203,6 +203,7 @@ struct nfa_state_empty {
   unsigned visited;
   nfa_state_t *trans0;
   nfa_state_t *trans1;
+  int accept;
 };
 
 struct nfa_state_single {
@@ -220,11 +221,13 @@ struct nfa_state_set {
 };
 
 union nfa_state {
-  struct nfa_state_accept a;
+  struct nfa_state_any a;
   struct nfa_state_empty e;
   struct nfa_state_single o;
   struct nfa_state_set s;
 };
+
+#define nfa_accept_state_p(s) ((s)->a.kind == nfa_empty && (s)->e.accept)
 
 struct nfa_machine {
   int is_nfa;           /* common member */
@@ -809,8 +812,10 @@ static struct cobj_ops char_set_obj_ops = cobj_ops_init(eq,
 static nfa_state_t *nfa_state_accept(void)
 {
   nfa_state_t *st = coerce(nfa_state_t *, chk_malloc(sizeof *st));
-  st->a.kind = nfa_accept;
-  st->a.visited = 0;
+  st->e.kind = nfa_empty;
+  st->e.visited = 0;
+  st->e.trans0 = st->e.trans1 = 0;
+  st->e.accept = 1;
   return st;
 }
 
@@ -821,6 +826,7 @@ static nfa_state_t *nfa_state_empty(nfa_state_t *t0, nfa_state_t *t1)
   st->e.visited = 0;
   st->e.trans0 = t0;
   st->e.trans1 = t1;
+  st->e.accept = 0;
   return st;
 }
 
@@ -877,10 +883,11 @@ static nfa_state_t *nfa_state_set(nfa_state_t *t, char_set_t *cs)
 static void nfa_state_empty_convert(nfa_state_t *acc, nfa_state_t *t0,
                                     nfa_state_t *t1)
 {
-  assert (acc->a.kind == nfa_accept);
+  assert (nfa_accept_state_p(acc));
   acc->e.kind = nfa_empty;
   acc->e.trans0 = t0;
   acc->e.trans1 = t1;
+  acc->e.accept = 0;
 }
 
 /*
@@ -899,7 +906,7 @@ static void nfa_state_empty_convert(nfa_state_t *acc, nfa_state_t *t0,
  */
 static void nfa_state_merge(nfa_state_t *acc, nfa_state_t *st)
 {
-  assert (acc->a.kind == nfa_accept);
+  assert (nfa_accept_state_p(acc));
   *acc = *st;
 }
 
@@ -1063,8 +1070,6 @@ static void nfa_map_states(nfa_state_t *s,
     fun(s, ctx);
 
     switch (s->a.kind) {
-    case nfa_accept:
-      break;
     case nfa_empty:
       nfa_map_states(s->e.trans0, ctx, fun, visited);
       nfa_map_states(s->e.trans1, ctx, fun, visited);
@@ -1139,6 +1144,8 @@ static void nfa_thread_epsilons(nfa_state_t **ps, unsigned visited)
 
   switch (s->a.kind) {
   case nfa_empty:
+    if (nfa_accept_state_p(s))
+      break;
     if (s->e.trans0 && s->e.trans1) {
       ps0 = &s->e.trans0;
       ps1 = &s->e.trans1;
@@ -1156,8 +1163,6 @@ static void nfa_thread_epsilons(nfa_state_t **ps, unsigned visited)
   case nfa_wild:
   case nfa_set:
     ps0 = &s->o.trans;
-    break;
-  case nfa_accept:
     break;
   }
 
@@ -1230,12 +1235,13 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
   /* First, add all states in the input set to the closure,
      push them on the stack, and mark them as visited. */
   for (i = 0; i < nin; i++) {
+    nfa_state_t *s = set[i];
     bug_unless (stackp < nstates);
 
-    set[i]->a.visited = visited;
-    stack[stackp++] = set[i];
-    set[nout++] = set[i];
-    if (set[i]->a.kind == nfa_accept)
+    s->a.visited = visited;
+    stack[stackp++] = s;
+    set[nout++] = s;
+    if (nfa_accept_state_p(s))
       *accept = 1;
   }
 
@@ -1253,7 +1259,7 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
         e0->a.visited = visited;
         stack[stackp++] = e0;
         set[nout++] = e0;
-        if (e0->a.kind == nfa_accept)
+        if (nfa_accept_state_p(e0))
           *accept = 1;
       }
 
@@ -1261,7 +1267,7 @@ static int nfa_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
         e1->a.visited = visited;
         stack[stackp++] = e1;
         set[nout++] = e1;
-        if (e1->a.kind == nfa_accept)
+        if (nfa_accept_state_p(e1))
           *accept = 1;
       }
     }
@@ -1321,7 +1327,7 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
         mov->a.visited = visited;
         stack[stackp++] = mov;
         set[nout++] = mov;
-        if (mov->a.kind == nfa_accept)
+        if (nfa_accept_state_p(mov))
           *accept = 1;
       }
     }
@@ -1341,7 +1347,7 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
         e0->a.visited = visited;
         stack[stackp++] = e0;
         set[nout++] = e0;
-        if (e0->a.kind == nfa_accept)
+        if (nfa_accept_state_p(e0))
           *accept = 1;
       }
 
@@ -1349,7 +1355,7 @@ static int nfa_move_closure(nfa_state_t **stack, nfa_state_t **set, int nin,
         e1->a.visited = visited;
         stack[stackp++] = e1;
         set[nout++] = e1;
-        if (e1->a.kind == nfa_accept)
+        if (nfa_accept_state_p(e1))
           *accept = 1;
       }
     }
