@@ -2352,7 +2352,7 @@ static void print_rec(val exp, val stream, int *semi_flag)
       for (; args; args = cdr(args)) {
         val arg = car(args);
         if (consp(arg) && (car(arg) == compl_s || car(arg) == and_s ||
-                           car(arg) == nongreedy_s))
+                           car(arg) == or_s || car(arg) == nongreedy_s))
           paren_print_rec(arg, stream, semi_flag);
         else
           print_rec(arg, stream, semi_flag);
