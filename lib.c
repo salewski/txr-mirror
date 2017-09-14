@@ -1054,6 +1054,7 @@ loc list_collect_revappend(loc ptail, val obj)
 
 val nreverse(val in)
 {
+  val self = lit("nreverse");
   seq_info_t si = seq_info(in);
 
   switch (si.kind) {
@@ -1076,7 +1077,7 @@ val nreverse(val in)
   case SEQ_VECLIKE:
     {
       val in = si.obj;
-      cnum len = c_num(length(in));
+      cnum len = c_fixnum(length(in), self);
       cnum i;
 
       for (i = 0; i < len / 2; i++) {
@@ -1095,6 +1096,7 @@ val nreverse(val in)
 
 val reverse(val seq_in)
 {
+  val self = lit("reverse");
   seq_info_t si = seq_info(seq_in);
 
   switch (si.kind) {
@@ -1118,7 +1120,7 @@ val reverse(val seq_in)
 
     {
       val obj = copy(si.obj);
-      cnum len = c_num(length(si.obj));
+      cnum len = c_fixnum(length(si.obj), self);
       cnum i;
 
       for (i = 0; i < len / 2; i++) {
@@ -1624,7 +1626,7 @@ static val rem_impl(val (*eqfun)(val, val), val name,
     {
       val out = mkustring(zero);
       val str = seq_in;
-      cnum len = c_num(length_str(str)), i;
+      cnum len = c_fixnum(length_str(str), name), i;
 
       for (i = 0; i < len; i++) {
         val elem = chr_str(str, num_fast(i));
@@ -1640,7 +1642,7 @@ static val rem_impl(val (*eqfun)(val, val), val name,
     {
       val out = vector(zero, nil);
       val vec = seq_in;
-      cnum len = c_num(length_vec(vec)), i;
+      cnum len = c_fixnum(length_vec(vec), name), i;
 
       for (i = 0; i < len; i++) {
         val elem = vecref(vec, num_fast(i));
@@ -1659,6 +1661,7 @@ static val rem_impl(val (*eqfun)(val, val), val name,
 
 val remove_if(val pred, val seq_in, val keyfun_in)
 {
+  val self = lit("remove-if");
   val keyfun = default_null_arg(keyfun_in);
 
   switch (type(seq_in)) {
@@ -1692,7 +1695,7 @@ val remove_if(val pred, val seq_in, val keyfun_in)
     {
       val out = mkustring(zero);
       val str = seq_in;
-      cnum len = c_num(length_str(str)), i;
+      cnum len = c_fixnum(length_str(str), self), i;
 
       for (i = 0; i < len; i++) {
         val elem = chr_str(str, num_fast(i));
@@ -1708,7 +1711,7 @@ val remove_if(val pred, val seq_in, val keyfun_in)
     {
       val out = vector(zero, nil);
       val vec = seq_in;
-      cnum len = c_num(length_vec(vec)), i;
+      cnum len = c_fixnum(length_vec(vec), self), i;
 
       for (i = 0; i < len; i++) {
         val elem = vecref(vec, num_fast(i));
@@ -3057,6 +3060,17 @@ cnum c_num(val num)
   }
 }
 
+cnum c_fixnum(val num, val self)
+{
+  switch (type(num)) {
+  case CHR: case NUM:
+    return coerce(cnum, num) >> TAG_SHIFT;
+  default:
+    type_mismatch(lit("~a: ~s is not fixnum integer or character"),
+                  self, num, nao);
+  }
+}
+
 val flo(double n)
 {
   val obj = make_obj();
@@ -3524,27 +3538,27 @@ val string_extend(val str, val tail)
   type_check(str, STR);
   {
     val self = lit("string-extend");
-    cnum len = c_num(length_str(str));
-    cnum oalloc = c_num(str->st.alloc), alloc = oalloc;
+    cnum len = c_fixnum(length_str(str), self);
+    cnum oalloc = c_fixnum(str->st.alloc, self), alloc = oalloc;
     cnum delta, needed;
 
     if (stringp(tail))
-      delta = c_num(length_str(tail));
+      delta = c_fixnum(length_str(tail), self);
     else if (chrp(tail))
       delta = 1;
     else if (integerp(tail))
-      delta = c_num(tail);
+      delta = c_fixnum(tail, self);
     else
       uw_throwf(error_s, lit("~s: tail ~s bad type"), self, str, nao);
 
-    if (INT_PTR_MAX - delta - 1 < len)
+    if (NUM_MAX - delta - 1 < len)
       uw_throwf(error_s, lit("~s: overflow"), self, nao);
 
     needed = len + delta + 1;
 
     if (needed > alloc) {
-      if (alloc >= (INT_PTR_MAX - INT_PTR_MAX / 5))
-        alloc = INT_PTR_MAX;
+      if (alloc >= (NUM_MAX - NUM_MAX / 5))
+        alloc = NUM_MAX;
       else
         alloc = max(alloc + alloc / 4, needed);
 
@@ -4399,7 +4413,7 @@ val cmp_str(val astr, val bstr)
    case TYPE_PAIR(STR, STR):
    case TYPE_PAIR(LIT, STR):
    case TYPE_PAIR(STR, LIT):
-     return num_fast(wcscmp(c_str(astr), c_str(bstr)));
+     return num(wcscmp(c_str(astr), c_str(bstr)));
    case TYPE_PAIR(LSTR, LIT):
    case TYPE_PAIR(LSTR, STR):
    case TYPE_PAIR(LIT, LSTR):
@@ -4614,6 +4628,7 @@ static void less_tab_init(void)
 
 val less(val left, val right)
 {
+  val self = lit("less");
   type_t l_type, r_type;
 
   if (left == right)
@@ -4692,8 +4707,8 @@ tail:
   case VEC:
     {
       cnum i;
-      cnum lenl = c_num(length_vec(left));
-      cnum lenr = c_num(length_vec(right));
+      cnum lenl = c_fixnum(length_vec(left), self);
+      cnum lenr = c_fixnum(length_vec(right), self);
       cnum len = min(lenl, lenr);
 
       for (i = 0; i < len; i++) {
@@ -7936,7 +7951,8 @@ static cnum calc_win_size(cnum ra)
 
 static val window_map_list(val range, val boundary, val fun, val list, val app)
 {
-  cnum i, j, ra = c_num(range), ws = calc_win_size(ra);
+  val self = lit("window-map");
+  cnum i, j, ra = c_fixnum(range, self), ws = calc_win_size(ra);
   val iter;
   args_decl (args, ws);
   list_collect_decl (out, ptail);
@@ -7963,7 +7979,7 @@ static val window_map_list(val range, val boundary, val fun, val list, val app)
     args->arg[i] = car(iter);
 
   for (j = ra; i < ws; i++)
-    args->arg[i] = ref(boundary, num_fast(j++));
+    args->arg[i] = ref(boundary, num(j++));
 
   for (;;) {
     args_decl (args_cp, ws);
@@ -7984,7 +8000,7 @@ static val window_map_list(val range, val boundary, val fun, val list, val app)
       args->arg[i] = car(iter);
       iter = cdr(iter);
     } else {
-      args->arg[i] = ref(boundary, num_fast(j++));
+      args->arg[i] = ref(boundary, num(j++));
     }
   }
 
@@ -8244,7 +8260,8 @@ static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
 
 static void sort_vec(val vec, val lessfun, val keyfun)
 {
-  cnum len = c_num(length(vec));
+  val self = lit("sort");
+  cnum len = c_fixnum(length(vec), self);
   quicksort(vec, lessfun, keyfun, 0, len);
 }
 
@@ -8363,6 +8380,7 @@ val sort_group(val seq, val keyfun, val lessfun)
 
 val unique(val seq, val keyfun, struct args *hashv_args)
 {
+  val self = lit("unique");
   val hash = hashv(hashv_args);
   val kf = default_arg(keyfun, identity_f);
 
@@ -8371,7 +8389,7 @@ val unique(val seq, val keyfun, struct args *hashv_args)
   if (vectorp(seq) || stringp(seq)) {
     cnum i, len;
 
-    for (i = 0, len = c_num(length(seq)); i < len; i++) {
+    for (i = 0, len = c_fixnum(length(seq), self); i < len; i++) {
       val new_p;
       val v = ref(seq, num_fast(i));
 

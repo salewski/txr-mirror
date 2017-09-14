@@ -228,7 +228,7 @@ static void buf_put_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
 {
   struct buf *b = buf_handle(buf, self);
   cnum p = buf_check_index(pos, self);
-  val req_len = plus(pos, num_fast(size));
+  val req_len = plus(pos, num(size));
   if (gt(req_len, b->len))
     buf_do_set_len(buf, b, req_len, nil, self);
   memcpy(b->data + p, ptr, size);

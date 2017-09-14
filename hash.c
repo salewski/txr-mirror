@@ -539,9 +539,12 @@ static void hash_grow(struct hash *h, val hash)
 {
   cnum i;
   cnum new_modulus = 2 * h->modulus;
-  val new_table = vector(num_fast(new_modulus), nil);
+  val new_table;
 
-  bug_unless (new_modulus > h->modulus);
+  if (new_modulus > NUM_MAX)
+    return;
+
+  new_table = vector(num_fast(new_modulus), nil);
 
   for (i = 0; i < h->modulus; i++) {
     val conses = vecref(h->table, num_fast(i));
@@ -1096,12 +1099,13 @@ val hash_list(val keys, struct args *hashv_args)
 
 val group_by(val func, val seq, struct args *hashv_args)
 {
+  val self = lit("group-by");
   val hash = hashv(hashv_args);
 
   if (vectorp(seq)) {
     cnum i, len;
 
-    for (i = 0, len = c_num(length(seq)); i < len; i++) {
+    for (i = 0, len = c_fixnum(length(seq), self); i < len; i++) {
       val v = vecref(seq, num_fast(i));
       pushhash(hash, funcall1(func, v), v);
     }
@@ -1126,12 +1130,13 @@ val group_by(val func, val seq, struct args *hashv_args)
 val group_reduce(val hash, val by_fun, val reduce_fun, val seq,
                  val initval, val filter_fun)
 {
+  val self = lit("group-reduce");
   initval = default_null_arg(initval);
 
   if (vectorp(seq)) {
     cnum i, len;
 
-    for (i = 0, len = c_num(length(seq)); i < len; i++) {
+    for (i = 0, len = c_fixnum(length(seq), self); i < len; i++) {
       val v = vecref(seq, num_fast(i));
       val key = funcall1(by_fun, v);
       val new_p;

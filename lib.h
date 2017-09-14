@@ -646,6 +646,7 @@ val improper_plist_to_alist(val list, val boolean_keys);
 val num(cnum val);
 val flo(double val);
 cnum c_num(val num);
+cnum c_fixnum(val num, val self);
 double c_flo(val num);
 val fixnump(val num);
 val bignump(val num);

@@ -100,6 +100,10 @@ static val perm_init_common(val p, val k_null)
   val n = length(p);
   val k = or2(k_null, n);
 
+  if (!fixnump(n))
+    uw_throwf(error_s, lit("perm: sequence length ~s is out of fixnum range"),
+              n, nao);
+
   if (gt(k, n)) {
     return nil;
   } else {
