@@ -33397,7 +33397,7 @@ This also allows programmers to use the quasiquote read syntax to construct
 quasiquote macros. For instance
 
 .cblk
-  ^(qquote (unquote ,x)) ;; does not mean ^^,x 
+  ^(qquote (unquote ,x)) ;; does not mean ^^,,x !
 .cble
 
 To the quasiquote reader, the
@@ -33409,7 +33409,7 @@ and so this syntax simply means that if the value of
 .code x
 is
 .codn foo ,
-the result will be
+the result of evaluating this expression will be
 .codn "(qquote (unquote foo))" .
 
 The form's expansion is actually this:
