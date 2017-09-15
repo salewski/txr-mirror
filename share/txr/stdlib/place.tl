@@ -35,7 +35,7 @@
     (throwf 'eval-error . params))
 
   (defmacro sys:l1-setq (u-expr new-val :env e)
-    (let ((e-expr (macroexpand u-expr e)))
+    (let ((e-expr (macroexpand-lisp1 u-expr e)))
       (if (symbolp e-expr)
         (caseq (lexical-lisp1-binding e e-expr)
           (:var ^(sys:setq ,e-expr ,new-val))
@@ -46,7 +46,7 @@
         ^(set ,u-expr ,new-val))))
 
   (defmacro sys:l1-val (u-expr :env e)
-    (let ((e-expr (macroexpand u-expr e)))
+    (let ((e-expr (macroexpand-lisp1 u-expr e)))
       (if (and (symbolp e-expr) (not (constantp e-expr)))
         (caseq (lexical-lisp1-binding e e-expr)
           (:fun ^(fun ,e-expr))
