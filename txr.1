@@ -38079,7 +38079,7 @@ which indicates that no replacement is to take place.
   (regsub #/Hello/ "Goodbye" "Hello world!") -> "Goodbye world!"
 
   ;; Left-anchored replacement with r^ function:
-  (regsub (op r^ #/H/) "J" "Hello, hello!") -> "Jello, hello!"
+  (regsub (fr^ #/H/) "J" "Hello, hello!") -> "Jello, hello!"
 .cble
 
 .coNP Function @ regexp
