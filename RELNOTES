@@ -1,3 +1,51 @@
+                                    TXR 186
+                                   2017-09-16
+
+
+  Features
+
+  - math:
+    - new cum-inv-norm function for calculating inverse of
+      the normal distribution.
+    - new poly and rpoly functions for evaluation of single-variable
+      polynomials, given coefficients and domain value.
+  - macros:
+    - new macroexpand-lisp1 and macroexpand-1-lisp1 functions
+      for expanding forms in an assumed Lisp-1 style evaluation
+      context.
+  - regex:
+    - new regex-prefix-match function
+      - determines whether string is a prefix of a possible match,
+        even if it is not itself a match.
+    - optimizations implemented to reduce NFA graph size.
+    - printed representation of regexes based on original
+      source code, not AST-optimized version.
+  - command line:
+    - txr -i <file> now goes to REPL even if loading <file> throws
+      exception.
+  - listener:
+    - Visual feedback is now given when Enter is pressed at
+      the end of a line that is not accepted due to unbalanced syntax.
+
+  Bugs
+
+  - listener:
+    - Enter pressed in Ctrl-X context now correctly leaves
+      Ctrl-X context (in situations when line is incomplete
+      and not submitted).
+  - Lisp syntax:
+    - precedence of range .. now lower than referencing dot,
+      so a.b .. c.d parses in intuitive way.
+  - regex:
+    - fixed incorrect printing of | relative to catenation
+      - e.g. #/abc(def|ghi)/ was printing as #/abcdef|ghi/
+      - recent regression
+  - syntactic places:
+    - if form [m ...] is used as a place, m is now correctly
+      macro-expanded in a Lisp-1 context.
+
+
+
                                     TXR 185
                                    2017-08-30
 
