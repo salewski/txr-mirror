@@ -48,7 +48,6 @@
 #include "hash.h"
 #include "debug.h"
 #include "match.h"
-#include "rand.h"
 #include "txr.h"
 #include "combi.h"
 #include "lisplib.h"

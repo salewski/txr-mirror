@@ -39,7 +39,6 @@
 #include "unwind.h"
 #include "match.h"
 #include "filter.h"
-#include "gc.h"
 #include "eval.h"
 #include "stream.h"
 

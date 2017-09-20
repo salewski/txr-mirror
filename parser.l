@@ -50,7 +50,6 @@
 #include "hash.h"
 #include "y.tab.h"
 #include "parser.h"
-#include "eval.h"
 #include "txr.h"
 
 #define YY_INPUT(buf, result, max_size)           \
