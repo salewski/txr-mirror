@@ -310,6 +310,7 @@ clean: conftest.clean tests.clean
 	rm -f y.tab.h.old
 	rm -f $(PROG)-win$(EXE) $(PROG)-win-dbg$(EXE)
 	rm -rf opt dbg $(EXTRA_OBJS-y)
+	rm -f $(TESTS_TMP)
 
 distclean: clean
 	rm -f config.h config.make config.log
