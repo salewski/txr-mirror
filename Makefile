@@ -100,27 +100,37 @@ $(V)sed ':x; /\\$$/ { N; s/\\\n//; tx }' < $(1) | \
   sed -e '1s/^/DEP_/' -e '1s/: [^ ]\+/ :=/' > $(1:.d=.v)
 endef
 
+define SH
+$(if $(VERBOSE),                                        \
+  $(1),                                                 \
+  $(V)cmd='$(1)' ;                                      \
+  if ! eval "$$cmd" ; then                              \
+    printf "make: failing command:\n%s\n" "$$cmd";      \
+    exit 1;                                             \
+  fi)
+endef
+
 define COMPILE_C
 $(call ABBREV,CC)
-$(V)$(TXR_CC) $(OPT_FLAGS) $(TXR_CFLAGS) -c -o $@ $<
+$(call SH,$(TXR_CC) $(OPT_FLAGS) $(TXR_CFLAGS) -c -o $@ $<)
 endef
 
 define COMPILE_C_WITH_DEPS
 $(call ABBREV,CC)
-$(V)mkdir -p $(dir $@)
-$(V)$(TXR_CC) -MMD -MT $@ $(1) $(TXR_CFLAGS) -c -o $@ $<
+$(call SH,mkdir -p $(dir $@))
+$(call SH,$(TXR_CC) -MMD -MT $@ $(1) $(TXR_CFLAGS) -c -o $@ $<)
 $(call DEPGEN,${@:.o=.d})
 endef
 
 define LINK_PROG
 $(call ABBREV,LINK)
-$(V)$(TXR_CC) $(1) $(TXR_CFLAGS) -o $@ $^ $(TXR_LDFLAGS)
+$(call SH,$(TXR_CC) $(1) $(TXR_CFLAGS) -o $@ $^ $(TXR_LDFLAGS))
 endef
 
 define WINDRES
 $(call ABBREV,RES)
-$(V)mkdir -p $(dir $@)
-$(V)windres -O coff -DTXR_VER=$(txr_ver) $< $@
+$(call SH,mkdir -p $(dir $@))
+$(call SH,windres -O coff -DTXR_VER=$(txr_ver) $< $@)
 endef
 
 ifneq ($(top_srcdir),)
@@ -221,37 +231,41 @@ $(eval $(foreach item,y.tab.c y.tab.h lex.yy.c,\
 
 lex.yy.c: $(top_srcdir)parser.l
 	$(call ABBREV,LEX)
-	$(V)rm -f $@
-	$(V)if $(TXR_LEX) $(LEX_DBG_FLAGS) $< ; then \
-	  sed -e s@//.*@@ < $@ > $@.tmp ; \
-	  mv $@.tmp $@ ; \
-	else \
-	  exit 1 ; \
-	fi
-	$(V)chmod a-w $@
+	$(call SH,rm -f $@)
+	$(call SH,                                              \
+	  if $(TXR_LEX) $(LEX_DBG_FLAGS) $< ; then		\
+	    sed -e s@//.*@@ < $@ > $@.tmp ;                     \
+	    mv $@.tmp $@ ;                                      \
+	  else                                                  \
+	    exit 1 ;                                            \
+	  fi)
+	$(call SH,chmod a-w $@)
 
 y.tab.h: y.tab.c
-	$(V)if ! [ -e y.tab.h ] ; then                            \
-	  echo "Someone removed y.tab.h but left y.tab.c" ;       \
-	  echo "Remove y.tab.c and re-run make" ;                 \
-	  exit 1;                                                 \
-	fi
+	$(call SH,                                              \
+	  if ! [ -e y.tab.h ] ; then                            \
+	    echo "Someone removed y.tab.h but left y.tab.c" ;   \
+	    echo "Remove y.tab.c and re-run make" ;             \
+	    exit 1 ;                                            \
+	  fi)
 
 y.tab.c: $(top_srcdir)parser.y
 	$(call ABBREV,YACC)
-	$(V)if [ -e y.tab.h ]; then mv y.tab.h y.tab.h.old ; fi
-	$(V)rm -f y.tab.c
-	$(V)if $(TXR_YACC) -v -d $< ; then                        \
-	  chmod a-w y.tab.c ;                                     \
-	  sed -e '/yyparse/d' < y.tab.h > y.tab.h.tmp &&          \
-	    mv y.tab.h.tmp y.tab.h ;                              \
-	  if cmp -s y.tab.h y.tab.h.old ; then                    \
-	    mv y.tab.h.old y.tab.h ;                              \
-	  fi ;                                                    \
-	else                                                      \
-	  rm y.tab.c ;                                            \
-	  false ;                                                 \
-	fi
+	$(call SH,                                              \
+	  if [ -e y.tab.h ]; then mv y.tab.h y.tab.h.old ; fi)
+	$(call SH,rm -f y.tab.c)
+	$(call SH,                                              \
+	  if $(TXR_YACC) -v -d $< ; then                        \
+	    chmod a-w y.tab.c ;                                 \
+	    sed -e '/yyparse/d' < y.tab.h > y.tab.h.tmp &&      \
+	      mv y.tab.h.tmp y.tab.h ;                          \
+	    if cmp -s y.tab.h y.tab.h.old ; then                \
+	      mv y.tab.h.old y.tab.h ;                          \
+	    fi ;                                                \
+	  else                                                  \
+	    rm y.tab.c ;                                        \
+	    false ;                                             \
+	  fi)
 
 # Suppress useless sccs id array and unused label warning in byacc otuput.
 # Bison-generated parser also tests for this lint define.
@@ -347,28 +361,31 @@ tst/tests/017/%: TXR_DBG_OPTS :=
 .PRECIOUS: tst/%.out
 tst/%.out: %.txr
 	$(call ABBREV,TXR)
-	$(V)mkdir -p $(dir $@)
-	$(V)$(if $(TXR_SCRIPT_ON_CMDLINE),\
-	       $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $<)" \
-	          $(TXR_ARGS) > $(TESTS_TMP),\
-	       $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TESTS_TMP))
-	$(V)mv $(TESTS_TMP) $@
+	$(call SH,mkdir -p $(dir $@))
+	$(call SH,                                                            \
+	  $(if $(TXR_SCRIPT_ON_CMDLINE),                                      \
+	    $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $<)"                \
+	    $(TXR_ARGS) > $(TESTS_TMP),                                       \
+	    $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TESTS_TMP)))
+	$(call SH,mv $(TESTS_TMP) $@)
 
 tst/%.out: %.tl
 	$(call ABBREV,TXR)
-	$(V)mkdir -p $(dir $@)
-	$(V)$(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TESTS_TMP)
-	$(V)mv $(TESTS_TMP) $@
+	$(call SH,mkdir -p $(dir $@))
+	$(call SH,\
+	  $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TESTS_TMP))
+	$(call SH,mv $(TESTS_TMP) $@)
 
 %.ok: %.out
-	$(V)if ! diff -u $(patsubst tst/%.out,%.expected,$<) $< ; then \
-	  rm $< ; \
-	  exit 1 ; \
-	fi
-	$(V)touch $@
+	$(call SH,                                                     \
+	  if ! diff -u $(patsubst tst/%.out,%.expected,$<) $< ; then   \
+	    rm $< ;                                                    \
+	    exit 1 ;                                                   \
+	  fi)
+	$(call SH,touch $@)
 
 %.expected: %.out
-	cp $< $@
+	$(call SH,cp $< $@)
 
 .PHONY: tests.clean
 tests.clean:
@@ -407,13 +424,14 @@ endif
 #
 define INSTALL
 	$(call ABBREV3,INSTALL,$(3),$(2))
-	$(V)mkdir -p $(3)
-	$(V)cp -f $(2) $(3)
-	$(V)for x in $(2) ; do \
-	  y=$(strip $(3))/$$(basename $$x) ; \
-	  touch -r $$x $$y ; \
-	  chmod $(1) $$y ; \
-	done
+	$(call SH,mkdir -p $(3))
+	$(call SH,cp -f $(2) $(3))
+	$(call SH,                                \
+	  for x in $(2) ; do                      \
+	    y=$(strip $(3))/$$(basename $$x) ;    \
+	    touch -r $$x $$y ;                    \
+	    chmod $(1) $$y ;                      \
+	  done)
 endef
 
 PREINSTALL := :
@@ -451,16 +469,17 @@ zip: install
 # Install the tests as well as the script to run them
 #
 install-tests:
-	$(V)rm -rf tst
-	$(V)mkdir -p $(DESTDIR)$(datadir)
 	$(call ABBREV3,INSTALL,$(DESTDIR)$(datadir),tests)
-	$(V)(find tests | cpio -o 2> /dev/null) \
-	    | (cd $(DESTDIR)$(datadir) ; cpio -idum 2> /dev/null)
-	$(V)(echo "#!/bin/sh" ; \
-	     echo "set -ex" ; \
-	     echo "cd $(datadir)" ; \
-	     make -s -n tests VERBOSE=y TXR=$(bindir)/txr) \
-	     > run.sh
+	$(call SH,rm -rf tst)
+	$(call SH,mkdir -p $(DESTDIR)$(datadir))
+	$(call SH,(find tests | cpio -o 2> /dev/null) \
+	              | (cd $(DESTDIR)$(datadir) ; cpio -idum 2> /dev/null))
+	$(call SH,                                                     \
+	  (echo "#!/bin/sh" ;                                          \
+	   echo "set -ex" ;                                            \
+	   echo "cd $(datadir)" ;                                      \
+	   make -s -n tests VERBOSE=y TXR=$(bindir)/txr)               \
+	  > run.sh)
 	$(call INSTALL,0755,run.sh,$(DESTDIR)$(datadir)/tests)
 
 #
