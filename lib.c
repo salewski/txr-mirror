@@ -2158,10 +2158,14 @@ static val partition_func(val env, val lcons)
 {
   cons_bind (seq, indices_base, env);
   cons_bind (indices, base, indices_base);
+  val len = nil;
 
   for (;;) {
     if (indices) {
-      val index = pop(&indices);
+      val raw_index = pop(&indices);
+      val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
+                      plus(raw_index, if3(len, len, len = length(seq))),
+                      raw_index);
       val index_rebased = minus(index, base);
 
       if (le(index_rebased, zero)) {
@@ -2192,10 +2196,14 @@ static val split_func(val env, val lcons)
 {
   cons_bind (seq, indices_base, env);
   cons_bind (indices, base, indices_base);
+  val len = nil;
 
   for (;;) {
     if (indices) {
-      val index = pop(&indices);
+      val raw_index = pop(&indices);
+      val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
+                      plus(raw_index, if3(len, len, len = length(seq))),
+                      raw_index);
       val index_rebased = minus(index, base);
 
       if (lt(index_rebased, zero)) {
@@ -2228,10 +2236,14 @@ static val split_star_func(val env, val lcons)
 {
   cons_bind (seq, indices_base, env);
   cons_bind (indices, base, indices_base);
+  val len = nil;
 
   for (;;) {
     if (indices) {
-      val index = pop(&indices);
+      val raw_index = pop(&indices);
+      val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
+                      plus(raw_index, if3(len, len, len = length(seq))),
+                      raw_index);
       val index_rebased = minus(index, base);
 
       if (lt(index_rebased, zero)) {
@@ -2279,23 +2291,7 @@ static val partition_split_common(val seq, val indices,
   if (!seqp(indices))
     indices = cons(indices, nil);
 
-  {
-    val len = nil;
-    list_collect_decl (out, ptail);
-
-    if (!opt_compat || opt_compat > 170) {
-      for (; indices; indices = cdr(indices)) {
-        val idx_raw = car(indices);
-        val idx = if3(minusp(idx_raw),
-                      plus(idx_raw, if3(len, len, len = length(seq))),
-                      idx_raw);
-        if (!minusp(idx))
-          ptail = list_collect(ptail, idx);
-      }
-    }
-
-    return make_lazy_cons(func_f1(cons(seq, cons(out, zero)), split_fptr));
-  }
+  return make_lazy_cons(func_f1(cons(seq, cons(indices, zero)), split_fptr));
 }
 
 val partition(val seq, val indices)
@@ -2315,12 +2311,17 @@ val split_star(val seq, val indices)
 
 static val partition_star_func(val env, val lcons)
 {
+  val len = nil;
+
   for (;;) {
     cons_bind (seq, indices_base, env);
     cons_bind (indices, base, indices_base);
 
     if (indices) {
-      val index = pop(&indices);
+      val raw_index = pop(&indices);
+      val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
+                      plus(raw_index, if3(len, len, len = length(seq))),
+                      raw_index);
       val index_rebased = minus(index, base);
       val first = nullify(sub(seq, zero, index_rebased));
 
@@ -2377,35 +2378,18 @@ val partition_star(val seq, val indices)
     indices = cons(indices, nil);
 
   {
-    val len = nil;
-    list_collect_decl (tindices, ptail);
-
-    if (!opt_compat || opt_compat > 170) {
-      for (; indices; indices = cdr(indices)) {
-        val idx_raw = car(indices);
-        val idx = if3(minusp(idx_raw),
-                      plus(idx_raw, if3(len, len, len = length(seq))),
-                      idx_raw);
-        if (!minusp(idx))
-          ptail = list_collect(ptail, idx);
-      }
-    }
-
-    while (tindices && lt(car(tindices), zero))
-      pop(&tindices);
-
-    while (tindices && eql(car(tindices), base)) {
+    while (indices && eql(car(indices), base)) {
       seq = nullify(cdr(seq));
       if (!seq)
         return nil;
       base = plus(base, one);
-      pop(&tindices);
+      pop(&indices);
     }
 
-    if (!tindices)
+    if (!indices)
       return cons(seq, nil);
 
-    return make_lazy_cons(func_f1(cons(seq, cons(tindices, base)),
+    return make_lazy_cons(func_f1(cons(seq, cons(indices, base)),
                                   partition_star_func));
   }
 }

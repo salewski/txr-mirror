@@ -27181,25 +27181,24 @@ to the original is produced.
 
 If the second argument is of the form
 .metn index-list ,
-it shall be a sequence of
-strictly non-decreasing, integers.
-
-First, the length of
-.meta sequence
-is added to every value in
+or if an
 .meta index-list
-that is negative.
-Then, any leading negative or zero values are dropped.
-The
-.code partition
-function then divides
+was produced from the
+.meta index
+or
+.meta function
+arguments, each value in that list must be an integer. Each integer
+value which is non-negative specifies the index position
+given by its value. Each integer value which is negative
+specifies an index position given by adding the length of
 .meta sequence
-according to the
-indices in index list. The first partition begins with the first element of
-.metn sequence .
-The second partition begins at the first position in
-.metn index-list ,
-and so on. Indices beyond the length of the sequence are ignored.
+to its value. The sequence index positions thus denoted by
+.meta index-list
+shall be strictly non-decreasing. Each successive element
+is expected to designate an index position at least as high
+as all previous elements, otherwise the behavior is unspecified.
+Leading index positions which are (still) negative, or zero, are effectively
+ignored.
 
 If
 .meta index-list
@@ -27207,19 +27206,46 @@ is empty then a one-element list containing the entire
 .meta sequence
 is returned.
 
+If
+.meta index-list
+is an infinite lazy list, the function shall terminate if that
+list eventually produces an index position which is greater than or equal to
+the length of
+.metn sequence .
+
 If the second argument is a function, then this function is applied
 to
 .metn sequence ,
 and the return value of this call is then used in place of the
-second argument, which must be an
+second argument, which must be a single index value, which is then
+taken as if it were the
 .meta index
-or
-.metn index-list .
+argument, or else a list of indices, which are taken as the
+.meta index-list
+argument.
 
 If the second argument is an atom other than a function, it is assumed to be
 an integer index, and is turned into an
 .meta index-list
 of one element.
+
+After the
+.meta index-list
+is obtained as an argument, or determined from the
+.meta index
+or
+.meta function
+arguments, the
+.code partition
+function then divides
+.meta sequence
+according to the indices given by that list.
+The first partition begins with the first element of
+.metn sequence .
+The second partition begins at the first position in
+.metn index-list ,
+and so on. Indices beyond the length of the sequence are ignored,
+as are indices less than or equal to zero.
 
 .TP* Examples:
 .cblk
@@ -27266,22 +27292,37 @@ function differs from
 .code split
 in that the elements indicated by the split indices are removed.
 
+The
+.metn index ,
+.metn index-list ,
+and
+.meta function
+arguments are subject to the same restrictions and treatment
+as the corresponding arguments of the
+.code partition
+function, with the following difference: the index positions indicated by
+.code index-list
+are required to be strictly increasing, rather than non-decreasing.
+
 If the second argument is of the form
 .metn index-list ,
-it shall be a sequence of increasing integers.
-The
+or if an
+.meta index-list
+was produced from the
+.meta index
+or
+.meta function
+arguments, then the
 .code split
 function divides
 .meta sequence
-according to the
-indices in index list. The first piece always begins with the first
-element of
+according to the indices indicated in the list. The first piece always begins
+with the first element of
 .metn sequence .
 Each subsequent piece begins with the position indicated by
 an element of
 .metn index-list .
-Negative indices are ignored. Repeated values give rise to empty
-pieces.
+Negative indices are ignored.
 If
 .meta index-list
 includes index zero,
@@ -27296,26 +27337,6 @@ The length of
 .meta sequence
 is added to any negative indices. An index which is still negative
 after being thus displaced is discarded.
-
-If
-.meta index-list
-is empty then a one-element list containing the entire
-.meta sequence
-is returned.
-
-If the second argument is a function, then this function is applied
-to
-.metn sequence ,
-and the return value of this call is then used in place of the
-second argument, which must be an
-.meta index
-or
-.metn index-list .
-
-If the second argument is an atom other than a function, it is assumed to be
-an integer index, and is turned into an
-.meta index-list
-of one element.
 
 .TP* Examples:
 .cblk
@@ -27350,48 +27371,38 @@ second argument is ignored; if it is
 .metn function ,
 it is not called.
 
+The
+.metn index ,
+.metn index-list ,
+and
+.meta function
+arguments are subject to the same restrictions and treatment
+as the corresponding arguments of the
+.code partition
+function, with the following difference: the index positions indicated by
+.code index-list
+are required to be strictly increasing, rather than non-decreasing.
+
 If the second argument is of the form
 .metn index-list ,
-which is a sequence
-of strictly increasing non-negative integers, then
+then
 .code partition*
 produces a
 lazy list of pieces taken from
 .metn sequence .
-The pieces are formed by
-deleting from
+The pieces are formed by deleting from
 .meta sequence
 the elements at the positions given
 in
-.metn index-list .
-The pieces are the non-empty sub-strings between
-the deleted elements.
+.metn index-list ,
+such that the pieces are the remaining non-empty sub-strings from
+between the deleted elements, maintaining their order.
 
 If
 .meta index-list
 is empty then a one-element list containing the entire
 .meta sequence
 is returned.
-
-If
-.meta index-list
-contains negative values, these are displaced by adding to them
-the length of
-.metn sequence .
-
-If the second argument is a function, then this function is applied
-to
-.metn sequence ,
-and the return value of this call is then used in place of the
-second argument, which must be an
-.meta index
-or
-.metn index-list .
-
-If the second argument is an atom other than a function, it is assumed to be
-an integer index, and is turned into an
-.meta index-list
-of one element.
 
 .TP* Examples:
 .cblk
