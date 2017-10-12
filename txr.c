@@ -858,13 +858,19 @@ int txr_main(int argc, char **argv)
                                                 tprint));
           val args_saved = or2(orig_args, arg_list);
           val args_new;
+          val obj;
 
           reg_varl(self_path_s, lit("cmdline-expr"));
           reg_var(args_s, or2(orig_args, arg_list));
-          pf(eval_intrinsic(lisp_parse(arg, std_error, colon_k,
-                                       lit("cmdline-expr"), colon_k),
-                            make_env(bindings, nil, nil)), std_output);
+
+          obj = eval_intrinsic(lisp_parse(arg, std_error, colon_k,
+                                          lit("cmdline-expr"), colon_k),
+                               make_env(bindings, nil, nil));
+          gc_hint(obj);
+          pf(z(obj), std_output);
+
           evaled = t;
+
           args_new = cdr(lookup_global_var(args_s));
           if (args_new != args_saved) {
             arg_list = args_new;

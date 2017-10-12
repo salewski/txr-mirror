@@ -5446,20 +5446,41 @@ val pprinl(val obj, val stream)
 
 val tprint(val obj, val out)
 {
-  switch (type(obj)) {
-  case NIL:
+  val self = lit("tprint");
+  seq_info_t si = seq_info(obj);
+
+  switch (si.kind) {
+  case SEQ_NIL:
     break;
-  case CONS:
-  case LCONS:
-  case VEC:
-    mapdo(curry_12_1(func_n2(tprint), out), obj);
+  case SEQ_LISTLIKE:
+    {
+      gc_hint(si.obj);
+      gc_hint(obj);
+      for (obj = z(si.obj); !endp(obj); obj = cdr(obj))
+        tprint(car(obj), out);
+    }
     break;
-  case LIT:
-  case STR:
-  case LSTR:
-    put_line(obj, out);
+  case SEQ_VECLIKE:
+    switch (si.type) {
+    case LIT:
+    case STR:
+    case LSTR:
+      put_line(obj, out);
+      break;
+    default:
+      {
+        val vec = si.obj;
+        cnum i, len = c_fixnum(length(vec), self);
+
+        for (i = 0; i < len; i++)
+          tprint(ref(vec, num_fast(i)), out);
+
+      }
+      break;
+    }
     break;
-  default:
+  case SEQ_NOTSEQ:
+  case SEQ_HASHLIKE:
     pprinl(obj, out);
     break;
   }
