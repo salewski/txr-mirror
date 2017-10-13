@@ -8521,19 +8521,17 @@ val rfind(val item, val seq, val testfun, val keyfun)
 
 val find_max(val seq, val testfun, val keyfun)
 {
-
-  seq = nullify(seq);
-
-  if (!seq)
-    return nil;
+  seq_info_t si = seq_info(seq);
 
   testfun = default_arg(testfun, greater_f);
   keyfun = default_arg(keyfun, identity_f);
 
-  switch (type(seq)) {
-  case COBJ:
-    if (seq->co.cls == hash_s) {
-      val hiter = hash_begin(seq);
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_HASHLIKE:
+    {
+      val hiter = hash_begin(si.obj);
       val cell = hash_next(hiter);
       val maxelt = cell;
       val maxkey = if2(cell, funcall1(keyfun, cell));
@@ -8548,11 +8546,9 @@ val find_max(val seq, val testfun, val keyfun)
 
       return maxelt;
     }
-    /* fallthrough */
-  case CONS:
-  case LCONS:
+  case SEQ_LISTLIKE:
     {
-      val maxelt = car(seq);
+      val maxelt = car(z(si.obj));
       val maxkey = funcall1(keyfun, maxelt);
 
       gc_hint(seq);
@@ -8565,28 +8561,29 @@ val find_max(val seq, val testfun, val keyfun)
           maxelt = elt;
         }
       }
+
       return maxelt;
     }
-  case STR:
-  case LSTR:
-  case LIT:
-  case VEC:
+  case SEQ_VECLIKE:
     {
-      val maxelt = ref(seq, zero);
+      val vec = si.obj;
+      val maxelt = ref(vec, zero);
       val maxkey = funcall1(keyfun, maxelt);
-      val len = length(seq);
+      val len = length(vec);
       val i;
 
       for (i = zero; lt(i, len); i = succ(i)) {
-        val elt = ref(seq, i);
+        val elt = ref(vec, i);
         val key = funcall1(keyfun, elt);
         if (funcall2(testfun, key, maxkey)) {
           maxkey = key;
           maxelt = elt;
         }
       }
+
       return maxelt;
     }
+  case SEQ_NOTSEQ:
   default:
     uw_throwf(error_s, lit("find-max: unsupported object ~s"), seq, nao);
   }
