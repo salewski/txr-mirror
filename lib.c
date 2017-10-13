@@ -8461,25 +8461,62 @@ val find(val item, val seq, val testfun, val keyfun)
   }
 }
 
-val rfind(val item, val list, val testfun, val keyfun)
+val rfind(val item, val seq, val testfun, val keyfun)
 {
-  val found = nil;
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
+  seq_info_t si = seq_info(seq);
 
-  list = nullify(list);
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_LISTLIKE:
+    {
+      val found = nil;
+      gc_hint(seq);
 
-  gc_hint(list);
+      for (seq = z(si.obj); seq; seq = cdr(seq)) {
+        val elem = car(seq);
+        val key = funcall1(keyfun, elem);
 
-  for (; list; list = cdr(list)) {
-    val elem = car(list);
-    val key = funcall1(keyfun, elem);
+        if (funcall2(testfun, item, key))
+          found = elem;
+      }
+      return found;
+    }
+  case SEQ_VECLIKE:
+    switch (si.type) {
+    case STR:
+    case LIT:
+      if (keyfun == identity_f &&
+          (testfun == equal_f || testfun == eql_f || testfun == eq_f))
+      {
+        const wchar_t ch = c_chr(item);
+        const wchar_t *cstr = c_str(seq);
+        if (wcschr(cstr, ch))
+          return item;
+        return nil;
+      }
+      /* fallthrough */
+    default:
+      {
+        val vec = si.obj;
+        cnum len = c_num(length(vec));
+        cnum i;
 
-    if (funcall2(testfun, item, key))
-      found = elem;
+        for (i = len - 1; i >= 0; i--) {
+          val elem = ref(vec, num(i));
+          val key = funcall1(keyfun, elem);
+          if (funcall2(testfun, item, key))
+            return elem;
+        }
+      }
+      break;
+    }
+    return nil;
+  default:
+    uw_throwf(error_s, lit("rfind: unsupported object ~s"), seq, nao);
   }
-
-  return found;
 }
 
 val find_max(val seq, val testfun, val keyfun)
