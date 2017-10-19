@@ -563,7 +563,7 @@ static val doloop_instantiate(val set_fun)
 static val op_set_entries(val dlt, val fun)
 {
   val name[] = {
-    lit("op"), lit("do"),
+    lit("op"), lit("do"), lit("lop"),
     nil
   };
   set_dlt_entries(dlt, name, fun);

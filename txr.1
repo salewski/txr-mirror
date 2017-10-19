@@ -40175,6 +40175,96 @@ from a quasiliteral within a nested
   (mapcar (op list @2 @1) '((1 2) (a b)))   ->   ((2 1) (b a))
 .cble
 
+.coNP Macro @ lop
+.synb
+.mets (lop << form +)
+.syne
+.desc
+The
+.code lop
+macro is variant of
+.code op
+with special semantics.
+
+The
+.meta form
+arguments support the same notation as those of the
+.code op
+operator.
+
+If only one
+.meta form
+is given then
+.code lop
+is equivalent to
+.codn op .
+
+If two or more
+.meta form
+arguments are present, then
+.code lop
+generates a variadic function which inserts all of its trailing
+arguments between the first and second
+.metn form -s.
+
+That is to say, trailing arguments coming into the anonymous function
+become the left arguments of the function or function-like object
+denoted by the first
+.meta form
+and the remaining
+.metn form -s
+give additional arguments. Hence the name
+.codn lop ,
+which stands for "left-inserting
+.codn op ".
+
+This left insertion of the trailing arguments takes place regardless of whether
+.code @rest
+occurs in any
+.metn form .
+
+The
+.meta form
+syntax determines the number of required arguments of the
+generated function, according to the highest-valued meta-number. The trailing
+arguments which are inserted into the left position are any arguments in excess
+of the required arguments.
+
+The
+.code lop
+macro's expansion can be understood via the following equivalences,
+except that in the real implementation, the symbols
+.code rest
+and
+.code arg1
+through
+.code arg3
+are replaced with hygienic, unique symbols.
+
+.cblk
+  (lop f)  <-->  (op f)   <-->   (lambda (. rest) [f . rest])
+
+  (lop f x y)  <-->  (lambda (. rest)
+                       [apply f (append rest [list x y])])
+
+  (lop f x @3 y)  <-->  (lambda (arg1 arg2 arg3 . rest)
+                          [apply f
+                                 (append rest
+                                         [list x arg3 y])])
+.cble
+
+.TP* Examples:
+
+.cblk
+  (mapcar (lop list 3) '(a b c)) --> ((a 3) (b 3) (c 3))
+
+  (mapcar (lop list @1) '(a b c)) --> ((a) (b) (c))
+
+  (mapcar (lop list @1) '(a b c) '(d e f))
+  --> ((d a) (e b) (f c))
+
+.cble
+
 .coNP Macros @, ap @, ip @ ado and @ ido.
 .synb
 .mets (ap << form +)

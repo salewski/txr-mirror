@@ -80,15 +80,26 @@
          (syntax-0 (if (eq sym 'do) ^(,*args) ^[,*args]))
          (syntax-1 (sys:op-alpha-rename f e syntax-0 nil))
          (syntax-2 (sys:op-alpha-rename f e syntax-1 t))
-         (have-metas (slot ctx 'gens))
+         (metas (slot ctx 'gens))
          (rest-sym (sys:ensure-op-arg ctx 0)))
-    ^(lambda (,*(cdr (slot ctx 'gens)) . ,rest-sym)
-       ,(if (or have-metas (eq sym 'do))
-          syntax-2
-          (append syntax-2 rest-sym)))))
+    ^(lambda (,*(cdr metas) . ,rest-sym)
+       ,(let ((fargs (cdr (cdr syntax-2))))
+          (cond
+            ((and (eq sym 'lop) fargs)
+             (let ((fargs-l1 (mapcar (lambda (farg)
+                                       ^(sys:l1-val ,farg))
+                                     fargs)))
+               ^[sys:apply ,(car (cdr syntax-2))
+                           (append ,rest-sym (list ,*fargs-l1))]))
+            ((or metas (eq sym 'do))
+             syntax-2)
+            (t (append syntax-2 rest-sym)))))))
 
 (defmacro op (:form f :env e . args)
   (sys:op-expand f e args))
 
 (defmacro do (:form f :env e . args)
+  (sys:op-expand f e args))
+
+(defmacro lop (:form f :env e . args)
   (sys:op-expand f e args))
