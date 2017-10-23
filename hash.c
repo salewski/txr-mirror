@@ -677,6 +677,20 @@ val make_similar_hash(val existing)
   return hash;
 }
 
+static val copy_hash_chain(val chain)
+{
+  list_collect_decl(out, ptail);
+
+  for (; chain; chain = cdr(chain)) {
+    val entry = car(chain);
+    val nentry = cons(car(entry), cdr(entry));
+    nentry->ch.hash = entry->ch.hash;
+    ptail = list_collect(ptail, nentry);
+  }
+
+  return out;
+}
+
 val copy_hash(val existing)
 {
   struct hash *ex = coerce(struct hash *, cobj_handle(existing, hash_s));
@@ -698,7 +712,7 @@ val copy_hash(val existing)
   h->acons_new_c_fun = ex->acons_new_c_fun;
 
   for (iter = zero; lt(iter, mod); iter = plus(iter, one))
-    set(vecref_l(h->table, iter), copy_alist(vecref(ex->table, iter)));
+    set(vecref_l(h->table, iter), copy_hash_chain(vecref(ex->table, iter)));
 
   return hash;
 }
