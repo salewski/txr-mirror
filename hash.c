@@ -792,12 +792,16 @@ val remhash(val hash, val key)
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = hash_rec_limit;
   cnum hv = h->hash_fun(key, &lim);
-  loc pchain = vecref_l(h->table, num_fast(hv % h->modulus));
-  val existing = h->assoc_fun(key, hv, deref(pchain));
+  val *pchain = valptr(vecref_l(h->table, num_fast(hv % h->modulus)));
+  val existing = h->assoc_fun(key, hv, *pchain);
 
   if (existing) {
-    val cell = memq(existing, deref(pchain));
-    set(pchain, nappend2(ldiff(deref(pchain), cell), cdr(cell)));
+    for (; *pchain; pchain = valptr(cdr_l(*pchain))) {
+      if (car(*pchain) == existing) {
+        *pchain = cdr(*pchain);
+        break;
+      }
+    }
     h->count--;
     bug_unless (h->count >= 0);
     return cdr(existing);
