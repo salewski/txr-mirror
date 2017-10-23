@@ -567,8 +567,6 @@ static void hash_grow(struct hash *h, val hash)
 
 static val hash_assoc(val key, cnum hash, val list)
 {
-  list = nullify(list);
-
   while (list) {
     val elem = car(list);
     if (elem->ch.hash == hash && equal(car(elem), key))
@@ -581,8 +579,6 @@ static val hash_assoc(val key, cnum hash, val list)
 
 static val hash_assql(val key, cnum hash, val list)
 {
-  list = nullify(list);
-
   while (list) {
     val elem = car(list);
     if (elem->ch.hash == hash && eql(car(elem), key))
