@@ -87,12 +87,16 @@ MAKEFLAGS += --no-builtin-rules
 
 V = $(if $(VERBOSE),,@)
 
-# Filtering out $(DEP_$@) allows the abbreviated output to show just the direct
-# prerequisites without the long laundry list of additional dependencies.
 ABBREV = $(if $(VERBOSE),\
            @:,\
            @printf "%s %s -> %s\n" $(1) \
-	      "$(patsubst $(top_srcdir)%,%,$(filter-out $(DEP_$@),$^))" $@)
+           "$(patsubst $(top_srcdir)%,%,$<)" $@)
+# Filtering out $(DEP_$@) allows the abbreviated output to show just the direct
+# prerequisites without the long laundry list of additional dependencies.
+ABBREVN = $(if $(VERBOSE),\
+            @:,\
+            @printf "%s %s -> %s\n" $(1) \
+            "$(patsubst $(top_srcdir)%,%,$(filter-out $(DEP_$@),$^))" $@)
 ABBREV3 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(3)" $(2))
 
 define DEPGEN
@@ -123,7 +127,7 @@ $(call DEPGEN,${@:.o=.d})
 endef
 
 define LINK_PROG
-$(call ABBREV,LINK)
+$(call ABBREVN,LINK)
 $(call SH,$(TXR_CC) $(1) $(TXR_CFLAGS) -o $@ $^ $(TXR_LDFLAGS))
 endef
 
