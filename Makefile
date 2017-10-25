@@ -319,37 +319,36 @@ distclean: clean
 	rm -f config.h config.make config.log
 endif
 
-TESTS_OUT := $(addprefix tst/,\
-                $(patsubst %.tl,%.out,\
-                   $(patsubst %.txr,%.out,\
-                      $(wildcard $(addprefix tests/*/*.,txr tl)))))
-TESTS_OK := $(TESTS_OUT:.out=.ok)
+TESTS_OK := $(addprefix tst/,\
+               $(patsubst %.tl,%.ok,\
+                  $(patsubst %.txr,%.ok,\
+                     $(wildcard $(addprefix tests/*/*.,txr tl)))))
 
 .PHONY: tests
 tests: $(TESTS_OK)
 	$(V)echo "** tests passed!"
 
 tst/tests/001/%: TXR_ARGS := tests/001/data
-tst/tests/001/query-1.out: TXR_OPTS := -B
-tst/tests/001/query-2.out: TXR_OPTS := -B
-tst/tests/001/query-4.out: TXR_OPTS := -B
+tst/tests/001/query-1.ok: TXR_OPTS := -B
+tst/tests/001/query-2.ok: TXR_OPTS := -B
+tst/tests/001/query-4.ok: TXR_OPTS := -B
 tst/tests/002/%: TXR_OPTS := -C 142 -DTESTDIR=tests/002
 tst/tests/004/%: TXR_ARGS := -a 123 -b -c
 tst/tests/005/%: TXR_ARGS := tests/005/data
 tst/tests/005/%: TXR_OPTS := -B
 tst/tests/006/%: TXR_ARGS := tests/006/data
 tst/tests/006/%: TXR_OPTS := -B
-tst/tests/006/freeform-3.out: TXR_ARGS := tests/006/passwd
-tst/tests/008/tokenize.out: TXR_ARGS := tests/008/data
-tst/tests/008/configfile.out: TXR_ARGS := tests/008/configfile
-tst/tests/008/students.out: TXR_ARGS := tests/008/students.xml
-tst/tests/008/soundex.out: TXR_ARGS := soundex sowndex lloyd lee jackson robert
-tst/tests/008/filtenv.out: TXR_OPTS := -B
-tst/tests/009/json.out: TXR_ARGS := $(addprefix tests/009/,webapp.json pass1.json)
-tst/tests/010/align-columns.out: TXR_ARGS := tests/010/align-columns.dat
-tst/tests/010/block.out: TXR_OPTS := -B
-tst/tests/010/reghash.out: TXR_OPTS := -B
-tst/tests/013/maze.out: TXR_ARGS := 20 20
+tst/tests/006/freeform-3.ok: TXR_ARGS := tests/006/passwd
+tst/tests/008/tokenize.ok: TXR_ARGS := tests/008/data
+tst/tests/008/configfile.ok: TXR_ARGS := tests/008/configfile
+tst/tests/008/students.ok: TXR_ARGS := tests/008/students.xml
+tst/tests/008/soundex.ok: TXR_ARGS := soundex sowndex lloyd lee jackson robert
+tst/tests/008/filtenv.ok: TXR_OPTS := -B
+tst/tests/009/json.ok: TXR_ARGS := $(addprefix tests/009/,webapp.json pass1.json)
+tst/tests/010/align-columns.ok: TXR_ARGS := tests/010/align-columns.dat
+tst/tests/010/block.ok: TXR_OPTS := -B
+tst/tests/010/reghash.ok: TXR_OPTS := -B
+tst/tests/013/maze.ok: TXR_ARGS := 20 20
 
 tst/tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 
@@ -361,31 +360,34 @@ tst/tests/015/%: TXR_DBG_OPTS :=
 tst/tests/016/%: TXR_DBG_OPTS :=
 tst/tests/017/%: TXR_DBG_OPTS :=
 
+TST_EXPECTED  = $(word 2,$^)
+TST_OUT = $(patsubst %.expected,tst/%.out,$(TST_EXPECTED))
+
 .PRECIOUS: tst/%.out
-tst/%.out: %.txr %.expected $(TXR)
+tst/%.ok: %.txr %.expected $(TXR)
 	$(call ABBREV,TXR)
 	$(call SH,mkdir -p $(dir $@))
 	$(call SH,                                                            \
 	  $(if $(TXR_SCRIPT_ON_CMDLINE),                                      \
 	    $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $<)"                \
-	    $(TXR_ARGS) > $@,                                                 \
-	    $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $@))
-
-tst/%.out: %.tl %.expected $(TXR)
-	$(call ABBREV,TXR)
-	$(call SH,mkdir -p $(dir $@))
-	$(call SH,\
-	  $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $@)
-
-%.ok: %.out
-	$(call SH,                                                     \
-	  if ! diff -u $(patsubst tst/%.out,%.expected,$<) $< ; then   \
-	    exit 1 ;                                                   \
+	    $(TXR_ARGS) > $(TST_OUT),                                         \
+	    $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TST_OUT)))
+	$(call SH,                                                            \
+	  if ! diff -u $(TST_EXPECTED) $(TST_OUT) ; then                      \
+	    exit 1 ;                                                          \
 	  fi)
 	$(call SH,touch $@)
 
-%.expected: %.out
-	$(call SH,cp $< $@)
+tst/%.ok: %.tl %.expected $(TXR)
+	$(call ABBREV,TXR)
+	$(call SH,mkdir -p $(dir $@))
+	$(call SH,\
+	  $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TST_OUT))
+	$(call SH,                                                            \
+	  if ! diff -u $(TST_EXPECTED) $(TST_OUT) ; then                      \
+	    exit 1 ;                                                          \
+	  fi)
+	$(call SH,touch $@)
 
 .PHONY: tests.clean
 tests.clean:
