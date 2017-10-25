@@ -314,13 +314,11 @@ clean: conftest.clean tests.clean
 	rm -f y.tab.h.old
 	rm -f $(PROG)-win$(EXE) $(PROG)-win-dbg$(EXE)
 	rm -rf opt dbg $(EXTRA_OBJS-y)
-	rm -f $(TESTS_TMP)
 
 distclean: clean
 	rm -f config.h config.make config.log
 endif
 
-TESTS_TMP := txr.test.out
 TESTS_OUT := $(addprefix tst/,\
                 $(patsubst %.tl,%.out,\
                    $(patsubst %.txr,%.out,\
@@ -364,27 +362,24 @@ tst/tests/016/%: TXR_DBG_OPTS :=
 tst/tests/017/%: TXR_DBG_OPTS :=
 
 .PRECIOUS: tst/%.out
-tst/%.out: %.txr
+tst/%.out: %.txr %.expected $(TXR)
 	$(call ABBREV,TXR)
 	$(call SH,mkdir -p $(dir $@))
 	$(call SH,                                                            \
 	  $(if $(TXR_SCRIPT_ON_CMDLINE),                                      \
 	    $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $<)"                \
-	    $(TXR_ARGS) > $(TESTS_TMP),                                       \
-	    $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TESTS_TMP)))
-	$(call SH,mv $(TESTS_TMP) $@)
+	    $(TXR_ARGS) > $@,                                                 \
+	    $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $@))
 
-tst/%.out: %.tl
+tst/%.out: %.tl %.expected $(TXR)
 	$(call ABBREV,TXR)
 	$(call SH,mkdir -p $(dir $@))
 	$(call SH,\
-	  $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TESTS_TMP))
-	$(call SH,mv $(TESTS_TMP) $@)
+	  $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $@)
 
 %.ok: %.out
 	$(call SH,                                                     \
 	  if ! diff -u $(patsubst tst/%.out,%.expected,$<) $< ; then   \
-	    rm $< ;                                                    \
 	    exit 1 ;                                                   \
 	  fi)
 	$(call SH,touch $@)
