@@ -61,6 +61,7 @@
   cond-actions
   (nranges 0)
   (rng-rec-temp (gensym))
+  (rng-vec-temp (gensym))
   rng-expr-temps
   rng-exprs
   outer-env)
@@ -334,7 +335,7 @@
                                                (set-diff te-ef te-ff)
                                                'functions)
                       (push rng-temp (qref ,awc rng-expr-temps))
-                      (push ^(placelet ((flag (vecref (qref ,',aws-sym rng-vec) ,ix)))
+                      (push ^(placelet ((flag (vecref ,(qref ,awc rng-vec-temp) ,ix)))
                                (let ((,flag-old flag) ,flag-act ,flag-deact
                                      ,*(if need-mid ^(,flag-mid (,from-expr-val ,from-expr-ex))))
                                  ,*(if need-mid
@@ -474,9 +475,10 @@
                             ^((,awk-fun (lambda (,aws-sym)
                                           ,(if awc.rng-exprs
                                              ^(let* ((,awc.rng-rec-temp rec)
-                                                 ,*(nreverse
-                                                     (zip awc.rng-expr-temps
-                                                          awc.rng-exprs)))
+                                                     (,awc.rng-vec-temp (qref ,aws-sym rng-vec))
+                                                     ,*(nreverse
+                                                         (zip awc.rng-expr-temps
+                                                              awc.rng-exprs)))
                                                 ,p-actions-xform)
                                              p-actions-xform))))))
                    ,*awc.begin-actions
