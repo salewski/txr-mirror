@@ -304,6 +304,7 @@
                         (rng-temp (gensym))
                         (from-expr-ex (sys:expand from-expr e))
                         (to-expr-ex (sys:expand to-expr e))
+                        (flag (gensym))
                         (flag-old (gensym))
                         (flag-act (gensym))
                         (flag-deact (gensym))
@@ -335,8 +336,8 @@
                                                (set-diff te-ef te-ff)
                                                'functions)
                       (push rng-temp (qref ,awc rng-expr-temps))
-                      (push ^(placelet ((flag (vecref ,(qref ,awc rng-vec-temp) ,ix)))
-                               (let ((,flag-old flag) ,flag-act ,flag-deact
+                      (push ^(placelet ((,flag (vecref ,(qref ,awc rng-vec-temp) ,ix)))
+                               (let ((,flag-old ,flag) ,flag-act ,flag-deact
                                      ,*(if need-mid ^(,flag-mid (,from-expr-val ,from-expr-ex))))
                                  ,*(if need-mid
                                      ^((when (and ,flag-old (not ,from-expr-val))
@@ -367,17 +368,17 @@
                                        ,*(if need-mid
                                            ^((set ,flag-mid nil)))))
                                  ,*(caseq style
-                                     ((rng rng+) ^((or (set flag ,flag-act)
+                                     ((rng rng+) ^((or (set ,flag ,flag-act)
                                                        ,(if (and (plusp sys:compat)
                                                           (<= sys:compat 177))
                                                           flag-old
                                                           flag-deact))))
-                                     (-rng- ^((and (set flag ,flag-act) ,flag-old)))
-                                     (rng- ^((set flag ,flag-act)))
-                                     (-rng ^((set flag ,flag-act) ,flag-old))
-                                     (-rng+ ^((set flag ,flag-act) (if ,flag-act ,flag-old)))
-                                     (--rng- ^((set flag ,flag-act) ,flag-mid))
-                                     ((--rng --rng+) ^((set flag ,flag-act) (or ,flag-mid ,flag-deact))))))
+                                     (-rng- ^((and (set ,flag ,flag-act) ,flag-old)))
+                                     (rng- ^((set ,flag ,flag-act)))
+                                     (-rng ^((set ,flag ,flag-act) ,flag-old))
+                                     (-rng+ ^((set ,flag ,flag-act) (if ,flag-act ,flag-old)))
+                                     (--rng- ^((set ,flag ,flag-act) ,flag-mid))
+                                     ((--rng --rng+) ^((set ,flag ,flag-act) (or ,flag-mid ,flag-deact))))))
                             (qref ,awc rng-exprs))
                       rng-temp)))
                 (rng (:form form from-expr to-expr)
