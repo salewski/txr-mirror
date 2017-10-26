@@ -297,13 +297,17 @@
                 (next-file () '(return-from :awk-file))
                 (sys:rng (form from-expr to-expr :env e)
                   (let ((style (car form))
+                        (need-mid (member (car form) '(--rng --rng- --rng+)))
+                        (need-end (member (car form) '(rng+ -rng+ --rng+)))
                         (ix (pinc (qref ,awc nranges)))
                         (rng-temp (gensym))
                         (from-expr-ex (sys:expand from-expr e))
                         (to-expr-ex (sys:expand to-expr e))
                         (flag-old (gensym))
                         (flag-act (gensym))
-                        (flag-deact (gensym)))
+                        (flag-deact (gensym))
+                        (flag-mid (gensym))
+                        (from-expr-val (gensym)))
                     (tree-bind ((from-expr-ex fe-fv fe-ff fe-ev fe-ef)
                                 (to-expr-ex te-fv te-ff te-ev te-ef)
                                 (from-expr-orig to-expr-orig))
@@ -331,21 +335,48 @@
                                                'functions)
                       (push rng-temp (qref ,awc rng-expr-temps))
                       (push ^(placelet ((flag (vecref (qref ,',aws-sym rng-vec) ,ix)))
-                               (let ((,flag-old flag) ,flag-act ,flag-deact)
-                                 (when (or ,flag-old ,from-expr-ex)
-                                   (set ,flag-act t))
-                                 (when (and ,flag-act ,to-expr-ex)
-                                   (set ,flag-act nil)
-                                   (set ,flag-deact t))
+                               (let ((,flag-old flag) ,flag-act ,flag-deact
+                                     ,*(if need-mid ^(,flag-mid (,from-expr-val ,from-expr-ex))))
+                                 ,*(if need-mid
+                                     ^((when (and ,flag-old (not ,from-expr-val))
+                                         (set ,flag-mid t))
+                                       (cond
+                                         (,flag-old (set ,flag-act ,flag-old))
+                                         (,from-expr-val (set ,flag-act t))))
+                                    ^((cond
+                                        (,flag-old (set ,flag-act ,flag-old))
+                                        (,from-expr-ex (set ,flag-act t)))))
+                                 ,(if need-end
+                                    ^(caseq ,flag-act
+                                       ((t) (when ,to-expr-ex
+                                              (set ,flag-act :end)
+                                              (set ,flag-deact t)
+                                              ,*(if need-mid
+                                                  ^((set ,flag-mid nil)))))
+                                       (:end (cond
+                                               (,to-expr-ex (set ,flag-deact t))
+                                               (,(if need-mid from-expr-val from-expr-ex)
+                                                 (set ,flag-act t ,flag-old nil))
+                                               (t (set ,flag-act nil)))
+                                             ,*(if need-mid
+                                                 ^((set ,flag-mid nil)))))
+                                    ^(when (and ,flag-act ,to-expr-ex)
+                                       (set ,flag-act nil)
+                                       (set ,flag-deact t)
+                                       ,*(if need-mid
+                                           ^((set ,flag-mid nil)))))
                                  ,*(caseq style
-                                     (rng ^((or (set flag ,flag-act)
-                                                ,(if (and (plusp sys:compat)
+                                     ((rng rng+) ^((or (set flag ,flag-act)
+                                                       ,(if (and (plusp sys:compat)
                                                           (<= sys:compat 177))
-                                                   flag-old
-                                                   flag-deact))))
+                                                          flag-old
+                                                          flag-deact))))
                                      (-rng- ^((and (set flag ,flag-act) ,flag-old)))
                                      (rng- ^((set flag ,flag-act)))
-                                     (-rng ^((set flag ,flag-act) ,flag-old)))))
+                                     (-rng ^((set flag ,flag-act) ,flag-old))
+                                     (-rng+ ^((set flag ,flag-act) (if ,flag-act ,flag-old)))
+                                     (--rng- ^((set flag ,flag-act) ,flag-mid))
+                                     ((--rng --rng+) ^((set flag ,flag-act) (or ,flag-mid ,flag-deact))))))
                             (qref ,awc rng-exprs))
                       rng-temp)))
                 (rng (:form form from-expr to-expr)
@@ -361,6 +392,26 @@
                             (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
                             (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
                 (-rng- (:form form from-expr to-expr)
+                  ^(sys:rng ,form
+                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
+                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
+                (--rng (:form form from-expr to-expr)
+                  ^(sys:rng ,form
+                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
+                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
+                (--rng- (:form form from-expr to-expr)
+                  ^(sys:rng ,form
+                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
+                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
+                (rng+ (:form form from-expr to-expr)
+                  ^(sys:rng ,form
+                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
+                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
+                (-rng+ (:form form from-expr to-expr)
+                  ^(sys:rng ,form
+                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
+                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
+                (--rng+ (:form form from-expr to-expr)
                   ^(sys:rng ,form
                             (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
                             (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))

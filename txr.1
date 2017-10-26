@@ -47037,56 +47037,98 @@ next one.  If there is no next input source,
 .code awk
 terminates.
 
-.coNP Macros @, rng @, -rng @ rng- and @ -rng-
+.coNP Macros @, rng @, -rng @ rng- @, -rng- @, --rng @, --rng- @, rng+ @ -rng+ and @ --rng+
 .synb
 .mets (rng < from-condition << to-condition )
 .mets (-rng < from-condition << to-condition )
 .mets (rng- < from-condition << to-condition )
 .mets (-rng- < from-condition << to-condition )
+.mets (--rng < from-condition << to-condition )
+.mets (--rng- < from-condition << to-condition )
+.mets (rng+ < from-condition << to-condition )
+.mets (-rng+ < from-condition << to-condition )
+.mets (--rng+ < from-condition << to-condition )
 .syne
 .desc
-The awk macro
+The nine awk macros in the
 .code rng
-may be used anywhere within an ordinary condition-pattern
+family may be used anywhere within an ordinary condition-pattern
 .code awk
 clause.
-It provides a Boolean test which is true if the current record lands within
-a range of records, delimited by conditions.
-The range begins when
+
+Each provides a Boolean test which is true if the current record lands within
+a range of records delimited by conditions.  Each provides its own
+distinct, useful nuance, which is identified by the mnemonic characters
+prefixed or suffixed to the name.
+
+The basic
+.code rng
+macro inclusively matches ranges of records. Each such range begins with a record
+for which
 .meta from-condition
-is found to be true, and ends when
+yields true, and ends on the record for which
 .meta to-condition
-is true. Over this interval, range is said to be
-.IR active .
-
-The
+is true. What it means to match is that the
 .code rng
-macro's result value is true for the starting record which matches
-.metn from-condition ,
-the final record which matches
+expression yields a Boolean true value when it is evaluated in the context
+of processing any of the records which are included in the range.
+
+The table below summarizes the semantic variations of these nine
+range macro operators. The leftmost column represents the file of records
+being processed. The remaining columns indicate, using the character
+.code X
+those rows for each of the nine range operators yield true. Each operator
+is assumed to be invoked with the arguments
+.code #/H/
+and
+.code #/T/
+as its
+.meta from-condition
+and
 .metn to-condition ,
-and all records in between, if any.
-The remaining macros work exactly like
-.codn rng ,
-identifying the active range in the same manner. They differ
-in that the Boolean value they produce excludes the starting record,
-final record, or both, depending on which macro. The
-.code -rng
-macro yields
-.code nil
-for the initial record. The
-.code rng-
-macro yields
-.code nil
-for the final record. The
-.code -rng-
-macro yields
-.code nil
-for both the initial and final record.
+respectively: for example,
+.code "(rng #/H/ #/T/)"
+in the case of
+.codn rng :
 
-Ranges expressed using
+.cblk
+  DATA    rng -rng rng- -rng- --rng --rng- rng+ -rng+ --rng+
+  ----------------------------------------------------------
+  PROLOG
+  H1      X        X                       X
+  H2      X    X   X     X                 X     X
+  H3      X    X   X     X                 X     X
+  B1      X    X   X     X      X     X    X     X      X
+  B2      X    X   X            X     X    X     X      X
+  T1      X    X                X          X     X      X
+  T2                                       X     X      X
+  T3                                       X     X      X
+  EPILOG
+.cble
+
+The prefix or suffix characters are mnemonic. A single
+.code -
+(dash) indicates the exclusion of one record. A double
+.code --
+(dash dash)
+indicates the exclusion of all leading records which match
+.metn from-condition ;
+this appears on the left side only.
+The
+.code +
+character, appearing on the right only, indicates that
+all consecutive records which match
+.meta to-condition
+are included in the range, not only the first one.
+
+Ranges are oblivious to the division between successive sources of input; a
+range can start in one file of records and terminate in another.
+To prevent a range from spanning input transitions, additional complexity
+is required in the expression.
+
+Ranges expressed using the
 .code rng
-may combine with other expressions, including
+family macros may combine with other expressions, including
 other ranges, and allow arbitrary nesting: the
 .meta from-condition
 or
@@ -47167,19 +47209,125 @@ or
 .codn kfs .
 It is not recommended to place any side effects into range expressions.
 
-Evaluation of ranges obeys the following logic, which is applied to
-each range, prior to the processing of condition-action clauses.
-If a range is not currently active, its
-.meta from-condition
-is evaluated. If it yields true, the range is activated.
-If a range is currently active (either already so, from a previous
-record-processing pass, or because it was just activated by
-.metn from-condition )
-then the
-.meta to-condition
-is evaluated. If it is true, then the range stays active for
-the current record, but is deactivated when the processing of
-the record completes.
+A more detailed description of the range operators follows.
+.RS
+.meIP (rng < from << to )
+This type of range becomes active when a record is encountered for which the
+.meta from
+expression yields true. While the range is active, the expression evaluates
+true. If, when the range is active, a record is encountered for which the
+.meta to
+expression yields true, the range remains active for that record and is
+deactivated after the completion of processing for that record. If
+the range is inactive and a record is encountered or which both
+.meta from
+and
+.meta to
+are true, then the range is activated for that record and then deactivated
+when that record is processed.
+Records for which
+.meta from
+and
+.meta to
+are not true do not affect the range's activation state.
+.meIP (-rng < from << to )
+This type of range is active under the same conditions as the
+.code rng
+type. However, the expression yields a Boolean false value for the
+first record which begins a range. That is to say, when the range is
+inactive, and a record is scanned for which
+.meta from
+is true, the range activates, but the range expression yields
+.codn nil .
+This is true regardless of whether the
+.meta to
+expression yields true for that record. If there are additional records
+in the range, the expression yields a true value for those records.
+.meIP (rng- < from << to )
+This type of range is active under the same conditions as the
+.code rng
+type. However, the range expression yields
+.code nil
+for the record for which
+.code to
+yields true which terminates the range. This occurs even if that is
+the same record which activated the range by triggering the
+.meta from
+condition.  Note that if a range terminates abruptly due to no more records
+being available, the range expression still yields true for the last record.
+.meIP (-rng- < from << to )
+This type of range is active under the same conditions as the
+.code rng
+type. However, the range expression yields
+.code nil
+for the first record which activates the range, and for the last
+record which deactivates the range by activating the
+.code to
+condition. If the range is active over fewer than three records, then
+the expression never yields true for that range. If the range terminates
+abruptly due to no more records being available, and if the last record
+processed isn't the one which activated the range due to triggering the
+.code from
+condition, the expression yields true for that record.
+.meIP (--rng < from << to )
+This type of range is active under the same conditions as
+.codn rng .
+However, the range expression yields
+.code nil
+for the entire leading sequence of consecutive records for which
+.meta from
+is true. Regardless of this, it yields true for the last record
+for which
+.meta to
+is true.
+.meIP (--rng- < from << to )
+This type of range is active under the same conditions as
+However, the range expression yields
+.code nil
+for the entire leading sequence of consecutive records for which
+.meta from
+is true, and also yields nil for the last record which trigger the
+.meta to
+condition.
+.meIP (rng+ < from << to )
+This range is active under different conditions compared to
+.codn rng .
+Though it becomes active in the same way, when the
+.meta from
+expression yields true, the deactivation logic is different.
+The range is deactivated when a record for which
+.meta to
+is true is followed by a record for which
+.meta to
+is not true. That record is excluded from the range; if the
+.meta from
+expression happens to be true for that record, a new range begins
+at that record. Thus, effectively, the range is terminated not
+by single record which triggers
+.meta to
+but by a sequence of one or more such consecutive records.
+.meIP (-rng+ < from << to )
+This range is active under the same conditions as 
+.codn rng+ .
+However, the range expression yields
+.code nil
+for the first record in the range. If the range contains only one record, then
+it returns
+.code nil
+for that record.
+.meIP (--rng+ < from << to )
+This range is active under the same conditions as 
+.codn rng+ .
+However, the range expression yields
+.code nil
+for the entire leading sequence of consecutive records for which
+.meta from
+is true, and for which
+.meta to
+is false. For the terminating records for which
+.meta to
+is true, it yields true.
+.RE
 
 .coNP Macro @ ff
 .synb
