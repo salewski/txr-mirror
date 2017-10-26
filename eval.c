@@ -3665,6 +3665,9 @@ static val me_case(val form, val menv)
     if (keys == t)
       eval_error(form_orig, lit("~s: symbol t used as key"), casesym, nao);
 
+    if (consp(keys) && !cdr(keys))
+      keys = car(keys);
+
     if (star) {
       if (atom(keys))
         keys = eval(keys, nil, form);
