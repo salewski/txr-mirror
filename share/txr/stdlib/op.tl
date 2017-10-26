@@ -82,6 +82,8 @@
          (syntax-2 (sys:op-alpha-rename f e syntax-1 t))
          (metas (slot ctx 'gens))
          (rest-sym (sys:ensure-op-arg ctx 0)))
+     (unless args
+       ['compile-error f "arguments required"])
     ^(lambda (,*(cdr metas) . ,rest-sym)
        ,(let ((fargs (cdr (cdr syntax-2))))
           (cond
