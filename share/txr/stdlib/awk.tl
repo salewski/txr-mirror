@@ -338,35 +338,30 @@
                       (push rng-temp (qref ,awc rng-expr-temps))
                       (push ^(placelet ((,flag (vecref ,(qref ,awc rng-vec-temp) ,ix)))
                                (let ((,flag-old ,flag) ,flag-act ,flag-deact
-                                     ,*(if need-mid ^(,flag-mid (,from-expr-val ,from-expr-ex))))
+                                     ,*(if need-mid ^((,from-expr-val ,from-expr-ex))))
                                  ,*(if need-mid
-                                     ^((when (and ,flag-old (not ,from-expr-val))
-                                         (set ,flag-mid t))
-                                       (cond
+                                     ^((set ,flag-act
+                                            (caseq ,flag-old
+                                              (nil (set ,flag-act (true ,from-expr-val)))
+                                              (:end :end)
+                                              (:mid :mid)
+                                              ((t) (if ,from-expr-val t :mid)))))
+                                     ^((cond
                                          (,flag-old (set ,flag-act ,flag-old))
-                                         (,from-expr-val (set ,flag-act t))))
-                                    ^((cond
-                                        (,flag-old (set ,flag-act ,flag-old))
-                                        (,from-expr-ex (set ,flag-act t)))))
+                                         (,from-expr-ex (set ,flag-act t)))))
                                  ,(if need-end
                                     ^(caseq ,flag-act
-                                       ((t) (when ,to-expr-ex
-                                              (set ,flag-act :end)
-                                              (set ,flag-deact t)
-                                              ,*(if need-mid
-                                                  ^((set ,flag-mid nil)))))
+                                       ((t ,*(if need-mid '(:mid))) (when ,to-expr-ex
+                                                                      (set ,flag-act :end)
+                                                                      (set ,flag-deact t)))
                                        (:end (cond
                                                (,to-expr-ex (set ,flag-deact t))
                                                (,(if need-mid from-expr-val from-expr-ex)
                                                  (set ,flag-act t ,flag-old nil))
-                                               (t (set ,flag-act nil)))
-                                             ,*(if need-mid
-                                                 ^((set ,flag-mid nil)))))
+                                               (t (set ,flag-act nil)))))
                                     ^(when (and ,flag-act ,to-expr-ex)
                                        (set ,flag-act nil)
-                                       (set ,flag-deact t)
-                                       ,*(if need-mid
-                                           ^((set ,flag-mid nil)))))
+                                       (set ,flag-deact t)))
                                  ,*(caseq style
                                      ((rng rng+) ^((or (set ,flag ,flag-act)
                                                        ,(if (and (plusp sys:compat)
@@ -377,8 +372,9 @@
                                      (rng- ^((set ,flag ,flag-act)))
                                      (-rng ^((set ,flag ,flag-act) ,flag-old))
                                      (-rng+ ^((set ,flag ,flag-act) (if ,flag-act ,flag-old)))
-                                     (--rng- ^((set ,flag ,flag-act) ,flag-mid))
-                                     ((--rng --rng+) ^((set ,flag ,flag-act) (or ,flag-mid ,flag-deact))))))
+                                     (--rng- ^((set ,flag ,flag-act) (eq ,flag-act :mid)))
+                                     ((--rng --rng+) ^((set ,flag ,flag-act)
+                                                       (or (eq ,flag-act :mid) ,flag-deact))))))
                             (qref ,awc rng-exprs))
                       rng-temp)))
                 (rng (:form form from-expr to-expr)
