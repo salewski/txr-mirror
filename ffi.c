@@ -4785,7 +4785,7 @@ val carray_blank(val nelem, val type)
 {
   val self = lit("carray-blank");
   cnum nel = c_num(nelem);
-  struct txr_ffi_type *tft = ffi_type_struct(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
 
   if (nel < 0) {
     uw_throwf(error_s, lit("~a: negative array size"), self, nao);
@@ -4804,7 +4804,7 @@ val carray_buf(val buf, val type, val offs_in)
   val offs = default_arg_strict(offs_in, zero);
   cnum offsn = c_num(offs);
   cnum blen = c_num(minus(length_buf(buf), offs));
-  struct txr_ffi_type *tft = ffi_type_struct(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
   cnum nelem = if3(tft->size, blen / tft->size, 0);
   if (offsn < 0)
     uw_throwf(error_s,
@@ -4850,7 +4850,7 @@ val carray_cptr(val cptr, val type, val len)
 {
   mem_t *data = cptr_get(cptr);
   cnum nelem = c_num(default_arg(len, negone));
-  (void) ffi_type_struct(type);
+  (void) ffi_type_struct_checked(type);
   return make_carray(type, data, nelem, nil, 0);
 }
 
@@ -5134,7 +5134,7 @@ val carray_pun(val carray, val type)
 {
   val self = lit("carray-pun");
   struct carray *scry = carray_struct_checked(carray);
-  struct txr_ffi_type *tft = ffi_type_struct(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
   cnum len = scry->nelem;
   cnum elsize = scry->eltft->size;
   cnum size = (ucnum) len * (ucnum) elsize;
