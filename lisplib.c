@@ -440,9 +440,11 @@ static val getput_set_entries(val dlt, val fun)
     lit("file-get"), lit("file-put"), lit("file-append"),
     lit("file-get-string"), lit("file-put-string"), lit("file-append-string"),
     lit("file-get-lines"), lit("file-put-lines"), lit("file-append-lines"),
+    lit("file-get-buf"), lit("file-put-buf"), lit("file-append-buf"),
     lit("command-get"), lit("command-put"),
     lit("command-get-string"), lit("command-put-string"),
     lit("command-get-lines"), lit("command-put-lines"),
+    lit("command-get-buf"), lit("command-put-buf"),
     nil
   };
   set_dlt_entries(dlt, name, fun);

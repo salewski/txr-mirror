@@ -24,6 +24,18 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+(defun sys:get-buf-common (s)
+  (let ((b (make-buf 4096))
+        (o 0))
+    (while t
+      (let ((p (fill-buf b o s)))
+        (when (< p (len b))
+          (buf-set-length b (if (plusp p) p o))
+          (return))
+        (buf-set-length b (+ p (len b)))
+        (set o p)))
+    b))
+
 (defun file-get (name)
   (with-stream (s (open-file name))
     (read s)))
@@ -59,6 +71,18 @@
   (with-stream (s (open-file name "a"))
     (put-lines lines s)))
 
+(defun file-get-buf (name)
+  (with-stream (s (open-file name "rb"))
+    (sys:get-buf-common s)))
+
+(defun file-put-buf (name buf)
+  (with-stream (s (open-file name "wb"))
+    (put-buf buf 0 s)))
+
+(defun file-append-buf (name buf)
+  (with-stream (s (open-file name "ab"))
+    (put-buf buf 0 s)))
+
 (defun command-get (cmd)
   (with-stream (s (open-command cmd))
     (read s)))
@@ -81,3 +105,11 @@
 (defun command-put-lines (cmd lines)
   (with-stream (s (open-command cmd "w"))
     (put-lines lines s)))
+
+(defun command-get-buf (cmd)
+  (with-stream (s (open-command cmd))
+    (sys:get-buf-common s)))
+
+(defun command-put-buf (cmd buf)
+  (with-stream (s (open-command cmd "w"))
+    (put-buf buf 0 s)))
