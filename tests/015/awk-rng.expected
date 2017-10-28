@@ -20,6 +20,10 @@ X1X2	t		t				t
 Y1	t	t				t	end	t	t	t
 a							end	end	t	t
 Y2							end	end	t	t
+X1X2Y1Y2	t					t	end	end	t	t
+a										
+X1X2Y1Y2	t					t	end		t	t
+X1X2Y1Y2	t					t	end	end	t	t
 X1	t		t				t			
 b	t	t	t	t			t	t		
 X2	t	t	t	t			t	t		
