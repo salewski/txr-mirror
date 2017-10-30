@@ -143,6 +143,7 @@ void stream_mark_op(val stream);
 void stream_destroy_op(val stream);
 struct stdio_mode parse_mode(val mode_str, struct stdio_mode m_dfl);
 val normalize_mode(struct stdio_mode *m, val mode_str, struct stdio_mode m_dfl);
+val normalize_mode_no_bin(struct stdio_mode *m, val mode_str, struct stdio_mode m_dfl);
 val set_mode_props(const struct stdio_mode m, val stream);
 val generic_get_line(val stream);
 val errno_to_string(val err);

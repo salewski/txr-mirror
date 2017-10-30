@@ -1446,6 +1446,22 @@ val normalize_mode(struct stdio_mode *m, val mode_str, struct stdio_mode m_dfl)
   return format_mode(*m);
 }
 
+val normalize_mode_no_bin(struct stdio_mode *m, val mode_str, struct stdio_mode m_dfl)
+{
+#ifdef __CYGWIN__
+  return normalize_mode(m, mode_str, m_dfl);
+#else
+  *m = do_parse_mode(mode_str, m_dfl);
+
+  if (m->malformed)
+    uw_throwf(file_error_s, lit("invalid file open mode ~a"), mode_str, nao);
+
+  m->binary = 0;
+
+  return format_mode(*m);
+#endif
+}
+
 val set_mode_props(const struct stdio_mode m, val stream)
 {
   if (m.interactive || m.linebuf || m.unbuf || m.buforder != -1) {
@@ -3857,7 +3873,7 @@ static void fds_restore(struct save_fds *fds)
 val open_command(val path, val mode_str)
 {
   struct stdio_mode m, m_r = stdio_mode_init_r;
-  val mode = normalize_mode(&m, mode_str, m_r);
+  val mode = normalize_mode_no_bin(&m, mode_str, m_r);
   int input = m.read != 0;
   struct save_fds sfds;
   FILE *f = 0;

@@ -107,9 +107,9 @@
     (put-lines lines s)))
 
 (defun command-get-buf (cmd)
-  (with-stream (s (open-command cmd))
+  (with-stream (s (open-command cmd "rb"))
     (sys:get-buf-common s)))
 
 (defun command-put-buf (cmd buf)
-  (with-stream (s (open-command cmd "w"))
+  (with-stream (s (open-command cmd "wb"))
     (put-buf buf 0 s)))
