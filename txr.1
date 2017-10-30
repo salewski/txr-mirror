@@ -47280,17 +47280,20 @@ However, the range expression yields
 .code nil
 for the entire leading sequence of consecutive records for which
 .meta from
-is true. Regardless of this, it yields true for the last record
-for which
+is true. If
+.meta from
+is true of the
 .meta to
-is true.
+record which terminates the range,
+.code nil
+is returned for that record also.
 .meIP (--rng- < from << to )
 This type of range is active under the same conditions as
 However, the range expression yields
 .code nil
 for the entire leading sequence of consecutive records for which
 .meta from
-is true, and also yields nil for the last record which trigger the
+is true, and also yields nil for the last record which triggers the
 .meta to
 condition.
 .meIP (rng+ < from << to )
@@ -47326,11 +47329,9 @@ However, the range expression yields
 .code nil
 for the entire leading sequence of consecutive records for which
 .meta from
-is true, and for which
+is true. This is the case even for those for which the
 .meta to
-is false. For the terminating records for which
-.meta to
-is true, it yields true.
+expression is true.
 .RE
 
 .coNP Macro @ ff

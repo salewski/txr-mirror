@@ -208,6 +208,80 @@
     ((regex fun) (call val rec))
     (t val)))
 
+(defun sys:awk%--rng (rng-vec idx from-val to-val)
+  (placelet ((state (vecref rng-vec idx)))
+    (caseq state
+      (nil (cond
+             ((and from-val to-val) nil)
+             (from-val (set state :mid) nil)))
+      (:mid (cond
+              (to-val (set state nil) (not from-val))
+              (from-val nil)
+              (t (set state t))))
+      (t (cond
+           (to-val (set (vecref rng-vec idx) nil) t)
+           (t t))))))
+
+(defun sys:awk%--rng- (rng-vec idx from-val to-val)
+  (placelet ((state (vecref rng-vec idx)))
+    (caseq state
+      (nil (cond
+             ((and from-val to-val) nil)
+             (from-val (set state :mid) nil)))
+      (:mid (cond
+              (to-val (set state nil))
+              (from-val nil)
+              (t (set state t))))
+      (t (cond
+           (to-val (set (vecref rng-vec idx) nil))
+           (t t))))))
+
+(defun sys:awk%rng+ (rng-vec idx from-val to-val)
+  (placelet ((state (vecref rng-vec idx)))
+    (caseq state
+      (nil (cond
+             ((and from-val to-val) (set state :end) t)
+             (from-val (set state t))))
+      (:end (cond
+              (to-val t)
+              (from-val (set state t))
+              (t (set state nil) nil)))
+      (t (cond
+           (to-val (set state :end) t)
+           (t t))))))
+
+(defun sys:awk%-rng+ (rng-vec idx from-val to-val)
+  (placelet ((state (vecref rng-vec idx)))
+    (caseq state
+      (nil (cond
+             ((and from-val to-val) (set state :end) nil)
+             (from-val (set state t) nil)))
+      (:end (cond
+              (to-val t)
+              (from-val (set state t) nil)
+              (t (set state nil) nil)))
+      (t (cond
+           (to-val (set state :end) t)
+           (t t))))))
+
+(defun sys:awk%--rng+ (rng-vec idx from-val to-val)
+  (placelet ((state (vecref rng-vec idx)))
+    (caseq state
+      (nil (cond
+             ((and from-val to-val) (set state :mid) nil)
+             (from-val (set state :mid) nil)))
+      (:mid (cond
+              (to-val (set state :end) (not from-val))
+              (from-val nil)
+              (t (set state t))))
+      (:end (cond
+              (to-val t)
+              (from-val (set state t) nil)
+              (t (set state nil) nil)))
+      (t (cond
+           (to-val (set state :end) t)
+           (t t))))))
+
 (defmacro sys:awk-redir (aws-sym stream-var kind mode path body)
   (with-gensyms (res-sym)
     ^(let ((,stream-var (qref ,aws-sym (ensure-stream ,kind ,path, mode))))
@@ -297,19 +371,23 @@
                 (again () '(return-from :awk-rec :awk-again))
                 (next-file () '(return-from :awk-file))
                 (sys:rng (form from-expr to-expr :env e)
-                  (let ((style (car form))
-                        (need-mid (member (car form) '(--rng --rng- --rng+)))
-                        (need-end (member (car form) '(rng+ -rng+ --rng+)))
-                        (ix (pinc (qref ,awc nranges)))
-                        (rng-temp (gensym))
-                        (from-expr-ex (sys:expand from-expr e))
-                        (to-expr-ex (sys:expand to-expr e))
-                        (flag (gensym))
-                        (flag-old (gensym))
-                        (flag-act (gensym))
-                        (flag-deact (gensym))
-                        (flag-mid (gensym))
-                        (from-expr-val (gensym)))
+                  (let* ((style (car form))
+                         (ix (pinc (qref ,awc nranges)))
+                         (rng-temp (gensym))
+                         (from-expr-ex (sys:expand from-expr e))
+                         (from-expr-val (gensym))
+                         (to-expr-ex (sys:expand to-expr e))
+                         (to-expr-val (gensym))
+                         (vec-temp (qref ,awc rng-vec-temp))
+                         (emul-broken (and (plusp sys:compat) (<= sys:compat 177)))
+                         (rng-fun
+                           (caseq style
+                             (--rng 'sys:awk%--rng)
+                             (--rng- 'sys:awk%--rng-)
+                             (rng+ 'sys:awk%rng+)
+                             (-rng+ 'sys:awk%-rng+)
+                             (--rng+ 'sys:awk%--rng+)))
+                         (state (gensym)))
                     (tree-bind ((from-expr-ex fe-fv fe-ff fe-ev fe-ef)
                                 (to-expr-ex te-fv te-ff te-ev te-ef)
                                 (from-expr-orig to-expr-orig))
@@ -336,46 +414,26 @@
                                                (set-diff te-ef te-ff)
                                                'functions)
                       (push rng-temp (qref ,awc rng-expr-temps))
-                      (push ^(placelet ((,flag (vecref ,(qref ,awc rng-vec-temp) ,ix)))
-                               (let ((,flag-old ,flag) ,flag-act ,flag-deact
-                                     ,*(if need-mid ^((,from-expr-val ,from-expr-ex))))
-                                 ,*(if need-mid
-                                     ^((set ,flag-act
-                                            (caseq ,flag-old
-                                              (nil (set ,flag-act (true ,from-expr-val)))
-                                              (:end :end)
-                                              (:mid :mid)
-                                              ((t) (if ,from-expr-val t :mid)))))
-                                     ^((cond
-                                         (,flag-old (set ,flag-act ,flag-old))
-                                         (,from-expr-ex (set ,flag-act t)))))
-                                 ,(if need-end
-                                    ^(caseq ,flag-act
-                                       ((t ,*(if need-mid '(:mid))) (when ,to-expr-ex
-                                                                      (set ,flag-act :end)
-                                                                      (set ,flag-deact t)))
-                                       (:end (cond
-                                               (,to-expr-ex (set ,flag-deact t))
-                                               (,(if need-mid from-expr-val from-expr-ex)
-                                                 (set ,flag-act t ,flag-old nil))
-                                               (t (set ,flag-act nil)))))
-                                    ^(when (and ,flag-act ,to-expr-ex)
-                                       (set ,flag-act nil)
-                                       (set ,flag-deact t)))
-                                 ,*(caseq style
-                                     ((rng rng+) ^((or (set ,flag ,flag-act)
-                                                       ,(if (and (plusp sys:compat)
-                                                          (<= sys:compat 177))
-                                                          flag-old
-                                                          flag-deact))))
-                                     (-rng- ^((and (set ,flag ,flag-act) ,flag-old)))
-                                     (rng- ^((set ,flag ,flag-act)))
-                                     (-rng ^((set ,flag ,flag-act) ,flag-old))
-                                     (-rng+ ^((set ,flag ,flag-act) (if ,flag-act ,flag-old)))
-                                     (--rng- ^((set ,flag ,flag-act) (eq ,flag-act :mid)))
-                                     ((--rng --rng+) ^((set ,flag ,flag-act)
-                                                       (or (eq ,flag-act :mid) ,flag-deact))))))
-                            (qref ,awc rng-exprs))
+                      (caseq style
+                        ((--rng --rng- rng+ -rng+ --rng+)
+                         (push
+                           ^(,rng-fun ,vec-temp ,ix ,from-expr-ex ,to-expr-ex)
+                           (qref ,awc rng-exprs)))
+                        (t (push
+                             ^(placelet ((,state (vecref ,(qref ,awc rng-vec-temp) ,ix)))
+                                (let ((,to-expr-val ,to-expr-ex))
+                                  (caseq ,state
+                                    (nil (let ((,from-expr-val ,from-expr-ex))
+                                           (cond
+                                             ((and ,from-expr-val ,to-expr-val)
+                                              ,(if (and (eq style 'rng) (not emul-broken)) t))
+                                             (,from-expr-val (set ,state t)
+                                                             ,(if (memq style '(rng rng-)) t)))))
+                                    (t (cond
+                                         (,to-expr-val (set ,state nil)
+                                                       ,(if (memq style '(rng -rng)) t))
+                                         (t t))))))
+                             (qref ,awc rng-exprs))))
                       rng-temp)))
                 (rng (:form form from-expr to-expr)
                   ^(sys:rng ,form

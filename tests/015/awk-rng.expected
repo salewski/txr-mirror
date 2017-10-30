@@ -8,22 +8,22 @@ X2	t	t	t	t			t	t
 1	t	t	t	t	t	t	t	t	t	
 2	t	t	t	t	t	t	t	t	t	
 3	t	t	t	t	t	t	t	t	t	
-Y1	t	t				t	end	t	t	t
-r							end	end	t	t
-s							end	end	t	t
-Y2							end	end	t	t
+Y1	t	t				t	t	t	t	t
+r							t	t	t	t
+s							t	t	t	t
+Y2							t	t	t	t
 t										
 Y2										
 X1X2	t		t				t			
-Y1Y2	t	t				t	end	t	t	t
+Y1Y2	t	t				t	t	t	t	t
 X1X2	t		t				t			
-Y1	t	t				t	end	t	t	t
-a							end	end	t	t
-Y2							end	end	t	t
-X1X2Y1Y2	t					t	end	end	t	t
+Y1	t	t				t	t	t	t	t
+a							t	t	t	t
+Y2							t	t	t	t
+X1X2Y1Y2	t						t	t	t	t
 a										
-X1X2Y1Y2	t					t	end		t	t
-X1X2Y1Y2	t					t	end	end	t	t
+X1X2Y1Y2	t						t			t
+X1X2Y1Y2	t						t	t		t
 X1	t		t				t			
-b	t	t	t	t			t	t		
-X2	t	t	t	t			t	t		
+b	t	t	t	t			t	t	t	
+X2	t	t	t	t			t	t	t	
