@@ -79,7 +79,7 @@ static void dir_tables_init(void)
 syn case match
 syn spell toplevel
 
-setlocal iskeyword=a-z,A-Z,48-57,!,$,&,*,+,-,:,<,=,>,?,\\,_,~,/,^
+setlocal iskeyword=a-z,A-Z,48-57,!,$,%,&,*,+,-,:,<,=,>,?,\\,_,~,/,^
 @  (rep) @{tl-sym}@(mod 0 4)@\nsyn keyword tl_keyword contained @{tl-sym}@(end)
 @  (end)
 @  (if txr-p)
