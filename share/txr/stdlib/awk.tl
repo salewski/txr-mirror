@@ -399,19 +399,19 @@
                                  (list (cadr form) (caddr form)))
                       (sys:awk-code-move-check ,awc ',aws-sym
                                                form from-expr-orig
-                                               (set-diff fe-ev fe-fv)
+                                               (diff fe-ev fe-fv)
                                                'variables)
                       (sys:awk-code-move-check ,awc ',aws-sym
                                                form from-expr-orig
-                                               (set-diff fe-ef fe-ff)
+                                               (diff fe-ef fe-ff)
                                                'functions)
                       (sys:awk-code-move-check ,awc ',aws-sym
                                                form to-expr-orig
-                                               (set-diff te-ev te-fv)
+                                               (diff te-ev te-fv)
                                                'variables)
                       (sys:awk-code-move-check ,awc ',aws-sym
                                                form to-expr-orig
-                                               (set-diff te-ef te-ff)
+                                               (diff te-ef te-ff)
                                                'functions)
                       (push rng-temp (qref ,awc rng-expr-temps))
                       (caseq style
