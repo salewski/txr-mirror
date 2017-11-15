@@ -8651,20 +8651,58 @@ val find_if(val pred, val seq, val key)
   return nil;
 }
 
-val rfind_if(val pred, val list, val key)
+val rfind_if(val predi, val seq, val key)
 {
+  val keyfun = default_arg(key, identity_f);
+  seq_info_t si = seq_info(seq);
   val found = nil;
-  key = default_arg(key, identity_f);
-  list = nullify(list);
 
-  gc_hint(list);
+  switch (si.kind) {
+  case SEQ_NIL:
+    break;
+  case SEQ_HASHLIKE:
+    {
+      val hiter = hash_begin(si.obj);
+      val cell;
 
-  for (; list; list = cdr(list)) {
-    val item = car(list);
-    val subj = funcall1(key, item);
+      while ((cell = hash_next(hiter))) {
+        val key = funcall1(keyfun, cell);
+        if (funcall1(predi, key))
+          found = cell;
+      }
 
-    if (funcall1(pred, subj))
-      found = item;
+      break;
+    }
+  case SEQ_LISTLIKE:
+    {
+      gc_hint(seq);
+
+      for (seq = z(si.obj); seq; seq = cdr(seq)) {
+        val elt = car(seq);
+        val key = funcall1(keyfun, elt);
+        if (funcall1(predi, key))
+          found = elt;
+      }
+
+      break;
+    }
+  case SEQ_VECLIKE:
+    {
+      val vec = si.obj;
+      val i = pred(length(vec));
+
+      for (; plusp(i); i = pred(i)) {
+        val elt = ref(vec, i);
+        val key = funcall1(keyfun, elt);
+        if (funcall1(predi, key))
+          return elt;
+      }
+
+      break;
+    }
+  case SEQ_NOTSEQ:
+  default:
+    uw_throwf(error_s, lit("rfind-if: unsupported object ~s"), seq, nao);
   }
 
   return found;

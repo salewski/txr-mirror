@@ -27491,7 +27491,7 @@ then these cells are taken as their keys.
 .coNP Functions @ rfind and @ rfind-if
 .synb
 .mets (rfind < key < sequence >> [ testfun <> [ keyfun ]])
-.mets (rfind-if < predfun < sequence <> [ keyfun ])
+.mets (rfind-if < predfun >> { sequence | << hash }  <> [ keyfun ])
 .syne
 .desc
 The
@@ -27508,6 +27508,18 @@ in
 .metn sequence ,
 they return the right-most element rather than
 the leftmost.
+
+In the case of
+.code rfind-if
+when a
+.meta hash
+is specified instead of a
+.metn sequence ,
+the function searches through the hash entries in the same order as
+.codn find-if ,
+but finds the last match rather than the first.
+Note: hashes are inherently not ordered; the relative order of items in
+a hash table can change when other items are inserted or deleted.
 
 .coNP Functions @ find-max and @ find-min
 .synb
