@@ -8594,19 +8594,58 @@ val find_min(val seq, val testfun, val keyfun)
   return find_max(seq, default_arg(testfun, less_f), keyfun);
 }
 
-val find_if(val pred, val list, val key)
+val find_if(val pred, val seq, val key)
 {
-  key = default_arg(key, identity_f);
-  list = nullify(list);
+  val keyfun = default_arg(key, identity_f);
+  seq_info_t si = seq_info(seq);
 
-  gc_hint(list);
+  switch (si.kind) {
+  case SEQ_NIL:
+    break;
+  case SEQ_HASHLIKE:
+    {
+      val hiter = hash_begin(si.obj);
+      val cell;
 
-  for (; list; list = cdr(list)) {
-    val item = car(list);
-    val subj = funcall1(key, item);
+      while ((cell = hash_next(hiter))) {
+        val key = funcall1(keyfun, cell);
+        if (funcall1(pred, key))
+          return cell;
+      }
 
-    if (funcall1(pred, subj))
-      return item;
+      break;
+    }
+  case SEQ_LISTLIKE:
+    {
+      gc_hint(seq);
+
+      for (seq = z(si.obj); seq; seq = cdr(seq)) {
+        val elt = car(seq);
+        val key = funcall1(keyfun, elt);
+        if (funcall1(pred, key))
+          return elt;
+      }
+
+      break;
+    }
+  case SEQ_VECLIKE:
+    {
+      val vec = si.obj;
+      val len = length(vec);
+      val i;
+
+      for (i = zero; lt(i, len); i = succ(i)) {
+        val elt = ref(vec, i);
+        val key = funcall1(keyfun, elt);
+        if (funcall1(pred, key))
+          return elt;
+      }
+
+      break;
+    }
+  case SEQ_NOTSEQ:
+  default:
+    uw_throwf(error_s, lit("find-if: unsupported object ~s"), seq, nao);
   }
 
   return nil;

@@ -27419,7 +27419,7 @@ is returned.
 .coNP Functions @ find and @ find-if
 .synb
 .mets (find < key < sequence >> [ testfun <> [ keyfun ]])
-.mets (find-if < predfun < sequence <> [ keyfun ])
+.mets (find-if < predfun >> { sequence | << hash }  <> [ keyfun ])
 .syne
 .desc
 The
@@ -27473,6 +27473,20 @@ yields true is returned. If no such
 element is found,
 .code nil
 is returned.
+
+In the case of
+.codn find-if ,
+a hash table may be specified instead of a sequence.
+The
+.meta hash
+is treated as if it were a sequence of hash key and hash
+value pairs represented as cons cells, the
+.code car
+slots of which are the hash keys, and the
+.code cdr
+of which are the hash values.  If the caller doesn't specify a
+.meta keyfun
+then these cells are taken as their keys.
 
 .coNP Functions @ rfind and @ rfind-if
 .synb
