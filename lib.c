@@ -8572,7 +8572,7 @@ val find_max(val seq, val testfun, val keyfun)
       val len = length(vec);
       val i;
 
-      for (i = zero; lt(i, len); i = succ(i)) {
+      for (i = one; lt(i, len); i = succ(i)) {
         val elt = ref(vec, i);
         val key = funcall1(keyfun, elt);
         if (funcall2(testfun, key, maxkey)) {
