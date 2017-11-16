@@ -8951,32 +8951,62 @@ val rpos_if(val pred, val seq, val key)
 
 val pos_max(val seq, val testfun, val keyfun)
 {
-  val pos = zero;
-  val maxkey;
-  val maxpos = zero;
-
-  seq = nullify(seq);
-
-  if (!seq)
-    return nil;
-
-  gc_hint(seq);
-
+  seq_info_t si = seq_info(seq);
   testfun = default_arg(testfun, greater_f);
   keyfun = default_arg(keyfun, identity_f);
 
-  maxkey = funcall1(keyfun, car(seq));
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_LISTLIKE:
+    {
+      val maxkey = funcall1(keyfun, car(si.obj));
+      val maxpos = zero;
+      val pos;
 
-  for (seq = cdr(seq); seq; seq = cdr(seq)) {
-    val key = funcall1(keyfun, car(seq));
-    pos = plus(pos, one);
-    if (funcall2(testfun, key, maxkey)) {
-      maxkey = key;
-      maxpos = pos;
+      gc_hint(seq);
+
+      for (pos = one, seq = cdr(z(si.obj));
+           seq;
+           seq = cdr(seq), pos = succ(pos))
+      {
+        val elt = car(seq);
+        val key = funcall1(keyfun, elt);
+        if (funcall2(testfun, key, maxkey)) {
+          maxkey = key;
+          maxpos = pos;
+        }
+      }
+
+      return maxpos;
     }
-  }
+  case SEQ_VECLIKE:
+    {
+      val vec = si.obj;
+      val len = length(vec);
 
-  return maxpos;
+      if (len != zero) {
+        val maxpos = zero;
+        val maxkey = funcall1(keyfun, ref(vec, zero));
+        val i;
+
+        for (i = one; lt(i, len); i = succ(i)) {
+          val elt = ref(vec, i);
+          val key = funcall1(keyfun, elt);
+          if (funcall2(testfun, key, maxkey)) {
+            maxkey = key;
+            maxpos = i;
+          }
+        }
+        return maxpos;
+      }
+
+      return nil;
+    }
+  case SEQ_NOTSEQ:
+  default:
+    uw_throwf(error_s, lit("pos-max: unsupported object ~s"), seq, nao);
+  }
 }
 
 val pos_min(val seq, val testfun, val keyfun)
