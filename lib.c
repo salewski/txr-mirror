@@ -8567,21 +8567,26 @@ val find_max(val seq, val testfun, val keyfun)
   case SEQ_VECLIKE:
     {
       val vec = si.obj;
-      val maxelt = ref(vec, zero);
-      val maxkey = funcall1(keyfun, maxelt);
       val len = length(vec);
-      val i;
 
-      for (i = one; lt(i, len); i = succ(i)) {
-        val elt = ref(vec, i);
-        val key = funcall1(keyfun, elt);
-        if (funcall2(testfun, key, maxkey)) {
-          maxkey = key;
-          maxelt = elt;
+      if (len != zero) {
+        val maxelt = ref(vec, zero);
+        val maxkey = funcall1(keyfun, maxelt);
+        val i;
+
+        for (i = one; lt(i, len); i = succ(i)) {
+          val elt = ref(vec, i);
+          val key = funcall1(keyfun, elt);
+          if (funcall2(testfun, key, maxkey)) {
+            maxkey = key;
+            maxelt = elt;
+          }
         }
+
+        return maxelt;
       }
 
-      return maxelt;
+      return nil;
     }
   case SEQ_NOTSEQ:
   default:
