@@ -8858,43 +8858,90 @@ val rposq(val obj, val list)
   return rpos(obj, list, eq_f, identity_f);
 }
 
-val pos_if(val pred, val list, val key)
+val pos_if(val pred, val seq, val key)
 {
-  val pos = zero;
-  key = default_arg(key, identity_f);
-  list = nullify(list);
+  val keyfun = default_arg(key, identity_f);
+  seq_info_t si = seq_info(seq);
 
-  gc_hint(list);
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_LISTLIKE:
+    {
+      val pos = zero;
+      gc_hint(seq);
 
-  for (; list; list = cdr(list), pos = plus(pos, one)) {
-    val item = car(list);
-    val subj = funcall1(key, item);
+      for (seq = z(si.obj); seq; seq = cdr(seq), pos = succ(pos)) {
+        val elem = car(seq);
+        val key = funcall1(keyfun, elem);
 
-    if (funcall1(pred, subj))
-      return pos;
+        if (funcall1(pred, key))
+          return pos;
+      }
+    }
+    return nil;
+  case SEQ_VECLIKE:
+    {
+      val vec = si.obj;
+      cnum len = c_num(length(vec));
+      cnum i;
+
+      for (i = 0; i < len; i++) {
+        val ni = num(i);
+        val elem = ref(vec, ni);
+        val key = funcall1(keyfun, elem);
+        if (funcall1(pred, key))
+          return ni;
+      }
+    }
+    return nil;
+  default:
+    uw_throwf(error_s, lit("pos-if: unsupported object ~s"), seq, nao);
   }
-
-  return nil;
 }
 
-val rpos_if(val pred, val list, val key)
+val rpos_if(val pred, val seq, val key)
 {
-  val pos = zero;
-  val found = nil;
-  key = default_arg(key, identity_f);
-  list = nullify(list);
+  val keyfun = default_arg(key, identity_f);
+  seq_info_t si = seq_info(seq);
 
-  gc_hint(list);
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_LISTLIKE:
+    {
+      val pos = zero;
+      val fpos = nil;
+      gc_hint(seq);
 
-  for (; list; list = cdr(list), pos = plus(pos, one)) {
-    val item = car(list);
-    val subj = funcall1(key, item);
+      for (seq = z(si.obj); seq; seq = cdr(seq), pos = succ(pos)) {
+        val elem = car(seq);
+        val key = funcall1(keyfun, elem);
 
-    if (funcall1(pred, subj))
-      found = pos;
+        if (funcall1(pred, key))
+          fpos = pos;
+      }
+
+      return fpos;
+    }
+  case SEQ_VECLIKE:
+    {
+      val vec = si.obj;
+      cnum len = c_num(length(vec));
+      cnum i;
+
+      for (i = len - 1; i >= 0; i--) {
+        val ni = num(i);
+        val elem = ref(vec, ni);
+        val key = funcall1(keyfun, elem);
+        if (funcall1(pred, key))
+          return ni;
+      }
+      return nil;
+    }
+  default:
+    uw_throwf(error_s, lit("rpos-if: unsupported object ~s"), seq, nao);
   }
-
-  return found;
 }
 
 val pos_max(val seq, val testfun, val keyfun)
