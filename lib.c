@@ -8708,99 +8708,6 @@ val rfind_if(val predi, val seq, val key)
   return found;
 }
 
-val posqual(val obj, val list)
-{
-  val pos = zero;
-
-  list = nullify(list);
-
-  gc_hint(list);
-
-  for (; list; list = cdr(list), pos = plus(pos, one))
-    if (equal(car(list), obj))
-      return pos;
-
-  return nil;
-}
-
-val rposqual(val obj, val list)
-{
-  val pos = zero;
-  val found = nil;
-
-  list = nullify(list);
-
-  gc_hint(list);
-
-  for (; list; list = cdr(list), pos = plus(pos, one))
-    if (equal(car(list), obj))
-      found = pos;
-
-  return found;
-}
-
-val posql(val obj, val list)
-{
-  val pos = zero;
-
-  list = nullify(list);
-
-  gc_hint(list);
-
-  for (; list; list = cdr(list), pos = plus(pos, one))
-    if (eql(car(list), obj))
-      return pos;
-
-  return nil;
-}
-
-val rposql(val obj, val list)
-{
-  val pos = zero;
-  val found = nil;
-
-  list = nullify(list);
-
-  gc_hint(list);
-
-  for (; list; list = cdr(list), pos = plus(pos, one))
-    if (eql(car(list), obj))
-      pos = found;
-
-  return pos;
-}
-
-val posq(val obj, val list)
-{
-  val pos = zero;
-
-  list = nullify(list);
-
-  gc_hint(list);
-
-  for (; list; list = cdr(list), pos = plus(pos, one))
-    if (car(list) == obj)
-      return pos;
-
-  return nil;
-}
-
-val rposq(val obj, val list)
-{
-  val pos = zero;
-  val found = nil;
-
-  list = nullify(list);
-
-  gc_hint(list);
-
-  for (; list; list = cdr(list), pos = plus(pos, one))
-    if (car(list) == obj)
-      found = pos;
-
-  return found;
-}
-
 val pos(val item, val seq, val testfun, val keyfun)
 {
   testfun = default_arg(testfun, equal_f);
@@ -8919,6 +8826,36 @@ val rpos(val item, val seq, val testfun, val keyfun)
   default:
     uw_throwf(error_s, lit("rpos: unsupported object ~s"), seq, nao);
   }
+}
+
+val posqual(val obj, val list)
+{
+  return pos(obj, list, equal_f, identity_f);
+}
+
+val rposqual(val obj, val list)
+{
+  return rpos(obj, list, equal_f, identity_f);
+}
+
+val posql(val obj, val list)
+{
+  return pos(obj, list, eql_f, identity_f);
+}
+
+val rposql(val obj, val list)
+{
+  return rpos(obj, list, eql_f, identity_f);
+}
+
+val posq(val obj, val list)
+{
+  return pos(obj, list, eq_f, identity_f);
+}
+
+val rposq(val obj, val list)
+{
+  return rpos(obj, list, eq_f, identity_f);
 }
 
 val pos_if(val pred, val list, val key)
