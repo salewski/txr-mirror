@@ -8805,89 +8805,120 @@ val pos(val item, val seq, val testfun, val keyfun)
 {
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
+  seq_info_t si = seq_info(seq);
 
-  seq = nullify(seq);
-
-  switch (type(seq)) {
-  case NIL:
-    break;
-  case COBJ:
-    if (!structp(seq))
-      break;
-    if (maybe_slot(seq, length_s))
-      goto vec;
-    if (!maybe_slot(seq, car_s))
-      break;
-    /* fallthrough */
-  case CONS:
-  case LCONS:
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_LISTLIKE:
     {
       val pos = zero;
       gc_hint(seq);
 
-      for (; seq; seq = cdr(seq), pos = plus(pos, one)) {
+      for (seq = z(si.obj); seq; seq = cdr(seq), pos = succ(pos)) {
         val elem = car(seq);
         val key = funcall1(keyfun, elem);
 
         if (funcall2(testfun, item, key))
           return pos;
       }
-      return nil;
     }
-  case STR:
-  case LIT:
-    if (keyfun == identity_f &&
-        (testfun == equal_f || testfun == eql_f || testfun == eq_f))
-    {
-      const wchar_t ch = c_chr(item);
-      const wchar_t *cstr = c_str(seq);
-      const wchar_t *cpos = wcschr(cstr, ch);
-      if (cpos)
-        return num(cpos - cstr);
-      return nil;
-    }
-    /* fallthrough */
-  case LSTR:
-  vec:
-    {
-      cnum len = c_num(length(seq));
-      cnum i;
-
-      for (i = 0; i < len; i++) {
-        val in = num(i);
-        val elem = ref(seq, in);
-        val key = funcall1(keyfun, elem);
-        if (funcall2(testfun, item, key))
-          return in;
+    return nil;
+  case SEQ_VECLIKE:
+    switch (si.type) {
+    case STR:
+    case LIT:
+      if (keyfun == identity_f &&
+          (testfun == equal_f || testfun == eql_f || testfun == eq_f))
+      {
+        const wchar_t ch = c_chr(item);
+        const wchar_t *cstr = c_str(seq);
+        const wchar_t *cpos = wcschr(cstr, ch);
+        if (cpos != 0)
+          return num(cpos - cstr);
+        return nil;
       }
+      /* fallthrough */
+    default:
+      {
+        val vec = si.obj;
+        cnum len = c_num(length(vec));
+        cnum i;
 
-      return nil;
+        for (i = 0; i < len; i++) {
+          val ni = num(i);
+          val elem = ref(vec, ni);
+          val key = funcall1(keyfun, elem);
+          if (funcall2(testfun, item, key))
+            return ni;
+        }
+      }
+      break;
     }
+    return nil;
   default:
-    break;
+    uw_throwf(error_s, lit("pos: unsupported object ~s"), seq, nao);
   }
-  uw_throwf(error_s, lit("find: unsupported object ~s"), seq, nao);
 }
 
-val rpos(val item, val list, val testfun, val keyfun)
+val rpos(val item, val seq, val testfun, val keyfun)
 {
-  val pos = zero;
-  val found = nil;
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
-  list = nullify(list);
+  seq_info_t si = seq_info(seq);
 
-  gc_hint(list);
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_LISTLIKE:
+    {
+      val pos = zero, fpos = nil;
+      gc_hint(seq);
 
-  for (; list; list = cdr(list), pos = plus(pos, one)) {
-    val elem = car(list);
-    val key = funcall1(keyfun, elem);
+      for (seq = z(si.obj); seq; seq = cdr(seq), pos = succ(pos)) {
+        val elem = car(seq);
+        val key = funcall1(keyfun, elem);
 
-    if (funcall2(testfun, item, key))
-      found = pos;
+        if (funcall2(testfun, item, key))
+          fpos = pos;
+      }
+      return fpos;
+    }
+  case SEQ_VECLIKE:
+    switch (si.type) {
+    case STR:
+    case LIT:
+      if (keyfun == identity_f &&
+          (testfun == equal_f || testfun == eql_f || testfun == eq_f))
+      {
+        const wchar_t ch = c_chr(item);
+        const wchar_t *cstr = c_str(seq);
+        const wchar_t *cpos = wcsrchr(cstr, ch);
+        if (cpos != 0)
+          return num(cpos - cstr);
+        return nil;
+      }
+      /* fallthrough */
+    default:
+      {
+        val vec = si.obj;
+        cnum len = c_num(length(vec));
+        cnum i;
+
+        for (i = len - 1; i >= 0; i--) {
+          val ni = num(i);
+          val elem = ref(vec, ni);
+          val key = funcall1(keyfun, elem);
+          if (funcall2(testfun, item, key))
+            return ni;
+        }
+      }
+      break;
+    }
+    return nil;
+  default:
+    uw_throwf(error_s, lit("rpos: unsupported object ~s"), seq, nao);
   }
-
-  return found;
 }
 
 val pos_if(val pred, val list, val key)
