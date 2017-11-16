@@ -8406,6 +8406,7 @@ val uniq(val seq)
 
 val find(val item, val seq, val testfun, val keyfun)
 {
+  val self = lit("find");
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
   seq_info_t si = seq_info(seq);
@@ -8443,11 +8444,11 @@ val find(val item, val seq, val testfun, val keyfun)
     default:
       {
         val vec = si.obj;
-        cnum len = c_num(length(vec));
+        cnum len = c_fixnum(length(vec), self);
         cnum i;
 
         for (i = 0; i < len; i++) {
-          val elem = ref(vec, num(i));
+          val elem = ref(vec, num_fast(i));
           val key = funcall1(keyfun, elem);
           if (funcall2(testfun, item, key))
             return elem;
@@ -8457,12 +8458,13 @@ val find(val item, val seq, val testfun, val keyfun)
     }
     return nil;
   default:
-    uw_throwf(error_s, lit("find: unsupported object ~s"), seq, nao);
+    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
   }
 }
 
 val rfind(val item, val seq, val testfun, val keyfun)
 {
+  val self = lit("rfind");
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
   seq_info_t si = seq_info(seq);
@@ -8501,11 +8503,11 @@ val rfind(val item, val seq, val testfun, val keyfun)
     default:
       {
         val vec = si.obj;
-        cnum len = c_num(length(vec));
+        cnum len = c_fixnum(length(vec), self);
         cnum i;
 
         for (i = len - 1; i >= 0; i--) {
-          val elem = ref(vec, num(i));
+          val elem = ref(vec, num_fast(i));
           val key = funcall1(keyfun, elem);
           if (funcall2(testfun, item, key))
             return elem;
@@ -8515,14 +8517,14 @@ val rfind(val item, val seq, val testfun, val keyfun)
     }
     return nil;
   default:
-    uw_throwf(error_s, lit("rfind: unsupported object ~s"), seq, nao);
+    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
   }
 }
 
 val find_max(val seq, val testfun, val keyfun)
 {
+  val self = lit("find-max");
   seq_info_t si = seq_info(seq);
-
   testfun = default_arg(testfun, greater_f);
   keyfun = default_arg(keyfun, identity_f);
 
@@ -8567,15 +8569,15 @@ val find_max(val seq, val testfun, val keyfun)
   case SEQ_VECLIKE:
     {
       val vec = si.obj;
-      val len = length(vec);
+      cnum len = c_fixnum(length(vec), self);
 
-      if (len != zero) {
+      if (len > 0) {
         val maxelt = ref(vec, zero);
         val maxkey = funcall1(keyfun, maxelt);
-        val i;
+        cnum i;
 
-        for (i = one; lt(i, len); i = succ(i)) {
-          val elt = ref(vec, i);
+        for (i = 1; i < len; i++) {
+          val elt = ref(vec, num_fast(i));
           val key = funcall1(keyfun, elt);
           if (funcall2(testfun, key, maxkey)) {
             maxkey = key;
@@ -8590,7 +8592,7 @@ val find_max(val seq, val testfun, val keyfun)
     }
   case SEQ_NOTSEQ:
   default:
-    uw_throwf(error_s, lit("find-max: unsupported object ~s"), seq, nao);
+    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
   }
 }
 
@@ -8601,6 +8603,7 @@ val find_min(val seq, val testfun, val keyfun)
 
 val find_if(val pred, val seq, val key)
 {
+  val self = lit("find-if");
   val keyfun = default_arg(key, identity_f);
   seq_info_t si = seq_info(seq);
 
@@ -8636,11 +8639,11 @@ val find_if(val pred, val seq, val key)
   case SEQ_VECLIKE:
     {
       val vec = si.obj;
-      val len = length(vec);
-      val i;
+      cnum len = c_fixnum(length(vec), self);
+      cnum i;
 
-      for (i = zero; lt(i, len); i = succ(i)) {
-        val elt = ref(vec, i);
+      for (i = 0; i < len; i++) {
+        val elt = ref(vec, num_fast(i));
         val key = funcall1(keyfun, elt);
         if (funcall1(pred, key))
           return elt;
@@ -8650,7 +8653,7 @@ val find_if(val pred, val seq, val key)
     }
   case SEQ_NOTSEQ:
   default:
-    uw_throwf(error_s, lit("find-if: unsupported object ~s"), seq, nao);
+    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
   }
 
   return nil;
@@ -8658,6 +8661,7 @@ val find_if(val pred, val seq, val key)
 
 val rfind_if(val predi, val seq, val key)
 {
+  val self = lit("rfind-if");
   val keyfun = default_arg(key, identity_f);
   seq_info_t si = seq_info(seq);
   val found = nil;
@@ -8694,10 +8698,10 @@ val rfind_if(val predi, val seq, val key)
   case SEQ_VECLIKE:
     {
       val vec = si.obj;
-      val i = pred(length(vec));
+      cnum i = c_fixnum(length(vec), self) - 1;
 
-      for (; plusp(i); i = pred(i)) {
-        val elt = ref(vec, i);
+      for (; i >= 0; i--) {
+        val elt = ref(vec, num_fast(i));
         val key = funcall1(keyfun, elt);
         if (funcall1(predi, key))
           return elt;
@@ -8707,7 +8711,7 @@ val rfind_if(val predi, val seq, val key)
     }
   case SEQ_NOTSEQ:
   default:
-    uw_throwf(error_s, lit("rfind-if: unsupported object ~s"), seq, nao);
+    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
   }
 
   return found;
@@ -8715,6 +8719,7 @@ val rfind_if(val predi, val seq, val key)
 
 val pos(val item, val seq, val testfun, val keyfun)
 {
+  val self = lit("pos");
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
   seq_info_t si = seq_info(seq);
@@ -8754,11 +8759,11 @@ val pos(val item, val seq, val testfun, val keyfun)
     default:
       {
         val vec = si.obj;
-        cnum len = c_num(length(vec));
+        cnum len = c_fixnum(length(vec), self);
         cnum i;
 
         for (i = 0; i < len; i++) {
-          val ni = num(i);
+          val ni = num_fast(i);
           val elem = ref(vec, ni);
           val key = funcall1(keyfun, elem);
           if (funcall2(testfun, item, key))
@@ -8769,12 +8774,13 @@ val pos(val item, val seq, val testfun, val keyfun)
     }
     return nil;
   default:
-    uw_throwf(error_s, lit("pos: unsupported object ~s"), seq, nao);
+    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
   }
 }
 
 val rpos(val item, val seq, val testfun, val keyfun)
 {
+  val self = lit("rpos");
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
   seq_info_t si = seq_info(seq);
@@ -8814,11 +8820,11 @@ val rpos(val item, val seq, val testfun, val keyfun)
     default:
       {
         val vec = si.obj;
-        cnum len = c_num(length(vec));
+        cnum len = c_fixnum(length(vec), self);
         cnum i;
 
         for (i = len - 1; i >= 0; i--) {
-          val ni = num(i);
+          val ni = num_fast(i);
           val elem = ref(vec, ni);
           val key = funcall1(keyfun, elem);
           if (funcall2(testfun, item, key))
@@ -8829,7 +8835,7 @@ val rpos(val item, val seq, val testfun, val keyfun)
     }
     return nil;
   default:
-    uw_throwf(error_s, lit("rpos: unsupported object ~s"), seq, nao);
+    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
   }
 }
 
@@ -8865,6 +8871,7 @@ val rposq(val obj, val list)
 
 val pos_if(val pred, val seq, val key)
 {
+  val self = lit("pos-if");
   val keyfun = default_arg(key, identity_f);
   seq_info_t si = seq_info(seq);
 
@@ -8888,11 +8895,11 @@ val pos_if(val pred, val seq, val key)
   case SEQ_VECLIKE:
     {
       val vec = si.obj;
-      cnum len = c_num(length(vec));
+      cnum len = c_fixnum(length(vec), self);
       cnum i;
 
       for (i = 0; i < len; i++) {
-        val ni = num(i);
+        val ni = num_fast(i);
         val elem = ref(vec, ni);
         val key = funcall1(keyfun, elem);
         if (funcall1(pred, key))
@@ -8901,12 +8908,13 @@ val pos_if(val pred, val seq, val key)
     }
     return nil;
   default:
-    uw_throwf(error_s, lit("pos-if: unsupported object ~s"), seq, nao);
+    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
   }
 }
 
 val rpos_if(val pred, val seq, val key)
 {
+  val self = lit("rpos-if");
   val keyfun = default_arg(key, identity_f);
   seq_info_t si = seq_info(seq);
 
@@ -8932,11 +8940,11 @@ val rpos_if(val pred, val seq, val key)
   case SEQ_VECLIKE:
     {
       val vec = si.obj;
-      cnum len = c_num(length(vec));
+      cnum len = c_fixnum(length(vec), self);
       cnum i;
 
       for (i = len - 1; i >= 0; i--) {
-        val ni = num(i);
+        val ni = num_fast(i);
         val elem = ref(vec, ni);
         val key = funcall1(keyfun, elem);
         if (funcall1(pred, key))
@@ -8945,12 +8953,13 @@ val rpos_if(val pred, val seq, val key)
       return nil;
     }
   default:
-    uw_throwf(error_s, lit("rpos-if: unsupported object ~s"), seq, nao);
+    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
   }
 }
 
 val pos_max(val seq, val testfun, val keyfun)
 {
+  val self = lit("pos-max");
   seq_info_t si = seq_info(seq);
   testfun = default_arg(testfun, greater_f);
   keyfun = default_arg(keyfun, identity_f);
@@ -8983,19 +8992,20 @@ val pos_max(val seq, val testfun, val keyfun)
   case SEQ_VECLIKE:
     {
       val vec = si.obj;
-      val len = length(vec);
+      cnum len = c_fixnum(length(vec), self);
 
-      if (len != zero) {
+      if (len > 0) {
         val maxpos = zero;
         val maxkey = funcall1(keyfun, ref(vec, zero));
-        val i;
+        cnum i;
 
-        for (i = one; lt(i, len); i = succ(i)) {
-          val elt = ref(vec, i);
+        for (i = 1; i < len; i++) {
+          val ni = num_fast(i);
+          val elt = ref(vec, ni);
           val key = funcall1(keyfun, elt);
           if (funcall2(testfun, key, maxkey)) {
             maxkey = key;
-            maxpos = i;
+            maxpos = ni;
           }
         }
         return maxpos;
@@ -9005,7 +9015,7 @@ val pos_max(val seq, val testfun, val keyfun)
     }
   case SEQ_NOTSEQ:
   default:
-    uw_throwf(error_s, lit("pos-max: unsupported object ~s"), seq, nao);
+    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
   }
 }
 
