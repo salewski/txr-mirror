@@ -26808,6 +26808,23 @@ from
 is passed through this one-argument function, and
 the resulting value is used in its place.
 
+If a sequence contains multiple equivalent maxima,
+whether the position of the leftmost or rightmost such maximum is reported
+depends on whether
+.meta testfun
+compares for strict inequality, or whether it reports true for
+equal arguments also. Under the default
+.metn testfun ,
+which is
+.codn less ,
+the
+.code pos-max
+function will return the position leftmost of a duplicate set of maximum
+elements. To find the rightmost of the maxima, the
+.code lequal
+function can be substituted. Analogous reasoning applies to other
+test functions.
+
 .coNP Function @ mismatch
 .synb
 .mets (mismatch < left-seq < right-seq >> [ testfun <> [ keyfun ]])
@@ -27604,6 +27621,14 @@ function can be specified as
 To find the entry holding the maximum value, the
 .code cdr
 function can be specified.
+
+If there are multiple equivalent maxima, then under the default
+.metn testfun ,
+that being
+.codn less ,
+the leftmost one is reported. See the notes under
+.code pos-max
+regarding duplicate maxima.
 
 .coNP Functions @, uni @ isec and @ diff
 .synb
