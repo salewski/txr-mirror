@@ -18,7 +18,7 @@
 syn case match
 syn spell toplevel
 
-setlocal iskeyword=a-z,A-Z,48-57,!,$,&,*,+,-,:,<,=,>,?,\\,_,~,/,^
+setlocal iskeyword=a-z,A-Z,48-57,!,$,%,&,*,+,-,:,<,=,>,?,\\,_,~,/,^
 
 syn keyword tl_keyword contained %e% %pi% * *args*
 syn keyword tl_keyword contained *args-eff* *args-full* *e* *filters*

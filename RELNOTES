@@ -1,3 +1,52 @@
+                                    TXR 187
+                                   2017-11-18
+
+
+  Features
+
+  - Functional library:
+    - lop:
+      - "left op": new variant of op macro.
+      - inserts free arguments on left rather than right.
+  - Control flow library:
+    - caseq, caseql and caseql expand to better code.
+  - Sequences library:
+    - find, find-if, find-max, pos, pos-if, pos-max, posq, posql, posqual,
+      rfind, rfind-if, rpos, rpos-if, rposq, rposql and rposqual:
+      - rewritten with optimization for vectors and strings and proper support
+        for vector-like struct objects.
+  - Awk macro:
+    - five new range operators
+    - some optimizations
+  - FFI/buffers/carray:
+    - carray indexing handles negative indices now according to usual vector
+      convention.
+    - New convenience functions for I/O between files/streams and buffers.
+  - Build:
+    - improved handling of test targets in Makefile
+    - in condensed mode ("CC file.o" output) if the build step fails, the
+      failed command is printed in detail.
+  - Windows port:
+    - Cygnal DLL updated to Cygwin 2.9.0 baseline from 2.5.2.
+  - Vim:
+    - % is correctly considered a symbol constituent.
+
+  Bugs
+
+  - partition, partition*, split and split* handle infinite lazy
+    lists of indices; issues in their < TXR-171 compatibility
+    have been addressed.
+  - tprint function and -t command line option deal with lazy lists
+    in constant memory now.
+  - completely broken copy-hash fixed.
+  - Awk macro: fixed hygiene problem in expansion.
+  - carray: stability: missing type checks added in several functions.
+  - open-command now accepts "b" mode flag even on POSIX platforms whose
+    popen function rejects it with a failure.
+
+
+
+
                                     TXR 186
                                    2017-09-16
 
