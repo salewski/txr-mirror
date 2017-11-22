@@ -1357,34 +1357,31 @@ val replace_list(val list, val items, val from, val to)
 
 static val lazy_appendv_func(val env, val lcons)
 {
-  cons_bind (last, lists, env);
-  val nonempty = nil;
+  cons_bind (fl, rl, env);
+  cons_bind (fe, re, fl);
 
-  while (lists) {
-    nonempty = nullify(pop(&lists));
-    if (nonempty)
-      break;
+  rplaca(lcons, fe);
+
+  if (re) {
+    rplaca(env, re);
+    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+  } else if (rl) {
+    do {
+      fl = car(rl);
+      rl = cdr(rl);
+    } while (!fl && rl);
+
+    if (fl) {
+      if (rl) {
+        rplaca(env, fl);
+        rplacd(env, rl);
+        rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+      } else {
+        rplacd(lcons, fl);
+      }
+    }
   }
 
-  rplaca(lcons, last);
-
-  if (nilp(lists)) {
-    rplacd(lcons, nonempty);
-    return nil;
-  }
-
-  if (atom(nonempty))
-    uw_throwf(error_s, lit("append*: cannot append to atom ~s"),
-              nonempty, nao);
-
-  rplacd(env, lists);
-
-  {
-    loc ptail = ltail(mkcloc(nonempty));
-    rplaca(env, car(deref(ptail)));
-    set(ptail, make_lazy_cons(lcons_fun(lcons)));
-    rplacd(lcons, nonempty);
-  }
   return nil;
 }
 
@@ -1407,11 +1404,8 @@ val lazy_appendv(struct args *args)
               nonempty, nao);
 
   {
-    loc ptail = ltail(mkcloc(nonempty));
-    set(ptail, make_lazy_cons(func_f1(cons(car(deref(ptail)),
-                                           args_get_rest(args, index)),
-                                      lazy_appendv_func)));
-    return nonempty;
+    return make_lazy_cons(func_f1(cons(nonempty, args_get_rest(args, index)),
+                                  lazy_appendv_func));
   }
 }
 
