@@ -635,7 +635,7 @@ loc lastcons(val list)
 
   while (consp(cdr(list))) {
     ret = cdr_l(list);
-    list = cdr(list);
+    list = deref(ret);
   }
   return ret;
 }
