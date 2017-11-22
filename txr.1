@@ -18071,25 +18071,114 @@ The places support deletion.
     x) -> "abce"
 .cble
 
-.coNP Functions @, append @ nconc and @ append*
+.coNP Functions @ append and @ nconc
 .synb
-.mets (append <> [ list * << last-arg ])
-.mets (nconc <> [ list * << last-arg ])
-.mets (append* <> [ list * << last-arg ])
+.mets (append <> [ sequence *])
+.mets (nconc <> [ sequence *])
 .syne
 .desc
 The
 .code append
-function creates a new list which is a catenation of the
+function creates a new object which is a catenation of the
 .meta list
 arguments. All arguments are optional;
 .code (append)
-produces the empty list.
+produces the empty list, and if
+a single argument is specified, that argument
+is returned.
 
-If a single argument is specified, then
+If two or more arguments are present, then the situation
+is identified as one or more
+.meta sequence
+arguments followed by
+.metn last-arg .
+The
+.meta sequence
+arguments must be sequences;
+.meta last-arg
+may be a sequence or atom.
+
+The
 .code append
-simply returns the value of that
-argument. It may be any kind of object.
+operation over three or more arguments is left-associative, such that
+.code "(append x y z)"
+is equivalent to both
+.code "(append (append x y) z)"
+and
+.codn "(append x (append z y))" .
+
+This allows the catenation of an arbitrary number of arguments
+to be understood in terms of a repeated application of the two-argument
+case, whose semantics is given by these rules:
+.RS
+.IP 1.
+.code nil
+catenates with
+.code nil
+to produce
+.codn nil :
+.cblk
+  (append nil nil) -> nil
+.cble
+.IP 2.
+.code nil
+catenates with a proper or improper list, producing that list itself:
+.cblk
+  (append nil '(1 2)) -> (1 2)
+  (append nil '(1 2 . 3)) -> (1 2 . 3)
+.cble
+.IP 3.
+A proper list catenates with
+.codn nil ,
+producing that list itself:
+.cblk
+  (append '(1 2) nil) -> (1 2)
+.cble
+.IP 4.
+A proper list catenates with an atom,
+producing an improper list terminated by that atom,
+whether or not that atom is a sequence:
+.cblk
+  (append '(1 2) #(3)) -> (1 2 . #(3))
+  (append '(1 2) 3) -> (1 2 . 3)
+.cble
+.IP 5.
+A non-list sequence catenates with another sequence into a sequence,
+producing a sequence which contains the elements of both,
+of the same kind as the left sequence. The elements must be
+compatible; a string can only catenate with a sequence of characters.
+.cblk
+  (append #(1 2) #(3 4)) -> #(1 2 3 4)
+  (append "ab" "cd") -> "abcd"
+  (append "ab" #(#\ec #\ed)) -> "abcd"
+  (append "ab" #(3 4)) -> ;; error
+.cble
+.IP 6.
+A non-list sequence catenates with an atom if it is a suitable element
+type for that kind of sequence. The resulting sequence is of the same
+kind, and includes that atom:
+.cblk
+  (append #(1 2) 3) -> #(1 2 3)
+  (append "ab" #\c) -> "abc"
+  (append "ab" 3) -> ;; error
+.cble
+.IP 7.
+If an improper list is catenated with any object, the catenation
+takes place between the terminating atom of that list and that object. This
+requires the terminating atom to be a sequence.  If the catenation is possible,
+then the result is a new improper list which is a copy of the original, but
+with the terminating atom replaced by a catenation of that atom and the object:
+.cblk
+  (append '(1 2 . "ab") "c") -> (1 2 . "abc")
+  (append '(1 2 . "ab") '(2 3)) -> ;; error
+.cble
+.IP 8.
+A non-sequence atom doesn't catenate; the situation is erroneous:
+.cblk
+  (append 1 2) -> ;; error
+  (append '(1 . 2) 3) -> ;; error
+.cble
+.RE
 
 If N arguments are specified, where N > 1, then the first N-1 arguments must be
 proper lists. Copies of these lists are catenated together. The last argument
@@ -18110,23 +18199,7 @@ The
 .code nconc
 function works like
 .codn append ,
-but avoids consing. It destructively
-manipulates (that is to say, mutates) incoming lists to catenate them, and so
-must be used with care.
-
-The
-.code append*
-function works like
-.codn append ,
-but returns a lazy list which produces
-the catenation of the lists on demand.  If some of the arguments are
-themselves lazy lists which are infinite, then
-.code append*
-can return immediately,
-whereas append will get caught in an infinite loop trying to produce a
-catenation and eventually exhaust available memory. (However, the last
-argument to append may be an infinite lazy list, because append does not
-traverse the last argument.)
+but may destructively manipulate any of the input objects.
 
 .TP* Examples:
 .cblk
@@ -18158,7 +18231,42 @@ traverse the last argument.)
   ;; atoms and improper lists other than in the last position
   ;; are erroneous
   (append '(a . b) 3 '(1 2 3)) -> **error**
+
+  ;; sequences other than lists can be catenated.
+  (append "abc" "def" "g" #\eh) -> "abcdefgh"
+
+  ;; lists followed by non-list sequences end with non-list
+  ;; sequences catenated in the terminating atom:
+  (append '(1 2) '(3 4) "abc" "def") -> (1 2 3 4 . "abcdef")
 .cble
+
+.coNP Function @ append*
+.synb
+.mets (append* <> [ list *])
+.syne
+.desc
+The
+.code append*
+function lazily catenates lists.
+
+If invoked with no arguments, it returns
+.codn nil .
+If invoked with a single argument, it returns that argument.
+
+Otherwise, it returns a lazy list consisting of the elements of every
+.meta list
+argument from left to right.
+
+Arguments other than the last are treated as lists, and traversed using
+.code car
+and
+.code cdr
+functions to visit their elements.
+
+The last argument isn't traversed: rather, that object itself becomes the
+.code cdr
+field of the last cons cell of the lazy list constructed from the
+previous arguments.
 
 .coNP Functions @ revappend and @ nreconc
 .synb
