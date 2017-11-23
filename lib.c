@@ -315,6 +315,12 @@ seq_info_t seq_info(val obj)
   return ret;
 }
 
+static void noreturn unsup_obj(val self, val obj)
+{
+  uw_throwf(error_s, lit("~a: unsupported object ~s"), self, obj, nao);
+  abort();
+}
+
 val throw_mismatch(val obj, type_t t)
 {
   type_mismatch(lit("~s is not of type ~s"), obj, code2type(t), nao);
@@ -8423,7 +8429,7 @@ val grade(val seq, val lessfun, val keyfun_in)
       }
       break;
     default:
-      uw_throwf(error_s, lit("~a: unsupported object ~s"), self, seq, nao);
+      unsup_obj(self, seq);
     }
 
     {
@@ -8495,7 +8501,7 @@ val find(val item, val seq, val testfun, val keyfun)
     }
     return nil;
   default:
-    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
+    unsup_obj(self, seq);
   }
 }
 
@@ -8554,7 +8560,7 @@ val rfind(val item, val seq, val testfun, val keyfun)
     }
     return nil;
   default:
-    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
+    unsup_obj(self, seq);
   }
 }
 
@@ -8629,7 +8635,7 @@ val find_max(val seq, val testfun, val keyfun)
     }
   case SEQ_NOTSEQ:
   default:
-    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
+    unsup_obj(self, seq);
   }
 }
 
@@ -8690,7 +8696,7 @@ val find_if(val pred, val seq, val key)
     }
   case SEQ_NOTSEQ:
   default:
-    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
+    unsup_obj(self, seq);
   }
 
   return nil;
@@ -8748,7 +8754,7 @@ val rfind_if(val predi, val seq, val key)
     }
   case SEQ_NOTSEQ:
   default:
-    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
+    unsup_obj(self, seq);
   }
 
   return found;
@@ -8811,7 +8817,7 @@ val pos(val item, val seq, val testfun, val keyfun)
     }
     return nil;
   default:
-    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
+    unsup_obj(self, seq);
   }
 }
 
@@ -8872,7 +8878,7 @@ val rpos(val item, val seq, val testfun, val keyfun)
     }
     return nil;
   default:
-    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
+    unsup_obj(self, seq);
   }
 }
 
@@ -8945,7 +8951,7 @@ val pos_if(val pred, val seq, val key)
     }
     return nil;
   default:
-    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
+    unsup_obj(self, seq);
   }
 }
 
@@ -8990,7 +8996,7 @@ val rpos_if(val pred, val seq, val key)
       return nil;
     }
   default:
-    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
+    unsup_obj(self, seq);
   }
 }
 
@@ -9052,7 +9058,7 @@ val pos_max(val seq, val testfun, val keyfun)
     }
   case SEQ_NOTSEQ:
   default:
-    uw_throwf(error_s, lit("~s: unsupported object ~s"), self, seq, nao);
+    unsup_obj(self, seq);
   }
 }
 
