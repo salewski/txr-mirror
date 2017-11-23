@@ -28945,6 +28945,51 @@ For strings and vectors,
 .code sort
 is not stable.
 
+.coNP Function @ grade
+.synb
+.mets (grade < sequence >> [ lessfun <> [ keyfun ]])
+.syne
+.desc
+The
+.code grade
+function returns a list of integer indices which indicate the position
+of the elements of
+.meta sequence
+in sorted order.
+
+The
+.meta lessfun
+and
+.meta keyfun
+arguments behave like those of the
+.code sort
+function.
+
+The
+.meta sequence
+object is not modified.
+
+The internal sort performed by
+.code grade
+is not stable. The indices of any elements considered equivalent under
+.code lessfun
+may appear in any order in the returned index sequence.
+
+Note: the
+.code grade
+function is inspired by the "grade up" and "grade down" operators
+in the APL language.
+
+.TP* Examples:
+
+.cblk
+  ;; Order of the 2 3 positions of the "l"
+  ;; characters is not specified:
+
+  [grade "Hello"] -> (0 1 2 3 4)
+  [grade "Hello" >] -> (4 2 3 1 0)
+.cble
+
 .coNP Function @ shuffle
 .synb
 .mets (shuffle << sequence )

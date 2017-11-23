@@ -6003,6 +6003,7 @@ void eval_init(void)
   reg_fun(intern(lit("sort-group"), user_package), func_n3o(sort_group, 1));
   reg_fun(intern(lit("unique"), user_package), func_n2ov(unique, 1));
   reg_fun(intern(lit("uniq"), user_package), func_n1(uniq));
+  reg_fun(intern(lit("grade"), user_package), func_n3o(grade, 1));
 
   reg_var(intern(lit("*param-macro*"), user_package), pm_table);
 

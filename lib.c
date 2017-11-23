@@ -8398,6 +8398,49 @@ val uniq(val seq)
   return unique(seq, identity_f, hashv_args);
 }
 
+val grade(val seq, val lessfun, val keyfun_in)
+{
+  val self = lit("grade");
+  seq_info_t si = seq_info(seq);
+
+  if (si.kind != SEQ_NIL) {
+    val keyfun = if3(missingp(keyfun_in),
+                     car_f,
+                     chain(car_f, keyfun_in, nao));
+    cnum i, len = c_fixnum(length(seq), self);
+    val iter, v = vector(num_fast(len), nil);
+
+    switch (si.kind) {
+    case SEQ_LISTLIKE:
+      for (iter = si.obj, i = 0; i < len; i++, iter = cdr(iter)) {
+        set(mkloc(v->v.vec[i], v), cons(car(iter), num_fast(i)));
+      }
+      break;
+    case SEQ_VECLIKE:
+      for (i = 0; i < len; i++) {
+        val ix = num_fast(i);
+        set(mkloc(v->v.vec[i], v), cons(ref(seq, ix), ix));
+      }
+      break;
+    default:
+      uw_throwf(error_s, lit("~a: unsupported object ~s"), self, seq, nao);
+    }
+
+    {
+      list_collect_decl (out, ptail);
+
+      sort(v, lessfun, keyfun);
+
+      for (i = 0; i < len; i++)
+        ptail = list_collect(ptail, cdr(v->v.vec[i]));
+
+      return out;
+    }
+  }
+
+  return nil;
+}
+
 val find(val item, val seq, val testfun, val keyfun)
 {
   val self = lit("find");
