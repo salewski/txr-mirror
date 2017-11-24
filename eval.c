@@ -1911,6 +1911,20 @@ static val expand_macro(val form, val mac_binding, val menv)
 {
   val expander = cdr(mac_binding);
   val expanded = funcall2(expander, form, menv);
+  if (form == expanded) {
+    val sym = car(form);
+    val up_binding = mac_binding;
+
+    while (menv && up_binding == mac_binding) {
+      menv = menv->e.up_env;
+      up_binding = lookup_mac(menv, sym);
+    }
+
+    if (up_binding && up_binding != mac_binding)
+      return expand_macro(form, up_binding, menv);
+
+    return form;
+  }
   set_origin(expanded, form);
   return expanded;
 }

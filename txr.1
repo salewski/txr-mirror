@@ -30165,12 +30165,33 @@ The return value of the macro is the macro expansion. It is substituted in
 place of the entire macro call form. That form is then expanded again;
 it may itself be another macro call, or contain more macro calls.
 
-.TP* "Dialect Note:"
+A global macro defined using
+.code defmacro
+may decline to expand a macro form. Declining to expand is achieved by
+returning the original unexpanded form, which may be captured using the
+.code :form
+parameter. When a global macro declines to expand a form, the form is
+taken as-is. At evaluation time, it will be treated as a function call.
+Note: when a local macro defined by
+.code macrolet
+declines, more complicated requirements apply; see the description of
+.codn macrolet .
+
+.TP* "Dialect Notes:"
 A macro in the global namespace introduced by
 .code defmacro
 may co-exist with a function of the same name introduced by
 .codn defun .
 This is not permitted in ANSI Common Lisp.
+
+ANSI Common Lisp doesn't describe the concept of declining to expand, except in
+the area of compiler macros. Since TXR Lisp allows global macros and functions
+of the same name to co-exist, ordinary macros can be used to optimize functions
+in a manner similar to Common Lisp compiler macros. A macro can be written
+of the same name as a function, and can optimize certain cases of the function
+call by expanding them to some alternative syntax. Cases which it doesn't
+optimize are handled by declining to expand, in which case the form remains
+as the original function call.
 
 .TP* Example:
 
@@ -30247,6 +30268,21 @@ evaluated in the bodies and parameter lists of
 macros to have any visibility to any surrounding lexical variable bindings,
 which are only instantiated in the evaluation phase, after expansion is done
 and macros no longer exist.
+
+A local macro defined using
+.code defmacro
+may decline to expand a macro form. Declining to expand is achieved by returning the original
+unexpanded form, which may be captured using the
+.code :form
+parameter. When a local macro declines to expand a form, the macro definition
+is temporarily hidden, as if it didn't exist in the lexical scope. If another
+macro of the same name is thereby revealed (a global macro or another local macro
+at a shallower nesting level), then an expansion is tried with that macro.  If
+no such macro is revealed, or if a lexical function binding of that name is
+revealed, then no expansion takes place; the original form is taken as-is.
+When another macro is tried, the process repeats, resulting in a search which
+proceeds as far as possible through outer lexical scopes and finally the
+global scope.
 
 .coNP Function @ macro-form-p
 .synb
