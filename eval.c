@@ -4063,6 +4063,7 @@ static val do_expand(val form, val menv)
 
   menv = default_null_arg(menv);
 
+again:
   if (nilp(form)) {
     return nil;
   } else if (bindable(form)) {
@@ -4341,10 +4342,10 @@ static val do_expand(val form, val menv)
       return rlcp(cons(sym, args_ex), form);
     } else if (sym == switch_s) {
       return expand_switch(form, menv);
-    } else if ((macro = lookup_mac(menv, sym))) {
+    } else if (!macro && (macro = lookup_mac(menv, sym))) {
       val mac_expand = expand_macro(form, macro, menv);
       if (mac_expand == form)
-        return form;
+        goto again;
       return expand(rlcp_tree(rlcp_tree(mac_expand, form), macro), menv);
     } else if (sym == progn_s) {
       val args = rest(form);
