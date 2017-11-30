@@ -7866,14 +7866,31 @@ val copy_alist(val list)
   return mapcar(func_n1(copy_cons), list);
 }
 
-val mapcar_listout(val fun, val list)
+val mapcar_listout(val fun, val seq)
 {
+  val self = lit("mapcar");
+  seq_info_t si = seq_info(seq);
   list_collect_decl (out, iter);
 
-  list = nullify(list);
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_VECLIKE:
+    {
+      val v = si.obj;
+      cnum i, len = c_fixnum(length(v), self);
 
-  for (; list; list = cdr(list))
-    iter = list_collect(iter, funcall1(fun, car(list)));
+      for (i = 0; i < len; i++)
+        iter = list_collect(iter, funcall1(fun, ref(v, num_fast(i))));
+    }
+    break;
+  case SEQ_LISTLIKE:
+    for (seq = z(si.obj); seq; seq = cdr(seq))
+      iter = list_collect(iter, funcall1(fun, car(seq)));
+    break;
+  default:
+    unsup_obj(self, seq);
+  }
 
   return out;
 }
