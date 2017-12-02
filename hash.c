@@ -1061,12 +1061,14 @@ void hash_process_weak(void)
 
 val hashv(struct args *args)
 {
-  val arglist = args_get_list(args);
-  val wkeys = memq(weak_keys_k, arglist);
-  val wvals = memq(weak_vals_k, arglist);
-  val equal = memq(equal_based_k, arglist);
-  val userdata = cadr(memq(userdata_k, arglist));
-  val hash = make_hash(wkeys, wvals, equal);
+  val wkeys = nil, wvals = nil, equal = nil, userdata = nil;
+  val hash = (args_keys_extract(args,
+                                weak_keys_k, nil, &wkeys,
+                                weak_vals_k, nil, &wvals,
+                                equal_based_k, nil, &equal,
+                                userdata_k, t, &userdata,
+                                nil),
+              make_hash(wkeys, wvals, equal));
   if (userdata)
     set_hash_userdata(hash, userdata);
   return hash;
