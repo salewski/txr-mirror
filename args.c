@@ -28,7 +28,9 @@
 #include <stddef.h>
 #include <signal.h>
 #include <string.h>
+#include <stdarg.h>
 #include "config.h"
+#include ALLOCA_H
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"
@@ -118,4 +120,91 @@ val args_copy_to_list(struct args *args)
   list_collect_nconc(ptail, args->list);
 
   return out;
+}
+
+void args_for_each(struct args *args,
+                   int (*fn)(val arg, int ix, mem_t *ctx),
+                   mem_t *ctx)
+{
+  int i;
+  val iter;
+
+  for (i = 0; i < args->fill; i++)
+    if (fn(args->arg[i], i, ctx))
+      args->arg[i] = nil;
+
+  for (iter = args->list; iter; iter = cdr(iter), i++)
+    if (fn(car(iter), i, ctx))
+      rplaca(iter, nil);
+}
+
+struct args_bool_key {
+  struct args_bool_key *next;
+  val key;
+  val arg_p;
+  val *store;
+};
+
+struct args_bool_ctx {
+  struct args_bool_key *akl;
+  val *next_arg_store;
+};
+
+static int args_key_check_store(val arg, int ix, mem_t *ctx)
+{
+  struct args_bool_ctx *acx = coerce(struct args_bool_ctx *, ctx);
+  struct args_bool_key **pakl, *akl;
+  val *store = 0;
+
+  if (acx->next_arg_store != 0) {
+    *acx->next_arg_store = arg;
+    acx->next_arg_store = 0;
+    return 0;
+  }
+
+  for (pakl = &acx->akl, akl = *pakl;
+       akl != 0;
+       pakl = &akl->next, akl = *pakl)
+  {
+    if (store != 0)
+      *store = arg;
+    if (akl->key == arg) {
+      if (akl->arg_p)
+        acx->next_arg_store = akl->store;
+      else
+        *akl->store = t;
+      *pakl = akl->next;
+    }
+  }
+
+  return 0;
+}
+
+void args_keys_extract_vl(struct args *args, va_list vl)
+{
+  struct args_bool_ctx acx = { 0 };
+
+  for (;;) {
+    val key;
+    struct args_bool_key *nakl;
+    if ((key = va_arg (vl, val)) == nil)
+      break;
+    nakl = coerce(struct args_bool_key *, alloca(sizeof *nakl));
+    nakl->key = key;
+    nakl->arg_p = va_arg (vl, val);
+    nakl->store = va_arg (vl, val *);
+    nakl->next = acx.akl;
+    acx.akl = nakl;
+  }
+
+  if (acx.akl != 0)
+    args_for_each(args, args_key_check_store, coerce(mem_t *, &acx));
+}
+
+void args_keys_extract(struct args *args, ...)
+{
+  va_list vl;
+  va_start (vl, args);
+  args_keys_extract_vl(args, vl);
+  va_end (vl);
 }
