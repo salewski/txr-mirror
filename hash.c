@@ -1062,12 +1062,13 @@ void hash_process_weak(void)
 val hashv(struct args *args)
 {
   val wkeys = nil, wvals = nil, equal = nil, userdata = nil;
-  val hash = (args_keys_extract(args,
-                                weak_keys_k, nil, &wkeys,
-                                weak_vals_k, nil, &wvals,
-                                equal_based_k, nil, &equal,
-                                userdata_k, t, &userdata,
-                                nil),
+  struct args_bool_key akv[] = {
+    { weak_keys_k, nil, &wkeys },
+    { weak_vals_k, nil, &wvals },
+    { equal_based_k, nil, &equal },
+    { userdata_k, t, &userdata }
+  };
+  val hash = (args_keys_extract(args, akv, sizeof akv / sizeof akv[0]),
               make_hash(wkeys, wvals, equal));
   if (userdata)
     set_hash_userdata(hash, userdata);

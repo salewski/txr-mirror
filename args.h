@@ -41,6 +41,12 @@ typedef int arg_index;
   (coerce(struct args *,                                                \
           alloca(offsetof(struct args, arg) + (N)*sizeof (val))))
 
+struct args_bool_key {
+  val key;
+  val arg_p;
+  val *store;
+};
+
 INLINE struct args *args_init_list(struct args *args, cnum argc, val list)
 {
   args->argc = argc;
@@ -189,5 +195,4 @@ val args_copy_to_list(struct args *args);
 void args_for_each(struct args *args,
                    int (*fn)(val arg, int ix, mem_t *ctx),
                    mem_t *ctx);
-void args_keys_extract_vl(struct args *args, va_list);
-void args_keys_extract(struct args *args, ...);
+void args_keys_extract(struct args *args, struct args_bool_key *, int n);

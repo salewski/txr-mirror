@@ -138,23 +138,16 @@ void args_for_each(struct args *args,
       rplaca(iter, nil);
 }
 
-struct args_bool_key {
-  struct args_bool_key *next;
-  val key;
-  val arg_p;
-  val *store;
-};
-
 struct args_bool_ctx {
-  struct args_bool_key *akl;
+  struct args_bool_key *akv;
+  int n;
   val *next_arg_store;
 };
 
 static int args_key_check_store(val arg, int ix, mem_t *ctx)
 {
   struct args_bool_ctx *acx = coerce(struct args_bool_ctx *, ctx);
-  struct args_bool_key **pakl, *akl;
-  val *store = 0;
+  int i, n = acx->n;
 
   if (acx->next_arg_store != 0) {
     *acx->next_arg_store = arg;
@@ -162,49 +155,27 @@ static int args_key_check_store(val arg, int ix, mem_t *ctx)
     return 0;
   }
 
-  for (pakl = &acx->akl, akl = *pakl;
-       akl != 0;
-       pakl = &akl->next, akl = *pakl)
-  {
-    if (store != 0)
-      *store = arg;
+  for (i = 0; i < n; i++) {
+    struct args_bool_key *akl = &acx->akv[i];
     if (akl->key == arg) {
       if (akl->arg_p)
         acx->next_arg_store = akl->store;
       else
         *akl->store = t;
-      *pakl = akl->next;
+      break;
     }
   }
 
   return 0;
 }
 
-void args_keys_extract_vl(struct args *args, va_list vl)
+void args_keys_extract(struct args *args, struct args_bool_key *akv, int n)
 {
-  struct args_bool_ctx acx = { 0 };
-
-  for (;;) {
-    val key;
-    struct args_bool_key *nakl;
-    if ((key = va_arg (vl, val)) == nil)
-      break;
-    nakl = coerce(struct args_bool_key *, alloca(sizeof *nakl));
-    nakl->key = key;
-    nakl->arg_p = va_arg (vl, val);
-    nakl->store = va_arg (vl, val *);
-    nakl->next = acx.akl;
-    acx.akl = nakl;
-  }
-
-  if (acx.akl != 0)
+  if (n > 0) {
+    struct args_bool_ctx acx;
+    acx.akv = akv;
+    acx.n = n;
+    acx.next_arg_store = 0;
     args_for_each(args, args_key_check_store, coerce(mem_t *, &acx));
-}
-
-void args_keys_extract(struct args *args, ...)
-{
-  va_list vl;
-  va_start (vl, args);
-  args_keys_extract_vl(args, vl);
-  va_end (vl);
+  }
 }
