@@ -485,8 +485,10 @@ extern val prog_string;
 
 #if HAVE_ULONGLONG_T
 typedef ulonglong_t alloc_bytes_t;
+#define SIZEOF_ALLOC_BYTES_T SIZEOF_LONGLONG_T
 #else
 typedef unsigned long alloc_bytes_t;
+#define SIZEOF_ALLOC_BYTES_T SIZEOF_LONG
 #endif
 
 extern alloc_bytes_t malloc_bytes;

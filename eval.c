@@ -2696,9 +2696,24 @@ static val op_prof(val form, val env)
   alloc_bytes_t start_mlbytes = malloc_bytes;
   alloc_bytes_t start_gcbytes = gc_bytes;
   val result = eval_progn(rest(form), env, form);
+  alloc_bytes_t delta_mlbytes = malloc_bytes - start_mlbytes;
+  alloc_bytes_t delta_gcbytes = gc_bytes - start_gcbytes;
+#if SIZEOF_ALLOC_BYTES_T > SIZEOF_PTR
+  val dmb = if3(delta_mlbytes <= (alloc_bytes_t) INT_PTR_MAX,
+                unum(delta_mlbytes),
+                logior(ash(unum(delta_mlbytes >> 32), num_fast(32)),
+                       unum(delta_mlbytes & 0xFFFFFFFF)));
+  val dgc = if3(delta_gcbytes <= (alloc_bytes_t) INT_PTR_MAX,
+                unum(delta_gcbytes),
+                logior(ash(unum(delta_gcbytes >> 32), num_fast(32)),
+                       unum(delta_gcbytes & 0xFFFFFFFF)));
+#else
+  val dmb = unum(delta_mlbytes);
+  val dgc = unum(delta_gcbytes);
+#endif
+
   return list(result,
-              num(malloc_bytes - start_mlbytes),
-              num(gc_bytes - start_gcbytes),
+              dmb, dgc,
               trunc(mul(num(clock() - start_time), num_fast(1000)), num_fast(CLOCKS_PER_SEC)),
               nao);
 }
