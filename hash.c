@@ -37,6 +37,7 @@
 #include "lib.h"
 #include "gc.h"
 #include "args.h"
+#include "txr.h"
 #include "signal.h"
 #include "unwind.h"
 #include "stream.h"
@@ -72,7 +73,7 @@ struct hash_iter {
   val cons;
 };
 
-val weak_keys_k, weak_vals_k, equal_based_k, userdata_k;
+val weak_keys_k, weak_vals_k, equal_based_k, eql_based_k, userdata_k;
 
 /*
  * Dynamic lists built up during gc.
@@ -1059,17 +1060,40 @@ void hash_process_weak(void)
   do_iters();
 }
 
+static val equal_based_p(val equal, val eql, val wkeys)
+{
+  if (opt_compat && opt_compat <= 187)
+    return equal;
+
+  if (equal && eql)
+    uw_throwf(error_s,
+              lit("make-hash: mutually exclusive :equal-based and :eql-based"),
+              nao);
+
+  if (wkeys) {
+    if (equal)
+      uw_throwf(error_s,
+                lit("make-hash: mutually exclusive :equal-based and :weak-keys"),
+                nao);
+    else
+      eql = t;
+  }
+
+  return null(eql);
+}
+
 val hashv(struct args *args)
 {
-  val wkeys = nil, wvals = nil, equal = nil, userdata = nil;
+  val wkeys = nil, wvals = nil, equal = nil, eql = nil, userdata = nil;
   struct args_bool_key akv[] = {
     { weak_keys_k, nil, &wkeys },
     { weak_vals_k, nil, &wvals },
     { equal_based_k, nil, &equal },
+    { eql_based_k, nil, &eql },
     { userdata_k, t, &userdata }
   };
   val hash = (args_keys_extract(args, akv, sizeof akv / sizeof akv[0]),
-              make_hash(wkeys, wvals, equal));
+              make_hash(wkeys, wvals, equal_based_p(equal, eql, wkeys)));
   if (userdata)
     set_hash_userdata(hash, userdata);
   return hash;
@@ -1431,6 +1455,7 @@ void hash_init(void)
   weak_keys_k = intern(lit("weak-keys"), keyword_package);
   weak_vals_k = intern(lit("weak-vals"), keyword_package);
   equal_based_k = intern(lit("equal-based"), keyword_package);
+  eql_based_k = intern(lit("eql-based"), keyword_package);
   userdata_k = intern(lit("userdata"), keyword_package);
   val ghu = func_n1(get_hash_userdata);
 

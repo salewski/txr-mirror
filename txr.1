@@ -6851,7 +6851,7 @@ Example:
 
 .cblk
   @; match text into variables a and b, then insert into hash table h
-  @(bind h (hash :equal-based))
+  @(bind h (hash))
   @a:@b
   @(do (set [h a] b))
 .cble
@@ -11293,7 +11293,9 @@ arguments and the key-value pairs. For instance:
 
 where
 .code (:equal-based)
-is the list of construction arguments and the pairs
+indicates that this hash table's keys are treated using
+.code equal
+equality, and
 .code "(a 1)"
 and
 .code "(b 2)"
@@ -11380,6 +11382,7 @@ The first item in the syntax is a list of keywords. These are the same
 keywords as are used when calling the function hash to construct
 a hash table. Allowed keywords are:
 .codn :equal-based ,
+.codn :eql-based ,
 .codn :weak-keys ,
 .codn :weak-values ,
 and
@@ -11392,6 +11395,11 @@ specifies the hash table's user data, which
 can be retrieved using the
 .code hash-userdata
 function.
+The
+.code :equal-based
+and
+.code :eql-based
+keywords are mutually exclusive.
 
 An empty list can be specified as
 .code nil
@@ -17251,7 +17259,7 @@ Two hashes are
 .code equal
 if they use the same equality (both are
 .codn :equal-based ,
-or both are the default
+or both are
 .codn :eql-based ),
 if their associated user data elements are equal (see the function
 .codn hash-userdata ),
@@ -29062,26 +29070,15 @@ function. The first occurrence of each element is retained,
 and the subsequent duplicates of that element, of any, are suppressed,
 such that the order of the elements is otherwise preserved.
 
-The following equivalence holds between
+The
 .code uniq
-and
-.codn unique :
+function is an alias for the one-argument case of
+.codn unique .
+That is to say, this equivalence holds:
 
 .cblk
-  (uniq s) <--> [unique s : :equal-based]
+  (uniq s) <--> (unique s)
 .cble
-
-That is,
-.code uniq
-is like
-.code unique
-with the default
-.meta keyfun
-argument (the
-.code identity
-function) and an
-.codn equal -based
-hash table.
 
 .coNP Function @ unique
 .synb
@@ -29123,13 +29120,7 @@ the internal hash table used by
 .codn unique .
 The arguments are like those of the
 .code hash
-function. In particular, the argument
-.code :equal-based
-causes
-.code unique
-to use
-.code equal
-equality.
+function.
 
 .coNP Function @ tuples
 .synb
@@ -31264,7 +31255,7 @@ The function is then memoized.
 
   (defun ensure-memo (sym)
     (or (gethash %memo% sym)
-        (sethash %memo% sym (hash :equal-based))))
+        (sethash %memo% sym (hash))))
 
   (define-param-expander :memo (param body)
     (let* ((memo-parm [param 0..(posq : param)])
@@ -38987,7 +38978,8 @@ and
 .coNP Functions @ make-hash and @ hash
 .synb
 .mets (make-hash < weak-keys < weak-vals << equal-based )
-.mets (hash {:weak-keys | :weak-vals | :equal-based |
+.mets (hash {:weak-keys | :weak-vals |
+.mets \ \ \ \ \ \  :eql-based | :equal-based |
 .mets \ \ \ \ \ \  :userdata << obj }*)
 .syne
 .desc
@@ -39018,17 +39010,42 @@ It is an error to attempt to construct an
 .codn equal -based
 hash table which has weak keys.
 
-The hash function provides an alternative interface. It accepts optional
-arguments which are keyword symbols. Any combination of the four symbols
+The
+.code hash
+function provides an alternative interface. It accepts optional
+keyword arguments. The supported keyword symbols are:
 .codn :weak-keys ,
 .codn :weak-vals ,
-.code :equal-based
+.codn :equal-based ,
+.code :eql-based
 and
 .code :userdata
-can be specified in any order
-to turn on the corresponding properties in the newly constructed hash table.
-If any of the keywords is not specified, the corresponding property defaults to
-.codn nil .
+which can be specified in any order to turn on the corresponding properties in
+the newly constructed hash table.
+
+Only one of
+.code :equal-based
+and
+.code :eql-based
+may be specified. If specified, then the hash table uses
+.code equal
+or
+.code eql
+equality, respectively, for considering two keys to be the same key.
+If neither is specified, the
+.code hash
+function produces an
+.code :equal-based
+hash table by default.
+
+If
+.code :weak-keys
+is specified, then it automatically implies
+.code :eql-based
+and, therefore,
+.code :equal-based
+may not be specified.
+
 If
 .code :userdata
 is present, it must be followed by an argument value; that value
@@ -62055,6 +62072,39 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 187
+Until \*(TX 187, hash tables constructed by the
+.code hash
+function were based on
+.code eql
+equality by default; the
+.code :equal-based
+keyword argument had to be specified to override this default, and the
+.code :eql-based
+keyword didn't exist. Selecting 187 or lower compatibility restores the
+behavior of
+.code eql
+equality being default, and the
+.code :eql-based
+keyword being unrecognized. This affects all functions which implicitly
+rely on
+.codn hash ,
+those being :
+.codn uniq ,
+.codn unique ,
+and
+.codn group-by .
+In spite of these changes, the printed representation of hash tables continues
+to use the
+.code :equal-based
+keyword to indicate hash tables based on
+.code equal
+and its absence to indicate
+.code eql
+equality. The new
+.code :eql-based
+keyword may be used in hash literals (unless 187 compatibility is
+in effect, in which case it is ignored).
 .IP 184
 A value of 184 or lower switches to the old implementation of the
 .code op

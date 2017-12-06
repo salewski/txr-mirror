@@ -25,7 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern val weak_keys_k, weak_vals_k, equal_based_k;
+extern val weak_keys_k, weak_vals_k, equal_based_k, eql_based_k, userdata_k;
 
 cnum equal_hash(val obj, int *count);
 val make_hash(val weak_keys, val weak_vals, val equal_based);
