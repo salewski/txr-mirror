@@ -51,8 +51,8 @@
                                  val))
                              (if abandoned
                                (sys:trace-leave lex-n :abandoned)))))))
-            (set [sys:*trace-hash* n] prev)
-            (set (symbol-function n) hook)))))))
+            (set (symbol-function n) hook
+                 [sys:*trace-hash* n] prev)))))))
 
 (defun sys:untrace (names)
   (flet ((disable (name-orig name)
