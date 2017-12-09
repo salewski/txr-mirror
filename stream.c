@@ -70,6 +70,7 @@
 #include "txr.h"
 #include "arith.h"
 #include "buf.h"
+#include "struct.h"
 
 /* Adhere to ISO C rules about direction switching on update streams. */
 #ifndef __gnu_linux__
@@ -77,6 +78,11 @@
 #endif
 
 val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
+
+val put_string_s, put_char_s, put_byte_s, get_line_s, get_char_s;
+val get_byte_s, unget_char_s, unget_byte_s, put_buf_s, fill_buf_s;
+val flush_s, seek_s, truncate_s, get_prop_s, set_prop_s;
+val get_error_s, get_error_str_s, clear_error_s, get_fd_s;
 
 val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
 val pprint_flo_format_s, print_base_s, print_circle_s;
@@ -4460,6 +4466,26 @@ void stream_init(void)
   socket_error_s = intern(lit("socket-error"), user_package);
 #endif
 
+  put_string_s = intern(lit("put-string"), user_package);
+  put_char_s = intern(lit("put-char"), user_package);
+  put_byte_s = intern(lit("put-byte"), user_package);
+  get_line_s = intern(lit("get-line"), user_package);
+  get_char_s = intern(lit("get-char"), user_package);
+  get_byte_s = intern(lit("get-byte"), user_package);
+  unget_char_s = intern(lit("unget-char"), user_package);
+  unget_byte_s = intern(lit("unget-byte"), user_package);
+  put_buf_s = intern(lit("put-buf"), user_package);
+  fill_buf_s = intern(lit("fill-buf"), user_package);
+  flush_s = intern(lit("flush"), user_package);
+  seek_s = intern(lit("seek"), user_package);
+  truncate_s = intern(lit("truncate"), user_package);
+  get_prop_s = intern(lit("get-prop"), user_package);
+  set_prop_s = intern(lit("set-prop"), user_package);
+  get_error_s = intern(lit("get-error"), user_package);
+  get_error_str_s = intern(lit("get-error-str"), user_package);
+  clear_error_s = intern(lit("clear-error"), user_package);
+  get_fd_s = intern(lit("get-fd"), user_package);
+
   reg_var(stdin_s = intern(lit("*stdin*"), user_package),
           make_stdio_stream(stdin, lit("stdin")));
   reg_var(stdout_s = intern(lit("*stdout*"), user_package),
@@ -4502,23 +4528,23 @@ void stream_init(void)
   reg_fun(intern(lit("make-strlist-output-stream"), user_package), func_n0(make_strlist_output_stream));
   reg_fun(intern(lit("get-list-from-stream"), user_package), func_n1(get_list_from_stream));
   reg_fun(intern(lit("close-stream"), user_package), func_n2o(close_stream, 1));
-  reg_fun(intern(lit("get-error"), user_package), func_n1(get_error));
-  reg_fun(intern(lit("get-error-str"), user_package), func_n1(get_error_str));
-  reg_fun(intern(lit("clear-error"), user_package), func_n1(clear_error));
-  reg_fun(intern(lit("get-line"), user_package), func_n1o(get_line, 0));
-  reg_fun(intern(lit("get-char"), user_package), func_n1o(get_char, 0));
-  reg_fun(intern(lit("get-byte"), user_package), func_n1o(get_byte, 0));
+  reg_fun(get_error_s, func_n1(get_error));
+  reg_fun(get_error_str_s, func_n1(get_error_str));
+  reg_fun(clear_error_s, func_n1(clear_error));
+  reg_fun(get_line_s, func_n1o(get_line, 0));
+  reg_fun(get_char_s, func_n1o(get_char, 0));
+  reg_fun(get_byte_s, func_n1o(get_byte, 0));
   reg_fun(intern(lit("get-string"), user_package), func_n3o(get_string, 0));
-  reg_fun(intern(lit("put-string"), user_package), func_n2o(put_string, 1));
+  reg_fun(put_string_s, func_n2o(put_string, 1));
   reg_fun(intern(lit("put-line"), user_package), func_n2o(put_line, 0));
-  reg_fun(intern(lit("put-char"), user_package), func_n2o(put_char, 1));
-  reg_fun(intern(lit("put-byte"), user_package), func_n2o(put_byte, 1));
+  reg_fun(put_char_s, func_n2o(put_char, 1));
+  reg_fun(put_byte_s, func_n2o(put_byte, 1));
   reg_fun(intern(lit("put-lines"), user_package), func_n2o(put_lines, 1));
   reg_fun(intern(lit("put-strings"), user_package), func_n2o(put_strings, 1));
-  reg_fun(intern(lit("unget-char"), user_package), func_n2o(unget_char, 1));
-  reg_fun(intern(lit("unget-byte"), user_package), func_n2o(unget_byte, 1));
-  reg_fun(intern(lit("put-buf"), user_package), func_n3o(put_buf, 1));
-  reg_fun(intern(lit("fill-buf"), user_package), func_n3o(fill_buf, 1));
+  reg_fun(unget_char_s, func_n2o(unget_char, 1));
+  reg_fun(unget_byte_s, func_n2o(unget_byte, 1));
+  reg_fun(put_buf_s, func_n3o(put_buf, 1));
+  reg_fun(fill_buf_s, func_n3o(fill_buf, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1o(flush_stream, 0));
   reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));
   reg_fun(intern(lit("truncate-stream"), user_package), func_n2o(truncate_stream, 1));

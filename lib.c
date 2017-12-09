@@ -55,6 +55,7 @@
 #include "unwind.h"
 #include "args.h"
 #include "stream.h"
+#include "strudel.h"
 #include "utf8.h"
 #include "filter.h"
 #include "eval.h"
@@ -11704,6 +11705,7 @@ void init(val *stack_bottom)
   arith_init();
   rand_init();
   stream_init();
+  strudel_init();
 #if HAVE_POSIX_SIGS
   sig_init();
 #endif

@@ -562,6 +562,23 @@ static val doloop_instantiate(val set_fun)
   return nil;
 }
 
+static val stream_wrap_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("stream-wrap"),
+    nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
+static val stream_wrap_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~astream-wrap.tl"), stdlib_path, nao));
+  return nil;
+}
+
 static val op_set_entries(val dlt, val fun)
 {
   val name[] = {
@@ -620,6 +637,7 @@ void lisplib_init(void)
   dlt_register(dl_table, keyparams_instantiate, keyparams_set_entries);
   dlt_register(dl_table, ffi_instantiate, ffi_set_entries);
   dlt_register(dl_table, doloop_instantiate, doloop_set_entries);
+  dlt_register(dl_table, stream_wrap_instantiate, stream_wrap_set_entries);
 
   if (!opt_compat || opt_compat >= 185)
     dlt_register(dl_table, op_instantiate, op_set_entries);

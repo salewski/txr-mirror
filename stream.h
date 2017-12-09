@@ -125,6 +125,11 @@ extern val stdio_stream_s;
 
 extern val stdin_s, stdout_s, stddebug_s, stderr_s, stdnull_s;
 
+extern val put_string_s, put_char_s, put_byte_s, get_line_s, get_char_s;
+extern val get_byte_s, unget_char_s, unget_byte_s, put_buf_s, fill_buf_s;
+extern val close_s, flush_s, seek_s, truncate_s, get_prop_s, set_prop_s;
+extern val get_error_s, get_error_str_s, clear_error_s, get_fd_s;
+
 extern val print_flo_precision_s, print_flo_digits_s, print_flo_format_s;
 extern val pprint_flo_format_s, print_base_s, print_circle_s;
 
