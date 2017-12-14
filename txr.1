@@ -44268,6 +44268,451 @@ to the stream using the
 function. The return value is that of
 .codn put-lines .
 
+.SS* User-Defined Streams
+
+In \*(TL, stream objects aren't structure types, and therefore lie outside of
+the object-oriented programming system. However, \*(TL supports a delegation
+mechanism which allows a structure which provides certain methods to be used as
+a stream.
+
+The function
+.code make-struct-delegate-stream
+takes as an argument the instance of a structure, which is
+referred to as the
+.IR "stream interface object" .
+The function returns a stream object such that when
+stream operations are invoked on this stream, it delegates these
+operations to methods of the stream interface object.
+
+A structure type called
+.code stream-wrap
+is provided, whose instances can serve as stream interface objects.
+This structure has a slot called
+.meta stream
+which holds a stream, and it provides all of the methods required for
+the delegation mechanism used by
+.codn make-struct-delegate-stream .
+This
+.code stream-wrap
+operations simply invoke the ordinary stream operations on the
+.meta stream
+slot. The
+.code stream-wrap
+type can be used as a base class for a derived class which intercepts
+certain operations on a stream (by defining the corresponding methods) while
+allowing other operations to transparently pass to the stream (via the
+base methods inherited from
+.codn stream-wrap ).
+
+.coNP Function @ make-struct-delegate-stream
+.synb
+.mets (make-struct-delegate-stream << object )
+.syne
+.desc
+The
+.code make-struct-delegate-stream
+function returns a stream whose operations depend on the
+.metn object ,
+a stream interface object.
+
+The
+.meta object
+argument must be a structure which implements certain
+subsets of, or all of, the following methods:
+.codn put-string ,
+.codn put-char ,
+.codn put-byte ,
+.codn get-line ,
+.codn get-char ,
+.codn get-byte ,
+.codn unget-char ,
+.codn unget-byte ,
+.codn put-buf ,
+.codn fill-buf ,
+.codn close ,
+.codn flush ,
+.codn seek ,
+.codn truncate ,
+.codn get-prop ,
+.codn set-prop ,
+.codn get-error ,
+.codn get-error-str ,
+.code clear-error
+and
+.codn get-fd .
+
+Implementing
+.code get-prop
+is mandatory, and that method must support the
+.code :name
+property.
+
+Failure to implement some of the other methods will impair the use of certain
+stream operations on the object.
+
+.coNP Method @ put-string
+.synb
+.mets << stream .(put-string str)
+.syne
+.desc
+The
+.code put-string
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code put-string
+stream I/O function.
+
+.coNP Method @ put-char
+.synb
+.mets << stream .(put-char chr)
+.syne
+.desc
+The
+.code put-char
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code put-char
+stream I/O function.
+
+.coNP Method @ put-byte
+.synb
+.mets << stream .(put-byte byte)
+.syne
+.desc
+The
+.code put-byte
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code put-byte
+stream I/O function.
+
+.coNP Method @ get-line
+.synb
+.mets << stream .(get-line)
+.syne
+.desc
+The
+.code get-line
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code get-line
+stream I/O function.
+
+.coNP Method @ get-char
+.synb
+.mets << stream .(get-char)
+.syne
+.desc
+The
+.code get-char
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code get-char
+stream I/O function.
+
+.coNP Method @ get-byte
+.synb
+.mets << stream .(get-byte)
+.syne
+.desc
+The
+.code get-byte
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code get-byte
+stream I/O function.
+
+.coNP Method @ unget-char
+.synb
+.mets << stream .(unget-char chr)
+.syne
+.desc
+The
+.code unget-char
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code unget-char
+stream I/O function.
+
+.coNP Method @ unget-byte
+.synb
+.mets << stream .(unget-byte byte)
+.syne
+.desc
+The
+.code unget-byte
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code unget-byte
+stream I/O function.
+
+.coNP Method @ put-buf
+.synb
+.mets << stream .(put-buf buf pos)
+.syne
+.desc
+The
+.code put-buf
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code put-buf
+stream I/O function.
+
+.coNP Method @ fill-buf
+.synb
+.mets << stream .(fill-buf buf pos)
+.syne
+.desc
+The
+.code fill-buf
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code fill-buf
+stream I/O function.
+
+.coNP Method @ close
+.synb
+.mets << stream .(close offs whence)
+.syne
+.desc
+The
+.code close
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code close-stream
+stream I/O function.
+
+.coNP Method @ flush
+.synb
+.mets << stream .(flush offs whence)
+.syne
+.desc
+The
+.code flush
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code flush-stream
+stream I/O function.
+
+.coNP Method @ seek
+.synb
+.mets << stream .(seek offs whence)
+.syne
+.desc
+The
+.code seek
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code seek-stream
+stream I/O function.
+
+.coNP Method @ truncate
+.synb
+.mets << stream .(truncate len)
+.syne
+.desc
+The
+.code truncate
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code truncate-stream
+stream I/O function.
+
+.coNP Method @ get-prop
+.synb
+.mets << stream .(get-prop sym)
+.syne
+.desc
+The
+.code get-prop
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code get-prop
+stream I/O function.
+
+.coNP Method @ set-prop
+.synb
+.mets << stream .(set-prop sym nval)
+.syne
+.desc
+The
+.code set-prop
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code set-prop
+stream I/O function.
+
+.coNP Method @ get-error
+.synb
+.mets << stream .(get-error)
+.syne
+.desc
+The
+.code get-error
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code get-error
+stream I/O function.
+
+.coNP Method @ get-error-str
+.synb
+.mets << stream .(get-error-str)
+.syne
+.desc
+The
+.code get-error-str
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code get-error-str
+stream I/O function.
+
+.coNP Method @ clear-error
+.synb
+.mets << stream .(clear-error)
+.syne
+.desc
+The
+.code clear-error
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code clear-error
+stream I/O function.
+
+.coNP Method @ get-fd
+.synb
+.mets << stream .(get-fd)
+.syne
+.desc
+The
+.code get-fd
+method is implemented on a stream interface object.
+It should behave in a manner consistent with the
+description of the
+.code fileno
+stream I/O function.
+
+.coNP Structure @ stream-wrap
+.synb
+.mets (defstruct stream-wrap nil
+.mets \ \ stream
+.mets \ \ (:method put-string (me str)
+.mets \ \ \ \ (put-string str me.stream))
+.mets \ \ (:method put-char (me chr)
+.mets \ \ \ \ (put-char chr me.stream))
+.mets \ \ (:method put-byte (me byte)
+.mets \ \ \ \ (put-byte byte me.stream))
+.mets \ \ (:method get-line (me)
+.mets \ \ \ \ (get-line me.stream))
+.mets \ \ (:method get-char (me)
+.mets \ \ \ \ (get-char me.stream))
+.mets \ \ (:method get-byte (me)
+.mets \ \ \ \ (get-byte me.stream))
+.mets \ \ (:method unget-char (me chr)
+.mets \ \ \ \ (unget-char chr me.stream))
+.mets \ \ (:method unget-byte (me byte)
+.mets \ \ \ \ (unget-byte byte me.stream))
+.mets \ \ (:method put-buf (me buf pos)
+.mets \ \ \ \ (put-buf buf pos me.stream))
+.mets \ \ (:method fill-buf (me buf pos)
+.mets \ \ \ \ (fill-buf buf pos me.stream))
+.mets \ \ (:method close (me)
+.mets \ \ \ \ (close-stream me.stream))
+.mets \ \ (:method flush (me)
+.mets \ \ \ \ (flush-stream me.stream))
+.mets \ \ (:method seek (me offs whence)
+.mets \ \ \ \ (seek-stream me.stream offs whence))
+.mets \ \ (:method truncate (me len)
+.mets \ \ \ \ (truncate-stream me.stream len))
+.mets \ \ (:method get-prop (me sym)
+.mets \ \ \ \ (stream-get-prop me.stream sym))
+.mets \ \ (:method set-prop (me sym nval)
+.mets \ \ \ \ (stream-set-prop me.stream sym nval))
+.mets \ \ (:method get-error (me)
+.mets \ \ \ \ (get-error me.stream))
+.mets \ \ (:method get-error-str (me)
+.mets \ \ \ \ (get-error-str me.stream))
+.mets \ \ (:method clear-error (me)
+.mets \ \ \ \ (clear-error me.stream))
+.mets \ \ (:method get-fd (me)
+.mets \ \ \ \ (fileno me.stream)))
+.syne
+.desc
+The
+.code stream-wrap
+class provides a trivial implementation of a stream interface.
+It has a single slot,
+.code stream
+which should be initialized with a stream object.
+Each methods of
+.metn stream-wrap ,
+shown in its entirety in the above Syntax section, simply
+invoke the corresponding stream I/O library functions, passing
+the method arguments, and the
+.code stream
+member to that function, and consequently returning whatever that function
+returns.
+
+Note: the
+.code stream-wrap
+function is intended to useful as an inheritance base. A user-defined
+structure can inherit from
+.code stream-wrap
+and provide its own versions of some of the methods, thereby intercepting
+those operations to customize the behavior.
+
+For instance, a function equivalent to the
+.code record-adapter
+function could be implemented by constructing an object derived from
+.code stream-wrap
+which overrides the behavior of the
+.code get-line
+method, and then using the
+.code make-struct-delegate-stream
+to return a stream based on this object.
+
+.TP* Example:
+.cblk
+   ;;; Implementation of my-record-adapter,
+   ;;; a function resembling
+   ;;; the record-adapter implementation
+
+   (defstruct rec-input stream-wrap
+     regex
+     include-match-p
+
+     ;; get-line overridden to use regex-based
+     ;; extraction using read-until-match
+     (:method get-line (me)
+       (read-until-match me.regex me.stream
+                         me.include-match-p))))
+
+   (defun my-record-adapter (regex stream include-match-p)
+     (let ((recin (new rec-input
+                       stream stream
+                       regex regex
+                       include-match-p include-match-p)))
+      (make-struct-delegate-stream recin)))
+.cble
+
 .SS* Symbols and Packages
 \*(TL has a package system inspired by the salient features of ANSI Common
 Lisp, but substantially simpler.
@@ -55904,6 +56349,7 @@ however, this creates a freshly allocated object on each evaluation.
 The expression
 .code "(cptr-int 0)"
 also produces a null pointer on all platforms where \*(TX is found.
+
 
 .SH* FOREIGN FUNCTION INTERFACE
 
