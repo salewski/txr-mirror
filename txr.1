@@ -56519,10 +56519,10 @@ The in operation has two nuances: the by-value nuance and the
 by-pointer nuance.
 Data passed into a function by value such as function arguments or via
 .code ptr-in
-are subject to the by-value nuance. Updates to these objects themselves
-do not propagate from the Lisp representation to the external representation;
-however, those objects may contain pointers requiring the by-pointer
-nuance of the in operation to be invoked.
+are subject to the by-value nuance. Updates to the foreign representation
+of these objects does not propagate back to the Lisp representation to the
+external representation; however, those objects may contain pointers requiring
+the by-pointer nuance of the in operation of those pointers to be invoked.
 
 .NP* The \fIget\fP operation
 
@@ -56548,8 +56548,9 @@ operation. This operation is like the reverse of the in operation. Like
 that operation, it has a by-value and by-pointer nuance.
 
 For instance, if a callback receives a structure by value, upon return, there
-is no use in reconstructing a new version of the structure; the caller will not
-receive the change. However, if the structure contains pointers to data that
+is no use in reconstructing a new version of the structure from the updated
+Lisp structure; the caller will not receive the change. However, if the
+structure contains pointers to data that
 was updated, by the callback, those changes must materialize. This is achieved
 by triggering the by-value nuance of the structure type's out operation, which
 will recursively invoke the out operation of embedded pointers, which will
