@@ -29382,7 +29382,7 @@ The
 .code head
 and
 .code tail
-members should be regarded as internal variables.
+slots should be regarded as internal variables.
 
 .coNP Function @ build-list
 .synb
@@ -44734,9 +44734,9 @@ Each methods of
 .metn stream-wrap ,
 shown in its entirety in the above Syntax section, simply
 invoke the corresponding stream I/O library functions, passing
-the method arguments, and the
+the method arguments, and the value of the
 .code stream
-member to that function, and consequently returning whatever that function
+slot to that function, and consequently returning whatever that function
 returns.
 
 Note: the
@@ -49245,7 +49245,7 @@ slot holds the original argument list.
 
 The
 .code out-args
-member holds the tail of the argument list consisting of the non-option
+slot holds the tail of the argument list consisting of the non-option
 arguments.
 
 The mechanism by means of which
@@ -52088,7 +52088,7 @@ are special IPv6 parameters corresponding to the
 .code sin6_flowinfo
 and
 .code sin6_scope_id
-members of the
+slots of the
 .code sockaddr_in6
 C language structure. Their meaning and use are beyond the scope of this document.
 
@@ -53302,7 +53302,7 @@ The
 .code set-iflags
 method sets, in the
 .code iflag
-member of the
+slot of the
 .meta termios
 structure, all of the bits which
 are set in the effective mask. That is to say,
@@ -53328,7 +53328,7 @@ The
 .code clear-iflags
 method clears, in the
 .code iflag
-member of the
+slot of the
 .meta termios
 structure, all of the bits which are
 set in the effective mask. That is to say,
@@ -59412,11 +59412,11 @@ type is retrieved which corresponds to the FFI type given by
 A new instance of the Lisp type is instantiated, as if by
 a one-argument call to
 .codn make-struct .
-Next, each member indicated by a
+Next, each slot indicated by a
 .meta slot-sym
 argument is set to the corresponding
 .metn init-value .
-Finally, each member of the struct which is not initialized via
+Finally, each slot of the struct which is not initialized via
 .meta slot-sym
 and
 .meta init-value
