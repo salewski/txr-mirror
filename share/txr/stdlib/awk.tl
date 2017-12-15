@@ -371,6 +371,10 @@
                 (again () '(return-from :awk-rec :awk-again))
                 (next-file () '(return-from :awk-file))
                 (sys:rng (form from-expr to-expr :env e)
+                  ^(sys:rng-impl ,form
+                                 (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
+                                 (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
+                (sys:rng-impl (form from-expr to-expr :env e)
                   (let* ((style (car form))
                          (ix (pinc (qref ,awc nranges)))
                          (rng-temp (gensym))
@@ -435,42 +439,15 @@
                                          (t t))))))
                              (qref ,awc rng-exprs))))
                       rng-temp)))
-                (rng (:form form from-expr to-expr)
-                  ^(sys:rng ,form
-                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
-                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
-                (-rng (:form form from-expr to-expr)
-                  ^(sys:rng ,form
-                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
-                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
-                (rng- (:form form from-expr to-expr)
-                  ^(sys:rng ,form
-                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
-                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
-                (-rng- (:form form from-expr to-expr)
-                  ^(sys:rng ,form
-                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
-                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
-                (--rng (:form form from-expr to-expr)
-                  ^(sys:rng ,form
-                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
-                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
-                (--rng- (:form form from-expr to-expr)
-                  ^(sys:rng ,form
-                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
-                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
-                (rng+ (:form form from-expr to-expr)
-                  ^(sys:rng ,form
-                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
-                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
-                (-rng+ (:form form from-expr to-expr)
-                  ^(sys:rng ,form
-                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
-                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
-                (--rng+ (:form form from-expr to-expr)
-                  ^(sys:rng ,form
-                            (sys:awk-test ,from-expr ,(qref ,awc rng-rec-temp))
-                            (sys:awk-test ,to-expr ,(qref ,awc rng-rec-temp))))
+                (rng (:form form from-expr to-expr) ^(sys:rng ,form ,from-expr ,to-expr))
+                (-rng (:form form from-expr to-expr) ^(sys:rng ,form ,from-expr ,to-expr))
+                (rng- (:form form from-expr to-expr) ^(sys:rng ,form ,from-expr ,to-expr))
+                (-rng- (:form form from-expr to-expr) ^(sys:rng ,form ,from-expr ,to-expr))
+                (--rng (:form form from-expr to-expr) ^(sys:rng ,form ,from-expr ,to-expr))
+                (--rng- (:form form from-expr to-expr) ^(sys:rng ,form ,from-expr ,to-expr))
+                (rng+ (:form form from-expr to-expr) ^(sys:rng ,form ,from-expr ,to-expr))
+                (-rng+ (:form form from-expr to-expr) ^(sys:rng ,form ,from-expr ,to-expr))
+                (--rng+ (:form form from-expr to-expr) ^(sys:rng ,form ,from-expr ,to-expr))
                 (ff (. opip-args)
                   ^(symacrolet ((f (rslot ,',aws-sym 'fields 'f-to-rec)))
                      (set f [(opip ,*opip-args) f])))
