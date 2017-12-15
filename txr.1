@@ -37344,17 +37344,28 @@ returns whatever value
 .meta receive-fun
 returns.
 
-When the continuation function is called (thereby resuming the captured
-continuation), inside that resumed continuation, the
+Resuming a continuation is done by invoking the continuation function.
+When this happens, the entire continuation context is restored by re-creating
+its captured evaluation frames on top of the current stack. Inside the
+continuation, the
 .code sys:capture-cont
-function appears to return.  Its return value is the argument
-which was passed to the continuation function.  The continuation function
-appears suspended while the resumed continuation executes.
-If the resumed continuation context terminates normally (by terminating
-the continuation's delimiting block named by
-.metn name )
-the continuation function terminates, and yields the value which emerged
-from the terminated block.
+function call which captured the continuation now appears to return,
+and yields a value. That value is precisely the value which was just
+passed to the continuation function moments ago.
+
+The resumed continuation can terminate in one of three ways. Firstly, it can
+simply keep executing until it discards all of its evaluation frames below the
+delimiting block, and then allows that block to terminate naturally by
+evaluating the last form contained in the block.  Secondly, can use
+.code return-from
+against its delimiting block to explicitly abandon all evaluations in between
+and terminate that block. Or it may perform
+a non-local control transfer past the delimited block somewhere into the
+evaluation frames of the caller. In the first two cases, the termination
+of the block turns into an ordinary return from the continuation function, and
+the result value of the terminated block becomes the return value of that
+function call.  In the last case, the call of the continuation function is
+abandoned and unwinding continues through the caller.
 
 If the symbol
 .code sys:cont-poison
@@ -37374,18 +37385,74 @@ the continuation results in an error exception being thrown.
 After releasing the buffer, the function returns
 .codn nil .
 
-.TP* Note:
+.TP* Notes:
 
 The continuation function may be used any time after it is produced, and may be
 called more than once, regardless of whether the originally captured dynamic
-context is still executing. The underlying continuation stores a copy of the
-captured dynamic context.  Whenever the continuation function is invoked, a
-copy of the captured context is made again and reinstated as if it were a new
-context.  Thus the apparent additional returns from
+context is still executing. The continuation object may be communicated into
+the resumed continuation, which can then use it to call itself, resulting
+in multiple nested resumptions of the same continuation. A delimited
+continuation is effectively a first class function.
+
+The underlying continuation object produced by
 .code sys:capture-cont
-are not actually made in the original context, but a copy. The copy of the
-context is not complete; it only extends up to the enclosing block which was
-named in the capturing call.
+stores a copy of the captured dynamic context.  Whenever the continuation
+function is invoked, a copy of the captured is reinstated as if it were a new
+context.  Thus each apparent return from the
+.code sys:capture-cont
+inside a resumed continuation is not actually made in the original context, but
+in a copy of that context. That context can be resumed multiple times
+sequentially or recursively.
+
+Just like lexical closures, continuations do not copy lexical environments;
+they capture lexical environments by reference. If a continuation modifies
+the values of captured lexical variables, those modifications are visible to
+other resumptions of the same continuation, to other continuations which
+capture the same environment, to lexical closures which capture the same
+environment and to the original context which created that environment, if it
+is still active.
+
+Unlike lexical closures, continuations do capture the local bindings
+of special variables. That is to say, if
+.code *var*
+is a special variable, then a lexical closure created inside a
+.code "(let ((*var* 42)) ...)"
+form will not capture the local re-binding of
+.code *var*
+which holds 42.  When the closure is invoked and accesses
+.codn *var* ,
+it accesses whatever value of
+.code *var*
+is dynamically current, as dictated by the environment which calls the
+closure, rather than the capturing environment.
+
+With continuations, the behavior is different. If a continuation
+is captured inside a
+.code "(let ((*var* 42)) ...)"
+form then it does capture the local binding. This is regardless whether
+the delimited prompt of the capture is enclosed in this form, or
+outside of the form.
+The special variable has a binding in a dynamic environment. There is always a
+reference to a current dynamic environment associated with every evaluation
+context, and a continuation captures that reference.  Because it is a
+reference, it means that the binding is shared. That is to say, all
+invocations of all continuations which capture the same dynamic environment in
+which that
+.code "(let ((*var* 42)) ...)"
+binding was made share the same binding; if
+.code *var*
+is modified by assignment, the modification is visible to all those views.
+
+Inside a resumed continuation, a form which binds a special variable such as
+.code "(let ((*var* 42)) ...)"
+may terminate. As expected, this causes the binding to be removed,
+revealing either another local binding of
+.code *var*
+or the global binding. However, this unbinding only affects only that
+that executing continuation; it has no effect inside other instances of the
+same continuation or other continuations which capture the same variable.
+Unbinding isn't a mutation of the dynamic environment, but may be understood
+as merely the restoration of an earlier dynamic environment reference.
 
 .TP* "Example:"
 
