@@ -61693,6 +61693,11 @@ If the Ctrl-D command is invoked while a selection is in effect, then
 instead of deleting the character under the cursor, it deletes the
 selection, and copies it to the clipboard.
 
+Ctrl-D has no effect on the clipboard when visual selection is not in effect.
+
+No other commands which delete text have any effect on the clipboard,
+whether or not selection mode is in effect.
+
 .NP* Clipboard Paste
 
 The Ctrl-Q command ("quote the clipboard") inserts text from the clipboard
@@ -61733,7 +61738,9 @@ When a selection is replaced, nothing is copied to the clipboard.
 .NP* Delete in Selection Mode
 
 In visual mode, it is possible to issue commands which delete text.
-Ctrl-D has special behavior, Visual Cut, described above.
+
+One such command is Ctrl-D. It's special behavior in selection mode,
+Visual Cut, is described above.
 
 The Backspace key and Ctrl-H also have a special behavior in select mode. If
 the cursor is at the rightmost endpoint of the selection, then these commands
@@ -61749,8 +61756,9 @@ and then deletes the word before the selection.
 All other deletion commands such as Ctrl-K simply cancel visual
 selection mode and take their usual effect.
 
-Nothing is copied to the clipboard when deletion commands are used while a
-selection is in effect.
+No deletion command other than Ctrl-D has any effect on the clipboard,
+and Ctrl-D only copies to the clipboard when a selection is being
+deleted.
 
 .SS* Multi-Line Mode
 
