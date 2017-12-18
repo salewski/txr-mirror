@@ -4430,6 +4430,15 @@ again:
                          sym, nao);
       }
 
+      if (insym_ex == rcons_s &&
+          proper_list_p(args_ex) && length(args_ex) == two &&
+          constantp(car(args_ex), menv) &&
+          constantp(cadr(args_ex), menv))
+      {
+        return rlcp(rcons(eval(car(args_ex), menv, form),
+                          eval(cadr(args_ex), menv, form)), form);
+      }
+
       if (insym_ex == insym && args_ex == args) {
         if (form_ex == form)
           return form;
