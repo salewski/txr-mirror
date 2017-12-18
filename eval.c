@@ -5025,6 +5025,44 @@ static val range_star(val from_in, val to_in, val step_in)
   }
 }
 
+static val rlist_fun(val item)
+{
+  if (rangep(item)) {
+    val rto = to(item);
+    return if3(rangep(rto),
+               range(from(item), from(rto), to(rto)),
+               range(from(item), rto, nil));
+  }
+
+  return cons(item, nil);
+}
+
+static val rlist_star_fun(val item)
+{
+  if (rangep(item)) {
+    val rto = to(item);
+    return if3(rangep(rto),
+               range_star(from(item), from(rto), to(rto)),
+               range_star(from(item), rto, nil));
+  }
+
+  return cons(item, nil);
+}
+
+static val rlist(struct args *items)
+{
+  args_decl_list(lists, ARGS_MIN,
+                 lazy_mapcar(func_n1(rlist_fun), args_get_list(items)));
+  return lazy_appendv(lists);
+}
+
+static val rlist_star(struct args *items)
+{
+  args_decl_list(lists, ARGS_MIN,
+                 lazy_mapcar(func_n1(rlist_star_fun), args_get_list(items)));
+  return lazy_appendv(lists);
+}
+
 static val generate_func(val env, val lcons)
 {
   cons_bind (while_pred, gen_fun, env);
@@ -6340,6 +6378,8 @@ void eval_init(void)
 
   reg_fun(intern(lit("range"), user_package), func_n3o(range, 0));
   reg_fun(intern(lit("range*"), user_package), func_n3o(range_star, 0));
+  reg_fun(intern(lit("rlist"), user_package), func_n0v(rlist));
+  reg_fun(intern(lit("rlist*"), user_package), func_n0v(rlist_star));
   reg_fun(generate_s, func_n2(generate));
   reg_fun(intern(lit("giterate"), user_package), func_n3o(giterate, 2));
   reg_fun(intern(lit("ginterate"), user_package), func_n3o(ginterate, 2));

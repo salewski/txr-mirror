@@ -20762,6 +20762,101 @@ might step over the endpoint value, and
 therefore never attain it. In this situation, the sequence also stops, and the
 excess value which surpasses the endpoint is excluded from the sequence.
 
+.coNP Functions @ rlist and @ rlist*
+.synb
+.mets (rlist << item *)
+.mets (rlist* << item *)
+.syne
+.desc
+The
+.code rlist
+("range list") function is useful for producing a list consisting of a mixture
+of discontinuous numeric or character ranges and individual items.
+
+The function returns a lazy list of elements. The items are produced
+by converting the function's successive
+.meta item
+arguments into lists, which are lazily catenated together to form the
+output list.
+
+Each
+.meta item
+is transformed into a list as follows. Any item which is
+.B not
+a range object is trivially turned into a one-element list as if by the
+.cblk
+.meti (list << item *)
+.cble
+expression.
+
+Any item which is a range object, whose
+.code to
+field
+.B isn't
+a range is turned into a lazy list as if by evaluating the
+.cblk
+.meti (range (from << item) (to << item))
+.cble
+expression. Thus for instance the argument
+.code 1..10
+turns into the (lazy) list
+.codn "(1 2 3 4 5 6 7 8 9 10)" .
+
+Any item which is a range object such that its
+.code to
+field is also a range is turned into a lazy  list as if by evaluating the
+.cblk
+.meti (range (from << item) (from (to << item)) (to (to << item)))
+.cble
+expression. Thus for instance the argument expression
+.code 1..10..2
+produces an
+.meta item
+which
+.code rlist
+turns into the lazy list
+.code "(1 3 5 7 9)"
+as if by the call
+.codn "(range 1 10 2)" .
+Note that the expression
+.code 1..10..2
+stands for the expression
+.code "(range 1 (range 10 2))"
+which evaluates to
+.codn "#R(1 #R(10 2))" .
+
+The
+.code "#R(1 #R(10 2))"
+range literal syntax can be passed as an argument to
+.code rlist
+with the same result as
+.codn 1..10..2 .
+
+The
+.code rlist*
+function differs from
+.code rlist
+in one regard: under
+.codn rlist* ,
+the ranges denoted by the range notation exclude the endpoint. That is,
+the ranges are generated as if by the
+.code range*
+function rather than
+.codn range .
+
+Note: it is permissible for
+.meta item
+objects to specify infinite ranges.
+It is also permissible to apply an infinite argument list to
+.codn rlist .
+
+.TP* Examples:
+.cblk
+  (rlist 1 "two" :three)  ->  (1 "two" :three)
+  (rlist 10 15..16 #\ea..#\ed 2) -> (10 15 16 #\ea #\eb #\ec 2)
+  (take 7 (rlist 1 2 5..:)) -> (1 2 5 6 7 8 9)
+.cble
+
 .SS* Ranges
 Ranges are objects that aggregate two values, not unlike
 .code cons
