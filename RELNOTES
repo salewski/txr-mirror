@@ -1,3 +1,44 @@
+                                    TXR 188
+                                   2017-12-19
+
+
+  Features
+
+  - New funtion grade
+    - like grade up/down operators in APL.
+    - returns indices into sequence in sorted order.
+  - New macro feature: lexical macros can decline expansion.
+    - lexical macro can decline to expand by returning original form.
+    - lexical scope is searched outwards to find and try another macro.
+  - Big hash change:
+    - hash function now defauilts to :equal-based.
+    - :eql-based keyword specifies hashing based on eql.
+    - functions which take hash arguments follow suit: group-by, etc.
+  - Streams new feature: structure delegate streams
+    - OOP interface for creating objects that substitute into
+      stream I/O operations.
+    - stream-wrap base implementation for easily wrapping and
+      adapting streams.
+  - New functions rlist and rlist*: express discontinuous ranges easily.
+
+  Bugs
+
+  - append* and mappend*:
+    - fixed unintentional, undocumented destructive behavior
+    - fixed non-termination on infinite lists.
+  - tail function now handles improper lists.
+  - macro expansion bug fixed:
+    - neglect to expand the output of a declined macro
+    - must be treated as a function call or possibly a special operator
+      - either way, may have constituent expressions that
+        need expansion
+  - prof: deal with overflowing performance counters.
+    - we use a 64 bit type if we have it, and convert to bignum
+      if and when required.
+  - trace: fixed spurious "previously traced" warning on methods.
+
+
+
                                     TXR 187
                                    2017-11-18
 
