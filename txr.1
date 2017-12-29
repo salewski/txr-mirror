@@ -11288,13 +11288,13 @@ Hash table literals have two parts: the list of hash construction
 arguments and the key-value pairs. For instance:
 
 .cblk
-   #H((:equal-based) (a 1) (b 2))
+   #H((:eql-based) (a 1) (b 2))
 .cble
 
 where
-.code (:equal-based)
+.code (:eql-based)
 indicates that this hash table's keys are treated using
-.code equal
+.code eql
 equality, and
 .code "(a 1)"
 and
@@ -11306,7 +11306,7 @@ hash:
 
 .cblk
   ;; not supported: splicing across the entire syntax
-  (let ((hash-syntax '((:equal-based) (a 1) (b 2))))
+  (let ((hash-syntax '((:eql-based) (a 1) (b 2))))
     ^#H(,*hash-syntax))
 .cble
 
@@ -11314,7 +11314,7 @@ This is correct:
 
 .cblk
   ;; fine: splicing hash arguments and contents separately
-  (let ((hash-args '(:equal-based))
+  (let ((hash-args '(:eql-based))
         (hash-contents '((a 1) (b 2))))
     ^#H(,hash-args ,*hash-contents))
 .cble
@@ -11840,7 +11840,7 @@ are not supported.
 
 .TP* "Note:"
 Circular notation can span hash table literals. The syntax
-.code "#1=#H(() (#1# #1#))"
+.code "#1=#H((:eql-based) (#1# #1#))"
 denotes an
 .codn eql -based
 hash table which contains one entry, in which that
@@ -11848,7 +11848,7 @@ same table itself is both the key and value. This kind of
 circularity is not supported for
 .codn equal -based
 hash tables. The analogous syntax
-.code "#1=#H((:equal-based) (#1# #1#))"
+.code "#1=#H(() (#1# #1#))"
 produces a hash table in an inconsistent state.
 
 .TP* "Dialect note:"
@@ -62690,6 +62690,25 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 188
+Until \*(TX 188,
+.codn equal -based
+hash tables printed using the notation
+.code "#H((:equal-based ...) ...)"
+whereas
+.codn eql -based
+hash tables simply omitted the
+.code :equal-based
+keyword. Changes were introduced in \*(TX 187 which gave rise to a read/print
+inconsistency with printing behavior. In \*(TX 189, further changes were
+introduced to fix this inconsistency:
+.codn equal -based
+hash tables print without any keyword indicating equality, and
+.codn eql -based
+hash tables print as
+.codn "#H((:eql-based) ...)" .
+If 188 or compatibility is selected, hash tables are printed
+in the old way.
 .IP 187
 Until \*(TX 187, hash tables constructed by the
 .code hash
