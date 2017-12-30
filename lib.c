@@ -9838,10 +9838,12 @@ val refset(val seq, val ind, val newval)
       val lambda_set_meth = maybe_slot(seq, lambda_set_s);
       if (lambda_set_meth)
         return funcall3(lambda_set_meth, seq, ind, newval);
+      type_mismatch(lit("refset: object ~s lacks ~s method"), seq,
+                    lambda_set_s, nao);
     }
     /* fallthrough */
   default:
-    type_mismatch(lit("ref: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("refset: ~s is not a sequence"), seq, nao);
   }
   return newval;
 }
