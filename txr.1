@@ -43888,6 +43888,16 @@ possibility that the expression will be further extended by means of the dot or
 dotdot operators. An explicit end-of-input signal must be given from the
 terminal to terminate the expression.
 
+The special variable
+.code *rec-source-loc*
+controls whether these functions record source location info similarly to
+.codn load .
+Note: if these functions are used to scan data which is evaluated as Lisp code,
+it may be useful to set
+.code *rec-source-loc*
+true in order to obtain better diagnostics. However, source location recording
+incurs a performance and storage penalty.
+
 .coNP Function @ record-adapter
 .synb
 .mets (record-adapter < regex >> [ stream <> [ include-match ]])
@@ -54615,6 +54625,31 @@ The macro expander already performs this transfer. If a macro call form
 has location info, the expander propagates that info to that form's
 expansion. In some situations, it is useful for a macro or other code
 transformer to perform this action explicitly.
+
+.coNP Special variable *rec-source-loc*
+.desc
+The Boolean special variable
+.code *rec-source-loc*
+controls whether the
+.code read
+and
+.code iread
+functions record source location info. The variable is
+.code nil
+by default, so that these functions do not record source location info.
+If it is true, then these functions record source location info.
+
+Regardless of the value of this variable, source location info is
+recorded for Lisp forms which are read from files or streams under the
+.code load
+function or specified on the \*(TX command line. Source location
+info is also always recorded when reading the \*(TX pattern language syntax.
+
+Note: recording and propagating location info incurs a memory and performance
+penalty.  The individual cons cells and certain other literal objects in the
+structure which emerges from the parser are associated with source location
+info via a global weak hash table.
+
 
 .coNP Function @ macro-ancestor
 .synb

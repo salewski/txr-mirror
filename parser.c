@@ -62,6 +62,7 @@
 
 val parser_s, unique_s, circref_s;
 val listener_hist_len_s, listener_multi_line_p_s, listener_sel_inclusive_p_s;
+val rec_source_loc_s;
 val intr_s;
 
 static val stream_parser_hash;
@@ -107,6 +108,7 @@ void parser_common_init(parser_t *p)
 {
   int i;
   yyscan_t yyscan;
+  val rec_source_loc_var = lookup_var(nil, rec_source_loc_s);
 
   p->parser = nil;
   p->lineno = 1;
@@ -128,6 +130,7 @@ void parser_common_init(parser_t *p)
     p->tok_pushback[i].yy_lval.val = 0;
   }
   p->tok_idx = 0;
+  p->rec_source_loc = !nilp(cdr(rec_source_loc_var));
 }
 
 void parser_cleanup(parser_t *p)
@@ -498,8 +501,9 @@ val regex_parse(val string, val error_stream)
   return parser.syntax_tree;
 }
 
-static val lisp_parse_impl(val interactive, val source_in, val error_stream,
-                           val error_return_val, val name_in, val lineno)
+static val lisp_parse_impl(val interactive, val rlcp_p, val source_in,
+                           val error_stream, val error_return_val, val name_in,
+                           val lineno)
 {
   uses_or2;
   val source = default_null_arg(source_in);
@@ -514,6 +518,9 @@ static val lisp_parse_impl(val interactive, val source_in, val error_stream,
   val saved_dyn = dyn_env;
   parser_t *pi = get_parser_impl(parser);
   volatile val parsed = nil;
+
+  if (rlcp_p)
+    pi->rec_source_loc = 1;
 
   uw_simple_catch_begin;
 
@@ -566,14 +573,21 @@ static val lisp_parse_impl(val interactive, val source_in, val error_stream,
 val lisp_parse(val source_in, val error_stream, val error_return_val,
                val name_in, val lineno)
 {
-  return lisp_parse_impl(nil, source_in, error_stream, error_return_val,
+  return lisp_parse_impl(nil, t, source_in, error_stream, error_return_val,
+                         name_in, lineno);
+}
+
+val nread(val source_in, val error_stream, val error_return_val,
+          val name_in, val lineno)
+{
+  return lisp_parse_impl(nil, nil, source_in, error_stream, error_return_val,
                          name_in, lineno);
 }
 
 val iread(val source_in, val error_stream, val error_return_val,
           val name_in, val lineno)
 {
-  return lisp_parse_impl(t, source_in, error_stream, error_return_val,
+  return lisp_parse_impl(t, nil, source_in, error_stream, error_return_val,
                          name_in, lineno);
 }
 
@@ -1310,6 +1324,7 @@ void parse_init(void)
   listener_hist_len_s = intern(lit("*listener-hist-len*"), user_package);
   listener_multi_line_p_s = intern(lit("*listener-multi-line-p*"), user_package);
   listener_sel_inclusive_p_s = intern(lit("*listener-sel-inclusive-p*"), user_package);
+  rec_source_loc_s = intern(lit("*rec-source-loc*"), user_package);
   unique_s = gensym(nil);
   prot1(&stream_parser_hash);
   prot1(&unique_s);
@@ -1318,5 +1333,6 @@ void parse_init(void)
   reg_var(listener_hist_len_s, num_fast(500));
   reg_var(listener_multi_line_p_s, t);
   reg_var(listener_sel_inclusive_p_s, nil);
+  reg_var(rec_source_loc_s, nil);
   reg_fun(circref_s, func_n1(circref));
 }

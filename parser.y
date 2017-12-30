@@ -62,6 +62,7 @@ static val define_transform(parser_t *parser, val define_form);
 static val optimize_text(val text_form);
 static val unquotes_occur(val quoted_form, int level);
 static val rlrec(parser_t *, val form, val line);
+static val rlcp_parser(parser_t *parser, val to, val from);
 static wchar_t char_from_name(const wchar_t *name);
 static val make_expr(parser_t *, val sym, val rest, val lineno);
 static val check_parse_time_action(val spec_rev);
@@ -75,6 +76,7 @@ int yyparse(scanner_t *, parser_t *);
 #endif
 
 #define rl(form, line) rlrec(parser, form, line)
+#define rlc(to, from) rlcp_parser(parser, to, from)
 #define mkexp(sym, rest, lineno) make_expr(parser, sym, rest, lineno)
 #define symhlpr(lexeme, meta_allowed) sym_helper(parser, lexeme, meta_allowed)
 #define yyerr(msg) yyerror(scnr, parser, msg)
@@ -231,21 +233,21 @@ clauses_opt : clauses_rev       { $$ = nreverse($1); }
             | /* empty */       { $$ = nil; }
             ;
 
-clause : all_clause             { $$ = cons($1, nil); rlcp($$, $1); }
-       | some_clause            { $$ = cons($1, nil); rlcp($$, $1); }
-       | none_clause            { $$ = cons($1, nil); rlcp($$, $1); }
-       | maybe_clause           { $$ = cons($1, nil); rlcp($$, $1); }
-       | cases_clause           { $$ = cons($1, nil); rlcp($$, $1); }
-       | block_clause           { $$ = cons($1, nil); rlcp($$, $1); }
-       | choose_clause          { $$ = cons($1, nil); rlcp($$, $1); }
-       | collect_clause         { $$ = cons($1, nil); rlcp($$, $1); }
-       | gather_clause          { $$ = cons($1, nil); rlcp($$, $1); }
+clause : all_clause             { $$ = cons($1, nil); rlc($$, $1); }
+       | some_clause            { $$ = cons($1, nil); rlc($$, $1); }
+       | none_clause            { $$ = cons($1, nil); rlc($$, $1); }
+       | maybe_clause           { $$ = cons($1, nil); rlc($$, $1); }
+       | cases_clause           { $$ = cons($1, nil); rlc($$, $1); }
+       | block_clause           { $$ = cons($1, nil); rlc($$, $1); }
+       | choose_clause          { $$ = cons($1, nil); rlc($$, $1); }
+       | collect_clause         { $$ = cons($1, nil); rlc($$, $1); }
+       | gather_clause          { $$ = cons($1, nil); rlc($$, $1); }
        | define_clause          { $$ = list(define_transform(parser, $1), nao);
-                                  rlcp(car($$), $1);
-                                  rlcp($$, $1); }
-       | try_clause             { $$ = cons($1, nil); rlcp($$, $1); }
-       | if_clause              { $$ = cons($1, nil); rlcp($$, $1); }
-       | output_clause          { $$ = cons($1, nil); rlcp($$, $1); }
+                                  rlc(car($$), $1);
+                                  rlc($$, $1); }
+       | try_clause             { $$ = cons($1, nil); rlc($$, $1); }
+       | if_clause              { $$ = cons($1, nil); rlc($$, $1); }
+       | output_clause          { $$ = cons($1, nil); rlc($$, $1); }
        | line                   { $$ = $1; }
        ;
 
@@ -386,8 +388,8 @@ if_clause : IF n_exprs_opt ')'
             else_clause_opt
             END newl            { if (opt_compat && opt_compat <= 136)
                                   { val xexp = expand_meta($2, nil);
-                                    val req = rlcp(cons(require_s, xexp), $2);
-                                    val iff = rlcp(cons(cons(cons(req, nil), $5), nil), $2);
+                                    val req = rlc(cons(require_s, xexp), $2);
+                                    val iff = rlc(cons(cons(cons(req, nil), $5), nil), $2);
                                     val elifs = $6;
                                     val els = cons($7, nil);
                                     val cases = nappend2(nappend2(iff, elifs), els);
@@ -411,7 +413,7 @@ elif_clauses_opt : ELIF n_exprs_opt ')' newl
                    clauses_opt
                    elif_clauses_opt  { if (opt_compat && opt_compat <= 136)
                                        { val xexp = expand_meta($2, nil);
-                                         val req = rlcp(cons(require_s, xexp), $2);
+                                         val req = rlc(cons(require_s, xexp), $2);
                                          $$ = cons(cons(cons(req, nil), $5), $6); }
                                        else
                                        { val expr = expand(car($2), nil);
@@ -439,9 +441,9 @@ elems_opt : elems               { $$ = $1; }
           ;
 
 elems : elem                    { $$ = cons($1, nil);
-                                  rlcp($$, $1); }
+                                  rlc($$, $1); }
       | elem elems              { $$ = cons($1, $2);
-                                  rlcp($$, $1); }
+                                  rlc($$, $1); }
       ;
 
 
@@ -459,17 +461,17 @@ text : TEXT                     { $$ = rl(string_own($1), num(parser->lineno)); 
      | EMPTY                    { $$ = null_string; }
      ;
 
-texts : text %prec LOW          { $$ = rlcp(cons($1, nil), $1); }
-      | text texts              { $$ = rlcp(cons($1, $2), $2); }
+texts : text %prec LOW          { $$ = rlc(cons($1, nil), $1); }
+      | text texts              { $$ = rlc(cons($1, $2), $2); }
       ;
 
-elem : texts                    { $$ = rlcp(cons(text_s, $1), $1);
-                                  $$ = rlcp(optimize_text($$), $$); }
+elem : texts                    { $$ = rlc(cons(text_s, $1), $1);
+                                  $$ = rlc(optimize_text($$), $$); }
      | var                      { $$ = rl($1, num(parser->lineno));
                                   match_reg_elem($$); }
      | list                     { val sym = first($1);
                                   if (sym ==  do_s || sym == require_s)
-                                    $$ = rlcp(cons(sym,
+                                    $$ = rlc(cons(sym,
                                                    expand_forms(rest($1), nil)),
                                               $1);
                                   else
@@ -712,7 +714,7 @@ o_elem : TEXT                   { $$ = string_own($1);
        | SPACE                  { $$ = string_own($1);
                                   rl($$, num(parser->lineno)); }
        | o_var                  { $$ = $1; }
-       | compound               { $$ = rlcp(list(expr_s,
+       | compound               { $$ = rlc(list(expr_s,
                                                  expand($1, nil), nao), $1); }
        | rep_elem               { $$ = $1; }
        ;
@@ -783,8 +785,8 @@ var_op : '*'                    { $$ = list(t, nao); }
 
 modifiers : NUMBER              { $$ = cons($1, nil); }
           | regex               { $$ = cons($1, nil);
-                                  rlcp($$, $1); }
-          | compound            { $$ = rlcp(cons(expand_meta($1, nil),
+                                  rlc($$, $1); }
+          | compound            { $$ = rlc(cons(expand_meta($1, nil),
                                                  nil), $1); }
           ;
 
@@ -815,10 +817,10 @@ q_var : '@' '{' n_expr n_exprs_opt '}'
 
 
 vector : '#' list               { if (unquotes_occur($2, 0))
-                                    $$ = rlcp(cons(vector_lit_s,
+                                    $$ = rlc(cons(vector_lit_s,
                                                    cons($2, nil)), $2);
                                   else
-                                    $$ = rlcp(vec_list($2), $2); }
+                                    $$ = rlc(vec_list($2), $2); }
        | '#' error              { $$ = nil;
                                   yybadtok(yychar, lit("unassigned/reserved # notation")); }
        ;
@@ -858,7 +860,7 @@ list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
                                   if (ur == a)
                                     $$ = $3;
                                   else
-                                    $$ = rlcp(cons(ur, cdr($3)), ur); }
+                                    $$ = rlc(cons(ur, cdr($3)), ur); }
      | '(' ')'                  { $$ = nil; }
      | '(' LAMBDOT n_expr ')'   { $$ = $3; }
      | '(' CONSDOT n_expr ')'   { $$ = $3; }
@@ -890,7 +892,7 @@ compound : list
          | meta
          ;
 
-exprs : n_exprs                 { $$ = rlcp(expand_meta($1, nil), $1); }
+exprs : n_exprs                 { $$ = rlc(expand_meta($1, nil), $1); }
       ;
 
 exprs_opt : exprs               { $$ = $1; }
@@ -905,8 +907,8 @@ n_exprs : r_exprs               { val term_atom = pop(&$1);
         ;
 
 r_exprs : n_expr                { val exprs = cons($1, nil);
-                                  rlcp(exprs, $1);
-                                  $$ = rlcp(cons(unique_s, exprs), exprs); }
+                                  rlc(exprs, $1);
+                                  $$ = rlc(cons(unique_s, exprs), exprs); }
         | HASH_SEMI             { parser->circ_suppress = 1; }
           n_expr                { parser->circ_suppress = 0;
                                   $$ = cons(unique_s, nil); }
@@ -918,7 +920,7 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
                                   val exprs = cdr($1);
                                   misplaced_consing_dot_check(scnr, term_atom_cons);
                                   rplacd(term_atom_cons,
-                                         rlcp(cons($2, exprs), or2($2, exprs)));
+                                         rlc(cons($2, exprs), or2($2, exprs)));
                                   $$ = term_atom_cons; }
         | r_exprs CONSDOT n_expr
                                 { val term_atom_cons = $1;
@@ -926,7 +928,7 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
                                   rplaca(term_atom_cons, $3);
                                   $$ = $1; }
         | WSPLICE wordslit      { $$ = cons(unique_s, nreverse(rl($2, num($1))));
-                                  rlcp($$, cdr($$)); }
+                                  rlc($$, cdr($$)); }
         | r_exprs WSPLICE
           wordslit              { val term_atom_cons = $1;
                                   val exprs = cdr($1);
@@ -936,7 +938,7 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
                                                   exprs));
                                   $$ = term_atom_cons; }
         | QWSPLICE wordsqlit    { $$ = cons(unique_s, rl($2, num($1)));
-                                  rlcp($$, cdr($$)); }
+                                  rlc($$, cdr($$)); }
         | r_exprs QWSPLICE
           wordsqlit             { val term_atom_cons = $1;
                                   val exprs = cdr($1);
@@ -963,13 +965,13 @@ i_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | WORDS wordslit         { $$ = rl($2, num($1)); }
        | QWORDS wordsqlit       { $$ = rl(cons(quasilist_s, $2), num($1)); }
        | buflit                 { $$ = $1; }
-       | '\'' i_dot_expr        { $$ = rl(rlcp(list(quote_s, $2, nao), $2),
+       | '\'' i_dot_expr        { $$ = rl(rlc(list(quote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | '^' i_dot_expr         { $$ = rl(rlcp(list(sys_qquote_s, $2, nao), $2),
+       | '^' i_dot_expr         { $$ = rl(rlc(list(sys_qquote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | ',' i_dot_expr         { $$ = rl(rlcp(list(sys_unquote_s, $2, nao), $2),
+       | ',' i_dot_expr         { $$ = rl(rlc(list(sys_unquote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | SPLICE i_dot_expr      { $$ = rl(rlcp(list(sys_splice_s, $2, nao), $2),
+       | SPLICE i_dot_expr      { $$ = rl(rlc(list(sys_splice_s, $2, nao), $2),
                                           num(parser->lineno)); }
        | HASH_N_EQUALS          { parser_circ_def(parser, $1, unique_s); }
          i_dot_expr             { parser_circ_def(parser, $1, $3);
@@ -996,40 +998,40 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | WORDS wordslit         { $$ = rl($2, num($1)); }
        | QWORDS wordsqlit       { $$ = rl(cons(quasilist_s, $2), num($1)); }
        | buflit                 { $$ = $1; }
-       | '\'' n_dot_expr        { $$ = rl(rlcp(list(quote_s, $2, nao), $2),
+       | '\'' n_dot_expr        { $$ = rl(rlc(list(quote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | '^' n_dot_expr         { $$ = rl(rlcp(list(sys_qquote_s, $2, nao), $2),
+       | '^' n_dot_expr         { $$ = rl(rlc(list(sys_qquote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | ',' n_dot_expr         { $$ = rl(rlcp(list(sys_unquote_s, $2, nao), $2),
+       | ',' n_dot_expr         { $$ = rl(rlc(list(sys_unquote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | SPLICE n_dot_expr      { $$ = rl(rlcp(list(sys_splice_s, $2, nao), $2),
+       | SPLICE n_dot_expr      { $$ = rl(rlc(list(sys_splice_s, $2, nao), $2),
                                           num(parser->lineno)); }
        | n_expr DOTDOT n_expr   { uses_or2;
-                                  $$ = rlcp(list(rcons_s, $1, $3, nao),
+                                  $$ = rlc(list(rcons_s, $1, $3, nao),
                                             or2($1, $3)); }
        | n_expr DOTDOT '.' n_expr
                                 { uses_or2;
-                                  $$ = rlcp(list(rcons_s, $1,
+                                  $$ = rlc(list(rcons_s, $1,
                                                           uref_helper(parser, $4),
                                                           nao),
                                             or2($1, $4)); }
        | n_expr OLD_DOTDOT n_expr
                                 { uses_or2;
-                                  $$ = rlcp(list(rcons_s, $1, $3, nao),
+                                  $$ = rlc(list(rcons_s, $1, $3, nao),
                                             or2($1, $3)); }
        | n_expr OLD_DOTDOT '.' n_expr
                                 { uses_or2;
-                                  $$ = rlcp(list(rcons_s, $1,
+                                  $$ = rlc(list(rcons_s, $1,
                                                           uref_helper(parser, $4),
                                                           nao),
                                             or2($1, $4)); }
        | n_expr '.' n_expr      { uses_or2;
                                   if (consp($3) && car($3) == qref_s) {
-                                    rplacd($3, rlcp(cons($1, cdr($3)), $1));
+                                    rplacd($3, rlc(cons($1, cdr($3)), $1));
                                     rl($$, num(parser->lineno));
                                     $$ = $3;
                                   } else {
-                                    $$ = rl(rlcp(list(qref_s, $1, $3, nao),
+                                    $$ = rl(rlc(list(qref_s, $1, $3, nao),
                                                  or2($1, $3)),
                                                  num(parser->lineno));
                                   } }
@@ -1177,7 +1179,7 @@ chrlit : HASH_BACKSLASH SYMTOK  { wchar_t ch;
 
 quasilit : '`' '`'              { $$ = null_string; }
          | '`' quasi_items '`'  { $$ = cons(quasi_s, $2);
-                                  rlcp($$, $2);
+                                  rlc($$, $2);
                                   rl($$, num(parser->lineno)); }
          | '`' error            { $$ = nil;
                                   yybadtok(yychar, lit("quasistring")); }
@@ -1213,7 +1215,7 @@ restlitchar : LITCHAR                   { $$ = mkstring(one, chr($1)); }
 wordslit : '"'                  { $$ = nil; }
          | ' ' wordslit         { $$ = $2; }
          | litchars wordslit    { val word = $1;
-                                  $$ = rlcp(cons(word, $2), $1); }
+                                  $$ = rlc(cons(word, $2), $1); }
          | error                { $$ = nil;
                                   yybadtok(yychar, lit("word list")); }
          ;
@@ -1221,11 +1223,11 @@ wordslit : '"'                  { $$ = nil; }
 wordsqlit : '`'                  { $$ = nil; }
           | ' ' wordsqlit        { $$ = $2; }
           | quasi_items '`'      { val qword = cons(quasi_s, $1);
-                                   $$ = rlcp(cons(qword, nil), $1); }
+                                   $$ = rlc(cons(qword, nil), $1); }
           | quasi_items ' '
             wordsqlit
                                  { val qword = cons(quasi_s, $1);
-                                   $$ = rlcp(cons(qword, $3), $1); }
+                                   $$ = rlc(cons(qword, $3), $1); }
           ;
 
 buflit : HASH_B_QUOTE '\''               { $$ = make_buf(zero, nil, nil);
@@ -1626,8 +1628,16 @@ val rlset(val form, val info)
 
 val rlrec(parser_t *parser, val form, val line)
 {
-  rlset(form, cons(line, parser->name));
+  if (parser->rec_source_loc)
+    rlset(form, cons(line, parser->name));
   return form;
+}
+
+val rlcp_parser(parser_t *parser, val to, val from)
+{
+  if (parser->rec_source_loc)
+    rlset(to, source_loc(from));
+  return to;
 }
 
 static val rlcp_tree_rec(val to, val from, struct circ_stack *up)
@@ -1690,8 +1700,8 @@ static val make_expr(parser_t *parser, val sym, val rest, val lineno)
   val ret = cons(expr_s, cons(expand(expr, nil), nil));
 
   if (rest) {
-    rlcp(expr, rest);
-    rlcp(ret, rest);
+    rlc(expr, rest);
+    rlc(ret, rest);
   } else {
     rl(expr, lineno);
     rl(ret, lineno);
@@ -1737,7 +1747,7 @@ static val uref_helper(parser_t *parser, val expr)
   if (consp(expr) && car(expr) == qref_s) {
     return rplaca(expr, uref_s);
   } else {
-    return rl(rlcp(list(uref_s, expr, nao), expr), num(parser->lineno));
+    return rl(rlc(list(uref_s, expr, nao), expr), num(parser->lineno));
   }
 }
 
@@ -1840,6 +1850,7 @@ int parse_once(val stream, val name, parser_t *parser)
 
   parser->stream = stream;
   parser->name = name;
+  parser->rec_source_loc = 1;
 
   uw_catch_begin(cons(error_s, nil), esym, eobj);
 

@@ -62,6 +62,7 @@ struct parser {
   struct yy_token recent_tok;
   struct yy_token tok_pushback[4];
   int tok_idx;
+  int rec_source_loc;
 };
 #endif
 
@@ -71,6 +72,7 @@ extern const int have_yydebug;
 extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
 extern val parser_s, unique_s, circref_s;
+extern val rec_source_loc_s;
 void yydebug_onoff(int);
 void yyerror(scanner_t *scanner, parser_t *, const char *s);
 void yyerr(scanner_t *scanner, const char *s);
@@ -114,6 +116,8 @@ val rlcp_tree(val to, val from);
 val regex_parse(val string, val error_stream);
 val lisp_parse(val source_in, val error_stream, val error_return_val,
                val name_in, val lineno);
+val nread(val source_in, val error_stream, val error_return_val,
+          val name_in, val lineno);
 val iread(val source_in, val error_stream, val error_return_val,
           val name_in, val lineno);
 val read_eval_stream(val stream, val error_stream);

@@ -6085,8 +6085,8 @@ void eval_init(void)
   reg_var(intern(lit("*param-macro*"), user_package), pm_table);
 
   reg_fun(intern(lit("eval"), user_package), func_n2o(eval_intrinsic, 1));
-  reg_fun(intern(lit("lisp-parse"), user_package), func_n5o(lisp_parse, 0));
-  reg_fun(intern(lit("read"), user_package), func_n5o(lisp_parse, 0));
+  reg_fun(intern(lit("lisp-parse"), user_package), func_n5o(nread, 0));
+  reg_fun(intern(lit("read"), user_package), func_n5o(nread, 0));
   reg_fun(intern(lit("iread"), user_package), func_n5o(iread, 0));
   reg_fun(intern(lit("load"), user_package), func_n1(load));
   reg_var(load_path_s, nil);
