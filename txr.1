@@ -25477,6 +25477,14 @@ The return value of
 .code lambda-set
 is ignored.
 
+Note: the
+.code lambda-set
+method is also used by the
+.code rplaca
+function, if no
+.code rplaca
+method exists.
+
 .TP* Example
 
 The following defines a structure with a single instance
@@ -25603,6 +25611,64 @@ method should return
 if the object is considered to denote an empty sequence. Otherwise it
 should either return that object itself, or else return the sequence which
 that object represents.
+
+.coNP Methods @ rplaca and @ rplacd
+.synb
+.mets << object .(rplaca << new-car-value )
+.mets << object .(rplacd << new-cdr-value )
+.syne
+.desc
+If a structure type defines the methods
+.code rplaca
+and
+.code rplacd
+then, respectively, the
+.code rplaca
+and
+.code rplacd
+functions will use these methods if they are applied to instances of that type.
+
+That is to say, when the function call
+.cblk
+.meti (rplaca < o << v )
+.cble
+is evaluated, and
+.meta o
+is a structure type, the function inquires whether
+.meta o
+supports a
+.code rplaca
+method. If so, then, effectively,
+.cblk
+.meti << o . (rplaca << v)
+.cble
+is invoked. The return value of this method call is ignored;
+.code rplaca
+returns
+.metn o .
+The analogous requirements apply to
+.code rplacd
+in relation to the
+.code rplacd
+method.
+
+Note: if the
+.code rplaca
+method doesn't exist, the
+.code rplaca
+function falls back on trying to store
+.meta new-car-value
+by means of the structure type's
+.code lambda-set
+method, using an index of zero. That is to say, if the type has no
+.code rplaca
+method, but does have a
+.code lambda-set
+method, then
+.cblk
+.meti << o . (lambda-set 0 << v)
+.cble
+is invoked.
 
 .coNP Function @ from-list
 .synb

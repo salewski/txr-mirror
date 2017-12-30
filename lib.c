@@ -109,6 +109,7 @@ val query_error_s, file_error_s, process_error_s, syntax_error_s;
 val timeout_error_s, system_error_s, alloc_error_s;
 val warning_s, defr_warning_s, restart_s, continue_s;
 val gensym_counter_s, nullify_s, from_list_s, lambda_set_s, length_s;
+val rplaca_s, rplacd_s;
 
 val nothrow_k, args_k, colon_k, auto_k, fun_k;
 val wrap_k, reflect_k;
@@ -432,6 +433,24 @@ val rplaca(val cons, val new_car)
     refset(cons, zero, new_car);
     return cons;
   default:
+    if (structp(cons)) {
+      {
+        val rplaca_meth = maybe_slot(cons, rplaca_s);
+        if (rplaca_meth) {
+          (void) funcall2(rplaca_meth, cons, new_car);
+          return cons;
+        }
+      }
+      {
+        val lambda_set_meth = maybe_slot(cons, lambda_set_s);
+        if (lambda_set_meth) {
+          (void) funcall3(lambda_set_meth, cons, zero, new_car);
+          return cons;
+        }
+      }
+      type_mismatch(lit("rplaca: ~s lacks ~s or ~s method"),
+                    cons, rplaca_s, lambda_set_s, nao);
+    }
     type_mismatch(lit("rplaca: cannot modify ~s"), cons, nao);
   }
 }
@@ -451,6 +470,17 @@ val rplacd(val cons, val new_cdr)
     replace(cons, new_cdr, one, t);
     return cons;
   default:
+    if (structp(cons)) {
+      {
+        val rplacd_meth = maybe_slot(cons, rplacd_s);
+        if (rplacd_meth) {
+          (void) funcall2(rplacd_meth, cons, new_cdr);
+          return cons;
+        }
+      }
+      replace(cons, new_cdr, one, t);
+      return cons;
+    }
     type_mismatch(lit("rplacd: cannot modify ~s"), cons, nao);
   }
 }
@@ -10521,6 +10551,8 @@ static void obj_init(void)
   from_list_s = intern(lit("from-list"), user_package);
   lambda_set_s = intern(lit("lambda-set"), user_package);
   length_s = intern(lit("length"), user_package);
+  rplaca_s = intern(lit("rplaca"), user_package);
+  rplacd_s = intern(lit("rplacd"), user_package);
 
   args_k = intern(lit("args"), keyword_package);
   nothrow_k = intern(lit("nothrow"), keyword_package);

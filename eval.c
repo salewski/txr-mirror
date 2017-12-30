@@ -5847,8 +5847,8 @@ void eval_init(void)
   reg_fun(intern(lit("lcons-fun"), user_package), func_n1(lcons_fun));
   reg_fun(car_s, car_f);
   reg_fun(cdr_s, cdr_f);
-  reg_fun(intern(lit("rplaca"), user_package), func_n2(rplaca));
-  reg_fun(intern(lit("rplacd"), user_package), func_n2(rplacd));
+  reg_fun(rplaca_s, func_n2(rplaca));
+  reg_fun(rplacd_s, func_n2(rplacd));
   reg_fun(intern(lit("rplaca"), system_package), func_n2(sys_rplaca));
   reg_fun(intern(lit("rplacd"), system_package), func_n2(sys_rplacd));
   reg_fun(intern(lit("first"), user_package), func_n1(car));
