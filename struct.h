@@ -28,6 +28,7 @@
 extern val struct_type_s, meth_s, print_s, make_struct_lit_s;
 extern val init_k, postinit_k;
 extern val slot_s, static_slot_s;
+extern struct cobj_ops struct_inst_ops;
 val make_struct_type(val name, val super,
                      val static_slots, val slots,
                      val static_initfun, val initfun, val boactor,
@@ -74,4 +75,5 @@ val slot_types(val slot);
 val static_slot_types(val slot);
 val slot_type_reg(val slot, val strct);
 val static_slot_type_reg(val slot, val strct);
+INLINE int obj_struct_p(val obj) { return obj->co.ops == &struct_inst_ops; }
 void struct_init(void);

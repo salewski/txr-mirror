@@ -302,7 +302,7 @@ seq_info_t seq_info(val obj)
       ret.kind = SEQ_HASHLIKE;
     } else if (cls == carray_s) {
       ret.kind = SEQ_VECLIKE;
-    } else if (structp(cls)) {
+    } else if (obj_struct_p(cls)) {
       if (maybe_slot(obj, length_s))
         ret.kind = SEQ_VECLIKE;
       if (maybe_slot(obj, car_s))
@@ -380,7 +380,7 @@ val car(val cons)
       return nil;
     return chr_str(cons, zero);
   case COBJ:
-    if (structp(cons))
+    if (obj_struct_p(cons))
       return funcall1(slot(cons, car_s), cons);
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
@@ -411,7 +411,7 @@ val cdr(val cons)
       return nil;
     return sub(cons, one, t);
   case COBJ:
-    if (structp(cons))
+    if (obj_struct_p(cons))
       return funcall1(slot(cons, cdr_s), cons);
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
@@ -813,7 +813,7 @@ val make_like(val list, val thatobj)
         return cat_str(list, nil);
       break;
     case COBJ:
-      if (structp(thatobj)) {
+      if (obj_struct_p(thatobj)) {
         val from_list_meth = maybe_slot(thatobj, from_list_s);
         if (from_list_meth)
           return funcall1(from_list_meth, list);
@@ -882,7 +882,7 @@ val nullify(val seq)
   case VEC:
     return if3(length_vec(seq) != zero, seq, nil);
   case COBJ:
-    if (structp(seq)) {
+    if (obj_struct_p(seq)) {
       val nullify_meth = maybe_slot(seq, nullify_s);
       if (nullify_meth)
         return funcall1(nullify_meth, seq);
@@ -6133,7 +6133,7 @@ val generic_funcall(val fun, struct args *args_in)
       }
     } else if (fun->co.cls == carray_s) {
       goto carray;
-    } else if (structp(fun)) {
+    } else if (obj_struct_p(fun)) {
       fun = method(fun, lambda_s);
       break;
     }
@@ -9705,7 +9705,7 @@ val copy(val seq)
       return make_random_state(seq, nil);
     if (seq->co.cls == carray_s)
       return copy_carray(seq);
-    if (structp(seq))
+    if (obj_struct_p(seq))
       return copy_struct(seq);
     /* fallthrough */
   default:
@@ -9739,7 +9739,7 @@ val length(val seq)
       return hash_count(seq);
     if (seq->co.cls == carray_s)
       return length_carray(seq);
-    if (structp(seq)) {
+    if (obj_struct_p(seq)) {
       val length_meth = maybe_slot(seq, length_s);
 
       if (length_meth)
@@ -9776,7 +9776,7 @@ val empty(val seq)
   case COBJ:
     if (seq->co.cls == hash_s)
       return eq(hash_count(seq), zero);
-    if (structp(seq)) {
+    if (obj_struct_p(seq)) {
       val length_meth = maybe_slot(seq, length_s);
       val nullify_meth = if2(nilp(length_meth), maybe_slot(seq, nullify_s));
       if (length_meth)
@@ -9822,7 +9822,7 @@ val ref(val seq, val ind)
       return gethash(seq, ind);
     if (seq->co.cls == carray_s)
       return carray_ref(seq, ind);
-    if (structp(seq)) {
+    if (obj_struct_p(seq)) {
       val lambda_meth = maybe_slot(seq, lambda_s);
       if (lambda_meth)
         return funcall2(lambda_meth, seq, ind);
@@ -9864,7 +9864,7 @@ val refset(val seq, val ind, val newval)
       return sethash(seq, ind, newval);
     if (seq->co.cls == carray_s)
       return carray_refset(seq, ind, newval);
-    if (structp(seq)) {
+    if (obj_struct_p(seq)) {
       val lambda_set_meth = maybe_slot(seq, lambda_set_s);
       if (lambda_set_meth)
         return funcall3(lambda_set_meth, seq, ind, newval);
@@ -9924,7 +9924,7 @@ val dwim_set(val place_p, val seq, varg vargs)
 
         return seq;
       }
-      if (structp(seq)) {
+      if (obj_struct_p(seq)) {
         (void) funcall(method_args(seq, lambda_set_s, vargs));
         return seq;
       }
@@ -9979,7 +9979,7 @@ val dwim_del(val place_p, val seq, val ind_range)
       (void) remhash(seq, ind_range);
       return seq;
     }
-    if (structp(seq))
+    if (obj_struct_p(seq))
       uw_throwf(error_s, lit("index/range delete: not supported for structs"),
                 nao);
   default:
@@ -11149,7 +11149,7 @@ tail:
       }
       obj = get_hash_userdata(obj);
       goto tail;
-    } else if (structp(obj)) {
+    } else if (obj_struct_p(obj)) {
       val stype = struct_type(obj);
       val iter;
 

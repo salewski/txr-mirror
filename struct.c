@@ -102,7 +102,6 @@ static val static_slot_type_hash;
 
 static val struct_type_finalize(val obj);
 static_forward(struct cobj_ops struct_type_ops);
-static_forward(struct cobj_ops struct_inst_ops);
 
 static val make_struct_type_compat(val name, val super, val slots,
                                    val initfun, val boactor);
@@ -1636,7 +1635,7 @@ static_def(struct cobj_ops struct_type_ops =
            cobj_ops_init(eq, struct_type_print, struct_type_destroy,
                          struct_type_mark, cobj_eq_hash_op))
 
-static_def(struct cobj_ops struct_inst_ops =
-           cobj_ops_init_ex(struct_inst_equal, struct_inst_print,
-                            cobj_destroy_free_op, struct_inst_mark,
-                            struct_inst_hash, struct_inst_equalsub))
+struct cobj_ops struct_inst_ops =
+  cobj_ops_init_ex(struct_inst_equal, struct_inst_print,
+                   cobj_destroy_free_op, struct_inst_mark,
+                   struct_inst_hash, struct_inst_equalsub);
