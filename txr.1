@@ -25961,6 +25961,32 @@ is a
 object, then the function behaves like
 .codn carray-sub .
 
+If
+.meta sequence
+is a structure, it must support the
+.code lambda
+method. The
+.code sub
+operation is transformed into a call to the
+.code lambda
+method according to the following equivalence:
+
+.cblk
+  (sub o from to) <--> o.(lambda (rcons from to))
+  (sub o : to)    <--> o.(lambda (rcons : to))
+  (sub o from)    <--> o.(lambda (rcons from :))
+  (sub o)         <--> o.(lambda (rcons : :))
+.cble
+
+That is to say, the
+.meta from
+and
+.code to
+arguments are converted to range object. If either argument
+is missing, the symbol
+.code :
+is used for the corresponding element of the range.
+
 When a
 .code sub
 form is used as a syntactic place, that place denotes a slice of
@@ -26106,6 +26132,61 @@ object, then
 .code replace
 behaves like
 .codn carray-replace .
+
+If
+.meta sequence
+is a structure, then the structure must support the
+.code lambda-set
+method. The
+.code replace
+operation is translated into a call of the
+.code lambda-set
+method according to the following equivalences:
+
+.cblk
+  (replace o items from to)
+  <--> o.(lambda-set (rcons from to) items)
+
+  (replace o items index-list)
+  <--> o.(lambda-set index-list items)
+.cble
+
+Thus, the
+.meta from
+and
+.meta to
+arguments are converted to single range object,
+whereas an
+.meta index-list
+is passed as-is.
+It is an error if a
+.code to
+argument is given, and
+.code from
+is a list; the situation is diagnosed. If either
+.code from
+or
+.code to
+are omitted, the range object contains the
+.code :
+symbol in the corresponding place:
+
+.cblk
+  (replace o items from)
+  <--> o.(lambda-set (rcons from :) items)
+
+  (replace o items : to)
+  <--> o.(lambda-set (rcons : to) items)
+
+  (replace o items)
+  <--> o.(lambda-set (rcons : :) items)
+.cble
+
+It is the responsibility of the object's
+.code lambda-set
+method to implement semantics consistent with the
+description of
+.codn replace .
 
 .coNP Function @ take
 .synb

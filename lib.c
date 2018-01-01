@@ -7235,6 +7235,29 @@ val replace_vec(val vec_in, val items, val from, val to)
   return vec_in;
 }
 
+static val replace_obj(val obj, val items, val from, val to)
+{
+  val self = lit("replace");
+  val lambda_set_meth = maybe_slot(obj, lambda_set_s);
+
+  if (!lambda_set_meth)
+    uw_throwf(error_s, lit("~a: object ~s lacks ~s method"),
+              self, obj, lambda_set_s, nao);
+
+  if (listp(from)) {
+    if (!missingp(to))
+      uw_throwf(error_s,
+                lit("~a: to-arg not applicable when from-arg is a list"),
+                self, nao);
+
+    (void) funcall3(slot(obj, lambda_set_s), obj, from, items);
+  } else {
+    (void) funcall3(slot(obj, lambda_set_s), obj, rcons(from, to), items);
+  }
+
+  return obj;
+}
+
 val cat_vec(val list)
 {
   ucnum total = 0;
@@ -9793,11 +9816,6 @@ val sub(val seq, val from, val to)
   switch (type(seq)) {
   case NIL:
     return nil;
-  case COBJ:
-    if (seq->co.cls == carray_s)
-      return carray_sub(seq, from, to);
-    seq = nullify(seq);
-    /* fallthrough */
   case CONS:
   case LCONS:
     return sub_list(seq, from, to);
@@ -9807,6 +9825,17 @@ val sub(val seq, val from, val to)
     return sub_str(seq, from, to);
   case VEC:
     return sub_vec(seq, from, to);
+  case COBJ:
+    if (seq->co.cls == carray_s)
+      return carray_sub(seq, from, to);
+    if (structp(seq)) {
+      val lambda_meth = maybe_slot(seq, lambda_s);
+      if (lambda_meth)
+        return funcall2(lambda_meth, seq, rcons(from, to));
+      seq = nullify(seq);
+      return sub_list(seq, from, to);
+    }
+    /* fallthrough */
   default:
     type_mismatch(lit("sub: ~s is not a sequence"), seq, nao);
   }
@@ -9894,6 +9923,8 @@ val replace(val seq, val items, val from, val to)
   case COBJ:
     if (seq->co.cls == carray_s)
       return carray_replace(seq, items, from, to);
+    if (obj_struct_p(seq))
+      return replace_obj(seq, items, from, to);
     /* fallthrough */
   default:
     type_mismatch(lit("replace: ~s is not a sequence"), seq, nao);
