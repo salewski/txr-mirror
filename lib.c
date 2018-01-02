@@ -308,7 +308,7 @@ seq_info_t seq_info(val obj)
       if (maybe_slot(obj, car_s))
         ret.kind = SEQ_LISTLIKE;
       else
-      ret.kind = SEQ_NOTSEQ;
+        ret.kind = SEQ_NOTSEQ;
     } else {
       ret.kind = SEQ_NOTSEQ;
     }
