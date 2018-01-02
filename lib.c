@@ -677,16 +677,23 @@ val lastcons(val list)
 
 val last(val seq, val n)
 {
-  if (null_or_missing_p(n)) {
-    if (listp(seq))
-      return lastcons(seq);
-    return sub(seq, negone, t);
-  } else {
-    if (listp(seq))
-      return nthlast(n, seq);
-    return if3(plusp(n),
-               sub(seq, neg(n), t),
-               sub(seq, t, t));
+  seq_info_t si = seq_info(seq);
+
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_LISTLIKE:
+    return if3(null_or_missing_p(n),
+               lastcons(seq),
+               nthlast(n, seq));
+  case SEQ_VECLIKE:
+    return if3(null_or_missing_p(n),
+               sub(seq, negone, t),
+               if3(plusp(n),
+                   sub(seq, neg(n), t),
+                   sub(seq, t, t)));
+  default:
+    uw_throwf(error_s, lit("last: ~s isn't a sequence"), seq, nao);
   }
 }
 
