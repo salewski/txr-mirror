@@ -4706,7 +4706,7 @@ static val mappendv(val fun, struct args *lists)
           return make_like(out, list_orig);
         }
         atail = list_collect(atail, car(list));
-        deref(car_l(iter)) = cdr(list);
+        rplaca(iter, cdr(list));
       }
 
       otail = list_collect_append(otail, apply(fun, z(args)));
@@ -4801,7 +4801,7 @@ static val mapdov(val fun, struct args *lists)
           return nil;
         }
         atail = list_collect(atail, car(list));
-        deref(car_l(iter)) = cdr(list);
+        rplaca(iter, cdr(list));
       }
 
       apply(fun, z(args));

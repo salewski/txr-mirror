@@ -344,8 +344,8 @@ static val hash_equal_op(val left, val right)
       free_conses = loc;
     } else {
       ncons = or2(pop(&free_conses), cons(nil, nil));
-      set(car_l(ncons), lcell);
-      set(cdr_l(ncons), pending);
+      rplaca(ncons, lcell);
+      rplaca(ncons, pending);
       pending = ncons;
     }
 
@@ -363,8 +363,8 @@ static val hash_equal_op(val left, val right)
       free_conses = loc;
     } else {
       ncons = or2(pop(&free_conses), cons(nil, nil));
-      set(car_l(ncons), rcell);
-      set(cdr_l(ncons), pending);
+      rplaca(ncons, rcell);
+      rplaca(ncons, pending);
       pending = ncons;
     }
   }

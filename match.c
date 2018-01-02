@@ -255,7 +255,7 @@ static val dest_set(val spec, val bindings, val pattern, val value)
 {
   if (bindable(pattern)) {
     val existing = tx_lookup_var_ubc(pattern, bindings, spec);
-    set(cdr_l(existing), value);
+    rplacd(existing, value);
   } else if (consp(pattern)) {
     if (first(pattern) == var_s) {
       uw_throwf(query_error_s,
@@ -3007,7 +3007,7 @@ static val v_gather(match_files_ctx *c)
                  match_files(mf_spec(*c, nested_spec)));
 
       if (!success) {
-        deref(cdr_l(iter)) = nil;
+        rplacd(iter, nil);
         ptail = list_collect_nconc(ptail, iter);
       } else if (success == t) {
         c->bindings = new_bindings;
@@ -3403,7 +3403,7 @@ static val v_collect(match_files_ctx *c)
 
           c->data = new_data;
           c->data_lineno = new_line;
-          deref(car_l(success)) = nil;
+          rplaca(success, nil);
         } else {
           debuglf(specline, lit("~s consumed entire file"), op_sym, nao);
           c->data = nil;
@@ -3497,7 +3497,7 @@ static val v_flatten(match_files_ctx *c)
                 lit("flatten: ~s is not a bindable symbol"), sym, nao);
     } else {
       val existing = tx_lookup_var_ubc(sym, c->bindings, first_spec);
-      set(cdr_l(existing), flatten(cdr(existing)));
+      rplacd(existing, flatten(cdr(existing)));
     }
   }
 
@@ -3655,7 +3655,7 @@ static val v_cat(match_files_ctx *c)
     val existing = tx_lookup_var_ubc(sym, c->bindings, first_spec);
     val sep = if3(sep_form, tleval_144(specline, sep_form, c->bindings),
                   lit(" "));
-    set(cdr_l(existing), cat_str(flatten(cdr(existing)), sep));
+    rplacd(existing, cat_str(flatten(cdr(existing)), sep));
   }
 
   return next_spec_k;
@@ -3743,9 +3743,9 @@ static val v_output(match_files_ctx *c)
 
         if (existing) {
           if (append) {
-            set(cdr_l(existing), append2(flatten(cdr(existing)), list_out));
+            rplacd(existing, append2(flatten(cdr(existing)), list_out));
           } else {
-            set(cdr_l(existing), list_out);
+            rplacd(existing, list_out);
           }
         } else {
           c->bindings = acons(into_var, list_out, c->bindings);
@@ -4052,7 +4052,7 @@ static val v_filter(match_files_ctx *c)
   for (; vars; vars = cdr(vars)) {
     val var = car(vars);
     val existing = tx_lookup_var_ubc(var, c->bindings, first_spec);
-    set(cdr_l(existing), filter_string_tree(filter, cdr(existing)));
+    rplacd(existing, filter_string_tree(filter, cdr(existing)));
   }
 
   uw_env_end;

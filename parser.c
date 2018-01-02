@@ -173,7 +173,7 @@ static val ensure_parser(val stream)
   val pars = cdr(cell);
   if (pars)
     return pars;
-  return set(cdr_l(cell), parser(stream, one));
+  return sys_rplacd(cell, parser(stream, one));
 }
 
 static void pushback_token(parser_t *p, struct yy_token *tok)

@@ -1104,7 +1104,7 @@ val nreverse(val in)
 
       while (in) {
         val temp = cdr(in);
-        set(cdr_l(in), rev);
+        rplacd(in, rev);
         rev = in;
         in = temp;
       }
@@ -7803,7 +7803,7 @@ val acons_new(val key, val value, val list)
   val existing = assoc(key, list);
 
   if (existing) {
-    set(cdr_l(existing), value);
+    rplacd(existing, value);
     return list;
   } else {
     return cons(cons(key, value), list);
@@ -7832,7 +7832,7 @@ val aconsql_new(val key, val value, val list)
   val existing = assql(key, list);
 
   if (existing) {
-    set(cdr_l(existing), value);
+    rplacd(existing, value);
     return list;
   } else {
     return cons(cons(key, value), list);
@@ -8207,8 +8207,8 @@ static val sort_list(val list, val lessfun, val keyfun)
          may contain mixtures of old and new objects, and
          so we could be reversing a newer->older pointer
          relationship. */
-      set(cdr_l(cons2), list);
-      deref(cdr_l(list)) = nil;
+      rplacd(cons2, list);
+      rplacd(list, nil);
       return cons2;
     } else {
       return list;
@@ -8224,7 +8224,7 @@ static val sort_list(val list, val lessfun, val keyfun)
       ; /* empty */
 
     list2 = cdr(bisect);
-    deref(cdr_l(bisect)) = nil;
+    rplacd(bisect, nil);
 
     return merge(sort_list(list, lessfun, keyfun),
                  sort_list(list2, lessfun, keyfun),

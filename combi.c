@@ -359,7 +359,7 @@ static void comb_gen_fun_common(val state)
     val curr = first(iter);
     val curr_rest = rest(curr);
     if (curr_rest != prev && consp(curr_rest)) {
-      set(car_l(iter), curr_rest);
+      rplaca(iter, curr_rest);
       return;
     } else if (rest(iter)) {
       val next = second(iter);
@@ -367,11 +367,11 @@ static void comb_gen_fun_common(val state)
       val next_rest_rest = rest(next_rest);
       prev = curr;
       if (next_rest != curr && consp(next_rest_rest))
-        prev = set(car_l(iter), next_rest_rest);
+        prev = sys_rplaca(iter, next_rest_rest);
     }
   }
 
-  deref(car_l(state)) = nil;
+  rplaca(state, nil);
 }
 
 static val comb_list_gen_fun(val state)
@@ -520,16 +520,16 @@ static void rcomb_gen_fun_common(val state)
     if (consp(curr_rest)) {
       val jter;
       for (jter = state; jter != next; jter = cdr(jter))
-        set(car_l(jter), curr_rest);
+        rplaca(jter, curr_rest);
       return;
     } else if (next) {
       val next = second(iter);
       if (curr != next)
-        set(car_l(iter), rest(next));
+        rplaca(iter, rest(next));
     }
   }
 
-  deref(car_l(state)) = nil;
+  rplaca(state, nil);
 }
 
 static val rcomb_list_gen_fun(val state)
