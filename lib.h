@@ -537,7 +537,7 @@ val listref(val list, val ind);
 loc listref_l(val list, val ind);
 loc tail(val cons);
 loc term(loc head);
-loc lastcons(val list);
+val lastcons(val list);
 val last(val list, val n);
 val nthlast(val pos, val list);
 val nthcdr(val pos, val list);

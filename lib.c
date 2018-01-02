@@ -664,26 +664,22 @@ loc term(loc head)
   return head;
 }
 
-loc lastcons(val list)
+val lastcons(val list)
 {
-  loc ret = nulloc;
-
+  val ret;
   gc_hint(list);
 
-  while (consp(cdr(list))) {
-    ret = cdr_l(list);
-    list = deref(ret);
-  }
+  for (ret = nil; consp(list); list = cdr(list))
+    ret = list;
+
   return ret;
 }
 
 val last(val seq, val n)
 {
   if (null_or_missing_p(n)) {
-    if (listp(seq)) {
-      loc p = lastcons(seq);
-      return nullocp(p) ? seq : deref(p);
-    }
+    if (listp(seq))
+      return lastcons(seq);
     return sub(seq, negone, t);
   } else {
     if (listp(seq))
