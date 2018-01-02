@@ -302,7 +302,7 @@ seq_info_t seq_info(val obj)
       ret.kind = SEQ_HASHLIKE;
     } else if (cls == carray_s) {
       ret.kind = SEQ_VECLIKE;
-    } else if (obj_struct_p(cls)) {
+    } else if (obj_struct_p(obj)) {
       if (maybe_slot(obj, length_s))
         ret.kind = SEQ_VECLIKE;
       if (maybe_slot(obj, car_s))
