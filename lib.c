@@ -380,8 +380,18 @@ val car(val cons)
       return nil;
     return chr_str(cons, zero);
   case COBJ:
-    if (obj_struct_p(cons))
-      return funcall1(slot(cons, car_s), cons);
+    if (obj_struct_p(cons)) {
+      {
+        val car_meth = maybe_slot(cons, car_s);
+        if (car_meth)
+          return funcall1(car_meth, cons);
+      }
+      {
+        val lambda_meth = maybe_slot(cons, lambda_s);
+        if (lambda_meth)
+          return funcall2(lambda_meth, cons, zero);
+      }
+    }
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
@@ -411,8 +421,18 @@ val cdr(val cons)
       return nil;
     return sub(cons, one, t);
   case COBJ:
-    if (obj_struct_p(cons))
-      return funcall1(slot(cons, cdr_s), cons);
+    if (obj_struct_p(cons)) {
+      {
+        val cdr_meth = maybe_slot(cons, cdr_s);
+        if (cdr_meth)
+          return funcall1(cdr_meth, cons);
+      }
+      {
+        val lambda_meth = maybe_slot(cons, lambda_s);
+        if (lambda_meth)
+          return funcall2(lambda_meth, cons, rcons(one, t));
+      }
+    }
   default:
     type_mismatch(lit("~s is not a cons"), cons, nao);
   }
