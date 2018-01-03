@@ -748,13 +748,6 @@ val butlastn(val n, val list)
   return ldiff(list, tail);
 }
 
-loc ltail(loc cons)
-{
-  while (cdr(deref(cons)))
-    cons = cdr_l(deref(cons));
-  return cons;
-}
-
 val pop(val *plist)
 {
   val ret = car(*plist);

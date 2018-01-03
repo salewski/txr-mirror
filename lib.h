@@ -543,7 +543,6 @@ val nthlast(val pos, val list);
 val nthcdr(val pos, val list);
 val nth(val pos, val list);
 val butlastn(val n, val list);
-loc ltail(loc cons);
 val pop(val *plist);
 val upop(val *plist, val *pundo);
 val rcyc_pop(val *plist);
