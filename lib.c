@@ -726,7 +726,7 @@ val nthcdr(val pos, val list)
 
   gc_hint(list);
 
-  while (n-- > 0)
+  while (list && n-- > 0)
     list = cdr(list);
 
   return list;
