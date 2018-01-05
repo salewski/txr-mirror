@@ -393,7 +393,7 @@ val car(val cons)
       }
     }
   default:
-    type_mismatch(lit("~s is not a cons"), cons, nao);
+    type_mismatch(lit("car: ~s is not a cons"), cons, nao);
   }
 }
 
@@ -434,7 +434,7 @@ val cdr(val cons)
       }
     }
   default:
-    type_mismatch(lit("~s is not a cons"), cons, nao);
+    type_mismatch(lit("cdr: ~s is not a cons"), cons, nao);
   }
 }
 
