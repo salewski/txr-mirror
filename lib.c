@@ -9895,7 +9895,15 @@ val refset(val seq, val ind, val newval)
   case NIL:
   case CONS:
   case LCONS:
-    return set(listref_l(seq, ind), newval);
+  list:
+    {
+      val nthcons = nthcdr(ind, seq);
+      if (nilp(nthcons))
+        uw_throwf(error_s, lit("refset: ~s has no assignable location at ~s"),
+                  seq, ind, nao);
+      (void) rplaca(nthcons, newval);
+      return newval;
+    }
   case LIT:
   case STR:
   case LSTR:
@@ -9910,11 +9918,20 @@ val refset(val seq, val ind, val newval)
     if (seq->co.cls == carray_s)
       return carray_refset(seq, ind, newval);
     if (obj_struct_p(seq)) {
-      val lambda_set_meth = maybe_slot(seq, lambda_set_s);
-      if (lambda_set_meth)
-        return funcall3(lambda_set_meth, seq, ind, newval);
-      type_mismatch(lit("refset: object ~s lacks ~s method"), seq,
-                    lambda_set_s, nao);
+      {
+        val lambda_set_meth = maybe_slot(seq, lambda_set_s);
+        if (lambda_set_meth) {
+          (void) funcall3(lambda_set_meth, seq, ind, newval);
+          return newval;
+        }
+      }
+      {
+        val car_meth = maybe_slot(seq, car_s);
+        if (car_meth)
+          goto list;
+      }
+      type_mismatch(lit("refset: object ~s lacks ~s or ~s method"), seq,
+                    lambda_set_s, car_s, nao);
     }
     /* fallthrough */
   default:
@@ -9949,6 +9966,8 @@ val replace(val seq, val items, val from, val to)
 
 val dwim_set(val place_p, val seq, varg vargs)
 {
+  val self = lit("index/range assignment");
+
   switch (type(seq)) {
   case COBJ:
     if (type(seq) == COBJ) {
@@ -9956,10 +9975,10 @@ val dwim_set(val place_p, val seq, varg vargs)
         cnum nva = args_count(vargs);
 
         if (nva < 2)
-          uw_throwf(error_s, lit("sethash: missing required arguments"), nao);
+          goto fewargs;
 
         if (nva > 3)
-            uw_throwf(error_s, lit("sethash: too many arguments"), nao);
+          goto excargs;
 
         if (nva == 2) {
           args_normalize(vargs, 2);
@@ -9972,17 +9991,28 @@ val dwim_set(val place_p, val seq, varg vargs)
         return seq;
       }
       if (obj_struct_p(seq)) {
-        (void) funcall(method_args(seq, lambda_set_s, vargs));
-        return seq;
+        {
+          val lambda_set_meth = maybe_slot(seq, lambda_set_s);
+          if (lambda_set_meth) {
+            (void) funcall(method_args(seq, lambda_set_s, vargs));
+            return seq;
+          }
+        }
+        if (maybe_slot(seq, car_s))
+          goto list;
+        type_mismatch(lit("~a: object ~s lacks "
+                          "~s or ~s method"),
+                      self, seq, lambda_set_s, car_s, nao);
       }
     }
     /* fallthrough */
   default:
+  list:
     {
       cnum index = 0;
       val ind_range, newval;
       if (!args_two_more(vargs, 0))
-        uw_throwf(error_s, lit("index/range assignment: missing required arguments"), nao);
+        goto fewargs;
       ind_range = args_get(vargs, &index);
       newval = args_get(vargs, &index);
 
@@ -10008,7 +10038,11 @@ val dwim_set(val place_p, val seq, varg vargs)
     }
   }
 notplace:
-  uw_throwf(error_s, lit("range assignment: list form must be place"), nao);
+  uw_throwf(error_s, lit("~a: list form must be place"), self, nao);
+fewargs:
+  uw_throwf(error_s, lit("~a: missing required arguments"), self, nao);
+excargs:
+  uw_throwf(error_s, lit("~a: too many arguments"), self, nao);
 }
 
 val dwim_del(val place_p, val seq, val ind_range)
