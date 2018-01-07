@@ -655,8 +655,9 @@ val listref(val list, val ind)
 
 loc tail(val cons)
 {
-  while (consp(cdr(cons)))
-    cons = cdr(cons);
+  val d;
+  for (d = cdr(cons); consp(d); d = cdr(d))
+    cons = d;
   return cdr_l(cons);
 }
 
