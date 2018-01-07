@@ -653,23 +653,6 @@ val listref(val list, val ind)
   return car(list);
 }
 
-loc listref_l(val list, val ind)
-{
-  val olist = list;
-  val oind = ind;
-
-  if (lt(ind, zero))
-    ind = plus(ind, length_list(list));
-
-  for (; gt(ind, zero) && list; ind = minus(ind, one))
-    list = cdr(list);
-  if (ge(ind, zero) && consp(list))
-    return car_l(list);
-
-  uw_throwf(error_s, lit("~s has no assignable location at ~s"),
-            olist, oind,  nao);
-}
-
 loc tail(val cons)
 {
   while (consp(cdr(cons)))

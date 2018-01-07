@@ -534,7 +534,6 @@ val tenth(val cons);
 val conses(val list);
 val lazy_conses(val list);
 val listref(val list, val ind);
-loc listref_l(val list, val ind);
 loc tail(val cons);
 loc term(loc head);
 val lastcons(val list);
