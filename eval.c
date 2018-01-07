@@ -1138,6 +1138,13 @@ static val applyv(val fun, struct args *args)
   return apply_intrinsic(fun, args_get_list(args));
 }
 
+static loc term(loc head)
+{
+  while (consp(deref(head)))
+    head = cdr_l(deref(head));
+  return head;
+}
+
 static val iapply(val fun, struct args *args)
 {
   cnum index = 0;
