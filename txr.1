@@ -17795,15 +17795,40 @@ string, then
 is returned. Otherwise the first character of the string or
 first element of the vector is returned.
 
+.meta object
+may be a structure. The
+.code car
+operation is possible if the object has a
+.code car
+method. If so,
+.code car
+invokes that method and returns whatever the method returns.
+If the structure has no
+.code car
+method, but has a
+.code lambda
+method, then the
+.code car
+function calls that method with one argument, that being
+the integer zero. Whatever the method returns,
+.code car
+returns. If neither method is defined, an error
+exception is thrown.
+
 A
 .code car
-form denotes a valid place when
+form denotes a valid place whenever
 .meta object
-is accessible via
-.codn car ,
-isn't the object
-.codn nil ,
-and is modifiable.
+is a valid argument for the
+.code rplaca
+function. Modifying the place denoted by the form is equivalent to invoking
+.code rplaca
+with
+.meta object
+as the left argument, and the replacement value as the right
+argument. It takes place in the manner given under the description
+.code rplaca
+function, and obeys the same restrictions.
 
 A
 .code car
@@ -17894,17 +17919,52 @@ and
 both result in
 .codn nil .
 
+If
+.meta object
+is a structure, then
+.code cdr
+requires it to support either the
+.code cdr
+method or the
+.code lambda
+method. If both are present,
+.code cdr
+is used. When the
+.code cdr
+function uses the
+.code cdr
+method, it invokes it with no arguments.
+Whatever value the method returns becomes the
+return value of
+.codn cdr .
+When
+.code cdr
+invokes a structure's
+.code lambda
+method, it passes as the argument the range object
+.codn "#R(1 t)" .
+Whatever the
+.code lambda
+method returns becomes the return value of
+.codn cdr .
+
 The invocation syntax of a
 .code cdr
 or
 .code rest
-form is a syntactic place. The place is semantically valid when
+form is a syntactic place.
+The place is semantically correct if
 .meta object
-is accessible via
-.codn cdr ,
-isn't the object
-.codn nil ,
-and is modifiable.
+is a valid argument for the
+.code rplacd
+function. Modifying the place denoted by the form is equivalent to invoking
+.code rplacd
+with
+.meta object
+as the left argument, and the replacement value as the right
+argument. It takes place in the manner given under the description
+.code rplacd
+function, and obeys the same restrictions.
 
 A
 .code cdr
@@ -17969,11 +18029,13 @@ fails and the loop terminates.
 
 .coNP Functions @ rplaca and @ rplacd
 .synb
-.mets (rplaca < cons << new-car-value )
-.mets (rplacd < cons << new-cdr-value )
+.mets (rplaca < object << new-car-value )
+.mets (rplacd < object << new-cdr-value )
 .syne
 .desc
-The
+If
+.code object
+is a cons cell or lazy cons cell, then
 .code rplaca
 and
 .code rplacd
@@ -17981,8 +18043,9 @@ functions assign new values into the
 .code car
 and
 .code cdr
-fields of the cell
-.metn cons .
+fields of the
+.metn object .
+In addition, these functions are meaningful for other kinds of objects also.
 
 Note that, except for the difference in return value,
 .code "(rplaca x y)"
@@ -17992,15 +18055,6 @@ and likewise
 .code "(rplacd x y)"
 can be written as
 .codn "(set (cdr x) y)" .
-
-It is an error if
-.meta cons
-is not a cons or lazy cons. In particular,
-whereas
-.code "(car nil)"
-is correct,
-.code "(rplaca nil ...)"
-is erroneous.
 
 The
 .code rplaca
@@ -18039,6 +18093,40 @@ on an empty string or vector. In this case,
 specifies the contents of the entire string or vector, as if the operation
 were done on a non-empty vector or string, followed by the deletion of the
 first element.
+
+The
+.meta object
+argument may be a structure. In the case of
+.codn rplaca ,
+the structure must have a defined
+.code rplaca
+method or else, failing that, a
+.code lambda-set
+method. The first of these methods which is available, in the given order, is
+used to perform the operation.  Whatever the respective method returns,
+If the
+.code lambda-set
+method is used, it is called with two arguments (in addition to
+.codn object ):
+the integer zero, and
+.metn new-car-value .
+
+In the case of
+.codn rplacd ,
+the structure must have a defined
+.code rplacd
+method or else, failing that, a
+.code lambda-set
+method. The first of these methods which is available, in the given order, is
+used to perform the operation.  Whatever the respective method returns,
+If the
+.code lambda-set
+method is used, it is called with two arguments (in addition to
+.codn object ):
+the range value
+.code "#R(1 t)"
+and
+.metn new-car-value .
 
 .coNP Accessors @, second @, third @, fourth @, fifth @, sixth @, seventh @, eighth @ ninth and @ tenth
 .synb
