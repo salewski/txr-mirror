@@ -22176,17 +22176,20 @@ argument must be a modifiable string.
 
 Direct use of
 .code chr-str
-is equivalent to the DWIM bracket notation except
-that
+is equivalent to the DWIM bracket notation provided that
 .meta str
-must be a string. The following relation holds:
+is a string and
+.meta idx
+an integer. The following relation holds:
 
 .cblk
   (chr-str-set s i c) --> (set [s i] c)
 .cble
 
-since
-.codn "(set [s i] c) <--> (refset s i c)" ,
+Since
+.code "(set [s i] c) <--> (refset s i c)"
+for an integer index
+.codn i ,
 this also holds:
 
 .cblk
@@ -26786,7 +26789,11 @@ The following equivalences hold between
 .code ref
 and
 .codn refset ,
-and the DWIM bracket syntax:
+and the DWIM bracket syntax, provided that
+.meta idx
+is a scalar index and
+.meta seq
+is a sequence object, rather than a hash.
 
 .cblk
   (ref seq idx) <--> [seq idx]
