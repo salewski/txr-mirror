@@ -308,6 +308,9 @@ static val sock_set_entries(val dlt, val fun)
     lit("str-inaddr"), lit("str-in6addr"),
     lit("str-inaddr-net"), lit("str-in6addr-net"),
     lit("open-socket"), lit("open-socket-pair"),
+    lit("sock-bind"), lit("sock-connect"), lit("sock-listen"),
+    lit("sock-accept"), lit("sock-shutdown"), lit("open-socket"),
+    lit("open-socket-pair"), lit("sock-send-timeout"), lit("sock-recv-timeout"),
     nil
   };
   set_dlt_entries(dlt, name, fun);
