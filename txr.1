@@ -26727,19 +26727,46 @@ If
 .meta seq
 is a structure, it supports
 .code ref
-if it has a
+directly if it has a
 .code lambda
 method. The
 .meta index
 argument is passed to that method, and the resulting value is
-returned. Similarly, a structure supports
+returned.
+If a structure lacks a
+.code lambda
+method, but has a
+.code car
+method, then
+.code ref
+treats it as a list, traversing the structure using
+.cod3 car / cdr
+operations. In the absence of support for these operations,
+the function fails with an error exception.
+
+Similarly, a structure supports
 .code refset
-if it has a
+directly if it has a
 .code lambda-set
-method, which is called with
+method. This gets called with
 .meta index
 and
-.metn new-value .
+.meta new-value
+as arguments. Then
+.meta new-value
+is returned.
+If a structure lacks a
+.code lambda-set
+method, then
+.code refset
+treats it as a list, traversing the structure using
+.cod3 car / cdr
+operations, and storing
+.meta new-value
+using
+.codn rplaca .
+In the absence of support for these operations,
+the function fails with an error exception.
 
 The
 .code ref
