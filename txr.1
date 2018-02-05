@@ -22983,6 +22983,69 @@ Note: the dirty flag can be used to support support the caching of values
 derived from an object's slots. The derived values don't have to be
 re-computed while an object remains clean.
 
+.NP* Equality Substitution
+
+In object-based or object-oriented programming, sometimes it is necessary for a
+new data type to provide its own notion of equality: its own requirements for
+when two distinct instances of the type are considered equal. Furthermore,
+types sometimes have to implement their own notion, also, of inequality: the
+requirements for the manner in which one instance is considered lesser or
+greater than another.
+
+\*(TL structures implement a concept called
+.IR "equality substitution"
+which provides a simple, unified way for the implementor of an object to
+encode the requirements for both equality and inequality.
+Equality substitution allows for objects to be used as keys in a hash
+table according to the custom equality, without the programmer being
+burdened with the responsibility of developing a custom hashing function.
+
+An object participates in equality substitution by implementing the
+.code equal
+method. The
+.code equal
+method takes no arguments other than the object itself. It returns
+a representative value which is used in place of that object
+for the purposes of
+.code equal
+comparison.
+
+Whenever an object which supports equality substitution is used as an argument
+of any of the functions
+.codn equal ,
+.codn nequal ,
+.codn greater ,
+.codn less ,
+.codn gequal ,
+.code lequal
+or
+.codn hash-equal ,
+the
+.code equal
+method of that object is invoked, and the return value of that method
+is taken in place of that object.
+
+The same is true if an object which supports equality substitution is used as a
+key in an
+.code :equal-based
+hash table.
+
+The substitution is applied repeatedly: if the return value of the object's
+.code equal
+method is an object which itself supports equality substitution,
+than that returned object's method is invoked on that object
+to fetch its equality substitute. This repeats as many times as necessary
+until an object is determined which isn't a structure that supports
+equality substitution.
+
+Once the equality substitute is determined, then the given function proceeds
+with the replacement object. Thus for example
+.code equal
+compares the replacement object in place of the original, and an
+.code :equal-based
+hash table uses the replacement object as the key for the purposes of
+hashing and comparison.
+
 .coNP Macro @ defstruct
 .synb
 .mets (defstruct >> { name | >> ( name << arg *)} < super
