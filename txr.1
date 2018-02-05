@@ -16109,10 +16109,10 @@ argument is used for macro-expanding
 
 Currently,
 .code constantp
-returns true for any form, which, after macro-expansion is a compound
-form with the symbol
+returns true for any form which, after macro-expansion, is any of
+the following: a compound form with the symbol
 .code quote
-in its first position, a non-symbolic atom, or one of the symbols
+in its first position; a non-symbolic atom; or one of the symbols
 which evaluate to themselves and cannot be bound as variables.
 These symbols are the keyword symbols, and the symbols
 .code t
