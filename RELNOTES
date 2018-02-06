@@ -1,3 +1,36 @@
+                                    TXR 189
+                                   2018-02-06
+
+
+  Features
+
+  - read an iread no longer record source code location info
+    unconditionally
+    - now controlled by new *rec-source-loc* special variable.
+
+  - OOP:
+    - better abstract sequence support:
+       - new: special methods rplaca and rplacd.
+       - sub and replace function now redirect to lambda and
+         lambda set methods.
+       - car and cdr fall back on lambda method now if
+         object has no car or cdr method.
+       - refset defined for objects that have car method.
+
+  Bugs
+
+  - Fixed regression in read-print consistency of hash tables.
+  - Fixed bug in sequence classification logic that caused
+    objects to be reported as non-sequences.
+  - Fixed nthcdr continuing to iterate up to n even after
+    end of list reached.
+  - Fixed neglected autoload registration for socket functions.
+  - Fixed bug in source location recording, causing errors in
+    code to be rported against incorrect file names and line
+    numbers.
+
+
+
                                     TXR 188
                                    2017-12-19
 
