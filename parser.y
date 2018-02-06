@@ -1617,12 +1617,30 @@ val expand_meta(val form, val menv)
   }
 }
 
+static val rlviable(val form)
+{
+  switch (type(form)) {
+  case NIL:
+  case LIT:
+  case CHR:
+  case NUM:
+  case SYM:
+  case BGNUM:
+  case FLNUM:
+    return nil;
+  default:
+    return t;
+  }
+}
+
 val rlset(val form, val info)
 {
-  val cell = gethash_c(form_to_ln_hash, form, nulloc);
-  loc place = cdr_l(cell);
-  if (nilp(deref(place)))
-    set(place, info);
+  if (rlviable(form)) {
+    val cell = gethash_c(form_to_ln_hash, form, nulloc);
+    loc place = cdr_l(cell);
+    if (nilp(deref(place)))
+      set(place, info);
+  }
   return form;
 }
 
