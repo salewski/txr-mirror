@@ -58,6 +58,12 @@ void set_dlt_entries(val dlt, val *name, val fun)
   }
 }
 
+static void intern_only(val *name)
+{
+  for (; *name; name++)
+    intern(*name, user_package);
+}
+
 static val place_set_entries(val dlt, val fun)
 {
   val name[] = {
@@ -313,7 +319,13 @@ static val sock_set_entries(val dlt, val fun)
     lit("open-socket-pair"), lit("sock-send-timeout"), lit("sock-recv-timeout"),
     nil
   };
+  val name_noload[] = {
+    lit("family"), lit("addr"), lit("port"), lit("flow-info"),
+    lit("scope-id"), lit("path"), lit("flags"), lit("socktype"),
+    lit("protocol"), lit("canonname"), nil
+  };
   set_dlt_entries(dlt, name, fun);
+  intern_only(name_noload);
   return nil;
 }
 
@@ -373,7 +385,13 @@ static val build_set_entries(val dlt, val fun)
   val name[] = {
     lit("list-builder"), lit("build-list"), lit("build"), nil
   };
+  val name_noload[] = {
+    lit("head"), lit("tail"), lit("add"), lit("add*"), lit("pend"),
+    lit("pend*"), lit("ncon"), lit("ncon*"), lit("get"), nil
+  };
+
   set_dlt_entries(dlt, name, fun);
+  intern_only(name_noload);
   return nil;
 }
 
@@ -409,7 +427,12 @@ static val getopts_set_entries(val dlt, val fun)
     lit("opt"), lit("getopts"), lit("opthelp"),
     nil
   };
+  val name_noload[] = {
+    lit("short"), lit("long"), lit("helptext"), lit("type"),
+    lit("in-args"), lit("out-args"), nil
+  };
   set_dlt_entries(dlt, name, fun);
+  intern_only(name_noload);
   return nil;
 }
 
@@ -571,7 +594,13 @@ static val stream_wrap_set_entries(val dlt, val fun)
     lit("stream-wrap"),
     nil
   };
+  val name_noload[] = {
+    lit("close"), lit("flush"), lit("seek"), lit("truncate"),
+    lit("get-prop"), lit("set-prop"), lit("get-fd"), nil
+  };
+
   set_dlt_entries(dlt, name, fun);
+  intern_only(name_noload);
   return nil;
 }
 
