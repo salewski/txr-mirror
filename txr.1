@@ -62500,6 +62500,27 @@ that the selection is determined by the starting and ending character,
 and includes them. This type of selection pairs well with a block-shaped
 cursor.
 
+.coNP Special variable @ *listener-pprint-p*
+.desc
+This Boolean variable controls how the listener prints the results
+of evaluations.
+It is
+.code nil
+by default.
+
+When the variable is
+.codn nil ,
+the evaluation result of each line entered into the listener is printed
+using the
+.code prinl
+function. Thus values are rendered in a machine-readable syntax, ensuing
+read/print consistency.
+
+If the variable is set true, the evaluation result of each line is printed
+using the
+.code pprinl
+function.
+
 .SH* SETUID/SETGID OPERATION
 
 On platforms with the Unix filesystem and process security model, \*(TX has
