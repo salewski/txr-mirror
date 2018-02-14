@@ -63324,14 +63324,16 @@ foregoing expression to
 Here
 .code a
 is not evaluated.
-forms in a clause were producing a result value of
+The undocumented behavior was that a matching clause which has no forms
+to be evaluated was producing a result value of
 .codn t .
 For example
 .code "(case 1 (1))"
 previously yielded
 .codn t ,
 but now yields
-.codn nil .
+.codn nil ,
+and this behavior is documented.
 .IP 155
 After version 155, the
 .code tok-str
