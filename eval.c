@@ -82,7 +82,7 @@ val caseq_star_s, caseql_star_s, casequal_star_s;
 val memq_s, memql_s, memqual_s;
 val eq_s, eql_s, equal_s;
 val car_s, cdr_s, not_s, vecref_s;
-val setq_s, lisp1_setq_s, setqf_s, inc_s, zap_s;
+val setq_s, sys_lisp1_value_s, sys_lisp1_setq_s, setqf_s, inc_s, zap_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val for_op_s, each_op_s;
 val append_each_s, append_each_star_s, while_s, while_star_s, until_star_s;
@@ -99,7 +99,7 @@ val macro_time_s, with_dyn_rebinds_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s, switch_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
-val load_path_s, load_recursive_s, sys_lisp1_value_s;
+val load_path_s, load_recursive_s;
 
 val special_s, unbound_s;
 val whole_k, form_k, symacro_k;
@@ -4386,7 +4386,7 @@ again:
       return expand(first(args), menv);
     } else if (sym == sys_lisp1_value_s) {
       return expand_lisp1_value(form, menv);
-    } else if (sym == lisp1_setq_s) {
+    } else if (sym == sys_lisp1_setq_s) {
       return expand_lisp1_setq(form, menv);
     } else if (sym == setqf_s) {
       return expand_setqf(form, menv);
@@ -5665,7 +5665,8 @@ void eval_init(void)
   tree_bind_s = intern(lit("tree-bind"), user_package);
   mac_param_bind_s = intern(lit("mac-param-bind"), user_package);
   setq_s = intern(lit("setq"), system_package);
-  lisp1_setq_s = intern(lit("lisp1-setq"), system_package);
+  sys_lisp1_setq_s = intern(lit("lisp1-setq"), system_package);
+  sys_lisp1_value_s = intern(lit("lisp1-value"), system_package);
   setqf_s = intern(lit("setqf"), system_package);
   inc_s = intern(lit("inc"), user_package);
   zap_s = intern(lit("zap"), user_package);
@@ -5738,7 +5739,6 @@ void eval_init(void)
   chand_s = intern(lit("chand"), user_package);
   load_path_s = intern(lit("*load-path*"), user_package);
   load_recursive_s = intern(lit("*load-recursive*"), system_package);
-  sys_lisp1_value_s = intern(lit("lisp1-value"), system_package);
 
   qquote_init();
 
@@ -5776,7 +5776,7 @@ void eval_init(void)
   reg_op(tree_bind_s, op_tree_bind);
   reg_op(mac_param_bind_s, op_mac_param_bind);
   reg_op(setq_s, op_setq);
-  reg_op(lisp1_setq_s, op_lisp1_setq);
+  reg_op(sys_lisp1_setq_s, op_lisp1_setq);
   reg_op(sys_lisp1_value_s, op_lisp1_value);
   reg_op(setqf_s, op_setqf);
   reg_op(for_op_s, op_for);

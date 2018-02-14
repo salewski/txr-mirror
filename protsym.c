@@ -77,7 +77,7 @@ extern val into_k, intr_s, ipf_s, keyword_package_s, labels_s;
 extern val lambda_s, lambda_set_s, last_s, lbind_s, lcons_s;
 extern val le_double_s, le_float_s, le_int16_s, le_int32_s, le_int64_s;
 extern val le_uint16_s, le_uint32_s, le_uint64_s, length_s, let_s;
-extern val let_star_s, lfilt_k, line_s, lines_k, lisp1_setq_s;
+extern val let_star_s, lfilt_k, line_s, lines_k, sys_lisp1_setq_s;
 extern val list_k, list_s, list_star_s, listener_hist_len_s, listener_multi_line_p_s;
 extern val listener_sel_inclusive_p_s, lists_k, lit_s, load_path_s, load_recursive_s;
 extern val load_s, local_s, long_s, longest_k, lstr_s;
@@ -206,7 +206,7 @@ val *protected_sym[] = {
   &lambda_s, &lambda_set_s, &last_s, &lbind_s, &lcons_s,
   &le_double_s, &le_float_s, &le_int16_s, &le_int32_s, &le_int64_s,
   &le_uint16_s, &le_uint32_s, &le_uint64_s, &length_s, &let_s,
-  &let_star_s, &lfilt_k, &line_s, &lines_k, &lisp1_setq_s,
+  &let_star_s, &lfilt_k, &line_s, &lines_k, &sys_lisp1_setq_s,
   &list_k, &list_s, &list_star_s, &listener_hist_len_s, &listener_multi_line_p_s,
   &listener_sel_inclusive_p_s, &lists_k, &lit_s, &load_path_s, &load_recursive_s,
   &load_s, &local_s, &long_s, &longest_k, &lstr_s,
