@@ -34,29 +34,6 @@
   (defun sys:eval-err (. params)
     (throwf 'eval-error . params))
 
-  (defmacro sys:l1-setq (u-expr new-val :env e)
-    (let ((e-expr (macroexpand-lisp1 u-expr e)))
-      (if (symbolp e-expr)
-        (caseq (lexical-lisp1-binding e e-expr)
-          (:var ^(sys:setq ,e-expr ,new-val))
-          (:symacro (sys:eval-err "sys:l1-setq: invalid use on symbol macro"))
-          (t (if (boundp e-expr)
-               ^(sys:setq ,e-expr ,new-val)
-               ^(sys:lisp1-setq ,e-expr ,new-val))))
-        ^(set ,u-expr ,new-val))))
-
-  (defmacro sys:l1-val (u-expr :env e)
-    (let ((e-expr (macroexpand-lisp1 u-expr e)))
-      (if (and (symbolp e-expr) (not (constantp e-expr)))
-        (caseq (lexical-lisp1-binding e e-expr)
-          (:fun ^(fun ,e-expr))
-          (:var e-expr)
-          (nil (if (boundp e-expr)
-                 u-expr
-                 ^(sys:lisp1-value ,e-expr)))
-          (t (sys:eval-err "sys:l1-val: invalid case")))
-        u-expr)))
-
   (defun sys:sym-update-expander (getter-name setter-name
                                   place-expr op-body)
     ^(macrolet ((,getter-name () ',place-expr)

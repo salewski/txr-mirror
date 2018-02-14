@@ -82,7 +82,9 @@ val caseq_star_s, caseql_star_s, casequal_star_s;
 val memq_s, memql_s, memqual_s;
 val eq_s, eql_s, equal_s;
 val car_s, cdr_s, not_s, vecref_s;
-val setq_s, sys_lisp1_value_s, sys_lisp1_setq_s, setqf_s, inc_s, zap_s;
+val setq_s, setqf_s, sys_lisp1_value_s, sys_lisp1_setq_s;
+val sys_l1_val_s, sys_l1_setq_s;
+val inc_s, zap_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val for_op_s, each_op_s;
 val append_each_s, append_each_star_s, while_s, while_star_s, until_star_s;
@@ -4638,6 +4640,63 @@ static val constantp(val form, val env_in)
   }
 }
 
+static val me_l1_val(val form, val menv)
+{
+  if (length(form) != two)
+    eval_error(form, lit("~s: invalid syntax"), first(form), nao);
+
+  {
+    val expr = cadr(form);
+    val expr_ex = macroexpand_lisp1(expr, menv);
+
+    if (symbolp(expr_ex) && !constantp(expr_ex, nil)) {
+      val binding_type = lexical_lisp1_binding(menv, expr_ex);
+
+      if (binding_type == fun_k) {
+        return list(fun_s, expr_ex, nao);
+      } else if (binding_type == var_k) {
+        return expr_ex;
+      } else if (binding_type == nil) {
+        if (boundp(expr_ex))
+          return expr;
+        return list(sys_lisp1_value_s, expr_ex, nao);
+      } else {
+        eval_error(form, lit("~s: invalid case"), car(form), nao);
+      }
+    }
+
+    return expr;
+  }
+}
+
+static val me_l1_setq(val form, val menv)
+{
+  if (!consp(cdr(form)) || !consp(cddr(form)) || cdddr(form))
+    eval_error(form, lit("~s: invalid syntax"), car(form), nao);
+
+  {
+    val expr = cadr(form);
+    val new_val = caddr(form);
+    val expr_ex = macroexpand_lisp1(expr, menv);
+
+    if (symbolp(expr_ex)) {
+      val binding_type = lexical_lisp1_binding(menv, expr_ex);
+
+      if (binding_type == var_k) {
+        return list(setq_s, expr_ex, new_val, nao);
+      } else if (binding_type == symacro_k) {
+        eval_error(form, lit("~s: invalid use on symacro"), car(form), nao);
+      } else if (boundp(expr_ex)) {
+        return list(setq_s, expr_ex, new_val, nao);
+      } else {
+        return list(sys_lisp1_setq_s, expr_ex, new_val, nao);
+      }
+    }
+
+    return list(set_s, expr, new_val, nao);
+  }
+}
+
 static val return_star(val name, val retval)
 {
   uw_block_return(name, retval);
@@ -5667,6 +5726,8 @@ void eval_init(void)
   setq_s = intern(lit("setq"), system_package);
   sys_lisp1_setq_s = intern(lit("lisp1-setq"), system_package);
   sys_lisp1_value_s = intern(lit("lisp1-value"), system_package);
+  sys_l1_setq_s = intern(lit("l1-setq"), system_package);
+  sys_l1_val_s = intern(lit("l1-val"), system_package);
   setqf_s = intern(lit("setqf"), system_package);
   inc_s = intern(lit("inc"), user_package);
   zap_s = intern(lit("zap"), user_package);
@@ -5813,6 +5874,8 @@ void eval_init(void)
     reg_mac(op_s, func_n2(me_op));
     reg_mac(do_s, func_n2(me_op));
   }
+  reg_mac(sys_l1_val_s, func_n2(me_l1_val));
+  reg_mac(sys_l1_setq_s, func_n2(me_l1_setq));
   reg_mac(ap_s, func_n2(me_ap));
   reg_mac(intern(lit("ip"), user_package), func_n2(me_ip));
   reg_mac(intern(lit("ado"), user_package), func_n2(me_ado));
