@@ -2237,7 +2237,7 @@ static val expand_lisp1_setq(val form, val menv)
     }
 
     if (binding_type == var_k)
-      return expand(rlcp(cons(setq_s, cddr(form)), form), menv);
+      return expand(rlcp(cons(setq_s, cons(sym, cddr(form))), form), menv);
 
     if (binding_type == fun_k)
       eval_error(form, lit("~s: cannot assign lexical function ~s"), op, sym, nao);
