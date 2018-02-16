@@ -1027,7 +1027,7 @@ int txr_main(int argc, char **argv)
         goto repl;
       }
 
-      return (parser.errors || !success) ? EXIT_FAILURE : 0;
+      return success ? 0 : EXIT_FAILURE;
     }
   }
 
