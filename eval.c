@@ -44,6 +44,7 @@
 #include "unwind.h"
 #include "regex.h"
 #include "stream.h"
+#include "y.tab.h"
 #include "parser.h"
 #include "hash.h"
 #include "debug.h"
@@ -3976,12 +3977,6 @@ val load(val target)
 
   open_txr_file(path, &txr_lisp_p, &name, &stream);
 
-  if (!txr_lisp_p) {
-    close_stream(stream, nil);
-    uw_throwf(error_s, lit("load: cannot process .txr file ~a"),
-              path, nao);
-  }
-
   uw_simple_catch_begin;
 
   dyn_env = make_env(nil, nil, dyn_env);
@@ -3989,9 +3984,32 @@ val load(val target)
   env_vbind(dyn_env, load_recursive_s, t);
   env_vbind(dyn_env, package_s, cur_package);
 
-  if (!read_eval_stream(stream, std_error)) {
+  if (txr_lisp_p) {
+    if (!read_eval_stream(stream, std_error)) {
+      close_stream(stream, nil);
+      uw_throwf(error_s, lit("load: ~a contains errors"), path, nao);
+    }
+  } else {
+    int gc = gc_state(0);
+    parser_t parser;
+    parse_once(stream, name, &parser);
+    gc_state(gc);
+
     close_stream(stream, nil);
-    uw_throwf(error_s, lit("load: ~a contains errors"), path, nao);
+
+    uw_release_deferred_warnings();
+
+    if (parser.errors)
+      uw_throwf(query_error_s, lit("load: parser errors in ~a"),
+                path, nao);
+    {
+      val match_ctx = uw_get_match_context();
+      val bindings = cdr(match_ctx);
+      val result = extract(parser.syntax_tree, nil, bindings);
+      cons_bind (new_bindings, success, result);
+      if (success)
+        uw_set_match_context(cons(car(match_ctx), new_bindings));
+    }
   }
 
   dyn_env = saved_dyn_env;

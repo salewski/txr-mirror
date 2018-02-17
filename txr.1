@@ -55314,10 +55314,16 @@ can immediately use to expand the given form that is being traversed.
 .desc
 The
 .code load
-function causes a file of \*(TL code to be read and evaluated.
+function causes a file containing \*(TL or \*(TX code to be read and processed.
 The
 .meta target
 argument is a string.
+
+Firstly, the value in
+.meta target
+is converted to an
+.I "effective pathname"
+as follows.
 
 If
 .meta target
@@ -55339,41 +55345,90 @@ then a pure relative
 pathname is used as-is, and thus resolved relative to the current working
 directory.
 
-If
-.meta target
-has no suffix, then
+Once the effective path name is determined,
 .code load
-first tries to load the un-suffixed name. If that cannot be opened, the
-.str .tl
-suffix is added to the path and another attempt is made. If that fails,
-an exception is thrown.
-
-If
+first tries to open that exact path name.
+If this succeeds, then the file will be treated as containing \*(TL,
+unless
 .meta target
-has a
-.str .txr
-suffix, it is assumed to be a \*(TX pattern language file, and
-an exception of type
-.code eval-error
-is thrown, since this is not supported.
+ends ends with the
+.code .txr
+suffix, in which case the file will be treated as containing
+\*(TX pattern language syntax.
 
-If
-.meta target
-is successfully resolved and opened, \*(TL forms are read from the file
-in succession. Each form is evaluated as if by the
+If loading the original effective path name fails, and that name is unsuffixed,
+then the
+.code .tl
+suffix is added and another attempt is made. If that succeeds,
+the file will be treated as \*(TL.
+
+If a file is successfully resolved and opened for \*(TL processing,
+then \*(TL forms are read from it in succession. Each form is evaluated as if
+by the
 .code eval
 function, before the next form is read.
 If a syntax error is encountered, an exception of type
 .code eval-error
 is thrown.
 
-Over the evaluation of the forms, the special variable
-.code *load-path*
-to the path name of that file.
+If a file is successfully resolved and opened for \*(TX processing,
+then its contents are parsed in their entirety as a \*(TX
+query. If the parse is successful, the query is executed.
+Previous \*(TX pattern variable and function bindings are in
+effect. If the query binds new variables and functions,
+these emerge from the
+.code load
+and take effect. If the parse is unsuccessful, an exception of type
+.code query-error
+is thrown.
 
 Parser error messages are directed to the
 .code *stderr*
 stream.
+
+Over the evaluation of either a \*(TL or \*(TX file,
+.code load
+establishes a new dynamic binding for several special
+variables. The variable
+.code *load-path*
+is given a new binding containing the effective path name. This excludes any
+.code .tl
+suffix that was added by
+.codn load .
+The
+.code *package*
+variable is also given a new dynamic binding, whose value is the
+same as the existing binding. Thus if the processing of the
+loaded file has the effect of altering the value of
+.codn *package* ,
+that effect will be undone when the binding is removed
+after the load completes.
+
+When the
+.code load
+function terminates normally after processing a file,
+it returns
+.codn nil .
+If the file contains a \*(TX pattern query which is
+processed to completion, the matching success or failure
+of that query has no bearing on the return value of
+.codn load .
+Note that this behavior is different from the
+.code @(load)
+directive which itself fails if the loaded query
+fails, causing subsequent directives not to be processed.
+
+A \*(TX pattern language file loaded with the Lisp
+.code load
+function does not have the usual implicit access to the
+command line arguments, unlike a top-level \*(TX query.
+If the directives in the file try to match input, they
+work against the
+.code *stdin*
+stream.  The
+.code @(next)
+directive behaves as it does when no more arguments
+are available.
 
 .coNP Special variable @ *load-path*
 .desc

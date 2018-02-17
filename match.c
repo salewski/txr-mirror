@@ -4308,10 +4308,14 @@ static val v_load(match_files_ctx *c)
         }
       }
     } else {
+      uw_set_match_context(cons(c->spec, c->bindings));
+
       if (!read_eval_stream(stream, std_error)){
         close_stream(stream, nil);
         sem_error(specline, lit("load: ~a contains errors"), path, nao);
       }
+
+      c->bindings = cdr(uw_get_match_context());
 
       ret = (sym == include_s) ? nil : next_spec_k;
     }
