@@ -69,6 +69,7 @@ val apply_intrinsic(val fun, val args);
 val eval_progn(val forms, val env, val ctx_form);
 val eval(val form, val env, val ctx_form);
 val eval_intrinsic(val form, val env);
+val eval_intrinsic_noerr(val form, val env, val *error_p);
 void trace_check(val name);
 val format_field(val string_or_list, val modifier, val filter, val eval_fun);
 val subst_vars(val forms, val env, val filter);

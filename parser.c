@@ -62,7 +62,7 @@
 
 val parser_s, unique_s, circref_s;
 val listener_hist_len_s, listener_multi_line_p_s, listener_sel_inclusive_p_s;
-val listener_pprint_s;
+val listener_pprint_s, listener_greedy_eval_s;
 val rec_source_loc_s;
 val intr_s;
 
@@ -1142,6 +1142,7 @@ val repl(val bindings, val in_stream, val out_stream)
   val multi_line_var = lookup_global_var(listener_multi_line_p_s);
   val sel_inclusive_var = lookup_global_var(listener_sel_inclusive_p_s);
   val pprint_var = lookup_global_var(listener_pprint_s);
+  val greedy_eval = lookup_global_var(listener_greedy_eval_s);
   val rw_f = func_f1v(out_stream, repl_warning);
   val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
 
@@ -1243,11 +1244,22 @@ val repl(val bindings, val in_stream, val out_stream)
                         read_eval_ret_last(nil, prev_counter,
                                            in_stream, out_stream));
         val pprin = cdr(pprint_var);
+        val (*pfun)(val, val) = if3(pprin, pprinl, prinl);
         reg_varl(var_sym, value);
         sethash(result_hash, var_counter, value);
-        if3(pprin, pprinl, prinl)(value, out_stream);
+        pfun(value, out_stream);
         lino_set_result(ls, utf8_dup_to(c_str(tostring(value))));
         lino_hist_add(ls, line_u8);
+        if (cdr(greedy_eval)) {
+          val error_p = nil;
+          while (bindable(value) || consp(value))
+          {
+            value = eval_intrinsic_noerr(value, nil, &error_p);
+            if (error_p)
+              break;
+            pfun(value, out_stream);
+          }
+        }
       }
     }
 
@@ -1328,6 +1340,7 @@ void parse_init(void)
   listener_multi_line_p_s = intern(lit("*listener-multi-line-p*"), user_package);
   listener_sel_inclusive_p_s = intern(lit("*listener-sel-inclusive-p*"), user_package);
   listener_pprint_s = intern(lit("*listener-pprint-p*"), user_package);
+  listener_greedy_eval_s = intern(lit("*listener-greedy-eval-p*"), user_package);
   rec_source_loc_s = intern(lit("*rec-source-loc*"), user_package);
   unique_s = gensym(nil);
   prot1(&stream_parser_hash);
@@ -1338,6 +1351,7 @@ void parse_init(void)
   reg_var(listener_multi_line_p_s, t);
   reg_var(listener_sel_inclusive_p_s, nil);
   reg_var(listener_pprint_s, nil);
+  reg_var(listener_greedy_eval_s, nil);
   reg_var(rec_source_loc_s, nil);
   reg_fun(circref_s, func_n1(circref));
 }

@@ -62576,6 +62576,75 @@ using the
 .code pprinl
 function.
 
+.coNP Special variable @ *listener-greedy-eval-p*
+.desc
+The special variable
+.code *listener-greedy-eval-p*
+controls whether or not a "greedy evaluation" feature is enabled
+in the listener. The default value is
+.codn nil ,
+disabling the feature.
+
+Greedy evaluation means that after the listener evaluates an expression
+successfully and prints its value, it then checks whether that value is
+an expression that may be further subject to non-trivial evaluation.
+If so, it evaluates that expression, and prints the resulting value.
+The process is then repeated with the resulting value. It keeps repeating until
+evaluation throws an error, or produces a self-evaluating object.
+
+These additional evaluations are performed in such a way that all warnings are
+suppressed and all other exceptions are intercepted.
+
+Greedy evaluation doesn't affect the state of the listener.
+Only the original expression is entered into the
+history. Only the value of the original expression is saved in the result hash
+or a numbered variable.  The command line number
+.code *n
+is incremented by one. The additional evaluations are only performed for
+the purpose of producing useful output. Of course, the evaluations may
+have side effects.
+
+.TP* Example:
+
+.cblk
+  1> (set *listener-greedy-eval-p* t)
+  t
+  2> 'a
+  a
+  3> (defvar b 2)
+  b
+  2
+  4> (defvar c '(+ 2 2))
+  c
+  (+ 2 2)
+  4
+  5> (defvar d '(list '+ 2 2))
+  d
+  (list '+ 2 2)
+  (+ 2 2)
+  4
+.cble
+
+The
+.code "(defvar d ...)"
+form produces
+.code d
+symbol as its result value. That symbol has a variable binding as a result
+of that
+.code defvar
+and so evaluates; that evaluation produces
+.codn "(list '+ 2 2)" ,
+the contents of
+.codn d .
+That object is a Lisp expression and is evaluated, producing
+.code "(+ 2 2)"
+and that of course is also an expression, which reduces to
+.codn 4 .
+The object
+.code 4
+is self-evaluating, and so the greedy evaluation process stops.
+
+
 .SH* SETUID/SETGID OPERATION
 
 On platforms with the Unix filesystem and process security model, \*(TX has

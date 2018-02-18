@@ -1370,6 +1370,32 @@ val eval_intrinsic(val form, val env)
   return ret;
 }
 
+val eval_intrinsic_noerr(val form, val env, val *error_p)
+{
+  val result = nil;
+  uw_frame_t uw_handler;
+  uw_push_handler(&uw_handler, cons(defr_warning_s, nil),
+                  func_n1v(uw_muffle_warning));
+
+  uw_catch_begin (cons(t, nil), exsym, exvals);
+
+  result = eval_intrinsic(form, env);
+
+  uw_catch(exsym, exvals) {
+    (void) exsym; (void) exvals;
+    *error_p = t;
+    break;
+  }
+
+  uw_unwind;
+
+  uw_catch_end;
+
+  uw_pop_frame(&uw_handler);
+
+  return result;
+}
+
 static val do_eval(val form, val env, val ctx,
                    val (*lookup)(val env, val sym))
 {
