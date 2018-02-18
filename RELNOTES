@@ -1,3 +1,29 @@
+                                    TXR 190
+                                   2018-02-18
+
+
+  Features
+
+  - Annoying limitation removed: lisp load now handles .txr files.
+
+  - Listener:
+    - new *listener-pprint-p* variable turns on use of pprint for
+      evaluation results.
+    - new *listener-greedy-eval-p* variable turns on a cascaded
+      evaluation: values are subject to additional rounds of evaluation,
+      whose results are also printed.
+
+
+  Bugs
+
+  - fixed bug "unbound function sys:l1-val" when using lop operator.
+  - fixed expander bug causing (do set [@1 x] y) to be wrongly expanded.
+  - autoload bugfix: symbols used for struct slots in standard library modules
+    are now interned even if those modules are not loaded, so that they are
+    treated properly under the package system.
+
+
+
                                     TXR 189
                                    2018-02-06
 
