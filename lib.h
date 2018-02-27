@@ -1183,6 +1183,6 @@ loc list_collect_revappend(loc ptail, val obj);
 #define static_forward(decl) namespace { extern decl; }
 #define static_def(def) namespace { def; }
 #else
-#define static_forward(decl) static decl;
-#define static_def(def) static def;
+#define static_forward(decl) static decl
+#define static_def(def) static def
 #endif
