@@ -423,7 +423,7 @@ static void buf_get_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
   cnum e = p + size;
   cnum l = c_num(b->len);
 
-  if (e >= l || e < 0)
+  if (e > l || e < 0)
     uw_throwf(error_s, lit("~a: attempted read past buffer end"), self, nao);
 
   memcpy(ptr, b->data + p, size);
