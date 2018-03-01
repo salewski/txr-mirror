@@ -24773,7 +24773,8 @@ and no boa arguments.
 
 Note that finalizers registered against
 .meta struct-obj
-are not invoked, and remain registered.
+are not invoked prior to the reset operation, and remain registered.
+
 If the structure has state which is cleaned up by
 finalizers, it is advisable to invoke them using
 .code call-finalizers
@@ -24781,6 +24782,24 @@ prior to using
 .codn reset-struct ,
 or to take other measures to deal with the
 situation.
+
+If the structure specifies
+.code :fini
+handlers, then the reinitialization will cause
+these to registered, just like when a new object
+it constructed. Thus if
+.code call-finalizers
+is not used prior to
+.codn reset-struct ,
+this will result in the existence of duplicate registrations of the
+finalization functions.
+
+Finalizers registered against
+.meta struct-obj
+.B are
+invoked if an exception is thrown
+during the reinitialization, just like when a new
+structure is being constructed.
 
 .coNP Function @ replace-struct
 .synb
@@ -63207,6 +63226,16 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 190
+Until \*(TX 190, the
+.code reset-struct
+function neglected to perform
+.code :postinit
+initializations, and didn't invoke finalization on the structure object
+if an exception was thrown during reinitialization. Thus, contrary
+to documented requirements, reinitialization of a structure didn't behave
+like fresh construction.  This behavior is replicated if compatibility
+with 190 or earlier is requested.
 .IP 188
 Until \*(TX 188,
 .codn equal -based

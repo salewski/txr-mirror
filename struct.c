@@ -726,13 +726,29 @@ val reset_struct(val strct)
   struct struct_inst *si = struct_handle(strct, self);
   struct struct_type *st = si->type;
   cnum i;
+  volatile val inited = nil;
+  int compat_190 = opt_compat && opt_compat <= 190;
 
   check_init_lazy_struct(strct, si);
+
+  uw_simple_catch_begin;
 
   for (i = 0; i < st->nslots; i++)
     si->slot[i] = nil;
 
   call_initfun_chain(st, strct);
+
+  if (!compat_190)
+    call_postinitfun_chain(st, strct);
+
+  inited = t;
+
+  uw_unwind {
+    if (!inited && !compat_190)
+      gc_call_finalizers(strct);
+  }
+
+  uw_catch_end;
 
   return strct;
 }
