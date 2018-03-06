@@ -192,6 +192,18 @@ val unum(ucnum u)
   }
 }
 
+val bignum_len(val num)
+{
+  switch (type(num)) {
+  case CHR: case NUM:
+    return zero;
+  case BGNUM:
+    return unum(mp(num)->used);
+  default:
+    type_mismatch(lit("bignum-digits: ~s is not an integer"), num, nao);
+  }
+}
+
 int highest_bit(int_ptr_t n)
 {
 #if SIZEOF_PTR == 8
@@ -3089,6 +3101,7 @@ void arith_init(void)
   reg_varl(intern(lit("*e*"), user_package), flo(M_E));
   reg_varl(intern(lit("%e%"), user_package), flo(M_E));
 
+  reg_fun(intern(lit("bignum-len"), user_package), func_n1(bignum_len));
   reg_fun(intern(lit("divides"), user_package), func_n2(divides));
   reg_fun(intern(lit("bits"), system_package), func_n1(bits));
   reg_fun(intern(lit("digpow"), user_package), func_n2o(digpow, 1));

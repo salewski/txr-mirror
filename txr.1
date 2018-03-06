@@ -35650,6 +35650,38 @@ that value is then added to the result accumulator.
   (rpoly 10 '(1 2 3)) -> 321
 .cble
 
+.coNP Function @ bignum-len
+.synb
+.mets (bignum-len << arg )
+.syne
+.desc
+The
+.code bignum-len
+function reports the machine-specific
+.I "bignum order"
+of the integer or character argument
+.metn arg .
+
+If
+.meta arg
+is a character or
+.code fixnum
+integer, the function returns zero.
+
+Otherwise
+.meta arg
+is expected to be a
+.code bignum
+integer, and the function returns the number of "limbs" used for its
+representation, a positive integer.
+
+Note: the
+.code bignum-len
+function is intended to be of use in algorithms whose performance
+benefits from ordering the operations on multiple integer operands
+according to the magnitudes of those operands. The function provides an
+estimate of magnitude which trades accuracy for efficiency.
+
 .SS* Bit Operations
 In \*(TL, similarly to Common Lisp, bit operations on integers are based
 on a concept that might be called "infinite two's-complement".  

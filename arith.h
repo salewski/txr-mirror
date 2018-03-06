@@ -36,6 +36,7 @@ val normalize(val bignum);
 val in_int_ptr_range(val bignum);
 ucnum c_unum(val num);
 val unum(ucnum u);
+val bignum_len(val num);
 val cum_norm_dist(val x);
 val inv_cum_norm(val p);
 val n_choose_k(val n, val k);
