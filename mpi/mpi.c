@@ -3302,20 +3302,7 @@ mp_err s_mp_mul_d(mp_int *a, mp_digit d)
   mp_err res;
   mp_digit *dp = DIGITS(a);
 
-  /* Single-digit multiplication will increase the precision of the
-   * output by at most one digit.  However, we can detect when this
-   * will happen -- if the high-order digit of a, times d, gives a
-   * two-digit result, then the precision of the result will increase;
-   * otherwise it won't.  We use this fact to avoid calling s_mp_pad()
-   * unless absolutely necessary.
-   */
   max = USED(a);
-  w = dp[max - 1] * convert(mp_word, d);
-  if (CARRYOUT(w) != 0) {
-    if ((res = s_mp_pad(a, max + 1)) != MP_OKAY)
-      return res;
-    dp = DIGITS(a);
-  }
 
   for (ix = 0; ix < max; ix++) {
     w = dp[ix] * convert(mp_word, d) + k;
@@ -3323,15 +3310,19 @@ mp_err s_mp_mul_d(mp_int *a, mp_digit d)
     k = CARRYOUT(w);
   }
 
-  /* If there is a precision increase, take care of it here; the above
-   * test guarantees we have enough storage to do this safely.
+  /* If there is a carry out, we must ensure
+   * we have enough storage for the extra digit.
+   * If there is carry, there are no leading zeros
+   * don't waste time calling s_mp_clamp.
    */
   if (k) {
-    dp[max] = k;
+    if ((res = s_mp_pad(a, max + 1)) != MP_OKAY)
+      return res;
+    DIGIT(a, max) = k;
     USED(a) = max + 1;
+  } else {
+    s_mp_clamp(a);
   }
-
-  s_mp_clamp(a);
 
   return MP_OKAY;
 }
