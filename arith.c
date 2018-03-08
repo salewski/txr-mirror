@@ -174,6 +174,7 @@ ucnum c_unum(val num)
       mp_get_uintptr(mp(num), &out);
       return out;
     }
+    /* fallthrough */
   range:
     uw_throwf(error_s, lit("~s given, non-negative expected"), num, nao);
   default:
@@ -680,9 +681,11 @@ tail:
   case TAG_PAIR(TAG_CHR, TAG_PTR):
     if (type(bnum) == RNG)
       return rcons(minus(anum, from(bnum)), minus(anum, to(bnum)));
+    break;
   case TAG_PAIR(TAG_PTR, TAG_CHR):
     if (type(anum) == RNG)
       return rcons(minus(from(anum), bnum), minus(to(anum), bnum));
+    break;
   }
   uw_throwf(error_s, lit("-: invalid operands ~s ~s"), anum, bnum, nao);
 }

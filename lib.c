@@ -392,6 +392,7 @@ val car(val cons)
           return funcall2(lambda_meth, cons, zero);
       }
     }
+    /* fallthrough */
   default:
     type_mismatch(lit("car: ~s is not a cons"), cons, nao);
   }
