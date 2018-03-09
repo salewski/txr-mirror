@@ -10861,10 +10861,7 @@ package.
 It is a syntax error to read a symbol whose package doesn't exist.
 
 If the package exists, but the symbol name doesn't exist in that package,
-the behavior depends on whether that package has a fallback list.
-If the package has an empty fallback list, then the symbol is interned in
-that package. If the package has non-empty fallback list, then the situation is
-a syntax error.
+then the symbol is interned in that package.
 
 If the package name is an empty string (the colon is preceded by nothing), the
 package is understood to be the
@@ -10917,8 +10914,6 @@ syntax does not intern the symbol
 in the
 .code foo
 package; the symbol must exist or else the syntax is erroneous.
-In \*(TL, this strictness is only imposed if the package has a fallback
-list. If the package has an empty fallback list, the symbol will be interned.
 
 .NP* Uninterned Symbols
 
@@ -45357,40 +45352,23 @@ and with the
 .code :fallback
 clause of the
 .code defpackage
-macro.  The fallback package list plays a role only in two situations
-in the \*(TL parser, one in the printer, and one in the interactive
+macro.  The fallback package list plays a role only in three situations:
+one in the \*(TL parser, one in the printer, and one in the interactive
 listener.
 
-The first parser situation involving a package fallback list occurs when the
+The parser situation involving the fallback list occurs when the
 \*(TL parser resolves an unqualified symbol token: a symbol token not carrying
 a package prefix. Such a symbol name is resolved against the current package
 (the package currently stored in the
 .code *package*
 special variable). If a symbol matching the token
-is not found in the current package, then the packages in the fallback
+is not found in the current package, then the packages in its fallback
 package list are searched for the symbol.  The first matching symbol which is
 found in the fallback list is returned.  If no matching symbol is found in the
 fallback list, then the token is interned as a new symbol is interned in the
 current package.  The packages in the current package's fallback list may
 themselves have fallback lists. Those fallback lists are not involved; no such
 recursion takes place.
-
-The second parser situation involving a package fallback list occurs when the
-\*(TL parser resolves a qualified symbol token. If a qualified symbol token
-refers to a nonexistent symbol (meaning that the denoted package exists, but
-has no such symbol) a check is performed whether the package has a non-empty
-fallback list. If a the package has a non-empty fallback list, then a syntax
-error occurs in this nonexistent symbol case. However, if the package has an
-empty fallback list, then the qualified symbol syntax is permitted to newly
-intern the nonexistent symbol in that package. For instance, the
-.code usr
-package has no fallbacks. Therefore the syntax
-.code usr:foobar
-will intern a symbol named
-.str foobar
-in the
-.code usr
-package and denote that symbol, rather than producing a syntax error.
 
 The printer situation involving the fallback list is as follows.
 If a symbol is being printed in a machine-readable way (not "pretty"),
@@ -45484,9 +45462,7 @@ in a private package.
   ;; Note that we don't have to change to the mod package,
   ;; to define functions with names in that package.
   ;; We rely on interning being allowed for the qualified
-  ;; mod:priv-fun syntax, which is permitted because
-  ;; mod has no fallback list. This is useful precisely
-  ;; for this type of package.
+  ;; mod:public-fun syntax.
   (defun mod:public-fun (arg)
     (priv-fun arg)) ;; priv-fun here is mod-priv:priv-fun
 
