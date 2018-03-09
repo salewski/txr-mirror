@@ -4535,7 +4535,7 @@ static val gather_free_refs(val info_cons, val exc, struct args *args)
 {
   (void) exc;
 
-  args_normalize(args, 2);
+  args_normalize_least(args, 2);
 
   if (args_count(args) == 2) {
     val tag = args_at(args, 1);
@@ -4931,7 +4931,7 @@ static val prod_common(val fun, struct args *lists,
     args_decl(args_reset, max(argc, ARGS_MIN));
     args_decl(args_work, max(argc, ARGS_MIN));
     args_copy(args_reset, lists);
-    args_normalize(args_reset, argc);
+    args_normalize_exact(args_reset, argc);
     args_copy(args_work, args_reset);
     list_collect_decl (out, ptail);
 

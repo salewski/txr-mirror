@@ -46,7 +46,7 @@ val args_add_checked(val name, struct args *args, val arg)
   return args_add(args, arg);
 }
 
-void args_normalize(struct args *args, cnum fill)
+void args_normalize_exact(struct args *args, cnum fill)
 {
   bug_unless (fill <= args->argc);
 
@@ -58,9 +58,17 @@ void args_normalize(struct args *args, cnum fill)
 
 }
 
+void args_normalize_least(struct args *args, cnum minfill)
+{
+  bug_unless (args->fill <= args->argc);
+
+  while (args->fill < minfill && args->list)
+    args_add(args, pop(&args->list));
+}
+
 void args_normalize_fill(struct args *args, cnum minfill, cnum maxfill)
 {
-  args_normalize(args, maxfill);
+  args_normalize_least(args, maxfill);
 
   if (args->fill >= minfill)
     while (args->fill < maxfill)

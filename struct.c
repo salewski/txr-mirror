@@ -1297,7 +1297,7 @@ static val method_args_fun(val env, varg args)
   args_decl(args_call, max(args->fill + 1 + ca_len, ARGS_MIN));
   args_add(args_call, strct);
   args_add_list(args_call, curried_args);
-  args_normalize(args_call, ca_len + 1);
+  args_normalize_exact(args_call, ca_len + 1);
   args_cat_zap(args_call, args);
   return generic_funcall(fun, args_call);
 }
@@ -1379,7 +1379,7 @@ static val umethod_args_fun(val env, struct args *args)
     args_decl(args_call, max(args->fill + ca_len, ARGS_MIN));
     args_add(args_call, strct);
     args_add_list(args_call, curried_args);
-    args_normalize(args_call, ca_len + 1);
+    args_normalize_exact(args_call, ca_len + 1);
     args_cat_zap_from(args_call, args, index);
 
     struct struct_inst *si = struct_handle(strct, self);

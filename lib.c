@@ -6064,7 +6064,7 @@ val generic_funcall(val fun, struct args *args_in)
   case BUF:
   carray:
     bug_unless (args->argc >= ARGS_MIN);
-    args_normalize(args, 3);
+    args_normalize_least(args, 3);
 
     switch (args->fill) {
     case 0:
@@ -6097,7 +6097,7 @@ val generic_funcall(val fun, struct args *args_in)
   case COBJ:
     if (fun->co.cls == hash_s) {
       bug_unless (args->argc >= ARGS_MIN);
-      args_normalize(args, 3);
+      args_normalize_least(args, 3);
 
       switch (args->fill) {
       case 0:
@@ -6111,7 +6111,7 @@ val generic_funcall(val fun, struct args *args_in)
       }
     } else if (fun->co.cls == regex_s) {
       bug_unless (args->argc >= ARGS_MIN);
-      args_normalize(args, 3);
+      args_normalize_least(args, 3);
 
       switch (args->fill) {
       case 0:
@@ -6144,7 +6144,7 @@ val generic_funcall(val fun, struct args *args_in)
     val *arg = 0;
 
     if (args->argc < fixparam) {
-      args_decl(args_copy, fixparam);
+      args_decl(args_copy, max(fixparam, ARGS_MIN));
       args_copy_zap(args_copy, args_in);
       args = args_copy;
     }
@@ -6195,9 +6195,8 @@ val generic_funcall(val fun, struct args *args_in)
     val *arg = 0;
 
     if (args->argc < fixparam) {
-      args_decl(args_copy, fixparam);
-      args_copy_zap(args_copy, args_in);
-      args = args_copy;
+      args_decl(args_copy, max(fixparam, ARGS_MIN));
+      args = args_copy_zap(args_copy, args_in);
     }
 
     arg = args->arg;
@@ -6207,7 +6206,10 @@ val generic_funcall(val fun, struct args *args_in)
     if (args->fill < reqargs)
       callerror(fun, lit("missing required arguments"));
 
-    args_clear(args);
+    {
+      args_decl(args_copy, max(args->fill - fixparam, ARGS_MIN));
+      args = args_cat_zap_from(args_copy, args, fixparam);
+    }
 
     switch (fun->f.functype) {
     case FINTERP:
@@ -9950,20 +9952,19 @@ val dwim_set(val place_p, val seq, varg vargs)
   case COBJ:
     if (type(seq) == COBJ) {
       if (seq->co.cls == hash_s) {
-        cnum nva = args_count(vargs);
+        args_normalize_least(vargs, 3);
 
-        if (nva < 2)
-          goto fewargs;
-
-        if (nva > 3)
-          goto excargs;
-
-        if (nva == 2) {
-          args_normalize(vargs, 2);
+        switch (vargs->fill) {
+        case 2:
           (void) sethash(seq, vargs->arg[0], vargs->arg[1]);
-        } else {
-          args_normalize(vargs, 3);
+          break;
+        case 3:
+          if (vargs->list)
+            goto excargs;
           (void) sethash(seq, vargs->arg[0], vargs->arg[2]);
+          break;
+        default:
+          goto fewargs;
         }
 
         return seq;

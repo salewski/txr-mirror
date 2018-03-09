@@ -4173,7 +4173,7 @@ val ffi_call_wrap(val fptr, val ffi_call_desc, struct args *args)
     args = args_copy;
   }
 
-  args_normalize(args, n);
+  args_normalize_least(args, n);
 
   if (args->fill < n || args->list)
     uw_throwf(error_s, lit("~a: ~s requires ~s arguments"),
