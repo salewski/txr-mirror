@@ -10498,6 +10498,8 @@ static void obj_init(void)
                            lit("t"), nulloc), make_sym(lit("t"))));
   set(mkloc(t->s.package, t), user_package);
 
+  set_package_fallback_list(system_package, cons(user_package, nil));
+
   null_s = intern(lit("null"), user_package);
   cons_s = intern(lit("cons"), user_package);
   str_s = intern(lit("str"), user_package);
