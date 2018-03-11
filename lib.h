@@ -70,6 +70,7 @@ typedef enum type {
 typedef enum functype
 {
    FINTERP,             /* Interpreted function. */
+   FVM,                 /* VM function. */
    F0, F1, F2, F3, F4,  /* Intrinsic functions with env. */
    N0, N1, N2, N3, N4, N5, N6, N7, N8   /* No-env intrinsics. */
 } functype_t;
@@ -148,6 +149,7 @@ struct func {
   val env;
   union {
     val interp_fun;
+    val vm_desc;
     val (*f0)(val);
     val (*f1)(val, val);
     val (*f2)(val, val, val);
@@ -890,6 +892,7 @@ val func_n1ov(val (*fun)(val, varg), int reqargs);
 val func_n2ov(val (*fun)(val, val, varg), int reqargs);
 val func_n3ov(val (*fun)(val, val, val, varg), int reqargs);
 val func_interp(val env, val form);
+val func_vm(val closure, val desc, int fixparam, int reqargs, int variadic);
 val func_get_form(val fun);
 val func_get_env(val fun);
 val func_set_env(val fun, val env);

@@ -59,6 +59,7 @@
 #include "utf8.h"
 #include "filter.h"
 #include "eval.h"
+#include "vm.h"
 #include "sysif.h"
 #include "regex.h"
 #include "parser.h"
@@ -6001,6 +6002,19 @@ val func_interp(val env, val form)
   return obj;
 }
 
+val func_vm(val closure, val desc, int fixparam, int reqargs, int variadic)
+{
+  val obj = make_obj();
+  obj->f.type = FUN;
+  obj->f.functype = FVM;
+  obj->f.env = closure;
+  obj->f.f.vm_desc = desc;
+  obj->f.fixparam = reqargs;
+  obj->f.optargs = fixparam - reqargs;
+  obj->f.variadic = variadic;
+  return obj;
+}
+
 val func_get_form(val fun)
 {
   type_check(fun, FUN);
@@ -6188,6 +6202,8 @@ val generic_funcall(val fun, struct args *args_in)
       return fun->f.f.n7(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]));
     case N8:
       return fun->f.f.n8(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]), z(arg[7]));
+    case FVM:
+      return vm_execute_closure(fun, args);
     case FINTERP:
       internal_error("unsupported function type");
     }
@@ -6206,42 +6222,47 @@ val generic_funcall(val fun, struct args *args_in)
     if (args->fill < reqargs)
       callerror(fun, lit("missing required arguments"));
 
-    {
-      args_decl(args_copy, max(args->fill - fixparam, ARGS_MIN));
-      args = args_cat_zap_from(args_copy, args, fixparam);
-    }
-
     switch (fun->f.functype) {
     case FINTERP:
       return funcall_interp(fun, args);
-    case F0:
-      return fun->f.f.f0v(fun->f.env, args);
-    case F1:
-      return fun->f.f.f1v(fun->f.env, z(arg[0]), args);
-    case F2:
-      return fun->f.f.f2v(fun->f.env, z(arg[0]), z(arg[1]), args);
-    case F3:
-      return fun->f.f.f3v(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), args);
-    case F4:
-      return fun->f.f.f4v(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), args);
-    case N0:
-      return fun->f.f.n0v(args);
-    case N1:
-      return fun->f.f.n1v(z(arg[0]), args);
-    case N2:
-      return fun->f.f.n2v(z(arg[0]), z(arg[1]), args);
-    case N3:
-      return fun->f.f.n3v(z(arg[0]), z(arg[1]), z(arg[2]), args);
-    case N4:
-      return fun->f.f.n4v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), args);
-    case N5:
-      return fun->f.f.n5v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), args);
-    case N6:
-      return fun->f.f.n6v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), args);
-    case N7:
-      return fun->f.f.n7v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]), args);
-    case N8:
-      return fun->f.f.n8v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]), z(arg[7]), args);
+    case FVM:
+      return vm_execute_closure(fun, args);
+    default:
+      {
+        args_decl(args_copy, max(args->fill - fixparam, ARGS_MIN));
+        args = args_cat_zap_from(args_copy, args, fixparam);
+      }
+
+      switch (fun->f.functype) {
+      case F0:
+        return fun->f.f.f0v(fun->f.env, args);
+      case F1:
+        return fun->f.f.f1v(fun->f.env, z(arg[0]), args);
+      case F2:
+        return fun->f.f.f2v(fun->f.env, z(arg[0]), z(arg[1]), args);
+      case F3:
+        return fun->f.f.f3v(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), args);
+      case F4:
+        return fun->f.f.f4v(fun->f.env, z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), args);
+      case N0:
+        return fun->f.f.n0v(args);
+      case N1:
+        return fun->f.f.n1v(z(arg[0]), args);
+      case N2:
+        return fun->f.f.n2v(z(arg[0]), z(arg[1]), args);
+      case N3:
+        return fun->f.f.n3v(z(arg[0]), z(arg[1]), z(arg[2]), args);
+      case N4:
+        return fun->f.f.n4v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), args);
+      case N5:
+        return fun->f.f.n5v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), args);
+      case N6:
+        return fun->f.f.n6v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), args);
+      case N7:
+        return fun->f.f.n7v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]), args);
+      case N8:
+        return fun->f.f.n8v(z(arg[0]), z(arg[1]), z(arg[2]), z(arg[3]), z(arg[4]), z(arg[5]), z(arg[6]), z(arg[7]), args);
+      }
     }
   }
 
@@ -11802,6 +11823,7 @@ void init(val *stack_bottom)
   rand_init();
   stream_init();
   strudel_init();
+  vm_init();
 #if HAVE_POSIX_SIGS
   sig_init();
 #endif

@@ -46,16 +46,26 @@ val dl_table;
 int opt_dbg_autoload;
 val trace_loaded;
 
-void set_dlt_entries(val dlt, val *name, val fun)
+static void set_dlt_entries_impl(val dlt, val *name, val fun, val package)
 {
   for (; *name; name++) {
-    val sym = intern(*name, user_package);
+    val sym = intern(*name, package);
 
     if (fun)
       sethash(dlt, sym, fun);
     else
       remhash(dlt, sym);
   }
+}
+
+void set_dlt_entries(val dlt, val *name, val fun)
+{
+  set_dlt_entries_impl(dlt, name, fun, user_package);
+}
+
+static void set_dlt_entries_sys(val dlt, val *name, val fun)
+{
+  set_dlt_entries_impl(dlt, name, fun, system_package);
 }
 
 static void intern_only(val *name)
@@ -611,6 +621,25 @@ static val stream_wrap_instantiate(val set_fun)
   return nil;
 }
 
+static val asm_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~aasm.tl"), stdlib_path, nao));
+  return nil;
+}
+
+static val asm_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("assembler"),
+    nil
+  };
+
+  set_dlt_entries_sys(dlt, name, fun);
+  return nil;
+}
+
+
 static val op_set_entries(val dlt, val fun)
 {
   val name[] = {
@@ -670,6 +699,7 @@ void lisplib_init(void)
   dlt_register(dl_table, ffi_instantiate, ffi_set_entries);
   dlt_register(dl_table, doloop_instantiate, doloop_set_entries);
   dlt_register(dl_table, stream_wrap_instantiate, stream_wrap_set_entries);
+  dlt_register(dl_table, asm_instantiate, asm_set_entries);
 
   if (!opt_compat || opt_compat >= 185)
     dlt_register(dl_table, op_instantiate, op_set_entries);

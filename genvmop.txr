@@ -1,0 +1,18 @@
+@(include "asm")
+@(in-package :sys)
+@(bind oc @(keep-if .code %oc-list%))
+@(next "vm.h")
+@(collect)
+@{copyright}
+@(until)
+
+@(end)
+@(output "vmop.h")
+@{copyright "\n"}
+
+typedef enum vm_op {
+@  (repeat :vars (oc))
+  @{oc.symbol :filter :upcase} = @{oc.code},
+@  (end)
+} vm_op_t;
+@(end)

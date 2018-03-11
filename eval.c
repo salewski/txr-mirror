@@ -431,7 +431,7 @@ val lookup_var(val env, val sym)
   return lookup_global_var(sym);
 }
 
-static val lookup_sym_lisp1(val env, val sym)
+val lookup_sym_lisp1(val env, val sym)
 {
   uses_or2;
 
