@@ -65,6 +65,10 @@ static val frame_type, catch_frame_type, handle_frame_type;
 
 static val deferred_warnings, tentative_defs;
 
+#if CONFIG_EXTRA_DEBUGGING
+static int uw_break_on_error;
+#endif
+
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
 val uw_block_return(val tag, val result);
@@ -554,6 +558,11 @@ val uw_throw(val sym, val args)
     fprintf(stderr, "txr: invalid re-entry of exception handling logic\n");
     abort();
   }
+
+#if CONFIG_EXTRA_DEBUGGING
+  if (uw_break_on_error && uw_exception_subtype_p(sym, error_s))
+    breakpt();
+#endif
 
   if (!listp(args))
     args = cons(args, nil);
