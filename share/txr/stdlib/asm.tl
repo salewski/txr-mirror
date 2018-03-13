@@ -116,7 +116,7 @@
                              (when me.(immediate-fits-type arg type)
                                arg))
                             (l (cond
-                                 ((keywordp arg) me.(lookup-label arg oc))
+                                 ((is-label arg) me.(lookup-label arg oc))
                                  ((integerp arg) arg)))
                             (n (if (integerp arg) arg))
                             (o arg)
@@ -142,7 +142,7 @@
 
   (:method asm-one (me syntax)
     (let ((oc (cond
-                ((keywordp syntax) [%oc-hash% 'label])
+                ((is-label syntax) [%oc-hash% 'label])
                 ((consp syntax) [%oc-hash% (car syntax)]))))
       (unless oc
         (error "assembler: invalid instruction ~s" syntax))
@@ -196,6 +196,11 @@
   (set [%oc-hash% oc.symbol] oc)
   (set [%oc-hash% oc.code] oc))
 
+(defun is-label (obj)
+  (or (keywordp obj)
+      (and (symbolp obj)
+           (not (symbol-package obj)))))
+
 (defun parse-operand (str)
   (cond
     ((r^$ #/t[0-9A-Fa-f][0-9A-Fa-f]?/ str)
@@ -242,8 +247,8 @@
 
 (defopcode op-label label nil
   (:method asm (me asm syntax)
-    (unless (keywordp syntax)
-      asm.(synerr "label must be keyword"))
+    (unless (is-label syntax)
+      asm.(synerr "label must be keyword or gensym"))
     asm.(define-label syntax))
 
   (:method dis (me asm extension operand)))
