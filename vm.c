@@ -825,5 +825,5 @@ void vm_init(void)
   vm_closure_s = intern(lit("vm-closure"), system_package);
   reg_fun(intern(lit("vm-make-desc"), system_package), func_n4(vm_make_desc));
   reg_fun(intern(lit("vm-desc-bytecode"), system_package), func_n1(vm_desc_bytecode));
-  reg_fun(intern(lit("vm-interpret-toplevel"), system_package), func_n1(vm_execute_toplevel));
+  reg_fun(intern(lit("vm-execute-toplevel"), system_package), func_n1(vm_execute_toplevel));
 }
