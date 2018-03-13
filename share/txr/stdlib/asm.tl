@@ -268,6 +268,8 @@
   (:method dis (me asm lev size)
     ^(,me.symbol ,lev ,size)))
 
+(defopcode-derived op-sframe sframe auto op-frame)
+
 (defopcode-derived op-dframe dframe auto op-frame)
 
 (defopcode op-end end auto

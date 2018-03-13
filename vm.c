@@ -262,7 +262,7 @@ INLINE void vm_set(struct vm_env *dspl, unsigned ref, val newval)
     mut(env->vec);
 }
 
-static void vm_frame(struct vm *vm, vm_word_t insn)
+static void vm_do_frame(struct vm *vm, vm_word_t insn, int capturable)
 {
   int lev = vm_insn_extra(insn);
   int size = vm_insn_operand(insn);
@@ -272,9 +272,19 @@ static void vm_frame(struct vm *vm, vm_word_t insn)
 
   vm->lev = lev;
   vm->dspl[lev].mem = coerce(val *, zalloca(size * sizeof (val *)));
-  vm->dspl[lev].vec = num_fast(size);
+  vm->dspl[lev].vec = (capturable ? num_fast(size) : 0);
   vm_execute(vm);
   vm->lev = lev - 1;
+}
+
+static void vm_frame(struct vm *vm, vm_word_t insn)
+{
+  vm_do_frame(vm, insn, 1);
+}
+
+static void vm_sframe(struct vm *vm, vm_word_t insn)
+{
+  vm_do_frame(vm, insn, 0);
 }
 
 static void vm_dframe(struct vm *vm, vm_word_t insn)
@@ -609,6 +619,9 @@ static val vm_execute(struct vm *vm)
       break;
     case FRAME:
       vm_frame(vm, insn);
+      break;
+    case SFRAME:
+      vm_sframe(vm, insn);
       break;
     case DFRAME:
       vm_dframe(vm, insn);
