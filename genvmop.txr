@@ -1,5 +1,5 @@
-@(include "asm")
 @(in-package :sys)
+@(mdo (find-struct-type 'assembler))
 @(bind oc @(keep-if .code %oc-list%))
 @(next "vm.h")
 @(collect)
