@@ -123,6 +123,8 @@
                             ((r rs d ds)
                              (cond
                                ((null arg) 0)
+                               ((consp arg)
+                                (parse-compound-operand arg))
                                ((symbolp arg)
                                 (parse-operand (symbol-name arg)))))
                             (t (error "assembler: invalid arg type spec")))))
@@ -200,6 +202,19 @@
   (or (keywordp obj)
       (and (symbolp obj)
            (not (symbol-package obj)))))
+
+(defun parse-compound-operand (cons)
+  (tree-case cons
+    ((sym arg)
+     (when (<= 0 arg 255)
+       (caseq sym
+         ((t) arg)
+         (d (+ arg 256)))))
+    ((sym arg1 arg2)
+     (when (and (<= 0 arg1 253)
+                (<= 0 arg2 255))
+       (caseq sym
+         (v (+ (* arg1 256) arg2)))))))
 
 (defun parse-operand (str)
   (cond
