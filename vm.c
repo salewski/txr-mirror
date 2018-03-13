@@ -164,7 +164,7 @@ static val vm_make_closure(struct vm *vm, int frsz)
                                chk_calloc(vm->nlvl, sizeof *dspl));
   struct vm_closure *vc = coerce(struct vm_closure *, chk_malloc(sizeof *vc));
   val closure;
-  int i, j;
+  int i;
 
   vc->frsz = frsz;
   vc->ip = vm->ip;
@@ -187,12 +187,10 @@ static val vm_make_closure(struct vm *vm, int frsz)
       break;
     case NUM:
       {
-        int n = c_num(vec);
         val heap_vec = vector(vec, nil);
         cdi->vec = heap_vec;
         cdi->mem = heap_vec->v.vec;
-        for (j = 0; j < n; j++)
-          heap_vec->v.vec[j] = mem[j];
+        memcpy(heap_vec->v.vec, mem, c_num(vec));
         mut(closure);
         *sdi = *cdi;
         break;
