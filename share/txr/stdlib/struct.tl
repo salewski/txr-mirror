@@ -285,7 +285,7 @@
   (sys:check-slot form slot)
   ^[(fun umethod) ',slot ,*bound-args])
 
-(defun sys:defmeth (type-sym name fun)
+(defun sys:define-method (type-sym name fun)
   (caseq name
     (:init (struct-set-initfun type-sym fun))
     (:postinit (struct-set-postinitfun type-sym fun))
@@ -300,8 +300,8 @@
       (compile-defr-warning form ^(struct-type . ,type-sym)
                             "definition of struct ~s not seen here" type-sym)))
   (register-tentative-def ^(sys:slot . ,name))
-  ^(sys:defmeth ',type-sym ',name (lambda ,arglist
-                                    (block ,name ,*body))))
+  ^(sys:define-method ',type-sym ',name (lambda ,arglist
+                                          (block ,name ,*body))))
 
 (defmacro with-slots ((. slot-specs) obj-expr . body)
   (with-gensyms (obj-sym)
