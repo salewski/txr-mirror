@@ -119,7 +119,8 @@ val vm_make_desc(val nlevels, val nregs, val bytecode, val datavec)
 
   {
     mem_t *code = buf_get(bytecode, self);
-    loc data_loc = vecref_l(datavec, zero);
+    val dvl = length_vec(datavec);
+    loc data_loc = if3(dvl != zero, vecref_l(datavec, zero), nulloc);
     struct vm_desc *vd = coerce(struct vm_desc *, chk_malloc(sizeof *vd));
     val desc;
 
