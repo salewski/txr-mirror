@@ -151,6 +151,12 @@ static val vm_desc_bytecode(val desc)
   return vd->bytecode;
 }
 
+static val vm_desc_datavec(val desc)
+{
+  struct vm_desc *vd = vm_desc_struct(desc);
+  return vd->datavec;
+}
+
 static void vm_desc_mark(val obj)
 {
   struct vm_desc *vd = coerce(struct vm_desc *, obj->co.handle);
@@ -825,5 +831,6 @@ void vm_init(void)
   vm_closure_s = intern(lit("vm-closure"), system_package);
   reg_fun(intern(lit("vm-make-desc"), system_package), func_n4(vm_make_desc));
   reg_fun(intern(lit("vm-desc-bytecode"), system_package), func_n1(vm_desc_bytecode));
+  reg_fun(intern(lit("vm-desc-datavec"), system_package), func_n1(vm_desc_datavec));
   reg_fun(intern(lit("vm-execute-toplevel"), system_package), func_n1(vm_execute_toplevel));
 }

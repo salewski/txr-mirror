@@ -630,12 +630,17 @@ static val asm_instantiate(val set_fun)
 
 static val asm_set_entries(val dlt, val fun)
 {
-  val name[] = {
+  val sys_name[] = {
     lit("assembler"),
     nil
   };
+  val name[] = {
+    lit("disassemble"),
+    nil
+  };
 
-  set_dlt_entries_sys(dlt, name, fun);
+  set_dlt_entries_sys(dlt, sys_name, fun);
+  set_dlt_entries(dlt, name, fun);
   return nil;
 }
 

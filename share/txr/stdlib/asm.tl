@@ -19,7 +19,7 @@
 
 (defstruct assembler nil
   buf
-  (bstr (make-buf-stream))
+  bstr
   (labdef (hash))
   (labref (hash))
   (:static imm-width (relate '(si mi bi) '(10 16 32)))
@@ -37,7 +37,11 @@
                                   "any object"))))
 
 (defmeth assembler :postinit (me)
-  (set me.buf (get-buf-from-stream me.bstr)))
+  (cond
+    (me.buf (set me.bstr (make-buf-stream me.buf)))
+    (me.bstr (set me.buf (get-buf-from-stream me.bstr)))
+    (t (set me.bstr (make-buf-stream)
+            me.buf (get-buf-from-stream me.bstr)))))
 
 (defmeth assembler cur-pos (me)
   (seek-stream me.bstr 0 :from-current))
@@ -585,3 +589,15 @@
                   (add (operand-to-sym x))
                   (unless (minusp fix)
                     (add (operand-to-sym y))))))))))))
+
+(defun disassemble-c-d (code data *stdout*)
+  (let ((asm (new assembler buf code)))
+    (put-line "data:")
+    (mapdo (do format t "  d~,02x: ~s\n" @1 @2) (range 0) data)
+    (put-line "code:")
+    asm.(dis-listing)))
+
+(defun usr:disassemble (obj : (stream *stdout*))
+  (typecase obj
+    (vm-desc (disassemble-c-d (vm-desc-bytecode obj) (vm-desc-datavec obj) stream))
+    (t (error "~s: not a compiled object: ~s" 'vm-disassemble obj))))
