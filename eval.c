@@ -3355,7 +3355,8 @@ static val expand_vars(val vars, val menv, val form, int seq_p)
     return vars;
   } else if (symbolp(sym = car(vars))) {
     val rest_vars = rest(vars);
-    val rest_vars_ex = expand_vars(rest_vars, menv, form, seq_p);
+    val menv_new = seq_p ? make_var_shadowing_env(menv, cons(sym, nil)) : menv;
+    val rest_vars_ex = expand_vars(rest_vars, menv_new, form, seq_p);
 
     if (!bindable(sym))
       not_bindable_error(form, sym);
