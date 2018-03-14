@@ -6170,7 +6170,7 @@ val generic_funcall(val fun, struct args *args_in)
     if (args->fill < reqargs)
       callerror(fun, lit("missing required arguments"));
 
-    if (args->list)
+    if (args->fill > fixparam || args->list)
       callerror(fun, lit("too many arguments"));
 
     switch (fun->f.functype) {
