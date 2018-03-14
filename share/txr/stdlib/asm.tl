@@ -161,7 +161,7 @@
   (unless (empty me.labref)
     (error "assembler: dangling label references"))
   (whenlet ((n (cdr [find-max me.labdef : cdr])))
-    (unless (< 0 n (len me.buf))
+    (unless (< -1 n (len me.buf))
       (error "assembler: labels outside of code"))))
 
 (defmeth assembler dis-one (me)
