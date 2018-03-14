@@ -271,7 +271,7 @@
 
 (defmacro push (new-item place :env env)
   (with-gensyms (new-sym)
-    ^(rlet ((,new-sym ,new-item))
+    ^(alet ((,new-sym ,new-item))
        ,(with-update-expander (getter setter) place env
           ^(,setter (cons ,new-sym (,getter)))))))
 
