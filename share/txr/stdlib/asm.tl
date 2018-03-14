@@ -177,7 +177,7 @@
     me.(set-pos p)
     (while (< p l)
       (let* ((dis me.(dis-one))
-             (dis-txt (cat-str [mapcar tostring dis] " "))
+             (dis-txt (cat-str [mapcar tostringp dis] " "))
              (q me.(cur-pos)))
         me.(set-pos p)
         (format t "~,5d: ~,08X ~a\n" (trunc p 4) me.(get-word) dis-txt)
