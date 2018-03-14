@@ -443,7 +443,7 @@
 (defopcode op-block block auto
   (:method asm (me asm syntax)
     me.(chk-arg-count 3 syntax)
-    (tree-bind (outreg blname exitpt) asm.(parse-args me syntax '(r r l))
+    (tree-bind (outreg blname exitpt) asm.(parse-args me syntax '(d r l))
       asm.(put-insn me.code (ash exitpt -16) (logtrunc exitpt 16))
       asm.(put-pair outreg blname)))
 
@@ -498,7 +498,7 @@
 (defopcode op-catch catch auto
   (:method asm (me asm syntax)
     me.(chk-arg-count 4 syntax)
-    (tree-bind (sym args catch-syms dst) asm.(parse-args me syntax '(r r r l))
+    (tree-bind (sym args catch-syms dst) asm.(parse-args me syntax '(d d r l))
       asm.(put-insn me.code (ash dst -16) (logtrunc dst 16))
       asm.(put-pair sym args)
       asm.(put-pair 0 catch-syms)))
