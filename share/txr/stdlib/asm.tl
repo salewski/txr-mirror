@@ -127,7 +127,8 @@
                               (parse-compound-operand arg))
                              ((symbolp arg)
                               (parse-operand (symbol-name arg)))))
-                          (t (error "assembler: invalid arg type spec")))))
+                          (t (error "assembler: invalid arg type spec ~s"
+                                    type)))))
               (unless (or parg (eq type 'o))
                 oc.(synerr "argument ~a of ~s invalid; ~a expected"
                            n syntax [me.operand-name type]))
@@ -540,7 +541,7 @@
 (defopcode op-setv setv auto
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
-    (tree-bind (reg name) asm.(parse-args me syntax '(s r))
+    (tree-bind (reg name) asm.(parse-args me syntax '(rs r))
       asm.(put-insn me.code reg name)))
   (:method dis (me asm reg name)
     ^(,me.symbol ,(operand-to-sym reg) ,(operand-to-sym name))))
