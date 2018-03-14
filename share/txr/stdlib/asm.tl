@@ -219,7 +219,7 @@
      (when (and (<= 0 arg1 253)
                 (<= 0 arg2 255))
        (caseq sym
-         (v (+ (* arg1 256) arg2)))))))
+         (v (+ (* (ssucc arg1) 256) arg2)))))))
 
 (defun parse-operand (str)
   (cond
