@@ -438,6 +438,23 @@
           (reg (cadr asm.(get-pair))))
       ^(,me.symbol ,(operand-to-sym reg) ,dst))))
 
+(defopcode op-ifq ifq auto
+  (:method asm (me asm syntax)
+    me.(chk-arg-count 3 syntax)
+    (tree-bind (lreg rreg dst) asm.(parse-args me syntax '(r r l))
+      asm.(put-insn me.code (ash dst -16) (logtrunc dst 16))
+      asm.(put-pair lreg rreg)))
+
+  (:method backpatch (me asm at dst)
+    asm.(put-insn me.code (ash dst -16) (logtrunc dst 16)))
+
+  (:method dis (me asm high16 low16)
+    (let ((dst (logior (ash high16 16) low16)))
+      (tree-bind (lreg rreg) asm.(get-pair)
+      ^(,me.symbol ,(operand-to-sym lreg) ,(operand-to-sym rreg) ,dst)))))
+
+(defopcode-derived op-ifql ifql auto op-ifq)
+
 (defopcode-derived op-uwprot uwprot auto op-jmp)
 
 (defopcode op-block block auto

@@ -441,6 +441,28 @@ static void vm_if(struct vm *vm, vm_word_t insn)
     vm->ip = vm_insn_bigop(ip);
 }
 
+static void vm_ifq(struct vm *vm, vm_word_t insn)
+{
+  unsigned ip = vm_insn_bigop(insn);
+  vm_word_t arg = vm->code[vm->ip++];
+  val a = vm_get(vm->dspl, vm_arg_operand_lo(arg));
+  val b = vm_get(vm->dspl, vm_arg_operand_hi(arg));
+
+  if (a != b)
+    vm->ip = vm_insn_bigop(ip);
+}
+
+static void vm_ifql(struct vm *vm, vm_word_t insn)
+{
+  unsigned ip = vm_insn_bigop(insn);
+  vm_word_t arg = vm->code[vm->ip++];
+  val a = vm_get(vm->dspl, vm_arg_operand_lo(arg));
+  val b = vm_get(vm->dspl, vm_arg_operand_hi(arg));
+
+  if (!eql(a, b))
+    vm->ip = vm_insn_bigop(ip);
+}
+
 static void vm_uwprot(struct vm *vm, vm_word_t insn)
 {
   int saved_lev = vm->lev;
@@ -666,6 +688,12 @@ static val vm_execute(struct vm *vm)
       break;
     case IF:
       vm_if(vm, insn);
+      break;
+    case IFQ:
+      vm_ifq(vm, insn);
+      break;
+    case IFQL:
+      vm_ifql(vm, insn);
       break;
     case UWPROT:
       vm_uwprot(vm, insn);
