@@ -1863,7 +1863,7 @@ static val op_defun(val form, val env)
     uw_purge_deferred_warning(cons(sym_s, name));
     return name;
   } else if (car(name) == meth_s) {
-    val binding = lookup_fun(nil, intern(lit("defmeth"), system_package));
+    val binding = lookup_fun(nil, intern(lit("define-method"), system_package));
     val type_sym = second(name);
     val meth_name = third(name);
     val block = cons(block_s, cons(meth_name, body));
