@@ -70,7 +70,6 @@ struct c_var {
 val top_vb, top_fb, top_mb, top_smb, special, builtin;
 val op_table, pm_table;
 val dyn_env;
-val eval_initing;
 
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s, dvbind_s;
@@ -1860,8 +1859,6 @@ static val op_defun(val form, val env)
 
     /* defun captures lexical environment, so env is passed */
     sethash(top_fb, name, cons(name, func_interp(env, fun)));
-    if (eval_initing)
-      sethash(builtin, name, defun_s);
     uw_purge_deferred_warning(cons(fun_s, name));
     uw_purge_deferred_warning(cons(sym_s, name));
     return name;
@@ -1889,8 +1886,6 @@ static val op_defun(val form, val env)
                  sym, name, nao);
 
     sethash(top_mb, sym, cons(name, func_interp(env, fun)));
-    if (eval_initing)
-      sethash(builtin, sym, defmacro_s);
     return name;
   } else {
     eval_error(form, lit("defun: ~s isn't recognized function name syntax"),
@@ -1938,8 +1933,6 @@ static val op_defmacro(val form, val env)
           rlcp_tree(cons(name, func_f2(cons(env, cons(params, cons(block, nil))),
                                        me_interp_macro)),
                     block));
-  if (eval_initing)
-    sethash(builtin, name, defmacro_s);
   return name;
 }
 
@@ -5720,8 +5713,6 @@ void eval_init(void)
   op_table = make_hash(nil, nil, nil);
   pm_table = make_hash(nil, nil, nil);
 
-  eval_initing = t;
-
   call_f = func_n1v(generic_funcall);
 
   origin_hash = make_hash(t, nil, nil);
@@ -6551,8 +6542,6 @@ void eval_init(void)
   uw_register_subtype(eval_error_s, error_s);
 
   lisplib_init();
-
-  eval_initing = nil;
 }
 
 void eval_compat_fixup(int compat_ver)
