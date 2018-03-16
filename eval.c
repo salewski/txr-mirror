@@ -2531,55 +2531,20 @@ static val op_handler_bind(val form, val env)
   return result;
 }
 
-val format_field(val obj, val modifier, val filter, val eval_fun)
+static val do_format_field(val obj, val n, val sep,
+                           val range_ix, val plist,
+                           val filter)
 {
-  val n = zero, sep = lit(" ");
-  val plist = nil;
   val str;
 
-  for (; modifier; pop(&modifier)) {
-    val item = first(modifier);
-    if (regexp(item)) {
-      uw_throw(query_error_s, lit("bad field format: regex modifier in output var"));
-    } else if (keywordp(item)) {
-      plist = modifier;
-      break;
-    } else if ((!opt_compat || opt_compat > 128) &&
-               consp(item) && car(item) == expr_s)
-    {
-      item = cadr(item);
-      goto eval;
-    } else if (consp(item) && car(item) == dwim_s) {
-      val arg_expr = second(item);
-
-      if (consp(arg_expr) && car(arg_expr) == range_s) {
-        val from = funcall1(eval_fun, second(arg_expr));
-        val to = funcall1(eval_fun, third(arg_expr));
-
-        obj = sub(obj, from, to);
-      } else {
-         val arg = funcall1(eval_fun, arg_expr);
-         if (integerp(arg)) {
-           obj = ref(obj, arg);
-         } else if (rangep(arg)) {
-           obj = sub(obj, from(arg), to(arg));
-         } else {
-           uw_throwf(query_error_s,
-                     lit("bad field format: index ~s expected to be integer or range"),
-                     arg, nao);
-         }
-      }
-    } else eval: {
-      val v = funcall1(eval_fun, item);
-      if (fixnump(v))
-        n = v;
-      else if (stringp(v))
-        sep = v;
-      else
-        uw_throwf(query_error_s,
-                  lit("bad field format: modifier ~s expected to be fixnum or string"),
-                  v, nao);
-    }
+  if (integerp(range_ix)) {
+    obj = ref(obj, range_ix);
+  } else if (rangep(range_ix)) {
+    obj = sub(obj, from(range_ix), to(range_ix));
+  } else if (range_ix) {
+    uw_throwf(query_error_s,
+              lit("bad field format: index ~s expected to be integer or range"),
+              range_ix, nao);
   }
 
   str = if3(stringp(obj),
@@ -2626,6 +2591,50 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
   }
 }
 
+val format_field(val obj, val modifier, val filter, val eval_fun)
+{
+  val n = zero, sep = lit(" ");
+  val plist = nil;
+  val range_ix = nil;
+
+  for (; modifier; pop(&modifier)) {
+    val item = first(modifier);
+    if (regexp(item)) {
+      uw_throw(query_error_s, lit("bad field format: regex modifier in output var"));
+    } else if (keywordp(item)) {
+      plist = modifier;
+      break;
+    } else if ((!opt_compat || opt_compat > 128) &&
+               consp(item) && car(item) == expr_s)
+    {
+      item = cadr(item);
+      goto eval;
+    } else if (consp(item) && car(item) == dwim_s) {
+      val arg_expr = second(item);
+
+      if (consp(arg_expr) && car(arg_expr) == range_s) {
+        val from = funcall1(eval_fun, second(arg_expr));
+        val to = funcall1(eval_fun, third(arg_expr));
+
+        range_ix = rcons(from, to);
+      } else {
+        range_ix = funcall1(eval_fun, arg_expr);
+      }
+    } else eval: {
+      val v = funcall1(eval_fun, item);
+      if (fixnump(v))
+        n = v;
+      else if (stringp(v))
+        sep = v;
+      else
+        uw_throwf(query_error_s,
+                  lit("bad field format: modifier ~s expected to be fixnum or string"),
+                  v, nao);
+    }
+  }
+
+  return do_format_field(obj, n, sep, range_ix, plist, filter);
+}
 
 val subst_vars(val forms, val env, val filter)
 {
