@@ -644,6 +644,28 @@ static val asm_set_entries(val dlt, val fun)
   return nil;
 }
 
+static val compiler_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~acompiler.tl"), stdlib_path, nao));
+  return nil;
+}
+
+static val compiler_set_entries(val dlt, val fun)
+{
+  val sys_name[] = {
+    lit("compiler"),
+    nil
+  };
+  val name[] = {
+    lit("compile-toplevel"),
+    nil
+  };
+
+  set_dlt_entries_sys(dlt, sys_name, fun);
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
 
 static val op_set_entries(val dlt, val fun)
 {
@@ -705,6 +727,7 @@ void lisplib_init(void)
   dlt_register(dl_table, doloop_instantiate, doloop_set_entries);
   dlt_register(dl_table, stream_wrap_instantiate, stream_wrap_set_entries);
   dlt_register(dl_table, asm_instantiate, asm_set_entries);
+  dlt_register(dl_table, compiler_instantiate, compiler_set_entries);
 
   if (!opt_compat || opt_compat >= 185)
     dlt_register(dl_table, op_instantiate, op_set_entries);
