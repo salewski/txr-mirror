@@ -6009,7 +6009,7 @@ val func_vm(val closure, val desc, int fixparam, int reqargs, int variadic)
   obj->f.functype = FVM;
   obj->f.env = closure;
   obj->f.f.vm_desc = desc;
-  obj->f.fixparam = reqargs;
+  obj->f.fixparam = fixparam;
   obj->f.optargs = fixparam - reqargs;
   obj->f.variadic = variadic;
   return obj;
