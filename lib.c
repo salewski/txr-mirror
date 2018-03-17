@@ -2509,6 +2509,7 @@ val equal(val left, val right)
     {
       switch (left->f.functype) {
       case FINTERP: return (equal(left->f.f.interp_fun, right->f.f.interp_fun));
+      case FVM: return t;
       case F0: return (left->f.f.f0 == right->f.f.f0) ? t : nil;
       case F1: return (left->f.f.f1 == right->f.f.f1) ? t : nil;
       case F2: return (left->f.f.f2 == right->f.f.f2) ? t : nil;
@@ -6287,6 +6288,8 @@ val funcall(val fun)
     switch (fun->f.functype) {
     case FINTERP:
       return funcall_interp(fun, args);
+    case FVM:
+      return vm_execute_closure(fun, args);
     case F0:
       return fun->f.f.f0v(fun->f.env, args);
     case N0:
@@ -6296,6 +6299,11 @@ val funcall(val fun)
     }
   } else {
     switch (fun->f.functype) {
+    case FVM:
+      {
+        args_decl(args, ARGS_MIN);
+        return vm_execute_closure(fun, args);
+      }
     case F0:
       return fun->f.f.f0(fun->f.env);
     case N0:
@@ -6322,6 +6330,9 @@ val funcall1(val fun, val arg)
     case FINTERP:
       args_add(args, arg);
       return funcall_interp(fun, args);
+    case FVM:
+      args_add(args, arg);
+      return vm_execute_closure(fun, args);
     case F0:
       args_add(args, arg);
       return fun->f.f.f0v(fun->f.env, args);
@@ -6337,6 +6348,12 @@ val funcall1(val fun, val arg)
     }
   } else {
     switch (fun->f.functype) {
+    case FVM:
+      {
+        args_decl(args, ARGS_MIN);
+        args_add(args, arg);
+        return vm_execute_closure(fun, args);
+      }
     case F1:
       return fun->f.f.f1(fun->f.env, z(arg));
     case N1:
@@ -6363,6 +6380,9 @@ val funcall2(val fun, val arg1, val arg2)
     case FINTERP:
       args_add2(args, arg1, arg2);
       return funcall_interp(fun, args);
+    case FVM:
+      args_add2(args, arg1, arg2);
+      return vm_execute_closure(fun, args);
     case F0:
       args_add2(args, arg1, arg2);
       return fun->f.f.f0v(fun->f.env, args);
@@ -6384,6 +6404,12 @@ val funcall2(val fun, val arg1, val arg2)
     }
   } else {
     switch (fun->f.functype) {
+    case FVM:
+      {
+        args_decl(args, ARGS_MIN);
+        args_add2(args, arg1, arg2);
+        return vm_execute_closure(fun, args);
+      }
     case F2:
       return fun->f.f.f2(fun->f.env, z(arg1), z(arg2));
     case N2:
@@ -6410,6 +6436,9 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
     case FINTERP:
       args_add3(args, arg1, arg2, arg3);
       return funcall_interp(fun, args);
+    case FVM:
+      args_add3(args, arg1, arg2, arg3);
+      return vm_execute_closure(fun, args);
     case F0:
       args_add3(args, arg1, arg2, arg3);
       return fun->f.f.f0v(fun->f.env, args);
@@ -6437,6 +6466,12 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
     }
   } else {
     switch (fun->f.functype) {
+    case FVM:
+      {
+        args_decl(args, ARGS_MIN);
+        args_add3(args, arg1, arg2, arg3);
+        return vm_execute_closure(fun, args);
+      }
     case F3:
       return fun->f.f.f3(fun->f.env, z(arg1), z(arg2), z(arg3));
     case N3:
@@ -6463,6 +6498,9 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
     case FINTERP:
       args_add4(args, arg1, arg2, arg3, arg4);
       return funcall_interp(fun, args);
+    case FVM:
+      args_add4(args, arg1, arg2, arg3, arg4);
+      return vm_execute_closure(fun, args);
     case F0:
       args_add4(args, arg1, arg2, arg3, arg4);
       return fun->f.f.f0v(fun->f.env, args);
@@ -6496,6 +6534,12 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
     }
   } else {
     switch (fun->f.functype) {
+    case FVM:
+      {
+        args_decl(args, ARGS_MIN);
+        args_add4(args, arg1, arg2, arg3, arg4);
+        return vm_execute_closure(fun, args);
+      }
     case F4:
       return fun->f.f.f4(fun->f.env, z(arg1), z(arg2), z(arg3), z(arg4));
     case N4:
@@ -11102,7 +11146,8 @@ dot:
         format(out, lit("#<interpreted fun: ~s ~s>"),
                car(fun), cadr(fun), nao);
       } else {
-        format(out, lit("#<intrinsic fun: ~a param"),
+        format(out, lit("#<~a fun: ~a param"),
+               if3(f->functype == FVM, lit("vm"), lit("intrinsic")),
                num_fast(f->fixparam - f->optargs), nao);
         if (f->optargs)
           format(out, lit(" + ~a optional"),

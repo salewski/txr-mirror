@@ -372,8 +372,12 @@ tail_call:
     mark_obj_tail(obj->pk.symhash);
   case FUN:
     mark_obj(obj->f.env);
-    if (obj->f.functype == FINTERP)
+    switch (obj->f.functype) {
+    case FINTERP:
       mark_obj_tail(obj->f.f.interp_fun);
+    case FVM:
+      mark_obj_tail(obj->f.f.vm_desc);
+    }
     return;
   case VEC:
     {
