@@ -319,6 +319,8 @@
                                          (dreg me.(get-dreg special)))
                                      ^(bindv ,sub-bind.loc ,dreg)))))
                            ,*bfrag.code
+                           ,*(if specials
+                               ^((end ,bfrag.oreg)))
                            (end ,bfrag.oreg)
                            ,lskip)
                          (uni [reduce-left uni ifrags nil .fvars]
