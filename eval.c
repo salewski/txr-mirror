@@ -2531,6 +2531,25 @@ static val op_handler_bind(val form, val env)
   return result;
 }
 
+static val fmt_tostring(val obj)
+{
+  return if3(stringp(obj),
+             obj,
+             if3(if3(opt_compat && opt_compat <= 174,
+                     listp(obj), seqp(obj)),
+                 obj,
+                 tostringp(obj)));
+}
+
+static val fmt_cat(val obj, val sep)
+{
+  return if3(stringp(obj),
+             obj,
+             if3(if3(opt_compat && opt_compat <= 174, listp(obj), seqp(obj)),
+                 cat_str(mapcar(func_n1(tostringp), obj), sep),
+                 tostringp(obj)));
+}
+
 static val do_format_field(val obj, val n, val sep,
                            val range_ix, val plist,
                            val filter)
@@ -2547,11 +2566,7 @@ static val do_format_field(val obj, val n, val sep,
               range_ix, nao);
   }
 
-  str = if3(stringp(obj),
-            obj,
-            if3(if3(opt_compat && opt_compat <= 174, listp(obj), seqp(obj)),
-                cat_str(mapcar(func_n1(tostringp), obj), sep),
-                tostringp(obj)));
+  str = fmt_cat(obj, sep);
 
   {
     val filter_sym = getplist(plist, filter_k);
@@ -2641,7 +2656,7 @@ static val fmt_simple(val obj, val n_in, val sep_in,
 {
   val n = if3(null(n_in), zero, n_in);
   val sep = if3(null(sep_in), lit(" "), sep_in);
-  return do_format_field(obj, n, sep, range_ix, plist, nil);
+  return do_format_field(fmt_tostring(obj), n, sep, range_ix, plist, nil);
 }
 
 static val fmt_flex(val obj, val plist, struct args *args)
@@ -2665,7 +2680,7 @@ static val fmt_flex(val obj, val plist, struct args *args)
     }
   }
 
-  return do_format_field(obj, n, sep, range_ix, plist, nil);
+  return do_format_field(fmt_tostring(obj), n, sep, range_ix, plist, nil);
 }
 
 val subst_vars(val forms, val env, val filter)
@@ -2686,24 +2701,14 @@ val subst_vars(val forms, val env, val filter)
         /* If the object is a sequence, we let format_field deal with the
            conversion to text, because the modifiers influence how
            it is done. */
-        str = if3(stringp(str),
-                  str,
-                  if3(if3(opt_compat && opt_compat <= 174,
-                          listp(str), seqp(str)),
-                      str,
-                      tostringp(str)));
+        str = fmt_tostring(str);
 
         if (modifiers) {
           forms = cons(format_field(str, modifiers, filter,
                                     curry_123_1(func_n3(eval), env, form)),
                        rest(forms));
         } else {
-          if (!stringp(str))
-            str = if3(if3(opt_compat && opt_compat <= 174,
-                          listp(str), seqp(str)),
-                      cat_str(mapcar(func_n1(tostringp), str), lit(" ")),
-                      str);
-
+          str = fmt_cat(str, lit(" "));
           forms = cons(filter_string_tree(filter, str), rest(forms));
         }
 
