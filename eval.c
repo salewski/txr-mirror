@@ -2636,6 +2636,38 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
   return do_format_field(obj, n, sep, range_ix, plist, filter);
 }
 
+static val fmt_simple(val obj, val n_in, val sep_in,
+                          val range_ix, val plist)
+{
+  val n = if3(null(n_in), zero, n_in);
+  val sep = if3(null(sep_in), lit(" "), sep_in);
+  return do_format_field(obj, n, sep, range_ix, plist, nil);
+}
+
+static val fmt_flex(val obj, val plist, struct args *args)
+{
+  cnum ix = 0;
+  val n = zero, sep = lit(" ");
+  val range_ix = nil;
+
+  while (args_more(args, ix)) {
+    val arg = args_get(args, &ix);
+
+    if (integerp(arg)) {
+      n = arg;
+    } else if (stringp(arg)) {
+      sep = arg;
+    } else if (rangep(arg)) {
+      if (to(arg))
+        range_ix = arg;
+      else
+        range_ix = from(arg);
+    }
+  }
+
+  return do_format_field(obj, n, sep, range_ix, plist, nil);
+}
+
 val subst_vars(val forms, val env, val filter)
 {
   list_collect_decl(out, iter);
@@ -6256,6 +6288,9 @@ void eval_init(void)
   reg_fun(intern(lit("pprinl"), user_package), func_n2o(pprinl, 1));
   reg_fun(intern(lit("tprint"), user_package), func_n2o(tprint, 1));
   reg_fun(intern(lit("display-width"), user_package), func_n1(display_width));
+
+  reg_fun(intern(lit("fmt-simple"), system_package), func_n5(fmt_simple));
+  reg_fun(intern(lit("fmt-flex"), system_package), func_n2v(fmt_flex));
 
   reg_varl(user_package_s = intern(lit("user-package"), user_package_var),
            user_package_var);
