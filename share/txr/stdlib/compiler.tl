@@ -251,8 +251,7 @@
         (let* ((opt-pars (mapcar [iffi atom list] raw-opt-pars))
                (nenv (if need-frame (new env up env co me) env))
                (nreq (len req-pars))
-               (nfixed (+ nreq (len opt-pars)))
-               (frsize (+ nfixed (if rest-par 1 0))))
+               (nfixed (+ nreq (len opt-pars))))
           (flet ((spec-sub (sym)
                    (cond
                      ((special-var-p sym)
@@ -298,7 +297,8 @@
                    (benv (if specials (new env up nenv co me) nenv))
                    (bfrag me.(comp-progn benv body))
                    (oreg me.(alloc-treg))
-                   (lskip (gensym "l-")))
+                   (lskip (gensym "l-"))
+                   (frsize nenv.v-cntr))
               me.(free-treg bfrag.oreg)
               (new (frag oreg
                          ^((close ,oreg ,frsize ,lskip ,nfixed ,nreq
