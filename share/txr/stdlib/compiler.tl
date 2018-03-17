@@ -132,6 +132,7 @@
             (sys:for-op me.(comp-for env (cdr form)))
             (progn me.(comp-progn env (cadr form)))
             (prog1 me.(comp-prog1 env form))
+            (sys:quasi me.(comp-quasi env form))
             (sys:dvbind me.(compile env (caddr form)))
             (sys:with-dyn-rebinds me.(comp-progn env (cddr form)))
             ((macrolet symacrolet macro-time)
@@ -353,6 +354,10 @@
     ((prog1 fi) me.(compile env fi))
     ((prog1) me.(compile env nil))))
 
+(defmeth compiler comp-quasi (me env form)
+  (let ((qexp (expand-quasi form)))
+    me.(compile env (expand qexp))))
+
 (defmeth compiler comp-call (me env sym args)
   (let ((oreg me.(alloc-treg))
         (dreg me.(get-dreg sym))
@@ -395,6 +400,85 @@
                    ,*rfrag.code)
                    [reduce-left uni frags nil .fvars]
                    [reduce-left uni frags nil .ffuns])))))
+
+(defun expand-quasi-mods (obj mods : form)
+  (let (plist num sep rng-ix scalar-ix-p flex gens)
+    (flet ((get-sym (exp)
+             (let ((gen (gensym)))
+               (push (list gen exp) gens)
+               gen)))
+      (for () (mods) ((pop mods))
+        (let ((mel (car mods)))
+          (cond
+            ((keywordp mel)
+             (set plist mods)
+             (return))
+            ((integerp mel)
+             (when num
+               (compile-error form "duplicate modifier (width/alignment): ~s"
+                              num))
+             (set num mel))
+            ((stringp mel)
+             (when sep
+               (compile-error form "duplicate modifier (separator): ~s"
+                              num))
+             (set sep mel))
+            ((atom mel)
+             (push (get-sym mel) flex))
+            (t
+              (caseq (car mel)
+                (dwim
+                  (when rng-ix
+                    (compile-error form "duplicate modifier (range/index): ~s"
+                                   mel))
+                  (unless (consp (cdr mel))
+                    (compile-error form "misisng argument in range/index: ~s"
+                                   mel))
+                  (unless (null (cddr mel))
+                    (compile-error form "excess args in range/index: ~s"
+                                   num))
+                  (let ((arg (cadr mel)))
+                    (cond
+                      ((and (consp arg) (eq (car arg) 'range))
+                       (set rng-ix (get-sym ^(rcons ,(cadr arg) ,(caddr arg)))))
+                      (t
+                        (set rng-ix (get-sym arg))
+                        (set scalar-ix-p t)))))
+                (sys:expr (push (get-sym flex) (cadr mel)))
+                (t (push (get-sym mel) flex)))))))
+      (let ((mcount (+ (if num 1 0)
+                       (if sep 1 0)
+                       (if rng-ix 1 0)
+                       (len flex))))
+        (when (> mcount 3)
+          (compile-error form "too many formatting modifiers"))
+        ^(alet ,(nreverse gens)
+           ,(if flex
+              ^(sys:fmt-flex ,obj ',plist
+                             ,*(remq nil (list* num sep
+                                                (if scalar-ix-p
+                                                  ^(rcons ,rng-ix nil)
+                                                  rng-ix)
+                                                (nreverse flex))))
+              ^(sys:fmt-simple ,obj ,num ,sep, rng-ix ',plist)))))))
+
+(defun expand-quasi-args (form)
+  (append-each ((el (cdr form)))
+    (cond
+      ((consp el)
+       (caseq (car el)
+         (sys:var (mac-param-bind form (sym exp : mods) el
+                    (list (expand-quasi-mods exp mods))))
+         (sys:quasi (expand-quasi-mods el))
+         (t el)))
+      ((bindable el)
+       (list ^(sys:fmt-simple ,el nil nil nil nil)))
+      (t
+        (list el)))))
+
+(defun expand-quasi (form)
+  (let ((qa (expand-quasi-args form)))
+    ^(append ,*qa)))
 
 (defun usr:compile-toplevel (exp)
   (let ((co (new compiler))
