@@ -145,7 +145,7 @@
             (t
               (compile-error form "special op ~s not handled yet" sym))))
          ((bindable sym) me.(comp-call env sym (cdr form)))
-         (t (compile-error form "invalid compound form")))))))
+         (t (compile-error form "invalid operator")))))))
 
 (defmeth compiler comp-atom (me form)
   (cond
