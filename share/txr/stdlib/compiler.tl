@@ -483,6 +483,6 @@
 (defun usr:compile-toplevel (exp)
   (let ((co (new compiler))
         (as (new assembler)))
-    (let ((frag co.(compile (new env) (expand exp))))
+    (let ((frag co.(compile (new env) (expand* exp))))
       as.(asm ^(,*frag.code (end ,frag.oreg)))
       (vm-make-desc co.nlev co.nreg as.buf co.(get-datavec)))))
