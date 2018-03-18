@@ -125,11 +125,11 @@
          ((special-operator-p sym)
           (caseq sym
             (quote me.(comp-atom (cadr form)))
-            (sys:setq me.(comp-setq env (cdr form)))
-            (block me.(comp-block env (cdr form)))
-            ((let let*) me.(comp-let env sym (cdr form)))
-            (lambda me.(comp-lambda env (cdr form)))
-            (sys:for-op me.(comp-for env (cdr form)))
+            (sys:setq me.(comp-setq env form))
+            (block me.(comp-block env form))
+            ((let let*) me.(comp-let env sym form))
+            (lambda me.(comp-lambda env form))
+            (sys:for-op me.(comp-for env form))
             (progn me.(comp-progn env (cadr form)))
             (prog1 me.(comp-prog1 env form))
             (sys:quasi me.(comp-quasi env form))
@@ -164,8 +164,8 @@
           (dreg me.(get-dreg sym)))
       (new (frag oreg ^((getv ,oreg ,dreg)) (list sym))))))
 
-(defmeth compiler comp-setq (me env args)
-  (tree-bind (sym value) args
+(defmeth compiler comp-setq (me env form)
+  (mac-param-bind form (op sym value) form
     (let* ((bind env.(lookup-var sym))
            (vloc (if bind
                    bind.loc
@@ -180,8 +180,8 @@
                  (uni (list sym) vfrag.fvars)
                  vfrag.ffuns)))))
 
-(defmeth compiler comp-block (me env args)
-  (tree-bind (name . body) args
+(defmeth compiler comp-block (me env form)
+  (mac-param-bind form (op name . body) form
     (let* ((dreg me.(get-dreg name))
            (bfrag me.(comp-progn env body))
            (lskip (gensym "l"))
@@ -197,8 +197,8 @@
                  bfrag.fvars
                  bfrag.ffuns)))))
 
-(defmeth compiler comp-let (me env sym args)
-  (tree-bind (raw-vis . body) args
+(defmeth compiler comp-let (me env sym form)
+  (mac-param-bind form (sym raw-vis . body) form
     (let* ((vis (mapcar [iffi atom list] raw-vis))
            (specials [keep-if special-var-p vis car])
            (lexsyms [remove-if special-var-p [mapcar car vis]])
@@ -241,8 +241,8 @@
                    (uni (diff bfrag.fvars lexsyms) fvars)
                    (uni ffuns bfrag.ffuns)))))))
 
-(defmeth compiler comp-lambda (me env args)
-  (tree-bind (pars . body) args
+(defmeth compiler comp-lambda (me env form)
+  (mac-param-bind form (op pars . body) form
     (let* ((rest-par (nthlast 0 pars))
            (fixed-pars (ldiff pars rest-par))
            (need-frame (or fixed-pars rest-par))
@@ -369,8 +369,8 @@
                  [reduce-left uni afrags nil .fvars]
                  [reduce-left uni afrags nil .ffuns])))))
 
-(defmeth compiler comp-for (me env args)
-  (tree-bind (inits (: test . rets) incs . body) args
+(defmeth compiler comp-for (me env form)
+  (mac-param-bind form (op inits (: test . rets) incs . body) form
     (let* ((ifrag me.(comp-progn env inits))
            (tfrag (progn
                     me.(free-treg ifrag.oreg)
