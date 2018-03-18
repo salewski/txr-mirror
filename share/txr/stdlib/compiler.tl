@@ -72,7 +72,12 @@
   (:method extend-fun (me sym)
     (let* ((loc ^(v ,me.lev ,(pinc me.v-cntr)))
            (bn (new binding sym sym loc loc env me)))
-      (set me.fb (acons-new sym bn me.fb)))))
+      (set me.fb (acons-new sym bn me.fb))))
+
+  (:method out-of-scope (me reg)
+    (if (eq (car reg) 'v)
+      (let ((lev (ssucc (cadr reg))))
+        (< me.lev lev)))))
 
 (defstruct compiler nil
   (dreg-cntr 0)
@@ -111,30 +116,30 @@
   (when (>= env.lev me.nlev)
     (set me.nlev (succ env.lev))))
 
-(defmeth compiler compile (me env form)
+(defmeth compiler compile (me oreg env form)
   (set me.last-form form)
   (cond
-    ((null form) (new (frag '(t 0) nil)))
-    ((and (symbolp form)
-          (not (bindable form))) me.(comp-atom form))
-    ((symbolp form) me.(comp-var env form))
-    ((atom form) me.(comp-atom form))
+    ((symbolp form)
+     (if (bindable form)
+       me.(comp-var oreg env form)
+       me.(comp-atom oreg form)))
+    ((atom form) me.(comp-atom oreg form))
     ((consp form)
      (let ((sym (car form)))
        (cond
          ((special-operator-p sym)
           (caseq sym
-            (quote me.(comp-atom (cadr form)))
-            (sys:setq me.(comp-setq env form))
-            (block me.(comp-block env form))
-            ((let let*) me.(comp-let env sym form))
-            (lambda me.(comp-lambda env form))
-            (sys:for-op me.(comp-for env form))
-            (progn me.(comp-progn env (cadr form)))
-            (prog1 me.(comp-prog1 env form))
-            (sys:quasi me.(comp-quasi env form))
-            (sys:dvbind me.(compile env (caddr form)))
-            (sys:with-dyn-rebinds me.(comp-progn env (cddr form)))
+            (quote me.(comp-atom oreg (cadr form)))
+            (sys:setq me.(comp-setq oreg env form))
+            (block me.(comp-block oreg env form))
+            ((let let*) me.(comp-let oreg env form))
+            (lambda me.(comp-lambda oreg env form))
+            (sys:for-op me.(comp-for oreg env form))
+            (progn me.(comp-progn oreg env (cadr form)))
+            (prog1 me.(comp-prog1 oreg env form))
+            (sys:quasi me.(comp-quasi oreg env form))
+            (sys:dvbind me.(compile oreg env (caddr form)))
+            (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
             ((macrolet symacrolet macro-time)
              (compile-error form "unexpanded ~s encountered" sym))
             ((sys:var sys:expr)
@@ -144,60 +149,55 @@
              (compile-error form "unexpanded quasiquote encountered"))
             (t
               (compile-error form "special op ~s not handled yet" sym))))
-         ((bindable sym) me.(comp-call env sym (cdr form)))
+         ((bindable sym) me.(comp-call oreg env sym (cdr form)))
          (t (compile-error form "invalid operator")))))))
 
-(defmeth compiler comp-atom (me form)
+(defmeth compiler comp-atom (me oreg form)
   (cond
+    ((null form) (new (frag '(t 0) nil)))
     ((or (and (integerp form)
               (< (width form) 32))
          (chrp form))
-     (let ((oreg me.(alloc-treg)))
-       (new (frag oreg ^((movi ,oreg ,form))))))
+     (new (frag oreg ^((movi ,oreg ,form)))))
     (t (let ((dreg me.(get-dreg form)))
          (new (frag dreg nil))))))
 
-(defmeth compiler comp-var (me env sym)
+(defmeth compiler comp-var (me oreg env sym)
   (iflet ((vbin env.(lookup-var sym)))
     (new (frag vbin.loc nil (list sym)))
-    (let ((oreg me.(alloc-treg))
-          (dreg me.(get-dreg sym)))
+    (let ((dreg me.(get-dreg sym)))
       (new (frag oreg ^((getv ,oreg ,dreg)) (list sym))))))
 
-(defmeth compiler comp-setq (me env form)
+(defmeth compiler comp-setq (me oreg env form)
   (mac-param-bind form (op sym value) form
     (let* ((bind env.(lookup-var sym))
            (vloc (if bind
                    bind.loc
                    me.(get-dreg sym)))
-           (vfrag me.(compile env value)))
-      me.(free-treg vfrag.oreg)
+           (vfrag me.(compile (if bind vloc oreg) env value)))
       (new (frag vloc
                  ^(,*vfrag.code
                    ,*(if bind
-                       ^((mov ,vloc ,vfrag.oreg))
+                       (if (nequal vfrag.oreg vloc)
+                         ^((mov ,vloc ,vfrag.oreg)))
                        ^((setv ,vloc ,vfrag.oreg))))
                  (uni (list sym) vfrag.fvars)
                  vfrag.ffuns)))))
 
-(defmeth compiler comp-block (me env form)
+(defmeth compiler comp-block (me oreg env form)
   (mac-param-bind form (op name . body) form
     (let* ((dreg me.(get-dreg name))
-           (bfrag me.(comp-progn env body))
-           (lskip (gensym "l"))
-           (oreg (if (equal bfrag.oreg '(t 0))
-                   me.(alloc-treg)
-                   bfrag.oreg)))
-      me.(free-treg bfrag.oreg)
-      (new (frag oreg
-                 ^((block ,oreg ,dreg ,lskip)
+           (bfrag me.(comp-progn oreg env body))
+           (lskip (gensym "l")))
+      (new (frag bfrag.oreg
+                 ^((block ,bfrag.oreg ,dreg ,lskip)
                    ,*bfrag.code
                    (end ,bfrag.oreg)
                    ,lskip)
                  bfrag.fvars
                  bfrag.ffuns)))))
 
-(defmeth compiler comp-let (me env sym form)
+(defmeth compiler comp-let (me oreg env form)
   (mac-param-bind form (sym raw-vis . body) form
     (let* ((vis (mapcar [iffi atom list] raw-vis))
            (specials [keep-if special-var-p vis car])
@@ -218,30 +218,33 @@
                        (tree-bind (sym : form) vi
                          (cond
                            ((special-var-p sym)
-                            (let ((frag me.(compile fenv form))
+                            (let ((frag me.(compile oreg fenv form))
                                   (dreg me.(get-dreg sym)))
                               (pend frag.code)
                               (add ^(bindv ,frag.oreg ,dreg))
-                              me.(free-treg frag.oreg)
                               (set ffuns (uni ffuns frag.ffuns)
                                    fvars (uni fvars frag.fvars))))
                            (form
-                             (let ((frag me.(compile fenv form))
-                                   (bind (progn
-                                           (if seq nenv.(extend-var sym))
-                                           nenv.(lookup-var sym))))
+                             (let* ((bind (progn
+                                            (if seq nenv.(extend-var sym))
+                                            nenv.(lookup-var sym)))
+                                    (frag me.(compile bind.loc fenv form)))
                                (pend frag.code)
-                               (add ^(mov ,bind.loc ,frag.oreg))
-                               me.(free-treg frag.oreg)
+                               (if (nequal bind.loc frag.oreg)
+                                 (add ^(mov ,bind.loc ,frag.oreg)))
                                (set ffuns (uni ffuns frag.ffuns)
                                     fvars (uni fvars frag.fvars)))))))))
-             (bfrag me.(comp-progn nenv body)))
-        (new (frag bfrag.oreg
-                   (append code bfrag.code ^((end ,bfrag.oreg)))
+             (bfrag me.(comp-progn oreg nenv body))
+             (boreg (if env.(out-of-scope bfrag.oreg) oreg bfrag.oreg)))
+        (new (frag oreg
+                   (append code bfrag.code
+                           (if (nequal boreg bfrag.oreg)
+                             ^((mov ,boreg ,bfrag.oreg)))
+                           ^((end ,boreg)))
                    (uni (diff bfrag.fvars lexsyms) fvars)
                    (uni ffuns bfrag.ffuns)))))))
 
-(defmeth compiler comp-lambda (me env form)
+(defmeth compiler comp-lambda (me oreg env form)
   (mac-param-bind form (op pars . body) form
     (let* ((rest-par (nthlast 0 pars))
            (fixed-pars (ldiff pars rest-par))
@@ -277,30 +280,29 @@
             (let* ((col-reg (if opt-pars me.(get-dreg :)))
                    (tee-reg (if opt-pars me.(get-dreg t)))
                    (ifrags (collect-each ((op opt-pars))
-                             (let* ((init-form (cadr op))
-                                    (init-frag me.(compile env init-form)))
-                               me.(free-treg init-frag.oreg)
-                               init-frag)))
+                             (tree-bind (var-sym : init-form have-sym) op
+                               (let ((vbind nenv.(lookup-var var-sym)))
+                                 me.(compile vbind.loc env init-form)))))
                    (opt-code (append-each ((op opt-pars)
                                            (ifrg ifrags))
                                (tree-bind (var-sym : init-form have-sym) op
-                                 (let ((var-bind nenv.(lookup-var var-sym))
+                                 (let ((vbind nenv.(lookup-var var-sym))
                                        (have-bind nenv.(lookup-var have-sym))
                                        (lskip (gensym "l")))
                                    ^(,*(if have-sym
                                          ^((mov ,have-bind.loc ,tee-reg)))
-                                      (ifq ,var-bind.loc ,col-reg ,lskip)
+                                      (ifq ,ifrg.oreg ,col-reg ,lskip)
                                       ,*(if have-sym
                                           ^((mov ,have-bind.loc nil)))
                                       ,*ifrg.code
-                                      (mov ,var-bind.loc ,ifrg.oreg)
+                                      ,*(if (nequal vbind.loc ifrg.oreg)
+                                          ^((mov ,vbind.loc ,ifrg.oreg)))
                                       ,lskip)))))
                    (benv (if specials (new env up nenv co me) nenv))
-                   (bfrag me.(comp-progn benv body))
-                   (oreg me.(alloc-treg))
+                   (bfrag me.(comp-progn oreg benv body))
+                   (boreg (if env.(out-of-scope bfrag.oreg) oreg bfrag.oreg))
                    (lskip (gensym "l-"))
                    (frsize nenv.v-cntr))
-              me.(free-treg bfrag.oreg)
               (new (frag oreg
                          ^((close ,oreg ,frsize ,lskip ,nfixed ,nreq
                                   ,(if rest-par t nil)
@@ -321,72 +323,68 @@
                                      ^(bindv ,sub-bind.loc ,dreg)))))
                            ,*bfrag.code
                            ,*(if specials
-                               ^((end ,bfrag.oreg)))
-                           (end ,bfrag.oreg)
+                               ^((end ,oreg)))
+                           ,*(if (nequal boreg bfrag.oreg)
+                               ^((mov ,boreg ,bfrag.oreg)))
+                           (end ,boreg)
                            ,lskip)
                          (uni [reduce-left uni ifrags nil .fvars]
                               (diff bfrag.fvars lexsyms))
                          (uni [reduce-left uni ifrags nil .ffuns]
                               bfrag.ffuns))))))))))
 
-(defmeth compiler comp-progn (me env args)
-  (let* ((oreg me.(alloc-treg))
-         ffuns fvars
+(defmeth compiler comp-progn (me oreg env args)
+  (let* (ffuns fvars
+         lastfrag
          (code (build
                  (each ((form args))
-                   me.(free-treg oreg)
-                   (let ((frag me.(compile env form)))
-                     (set oreg frag.oreg)
+                   (let ((frag me.(compile oreg env form)))
+                     (set lastfrag frag)
                      (set fvars (uni fvars frag.fvars))
                      (set ffuns (uni ffuns frag.ffuns))
                      (pend frag.code))))))
-    (new (frag oreg code fvars ffuns))))
+    (new (frag (if lastfrag lastfrag.oreg ^(t 0)) code fvars ffuns))))
 
-(defmeth compiler comp-prog1 (me env form)
+(defmeth compiler comp-prog1 (me oreg env form)
   (tree-case form
-    ((prog1 fi . re) (let ((fi-frag me.(compile env fi))
-                           (re-frag me.(comp-progn env re)))
-                       me.(free-treg re-frag.oreg)
+    ((prog1 fi . re) (let* ((igreg me.(alloc-treg))
+                            (fi-frag me.(compile oreg env fi))
+                            (re-frag me.(comp-progn igreg env re)))
+                       me.(free-treg igreg)
                        (new (frag fi-frag.oreg
                                   (append fi-frag.code re-frag.code)
                                   (uni fi-frag.fvars re-frag.fvars)
                                   (uni fi-frag.ffuns re-frag.ffuns)))))
-    ((prog1 fi) me.(compile env fi))
-    ((prog1) me.(compile env nil))))
+    ((prog1 fi) me.(compile oreg env fi))
+    ((prog1) me.(compile oreg env nil))))
 
-(defmeth compiler comp-quasi (me env form)
+(defmeth compiler comp-quasi (me oreg env form)
   (let ((qexp (expand-quasi form)))
-    me.(compile env (expand qexp))))
+    me.(compile oreg env (expand qexp))))
 
-(defmeth compiler comp-call (me env sym args)
-  (let ((oreg me.(alloc-treg))
-        (dreg me.(get-dreg sym))
-        (afrags (mapcar (meth me compile env) args)))
-    (let ((aregs (mapcar .oreg afrags)))
-      me.(free-tregs aregs)
-      (new (frag oreg
-                 ^(,*(mappend .code afrags) (call ,oreg ,dreg ,*aregs))
-                 [reduce-left uni afrags nil .fvars]
-                 [reduce-left uni afrags nil .ffuns])))))
+(defmeth compiler comp-call (me oreg env sym args)
+  (let* ((dreg me.(get-dreg sym))
+         (sugg-oregs (mapcar (ret me.(alloc-treg)) args))
+         (afrags (mapcar (ret me.(compile @1 env @2))
+                         sugg-oregs args))
+         (real-oregs (mapcar .oreg afrags)))
+    me.(free-tregs sugg-oregs)
+    (new (frag oreg
+               ^(,*(mappend .code afrags) (call ,oreg ,dreg ,*real-oregs))
+               [reduce-left uni afrags nil .fvars]
+               [reduce-left uni afrags nil .ffuns]))))
 
-(defmeth compiler comp-for (me env form)
+(defmeth compiler comp-for (me oreg env form)
   (mac-param-bind form (op inits (: test . rets) incs . body) form
-    (let* ((ifrag me.(comp-progn env inits))
-           (tfrag (progn
-                    me.(free-treg ifrag.oreg)
-                    me.(compile env test)))
-           (rfrag me.(comp-progn env rets))
-           (nfrag me.(comp-progn env incs))
-           (bfrag (progn
-                    me.(free-treg nfrag.oreg)
-                    me.(comp-progn env body)))
+    (let* ((ifrag me.(comp-progn oreg env inits))
+           (tfrag (if test me.(compile oreg env test)))
+           (rfrag me.(comp-progn oreg env rets))
+           (nfrag me.(comp-progn oreg env incs))
+           (bfrag me.(comp-progn oreg env body))
            (lback (gensym "l"))
            (lskip (gensym "l"))
-           (frags (list ifrag tfrag rfrag nfrag bfrag))
-           (infin (equal tfrag.oreg '(t 0)))
-           (oreg (if rets rfrag.oreg '(t 0))))
-      me.(free-tregs (list bfrag.oreg tfrag.oreg rfrag.oreg))
-      (new (frag oreg
+           (frags (list ifrag tfrag rfrag nfrag bfrag)))
+      (new (frag rfrag.oreg
                  ^(,*ifrag.code
                    ,lback
                    ,*tfrag.code
@@ -396,8 +394,8 @@
                    ,*nfrag.code
                    (jmp ,lback)
                    ,*(if test
-                       ^(,lskip))
-                   ,*rfrag.code)
+                       ^(,lskip
+                         ,*rfrag.code)))
                    [reduce-left uni frags nil .fvars]
                    [reduce-left uni frags nil .ffuns])))))
 
@@ -483,6 +481,7 @@
 (defun usr:compile-toplevel (exp)
   (let ((co (new compiler))
         (as (new assembler)))
-    (let ((frag co.(compile (new env) (expand* exp))))
+    (let* ((oreg co.(alloc-treg))
+           (frag co.(compile oreg (new env) (expand* exp))))
       as.(asm ^(,*frag.code (end ,frag.oreg)))
       (vm-make-desc co.nlev co.nreg as.buf co.(get-datavec)))))
