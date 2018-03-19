@@ -199,7 +199,7 @@
 
 (defmeth compiler comp-block (me oreg env form)
   (mac-param-bind form (op name . body) form
-    (let* ((dreg me.(get-dreg name))
+    (let* ((nreg (if name me.(get-dreg name) '(t 0)))
            (bfrag me.(comp-progn oreg env body))
            (lskip (gensym "l")))
       (new (frag bfrag.oreg
