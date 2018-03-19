@@ -81,11 +81,14 @@
 
 (defstruct compiler nil
   (dreg-cntr 0)
+  (fidx-cntr 0)
   (nlev 2)
   (nreg 1)
   (tregs (mapcar (op list t) (range 1 255)))
   (dreg (hash :eql-based))
   (data (hash :eql-based))
+  (fidx (hash :eql-based))
+  (ftab (hash :eql-based))
   last-form)
 
 (defmeth compiler get-dreg (me atom)
@@ -95,8 +98,18 @@
       (set [me.data (cadr dreg)] atom)
       (set [me.dreg atom] dreg))))
 
+(defmeth compiler get-fidx (me atom)
+  (iflet ((fidx [me.fidx atom]))
+    fidx
+    (let* ((fidx (pinc me.fidx-cntr)))
+      (set [me.ftab fidx] atom)
+      (set [me.fidx atom] fidx))))
+
 (defmeth compiler get-datavec (me)
   (vec-list [mapcar me.data (range* 0 me.dreg-cntr)]))
+
+(defmeth compiler get-funvec (me)
+  (vec-list [mapcar me.ftab (range* 0 me.fidx-cntr)]))
 
 (defmeth compiler alloc-treg (me)
   (let ((treg (pop me.tregs)))
@@ -365,14 +378,20 @@
     me.(compile oreg env (expand qexp))))
 
 (defmeth compiler comp-call (me oreg env sym args)
-  (let* ((dreg me.(get-dreg sym))
-         (sugg-oregs (mapcar (ret me.(alloc-treg)) args))
+  (condlet
+    (((freg env.(lookup-fun sym)))
+     me.(comp-call-impl oreg env 'call freg args))
+    (((fidx me.(get-fidx sym)))
+     me.(comp-call-impl oreg env 'gcall fidx args))))
+
+(defmeth compiler comp-call-impl (me oreg env opcode freg args)
+  (let* ((sugg-oregs (mapcar (ret me.(alloc-treg)) args))
          (afrags (mapcar (ret me.(compile @1 env @2))
                          sugg-oregs args))
          (real-oregs (mapcar .oreg afrags)))
     me.(free-tregs sugg-oregs)
     (new (frag oreg
-               ^(,*(mappend .code afrags) (call ,oreg ,dreg ,*real-oregs))
+               ^(,*(mappend .code afrags) (,opcode ,oreg ,freg ,*real-oregs))
                [reduce-left uni afrags nil .fvars]
                [reduce-left uni afrags nil .ffuns]))))
 
@@ -486,4 +505,4 @@
     (let* ((oreg co.(alloc-treg))
            (frag co.(compile oreg (new env) (expand* exp))))
       as.(asm ^(,*frag.code (end ,frag.oreg)))
-      (vm-make-desc co.nlev co.nreg as.buf co.(get-datavec) #()))))
+      (vm-make-desc co.nlev co.nreg as.buf co.(get-datavec) co.(get-funvec)))))
