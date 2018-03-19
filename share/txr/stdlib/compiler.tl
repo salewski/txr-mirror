@@ -484,4 +484,4 @@
     (let* ((oreg co.(alloc-treg))
            (frag co.(compile oreg (new env) (expand* exp))))
       as.(asm ^(,*frag.code (end ,frag.oreg)))
-      (vm-make-desc co.nlev co.nreg as.buf co.(get-datavec)))))
+      (vm-make-desc co.nlev co.nreg as.buf co.(get-datavec) #()))))

@@ -360,6 +360,34 @@
 
 (defopcode-derived op-apply apply auto op-call)
 
+(defopcode op-gcall gcall auto
+  (:method asm (me asm syntax)
+    me.(chk-arg-count-min 2 syntax)
+    (let* ((nargs (pred (len syntax)))
+           (syn-pat (list* 'r 'n (repeat '(r) (sssucc nargs))))
+           (funargs (ppred nargs))
+           (args asm.(parse-args me syntax syn-pat)))
+      asm.(put-insn me.code funargs (pop args))
+      (while args
+        (let ((x (pop args))
+              (y (or (pop args) 0)))
+          asm.(put-pair y x)))))
+
+  (:method dis (me asm funargs arg0)
+    (let ((first t))
+      (build
+        (add me.symbol)
+        (add (operand-to-sym arg0))
+        (inc funargs 1)
+        (while (> funargs 0)
+          (dec funargs 2)
+          (tree-bind (y x) asm.(get-pair)
+            (add (if (zap first) x (operand-to-sym x)))
+            (unless (minusp funargs)
+              (add (operand-to-sym y)))))))))
+
+(defopcode-derived op-gapply gapply auto op-gcall)
+
 (defopcode op-movrs movrs auto
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
@@ -635,14 +663,19 @@
                   (unless (minusp fix)
                     (add (operand-to-sym y))))))))))))
 
-(defun disassemble-c-d (code data *stdout*)
+(defun disassemble-c-d (code data funv *stdout*)
   (let ((asm (new assembler buf code)))
     (put-line "data:")
     (mapdo (do format t "  d~,02x: ~s\n" @1 @2) (range 0) data)
+    (put-line "funs:")
+    (mapdo (do format t "~5d: ~s\n" @1 @2) (range 0) funv)
     (put-line "code:")
     asm.(dis-listing)))
 
 (defun usr:disassemble (obj : (stream *stdout*))
   (typecase obj
-    (vm-desc (disassemble-c-d (vm-desc-bytecode obj) (vm-desc-datavec obj) stream))
+    (vm-desc (disassemble-c-d (vm-desc-bytecode obj)
+                              (vm-desc-datavec obj)
+                              (vm-desc-funvec obj)
+                              stream))
     (t (error "~s: not a compiled object: ~s" 'vm-disassemble obj))))

@@ -25,7 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-val vm_make_desc(val nlevels, val nregs, val bytecode, val datavec);
+val vm_make_desc(val nlevels, val nregs, val bytecode,
+                 val datavec, val funvec);
 val vm_execute_toplevel(val desc);
 val vm_execute_closure(val fun, struct args *);
 void vm_init(void);

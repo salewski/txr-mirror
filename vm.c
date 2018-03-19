@@ -67,8 +67,15 @@ struct vm_desc {
   int frsz;
   val bytecode;
   val datavec;
+  val funvec;
   vm_word_t *code;
   val *data;
+  struct vm_ftent *ftab;
+};
+
+struct vm_ftent {
+  val fb;
+  loc fbloc;
 };
 
 struct vm_env {
@@ -104,7 +111,8 @@ static struct vm_desc *vm_desc_struct(val obj)
   return coerce(struct vm_desc *, cobj_handle(obj, vm_desc_s));
 }
 
-val vm_make_desc(val nlevels, val nregs, val bytecode, val datavec)
+val vm_make_desc(val nlevels, val nregs, val bytecode,
+                 val datavec, val funvec)
 {
   val self = lit("sys:vm-make-desc");
   int nlvl = c_int(nlevels, self), nreg = c_int(nregs, self);
@@ -120,14 +128,20 @@ val vm_make_desc(val nlevels, val nregs, val bytecode, val datavec)
   {
     mem_t *code = buf_get(bytecode, self);
     val dvl = length_vec(datavec);
+    cnum fvl = c_num(length_vec(funvec));
     loc data_loc = if3(dvl != zero, vecref_l(datavec, zero), nulloc);
     struct vm_desc *vd = coerce(struct vm_desc *, chk_malloc(sizeof *vd));
+    struct vm_ftent *ftab = if3(fvl != 0,
+                                coerce(struct vm_ftent *,
+                                       chk_calloc(fvl, sizeof *ftab)), 0);
+    cnum i;
     val desc;
 
     vd->nlvl = nlvl;
     vd->nreg = nreg;
     vd->code = coerce(vm_word_t *, code);
     vd->data = valptr(data_loc);
+    vd->ftab = ftab;
 
     vd->bytecode = nil;
     vd->datavec = nil;
@@ -140,7 +154,14 @@ val vm_make_desc(val nlevels, val nregs, val bytecode, val datavec)
 
     vd->bytecode = bytecode;
     vd->datavec = datavec;
+    vd->funvec = funvec;
     vd->self = desc;
+
+    for (i = 0; i < fvl; i++) {
+      struct vm_ftent *fe = &ftab[i];
+      fe->fb = lookup_fun(nil, vecref(funvec, num_fast(i)));
+      fe->fbloc = cdr_l(fe->fb);
+    }
 
     return desc;
   }
@@ -158,11 +179,30 @@ static val vm_desc_datavec(val desc)
   return vd->datavec;
 }
 
+static val vm_desc_funvec(val desc)
+{
+  struct vm_desc *vd = vm_desc_struct(desc);
+  return vd->funvec;
+}
+
+static void vm_desc_destroy(val obj)
+{
+  struct vm_desc *vd = coerce(struct vm_desc *, obj->co.handle);
+  free(vd->ftab);
+  free(vd);
+}
+
 static void vm_desc_mark(val obj)
 {
   struct vm_desc *vd = coerce(struct vm_desc *, obj->co.handle);
+  cnum i, fvl = c_num(length_vec(vd->funvec));
+
   gc_mark(vd->bytecode);
   gc_mark(vd->datavec);
+  gc_mark(vd->funvec);
+
+  for (i = 0; i < fvl; i++)
+    gc_mark(vd->ftab[i].fb);
 }
 
 static val vm_make_closure(struct vm *vm, int frsz)
@@ -375,6 +415,65 @@ static void vm_apply(struct vm *vm, vm_word_t insn)
   }
 
   result = apply_intrinsic(vm_get(vm->dspl, fun), args_get_list(args));
+  vm_set(vm->dspl, dest, result);
+}
+
+static void vm_gcall(struct vm *vm, vm_word_t insn)
+{
+  unsigned nargs = vm_insn_extra(insn);
+  unsigned dest = vm_insn_operand(insn);
+  vm_word_t argw = vm->code[vm->ip++];
+  unsigned fun = vm_arg_operand_lo(argw);
+  val result;
+  args_decl (args, nargs < ARGS_MIN ? ARGS_MIN : nargs);
+
+  if (nargs--) {
+    args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
+
+    while (nargs >= 2) {
+      nargs -= 2;
+      argw = vm->code[vm->ip++];
+      args_add(args, vm_get(vm->dspl, vm_arg_operand_lo(argw)));
+      args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
+    }
+
+    if (nargs) {
+      argw = vm->code[vm->ip++];
+      args_add(args, vm_get(vm->dspl, vm_arg_operand_lo(argw)));
+    }
+  }
+
+  result = generic_funcall(deref(vm->vd->ftab[fun].fbloc), args);
+  vm_set(vm->dspl, dest, result);
+}
+
+static void vm_gapply(struct vm *vm, vm_word_t insn)
+{
+  unsigned nargs = vm_insn_extra(insn);
+  unsigned dest = vm_insn_operand(insn);
+  vm_word_t argw = vm->code[vm->ip++];
+  unsigned fun = vm_arg_operand_lo(argw);
+  val result;
+  args_decl (args, nargs < ARGS_MIN ? ARGS_MIN : nargs);
+
+  if (nargs--) {
+    args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
+
+    while (nargs >= 2) {
+      nargs -= 2;
+      argw = vm->code[vm->ip++];
+      args_add(args, vm_get(vm->dspl, vm_arg_operand_lo(argw)));
+      args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
+    }
+
+    if (nargs) {
+      argw = vm->code[vm->ip++];
+      args_add(args, vm_get(vm->dspl, vm_arg_operand_lo(argw)));
+    }
+  }
+
+  result = apply_intrinsic(deref(vm->vd->ftab[fun].fbloc),
+                           args_get_list(args));
   vm_set(vm->dspl, dest, result);
 }
 
@@ -672,6 +771,12 @@ static val vm_execute(struct vm *vm)
     case APPLY:
       vm_apply(vm, insn);
       break;
+    case GCALL:
+      vm_gcall(vm, insn);
+      break;
+    case GAPPLY:
+      vm_gapply(vm, insn);
+      break;
     case MOVRS:
       vm_movrs(vm, insn);
       break;
@@ -850,7 +955,7 @@ val vm_execute_closure(val fun, struct args *args)
 static_def(struct cobj_ops vm_desc_ops =
   cobj_ops_init(eq,
                 cobj_print_op,
-                cobj_destroy_free_op,
+                vm_desc_destroy,
                 vm_desc_mark,
                 cobj_eq_hash_op));
 
@@ -865,8 +970,9 @@ void vm_init(void)
 {
   vm_desc_s = intern(lit("vm-desc"), system_package);
   vm_closure_s = intern(lit("vm-closure"), system_package);
-  reg_fun(intern(lit("vm-make-desc"), system_package), func_n4(vm_make_desc));
+  reg_fun(intern(lit("vm-make-desc"), system_package), func_n5(vm_make_desc));
   reg_fun(intern(lit("vm-desc-bytecode"), system_package), func_n1(vm_desc_bytecode));
   reg_fun(intern(lit("vm-desc-datavec"), system_package), func_n1(vm_desc_datavec));
+  reg_fun(intern(lit("vm-desc-funvec"), system_package), func_n1(vm_desc_funvec));
   reg_fun(intern(lit("vm-execute-toplevel"), system_package), func_n1(vm_execute_toplevel));
 }
