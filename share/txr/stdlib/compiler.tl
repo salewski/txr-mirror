@@ -202,8 +202,8 @@
     (let* ((nreg (if name me.(get-dreg name) '(t 0)))
            (bfrag me.(comp-progn oreg env body))
            (lskip (gensym "l")))
-      (new (frag bfrag.oreg
-                 ^((block ,bfrag.oreg ,dreg ,lskip)
+      (new (frag oreg
+                 ^((block ,oreg ,nreg ,lskip)
                    ,*bfrag.code
                    (end ,bfrag.oreg)
                    ,lskip)
