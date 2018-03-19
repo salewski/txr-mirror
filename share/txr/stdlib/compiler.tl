@@ -60,7 +60,7 @@
 
   (:method lookup-fun (me sym)
     (condlet
-      (((cell (assoc me.fb sym))) (cdr cell))
+      (((cell (assoc sym me.fb))) (cdr cell))
       (((up me.up)) up.(lookup-fun sym))
       (t nil)))
 
