@@ -214,6 +214,13 @@ static val vm_make_closure(struct vm *vm, int frsz)
   return closure;
 }
 
+static void vm_closure_destroy(val obj)
+{
+  struct vm_closure *vc = coerce(struct vm_closure *, obj->co.handle);
+  free(vc->dspl);
+  free(vc);
+}
+
 static void vm_closure_mark(val obj)
 {
   struct vm_closure *vc = coerce(struct vm_closure *, obj->co.handle);
@@ -850,7 +857,7 @@ static_def(struct cobj_ops vm_desc_ops =
 static_def(struct cobj_ops vm_closure_ops =
   cobj_ops_init(eq,
                 cobj_print_op,
-                cobj_destroy_free_op,
+                vm_closure_destroy,
                 vm_closure_mark,
                 cobj_eq_hash_op));
 
