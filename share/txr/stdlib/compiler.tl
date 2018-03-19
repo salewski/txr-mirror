@@ -299,10 +299,12 @@
                                           ^((mov ,vbind.loc ,ifrg.oreg)))
                                       ,lskip)))))
                    (benv (if specials (new env up nenv co me) nenv))
-                   (bfrag me.(comp-progn oreg benv body))
-                   (boreg (if env.(out-of-scope bfrag.oreg) oreg bfrag.oreg))
+                   (btreg me.(alloc-treg))
+                   (bfrag me.(comp-progn btreg benv body))
+                   (boreg (if env.(out-of-scope bfrag.oreg) btreg bfrag.oreg))
                    (lskip (gensym "l-"))
                    (frsize nenv.v-cntr))
+              me.(free-treg btreg)
               (new (frag oreg
                          ^((close ,oreg ,frsize ,lskip ,nfixed ,nreq
                                   ,(if rest-par t nil)
@@ -323,7 +325,7 @@
                                      ^(bindv ,sub-bind.loc ,dreg)))))
                            ,*bfrag.code
                            ,*(if specials
-                               ^((end ,oreg)))
+                               ^((end ,boreg)))
                            ,*(if (nequal boreg bfrag.oreg)
                                ^((mov ,boreg ,bfrag.oreg)))
                            (end ,boreg)
