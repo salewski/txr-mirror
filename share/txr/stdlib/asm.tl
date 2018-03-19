@@ -678,4 +678,5 @@
                               (vm-desc-datavec obj)
                               (vm-desc-funvec obj)
                               stream))
-    (t (error "~s: not a compiled object: ~s" 'vm-disassemble obj))))
+    (t (error "~s: not a compiled object: ~s" 'vm-disassemble obj)))
+  obj)
