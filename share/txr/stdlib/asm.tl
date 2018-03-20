@@ -636,7 +636,7 @@
         asm.(put-insn me.code (ash dst -16) (logtrunc dst 16))
         asm.(put-pair (logior (ash (if vari 1 0) 8) frsize) reg)
         asm.(put-pair req fix)
-        (unless (eq fix (+ (len regs) (if vari 1 0)))
+        (unless (eql fix (- (len regs) (if vari 1 0)))
           me.(synerr "wrong number of registers"))
         (while regs
           (let ((x (pop regs))
