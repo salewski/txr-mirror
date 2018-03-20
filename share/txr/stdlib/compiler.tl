@@ -145,6 +145,7 @@
             (quote me.(comp-atom oreg (cadr form)))
             (sys:setq me.(comp-setq oreg env form))
             (cond me.(comp-cond oreg env form))
+            (if me.(comp-if oreg env form))
             (block me.(comp-block oreg env form))
             ((let let*) me.(comp-let oreg env form))
             (lambda me.(comp-lambda oreg env form))
@@ -250,6 +251,57 @@
                  ,lout)
                [reduce-left uni frags nil .fvars]
                [reduce-left uni frags nil .ffuns]))))
+
+(defmeth compiler comp-if (me oreg env form)
+  (tree-case form
+    ((op test then else)
+     (let* ((te-oreg me.(alloc-treg))
+            (lelse (gensym "l"))
+            (lskip (gensym "l"))
+            (te-frag me.(compile te-oreg env test))
+            (th-frag me.(compile oreg env then))
+            (el-frag me.(compile oreg env else)))
+       me.(free-treg te-oreg)
+       (new (frag oreg
+                  ^(,*te-frag.code
+                    (if ,te-frag.oreg ,lelse)
+                    ,*th-frag.code
+                    ,*(if (nequal oreg th-frag.oreg)
+                        ^((mov ,oreg ,th-frag.oreg)))
+                    (jmp ,lskip)
+                    ,lelse
+                    ,*el-frag.code
+                    ,*(if (nequal oreg el-frag.oreg)
+                        ^((mov ,oreg ,el-frag.oreg)))
+                    ,lskip
+                    ,*(if (nequal te-oreg te-frag.oreg)
+                        ^((mov ,te-oreg ,te-frag.oreg))))
+                    (uni te-frag.fvars (uni th-frag.fvars el-frag.fvars))
+                    (uni te-frag.ffuns (uni th-frag.ffuns el-frag.ffuns))))))
+    ((op test then)
+     (let ((lskip (gensym "l"))
+           (te-frag me.(compile oreg env test))
+           (th-frag me.(compile oreg env then)))
+       (new (frag oreg
+                  ^(,*te-frag.code
+                    ,*(if (nequal oreg te-frag.oreg)
+                        ^((mov ,oreg ,te-frag.oreg)))
+                    (if ,oreg ,lskip)
+                    ,*th-frag.code
+                    ,*(if (nequal oreg th-frag.oreg)
+                        ^((mov ,oreg ,th-frag.oreg)))
+                    ,lskip)
+                    (uni te-frag.fvars th-frag.fvars)
+                    (uni te-frag.ffuns th-frag.ffuns)))))
+    ((op test)
+     (let ((te-frag me.(compile oreg env test)))
+       (new (frag oreg
+                  ^(,*te-frag.code
+                    (mov ,oreg nil))
+                  te-frag.fvars
+                  te-frag.ffuns))))
+    ((op) me.(compile oreg env nil))
+    (form (compile-error form "excess argument forms"))))
 
 (defmeth compiler comp-block (me oreg env form)
   (mac-param-bind form (op name . body) form
