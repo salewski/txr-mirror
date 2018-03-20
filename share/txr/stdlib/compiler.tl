@@ -144,6 +144,7 @@
           (caseq sym
             (quote me.(comp-atom oreg (cadr form)))
             (sys:setq me.(comp-setq oreg env form))
+            (cond me.(comp-cond oreg env form))
             (block me.(comp-block oreg env form))
             ((let let*) me.(comp-let oreg env form))
             (lambda me.(comp-lambda oreg env form))
@@ -196,6 +197,59 @@
                        ^((setv ,vloc ,vfrag.oreg))))
                  (uni (list sym) vfrag.fvars)
                  vfrag.ffuns)))))
+
+(defmeth compiler comp-cond (me oreg env form)
+  (let* ((lout (gensym "l"))
+         (frags (collect-each ((cl (rest form)))
+                  (mac-param-bind form (test . forms) cl
+                    (cond
+                      ((and (eq test t) (null forms))
+                       (let ((dreg me.(get-dreg t)))
+                         (new (frag oreg
+                                    ^(,*(if (nequal oreg dreg)
+                                          ^((mov ,oreg ,dreg)))
+                                      (jmp ,lout))))))
+                      ((eq test t)
+                       (let ((ffrag me.(comp-progn oreg env forms)))
+                         (new (frag oreg
+                                    ^(,*ffrag.code
+                                      ,*(if (nequal oreg ffrag.oreg)
+                                          ^((mov ,oreg ,ffrag.oreg)))
+                                      (jmp ,lout))
+                                    ffrag.fvars
+                                    ffrag.ffuns))))
+                      ((null forms)
+                       (let ((tfrag me.(compile oreg env test))
+                             (lskip (gensym "l")))
+                         (new (frag oreg
+                                    ^(,*tfrag.code
+                                       ,*(if (neq (car tfrag.oreg) 'd)
+                                           ^((if ,tfrag.oreg ,lskip)))
+                                      ,*(if (nequal oreg tfrag.oreg)
+                                          ^((mov ,oreg ,tfrag.oreg)))
+                                      (jmp ,lout)
+                                      ,lskip)
+                                    tfrag.fvars
+                                    tfrag.ffuns))))
+                      (t (let ((tfrag me.(compile oreg env test))
+                               (ffrag me.(comp-progn oreg env forms))
+                               (lskip (gensym "l")))
+                           (new (frag oreg
+                                      ^(,*tfrag.code
+                                         ,*(if (neq (car tfrag.oreg) 'd)
+                                             ^((if ,tfrag.oreg ,lskip)))
+                                         ,*ffrag.code
+                                         ,*(if (nequal oreg ffrag.oreg)
+                                             ^((mov ,oreg ,ffrag.oreg)))
+                                         (jmp ,lout)
+                                         ,lskip)
+                                      (uni tfrag.fvars ffrag.fvars)
+                                      (uni tfrag.ffuns ffrag.ffuns))))))))))
+    (new (frag oreg
+               ^(,*(mappend .code frags)
+                 ,lout)
+               [reduce-left uni frags nil .fvars]
+               [reduce-left uni frags nil .ffuns]))))
 
 (defmeth compiler comp-block (me oreg env form)
   (mac-param-bind form (op name . body) form
