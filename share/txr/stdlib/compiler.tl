@@ -193,8 +193,7 @@
       (new (frag vloc
                  ^(,*vfrag.code
                    ,*(if bind
-                       (if (nequal vfrag.oreg vloc)
-                         ^((mov ,vloc ,vfrag.oreg)))
+                       (maybe-mov vfrag.oreg vloc)
                        ^((setv ,vloc ,vfrag.oreg))))
                  (uni (list sym) vfrag.fvars)
                  vfrag.ffuns)))))
@@ -207,15 +206,13 @@
                       ((and (eq test t) (null forms))
                        (let ((dreg me.(get-dreg t)))
                          (new (frag oreg
-                                    ^(,*(if (nequal oreg dreg)
-                                          ^((mov ,oreg ,dreg)))
+                                    ^(,*(maybe-mov oreg dreg)
                                       (jmp ,lout))))))
                       ((eq test t)
                        (let ((ffrag me.(comp-progn oreg env forms)))
                          (new (frag oreg
                                     ^(,*ffrag.code
-                                      ,*(if (nequal oreg ffrag.oreg)
-                                          ^((mov ,oreg ,ffrag.oreg)))
+                                      ,*(maybe-mov oreg ffrag.oreg)
                                       (jmp ,lout))
                                     ffrag.fvars
                                     ffrag.ffuns))))
@@ -226,8 +223,7 @@
                                     ^(,*tfrag.code
                                        ,*(if (neq (car tfrag.oreg) 'd)
                                            ^((if ,tfrag.oreg ,lskip)))
-                                      ,*(if (nequal oreg tfrag.oreg)
-                                          ^((mov ,oreg ,tfrag.oreg)))
+                                      ,*(maybe-mov oreg tfrag.oreg)
                                       (jmp ,lout)
                                       ,lskip)
                                     tfrag.fvars
@@ -240,8 +236,7 @@
                                          ,*(if (neq (car tfrag.oreg) 'd)
                                              ^((if ,tfrag.oreg ,lskip)))
                                          ,*ffrag.code
-                                         ,*(if (nequal oreg ffrag.oreg)
-                                             ^((mov ,oreg ,ffrag.oreg)))
+                                         ,*(maybe-mov oreg ffrag.oreg)
                                          (jmp ,lout)
                                          ,lskip)
                                       (uni tfrag.fvars ffrag.fvars)
@@ -266,16 +261,13 @@
                   ^(,*te-frag.code
                     (if ,te-frag.oreg ,lelse)
                     ,*th-frag.code
-                    ,*(if (nequal oreg th-frag.oreg)
-                        ^((mov ,oreg ,th-frag.oreg)))
+                    ,*(maybe-mov oreg th-frag.oreg)
                     (jmp ,lskip)
                     ,lelse
                     ,*el-frag.code
-                    ,*(if (nequal oreg el-frag.oreg)
-                        ^((mov ,oreg ,el-frag.oreg)))
+                    ,*(maybe-mov oreg el-frag.oreg)
                     ,lskip
-                    ,*(if (nequal te-oreg te-frag.oreg)
-                        ^((mov ,te-oreg ,te-frag.oreg))))
+                    ,*(maybe-mov te-oreg te-frag.oreg))
                     (uni te-frag.fvars (uni th-frag.fvars el-frag.fvars))
                     (uni te-frag.ffuns (uni th-frag.ffuns el-frag.ffuns))))))
     ((op test then)
@@ -284,12 +276,10 @@
            (th-frag me.(compile oreg env then)))
        (new (frag oreg
                   ^(,*te-frag.code
-                    ,*(if (nequal oreg te-frag.oreg)
-                        ^((mov ,oreg ,te-frag.oreg)))
+                    ,*(maybe-mov oreg te-frag.oreg)
                     (if ,oreg ,lskip)
                     ,*th-frag.code
-                    ,*(if (nequal oreg th-frag.oreg)
-                        ^((mov ,oreg ,th-frag.oreg)))
+                    ,*(maybe-mov oreg th-frag.oreg)
                     ,lskip)
                     (uni te-frag.fvars th-frag.fvars)
                     (uni te-frag.ffuns th-frag.ffuns)))))
@@ -348,17 +338,15 @@
                                             (if seq nenv.(extend-var sym))
                                             nenv.(lookup-var sym)))
                                     (frag me.(compile bind.loc fenv form)))
-                               (pend frag.code)
-                               (if (nequal bind.loc frag.oreg)
-                                 (add ^(mov ,bind.loc ,frag.oreg)))
+                               (pend frag.code
+                                     (maybe-mov bind.loc frag.oreg))
                                (set ffuns (uni ffuns frag.ffuns)
                                     fvars (uni fvars frag.fvars)))))))))
              (bfrag me.(comp-progn oreg nenv body))
              (boreg (if env.(out-of-scope bfrag.oreg) oreg bfrag.oreg)))
         (new (frag oreg
                    (append code bfrag.code
-                           (if (nequal boreg bfrag.oreg)
-                             ^((mov ,boreg ,bfrag.oreg)))
+                           (maybe-mov boreg bfrag.oreg)
                            ^((end ,boreg)))
                    (uni (diff bfrag.fvars lexsyms) fvars)
                    (uni ffuns bfrag.ffuns)))))))
@@ -414,8 +402,7 @@
                                       ,*(if have-sym
                                           ^((mov ,have-bind.loc nil)))
                                       ,*ifrg.code
-                                      ,*(if (nequal vbind.loc ifrg.oreg)
-                                          ^((mov ,vbind.loc ,ifrg.oreg)))
+                                      ,*(maybe-mov vbind.loc ifrg.oreg)
                                       ,lskip)))))
                    (benv (if specials (new env up nenv co me) nenv))
                    (btreg me.(alloc-treg))
@@ -445,8 +432,7 @@
                            ,*bfrag.code
                            ,*(if specials
                                ^((end ,boreg)))
-                           ,*(if (nequal boreg bfrag.oreg)
-                               ^((mov ,boreg ,bfrag.oreg)))
+                           ,*(maybe-mov boreg bfrag.oreg)
                            (end ,boreg)
                            ,lskip)
                          (uni [reduce-left uni ifrags nil .fvars]
@@ -525,6 +511,10 @@
                          ,*rfrag.code)))
                    [reduce-left uni frags nil .fvars]
                    [reduce-left uni frags nil .ffuns])))))
+
+(defun maybe-mov (to-reg from-reg)
+  (if (nequal to-reg from-reg)
+    ^((mov ,to-reg ,from-reg))))
 
 (defun expand-quasi-mods (obj mods : form)
   (let (plist num sep rng-ix scalar-ix-p flex gens)
