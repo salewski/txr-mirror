@@ -49,8 +49,8 @@
     (unless me.lev
       (set me.lev (if me.up (succ me.up.lev) 1)))
     (unless (or me.co (null me.up))
-      (set me.co me.up.co)
-      me.co.(new-env me)))
+      (set me.co me.up.co))
+    me.co.(new-env me))
 
   (:method lookup-var (me sym)
     (condlet
@@ -503,6 +503,6 @@
   (let ((co (new compiler))
         (as (new assembler)))
     (let* ((oreg co.(alloc-treg))
-           (frag co.(compile oreg (new env) (expand* exp))))
+           (frag co.(compile oreg (new env co co) (expand* exp))))
       as.(asm ^(,*frag.code (end ,frag.oreg)))
       (vm-make-desc co.nlev co.nreg as.buf co.(get-datavec) co.(get-funvec)))))

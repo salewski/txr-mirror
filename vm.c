@@ -219,6 +219,8 @@ static val vm_make_closure(struct vm *vm, int frsz)
   vc->vd = vm->vd;
   vc->dspl = dspl;
 
+  assert (vc->nlvl <= vm->nlvl);
+
   closure = cobj(coerce(mem_t *, vc), vm_closure_s, &vm_closure_ops);
 
   for (i = 2; i < vc->nlvl; i++) {
