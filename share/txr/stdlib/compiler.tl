@@ -503,6 +503,8 @@
   (let ((co (new compiler))
         (as (new assembler)))
     (let* ((oreg co.(alloc-treg))
-           (frag co.(compile oreg (new env co co) (expand* exp))))
+           (xexp (prog1 (expand* exp) (unless *load-recursive*
+                                        (release-deferred-warnings))))
+           (frag co.(compile oreg (new env co co) xexp)))
       as.(asm ^(,*frag.code (end ,frag.oreg)))
       (vm-make-desc co.nlev co.nreg as.buf co.(get-datavec) co.(get-funvec)))))
