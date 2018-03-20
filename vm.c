@@ -160,7 +160,7 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
     for (i = 0; i < fvl; i++) {
       struct vm_ftent *fe = &ftab[i];
       fe->fb = lookup_fun(nil, vecref(funvec, num_fast(i)));
-      fe->fbloc = cdr_l(fe->fb);
+      fe->fbloc = if3(fe->fb, cdr_l(fe->fb), nulloc);
     }
 
     return desc;
@@ -420,6 +420,23 @@ static void vm_apply(struct vm *vm, vm_word_t insn)
   vm_set(vm->dspl, dest, result);
 }
 
+static loc vm_ftab(struct vm *vm, unsigned fun)
+{
+  struct vm_desc *vd = vm->vd;
+  struct vm_ftent *fe = &vd->ftab[fun];
+  loc fbloc = fe->fbloc;
+
+  if (!nullocp(fbloc))
+    return fbloc;
+
+  if (nilp(fe->fb = lookup_fun(nil, vecref(vd->funvec, num_fast(fun)))))
+    eval_error(vd->bytecode,
+               lit("function ~s is not defined"),
+               vecref(vd->funvec, num(fun)), nao);
+  gc_mutated(vd->self);
+  return (fe->fbloc = cdr_l(fe->fb));
+}
+
 static void vm_gcall(struct vm *vm, vm_word_t insn)
 {
   unsigned nargs = vm_insn_extra(insn);
@@ -445,7 +462,7 @@ static void vm_gcall(struct vm *vm, vm_word_t insn)
     }
   }
 
-  result = generic_funcall(deref(vm->vd->ftab[fun].fbloc), args);
+  result = generic_funcall(deref(vm_ftab(vm, fun)), args);
   vm_set(vm->dspl, dest, result);
 }
 
@@ -474,8 +491,7 @@ static void vm_gapply(struct vm *vm, vm_word_t insn)
     }
   }
 
-  result = apply_intrinsic(deref(vm->vd->ftab[fun].fbloc),
-                           args_get_list(args));
+  result = apply_intrinsic(deref(vm_ftab(vm, fun)), args_get_list(args));
   vm_set(vm->dspl, dest, result);
 }
 
