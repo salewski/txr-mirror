@@ -892,13 +892,12 @@ val vm_execute_closure(val fun, struct args *args)
   val desc = fun->f.f.vm_desc;
   int fixparam = fun->f.fixparam;
   int variadic = fun->f.variadic;
-  int nargs = fixparam + variadic;
   struct vm_desc *vd = vm_desc_struct(desc);
   struct vm_closure *vc = coerce(struct vm_closure *, closure->co.handle);
   struct vm vm;
   val *frame = coerce(val *, alloca(sizeof *frame * vd->frsz));
   struct vm_env *dspl = coerce(struct vm_env *, frame + vd->nreg);
-  val vargs = if3(variadic, args_get_rest(args, nargs), nil);
+  val vargs = if3(variadic, args_get_rest(args, fixparam), nil);
   cnum ix = 0;
   vm_word_t argw = 0;
 
@@ -922,8 +921,8 @@ val vm_execute_closure(val fun, struct args *args)
     vm.dspl[vm.lev].vec = num_fast(vc->frsz);
   }
 
-  while (nargs >= 2) {
-    nargs -= 2;
+  while (fixparam >= 2) {
+    fixparam -= 2;
     argw = vm.code[vm.ip++];
     unsigned xreg = vm_arg_operand_lo(argw);
     unsigned yreg = vm_arg_operand_hi(argw);
@@ -931,7 +930,7 @@ val vm_execute_closure(val fun, struct args *args)
     vm_set(dspl, yreg, args_get(args, &ix));
   }
 
-  if (nargs) {
+  if (fixparam) {
     argw = vm.code[vm.ip++];
     unsigned xreg = vm_arg_operand_lo(argw);
     vm_set(dspl, xreg, args_get(args, &ix));
@@ -939,7 +938,7 @@ val vm_execute_closure(val fun, struct args *args)
 
   if (variadic) {
     unsigned vreg;
-    if (!nargs) {
+    if (!fixparam) {
       argw = vm.code[vm.ip++];
       vreg = vm_arg_operand_lo(argw);
     } else {
