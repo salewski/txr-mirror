@@ -344,7 +344,7 @@
                                     fvars (uni fvars frag.fvars)))))))))
              (bfrag me.(comp-progn oreg nenv body))
              (boreg (if env.(out-of-scope bfrag.oreg) oreg bfrag.oreg)))
-        (new (frag oreg
+        (new (frag boreg
                    (append code bfrag.code
                            (maybe-mov boreg bfrag.oreg)
                            ^((end ,boreg)))
