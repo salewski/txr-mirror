@@ -4367,20 +4367,23 @@ again:
     } else if (sym == quote_s || sym == dvbind_s) {
       return form;
     } else if (sym == for_op_s) {
-      val vars = second(form);
+      val inits = second(form);
       val cond = third(form);
       val incs = fourth(form);
       val forms = rest(rest(rest(rest(form))));
+      val inits_ex = expand_forms(inits, menv);
       val cond_ex = expand_forms(cond, menv);
       val incs_ex = expand_forms(incs, menv);
       val forms_ex = expand_progn(forms, menv);
 
-      if (cond == cond_ex && incs == incs_ex && forms == forms_ex) {
+      if (inits == inits_ex && cond == cond_ex &&
+          incs == incs_ex && forms == forms_ex)
+      {
         return form;
       } else {
-        return rlcp(cons(sym, cons(vars, cons(cond_ex,
-                                              cons(incs_ex,
-                                                   forms_ex)))), form);
+        return rlcp(cons(sym, cons(inits_ex, cons(cond_ex,
+                                                  cons(incs_ex,
+                                                       forms_ex)))), form);
       }
     } else if (sym == dohash_s) {
       val spec = second(form);
