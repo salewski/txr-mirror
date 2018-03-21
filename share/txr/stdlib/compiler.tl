@@ -69,7 +69,12 @@
       (compile-error me.co.last-form "duplicate variable: ~s" sym))
     (let* ((loc ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
            (bn (new binding sym sym loc loc env me)))
-      (set me.vb (acons-new sym bn me.vb))))
+      (set me.vb (acons sym bn me.vb))))
+
+  (:method extend-var* (me sym)
+    (let* ((loc ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
+           (bn (new binding sym sym loc loc env me)))
+      (set me.vb (acons sym bn me.vb))))
 
   (:method extend-fun (me sym)
     (when (assoc sym me.fb)
@@ -358,7 +363,8 @@
                                (pend frag.code
                                      (maybe-mov bind.loc frag.oreg))
                                (set ffuns (uni ffuns frag.ffuns)
-                                    fvars (uni fvars frag.fvars)))))))))
+                                    fvars (uni fvars frag.fvars))))
+                           (t (if seq nenv.(extend-var* sym))))))))
              (bfrag me.(comp-progn oreg nenv body))
              (boreg (if env.(out-of-scope bfrag.oreg) oreg bfrag.oreg)))
         (new (frag boreg
