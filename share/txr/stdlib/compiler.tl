@@ -398,7 +398,7 @@
                                        (lskip (gensym "l")))
                                    ^(,*(if have-sym
                                          ^((mov ,have-bind.loc ,tee-reg)))
-                                      (ifq ,ifrg.oreg ,col-reg ,lskip)
+                                      (ifq ,vbind.loc ,col-reg ,lskip)
                                       ,*(if have-sym
                                           ^((mov ,have-bind.loc nil)))
                                       ,*ifrg.code
