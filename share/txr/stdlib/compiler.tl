@@ -150,7 +150,7 @@
             ((let let*) me.(comp-let oreg env form))
             (lambda me.(comp-lambda oreg env form))
             (sys:for-op me.(comp-for oreg env form))
-            (progn me.(comp-progn oreg env (cadr form)))
+            (progn me.(comp-progn oreg env (cdr form)))
             (prog1 me.(comp-prog1 oreg env form))
             (sys:quasi me.(comp-quasi oreg env form))
             (sys:dvbind me.(compile oreg env (caddr form)))
