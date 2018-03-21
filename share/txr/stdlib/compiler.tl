@@ -151,6 +151,8 @@
             (lambda me.(comp-lambda oreg env form))
             (sys:for-op me.(comp-for oreg env form))
             (progn me.(comp-progn oreg env (cdr form)))
+            (and me.(comp-and-or oreg env form))
+            (or me.(comp-and-or oreg env form))
             (prog1 me.(comp-prog1 oreg env form))
             (sys:quasi me.(comp-quasi oreg env form))
             (dohash me.(compile oreg env (expand-dohash form)))
@@ -461,6 +463,31 @@
                        (pend frag.code)))))))
     me.(free-treg oreg-discard)
     (new (frag (if lastfrag lastfrag.oreg ^(t 0)) code fvars ffuns))))
+
+(defmeth compiler comp-and-or (me oreg env form)
+  (mac-param-bind form (op . args) form
+    (let* (ffuns fvars
+           (nargs (len args))
+           lastfrag
+           (is-and (eq op 'and))
+           (lout (gensym "l"))
+           (code (build
+                   (each ((form args)
+                          (n (range 1)))
+                     (let ((islast (eql n nargs)))
+                       (let ((frag me.(compile oreg env form)))
+                         (when islast
+                           (set lastfrag frag))
+                         (pend frag.code
+                               (maybe-mov oreg frag.oreg))
+                         (unless islast
+                             (add (if is-and
+                                    ^(if ,oreg ,lout)
+                                    ^(ifq ,oreg ,nil ,lout))))
+                         (set fvars (uni fvars frag.fvars))
+                         (set ffuns (uni ffuns frag.ffuns))))))))
+    (new (frag (if lastfrag oreg (if is-and me.(get-dreg t) ^(t 0)))
+               (append code ^(,lout)) fvars ffuns)))))
 
 (defmeth compiler comp-prog1 (me oreg env form)
   (tree-case form
