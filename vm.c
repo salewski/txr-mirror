@@ -97,7 +97,7 @@ struct vm_closure {
   int frsz;
   int nlvl;
   unsigned ip;
-  struct vm_env *dspl;
+  struct vm_env dspl[1];
 };
 
 val vm_desc_s, vm_closure_s;
@@ -207,9 +207,10 @@ static void vm_desc_mark(val obj)
 
 static val vm_make_closure(struct vm *vm, int frsz)
 {
-  struct vm_env *dspl = coerce(struct vm_env *,
-                               chk_calloc(vm->nlvl, sizeof *dspl));
-  struct vm_closure *vc = coerce(struct vm_closure *, chk_malloc(sizeof *vc));
+  size_t dspl_sz = vm->nlvl * sizeof (struct vm_env);
+  struct vm_closure *vc = coerce(struct vm_closure *,
+                                 chk_malloc(offsetof (struct vm_closure, dspl)
+                                            + dspl_sz));
   val closure;
   int i;
 
@@ -217,7 +218,8 @@ static val vm_make_closure(struct vm *vm, int frsz)
   vc->ip = vm->ip;
   vc->nlvl = vm->lev + 1;
   vc->vd = vm->vd;
-  vc->dspl = dspl;
+
+  memset(vc->dspl, 0, dspl_sz);
 
   assert (vc->nlvl <= vm->nlvl);
 
@@ -225,7 +227,7 @@ static val vm_make_closure(struct vm *vm, int frsz)
 
   for (i = 2; i < vc->nlvl; i++) {
     struct vm_env *sdi = &vm->dspl[i];
-    struct vm_env *cdi = &dspl[i];
+    struct vm_env *cdi = &vc->dspl[i];
     val vec = sdi->vec;
     val *mem = sdi->mem;
 
@@ -254,13 +256,6 @@ static val vm_make_closure(struct vm *vm, int frsz)
   }
 
   return closure;
-}
-
-static void vm_closure_destroy(val obj)
-{
-  struct vm_closure *vc = coerce(struct vm_closure *, obj->co.handle);
-  free(vc->dspl);
-  free(vc);
 }
 
 static void vm_closure_mark(val obj)
@@ -979,7 +974,7 @@ static_def(struct cobj_ops vm_desc_ops =
 static_def(struct cobj_ops vm_closure_ops =
   cobj_ops_init(eq,
                 cobj_print_op,
-                vm_closure_destroy,
+                cobj_destroy_free_op,
                 vm_closure_mark,
                 cobj_eq_hash_op));
 
