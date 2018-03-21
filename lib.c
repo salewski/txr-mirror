@@ -6386,6 +6386,8 @@ val funcall1(val fun, val arg)
       args_add(args, arg);
       return funcall_interp(fun, args);
     case FVM:
+      if (fun->f.fixparam > 1)
+        break;
       args_add(args, arg);
       return vm_execute_closure(fun, args);
     case F0:
@@ -6406,6 +6408,8 @@ val funcall1(val fun, val arg)
     case FVM:
       {
         args_decl(args, ARGS_MIN);
+        if (fun->f.fixparam != 1)
+          break;
         args_add(args, arg);
         return vm_execute_closure(fun, args);
       }
@@ -6436,6 +6440,8 @@ val funcall2(val fun, val arg1, val arg2)
       args_add2(args, arg1, arg2);
       return funcall_interp(fun, args);
     case FVM:
+      if (fun->f.fixparam > 2)
+        break;
       args_add2(args, arg1, arg2);
       return vm_execute_closure(fun, args);
     case F0:
@@ -6462,6 +6468,8 @@ val funcall2(val fun, val arg1, val arg2)
     case FVM:
       {
         args_decl(args, ARGS_MIN);
+        if (fun->f.fixparam != 2)
+          break;
         args_add2(args, arg1, arg2);
         return vm_execute_closure(fun, args);
       }
@@ -6492,6 +6500,8 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
       args_add3(args, arg1, arg2, arg3);
       return funcall_interp(fun, args);
     case FVM:
+      if (fun->f.fixparam > 3)
+        break;
       args_add3(args, arg1, arg2, arg3);
       return vm_execute_closure(fun, args);
     case F0:
@@ -6524,6 +6534,8 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
     case FVM:
       {
         args_decl(args, ARGS_MIN);
+        if (fun->f.fixparam != 3)
+          break;
         args_add3(args, arg1, arg2, arg3);
         return vm_execute_closure(fun, args);
       }
@@ -6554,6 +6566,8 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
       args_add4(args, arg1, arg2, arg3, arg4);
       return funcall_interp(fun, args);
     case FVM:
+      if (fun->f.fixparam > 4)
+        break;
       args_add4(args, arg1, arg2, arg3, arg4);
       return vm_execute_closure(fun, args);
     case F0:
@@ -6592,6 +6606,8 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
     case FVM:
       {
         args_decl(args, ARGS_MIN);
+        if (fun->f.fixparam != 4)
+          break;
         args_add4(args, arg1, arg2, arg3, arg4);
         return vm_execute_closure(fun, args);
       }
