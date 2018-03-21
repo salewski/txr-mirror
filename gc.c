@@ -371,14 +371,15 @@ tail_call:
     mark_obj(obj->pk.hidhash);
     mark_obj_tail(obj->pk.symhash);
   case FUN:
-    mark_obj(obj->f.env);
     switch (obj->f.functype) {
     case FINTERP:
-      mark_obj_tail(obj->f.f.interp_fun);
+      mark_obj(obj->f.f.interp_fun);
+      break;
     case FVM:
-      mark_obj_tail(obj->f.f.vm_desc);
+      mark_obj(obj->f.f.vm_desc);
+      break;
     }
-    return;
+    mark_obj_tail(obj->f.env);
   case VEC:
     {
       val alloc_size = obj->v.vec[vec_alloc];
