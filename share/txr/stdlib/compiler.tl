@@ -65,14 +65,24 @@
       (t nil)))
 
   (:method extend-var (me sym)
+    (when (assoc sym me.vb)
+      (compile-error me.co.last-form "duplicate variable: ~s" sym))
     (let* ((loc ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
            (bn (new binding sym sym loc loc env me)))
       (set me.vb (acons-new sym bn me.vb))))
 
   (:method extend-fun (me sym)
+    (when (assoc sym me.fb)
+      (compile-error me.co.last-form "duplicate function ~s" sym))
     (let* ((loc ^(v ,me.lev ,(pinc me.v-cntr)))
            (bn (new binding sym sym loc loc env me)))
-      (set me.fb (acons-new sym bn me.fb))))
+      (set me.fb (acons sym bn me.fb))))
+
+  (:method rename-var (me from-sym to-sym)
+    (iflet ((cell (assoc from-sym me.vb)))
+      (rplaca cell to-sym)
+      (let ((bn (cdr cell)))
+        (set bn.sym to-sym))))
 
   (:method out-of-scope (me reg)
     (if (eq (car reg) 'v)
@@ -338,10 +348,13 @@
                               (set ffuns (uni ffuns frag.ffuns)
                                    fvars (uni fvars frag.fvars))))
                            (form
-                             (let* ((bind (progn
-                                            (if seq nenv.(extend-var sym))
+                             (let* ((tmp (if seq (gensym)))
+                                    (bind (if seq
+                                            (cdar nenv.(extend-var tmp))
                                             nenv.(lookup-var sym)))
                                     (frag me.(compile bind.loc fenv form)))
+                               (when seq
+                                 fenv.(rename-var tmp sym))
                                (pend frag.code
                                      (maybe-mov bind.loc frag.oreg))
                                (set ffuns (uni ffuns frag.ffuns)
