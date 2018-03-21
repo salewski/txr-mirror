@@ -6073,7 +6073,8 @@ void eval_init(void)
   reg_fun(intern(lit("copy-list"), user_package), func_n1(copy_list));
   reg_fun(intern(lit("nreverse"), user_package), func_n1(nreverse));
   reg_fun(intern(lit("reverse"), user_package), func_n1(reverse));
-  reg_fun(intern(lit("ldiff"), user_package), func_n2(ldiff));
+  reg_fun(intern(lit("ldiff"), user_package),
+          func_n2(if3(opt_compat && opt_compat <= 190, ldiff_old, ldiff)));
   reg_fun(intern(lit("last"), user_package), func_n2o(last, 1));
   reg_fun(intern(lit("butlast"), user_package), func_n2o(butlast, 1));
   reg_fun(intern(lit("nthlast"), user_package), func_n2(nthlast));

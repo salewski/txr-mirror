@@ -359,6 +359,8 @@ typedef struct seq_info {
 
 extern const seq_kind_t seq_kind_tab[MAXTYPE+1];
 
+#define SEQ_KIND_PAIR(A, B) ((A) << 3 | (B))
+
 INLINE cnum tag(val obj) { return coerce(cnum, obj) & TAG_MASK; }
 INLINE int is_ptr(val obj) { return obj && tag(obj) == TAG_PTR; }
 INLINE int is_num(val obj) { return tag(obj) == TAG_NUM; }
@@ -566,6 +568,7 @@ val replace_list(val list, val items, val from, val to);
 val lazy_appendl(val lists);
 val lazy_appendv(struct args *lists);
 val ldiff(val list1, val list2);
+val ldiff_old(val list1, val list2);
 val flatten(val list);
 val lazy_flatten(val list);
 val flatcar(val list);

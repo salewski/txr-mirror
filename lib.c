@@ -1447,7 +1447,62 @@ val lazy_appendl(val lists)
   return lazy_appendv(args);
 }
 
-val ldiff(val list1, val list2)
+val ldiff(val seq1_in, val seq2)
+{
+  val seq1 = seq1_in;
+  list_collect_decl (out, ptail);
+
+loop:
+  if (seq1 == seq2)
+    return out;
+
+  {
+    seq_info_t si1 = seq_info(seq1);
+    seq_info_t si2 = seq_info(seq2);
+
+    switch (SEQ_KIND_PAIR(si1.kind, si2.kind)) {
+    case SEQ_KIND_PAIR(SEQ_NIL, SEQ_NIL):
+    case SEQ_KIND_PAIR(SEQ_NIL, SEQ_LISTLIKE):
+    case SEQ_KIND_PAIR(SEQ_NIL, SEQ_VECLIKE):
+    case SEQ_KIND_PAIR(SEQ_NIL, SEQ_HASHLIKE):
+    case SEQ_KIND_PAIR(SEQ_NIL, SEQ_NOTSEQ):
+      break;
+    case SEQ_KIND_PAIR(SEQ_LISTLIKE, SEQ_NIL):
+    case SEQ_KIND_PAIR(SEQ_VECLIKE, SEQ_NIL):
+    case SEQ_KIND_PAIR(SEQ_HASHLIKE, SEQ_NIL):
+    case SEQ_KIND_PAIR(SEQ_NOTSEQ, SEQ_NIL):
+      return seq1;
+    case SEQ_KIND_PAIR(SEQ_LISTLIKE, SEQ_LISTLIKE):
+      ptail = list_collect(ptail, car(si1.obj));
+      seq1 = cdr(si1.obj);
+      goto loop;
+    case SEQ_KIND_PAIR(SEQ_LISTLIKE, SEQ_VECLIKE):
+    case SEQ_KIND_PAIR(SEQ_LISTLIKE, SEQ_HASHLIKE):
+    case SEQ_KIND_PAIR(SEQ_LISTLIKE, SEQ_NOTSEQ):
+      ptail = list_collect(ptail, car(si1.obj));
+      seq1 = cdr(si1.obj);
+      goto loop;
+    case SEQ_KIND_PAIR(SEQ_VECLIKE, SEQ_VECLIKE):
+      if (equal(seq1, seq2) || zerop(length(seq1)))
+        break;
+      ptail = list_collect(ptail, ref(seq1, zero));
+      seq1 = sub(seq1, one, t);
+      goto loop;
+    case SEQ_KIND_PAIR(SEQ_HASHLIKE, SEQ_HASHLIKE):
+    case SEQ_KIND_PAIR(SEQ_NOTSEQ, SEQ_NOTSEQ):
+      if (!equal(seq1, seq2))
+        ptail = list_collect_append(ptail, seq1);
+      break;
+    default:
+      ptail = list_collect_append(ptail, seq1);
+      break;
+    }
+  }
+
+  return make_like(out, seq1_in);
+}
+
+val ldiff_old(val list1, val list2)
 {
   val list_orig = list1;
   list_collect_decl (out, ptail);
