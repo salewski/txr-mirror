@@ -679,7 +679,7 @@
            ,*(caseq each-type
                (collect-each ^((rplacd ,accum (cons (progn ,*body) nil))
                                (sys:setq ,accum (cdr ,accum))))
-               (append-each ^((rplacd ,accum (progn ,*body))
+               (append-each ^((rplacd ,accum (append (cdr ,accum) (progn ,*body)))
                               (sys:setq ,accum (last ,accum))))
                (t body)))))))
 
