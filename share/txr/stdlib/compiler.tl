@@ -442,14 +442,23 @@
 
 (defmeth compiler comp-progn (me oreg env args)
   (let* (ffuns fvars
+         (nargs (len args))
          lastfrag
+         (oreg-discard (if (eq (car oreg) t)
+                         oreg
+                         me.(alloc-treg)))
          (code (build
-                 (each ((form args))
-                   (let ((frag me.(compile oreg env form)))
-                     (set lastfrag frag)
-                     (set fvars (uni fvars frag.fvars))
-                     (set ffuns (uni ffuns frag.ffuns))
-                     (pend frag.code))))))
+                 (each ((form args)
+                        (n (range 1)))
+                   (let ((islast (eql n nargs)))
+                     (let ((frag me.(compile (if islast oreg oreg-discard)
+                                             env form)))
+                       (when islast
+                         (set lastfrag frag))
+                       (set fvars (uni fvars frag.fvars))
+                       (set ffuns (uni ffuns frag.ffuns))
+                       (pend frag.code)))))))
+    me.(free-treg oreg-discard)
     (new (frag (if lastfrag lastfrag.oreg ^(t 0)) code fvars ffuns))))
 
 (defmeth compiler comp-prog1 (me oreg env form)
