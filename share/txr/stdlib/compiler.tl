@@ -150,6 +150,7 @@
             ((let let*) me.(comp-let oreg env form))
             (lambda me.(comp-lambda oreg env form))
             (sys:for-op me.(comp-for oreg env form))
+            (sys:each-op me.(compile oreg env (expand-each form env)))
             (progn me.(comp-progn oreg env (cdr form)))
             (and me.(comp-and-or oreg env form))
             (or me.(comp-and-or oreg env form))
@@ -642,6 +643,26 @@
             (sys:setq ,key-var (car ,cell-var))
             (sys:setq ,val-var (cdr ,cell-var))
             ,*body)))))
+
+(defun expand-each (form env)
+  (mac-param-bind form (op each-type vars . body) form
+    (unless vars
+      (set vars [mapcar car env.vb]))
+    (let* ((gens (mapcar (ret (gensym)) vars))
+           (out (if (member each-type '(collect-each append-each))
+                  (gensym)))
+           (accum (if out (gensym))))
+      ^(let* (,*(zip gens vars) ,*(if accum ^((,out (cons nil nil)) (,accum ,out))))
+         (sys:for-op ()
+                     ((and ,*gens) ,*(if accum ^((cdr ,out))))
+                     (,*(mapcar (ret ^(sys:setq ,@1 (cdr ,@1))) gens))
+           ,*(mapcar (ret ^(sys:setq ,@1 (car ,@2))) vars gens)
+           ,*(caseq each-type
+               (collect-each ^((rplacd ,accum (cons (progn ,*body) nil))
+                               (sys:setq ,accum (cdr ,accum))))
+               (append-each ^((rplacd ,accum (progn ,*body))
+                              (sys:setq ,accum (last ,accum))))
+               (t body)))))))
 
 (defun usr:compile-toplevel (exp)
   (let ((co (new compiler))
