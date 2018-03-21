@@ -153,6 +153,7 @@
             (progn me.(comp-progn oreg env (cdr form)))
             (prog1 me.(comp-prog1 oreg env form))
             (sys:quasi me.(comp-quasi oreg env form))
+            (dohash me.(compile oreg env (expand-dohash form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
             (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
             ((macrolet symacrolet macro-time)
@@ -603,6 +604,17 @@
 (defun expand-quasi (form)
   (let ((qa (expand-quasi-args form)))
     ^(append ,*qa)))
+
+(defun expand-dohash (form)
+  (mac-param-bind form (op (key-var val-var hash-form : res-form) . body) form
+    (with-gensyms (iter-var cell-var)
+      ^(let (,key-var ,val-var (,iter-var (hash-begin ,hash-form)) ,cell-var)
+         (sys:for-op ((sys:setq ,cell-var (hash-next ,iter-var)))
+                     (,cell-var ,res-form)
+                     ((sys:setq ,cell-var (hash-next ,iter-var)))
+            (sys:setq ,key-var (car ,cell-var))
+            (sys:setq ,val-var (cdr ,cell-var))
+            ,*body)))))
 
 (defun usr:compile-toplevel (exp)
   (let ((co (new compiler))
