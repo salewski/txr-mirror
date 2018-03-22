@@ -617,6 +617,17 @@ static void vm_block(struct vm *vm, vm_word_t insn)
   vm->lev = saved_lev;
 }
 
+static void vm_no_block_err(struct vm *vm, val name)
+{
+  if (name)
+    eval_error(vm->vd->bytecode,
+               lit("return-from: no block named ~s is visible"),
+               name, nao);
+  else
+    eval_error(vm->vd->bytecode,
+               lit("return: no anonymous block is visible"),
+               name, nao);
+}
 
 static void vm_retsr(struct vm *vm, vm_word_t insn)
 {
@@ -624,6 +635,7 @@ static void vm_retsr(struct vm *vm, vm_word_t insn)
   val tag = vm_get(vm->dspl, vm_insn_extra(insn));
 
   uw_block_return(tag, res);
+  vm_no_block_err(vm, tag);
 }
 
 static void vm_retrs(struct vm *vm, vm_word_t insn)
@@ -632,6 +644,7 @@ static void vm_retrs(struct vm *vm, vm_word_t insn)
   val tag = vm_get(vm->dspl, vm_insn_operand(insn));
 
   uw_block_return(tag, res);
+  vm_no_block_err(vm, tag);
 }
 
 static void vm_retrr(struct vm *vm, vm_word_t insn)
@@ -641,6 +654,7 @@ static void vm_retrr(struct vm *vm, vm_word_t insn)
   val tag = vm_get(vm->dspl, vm_arg_operand_lo(arg));
 
   uw_block_return(tag, res);
+  vm_no_block_err(vm, tag);
 }
 
 static void vm_catch(struct vm *vm, vm_word_t insn)
