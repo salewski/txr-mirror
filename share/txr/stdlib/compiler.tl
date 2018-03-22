@@ -172,6 +172,7 @@
             (prog1 me.(comp-prog1 oreg env form))
             (sys:quasi me.(comp-quasi oreg env form))
             (dohash me.(compile oreg env (expand-dohash form)))
+            (sys:upenv me.(compile oreg env.up (cadr form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
             (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
             ((macrolet symacrolet macro-time)

@@ -2803,6 +2803,14 @@ static val op_switch(val form, val env)
   return eval_progn(forms, env, forms);
 }
 
+static val op_upenv(val form, val env)
+{
+  val args = cdr(form);
+  val expr = pop(&args);
+  type_check(env, ENV);
+  return eval(expr, env->e.up_env, expr);
+}
+
 static val me_def_variable(val form, val menv)
 {
   val args = rest(form);
@@ -5940,6 +5948,7 @@ void eval_init(void)
   reg_op(with_dyn_rebinds_s, op_with_dyn_rebinds);
   reg_op(prof_s, op_prof);
   reg_op(switch_s, op_switch);
+  reg_op(intern(lit("upenv"), system_package), op_upenv);
 
   reg_mac(defvar_s, func_n2(me_def_variable));
   reg_mac(defparm_s, func_n2(me_def_variable));
