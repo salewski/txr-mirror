@@ -406,7 +406,7 @@ val struct_get_initfun(val type)
 val struct_set_initfun(val type, val fun)
 {
   struct struct_type *st = stype_handle(&type, lit("struct-set-initfun"));
-  st->initfun = fun;
+  set(mkloc(st->initfun, type), fun);
   return fun;
 }
 
@@ -419,7 +419,7 @@ val struct_get_postinitfun(val type)
 val struct_set_postinitfun(val type, val fun)
 {
   struct struct_type *st = stype_handle(&type, lit("struct-set-postinitfun"));
-  st->postinitfun = fun;
+  set(mkloc(st->postinitfun, type),  fun);
   return fun;
 }
 
