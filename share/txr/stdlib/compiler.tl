@@ -213,7 +213,7 @@
       (new (frag vloc
                  ^(,*vfrag.code
                    ,*(if bind
-                       (maybe-mov vfrag.oreg vloc)
+                       (maybe-mov vloc vfrag.oreg)
                        ^((setv ,vloc ,vfrag.oreg))))
                  (uni (list sym) vfrag.fvars)
                  vfrag.ffuns)))))
