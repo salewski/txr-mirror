@@ -162,6 +162,8 @@
             (cond me.(comp-cond oreg env form))
             (if me.(comp-if oreg env form))
             (block me.(comp-block oreg env form))
+            (return-from me.(comp-return-from oreg env form))
+            (return me.(comp-return oreg env form))
             ((let let*) me.(comp-let oreg env form))
             (lambda me.(comp-lambda oreg env form))
             (sys:for-op me.(comp-for oreg env form))
@@ -325,6 +327,22 @@
                    ,lskip)
                  bfrag.fvars
                  bfrag.ffuns)))))
+
+(defmeth compiler comp-return-from (me oreg env form)
+  (mac-param-bind form (op name value) form
+    (let* ((nreg (if (null name)
+                   nil
+                   me.(get-dreg name)))
+           (vfrag me.(compile oreg env value)))
+      (new (frag oreg
+                 ^(,*vfrag.code
+                   (ret ,nreg ,vfrag.oreg))
+                 vfrag.fvars
+                 vfrag.ffuns)))))
+
+(defmeth compiler comp-return (me oreg env form)
+  (mac-param-bind form (op value) form
+    me.(comp-return-from oreg env ^(,op nil ,value))))
 
 (defmeth compiler comp-let (me oreg env form)
   (mac-param-bind form (sym raw-vis . body) form
