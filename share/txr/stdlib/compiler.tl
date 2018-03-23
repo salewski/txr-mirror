@@ -218,7 +218,7 @@
                  ^(,*vfrag.code
                    ,*(if bind
                        (maybe-mov vloc vfrag.oreg)
-                       ^((setv ,vloc ,vfrag.oreg))))
+                       ^((setv ,vfrag.oreg ,vloc))))
                  (uni (list sym) vfrag.fvars)
                  vfrag.ffuns)))))
 
