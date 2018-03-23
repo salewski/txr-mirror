@@ -516,13 +516,17 @@
 
 (defmeth compiler comp-progn (me oreg env args)
   (let* (ffuns fvars
-         (nargs (len args))
+         (lead-forms (butlastn 1 args))
+         (last-form (nthlast 1 args))
+         (eff-lead-forms (remove-if [orf constantp symbolp] lead-forms))
+         (forms (append eff-lead-forms last-form))
+         (nargs (len forms))
          lastfrag
          (oreg-discard (if (eq (car oreg) t)
                          oreg
                          me.(alloc-treg)))
          (code (build
-                 (each ((form args)
+                 (each ((form forms)
                         (n (range 1)))
                    (let ((islast (eql n nargs)))
                      (let ((frag me.(compile (if islast oreg oreg-discard)
