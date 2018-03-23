@@ -604,7 +604,6 @@
            (nenv (new env up env co me))
            (obj-immut-var (cdar nenv.(extend-var (gensym))))
            (obj-var (cdar nenv.(extend-var (gensym))))
-           (err-var (cdar nenv.(extend-var (gensym))))
            (err-blk (cdar nenv.(extend-var (gensym))))
            (lout (gensym "l"))
            (objfrag me.(compile oreg env obj))
@@ -616,8 +615,7 @@
                                                    ,obj-immut-var.sym)
                                               ,(expand-bind-mac-params
                                                  form params
-                                                 nil obj-var.sym
-                                                 err-var.sym
+                                                 nil obj-var.sym :
                                                  err-blk.sym
                                                  body))))
                               (lerrtest (gensym "l"))
@@ -626,16 +624,9 @@
                          (new (frag oreg
                                     ^(,*cfrag.code
                                        ,*(maybe-mov oreg cfrag.oreg)
-                                       (ifq ,oreg ,me.(get-dreg :) ,lerrtest)
-                                       ,*(cond
-                                           ((eql i ncases)
-                                            ^((mov ,oreg nil)
-                                              (jmp ,lout)))
-                                           (t
-                                            ^((jmp ,lnext))))
-                                       ,lerrtest
-                                       (if ,err-var.loc ,lout)
-                                       ,*(if (neql i ncases) ^(,lnext)))
+                                       (ifq ,oreg ,me.(get-dreg :) ,lout)
+                                       ,*(if (eql i ncases)
+                                           ^((mov ,oreg nil))))
                                     cfrag.fvars
                                     cfrag.ffuns))))))
            (allfrags (cons objfrag cfrags)))
@@ -809,10 +800,9 @@
                                         ,(berr nil))))))
                              ((null strict) nil)
                              ((symbolp strict)
-                              ^((when (or (< ,plen ,nreq)
-                                          (> ,plen ,nfix))
-                                  (set ,strict t)
-                                  (return-from ,err-block nil)))))
+                              ^((if (or (< ,plen ,nreq)
+                                        (> ,plen ,nfix))
+                                  (return-from ,err-block ',strict)))))
                          ,*(append-each ((k key-pars))
                              (tree-bind (key . var) k
                                (push var vars)
@@ -872,9 +862,8 @@
                                 ^((if ,obj-var ,(berr nil))))
                                ((null strict) nil)
                                ((symbolp strict)
-                                ^((when ,obj-var
-                                    (set ,strict t)
-                                    (return-from ,err-block nil)))))))
+                                ^((if ,obj-var
+                                    (return-from ,err-block ',strict)))))))
                        (put-gen curs))))))
         (let ((bind-code (expand-rec params obj-var)))
           ^(let (,*(nreverse vars) ,plen ,*gen-stk)
