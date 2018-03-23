@@ -568,7 +568,8 @@
   (tree-case form
     ((prog1 fi . re) (let* ((igreg me.(alloc-treg))
                             (fi-frag me.(compile oreg env fi))
-                            (re-frag me.(comp-progn igreg env re)))
+                            (re-frag me.(comp-progn igreg env
+                                                    (append re '(nil)))))
                        me.(free-treg igreg)
                        (new (frag fi-frag.oreg
                                   (append fi-frag.code re-frag.code)
