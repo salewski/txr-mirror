@@ -598,9 +598,9 @@
 (defopcode op-getv getv auto
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
-    (tree-bind (reg name) asm.(parse-args me syntax '(ds r))
-      asm.(put-insn me.code reg name)))
-  (:method dis (me asm reg name)
+    (tree-bind (reg name) asm.(parse-args me syntax '(d rs))
+      asm.(put-insn me.code name reg)))
+  (:method dis (me asm name reg)
     ^(,me.symbol ,(operand-to-sym reg) ,(operand-to-sym name))))
 
 (defopcode-derived op-getf getf auto op-getv)
@@ -616,9 +616,9 @@
 (defopcode op-setv setv auto
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
-    (tree-bind (reg name) asm.(parse-args me syntax '(rs r))
-      asm.(put-insn me.code reg name)))
-  (:method dis (me asm reg name)
+    (tree-bind (reg name) asm.(parse-args me syntax '(r rs))
+      asm.(put-insn me.code name reg)))
+  (:method dis (me asm name reg)
     ^(,me.symbol ,(operand-to-sym reg) ,(operand-to-sym name))))
 
 (defopcode-derived op-setl1 setl1 auto op-setv)

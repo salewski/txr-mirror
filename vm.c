@@ -707,7 +707,7 @@ static val vm_get_binding(struct vm *vm, vm_word_t insn,
                           val (*lookup_fn)(val env, val sym),
                           val kind_str)
 {
-  val sym = vm_get(vm->dspl, vm_insn_operand(insn));
+  val sym = vm_get(vm->dspl, vm_insn_extra(insn));
   val binding = lookup_fn(nil, sym);
 
   if (nilp(binding))
@@ -721,7 +721,7 @@ static void vm_getsym(struct vm *vm, vm_word_t insn,
                       val kind_str)
 {
   val binding = vm_get_binding(vm, insn, lookup_fn, kind_str);
-  int dst = vm_insn_extra(insn);
+  unsigned dst = vm_insn_operand(insn);
   vm_set(vm->dspl, dst, cdr(binding));
 }
 
@@ -730,7 +730,7 @@ static void vm_getbind(struct vm *vm, vm_word_t insn,
                        val kind_str)
 {
   val binding = vm_get_binding(vm, insn, lookup_fn, kind_str);
-  int dst = vm_insn_extra(insn);
+  unsigned dst = vm_insn_operand(insn);
   vm_set(vm->dspl, dst, binding);
 }
 
@@ -739,14 +739,14 @@ static void vm_setsym(struct vm *vm, vm_word_t insn,
                       val kind_str)
 {
   val binding = vm_get_binding(vm, insn, lookup_fn, kind_str);
-  int src = vm_insn_extra(insn);
+  unsigned src = vm_insn_operand(insn);
   rplacd(binding, vm_get(vm->dspl, src));
 }
 
 static void vm_bindv(struct vm *vm, vm_word_t insn)
 {
-  val sym = vm_get(vm->dspl, vm_insn_operand(insn));
-  int src = vm_insn_extra(insn);
+  val sym = vm_get(vm->dspl, vm_insn_extra(insn));
+  int src = vm_insn_operand(insn);
 
   if (nilp(dyn_env))
     eval_error(vm->vd->bytecode,
