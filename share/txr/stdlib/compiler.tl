@@ -224,20 +224,24 @@
 
 (defmeth compiler comp-cond (me oreg env form)
   (let* ((lout (gensym "l"))
-         (frags (collect-each ((cl (rest form)))
+         (ncases (len (rest form)))
+         (frags (collect-each ((cl (rest form))
+                               (i (range 1)))
                   (mac-param-bind form (test . forms) cl
                     (cond
                       ((and (eq test t) (null forms))
                        (let ((dreg me.(get-dreg t)))
                          (new (frag oreg
                                     ^(,*(maybe-mov oreg dreg)
-                                      (jmp ,lout))))))
+                                      ,*(if (neql i ncases)
+                                          ^((jmp ,lout))))))))
                       ((eq test t)
                        (let ((ffrag me.(comp-progn oreg env forms)))
                          (new (frag oreg
                                     ^(,*ffrag.code
                                       ,*(maybe-mov oreg ffrag.oreg)
-                                      (jmp ,lout))
+                                      ,*(if (neql i ncases)
+                                          ^((jmp ,lout))))
                                     ffrag.fvars
                                     ffrag.ffuns))))
                       ((null forms)
@@ -248,7 +252,8 @@
                                        ,*(if (neq (car tfrag.oreg) 'd)
                                            ^((if ,tfrag.oreg ,lskip)))
                                       ,*(maybe-mov oreg tfrag.oreg)
-                                      (jmp ,lout)
+                                      ,*(if (neql i ncases)
+                                          ^((jmp ,lout)))
                                       ,lskip)
                                     tfrag.fvars
                                     tfrag.ffuns))))
@@ -261,7 +266,8 @@
                                              ^((if ,tfrag.oreg ,lskip)))
                                          ,*ffrag.code
                                          ,*(maybe-mov oreg ffrag.oreg)
-                                         (jmp ,lout)
+                                         ,*(if (neql i ncases)
+                                             ^((jmp ,lout)))
                                          ,lskip)
                                       (uni tfrag.fvars ffrag.fvars)
                                       (uni tfrag.ffuns ffrag.ffuns))))))))))
