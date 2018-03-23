@@ -147,6 +147,7 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
 
     vd->bytecode = nil;
     vd->datavec = nil;
+    vd->funvec = nil;
 
     vd->frsz = nlvl * 2 + nreg;
 
