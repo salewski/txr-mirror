@@ -65,6 +65,7 @@ struct vm_desc {
   int nlvl;
   int nreg;
   int frsz;
+  cnum ftsz;
   val bytecode;
   val datavec;
   val funvec;
@@ -128,12 +129,12 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
   {
     mem_t *code = buf_get(bytecode, self);
     val dvl = length_vec(datavec);
-    cnum fvl = c_num(length_vec(funvec));
+    cnum ftsz = c_num(length_vec(funvec));
     loc data_loc = if3(dvl != zero, vecref_l(datavec, zero), nulloc);
     struct vm_desc *vd = coerce(struct vm_desc *, chk_malloc(sizeof *vd));
-    struct vm_ftent *ftab = if3(fvl != 0,
+    struct vm_ftent *ftab = if3(ftsz != 0,
                                 coerce(struct vm_ftent *,
-                                       chk_calloc(fvl, sizeof *ftab)), 0);
+                                       chk_calloc(ftsz, sizeof *ftab)), 0);
     cnum i;
     val desc;
 
@@ -142,6 +143,7 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
     vd->code = coerce(vm_word_t *, code);
     vd->data = valptr(data_loc);
     vd->ftab = ftab;
+    vd->ftsz = ftsz;
 
     vd->bytecode = nil;
     vd->datavec = nil;
@@ -157,7 +159,7 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
     vd->funvec = funvec;
     vd->self = desc;
 
-    for (i = 0; i < fvl; i++) {
+    for (i = 0; i < ftsz; i++) {
       struct vm_ftent *fe = &ftab[i];
       fe->fb = lookup_fun(nil, vecref(funvec, num_fast(i)));
       fe->fbloc = if3(fe->fb, cdr_l(fe->fb), nulloc);
@@ -195,13 +197,13 @@ static void vm_desc_destroy(val obj)
 static void vm_desc_mark(val obj)
 {
   struct vm_desc *vd = coerce(struct vm_desc *, obj->co.handle);
-  cnum i, fvl = c_num(length_vec(vd->funvec));
+  cnum i, ftsz = vd->ftsz;
 
   gc_mark(vd->bytecode);
   gc_mark(vd->datavec);
   gc_mark(vd->funvec);
 
-  for (i = 0; i < fvl; i++)
+  for (i = 0; i < ftsz; i++)
     gc_mark(vd->ftab[i].fb);
 }
 
