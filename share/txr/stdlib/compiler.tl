@@ -175,6 +175,7 @@
             (sys:quasi me.(comp-quasi oreg env form))
             (dohash me.(compile oreg env (expand-dohash form)))
             (tree-bind me.(comp-tree-bind oreg env form))
+            (tree-case me.(comp-tree-case oreg env form))
             (sys:upenv me.(compile oreg env.up (cadr form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
             (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
@@ -596,6 +597,57 @@
                              ,(expand-bind-mac-params form params nil
                                                       obj-var t nil body)))))
         me.(compile oreg env expn)))))
+
+(defmeth compiler comp-tree-case (me oreg env form)
+  (mac-param-bind form (op obj . cases) form
+    (let* ((ncases (len cases))
+           (nenv (new env up env co me))
+           (obj-immut-var (cdar nenv.(extend-var (gensym))))
+           (obj-var (cdar nenv.(extend-var (gensym))))
+           (err-var (cdar nenv.(extend-var (gensym))))
+           (err-blk (cdar nenv.(extend-var (gensym))))
+           (lout (gensym "l"))
+           (objfrag me.(compile oreg env obj))
+           (cfrags (collect-each ((c cases)
+                                  (i (range 1)))
+                     (mac-param-bind form (params . body) c
+                       (let* ((src (expand ^(block ,err-blk.sym
+                                              (set ,obj-var.sym
+                                                   ,obj-immut-var.sym)
+                                              ,(expand-bind-mac-params
+                                                 form params
+                                                 nil obj-var.sym
+                                                 err-var.sym
+                                                 err-blk.sym
+                                                 body))))
+                              (lerrtest (gensym "l"))
+                              (lnext (gensym "l"))
+                              (cfrag me.(compile oreg nenv src)))
+                         (new (frag oreg
+                                    ^(,*cfrag.code
+                                       ,*(maybe-mov oreg cfrag.oreg)
+                                       (ifq ,oreg ,me.(get-dreg :) ,lerrtest)
+                                       ,*(cond
+                                           ((eql i ncases)
+                                            ^((mov ,oreg nil)
+                                              (jmp ,lout)))
+                                           (t
+                                            ^((jmp ,lnext))))
+                                       ,lerrtest
+                                       (if ,err-var.loc ,lout)
+                                       ,*(if (neql i ncases) ^(,lnext)))
+                                    cfrag.fvars
+                                    cfrag.ffuns))))))
+           (allfrags (cons objfrag cfrags)))
+      (new (frag oreg
+                 ^(,*objfrag.code
+                   (frame ,nenv.lev ,nenv.v-cntr)
+                   ,*(maybe-mov obj-immut-var.loc objfrag.oreg)
+                   ,*(mappend .code cfrags)
+                   ,lout
+                   (end ,oreg))
+                 [reduce-left uni allfrags nil .fvars]
+                 [reduce-left uni allfrags nil .ffuns])))))
 
 (defun maybe-mov (to-reg from-reg)
   (if (nequal to-reg from-reg)
