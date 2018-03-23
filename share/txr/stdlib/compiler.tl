@@ -174,6 +174,7 @@
             (prog1 me.(comp-prog1 oreg env form))
             (sys:quasi me.(comp-quasi oreg env form))
             (dohash me.(compile oreg env (expand-dohash form)))
+            (tree-bind me.(comp-tree-bind oreg env form))
             (sys:upenv me.(compile oreg env.up (cadr form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
             (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
@@ -588,6 +589,14 @@
                    [reduce-left uni frags nil .fvars]
                    [reduce-left uni frags nil .ffuns])))))
 
+(defmeth compiler comp-tree-bind (me oreg env form)
+  (tree-bind (op params obj . body) form
+    (with-gensyms (obj-var)
+      (let ((expn (expand ^(let ((,obj-var ,obj))
+                             ,(expand-bind-mac-params form params nil
+                                                      obj-var t nil body)))))
+        me.(compile oreg env expn)))))
+
 (defun maybe-mov (to-reg from-reg)
   (if (nequal to-reg from-reg)
     ^((mov ,to-reg ,from-reg))))
@@ -701,6 +710,131 @@
                (append-each ^((rplacd ,accum (append (cdr ,accum) (progn ,*body)))
                               (sys:setq ,accum (last ,accum))))
                (t body)))))))
+
+(defun expand-bind-mac-parse-params (params form)
+  (let* ((rest-par (nthlast 0 params))
+         (proper-pars (ldiff params rest-par))
+         nonkey-pars key-pars)
+    (while proper-pars
+      (let ((pp (pop proper-pars)))
+        (caseq pp
+          ((:env :whole :form)
+           (unless proper-pars
+             (compile-error form "~s requires argument" pp))
+           (push (cons pp (pop proper-pars)) key-pars))
+          (t (push pp nonkey-pars)))))
+    (tree-bind (: req-pars raw-opt-pars) (split* (nreverse nonkey-pars)
+                                                 (op where (op eq :)))
+      (let ((opt-pars (mapcar [iffi atom list] raw-opt-pars)))
+        (list (nreverse key-pars) req-pars opt-pars rest-par)))))
+
+(defun expand-bind-mac-params (ctx-form params menv-var
+                               obj-var strict err-block body)
+  (let (vars gen-stk (plen (gensym)))
+    (macrolet ((berr (too-few-p)
+                 ^^(sys:bind-mac-error ',ctx-form ',params
+                                       ,obj-var ,',too-few-p)))
+      (labels ((get-gen ()
+                 (or (pop gen-stk) (gensym)))
+               (put-gen (g)
+                 (push g gen-stk))
+               (expand-rec (params obj-var)
+                 (tree-bind (key-pars req-pars opt-pars rest-par)
+                            (expand-bind-mac-parse-params params ctx-form)
+                   (let* ((nreq (len req-pars))
+                          (nfix (+ nreq (len opt-pars)))
+                          (curs (get-gen)))
+                     (unwind-protect
+                       ^(,*(when strict
+                             ^((set ,plen (if (consp ,obj-var)
+                                            (len ,obj-var) 0))))
+                         ,*(cond
+                             ((eq strict t)
+                              ^((if (< ,plen ,nreq)
+                                  ,(berr t))
+                                ,*(unless rest-par
+                                    ^((if (> ,plen ,nfix)
+                                        ,(berr nil))))))
+                             ((null strict) nil)
+                             ((symbolp strict)
+                              ^((when (or (< ,plen ,nreq)
+                                          (> ,plen ,nfix))
+                                  (set ,strict t)
+                                  (return-from ,err-block nil)))))
+                         ,*(append-each ((k key-pars))
+                             (tree-bind (key . var) k
+                               (push var vars)
+                               (caseq key
+                                 (:whole ^((set ,var ,obj-var)))
+                                 (:form ^((set ,var ',ctx-form)))
+                                 (:env ^((set ,var ,menv-var))))))
+                         ,*(append-each ((p req-pars))
+                             (cond
+                               ((consp p)
+                                ^((set ,curs (car ,obj-var))
+                                  (set ,obj-var (cdr ,obj-var))
+                                  ,*(expand-rec p curs)))
+                               (t
+                                (push p vars)
+                                ^((set ,p (car ,obj-var))
+                                  (set ,obj-var (cdr ,obj-var))))))
+                         ,*(append-each ((o opt-pars))
+                             (tree-bind (p : init-form pres-p) o
+                               (cond
+                                 ((consp p)
+                                  (when pres-p
+                                    (push pres-p vars))
+                                  ^((set ,curs (or (car ,obj-var)
+                                                 (sys:upenv ,init-form)))
+                                    (cond
+                                      ((and ,obj-var
+                                            (prog1
+                                              (neq (set ,curs (car ,obj-var)) :)
+                                              (set ,obj-var (cdr ,obj-var))))
+                                        ,*(if pres-p
+                                            ^((set ,pres-p t))))
+                                      (t
+                                        (set ,curs (sys:upenv ,init-form))))
+                                    (when ,curs
+                                      ,*(expand-rec p curs))))
+                                 (t
+                                   (push p vars)
+                                   (when pres-p
+                                     (push pres-p vars))
+                                   ^((cond
+                                       ((and ,obj-var
+                                             (prog1
+                                               (neq (set ,p (car ,obj-var)) :)
+                                               (set ,obj-var (cdr ,obj-var))))
+                                        ,*(if pres-p
+                                            ^((set ,pres-p t))))
+                                       (t
+                                         ,*(if init-form
+                                             ^((set ,p (sys:upenv ,init-form)))))))))))
+                         ,*(when rest-par
+                             (push rest-par vars)
+                             ^((set ,rest-par ,obj-var)))
+                         ,*(unless rest-par
+                             (cond
+                               ((eq strict t)
+                                ^((if ,obj-var ,(berr nil))))
+                               ((null strict) nil)
+                               ((symbolp strict)
+                                ^((when ,obj-var
+                                    (set ,strict t)
+                                    (return-from ,err-block nil)))))))
+                       (put-gen curs))))))
+        (let ((bind-code (expand-rec params obj-var)))
+          ^(let (,*(nreverse vars) ,plen ,*gen-stk)
+             ,*bind-code
+             ,*body))))))
+
+(defun sys:bind-mac-error (ctx-form params obj too-few-p)
+  (if (atom obj)
+    (compile-error ctx-form "extra atom ~s not matched by params ~s"
+                   obj  params)
+    (compile-error ctx-form "object ~s too ~a for params ~s"
+                   obj (if too-few-p "short" "long") params)))
 
 (defun usr:compile-toplevel (exp)
   (let ((co (new compiler))
