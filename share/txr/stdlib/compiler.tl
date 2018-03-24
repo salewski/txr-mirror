@@ -839,12 +839,12 @@
                                         (> ,plen ,nfix))
                                   (return-from ,err-block ',strict)))))
                          ,*(append-each ((k key-pars))
-                             (tree-bind (key . var) k
-                               (push var vars)
+                             (tree-bind (key . sym) k
+                               (push sym vars)
                                (caseq key
-                                 (:whole ^((set ,var ,obj-var)))
-                                 (:form ^((set ,var ',ctx-form)))
-                                 (:env ^((set ,var ,menv-var))))))
+                                 (:whole ^((set ,sym ,obj-var)))
+                                 (:form ^((set ,sym ',ctx-form)))
+                                 (:env ^((set ,sym ,menv-var))))))
                          ,*(append-each ((p req-pars))
                              (cond
                                ((consp p)
