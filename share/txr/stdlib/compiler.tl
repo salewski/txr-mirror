@@ -629,7 +629,10 @@
   (tree-bind (op params obj . body) form
     (with-gensyms (obj-var)
       (let ((expn (expand ^(let ((,obj-var ,obj))
-                             ,(expand-bind-mac-params form params nil
+                             ,(expand-bind-mac-params ^',form
+                                                      ^',(rlcp ^(,(car form))
+                                                               form)
+                                                      params nil
                                                       obj-var t nil body)))))
         me.(compile oreg env expn)))))
 
@@ -641,6 +644,8 @@
            (obj-var (cdar nenv.(extend-var (gensym))))
            (err-blk (cdar nenv.(extend-var (gensym))))
            (lout (gensym "l"))
+           (ctx-form ^',form)
+           (err-form ^',(rlcp ^(,(car form)) form))
            (objfrag me.(compile oreg env obj))
            (cfrags (collect-each ((c cases)
                                   (i (range 1)))
@@ -649,8 +654,8 @@
                                               (set ,obj-var.sym
                                                    ,obj-immut-var.sym)
                                               ,(expand-bind-mac-params
-                                                 form params
-                                                 nil obj-var.sym :
+                                                 ctx-form err-form
+                                                 params nil obj-var.sym :
                                                  err-blk.sym
                                                  body))))
                               (lerrtest (gensym "l"))
@@ -806,12 +811,11 @@
       (let ((opt-pars (mapcar [iffi atom list] raw-opt-pars)))
         (list (nreverse key-pars) req-pars opt-pars rest-par)))))
 
-(defun expand-bind-mac-params (ctx-form params menv-var
+(defun expand-bind-mac-params (ctx-form err-form params menv-var
                                obj-var strict err-block body)
-  (let (vars gen-stk (plen (gensym))
-        (err-form (rlcp ^(,(car ctx-form)) ctx-form)))
+  (let (vars gen-stk (plen (gensym)))
     (macrolet ((berr (too-few-p)
-                 ^^(sys:bind-mac-error ',err-form ',params
+                 ^^(sys:bind-mac-error ,err-form ',params
                                        ,obj-var ,',too-few-p)))
       (labels ((get-gen ()
                  (or (pop gen-stk) (gensym)))
@@ -844,7 +848,7 @@
                                (push sym vars)
                                (caseq key
                                  (:whole ^((set ,sym ,obj-var)))
-                                 (:form ^((set ,sym ',ctx-form)))
+                                 (:form ^((set ,sym ,ctx-form)))
                                  (:env ^((set ,sym ,menv-var))))))
                          ,*(append-each ((p req-pars))
                              (cond
