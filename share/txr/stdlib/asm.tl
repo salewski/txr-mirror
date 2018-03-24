@@ -203,18 +203,21 @@
 
 (defmeth assembler dis-listing (me : (stream *stdout*))
   (let ((p 0)
+        (c 0)
         (l (len me.buf)))
     me.(set-pos p)
     (while (< p l)
       (let* ((dis me.(dis-one))
              (dis-txt (cat-str [mapcar tostringp dis] " "))
              (q me.(cur-pos)))
+        (inc c)
         me.(set-pos p)
         (format t "~,5d: ~,08X ~a\n" (trunc p 4) me.(get-word) dis-txt)
         (while (< (inc p 4) q)
           (format t "~,5d: ~,08X\n" (trunc p 4) me.(get-word)))
         me.(set-pos q)
-        (set p q)))))
+        (set p q)))
+    c))
 
 (defvarl %oc-list-builder% (new list-builder))
 
@@ -670,7 +673,9 @@
     (put-line "funs:")
     (mapdo (do format t "~5d: ~s\n" @1 @2) (range 0) funv)
     (put-line "code:")
-    asm.(dis-listing)))
+    (let ((ninsn asm.(dis-listing)))
+      (put-line "instruction count:")
+      (format t "~5d\n" ninsn))))
 
 (defun usr:disassemble (obj : (stream *stdout*))
   (typecase obj
