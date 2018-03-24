@@ -161,6 +161,7 @@
             (sys:setq me.(comp-setq oreg env form))
             (cond me.(comp-cond oreg env form))
             (if me.(comp-if oreg env form))
+            (unwind-protect me.(comp-unwind-protect oreg env form))
             (block me.(comp-block oreg env form))
             (return-from me.(comp-return-from oreg env form))
             (return me.(comp-return oreg env form))
@@ -347,6 +348,30 @@
                   te-frag.ffuns))))
     ((op) me.(compile oreg env nil))
     (form (compile-error form "excess argument forms"))))
+
+(defmeth compiler comp-unwind-protect (me oreg env form)
+  (mac-param-bind form (op prot-form . cleanup-body) form
+    (let* ((pfrag me.(compile oreg env prot-form))
+           (cfrag me.(comp-progn oreg env cleanup-body))
+           (lclean (gensym "l"))
+           (lskip (gensym "l")))
+      (cond
+        ((null pfrag.code)
+         (new (frag pfrag.oreg
+                    cfrag.code
+                    cfrag.fvars
+                    cfrag.ffuns)))
+        ((null cfrag.code) pfrag)
+        (t (new (frag pfrag.oreg
+                      ^((uwprot ,lclean)
+                        ,*pfrag.code
+                        (jmp ,lskip)
+                        ,lclean
+                        ,*cfrag.code
+                        (end nil)
+                        ,lskip)
+                      (uni pfrag.fvars pfrag.fvars)
+                      (uni cfrag.fvars cfrag.fvars))))))))
 
 (defmeth compiler comp-block (me oreg env form)
   (mac-param-bind form (op name . body) form
