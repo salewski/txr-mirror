@@ -175,6 +175,7 @@
             (sys:quasi me.(comp-quasi oreg env form))
             (dohash me.(compile oreg env (expand-dohash form)))
             (tree-bind me.(comp-tree-bind oreg env form))
+            (mac-param-bind me.(comp-mac-param-bind oreg env form))
             (tree-case me.(comp-tree-case oreg env form))
             (sys:upenv me.(compile oreg env.up (cadr form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
@@ -632,6 +633,17 @@
                              ,(expand-bind-mac-params ^',form
                                                       ^',(rlcp ^(,(car form))
                                                                form)
+                                                      params nil
+                                                      obj-var t nil body)))))
+        me.(compile oreg env expn)))))
+
+(defmeth compiler comp-mac-param-bind (me oreg env form)
+  (mac-param-bind form (op context params obj . body) form
+    (with-gensyms (obj-var form-var)
+      (let ((expn (expand ^(let* ((,obj-var ,obj)
+                                  (,form-var ,context))
+                             ,(expand-bind-mac-params form-var
+                                                      form-var
                                                       params nil
                                                       obj-var t nil body)))))
         me.(compile oreg env expn)))))
