@@ -808,9 +808,10 @@
 
 (defun expand-bind-mac-params (ctx-form params menv-var
                                obj-var strict err-block body)
-  (let (vars gen-stk (plen (gensym)))
+  (let (vars gen-stk (plen (gensym))
+        (err-form (rlcp ^(,(car ctx-form)) ctx-form)))
     (macrolet ((berr (too-few-p)
-                 ^^(sys:bind-mac-error ',ctx-form ',params
+                 ^^(sys:bind-mac-error ',err-form ',params
                                        ,obj-var ,',too-few-p)))
       (labels ((get-gen ()
                  (or (pop gen-stk) (gensym)))
