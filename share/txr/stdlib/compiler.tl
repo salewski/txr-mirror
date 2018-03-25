@@ -170,6 +170,7 @@
           (caseq sym
             (quote me.(comp-atom oreg (cadr form)))
             (sys:setq me.(comp-setq oreg env form))
+            (sys:lisp1-setq me.(comp-lisp1-setq oreg env form))
             (cond me.(comp-cond oreg env form))
             (if me.(comp-if oreg env form))
             (unwind-protect me.(comp-unwind-protect oreg env form))
@@ -238,6 +239,22 @@
                        ^((setv ,vfrag.oreg ,vloc))))
                  (uni (list sym) vfrag.fvars)
                  vfrag.ffuns)))))
+
+(defmeth compiler comp-lisp1-setq (me oreg env form)
+  (mac-param-bind form (op sym val) form
+    (let ((bind env.(lookup-lisp1 sym)))
+      (cond
+        ((typep bind 'fbinding)
+         (compile-error form "assignment to lexical function binding"))
+        ((null bind)
+         (let ((vfrag me.(compile oreg env val))
+               (l1loc me.(get-dreg sym)))
+           (new (frag l1loc
+                      ^(,*vfrag.code
+                        (setl1 ,vfrag.oreg ,l1loc))
+                      (uni (list sym) vfrag.fvars)
+                      vfrag.ffuns))))
+        (t me.(compile oreg env ^(sys:setq ,sym ,val)))))))
 
 (defmeth compiler comp-cond (me oreg env form)
   (let* ((lout (gensym "l"))
