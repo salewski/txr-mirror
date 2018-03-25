@@ -192,7 +192,7 @@
              (compile-error form "unexpanded quasiquote encountered"))
             (t
               (compile-error form "special op ~s not handled yet" sym))))
-         ((bindable sym) me.(comp-call oreg env sym (cdr form)))
+         ((bindable sym) me.(comp-fun-form oreg env sym (cdr form)))
          (t (compile-error form "invalid operator")))))))
 
 (defmeth compiler comp-atom (me oreg form)
@@ -648,7 +648,7 @@
   (let ((qexp (expand-quasi form)))
     me.(compile oreg env (expand qexp))))
 
-(defmeth compiler comp-call (me oreg env sym args)
+(defmeth compiler comp-fun-form (me oreg env sym args)
   (condlet
     (((fbind env.(lookup-fun sym)))
      me.(comp-call-impl oreg env 'call fbind.loc args))
