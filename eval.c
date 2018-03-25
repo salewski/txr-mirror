@@ -1801,17 +1801,30 @@ static val op_or(val form, val env)
   return nil;
 }
 
+static val rt_defvarl(val sym)
+{
+  val new_p;
+  val cell = gethash_c(top_vb, sym, mkcloc(new_p));
+
+  if (new_p) {
+    uw_purge_deferred_warning(cons(var_s, sym));
+    uw_purge_deferred_warning(cons(sym_s, sym));
+    remhash(top_smb, sym);
+    return cell;
+  }
+
+  return nil;
+}
+
 static val op_defvarl(val form, val env)
 {
   val args = rest(form);
   val sym = first(args);
+  val cell = rt_defvarl(sym);
 
-  if (!gethash(top_vb, sym)) {
+  if (cell) {
     val value = eval(second(args), env, form);
-    remhash(top_smb, sym);
-    sethash(top_vb, sym, cons(sym, value));
-    uw_purge_deferred_warning(cons(var_s, sym));
-    uw_purge_deferred_warning(cons(sym_s, sym));
+    rplacd(cell, cons(sym, value));
   }
 
   return sym;
@@ -6600,6 +6613,8 @@ void eval_init(void)
   reg_fun(intern(lit("cptrp"), user_package), func_n1(cptrp));
   reg_fun(intern(lit("cptr-type"), user_package), func_n1(cptr_type));
   reg_varl(intern(lit("cptr-null"), user_package), cptr(0));
+
+  reg_fun(intern(lit("rt-defvarl"), system_package), func_n1(rt_defvarl));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
