@@ -1857,6 +1857,20 @@ void trace_check(val name)
   }
 }
 
+static val rt_defun(val name, val function)
+{
+  sethash(top_fb, name, cons(name, function));
+  uw_purge_deferred_warning(cons(fun_s, name));
+  uw_purge_deferred_warning(cons(sym_s, name));
+  return name;
+}
+
+static val rt_defmacro(val sym, val name, val function)
+{
+  sethash(top_mb, sym, cons(name, function));
+  return name;
+}
+
 static val op_defun(val form, val env)
 {
   val args = rest(form);
@@ -1869,12 +1883,7 @@ static val op_defun(val form, val env)
   if (!consp(name)) {
     val block = cons(block_s, cons(name, body));
     val fun = cons(name, cons(params, cons(block, nil)));
-
-    /* defun captures lexical environment, so env is passed */
-    sethash(top_fb, name, cons(name, func_interp(env, fun)));
-    uw_purge_deferred_warning(cons(fun_s, name));
-    uw_purge_deferred_warning(cons(sym_s, name));
-    return name;
+    return rt_defun(name, func_interp(env, fun));
   } else if (car(name) == meth_s) {
     val binding = lookup_fun(nil, intern(lit("define-method"), system_package));
     val type_sym = second(name);
@@ -1898,8 +1907,7 @@ static val op_defun(val form, val env)
       eval_error(form, lit("defun: ~s is a special operator in ~s"),
                  sym, name, nao);
 
-    sethash(top_mb, sym, cons(name, func_interp(env, fun)));
-    return name;
+    return rt_defmacro(sym, name, func_interp(env, fun));
   } else {
     eval_error(form, lit("defun: ~s isn't recognized function name syntax"),
                name, nao);
@@ -6615,6 +6623,8 @@ void eval_init(void)
   reg_varl(intern(lit("cptr-null"), user_package), cptr(0));
 
   reg_fun(intern(lit("rt-defvarl"), system_package), func_n1(rt_defvarl));
+  reg_fun(intern(lit("rt-defun"), system_package), func_n2(rt_defun));
+  reg_fun(intern(lit("rt-defmacro"), system_package), func_n3(rt_defmacro));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
