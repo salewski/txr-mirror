@@ -195,6 +195,7 @@
             (tree-case me.(comp-tree-case oreg env form))
             (sys:lisp1-value me.(comp-lisp1-value oreg env form))
             (dwim me.(comp-dwim oreg env form))
+            (defvarl me.(compile oreg env (expand-defvarl form)))
             (sys:upenv me.(compile oreg env.up (cadr form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
             (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
@@ -1067,6 +1068,14 @@
           ^(let (,*(nreverse vars) ,plen ,*gen-stk)
              ,*bind-code
              ,*body))))))
+
+(defun expand-defvarl (form)
+  (mac-param-bind form (op sym : value) form
+    (with-gensyms (cell)
+      ^(let ((,cell (sys:rt-defvarl ',sym)))
+         (if ,cell
+           (usr:rplacd ,cell (cons ',sym ,value)))
+         ',sym))))
 
 (defun sys:bind-mac-error (ctx-form params obj too-few-p)
   (if (atom obj)
