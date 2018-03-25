@@ -653,7 +653,19 @@
     (((fbind env.(lookup-fun sym)))
      me.(comp-call-impl oreg env 'call fbind.loc args))
     (((fidx me.(get-fidx sym)))
-     me.(comp-call-impl oreg env 'gcall fidx args))))
+     (caseq sym
+       (call me.(comp-call oreg env args))
+       (t me.(comp-call-impl oreg env 'gcall fidx args))))))
+
+(defmeth compiler comp-call (me oreg env args)
+  (tree-bind (fform . fargs) args
+    (let* ((ffrag me.(compile oreg env fform))
+           (cfrag me.(comp-call-impl oreg env 'call ffrag.oreg fargs)))
+      (new (frag cfrag.oreg
+                 (append ffrag.code
+                         cfrag.code)
+                 (uni ffrag.fvars cfrag.fvars)
+                 (uni ffrag.ffuns cfrag.ffuns))))))
 
 (defmeth compiler comp-call-impl (me oreg env opcode freg args)
   (let* ((sugg-oregs (mapcar (ret me.(alloc-treg)) args))
