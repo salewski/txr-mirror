@@ -232,7 +232,7 @@
                    bind.loc
                    me.(get-dreg sym)))
            (vfrag me.(compile (if bind vloc oreg) env value)))
-      (new (frag vloc
+      (new (frag vfrag.oreg
                  ^(,*vfrag.code
                    ,*(if bind
                        (maybe-mov vloc vfrag.oreg)
@@ -249,7 +249,7 @@
         ((null bind)
          (let ((vfrag me.(compile oreg env val))
                (l1loc me.(get-dreg sym)))
-           (new (frag l1loc
+           (new (frag vfrag.oreg
                       ^(,*vfrag.code
                         (setl1 ,vfrag.oreg ,l1loc))
                       (uni (list sym) vfrag.fvars)
