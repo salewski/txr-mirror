@@ -192,6 +192,7 @@
             (mac-param-bind me.(comp-mac-param-bind oreg env form))
             (tree-case me.(comp-tree-case oreg env form))
             (sys:lisp1-value me.(comp-lisp1-value oreg env form))
+            (dwim me.(comp-dwim oreg env form))
             (sys:upenv me.(compile oreg env.up (cadr form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
             (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
@@ -796,6 +797,12 @@
                       (list arg)
                       (list arg))))))
       (t me.(compile oreg env arg)))))
+
+(defmeth compiler comp-dwim (me oreg env form)
+  (mac-param-bind form (op obj . args) form
+    (let ((l1-exprs (cdr form)))
+      me.(compile oreg env
+                  ^(call ,*(mapcar (op list 'sys:lisp1-value) l1-exprs))))))
 
 (defun maybe-mov (to-reg from-reg)
   (if (nequal to-reg from-reg)
