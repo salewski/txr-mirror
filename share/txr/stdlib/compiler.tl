@@ -196,6 +196,7 @@
             (sys:lisp1-value me.(comp-lisp1-value oreg env form))
             (dwim me.(comp-dwim oreg env form))
             (defvarl me.(compile oreg env (expand-defvarl form)))
+            (defun me.(compile oreg env (expand-defun form)))
             (sys:upenv me.(compile oreg env.up (cadr form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
             (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
@@ -1076,6 +1077,25 @@
          (if ,cell
            (usr:rplacd ,cell (cons ',sym ,value)))
          ',sym))))
+
+(defun expand-defun (form)
+  (mac-param-bind form (op name args . body) form
+    (flet ((mklambda (block-name)
+             ^(lambda ,args (block ,block-name ,*body))))
+      (cond
+        ((bindable name)
+         ^(sys:rt-defun ',name ,(mklambda name)))
+        ((consp name)
+         (caseq (car name)
+           (meth
+             (mac-param-bind form (meth type slot) name
+               ^(sys:define-method ',type ',slot ,(mklambda slot))))
+           (macro
+             (mac-param-bind form (macro sym) name
+               ^(sys:rt-defmacro ',sym ',name ,(mklambda sym))))
+           (t (compile-error form "~s isn't a valid compound function name"
+                             name))))
+        (t (compile-error form "~s isn't a valid function name" name))))))
 
 (defun sys:bind-mac-error (ctx-form params obj too-few-p)
   (if (atom obj)
