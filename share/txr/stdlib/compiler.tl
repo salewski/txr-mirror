@@ -168,6 +168,7 @@
             ((let let*) me.(comp-let oreg env form))
             ((sys:fbind sys:lbind) me.(comp-fbind oreg env form))
             (lambda me.(comp-lambda oreg env form))
+            (fun me.(comp-fun oreg env form))
             (sys:for-op me.(comp-for oreg env form))
             (sys:each-op me.(compile oreg env (expand-each form env)))
             (progn me.(comp-progn oreg env (cdr form)))
@@ -571,6 +572,13 @@
                               (diff bfrag.fvars lexsyms))
                          (uni [reduce-left uni ifrags nil .ffuns]
                               bfrag.ffuns))))))))))
+
+(defmeth compiler comp-fun (me oreg env form)
+  (mac-param-bind form (op sym) form
+    (iflet ((fbin env.(lookup-fun sym)))
+      (new (frag fbin.loc nil nil (list sym)))
+      (let ((dreg me.(get-dreg sym)))
+        (new (frag oreg ^((getf ,oreg ,dreg)) nil (list sym)))))))
 
 (defmeth compiler comp-progn (me oreg env args)
   (let* (ffuns fvars
