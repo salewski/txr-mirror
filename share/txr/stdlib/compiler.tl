@@ -610,8 +610,8 @@
 
 (defmeth compiler comp-call (me oreg env sym args)
   (condlet
-    (((freg env.(lookup-fun sym)))
-     me.(comp-call-impl oreg env 'call freg args))
+    (((fbind env.(lookup-fun sym)))
+     me.(comp-call-impl oreg env 'call fbind.loc args))
     (((fidx me.(get-fidx sym)))
      me.(comp-call-impl oreg env 'gcall fidx args))))
 
