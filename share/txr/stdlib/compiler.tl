@@ -166,6 +166,7 @@
             (return-from me.(comp-return-from oreg env form))
             (return me.(comp-return oreg env form))
             ((let let*) me.(comp-let oreg env form))
+            ((sys:fbind sys:lbind) me.(comp-fbind oreg env form))
             (lambda me.(comp-lambda oreg env form))
             (sys:for-op me.(comp-for oreg env form))
             (sys:each-op me.(compile oreg env (expand-each form env)))
@@ -450,6 +451,37 @@
                            ^((end ,boreg)))
                    (uni (diff bfrag.fvars lexsyms) fvars)
                    (uni ffuns bfrag.ffuns)))))))
+
+(defmeth compiler comp-fbind (me oreg env form)
+  (mac-param-bind form (sym raw-fis . body) form
+    (let* ((fis (mapcar [iffi atom list] raw-fis))
+           (lexfuns [mapcar car fis])
+           (frsize (len lexfuns))
+           (rec (eq sym 'sys:lbind))
+           (nenv (new env up env co me)))
+      (each ((lfun lexfuns))
+        nenv.(extend-fun lfun))
+      (let* (ffuns fvars
+             (code (build
+                     (add ^(frame ,nenv.lev ,frsize))
+                     (each ((fi fis))
+                       (tree-bind (sym : form) fi
+                         (let* ((bind nenv.(lookup-fun sym))
+                                (frag me.(compile bind.loc
+                                                  (if rec nenv env)
+                                                  form)))
+                           (pend frag.code
+                                 (maybe-mov bind.loc frag.oreg))
+                           (set ffuns (uni ffuns frag.ffuns)
+                                fvars (uni fvars frag.fvars)))))))
+             (bfrag me.(comp-progn oreg nenv body))
+             (boreg (if env.(out-of-scope bfrag.oreg) oreg bfrag.oreg)))
+        (new (frag boreg
+                   (append code bfrag.code
+                           (maybe-mov boreg bfrag.oreg)
+                           ^((end ,boreg)))
+                   (uni fvars bfrag.fvars)
+                   (uni (diff bfrag.ffuns lexfuns) bfrag.ffuns)))))))
 
 (defmeth compiler comp-lambda (me oreg env form)
   (mac-param-bind form (op pars . body) form
