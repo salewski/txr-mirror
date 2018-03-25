@@ -79,7 +79,7 @@
   (:method extend-fun (me sym)
     (when (assoc sym me.fb)
       (compile-error me.co.last-form "duplicate function ~s" sym))
-    (let* ((loc ^(v ,me.lev ,(pinc me.v-cntr)))
+    (let* ((loc ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
            (bn (new binding sym sym loc loc env me)))
       (set me.fb (acons sym bn me.fb))))
 
