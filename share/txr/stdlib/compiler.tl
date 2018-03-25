@@ -37,6 +37,10 @@
   loc
   sys:env)
 
+(defstruct vbinding binding)
+
+(defstruct fbinding binding)
+
 (defstruct sys:env nil
   vb
   fb
@@ -64,23 +68,30 @@
       (((up me.up)) up.(lookup-fun sym))
       (t nil)))
 
+  (:method lookup-lisp1 (me sym)
+    (condlet
+      (((cell (or (assoc sym me.vb)
+                  (assoc sym me.fb)))) (cdr cell))
+      (((up me.up)) up.(lookup-lisp1 sym))
+      (t nil)))
+
   (:method extend-var (me sym)
     (when (assoc sym me.vb)
       (compile-error me.co.last-form "duplicate variable: ~s" sym))
     (let* ((loc ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
-           (bn (new binding sym sym loc loc env me)))
+           (bn (new vbinding sym sym loc loc env me)))
       (set me.vb (acons sym bn me.vb))))
 
   (:method extend-var* (me sym)
     (let* ((loc ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
-           (bn (new binding sym sym loc loc env me)))
+           (bn (new vbinding sym sym loc loc env me)))
       (set me.vb (acons sym bn me.vb))))
 
   (:method extend-fun (me sym)
     (when (assoc sym me.fb)
       (compile-error me.co.last-form "duplicate function ~s" sym))
     (let* ((loc ^(v ,(ppred me.lev) ,(pinc me.v-cntr)))
-           (bn (new binding sym sym loc loc env me)))
+           (bn (new fbinding sym sym loc loc env me)))
       (set me.fb (acons sym bn me.fb))))
 
   (:method rename-var (me from-sym to-sym)
@@ -180,6 +191,7 @@
             (tree-bind me.(comp-tree-bind oreg env form))
             (mac-param-bind me.(comp-mac-param-bind oreg env form))
             (tree-case me.(comp-tree-case oreg env form))
+            (sys:lisp1-value me.(comp-lisp1-value oreg env form))
             (sys:upenv me.(compile oreg env.up (cadr form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
             (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
@@ -768,6 +780,22 @@
                    (end ,oreg))
                  [reduce-left uni allfrags nil .fvars]
                  [reduce-left uni allfrags nil .ffuns])))))
+
+(defmeth compiler comp-lisp1-value (me oreg env form)
+  (mac-param-bind form (op arg) form
+    (cond
+      ((bindable arg)
+       (condlet
+         (((bind env.(lookup-lisp1 arg)))
+          (new (frag bind.loc
+                     nil
+                     (if (typep bind 'vbinding) (list arg))
+                     (if (typep bind 'fbinding) (list arg)))))
+        (t (new (frag oreg
+                      ^((getl1 ,oreg ,me.(get-dreg arg)))
+                      (list arg)
+                      (list arg))))))
+      (t me.(compile oreg env arg)))))
 
 (defun maybe-mov (to-reg from-reg)
   (if (nequal to-reg from-reg)
