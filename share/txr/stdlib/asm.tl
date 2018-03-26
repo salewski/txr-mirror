@@ -569,6 +569,8 @@
                                (t 'retrr))]))
         real.(asm asm syntax)))))
 
+(defopcode-derived op-abscsr abscsr auto op-retsr)
+
 (defopcode op-catch catch auto
   (:method asm (me asm syntax)
     me.(chk-arg-count 4 syntax)

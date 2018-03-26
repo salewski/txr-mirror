@@ -660,6 +660,15 @@ static void vm_retrr(struct vm *vm, vm_word_t insn)
   vm_no_block_err(vm, tag);
 }
 
+static void vm_abscsr(struct vm *vm, vm_word_t insn)
+{
+  val res = vm_get(vm->dspl, vm_insn_operand(insn));
+  val tag = vm_get(vm->dspl, vm_insn_extra(insn));
+
+  uw_block_abscond(tag, res);
+  vm_no_block_err(vm, tag);
+}
+
 static void vm_catch(struct vm *vm, vm_word_t insn)
 {
   unsigned catch_ip = vm_insn_bigop(insn);
@@ -851,6 +860,9 @@ static val vm_execute(struct vm *vm)
       break;
     case RETRR:
       vm_retrr(vm, insn);
+      break;
+    case ABSCSR:
+      vm_abscsr(vm, insn);
       break;
     case CATCH:
       vm_catch(vm, insn);

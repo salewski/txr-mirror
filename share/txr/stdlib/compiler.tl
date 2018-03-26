@@ -176,7 +176,7 @@
             (if me.(comp-if oreg env form))
             (unwind-protect me.(comp-unwind-protect oreg env form))
             ((block block*) me.(comp-block oreg env form))
-            (return-from me.(comp-return-from oreg env form))
+            ((return-from sys:abscond-from) me.(comp-return-from oreg env form))
             (return me.(comp-return oreg env form))
             ((let let*) me.(comp-let oreg env form))
             ((sys:fbind sys:lbind) me.(comp-fbind oreg env form))
@@ -447,10 +447,11 @@
     (let* ((nreg (if (null name)
                    nil
                    me.(get-dreg name)))
+           (opcode (if (eq op 'return-from) 'ret 'abscsr))
            (vfrag me.(compile oreg env value)))
       (new (frag oreg
                  ^(,*vfrag.code
-                   (ret ,nreg ,vfrag.oreg))
+                   (,opcode ,nreg ,vfrag.oreg))
                  vfrag.fvars
                  vfrag.ffuns)))))
 
