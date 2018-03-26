@@ -44,7 +44,7 @@
   (with-gensyms (hidden-fun)
     ^(progn
        (defun ,hidden-fun ())
-       (defmacro ,name (. args) ^(cbn ,',hidden-fun ,*args))
+       (macro-time (defmacro ,name (. args) ^(cbn ,',hidden-fun ,*args)))
        (set (symbol-function ',hidden-fun)
             ,(make-cbn-fun 'lambda args
                            ^(block ,name (let ((,name)) ,*body ,name)))))))

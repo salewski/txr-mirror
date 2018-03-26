@@ -1,15 +1,16 @@
 @(do
    (set *gensym-counter* 0)
 
-   (defmacro whilst ((condition : result) . body)
-     (let ((cblk (gensym "cnt-blk-"))
-           (bblk (gensym "brk-blk-")))
-       ^(macrolet ((break (value) ^(return-from ,',bblk ,value)))
-          (symacrolet ((break (return-from ,bblk))
-                       (continue (return-from ,cblk)))
-            (block ,bblk
-              (for () (,condition ,result) ()
-                (block ,cblk ,*body)))))))
+   (macro-time
+     (defmacro whilst ((condition : result) . body)
+       (let ((cblk (gensym "cnt-blk-"))
+             (bblk (gensym "brk-blk-")))
+         ^(macrolet ((break (value) ^(return-from ,',bblk ,value)))
+            (symacrolet ((break (return-from ,bblk))
+                         (continue (return-from ,cblk)))
+              (block ,bblk
+                (for () (,condition ,result) ()
+                  (block ,cblk ,*body))))))))
 
    (let ((i 0))
      (whilst ((< i 100))

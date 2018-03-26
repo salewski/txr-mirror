@@ -13,11 +13,12 @@
     (defvar y-offset (+ y-centre (* 0.5 pixel-size (+ j-max 1))))
  
     ;; complex number library
-    (defmacro cplx (x y) ^(cons ,x ,y))
-    (defmacro re (c) ^(car ,c))
-    (defmacro im (c) ^(cdr ,c))
+    (macro-time
+      (defmacro cplx (x y) ^(cons ,x ,y))
+      (defmacro re (c) ^(car ,c))
+      (defmacro im (c) ^(cdr ,c))
 
-    (defsymacro c0 (macro-time (cplx 0 0)))
+      (defsymacro c0 (cplx 0 0)))
 
     (macro-time 
       (defun with-cplx-expand (specs body)
@@ -28,10 +29,10 @@
                  ((a b . rest) ^(progn ,a ,b ,*rest))
                  ((a) a)
                  (x (error "with-cplx: invalid body ~s" body))))
-           (x (error "with-cplx: bad args ~s" x)))))
+           (x (error "with-cplx: bad args ~s" x))))
 
-    (defmacro with-cplx (specs . body)
-      (with-cplx-expand specs body))
+      (defmacro with-cplx (specs . body)
+        (with-cplx-expand specs body)))
 
     (defun c+ (x y)
       (with-cplx ((a b x) (c d y))

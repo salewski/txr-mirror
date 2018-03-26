@@ -4295,7 +4295,7 @@ again:
       if (init != init_ex)
         form_ex = rlcp(cons(sym, cons(name, cons(init_ex, nil))), form);
 
-      if (sym == defsymacro_s) {
+      if (opt_compat && opt_compat <= 190 && sym == defsymacro_s) {
         val result = eval(if3(opt_compat && opt_compat <= 137,
                               form_ex, form),
                           make_env(nil, nil, nil), form);
@@ -4346,10 +4346,11 @@ again:
         if (body != body_ex || params != params_ex)
           form_ex = rlcp(cons(sym, cons(name, cons(params_ex, body_ex))), form);
 
-        if (sym == defmacro_s) {
+        if (opt_compat && opt_compat <= 190 && sym == defmacro_s) {
           val result = eval(form_ex, make_env(nil, nil, nil), form);
           return cons(quote_s, cons(result, nil));
         }
+
         return form_ex;
       }
     } else if (sym == tree_case_s) {

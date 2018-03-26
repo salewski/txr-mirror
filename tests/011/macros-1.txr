@@ -1,10 +1,11 @@
 @(do
   (progn
-    (defmacro rem-num (:env menv some-form)
-      (let ((expanded (macroexpand some-form menv)))
-        (if (numberp (car expanded))
-          (cdr expanded)
-          some-form)))
+    (macro-time
+      (defmacro rem-num (:env menv some-form)
+        (let ((expanded (macroexpand some-form menv)))
+          (if (numberp (car expanded))
+            (cdr expanded)
+            some-form))))
 
     (prinl
       (macrolet ((foo () '(1 list 42))
