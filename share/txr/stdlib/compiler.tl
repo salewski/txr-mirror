@@ -175,7 +175,7 @@
             (cond me.(comp-cond oreg env form))
             (if me.(comp-if oreg env form))
             (unwind-protect me.(comp-unwind-protect oreg env form))
-            (block me.(comp-block oreg env form))
+            ((block block*) me.(comp-block oreg env form))
             (return-from me.(comp-return-from oreg env form))
             (return me.(comp-return oreg env form))
             ((let let*) me.(comp-let oreg env form))
@@ -428,11 +428,14 @@
 
 (defmeth compiler comp-block (me oreg env form)
   (mac-param-bind form (op name . body) form
-    (let* ((nreg (if name me.(get-dreg name) '(t 0)))
+    (let* ((star (and name (eq op 'block*)))
+           (nfrag (if star me.(compile oreg env name)))
+           (nreg (if star nfrag.oreg me.(get-dreg name)))
            (bfrag me.(comp-progn oreg env body))
            (lskip (gensym "l")))
       (new (frag oreg
-                 ^((block ,oreg ,nreg ,lskip)
+                 ^(,*(if nfrag nfrag.code)
+                   (block ,oreg ,nreg ,lskip)
                    ,*bfrag.code
                    (end ,bfrag.oreg)
                    ,lskip)
