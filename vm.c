@@ -244,7 +244,7 @@ static val vm_make_closure(struct vm *vm, int frsz)
         val heap_vec = vector(vec, nil);
         cdi->vec = heap_vec;
         cdi->mem = heap_vec->v.vec;
-        memcpy(heap_vec->v.vec, mem, c_num(vec));
+        memcpy(cdi->mem, mem, sizeof *cdi->mem * c_num(vec));
         mut(closure);
         *sdi = *cdi;
         break;
