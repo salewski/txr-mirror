@@ -197,6 +197,7 @@
             (dwim me.(comp-dwim oreg env form))
             (defvarl me.(compile oreg env (expand-defvarl form)))
             (defun me.(compile oreg env (expand-defun form)))
+            (defmacro me.(compile oreg env (expand-defmacro form)))
             (sys:upenv me.(compile oreg env.up (cadr form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
             (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
@@ -1096,6 +1097,19 @@
            (t (compile-error form "~s isn't a valid compound function name"
                              name))))
         (t (compile-error form "~s isn't a valid function name" name))))))
+
+(defun expand-defmacro (form)
+  (mac-param-bind form (op name mac-args . body) form
+    (with-gensyms (form menv)
+      (let ((exp-lam ^(lambda (,form ,menv)
+                        (mac-param-bind ,form ,mac-args (cdr ,form)
+                          (sys:set-macro-ancestor
+                            (block ,name
+                              ,*body)
+                            ,form)))))
+        ^(progn
+           (sys:rt-defmacro ',name '(macro ,name) ,exp-lam)
+           ',name)))))
 
 (defun sys:bind-mac-error (ctx-form params obj too-few-p)
   (if (atom obj)
