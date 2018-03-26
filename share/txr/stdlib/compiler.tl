@@ -198,6 +198,7 @@
             (defvarl me.(compile oreg env (expand-defvarl form)))
             (defun me.(compile oreg env (expand-defun form)))
             (defmacro me.(compile oreg env (expand-defmacro form)))
+            (defsymacro me.(compile oreg env (expand-defsymacro form)))
             (sys:upenv me.(compile oreg env.up (cadr form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
             (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
@@ -1110,6 +1111,10 @@
         ^(progn
            (sys:rt-defmacro ',name '(macro ,name) ,exp-lam)
            ',name)))))
+
+(defun expand-defsymacro (form)
+  (mac-param-bind form (op name def) form
+    ^(sys:rt-defsymacro ',name ',def)))
 
 (defun sys:bind-mac-error (ctx-form params obj too-few-p)
   (if (atom obj)

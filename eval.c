@@ -1844,6 +1844,14 @@ static val op_defsymacro(val form, val env)
   return sym;
 }
 
+static val rt_defsymacro(val sym, val def)
+{
+  remhash(top_vb, sym);
+  remhash(special, sym);
+  sethash(top_smb, sym, cons(sym, def));
+  return sym;
+}
+
 static val op_defmacro(val form, val env);
 
 void trace_check(val name)
@@ -6626,6 +6634,7 @@ void eval_init(void)
   reg_fun(intern(lit("rt-defvarl"), system_package), func_n1(rt_defvarl));
   reg_fun(intern(lit("rt-defun"), system_package), func_n2(rt_defun));
   reg_fun(intern(lit("rt-defmacro"), system_package), func_n3(rt_defmacro));
+  reg_fun(intern(lit("rt-defsymacro"), system_package), func_n2(rt_defsymacro));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
