@@ -51,25 +51,11 @@
                                             ((set ,next-var
                                                   (block* ,tb-id
                                                     (sys:switch ,next-var #(,*codes))
-                                                    nil))))))
-                 ;; pass one: expand inner forms, including tagbody forms.
-                 ;; if any inner tagbody forms leave (go ...) forms unexpanded,
-                 ;; protect those (go ...)forms from falling victim to the
-                 ;; global macro, by wrapping this with a harmless local go macro.
-                 (pass-one (sys:expand ^(macrolet ((go (:form form label) form))
-                                          ,basic-code) env)))
-            ;; pass two: now expand the remaining go forms at this level, against
-            ;; this tagbody. If any go forms remain, they must refer to nonexistent
-            ;; labels. By calling sys:expand one more time, we flush these out
-            ;; using the global go macro --- unless we are nested inside the
-            ;; pass-one expansion of outer tagbody, which protects them!
-            ;; Thus, the outermost tagbody flushes out the undefined labels.
-            (sys:expand ^(macrolet ((go (:form form label)
-                                        (let ((index (posql label ',lbls)))
-                                          (cond
-                                            ((null index) form)
-                                            (t ^(return* ,',tb-id ,index))))))
-                           ,pass-one) env)))))))
+                                                    nil)))))))
+            ^(macrolet ((go (:form form label)
+                          (let ((index (posql label ',lbls)))
+                            (if index ^(return* ,',tb-id ,index) form))))
+               ,basic-code)))))))
 
 (defmacro go (label)
   (if [[orf symbolp integerp chrp] label]
