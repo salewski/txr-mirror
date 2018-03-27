@@ -115,7 +115,9 @@
   (data (hash :eql-based))
   (fidx (hash :eql-based))
   (ftab (hash :eql-based))
-  last-form)
+  last-form
+  (:static gcallop (relate '(apply usr:apply call) '(gapply gapply gcall)))
+  (:static callop (relate '(apply usr:apply call) '(apply apply call))))
 
 (defmeth compiler get-dreg (me atom)
   (iflet ((dreg [me.dreg atom]))
@@ -764,18 +766,28 @@
     me.(compile oreg env (expand qexp))))
 
 (defmeth compiler comp-fun-form (me oreg env sym args)
-  (condlet
-    (((fbind env.(lookup-fun sym)))
-     me.(comp-call-impl oreg env 'call fbind.loc args))
-    (((fidx me.(get-fidx sym)))
-     (caseq sym
-       (call me.(comp-call oreg env args))
-       (t me.(comp-call-impl oreg env 'gcall fidx args))))))
+  (caseql sym
+    ((call apply usr:apply)
+     (let ((gopcode [me.gcallop sym])
+           (opcode [me.callop sym]))
+       (tree-case (car args)
+         ((op arg) (if (and (eq op 'fun) (bindable arg))
+                     (let ((fbind env.(lookup-fun arg)))
+                       me.(comp-call-impl oreg env (if fbind opcode gopcode)
+                                          (if fbind fbind.loc me.(get-fidx arg))
+                                          (cdr args)))
+                     :))
+         (arg me.(comp-call oreg env
+                            (if (eq sym 'usr:apply) 'apply sym) args)))))
+    (t (let ((fbind env.(lookup-fun sym)))
+         me.(comp-call-impl oreg env (if fbind 'call 'gcall)
+                            (if fbind fbind.loc me.(get-fidx sym))
+                            args)))))
 
-(defmeth compiler comp-call (me oreg env args)
+(defmeth compiler comp-call (me oreg env opcode args)
   (tree-bind (fform . fargs) args
     (let* ((ffrag me.(compile oreg env fform))
-           (cfrag me.(comp-call-impl oreg env 'call ffrag.oreg fargs)))
+           (cfrag me.(comp-call-impl oreg env opcode ffrag.oreg fargs)))
       (new (frag cfrag.oreg
                  (append ffrag.code
                          cfrag.code)
