@@ -179,6 +179,7 @@
             ((return-from sys:abscond-from) me.(comp-return-from oreg env form))
             (return me.(comp-return oreg env form))
             (handler-bind me.(comp-handler-bind oreg env form))
+            (sys:catch me.(comp-catch oreg env form))
             ((let let*) me.(comp-let oreg env form))
             ((sys:fbind sys:lbind) me.(comp-fbind oreg env form))
             (lambda me.(comp-lambda oreg env form))
@@ -472,6 +473,51 @@
                    (end ,bfrag.oreg))
                  (uni ffrag.fvars bfrag.fvars)
                  (uni ffrag.ffuns bfrag.ffuns))))))
+
+(defmeth compiler comp-catch (me oreg env form)
+  (mac-param-bind form (op symbols try-expr . clauses) form
+    (with-gensyms (ex-sym-var ex-args-var)
+      (let* ((nenv (new env up env co me))
+             (esvb (cdar nenv.(extend-var ex-sym-var)))
+             (eavb (cdar nenv.(extend-var ex-args-var)))
+             (tfrag me.(compile oreg env try-expr))
+             (lhand (gensym "l"))
+             (lhend (gensym "l"))
+             (lfrend (gensym "l"))
+             (nclauses (len clauses))
+             (cfrags (collect-each ((cl clauses)
+                                    (i (range 1)))
+                       (mac-param-bind form (sym params . body) cl
+                         (let* ((cl-src ^(apply (lambda ,params ,*body)
+                                                ,ex-sym-var ,ex-args-var))
+                                (cfrag me.(compile oreg nenv (expand cl-src)))
+                                (lskip (gensym "l")))
+                           (new (frag oreg
+                                      ^((gcall ,oreg
+                                               ,me.(get-fidx 'exception-subtype-p)
+                                               ,esvb.loc
+                                               ,me.(get-dreg sym))
+                                        (if ,oreg ,lskip)
+                                        ,*cfrag.code
+                                        ,*(maybe-mov tfrag.oreg cfrag.oreg)
+                                        ,*(unless (eql i nclauses)
+                                            ^((jmp ,lhend)))
+                                        ,lskip)
+                                      cfrag.fvars
+                                      cfrag.ffuns)))))))
+        (new (frag tfrag.oreg
+                   ^((frame ,nenv.lev ,nenv.v-cntr)
+                     (catch ,esvb.loc ,eavb.loc ,me.(get-dreg symbols) ,lhand)
+                     ,*tfrag.code
+                     (jmp ,lfrend)
+                     ,lhand
+                     ,*(mappend .code cfrags)
+                     ,lhend
+                     (end ,tfrag.oreg)
+                     ,lfrend
+                     (end ,tfrag.oreg))
+                   (uni tfrag.fvars [reduce-left uni cfrags nil .fvars])
+                   (uni tfrag.ffuns [reduce-left uni cfrags nil .ffuns])))))))
 
 (defmeth compiler comp-let (me oreg env form)
   (mac-param-bind form (sym raw-vis . body) form
