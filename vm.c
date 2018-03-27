@@ -45,6 +45,7 @@
 #include "args.h"
 #include "itypes.h"
 #include "buf.h"
+#include "arith.h"
 #include "vmop.h"
 #include "vm.h"
 
@@ -585,6 +586,23 @@ static void vm_ifql(struct vm *vm, vm_word_t insn)
     vm->ip = vm_insn_bigop(ip);
 }
 
+static void vm_swtch(struct vm *vm, vm_word_t insn)
+{
+  unsigned tblsz = vm_insn_extra(insn);
+  ucnum idx = c_unum(vm_get(vm->dspl, vm_insn_operand(insn)));
+
+  if (idx < tblsz) {
+    vm_word_t tgt = vm->code[vm->ip + idx / 2];
+    unsigned shift = (idx % 2) * 16;
+    vm->ip = (tgt >> shift) & 0xFFFFU;
+  } else {
+    struct vm_desc *vd = vm->vd;
+    eval_error(vd->bytecode,
+               lit("switch index ~s is out of range"),
+               num(idx), nao);
+  }
+}
+
 static void vm_uwprot(struct vm *vm, vm_word_t insn)
 {
   int saved_lev = vm->lev;
@@ -845,6 +863,9 @@ static val vm_execute(struct vm *vm)
       break;
     case IFQL:
       vm_ifql(vm, insn);
+      break;
+    case SWTCH:
+      vm_swtch(vm, insn);
       break;
     case UWPROT:
       vm_uwprot(vm, insn);

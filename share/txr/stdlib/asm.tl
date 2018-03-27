@@ -279,6 +279,21 @@
       (2 (chr-int val))
       (t (error "assembler: bad immediate operand: ~s" bits)))))
 
+(defstruct backpatch-low16 nil
+  (:method backpatch (me asm at offs)
+    (tree-bind (hi lo) asm.(get-pair)
+      asm.(set-pos at)
+      asm.(put-pair hi offs))))
+
+(defstruct backpatch-high16 nil
+  (:method backpatch (me asm at offs)
+    (tree-bind (hi lo) asm.(get-pair)
+      asm.(set-pos at)
+      asm.(put-pair offs lo))))
+
+(defvarl %backpatch-low16% (new backpatch-low16))
+(defvarl %backpatch-high16% (new backpatch-high16))
+
 (defmacro defopcode (class symbol code . slot-defs)
   ^(symacrolet ((auto (pinc %oc-code%)))
      (defstruct ,class oc-base
@@ -511,6 +526,31 @@
       ^(,me.symbol ,(operand-to-sym lreg) ,(operand-to-sym rreg) ,dst)))))
 
 (defopcode-derived op-ifql ifql auto op-ifq)
+
+(defopcode op-swtch swtch auto
+  (:method asm (me asm syntax)
+    me.(chk-arg-count-min 1 syntax)
+    (let* ((args asm.(parse-args me syntax '(r)))
+           (lbls (cddr syntax))
+           (tblsz (len lbls)))
+      asm.(put-insn me.code tblsz (car args))
+      (while lbls
+        (let ((x asm.(lookup-label (pop lbls) %backpatch-low16%))
+              (y (if lbls
+                   asm.(lookup-label (pop lbls) %backpatch-high16%)
+                   0)))
+          asm.(put-pair y x)))))
+
+  (:method dis (me asm tblsz switch-val)
+    (build
+      (add me.symbol)
+      (add (operand-to-sym switch-val))
+      (while (> tblsz 0)
+        (dec tblsz 2)
+        (tree-bind (y x) asm.(get-pair)
+          (add x)
+          (unless (minusp tblsz)
+            (add y)))))))
 
 (defopcode-derived op-uwprot uwprot auto op-jmp)
 
