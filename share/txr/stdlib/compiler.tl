@@ -576,6 +576,7 @@
            (lexfuns [mapcar car fis])
            (frsize (len lexfuns))
            (rec (eq sym 'sys:lbind))
+           (eenv (unless rec (new env up env co me)))
            (nenv (new env up env co me)))
       (each ((lfun lexfuns))
         nenv.(extend-fun lfun))
@@ -586,7 +587,7 @@
                        (tree-bind (sym : form) fi
                          (let* ((bind nenv.(lookup-fun sym))
                                 (frag me.(compile bind.loc
-                                                  (if rec nenv env)
+                                                  (if rec nenv eenv)
                                                   form)))
                            (pend frag.code
                                  (maybe-mov bind.loc frag.oreg))
