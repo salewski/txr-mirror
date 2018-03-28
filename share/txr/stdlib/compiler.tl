@@ -289,73 +289,16 @@
                    vfrag.ffuns))))))
 
 (defmeth compiler comp-cond (me oreg env form)
-  (let* ((lout (gensym "l"))
-         (raw-cases (rest form))
-         (first-const [member-if constantp raw-cases car])
-         (cases (ldiff raw-cases (cdr first-const)))
-         (ncases (len cases))
-         (frags (collect-each ((cl cases)
-                               (i (range 1)))
-                  (mac-param-bind form (test . forms) cl
-                    (cond
-                      ((and (eq test t) (null forms))
-                       (let ((dreg me.(get-dreg t)))
-                         (new (frag oreg
-                                    ^(,*(maybe-mov oreg dreg)
-                                      ,*(if (neql i ncases)
-                                          ^((jmp ,lout))))))))
-                      ((eq test t)
-                       (let ((ffrag me.(comp-progn oreg env forms)))
-                         (new (frag oreg
-                                    ^(,*ffrag.code
-                                      ,*(maybe-mov oreg ffrag.oreg)
-                                      ,*(if (neql i ncases)
-                                          ^((jmp ,lout))))
-                                    ffrag.fvars
-                                    ffrag.ffuns))))
-                      ((null test)
-                       me.(compile oreg env nil))
-                      ((constantp test)
-                       (let ((ffrag me.(comp-progn oreg env cl)))
-                         (new (frag oreg
-                                    ^(,*ffrag.code
-                                      ,*(maybe-mov oreg ffrag.oreg)
-                                      ,*(if (neql i ncases)
-                                          ^((jmp ,lout))))
-                                    ffrag.fvars
-                                    ffrag.ffuns))))
-                      ((null forms)
-                       (let ((tfrag me.(compile oreg env test))
-                             (lskip (gensym "l")))
-                         (new (frag oreg
-                                    ^(,*tfrag.code
-                                       ,*(if (neq (car tfrag.oreg) 'd)
-                                           ^((if ,tfrag.oreg ,lskip)))
-                                      ,*(maybe-mov oreg tfrag.oreg)
-                                      ,*(if (neql i ncases)
-                                          ^((jmp ,lout)))
-                                      ,lskip)
-                                    tfrag.fvars
-                                    tfrag.ffuns))))
-                      (t (let ((tfrag me.(compile oreg env test))
-                               (ffrag me.(comp-progn oreg env forms))
-                               (lskip (gensym "l")))
-                           (new (frag oreg
-                                      ^(,*tfrag.code
-                                         ,*(if (neq (car tfrag.oreg) 'd)
-                                             ^((if ,tfrag.oreg ,lskip)))
-                                         ,*ffrag.code
-                                         ,*(maybe-mov oreg ffrag.oreg)
-                                         ,*(if (neql i ncases)
-                                             ^((jmp ,lout)))
-                                         ,lskip)
-                                      (uni tfrag.fvars ffrag.fvars)
-                                      (uni tfrag.ffuns ffrag.ffuns))))))))))
-    (new (frag oreg
-               ^(,*(mappend .code frags)
-                 ,lout)
-               [reduce-left uni frags nil .fvars]
-               [reduce-left uni frags nil .ffuns]))))
+  (tree-case form
+    ((op) me.(comp-atom oreg nil))
+    ((op (test . forms) . more) me.(compile oreg env
+                                            ^(if ,test
+                                               (progn ,*forms)
+                                               (cond ,*more))))
+    ((op atom . more)
+     (compile-error form "atom in cond syntax; pair expected"))
+    ((op . atom)
+     (compile-error form "trailing atom in cond syntax"))))
 
 (defmeth compiler comp-if (me oreg env form)
   (tree-case form
