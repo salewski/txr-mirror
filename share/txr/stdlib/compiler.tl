@@ -121,11 +121,13 @@
   (:static callop (relate '(apply usr:apply call) '(apply apply call))))
 
 (defmeth compiler get-dreg (me atom)
-  (iflet ((dreg [me.dreg atom]))
-    dreg
-    (let* ((dreg ^(d ,(pinc me.dreg-cntr))))
+  (condlet
+    (((dreg [me.dreg atom])) dreg)
+    ((((< me.dreg-cntr 256)))
+     (let* ((dreg ^(d ,(pinc me.dreg-cntr))))
       (set [me.data (cadr dreg)] atom)
-      (set [me.dreg atom] dreg))))
+      (set [me.dreg atom] dreg)))
+    (t (compile-error me.last-form "code too complex: out of registers"))))
 
 (defmeth compiler get-fidx (me atom)
   (iflet ((fidx [me.fidx atom]))
