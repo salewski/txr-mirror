@@ -222,7 +222,7 @@
              (compile-error form "unexpanded quasiquote encountered"))
             (t
               (compile-error form "special op ~s not handled yet" sym))))
-         ((bindable sym) me.(comp-fun-form oreg env sym (cdr form)))
+         ((bindable sym) me.(comp-fun-form oreg env form))
          (t (compile-error form "invalid operator")))))))
 
 (defmeth compiler comp-atom (me oreg form)
@@ -748,24 +748,25 @@
   (let ((qexp (expand-quasi form)))
     me.(compile oreg env (expand qexp))))
 
-(defmeth compiler comp-fun-form (me oreg env sym args)
-  (caseql sym
-    ((call apply usr:apply)
-     (let ((gopcode [%gcall-op% sym])
-           (opcode [%call-op% sym]))
-       (tree-case (car args)
-         ((op arg) (if (and (eq op 'fun) (bindable arg))
-                     (let ((fbind env.(lookup-fun arg)))
-                       me.(comp-call-impl oreg env (if fbind opcode gopcode)
-                                          (if fbind fbind.loc me.(get-fidx arg))
-                                          (cdr args)))
-                     :))
-         (arg me.(comp-call oreg env
-                            (if (eq sym 'usr:apply) 'apply sym) args)))))
-    (t (let ((fbind env.(lookup-fun sym)))
-         me.(comp-call-impl oreg env (if fbind 'call 'gcall)
-                            (if fbind fbind.loc me.(get-fidx sym))
-                            args)))))
+(defmeth compiler comp-fun-form (me oreg env form)
+  (tree-bind (sym . args) form
+    (caseql sym
+      ((call apply usr:apply)
+       (let ((gopcode [%gcall-op% sym])
+             (opcode [%call-op% sym]))
+         (tree-case (car args)
+           ((op arg) (if (and (eq op 'fun) (bindable arg))
+                       (let ((fbind env.(lookup-fun arg)))
+                         me.(comp-call-impl oreg env (if fbind opcode gopcode)
+                                            (if fbind fbind.loc me.(get-fidx arg))
+                                            (cdr args)))
+                       :))
+           (arg me.(comp-call oreg env
+                              (if (eq sym 'usr:apply) 'apply sym) args)))))
+      (t (let ((fbind env.(lookup-fun sym)))
+           me.(comp-call-impl oreg env (if fbind 'call 'gcall)
+                              (if fbind fbind.loc me.(get-fidx sym))
+                              args))))))
 
 (defmeth compiler comp-call (me oreg env opcode args)
   (tree-bind (fform . fargs) args
