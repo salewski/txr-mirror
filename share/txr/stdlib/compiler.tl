@@ -122,6 +122,14 @@
 
 (defvarl %call-op% (relate '(apply usr:apply call) '(apply apply call)))
 
+(defvarl %test-funs-pos% '(eq))
+
+(defvarl %test-funs-neg% '(neq))
+
+(defvarl %test-funs% (append %test-funs-pos% %test-funs-neg%))
+
+(defvarl %test-inv% (relate %test-funs-pos% %test-funs-neg%))
+
 (defmeth compiler get-dreg (me atom)
   (condlet
     ((((null atom))) '(t 0))
@@ -308,6 +316,9 @@
         me.(compile oreg env else))
        ((constantp test)
         me.(compile oreg env then))
+       ((and (consp test) (member (car test) %test-funs%))
+        me.(compile oreg env ^(ift ,(car test) ,(cadr test) ,(caddr test)
+                                   ,then ,else)))
        (t
          (let* ((te-oreg me.(alloc-treg))
                 (lelse (gensym "l"))
@@ -333,6 +344,9 @@
        ((null test) me.(compile oreg env nil))
        ((constantp test)
         me.(compile oreg env then))
+       ((and (consp test) (member (car test) %test-funs%))
+        me.(compile oreg env ^(ift ,(car test) ,(cadr test) ,(caddr test)
+                                   ,then)))
        (t (let ((lskip (gensym "l"))
                 (te-frag me.(compile oreg env test))
                 (th-frag me.(compile oreg env then)))
@@ -346,14 +360,51 @@
                        (uni te-frag.fvars th-frag.fvars)
                        (uni te-frag.ffuns th-frag.ffuns)))))))
     ((op test)
-     (let ((te-frag me.(compile oreg env test)))
-       (new (frag oreg
-                  ^(,*te-frag.code
-                    (mov ,oreg nil))
-                  te-frag.fvars
-                  te-frag.ffuns))))
+     (cond
+       ((constantp test) me.(compile oreg env nil))
+       ((and (consp test) (member (car test) %test-funs%))
+        me.(compile oreg env ^(ift ,(car test) ,(cadr test) ,(caddr test))))
+       (t (let ((te-frag me.(compile oreg env test)))
+            (new (frag oreg
+                       ^(,*te-frag.code
+                          (mov ,oreg nil))
+                       te-frag.fvars
+                       te-frag.ffuns))))))
     ((op) me.(compile oreg env nil))
     (form (compile-error form "excess argument forms"))))
+
+(defmeth compiler comp-ift (me oreg env form)
+  (mac-param-bind form (op fun left right : then else) form
+    (when (member fun %test-funs-neg%)
+      (set fun [%test-inv% fun])
+      (swap then else))
+    (if (and (constantp left) (constantp right))
+      me.(compile oreg env (if (eq (eval left) (eval right)) then else))
+      (let* ((le-oreg me.(alloc-treg))
+             (ri-oreg me.(alloc-treg))
+             (lelse (gensym "l"))
+             (lskip (gensym "l"))
+             (le-frag me.(compile le-oreg env left))
+             (ri-frag me.(compile ri-oreg env right))
+             (th-frag me.(compile oreg env then))
+             (el-frag me.(compile oreg env else)))
+        me.(free-treg le-oreg)
+        me.(free-treg ri-oreg)
+        (new (frag oreg
+                   ^(,*le-frag.code
+                     ,*ri-frag.code
+                     (ifq ,le-frag.oreg ,ri-frag.oreg ,lelse)
+                     ,*th-frag.code
+                     ,*(maybe-mov oreg th-frag.oreg)
+                      (jmp ,lskip)
+                     ,lelse
+                     ,*el-frag.code
+                     ,*(maybe-mov oreg el-frag.oreg)
+                     ,lskip)
+                   (uni (uni le-frag.fvars ri-frag.fvars)
+                        (uni th-frag.fvars el-frag.fvars))
+                   (uni (uni le-frag.ffuns ri-frag.ffuns)
+                        (uni th-frag.ffuns el-frag.ffuns))))))))
 
 (defmeth compiler comp-switch (me oreg env form)
   (mac-param-bind form (op idx-form cases-vec) form
@@ -763,6 +814,7 @@
                        :))
            (arg me.(comp-call oreg env
                               (if (eq sym 'usr:apply) 'apply sym) args)))))
+      (ift me.(comp-ift oreg env form))
       (t (let ((fbind env.(lookup-fun sym)))
            me.(comp-call-impl oreg env (if fbind 'call 'gcall)
                               (if fbind fbind.loc me.(get-fidx sym))
