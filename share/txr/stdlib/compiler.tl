@@ -176,6 +176,7 @@
             (sys:setqf me.(comp-setqf oreg env form))
             (cond me.(comp-cond oreg env form))
             (if me.(comp-if oreg env form))
+            (switch me.(comp-switch oreg env form))
             (unwind-protect me.(comp-unwind-protect oreg env form))
             ((block block*) me.(comp-block oreg env form))
             ((return-from sys:abscond-from) me.(comp-return-from oreg env form))
@@ -405,6 +406,37 @@
                   te-frag.ffuns))))
     ((op) me.(compile oreg env nil))
     (form (compile-error form "excess argument forms"))))
+
+(defmeth compiler comp-switch (me oreg env form)
+  (mac-param-bind form (op idx-form cases-vec) form
+    (let* ((ncases (len cases-vec))
+           (cs (and (plusp ncases) (conses [vec 0])))
+           (shared (and cs (all [vec 1..:] (op memq @1 cs))))
+           (cases (if shared
+                    (let ((cs-nil ^(,*cs nil)))
+                      [mapcar ldiff cs-nil (cdr cs-nil)])
+                    cases-vec))
+           (lend (gensym "l"))
+           (clabels (mapcar (ret (gensym "l")) cases))
+           (ifrag me.(compile oreg env idx-form))
+           (cfrags (collect-each ((cs cases)
+                                  (lb clabels)
+                                  (i (range 1)))
+                     (let ((cfrag me.(comp-progn oreg env cs)))
+                       (new (frag oreg
+                                  ^(,lb
+                                    ,*cfrag.code
+                                    ,*(unless shared
+                                        ^(,*(maybe-mov oreg cfrag.oreg)
+                                          ,*(unless (= i ncases)
+                                              ^((jmp ,lend))))))
+                                  cfrag.fvars cfrag.ffuns))))))
+      (new (frag oreg
+                 ^((swtch ,ifrag.oreg ,*clabels)
+                   ,*(mappend .code cfrags)
+                   ,lend)
+                 (uni ifrag.fvars [reduce-left uni cfrags nil .fvars])
+                 (uni ifrag.ffuns [reduce-left uni cfrags nil .ffuns]))))))
 
 (defmeth compiler comp-unwind-protect (me oreg env form)
   (mac-param-bind form (op prot-form . cleanup-body) form
