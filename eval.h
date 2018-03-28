@@ -78,6 +78,7 @@ val expand_quasi(val quasi_forms, val menv);
 val load(val target);
 val expand(val form, val menv);
 val expand_forms(val forms, val menv);
+val prof_call(val (*fun)(mem_t *ctx), mem_t *ctx);
 val bindable(val obj);
 val mapcarv(val fun, struct args *lists);
 val mapcarl(val fun, val list_of_lists);

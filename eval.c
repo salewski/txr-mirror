@@ -2794,12 +2794,12 @@ static val op_with_dyn_rebinds(val form, val env)
   }
 }
 
-static val op_prof(val form, val env)
+val prof_call(val (*fun)(mem_t *ctx), mem_t *ctx)
 {
   clock_t start_time = clock();
   alloc_bytes_t start_mlbytes = malloc_bytes;
   alloc_bytes_t start_gcbytes = gc_bytes;
-  val result = eval_progn(rest(form), env, form);
+  val result = fun(ctx);
   alloc_bytes_t delta_mlbytes = malloc_bytes - start_mlbytes;
   alloc_bytes_t delta_gcbytes = gc_bytes - start_gcbytes;
 #if SIZEOF_ALLOC_BYTES_T > SIZEOF_PTR
@@ -2820,6 +2820,22 @@ static val op_prof(val form, val env)
               dmb, dgc,
               trunc(mul(num(clock() - start_time), num_fast(1000)), num_fast(CLOCKS_PER_SEC)),
               nao);
+}
+
+struct prof_ctx {
+  val form, env;
+};
+
+static val op_prof_callback(mem_t *ctx)
+{
+  struct prof_ctx *pctx = coerce(struct prof_ctx *, ctx);
+  return eval_progn(rest(pctx->form), pctx->env, pctx->form);
+}
+
+static val op_prof(val form, val env)
+{
+  struct prof_ctx ctx = { form, env };
+  return prof_call(op_prof_callback, coerce(mem_t *, &ctx));
 }
 
 static val op_switch(val form, val env)
