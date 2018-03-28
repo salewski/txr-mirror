@@ -122,6 +122,7 @@
 
 (defmeth compiler get-dreg (me atom)
   (condlet
+    ((((null atom))) '(t 0))
     (((dreg [me.dreg atom])) dreg)
     ((((< me.dreg-cntr 256)))
      (let* ((dreg ^(d ,(pinc me.dreg-cntr))))
