@@ -106,11 +106,12 @@
         (< me.lev lev)))))
 
 (defstruct compiler nil
+  (treg-cntr 1)
   (dreg-cntr 0)
   (fidx-cntr 0)
   (nlev 2)
   (nreg 1)
-  (tregs (mapcar (op list t) (range 1 255)))
+  (tregs nil)
   (dreg (hash :eql-based))
   (data (hash :eql-based))
   (fidx (hash :eql-based))
@@ -140,11 +141,10 @@
   (vec-list [mapcar me.ftab (range* 0 me.fidx-cntr)]))
 
 (defmeth compiler alloc-treg (me)
-  (let ((treg (pop me.tregs)))
-    (unless treg
-      (compile-error me.last-form "code too complex: out of registers"))
-    (set me.nreg (max me.nreg (succ (cadr treg))))
-    treg))
+  (cond
+    (me.tregs (pop me.tregs))
+    ((< me.treg-cntr 256) ^(t ,(pinc me.treg-cntr)))
+    (t (compile-error me.last-form "code too complex: out of registers"))))
 
 (defmeth compiler free-treg (me treg)
   (when (and (eq t (car treg)) (neq 0 (cadr treg)))
@@ -1251,4 +1251,4 @@
                                         (release-deferred-warnings))))
            (frag co.(compile oreg (new env co co) xexp)))
       as.(asm ^(,*frag.code (end ,frag.oreg)))
-      (vm-make-desc co.nlev co.nreg as.buf co.(get-datavec) co.(get-funvec)))))
+      (vm-make-desc co.nlev co.treg-cntr as.buf co.(get-datavec) co.(get-funvec)))))
