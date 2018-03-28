@@ -116,9 +116,11 @@
   (data (hash :eql-based))
   (fidx (hash :eql-based))
   (ftab (hash :eql-based))
-  last-form
-  (:static gcallop (relate '(apply usr:apply call) '(gapply gapply gcall)))
-  (:static callop (relate '(apply usr:apply call) '(apply apply call))))
+  last-form)
+
+(defvarl %gcall-op% (relate '(apply usr:apply call) '(gapply gapply gcall)))
+
+(defvarl %call-op% (relate '(apply usr:apply call) '(apply apply call)))
 
 (defmeth compiler get-dreg (me atom)
   (condlet
@@ -806,8 +808,8 @@
 (defmeth compiler comp-fun-form (me oreg env sym args)
   (caseql sym
     ((call apply usr:apply)
-     (let ((gopcode [me.gcallop sym])
-           (opcode [me.callop sym]))
+     (let ((gopcode [%gcall-op% sym])
+           (opcode [%call-op% sym]))
        (tree-case (car args)
          ((op arg) (if (and (eq op 'fun) (bindable arg))
                      (let ((fbind env.(lookup-fun arg)))
