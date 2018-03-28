@@ -753,7 +753,8 @@
                        (set fvars (uni fvars frag.fvars))
                        (set ffuns (uni ffuns frag.ffuns))
                        (pend frag.code)))))))
-    me.(free-treg oreg-discard)
+    (when (nequal oreg oreg-discard)
+      me.(free-treg oreg-discard))
     (new (frag (if lastfrag lastfrag.oreg ^(t 0)) code fvars ffuns))))
 
 (defmeth compiler comp-and-or (me oreg env form)
