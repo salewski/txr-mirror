@@ -200,6 +200,7 @@
             (tree-case me.(comp-tree-case oreg env form))
             (sys:lisp1-value me.(comp-lisp1-value oreg env form))
             (dwim me.(comp-dwim oreg env form))
+            (prof me.(comp-prof oreg env form))
             (defvarl me.(compile oreg env (expand-defvarl form)))
             (defun me.(compile oreg env (expand-defun form)))
             (defmacro me.(compile oreg env (expand-defmacro form)))
@@ -950,6 +951,15 @@
     (let ((l1-exprs (cdr form)))
       me.(compile oreg env
                   ^(call ,*(mapcar (op list 'sys:lisp1-value) l1-exprs))))))
+
+(defmeth compiler comp-prof (me oreg env form)
+  (mac-param-bind form (op . forms) form
+    (let ((bfrag me.(comp-progn oreg env forms)))
+      (new (frag bfrag.oreg
+                 ^((prof ,bfrag.oreg)
+                   ,*bfrag.code
+                   (end ,bfrag.oreg))
+                 bfrag.fvars bfrag.ffuns)))))
 
 (defun maybe-mov (to-reg from-reg)
   (if (nequal to-reg from-reg)
