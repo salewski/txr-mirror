@@ -351,6 +351,8 @@
 
 (defopcode-derived op-fin fin auto op-end)
 
+(defopcode-derived op-prof prof auto op-fin)
+
 (defopcode op-call call auto
   (:method asm (me asm syntax)
     me.(chk-arg-count-min 2 syntax)

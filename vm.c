@@ -332,6 +332,19 @@ static void vm_do_frame(struct vm *vm, vm_word_t insn, int capturable)
   vm->lev = lev - 1;
 }
 
+static val vm_prof_callback(mem_t *ctx)
+{
+  struct vm *vm = coerce(struct vm *, ctx);
+  return vm_execute(vm);
+}
+
+static void vm_prof(struct vm *vm, vm_word_t insn)
+{
+  unsigned dest = vm_insn_operand(insn);
+  val result = prof_call(vm_prof_callback, coerce(mem_t *, vm));
+  vm_set(vm->dspl, dest, result);
+}
+
 static void vm_frame(struct vm *vm, vm_word_t insn)
 {
   vm_do_frame(vm, insn, 1);
@@ -822,6 +835,9 @@ static val vm_execute(struct vm *vm)
       return vm_end(vm, insn);
     case FIN:
       return vm_fin(vm, insn);
+    case PROF:
+      vm_prof(vm, insn);
+      break;
     case CALL:
       vm_call(vm, insn);
       break;
