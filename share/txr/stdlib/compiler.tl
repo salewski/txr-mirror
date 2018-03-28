@@ -380,8 +380,7 @@
                          ,lelse
                          ,*el-frag.code
                          ,*(maybe-mov oreg el-frag.oreg)
-                         ,lskip
-                         ,*(maybe-mov te-oreg te-frag.oreg))
+                         ,lskip)
                       (uni te-frag.fvars (uni th-frag.fvars el-frag.fvars))
                       (uni te-frag.ffuns (uni th-frag.ffuns el-frag.ffuns))))))))
     ((op test then)
