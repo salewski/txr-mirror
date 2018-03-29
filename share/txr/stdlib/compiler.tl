@@ -166,6 +166,11 @@
 (defmeth compiler free-tregs (me tregs)
   (mapdo (meth me free-treg) tregs))
 
+(defmeth compiler check-treg-leak (me)
+  (let ((balance (- (pred me.treg-cntr) (len me.tregs))))
+    (unless (zerop balance)
+      (error "t-register leak in compiler: ~s outstanding" balance))))
+
 (defmeth compiler new-env (me env)
   (when (>= env.lev me.nlev)
     (set me.nlev (succ env.lev))))
@@ -1251,5 +1256,7 @@
            (xexp (prog1 (expand* exp) (unless *load-recursive*
                                         (release-deferred-warnings))))
            (frag co.(compile oreg (new env co co) xexp)))
+      co.(free-treg oreg)
+      co.(check-treg-leak)
       as.(asm ^(,*frag.code (end ,frag.oreg)))
       (vm-make-desc co.nlev co.treg-cntr as.buf co.(get-datavec) co.(get-funvec)))))
