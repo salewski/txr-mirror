@@ -3802,24 +3802,40 @@ static val me_case(val form, val menv)
   val lofnil = cons(nil, nil);
   val star = tnil(casesym == caseq_star_s || casesym == caseql_star_s ||
                   casesym == casequal_star_s);
+  int compat = (opt_compat && opt_compat <= 156 && !star);
+  val check_fun = orf(func_n1(fixnump),
+                      func_n1(chrp),
+                      func_n1(symbolp), nao);
+
+  val all_keys_eq = t;
+  val hash_fallback_clause = nil;
+  val hash = nil;
+  val index = zero;
+  val idxsym = gensym(lit("index-"));
   list_collect_decl (condpairs, ptail);
+  list_collect_decl (hashforms, qtail);
 
   if (casesym == caseq_s || casesym == caseq_star_s) {
     memfuncsym = memq_s;
     eqfuncsym = eq_s;
+    hash = make_hash(nil, nil, nil);
   } else if (casesym == caseql_s || casesym == caseql_star_s) {
     memfuncsym = memql_s;
     eqfuncsym = eql_s;
+    hash = make_hash(nil, nil, nil);
   } else {
     memfuncsym = memqual_s;
     eqfuncsym = equal_s;
+    hash = make_hash(nil, nil, t);
   }
 
   for (; consp(form); form = cdr(form)) {
     cons_bind (clause, rest, form);
     cons_bind (keys, forms, clause);
+    val hash_keys = if3(atom(keys), cons(keys, nil), keys);
 
     if (!rest && keys == t) {
+      hash_fallback_clause = clause;
       ptail = list_collect(ptail, clause);
       break;
     }
@@ -3837,7 +3853,22 @@ static val me_case(val form, val menv)
         keys = eval(cons(list_s, keys), nil, form);
     }
 
-    if (opt_compat && opt_compat <= 156 && !star) {
+    if (atom(keys)) {
+      sethash(hash, keys, index);
+      if (!funcall1(check_fun, keys))
+        all_keys_eq = nil;
+    } else {
+      val iter;
+      for (iter = hash_keys; iter; iter = cdr(iter))
+        sethash(hash, car(iter), index);
+      if (!all_satisfy(keys, check_fun, nil))
+        all_keys_eq = nil;
+    }
+
+    qtail = list_collect(qtail, forms);
+    index = succ(index);
+
+    if (compat) {
       ptail = list_collect(ptail,
                            cons(list(if3(atom(keys), eqfuncsym, memfuncsym),
                                      tformsym,
@@ -3859,6 +3890,24 @@ static val me_case(val form, val menv)
 
   if (form && atom(form))
     eval_error(form_orig, lit("~s: improper form terminated by ~s"), casesym, form, nao);
+
+  if (!compat && gt(hash_count(hash), num_fast(10)) &&
+      ((casesym == caseq_s || casesym == caseq_star_s) &&
+        all_keys_eq))
+  {
+    return list(let_star_s, list(list(tformsym, testform, nao),
+                                 list(idxsym,
+                                      list(intern(lit("gethash"), user_package),
+                                           hash,
+                                           tformsym,
+                                           nao),
+                                      nao),
+                                 nao),
+                list(if_s, idxsym,
+                     list(switch_s, idxsym, vec_list(hashforms), nao),
+                     cons(progn_s, cdr(hash_fallback_clause)),
+                     nao), nao);
+  }
 
   return list(let_s, cons(list(tformsym, testform, nao), nil),
               cons(cond_s, condpairs), nao);
