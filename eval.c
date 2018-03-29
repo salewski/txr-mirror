@@ -914,14 +914,14 @@ static val expand_opt_params_rec(val params, val menv,
           return params;
         return rlcp(cons(pair, params_ex), cdr(params));
       }
-    } else if (!macro_style_p && consp(car(pair))) {
+    } else if (!macro_style_p && !bindable(car(pair))) {
       eval_error(form, lit("~s: parameter symbol expected, not ~s"),
                  car(form), car(pair), nao);
     } else {
       val param = car(pair);
-      val param_ex = expand_params_rec(param, menv,
-                                       macro_style_p,
-                                       form, pspecials);
+      val param_ex = if3(macro_style_p && consp(param),
+                         expand_params_rec(param, menv, t, form, pspecials),
+                         param);
       val initform = cadr(pair);
       val initform_ex = rlcp(expand(initform, menv), initform);
       val opt_sym = caddr(pair);
@@ -987,9 +987,13 @@ static val expand_params_rec(val params, val menv,
         eval_error(form, lit("~s: ~s parameter requires bindable symbol"),
                    car(form), param, nao);
       param_ex = param;
-    } else {
-      param_ex = expand_params_rec(param, menv, macro_style_p, form, pspecials);
+    } else if (macro_style_p && (nilp(param) || consp(param))) {
+      param_ex = expand_params_rec(param, menv, t, form, pspecials);
       new_menv = make_var_shadowing_env(menv, get_param_syms(param_ex));
+    } else if (!bindable(param)) {
+      not_bindable_error(form, param);
+    } else {
+      param_ex = param;
     }
 
     {
@@ -1232,7 +1236,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
         goto noarg;
       }
 
-      if (atom(param)) {
+      if (!listp(param)) {
         env_vbind(new_env, param, car(form));
       } else {
         if (optargs) {
@@ -1276,7 +1280,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
     }
 
 noarg:
-    if (atom(param)) {
+    if (!listp(param)) {
       env_vbind(new_env, param, nil);
     } else {
       val nparam = pop(&param);
