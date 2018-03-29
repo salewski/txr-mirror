@@ -1135,7 +1135,7 @@
                                  (:env ^((set ,sym ,menv-var))))))
                          ,*(append-each ((p req-pars))
                              (cond
-                               ((consp p)
+                               ((listp p)
                                 ^((set ,curs (car ,obj-var))
                                   (set ,obj-var (cdr ,obj-var))
                                   ,*(expand-rec p curs)))
@@ -1146,7 +1146,7 @@
                          ,*(append-each ((o opt-pars))
                              (tree-bind (p : init-form pres-p) o
                                (cond
-                                 ((consp p)
+                                 ((listp p)
                                   (when pres-p
                                     (push pres-p vars))
                                   ^((set ,curs (or (car ,obj-var)
