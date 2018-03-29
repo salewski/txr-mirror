@@ -117,6 +117,17 @@ struct args *args_cat_zap_from(struct args *to, struct args *from, cnum index)
   return to;
 }
 
+struct args *args_copy_reverse(struct args *to, struct args *from, cnum nargs)
+{
+  cnum i, index = 0;
+
+  for (i = nargs - 1; i >= 0; i--)
+    to->arg[i] = args_get(from, &index);
+
+  to->fill = nargs;
+  return to;
+}
+
 val args_copy_to_list(struct args *args)
 {
   list_collect_decl (out, ptail);

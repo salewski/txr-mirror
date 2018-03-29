@@ -187,6 +187,7 @@ struct args *args_copy(struct args *to, struct args *from);
 struct args *args_copy_zap(struct args *to, struct args *from);
 struct args *args_cat_zap(struct args *to, struct args *from);
 struct args *args_cat_zap_from(struct args *to, struct args *from, cnum index);
+struct args *args_copy_reverse(struct args *to, struct args *from, cnum nargs);
 val args_copy_to_list(struct args *args);
 void args_for_each(struct args *args,
                    int (*fn)(val arg, int ix, mem_t *ctx),
