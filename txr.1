@@ -30567,7 +30567,8 @@ or functions.
 
 .coNP Operator @ defmacro
 .synb
-.mets (defmacro < name <> ( param * [: << opt-param * ] [. < rest-param ])
+.mets (defmacro < name
+.mets \ \ \ \ \ \ \ \ \  <> ( param * [: << opt-param * ] [. < rest-param ])
 .mets \ \  << body-form *)
 .syne
 .desc
@@ -30651,7 +30652,8 @@ as the original function call.
 
 .coNP Operator @ macrolet
 .synb
-.mets (macrolet >> ({( name < macro-style-params << macro-body-form *)}*)
+.mets (macrolet >> ({( name < macro-style-params
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \  << macro-body-form *)}*)
 .mets \ \  << body-form *)
 .syne
 .desc
@@ -31316,7 +31318,8 @@ but then suppresses evaluation of the result.
 .coNP Operators @ tree-bind and @ mac-param-bind
 .synb
 .mets (tree-bind < macro-style-params < expr << form *)
-.mets (mac-param-bind < context-expr < macro-style-params < expr << form *)
+.mets (mac-param-bind < context-expr
+.mets \ \  < macro-style-params < expr << form *)
 .syne
 .desc
 The
