@@ -3466,9 +3466,17 @@ val clamp(val low, val high, val num)
   return max2(low, min2(high, num));
 }
 
+static val rexpt(val right, val left)
+{
+  return expt(left, right);
+}
+
 val exptv(struct args *nlist)
 {
-  return reduce_right(func_n2(expt), args_get_list(nlist), one, nil);
+  cnum nargs = args_count(nlist);
+  args_decl(rnlist, max(ARGS_MIN, nargs));
+  args_copy_reverse(rnlist, nlist, nargs);
+  return nary_op(lit("expt"), rexpt, unary_num, rnlist, one);
 }
 
 static val abso_self(val self, val arg)
