@@ -3202,25 +3202,37 @@ val nary_op(val self, val (*bfun)(val, val),
             val (*ufun)(val self, val),
             struct args *args, val emptyval)
 {
-  val fi, se, re;
+  val acc, next;
   cnum index = 0;
 
   if (!args_more(args, index))
     return emptyval;
 
-  fi = args_get(args, &index);
+  acc = args_get(args, &index);
 
   if (!args_more(args, index))
-    return ufun(self, fi);
+    return ufun(self, acc);
 
-  se = args_get(args, &index);
+  do {
+    next = args_get(args, &index);
+    acc = bfun(acc, next);
+  } while (args_more(args, index));
 
-  if (!args_more(args, index))
-    return bfun(fi, se);
+  return acc;
+}
 
-  re = args_get_rest(args, index);
+val nary_simple_op(val self, val (*bfun)(val, val),
+                   struct args *args, val firstval)
+{
+  val acc = firstval, next;
+  cnum index = 0;
 
-  return reduce_left(func_n2(bfun), re, bfun(fi, se), nil);
+  while (args_more(args, index)) {
+    next = args_get(args, &index);
+    acc = bfun(acc, next);
+  }
+
+  return acc;
 }
 
 static val unary_num(val self, val arg)
@@ -3257,19 +3269,18 @@ val plusv(struct args *nlist)
 
 val minusv(val minuend, struct args *nlist)
 {
+  val acc = minuend, next;
   cnum index = 0;
-  val fi;
 
   if (!args_more(nlist, index))
-    return neg(minuend);
+    return neg(acc);
 
-  fi = args_get(nlist, &index);
+  do {
+    next = args_get(nlist, &index);
+    acc = minus(acc, next);
+  } while (args_more(nlist, index));
 
-  if (!args_more(nlist, index))
-    return minus(minuend, fi);
-
-  return reduce_left(func_n2(minus), args_get_list(nlist),
-                     minus(minuend, fi), nil);
+  return acc;
 }
 
 val mulv(struct args *nlist)
@@ -3279,19 +3290,18 @@ val mulv(struct args *nlist)
 
 val divv(val dividend, struct args *nlist)
 {
+  val acc = dividend, next;
   cnum index = 0;
-  val fi;
 
   if (!args_more(nlist, index))
-    return divi(one, dividend);
+    return divi(one, acc);
 
-  fi = args_get(nlist, &index);
+  do {
+    next = args_get(nlist, &index);
+    acc = divi(acc, next);
+  } while (args_more(nlist, index));
 
-  if (!args_more(nlist, index))
-    return divi(dividend, fi);
-
-  return reduce_left(func_n2(divi), args_get_list(nlist),
-                     divi(dividend, fi), nil);
+  return acc;
 }
 
 val logandv(struct args *nlist)
@@ -3431,12 +3441,12 @@ val min2(val a, val b)
 
 val maxv(val first, struct args *rest)
 {
-  return reduce_left(func_n2(max2), args_get_list(rest), first, nil);
+  return nary_simple_op(lit("max"), max2, rest, first);
 }
 
 val minv(val first, struct args *rest)
 {
-  return reduce_left(func_n2(min2), args_get_list(rest), first, nil);
+  return nary_simple_op(lit("min"), min2, rest, first);
 }
 
 val maxl(val first, val rest)
@@ -3461,22 +3471,20 @@ val exptv(struct args *nlist)
   return reduce_right(func_n2(expt), args_get_list(nlist), one, nil);
 }
 
+static val abso_self(val self, val arg)
+{
+  (void) self;
+  return abso(arg);
+}
+
 val gcdv(struct args *nlist)
 {
-  if (!args_more(nlist, 0))
-    return zero;
-  if (!args_two_more(nlist, 0))
-    return abso(args_atz(nlist, 0));
-  return reduce_left(func_n2(gcd), args_get_list(nlist), colon_k, nil);
+  return nary_op(lit("gcd"), gcd, abso_self, nlist, zero);
 }
 
 val lcmv(struct args *nlist)
 {
-  if (!args_more(nlist, 0))
-    return one;
-  if (!args_two_more(nlist, 0))
-    return abso(args_atz(nlist, 0));
-  return reduce_left(func_n2(lcm), args_get_list(nlist), colon_k, nil);
+  return nary_op(lit("lcm"), lcm, abso_self, nlist, zero);
 }
 
 val string_own(wchar_t *str)
