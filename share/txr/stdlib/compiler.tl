@@ -836,13 +836,18 @@
                  (uni ffrag.ffuns cfrag.ffuns))))))
 
 (defmeth compiler comp-call-impl (me oreg env opcode freg args)
-  (let* ((sugg-oregs (mapcar (ret me.(alloc-treg)) args))
-         (afrags (mapcar (ret me.(compile @1 env @2))
-                         sugg-oregs args))
-         (real-oregs (mapcar .oreg afrags)))
-    me.(free-tregs sugg-oregs)
+  (let* ((aoregs nil)
+         (afrags (collect-each ((arg args))
+                   (let* ((aoreg me.(alloc-treg))
+                          (afrag me.(compile aoreg env arg)))
+                     (if (nequal afrag.oreg aoreg)
+                       me.(free-treg aoreg)
+                       (push aoreg aoregs))
+                     afrag))))
+    me.(free-tregs aoregs)
     (new (frag oreg
-               ^(,*(mappend .code afrags) (,opcode ,oreg ,freg ,*real-oregs))
+               ^(,*(mappend .code afrags)
+                 (,opcode ,oreg ,freg ,*(mapcar .oreg afrags)))
                [reduce-left uni afrags nil .fvars]
                [reduce-left uni afrags nil .ffuns]))))
 
