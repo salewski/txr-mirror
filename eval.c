@@ -4470,6 +4470,19 @@ again:
         val arg_ex = expand(arg, menv);
         return rlcp(list(sym, arg_ex, nao), form);
       }
+      if (!lookup_fun(menv, arg)) {
+        if (special_operator_p(arg))
+          eval_warn(last_form_expanded,
+                    lit("fun used on special operator ~s"), arg, nao);
+        else if (!bindable(arg))
+          eval_warn(last_form_expanded,
+                    lit("~s appears in operator position"), arg, nao);
+        else
+          eval_defr_warn(last_form_expanded,
+                         cons(fun_s, arg),
+                         lit("unbound function ~s"),
+                         arg, nao);
+      }
       return form;
     } else if (sym == quote_s || sym == dvbind_s) {
       return form;
