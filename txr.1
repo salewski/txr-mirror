@@ -43054,10 +43054,14 @@ The
 .code get-string-from-stream
 function is used to retrieve the accumulated string.
 
-If the null character is written to a string output stream, either via
-a character output operation or as a byte operation, the resulting string
-will appear to be prematurely terminated. \*(TX strings cannot contain null
-bytes.
+If the null character is written to a string output stream, the behavior
+is unspecified. \*(TX strings cannot contain null bytes. A the pseudo-null
+character
+.codn #\exDC00 ,
+also notated
+.codn #\epnul ,
+will produce a null byte when converted to UTF-8 and thus serves as an
+effective internal representation of the null character in external data.
 
 .coNP Function @ get-string-from-stream
 .synb
