@@ -234,7 +234,7 @@
               sys:qquote sys:unquote sys:splice)
              (compile-error form "unexpanded quasiquote encountered"))
             (t
-              (compile-error form "special op ~s not handled yet" sym))))
+              (compile-error form "unrecognized special operator ~s" sym))))
          ((bindable sym) me.(comp-fun-form oreg env form))
          (t (compile-error form "invalid operator")))))))
 
