@@ -33735,10 +33735,9 @@ are assignable, and provide temporary storage.
 .TP* "Example:"
 
 .cblk
-  ;; WRONG! Exchange two variables, a and b:
+  ;; WRONG! Real storage location needed.
   (rlet ((flag nil))
-    ;; code which mutates flag
-    (flip flag)) ;; error: flag macro-expands to nil
+    (flip flag)) ;; error: flag expands to nil
 
   ;; Demonstration of constant-propagation
   (let ((a 42))
