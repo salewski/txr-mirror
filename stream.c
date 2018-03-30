@@ -2065,6 +2065,12 @@ static int string_out_byte_callback(mem_t *ctx)
   return so->byte_buf[so->tail++];
 }
 
+static void string_out_extracted_error(val stream)
+{
+  uw_throwf(file_error_s, lit("output not possible on ~s: string extracted"),
+            stream, nao);
+}
+
 static val string_out_put_char(val stream, val ch);
 
 static val string_out_byte_flush(struct string_out *so, val stream)
@@ -2091,8 +2097,8 @@ static val string_out_put_string(val stream, val str)
 {
   struct string_out *so = coerce(struct string_out *, stream->co.handle);
 
-  if (so == 0)
-    return nil;
+  if (so->buf == 0)
+    string_out_extracted_error(stream);
 
   while (so->head != so->tail)
     string_out_byte_flush(so, stream);
@@ -2136,8 +2142,8 @@ static val string_out_put_byte(val stream, int ch)
 {
   struct string_out *so = coerce(struct string_out *, stream->co.handle);
 
-  if (so == 0)
-    return nil;
+  if (so->buf == 0)
+    string_out_extracted_error(stream);
 
   so->byte_buf[so->head++] = ch;
 
