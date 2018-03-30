@@ -18740,7 +18740,7 @@ See the relevant examples below.
   (ldiff '(1 2 3) '(2 3)) -> either (1) or (1 2 3)
 
   ;; b is the (1 2) suffix of a, so the ldiff is (1)
-  (let ((a '(1 2 3)) (b (cdr a)))
+  (let* ((a '(1 2 3)) (b (cdr a)))
     (ldiff a b))
   -> (1)
 
