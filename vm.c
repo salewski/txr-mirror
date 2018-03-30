@@ -643,6 +643,7 @@ static void vm_block(struct vm *vm, vm_word_t insn)
   int saved_lev = vm->lev;
 
   uw_block_begin (vm_get(vm->dspl, blname), result);
+  uw_blk.bl.cont_bottom = coerce(mem_t *, vm + 1);
   result = vm_execute(vm);
   uw_block_end;
 

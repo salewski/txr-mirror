@@ -42,6 +42,7 @@ struct uw_block {
   val tag;
   val result;
   val protocol;
+  mem_t *cont_bottom;
   extended_jmp_buf jb;
 };
 

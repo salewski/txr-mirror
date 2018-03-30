@@ -191,6 +191,7 @@ void uw_push_block(uw_frame_t *fr, val tag)
   fr->bl.tag = tag;
   fr->bl.result = nil;
   fr->bl.up = uw_stack;
+  fr->bl.cont_bottom = 0;
   uw_stack = fr;
 }
 
@@ -906,8 +907,10 @@ static val revive_cont(val dc, val arg)
       word = *wordptr;
 
       if (word >= orig_start - UW_CONT_FRAME_BEFORE &&
-          word < orig_end && is_ptr(coerce(val, word)))
+          word <= orig_end && is_ptr(coerce(val, word)))
+      {
         *wordptr = word + delta;
+      }
 
 #if HAVE_VALGRIND
       if (opt_vg_debug)
@@ -959,7 +962,11 @@ static val capture_cont(val tag, val fun, uw_frame_t *block)
   bug_unless (uw_stack < block);
 
   {
-    mem_t *lim = coerce(mem_t *, block + 1) + UW_CONT_FRAME_AFTER;
+    mem_t *basic_lim = coerce(mem_t *, block + 1) + UW_CONT_FRAME_AFTER;
+    mem_t *lim = block->bl.cont_bottom
+                 ? (block->bl.cont_bottom > basic_lim
+                    ? block->bl.cont_bottom : basic_lim)
+                 : basic_lim;
     cnum bloff = coerce(mem_t *, block) - coerce(mem_t *, stack);
     cnum size = coerce(mem_t *, lim) - coerce(mem_t *, stack);
     mem_t *stack_copy = chk_malloc(size);
