@@ -892,7 +892,7 @@ static val revive_cont(val dc, val arg)
 
     memcpy(space, cont->stack, cont->size);
 
-    for (ptr = space; ptr < space + cont->size; ptr += sizeof (cnum))
+    for (ptr = space; delta && ptr < space + cont->size; ptr += sizeof (cnum))
     {
       uint_ptr_t *wordptr = coerce(uint_ptr_t *, ptr);
       uint_ptr_t word;
