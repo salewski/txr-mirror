@@ -15271,6 +15271,12 @@ determines the number of iterations, so if any of the
 evaluate to
 an empty list, the body is not executed.
 
+If the list of
+.cblk
+.meti >> ( syn  << init-form )
+.cble
+pairs itself is empty, then an infinite loop is specified.
+
 The body forms are enclosed in an anonymous block, allowing the
 .code return
 operator to terminate the loop prematurely and optionally specify
