@@ -677,7 +677,7 @@
                    (ifrags (collect-each ((op opt-pars))
                              (tree-bind (var-sym : init-form have-sym) op
                                (let ((vbind nenv.(lookup-var var-sym)))
-                                 me.(compile vbind.loc env init-form)))))
+                                 me.(compile vbind.loc nenv init-form)))))
                    (opt-code (append-each ((op opt-pars)
                                            (ifrg ifrags))
                                (tree-bind (var-sym : init-form have-sym) op
