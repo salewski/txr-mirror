@@ -994,6 +994,7 @@ static val expand_params_rec(val params, val menv,
       not_bindable_error(form, param);
     } else {
       param_ex = param;
+      new_menv = make_var_shadowing_env(menv, cons(param, nil));
     }
 
     {
