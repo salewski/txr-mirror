@@ -1131,9 +1131,11 @@
                                         ,(berr nil))))))
                              ((null strict) nil)
                              ((symbolp strict)
-                              ^((if (or (< ,plen ,nreq)
-                                        (> ,plen ,nfix))
-                                  (return-from ,err-block ',strict)))))
+                              ^((if (< ,plen ,nreq)
+                                  (return-from ,err-block ',strict))
+                                ,*(unless rest-par
+                                    ^((if (> ,plen ,nfix)
+                                        (return-from ,err-block ',strict)))))))
                          ,*(append-each ((k key-pars))
                              (tree-bind (key . sym) k
                                (push sym vars)
