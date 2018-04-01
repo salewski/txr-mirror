@@ -825,8 +825,10 @@
 
 (defmeth compiler comp-call (me oreg env opcode args)
   (tree-bind (fform . fargs) args
-    (let* ((ffrag me.(compile oreg env fform))
+    (let* ((foreg me.(alloc-treg))
+           (ffrag me.(compile foreg env fform))
            (cfrag me.(comp-call-impl oreg env opcode ffrag.oreg fargs)))
+      me.(free-treg foreg)
       (new (frag cfrag.oreg
                  (append ffrag.code
                          cfrag.code)
