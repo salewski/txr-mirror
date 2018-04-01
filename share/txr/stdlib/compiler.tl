@@ -521,7 +521,6 @@
              (tfrag me.(compile oreg env try-expr))
              (lhand (gensym "l"))
              (lhend (gensym "l"))
-             (lfrend (gensym "l"))
              (nclauses (len clauses))
              (cfrags (collect-each ((cl clauses)
                                     (i (range 1)))
@@ -547,12 +546,11 @@
                    ^((frame ,nenv.lev ,nenv.v-cntr)
                      (catch ,esvb.loc ,eavb.loc ,me.(get-dreg symbols) ,lhand)
                      ,*tfrag.code
-                     (jmp ,lfrend)
+                     (jmp ,lhend)
                      ,lhand
                      ,*(mappend .code cfrags)
                      ,lhend
                      (end ,tfrag.oreg)
-                     ,lfrend
                      (end ,tfrag.oreg))
                    (uni tfrag.fvars [reduce-left uni cfrags nil .fvars])
                    (uni tfrag.ffuns [reduce-left uni cfrags nil .ffuns])))))))
