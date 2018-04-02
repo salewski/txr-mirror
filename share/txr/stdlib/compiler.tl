@@ -471,7 +471,7 @@
       me.(free-treg treg)
       (cond
         ((null pfrag.code)
-         (new (frag pfrag.oreg
+         (new (frag cfrag.oreg
                     cfrag.code
                     cfrag.fvars
                     cfrag.ffuns)))
