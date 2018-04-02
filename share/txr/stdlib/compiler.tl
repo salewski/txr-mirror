@@ -449,7 +449,8 @@
                                   cfrag.fvars cfrag.ffuns))))))
       me.(maybe-free-treg treg oreg)
       (new (frag oreg
-                 ^((swtch ,ifrag.oreg ,*clabels)
+                 ^(,*ifrag.code
+                   (swtch ,ifrag.oreg ,*clabels)
                    ,*(mappend .code cfrags)
                    ,lend)
                  (uni ifrag.fvars [reduce-left uni cfrags nil .fvars])
