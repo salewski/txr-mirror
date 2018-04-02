@@ -483,7 +483,7 @@
                  bfrag.ffuns)))))
 
 (defmeth compiler comp-return-from (me oreg env form)
-  (mac-param-bind form (op name value) form
+  (mac-param-bind form (op name : value) form
     (let* ((nreg (if (null name)
                    nil
                    me.(get-dreg name)))
@@ -496,7 +496,7 @@
                  vfrag.ffuns)))))
 
 (defmeth compiler comp-return (me oreg env form)
-  (mac-param-bind form (op value) form
+  (mac-param-bind form (op : value) form
     me.(comp-return-from oreg env ^(,op nil ,value))))
 
 (defmeth compiler comp-handler-bind (me oreg env form)
