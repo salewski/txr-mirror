@@ -313,6 +313,7 @@
 (defmeth compiler comp-cond (me oreg env form)
   (tree-case form
     ((op) me.(comp-atom oreg nil))
+    ((op (test) . more) me.(compile oreg env ^(or ,test (cond ,*more))))
     ((op (test . forms) . more) me.(compile oreg env
                                             ^(if ,test
                                                (progn ,*forms)
