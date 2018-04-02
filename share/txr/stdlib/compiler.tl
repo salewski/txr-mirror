@@ -501,7 +501,8 @@
                  ^(,*(if nfrag nfrag.code)
                    (block ,oreg ,nreg ,lskip)
                    ,*bfrag.code
-                   (end ,bfrag.oreg)
+                   ,*(maybe-mov oreg bfrag.oreg)
+                   (end ,oreg)
                    ,lskip)
                  bfrag.fvars
                  bfrag.ffuns)))))
