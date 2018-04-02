@@ -435,10 +435,13 @@
            (clabels (mapcar (ret (gensym "l")) cases))
            (treg me.(maybe-alloc-treg oreg))
            (ifrag me.(compile treg env idx-form))
+           last-cfrag
            (cfrags (collect-each ((cs cases)
                                   (lb clabels)
                                   (i (range 1)))
                      (let ((cfrag me.(comp-progn oreg env cs)))
+                       (when (eq i ncases)
+                         (set last-cfrag cfrag))
                        (new (frag oreg
                                   ^(,lb
                                     ,*cfrag.code
@@ -452,6 +455,8 @@
                  ^(,*ifrag.code
                    (swtch ,ifrag.oreg ,*clabels)
                    ,*(mappend .code cfrags)
+                   ,*(when (and shared last-cfrag)
+                       (maybe-mov oreg last-cfrag.oreg))
                    ,lend)
                  (uni ifrag.fvars [reduce-left uni cfrags nil .fvars])
                  (uni ifrag.ffuns [reduce-left uni cfrags nil .ffuns]))))))
