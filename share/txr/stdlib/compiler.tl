@@ -695,7 +695,7 @@
                    (bfrag me.(comp-progn btreg benv body))
                    (boreg (if env.(out-of-scope bfrag.oreg) btreg bfrag.oreg))
                    (lskip (gensym "l-"))
-                   (frsize nenv.v-cntr))
+                   (frsize (if need-frame nenv.v-cntr 0)))
               me.(free-treg btreg)
               (new (frag oreg
                          ^((close ,oreg ,frsize ,lskip ,nfixed ,nreq
