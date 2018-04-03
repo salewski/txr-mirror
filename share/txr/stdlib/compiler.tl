@@ -216,7 +216,7 @@
             (fun me.(comp-fun oreg env form))
             (sys:for-op me.(comp-for oreg env form))
             (sys:each-op me.(compile oreg env (expand-each form env)))
-            (progn me.(comp-progn oreg env (cdr form)))
+            ((progn eval-only compile-only) me.(comp-progn oreg env (cdr form)))
             (and me.(comp-and-or oreg env form))
             (or me.(comp-and-or oreg env form))
             (prog1 me.(comp-prog1 oreg env form))

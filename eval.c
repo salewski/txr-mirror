@@ -6062,6 +6062,8 @@ void eval_init(void)
   reg_op(prof_s, op_prof);
   reg_op(switch_s, op_switch);
   reg_op(intern(lit("upenv"), system_package), op_upenv);
+  reg_op(intern(lit("compile-only"), user_package), op_progn);
+  reg_op(intern(lit("eval-only"), user_package), op_progn);
 
   reg_mac(defvar_s, func_n2(me_def_variable));
   reg_mac(defparm_s, func_n2(me_def_variable));
