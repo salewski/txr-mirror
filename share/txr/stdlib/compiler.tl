@@ -24,7 +24,7 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(in-package :sys)
+(in-package sys)
 
 (defstruct (frag oreg code : fvars ffuns) nil
   oreg
