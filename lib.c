@@ -5430,6 +5430,48 @@ val symbol_visible(val package, val sym)
   return nil;
 }
 
+/* symbol_needs_prefix assumes the perspective that package
+ * is the current package!
+ */
+val symbol_needs_prefix(val package, val sym)
+{
+  val name = symbol_name(sym);
+  type_check (package, PKG);
+
+  {
+    int homed_here = (sym->s.package == package);
+    val home_cell = gethash_e(package->pk.symhash, name);
+    int present_here = (eq(cdr(home_cell), sym) != nil);
+    val fallback = get_hash_userdata(package->pk.symhash);
+    val fb_cell = nil;
+    int in_fallback = 0;
+
+    for (; fallback; fallback = cdr(fallback)) {
+      val fb_pkg = car(fallback);
+      val cell = gethash_e(fb_pkg->pk.symhash, name);
+
+      if (cell) {
+        fb_cell = cell;
+        if (eq(cdr(cell), sym) != nil) {
+          in_fallback = 1;
+          break;
+        }
+      }
+    }
+
+    if (!homed_here && !present_here && !in_fallback)
+      return t;
+
+    if ((homed_here || present_here) && fb_cell)
+      return t;
+
+    if (in_fallback && home_cell)
+      return t;
+  }
+
+  return nil;
+}
+
 val find_symbol(val str, val package_in)
 {
   val self = lit("find-symbol");
@@ -10953,7 +10995,7 @@ static int unquote_star_check(val obj, val pretty)
     return 0;
   if (car(obj->s.name) != chr('*'))
     return 0;
-  return pretty || symbol_visible(cur_package, obj);
+  return pretty || !symbol_needs_prefix(cur_package, obj);
 }
 
 val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
@@ -11215,7 +11257,7 @@ dot:
         put_string(lit("#:"), out);
       } else if (obj->s.package == keyword_package) {
         put_char(chr(':'), out);
-      } else if (!symbol_visible(cur_package, obj)) {
+      } else if (symbol_needs_prefix(cur_package, obj)) {
         put_string(obj->s.package->pk.name, out);
         put_char(chr(':'), out);
       }
