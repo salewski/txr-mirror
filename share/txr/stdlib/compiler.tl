@@ -1277,13 +1277,15 @@
 
 (defun expand-defmacro (form)
   (mac-param-bind form (op name mac-args . body) form
-    (with-gensyms (form menv)
+    (with-gensyms (form menv spine-iter)
       (let ((exp-lam ^(lambda (,form ,menv)
-                        (mac-param-bind ,form ,mac-args (cdr ,form)
-                          (sys:set-macro-ancestor
-                            (block ,name
-                              ,*body)
-                            ,form)))))
+                        (let ((,spine-iter (cdr ,form)))
+                          ,(expand (expand-bind-mac-params form form mac-args
+                                                           menv spine-iter
+                                                           t nil
+                                     ^((sys:set-macro-ancestor
+                                         (block ,name ,*body)
+                                         ,form))))))))
         ^(progn
            (sys:rt-defmacro ',name '(macro ,name) ,exp-lam)
            ',name)))))
