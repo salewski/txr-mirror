@@ -24,99 +24,97 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(macro-time
-  (defvar *place-clobber-expander* (hash))
-  (defvar *place-update-expander* (hash))
-  (defvar *place-delete-expander* (hash))
-  (defvar *place-macro* (hash))
-  (defvar sys:*pl-env* nil)
+(defvar *place-clobber-expander* (hash))
+(defvar *place-update-expander* (hash))
+(defvar *place-delete-expander* (hash))
+(defvar *place-macro* (hash))
+(defvar sys:*pl-env* nil)
 
-  (defun sys:eval-err (. params)
-    (throwf 'eval-error . params))
+(defun sys:eval-err (. params)
+  (throwf 'eval-error . params))
 
-  (defun sys:sym-update-expander (getter-name setter-name
-                                  place-expr op-body)
-    ^(macrolet ((,getter-name () ',place-expr)
-                (,setter-name (val-expr) ^(sys:setq ,',place-expr
-                                                    ,val-expr)))
-       ,op-body))
+(defun sys:sym-update-expander (getter-name setter-name
+                                place-expr op-body)
+  ^(macrolet ((,getter-name () ',place-expr)
+              (,setter-name (val-expr) ^(sys:setq ,',place-expr
+                                                  ,val-expr)))
+     ,op-body))
 
-  (defun sys:sym-clobber-expander (simple-setter-name
-                                   place-expr op-body)
-    ^(macrolet ((,simple-setter-name (val-expr)
-                   ^(sys:setq ,',place-expr ,val-expr)))
-       ,op-body))
+(defun sys:sym-clobber-expander (simple-setter-name
+                                 place-expr op-body)
+  ^(macrolet ((,simple-setter-name (val-expr)
+                 ^(sys:setq ,',place-expr ,val-expr)))
+     ,op-body))
 
-  (defun sys:sym-delete-expander (deleter-name
-                                  place-expr . op-body)
-    ^(macrolet ((,deleter-name (:env env)
-                  (when (lexical-var-p env ',place-expr)
-                    (sys:eval-err "~s is a lexical variable, thus not deletable"
-                                  ',place-expr))
-                  ^(prog1
-                     (symbol-value ',',place-expr)
-                     (makunbound ',',place-expr))))
-       ,*op-body))
+(defun sys:sym-delete-expander (deleter-name
+                                place-expr . op-body)
+  ^(macrolet ((,deleter-name (:env env)
+                (when (lexical-var-p env ',place-expr)
+                  (sys:eval-err "~s is a lexical variable, thus not deletable"
+                                ',place-expr))
+                ^(prog1
+                   (symbol-value ',',place-expr)
+                   (makunbound ',',place-expr))))
+     ,*op-body))
 
-  (defun sys:get-place-macro (sym)
-    (or [*place-macro* sym]
-        (progn (sys:try-load sym) [*place-macro* sym])))
+(defun sys:get-place-macro (sym)
+  (or [*place-macro* sym]
+      (progn (sys:try-load sym) [*place-macro* sym])))
 
-  (defun sys:pl-expand (unex-place env)
-    (while t
-      (let ((place unex-place))
-        (let ((pm-expander (sys:get-place-macro (if (consp unex-place)
-                                                  (car unex-place)))))
-          (when pm-expander
-            (sys:setq place (sys:set-macro-ancestor
-                              [pm-expander unex-place]
-                              unex-place))))
-        (sys:setq place (macroexpand-1 place env))
-        (when (or (eq place unex-place)
-                  (null place)
-                  (and (atom place) (not (symbolp place))))
-          (return place))
-        (sys:setq unex-place place))))
+(defun sys:pl-expand (unex-place env)
+  (while t
+    (let ((place unex-place))
+      (let ((pm-expander (sys:get-place-macro (if (consp unex-place)
+                                                (car unex-place)))))
+        (when pm-expander
+          (sys:setq place (sys:set-macro-ancestor
+                            [pm-expander unex-place]
+                            unex-place))))
+      (sys:setq place (macroexpand-1 place env))
+      (when (or (eq place unex-place)
+                (null place)
+                (and (atom place) (not (symbolp place))))
+        (return place))
+      (sys:setq unex-place place))))
 
-  (defun place-form-p (unex-place env)
-    (let ((place (sys:pl-expand unex-place env)))
-      (or (bindable place)
-          (and (consp place) [*place-update-expander* (car place)] t))))
+(defun place-form-p (unex-place env)
+  (let ((place (sys:pl-expand unex-place env)))
+    (or (bindable place)
+        (and (consp place) [*place-update-expander* (car place)] t))))
 
-  (defun get-update-expander (place)
-    (cond
-      ((symbolp place) (fun sys:sym-update-expander))
-      ((consp place) (or [*place-update-expander* (car place)]
-                         (sys:eval-err "~s is not an assignable place" place)))
-      (t (sys:eval-err "form ~s is not syntax denoting an assignable place" place))))
+(defun get-update-expander (place)
+  (cond
+    ((symbolp place) (fun sys:sym-update-expander))
+    ((consp place) (or [*place-update-expander* (car place)]
+                       (sys:eval-err "~s is not an assignable place" place)))
+    (t (sys:eval-err "form ~s is not syntax denoting an assignable place" place))))
 
-  (defun get-clobber-expander (place)
-    (cond
-      ((symbolp place) (fun sys:sym-clobber-expander))
-      ((consp place) (or [*place-clobber-expander* (car place)]
-                         (iflet ((fun [*place-update-expander* (car place)]))
-                            (op apply fun (gensym) @1 @2 @rest))
-                         (sys:eval-err "~s is not an assignable place" place)))
-      (t (sys:eval-err "form ~s is not syntax denoting an assignable place" place))))
+(defun get-clobber-expander (place)
+  (cond
+    ((symbolp place) (fun sys:sym-clobber-expander))
+    ((consp place) (or [*place-clobber-expander* (car place)]
+                       (iflet ((fun [*place-update-expander* (car place)]))
+                          (op apply fun (gensym) @1 @2 @rest))
+                       (sys:eval-err "~s is not an assignable place" place)))
+    (t (sys:eval-err "form ~s is not syntax denoting an assignable place" place))))
 
-  (defun get-delete-expander (place)
-    (cond
-      ((symbolp place) (fun sys:sym-delete-expander))
-      ((consp place) (or [*place-delete-expander* (car place)]
-                         (sys:eval-err "~s is not a deletable place" place)))
-      (t (sys:eval-err "form ~s is not syntax denoting a deletable place" place)))))
+(defun get-delete-expander (place)
+  (cond
+    ((symbolp place) (fun sys:sym-delete-expander))
+    ((consp place) (or [*place-delete-expander* (car place)]
+                       (sys:eval-err "~s is not a deletable place" place)))
+    (t (sys:eval-err "form ~s is not syntax denoting a deletable place" place))))
 
-(macro-time
-  (defun sys:r-s-let-expander (bindings body e letsym pred)
-    (let ((exp-bindings (mapcar (aret ^(,@1 ,(macroexpand @2 e))) bindings)))
-      (let ((renames [keep-if pred exp-bindings second])
-            (regular [remove-if pred exp-bindings second]))
-      (cond ((and renames regular)
-              ^(symacrolet ,renames
-                 (,letsym ,regular ,*body)))
-            (renames ^(symacrolet ,renames ,*body))
-            (regular ^(,letsym ,regular ,*body))
-            (t ^(progn ,*body)))))))
+(defun sys:r-s-let-expander (bindings body e letsym pred)
+  (let ((exp-bindings (mapcar (aret ^(,@1 ,(macroexpand @2 e))) bindings)))
+    (let ((renames [keep-if pred exp-bindings second])
+          (regular [remove-if pred exp-bindings second]))
+    (cond ((and renames regular)
+            ^(symacrolet ,renames
+               (,letsym ,regular ,*body)))
+          (renames ^(symacrolet ,renames ,*body))
+          (regular ^(,letsym ,regular ,*body))
+          (t ^(progn ,*body))))))
 
 (defmacro rlet (bindings :env e . body)
   [sys:r-s-let-expander bindings body e 'let constantp])
@@ -135,42 +133,41 @@
 (defmacro with-gensyms (syms . body)
   ^(let ,(zip syms (repeat '((gensym)))) ,*body))
 
-(macro-time
-  (defun sys:propagate-ancestor (to-tree from-form . syms)
-    (tree-case to-tree
-      ((a . d)
-       (when (memq a syms)
-         (sys:set-macro-ancestor to-tree from-form))
-       (sys:propagate-ancestor a from-form . syms)
-       (sys:propagate-ancestor d from-form . syms)))
-    to-tree)
+(defun sys:propagate-ancestor (to-tree from-form . syms)
+  (tree-case to-tree
+    ((a . d)
+     (when (memq a syms)
+       (sys:set-macro-ancestor to-tree from-form))
+     (sys:propagate-ancestor a from-form . syms)
+     (sys:propagate-ancestor d from-form . syms)))
+  to-tree)
 
-  (defun call-update-expander (getter setter unex-place env body)
-    (sys:propagate-ancestor body unex-place getter setter)
-    (let* ((place (sys:pl-expand unex-place env))
-           (expander (get-update-expander place))
-           (sys:*pl-env* env)
-           (expansion [expander getter setter place body])
-           (expansion-ex (sys:expand expansion env)))
-      (sys:propagate-ancestor expansion-ex place getter setter)))
+(defun call-update-expander (getter setter unex-place env body)
+  (sys:propagate-ancestor body unex-place getter setter)
+  (let* ((place (sys:pl-expand unex-place env))
+         (expander (get-update-expander place))
+         (sys:*pl-env* env)
+         (expansion [expander getter setter place body])
+         (expansion-ex (sys:expand expansion env)))
+    (sys:propagate-ancestor expansion-ex place getter setter)))
 
-  (defun call-clobber-expander (ssetter unex-place env body)
-    (sys:propagate-ancestor body unex-place ssetter)
-    (let* ((place (sys:pl-expand unex-place env))
-           (expander (get-clobber-expander place))
-           (sys:*pl-env* env)
-           (expansion [expander ssetter place body])
-           (expansion-ex (sys:expand expansion env)))
-      (sys:propagate-ancestor expansion-ex place ssetter)))
+(defun call-clobber-expander (ssetter unex-place env body)
+  (sys:propagate-ancestor body unex-place ssetter)
+  (let* ((place (sys:pl-expand unex-place env))
+         (expander (get-clobber-expander place))
+         (sys:*pl-env* env)
+         (expansion [expander ssetter place body])
+         (expansion-ex (sys:expand expansion env)))
+    (sys:propagate-ancestor expansion-ex place ssetter)))
 
-  (defun call-delete-expander (deleter unex-place env body)
-    (sys:propagate-ancestor body unex-place deleter)
-    (let* ((place (sys:pl-expand unex-place env))
-           (expander (get-delete-expander place))
-           (sys:*pl-env* env)
-           (expansion [expander deleter place body])
-           (expansion-ex (sys:expand expansion env)))
-      (sys:propagate-ancestor expansion-ex place deleter))))
+(defun call-delete-expander (deleter unex-place env body)
+  (sys:propagate-ancestor body unex-place deleter)
+  (let* ((place (sys:pl-expand unex-place env))
+         (expander (get-delete-expander place))
+         (sys:*pl-env* env)
+         (expansion [expander deleter place body])
+         (expansion-ex (sys:expand expansion env)))
+    (sys:propagate-ancestor expansion-ex place deleter)))
 
 (defmacro with-update-expander ((getter setter) unex-place env body)
   ^(with-gensyms (,getter ,setter)
@@ -373,7 +370,7 @@
       (sys:eval-err "~s: ~s cannot be used as a place name"
                 'defplace name))
     (with-gensyms (place)
-      ^(macro-time
+      ^(progn
          (sethash *place-update-expander* ',name
            (lambda (,getter-sym ,setter-sym ,place ,body-sym)
              (tree-bind ,args (cdr ,place)
