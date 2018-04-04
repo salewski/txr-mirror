@@ -1386,4 +1386,7 @@ void parse_init(void)
   reg_var(listener_greedy_eval_s, nil);
   reg_var(rec_source_loc_s, nil);
   reg_fun(circref_s, func_n1(circref));
+  reg_fun(intern(lit("get-parser"), system_package), func_n1(get_parser));
+  reg_fun(intern(lit("parser-errors"), system_package), func_n1(parser_errors));
+  reg_fun(intern(lit("parser-eof"), system_package), func_n1(parser_eof));
 }

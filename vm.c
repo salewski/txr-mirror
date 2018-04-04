@@ -171,6 +171,18 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
   }
 }
 
+static val vm_desc_nlevels(val desc)
+{
+  struct vm_desc *vd = vm_desc_struct(desc);
+  return num(vd->nlvl);
+}
+
+static val vm_desc_nregs(val desc)
+{
+  struct vm_desc *vd = vm_desc_struct(desc);
+  return num(vd->nreg);
+}
+
 static val vm_desc_bytecode(val desc)
 {
   struct vm_desc *vd = vm_desc_struct(desc);
@@ -1050,6 +1062,8 @@ void vm_init(void)
   vm_desc_s = intern(lit("vm-desc"), system_package);
   vm_closure_s = intern(lit("vm-closure"), system_package);
   reg_fun(intern(lit("vm-make-desc"), system_package), func_n5(vm_make_desc));
+  reg_fun(intern(lit("vm-desc-nlevels"), system_package), func_n1(vm_desc_nlevels));
+  reg_fun(intern(lit("vm-desc-nregs"), system_package), func_n1(vm_desc_nregs));
   reg_fun(intern(lit("vm-desc-bytecode"), system_package), func_n1(vm_desc_bytecode));
   reg_fun(intern(lit("vm-desc-datavec"), system_package), func_n1(vm_desc_datavec));
   reg_fun(intern(lit("vm-desc-funvec"), system_package), func_n1(vm_desc_funvec));

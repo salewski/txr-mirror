@@ -105,18 +105,19 @@
       (let ((lev (ssucc (cadr reg))))
         (< me.lev lev)))))
 
-(defstruct compiler nil
-  (treg-cntr 1)
-  (dreg-cntr 0)
-  (fidx-cntr 0)
-  (nlev 2)
-  (nreg 1)
-  (tregs nil)
-  (dreg (hash :eql-based))
-  (data (hash :eql-based))
-  (fidx (hash :eql-based))
-  (ftab (hash :eql-based))
-  last-form)
+(compile-only
+  (defstruct compiler nil
+    (treg-cntr 1)
+    (dreg-cntr 0)
+    (fidx-cntr 0)
+    (nlev 2)
+    (nreg 1)
+    (tregs nil)
+    (dreg (hash :eql-based))
+    (data (hash :eql-based))
+    (fidx (hash :eql-based))
+    (ftab (hash :eql-based))
+    last-form))
 
 (defvarl %gcall-op% (relate '(apply usr:apply call) '(gapply gapply gcall)))
 
@@ -1309,3 +1310,78 @@
       co.(check-treg-leak)
       as.(asm ^(,*frag.code (end ,frag.oreg)))
       (vm-make-desc co.nlev co.treg-cntr as.buf co.(get-datavec) co.(get-funvec)))))
+
+(defvarl %file-suff-rx% #/[.][^\\\/.]+/)
+
+(defvar *emit*)
+
+(defvar *eval*)
+
+(defun open-compile-streams (in-path out-path)
+  (let* ((rsuff (r$ %file-suff-rx% in-path))
+         (suff (if rsuff [in-path rsuff]))
+         (ip-nosuff (if rsuff [in-path 0..(from rsuff)] in-path))
+         in-stream out-stream)
+    (cond
+      ((equal suff ".txr")
+       (error "~s: cannot compile TXR files" 'compile-file))
+      ((null suff)
+       (set in-stream (or (ignerr (open-file ip-nosuff))
+                          (ignerr (open-file `@{ip-nosuff}.tl`)))))
+      (t
+       (set in-stream (ignerr (open-file in-path)))))
+
+    (unless in-stream
+      (error "~s: unable to open input file ~s" 'compile-file in-path))
+
+    (unless out-path
+      (set out-path `@{ip-nosuff}.tlo`))
+
+    (set out-stream (ignerr (open-file out-path "w")))
+
+    (unless out-stream
+      (close-stream in-stream)
+      (error "~s: unable to open output file ~s" 'compile-file in-stream))
+
+    (list in-stream out-stream)))
+
+(defun list-from-vm-desc (vd)
+  (list (sys:vm-desc-nlevels vd)
+        (sys:vm-desc-nregs vd)
+        (sys:vm-desc-bytecode vd)
+        (sys:vm-desc-datavec vd)
+        (sys:vm-desc-funvec vd)))
+
+(defun usr:compile-file (in-path : out-path)
+  (let ((streams (open-compile-streams in-path out-path))
+        (err-ret (gensym))
+        (*package* *package*)
+        (*emit* t)
+        (*eval* t)
+        (*load-path* in-path)
+        (sys:*load-recursive* t))
+    (with-resources ((in-stream (car streams) (close-stream in-stream))
+                     (out-stream (cadr streams) (close-stream out-stream)))
+      (labels ((compile-form (form)
+                 (unless (atom form)
+                   (caseq (car form)
+                     (progn [mapdo compile-form (cdr form)])
+                     (compile-only (let ((*eval* nil))
+                                     [mapdo compile-form (cdr form)]))
+                     (eval-only (let ((*emit* nil))
+                                  [mapdo compile-form (cdr form)]))
+                     (t (when (or *eval* *emit*)
+                          (let* ((vm-desc (compile-toplevel form))
+                                 (flat-vd (list-from-vm-desc vm-desc)))
+                            (when *eval*
+                              (sys:vm-execute-toplevel vm-desc))
+                            (when *emit*
+                              (let ((*print-circle* t))
+                                (prinl flat-vd out-stream))))))))))
+        (whilet ((obj (read in-stream *stderr* err-ret))
+                 ((neq obj err-ret)))
+          (compile-form (sys:expand* obj)))
+        (let ((parser (sys:get-parser in-stream)))
+          (when (> (sys:parser-errors parser) 0)
+            (error "~s: compilation of ~s failed" 'compile-file
+                   (stream-get-prop in-stream :name))))))))
