@@ -945,7 +945,7 @@
            (nenv (new env up env co me))
            (obj-immut-var (cdar nenv.(extend-var (gensym))))
            (obj-var (cdar nenv.(extend-var (gensym))))
-           (err-blk (cdar nenv.(extend-var (gensym))))
+           (err-blk (gensym))
            (lout (gensym "l"))
            (ctx-form ^',form)
            (err-form ^',(rlcp ^(,(car form)) form))
@@ -954,13 +954,13 @@
            (cfrags (collect-each ((c cases)
                                   (i (range 1)))
                      (mac-param-bind form (params . body) c
-                       (let* ((src (expand ^(block ,err-blk.sym
+                       (let* ((src (expand ^(block ,err-blk
                                               (set ,obj-var.sym
                                                    ,obj-immut-var.sym)
                                               ,(expand-bind-mac-params
                                                  ctx-form err-form
                                                  params nil obj-var.sym :
-                                                 err-blk.sym
+                                                 err-blk
                                                  body))))
                               (lerrtest (gensym "l"))
                               (lnext (gensym "l"))
