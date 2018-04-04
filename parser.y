@@ -1232,23 +1232,18 @@ wordsqlit : '`'                  { $$ = nil; }
 
 buflit : HASH_B_QUOTE '\''               { $$ = make_buf(zero, nil, nil);
                                            end_of_buflit(scnr); }
-       | HASH_B_QUOTE buflit_items '\''  { val len = length($2);
-                                           val bytes = nreverse($2);
-                                           val buf = make_buf(len, nil, nil);
-                                           cnum i;
-                                           end_of_buflit(scnr);
-
-                                           for (i = 0; i < c_num(len); i++)
-                                           { buf_put_u8(buf, num(i),
-                                                         pop(&bytes)); }
-                                           $$ = buf; }
+       | HASH_B_QUOTE buflit_items '\''  { end_of_buflit(scnr);
+                                           buf_trim($2);
+                                           $$ = $2; }
        | HASH_B_QUOTE error              { yyerr("unterminated buffer literal");
                                            end_of_buflit(scnr);
                                            yyerrok; }
        ;
 
-buflit_items : buflit_items buflit_item { $$ = cons($2, $1); }
-             | buflit_item              { $$ = cons($1, nil); }
+buflit_items : buflit_items buflit_item { buf_put_u8($1, length_buf($$), $2);
+                                          $$ = $1; }
+             | buflit_item              { $$ = make_buf(zero, nil, num_fast(512));
+                                          buf_put_u8($$, zero, $1); }
              ;
 
 buflit_item  : LITCHAR LITCHAR          { $$ = num($1 << 4 | $2); }
