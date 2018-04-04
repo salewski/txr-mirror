@@ -1372,7 +1372,8 @@
                                      [mapdo compile-form (cdr form)]))
                      (eval-only (let ((*emit* nil))
                                   [mapdo compile-form (cdr form)]))
-                     (t (when (or *eval* *emit*)
+                     (t (when (and (or *eval* *emit*)
+                                   (not (constantp form)))
                           (let* ((vm-desc (compile-toplevel form))
                                  (flat-vd (list-from-vm-desc vm-desc)))
                             (when *eval*
