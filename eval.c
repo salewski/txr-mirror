@@ -1232,7 +1232,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
     }
 
     if (consp(form)) {
-      if (optargs && car(form) == colon_k) {
+      if (optargs && opt_compat && opt_compat <= 190 && car(form) == colon_k) {
         form = cdr(form);
         goto noarg;
       }

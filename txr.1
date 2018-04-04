@@ -30454,6 +30454,19 @@ parameter inside has a restricted scope in a nested parameter
 list: its parameter will capture just that part of the argument material which
 matches that parameter list, rather than the entire argument list.
 
+The processing of macro parameter lists omits the feature that when the
+keyword symbol
+.code :
+(colon) given as the argument to an optional parameter, that argument is
+treated as a missing argument. This special logic is implemented only
+in the function argument passing mechanism, not in the binding of macro
+parameters to object structure. If the colon symbol appears in the object
+structure and is matched against an optional parameter, it is an
+ordinary value. That parameter is considered present, and takes on
+that
+.code :
+keyword symbol as its value.
+
 .TP* "Dialect Note:"
 
 In ANSI Common Lisp, the lambda list keyword
@@ -63254,8 +63267,15 @@ function neglected to perform
 initializations, and didn't invoke finalization on the structure object
 if an exception was thrown during reinitialization. Thus, contrary
 to documented requirements, reinitialization of a structure didn't behave
-like fresh construction.  This behavior is replicated if compatibility
-with 190 or earlier is requested.
+like fresh construction. Also, until \*(TX 190, macro parameter
+lists implemented the requirement that a
+.code :
+(colon keyword symbol) argument to an optional
+was treated as a missing argument, triggering argument-defaulting behavior.
+That requirement was removed; the colon symbol behaves as an ordinary value
+under destructuring with macro parameter lists.
+All these behaviors are restored in compatibility
+with version 190 or earlier.
 .IP 188
 Until \*(TX 188,
 .codn equal -based

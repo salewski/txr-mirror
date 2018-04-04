@@ -623,7 +623,7 @@
          (macrolet ((,getter () ^(cdr ,',entry-sym))
                     (,setter (val) ^(sys:rplacd ,',entry-sym ,val)))
             ,body))))
-  :
+  nil
   (deleter
     ^(macrolet ((,deleter ()
                   (if ,have-default-p
@@ -763,7 +763,7 @@
     ^(macrolet ((,getter () ^(fun ,',sym))
                 (,setter (val) ^(sys:setqf ,',sym ,val)))
        ,body))
-  :
+  nil
   (deleter
     ^(macrolet ((,deleter (:env env)
                    (when (lexical-fun-p env ',sym)
@@ -805,7 +805,7 @@
           (macrolet ((,getter () ^(call (car ,',gs-sym)))
                      (,setter (val) ^(call (cdr ,',gs-sym) ,val)))
             ,body))))
-  :
+  nil
   (deleter
     ^(macrolet ((,deleter () ^(fmakunbound ,',sym-expr)))
        ,body)))
@@ -821,7 +821,7 @@
           (macrolet ((,getter () ^(cdr ,',binding-sym))
                      (,setter (val) ^(sys:rplacd ,',binding-sym ,val)))
             ,body))))
-  :
+  nil
   (deleter
     ^(macrolet ((,deleter () ^(mmakunbound ,',sym-expr)))
        ,body)))
@@ -837,7 +837,7 @@
           (macrolet ((,getter () ^(cdr ,',binding-sym))
                      (,setter (val) ^(sys:rplacd ,',binding-sym ,val)))
             ,body))))
-  :
+  nil
   (deleter
     ^(macrolet ((,deleter () ^(makunbound ,',sym-expr)))
        ,body)))
