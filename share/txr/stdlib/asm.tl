@@ -43,24 +43,25 @@
   (:method backpatch (me asm at offs)
     (error `assembler: @{me.symbol} doesn't backpatch`)))
 
-(defstruct assembler nil
-  buf
-  bstr
-  (labdef (hash))
-  (labref (hash))
-  (:static imm-width (relate '(si mi bi) '(10 16 32)))
-  (:static sign-bits (relate '(fixnum bignum chr) '(1 1 0)))
-  (:static operand-name (relate '(si mi bi l r rs d ds n o)
-                                '("small immediate"
-                                  "medium immediate"
-                                  "big immediate"
-                                  "label"
-                                  "register operand"
-                                  "register small operand"
-                                  "register destination operand"
-                                  "register small destination operand"
-                                  "integer"
-                                  "any object"))))
+(compile-only
+  (defstruct assembler nil
+    buf
+    bstr
+    (labdef (hash))
+    (labref (hash))
+    (:static imm-width (relate '(si mi bi) '(10 16 32)))
+    (:static sign-bits (relate '(fixnum bignum chr) '(1 1 0)))
+    (:static operand-name (relate '(si mi bi l r rs d ds n o)
+                                  '("small immediate"
+                                    "medium immediate"
+                                    "big immediate"
+                                    "label"
+                                    "register operand"
+                                    "register small operand"
+                                    "register destination operand"
+                                    "register small destination operand"
+                                    "integer"
+                                    "any object")))))
 
 (defmeth assembler :postinit (me)
   (cond
@@ -225,7 +226,7 @@
 
 (defvarl %oc-hash% (hash))
 
-(defvarl %oc-code% 0)
+(defparml %oc-code% 0)
 
 (defun register-opcode (oc)
   %oc-list-builder%.(add oc)
