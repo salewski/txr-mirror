@@ -1089,7 +1089,7 @@
          (sys:var (mac-param-bind form (sym exp : mods) el
                     (list (expand-quasi-mods exp mods))))
          (sys:quasi (expand-quasi-mods el))
-         (t el)))
+         (t (list ^(sys:fmt-simple ,el nil nil nil nil)))))
       ((bindable el)
        (list ^(sys:fmt-simple ,el nil nil nil nil)))
       (t
