@@ -24,13 +24,12 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(macro-time
-  (defun sys:name-str (kind sym-or-string)
-    (cond
-      ((symbolp sym-or-string) (symbol-name sym-or-string))
-      ((stringp sym-or-string) sym-or-string)
-      (t (throw 'eval-error "~s: ~s isn't a valid ~a name"
-                'defpackage sym-or-string kind)))))
+(defun sys:name-str (kind sym-or-string)
+  (cond
+    ((symbolp sym-or-string) (symbol-name sym-or-string))
+    ((stringp sym-or-string) sym-or-string)
+    (t (throw 'eval-error "~s: ~s isn't a valid ~a name"
+              'defpackage sym-or-string kind))))
 
 (defmacro defpackage (name . clauses)
   (let* ((pkg (gensym "pkg-"))

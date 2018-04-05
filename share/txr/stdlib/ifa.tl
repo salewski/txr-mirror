@@ -69,13 +69,12 @@
 (defmacro whena (test . body)
   ^(ifa ,test (progn ,*body)))
 
-(macro-time
-  (defun sys:if-to-cond (if-oper cond-oper pairs)
-    (tree-case pairs
-      (((test . forms) . rest) ^(,if-oper ,test (progn ,*forms)
-                                          (,cond-oper ,*rest)))
-      (() ())
-      (else (throwf 'eval-error "~s: bad syntax: ~s" cond-oper pairs)))))
+(defun sys:if-to-cond (if-oper cond-oper pairs)
+  (tree-case pairs
+    (((test . forms) . rest) ^(,if-oper ,test (progn ,*forms)
+                                        (,cond-oper ,*rest)))
+    (() ())
+    (else (throwf 'eval-error "~s: bad syntax: ~s" cond-oper pairs))))
 
 (defmacro conda (. pairs)
   (sys:if-to-cond 'ifa 'conda pairs))

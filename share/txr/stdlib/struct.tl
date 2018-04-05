@@ -24,15 +24,14 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(macro-time
-  (defun sys:bad-slot-syntax (form arg)
-    (compile-error form "bad slot syntax ~s" arg))
+(defun sys:bad-slot-syntax (form arg)
+  (compile-error form "bad slot syntax ~s" arg))
 
-  (defun sys:prune-missing-inits (slot-init-forms)
-    (remove-if (tb ((kind name : (init-form nil init-form-present)))
-                 (and (member kind '(:static :instance :function))
-                      (not init-form-present)))
-               slot-init-forms)))
+(defun sys:prune-missing-inits (slot-init-forms)
+  (remove-if (tb ((kind name : (init-form nil init-form-present)))
+               (and (member kind '(:static :instance :function))
+                    (not init-form-present)))
+             slot-init-forms))
 
 (defmacro defstruct (:form form name-spec super . slot-specs)
   (tree-bind (name args) (tree-case name-spec
