@@ -547,9 +547,12 @@ static char_set_t *char_set_create(chset_type_t type, wchar_t base, unsigned st)
   return cs;
 }
 
-static void char_set_destroy(char_set_t *set)
+static void char_set_destroy(char_set_t *set, int force)
 {
   if (!set)
+    return;
+
+  if (set->any.stat && !force)
     return;
 
   switch (set->any.type) {
@@ -799,8 +802,7 @@ static void init_special_char_sets(void)
 static void char_set_cobj_destroy(val chset)
 {
   char_set_t *set = coerce(char_set_t *, chset->co.handle);
-  if (!set->any.stat)
-    char_set_destroy(set);
+  char_set_destroy(set, 0);
   chset->co.handle = 0;
 }
 
@@ -852,7 +854,7 @@ static nfa_state_t *nfa_state_wild(nfa_state_t *t)
 static void nfa_state_free(nfa_state_t *st)
 {
   if (st->a.kind == nfa_set)
-    char_set_destroy(st->s.set);
+    char_set_destroy(st->s.set, 0);
   free(st);
 }
 
@@ -3303,11 +3305,11 @@ void regex_init(void)
 
 void regex_free_all(void)
 {
-  char_set_destroy(space_cs);
-  char_set_destroy(digit_cs);
-  char_set_destroy(word_cs);
-  char_set_destroy(cspace_cs);
-  char_set_destroy(cdigit_cs);
-  char_set_destroy(cword_cs);
-  char_set_destroy(wide_cs);
+  char_set_destroy(space_cs, 1);
+  char_set_destroy(digit_cs, 1);
+  char_set_destroy(word_cs, 1);
+  char_set_destroy(cspace_cs, 1);
+  char_set_destroy(cdigit_cs, 1);
+  char_set_destroy(cword_cs, 1);
+  char_set_destroy(wide_cs, 1);
 }
