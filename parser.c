@@ -627,8 +627,7 @@ static val read_file_common(val stream, val error_stream, val compiled)
       val nlevels = pop(&form);
       val nregs = pop(&form);
       val bytecode = pop(&form);
-      val dv_raw = pop(&form);
-      val datavec = if3(consp(dv_raw), vec_list(cadr(dv_raw)), dv_raw);
+      val datavec = pop(&form);
       val funvec = car(form);
       val desc = vm_make_desc(nlevels, nregs, bytecode, datavec, funvec);
       (void) vm_execute_toplevel(desc);
