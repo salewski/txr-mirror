@@ -55,6 +55,7 @@
 #include "cadr.h"
 #include "struct.h"
 #include "parser.h"
+#include "vm.h"
 #include "txr.h"
 #if HAVE_TERMIOS
 #include "linenoise/linenoise.h"
@@ -411,12 +412,14 @@ val parser_circ_ref(parser_t *p, val num)
 
 void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
 {
-  enum { none, tl, txr } suffix;
+  enum { none, tl, tlo, txr } suffix;
 
   if (match_str(spec_file, lit(".txr"), negone))
     suffix = txr;
   else if (match_str(spec_file, lit(".tl"), negone))
     suffix = tl;
+  else if (match_str(spec_file, lit(".tlo"), negone))
+    suffix = tlo;
   else
     suffix = none;
 
@@ -430,6 +433,9 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
       switch (suffix) {
       case tl:
         *txr_lisp_p = t;
+        break;
+      case tlo:
+        *txr_lisp_p = chr('o');
         break;
       case txr:
         *txr_lisp_p = nil;
@@ -456,10 +462,17 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
     }
 
 
-    if (suffix == none && in == 0) {
-      spec_file_try = scat(lit("."), spec_file, lit("tl"), nao);
-      in = w_fopen(c_str(spec_file_try), L"r");
-      *txr_lisp_p = t;
+    if (suffix == none) {
+      if (in == 0) {
+        spec_file_try = scat(lit("."), spec_file, lit("tlo"), nao);
+        in = w_fopen(c_str(spec_file_try), L"r");
+        *txr_lisp_p = chr('o');
+      }
+      if (in == 0) {
+        spec_file_try = scat(lit("."), spec_file, lit("tl"), nao);
+        in = w_fopen(c_str(spec_file_try), L"r");
+        *txr_lisp_p = t;
+      }
     }
 
     if (in == 0) {
@@ -592,7 +605,7 @@ val iread(val source_in, val error_stream, val error_return_val,
                          name_in, lineno);
 }
 
-val read_eval_stream(val stream, val error_stream)
+static val read_file_common(val stream, val error_stream, val compiled)
 {
   val error_val = gensym(nil);
   val name = stream_get_prop(stream, name_k);
@@ -609,13 +622,34 @@ val read_eval_stream(val stream, val error_stream)
       continue;
     }
 
-    (void) eval_intrinsic(form, nil);
+    if (compiled) {
+      val nlevels = pop(&form);
+      val nregs = pop(&form);
+      val bytecode = pop(&form);
+      val dv_raw = pop(&form);
+      val datavec = if3(consp(dv_raw), vec_list(cadr(dv_raw)), dv_raw);
+      val funvec = car(form);
+      val desc = vm_make_desc(nlevels, nregs, bytecode, datavec, funvec);
+      (void) vm_execute_toplevel(desc);
+    } else {
+      (void) eval_intrinsic(form, nil);
+    }
 
     if (parser_eof(parser))
       break;
   }
 
   return t;
+}
+
+val read_eval_stream(val stream, val error_stream)
+{
+  return read_file_common(stream, error_stream, nil);
+}
+
+val read_compiled_file(val stream, val error_stream)
+{
+  return read_file_common(stream, error_stream, t);
 }
 
 #if HAVE_TERMIOS

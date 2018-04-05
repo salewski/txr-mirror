@@ -4310,7 +4310,11 @@ static val v_load(match_files_ctx *c)
     } else {
       uw_set_match_context(cons(c->spec, c->bindings));
 
-      if (!read_eval_stream(stream, std_error)){
+      if (txr_lisp_p == chr('o') && !read_compiled_file(stream, std_error)) {
+        close_stream(stream, nil);
+        uw_throwf(error_s, lit("load: unable to load compiled file ~a"),
+                  path, nao);
+      } else if (!read_eval_stream(stream, std_error)) {
         close_stream(stream, nil);
         sem_error(specline, lit("load: ~a contains errors"), path, nao);
       }

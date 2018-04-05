@@ -4157,10 +4157,16 @@ val load(val target)
   env_vbind(dyn_env, load_recursive_s, t);
   env_vbind(dyn_env, package_s, cur_package);
 
-  if (txr_lisp_p) {
+  if (txr_lisp_p == t) {
     if (!read_eval_stream(stream, std_error)) {
       close_stream(stream, nil);
       uw_throwf(error_s, lit("load: ~a contains errors"), path, nao);
+    }
+  } else if (txr_lisp_p == chr('o')) {
+    if (!read_compiled_file(stream, std_error)) {
+      close_stream(stream, nil);
+      uw_throwf(error_s, lit("load: unable to load compiled file ~a"),
+                path, nao);
     }
   } else {
     int gc = gc_state(0);

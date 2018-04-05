@@ -139,6 +139,7 @@ static void help(void)
 "                       Use of txr implies agreement with the disclaimer\n"
 "                       section at the bottom of the license.\n"
 "--lisp                 Treat unsuffixed query files as TXR Lisp.\n"
+"--compiled             Treat unsuffixed query files as compiled TXR Lisp.\n"
 "--lisp-bindings        Synonym for -l\n"
 "--debugger             Synonym for -d\n"
 "--noninteractive       Synonym for -n\n"
@@ -677,6 +678,9 @@ int txr_main(int argc, char **argv)
       } else if (equal(opt, lit("lisp"))) {
         txr_lisp_p = t;
         continue;
+      } else if (equal(opt, lit("compiled"))) {
+        txr_lisp_p = chr('o');
+        continue;
 #if HAVE_FORK_STUFF
       } else if (equal(opt, lit("reexec"))) {
         exec_wrap(prog_path, arg_list);
@@ -787,7 +791,7 @@ int txr_main(int argc, char **argv)
       case 'c':
         if (txr_lisp_p) {
           format(std_error,
-                 lit("~a: -c not compatible with --lisp; use -e\n"),
+                 lit("~a: -c not compatible with --lisp or --compiled; use -e\n"),
                  prog_string, nao);
           return EXIT_FAILURE;
         }
@@ -1036,7 +1040,11 @@ int txr_main(int argc, char **argv)
     reg_varl(car(binding), cdr(binding));
   }
 
-  {
+  if (txr_lisp_p == chr('o')) {
+    val result = read_compiled_file(parse_stream, std_error);
+    if (!enter_repl)
+      return result ? 0 : EXIT_FAILURE;
+  } else {
     val result = read_eval_stream_noerr(parse_stream, spec_file_str,
                                         std_error);
 
