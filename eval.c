@@ -2717,6 +2717,11 @@ static val fmt_flex(val obj, val plist, struct args *args)
   return do_format_field(fmt_tostring(obj), n, sep, range_ix, plist, nil);
 }
 
+static val fmt_join(struct args *args)
+{
+  return cat_str(args_get_list(args), lit(""));
+}
+
 val subst_vars(val forms, val env, val filter)
 {
   list_collect_decl(out, iter);
@@ -6432,6 +6437,7 @@ void eval_init(void)
 
   reg_fun(intern(lit("fmt-simple"), system_package), func_n5(fmt_simple));
   reg_fun(intern(lit("fmt-flex"), system_package), func_n2v(fmt_flex));
+  reg_fun(intern(lit("fmt-join"), system_package), func_n0v(fmt_join));
 
   reg_varl(user_package_s = intern(lit("user-package"), user_package_var),
            user_package_var);

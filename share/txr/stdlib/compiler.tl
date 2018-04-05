@@ -1097,7 +1097,7 @@
 
 (defun expand-quasi (form)
   (let ((qa (expand-quasi-args form)))
-    ^(append ,*qa)))
+    ^(sys:fmt-join ,*qa)))
 
 (defun expand-dohash (form)
   (mac-param-bind form (op (key-var val-var hash-form : res-form) . body) form
