@@ -37,6 +37,6 @@
                    ^(hash-next ,iter)
                    ^(let ((,next (hash-next ,iter)))
                       ,*(if key ^((set ,key (car ,next))))
-                      ,*(if val ^((set ,val (cdr ,next)))))
-                   ,next)))
+                      ,*(if val ^((set ,val (cdr ,next))))
+                      ,next))))
          ,*body))))
