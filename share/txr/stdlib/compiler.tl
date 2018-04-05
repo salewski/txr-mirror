@@ -1294,13 +1294,6 @@
   (mac-param-bind form (op name def) form
     ^(sys:rt-defsymacro ',name ',def)))
 
-(defun sys:bind-mac-error (ctx-form params obj too-few-p)
-  (if (atom obj)
-    (compile-error ctx-form "extra atom ~s not matched by params ~s"
-                   obj  params)
-    (compile-error ctx-form "object ~s too ~a for params ~s"
-                   obj (if too-few-p "short" "long") params)))
-
 (defun usr:compile-toplevel (exp)
   (let ((co (new compiler))
         (as (new assembler)))

@@ -532,10 +532,15 @@ static val pmac_instantiate(val set_fun)
 
 static val error_set_entries(val dlt, val fun)
 {
+  val sys_name[] = {
+    lit("bind-mac-error"),
+    nil
+  };
   val name[] = {
     lit("compile-error"), lit("compile-warning"), lit("compile-defr-warning"),
     nil
   };
+  set_dlt_entries_sys(dlt, sys_name, fun);
   set_dlt_entries(dlt, name, fun);
   return nil;
 }
@@ -658,7 +663,7 @@ static val compiler_instantiate(val set_fun)
 static val compiler_set_entries(val dlt, val fun)
 {
   val sys_name[] = {
-    lit("compiler"), lit("bind-mac-error"),
+    lit("compiler"),
     nil
   };
   val name[] = {
