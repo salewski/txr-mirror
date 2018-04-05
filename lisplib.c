@@ -103,7 +103,7 @@ static val place_set_entries(val dlt, val fun)
 static val place_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aplace.tl"), stdlib_path, nao));
+  load(format(nil, lit("~aplace"), stdlib_path, nao));
   return nil;
 }
 
@@ -117,7 +117,7 @@ static val ver_set_entries(val dlt, val fun)
 static val ver_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aver.tl"), stdlib_path, nao));
+  load(format(nil, lit("~aver"), stdlib_path, nao));
   return nil;
 }
 
@@ -133,7 +133,7 @@ static val ifa_set_entries(val dlt, val fun)
 static val ifa_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aifa.tl"), stdlib_path, nao));
+  load(format(nil, lit("~aifa"), stdlib_path, nao));
   return nil;
 }
 
@@ -147,7 +147,7 @@ static val txr_case_set_entries(val dlt, val fun)
 static val txr_case_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~atxr-case.tl"), stdlib_path, nao));
+  load(format(nil, lit("~atxr-case"), stdlib_path, nao));
   return nil;
 }
 
@@ -165,7 +165,7 @@ static val with_resources_set_entries(val dlt, val fun)
 static val with_resources_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~awith-resources.tl"), stdlib_path, nao));
+  load(format(nil, lit("~awith-resources"), stdlib_path, nao));
   return nil;
 }
 
@@ -192,7 +192,7 @@ static val path_test_set_entries(val dlt, val fun)
 static val path_test_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~apath-test.tl"), stdlib_path, nao));
+  load(format(nil, lit("~apath-test"), stdlib_path, nao));
   return nil;
 }
 
@@ -216,7 +216,7 @@ static val struct_set_entries(val dlt, val fun)
 static val struct_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~astruct.tl"), stdlib_path, nao));
+  load(format(nil, lit("~astruct"), stdlib_path, nao));
   return nil;
 }
 
@@ -239,7 +239,7 @@ static val with_stream_set_entries(val dlt, val fun)
 static val with_stream_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~awith-stream.tl"), stdlib_path, nao));
+  load(format(nil, lit("~awith-stream"), stdlib_path, nao));
   return nil;
 }
 
@@ -253,7 +253,7 @@ static val hash_set_entries(val dlt, val fun)
 static val hash_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~ahash.tl"), stdlib_path, nao));
+  load(format(nil, lit("~ahash"), stdlib_path, nao));
   return nil;
 }
 
@@ -271,7 +271,7 @@ static val except_set_entries(val dlt, val fun)
 static val except_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aexcept.tl"), stdlib_path, nao));
+  load(format(nil, lit("~aexcept"), stdlib_path, nao));
   return nil;
 }
 
@@ -285,7 +285,7 @@ static val type_set_entries(val dlt, val fun)
 static val type_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~atype.tl"), stdlib_path, nao));
+  load(format(nil, lit("~atype"), stdlib_path, nao));
   return nil;
 }
 
@@ -304,7 +304,7 @@ static val yield_set_entries(val dlt, val fun)
 static val yield_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~ayield.tl"), stdlib_path, nao));
+  load(format(nil, lit("~ayield"), stdlib_path, nao));
   return nil;
 }
 
@@ -343,7 +343,7 @@ static val sock_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
   sock_load_init();
-  load(format(nil, lit("~asocket.tl"), stdlib_path, nao));
+  load(format(nil, lit("~asocket"), stdlib_path, nao));
   return nil;
 }
 
@@ -366,7 +366,7 @@ static val termios_set_entries(val dlt, val fun)
 static val termios_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~atermios.tl"), stdlib_path, nao));
+  load(format(nil, lit("~atermios"), stdlib_path, nao));
   sock_load_init();
   return nil;
 }
@@ -385,7 +385,7 @@ static val awk_set_entries(val dlt, val fun)
 static val awk_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aawk.tl"), stdlib_path, nao));
+  load(format(nil, lit("~aawk"), stdlib_path, nao));
   sock_load_init();
   return nil;
 }
@@ -408,7 +408,7 @@ static val build_set_entries(val dlt, val fun)
 static val build_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~abuild.tl"), stdlib_path, nao));
+  load(format(nil, lit("~abuild"), stdlib_path, nao));
   sock_load_init();
   return nil;
 }
@@ -425,7 +425,7 @@ static val trace_set_entries(val dlt, val fun)
 static val trace_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~atrace.tl"), stdlib_path, nao));
+  load(format(nil, lit("~atrace"), stdlib_path, nao));
   trace_loaded = t;
   return nil;
 }
@@ -449,7 +449,7 @@ static val getopts_set_entries(val dlt, val fun)
 static val getopts_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~agetopts.tl"), stdlib_path, nao));
+  load(format(nil, lit("~agetopts"), stdlib_path, nao));
   return nil;
 }
 
@@ -466,7 +466,7 @@ static val package_set_entries(val dlt, val fun)
 static val package_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~apackage.tl"), stdlib_path, nao));
+  load(format(nil, lit("~apackage"), stdlib_path, nao));
   return nil;
 }
 
@@ -490,7 +490,7 @@ static val getput_set_entries(val dlt, val fun)
 static val getput_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~agetput.tl"), stdlib_path, nao));
+  load(format(nil, lit("~agetput"), stdlib_path, nao));
   return nil;
 }
 
@@ -506,7 +506,7 @@ static val tagbody_set_entries(val dlt, val fun)
 static val tagbody_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~atagbody.tl"), stdlib_path, nao));
+  load(format(nil, lit("~atagbody"), stdlib_path, nao));
   return nil;
 }
 
@@ -522,7 +522,7 @@ static val pmac_set_entries(val dlt, val fun)
 static val pmac_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~apmac.tl"), stdlib_path, nao));
+  load(format(nil, lit("~apmac"), stdlib_path, nao));
   return nil;
 }
 
@@ -539,7 +539,7 @@ static val error_set_entries(val dlt, val fun)
 static val error_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aerror.tl"), stdlib_path, nao));
+  load(format(nil, lit("~aerror"), stdlib_path, nao));
   return nil;
 }
 
@@ -556,7 +556,7 @@ static val keyparams_set_entries(val dlt, val fun)
 static val keyparams_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~akeyparams.tl"), stdlib_path, nao));
+  load(format(nil, lit("~akeyparams"), stdlib_path, nao));
   return nil;
 }
 
@@ -577,7 +577,7 @@ static val ffi_set_entries(val dlt, val fun)
 static val ffi_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~affi.tl"), stdlib_path, nao));
+  load(format(nil, lit("~affi"), stdlib_path, nao));
   return nil;
 }
 
@@ -594,7 +594,7 @@ static val doloop_set_entries(val dlt, val fun)
 static val doloop_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~adoloop.tl"), stdlib_path, nao));
+  load(format(nil, lit("~adoloop"), stdlib_path, nao));
   return nil;
 }
 
@@ -617,14 +617,14 @@ static val stream_wrap_set_entries(val dlt, val fun)
 static val stream_wrap_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~astream-wrap.tl"), stdlib_path, nao));
+  load(format(nil, lit("~astream-wrap"), stdlib_path, nao));
   return nil;
 }
 
 static val asm_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aasm.tl"), stdlib_path, nao));
+  load(format(nil, lit("~aasm"), stdlib_path, nao));
   return nil;
 }
 
@@ -647,7 +647,7 @@ static val asm_set_entries(val dlt, val fun)
 static val compiler_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~acompiler.tl"), stdlib_path, nao));
+  load(format(nil, lit("~acompiler"), stdlib_path, nao));
   return nil;
 }
 
@@ -680,7 +680,7 @@ static val op_set_entries(val dlt, val fun)
 static val op_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aop.tl"), stdlib_path, nao));
+  load(format(nil, lit("~aop"), stdlib_path, nao));
   return nil;
 }
 
