@@ -2272,7 +2272,7 @@ static void print_class_char(val ch, val first_p, val stream, int *semi_flag)
     put_char(ch, stream);
     return;
   }
-  out_str_char(c_chr(ch), stream, semi_flag);
+  out_str_char(c_chr(ch), stream, semi_flag, 1);
 }
 
 static void print_rec(val exp, val stream, int *semi_flag);
@@ -2311,7 +2311,7 @@ static void print_rec(val exp, val stream, int *semi_flag)
       put_char(exp, stream);
       break;
     default:
-      out_str_char(ch, stream, semi_flag);
+      out_str_char(ch, stream, semi_flag, 1);
     }
   } else if (stringp(exp)) {
     cnum i;

@@ -10849,7 +10849,7 @@ static val simple_qref_args_p(val args, val pos)
   }
 }
 
-void out_str_char(wchar_t ch, val out, int *semi_flag)
+void out_str_char(wchar_t ch, val out, int *semi_flag, int regex)
 {
   if (*semi_flag && (iswxdigit(ch) || ch == ';'))
     put_char(chr(';'), out);
@@ -10864,9 +10864,14 @@ void out_str_char(wchar_t ch, val out, int *semi_flag)
   case '\v': put_string(lit("\\v"), out); break;
   case '\f': put_string(lit("\\f"), out); break;
   case '\r': put_string(lit("\\r"), out); break;
-  case '"': put_string(lit("\\\""), out); break;
   case '\\': put_string(lit("\\\\"), out); break;
   case 27: put_string(lit("\\e"), out); break;
+  case '"':
+    if (regex)
+      put_char(chr(ch), out);
+    else
+      put_string(lit("\\\""), out);
+    break;
   default:
     {
       val fmt = nil;
@@ -10891,7 +10896,7 @@ void out_str_char(wchar_t ch, val out, int *semi_flag)
 static void out_str_readable(const wchar_t *ptr, val out, int *semi_flag)
 {
   for (; *ptr; ptr++)
-    out_str_char(*ptr, out, semi_flag);
+    out_str_char(*ptr, out, semi_flag, 0);
 }
 
 static void out_lazy_str(val lstr, val out)
