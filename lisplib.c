@@ -198,11 +198,15 @@ static val path_test_instantiate(val set_fun)
 
 static val struct_set_entries(val dlt, val fun)
 {
+  val sys_name[] = {
+    lit("define-method"), nil
+  };
   val name[] = {
     lit("defstruct"), lit("qref"), lit("uref"), lit("new"), lit("meth"),
     lit("umeth"), lit("usl"), lit("defmeth"), lit("rslot"), nil
   };
 
+  set_dlt_entries_sys(dlt, sys_name, fun);
   set_dlt_entries(dlt, name, fun);
 
   if (fun)
