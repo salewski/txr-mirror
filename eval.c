@@ -6377,6 +6377,7 @@ void eval_init(void)
   reg_fun(intern(lit("load"), user_package), func_n1(load));
   reg_var(load_path_s, nil);
   reg_symacro(intern(lit("self-load-path"), user_package), load_path_s);
+  reg_var(load_recursive_s, nil);
   reg_fun(intern(lit("expand"), system_package), func_n2o(no_warn_expand, 1));
   reg_fun(intern(lit("expand*"), system_package), func_n2o(expand, 1));
   reg_fun(intern(lit("expand-with-free-refs"), system_package),
