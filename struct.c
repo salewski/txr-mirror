@@ -1410,6 +1410,7 @@ static void struct_inst_print(val obj, val out, val pretty,
   val save_mode = test_set_indent_mode(out, num_fast(indent_off),
                                        num_fast(indent_data));
   val save_indent, iter, once;
+  int force_br = 0;
   int compat = opt_compat && opt_compat <= 154;
 
   if (!compat || pretty) {
@@ -1433,7 +1434,8 @@ static void struct_inst_print(val obj, val out, val pretty,
         put_char(chr(' '), out);
         once = nil;
       } else {
-        width_check(out, chr(' '));
+        if (width_check(out, chr(' ')))
+          force_br = 1;
       }
       obj_print_impl(sym, out, pretty, ctx);
       put_char(chr(' '), out);
@@ -1441,6 +1443,8 @@ static void struct_inst_print(val obj, val out, val pretty,
     }
   }
   put_char(chr(')'), out);
+  if (force_br)
+    force_break(out);
   set_indent_mode(out, save_mode);
   set_indent(out, save_indent);
 }

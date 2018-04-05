@@ -622,6 +622,7 @@ val buf_print(val buf, val stream_in)
   val save_mode = test_set_indent_mode(stream, num_fast(indent_off),
                                        num_fast(indent_data));
   val save_indent;
+  int fb = 0;
 
   put_string(lit("#b'"), stream);
 
@@ -630,11 +631,15 @@ val buf_print(val buf, val stream_in)
   while (len-- > 0) {
     format(stream, lit("~,02x"), num_fast(*data++), nao);
     if ((++count & 7) == 0 && len)
-      width_check(stream, chr(' '));
+      if (width_check(stream, chr(' ')))
+        fb = 1;
   }
 
   set_indent(stream, save_indent);
   set_indent_mode(stream, save_mode);
+
+  if (fb)
+    force_break(stream);
 
   return put_char(chr('\''), stream);
 }

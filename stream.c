@@ -103,7 +103,7 @@ val shell, shell_arg;
 
 void strm_base_init(struct strm_base *s)
 {
-  static struct strm_base init = { indent_off, 60, 10, 0, 0, 0 };
+  static struct strm_base init = { indent_off, 60, 10, 0, 0, 0, 0 };
   *s = init;
 }
 
@@ -3512,6 +3512,7 @@ val put_string(val string, val stream_in)
       switch (*p) {
       case '\n':
         col = 0;
+        s->force_break = 0;
         break;
       case '\t':
         col = (col + 1) | 7;
@@ -3540,6 +3541,7 @@ val put_char(val ch, val stream_in)
   case L'\n':
     ops->put_char(stream, ch);
     s->column = 0;
+    s->force_break = 0;
     break;
   case L'\t':
     if (s->column == 0 && s->indent_mode != indent_off) {
@@ -3697,14 +3699,25 @@ val width_check(val stream, val alt)
   if ((s->indent_mode == indent_code &&
        s->column >= s->indent_chars + s->code_width) ||
       (s->indent_mode == indent_data &&
-       s->column >= s->indent_chars + s->data_width))
+       s->column >= s->indent_chars + s->data_width) ||
+      (s->indent_mode != indent_off && s->force_break))
   {
     put_char(chr('\n'), stream);
+    s->force_break = 0;
+    return t;
   } else if (alt) {
     put_char(alt, stream);
   }
 
-  return t;
+  return nil;
+}
+
+val force_break(val stream)
+{
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(stream, stream_s));
+  s->force_break = 1;
+  return stream;
 }
 
 struct strm_ctx *get_set_ctx(val stream, struct strm_ctx *ctx)
@@ -4596,6 +4609,7 @@ void stream_init(void)
   reg_fun(intern(lit("set-indent"), user_package), func_n2(set_indent));
   reg_fun(intern(lit("inc-indent"), user_package), func_n2(inc_indent));
   reg_fun(intern(lit("width-check"), user_package), func_n2(width_check));
+  reg_fun(intern(lit("force-break"), user_package), func_n1(force_break));
   reg_varl(intern(lit("indent-off"), user_package), num_fast(indent_off));
   reg_varl(intern(lit("indent-data"), user_package), num_fast(indent_data));
   reg_varl(intern(lit("indent-code"), user_package), num_fast(indent_code));

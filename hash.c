@@ -408,7 +408,7 @@ static cnum hash_hash_op(val obj, int *count)
 static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
 {
   struct hash *h = coerce(struct hash *, hash->co.handle);
-  int need_space = 0;
+  int need_space = 0, force_br = 0;
   val save_mode = test_set_indent_mode(out, num_fast(indent_off),
                                        num_fast(indent_data));
   val save_indent;
@@ -461,7 +461,8 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
     while ((cell = hash_next(iter))) {
       val key = car(cell);
       val value = cdr(cell);
-      width_check(out, chr(' '));
+      if (width_check(out, chr(' ')))
+        force_br = 1;
 
       put_string(lit("("), out);
       obj_print_impl(key, out, pretty, ctx);
@@ -475,6 +476,9 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
     }
   }
   put_string(lit(")"), out);
+
+  if (force_br)
+    force_break(out);
 
   set_indent_mode(out, save_mode);
   set_indent(out, save_indent);

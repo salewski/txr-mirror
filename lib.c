@@ -11109,6 +11109,7 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         val iter;
         val closepar = chr(')');
         val indent = zero;
+        int force_br = 0;
 
         if (sym == dwim_s && consp(cdr(obj))) {
           put_char(chr('['), out);
@@ -11181,7 +11182,8 @@ finish:
             iter = nil;
             goto dot;
           } else if (consp(d)) {
-            width_check(out, chr(' '));
+            if (width_check(out, chr(' ')))
+              force_br = 1;
           } else {
 dot:
             put_string(lit(" . "), out);
@@ -11189,6 +11191,9 @@ dot:
             put_char(closepar, out);
           }
         }
+
+        if (force_br)
+          force_break(out);
       }
 
       if (save_indent)
@@ -11299,6 +11304,7 @@ dot:
       val save_mode = test_set_indent_mode(out, num_fast(indent_off),
                                            num_fast(indent_data));
       val save_indent;
+      int force_br = 0;
 
       put_string(lit("#("), out);
 
@@ -11308,10 +11314,14 @@ dot:
         val elem = obj->v.vec[i];
         obj_print_impl(elem, out, pretty, ctx);
         if (i < length - 1)
-          width_check(out, chr(' '));
+          if (width_check(out, chr(' ')))
+            force_br = 1;
       }
 
       put_char(chr(')'), out);
+
+      if (force_br)
+        force_break(out);
 
       set_indent(out, save_indent);
       set_indent_mode(out, save_mode);

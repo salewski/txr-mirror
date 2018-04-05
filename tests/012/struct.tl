@@ -50,11 +50,13 @@
 (set *gensym-counter* 0)
 (stest (ignwarn (sys:expand 's.(a).d))
        "(slot (call (slot s 'a)\n               \
-       \            s) 'd)")
+       \            s)\n                        \
+       \      'd)")
 (set *gensym-counter* 0)
 (stest (ignwarn (sys:expand 's.(a b c).d))
        "(slot (call (slot s 'a)\n               \
-       \            s b c)\n      'd)")
+       \            s b c)\n                    \
+       \      'd)")
 
 (test s.a 100)
 

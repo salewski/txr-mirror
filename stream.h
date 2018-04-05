@@ -49,6 +49,7 @@ struct strm_base {
   cnum code_width;
   cnum indent_chars;
   cnum column;
+  unsigned force_break;
   struct strm_ctx *ctx;
 };
 
@@ -209,6 +210,7 @@ val get_indent(val stream);
 val set_indent(val stream, val indent);
 val inc_indent(val stream, val delta);
 val width_check(val stream, val alt);
+val force_break(val stream);
 struct strm_ctx *get_set_ctx(val stream, struct strm_ctx *);
 struct strm_ctx *get_ctx(val stream);
 val get_string(val stream, val nchars, val close_after_p);

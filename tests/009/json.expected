@@ -19,8 +19,9 @@ AST: #H(() ("web-app" #H(() ("servlet-mapping" #H(() ("cofaxTools" "/tools/*") (
                                                                                                           ("dataStoreUrl" "jdbc:microsoft:sqlserver://LOCALHOST:1433;DatabaseName=goon")
                                                                                                           ("useDataStore" :true) ("cachePackageTagsTrack" 200.0) ("searchEngineFileTemplate" "forSearchEngines.htm")
                                                                                                           ("cachePackageTagsStore" 200.0) ("cachePagesRefresh" 10.0)))
-                                         ("servlet-name" "cofaxCDS")) #H(() ("servlet-class" "org.cofax.cds.EmailServlet") ("init-param" #H(() ("mailHost" "mail1") ("mailHostOverride" "mail2")))
-                                                                         ("servlet-name" "cofaxEmail"))
+                                         ("servlet-name" "cofaxCDS"))
+                                      #H(() ("servlet-class" "org.cofax.cds.EmailServlet") ("init-param" #H(() ("mailHost" "mail1") ("mailHostOverride" "mail2")))
+                                         ("servlet-name" "cofaxEmail"))
                                       #H(() ("servlet-class" "org.cofax.cds.AdminServlet") ("servlet-name" "cofaxAdmin"))
                                       #H(() ("servlet-class" "org.cofax.cds.FileServlet") ("servlet-name" "fileServlet"))
                                       #H(() ("servlet-class" "org.cofax.cms.CofaxToolsServlet") ("init-param" #H(() ("lookInContext" 1.0) ("removePageCache" "/content/admin/remove?cache=pages&id=")
@@ -29,7 +30,8 @@ AST: #H(() ("web-app" #H(() ("servlet-mapping" #H(() ("cofaxTools" "/tools/*") (
                                                                                                                  ("log" 1.0) ("adminGroupID" 4.0) ("templatePath" "toolstemplates/")
                                                                                                                  ("betaServer" :true) ("dataLogLocation" "/usr/local/tomcat/logs/dataLog.log")
                                                                                                                  ("fileTransferFolder" "/usr/local/tomcat/webapps/content/fileTransferFolder")))
-                                         ("servlet-name" "cofaxTools")))) ("taglib" #H(() ("taglib-uri" "cofax.tld") ("taglib-location" "/WEB-INF/tlds/cofax.tld"))))))
+                                         ("servlet-name" "cofaxTools"))))
+                         ("taglib" #H(() ("taglib-uri" "cofax.tld") ("taglib-location" "/WEB-INF/tlds/cofax.tld"))))))
 
 Unmatched junk: ""
 
