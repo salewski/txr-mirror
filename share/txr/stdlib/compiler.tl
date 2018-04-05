@@ -1374,6 +1374,7 @@
                             (when *emit*
                               (let ((*print-circle* t))
                                 (prinl flat-vd out-stream))))))))))
+        (prinl '(0 0) out-stream)
         (whilet ((obj (read in-stream *stderr* err-ret))
                  ((neq obj err-ret)))
           (compile-form (sys:expand* obj)))

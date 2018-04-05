@@ -610,6 +610,7 @@ static val read_file_common(val stream, val error_stream, val compiled)
 {
   val error_val = gensym(nil);
   val name = stream_get_prop(stream, name_k);
+  val first = t;
 
   for (;;) {
     val form = lisp_parse(stream, error_stream, error_val, name, colon_k);
@@ -623,7 +624,14 @@ static val read_file_common(val stream, val error_stream, val compiled)
       continue;
     }
 
-    if (compiled) {
+    if (compiled && first) {
+      val major = pop(&form);
+      if (gt(major, zero))
+        uw_throwf(error_s,
+                  lit("cannot load ~s; it was compiled by a newer implementation"),
+                  stream, nao);
+      first = nil;
+    } else if (compiled) {
       val nlevels = pop(&form);
       val nregs = pop(&form);
       val bytecode = pop(&form);
