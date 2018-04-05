@@ -816,7 +816,7 @@ q_var : '@' '{' n_expr n_exprs_opt '}'
       ;
 
 
-vector : '#' list               { if (unquotes_occur($2, 0))
+vector : '#' list               { if (parser->quasi_level > 0 && unquotes_occur($2, 0))
                                     $$ = rlc(cons(vector_lit_s,
                                                    cons($2, nil)), $2);
                                   else
@@ -825,7 +825,7 @@ vector : '#' list               { if (unquotes_occur($2, 0))
                                   yybadtok(yychar, lit("unassigned/reserved # notation")); }
        ;
 
-hash : HASH_H list              { if (unquotes_occur($2, 0))
+hash : HASH_H list              { if (parser->quasi_level > 0 && unquotes_occur($2, 0))
                                     $$ = rl(cons(hash_lit_s, $2), num($1));
                                   else
                                     $$ = rl(hash_construct(first($2),
@@ -835,7 +835,7 @@ hash : HASH_H list              { if (unquotes_occur($2, 0))
                                     yybadtok(yychar, lit("hash literal")); }
      ;
 
-struct : HASH_S list            { if (unquotes_occur($2, 0))
+struct : HASH_S list            { if (parser->quasi_level > 0 && unquotes_occur($2, 0))
                                     $$ = rl(cons(struct_lit_s, $2),
                                               num($1));
                                   else
@@ -967,11 +967,17 @@ i_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | buflit                 { $$ = $1; }
        | '\'' i_dot_expr        { $$ = rl(rlc(list(quote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | '^' i_dot_expr         { $$ = rl(rlc(list(sys_qquote_s, $2, nao), $2),
+       | '^'                    { parser->quasi_level++; }
+         i_dot_expr             { parser->quasi_level--;
+                                  $$ = rl(rlc(list(sys_qquote_s, $3, nao), $3),
                                           num(parser->lineno)); }
-       | ',' i_dot_expr         { $$ = rl(rlc(list(sys_unquote_s, $2, nao), $2),
+       | ','                    { parser->quasi_level--; }
+         i_dot_expr             { parser->quasi_level++;
+                                  $$ = rl(rlc(list(sys_unquote_s, $3, nao), $3),
                                           num(parser->lineno)); }
-       | SPLICE i_dot_expr      { $$ = rl(rlc(list(sys_splice_s, $2, nao), $2),
+       | SPLICE                 { parser->quasi_level--; }
+         i_dot_expr             { parser->quasi_level++;
+                                  $$ = rl(rlc(list(sys_splice_s, $3, nao), $3),
                                           num(parser->lineno)); }
        | HASH_N_EQUALS          { parser_circ_def(parser, $1, unique_s); }
          i_dot_expr             { parser_circ_def(parser, $1, $3);
@@ -1000,11 +1006,17 @@ n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
        | buflit                 { $$ = $1; }
        | '\'' n_dot_expr        { $$ = rl(rlc(list(quote_s, $2, nao), $2),
                                           num(parser->lineno)); }
-       | '^' n_dot_expr         { $$ = rl(rlc(list(sys_qquote_s, $2, nao), $2),
+       | '^'                    { parser->quasi_level++; }
+         n_dot_expr             { parser->quasi_level--;
+                                  $$ = rl(rlc(list(sys_qquote_s, $3, nao), $3),
                                           num(parser->lineno)); }
-       | ',' n_dot_expr         { $$ = rl(rlc(list(sys_unquote_s, $2, nao), $2),
+       | ','                    { parser->quasi_level--; }
+         n_dot_expr             { parser->quasi_level++;
+                                  $$ = rl(rlc(list(sys_unquote_s, $3, nao), $3),
                                           num(parser->lineno)); }
-       | SPLICE n_dot_expr      { $$ = rl(rlc(list(sys_splice_s, $2, nao), $2),
+       | SPLICE                 { parser->quasi_level--; }
+         n_dot_expr             { parser->quasi_level++;
+                                  $$ = rl(rlc(list(sys_splice_s, $3, nao), $3),
                                           num(parser->lineno)); }
        | n_expr DOTDOT n_expr   { uses_or2;
                                   $$ = rlc(list(rcons_s, $1, $3, nao),
@@ -1886,6 +1898,7 @@ int parse(parser_t *parser, val name, enum prime_parser prim)
   parser->circ_count = 0;
   parser->circ_suppress = 0;
   parser->syntax_tree = nil;
+  parser->quasi_level = 0;
 
   prime_parser(parser, name, prim);
 

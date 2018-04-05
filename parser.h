@@ -55,6 +55,7 @@ struct parser {
   val name;
   val prepared_msg;
   val syntax_tree;
+  int quasi_level;
   val circ_ref_hash;
   cnum circ_count;
   int circ_suppress;

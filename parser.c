@@ -122,6 +122,7 @@ void parser_common_init(parser_t *p)
   p->circ_ref_hash = nil;
   p->circ_count = 0;
   p->syntax_tree = nil;
+  p->quasi_level = 0;
   yylex_init(&yyscan);
   p->scanner = convert(scanner_t *, yyscan);
   yyset_extra(p, p->scanner);
