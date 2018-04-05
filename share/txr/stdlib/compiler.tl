@@ -1356,7 +1356,8 @@
         (*load-path* in-path)
         (sys:*load-recursive* t))
     (with-resources ((in-stream (car streams) (close-stream in-stream))
-                     (out-stream (cadr streams) (close-stream out-stream)))
+                     (out-stream (cadr streams) (close-stream out-stream))
+                     (out (new list-builder)))
       (labels ((compile-form (form)
                  (unless (atom form)
                    (caseq (car form)
@@ -1372,12 +1373,18 @@
                             (when *eval*
                               (sys:vm-execute-toplevel vm-desc))
                             (when *emit*
-                              (let ((*print-circle* t))
-                                (prinl flat-vd out-stream))))))))))
+                              out.(add flat-vd)))))))))
         (prinl '(0 0) out-stream)
-        (whilet ((obj (read in-stream *stderr* err-ret))
-                 ((neq obj err-ret)))
-          (compile-form (sys:expand* obj)))
+        (unwind-protect
+          (whilet ((obj (read in-stream *stderr* err-ret))
+                   ((neq obj err-ret)))
+            (compile-form (sys:expand* obj)))
+          (let ((*print-circle* t)
+                (*package* (make-package "$")))
+            (unwind-protect
+              (prinl out.(get) out-stream)
+              (delete-package *package*))))
+
         (let ((parser (sys:get-parser in-stream)))
           (when (> (sys:parser-errors parser) 0)
             (error "~s: compilation of ~s failed" 'compile-file

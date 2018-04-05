@@ -632,13 +632,16 @@ static val read_file_common(val stream, val error_stream, val compiled)
                   stream, nao);
       first = nil;
     } else if (compiled) {
-      val nlevels = pop(&form);
-      val nregs = pop(&form);
-      val bytecode = pop(&form);
-      val datavec = pop(&form);
-      val funvec = car(form);
-      val desc = vm_make_desc(nlevels, nregs, bytecode, datavec, funvec);
-      (void) vm_execute_toplevel(desc);
+      for (; form; form = cdr(form)) {
+        val item = car(form);
+        val nlevels = pop(&item);
+        val nregs = pop(&item);
+        val bytecode = pop(&item);
+        val datavec = pop(&item);
+        val funvec = car(item);
+        val desc = vm_make_desc(nlevels, nregs, bytecode, datavec, funvec);
+        (void) vm_execute_toplevel(desc);
+      }
     } else {
       (void) eval_intrinsic(form, nil);
     }
