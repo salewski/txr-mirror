@@ -297,7 +297,7 @@ static void vm_reset(struct vm *vm, struct vm_desc *vd,
   vm->dspl = dspl;
 }
 
-#define vm_insn_opcode(insn) coerce(vm_op_t, ((insn) >> 26))
+#define vm_insn_opcode(insn) convert(vm_op_t, ((insn) >> 26))
 #define vm_insn_operand(insn) ((insn) & 0xFFFFU)
 #define vm_insn_extra(insn) (((insn) >> 16) & 0x3FF)
 #define vm_insn_bigop(insn) (((insn) & 0x3FFFFFFU))
