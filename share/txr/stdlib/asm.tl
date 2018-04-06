@@ -709,7 +709,7 @@
                   (unless (minusp fix)
                     (add (operand-to-sym y))))))))))))
 
-(defun disassemble-c-d (code data funv *stdout*)
+(defun disassemble-cdf (code data funv *stdout*)
   (let ((asm (new assembler buf code)))
     (put-line "data:")
     (mapdo (do format t "  d~,02X: ~s\n" @1 @2) (range 0) data)
@@ -722,7 +722,7 @@
 
 (defun usr:disassemble (obj : (stream *stdout*))
   (typecase obj
-    (vm-desc (disassemble-c-d (vm-desc-bytecode obj)
+    (vm-desc (disassemble-cdf (vm-desc-bytecode obj)
                               (vm-desc-datavec obj)
                               (vm-desc-funvec obj)
                               stream))
