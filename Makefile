@@ -61,6 +61,10 @@ OBJS-$(have_termios) += termios.o
 OBJS-$(have_termios) += linenoise/linenoise.o
 EXTRA_OBJS-$(add_win_res) += win/txr.res
 
+STDLIB_SRCS := $(wildcard share/txr/stdlib/*.tl)
+STDLIB_TLOS := $(patsubst %.tl,%.tlo,$(STDLIB_SRCS))
+STDLIB_TLOS2 := $(patsubst %.tl,%.tlo2,$(STDLIB_SRCS))
+
 ifneq ($(have_git),)
 SRCS := $(addprefix $(top_srcdir),\
                     $(filter-out lex.yy.c y.tab.c y.tab.h,\
@@ -138,6 +142,12 @@ $(call SH,mkdir -p $(dir $@))
 $(call SH,windres -O coff -DTXR_VER=$(txr_ver) $< $@)
 endef
 
+define COMPILE_TL
+$(call ABBREV,TXR)
+$(call SH,$(TXR) -e "(compile-file \"$<\" \"$@.tmp\")")
+$(call SH,mv $@.tmp $@)
+endef
+
 ifneq ($(top_srcdir),)
 dbg/%.o: $(top_srcdir)%.c
 	$(call COMPILE_C_WITH_DEPS,$(DBG_ONLY_FLAGS))
@@ -173,6 +183,13 @@ opt/%-win.o: $(top_srcdir)%.c
 win/%.res: $(top_srcdir)win/%.rc $(top_srcdir)win/%.ico
 	$(call WINDRES)
 
+%.tlo: %.tl $(TXR)
+	$(call COMPILE_TL)
+
+%.tlo2: %.tl $(TXR)
+	$(call COMPILE_TL)
+	$(call SH,F=$@ T=$${F%.tlo2}.tlo; cmp -s $$F $$T || cp $$F $$T)
+
 # The following pattern rule is used for test targets built by configure
 %.o: %.c
 	$(call COMPILE_C)
@@ -195,8 +212,13 @@ tainted:
 endif
 endif
 
-.PHONY: all
-all: $(BUILD_TARGETS)
+.PHONY: all stage1 stage2
+
+all: $(BUILD_TARGETS) stage1 stage2
+
+stage1: $(STDLIB_TLOS)
+
+stage2: $(STDLIB_TLOS2)
 
 $(PROG): $(OPT_OBJS) $(EXTRA_OBJS-y)
 	$(call LINK_PROG,$(OPT_FLAGS))
@@ -295,7 +317,7 @@ $(call EACH_CONF,txr.o txr-win.o): TXR_CFLAGS += -DEXE_SUFF=\"$(EXE)\"
 $(call EACH_CONF,txr.o txr-win.o): TXR_CFLAGS += -DTXR_VER=\"$(txr_ver)\"
 
 $(call EACH_CONF,linenoise/linenoise.o): TXR_CFLAGS += -D$(termios_define)
-.PHONY: rebuild clean repatch distclean
+.PHONY: rebuild clean repatch clean-tlo distclean
 
 ifeq ($(PROG),)
 rebuild clean repatch: notconfigured
@@ -310,11 +332,14 @@ distclean:
 else
 rebuild: clean repatch $(PROG)
 
-clean: conftest.clean tests.clean
+clean: conftest.clean clean-tlo
 	rm -f $(PROG)$(EXE) $(PROG)-dbg$(EXE) y.tab.c lex.yy.c y.tab.h y.output
 	rm -f y.tab.h.old
 	rm -f $(PROG)-win$(EXE) $(PROG)-win-dbg$(EXE)
 	rm -rf opt dbg $(EXTRA_OBJS-y)
+
+clean-tlo:
+	rm -f $(STDLIB_TLOS) $(STDLIB_TLOS2)
 
 distclean: clean
 	rm -f config.h config.make config.log
@@ -448,7 +473,7 @@ install: $(PROG)
 	$(call INSTALL,0444,$(top_srcdir)txr.1,$(DESTDIR)$(mandir)/man1)
 	$(call INSTALL,0444,\
 	   $(addprefix $(top_srcdir)share/txr/stdlib/,\
-	                  *.txr *.tl),\
+	                  *.txr *.tl *.tlo),\
 	   $(DESTDIR)$(datadir)/stdlib)
 
 .PHONY: unixtar gnutar zip
