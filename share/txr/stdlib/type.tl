@@ -24,7 +24,7 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(defmacro typecase (expr . clauses)
+(defmacro typecase (form . clauses)
   (let* ((val (gensym))
          (cond-pairs (collect-each ((cl clauses))
                        (tree-case cl
@@ -35,5 +35,5 @@
                          (else (throwf 'eval-error
                                        "~s: bad clause syntax: ~s"
                                        'typecase cl))))))
-    ^(let ((,val ,expr))
+    ^(let ((,val ,form))
        (cond ,*cond-pairs))))

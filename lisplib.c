@@ -763,7 +763,7 @@ val lisplib_try_load(val sym)
      debug_state_t ds = debug_set_state(opt_dbg_autoload ? 0 : -1, opt_dbg_autoload);
      val saved_dyn_env = dyn_env;
      dyn_env = make_env(nil, nil, dyn_env);
-     env_vbind(dyn_env, package_s, user_package);
+     env_vbind(dyn_env, package_s, system_package);
      env_vbind(dyn_env, package_alist_s, packages);
      funcall(fun);
      dyn_env = saved_dyn_env;

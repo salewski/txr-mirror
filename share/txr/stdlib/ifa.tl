@@ -25,8 +25,8 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defmacro ifa (:env e test then : else)
-  (flet ((candidate-p (expr)
-           (not (or (constantp expr e) (symbolp expr)))))
+  (flet ((candidate-p (form)
+           (not (or (constantp form e) (symbolp form)))))
     (cond
       ((or (atom test) (null (cdr test))) ^(let ((it ,test))
                                              (if it ,then ,else)))

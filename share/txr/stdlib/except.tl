@@ -27,7 +27,7 @@
 (defun sys:handle-bad-syntax (item)
   (throwf 'eval-error "~s: bad clause syntax: ~s" 'handle item))
 
-(defmacro catch (:form form :env e try-form . catch-clauses)
+(defmacro usr:catch (:form form :env e try-form . catch-clauses)
   (let ((catch-syms [mapcar car catch-clauses])
         (sys-catch-clauses (mapcar (do mac-param-bind @1 (type args . body) @1
                                      (tree-bind (args-ex . body-ex)

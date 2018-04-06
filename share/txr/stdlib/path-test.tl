@@ -27,9 +27,9 @@
 (defun sys:do-path-test (statfun path testfun)
   [testfun (if (stringp path) (ignerr [statfun path]) path)])
 
-(defmacro sys:path-test ((var statfun path) . body)
+(defmacro sys:path-test ((sym statfun path) . body)
   ^[sys:do-path-test ,statfun ,path
-     (lambda (,var) (when ,var ,*body))])
+     (lambda (,sym) (when ,sym ,*body))])
 
 (defun sys:path-test-mode (statfun path mask)
   (sys:path-test (s statfun path)
@@ -134,9 +134,9 @@
                  (and (not (rest g.mem))
                       (equal (getpwuid euid).name (first g.mem)))))))))
 
-(defmacro sys:path-examine ((var statfun path) . body)
+(defmacro sys:path-examine ((sym statfun path) . body)
   ^[sys:do-path-test ,statfun ,path
-     (lambda (,var) ,*body)])
+     (lambda (,sym) ,*body)])
 
 (defun path-newer (path-0 path-1)
   (sys:path-examine (s0 stat path-0)

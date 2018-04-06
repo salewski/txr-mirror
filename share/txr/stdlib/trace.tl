@@ -112,8 +112,8 @@
              (sys:untrace (list name))))
         (continue ())))))
 
-(defmacro trace (. names)
+(defmacro usr:trace (. names)
   ^(sys:trace ',names))
 
-(defmacro untrace (. names)
+(defmacro usr:untrace (. names)
   ^(sys:untrace ',names))

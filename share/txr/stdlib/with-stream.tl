@@ -51,8 +51,8 @@
   ^(let ((,stream (make-buf-stream ,buf)))
      ,*body))
 
-(defmacro with-stream ((var stream) . body)
-  ^(let ((,var ,stream))
+(defmacro with-stream ((sym stream) . body)
+  ^(let ((,sym ,stream))
      (unwind-protect
        (progn ,*body)
-       (close-stream ,var))))
+       (close-stream ,sym))))

@@ -84,7 +84,7 @@
     ^(yield-from nil ,form)
     ^(yield-from nil)))
 
-(defmacro suspend (:form form name var . body)
-  ^(sys:capture-cont ',name (lambda (,var)
+(defmacro suspend (:form form name sym . body)
+  ^(sys:capture-cont ',name (lambda (,sym)
                               (sys:abscond-from ,name (progn ,*body)))
                      ',form))

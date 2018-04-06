@@ -32,17 +32,17 @@
          bc.tail (last bc.head)))
 
   (:method add (self . items)
-    (set self.tail (last (rplacd self.tail (copy items)))))
+    (set self.tail (last (usr:rplacd self.tail (copy items)))))
 
   (:method add* (self . items)
     (let ((ic (copy items))
           (h self.head))
-      (rplacd (last ic) (cdr h))
-      (rplacd h ic)))
+      (usr:rplacd (last ic) (cdr h))
+      (usr:rplacd h ic)))
 
   (:method pend (self . lists)
     (while lists
-      (set self.tail (last (rplacd self.tail (copy (car lists)))))
+      (set self.tail (last (usr:rplacd self.tail (copy (car lists)))))
       (set lists (cdr lists))))
 
   (:method pend* (self . lists)
@@ -50,13 +50,13 @@
            (nh (cons nil nil))
            (tl nh))
       (while lists
-        (set tl (last (rplacd tl (copy (car lists)))))
+        (set tl (last (usr:rplacd tl (copy (car lists)))))
         (set lists (cdr lists)))
-      (rplacd tl (cdr h))
+      (usr:rplacd tl (cdr h))
       (set self.head nh)))
 
   (:method ncon (self . lists)
-    (set self.tail (last (rplacd self.tail (nconc . lists)))))
+    (set self.tail (last (usr:rplacd self.tail (nconc . lists)))))
 
   (:method ncon* (self . lists)
     (let ((h self.head))

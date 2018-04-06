@@ -26,17 +26,17 @@
 
 (defmacro with-resources (res-bindings . body)
   (tree-case res-bindings
-    (((var init cleanup) . rest)
-     ^(let ((,var ,init))
-        (when ,var
+    (((sym init cleanup) . rest)
+     ^(let ((,sym ,init))
+        (when ,sym
           (unwind-protect
             (with-resources ,rest ,*body)
             ,cleanup))))
-    (((var init) . rest)
-     ^(let ((,var ,init))
+    (((sym init) . rest)
+     ^(let ((,sym ,init))
         (with-resources ,rest ,*body)))
-    ((var . rest)
-     ^(let (,var)
+    ((sym . rest)
+     ^(let (,sym)
         (with-resources ,rest ,*body)))
     (nil
       ^(progn ,*body))
