@@ -125,7 +125,7 @@ static val ver_instantiate(val set_fun)
 static val ifa_set_entries(val dlt, val fun)
 {
   val name[] = {
-    lit("ifa"), lit("whena"), lit("conda"), lit("condlet"), nil
+    lit("ifa"), lit("whena"), lit("conda"), lit("condlet"), lit("it"), nil
   };
   set_dlt_entries(dlt, name, fun);
   return nil;
@@ -384,7 +384,18 @@ static val awk_set_entries(val dlt, val fun)
   val name[] = {
     lit("awk"), nil
   };
+  val name_noload[] = {
+    lit("rec"), lit("orec"), lit("f"), lit("nf"), lit("nr"), lit("fnr"),
+    lit("arg"), lit("fname"), lit("rs"), lit("krs"), lit("fs"), lit("ft"),
+    lit("fw"), lit("kfs"), lit("ofs"), lit("ors"), lit("next"), lit("again"),
+    lit("next-file"), lit("rng"), lit("-rng"), lit("rng-"), lit("-rng-"),
+    lit("--rng"), lit("--rng-"), lit("rng+"), lit("-rng+"), lit("--rng+"),
+    lit("ff"), lit("f"), lit("mf"), lit("fconv"), lit("->"), lit("->>"),
+    lit("<-"), lit("!>"), lit("<!"), lit("prn"), nil
+  };
+
   set_dlt_entries(dlt, name, fun);
+  intern_only(name_noload);
   return nil;
 }
 
