@@ -88,10 +88,11 @@ static val place_set_entries(val dlt, val fun)
     lit("with-update-expander"), lit("with-clobber-expander"),
     lit("with-delete-expander"),
     lit("set"), lit("pset"), lit("zap"), lit("flip"), lit("inc"), lit("dec"),
+    lit("pinc"), lit("pdec"),
     lit("push"), lit("pop"), lit("swap"), lit("shift"), lit("rotate"),
     lit("pushnew"), lit("del"), lit("lset"), lit("upd"),
     lit("defplace"), lit("define-place-macro"), lit("define-modify-macro"),
-    lit("placelet"), lit("placelet*"), lit("define-acessor"),
+    lit("placelet"), lit("placelet*"), lit("define-accessor"),
     lit("with-slots"),
     nil
   };
@@ -321,6 +322,8 @@ static val sock_set_entries(val dlt, val fun)
     lit("getaddrinfo"),
     lit("af-unspec"), lit("af-unix"), lit("af-inet"), lit("af-inet6"),
     lit("sock-stream"), lit("sock-dgram"),
+    lit("inaddr-any"), lit("inaddr-loopback"),
+    lit("in6addr-any"), lit("in6addr-loopback"),
     lit("sock-nonblock"), lit("sock-cloexec"),
     lit("ai-passive"), lit("ai-canonname"), lit("ai-numerichost"),
     lit("ai-v4mapped"), lit("ai-all"), lit("ai-addrconfig"),
