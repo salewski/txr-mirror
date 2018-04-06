@@ -441,13 +441,10 @@ INLINE val chr(wchar_t ch)
 
 #define lit(strlit) lit_noex(strlit)
 
-#define keyword_package keyword_package_var
-#define user_package user_package_var
-#define system_package system_package_var
 #define cur_package (get_current_package())
 #define cur_package_alist_loc (get_current_package_alist_loc())
 
-extern val packages, system_package_var, keyword_package_var, user_package_var;
+extern val packages, system_package, keyword_package, user_package;
 extern val package_alist_s;
 extern val package_s, keyword_package_s, system_package_s, user_package_s;
 extern val null_s, t, cons_s, str_s, chr_s, fixnum_sl;

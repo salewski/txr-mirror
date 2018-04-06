@@ -6439,24 +6439,21 @@ void eval_init(void)
   reg_fun(intern(lit("fmt-flex"), system_package), func_n2v(fmt_flex));
   reg_fun(intern(lit("fmt-join"), system_package), func_n0v(fmt_join));
 
-  reg_varl(user_package_s = intern(lit("user-package"), user_package_var),
-           user_package_var);
-  reg_varl(system_package_s = intern(lit("system-package"), user_package_var),
-           system_package_var);
-  reg_varl(keyword_package_s = intern(lit("keyword-package"), user_package_var),
-           keyword_package_var);
+  reg_varl(user_package_s = intern(lit("user-package"), user_package), user_package);
+  reg_varl(system_package_s = intern(lit("system-package"), user_package), system_package);
+  reg_varl(keyword_package_s = intern(lit("keyword-package"), user_package), keyword_package);
 
   if (opt_compat && opt_compat <= 156) {
-    reg_varl(intern(lit("*user-package*"), user_package), user_package_var);
-    reg_varl(intern(lit("*system-package*"), user_package), system_package_var);
-    reg_varl(intern(lit("*keyword-package*"), user_package), keyword_package_var);
+    reg_varl(intern(lit("*user-package*"), user_package), user_package);
+    reg_varl(intern(lit("*system-package*"), user_package), system_package);
+    reg_varl(intern(lit("*keyword-package*"), user_package), keyword_package);
   }
 
   reg_fun(intern(lit("make-sym"), user_package), func_n1(make_sym));
   reg_fun(intern(lit("gensym"), user_package), func_n1o(gensym, 0));
   reg_var(gensym_counter_s = intern(lit("*gensym-counter*"), user_package), zero);
   reg_var(package_alist_s = intern(lit("*package-alist*"), user_package), packages);
-  reg_var(package_s = intern(lit("*package*"), user_package), user_package_var);
+  reg_var(package_s = intern(lit("*package*"), user_package), user_package);
   reg_fun(intern(lit("make-package"), user_package), func_n1(make_package));
   reg_fun(intern(lit("find-package"), user_package), func_n1(find_package));
   reg_fun(intern(lit("delete-package"), user_package), func_n1(delete_package));

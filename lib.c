@@ -83,7 +83,7 @@ int async_sig_enabled = 0;
 
 val packages;
 
-val system_package_var, keyword_package_var, user_package_var;
+val system_package, keyword_package, user_package;
 val package_alist_s;
 val package_s, system_package_s, keyword_package_s, user_package_s;
 
@@ -5117,7 +5117,7 @@ static void symbol_setname(val sym, val name)
 val symbol_package(val sym)
 {
   if (sym == nil)
-    return user_package_var;
+    return user_package;
   type_check(sym, SYM);
   return sym->s.package;
 }
@@ -5635,7 +5635,7 @@ val symbolp(val sym)
 
 val keywordp(val sym)
 {
-  return tnil(sym && symbolp(sym) && sym->s.package == keyword_package_var);
+  return tnil(sym && symbolp(sym) && sym->s.package == keyword_package);
 }
 
 val get_current_package(void)
@@ -10664,8 +10664,8 @@ static void obj_init(void)
    * symbols.
    */
 
-  protect(&packages, &system_package_var, &keyword_package_var,
-          &user_package_var, &null_string, &nil_string,
+  protect(&packages, &system_package, &keyword_package,
+          &user_package, &null_string, &nil_string,
           &null_list, &equal_f, &eq_f, &eql_f,
           &car_f, &cdr_f, &null_f, &list_f,
           &identity_f, &less_f, &greater_f, &prog_string, &env_list,

@@ -1343,7 +1343,7 @@ static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)
     val sym_name = string(colon + 1);
     scrub_scanner(parser->scanner, SYMTOK, tokfree);
     free(tokfree);
-    sym = intern(sym_name, keyword_package_var);
+    sym = intern(sym_name, keyword_package);
   } else if (colon != 0) {
     val pkg_name = string(lexeme);
     val sym_name = string(colon + 1);
