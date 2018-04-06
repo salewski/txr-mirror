@@ -371,7 +371,6 @@ static val termios_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
   load(format(nil, lit("~atermios"), stdlib_path, nao));
-  sock_load_init();
   return nil;
 }
 
@@ -390,7 +389,6 @@ static val awk_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
   load(format(nil, lit("~aawk"), stdlib_path, nao));
-  sock_load_init();
   return nil;
 }
 
@@ -413,7 +411,6 @@ static val build_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
   load(format(nil, lit("~abuild"), stdlib_path, nao));
-  sock_load_init();
   return nil;
 }
 
