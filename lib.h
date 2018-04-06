@@ -445,7 +445,7 @@ INLINE val chr(wchar_t ch)
 #define cur_package_alist_loc (get_current_package_alist_loc())
 
 extern val packages, system_package, keyword_package, user_package;
-extern val package_alist_s;
+extern val public_package, package_alist_s;
 extern val package_s, keyword_package_s, system_package_s, user_package_s;
 extern val null_s, t, cons_s, str_s, chr_s, fixnum_sl;
 extern val sym_s, pkg_s, fun_s, vec_s;

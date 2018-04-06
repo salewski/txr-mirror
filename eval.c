@@ -6453,7 +6453,8 @@ void eval_init(void)
   reg_fun(intern(lit("gensym"), user_package), func_n1o(gensym, 0));
   reg_var(gensym_counter_s = intern(lit("*gensym-counter*"), user_package), zero);
   reg_var(package_alist_s = intern(lit("*package-alist*"), user_package), packages);
-  reg_var(package_s = intern(lit("*package*"), user_package), user_package);
+  reg_var(package_s = intern(lit("*package*"), user_package),
+          (opt_compat && opt_compat <= 190) ? user_package : public_package);
   reg_fun(intern(lit("make-package"), user_package), func_n1(make_package));
   reg_fun(intern(lit("find-package"), user_package), func_n1(find_package));
   reg_fun(intern(lit("delete-package"), user_package), func_n1(delete_package));
