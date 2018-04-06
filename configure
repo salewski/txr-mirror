@@ -587,6 +587,37 @@ fi
 
 printf "Checking source directory \"%s\" ..." "$top_srcdir"
 
+lndir()
+{
+  fromdir=$1
+  todir=$2
+  abs=${fromdir%${fromdir#/}}
+
+  find "$fromdir" \( -type f -o -type d \) | while read frompath ; do
+    topath=${frompath#$fromdir}
+    topath=${topath#/}
+    [ -n "$topath" ] || topath="."
+    if [ -f "$frompath" ] ; then
+      if [ $abs ] ; then
+        ln -sf "$frompath" "$todir/$topath"
+      else
+        old_IFS=$IFS
+        IFS=/
+        set -- $todir/$topath
+        IFS=$old_IFS
+        dots=""
+        while [ $# -gt 0 ] ; do
+          [ $1 = "." ] || dots="$dots../"
+          shift
+        done
+        ln -sf "$dots$frompath" "$todir/$topath"
+      fi
+    else
+      mkdir -p "$todir/$topath"
+    fi
+  done
+}
+
 case "$top_srcdir" in
 " "* | *" "* | *" " )
   printf " bad (contains spaces)\n"
@@ -598,9 +629,13 @@ case "$top_srcdir" in
 esac
 
 if [ "$source_dir" != "." ] ; then
-  for x in Makefile share tests; do
+  for x in Makefile ; do
     printf "Symlinking %s -> $source_dir/%s\n" $x $x
     ln -sf "$source_dir/$x" .
+  done
+  for x in share tests; do
+    printf "Tree symlinking %s -> $source_dir/%s\n" $x $x
+    lndir $source_dir/$x $x
   done
 else
   printf "** Note: it's recommended to build in a separate directory\n"
