@@ -237,7 +237,7 @@ val *protected_sym[] = {
   &seek_s, &sequence_s, &set_prop_s, &set_s, &setq_s,
   &setqf_s, &short_s, &shortest_k, &single_s, &size_k,
   &size_s, &skip_s, &slot_s, &some_s, &space_k,
-  &special_s, &splice_s, &stat_s, &static_slot_s, &stddebug_s,
+  &special_s, &splice_s, &stat_s, &stddebug_s,
   &stderr_s, &stdin_s, &stdio_stream_s, &stdnull_s, &stdout_s,
   &str_d_s, &str_s, &stream_s, &string_k, &string_s,
   &struct_lit_s, &struct_s, &struct_type_s, &switch_s, &sym_s,

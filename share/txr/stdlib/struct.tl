@@ -136,9 +136,9 @@
             (type-sym (gensym)))
         (register-tentative-def ^(struct-type . ,name))
         (each ((s stat-slots))
-          (register-tentative-def ^(sys:slot . ,s)))
+          (register-tentative-def ^(slot . ,s)))
         (each ((s inst-slots))
-          (register-tentative-def ^(sys:slot . ,s)))
+          (register-tentative-def ^(slot . ,s)))
         ^(sys:make-struct-type
            ',name ',super ',stat-slots ',inst-slots
            ,(if (or func-si-forms val-si-forms)
@@ -192,7 +192,7 @@
 (defun sys:check-slot (form slot)
   (unless (or (sys:slot-types slot)
               (sys:static-slot-types slot))
-    (compile-defr-warning form ^(sys:slot . ,slot)
+    (compile-defr-warning form ^(slot . ,slot)
                           "symbol ~s isn't the name of a struct slot"
                           slot))
   slot)
@@ -298,7 +298,7 @@
     ((not (find-struct-type type-sym))
       (compile-defr-warning form ^(struct-type . ,type-sym)
                             "definition of struct ~s not seen here" type-sym)))
-  (register-tentative-def ^(sys:slot . ,name))
+  (register-tentative-def ^(slot . ,name))
   ^(sys:define-method ',type-sym ',name (lambda ,arglist
                                           (block ,name ,*body))))
 

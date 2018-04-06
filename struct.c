@@ -91,7 +91,7 @@ struct struct_inst {
 
 val struct_type_s, meth_s, print_s, make_struct_lit_s;
 val init_k, postinit_k;
-val slot_s, static_slot_s;
+val slot_s;
 
 static cnum struct_id_counter;
 static val struct_type_hash;
@@ -119,8 +119,7 @@ void struct_init(void)
   make_struct_lit_s = intern(lit("make-struct-lit"), system_package);
   init_k = intern(lit("init"), keyword_package);
   postinit_k = intern(lit("postinit"), keyword_package);
-  slot_s = intern(lit("slot"), system_package);
-  static_slot_s = intern(lit("static-slot"), system_package);
+  slot_s = intern(lit("slot"), user_package);
   struct_type_hash = make_hash(nil, nil, nil);
   slot_hash = make_hash(nil, nil, t);
   slot_type_hash = make_hash(nil, nil, nil);
@@ -155,7 +154,7 @@ void struct_init(void)
   reg_fun(intern(lit("replace-struct"), user_package), func_n2(replace_struct));
   reg_fun(intern(lit("clear-struct"), user_package), func_n2o(clear_struct, 1));
   reg_fun(intern(lit("reset-struct"), user_package), func_n1(reset_struct));
-  reg_fun(intern(lit("slot"), user_package), func_n2(slot));
+  reg_fun(slot_s, func_n2(slot));
   reg_fun(intern(lit("slotset"), user_package), func_n3(slotset));
   reg_fun(intern(lit("static-slot"), user_package), func_n2(static_slot));
   reg_fun(intern(lit("static-slot-set"), user_package),
@@ -1647,7 +1646,6 @@ val static_slot_type_reg(val slot, val strct)
 
   if (!memq(strct, typelist)) {
     sethash(slot_type_hash, slot, cons(strct, typelist));
-    uw_purge_deferred_warning(cons(static_slot_s, slot));
     uw_purge_deferred_warning(cons(slot_s, slot));
   }
 
