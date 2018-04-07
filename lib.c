@@ -6253,6 +6253,10 @@ val generic_funcall(val fun, struct args *args_in)
       default:
         callerror(fun, lit("too many arguments"));
       }
+    } else if (fun->co.cls == vm_desc_s) {
+      if (args->fill || args->list)
+        callerror(fun, lit("too many arguments"));
+      return vm_execute_toplevel(fun);
     } else if (fun->co.cls == carray_s) {
       goto carray;
     } else if (obj_struct_p(fun)) {

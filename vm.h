@@ -25,6 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+extern val vm_desc_s, vm_closure_s;
+
 val vm_make_desc(val nlevels, val nregs, val bytecode,
                  val datavec, val funvec);
 val vm_execute_toplevel(val desc);
