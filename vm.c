@@ -221,6 +221,11 @@ static void vm_desc_mark(val obj)
     gc_mark(vd->ftab[i].fb);
 }
 
+static struct vm_closure *vm_closure_struct(val obj)
+{
+  return coerce(struct vm_closure *, cobj_handle(obj, vm_closure_s));
+}
+
 static val vm_make_closure(struct vm *vm, int frsz)
 {
   size_t dspl_sz = vm->nlvl * sizeof (struct vm_env);
@@ -1043,6 +1048,18 @@ val vm_execute_closure(val fun, struct args *args)
   return vm_execute(&vm);
 }
 
+static val vm_closure_desc(val closure)
+{
+  struct vm_closure *vc = vm_closure_struct(closure);
+  return vc->vd->self;
+}
+
+static val vm_closure_entry(val closure)
+{
+  struct vm_closure *vc = vm_closure_struct(closure);
+  return unum(vc->ip);
+}
+
 static_def(struct cobj_ops vm_desc_ops =
   cobj_ops_init(eq,
                 cobj_print_op,
@@ -1068,4 +1085,6 @@ void vm_init(void)
   reg_fun(intern(lit("vm-desc-datavec"), system_package), func_n1(vm_desc_datavec));
   reg_fun(intern(lit("vm-desc-funvec"), system_package), func_n1(vm_desc_funvec));
   reg_fun(intern(lit("vm-execute-toplevel"), system_package), func_n1(vm_execute_toplevel));
+  reg_fun(intern(lit("vm-closure-desc"), system_package), func_n1(vm_closure_desc));
+  reg_fun(intern(lit("vm-closure-entry"), system_package), func_n1(vm_closure_entry));
 }
