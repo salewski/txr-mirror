@@ -6161,6 +6161,11 @@ val interp_fun_p(val obj)
   return (functionp(obj) && obj->f.functype == FINTERP) ? t : nil;
 }
 
+val vm_fun_p(val obj)
+{
+  return (functionp(obj) && obj->f.functype == FVM) ? t : nil;
+}
+
 static noreturn void callerror(val fun, val msg)
 {
   uses_or2;
