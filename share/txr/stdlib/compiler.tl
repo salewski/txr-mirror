@@ -1387,3 +1387,18 @@
           (when (> (sys:parser-errors parser) 0)
             (error "~s: compilation of ~s failed" 'compile-file
                    (stream-get-prop in-stream :name))))))))
+
+(defun usr:compile (obj)
+  (typecase obj
+    (fun (tree-bind (indicator args . body) (func-get-form obj)
+           (let* ((form ^(lambda ,args ,*body))
+                  (vm-desc (compile-toplevel form)))
+             (vm-execute-toplevel vm-desc))))
+    (t (condlet
+         (((fun (symbol-function obj)))
+          (tree-bind (indicator args . body) (func-get-form fun)
+            (let* ((form ^(lambda ,args ,*body))
+                   (vm-desc (compile-toplevel form))
+                   (comp-fun (vm-execute-toplevel vm-desc)))
+              (set (symbol-function obj) comp-fun))))
+         (t (error "~s: cannot compile ~s" 'compile obj))))))
