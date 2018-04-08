@@ -710,11 +710,11 @@ static void load_rcfile(val name)
   uw_catch_end;
 }
 
-static val get_visible_syms(val package, int is_cur)
+static val get_visible_syms(val package, int include_fallback)
 {
   val fblist;
 
-  if (!is_cur || nilp((fblist = package_fallback_list(package)))) {
+  if (!include_fallback || nilp((fblist = package_fallback_list(package)))) {
     return package_symbols(package);
   } else {
     val symhash = copy_hash(package->pk.symhash);
@@ -748,7 +748,7 @@ static void find_matching_syms(lino_completions_t *cpl,
                          package_name(package)));
   val syms = ((kind == 'S' || kind == 'M')
               ? hash_keys((get_slot_syms(package, is_cur, tnil(kind == 'M'))))
-              : get_visible_syms(package, is_cur != nil));
+              : get_visible_syms(package, is_cur != nil && !qualify));
 
   for ( ; syms; syms = cdr(syms)) {
     val sym = car(syms);
