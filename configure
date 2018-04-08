@@ -590,7 +590,7 @@ printf "Checking source directory \"%s\" ..." "$top_srcdir"
 lndir()
 {
   fromdir=$1
-  todir=$2
+  todir=${2%/}
   abs=${fromdir%${fromdir#/}}
 
   find "$fromdir" \( -type f -o -type d \) | while read frompath ; do
@@ -610,6 +610,7 @@ lndir()
           [ $1 = "." ] || dots="$dots../"
           shift
         done
+        rm -f "$todir/$topath"
         ln -sf "$dots$frompath" "$todir/$topath"
       fi
     else
