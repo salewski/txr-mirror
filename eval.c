@@ -3900,8 +3900,7 @@ static val me_case(val form, val menv)
     eval_error(form_orig, lit("~s: improper form terminated by ~s"), casesym, form, nao);
 
   if (!compat && gt(hash_count(hash), num_fast(10)) &&
-      ((casesym == caseq_s || casesym == caseq_star_s) &&
-        all_keys_eq))
+      ((casesym != caseq_s && casesym != caseq_star_s) || all_keys_eq))
   {
     return list(let_star_s, list(list(tformsym, testform, nao),
                                  list(idxsym,
