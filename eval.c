@@ -3798,6 +3798,11 @@ static val me_flet_labels(val form, val menv)
               cons(lambdas, body));
 }
 
+static val compares_with_eq(val obj)
+{
+  return tnil(fixnump(obj) || chrp(obj) || symbolp(obj));
+}
+
 static val me_case(val form, val menv)
 {
   val form_orig = form;
@@ -3809,10 +3814,7 @@ static val me_case(val form, val menv)
   val star = tnil(casesym == caseq_star_s || casesym == caseql_star_s ||
                   casesym == casequal_star_s);
   int compat = (opt_compat && opt_compat <= 156 && !star);
-  val check_fun = orf(func_n1(fixnump),
-                      func_n1(chrp),
-                      func_n1(symbolp), nao);
-
+  val comp_eq_f = func_n1(compares_with_eq);
   val all_keys_eq = t;
   val hash_fallback_clause = nil;
   val hash = nil;
@@ -3861,13 +3863,13 @@ static val me_case(val form, val menv)
 
     if (atom(keys)) {
       sethash(hash, keys, index);
-      if (!funcall1(check_fun, keys))
+      if (!compares_with_eq(keys))
         all_keys_eq = nil;
     } else {
       val iter;
       for (iter = hash_keys; iter; iter = cdr(iter))
         sethash(hash, car(iter), index);
-      if (!all_satisfy(keys, check_fun, nil))
+      if (!all_satisfy(keys, comp_eq_f, nil))
         all_keys_eq = nil;
     }
 
