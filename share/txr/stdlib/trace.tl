@@ -61,7 +61,7 @@
              (n [mapcar sys:trace-canonicalize-name names]))
         (unless [sys:*trace-hash* n]
           (when (neq n orig-n)
-            (catch
+            (usr:catch
               (throwf 'warning "~s: ~s is actually ~s: tracing that instead"
                       'trace orig-n n)
               (continue ())))
@@ -89,7 +89,7 @@
            (let ((prev (del [sys:*trace-hash* name])))
              (when prev
                (when (neq name-orig name)
-                 (catch
+                 (usr:catch
                    (throwf 'warning "~s: ~s is actually ~s: untracing that instead"
                            'trace name-orig name)
                    (continue ())))
@@ -104,7 +104,7 @@
 (defun sys:trace-redefine-check (orig-name)
   (let ((name (sys:trace-canonicalize-name orig-name)))
     (when [sys:*trace-hash* name]
-      (catch
+      (usr:catch
         (cond
           ((neq name orig-name)
              (throwf 'warning "~!~s won't be traced, though it overrides\n\
