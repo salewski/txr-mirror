@@ -4621,7 +4621,9 @@ again:
       /* funtion call expansion also handles: prog1, call, if, and, or,
          unwind-protect, return and other special forms whose arguments
          are evaluated */
-      val form_ex = dot_to_apply(form, nil);
+      val form_ex = if3(special_operator_p(sym),
+                        form,
+                        dot_to_apply(form, nil));
       val insym = first(form_ex);
       val insym_ex = insym;
       val args = rest(form_ex);
