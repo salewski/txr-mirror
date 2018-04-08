@@ -41,12 +41,16 @@
 (defun sys:trace-canonicalize-name (name)
   (if (and (consp name)
            (eq (car name) 'meth))
-    (let* ((req-type (cadr name))
-           (sym (caddr name)))
-      (let ((actual-type (static-slot-home req-type sym)))
-        (if (eq req-type actual-type)
-          name
-          ^(meth ,actual-type ,sym))))
+    (let* ((req-type-sym (cadr name))
+           (slot-sym (caddr name))
+           (req-type (find-struct-type req-type-sym))
+           (s-s-p (if req-type
+                    (static-slot-p req-type slot-sym)))
+           (actual-type-sym (if s-s-p
+                              (static-slot-home req-type-sym slot-sym))))
+      (if (and s-s-p (neq req-type-sym actual-type-sym))
+        ^(meth ,actual-type-sym ,slot-sym)
+        name))
     name))
 
 (defun sys:trace (names)
