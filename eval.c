@@ -3096,13 +3096,18 @@ static val dot_to_apply(val form, val lisp1_p)
   return form;
 }
 
+noreturn static void dotted_form_error(val form)
+{
+  uw_throwf(error_s, lit("dotted argument ~!~s not supported by form"),
+            form, nao);
+}
+
 val expand_forms(val form, val menv)
 {
   if (atom(form)) {
     if (!form || (opt_compat && opt_compat <= 137))
       return form;
-    uw_throwf(error_s, lit("dotted argument ~!~s "
-                           "was not converted to apply form"), form, nao);
+    dotted_form_error(form);
   } else {
     val f = car(form);
     val r = cdr(form);
@@ -3123,8 +3128,7 @@ static val expand_forms_ss(val form, val menv, val ss_hash)
   if (atom(form)) {
     if (!form)
       return form;
-    uw_throwf(error_s, lit("dotted argument ~!~s "
-                           "was not converted to apply form"), form, nao);
+    dotted_form_error(form);
   } else {
     val f = car(form);
     val r = cdr(form);
@@ -3209,8 +3213,7 @@ static val expand_forms_lisp1(val form, val menv)
   if (atom(form)) {
     if (!form || (opt_compat && opt_compat <= 137))
       return form;
-    uw_throwf(error_s, lit("dotted function call ~!~s "
-                           "was not converted to apply form"), form, nao);
+    dotted_form_error(form);
   } else {
     val f = car(form);
     val r = cdr(form);
