@@ -45,6 +45,7 @@
   (defstruct assembler nil
     buf
     bstr
+    (max-treg 0)
     (labdef (hash))
     (labref (hash))
     (:static imm-width (relate '(si mi bi) '(10 16 32)))
@@ -169,6 +170,8 @@
                          (not (< parg 1024)))
                 oc.(synerr "argument ~a of ~s isn't a small register"
                            n syntax))
+              (when (and (member type '(r rs d ds)) (< parg 256))
+                (set me.max-treg (max parg me.max-treg)))
               parg))
           pattern (rest syntax) (range 1)))
 

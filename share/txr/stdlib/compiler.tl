@@ -1302,7 +1302,7 @@
       co.(free-treg oreg)
       co.(check-treg-leak)
       as.(asm ^(,*frag.code (end ,frag.oreg)))
-      (vm-make-desc co.nlev co.treg-cntr as.buf co.(get-datavec) co.(get-funvec)))))
+      (vm-make-desc co.nlev (succ as.max-treg) as.buf co.(get-datavec) co.(get-funvec)))))
 
 (defvarl %file-suff-rx% #/[.][^\\\/.]+/)
 
