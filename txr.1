@@ -24723,13 +24723,13 @@ is a structure, otherwise it returns
 
 .coNP Function @ struct-type
 .synb
-.mets (structp << struct-obj )
+.mets (struct-type << struct-obj )
 .syne
 .desc
 The
 .code struct-type
 function returns the structure type object which
-defines the type of the structure object
+represents the type of the structure object instance
 .metn struct-obj .
 
 .coNP Function @ clear-struct
@@ -25188,7 +25188,7 @@ are ignored, as are their subtypes.
 
 .coNP Function @ static-slot-home
 .synb
-.mets (static-slot-ensure < type << name )
+.mets (static-slot-home < type << name )
 .syne
 .desc
 The
