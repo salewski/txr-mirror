@@ -826,10 +826,10 @@
                                                     (append re '(nil)))))
                        me.(maybe-free-treg fireg oreg)
                        me.(free-treg igreg)
-                       (new (frag oreg
+                       (new (frag fireg
                                   (append fi-frag.code
-                                          re-frag.code
-                                          (maybe-mov oreg fireg))
+                                          (maybe-mov fireg fi-frag.oreg)
+                                          re-frag.code)
                                   (uni fi-frag.fvars re-frag.fvars)
                                   (uni fi-frag.ffuns re-frag.ffuns)))))
     ((prog1 fi) me.(compile oreg env fi))
