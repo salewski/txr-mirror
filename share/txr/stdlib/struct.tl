@@ -316,10 +316,10 @@
     (slotset struct sym val)
     (call (umethod meth-sym) struct)))
 
-(defmacro rslot (struct sym meth-sym)
+(defmacro usr:rslot (struct sym meth-sym)
   ^(slot ,struct ,sym))
 
-(define-place-macro rslot (struct sym meth-sym)
+(define-place-macro usr:rslot (struct sym meth-sym)
   ^(sys:rslot ,struct ,sym ,meth-sym))
 
 (defplace (sys:rslot struct sym meth-sym) body
