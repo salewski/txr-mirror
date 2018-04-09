@@ -18678,93 +18678,6 @@ keep the structure intact, but transfer the
 values among cons cells into
 reverse order.  Other approaches are possible.
 
-.coNP Function @ ldiff
-.synb
-.mets (ldiff < list << sublist )
-.syne
-.desc
-The values
-.meta list
-and
-.meta sublist
-are proper lists.
-
-The
-.code ldiff
-function determines whether
-.meta sublist
-is a structural suffix of
-.meta list
-(meaning that it actually is a suffix, and is not merely equal to one).
-
-This is true if
-.meta list
-and
-.meta sublist
-are the same object, or else,
-recursively, if
-.meta sublist
-is a suffix of
-.cblk
-.meti (cdr << list ).
-.cble
-
-The object
-.code nil
-is the sublist of every list, including itself.
-
-The ldiff function returns a new list consisting of the elements of
-the prefix of
-.meta list
-which come before the
-.meta sublist
-suffix. The elements
-are in the same order as in
-.metn list .
-If
-.meta sublist
-is not a suffix of
-.metn list ,
-then a copy of
-.meta list
-is returned.
-
-This function also works more generally on sequences.
-The
-.meta list
-and
-.meta sublist
-arguments may be strings or vectors. In this case, the suffixing
-matching behavior is relaxed to one of structural equivalence.
-See the relevant examples below.
-
-.TP* Examples:
-.cblk
-  ;;; unspecified: the compiler could make
-  ;;; '(2 3) a suffix of '(1 2 3),
-  ;;; or they could be separate objects.
-  (ldiff '(1 2 3) '(2 3)) -> either (1) or (1 2 3)
-
-  ;; b is the (1 2) suffix of a, so the ldiff is (1)
-  (let* ((a '(1 2 3)) (b (cdr a)))
-    (ldiff a b))
-  -> (1)
-
-  ;; string and vector behavior
-  (ldiff "abc" "bc") -> "a"
-
-  (ldiff "abc" nil) -> "abc"
-
-  (ldiff #(1 2 3) #(3)) -> #(1 2)
-
-  ;; mixtures do not have above behavior
-  (ldiff #(1 2 3) '(3)) -> #(1 2 3)
-
-  (ldiff '(1 2 3) #(3)) -> #(1 2 3)
-
-  (ldiff "abc" #(#\eb #\ec)) -> "abc"
-.cble
-
 .coNP Accessor @ nthlast
 .synb
 .mets (nthlast < index << list )
@@ -26669,6 +26582,159 @@ isn't provided. Of course, assignment to an
 form is destructive; Common Lisp doesn't support
 .code butlast
 as a place.
+
+.coNP Function @ ldiff
+.synb
+.mets (ldiff < sequence << tail-sequence )
+.syne
+.desc
+The
+.code ldiff
+function is a somewhat generalized version of the same-named classic Lisp
+function found in traditional Lisp dialects.
+
+The
+.code ldiff
+function supports the original
+.code ldiff
+semantics when both inputs are lists. It determines whether the
+.meta tail-sequence
+list is a structural suffix of
+.metn sequence ;
+which is to say: is
+.meta tail-sequence
+one of the
+.code cons
+cells which comprise
+.metn sequence ?
+If so, then a list is returned consisting of all the items of
+.meta sequence
+before
+.metn tail-sequence :
+a copy of
+.meta sequence
+with the
+.meta tail-sequence
+part removed, and replaced by the
+.code nil
+terminator. If
+.meta tail-sequence
+is
+.code nil
+or the lists are unrelated, then
+.meta sequence
+is returned.
+
+The \*(TL
+.code ldiff
+function supports the following additional semantics.
+
+.RS
+.IP 1.
+The basic description of
+.code ldiff
+is extended to work with list-like sequences, not
+merely lists; that is to say, objects which support the
+.code car
+method.
+.IP 2.
+If
+.meta sequence
+is any kind of sequence, and
+.meta tail-sequence
+is any kind of empty sequence, then
+.meta sequence
+is returned.
+.IP 3.
+If either argument is an atom that is not a sequence,
+.code ldiff
+returns
+.metn sequence .
+.IP 4.
+If
+.meta sequence
+is a list-like sequence, and
+.meta tail-sequence
+isn't, then the terminating atom of
+.meta sequence
+is determined. This atom is compared using
+.code equal
+to the
+.meta tail-sequence
+object. If they are equal, then a proper list is
+returned containing the items of
+.meta sequence
+excluding the terminating atom.
+.IP 5.
+If both arguments are vector-like sequences, then
+.code ldiff
+determines whether
+.meta sequence
+has a suffix which is
+.code equal
+to
+.metn tail-sequence .
+If this is the case, then a sequence is returned, of the same kind as
+.metn sequence ,
+consisting of the items of
+.meta sequence
+before that suffix.
+If
+.meta tail-sequence
+is not
+.code equal
+to a suffix of
+.metn sequence ,
+then
+.meta sequence
+is returned.
+.IP 6
+In all other cases ,
+.meta sequence
+and
+.meta tail-sequence
+are compared with
+.codn equal .
+If the comparison is true,
+.code nil
+is returned, otherwise
+.meta sequence
+is returned.
+.RE
+
+.TP* Examples:
+
+.cblk
+  ;;; unspecified: the compiler could make
+  ;;; '(2 3) a suffix of '(1 2 3),
+  ;;; or they could be separate objects.
+  (ldiff '(1 2 3) '(2 3)) -> either (1) or (1 2 3)
+
+  ;; b is the (1 2) suffix of a, so the ldiff is (1)
+  (let* ((a '(1 2 3)) (b (cdr a)))
+    (ldiff a b))
+  -> (1)
+
+  ;; Rule 5: strings and vector
+  (ldiff "abc" "bc") -> "a"
+  (ldiff "abc" nil) -> "abc"
+  (ldiff #(1 2 3) #(3)) -> #(1 2)
+
+  ;; Rule 5: mixed vector kinds
+  (ldiff "abc" #(#\eb #\ec)) -> "abc"
+
+  ;; Rule 6:
+  (ldiff #(1 2 3) '(3)) -> #(1 2 3)
+
+  ;; Rule 4:
+  (ldiff '(1 2 3) #(3)) -> '(1 2 3)
+  (ldiff '(1 2 3 . #(3)) #(3)) -> '(1 2 3)
+  (ldiff '(1 2 3 . 4) #(3)) -> '(1 2 3 . 4)
+
+  ;; Rule 6
+  (ldiff 1 2) -> 1
+  (ldiff 1 1) -> nil
+.cble
 
 .coNP Function @ search
 .synb
@@ -63698,6 +63764,13 @@ That requirement was removed; the colon symbol behaves as an ordinary value
 under destructuring with macro parameter lists.
 All these behaviors are restored in compatibility
 with version 190 or earlier.
+Another change after \*(TX 190 was a critical redesign of the requirements
+for the behavior of the
+.code ldiff
+function. Version 190 compatibility causes the
+.code ldiff
+symbol to refer to the old implementation of
+.codn ldiff .
 .IP 188
 Until \*(TX 188,
 .codn equal -based
