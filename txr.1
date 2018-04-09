@@ -61866,6 +61866,149 @@ In all cases, the return value of
 .code compile
 is the compiled function.
 
+.coNP Function @ compile-file
+.synb
+.mets (compile-file < input-path <> [ output-path ])
+.syne
+.desc
+The
+.code compile-file
+function reads forms from an input file, and produces a compiled output file.
+
+If
+.meta input-path
+has no suffix, and cannot be opened, then the
+.meta .tl
+suffix is added to it for a second attempt.
+
+If
+.meta output-path
+isn't specified, it is derived from
+.meta input-path
+as follows: if
+.meta input-path
+is unsuffixed, then
+.code .tlo
+is added to it to produce the
+.metn output-path ;
+otherwise,
+the suffix is removed from
+.meta input-path
+and
+.code .tlo
+is added.
+
+Compilation proceeds according to the File Compilation Model.
+
+.coNP Operators @ compile-only and @ eval-only
+.synb
+.mets (compile-only << form *)
+.mets (eval-only << form *)
+.syne
+.desc
+These operators take on a special behavior only when they appear as top-level forms
+in the context of file compilation.
+When a
+.code compile-only
+or
+.code eval-only
+form is processed by the evaluator rather than compiler, or when it is
+processed outside of file compilation, or when it is appears as other than a
+top-level form even under file compilation, then these operators mean exactly
+the same thing as
+.codn progn .
+
+When a
+.code compile-only
+form appears as a top-level form under file compilation, it indicates to the
+file compiler that the
+.metn form -s
+enclosed in it are not to be evaluated. By default, the file compiler executes
+each primary top-level form after compiling it.  The
+.code compile-only
+operator suppresses this evaluation.
+
+When a
+.code eval-only
+form appears as a top-level form under file compilation, it indicates to the
+file compiler that the
+.metn form -s
+enclosed in it are to be emitted into the output file.  By default, the file
+appends the compiled image of each primary top-level form to a list which
+will be written to the output file. The
+.code eval-only
+operator suppresses this evaluation.
+
+Forms which are surrounded by both an
+.code eval-only
+form and a
+.code compile-only
+form are neither executed nor emitted into the output file. In this situation,
+the forms are skipped entirely; no compilation takes place.
+
+.TP* Notes:
+
+The
+.code compile-file
+function not only compiles, but also executes every form for the following
+reason: the correct compilation of forms can depend on the execution of earlier
+forms. For instance, code may depend on macros. Macros may in turn depend on
+functions and variables. All those definitions are required in order to compile
+the dependent code. Those dependencies may be in a separate file which is
+loaded by a
+.code load
+form; that
+.code load
+form must be executed.
+
+Situations in which
+.code compile-only
+is useful are those in which it is desirable to stage the execution of some
+top-level form into the compiled file, and not have it happen during
+compilation. For instance:
+
+.cblk
+   ;; in a main module
+   (compile-only (start-application))
+.cble
+
+It is not desirable to have the file compiler try to start the application
+as a side effect of compiling the main module. The right behavior is to
+compile the
+.code "(start-application)"
+top-level form so that this will happen when that module is loaded.
+
+Situation in which
+.code eval-only
+is useful is for specifying forms which have a compile-time effect only,
+but are not propagated into the compiled file.
+
+For example, since the correct treatment of literal symbols occurring in a
+compiled file does not depend on the
+.code *package*
+variable, in many cases, the
+.code in-package
+invocation in the file can be wrapped with
+.codn eval-only :
+
+.cblk
+  (eval-only (in-package app))
+.cble
+
+The
+.code in-package
+form must be evaluated during compilation so that the remaining forms are read
+in the correct package. However the loading of the compiled versions of those
+forms doesn't require that package to be in effect; thus a compiled image
+of the
+.code in-package
+form need not appear in the compiled file.
+
+Macros definitions may be treated with
+.code eval-only
+if the intent is only to make the expanded code available in the compiled file,
+and not to propagate compiled versions of the macros which produced it.
+
 .SH* INTERACTIVE LISTENER
 
 .SS* Overview
