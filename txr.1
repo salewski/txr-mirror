@@ -62075,6 +62075,57 @@ Macros definitions may be treated with
 if the intent is only to make the expanded code available in the compiled file,
 and not to propagate compiled versions of the macros which produced it.
 
+.coNP Function @ disassemble
+.synb
+.mets (disassemble << function-name )
+.mets (disassemble << function )
+.mets (disassemble << compiled-expression )
+.syne
+.desc
+The
+.code disassemble
+function presents a disassembly listing of the virtual machine
+code of a compiled function or form. It also presents the literal data
+contained in that compiled object in a tabular form which is readily
+cross-referenced with the disassembly listing.
+
+If the argument is a
+.meta function-name
+then the function object is retrieved from the binding indicated
+by the name, in the global namespace. That object is then treated
+as if it were the
+.meta function
+argument.
+
+A
+.meta function
+argument is one that is a function object. Only compiled virtual machine
+functions can be disassembled; other kinds of functions are rejected by
+.codn disassemble .
+
+The
+.code disassemble
+function will also process the
+.meta complied-expression
+object that is returned by the
+.code compile-toplevel
+function.
+
+In the case of
+.metn function ,
+the entire compiled form containing
+.meta function
+is disassembled. That form usually contains code which is external
+to the function, even possibly other functions.
+The disassembly listing indicates the entry point in the code
+block where the execution of
+.meta function
+begins.
+
+The
+.code disassemble
+function returns its argument.
+
 .SH* INTERACTIVE LISTENER
 
 .SS* Overview
