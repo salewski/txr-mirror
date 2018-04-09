@@ -55369,7 +55369,8 @@ The
 function causes a file containing \*(TL or \*(TX code to be read and processed.
 The
 .meta target
-argument is a string.
+argument is a string. The function can load \*(TL source files as well
+as compiled files.
 
 Firstly, the value in
 .meta target
@@ -55403,16 +55404,22 @@ first tries to open that exact path name.
 If this succeeds, then the file will be treated as containing \*(TL,
 unless
 .meta target
-ends ends with the
+ends with the
 .code .txr
 suffix, in which case the file will be treated as containing
-\*(TX pattern language syntax.
+\*(TX pattern language syntax, or ends with the suffix
+.code .tlo
+in which case it will be treated as a compiled file.
 
 If loading the original effective path name fails, and that name is unsuffixed,
 then the
+.code .tlo
+suffix is added and a second attempt is made. If that succeeds, the file
+is treated as a compiled \*(TL file.
+Otherwise, the suffix
 .code .tl
-suffix is added and another attempt is made. If that succeeds,
-the file will be treated as \*(TL.
+suffix is added to the original unsuffixed name, and one more attempt is made.
+If that succeeds, the file will be treated as \*(TL.
 
 If a file is successfully resolved and opened for \*(TL processing,
 then \*(TL forms are read from it in succession. Each form is evaluated as if
@@ -55422,6 +55429,10 @@ function, before the next form is read.
 If a syntax error is encountered, an exception of type
 .code eval-error
 is thrown.
+
+If a file is successfully resolved and opened for processing as a
+compiled \*(TL object file, then the compiled images of top-level forms
+are read from it, converted into compiled objects, and executed.
 
 If a file is successfully resolved and opened for \*(TX processing,
 then its contents are parsed in their entirety as a \*(TX
@@ -55438,7 +55449,7 @@ Parser error messages are directed to the
 .code *stderr*
 stream.
 
-Over the evaluation of either a \*(TL or \*(TX file,
+Over the evaluation of either a \*(TL, compiled file, or \*(TX file,
 .code load
 establishes a new dynamic binding for several special
 variables. The variable
@@ -55495,7 +55506,7 @@ are evaluated in that file during the loading process.
 
 The
 .code *load-path*
-variable is is bound when a \*(TX or \*(TL file is loaded from the command
+variable is is bound when a file is loaded from the command
 line.
 
 If the
@@ -61586,6 +61597,274 @@ and have the same meaning. In particular,
 indicates a byte offset into the
 .meta carray
 object's storage, not an array index.
+
+.SH* LISP COMPILATION
+
+.SS* Overview
+
+\*(TX supports two modes of processing of Lisp programs: evaluation and compilation.
+
+Expressions entered into the listener, loaded from source files via
+.codn load ,
+processed by the
+.code eval
+function, or embedded into the \*(TX pattern language, are processed by the
+.IR evaluator .
+The evaluator expands all macros, and then interprets the program
+by traversing its raw syntax tree structure. It uses an inefficient
+representation of lexical variables consisting of heap-allocated environment
+object which store variable bindings as association lists. Every time a
+variable is accessed, the chain of environments is searched for the binding.
+
+\*(TX also provides a compiler and virtual machine for more efficient execution
+of Lisp programs. In this mode of processing, top-level expressions are
+translated into the instructions of Lisp-oriented virtual machine. The virtual
+machine language is traversed more efficiently compared to the traversal of the
+cons cells of the original Lisp syntax tree. Moreover, compiled code uses a
+much more efficient representation for lexical variables which doesn't involve
+searching through an environment chain. Lexical variables are always allocated
+on the stack (the native one established by the operating system). They are
+transparently relocated to dynamic storage only when captured by lexical
+closures, and without sacrificing access speed.
+
+\*(TX provides the function
+.code compile
+for compiling individual functions, both anonymous and named. File compilation
+is supported via the function
+.codn compile-file .
+The function
+.code compile-toplevel
+is provided for compiling expressions in an empty lexical environment. This
+function is the basis for both
+.code compile
+and
+.codn compile-file .
+
+The
+.code disassemble
+function is provided to list the compiled code in a more understandable way;
+.code disassemble
+takes a compiled code object and decodes it into an assembly language
+presentation of its virtual machine code, accompanied by a dump of the various
+information tables.
+
+File compilation via
+.code compile-file
+refers to processing step whereby a source file containing \*(TL forms
+(typically named with a
+.code .tl
+file name suffix) is translated into an object file (named with a
+.code .tlo
+suffix) containing a compiled version of those forms.
+
+The key concept is that loading the compiled
+.code .tlo
+file via the
+.code load
+function produces the same effect as loading the
+.code .tl
+file (except when special arrangements are deliberately put in place for
+different behaviors to occur). The difference is that the compiled file
+contains no Lisp source code; only the machine code instructions for the
+virtual machine, and some accompanying data such as literals and referenced
+symbols.
+
+Compilation not only provides faster execution. Compiled files load much
+faster.  Compiled files can be distributed unaccompanied by the source files,
+and are much more resistant to reverse engineering.
+
+.SS* Top-Level Forms
+
+A very important concept in file compilation via
+.code compile-file
+is that of the
+.IR "top-level form" ,
+and how that term is defined.  The file compiler individually processes
+top-level forms; for each such form, it emits a translated image.
+
+In the context of file compilation, a top-level form isn't simply any Lisp form
+which is not enclosed by another one, or evaluated in an empty lexical
+environment. Rather, in this specific context, it has this specific definition:
+
+.RS
+.IP 1.
+If a form appearing in a \*(TL source file isn't enclosed in another
+form, it is a top-level form.
+.IP 2.
+If a
+.code progn
+form is top-level form, then each of its constituent forms is also a top-level
+form.
+.IP 3.
+If a
+.code compile-only
+form is top-level form, then each of its constituent forms is also a top-level
+form.
+.IP 4.
+If a
+.code eval-only
+form is top-level form, then each of its constituent forms is also a top-level
+form.
+.IP 5.
+When a form is identified as a top-level form by the above rule 1,
+its constituents are considered under rules 2-4 are only after the form is
+fully macro-expanded.
+.IP 6.
+No other forms are top-level forms.
+.RE
+A top-level form is a
+.I primary
+top-level form if it doesn't contain any other top-level forms;
+that is, is not a form based on any of the operators
+.codn progn ,
+.code compile-only
+or
+.codn eval-only .
+
+.SS* File Compilation Model
+
+The file compiler reads each successive forms from a file, performs a full
+expansion on that form, then traverses it to identify all of the primary
+top-level forms which it contains. Each primary top-level form is subject to
+three actions, either of the latter two of which may be omitted: compilation,
+execution and emission. Compilation refers to the translation to compiled form.
+Execution is the invocation of the compiled form. Emission refers to appending
+an externalized representation of the compiled form (its image) to the output
+which is written into the compiled file.
+
+By default, all three actions take place for every primary form. Using the
+operators
+.code compile-only
+or
+.codn eval-only ,
+execution or emission, or both, may be suppressed. If both are suppressed,
+then compilation isn't performed; the forms processed in this mode are
+effectively ignored.
+
+When a compiled file is loaded, the images of compiled forms are read from
+it and converted back to compiled objects, which are executed in sequence.
+
+.SS* Treatment of Literals
+
+Programs specify not only code, but also data. Data embedded in a program is
+called
+.IR "literal data" .
+There are restrictions on what kinds of object may be used as literal data
+in programs subject to file compilation. Programs which stray outside of these
+restrictions will produce compiled files which load incorrectly or fail to
+load.
+
+Literal objects arise not only from the use of literal such as numbers,
+characters an strings, and not only from quoted symbols or lists.
+For instance, compiled forms which define or reference free variables or global
+functions require the names of these variables or functions to be represented
+as literals.
+
+An object used as a literals in file-compiled code must be
+.I externalizable
+which means that it has a printed representation which can be scanned to
+produce a similar objects. An object which does not have a readable printed
+representation will give rise to a compiled file which trigger an exception.
+Literals which are themselves read from program source code naturally meet this
+restriction; however, with the use of macros, it is possible to embed arbitrary
+objects into program code.
+
+If the same object appears in two or more places in the code specified in a
+single file, the file compilation and loading mechanism ensures that the
+multiple occurrences of that object in the compiled file become a single object
+when the compiled file is loaded. For example, if macros are used in such a way
+that the compiled file defines a function which has a name generated by
+.codn gensym ,
+and there are calls to that function throughout that file, this will work
+properly: the multiple occurrence of the gensym will appear as the same symbol.
+However: that symbol in the loaded file will not be identical to any other
+symbol in the \*(TX image; it will be newly allocated each time the compiled
+file is loaded.
+
+Interned symbols are recorded in a compiled file by means of their textual
+names and package prefixes. When a compiled file is loaded, the interned
+symbols which occur as literals in it are entered into the specified packages
+under the specified names. The value of the
+.code *package*
+special variable has no influence on this.
+
+Circular structures in compiled literals are preserved; on loading, similar
+circular structures are reproduced.
+
+.coNP Function @ compile-toplevel
+.synb
+.mets (compile-toplevel << form )
+.syne
+.desc
+The
+.code compile-toplevel
+function takes the Lisp form
+.meta form
+and compiles it. The return value is a
+.I "virtual machine description"
+object representing the compiled form. This object isn't of function type, but may be
+invoked as if it were a function with no arguments.
+
+Invoking the compiled object is expected to produce the same effect as
+evaluating the original
+.meta form
+using the
+.code eval
+function.
+
+Note: in spite of the name,
+.code compile-toplevel
+makes no consideration whether or not
+.meta form
+is a "top-level form" according to the definition of that term
+as it applies to
+.code compile-file
+processing.
+
+.TP* Example
+
+.cblk
+  ;; compile (+ 2 2) form and execute to calculate 4
+  ;;
+  (defparm comp (compile-toplevel '(+ 2 2)))
+
+  (call comp) -> 4
+
+  [comp] -> 4
+.cble
+
+.coNP Function @ compile
+.synb
+.mets (compile << function-name )
+.mets (compile << lambda-expression )
+.mets (compile << function-object )
+.syne
+.desc
+The
+.code compile
+function compiles functions.
+
+It can compile named functions when
+the argument is a
+.metn function-name .
+A function name is a symbol denoting an existing interpreted function,
+or compound syntax such as
+.cblk
+.meti (meth < type << name )
+.cble
+to refer to methods. The code of the interpreted function is retrieved,
+compiled in a manner which produces an anonymous compiled function,
+and then that function replaces the original function under the same name.
+
+If the argument is a lambda expression, then that function is
+compiled.
+
+If the argument is a function object, and that object is an interpreted
+function, then its code is retrieved and compiled.
+
+In all cases, the return value of
+.code compile
+is the compiled function.
 
 .SH* INTERACTIVE LISTENER
 
