@@ -789,33 +789,36 @@
     (new (frag (if lastfrag lastfrag.oreg ^(t 0)) code fvars ffuns))))
 
 (defmeth compiler comp-and-or (me oreg env form)
-  (mac-param-bind form (op . args) form
-    (let* (ffuns fvars
-           (nargs (len args))
-           lastfrag
-           (is-and (eq op 'and))
-           (lout (gensym "l"))
-           (treg me.(maybe-alloc-treg oreg))
-           (code (build
-                   (each ((form args)
-                          (n (range 1)))
-                     (let ((islast (eql n nargs)))
-                       (let ((frag me.(compile treg env form)))
-                         (when islast
-                           (set lastfrag frag))
-                         (pend frag.code
-                               (maybe-mov treg frag.oreg))
-                         (unless islast
-                           (add (if is-and
-                                  ^(if ,treg ,lout)
-                                  ^(ifq ,treg ,nil ,lout))))
-                         (set fvars (uni fvars frag.fvars))
-                         (set ffuns (uni ffuns frag.ffuns))))))))
-      me.(maybe-free-treg treg oreg)
-      (new (frag (if args oreg (if is-and me.(get-dreg t) ^(t 0)))
-                 (append code ^(,lout
-                                ,*(if args (maybe-mov oreg treg))))
-                 fvars ffuns)))))
+  (tree-case form
+    ((op) me.(compile oreg env (if (eq op 'and) t)))
+    ((op arg) me.(compile oreg env arg))
+    ((op . args)
+     (let* (ffuns fvars
+            (nargs (len args))
+            lastfrag
+            (is-and (eq op 'and))
+            (lout (gensym "l"))
+            (treg me.(maybe-alloc-treg oreg))
+            (code (build
+                    (each ((form args)
+                           (n (range 1)))
+                      (let ((islast (eql n nargs)))
+                        (let ((frag me.(compile treg env form)))
+                          (when islast
+                            (set lastfrag frag))
+                          (pend frag.code
+                                (maybe-mov treg frag.oreg))
+                          (unless islast
+                            (add (if is-and
+                                   ^(if ,treg ,lout)
+                                   ^(ifq ,treg ,nil ,lout))))
+                          (set fvars (uni fvars frag.fvars))
+                          (set ffuns (uni ffuns frag.ffuns))))))))
+       me.(maybe-free-treg treg oreg)
+       (new (frag oreg
+                  (append code ^(,lout
+                                 ,*(maybe-mov oreg treg)))
+                  fvars ffuns))))))
 
 (defmeth compiler comp-prog1 (me oreg env form)
   (tree-case form
