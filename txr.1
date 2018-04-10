@@ -62053,6 +62053,41 @@ is added.
 
 Compilation proceeds according to the File Compilation Model.
 
+.coNP Macro @ with-compilation-unit
+.synb
+.mets (with-compilation-unit << form *)
+.syne
+.desc
+When a file is processed by
+.codn compile-file ,
+certain actions, such as the issuance of diagnostics about undefined functions
+and variables, are delayed until the file is completely processed.
+
+The
+.code with-compilation-unit
+macro allows these actions to be collectively deferred until multiple files
+are completely processed.
+
+The macro evaluates each enclosed
+.meta form
+in a single compilation environment. After the last
+.meta form
+is evaluated, deferred actions of any enclosed
+.code compile-file
+forms are performed, and then the value of the last
+.meta form
+is returned.
+
+It is permissible to nest
+.code with-compilation-unit
+forms, lexically or dynamically. The outer-most invocation of
+.code with-compilation-unit
+dominates; all deferred
+.code compile-file
+actions are held until the outer-most enclosing
+.code with-compilation-unit
+terminates.
+
 .coNP Operators @ compile-only and @ eval-only
 .synb
 .mets (compile-only << form *)

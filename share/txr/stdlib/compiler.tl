@@ -1348,6 +1348,16 @@
         (sys:vm-desc-datavec vd)
         (sys:vm-desc-funvec vd)))
 
+
+(defmacro usr:with-compilation-unit (. body)
+  (with-gensyms (rec)
+    ^(let* ((,rec sys:*load-recursive*)
+            (sys:*load-recursive* t))
+       (unwind-protect
+         (progn ,*body)
+         (unless ,rec
+           (release-deferred-warnings))))))
+
 (defun usr:compile-file (in-path : out-path)
   (let ((streams (open-compile-streams in-path out-path))
         (err-ret (gensym))
@@ -1355,42 +1365,42 @@
         (*emit* t)
         (*eval* t)
         (*load-path* in-path)
-        (*rec-source-loc* t)
-        (sys:*load-recursive* t))
-    (with-resources ((in-stream (car streams) (close-stream in-stream))
-                     (out-stream (cadr streams) (close-stream out-stream))
-                     (out (new list-builder)))
-      (labels ((compile-form (form)
-                 (unless (atom form)
-                   (caseq (car form)
-                     (progn [mapdo compile-form (cdr form)])
-                     (compile-only (let ((*eval* nil))
-                                     [mapdo compile-form (cdr form)]))
-                     (eval-only (let ((*emit* nil))
-                                  [mapdo compile-form (cdr form)]))
-                     (t (when (and (or *eval* *emit*)
-                                   (not (constantp form)))
-                          (let* ((vm-desc (compile-toplevel form))
-                                 (flat-vd (list-from-vm-desc vm-desc)))
-                            (when *eval*
-                              (sys:vm-execute-toplevel vm-desc))
-                            (when *emit*
-                              out.(add flat-vd)))))))))
-        (prinl '(0 0) out-stream)
-        (unwind-protect
-          (whilet ((obj (read in-stream *stderr* err-ret))
-                   ((neq obj err-ret)))
-            (compile-form (sys:expand* obj)))
-          (let ((*print-circle* t)
-                (*package* (make-package "$")))
-            (unwind-protect
-              (prinl out.(get) out-stream)
-              (delete-package *package*))))
+        (*rec-source-loc* t))
+    (with-compilation-unit
+      (with-resources ((in-stream (car streams) (close-stream in-stream))
+                       (out-stream (cadr streams) (close-stream out-stream))
+                       (out (new list-builder)))
+        (labels ((compile-form (form)
+                   (unless (atom form)
+                     (caseq (car form)
+                       (progn [mapdo compile-form (cdr form)])
+                       (compile-only (let ((*eval* nil))
+                                       [mapdo compile-form (cdr form)]))
+                       (eval-only (let ((*emit* nil))
+                                    [mapdo compile-form (cdr form)]))
+                       (t (when (and (or *eval* *emit*)
+                                     (not (constantp form)))
+                            (let* ((vm-desc (compile-toplevel form))
+                                   (flat-vd (list-from-vm-desc vm-desc)))
+                              (when *eval*
+                                (sys:vm-execute-toplevel vm-desc))
+                              (when *emit*
+                                out.(add flat-vd)))))))))
+          (prinl '(0 0) out-stream)
+          (unwind-protect
+            (whilet ((obj (read in-stream *stderr* err-ret))
+                     ((neq obj err-ret)))
+              (compile-form (sys:expand* obj)))
+            (let ((*print-circle* t)
+                  (*package* (make-package "$")))
+              (unwind-protect
+                (prinl out.(get) out-stream)
+                (delete-package *package*))))
 
-        (let ((parser (sys:get-parser in-stream)))
-          (when (> (sys:parser-errors parser) 0)
-            (error "~s: compilation of ~s failed" 'compile-file
-                   (stream-get-prop in-stream :name))))))))
+          (let ((parser (sys:get-parser in-stream)))
+            (when (> (sys:parser-errors parser) 0)
+              (error "~s: compilation of ~s failed" 'compile-file
+                     (stream-get-prop in-stream :name)))))))))
 
 (defun usr:compile (obj)
   (typecase obj
