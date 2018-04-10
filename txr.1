@@ -45854,10 +45854,7 @@ of that object.
 .desc
 These variables hold predefined packages. The
 .code user-package
-contains all of the public symbols in the \*(TL library,
-and is also the initial value of the
-.code *package*
-special variable.
+contains all of the public symbols in the \*(TL library.
 The
 .code keyword-package
 holds keyword symbols, which are printed with
@@ -45877,11 +45874,27 @@ and
 
 .coNP Special variable @ *package*
 .desc
-This variable holds the current package. The top-level binding of this
-variable is initialized to the user package: the same package object
-which is held in the
-.code user-package
-variable.
+This variable holds the current package. The global value of this variable
+is initialized to a package called
+.strn pub .
+The
+.code pub
+package has the
+.code usr
+package in its fallback list; thus when
+.code pub
+is current, all of the
+.code usr
+symbols, comprising the content of the \*(TL library, are visible.
+
+All forms read and evaluated from the \*(TX command line, in the interactive listener,
+from files via
+.code load
+or
+.code compile-file
+or from the \*(TX pattern language are processed in this default
+.code pub
+package, unless arrangement are made to change to a different package.
 
 The current package is used as the default package for interning symbol tokens
 which do not carry the colon-delimited package prefix.
@@ -63957,9 +63970,17 @@ lists implemented the requirement that a
 was treated as a missing argument, triggering argument-defaulting behavior.
 That requirement was removed; the colon symbol behaves as an ordinary value
 under destructuring with macro parameter lists.
-All these behaviors are restored in compatibility
+Moreover, until \*(TX 190, the
+.code pub
+symbol package didn't exist; the
+.code *package*
+variable was initialized to the user package and so symbols introduced
+by application code were interned in the same package as the \*(TL
+library.
+All these old behaviors are restored in compatibility
 with version 190 or earlier.
-Another change after \*(TX 190 was a critical redesign of the requirements
+Finally, one more change after \*(TX 190 that is controlled by the
+compatibility mechanism was a critical redesign of the requirements
 for the behavior of the
 .code ldiff
 function. Version 190 compatibility causes the
