@@ -33,7 +33,7 @@
 
 (defmacro defpackage (name . clauses)
   (let* ((pkg (gensym "pkg-"))
-         (name-str (sys:name-str 'package name))
+         (nstr (sys:name-str 'package name))
          (exp-clauses (append-each ((c clauses))
                         (tree-case c
                           ((keyword package . rest)
@@ -78,8 +78,8 @@
                           (atom
                             (throwf 'eval-error "~s: invalid clause: ~s"
                                     'defpackage atom))))))
-    ^(let ((,pkg (or (find-package ,name-str)
-                     (make-package ,name-str))))
+    ^(let ((,pkg (or (find-package ,nstr)
+                     (make-package ,nstr))))
        ,*exp-clauses
        ,pkg)))
 
