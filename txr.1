@@ -16676,6 +16676,28 @@ if
 is an interpreted function, otherwise it returns
 .codn nil .
 
+.coNP Function @ vm-fun-p
+.synb
+.mets (vm-fun-p << obj )
+.syne
+.desc
+The
+.code vm-fun-p
+function returns
+.code t
+if
+.meta obj
+a function compiled for the virtual machine: a function representation produced
+by means of the functions
+.codn compile-file ,
+.code compile-toplevel
+or
+.codn compile .
+If
+.meta obj
+is of any other type, the function returns
+.codn nil .
+
 .coNP Function @ special-var-p
 .synb
 .mets (special-var-p << obj )
