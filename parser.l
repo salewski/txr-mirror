@@ -1080,8 +1080,8 @@ static int directive_tok(scanner_t *yyscanner, int tok, int state)
     val package = symbol_package(sym);
 
     if (package != user_package && package != keyword_package) {
-      yyerrprepf(yyg, lit("~s: this is ~a:~s: not from the usr package"),
-                 sym, package_name(package), sym, nao);
+      yyerrprepf(yyg, lit("~a: this is ~a:~a, not usr:~a"),
+                 symname, package_name(package), symname, symname, nao);
       tok = ERRTOK;
     }
   }
