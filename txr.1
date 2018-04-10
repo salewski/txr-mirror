@@ -44550,9 +44550,10 @@ If a negative indentation results, it is clamped to zero.
 The
 .code width-check
 function examines the state of the stream, taking into consideration
-the current printing column position, the indentation state, and
-indentation amount. It makes a decision either to introduce a line
-break by printing a newline character, or else to print the
+the current printing column position, the indentation state,
+the indentation amount and an internal "force break" flag. It makes a decision
+either to introduce a line break by printing a newline character, or else to
+print the
 .meta alt-char
 character.
 
@@ -44562,8 +44563,94 @@ is
 .codn nil ,
 then the function has no effect at all.
 
-The return value is always
-.codn t .
+The return value is
+.code t
+if the function has issued a line break, otherwise
+.codn nil .
+
+.coNP Function @ force-break
+.synb
+.mets (force-break << stream )
+.syne
+.desc
+If the
+.code force-break
+function is called on a stream, it sets an internal "force break" flag which
+affects the future behavior of
+.codn width-check .
+The
+.code width-check
+function examines this flag. If the flag is set,
+.code width-check
+clears it, and issues a line break without considering any other
+conditions.
+
+The
+.metn stream 's
+.code force-break
+flag is also cleared whenever a newline character is output.
+
+The
+.code force-break
+function returns
+.codn stream .
+
+Note: the
+.code force-break
+is involved in line breaking decisions. Whenever a list or list-like syntax is
+being printed, whenever an element of that syntax is broken into multiple
+lines, a break is forced after that element, in order to avoid output
+which resembles the following diagonally-creeping pattern:
+
+.cblk
+  (a b c (d e f
+          g h i) j (k l
+                    m n) o)
+.cble
+
+but instead is rendered in a more horizontally compact pattern:
+
+.cblk
+  (a b c (d e f
+          g h i)
+   j (k l
+      m n)
+   o)
+.cble
+
+When the printer prints
+.code "(d e f g h i)"
+it uses the
+.code width-check
+function between the elements; that function issues the
+break between the
+.code f
+and
+.codn g .
+The printer monitors the return value of
+.codn width-check ;
+it knows that since one of the calls returned
+.codn t ,
+the object had been broken into two or more lines. It then calls
+.code force-break
+after printing the last element
+.code i
+of that object.  Then, due to the force flag, the outer recursion of the
+printer which is printing
+.code "(a b c ...)"
+will experience a break when it calls
+.code width-check
+before printing
+.codn j .
+
+Custom
+.code print
+methods defined on structure objects can take advantage of
+.code width-check
+and
+.code force-break
+in the same way so that application-defined output integrates
+with the formatting algorithm.
 
 .SS* Coprocesses
 .coNP Functions @ open-command and @ open-process
