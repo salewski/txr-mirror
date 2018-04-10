@@ -45574,7 +45574,9 @@ The printer situation involving the fallback list is as follows.
 If a symbol is being printed in a machine-readable way (not "pretty"),
 has a home package and is not a keyword symbol, then a search takes place
 through the current package and its fallback list. If the symbol is found
-in any of those places, then it is printed without a package prefix.
+in any of those places, and if those places are devoid of any symbols
+which have the same name, thus causing ambiguity, then the symbol is printed
+without a package prefix.
 
 The listener situation involving the fallback list is a follows.
 When tab completion is used on a symbol without a package
