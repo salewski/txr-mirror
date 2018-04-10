@@ -136,7 +136,6 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
     struct vm_ftent *ftab = if3(ftsz != 0,
                                 coerce(struct vm_ftent *,
                                        chk_calloc(ftsz, sizeof *ftab)), 0);
-    cnum i;
     val desc;
 
     vd->nlvl = nlvl;
@@ -160,12 +159,6 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
     vd->datavec = datavec;
     vd->funvec = funvec;
     vd->self = desc;
-
-    for (i = 0; i < ftsz; i++) {
-      struct vm_ftent *fe = &ftab[i];
-      fe->fb = lookup_fun(nil, vecref(funvec, num_fast(i)));
-      fe->fbloc = if3(fe->fb, cdr_l(fe->fb), nulloc);
-    }
 
     return desc;
   }
