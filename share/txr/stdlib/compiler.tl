@@ -1355,6 +1355,7 @@
         (*emit* t)
         (*eval* t)
         (*load-path* in-path)
+        (*rec-source-loc* t)
         (sys:*load-recursive* t))
     (with-resources ((in-stream (car streams) (close-stream in-stream))
                      (out-stream (cadr streams) (close-stream out-stream))
