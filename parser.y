@@ -1275,10 +1275,8 @@ not_a_clause : ALL              { $$ = mkexp(all_s, nil, num(parser->lineno)); }
              | OR               { $$ = mkexp(or_s, nil, num(parser->lineno)); }
              | TRY              { $$ = mkexp(try_s, nil, num(parser->lineno)); }
              | FINALLY          { $$ = mkexp(finally_s, nil, num(parser->lineno)); }
-             | ELSE             { $$ = mkexp(intern(lit("else"), nil),
-                                             nil, num(parser->lineno)); }
-             | ELIF             { $$ = mkexp(intern(lit("elif"), nil),
-                                             nil, num(parser->lineno)); }
+             | ELSE             { $$ = mkexp(else_s, nil, num(parser->lineno)); }
+             | ELIF             { $$ = mkexp(elif_s, nil, num(parser->lineno)); }
              | BLOCK
                exprs_opt ')'    { $$ = mkexp(block_s, $2, nil); }
              | CHOOSE
@@ -1294,8 +1292,7 @@ not_a_clause : ALL              { $$ = mkexp(all_s, nil, num(parser->lineno)); }
              | CATCH
                exprs_opt ')'    { $$ = mkexp(catch_s, $2, nil); }
              | IF
-               exprs_opt ')'    { $$ = mkexp(intern(lit("if"), nil),
-                                                 $2, nil); }
+               exprs_opt ')'    { $$ = mkexp(if_s, $2, nil); }
              | OUTPUT
                 exprs_opt ')'   { yyerr("@(output) doesn't nest"); }
 
