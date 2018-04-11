@@ -1,3 +1,70 @@
+                                    TXR 191
+                                   2018-04-10
+
+
+  Features
+
+  - TXR Lisp now has a compiler and virtual machine.
+    - individual forms and functions can be compiled
+    - TXR Lisp .tl files can be compiled into .tlo object files
+    - the Lisp parts of the library are now compiled.
+      - TXR starts up some 3.5X faster when most of the
+        library auto-loading is triggered.
+  - Library:
+    - new bignum-len function; get the "size" of a bignum efficiently.
+    - ldiff function redesigned with more nuanced semantics.
+  - Symbols/Packages:
+    - package-prefix-interning now allowed in packages that have a
+      fallback list.
+    - application code is now read in a package called pub, not in
+      the usr package.
+    - usr package is devoid of spurious symbols; the Lisp library is
+      read in the sys package.
+  - Macros:
+    - defmacro forms are no longer hackily evaluated at macro-expansion time:
+      - evaluated normally, in apparent lexical env.
+      - code which does things like:
+        (progn (defmacro foo ...) (foo ...)).
+        now requires (macro-time ...) around the defmacro.
+    - optional parameters in macro-style parameter lists no longer support the
+      colon hack for explicitly specifying a missing parameter.
+      - only function calls have this feature now.
+   - Printer:
+     - improved line breaking of aggregate objects.
+     - new function force-break exposed, related to this.
+
+   Bugs
+
+   - buffers: buf-get-* functions were not allowing the last byte of a buffer
+     to be extracted.
+   - structs: post-inits and finalization registrations are now correctly
+     performed by reset-struct.
+   - trace: several bugfixes in method redefinition check.
+   - bignums: fixed broken single-digit bignum multiplication.
+   - functions: fixed regression in function argument processing causing the
+     failure to diagnose too many args.
+   - expander: fixed neglect to add sequentially-bound variables to the
+     expansion-time environment when they lack an init-form.
+   - expander: fixed some neglected expansions in the sys:for-op special
+     operator that implements the iteration forms like each and for.
+   - expander: bugs/regressions in handling nil in parameter list expansion.
+   - expander: optional parameters of functions were not being expanded in an
+     environment in which the previous params are visible.
+   - listener: fixed poor treatment of regex syntax in the code which prevent
+     lines from being submitted when they
+     are ill-formed.
+   - gc bugs: fixed some incorrect mutations that break generational gc.
+     - some in struct code
+     - some in datagram socket code.
+   - tagbody: fixed; was broken due to a regression.
+   - packages: read/print consistency issue related to packgage prefixes fixed.
+   - regex: read/print consistency problem related to double quote.
+   - regex: double-free corruption bug related to use of canned
+     character classes like \w.
+   - hash: fixed broken with-hash-iter.
+
+
+
                                     TXR 190
                                    2018-02-18
 
