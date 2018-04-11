@@ -641,6 +641,7 @@ static val read_file_common(val stream, val error_stream, val compiled)
         val funvec = car(item);
         val desc = vm_make_desc(nlevels, nregs, bytecode, datavec, funvec);
         (void) vm_execute_toplevel(desc);
+        gc_hint(desc);
       }
     } else {
       (void) eval_intrinsic(form, nil);
