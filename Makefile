@@ -186,10 +186,10 @@ opt/%-win.o: $(top_srcdir)%.c
 win/%.res: $(top_srcdir)win/%.rc $(top_srcdir)win/%.ico
 	$(call WINDRES)
 
-%.tlo: %.tl
+%.tlo: %.tl | $(PROG)
 	$(call COMPILE_TL)
 
-%.tlo2: %.tl
+%.tlo2: %.tl | $(PROG)
 	$(call COMPILE_TL)
 	$(call SH,F=$@ T=$${F%.tlo2}.tlo; cmp -s $$F $$T || cp $$F $$T)
 
