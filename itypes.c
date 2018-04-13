@@ -228,5 +228,5 @@ void itypes_init()
     volatile unsigned char uc[sizeof (unsigned)];
   } u = { 0xff };
 
-  itypes_little_endian = (u.uc[0] = 0xff);
+  itypes_little_endian = (u.uc[0] == 0xff);
 }

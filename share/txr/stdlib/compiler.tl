@@ -1313,6 +1313,10 @@
 
 (defvar *eval*)
 
+(defvarl %big-endian% (equal (ffi-put 1 (ffi uint32)) #b'00000001'))
+
+(defvarl %tlo-ver% ^(0 0 ,%big-endian%))
+
 (defun open-compile-streams (in-path out-path)
   (let* ((rsuff (r$ %file-suff-rx% in-path))
          (suff (if rsuff [in-path rsuff]))
@@ -1386,7 +1390,7 @@
                                 (sys:vm-execute-toplevel vm-desc))
                               (when *emit*
                                 out.(add flat-vd)))))))))
-          (prinl '(0 0) out-stream)
+          (prinl %tlo-ver% out-stream)
           (unwind-protect
             (whilet ((obj (read in-stream *stderr* err-ret))
                      ((neq obj err-ret)))

@@ -106,4 +106,6 @@ val buf_pprint(val buf, val stream);
 val make_buf_stream(val buf_opt);
 val get_buf_from_stream(val stream);
 
+void buf_swap32(val buf);
+
 void buf_init(void);

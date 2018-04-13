@@ -55,6 +55,8 @@
 #include "cadr.h"
 #include "struct.h"
 #include "parser.h"
+#include "itypes.h"
+#include "buf.h"
 #include "vm.h"
 #include "txr.h"
 #if HAVE_TERMIOS
@@ -611,6 +613,7 @@ static val read_file_common(val stream, val error_stream, val compiled)
   val error_val = gensym(nil);
   val name = stream_get_prop(stream, name_k);
   val first = t;
+  val big_endian = nil;
 
   for (;;) {
     val form = lisp_parse(stream, error_stream, error_val, name, colon_k);
@@ -625,11 +628,12 @@ static val read_file_common(val stream, val error_stream, val compiled)
     }
 
     if (compiled && first) {
-      val major = pop(&form);
+      val major = car(form);
       if (gt(major, zero))
         uw_throwf(error_s,
                   lit("cannot load ~s; it was compiled by a newer implementation"),
                   stream, nao);
+      big_endian = caddr(form);
       first = nil;
     } else if (compiled) {
       for (; form; form = cdr(form)) {
@@ -640,6 +644,9 @@ static val read_file_common(val stream, val error_stream, val compiled)
         val datavec = pop(&item);
         val funvec = car(item);
         val desc = vm_make_desc(nlevels, nregs, bytecode, datavec, funvec);
+        if ((big_endian && itypes_little_endian) ||
+            (!big_endian && !itypes_little_endian))
+          buf_swap32(bytecode);
         (void) vm_execute_toplevel(desc);
         gc_hint(desc);
       }

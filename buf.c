@@ -914,6 +914,20 @@ val get_buf_from_stream(val stream)
   return s->buf;
 }
 
+void buf_swap32(val buf)
+{
+  val self = lit("buf-swap32");
+  struct buf *b = buf_handle(buf, self);
+  mem_t *data = b->data, *end = data + c_num(b->len);
+
+  for (; data + 3 < end; data += 4) {
+    u32_t sw32 = *coerce(u32_t *, data);
+    sw32 = ((sw32 & 0xFF00FF00U) >>  8) | ((sw32 & 0x00FF00FFU) <<  8);
+    sw32 = ((sw32 & 0xFFFF0000U) >> 16) | ((sw32 & 0x0000FFFFU) << 16);
+    *coerce(u32_t *, data) = sw32;
+  }
+}
+
 void buf_init(void)
 {
   reg_fun(intern(lit("make-buf"), user_package), func_n3o(make_buf, 1));
