@@ -3806,6 +3806,18 @@ static val compares_with_eq(val obj)
   return tnil(fixnump(obj) || chrp(obj) || symbolp(obj));
 }
 
+static val hash_min_max(val env, val key, val value)
+{
+  cons_bind (minkey, maxkey, env);
+  if (!minkey || lt(key, minkey))
+    minkey = key;
+  if (!maxkey || gt(key, maxkey))
+    maxkey = key;
+  rplaca(env, minkey);
+  rplacd(env, maxkey);
+  return nil;
+}
+
 static val me_case(val form, val menv)
 {
   val form_orig = form;
@@ -3818,7 +3830,11 @@ static val me_case(val form, val menv)
                   casesym == casequal_star_s);
   int compat = (opt_compat && opt_compat <= 156 && !star);
   val comp_eq_f = func_n1(compares_with_eq);
+  val integerp_f = func_n1(integerp);
+  val chrp_f = func_n1(chrp);
   val all_keys_eq = t;
+  val all_keys_integer = t;
+  val all_keys_chr = t;
   val hash_fallback_clause = nil;
   val hash = nil;
   val index = zero;
@@ -3868,12 +3884,20 @@ static val me_case(val form, val menv)
       sethash(hash, keys, index);
       if (!compares_with_eq(keys))
         all_keys_eq = nil;
+      if (!integerp(keys))
+        all_keys_integer = nil;
+      if (!chrp(keys))
+        all_keys_chr = nil;
     } else {
       val iter;
       for (iter = hash_keys; iter; iter = cdr(iter))
         sethash(hash, car(iter), index);
       if (!all_satisfy(keys, comp_eq_f, nil))
         all_keys_eq = nil;
+      if (!all_satisfy(keys, integerp_f, nil))
+        all_keys_integer = nil;
+      if (!all_satisfy(keys, chrp_f, nil))
+        all_keys_chr = nil;
     }
 
     qtail = list_collect(qtail, forms);
@@ -3901,6 +3925,59 @@ static val me_case(val form, val menv)
 
   if (form && atom(form))
     eval_error(form_orig, lit("~s: improper form terminated by ~s"), casesym, form, nao);
+
+  if (!compat && (all_keys_integer || all_keys_chr)) {
+    val minmax = cons(nil, nil);
+    val nkeys = (maphash(func_f2(minmax, hash_min_max), hash),
+                 (hash_count(hash)));
+    val minkey = if3(nkeys, car(minmax), zero);
+    val maxkey = if3(nkeys, cdr(minmax), zero);
+    val i, range = minus(maxkey, minkey);
+    val swres = gensym(lit("swres-"));
+    val uniq = list(quote_s, make_sym(lit("nohit")), nao);
+    val uniqf = cons(uniq, nil);
+
+    if (ge(nkeys, num_fast(6)) && gt(nkeys, divi(mul(range, three), four)) &&
+        ((casesym != caseq_s && casesym != caseq_star_s) ||
+         (!bignump(minkey) && !bignump(maxkey))))
+    {
+      list_collect_decl (indexed_clauses, rtail);
+
+      for (i = minkey; i <= maxkey; i = succ(i)) {
+        val lookup = gethash_e(hash, i);
+        rtail = list_collect(rtail, if3(lookup,
+                                        ref(hashforms, cdr(lookup)),
+                                        uniqf));
+      }
+
+      return list(let_s, list(list(tformsym, testform, nao),
+                              list(swres, uniq, nao),
+                              nao),
+                  list(if_s,
+                       list(and_s,
+                            list(intern(if3(all_keys_integer,
+                                            lit("integerp"), lit("chrp")),
+                                        user_package),
+                                 tformsym, nao),
+                            list(intern(lit("<="), user_package),
+                                 minkey, tformsym, maxkey, nao),
+                            nao),
+                       list(set_s,
+                            swres,
+                            list(switch_s,
+                                 if3(minkey == 0,
+                                     tformsym,
+                                     list(intern(lit("-"), user_package),
+                                          tformsym, minkey, nao)),
+                                 vec_list(indexed_clauses), nao),
+                            nao), nao),
+                  list(if_s,
+                       list(eq_s, swres, uniq, nao),
+                       cons(progn_s, cdr(hash_fallback_clause)),
+                       swres,
+                       nao), nao);
+    }
+  }
 
   if (!compat && gt(hash_count(hash), num_fast(10)) &&
       ((casesym != caseq_s && casesym != caseq_star_s) || all_keys_eq))
