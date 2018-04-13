@@ -244,6 +244,8 @@
             (t
               (compile-error form "unrecognized special operator ~s" sym))))
          ((bindable sym) me.(comp-fun-form oreg env form))
+         ((and (consp sym)
+               (eq (car sym) 'lambda)) me.(compile oreg env ^(call ,*form)))
          (t (compile-error form "invalid operator")))))))
 
 (defmeth compiler comp-atom (me oreg form)
