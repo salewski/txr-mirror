@@ -675,14 +675,14 @@
   (mac-param-bind form (op pars . body) form
     (let* ((rest-par (nthlast 0 pars))
            (fixed-pars (ldiff pars rest-par))
-           (need-frame (or fixed-pars rest-par))
            lexsyms specials)
       (tree-bind (: req-pars raw-opt-pars) (split* fixed-pars
                                                    (op where (op eq :)))
         (let* ((opt-pars (mapcar [iffi atom list] raw-opt-pars))
-               (nenv (if need-frame (new env up env co me) env))
                (nreq (len req-pars))
-               (nfixed (+ nreq (len opt-pars))))
+               (nfixed (+ nreq (len opt-pars)))
+               (need-frame (or (plusp nfixed) rest-par))
+               (nenv (if need-frame (new env up env co me) env)))
           (flet ((spec-sub (sym)
                    (cond
                      ((special-var-p sym)
