@@ -54,3 +54,12 @@
                    obj  params)
     (compile-error ctx-form "object ~s too ~a for params ~s"
                    obj (if too-few-p "short" "long") params)))
+
+(defun lambda-too-many-args (form)
+  (compile-error form "excess arguments given"))
+
+(defun lambda-too-few-args (form)
+  (compile-error form "inufficient arguments given"))
+
+(defun lambda-short-apply-list ()
+  (throwf 'eval-error "~s: applied argument list too short" 'lambda))

@@ -882,12 +882,21 @@
        (let ((gopcode [%gcall-op% sym])
              (opcode [%call-op% sym]))
          (tree-case (car args)
-           ((op arg) (if (and (eq op 'fun) (bindable arg))
-                       (let ((fbind env.(lookup-fun arg)))
-                         me.(comp-call-impl oreg env (if fbind opcode gopcode)
-                                            (if fbind fbind.loc me.(get-fidx arg))
-                                            (cdr args)))
-                       :))
+           ((op arg . more)
+            (caseq op
+              (fun (cond
+                     (more (compile-error form "excess args in fun form"))
+                     ((bindable arg)
+                      (let ((fbind env.(lookup-fun arg)))
+                        me.(comp-call-impl oreg env (if fbind opcode gopcode)
+                                           (if fbind fbind.loc me.(get-fidx arg))
+                                           (cdr args))))
+                     ((and (consp arg) (eq (car arg) 'lambda))
+                      me.(comp-fun-form oreg env ^(sym ,arg ,*(cdr args))))
+                     (t :)))
+              (lambda me.(comp-inline-lambda oreg env opcode
+                                             (car args) (cdr args)))
+              (t :)))
            (arg me.(comp-call oreg env
                               (if (eq sym 'usr:apply) 'apply sym) args)))))
       (ift me.(comp-ift oreg env form))
@@ -923,6 +932,17 @@
                  (,opcode ,oreg ,freg ,*(mapcar .oreg afrags)))
                [reduce-left uni afrags nil .fvars]
                [reduce-left uni afrags nil .ffuns]))))
+
+(defmeth compiler comp-inline-lambda (me oreg env opcode lambda args)
+  (let ((reg-args args) apply-list-arg)
+    (when (eql opcode 'apply)
+      (unless args
+        (compile-error lambda "apply requires arguments"))
+      (set reg-args (butlast args)
+           apply-list-arg (car (last args))))
+    me.(compile oreg env (expand (lambda-apply-transform lambda
+                                                         reg-args
+                                                         apply-list-arg)))))
 
 (defmeth compiler comp-for (me oreg env form)
   (mac-param-bind form (op inits (: test . rets) incs . body) form
@@ -1307,6 +1327,50 @@
 (defun expand-defsymacro (form)
   (mac-param-bind form (op name def) form
     ^(sys:rt-defsymacro ',name ',def)))
+
+(defun lambda-apply-transform (lm-expr fix-arg-exprs apply-list-expr)
+  (mac-param-bind lm-expr (lambda lm-args . lm-body) lm-expr
+    (let* ((pars (new (fun-param-parser lm-args lm-expr)))
+           (ign-sym (gensym))
+           (al-val (gensym)))
+      ^(let* ,(build
+                (while (and fix-arg-exprs pars.req)
+                  (add ^(,(pop pars.req) ,(pop fix-arg-exprs))))
+                (while (and fix-arg-exprs pars.opt)
+                  (add ^(,(car (pop pars.opt)) ,(pop fix-arg-exprs))))
+                (cond
+                  ((and (null fix-arg-exprs)
+                        (null pars.req)
+                        (null pars.opt))
+                   (when (or pars.rest apply-list-expr)
+                     (add ^(,(or pars.rest ign-sym) ,apply-list-expr))))
+                  (fix-arg-exprs
+                    (lambda-too-many-args lm-expr))
+                  (apply-list-expr
+                    (add ^(,al-val ,apply-list-expr))
+                    (when pars.req
+                      (add ^(,ign-sym (if (< (len ,al-val) ,(len pars.req))
+                                        (lambda-short-apply-list)))))
+                    (while pars.req
+                      (add ^(,(pop pars.req) (pop ,al-val))))
+                    (while pars.opt
+                      (add ^(,(caar pars.opt)
+                              (if ,al-val
+                                (pop ,al-val)
+                                ,(cadar pars.opt))))
+                      (pop pars.opt))
+                    (when pars.rest
+                      (add ^(,pars.rest ,al-val))))
+                  (pars.req
+                    (lambda-too-few-args lm-expr))
+                  (pars.opt
+                    (while pars.opt
+                      (add ^(,(caar pars.opt)
+                              ,(cadar pars.opt)))
+                      (pop pars.opt))
+                    (when pars.rest
+                      (add ^(,pars.rest))))))
+         ,*lm-body))))
 
 (defun usr:compile-toplevel (exp)
   (let ((co (new compiler))
