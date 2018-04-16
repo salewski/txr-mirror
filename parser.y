@@ -1,3 +1,5 @@
+%{
+
 /* Copyright 2009-2018
  * Kaz Kylheku <kaz@kylheku.com>
  * Vancouver, Canada
@@ -24,8 +26,6 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-%{
 
 #include <stddef.h>
 #include <stdio.h>
