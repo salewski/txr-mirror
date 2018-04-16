@@ -114,7 +114,7 @@ endef
 define SH
 $(if $(VERBOSE),                                        \
   $(1),                                                 \
-  $(V)cmd='$(1)' ;                                      \
+  $(V)cmd='$(subst ','\'',$(1))' ;                      \
   if ! eval "$$cmd" ; then                              \
     printf "make: failing command:\n%s\n" "$$cmd";      \
     exit 1;                                             \
