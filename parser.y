@@ -1887,6 +1887,7 @@ int parse_once(val stream, val name, parser_t *parser)
 int parse(parser_t *parser, val name, enum prime_parser prim)
 {
   int res = 0;
+  cnum start_line = parser->lineno;
 
   parser->errors = 0;
   parser->eof = 0;
@@ -1915,6 +1916,10 @@ int parse(parser_t *parser, val name, enum prime_parser prim)
   uw_unwind;
 
   uw_catch_end;
+
+  if (parser->errors && parser->syntax_tree == nil && start_line != 1)
+    yyerrorf(parser->scanner, lit("while parsing form starting at line ~a"),
+             num(start_line), nao);
 
   return res;
 }
