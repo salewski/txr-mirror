@@ -24,6 +24,8 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+(load "vm-param")
+
 (defstruct (frag oreg code : fvars ffuns) nil
   oreg
   code
@@ -171,7 +173,7 @@
   (condlet
     ((((null atom))) '(t 0))
     (((dreg [me.dreg atom])) dreg)
-    ((((< me.dreg-cntr 256)))
+    ((((< me.dreg-cntr %lev-size%)))
      (let* ((dreg ^(d ,(pinc me.dreg-cntr))))
       (set [me.data (cadr dreg)] atom)
       (set [me.dreg atom] dreg)))
@@ -193,7 +195,7 @@
 (defmeth compiler alloc-treg (me)
   (cond
     (me.tregs (pop me.tregs))
-    ((< me.treg-cntr 256) ^(t ,(pinc me.treg-cntr)))
+    ((< me.treg-cntr %lev-size%) ^(t ,(pinc me.treg-cntr)))
     (t (compile-error me.last-form "code too complex: out of registers"))))
 
 (defmeth compiler free-treg (me treg)
@@ -219,6 +221,9 @@
 
 (defmeth compiler new-env (me env)
   (when (>= env.lev me.nlev)
+    (unless (<= env.lev %max-lev%)
+      (compile-error me.last-form
+                     "code too complex: lexical nesting too deep"))
     (set me.nlev (succ env.lev))))
 
 (defmeth compiler compile (me oreg env form)
@@ -290,7 +295,7 @@
   (cond
     ((null form) (new (frag '(t 0) nil)))
     ((or (and (integerp form)
-              (< (width form) 32))
+              (< (width form) %imm-width%))
          (chrp form))
      (new (frag oreg ^((movi ,oreg ,form)))))
     (t (let ((dreg me.(get-dreg form)))

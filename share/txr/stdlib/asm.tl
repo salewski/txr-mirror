@@ -24,6 +24,8 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+(load "vm-param")
+
 (defstruct oc-base nil
   (:method synerr (me fmt . args)
     (error `opcode @{me.symbol}: @fmt` . args))
@@ -40,6 +42,9 @@
 
   (:method backpatch (me asm at offs)
     (error `assembler: @{me.symbol} doesn't backpatch`)))
+
+(defmacro small-op-p (val)
+  ^(< ,val ,1024))
 
 (compile-only
   (defstruct assembler nil
@@ -163,14 +168,16 @@
                 oc.(synerr "argument ~a of ~s invalid; ~a expected"
                            n syntax [me.operand-name type]))
               (when (and (member type '(d ds))
-                         (or (zerop parg) (<= 256 parg 511)))
+                         (or (zerop parg) (<= %lev-size%
+                                              parg
+                                              (+ %lev-size% %max-lev-idx%))))
                 oc.(synerr "argument ~a of ~s cannot be destination"
                            n syntax))
               (when (and (member type '(rs ds))
-                         (not (< parg 1024)))
+                         (not (small-op-p parg)))
                 oc.(synerr "argument ~a of ~s isn't a small register"
                            n syntax))
-              (when (and (member type '(r rs d ds)) (< parg 256))
+              (when (and (member type '(r rs d ds)) (< parg %lev-size%))
                 (set me.max-treg (max parg me.max-treg)))
               parg))
           pattern (rest syntax) (range 1)))
@@ -242,36 +249,36 @@
 (defun parse-compound-operand (cons)
   (tree-case cons
     ((sym arg)
-     (when (<= 0 arg 255)
+     (when (< -1 arg %lev-size%)
        (caseq sym
          ((t) arg)
-         (d (+ arg 256)))))
+         (d (+ arg %lev-size%)))))
     ((sym arg1 arg2)
-     (when (and (<= 0 arg1 253)
-                (<= 0 arg2 255))
+     (when (and (<= 0 arg1 %max-v-lev%)
+                (<= 0 arg2 %max-lev%))
        (caseq sym
-         (v (+ (* (ssucc arg1) 256) arg2)))))))
+         (v (+ (* (ssucc arg1) %lev-size%) arg2)))))))
 
 (defun parse-operand (str)
   (cond
     ((r^$ #/t[0-9A-Fa-f][0-9A-Fa-f]?/ str)
      (int-str [str 1..:] 16))
     ((r^$ #/d[0-9A-Fa-f][0-9A-Fa-f]?/ str)
-     (+ 256 (int-str [str 1..:] 16)))
+     (+ %lev-size% (int-str [str 1..:] 16)))
     ((r^$ #/v[0-9A-Fa-f]?[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]/ str)
        (let ((xn (int-str [`0@{str[1..:]}` -4..-2] 16))
              (yn (int-str [str -2..:] 16)))
-         (+ (* 256 (+ 2 xn)) yn)))))
+         (+ (* %lev-size% (ssucc xn)) yn)))))
 
 (defun operand-to-sym (val)
-  (let ((xn (ash val -8))
-        (yn (logtrunc val 8)))
+  (let ((xn (ash val (- %lev-bits%)))
+        (yn (logtrunc val %lev-bits%)))
     (caseql xn
       (0 (if (eql yn 0)
            nil
            (intern (fmt "t~,02X" yn))))
       (1 (intern (fmt "d~,02X" yn)))
-      (t (intern (fmt "v~,02X~,02X" (- xn 2) yn))))))
+      (t (intern (fmt "v~,02X~,02X" (ssucc xn) yn))))))
 
 (defun bits-to-obj (bits width)
   (let ((tag (logtrunc bits 2))
@@ -280,6 +287,10 @@
       (1 (sign-extend val (- width 2)))
       (2 (chr-int val))
       (t (error "assembler: bad immediate operand: ~s" bits)))))
+
+(defmacro enc-small-op (val) val)
+
+(defmacro small-op-to-sym (val) ^(operand-to-sym ,val))
 
 (defstruct backpatch-low16 nil
   (:method backpatch (me asm at offs)
@@ -331,10 +342,12 @@
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
     (tree-bind (lev size) asm.(parse-args me syntax '(n n))
-      (unless (<= 1 lev 255)
-        me.(synerr "level must range from 2 to 256"))
-      (unless (<= 0 size 256)
-        me.(synerr "size must range from 0 to 256"))
+      (unless (<= 2 lev %max-lev-idx%)
+        me.(synerr "level must range from 2 to ~a"
+                   %max-lev-idx%))
+      (unless (<= 0 size %lev-size%)
+        me.(synerr "size must range from 0 to ~a"
+                   %lev-size%))
       asm.(put-insn me.code lev size)))
   (:method dis (me asm lev size)
     ^(,me.symbol ,lev ,size)))
@@ -414,19 +427,19 @@
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
     (tree-bind (dst src) asm.(parse-args me syntax '(d rs))
-      asm.(put-insn me.code src dst)))
+      asm.(put-insn me.code (enc-small-op src) dst)))
 
   (:method dis (me asm src dst)
-    ^(,me.symbol ,(operand-to-sym dst) ,(operand-to-sym src))))
+    ^(,me.symbol ,(operand-to-sym dst) ,(small-op-to-sym src))))
 
 (defopcode op-movsr movsr auto
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
     (tree-bind (dst src) asm.(parse-args me syntax '(ds r))
-      asm.(put-insn me.code dst src)))
+      asm.(put-insn me.code (enc-small-op dst) src)))
 
   (:method dis (me asm dst src)
-    ^(,me.symbol ,(operand-to-sym dst) ,(operand-to-sym src))))
+    ^(,me.symbol ,(small-op-to-sym dst) ,(operand-to-sym src))))
 
 (defopcode op-movrr movrr auto
   (:method asm (me asm syntax)
@@ -443,8 +456,8 @@
   (:method asm (me asm syntax)
     (tree-bind (dst src) asm.(parse-args me syntax '(d r))
       (let ((real [%oc-hash% (cond
-                               ((< dst 1024) 'movsr)
-                               ((< src 1024) 'movrs)
+                               ((small-op-p dst) 'movsr)
+                               ((small-op-p src) 'movrs)
                                (t 'movrr))]))
         real.(asm asm syntax)))))
 
@@ -461,15 +474,16 @@
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
     (tree-bind (dst imm) asm.(parse-args me syntax '(ds mi))
-      asm.(put-insn me.code dst (logtrunc (sys:bits imm) 16))))
+      asm.(put-insn me.code (enc-small-op dst)
+                    (logtrunc (sys:bits imm) 16))))
 
   (:method dis (me asm dst imm )
-    ^(,me.symbol ,(operand-to-sym dst) ,(bits-to-obj imm 16))))
+    ^(,me.symbol ,(small-op-to-sym dst) ,(bits-to-obj imm 16))))
 
 (defopcode op-movrbi movrbi auto
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
-    (tree-bind (dst imm) asm.(parse-args me syntax '(ds bi))
+    (tree-bind (dst imm) asm.(parse-args me syntax '(d bi))
       asm.(put-insn me.code 0 dst)
       asm.(put-word (logtrunc (sys:bits imm) 32))))
 
@@ -483,7 +497,7 @@
       (let ((real [%oc-hash% (cond
                                (asm.(immediate-fits-type src 'si) 'movrsi)
                                ((and asm.(immediate-fits-type src 'si)
-                                     (< dst 1024)) 'movsmi)
+                                     (small-op-p dst)) 'movsmi)
                                (t 'movrbi))]))
         real.(asm asm syntax)))))
 
@@ -578,19 +592,19 @@
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
     (tree-bind (name reg) asm.(parse-args me syntax '(rs r))
-      asm.(put-insn me.code name reg)))
+      asm.(put-insn me.code (enc-small-op name) reg)))
 
   (:method dis (me asm name reg)
-    ^(,me.symbol ,(operand-to-sym name) ,(operand-to-sym reg))))
+    ^(,me.symbol ,(small-op-to-sym name) ,(operand-to-sym reg))))
 
 (defopcode op-retrs retrs auto
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
     (tree-bind (name reg) asm.(parse-args me syntax '(r rs))
-      asm.(put-insn me.code reg name)))
+      asm.(put-insn me.code (enc-small-op reg) name)))
 
   (:method dis (me asm reg name)
-    ^(,me.symbol ,(operand-to-sym name) ,(operand-to-sym reg))))
+    ^(,me.symbol ,(operand-to-sym name) ,(small-op-to-sym reg))))
 
 (defopcode op-retrr retrr auto
   (:method asm (me asm syntax)
@@ -608,8 +622,8 @@
     me.(chk-arg-count 2 syntax)
     (tree-bind (name reg) asm.(parse-args me syntax '(r r))
       (let ((real [%oc-hash% (cond
-                               ((< name 1024) 'retsr)
-                               ((< reg 1024) 'retrs)
+                               ((small-op-p name) 'retsr)
+                               ((small-op-p reg) 'retrs)
                                (t 'retrr))]))
         real.(asm asm syntax)))))
 
@@ -648,9 +662,9 @@
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
     (tree-bind (reg name) asm.(parse-args me syntax '(d rs))
-      asm.(put-insn me.code name reg)))
+      asm.(put-insn me.code (enc-small-op name) reg)))
   (:method dis (me asm name reg)
-    ^(,me.symbol ,(operand-to-sym reg) ,(operand-to-sym name))))
+    ^(,me.symbol ,(operand-to-sym reg) ,(small-op-to-sym name))))
 
 (defopcode-derived op-getf getf auto op-getv)
 
@@ -666,9 +680,9 @@
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
     (tree-bind (reg name) asm.(parse-args me syntax '(r rs))
-      asm.(put-insn me.code name reg)))
+      asm.(put-insn me.code (enc-small-op name) reg)))
   (:method dis (me asm name reg)
-    ^(,me.symbol ,(operand-to-sym reg) ,(operand-to-sym name))))
+    ^(,me.symbol ,(operand-to-sym reg) ,(small-op-to-sym name))))
 
 (defopcode-derived op-setl1 setl1 auto op-setv)
 
@@ -680,10 +694,10 @@
     (let* ((syn-pat (repeat '(d) (- (length syntax) 7))))
       (tree-bind (reg frsize dst fix req vari . regs)
                  asm.(parse-args me syntax ^(d n l n n o ,*syn-pat))
-        (unless (<= 0 frsize 255)
-          me.(synerr "frame size must be 0 to 255"))
+        (unless (<= 0 frsize %lev-size%)
+          me.(synerr "frame size must be 0 to ~a" %lev-size%))
         asm.(put-insn me.code (ash dst -16) (logtrunc dst 16))
-        asm.(put-pair (logior (ash (if vari 1 0) 8) frsize) reg)
+        asm.(put-pair (logior (ash (if vari 1 0) %lev-bits%) frsize) reg)
         asm.(put-pair req fix)
         (unless (eql fix (- (len regs) (if vari 1 0)))
           me.(synerr "wrong number of registers"))
@@ -698,10 +712,11 @@
   (:method dis (me asm high16 low16)
     (let ((dst (logior (ash high16 16) low16)))
       (tree-bind (vari-frsize reg) asm.(get-pair)
-        (let ((vari (bit vari-frsize 8)))
+        (let ((vari (bit vari-frsize %lev-bits%)))
           (tree-bind (req fix) asm.(get-pair)
             (build
-              (add me.symbol (operand-to-sym reg) (logtrunc vari-frsize 8)
+              (add me.symbol (operand-to-sym reg)
+                   (logtrunc vari-frsize %lev-bits%)
                    dst fix req vari)
               (when vari
                 (inc fix))

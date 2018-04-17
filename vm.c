@@ -293,18 +293,31 @@ static void vm_reset(struct vm *vm, struct vm_desc *vd,
 #define vm_insn_bigop(insn) (((insn) & 0x3FFFFFFU))
 #define vm_arg_operand_lo(arg) ((arg) & 0xFFFFU)
 #define vm_arg_operand_hi(arg) ((arg) >> 16)
+#define VM_LEV_BITS 8
+#define VM_LEV_MASK 0xFF
+#define VM_SM_LEV_BITS 8
+#define VM_SM_LEV_MASK 0xFF
+#define vm_lev(arg) ((arg) >> VM_LEV_BITS)
+#define vm_idx(arg) ((arg) & VM_LEV_MASK)
+#define vm_sm_lev(arg) ((arg) >> VM_SM_LEV_BITS)
+#define vm_sm_idx(arg) ((arg) & VM_SM_LEV_MASK)
 
 static val vm_execute(struct vm *vm);
 
 INLINE val vm_get(struct vm_env *dspl, unsigned ref)
 {
-  return dspl[ref >> 8].mem[ref & 0xFF];
+  return dspl[vm_lev(ref)].mem[vm_idx(ref)];
+}
+
+INLINE val vm_sm_get(struct vm_env *dspl, unsigned ref)
+{
+  return dspl[vm_sm_lev(ref)].mem[vm_sm_idx(ref)];
 }
 
 INLINE void vm_set(struct vm_env *dspl, unsigned ref, val newval)
 {
-  unsigned d = ref >> 8;
-  unsigned i = ref & 0xFF;
+  unsigned d = vm_lev(ref);
+  unsigned i = vm_idx(ref);
   struct vm_env *env = &dspl[d];
 
   if (d == 1)
@@ -318,6 +331,25 @@ INLINE void vm_set(struct vm_env *dspl, unsigned ref, val newval)
   if (is_ptr(env->vec))
     mut(env->vec);
 }
+
+INLINE void vm_sm_set(struct vm_env *dspl, unsigned ref, val newval)
+{
+  unsigned d = vm_sm_lev(ref);
+  unsigned i = vm_sm_idx(ref);
+  struct vm_env *env = &dspl[d];
+
+  if (d == 1)
+    uw_throwf(error_s, lit("modification of VM static data"), nao);
+
+  if (ref == 0)
+    uw_throwf(error_s, lit("modification of t00/nil"), nao);
+
+  env->mem[i] = newval;
+
+  if (is_ptr(env->vec))
+    mut(env->vec);
+}
+
 
 static void vm_do_frame(struct vm *vm, vm_word_t insn, int capturable)
 {
@@ -511,14 +543,14 @@ static void vm_gapply(struct vm *vm, vm_word_t insn)
 
 static void vm_movrs(struct vm *vm, vm_word_t insn)
 {
-  val datum = vm_get(vm->dspl, vm_insn_extra(insn));
+  val datum = vm_sm_get(vm->dspl, vm_insn_extra(insn));
   vm_set(vm->dspl, vm_insn_operand(insn), datum);
 }
 
 static void vm_movsr(struct vm *vm, vm_word_t insn)
 {
   val datum = vm_get(vm->dspl, vm_insn_operand(insn));
-  vm_set(vm->dspl, vm_insn_extra(insn), datum);
+  vm_sm_set(vm->dspl, vm_insn_extra(insn), datum);
 }
 
 static void vm_movrr(struct vm *vm, vm_word_t insn)
@@ -549,7 +581,7 @@ static void vm_movsmi(struct vm *vm, vm_word_t insn)
   if ((imm & TAG_MASK) == NUM && (imm & 0x8000))
     imm |= negmask;
 
-  vm_set(vm->dspl, dst, coerce(val, imm));
+  vm_sm_set(vm->dspl, dst, coerce(val, imm));
 }
 
 static void vm_movrbi(struct vm *vm, vm_word_t insn)
@@ -669,7 +701,7 @@ static void vm_no_block_err(struct vm *vm, val name)
 static void vm_retsr(struct vm *vm, vm_word_t insn)
 {
   val res = vm_get(vm->dspl, vm_insn_operand(insn));
-  val tag = vm_get(vm->dspl, vm_insn_extra(insn));
+  val tag = vm_sm_get(vm->dspl, vm_insn_extra(insn));
 
   uw_block_return(tag, res);
   vm_no_block_err(vm, tag);
@@ -677,7 +709,7 @@ static void vm_retsr(struct vm *vm, vm_word_t insn)
 
 static void vm_retrs(struct vm *vm, vm_word_t insn)
 {
-  val res = vm_get(vm->dspl, vm_insn_extra(insn));
+  val res = vm_sm_get(vm->dspl, vm_insn_extra(insn));
   val tag = vm_get(vm->dspl, vm_insn_operand(insn));
 
   uw_block_return(tag, res);
@@ -697,7 +729,7 @@ static void vm_retrr(struct vm *vm, vm_word_t insn)
 static void vm_abscsr(struct vm *vm, vm_word_t insn)
 {
   val res = vm_get(vm->dspl, vm_insn_operand(insn));
-  val tag = vm_get(vm->dspl, vm_insn_extra(insn));
+  val tag = vm_sm_get(vm->dspl, vm_insn_extra(insn));
 
   uw_block_abscond(tag, res);
   vm_no_block_err(vm, tag);
@@ -750,7 +782,7 @@ static val vm_get_binding(struct vm *vm, vm_word_t insn,
                           val (*lookup_fn)(val env, val sym),
                           val kind_str)
 {
-  val sym = vm_get(vm->dspl, vm_insn_extra(insn));
+  val sym = vm_sm_get(vm->dspl, vm_insn_extra(insn));
   val binding = lookup_fn(nil, sym);
 
   if (nilp(binding))
@@ -788,7 +820,7 @@ static void vm_setsym(struct vm *vm, vm_word_t insn,
 
 static void vm_bindv(struct vm *vm, vm_word_t insn)
 {
-  val sym = vm_get(vm->dspl, vm_insn_extra(insn));
+  val sym = vm_sm_get(vm->dspl, vm_insn_extra(insn));
   int src = vm_insn_operand(insn);
 
   if (nilp(dyn_env))
@@ -804,8 +836,8 @@ static void vm_close(struct vm *vm, vm_word_t insn)
   vm_word_t arg1 = vm->code[vm->ip++];
   vm_word_t arg2 = vm->code[vm->ip++];
   unsigned vari_fr = vm_arg_operand_hi(arg1);
-  int variadic = vari_fr & 0x100;
-  int frsz = vari_fr & 0xFF;
+  int variadic = vari_fr & (1 << VM_LEV_BITS);
+  int frsz = vari_fr & VM_LEV_MASK;
   unsigned reg = vm_arg_operand_lo(arg1);
   int reqargs = vm_arg_operand_hi(arg2);
   int fixparam = vm_arg_operand_lo(arg2);
