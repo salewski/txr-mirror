@@ -41,7 +41,7 @@
                  n syntax)))
 
   (:method backpatch (me asm at offs)
-    (error `assembler: @{me.symbol} doesn't backpatch`)))
+    (asm-error `@{me.symbol} doesn't backpatch`)))
 
 (defmacro small-op-p (val)
   ^(< ,val ,1024))
@@ -100,7 +100,7 @@
 (defmeth assembler read-buf (me bytes)
   (let ((buf (make-buf bytes)))
     (when (neql (fill-buf buf 0 me.bstr) bytes)
-      (error "assembler: read past instruction block"))
+      (asm-error "read past instruction block"))
     buf))
 
 (defmeth assembler put-word (me word)
@@ -162,8 +162,7 @@
                               (parse-compound-operand arg))
                              ((symbolp arg)
                               (parse-operand (symbol-name arg)))))
-                          (t (error "assembler: invalid arg type spec ~s"
-                                    type)))))
+                          (t (asm-error "invalid arg type spec ~s" type)))))
               (unless (or parg (eq type 'o))
                 oc.(synerr "argument ~a of ~s invalid; ~a expected"
                            n syntax [me.operand-name type]))
@@ -187,17 +186,17 @@
               ((is-label syntax) [%oc-hash% 'label])
               ((consp syntax) [%oc-hash% (car syntax)]))))
     (unless oc
-      (error "assembler: invalid instruction ~s" syntax))
+      (asm-error "invalid instruction ~s" syntax))
     oc.(asm me syntax)))
 
 (defmeth assembler asm (me insns)
   (each ((i insns))
     me.(asm-one i))
   (unless (empty me.labref)
-    (error "assembler: dangling label references"))
+    (asm-error "dangling label references"))
   (whenlet ((n (cdr [find-max me.labdef : cdr])))
     (unless (< -1 n (len me.buf))
-      (error "assembler: labels outside of code"))))
+      (asm-error "labels outside of code"))))
 
 (defmeth assembler dis-one (me)
   (tree-bind (code extension operand) me.(get-insn)
@@ -235,6 +234,9 @@
 (defvarl %oc-hash% (hash))
 
 (defparml %oc-code% 0)
+
+(defun asm-error (msg . args)
+  (error `~s: @msg` 'assembler . args))
 
 (defun register-opcode (oc)
   %oc-list-builder%.(add oc)
@@ -286,7 +288,7 @@
     (caseq tag
       (1 (sign-extend val (- width 2)))
       (2 (chr-int val))
-      (t (error "assembler: bad immediate operand: ~s" bits)))))
+      (t (error "~s: bad immediate operand: ~s" 'assembler bits)))))
 
 (defmacro enc-small-op (val) val)
 

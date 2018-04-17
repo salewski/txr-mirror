@@ -32,8 +32,8 @@
                                              (if it ,then ,else)))
       ((member (first test) '(not null false))
        (unless (eql (length test) 2)
-         (throwf 'eval-error "ifa: wrong number of arguments to ~s"
-                 (first test)))
+         (compile-error "~s: wrong number of arguments to ~s"
+                        'ifa (first test)))
        ^(ifa ,(second test) ,else ,then))
       (t (let* ((sym (first test))
                 (args (if (eq 'dwim sym) (cddr test) (cdr test)))
@@ -43,11 +43,11 @@
                        (and (or (functionp (symbol-function sym))
                                 (eq sym 'dwim)
                                 (null (symbol-function sym)))))
-             (throwf 'eval-error "ifa: test expression must be \
-                                 \ a simple function call"))
+             (compile-error "~s: test expression must be \
+                            \ a simple function call" 'ifa))
            (when (> n-candidate-args 1)
-             (throwf 'eval-error "ifa: ambiguous situation: \
-                                 \ not clear what can be \"it\""))
+             (compile-error "~s: ambiguous situation: \
+                            \ not clear what can be \"it\"" 'ifa))
            (iflet ((it-form (macroexpand [args pos-candidate] e))
                    (is-place (place-form-p it-form e)))
              (let ((before-it [args 0..pos-candidate])
@@ -74,7 +74,7 @@
     (((test . forms) . rest) ^(,if-oper ,test (progn ,*forms)
                                         (,cond-oper ,*rest)))
     (() ())
-    (else (throwf 'eval-error "~s: bad syntax: ~s" cond-oper pairs))))
+    (else (compile-error "~s: bad syntax: ~s" cond-oper pairs))))
 
 (defmacro conda (. pairs)
   (sys:if-to-cond 'ifa 'conda pairs))

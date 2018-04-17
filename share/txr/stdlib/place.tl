@@ -292,8 +292,8 @@
 
 (defmacro shift (:env env . places)
   (tree-case places
-    (() (sys:eval-err "shift: need at least two arguments"))
-    ((place) (sys:eval-err "shift: need at least two arguments"))
+    (() (compile-error "~s: need at least two arguments" 'shift))
+    ((place) (compile-error "~s: need at least two arguments" 'shift))
     ((place newvalue)
      (with-update-expander (getter setter) place env
         ^(prog1 (,getter) (,setter ,newvalue))))
@@ -345,7 +345,8 @@
         (orig (gensym))
         (iter (gensym)))
     (unless places
-      (sys:eval-err "lset: require one or more places followed by expression"))
+      (compile-error "~s: require one or more places followed by expression"
+                     'lset))
     ^(let* ((,orig ,(car source))
             (,iter ,orig))
        ,*(butlast (mappend (ret ^((set ,@1 (car ,iter)) (set ,iter (cdr ,iter))))
@@ -367,8 +368,8 @@
                  (symbolp name)
                  (not (keywordp name))
                  (not (eq t name)))
-      (sys:eval-err "~s: ~s cannot be used as a place name"
-                'defplace name))
+      (compile-error "~s: ~s cannot be used as a place name"
+                     'defplace name))
     (with-gensyms (place)
       ^(progn
          (sethash *place-update-expander* ',name
@@ -767,9 +768,9 @@
   (deleter
     ^(macrolet ((,deleter (:env env)
                    (when (lexical-fun-p env ',sym)
-                     (sys:eval-err "~s is a lexical function, \
-                                   \ thus not deletable"
-                                 ',sym))
+                     (compile-error "~s is a lexical function, \
+                                    \ thus not deletable"
+                                    ',sym))
                     ^(fmakunbound ',',sym)))
        ,body)))
 
@@ -812,7 +813,7 @@
 
 (defun sys:get-mb (sym)
   (or (gethash sys:top-mb sym)
-      (sys:eval-err "unbound macro ~s" sym)))
+      (compile-error "unbound macro ~s" sym)))
 
 (defplace (symbol-macro sym-expr) body
   (getter setter
@@ -883,12 +884,12 @@
     (((sym place)) ^(sys:placelet-1 ((,sym ,place)) ,*body))
     (((sym place) . rest-pairs) ^(sys:placelet-1 ((,sym ,place))
                                    (placelet* (,*rest-pairs) ,*body)))
-    (obj (throwf 'eval-error "placelet*: bad syntax: ~s" obj))))
+    (obj (compile-error "~s: bad syntax: ~s" 'placelet* obj))))
 
 (defmacro placelet (sym-place-pairs . body)
   (unless (all sym-place-pairs
                [andf consp (opip length (= 2)) (oand first bindable)])
-    (throwf 'eval-error "placelet: bad syntax: ~s" sym-place-pairs))
+    (compile-error "~s: bad syntax: ~s" 'placelet sym-place-pairs))
   (tree-bind (: syms places) (transpose sym-place-pairs)
      (let ((temps (mapcar (ret (gensym)) syms)))
        ^(placelet* (,*(zip temps places))

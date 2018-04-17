@@ -55,12 +55,15 @@
     (((sym . rest) . other-clauses)
      (if (eq sym t)
        (if other-clauses
-         (error "txr-case: clauses after (t ...) clause ignored")
+         (compile-error "~s: clauses after (t ...) clause ignored"
+                        'txr-case)
          ^(progn ,*rest))
-       (error "txr-case: bad syntax: ~s" (car clauses))))
+       (compile-error "~s: bad syntax: ~s" (car clauses)
+                      'txr-case)))
     (() ())
     (atom
-       (error "txr-case: unexpected atom in syntax: ~s" atom))))
+       (compile-error "~s: unexpected atom in syntax: ~s"
+                      'txr-case atom))))
 
 (defmacro txr-case (input-expr . clauses)
   (let ((input (gensym "input-")))

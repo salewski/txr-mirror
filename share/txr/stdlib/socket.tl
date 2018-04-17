@@ -57,7 +57,8 @@
         (a         (ash addr -24))
         (p (if port `:@port` "")))
     (if (or (> a 255) (minusp a))
-      (throwf 'eval-error "str-inaddr: ~a out of range for IPv4 address" addr)
+      (throwf 'eval-error "~s: ~a out of range for IPv4 address"
+              'str-inaddr addr)
       `@a.@b.@c.@d@p`)))
 
 (defun sys:in6addr-condensed-text (numeric-pieces)
@@ -82,9 +83,10 @@
                                                 (if (minusp (dec count))
                                                   (unless (zerop val)
                                                     (throwf 'eval-error
-                                                            "str-in6addr: \
+                                                            "~s: \
                                                             \ ~a out of range \
                                                             \ for IPv6 address"
+                                                            'str-in6addr
                                                             addr))
                                                   (cons (logand val #xFFFF)
                                                         (ash val -16))))
@@ -109,8 +111,8 @@
            (we (or weff (+ w wextra))))
       (cond
         ((or (> a 255) (minusp a))
-         (throwf 'eval-error "str-inaddr-net: ~a out of range for IPv4 address"
-                 addr))
+         (throwf 'eval-error "~s: ~a out of range for IPv4 address"
+                 'str-inaddr-net addr))
         ((> w 24) `@a.@b.@c.@d/@we`)
         ((> w 16) `@a.@b.@c/@we`)
         ((> w 8) `@a.@b/@we`)
@@ -137,9 +139,10 @@
                                        (if (minusp (dec count))
                                          (unless (zerop val)
                                            (throwf 'eval-error
-                                                   "str-in6addr-net: \
+                                                   "~s: \
                                                    \ ~a out of range \
                                                    \ for IPv6 address"
+                                                   'str-in6addr-net
                                                    addr))
                                            (cons (logand val #xFFFF)
                                                  (ash val -16))))

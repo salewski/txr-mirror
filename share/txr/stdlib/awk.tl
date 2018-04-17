@@ -91,7 +91,7 @@
              self.nf i)))
     (self.fs
       (when self.ft
-        (throwf 'eval-error "awk: both fs and ft set"))
+        (awk-error "both fs and ft set"))
       (if (and (not self.kfs) (equal self.rec ""))
         (set self.fields nil
              self.nf 0)
@@ -203,6 +203,9 @@
     ((memq kind '(:outf outp)) (flush-stream stream) val)
     (val)))
 
+(defun awk-error (msg . args)
+  (throwf 'eval-error `~s: @msg` 'awk . args))
+
 (defun sys:awk-test (val rec)
   (caseq (typeof val)
     ((regex fun) (call val rec))
@@ -297,30 +300,23 @@
         ((pattern . actions) (caseql pattern
                                (:inputs
                                  (when awc.inputs
-                                   (throwf 'eval-error
-                                           "awk: duplicate :input clauses"))
+                                   (awk-error "duplicate :input clauses"))
                                  (set awc.inputs actions))
                                (:output
                                  (when awc.output
-                                   (throwf 'eval-error
-                                           "awk: duplicate :input clauses"))
+                                   (awk-error "duplicate :output clauses"))
                                  (when (or (atom actions) (cdr actions))
-                                   (throwf 'eval-error
-                                           "awk: bad :output syntax"))
+                                   (awk-error "bad :output syntax"))
                                  (set awc.output (car actions)))
                                (:name
                                  (when awc.name
-                                   (throwf 'eval-error
-                                           "awk: duplicate :name clauses"))
+                                   (awk-error "duplicate :name clauses"))
                                  (when (or (atom actions) (cdr actions))
-                                   (throwf 'eval-error
-                                           "awk: bad :name syntax"))
+                                   (awk-error "bad :name syntax"))
                                  (unless (car actions)
-                                   (throwf 'eval-error
-                                           "awk: null :name not permitted"))
+                                   (awk-error "null :name not permitted"))
                                  (unless (symbolp (car actions))
-                                   (throwf 'eval-error
-                                           "awk: :name must be a symbol"))
+                                   (awk-error ":name must be a symbol"))
                                  (set awc.name (car actions)))
                                (:let (push actions awc.lets))
                                (:begin (push actions awc.begin-actions))
@@ -333,7 +329,7 @@
                                           cl
                                           ^(,pattern (prn)))
                                         awc.cond-actions))))
-        (junk (throwf 'eval-error "awk: bad clause syntax ~s" junk))))
+        (junk (awk-error "bad clause syntax ~s" junk))))
     (set awc.lets [apply append (nreverse awc.lets)]
          awc.begin-actions [apply append (nreverse awc.begin-actions)]
          awc.end-actions [apply append (nreverse awc.end-actions)]

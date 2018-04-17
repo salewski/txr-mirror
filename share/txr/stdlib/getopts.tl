@@ -59,6 +59,9 @@
 (defun sys:opt-err (. args)
   (throwf 'opt-error . args))
 
+(defun getopts-error (msg . args)
+  (error `~s: @msg` 'getopts . args))
+
 (defun sys:opt-dash (name)
   `@(if (> (length name) 1) "-")-@name`)
 
@@ -67,18 +70,18 @@
               (fboundp me.type)
               (and (consp me.type) (eq (car me.type) 'list))
               (member me.type me.valid-types))
-    (error "getopts: type must be a function or valid keyword, not ~s"
-           me.type))
+    (getopts-error "type must be a function or valid keyword, not ~s"
+                   me.type))
   (when me.long
     (when (< (length me.long) 2)
-      (error "getopts: long option ~a has a short name" me.long))
+      (getopts-error "long option ~a has a short name" me.long))
     (when (eql [me.long 0] #\-)
-      (error "getopts: long option ~a starts with - character" me.long)))
+      (getopts-error "long option ~a starts with - character" me.long)))
   (when me.short
     (when (neq (length me.short) 1)
-      (error "getopts: short option ~a not one character long" me.short))
+      (getopts-error "short option ~a not one character long" me.short))
     (when (eql [me.short 0] #\-)
-      (error "getopts: short option ~a starts with - character" me.short))))
+      (getopts-error "short option ~a starts with - character" me.short))))
 
 (defmeth sys:opt-parsed convert-type (me)
   (let ((name (sys:opt-dash me.name))

@@ -91,7 +91,7 @@
   (cond
     ((null specs) list-expr)
     ((atom specs)
-     (throwf 'eval-error "sys:conv: invalid conversion list: ~s" specs))
+     (throwf 'eval-error "~s: invalid conversion list: ~s" 'conv specs))
     (t (with-gensyms (list-sym)
          ^(let ((,list-sym ,list-expr))
             ,(sys:conv-expand form specs list-sym)
