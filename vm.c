@@ -51,14 +51,6 @@
 
 typedef u32_t vm_word_t;
 
-#if HAVE_LITTLE_ENDIAN
-#define vm_opcode(vw) ((vw) >> 26)
-#define vm_oparg(vw) (((vw) >> 16) & 0x3FF)
-#else
-#define vm_opcode(vw) ((vw) >> 26)
-#define vm_oparg(vw) (((vw) >> 16) & 0x3FF)
-#endif
-
 #define zalloca(size) memset(alloca(size), 0, size)
 
 struct vm_desc {
