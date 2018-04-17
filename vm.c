@@ -245,9 +245,11 @@ static val vm_make_closure(struct vm *vm, int frsz)
     case NUM:
       {
         val heap_vec = vector(vec, nil);
+        size_t size = sizeof *cdi->mem * c_num(vec);
         cdi->vec = heap_vec;
         cdi->mem = heap_vec->v.vec;
-        memcpy(cdi->mem, mem, sizeof *cdi->mem * c_num(vec));
+        memcpy(cdi->mem, mem, size);
+        memset(mem, 0, size);
         mut(closure);
         *sdi = *cdi;
         break;
