@@ -1397,7 +1397,7 @@
 
 (defvarl %big-endian% (equal (ffi-put 1 (ffi uint32)) #b'00000001'))
 
-(defvarl %tlo-ver% ^(0 0 ,%big-endian%))
+(defvarl %tlo-ver% ^(1 0 ,%big-endian%))
 
 (defun open-compile-streams (in-path out-path)
   (let* ((rsuff (r$ %file-suff-rx% in-path))
