@@ -1122,7 +1122,9 @@ static val apply_frob_args(val args)
 
 static val apply_intrinsic_frob_args(val args)
 {
-  if (!cdr(args)) {
+  if (!args) {
+    uw_throwf(error_s, lit("apply: trailing-args argument missing"), nao);
+  } if (!cdr(args)) {
     return tolist(car(args));
   } else {
     list_collect_decl (out, ptail);
