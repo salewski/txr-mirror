@@ -285,6 +285,15 @@
       (1 (intern (fmt "d~,02X" ix)))
       (t (intern (fmt "v~,02X~,03X" (ssucc lv) ix))))))
 
+(defun operand-to-exp (val)
+  (with-lev-idx (lv ix) val
+    (caseql lv
+      (0 (if (zerop ix)
+           nil
+           ^(t ,ix)))
+      (1 ^(d ,ix))
+      (t ^(v ,lv ,ix)))))
+
 (defun bits-to-obj (bits width)
   (let ((tag (logtrunc bits 2))
         (val (ash bits -2)))
@@ -676,7 +685,10 @@
 (defopcode op-getv getv auto
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
-    (tree-bind (reg name) asm.(parse-args me syntax '(d rs))
+    (tree-bind (reg name) asm.(parse-args me syntax '(d r))
+      (unless (small-op-p name)
+        asm.(asm-one ^(mov (t 1) ,(operand-to-exp name)))
+        (set name 1))
       asm.(put-insn me.code (enc-small-op name) reg)))
   (:method dis (me asm name reg)
     ^(,me.symbol ,(operand-to-sym reg) ,(small-op-to-sym name))))
@@ -694,7 +706,10 @@
 (defopcode op-setv setv auto
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
-    (tree-bind (reg name) asm.(parse-args me syntax '(r rs))
+    (tree-bind (reg name) asm.(parse-args me syntax '(r r))
+      (unless (small-op-p name)
+        asm.(asm-one ^(mov (t 1) ,(operand-to-exp name)))
+        (set name 1))
       asm.(put-insn me.code (enc-small-op name) reg)))
   (:method dis (me asm name reg)
     ^(,me.symbol ,(operand-to-sym reg) ,(small-op-to-sym name))))

@@ -107,7 +107,7 @@
 
 (compile-only
   (defstruct compiler nil
-    (treg-cntr 1)
+    (treg-cntr 2)
     (dreg-cntr 0)
     (fidx-cntr 0)
     (nlev 2)
@@ -215,7 +215,7 @@
     me.(free-treg treg)))
 
 (defmeth compiler check-treg-leak (me)
-  (let ((balance (- (pred me.treg-cntr) (len me.tregs))))
+  (let ((balance (- (ppred me.treg-cntr) (len me.tregs))))
     (unless (zerop balance)
       (error "t-register leak in compiler: ~s outstanding" balance))))
 
