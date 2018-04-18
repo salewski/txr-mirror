@@ -24,9 +24,12 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(defsymacro %lev-size% 256)
+(defsymacro %lev-size% 1024)
 (defsymacro %max-lev-idx% (macro-time (ppred %lev-size%)))
-(defsymacro %lev-bits% 8)
-(defsymacro %max-lev% 255)
+(defsymacro %lev-bits% 10)
+(defsymacro %max-lev% 63)
 (defsymacro %max-v-lev% (macro-time (ppred %max-lev%)))
 (defsymacro %imm-width% 32)
+(defsymacro %sm-lev-size% 64)
+(defsymacro %max-sm-lev-idx% 15)
+(defsymacro %sm-lev-bits% 6)

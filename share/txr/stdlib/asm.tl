@@ -43,9 +43,6 @@
   (:method backpatch (me asm at offs)
     (asm-error `@{me.symbol} doesn't backpatch`)))
 
-(defmacro small-op-p (val)
-  ^(< ,val ,1024))
-
 (compile-only
   (defstruct assembler nil
     buf
@@ -263,24 +260,30 @@
 
 (defun parse-operand (str)
   (cond
-    ((r^$ #/t[0-9A-Fa-f][0-9A-Fa-f]?/ str)
+    ((r^$ #/t[0-9A-Fa-f][0-9A-Fa-f]?[0-9A-Fa-f]?/ str)
      (int-str [str 1..:] 16))
-    ((r^$ #/d[0-9A-Fa-f][0-9A-Fa-f]?/ str)
+    ((r^$ #/d[0-9A-Fa-f][0-9A-Fa-f]?[0-9A-Fa-f]?/ str)
      (+ %lev-size% (int-str [str 1..:] 16)))
-    ((r^$ #/v[0-9A-Fa-f]?[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]/ str)
-       (let ((xn (int-str [`0@{str[1..:]}` -4..-2] 16))
-             (yn (int-str [str -2..:] 16)))
-         (+ (* %lev-size% (ssucc xn)) yn)))))
+    ((r^$ #/v[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]/ str)
+       (let ((lv (int-str [`0@{str[1..:]}` -5..-3] 16))
+             (ix (int-str [str -3..:] 16)))
+         (+ (* %lev-size% (ssucc lv)) ix)))))
+
+(defmacro with-lev-idx ((lev-var idx-var) val-expr . body)
+  (with-gensyms (val-var)
+    ^(let* ((,val-var ,val-expr)
+            (,lev-var (ash ,val-var (macro-time (- %lev-bits%))))
+            (,idx-var (logtrunc ,val-var %lev-bits%)))
+       ,*body)))
 
 (defun operand-to-sym (val)
-  (let ((xn (ash val (- %lev-bits%)))
-        (yn (logtrunc val %lev-bits%)))
-    (caseql xn
-      (0 (if (eql yn 0)
+  (with-lev-idx (lv ix) val
+    (caseql lv
+      (0 (if (zerop ix)
            nil
-           (intern (fmt "t~,02X" yn))))
-      (1 (intern (fmt "d~,02X" yn)))
-      (t (intern (fmt "v~,02X~,02X" (ssucc xn) yn))))))
+           (intern (fmt "t~,02X" ix))))
+      (1 (intern (fmt "d~,02X" ix)))
+      (t (intern (fmt "v~,02X~,03X" (ssucc lv) ix))))))
 
 (defun bits-to-obj (bits width)
   (let ((tag (logtrunc bits 2))
@@ -290,9 +293,19 @@
       (2 (chr-int val))
       (t (error "~s: bad immediate operand: ~s" 'assembler bits)))))
 
-(defmacro enc-small-op (val) val)
+(defun small-op-p (val)
+  (with-lev-idx (lv ix) val
+    (and (< -1 ix %sm-lev-size%)
+         (<= 0 lv %max-sm-lev-idx%))))
 
-(defmacro small-op-to-sym (val) ^(operand-to-sym ,val))
+(defun enc-small-op (val)
+  (with-lev-idx (lv ix) val
+    (logior (ash lv %sm-lev-bits%) ix)))
+
+(defun small-op-to-sym (sval)
+  (let ((lv (ash sval (- %sm-lev-bits%)))
+        (ix (logtrunc sval %sm-lev-bits%)))
+    (operand-to-sym (+ (* lv %lev-size%) ix))))
 
 (defstruct backpatch-low16 nil
   (:method backpatch (me asm at offs)
