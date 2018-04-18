@@ -480,21 +480,28 @@
            (clabels (mapcar (ret (gensym "l")) cases))
            (treg me.(maybe-alloc-treg oreg))
            (ifrag me.(compile treg env idx-form))
+           (seen (unless shared (hash :eql-based)))
            last-cfrag
            (cfrags (collect-each ((cs cases)
                                   (lb clabels)
                                   (i (range 1)))
-                     (let ((cfrag me.(comp-progn oreg env cs)))
-                       (when (eq i ncases)
-                         (set last-cfrag cfrag))
-                       (new (frag oreg
-                                  ^(,lb
-                                    ,*cfrag.code
-                                    ,*(unless shared
-                                        ^(,*(maybe-mov oreg cfrag.oreg)
-                                          ,*(unless (= i ncases)
-                                              ^((jmp ,lend))))))
-                                  cfrag.fvars cfrag.ffuns))))))
+                     (iflet ((seen-lb (and seen [seen cs])))
+                       (progn
+                         (set [clabels (pred i)] seen-lb)
+                         (new (frag oreg nil)))
+                       (let ((cfrag me.(comp-progn oreg env cs)))
+                         (when (eq i ncases)
+                           (set last-cfrag cfrag))
+                         (unless shared
+                           (set [seen cs] lb))
+                         (new (frag oreg
+                                    ^(,lb
+                                       ,*cfrag.code
+                                       ,*(unless shared
+                                           ^(,*(maybe-mov oreg cfrag.oreg)
+                                              ,*(unless (= i ncases)
+                                                  ^((jmp ,lend))))))
+                                    cfrag.fvars cfrag.ffuns)))))))
       me.(maybe-free-treg treg oreg)
       (new (frag oreg
                  ^(,*ifrag.code
