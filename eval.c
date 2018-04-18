@@ -3093,10 +3093,17 @@ static val dot_to_apply(val form, val lisp1_p)
   }
 
   if (args) {
-    val sym = car(form);
-    return cons(sys_apply_s, cons(if3(lisp1_p,
-                                      sym,
-                                      list(fun_s, sym, nao)),
+    val fun = car(form);
+    val nofun = nil;
+
+    while (fun == call_s) {
+      fun = car(args);
+      nofun = t;
+      pop(&args);
+    }
+    return cons(sys_apply_s, cons(if3(lisp1_p || nofun,
+                                      fun,
+                                      list(fun_s, fun, nao)),
                                   args));
   }
 
