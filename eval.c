@@ -1142,9 +1142,19 @@ val apply_intrinsic(val fun, val args)
   return apply(fun, apply_intrinsic_frob_args(z(args)));
 }
 
-static val applyv(val fun, struct args *args)
+val applyv(val fun, struct args *args)
 {
-  return apply_intrinsic(fun, args_get_list(args));
+  args_normalize_least(args, 1);
+
+  if (!args->fill)
+    uw_throwf(error_s, lit("apply: trailing-args argument missing"), nao);
+
+  if (!args->list)
+    args->list = z(args->arg[--args->fill]);
+  else
+    args->list = apply_intrinsic_frob_args(args->list);
+
+  return generic_funcall(fun, args);
 }
 
 static loc term(loc head)

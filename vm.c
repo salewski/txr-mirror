@@ -464,7 +464,7 @@ static void vm_apply(struct vm *vm, vm_word_t insn)
     }
   }
 
-  result = apply_intrinsic(vm_get(vm->dspl, fun), args_get_list(args));
+  result = applyv(vm_get(vm->dspl, fun), args);
   vm_set(vm->dspl, dest, result);
 }
 
