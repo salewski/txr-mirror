@@ -66,7 +66,6 @@ void reg_fun(val sym, val fun);
 void reg_mac(val sym, val fun);
 val set_get_symacro(val sym, val form);
 val apply(val fun, val arglist);
-val apply_intrinsic(val fun, val args);
 val applyv(val fun, struct args *args);
 val eval_progn(val forms, val env, val ctx_form);
 val eval(val form, val env, val ctx_form);

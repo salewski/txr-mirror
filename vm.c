@@ -539,7 +539,7 @@ static void vm_gapply(struct vm *vm, vm_word_t insn)
     }
   }
 
-  result = apply_intrinsic(deref(vm_ftab(vm, fun)), args_get_list(args));
+  result = applyv(deref(vm_ftab(vm, fun)), args);
   vm_set(vm->dspl, dest, result);
 }
 

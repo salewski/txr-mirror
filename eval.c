@@ -1137,11 +1137,6 @@ static val apply_intrinsic_frob_args(val args)
   }
 }
 
-val apply_intrinsic(val fun, val args)
-{
-  return apply(fun, apply_intrinsic_frob_args(z(args)));
-}
-
 val applyv(val fun, struct args *args)
 {
   args_normalize_least(args, 1);
@@ -5853,7 +5848,7 @@ val retf(val ret)
 
 static val do_apf(val fun, struct args *args)
 {
-  return apply_intrinsic(fun, args_get_list(args));
+  return applyv(fun, args);
 }
 
 static val apf(val fun)
