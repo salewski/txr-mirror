@@ -281,8 +281,8 @@
     (caseql lv
       (0 (if (zerop ix)
            nil
-           (intern (fmt "t~,02X" ix))))
-      (1 (intern (fmt "d~,02X" ix)))
+           (intern (fmt "t~,03X" ix))))
+      (1 (intern (fmt "d~,03X" ix)))
       (t (intern (fmt "v~,02X~,03X" (ppred lv) ix))))))
 
 (defun operand-to-exp (val)
@@ -760,7 +760,7 @@
 (defun disassemble-cdf (code data funv *stdout*)
   (let ((asm (new assembler buf code)))
     (put-line "data:")
-    (mapdo (do format t "  d~,02X: ~s\n" @1 @2) (range 0) data)
+    (mapdo (do format t " d~,03X: ~s\n" @1 @2) (range 0) data)
     (put-line "funs:")
     (mapdo (do format t "~5d: ~s\n" @1 @2) (range 0) funv)
     (put-line "code:")
