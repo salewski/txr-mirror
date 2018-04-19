@@ -283,7 +283,7 @@
            nil
            (intern (fmt "t~,02X" ix))))
       (1 (intern (fmt "d~,02X" ix)))
-      (t (intern (fmt "v~,02X~,03X" (ssucc lv) ix))))))
+      (t (intern (fmt "v~,02X~,03X" (ppred lv) ix))))))
 
 (defun operand-to-exp (val)
   (with-lev-idx (lv ix) val
@@ -292,7 +292,7 @@
            nil
            ^(t ,ix)))
       (1 ^(d ,ix))
-      (t ^(v ,lv ,ix)))))
+      (t ^(v ,(ppred lv) ,ix)))))
 
 (defun bits-to-obj (bits width)
   (let ((tag (logtrunc bits 2))
