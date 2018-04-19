@@ -38563,6 +38563,28 @@ non-deterministically:
   -> (2 4)
 .cble
 
+.coNP Macros @ hlet and @ hlet*
+.synb
+.mets (hlet >> ({ sym | >> ( sym << init-form )}*) << body-form *)
+.mets (hlet* >> ({ sym | >> ( sym << init-form )}*) << body-form *)
+.syne
+.desc
+The
+.code hlet
+and
+.code hlet*
+macros behave exactly like
+.code let
+and
+.codn let* ,
+respectively except that they guarantee that the variable bindings are
+allocated in storage which isn't captured by delimited continuations.
+
+The
+.code h
+in the names stands for "heap", serving as a mnemonic based on the
+implementation concept of these bindings being "heap allocated".
+
 .SS* Regular Expression Library
 
 \*(TX provides a "pure" regular expression implementation based on automata

@@ -88,3 +88,31 @@
   ^(sys:capture-cont ',name (lambda (,sym)
                               (sys:abscond-from ,name (progn ,*body)))
                      ',form))
+
+(defun hlet-expand (op raw-vis body)
+  (let* ((vis (mapcar [iffi atom list] raw-vis))
+         (nvars (len vis))
+         (syms [mapcar car vis])
+         (inits [mapcar cadr vis])
+         (letop (if (eq op 'hlet*) 'let* 'let))
+         (gens (mapcar (ret (gensym)) vis))
+         (vec (gensym))
+         (macs (mapcar (ret ^(,@1 (vecref ,vec ,@2)))
+                       syms (range 0)))
+         (inits (mapcar (ret ^(set (vecref ,vec ,@1) ,@2))
+                        (range 0) inits)))
+    (if (eq op 'hlet*)
+      ^(let* ((,vec (vector ,nvars)))
+         (symacrolet ,macs
+           ,*inits
+           ,*body))
+      ^(let* ((,vec (vector ,nvars)))
+         ,*inits
+         (symacrolet ,macs
+           ,*body)))))
+
+(defmacro hlet (var-inits . body)
+  (hlet-expand 'hlet var-inits body))
+
+(defmacro hlet* (var-inits . body)
+  (hlet-expand 'hlet* var-inits body))

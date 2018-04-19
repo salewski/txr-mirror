@@ -299,7 +299,7 @@ static val yield_set_entries(val dlt, val fun)
   val name[] = {
     lit("obtain"), lit("obtain-block"), lit("yield-from"), lit("yield"),
     lit("obtain*"), lit("obtain*-block"),
-    lit("suspend"),
+    lit("suspend"), lit("hlet"), lit("hlet*"),
     nil
   };
   set_dlt_entries(dlt, name, fun);
