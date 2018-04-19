@@ -1,3 +1,41 @@
+                                    TXR 192
+                                   2018-04-19
+
+  Features
+
+  - compiler:
+    - compiled files now marked with byte order indication
+      - TXR compiled on big-endian will load compiled files made by TXR on a
+        little-endian machine and vice-versa.
+    - caseq/caseql/casequal optimized to table dispatch for characters and
+      integers in dense range.
+    - inline lambdas (lambdas that are immediately invoked) are now open-coded
+      into let-based binding blocks.
+  - parser:
+    - Unterminated form errors now show the starting line number of the
+      top-level form being read.
+  - VM:
+    - architectural change: display max depth reduced from 256 to 64 frames,
+      but frames with maximum widened from 256 words to 1024 words.
+    - object file major version bumped from 0 to 1:
+      - compiled files from TXR 191 won't load.
+  - lib/VM:
+    - wasteful consing eliminated from apply function.
+  - continuations:
+    - documented differences in compiled vs intepreted behavior with respect to
+      mutated lexicals.
+    - new macros hlet and hlet* provided for binding lexical variables that are
+      based in off-stack storage that isn't captured in continuations.
+
+  Bugs
+
+  - compiler:
+    - fixed miscompilation of unwind-protect.
+    - missing ((lambda ()) ...) call forms now handled
+      - also optimized by open-coding.
+
+
+
                                     TXR 191
                                    2018-04-10
 
