@@ -518,8 +518,7 @@
     (let* ((treg me.(alloc-treg))
            (pfrag me.(compile oreg env prot-form))
            (cfrag me.(comp-progn treg env cleanup-body))
-           (lclean (gensym "l"))
-           (lskip (gensym "l")))
+           (lclean (gensym "l")))
       me.(free-treg treg)
       (cond
         ((null pfrag.code)
@@ -531,11 +530,10 @@
         (t (new (frag pfrag.oreg
                       ^((uwprot ,lclean)
                         ,*pfrag.code
-                        (jmp ,lskip)
+                        (end nil)
                         ,lclean
                         ,*cfrag.code
-                        (end nil)
-                        ,lskip)
+                        (end nil))
                       (uni pfrag.fvars pfrag.fvars)
                       (uni cfrag.fvars cfrag.fvars))))))))
 
