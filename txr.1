@@ -37864,7 +37864,7 @@ Unfortunately, the absconding operator is dangerous: its use
 breaks the language guarantee that clean-up associated with a form is done no
 matter how a form terminates.
 
-.TP* Notes:
+.NP* Comparison with Lexical Closures
 
 Delimited continuations resemble lexical closures in some ways. Both
 constructs provide a way to return to some context whose evaluation
@@ -37887,6 +37887,43 @@ code, return to surrounding forms and parent functions, and access the dynamic
 environment. The continuation function returns to its caller when that entire
 restarted context terminates, whereas a closure returns to its caller as soon
 as the closure body terminates.
+
+.NP* Differences in Compiled vs. Interpreted Behavior
+
+Delimited continuations in \*(TX expose a behavioral difference between
+compiled and interpreted code.
+
+When a continuation is captured in compiled code, it captures not only the
+bindings of lexical variables, but also potentially their current values
+at the time of capture. Lexical variables captured in a continuation which are
+changed after a continuation is captured may appear to revert to their
+capture-time values inside the restored continuation. This is because in compiled
+code, variables are allocated on the stack, which is copied as part of
+creating a continuation. By contrast, interpreted code only maintains an
+environment pointer on the stack; the lexical environment is a dynamically
+allocated object whose contents aren't included in the continuation.
+Code that doesn't mutate variables will not see a difference.
+An additional complication is that when compiled code captures lexical
+closures, captured variables are moved into dynamic storage.
+
+In continuation-based code which relies on mutation of lexical variables
+created with
+.code let
+or
+.codn let* ,
+the macros
+.code hlet
+and
+.code hlet*
+can be used instead. These macros create variable bindings whose storage is
+outside of the stack.
+
+If the affected variables are other kinds of bindings such as
+function parameters or variables created with specialized binding
+constructs such as
+.codn with-stream ,
+additional coding changes may be required to get interpreted code
+working under compilation.
 
 .coNP Function @ sys:capture-cont
 .synb
