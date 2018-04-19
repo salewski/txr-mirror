@@ -61983,7 +61983,7 @@ circular structures are reproduced.
 
 .coNP Function @ compile-toplevel
 .synb
-.mets (compile-toplevel << form )
+.mets (compile-toplevel < form << expanded-p )
 .syne
 .desc
 The
@@ -62001,6 +62001,12 @@ evaluating the original
 using the
 .code eval
 function.
+
+The
+.meta expanded-p
+argument indicates that
+.meta form
+has already been expanded and is to be compiled without further expansion.
 
 Note: in spite of the name,
 .code compile-toplevel

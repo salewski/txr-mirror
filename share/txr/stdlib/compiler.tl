@@ -1382,12 +1382,16 @@
                       (add ^(,pars.rest))))))
          ,*lm-body))))
 
-(defun usr:compile-toplevel (exp)
+(defun usr:compile-toplevel (exp : (expanded-p nil))
   (let ((co (new compiler))
         (as (new assembler)))
     (let* ((oreg co.(alloc-treg))
-           (xexp (prog1 (expand* exp) (unless *load-recursive*
-                                        (release-deferred-warnings))))
+           (xexp (if expanded-p
+                   exp
+                   (unwind-protect
+                     (expand* exp)
+                     (unless *load-recursive*
+                       (release-deferred-warnings)))))
            (frag co.(compile oreg (new env co co) xexp)))
       co.(free-treg oreg)
       co.(check-treg-leak)
@@ -1471,7 +1475,7 @@
                                     [mapdo compile-form (cdr form)]))
                        (t (when (and (or *eval* *emit*)
                                      (not (constantp form)))
-                            (let* ((vm-desc (compile-toplevel form))
+                            (let* ((vm-desc (compile-toplevel form t))
                                    (flat-vd (list-from-vm-desc vm-desc)))
                               (when *eval*
                                 (sys:vm-execute-toplevel vm-desc))
