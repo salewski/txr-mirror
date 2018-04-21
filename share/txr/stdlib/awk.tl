@@ -287,9 +287,10 @@
 
 (defmacro sys:awk-redir (aws-sym stream-var kind mode path body)
   (with-gensyms (res-sym)
-    ^(let ((,stream-var (qref ,aws-sym (ensure-stream ,kind ,path, mode))))
+    ^(let ((,res-sym ,path)
+           (,stream-var (qref ,aws-sym (ensure-stream ,kind ,res-sym ,mode))))
        ,(if body
-          ^(qref ,aws-sym (close-or-flush ,stream-var ,kind ,path
+          ^(qref ,aws-sym (close-or-flush ,stream-var ,kind ,res-sym
                                           (progn ,*body)))
           stream-var))))
 
