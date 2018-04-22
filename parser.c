@@ -629,9 +629,9 @@ static val read_file_common(val stream, val error_stream, val compiled)
 
     if (compiled && first) {
       val major = car(form);
-      if (neq(major, one))
+      if (lt(major, one) || gt(major, two))
         uw_throwf(error_s,
-                  lit("cannot load ~s; version number mismatch"),
+                  lit("cannot load ~s: version number mismatch"),
                   stream, nao);
       big_endian = caddr(form);
       first = nil;

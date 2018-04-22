@@ -2692,12 +2692,15 @@ val format_field(val obj, val modifier, val filter, val eval_fun)
   return do_format_field(obj, n, sep, range_ix, plist, filter);
 }
 
-static val fmt_simple(val obj, val n_in, val sep_in,
+static val fmt_simple(val obj, val n, val sep,
                           val range_ix, val plist)
 {
-  val n = if3(null(n_in), zero, n_in);
-  val sep = if3(null(sep_in), lit(" "), sep_in);
-  return do_format_field(fmt_tostring(obj), n, sep, range_ix, plist, nil);
+  return do_format_field(fmt_tostring(obj),
+                         default_arg(n, zero),
+                         default_arg(sep, lit(" ")),
+                         default_null_arg(range_ix),
+                         default_null_arg(plist),
+                         nil);
 }
 
 static val fmt_flex(val obj, val plist, struct args *args)
@@ -6532,7 +6535,7 @@ void eval_init(void)
   reg_fun(intern(lit("tprint"), user_package), func_n2o(tprint, 1));
   reg_fun(intern(lit("display-width"), user_package), func_n1(display_width));
 
-  reg_fun(intern(lit("fmt-simple"), system_package), func_n5(fmt_simple));
+  reg_fun(intern(lit("fmt-simple"), system_package), func_n5o(fmt_simple, 1));
   reg_fun(intern(lit("fmt-flex"), system_package), func_n2v(fmt_flex));
   reg_fun(intern(lit("fmt-join"), system_package), func_n0v(fmt_join));
 

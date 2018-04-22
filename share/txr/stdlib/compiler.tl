@@ -1143,7 +1143,12 @@
                                                   ^(rcons ,rng-ix nil)
                                                   rng-ix)
                                                 (nreverse flex))))
-              ^(sys:fmt-simple ,obj ,num ,sep, rng-ix ',plist)))))))
+              (cond
+                (plist ^(sys:fmt-simple ,obj ,num ,sep, rng-ix ',plist))
+                (rng-ix ^(sys:fmt-simple ,obj ,num ,sep, rng-ix))
+                (sep ^(sys:fmt-simple ,obj ,num ,sep))
+                (num ^(sys:fmt-simple ,obj ,num))
+                (t ^(sys:fmt-simple ,obj ,num)))))))))
 
 (defun expand-quasi-args (form)
   (append-each ((el (cdr form)))
@@ -1153,9 +1158,9 @@
          (sys:var (mac-param-bind form (sym exp : mods) el
                     (list (expand-quasi-mods exp mods))))
          (sys:quasi (expand-quasi-mods el))
-         (t (list ^(sys:fmt-simple ,el nil nil nil nil)))))
+         (t (list ^(sys:fmt-simple ,el)))))
       ((bindable el)
-       (list ^(sys:fmt-simple ,el nil nil nil nil)))
+       (list ^(sys:fmt-simple ,el)))
       (t
         (list el)))))
 
@@ -1406,7 +1411,7 @@
 
 (defvarl %big-endian% (equal (ffi-put 1 (ffi uint32)) #b'00000001'))
 
-(defvarl %tlo-ver% ^(1 0 ,%big-endian%))
+(defvarl %tlo-ver% ^(2 0 ,%big-endian%))
 
 (defun open-compile-streams (in-path out-path)
   (let* ((rsuff (r$ %file-suff-rx% in-path))
