@@ -177,7 +177,7 @@
      (let ((dreg ^(d ,(pinc me.dreg-cntr))))
       (set [me.data (cadr dreg)] atom)
       (set [me.dreg atom] dreg)))
-    (t (compile-error me.last-form "code too complex: out of registers"))))
+    (t (compile-error me.last-form "code too complex: too many literals"))))
 
 (defmeth compiler get-fidx (me atom)
   (iflet ((fidx [me.fidx atom]))
