@@ -322,9 +322,6 @@ INLINE void vm_set(struct vm_env *dspl, unsigned ref, val newval)
   unsigned i = vm_idx(ref);
   struct vm_env *env = &dspl[d];
 
-  if (d == 1)
-    uw_throwf(error_s, lit("modification of VM static data"), nao);
-
   if (ref == 0)
     uw_throwf(error_s, lit("modification of t00/nil"), nao);
 
@@ -339,9 +336,6 @@ INLINE void vm_sm_set(struct vm_env *dspl, unsigned ref, val newval)
   unsigned d = vm_sm_lev(ref);
   unsigned i = vm_sm_idx(ref);
   struct vm_env *env = &dspl[d];
-
-  if (d == 1)
-    uw_throwf(error_s, lit("modification of VM static data"), nao);
 
   if (ref == 0)
     uw_throwf(error_s, lit("modification of t00/nil"), nao);

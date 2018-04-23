@@ -62299,6 +62299,303 @@ Macros definitions may be treated with
 if the intent is only to make the expanded code available in the compiled file,
 and not to propagate compiled versions of the macros which produced it.
 
+.coNP Macro @ load-time
+.synb
+.mets (load-time << form )
+.syne
+.desc
+The
+.code load-time
+macro makes it possible for a program to evaluate a form, such that,
+subsequently, the value of that form is then treated as if it were
+a literal object.
+
+Literals are pieces of the program syntax which are not evaluated at all.
+On the other hand, the values of expressions are not literals.
+
+From time to time, certain situations benefit from the program being
+able to perform an evaluation, and then have the result of that evaluation
+treated as a literal.
+
+There is already an operator named
+.code macro-time
+which makes this possible in its particular manner: that operator
+allows one or more expressions to be evaluated during macro expansion.
+The result of the
+.code macro-time
+is then quoted and substituted in place of the expression. That result
+then appears as a true quoted literal to the executing code.
+
+The
+.code load-time
+macro similarly arranges for the single form
+.meta form
+to be evaluated. However, this evaluation doesn't take place at
+expansion time. It is delayed until the program executes.
+
+What exactly "delayed until the program executes" means depends on whether
+.code load-time
+is used in compiled or interpreted code, and in what situation is
+it compiled.
+
+If the
+.code load-time
+form appears in interpreted code, then the exact time when
+.meta form
+is evaluated is unspecified. The evaluator may identify all
+.code load-time
+forms which occur anywhere in a top-level expression, and perform
+their evaluations immediately, before evaluating the form itself.
+Then, when the
+.code load-time
+forms are encountered again during the evaluation of the form,
+they simply retrieve the previously evaluated values as if
+they were literal.  Or else, the evaluation may be performed late: when the
+.code load-time
+form itself is encountered during normal evaluation. In that case,
+.meta form
+will still be evaluated only once and then its value effectively
+as a literal in subsequent re-evaluations of that
+.code load-time
+form, if any.
+
+If a
+.code load-time
+form appears in an expression which is compiled, it arranges for
+the compiled version of
+.meta form
+to be executed when compiled version of the entire expression is
+executed. This execution occurs early, before the execution of
+forms that are not wrapped in
+.codn load-time .
+The value produced by
+.code form
+is entered into the static data vector associated with the
+compiled top-level expression, which also holds ordinary literals.
+Whenever the value of that
+.code load-time
+form is required, the compiled code references it from the data
+vector as if it were a true literal.
+
+The implications of the translation scheme may be understood
+separately from the perspective of code processed with
+.codn compile-toplevel ,
+.code compile
+and
+.codn compile-file .
+
+A
+.code load-time
+form appearing in a form passed to
+.code compile-toplevel
+is translated such that its embedded
+.meta form
+will be executed each time the virtual machine description returned by
+.code compile-toplevel
+is executed, and the execution of all such forms is placed ahead
+of other code.
+
+A
+.code load-time
+form appearing in an interpreted function which is processed by
+.code compile
+is effectively evaluated immediately, and its value becomes a literal
+in the compiled version of the function.
+
+A
+.code load-time
+form appearing in an expression inside a file that is processed by
+.code compile-file
+is compiled along with that form and deposited into the object file.
+When the object file is loaded, each compiled top-level form is executed.
+Each compiled top-level form's
+.code load-time
+calculations are executed first, and the corresponding
+.meta form
+values become literals at that point. This execution order is individually
+ensured for each top-level form.
+Thus, the
+.code load-time
+forms in a given top-level form may rely on the side-effects of
+of prior top-level forms having taken place.
+
+In all situations, the evaluation of
+.meta form
+takes place in an empty lexical environment. Even if the
+.code load-time
+form is surrounded by constructs which establish lexical bindings,
+those lexical bindings aren't visible to
+.metn form .
+Which dynamic bindings are visible to
+.meta form
+depends on the exact situation. If a
+.code load-time
+form occurs in code that had been processed by
+.code compile-file
+and is now being loaded by
+.codn load ,
+then the dynamic environment in effect is the one in which the
+.code load
+occurred, with any modifications to that environment that were performed
+by previously executed forms. If a
+.code load-time
+form occurs in code that had been processed by
+.codn compile-toplevel ,
+then
+.meta form
+is evaluated in the dynamic environment of the caller which invokes
+the execution of the resulting compiled object.
+When a
+.code load-time
+form occurs in the code of an function being processed by
+.codn compile ,
+then
+.meta form
+is evaluated in the dynamic environment of the caller which invokes
+.codn compile .
+If a
+.code load-time
+form occurs in a form processed processed by the evaluator, it is unspecified
+whether it takes place in the original dynamic environment in which the
+evaluator was invoked, or whether it is in the dynamic environment of
+the immediately enclosing form which surrounds the
+.code load-time
+form.
+
+.TP* Notes:
+
+When interpreted code containing
+.code load-time
+is evaluated, a mutating side effect may take place
+on the tree structure of that code itself as a result of the
+.code load-time
+evaluation.
+If that previously evaluated code is subsequently compiled, the compiled
+translation may be different from compiling the original unevaluated code.
+Specifically, the compiler may take advantage of the
+.code load-time
+evaluation which had already taken place in the interpreter, and simply take
+that value, and avoid compiling
+.meta form
+entirely. This also has implications on the dynamic environment
+that is in effect when
+.meta form
+is evaluated. If
+.meta form
+is evaluated by the interpreter, then it interacts with the dynamic environment
+which as in effect in that situation; then when the compiler later just takes
+the result of that evaluation, the compiler's dynamic environment is irrelevant
+since
+.meta form
+isn't being evaluated any more.
+
+If
+.metn form ,
+when evaluated multiple times, potentially produces a different value on each
+evaluation, this has implications for the situation when an object produced by
+.code compile-toplevel
+is invoked multiple times. Each time such an object is invoked, the
+.code load-time
+forms are evaluated. If they produce different values, then it appears that
+the values of literals are changing. All lexical closures derived from the
+same compiled object share the same literal data.
+The
+.code load
+function never evaluates a compiled expression more than once. If the same
+compiled file is loaded more than once, a new compiled object instance is
+produced from each compiled expression, carrying its own storage area for
+literals. The
+.code compile
+function also never evaluates a compiled expression more than once; it produces
+a compiled object, and then executes it once in order to obtain a lexical
+closure which is returned. Invoking the closure doesn't cause the
+.code load-time
+expressions to be evaluated.
+
+The use of
+.code load-value
+is similar to defining a variable and then referring to the variable.
+For instance, a file containing this:
+
+.cblk
+  (defvarl a (list 1 2))
+  (defun f () (cons 0 a))
+.cble
+
+is similar to
+
+.cblk
+  (defun f () (cons 0 (load-time (list 1 2))))
+.cble
+
+When either file is loaded, in source or compiled form,
+.code list
+expression is evaluated at load time, and then when
+.code f
+is invoked, it retrieves the list.
+
+Both approaches have advantages. The variable-based approach gives the value a
+name. The semantics of the variable is straightforward. The variable
+.code a
+can easily be assigned a new value. Using its name, the variable can be
+inspected from the interactive listener. The variable can be referenced
+from multiple top-level forms directly; it is not a static datum tied to
+a table of literal values that is tied to a single top-level form.
+Furthermore, the use of
+.cod3 defvar / defvarl
+versus
+.cod3 defparm / defparml
+controls whether the variable gets replaced with a new value when the
+file is re-loaded.
+
+The advantage of
+.code load-time
+is that it doesn't require a separate top-level form to achieve its load-time
+effect: the expression is simply nested at the point where it is needed. The
+.code load-time
+value form can therefore be generated by macros, whose expansions cannot inject
+extra top-level forms into the site where they are invoked.
+If a macro writer would like some form to be evaluated at load time and
+its value accessible in a macro expansion that appears arbitrarily nested
+in code, then
+.code load-time
+may provide the path to a straightforward implementation strategy.
+Access to a
+.code load-time
+value is fast because it doesn't involve referencing through a variable
+binding; compiled code accesses the value directly via its fixed position
+in the static data table associated with that code. This advantage is
+insignificant, however, because access to lexical variables in compiled code is
+similarly fast, and a value can easily be propagated from a global variable
+to a lexical for the sake of speed. That said,
+.code load-time
+eliminates that copying step too.
+
+
+.TP* "Dialect note:"
+The
+.code load-time
+macro is similar to the ANSI Common Lisp
+.code load-time-value
+special operator. It doesn't support the
+.meta read-only-p
+argument featured in the ANSI CL operator.
+The semantics of
+.code load-time
+is somewhat more precisely specified in terms of concrete
+implementation concepts. The ANSI CL
+.code load-time-value
+may evaluate
+.meta form
+more than once in interpreted code; effectively, the ANSI CL
+implementation may treat
+.code "(load-time-value x)"
+as
+.codn "(progn x)" .
+This is not true of \*(TL's
+.code load-time
+which requires once-only evaluation even in interpreted code.
+
 .coNP Function @ disassemble
 .synb
 .mets (disassemble << function-name )

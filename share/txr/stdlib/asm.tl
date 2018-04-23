@@ -164,9 +164,7 @@
                 oc.(synerr "argument ~a of ~s invalid; ~a expected"
                            n syntax [me.operand-name type]))
               (when (and (member type '(d ds))
-                         (or (zerop parg) (<= %lev-size%
-                                              parg
-                                              (+ %lev-size% %max-lev-idx%))))
+                         (or (zerop parg)))
                 oc.(synerr "argument ~a of ~s cannot be destination"
                            n syntax))
               (when (and (member type '(rs ds))

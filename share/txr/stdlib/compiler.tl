@@ -116,7 +116,26 @@
     (data (hash :eql-based))
     (fidx (hash :eql-based))
     (ftab (hash :eql-based))
+    lt-frags
     last-form))
+
+(defmacro compile-in-toplevel (comp . body)
+  (with-gensyms (comp-var saved-tregs saved-treg-cntr saved-nlev)
+    ^(let* ((,comp-var ,comp)
+            (,saved-tregs (qref ,comp-var tregs))
+            (,saved-treg-cntr (qref ,comp-var treg-cntr))
+            (,saved-nlev (qref ,comp-var nlev)))
+       (unwind-protect
+         (progn
+           (set (qref ,comp-var tregs) nil
+                (qref ,comp-var treg-cntr) 2
+                (qref ,comp-var nlev) 2)
+           (prog1
+             (progn ,*body)
+             (qref ,comp-var (check-treg-leak))))
+         (set (qref ,comp-var tregs) ,saved-tregs
+              (qref ,comp-var treg-cntr) ,saved-treg-cntr
+              (qref ,comp-var nlev) ,saved-nlev)))))
 
 (compile-only
   (defstruct param-parser-base nil
@@ -177,6 +196,13 @@
       (set [me.data (cadr dreg)] atom)
       (set [me.dreg atom] dreg)))
     (t (compile-error me.last-form "code too complex: too many literals"))))
+
+(defmeth compiler alloc-dreg (me)
+  (if (< me.dreg-cntr %lev-size%)
+    (let ((dreg ^(d ,(pinc me.dreg-cntr))))
+      (set [me.data (cadr dreg)] nil)
+      dreg)
+    (compile-error me.last-form "code too complex: too many literals")))
 
 (defmeth compiler get-fidx (me atom)
   (iflet ((fidx [me.fidx atom]))
@@ -276,6 +302,7 @@
             (sys:upenv me.(compile oreg env.up (cadr form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
             (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
+            (sys:load-time-lit me.(comp-load-time-lit oreg env form))
             ((macrolet symacrolet macro-time)
              (compile-error form "unexpanded ~s encountered" sym))
             ((sys:var sys:expr)
@@ -1079,6 +1106,23 @@
                    (end ,bfrag.oreg))
                  bfrag.fvars bfrag.ffuns)))))
 
+(defmeth compiler comp-load-time-lit (me oreg env form)
+  (mac-param-bind form (op loaded-p exp) form
+    (if loaded-p
+      me.(compile oreg env ^(quote ,exp))
+      (compile-in-toplevel me
+        (let* ((oreg me.(alloc-treg))
+               (dreg me.(alloc-dreg))
+               (exp me.(compile oreg (new env co me) exp))
+               (lt-frag (new (frag dreg
+                                   ^(,*exp.code
+                                     (mov ,dreg ,exp.oreg))
+                                   exp.fvars
+                                   exp.ffuns))))
+          me.(free-treg oreg)
+          (push lt-frag me.lt-frags)
+          (new (frag dreg nil)))))))
+
 (defun maybe-mov (to-reg from-reg)
   (if (nequal to-reg from-reg)
     ^((mov ,to-reg ,from-reg))))
@@ -1399,7 +1443,7 @@
            (frag co.(compile oreg (new env co co) xexp)))
       co.(free-treg oreg)
       co.(check-treg-leak)
-      as.(asm ^(,*frag.code (end ,frag.oreg)))
+      as.(asm ^(,*(mappend .code (nreverse co.lt-frags)) ,*frag.code (end ,frag.oreg)))
       (vm-make-desc co.nlev (succ as.max-treg) as.buf co.(get-datavec) co.(get-funvec)))))
 
 (defvarl %file-suff-rx% #/[.][^\\\/.]+/)

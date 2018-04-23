@@ -102,6 +102,7 @@ val defsymacro_s, symacrolet_s, prof_s, switch_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
 val load_path_s, load_recursive_s;
+val load_time_s, load_time_lit_s;
 
 val special_s, unbound_s;
 val whole_k, form_k, symacro_k;
@@ -2876,6 +2877,18 @@ static val op_upenv(val form, val env)
   return eval(expr, env->e.up_env, expr);
 }
 
+static val op_load_time_lit(val form, val env)
+{
+  val args = cdr(form);
+  if (car(args)) {
+    return cadr(args);
+  } else {
+    rplaca(args, t);
+    args = cdr(args);
+    return sys_rplaca(args, eval(car(args), nil, form));
+  }
+}
+
 static val me_def_variable(val form, val menv)
 {
   val args = rest(form);
@@ -4235,6 +4248,12 @@ static val me_mlet(val form, val menv)
               apply_frob_args(list(symacrolet, smacs,
                                    append2(sets, or2(body, cons(nil, nil))),
                                    nao)), nao);
+}
+
+static val me_load_time(val form, val menv)
+{
+  val expr = cadr(form);
+  return list(load_time_lit_s, nil, expr, nao);
 }
 
 val load(val target)
@@ -6117,6 +6136,8 @@ void eval_init(void)
   chand_s = intern(lit("chand"), user_package);
   load_path_s = intern(lit("*load-path*"), user_package);
   load_recursive_s = intern(lit("*load-recursive*"), system_package);
+  load_time_s = intern(lit("load-time"), user_package);
+  load_time_lit_s  = intern(lit("load-time-lit"), system_package);
 
   qquote_init();
 
@@ -6175,6 +6196,7 @@ void eval_init(void)
   reg_op(intern(lit("upenv"), system_package), op_upenv);
   reg_op(intern(lit("compile-only"), user_package), op_progn);
   reg_op(intern(lit("eval-only"), user_package), op_progn);
+  reg_op(load_time_lit_s, op_load_time_lit);
 
   reg_mac(defvar_s, func_n2(me_def_variable));
   reg_mac(defparm_s, func_n2(me_def_variable));
@@ -6232,6 +6254,8 @@ void eval_init(void)
   reg_mac(intern(lit("dotimes"), user_package), func_n2(me_dotimes));
   reg_mac(intern(lit("lcons"), user_package), func_n2(me_lcons));
   reg_mac(intern(lit("mlet"), user_package), func_n2(me_mlet));
+  reg_mac(load_time_s, func_n2(me_load_time));
+
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
   reg_fun(intern(lit("lcons-fun"), user_package), func_n1(lcons_fun));
