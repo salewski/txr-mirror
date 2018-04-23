@@ -111,7 +111,6 @@
     (dreg-cntr 0)
     (fidx-cntr 0)
     (nlev 2)
-    (nreg 1)
     (tregs nil)
     (dreg (hash :eql-based))
     (data (hash :eql-based))
