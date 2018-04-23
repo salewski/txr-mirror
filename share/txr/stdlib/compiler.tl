@@ -174,7 +174,7 @@
     ((((null atom))) '(t 0))
     (((dreg [me.dreg atom])) dreg)
     ((((< me.dreg-cntr %lev-size%)))
-     (let* ((dreg ^(d ,(pinc me.dreg-cntr))))
+     (let ((dreg ^(d ,(pinc me.dreg-cntr))))
       (set [me.data (cadr dreg)] atom)
       (set [me.dreg atom] dreg)))
     (t (compile-error me.last-form "code too complex: out of registers"))))
