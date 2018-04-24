@@ -76,6 +76,11 @@ static void intern_only(val *name)
 
 static val place_set_entries(val dlt, val fun)
 {
+  val sys_name[] = {
+    lit("get-fun-getter-setter"), lit("get-mb"), lit("get-vb"),
+    lit("register-simple-accessor"),
+    nil
+  };
   val name[] = {
     lit("*place-clobber-expander*"), lit("*place-update-expander*"),
     lit("*place-delete-expander*"), lit("*place-macro*"),
@@ -97,6 +102,7 @@ static val place_set_entries(val dlt, val fun)
     nil
   };
 
+  set_dlt_entries_sys(dlt, sys_name, fun);
   set_dlt_entries(dlt, name, fun);
   return nil;
 }
@@ -200,7 +206,7 @@ static val path_test_instantiate(val set_fun)
 static val struct_set_entries(val dlt, val fun)
 {
   val sys_name[] = {
-    lit("define-method"), nil
+    lit("define-method"), lit("rslotset"), nil
   };
   val name[] = {
     lit("defstruct"), lit("qref"), lit("uref"), lit("new"), lit("meth"),
@@ -296,12 +302,17 @@ static val type_instantiate(val set_fun)
 
 static val yield_set_entries(val dlt, val fun)
 {
+  val sys_name[] = {
+    lit("obtain-impl"), nil
+  };
   val name[] = {
     lit("obtain"), lit("obtain-block"), lit("yield-from"), lit("yield"),
     lit("obtain*"), lit("obtain*-block"),
     lit("suspend"), lit("hlet"), lit("hlet*"),
     nil
   };
+
+  set_dlt_entries_sys(dlt, sys_name, fun);
   set_dlt_entries(dlt, name, fun);
   return nil;
 }
@@ -430,9 +441,14 @@ static val build_instantiate(val set_fun)
 
 static val trace_set_entries(val dlt, val fun)
 {
+  val sys_name[] = {
+    lit("trace"), lit("untrace"), nil
+  };
   val name[] = {
     lit("*trace-output*"), lit("trace"), lit("untrace"), nil
   };
+
+  set_dlt_entries_sys(dlt, sys_name, fun);
   set_dlt_entries(dlt, name, fun);
   return nil;
 }
@@ -567,7 +583,12 @@ static val error_instantiate(val set_fun)
 
 static val keyparams_set_entries(val dlt, val fun)
 {
+  val sys_name[] = {
+    lit("extract-keys"),
+    nil
+  };
   val key_k = intern(lit("key"), keyword_package);
+  set_dlt_entries_sys(dlt, sys_name, fun);
   if (fun)
     sethash(dlt, key_k, fun);
   else
