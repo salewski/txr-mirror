@@ -55,6 +55,17 @@
     (compile-error ctx-form "object ~s too ~a for params ~s"
                    obj (if too-few-p "short" "long") params)))
 
+(defun sys:bind-mac-check (ctx-form params obj req fix)
+  (if (and obj (atom obj))
+    (compile-error ctx-form "extra atom ~s not matched by params ~s"
+                   obj params)
+    (let ((l (len obj)))
+      (iflet ((problem (cond
+                         ((< l req) "short")
+                         ((and fix (> l fix)) "short"))))
+        (compile-error ctx-form "object ~s too ~a for params ~s"
+                       obj problem params)))))
+
 (defun lambda-too-many-args (form)
   (compile-error form "excess arguments given"))
 

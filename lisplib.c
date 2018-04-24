@@ -544,7 +544,8 @@ static val pmac_instantiate(val set_fun)
 static val error_set_entries(val dlt, val fun)
 {
   val sys_name[] = {
-    lit("bind-mac-error"), lit("lambda-too-many-args"),
+    lit("bind-mac-error"), lit("bind-mac-check"),
+    lit("lambda-too-many-args"),
     lit("lambda-too-few-args"), lit("lambda-short-apply-list"),
     nil
   };
