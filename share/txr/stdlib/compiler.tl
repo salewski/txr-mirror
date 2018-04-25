@@ -1559,10 +1559,9 @@
                      ((neq obj err-ret)))
               (compile-form (sys:expand* obj)))
             (let ((*print-circle* t)
-                  (*package* (make-package "$")))
-              (unwind-protect
-                (prinl out.(get) out-stream)
-                (delete-package *package*))))
+                  (*package* (sys:make-anon-package)))
+              (prinl out.(get) out-stream)
+              (delete-package *package*)))
 
           (let ((parser (sys:get-parser in-stream)))
             (when (> (sys:parser-errors parser) 0)

@@ -830,6 +830,7 @@ val break_str(val str, val set);
 val make_sym(val name);
 val gensym(val prefix);
 val make_package(val name);
+val make_anon_package(void);
 val packagep(val obj);
 val find_package(val name);
 val delete_package(val package);

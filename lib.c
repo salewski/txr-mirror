@@ -5145,6 +5145,18 @@ val gensym(val prefix)
   return make_sym(name);
 }
 
+static val make_package_common(val name)
+{
+  val obj = make_obj();
+  obj->pk.type = PKG;
+  obj->pk.name = name;
+  obj->pk.symhash = nil; /* make_hash calls below could trigger gc! */
+  obj->pk.hidhash = nil;
+  obj->pk.symhash = make_hash(nil, nil, lit("t")); /* don't have t yet! */
+  obj->pk.hidhash = make_hash(nil, nil, lit("t"));
+  return obj;
+}
+
 val make_package(val name)
 {
   if (find_package(name)) {
@@ -5155,17 +5167,15 @@ val make_package(val name)
     uw_throwf(error_s, lit("make-package: package name can't be empty string"),
               nao);
   } else {
-    val obj = make_obj();
-    obj->pk.type = PKG;
-    obj->pk.name = name;
-    obj->pk.symhash = nil; /* make_hash calls below could trigger gc! */
-    obj->pk.hidhash = nil;
-    obj->pk.symhash = make_hash(nil, nil, lit("t")); /* don't have t yet! */
-    obj->pk.hidhash = make_hash(nil, nil, lit("t"));
-
+    val obj = make_package_common(name);
     mpush(cons(name, obj), cur_package_alist_loc);
     return obj;
   }
+}
+
+val make_anon_package(void)
+{
+  return make_package_common(lit("#<anon-package>"));
 }
 
 val packagep(val obj)
