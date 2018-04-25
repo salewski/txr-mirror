@@ -311,6 +311,14 @@ INLINE val vm_get(struct vm_env *dspl, unsigned ref)
   return dspl[vm_lev(ref)].mem[vm_idx(ref)];
 }
 
+INLINE val vm_getz(struct vm_env *dspl, unsigned ref)
+{
+  unsigned lev = vm_lev(ref);
+  if (lev == 0)
+    return z(dspl[0].mem[vm_idx(ref)]);
+  return dspl[lev].mem[vm_idx(ref)];
+}
+
 INLINE val vm_sm_get(struct vm_env *dspl, unsigned ref)
 {
   return dspl[vm_sm_lev(ref)].mem[vm_sm_idx(ref)];
@@ -419,17 +427,17 @@ static void vm_call(struct vm *vm, vm_word_t insn)
     while (nargs >= 2) {
       nargs -= 2;
       argw = vm->code[vm->ip++];
-      args_add(args, vm_get(vm->dspl, vm_arg_operand_lo(argw)));
-      args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
+      args_add(args, vm_getz(vm->dspl, vm_arg_operand_lo(argw)));
+      args_add(args, vm_getz(vm->dspl, vm_arg_operand_hi(argw)));
     }
 
     if (nargs) {
       argw = vm->code[vm->ip++];
-      args_add(args, vm_get(vm->dspl, vm_arg_operand_lo(argw)));
+      args_add(args, vm_getz(vm->dspl, vm_arg_operand_lo(argw)));
     }
   }
 
-  result = generic_funcall(vm_get(vm->dspl, fun), args);
+  result = generic_funcall(vm_getz(vm->dspl, fun), args);
   vm_set(vm->dspl, dest, result);
 }
 
@@ -443,22 +451,22 @@ static void vm_apply(struct vm *vm, vm_word_t insn)
   args_decl (args, nargs < ARGS_MIN ? ARGS_MIN : nargs);
 
   if (nargs--) {
-    args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
+    args_add(args, vm_getz(vm->dspl, vm_arg_operand_hi(argw)));
 
     while (nargs >= 2) {
       nargs -= 2;
       argw = vm->code[vm->ip++];
-      args_add(args, vm_get(vm->dspl, vm_arg_operand_lo(argw)));
-      args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
+      args_add(args, vm_getz(vm->dspl, vm_arg_operand_lo(argw)));
+      args_add(args, vm_getz(vm->dspl, vm_arg_operand_hi(argw)));
     }
 
     if (nargs) {
       argw = vm->code[vm->ip++];
-      args_add(args, vm_get(vm->dspl, vm_arg_operand_lo(argw)));
+      args_add(args, vm_getz(vm->dspl, vm_arg_operand_lo(argw)));
     }
   }
 
-  result = applyv(vm_get(vm->dspl, fun), args);
+  result = applyv(vm_getz(vm->dspl, fun), args);
   vm_set(vm->dspl, dest, result);
 }
 
@@ -489,18 +497,18 @@ static void vm_gcall(struct vm *vm, vm_word_t insn)
   args_decl (args, nargs < ARGS_MIN ? ARGS_MIN : nargs);
 
   if (nargs--) {
-    args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
+    args_add(args, vm_getz(vm->dspl, vm_arg_operand_hi(argw)));
 
     while (nargs >= 2) {
       nargs -= 2;
       argw = vm->code[vm->ip++];
-      args_add(args, vm_get(vm->dspl, vm_arg_operand_lo(argw)));
-      args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
+      args_add(args, vm_getz(vm->dspl, vm_arg_operand_lo(argw)));
+      args_add(args, vm_getz(vm->dspl, vm_arg_operand_hi(argw)));
     }
 
     if (nargs) {
       argw = vm->code[vm->ip++];
-      args_add(args, vm_get(vm->dspl, vm_arg_operand_lo(argw)));
+      args_add(args, vm_getz(vm->dspl, vm_arg_operand_lo(argw)));
     }
   }
 
@@ -518,18 +526,18 @@ static void vm_gapply(struct vm *vm, vm_word_t insn)
   args_decl (args, nargs < ARGS_MIN ? ARGS_MIN : nargs);
 
   if (nargs--) {
-    args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
+    args_add(args, vm_getz(vm->dspl, vm_arg_operand_hi(argw)));
 
     while (nargs >= 2) {
       nargs -= 2;
       argw = vm->code[vm->ip++];
-      args_add(args, vm_get(vm->dspl, vm_arg_operand_lo(argw)));
-      args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
+      args_add(args, vm_getz(vm->dspl, vm_arg_operand_lo(argw)));
+      args_add(args, vm_getz(vm->dspl, vm_arg_operand_hi(argw)));
     }
 
     if (nargs) {
       argw = vm->code[vm->ip++];
-      args_add(args, vm_get(vm->dspl, vm_arg_operand_lo(argw)));
+      args_add(args, vm_getz(vm->dspl, vm_arg_operand_lo(argw)));
     }
   }
 
