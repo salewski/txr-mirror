@@ -53,8 +53,10 @@ typedef uint_ptr_t ucnum;
 
 #ifdef __GNUC__
 #define noreturn __attribute__((noreturn))
+#define NOINLINE __attribute__((noinline))
 #else
 #define noreturn
+#define NOINLINE
 #endif
 
 typedef enum type {

@@ -376,24 +376,24 @@ static val vm_prof_callback(mem_t *ctx)
   return vm_execute(vm);
 }
 
-static void vm_prof(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_prof(struct vm *vm, vm_word_t insn)
 {
   unsigned dest = vm_insn_operand(insn);
   val result = prof_call(vm_prof_callback, coerce(mem_t *, vm));
   vm_set(vm->dspl, dest, result);
 }
 
-static void vm_frame(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_frame(struct vm *vm, vm_word_t insn)
 {
   vm_do_frame(vm, insn, 1);
 }
 
-static void vm_sframe(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_sframe(struct vm *vm, vm_word_t insn)
 {
   vm_do_frame(vm, insn, 0);
 }
 
-static void vm_dframe(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_dframe(struct vm *vm, vm_word_t insn)
 {
   val saved_dyn_env = dyn_env;
   dyn_env = make_env(nil, nil, dyn_env);
@@ -401,18 +401,18 @@ static void vm_dframe(struct vm *vm, vm_word_t insn)
   dyn_env = saved_dyn_env;
 }
 
-static val vm_end(struct vm *vm, vm_word_t insn)
+NOINLINE static val vm_end(struct vm *vm, vm_word_t insn)
 {
   return vm_get(vm->dspl, vm_insn_operand(insn));
 }
 
-static val vm_fin(struct vm *vm, vm_word_t insn)
+NOINLINE static val vm_fin(struct vm *vm, vm_word_t insn)
 {
   vm->ip--;
   return vm_get(vm->dspl, vm_insn_operand(insn));
 }
 
-static void vm_call(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_call(struct vm *vm, vm_word_t insn)
 {
   unsigned nargs = vm_insn_extra(insn);
   unsigned dest = vm_insn_operand(insn);
@@ -441,7 +441,7 @@ static void vm_call(struct vm *vm, vm_word_t insn)
   vm_set(vm->dspl, dest, result);
 }
 
-static void vm_apply(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_apply(struct vm *vm, vm_word_t insn)
 {
   unsigned nargs = vm_insn_extra(insn);
   unsigned dest = vm_insn_operand(insn);
@@ -487,7 +487,7 @@ static loc vm_ftab(struct vm *vm, unsigned fun)
   return (fe->fbloc = cdr_l(fe->fb));
 }
 
-static void vm_gcall(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_gcall(struct vm *vm, vm_word_t insn)
 {
   unsigned nargs = vm_insn_extra(insn);
   unsigned dest = vm_insn_operand(insn);
@@ -516,7 +516,7 @@ static void vm_gcall(struct vm *vm, vm_word_t insn)
   vm_set(vm->dspl, dest, result);
 }
 
-static void vm_gapply(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_gapply(struct vm *vm, vm_word_t insn)
 {
   unsigned nargs = vm_insn_extra(insn);
   unsigned dest = vm_insn_operand(insn);
@@ -545,26 +545,26 @@ static void vm_gapply(struct vm *vm, vm_word_t insn)
   vm_set(vm->dspl, dest, result);
 }
 
-static void vm_movrs(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_movrs(struct vm *vm, vm_word_t insn)
 {
   val datum = vm_sm_get(vm->dspl, vm_insn_extra(insn));
   vm_set(vm->dspl, vm_insn_operand(insn), datum);
 }
 
-static void vm_movsr(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_movsr(struct vm *vm, vm_word_t insn)
 {
   val datum = vm_get(vm->dspl, vm_insn_operand(insn));
   vm_sm_set(vm->dspl, vm_insn_extra(insn), datum);
 }
 
-static void vm_movrr(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_movrr(struct vm *vm, vm_word_t insn)
 {
   vm_word_t arg = vm->code[vm->ip++];
   val datum = vm_get(vm->dspl, vm_arg_operand_lo(arg));
   vm_set(vm->dspl, vm_insn_operand(insn), datum);
 }
 
-static void vm_movrsi(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_movrsi(struct vm *vm, vm_word_t insn)
 {
   unsigned dst = vm_insn_operand(insn);
   ucnum negmask = ~convert(ucnum, 0x3FF);
@@ -576,7 +576,7 @@ static void vm_movrsi(struct vm *vm, vm_word_t insn)
   vm_set(vm->dspl, dst, coerce(val, imm));
 }
 
-static void vm_movsmi(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_movsmi(struct vm *vm, vm_word_t insn)
 {
   unsigned dst = vm_insn_extra(insn);
   ucnum negmask = ~convert(ucnum, 0xFFFF);
@@ -588,7 +588,7 @@ static void vm_movsmi(struct vm *vm, vm_word_t insn)
   vm_sm_set(vm->dspl, dst, coerce(val, imm));
 }
 
-static void vm_movrbi(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_movrbi(struct vm *vm, vm_word_t insn)
 {
   unsigned dst = vm_insn_operand(insn);
   ucnum negmask = ~convert(ucnum, 0xFFFFFFFF);
@@ -605,7 +605,7 @@ static void vm_jmp(struct vm *vm, vm_word_t insn)
   vm->ip = vm_insn_bigop(insn);
 }
 
-static void vm_if(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_if(struct vm *vm, vm_word_t insn)
 {
   unsigned ip = vm_insn_bigop(insn);
   vm_word_t arg = vm->code[vm->ip++];
@@ -615,7 +615,7 @@ static void vm_if(struct vm *vm, vm_word_t insn)
     vm->ip = vm_insn_bigop(ip);
 }
 
-static void vm_ifq(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_ifq(struct vm *vm, vm_word_t insn)
 {
   unsigned ip = vm_insn_bigop(insn);
   vm_word_t arg = vm->code[vm->ip++];
@@ -626,7 +626,7 @@ static void vm_ifq(struct vm *vm, vm_word_t insn)
     vm->ip = vm_insn_bigop(ip);
 }
 
-static void vm_ifql(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_ifql(struct vm *vm, vm_word_t insn)
 {
   unsigned ip = vm_insn_bigop(insn);
   vm_word_t arg = vm->code[vm->ip++];
@@ -637,7 +637,7 @@ static void vm_ifql(struct vm *vm, vm_word_t insn)
     vm->ip = vm_insn_bigop(ip);
 }
 
-static void vm_swtch(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_swtch(struct vm *vm, vm_word_t insn)
 {
   unsigned tblsz = vm_insn_extra(insn);
   ucnum idx = c_unum(vm_get(vm->dspl, vm_insn_operand(insn)));
@@ -654,7 +654,7 @@ static void vm_swtch(struct vm *vm, vm_word_t insn)
   }
 }
 
-static void vm_uwprot(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_uwprot(struct vm *vm, vm_word_t insn)
 {
   int saved_lev = vm->lev;
   unsigned cleanup_ip = vm_insn_bigop(insn);
@@ -672,7 +672,7 @@ static void vm_uwprot(struct vm *vm, vm_word_t insn)
   uw_catch_end;
 }
 
-static void vm_block(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_block(struct vm *vm, vm_word_t insn)
 {
   unsigned exitpt = vm_insn_bigop(insn);
   vm_word_t arg = vm->code[vm->ip++];
@@ -690,7 +690,7 @@ static void vm_block(struct vm *vm, vm_word_t insn)
   vm->lev = saved_lev;
 }
 
-static void vm_no_block_err(struct vm *vm, val name)
+NOINLINE static void vm_no_block_err(struct vm *vm, val name)
 {
   if (name)
     eval_error(vm->vd->bytecode,
@@ -702,7 +702,7 @@ static void vm_no_block_err(struct vm *vm, val name)
                name, nao);
 }
 
-static void vm_retsr(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_retsr(struct vm *vm, vm_word_t insn)
 {
   val res = vm_get(vm->dspl, vm_insn_operand(insn));
   val tag = vm_sm_get(vm->dspl, vm_insn_extra(insn));
@@ -711,7 +711,7 @@ static void vm_retsr(struct vm *vm, vm_word_t insn)
   vm_no_block_err(vm, tag);
 }
 
-static void vm_retrs(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_retrs(struct vm *vm, vm_word_t insn)
 {
   val res = vm_sm_get(vm->dspl, vm_insn_extra(insn));
   val tag = vm_get(vm->dspl, vm_insn_operand(insn));
@@ -720,7 +720,7 @@ static void vm_retrs(struct vm *vm, vm_word_t insn)
   vm_no_block_err(vm, tag);
 }
 
-static void vm_retrr(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_retrr(struct vm *vm, vm_word_t insn)
 {
   vm_word_t arg = vm->code[vm->ip++];
   val res = vm_get(vm->dspl, vm_insn_operand(insn));
@@ -730,7 +730,7 @@ static void vm_retrr(struct vm *vm, vm_word_t insn)
   vm_no_block_err(vm, tag);
 }
 
-static void vm_abscsr(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_abscsr(struct vm *vm, vm_word_t insn)
 {
   val res = vm_get(vm->dspl, vm_insn_operand(insn));
   val tag = vm_sm_get(vm->dspl, vm_insn_extra(insn));
@@ -739,7 +739,7 @@ static void vm_abscsr(struct vm *vm, vm_word_t insn)
   vm_no_block_err(vm, tag);
 }
 
-static void vm_catch(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_catch(struct vm *vm, vm_word_t insn)
 {
   unsigned catch_ip = vm_insn_bigop(insn);
   vm_word_t arg1 = vm->code[vm->ip++];
@@ -768,7 +768,7 @@ static void vm_catch(struct vm *vm, vm_word_t insn)
   uw_catch_end;
 }
 
-static void vm_handle(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_handle(struct vm *vm, vm_word_t insn)
 {
   val fun = vm_get(vm->dspl, vm_insn_operand(insn));
   vm_word_t arg1 = vm->code[vm->ip++];
@@ -795,34 +795,34 @@ static val vm_get_binding(struct vm *vm, vm_word_t insn,
   return binding;
 }
 
-static void vm_getsym(struct vm *vm, vm_word_t insn,
-                      val (*lookup_fn)(val env, val sym),
-                      val kind_str)
+NOINLINE static void vm_getsym(struct vm *vm, vm_word_t insn,
+                               val (*lookup_fn)(val env, val sym),
+                               val kind_str)
 {
   val binding = vm_get_binding(vm, insn, lookup_fn, kind_str);
   unsigned dst = vm_insn_operand(insn);
   vm_set(vm->dspl, dst, cdr(binding));
 }
 
-static void vm_getbind(struct vm *vm, vm_word_t insn,
-                       val (*lookup_fn)(val env, val sym),
-                       val kind_str)
+NOINLINE static void vm_getbind(struct vm *vm, vm_word_t insn,
+                                val (*lookup_fn)(val env, val sym),
+                                val kind_str)
 {
   val binding = vm_get_binding(vm, insn, lookup_fn, kind_str);
   unsigned dst = vm_insn_operand(insn);
   vm_set(vm->dspl, dst, binding);
 }
 
-static void vm_setsym(struct vm *vm, vm_word_t insn,
-                      val (*lookup_fn)(val env, val sym),
-                      val kind_str)
+NOINLINE static void vm_setsym(struct vm *vm, vm_word_t insn,
+                               val (*lookup_fn)(val env, val sym),
+                               val kind_str)
 {
   val binding = vm_get_binding(vm, insn, lookup_fn, kind_str);
   unsigned src = vm_insn_operand(insn);
   rplacd(binding, vm_get(vm->dspl, src));
 }
 
-static void vm_bindv(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_bindv(struct vm *vm, vm_word_t insn)
 {
   val sym = vm_sm_get(vm->dspl, vm_insn_extra(insn));
   int src = vm_insn_operand(insn);
@@ -834,7 +834,7 @@ static void vm_bindv(struct vm *vm, vm_word_t insn)
   env_vbind(dyn_env, sym, vm_get(vm->dspl, src));
 }
 
-static void vm_close(struct vm *vm, vm_word_t insn)
+NOINLINE static void vm_close(struct vm *vm, vm_word_t insn)
 {
   unsigned dst = vm_insn_bigop(insn);
   vm_word_t arg1 = vm->code[vm->ip++];
@@ -852,7 +852,7 @@ static void vm_close(struct vm *vm, vm_word_t insn)
   vm->ip = dst;
 }
 
-static val vm_execute(struct vm *vm)
+NOINLINE static val vm_execute(struct vm *vm)
 {
   for (;;) {
     vm_word_t insn = vm->code[vm->ip++];
