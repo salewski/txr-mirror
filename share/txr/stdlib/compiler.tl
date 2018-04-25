@@ -936,10 +936,12 @@
            (arg me.(comp-call oreg env
                               (if (eq sym 'usr:apply) 'apply sym) args)))))
       (ift me.(comp-ift oreg env form))
-      (t (let ((fbind env.(lookup-fun sym)))
-           me.(comp-call-impl oreg env (if fbind 'call 'gcall)
-                              (if fbind fbind.loc me.(get-fidx sym))
-                              args))))))
+      (t (let* ((fbind env.(lookup-fun sym))
+                (cfrag me.(comp-call-impl oreg env (if fbind 'call 'gcall)
+                                          (if fbind fbind.loc me.(get-fidx sym))
+                                          args)))
+           (pushnew sym cfrag.ffuns)
+           cfrag)))))
 
 (defmeth compiler comp-call (me oreg env opcode args)
   (tree-bind (fform . fargs) args
