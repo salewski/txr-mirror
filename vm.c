@@ -1063,7 +1063,7 @@ val vm_execute_closure(val fun, struct args *args)
       vreg = vm_arg_operand_hi(argw);
     }
 
-    vm_set(dspl, vreg, vargs);
+    vm_set(dspl, vreg, z(vargs));
   }
 
   return vm_execute(&vm);
