@@ -1477,7 +1477,7 @@
   (list (sys:vm-desc-nlevels vd)
         (sys:vm-desc-nregs vd)
         (sys:vm-desc-bytecode vd)
-        (sys:vm-desc-datavec vd)
+        (copy (sys:vm-desc-datavec vd))
         (sys:vm-desc-funvec vd)))
 
 
