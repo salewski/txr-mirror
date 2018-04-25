@@ -598,7 +598,7 @@
 
 (defmeth compiler comp-return (me oreg env form)
   (mac-param-bind form (op : value) form
-    me.(comp-return-from oreg env ^(,op nil ,value))))
+    me.(comp-return-from oreg env ^(return-from nil ,value))))
 
 (defmeth compiler comp-handler-bind (me oreg env form)
   (mac-param-bind form (op func-form ex-syms . body) form
