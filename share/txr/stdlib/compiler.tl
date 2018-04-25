@@ -41,9 +41,15 @@
 
 (defstruct fbinding binding)
 
+(defstruct blockinfo nil
+  sym
+  used
+  sys:env)
+
 (defstruct sys:env nil
   vb
   fb
+  bb
   up
   co
   lev
@@ -75,6 +81,12 @@
       (((up me.up)) up.(lookup-lisp1 sym))
       (t nil)))
 
+  (:method lookup-block (me sym)
+    (condlet
+      (((cell (assoc sym me.bb))) (cdr cell))
+      (((up me.up)) up.(lookup-block sym))
+      (t nil)))
+
   (:method extend-var (me sym)
     (when (assoc sym me.vb)
       (compile-error me.co.last-form "duplicate variable: ~s" sym))
@@ -103,7 +115,11 @@
   (:method out-of-scope (me reg)
     (if (eq (car reg) 'v)
       (let ((lev (ssucc (cadr reg))))
-        (< me.lev lev)))))
+        (< me.lev lev))))
+
+  (:method extend-block (me sym)
+    (let* ((bn (new blockinfo sym sym env me)))
+      (set me.bb (acons sym bn me.bb)))))
 
 (compile-only
   (defstruct compiler nil
@@ -186,6 +202,9 @@
 (defvarl %test-funs% (append %test-funs-pos% %test-funs-neg%))
 
 (defvarl %test-inv% (relate %test-funs-pos% %test-funs-neg%))
+
+(defvarl %block-using-funs% '(sys:capture-cont return* sys:abscond* match-fun
+                              eval load compile compile-file compile-toplevel))
 
 (defmeth compiler get-dreg (me atom)
   (condlet
@@ -566,22 +585,31 @@
 (defmeth compiler comp-block (me oreg env form)
   (mac-param-bind form (op name . body) form
     (let* ((star (and name (eq op 'block*)))
+           (nenv (unless star
+                   (new env up env lev env.lev co me)))
+           (binfo (unless star
+                    (cdar nenv.(extend-block name))))
            (treg (if star me.(maybe-alloc-treg oreg)))
-           (nfrag (if star me.(compile treg env name)))
+           (nfrag (if star me.(compile treg nenv name)))
            (nreg (if star nfrag.oreg me.(get-dreg name)))
-           (bfrag me.(comp-progn oreg env body))
+           (bfrag me.(comp-progn oreg nenv body))
            (lskip (gensym "l")))
       (when treg
         me.(maybe-free-treg treg oreg))
-      (new (frag oreg
-                 ^(,*(if nfrag nfrag.code)
-                   (block ,oreg ,nreg ,lskip)
-                   ,*bfrag.code
-                   ,*(maybe-mov oreg bfrag.oreg)
-                   (end ,oreg)
-                   ,lskip)
-                 bfrag.fvars
-                 bfrag.ffuns)))))
+      (if (and (not star)
+               (not binfo.used)
+               [all bfrag.ffuns system-symbol-p]
+               [none bfrag.ffuns (op member @1 %block-using-funs%)])
+        bfrag
+        (new (frag oreg
+                   ^(,*(if nfrag nfrag.code)
+                      (block ,oreg ,nreg ,lskip)
+                      ,*bfrag.code
+                      ,*(maybe-mov oreg bfrag.oreg)
+                      (end ,oreg)
+                      ,lskip)
+                   bfrag.fvars
+                   bfrag.ffuns))))))
 
 (defmeth compiler comp-return-from (me oreg env form)
   (mac-param-bind form (op name : value) form
@@ -589,7 +617,10 @@
                    nil
                    me.(get-dreg name)))
            (opcode (if (eq op 'return-from) 'ret 'abscsr))
-           (vfrag me.(compile oreg env value)))
+           (vfrag me.(compile oreg env value))
+           (binfo env.(lookup-block name)))
+      (when binfo
+        (set binfo.used t))
       (new (frag oreg
                  ^(,*vfrag.code
                    (,opcode ,nreg ,vfrag.oreg))
@@ -1418,6 +1449,10 @@
                     (when pars.rest
                       (add ^(,pars.rest))))))
          ,*lm-body))))
+
+(defun system-symbol-p (sym)
+  (member (symbol-package sym)
+          (load-time (list user-package system-package))))
 
 (defun usr:compile-toplevel (exp : (expanded-p nil))
   (let ((co (new compiler))

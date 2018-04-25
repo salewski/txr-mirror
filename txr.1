@@ -15704,6 +15704,97 @@ sense to have support a dynamically computed name.
 Thus blocks in \*(TL provide dynamic non-local returns, as well
 as returns out of lexical nesting.
 
+It is permitted for blocks to be aggressively
+.codn progn -converted
+by compilation.  This means that a
+.code block
+form which meets certain criteria is converted to a
+.code progn
+form which surrounds the
+.metn body-form -s
+and thus no longer establishes an exit point.
+
+A
+.code block
+form will be spared from
+.codn progn -conversion
+by the compiler if it meets the following rules.
+.RS
+.IP 1
+Any
+.meta body-form
+references the block's
+.meta name
+in a
+.codn return ,
+.codn return-from ,
+.code sys:abscond-from
+or
+.code sys:capture-cont
+expression.
+.IP 2
+The form contains at least one direct call to a function
+not in the standard \*(TL library.
+.IP 3
+The form contains at least one direct call to the functions
+.codn sys:capture-cont ,
+.codn return* ,
+.codn sys:abscond* ,
+.codn match-fun ,
+.codn eval ,
+.codn load ,
+.codn compile ,
+.code compile-file
+or
+.codn compile-toplevel .
+.IP 4
+The form references any of the functions in rules 2 and 3
+as a function binding via the
+.code dwim
+operator (or the DWIM brackets notation) or via the
+.code fun
+operator.
+.RE
+.PP
+Removal of blocks under the above rules means that some use of blocks which
+works in interpreted code will not work in compiled programs. Programs which
+adhere to the rules are not affected by such a difference.
+
+Additionally, the compiler may
+.codn progn -convert
+blocks in contravention of the above rules, but only if doing so makes no
+difference to visible program behavior.
+
+.TP* Examples:
+.cblk
+  (defun helper ()
+    (return-from top 42))
+
+  ;; defun implicitly defines a block named top
+  (defun top ()
+    (helper) ;; function returns 42
+    (prinl 'notreached)) ;; never printed
+
+  (defun top2 ()
+    (let ((h (fun helper)))
+      (block top (call h))   ;; may progn-convert
+      (block top (call 'helper)) ;; may progn-convert
+      (block top (helper)))) ;; not removed
+.cble
+In the above examples, the block containing
+.code "(call h)"
+may be converted to
+.code progn
+because it doesn't express a
+.B direct
+call to the
+.code helper
+function. The block which calls
+.code helper
+using
+.code "(call 'helper)"
+is also not considered to be making a direct call.
+
 .TP* "Dialect Note:"
 In Common Lisp, blocks are lexical. A separate mechanism consisting of
 catch and throw operators performs non-local transfer based on symbols.
