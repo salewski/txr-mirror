@@ -67,6 +67,10 @@ STDLIB_SRCS := $(wildcard share/txr/stdlib/*.tl)
 STDLIB_TLOS := $(patsubst %.tl,%.tlo,$(STDLIB_SRCS))
 STDLIB_TLOS2 := $(patsubst %.tl,%.tlo2,$(STDLIB_SRCS))
 
+STDLIB_EARLY_PATS := %/error.tlo # these must be compiled first
+STDLIB_EARLY_TLOS := $(filter $(STDLIB_EARLY_PATS),$(STDLIB_TLOS))
+STDLIB_LATE_TLOS := $(filter-out $(STDLIB_EARLY_TLOS),$(STDLIB_TLOS))
+
 ifneq ($(have_git),)
 SRCS := $(addprefix $(top_srcdir),\
                     $(filter-out lex.yy.c y.tab.c y.tab.h,\
@@ -218,6 +222,8 @@ endif
 .PHONY: all stage1 stage2
 
 all: $(BUILD_TARGETS) stage1 stage2
+
+$(STDLIB_LATE_TLOS): $(STDLIB_EARLY_TLOS)
 
 stage1: $(STDLIB_TLOS)
 
