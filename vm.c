@@ -999,7 +999,7 @@ val vm_execute_toplevel(val desc)
   vm.dspl[0].vec = nil;
 
   vm.dspl[1].mem = vd->data;
-  vm.dspl[0].vec = vd->datavec;
+  vm.dspl[1].vec = vd->datavec;
 
   return vm_execute(&vm);
 }
