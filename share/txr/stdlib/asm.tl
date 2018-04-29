@@ -298,7 +298,7 @@
     (caseq tag
       (1 (sign-extend val (- width 2)))
       (2 (chr-int val))
-      (t (error "~s: bad immediate operand: ~s" 'assembler bits)))))
+      (t (error "~s: bad immediate operand: ~x" 'assembler bits)))))
 
 (defun small-op-p (val)
   (with-lev-idx (lv ix) val
