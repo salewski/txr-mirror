@@ -50,6 +50,7 @@
 #define ABS(A) ((A) < 0 ? -(A) : (A))
 
 static mp_int NUM_MAX_MP, INT_PTR_MAX_MP, UINT_PTR_MAX_MP;
+static mp_int INT_PTR_MAX_SUCC_MP;
 
 val make_bignum(void)
 {
@@ -149,7 +150,17 @@ val normalize(val bignum)
 
 val in_int_ptr_range(val bignum)
 {
-  return (mp_cmp_mag(mp(bignum), &INT_PTR_MAX_MP) == MP_GT) ? nil : t;
+  switch (mp_cmp_mag(mp(bignum), &INT_PTR_MAX_SUCC_MP)) {
+  default:
+  case MP_GT:
+    return nil;
+  case MP_EQ:
+    if (mp_cmp_z(mp(bignum)) == MP_GT)
+      return nil;
+    /* fallthrough */
+  case MP_LT:
+    return t;
+  }
 }
 
 static val in_uint_ptr_range(val bignum)
@@ -2180,7 +2191,7 @@ val int_flo(val f)
 {
   double d = c_flo(f);
 
-  if (d >= INT_PTR_MAX && d <= INT_PTR_MIN) {
+  if (d >= INT_PTR_MAX && d <= INT_PTR_MIN - 1) {
     cnum n = d;
     if (n < NUM_MIN || n > NUM_MAX)
       return bignum(n);
@@ -3079,6 +3090,9 @@ void arith_init(void)
   mp_set_intptr(&INT_PTR_MAX_MP, INT_PTR_MAX);
   mp_init(&UINT_PTR_MAX_MP);
   mp_set_uintptr(&UINT_PTR_MAX_MP, -1);
+  mp_init(&INT_PTR_MAX_SUCC_MP);
+  mp_set_intptr(&INT_PTR_MAX_SUCC_MP, INT_PTR_MIN - 1);
+  mp_neg(&INT_PTR_MAX_SUCC_MP, &INT_PTR_MAX_SUCC_MP);
   log2_init();
 
   reg_varl(intern(lit("*flo-dig*"), user_package), num_fast(DBL_DIG));
@@ -3118,4 +3132,5 @@ void arith_free_all(void)
   mp_clear(&NUM_MAX_MP);
   mp_clear(&INT_PTR_MAX_MP);
   mp_clear(&UINT_PTR_MAX_MP);
+  mp_clear(&INT_PTR_MAX_SUCC_MP);
 }
