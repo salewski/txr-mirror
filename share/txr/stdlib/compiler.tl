@@ -339,7 +339,7 @@
 (defmeth compiler comp-atom (me oreg form)
   (cond
     ((null form) (new (frag '(t 0) nil)))
-    ((or (and (integerp form)
+    ((or (and (fixnump form)
               (<= (width form) (- %imm-width% 3)))
          (chrp form))
      (new (frag oreg ^((movi ,oreg ,form)))))

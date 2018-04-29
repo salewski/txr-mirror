@@ -135,7 +135,7 @@
 
 (defmeth assembler immediate-fits-type (me arg operand-type)
   (and (member (typeof arg)
-               '(fixnum bignum chr))
+               '(fixnum chr))
        (<= (+ (width arg)
               [me.sign-bits (typeof arg)]
               2)
