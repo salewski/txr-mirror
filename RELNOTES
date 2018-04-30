@@ -1,3 +1,22 @@
+                                    TXR 194
+                                   2018-04-30
+
+
+ Bugs
+
+ - FFI:
+   - issue causing inability to to encode the most negative signed
+     32 bit integer on 32 bit platforms, and the 64 bit one on 64
+     bit platforms.
+ - compiler:
+   - fixed situations when compiler generates immediate move instructions
+     for integer operands that are too wide to be used as immdiate literals.
+ - assembler:
+   - fixed a situation in which a bignum integer was encoded as a literal
+     using its bitwise pointer representation.
+
+
+
                                     TXR 193
                                    2018-04-26
 
