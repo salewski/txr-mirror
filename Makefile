@@ -223,7 +223,7 @@ endif
 
 all: $(BUILD_TARGETS) stage1 stage2
 
-$(STDLIB_LATE_TLOS): $(STDLIB_EARLY_TLOS)
+$(STDLIB_LATE_TLOS): | $(STDLIB_EARLY_TLOS)
 
 stage1: $(STDLIB_TLOS)
 
