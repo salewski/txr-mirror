@@ -49,22 +49,28 @@
       (continue ()))))
 
 (defun sys:bind-mac-error (ctx-form params obj too-few-p)
-  (if (atom obj)
-    (compile-error ctx-form "extra atom ~s not matched by params ~s"
-                   obj  params)
-    (compile-error ctx-form "object ~s too ~a for params ~s"
-                   obj (if too-few-p "short" "long") params)))
+  (cond
+    ((atom obj)
+     (compile-error ctx-form "extra element ~s not matched by params ~a"
+                    obj params))
+    ((null obj)
+     (compile-error ctx-form "params ~a require arguments" params))
+    (t (compile-error ctx-form "too ~a elements in ~s for params ~a"
+                      (if too-few-p "few" "many")
+                      obj params))))
 
 (defun sys:bind-mac-check (ctx-form params obj req fix)
   (if (and obj (atom obj))
-    (compile-error ctx-form "extra atom ~s not matched by params ~s"
+    (compile-error ctx-form "extra element ~s not matched by params ~a"
                    obj params)
     (let ((l (len obj)))
       (iflet ((problem (cond
-                         ((< l req) "short")
-                         ((and fix (> l fix)) "short"))))
-        (compile-error ctx-form "object ~s too ~a for params ~s"
-                       obj problem params)))))
+                         ((< l req) "few")
+                         ((and fix (> l fix)) "many"))))
+        (if (zerop l)
+          (compile-error ctx-form "params ~a require arguments" params)
+          (compile-error ctx-form "too ~a elements in ~s for params ~a"
+                         problem obj params))))))
 
 (defun lambda-too-many-args (form)
   (compile-error form "excess arguments given"))
