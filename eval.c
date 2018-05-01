@@ -920,9 +920,9 @@ static val expand_opt_params_rec(val params, val menv,
                  car(form), car(pair), nao);
     } else {
       val param = car(pair);
-      val param_ex = if3(macro_style_p && consp(param),
-                         expand_params_rec(param, menv, t, form, pspecials),
-                         param);
+      val param_ex = expand_params_rec(param, menv,
+                                       macro_style_p,
+                                       form, pspecials);
       val initform = cadr(pair);
       val initform_ex = rlcp(expand(initform, menv), initform);
       val opt_sym = caddr(pair);
@@ -988,14 +988,11 @@ static val expand_params_rec(val params, val menv,
         eval_error(form, lit("~s: ~s parameter requires bindable symbol"),
                    car(form), param, nao);
       param_ex = param;
-    } else if (macro_style_p && (nilp(param) || consp(param))) {
+    } else if (bindable(param) || (macro_style_p && listp(param))) {
       param_ex = expand_params_rec(param, menv, t, form, pspecials);
       new_menv = make_var_shadowing_env(menv, get_param_syms(param_ex));
-    } else if (!bindable(param)) {
-      not_bindable_error(form, param);
     } else {
-      param_ex = param;
-      new_menv = make_var_shadowing_env(menv, cons(param, nil));
+      not_bindable_error(form, param);
     }
 
     {
