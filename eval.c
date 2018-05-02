@@ -928,20 +928,16 @@ static val make_var_shadowing_env(val menv, val vars);
 static val get_param_syms(val params);
 
 static val expand_params_rec(val params, val menv,
-                             val macro_style_p, val form,
-                             val *pspecials);
+                             val macro_style_p, val form);
 
 static val expand_opt_params_rec(val params, val menv,
-                                 val macro_style_p,
-                                 val form, val *pspecials)
+                                 val macro_style_p, val form)
 {
   if (!params) {
     return params;
   } else if (atom(params)) {
     if (!bindable(params))
       not_bindable_error(form, params);
-    if (special_var_p(params))
-      push(params, pspecials);
     return params;
   } else {
     val pair = car(params);
@@ -967,13 +963,9 @@ static val expand_opt_params_rec(val params, val menv,
         new_menv = make_var_shadowing_env(menv, pair);
       }
 
-      if (special_var_p(pair))
-        push(pair, pspecials);
-
       {
         val params_ex = expand_opt_params_rec(cdr(params), new_menv,
-                                              macro_style_p,
-                                              form, pspecials);
+                                              macro_style_p, form);
 
 
         if (params_ex == cdr(params))
@@ -987,7 +979,7 @@ static val expand_opt_params_rec(val params, val menv,
       val param = car(pair);
       val param_ex = expand_params_rec(param, menv,
                                        macro_style_p,
-                                       form, pspecials);
+                                       form);
       val initform = cadr(pair);
       val initform_ex = rlcp(expand(initform, menv), initform);
       val opt_sym = caddr(pair);
@@ -1003,34 +995,27 @@ static val expand_opt_params_rec(val params, val menv,
       if (opt_sym) {
         if (!bindable(opt_sym))
           not_bindable_error(form, opt_sym);
-        if (special_var_p(opt_sym))
-          push(opt_sym, pspecials);
       }
 
       return rlcp(cons(form_ex, expand_opt_params_rec(rest(params), new_menv,
-                                                      macro_style_p, form,
-                                                      pspecials)),
+                                                      macro_style_p, form)),
                   cdr(params));
     }
   }
 }
 
 static val expand_params_rec(val params, val menv,
-                             val macro_style_p, val form,
-                             val *pspecials)
+                             val macro_style_p, val form)
 {
   if (!params) {
     return params;
   } else if (atom(params)) {
     if (!bindable(params))
       not_bindable_error(form, params);
-    if (special_var_p(params))
-      push(params, pspecials);
     return params;
   } else if (car(params) == colon_k) {
     val params_ex = expand_opt_params_rec(cdr(params), menv,
-                                          macro_style_p,
-                                          form, pspecials);
+                                          macro_style_p, form);
     if (params_ex == cdr(params))
       return params;
     return rlcp(cons(colon_k, params_ex), cdr(params));
@@ -1054,7 +1039,7 @@ static val expand_params_rec(val params, val menv,
                    car(form), param, nao);
       param_ex = param;
     } else if (bindable(param) || (macro_style_p && listp(param))) {
-      param_ex = expand_params_rec(param, menv, t, form, pspecials);
+      param_ex = expand_params_rec(param, menv, t, form);
       new_menv = make_var_shadowing_env(menv, get_param_syms(param_ex));
     } else {
       not_bindable_error(form, param);
@@ -1063,7 +1048,7 @@ static val expand_params_rec(val params, val menv,
     {
       val params_ex = expand_params_rec(cdr(params), new_menv,
                                         macro_style_p,
-                                        form, pspecials);
+                                        form);
       if (param_ex == car(params) && params_ex == cdr(params))
         return params;
       return rlcp(cons(param_ex, params_ex), params);
@@ -1107,11 +1092,8 @@ static val expand_param_macro(val params, val body, val menv, val form)
 static val expand_params(val params, val body, val menv,
                          val macro_style_p, val form)
 {
-  val specials = nil;
-  cons_bind (params_ex0, body_ex, expand_param_macro(params, body,
-                                                     menv, form));
-  val params_ex = expand_params_rec(params_ex0, menv, macro_style_p,
-                                    form, &specials);
+  cons_bind (params_ex0, body_ex, expand_param_macro(params, body, menv, form));
+  val params_ex = expand_params_rec(params_ex0, menv, macro_style_p, form);
   return cons(params_ex, body_ex);
 }
 
