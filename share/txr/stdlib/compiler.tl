@@ -780,12 +780,13 @@
     (let* ((pars (new (fun-param-parser par-syntax form)))
            (need-frame (or (plusp pars.nfix) pars.rest))
            (nenv (if need-frame (new env up env co me) env))
-           lexsyms specials)
+           lexsyms specials need-dframe)
       (flet ((spec-sub (sym)
                (cond
                  ((special-var-p sym)
                   (let ((sub (gensym)))
                     (push (cons sym sub) specials)
+                    (set need-dframe t)
                     nenv.(extend-var sub)
                     sub))
                  (t
@@ -804,12 +805,12 @@
           (let* ((col-reg (if opt-pars me.(get-dreg :)))
                  (tee-reg (if opt-pars me.(get-dreg t)))
                  (ifrags (collect-each ((op opt-pars))
-                           (tree-bind (var-sym : init-form have-sym) op
+                           (tree-bind (var-sym init-form have-sym) op
                              (let ((vbind nenv.(lookup-var var-sym)))
                                me.(compile vbind.loc nenv init-form)))))
                  (opt-code (append-each ((op opt-pars)
                                          (ifrg ifrags))
-                             (tree-bind (var-sym : init-form have-sym) op
+                             (tree-bind (var-sym init-form have-sym) op
                                (let ((vbind nenv.(lookup-var var-sym))
                                      (have-bind nenv.(lookup-var have-sym))
                                      (lskip (gensym "l")))
@@ -820,7 +821,14 @@
                                         ^((mov ,have-bind.loc nil)))
                                     ,*ifrg.code
                                     ,*(maybe-mov vbind.loc ifrg.oreg)
-                                    ,lskip)))))
+                                    ,lskip
+                                    ,*(whenlet ((spec-sub [find var-sym specials : cdr]))
+                                        (set specials [remq var-sym specials cdr])
+                                        ^((bindv ,vbind.loc ,me.(get-dreg (car spec-sub)))))
+                                    ,*(whenlet ((spec-sub [find have-sym specials : cdr]))
+                                        (prinl 'have)
+                                        (set specials [remq have-sym specials cdr])
+                                        ^((bindv ,have-bind.loc ,me.(get-dreg (car spec-sub))))))))))
                  (benv (if specials (new env up nenv co me) nenv))
                  (btreg me.(alloc-treg))
                  (bfrag me.(comp-progn btreg benv body))
@@ -837,8 +845,7 @@
                                     nenv.(lookup-var (car op)).loc)
                                 ,*(if rest-par
                                     (list nenv.(lookup-var rest-par).loc)))
-                         ,*opt-code
-                         ,*(if specials
+                         ,*(if need-dframe
                              ^((dframe ,benv.lev 0)))
                          ,*(if specials
                              (collect-each ((vs specials))
@@ -846,8 +853,9 @@
                                  (let ((sub-bind nenv.(lookup-var gensym))
                                        (dreg me.(get-dreg special)))
                                    ^(bindv ,sub-bind.loc ,dreg)))))
+                         ,*opt-code
                          ,*bfrag.code
-                         ,*(if specials
+                         ,*(if need-dframe
                              ^((end ,boreg)))
                          ,*(maybe-mov boreg bfrag.oreg)
                          (end ,boreg)
