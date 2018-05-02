@@ -16218,7 +16218,7 @@ functions whose arguments are constant forms.
 
 .coNP Function @ make-env
 .synb
-.mets (make-env >> [ variable-bindings >> [ function-bindings <> [ next-env ]]])
+.mets (make-env >> [ var-bindings >> [ fun-bindings <> [ next-env ]]])
 .syne
 .desc
 The
@@ -16228,12 +16228,12 @@ function creates an environment object suitable as the
 parameter.
 
 The
-.meta variable-bindings
+.meta var-bindings
 and
-.meta function-bindings
+.meta fun-bindings
 parameters, if specified,
 should be association lists, mapping symbols to objects.  The objects in
-.meta function-bindings
+.meta fun-bindings
 should be functions, or objects callable as functions.
 
 The
@@ -33411,7 +33411,8 @@ macro:
 
 .coNP Function @ call-update-expander
 .synb
-.mets (call-update-expander < getter < setter < place < env << body-form )
+.mets (call-update-expander < getter < setter < place < env
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \  << body-form )
 .syne
 .desc
 The
@@ -33503,7 +33504,8 @@ Implement the swap macro using
 
 .coNP Function @ call-clobber-expander
 .synb
-.mets (call-clobber-expander < simple-setter < place < env << body-form )
+.mets (call-clobber-expander < simple-setter < place < env
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \  << body-form )
 .syne
 .desc
 The
@@ -47391,8 +47393,10 @@ struct is
 
 .coNP Functions @ make-time and @ make-time-utc
 .synb
-.mets (make-time < year < month < day < hour < minute < second << dst-advice )
-.mets (make-time-utc < year < month < day < hour < minute < second << dst-advice )
+.mets (make-time < year < month < day
+.mets \ \ \ \ \ \ \ \ \ \  < hour < minute < second << dst-advice )
+.mets (make-time-utc < year < month < day
+.mets \ \ \ \ \ \ \ \ \ \ \ \ \ \  < hour < minute < second << dst-advice )
 .syne
 .desc
 The
@@ -55082,7 +55086,8 @@ it is local inside it.
 
 .coNP Macro @ txr-if
 .synb
-.mets (txr-if < name <> ( argument *) < input < then-expr <> [ else-expr ])
+.mets (txr-if < name <> ( argument *) < input
+.mets \ \ \ \ \ \ \  < then-expr <> [ else-expr ])
 .syne
 .desc
 The
