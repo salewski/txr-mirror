@@ -12503,8 +12503,8 @@ defined by \*(TX programs.
 .mets (third << object )
 .mets ...
 .mets (tenth << object )
-.mets (last << object <> [ num ])
-.mets (butlast << object <> [ num ])
+.mets (last < object <> [ num ])
+.mets (butlast < object <> [ num ])
 .mets (cdr << object )
 .mets (caar << object )
 .mets (cadr << object )
@@ -26575,8 +26575,8 @@ itself or a copy.
 
 .coNP Accessor @ last
 .synb
-.mets (last << seq <> [ num ])
-.mets (set (last << seq <> [ num ]) << new-value)
+.mets (last < seq <> [ num ])
+.mets (set (last < seq <> [ num ]) << new-value)
 .syne
 .desc
 The
@@ -26622,8 +26622,8 @@ in terms of the following equivalence:
 
 .coNP Accessor @ butlast
 .synb
-.mets (butlast << sequence <> [ num ])
-.mets (set (butlast << sequence <> [ num ]) << new-value )
+.mets (butlast < sequence <> [ num ])
+.mets (set (butlast < sequence <> [ num ]) << new-value )
 .syne
 .desc
 The
@@ -27125,9 +27125,9 @@ The sequence or hash table is returned.
 
 .coNP Functions @, remq @ remql and @ remqual
 .synb
-.mets (remq < object << list <> [ key-function ])
-.mets (remql < object << list <> [ key-function ])
-.mets (remqual < object << list <> [ key-function ])
+.mets (remq < object < list <> [ key-function ])
+.mets (remql < object < list <> [ key-function ])
+.mets (remqual < object < list <> [ key-function ])
 .syne
 .desc
 The
@@ -27166,9 +27166,9 @@ is that element's key which is compared to
 
 .coNP Functions @, remq* @ remql* and @ remqual*
 .synb
-.mets (remq* < object < list )
-.mets (remql* < object < list )
-.mets (remqual* < object < list )
+.mets (remq* < object << list )
+.mets (remql* < object << list )
+.mets (remqual* < object << list )
 .syne
 .desc
 The
