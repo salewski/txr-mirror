@@ -320,7 +320,6 @@
             (defsymacro me.(compile oreg env (expand-defsymacro form)))
             (sys:upenv me.(compile oreg env.up (cadr form)))
             (sys:dvbind me.(compile oreg env (caddr form)))
-            (sys:with-dyn-rebinds me.(comp-progn oreg env (cddr form)))
             (sys:load-time-lit me.(comp-load-time-lit oreg env form))
             ((macrolet symacrolet macro-time)
              (compile-error form "unexpanded ~s encountered" sym))

@@ -128,9 +128,9 @@ extern val ushort_s, uw_protect_s, val_s, var_k, var_s;
 extern val vars_k, vec_list_s, vec_s, vecref_s, vector_lit_s;
 extern val vm_closure_s, vm_desc_s, void_s, warning_s, wchar_s;
 extern val weak_keys_k, weak_vals_k, when_s, while_s, while_star_s;
-extern val whole_k, wild_s, with_dyn_rebinds_s, word_char_k, wrap_k;
-extern val wstr_d_s, wstr_s, year_s, zap_s, zarray_s;
-extern val zeroplus_s, zone_s;
+extern val whole_k, wild_s, word_char_k, wrap_k, wstr_d_s;
+extern val wstr_s, year_s, zap_s, zarray_s, zeroplus_s;
+extern val zone_s;
 
 #if CONFIG_DEBUG_SUPPORT
 extern val debug_quit_s;
@@ -259,9 +259,9 @@ val *protected_sym[] = {
   &vars_k, &vec_list_s, &vec_s, &vecref_s, &vector_lit_s,
   &vm_closure_s, &vm_desc_s, &void_s, &warning_s, &wchar_s,
   &weak_keys_k, &weak_vals_k, &when_s, &while_s, &while_star_s,
-  &whole_k, &wild_s, &with_dyn_rebinds_s, &word_char_k, &wrap_k,
-  &wstr_d_s, &wstr_s, &year_s, &zap_s, &zarray_s,
-  &zeroplus_s, &zone_s,
+  &whole_k, &wild_s, &word_char_k, &wrap_k, &wstr_d_s,
+  &wstr_s, &year_s, &zap_s, &zarray_s, &zeroplus_s,
+  &zone_s,
 
 #if CONFIG_DEBUG_SUPPORT
   &debug_quit_s,

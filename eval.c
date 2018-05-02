@@ -97,7 +97,7 @@ val op_s, ap_s, identity_s, apf_s, ipf_s;
 val ret_s, aret_s;
 val hash_lit_s, hash_construct_s, struct_lit_s, qref_s, uref_s;
 val vector_lit_s, vec_list_s;
-val macro_time_s, with_dyn_rebinds_s, macrolet_s;
+val macro_time_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s, switch_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val opip_s, oand_s, chain_s, chand_s;
@@ -756,6 +756,7 @@ static val squash_menv_deleting_range(val menv, val upto_menv)
 static val bind_args(val env, val params, struct args *args, val ctx)
 {
   val new_env = make_env(nil, nil, env);
+  val dyn_env_made = nil;
   val optargs = nil;
   cnum index = 0;
   uw_frame_t uw_cc;
@@ -767,6 +768,7 @@ static val bind_args(val env, val params, struct args *args, val ctx)
     val arg;
     val initform = nil;
     val presentsym = nil;
+    val special_p = nil;
 
     if (param == colon_k) {
       optargs = t;
@@ -785,6 +787,13 @@ static val bind_args(val env, val params, struct args *args, val ctx)
       }
     }
 
+    if ((special_p = special_var_p(param))) {
+      if (!dyn_env_made) {
+        dyn_env = make_env(nil, nil, dyn_env);
+        dyn_env_made = t;
+      }
+    }
+
     arg = args_get(args, &index);
 
     if (optargs) {
@@ -794,17 +803,30 @@ static val bind_args(val env, val params, struct args *args, val ctx)
       if (arg == colon_k) {
         if (initform) {
           initval = eval(initform, new_env, ctx);
-          new_env = make_env(nil, nil, new_env);
+          if (!special_p)
+            new_env = make_env(nil, nil, new_env);
         }
       } else {
         initval = arg;
         present = t;
       }
-      env_vbind(new_env, param, initval);
-      if (presentsym)
-        env_vbind(new_env, presentsym, present);
+      if (special_p) {
+        env_vbind(dyn_env, param, initval);
+      } else {
+        env_vbind(new_env, param, initval);
+      }
+      if (presentsym) {
+        if (special_var_p(presentsym)) {
+          env_vbind(dyn_env, presentsym, present);
+        } else {
+          env_vbind(new_env, presentsym, present);
+        }
+      }
     } else {
-      env_vbind(new_env, param, arg);
+      if (special_p)
+        env_vbind(dyn_env, param, arg);
+      else
+        env_vbind(new_env, param, arg);
     }
   }
 
@@ -823,19 +845,62 @@ static val bind_args(val env, val params, struct args *args, val ctx)
         val presentsym = pop(&param);
         val initval = eval(initform, new_env, ctx);
 
-        new_env = make_env(nil, nil, new_env);
-        env_vbind(new_env, sym, initval);
-        if (presentsym)
-          env_vbind(new_env, presentsym, nil);
+        if (special_var_p(sym)) {
+          if (!dyn_env_made) {
+            dyn_env = make_env(nil, nil, dyn_env);
+            dyn_env_made = t;
+          }
+          env_vbind(dyn_env, sym, initval);
+        } else {
+          new_env = make_env(nil, nil, new_env);
+          env_vbind(new_env, sym, initval);
+        }
+
+        if (presentsym) {
+          if (special_var_p(presentsym)) {
+            if (!dyn_env_made) {
+              dyn_env = make_env(nil, nil, dyn_env);
+              dyn_env_made = t;
+            }
+            env_vbind(dyn_env, presentsym, nil);
+          } else {
+            env_vbind(new_env, presentsym, nil);
+          }
+        }
       } else {
-        env_vbind(new_env, param, nil);
+        if (special_var_p(param)) {
+          if (!dyn_env_made) {
+            dyn_env = make_env(nil, nil, dyn_env);
+            dyn_env_made = t;
+          }
+          env_vbind(dyn_env, param, nil);
+        } else {
+          env_vbind(new_env, param, nil);
+        }
       }
       params = cdr(params);
     }
-    if (bindable(params))
-      env_vbind(new_env, params, nil);
+    if (bindable(params)) {
+      if (special_var_p(params)) {
+        if (!dyn_env_made) {
+          dyn_env = make_env(nil, nil, dyn_env);
+          dyn_env_made = t;
+        }
+        env_vbind(dyn_env, params, nil);
+      } else {
+        env_vbind(new_env, params, nil);
+      }
+    }
   } else if (params) {
-    env_vbind(new_env, params, args_get_rest(args, index));
+    if (special_var_p(params)) {
+      if (!dyn_env_made) {
+        dyn_env = make_env(nil, nil, dyn_env);
+        dyn_env_made = t;
+      }
+      env_vbind(dyn_env, params, args_get_rest(args, index));
+    } else {
+      env_vbind(new_env, params, args_get_rest(args, index));
+    }
   } else if (args_more(args, index)) {
     eval_error(ctx, lit("~s: too many arguments"),
                ctx_name(ctx), nao);
@@ -1043,16 +1108,11 @@ static val expand_params(val params, val body, val menv,
                          val macro_style_p, val form)
 {
   val specials = nil;
-  cons_bind (params_ex0, body_ex0, expand_param_macro(params, body,
-                                                      menv, form));
-  int have_rebinds = consp(body_ex0) && consp(car(body_ex0)) && caar(body_ex0) == with_dyn_rebinds_s;
+  cons_bind (params_ex0, body_ex, expand_param_macro(params, body,
+                                                     menv, form));
   val params_ex = expand_params_rec(params_ex0, menv, macro_style_p,
                                     form, &specials);
-  val body_out = if3(!have_rebinds && specials,
-                     rlcp(cons(cons(with_dyn_rebinds_s, cons(specials, body_ex0)),
-                               nil), nil),
-                     body_ex0);
-  return cons(params_ex, body_out);
+  return cons(params_ex, body_ex);
 }
 
 static val get_opt_param_syms(val params)
@@ -1361,8 +1421,11 @@ val funcall_interp(val interp_fun, struct args *args)
   val def = cdr(fun);
   val params = car(def);
   val body = cdr(def);
+  val saved_de = dyn_env;
   val fun_env = bind_args(env, params, args, interp_fun);
-  return eval_progn(body, fun_env, body);
+  val ret = eval_progn(body, fun_env, body);
+  dyn_env = saved_de;
+  return ret;
 }
 
 val eval_intrinsic(val form, val env)
@@ -2789,27 +2852,6 @@ val subst_vars(val forms, val env, val filter)
 static val op_quasi_lit(val form, val env)
 {
   return cat_str(subst_vars(rest(form), env, nil), nil);
-}
-
-static val op_with_dyn_rebinds(val form, val env)
-{
-  val rebind_vars = cadr(form);
-  val body = cddr(form);
-  list_collect_decl (dbinds, ptail);
-
-  for (; rebind_vars; rebind_vars = cdr(rebind_vars)) {
-    val sym = car(rebind_vars);
-    val binding = lookup_var(env, car(rebind_vars));
-    ptail = list_collect(ptail, cons(sym, cdr(binding)));
-    rplacd(binding, unbound_s);
-  }
-
-  {
-    val saved_de = set_dyn_env(make_env(dbinds, nil, dyn_env));
-    val result = eval_progn(body, env, form);
-    set_dyn_env(saved_de);
-    return result;
-  }
 }
 
 val prof_call(val (*fun)(mem_t *ctx), mem_t *ctx)
@@ -4583,13 +4625,6 @@ again:
       if (params_ex == params && expr_ex == expr && body_ex == body)
         return form;
       return rlcp(cons(sym, cons(params_ex, cons(expr_ex, body_ex))), form);
-    } else if (sym == with_dyn_rebinds_s) {
-      val body = rest(form);
-      val syms = pop(&body);
-      val body_ex = expand_progn(body, menv);
-      if (body_ex == body)
-        return form;
-      return rlcp(cons(sym, cons(syms, body_ex)), form);
     } else if (sym == fun_s) {
       val arg = second(form);
       if (consp(arg) && car(arg) == lambda_s) {
@@ -6119,7 +6154,6 @@ void eval_init(void)
   macro_time_s = intern(lit("macro-time"), user_package);
   macrolet_s = intern(lit("macrolet"), user_package);
   symacrolet_s = intern(lit("symacrolet"), user_package);
-  with_dyn_rebinds_s = intern(lit("with-dyn-rebinds"), system_package);
   whole_k = intern(lit("whole"), keyword_package);
   form_k = intern(lit("form"), keyword_package);
   special_s = intern(lit("special"), system_package);
@@ -6187,7 +6221,6 @@ void eval_init(void)
   reg_op(quasi_s, op_quasi_lit);
   reg_op(sys_catch_s, op_catch);
   reg_op(handler_bind_s, op_handler_bind);
-  reg_op(with_dyn_rebinds_s, op_with_dyn_rebinds);
   reg_op(prof_s, op_prof);
   reg_op(switch_s, op_switch);
   reg_op(intern(lit("upenv"), system_package), op_upenv);
