@@ -1,3 +1,20 @@
+                                    TXR 195
+                                   2018-05-04
+
+
+ Bugs
+
+ - Overhaul of handling of parameters that are special variables.
+   - was not implemented at all in interpreted destructuring.
+     - compiled destructuring implemented it by using let.
+   - had subtly wrong scoping semantics, not affecting most code.
+   - was broken completely due to a regression in TXR 190
+ - MacOS and Solaris ports:
+   - fixed broken method for getting TXR's executable path, which
+     caused TXR not to work unless invoked via full path.
+
+
+
                                     TXR 194
                                    2018-04-30
 
