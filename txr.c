@@ -40,6 +40,9 @@
 #include <windows.h>
 #undef TEXT
 #endif
+#if __APPLE__
+#include <mach-o/dyld.h>
+#endif
 #include "lib.h"
 #include "stream.h"
 #include "gc.h"
@@ -229,6 +232,16 @@ static val get_self_path(void)
     return nil;
 
   return string(self);
+}
+#elif __APPLE__
+static val get_self_path(void)
+{
+  char self[PATH_MAX] = { 0 };
+  uint32_t size = sizeof self;
+
+  if (_NSGetExecutablePath(self, &size) != 0)
+    return nil;
+  return string_utf8(self);
 }
 #else
 static val get_self_path(void)
