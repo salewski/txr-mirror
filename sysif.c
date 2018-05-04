@@ -335,7 +335,7 @@ static val chdir_wrap(val path)
   return t;
 }
 
-static val getcwd_wrap(void)
+val getcwd_wrap(void)
 {
   size_t guess = 256;
 

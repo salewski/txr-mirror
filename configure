@@ -2973,6 +2973,24 @@ else
   printf "no\n"
 fi
 
+printf "Checking for getexecname ... "
+cat > conftest.c <<!
+#include <stdlib.h>
+
+int main(void)
+{
+  const char *rp = getexecname();
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_GETEXECNAME 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
 #
 # Dependent variables
 #

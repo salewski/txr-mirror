@@ -243,6 +243,14 @@ static val get_self_path(void)
     return nil;
   return string_utf8(self);
 }
+#elif HAVE_GETEXECNAME
+static val get_self_path(void)
+{
+  val execname = string_utf8(getexecname());
+  if (car(execname) == chr('/'))
+    return execname;
+  return format(nil, lit("~a/~a"), getcwd_wrap(), execname, nao);
+}
 #else
 static val get_self_path(void)
 {

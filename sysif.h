@@ -69,4 +69,7 @@ INLINE void repress_privilege(void) { }
 INLINE void drop_privilege(void) { }
 INLINE void simulate_setuid_setgid(val open_script) { }
 #endif
+#if HAVE_UNISTD_H
+val getcwd_wrap(void);
+#endif
 void sysif_init(void);
