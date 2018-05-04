@@ -1207,6 +1207,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
                              val loose_p, val ctx_form)
 {
   val new_env = make_env(nil, nil, env);
+  val dyn_env_made = nil;
   val whole = form;
   val optargs = nil;
   uw_frame_t uw_cc;
@@ -1228,7 +1229,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
       nparam = car(next);
 
       if (atom(nparam)) {
-        env_vbind(new_env, nparam, bform);
+        lex_or_dyn_bind(&dyn_env_made, new_env, nparam, bform);
       } else {
         new_env = bind_macro_params(new_env, menv,
                                     nparam, bform,
@@ -1253,7 +1254,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
       }
 
       if (!listp(param)) {
-        env_vbind(new_env, param, car(form));
+        lex_or_dyn_bind(&dyn_env_made, new_env, param, car(form));
       } else {
         if (optargs) {
           val nparam = pop(&param);
@@ -1266,7 +1267,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
                                       nparam, car(form), t, ctx_form);
 
           if (presentsym)
-            env_vbind(new_env, presentsym, t);
+            lex_or_dyn_bind(&dyn_env_made, new_env, presentsym, t);
         } else {
           new_env = bind_macro_params(new_env, menv,
                                       param, car(form),
@@ -1297,7 +1298,7 @@ static val bind_macro_params(val env, val menv, val params, val form,
 
 noarg:
     if (!listp(param)) {
-      env_vbind(new_env, param, nil);
+      lex_or_dyn_bind(&dyn_env_made, new_env, param, nil);
     } else {
       val nparam = pop(&param);
       val initform = pop(&param);
@@ -1313,14 +1314,14 @@ noarg:
       }
 
       if (presentsym)
-        env_vbind(new_env, presentsym, nil);
+        lex_or_dyn_bind(&dyn_env_made, new_env, presentsym, nil);
     }
 
     params = cdr(params);
   }
 
   if (params) {
-    env_vbind(new_env, params, form);
+    lex_or_dyn_bind(&dyn_env_made, new_env, params, form);
     goto out;
   }
 
@@ -2156,13 +2157,16 @@ static val op_tree_case(val form, val env)
   for (; consp(cases); cases = cdr(cases)) {
     val onecase = car(cases);
     cons_bind (params, forms, onecase);
+    val saved_de = dyn_env;
     val new_env = bind_macro_params(env, nil, params, expr_val,
                                     colon_k, onecase);
     if (new_env) {
       val ret = eval_progn(forms, new_env, forms);
+      dyn_env = saved_de;
       if (ret != colon_k)
         return ret;
     }
+    dyn_env = saved_de;
   }
 
   return nil;
@@ -2218,8 +2222,11 @@ static val op_tree_bind(val form, val env)
   val expr = third(form);
   val body = rest(rest(rest(form)));
   val expr_val = eval(expr, env, expr);
+  val saved_de = dyn_env;
   val new_env = bind_macro_params(env, nil, params, expr_val, nil, form);
-  return eval_progn(body, new_env, body);
+  val ret = eval_progn(body, new_env, body);
+  dyn_env = saved_de;
+  return ret;
 }
 
 static val op_mac_param_bind(val form, val env)
@@ -2230,8 +2237,11 @@ static val op_mac_param_bind(val form, val env)
   val expr = pop(&body);
   val ctx_val = eval(ctx_form, env, ctx_form);
   val expr_val = eval(expr, env, expr);
+  val saved_de = dyn_env;
   val new_env = bind_macro_params(env, nil, params, expr_val, nil, ctx_val);
-  return eval_progn(body, new_env, body);
+  val ret = eval_progn(body, new_env, body);
+  dyn_env = saved_de;
+  return ret;
 }
 
 static val op_setq(val form, val env)
