@@ -753,6 +753,35 @@ static val squash_menv_deleting_range(val menv, val upto_menv)
   return out_env;
 }
 
+INLINE val lex_or_dyn_bind_seq(val *dyn_made, val lex_env, val sym, val obj)
+{
+  if (special_var_p(sym)) {
+    if (!*dyn_made) {
+      dyn_env = make_env(nil, nil, dyn_env);
+      *dyn_made = t;
+    }
+    env_vbind(dyn_env, sym, obj);
+  } else {
+    lex_env = make_env(nil, nil, lex_env);
+    env_vbind(lex_env, sym, obj);
+  }
+
+  return lex_env;
+}
+
+INLINE void lex_or_dyn_bind(val *dyn_made, val lex_env, val sym, val obj)
+{
+  if (special_var_p(sym)) {
+    if (!*dyn_made) {
+      dyn_env = make_env(nil, nil, dyn_env);
+      *dyn_made = t;
+    }
+    env_vbind(dyn_env, sym, obj);
+  } else {
+    env_vbind(lex_env, sym, obj);
+  }
+}
+
 static val bind_args(val env, val params, struct args *args, val ctx)
 {
   val new_env = make_env(nil, nil, env);
@@ -768,7 +797,6 @@ static val bind_args(val env, val params, struct args *args, val ctx)
     val arg;
     val initform = nil;
     val presentsym = nil;
-    val special_p = nil;
 
     if (param == colon_k) {
       optargs = t;
@@ -787,13 +815,6 @@ static val bind_args(val env, val params, struct args *args, val ctx)
       }
     }
 
-    if ((special_p = special_var_p(param))) {
-      if (!dyn_env_made) {
-        dyn_env = make_env(nil, nil, dyn_env);
-        dyn_env_made = t;
-      }
-    }
-
     arg = args_get(args, &index);
 
     if (optargs) {
@@ -803,30 +824,18 @@ static val bind_args(val env, val params, struct args *args, val ctx)
       if (arg == colon_k) {
         if (initform) {
           initval = eval(initform, new_env, ctx);
-          if (!special_p)
-            new_env = make_env(nil, nil, new_env);
+          new_env = lex_or_dyn_bind_seq(&dyn_env_made, new_env,
+                                        param, initval);
         }
       } else {
-        initval = arg;
+        lex_or_dyn_bind(&dyn_env_made, new_env, param, arg);
         present = t;
       }
-      if (special_p) {
-        env_vbind(dyn_env, param, initval);
-      } else {
-        env_vbind(new_env, param, initval);
-      }
-      if (presentsym) {
-        if (special_var_p(presentsym)) {
-          env_vbind(dyn_env, presentsym, present);
-        } else {
-          env_vbind(new_env, presentsym, present);
-        }
-      }
+
+      if (presentsym)
+        lex_or_dyn_bind(&dyn_env_made, new_env, presentsym, present);
     } else {
-      if (special_p)
-        env_vbind(dyn_env, param, arg);
-      else
-        env_vbind(new_env, param, arg);
+      lex_or_dyn_bind(&dyn_env_made, new_env, param, arg);
     }
   }
 
@@ -845,62 +854,21 @@ static val bind_args(val env, val params, struct args *args, val ctx)
         val presentsym = pop(&param);
         val initval = eval(initform, new_env, ctx);
 
-        if (special_var_p(sym)) {
-          if (!dyn_env_made) {
-            dyn_env = make_env(nil, nil, dyn_env);
-            dyn_env_made = t;
-          }
-          env_vbind(dyn_env, sym, initval);
-        } else {
-          new_env = make_env(nil, nil, new_env);
-          env_vbind(new_env, sym, initval);
-        }
+        new_env = lex_or_dyn_bind_seq(&dyn_env_made, new_env,
+                                      sym, initval);
 
-        if (presentsym) {
-          if (special_var_p(presentsym)) {
-            if (!dyn_env_made) {
-              dyn_env = make_env(nil, nil, dyn_env);
-              dyn_env_made = t;
-            }
-            env_vbind(dyn_env, presentsym, nil);
-          } else {
-            env_vbind(new_env, presentsym, nil);
-          }
-        }
+        if (presentsym)
+          lex_or_dyn_bind(&dyn_env_made, new_env, presentsym, nil);
       } else {
-        if (special_var_p(param)) {
-          if (!dyn_env_made) {
-            dyn_env = make_env(nil, nil, dyn_env);
-            dyn_env_made = t;
-          }
-          env_vbind(dyn_env, param, nil);
-        } else {
-          env_vbind(new_env, param, nil);
-        }
+        lex_or_dyn_bind(&dyn_env_made, new_env, param, nil);
       }
       params = cdr(params);
     }
-    if (bindable(params)) {
-      if (special_var_p(params)) {
-        if (!dyn_env_made) {
-          dyn_env = make_env(nil, nil, dyn_env);
-          dyn_env_made = t;
-        }
-        env_vbind(dyn_env, params, nil);
-      } else {
-        env_vbind(new_env, params, nil);
-      }
-    }
+    if (bindable(params))
+      lex_or_dyn_bind(&dyn_env_made, new_env, params, nil);
   } else if (params) {
-    if (special_var_p(params)) {
-      if (!dyn_env_made) {
-        dyn_env = make_env(nil, nil, dyn_env);
-        dyn_env_made = t;
-      }
-      env_vbind(dyn_env, params, args_get_rest(args, index));
-    } else {
-      env_vbind(new_env, params, args_get_rest(args, index));
-    }
+    lex_or_dyn_bind(&dyn_env_made, new_env, params,
+                    args_get_rest(args, index));
   } else if (args_more(args, index)) {
     eval_error(ctx, lit("~s: too many arguments"),
                ctx_name(ctx), nao);
