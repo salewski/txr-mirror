@@ -254,15 +254,7 @@ static val get_self_path(void)
 #else
 static val get_self_path(void)
 {
-  char self[PATH_MAX];
-
-  if (!progname_u8)
-    return nil;
-
-  if (realpath(progname_u8, self))
-    return string_utf8(self);
-
-  return nil;
+  return lit(TXR_INST_PATH);
 }
 #endif
 

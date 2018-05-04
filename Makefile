@@ -325,9 +325,11 @@ dbg/ffi.o: TXR_CFLAGS += $(LIBFFI_CFLAGS)
 # calculations.
 
 opt/txr.o: TXR_CFLAGS += -DPROG_NAME=\"$(PROG)\" \
-                         -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)$(EXE)\"
+                         -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)$(EXE)\" \
+								 -DTXR_INST_PATH=\"$(bindir)/$(PROG)$(EXE)\"
 dbg/txr.o: TXR_CFLAGS += -DPROG_NAME=\"$(PROG)-dbg\" \
-                         -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-dbg$(EXE)\"
+                         -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-dbg$(EXE)\" \
+								 -DTXR_INST_PATH=\"$(bindir)/$(PROG)$(EXE)\"
 opt/txr-win.o: TXR_CFLAGS += -DPROG_NAME=\"$(PROG)-win\" \
                              -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-win$(EXE)\"
 dbg/txr-win.o: TXR_CFLAGS += -DPROG_NAME=\"$(PROG)-win-dbg\" \
