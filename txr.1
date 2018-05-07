@@ -61958,7 +61958,7 @@ function, or embedded into the \*(TX pattern language, are processed by the
 The evaluator expands all macros, and then interprets the program
 by traversing its raw syntax tree structure. It uses an inefficient
 representation of lexical variables consisting of heap-allocated environment
-object which store variable bindings as association lists. Every time a
+objects which store variable bindings as Lisp association lists. Every time a
 variable is accessed, the chain of environments is searched for the binding.
 
 \*(TX also provides a compiler and virtual machine for more efficient execution
@@ -62052,7 +62052,7 @@ form is top-level form, then each of its constituent forms is also a top-level
 form.
 .IP 5.
 When a form is identified as a top-level form by the above rule 1,
-its constituents are considered under rules 2-4 are only after the form is
+its constituents are considered under rules 2-4 only after the form is
 fully macro-expanded.
 .IP 6.
 No other forms are top-level forms.
@@ -62069,15 +62069,15 @@ or
 .SS* File Compilation Model
 
 The file compiler reads each successive forms from a file, performs a full
-expansion on that form, then traverses it to identify all of the primary
-top-level forms which it contains. Each primary top-level form is subject to
+expansion on that form, then traverses it to identify all of the
+top-level forms which it contains. Each top-level form is subject to
 three actions, either of the latter two of which may be omitted: compilation,
 execution and emission. Compilation refers to the translation to compiled form.
 Execution is the invocation of the compiled form. Emission refers to appending
 an externalized representation of the compiled form (its image) to the output
 which is written into the compiled file.
 
-By default, all three actions take place for every primary form. Using the
+By default, all three actions take place for every top-level form. Using the
 operators
 .code compile-only
 or
@@ -62100,7 +62100,7 @@ restrictions will produce compiled files which load incorrectly or fail to
 load.
 
 Literal objects arise not only from the use of literal such as numbers,
-characters an strings, and not only from quoted symbols or lists.
+characters and strings, and not only from quoted symbols or lists.
 For instance, compiled forms which define or reference free variables or global
 functions require the names of these variables or functions to be represented
 as literals.
@@ -62108,8 +62108,8 @@ as literals.
 An object used as a literals in file-compiled code must be
 .I externalizable
 which means that it has a printed representation which can be scanned to
-produce a similar objects. An object which does not have a readable printed
-representation will give rise to a compiled file which trigger an exception.
+produce a similar object. An object which does not have a readable printed
+representation will give rise to a compiled file which triggers an exception.
 Literals which are themselves read from program source code naturally meet this
 restriction; however, with the use of macros, it is possible to embed arbitrary
 objects into program code.
@@ -62300,8 +62300,8 @@ or
 .code eval-only
 form is processed by the evaluator rather than compiler, or when it is
 processed outside of file compilation, or when it is appears as other than a
-top-level form even under file compilation, then these operators mean exactly
-the same thing as
+top-level form even under file compilation, then these operators behave
+in a manner identical to
 .codn progn .
 
 When a
@@ -62310,7 +62310,7 @@ form appears as a top-level form under file compilation, it indicates to the
 file compiler that the
 .metn form -s
 enclosed in it are not to be evaluated. By default, the file compiler executes
-each primary top-level form after compiling it.  The
+each top-level form after compiling it.  The
 .code compile-only
 operator suppresses this evaluation.
 
@@ -62320,7 +62320,7 @@ form appears as a top-level form under file compilation, it indicates to the
 file compiler that the
 .metn form -s
 enclosed in it are to be emitted into the output file.  By default, the file
-appends the compiled image of each primary top-level form to a list which
+appends the compiled image of each top-level form to a list which
 will be written to the output file. The
 .code eval-only
 operator suppresses this evaluation.
@@ -62450,8 +62450,8 @@ they were literal.  Or else, the evaluation may be performed late: when the
 .code load-time
 form itself is encountered during normal evaluation. In that case,
 .meta form
-will still be evaluated only once and then its value effectively
-as a literal in subsequent re-evaluations of that
+will still be evaluated only once and then its value will be be
+inserted as a literal in subsequent re-evaluations of that
 .code load-time
 form, if any.
 
@@ -62495,7 +62495,7 @@ A
 .code load-time
 form appearing in an interpreted function which is processed by
 .code compile
-is effectively evaluated immediately, and its value becomes a literal
+is evaluated immediately, and its value becomes a literal
 in the compiled version of the function.
 
 A
@@ -62513,7 +62513,7 @@ ensured for each top-level form.
 Thus, the
 .code load-time
 forms in a given top-level form may rely on the side-effects of
-of prior top-level forms having taken place.
+prior top-level forms having taken place.
 
 In all situations, the evaluation of
 .meta form
