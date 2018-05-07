@@ -1146,6 +1146,14 @@
                    (end ,bfrag.oreg))
                  bfrag.fvars bfrag.ffuns)))))
 
+(defun misleading-ref-check (frag env form)
+  (each ((v frag.fvars))
+    (when env.(lookup-var v)
+      (compile-warning form "cannot refer to lexical variable ~s" v)))
+  (each ((f frag.ffuns))
+    (when env.(lookup-fun f)
+      (compile-warning form "cannot refer to lexical function ~s" f))))
+
 (defmeth compiler comp-load-time-lit (me oreg env form)
   (mac-param-bind form (op loaded-p exp) form
     (if loaded-p
@@ -1159,6 +1167,7 @@
                                      (mov ,dreg ,exp.oreg))
                                    exp.fvars
                                    exp.ffuns))))
+          (misleading-ref-check exp env form)
           me.(free-treg oreg)
           (push lt-frag me.lt-frags)
           (new (frag dreg nil)))))))
