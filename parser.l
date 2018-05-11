@@ -190,7 +190,7 @@ static wchar_t num_esc(scanner_t *scn, char *num)
 
 %option stack noinput reentrant bison-bridge extra-type="parser_t *"
 
-SYM     [a-zA-Z0-9_]+
+TOK     [a-zA-Z0-9_]+
 SGN     [+\-]
 EXP     [eE][+\-]?[0-9]+
 DIG     [0-9]
@@ -206,7 +206,6 @@ BSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\_~]
 NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\_~/]
 ID_END  [^a-zA-Z0-9!$%&*+\-<=>?\\_~/]
 EXTRA   [#^]
-TOK     {SYM}
 BT0     {BSCHR}({BSCHR}|{EXTRA})*
 BT1     @{BT0}+
 BT2     ({BSCHR}|{EXTRA})+
@@ -960,7 +959,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return LITCHAR;
 }
 
-<CHRLIT>{SYM} {
+<CHRLIT>{TOK} {
   yylval->lexeme = utf8_dup_from(yytext);
   return SYMTOK;
 }
