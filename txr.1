@@ -1782,6 +1782,13 @@ which are not allowed in a
  ! $ % & * + - < = > ? \e ~
 .cble
 
+Moreover, most Unicode characters beyond U+007F may appear in a
+.metn bident ,
+with certain exceptions. A character may not be used if it is any of the
+Unicode space characters, a member of the high or low surrogate region,
+a member of any Unicode private use area, or is one of the two characters
+U+FFFE or U+FFFF.
+
 The rule still holds that a name cannot look like a number so
 .code +123
 is not a valid
@@ -10825,7 +10832,12 @@ underscores:
 
 and of course, may not look like a number.
 
-The character allowed in a
+A
+.meta lident
+may also include all of the Unicode characters which are permitted in a
+.metn bident .
+
+The one character which is allowed in a
 .meta lident
 but not in a
 .meta bident

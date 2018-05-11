@@ -186,6 +186,47 @@ static wchar_t num_esc(scanner_t *scn, char *num)
   return val;
 }
 
+static wchar_t *unicode_ident(scanner_t *scn, const char *lex)
+{
+  wchar_t *wlex = utf8_dup_from(lex), *ptr = wlex, wch;
+
+  while ((wch = *ptr++)) {
+    if (wch < 0x1680 || (wch >= 0x3000 && wch < 0xdc00))
+      continue;
+
+    if ((wch >= 0xdc00 && wch <= 0xdcff) ||
+        (wch >= 0xd800 && wch <= 0xdbff) ||
+#if FULL_UNICODE
+        (wch >= 0xf0000 && wch <= 0xffffd) ||
+        (wch >= 0x100000 && wch <= 0x10fffd) ||
+#endif
+        (wch >= 0xe000 && wch <= 0xf8ff) ||
+        (wch == 0xfffe) ||
+        (wch == 0xffff))
+    {
+      yyerror(scn, yyget_extra(scn),
+              "disallowed Unicode character in identifier");
+      break;
+    }
+
+    switch (wch) {
+    case 0x1680: case 0x180e: case 0x2000: case 0x2001: case 0x2002:
+    case 0x2003: case 0x2004: case 0x2005: case 0x2006: case 0x2007:
+    case 0x2008: case 0x2009: case 0x200a: case 0x2028: case 0x2029:
+    case 0x205f: case 0x3000:
+      yyerror(scn, yyget_extra(scn),
+              "Unicode space occurs in identifier");
+      break;
+    default:
+      continue;
+    }
+
+    break;
+  }
+
+  return wlex;
+}
+
 %}
 
 %option stack noinput reentrant bison-bridge extra-type="parser_t *"
@@ -202,8 +243,8 @@ DOTFLO  [.]{DIG}+
 XNUM    #x{SGN}?{XDIG}+
 ONUM    #o{SGN}?[0-7]+
 BNUM    #b{SGN}?[0-1]+
-BSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\_~]
-NSCHR   [a-zA-Z0-9!$%&*+\-<=>?\\_~/]
+BSCHR   ([a-zA-Z0-9!$%&*+\-<=>?\\_~]|{UONLY})
+NSCHR   ([a-zA-Z0-9!$%&*+\-<=>?\\_~/]|{UONLY})
 ID_END  [^a-zA-Z0-9!$%&*+\-<=>?\\_~/]
 EXTRA   [#^]
 BT0     {BSCHR}({BSCHR}|{EXTRA})*
@@ -395,7 +436,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->lexeme = utf8_dup_from(yytext);
+  yylval->lexeme = unicode_ident(yyscanner, yytext);
   return SYMTOK;
 }
 
@@ -408,7 +449,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->lexeme = utf8_dup_from(yytext);
+  yylval->lexeme = unicode_ident(yyscanner, yytext);
   return SYMTOK;
 }
 
@@ -422,7 +463,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   yyerrorf(yyg, lit("bad token: ~a"),
                     string_own(utf8_dup_from(yytext)),
                     nao);
-  yylval->lexeme = utf8_dup_from(yytext);
+  yylval->lexeme = unicode_ident(yyscanner, yytext);
   return SYMTOK;
 }
 
