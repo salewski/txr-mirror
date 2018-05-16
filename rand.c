@@ -220,9 +220,9 @@ val random(val state, val modulus)
   val self = lit("random");
   struct rand_state *r = coerce(struct rand_state *,
                                 cobj_handle(state, random_state_s));
+  mp_int *m;
 
-  if (bignump(modulus)) {
-    mp_int *m = mp(modulus);
+  if (bignump(modulus) && !ISNEG(m = mp(modulus))) {
     ucnum bits = mp_count_bits(m) - mp_is_pow_two(m);
     ucnum rands_needed = (bits + 32 - 1) / 32;
     ucnum msb_rand_bits = bits % 32;
