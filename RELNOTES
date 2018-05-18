@@ -1,17 +1,35 @@
+                                    TXR 196
+                                   2018-05-18
+
+
+  Features
+
+  - Both the TXR Pattern Language and TXR Lisp now allow Unicode
+    in identifiers.
+    - Un-braced variables like @abc in the pattern language and
+      string quasiliterals are excluded from this change.
+    - Braced variables and Lisp symbols, including packag prefixes,
+      may use Unicode characters.
+    - Unicode spaces cannot be used in identifiers, and neither can
+      various invalid characters.
+  - The Interactive Listener now supports Unicode input.
+
+
+
                                     TXR 195
                                    2018-05-04
 
 
- Bugs
+  Bugs
 
- - Overhaul of handling of parameters that are special variables.
-   - was not implemented at all in interpreted destructuring.
-     - compiled destructuring implemented it by using let.
-   - had subtly wrong scoping semantics, not affecting most code.
-   - was broken completely due to a regression in TXR 190
- - MacOS and Solaris ports:
-   - fixed broken method for getting TXR's executable path, which
-     caused TXR not to work unless invoked via full path.
+  - Overhaul of handling of parameters that are special variables.
+    - was not implemented at all in interpreted destructuring.
+      - compiled destructuring implemented it by using let.
+    - had subtly wrong scoping semantics, not affecting most code.
+    - was broken completely due to a regression in TXR 190
+  - MacOS and Solaris ports:
+    - fixed broken method for getting TXR's executable path, which
+      caused TXR not to work unless invoked via full path.
 
 
 
@@ -19,18 +37,18 @@
                                    2018-04-30
 
 
- Bugs
+  Bugs
 
- - FFI:
-   - issue causing inability to to encode the most negative signed
-     32 bit integer on 32 bit platforms, and the 64 bit one on 64
-     bit platforms.
- - compiler:
-   - fixed situations when compiler generates immediate move instructions
-     for integer operands that are too wide to be used as immdiate literals.
- - assembler:
-   - fixed a situation in which a bignum integer was encoded as a literal
-     using its bitwise pointer representation.
+  - FFI:
+    - issue causing inability to to encode the most negative signed
+      32 bit integer on 32 bit platforms, and the 64 bit one on 64
+      bit platforms.
+  - compiler:
+    - fixed situations when compiler generates immediate move instructions
+      for integer operands that are too wide to be used as immdiate literals.
+  - assembler:
+    - fixed a situation in which a bignum integer was encoded as a literal
+      using its bitwise pointer representation.
 
 
 
