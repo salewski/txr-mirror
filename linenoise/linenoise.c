@@ -1825,10 +1825,10 @@ static void edit_in_editor(lino_t *l) {
 
 #if HAVE_MKSTEMPS
         if ((fd = mkstemps(path, strlen(suffix))) != -1)
-            fo = lino_os.fdopen_fn(fd, L"w");
+            fo = lino_os.fdopen_fn(fd, lino_overwrite);
 #else
         if ((fd = mkstemp(path)) != -1)
-            fo = lino_os.fdopen_fn(fd, L"w");
+            fo = lino_os.fdopen_fn(fd, lino_overwrite);
 #endif
 
         if (!fo && fd != -1)
@@ -1846,7 +1846,7 @@ static void edit_in_editor(lino_t *l) {
             lino_os.close_fn(fo);
             fo = 0;
 
-            if (system(cmd) == 0 && (fi = lino_os.open8_fn(path, L"r")) != 0) {
+            if (system(cmd) == 0 && (fi = lino_os.open8_fn(path, lino_read)) != 0) {
                 size_t len;
                 (void) lino_os.gets_fn(fi, l->data, nelem(l->data));
                 lino_os.close_fn(fi);
@@ -2619,7 +2619,7 @@ int lino_hist_set_max_len(lino_t *ls, int len) {
 /* Save the history in the specified file. On success 0 is returned
  * otherwise -1 is returned. */
 int lino_hist_save(lino_t *ls, const wchar_t *filename) {
-    mem_t *fp = lino_os.open_fn(filename, L"w");
+    mem_t *fp = lino_os.open_fn(filename, lino_overwrite);
     int j;
 
     if (fp == NULL) {
@@ -2642,7 +2642,7 @@ int lino_hist_save(lino_t *ls, const wchar_t *filename) {
  * If the file exists and the operation succeeded 0 is returned, otherwise
  * on error -1 is returned. */
 int lino_hist_load(lino_t *ls, const wchar_t *filename) {
-    mem_t *fp = lino_os.open_fn(filename, L"r");
+    mem_t *fp = lino_os.open_fn(filename, lino_read);
     wchar_t buf[LINENOISE_MAX_LINE];
 
     if (fp == NULL) {

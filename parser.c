@@ -1489,23 +1489,27 @@ static int lino_feof(mem_t *stream_in)
   return get_error(stream) == t;
 }
 
-static mem_t *lino_open(const wchar_t *name_in, const wchar_t *mode_in)
+static const wchli_t *lino_mode_str[] = {
+  wli("r"), wli("w")
+};
+
+static mem_t *lino_open(const wchar_t *name_in, lino_file_mode_t mode_in)
 {
   val name = string(name_in);
-  val mode = static_str(coerce(const wchli_t *, mode_in));
+  val mode = static_str(lino_mode_str[mode_in]);
   return coerce(mem_t *, open_file(name, mode));
 }
 
-static mem_t *lino_open8(const char *name_in, const wchar_t *mode_in)
+static mem_t *lino_open8(const char *name_in, lino_file_mode_t mode_in)
 {
   val name = string_utf8(name_in);
-  val mode = static_str(coerce(const wchli_t *, mode_in));
+  val mode = static_str(lino_mode_str[mode_in]);
   return coerce(mem_t *, open_file(name, mode));
 }
 
-static mem_t *lino_fdopen(int fd, const wchar_t *mode_in)
+static mem_t *lino_fdopen(int fd, lino_file_mode_t mode_in)
 {
-  val mode = static_str(coerce(const wchli_t *, mode_in));
+  val mode = static_str(lino_mode_str[mode_in]);
   return coerce(mem_t *, open_fileno(num(fd), mode));
 }
 

@@ -54,6 +54,11 @@ typedef unsigned char mem_t;
 #define MEM_T_DEFINED
 #endif
 
+typedef enum lino_file_mode {
+    lino_read,
+    lino_overwrite,
+} lino_file_mode_t;
+
 typedef struct lino_os {
     mem_t *(*alloc_fn)(size_t n);
     mem_t *(*realloc_fn)(mem_t *old, size_t size);
@@ -67,9 +72,9 @@ typedef struct lino_os {
     wchar_t *(*getl_fn)(mem_t *stream, wchar_t *buf, size_t nchar);
     wchar_t *(*gets_fn)(mem_t *stream, wchar_t *buf, size_t nchar);
     int (*eof_fn)(mem_t *stream);
-    mem_t *(*open_fn)(const wchar_t *name, const wchar_t *mode);
-    mem_t *(*open8_fn)(const char *name, const wchar_t *mode);
-    mem_t *(*fdopen_fn)(int fd, const wchar_t *mode);
+    mem_t *(*open_fn)(const wchar_t *name, lino_file_mode_t mode);
+    mem_t *(*open8_fn)(const char *name, lino_file_mode_t mode);
+    mem_t *(*fdopen_fn)(int fd, lino_file_mode_t mode);
     void (*close_fn)(mem_t *stream);
     int (*wide_display_fn)(wchar_t);
 } lino_os_t;
