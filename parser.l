@@ -436,7 +436,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->lexeme = unicode_ident(yyscanner, yytext);
+  yylval->lexeme = unicode_ident(yyg, yytext);
   return SYMTOK;
 }
 
@@ -449,7 +449,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->lexeme = unicode_ident(yyscanner, yytext);
+  yylval->lexeme = unicode_ident(yyg, yytext);
   return SYMTOK;
 }
 
@@ -463,7 +463,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   yyerrorf(yyg, lit("bad token: ~a"),
                     string_own(utf8_dup_from(yytext)),
                     nao);
-  yylval->lexeme = unicode_ident(yyscanner, yytext);
+  yylval->lexeme = unicode_ident(yyg, yytext);
   return SYMTOK;
 }
 

@@ -2796,7 +2796,7 @@ wchar_t *chk_wrealloc(wchar_t *old, size_t nwchar)
   size_t size = nwchar * sizeof (wchar_t);
   if (size < nwchar)
     uw_throw(error_s, lit("string size overflow"));
-  return coerce(wchar_t *, chk_realloc(convert(mem_t *, old),
+  return coerce(wchar_t *, chk_realloc(coerce(mem_t *, old),
                                        sizeof (wchar_t) * nwchar));
 }
 
