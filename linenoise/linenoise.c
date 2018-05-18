@@ -63,6 +63,8 @@
 #endif
 #ifdef __CYGWIN__
 #include <sys/utsname.h>
+#include <sys/fcntl.h>
+#include <io.h>
 #endif
 #include "linenoise.h"
 
@@ -96,6 +98,9 @@ struct lino_state {
     lino_enter_cb_t *enter_callback;
     void *ce_ctx;               /* User context for enter callback */
     struct termios orig_termios;        /* In order to restore at exit.*/
+#ifdef __CYGWIN__
+    int orig_imode, orig_omode;
+#endif
     int rawmode;        /* For atexit() function to check if restore is needed*/
     int mlmode;         /* Multi line mode. Default is single line. */
     int history_max_len;
@@ -218,6 +223,9 @@ static void atexit_handler(void);
 static int enable_raw_mode(lino_t *ls) {
     struct termios raw;
     int ifd = lino_os.fileno_fn(ls->tty_ifs);
+#ifdef __CYGWIN__
+    int ofd = lino_os.fileno_fn(ls->tty_ofs);
+#endif
 
     if (!isatty(ifd))
         goto fatal;
@@ -248,6 +256,11 @@ static int enable_raw_mode(lino_t *ls) {
     if (tcsetattr(ifd, TCSANOW, &raw) < 0)
         goto fatal;
 
+#ifdef __CYGWIN__
+    ls->orig_imode = setmode(ifd, O_BINARY);
+    ls->orig_omode = setmode(ofd, O_BINARY);
+#endif
+
     ls->rawmode = 1;
     return 0;
 
@@ -258,10 +271,19 @@ fatal:
 
 static void disable_raw_mode(lino_t *ls) {
     int ifd = lino_os.fileno_fn(ls->tty_ifs);
+#ifdef __CYGWIN__
+    int ofd = lino_os.fileno_fn(ls->tty_ofs);
+#endif
 
     /* Don't even check the return value as it's too late. */
-    if (ls->rawmode && tcsetattr(ifd, TCSANOW, &ls->orig_termios) != -1)
+    if (ls->rawmode && tcsetattr(ifd, TCSANOW, &ls->orig_termios) != -1) {
+#ifdef __CYGWIN__
+        /* reverse order in case ofd == ifd */
+	setmode(ofd, ls->orig_omode);
+	setmode(ifd, ls->orig_imode);
+#endif
         ls->rawmode = 0;
+    }
 }
 
 /* Use the ESC [6n escape sequence to query the horizontal cursor position
