@@ -2940,7 +2940,7 @@ val width(val obj)
   default:
     break;
   }
-  uw_throwf(error_s, lit("integer-length: ~s isn't an integer"), obj, nao);
+  uw_throwf(error_s, lit("width: ~s isn't an integer"), obj, nao);
 }
 
 val bits(val obj)
