@@ -2499,6 +2499,65 @@ mp_size mp_count_bits(mp_int *mp)
   return s_highest_bit_mp(mp);
 }
 
+static mp_size s_mp_count_ones(mp_int *mp)
+{
+  mp_size ix;
+  mp_size c;
+  mp_digit *dp = DIGITS(mp);
+
+  for (c = 0, ix = USED(mp) - 1; ix < MP_SIZE_MAX; ix--) {
+    mp_digit d = dp[ix];
+#if MP_DIGIT_SIZE == 8
+    d = ((d & 0xAAAAAAAAAAAAAAAA) >>  1) + (d & 0x5555555555555555);
+    d = ((d & 0xCCCCCCCCCCCCCCCC) >>  2) + (d & 0x3333333333333333);
+    d = ((d & 0xF0F0F0F0F0F0F0F0) >>  4) + (d & 0x0F0F0F0F0F0F0F0F);
+    d = ((d & 0xFF00FF00FF00FF00) >>  8) + (d & 0x00FF00FF00FF00FF);
+    d = ((d & 0xFFFF0000FFFF0000) >> 16) + (d & 0x0000FFFF0000FFFF);
+    d = ((d & 0xFFFFFFFF00000000) >> 32) + (d & 0x00000000FFFFFFFF);
+    c += d;
+#elif MP_DIGIT_SIZE == 4
+    d = ((d & 0xAAAAAAAA) >>  1) + (d & 0x55555555);
+    d = ((d & 0xCCCCCCCC) >>  2) + (d & 0x33333333);
+    d = ((d & 0xF0F0F0F0) >>  4) + (d & 0x0F0F0F0F);
+    d = ((d & 0xFF00FF00) >>  8) + (d & 0x00FF00FF);
+    d = ((d & 0xFFFF0000) >> 16) + (d & 0x0000FFFF);
+    c += d;
+#elif MP_DIGIT_SIZE == 2
+    d = ((d & 0xAAAA) >> 1) + (d & 0x5555);
+    d = ((d & 0xCCCC) >> 2) + (d & 0x3333);
+    d = ((d & 0xF0F0) >> 4) + (d & 0x0F0F);
+    d = ((d & 0xFF00) >> 8) + (d & 0x00FF);
+    c += d;
+#elif MP_DIGIT_SIZE == 1
+    d = ((d & 0xAA) >> 1) + (d & 0x55);
+    d = ((d & 0xCC) >> 2) + (d & 0x33);
+    d = ((d & 0xF0) >> 4) + (d & 0x0F);
+    c += d;
+#else
+#error fixme: unsupported MP_DIGIT_SIZE
+#endif
+  }
+
+  return c;
+}
+
+mp_size mp_count_ones(mp_int *mp)
+{
+  if (SIGN(mp) == MP_NEG) {
+    mp_int tmp;
+    mp_size res;
+    if ((res = mp_init_copy(&tmp, mp)) != MP_OKAY)
+      return res;
+    if ((res = s_mp_sub_d(&tmp, 1) != MP_OKAY))
+      return res;
+    res = s_mp_count_ones(&tmp);
+    mp_clear(&tmp);
+    return res;
+  }
+
+  return s_mp_count_ones(mp);
+}
+
 mp_size mp_is_pow_two(mp_int *mp)
 {
   return s_mp_ispow2(mp) >= 0;

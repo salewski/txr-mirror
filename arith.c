@@ -2697,6 +2697,46 @@ val maskv(struct args *bits)
   return accum;
 }
 
+val logcount(val n)
+{
+  val self = lit("logcount");
+
+  switch (type(n)) {
+  case NUM:
+  case CHR:
+    {
+      int_ptr_t c = c_num(n);
+      uint_ptr_t d = c;
+      if (c < 0)
+        d = ~d;
+#if SIZEOF_PTR == 8
+      d = ((d & 0xAAAAAAAAAAAAAAAA) >>  1) + (d & 0x5555555555555555);
+      d = ((d & 0xCCCCCCCCCCCCCCCC) >>  2) + (d & 0x3333333333333333);
+      d = ((d & 0xF0F0F0F0F0F0F0F0) >>  4) + (d & 0x0F0F0F0F0F0F0F0F);
+      d = ((d & 0xFF00FF00FF00FF00) >>  8) + (d & 0x00FF00FF00FF00FF);
+      d = ((d & 0xFFFF0000FFFF0000) >> 16) + (d & 0x0000FFFF0000FFFF);
+      d = ((d & 0xFFFFFFFF00000000) >> 32) + (d & 0x00000000FFFFFFFF);
+#elif SIZEOF_PTR == 4
+      d = ((d & 0xAAAAAAAA) >>  1) + (d & 0x55555555);
+      d = ((d & 0xCCCCCCCC) >>  2) + (d & 0x33333333);
+      d = ((d & 0xF0F0F0F0) >>  4) + (d & 0x0F0F0F0F);
+      d = ((d & 0xFF00FF00) >>  8) + (d & 0x00FF00FF);
+      d = ((d & 0xFFFF0000) >> 16) + (d & 0x0000FFFF);
+      return unum(d);
+#else
+#error fixme: only 4 or 8 byte pointers supported
+#endif
+    }
+  case BGNUM:
+    {
+      mp_size co = mp_count_ones(mp(n));
+      return unum(co);
+    }
+  default:
+    uw_throwf(error_s, lit("~a: non-integral operand ~s"), self, n, nao);
+  }
+}
+
 /*
  * Source:
  * Better Approximations to Cumulative Normal Functions

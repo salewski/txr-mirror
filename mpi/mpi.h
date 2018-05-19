@@ -177,6 +177,7 @@ mp_err mp_to_unsigned_bin(mp_int *mp, unsigned char *str);
 mp_err mp_to_unsigned_buf(mp_int *mp, unsigned char *str, size_t size);
 
 mp_size mp_count_bits(mp_int *mp);
+mp_size mp_count_ones(mp_int *mp);
 mp_size mp_is_pow_two(mp_int *mp);
 
 #if MP_COMPAT_MACROS

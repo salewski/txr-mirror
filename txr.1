@@ -36263,6 +36263,25 @@ two's complement bitfield 01 denotes 1, and 10 denotes -2.
 
 The argument may be a character.
 
+.coNP Function @ logcount
+.synb
+.mets (logcount << integer )
+.syne
+.desc
+The
+.code logcount
+function considers
+.meta integer
+to have a two's complement representation. If the integer is positive,
+it returns the count of bits in that representation whose value is 1.
+If
+.meta integer
+is negative, it returns the count of zero bits instead. If
+.meta integer
+is zero, the value returned is zero.
+
+The argument may be a character.
+
 .SS* Exception Handling
 
 An
