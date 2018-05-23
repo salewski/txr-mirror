@@ -788,6 +788,7 @@ modifiers : NUMBER              { $$ = cons($1, nil); }
                                   rlc($$, $1); }
           | compound            { $$ = rlc(cons(expand_meta($1, nil),
                                                  nil), $1); }
+          | SYMTOK              { $$ = cons(symhlpr($1, nil), nil); }
           ;
 
 o_var : SYMTOK                  { val expr = symhlpr($1, nil);

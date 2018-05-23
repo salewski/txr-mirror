@@ -596,6 +596,11 @@ static val h_var(match_line_ctx *c)
               sym, nao);
   }
 
+  if (bindable(modifier)) {
+    val mpair = tx_lookup_var_ubc(modifier, c->bindings, elem);
+    modifier = cdr(mpair);
+  }
+
   if (pair) {
     /* If the variable already has a binding, we replace
        it with its value, and treat it as a string match.

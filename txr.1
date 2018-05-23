@@ -2179,6 +2179,7 @@ enclosed with the variable in braces:
 .mets >> @{ bident <> / regex /}
 .mets >> @{ bident >> ( fun >> [args ...])}
 .mets >> @{ bident << number }
+.mets >> @{ bident << bident }
 .cble
 
 These specify a variable binding that is driven by a positive match derived
@@ -2226,6 +2227,26 @@ string is extracted.
 This syntax is processed without consideration of what other
 syntax follows.  A positive match may be directly followed by an unbound
 variable.
+
+The
+.cblk
+.mets >> @{ bident << bident }
+.cble
+syntax allows the
+.meta number
+or
+.meta regex
+modifier to come from a variable. The variable must be bound and contain
+a non-negative integer or regular expression.
+For example,
+.code "@{x y}"
+behaves like
+.code "@{x 3}"
+if
+.code y
+is bound to the integer 3. It is an error if
+.code y
+is unbound.
 
 .coSS Special Symbols @ nil and @ t
 
