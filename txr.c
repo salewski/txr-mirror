@@ -136,7 +136,7 @@ static void help(void)
 "-t expression          Like -p, but prints using tprint.\n"
 "-C N                   Request backward-compatible behavior to the\n"
 "                       specified version of TXR.\n"
-"--help                 You already know!\n"
+"--help                 Reproduce this help text.\n"
 "--version              Display program version\n"
 "--license              Display software license\n"
 "                       Use of txr implies agreement with the disclaimer\n"
