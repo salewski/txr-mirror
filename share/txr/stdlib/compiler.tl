@@ -765,22 +765,30 @@
       (each ((lfun lexfuns))
         nenv.(extend-fun lfun))
       (let* (ffuns fvars
-             (code (build
-                     (add ^(frame ,nenv.lev ,frsize))
-                     (each ((fi fis))
+             (ffrags (collect-each ((fi fis))
                        (tree-bind (sym : form) fi
                          (let* ((bind nenv.(lookup-fun sym))
                                 (frag me.(compile bind.loc
                                                   (if rec nenv eenv)
                                                   form)))
-                           (pend frag.code
-                                 (maybe-mov bind.loc frag.oreg))
-                           (set ffuns (uni ffuns frag.ffuns)
-                                fvars (uni fvars frag.fvars)))))))
+                           (list bind
+                                 (new (frag frag.oreg
+                                            (append frag.code
+                                                    (maybe-mov bind.loc frag.oreg))
+                                            frag.fvars
+                                            frag.ffuns)))))))
              (bfrag me.(comp-progn oreg nenv body))
              (boreg (if env.(out-of-scope bfrag.oreg) oreg bfrag.oreg)))
+        (set ffrags (append-each ((bf ffrags))
+                      (tree-bind (bind ff) bf
+                        (when bind.used
+                          (set ffuns (uni ffuns ff.ffuns)
+                               fvars (uni fvars ff.fvars))
+                          (list ff)))))
         (new (frag boreg
-                   (append code bfrag.code
+                   (append ^((frame ,nenv.lev ,frsize))
+                           (mappend .code ffrags)
+                           bfrag.code
                            (maybe-mov boreg bfrag.oreg)
                            ^((end ,boreg)))
                    (uni fvars bfrag.fvars)
