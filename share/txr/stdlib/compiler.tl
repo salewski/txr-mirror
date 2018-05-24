@@ -35,6 +35,7 @@
 (defstruct binding nil
   sym
   loc
+  used
   sys:env)
 
 (defstruct vbinding binding)
@@ -62,29 +63,41 @@
       (set me.co me.up.co))
     me.co.(new-env me))
 
-  (:method lookup-var (me sym)
+  (:method lookup-var (me sym : mark-used)
     (condlet
-      (((cell (assoc sym me.vb))) (cdr cell))
-      (((up me.up)) up.(lookup-var sym))
+      (((cell (assoc sym me.vb)))
+       (let ((bi (cdr cell)))
+         (if mark-used (set bi.used t))
+         bi))
+      (((up me.up)) up.(lookup-var sym mark-used))
       (t nil)))
 
-  (:method lookup-fun (me sym)
+  (:method lookup-fun (me sym : mark-used)
     (condlet
-      (((cell (assoc sym me.fb))) (cdr cell))
-      (((up me.up)) up.(lookup-fun sym))
+      (((cell (assoc sym me.fb)))
+       (let ((bi (cdr cell)))
+         (if mark-used (set bi.used t))
+         bi))
+      (((up me.up)) up.(lookup-fun sym mark-used))
       (t nil)))
 
-  (:method lookup-lisp1 (me sym)
+  (:method lookup-lisp1 (me sym : mark-used)
     (condlet
       (((cell (or (assoc sym me.vb)
-                  (assoc sym me.fb)))) (cdr cell))
-      (((up me.up)) up.(lookup-lisp1 sym))
+                  (assoc sym me.fb))))
+       (let ((bi (cdr cell)))
+         (if mark-used (set bi.used t))
+         bi))
+      (((up me.up)) up.(lookup-lisp1 sym mark-used))
       (t nil)))
 
-  (:method lookup-block (me sym)
+  (:method lookup-block (me sym : mark-used)
     (condlet
-      (((cell (assoc sym me.bb))) (cdr cell))
-      (((up me.up)) up.(lookup-block sym))
+      (((cell (assoc sym me.bb)))
+       (let ((bi (cdr cell)))
+         (if mark-used (set bi.used t))
+         bi))
+      (((up me.up)) up.(lookup-block sym mark-used))
       (t nil)))
 
   (:method extend-var (me sym)
@@ -617,9 +630,7 @@
                    me.(get-dreg name)))
            (opcode (if (eq op 'return-from) 'ret 'abscsr))
            (vfrag me.(compile oreg env value))
-           (binfo env.(lookup-block name)))
-      (when binfo
-        (set binfo.used t))
+           (binfo env.(lookup-block name t)))
       (new (frag oreg
                  ^(,*vfrag.code
                    (,opcode ,nreg ,vfrag.oreg))
@@ -867,7 +878,7 @@
 
 (defmeth compiler comp-fun (me oreg env form)
   (mac-param-bind form (op sym) form
-    (iflet ((fbin env.(lookup-fun sym)))
+    (iflet ((fbin env.(lookup-fun sym t)))
       (new (frag fbin.loc nil nil (list sym)))
       (let ((dreg me.(get-dreg sym)))
         (new (frag oreg ^((getf ,oreg ,dreg)) nil (list sym)))))))
@@ -961,7 +972,7 @@
               (fun (cond
                      (more (compile-error form "excess args in fun form"))
                      ((bindable arg)
-                      (let ((fbind env.(lookup-fun arg)))
+                      (let ((fbind env.(lookup-fun arg t)))
                         me.(comp-call-impl oreg env (if fbind opcode gopcode)
                                            (if fbind fbind.loc me.(get-fidx arg))
                                            (cdr args))))
@@ -974,7 +985,7 @@
            (arg me.(comp-call oreg env
                               (if (eq sym 'usr:apply) 'apply sym) args)))))
       (ift me.(comp-ift oreg env form))
-      (t (let* ((fbind env.(lookup-fun sym))
+      (t (let* ((fbind env.(lookup-fun sym t))
                 (cfrag me.(comp-call-impl oreg env (if fbind 'call 'gcall)
                                           (if fbind fbind.loc me.(get-fidx sym))
                                           args)))
@@ -1120,7 +1131,7 @@
     (cond
       ((bindable arg)
        (condlet
-         (((bind env.(lookup-lisp1 arg)))
+         (((bind env.(lookup-lisp1 arg t)))
           (new (frag bind.loc
                      nil
                      (if (typep bind 'vbinding) (list arg))
