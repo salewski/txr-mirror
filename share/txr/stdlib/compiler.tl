@@ -706,6 +706,7 @@
     (let* ((vis (mapcar [iffi atom list] raw-vis))
            (specials [keep-if special-var-p vis car])
            (lexsyms [remove-if special-var-p [mapcar car vis]])
+           allsyms
            (specials-occur [find-if special-var-p vis car])
            (treg (if specials-occur me.(alloc-treg)))
            (frsize (len lexsyms))
@@ -722,6 +723,7 @@
                             ,nenv.lev ,frsize))
                      (each ((vi vis))
                        (tree-bind (sym : form) vi
+                         (push sym allsyms)
                          (cond
                            ((special-var-p sym)
                             (let ((frag me.(compile treg fenv form))
@@ -729,7 +731,11 @@
                               (pend frag.code)
                               (add ^(bindv ,frag.oreg ,dreg))
                               (set ffuns (uni ffuns frag.ffuns)
-                                   fvars (uni fvars frag.fvars))))
+                                   fvars (uni fvars
+                                              (if seq
+                                                (diff frag.fvars
+                                                      (cdr allsyms))
+                                                frag.fvars)))))
                            (form
                              (let* ((tmp (if seq (gensym)))
                                     (bind (if seq
@@ -741,7 +747,11 @@
                                (pend frag.code
                                      (maybe-mov bind.loc frag.oreg))
                                (set ffuns (uni ffuns frag.ffuns)
-                                    fvars (uni fvars frag.fvars))))
+                                    fvars (uni fvars
+                                               (if seq
+                                                 (diff frag.fvars
+                                                       (cdr allsyms))
+                                                 frag.fvars)))))
                            (t (if seq nenv.(extend-var* sym))))))))
              (bfrag me.(comp-progn oreg nenv body))
              (boreg (if env.(out-of-scope bfrag.oreg) oreg bfrag.oreg)))
@@ -751,7 +761,7 @@
                    (append code bfrag.code
                            (maybe-mov boreg bfrag.oreg)
                            ^((end ,boreg)))
-                   (uni (diff bfrag.fvars lexsyms) fvars)
+                   (uni (diff bfrag.fvars allsyms) fvars)
                    (uni ffuns bfrag.ffuns)))))))
 
 (defmeth compiler comp-fbind (me oreg env form)
@@ -792,14 +802,15 @@
                            (maybe-mov boreg bfrag.oreg)
                            ^((end ,boreg)))
                    (uni fvars bfrag.fvars)
-                   (uni (diff bfrag.ffuns lexfuns) bfrag.ffuns)))))))
+                   (uni (diff bfrag.ffuns lexfuns)
+                        (if rec (diff ffuns lexfuns) ffuns))))))))
 
 (defmeth compiler comp-lambda (me oreg env form)
   (mac-param-bind form (op par-syntax . body) form
     (let* ((pars (new (fun-param-parser par-syntax form)))
            (need-frame (or (plusp pars.nfix) pars.rest))
            (nenv (if need-frame (new env up env co me) env))
-           lexsyms specials need-dframe)
+           lexsyms fvars specials need-dframe)
       (flet ((spec-sub (sym)
                (cond
                  ((special-var-p sym)
@@ -819,14 +830,20 @@
                              (list (spec-sub var-sym)
                                    init-form
                                    (if have-sym (spec-sub have-sym))))))
-               (rest-par (when pars.rest (spec-sub pars.rest))))
+               (rest-par (when pars.rest (spec-sub pars.rest)))
+               (allsyms req-pars))
           (upd specials nreverse)
           (let* ((col-reg (if opt-pars me.(get-dreg :)))
                  (tee-reg (if opt-pars me.(get-dreg t)))
                  (ifrags (collect-each ((op opt-pars))
                            (tree-bind (var-sym init-form have-sym) op
-                             (let ((vbind nenv.(lookup-var var-sym)))
-                               me.(compile vbind.loc nenv init-form)))))
+                             (let* ((vbind nenv.(lookup-var var-sym))
+                                    (ifrag me.(compile vbind.loc nenv init-form)))
+                               (set fvars (uni fvars
+                                               (diff ifrag.fvars allsyms)))
+                               (push var-sym allsyms)
+                               (push have-sym allsyms)
+                               ifrag))))
                  (opt-code (append-each ((op opt-pars)
                                          (ifrg ifrags))
                              (tree-bind (var-sym init-form have-sym) op
@@ -879,8 +896,7 @@
                          ,*(maybe-mov boreg bfrag.oreg)
                          (end ,boreg)
                          ,lskip)
-                       (uni [reduce-left uni ifrags nil .fvars]
-                            (diff bfrag.fvars lexsyms))
+                       (uni fvars (diff bfrag.fvars lexsyms))
                        (uni [reduce-left uni ifrags nil .ffuns]
                             bfrag.ffuns)))))))))
 
