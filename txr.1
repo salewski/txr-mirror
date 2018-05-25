@@ -62378,11 +62378,11 @@ When a
 form appears as a top-level form under file compilation, it indicates to the
 file compiler that the
 .metn form -s
-enclosed in it are to be emitted into the output file.  By default, the file
-appends the compiled image of each top-level form to a list which
-will be written to the output file. The
+enclosed in it are not to be emitted into the output file. By default, the file
+compiler includes the compiled image in the output written to the output file.
+The
 .code eval-only
-operator suppresses this evaluation.
+operator suppresses this inclusion.
 
 Forms which are surrounded by both an
 .code eval-only
