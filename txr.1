@@ -47537,7 +47537,7 @@ macro is a robust, self-contained language feature which can be used
 anywhere where a \*(TL expression is called for, cleanly nests
 with itself and can produce a return value when done. By contrast,
 a function in the Awk language, or an action body, cannot instantiate
-an local Awk processing machine.
+a local Awk processing machine.
 
 The
 .code awk
@@ -48958,6 +48958,7 @@ record which terminates the range,
 is returned for that record also.
 .meIP (--rng- < from << to )
 This type of range is active under the same conditions as
+.codn rng .
 However, the range expression yields
 .code nil
 for the entire leading sequence of consecutive records for which
