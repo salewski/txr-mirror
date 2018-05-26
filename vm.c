@@ -61,10 +61,10 @@ struct vm_desc {
   cnum ftsz;
   val bytecode;
   val datavec;
-  val funvec;
+  val symvec;
   vm_word_t *code;
   val *data;
-  struct vm_ftent *ftab;
+  struct vm_ftent *stab;
 };
 
 struct vm_ftent {
@@ -106,7 +106,7 @@ static struct vm_desc *vm_desc_struct(val obj)
 }
 
 val vm_make_desc(val nlevels, val nregs, val bytecode,
-                 val datavec, val funvec)
+                 val datavec, val symvec)
 {
   val self = lit("sys:vm-make-desc");
   int nlvl = c_int(nlevels, self), nreg = c_int(nregs, self);
@@ -122,24 +122,24 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
   {
     mem_t *code = buf_get(bytecode, self);
     val dvl = length_vec(datavec);
-    cnum ftsz = c_num(length_vec(funvec));
+    cnum ftsz = c_num(length_vec(symvec));
     loc data_loc = if3(dvl != zero, vecref_l(datavec, zero), nulloc);
     struct vm_desc *vd = coerce(struct vm_desc *, chk_malloc(sizeof *vd));
-    struct vm_ftent *ftab = if3(ftsz != 0,
+    struct vm_ftent *stab = if3(ftsz != 0,
                                 coerce(struct vm_ftent *,
-                                       chk_calloc(ftsz, sizeof *ftab)), 0);
+                                       chk_calloc(ftsz, sizeof *stab)), 0);
     val desc;
 
     vd->nlvl = nlvl;
     vd->nreg = nreg;
     vd->code = coerce(vm_word_t *, code);
     vd->data = valptr(data_loc);
-    vd->ftab = ftab;
+    vd->stab = stab;
     vd->ftsz = ftsz;
 
     vd->bytecode = nil;
     vd->datavec = nil;
-    vd->funvec = nil;
+    vd->symvec = nil;
 
     vd->frsz = nlvl * 2 + nreg;
 
@@ -149,7 +149,7 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
 
     vd->bytecode = bytecode;
     vd->datavec = datavec;
-    vd->funvec = funvec;
+    vd->symvec = symvec;
     vd->self = desc;
 
     return desc;
@@ -180,16 +180,16 @@ static val vm_desc_datavec(val desc)
   return vd->datavec;
 }
 
-static val vm_desc_funvec(val desc)
+static val vm_desc_symvec(val desc)
 {
   struct vm_desc *vd = vm_desc_struct(desc);
-  return vd->funvec;
+  return vd->symvec;
 }
 
 static void vm_desc_destroy(val obj)
 {
   struct vm_desc *vd = coerce(struct vm_desc *, obj->co.handle);
-  free(vd->ftab);
+  free(vd->stab);
   free(vd);
 }
 
@@ -200,10 +200,10 @@ static void vm_desc_mark(val obj)
 
   gc_mark(vd->bytecode);
   gc_mark(vd->datavec);
-  gc_mark(vd->funvec);
+  gc_mark(vd->symvec);
 
   for (i = 0; i < ftsz; i++)
-    gc_mark(vd->ftab[i].fb);
+    gc_mark(vd->stab[i].fb);
 }
 
 static struct vm_closure *vm_closure_struct(val obj)
@@ -470,19 +470,19 @@ NOINLINE static void vm_apply(struct vm *vm, vm_word_t insn)
   vm_set(vm->dspl, dest, result);
 }
 
-static loc vm_ftab(struct vm *vm, unsigned fun)
+static loc vm_stab(struct vm *vm, unsigned fun)
 {
   struct vm_desc *vd = vm->vd;
-  struct vm_ftent *fe = &vd->ftab[fun];
+  struct vm_ftent *fe = &vd->stab[fun];
   loc fbloc = fe->fbloc;
 
   if (!nullocp(fbloc))
     return fbloc;
 
-  if (nilp(fe->fb = lookup_fun(nil, vecref(vd->funvec, num_fast(fun)))))
+  if (nilp(fe->fb = lookup_fun(nil, vecref(vd->symvec, num_fast(fun)))))
     eval_error(vd->bytecode,
                lit("function ~s is not defined"),
-               vecref(vd->funvec, num(fun)), nao);
+               vecref(vd->symvec, num(fun)), nao);
   gc_mutated(vd->self);
   return (fe->fbloc = cdr_l(fe->fb));
 }
@@ -512,7 +512,7 @@ NOINLINE static void vm_gcall(struct vm *vm, vm_word_t insn)
     }
   }
 
-  result = generic_funcall(deref(vm_ftab(vm, fun)), args);
+  result = generic_funcall(deref(vm_stab(vm, fun)), args);
   vm_set(vm->dspl, dest, result);
 }
 
@@ -541,7 +541,7 @@ NOINLINE static void vm_gapply(struct vm *vm, vm_word_t insn)
     }
   }
 
-  result = applyv(deref(vm_ftab(vm, fun)), args);
+  result = applyv(deref(vm_stab(vm, fun)), args);
   vm_set(vm->dspl, dest, result);
 }
 
@@ -1104,7 +1104,7 @@ void vm_init(void)
   reg_fun(intern(lit("vm-desc-nregs"), system_package), func_n1(vm_desc_nregs));
   reg_fun(intern(lit("vm-desc-bytecode"), system_package), func_n1(vm_desc_bytecode));
   reg_fun(intern(lit("vm-desc-datavec"), system_package), func_n1(vm_desc_datavec));
-  reg_fun(intern(lit("vm-desc-funvec"), system_package), func_n1(vm_desc_funvec));
+  reg_fun(intern(lit("vm-desc-symvec"), system_package), func_n1(vm_desc_symvec));
   reg_fun(intern(lit("vm-execute-toplevel"), system_package), func_n1(vm_execute_toplevel));
   reg_fun(intern(lit("vm-closure-desc"), system_package), func_n1(vm_closure_desc));
   reg_fun(intern(lit("vm-closure-entry"), system_package), func_n1(vm_closure_entry));

@@ -138,13 +138,13 @@
   (defstruct compiler nil
     (treg-cntr 2)
     (dreg-cntr 0)
-    (fidx-cntr 0)
+    (sidx-cntr 0)
     (nlev 2)
     (tregs nil)
     (dreg (hash :eql-based))
     (data (hash :eql-based))
-    (fidx (hash :eql-based))
-    (ftab (hash :eql-based))
+    (sidx (hash :eql-based))
+    (stab (hash :eql-based))
     lt-frags
     last-form))
 
@@ -236,18 +236,18 @@
       dreg)
     (compile-error me.last-form "code too complex: too many literals")))
 
-(defmeth compiler get-fidx (me atom)
-  (iflet ((fidx [me.fidx atom]))
-    fidx
-    (let* ((fidx (pinc me.fidx-cntr)))
-      (set [me.ftab fidx] atom)
-      (set [me.fidx atom] fidx))))
+(defmeth compiler get-sidx (me atom)
+  (iflet ((sidx [me.sidx atom]))
+    sidx
+    (let* ((sidx (pinc me.sidx-cntr)))
+      (set [me.stab sidx] atom)
+      (set [me.sidx atom] sidx))))
 
 (defmeth compiler get-datavec (me)
   (vec-list [mapcar me.data (range* 0 me.dreg-cntr)]))
 
-(defmeth compiler get-funvec (me)
-  (vec-list [mapcar me.ftab (range* 0 me.fidx-cntr)]))
+(defmeth compiler get-symvec (me)
+  (vec-list [mapcar me.stab (range* 0 me.sidx-cntr)]))
 
 (defmeth compiler alloc-treg (me)
   (cond
@@ -401,7 +401,7 @@
       (compile-error form "assignment to lexical function binding")
       (let ((vfrag me.(compile oreg env val))
             (fname me.(get-dreg sym))
-            (rplcd me.(get-fidx 'usr:rplacd))
+            (rplcd me.(get-sidx 'usr:rplacd))
             (treg me.(alloc-treg)))
         me.(free-treg treg)
         (new (frag vfrag.oreg
@@ -676,7 +676,7 @@
                                 (lskip (gensym "l")))
                            (new (frag oreg
                                       ^((gcall ,treg
-                                               ,me.(get-fidx 'exception-subtype-p)
+                                               ,me.(get-sidx 'exception-subtype-p)
                                                ,esvb.loc
                                                ,me.(get-dreg sym))
                                         (if ,treg ,lskip)
@@ -998,7 +998,7 @@
                      ((bindable arg)
                       (let ((fbind env.(lookup-fun arg t)))
                         me.(comp-call-impl oreg env (if fbind opcode gopcode)
-                                           (if fbind fbind.loc me.(get-fidx arg))
+                                           (if fbind fbind.loc me.(get-sidx arg))
                                            (cdr args))))
                      ((and (consp arg) (eq (car arg) 'lambda))
                       me.(comp-fun-form oreg env ^(sym ,arg ,*(cdr args))))
@@ -1011,7 +1011,7 @@
       (ift me.(comp-ift oreg env form))
       (t (let* ((fbind env.(lookup-fun sym t))
                 (cfrag me.(comp-call-impl oreg env (if fbind 'call 'gcall)
-                                          (if fbind fbind.loc me.(get-fidx sym))
+                                          (if fbind fbind.loc me.(get-sidx sym))
                                           args)))
            (pushnew sym cfrag.ffuns)
            cfrag)))))
@@ -1519,7 +1519,7 @@
       co.(free-treg oreg)
       co.(check-treg-leak)
       as.(asm ^(,*(mappend .code (nreverse co.lt-frags)) ,*frag.code (end ,frag.oreg)))
-      (vm-make-desc co.nlev (succ as.max-treg) as.buf co.(get-datavec) co.(get-funvec)))))
+      (vm-make-desc co.nlev (succ as.max-treg) as.buf co.(get-datavec) co.(get-symvec)))))
 
 (defvarl %file-suff-rx% #/[.][^\\\/.]+/)
 
@@ -1564,8 +1564,7 @@
         (sys:vm-desc-nregs vd)
         (sys:vm-desc-bytecode vd)
         (copy (sys:vm-desc-datavec vd))
-        (sys:vm-desc-funvec vd)))
-
+        (sys:vm-desc-symvec vd)))
 
 (defmacro usr:with-compilation-unit (. body)
   (with-gensyms (rec)

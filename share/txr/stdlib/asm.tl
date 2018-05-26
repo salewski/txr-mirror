@@ -759,7 +759,7 @@
   (let ((asm (new assembler buf code)))
     (put-line "data:")
     (mapdo (do format t " d~,03X: ~s\n" @1 @2) (range 0) data)
-    (put-line "funs:")
+    (put-line "syms:")
     (mapdo (do format t "~5d: ~s\n" @1 @2) (range 0) funv)
     (put-line "code:")
     (let ((ninsn asm.(dis-listing)))
@@ -771,7 +771,7 @@
     (typecase obj
       (vm-desc (disassemble-cdf (vm-desc-bytecode obj)
                                 (vm-desc-datavec obj)
-                                (vm-desc-funvec obj)
+                                (vm-desc-symvec obj)
                                 stream))
       (fun (unless (vm-fun-p obj)
              (error "~s: not a vm function: ~s" self obj))
