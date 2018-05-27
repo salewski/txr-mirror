@@ -1,3 +1,25 @@
+                                    TXR 197
+                                   2018-05-27
+
+
+  Features
+
+  - logcount function:
+    - counts one bits in non-negative integers, zero bits in negative ones.
+    - closely based on ANSI CL logcount.
+
+  Bugs
+
+  - listener:
+    - regression in 196: fatal exception if .txr_history
+      file doesn't exist.
+  - compiler:
+    - failure to handle block* special form, and therefore also tagbody.
+  - awk:
+    - autload issue: compiled file containing awk expression won't load.
+
+
+
                                     TXR 196
                                    2018-05-18
 
