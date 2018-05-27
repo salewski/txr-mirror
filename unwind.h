@@ -288,3 +288,12 @@ noreturn val type_mismatch(val, ...);
    uw_unwind { }                                        \
    uw_catch_end;                                        \
    return _r_e_t;
+
+#define ignerr_begin                                            \
+   uw_catch_begin (cons(error_s, nil), _x_s_y_m, _x_a_r_g_s)
+
+#define ignerr_end                                              \
+   uw_catch(_x_s_y_m, _x_a_r_g_s)                               \
+   (void) _x_s_y_m; (void) _x_a_r_g_s;                          \
+   uw_unwind { }                                                \
+   uw_catch_end

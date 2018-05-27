@@ -1497,14 +1497,22 @@ static mem_t *lino_open(const wchar_t *name_in, lino_file_mode_t mode_in)
 {
   val name = string(name_in);
   val mode = static_str(lino_mode_str[mode_in]);
-  return coerce(mem_t *, open_file(name, mode));
+  mem_t *ret = 0;
+  ignerr_begin;
+  ret = coerce(mem_t *, open_file(name, mode));
+  ignerr_end;
+  return ret;
 }
 
 static mem_t *lino_open8(const char *name_in, lino_file_mode_t mode_in)
 {
   val name = string_utf8(name_in);
   val mode = static_str(lino_mode_str[mode_in]);
-  return coerce(mem_t *, open_file(name, mode));
+  mem_t *ret = 0;
+  ignerr_begin;
+  ret = coerce(mem_t *, open_file(name, mode));
+  ignerr_end;
+  return ret;
 }
 
 static mem_t *lino_fdopen(int fd, lino_file_mode_t mode_in)
