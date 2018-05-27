@@ -602,9 +602,9 @@
            (binfo (unless star
                     (cdar nenv.(extend-block name))))
            (treg (if star me.(maybe-alloc-treg oreg)))
-           (nfrag (if star me.(compile treg nenv name)))
+           (nfrag (if star me.(compile treg env name)))
            (nreg (if star nfrag.oreg me.(get-dreg name)))
-           (bfrag me.(comp-progn oreg nenv body))
+           (bfrag me.(comp-progn oreg (or nenv env) body))
            (lskip (gensym "l")))
       (when treg
         me.(maybe-free-treg treg oreg))
