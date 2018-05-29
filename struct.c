@@ -660,6 +660,14 @@ static struct struct_inst *struct_handle(val obj, val ctx)
             ctx, obj, nao);
 }
 
+static struct struct_inst *struct_handle_for_slot(val obj, val ctx, val slot)
+{
+  if (cobjp(obj) && obj->co.ops == &struct_inst_ops)
+    return coerce(struct struct_inst *, obj->co.handle);
+  uw_throwf(error_s, lit("~a: attempt to access slot ~s of non-structure ~s"),
+            ctx, slot, obj, nao);
+}
+
 val copy_struct(val strct)
 {
   const val self = lit("copy-struct");
@@ -949,7 +957,7 @@ static noreturn void no_such_static_slot(val ctx, val type, val slot)
 val slot(val strct, val sym)
 {
   const val self = lit("slot");
-  struct struct_inst *si = struct_handle(strct, self);
+  struct struct_inst *si = struct_handle_for_slot(strct, self, sym);
 
   if (sym && symbolp(sym)) {
     loc ptr = lookup_slot_load(strct, si, sym);
@@ -963,7 +971,7 @@ val slot(val strct, val sym)
 val maybe_slot(val strct, val sym)
 {
   const val self = lit("slot");
-  struct struct_inst *si = struct_handle(strct, self);
+  struct struct_inst *si = struct_handle_for_slot(strct, self, sym);
 
   if (sym && symbolp(sym)) {
     loc ptr = lookup_slot_load(strct, si, sym);
@@ -977,7 +985,7 @@ val maybe_slot(val strct, val sym)
 val slotset(val strct, val sym, val newval)
 {
   const val self = lit("slotset");
-  struct struct_inst *si = struct_handle(strct, self);
+  struct struct_inst *si = struct_handle_for_slot(strct, self, sym);
 
   if (sym && symbolp(sym)) {
     loc ptr = lookup_slot(strct, si, sym);
