@@ -12943,7 +12943,7 @@ evaluated as Lisp, the name of a variable being such an expression.
 The following sections list all of the special operators, macros
 and functions in \*(TL.
 
-In these sections Syntax is indicated using these conventions:
+In these sections, syntax is indicated using these conventions:
 
 .meIP < word
 .ie n \{\
@@ -12982,6 +12982,15 @@ repetition.
 
 .meIP [syntax] <> [ word ]
 Square brackets indicate optional syntax.
+
+.coIP '[' ']'
+The quoted square brackets indicate literal brackets which appear
+in the syntax, which they do without quotes. For instance
+.code "'['foo [ bar ]']'"
+is a pattern denotes the two possible expressions
+.code "[foo]"
+and
+.codn "[foo bar]" .
 
 .meIP syntax -> < result
 The arrow notation is used in examples to indicate that the evaluation
@@ -13733,9 +13742,9 @@ retrieve a global macro expander using the function
 .coNP Operator @ dwim
 .synb
 .mets (dwim << argument *)
-.mets <> [ argument *]
+.mets <> '[' argument *']'
 .mets (set (dwim < obj-place < index <> [ alt ]) << new-value )
-.mets (set >> [ obj-place < index <> [ alt ]] << new-value )
+.mets (set >> '[' obj-place < index <> [ alt ]']' << new-value )
 .syne
 .desc
 The
@@ -13748,6 +13757,17 @@ The notation
 .code [...]
 is a shorthand which denotes
 .codn "(dwim ...)" .
+
+Note that since the
+.code [
+and
+.code ]
+are used in this document for indicating optional syntax,
+in the above Syntax synopsis the quoted notation
+.code '['
+and
+.code ']'
+denotes bracket tokens which literally appear in the syntax.
 
 The
 .code dwim
@@ -14405,7 +14425,7 @@ macros as case keys.
 .coNP Operator/function @ if
 .synb
 .mets (if < cond < t-form <> [ e-form ])
-.mets [if < cond < then <> [ else ]]
+.mets '['if < cond < then <> [ else ]']'
 .syne
 .desc
 There exist both an
@@ -14458,7 +14478,7 @@ argument if present, otherwise it returns
 .coNP Operator/function @ and
 .synb
 .mets (and << form *)
-.mets [and << arg *]
+.mets '['and << arg *']'
 .syne
 .desc
 There exist both an
@@ -14517,7 +14537,7 @@ Otherwise it returns the value of the last argument.
 .coNP Operator/function @ or
 .synb
 .mets (or << form *)
-.mets [or << arg *]
+.mets '['or << arg *']'
 .syne
 .desc
 There exist both an
@@ -25915,7 +25935,7 @@ is invoked.
 
 .coNP Function @ from-list
 .synb
-.mets << object .[from-list << list ]
+.mets << object .'['from-list << list ']'
 .syne
 .desc
 If a
