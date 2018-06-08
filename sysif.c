@@ -53,6 +53,9 @@
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#if HAVE_SYS_SYSMACROS_H
+#include <sys/sysmacros.h>
+#endif
 #if HAVE_POLL
 #include <poll.h>
 #endif

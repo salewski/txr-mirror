@@ -128,6 +128,7 @@ have_dbl_decimal_dig=
 have_unistd=
 have_sys_types=
 have_sys_time=
+have_makedev=
 have_syslog=
 have_glob=
 have_ftw=
@@ -2006,8 +2007,9 @@ fi
 
 printf "Checking for makedev ... "
 
-cat > conftest.c <<!
-#include <sys/types.h>
+for try_header in sysmacros types ; do
+  cat > conftest.c <<!
+#include <sys/${try_header}.h>
 
 int main(void)
 {
@@ -2017,11 +2019,23 @@ int main(void)
   return 0;
 }
 !
-if conftest ; then
-  printf "yes\n"
-  printf "#define HAVE_MAKEDEV 1\n" >> config.h
-  have_sys_types=y
-else
+  if conftest ; then
+    printf "yes\n"
+    printf "#define HAVE_MAKEDEV 1\n" >> config.h
+    case $try_header in
+    sysmacros )
+      printf "#define HAVE_SYS_SYSMACROS_H 1\n" >> config.h
+      ;;
+    types )
+      have_sys_types=y
+      ;;
+    esac
+    have_makedev=y
+    break
+  fi
+done
+
+if [ -z "$have_makedev" ] ; then
   printf "no\n"
 fi
 
