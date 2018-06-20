@@ -1456,7 +1456,7 @@ static void yank_sel(lino_t *l)
 
         if (end - sel > 0) {
             lino_os.free_fn(l->clip);
-            l->clip = coerce(wchar_t *, lino_os.alloc_fn(end - sel + 1));
+            l->clip = coerce(wchar_t *, lino_os.wmalloc_fn(end - sel + 1));
             wmemcpy(l->clip, l->data + sel, end - sel);
             l->clip[end - sel] = 0;
             l->dpos = sel;
