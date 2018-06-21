@@ -55,6 +55,7 @@
 #include "struct.h"
 #include "cadr.h"
 #include "filter.h"
+#include "vm.h"
 #include "eval.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -5329,6 +5330,8 @@ static val makunbound(val sym)
   remhash(top_smb, sym);
   remhash(special, sym);
 
+  vm_invalidate_binding(sym);
+
   return sym;
 }
 
@@ -5338,6 +5341,7 @@ static val fmakunbound(val sym)
   remhash(top_fb, sym);
   if (opt_compat && opt_compat <= 127)
     remhash(top_mb, sym);
+  vm_invalidate_binding(sym);
   return sym;
 }
 

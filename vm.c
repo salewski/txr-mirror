@@ -53,7 +53,12 @@ typedef u32_t vm_word_t;
 
 #define zalloca(size) memset(alloca(size), 0, size)
 
+struct vm_desc_links {
+  struct vm_desc *next, *prev;
+};
+
 struct vm_desc {
+  struct vm_desc_links lnk;
   val self;
   int nlvl;
   int nreg;
@@ -100,6 +105,10 @@ static_forward(struct cobj_ops vm_desc_ops);
 
 static_forward(struct cobj_ops vm_closure_ops);
 
+static struct vm_desc_links vmd_list = {
+  coerce(struct vm_desc *, &vmd_list), coerce(struct vm_desc *, &vmd_list)
+};
+
 static struct vm_desc *vm_desc_struct(val obj)
 {
   return coerce(struct vm_desc *, cobj_handle(obj, vm_desc_s));
@@ -125,6 +134,7 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
     cnum ftsz = c_num(length_vec(symvec));
     loc data_loc = if3(dvl != zero, vecref_l(datavec, zero), nulloc);
     struct vm_desc *vd = coerce(struct vm_desc *, chk_malloc(sizeof *vd));
+    struct vm_desc *vtail = vmd_list.prev, *vnull = vtail->lnk.next;
     struct vm_ftent *stab = if3(ftsz != 0,
                                 coerce(struct vm_ftent *,
                                        chk_calloc(ftsz, sizeof *stab)), 0);
@@ -151,6 +161,11 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
     vd->datavec = datavec;
     vd->symvec = symvec;
     vd->self = desc;
+
+    vd->lnk.prev = vtail;
+    vd->lnk.next = vnull;
+    vnull->lnk.prev = vd;
+    vtail->lnk.next = vd;
 
     return desc;
   }
@@ -189,6 +204,10 @@ static val vm_desc_symvec(val desc)
 static void vm_desc_destroy(val obj)
 {
   struct vm_desc *vd = coerce(struct vm_desc *, obj->co.handle);
+  struct vm_desc *vn = vd->lnk.next, *vp = vd->lnk.prev;
+  vp->lnk.next = vn;
+  vn->lnk.prev = vp;
+  vd->lnk.prev = vd->lnk.next = 0;
   free(vd->stab);
   free(vd);
 }
@@ -1079,6 +1098,22 @@ static val vm_closure_entry(val closure)
 {
   struct vm_closure *vc = vm_closure_struct(closure);
   return unum(vc->ip);
+}
+
+void vm_invalidate_binding(val sym)
+{
+  struct vm_desc *vd = vmd_list.next, *vnull = vd->lnk.prev;
+
+  for (; vd != vnull; vd = vd->lnk.next) {
+    cnum i;
+    for (i = 0; i < vd->ftsz; i++) {
+      if (vecref(vd->symvec, num_fast(i)) == sym) {
+        struct vm_ftent *sti = &vd->stab[i];
+        sti->fb = nil;
+        sti->fbloc = nulloc;
+      }
+    }
+  }
 }
 
 static_def(struct cobj_ops vm_desc_ops =
