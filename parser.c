@@ -616,10 +616,15 @@ static val read_file_common(val stream, val error_stream, val compiled)
   val name = stream_get_prop(stream, name_k);
   val first = t;
   val big_endian = nil;
+  val parser = ensure_parser(stream);
+
+  if (compiled) {
+    parser_t *pi = get_parser_impl(parser);
+    pi->rec_source_loc = 0;
+  }
 
   for (;;) {
     val form = lisp_parse(stream, error_stream, error_val, name, colon_k);
-    val parser = get_parser(stream);
 
     if (form == error_val) {
       if (parser_errors(parser) != zero)
