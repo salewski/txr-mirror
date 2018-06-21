@@ -63,16 +63,16 @@ struct vm_desc {
   int nlvl;
   int nreg;
   int frsz;
-  cnum ftsz;
+  cnum stsz;
   val bytecode;
   val datavec;
   val symvec;
   vm_word_t *code;
   val *data;
-  struct vm_ftent *stab;
+  struct vm_stent *stab;
 };
 
-struct vm_ftent {
+struct vm_stent {
   val fb;
   loc fbloc;
 };
@@ -131,13 +131,13 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
   {
     mem_t *code = buf_get(bytecode, self);
     val dvl = length_vec(datavec);
-    cnum ftsz = c_num(length_vec(symvec));
+    cnum stsz = c_num(length_vec(symvec));
     loc data_loc = if3(dvl != zero, vecref_l(datavec, zero), nulloc);
     struct vm_desc *vd = coerce(struct vm_desc *, chk_malloc(sizeof *vd));
     struct vm_desc *vtail = vmd_list.prev, *vnull = vtail->lnk.next;
-    struct vm_ftent *stab = if3(ftsz != 0,
-                                coerce(struct vm_ftent *,
-                                       chk_calloc(ftsz, sizeof *stab)), 0);
+    struct vm_stent *stab = if3(stsz != 0,
+                                coerce(struct vm_stent *,
+                                       chk_calloc(stsz, sizeof *stab)), 0);
     val desc;
 
     vd->nlvl = nlvl;
@@ -145,7 +145,7 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
     vd->code = coerce(vm_word_t *, code);
     vd->data = valptr(data_loc);
     vd->stab = stab;
-    vd->ftsz = ftsz;
+    vd->stsz = stsz;
 
     vd->bytecode = nil;
     vd->datavec = nil;
@@ -215,13 +215,13 @@ static void vm_desc_destroy(val obj)
 static void vm_desc_mark(val obj)
 {
   struct vm_desc *vd = coerce(struct vm_desc *, obj->co.handle);
-  cnum i, ftsz = vd->ftsz;
+  cnum i, stsz = vd->stsz;
 
   gc_mark(vd->bytecode);
   gc_mark(vd->datavec);
   gc_mark(vd->symvec);
 
-  for (i = 0; i < ftsz; i++)
+  for (i = 0; i < stsz; i++)
     gc_mark(vd->stab[i].fb);
 }
 
@@ -492,7 +492,7 @@ NOINLINE static void vm_apply(struct vm *vm, vm_word_t insn)
 static loc vm_stab(struct vm *vm, unsigned fun)
 {
   struct vm_desc *vd = vm->vd;
-  struct vm_ftent *fe = &vd->stab[fun];
+  struct vm_stent *fe = &vd->stab[fun];
   loc fbloc = fe->fbloc;
 
   if (!nullocp(fbloc))
@@ -1106,9 +1106,9 @@ void vm_invalidate_binding(val sym)
 
   for (; vd != vnull; vd = vd->lnk.next) {
     cnum i;
-    for (i = 0; i < vd->ftsz; i++) {
+    for (i = 0; i < vd->stsz; i++) {
       if (vecref(vd->symvec, num_fast(i)) == sym) {
-        struct vm_ftent *sti = &vd->stab[i];
+        struct vm_stent *sti = &vd->stab[i];
         sti->fb = nil;
         sti->fbloc = nulloc;
       }
