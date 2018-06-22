@@ -52,6 +52,16 @@ typedef enum hash_flags {
   hash_weak_both = 3
 } hash_flags_t;
 
+struct hash_ops {
+  cnum (*hash_fun)(val, int *);
+  val (*equal_fun)(val, val);
+  val (*assoc_fun)(val key, cnum hash, val list);
+  val (*acons_new_c_fun)(val key, cnum hash, loc new_p, loc list);
+};
+
+#define hash_ops_init(hash, equal, assoc, acons) \
+  { hash, equal, assoc, acons }
+
 struct hash {
   hash_flags_t flags;
   struct hash *next;
@@ -60,10 +70,7 @@ struct hash {
   cnum count;
   val userdata;
   int usecount;
-  cnum (*hash_fun)(val, int *);
-  val (*equal_fun)(val, val);
-  val (*assoc_fun)(val key, cnum hash, val list);
-  val (*acons_new_c_fun)(val key, cnum hash, loc new_p, loc list);
+  struct hash_ops *hops;
 };
 
 struct hash_iter {
@@ -72,6 +79,9 @@ struct hash_iter {
   cnum chain;
   val cons;
 };
+
+static_forward(struct hash_ops hash_eql_ops);
+static_forward(struct hash_ops hash_equal_ops);
 
 val weak_keys_k, weak_vals_k, equal_based_k, eql_based_k, userdata_k;
 
@@ -299,7 +309,7 @@ static val hash_equal_op(val left, val right)
   val free_conses = nil;
   val pending = nil;
 
-  if (l->hash_fun != r->hash_fun)
+  if (l->hops != r->hops)
     return nil;
 
   if (l->count != r->count)
@@ -323,7 +333,8 @@ static val hash_equal_op(val left, val right)
      * no need to go through the pending list.
      */
 
-    if (l->equal_fun(car(lcell), car(rcell)) && equal(cdr(lcell), cdr(rcell)))
+    if (l->hops->equal_fun(car(lcell), car(rcell)) &&
+        equal(cdr(lcell), cdr(rcell)))
       continue;
 
     /*
@@ -333,7 +344,7 @@ static val hash_equal_op(val left, val right)
      * a difference between the hash tables, and conclude they are different.
      * If there is no match, then we insert the cell into the pending list.
      */
-    found = l->assoc_fun(car(lcell), lcell->ch.hash, pending);
+    found = l->hops->assoc_fun(car(lcell), lcell->ch.hash, pending);
 
     if (found && !equal(cdr(found), cdr(lcell))) {
       return nil;
@@ -352,7 +363,7 @@ static val hash_equal_op(val left, val right)
     /*
      * The logic is mirrored for the right cell.
      */
-    found = l->assoc_fun(car(rcell), rcell->ch.hash, pending);
+    found = l->hops->assoc_fun(car(rcell), rcell->ch.hash, pending);
 
     if (found && !equal(cdr(found), cdr(rcell))) {
       return nil;
@@ -387,9 +398,9 @@ static cnum hash_hash_op(val obj, int *count)
 
   switch (sizeof (mem_t *)) {
   case 4:
-    out += coerce(cnum, h->hash_fun) >> 4;
+    out += coerce(cnum, h->hops) >> 4;
   case 8: default:
-    out += coerce(cnum, h->hash_fun) >> 5;
+    out += coerce(cnum, h->hops) >> 5;
   }
 
   out += equal_hash(h->userdata, count);
@@ -420,11 +431,11 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
   put_char(chr('('), out);
 
   if (opt_compat && opt_compat <= 188) {
-    if (h->hash_fun == equal_hash)
+    if (h->hops == &hash_equal_ops)
       obj_print_impl(equal_based_k, out, pretty, ctx);
     need_space = 1;
   } else {
-    if (h->hash_fun == eql_hash)
+    if (h->hops == &hash_eql_ops)
       obj_print_impl(eql_based_k, out, pretty, ctx);
     need_space = 1;
   }
@@ -636,6 +647,14 @@ static val hash_aconsql_new_c(val key, cnum hash, loc new_p, loc list)
   }
 }
 
+static_def(struct hash_ops hash_eql_ops = hash_ops_init(eql_hash, eql,
+                                                        hash_assql,
+                                                        hash_aconsql_new_c));
+
+static_def(struct hash_ops hash_equal_ops = hash_ops_init(equal_hash, equal,
+                                                          hash_assoc,
+                                                          hash_acons_new_c));
+
 val make_hash(val weak_keys, val weak_vals, val equal_based)
 {
   if (weak_keys && equal_based) {
@@ -656,10 +675,7 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
     h->userdata = nil;
 
     h->usecount = 0;
-    h->hash_fun = equal_based ? equal_hash : eql_hash;
-    h->equal_fun = equal_based ? equal : eql;
-    h->assoc_fun = equal_based ? hash_assoc : hash_assql;
-    h->acons_new_c_fun = equal_based ? hash_acons_new_c : hash_aconsql_new_c;
+    h->hops = equal_based ? &hash_equal_ops : &hash_eql_ops;
 
     return hash;
   }
@@ -680,10 +696,7 @@ val make_similar_hash(val existing)
 
   h->flags = ex->flags;
   h->usecount = 0;
-  h->hash_fun = ex->hash_fun;
-  h->equal_fun = ex->equal_fun;
-  h->assoc_fun = ex->assoc_fun;
-  h->acons_new_c_fun = ex->acons_new_c_fun;
+  h->hops = ex->hops;
 
   return hash;
 }
@@ -718,9 +731,7 @@ val copy_hash(val existing)
 
   h->flags = ex->flags;
   h->usecount = 0;
-  h->hash_fun = ex->hash_fun;
-  h->assoc_fun = ex->assoc_fun;
-  h->acons_new_c_fun = ex->acons_new_c_fun;
+  h->hops = ex->hops;
 
   for (iter = zero; lt(iter, mod); iter = plus(iter, one))
     set(vecref_l(h->table, iter), copy_hash_chain(vecref(ex->table, iter)));
@@ -732,10 +743,10 @@ val gethash_c(val hash, val key, loc new_p)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = hash_rec_limit;
-  cnum hv = h->hash_fun(key, &lim);
+  cnum hv = h->hops->hash_fun(key, &lim);
   loc pchain = vecref_l(h->table, num_fast(hv % h->modulus));
   val old = deref(pchain);
-  val cell = h->acons_new_c_fun(key, hv, new_p, pchain);
+  val cell = h->hops->acons_new_c_fun(key, hv, new_p, pchain);
   if (old != deref(pchain) && ++h->count > 2 * h->modulus && h->usecount == 0)
     hash_grow(h, hash);
   return cell;
@@ -745,9 +756,9 @@ val gethash_e(val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = hash_rec_limit;
-  cnum hv = h->hash_fun(key, &lim);
+  cnum hv = h->hops->hash_fun(key, &lim);
   val chain = vecref(h->table, num_fast(hv % h->modulus));
-  return h->assoc_fun(key, hv, chain);
+  return h->hops->assoc_fun(key, hv, chain);
 }
 
 val gethash(val hash, val key)
@@ -802,9 +813,9 @@ val remhash(val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = hash_rec_limit;
-  cnum hv = h->hash_fun(key, &lim);
+  cnum hv = h->hops->hash_fun(key, &lim);
   val *pchain = valptr(vecref_l(h->table, num_fast(hv % h->modulus)));
-  val existing = h->assoc_fun(key, hv, *pchain);
+  val existing = h->hops->assoc_fun(key, hv, *pchain);
 
   if (existing) {
     for (; *pchain; pchain = valptr(cdr_l(*pchain))) {
@@ -1296,7 +1307,7 @@ val hash_uni(val hash1, val hash2, val join_func)
   struct hash *h1 = coerce(struct hash *, cobj_handle(hash1, hash_s));
   struct hash *h2 = coerce(struct hash *, cobj_handle(hash2, hash_s));
 
-  if (h1->hash_fun != h2->hash_fun)
+  if (h1->hops != h2->hops)
     uw_throwf(error_s, lit("hash-uni: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
 
   {
@@ -1331,7 +1342,7 @@ val hash_diff(val hash1, val hash2)
   struct hash *h1 = coerce(struct hash *, cobj_handle(hash1, hash_s));
   struct hash *h2 = coerce(struct hash *, cobj_handle(hash2, hash_s));
 
-  if (h1->hash_fun != h2->hash_fun)
+  if (h1->hops != h2->hops)
     uw_throwf(error_s, lit("hash-diff: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
 
   {
@@ -1354,7 +1365,7 @@ val hash_isec(val hash1, val hash2, val join_func)
   struct hash *h1 = coerce(struct hash *, cobj_handle(hash1, hash_s));
   struct hash *h2 = coerce(struct hash *, cobj_handle(hash2, hash_s));
 
-  if (h1->hash_fun != h2->hash_fun)
+  if (h1->hops != h2->hops)
     uw_throwf(error_s, lit("hash-uni: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
 
   {
