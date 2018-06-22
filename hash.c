@@ -345,7 +345,7 @@ static val hash_equal_op(val left, val right)
     } else {
       ncons = or2(pop(&free_conses), cons(nil, nil));
       rplaca(ncons, lcell);
-      rplaca(ncons, pending);
+      rplacd(ncons, pending);
       pending = ncons;
     }
 
@@ -364,7 +364,7 @@ static val hash_equal_op(val left, val right)
     } else {
       ncons = or2(pop(&free_conses), cons(nil, nil));
       rplaca(ncons, rcell);
-      rplaca(ncons, pending);
+      rplacd(ncons, pending);
       pending = ncons;
     }
   }
