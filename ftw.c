@@ -43,6 +43,8 @@
 #include "sysif.h"
 #include "ftw.h"
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
 static val s_callback;
 static uw_frame_t *s_exit_point;
 
@@ -66,7 +68,7 @@ static int ftw_callback(const char *c_path, const struct stat *c_sb,
     val base = num(fb->base);
     val result;
 
-    args_decl(args, ARGS_MIN);
+    args_decl(args, max(ARGS_MIN, 5));
     args_add5(args, path, type, sb, level, base);
     result = generic_funcall(s_callback, args);
     c_result = if3(integerp(result), c_num(result), 0);
