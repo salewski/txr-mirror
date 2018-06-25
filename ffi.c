@@ -4241,8 +4241,8 @@ static void ffi_closure_dispatch(ffi_cif *cif, void *cret,
   struct txr_ffi_type *rtft = ffi_type_struct(rtype);
   val retval = nil;
   int out_pass_needed = 0;
-  args_decl(args, tfcl->nparam);
-  args_decl(args_cp, tfcl->nparam);
+  args_decl(args, nargs);
+  args_decl(args_cp, nargs);
 
   for (i = 0; i < nargs; i++) {
     val type = pop(&types);
@@ -4293,8 +4293,8 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
   uw_simple_catch_begin;
 
   {
-    args_decl(args, tfcl->nparam);
-    args_decl(args_cp, tfcl->nparam);
+    args_decl(args, nargs);
+    args_decl(args_cp, nargs);
 
     for (i = 0; i < nargs; i++) {
       val type = pop(&types);
