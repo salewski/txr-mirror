@@ -51,6 +51,8 @@
 
 typedef u32_t vm_word_t;
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
 #define zalloca(size) memset(alloca(size), 0, size)
 
 struct vm_desc_links {
@@ -438,7 +440,7 @@ NOINLINE static void vm_call(struct vm *vm, vm_word_t insn)
   vm_word_t argw = vm->code[vm->ip++];
   unsigned fun = vm_arg_operand_lo(argw);
   val result;
-  args_decl (args, nargs < ARGS_MIN ? ARGS_MIN : nargs);
+  args_decl (args, max(nargs, ARGS_MIN));
 
   if (nargs--) {
     args_add(args, vm_get(vm->dspl, vm_arg_operand_hi(argw)));
@@ -467,7 +469,7 @@ NOINLINE static void vm_apply(struct vm *vm, vm_word_t insn)
   vm_word_t argw = vm->code[vm->ip++];
   unsigned fun = vm_arg_operand_lo(argw);
   val result;
-  args_decl (args, nargs < ARGS_MIN ? ARGS_MIN : nargs);
+  args_decl (args, max(nargs, ARGS_MIN));
 
   if (nargs--) {
     args_add(args, vm_getz(vm->dspl, vm_arg_operand_hi(argw)));
@@ -513,7 +515,7 @@ NOINLINE static void vm_gcall(struct vm *vm, vm_word_t insn)
   vm_word_t argw = vm->code[vm->ip++];
   unsigned fun = vm_arg_operand_lo(argw);
   val result;
-  args_decl (args, nargs < ARGS_MIN ? ARGS_MIN : nargs);
+  args_decl (args, max(nargs, ARGS_MIN));
 
   if (nargs--) {
     args_add(args, vm_getz(vm->dspl, vm_arg_operand_hi(argw)));
@@ -542,7 +544,7 @@ NOINLINE static void vm_gapply(struct vm *vm, vm_word_t insn)
   vm_word_t argw = vm->code[vm->ip++];
   unsigned fun = vm_arg_operand_lo(argw);
   val result;
-  args_decl (args, nargs < ARGS_MIN ? ARGS_MIN : nargs);
+  args_decl (args, max(nargs, ARGS_MIN));
 
   if (nargs--) {
     args_add(args, vm_getz(vm->dspl, vm_arg_operand_hi(argw)));
