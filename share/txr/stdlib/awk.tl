@@ -175,7 +175,7 @@
               (set aws.rec rec aws.orig-rec rec)
               (inc aws.rec-num)
               (inc aws.file-rec-num)
-              (while* (eq :awk-again (block :awk-rec [func aws]))
+              (while* (eq :awk-again (block* :awk-rec [func aws]))
                 aws.(rec-to-f)))
             (when end-file-func
               [end-file-func aws])))))))
