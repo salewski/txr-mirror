@@ -14,10 +14,14 @@
    (defvarl disamb (hash :equal-based))
    (defvarl dist-counter 0)
 
-   (sys:set-hash-str-limit 1000)
+   (defun hash-str (str)
+     (for ((lim (len str)) (i 0) (h 0) g) ((< i lim) h) ((inc i))
+       (set h (+ (ash h 4) (int-chr [str i])))
+       (set g (logand h #x7c000000))
+       (set h (logtrunc (logxor h (logxor (ash g -26) g)) 32))))
 
    (defun hash-title (title)
-     (let* ((h (logtrunc (hash-equal title) 32))
+     (let* ((h (logtrunc (hash-str title) 32))
             (existing [dupes h]))
        (when existing
          (unless (equal title existing)
