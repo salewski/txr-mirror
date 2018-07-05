@@ -43,6 +43,7 @@
 #include "stream.h"
 #include "eval.h"
 #include "cadr.h"
+#include "itypes.h"
 #include "hash.h"
 
 typedef enum hash_flags {
@@ -53,7 +54,7 @@ typedef enum hash_flags {
 } hash_flags_t;
 
 struct hash_ops {
-  cnum (*hash_fun)(val, int *);
+  cnum (*hash_fun)(val, int *, ucnum);
   val (*equal_fun)(val, val);
   val (*assoc_fun)(val key, cnum hash, val list);
   val (*acons_new_c_fun)(val key, cnum hash, loc new_p, loc list);
@@ -63,6 +64,7 @@ struct hash_ops {
   { hash, equal, assoc, acons }
 
 struct hash {
+  ucnum seed;
   hash_flags_t flags;
   struct hash *next;
   val table;
@@ -91,69 +93,83 @@ val weak_keys_k, weak_vals_k, equal_based_k, eql_based_k, userdata_k;
 static struct hash *reachable_weak_hashes;
 static struct hash_iter *reachable_iters;
 
-static int hash_str_limit = 128, hash_rec_limit = 32;
+static int hash_str_limit = INT_MAX, hash_rec_limit = 32;
 
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
 loc gethash_l(val hash, val key, loc new_p);
 #endif
 
-/*
- * This is is an adaptation of hashpjw, from Compilers: Principles, Techniques
- * and Tools, Aho, Sethi, Ulman, 1988. P. 436.  The register is wider by
- * a few bits, and we bring down five overflow bits instead of four.
- * We don't reduce the final result modulo a small prime, but leave it
- * as it is; let the hashing routines do their own reduction.
- */
-static unsigned long hash_c_str(const wchar_t *str)
+static u32_t randbox[] = {
+  0x49848f1bU, 0xe6255dbaU, 0x36da5bdcU, 0x47bf94e9U,
+  0x8cbcce22U, 0x559fc06aU, 0xd268f536U, 0xe10af79aU,
+  0xc1af4d69U, 0x1d2917b5U, 0xec4c304dU, 0x9ee5016cU,
+  0x69232f74U, 0xfead7bb3U, 0xe9089ab6U, 0xf012f6aeU,
+};
+
+static u32_t hash_c_str(const wchar_t *str, u32_t seed)
 {
   int count = hash_str_limit;
-  unsigned long h = 0;
-  while (*str && count--) {
-    unsigned long g;
-    h = (h << 4) + *str++;
-    g = h & 0x7C000000;
-    h = h ^ (g >> 26) ^ g;
+  u32_t acc = seed;
+  u32_t ch;
+
+  while (count-- && (ch = *str++) != 0) {
+    acc ^= ch;
+    acc ^= randbox[acc & 0xf];
+    acc = acc >> 1 | acc << (32 - 1);
   }
-  return h;
+
+  acc ^= randbox[acc & 0xf];
+  acc = acc >> 1 | acc << (32 - 1);
+  acc ^= randbox[acc & 0xf];
+  acc = acc >> 1 | acc << (32 - 1);
+  acc ^= randbox[acc & 0xf];
+  acc = acc >> 1 | acc << (32 - 1);
+  acc ^= randbox[acc & 0xf];
+
+  return acc;
 }
 
-static unsigned long hash_buf(const mem_t *ptr, cnum size)
+static u32_t hash_buf(const mem_t *ptr, cnum size, u32_t seed)
 {
+  const u32_t *buf = coerce(const u32_t *, ptr);
   int count = hash_str_limit;
-  unsigned long h = 0;
+  u32_t acc = seed;
 
-  for (; size >= 4 && count--; size -= 4, ptr += 4) {
-    unsigned long el = (convert(unsigned long, ptr[0]) << 24 |
-                        convert(unsigned long, ptr[1]) << 16 |
-                        convert(unsigned long, ptr[2]) << 8 |
-                        convert(unsigned long, ptr[3]));
-    unsigned long g;
-    h = (h << 4) + el;
-    g = h & 0x7C000000;
-    h = h ^ (g >> 26) ^ g;
-    ptr += 4;
+  for (; size >= sizeof *buf && count--; size -= sizeof *buf, buf++) {
+    u32_t in = *buf;
+    acc ^= in;
+    acc ^= randbox[acc & 0xf];
+    acc = acc >> 1 | acc << (32 - 1);
   }
 
-  if (count) {
-    unsigned long el = 0;
-    unsigned long g;
+  if (size != 0) {
+    const mem_t *tail = coerce(const mem_t *, ptr);
+    u32_t in = 0;
+
     switch (size) {
-    case 0:
-      break;
     case 3:
-      el = *ptr++;
+      in |= convert(u32_t, tail[2]) << 16;
     case 2:
-      el = el << 8 | *ptr++;
+      in |= convert(u32_t, tail[1]) << 8;
     case 1:
-      el = el << 8 | *ptr++;
-      h = (h << 4) + el;
-      g = h & 0x7C000000;
-      h = h ^ (g >> 26) ^ g;
-      ptr += 4;
+      in |= convert(u32_t, tail[0]);
     }
+
+    acc ^= in;
+    acc ^= randbox[acc & 0xf];
+    acc = acc >> 1 | acc << (32 - 1);
   }
-  return h;
+
+  acc ^= randbox[acc & 0xf];
+  acc = acc >> 1 | acc << (32 - 1);
+  acc ^= randbox[acc & 0xf];
+  acc = acc >> 1 | acc << (32 - 1);
+  acc ^= randbox[acc & 0xf];
+  acc = acc >> 1 | acc << (32 - 1);
+  acc ^= randbox[acc & 0xf];
+
+  return acc;
 }
 
 static cnum hash_double(double n)
@@ -174,7 +190,7 @@ static cnum hash_double(double n)
   return h & NUM_MAX;
 }
 
-cnum equal_hash(val obj, int *count)
+cnum equal_hash(val obj, int *count, ucnum seed)
 {
   if ((*count)-- <= 0)
     return 0;
@@ -183,12 +199,13 @@ cnum equal_hash(val obj, int *count)
   case NIL:
     return NUM_MAX;
   case LIT:
-    return hash_c_str(litptr(obj)) & NUM_MAX;
+    return hash_c_str(litptr(obj), seed) & NUM_MAX;
   case CONS:
-    return (equal_hash(obj->c.car, count)
-            + 32 * (equal_hash(obj->c.cdr, count) & (NUM_MAX / 16))) & NUM_MAX;
+    return (equal_hash(obj->c.car, count, seed)
+            + 32 * (equal_hash(obj->c.cdr, count, seed)
+                    & (NUM_MAX / 16))) & NUM_MAX;
   case STR:
-    return hash_c_str(obj->st.str) & NUM_MAX;
+    return hash_c_str(obj->st.str, seed) & NUM_MAX;
   case CHR:
     return c_chr(obj) & NUM_MAX;
   case NUM:
@@ -205,27 +222,28 @@ cnum equal_hash(val obj, int *count)
     break;
   case FUN:
     return (coerce(cnum, obj->f.f.interp_fun)
-            + equal_hash(obj->f.env, count)) & NUM_MAX;
+            + equal_hash(obj->f.env, count, seed)) & NUM_MAX;
   case VEC:
     {
       val length = obj->v.vec[vec_length];
-      cnum i, h = equal_hash(obj->v.vec[vec_length], count);
+      cnum i, h = equal_hash(obj->v.vec[vec_length], count, seed);
       cnum len = c_num(length);
 
       for (i = 0; i < len; i++) {
         h = 32 * (h & (NUM_MAX / 16));
-        h += equal_hash(obj->v.vec[i], count);
+        h += equal_hash(obj->v.vec[i], count, seed);
         h &= NUM_MAX;
       }
 
       return h;
     }
   case LCONS:
-    return (equal_hash(car(obj), count)
-            + 32 * (equal_hash(cdr(obj), count) & (NUM_MAX / 16))) & NUM_MAX;
+    return (equal_hash(car(obj), count, seed)
+            + 32 * (equal_hash(cdr(obj), count, seed) &
+                    (NUM_MAX / 16))) & NUM_MAX;
   case LSTR:
     lazy_str_force_upto(obj, num(hash_str_limit - 1));
-    return equal_hash(obj->ls.prefix, count);
+    return equal_hash(obj->ls.prefix, count, seed);
   case BGNUM:
     return mp_hash(mp(obj)) & NUM_MAX;
   case FLNUM:
@@ -235,14 +253,15 @@ cnum equal_hash(val obj, int *count)
     if (obj->co.ops->equalsub) {
       val sub = obj->co.ops->equalsub(obj);
       if (sub)
-        return equal_hash(sub, count);
+        return equal_hash(sub, count, seed);
     }
-    return obj->co.ops->hash(obj, count) & NUM_MAX;
+    return obj->co.ops->hash(obj, count, seed) & NUM_MAX;
   case RNG:
-    return (equal_hash(obj->rn.from, count)
-            + 32 * (equal_hash(obj->rn.to, count) & (NUM_MAX / 16))) & NUM_MAX;
+    return (equal_hash(obj->rn.from, count, seed)
+            + 32 * (equal_hash(obj->rn.to, count, seed)
+                    & (NUM_MAX / 16))) & NUM_MAX;
   case BUF:
-    return hash_buf(obj->b.data, c_num(obj->b.len));
+    return hash_buf(obj->b.data, c_num(obj->b.len), seed);
   }
 
   internal_error("unhandled case in equal function");
@@ -286,9 +305,16 @@ static cnum eql_hash(val obj, int *count)
   abort();
 }
 
-cnum cobj_eq_hash_op(val obj, int *count)
+static cnum eql_hash_op(val obj, int *count, ucnum seed)
+{
+  (void) seed;
+  return eql_hash(obj, count);
+}
+
+cnum cobj_eq_hash_op(val obj, int *count, ucnum seed)
 {
   (void) count;
+  (void) seed;
 
   switch (sizeof (mem_t *)) {
   case 4:
@@ -387,7 +413,7 @@ static val hash_equal_op(val left, val right)
   return eq(pending, nil);
 }
 
-static cnum hash_hash_op(val obj, int *count)
+static cnum hash_hash_op(val obj, int *count, ucnum seed)
 {
   cnum out = 0;
   struct hash *h = coerce(struct hash *, obj->co.handle);
@@ -403,13 +429,13 @@ static cnum hash_hash_op(val obj, int *count)
     out += coerce(cnum, h->hops) >> 5;
   }
 
-  out += equal_hash(h->userdata, count);
+  out += equal_hash(h->userdata, count, seed);
   out &= NUM_MAX;
 
   iter = hash_begin(obj);
 
   while ((cell = hash_next(iter)) != nil) {
-    out += equal_hash(cell, count);
+    out += equal_hash(cell, count, seed);
     out &= NUM_MAX;
   }
 
@@ -647,7 +673,7 @@ static val hash_aconsql_new_c(val key, cnum hash, loc new_p, loc list)
   }
 }
 
-static_def(struct hash_ops hash_eql_ops = hash_ops_init(eql_hash, eql,
+static_def(struct hash_ops hash_eql_ops = hash_ops_init(eql_hash_op, eql,
                                                         hash_assql,
                                                         hash_aconsql_new_c));
 
@@ -668,6 +694,7 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
     val table = vector(mod, nil);
     val hash = cobj(coerce(mem_t *, h), hash_s, &hash_ops);
 
+    h->seed = 0;
     h->flags = convert(hash_flags_t, flags);
     h->modulus = c_num(mod);
     h->count = 0;
@@ -694,6 +721,7 @@ val make_similar_hash(val existing)
   h->table = table;
   h->userdata = ex->userdata;
 
+  h->seed = ex->seed;
   h->flags = ex->flags;
   h->usecount = 0;
   h->hops = ex->hops;
@@ -743,7 +771,7 @@ val gethash_c(val hash, val key, loc new_p)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = hash_rec_limit;
-  cnum hv = h->hops->hash_fun(key, &lim);
+  cnum hv = h->hops->hash_fun(key, &lim, h->seed);
   loc pchain = vecref_l(h->table, num_fast(hv % h->modulus));
   val old = deref(pchain);
   val cell = h->hops->acons_new_c_fun(key, hv, new_p, pchain);
@@ -756,7 +784,7 @@ val gethash_e(val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = hash_rec_limit;
-  cnum hv = h->hops->hash_fun(key, &lim);
+  cnum hv = h->hops->hash_fun(key, &lim, h->seed);
   val chain = vecref(h->table, num_fast(hv % h->modulus));
   return h->hops->assoc_fun(key, hv, chain);
 }
@@ -813,7 +841,7 @@ val remhash(val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
   int lim = hash_rec_limit;
-  cnum hv = h->hops->hash_fun(key, &lim);
+  cnum hv = h->hops->hash_fun(key, &lim, h->seed);
   val *pchain = valptr(vecref_l(h->table, num_fast(hv % h->modulus)));
   val existing = h->hops->assoc_fun(key, hv, *pchain);
 
@@ -940,7 +968,7 @@ val hash_eql(val obj)
 val hash_equal(val obj)
 {
   int lim = hash_rec_limit;
-  return num_fast(equal_hash(obj, &lim));
+  return num_fast(equal_hash(obj, &lim, 0));
 }
 
 /*

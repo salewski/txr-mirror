@@ -27,7 +27,7 @@
 
 extern val weak_keys_k, weak_vals_k, equal_based_k, eql_based_k, userdata_k;
 
-cnum equal_hash(val obj, int *count);
+cnum equal_hash(val obj, int *count, ucnum);
 val make_hash(val weak_keys, val weak_vals, val equal_based);
 val make_similar_hash(val existing);
 val copy_hash(val existing);
