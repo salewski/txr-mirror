@@ -58,7 +58,7 @@ typedef enum hash_flags {
 } hash_flags_t;
 
 struct hash_ops {
-  cnum (*hash_fun)(val, int *, ucnum);
+  ucnum (*hash_fun)(val, int *, ucnum);
   val (*equal_fun)(val, val);
   val (*assoc_fun)(val key, cnum hash, val list);
   val (*acons_new_c_fun)(val key, cnum hash, loc new_p, loc list);
@@ -179,13 +179,9 @@ static u32_t hash_buf(const mem_t *ptr, ucnum size, u32_t seed)
   return acc;
 }
 
-static cnum hash_double(double n)
+static ucnum hash_double(double n)
 {
-#ifdef HAVE_UINTPTR_T
-  uint_ptr_t h = 0;
-#else
-  unsigned long h = 0;
-#endif
+  ucnum h = 0;
 
   mem_t *p = coerce(mem_t *, &n), *q = p + sizeof(double);
 
@@ -194,65 +190,62 @@ static cnum hash_double(double n)
     h += *p++;
   }
 
-  return h & NUM_MAX;
+  return h;
 }
 
-cnum equal_hash(val obj, int *count, ucnum seed)
+ucnum equal_hash(val obj, int *count, ucnum seed)
 {
   if ((*count)-- <= 0)
     return 0;
 
   switch (type(obj)) {
   case NIL:
-    return NUM_MAX;
+    return convert(ucnum, -1);
   case LIT:
-    return hash_c_str(litptr(obj), seed) & NUM_MAX;
+    return hash_c_str(litptr(obj), seed);
   case CONS:
-    return (equal_hash(obj->c.car, count, seed)
-            + 32 * (equal_hash(obj->c.cdr, count, seed)
-                    & (NUM_MAX / 16))) & NUM_MAX;
+    return equal_hash(obj->c.car, count, seed)
+            + 2 * equal_hash(obj->c.cdr, count, seed);
   case STR:
-    return hash_c_str(obj->st.str, seed) & NUM_MAX;
+    return hash_c_str(obj->st.str, seed);
   case CHR:
-    return c_chr(obj) & NUM_MAX;
+    return c_chr(obj);
   case NUM:
-    return c_num(obj) & NUM_MAX;
+    return c_num(obj);
   case SYM:
   case PKG:
   case ENV:
     switch (sizeof (mem_t *)) {
     case 4:
-      return (coerce(cnum, obj) >> 4) & NUM_MAX;
+      return coerce(ucnum, obj) >> 4;
     case 8: default:
-      return (coerce(cnum, obj) >> 5) & NUM_MAX;
+      return coerce(ucnum, obj) >> 5;
     }
     break;
   case FUN:
-    return (coerce(cnum, obj->f.f.interp_fun)
-            + equal_hash(obj->f.env, count, seed)) & NUM_MAX;
+    return coerce(ucnum, obj->f.f.interp_fun)
+            + equal_hash(obj->f.env, count, seed);
   case VEC:
     {
       val length = obj->v.vec[vec_length];
-      cnum i, h = equal_hash(obj->v.vec[vec_length], count, seed);
-      cnum len = c_num(length);
+      ucnum h = equal_hash(obj->v.vec[vec_length], count, seed);
+      cnum i, len = c_num(length);
 
       for (i = 0; i < len; i++) {
-        h = 32 * (h & (NUM_MAX / 16));
+        h *= 2;
         h += equal_hash(obj->v.vec[i], count, seed);
-        h &= NUM_MAX;
       }
 
       return h;
     }
   case LCONS:
-    return (equal_hash(car(obj), count, seed)
-            + 32 * (equal_hash(cdr(obj), count, seed) &
-                    (NUM_MAX / 16))) & NUM_MAX;
+    return equal_hash(car(obj), count, seed)
+            + 2 * equal_hash(cdr(obj), count, seed);
   case LSTR:
     lazy_str_force_upto(obj, num(hash_str_limit - 1));
     return equal_hash(obj->ls.prefix, count, seed);
   case BGNUM:
-    return mp_hash(mp(obj)) & NUM_MAX;
+    return mp_hash(mp(obj));
   case FLNUM:
     return hash_double(obj->fl.n);
   case COBJ:
@@ -262,11 +255,10 @@ cnum equal_hash(val obj, int *count, ucnum seed)
       if (sub)
         return equal_hash(sub, count, seed);
     }
-    return obj->co.ops->hash(obj, count, seed) & NUM_MAX;
+    return obj->co.ops->hash(obj, count, seed);
   case RNG:
-    return (equal_hash(obj->rn.from, count, seed)
-            + 32 * (equal_hash(obj->rn.to, count, seed)
-                    & (NUM_MAX / 16))) & NUM_MAX;
+    return equal_hash(obj->rn.from, count, seed)
+            + 2 * equal_hash(obj->rn.to, count, seed);
   case BUF:
     return hash_buf(obj->b.data, c_unum(obj->b.len), seed);
   }
@@ -274,60 +266,59 @@ cnum equal_hash(val obj, int *count, ucnum seed)
   internal_error("unhandled case in equal function");
 }
 
-static cnum eql_hash(val obj, int *count)
+static ucnum eql_hash(val obj, int *count)
 {
   switch (tag(obj)) {
   case TAG_PTR:
     switch (type(obj)) {
     case NIL:
-      return NUM_MAX;
+      return convert(ucnum, -1);
     case BGNUM:
-      return mp_hash(mp(obj)) & NUM_MAX;
+      return mp_hash(mp(obj));
     case FLNUM:
       return hash_double(obj->fl.n);
     case RNG:
-      return (eql_hash(obj->rn.from, count)
-              + 32 * (eql_hash(obj->rn.to, count) & (NUM_MAX / 16))) & NUM_MAX;
+      return eql_hash(obj->rn.from, count) + 2 * eql_hash(obj->rn.to, count);
     default:
       switch (sizeof (mem_t *)) {
       case 4:
-        return (coerce(cnum, obj) >> 4) & NUM_MAX;
+        return coerce(ucnum, obj) >> 4;
       case 8: default:
-        return (coerce(cnum, obj) >> 5) & NUM_MAX;
+        return coerce(ucnum, obj) >> 5;
       }
     }
   case TAG_CHR:
-    return c_chr(obj) & NUM_MAX;
+    return c_chr(obj);
   case TAG_NUM:
-    return c_num(obj) & NUM_MAX;
+    return c_num(obj);
   case TAG_LIT:
     switch (sizeof (mem_t *)) {
     case 4:
-      return (coerce(cnum, obj) >> 2) & NUM_MAX;
+      return coerce(ucnum, obj) >> 2;
     case 8: default:
-      return (coerce(cnum, obj) >> 3) & NUM_MAX;
+      return coerce(ucnum, obj) >> 3;
     }
   }
   /* notreached */
   abort();
 }
 
-static cnum eql_hash_op(val obj, int *count, ucnum seed)
+static ucnum eql_hash_op(val obj, int *count, ucnum seed)
 {
   (void) seed;
   return eql_hash(obj, count);
 }
 
-cnum cobj_eq_hash_op(val obj, int *count, ucnum seed)
+ucnum cobj_eq_hash_op(val obj, int *count, ucnum seed)
 {
   (void) count;
   (void) seed;
 
   switch (sizeof (mem_t *)) {
   case 4:
-    return (coerce(cnum, obj) >> 4) & NUM_MAX;
+    return coerce(ucnum, obj) >> 4;
   case 8: default:
-    return (coerce(cnum, obj) >> 5) & NUM_MAX;
+    return coerce(ucnum, obj) >> 5;
   }
   /* notreached */
   abort();
@@ -420,9 +411,9 @@ static val hash_equal_op(val left, val right)
   return eq(pending, nil);
 }
 
-static cnum hash_hash_op(val obj, int *count, ucnum seed)
+static ucnum hash_hash_op(val obj, int *count, ucnum seed)
 {
-  cnum out = 0;
+  ucnum out = 0;
   struct hash *h = coerce(struct hash *, obj->co.handle);
   val iter, cell;
 
@@ -431,9 +422,9 @@ static cnum hash_hash_op(val obj, int *count, ucnum seed)
 
   switch (sizeof (mem_t *)) {
   case 4:
-    out += coerce(cnum, h->hops) >> 4;
+    out += coerce(ucnum, h->hops) >> 4;
   case 8: default:
-    out += coerce(cnum, h->hops) >> 5;
+    out += coerce(ucnum, h->hops) >> 5;
   }
 
   out += equal_hash(h->userdata, count, seed);

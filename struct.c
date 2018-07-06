@@ -1492,11 +1492,12 @@ static val struct_inst_equal(val left, val right)
   return t;
 }
 
-static cnum struct_inst_hash(val obj, int *count, ucnum seed)
+static ucnum struct_inst_hash(val obj, int *count, ucnum seed)
 {
   struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
   struct struct_type *st = si->type;
-  cnum nslots = st->nslots, sl, out = equal_hash(st->self, count, seed);
+  cnum nslots = st->nslots, sl;
+  ucnum out = equal_hash(st->self, count, seed);
 
   check_init_lazy_struct(obj, si);
 

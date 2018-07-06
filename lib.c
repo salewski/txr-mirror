@@ -7851,7 +7851,7 @@ val cobj_equal_handle_op(val left, val right)
   return (left->co.handle == right->co.handle) ? t : nil;
 }
 
-cnum cobj_handle_hash_op(val obj, int *count, ucnum seed)
+ucnum cobj_handle_hash_op(val obj, int *count, ucnum seed)
 {
   mem_t *handle = obj->co.handle;
   return cobj_eq_hash_op(coerce(val, handle), count, seed);
