@@ -137,7 +137,7 @@ static u32_t hash_c_str(const wchar_t *str, u32_t seed)
   return acc;
 }
 
-static u32_t hash_buf(const mem_t *ptr, cnum size, u32_t seed)
+static u32_t hash_buf(const mem_t *ptr, ucnum size, u32_t seed)
 {
   const u32_t *buf = coerce(const u32_t *, ptr);
   int count = hash_str_limit;
@@ -268,7 +268,7 @@ cnum equal_hash(val obj, int *count, ucnum seed)
             + 32 * (equal_hash(obj->rn.to, count, seed)
                     & (NUM_MAX / 16))) & NUM_MAX;
   case BUF:
-    return hash_buf(obj->b.data, c_num(obj->b.len), seed);
+    return hash_buf(obj->b.data, c_unum(obj->b.len), seed);
   }
 
   internal_error("unhandled case in equal function");
