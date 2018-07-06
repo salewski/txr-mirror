@@ -39866,7 +39866,7 @@ and
 .SS* Hashing Library
 .coNP Functions @ make-hash and @ hash
 .synb
-.mets (make-hash < weak-keys < weak-vals << equal-based )
+.mets (make-hash < weak-keys < weak-vals < equal-based <> [ hash-seed ])
 .mets (hash {:weak-keys | :weak-vals |
 .mets \ \ \ \ \ \  :eql-based | :equal-based |
 .mets \ \ \ \ \ \  :userdata << obj }*)
@@ -39894,6 +39894,18 @@ specifies whether it is
 The hash function defaults
 all three of these properties to false, and allows them to be overridden to
 true by the presence of keyword arguments.
+
+The optional
+.meta hash-seed
+parameter must be an integer, if specified. Its value perturbs the hashing
+function of the hash table, which affects
+.code :equal-based
+hash tables, when character strings and buffers are used as keys.
+If
+.meta hash-seed
+is omitted, then the value of the
+.code *hash-seed*
+variable is used as the seed.
 
 It is an error to attempt to construct an
 .codn equal -based
@@ -40641,7 +40653,7 @@ function.
 .coNP Functions @ hash-eql and @ hash-equal
 .synb
 .mets (hash-eql << object )
-.mets (hash-equal << object )
+.mets (hash-equal < object <> [ hash-seed ])
 .syne
 .desc
 These functions each compute an integer hash value from the internal
@@ -40677,6 +40689,27 @@ Object of struct type may support custom hashing by way of defining
 an equality substitution via an
 .code equal
 method. See the Equality Substitution section under Structures.
+
+The optional
+.meta hash-seed
+value perturbs the hashing function used by
+.code hash-equal
+for strings and buffer objects.  This seed value must be a non-negative integer
+no wider than 32 bits: that is, in the range 0 to 4294967295.
+If the value isn't specified, it defaults to zero.
+Effectively, each possible value of the seed specifies a different hashing
+function. If two objects
+.code A
+and
+.code B
+are the same under the
+.code equal
+function, then
+.code "(hash-equal A S)"
+and
+.code "(hash-equal B S)"
+each produce the same integer hash value for any valid seed value
+.codn S .
 
 .coNP Functions @, hash_keys @, hash_values @ hash_pairs and @ hash_alist
 .synb
@@ -40997,6 +41030,57 @@ hash value in that variable, or else sets the variable
 to
 .code nil
 if there is no next value.
+
+.coNP Special variable @ *hash-seed*
+.desc
+The
+.code *hash-seed*
+special variable is initialized with a value of zero. Whenever a new
+hash table is explicitly or implicitly created, it takes its seed from
+the value of the
+.code *hash-seed*
+variable in the current dynamic environment.
+
+The only situation in which
+.code *hash-seed*
+is not used when creating a new hash table is when
+.code make-hash
+is called with an argument given for the optional
+.meta hash-seed
+argument.
+
+Only
+.codn equal -based
+hash tables make use of their seed, and only for keys which are strings and
+buffers.  The purpose of the seed is to scramble the hashing function, to make
+a hash table resistant to a type of denial-of-service attack, whereby a
+malicious input causes a hash table to be populated with a large number of keys
+which all map to the same hash table chain, causing the performance to severely
+degrade.
+
+The value of
+.code *hash-seed*
+must be a non-negative integer, no wider than 32 bits.
+
+.coNP Function @ gen-hash-seed
+.synb
+.mets (gen-hash-seed)
+.syne
+.desc
+The
+.code gen-hash-seed
+function returns an integer value suitable for the
+.code *hash-seed*
+variable, or as the
+.code hash-seed
+argument of the
+.code make-hash
+and
+.code hash-equal
+functions.
+
+The value is derived from the host environment, from information such
+as the process ID and time of day.
 
 .SS* Partial Evaluation and Combinators
 .coNP Macros @ op and @ do

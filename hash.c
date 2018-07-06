@@ -34,6 +34,9 @@
 #include <signal.h>
 #include "config.h"
 #include ALLOCA_H
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "args.h"
@@ -44,6 +47,7 @@
 #include "eval.h"
 #include "cadr.h"
 #include "itypes.h"
+#include "arith.h"
 #include "hash.h"
 
 typedef enum hash_flags {
@@ -82,10 +86,13 @@ struct hash_iter {
   val cons;
 };
 
+#define hash_seed (deref(lookup_var_l(nil, hash_seed_s)))
+
 static_forward(struct hash_ops hash_eql_ops);
 static_forward(struct hash_ops hash_equal_ops);
 
 val weak_keys_k, weak_vals_k, equal_based_k, eql_based_k, userdata_k;
+val hash_seed_s;
 
 /*
  * Dynamic lists built up during gc.
@@ -681,7 +688,7 @@ static_def(struct hash_ops hash_equal_ops = hash_ops_init(equal_hash, equal,
                                                           hash_assoc,
                                                           hash_acons_new_c));
 
-val make_hash(val weak_keys, val weak_vals, val equal_based)
+val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed)
 {
   if (weak_keys && equal_based) {
     uw_throwf(error_s,
@@ -694,7 +701,9 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
     val table = vector(mod, nil);
     val hash = cobj(coerce(mem_t *, h), hash_s, &hash_ops);
 
-    h->seed = 0;
+    h->seed = convert(u32_t, c_unum(default_arg(seed,
+                                                if3(hash_seed_s,
+                                                    hash_seed, zero))));
     h->flags = convert(hash_flags_t, flags);
     h->modulus = c_num(mod);
     h->count = 0;
@@ -706,6 +715,11 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
 
     return hash;
   }
+}
+
+val make_hash(val weak_keys, val weak_vals, val equal_based)
+{
+  return make_seeded_hash(weak_keys, weak_vals, equal_based, nil);
 }
 
 val make_similar_hash(val existing)
@@ -965,10 +979,10 @@ val hash_eql(val obj)
   return num_fast(eql_hash(obj, &lim));
 }
 
-val hash_equal(val obj)
+val hash_equal(val obj, val seed)
 {
   int lim = hash_rec_limit;
-  return num_fast(equal_hash(obj, &lim, 0));
+  return num_fast(equal_hash(obj, &lim, if3(missingp(seed), 0, c_unum(seed))));
 }
 
 /*
@@ -1499,6 +1513,19 @@ static val set_hash_rec_limit(val lim)
   return old;
 }
 
+static val gen_hash_seed(void)
+{
+    val time = time_sec_usec();
+    ucnum sec = convert(ucnum, c_num(car(time)));
+    ucnum usec = convert(ucnum, c_num(cdr(time)));
+#if HAVE_UNISTD_H
+    ucnum pid = convert(ucnum, getpid());
+#else
+    ucnum pid = 0;
+#endif
+    return unum(sec ^ (usec << 12) ^ pid);
+}
+
 void hash_init(void)
 {
   weak_keys_k = intern(lit("weak-keys"), keyword_package);
@@ -1506,9 +1533,12 @@ void hash_init(void)
   equal_based_k = intern(lit("equal-based"), keyword_package);
   eql_based_k = intern(lit("eql-based"), keyword_package);
   userdata_k = intern(lit("userdata"), keyword_package);
+  hash_seed_s = intern(lit("*hash-seed*"), user_package);
   val ghu = func_n1(get_hash_userdata);
 
-  reg_fun(intern(lit("make-hash"), user_package), func_n3(make_hash));
+  reg_var(hash_seed_s, zero);
+
+  reg_fun(intern(lit("make-hash"), user_package), func_n4o(make_seeded_hash, 3));
   reg_fun(intern(lit("make-similar-hash"), user_package), func_n1(make_similar_hash));
   reg_fun(intern(lit("copy-hash"), user_package), func_n1(copy_hash));
   reg_fun(intern(lit("hash"), user_package), func_n0v(hashv));
@@ -1529,7 +1559,7 @@ void hash_init(void)
   reg_fun(intern(lit("hashp"), user_package), func_n1(hashp));
   reg_fun(intern(lit("maphash"), user_package), func_n2(maphash));
   reg_fun(intern(lit("hash-eql"), user_package), func_n1(hash_eql));
-  reg_fun(intern(lit("hash-equal"), user_package), func_n1(hash_equal));
+  reg_fun(intern(lit("hash-equal"), user_package), func_n2o(hash_equal, 1));
   reg_fun(intern(lit("hash-keys"), user_package), func_n1(hash_keys));
   reg_fun(intern(lit("hash-values"), user_package), func_n1(hash_values));
   reg_fun(intern(lit("hash-pairs"), user_package), func_n1(hash_pairs));
@@ -1552,4 +1582,5 @@ void hash_init(void)
           func_n1(set_hash_str_limit));
   reg_fun(intern(lit("set-hash-rec-limit"), system_package),
           func_n1(set_hash_rec_limit));
+  reg_fun(intern(lit("gen-hash-seed"), user_package), func_n0(gen_hash_seed));
 }

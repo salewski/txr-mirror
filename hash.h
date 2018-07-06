@@ -28,6 +28,7 @@
 extern val weak_keys_k, weak_vals_k, equal_based_k, eql_based_k, userdata_k;
 
 cnum equal_hash(val obj, int *count, ucnum);
+val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed);
 val make_hash(val weak_keys, val weak_vals, val equal_based);
 val make_similar_hash(val existing);
 val copy_hash(val existing);
@@ -49,7 +50,7 @@ val maphash(val func, val hash);
 val hash_begin(val hash);
 val hash_next(val iter);
 val hash_eql(val obj);
-val hash_equal(val obj);
+val hash_equal(val obj, val seed);
 val hashv(struct args *args);
 val hashl(val args);
 val hash_construct(val hashl_args, val pairs);
