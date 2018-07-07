@@ -1,3 +1,46 @@
+                                    TXR 198
+                                   2018-07-06
+
+
+  Features
+
+  - Hashes:
+    - Hash tables and the hash-equal function now use a hashing function keyed
+      with a seed, providing a tool against hash collision DoS attacks.
+    - New *hash-seed* special variable, gen-hash-seed function.
+    - make-hash and hash-equal take optional seed argument.
+    - hashes implicitly take their seed from *hash-seed*, which is initialized
+      to zero (for repeatability).
+    - seeding hashes is the application's responsibility; TXR will not
+      automaticaly seed hashes.
+
+  Bugs
+
+  - Listener:
+    - crash in selection yanking. This regression is
+      a result of the recent "unicodization" of the listener.
+  - VM:
+    - compiled code now follows the situation when a function binding
+      is deleted with fmakunbound and then a new binding is introduced
+      for the same symbol.
+    - source location info is no longer wastefully recorded for the forms
+      that occur in compiled files.
+  - Hashes:
+    - equal function broken comparing two hashes: incorrect logic.
+    - copy-hash not copying equal function pointer, causing garbage
+      function pointer to be dereferenced when copied hash is
+      compared for equality.
+  - POSIX interface:
+    - ftw funtion discovered broken (from initial implementation).
+      Callback mechanism allocated four words on the stack, then
+      put five arguments there. This was previously undetected, but
+      recent improvements in args handling now caused ftw to assert.
+  - Awk macro:
+    - fixed nonworking (next); a regression caused by the Lisp compiler
+      optimizing away (block ...) construct.
+
+
+
                                     TXR 197
                                    2018-05-27
 
