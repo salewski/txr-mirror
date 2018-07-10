@@ -214,7 +214,7 @@
 
 (defvarl %test-funs% (append %test-funs-pos% %test-funs-neg%))
 
-(defvarl %test-inv% (relate %test-funs-pos% %test-funs-neg%))
+(defvarl %test-inv% (relate %test-funs-neg% %test-funs-pos%))
 
 (defvarl %block-using-funs% '(sys:capture-cont return* sys:abscond* match-fun
                               eval load compile compile-file compile-toplevel))
