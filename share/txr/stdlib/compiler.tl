@@ -1061,23 +1061,26 @@
                                                          apply-list-arg)))))
 
 (defmeth compiler comp-for (me oreg env form)
-  (mac-param-bind form (op inits (: test . rets) incs . body) form
+  (mac-param-bind form (op inits (: (test nil test-p) . rets) incs . body) form
     (let* ((treg me.(alloc-treg))
            (ifrag me.(comp-progn treg env inits))
-           (tfrag (if test me.(compile oreg env test)))
+           (tfrag (if test-p me.(compile oreg env test)))
            (rfrag me.(comp-progn oreg env rets))
            (nfrag me.(comp-progn treg env incs))
            (bfrag me.(comp-progn treg env body))
            (lback (gensym "l"))
            (lskip (gensym "l"))
-           (frags (list ifrag tfrag rfrag nfrag bfrag)))
+           (frags (build
+                    (add ifrag)
+                    (if test-p (add tfrag))
+                    (add rfrag nfrag bfrag))))
       me.(free-treg treg)
       (new (frag rfrag.oreg
                  ^(,*ifrag.code
                    ,lback
-                   ,*tfrag.code
-                   ,*(if test
-                      ^((if ,tfrag.oreg ,lskip)))
+                   ,*(if test-p
+                      ^(,*tfrag.code
+                        (if ,tfrag.oreg ,lskip)))
                    ,*bfrag.code
                    ,*nfrag.code
                    (jmp ,lback)
