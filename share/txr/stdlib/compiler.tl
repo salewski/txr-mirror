@@ -208,13 +208,17 @@
 
 (defvarl %call-op% (relate '(apply usr:apply call) '(apply apply call)))
 
-(defvarl %test-funs-pos% '(eq))
+(defvarl %test-funs-pos% '(eq eql))
 
-(defvarl %test-funs-neg% '(neq))
+(defvarl %test-funs-neg% '(neq neql))
+
+(defvarl %test-funs-ops% '(ifq ifql))
 
 (defvarl %test-funs% (append %test-funs-pos% %test-funs-neg%))
 
 (defvarl %test-inv% (relate %test-funs-neg% %test-funs-pos%))
+
+(defvarl %test-opcode% (relate %test-funs-pos% %test-funs-ops%))
 
 (defvarl %block-using-funs% '(sys:capture-cont return* sys:abscond* match-fun
                               eval load compile compile-file compile-toplevel))
@@ -498,7 +502,8 @@
       (swap then else))
     (if (and (constantp left) (constantp right))
       me.(compile oreg env (if (call fun (eval left) (eval right)) then else))
-      (let* ((le-oreg me.(alloc-treg))
+      (let* ((opcode [%test-opcode% fun])
+             (le-oreg me.(alloc-treg))
              (ri-oreg me.(alloc-treg))
              (lelse (gensym "l"))
              (lskip (gensym "l"))
@@ -511,7 +516,7 @@
         (new (frag oreg
                    ^(,*le-frag.code
                      ,*ri-frag.code
-                     (ifq ,le-frag.oreg ,ri-frag.oreg ,lelse)
+                     (,opcode ,le-frag.oreg ,ri-frag.oreg ,lelse)
                      ,*th-frag.code
                      ,*(maybe-mov oreg th-frag.oreg)
                       (jmp ,lskip)
