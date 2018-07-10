@@ -497,7 +497,7 @@
       (set fun [%test-inv% fun])
       (swap then else))
     (if (and (constantp left) (constantp right))
-      me.(compile oreg env (if (eq (eval left) (eval right)) then else))
+      me.(compile oreg env (if (call fun (eval left) (eval right)) then else))
       (let* ((le-oreg me.(alloc-treg))
              (ri-oreg me.(alloc-treg))
              (lelse (gensym "l"))
