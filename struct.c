@@ -1333,7 +1333,7 @@ val super_method(val strct, val slotsym)
 static val uslot_fun(val sym, val strct)
 {
   val self = lit("uslot");
-  struct struct_inst *si = struct_handle(strct, self);
+  struct struct_inst *si = struct_handle_for_slot(strct, self, sym);
 
   if (sym && symbolp(sym)) {
     loc ptr = lookup_slot(strct, si, sym);
@@ -1359,7 +1359,7 @@ static val umethod_fun(val sym, struct args *args)
   } else {
     val strct = args_at(args, 0);
 
-    struct struct_inst *si = struct_handle(strct, self);
+    struct struct_inst *si = struct_handle_for_slot(strct, self, sym);
 
     if (sym && symbolp(sym)) {
       loc ptr = lookup_slot(strct, si, sym);
@@ -1389,7 +1389,7 @@ static val umethod_args_fun(val env, struct args *args)
     args_normalize_exact(args_call, ca_len + 1);
     args_cat_zap_from(args_call, args, index);
 
-    struct struct_inst *si = struct_handle(strct, self);
+    struct struct_inst *si = struct_handle_for_slot(strct, self, sym);
 
     if (sym && symbolp(sym)) {
       loc ptr = lookup_slot(strct, si, sym);
