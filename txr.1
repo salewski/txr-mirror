@@ -15818,7 +15818,8 @@ The form is a
 .code block*
 form; these are spared from the optimization.
 .RE
-.PP
+.IP
+
 Removal of blocks under the above rules means that some use of blocks which
 works in interpreted code will not work in compiled programs. Programs which
 adhere to the rules are not affected by such a difference.
@@ -18457,6 +18458,7 @@ A non-sequence atom doesn't catenate; the situation is erroneous:
 .cble
 .RE
 
+.IP
 If N arguments are specified, where N > 1, then the first N-1 arguments must be
 proper lists. Copies of these lists are catenated together. The last argument
 N, shown in the above syntax as
@@ -50169,8 +50171,8 @@ whose elements are the converted pieces. For instance
 will convert a list of comma-separated decimal integer tokens into
 a list of integer objects.
 .RE
-.PP
 
+.IP
 If
 .code type
 is a function, then the option requires an argument. The argument string
@@ -62224,6 +62226,7 @@ fully macro-expanded.
 .IP 6.
 No other forms are top-level forms.
 .RE
+
 A top-level form is a
 .I primary
 top-level form if it doesn't contain any other top-level forms;
