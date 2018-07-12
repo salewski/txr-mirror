@@ -62306,6 +62306,17 @@ special variable has no influence on this.
 Circular structures in compiled literals are preserved; on loading, similar
 circular structures are reproduced.
 
+.SS* Treatment of The Hash Bang Line
+
+When a source file begins with the
+.code #!
+("hash-bang") character sequence, the file compiler propagates that
+line to the compiled file, verbatim.
+
+\*(TX supports the hash bang mechanism in compiled
+.code .tlo
+files, thereby allowing compiled scripts to be executable.
+
 .coNP Function @ compile-toplevel
 .synb
 .mets (compile-toplevel < form << expanded-p )
