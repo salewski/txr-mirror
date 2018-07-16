@@ -100,7 +100,6 @@ val vector_lit_s, vec_list_s;
 val macro_time_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s, switch_s;
 val fbind_s, lbind_s, flet_s, labels_s;
-val opip_s, oand_s, chain_s, chand_s;
 val load_path_s, load_recursive_s;
 val load_time_s, load_time_lit_s;
 
@@ -4028,36 +4027,6 @@ static val me_tc(val form, val menv)
               cons(tree_case_s, cons(args, cases)), nao);
 }
 
-static val me_opip(val form, val menv)
-{
-  val opsym = pop(&form);
-  val clauses = form;
-  val chain_chand = if3(opsym == opip_s, chain_s, chand_s);
-  list_collect_decl (transformed_forms, ptail);
-
-  for (; clauses; clauses = cdr(clauses)) {
-    val clause = car(clauses);
-
-    if (consp(clause)) {
-      uses_or2;
-      val sym = car(clause);
-
-      if (sym == dwim_s || sym == uref_s || sym == qref_s) {
-        list_collect(ptail, clause);
-      } else {
-        val opdo = if3(or2(macro_form_p(clause, menv),
-                           gethash(op_table, sym)),
-                       do_s, op_s);
-        list_collect(ptail, cons(opdo, clause));
-      }
-    } else {
-      list_collect(ptail, clause);
-    }
-  }
-
-  return cons(dwim_s, cons(chain_chand, transformed_forms));
-}
-
 static val me_ignerr(val form, val menv)
 {
   return list(catch_s, cons(progn_s, rest(form)),
@@ -6091,10 +6060,6 @@ void eval_init(void)
   symacro_k = intern(lit("symacro"), keyword_package);
   prof_s = intern(lit("prof"), user_package);
   switch_s = intern(lit("switch"), system_package);
-  opip_s = intern(lit("opip"), user_package);
-  oand_s = intern(lit("oand"), user_package);
-  chain_s = intern(lit("chain"), user_package);
-  chand_s = intern(lit("chand"), user_package);
   load_path_s = intern(lit("*load-path*"), user_package);
   load_recursive_s = intern(lit("*load-recursive*"), system_package);
   load_time_s = intern(lit("load-time"), user_package);
@@ -6199,8 +6164,6 @@ void eval_init(void)
   reg_mac(casequal_star_s, func_n2(me_case));
   reg_mac(intern(lit("tb"), user_package), func_n2(me_tb));
   reg_mac(intern(lit("tc"), user_package), func_n2(me_tc));
-  reg_mac(opip_s, func_n2(me_opip));
-  reg_mac(oand_s, func_n2(me_opip));
   reg_mac(intern(lit("ignerr"), user_package), func_n2(me_ignerr));
   reg_mac(intern(lit("whilet"), user_package), func_n2(me_whilet));
   reg_mac(iflet_s, func_n2(me_iflet_whenlet));
@@ -6484,8 +6447,8 @@ void eval_init(void)
   reg_fun(intern(lit("lexical-fun-p"), user_package), func_n2(lexical_fun_p));
   reg_fun(intern(lit("lexical-lisp1-binding"), user_package),
           func_n2(lexical_lisp1_binding));
-  reg_fun(chain_s, func_n0v(chainv));
-  reg_fun(chand_s, func_n0v(chandv));
+  reg_fun(intern(lit("chain"), user_package), func_n0v(chainv));
+  reg_fun(intern(lit("chand"), user_package), func_n0v(chandv));
   reg_fun(intern(lit("juxt"), user_package), func_n0v(juxtv));
   reg_fun(intern(lit("andf"), user_package), func_n0v(andv));
   reg_fun(intern(lit("orf"), user_package), func_n0v(orv));

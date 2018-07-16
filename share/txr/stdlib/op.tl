@@ -123,3 +123,20 @@
 
 (defmacro aret (. args)
   ^(ap identity (progn @rest ,*args)))
+
+(defun sys:opip-expand (e clauses)
+  (collect-each ((c clauses))
+    (if (atom c)
+      c
+      (let ((sym (car c)))
+        (if (member sym '(dwim uref qref))
+          c
+          (let ((opdo (if (or (special-operator-p (car c))
+                              (macro-form-p c e)) 'do 'op)))
+            ^(,opdo ,*c)))))))
+
+(defmacro opip (:env e . clauses)
+  ^[chain ,*(sys:opip-expand e clauses)])
+
+(defmacro oand (:env e . clauses)
+  ^[chand ,*(sys:opip-expand e clauses)])

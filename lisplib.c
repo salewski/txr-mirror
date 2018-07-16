@@ -720,6 +720,7 @@ static val op_set_entries(val dlt, val fun)
   val name[] = {
     lit("op"), lit("do"), lit("lop"), lit("ap"), lit("ip"),
     lit("ado"), lit("ido"), lit("ret"), lit("aret"),
+    lit("opip"), lit("oand"),
     nil
   };
   set_dlt_entries(dlt, name, fun);
