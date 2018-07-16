@@ -94,8 +94,7 @@ val uw_protect_s, return_s, return_from_s, sys_abscond_from_s, block_star_s;
 val list_s, list_star_s, append_s, apply_s, sys_apply_s, iapply_s;
 val gen_s, gun_s, generate_s, rest_s, plus_s;
 val promise_s, promise_forced_s, promise_inprogress_s, force_s;
-val op_s, ap_s, identity_s, apf_s, ipf_s;
-val ret_s, aret_s;
+val op_s, identity_s;
 val hash_lit_s, hash_construct_s, struct_lit_s, qref_s, uref_s;
 val vector_lit_s, vec_list_s;
 val macro_time_s, macrolet_s;
@@ -3783,34 +3782,6 @@ static val me_op(val form, val menv)
   }
 }
 
-static val me_ap(val form, val menv)
-{
-  return list(apf_s, cons(op_s, rest(form)), nao);
-}
-
-static val me_ip(val form, val menv)
-{
-  return list(ipf_s, cons(op_s, rest(form)), nao);
-}
-
-static val me_ado(val form, val menv)
-{
-  return list(apf_s, cons(do_s, rest(form)), nao);
-}
-
-static val me_ido(val form, val menv)
-{
-  return list(ipf_s, cons(do_s, rest(form)), nao);
-}
-
-static val me_ret_aret(val form, val menv)
-{
-  val sym = if3(eq(car(form), ret_s), op_s, ap_s);
-  return list(sym, identity_s, cons(progn_s,
-                                    cons(list(var_s, rest_s, nao),
-                                         rest(form))), nao);
-}
-
 static val me_flet_labels(val form, val menv)
 {
   val body = form;
@@ -6100,12 +6071,7 @@ void eval_init(void)
   promise_inprogress_s = intern(lit("promise-inprogress"), system_package);
   force_s = intern(lit("force"), user_package);
   op_s = intern(lit("op"), user_package);
-  ap_s = intern(lit("ap"), user_package);
   do_s = intern(lit("do"), user_package);
-  apf_s = intern(lit("apf"), user_package);
-  ipf_s = intern(lit("ipf"), user_package);
-  ret_s = intern(lit("ret"), user_package);
-  aret_s = intern(lit("aret"), user_package);
   identity_s = intern(lit("identity"), user_package);
   rest_s = intern(lit("rest"), user_package);
   hash_lit_s = intern(lit("hash-lit"), system_package);
@@ -6212,12 +6178,6 @@ void eval_init(void)
   }
   reg_mac(sys_l1_val_s, func_n2(me_l1_val));
   reg_mac(sys_l1_setq_s, func_n2(me_l1_setq));
-  reg_mac(ap_s, func_n2(me_ap));
-  reg_mac(intern(lit("ip"), user_package), func_n2(me_ip));
-  reg_mac(intern(lit("ado"), user_package), func_n2(me_ado));
-  reg_mac(intern(lit("ido"), user_package), func_n2(me_ido));
-  reg_mac(ret_s, func_n2(me_ret_aret));
-  reg_mac(aret_s, func_n2(me_ret_aret));
   reg_mac(qquote_s, func_n2(me_qquote));
   reg_mac(sys_qquote_s, func_n2(me_qquote));
   reg_mac(intern(lit("equot"), user_package), func_n2(me_equot));
@@ -6538,8 +6498,8 @@ void eval_init(void)
   reg_fun(intern(lit("or"), user_package), func_n0v(or_fun));
   reg_fun(intern(lit("and"), user_package), func_n0v(and_fun));
   reg_fun(intern(lit("retf"), user_package), func_n1(retf));
-  reg_fun(apf_s, func_n1(apf));
-  reg_fun(ipf_s, func_n1(ipf));
+  reg_fun(intern(lit("apf"), user_package), func_n1(apf));
+  reg_fun(intern(lit("ipf"), user_package), func_n1(ipf));
   reg_fun(intern(lit("callf"), user_package), func_n1v(callf));
   reg_fun(intern(lit("mapf"), user_package), func_n1v(mapf));
   reg_fun(intern(lit("tf"), user_package), func_n0v(tf));

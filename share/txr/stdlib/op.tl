@@ -105,3 +105,21 @@
 
 (defmacro lop (:form f :env e . args)
   (sys:op-expand f e args))
+
+(defmacro ap (. args)
+  ^(apf (op ,*args)))
+
+(defmacro ip (. args)
+  ^(ipf (op ,*args)))
+
+(defmacro ado (. args)
+  ^(apf (do ,*args)))
+
+(defmacro ido (. args)
+  ^(ipf (do ,*args)))
+
+(defmacro ret (. args)
+  ^(op identity (progn @rest ,*args)))
+
+(defmacro aret (. args)
+  ^(ap identity (progn @rest ,*args)))

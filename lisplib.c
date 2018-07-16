@@ -718,7 +718,8 @@ static val compiler_set_entries(val dlt, val fun)
 static val op_set_entries(val dlt, val fun)
 {
   val name[] = {
-    lit("op"), lit("do"), lit("lop"),
+    lit("op"), lit("do"), lit("lop"), lit("ap"), lit("ip"),
+    lit("ado"), lit("ido"), lit("ret"), lit("aret"),
     nil
   };
   set_dlt_entries(dlt, name, fun);
