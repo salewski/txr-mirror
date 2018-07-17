@@ -102,6 +102,7 @@ val defsymacro_s, symacrolet_s, prof_s, switch_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val load_path_s, load_recursive_s;
 val load_time_s, load_time_lit_s;
+val eval_only_s, compile_only_s;
 
 val special_s, unbound_s;
 val whole_k, form_k, symacro_k;
@@ -1378,7 +1379,7 @@ val funcall_interp(val interp_fun, struct args *args)
   return ret;
 }
 
-val eval_intrinsic(val form, val env)
+static val expand_eval(val form, val env)
 {
   val lfe_save = last_form_evaled;
   val lfx_save = last_form_expanded;
@@ -1390,6 +1391,30 @@ val eval_intrinsic(val form, val env)
   last_form_expanded = lfx_save;
   last_form_evaled = lfe_save;
   return ret;
+}
+
+static val macroexpand(val form, val menv);
+
+val eval_intrinsic(val form, val env)
+{
+  val form_ex = macroexpand(form, env);
+  val op;
+
+  if (consp(form_ex) &&
+      ((op = car(form_ex)) == progn_s || op == eval_only_s ||
+       op == compile_only_s))
+  {
+    val res = nil, next = cdr(form_ex);
+
+    while (next) {
+      res = expand_eval(car(next), env);
+      next = cdr(next);
+    }
+
+    return res;
+  }
+
+  return expand_eval(form_ex, env);
 }
 
 val eval_intrinsic_noerr(val form, val env, val *error_p)
@@ -6064,6 +6089,8 @@ void eval_init(void)
   load_recursive_s = intern(lit("*load-recursive*"), system_package);
   load_time_s = intern(lit("load-time"), user_package);
   load_time_lit_s  = intern(lit("load-time-lit"), system_package);
+  eval_only_s  = intern(lit("eval-only"), user_package);
+  compile_only_s = intern(lit("compile-only"), user_package);
 
   qquote_init();
 
@@ -6119,8 +6146,8 @@ void eval_init(void)
   reg_op(prof_s, op_prof);
   reg_op(switch_s, op_switch);
   reg_op(intern(lit("upenv"), system_package), op_upenv);
-  reg_op(intern(lit("compile-only"), user_package), op_progn);
-  reg_op(intern(lit("eval-only"), user_package), op_progn);
+  reg_op(compile_only_s, op_progn);
+  reg_op(eval_only_s, op_progn);
   reg_op(load_time_lit_s, op_load_time_lit);
 
   reg_mac(defvar_s, func_n2(me_def_variable));
