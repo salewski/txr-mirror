@@ -181,14 +181,17 @@ static u32_t hash_buf(const mem_t *ptr, ucnum size, u32_t seed)
 
 static ucnum hash_double(double n)
 {
+  union hack {
+    volatile double d;
+    volatile ucnum a[sizeof (double) / sizeof (ucnum)];
+  } u;
   ucnum h = 0;
+  int i;
 
-  mem_t *p = coerce(mem_t *, &n), *q = p + sizeof(double);
+  u.d = n;
 
-  while (p < q) {
-    h = h << 8 | h >> (8 * sizeof h - 1);
-    h += *p++;
-  }
+  for (i = 0; i < sizeof u.a / sizeof u.a[0]; i++)
+    h += u.a[i];
 
   return h;
 }
