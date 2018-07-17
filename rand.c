@@ -215,6 +215,32 @@ val random_fixnum(val state)
   return num(rand32(r) & NUM_MAX);
 }
 
+static val random_float(val state)
+{
+  struct rand_state *r = coerce(struct rand_state *,
+                                cobj_handle(default_arg(state, random_state),
+                                            random_state_s));
+  union hack {
+    volatile double d;
+    struct {
+#if HAVE_LITTLE_ENDIAN
+      volatile rand32_t lo, hi;
+#else
+      volatile rand32_t hi, lo;
+#endif
+    } r;
+  } h;
+
+  h.r.lo = rand32(r);
+  h.r.hi = (rand32(r) & 0xFFFFF) | (1023UL << 20);
+
+  /* The least significant bit of the mantissa is always zero after
+   * this subtraction, reducing us to 51 bits of precision.
+   * Still; an attractive approach.
+   */
+  return flo(h.d - 1.0);
+}
+
 val random(val state, val modulus)
 {
   val self = lit("random");
@@ -334,6 +360,7 @@ void rand_init(void)
           func_n1o(random_state_get_vec, 0));
   reg_fun(intern(lit("random-state-p"), user_package), func_n1(random_state_p));
   reg_fun(intern(lit("random-fixnum"), user_package), func_n1o(random_fixnum, 0));
+  reg_fun(intern(lit("random-float"), user_package), func_n1o(random_float, 0));
   reg_fun(intern(lit("random"), user_package), func_n2(random));
   reg_fun(intern(lit("rand"), user_package), func_n2o(rnd, 1));
 }
