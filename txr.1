@@ -16229,7 +16229,7 @@ The
 .code eval
 function treats the
 .meta form
-object as a Lisp expression, which is
+object as a Lisp expression, which is expanded and
 evaluated. The side effects implied by the form are performed, and the value
 which it produces is returned. The optional
 .meta env
@@ -16238,6 +16238,53 @@ resolving the function and variable references encountered in the expression.
 If this argument is omitted
 .code nil
 then evaluation takes place in the global environment.
+
+The
+.meta form
+is not expanded all at once. Rather, it is treated by the following algorithm:
+.RS
+.IP 1
+First, if
+.meta form
+is a macro, it is macro-expanded as if by an application of the function
+.codn macroexpand .
+.IP 2
+If the resulting expanded form is a
+.codn progn ,
+.codn compile-only ,
+or
+.code eval-only
+form, then
+.code eval
+iterates over that form's argument expressions, passing each expression to a
+recursive call to
+.code eval
+using the same
+.metn env .
+.IP 3
+Otherwise, if the expanded form isn't one of the above three kinds of
+expressions, it is subject to a full expansion and evaluation.
+.RE
+.IP
+This algorithm allows a sequence of top-level forms to be combined into a
+single top-level form, even when the expansion of forms occurring later in the
+sequence depends on the evaluation effects of forms earlier in the sequence.
+
+For instance, a form like
+.code "(progn (defmacro foo ()) (foo))"
+may be processed with
+.codn eval ,
+because the above algorithm ensures that the
+.code "(defmacro foo ())"
+expression is fully evaluated first, thereby providing the
+macro definition required by
+.codn "(foo)" .
+
+This expansion and evaluation order is important because the semantics of
+.code eval
+forms the reference model for how the
+.code load
+function processes top-level forms.
 
 See also: the
 .code make-env
@@ -62253,7 +62300,7 @@ or
 
 .SS* File Compilation Model
 
-The file compiler reads each successive forms from a file, performs a full
+The file compiler reads each successive forms from a file, performs a partial
 expansion on that form, then traverses it to identify all of the
 top-level forms which it contains. Each top-level form is subject to
 three actions, either of the latter two of which may be omitted: compilation,
@@ -62274,6 +62321,31 @@ effectively ignored.
 When a compiled file is loaded, the images of compiled forms are read from
 it and converted back to compiled objects, which are executed in sequence.
 
+Partial expansion means that file compilation doesn't fully expand each
+form that is encountered. Rather, an incremental expansion is performed,
+very similar to the algorithm used by the
+.code eval
+function:
+.RS
+.IP 1
+First, if
+.meta form
+is a macro, it is macro-expanded as if by an application of the function
+.codn macroexpand .
+.IP 2
+If the resulting expanded form is a
+.codn progn ,
+.codn compile-only ,
+or
+.code eval-only
+form, then
+.code eval
+iterates over that form's argument expressions, compiling each expression
+recursively as if it were separate expression.
+.IP 3
+Otherwise, if the expanded form isn't one of the above three kinds of
+expressions, it is subject to a full expansion and compilation.
+.RE
 .SS* Treatment of Literals
 
 Programs specify not only code, but also data. Data embedded in a program is
@@ -62359,6 +62431,12 @@ argument indicates that
 .meta form
 has already been expanded and is to be compiled without further expansion.
 
+If
+.meta expanded-p
+is
+.codn nil ,
+then it is subject to a full expansion.
+
 Note: in spite of the name,
 .code compile-toplevel
 makes no consideration whether or not
@@ -62367,6 +62445,25 @@ is a "top-level form" according to the definition of that term
 as it applies to
 .code compile-file
 processing.
+
+Note: a form like
+.code "(progn (defmacro foo ()) (foo))"
+will not be processed by
+.code compile-toplevel
+in a manner similar to the processing by
+.codn eval .
+In this example,
+.code defmacro
+form will not be evaluated prior to the expansion of
+.code "(foo)"
+(and in fact not evaluated at all)
+and so the latter expression isn't correctly referring to that macro.
+The form
+.code "(progn (macro-time (defmacro foo ())) (foo))"
+can be processed by
+.codn compile-toplevel ;
+however, the macro definition now takes place during expansion, and isn't
+compiled.
 
 .TP* Example
 
