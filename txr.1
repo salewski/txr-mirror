@@ -35991,6 +35991,86 @@ benefits from ordering the operations on multiple integer operands
 according to the magnitudes of those operands. The function provides an
 estimate of magnitude which trades accuracy for efficiency.
 
+.coNP Variables @, flo-near @, flo-down @ flo-up and @ flo-zero
+.desc
+These variables hold integer values suitable as arguments to the
+.code flo-set-round-mode
+function, which controls the rounding mode for the results of floating-point
+operations.  These variables are only defined on platforms which support
+rounding control.
+
+Their values have the following meanings:
+.RS
+.coIP flo-near
+Round to nearest: the result of an operation is rounded to the nearest
+representable value.
+.coIP flo-down
+Round down: the result of an operation is rounded to the nearest representable
+value that lies in the direction of negative infinity.
+.coIP flo-up
+Round up: the result of an operation is rounded to the nearest representable
+value that lies in the direction of positive infinity.
+.coIP flo-up
+Round to zero: the result of an operation is rounded to the nearest
+representable value that lies in the direction of zero.
+.RE
+.IP
+
+.coNP Functions @ flo-get-round-mode and @ flo-set-round-mode
+.synb
+.mets (flo-get-round-mode)
+.mets (flo-set-round-mode << mode )
+.syne
+.desc
+Sometimes floating-point operations produce a result which
+requires more bits of precision than the floating point representation
+can provide. A representable floating-point value must be substituted
+for the true result and yielded by the operation.
+
+On platforms which support rounding control, these functions are provided for
+selecting the decision procedure by which the floating-point representation
+is taken.
+
+The
+.code flo-get-round-mode
+returns the current rounding mode. The rounding mode is represented by
+an integer value which is either equal to one of the four variables
+.codn flo-near ,
+.codn flo-down ,
+.code flo-up
+and
+.codn flo-zero ,
+or else some other value specific to the host environment. Initially,
+the value is that of
+.codn flo-near .
+Otherwise, the value returned is that which was stored by the most
+recent successful call to
+.codn flo-set-round-mode .
+
+The
+.code flo-set-round-mode
+function changes the rounding mode. The argument to its
+.meta mode
+parameter may be the value of one of the above four variables,
+or else some other value supported by the host environment's
+.code fesetround
+C library function.
+
+The
+.code flo-set-round-mode
+function returns
+.code t
+if it is successful, otherwise the return value is
+.code nil
+and the rounding mode is not changed.
+
+If a value is is passed to
+.code flo-set-round-mode
+which is not the value of one of the above
+four rounding mode variables, and the function succeeds anyway, then the
+rounding behavior of floating-point operations depends on the host
+environment's interpretation of that value.
+
 .SS* Bit Operations
 In \*(TL, similarly to Common Lisp, bit operations on integers are based
 on a concept that might be called "infinite two's-complement".  

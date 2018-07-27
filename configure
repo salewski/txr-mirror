@@ -1392,6 +1392,32 @@ if ! [ $have_dbl_decimal_dig ] ; then
 fi
 
 #
+# Rounding mode control.
+#
+
+printf "Checking for fesetround and fegetround ... "
+
+cat > conftest.c <<!
+#include <fenv.h>
+
+int main(void)
+{
+  int mode = fegetround();
+  fesetround(FE_TONEAREST);
+  fesetround(FE_DOWNWARD);
+  fesetround(FE_UPWARD);
+  fesetround(FE_TOWARDZERO);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_ROUNDING_CTL_H 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
+#
 # Valgrind
 #
 

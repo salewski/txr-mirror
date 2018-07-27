@@ -36,12 +36,16 @@
 #include <ctype.h>
 #include <float.h>
 #include "config.h"
+#if HAVE_ROUNDING_CTL_H
+#include <fenv.h>
+#endif
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"
 #include "gc.h"
 #include "args.h"
 #include "eval.h"
+#include "itypes.h"
 #include "arith.h"
 
 #define TAG_PAIR(A, B) ((A) << TAG_SHIFT | (B))
@@ -3122,6 +3126,20 @@ val rpoly(val x, val seq)
   return acc;
 }
 
+#if HAVE_ROUNDING_CTL_H
+
+static val flo_get_round_mode(void)
+{
+  return num(fegetround());
+}
+
+static val flo_set_round_mode(val mode)
+{
+  return tnil(!fesetround(c_int(mode, lit("flo-set-round-mode"))));
+}
+
+#endif
+
 void arith_init(void)
 {
   mp_init(&NUM_MAX_MP);
@@ -3165,6 +3183,17 @@ void arith_init(void)
   reg_fun(intern(lit("digits"), user_package), func_n2o(digits, 1));
   reg_fun(intern(lit("poly"), user_package), func_n2(poly));
   reg_fun(intern(lit("rpoly"), user_package), func_n2(rpoly));
+
+#if HAVE_ROUNDING_CTL_H
+  reg_varl(intern(lit("flo-near"), user_package), num(FE_TONEAREST));
+  reg_varl(intern(lit("flo-down"), user_package), num(FE_DOWNWARD));
+  reg_varl(intern(lit("flo-up"), user_package), num(FE_UPWARD));
+  reg_varl(intern(lit("flo-zero"), user_package), num(FE_TOWARDZERO));
+  reg_fun(intern(lit("flo-get-round-mode"), user_package),
+          func_n0(flo_get_round_mode));
+  reg_fun(intern(lit("flo-set-round-mode"), user_package),
+          func_n1(flo_set_round_mode));
+#endif
 }
 
 void arith_free_all(void)
