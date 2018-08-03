@@ -50081,7 +50081,7 @@ the POSIX-style options from a list of command-line arguments.
 The supported options can be defined as a list of option descriptor
 objects each of which is constructed by a call to the
 .code opt
-function. Each option can have a long or short name, or both,
+function. Each option can have a long name, a short name,
 a type, and a description.
 
 The
@@ -50123,7 +50123,8 @@ followed by multiple short option characters.
 
 An option can take an argument, in which case the argument is required.
 An option which takes no argument is Boolean, and a Boolean option
-never takes an argument: "takes argument" and "Boolean" are synonymous.
+never takes an argument: "takes no argument" and "Boolean" effectively
+mean the same thing.
 
 Long options are invoked as an argument which begins with a
 .code --
