@@ -1250,7 +1250,7 @@
                     (compile-error form "duplicate modifier (range/index): ~s"
                                    mel))
                   (unless (consp (cdr mel))
-                    (compile-error form "misisng argument in range/index: ~s"
+                    (compile-error form "missing argument in range/index: ~s"
                                    mel))
                   (unless (null (cddr mel))
                     (compile-error form "excess args in range/index: ~s"
