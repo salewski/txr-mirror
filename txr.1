@@ -34863,6 +34863,31 @@ is positive, it is returned. If
 is negative, its additive inverse is
 returned: a positive number of the same type with exactly the same magnitude.
 
+.coNP Function @ signum
+.synb
+.mets (signum << number )
+.syne
+.desc
+The
+.code signum
+function calculates a representation of the sign of
+.meta number
+as a numeric value.
+
+If
+.meta number
+is an integer, then
+.code signum
+returns -1 if the integer is negative, 1 if the integer is positive,
+or else 0.
+
+If
+.meta number
+is a floating-point value then
+.code signum
+returns -1.0 if the value is negative, 1.0 if the value is positive or
+else 0.0.
+
 .coNP Functions @, trunc @, floor @ ceil and @ round
 .synb
 .mets (trunc < dividend <> [ divisor ])

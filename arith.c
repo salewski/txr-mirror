@@ -748,6 +748,26 @@ val abso(val anum)
   }
 }
 
+static val signum(val anum)
+{
+  switch (type(anum)) {
+  case BGNUM:
+    return if3(ISNEG(mp(anum)), negone, one);
+  case FLNUM:
+    {
+      double a = anum->fl.n;
+      return flo(if3(a > 0, 1.0, if3(a < 0, -1.0, 0.0)));
+    }
+  case NUM:
+    {
+      cnum a = c_num(anum);
+      return if3(a > 0, one, if3(a < 0, negone, zero));
+    }
+  default:
+    uw_throwf(error_s, lit("signum: ~s is not a number"), anum, nao);
+  }
+}
+
 val mul(val anum, val bnum)
 {
   val self = lit("*");
@@ -3175,6 +3195,8 @@ void arith_init(void)
 #endif
   reg_varl(intern(lit("*e*"), user_package), flo(M_E));
   reg_varl(intern(lit("%e%"), user_package), flo(M_E));
+
+  reg_fun(intern(lit("signum"), user_package), func_n1(signum));
 
   reg_fun(intern(lit("bignum-len"), user_package), func_n1(bignum_len));
   reg_fun(intern(lit("divides"), user_package), func_n2(divides));
