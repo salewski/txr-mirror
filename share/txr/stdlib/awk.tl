@@ -344,7 +344,7 @@
   (when suspicious-vars
     (compile-warning mainform "~!form ~s\n\
                                is moved out of the apparent scope\n\
-                               and thus cannot refer to ~s ~s"
+                               and thus cannot refer to ~a ~s"
                      subform kind suspicious-vars)))
 
 (defmacro sys:awk-mac-let (awc aws-sym . body)
