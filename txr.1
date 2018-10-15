@@ -14775,7 +14775,7 @@ and used as the basis of the test.
   ;; a line is identical to the character string "end".
 
   (whilet ((line (get-line))
-           (more (and line (not (equal line "end")))))
+           (more (and line (nequal line "end"))))
     (put-line line))
 .cble
 
@@ -49841,7 +49841,7 @@ the corresponding field in the previous line:
 
 .cblk
   (awk (:let prev)
-       ((not (equal [f 0] prev)) (prn) (set prev [f 0])))
+       ((nequal [f 0] prev) (prn) (set prev [f 0])))
 .cble
 .IP 17.
 Simulate the
