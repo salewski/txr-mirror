@@ -49741,7 +49741,7 @@ while the fourth one doesn't:
 Print lines containing a backslash in the second field:
 
 .cblk
-  (awk ((and [f 1] (find #\e\e [f 1]))))
+  (awk ((find #\e\e [f 1])))
 .cble
 .IP 7.
 Print lines containing a backslash using a regex constructed
@@ -49785,7 +49785,7 @@ by producing a single string first:
 Print lines longer than 72 characters:
 
 .cblk
-  (awk ((> (length rec) 72)))
+  (awk ((> (len rec) 72)))
 .cble
 .IP 11.
 Print first two fields in reverse order, separated by
