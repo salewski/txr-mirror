@@ -363,23 +363,30 @@
          (new (frag dreg nil))))))
 
 (defmeth compiler comp-var (me oreg env sym)
-  (iflet ((vbin env.(lookup-var sym)))
-    (new (frag vbin.loc nil (list sym)))
-    (let ((dreg me.(get-dreg sym)))
-      (new (frag oreg ^((getv ,oreg ,dreg)) (list sym))))))
+  (let ((vbin env.(lookup-var sym)))
+    (cond
+      (vbin (new (frag vbin.loc nil (list sym))))
+      ((special-var-p sym)
+       (let ((dreg me.(get-dreg sym)))
+         (new (frag oreg ^((getv ,oreg ,dreg)) (list sym)))))
+      (t (new (frag oreg ^((getlx ,oreg ,me.(get-sidx sym))) (list sym)))))))
 
 (defmeth compiler comp-setq (me oreg env form)
   (mac-param-bind form (op sym value) form
     (let* ((bind env.(lookup-var sym))
-           (vloc (if bind
-                   bind.loc
-                   me.(get-dreg sym)))
+           (spec (special-var-p sym))
+           (vloc (cond
+                   (bind bind.loc)
+                   (spec me.(get-dreg sym))
+                   (t me.(get-sidx sym))))
            (vfrag me.(compile (if bind vloc oreg) env value)))
       (new (frag vfrag.oreg
                  ^(,*vfrag.code
                    ,*(if bind
                        (maybe-mov vloc vfrag.oreg)
-                       ^((setv ,vfrag.oreg ,vloc))))
+                       (if spec
+                         ^((setv ,vfrag.oreg ,vloc))
+                         ^((setlx ,vfrag.oreg ,me.(get-sidx sym))))))
                  (uni (list sym) vfrag.fvars)
                  vfrag.ffuns)))))
 
@@ -1537,7 +1544,7 @@
 
 (defvarl %big-endian% (equal (ffi-put 1 (ffi uint32)) #b'00000001'))
 
-(defvarl %tlo-ver% ^(2 0 ,%big-endian%))
+(defvarl %tlo-ver% ^(3 0 ,%big-endian%))
 
 (defun open-compile-streams (in-path out-path)
   (let* ((rsuff (r$ %file-suff-rx% in-path))
