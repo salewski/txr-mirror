@@ -707,6 +707,11 @@ val uw_defer_warning(val args)
   return nil;
 }
 
+val uw_warning_exists(val tag)
+{
+  return member(tag, deferred_warnings, equal_f, cdr_f);
+}
+
 val uw_register_tentative_def(val tag)
 {
   uw_purge_deferred_warning(tag);

@@ -2929,8 +2929,12 @@ static val me_def_variable(val form, val menv)
   if (!bindable(sym))
     not_bindable_error(form, sym);
 
-  if (op == defparm_s || op == defvar_s)
+  if (op == defparm_s || op == defvar_s) {
     mark_special(sym);
+    if (uw_warning_exists(cons(var_s, sym)))
+      eval_warn(form, lit("~s: global ~s marked special after lexical uses"),
+                op, sym, nao);
+  }
 
   return apply_frob_args(list(prog1_s,
                               cons(defvarl_s,
