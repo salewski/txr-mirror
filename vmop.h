@@ -66,4 +66,6 @@ typedef enum vm_op {
   SETL1 = 37,
   BINDV = 38,
   CLOSE = 39,
+  GETLX = 40,
+  SETLX = 41,
 } vm_op_t;

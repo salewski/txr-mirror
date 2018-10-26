@@ -491,7 +491,8 @@ NOINLINE static void vm_apply(struct vm *vm, vm_word_t insn)
   vm_set(vm->dspl, dest, result);
 }
 
-static loc vm_stab(struct vm *vm, unsigned fun)
+static loc vm_stab(struct vm *vm, unsigned fun,
+                   val (*lookup_fn)(val env, val sym), val kind_str)
 {
   struct vm_desc *vd = vm->vd;
   struct vm_stent *fe = &vd->stab[fun];
@@ -502,7 +503,7 @@ static loc vm_stab(struct vm *vm, unsigned fun)
 
   if (nilp(fe->bind = lookup_fn(nil, vecref(vd->symvec, num_fast(fun)))))
     eval_error(vd->bytecode,
-               lit("function ~s is not defined"),
+               lit("~a ~s is not defined"), kind_str,
                vecref(vd->symvec, num(fun)), nao);
   gc_mutated(vd->self);
   return (fe->bindloc = cdr_l(fe->bind));
@@ -533,7 +534,8 @@ NOINLINE static void vm_gcall(struct vm *vm, vm_word_t insn)
     }
   }
 
-  result = generic_funcall(deref(vm_stab(vm, fun)), args);
+  result = generic_funcall(deref(vm_stab(vm, fun, lookup_fun,
+                                         lit("function"))), args);
   vm_set(vm->dspl, dest, result);
 }
 
@@ -562,7 +564,8 @@ NOINLINE static void vm_gapply(struct vm *vm, vm_word_t insn)
     }
   }
 
-  result = applyv(deref(vm_stab(vm, fun)), args);
+  result = applyv(deref(vm_stab(vm, fun, lookup_fun,
+                                lit("function"))), args);
   vm_set(vm->dspl, dest, result);
 }
 
@@ -855,6 +858,24 @@ NOINLINE static void vm_bindv(struct vm *vm, vm_word_t insn)
   env_vbind(dyn_env, sym, vm_get(vm->dspl, src));
 }
 
+NOINLINE static void vm_gettab(struct vm *vm, vm_word_t insn,
+                               val (*lookup_fn)(val env, val sym),
+                               val kind_str)
+{
+  unsigned idx = vm_insn_operand(insn);
+  unsigned dst = vm_insn_extra(insn);
+  vm_sm_set(vm->dspl, dst, deref(vm_stab(vm, idx, lookup_fn, kind_str)));
+}
+
+NOINLINE static void vm_settab(struct vm *vm, vm_word_t insn,
+                               val (*lookup_fn)(val env, val sym),
+                               val kind_str)
+{
+  unsigned idx = vm_insn_operand(insn);
+  unsigned src = vm_insn_extra(insn);
+  set(vm_stab(vm, idx, lookup_fn, kind_str), vm_sm_get(vm->dspl, src));
+}
+
 NOINLINE static void vm_close(struct vm *vm, vm_word_t insn)
 {
   unsigned dst = vm_insn_bigop(insn);
@@ -996,6 +1017,12 @@ NOINLINE static val vm_execute(struct vm *vm)
       break;
     case CLOSE:
       vm_close(vm, insn);
+      break;
+    case GETLX:
+      vm_gettab(vm, insn, lookup_var, lit("variable"));
+      break;
+    case SETLX:
+      vm_settab(vm, insn, lookup_var, lit("variable"));
       break;
     default:
       uw_throwf(error_s, lit("invalid opcode ~s"), num_fast(opcode), nao);

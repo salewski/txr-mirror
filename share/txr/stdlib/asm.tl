@@ -755,6 +755,30 @@
                   (unless (minusp fix)
                     (add (operand-to-sym y))))))))))))
 
+(defopcode op-getlx getlx auto
+  (:method asm (me asm syntax)
+    me.(chk-arg-count 2 syntax)
+    (tree-bind (dst idx) asm.(parse-args me syntax '(d n))
+      (cond
+        ((small-op-p dst)
+         asm.(put-insn me.code (enc-small-op dst) idx))
+        (t asm.(put-insn me.code (enc-small-op 1) idx)
+           asm.(asm-one ^(mov ,(operand-to-exp dst) t1))))))
+  (:method dis (me asm dst idx)
+    ^(,me.symbol ,(operand-to-sym dst) ,idx)))
+
+(defopcode op-setlx setlx auto
+  (:method asm (me asm syntax)
+    me.(chk-arg-count 2 syntax)
+    (tree-bind (src idx) asm.(parse-args me syntax '(r n))
+      (cond
+        ((small-op-p src)
+         asm.(put-insn me.code (enc-small-op src) idx))
+        (t asm.(asm-one ^(mov t1 ,(operand-to-exp src)))
+           asm.(put-insn me.code (enc-small-op 1) idx)))))
+  (:method dis (me asm src idx)
+    ^(,me.symbol ,(operand-to-sym src) ,idx)))
+
 (defun disassemble-cdf (code data funv *stdout*)
   (let ((asm (new assembler buf code)))
     (put-line "data:")
