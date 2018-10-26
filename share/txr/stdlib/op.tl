@@ -24,14 +24,14 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+(defvar sys:*op-ctx*)
+
 (sys:make-struct-type
   'sys:op-ctx nil nil '(form gens up meta) nil
   (lambda (me)
     (slotset me 'up sys:*op-ctx*)
     (slotset me 'meta (gensym "meta-")))
   nil nil)
-
-(defvar sys:*op-ctx*)
 
 (defun sys:ensure-op-arg (ctx n)
   (let ((ag (slot ctx 'gens)))
