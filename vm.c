@@ -157,17 +157,17 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
 
     vd->self = nil;
 
+    vd->lnk.prev = vtail;
+    vd->lnk.next = vnull;
+    vnull->lnk.prev = vd;
+    vtail->lnk.next = vd;
+
     desc = cobj(coerce(mem_t *, vd), vm_desc_s, &vm_desc_ops);
 
     vd->bytecode = bytecode;
     vd->datavec = datavec;
     vd->symvec = symvec;
     vd->self = desc;
-
-    vd->lnk.prev = vtail;
-    vd->lnk.next = vnull;
-    vnull->lnk.prev = vd;
-    vtail->lnk.next = vd;
 
     return desc;
   }
