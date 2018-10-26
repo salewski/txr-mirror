@@ -75,8 +75,8 @@ struct vm_desc {
 };
 
 struct vm_stent {
-  val fb;
-  loc fbloc;
+  val bind;
+  loc bindloc;
 };
 
 struct vm_env {
@@ -224,7 +224,7 @@ static void vm_desc_mark(val obj)
   gc_mark(vd->symvec);
 
   for (i = 0; i < stsz; i++)
-    gc_mark(vd->stab[i].fb);
+    gc_mark(vd->stab[i].bind);
 }
 
 static struct vm_closure *vm_closure_struct(val obj)
@@ -495,17 +495,17 @@ static loc vm_stab(struct vm *vm, unsigned fun)
 {
   struct vm_desc *vd = vm->vd;
   struct vm_stent *fe = &vd->stab[fun];
-  loc fbloc = fe->fbloc;
+  loc bindloc = fe->bindloc;
 
-  if (!nullocp(fbloc))
-    return fbloc;
+  if (!nullocp(bindloc))
+    return bindloc;
 
-  if (nilp(fe->fb = lookup_fun(nil, vecref(vd->symvec, num_fast(fun)))))
+  if (nilp(fe->bind = lookup_fn(nil, vecref(vd->symvec, num_fast(fun)))))
     eval_error(vd->bytecode,
                lit("function ~s is not defined"),
                vecref(vd->symvec, num(fun)), nao);
   gc_mutated(vd->self);
-  return (fe->fbloc = cdr_l(fe->fb));
+  return (fe->bindloc = cdr_l(fe->bind));
 }
 
 NOINLINE static void vm_gcall(struct vm *vm, vm_word_t insn)
@@ -1111,8 +1111,8 @@ void vm_invalidate_binding(val sym)
     for (i = 0; i < vd->stsz; i++) {
       if (vecref(vd->symvec, num_fast(i)) == sym) {
         struct vm_stent *sti = &vd->stab[i];
-        sti->fb = nil;
-        sti->fbloc = nulloc;
+        sti->bind = nil;
+        sti->bindloc = nulloc;
       }
     }
   }
