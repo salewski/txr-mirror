@@ -30185,6 +30185,8 @@ whereas
 .code add*
 adds elements at the front.
 
+The return value of these methods is unspecified.
+
 .TP* Example:
 
 .cblk
@@ -30226,6 +30228,8 @@ being constructed.
 Both methods have the property that the
 constructed list does not share structure
 with the input lists.
+
+The return value of these methods is unspecified.
 
 .TP* Example:
 
@@ -30276,6 +30280,8 @@ function can be called with a single argument
 which is an atom. This atom will simply be
 installed as the terminating atom of the
 list being constructed.
+
+The return value of these methods is unspecified.
 
 .TP* Example:
 
@@ -30348,6 +30354,14 @@ Local functions which mimic the
 .code list-builder
 methods operate implicitly on this hidden variable, so that
 the object need not be mentioned as an argument.
+
+With the exception of
+.codn get ,
+these local functions
+.codn get ,
+have unspecified return values, like the same-named
+.code list-builder
+methods.
 
 .TP* Examples:
 
