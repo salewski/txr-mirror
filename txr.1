@@ -62762,6 +62762,13 @@ form; that
 .code load
 form must be executed.
 
+Note that execution of a form implies that the
+.code load-time
+forms that it contains are evaluated (prior to other evaluations). Suppression
+of the execution of a form also suppresses the evaluation of
+.code load-time
+forms.
+
 Situations in which
 .code compile-only
 is useful are those in which it is desirable to stage the execution of some
@@ -62929,6 +62936,17 @@ Thus, the
 .code load-time
 forms in a given top-level form may rely on the side-effects of
 prior top-level forms having taken place.
+Note that, by default,
+.code compile-file
+also immediately executes each top-level form which it compiles and deposits
+into the output file. This execution is equivalent to a load; it causes
+.code load-time
+forms to be evaluated. The
+.code compile-only
+operator must be used around
+.code load-time
+forms which must be evaluated only when the compiled file is loaded,
+and not at compile time.
 
 In all situations, the evaluation of
 .meta form
