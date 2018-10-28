@@ -186,7 +186,7 @@ static ucnum hash_double(double n)
     volatile ucnum a[sizeof (double) / sizeof (ucnum)];
   } u;
   ucnum h = 0;
-  int i;
+  unsigned i;
 
   u.d = n;
 
