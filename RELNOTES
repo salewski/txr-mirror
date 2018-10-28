@@ -1,3 +1,47 @@
+                                    TXR 199
+                                   2018-10-28
+
+
+  Features
+
+  - compiler:
+    - hash bang in source files translated into compiled files.
+    - more constant folding optimizations in equality comparisons.
+    - de-duplication of code when compiling switch form whose branches
+      share source code substructure (the basis for tagbody).
+    - faster access to global lexical variables via two new VM instructions.
+    - semantics change in handling of free variables:
+      - undeclared variables treated as lexical rather than special.
+      - defvar/defparm now warn if the variable was already used.
+
+  - OOP:
+    - improved diagnostics in uslot and umethod.
+
+  - math:
+    - new function random-float which produces evenly-distributed
+      pseudo-random values in the range [0, 1).
+    - functions exposed for floating-point rounding control.
+    - new signum function.
+
+  - lib:
+    - list-builder methods rewritten for semantics and efficiency.
+    - op-related macros rewritten in Lisp.
+    - hashing function for floating-point values rewritten for efficiency.
+
+  - evaluation:
+    - top level forms under evaluation and compilation handled
+      incrementally:
+      - thus: if (prog A B) is a top-level form, then A will be
+        macro-expanded and evaluated before B, so B can rely on
+        A's expansion and compile-time effects to have occurred.
+
+  Bugs
+
+  - compiler:
+    - fixed miscompiled empty test in for loop.
+
+
+
                                     TXR 198
                                    2018-07-06
 
