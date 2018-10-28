@@ -62524,6 +62524,44 @@ line to the compiled file, verbatim.
 .code .tlo
 files, thereby allowing compiled scripts to be executable.
 
+.SS* Compiled File Compatibility
+
+\*(TX's virtual machine architecture for executing compiled code
+is evolving, and that evolution has implications for the compatibility between
+compiled files the \*(TX executable image.
+
+The basic requirement is that a given version of \*(TX can load and execute
+the compiled files which that same version has produced.
+
+Furthermore, these files are architecture-independent, except that their
+encoding is in the local byte order ("endianness") of the host machine.
+The byte order is explicitly indicated in the files, and the
+.code load
+function resolves it. Thus a file produced by \*(TX running on a 64 bit big
+endian Power PC can be loaded by \*(TX running on 32 bit x86, which is,
+of course, little endian.
+
+A given \*(TX version may also be capable of loading files produced by
+an older version, or even ones produced by a newer version. Whether this
+is possible depends on the versions involved.
+
+Compiled files contain a minor and major version number (which is independent
+of the \*(TX version). The
+.code load
+function examines these numbers and decides whether the file is loadable,
+or whether it must be rejected.
+
+The first version of \*(TX which featured the compiler and virtual machine was
+191. Older versions therefore cannot load compiled files.
+
+Versions 191 and 192 produce version 1 compiled files, and load only that
+version.
+
+Versions 193 through 198 produce version 2 compiled files and load only
+that version.
+
+Version 199 produces version 3 files and loads version 2 or 3.
+
 .SS* Compilation Library
 
 .coNP Function @ compile-toplevel
@@ -64810,6 +64848,22 @@ behaviors where old versions of \*(TX would have produced an error, such as a
 syntax error. Though, strictly speaking, this means that something is working
 differently in a new version, replacing an error situation with functionality
 is usually not considered a deviation from backward-compatibility.
+
+There is one notable deviation from this general requirement for backwards
+compatibility: the handling of compiled files. For pragmatic reasons,
+from time to time \*(TX may break backward compatibility, such that a newer
+version of \*(TX will not load compiled files produced by an older version.
+The files will have to be recompiled with the new \*(TX. More details
+are given in the section
+.B "Compiled File Compatibility"
+under the major section
+.BR "LISP COMPILATION" .
+The rationale for not requiring backward compatibility support for older
+compiled files is that older files require the older implementation of the
+virtual machine which they target. In some cases the differences between
+the older virtual machine and new is so great that \*(TX would have to carry a
+whole separate virtual machine implementation for the sake of the older files,
+which is a significant burden.
 
 .coSS The @ -C compatibility option
 
