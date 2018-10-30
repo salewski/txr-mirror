@@ -1003,7 +1003,7 @@ int txr_main(int argc, char **argv)
   }
 
   reg_var(args_s, or2(orig_args, arg_list));
-  reg_varl(intern(lit("self-path"), user_package), spec_file_str);
+  reg_varl(self_path_s, spec_file_str);
 
   env_vbind(dyn_env, load_recursive_s, t);
 
