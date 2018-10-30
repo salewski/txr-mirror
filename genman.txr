@@ -98,7 +98,7 @@ Content-type: text/html
 <noscript>
 <h3>Please turn on Javascript to use the collapsible contents.</h3>
 </noscript>
-<a href="#/" onclick="toggleall(this)">@clpsall</a>
+<a href="#/" onclick="toggleall(this)">@xpnall</a>
 @      (end)
 @    (or)
 @TOC
@@ -123,7 +123,7 @@ Content-type: text/html
               `<a href="#/" onclick="toggle(this, '@id')" class="toggle">@(if closed closedtxt opentxt)</a>`))
 @    (output :into TOC)
 @TOC
-<dd><dl id="@id"@(if closed " style=\"display: none\"")>
+<dd><dl id="@id" class="tocsec"@(if closed " style=\"display: none\"")>
 @    (end)
 @  (end)
 @(until)
@@ -178,6 +178,7 @@ This document was created by
 .disambiguations dl { margin-bottom: 2048px; }
 </style>
 <script type="text/javascript">
+var xpanded = false;
 function toggle(link, id) {
   var e = document.getElementById(id);
   if (e.style.display == '') {
@@ -190,11 +191,10 @@ function toggle(link, id) {
 }
 function toggleall(link) {
   var toc = document.getElementsByClassName("TOC");
-  var dls = toc[0].getElementsByTagName("DL");
+  var dls = toc[0].getElementsByClassName("tocsec");
   var atoggles = toc[0].getElementsByClassName("toggle");
-  var disp = dls[0].style.display;
-  var ndisp = (disp == '') ? 'none' : '';
-  var nhtml = (disp == '') ? '@closedtxt' : '@opentxt'
+  var ndisp = xpanded ? 'none' : '';
+  var nhtml = xpanded ? '@closedtxt' : '@opentxt'
 
   for (var i = 0; i < dls.length; i++)
     dls[i].style.display = ndisp;
@@ -202,7 +202,9 @@ function toggleall(link) {
   for (var i = 0; i < atoggles.length; i++)
     atoggles[i].innerHTML = nhtml;
 
-  link.innerHTML = (disp == '') ? '@xpnall' : '@clpsall';
+  link.innerHTML = xpanded ? '@xpnall' : '@clpsall';
+
+  xpanded = !xpanded;
 }
 function tocjump(hash) {
   var toc = document.getElementsByClassName("TOC");
