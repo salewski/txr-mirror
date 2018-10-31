@@ -71,7 +71,7 @@ val listener_pprint_s, listener_greedy_eval_s;
 val rec_source_loc_s;
 val intr_s;
 
-static val stream_parser_hash;
+static val stream_parser_hash, catch_all;
 
 static void yy_tok_mark(struct yy_token *tok)
 {
@@ -897,7 +897,6 @@ static void provide_completions(const wchar_t *data,
 
 static wchar_t *provide_atom(lino_t *l, const wchar_t *str, int n, void *ctx)
 {
-  val catch_all = list(t, nao);
   val obj = nao;
   val form;
   val line = string(str);
@@ -1216,7 +1215,6 @@ val repl(val bindings, val in_stream, val out_stream)
   val counter_sym = intern(lit("*n"), user_package);
   val var_counter_sym = intern(lit("*v"), user_package);
   val result_hash_sym = intern(lit("*r"), user_package);
-  val catch_all = list(t, nao);
   val result_hash = make_hash(nil, nil, nil);
   val done = nil;
   val counter = one;
@@ -1551,9 +1549,9 @@ void parse_init(void)
   listener_greedy_eval_s = intern(lit("*listener-greedy-eval-p*"), user_package);
   rec_source_loc_s = intern(lit("*rec-source-loc*"), user_package);
   unique_s = gensym(nil);
-  prot1(&stream_parser_hash);
-  prot1(&unique_s);
+  protect(&stream_parser_hash, &unique_s, &catch_all, convert(val *, 0));
   stream_parser_hash = make_hash(t, nil, nil);
+  catch_all = cons(t, nil);
   parser_l_init();
   lino_init(&linenoise_txr_binding);
   reg_var(listener_hist_len_s, num_fast(500));
