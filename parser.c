@@ -1431,9 +1431,27 @@ static int lino_puts(mem_t *stream_in, const wchar_t *str_in)
 
 static wint_t lino_getch(mem_t *stream_in)
 {
-  val stream = coerce(val, stream_in);
-  val ch = get_char(stream);
-  return if3(ch, c_num(ch), WEOF);
+  wint_t ret = WEOF;
+
+  val stream, ch;
+
+  uw_catch_begin (catch_all, sy, va);
+
+  stream = coerce(val, stream_in);
+  ch = get_char(stream);
+
+  ret = if3(ch, c_num(ch), WEOF);
+
+  uw_catch (sy, va) {
+    (void) sy;
+    (void) va;
+  }
+
+  uw_unwind { }
+
+  uw_catch_end;
+
+  return ret;
 }
 
 static wchar_t *lino_getl(mem_t *stream_in, wchar_t *buf, size_t nchar)
