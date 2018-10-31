@@ -583,7 +583,7 @@ static int complete_line(lino_t *ls, int substring) {
 
             c = lino_os.getch_fn(ls->tty_ifs);
 
-            if (c < 0) {
+            if (c == WEOF) {
                 if (errno == EINTR) {
                     handle_resize(ls, lt);
                     continue;
@@ -702,7 +702,7 @@ static int history_search(lino_t *l)
         for (;;) {
             c = lino_os.getch_fn(lc->tty_ifs);
 
-            if (c < 0) {
+            if (c == WEOF) {
                 if (errno == EINTR) {
                     handle_resize(lc, l);
                     continue;
@@ -1952,12 +1952,12 @@ static int edit(lino_t *l, const wchar_t *prompt)
 
         c = lino_os.getch_fn(l->tty_ifs);
 
-        if (c < 0 && errno == EINTR) {
+        if (c == WEOF && errno == EINTR) {
             handle_resize(l, 0);
             continue;
         }
 
-        if (c < 0) {
+        if (c == WEOF) {
             ret = l->len ? l->len : -1;
             goto out;
         }
@@ -2218,16 +2218,16 @@ static int edit(lino_t *l, const wchar_t *prompt)
             /* Read the next two bytes representing the escape sequence.
              * Use two calls to handle slow terminals returning the two
              * chars at different times. */
-            if ((seq[0] = lino_os.getch_fn(l->tty_ifs)) < 0)
+            if ((seq[0] = lino_os.getch_fn(l->tty_ifs)) == WEOF)
                 break;
-            if ((seq[1] = lino_os.getch_fn(l->tty_ifs)) < 0)
+            if ((seq[1] = lino_os.getch_fn(l->tty_ifs)) == WEOF)
                 break;
 
             /* ESC [ sequences. */
             if (seq[0] == '[') {
                 if (seq[1] >= '0' && seq[1] <= '9') {
                     /* Extended escape, read additional byte. */
-                    if ((seq[2] = lino_os.getch_fn(l->tty_ifs)) < 0)
+                    if ((seq[2] = lino_os.getch_fn(l->tty_ifs)) == WEOF)
                         break;
                     if (seq[2] == '~') {
                         switch(seq[1]) {
