@@ -1022,7 +1022,8 @@ int txr_main(int argc, char **argv)
 
     opt_loglevel = match_loglevel;
 
-    reg_var(intern(lit("*self-path*"), user_package), spec_file_str);
+    if (opt_compat && opt_compat <= 199)
+      reg_var(intern(lit("*self-path*"), user_package), spec_file_str);
 
     if (parser.errors) {
       if (enter_repl)

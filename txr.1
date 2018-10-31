@@ -64906,6 +64906,10 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 199
+After \*(TX 199, certain global variables that had been deprecated
+for a long time, and no longer documented, were removed. Requesting 199 or
+earlier compatibility restores those variables.
 .IP 190
 Until \*(TX 190, the
 .code reset-struct

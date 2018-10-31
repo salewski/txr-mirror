@@ -46,6 +46,7 @@
 #include "args.h"
 #include "eval.h"
 #include "itypes.h"
+#include "txr.h"
 #include "arith.h"
 
 #define TAG_PAIR(A, B) ((A) << TAG_SHIFT | (B))
@@ -3173,10 +3174,13 @@ void arith_init(void)
   mp_neg(&INT_PTR_MAX_SUCC_MP, &INT_PTR_MAX_SUCC_MP);
   log2_init();
 
-  reg_varl(intern(lit("*flo-dig*"), user_package), num_fast(DBL_DIG));
-  reg_varl(intern(lit("*flo-max*"), user_package), flo(DBL_MAX));
-  reg_varl(intern(lit("*flo-min*"), user_package), flo(DBL_MIN));
-  reg_varl(intern(lit("*flo-epsilon*"), user_package), flo(DBL_EPSILON));
+  if (opt_compat && opt_compat <= 199) {
+    reg_varl(intern(lit("*flo-dig*"), user_package), num_fast(DBL_DIG));
+    reg_varl(intern(lit("*flo-max*"), user_package), flo(DBL_MAX));
+    reg_varl(intern(lit("*flo-min*"), user_package), flo(DBL_MIN));
+    reg_varl(intern(lit("*flo-epsilon*"), user_package), flo(DBL_EPSILON));
+  }
+
   reg_varl(intern(lit("flo-dig"), user_package), num_fast(DBL_DIG));
   reg_varl(intern(lit("flo-max-dig"), user_package), num_fast(FLO_MAX_DIG));
   reg_varl(intern(lit("flo-max"), user_package), flo(DBL_MAX));
@@ -3188,13 +3192,16 @@ void arith_init(void)
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-  reg_varl(intern(lit("*pi*"), user_package), flo(M_PI));
   reg_varl(intern(lit("%pi%"), user_package), flo(M_PI));
 #ifndef M_E
 #define M_E 2.71828182845904523536
 #endif
-  reg_varl(intern(lit("*e*"), user_package), flo(M_E));
   reg_varl(intern(lit("%e%"), user_package), flo(M_E));
+
+  if (opt_compat && opt_compat <= 199) {
+    reg_varl(intern(lit("*pi*"), user_package), flo(M_PI));
+    reg_varl(intern(lit("*e*"), user_package), flo(M_E));
+  }
 
   reg_fun(intern(lit("signum"), user_package), func_n1(signum));
 
