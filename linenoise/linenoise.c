@@ -681,7 +681,7 @@ static int history_search(lino_t *l)
     const wchar_t *fmt = L"[%ls]%ls";
     int ex = wcslen(fmt) - 2*wcslen(L"%ls");
     lino_t *lc = lino_copy(l), *ld = lino_copy(l);
-    int c = -1;
+    wint_t c = 0;
 
     if (lc == 0 || ld == 0)
         goto out;
