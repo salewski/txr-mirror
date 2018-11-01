@@ -4533,8 +4533,10 @@ void stream_init(void)
   reg_var(print_circle_s = intern(lit("*print-circle*"), user_package), nil);
 
 #if HAVE_ISATTY
-  if (isatty(fileno(stdin)) == 1)
+  if (isatty(fileno(stdin)) == 1) {
     stream_set_prop(std_input, real_time_k, t);
+    setbuf(stdin, 0);
+  }
 #endif
 
   reg_fun(format_s, func_n2v(formatv));
