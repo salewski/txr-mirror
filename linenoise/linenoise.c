@@ -1366,24 +1366,28 @@ static int find_nearest_paren(const wchar_t *s, int i)
     return nxt;
 }
 
-static void usec_delay(lino_t *l, long usec)
+static int usec_delay(lino_t *l, long usec)
 {
 #if HAVE_POLL
     struct pollfd pfd;
+
     pfd.fd = lino_os.fileno_fn(l->tty_ifs);
     pfd.events = POLLIN;
-    poll(&pfd, 1, usec/1000);
+    pfd.revents = 0;
+    return poll(&pfd, 1, usec/1000) == 1;
 #elif HAVE_POSIX_NANOSLEEP
     struct timespec ts;
     (void) l;
     ts.tv_sec = usec / 1000000;
     ts.tv_nsec = (usec % 1000000) * 1000;
     nanosleep(&ts, 0);
+    return 0;
 #elif HAVE_POSIX_USLEEP
     (void) l;
     if (u >= 1000000)
         sleep(u / 1000000);
     usleep(u % 1000000);
+    return 0;
 #else
 #error portme
 #endif
@@ -1408,20 +1412,20 @@ static void paren_jump(lino_t *l)
 
 static void flash(lino_t *l, int ch)
 {
-    int i;
+    int i, cancel = 0;
+    wchar_t on[2] = { ch };
+    const wchar_t *off = L"\b \b";
 
     if (l->dlen >= (int) nelem (l->data) - 1)
         return;
 
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < 2 && !cancel; i++) {
         if (i > 0)
+            cancel = usec_delay(l, LINENOISE_FLASH_DELAY);
+        lino_os.puts_fn(l->tty_ofs, on);
+        if (!cancel)
             usec_delay(l, LINENOISE_FLASH_DELAY);
-        l->data[l->dlen++] = ch;
-        l->data[l->dlen] = 0;
-        refresh_line(l);
-        usec_delay(l, LINENOISE_FLASH_DELAY);
-        l->data[--l->dlen] = 0;
-        refresh_line(l);
+        lino_os.puts_fn(l->tty_ofs, off);
     }
 }
 
@@ -2090,8 +2094,10 @@ static int edit(lino_t *l, const wchar_t *prompt)
                         l->error = lino_ioerr;
                         goto out;
                     }
-                    if (l->dpos == l->dlen)
+                    if (l->dpos == l->dlen) {
+                        refresh_line(l);
                         flash(l, '!');
+                    }
                     break;
                 }
                 if (l->mlmode)
@@ -2155,8 +2161,10 @@ static int edit(lino_t *l, const wchar_t *prompt)
                     l->error = lino_ioerr;
                     goto out;
                 }
-                if (!paste && l->dpos == l->dlen)
+                if (!paste && l->dpos == l->dlen) {
+                    refresh_line(l);
                     flash(l, '!');
+                }
                 break;
             }
             if (l->mlmode)
