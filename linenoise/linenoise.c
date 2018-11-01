@@ -1121,12 +1121,12 @@ static struct row_values screen_rows(const wchar_t *str, int pos, int cols)
     return out;
 }
 
-static int col_offset_in_str(const wchar_t *str, int pos)
+static int col_offset_in_str(const wchar_t *str, int pos, int cols)
 {
     int offs = 0;
     while (pos > 0 && str[--pos] != '\n')
         offs++;
-    return offs;
+    return offs % cols;
 }
 
 /* Multi line low level line refresh.
@@ -1199,7 +1199,7 @@ static void refresh_multiline(lino_t *l) {
 
     /* Move cursor to the correct column */
     {
-        int ccol = col_offset_in_str(l->buf, l->pos) % l->cols;
+        int ccol = col_offset_in_str(l->buf, l->pos, l->cols);
 
         /* Go up till we reach the expected positon. */
         if (rows - nrow > 0) {
