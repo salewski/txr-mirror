@@ -1506,9 +1506,15 @@ static int edit_insert(lino_t *l, wchar_t c) {
             l->dpos++;
             l->dlen++;
             l->data[l->dlen] = '\0';
-            if ((!l->mlmode && l->len == l->dlen && l->plen+l->len < l->cols)) {
-                /* Avoid a full update of the line in the
-                 * trivial case. */
+            if ((!l->mlmode && l->len == l->dlen && l->plen+l->len < l->cols) ||
+                (l->mlmode && l->dpos == l->dlen))
+            {
+                /* Avoid full line update in trivial situations.
+                 * single-line mode: line is shorter than cols (so no
+                 * horizontal scrolling) and no funny characters that
+                 * make the display length different from the buffer length.
+                 * multi-line-mode: we are just adding to the end.
+                 */
                 wchar_t str[2] = { c };
                 if (!lino_os.puts_fn(l->tty_ofs, str))
                     return -1;
