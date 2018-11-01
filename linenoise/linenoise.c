@@ -1233,6 +1233,8 @@ static void refresh_line(lino_t *ls) {
         refresh_multiline(ls);
     else
         refresh_singleline(ls);
+
+    ls->need_refresh = 0;
 }
 
 static int scan_match_rev(const wchar_t *s, int i, wchar_t mch)
@@ -1949,10 +1951,8 @@ static int edit(lino_t *l, const wchar_t *prompt)
 
         update_sel(l);
 
-        if (l->need_refresh) {
-            l->need_refresh = 0;
+        if (l->need_refresh)
             refresh_line(l);
-        }
 
         c = lino_os.getch_fn(l->tty_ifs);
 
