@@ -1237,6 +1237,51 @@ static void refresh_line(lino_t *ls) {
     ls->need_refresh = 0;
 }
 
+static void move_cursor_multiline(lino_t *l, int npos)
+{
+    wchar_t seq[64];
+    struct abuf ab;
+    struct row_values ro = (sync_data_to_buf(l),
+                            screen_rows(l->buf, l->pos, l->cols));
+    int odp = l->pos;
+    struct row_values rn = (l->dpos = npos,
+                            sync_data_to_buf(l),
+                            screen_rows(l->buf, l->pos, l->cols));
+    int ndp = l->pos;
+    int orow = ro.rows[1];
+    int nrow = rn.rows[1];
+    int ocol = col_offset_in_str(l->buf, odp, l->cols);
+    int ncol = col_offset_in_str(l->buf, ndp, l->cols);
+
+    ab_init(&ab);
+
+    if (nrow != orow) {
+        wcsnprintf(seq, 64, L"\x1b[%d%S", abs(orow - nrow),
+                   (nrow < orow) ? L"A" : L"B");
+        ab_append(&ab, seq, wcslen(seq));
+    }
+
+    if (ncol != ocol) {
+        wcsnprintf(seq, 64, L"\x1b[%d%S", abs(ocol - ncol),
+                   (ncol < ocol) ? L"D" : L"C");
+        ab_append(&ab, seq, wcslen(seq));
+    }
+
+    (void) lino_os.puts_fn(l->tty_ofs, ab.b);
+    ab_free(&ab);
+    l->dpos = npos;
+}
+
+static void move_cursor(lino_t *l, int npos)
+{
+    if (l->mlmode) {
+        move_cursor_multiline(l, npos);
+    } else {
+        l->dpos = npos;
+        refresh_line(l);
+    }
+}
+
 static int scan_match_rev(const wchar_t *s, int i, wchar_t mch)
 {
     while (i > 0) {
@@ -1404,11 +1449,13 @@ static void paren_jump(lino_t *l)
 
     if (pos != -1) {
         int dp = l->dpos;
-        l->dpos = pos;
-        refresh_line(l);
+        if (usec_delay(l, 0))
+            return;
+        if (l->need_refresh)
+            refresh_line(l);
+        move_cursor(l, pos);
         usec_delay(l, LINENOISE_PAREN_DELAY);
-        l->dpos = dp;
-        l->need_refresh = 1;
+        move_cursor(l, dp);
     }
 }
 
