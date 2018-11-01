@@ -342,7 +342,7 @@ static int get_columns(mem_t *ifs, mem_t *ofs) {
         if (!lino_os.puts_fn(ofs, L"\x1b[999C"))
             goto failed;
         cols = get_cursor_position(ifs, ofs);
-        if (cols == -1) goto failed;
+        if (cols <= 0) goto failed;
 
         /* Restore position. */
         if (cols > start) {
