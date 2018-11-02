@@ -1376,8 +1376,14 @@ val repl(val bindings, val in_stream, val out_stream)
 
   dyn_env = saved_dyn_env;
 
-  if (histfile_w)
-    lino_hist_save(ls, histfile_w);
+  if (histfile_w) {
+    val histfile_tmp = format(nil, lit("~a/.txr_history.tmp"), home, nao);
+    if (lino_hist_save(ls, c_str(histfile_tmp)) == 0)
+      rename_path(histfile_tmp, histfile);
+    else
+      put_line(lit("** unable to save history file"), out_stream);
+    gc_hint(histfile_tmp);
+  }
 
   free(line_w);
   lino_free(ls);
