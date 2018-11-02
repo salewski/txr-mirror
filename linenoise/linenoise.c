@@ -1275,6 +1275,9 @@ static void move_cursor_multiline(lino_t *l, int npos)
 
 static void move_cursor(lino_t *l, int npos)
 {
+    if (npos == l->dpos)
+        return;
+
     if (l->mlmode) {
         move_cursor_multiline(l, npos);
     } else {
