@@ -31300,8 +31300,8 @@ bindings can shadow macros.
   ;;
   (defmacro classify (sym :env e)
     (cond
-      ((lexical-var-p e expr) :lexical-var)
-      ((lexical-fun-p e expr) :lexical-fun)
+      ((lexical-var-p e sym) :lexical-var)
+      ((lexical-fun-p e sym) :lexical-fun)
       (t :not-lex-fun-var)))
 
   ;;
