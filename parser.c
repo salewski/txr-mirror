@@ -1220,7 +1220,7 @@ val repl(val bindings, val in_stream, val out_stream)
   val counter = one;
   val home = get_home_path();
   val histfile = if2(home, format(nil, lit("~a/.txr_history"), home, nao));
-  wchar_t *histfile_w = if3(home, chk_strdup(c_str(histfile)), NULL);
+  const wchar_t *histfile_w = if3(home, c_str(histfile), NULL);
   val rcfile = if2(home, format(nil, lit("~a/.txr_profile"), home, nao));
   val old_sig_handler = set_sig_handler(num(SIGINT), func_n2(repl_intr));
   val hist_len_var = lookup_global_var(listener_hist_len_s);
@@ -1379,7 +1379,6 @@ val repl(val bindings, val in_stream, val out_stream)
   if (histfile_w)
     lino_hist_save(ls, histfile_w);
 
-  free(histfile_w);
   free(line_w);
   lino_free(ls);
   gc_hint(histfile);
