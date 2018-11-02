@@ -1604,26 +1604,20 @@ static int edit_insert_str(lino_t *l, const wchar_t *s, int nchar)
 
 /* Move cursor on the left. */
 static void edit_move_left(lino_t *l) {
-    if (l->dpos > 0) {
-        l->dpos--;
-        l->need_refresh = 1;
-    }
+    if (l->dpos > 0)
+        move_cursor(l, l->dpos - 1);
 }
 
 /* Move cursor on the right. */
 static void edit_move_right(lino_t *l) {
-    if (l->dpos != l->dlen) {
-        l->dpos++;
-        l->need_refresh = 1;
-    }
+    if (l->dpos < l->dlen)
+        move_cursor(l, l->dpos + 1);
 }
 
 static void edit_move_home(lino_t *l)
 {
-    if (l->dpos != 0) {
-        l->dpos = 0;
-        l->need_refresh = 1;
-    }
+    if (l->dpos != 0)
+        move_cursor(l, 0);
 }
 
 static void edit_move_sol(lino_t *l) {
@@ -1635,21 +1629,17 @@ static void edit_move_sol(lino_t *l) {
         while (dpos > 0 && l->data[dpos-1] != '\r')
             dpos--;
 
-        if (l->dpos != dpos) {
-            l->dpos = dpos;
-            l->need_refresh = 1;
-        } else {
+        if (l->dpos != dpos)
+            move_cursor(l, dpos);
+        else
             edit_move_home(l);
-        }
     }
 }
 
 static void edit_move_end(lino_t *l)
 {
-    if (l->dpos != l->dlen) {
-        l->dpos = l->dlen;
-        l->need_refresh = 1;
-    }
+    if (l->dpos != l->dlen)
+        move_cursor(l, l->dlen);
 }
 
 static void edit_move_eol(lino_t *l) {
@@ -1660,12 +1650,10 @@ static void edit_move_eol(lino_t *l) {
 
         dpos += wcscspn(l->data + dpos, L"\r");
 
-        if (l->dpos != dpos) {
-            l->dpos = dpos;
-            l->need_refresh = 1;
-        } else {
+        if (l->dpos != dpos)
+            move_cursor(l, dpos);
+        else
             edit_move_end(l);
-        }
     }
 }
 
@@ -1676,17 +1664,16 @@ static void edit_move_matching_paren(lino_t *l)
     if (p != -1) {
         int fw = scan_fwd(l->data, p);
         int re = scan_rev(l->data, p);
+        int npos = l->dpos;
 
-        if (fw != -1) {
-            l->dpos = fw;
-            l->need_refresh = 1;
-        } else if (re != -1) {
-            l->dpos = re;
-            l->need_refresh = 1;
-        } else {
-            l->dpos = p;
-            l->need_refresh = 1;
-        }
+        if (fw != -1)
+            npos = fw;
+        else if (re != -1)
+            npos = re;
+        else
+            npos = p;
+
+        move_cursor(l, npos);
     }
 }
 
