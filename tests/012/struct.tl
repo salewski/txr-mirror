@@ -13,7 +13,7 @@
 (test ^#S(bar b ,(+ 2 2))
       #S(bar a 103 b 4))
 
-(test (sys:expand '^#S(bar b ,(+ 2 2)))
+(test (expand '^#S(bar b ,(+ 2 2)))
       (sys:make-struct-lit 'bar (list 'b (+ 2 2))))
 
 (defvar s (eval ^#S(bar b ,(+ 2 2))))
@@ -24,36 +24,36 @@
 (test s
       #S(bar a 100 b 4))
 
-(test (ignwarn (sys:expand 'a.b.c.d))
+(test (ignwarn (expand 'a.b.c.d))
       (slot (slot (slot a 'b)
                   'c) 'd))
 
-(test (sys:expand 's.a)
+(test (expand 's.a)
       (slot s 'a))
-(test (sys:expand 's.[a])
+(test (expand 's.[a])
       [(slot s 'a)])
-(test (sys:expand 's.[a b c])
+(test (expand 's.[a b c])
       [(slot s 'a) b c])
 
 (set *gensym-counter* 0)
-(stest (ignwarn (sys:expand 's.(a)))
+(stest (ignwarn (expand 's.(a)))
        "(call (slot s 'a)\n                     \
        \      s)")
 (set *gensym-counter* 0)
-(stest (ignwarn (sys:expand 's.(a b c)))
+(stest (ignwarn (expand 's.(a b c)))
        "(call (slot s 'a)\n                     \
        \      s b c)")
-(test (sys:expand 's.[a].d)
+(test (expand 's.[a].d)
       (slot [(slot s 'a)] 'd))
-(test (sys:expand 's.[a b c].d)
+(test (expand 's.[a b c].d)
       (slot [(slot s 'a) b c] 'd))
 (set *gensym-counter* 0)
-(stest (ignwarn (sys:expand 's.(a).d))
+(stest (ignwarn (expand 's.(a).d))
        "(slot (call (slot s 'a)\n               \
        \            s)\n                        \
        \      'd)")
 (set *gensym-counter* 0)
-(stest (ignwarn (sys:expand 's.(a b c).d))
+(stest (ignwarn (expand 's.(a b c).d))
        "(slot (call (slot s 'a)\n               \
        \            s b c)\n                    \
        \      'd)")
@@ -63,7 +63,7 @@
 (test (new foo) #S(foo a 42))
 
 (set *gensym-counter* 0)
-(stest (sys:expand '(defstruct (boa x y) nil
+(stest (expand '(defstruct (boa x y) nil
                       (x 0) (y 0)))
        "(sys:make-struct-type 'boa '() '()\n                                            \
        \                      '(x y) () (lambda (#:g0008)\n                             \

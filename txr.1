@@ -31264,6 +31264,297 @@ one or more argument forms to be treated in a Lisp-1 context, in situations
 when such a macro needs to itself expand the material, rather than merely
 insert it as-is into the output code template.
 
+.coNP Functions @ expand and @ *expand
+.synb
+.mets (expand < form <> [ env ])
+.mets (expand* < form <> [ env ])
+.syne
+.desc
+The functions
+.code expand
+and
+.code expand*
+both perform a complete expansion of
+.meta form
+in the macro-environment
+.metn env ,
+and return that expansion.
+
+If
+.meta env
+is omitted, the expansion takes place in the global environment in
+which only global macros are visible.
+
+The returned object is a structure that
+is devoid of any macro calls. Also, all
+.code macrolet
+and
+.code symacrolet
+blocks in form
+.meta form
+are removed in the returned structure, replaced by their fully
+expanded bodies.
+
+The difference between
+.code expand
+and
+.code expand*
+is that
+.code expand
+suppresses any warning exceptions that are issued during expansion.
+
+.coNP Function @ expand-with-free-refs
+.synb
+.mets (expand-with-free-refs < form >> [ inner-env <> [ outer-env ]])
+.syne
+.desc
+The
+.code expand-with-free-refs
+form performs a full expansion of
+.metn form ,
+as if by the
+.code expand
+function and returns a list containing that expansion, plus four additional
+items which provide information about variable and function references which
+occur in
+.metn form .
+
+If both
+.meta inner-env
+and
+.meta outer-env
+are provided, then it is expected that
+.meta inner-env
+is lexically nested within
+.metn outer-env .
+
+Note: it is not required that
+.meta outer-env
+be the immediate parent of
+.metn inner-env .
+
+Note: a common usage situation is that
+.meta outer-env
+is the environment of the invocation of a "parent" macro which generates a form
+that contains local macros. The bodies of those local macros use
+.codn expand-with-free-refs ,
+specifying their own environment as
+.meta inner-env
+and that of their generating "parent" as
+.metn outer-env .
+
+In detail, the five items of the returned list are
+.cblk
+.meti >> ( expansion < fv-inner < ff-inner < fv-outer << ff-outer )
+.cble
+whose descriptions are:
+.RS
+.meIP < expansion
+The full expansion of
+.metn form ,
+containing no macro invocations, or
+.code symacrolet
+or
+.code macrolet
+forms.
+.meIP < fv-inner
+A list of the free variables which occur in
+.meta form
+relative to the
+.meta inner-env
+environment. That is to say, variables that are not bound inside
+.meta form
+and are not also bound in
+.metn inner-env .
+If
+.meta inner-env
+is omitted, then these are the absolutely free variables
+occurring in
+.metn form .
+.meIP < ff-inner
+Exactly like
+.meta fv-inner
+but informing about function bindings rather than variables.
+.meIP < fv-outer
+A list of the variables which which occur in
+.meta form
+which would be free if the environments between
+.meta inner-env
+and
+.meta outer-env
+(including the former, excluding the latter)
+were removed from consideration. A more detailed description of this semantics
+is given below. If
+.meta outer-env
+is omitted, then these are the absolutely free variables
+occurring in
+.metn form ,
+ignoring the
+.metn inner-env .
+.meIP < ff-outer
+Exactly like
+.meta fv-outer
+but informing about function bindings rather than variables.
+.RE
+
+.IP
+The semantics of the treatment of
+.meta inner-env
+and
+.meta outer-env
+in the calculation of
+.meta fv-outer
+and
+.meta ff-outer
+is as follows.  A new environment
+.meta diff-env
+is calculated from these two environments, and
+.meta form
+is expanded in this environment. Variables and functions occurring in
+.meta form
+which are not bound in
+.meta diff-env
+are listed as
+.meta fv-outer
+and
+.metn ff-outer .
+
+This
+.meta diff-env
+is calculated as follows. First
+.meta diff-env
+is initialized as a copy of
+.metn outer-env .
+Then, all environments below
+.meta outer-env
+down to
+.meta inner-env
+are examined for bindings which shadow bindings in
+.metn diff-env .
+Those shadows are removed from
+.metn diff-env .
+Therefore, what remains in
+.meta diff-env
+are those bindings from
+.meta outer-env
+that are
+.I not
+shadowed by the environments between
+.meta inner-env
+and
+.metn outer-env .
+
+.TP* Example:
+
+Suppose that
+.code mac
+is a macro which somehow has access to the two indicated lexical environments
+in the following code snippet:
+
+.cblk
+  (let (a c) ;; <- outer-env
+    (let (b)
+      (let (c) ;; <- inner-env
+        (mac (list a b c d))))
+.cble
+
+Suppose that
+.code mac
+invokes the
+.code expand-with-free-refs
+function, passing in the
+.code "(list a b c d)"
+argument form as
+.code form
+and two macro-time environment objects corresponding to the indicated
+environments.
+
+The return value of
+.code expand-with-free-refs
+shall be:
+
+.cblk
+  ((list a b c d) (a d) (list) (b c d) (list))
+.cble
+
+The
+.meta fv-inner
+list is
+.code "(d)"
+because this is the only variable that occurs in
+.code "(list a b c d)"
+which is free with regard to
+.metn inner-env .
+The
+.codn a ,
+.code b
+and
+.code c
+variables are not listed because they appear bound inside
+.metn inner-env .
+
+The reported
+.meta fv-outer
+list is
+.code "(b c d)"
+because the form is considered against
+.meta diff-env
+which is formed by removing the shadowing bindings from
+.metn outer-env .
+The difference between
+.code "(a c)"
+and
+.code "(b c)"
+is
+.code a
+and so the form is considered in an environment containing the binding
+.code a
+which leaves
+.code "(b c d)"
+free.
+
+Note: this information is useful because a set difference can be calculated
+between the two reported sets. The set difference between the
+.meta fv-outer
+variables
+.code "(b c d)"
+and the
+.meta fv-inner
+variables
+.code "(d)"
+is
+.codn "(b c)" .
+
+That set difference
+.code "(b c)"
+is significant because it precisely informs about the
+.I bound
+variables which occur in
+.code "(list a b c d)"
+which appear bound in
+.metn inner-env ,
+but are not bound due to a binding coming from
+.metn outer-env .
+
+The variable
+.code d
+is not listed in
+.code "(b c)"
+because it is not a bound variable.
+The variable
+.code a
+is not in
+.code "(b c)"
+because though it is bound in
+.metn inner-env ,
+that binding comes from
+.metn outer-env .
+
+The upshot of this logic is that it allows a macro to inspect a form in order
+to discover the identities of the variables and functions which are used inside
+that form, whose definitions come from a specific, bounded scope surrounding
+that form.
+
 .coNP Functions @ lexical-var-p and @ lexical-fun-p
 .synb
 .mets (lexical-var-p < env << form )

@@ -375,9 +375,9 @@
                   (let* ((style (car form))
                          (ix (pinc (qref ,awc nranges)))
                          (rng-temp (gensym))
-                         (from-expr-ex (sys:expand from-expr e))
+                         (from-expr-ex (expand from-expr e))
                          (from-expr-val (gensym))
-                         (to-expr-ex (sys:expand to-expr e))
+                         (to-expr-ex (expand to-expr e))
                          (to-expr-val (gensym))
                          (vec-temp (qref ,awc rng-vec-temp))
                          (emul-broken (and (plusp sys:compat) (<= sys:compat 177)))
@@ -393,10 +393,8 @@
                                 (to-expr-ex te-fv te-ff te-ev te-ef)
                                 (from-expr-orig to-expr-orig))
                                (list
-                                 (sys:expand-with-free-refs from-expr e
-                                                            ,awc.outer-env)
-                                 (sys:expand-with-free-refs to-expr e
-                                                            ,awc.outer-env)
+                                 (expand-with-free-refs from-expr e ,awc.outer-env)
+                                 (expand-with-free-refs to-expr e ,awc.outer-env)
                                  (list (cadr form) (caddr form)))
                       (sys:awk-code-move-check ,awc ',aws-sym
                                                form from-expr-orig
@@ -479,7 +477,7 @@
       (let* ((p-actions-xform-unex (mapcar (aret ^(when (sys:awk-test ,@1 rec)
                                                     ,*@rest))
                                            awc.cond-actions))
-             (p-actions-xform (sys:expand
+             (p-actions-xform (expand
                                 ^(sys:awk-mac-let ,awc ,aws-sym
                                    ,*p-actions-xform-unex)
                                 (sys:awk-fun-shadowing-env outer-env))))

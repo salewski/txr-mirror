@@ -71,7 +71,7 @@
                            ,*(if do-nested-metas
                                ^((,(slot ctx 'meta) ((quote arg)) arg))))
                   ,op-args)))
-    (sys:expand code e)))
+    (expand code e)))
 
 (defun sys:op-expand (f e args)
   (let* ((ctx (make-struct 'sys:op-ctx ^(form ,f)))

@@ -22,7 +22,7 @@
 
    (prinl
      (ignwarn
-       (sys:expand
+       (expand
          '(whilst ((< i 100))
             (if (< (inc i) 20)
               continue)
