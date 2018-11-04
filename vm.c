@@ -991,7 +991,7 @@ NOINLINE static val vm_execute(struct vm *vm)
     case GETV:
       vm_getsym(vm, insn, lookup_var, lit("variable"));
       break;
-    case GETF:
+    case OLDGETF:
       vm_getsym(vm, insn, lookup_fun, lit("function"));
       break;
     case GETL1:
@@ -1023,6 +1023,9 @@ NOINLINE static val vm_execute(struct vm *vm)
       break;
     case SETLX:
       vm_settab(vm, insn, lookup_var, lit("variable"));
+      break;
+    case GETF:
+      vm_gettab(vm, insn, lookup_fun, lit("function"));
       break;
     default:
       uw_throwf(error_s, lit("invalid opcode ~s"), num_fast(opcode), nao);

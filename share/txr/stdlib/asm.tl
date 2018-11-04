@@ -691,7 +691,7 @@
   (:method dis (me asm name reg)
     ^(,me.symbol ,(operand-to-sym reg) ,(small-op-to-sym name))))
 
-(defopcode-derived op-getf getf auto op-getv)
+(defopcode-derived op-oldgetf oldgetf auto op-getv)
 
 (defopcode-derived op-getl1 getl1 auto op-getv)
 
@@ -778,6 +778,8 @@
            asm.(put-insn me.code (enc-small-op 1) idx)))))
   (:method dis (me asm src idx)
     ^(,me.symbol ,(operand-to-sym src) ,idx)))
+
+(defopcode-derived op-getf getf auto op-getlx)
 
 (defun disassemble-cdf (code data funv *stdout*)
   (let ((asm (new assembler buf code)))

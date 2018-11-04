@@ -57,7 +57,7 @@ typedef enum vm_op {
   CATCH = 28,
   HANDLE = 29,
   GETV = 30,
-  GETF = 31,
+  OLDGETF = 31,
   GETL1 = 32,
   GETVB = 33,
   GETFB = 34,
@@ -68,4 +68,5 @@ typedef enum vm_op {
   CLOSE = 39,
   GETLX = 40,
   SETLX = 41,
+  GETF = 42,
 } vm_op_t;

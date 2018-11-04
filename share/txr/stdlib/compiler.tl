@@ -26,6 +26,8 @@
 
 (load "vm-param")
 
+(defvarl assumed-fun)
+
 (defstruct (frag oreg code : fvars ffuns) nil
   oreg
   code
@@ -916,8 +918,7 @@
   (mac-param-bind form (op sym) form
     (iflet ((fbin env.(lookup-fun sym t)))
       (new (frag fbin.loc nil nil (list sym)))
-      (let ((dreg me.(get-dreg sym)))
-        (new (frag oreg ^((getf ,oreg ,dreg)) nil (list sym)))))))
+      (new (frag oreg ^((getf ,oreg ,me.(get-sidx sym))) nil (list sym))))))
 
 (defmeth compiler comp-progn (me oreg env args)
   (let* (ffuns fvars
@@ -1169,23 +1170,43 @@
   (mac-param-bind form (op arg) form
     (cond
       ((bindable arg)
-       (condlet
-         (((bind env.(lookup-lisp1 arg t)))
-          (new (frag bind.loc
-                     nil
-                     (if (typep bind 'vbinding) (list arg))
-                     (if (typep bind 'fbinding) (list arg)))))
-        (t (new (frag oreg
-                      ^((getl1 ,oreg ,me.(get-dreg arg)))
-                      (list arg)
-                      (list arg))))))
+       (let ((bind env.(lookup-lisp1 arg t)))
+         (cond
+           (bind
+             (new (frag bind.loc
+                        nil
+                        (if (typep bind 'vbinding) (list arg))
+                        (if (typep bind 'fbinding) (list arg)))))
+           ((not (boundp arg))
+            (pushnew arg assumed-fun)
+            (new (frag oreg
+                       ^((getf ,oreg ,me.(get-sidx arg)))
+                       nil
+                       (list arg))))
+           ((special-var-p arg)
+            (new (frag oreg
+                       ^((getv ,oreg ,me.(get-dreg arg)))
+                       (list arg)
+                       nil)))
+           (t (new (frag oreg
+                       ^((getlx ,oreg ,me.(get-sidx arg)))
+                       (list arg)
+                       nil))))))
       (t me.(compile oreg env arg)))))
 
 (defmeth compiler comp-dwim (me oreg env form)
   (mac-param-bind form (op obj . args) form
-    (let ((l1-exprs (cdr form)))
+    (let* ((l1-exprs (cdr form))
+           (fun (car l1-exprs))
+           (bind env.(lookup-lisp1 fun nil)))
       me.(compile oreg env
-                  ^(call ,*(mapcar (op list 'sys:lisp1-value) l1-exprs))))))
+                  (if (and (symbolp fun)
+                           (not bind)
+                           (not (boundp fun)))
+                    (progn
+                      (pushnew fun assumed-fun)
+                      ^(,fun ,*(mapcar (op list 'sys:lisp1-value) (cdr l1-exprs))))
+                    ^(call ,*(mapcar (op list 'sys:lisp1-value) l1-exprs)))))))
 
 (defmeth compiler comp-prof (me oreg env form)
   (mac-param-bind form (op . forms) form
@@ -1536,6 +1557,15 @@
       as.(asm ^(,*(mappend .code (nreverse co.lt-frags)) ,*frag.code (end ,frag.oreg)))
       (vm-make-desc co.nlev (succ as.max-treg) as.buf co.(get-datavec) co.(get-symvec)))))
 
+(defun compiler-emit-warnings ()
+  (let ((warn-fun [keep-if boundp (zap assumed-fun)]))
+    (when warn-fun
+      (usr:catch
+        (throw 'warning
+               `uses of @{warn-fun ", "} compiled as functions,\
+               \ then defined as vars`)
+        (continue ())))))
+
 (defvarl %file-suff-rx% #/[.][^\\\/.]+/)
 
 (defvar *emit*)
@@ -1544,7 +1574,7 @@
 
 (defvarl %big-endian% (equal (ffi-put 1 (ffi uint32)) #b'00000001'))
 
-(defvarl %tlo-ver% ^(3 0 ,%big-endian%))
+(defvarl %tlo-ver% ^(4 0 ,%big-endian%))
 
 (defun open-compile-streams (in-path out-path)
   (let* ((rsuff (r$ %file-suff-rx% in-path))
@@ -1588,7 +1618,8 @@
        (unwind-protect
          (progn ,*body)
          (unless ,rec
-           (release-deferred-warnings))))))
+           (release-deferred-warnings)
+           (compiler-emit-warnings))))))
 
 (defun usr:compile-file (in-path : out-path)
   (let ((streams (open-compile-streams in-path out-path))

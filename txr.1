@@ -62644,17 +62644,19 @@ file name suffix) is translated into an object file (named with a
 .code .tlo
 suffix) containing a compiled version of those forms.
 
-The key concept is that loading the compiled
+The intent is that loading the compiled
 .code .tlo
 file via the
 .code load
 function produces the same effect as loading the
 .code .tl
-file (except when special arrangements are deliberately put in place for
-different behaviors to occur). The difference is that the compiled file
+file. The main difference is that the compiled file
 contains no Lisp source code; only the machine code instructions for the
 virtual machine, and some accompanying data such as literals and referenced
-symbols.
+symbols. Note that the behavior of compiled code can differ from interpreted
+code in a number of ways. Differences in behavior can be deliberately induced.
+Certain erroneous or dubious situations can also cause compiled code to behave
+differently from interpreted code.
 
 Compilation not only provides faster execution. Compiled files load much
 faster.  Compiled files can be distributed unaccompanied by the source files,
@@ -62852,6 +62854,79 @@ Versions 193 through 198 produce version 2 compiled files and load only
 that version.
 
 Version 199 produces version 3 files and loads version 2 or 3.
+
+Version 200 produces version 4 files and loads version 2, 3 or 4.
+
+.SS* Semantic Differences between Compilation and Interpretation
+
+The
+.code compile-only
+and
+.code eval-only
+operators can be used to deliberately produce code which behaves differently
+when compiled and interpreted. In addition, unwanted differences in behavior
+can also occur. The situations are summarized below.
+
+Forms evaluated by
+.code load-time
+are treated differently by the compiler. When a top-level form is compiled,
+its embedded
+.code load-time
+forms are factored out such that the compiled image of the top-level form
+will evaluate these forms before other evaluations take place.
+The interpreter doesn't perform this factoring; it evaluates a
+.code load-time
+form when it encounters it for the first time.
+
+Unbound variables are treated differently by the compiler. A reference
+to an unbound variable is treated as a global lexical access. This means that
+if a variable access is compiled first and then a
+.code defvar
+is processed which introduces the variable as a dynamically scoped ("special")
+variable, the compiled code will not treat the variable as special; it
+will refer to the global binding of the variable, even when a dynamic binding
+for that variable exists.  The interpreter treats all variable references
+that do not have lexical bindings as referring to dynamic variables.
+The compiler treats a variable as dynamic if a
+.code defvar
+has been processed which marked that variable as special.
+
+Arguments of a
+.code dwim
+form (or the equivalent bracket notation) which are unbound
+symbols are treated differently by the
+compiler. The code is compiled under the assumption that all such symbols
+refer to global functions. For instance, if neither
+.code f
+nor
+.code x
+are defined, then
+.code "[f x]"
+will be compiled under the assumption that they are functions.  If they are
+later defined as variables, the compiled code will fail because no function
+named
+.code x
+exists. The interpreter resolves each symbol in a
+.code dwim
+form at the time the form is being executed. If a symbol is defined
+as a variable at that time, it is accessed as a variable. If it defined as a
+function, it is accessed as a function.
+
+The symbolic arguments of a
+.code dwim
+form that refer to global bindings are also treated differently by the compiler.
+For each such symbol, the compiler determines whether it refers to a
+function or variable and, further, whether the variable is global lexical or
+special. This treatment of the symbol is then cemented in the compiled code;
+the compiled code will treat that symbol that way regardless of the
+run-time situation. By contrast, the interpreter performs this classification
+each time the arguments of a
+.code dwim
+form are evaluated. The rules are otherwise the same: if the symbol is bound as
+a variable, it is treated as a variable. If it is bound as a function, it is
+treated as a function. If it has both bindings, it is treated as a variable.
+The difference is that this is resolved at compile time for compiled code,
+and at evaluation time for interpreted code.
 
 .SS* Compilation Library
 
