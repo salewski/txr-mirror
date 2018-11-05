@@ -129,6 +129,7 @@ val make_duplicate_buf(val len, mem_t *data)
   return obj;
 }
 
+
 static struct buf *buf_handle(val buf, val ctx)
 {
   if (type(buf) == BUF)

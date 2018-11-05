@@ -1,3 +1,48 @@
+                                    TXR 200
+                                   2018-11-05
+
+
+  Features
+
+  lib:
+  - The form expander is now a public, documented feature,
+    including expand-with-free-refs, which informs about free variables
+    occurring in a form.
+  - New copy-buf function, called by copy for buf objects.
+
+  compiler:
+  - Better code generation for dwim forms.
+    - global functions and global lexical variables in dwim
+      forms are handled more efficiently.
+      - no more lisp-1-style dynamic lookup at run-time; compiler resolves
+        references to function or variable bindings.
+    - a global function in the first position is dispatched the same as a
+      regular call, resolved at compile time to the function binding; so
+      [mapcar list '(1 2 3)] generates exactly the same code as
+      (mapcar (fun list) '(1 2 3)) using the gcall instruction.
+
+  listener:
+  - performance improvements in multi-line edit mode:
+    - refresh operations are avoided for cursor movements, incomplete line
+      warning flash, and character appends at the end of the line.
+    - much better copy and paste experience, and better experience on
+      slow/lagged remote connections and serial lines.
+  - uses temporary file for saving history.
+
+  doc:
+  - HTML table of contents "collapse all" logic doesn't
+    hide the entire table, keeping the major sections visible.
+
+  Bugs:
+
+  - listener:
+    - fixed abort on window resize (regression from Unicode work
+      earlier in the year).
+    - history now saved using temp file which is renamed after
+      being successfully written.
+
+
+
                                     TXR 199
                                    2018-10-28
 
