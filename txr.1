@@ -26177,6 +26177,12 @@ is a structure, it returns
 .cble
 If
 .meta object
+is a buffer, it returns
+.cblk
+.meti (copy-buf << object ).
+.cble
+If
+.meta object
 is a
 .codn carray ,
 it returns
@@ -56984,6 +56990,22 @@ If
 .meta init-val
 is specified, its value must be in the range 0 to 255.
 It defaults to zero.
+
+.coNP Function @ copy-buf
+.synb
+.mets (copy-buf << buf )
+.syne
+.desc
+The
+.code copy-buf
+function returns a duplicate of
+.metn buf :
+an object distinct from
+.meta buf
+which has the same length and contents, and compares
+.code equal
+to
+.metn buf .
 
 .coNP Function @ buf-put-i8
 .synb

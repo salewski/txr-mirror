@@ -137,6 +137,14 @@ static struct buf *buf_handle(val buf, val ctx)
             ctx, buf, nao);
 }
 
+val copy_buf(val buf)
+{
+  struct buf *b = buf_handle(buf, lit("copy-buf"));
+  return if3(b->size,
+             make_duplicate_buf(b->len, b->data),
+             make_borrowed_buf(b->len, b->data));
+}
+
 static void buf_grow(struct buf *b, val init_val, val self)
 {
   cnum len = c_num(b->len);
@@ -935,6 +943,7 @@ void buf_init(void)
   reg_fun(intern(lit("buf-trim"), user_package), func_n1(buf_trim));
   reg_fun(intern(lit("buf-set-length"), user_package), func_n3o(buf_set_length, 2));
   reg_fun(intern(lit("length-buf"), user_package), func_n1(length_buf));
+  reg_fun(intern(lit("copy-buf"), user_package), func_n1(copy_buf));
 
 #if HAVE_I8
   reg_fun(intern(lit("buf-put-i8"), user_package), func_n3(buf_put_i8));

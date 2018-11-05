@@ -30,6 +30,7 @@ val bufp(val object);
 val make_borrowed_buf(val len, mem_t *data);
 val init_borrowed_buf(obj_t *buf, val len, mem_t *data);
 val make_duplicate_buf(val len, mem_t *data);
+val copy_buf(val buf);
 val buf_trim(val buf);
 val buf_set_length(val obj, val len, val init_val);
 val length_buf(val buf);
