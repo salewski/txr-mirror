@@ -1576,6 +1576,12 @@
 
 (defvarl %tlo-ver% ^(4 0 ,%big-endian%))
 
+(defvarl %package-manip% '(make-package delete-package
+                           use-package unuse-package
+                           set-package-fallback-list
+                           intern unintern rehome-sym
+                           use-sym unuse-sym))
+
 (defun open-compile-streams (in-path out-path)
   (let* ((rsuff (r$ %file-suff-rx% in-path))
          (suff (if rsuff [in-path rsuff]))
@@ -1649,19 +1655,26 @@
                          (t (when (and (or *eval* *emit*)
                                        (not (constantp form)))
                               (let* ((vm-desc (compile-toplevel form))
-                                     (flat-vd (list-from-vm-desc vm-desc)))
+                                     (flat-vd (list-from-vm-desc vm-desc))
+                                     (fence (member (car form) %package-manip%)))
                                 (when *eval*
-                                  (sys:vm-execute-toplevel vm-desc))
+                                  (let ((pa *package-alist*))
+                                    (sys:vm-execute-toplevel vm-desc)
+                                    (when (or (neq pa *package-alist*))
+                                      (set fence t))))
                                 (when *emit*
-                                  out.(add flat-vd))))))))))
+                                  out.(add flat-vd)
+                                  (when fence
+                                    out.(add :fence)))))))))))
           (prinl %tlo-ver% out-stream)
           (unwind-protect
             (whilet ((obj (read in-stream *stderr* err-ret))
                      ((neq obj err-ret)))
               (compile-form obj))
-            (let ((*print-circle* t)
-                  (*package* (sys:make-anon-package)))
-              (prinl out.(get) out-stream)
+            (let* ((*print-circle* t)
+                   (*package* (sys:make-anon-package))
+                   (out-forms (split* out.(get) (op where (op eq :fence)))))
+              [mapdo (op prinl @1 out-stream) out-forms]
               (delete-package *package*)))
 
           (let ((parser (sys:get-parser in-stream)))

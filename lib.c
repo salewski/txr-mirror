@@ -5226,7 +5226,7 @@ val delete_package(val package_in)
   val package = get_package(lit("delete-package"), package_in, nil);
   val iter;
   loc cpll = cur_package_alist_loc;
-  set(cpll, alist_nremove1(deref(cpll), package->pk.name));
+  set(cpll, alist_remove1(deref(cpll), package->pk.name));
   for (iter = deref(cpll); iter; iter = cdr(iter))
     unuse_package(package, cdar(iter));
   return nil;

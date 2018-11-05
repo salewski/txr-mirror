@@ -62889,6 +62889,8 @@ operators can be used to deliberately produce code which behaves differently
 when compiled and interpreted. In addition, unwanted differences in behavior
 can also occur. The situations are summarized below.
 
+.coNP Differences due to @ load-time
+
 Forms evaluated by
 .code load-time
 are treated differently by the compiler. When a top-level form is compiled,
@@ -62899,6 +62901,8 @@ will evaluate these forms before other evaluations take place.
 The interpreter doesn't perform this factoring; it evaluates a
 .code load-time
 form when it encounters it for the first time.
+
+.coNP Treatment of unbound variables
 
 Unbound variables are treated differently by the compiler. A reference
 to an unbound variable is treated as a global lexical access. This means that
@@ -62912,6 +62916,8 @@ that do not have lexical bindings as referring to dynamic variables.
 The compiler treats a variable as dynamic if a
 .code defvar
 has been processed which marked that variable as special.
+
+.coNP Unbound symbols in @ dwim
 
 Arguments of a
 .code dwim
@@ -62949,6 +62955,84 @@ a variable, it is treated as a variable. If it is bound as a function, it is
 treated as a function. If it has both bindings, it is treated as a variable.
 The difference is that this is resolved at compile time for compiled code,
 and at evaluation time for interpreted code.
+
+.coNP File-wide insertion of gensyms
+
+The following degenerate situation occurs, illustrated by example. Suppose the
+following definitions are given:
+
+.cblk
+  (defvarl %gensym%)
+
+  (defmacro define-secret-fun ((. args) . body)
+    (set %gensym% (gensym))
+    ^(defun ,%gensym% (,*args) ,*body))
+
+  (defmacro call-secret-fun (. args)
+    ^(,%gensym% ,*args))
+.cble
+
+The idea is to be able to define a function whose name is an uninterned
+symbol and then call it. An example module might use these definitions as
+follows:
+
+.cblk
+  (define-secret-fun (a) (put-line `a is @a`))
+
+  (call-secret-fun 42)
+.cble
+
+The effect is that the second top-level form calls the function, which
+prints 42 to standard out. This works both interpreted and compiled with
+.codn compile-file .
+Each of these two macro calls generates a top-level form into which
+the same gensym is inserted. This works under file compilation due to a
+deliberate strategy in the layout of compiled files, which allows such
+uses. Namely, the file compiler combines multiple top-level forms are combined
+into a single object, which is read at once, and which uses the circle
+notation to unify gensym references.
+
+However, suppose the following change is introduced:
+
+.cblk
+  (define-secret-fun (a) (put-line `a is @a`))
+
+  (defpackage foo) ;; newly inserted form
+
+  (call-secret-fun 42)
+.cble
+
+This still works interpreted, and appears to compiles. However, when the
+compiled file is loaded, the compiled version of the
+.code call-secret-fun
+form fails with an error complaining that the
+.code #:g0039
+(or other gensym name) function is not defined.
+
+This is because for this modified source file, the file compiler is not
+able to combine the compiled forms into a single object. It would not
+be correct to do so in the presence of the
+.code defpackage
+form, because the evaluation of that form affects the subsequent interpretation
+of symbols. After the package definition is executed, it is possible for
+a subsequent top-level form to refer to a symbol in the
+.code foo
+package such as
+.code foo:bar
+to occur, which would be erroneous if the package didn't exist.
+
+The file compiler therefore arranges for the compiled forms after the
+.code defpackage
+to be emitted into a separate object. But that division in the output file
+consequently prevents the occurrences of the gensym to resolve to the same
+symbol object.
+
+In other words, the strategy for allowing global gensym use is in conflict
+with support for forms which have a necessary read-time effect such as
+.codn defpackage .
+
+The solution is to rearrange the file to unravel the interference, or
+to use interned symbols instead of gensyms.
 
 .SS* Compilation Library
 
