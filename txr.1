@@ -56486,6 +56486,14 @@ stream.  The
 directive behaves as it does when no more arguments
 are available.
 
+If the source or compiled file begins with the characters
+.codn #! ,
+usually indicating "hash bang" script,
+.code load
+reads reads the first line of the file and discards it.
+Processing of the file then begins with the first byte
+following that line.
+
 .coNP Special variable @ *load-path*
 .desc
 The
