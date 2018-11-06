@@ -2857,9 +2857,8 @@ val cons(val car, val cdr)
   if (recycled_conses) {
     obj = recycled_conses;
     recycled_conses = recycled_conses->c.cdr;
-#if CONFIG_GEN_GC
-    gc_mutated(obj);
-#endif
+    setcheck(obj, car);
+    setcheck(obj, cdr);
   } else {
     obj = make_obj();
     obj->c.type = CONS;

@@ -271,7 +271,7 @@ static val vm_make_closure(struct vm *vm, int frsz)
         cdi->mem = heap_vec->v.vec;
         memcpy(cdi->mem, mem, size);
         memset(mem, 0, size);
-        mut(closure);
+        setcheck(closure, heap_vec);
         *sdi = *cdi;
         break;
       }
@@ -357,7 +357,7 @@ INLINE void vm_set(struct vm_env *dspl, unsigned ref, val newval)
   env->mem[i] = newval;
 
   if (is_ptr(env->vec))
-    mut(env->vec);
+    setcheck(env->vec, newval);
 }
 
 INLINE void vm_sm_set(struct vm_env *dspl, unsigned ref, val newval)
@@ -372,7 +372,7 @@ INLINE void vm_sm_set(struct vm_env *dspl, unsigned ref, val newval)
   env->mem[i] = newval;
 
   if (is_ptr(env->vec))
-    mut(env->vec);
+    setcheck(env->vec, newval);
 }
 
 
@@ -505,7 +505,7 @@ static loc vm_stab(struct vm *vm, unsigned fun,
     eval_error(vd->bytecode,
                lit("~a ~s is not defined"), kind_str,
                vecref(vd->symvec, num(fun)), nao);
-  gc_mutated(vd->self);
+  setcheck(vd->self, fe->bind);
   return (fe->bindloc = cdr_l(fe->bind));
 }
 

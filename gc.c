@@ -820,25 +820,27 @@ int gc_is_reachable(val obj)
 
 #if CONFIG_GEN_GC
 
-val gc_set(loc lo, val obj)
+void gc_assign_check(val p, val c)
 {
-  val *ptr = valptr(lo);
-
-  if (lo.obj && is_ptr(obj) && lo.obj->t.gen == 1 && obj->t.gen == 0 && !full_gc) {
+  if (p && is_ptr(c) && p->t.gen == 1 && c->t.gen == 0 && !full_gc) {
     if (checkobj_idx < CHECKOBJ_VEC_SIZE) {
-      obj->t.gen = -1;
-      checkobj[checkobj_idx++] = obj;
+      c->t.gen = -1;
+      checkobj[checkobj_idx++] = c;
     } else if (gc_enabled) {
       gc();
-      /* obj can't be in gen 0 because there are no baby objects after gc */
+      /* c can't be in gen 0 because there are no baby objects after gc */
     } else {
       /* We have no space to in checkobj record this backreference, and gc is
          not available to promote obj to gen 1. We must schedule a full gc. */
       full_gc = 1;
     }
   }
+}
 
-  *ptr = obj;
+val gc_set(loc lo, val obj)
+{
+  gc_assign_check(lo.obj, obj);
+  *valptr(lo) = obj;
   return obj;
 }
 
@@ -861,7 +863,6 @@ val gc_mutated(val obj)
 
   return obj;
 }
-
 
 val gc_push(val obj, loc plist)
 {

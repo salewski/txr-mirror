@@ -697,7 +697,7 @@ val clear_struct(val strct, val value)
   for (i = 0; i < st->nslots; i++)
     si->slot[i] = clear_val;
 
-  mut(strct);
+  setcheck(strct, clear_val);
 
   return strct;
 }

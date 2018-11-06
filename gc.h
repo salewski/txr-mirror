@@ -43,6 +43,7 @@ val gc_call_finalizers(val obj);
 #if CONFIG_GEN_GC
 val gc_set(loc, val);
 val gc_push(val, loc);
+void gc_assign_check(val p, val c);
 val gc_mutated(val);
 extern int full_gc;
 #endif
