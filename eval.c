@@ -4241,6 +4241,9 @@ val load(val target)
 
   open_txr_file(path, &txr_lisp_p, &name, &stream);
 
+  if (!match_str(or2(get_line(stream), lit("")), lit("#!"), nil))
+    seek_stream(stream, zero, from_start_k);
+
   uw_simple_catch_begin;
 
   dyn_env = make_env(nil, nil, dyn_env);
