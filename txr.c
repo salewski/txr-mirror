@@ -192,17 +192,21 @@ static void hint(void)
 static val check_hash_bang(val stream, val args)
 {
   val line = get_line(stream);
-  if (match_str(line, lit("#!"), nil)) {
-    val pos = search_str(line, lit("\xdc00"), nil, nil);
 
-    if (pos) {
-      val after_null = sub_str(line, succ(pos), t);
-      val prepend_args = split_str(after_null, lit(" "));
-      args = nappend2(prepend_args, args);
+  if (line) {
+    if (match_str(line, lit("#!"), nil)) {
+      val pos = search_str(line, lit("\xdc00"), nil, nil);
+
+      if (pos) {
+        val after_null = sub_str(line, succ(pos), t);
+        val prepend_args = split_str(after_null, lit(" "));
+        args = nappend2(prepend_args, args);
+      }
+    } else {
+      seek_stream(stream, zero, from_start_k);
     }
-  } else {
-    seek_stream(stream, zero, from_start_k);
   }
+
   return args;
 }
 
