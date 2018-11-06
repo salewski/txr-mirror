@@ -94,7 +94,6 @@ syn match txr_error "@at\\[xo]"
 syn match txr_char "@at\\x[@hex]\+;\?"
 syn match txr_char "@at\\[@oct]\+;\?"
 syn match txr_regdir "@at/\(\\/\|[^/]\|\\\n\)*/"
-syn match txr_hashbang "^#!.*"
 @    (end)
 @  (end)
 @  (output :continue out)
@@ -116,6 +115,8 @@ syn match txr_chr "#\\o[@oct]\+"@(if txr-p " contained")
 syn match txr_chr "#\\[^ \t\n@alnum]"@(if txr-p " contained")
 syn match txr_chr "#\\[@alnum]\+"@(if txr-p " contained")
 syn match txr_ncomment ";.*"@(if txr-p " contained")
+
+syn match txr_hashbang "\%^#!.*"
 
 syn match txr_dot "\." contained
 syn match txr_ident "[@alnum@glyph]*[@alpha@glyph^][@alnum@glyph^]*" contained
