@@ -5447,7 +5447,7 @@ val symbol_visible(val package, val sym)
 /* symbol_needs_prefix assumes the perspective that package
  * is the current package!
  */
-val symbol_needs_prefix(val package, val sym)
+val symbol_needs_prefix(val self, val package, val sym)
 {
   val name = symbol_name(sym);
   type_check (package, PKG);
@@ -11017,7 +11017,7 @@ static int unquote_star_check(val obj, val pretty)
     return 0;
   if (car(obj->s.name) != chr('*'))
     return 0;
-  return pretty || !symbol_needs_prefix(cur_package, obj);
+  return pretty || !symbol_needs_prefix(lit("print"), cur_package, obj);
 }
 
 val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
@@ -11284,7 +11284,7 @@ dot:
         put_string(lit("#:"), out);
       } else if (obj->s.package == keyword_package) {
         put_char(chr(':'), out);
-      } else if (symbol_needs_prefix(cur_package, obj)) {
+      } else if (symbol_needs_prefix(lit("print"), cur_package, obj)) {
         put_string(obj->s.package->pk.name, out);
         put_char(chr(':'), out);
       }
