@@ -329,23 +329,6 @@ val throw_mismatch(val self, val obj, type_t t)
   type_mismatch(lit("~a: ~s is not of type ~s"), self, obj, code2type(t), nao);
 }
 
-val type_check2(val obj, int t1, int t2)
-{
-  if (!is_ptr(obj) || (obj->t.type != t1 && obj->t.type != t2))
-    type_mismatch(lit("~s is not of type ~s or ~s"), obj,
-                  code2type(t1), code2type(t2), nao);
-  return t;
-}
-
-val type_check3(val obj, int t1, int t2, int t3)
-{
-  if (!is_ptr(obj) || (obj->t.type != t1 && obj->t.type != t2
-                       && obj->t.type != t3))
-    type_mismatch(lit("~s is not of type ~s, ~s nor ~s"), obj,
-                  code2type(t1), code2type(t2), code2type(t3), nao);
-  return t;
-}
-
 val class_check(val cobj, val class_sym)
 {
   type_assert (is_ptr(cobj) && cobj->t.type == COBJ &&

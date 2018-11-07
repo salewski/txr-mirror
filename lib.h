@@ -515,8 +515,6 @@ INLINE val type_check(val self, val obj, type_t typecode)
     throw_mismatch(self, obj, typecode);
   return t;
 }
-val type_check2(val obj, int, int);
-val type_check3(val obj, int, int, int);
 val class_check(val cobj, val class_sym);
 val car(val cons);
 val cdr(val cons);
