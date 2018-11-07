@@ -2844,7 +2844,7 @@ mem_t *chk_xalloc(ucnum m, ucnum n, val self)
   size_t size = mn;
 
   if ((m > 0 && mn / m != n) || (ucnum) size != mn)
-    uw_throwf(error_s, lit("~s: memory allocation size overflow"),
+    uw_throwf(error_s, lit("~a: memory allocation size overflow"),
               self, nao);
 
   return chk_malloc(size);
@@ -3640,10 +3640,10 @@ val string_extend(val str, val tail)
     else if (integerp(tail))
       delta = c_fixnum(tail, self);
     else
-      uw_throwf(error_s, lit("~s: tail ~s bad type"), self, str, nao);
+      uw_throwf(error_s, lit("~a: tail ~s bad type"), self, str, nao);
 
     if (NUM_MAX - delta - 1 < len)
-      uw_throwf(error_s, lit("~s: overflow"), self, nao);
+      uw_throwf(error_s, lit("~a: overflow"), self, nao);
 
     needed = len + delta + 1;
 
@@ -5494,7 +5494,7 @@ val find_symbol(val str, val package_in)
   val found, sym;
 
   if (!stringp(str))
-    uw_throwf(error_s, lit("~s: name ~s isn't a string"), self, str, nao);
+    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
 
   if ((sym = gethash_f(package->pk.symhash, str, mkcloc(found))) || found)
     return sym;
@@ -5605,7 +5605,7 @@ val intern_fallback(val str, val package_in)
   val fblist = get_hash_userdata(package->pk.symhash);
 
   if (!stringp(str))
-    uw_throwf(error_s, lit("~s: name ~s isn't a string"), self, str, nao);
+    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
 
   if (fblist) {
     val found;

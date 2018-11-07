@@ -3158,13 +3158,13 @@ static val make_ffi_type_enum(val syntax, val enums,
     if (symbolp(en)) {
       val sym = en;
       if (!bindable(sym))
-        uw_throwf(error_s, lit("~s: ~s member ~s isn't a bindable symbol"),
+        uw_throwf(error_s, lit("~a: ~s member ~s isn't a bindable symbol"),
                   self, syntax, sym, nao);
       if (cur == INT_MAX)
-        uw_throwf(error_s, lit("~s: ~s overflow at member ~s"),
+        uw_throwf(error_s, lit("~a: ~s overflow at member ~s"),
                   self, syntax, sym, nao);
       if (gethash(num_sym, sym))
-        uw_throwf(error_s, lit("~s: ~s duplicate member ~s"),
+        uw_throwf(error_s, lit("~a: ~s duplicate member ~s"),
                   self, syntax, sym, nao);
       sethash(num_sym, sym, nn = num(++cur));
       sethash(sym_num, nn, sym);
@@ -3177,22 +3177,22 @@ static val make_ffi_type_enum(val syntax, val enums,
       val sym = car(en);
       val n;
       if (!bindable(sym))
-        uw_throwf(error_s, lit("~s: ~s member ~s isn't a bindable symbol"),
+        uw_throwf(error_s, lit("~a: ~s member ~s isn't a bindable symbol"),
                   self, syntax, sym, nao);
       if (gethash(num_sym, sym))
-        uw_throwf(error_s, lit("~s: ~s duplicate member ~s"),
+        uw_throwf(error_s, lit("~a: ~s duplicate member ~s"),
                   self, syntax, sym, nao);
 
       n = ffi_eval_expr(expr, shadow_menv, enum_env);
 
       if (!integerp(n)) {
-        uw_throwf(error_s, lit("~s: ~s member ~s value ~s not integer"),
+        uw_throwf(error_s, lit("~a: ~s member ~s value ~s not integer"),
                   self, syntax, n, nao);
       }
 
       cur = c_num(n);
       if (cur > INT_MAX)
-        uw_throwf(error_s, lit("~s: ~s member ~s value ~s too large"),
+        uw_throwf(error_s, lit("~a: ~s member ~s value ~s too large"),
                   self, syntax, n, nao);
       sethash(num_sym, sym, nn = num(cur));
       sethash(sym_num, nn, sym);

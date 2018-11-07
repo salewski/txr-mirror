@@ -572,7 +572,7 @@ val exec_wrap(val file, val args_opt)
   val args = default_null_arg(args_opt);
   int nargs = c_num(length(args)) + 1;
   char **argv = if3(nargs < 0 || nargs == INT_MAX,
-                    (uw_throwf(file_error_s, lit("~s: argument list overflow"),
+                    (uw_throwf(file_error_s, lit("~a: argument list overflow"),
                                self, nao), convert(char **, 0)),
                     coerce(char **, chk_xalloc(nargs + 1, sizeof *argv, self)));
   val iter;
@@ -1074,7 +1074,7 @@ static val setgroups_wrap(val list)
   ucnum len = c_num(length(list));
 
   if (convert(ucnum, convert(size_t, len)) != len) {
-    uw_throwf(system_error_s, lit("~s: list too long"), self, nao);
+    uw_throwf(system_error_s, lit("~a: list too long"), self, nao);
   } else {
     gid_t *arr = coerce(gid_t *, chk_xalloc(len, sizeof *arr, self));
     int i = 0, res;
@@ -1508,7 +1508,7 @@ static val dlclose_wrap(val cptr)
   val self = lit("dlclose");
   mem_t *ptr = cptr_handle(cptr, dlhandle_s, self);
   if (cptr->co.ops != &cptr_dl_ops)
-    uw_throwf(error_s, lit("~s: object ~s isn't a handle from dlopen"),
+    uw_throwf(error_s, lit("~a: object ~s isn't a handle from dlopen"),
               self, cptr, nao);
   if (ptr != 0) {
     int res = dlclose(ptr);

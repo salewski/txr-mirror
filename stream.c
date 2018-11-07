@@ -3949,7 +3949,7 @@ val open_process(val name, val mode_str, val args)
   fds_swizzle(&sfds, (input ? FDS_IN : FDS_OUT) | FDS_ERR);
 
   if (nargs < 0 || nargs == INT_MAX)
-    uw_throwf(error_s, lit("~s: argument list overflow"), self, nao);
+    uw_throwf(error_s, lit("~a: argument list overflow"), self, nao);
 
   argv = coerce(char **, chk_xalloc(nargs + 1, sizeof *argv, self));
 
@@ -4145,7 +4145,7 @@ static val run(val name, val args)
   nargs = c_num(length(args)) + 1;
 
   if (nargs < 0 || nargs == INT_MAX)
-    uw_throwf(error_s, lit("~s: argument list overflow"), self, nao);
+    uw_throwf(error_s, lit("~a: argument list overflow"), self, nao);
 
   argv = coerce(char **, chk_xalloc(nargs + 1, sizeof *argv, self));
 
@@ -4226,7 +4226,7 @@ static val run(val command, val args)
   fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR);
 
   if (nargs < 0 || nargs == INT_MAX)
-    uw_throwf(error_s, lit("~s: argument list overflow"), self, nao);
+    uw_throwf(error_s, lit("~a: argument list overflow"), self, nao);
 
   wargv = coerce(const wchar_t **, chk_xalloc(nargs + 1, sizeof *wargv, self));
 
