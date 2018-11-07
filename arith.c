@@ -2349,7 +2349,7 @@ val flo_int(val i)
 
   {
     double d;
-    type_check(i, BGNUM);
+    type_check(self, i, BGNUM);
     if (mp_to_double(mp(i), &d) != MP_OKAY)
       uw_throwf(error_s, lit("~a: bignum to float conversion failed"),
                 self, nao);

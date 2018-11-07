@@ -508,11 +508,11 @@ val typeof(val obj);
 val subtypep(val sub, val sup);
 val typep(val obj, val type);
 seq_info_t seq_info(val cobj);
-val throw_mismatch(val obj, type_t);
-INLINE val type_check(val obj, type_t typecode)
+val throw_mismatch(val self, val obj, type_t);
+INLINE val type_check(val self, val obj, type_t typecode)
 {
   if (type(obj) != typecode)
-    throw_mismatch(obj, typecode);
+    throw_mismatch(self, obj, typecode);
   return t;
 }
 val type_check2(val obj, int, int);

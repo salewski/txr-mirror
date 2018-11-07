@@ -888,7 +888,7 @@ static val gc_wrap(void)
 
 val gc_finalize(val obj, val fun, val rev_order_p)
 {
-  type_check(fun, FUN);
+  type_check(lit("gc-finalize"), fun, FUN);
 
   rev_order_p = default_null_arg(rev_order_p);
 

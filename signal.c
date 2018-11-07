@@ -257,6 +257,7 @@ static void small_sigfillset(small_sigset_t *ss)
 val set_sig_handler(val signo, val lambda)
 {
   static struct sigaction blank;
+  val self = lit("set-sig-handler");
   cnum sig = c_num(signo);
   val old_lambda;
   small_sigset_t block, saved;
@@ -265,7 +266,7 @@ val set_sig_handler(val signo, val lambda)
   sig_mask(SIG_BLOCK, &block, &saved);
 
   if (sig < 0 || sig >= MAX_SIG)
-    uw_throwf(error_s, lit("set-sig-handler: signal ~s out of range"), sig, nao);
+    uw_throwf(error_s, lit("~a: signal ~s out of range"), self, sig, nao);
 
   old_lambda = sig_lambda[sig];
 
@@ -281,7 +282,7 @@ val set_sig_handler(val signo, val lambda)
     } else {
       struct sigaction sa = blank;
 
-      type_check(lambda, FUN);
+      type_check(self, lambda, FUN);
 
       sa.sa_flags = SA_RESTART;
       sa.sa_handler = sig_handler;

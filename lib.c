@@ -324,9 +324,9 @@ static void noreturn unsup_obj(val self, val obj)
   abort();
 }
 
-val throw_mismatch(val obj, type_t t)
+val throw_mismatch(val self, val obj, type_t t)
 {
-  type_mismatch(lit("~s is not of type ~s"), obj, code2type(t), nao);
+  type_mismatch(lit("~a: ~s is not of type ~s"), self, obj, code2type(t), nao);
 }
 
 val type_check2(val obj, int t1, int t2)
@@ -2915,7 +2915,7 @@ void rcyc_empty(void)
 
 val lcons_fun(val lcons)
 {
-  type_check(lcons, LCONS);
+  type_check(lit("lcons-fun"), lcons, LCONS);
   return lcons->lc.func;
 }
 
@@ -3155,7 +3155,7 @@ val flo(double n)
 
 double c_flo(val num, val self)
 {
-  type_check(num, FLNUM);
+  type_check(self, num, FLNUM);
   return num->fl.n;
 }
 
@@ -3625,9 +3625,10 @@ val downcase_str(val str)
 
 val string_extend(val str, val tail)
 {
-  type_check(str, STR);
+  val self = lit("string-extend");
+
+  type_check(self, str, STR);
   {
-    val self = lit("string-extend");
     cnum len = c_fixnum(length_str(str), self);
     cnum oalloc = c_fixnum(str->st.alloc, self), alloc = oalloc;
     cnum delta, needed;
@@ -5108,13 +5109,13 @@ val break_str(val str, val set)
 val symbol_name(val sym)
 {
   if (sym)
-    type_check(sym, SYM);
+    type_check(lit("symbol-name"), sym, SYM);
   return sym ? sym->s.name : nil_string;
 }
 
 static void symbol_setname(val sym, val name)
 {
-  type_check(sym, SYM);
+  type_check(lit("internal error"), sym, SYM);
   sym->s.name = name;
 }
 
@@ -5122,7 +5123,7 @@ val symbol_package(val sym)
 {
   if (sym == nil)
     return user_package;
-  type_check(sym, SYM);
+  type_check(lit("symbol-package"), sym, SYM);
   return sym->s.package;
 }
 
@@ -5212,7 +5213,7 @@ static val get_package(val fname, val package, val missing_ok)
       uw_throwf(error_s, lit("~a: no such package: ~s"), fname, package, nao);
     return p;
   }
-  type_check (package, PKG);
+  type_check(fname, package, PKG);
   return package;
 }
 
@@ -5234,7 +5235,7 @@ val package_alist(void)
 
 val package_name(val package)
 {
-  type_check (package, PKG);
+  type_check(lit("package-name"), package, PKG);
   return package->pk.name;
 }
 
@@ -5417,7 +5418,7 @@ val unuse_package(val unuse_list, val package_in)
 val symbol_visible(val package, val sym)
 {
   val name = symbol_name(sym);
-  type_check (package, PKG);
+  type_check(lit("internal error"), package, PKG);
 
   if (sym->s.package == package)
     return t;
@@ -5450,7 +5451,7 @@ val symbol_visible(val package, val sym)
 val symbol_needs_prefix(val self, val package, val sym)
 {
   val name = symbol_name(sym);
-  type_check (package, PKG);
+  type_check (self, package, PKG);
 
   {
     int homed_here = (sym->s.package == package);
@@ -6145,22 +6146,23 @@ val func_vm(val closure, val desc, int fixparam, int reqargs, int variadic)
 
 val func_get_form(val fun)
 {
-  type_check(fun, FUN);
+  val self = lit("func-get-form");
+  type_check(self, fun, FUN);
   if (fun->f.functype != FINTERP)
-    uw_throwf(error_s, lit("func-get-form: ~a is not an interpreted function"),
-              fun, nao);
+    uw_throwf(error_s, lit("~a: ~a is not an interpreted function"),
+              self, fun, nao);
   return fun->f.f.interp_fun;
 }
 
 val func_get_env(val fun)
 {
-  type_check(fun, FUN);
+  type_check(lit("func-get-env"), fun, FUN);
   return fun->f.env;
 }
 
 val func_set_env(val fun, val env)
 {
-  type_check(fun, FUN);
+  type_check(lit("func-set-env"), fun, FUN);
   set(mkloc(fun->f.env, fun), env);
   return env;
 }
@@ -7125,7 +7127,8 @@ val vectorp(val vec)
 
 val vec_set_length(val vec, val length)
 {
-  type_check(vec, VEC);
+  val self = lit("vec-set-length");
+  type_check(self, vec, VEC);
 
   {
     cnum new_length = c_num(length);
@@ -7133,13 +7136,13 @@ val vec_set_length(val vec, val length)
     cnum old_alloc = c_num(vec->v.vec[vec_alloc]);
 
     if (new_length < 0)
-      uw_throwf(error_s, lit("vec-set-length: negative length ~s specified"),
-                length, nao);
+      uw_throwf(error_s, lit("~a: negative length ~s specified"),
+                self, length, nao);
 
     if (new_length > INT_PTR_MAX - 2)
     {
-      uw_throwf(error_s, lit("vec-set-length: cannot extend to length ~s"),
-                length, nao);
+      uw_throwf(error_s, lit("~a: cannot extend to length ~s"),
+                self, length, nao);
     }
 
     if (new_length > old_alloc) {
@@ -7206,13 +7209,13 @@ val vec_push(val vec, val item)
 
 val length_vec(val vec)
 {
-  type_check(vec, VEC);
+  type_check(lit("length-vec"), vec, VEC);
   return vec->v.vec[vec_length];
 }
 
 val size_vec(val vec)
 {
-  type_check(vec, VEC);
+  type_check(lit("size-vec"), vec, VEC);
   return vec->v.vec[vec_alloc];
 }
 
@@ -7264,7 +7267,7 @@ val list_vec(val vec)
   list_collect_decl (list, ptail);
   int i, len;
 
-  type_check(vec, VEC);
+  type_check(lit("list-vec"), vec, VEC);
 
   len = c_num(vec->v.vec[vec_length]);
 
@@ -7612,7 +7615,7 @@ static val copy_lazy_str(val lstr)
 val lazy_str_force(val lstr)
 {
   val lim, term, pfx;
-  type_check(lstr, LSTR);
+  type_check(lit("lazy-str-force"), lstr, LSTR);
   lim = lstr->ls.props->limit;
   term = lstr->ls.props->term;
   pfx = lstr->ls.prefix;
@@ -7660,7 +7663,7 @@ val lazy_str_force_upto(val lstr, val index)
 {
   uses_or2;
   val lim, term, ltrm, pfx, len;
-  type_check(lstr, LSTR);
+  type_check(lit("lazy-str-force-upto"), lstr, LSTR);
   lim = lstr->ls.props->limit;
   term = lstr->ls.props->term;
   ltrm = length_str(term);
@@ -7769,7 +7772,7 @@ val length_str_le(val str, val len)
 
 val lazy_str_get_trailing_list(val lstr, val index)
 {
-  type_check(lstr, LSTR);
+  type_check(lit("lazy-str-get-trailing-list"), lstr, LSTR);
 
   /* Force lazy string up through the index position */
   if (ge(index, length_str(lstr->ls.prefix)))
@@ -10615,26 +10618,26 @@ val rangep(val obj)
 
 val from(val range)
 {
-  type_check(range, RNG);
+  type_check(lit("from"), range, RNG);
   return range->rn.from;
 }
 
 val to(val range)
 {
-  type_check(range, RNG);
+  type_check(lit("to"), range, RNG);
   return range->rn.to;
 }
 
 val set_from(val range, val from)
 {
-  type_check(range, RNG);
+  type_check(lit("set-from"), range, RNG);
   set(mkloc(range->rn.from, range), from);
   return range;
 }
 
 val set_to(val range, val to)
 {
-  type_check(range, RNG);
+  type_check(lit("set-to"), range, RNG);
   set(mkloc(range->rn.to, range), to);
   return range;
 }

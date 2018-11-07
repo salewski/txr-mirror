@@ -125,7 +125,7 @@ val make_env(val vbindings, val fbindings, val up_env)
 
 val copy_env(val oenv)
 {
-  type_check(oenv, ENV);
+  type_check(lit("copy-env"), oenv, ENV);
 
   {
     val nenv = make_obj();
@@ -154,7 +154,7 @@ val env_fbind(val env, val sym, val fun)
 {
   if (env) {
     val cell;
-    type_check(env, ENV);
+    type_check(lit("env-fbind"), env, ENV);
     cell = acons_new_c(sym, nulloc, mkloc(env->e.fbindings, env));
     return rplacd(cell, fun);
   } else {
@@ -170,7 +170,7 @@ val env_vbind(val env, val sym, val obj)
 {
   if (env) {
     val cell;
-    type_check(env, ENV);
+    type_check(lit("env-vbind"), env, ENV);
     cell = acons_new_c(sym, nulloc, mkloc(env->e.vbindings, env));
     return rplacd(cell, obj);
   } else {
@@ -185,7 +185,7 @@ val env_vbind(val env, val sym, val obj)
 static void env_vb_to_fb(val env)
 {
   if (env) {
-    type_check(env, ENV);
+    type_check(lit("expand"), env, ENV);
     env->e.fbindings = env->e.vbindings;
     env->e.vbindings = nil;
   }
@@ -410,7 +410,7 @@ val lookup_global_var(val sym)
 val lookup_var(val env, val sym)
 {
   if (env) {
-    type_check(env, ENV);
+    type_check(lit("variable lookup"), env, ENV);
 
     for (; env; env = env->e.up_env) {
       val binding = assoc(sym, env->e.vbindings);
@@ -436,7 +436,7 @@ val lookup_sym_lisp1(val env, val sym)
   uses_or2;
 
   if (env) {
-    type_check(env, ENV);
+    type_check(lit("lisp-1-style lookup"), env, ENV);
 
     for (; env; env = env->e.up_env) {
       val binding = or2(assoc(sym, env->e.vbindings),
@@ -505,7 +505,7 @@ val lookup_fun(val env, val sym)
     return or2(gethash(top_fb, sym),
                if2(lisplib_try_load(sym), gethash(top_fb, sym)));
   } else  {
-    type_check(env, ENV);
+    type_check(lit("function lookup"), env, ENV);
 
     {
       val binding = assoc(sym, env->e.fbindings);
@@ -521,7 +521,7 @@ val func_get_name(val fun, val env)
   env = default_null_arg(env);
 
   if (env) {
-    type_check(env, ENV);
+    type_check(lit("func-get-name"), env, ENV);
 
     {
       val iter;
@@ -560,7 +560,7 @@ static val lookup_mac(val menv, val sym)
     return or2(gethash(top_mb, sym),
                if2(lisplib_try_load(sym), gethash(top_mb, sym)));
   } else  {
-    type_check(menv, ENV);
+    type_check(lit("macro lookup"), menv, ENV);
 
     {
       val binding = assoc(sym, menv->e.fbindings);
@@ -579,7 +579,7 @@ static val lookup_symac(val menv, val sym)
     return or2(gethash(top_smb, sym),
                if2(lisplib_try_load(sym), gethash(top_smb, sym)));
   } else  {
-    type_check(menv, ENV);
+    type_check(lit("symacro lookup"), menv, ENV);
 
     {
       val binding = assoc(sym, menv->e.vbindings);
@@ -598,7 +598,7 @@ static val lookup_symac_lisp1(val menv, val sym)
     return or2(gethash(top_smb, sym),
                if2(lisplib_try_load(sym), gethash(top_smb, sym)));
   } else  {
-    type_check(menv, ENV);
+    type_check(lit("symacro lookup"), menv, ENV);
 
     /* Of course, we are not looking for symbol macros in the operator macro
      * name space.  Rather, the object of the lookup rule implemented by this
@@ -630,7 +630,7 @@ static val lexical_var_p(val menv, val sym)
   if (nilp(menv)) {
     return nil;
   } else {
-    type_check(menv, ENV);
+    type_check(lit("lexical-var-p"), menv, ENV);
 
     {
       val binding = assoc(sym, menv->e.vbindings);
@@ -647,7 +647,7 @@ static val lexical_fun_p(val menv, val sym)
   if (nilp(menv)) {
     return nil;
   } else {
-    type_check(menv, ENV);
+    type_check(lit("lexical-fun-p"), menv, ENV);
 
     {
       val binding = assoc(sym, menv->e.fbindings);
@@ -664,7 +664,7 @@ static val lexical_lisp1_binding(val menv, val sym)
   if (nilp(menv)) {
     return nil;
   } else {
-    type_check(menv, ENV);
+    type_check(lit("lexical-lisp1-binding"), menv, ENV);
 
     {
       val binding = assoc(sym, menv->e.vbindings);
@@ -714,7 +714,7 @@ static val squash_menv_deleting_range(val menv, val upto_menv)
   out_env = make_env(nil, nil, nil);
 
   for (iter = menv; iter && iter != upto_menv; iter = next) {
-    type_check(iter, ENV);
+    type_check(lit("expand-with-free-refs"), iter, ENV);
     varshadows = append2(varshadows, mapcar(car_f, iter->e.vbindings));
     funshadows = append2(funshadows, mapcar(car_f, iter->e.fbindings));
     next = iter->e.up_env;
@@ -2896,7 +2896,7 @@ static val op_upenv(val form, val env)
 {
   val args = cdr(form);
   val expr = pop(&args);
-  type_check(env, ENV);
+  type_check(car(form), env, ENV);
   return eval(expr, env->e.up_env, expr);
 }
 
