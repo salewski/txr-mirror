@@ -152,13 +152,15 @@ static val make_env_intrinsic(val vbindings, val fbindings, val up_env)
 
 val env_fbind(val env, val sym, val fun)
 {
+  val self = lit("env-fbind");
+
   if (env) {
     val cell;
-    type_check(lit("env-fbind"), env, ENV);
+    type_check(self, env, ENV);
     cell = acons_new_c(sym, nulloc, mkloc(env->e.fbindings, env));
     return rplacd(cell, fun);
   } else {
-    val hcell = gethash_c(top_fb, sym, nulloc);
+    val hcell = gethash_c(self, top_fb, sym, nulloc);
     val cell = cdr(hcell);
     if (cell)
       return rplacd(cell, fun);
@@ -168,13 +170,15 @@ val env_fbind(val env, val sym, val fun)
 
 val env_vbind(val env, val sym, val obj)
 {
+  val self = lit("env-vbind");
+
   if (env) {
     val cell;
-    type_check(lit("env-vbind"), env, ENV);
+    type_check(self, env, ENV);
     cell = acons_new_c(sym, nulloc, mkloc(env->e.vbindings, env));
     return rplacd(cell, obj);
   } else {
-    val hcell = gethash_c(top_vb, sym, nulloc);
+    val hcell = gethash_c(self, top_vb, sym, nulloc);
     val cell = cdr(hcell);
     if (cell)
       return rplacd(cell, obj);
@@ -1851,8 +1855,9 @@ static val op_or(val form, val env)
 
 static val rt_defvarl(val sym)
 {
+  val self = lit("defvar");
   val new_p;
-  val cell = gethash_c(top_vb, sym, mkcloc(new_p));
+  val cell = gethash_c(self, top_vb, sym, mkcloc(new_p));
 
   if (new_p) {
     uw_purge_deferred_warning(cons(var_s, sym));
@@ -3973,7 +3978,7 @@ static val me_case(val form, val menv)
       list_collect_decl (indexed_clauses, rtail);
 
       for (i = minkey; i <= maxkey; i = succ(i)) {
-        val lookup = gethash_e(hash, i);
+        val lookup = gethash_e(casesym, hash, i);
         rtail = list_collect(rtail, if3(lookup,
                                         ref(hashforms, cdr(lookup)),
                                         uniqf));
@@ -4227,6 +4232,7 @@ static val me_load_time(val form, val menv)
 
 val load(val target)
 {
+  val self = lit("load");
   uses_or2;
   val parent = or2(load_path, null_string);
   val path = if3(!pure_rel_path_p(target),
@@ -4252,15 +4258,15 @@ val load(val target)
   env_vbind(dyn_env, package_s, cur_package);
 
   if (txr_lisp_p == t) {
-    if (!read_eval_stream(stream, std_error)) {
+    if (!read_eval_stream(self, stream, std_error)) {
       close_stream(stream, nil);
-      uw_throwf(error_s, lit("load: ~a contains errors"), path, nao);
+      uw_throwf(error_s, lit("~a: ~a contains errors"), self, path, nao);
     }
   } else if (txr_lisp_p == chr('o')) {
-    if (!read_compiled_file(stream, std_error)) {
+    if (!read_compiled_file(self, stream, std_error)) {
       close_stream(stream, nil);
-      uw_throwf(error_s, lit("load: unable to load compiled file ~a"),
-                path, nao);
+      uw_throwf(error_s, lit("~a: unable to load compiled file ~a"),
+                self, path, nao);
     }
   } else {
     int gc = gc_state(0);
@@ -4273,8 +4279,8 @@ val load(val target)
     uw_release_deferred_warnings();
 
     if (parser.errors)
-      uw_throwf(query_error_s, lit("load: parser errors in ~a"),
-                path, nao);
+      uw_throwf(query_error_s, lit("~a: parser errors in ~a"),
+                self, path, nao);
     {
       val match_ctx = uw_get_match_context();
       val bindings = cdr(match_ctx);
@@ -5775,7 +5781,7 @@ void reg_var(val sym, val val)
 
 static void reg_symacro(val sym, val form)
 {
-  val cell = gethash_c(top_smb, sym, nulloc);
+  val cell = gethash_c(lit("internal initialization"), top_smb, sym, nulloc);
   val binding = cdr(cell);
 
   if (binding)

@@ -1628,7 +1628,7 @@ static val rlviable(val form)
 val rlset(val form, val info)
 {
   if (rlviable(form)) {
-    val cell = gethash_c(form_to_ln_hash, form, nulloc);
+    val cell = gethash_c(lit("rlcp"), form_to_ln_hash, form, nulloc);
     loc place = cdr_l(cell);
     if (nilp(deref(place)))
       set(place, info);

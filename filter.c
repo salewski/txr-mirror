@@ -61,7 +61,7 @@ static val trie_add(val trie, val key, val value)
   for (node = trie, i = zero; lt(i, len); i = plus(i, one)) {
     val ch = chr_str(key, i);
     val newnode_p;
-    loc place = gethash_l(node, ch, mkcloc(newnode_p));
+    loc place = gethash_l(lit("trie-add"), node, ch, mkcloc(newnode_p));
     if (newnode_p)
       set(place, make_hash(nil, nil, nil));
     node = deref(place);

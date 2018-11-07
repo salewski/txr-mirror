@@ -121,8 +121,8 @@ val nread(val source_in, val error_stream, val error_return_val,
           val name_in, val lineno);
 val iread(val source_in, val error_stream, val error_return_val,
           val name_in, val lineno);
-val read_eval_stream(val stream, val error_stream);
-val read_compiled_file(val stream, val error_stream);
+val read_eval_stream(val self, val stream, val error_stream);
+val read_compiled_file(val self, val stream, val error_stream);
 #if HAVE_TERMIOS
 val repl(val bindings, val in_stream, val out_stream);
 #endif

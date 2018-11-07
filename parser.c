@@ -169,14 +169,14 @@ val parser(val stream, val lineno)
   return parser;
 }
 
-static parser_t *get_parser_impl(val parser)
+static parser_t *get_parser_impl(val self, val parser)
 {
-  return coerce(parser_t *, cobj_handle(parser, parser_s));
+  return coerce(parser_t *, cobj_handle(self, parser, parser_s));
 }
 
 static val ensure_parser(val stream)
 {
-  val cell = gethash_c(stream_parser_hash, stream, nulloc);
+  val cell = gethash_c(lit("internal error"), stream_parser_hash, stream, nulloc);
   val pars = cdr(cell);
   if (pars)
     return pars;
@@ -391,7 +391,7 @@ void parser_circ_def(parser_t *p, val num, val expr)
 
   {
     val new_p = nil;
-    val cell = gethash_c(p->circ_ref_hash, num, mkcloc(new_p));
+    val cell = gethash_c(lit("parser"), p->circ_ref_hash, num, mkcloc(new_p));
 
     if (!new_p && cdr(cell) != unique_s)
       yyerrorf(p->scanner, lit("duplicate #~s= def"), num, nao);
@@ -520,7 +520,7 @@ val regex_parse(val string, val error_stream)
   return parser.syntax_tree;
 }
 
-static val lisp_parse_impl(val interactive, val rlcp_p, val source_in,
+static val lisp_parse_impl(val self, val interactive, val rlcp_p, val source_in,
                            val error_stream, val error_return_val, val name_in,
                            val lineno)
 {
@@ -535,7 +535,7 @@ static val lisp_parse_impl(val interactive, val rlcp_p, val source_in,
                      stream_get_prop(input_stream, name_k)));
   val parser = ensure_parser(input_stream);
   val saved_dyn = dyn_env;
-  parser_t *pi = get_parser_impl(parser);
+  parser_t *pi = get_parser_impl(self, parser);
   volatile val parsed = nil;
 
   if (rlcp_p)
@@ -547,7 +547,7 @@ static val lisp_parse_impl(val interactive, val rlcp_p, val source_in,
 
   error_stream = default_null_arg(error_stream);
   error_stream = if3(error_stream == t, std_output, or2(error_stream, std_null));
-  class_check (error_stream, stream_s);
+  class_check (self, error_stream, stream_s);
 
   if (lineno && !missingp(lineno))
     pi->lineno = c_num(lineno);
@@ -592,25 +592,28 @@ static val lisp_parse_impl(val interactive, val rlcp_p, val source_in,
 val lisp_parse(val source_in, val error_stream, val error_return_val,
                val name_in, val lineno)
 {
-  return lisp_parse_impl(nil, t, source_in, error_stream, error_return_val,
-                         name_in, lineno);
+  val self = lit("lisp-parse");
+  return lisp_parse_impl(self, nil, t, source_in, error_stream,
+                         error_return_val, name_in, lineno);
 }
 
 val nread(val source_in, val error_stream, val error_return_val,
           val name_in, val lineno)
 {
-  return lisp_parse_impl(nil, nil, source_in, error_stream, error_return_val,
-                         name_in, lineno);
+  val self = lit("nread");
+  return lisp_parse_impl(self, nil, nil, source_in, error_stream,
+                         error_return_val, name_in, lineno);
 }
 
 val iread(val source_in, val error_stream, val error_return_val,
           val name_in, val lineno)
 {
-  return lisp_parse_impl(t, nil, source_in, error_stream, error_return_val,
-                         name_in, lineno);
+  val self = lit("iread");
+  return lisp_parse_impl(self, t, nil, source_in, error_stream,
+                         error_return_val, name_in, lineno);
 }
 
-static val read_file_common(val stream, val error_stream, val compiled)
+static val read_file_common(val self, val stream, val error_stream, val compiled)
 {
   val error_val = gensym(nil);
   val name = stream_get_prop(stream, name_k);
@@ -619,7 +622,7 @@ static val read_file_common(val stream, val error_stream, val compiled)
   val parser = ensure_parser(stream);
 
   if (compiled) {
-    parser_t *pi = get_parser_impl(parser);
+    parser_t *pi = get_parser_impl(self, parser);
     pi->rec_source_loc = 0;
   }
 
@@ -668,14 +671,14 @@ static val read_file_common(val stream, val error_stream, val compiled)
   return t;
 }
 
-val read_eval_stream(val stream, val error_stream)
+val read_eval_stream(val self, val stream, val error_stream)
 {
-  return read_file_common(stream, error_stream, nil);
+  return read_file_common(self, stream, error_stream, nil);
 }
 
-val read_compiled_file(val stream, val error_stream)
+val read_compiled_file(val self, val stream, val error_stream)
 {
-  return read_file_common(stream, error_stream, t);
+  return read_file_common(self, stream, error_stream, t);
 }
 
 #if HAVE_TERMIOS
@@ -704,7 +707,7 @@ static void load_rcfile(val name)
     } else {
       val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
       env_vbind(dyn_env, load_path_s, resolved_name);
-      read_eval_stream(stream, std_output);
+      read_eval_stream(lit("listener"), stream, std_output);
       dyn_env = saved_dyn_env;
     }
   }
@@ -741,7 +744,7 @@ static val get_visible_syms(val package, int include_fallback)
       val fcell;
       val new_p;
       while ((fcell = hash_next(hiter))) {
-        val scell = gethash_c(symhash, car(fcell), mkcloc(new_p));
+        val scell = gethash_c(lit("listener"), symhash, car(fcell), mkcloc(new_p));
         if (new_p)
           rplacd(scell, cdr(fcell));
       }
@@ -1400,13 +1403,15 @@ val get_parser(val stream)
 
 val parser_errors(val parser)
 {
-  parser_t *p = coerce(parser_t *, cobj_handle(parser, parser_s));
+  val self = lit("parser-errors");
+  parser_t *p = coerce(parser_t *, cobj_handle(self, parser, parser_s));
   return num(p->errors);
 }
 
 val parser_eof(val parser)
 {
-  parser_t *p = coerce(parser_t *, cobj_handle(parser, parser_s));
+  val self = lit("parser-eof");
+  parser_t *p = coerce(parser_t *, cobj_handle(self, parser, parser_s));
   return tnil(p->eof);
 }
 

@@ -2245,7 +2245,9 @@ val regexp(val obj)
 
 val regex_source(val compiled_regex)
 {
-  regex_t *regex = coerce(regex_t *, cobj_handle(compiled_regex, regex_s));
+  val self = lit("regex-source");
+  regex_t *regex = coerce(regex_t *,
+                          cobj_handle(self, compiled_regex, regex_s));
   return regex->source;
 }
 
@@ -2416,7 +2418,8 @@ static void print_rec(val exp, val stream, int *semi_flag)
 
 static void regex_print(val obj, val stream, val pretty, struct strm_ctx *ctx)
 {
-  regex_t *regex = coerce(regex_t *, cobj_handle(obj, regex_s));
+  val self = lit("regex-print");
+  regex_t *regex = coerce(regex_t *, cobj_handle(self, obj, regex_s));
   int semi_flag = 0;
 
   (void) pretty;
@@ -2429,7 +2432,8 @@ static void regex_print(val obj, val stream, val pretty, struct strm_ctx *ctx)
 
 static cnum regex_run(val compiled_regex, const wchar_t *str)
 {
-  regex_t *regex = coerce(regex_t *, cobj_handle(compiled_regex, regex_s));
+  val self = lit("regex-run");
+  regex_t *regex = coerce(regex_t *, cobj_handle(self, compiled_regex, regex_s));
 
   return if3(regex->kind == REGEX_DV,
              dv_run(regex->r.dv, str),
@@ -2471,9 +2475,9 @@ static void regex_machine_reset(regex_machine_t *regm)
     regm->n.last_accept_pos = regm->n.count;
 }
 
-static void regex_machine_init(regex_machine_t *regm, val reg)
+static void regex_machine_init(val self, regex_machine_t *regm, val reg)
 {
-  regex_t *regex = coerce(regex_t *, cobj_handle(reg, regex_s));
+  regex_t *regex = coerce(regex_t *, cobj_handle(self, reg, regex_s));
 
   if (regex->kind == REGEX_DV) {
     regm->n.is_nfa = 0;
@@ -2566,6 +2570,7 @@ static regm_result_t regex_machine_feed(regex_machine_t *regm, wchar_t ch)
 val search_regex(val haystack, val needle_regex, val start,
                  val from_end)
 {
+  val self = lit("search-regex");
   val slen = nil;
   start = default_arg(start, zero);
   from_end = default_null_arg(from_end);
@@ -2602,7 +2607,7 @@ val search_regex(val haystack, val needle_regex, val start,
     if (length_str_lt(haystack, pos))
       return nil;
 
-    regex_machine_init(&regm, needle_regex);
+    regex_machine_init(self, &regm, needle_regex);
 
 again:
     for (i = pos; length_str_gt(haystack, i); i = plus(i, one)) {
@@ -2689,6 +2694,7 @@ val range_regex_all(val haystack, val needle_regex, val start, val end)
 
 val match_regex(val str, val reg, val pos)
 {
+  val self = lit("match-regex");
   regex_machine_t regm;
   val i, retval;
   regm_result_t last_res = REGM_INCOMPLETE;
@@ -2703,7 +2709,7 @@ val match_regex(val str, val reg, val pos)
     return nil;
   }
 
-  regex_machine_init(&regm, reg);
+  regex_machine_init(self, &regm, reg);
 
   for (i = pos; length_str_gt(str, i); i = plus(i, one)) {
     last_res = regex_machine_feed(&regm, c_chr(chr_str(str, i)));
@@ -2764,6 +2770,7 @@ static val match_regex_right_old(val str, val regex, val end)
 
 val match_regex_right(val str, val regex, val end)
 {
+  val self = lit("match-regex-right");
   val pos = zero;
   val len = length(str);
 
@@ -2782,7 +2789,7 @@ val match_regex_right(val str, val regex, val end)
     val i ;
     regm_result_t last_res = REGM_INCOMPLETE;
 
-    regex_machine_init(&regm, regex);
+    regex_machine_init(self, &regm, regex);
 
     for (i = pos; lt(i, end); i = plus(i, one)) {
       last_res = regex_machine_feed(&regm, c_chr(chr_str(str, i)));
@@ -2810,6 +2817,7 @@ val match_regex_right(val str, val regex, val end)
 
 val regex_prefix_match(val reg, val str, val pos)
 {
+  val self = lit("regex-prefix-match");
   regex_machine_t regm;
   val i;
   regm_result_t last_res;
@@ -2824,7 +2832,7 @@ val regex_prefix_match(val reg, val str, val pos)
     return nil;
   }
 
-  regex_machine_init(&regm, reg);
+  regex_machine_init(self, &regm, reg);
 
   last_res = regex_machine_infer_init_state(&regm);
 
@@ -3108,6 +3116,7 @@ val regex_range_search_fun(val regex, val start, val from_end)
 
 val read_until_match(val regex, val stream_in, val include_match_in)
 {
+  val self = lit("read-until-match");
   regex_machine_t regm;
   val out = nil;
   val stack = nil;
@@ -3115,7 +3124,7 @@ val read_until_match(val regex, val stream_in, val include_match_in)
   val stream = default_arg(stream_in, std_input);
   val include_match = default_null_arg(include_match_in);
 
-  regex_machine_init(&regm, regex);
+  regex_machine_init(self, &regm, regex);
 
   for (;;) {
     val ch = get_char(stream);

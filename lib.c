@@ -329,11 +329,11 @@ val throw_mismatch(val self, val obj, type_t t)
   type_mismatch(lit("~a: ~s is not of type ~s"), self, obj, code2type(t), nao);
 }
 
-val class_check(val cobj, val class_sym)
+val class_check(val self, val cobj, val class_sym)
 {
   type_assert (is_ptr(cobj) && cobj->t.type == COBJ &&
               (cobj->co.cls == class_sym || subtypep(cobj->co.cls, class_sym)),
-               (lit("~s is not of type ~s"), cobj, class_sym, nao));
+               (lit("~a: ~s is not of type ~s"), self, cobj, class_sym, nao));
   return t;
 }
 
@@ -5289,7 +5289,7 @@ val use_sym(val symbol, val package_in)
   if (symbol_package(symbol) != package) {
     val name = symbol_name(symbol);
     val found;
-    val existing = gethash_f(package->pk.symhash, name, mkcloc(found));
+    val existing = gethash_f(self, package->pk.symhash, name, mkcloc(found));
 
     if (found && symbol_package(existing) == package) {
       if (existing == nil)
@@ -5311,8 +5311,8 @@ val unuse_sym(val symbol, val package_in)
   val package = get_package(self, package_in, t);
   val name = symbol_name(symbol);
   val found_visible, found_hidden;
-  val visible = gethash_f(package->pk.symhash, name, mkcloc(found_visible));
-  val hidden = gethash_f(package->pk.hidhash, name, mkcloc(found_hidden));
+  val visible = gethash_f(self, package->pk.symhash, name, mkcloc(found_visible));
+  val hidden = gethash_f(self, package->pk.hidhash, name, mkcloc(found_hidden));
 
   if (!found_visible || visible != symbol)
     return nil;
@@ -5400,14 +5400,15 @@ val unuse_package(val unuse_list, val package_in)
  */
 val symbol_visible(val package, val sym)
 {
+  val self = lit("internal error");
   val name = symbol_name(sym);
-  type_check(lit("internal error"), package, PKG);
+  type_check(self, package, PKG);
 
   if (sym->s.package == package)
     return t;
 
   {
-    val cell = gethash_e(package->pk.symhash, name);
+    val cell = gethash_e(self, package->pk.symhash, name);
 
     if (cell)
       return eq(cdr(cell), sym);
@@ -5418,7 +5419,7 @@ val symbol_visible(val package, val sym)
 
     for (; fallback; fallback = cdr(fallback)) {
       val fb_pkg = car(fallback);
-      val cell = gethash_e(fb_pkg->pk.symhash, name);
+      val cell = gethash_e(self, fb_pkg->pk.symhash, name);
 
       if (cell)
         return eq(cdr(cell), sym);
@@ -5438,7 +5439,7 @@ val symbol_needs_prefix(val self, val package, val sym)
 
   {
     int homed_here = (sym->s.package == package);
-    val home_cell = gethash_e(package->pk.symhash, name);
+    val home_cell = gethash_e(self, package->pk.symhash, name);
     int present_here = (eq(cdr(home_cell), sym) != nil);
     val fallback = get_hash_userdata(package->pk.symhash);
     val fb_cell = nil;
@@ -5446,7 +5447,7 @@ val symbol_needs_prefix(val self, val package, val sym)
 
     for (; fallback; fallback = cdr(fallback)) {
       val fb_pkg = car(fallback);
-      val cell = gethash_e(fb_pkg->pk.symhash, name);
+      val cell = gethash_e(self, fb_pkg->pk.symhash, name);
 
       if (cell) {
         fb_cell = cell;
@@ -5479,7 +5480,7 @@ val find_symbol(val str, val package_in)
   if (!stringp(str))
     uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
 
-  if ((sym = gethash_f(package->pk.symhash, str, mkcloc(found))) || found)
+  if ((sym = gethash_f(self, package->pk.symhash, str, mkcloc(found))) || found)
     return sym;
 
   return zero;
@@ -5487,14 +5488,15 @@ val find_symbol(val str, val package_in)
 
 val intern(val str, val package_in)
 {
+  val self = lit("intern");
   val new_p;
   loc place;
-  val package = get_package(lit("intern"), package_in, t);
+  val package = get_package(self, package_in, t);
 
   if (!stringp(str))
-    uw_throwf(error_s, lit("intern: name ~s isn't a string"), str, nao);
+    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
 
-  place = gethash_l(package->pk.symhash, str, mkcloc(new_p));
+  place = gethash_l(self, package->pk.symhash, str, mkcloc(new_p));
 
   if (!new_p) {
     return deref(place);
@@ -5507,14 +5509,14 @@ val intern(val str, val package_in)
 
 val unintern(val symbol, val package_in)
 {
-  val unint = lit("unintern");
-  val package = get_package(unint, package_in, t);
+  val self = lit("unintern");
+  val package = get_package(self, package_in, t);
   val name = symbol_name(symbol);
   val found_visible, found_hidden;
-  val visible = gethash_f(package->pk.symhash, name, mkcloc(found_visible));
-  val hidden = gethash_f(package->pk.hidhash, name, mkcloc(found_hidden));
+  val visible = gethash_f(self, package->pk.symhash, name, mkcloc(found_visible));
+  val hidden = gethash_f(self, package->pk.hidhash, name, mkcloc(found_hidden));
 
-  prot_sym_check(unint, name, package);
+  prot_sym_check(self, name, package);
 
   if (!found_visible || visible != symbol) {
     if (found_hidden && hidden == symbol) {
@@ -5594,12 +5596,12 @@ val intern_fallback(val str, val package_in)
     val found;
     val sym;
 
-    if ((sym = gethash_f(package->pk.symhash, str, mkcloc(found))) || found)
+    if ((sym = gethash_f(self, package->pk.symhash, str, mkcloc(found))) || found)
       return sym;
 
     for (; fblist; fblist = cdr(fblist)) {
       val otherpkg = car(fblist);
-      if ((sym = gethash_f(otherpkg->pk.symhash, str, mkcloc(found))) || found)
+      if ((sym = gethash_f(self, otherpkg->pk.symhash, str, mkcloc(found))) || found)
         return sym;
     }
   }
@@ -5608,7 +5610,7 @@ val intern_fallback(val str, val package_in)
     val new_p;
     loc place;
 
-    place = gethash_l(package->pk.symhash, str, mkcloc(new_p));
+    place = gethash_l(self, package->pk.symhash, str, mkcloc(new_p));
 
     if (!new_p) {
       return deref(place);
@@ -7788,15 +7790,15 @@ val cobjp(val obj)
   return type(obj) == COBJ ? t : nil;
 }
 
-mem_t *cobj_handle(val cobj, val cls_sym)
+mem_t *cobj_handle(val self, val cobj, val cls_sym)
 {
-  class_check(cobj, cls_sym);
+  class_check(self, cobj, cls_sym);
   return cobj->co.handle;
 }
 
-struct cobj_ops *cobj_ops(val cobj, val cls_sym)
+struct cobj_ops *cobj_ops(val self, val cobj, val cls_sym)
 {
-  class_check(cobj, cls_sym);
+  class_check(self, cobj, cls_sym);
   return cobj->co.ops;
 }
 
@@ -8638,7 +8640,7 @@ val unique(val seq, val keyfun, struct args *hashv_args)
       val new_p;
       val v = ref(seq, num_fast(i));
 
-      (void) gethash_c(hash, funcall1(kf, v), mkcloc(new_p));
+      (void) gethash_c(self, hash, funcall1(kf, v), mkcloc(new_p));
 
       if (new_p)
         ptail = list_collect(ptail, v);
@@ -8648,7 +8650,7 @@ val unique(val seq, val keyfun, struct args *hashv_args)
       val new_p;
       val v = car(seq);
 
-      (void) gethash_c(hash, funcall1(kf, v), mkcloc(new_p));
+      (void) gethash_c(self, hash, funcall1(kf, v), mkcloc(new_p));
 
       if (new_p)
         ptail = list_collect(ptail, v);
@@ -9739,13 +9741,14 @@ val drop_until(val pred, val seq, val keyfun)
 
 val in(val seq, val item, val testfun, val keyfun)
 {
+  val self = lit("in");
   switch (type(seq)) {
   case NIL:
     return nil;
   case COBJ:
     if (seq->co.cls == hash_s) {
       val found;
-      gethash_f(seq, item, mkcloc(found));
+      gethash_f(self, seq, item, mkcloc(found));
       return if3(found, t, nil);
     }
     /* fallthrough */
@@ -10499,6 +10502,7 @@ val where(val func, val seq)
 
 val sel(val seq_in, val where_in)
 {
+  val self = lit("sel");
   list_collect_decl (out, ptail);
   val seq = nullify(seq_in);
   val where = if3(functionp(where_in),
@@ -10517,7 +10521,7 @@ val sel(val seq_in, val where_in)
         val found;
         loc pfound = mkcloc(found);
         val key = car(where);
-        val value = gethash_f(seq, key, pfound);
+        val value = gethash_f(self, seq, key, pfound);
 
         if (found)
           sethash(newhash, key, value);
@@ -10660,6 +10664,8 @@ val env(void)
 
 static void obj_init(void)
 {
+  val self = lit("internal init");
+
   /*
    * No need to GC-protect the convenience variables which hold the interned
    * symbols, because the interned_syms list holds a reference to all the
@@ -10688,10 +10694,11 @@ static void obj_init(void)
   /* nil can't be interned because it's not a SYM object;
      it works as a symbol because the nil case is handled by
      symbol-manipulating function. */
-  rplacd(gethash_c(user_package->pk.symhash, nil_string, nulloc), nil);
+  rplacd(gethash_c(self, user_package->pk.symhash,
+                   nil_string, nulloc), nil);
 
   /* t can't be interned, because intern needs t in order to do its job. */
-  t = cdr(rplacd(gethash_c(user_package->pk.symhash,
+  t = cdr(rplacd(gethash_c(self, user_package->pk.symhash,
                            lit("t"), nulloc), make_sym(lit("t"))));
   set(mkloc(t->s.package, t), user_package);
 
@@ -11008,10 +11015,11 @@ static int unquote_star_check(val obj, val pretty)
 
 val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
 {
+  val self = lit("print");
   val ret = obj;
 
   if (ctx && circle_print_eligible(obj)) {
-    val cell = gethash_c(ctx->obj_hash, obj, nulloc);
+    val cell = gethash_c(self, ctx->obj_hash, obj, nulloc);
     val label = cdr(cell);
 
     if (label == t) {
@@ -11364,11 +11372,12 @@ dot:
 
 static void populate_obj_hash(val obj, struct strm_ctx *ctx)
 {
+  val self = lit("print");
 tail:
   if (circle_print_eligible(obj)) {
     if (ctx->obj_hash_prev) {
       val prev_cell;
-      val label = gethash_f(ctx->obj_hash_prev, obj, mkcloc(prev_cell));
+      val label = gethash_f(self, ctx->obj_hash_prev, obj, mkcloc(prev_cell));
 
       if (label == colon_k)
         uw_throwf(error_s, lit("print: unexpected duplicate object "
@@ -11377,7 +11386,7 @@ tail:
         return;
     } else {
       val new_p;
-      val cell = gethash_c(ctx->obj_hash, obj, mkcloc(new_p));
+      val cell = gethash_c(self, ctx->obj_hash, obj, mkcloc(new_p));
 
       if (!new_p) {
         rplacd(cell, t);
@@ -11448,16 +11457,17 @@ tail:
 
 static void obj_hash_merge(val parent_hash, val child_hash)
 {
+  val self = lit("print");
   val iter, cell;
 
   for (iter = hash_begin(child_hash); (cell = hash_next(iter));) {
     val new_p;
-    val pcell = gethash_c(parent_hash, car(cell), mkcloc(new_p));
+    val pcell = gethash_c(self, parent_hash, car(cell), mkcloc(new_p));
     if (new_p)
       rplacd(pcell, cdr(cell));
     else
-      uw_throwf(error_s, lit("print: unexpected duplicate object "
-                             "(internal error?)"), nao);
+      uw_throwf(error_s, lit("~a: unexpected duplicate object "
+                             "(internal error?)"), self, nao);
   }
 }
 

@@ -111,9 +111,9 @@ static struct vm_desc_links vmd_list = {
   coerce(struct vm_desc *, &vmd_list), coerce(struct vm_desc *, &vmd_list)
 };
 
-static struct vm_desc *vm_desc_struct(val obj)
+static struct vm_desc *vm_desc_struct(val self, val obj)
 {
-  return coerce(struct vm_desc *, cobj_handle(obj, vm_desc_s));
+  return coerce(struct vm_desc *, cobj_handle(self, obj, vm_desc_s));
 }
 
 val vm_make_desc(val nlevels, val nregs, val bytecode,
@@ -175,31 +175,36 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
 
 static val vm_desc_nlevels(val desc)
 {
-  struct vm_desc *vd = vm_desc_struct(desc);
+  val self = lit("vm_desc_nlevels");
+  struct vm_desc *vd = vm_desc_struct(self, desc);
   return num(vd->nlvl);
 }
 
 static val vm_desc_nregs(val desc)
 {
-  struct vm_desc *vd = vm_desc_struct(desc);
+  val self = lit("vm-desc-nregs");
+  struct vm_desc *vd = vm_desc_struct(self, desc);
   return num(vd->nreg);
 }
 
 static val vm_desc_bytecode(val desc)
 {
-  struct vm_desc *vd = vm_desc_struct(desc);
+  val self = lit("vm-desc-bytecode");
+  struct vm_desc *vd = vm_desc_struct(self, desc);
   return vd->bytecode;
 }
 
 static val vm_desc_datavec(val desc)
 {
-  struct vm_desc *vd = vm_desc_struct(desc);
+  val self = lit("vm-desc-datavec");
+  struct vm_desc *vd = vm_desc_struct(self, desc);
   return vd->datavec;
 }
 
 static val vm_desc_symvec(val desc)
 {
-  struct vm_desc *vd = vm_desc_struct(desc);
+  val self = lit("vm-desc-symvec");
+  struct vm_desc *vd = vm_desc_struct(self, desc);
   return vd->symvec;
 }
 
@@ -227,9 +232,9 @@ static void vm_desc_mark(val obj)
     gc_mark(vd->stab[i].bind);
 }
 
-static struct vm_closure *vm_closure_struct(val obj)
+static struct vm_closure *vm_closure_struct(val self, val obj)
 {
-  return coerce(struct vm_closure *, cobj_handle(obj, vm_closure_s));
+  return coerce(struct vm_closure *, cobj_handle(self, obj, vm_closure_s));
 }
 
 static val vm_make_closure(struct vm *vm, int frsz)
@@ -1035,7 +1040,8 @@ NOINLINE static val vm_execute(struct vm *vm)
 
 val vm_execute_toplevel(val desc)
 {
-  struct vm_desc *vd = vm_desc_struct(desc);
+  val self = lit("vm-execute-toplevel");
+  struct vm_desc *vd = vm_desc_struct(self, desc);
   struct vm vm;
   val *frame = coerce(val *, alloca(sizeof *frame * vd->frsz));
   struct vm_env *dspl = coerce(struct vm_env *, frame + vd->nreg);
@@ -1057,11 +1063,12 @@ val vm_execute_toplevel(val desc)
 
 val vm_execute_closure(val fun, struct args *args)
 {
+  val self = lit("vm-execute-closure");
   val closure = fun->f.env;
   val desc = fun->f.f.vm_desc;
   int fixparam = fun->f.fixparam;
   int variadic = fun->f.variadic;
-  struct vm_desc *vd = vm_desc_struct(desc);
+  struct vm_desc *vd = vm_desc_struct(self, desc);
   struct vm_closure *vc = coerce(struct vm_closure *, closure->co.handle);
   struct vm vm;
   val *frame = coerce(val *, alloca(sizeof *frame * vd->frsz));
@@ -1122,13 +1129,15 @@ val vm_execute_closure(val fun, struct args *args)
 
 static val vm_closure_desc(val closure)
 {
-  struct vm_closure *vc = vm_closure_struct(closure);
+  val self = lit("vm-closure-desc");
+  struct vm_closure *vc = vm_closure_struct(self, closure);
   return vc->vd->self;
 }
 
 static val vm_closure_entry(val closure)
 {
-  struct vm_closure *vc = vm_closure_struct(closure);
+  val self = lit("vm-closure-entry");
+  struct vm_closure *vc = vm_closure_struct(self, closure);
   return unum(vc->ip);
 }
 

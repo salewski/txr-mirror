@@ -515,7 +515,7 @@ INLINE val type_check(val self, val obj, type_t typecode)
     throw_mismatch(self, obj, typecode);
   return t;
 }
-val class_check(val cobj, val class_sym);
+val class_check(val self, val cobj, val class_sym);
 val car(val cons);
 val cdr(val cons);
 INLINE val us_car(val cons) { return cons->c.car; }
@@ -972,8 +972,8 @@ val length_str_lt(val str, val len);
 val length_str_le(val str, val len);
 val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops);
 val cobjp(val obj);
-mem_t *cobj_handle(val cobj, val cls_sym);
-struct cobj_ops *cobj_ops(val cobj, val cls_sym);
+mem_t *cobj_handle(val self, val cobj, val cls_sym);
+struct cobj_ops *cobj_ops(val self, val cobj, val cls_sym);
 val cptr(mem_t *ptr);
 val cptr_typed(mem_t *handle, val type_sym, struct cobj_ops *ops);
 val cptrp(val obj);

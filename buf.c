@@ -891,7 +891,7 @@ static struct strm_ops buf_strm_ops =
 static struct buf_strm *buf_strm(val stream, val self)
 {
   struct buf_strm *s = coerce(struct buf_strm *,
-                              cobj_handle(stream, stream_s));
+                              cobj_handle(self, stream, stream_s));
 
   type_assert (stream->co.ops == &buf_strm_ops.cobj_ops,
                (lit("~a: ~a is not a buffer stream"), self, stream, nao));

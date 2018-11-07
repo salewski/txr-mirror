@@ -880,7 +880,8 @@ static void call_copy_handlers(uw_frame_t *upto, int parent)
 
 static val revive_cont(val dc, val arg)
 {
-  struct cont *cont = coerce(struct cont *, cobj_handle(dc, sys_cont_s));
+  val self = lit("revive-cont");
+  struct cont *cont = coerce(struct cont *, cobj_handle(self, dc, sys_cont_s));
 
   if (arg == sys_cont_free_s) {
     free(cont->stack);

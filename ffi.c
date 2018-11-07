@@ -194,22 +194,22 @@ static struct txr_ffi_type *ffi_type_struct(val obj)
   return coerce(struct txr_ffi_type *, obj->co.handle);
 }
 
-static struct txr_ffi_type *ffi_type_struct_checked(val obj)
+static struct txr_ffi_type *ffi_type_struct_checked(val self, val obj)
 {
-  return coerce(struct txr_ffi_type *, cobj_handle(obj, ffi_type_s));
+  return coerce(struct txr_ffi_type *, cobj_handle(self, obj, ffi_type_s));
 }
 
 #if HAVE_LIBFFI
-static ffi_type *ffi_get_type(val obj)
+static ffi_type *ffi_get_type(val self, val obj)
 {
-  struct txr_ffi_type *tffi = ffi_type_struct_checked(obj);
+  struct txr_ffi_type *tffi = ffi_type_struct_checked(self, obj);
   return tffi->ft;
 }
 #endif
 
-static val ffi_get_lisp_type(val obj)
+static val ffi_get_lisp_type(val self, val obj)
 {
-  struct txr_ffi_type *tffi = ffi_type_struct_checked(obj);
+  struct txr_ffi_type *tffi = ffi_type_struct_checked(self, obj);
   return tffi->lt;
 }
 
@@ -328,9 +328,9 @@ static struct txr_ffi_closure *ffi_closure_struct(val obj)
   return coerce(struct txr_ffi_closure *, obj->co.handle);
 }
 
-static struct txr_ffi_closure *ffi_closure_struct_checked(val obj)
+static struct txr_ffi_closure *ffi_closure_struct_checked(val self, val obj)
 {
-  return coerce(struct txr_ffi_closure *, cobj_handle(obj, ffi_closure_s));
+  return coerce(struct txr_ffi_closure *, cobj_handle(self, obj, ffi_closure_s));
 }
 
 static void ffi_closure_print_op(val obj, val out,
@@ -2690,7 +2690,7 @@ static val ffi_union_in(struct txr_ffi_type *tft, int copy, mem_t *src,
     if (uni == nil) {
       uni = make_union_tft(src, tft);
     } else {
-      mem_t *ptr = union_get_ptr(uni);
+      mem_t *ptr = union_get_ptr(self, uni);
       memcpy(ptr, src, tft->size);
     }
   }
@@ -2701,7 +2701,7 @@ static val ffi_union_in(struct txr_ffi_type *tft, int copy, mem_t *src,
 static void ffi_union_put(struct txr_ffi_type *tft, val uni,
                           mem_t *dst, val self)
 {
-  mem_t *ptr = union_get_ptr(uni);
+  mem_t *ptr = union_get_ptr(self, uni);
   memcpy(dst, ptr, tft->size);
 }
 
@@ -3351,7 +3351,7 @@ val ffi_type_compile(val syntax)
       val target_type = ffi_type_compile(cadr(syntax));
       if (cddr(syntax))
         goto excess;
-      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
+      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(self, target_type),
                                    ffi_ptr_in_put, ffi_ptr_get,
                                    ffi_ptr_in_in, ffi_ptr_in_out,
                                    ffi_ptr_in_release, target_type);
@@ -3359,7 +3359,7 @@ val ffi_type_compile(val syntax)
       val target_type = ffi_type_compile(cadr(syntax));
       if (cddr(syntax))
         goto excess;
-      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
+      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(self, target_type),
                                    ffi_ptr_in_put, ffi_ptr_d_get,
                                    ffi_ptr_in_d_in, ffi_ptr_in_out,
                                    ffi_ptr_in_release, target_type);
@@ -3367,7 +3367,7 @@ val ffi_type_compile(val syntax)
       val target_type = ffi_type_compile(cadr(syntax));
       if (cddr(syntax))
         goto excess;
-      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
+      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(self, target_type),
                                    ffi_ptr_out_put, ffi_ptr_get,
                                    ffi_ptr_out_in, ffi_ptr_out_out,
                                    ffi_simple_release, target_type);
@@ -3375,7 +3375,7 @@ val ffi_type_compile(val syntax)
       val target_type = ffi_type_compile(cadr(syntax));
       if (cddr(syntax))
         goto excess;
-      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
+      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(self, target_type),
                                    ffi_ptr_out_null_put, ffi_ptr_d_get,
                                    ffi_ptr_out_in, ffi_ptr_out_out,
                                    0, target_type);
@@ -3383,7 +3383,7 @@ val ffi_type_compile(val syntax)
       val target_type = ffi_type_compile(cadr(syntax));
       if (cddr(syntax))
         goto excess;
-      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
+      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(self, target_type),
                                    ffi_ptr_in_put, ffi_ptr_get,
                                    ffi_ptr_out_in, ffi_ptr_out_out,
                                    ffi_ptr_in_release, target_type);
@@ -3391,7 +3391,7 @@ val ffi_type_compile(val syntax)
       val target_type = ffi_type_compile(cadr(syntax));
       if (cddr(syntax))
         goto excess;
-      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(target_type),
+      return make_ffi_type_pointer(syntax, ffi_get_lisp_type(self, target_type),
                                    ffi_ptr_out_null_put, ffi_ptr_get,
                                    ffi_ptr_out_s_in, ffi_ptr_out_out,
                                    0, target_type);
@@ -4059,9 +4059,10 @@ static struct txr_ffi_call_desc *ffi_call_desc(val obj)
   return coerce(struct txr_ffi_call_desc *, obj->co.handle);
 }
 
-static struct txr_ffi_call_desc *ffi_call_desc_checked(val obj)
+static struct txr_ffi_call_desc *ffi_call_desc_checked(val self, val obj)
 {
-  return coerce(struct txr_ffi_call_desc *, cobj_handle(obj, ffi_call_desc_s));
+  return coerce(struct txr_ffi_call_desc *, cobj_handle(self, obj,
+                                                        ffi_call_desc_s));
 }
 
 static void ffi_call_desc_print_op(val obj, val out,
@@ -4115,7 +4116,7 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
 
   for (i = 0; i < nt; i++) {
     val type = pop(&argtypes);
-    struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+    struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
     if (tft->size == 0)
       uw_throwf(error_s, lit("~a: can't pass type ~s by value"),
                 self, type, nao);
@@ -4126,7 +4127,7 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
   }
 
   {
-    struct txr_ffi_type *tft = ffi_type_struct_checked(rettype);
+    struct txr_ffi_type *tft = ffi_type_struct_checked(self, rettype);
     if (tft->size == 0 && tft->ft != &ffi_type_void)
       uw_throwf(error_s, lit("~a: can't return type ~s by value"),
                 self, rettype, nao);
@@ -4137,10 +4138,10 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
 
   if (tfcd->variadic)
     ffis = ffi_prep_cif_var(&tfcd->cif, FFI_DEFAULT_ABI, nf, nt,
-                            ffi_get_type(rettype), args);
+                            ffi_get_type(self, rettype), args);
   else
     ffis = ffi_prep_cif(&tfcd->cif, FFI_DEFAULT_ABI, nt,
-                        ffi_get_type(rettype), args);
+                        ffi_get_type(self, rettype), args);
 
   if (ffis != FFI_OK)
     uw_throwf(error_s, lit("~a: ffi_prep_cif failed: ~s"),
@@ -4152,7 +4153,7 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
 val ffi_call_wrap(val fptr, val ffi_call_desc, struct args *args)
 {
   val self = lit("ffi-call");
-  struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(ffi_call_desc);
+  struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(self, ffi_call_desc);
   mem_t *fp = cptr_get(fptr);
   cnum n = tfcd->ntotal;
   void **values = convert(void **, alloca(sizeof *values * tfcd->ntotal));
@@ -4347,7 +4348,7 @@ val ffi_make_closure(val fun, val call_desc, val safe_p_in, val abort_ret_in)
   val self = lit("ffi-make-closure");
   struct txr_ffi_closure *tfcl = coerce(struct txr_ffi_closure *,
                                         chk_calloc(1, sizeof *tfcl));
-  struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(call_desc);
+  struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(self, call_desc);
   val obj = cobj(coerce(mem_t *, tfcl), ffi_closure_s, &ffi_closure_ops);
   val safe_p = default_arg(safe_p_in, t);
   ffi_status ffis = FFI_OK;
@@ -4378,9 +4379,9 @@ val ffi_make_closure(val fun, val call_desc, val safe_p_in, val abort_ret_in)
   return obj;
 }
 
-mem_t *ffi_closure_get_fptr(val closure)
+mem_t *ffi_closure_get_fptr(val self, val closure)
 {
-  struct txr_ffi_closure *tfcl = ffi_closure_struct_checked(closure);
+  struct txr_ffi_closure *tfcl = ffi_closure_struct_checked(self, closure);
   return tfcl->fptr;
 }
 
@@ -4389,7 +4390,7 @@ mem_t *ffi_closure_get_fptr(val closure)
 val ffi_typedef(val name, val type)
 {
   val self = lit("ffi-typedef");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   if (bitfield_syntax_p(tft->syntax))
     uw_throwf(error_s, lit("~a: cannot create a typedef for bitfield type"),
               self, nao);
@@ -4399,7 +4400,7 @@ val ffi_typedef(val name, val type)
 val ffi_size(val type)
 {
   val self = lit("ffi-size");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   if (bitfield_syntax_p(tft->syntax))
     uw_throwf(error_s, lit("~a: bitfield type ~s has no size"),
               self, type, nao);
@@ -4409,7 +4410,7 @@ val ffi_size(val type)
 val ffi_alignof(val type)
 {
   val self = lit("ffi-alignof");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   if (bitfield_syntax_p(tft->syntax))
     uw_throwf(error_s, lit("~a: bitfield type ~s has no alignment"),
               self, type, nao);
@@ -4419,7 +4420,7 @@ val ffi_alignof(val type)
 val ffi_offsetof(val type, val memb)
 {
   val self = lit("ffi-offsetof");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   cnum i;
 
   if (!tft->memb)
@@ -4442,7 +4443,7 @@ val ffi_offsetof(val type, val memb)
 val ffi_arraysize(val type)
 {
   val self = lit("ffi-put-into");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   if (!tft->eltype)
     uw_throwf(error_s, lit("~a: ~s isn't an array"), self, type, nao);
   return num(tft->nelem);
@@ -4451,7 +4452,7 @@ val ffi_arraysize(val type)
 val ffi_elemsize(val type)
 {
   val self = lit("ffi-elemsize");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   if (!tft->eltype) {
     uw_throwf(error_s, lit("~a: ~s isn't an array or pointer"),
               self, type, nao);
@@ -4464,7 +4465,7 @@ val ffi_elemsize(val type)
 val ffi_elemtype(val type)
 {
   val self = lit("ffi-elemtype");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   val eltype = tft->eltype;
 
   if (!eltype) {
@@ -4478,7 +4479,7 @@ val ffi_elemtype(val type)
 val ffi_put_into(val dstbuf, val obj, val type, val offset_in)
 {
   val self = lit("ffi-put-into");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   mem_t *dst = buf_get(dstbuf, self);
   val offset = default_arg(offset_in, zero);
   cnum offsn = c_num(offset);
@@ -4496,7 +4497,7 @@ val ffi_put_into(val dstbuf, val obj, val type, val offset_in)
 val ffi_put(val obj, val type)
 {
   val self = lit("ffi-put");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   val buf = make_buf(num_fast(tft->size), zero, nil);
   mem_t *dst = buf_get(buf, self);
   tft->put(tft, obj, dst, self);
@@ -4506,7 +4507,7 @@ val ffi_put(val obj, val type)
 val ffi_in(val srcbuf, val obj, val type, val copy_p, val offset_in)
 {
   val self = lit("ffi-in");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   mem_t *src = buf_get(srcbuf, self);
   val offset = default_arg(offset_in, zero);
   cnum offsn = c_num(offset);
@@ -4527,7 +4528,7 @@ val ffi_in(val srcbuf, val obj, val type, val copy_p, val offset_in)
 val ffi_get(val srcbuf, val type, val offset_in)
 {
   val self = lit("ffi-get");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   mem_t *src = buf_get(srcbuf, self);
   val offset = default_arg(offset_in, zero);
   cnum offsn = c_num(offset);
@@ -4544,7 +4545,7 @@ val ffi_get(val srcbuf, val type, val offset_in)
 val ffi_out(val dstbuf, val obj, val type, val copy_p, val offset_in)
 {
   val self = lit("ffi-out");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   mem_t *dst = buf_get(dstbuf, self);
   val offset = default_arg(offset_in, zero);
   cnum offsn = c_num(offset);
@@ -4577,9 +4578,9 @@ static struct carray *carray_struct(val carray)
   return coerce(struct carray*, carray->co.handle);
 }
 
-static struct carray *carray_struct_checked(val carray)
+static struct carray *carray_struct_checked(val self, val carray)
 {
-  return coerce(struct carray*, cobj_handle(carray, carray_s));
+  return coerce(struct carray*, cobj_handle(self, carray, carray_s));
 }
 
 static void carray_print_op(val obj, val out, val pretty, struct strm_ctx *ctx)
@@ -4624,10 +4625,11 @@ static struct cobj_ops carray_owned_ops =
 
 val make_carray(val type, mem_t *data, cnum nelem, val ref, cnum offs)
 {
+  val self = lit("make-carray");
   struct carray *scry = coerce(struct carray *, chk_malloc(sizeof *scry));
   val obj;
   scry->eltype = nil;
-  scry->eltft = ffi_type_struct_checked(type);
+  scry->eltft = ffi_type_struct_checked(self, type);
   scry->data = data;
   scry->nelem = nelem;
   scry->ref = nil;
@@ -4646,8 +4648,8 @@ val carrayp(val obj)
 
 val carray_set_length(val carray, val nelem)
 {
-  struct carray *scry = carray_struct_checked(carray);
   val self = lit("carray-set-length");
+  struct carray *scry = carray_struct_checked(self, carray);
   cnum nel = c_num(nelem);
 
   if (carray->co.ops == &carray_owned_ops)
@@ -4667,7 +4669,7 @@ val carray_set_length(val carray, val nelem)
 val carray_dup(val carray)
 {
   val self = lit("carray-dup");
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
 
   if (carray->co.ops == &carray_owned_ops) {
     return nil;
@@ -4694,7 +4696,7 @@ val carray_dup(val carray)
 val carray_own(val carray)
 {
   val self = lit("carray-own");
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
   if (scry->ref)
     uw_throwf(error_s, lit("~a: cannot own buffer belonging to ~s"),
               self, scry->ref, nao);
@@ -4705,7 +4707,7 @@ val carray_own(val carray)
 val carray_free(val carray)
 {
   val self = lit("carray-free");
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
 
   if (carray->co.ops == &carray_owned_ops) {
     free(scry->data);
@@ -4721,19 +4723,22 @@ val carray_free(val carray)
 
 val carray_type(val carray)
 {
-  struct carray *scry = carray_struct_checked(carray);
+  val self = lit("carray-type");
+  struct carray *scry = carray_struct_checked(self, carray);
   return scry->eltype;
 }
 
 val length_carray(val carray)
 {
-  struct carray *scry = carray_struct_checked(carray);
+  val self = lit("length-carray");
+  struct carray *scry = carray_struct_checked(self, carray);
   return if3(scry->nelem < 0, nil, num(scry->nelem));
 }
 
 val copy_carray(val carray)
 {
-  struct carray *scry = carray_struct_checked(carray);
+  val self = lit("copy-carray");
+  struct carray *scry = carray_struct_checked(self, carray);
   val copy = make_carray(scry->eltype, scry->data, scry->nelem, nil, 0);
   carray_dup(copy);
   return copy;
@@ -4741,7 +4746,7 @@ val copy_carray(val carray)
 
 mem_t *carray_ptr(val carray, val type, val self)
 {
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
   if (scry->eltype != type)
     uw_throwf(error_s, lit("~a: ~s is not of element type ~!~s"),
               self, carray, type, nao);
@@ -4785,7 +4790,7 @@ val carray_blank(val nelem, val type)
 {
   val self = lit("carray-blank");
   cnum nel = c_num(nelem);
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
 
   if (nel < 0) {
     uw_throwf(error_s, lit("~a: negative array size"), self, nao);
@@ -4804,7 +4809,7 @@ val carray_buf(val buf, val type, val offs_in)
   val offs = default_arg_strict(offs_in, zero);
   cnum offsn = c_num(offs);
   cnum blen = c_num(minus(length_buf(buf), offs));
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   cnum nelem = if3(tft->size, blen / tft->size, 0);
   if (offsn < 0)
     uw_throwf(error_s,
@@ -4824,7 +4829,7 @@ val carray_buf(val buf, val type, val offs_in)
 val carray_buf_sync(val carray)
 {
   val self = lit("carray-buf-sync");
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
   val buf = scry->ref;
   mem_t *data = buf_get(buf, self);
   cnum blen = c_num(minus(length_buf(buf), num(scry->offs)));
@@ -4840,7 +4845,8 @@ val carray_buf_sync(val carray)
 
 val buf_carray(val carray)
 {
-  struct carray *scry = carray_struct_checked(carray);
+  val self = lit("buf-carray");
+  struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *etft = scry->eltft;
   cnum bytes = scry->nelem * etft->size;
   return  make_duplicate_buf(num(bytes), scry->data);
@@ -4848,16 +4854,18 @@ val buf_carray(val carray)
 
 val carray_cptr(val cptr, val type, val len)
 {
+  val self = lit("carray-cptr");
   mem_t *data = cptr_get(cptr);
   cnum nelem = c_num(default_arg(len, negone));
-  (void) ffi_type_struct_checked(type);
+  (void) ffi_type_struct_checked(self, type);
   return make_carray(type, data, nelem, nil, 0);
 }
 
 val vec_carray(val carray, val null_term_p)
 {
+  val self = lit("vec-carray");
   val nt_p = default_null_arg(null_term_p);
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
   cnum i, l = if3(nt_p, scry->nelem - 1, scry->nelem);
   val vec = vector(num(l), nil);
   for (i = 0; i < l; i++) {
@@ -4870,8 +4878,9 @@ val vec_carray(val carray, val null_term_p)
 
 val list_carray(val carray, val null_term_p)
 {
+  val self = lit("list-carray");
   val nt_p = default_null_arg(null_term_p);
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
   cnum i, l = if3(nt_p, scry->nelem - 1, scry->nelem);
   list_collect_decl (list, ptail);
   for (i = 0; i < l; i++) {
@@ -4885,7 +4894,7 @@ val list_carray(val carray, val null_term_p)
 val carray_ref(val carray, val idx)
 {
   val self = lit("carray-ref");
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
   cnum ix = c_num(idx);
 
   if (ix < 0)
@@ -4906,7 +4915,7 @@ val carray_ref(val carray, val idx)
 val carray_refset(val carray, val idx, val newval)
 {
   val self = lit("carray-refset");
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
   cnum ix = c_num(idx);
 
   if (ix < 0 || (scry->nelem >= 0 && ix >= scry->nelem)) {
@@ -4924,7 +4933,8 @@ val carray_refset(val carray, val idx, val newval)
 
 val carray_sub(val carray, val from, val to)
 {
-  struct carray *scry = carray_struct_checked(carray);
+  val self = lit("carray-sub");
+  struct carray *scry = carray_struct_checked(self, carray);
   cnum ln = scry->nelem;
   val len = num(ln);
 
@@ -4967,7 +4977,7 @@ val carray_sub(val carray, val from, val to)
 val carray_replace(val carray, val values, val from, val to)
 {
   val self = lit("carray-replace");
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
   cnum ln = scry->nelem;
   val len = num(ln);
   val vlen = length(values);
@@ -5080,7 +5090,7 @@ static void carray_ensure_artype(val carray, struct carray *scry, val self)
 
 static val carray_get_common(val carray, val self, unsigned null_term)
 {
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
 
   carray_ensure_artype(carray, scry, self);
 
@@ -5093,7 +5103,7 @@ static val carray_get_common(val carray, val self, unsigned null_term)
 
 static void carray_put_common(val carray, val seq, val self, unsigned null_term)
 {
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
 
   carray_ensure_artype(carray, scry, self);
 
@@ -5133,8 +5143,8 @@ val carray_putz(val carray, val seq)
 val carray_pun(val carray, val type)
 {
   val self = lit("carray-pun");
-  struct carray *scry = carray_struct_checked(carray);
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct carray *scry = carray_struct_checked(self, carray);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   cnum len = scry->nelem;
   cnum elsize = scry->eltft->size;
   cnum size = (ucnum) len * (ucnum) elsize;
@@ -5232,7 +5242,7 @@ val carray_num(val num, val eltype_in)
 val unum_carray(val carray)
 {
   val self = lit("unum-carray");
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *etft = scry->eltft;
   ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
   val ubn = make_bignum();
@@ -5245,7 +5255,7 @@ val unum_carray(val carray)
 val num_carray(val carray)
 {
   val self = lit("num-carray");
-  struct carray *scry = carray_struct_checked(carray);
+  struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *etft = scry->eltft;
   ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
   ucnum bits = size * 8;
@@ -5258,7 +5268,8 @@ val num_carray(val carray)
 
 val put_carray(val carray, val offs, val stream)
 {
-  struct carray *scry = carray_struct_checked(carray);
+  val self = lit("put-carray");
+  struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *etft = scry->eltft;
   ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
   val buf = make_borrowed_buf(unum(size), scry->data);
@@ -5270,7 +5281,8 @@ val put_carray(val carray, val offs, val stream)
 
 val fill_carray(val carray, val offs, val stream)
 {
-  struct carray *scry = carray_struct_checked(carray);
+  val self = lit("fill-carray");
+  struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *etft = scry->eltft;
   ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
   val buf = make_borrowed_buf(unum(size), scry->data);
@@ -5290,9 +5302,9 @@ static struct uni *uni_struct(val obj)
   return coerce(struct uni *, obj->co.handle);
 }
 
-static struct uni *uni_struct_checked(val obj)
+static struct uni *uni_struct_checked(val self, val obj)
 {
-  return coerce(struct uni *, cobj_handle(obj, union_s));
+  return coerce(struct uni *, cobj_handle(self, obj, union_s));
 }
 
 static void union_destroy_op(val obj)
@@ -5331,16 +5343,16 @@ static val make_union_tft(mem_t *data_in, struct txr_ffi_type *tft)
   return make_union_common(data, tft);
 }
 
-mem_t *union_get_ptr(val uni)
+mem_t *union_get_ptr(val self, val uni)
 {
-  struct uni *us = uni_struct_checked(uni);
+  struct uni *us = uni_struct_checked(self, uni);
   return us->data;
 }
 
 val make_union(val type, val init, val memb)
 {
   val self = lit("make-union");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   mem_t *data = chk_calloc(1, tft->size);
   val uni = make_union_common(data, tft);
   if (!missingp(init)) {
@@ -5355,7 +5367,8 @@ val make_union(val type, val init, val memb)
 
 val union_members(val uni)
 {
-  struct uni *us = uni_struct_checked(uni);
+  val self = lit("union-members");
+  struct uni *us = uni_struct_checked(self, uni);
   struct txr_ffi_type *tft = us->tft;
   cnum i;
   list_collect_decl (out, ptail);
@@ -5369,7 +5382,7 @@ val union_members(val uni)
 val union_get(val uni, val memb)
 {
   val self = lit("union-get");
-  struct uni *us = uni_struct_checked(uni);
+  struct uni *us = uni_struct_checked(self, uni);
   struct txr_ffi_type *tft = us->tft;
   struct txr_ffi_type *mtft = ffi_find_memb(tft, memb);
   if (mtft == 0)
@@ -5380,7 +5393,7 @@ val union_get(val uni, val memb)
 val union_put(val uni, val memb, val newval)
 {
   val self = lit("union-put");
-  struct uni *us = uni_struct_checked(uni);
+  struct uni *us = uni_struct_checked(self, uni);
   struct txr_ffi_type *tft = us->tft;
   struct txr_ffi_type *mtft = ffi_find_memb(tft, memb);
   if (mtft == 0)
@@ -5392,7 +5405,7 @@ val union_put(val uni, val memb, val newval)
 val union_in(val uni, val memb, val memb_obj)
 {
   val self = lit("union-in");
-  struct uni *us = uni_struct_checked(uni);
+  struct uni *us = uni_struct_checked(self, uni);
   struct txr_ffi_type *tft = us->tft;
   struct txr_ffi_type *mtft = ffi_find_memb(tft, memb);
   if (mtft == 0)
@@ -5403,7 +5416,7 @@ val union_in(val uni, val memb, val memb_obj)
 val union_out(val uni, val memb, val memb_obj)
 {
   val self = lit("union-out");
-  struct uni *us = uni_struct_checked(uni);
+  struct uni *us = uni_struct_checked(self, uni);
   struct txr_ffi_type *tft = us->tft;
   struct txr_ffi_type *mtft = ffi_find_memb(tft, memb);
   if (mtft == 0)
@@ -5415,7 +5428,7 @@ val union_out(val uni, val memb, val memb_obj)
 val make_zstruct(val type, struct args *args)
 {
   val self = lit("make-zstruct");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   val pairs = args_get_list(args);
   args_decl(ms_args, 0);
   val strct = make_struct(tft->lt, nil, ms_args);
@@ -5460,7 +5473,7 @@ val make_zstruct(val type, struct args *args)
 val zero_fill(val type, val obj)
 {
   val self = lit("zero-fill");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   cnum size = tft->size;
   int need_free = (size >= 1024);
   mem_t *buf = if3(need_free, chk_calloc(1, size), coerce(mem_t *, zalloca(size)));
@@ -5492,7 +5505,7 @@ val zero_fill(val type, val obj)
 val put_obj(val obj, val type, val stream)
 {
   val self = lit("put-obj");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   cnum size = tft->size;
   val len = num(size);
   mem_t *data = coerce(mem_t *, zalloca(size));
@@ -5506,7 +5519,7 @@ val put_obj(val obj, val type, val stream)
 val get_obj(val type, val stream)
 {
   val self = lit("get-obj");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   cnum size = tft->size;
   val len = num(size);
   mem_t *data = coerce(mem_t *, zalloca(size));
@@ -5520,7 +5533,7 @@ val get_obj(val type, val stream)
 val fill_obj(val obj, val type, val stream)
 {
   val self = lit("fill-obj");
-  struct txr_ffi_type *tft = ffi_type_struct_checked(type);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   cnum size = tft->size;
   val len = num(size);
   mem_t *data = coerce(mem_t *, zalloca(size));

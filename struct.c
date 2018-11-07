@@ -224,7 +224,8 @@ static struct struct_type *stype_handle(val *pobj, val ctx)
       if (!stype)
         no_such_struct(ctx, obj);
       *pobj = stype;
-      return coerce(struct struct_type *, cobj_handle(stype, struct_type_s));
+      return coerce(struct struct_type *, cobj_handle(ctx, stype,
+                                                      struct_type_s));
     }
   case COBJ:
     if (obj->co.cls == struct_type_s)
@@ -265,7 +266,7 @@ val make_struct_type(val name, val super,
       no_such_struct(self, super);
     super = supertype;
   } else if (super) {
-    class_check(super, struct_type_s);
+    class_check(self, super, struct_type_s);
   }
 
   if (!bindable(name)) {

@@ -472,15 +472,16 @@ static int parse_once_noerr(val stream, val name, parser_t *parser)
                    exsym, exargs, std_error, pfx);
 }
 
-static val read_eval_stream_noerr(val stream, val name, val error_stream)
+static val read_eval_stream_noerr(val self, val stream, val name, val error_stream)
 {
   val pfx = format(nil, lit("~a:"), name, nao);
-  ignerr_func_body(val, nil, read_eval_stream(stream, error_stream),
+  ignerr_func_body(val, nil, read_eval_stream(self, stream, error_stream),
                    exsym, exargs, std_error, pfx);
 }
 
 int txr_main(int argc, char **argv)
 {
+  val self = lit("txr startup");
   uses_or2;
   val specstring = nil;
   val spec = nil;
@@ -1059,11 +1060,11 @@ int txr_main(int argc, char **argv)
   }
 
   if (txr_lisp_p == chr('o')) {
-    val result = read_compiled_file(parse_stream, std_error);
+    val result = read_compiled_file(self, parse_stream, std_error);
     if (!enter_repl)
       return result ? 0 : EXIT_FAILURE;
   } else {
-    val result = read_eval_stream_noerr(parse_stream, spec_file_str,
+    val result = read_eval_stream_noerr(self, parse_stream, spec_file_str,
                                         std_error);
 
     close_stream(parse_stream, nil);

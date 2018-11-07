@@ -718,7 +718,8 @@ val make_hash(val weak_keys, val weak_vals, val equal_based)
 
 val make_similar_hash(val existing)
 {
-  struct hash *ex = coerce(struct hash *, cobj_handle(existing, hash_s));
+  val self = lit("make-similar-hash");
+  struct hash *ex = coerce(struct hash *, cobj_handle(self, existing, hash_s));
   struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
   val mod = num_fast(256);
   val table = vector(mod, nil);
@@ -753,7 +754,8 @@ static val copy_hash_chain(val chain)
 
 val copy_hash(val existing)
 {
-  struct hash *ex = coerce(struct hash *, cobj_handle(existing, hash_s));
+  val self = lit("copy-hash");
+  struct hash *ex = coerce(struct hash *, cobj_handle(self, existing, hash_s));
   struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
   val mod = num_fast(ex->modulus);
   val table = vector(mod, nil);
@@ -775,9 +777,9 @@ val copy_hash(val existing)
   return hash;
 }
 
-val gethash_c(val hash, val key, loc new_p)
+val gethash_c(val self, val hash, val key, loc new_p)
 {
-  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   int lim = hash_rec_limit;
   cnum hv = h->hops->hash_fun(key, &lim, h->seed);
   loc pchain = vecref_l(h->table, num_fast(hv % h->modulus));
@@ -788,9 +790,9 @@ val gethash_c(val hash, val key, loc new_p)
   return cell;
 }
 
-val gethash_e(val hash, val key)
+val gethash_e(val self, val hash, val key)
 {
-  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   int lim = hash_rec_limit;
   cnum hv = h->hops->hash_fun(key, &lim, h->seed);
   val chain = vecref(h->table, num_fast(hv % h->modulus));
@@ -799,19 +801,21 @@ val gethash_e(val hash, val key)
 
 val gethash(val hash, val key)
 {
-  val found = gethash_e(hash, key);
+  val self = lit("gethash");
+  val found = gethash_e(self, hash, key);
   return cdr(found);
 }
 
 val inhash(val hash, val key, val init)
 {
+  val self = lit("inhash");
   val cell;
 
   if (missingp(init)) {
-    gethash_f(hash, key, mkcloc(cell));
+    gethash_f(self, hash, key, mkcloc(cell));
   } else {
     val new_p;
-    cell = gethash_c(hash, key, mkcloc(new_p));
+    cell = gethash_c(self, hash, key, mkcloc(new_p));
     if (new_p)
       rplacd(cell, init);
   }
@@ -819,35 +823,39 @@ val inhash(val hash, val key, val init)
   return cell;
 }
 
-val gethash_f(val hash, val key, loc found)
+val gethash_f(val self, val hash, val key, loc found)
 {
-  set(found, gethash_e(hash, key));
+  set(found, gethash_e(self, hash, key));
   return cdr(deref(found));
 }
 
 val gethash_n(val hash, val key, val notfound_val)
 {
-  val existing = gethash_e(hash, key);
+  val self = lit("gethash-n");
+  val existing = gethash_e(self, hash, key);
   return if3(existing, cdr(existing), default_null_arg(notfound_val));
 }
 
 val sethash(val hash, val key, val value)
 {
+  val self = lit("sethash");
   val new_p;
-  rplacd(gethash_c(hash, key, mkcloc(new_p)), value);
+  rplacd(gethash_c(self, hash, key, mkcloc(new_p)), value);
   return value;
 }
 
 val pushhash(val hash, val key, val value)
 {
+  val self = lit("pushhash");
   val new_p;
-  mpush(value, gethash_l(hash, key, mkcloc(new_p)));
+  mpush(value, gethash_l(self, hash, key, mkcloc(new_p)));
   return new_p;
 }
 
 val remhash(val hash, val key)
 {
-  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
+  val self = lit("remhash");
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   int lim = hash_rec_limit;
   cnum hv = h->hops->hash_fun(key, &lim, h->seed);
   val *pchain = valptr(vecref_l(h->table, num_fast(hv % h->modulus)));
@@ -870,7 +878,8 @@ val remhash(val hash, val key)
 
 val clearhash(val hash)
 {
-  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
+  val self = lit("clearhash");
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   val mod = num_fast(256);
   val table = vector(mod, nil);
   cnum oldcount = h->count;
@@ -882,19 +891,22 @@ val clearhash(val hash)
 
 val hash_count(val hash)
 {
-  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
+  val self = lit("hash-count");
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   return num_fast(h->count);
 }
 
 val get_hash_userdata(val hash)
 {
-  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
+  val self = lit("get-hash-userdata");
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   return h->userdata;
 }
 
 val set_hash_userdata(val hash, val data)
 {
-  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
+  val self = lit("set-hash-userdata");
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   val olddata = h->userdata;
   set(mkloc(h->userdata, hash), data);
   return olddata;
@@ -923,8 +935,9 @@ static struct cobj_ops hash_iter_ops = cobj_ops_init(eq,
 
 val hash_begin(val hash)
 {
+  val self = lit("hash-begin");
   val hi_obj;
-  struct hash *h = coerce(struct hash *, cobj_handle(hash, hash_s));
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   struct hash_iter *hi = coerce(struct hash_iter *, chk_malloc(sizeof *hi));
 
   hi->next = 0;
@@ -939,7 +952,9 @@ val hash_begin(val hash)
 
 val hash_next(val iter)
 {
-  struct hash_iter *hi = coerce(struct hash_iter *, cobj_handle(iter, hash_iter_s));
+  val self = lit("hash-next");
+  struct hash_iter *hi = coerce(struct hash_iter *,
+                                cobj_handle(self, iter, hash_iter_s));
   val hash = hi->hash;
   struct hash *h = hash ? coerce(struct hash *, hash->co.handle) : 0;
 
@@ -1238,7 +1253,7 @@ val group_reduce(val hash, val by_fun, val reduce_fun, val seq,
       val v = vecref(seq, num_fast(i));
       val key = funcall1(by_fun, v);
       val new_p;
-      val cell = gethash_c(hash, key, mkcloc(new_p));
+      val cell = gethash_c(self, hash, key, mkcloc(new_p));
 
       if (new_p)
         rplacd(cell, funcall2(reduce_fun, initval, v));
@@ -1250,7 +1265,7 @@ val group_reduce(val hash, val by_fun, val reduce_fun, val seq,
       val v = car(seq);
       val key = funcall1(by_fun, v);
       val new_p;
-      val cell = gethash_c(hash, key, mkcloc(new_p));
+      val cell = gethash_c(self, hash, key, mkcloc(new_p));
 
       if (new_p)
         rplacd(cell, funcall2(reduce_fun, initval, v));
@@ -1340,11 +1355,13 @@ val hash_alist(val hash)
 
 val hash_uni(val hash1, val hash2, val join_func)
 {
-  struct hash *h1 = coerce(struct hash *, cobj_handle(hash1, hash_s));
-  struct hash *h2 = coerce(struct hash *, cobj_handle(hash2, hash_s));
+  val self = lit("hash-uni");
+  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_s));
+  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_s));
 
   if (h1->hops != h2->hops)
-    uw_throwf(error_s, lit("hash-uni: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
+    uw_throwf(error_s, lit("~a: ~s and ~s are incompatible hashes"),
+              self, hash1, hash2, nao);
 
   {
     val hout = make_similar_hash(hash1);
@@ -1364,7 +1381,7 @@ val hash_uni(val hash1, val hash2, val join_func)
       if (missingp(join_func)) {
         sethash(hout, car(entry), cdr(entry));
       } else {
-        loc ptr = gethash_l(hout, car(entry), nulloc);
+        loc ptr = gethash_l(self, hout, car(entry), nulloc);
         set(ptr, funcall2(join_func, cdr(entry), deref(ptr)));
       }
     }
@@ -1375,11 +1392,13 @@ val hash_uni(val hash1, val hash2, val join_func)
 
 val hash_diff(val hash1, val hash2)
 {
-  struct hash *h1 = coerce(struct hash *, cobj_handle(hash1, hash_s));
-  struct hash *h2 = coerce(struct hash *, cobj_handle(hash2, hash_s));
+  val self = lit("hash-diff");
+  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_s));
+  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_s));
 
   if (h1->hops != h2->hops)
-    uw_throwf(error_s, lit("hash-diff: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
+    uw_throwf(error_s, lit("~a: ~s and ~a are incompatible hashes"),
+              self, hash1, hash2, nao);
 
   {
     val hout = copy_hash(hash1);
@@ -1398,11 +1417,13 @@ val hash_diff(val hash1, val hash2)
 
 val hash_isec(val hash1, val hash2, val join_func)
 {
-  struct hash *h1 = coerce(struct hash *, cobj_handle(hash1, hash_s));
-  struct hash *h2 = coerce(struct hash *, cobj_handle(hash2, hash_s));
+  val self = lit("hash-isec");
+  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_s));
+  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_s));
 
   if (h1->hops != h2->hops)
-    uw_throwf(error_s, lit("hash-uni: ~a and ~a are incompatible hashes"), hash1, hash2, nao);
+    uw_throwf(error_s, lit("~a: ~s and ~s are incompatible hashes"),
+              self, hash1, hash2, nao);
 
   {
     val hout = make_similar_hash(hash1);
@@ -1413,7 +1434,7 @@ val hash_isec(val hash1, val hash2, val join_func)
          entry = hash_next(hiter))
     {
       val found;
-      val data2 = gethash_f(hash2, car(entry), mkcloc(found));
+      val data2 = gethash_f(self, hash2, car(entry), mkcloc(found));
       if (found) {
         if (missingp(join_func))
           sethash(hout, car(entry), cdr(entry));
@@ -1460,15 +1481,17 @@ val hash_update(val hash, val fun)
 
 val hash_update_1(val hash, val key, val fun, val init)
 {
+  val self = lit("hash-update-1");
+
   if (missingp(init)) {
     val cons;
-    val data = gethash_f(hash, key, mkcloc(cons));
+    val data = gethash_f(self, hash, key, mkcloc(cons));
     if (cons)
       rplacd(cons, funcall1(fun, data));
     return data;
   } else {
     val new_p;
-    loc place = gethash_l(hash, key, mkcloc(new_p));
+    loc place = gethash_l(self, hash, key, mkcloc(new_p));
     if (new_p)
       set(place, funcall1(fun, init));
     else

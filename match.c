@@ -4237,6 +4237,7 @@ static val v_assert(match_files_ctx *c)
 
 static val v_load(match_files_ctx *c)
 {
+  val self = lit("@(load)");
   uses_or2;
   spec_bind (specline, first_spec, c->spec);
   val sym = first(first_spec);
@@ -4316,11 +4317,11 @@ static val v_load(match_files_ctx *c)
     } else {
       uw_set_match_context(cons(c->spec, c->bindings));
 
-      if (txr_lisp_p == chr('o') && !read_compiled_file(stream, std_error)) {
+      if (txr_lisp_p == chr('o') && !read_compiled_file(self, stream, std_error)) {
         close_stream(stream, nil);
         uw_throwf(error_s, lit("load: unable to load compiled file ~a"),
                   path, nao);
-      } else if (!read_eval_stream(stream, std_error)) {
+      } else if (!read_eval_stream(self, stream, std_error)) {
         close_stream(stream, nil);
         sem_error(specline, lit("load: ~a contains errors"), path, nao);
       }

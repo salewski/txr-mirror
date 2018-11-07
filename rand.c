@@ -112,10 +112,11 @@ static rand32_t rand32(struct rand_state *r)
 
 val make_random_state(val seed, val warmup)
 {
+  val self = lit("make-random-state");
   val rs = make_state();
   int i = 0;
   struct rand_state *r = coerce(struct rand_state *,
-                                cobj_handle(rs, random_state_s));
+                                cobj_handle(self, rs, random_state_s));
 
   seed = default_null_arg(seed);
   warmup = default_null_arg(warmup);
@@ -154,7 +155,7 @@ val make_random_state(val seed, val warmup)
 #endif
   } else if (random_state_p(seed)) {
     struct rand_state *rseed = coerce(struct rand_state *,
-                                      cobj_handle(seed, random_state_s));
+                                      cobj_handle(self, seed, random_state_s));
     *r = *rseed;
     return rs;
   } else if (vectorp(seed)) {
@@ -193,8 +194,10 @@ val make_random_state(val seed, val warmup)
 
 val random_state_get_vec(val state)
 {
+  val self = lit("random-state-get-vec");
   struct rand_state *r = coerce(struct rand_state *,
-                                cobj_handle(default_arg(state, random_state),
+                                cobj_handle(self,
+                                            default_arg(state, random_state),
                                             random_state_s));
   int i;
   val vec = vector(num_fast(17), nil);
@@ -209,16 +212,20 @@ val random_state_get_vec(val state)
 
 val random_fixnum(val state)
 {
+  val self = lit("random-fixnum");
   struct rand_state *r = coerce(struct rand_state *,
-                                cobj_handle(default_arg(state, random_state),
+                                cobj_handle(self,
+                                            default_arg(state, random_state),
                                             random_state_s));
   return num(rand32(r) & NUM_MAX);
 }
 
 static val random_float(val state)
 {
+  val self = lit("random-float");
   struct rand_state *r = coerce(struct rand_state *,
-                                cobj_handle(default_arg(state, random_state),
+                                cobj_handle(self,
+                                            default_arg(state, random_state),
                                             random_state_s));
   union hack {
     volatile double d;
@@ -245,7 +252,7 @@ val random(val state, val modulus)
 {
   val self = lit("random");
   struct rand_state *r = coerce(struct rand_state *,
-                                cobj_handle(state, random_state_s));
+                                cobj_handle(self, state, random_state_s));
   mp_int *m;
 
   if (bignump(modulus) && !ISNEG(m = mp(modulus))) {

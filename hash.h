@@ -32,12 +32,12 @@ val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed);
 val make_hash(val weak_keys, val weak_vals, val equal_based);
 val make_similar_hash(val existing);
 val copy_hash(val existing);
-val gethash_c(val hash, val key, loc new_p);
-val gethash_e(val hash, val key);
+val gethash_c(val self, val hash, val key, loc new_p);
+val gethash_e(val self, val hash, val key);
 val gethash(val hash, val key);
 val inhash(val hash, val key, val init);
 val gethash_n(val hash, val key, val notfound_val);
-val gethash_f(val hash, val key, loc found);
+val gethash_f(val self, val hash, val key, loc found);
 val sethash(val hash, val key, val value);
 val pushhash(val hash, val key, val value);
 val remhash(val hash, val key);
@@ -74,9 +74,9 @@ val hash_revget(val hash, val value, val test, val keyfun);
 
 void hash_process_weak(void);
 
-INLINE loc gethash_l(val hash, val key, loc new_p)
+INLINE loc gethash_l(val self, val hash, val key, loc new_p)
 {
-  return cdr_l(gethash_c(hash, key, new_p));
+  return cdr_l(gethash_c(self, hash, key, new_p));
 }
 
 void hash_init(void);
