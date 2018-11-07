@@ -3693,32 +3693,28 @@ val lazy_stringp(val str)
 
 val length_str(val str)
 {
-  if (tag(str) == TAG_LIT) {
+  switch (type(str)) {
+  case LIT:
     return num(wcslen(c_str(str)));
-  } else {
-    type_check2 (str, STR, LSTR);
-
-    if (str->ls.type == LSTR) {
-      lazy_str_force(str);
-      return length_str(str->ls.prefix);
-    }
-
+  case LSTR:
+    lazy_str_force(str);
+    return length_str(str->ls.prefix);
+  case STR:
     if (!str->st.len) {
       set(mkloc(str->st.len, str), num(wcslen(str->st.str)));
       set(mkloc(str->st.alloc, str), plus(str->st.len, one));
     }
     return str->st.len;
+  default:
+    type_mismatch(lit("length-str: ~s is not a string"), str, nao);
   }
 }
 
 const wchar_t *c_str(val obj)
 {
-  if (tag(obj) == TAG_LIT)
+  switch (type(obj)) {
+  case LIT:
     return litptr(obj);
-
-  type_check3(obj, STR, SYM, LSTR);
-
-  switch (obj->t.type) {
   case STR:
     return obj->st.str;
   case SYM:
@@ -3727,7 +3723,7 @@ const wchar_t *c_str(val obj)
     lazy_str_force(obj);
     return c_str(obj->ls.prefix);
   default:
-    abort();
+    type_mismatch(lit("~s is not a string"), obj, nao);
   }
 }
 
@@ -7694,89 +7690,81 @@ val lazy_str_force_upto(val lstr, val index)
 
 val length_str_gt(val str, val len)
 {
-  if (is_lit(str)) {
-    const wchar_t *cstr = c_str(str);
-    size_t clen = c_num(len);
-    const wchar_t *nult = wmemchr(cstr, 0, clen + 1);
-    return nult == 0 ? t : nil;
-  } else {
-    type_check2 (str, STR, LSTR);
-
-    switch (str->t.type) {
-    case STR:
-      return gt(length_str(str), len);
-    case LSTR:
-      lazy_str_force_upto(str, len);
-      return gt(length_str(str->ls.prefix), len);
-    default:
-      internal_error("unexpected type value");
+  switch (type(str)) {
+  case LIT:
+    {
+      const wchar_t *cstr = c_str(str);
+      size_t clen = c_num(len);
+      const wchar_t *nult = wmemchr(cstr, 0, clen + 1);
+      return nult == 0 ? t : nil;
     }
+  case STR:
+    return gt(length_str(str), len);
+  case LSTR:
+    lazy_str_force_upto(str, len);
+    return gt(length_str(str->ls.prefix), len);
+  default:
+    type_mismatch(lit("length-str-gt: ~s is not a string"), str, nao);
   }
 }
 
 val length_str_ge(val str, val len)
 {
-  if (is_lit(str)) {
-    const wchar_t *cstr = c_str(str);
-    size_t clen = c_num(len);
-    const wchar_t *nult = wmemchr(cstr, 0, clen);
-    return nult == 0 ? t : nil;
-  } else {
-    type_check2 (str, STR, LSTR);
-
-    switch (str->t.type) {
-    case STR:
-      return ge(length_str(str), len);
-    case LSTR:
-      lazy_str_force_upto(str, len);
-      return ge(length_str(str->ls.prefix), len);
-    default:
-      internal_error("unexpected type value");
+  switch (type(str)) {
+  case LIT:
+    {
+      const wchar_t *cstr = c_str(str);
+      size_t clen = c_num(len);
+      const wchar_t *nult = wmemchr(cstr, 0, clen);
+      return nult == 0 ? t : nil;
     }
+  case STR:
+    return ge(length_str(str), len);
+  case LSTR:
+    lazy_str_force_upto(str, len);
+    return ge(length_str(str->ls.prefix), len);
+  default:
+    type_mismatch(lit("length-str-ge: ~s is not a string"), str, nao);
   }
 }
 
 val length_str_lt(val str, val len)
 {
-  if (is_lit(str)) {
-    const wchar_t *cstr = c_str(str);
-    size_t clen = c_num(len);
-    const wchar_t *nult = wmemchr(cstr, 0, clen);
-    return nult != 0 ? t : nil;
-  } else {
-    type_check2 (str, STR, LSTR);
-
-    switch (str->t.type) {
-    case STR:
-      return lt(length_str(str), len);
-    case LSTR:
-      lazy_str_force_upto(str, len);
-      return lt(length_str(str->ls.prefix), len);
-    default:
-      internal_error("unexpected type value");
+  switch (type(str)) {
+  case LIT:
+    {
+      const wchar_t *cstr = c_str(str);
+      size_t clen = c_num(len);
+      const wchar_t *nult = wmemchr(cstr, 0, clen);
+      return nult != 0 ? t : nil;
     }
+  case STR:
+    return lt(length_str(str), len);
+  case LSTR:
+    lazy_str_force_upto(str, len);
+    return lt(length_str(str->ls.prefix), len);
+  default:
+    type_mismatch(lit("length-str-lt: ~s is not a string"), str, nao);
   }
 }
 
 val length_str_le(val str, val len)
 {
-  if (is_lit(str)) {
-    const wchar_t *cstr = c_str(str);
-    size_t clen = c_num(len);
-    const wchar_t *nult = wmemchr(cstr, 0, clen + 1);
-    return nult != 0 ? t : nil;
-  } else {
-    type_check2 (str, STR, LSTR);
-
-    switch (str->t.type) {
-    case STR:
-      return le(length_str(str), len);
-    case LSTR:
-      lazy_str_force_upto(str, len);
-      return le(length_str(str->ls.prefix), len);
-    default:
-      internal_error("unexpected type value");
+  switch (type(str)) {
+  case LIT:
+    {
+      const wchar_t *cstr = c_str(str);
+      size_t clen = c_num(len);
+      const wchar_t *nult = wmemchr(cstr, 0, clen + 1);
+      return nult != 0 ? t : nil;
     }
+  case STR:
+    return le(length_str(str), len);
+  case LSTR:
+    lazy_str_force_upto(str, len);
+    return le(length_str(str->ls.prefix), len);
+  default:
+    type_mismatch(lit("length-str-lt: ~s is not a string"), str, nao);
   }
 }
 
