@@ -3153,7 +3153,7 @@ val flo(double n)
   return obj;
 }
 
-double c_flo(val num)
+double c_flo(val num, val self)
 {
   type_check(num, FLNUM);
   return num->fl.n;

@@ -399,7 +399,7 @@ val buf_put_float(val buf, val pos, val num)
 {
   val self = lit("buf-put-float");
   double n;
-  double f = c_flo(num);
+  double f = c_flo(num, self);
   if (f > FLT_MAX || f < FLT_MIN)
     uw_throwf(error_s, lit("~a: ~s is out of float range"), self, num, nao);
 
@@ -412,7 +412,7 @@ val buf_put_float(val buf, val pos, val num)
 val buf_put_double(val buf, val pos, val num)
 {
   val self = lit("buf-put-double");
-  double n = c_flo(num);
+  double n = c_flo(num, self);
   buf_put_bytes(buf, pos, coerce(mem_t *, &n), sizeof n, self);
   return num;
 }

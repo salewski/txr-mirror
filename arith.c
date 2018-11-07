@@ -107,6 +107,27 @@ val num_from_buffer(mem_t *buf, int bytes)
   return normalize(n);
 }
 
+static noreturn void not_number(val self, val obj)
+{
+  uw_throwf(type_error_s, lit("~a: ~s is not a number"), self, obj, nao);
+}
+
+static noreturn void not_integer(val self, val obj)
+{
+  uw_throwf(type_error_s, lit("~a: ~s is not an integer"), self, obj, nao);
+}
+
+static noreturn void invalid_ops(val self, val obj1, val obj2)
+{
+  uw_throwf(type_error_s, lit("~a: invalid operands ~s ~s"), self,
+            obj1, obj2, nao);
+}
+
+static noreturn void invalid_op(val self, val obj)
+{
+  uw_throwf(type_error_s, lit("~a: invalid operand ~s"), self, obj, nao);
+}
+
 int num_to_buffer(val num, mem_t *buf, int bytes)
 {
   switch (type(num)) {
@@ -127,7 +148,7 @@ int num_to_buffer(val num, mem_t *buf, int bytes)
   case BGNUM:
     return mp_to_unsigned_buf(mp(num), buf, bytes) == MP_OKAY ? 1 : 0;
   default:
-    type_mismatch(lit("~s is not an integer"), num, nao);
+    not_integer(lit("num-to-buffer"), num);
   }
 }
 
@@ -217,7 +238,7 @@ val bignum_len(val num)
   case BGNUM:
     return unum(mp(num)->used);
   default:
-    type_mismatch(lit("bignum-digits: ~s is not an integer"), num, nao);
+    not_integer(lit("bignum-len"), num);
   }
 }
 
@@ -451,7 +472,7 @@ tail:
         return normalize(n);
       }
     case FLNUM:
-      return flo(c_num(anum) + c_flo(bnum));
+      return flo(c_num(anum) + c_flo(bnum, self));
     case RNG:
       return rcons(plus(anum, from(bnum)), plus(anum, to(bnum)));
     default:
@@ -486,7 +507,7 @@ tail:
         return normalize(n);
       }
     case FLNUM:
-      return flo(c_num(bnum) + c_flo(anum));
+      return flo(c_num(bnum) + c_flo(anum, self));
     case RNG:
       return rcons(plus(from(anum), bnum), plus(to(anum), bnum));
     default:
@@ -506,7 +527,7 @@ tail:
         return normalize(n);
       }
     case TYPE_PAIR(FLNUM, FLNUM):
-      return flo(c_flo(anum) + c_flo(bnum));
+      return flo(c_flo(anum, self) + c_flo(bnum, self));
     case TYPE_PAIR(BGNUM, FLNUM):
       anum = flo_int(anum);
       goto tail;
@@ -552,11 +573,11 @@ tail:
     if (type(anum) == RNG)
       return rcons(plus(from(anum), bnum), plus(to(anum), bnum));
   }
-  uw_throwf(error_s, lit("+: invalid operands ~s ~s"), anum, bnum, nao);
+  invalid_ops(self, anum, bnum);
 char_range:
   uw_throwf(numeric_error_s,
-            lit("+: sum of ~s and ~s is out of character range"),
-            anum, bnum, nao);
+            lit("~a: sum of ~s and ~s is out of character range"),
+            self, anum, bnum, nao);
 }
 
 val minus(val anum, val bnum)
@@ -608,7 +629,7 @@ tail:
         return normalize(n);
       }
     case FLNUM:
-      return flo(c_num(anum) - c_flo(bnum));
+      return flo(c_num(anum) - c_flo(bnum, self));
     case RNG:
       return rcons(minus(anum, from(bnum)), minus(anum, to(bnum)));
     default:
@@ -643,7 +664,7 @@ tail:
         return normalize(n);
       }
     case FLNUM:
-      return flo(c_flo(anum) - c_num(bnum));
+      return flo(c_flo(anum, self) - c_num(bnum));
     case RNG:
       return rcons(minus(from(anum), bnum), minus(to(anum), bnum));
     default:
@@ -663,7 +684,7 @@ tail:
         return normalize(n);
       }
     case TYPE_PAIR(FLNUM, FLNUM):
-      return flo(c_flo(anum) - c_flo(bnum));
+      return flo(c_flo(anum, self) - c_flo(bnum, self));
     case TYPE_PAIR(BGNUM, FLNUM):
       anum = flo_int(anum);
       goto tail;
@@ -690,8 +711,8 @@ tail:
 
       if (sum < 0 || sum > 0x10FFFF)
         uw_throwf(numeric_error_s,
-                  lit("-: difference of ~s and ~s is out of character range"),
-                  anum, bnum, nao);
+                  lit("~a: difference of ~s and ~s is out of character range"),
+                  self, anum, bnum, nao);
       return chr(sum);
     }
   case TAG_PAIR(TAG_CHR, TAG_PTR):
@@ -703,11 +724,14 @@ tail:
       return rcons(minus(from(anum), bnum), minus(to(anum), bnum));
     break;
   }
-  uw_throwf(error_s, lit("-: invalid operands ~s ~s"), anum, bnum, nao);
+
+  invalid_ops(self, anum, bnum);
 }
 
 val neg(val anum)
 {
+  val self = lit("-");
+
   switch (type(anum)) {
   case BGNUM:
     {
@@ -716,18 +740,20 @@ val neg(val anum)
       return n;
     }
   case FLNUM:
-    return flo(-c_flo(anum));
+    return flo(-c_flo(anum, self));
   case NUM:
     return num(-c_num(anum));
   case RNG:
     return rcons(neg(from(anum)), neg(to(anum)));
   default:
-    uw_throwf(error_s, lit("-: ~s is not a number"), anum, nao);
+    not_number(self, anum);
   }
 }
 
 val abso(val anum)
 {
+  val self = lit("abs");
+
   switch (type(anum)) {
   case BGNUM:
     {
@@ -736,7 +762,7 @@ val abso(val anum)
       return n;
     }
   case FLNUM:
-    return flo(fabs(c_flo(anum)));
+    return flo(fabs(c_flo(anum, self)));
   case NUM:
     {
       cnum n = c_num(anum);
@@ -745,7 +771,7 @@ val abso(val anum)
   case RNG:
     return rcons(abso(from(anum)), abso(to(anum)));
   default:
-    uw_throwf(error_s, lit("abs: ~s is not a number"), anum, nao);
+    not_number(self, anum);
   }
 }
 
@@ -765,7 +791,7 @@ static val signum(val anum)
       return if3(a > 0, one, if3(a < 0, negone, zero));
     }
   default:
-    uw_throwf(error_s, lit("signum: ~s is not a number"), anum, nao);
+    not_number(lit("signum"), anum);
   }
 }
 
@@ -831,7 +857,7 @@ tail:
         return n;
       }
     case FLNUM:
-      return flo(c_num(anum) * c_flo(bnum));
+      return flo(c_num(anum) * c_flo(bnum, self));
     case RNG:
       return rcons(mul(anum, from(bnum)), mul(anum, to(bnum)));
     default:
@@ -865,7 +891,7 @@ tail:
         return n;
       }
     case FLNUM:
-      return flo(c_flo(anum) * c_num(bnum));
+      return flo(c_flo(anum, self) * c_num(bnum));
     case RNG:
       return rcons(mul(from(anum), bnum), mul(to(anum), bnum));
     default:
@@ -885,7 +911,7 @@ tail:
         return n;
       }
     case TYPE_PAIR(FLNUM, FLNUM):
-      return flo(c_flo(anum) * c_flo(bnum));
+      return flo(c_flo(anum, self) * c_flo(bnum, self));
     case TYPE_PAIR(BGNUM, FLNUM):
       anum = flo_int(anum);
       goto tail;
@@ -904,10 +930,11 @@ tail:
       break;
     }
   }
-  uw_throwf(error_s, lit("*: invalid operands ~s ~s"), anum, bnum, nao);
+
+  invalid_ops(self, anum, bnum);
 }
 
-static val trunc1(val num)
+static val trunc1(val self, val num)
 {
   switch (type(num)) {
   case NUM:
@@ -915,21 +942,28 @@ static val trunc1(val num)
     return num;
   case FLNUM:
     {
-      double n = c_flo(num);
+      double n = c_flo(num, self);
       return flo(n - fmod(n, 1.0));
     }
   case RNG:
-    return rcons(trunc1(from(num)), trunc1(to(num)));
+    return rcons(trunc1(self, from(num)), trunc1(self, to(num)));
   default:
     break;
   }
-  uw_throwf(error_s, lit("trunc: invalid operand ~s"), num, nao);
+  invalid_op(self, num);
+}
+
+static noreturn void divzero(val self)
+{
+  uw_throwf(numeric_error_s, lit("~a: division by zero"), self, nao);
 }
 
 val trunc(val anum, val bnum)
 {
+  val self = lit("trunc");
+
   if (missingp(bnum))
-    return trunc1(anum);
+    return trunc1(self, anum);
 tail:
   switch (TAG_PAIR(tag(anum), tag(bnum))) {
   case TAG_PAIR(TAG_NUM, TAG_NUM):
@@ -954,7 +988,7 @@ tail:
       return zero;
     case FLNUM:
       {
-        double x = c_num(anum), y = c_flo(bnum);
+        double x = c_num(anum), y = c_flo(bnum, self);
         if (y == 0.0)
           goto divzero;
         else
@@ -993,7 +1027,7 @@ tail:
       }
     case FLNUM:
       {
-        double x = c_flo(anum), y = c_num(bnum);
+        double x = c_flo(anum, self), y = c_num(bnum);
         if (y == 0.0)
           goto divzero;
         else
@@ -1017,7 +1051,7 @@ tail:
       }
     case TYPE_PAIR(FLNUM, FLNUM):
       {
-        double x = c_flo(anum), y = c_flo(bnum);
+        double x = c_flo(anum, self), y = c_flo(bnum, self);
         if (y == 0.0)
           goto divzero;
         else
@@ -1034,9 +1068,9 @@ tail:
       return rcons(trunc(from(anum), bnum), trunc(to(anum), bnum));
     }
   }
-  uw_throwf(error_s, lit("trunc: invalid operands ~s ~s"), anum, bnum, nao);
+  invalid_ops(self, anum, bnum);
 divzero:
-  uw_throw(numeric_error_s, lit("trunc: division by zero"));
+  divzero(self);
 }
 
 static double dmod(double a, double b)
@@ -1052,6 +1086,8 @@ static double dmod(double a, double b)
 
 val mod(val anum, val bnum)
 {
+  val self = lit("mod");
+
 tail:
   switch (TAG_PAIR(tag(anum), tag(bnum))) {
   case TAG_PAIR(TAG_NUM, TAG_NUM):
@@ -1098,7 +1134,7 @@ tail:
         return normalize(n);
       }
     case FLNUM:
-      return flo(dmod(c_num(anum), c_flo(bnum)));
+      return flo(dmod(c_num(anum), c_flo(bnum, self)));
     default:
       break;
     }
@@ -1149,7 +1185,7 @@ tail:
         }
       }
     case FLNUM:
-      return flo(dmod(c_flo(anum), c_num(bnum)));
+      return flo(dmod(c_flo(anum, self), c_num(bnum)));
     default:
       break;
     }
@@ -1180,7 +1216,7 @@ tail:
         return normalize(n);
       }
     case TYPE_PAIR(FLNUM, FLNUM):
-      return flo(dmod(c_flo(anum), c_flo(bnum)));
+      return flo(dmod(c_flo(anum, self), c_flo(bnum, self)));
     case TYPE_PAIR(BGNUM, FLNUM):
       anum = flo_int(anum);
       goto tail;
@@ -1189,9 +1225,9 @@ tail:
       goto tail;
     }
   }
-  uw_throwf(error_s, lit("mod: invalid operands ~s ~s"), anum, bnum, nao);
+  invalid_ops(self, anum, bnum);
 divzero:
-  uw_throw(numeric_error_s, lit("mod: division by zero"));
+  divzero(self);
 }
 
 val floordiv(val anum, val bnum)
@@ -1238,7 +1274,7 @@ tail:
       }
     case FLNUM:
       {
-        double x = c_num(anum), y = c_flo(bnum);
+        double x = c_num(anum), y = c_flo(bnum, self);
         if (y == 0.0)
           goto divzero;
         else
@@ -1295,7 +1331,7 @@ tail:
       }
     case FLNUM:
       {
-        double x = c_flo(anum), y = c_num(bnum);
+        double x = c_flo(anum, self), y = c_num(bnum);
         if (y == 0.0)
           goto divzero;
         else
@@ -1330,7 +1366,7 @@ tail:
       }
     case TYPE_PAIR(FLNUM, FLNUM):
       {
-        double x = c_flo(anum), y = c_flo(bnum);
+        double x = c_flo(anum, self), y = c_flo(bnum, self);
         if (y == 0.0)
           goto divzero;
         else
@@ -1347,9 +1383,9 @@ tail:
       return rcons(floordiv(from(anum), bnum), floordiv(to(anum), bnum));
     }
   }
-  uw_throwf(error_s, lit("floor: invalid operands ~s ~s"), anum, bnum, nao);
+  invalid_ops(self, anum, bnum);
 divzero:
-  uw_throw(numeric_error_s, lit("floor: division by zero"));
+  divzero(self);
 }
 
 val ceildiv(val anum, val bnum)
@@ -1359,7 +1395,7 @@ val ceildiv(val anum, val bnum)
   return neg(floordiv(neg(anum), bnum));
 }
 
-static val round1(val num)
+static val round1(val self, val num)
 {
   switch (type(num)) {
   case NUM:
@@ -1367,28 +1403,30 @@ static val round1(val num)
     return num;
   case FLNUM:
 #if HAVE_ROUND
-    return flo(round(c_flo(num)));
+    return flo(round(c_flo(num, self)));
 #else
     {
-      double n = c_flo(num);
+      double n = c_flo(num, self);
       return if3(n >= 0,
                  flo(floor(0.5 + n)),
                  flo(-floor(0.5 + fabs(n))));
     }
 #endif
   case RNG:
-    return rcons(round1(from(num)), round1(to(num)));
+    return rcons(round1(self, from(num)), round1(self, to(num)));
   default:
     break;
   }
-  uw_throwf(error_s, lit("round: invalid operand ~s"), num, nao);
+  invalid_op(self, num);
 }
 
 
 val roundiv(val anum, val bnum)
 {
+  val self = lit("round");
+
   if (missingp(bnum))
-    return round1(anum);
+    return round1(self, anum);
 
   if (minusp(bnum)) {
     anum = neg(anum);
@@ -1400,7 +1438,7 @@ val roundiv(val anum, val bnum)
   } else if (floatp(anum) || floatp(bnum)) {
     val quot = divi(anum, bnum);
 #if HAVE_ROUND
-    return flo(round(c_flo(quot)));
+    return flo(round(c_flo(quot, self)));
 #else
     {
       double q = c_flo(quot);
@@ -1469,32 +1507,38 @@ static val to_float(val func, val num)
   case FLNUM:
     return num;
   default:
-    uw_throwf(error_s, lit("~a: invalid operand ~s"), func, num, nao);
+    invalid_op(func, num);
   }
 }
 
 val divi(val anum, val bnum)
 {
+  val self = lit("/");
+
   if (missingp(bnum)) {
-    double b = c_flo(to_float(lit("/"), anum));
+    double b = c_flo(to_float(self, anum), self);
     if (b == 0.0)
-      uw_throw(numeric_error_s, lit("/: division by zero"));
+      goto divzero;
     return flo(1.0 / b);
   } else if (type(anum) == RNG) {
     return rcons(divi(from(anum), bnum), divi(to(anum), bnum));
   } else {
-    double a = c_flo(to_float(lit("/"), anum));
-    double b = c_flo(to_float(lit("/"), bnum));
+    double a = c_flo(to_float(self, anum), self);
+    double b = c_flo(to_float(self, bnum), self);
 
     if (b == 0.0)
-      uw_throw(numeric_error_s, lit("/: division by zero"));
+      goto divzero;
 
     return flo(a / b);
   }
+divzero:
+  divzero(self);
 }
 
 val zerop(val num)
 {
+  val self = lit("zerop");
+
   if (num == zero)
     return t;
 
@@ -1503,45 +1547,49 @@ val zerop(val num)
   case BGNUM:
     return nil;
   case FLNUM:
-    return if2(c_flo(num) == 0.0, t);
+    return if2(c_flo(num, self) == 0.0, t);
   case CHR:
     return if2(num == chr(0), t);
   case RNG:
     return and2(zerop(from(num)), zerop(to(num)));
   default:
-    uw_throwf(error_s, lit("zerop: ~s is not a number"), num, nao);
+    not_number(self, num);
   }
 }
 
 val plusp(val num)
 {
+  val self = lit("zerop");
+
   switch (type(num)) {
   case NUM:
     return if2(c_num(num) > 0, t);
   case BGNUM:
     return if2(mp_cmp_z(mp(num)) == MP_GT, t);
   case FLNUM:
-    return if2(c_flo(num) > 0.0, t);
+    return if2(c_flo(num, self) > 0.0, t);
   case CHR:
     return if2(num != chr(0), t);
   default:
-    uw_throwf(error_s, lit("plusp: ~s is not a number"), num, nao);
+    not_number(self, num);
   }
 }
 
 val minusp(val num)
 {
+  val self = lit("minusp");
+
   switch (type(num)) {
   case NUM:
     return if2(c_num(num) < 0, t);
   case BGNUM:
     return if2(mp_cmp_z(mp(num)) == MP_LT, t);
   case FLNUM:
-    return if2(c_flo(num) < 0.0, t);
+    return if2(c_flo(num, self) < 0.0, t);
   case CHR:
     return nil;
   default:
-    uw_throwf(error_s, lit("minusp: ~s is not a number"), num, nao);
+    not_number(self, num);
   }
 }
 
@@ -1553,8 +1601,7 @@ val evenp(val num)
   case BGNUM:
     return mp_iseven(mp(num)) ? t : nil;
   default:
-    uw_throwf(error_s, lit("evenp: ~s is not an integer"), num, nao);
-    return nil;
+    not_integer(lit("evenp"), num);
   }
 }
 
@@ -1566,7 +1613,7 @@ val oddp(val num)
   case BGNUM:
     return mp_isodd(mp(num)) ? t : nil;
   default:
-    uw_throwf(error_s, lit("oddp: ~s is not an integer"), num, nao);
+    not_integer(lit("oddp"), num);
     return nil;
   }
 }
@@ -1603,6 +1650,7 @@ val pppred(val num)
 
 val gt(val anum, val bnum)
 {
+  val self = lit(">");
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
@@ -1620,12 +1668,12 @@ tail:
     return mp_cmp(mp(anum), mp(bnum)) == MP_GT ? t : nil;
   case TYPE_PAIR(NUM, FLNUM):
   case TYPE_PAIR(CHR, FLNUM):
-    return c_num(anum) > c_flo(bnum) ? t : nil;
+    return c_num(anum) > c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, NUM):
   case TYPE_PAIR(FLNUM, CHR):
-    return c_flo(anum) > c_num(bnum) ? t : nil;
+    return c_flo(anum, self) > c_num(bnum) ? t : nil;
   case TYPE_PAIR(FLNUM, FLNUM):
-    return c_flo(anum) > c_flo(bnum) ? t : nil;
+    return c_flo(anum, self) > c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, BGNUM):
     bnum = flo_int(bnum);
     goto tail;
@@ -1647,11 +1695,12 @@ tail:
     }
   }
 
-  uw_throwf(error_s, lit(">: invalid operands ~s ~s"), anum, bnum, nao);
+  invalid_ops(self, anum, bnum);
 }
 
 val lt(val anum, val bnum)
 {
+  val self = lit("<");
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
@@ -1669,12 +1718,12 @@ tail:
     return mp_cmp(mp(anum), mp(bnum)) == MP_LT ? t : nil;
   case TYPE_PAIR(NUM, FLNUM):
   case TYPE_PAIR(CHR, FLNUM):
-    return c_num(anum) < c_flo(bnum) ? t : nil;
+    return c_num(anum) < c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, NUM):
   case TYPE_PAIR(FLNUM, CHR):
-    return c_flo(anum) < c_num(bnum) ? t : nil;
+    return c_flo(anum, self) < c_num(bnum) ? t : nil;
   case TYPE_PAIR(FLNUM, FLNUM):
-    return c_flo(anum) < c_flo(bnum) ? t : nil;
+    return c_flo(anum, self) < c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, BGNUM):
     bnum = flo_int(bnum);
     goto tail;
@@ -1696,11 +1745,12 @@ tail:
     }
   }
 
-  uw_throwf(error_s, lit("<: invalid operands ~s ~s"), anum, bnum, nao);
+  invalid_ops(self, anum, bnum);
 }
 
 val ge(val anum, val bnum)
 {
+  val self = lit(">=");
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
@@ -1723,12 +1773,12 @@ tail:
     }
   case TYPE_PAIR(NUM, FLNUM):
   case TYPE_PAIR(CHR, FLNUM):
-    return c_num(anum) >= c_flo(bnum) ? t : nil;
+    return c_num(anum) >= c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, NUM):
   case TYPE_PAIR(FLNUM, CHR):
-    return c_flo(anum) >= c_num(bnum) ? t : nil;
+    return c_flo(anum, self) >= c_num(bnum) ? t : nil;
   case TYPE_PAIR(FLNUM, FLNUM):
-    return c_flo(anum) >= c_flo(bnum) ? t : nil;
+    return c_flo(anum, self) >= c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, BGNUM):
     bnum = flo_int(bnum);
     goto tail;
@@ -1750,11 +1800,12 @@ tail:
     }
   }
 
-  uw_throwf(error_s, lit(">=: invalid operands ~s ~s"), anum, bnum, nao);
+  invalid_ops(self, anum, bnum);
 }
 
 val le(val anum, val bnum)
 {
+  val self = lit("<=");
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
@@ -1777,12 +1828,12 @@ tail:
     }
   case TYPE_PAIR(NUM, FLNUM):
   case TYPE_PAIR(CHR, FLNUM):
-    return c_num(anum) <= c_flo(bnum) ? t : nil;
+    return c_num(anum) <= c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, NUM):
   case TYPE_PAIR(FLNUM, CHR):
-    return c_flo(anum) <= c_num(bnum) ? t : nil;
+    return c_flo(anum, self) <= c_num(bnum) ? t : nil;
   case TYPE_PAIR(FLNUM, FLNUM):
-    return c_flo(anum) <= c_flo(bnum) ? t : nil;
+    return c_flo(anum, self) <= c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, BGNUM):
     bnum = flo_int(bnum);
     goto tail;
@@ -1804,11 +1855,12 @@ tail:
     }
   }
 
-  uw_throwf(error_s, lit("<=: invalid operands ~s ~s"), anum, bnum, nao);
+  invalid_ops(self, anum, bnum);
 }
 
 val numeq(val anum, val bnum)
 {
+  val self = lit("=");
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
@@ -1826,12 +1878,12 @@ tail:
     return mp_cmp(mp(anum), mp(bnum)) == MP_EQ ? t : nil;
   case TYPE_PAIR(NUM, FLNUM):
   case TYPE_PAIR(CHR, FLNUM):
-    return c_num(anum) == c_flo(bnum) ? t : nil;
+    return c_num(anum) == c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, NUM):
   case TYPE_PAIR(FLNUM, CHR):
-    return c_flo(anum) == c_num(bnum) ? t : nil;
+    return c_flo(anum, self) == c_num(bnum) ? t : nil;
   case TYPE_PAIR(FLNUM, FLNUM):
-    return c_flo(anum) == c_flo(bnum) ? t : nil;
+    return c_flo(anum, self) == c_flo(bnum, self) ? t : nil;
   case TYPE_PAIR(FLNUM, BGNUM):
     bnum = flo_int(bnum);
     goto tail;
@@ -1843,7 +1895,7 @@ tail:
                 numeq(to(anum), to(bnum)));
   }
 
-  uw_throwf(error_s, lit("=: invalid operands ~s ~s"), anum, bnum, nao);
+  invalid_ops(self, anum, bnum);
 }
 
 val expt(val anum, val bnum)
@@ -1939,11 +1991,11 @@ tail:
     }
   case TYPE_PAIR(NUM, FLNUM):
     /* TODO: error checking */
-    return flo(pow(c_num(anum), c_flo(bnum)));
+    return flo(pow(c_num(anum), c_flo(bnum, self)));
   case TYPE_PAIR(FLNUM, NUM):
-    return flo(pow(c_flo(anum), c_num(bnum)));
+    return flo(pow(c_flo(anum, self), c_num(bnum)));
   case TYPE_PAIR(FLNUM, FLNUM):
-    return flo(pow(c_flo(anum), c_flo(bnum)));
+    return flo(pow(c_flo(anum, self), c_flo(bnum, self)));
   case TYPE_PAIR(BGNUM, FLNUM):
     anum = flo_int(anum);
     goto tail;
@@ -1952,9 +2004,9 @@ tail:
     goto tail;
   }
 
-  uw_throwf(error_s, lit("expt: invalid operands ~s ~s"), anum, bnum, nao);
+  invalid_ops(self, anum, bnum);
 negexp:
-  uw_throw(error_s, lit("expt: negative exponent"));
+  uw_throwf(type_error_s, lit("~a: negative exponent"), self, nao);
 }
 
 val exptmod(val base, val exp, val mod)
@@ -2096,80 +2148,95 @@ val divides(val d, val n)
 
 val floorf(val num)
 {
+  val self = lit("floor");
+
   switch (type(num)) {
   case NUM:
   case BGNUM:
     return num;
   case FLNUM:
-    return flo(floor(c_flo(num)));
+    return flo(floor(c_flo(num, self)));
   case RNG:
     return rcons(floorf(from(num)), floorf(to(num)));
   default:
     break;
   }
-  uw_throwf(error_s, lit("floor: invalid operand ~s"), num, nao);
+
+  invalid_op(self, num);
 }
 
 val ceili(val num)
 {
+  val self = lit("ceil");
+
   switch (type(num)) {
   case NUM:
   case BGNUM:
     return num;
   case FLNUM:
-    return flo(ceil(c_flo(num)));
+    return flo(ceil(c_flo(num, self)));
   case RNG:
     return rcons(ceili(from(num)), ceili(to(num)));
   default:
     break;
   }
-  uw_throwf(error_s, lit("ceil: invalid operand ~s"), num, nao);
+
+  invalid_op(self, num);
 }
 
 val sine(val num)
 {
-  return flo(sin(c_flo(to_float(lit("sin"), num))));
+  val self = lit("sin");
+  return flo(sin(c_flo(to_float(self, num), self)));
 }
 
 val cosi(val num)
 {
-  return flo(cos(c_flo(to_float(lit("cos"), num))));
+  val self = lit("cos");
+  return flo(cos(c_flo(to_float(self, num), self)));
 }
 
 val tang(val num)
 {
-  return flo(tan(c_flo(to_float(lit("tan"), num))));
+  val self = lit("tan");
+  return flo(tan(c_flo(to_float(self, num), self)));
 }
 
 val asine(val num)
 {
-  return flo(asin(c_flo(to_float(lit("asin"), num))));
+  val self = lit("asin");
+  return flo(asin(c_flo(to_float(self, num), self)));
 }
 
 val acosi(val num)
 {
-  return flo(acos(c_flo(to_float(lit("acos"), num))));
+  val self = lit("acos");
+  return flo(acos(c_flo(to_float(self, num), self)));
 }
 
 val atang(val num)
 {
-  return flo(atan(c_flo(to_float(lit("atan"), num))));
+  val self = lit("atan");
+  return flo(atan(c_flo(to_float(self, num), self)));
 }
 
 val atang2(val y, val x)
 {
-  return flo(atan2(c_flo(to_float(lit("atan2"), y)),
-                   c_flo(to_float(lit("atan2"), x))));
+  val self = lit("atan2");
+  return flo(atan2(c_flo(to_float(self, y), self),
+                   c_flo(to_float(self, x), self)));
 }
 
 val loga(val num)
 {
-  return flo(log(c_flo(to_float(lit("log"), num))));
+  val self = lit("log");
+  return flo(log(c_flo(to_float(self, num), self)));
 }
 
 val logten(val num)
 {
-  return flo(log10(c_flo(to_float(lit("log"), num))));
+  val self = lit("log10");
+  return flo(log10(c_flo(to_float(self, num), self)));
 }
 
 #if HAVE_LOG2
@@ -2196,17 +2263,20 @@ static double log2(double x)
 
 val logtwo(val num)
 {
-  return flo(log2(c_flo(to_float(lit("log"), num))));
+  val self = lit("log2");
+  return flo(log2(c_flo(to_float(self, num), self)));
 }
 
 val expo(val num)
 {
-  return flo(exp(c_flo(to_float(lit("exp"), num))));
+  val self = lit("exp");
+  return flo(exp(c_flo(to_float(self, num), self)));
 }
 
 val sqroot(val num)
 {
-  return flo(sqrt(c_flo(to_float(lit("sqrt"), num))));
+  val self = lit("sqrt");
+  return flo(sqrt(c_flo(to_float(self, num), self)));
 }
 
 /*
@@ -2214,7 +2284,8 @@ val sqroot(val num)
  */
 val int_flo(val f)
 {
-  double d = c_flo(f);
+  val self = lit("int-flo");
+  double d = c_flo(f, self);
 
   if (d >= INT_PTR_MAX && d <= INT_PTR_MIN - 1) {
     cnum n = d;
@@ -2231,8 +2302,8 @@ val int_flo(val f)
 
     if (!isdigit(text[0]) && (text[0] != '-' || !isdigit(text[1])))
       uw_throwf(error_s,
-                lit("int-flo: cannot convert #<bad-float> to integer"),
-                nao);
+                lit("~a: cannot convert #<bad-float> to integer"),
+                self, nao);
 
     have_exp = (strchr(text, 'e') != 0);
     have_point = (strchr(text, '.') != 0);
@@ -2271,6 +2342,8 @@ val int_flo(val f)
 
 val flo_int(val i)
 {
+  val self = lit("flo-int");
+
   if (fixnump(i))
     return flo(c_num(i));
 
@@ -2278,8 +2351,8 @@ val flo_int(val i)
     double d;
     type_check(i, BGNUM);
     if (mp_to_double(mp(i), &d) != MP_OKAY)
-      uw_throwf(error_s, lit("flo-int: bignum to float conversion failed"),
-                nao);
+      uw_throwf(error_s, lit("~a: bignum to float conversion failed"),
+                self, nao);
     return flo(d);
   }
 }
@@ -2770,8 +2843,9 @@ val logcount(val n)
  */
 val cum_norm_dist(val arg)
 {
-  val arg_flo = to_float(lit("cum-norm-dist"), arg);
-  double x = c_flo(arg_flo);
+  val self = lit("cum-norm-dist");
+  val arg_flo = to_float(self, arg);
+  double x = c_flo(arg_flo, self);
   double xabs = fabs(x);
 
   if (xabs > 37.0) {
@@ -2823,8 +2897,9 @@ val cum_norm_dist(val arg)
  */
 val inv_cum_norm(val arg)
 {
-  val arg_flo = to_float(lit("inv-cum-norm"), arg);
-  double p = c_flo(arg_flo);
+  val self = lit("inv-cum-norm");
+  val arg_flo = to_float(self, arg);
+  double p = c_flo(arg_flo, self);
   int is_upper_half = (p >= 0.5);
   double r = is_upper_half ? 1 - p : p;
   if (r < 1E-20) {

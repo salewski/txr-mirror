@@ -3232,7 +3232,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
               obj = flo_int(obj);
               /* fallthrough */
             case FLNUM:
-              n = c_flo(obj);
+              n = c_flo(obj, lit("format"));
               break;
             case NUM:
               n = convert(double, c_num(obj));

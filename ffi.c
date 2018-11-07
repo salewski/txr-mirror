@@ -684,7 +684,7 @@ static void ffi_float_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
     n = int_flo(n);
     /* fallthrough */
   default:
-    v = c_flo(n);
+    v = c_flo(n, self);
     break;
   }
 
@@ -719,7 +719,7 @@ static void ffi_double_put(struct txr_ffi_type *tft, val n, mem_t *dst,
     n = int_flo(n);
     /* fallthrough */
   default:
-    v = c_flo(n);
+    v = c_flo(n, self);
     break;
   }
 

@@ -657,7 +657,7 @@ val num(cnum val);
 val flo(double val);
 cnum c_num(val num);
 cnum c_fixnum(val num, val self);
-double c_flo(val num);
+double c_flo(val self, val num);
 val fixnump(val num);
 val bignump(val num);
 val floatp(val num);
