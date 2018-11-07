@@ -7636,7 +7636,6 @@ val lazy_str_force(val lstr)
 val lazy_str_put(val lstr, val stream)
 {
   val lim, term, iter;
-  type_check(lstr, LSTR);
   lim = lstr->ls.props->limit;
   term = lstr->ls.props->term;
 
@@ -10924,7 +10923,6 @@ static void out_lazy_str(val lstr, val out)
   val lim, term, iter;
   const wchar_t *wcterm;
 
-  type_check(lstr, LSTR);
   lim = lstr->ls.props->limit;
   term = lstr->ls.props->term;
   wcterm = c_str(term);
