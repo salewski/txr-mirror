@@ -104,7 +104,7 @@ static int hash_str_limit = INT_MAX, hash_rec_limit = 32;
 
 /* C99 inline instantiations. */
 #if __STDC_VERSION__ >= 199901L
-loc gethash_l(val hash, val key, loc new_p);
+loc gethash_l(val self, val hash, val key, loc new_p);
 #endif
 
 static u32_t randbox[] = {
