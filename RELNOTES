@@ -1,3 +1,30 @@
+                                    TXR 201
+                                   2018-11-07
+
+
+  Features
+
+  - load now tolerates and ignores hash bang lines instead of
+    trying to parse them as syntax.
+    - previously, hash bang was only supported in files invoked
+      from the txr command line.
+  - some internal improvements related to gc.
+  - improved type mismatch diagnosis in many library areas
+    - more instances of which function triggered mismatch.
+
+  Bugs
+
+  - compiler:
+    - compile-file was incorrectly handling situation with a defpackage
+      followed by symbols from that package in the same file,
+      resulting in a file that won't load.
+  - load:
+    - exception no longer thrown when file is empty.
+  - a few instances of error messages containing a quoted
+    function name.
+
+
+
                                     TXR 200
                                    2018-11-05
 
