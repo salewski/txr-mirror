@@ -2801,6 +2801,30 @@ else
   printf "no\n"
 fi
 
+if [ $have_sockets ] ; then
+  printf "Checking whether we have <sys/select.h> ... "
+
+  cat > conftest.c <<!
+#include <sys/select.h>
+
+int main(int argc, char **argv)
+{
+  fd_set rfds;
+  int res;
+  FD_ZERO(&rfds);
+  FD_SET(0, &rfds);
+  res = res = select(1, &rfds, 0, 0, 0);
+  return 0;
+}
+!
+  if conftest; then
+    printf "yes\n"
+    printf "#define HAVE_SYS_SELECT_H 1\n" >> config.h
+  else
+    printf "no\n"
+  fi
+fi
+
 printf "Checking for getaddrinfo ... "
 
 cat > conftest.c <<!

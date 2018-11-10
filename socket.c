@@ -40,6 +40,9 @@
 #include <netdb.h>
 #include "config.h"
 #include ALLOCA_H
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 #include "lib.h"
 #include "stream.h"
 #include "signal.h"
