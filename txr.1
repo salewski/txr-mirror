@@ -64455,8 +64455,7 @@ This is determined by the special variable
 whose default value is
 .code t
 (multi-line mode).  It is possible to toggle between
-line mode and multi-line mode using the Ctrl-J command. The default changed
-starting in \*(TX 179. Versions up to 178 defaulted to single-line mode.
+line mode and multi-line mode using the Ctrl-J command.
 
 In line mode, all input given to a single prompt appears to be on a single
 line. When the line becomes longer than the screen width, it scrolls
@@ -64483,13 +64482,7 @@ closing punctuation for elements like compound expressions and string literals.
 If the input appears incomplete, then the Enter is inserted verbatim at
 the current cursor position, rather than signaling that the line is
 being submitted for evaluation. The Ctrl-X, Enter command sequence also has
-this behavior. This feature was introduced in \*(TX 179, at the same time
-when multi-line mode was made default. In versions prior to 178, Enter
-always submitted the line for evaluation; entering line breaks required
-the use of the Ctrl-V, Enter sequence, the use of extended verbatim mode using
-Ctrl-X, Ctrl-V, or else use of the
-.code :read
-command.
+this behavior.
 
 .SS* Reading Forms Directly from the Terminal
 
