@@ -64519,15 +64519,19 @@ background process, or serial line noise.
 
 The Ctrl-Z ("Zzzz... (sleep)") command causes \*(TX to be placed into the
 background in a suspended, and control returned to the system shell.
-This feature depends on the use of a POSIX job control shell.
 
 Bringing the suspended \*(TX back into the foreground is achieved with a shell
-command such as the
+job-control command such as the
 .code fg
 command in GNU Bash.
 
 When \*(TX is resumed, the interactive listener will re-display the edited
 line and restore the previous cursor position.
+
+Making full use of this feature requires a POSIX job control shell,
+in the sense that without job control support in the shell, there may not be a
+way to restore \*(TX into the terminal session's foreground, causing the
+user to lose interactive control over that \*(TX instance.
 
 .SS* Editing Help
 
