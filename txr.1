@@ -1301,9 +1301,11 @@ Basic example:
 
 Here,
 .code env
-searches for 
-.code txr
-receives, from the operating system the arguments:
+searches for
+.codn txr ,
+finding it in
+.codn /usr/bin .
+Thus, including the executable name, \*(TX receives this full argument list:
 
 .cblk
   /usr/bin/txr /home/jenny/foo.txr --bar abc
@@ -1328,7 +1330,7 @@ the script name. The effective command line then becomes:
 Command line option processing continues, beginning with the
 .code -a
 option. After the option is processed,
-.code /home/amy/foo.txr
+.code /home/jenny/foo.txr
 is encountered again. This time it is not opened a second time;
 it signals the end of option processing, exactly as it would immediately
 do if it hadn't triggered the insertion of any arguments.
@@ -1350,15 +1352,15 @@ can be used in conjunction with the null hack. When
 begins executing, it receives the arguments
 
 .cblk
-  /usr/bin/txr /home/amy/foo.txr
+  /usr/bin/txr /home/jenny/foo.txr
 .cble
 
 The script file is opened, and the arguments delimited by the
-null character in the hash bang line are inserted, resulting 
+null character in the hash bang line are inserted, resulting
 in the effective command line:
 
 .cblk
-  /usr/bin/txr --eargs:-C:175:{}:--debug /home/amy/foo.txr
+  /usr/bin/txr --eargs:-C:175:{}:--debug /home/jenny/foo.txr
 .cble
 
 Next,
@@ -1367,7 +1369,7 @@ is processed in the ordinary way, transforming the command line
 into:
 
 .cblk
-  /usr/bin/txr -C 175 /home/amy/foo.txr --debug
+  /usr/bin/txr -C 175 /home/jenny/foo.txr --debug
 .cble
 
 The name of the script file is encountered, and signals the end
@@ -1377,7 +1379,7 @@ receives the
 .code -C
 option, instructing it to emulate some behaviors from version 175,
 and the
-.code /home/amy/foo.txr
+.code /home/jenny/foo.txr
 script receives
 .code --debug
 as
