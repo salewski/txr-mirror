@@ -350,31 +350,27 @@
 .cble
 
 .SH* DESCRIPTION
-\*(TX is a programming language supporting multiple paradigms.
-It in fact comprises two languages integrated into a single tool: a text
-scanning and extraction language referred to as the \*(TX pattern language, or
-sometimes just \*(TX when it is clear; and a general-purpose dialect of Lisp
-called \*(TL.
+\*(TX is a general-purpose, multi-paradigm programming language.
+It comprises two languages integrated into a single tool: a text
+scanning and extraction language referred to as the \*(TX Pattern Language
+(sometimes just "TXR"), and a general-purpose dialect of Lisp called \*(TL.
 
-A script written in the \*(TX pattern language is referred to in this
-document as a query, and it
-specifies a pattern which matches (a prefix of) an entire file, or multiple
-files.  Patterns can consists of large chunks of multi-line free-form text,
-which is matched literally against material in the input sources. Free
+\*(TX can be used for everything from "one liner" data transformation tasks at
+the command line, to data scanning and extracting scripts, to full
+application development in a wide-range of areas.
+
+A script written in the \*(TX Pattern Language, also referred to in this
+document as a
+.IR query ,
+specifies a pattern which matches one or more sources of inputs, such
+as text files. Patterns can consist of large chunks of multi-line free-form
+text, which is matched literally against material in the input sources. Free
 variables occurring in the pattern (denoted by the
 .code @
 symbol) are bound to the pieces of text occurring in the
-corresponding positions. If the overall match is successful, then
-\*(TX can do one of two things: it can report the list of variables which were
-bound, in the form of a set of variable assignments which can be evaluated by
-the
-.B eval
-command of the POSIX shell language, or generate a custom report according
-to special directives in the query. Patterns can be arbitrarily complex,
+corresponding positions.  Patterns can be arbitrarily complex,
 and can be broken down into named pattern functions, which may be mutually
-recursive. \*(TX patterns can work horizontally (characters within a line)
-or vertically (spanning multiple lines). Multiple lines can be treated
-as a single line.
+recursive.
 
 In addition to embedded variables which implicitly match text, the
 \*(TX pattern language supports a number of directives, for matching text using
@@ -383,13 +379,29 @@ through a file for the place where an entire sub-query matches, for collecting
 lists, and for combining sub-queries using logical conjunction, disjunction and
 negation, and numerous others.
 
-Furthermore, embedded within \*(TX is a powerful Lisp dialect.  \*(TL supports
-functional, imperative and object-oriented programming, and provides data types
-such as symbols, strings, vectors, hash tables with weak reference support,
-lazy lists, and arbitrary-precision (bignum integers).
+Patterns can contain actions which transform data and generate output.
+These actions can be embedded anywhere within the pattern matching logic.
+A common structure for small \*(TX scripts is to perform a complete matching
+session in the at the top of the script, and then deal with processing
+and reporting at the bottom.
 
-\*(TL features an expressive foreign function interface (FFI) for calling into
-libraries and other software components that support C-language-style calls.
+The \*(TL language can be used from within \*(TX scripts as an
+embedded language, or completely stand-alone.  It supports functional,
+imperative and object-oriented programming, and provides numerous data types
+such as symbols, strings, vectors, hash tables with weak reference support,
+lazy lists, and arbitrary-precision ("bignum") integers.  It has expressive
+foreign function interface (FFI) for calling into libraries and other software
+components that support C-language-style calls. 
+
+\*(TL source files as well as individual functions can be optionally compiled
+for execution on a virtual machine that is built into \*(TX.  Compiled files
+execute and load faster, and resist reverse-engineering.  Stand-alone
+application delivery is possible.
+
+\*(TX is free software offered under the two-clause BSD license which
+places almost no restrictions on redistribution, and allows every conceivable
+use, of the whole software or any constituent part, royalty-free, free of
+charge, and free of any restrictions.
 
 .SH* ARGUMENTS AND OPTIONS
 
