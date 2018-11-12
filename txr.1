@@ -11053,14 +11053,17 @@ That is to say, this dot operator constructs a
 .code qref
 expression out of its left and right arguments. If the right argument
 of the dot is already a qref expression (whether produced by another instance
-of the dot operator, or expressed directly) it is merged. And the qref dot
-operator is right-to-left associative, so that
+of the dot operator, or expressed directly) it is merged. This requires
+the qref dot operator to be right-to-left associative, so that
 .code a.b.c
-first produces
-.code "(qref b c)"
-via the right dot, and then
+works by first translating
+.code b.c
+to
+.codn "(qref b c)" ,
+and then adjoining
 .code a
-is adjoined into the syntax via the right dot.
+to produce
+.codn "(qref a b c)" .
 
 Integer tokens cannot be involved in this syntax, because they
 form floating-point constants when juxtaposed with a dot.
