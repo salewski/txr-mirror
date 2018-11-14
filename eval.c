@@ -138,6 +138,22 @@ val copy_env(val oenv)
   }
 }
 
+val deep_copy_env(val oenv)
+{
+  type_check(lit("deep-copy-env"), oenv, ENV);
+
+  {
+    val nenv = make_obj();
+    nenv->e.type = ENV;
+    nenv->e.vbindings = copy_alist(oenv->e.vbindings);
+    nenv->e.fbindings = copy_alist(oenv->e.fbindings);
+
+    nenv->e.up_env = if2(oenv->e.up_env != nil,
+                         deep_copy_env(oenv->e.up_env));
+    return nenv;
+  }
+}
+
 /*
  * Wrapper for performance reasons: don't make make_env
  * process default arguments.
@@ -6745,6 +6761,7 @@ void eval_init(void)
   reg_fun(intern(lit("special-operator-p"), user_package), func_n1(special_operator_p));
   reg_fun(intern(lit("special-var-p"), user_package), func_n1(special_var_p));
   reg_fun(sys_mark_special_s, func_n1(mark_special));
+  reg_fun(intern(lit("copy-fun"), user_package), func_n1(copy_fun));
   reg_fun(intern(lit("func-get-form"), user_package), func_n1(func_get_form));
   reg_fun(intern(lit("func-get-name"), user_package), func_n2o(func_get_name, 1));
   reg_fun(intern(lit("func-get-env"), user_package), func_n1(func_get_env));

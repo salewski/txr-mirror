@@ -14207,6 +14207,42 @@ argument is not given any special syntactic treatment at all)
 while the Lisp-2 foundation provides a traditional Lisp environment with its
 "natural hygiene".
 
+.coNP Function @ copy-fun
+.synb
+.mets (copy-fun << function )
+.syne
+.desc
+The
+.code copy-fun
+function produces and returns a duplicate of
+.metn function ,
+which must be a function.
+
+A duplicate of a function is a distinct function object not
+.code eq
+to the original function, yet which accepts the same arguments
+and behaves exactly the same way as the original.
+
+If a function contains no captured environment, then a copy made of that
+function by
+.code copy-fun
+is indistinguishable from the original function in every regard,
+except for being a distinct object that compares unequal to the original
+under the
+.code eq
+function.
+
+If a function contains a captured environment, then a copy of that function
+made by
+.code copy-fun
+has its own copy of that environment. If the copied function changes the
+values of captured lexical variables, the original function is not affected by
+these changes and
+.IR "vice versa" .
+
+The entire lexical environment is copied; the copy and original function do not
+share any portion of the environment at any level of nesting.
+
 .SS* Sequencing, Selection and Iteration
 .coNP Operators @ progn and @ prog1
 .synb

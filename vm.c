@@ -292,6 +292,32 @@ static val vm_make_closure(struct vm *vm, int frsz)
   return closure;
 }
 
+val vm_copy_closure(val oclosure)
+{
+  struct vm_closure *ovc = coerce(struct vm_closure *, oclosure->co.handle);
+  const size_t hdr_sz = offsetof (struct vm_closure, dspl);
+  size_t dspl_sz = ovc->nlvl * sizeof (struct vm_env);
+  struct vm_closure *nvc = coerce(struct vm_closure *,
+                                  chk_malloc(hdr_sz + dspl_sz));
+  val nclosure;
+  int i;
+
+  memcpy(nvc, ovc, hdr_sz + dspl_sz);
+
+  nclosure = cobj(coerce(mem_t *, nvc), vm_closure_s, &vm_closure_ops);
+
+  for (i = 2; i < nvc->nlvl; i++) {
+    struct vm_env *ndi = &nvc->dspl[i];
+
+    if (ndi->vec != nil) {
+      ndi->vec = copy_vec(ndi->vec);
+      ndi->mem = ndi->vec->v.vec;
+    }
+  }
+
+  return nclosure;
+}
+
 static void vm_closure_mark(val obj)
 {
   struct vm_closure *vc = coerce(struct vm_closure *, obj->co.handle);

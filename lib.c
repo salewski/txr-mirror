@@ -6129,6 +6129,21 @@ val func_vm(val closure, val desc, int fixparam, int reqargs, int variadic)
   return obj;
 }
 
+val copy_fun(val ofun)
+{
+  val self = lit("copy-fun");
+  type_check(self, ofun, FUN);
+  {
+    val nfun = make_obj();
+    nfun->f = ofun->f;
+
+    if (nfun->f.env)
+      nfun->f.env = if3(nfun->f.functype == FVM,
+                        vm_copy_closure, deep_copy_env)(nfun->f.env);
+    return nfun;
+  }
+}
+
 val func_get_form(val fun)
 {
   val self = lit("func-get-form");

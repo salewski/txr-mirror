@@ -44,6 +44,7 @@ val set_last_form_evaled(val form);
 void error_trace(val exsym, val exvals, val out_stream, val prefix);
 val make_env(val fbindings, val vbindings, val up_env);
 val copy_env(val oenv);
+val deep_copy_env(val oenv);
 val env_fbind(val env, val sym, val fun);
 val env_vbind(val env, val sym, val obj);
 val lookup_var(val env, val sym);
