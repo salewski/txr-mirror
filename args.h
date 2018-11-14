@@ -37,10 +37,6 @@ typedef int arg_index;
 #define ARGS_MAX 32
 #define ARGS_MIN 4
 
-#define args_alloc(N)                                                   \
-  (coerce(struct args *,                                                \
-          alloca(offsetof(struct args, arg) + (N)*sizeof (val))))
-
 struct args_bool_key {
   val key;
   val arg_p;
