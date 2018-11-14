@@ -16435,6 +16435,44 @@ is specified as
 .codn nil ,
 then the binding takes place in the global environment.
 
+.coNP Functions @, env-vbindings @ env-fbindings and @ env-next
+.synb
+.mets (env-vbindings << env )
+.mets (env-fbindings << env )
+.mets (env-next << env )
+.syne
+.desc
+These function retrieve the components of
+.metn env ,
+which must be an environment. The
+.code env-vbindings
+function retrieves the the association list representing variable
+bindings. Similarly, the
+.code env-fbindings
+retrieves the association list of function bindings.
+The
+.code env-next
+function retrieves the next environment, if
+.meta env
+has one, otherwise
+.codn nil .
+
+If
+.code e
+is an environment constructed by the expression
+.codn "(make-env v f n)" ,
+then
+.code "(env-vbindings e)"
+retrieves
+.codn v ,
+.code "(env-fbindings e)"
+retrieves
+.code f
+and
+.code "(env-next e)"
+returns
+.codn n .
+
 .SS* Global Environment
 .coNP Accessors @, symbol-function @ symbol-macro and @ symbol-value
 .synb

@@ -202,6 +202,27 @@ val env_vbind(val env, val sym, val obj)
   }
 }
 
+static val env_vbindings(val env)
+{
+  val self = lit("env-vbindings");
+  type_check(self, env, ENV);
+  return env->e.vbindings;
+}
+
+static val env_fbindings(val env)
+{
+  val self = lit("env-fbindings");
+  type_check(self, env, ENV);
+  return env->e.fbindings;
+}
+
+static val env_next(val env)
+{
+  val self = lit("env-next");
+  type_check(self, env, ENV);
+  return env->e.up_env;
+}
+
 static void env_vb_to_fb(val env)
 {
   if (env) {
@@ -6499,6 +6520,9 @@ void eval_init(void)
   reg_fun(intern(lit("make-env"), user_package), func_n3o(make_env_intrinsic, 0));
   reg_fun(intern(lit("env-fbind"), user_package), func_n3(env_fbind));
   reg_fun(intern(lit("env-vbind"), user_package), func_n3(env_vbind));
+  reg_fun(intern(lit("env-vbindings"), user_package), func_n1(env_vbindings));
+  reg_fun(intern(lit("env-fbindings"), user_package), func_n1(env_fbindings));
+  reg_fun(intern(lit("env-next"), user_package), func_n1(env_next));
   reg_fun(intern(lit("lexical-var-p"), user_package), func_n2(lexical_var_p));
   reg_fun(intern(lit("lexical-fun-p"), user_package), func_n2(lexical_fun_p));
   reg_fun(intern(lit("lexical-lisp1-binding"), user_package),

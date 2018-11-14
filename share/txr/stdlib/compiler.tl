@@ -1682,16 +1682,45 @@
               (error "~s: compilation of ~s failed" 'compile-file
                      (stream-get-prop in-stream :name)))))))))
 
+(defun sys:env-to-let (env form)
+  (when env
+    (let ((vb (env-vbindings env))
+          (fb (env-fbindings env))
+          (up (env-next env)))
+      (when vb
+        (set form ^(let ,(mapcar (tb ((a . d)) ^(,a ',d)) vb) ,form)))
+      (when fb
+        (let (lbind fbind)
+          (each ((pair fb))
+            (tree-bind (a . d) pair
+              (let* ((fun-p (interp-fun-p d))
+                     (fe (if fun-p (func-get-env d)))
+                     (lb-p (and fe (eq fe env)))
+                     (fb-p (and fe (eq fe up))))
+                (cond
+                  (lb-p (push ^(,a ,(func-get-form d)) lbind))
+                  (fb-p (push ^(,a ,(func-get-form d)) fbind))
+                  (t (push ^(,a ',d) fbind))))))
+          (when lbind
+            (set form ^(sys:lbind ,(nreverse lbind) ,form)))
+          (when fbind
+            (set form ^(sys:fbind ,(nreverse fbind) ,form)))))
+      (if up
+        (set form (sys:env-to-let up form)))))
+  form)
+
 (defun usr:compile (obj)
   (typecase obj
     (fun (tree-bind (indicator args . body) (func-get-form obj)
-           (let* ((form ^(lambda ,args ,*body))
+           (let* ((form (sys:env-to-let (func-get-env obj)
+                                        ^(lambda ,args ,*body)))
                   (vm-desc (compile-toplevel form)))
              (vm-execute-toplevel vm-desc))))
     (t (condlet
          (((fun (symbol-function obj)))
           (tree-bind (indicator args . body) (func-get-form fun)
-            (let* ((form ^(lambda ,args ,*body))
+            (let* ((form (sys:env-to-let (func-get-env fun)
+                                         ^(lambda ,args ,*body)))
                    (vm-desc (compile-toplevel form))
                    (comp-fun (vm-execute-toplevel vm-desc)))
               (set (symbol-function obj) comp-fun))))
