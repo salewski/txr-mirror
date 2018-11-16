@@ -3288,6 +3288,17 @@ void arith_init(void)
   reg_fun(intern(lit("poly"), user_package), func_n2(poly));
   reg_fun(intern(lit("rpoly"), user_package), func_n2(rpoly));
 
+  reg_fun(intern(lit("b<"), system_package), func_n2(lt));
+  reg_fun(intern(lit("b>"), system_package), func_n2(gt));
+  reg_fun(intern(lit("b<="), system_package), func_n2(le));
+  reg_fun(intern(lit("b=>"), system_package), func_n2(ge));
+  reg_fun(intern(lit("b="), system_package), func_n2(numeq));
+  reg_fun(intern(lit("b+"), system_package), func_n2(plus));
+  reg_fun(intern(lit("b-"), system_package), func_n2(minus));
+  reg_fun(intern(lit("b*"), system_package), func_n2(mul));
+  reg_fun(intern(lit("b/"), system_package), func_n2(divi));
+  reg_fun(intern(lit("neg"), system_package), func_n1(neg));
+
 #if HAVE_ROUNDING_CTL_H
   reg_varl(intern(lit("flo-near"), user_package), num(FE_TONEAREST));
   reg_varl(intern(lit("flo-down"), user_package), num(FE_DOWNWARD));

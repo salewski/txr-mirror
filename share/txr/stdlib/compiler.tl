@@ -225,6 +225,12 @@
 (defvarl %block-using-funs% '(sys:capture-cont return* sys:abscond* match-fun
                               eval load compile compile-file compile-toplevel))
 
+(defvarl %nary-ops% '(< > <= => = + - * /))
+
+(defvarl %bin-ops% '(b< b> b<= b=> b= b+ b- b* b/))
+
+(defvarl %bin-op% (relate %nary-ops% %bin-ops%))
+
 (defmeth compiler get-dreg (me atom)
   (condlet
     ((((null atom))) '(t 0))
@@ -999,6 +1005,17 @@
 
 (defmeth compiler comp-fun-form (me oreg env form)
   (tree-bind (sym . args) form
+    (cond
+      ((= (len args) 2)
+       (iflet ((bin [%bin-op% sym]))
+         (set sym bin
+              form (cons sym args))))
+      ((= (len args) 1)
+       (caseq sym
+         (- (set sym 'neg
+                 form (cons sym args)))
+         ((identity + * min max) (return-from comp-fun-form
+                                   me.(compile oreg env (car args)))))))
     (caseql sym
       ((call apply usr:apply)
        (let ((gopcode [%gcall-op% sym])
