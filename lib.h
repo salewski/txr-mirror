@@ -438,6 +438,10 @@ INLINE val chr(wchar_t ch)
   return coerce(val, (convert(cnum, ch) << TAG_SHIFT) | TAG_CHR);
 }
 
+INLINE cnum c_n(val num)
+{
+    return coerce(cnum, num) >> TAG_SHIFT;
+}
 #if LIT_ALIGN < 4
 #define lit_noex(strlit) coerce(obj_t *,\
                                 coerce(cnum, L"\0" L ## strlit L"\0" + 1) | \
