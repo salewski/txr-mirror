@@ -6439,8 +6439,9 @@ val funcall(val fun)
     switch (fun->f.functype) {
     case FVM:
       {
-        args_decl(args, ARGS_MIN);
-        return vm_execute_closure(fun, args);
+        if (fun->f.fixparam != 0)
+          break;
+        return vm_funcall(fun);
       }
     case F0:
       return fun->f.f.f0(fun->f.env);
@@ -6490,11 +6491,9 @@ val funcall1(val fun, val arg)
     switch (fun->f.functype) {
     case FVM:
       {
-        args_decl(args, ARGS_MIN);
         if (fun->f.fixparam != 1)
           break;
-        args_add(args, arg);
-        return vm_execute_closure(fun, args);
+        return vm_funcall1(fun, z(arg));
       }
     case F1:
       return fun->f.f.f1(fun->f.env, z(arg));
@@ -6550,11 +6549,9 @@ val funcall2(val fun, val arg1, val arg2)
     switch (fun->f.functype) {
     case FVM:
       {
-        args_decl(args, ARGS_MIN);
         if (fun->f.fixparam != 2)
           break;
-        args_add2(args, arg1, arg2);
-        return vm_execute_closure(fun, args);
+        return vm_funcall2(fun, z(arg1), z(arg2));
       }
     case F2:
       return fun->f.f.f2(fun->f.env, z(arg1), z(arg2));
@@ -6616,11 +6613,9 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
     switch (fun->f.functype) {
     case FVM:
       {
-        args_decl(args, ARGS_MIN);
         if (fun->f.fixparam != 3)
           break;
-        args_add3(args, arg1, arg2, arg3);
-        return vm_execute_closure(fun, args);
+        return vm_funcall3(fun, z(arg1), z(arg2), z(arg3));
       }
     case F3:
       return fun->f.f.f3(fun->f.env, z(arg1), z(arg2), z(arg3));
@@ -6688,11 +6683,9 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
     switch (fun->f.functype) {
     case FVM:
       {
-        args_decl(args, ARGS_MIN);
         if (fun->f.fixparam != 4)
           break;
-        args_add4(args, arg1, arg2, arg3, arg4);
-        return vm_execute_closure(fun, args);
+        return vm_funcall4(fun, z(arg1), z(arg2), z(arg3), z(arg4));
       }
     case F4:
       return fun->f.f.f4(fun->f.env, z(arg1), z(arg2), z(arg3), z(arg4));

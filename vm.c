@@ -1196,6 +1196,106 @@ val vm_execute_closure(val fun, struct args *args)
   return vm_execute(&vm);
 }
 
+#define vm_funcall_common \
+  val closure = fun->f.env;                                                  \
+  val desc = fun->f.f.vm_desc;                                               \
+  struct vm_desc *vd = vm_desc_struct(self, desc);                           \
+  struct vm_closure *vc = coerce(struct vm_closure *, closure->co.handle);   \
+  struct vm vm;                                                              \
+  val *frame = coerce(val *, alloca(sizeof *frame * vd->frsz));              \
+  struct vm_env *dspl = coerce(struct vm_env *, frame + vd->nreg);           \
+  vm_reset(&vm, vd, dspl, vc->nlvl - 1, vc->ip);                             \
+  vm.dspl = coerce(struct vm_env *, frame + vd->nreg);                       \
+  frame[0] = nil;                                                            \
+  vm.dspl[0].mem = frame;                                                    \
+  vm.dspl[0].vec = nil;                                                      \
+  vm.dspl[1].mem = vd->data;                                                 \
+  vm.dspl[1].vec = vd->datavec;                                              \
+  memcpy(vm.dspl + 2, vc->dspl + 2, (vc->nlvl - 2) * sizeof *vm.dspl);       \
+  if (vc->frsz != 0) {                                                       \
+    vm.lev++;                                                                \
+    vm.dspl[vm.lev].mem = coerce(val *, zalloca(vc->frsz * sizeof (val *))); \
+    vm.dspl[vm.lev].vec = num_fast(vc->frsz);                                \
+  }
+
+val vm_funcall(val fun)
+{
+  val self = lit("vm-funcall");
+  vm_funcall_common;
+
+  return vm_execute(&vm);
+}
+
+val vm_funcall1(val fun, val arg)
+{
+  val self = lit("vm-funcall1");
+  vm_funcall_common;
+
+  {
+    vm_word_t argw = vm.code[vm.ip++];
+    unsigned areg = vm_arg_operand_lo(argw);
+    vm_set(dspl, areg, arg);
+  }
+
+  return vm_execute(&vm);
+}
+
+val vm_funcall2(val fun, val arg1, val arg2)
+{
+  val self = lit("vm-funcall2");
+  vm_funcall_common;
+
+  {
+    vm_word_t arg12w = vm.code[vm.ip++];
+    unsigned a1reg = vm_arg_operand_lo(arg12w);
+    unsigned a2reg = vm_arg_operand_hi(arg12w);
+    vm_set(dspl, a1reg, arg1);
+    vm_set(dspl, a2reg, arg2);
+  }
+
+  return vm_execute(&vm);
+}
+
+val vm_funcall3(val fun, val arg1, val arg2, val arg3)
+{
+  val self = lit("vm-funcall3");
+  vm_funcall_common;
+
+  {
+    vm_word_t arg12w = vm.code[vm.ip++];
+    vm_word_t arg34w = vm.code[vm.ip++];
+    unsigned a1reg = vm_arg_operand_lo(arg12w);
+    unsigned a2reg = vm_arg_operand_hi(arg12w);
+    unsigned a3reg = vm_arg_operand_lo(arg34w);
+    vm_set(dspl, a1reg, arg1);
+    vm_set(dspl, a2reg, arg2);
+    vm_set(dspl, a3reg, arg3);
+  }
+
+  return vm_execute(&vm);
+}
+
+val vm_funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
+{
+  val self = lit("vm-funcall4");
+  vm_funcall_common;
+
+  {
+    vm_word_t arg12w = vm.code[vm.ip++];
+    vm_word_t arg34w = vm.code[vm.ip++];
+    unsigned a1reg = vm_arg_operand_lo(arg12w);
+    unsigned a2reg = vm_arg_operand_hi(arg12w);
+    unsigned a3reg = vm_arg_operand_lo(arg34w);
+    unsigned a4reg = vm_arg_operand_hi(arg34w);
+    vm_set(dspl, a1reg, arg1);
+    vm_set(dspl, a2reg, arg2);
+    vm_set(dspl, a3reg, arg3);
+    vm_set(dspl, a4reg, arg4);
+  }
+
+  return vm_execute(&vm);
+}
+
 static val vm_closure_desc(val closure)
 {
   val self = lit("vm-closure-desc");

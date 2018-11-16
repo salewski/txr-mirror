@@ -32,5 +32,10 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
 val vm_execute_toplevel(val desc);
 val vm_copy_closure(val closure);
 val vm_execute_closure(val fun, struct args *);
+val vm_funcall(val fun);
+val vm_funcall1(val fun, val arg);
+val vm_funcall2(val fun, val arg1, val arg2);
+val vm_funcall3(val fun, val arg1, val arg2, val arg3);
+val vm_funcall4(val fun, val arg1, val arg2, val arg3, val arg4);
 void vm_invalidate_binding(val sym);
 void vm_init(void);
