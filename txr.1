@@ -14207,6 +14207,20 @@ argument is not given any special syntactic treatment at all)
 while the Lisp-2 foundation provides a traditional Lisp environment with its
 "natural hygiene".
 
+.coNP Function @ functionp
+.synb
+.mets (functionp << obj )
+.syne
+.desc
+The
+.code functionp
+function returns
+.code t
+if
+.meta obj
+is a function, otherwise it returns
+.codn nil .
+
 .coNP Function @ copy-fun
 .synb
 .mets (copy-fun << function )
@@ -16940,20 +16954,6 @@ function
 .metn func .
 The environment object holds the captured bindings of a
 lexical closure.
-
-.coNP Function @ functionp
-.synb
-.mets (functionp << obj )
-.syne
-.desc
-The
-.code functionp
-function returns
-.code t
-if
-.meta obj
-is a function, otherwise it returns
-.codn nil .
 
 .coNP Function @ interp-fun-p
 .synb
