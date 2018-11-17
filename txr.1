@@ -26236,62 +26236,35 @@ is
 it
 returns
 .codn nil .
-If
-.meta object
-is a list, it returns
-.cblk
-.meti (copy-list << object ).
-.cble
-If
-.meta object
-is a string, it returns
-.cblk
-.meti (copy-str << object ).
-.cble
-If
-.meta object
-is a vector, it returns
-.cblk
-.meti (copy-vec << object ).
-.cble
-If
-.meta object
-is a hash, it returns
-.cblk
-.meti (copy-hash << object ).
-.cble
-If
-.meta object
-is a structure, it returns
-.cblk
-.meti (copy-struct << object ).
-.cble
-If
-.meta object
-is a function, it returns
-.cblk
-.meti (copy-fun << object ).
-.cble
-If
-.meta object
-is a buffer, it returns
-.cblk
-.meti (copy-buf << object ).
-.cble
-If
-.meta object
-is a
-.codn carray ,
-it returns
-.cblk
-.meti (copy-carray << object ).
-.cble
-Lastly, if
-.meta object
-is a random state, it returns
-.cblk
-.meti (make-random-state << object ).
-.cble
+Otherwise,
+.code copy
+is equivalent to invoking a more specific copying function according to
+the type of the argument, as follows:
+.RS
+.coIP cons
+.meti (copy-list << object )
+.coIP str
+.meti (copy-str << object )
+.coIP vec
+.meti (copy-vec << object )
+.coIP hash
+.meti (copy-hash << object )
+.IP "struct type"
+.meti (copy-struct << object )
+.coIP fun
+.meti (copy-fun << object )
+.coIP buf
+.meti (copy-buf << object )
+.coIP carray
+.meti (copy-carray << object )
+.coIP random-state
+.meti (make-random-state << object )
+.RE
+
+.IP
+For all other types of
+.metn object ,
+the invocation is erroneous.
 
 Except in the case when
 .meta sequence
