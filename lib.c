@@ -9924,6 +9924,8 @@ val copy(val seq)
     return copy_vec(seq);
   case BUF:
     return copy_buf(seq);
+  case FUN:
+    return copy_fun(seq);
   case COBJ:
     if (seq->co.cls == hash_s)
       return copy_hash(seq);
