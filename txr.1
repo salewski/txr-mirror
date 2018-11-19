@@ -38601,20 +38601,33 @@ as the closure body terminates.
 .NP* Differences in Compiled vs. Interpreted Behavior
 
 Delimited continuations in \*(TX expose a behavioral difference between
-compiled and interpreted code.
+compiled and interpreted code which mutates the values of lexical variables.
 
 When a continuation is captured in compiled code, it captures not only the
 bindings of lexical variables, but also potentially their current values
-at the time of capture. Lexical variables captured in a continuation which are
-changed after a continuation is captured may appear to revert to their
-capture-time values inside the restored continuation. This is because in compiled
-code, variables are allocated on the stack, which is copied as part of
-creating a continuation. By contrast, interpreted code only maintains an
+at the time of capture. What this means is that whenever the continuation
+is resumed, those variables will appear to have the captured values,
+regardless of any mutations that have taken place since. In other words,
+the captured future includes those specific values.  This is because in
+compiled code, variables are allocated on the stack, which is copied as part of
+creating a continuation. Those variables are effectively newly instantiated in
+each resumption of the continuation, when the captured stack segment
+is reinstated into the stack, and take on those original values.
+
+In contrast, interpretation of code only maintains an
 environment pointer on the stack; the lexical environment is a dynamically
-allocated object whose contents aren't included in the continuation.
-Code that doesn't mutate variables will not see a difference.
+allocated object whose contents aren't included in the continuation's
+stack segment capture. If the captured variables are modified after the
+capture, the continuation will see the updated values: all resumptions of the
+continuation share the same instance of the captured environment among
+themselves, and with the original context where the capture took place.
+
 An additional complication is that when compiled code captures lexical
-closures, captured variables are moved into dynamic storage.
+closures, captured variables are moved into dynamic storage and then
+they become shared: the semantics of the mutation of those variables
+is then similar to the situation in interpreted code. Therefore, the
+above described non-sharing capture behavior of compiled code is not required
+to hold.
 
 In continuation-based code which relies on mutation of lexical variables
 created with
@@ -38626,7 +38639,8 @@ the macros
 and
 .code hlet*
 can be used instead. These macros create variable bindings whose storage is
-outside of the stack.
+always outside of the stack, and therefore the variables will exhibit
+consistent
 
 If the affected variables are other kinds of bindings such as
 function parameters or variables created with specialized binding
@@ -63111,6 +63125,12 @@ with support for forms which have a necessary read-time effect such as
 
 The solution is to rearrange the file to unravel the interference, or
 to use interned symbols instead of gensyms.
+
+.coNP Delimited Continuations
+
+There are differences in behavior between compiled and interpreted code
+with regard to delimited continuations. This is covered in the
+Delimited Continuations section of the manual.
 
 .SS* Compilation Library
 
