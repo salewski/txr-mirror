@@ -1,3 +1,25 @@
+                                    TXR 202
+                                   2018-11-22
+
+
+  Features
+
+  - Some optimizations in arithmetic library, compiler and virtual machine.
+  - New function copy-fun:
+    - copies functions, making a duplicate of their environment.
+    - can take a "snapshot" of a closure.
+
+  Bugs:
+
+  - compiler:
+    - compile function now correctly handles functions that carry a lexical
+      environment.
+      - interpreted environment gets compiled into VM environment.
+  - Build issue upstreamed from Void Linux distro:
+    - On Musl library, <sys/select.h> header is required for fd_set.
+
+
+
                                     TXR 201
                                    2018-11-07
 
