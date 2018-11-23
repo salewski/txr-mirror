@@ -366,14 +366,18 @@ INLINE val vm_get(struct vm_env *dspl, unsigned ref)
 INLINE val vm_getz(struct vm_env *dspl, unsigned ref)
 {
   unsigned lev = vm_lev(ref);
-  if (lev == 0)
-    return z(dspl[0].mem[vm_idx(ref)]);
-  return dspl[lev].mem[vm_idx(ref)];
+  val *addr = &dspl[lev].mem[vm_idx(ref)];
+  return (lev == 0) ? z(*addr) : *addr;
 }
 
 INLINE val vm_sm_get(struct vm_env *dspl, unsigned ref)
 {
   return dspl[vm_sm_lev(ref)].mem[vm_sm_idx(ref)];
+}
+
+NOINLINE static void vm_set_nil_error(void)
+{
+    uw_throwf(error_s, lit("modification of t00/nil"), nao);
 }
 
 INLINE void vm_set(struct vm_env *dspl, unsigned ref, val newval)
@@ -383,7 +387,7 @@ INLINE void vm_set(struct vm_env *dspl, unsigned ref, val newval)
   struct vm_env *env = &dspl[d];
 
   if (ref == 0)
-    uw_throwf(error_s, lit("modification of t00/nil"), nao);
+    vm_set_nil_error();
 
   env->mem[i] = newval;
 
@@ -398,7 +402,7 @@ INLINE void vm_sm_set(struct vm_env *dspl, unsigned ref, val newval)
   struct vm_env *env = &dspl[d];
 
   if (ref == 0)
-    uw_throwf(error_s, lit("modification of t00/nil"), nao);
+    vm_set_nil_error();
 
   env->mem[i] = newval;
 
@@ -522,7 +526,24 @@ NOINLINE static void vm_apply(struct vm *vm, vm_word_t insn)
   vm_set(vm->dspl, dest, result);
 }
 
-static loc vm_stab(struct vm *vm, unsigned fun,
+
+NOINLINE static loc vm_stab_slowpath(struct vm *vm, unsigned fun,
+                                     val (*lookup_fn)(val env, val sym),
+                                     val kind_str)
+{
+  struct vm_desc *vd = vm->vd;
+  struct vm_stent *fe = &vd->stab[fun];
+
+  if (nilp(fe->bind = lookup_fn(nil, vecref(vd->symvec, num_fast(fun)))))
+    eval_error(vd->bytecode,
+               lit("~a ~s is not defined"), kind_str,
+               vecref(vd->symvec, num(fun)), nao);
+  setcheck(vd->self, fe->bind);
+
+  return (fe->bindloc = cdr_l(fe->bind));
+}
+
+INLINE loc vm_stab(struct vm *vm, unsigned fun,
                    val (*lookup_fn)(val env, val sym), val kind_str)
 {
   struct vm_desc *vd = vm->vd;
@@ -532,12 +553,7 @@ static loc vm_stab(struct vm *vm, unsigned fun,
   if (!nullocp(bindloc))
     return bindloc;
 
-  if (nilp(fe->bind = lookup_fn(nil, vecref(vd->symvec, num_fast(fun)))))
-    eval_error(vd->bytecode,
-               lit("~a ~s is not defined"), kind_str,
-               vecref(vd->symvec, num(fun)), nao);
-  setcheck(vd->self, fe->bind);
-  return (fe->bindloc = cdr_l(fe->bind));
+  return vm_stab_slowpath(vm, fun, lookup_fn, kind_str);
 }
 
 NOINLINE static void vm_gcall(struct vm *vm, vm_word_t insn)
