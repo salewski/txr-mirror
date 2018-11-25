@@ -6476,7 +6476,8 @@ void eval_init(void)
   reg_fun(intern(lit("in"), user_package), func_n4o(in, 2));
   reg_fun(intern(lit("logand"), user_package), func_n0v(logandv));
   reg_fun(intern(lit("logior"), user_package), func_n0v(logiorv));
-  reg_fun(intern(lit("logxor"), user_package), func_n2(logxor));
+  reg_fun(intern(lit("logxor"), user_package),
+          func_n2(if3(opt_compat && opt_compat <= 202, logxor_old, logxor)));
   reg_fun(intern(lit("logtest"), user_package), func_n2(logtest));
   reg_fun(intern(lit("lognot"), user_package), func_n2o(lognot, 1));
   reg_fun(intern(lit("logtrunc"), user_package), func_n2(logtrunc));

@@ -2461,6 +2461,49 @@ val logxor(val a, val b)
 {
   val c;
 
+  switch (TYPE_PAIR(type(a), type(b))) {
+  case TYPE_PAIR(NUM, CHR):
+  case TYPE_PAIR(CHR, NUM):
+    {
+      cnum ac = c_n(a);
+      cnum bc = c_n(b);
+      return chr(ac ^ bc);
+    }
+  case TYPE_PAIR(NUM, NUM):
+    {
+      cnum ac = c_n(a);
+      cnum bc = c_n(b);
+      return num_fast(ac ^ bc);
+    }
+  case TYPE_PAIR(BGNUM, NUM):
+    {
+      val tmp = a;
+      a = b;
+      b = tmp;
+    }
+    /* fallthrough */
+  case TYPE_PAIR(NUM, BGNUM):
+    a = bignum(c_n(a));
+    /* fallthrough */
+  case TYPE_PAIR(BGNUM, BGNUM):
+    if (a == b)
+      return zero;
+    c = make_ubignum();
+    if (mp_xor(mp(a), mp(b), mp(c)) != MP_OKAY)
+      goto bad;
+    return normalize(c);
+  default:
+    uw_throwf(error_s, lit("logxor: non-integral operands ~s ~s"), a, b, nao);
+  }
+
+bad:
+  uw_throwf(error_s, lit("logxor: operation failed on ~s ~s"), a, b, nao);
+}
+
+val logxor_old(val a, val b)
+{
+  val c;
+
   if (zerop(a) && zerop(b))
     return zero;
 

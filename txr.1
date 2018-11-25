@@ -65473,6 +65473,13 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 202
+Up to \*(TX 202, the
+.code logxor
+function was incorrectly implemented, producing wrong results when both
+arguments are the same fixnum integer, or the same bignum object.
+The incorrect behavior is restored if 202 or earlier compatibility is
+requested.
 .IP 199
 After \*(TX 199, certain global variables that had been deprecated
 for a long time, and no longer documented, were removed. Requesting 199 or

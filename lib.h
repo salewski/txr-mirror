@@ -749,6 +749,7 @@ val logior(val, val);
 val logandv(struct args *nlist);
 val logiorv(struct args *nlist);
 val logxor(val, val);
+val logxor_old(val, val);
 val logtest(val, val);
 val lognot(val, val);
 val logtrunc(val a, val bits);
