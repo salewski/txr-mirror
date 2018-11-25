@@ -2361,23 +2361,16 @@ val logand(val a, val b)
 {
   val c;
 
-  if (zerop(a) || zerop(b))
-    return zero;
-
   switch (TYPE_PAIR(type(a), type(b))) {
   case TYPE_PAIR(NUM, CHR):
   case TYPE_PAIR(CHR, NUM):
-    if (a == b) {
-      return a;
-    } else {
+    {
       cnum ac = c_n(a);
       cnum bc = c_n(b);
       return chr(ac & bc);
     }
   case TYPE_PAIR(NUM, NUM):
-    if (a == b) {
-      return a;
-    } else {
+    {
       cnum ac = c_n(a);
       cnum bc = c_n(b);
       return num_fast(ac & bc);
@@ -2411,23 +2404,16 @@ val logior(val a, val b)
 {
   val c;
 
-  if (zerop(a) && zerop(b))
-    return zero;
-
   switch (TYPE_PAIR(type(a), type(b))) {
   case TYPE_PAIR(NUM, CHR):
   case TYPE_PAIR(CHR, NUM):
-    if (a == b) {
-      return a;
-    } else {
+    {
       cnum ac = c_n(a);
       cnum bc = c_n(b);
       return chr(ac | bc);
     }
   case TYPE_PAIR(NUM, NUM):
-    if (a == b) {
-      return a;
-    } else {
+    {
       cnum ac = c_n(a);
       cnum bc = c_n(b);
       return num_fast(ac | bc);
