@@ -20074,11 +20074,12 @@ functions than less functions, the excess key functions are ignored.
 The function
 .code make-lazy-cons
 makes a special kind of cons cell called a lazy
-cons, or lcons.  Lazy conses are useful for implementing lazy lists.
+cons, whose type is
+.codn lcons .
+Lazy conses are useful for implementing lazy lists.
 
 Lazy lists are lists which are not allocated all at once. Rather,
-their elements materialize when they are accessed, like
-magic stepping stones appearing under one's feet out of thin air.
+the elements of its structure materialize just before they are accessed.
 
 A lazy cons has
 .code car
@@ -20088,25 +20089,50 @@ fields like a regular cons, and those
 fields are initialized to
 .code nil
 when the lazy cons is created. A lazy cons also
-has an update function, the one which is provided as the
+has an update function, which is specified by the
 .meta function
 argument to
 .codn make-lazy-cons .
+
+The
+.meta function
+argument must be a function that may be called with exactly one
+parameter.
 
 When either the
 .code car
 and
 .code cdr
-fields of a cons are accessed for the first time,
-the function is automatically invoked first. That function has the opportunity
-to initialize the
+fields of a cons are accessed for the first time to retrieve their value,
+.meta function
+is automatically invoked first, and is given the lazy cons
+as a parameter. That function has the opportunity
+to store new values into the
 .code car
 and
 .code cdr
 fields. Once the function is called, it is removed
 from the lazy cons: the lazy cons no longer has an update function.
+If the function attempts to retrieve the value of the
+lazy cons cell's
+.code car
+or
+.code cdr
+field, it will be recursively invoked.
 
-To continue a lazy list, the function can make another call to
+Storing a value into either the
+.code car
+or
+.code cdr
+field does not have the effect of invoking the update function.
+
+If the function terminates by returning normally, the access to the value of
+the field then proceeds in the ordinary manner, retrieving whatever value has
+most recently been stored.
+
+The return value of the function is ignored.
+
+To perpetuate the growth of a lazy list, the function can make another call to
 .code make-lazy-cons
 and install the resulting cons as the
 .code cdr
