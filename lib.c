@@ -11283,7 +11283,11 @@ dot:
     }
     break;
   case SYM:
-    if (!pretty) {
+    if (pretty) {
+      if (!opt_compat || opt_compat > 202)
+        if (obj->s.package == keyword_package)
+          put_char(chr(':'), out);
+    } else {
       if (!obj->s.package) {
         put_string(lit("#:"), out);
       } else if (obj->s.package == keyword_package) {

@@ -65505,7 +65505,15 @@ Up to \*(TX 202, the
 function was incorrectly implemented, producing wrong results when both
 arguments are the same fixnum integer, or the same bignum object.
 The incorrect behavior is restored if 202 or earlier compatibility is
-requested.
+requested. After 202, the behavior of the
+.code print
+function changed with regard to symbols in the keyword package.
+Regardless of the
+.meta pretty-p
+flag, keywords are printed with the leading colon. Compatibility with
+202 or earlier restores the behavior that when the
+.meta pretty-p
+flag is true, symbols are printed without package prefixes.
 .IP 199
 After \*(TX 199, certain global variables that had been deprecated
 for a long time, and no longer documented, were removed. Requesting 199 or
