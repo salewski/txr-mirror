@@ -43556,13 +43556,44 @@ then the
 function renders in a way which strives for read-print
 consistency: an object is printed in a notation which is recognized as
 a similar object of the same kind when it appears in \*(TX source code.
+Floating-point objects are printed as if using the
+.code format
+function, with formatting controlled by the
+.code *print-flo-format*
+variable.
+
 If
 .meta pretty-p
 is true, then
 .code print
-performs does not strive for read-print consistency.  For instance, it prints a
-string object simply by dumping its characters, rather than by adding the
-surrounding quotes and rendering escape syntax for special characters.
+does not strive for read-print consistency.
+Strings are printed by sending their characters to the output
+stream, as if by the
+.code put-string
+function, rather than being rendered in the string literal notation
+consisting of double quotes, and escape sequences for control
+characters.  Likewise, character objects are printed via
+.code put-char
+rather than the
+.code #\e
+notation. Buffer objects are printed by sending their bytes to the
+output stream using
+.code put-byte
+rather than being rendered in the
+.code #b
+notation.
+Symbols are printed without their package prefix, except that
+symbols from the keyword package are still printed with the leading colon.
+Floating-point objects are printed as if using the
+.code format
+function, with formatting controlled by the
+.code *pprint-flo-format*
+variable.
+
+When aggregate objects like conses, ranges and vectors are printed,
+the notations of these objects themselves are unaffected by the
+.code pretty-p
+flag; however, that flag is distributed to the elements.
 
 The
 .code print
