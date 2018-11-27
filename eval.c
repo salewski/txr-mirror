@@ -3913,6 +3913,9 @@ static val me_case(val form, val menv)
   list_collect_decl (condpairs, ptail);
   list_collect_decl (hashforms, qtail);
 
+  if (atom(cdr(form_orig)))
+    eval_error(form_orig, lit("~s: missing test form"), casesym, nao);
+
   if (casesym == caseq_s || casesym == caseq_star_s) {
     memfuncsym = memq_s;
     eqfuncsym = eq_s;
