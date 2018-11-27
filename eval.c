@@ -3944,15 +3944,15 @@ static val me_case(val form, val menv)
     if (keys == t)
       eval_error(form_orig, lit("~s: symbol t used as key"), casesym, nao);
 
-    if (consp(keys) && !cdr(keys))
-      keys = car(keys);
-
     if (star) {
       if (atom(keys))
-        keys = eval(keys, nil, form);
+        hash_keys = cons(keys = eval(keys, nil, form), nil);
       else
-        keys = eval(cons(list_s, keys), nil, form);
+        hash_keys = keys = eval(cons(list_s, keys), nil, form);
     }
+
+    if (consp(keys) && !cdr(keys))
+      keys = car(keys);
 
     if (atom(keys)) {
       sethash(hash, keys, index);
