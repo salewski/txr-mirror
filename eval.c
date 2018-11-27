@@ -4001,8 +4001,9 @@ static val me_case(val form, val menv)
     val minmax = cons(nil, nil);
     val nkeys = (maphash(func_f2(minmax, hash_min_max), hash),
                  (hash_count(hash)));
-    val minkey = if3(nkeys, car(minmax), zero);
-    val maxkey = if3(nkeys, cdr(minmax), zero);
+    val empty = zerop(nkeys);
+    val minkey = if3(empty, zero, car(minmax));
+    val maxkey = if3(empty, zero, cdr(minmax));
     val i, range = minus(maxkey, minkey);
     val swres = gensym(lit("swres-"));
     val uniq = list(quote_s, make_sym(lit("nohit")), nao);
