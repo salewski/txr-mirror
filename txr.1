@@ -62792,7 +62792,7 @@ is supported via the function
 .codn compile-file .
 The function
 .code compile-toplevel
-is provided for compiling expressions in an empty lexical environment. This
+is provided for compiling expressions in the global environment. This
 function is the basis for both
 .code compile
 and
@@ -62843,8 +62843,9 @@ and how that term is defined.  The file compiler individually processes
 top-level forms; for each such form, it emits a translated image.
 
 In the context of file compilation, a top-level form isn't simply any Lisp form
-which is not enclosed by another one, or evaluated in an empty lexical
-environment. Rather, in this specific context, it has this specific definition:
+which is not enclosed by another one.  Rather, in this specific context, it has
+this specific definition, which allows some enclosed forms to still be
+considered top-level forms:
 
 .RS
 .IP 1.
@@ -63615,7 +63616,7 @@ and not at compile time.
 
 In all situations, the evaluation of
 .meta form
-takes place in an empty lexical environment. Even if the
+takes place in the global environment. Even if the
 .code load-time
 form is surrounded by constructs which establish lexical bindings,
 those lexical bindings aren't visible to
