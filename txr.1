@@ -21384,6 +21384,58 @@ of a range.
 Note that these functions are not accessors, which is because
 ranges are immutable.
 
+.coNP Functions @ in-range and @ in-range*
+.synb
+.mets (in-range < range << value )
+.mets (in-range* < range << value )
+.syne
+.desc
+The
+.code in-range
+and
+.code in-range*
+functions test whether the
+.meta value
+argument lies in the range represented by the
+.meta range
+argument, indicating the Boolean result using one of the values
+.code t
+or
+.codn nil .
+
+The
+.meta range
+argument must be a range object.
+
+It is expected that the range object's
+.code from
+value does not exceed the
+.code to
+value; a reversed range is considered empty.
+
+The
+.code in-range*
+function differs from
+.code in-range
+in that it excludes the
+upper endpoint.
+
+The implicit comparison against the range endpoints is performed
+using the
+.code less
+and
+.code lequal
+functions, as appropriate.
+
+The following equivalences hold:
+
+.cblk
+  (in-range r x)  <-->  (and (lequal (from r) x)
+                             (lequal (to r) x))
+
+  (in-range* r x)  <-->  (and (lequal (from r) x)
+                              (less (to r) x))
+.cble
 .SS* Characters and Strings
 .coNP Function @ mkstring
 .synb

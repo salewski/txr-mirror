@@ -10639,6 +10639,26 @@ val set_to(val range, val to)
   return range;
 }
 
+val in_range(val range, val num)
+{
+  type_check(lit("in-range"), range, RNG);
+  {
+    val from = range->rn.from;
+    val to = range->rn.to;
+    return and2(lequal(from, num), lequal(num, to));
+  }
+}
+
+val in_range_star(val range, val num)
+{
+  type_check(lit("in-range*"), range, RNG);
+  {
+    val from = range->rn.from;
+    val to = range->rn.to;
+    return and2(lequal(from, num), less(num, to));
+  }
+}
+
 val env(void)
 {
   if (env_list) {

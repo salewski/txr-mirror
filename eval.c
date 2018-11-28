@@ -6771,6 +6771,8 @@ void eval_init(void)
   reg_fun(intern(lit("rangep"), user_package), func_n1(rangep));
   reg_fun(intern(lit("from"), user_package), func_n1(from));
   reg_fun(intern(lit("to"), user_package), func_n1(to));
+  reg_fun(intern(lit("in-range"), user_package), func_n2(in_range));
+  reg_fun(intern(lit("in-range*"), user_package), func_n2(in_range_star));
 
   reg_fun(intern(lit("make-like"), user_package), func_n2(make_like));
   reg_fun(intern(lit("nullify"), user_package), func_n1(nullify));
