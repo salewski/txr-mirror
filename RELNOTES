@@ -1,3 +1,21 @@
+                                    TXR 203
+                                   2018-11-29
+
+
+  Features
+
+  - Optimizations in vm.
+  - pprint keeps colon on keyword symbols.
+  - New functions in-range, in-range*.
+
+  Bugs
+
+  - logxor: broken function fixed.
+  - caseq*/caseql*/casequal*: fixed broken handling of
+    clauses containing multiple keys: (caseql* x ((a b ..) ...)).
+
+
+
                                     TXR 202
                                    2018-11-22
 
@@ -9,7 +27,7 @@
     - copies functions, making a duplicate of their environment.
     - can take a "snapshot" of a closure.
 
-  Bugs:
+  Bugs
 
   - compiler:
     - compile function now correctly handles functions that carry a lexical
