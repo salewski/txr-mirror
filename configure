@@ -291,6 +291,8 @@ cross [$cross]
   default will be added as a prefix to all of the toolchain commands.
   It should include the trailing slash, unless the \$compiler_prefix
   and \$tool_prefix variables take care of this by providing a leading slash.
+  If this variable is set, ccname should also be set; the default
+  ccname doesn't make sense in that case.
 
 compiler-prefix [$compiler_prefix]
 
@@ -300,17 +302,22 @@ compiler-prefix [$compiler_prefix]
   \$cross is "/cross/toolchain/" and \$compiler_prefix is
   "bin/mips-linux-" then the compiler command, unless otherwise
   specified, will be "/cross/toolchain/bin/mips-linux-gcc".
+  If this variable is set, ccname should also be set; the default
+  ccname doesn't make sense in that case.
 
 ccname [$ccname]
 
   Specifies just the name of the compiler front-end program, without the path.
   The following variable, cc, specifies the full name.
+  The default value is the \$(CC) predefined make variable.
 
 cc [$cc]
 
   Specifies the name of the toolchain front-end driver command to use for
   compiling C sources to object files, and for linking object files to
   executables. This becomes the TXR_CC variable in config.make.
+  Note that cross and compiler_prefix are empty by default and
+  and so this expands to just ccname.
 
 intptr [$intptr]
 
@@ -369,7 +376,8 @@ nm [$nm]
 opt-flags [$opt_flags]
 
   Specifies optimization flags to use for compiling and linking
-  C sources.
+  C sources. Note that these are in addition to any CFLAGS
+  passed in the environment or on the make command line.
 
 lang-flags [$lang_flags]
 
@@ -407,7 +415,8 @@ platform-cflags [$platform_cflags]
 platform-ldflags [$platform_ldflags]
 
   Specify additional linker flags for anything else, such as hardening,
-  linking as needed, et cetera.
+  linking as needed, et cetera. Note that these are in addition to
+  any LDFLAGS from the environment or make command line.
 
 remove-flags [$remove_flags]
 
