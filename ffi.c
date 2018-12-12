@@ -35,7 +35,6 @@
 #include <string.h>
 #include <signal.h>
 #include <wchar.h>
-#include <dirent.h>
 #include <time.h>
 #include "config.h"
 #if HAVE_LIBFFI

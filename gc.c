@@ -29,7 +29,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <assert.h>
-#include <dirent.h>
 #include <wchar.h>
 #include <signal.h>
 #include "config.h"

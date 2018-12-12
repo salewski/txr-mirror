@@ -27,7 +27,6 @@
 
 #include <stdio.h>
 #include <wchar.h>
-#include <dirent.h>
 #include <stdarg.h>
 #include <signal.h>
 #include "config.h"

@@ -31,7 +31,6 @@
 #include <stdarg.h>
 #include <wchar.h>
 #include <signal.h>
-#include <dirent.h>
 #include <syslog.h>
 #include "config.h"
 #include ALLOCA_H

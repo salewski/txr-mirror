@@ -32,7 +32,6 @@
 #include <wctype.h>
 #include <limits.h>
 #include <stdarg.h>
-#include <dirent.h>
 #include <errno.h>
 #include <wchar.h>
 #include <math.h>

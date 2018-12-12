@@ -172,7 +172,6 @@ val make_string_output_stream(void);
 val get_string_from_stream(val);
 val make_strlist_output_stream(void);
 val get_list_from_stream(val);
-val make_dir_stream(DIR *);
 val record_adapter(val regex, val stream, val include_match);
 val streamp(val obj);
 val real_time_stream_p(val obj);

@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <dirent.h>
 #include <stdarg.h>
 #include <wchar.h>
 #include <signal.h>

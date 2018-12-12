@@ -28,7 +28,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include <dirent.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <limits.h>

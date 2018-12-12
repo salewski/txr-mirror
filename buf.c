@@ -34,7 +34,6 @@
 #include <stdarg.h>
 #include <signal.h>
 #include <stdio.h>
-#include <dirent.h>
 #include "config.h"
 #include "lib.h"
 #include "gc.h"

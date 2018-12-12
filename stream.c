@@ -1702,7 +1702,7 @@ static struct strm_ops dir_ops =
                 dir_clear_error,
                 0);
 
-val make_dir_stream(DIR *dir)
+static val make_dir_stream(DIR *dir)
 {
   struct dir_handle *h = coerce(struct dir_handle *, chk_malloc(sizeof *h));
   strm_base_init(&h->a);

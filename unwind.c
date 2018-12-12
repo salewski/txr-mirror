@@ -30,7 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <dirent.h>
 #include <stdarg.h>
 #include <signal.h>
 #include "config.h"

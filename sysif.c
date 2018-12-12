@@ -31,7 +31,6 @@
 #include <string.h>
 #include <wchar.h>
 #include <signal.h>
-#include <dirent.h>
 #include <errno.h>
 #include <time.h>
 #include "config.h"
