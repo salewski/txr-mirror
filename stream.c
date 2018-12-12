@@ -70,7 +70,6 @@
 #include "txr.h"
 #include "arith.h"
 #include "buf.h"
-#include "struct.h"
 
 /* Adhere to ISO C rules about direction switching on update streams. */
 #ifndef __gnu_linux__

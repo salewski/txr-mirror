@@ -44,7 +44,6 @@
 #include "unwind.h"
 #include "stream.h"
 #include "eval.h"
-#include "cadr.h"
 #include "itypes.h"
 #include "arith.h"
 #include "hash.h"

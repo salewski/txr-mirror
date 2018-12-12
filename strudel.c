@@ -31,14 +31,10 @@
 #include <stdarg.h>
 #include <wchar.h>
 #include <signal.h>
-#include <syslog.h>
 #include "config.h"
-#include ALLOCA_H
 #include "lib.h"
 #include "stream.h"
 #include "gc.h"
-#include "args.h"
-#include "utf8.h"
 #include "eval.h"
 #include "struct.h"
 #include "strudel.h"
