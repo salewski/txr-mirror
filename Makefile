@@ -35,7 +35,7 @@ TXR_CFLAGS += -iquote . $(if $(top_srcdir), -iquote $(top_srcdir)) \
               $(DBG_FLAGS) $(PLATFORM_CFLAGS) $(EXTRA_FLAGS)
 TXR_CFLAGS += $(filter-out $(REMOVE_FLAGS),$(TXR_CFLAGS))
 TXR_LDFLAGS := $(LDFLAGS)
-TXR_LDFLAGS := -lm $(CONF_LDFLAGS) $(PLATFORM_LDFLAGS) $(EXTRA_LDFLAGS)
+TXR_LDFLAGS += -lm $(CONF_LDFLAGS) $(PLATFORM_LDFLAGS) $(EXTRA_LDFLAGS)
 
 ifneq ($(subst g++,@,$(notdir $(TXR_CC))),$(notdir $(TXR_CC)))
 TXR_CFLAGS := $(filter-out -Wmissing-prototypes -Wstrict-prototypes,$(TXR_CFLAGS))
