@@ -1559,7 +1559,7 @@ val zerop(val num)
 
 val plusp(val num)
 {
-  val self = lit("zerop");
+  val self = lit("plusp");
 
   switch (type(num)) {
   case NUM:
