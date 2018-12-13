@@ -1547,9 +1547,9 @@ val zerop(val num)
   case BGNUM:
     return nil;
   case FLNUM:
-    return if2(c_flo(num, self) == 0.0, t);
+    return tnil(c_flo(num, self) == 0.0);
   case CHR:
-    return if2(num == chr(0), t);
+    return tnil(num == chr(0));
   case RNG:
     return and2(zerop(from(num)), zerop(to(num)));
   default:
@@ -1563,13 +1563,13 @@ val plusp(val num)
 
   switch (type(num)) {
   case NUM:
-    return if2(c_n(num) > 0, t);
+    return tnil(c_n(num) > 0);
   case BGNUM:
-    return if2(mp_cmp_z(mp(num)) == MP_GT, t);
+    return tnil(mp_cmp_z(mp(num)) == MP_GT);
   case FLNUM:
-    return if2(c_flo(num, self) > 0.0, t);
+    return tnil(c_flo(num, self) > 0.0);
   case CHR:
-    return if2(num != chr(0), t);
+    return tnil(num != chr(0));
   default:
     not_number(self, num);
   }
@@ -1581,11 +1581,11 @@ val minusp(val num)
 
   switch (type(num)) {
   case NUM:
-    return if2(c_n(num) < 0, t);
+    return tnil(c_n(num) < 0);
   case BGNUM:
-    return if2(mp_cmp_z(mp(num)) == MP_LT, t);
+    return tnil(mp_cmp_z(mp(num)) == MP_LT);
   case FLNUM:
-    return if2(c_flo(num, self) < 0.0, t);
+    return tnil(c_flo(num, self) < 0.0);
   case CHR:
     return nil;
   default:
