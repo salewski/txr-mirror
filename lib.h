@@ -685,6 +685,7 @@ val wrap_star(val start, val end, val num);
 val wrap(val start, val end, val num);
 val divi(val anum, val bnum);
 val zerop(val num);
+val nzerop(val num);
 val plusp(val num);
 val minusp(val num);
 val evenp(val num);

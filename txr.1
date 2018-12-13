@@ -35770,9 +35770,10 @@ a
 or
 .codn float .
 
-.coNP Function @ zerop
+.coNP Functions @ zerop and @ nzerop
 .synb
 .mets (zerop << number )
+.mets (nzerop << number )
 .syne
 .desc
 The
@@ -35796,6 +35797,28 @@ for the null character
 and
 .code nil
 for all other characters.
+
+If
+.meta number
+is a range, then
+.code zerop
+returns
+.code t
+if both of the range endpoints individually satisfy
+.codn zerop .
+
+The
+.code nzerop
+function is the logical inverse of
+.codn zerop :
+it returns
+.code t
+for those arguments for which
+.code zerop
+returns
+.code nil
+and
+.IR "vice versa" .
 
 .coNP Functions @ plusp and @ minusp
 .synb

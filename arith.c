@@ -1557,6 +1557,28 @@ val zerop(val num)
   }
 }
 
+val nzerop(val num)
+{
+  val self = lit("nzerop");
+
+  if (num == zero)
+    return nil;
+
+  switch (type(num)) {
+  case NUM:
+  case BGNUM:
+    return t;
+  case FLNUM:
+    return tnil(c_flo(num, self) != 0.0);
+  case CHR:
+    return tnil(num != chr(0));
+  case RNG:
+    return tnil(nzerop(from(num)) || nzerop(to(num)));
+  default:
+    not_number(self, num);
+  }
+}
+
 val plusp(val num)
 {
   val self = lit("plusp");
