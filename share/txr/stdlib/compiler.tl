@@ -26,8 +26,6 @@
 
 (load "vm-param")
 
-(defvarl assumed-fun)
-
 (defstruct (frag oreg code : fvars ffuns) nil
   oreg
   code
@@ -230,6 +228,8 @@
 (defvarl %bin-ops% '(b< b> b<= b=> b= b+ b- b* b/))
 
 (defvarl %bin-op% (relate %nary-ops% %bin-ops%))
+
+(defvarl assumed-fun)
 
 (defmeth compiler get-dreg (me atom)
   (condlet
