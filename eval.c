@@ -1895,7 +1895,7 @@ static val rt_defvarl(val sym)
   val new_p;
   val cell = gethash_c(self, top_vb, sym, mkcloc(new_p));
 
-  if (new_p) {
+  if (new_p || !cdr(cell)) {
     uw_purge_deferred_warning(cons(var_s, sym));
     uw_purge_deferred_warning(cons(sym_s, sym));
     remhash(top_smb, sym);
