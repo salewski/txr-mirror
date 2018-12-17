@@ -324,7 +324,7 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
         if (ch < 0xF5) {
           ud->state = utf8_more3;
           ud->wch = (ch & 0x7);
-          ud->wch_min = 0x100000;
+          ud->wch_min = 0x10000;
           break;
         }
         /* fallthrough */
