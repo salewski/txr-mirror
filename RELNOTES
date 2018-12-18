@@ -1,3 +1,28 @@
+                                    TXR 204
+                                   2018-12-18
+
+
+  Features
+
+  - New function nzerop: negates zerop so we don't have to
+    write (not (zerop x)).
+  - Turning off -fstack-protector gcc option foisted by some distros
+    - improves VM performance about 7% in loop benchmark.
+
+  Bugs
+
+  - defvar:
+    - fix variable being in a state of limbo if the
+      initializing expression throws.
+  - build:
+    - we were ignoring the LDFLAGS variable from
+      the make command line or environment.
+  - character handling:
+    - fix UTF-8 decoder bug causing failure to decode four-byte
+      sequences correctly.
+
+
+
                                     TXR 203
                                    2018-11-29
 
