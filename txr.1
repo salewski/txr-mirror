@@ -38388,16 +38388,14 @@ used to suppress deferrable warnings.
 
 The idea is that a definition of some construct has been seen,
 but not yet executed. Thus the construct is not defined, but
-it can reasonably be expects that it will be defined;
+it can reasonably be expected that it will be defined;
 hence, warnings about its nonexistence can be suppressed.
 
 For example, in the following code, when the expression
 .code "(foo)"
 is being expanded and transformed, the
 .code foo
-function
-.code foo
-does not exist:
+function does not exist:
 
 .cblk
   (progn (defun foo ()) (foo))
