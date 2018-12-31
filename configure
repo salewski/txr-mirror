@@ -2577,7 +2577,7 @@ done
 
 printf "Checking for alloca ... "
 
-for try_header in alloca.h malloc.h ; do
+for try_header in stdlib.h alloca.h malloc.h ; do
   cat > conftest.c <<!
 #include <$try_header>
 
