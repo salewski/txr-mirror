@@ -34,7 +34,7 @@
 #include <time.h>
 #include <assert.h>
 #include "config.h"
-#include ALLOCA_H
+#include "alloca.h"
 #include "lib.h"
 #include "gc.h"
 #include "args.h"

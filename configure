@@ -2577,9 +2577,9 @@ done
 
 printf "Checking for alloca ... "
 
-for try_header in stdlib.h alloca.h malloc.h ; do
+for try_header in stdlib alloca malloc ; do
   cat > conftest.c <<!
-#include <$try_header>
+#include <$try_header.h>
 
 int main(int argc, char **argv)
 {
@@ -2590,7 +2590,7 @@ int main(int argc, char **argv)
 
   if conftest ; then
     printf "yes\n"
-    printf "#define ALLOCA_H <%s>\n" $try_header >> config.h
+    printf "#define HAVE_ALLOCA_%s 1\n" $try_header >> config.h
     have_alloca=y
     break;
   fi

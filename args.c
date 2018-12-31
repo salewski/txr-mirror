@@ -30,7 +30,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include "config.h"
-#include ALLOCA_H
+#include "alloca.h"
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"

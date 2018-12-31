@@ -43,7 +43,7 @@
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#include ALLOCA_H
+#include "alloca.h"
 #include "lib.h"
 #include "stream.h"
 #include "gc.h"

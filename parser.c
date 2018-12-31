@@ -37,7 +37,7 @@
 #include <wctype.h>
 #include <errno.h>
 #include "config.h"
-#include ALLOCA_H
+#include "alloca.h"
 #ifdef __CYGWIN__
 #include <sys/utsname.h>
 #endif

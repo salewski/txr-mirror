@@ -40,7 +40,7 @@
 #include <sys/time.h>
 #include <assert.h>
 #include "config.h"
-#include ALLOCA_H
+#include "alloca.h"
 #ifdef HAVE_GETENVIRONMENTSTRINGS
 #define NOMINMAX
 #include <windows.h>

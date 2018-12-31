@@ -76,7 +76,7 @@
 #if HAVE_DLOPEN
 #include <dlfcn.h>
 #endif
-#include ALLOCA_H
+#include "alloca.h"
 #include "lib.h"
 #include "stream.h"
 #include "hash.h"

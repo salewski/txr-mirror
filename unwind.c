@@ -45,7 +45,7 @@
 #include "eval.h"
 #include "struct.h"
 #include "cadr.h"
-#include ALLOCA_H
+#include "alloca.h"
 #include "unwind.h"
 
 #define UW_CONT_FRAME_BEFORE (32 * sizeof (val))

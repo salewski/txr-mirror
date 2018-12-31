@@ -33,9 +33,9 @@
 #include <wchar.h>
 #include <signal.h>
 #include <errno.h>
-#include "config.h"
 #include <termios.h>
-#include ALLOCA_H
+#include "config.h"
+#include "alloca.h"
 #include "lib.h"
 #include "gc.h"
 #include "args.h"

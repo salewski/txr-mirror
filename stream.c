@@ -56,7 +56,7 @@
 #if HAVE_SOCKETS
 #include <sys/socket.h>
 #endif
-#include ALLOCA_H
+#include "alloca.h"
 #include "lib.h"
 #include "gc.h"
 #include "signal.h"

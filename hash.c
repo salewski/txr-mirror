@@ -32,7 +32,7 @@
 #include <limits.h>
 #include <signal.h>
 #include "config.h"
-#include ALLOCA_H
+#include "alloca.h"
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif

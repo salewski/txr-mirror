@@ -34,7 +34,7 @@
 #include <signal.h>
 #include <stdarg.h>
 #include "config.h"
-#include ALLOCA_H
+#include "alloca.h"
 #include "lib.h"
 #include "parser.h"
 #include "signal.h"

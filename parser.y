@@ -38,7 +38,7 @@
 #include <wchar.h>
 #include <signal.h>
 #include "config.h"
-#include ALLOCA_H
+#include "alloca.h"
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"

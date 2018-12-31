@@ -38,7 +38,7 @@
 #include <sys/un.h>
 #include <netdb.h>
 #include "config.h"
-#include ALLOCA_H
+#include "alloca.h"
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif

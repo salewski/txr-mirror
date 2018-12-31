@@ -34,7 +34,7 @@
 #include <signal.h>
 #include <assert.h>
 #include "config.h"
-#include ALLOCA_H
+#include "alloca.h"
 #include "lib.h"
 #include "hash.h"
 #include "eval.h"
