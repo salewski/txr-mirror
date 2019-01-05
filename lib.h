@@ -721,6 +721,7 @@ val exptv(struct args *nlist);
 val exptmod(val base, val exp, val mod);
 val sqroot(val anum);
 val isqrt(val anum);
+val square(val anum);
 val gcd(val anum, val bnum);
 val gcdv(struct args *nlist);
 val lcm(val anum, val bnum);

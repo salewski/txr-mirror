@@ -2102,6 +2102,59 @@ negop:
   uw_throw(error_s, lit("isqrt: negative operand"));
 }
 
+val square(val anum)
+{
+  val self = lit("square");
+
+  switch (type(anum)) {
+  case NUM:
+    {
+      cnum a = c_n(anum);
+#if HAVE_DOUBLE_INTPTR_T
+      double_intptr_t product = a * convert(double_intptr_t, a);
+      if (product < NUM_MIN || product > NUM_MAX)
+        return bignum_dbl_ipt(product);
+      return num_fast(product);
+#else
+      cnum ap = ABS(a);
+      if (2 * highest_bit(ap) < CNUM_BIT - 1) {
+        cnum product = a * a;
+        if (product >= NUM_MIN && product <= NUM_MAX)
+          return num_fast(product);
+        return bignum(product);
+      } else {
+        val n = make_bignum();
+        mp_err mpe;
+        mp_set_intptr(mp(n), a);
+        mpe = mp_sqr(mp(n), mp(n));
+        if (mpe != MP_OKAY)
+          do_mp_error(self, mpe);
+        return n;
+      }
+#endif
+    }
+  case BGNUM:
+    {
+      val n = make_bignum();
+      mp_err mpe = mp_sqr(mp(anum), mp(n));
+      if (mpe != MP_OKAY)
+        do_mp_error(self, mpe);
+      return n;
+    }
+  case FLNUM:
+    {
+      double a = c_flo(anum, self);
+      return flo(a * a);
+    }
+  case RNG:
+    return rcons(square(from(anum)), square(to(anum)));
+  default:
+    break;
+  }
+
+  uw_throwf(error_s, lit("square: invalid operand ~s"), anum, nao);
+}
+
 val gcd(val anum, val bnum)
 {
   val n;

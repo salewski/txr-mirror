@@ -6413,6 +6413,7 @@ void eval_init(void)
   reg_fun(intern(lit("expt"), user_package), func_n0v(exptv));
   reg_fun(intern(lit("exptmod"), user_package), func_n3(exptmod));
   reg_fun(intern(lit("isqrt"), user_package), func_n1(isqrt));
+  reg_fun(intern(lit("square"), user_package), func_n1(square));
   reg_fun(intern(lit("gcd"), user_package), func_n0v(gcdv));
   reg_fun(intern(lit("lcm"), user_package), func_n0v(lcmv));
   reg_fun(intern(lit("floor"), user_package), func_n2o(floordiv, 1));
