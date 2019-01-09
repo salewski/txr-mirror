@@ -252,7 +252,7 @@
          (d (+ arg %lev-size%)))))
     ((sym arg1 arg2)
      (when (and (<= 0 arg1 %max-v-lev%)
-                (<= 0 arg2 %max-lev%))
+                (<= 0 arg2 %max-lev-idx%))
        (caseq sym
          (v (+ (* (ssucc arg1) %lev-size%) arg2)))))))
 
