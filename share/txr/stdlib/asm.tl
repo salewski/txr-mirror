@@ -364,9 +364,9 @@
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
     (tree-bind (lev size) asm.(parse-args me syntax '(n n))
-      (unless (<= 2 lev %max-lev-idx%)
+      (unless (<= 2 lev %max-v-lev%)
         me.(synerr "level must range from 2 to ~a"
-                   %max-lev-idx%))
+                   %max-v-lev%))
       (unless (<= 0 size %lev-size%)
         me.(synerr "size must range from 0 to ~a"
                    %lev-size%))
