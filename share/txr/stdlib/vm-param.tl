@@ -25,7 +25,7 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defsymacro %lev-size% 1024)
-(defsymacro %max-lev-idx% (macro-time (ppred %lev-size%)))
+(defsymacro %max-lev-idx% (macro-time (pred %lev-size%)))
 (defsymacro %lev-bits% 10)
 (defsymacro %max-lev% 63)
 (defsymacro %max-v-lev% (macro-time (ppred %max-lev%)))
