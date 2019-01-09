@@ -302,8 +302,8 @@
 
 (defun small-op-p (val)
   (with-lev-idx (lv ix) val
-    (and (< -1 ix %sm-lev-size%)
-         (<= 0 lv %max-sm-lev-idx%))))
+    (and (<= 0 ix %max-sm-lev-idx%)
+         (<= 0 lv %max-sm-lev%))))
 
 (defun enc-small-op (val)
   (with-lev-idx (lv ix) val
