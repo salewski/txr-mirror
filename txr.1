@@ -59140,6 +59140,10 @@ simply iterates over the Lisp sequence, and performs an element for
 element conversion to
 .metn type .
 
+If the sequence is shorter than the array, then the remaining elements
+are filled with zero bits. If the sequence is longer than the array, then the
+excess elements in the sequence are ignored.
+
 Since Lisp arrays and C arrays do not share the same representation,
 temporary buffers are automatically created and destroyed by FFI
 to manage the conversion.

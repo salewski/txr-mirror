@@ -68,6 +68,8 @@
                           ? (size) \
                           : sizeof (ffi_arg))
 
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
 #if HAVE_LITTLE_ENDIAN
 #define ifbe(expr) (0)
 #define ifbe2(expr1, expr2) (expr2)
@@ -2382,19 +2384,42 @@ static void ffi_array_put_common(struct txr_ffi_type *tft, val vec, mem_t *dst,
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   cnum elsize = etft->size;
   int nt = tft->null_term;
-  cnum i;
+  cnum i = 0;
   ucnum offs = 0;
+  seq_info_t si = seq_info(vec);
 
-  for (i = 0; i < nelem; i++) {
-    if (nt && i == nelem - 1) {
-      memset(dst + offs, 0, elsize);
-      break;
-    } else {
-      val elval = ref(vec, num_fast(i));
-      etft->put(etft, elval, dst + offs, self);
-      offs += elsize;
+  switch (si.kind) {
+  case SEQ_NIL:
+  case SEQ_LISTLIKE:
+    {
+      val iter = si.obj;
+
+      for (; i < nelem - nt && !endp(iter); i++, iter = cdr(iter)) {
+        val elval = car(iter);
+        etft->put(etft, elval, dst + offs, self);
+        offs += elsize;
+      }
     }
+    break;
+  case SEQ_VECLIKE:
+    {
+      val v = si.obj;
+      cnum lim = min(nelem - nt, c_num(length(si.obj)));
+
+      for (; i < lim; i++) {
+        val elval = ref(v, num_fast(i));
+        etft->put(etft, elval, dst + offs, self);
+        offs += elsize;
+      }
+    }
+    break;
+  default:
+    uw_throwf(error_s, lit("~a: ~s isn't convertible to a C array"), self,
+              vec, nao);
   }
+
+  if (i < nelem)
+    memset(dst + offs, 0, elsize * (nelem - i));
 }
 
 static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
