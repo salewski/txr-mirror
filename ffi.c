@@ -3066,7 +3066,7 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
                                     chk_calloc(1, sizeof *tft));
   ffi_type *ft = coerce(ffi_type *, chk_calloc(1, sizeof *ft));
-  cnum nelem = c_num(dim), i;
+  cnum nelem = c_num(dim);
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
 
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
@@ -3088,21 +3088,15 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->alloc = ffi_fixed_alloc;
   tft->free = free;
   tft->by_value_in = etft->by_value_in;
-
-  for (i = 0; i < nelem; i++) {
-    if (i == 0) {
-      tft->size = etft->size * nelem;
-      tft->align = etft->align;
-      if (etft->out != 0)
-        tft->out = ffi_array_out;
-    }
-  }
-
+  tft->size = etft->size * nelem;
+  tft->align = etft->align;
+  if (etft->out != 0)
+    tft->out = ffi_array_out;
   tft->nelem = nelem;
 
 #if HAVE_LIBFFI
   ft->type = FFI_TYPE_STRUCT;
-  ft->size = etft->size * nelem;
+  ft->size = tft->size;
   ft->alignment = etft->align;
   ft->elements = tft->elements;
 #endif
