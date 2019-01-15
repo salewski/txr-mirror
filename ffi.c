@@ -2258,9 +2258,11 @@ static void ffi_char_array_put(struct txr_ffi_type *tft, val str, mem_t *dst,
   } else {
     char *u8str = utf8_dup_to(wstr);
     memcpy(dst, u8str, nelem);
-    dst[nelem - 1] = 0;
     free(u8str);
   }
+
+  if (nt)
+    dst[nelem - 1] = 0;
 }
 
 static val ffi_wchar_array_get(struct txr_ffi_type *tft, mem_t *src,
