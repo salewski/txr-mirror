@@ -1,3 +1,29 @@
+                                    TXR 205
+                                   2019-01-15
+
+
+  Features
+
+  - New function square for squaring a number; faster for bignums.
+  - FFI:
+    - array handling is more forgiving: Lisp sequences shorter than the array
+      can be converted without error; the array is null padded.
+
+  Bugs
+
+  - build:
+    - fixed problem related to alloca.h, reproduced under the Musl C library.
+  - compiler/assembler:
+    - fixed several bugs that prevent the compilation of functions with
+      deeply nested lexical scopes or large numbers of local variables,
+      yet well within the VM limits.
+  - FFI:
+    - Fixed issue in (array n char) type's put operation: this FFI type
+      does not null-terminate, but was doing it when truncating strings
+      longer than n.
+
+
+
                                     TXR 204
                                    2018-12-18
 
