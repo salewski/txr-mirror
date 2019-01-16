@@ -37,6 +37,22 @@
        (symacrolet ((sys:ffi-lib ,keep-var))
          ,*body))))
 
+(defun sys:with-dyn-lib-check (f e ref)
+  (when (eq (macroexpand 'sys:ffi-lib e) 'sys:ffi-lib)
+    (compile-warning f "simple ref ~s requires ~s"
+                     ref 'with-dyn-lib)))
+
+(defun sys:expand-sym-ref (f e exp)
+  (cond
+    ((stringp exp)
+       (sys:with-dyn-lib-check f e exp)
+       ^(dlsym-checked sys:ffi-lib ,exp))
+    ((and (consp exp) (stringp (car exp)))
+       (mac-param-bind f (sym ver) exp
+         (sys:with-dyn-lib-check f e exp)
+         ^(dlvsym-checked sys:ffi-lib ,sym ,ver)))
+    (t exp)))
+
 (defun sys:analyze-argtypes (form argtypes)
   (let ((p (posq : argtypes)))
     (when p
@@ -45,14 +61,9 @@
         (del [argtypes p])))
     (list* (length argtypes) p argtypes)))
 
-(defmacro deffi (:form f name fun-expr rettype argtypes)
-  (let ((fun-ref (cond
-                   ((stringp fun-expr)
-                      ^(dlsym-checked sys:ffi-lib ,fun-expr))
-                   ((consp fun-expr)
-                      (mac-param-bind f (sym ver) fun-expr
-                        ^(dlvsym-checked sys:ffi-lib ,sym ,ver)))
-                   (t fun-expr)))
+
+(defmacro deffi (:form f :env e name fun-expr rettype argtypes)
+  (let ((fun-ref (sys:expand-sym-ref f e fun-expr))
         (ret-type-sym (gensym "ret-type-"))
         (arg-types-sym (gensym "arg-types-"))
         (call-desc-sym (gensym "call-desc-"))
@@ -96,26 +107,14 @@
 (defmacro deffi-cb-unsafe (:form f name rettype argtypes)
   (sys:deffi-cb-expander f name rettype argtypes nil nil))
 
-(defmacro deffi-sym (:form f name var-expr : type-sym)
-  (let ((var-ref (cond
-                   ((stringp var-expr)
-                      ^(dlsym-checked sys:ffi-lib ,var-expr))
-                   ((consp var-expr)
-                      (mac-param-bind f (sym ver) var-expr
-                        ^(dlvsym-checked sys:ffi-lib ,sym ,ver)))
-                   (t var-expr))))
+(defmacro deffi-sym (:form f :env e name var-expr : type-sym)
+  (let ((var-ref (sys:expand-sym-ref f e var-expr)))
     ^(defparml ,name ,(if type-sym
                         ^(cptr-cast ',type-sym ,var-ref)
                         var-ref))))
 
-(defmacro deffi-var (:form f name var-expr type)
-  (let ((var-ref (cond
-                   ((stringp var-expr)
-                      ^(dlsym-checked sys:ffi-lib ,var-expr))
-                   ((consp var-expr)
-                      (mac-param-bind f (sym ver) var-expr
-                        ^(dlvsym-checked sys:ffi-lib ,sym ,ver)))
-                   (t var-expr)))
+(defmacro deffi-var (:form f :env e name var-expr type)
+  (let ((var-ref (sys:expand-sym-ref f e var-expr))
         (type-sym (gensym "type-"))
         (var-sym (gensym "var-")))
     ^(progn
