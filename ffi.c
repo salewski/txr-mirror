@@ -4887,13 +4887,22 @@ val vec_carray(val carray, val null_term_p)
   val nt_p = default_null_arg(null_term_p);
   struct carray *scry = carray_struct_checked(self, carray);
   cnum i, l = if3(nt_p, scry->nelem - 1, scry->nelem);
-  val vec = vector(num(l), nil);
-  for (i = 0; i < l; i++) {
-    val ni = num_fast(i);
-    val el = carray_ref(carray, ni);
-    set(vecref_l(vec, ni), el);
+
+  if (l >= 0) {
+    val vec = vector(num(l), nil);
+    for (i = 0; i < l; i++) {
+      val ni = num_fast(i);
+      val el = carray_ref(carray, ni);
+      set(vecref_l(vec, ni), el);
+    }
+    return vec;
+  } else if (scry->nelem >= 0) {
+    return vector(zero, nil);
+  } else {
+    uw_throwf(error_s,
+              lit("~a: cannot convert unknown length carray to vector"),
+              self, nao);
   }
-  return vec;
 }
 
 val list_carray(val carray, val null_term_p)
@@ -4902,13 +4911,22 @@ val list_carray(val carray, val null_term_p)
   val nt_p = default_null_arg(null_term_p);
   struct carray *scry = carray_struct_checked(self, carray);
   cnum i, l = if3(nt_p, scry->nelem - 1, scry->nelem);
-  list_collect_decl (list, ptail);
-  for (i = 0; i < l; i++) {
-    val ni = num_fast(i);
-    val el = carray_ref(carray, ni);
-    ptail = list_collect(ptail, el);
+
+  if (l >= 0) {
+    list_collect_decl (list, ptail);
+    for (i = 0; i < l; i++) {
+      val ni = num_fast(i);
+      val el = carray_ref(carray, ni);
+      ptail = list_collect(ptail, el);
+    }
+    return list;
+  } else if (scry->nelem >= 0) {
+    return nil;
+  } else {
+    uw_throwf(error_s,
+              lit("~a: cannot convert unknown length carray to list"),
+              self, nao);
   }
-  return list;
 }
 
 val carray_ref(val carray, val idx)
