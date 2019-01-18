@@ -1221,16 +1221,12 @@ char DUMMY;
 
   if [ $SIZEOF_PTR -eq $SIZEOF_SHORT ] ; then
     intptr="short"
-    uintptr=y
   elif [ $SIZEOF_PTR -eq $SIZEOF_INT ] ; then
     intptr="int"
-    uintptr=y
   elif [ $SIZEOF_PTR -eq $SIZEOF_LONG ] ; then
     intptr="long"
-    uintptr=y
   elif [ $SIZEOF_PTR -eq $SIZEOF_LONGLONG_T ] ; then
     intptr="longlong_t"
-    uintptr=$ulonglong
   fi
 
   if [ -z "$intptr" ] ; then
@@ -1241,13 +1237,11 @@ fi
 
 printf '"%s"\n' "$intptr"
 printf "typedef $intptr int_ptr_t;\n" >> config.h
-if [ -n "$uintptr" ] ; then
-  printf "#define HAVE_UINTPTR_T 1\n" >> config.h
-  printf "typedef unsigned $intptr uint_ptr_t;\n" >> config.h
-fi
-intptr_max_expr="((((convert($intptr, 1) << $((SIZEOF_PTR * 8 - 2))) - 1) << 1) + 1)"
+printf "typedef unsigned $intptr uint_ptr_t;\n" >> config.h
+intptr_max_expr="((((convert(int_ptr_t, 1) << $((SIZEOF_PTR * 8 - 2))) - 1) << 1) + 1)"
 printf "#define INT_PTR_MAX %s\n" "$intptr_max_expr" >> config.h
 printf "#define INT_PTR_MIN (-INT_PTR_MAX)\n" >> config.h
+printf "#define UINT_PTR_MAX (convert(uint_ptr_t, -1))\n" >> config.h
 
 if [ -n "$longlong" ] && [ $SIZEOF_LONGLONG_T -eq $(( 2 * SIZEOF_PTR )) ]
 then
