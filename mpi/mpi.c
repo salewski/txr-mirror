@@ -3300,7 +3300,7 @@ mp_err s_mp_add_d(mp_int *mp, mp_digit d) /* unsigned digit addition */
   mp_size ix = 1, used = USED(mp);
   mp_digit *dp = DIGITS(mp);
 
-  w = dp[0] + d;
+  w = convert(mp_word, dp[0]) + d;
   dp[0] = ACCUM(w);
   k = CARRYOUT(w);
 
