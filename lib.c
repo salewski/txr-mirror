@@ -4600,11 +4600,8 @@ val int_str(val str, val base)
 
   if ((value == LONG_MAX || value == LONG_MIN) && errno == ERANGE) {
     val bignum = make_bignum();
-    size_t size;
-    unsigned char *ucs = utf8_dup_to_buf(wcs, &size, 1);
-    mp_err err = mp_read_radix(mp(bignum), ucs, b);
+    mp_err err = mp_read_radix(mp(bignum), wcs, b);
 
-    free(ucs); /* TODO: make wchar_t version of mp_read_radix. */
     gc_hint(str);
 
     if (err != MP_OKAY)

@@ -189,7 +189,7 @@ mp_size mp_is_pow_two(mp_int *mp);
 #define mp_tomag(mp, str) mp_to_unsigned_bin((mp), (str))
 #endif
 
-mp_nign mp_err mp_read_radix(mp_int *mp, unsigned char *str, int radix);
+mp_nign mp_err mp_read_radix(mp_int *mp, const wchar_t *str, int radix);
 mp_size mp_radix_size(mp_int *mp, int radix);
 mp_size mp_value_radix_size(mp_size num, mp_size qty, int radix);
 mp_err mp_toradix(mp_int *mp, unsigned char *str, int radix);

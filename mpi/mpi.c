@@ -156,7 +156,7 @@ int s_mp_cmp_d(mp_int *a, mp_digit d); /* magnitude digit compare */
 mp_size s_mp_ispow2(mp_int *v); /* is v a power of 2? */
 int s_mp_ispow2d(mp_digit d); /* is d a power of 2? */
 
-int s_mp_tovalue(int ch, int r); /* convert ch to value */
+int s_mp_tovalue(wchar_t ch, int r); /* convert ch to value */
 char s_mp_todigit(int val, int r, int low); /* convert val to digit */
 size_t s_mp_outlen(mp_size bits, int r); /* output length in bytes */
 
@@ -2568,7 +2568,7 @@ mp_size mp_is_pow_two(mp_int *mp)
  * characters are ignored, and the function reads until a non-digit
  * character or the end of the string.
  */
-mp_err mp_read_radix(mp_int *mp, unsigned char *str, int radix)
+mp_err mp_read_radix(mp_int *mp, const wchar_t *str, int radix)
 {
   size_t ix = 0;
   int val = 0;
@@ -3959,7 +3959,7 @@ int s_mp_ispow2d(mp_digit d)
  * The results will be odd if you use a radix < 2 or > 62, you are
  * expected to know what you're up to.
  */
-int s_mp_tovalue(int ch, int r)
+int s_mp_tovalue(wchar_t ch, int r)
 {
   int val, xch;
 
