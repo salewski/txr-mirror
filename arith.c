@@ -2367,6 +2367,9 @@ val int_flo(val f)
     if (n < NUM_MIN || n > NUM_MAX)
       return bignum(n);
     return num_fast(n);
+  } else if (d >= 0 && d <= UINT_PTR_MAX) {
+    ucnum n = d;
+    return unum(n);
   } else {
     char text[128];
     char mint[128] = "", mfrac[128] = "", *pint = mint;
