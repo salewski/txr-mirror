@@ -1,3 +1,21 @@
+                                    TXR 206
+                                   2019-01-18
+
+
+  Features
+
+  - deffi, deffi-var and deffi-sym macros now helpfully diagnose if they
+    require a surrounding with-dyn-lib macro that is missing.
+
+  Bugs
+
+  - fixed bugs in vec-carray and list-carray functions.
+  - fixed bug in addition involving a bignum and small integer.
+  - fixed bug in random and rand function: not generating values
+    over the full range specified by the modulus.
+
+
+
                                     TXR 205
                                    2019-01-15
 
