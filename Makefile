@@ -81,7 +81,7 @@ SRCS := $(addprefix $(top_srcdir),\
 endif
 
 # MPI objects
-MPI_OBJ_BASE=mpi.o mplogic.o
+MPI_OBJ_BASE=mpi.o
 
 MPI_OBJS := $(addprefix mpi/,$(MPI_OBJ_BASE))
 
