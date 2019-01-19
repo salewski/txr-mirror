@@ -2934,7 +2934,9 @@ val logcount(val n)
     }
   case BGNUM:
     {
-      mp_size co = mp_count_ones(mp(n));
+      mp_err co = mp_count_ones(mp(n));
+      if (co < 0)
+        internal_error("problem in bignum arithmetic");
       return unum(co);
     }
   default:

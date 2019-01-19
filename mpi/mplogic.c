@@ -185,7 +185,7 @@ mp_err mpl_rsh(mp_int *a, mp_int *b, mp_digit d)
   /* Now handle any remaining bit shifting */
   if (bshift)
   {
-    mp_digit prev = 0, next, mask = (1 << bshift) - 1;
+    mp_digit prev = 0, next, mask = (convert(mp_digit, 1) << bshift) - 1;
     mp_size ix;
 
     /* 'mask' is a digit with the lower bshift bits set, the rest
@@ -229,7 +229,7 @@ mp_err mpl_lsh(mp_int *a, mp_int *b, mp_digit d)
 
   if (bshift) {
     mp_size ix;
-    mp_digit prev = 0, next, mask = (1 << bshift) - 1;
+    mp_digit prev = 0, next, mask = (convert(mp_digit, 1) << bshift) - 1;
 
     for (ix = 0; ix < USED(b); ix++) {
       next = (DIGIT(b, ix) >> (DIGIT_BIT - bshift)) & mask;

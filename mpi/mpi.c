@@ -2541,11 +2541,11 @@ static mp_size s_mp_count_ones(mp_int *mp)
   return c;
 }
 
-mp_size mp_count_ones(mp_int *mp)
+mp_err mp_count_ones(mp_int *mp)
 {
   if (SIGN(mp) == MP_NEG) {
     mp_int tmp;
-    mp_size res;
+    mp_err res;
     if ((res = mp_init_copy(&tmp, mp)) != MP_OKAY)
       return res;
     if ((res = s_mp_sub_d(&tmp, 1) != MP_OKAY))
@@ -2560,7 +2560,7 @@ mp_size mp_count_ones(mp_int *mp)
 
 mp_size mp_is_pow_two(mp_int *mp)
 {
-  return s_mp_ispow2(mp) >= 0;
+  return s_mp_ispow2(mp) < MP_SIZE_MAX;
 }
 
 /* Read an integer from the given string, and set mp to the resulting
@@ -2681,7 +2681,7 @@ mp_err mp_toradix_case(mp_int *mp, unsigned char *str, int radix, int low)
     /* Reverse the digits and sign indicator */
     ix = 0;
     while (ix < pos) {
-      char tmp2 = str[ix];
+      unsigned char tmp2 = str[ix];
 
       str[ix] = str[pos];
       str[pos] = tmp2;
@@ -3418,12 +3418,15 @@ mp_err s_mp_div_d(mp_int *mp, mp_digit d, mp_digit *r)
       t = 0;
     }
 
+    assert (t <= MP_DIGIT_MAX);
     qp[ix] = t;
   }
 
   /* Deliver the remainder, if desired */
-  if (r)
+  if (r) {
+    assert (w <= MP_DIGIT_MAX);
     *r = w;
+  }
 
   s_mp_clamp(&quot);
   mp_exch(&quot, mp);
@@ -3950,7 +3953,7 @@ int s_mp_ispow2d(mp_digit d)
     return -1; /* not a power of two */
 
   /* If d == 0, s_highest_bit returns 0, thus we return -1. */
-  return s_highest_bit(d) - 1;
+  return (int) s_highest_bit(d) - 1;
 }
 
 /* Convert the given character to its digit value, in the given radix.
