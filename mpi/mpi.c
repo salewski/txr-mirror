@@ -150,7 +150,7 @@ mp_err s_mp_sqr(mp_int *a); /* magnitude square */
 #endif
 
 mp_err s_mp_div(mp_int *a, mp_int *b); /* magnitude divide */
-mp_err s_mp_2expt(mp_int *a, mp_digit k); /* a = 2^k */
+mp_err s_mp_2expt(mp_int *a, mp_size k); /* a = 2^k */
 int s_mp_cmp(mp_int *a, mp_int *b); /* magnitude comparison */
 int s_mp_cmp_d(mp_int *a, mp_digit d); /* magnitude digit compare */
 mp_size s_mp_ispow2(mp_int *v); /* is v a power of 2? */
@@ -2139,7 +2139,7 @@ mp_err mp_comp(mp_int *a, mp_int *b)
   return MP_OKAY;
 }
 
-mp_err mp_trunc_comp(mp_int *a, mp_int *b, mp_digit bits)
+mp_err mp_trunc_comp(mp_int *a, mp_int *b, mp_size bits)
 {
   mp_err res;
   mp_size ix, dig = bits / DIGIT_BIT, rembits = bits % DIGIT_BIT;
@@ -2182,7 +2182,7 @@ mp_err mp_trunc_comp(mp_int *a, mp_int *b, mp_digit bits)
   return MP_OKAY;
 }
 
-mp_err mp_trunc(mp_int *a, mp_int *b, mp_digit bits)
+mp_err mp_trunc(mp_int *a, mp_int *b, mp_size bits)
 {
   mp_err res;
   mp_size ix, dig = bits / DIGIT_BIT, rembits = bits % DIGIT_BIT;
@@ -2276,12 +2276,12 @@ mp_err mp_shift(mp_int *a, mp_int *b, int bits)
   return MP_OKAY;
 }
 
-mp_err mp_bit(mp_int *a, mp_digit bit)
+mp_err mp_bit(mp_int *a, mp_size bit)
 {
   mp_int tmp;
   mp_err res;
   int a_neg = ISNEG(a);
-  mp_digit digit = bit / MP_DIGIT_BIT;
+  mp_size digit = bit / MP_DIGIT_BIT;
   mp_digit mask = convert(mp_digit, 1) << (bit % MP_DIGIT_BIT);
 
   if (a_neg) {
@@ -3799,7 +3799,7 @@ T:
   return res;
 }
 
-mp_err s_mp_2expt(mp_int *a, mp_digit k)
+mp_err s_mp_2expt(mp_int *a, mp_size k)
 {
   mp_err res;
   mp_size dig, bit;

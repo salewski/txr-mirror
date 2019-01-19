@@ -153,10 +153,10 @@ mp_err mp_and(mp_int *a, mp_int *b, mp_int *c);
 mp_err mp_or(mp_int *a, mp_int *b, mp_int *c);
 mp_err mp_xor(mp_int *a, mp_int *b, mp_int *c);
 mp_err mp_comp(mp_int *a, mp_int *b);
-mp_nign mp_err mp_trunc_comp(mp_int *a, mp_int *b, mp_digit bits);
-mp_nign mp_err mp_trunc(mp_int *a, mp_int *b, mp_digit bits);
+mp_nign mp_err mp_trunc_comp(mp_int *a, mp_int *b, mp_size bits);
+mp_nign mp_err mp_trunc(mp_int *a, mp_int *b, mp_size bits);
 mp_nign mp_err mp_shift(mp_int *a, mp_int *b, int bits); /* + left, - right */
-mp_err mp_bit(mp_int *a, mp_digit bit);
+mp_err mp_bit(mp_int *a, mp_size bit);
 
 mp_nign mp_err mp_to_double(mp_int *mp, double *d);
 
