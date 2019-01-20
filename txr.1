@@ -63037,7 +63037,7 @@ If the resulting expanded form is a
 or
 .code eval-only
 form, then
-.code eval
+.code compile-file
 iterates over that form's argument expressions, compiling each expression
 recursively as if it were separate expression.
 .IP 3
@@ -63060,7 +63060,7 @@ For instance, compiled forms which define or reference free variables or global
 functions require the names of these variables or functions to be represented
 as literals.
 
-An object used as a literals in file-compiled code must be
+An object used as a literal in file-compiled code must be
 .I externalizable
 which means that it has a printed representation which can be scanned to
 produce a similar object. An object which does not have a readable printed
@@ -63202,6 +63202,8 @@ exists. The interpreter resolves each symbol in a
 form at the time the form is being executed. If a symbol is defined
 as a variable at that time, it is accessed as a variable. If it defined as a
 function, it is accessed as a function.
+
+.coNP Bound symbols in @ dwim
 
 The symbolic arguments of a
 .code dwim
@@ -63352,7 +63354,9 @@ Note: a form like
 will not be processed by
 .code compile-toplevel
 in a manner similar to the processing by
-.codn eval .
+.code eval
+or
+.codn compile-file .
 In this example,
 .code defmacro
 form will not be evaluated prior to the expansion of
@@ -63365,6 +63369,13 @@ can be processed by
 .codn compile-toplevel ;
 however, the macro definition now takes place during expansion, and isn't
 compiled.
+The
+.code compile-file
+function has no such issue when it encounters such a form at the top-level,
+because that function will consider a top-level
+.code progn
+form to consist of multiple top-level forms that are compiled
+individually, and also executed immediately after being compiled.
 
 .TP* Example
 
