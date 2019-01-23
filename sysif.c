@@ -1332,10 +1332,10 @@ static val crypt_wrap(val wkey, val wsalt)
 
 off_t off_t_num(val num, val self)
 {
-  switch (sizeof(off_t)) {
-  case 4:
+  switch (CHAR_BIT * sizeof(off_t)) {
+  case 32:
     return c_i32(num, self);
-  case 8:
+  case 64:
     return c_i64(num, self);
   default:
     internal_error("portme: unsupported off_t size");

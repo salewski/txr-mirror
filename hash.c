@@ -216,10 +216,10 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
   case SYM:
   case PKG:
   case ENV:
-    switch (sizeof (mem_t *)) {
-    case 4:
+    switch (CHAR_BIT * sizeof (mem_t *)) {
+    case 32:
       return coerce(ucnum, obj) >> 4;
-    case 8: default:
+    case 64: default:
       return coerce(ucnum, obj) >> 5;
     }
     break;
@@ -281,10 +281,10 @@ static ucnum eql_hash(val obj, int *count)
     case RNG:
       return eql_hash(obj->rn.from, count) + 2 * eql_hash(obj->rn.to, count);
     default:
-      switch (sizeof (mem_t *)) {
-      case 4:
+      switch (CHAR_BIT * sizeof (mem_t *)) {
+      case 32:
         return coerce(ucnum, obj) >> 4;
-      case 8: default:
+      case 64: default:
         return coerce(ucnum, obj) >> 5;
       }
     }
@@ -293,10 +293,10 @@ static ucnum eql_hash(val obj, int *count)
   case TAG_NUM:
     return c_num(obj);
   case TAG_LIT:
-    switch (sizeof (mem_t *)) {
-    case 4:
+    switch (CHAR_BIT * sizeof (mem_t *)) {
+    case 32:
       return coerce(ucnum, obj) >> 2;
-    case 8: default:
+    case 64: default:
       return coerce(ucnum, obj) >> 3;
     }
   }
@@ -315,10 +315,10 @@ ucnum cobj_eq_hash_op(val obj, int *count, ucnum seed)
   (void) count;
   (void) seed;
 
-  switch (sizeof (mem_t *)) {
-  case 4:
+  switch (CHAR_BIT * sizeof (mem_t *)) {
+  case 32:
     return coerce(ucnum, obj) >> 4;
-  case 8: default:
+  case 64: default:
     return coerce(ucnum, obj) >> 5;
   }
   /* notreached */
@@ -421,10 +421,10 @@ static ucnum hash_hash_op(val obj, int *count, ucnum seed)
   if ((*count)-- <= 0)
     return 0;
 
-  switch (sizeof (mem_t *)) {
-  case 4:
+  switch (CHAR_BIT * sizeof (mem_t *)) {
+  case 32:
     out += coerce(ucnum, h->hops) >> 4;
-  case 8: default:
+  case 64: default:
     out += coerce(ucnum, h->hops) >> 5;
   }
 

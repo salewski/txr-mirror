@@ -98,7 +98,7 @@ u32_t c_u32(val n, val self)
 #endif
 
 #if HAVE_I64
-#if SIZEOF_PTR == 8
+#if CHAR_BIT * SIZEOF_PTR == 64
 i64_t c_i64(val n, val self)
 {
   cnum v = c_num(n);

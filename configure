@@ -1183,7 +1183,9 @@ read_syms()
 if [ -z "$intptr" ] ; then
   cat > conftest.c <<!
 #include <stddef.h>
+#include <limits.h>
 #include "config.h"
+char SIZEOF_BYTE[CHAR_BIT];
 #ifdef HAVE_SUPERLONG_T
 char SIZEOF_SUPERLONG_T[sizeof (superlong_t)];
 #endif
@@ -1205,6 +1207,7 @@ char DUMMY;
     exit 1
   fi
 
+  SIZEOF_BYTE=0
   SIZEOF_PTR=0
   SIZEOF_SHORT=0
   SIZEOF_INT=0
@@ -1214,7 +1217,7 @@ char DUMMY;
 
   read_syms y
 
-  if [ $SIZEOF_PTR -eq 0 ] ; then
+  if [ $SIZEOF_PTR -eq 0 -o $SIZEOF_BYTE -eq 0 ] ; then
     printf "failed\n"
     exit 1
   fi
@@ -1238,7 +1241,7 @@ fi
 printf '"%s"\n' "$intptr"
 printf "typedef $intptr int_ptr_t;\n" >> config.h
 printf "typedef unsigned $intptr uint_ptr_t;\n" >> config.h
-intptr_max_expr="((((convert(int_ptr_t, 1) << $((SIZEOF_PTR * 8 - 2))) - 1) << 1) + 1)"
+intptr_max_expr="((((convert(int_ptr_t, 1) << $((SIZEOF_PTR * SIZEOF_BYTE - 2))) - 1) << 1) + 1)"
 printf "#define INT_PTR_MAX %s\n" "$intptr_max_expr" >> config.h
 printf "#define INT_PTR_MIN (-INT_PTR_MAX)\n" >> config.h
 printf "#define UINT_PTR_MAX (convert(uint_ptr_t, -1))\n" >> config.h
@@ -2712,7 +2715,9 @@ file_offset_define=none
 
 for try in NOTHING _LARGE_FILES=1 _FILE_OFFSET_BITS=64 ; do
   cat > conftest.c <<!
+#include <limits.h>
 #include <sys/types.h>
+char SIZEOF_BYTE[CHAR_BIT];
 char SIZEOF_OFF_T[sizeof (off_t)];
 char DUMMY;
 !
@@ -2724,16 +2729,17 @@ char DUMMY;
     exit 1
   fi
 
+  SIZEOF_BYTE=0
   SIZEOF_OFF_T=0
 
   read_syms
 
-  if [ $SIZEOF_OFF_T -eq 0 ] ; then
+  if [ $SIZEOF_OFF_T -eq 0 -o $SIZEOF_BYTE -eq 0 ] ; then
     printf "failed\n"
     exit 1
   fi
 
-  if [ $SIZEOF_OFF_T -eq 8 ] ; then
+  if [ $(( SIZEOF_BYTE * SIZEOF_OFF_T )) -eq 64 ] ; then
     if [ $try = NOTHING ] ; then
       printf "default\n"
       file_offset_define=

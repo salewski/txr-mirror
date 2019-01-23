@@ -44,9 +44,9 @@
 
 #define random_warmup (deref(lookup_var_l(nil, random_warmup_s)))
 
-#if SIZEOF_INT == 4
+#if CHAR_BIT * SIZEOF_INT == 32
 typedef unsigned int rand32_t;
-#elif SIZEOF_LONG == 4
+#elif CHAR_BIT * SIZEOF_LONG == 32
 typedef unsigned long rand32_t;
 #endif
 
@@ -136,11 +136,11 @@ val make_random_state(val seed, val warmup)
 
     r->state[0] = s & 0xFFFFFFFFul;
     i = 1;
-#if SIZEOF_PTR == 8
+#if CHAR_BIT * SIZEOF_PTR == 64
     s >>= 32;
     r->state[1] = s & 0xFFFFFFFFul;
     i = 2;
-#elif SIZEOF_PTR > 8
+#elif CHAR_BIT * SIZEOF_PTR > 64
 #error port me!
 #endif
   } else if (nilp(seed)) {
@@ -304,14 +304,14 @@ val random(val state, val modulus)
       return zero;
     } else if (m > 1) {
       int bits = highest_bit(m - 1);
-#if SIZEOF_PTR >= 8
+#if CHAR_BIT * SIZEOF_PTR >= 64
       ucnum rands_needed = (bits + 32 - 1) / 32;
 #endif
       ucnum msb_rand_bits = bits % 32;
       rand32_t msb_rand_mask = convert(rand32_t, -1) >> (32 - msb_rand_bits);
       for (;;) {
         cnum out = 0;
-#if SIZEOF_PTR >= 8
+#if CHAR_BIT * SIZEOF_PTR >= 64
         ucnum i;
 
         for (i = 0; i < rands_needed; i++) {

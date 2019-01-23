@@ -244,7 +244,7 @@ val bignum_len(val num)
 
 int highest_bit(int_ptr_t n)
 {
-#if SIZEOF_PTR == 8
+#if CHAR_BIT * SIZEOF_PTR == 64
   if (n & 0x7FFFFFFF00000000) {
     if (n & 0x7FFF000000000000) {
       if (n & 0x7F00000000000000) {
@@ -354,7 +354,7 @@ int highest_bit(int_ptr_t n)
       }
     }
   }
-#elif SIZEOF_PTR == 4
+#elif CHAR_BIT * SIZEOF_PTR == 32
   if (n & 0x7FFF0000) {
     if (n & 0x7F000000) {
       if (n & 0x70000000) {
@@ -2914,14 +2914,14 @@ val logcount(val n)
       uint_ptr_t d = c;
       if (c < 0)
         d = ~d;
-#if SIZEOF_PTR == 8
+#if CHAR_BIT * SIZEOF_PTR == 64
       d = ((d & 0xAAAAAAAAAAAAAAAA) >>  1) + (d & 0x5555555555555555);
       d = ((d & 0xCCCCCCCCCCCCCCCC) >>  2) + (d & 0x3333333333333333);
       d = ((d & 0xF0F0F0F0F0F0F0F0) >>  4) + (d & 0x0F0F0F0F0F0F0F0F);
       d = ((d & 0xFF00FF00FF00FF00) >>  8) + (d & 0x00FF00FF00FF00FF);
       d = ((d & 0xFFFF0000FFFF0000) >> 16) + (d & 0x0000FFFF0000FFFF);
       d = ((d & 0xFFFFFFFF00000000) >> 32) + (d & 0x00000000FFFFFFFF);
-#elif SIZEOF_PTR == 4
+#elif CHAR_BIT * SIZEOF_PTR == 32
       d = ((d & 0xAAAAAAAA) >>  1) + (d & 0x55555555);
       d = ((d & 0xCCCCCCCC) >>  2) + (d & 0x33333333);
       d = ((d & 0xF0F0F0F0) >>  4) + (d & 0x0F0F0F0F);
@@ -2929,7 +2929,7 @@ val logcount(val n)
       d = ((d & 0xFFFF0000) >> 16) + (d & 0x0000FFFF);
       return unum(d);
 #else
-#error fixme: only 4 or 8 byte pointers supported
+#error portme
 #endif
     }
   case BGNUM:

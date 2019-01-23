@@ -926,7 +926,7 @@ static val ffi_le_u32_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_be_i64_put(struct txr_ffi_type *tft, val n,
                            mem_t *dst, val self)
 {
-#if SIZEOF_PTR >= 8
+#if CHAR_BIT * SIZEOF_PTR >= 64
   cnum v = c_num(n);
 
   if (v < -convert(cnum, 0x7FFFFFFFFFFFFFFF - 1) || v > 0x7FFFFFFFFFFFFFFF)
@@ -964,7 +964,7 @@ range:
 
 static val ffi_be_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-#if SIZEOF_PTR >= 8
+#if CHAR_BIT * SIZEOF_PTR >= 64
   cnum n = (convert(cnum, src[0]) << 56 | convert(cnum, src[1]) << 48 |
             convert(cnum, src[2]) << 40 | convert(cnum, src[3]) << 32 |
             convert(cnum, src[4]) << 24 | convert(cnum, src[5]) << 16 |
@@ -984,7 +984,7 @@ static val ffi_be_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_be_u64_put(struct txr_ffi_type *tft, val n,
                            mem_t *dst, val self)
 {
-#if SIZEOF_PTR >= 8
+#if CHAR_BIT * SIZEOF_PTR >= 64
   ucnum v = c_unum(n);
 
   if (v > 0xFFFFFFFFFFFFFFFF)
@@ -1022,7 +1022,7 @@ range:
 
 static val ffi_be_u64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-#if SIZEOF_PTR >= 8
+#if CHAR_BIT * SIZEOF_PTR >= 64
   ucnum n = (convert(ucnum, src[0]) << 56 | convert(ucnum, src[1]) << 48 |
              convert(ucnum, src[2]) << 40 | convert(ucnum, src[3]) << 32 |
              convert(ucnum, src[4]) << 24 | convert(ucnum, src[5]) << 16 |
@@ -1040,7 +1040,7 @@ static val ffi_be_u64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_le_i64_put(struct txr_ffi_type *tft, val n,
                            mem_t *dst, val self)
 {
-#if SIZEOF_PTR >= 8
+#if CHAR_BIT * SIZEOF_PTR >= 64
   cnum v = c_num(n);
 
   if (v < -convert(cnum, 0x7FFFFFFFFFFFFFFF - 1) || v > 0x7FFFFFFFFFFFFFFF)
@@ -1078,7 +1078,7 @@ range:
 
 static val ffi_le_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-#if SIZEOF_PTR >= 8
+#if CHAR_BIT * SIZEOF_PTR >= 64
   cnum n = (convert(cnum, src[7]) << 56 | convert(cnum, src[6]) << 48 |
             convert(cnum, src[5]) << 40 | convert(cnum, src[4]) << 32 |
             convert(cnum, src[3]) << 24 | convert(cnum, src[2]) << 16 |
@@ -1098,7 +1098,7 @@ static val ffi_le_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_le_u64_put(struct txr_ffi_type *tft, val n,
                            mem_t *dst, val self)
 {
-#if SIZEOF_PTR >= 8
+#if CHAR_BIT * SIZEOF_PTR >= 64
   ucnum v = c_unum(n);
 
   if (v > 0xFFFFFFFFFFFFFFFF)
@@ -1136,7 +1136,7 @@ range:
 
 static val ffi_le_u64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-#if SIZEOF_PTR >= 8
+#if CHAR_BIT * SIZEOF_PTR >= 64
   ucnum n = (convert(ucnum, src[7]) << 56 | convert(ucnum, src[6]) << 48 |
              convert(ucnum, src[5]) << 40 | convert(ucnum, src[4]) << 32 |
              convert(ucnum, src[3]) << 24 | convert(ucnum, src[2]) << 16 |
