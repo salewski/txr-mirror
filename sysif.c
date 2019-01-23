@@ -88,6 +88,7 @@
 #include "args.h"
 #include "struct.h"
 #include "arith.h"
+#include "itypes.h"
 #include "txr.h"
 #include "sysif.h"
 
@@ -1329,55 +1330,15 @@ static val crypt_wrap(val wkey, val wsalt)
 
 #endif
 
-off_t off_t_num(val num)
+off_t off_t_num(val num, val self)
 {
-  switch (type(num)) {
-  case NUM:
-    if (sizeof (cnum) <= sizeof (off_t)) {
-      return c_num(num);
-    } else {
-      cnum n = c_num(num);
-      if (n > OFF_T_MAX || n < OFF_T_MIN)
-        goto toobig;
-      return n;
-    }
-  case BGNUM:
-    {
-      mp_size odig = (sizeof (off_t) / sizeof (mp_digit));
-      int i;
-      off_t out;
-      mp_int *mpn = mp(num);
-
-      if (odig > 1) {
-        if (mp_used(mpn) > odig)
-          goto toobig;
-
-        if (mp_used(mpn) == odig &&
-            (mp_digits(mpn)[mp_used(mpn) - 1] >> (MP_DIGIT_BIT - 1)) != 0)
-          goto toobig;
-
-        for (out = 0, i = mp_used(mpn) - 1; i >= 0; i--) {
-          out <<= MP_DIGIT_BIT * (odig > 1);
-          out |= mp_digits(mpn)[i];
-        }
-
-        return (mp_isneg(mpn)) ? -out : out;
-      } else {
-        mp_digit d = mp_digits(mpn)[0];
-
-        if (mp_used(mpn) > 1)
-          goto toobig;
-
-        if (d > OFF_T_MAX)
-          goto toobig;
-
-        return (mp_isneg(mpn)) ? d : -d;
-      }
-    }
+  switch (sizeof(off_t)) {
+  case 4:
+    return c_i32(num, self);
+  case 8:
+    return c_i64(num, self);
   default:
-    uw_throwf(error_s, lit("~s isn't a file offset"), num, nao);
-  toobig:
-    uw_throwf(error_s, lit("~s cannot fit into a file offset"), num, nao);
+    internal_error("portme: unsupported off_t size");
   }
 }
 
@@ -1413,10 +1374,11 @@ val stdio_ftell(FILE *f)
 
 val stdio_fseek(FILE *f, val off, int whence)
 {
+  val self = lit("seek-stream");
 #if HAVE_FSEEKO
-  return num_off_t(fseeko(f, off_t_num(off), whence));
+  return num_off_t(fseeko(f, off_t_num(off, self), whence));
 #else
-  int ret = fseek(f, off_t_num(off), whence);
+  int ret = fseek(f, c_long(off, self), whence);
   return (ret == -1) ? num_fast(ret) : stdio_ftell(f);
 #endif
 }

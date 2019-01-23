@@ -56,7 +56,7 @@ val stat_to_struct(struct stat st, val path);
 #endif
 val statp(val path);
 val statf(val path);
-off_t off_t_num(val num);
+off_t off_t_num(val num, val self);
 val num_off_t(off_t offnum);
 val stdio_ftell(FILE *);
 val stdio_fseek(FILE *, val, int whence);
