@@ -74,6 +74,14 @@ static mp_size s_mp_defprec = MP_DEFPREC;
 #define ARGCHK(X,Y)
 #endif
 
+/* Nicknames for access macros */
+#define SIGN(MP) mp_sign(MP)
+#define ISNEG(MP) mp_isneg(MP)
+#define USED(MP) mp_used(MP)
+#define ALLOC(MP) mp_alloc(MP)
+#define DIGITS(MP) mp_digits(MP)
+#define DIGIT(MP,N) mp_digit(MP,N)
+
 /* This defines the maximum I/O base (minimum is 2) */
 #define MAX_RADIX 64
 

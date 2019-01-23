@@ -1349,29 +1349,29 @@ off_t off_t_num(val num)
       mp_int *mpn = mp(num);
 
       if (odig > 1) {
-        if (USED(mpn) > odig)
+        if (mp_used(mpn) > odig)
           goto toobig;
 
-        if (USED(mpn) == odig &&
-            (DIGITS(mpn)[USED(mpn) - 1] >> (MP_DIGIT_BIT - 1)) != 0)
+        if (mp_used(mpn) == odig &&
+            (mp_digits(mpn)[mp_used(mpn) - 1] >> (MP_DIGIT_BIT - 1)) != 0)
           goto toobig;
 
-        for (out = 0, i = USED(mpn) - 1; i >= 0; i--) {
+        for (out = 0, i = mp_used(mpn) - 1; i >= 0; i--) {
           out <<= MP_DIGIT_BIT * (odig > 1);
-          out |= DIGITS(mpn)[i];
+          out |= mp_digits(mpn)[i];
         }
 
-        return (ISNEG(mpn)) ? -out : out;
+        return (mp_isneg(mpn)) ? -out : out;
       } else {
-        mp_digit d = DIGITS(mpn)[0];
+        mp_digit d = mp_digits(mpn)[0];
 
-        if (USED(mpn) > 1)
+        if (mp_used(mpn) > 1)
           goto toobig;
 
         if (d > OFF_T_MAX)
           goto toobig;
 
-        return (ISNEG(mpn)) ? d : -d;
+        return (mp_isneg(mpn)) ? d : -d;
       }
     }
   default:

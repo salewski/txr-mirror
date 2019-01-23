@@ -49,12 +49,12 @@ typedef struct {
 } mp_int;
 
 /* Macros for accessing the mp_int internals */
-#define SIGN(MP) ((MP)->sign)
-#define ISNEG(MP) ((MP)->sign == MP_NEG)
-#define USED(MP) ((MP)->used)
-#define ALLOC(MP) ((MP)->alloc)
-#define DIGITS(MP) ((MP)->dp)
-#define DIGIT(MP,N) (MP)->dp[(N)]
+#define mp_sign(MP) ((MP)->sign)
+#define mp_isneg(MP) ((MP)->sign == MP_NEG)
+#define mp_used(MP) ((MP)->used)
+#define mp_alloc(MP) ((MP)->alloc)
+#define mp_digits(MP) ((MP)->dp)
+#define mp_digit(MP,N) (MP)->dp[(N)]
 
 #ifdef __GNUC__
 #define mp_nign __attribute__((warn_unused_result))
@@ -68,7 +68,7 @@ void mp_set_prec(mp_size prec);
 mp_err mp_init(mp_int *mp);
 INLINE mp_err mp_init_minimal(mp_int *mp)
 {
-  DIGITS(mp) = 0;
+  mp_digits(mp) = 0;
   return MP_OKAY;
 }
 mp_err mp_init_array(mp_int mp[], int count);

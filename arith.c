@@ -779,7 +779,7 @@ static val signum(val anum)
 {
   switch (type(anum)) {
   case BGNUM:
-    return if3(ISNEG(mp(anum)), negone, one);
+    return if3(mp_isneg(mp(anum)), negone, one);
   case FLNUM:
     {
       double a = anum->fl.n;
@@ -1266,9 +1266,9 @@ tail:
         cnum a = c_n(anum);
         if (a == 0)
           return zero;
-        if (a < 0 && !ISNEG(mp(bnum)))
+        if (a < 0 && !mp_isneg(mp(bnum)))
           return negone;
-        if (a > 0 && ISNEG(mp(bnum)))
+        if (a > 0 && mp_isneg(mp(bnum)))
           return negone;
         return zero;
       }
@@ -1301,8 +1301,8 @@ tail:
             goto divzero;
           if (b < 0)
             mp_neg(mp(n), mp(n));
-          if (rem && ((ISNEG(mp(anum)) && b > 0) ||
-                      (!ISNEG(mp(anum)) && b < 0)))
+          if (rem && ((mp_isneg(mp(anum)) && b > 0) ||
+                      (!mp_isneg(mp(anum)) && b < 0)))
             mpe = mp_sub_d(mp(n), 1, mp(n));
           if (mpe != MP_OKAY)
             do_mp_error(self, mpe);
@@ -1320,8 +1320,8 @@ tail:
             goto divzero;
           }
           if (mp_cmp_z(&rem) != MP_EQ &&
-              ((ISNEG(mp(anum)) && b > 0) ||
-               (!ISNEG(mp(anum)) && b < 0)))
+              ((mp_isneg(mp(anum)) && b > 0) ||
+               (!mp_isneg(mp(anum)) && b < 0)))
             mpe = mp_sub_d(mp(n), 1, mp(n));
           mp_clear(&rem);
           if (mpe != MP_OKAY)
@@ -1356,8 +1356,8 @@ tail:
           goto divzero;
         }
         if (mp_cmp_z(&rem) != MP_EQ &&
-              ((ISNEG(mp(anum)) && !ISNEG(mp(bnum))) ||
-               (!ISNEG(mp(anum)) && ISNEG(mp(bnum)))))
+              ((mp_isneg(mp(anum)) && !mp_isneg(mp(bnum))) ||
+               (!mp_isneg(mp(anum)) && mp_isneg(mp(bnum)))))
             mpe = mp_sub_d(mp(n), 1, mp(n));
         mp_clear(&rem);
         if (mpe != MP_OKAY)
