@@ -154,7 +154,7 @@ int num_to_buffer(val num, mem_t *buf, int bytes)
 
 #if HAVE_DOUBLE_INTPTR_T
 
-static val bignum_dbl_ipt(double_intptr_t di)
+val bignum_dbl_ipt(double_intptr_t di)
 {
   val n = make_bignum();
   mp_set_double_intptr(mp(n), di);

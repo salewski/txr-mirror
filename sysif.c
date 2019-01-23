@@ -1351,11 +1351,9 @@ val num_off_t(off_t off)
   } else {
 #if HAVE_DOUBLE_INTPTR_T
     if (sizeof (off_t) <= sizeof (double_intptr_t)) {
-      val n = make_bignum();
-      mp_set_double_intptr(mp(n), off);
-      return n;
+      return bignum_dbl_ipt(off);
     } else {
-      abort();
+      internal_error("portme: unsupported off_t size");
     }
 #else
 #error port me!

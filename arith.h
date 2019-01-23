@@ -33,6 +33,9 @@ val num_from_buffer(mem_t *buf, int bytes);
 int num_to_buffer(val num, mem_t *buf, int bytes);
 int highest_bit(int_ptr_t n);
 val normalize(val bignum);
+#if HAVE_DOUBLE_INTPTR_T
+val bignum_dbl_ipt(double_intptr_t di);
+#endif
 val in_int_ptr_range(val bignum);
 ucnum c_unum(val num);
 val unum(ucnum u);
