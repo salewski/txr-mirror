@@ -1087,8 +1087,8 @@ static val ffi_le_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
     n = -((n ^ 0xFFFFFFFFFFFFFFFF) + 1);
   return num(n);
 #else
-  cnum hi32 = (convert(cnum, src[3]) << 24 | convert(cnum, src[2]) << 16 |
-               convert(cnum, src[1]) << 8 | src[0]);
+  cnum hi32 = (convert(cnum, src[7]) << 24 | convert(cnum, src[6]) << 16 |
+               convert(cnum, src[5]) << 8 | src[4]);
   ucnum lo32 = (convert(ucnum, src[3]) << 24 | convert(ucnum, src[2]) << 16 |
                 convert(ucnum, src[1]) << 8 | src[0]);
   return logior(ash(num(hi32), num_fast(32)), unum(lo32));
