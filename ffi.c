@@ -975,8 +975,8 @@ static val ffi_be_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 #else
   cnum hi32 = (convert(cnum, src[0]) << 24 | convert(cnum, src[1]) << 16 |
                convert(cnum, src[2]) << 8 | src[3]);
-  cnum lo32 = (convert(cnum, src[4]) << 24 | convert(cnum, src[5]) << 16 |
-               convert(cnum, src[6]) << 8 | src[7]);
+  ucnum lo32 = (convert(ucnum, src[4]) << 24 | convert(ucnum, src[5]) << 16 |
+                convert(ucnum, src[6]) << 8 | src[7]);
   return logior(ash(num(hi32), num_fast(32)), unum(lo32));
 #endif
 }
@@ -1089,8 +1089,8 @@ static val ffi_le_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 #else
   cnum hi32 = (convert(cnum, src[3]) << 24 | convert(cnum, src[2]) << 16 |
                convert(cnum, src[1]) << 8 | src[0]);
-  cnum lo32 = (convert(cnum, src[3]) << 24 | convert(cnum, src[2]) << 16 |
-               convert(cnum, src[1]) << 8 | src[0]);
+  ucnum lo32 = (convert(ucnum, src[3]) << 24 | convert(ucnum, src[2]) << 16 |
+                convert(ucnum, src[1]) << 8 | src[0]);
   return logior(ash(num(hi32), num_fast(32)), unum(lo32));
 #endif
 }
