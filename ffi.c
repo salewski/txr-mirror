@@ -929,7 +929,7 @@ static void ffi_be_i64_put(struct txr_ffi_type *tft, val n,
 #if CHAR_BIT * SIZEOF_PTR >= 64
   cnum v = c_num(n);
 
-  if (v < -convert(cnum, 0x7FFFFFFFFFFFFFFF - 1) || v > 0x7FFFFFFFFFFFFFFF)
+  if (v < -convert(cnum, 0x7FFFFFFFFFFFFFFF) - 1 || v > 0x7FFFFFFFFFFFFFFF)
     goto range;
 
   dst[0] = (v >> 56) & 0xff;
@@ -944,7 +944,7 @@ static void ffi_be_i64_put(struct txr_ffi_type *tft, val n,
   cnum hi32 = c_num(ash(n, num_fast(-32)));
   ucnum lo32 = c_unum(logtrunc(n, num_fast(32)));
 
-  if (hi32 < -convert(cnum, 0x7FFFFFFF - 1) || hi32 > 0x7FFFFFFF)
+  if (hi32 < -convert(cnum, 0x7FFFFFFF) - 1 || hi32 > 0x7FFFFFFF)
     goto range;
 
   dst[0] = (hi32 >> 24) & 0xff;
@@ -1043,7 +1043,7 @@ static void ffi_le_i64_put(struct txr_ffi_type *tft, val n,
 #if CHAR_BIT * SIZEOF_PTR >= 64
   cnum v = c_num(n);
 
-  if (v < -convert(cnum, 0x7FFFFFFFFFFFFFFF - 1) || v > 0x7FFFFFFFFFFFFFFF)
+  if (v < -convert(cnum, 0x7FFFFFFFFFFFFFFF) - 1 || v > 0x7FFFFFFFFFFFFFFF)
     goto range;
 
   dst[7] = (v >> 56) & 0xff;
@@ -1058,7 +1058,7 @@ static void ffi_le_i64_put(struct txr_ffi_type *tft, val n,
   cnum hi32 = c_num(ash(n, num_fast(-32)));
   ucnum lo32 = c_unum(logtrunc(n, num_fast(32)));
 
-  if (hi32 < -convert(cnum, 0x7FFFFFFF - 1) || hi32 > 0x7FFFFFFF)
+  if (hi32 < -convert(cnum, 0x7FFFFFFF) - 1 || hi32 > 0x7FFFFFFF)
     goto range;
 
   dst[7] = (hi32 >> 24) & 0xff;
