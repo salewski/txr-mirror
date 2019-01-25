@@ -98,7 +98,8 @@ u32_t c_u32(val n, val self)
 #endif
 
 #if HAVE_I64
-#if CHAR_BIT * SIZEOF_PTR == 64
+
+#if CHAR_BIT * SIZEOF_PTR >= 64
 i64_t c_i64(val n, val self)
 {
   cnum v = c_num(n);
@@ -112,6 +113,24 @@ u64_t c_u64(val n, val self)
 {
   ucnum v = c_unum(n);
   if (v > (ucnum) 0xFFFFFFFFFFFFFFFF)
+    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 64 bit range"),
+              self, n, nao);
+  return v;
+}
+#elif HAVE_DOUBLE_INTPTR_T && CHAR_BIT * SIZEOF_DOUBLE_INTPTR >= 64
+i64_t c_i64(val n, val self)
+{
+  dbl_cnum v = c_dbl_num(n);
+  if (v < (- (dbl_cnum) 0x7FFFFFFFFFFFFFFF - 1) || v > (dbl_cnum) 0x7FFFFFFFFFFFFFFF)
+    uw_throwf(error_s, lit("~a: value ~s is out of signed 64 bit range"),
+              self, n, nao);
+  return v;
+}
+
+u64_t c_u64(val n, val self)
+{
+  dbl_ucnum v = c_dbl_unum(n);
+  if (v > (dbl_ucnum) 0xFFFFFFFFFFFFFFFF)
     uw_throwf(error_s, lit("~a: value ~s is out of unsigned 64 bit range"),
               self, n, nao);
   return v;
@@ -131,6 +150,33 @@ u64_t c_u64(val n, val self)
   return convert(u64_t, c_u32(high32, self)) << 32 | c_u32(low32, self);
 }
 #endif
+
+val num_64(i64_t n)
+{
+#if CHAR_BIT * SIZEOF_PTR >= 64
+  return num(n);
+#elif HAVE_DOUBLE_INTPTR_T && CHAR_BIT * SIZEOF_DOUBLE_INTPTR >= 64
+  return normalize(bignum_dbl_ipt(n));
+#else
+  cnum hi32 = n >> 32;
+  ucnum lo32 = n & 0xFFFFFFFFU;
+  return logior(ash(num(hi32), num_fast(32)), unum(lo32));
+#endif
+}
+
+val unum_64(u64_t n)
+{
+#if CHAR_BIT * SIZEOF_PTR >= 64
+  return unum(n);
+#elif HAVE_DOUBLE_INTPTR_T && CHAR_BIT * SIZEOF_DOUBLE_INTPTR >= 64
+  return normalize(bignum_dbl_uipt(n));
+#else
+  ucnum hi32 = n >> 32;
+  ucnum lo32 = n & 0xFFFFFFFFU;
+  return logior(ash(unum(hi32), num_fast(32)), unum(lo32));
+#endif
+}
+
 #endif
 
 char c_char(val n, val self)
