@@ -845,11 +845,14 @@ tail:
       } else {
         val n = make_bignum();
         mp_int tmpb;
+        mp_err mpe;
         mp_init(&tmpb);
         mp_set_intptr(&tmpb, b);
         mp_set_intptr(mp(n), a);
-        mp_mul(mp(n), &tmpb, mp(n));
+        mpe = mp_mul(mp(n), &tmpb, mp(n));
         mp_clear(&tmpb);
+        if (mpe != MP_OKAY)
+          do_mp_error(self, mpe);
         return n;
       }
 #endif
