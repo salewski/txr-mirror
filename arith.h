@@ -35,10 +35,15 @@ int highest_bit(int_ptr_t n);
 val normalize(val bignum);
 #if HAVE_DOUBLE_INTPTR_T
 val bignum_dbl_ipt(double_intptr_t di);
+val bignum_dbl_uipt(double_uintptr_t dui);
 #endif
 val in_int_ptr_range(val bignum);
 ucnum c_unum(val num);
 val unum(ucnum u);
+#if HAVE_DOUBLE_INTPTR_T
+double_intptr_t c_dbl_num(val num);
+double_uintptr_t c_dbl_unum(val num);
+#endif
 val bignum_len(val num);
 val cum_norm_dist(val x);
 val inv_cum_norm(val p);

@@ -158,6 +158,13 @@ val bignum_dbl_ipt(double_intptr_t di)
   return n;
 }
 
+val bignum_dbl_uipt(double_uintptr_t dui)
+{
+  val n = make_bignum();
+  mp_set_double_uintptr(mp(n), dui);
+  return n;
+}
+
 #endif
 
 val normalize(val bignum)
@@ -206,6 +213,46 @@ val unum(ucnum u)
     return n;
   }
 }
+
+#if HAVE_DOUBLE_INTPTR_T
+
+dbl_cnum c_dbl_num(val n)
+{
+  switch (type(n)) {
+  case CHR: case NUM:
+    return coerce(cnum, n) >> TAG_SHIFT;
+  case BGNUM:
+    if (mp_in_double_intptr_range(mp(n))) {
+      double_intptr_t out;
+      mp_get_double_intptr(mp(n), &out);
+      return out;
+    }
+    uw_throwf(error_s, lit("~s is out of signed ~a bit range"),
+              n, num_fast(SIZEOF_DOUBLE_INTPTR * CHAR_BIT), nao);
+  default:
+    type_mismatch(lit("~s is not an integer"), n, nao);
+  }
+}
+
+dbl_ucnum c_dbl_unum(val n)
+{
+  switch (type(n)) {
+  case CHR: case NUM:
+    return coerce(cnum, n) >> TAG_SHIFT;
+  case BGNUM:
+    if (mp_in_double_uintptr_range(mp(n))) {
+      double_uintptr_t out;
+      mp_get_double_uintptr(mp(n), &out);
+      return out;
+    }
+    uw_throwf(error_s, lit("~s is out of unsigned ~a bit range"),
+              n, num_fast(SIZEOF_DOUBLE_INTPTR * CHAR_BIT), nao);
+  default:
+    type_mismatch(lit("~s is not an integer"), n, nao);
+  }
+}
+
+#endif
 
 val bignum_len(val num)
 {

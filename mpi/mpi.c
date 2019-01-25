@@ -471,7 +471,7 @@ mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z)
 
 int mp_in_range(mp_int *mp, uint_ptr_t lim, int unsig)
 {
-  const int ptrnd = (SIZEOF_PTR + MP_DIGIT_BIT - 1) / MP_DIGIT_BIT;
+  const unsigned ptrnd = (SIZEOF_PTR + MP_DIGIT_BIT - 1) / MP_DIGIT_BIT;
   mp_size nd = USED(mp);
 
   if (unsig && ISNEG(mp))
@@ -501,6 +501,7 @@ int mp_in_uintptr_range(mp_int *mp)
 }
 
 #ifdef HAVE_DOUBLE_INTPTR_T
+
 mp_err mp_set_double_intptr(mp_int *mp, double_intptr_t z)
 {
   mp_size ix, shift;
@@ -530,6 +531,85 @@ mp_err mp_set_double_intptr(mp_int *mp, double_intptr_t z)
 
   return MP_OKAY;
 }
+
+mp_err mp_set_double_uintptr(mp_int *mp, double_uintptr_t v)
+{
+  mp_size ix, shift;
+  const mp_size nd = (sizeof v + sizeof (mp_digit) - 1) / sizeof (mp_digit);
+
+  ARGCHK(mp != NULL, MP_BADARG);
+
+  mp_zero(mp);
+
+  if (v == 0)
+    return MP_OKAY; /* shortcut for zero */
+
+  s_mp_grow(mp, nd);
+
+  USED(mp) = nd;
+
+  for (ix = 0, shift = 0; ix < nd; ix++, shift += MP_DIGIT_BIT)
+  {
+    DIGIT(mp, ix) = (v >> shift) & MP_DIGIT_MAX;
+  }
+
+  s_mp_clamp(mp);
+
+  return MP_OKAY;
+}
+
+mp_err mp_get_double_uintptr(mp_int *mp, double_uintptr_t *z)
+{
+  double_uintptr_t out = 0;
+  mp_size ix;
+  mp_size nd = USED(mp);
+  for (ix = 0; ix < nd; ix++, out <<= MP_DIGIT_BIT)
+    out |= DIGIT(mp, ix);
+
+  *z = (SIGN(mp) == MP_NEG) ? -out : out;
+  return MP_OKAY;
+}
+
+mp_err mp_get_double_intptr(mp_int *mp, double_intptr_t *z)
+{
+  double_uintptr_t tmp = 0;
+  mp_get_double_uintptr(mp, &tmp);
+  /* Reliance on bitwise unsigned to two's complement conversion */
+  *z = convert(int_ptr_t, tmp);
+  return MP_OKAY;
+}
+
+static int s_mp_in_big_range(mp_int *mp, double_uintptr_t lim, int unsig)
+{
+  const unsigned ptrnd = (SIZEOF_DOUBLE_INTPTR + MP_DIGIT_BIT - 1) / MP_DIGIT_BIT;
+  mp_size nd = USED(mp);
+
+  if (unsig && ISNEG(mp))
+    return 0;
+
+  if (nd < ptrnd)
+    return 1;
+
+  if (nd > ptrnd)
+    return 0;
+
+  {
+    mp_digit top = DIGITS(mp)[ptrnd - 1];
+    lim >>= ((ptrnd - 1) * MP_DIGIT_BIT);
+    return top <= lim;
+  }
+}
+
+int mp_in_double_intptr_range(mp_int *mp)
+{
+  return s_mp_in_big_range(mp, DOUBLE_INTPTR_MAX, 0);
+}
+
+int mp_in_double_uintptr_range(mp_int *mp)
+{
+  return s_mp_in_big_range(mp, DOUBLE_UINTPTR_MAX, 1);
+}
+
 #endif
 
 mp_err mp_set_word(mp_int *mp, mp_word w, int sign)

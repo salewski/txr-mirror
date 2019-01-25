@@ -90,6 +90,11 @@ int mp_in_intptr_range(mp_int *mp);
 int mp_in_uintptr_range(mp_int *mp);
 #ifdef HAVE_DOUBLE_INTPTR_T
 mp_err mp_set_double_intptr(mp_int *mp, double_intptr_t z);
+mp_err mp_set_double_uintptr(mp_int *mp, double_uintptr_t z);
+mp_err mp_get_double_intptr(mp_int *mp, double_intptr_t *z);
+mp_err mp_get_double_uintptr(mp_int *mp, double_uintptr_t *z);
+int mp_in_double_intptr_range(mp_int *mp);
+int mp_in_double_uintptr_range(mp_int *mp);
 #endif
 mp_err mp_set_word(mp_int *mp, mp_word w, int sign);
 

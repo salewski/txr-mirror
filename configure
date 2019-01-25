@@ -1102,6 +1102,7 @@ if [ -n "$superlong" ] ; then
   printf '"%s"\n' "$superlong"
   printf "#define HAVE_SUPERLONG_T 1\n" >> config.h
   printf "typedef $superlong superlong_t;\n" >> config.h
+  printf "typedef $(echo $superlong | sed -e s/int/uint/) superulong_t;\n" >> config.h
 else
   printf "none\n"
 fi
@@ -1245,15 +1246,22 @@ intptr_max_expr="((((convert(int_ptr_t, 1) << $((SIZEOF_PTR * SIZEOF_BYTE - 2)))
 printf "#define INT_PTR_MAX %s\n" "$intptr_max_expr" >> config.h
 printf "#define INT_PTR_MIN (-INT_PTR_MAX)\n" >> config.h
 printf "#define UINT_PTR_MAX (convert(uint_ptr_t, -1))\n" >> config.h
+double_intptr_max_expr="((((convert(double_intptr_t, 1) << $((2 * SIZEOF_PTR * SIZEOF_BYTE - 2))) - 1) << 1) + 1)"
+printf "#define SIZEOF_DOUBLE_INTPTR (2*SIZEOF_PTR)\n" >> config.h
+printf "#define DOUBLE_INTPTR_MAX %s\n" "$double_intptr_max_expr" >> config.h
+printf "#define DOUBLE_INTPTR_MIN (-DOUBLE_INTPTR_MAX)\n" >> config.h
+printf "#define DOUBLE_UINTPTR_MAX (convert(double_uintptr_t, -1))\n" >> config.h
 
 if [ -n "$longlong" ] && [ $SIZEOF_LONGLONG_T -eq $(( 2 * SIZEOF_PTR )) ]
 then
   printf "#define HAVE_DOUBLE_INTPTR_T 1\n" >> config.h
   printf "typedef longlong_t double_intptr_t;\n" >> config.h
+  printf "typedef ulonglong_t double_uintptr_t;\n" >> config.h
 elif [ -n "$superlong" ] && [ $SIZEOF_SUPERLONG_T -eq $(( 2 * SIZEOF_PTR )) ]
 then
   printf "#define HAVE_DOUBLE_INTPTR_T 1\n" >> config.h
   printf "typedef superlong_t double_intptr_t;\n" >> config.h
+  printf "typedef superulong_t double_uintptr_t;\n" >> config.h
 fi
 
 #if HAVE_LONGLONG_T && 
