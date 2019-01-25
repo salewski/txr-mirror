@@ -926,11 +926,7 @@ static val ffi_le_u32_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_be_i64_put(struct txr_ffi_type *tft, val n,
                            mem_t *dst, val self)
 {
-#if CHAR_BIT * SIZEOF_PTR >= 64
-  cnum v = c_num(n);
-
-  if (v < -convert(cnum, 0x7FFFFFFFFFFFFFFF) - 1 || v > 0x7FFFFFFFFFFFFFFF)
-    goto range;
+  i64_t v = c_i64(n, self);
 
   dst[0] = (v >> 56) & 0xff;
   dst[1] = (v >> 48) & 0xff;
@@ -940,55 +936,21 @@ static void ffi_be_i64_put(struct txr_ffi_type *tft, val n,
   dst[5] = (v >> 16) & 0xff;
   dst[6] = (v >> 8) & 0xff;
   dst[7] = v & 0xff;
-#else
-  cnum hi32 = c_num(ash(n, num_fast(-32)));
-  ucnum lo32 = c_unum(logtrunc(n, num_fast(32)));
-
-  if (hi32 < -convert(cnum, 0x7FFFFFFF) - 1 || hi32 > 0x7FFFFFFF)
-    goto range;
-
-  dst[0] = (hi32 >> 24) & 0xff;
-  dst[1] = (hi32 >> 16) & 0xff;
-  dst[2] = (hi32 >> 8) & 0xff;
-  dst[3] = hi32 & 0xff;
-  dst[4] = (lo32 >> 24) & 0xff;
-  dst[5] = (lo32 >> 16) & 0xff;
-  dst[6] = (lo32 >> 8) & 0xff;
-  dst[7] = lo32 & 0xff;
-#endif
-  return;
-range:
-    uw_throwf(error_s, lit("~a: value ~s is out of signed 64 bit range"),
-              self, n, nao);
 }
 
 static val ffi_be_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-#if CHAR_BIT * SIZEOF_PTR >= 64
-  cnum n = (convert(cnum, src[0]) << 56 | convert(cnum, src[1]) << 48 |
-            convert(cnum, src[2]) << 40 | convert(cnum, src[3]) << 32 |
-            convert(cnum, src[4]) << 24 | convert(cnum, src[5]) << 16 |
-            convert(cnum, src[6]) << 8 | src[7]);
-  if ((n & 0x8000000000000000) != 0)
-    n = -((n ^ 0xFFFFFFFFFFFFFFFF) + 1);
-  return num(n);
-#else
-  cnum hi32 = (convert(cnum, src[0]) << 24 | convert(cnum, src[1]) << 16 |
-               convert(cnum, src[2]) << 8 | src[3]);
-  ucnum lo32 = (convert(ucnum, src[4]) << 24 | convert(ucnum, src[5]) << 16 |
-                convert(ucnum, src[6]) << 8 | src[7]);
-  return logior(ash(num(hi32), num_fast(32)), unum(lo32));
-#endif
+  i64_t n = (convert(i64_t, src[0]) << 56 | convert(i64_t, src[1]) << 48 |
+             convert(i64_t, src[2]) << 40 | convert(i64_t, src[3]) << 32 |
+             convert(i64_t, src[4]) << 24 | convert(i64_t, src[5]) << 16 |
+             convert(i64_t, src[6]) << 8 | src[7]);
+  return num_64(n);
 }
 
 static void ffi_be_u64_put(struct txr_ffi_type *tft, val n,
                            mem_t *dst, val self)
 {
-#if CHAR_BIT * SIZEOF_PTR >= 64
-  ucnum v = c_unum(n);
-
-  if (v > 0xFFFFFFFFFFFFFFFF)
-    goto range;
+  u64_t v = c_u64(n, self);
 
   dst[0] = (v >> 56) & 0xff;
   dst[1] = (v >> 48) & 0xff;
@@ -998,53 +960,22 @@ static void ffi_be_u64_put(struct txr_ffi_type *tft, val n,
   dst[5] = (v >> 16) & 0xff;
   dst[6] = (v >> 8) & 0xff;
   dst[7] = v & 0xff;
-#else
-  ucnum hi32 = c_unum(ash(n, num_fast(-32)));
-  ucnum lo32 = c_unum(logtrunc(n, num_fast(32)));
-
-  if (hi32 > 0xFFFFFFFF)
-    goto range;
-
-  dst[0] = (hi32 >> 24) & 0xff;
-  dst[1] = (hi32 >> 16) & 0xff;
-  dst[2] = (hi32 >> 8) & 0xff;
-  dst[3] = hi32 & 0xff;
-  dst[4] = (lo32 >> 24) & 0xff;
-  dst[5] = (lo32 >> 16) & 0xff;
-  dst[6] = (lo32 >> 8) & 0xff;
-  dst[7] = lo32 & 0xff;
-#endif
   return;
-range:
-    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 64 bit range"),
-              self, n, nao);
 }
 
 static val ffi_be_u64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-#if CHAR_BIT * SIZEOF_PTR >= 64
-  ucnum n = (convert(ucnum, src[0]) << 56 | convert(ucnum, src[1]) << 48 |
-             convert(ucnum, src[2]) << 40 | convert(ucnum, src[3]) << 32 |
-             convert(ucnum, src[4]) << 24 | convert(ucnum, src[5]) << 16 |
-             convert(ucnum, src[6]) << 8 | src[7]);
-  return unum(n);
-#else
-  ucnum hi32 = (convert(ucnum, src[0]) << 24 | convert(ucnum, src[1]) << 16 |
-                convert(ucnum, src[2]) << 8 | src[3]);
-  ucnum lo32 = (convert(ucnum, src[4]) << 24 | convert(ucnum, src[5]) << 16 |
-                convert(ucnum, src[6]) << 8 | src[7]);
-  return logior(ash(unum(hi32), num_fast(32)), unum(lo32));
-#endif
+  u64_t n = (convert(u64_t, src[0]) << 56 | convert(u64_t, src[1]) << 48 |
+             convert(u64_t, src[2]) << 40 | convert(u64_t, src[3]) << 32 |
+             convert(u64_t, src[4]) << 24 | convert(u64_t, src[5]) << 16 |
+             convert(u64_t, src[6]) << 8 | src[7]);
+  return unum_64(n);
 }
 
 static void ffi_le_i64_put(struct txr_ffi_type *tft, val n,
                            mem_t *dst, val self)
 {
-#if CHAR_BIT * SIZEOF_PTR >= 64
-  cnum v = c_num(n);
-
-  if (v < -convert(cnum, 0x7FFFFFFFFFFFFFFF) - 1 || v > 0x7FFFFFFFFFFFFFFF)
-    goto range;
+  i64_t v = c_i64(n, self);
 
   dst[7] = (v >> 56) & 0xff;
   dst[6] = (v >> 48) & 0xff;
@@ -1054,55 +985,21 @@ static void ffi_le_i64_put(struct txr_ffi_type *tft, val n,
   dst[2] = (v >> 16) & 0xff;
   dst[1] = (v >> 8) & 0xff;
   dst[0] = v & 0xff;
-#else
-  cnum hi32 = c_num(ash(n, num_fast(-32)));
-  ucnum lo32 = c_unum(logtrunc(n, num_fast(32)));
-
-  if (hi32 < -convert(cnum, 0x7FFFFFFF) - 1 || hi32 > 0x7FFFFFFF)
-    goto range;
-
-  dst[7] = (hi32 >> 24) & 0xff;
-  dst[6] = (hi32 >> 16) & 0xff;
-  dst[5] = (hi32 >> 8) & 0xff;
-  dst[4] = hi32 & 0xff;
-  dst[3] = (lo32 >> 24) & 0xff;
-  dst[2] = (lo32 >> 16) & 0xff;
-  dst[1] = (lo32 >> 8) & 0xff;
-  dst[0] = lo32 & 0xff;
-#endif
-  return;
-range:
-    uw_throwf(error_s, lit("~a: value ~s is out of signed 64 bit range"),
-              self, n, nao);
 }
 
 static val ffi_le_i64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-#if CHAR_BIT * SIZEOF_PTR >= 64
-  cnum n = (convert(cnum, src[7]) << 56 | convert(cnum, src[6]) << 48 |
-            convert(cnum, src[5]) << 40 | convert(cnum, src[4]) << 32 |
-            convert(cnum, src[3]) << 24 | convert(cnum, src[2]) << 16 |
-            convert(cnum, src[1]) << 8 | src[0]);
-  if ((n & 0x8000000000000000) != 0)
-    n = -((n ^ 0xFFFFFFFFFFFFFFFF) + 1);
-  return num(n);
-#else
-  cnum hi32 = (convert(cnum, src[7]) << 24 | convert(cnum, src[6]) << 16 |
-               convert(cnum, src[5]) << 8 | src[4]);
-  ucnum lo32 = (convert(ucnum, src[3]) << 24 | convert(ucnum, src[2]) << 16 |
-                convert(ucnum, src[1]) << 8 | src[0]);
-  return logior(ash(num(hi32), num_fast(32)), unum(lo32));
-#endif
+  u64_t n = (convert(u64_t, src[7]) << 56 | convert(u64_t, src[6]) << 48 |
+             convert(u64_t, src[5]) << 40 | convert(u64_t, src[4]) << 32 |
+             convert(u64_t, src[3]) << 24 | convert(u64_t, src[2]) << 16 |
+             convert(u64_t, src[1]) << 8 | src[0]);
+  return num_64(n);
 }
 
 static void ffi_le_u64_put(struct txr_ffi_type *tft, val n,
                            mem_t *dst, val self)
 {
-#if CHAR_BIT * SIZEOF_PTR >= 64
-  ucnum v = c_unum(n);
-
-  if (v > 0xFFFFFFFFFFFFFFFF)
-    goto range;
+  u64_t v = c_u64(n, self);
 
   dst[7] = (v >> 56) & 0xff;
   dst[6] = (v >> 48) & 0xff;
@@ -1112,43 +1009,15 @@ static void ffi_le_u64_put(struct txr_ffi_type *tft, val n,
   dst[2] = (v >> 16) & 0xff;
   dst[1] = (v >> 8) & 0xff;
   dst[0] = v & 0xff;
-#else
-  ucnum hi32 = c_unum(ash(n, num_fast(-32)));
-  ucnum lo32 = c_unum(logtrunc(n, num_fast(32)));
-
-  if (hi32 > 0xFFFFFFFF)
-    goto range;
-
-  dst[7] = (hi32 >> 24) & 0xff;
-  dst[6] = (hi32 >> 16) & 0xff;
-  dst[5] = (hi32 >> 8) & 0xff;
-  dst[4] = hi32 & 0xff;
-  dst[3] = (lo32 >> 24) & 0xff;
-  dst[2] = (lo32 >> 16) & 0xff;
-  dst[1] = (lo32 >> 8) & 0xff;
-  dst[0] = lo32 & 0xff;
-#endif
-  return;
-range:
-    uw_throwf(error_s, lit("~a: value ~s is out of unsigned 64 bit range"),
-              self, n, nao);
 }
 
 static val ffi_le_u64_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
-#if CHAR_BIT * SIZEOF_PTR >= 64
-  ucnum n = (convert(ucnum, src[7]) << 56 | convert(ucnum, src[6]) << 48 |
-             convert(ucnum, src[5]) << 40 | convert(ucnum, src[4]) << 32 |
-             convert(ucnum, src[3]) << 24 | convert(ucnum, src[2]) << 16 |
-             convert(ucnum, src[1]) << 8 | src[0]);
-  return unum(n);
-#else
-  ucnum hi32 = (convert(ucnum, src[3]) << 24 | convert(ucnum, src[2]) << 16 |
-                convert(ucnum, src[1]) << 8 | src[0]);
-  ucnum lo32 = (convert(ucnum, src[3]) << 24 | convert(ucnum, src[2]) << 16 |
-                convert(ucnum, src[1]) << 8 | src[0]);
-  return logior(ash(unum(hi32), num_fast(32)), unum(lo32));
-#endif
+  u64_t n = (convert(u64_t, src[7]) << 56 | convert(u64_t, src[6]) << 48 |
+             convert(u64_t, src[5]) << 40 | convert(u64_t, src[4]) << 32 |
+             convert(u64_t, src[3]) << 24 | convert(u64_t, src[2]) << 16 |
+             convert(u64_t, src[1]) << 8 | src[0]);
+  return unum_64(n);
 }
 
 static void ffi_be_float_put(struct txr_ffi_type *tft, val n,
