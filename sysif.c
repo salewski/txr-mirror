@@ -1347,17 +1347,11 @@ val num_off_t(off_t off)
   if (sizeof (off_t) <= sizeof (cnum)) {
     return num(off);
   } else if (NUM_MIN <= off && off <= NUM_MAX) {
-      return num(off);
+    return num(off);
+  } else if (sizeof (off_t) <= sizeof (i64_t)) {
+    return num_64(off);
   } else {
-#if HAVE_DOUBLE_INTPTR_T
-    if (sizeof (off_t) <= sizeof (double_intptr_t)) {
-      return bignum_dbl_ipt(off);
-    } else {
-      internal_error("portme: unsupported off_t size");
-    }
-#else
-#error port me!
-#endif
+    internal_error("portme: unsupported off_t size");
   }
 }
 
