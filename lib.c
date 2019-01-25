@@ -3099,20 +3099,21 @@ val num(cnum n)
   return bignum(n);
 }
 
-cnum c_num(val num)
+cnum c_num(val n)
 {
-  switch (type(num)) {
+  switch (type(n)) {
   case CHR: case NUM:
-    return coerce(cnum, num) >> TAG_SHIFT;
+    return coerce(cnum, n) >> TAG_SHIFT;
   case BGNUM:
-    if (in_int_ptr_range(num)) {
+    if (in_int_ptr_range(n)) {
       int_ptr_t out;
-      mp_get_intptr(mp(num), &out);
+      mp_get_intptr(mp(n), &out);
       return out;
     }
-    uw_throwf(error_s, lit("~s is out of cnum range"), num, nao);
+    uw_throwf(error_s, lit("~s is out of allowed range [~s, ~s]"),
+              n, num(INT_PTR_MIN), num(INT_PTR_MAX), nao);
   default:
-    type_mismatch(lit("~s is not an integer"), num, nao);
+    type_mismatch(lit("~s is not an integer"), n, nao);
   }
 }
 

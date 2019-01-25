@@ -213,7 +213,8 @@ ucnum c_unum(val num)
     }
     /* fallthrough */
   range:
-    uw_throwf(error_s, lit("~s given, non-negative expected"), num, nao);
+    uw_throwf(error_s, lit("~s is out of allowed range [0, ~a]"),
+              num, unum(UINT_PTR_MAX), nao);
   default:
     type_mismatch(lit("~s is not an integer"), num, nao);
   }
