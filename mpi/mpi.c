@@ -469,6 +469,37 @@ mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z)
   return MP_OKAY;
 }
 
+int mp_in_range(mp_int *mp, uint_ptr_t lim, int unsig)
+{
+  const int ptrnd = (SIZEOF_PTR + MP_DIGIT_BIT - 1) / MP_DIGIT_BIT;
+  mp_size nd = USED(mp);
+
+  if (unsig && ISNEG(mp))
+    return 0;
+
+  if (nd < ptrnd)
+    return 1;
+
+  if (nd > ptrnd)
+    return 0;
+
+  {
+    mp_digit top = DIGITS(mp)[ptrnd - 1];
+    lim >>= ((ptrnd - 1) * MP_DIGIT_BIT);
+    return top <= lim;
+  }
+}
+
+int mp_in_intptr_range(mp_int *mp)
+{
+  return mp_in_range(mp, INT_PTR_MAX, 0);
+}
+
+int mp_in_uintptr_range(mp_int *mp)
+{
+  return mp_in_range(mp, UINT_PTR_MAX, 1);
+}
+
 #ifdef HAVE_DOUBLE_INTPTR_T
 mp_err mp_set_double_intptr(mp_int *mp, double_intptr_t z)
 {

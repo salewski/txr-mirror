@@ -54,9 +54,6 @@
 #define CNUM_BIT ((int) sizeof (cnum) * CHAR_BIT)
 #define ABS(A) ((A) < 0 ? -(A) : (A))
 
-static mp_int NUM_MAX_MP, INT_PTR_MAX_MP, UINT_PTR_MAX_MP;
-static mp_int INT_PTR_MAX_SUCC_MP;
-
 val make_bignum(void)
 {
   val n = make_obj();
@@ -165,34 +162,13 @@ val bignum_dbl_ipt(double_intptr_t di)
 
 val normalize(val bignum)
 {
-  if (mp_cmp_mag(mp(bignum), &NUM_MAX_MP) == MP_GT) {
+  if (!mp_in_range(mp(bignum), NUM_MAX, 0)) {
     return bignum;
   } else {
     cnum fixnum;
     mp_get_intptr(mp(bignum), &fixnum);
     return num(fixnum);
   }
-}
-
-val in_int_ptr_range(val bignum)
-{
-  switch (mp_cmp_mag(mp(bignum), &INT_PTR_MAX_SUCC_MP)) {
-  default:
-  case MP_GT:
-    return nil;
-  case MP_EQ:
-    if (mp_cmp_z(mp(bignum)) == MP_GT)
-      return nil;
-    /* fallthrough */
-  case MP_LT:
-    return t;
-  }
-}
-
-static val in_uint_ptr_range(val bignum)
-{
-  return (mp_cmp_z(mp(bignum)) == MP_LT ||
-          mp_cmp_mag(mp(bignum), &UINT_PTR_MAX_MP) == MP_GT) ? nil : t;
 }
 
 ucnum c_unum(val num)
@@ -206,7 +182,7 @@ ucnum c_unum(val num)
     }
     goto range;
   case BGNUM:
-    if (in_uint_ptr_range(num)) {
+    if (mp_in_uintptr_range(mp(num))) {
       uint_ptr_t out;
       mp_get_uintptr(mp(num), &out);
       return out;
@@ -3348,15 +3324,6 @@ static val flo_set_round_mode(val mode)
 
 void arith_init(void)
 {
-  mp_init(&NUM_MAX_MP);
-  mp_set_intptr(&NUM_MAX_MP, NUM_MAX);
-  mp_init(&INT_PTR_MAX_MP);
-  mp_set_intptr(&INT_PTR_MAX_MP, INT_PTR_MAX);
-  mp_init(&UINT_PTR_MAX_MP);
-  mp_set_uintptr(&UINT_PTR_MAX_MP, -1);
-  mp_init(&INT_PTR_MAX_SUCC_MP);
-  mp_set_intptr(&INT_PTR_MAX_SUCC_MP, INT_PTR_MIN - 1);
-  mp_neg(&INT_PTR_MAX_SUCC_MP, &INT_PTR_MAX_SUCC_MP);
   log2_init();
 
   if (opt_compat && opt_compat <= 199) {
@@ -3423,8 +3390,4 @@ void arith_init(void)
 
 void arith_free_all(void)
 {
-  mp_clear(&NUM_MAX_MP);
-  mp_clear(&INT_PTR_MAX_MP);
-  mp_clear(&UINT_PTR_MAX_MP);
-  mp_clear(&INT_PTR_MAX_SUCC_MP);
 }

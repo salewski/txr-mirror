@@ -3105,7 +3105,7 @@ cnum c_num(val n)
   case CHR: case NUM:
     return coerce(cnum, n) >> TAG_SHIFT;
   case BGNUM:
-    if (in_int_ptr_range(n)) {
+    if (mp_in_intptr_range(mp(n))) {
       int_ptr_t out;
       mp_get_intptr(mp(n), &out);
       return out;

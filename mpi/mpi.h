@@ -85,6 +85,9 @@ mp_err mp_set_uintptr(mp_int *mp, uint_ptr_t z);
 mp_err mp_set_intptr(mp_int *mp, int_ptr_t z);
 mp_err mp_get_uintptr(mp_int *mp, uint_ptr_t *z);
 mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z);
+int mp_in_range(mp_int *mp, uint_ptr_t lim, int unsig);
+int mp_in_intptr_range(mp_int *mp);
+int mp_in_uintptr_range(mp_int *mp);
 #ifdef HAVE_DOUBLE_INTPTR_T
 mp_err mp_set_double_intptr(mp_int *mp, double_intptr_t z);
 #endif
