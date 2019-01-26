@@ -784,7 +784,7 @@
 (defun disassemble-cdf (code data funv *stdout*)
   (let ((asm (new assembler buf code)))
     (put-line "data:")
-    (mapdo (do format t " d~,03X: ~s\n" @1 @2) (range 0) data)
+    (mapdo (do format t "~5d: ~s\n" @1 @2) (range 0) data)
     (put-line "syms:")
     (mapdo (do format t "~5d: ~s\n" @1 @2) (range 0) funv)
     (put-line "code:")
