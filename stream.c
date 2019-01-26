@@ -675,7 +675,7 @@ static val stdio_seek(val stream, val offset, enum strm_whence whence)
     if (offset == zero && whence == strm_cur) {
       return stdio_ftell(h->f);
     } else {
-      if (stdio_fseek(h->f, offset, whence) != negone) {
+      if (stdio_fseek(h->f, offset, whence)) {
         utf8_decoder_init(&h->ud);
         h->unget_c = nil;
         return t;

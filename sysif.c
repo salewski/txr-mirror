@@ -1364,14 +1364,13 @@ val stdio_ftell(FILE *f)
 #endif
 }
 
-val stdio_fseek(FILE *f, val off, int whence)
+int stdio_fseek(FILE *f, val off, int whence)
 {
   val self = lit("seek-stream");
 #if HAVE_FSEEKO
-  return num_off_t(fseeko(f, off_t_num(off, self), whence));
+  return fseeko(f, off_t_num(off, self), whence) == 0;
 #else
-  int ret = fseek(f, c_long(off, self), whence);
-  return (ret == -1) ? num_fast(ret) : stdio_ftell(f);
+  return fseek(f, c_long(off, self), whence) == 0;
 #endif
 }
 

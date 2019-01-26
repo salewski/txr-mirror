@@ -59,7 +59,7 @@ val statf(val path);
 off_t off_t_num(val num, val self);
 val num_off_t(off_t offnum);
 val stdio_ftell(FILE *);
-val stdio_fseek(FILE *, val, int whence);
+int stdio_fseek(FILE *, val, int whence);
 #if HAVE_GETEUID
 void repress_privilege(void);
 void drop_privilege(void);
