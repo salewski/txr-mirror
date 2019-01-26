@@ -11,11 +11,11 @@ typedef unsigned mp_size;
  */
 typedef int mp_err;
 
-#if HAVE_USUPERLONG_T && HAVE_ULONGLONG_T && \
+#if HAVE_SUPERLONG_T && HAVE_ULONGLONG_T && \
     SIZEOF_SUPERLONG_T / 2 == SIZEOF_LONGLONG_T && \
     SIZEOF_PTR >= SIZEOF_LONGLONG_T
   typedef ulonglong_t mp_digit;
-  typedef usuperlong_t mp_word;
+  typedef superulong_t mp_word;
   #define MP_DIGIT_SIZE SIZEOF_LONGLONG_T
   #define DIGIT_FMT "%" #SIZEOF_SUPERLONG_T "llx"
 #elif HAVE_ULONGLONG_T && SIZEOF_LONGLONG_T / 2 == SIZEOF_LONG && \

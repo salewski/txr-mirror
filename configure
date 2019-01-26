@@ -1100,19 +1100,16 @@ fi
 
 if [ -n "$superlong" ] ; then
   printf '"%s"\n' "$superlong"
-  printf "#define HAVE_SUPERLONG_T 1\n" >> config.h
-  printf "typedef $superlong superlong_t;\n" >> config.h
-  printf "typedef $(echo $superlong | sed -e s/int/uint/) superulong_t;\n" >> config.h
 else
   printf "none\n"
 fi
 
 printf "Checking what C type we have for u. integers wider than \"long long\" ... "
 
-usuperlong=
+superulong=
 
 if [ -z "$broken128" ] ; then
-  for try_type in uint128 uint128_t __uint128 __uint128_t ; do
+  for try_type in uint128 uint128_t __uint128 __uint128_t 'unsigned int128'; do
     cat > conftest.c <<!
 #include "config.h"
 int main(void)
@@ -1124,18 +1121,22 @@ int main(void)
 longlong_t a, b;
 !
     if conftest_o ; then
-      usuperlong=$try_type
+      superulong=$try_type
       break
     fi
   done
 fi
 
-if [ -n "$usuperlong" ] ; then
-  printf '"%s"\n' "$usuperlong"
-  printf "#define HAVE_USUPERLONG_T 1\n" >> config.h
-  printf "typedef $usuperlong usuperlong_t;\n" >> config.h
+if [ -n "$superulong" ] ; then
+  printf '"%s"\n' "$superulong"
 else
   printf "none\n"
+fi
+
+if [ -n "$superlong" -a -n "$superulong" ] ; then
+  printf "#define HAVE_SUPERLONG_T 1\n" >> config.h
+  printf "typedef $superlong superlong_t;\n" >> config.h
+  printf "typedef $superulong superulong_t;\n" >> config.h
 fi
 
 printf "Checking what C integer type can hold a pointer ... "
