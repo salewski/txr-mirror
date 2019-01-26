@@ -493,8 +493,7 @@ install: $(PROG)
 	$(call INSTALL,0444,$(top_srcdir)METALICENSE,$(DESTDIR)$(datadir))
 	$(call INSTALL,0444,$(top_srcdir)txr.1,$(DESTDIR)$(mandir)/man1)
 	$(call INSTALL,0444,\
-	   $(addprefix $(top_srcdir)share/txr/stdlib/,\
-	                  *.txr *.tl *.tlo),\
+	   $(addprefix share/txr/stdlib/,*.txr *.tl *.tlo),\
 	   $(DESTDIR)$(datadir)/stdlib)
 
 .PHONY: unixtar gnutar zip
