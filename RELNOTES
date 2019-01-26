@@ -1,3 +1,21 @@
+                                    TXR 207
+                                   2019-01-26
+
+
+  Features
+
+  - Internal code structure and performance improvement in the areas of FFI,
+    integer types and bignums.
+
+  Bugs
+
+  - FFI: fixed bugs in the be-int64 and le-int64 types,
+    making these usable.
+  - Build problem: "make install" failing for compiled .tlo
+    files when using a separate build directory.
+
+
+
                                     TXR 206
                                    2019-01-18
 
