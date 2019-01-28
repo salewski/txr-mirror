@@ -575,8 +575,14 @@ int txr_main(int argc, char **argv)
 
     /* Odd case 1: --args is followed by an arbitrary delimiting
      * character, not necessarily = */
-    if (match_str(arg, lit("--args"), zero) && ge(length(arg), num(7))) {
+    if (match_str(arg, lit("--args"), zero)) {
       val sep = sub_str(arg, num(6), num(7));
+      if (empty(sep)) {
+        format(std_error,
+               lit("~a: --args requires argument material\n"),
+               prog_string, nao);
+        return EXIT_FAILURE;
+      }
       arg = sub_str(arg, num(7), nil);
       arg_list = append2(split_str(arg, sep), arg_list);
       set(eff_arg_tail, butlastn(one, deref(eff_arg_tail)));
@@ -585,12 +591,18 @@ int txr_main(int argc, char **argv)
 
     /* Odd case 2: --eargs is followed by an arbitrary delimiting
      * character, not necessarily = */
-    if (match_str(arg, lit("--eargs"), zero) && ge(length(arg), num(8))) {
+    if (match_str(arg, lit("--eargs"), zero)) {
       val sep = sub_str(arg, num(7), num(8));
       val arg2;
+      if (empty(sep)) {
+        format(std_error,
+               lit("~a: --eargs requires argument material\n"),
+               prog_string, nao);
+        return EXIT_FAILURE;
+      }
       if (!arg_list) {
         format(std_error,
-               lit("~a: --eargs=[...] must be followed by an argument\n"),
+               lit("~a: --eargs must be followed by an argument\n"),
                prog_string, nao);
         return EXIT_FAILURE;
       }
