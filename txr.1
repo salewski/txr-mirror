@@ -1412,6 +1412,64 @@ be taken to detect and handle that situation, either by means of the
 variable, or else by some logic which infers that the processing of the hash
 bang line hadn't been performed.
 
+.coNP Passing Options to \*(TX via Hash Bang Null Hack
+
+It is possible to use the Hash Bang Null Hack, such that the resulting
+executable program recognizes \*(TX options. This is made possible by
+a special behavior in the processing of the
+.code -f
+option.
+
+For instance, suppose that the effect of the following familiar hash bang line
+is required:
+
+.cblk
+  #!/path/to/txr -f
+.cble
+
+However, suppose there is also a requirement to use the
+.code env
+utility to find \*(TX. Furthermore, the operation system allows only one hash
+bang argument.  Using the Null Hack, this is rewritten as:
+
+.cblk
+  #!/usr/bin/env txr<NUL>-f
+.cble
+
+then if the script is invoked with arguments
+.codn "-a b c" ,
+the command line will ultimately be transformed into:
+
+.cblk
+  /path/to/txr -f /path/to/scriptfile -i a b c
+.cble
+
+which allows \*(TX to process the
+.code -i
+option, leaving
+.codn a ,
+.code b
+and
+.code c
+as arguments for the script.
+
+However, note that there is a subtle issue with the
+.code -f
+option that has been inserted via the Null Hack: namely, this
+insertion happens after
+\*(TX has opened the script file and read the hash bang line from it.
+This means that when the inserted
+.code -f
+option is being processed, the script file is already open.
+A special behavior occurs. The
+.code -f
+option processing notices that the argument to
+.code -f
+is identical to the path name of name of the script file that \*(TX has
+already opened for processing. The
+.code -f
+option and its argument are then skipped.
+
 .NP* Hash Bang and Setuid
 \*(TX supports setuid hash bang scripting, even on platforms that do not
 support setuid and setgid attributes on hash bang scripts. On such

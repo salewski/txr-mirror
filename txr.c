@@ -839,13 +839,15 @@ int txr_main(int argc, char **argv)
         parse_stream = make_string_byte_input_stream(specstring);
         break;
       case 'f':
+        spec_file = arg;
         if (parse_stream) {
+          if (equal(spec_file, spec_file_str))
+            break;
           format(std_error,
-                 lit("~a: -f ~a: input file has already been established\n"),
-                 prog_string, spec_file, nao);
+                 lit("~a: -f ~a: input source ~a has already been established\n"),
+                 prog_string, arg, spec_file_str, nao);
           return EXIT_FAILURE;
         }
-        spec_file = arg;
         if (wcscmp(c_str(spec_file), L"-") != 0) {
           open_txr_file(spec_file, &txr_lisp_p, &spec_file_str, &parse_stream);
           simulate_setuid_setgid(parse_stream);
