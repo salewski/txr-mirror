@@ -826,8 +826,8 @@ int txr_main(int argc, char **argv)
         }
         if (parse_stream) {
           format(std_error,
-                 lit("~a: -c ~a: input file has already been established\n"),
-                 prog_string, spec_file, nao);
+                 lit("~a: -c ~a: input source ~a has already been established\n"),
+                 prog_string, arg, spec_file_str, nao);
           return EXIT_FAILURE;
         }
         specstring = arg;
