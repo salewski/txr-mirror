@@ -765,6 +765,7 @@ val copy_hash(val existing)
   h->table = table;
   h->userdata = ex->userdata;
 
+  h->seed = ex->seed;
   h->flags = ex->flags;
   h->usecount = 0;
   h->hops = ex->hops;
