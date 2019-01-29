@@ -323,12 +323,40 @@ static val tleval_progn(val spec, val forms, val bindings)
   return ret;
 }
 
+static val tleval_nothrow(val spec, val form, val bindings, val nothrow)
+{
+  val result = colon_k;
+
+  if (nothrow) {
+    uw_catch_begin (cons(error_s, nil), exc_sym, exc);
+
+    result = tleval(spec, form, bindings);
+
+    uw_catch (exc_sym, exc) { (void) exc; }
+
+    uw_unwind { }
+
+    uw_catch_end;
+  } else {
+    result = tleval(spec, form, bindings);
+  }
+
+  return result;
+}
+
 static val txeval(val spec, val form, val bindings);
 
 static val tleval_144(val spec, val form, val bindings)
 {
   return if3(!opt_compat || opt_compat >= 144,
              tleval(spec, form, bindings),
+             txeval(spec, form, bindings));
+}
+
+static val tleval_144_nothrow(val spec, val form, val bindings, val nothrow)
+{
+  return if3(!opt_compat || opt_compat >= 144,
+             tleval_nothrow(spec, form, bindings, nothrow),
              txeval(spec, form, bindings));
 }
 
@@ -2699,7 +2727,7 @@ static val v_next_impl(match_files_ctx *c)
       val nothrow = cdr(assoc(nothrow_k, alist));
       val str = if3(meta,
                     txeval(specline, source, c->bindings),
-                    tleval(specline, source, c->bindings));
+                    tleval_nothrow(specline, source, c->bindings, nothrow));
 
       if (!from_var && !source && !string_expr && !list_expr && !tlist_expr)
         sem_error(specline, lit("next: source required before keyword arguments"), nao);
@@ -2717,6 +2745,9 @@ static val v_next_impl(match_files_ctx *c)
         }
       }
 
+      if (!meta && source && nothrow && str == colon_k)
+        goto nothrow_lisp;
+
       if (from_var) {
         val existing = tx_lookup_var_ubc(from_var, c->bindings, first_spec);
 
@@ -2732,15 +2763,22 @@ static val v_next_impl(match_files_ctx *c)
         }
       } else if (list_expr) {
         val list_val = if3(opt_compat && opt_compat <= 143,
-                           txeval, tleval)(specline, list_expr, c->bindings);
-        cons_bind (new_bindings, success,
-                   match_files(mf_file_data(*c, lit("var"),
-                               lazy_flatten(list_val), one)));
+                           txeval(specline, list_expr, c->bindings),
+                           tleval_nothrow(specline, list_expr, c->bindings, nothrow));
 
-        if (success)
-          return cons(new_bindings,
-                      if3(c->data, cons(c->data, c->data_lineno), t));
-        return nil;
+        if (nothrow && list_val == colon_k)
+          goto nothrow_lisp;
+
+        {
+          cons_bind (new_bindings, success,
+                     match_files(mf_file_data(*c, lit("var"),
+                                 lazy_flatten(list_val), one)));
+
+          if (success)
+            return cons(new_bindings,
+                        if3(c->data, cons(c->data, c->data_lineno), t));
+          return nil;
+        }
       } else if (tlist_expr) {
         val list_val = txeval(specline, tlist_expr, c->bindings);
         cons_bind (new_bindings, success,
@@ -2752,7 +2790,11 @@ static val v_next_impl(match_files_ctx *c)
                       if3(c->data, cons(c->data, c->data_lineno), t));
         return nil;
       } else if (string_expr) {
-        val str_val = tleval_144(specline, string_expr, c->bindings);
+        val str_val = tleval_144_nothrow(specline, string_expr, c->bindings, nothrow);
+
+        if (nothrow && str_val == colon_k)
+          goto nothrow_lisp;
+
         if (!stringp(str_val))
           sem_error(specline, lit(":string arg ~s evaluated to non-string ~s"), string_expr, str_val, nao);
 
@@ -2824,6 +2866,11 @@ static val v_next_impl(match_files_ctx *c)
                   if3(c->data, cons(c->data, c->data_lineno), t));
     return nil;
   }
+
+nothrow_lisp:
+  debuglf(first_spec, lit("Lisp expression threw error: "
+                          "treating as failed match due to nothrow"), nao);
+  return nil;
 }
 
 static val v_next(match_files_ctx *c)
