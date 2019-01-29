@@ -1,3 +1,27 @@
+                                    TXR 208
+                                   2019-01-28
+
+
+  Features
+
+  - The -f command line option can be used with the Hash Bang Null Hack.
+
+  Bugs
+
+  - Showstopper bug in copy-hash also affecting hash-diff.
+  - Pattern Language:
+    - Bug in @(next) directive's :nothrow
+      - @(next "file" :nothrow) wrongly reading from standard input
+        if opening "file" throws.
+    - @(next expr :nothrow) not catches error exception
+      thrown by Lisp code.
+      - The documentation can be interpreted as requiring this
+        and the expectation is intuitive.
+      - Same with @(next :list <expr> :nothrow) and
+        @(next :string <expr> :nothrow).
+
+
+
                                     TXR 207
                                    2019-01-26
 
