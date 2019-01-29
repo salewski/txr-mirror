@@ -2705,15 +2705,15 @@ static val v_next_impl(match_files_ctx *c)
         sem_error(specline, lit("next: source required before keyword arguments"), nao);
 
       {
-        int count = (from_var != nil) +
+        int count = (source != nil) +
+                    (from_var != nil) +
                     (list_expr != nil) +
                     (tlist_expr != nil) +
                     (string_expr != nil);
 
         if (count > 1)
         {
-          sem_error(specline, lit("next: only one of :var, :list, :tlist or :string "
-                                  "can be specified"), nao);
+          sem_error(specline, lit("next: at most one source may be specified"), nao);
         }
       }
 
