@@ -2788,13 +2788,21 @@ static val v_next_impl(match_files_ctx *c)
         }
       } else {
         val stream = complex_open(str, nil, nil, nothrow, nil);
-        cons_bind (new_bindings, success,
-                   match_files(mf_file_data(*c, str,
-                                            lazy_stream_cons(stream), one)));
 
-        if (success)
-          return cons(new_bindings,
-                      if3(c->data, cons(c->data, c->data_lineno), t));
+        if (stream) {
+          cons_bind (new_bindings, success,
+                     match_files(mf_file_data(*c, str,
+                                              lazy_stream_cons(stream), one)));
+
+          if (success)
+            return cons(new_bindings,
+                        if3(c->data, cons(c->data, c->data_lineno), t));
+        } else {
+          debuglf(first_spec, lit("could not open ~a: "
+                                  "treating as failed match due to nothrow"),
+                  str, nao);
+        }
+
         return nil;
       }
     }
