@@ -231,15 +231,26 @@
 
 (defvarl assumed-fun)
 
-(defmeth compiler get-dreg (me atom)
-  (condlet
-    ((((null atom))) '(t 0))
-    (((dreg [me.dreg atom])) dreg)
-    ((((< me.dreg-cntr %lev-size%)))
-     (let ((dreg ^(d ,(pinc me.dreg-cntr))))
-      (set [me.data (cadr dreg)] atom)
-      (set [me.dreg atom] dreg)))
-    (t (compile-error me.last-form "code too complex: too many literals"))))
+(defvar *dedup*)
+
+(defun dedup (obj)
+  (cond
+    ((null obj) nil)
+    ((null *dedup*) obj)
+    ((or (stringp obj) (bignump obj))
+     (or [*dedup* obj] (set [*dedup* obj] obj)))
+    (t obj)))
+
+(defmeth compiler get-dreg (me obj)
+  (let ((dobj (dedup obj)))
+    (condlet
+      ((((null dobj))) '(t 0))
+      (((dreg [me.dreg dobj])) dreg)
+      ((((< me.dreg-cntr %lev-size%)))
+       (let ((dreg ^(d ,(pinc me.dreg-cntr))))
+        (set [me.data (cadr dreg)] dobj)
+        (set [me.dreg dobj] dreg)))
+      (t (compile-error me.last-form "code too complex: too many literals")))))
 
 (defmeth compiler alloc-dreg (me)
   (if (< me.dreg-cntr %lev-size%)
@@ -1560,7 +1571,8 @@
 
 (defun usr:compile-toplevel (exp : (expanded-p nil))
   (let ((co (new compiler))
-        (as (new assembler)))
+        (as (new assembler))
+        (*dedup* (or *dedup* (hash))))
     (let* ((oreg co.(alloc-treg))
            (xexp (if expanded-p
                    exp
@@ -1637,7 +1649,8 @@
 (defmacro usr:with-compilation-unit (. body)
   (with-gensyms (rec)
     ^(let* ((,rec sys:*load-recursive*)
-            (sys:*load-recursive* t))
+            (sys:*load-recursive* t)
+            (*dedup* (or *dedup* (hash))))
        (unwind-protect
          (progn ,*body)
          (unless ,rec
