@@ -63223,6 +63223,61 @@ The interpreter doesn't perform this factoring; it evaluates a
 .code load-time
 form when it encounters it for the first time.
 
+.coNP Treatment of literals
+
+The compiler identifies multiple occurrences of equivalent strings and bignum
+integers that occur as literals, and condenses each one to a single instance,
+within the scope of the compilation. The scope is possibly as wide as a file.
+
+If the literal
+.str abc
+appears in multiple places in the same file that is processed by
+.codn compile-file ,
+in the resulting compiled file, there may be just a single
+.str abc
+object. For instance, if the file contains two functions:
+
+.cblk
+  (defun f1 () "abc")
+  (defun f2 () "abc")
+.cble
+
+when compiled, these will return the same object such that
+
+.cblk
+  (eq (f1) (f2)) -> t
+.cble
+
+No such de-duplication is performed for interpreted code.
+
+Consequently, code which depends on multiple occurrences of these objects to be
+distinct objects may behave correctly when interpreted, but misbehave when
+compiled. Or vice versa. One example is code which modifies a string literal.
+Under compilation, the change will affect all occurrences of that literal
+that have been merged into one object.  Another example is an
+expression like
+.codn "(eq \(dqabc\(dq \(dqabc\(dq)" ,
+which yields
+.code nil
+under interpretation because the two strings are distinct object in spite
+of appearing side by side in the syntax, but
+.code t
+when compiled, since they denote the same string object.
+
+In the future, objects other than strings and bignums may be similarly
+consolidated, such as lists and vectors, which means that interpreted
+code which works today when compiled may misbehave in the future.
+
+Note that objects which are literally notated in source code are not the only
+kinds of objects considered to be literals.  Objects which are constructed by
+macros and inserted into macro-expansions are also literals.  Literals are
+self-evaluating objects that appear as expressions in the syntax which remains
+after macro-expansion, as well as arguments of the
+.code quote
+operator. If a macro calculates a new string each time it is expanded,
+and inserts it into the expansion as a literal, the compiler will identify
+and consolidate groups of such strings that are identical.
+
 .coNP Treatment of unbound variables
 
 Unbound variables are treated differently by the compiler. A reference
