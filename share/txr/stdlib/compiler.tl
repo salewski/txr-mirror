@@ -1657,6 +1657,14 @@
            (release-deferred-warnings)
            (compiler-emit-warnings))))))
 
+(defun usr:dump-to-tlo (out-stream out)
+  (let* ((*print-circle* t)
+         (*package* (sys:make-anon-package))
+         (out-forms (split* out.(get) (op where (op eq :fence)))))
+    (prinl %tlo-ver% out-stream)
+    [mapdo (op prinl @1 out-stream) out-forms]
+    (delete-package *package*)))
+
 (defun usr:compile-file (in-path : out-path)
   (let ((streams (open-compile-streams in-path out-path))
         (err-ret (gensym))
@@ -1696,21 +1704,37 @@
                                   out.(add flat-vd)
                                   (when fence
                                     out.(add :fence)))))))))))
-          (prinl %tlo-ver% out-stream)
           (unwind-protect
             (whilet ((obj (read in-stream *stderr* err-ret))
                      ((neq obj err-ret)))
               (compile-form obj))
-            (let* ((*print-circle* t)
-                   (*package* (sys:make-anon-package))
-                   (out-forms (split* out.(get) (op where (op eq :fence)))))
-              [mapdo (op prinl @1 out-stream) out-forms]
-              (delete-package *package*)))
+            (dump-to-tlo out-stream out))
 
           (let ((parser (sys:get-parser in-stream)))
             (when (> (sys:parser-errors parser) 0)
               (error "~s: compilation of ~s failed" 'compile-file
                      (stream-get-prop in-stream :name)))))))))
+
+(defun usr:dump-compiled-objects (out-stream . compiled-objs)
+  (symacrolet ((self 'dump-compiled-object))
+    (let ((out (new list-builder)))
+      (flet ((vm-from-fun (fun)
+               (unless (vm-fun-p fun)
+                 (error "~s: not a vm function: ~s" self fun))
+               (sys:vm-closure-desc (func-get-env fun))))
+        (each ((obj compiled-objs))
+          (let* ((vm-desc (typecase obj
+                            (vm-desc obj)
+                            (fun (vm-from-fun obj))
+                            (t (iflet ((fun (symbol-function obj)))
+                                 (vm-from-fun fun)
+                                 (error "~s: not a compiled object: ~s"
+                                        self obj)))))
+                 (symvec (sys:vm-desc-symvec vm-desc)))
+            out.(add (list-from-vm-desc vm-desc))
+            (when (isec symvec %package-manip%)
+              out.(add :fence)))))
+      (dump-to-tlo out-stream out))))
 
 (defun sys:env-to-let (env form)
   (when env

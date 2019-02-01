@@ -64079,6 +64079,99 @@ The
 .code disassemble
 function returns its argument.
 
+.coNP Function @ dump-compiled-objects
+.synb
+.mets (dump-compiled-objects < stream << object *)
+.syne
+.desc
+The
+.code dump-compiled-objects
+function writes compiled objects into
+.meta stream
+in the same format as the
+.code compile-file
+function.
+
+Unlike under
+.codn compile-file ,
+the output is written into an arbitrary stream rather than a named file.
+The objects aren't specified by the to-be-compiled syntax processed from a
+source file, but rather as zero or more arguments which specify objects that
+are already compiled.
+
+Each
+.meta object
+must be be one of three kinds of values:
+.RS
+.IP 1.
+a virtual machine description object returned by
+.code compile-toplevel
+function; or
+.IP 2.
+a compiled function object, satisfying the function
+.codn vm-fun-p ;
+or else
+.IP 3.
+the name of a compiled function object, which may take any of the
+forms suitable as arguments to the
+.code symbol-function
+function.
+.RE
+.IP
+First,
+.code dump-compiled-objects
+writes some preamble information into
+.metn stream .
+Then, for each
+.meta object
+that is not already a virtual machine description, its corresponding
+virtual machine description is retrieved. The virtual machine description
+is converted into the externalized format required for the object format
+and that externalized format is written into
+.metn stream .
+The
+.code object
+argument are thus processed in left-to-right order.
+
+If exactly one call to
+.code dump-compiled-objects
+is used to populate an initially empty file, and no other data are
+written into the file, then that file is a valid compiled file.
+If that file is processed by
+.code load-file
+then each of the externalized forms is converted to a virtual machine
+description and executed.
+
+Note that virtual machine descriptions are not functions. A function's
+virtual machine description is the compiled version of the top-level form
+whose evaluation produced that function.
+
+For example, if the following top-level form is compiled and executed,
+two functions are defined:
+
+.cblk
+  (let ()
+    (defun a ())
+    (defun b ()))
+.cble
+
+Then, the following three expressions all have the same effect on
+stream
+.codn s :
+
+.cblk
+  (dump-compiled-objects s 'a)
+  (dump-compiled-objects s 'b)
+.cble
+
+Whether the
+.code a
+or
+.code b
+symbol is used to specify the object to be dumped, the same virtual machine
+description is externalized and deposited into the stream. That machine
+description, when loaded and executed, defines two functions.
+
 .SH* INTERACTIVE LISTENER
 
 .SS* Overview
