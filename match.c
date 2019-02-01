@@ -4609,9 +4609,7 @@ repeat_spec_same_data:
 
       if (entry) {
         v_match_func vmf = coerce(v_match_func, cptr_get(entry));
-        val result;
-
-        result = vmf(&c);
+        val result = vmf(&c);
 
         set_last_form_evaled(lfe_save);
 
