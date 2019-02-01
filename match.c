@@ -4602,12 +4602,15 @@ repeat_spec_same_data:
 
     debug_check(specline, c.bindings, c.data, c.data_lineno, nil, nil);
 
+    /* Line with nothing but a single directive or call: vertical mode. */
     if (consp(first_spec) && !rest(specline)) {
       val lfe_save = set_last_form_evaled(first_spec);
       val sym = first(first_spec);
       val entry = gethash(v_directive_table, sym);
 
-      if (entry) {
+      if (sym == var_s || sym == text_s) {
+        /* It's actually a var or text; go to horizontal processing below */
+      } else if (entry) {
         v_match_func vmf = coerce(v_match_func, cptr_get(entry));
         val result = vmf(&c);
 
@@ -4618,10 +4621,12 @@ repeat_spec_same_data:
             break;
           goto repeat_spec_same_data;
         } else if (result == decline_k) {
-          /* go on to other processing below */
+          /* Vertical directive declined; go to horizontal processing */
         } else {
           debug_return (result);
         }
+      } else if (gethash(h_directive_table,sym)) {
+        /* Lone horizontal-only directive: go to horizontal processing */
       } else {
         val result = v_fun(&c);
 
@@ -4632,7 +4637,9 @@ repeat_spec_same_data:
             break;
           goto repeat_spec_same_data;
         } else if (result == decline_k) {
-          /* go on to other processing below */
+          /* Function declined; we know the lookup failed because
+             since rest(specline) is nil, this is not horizontal fallback. */
+          sem_error(specline, lit("function ~s not found"), sym, nao);
         } else {
           debug_return (result);
         }
