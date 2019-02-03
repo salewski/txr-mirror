@@ -3212,6 +3212,31 @@ val nary_op(val self, val (*bfun)(val, val),
   return acc;
 }
 
+static val nary_op_keyfun(val self, val (*bfun)(val, val),
+                          val (*ufun)(val self, val),
+                          struct args *args, val emptyval,
+                          val keyfun)
+{
+  val acc, next;
+  cnum index = 0;
+
+  if (!args_more(args, index))
+    return emptyval;
+
+  acc = funcall1(keyfun, args_get(args, &index));
+
+  if (!args_more(args, index))
+    return ufun(self, acc);
+
+  do {
+    next = funcall1(keyfun, args_get(args, &index));
+    acc = bfun(acc, next);
+  } while (args_more(args, index));
+
+  return acc;
+}
+
+
 val nary_simple_op(val self, val (*bfun)(val, val),
                    struct args *args, val firstval)
 {
@@ -3408,16 +3433,26 @@ val numneqv(struct args *args)
   return t;
 }
 
-val sum(val seq)
+static val sumv(struct args *nlist, val keyfun)
 {
-  args_decl_list(args, ARGS_MIN, tolist(seq));
-  return plusv(args);
+  return nary_op_keyfun(lit("+"), plus, unary_arith, nlist, zero, keyfun);
 }
 
-val prod(val seq)
+val sum(val seq, val keyfun)
 {
   args_decl_list(args, ARGS_MIN, tolist(seq));
-  return mulv(args);
+  return if3(missingp(keyfun), plusv(args), sumv(args, keyfun));
+}
+
+static val prodv(struct args *nlist, val keyfun)
+{
+  return nary_op_keyfun(lit("*"), mul, unary_num, nlist, one, keyfun);
+}
+
+val prod(val seq, val keyfun)
+{
+  args_decl_list(args, ARGS_MIN, tolist(seq));
+  return if3(missingp(keyfun), mulv(args), prodv(args, keyfun));
 }
 
 val max2(val a, val b)
