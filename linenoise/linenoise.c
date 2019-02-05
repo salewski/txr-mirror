@@ -131,7 +131,7 @@ struct lino_state {
     int maxrows;        /* Maximum num of rows used so far (multiline mode) */
     int history_index;  /* The history index we are currently editing. */
     int need_resize;    /* Need resize flag. */
-    int need_refresh;   /* Need refresh. */
+    int need_refresh;   /* Need refresh: 1 == full; 2 == recalc maxrows only. */
     int selmode;        /* Visual selection being made. */
     int selinclusive;   /* Selections include character right of endpoint. */
     int noninteractive; /* No character editing, even if input is tty. */
@@ -1146,6 +1146,9 @@ static void refresh_multiline(lino_t *l) {
     if (rows > l->maxrows)
         l->maxrows = rows;
 
+    if (l->need_refresh == 2)
+        return;
+
     /* First step: clear all the lines used before. To do so start by
      * going to the last row. */
     ab_init(&ab);
@@ -1569,6 +1572,8 @@ static int edit_insert(lino_t *l, wchar_t c) {
                 wchar_t str[2] = { c };
                 if (!lino_os.puts_fn(l->tty_ofs, str))
                     return -1;
+                if (l->mlmode)
+                    l->need_refresh = 2; /* just recalculate l->maxrows */
             } else {
                 l->need_refresh = 1;
             }
