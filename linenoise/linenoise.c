@@ -976,9 +976,9 @@ static void sync_data_to_buf(lino_t *l)
                 *bptr++ = '\r';
                 *bptr++ = '\n';
                 col = 0;
-            } else if (ch < ' ') {
+            } else if (ch < ' ' || ch == 0xDC00) {
                 *bptr++ = '^';
-                *bptr++ = '@' + ch;
+                *bptr++ = '@' + (ch & 0xff);
                 col += 2;
             } else if (ch == 127) {
                 *bptr++ = '^';
