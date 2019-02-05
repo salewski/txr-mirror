@@ -1569,7 +1569,16 @@ static int edit_insert(lino_t *l, wchar_t c) {
                  * make the display length different from the buffer length.
                  * multi-line-mode: we are just adding to the end.
                  */
-                wchar_t str[2] = { c };
+                wchar_t str[3] = L"^";
+
+                if (c == 0xdc00 || c < ' ') {
+                    str[1] = '@' + (c & 0xff);
+                } else if (c == 127) {
+                    str[1] = '?';
+                } else {
+                    str[0] = c;
+                }
+
                 if (!lino_os.puts_fn(l->tty_ofs, str))
                     return -1;
                 if (l->mlmode)
