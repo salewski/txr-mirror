@@ -139,12 +139,6 @@ size_t utf8_from_buf(wchar_t *wdst, const unsigned char *src, size_t nbytes)
   return nchar;
 }
 
-size_t utf8_from(wchar_t *wdst, const char *src)
-{
-  size_t nbytes = strlen(src);
-  return utf8_from_buf(wdst, coerce(const unsigned char *, src), nbytes);
-}
-
 size_t utf8_to_buf(unsigned char *dst, const wchar_t *wsrc, int null_term)
 {
   size_t nbyte = 0;

@@ -26,7 +26,6 @@
  */
 
 size_t utf8_from_buf(wchar_t *, const unsigned char *, size_t nbytes);
-size_t utf8_from(wchar_t *, const char *);
 size_t utf8_to_buf(unsigned char *dst, const wchar_t *wsrc, int null_term);
 size_t utf8_to(char *, const wchar_t *);
 wchar_t *utf8_dup_from(const char *);
