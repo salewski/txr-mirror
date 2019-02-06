@@ -5347,7 +5347,7 @@ val make_zstruct(val type, struct args *args)
     uw_throwf(error_s, lit("~a: ~s isn't a struct type"), self, type, nao);
 
   for (i = largest = 0; i < tft->nelem; i++) {
-    cnum size =tft->memb[i].mtft->size;
+    cnum size = tft->memb[i].mtft->size;
     if (size > largest)
       largest = size;
   }
