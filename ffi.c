@@ -5369,8 +5369,10 @@ val make_zstruct(val type, struct args *args)
     if (!inited[i]) {
       struct smemb *m = &tft->memb[i];
       val slsym = m->mname;
-      val initval = m->mtft->get(m->mtft, zbuf, self);
-      slotset(strct, slsym, initval);
+      if (slsym) {
+        val initval = m->mtft->get(m->mtft, zbuf, self);
+        slotset(strct, slsym, initval);
+      }
     }
   }
 
