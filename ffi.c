@@ -4239,7 +4239,7 @@ val ffi_make_closure(val fun, val call_desc, val safe_p_in, val abort_ret_in)
                                         chk_calloc(1, sizeof *tfcl));
   struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(self, call_desc);
   val obj = cobj(coerce(mem_t *, tfcl), ffi_closure_s, &ffi_closure_ops);
-  val safe_p = default_arg(safe_p_in, t);
+  val safe_p = default_arg_strict(safe_p_in, t);
   ffi_status ffis = FFI_OK;
 
   tfcl->clo = convert(ffi_closure *,
