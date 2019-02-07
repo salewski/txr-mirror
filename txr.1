@@ -60412,7 +60412,7 @@ type specifier keyword in the FFI type language.
 This type appears a C function pointer in the foreign code,
 and may be called as such. When it is called by foreign
 code, it triggers a call to
-.meta lisp-fun.
+.metn lisp-fun .
 
 The optional
 .meta safe-p
@@ -60423,7 +60423,7 @@ so that unsafe closure dispatch must be explicitly requested with a
 .code nil
 argument for this parameter.
 
-A a callback closure which is is safely dispatched, firstly, does not permit
+A callback closure which is safely dispatched, firstly, does not permit
 the capture of delimited continuations across foreign code. Delimited
 continuations can be captured inside a closure dispatched that way, but the
 delimiting prompt must be within the callback's local stack frame, without
