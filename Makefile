@@ -65,7 +65,6 @@ EXTRA_OBJS-$(add_win_res) += win/txr.res
 
 STDLIB_SRCS := $(wildcard share/txr/stdlib/*.tl)
 STDLIB_TLOS := $(patsubst %.tl,%.tlo,$(STDLIB_SRCS))
-STDLIB_TLOS2 := $(patsubst %.tl,%.tlo2,$(STDLIB_SRCS))
 
 STDLIB_EARLY_PATS := %/error.tlo # these must be compiled first
 STDLIB_EARLY_TLOS := $(filter $(STDLIB_EARLY_PATS),$(STDLIB_TLOS))
@@ -193,10 +192,6 @@ win/%.res: $(top_srcdir)win/%.rc $(top_srcdir)win/%.ico
 %.tlo: %.tl | $(PROG)
 	$(call COMPILE_TL)
 
-%.tlo2: %.tl | $(PROG)
-	$(call COMPILE_TL)
-	$(call SH,F=$@ T=$${F%.tlo2}.tlo; cmp -s $$F $$T || cp $$F $$T)
-
 # The following pattern rule is used for test targets built by configure
 %.o: %.c
 	$(call COMPILE_C)
@@ -219,15 +214,11 @@ tainted:
 endif
 endif
 
-.PHONY: all stage1 stage2
+.PHONY: all
 
-all: $(BUILD_TARGETS) stage1 stage2
+all: $(BUILD_TARGETS) $(STDLIB_TLOS)
 
 $(STDLIB_LATE_TLOS): | $(STDLIB_EARLY_TLOS)
-
-stage1: $(STDLIB_TLOS)
-
-stage2: $(STDLIB_TLOS2)
 
 $(PROG): $(OPT_OBJS) $(EXTRA_OBJS-y)
 	$(call LINK_PROG,$(OPT_FLAGS))
@@ -360,7 +351,7 @@ clean: conftest.clean clean-tlo
 	rm -rf opt dbg $(EXTRA_OBJS-y)
 
 clean-tlo:
-	rm -f $(STDLIB_TLOS) $(STDLIB_TLOS2)
+	rm -f $(STDLIB_TLOS)
 
 distclean: clean
 	rm -f config.h config.make config.log
