@@ -1,3 +1,76 @@
+                                    TXR 209
+                                   2019-02-08
+
+
+  Features
+
+  - Compiler:
+    - string literals and bignums now de-duplicated in compiled files.
+    - caseql generates slightly better code in the integer jump table case.
+    - new function dump-compiled-objects
+      - allows applications to programmatically generate compiled files
+        out of individually picked compiled forms.
+
+  - Library:
+    - The sum and prod functions now take an optional keyfun argument.
+      - Example: add up sizes of "*.txt" files:
+          (sum (glob "*.txt") [chain stat .size])
+
+  Bugs
+
+  - Compiler:
+    - The defvar/defparm macros didn't take into account compilation, only
+      marking the symbol special at expansion time, but neglecting to emit the
+      code to do that when the expansion is executed.
+      - This works for interpreted code, of course, but under compilation it
+        means that if we compile a (defvar x) in a file with compile-file, the
+        resulting compiled file will produce a global lexical x, not a
+        dynamically scoped x.
+
+  - Build:
+    - The library is no longer compiled twice: the .tlo2 files are gone.
+      - The idea that there could be a legitimate difference in the files
+        compiled by a partially-compiled image, versus a fully-compiled image
+        was wrong-headed. They are in fact the same, unless there is a bug.
+        The interpreted compiler must produce the same results as the compiled
+        compiler, period.
+      - In fact, there was a difference between the "stage1" and "stage2"
+        compiled files: it was caused by the above defvar bug.
+
+  - Pattern Language:
+    - When a call to a user-defined @(function ...), all on a line by itself
+      (vertical mode) faces the end of input (EOF), the function was not being
+      called.
+    - Functions were able to shadow horizontal directives.
+
+  - Listener:
+    - November 2018 regression that caused screen update glitch when a long
+      line wraps.
+    - The caret notation ^@ was not used for the NUL character; it was sent to
+      the terminal as-is (ignored by most terminals), but counted by our editor
+      as having a display width of 1.
+    - The ^@, ^A, ... caret notation was not being used for control characters,
+      when these were inserted at the end of the line in the optimized
+      no-refresh case.
+
+  - Parser:
+    - In string literals, handle embedded byte properly, mapping it to \pnul.
+    - In string literals, diagnose bad UTF-8.
+
+  - FFI:
+    - make-zstruct/znew were blowing up when the FFI struct type has padding
+      slots, indicated by the symbol nil.
+    - deffi-cb-unsafe macro was not being auto-loaded.
+    - ffi-make-closure's safe-p parameter's defaulting was mishandled, causing
+      it to be always true even when given a nil argument.
+      - thus deffi-cb-unsafe behaved like deffi-cb.
+    - In FFI closure dispatch, clear previous state related to exception
+      handling, which covers situations when we return to foreign code
+      due to an exception, but the foreign code calls down again into
+      a closure rather than itself bubbling up to Lisp.
+
+
+
                                     TXR 208
                                    2019-01-28
 
