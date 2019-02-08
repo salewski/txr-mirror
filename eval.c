@@ -2959,8 +2959,12 @@ static val me_def_variable(val form, val menv)
   val op = first(form);
   val sym = first(args);
   val initform = second(args);
+  val mkspecial = if2(op == defvar_s || op == defparm_s,
+                      cons(list(sys_mark_special_s,
+                                list(quote_s, sym, nao), nao), nil));
   val setval = if2(op == defparm_s || op == defparml_s,
                    cons(list(set_s, sym, initform, nao), nil));
+  val mksv = nappend2(mkspecial, setval);
 
   (void) menv;
 
@@ -2970,7 +2974,7 @@ static val me_def_variable(val form, val menv)
   if (!bindable(sym))
     not_bindable_error(form, sym);
 
-  if (op == defparm_s || op == defvar_s) {
+  if (mkspecial) {
     mark_special(sym);
     if (uw_warning_exists(cons(var_s, sym)))
       eval_warn(form, lit("~s: global ~s marked special after lexical uses"),
@@ -2981,7 +2985,7 @@ static val me_def_variable(val form, val menv)
                               cons(defvarl_s,
                                    cons(sym, if2(op == defvar_s,
                                                  cons(initform, nil)))),
-                              setval, nao));
+                              mksv, nao));
 }
 
 static val get_var_syms(val vars)
