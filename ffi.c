@@ -4179,6 +4179,8 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
   if (rtft->release != 0)
     memset(cret, 0, rsize);
 
+  s_exit_point = 0;
+
   uw_push_guard(&cont_guard, 0);
 
   uw_simple_catch_begin;
