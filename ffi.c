@@ -4173,10 +4173,11 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
   struct txr_ffi_type *rtft = ffi_type_struct(rtype);
   volatile val retval = nao;
   int out_pass_needed = 0;
+  size_t rsize = pad_retval(rtft->size);
   uw_frame_t cont_guard;
 
   if (rtft->release != 0)
-    memset(cret, 0, rtft->size);
+    memset(cret, 0, rsize);
 
   uw_push_guard(&cont_guard, 0);
 
@@ -4218,7 +4219,7 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
       if (rtft->release != 0 && retval != nao)
         rtft->release(rtft, retval, convert(mem_t *, cret));
       if (!tfcl->abort_retval)
-        memset(cret, 0, pad_retval(rtft->size));
+        memset(cret, 0, rsize);
       else
         ifbe2(rtft->rput, rtft->put)(rtft, tfcl->abort_retval,
                                      convert(mem_t *, cret), self);
