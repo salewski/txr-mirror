@@ -3173,9 +3173,7 @@ val improper_plist_to_alist(val list, val boolean_keys)
 
 val num(cnum n)
 {
-  if (n >= NUM_MIN && n <= NUM_MAX)
-    return coerce(val, (n << TAG_SHIFT) | TAG_NUM);
-  return bignum(n);
+  return (n >= NUM_MIN && n <= NUM_MAX) ? num_fast(n) : bignum(n);
 }
 
 cnum c_num(val n)
