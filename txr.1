@@ -28728,13 +28728,27 @@ and
 returning a new sequence: the union sequence,
 intersection sequence and difference sequence.
 
-The sequences
+The arguments
 .meta seq1
 and
 .meta seq2
-need not be of the same kind.
+need not be of the same kind. They may be hash tables.
+
 The returned sequence is of the same kind as
 .metn seq1 .
+If
+.meta seq1
+is a hash table, the returned sequence is a list.
+
+For the purposes of these functions, an input which is a hash table
+is considered as if it were a sequence of hash key and hash
+value pairs represented as cons cells, the
+.code car
+slots of which are the hash keys, and the
+.code cdr
+of which are the hash values. This means that if no
+.meta keyfun
+is specified, these pairs are taken as keys.
 
 Since the input sequences are defined as representing sets, they are assumed
 not to contain duplicate elements. These functions are not required, but may,
@@ -28812,7 +28826,7 @@ then the
 .code equal
 function is used.
 
-Note: a function identical to
+Note: a function similar to
 .code diff
 named
 .code set-diff
@@ -28830,6 +28844,25 @@ function, but is
 honored by the implementation for at as long as the
 .code set-diff
 synonym continues to be available.
+The
+.code set-diff
+function doesn't support hash tables and is inefficient for vectors and
+strings.
+
+Note: these functions are not efficient for the processing of hash tables,
+even when both inputs are hashes, the
+.meta keyfun
+argument is
+.codn car ,
+and
+.meta testfun
+matches the equality used by both hash table inputs.
+If applicable, the operations
+.codn hash-uni ,
+.code hash-isec
+and
+.code hash-diff
+should be used instead.
 
 .coNP Functions @, mapcar @, mappend @ mapcar* and @ mappend*
 .synb

@@ -9930,6 +9930,42 @@ val in(val seq, val item, val testfun, val keyfun)
   }
 }
 
+val diff(val seq1, val seq2, val testfun, val keyfun)
+{
+  val self = lit("diff");
+  list_collect_decl (out, ptail);
+  seq_iter_t si1, si2;
+  val el1;
+
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
+
+  seq_iter_init(self, &si1, seq1);
+  seq_iter_init(self, &si2, seq2);
+
+  while (seq_get(&si1, &el1)) {
+    val el1_key = funcall1(keyfun, el1);
+    val el2;
+    int found = 0;
+
+    seq_iter_rewind(self, &si2);
+
+    while (seq_get(&si2, &el2)) {
+      val el2_key = funcall1(keyfun, el2);
+
+      if (funcall2(testfun, el1_key, el2_key)) {
+        found = 1;
+        break;
+      }
+    }
+
+    if (!found)
+      ptail = list_collect(ptail, el1);
+  }
+
+  return make_like(out, seq1);
+}
+
 val set_diff(val list1, val list2, val testfun, val keyfun)
 {
   list_collect_decl (out, ptail);
@@ -9958,63 +9994,62 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
   return make_like(out, list_orig);
 }
 
-val isec(val list1, val list2, val testfun, val keyfun)
+val isec(val seq1, val seq2, val testfun, val keyfun)
 {
+  val self = lit("isec");
   list_collect_decl (out, ptail);
-  val list_orig = list1;
-
-  list1 = nullify(list1);
-  list2 = nullify(list2);
+  seq_iter_t si1, si2;
+  val el1;
 
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
 
-  for (; list1; list1 = cdr(list1)) {
-    /* optimization: list2 is a tail of list1, and so we
-       are done, unless the application has a weird test function. */
-    if (list1 == list2) {
-      ptail = list_collect_append(ptail, list1);
-      break;
-    } else {
-      val item = car(list1);
-      val list1_key = funcall1(keyfun, item);
+  seq_iter_init(self, &si1, seq1);
+  seq_iter_init(self, &si2, seq2);
 
-      if (member(list1_key, list2, testfun, keyfun))
-        ptail = list_collect(ptail, item);
+  while (seq_get(&si1, &el1)) {
+    val el1_key = funcall1(keyfun, el1);
+    val el2;
+
+    seq_iter_rewind(self, &si2);
+
+    while (seq_get(&si2, &el2)) {
+      val el2_key = funcall1(keyfun, el2);
+
+      if (funcall2(testfun, el1_key, el2_key)) {
+        ptail = list_collect(ptail, el1);
+        break;
+      }
     }
   }
 
-  return make_like(out, list_orig);
+  return make_like(out, seq1);
 }
 
-val uni(val list1, val list2, val testfun, val keyfun)
+val uni(val seq1, val seq2, val testfun, val keyfun)
 {
+  val self = lit("uni");
   list_collect_decl (out, ptail);
-  val list_orig = list1;
-
-  list1 = nullify(list1);
-  list2 = nullify(list2);
+  seq_iter_t si1, si2;
+  val el1, el2;
 
   testfun = default_arg(testfun, equal_f);
   keyfun = default_arg(keyfun, identity_f);
 
-  ptail = list_collect_append(ptail, list1);
+  seq_iter_init(self, &si1, seq1);
+  seq_iter_init(self, &si2, seq2);
 
-  for (; list2; list2 = cdr(list2)) {
-    /* optimization: list2 is a tail of list1, and so we
-       are done, unless the application has a weird test function. */
-    if (list1 == list2) {
-      break;
-    } else {
-      val item = car(list2);
-      val list2_key = funcall1(keyfun, item);
+  while (seq_get(&si1, &el1))
+    ptail = list_collect(ptail, el1);
 
-      if (!member(list2_key, list1, testfun, keyfun))
-        ptail = list_collect(ptail, item);
-    }
+  while (seq_get(&si2, &el2)) {
+    val el2_key = funcall1(keyfun, el2);
+
+    if (!member(el2_key, out, testfun, keyfun))
+      ptail = list_collect(ptail, el2);
   }
 
-  return make_like(out, list_orig);
+  return make_like(out, seq1);
 }
 
 val copy(val seq)
