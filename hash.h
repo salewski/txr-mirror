@@ -55,6 +55,7 @@ val hashv(struct args *args);
 val hashl(val args);
 val hash_construct(val hashl_args, val pairs);
 val hash_from_pairs_v(val pairs, struct args *hashv_args);
+val hash_from_alist_v(val alist, struct args *hashv_args);
 val hash_list(val keys, struct args *hashv_args);
 val group_by(val func, val seq, struct args *hashv_args);
 val group_reduce(val hash, val by_fun, val reduce_fun, val seq,

@@ -40769,10 +40769,11 @@ function is affected or its hash value under
 is altered, the behavior of subsequent lookup and insertion operations on the
 becomes unspecified.
 
-.coNP Functions @ hash-construct and @ hash-from-pairs
+.coNP Functions @, hash-construct @ hash-from-pairs and @ hash-from-alist
 .synb
 .mets (hash-construct < hash-args << key-val-pairs )
 .mets (hash-from-pairs < key-val-pairs << hash-arg *)
+.mets (hash-from-alist < alist << hash-arg *)
 .syne
 .desc
 The
@@ -40799,6 +40800,21 @@ function is an alternative interface to the same semantics. The
 argument is first, and the
 .meta hash-args
 are passed as trailing variadic arguments, rather than a single list argument.
+
+The
+.code hash-from-alist
+function is similar to
+.codn hash-from-pairs ,
+except that the
+.meta alist
+argument specifies they keys and values as an association list.
+The elements of the list are
+.code cons
+cells, each of whose
+.code car
+is a key, and whose
+.code cdr
+is the value.
 
 .coNP Function @ hash-list
 .synb
