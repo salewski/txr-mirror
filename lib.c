@@ -323,6 +323,85 @@ static void noreturn unsup_obj(val self, val obj)
   abort();
 }
 
+static int seq_iter_get_nil(seq_iter_t *it, val *pval)
+{
+  return 0;
+}
+
+static int seq_iter_get_list(seq_iter_t *it, val *pval)
+{
+  if (!it->ui.iter)
+    return 0;
+  *pval = car(it->ui.iter);
+  it->ui.iter = cdr(it->ui.iter);
+  return 1;
+}
+
+static int seq_iter_get_vec(seq_iter_t *it, val *pval)
+{
+  if (it->ui.index < it->ul.len) {
+    *pval = ref(it->inf.obj, num(it->ui.index++));
+    return 1;
+  }
+  return 0;
+}
+
+static int seq_iter_get_hash(seq_iter_t *it, val *pval)
+{
+  *pval = hash_next(it->ui.iter);
+  return *pval != nil;
+}
+
+void seq_iter_rewind(val self, seq_iter_t *it)
+{
+  switch (it->inf.kind) {
+  case SEQ_NIL:
+    it->ui.iter = nil;
+    break;
+  case SEQ_LISTLIKE:
+    it->ui.iter = it->inf.obj;
+    break;
+  case SEQ_VECLIKE:
+    it->ui.index = 0;
+    break;
+  case SEQ_HASHLIKE:
+    it->ui.iter = hash_begin(it->inf.obj);
+    break;
+  default:
+    break;
+  }
+}
+
+void seq_iter_init(val self, seq_iter_t *it, val obj)
+{
+  it->inf = seq_info(obj);
+
+  switch (it->inf.kind) {
+  case SEQ_NIL:
+    it->ui.iter = nil;
+    it->ul.len = 0;
+    it->get = seq_iter_get_nil;
+    break;
+  case SEQ_LISTLIKE:
+    it->ui.iter = it->inf.obj;
+    it->ul.len = 0;
+    it->get = seq_iter_get_list;
+    break;
+  case SEQ_VECLIKE:
+    it->ui.index = 0;
+    it->ul.len = c_num(length(it->inf.obj));
+    it->get = seq_iter_get_vec;
+    break;
+  case SEQ_HASHLIKE:
+    it->ui.iter = hash_begin(it->inf.obj);
+    it->ul.len = 0;
+    it->get = seq_iter_get_hash;
+    break;
+  default:
+    unsup_obj(self, obj);
+  }
+}
+
 val throw_mismatch(val self, val obj, type_t t)
 {
   type_mismatch(lit("~a: ~s is not of type ~s"), self, obj, code2type(t), nao);

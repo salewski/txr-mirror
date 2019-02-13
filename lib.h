@@ -369,6 +369,18 @@ typedef struct seq_info {
   seq_kind_t kind;
 } seq_info_t;
 
+typedef struct seq_iter {
+  seq_info_t inf;
+  union {
+    val iter;
+    cnum index;
+  } ui;
+  union {
+    cnum len;
+  } ul;
+  int (*get)(struct seq_iter *, val *pval);
+} seq_iter_t;
+
 extern const seq_kind_t seq_kind_tab[MAXTYPE+1];
 
 #define SEQ_KIND_PAIR(A, B) ((A) << 3 | (B))
@@ -517,6 +529,9 @@ val typeof(val obj);
 val subtypep(val sub, val sup);
 val typep(val obj, val type);
 seq_info_t seq_info(val cobj);
+void seq_iter_init(val self, seq_iter_t *it, val obj);
+void seq_iter_rewind(val self, seq_iter_t *it);
+INLINE int seq_get(seq_iter_t *it, val *pval) { return it->get(it, pval); }
 val throw_mismatch(val self, val obj, type_t);
 INLINE val type_check(val self, val obj, type_t typecode)
 {
