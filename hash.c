@@ -1380,8 +1380,12 @@ val hash_uni(val hash1, val hash2, val join_func)
       if (missingp(join_func)) {
         sethash(hout, car(entry), cdr(entry));
       } else {
-        loc ptr = gethash_l(self, hout, car(entry), nulloc);
-        set(ptr, funcall2(join_func, cdr(entry), deref(ptr)));
+        val new_p;
+        loc ptr = gethash_l(self, hout, car(entry), mkcloc(new_p));
+        if (new_p)
+          sethash(hout, car(entry), cdr(entry));
+        else
+          set(ptr, funcall2(join_func, cdr(entry), deref(ptr)));
       }
     }
 
