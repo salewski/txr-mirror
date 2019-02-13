@@ -65,6 +65,7 @@ val hash_pairs(val hash);
 val hash_alist(val hash);
 val hash_uni(val hash1, val hash2, val join_func);
 val hash_diff(val hash1, val hash2);
+val hash_symdiff(val hash1, val hash2);
 val hash_isec(val hash1, val hash2, val join_func);
 val hash_subset(val hash1, val hash2);
 val hash_proper_subset(val hash1, val hash2);

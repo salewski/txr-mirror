@@ -1418,6 +1418,40 @@ val hash_diff(val hash1, val hash2)
   }
 }
 
+val hash_symdiff(val hash1, val hash2)
+{
+  val self = lit("hash-symdiff");
+  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_s));
+  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_s));
+
+  if (h1->hops != h2->hops)
+    uw_throwf(error_s, lit("~a: ~s and ~a are incompatible hashes"),
+              self, hash1, hash2, nao);
+
+  {
+    val hout = make_similar_hash(hash1);
+    val hiter, entry;
+
+    for (hiter = hash_begin(hash1), entry = hash_next(hiter);
+         entry;
+         entry = hash_next(hiter))
+    {
+      if (!gethash_e(self, hash2, car(entry)))
+        sethash(hout, car(entry), cdr(entry));
+    }
+
+    for (hiter = hash_begin(hash2), entry = hash_next(hiter);
+         entry;
+         entry = hash_next(hiter))
+    {
+      if (!gethash_e(self, hash1, car(entry)))
+        sethash(hout, car(entry), cdr(entry));
+    }
+
+    return hout;
+  }
+}
+
 val hash_isec(val hash1, val hash2, val join_func)
 {
   val self = lit("hash-isec");
@@ -1586,6 +1620,7 @@ void hash_init(void)
   reg_fun(intern(lit("hash-alist"), user_package), func_n1(hash_alist));
   reg_fun(intern(lit("hash-uni"), user_package), func_n3o(hash_uni, 2));
   reg_fun(intern(lit("hash-diff"), user_package), func_n2(hash_diff));
+  reg_fun(intern(lit("hash-symdiff"), user_package), func_n2(hash_symdiff));
   reg_fun(intern(lit("hash-isec"), user_package), func_n3o(hash_isec, 2));
   reg_fun(intern(lit("hash-subset"), user_package), func_n2(hash_subset));
   reg_fun(intern(lit("hash-proper-subset"), user_package), func_n2(hash_proper_subset));

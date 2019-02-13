@@ -41549,10 +41549,11 @@ dohash early using
 or
 .codn (return) .
 
-.coNP Functions @, hash-uni @ hash-diff and @ hash-isec
+.coNP Functions @, hash-uni @, hash-diff @ hash-symdiff and @ hash-isec
 .synb
 .mets (hash-uni < hash1 < hash2 <> [ join-func ])
 .mets (hash-diff < hash1 << hash2 )
+.mets (hash-symdiff < hash1 << hash2 )
 .mets (hash-isec < hash1 < hash2 <> [ join-func ])
 .syne
 .desc
@@ -41614,6 +41615,25 @@ function. Then from this copy, all keys which occur
 in
 .code hash2
 are deleted.
+
+The
+.code hash-symdiff
+function performs a symmetric difference. A new hash is returned which
+contains all of the keys from
+.meta hash1
+that are not in
+.meta hash2
+and
+.IR "vice versa" :
+all of the keys from
+.meta hash2
+that are not in
+.metn hash1 .
+The keys carry their corresponding values from
+.meta hash1
+and
+.metn hash2 ,
+respectively.
 
 The
 .code hash-isec
