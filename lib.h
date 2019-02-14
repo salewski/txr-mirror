@@ -548,6 +548,8 @@ INLINE val *us_car_p(val cons) { return &cons->c.car; }
 INLINE val *us_cdr_p(val cons) { return &cons->c.cdr; }
 val rplaca(val cons, val new_car);
 val rplacd(val cons, val new_car);
+val us_rplaca(val cons, val new_car);
+val us_rplacd(val cons, val new_cdr);
 val sys_rplaca(val cons, val new_car);
 val sys_rplacd(val cons, val new_car);
 loc car_l(val cons);

@@ -2498,8 +2498,8 @@ static val op_dohash(val form, val env)
        and also deleting them such that these variables end up
        with the only reference. But in that case, those objects
        will be noted in the GC's check list. */
-    deref(cdr_l(keyvar)) = car(cell);
-    deref(cdr_l(valvar)) = cdr(cell);
+    *us_cdr_p(keyvar) = us_car(cell);
+    *us_cdr_p(valvar) = us_cdr(cell);
     eval_progn(body, new_env, form);
   }
 

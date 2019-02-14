@@ -568,6 +568,18 @@ val rplacd(val cons, val new_cdr)
   }
 }
 
+val us_rplaca(val cons, val new_car)
+{
+  set(mkloc(cons->c.car, cons), new_car);
+  return cons;
+}
+
+val us_rplacd(val cons, val new_cdr)
+{
+  set(mkloc(cons->c.cdr, cons), new_cdr);
+  return cons;
+}
+
 val sys_rplaca(val cons, val new_car)
 {
   (void) rplaca(cons, new_car);
@@ -5345,7 +5357,7 @@ val package_local_symbols(val package_in)
   val cell;
 
   while ((cell = hash_next(hiter))) {
-    val sym = cdr(cell);
+    val sym = us_cdr(cell);
     if (symbol_package(sym) == package)
       ptail = list_collect(ptail, sym);
   }
@@ -5361,7 +5373,7 @@ val package_foreign_symbols(val package_in)
   val cell;
 
   while ((cell = hash_next(hiter))) {
-    val sym = cdr(cell);
+    val sym = us_cdr(cell);
     if (symbol_package(sym) != package)
       ptail = list_collect(ptail, sym);
   }
@@ -10653,8 +10665,8 @@ val where(val func, val seq)
       val cell;
 
       while ((cell = hash_next(hiter)))
-        if (funcall1(func, cdr(cell)))
-          ptail = list_collect(ptail, car(cell));
+        if (funcall1(func, us_cdr(cell)))
+          ptail = list_collect(ptail, us_car(cell));
       break;
     }
     /* fallthrough */
@@ -11646,8 +11658,8 @@ tail:
       val iter = hash_begin(obj);
       val cell;
       while ((cell = hash_next(iter))) {
-        populate_obj_hash(car(cell), ctx);
-        populate_obj_hash(cdr(cell), ctx);
+        populate_obj_hash(us_car(cell), ctx);
+        populate_obj_hash(us_cdr(cell), ctx);
       }
       obj = get_hash_userdata(obj);
       goto tail;
@@ -11680,9 +11692,9 @@ static void obj_hash_merge(val parent_hash, val child_hash)
 
   for (iter = hash_begin(child_hash); (cell = hash_next(iter));) {
     val new_p;
-    loc pcdr = gethash_l(self, parent_hash, car(cell), mkcloc(new_p));
+    loc pcdr = gethash_l(self, parent_hash, us_car(cell), mkcloc(new_p));
     if (new_p)
-      set(pcdr, cdr(cell));
+      set(pcdr, us_cdr(cell));
     else
       uw_throwf(error_s, lit("~a: unexpected duplicate object "
                              "(internal error?)"), self, nao);

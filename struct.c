@@ -1550,8 +1550,8 @@ val method_name(val fun)
   val sth_cell;
 
   while ((sth_cell = hash_next(sth_iter))) {
-    val sym = car(sth_cell);
-    val stype = cdr(sth_cell);
+    val sym = us_car(sth_cell);
+    val stype = us_cdr(sth_cell);
     val sl_iter;
     struct struct_type *st = coerce(struct struct_type *, stype->co.handle);
 
@@ -1596,7 +1596,7 @@ val get_slot_syms(val package, val is_current, val method_only)
   val sth_cell;
 
   while ((sth_cell = hash_next(sth_iter))) {
-    val stype = cdr(sth_cell);
+    val stype = us_cdr(sth_cell);
     val sl_iter;
     struct struct_type *st = coerce(struct struct_type *, stype->co.handle);
 

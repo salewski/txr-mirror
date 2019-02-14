@@ -339,7 +339,7 @@ tail:
 
         while (pairs) {
           val cell = pop(&pairs);
-          sethash(obj, car(cell), cdr(cell));
+          sethash(obj, us_car(cell), us_cdr(cell));
         }
       }
     } else if (structp(obj)) {
@@ -743,9 +743,9 @@ static val get_visible_syms(val package, int include_fallback)
       val fcell;
       val new_p;
       while ((fcell = hash_next(hiter))) {
-        loc pcdr = gethash_l(lit("listener"), symhash, car(fcell), mkcloc(new_p));
+        loc pcdr = gethash_l(lit("listener"), symhash, us_car(fcell), mkcloc(new_p));
         if (new_p)
-          set(pcdr, cdr(fcell));
+          set(pcdr, us_cdr(fcell));
       }
     }
     return hash_values(symhash);
