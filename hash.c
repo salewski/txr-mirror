@@ -808,24 +808,16 @@ val gethash(val hash, val key)
 val inhash(val hash, val key, val init)
 {
   val self = lit("inhash");
-  val cell;
 
   if (missingp(init)) {
-    gethash_f(self, hash, key, mkcloc(cell));
+    return gethash_e(self, hash, key);
   } else {
     val new_p;
-    cell = gethash_c(self, hash, key, mkcloc(new_p));
+    val cell = gethash_c(self, hash, key, mkcloc(new_p));
     if (new_p)
       rplacd(cell, init);
+    return cell;
   }
-
-  return cell;
-}
-
-val gethash_f(val self, val hash, val key, loc found)
-{
-  set(found, gethash_e(self, hash, key));
-  return cdr(deref(found));
 }
 
 val gethash_n(val hash, val key, val notfound_val)
@@ -1484,13 +1476,12 @@ val hash_isec(val hash1, val hash2, val join_func)
          entry;
          entry = hash_next(hiter))
     {
-      val found;
-      val data2 = gethash_f(self, hash2, car(entry), mkcloc(found));
+      val found = gethash_e(self, hash2, car(entry));
       if (found) {
         if (missingp(join_func))
           sethash(hout, car(entry), cdr(entry));
         else
-          sethash(hout, car(entry), funcall2(join_func, cdr(entry), data2));
+          sethash(hout, car(entry), funcall2(join_func, cdr(entry), cdr(found)));
       }
     }
 
@@ -1535,8 +1526,8 @@ val hash_update_1(val hash, val key, val fun, val init)
   val self = lit("hash-update-1");
 
   if (missingp(init)) {
-    val cons;
-    val data = gethash_f(self, hash, key, mkcloc(cons));
+    val cons = gethash_e(self, hash, key);
+    val data = cdr(cons);
     if (cons)
       rplacd(cons, funcall1(fun, data));
     return data;

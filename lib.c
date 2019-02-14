@@ -5397,8 +5397,8 @@ val use_sym(val symbol, val package_in)
 
   if (symbol_package(symbol) != package) {
     val name = symbol_name(symbol);
-    val found;
-    val existing = gethash_f(self, package->pk.symhash, name, mkcloc(found));
+    val found = gethash_e(self, package->pk.symhash, name);
+    val existing = cdr(found);
 
     if (found && symbol_package(existing) == package) {
       if (existing == nil)
@@ -5419,9 +5419,10 @@ val unuse_sym(val symbol, val package_in)
   val self = lit("unuse-sym");
   val package = get_package(self, package_in, t);
   val name = symbol_name(symbol);
-  val found_visible, found_hidden;
-  val visible = gethash_f(self, package->pk.symhash, name, mkcloc(found_visible));
-  val hidden = gethash_f(self, package->pk.hidhash, name, mkcloc(found_hidden));
+  val found_visible = gethash_e(self, package->pk.symhash, name);
+  val found_hidden = gethash_e(self, package->pk.hidhash, name);
+  val visible = cdr(found_visible);
+  val hidden = cdr(found_hidden);
 
   if (!found_visible || visible != symbol)
     return nil;
@@ -5584,13 +5585,13 @@ val find_symbol(val str, val package_in)
 {
   val self = lit("find-symbol");
   val package = get_package(self, package_in, nil);
-  val found, sym;
+  val found;
 
   if (!stringp(str))
     uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
 
-  if ((sym = gethash_f(self, package->pk.symhash, str, mkcloc(found))) || found)
-    return sym;
+  if ((found = gethash_e(self, package->pk.symhash, str)))
+    return cdr(found);
 
   return zero;
 }
@@ -5621,9 +5622,11 @@ val unintern(val symbol, val package_in)
   val self = lit("unintern");
   val package = get_package(self, package_in, t);
   val name = symbol_name(symbol);
-  val found_visible, found_hidden;
-  val visible = gethash_f(self, package->pk.symhash, name, mkcloc(found_visible));
-  val hidden = gethash_f(self, package->pk.hidhash, name, mkcloc(found_hidden));
+  val found_visible = gethash_e(self, package->pk.symhash, name);
+  val found_hidden = gethash_e(self, package->pk.hidhash, name);
+  val visible = cdr(found_visible);
+  val hidden = cdr(found_hidden);
+
 
   prot_sym_check(self, name, package);
 
@@ -5702,16 +5705,16 @@ val intern_fallback(val str, val package_in)
     uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
 
   if (fblist) {
-    val found;
-    val sym;
+    val found = gethash_e(self, package->pk.symhash, str);
 
-    if ((sym = gethash_f(self, package->pk.symhash, str, mkcloc(found))) || found)
-      return sym;
+    if (found)
+      return cdr(found);
 
     for (; fblist; fblist = cdr(fblist)) {
       val otherpkg = car(fblist);
-      if ((sym = gethash_f(self, otherpkg->pk.symhash, str, mkcloc(found))) || found)
-        return sym;
+      val found = gethash_e(self, otherpkg->pk.symhash, str);
+      if (found)
+        return cdr(found);
     }
   }
 
@@ -9863,11 +9866,8 @@ val in(val seq, val item, val testfun, val keyfun)
   case NIL:
     return nil;
   case COBJ:
-    if (seq->co.cls == hash_s) {
-      val found;
-      gethash_f(self, seq, item, mkcloc(found));
-      return if3(found, t, nil);
-    }
+    if (seq->co.cls == hash_s)
+      return tnil(gethash_e(self, seq, item));
     /* fallthrough */
   case CONS:
   case LCONS:
@@ -10715,13 +10715,11 @@ val sel(val seq_in, val where_in)
       val newhash = make_similar_hash(seq);
 
       for (; where; where = cdr(where)) {
-        val found;
-        loc pfound = mkcloc(found);
         val key = car(where);
-        val value = gethash_f(self, seq, key, pfound);
+        val found = gethash_e(self, seq, key);
 
         if (found)
-          sethash(newhash, key, value);
+          sethash(newhash, key, cdr(found));
       }
 
       return newhash;
@@ -11597,8 +11595,8 @@ static void populate_obj_hash(val obj, struct strm_ctx *ctx)
 tail:
   if (circle_print_eligible(obj)) {
     if (ctx->obj_hash_prev) {
-      val prev_cell;
-      val label = gethash_f(self, ctx->obj_hash_prev, obj, mkcloc(prev_cell));
+      val prev_cell = gethash_e(self, ctx->obj_hash_prev, obj);
+      val label = cdr(prev_cell);
 
       if (label == colon_k)
         uw_throwf(error_s, lit("print: unexpected duplicate object "
