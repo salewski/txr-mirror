@@ -9994,6 +9994,49 @@ val set_diff(val list1, val list2, val testfun, val keyfun)
   return make_like(out, list_orig);
 }
 
+val symdiff(val seq1, val seq2, val testfun, val keyfun)
+{
+  val self = lit("symdiff");
+  list_collect_decl (out, ptail);
+  seq_iter_t si1, si2;
+  val el1, el2;
+
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
+
+  seq_iter_init(self, &si1, seq1);
+  seq_iter_init(self, &si2, seq2);
+
+  while (seq_get(&si1, &el1))
+    ptail = list_collect(ptail, el1);
+
+  while (seq_get(&si2, &el2)) {
+    val el2_key = funcall1(keyfun, el2);
+    val *iter;
+    int found = 0;
+
+    for (iter = &out; *iter; ) {
+      val elo = us_car(*iter);
+      val elo_key = funcall1(keyfun, elo);
+      if (funcall2(testfun, elo_key, el2_key)) {
+        val del = us_cdr(*iter);
+        if (deref(ptail) == del)
+          ptail = mkcloc(*iter);
+        *iter = del;
+        found = 1;
+        break;
+      } else {
+        iter = us_cdr_p(*iter);
+      }
+    }
+
+    if (!found)
+      ptail = list_collect(ptail, el2);
+  }
+
+  return make_like(out, seq1);
+}
+
 val isec(val seq1, val seq2, val testfun, val keyfun)
 {
   val self = lit("isec");

@@ -544,6 +544,8 @@ val car(val cons);
 val cdr(val cons);
 INLINE val us_car(val cons) { return cons->c.car; }
 INLINE val us_cdr(val cons) { return cons->c.cdr; }
+INLINE val *us_car_p(val cons) { return &cons->c.car; }
+INLINE val *us_cdr_p(val cons) { return &cons->c.cdr; }
 val rplaca(val cons, val new_car);
 val rplacd(val cons, val new_car);
 val sys_rplaca(val cons, val new_car);
@@ -1079,6 +1081,7 @@ val drop_until(val pred, val seq, val keyfun);
 val in(val seq, val key, val testfun, val keyfun);
 val set_diff(val list1, val list2, val testfun, val keyfun);
 val diff(val seq1, val seq2, val testfun, val keyfun);
+val symdiff(val seq1, val seq2, val testfun, val keyfun);
 val isec(val list1, val list2, val testfun, val keyfun);
 val uni(val list1, val list2, val testfun, val keyfun);
 val copy(val seq);

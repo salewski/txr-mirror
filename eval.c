@@ -6748,6 +6748,7 @@ void eval_init(void)
   reg_fun(intern(lit("multi-sort"), user_package), func_n3o(multi_sort, 2));
   reg_fun(intern(lit("set-diff"), user_package), func_n4o(set_diff, 2));
   reg_fun(intern(lit("diff"), user_package), func_n4o(diff, 2));
+  reg_fun(intern(lit("symdiff"), user_package), func_n4o(symdiff, 2));
   reg_fun(intern(lit("isec"), user_package), func_n4o(isec, 2));
   reg_fun(intern(lit("uni"), user_package), func_n4o(uni, 2));
 

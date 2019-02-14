@@ -28702,31 +28702,32 @@ the leftmost one is reported. See the notes under
 .code pos-max
 regarding duplicate maxima.
 
-.coNP Functions @, uni @ isec and @ diff
+.coNP Functions @, uni @, isec @ diff and @ symdiff
 .synb
 .mets (uni < seq1 < seq2 >> [ testfun <> [ keyfun ]])
 .mets (isec < seq1 < seq2 >> [ testfun <> [ keyfun ]])
 .mets (diff < seq1 < seq2 >> [ testfun <> [ keyfun ]])
+.mets (symdiff < seq1 < seq2 >> [ testfun <> [ keyfun ]])
 .syne
 .desc
 The functions
-.codn diff ,
-.code isec
+.codn uni ,
+.codn isec ,
+.code diff
 and
-.code uni
-treats the sequences
+.code symdiff
+treat the sequences
 .meta seq1
 and
 .meta seq2
 as if they were sets.
 
-They respectively compute the set union, set intersection
-and set difference of
+They, respectively, compute the set union, set intersection,
+set difference and symmetric difference of
 .meta seq1
 and
 .metn seq2 ,
-returning a new sequence: the union sequence,
-intersection sequence and difference sequence.
+returning a new sequence.
 
 The arguments
 .meta seq1
@@ -28806,6 +28807,19 @@ then it occurs at least once in the difference sequence.
 If an element occurs at least once in
 .metn seq2 ,
 then it does not occur in the difference sequence.
+
+The symmetric difference sequence produced by
+.code symdiff
+contains all of the elements of
+.meta seq1
+which do not occur in
+.meta seq2
+and
+.IR "vice versa" :
+it also contains all of the elements of
+.meta seq2
+which do not occur in
+.metn seq1 .
 
 Element equivalence is determined by a combination of
 .meta testfun
