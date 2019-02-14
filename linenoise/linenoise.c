@@ -1571,12 +1571,23 @@ static int edit_insert(lino_t *l, wchar_t c) {
                  */
                 wchar_t str[3] = L"^";
 
-                if (c == 0xdc00 || c < ' ') {
-                    str[1] = '@' + (c & 0xff);
-                } else if (c == 127) {
+                switch (c) {
+                case ENTER:
+                    str[0] = '\r';
+                    str[1] = '\n';
+                    break;
+                case 127:
                     str[1] = '?';
-                } else {
-                    str[0] = c;
+                    break;
+                default:
+                    if (c >= ' ') {
+                        str[0] = c;
+                        break;
+                    }
+                    /* fallthrough */
+                case 0xdc00:
+                    str[1] = '@' + (c & 0xff);
+                    break;
                 }
 
                 if (!lino_os.puts_fn(l->tty_ofs, str))
