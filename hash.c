@@ -830,8 +830,7 @@ val gethash_n(val hash, val key, val notfound_val)
 val sethash(val hash, val key, val value)
 {
   val self = lit("sethash");
-  val new_p;
-  rplacd(gethash_c(self, hash, key, mkcloc(new_p)), value);
+  rplacd(gethash_c(self, hash, key, nulloc), value);
   return value;
 }
 
@@ -1258,24 +1257,24 @@ val group_reduce(val hash, val by_fun, val reduce_fun, val seq,
       val v = vecref(seq, num_fast(i));
       val key = funcall1(by_fun, v);
       val new_p;
-      val cell = gethash_c(self, hash, key, mkcloc(new_p));
+      loc pcdr = gethash_l(self, hash, key, mkcloc(new_p));
 
       if (new_p)
-        rplacd(cell, funcall2(reduce_fun, initval, v));
+        set(pcdr, funcall2(reduce_fun, initval, v));
       else
-        rplacd(cell, funcall2(reduce_fun, cdr(cell), v));
+        set(pcdr, funcall2(reduce_fun, deref(pcdr), v));
     }
   } else {
     for (; seq; seq = cdr(seq)) {
       val v = car(seq);
       val key = funcall1(by_fun, v);
       val new_p;
-      val cell = gethash_c(self, hash, key, mkcloc(new_p));
+      loc pcdr = gethash_l(self, hash, key, mkcloc(new_p));
 
       if (new_p)
-        rplacd(cell, funcall2(reduce_fun, initval, v));
+        set(pcdr, funcall2(reduce_fun, initval, v));
       else
-        rplacd(cell, funcall2(reduce_fun, cdr(cell), v));
+        set(pcdr, funcall2(reduce_fun, deref(pcdr), v));
     }
   }
 

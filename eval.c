@@ -175,11 +175,11 @@ val env_fbind(val env, val sym, val fun)
     cell = acons_new_c(sym, nulloc, mkloc(env->e.fbindings, env));
     return rplacd(cell, fun);
   } else {
-    val hcell = gethash_c(self, top_fb, sym, nulloc);
-    val cell = cdr(hcell);
+    loc pcdr = gethash_l(self, top_fb, sym, nulloc);
+    val cell = deref(pcdr);
     if (cell)
       return rplacd(cell, fun);
-    return sys_rplacd(hcell, cons(sym, fun));
+    return set(pcdr, cons(sym, fun));
   }
 }
 
@@ -193,11 +193,11 @@ val env_vbind(val env, val sym, val obj)
     cell = acons_new_c(sym, nulloc, mkloc(env->e.vbindings, env));
     return rplacd(cell, obj);
   } else {
-    val hcell = gethash_c(self, top_vb, sym, nulloc);
-    val cell = cdr(hcell);
+    loc pcdr = gethash_l(self, top_vb, sym, nulloc);
+    val cell = deref(pcdr);
     if (cell)
       return rplacd(cell, obj);
-    return sys_rplacd(hcell, cons(sym, obj));
+    return set(pcdr, cons(sym, obj));
   }
 }
 
@@ -5823,13 +5823,13 @@ void reg_var(val sym, val val)
 
 static void reg_symacro(val sym, val form)
 {
-  val cell = gethash_c(lit("internal initialization"), top_smb, sym, nulloc);
-  val binding = cdr(cell);
+  loc pcdr = gethash_l(lit("internal initialization"), top_smb, sym, nulloc);
+  val binding = deref(pcdr);
 
   if (binding)
     rplacd(binding, form);
   else
-    rplacd(cell, cons(sym, form));
+    set(pcdr, cons(sym, form));
 }
 
 static val if_fun(val cond, val then, val alt)

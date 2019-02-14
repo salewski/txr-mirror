@@ -10909,8 +10909,7 @@ static void obj_init(void)
   /* nil can't be interned because it's not a SYM object;
      it works as a symbol because the nil case is handled by
      symbol-manipulating function. */
-  rplacd(gethash_c(self, user_package->pk.symhash,
-                   nil_string, nulloc), nil);
+  sethash(user_package->pk.symhash, nil_string, nil);
 
   /* t can't be interned, because intern needs t in order to do its job. */
   t = cdr(rplacd(gethash_c(self, user_package->pk.symhash,
@@ -11234,19 +11233,19 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
   val ret = obj;
 
   if (ctx && circle_print_eligible(obj)) {
-    val cell = gethash_c(self, ctx->obj_hash, obj, nulloc);
-    val label = cdr(cell);
+    loc pcdr = gethash_l(self, ctx->obj_hash, obj, nulloc);
+    val label = deref(pcdr);
 
     if (label == t) {
       val counter = succ(ctx->counter);
       ctx->counter = counter;
-      rplacd(cell, counter);
+      set(pcdr, counter);
       format(out, lit("#~s="), counter, nao);
     } else if (integerp(label)) {
       format(out, lit("#~s#"), label, nao);
       return ret;
     } else if (!label) {
-      rplacd(cell, colon_k);
+      set(pcdr, colon_k);
     }
   }
 
@@ -11681,9 +11680,9 @@ static void obj_hash_merge(val parent_hash, val child_hash)
 
   for (iter = hash_begin(child_hash); (cell = hash_next(iter));) {
     val new_p;
-    val pcell = gethash_c(self, parent_hash, car(cell), mkcloc(new_p));
+    loc pcdr = gethash_l(self, parent_hash, car(cell), mkcloc(new_p));
     if (new_p)
-      rplacd(pcell, cdr(cell));
+      set(pcdr, cdr(cell));
     else
       uw_throwf(error_s, lit("~a: unexpected duplicate object "
                              "(internal error?)"), self, nao);

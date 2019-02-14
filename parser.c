@@ -175,11 +175,11 @@ static parser_t *get_parser_impl(val self, val parser)
 
 static val ensure_parser(val stream)
 {
-  val cell = gethash_c(lit("internal error"), stream_parser_hash, stream, nulloc);
-  val pars = cdr(cell);
+  loc pcdr = gethash_l(lit("internal error"), stream_parser_hash, stream, nulloc);
+  val pars = deref(pcdr);
   if (pars)
     return pars;
-  return sys_rplacd(cell, parser(stream, one));
+  return set(pcdr, parser(stream, one));
 }
 
 static void pushback_token(parser_t *p, struct yy_token *tok)
@@ -390,12 +390,12 @@ void parser_circ_def(parser_t *p, val num, val expr)
 
   {
     val new_p = nil;
-    val cell = gethash_c(lit("parser"), p->circ_ref_hash, num, mkcloc(new_p));
+    loc pcdr = gethash_l(lit("parser"), p->circ_ref_hash, num, mkcloc(new_p));
 
-    if (!new_p && cdr(cell) != unique_s)
+    if (!new_p && deref(pcdr) != unique_s)
       yyerrorf(p->scanner, lit("duplicate #~s= def"), num, nao);
 
-    rplacd(cell, expr);
+    set(pcdr, expr);
   }
 }
 
@@ -743,9 +743,9 @@ static val get_visible_syms(val package, int include_fallback)
       val fcell;
       val new_p;
       while ((fcell = hash_next(hiter))) {
-        val scell = gethash_c(lit("listener"), symhash, car(fcell), mkcloc(new_p));
+        loc pcdr = gethash_l(lit("listener"), symhash, car(fcell), mkcloc(new_p));
         if (new_p)
-          rplacd(scell, cdr(fcell));
+          set(pcdr, cdr(fcell));
       }
     }
     return hash_values(symhash);
