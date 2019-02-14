@@ -1,5 +1,28 @@
+                                    TXR 210
+
+
+  Features
+
+  - Hashing:
+    - New functions hash-symdiff (symmetric difference) and hash-from-alist.
+    - Performance optimizations.
+
+  - Library:
+    - diff, isec and uni work efficiently for non-list sequences, and
+      support hashes.
+    - New function symdiff (symmetric difference).
+
+  Bugs
+
+  - hash-uni was wrongly calling the join-func also for keys that are only in
+    the left hash, rather than just keys that are in both hashes.
+  - Listener regression in TXR 209: hitting Enter in multi-line mode causes
+    ^M to appear instead of advancing to the next line.
+
+
+
                                     TXR 209
-                                   2019-02-08
+                                   2019-02-14
 
 
   Features
