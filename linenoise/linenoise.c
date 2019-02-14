@@ -1146,8 +1146,10 @@ static void refresh_multiline(lino_t *l) {
     if (rows > l->maxrows)
         l->maxrows = rows;
 
-    if (l->need_refresh == 2)
+    if (l->need_refresh == 2) {
+        l->oldrow = nrow;
         return;
+    }
 
     /* First step: clear all the lines used before. To do so start by
      * going to the last row. */
