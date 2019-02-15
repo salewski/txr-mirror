@@ -50,6 +50,13 @@
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define nelem(array) (sizeof (array) / sizeof (array)[0])
+#define uptopow2_0(v) ((v) - 1)
+#define uptopow2_1(v) (uptopow2_0(v) | uptopow2_0(v) >> 1)
+#define uptopow2_2(v) (uptopow2_1(v) | uptopow2_1(v) >> 2)
+#define uptopow2_3(v) (uptopow2_2(v) | uptopow2_2(v) >> 4)
+#define uptopow2_4(v) (uptopow2_3(v) | uptopow2_3(v) >> 8)
+#define uptopow2_5(v) (uptopow2_4(v) | uptopow2_4(v) >> 16)
+#define uptopow2(v) (uptopow2_5(v) + 1)
 
 #define STATIC_SLOT_BASE 0x10000000
 
@@ -90,18 +97,10 @@ struct struct_inst {
   val slot[1];
 };
 
-struct struct_id_recycle {
-  struct struct_id_recycle *next;
-  cnum id[64];
-  int fill;
-};
-
 val struct_type_s, meth_s, print_s, make_struct_lit_s;
 val init_k, postinit_k;
 val slot_s;
 
-static cnum struct_id_counter = 1;
-static struct struct_id_recycle *struct_id_stack;
 static val struct_type_hash;
 static val slot_hash;
 static val struct_type_finalize_f;
@@ -199,50 +198,6 @@ static noreturn void no_such_struct(val ctx, val sym)
             ctx, sym, nao);
 }
 
-static val get_struct_id(val self)
-{
-  struct struct_id_recycle *stk = struct_id_stack;
-
-  if (stk != 0) {
-    cnum id = stk->id[--stk->fill];
-    if (stk->fill == 0) {
-      struct_id_stack = stk->next;
-      free(stk);
-    }
-    return num_fast(id);
-  }
-
-  if (struct_id_counter > NUM_MAX)
-    uw_throwf(error_s, lit("~a: struct ID overflow"), self, nao);
-
-  return num_fast(struct_id_counter++);
-}
-
-static void recycle_struct_id(cnum id)
-{
-  struct struct_id_recycle *stk = struct_id_stack;
-
-  if (id == struct_id_counter - 1) {
-    struct_id_counter = id;
-    return;
-  }
-
-  if (stk != 0) {
-    if (stk->fill < nelem (stk->id)) {
-      stk->id[stk->fill++] = id;
-      return;
-    }
-  }
-
-  {
-    struct struct_id_recycle *nstk = convert(struct struct_id_recycle *,
-                                             chk_calloc(1, sizeof *stk));
-    nstk->next = stk;
-    struct_id_stack = nstk;
-    recycle_struct_id(id);
-  }
-}
-
 static val struct_type_finalize(val obj)
 {
   struct struct_type *st = coerce(struct struct_type *, obj->co.handle);
@@ -264,7 +219,6 @@ static val struct_type_finalize(val obj)
         }
   }
 
-  recycle_struct_id(st->id);
   return nil;
 }
 
@@ -344,10 +298,10 @@ val make_struct_type(val name, val super,
     uw_throwf(error_s, lit("~a: slot names must not repeat"),
               self, nao);
   } else {
-    val id = get_struct_id(self);
     struct struct_type *st = coerce(struct struct_type *,
                                     chk_malloc(sizeof *st));
     struct struct_type *su = if3(super, stype_handle(&super, self), 0);
+    val id = num_fast(coerce(ucnum, st) / (uptopow2(sizeof *st) / 2));
     val super_slots = if2(su, su->slots);
     val all_slots = uniq(append2(super_slots, append2(static_slots, slots)));
     val stype = cobj(coerce(mem_t *, st), struct_type_s, &struct_type_ops);
