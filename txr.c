@@ -318,6 +318,7 @@ static void sysroot_init(void)
   reg_varl(intern(lit("txr-version"), user_package),
            toint(lit(TXR_VER), nil));
   reg_varl(intern(lit("txr-path"), user_package), prog_dir);
+  reg_varl(intern(lit("txr-exe-path"), user_package), prog_path);
 }
 
 static void sysroot_compat_fixup(int compat_ver)
