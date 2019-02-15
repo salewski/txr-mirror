@@ -84,7 +84,7 @@ struct struct_type {
 
 struct struct_inst {
   struct struct_type *type;
-  cnum id : sizeof (cnum) * CHAR_BIT - 1 ;
+  cnum id : sizeof (cnum) * CHAR_BIT - TAG_SHIFT;
   unsigned lazy : 1;
   unsigned dirty : 1;
   val slot[1];
