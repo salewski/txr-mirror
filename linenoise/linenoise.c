@@ -1937,6 +1937,7 @@ static void edit_in_editor(lino_t *l) {
     if (fo) {
         char cmd[256];
         snprintf(cmd, sizeof cmd, "%s %s", ed, path);
+        int preserve = 0;
         tr(l->data, '\r', '\n');
 
         if (lino_os.puts_fn(fo, l->data) && lino_os.puts_fn(fo, L"\n"))
@@ -1953,7 +1954,13 @@ static void edit_in_editor(lino_t *l) {
 
                 record_undo(l);
 
-                l->data[len] = 0;
+                if (len == nelem(l->data) - 1) {
+                    wcsnprintf(l->data, nelem(l->data),
+                               L"%s: too large to read, preserved.",
+                               path);
+                    preserve = 1;
+                    len = wcslen(l->data);
+                }
                 if (len > 0 && l->data[len - 1] == '\n')
                     l->data[--len] = 0;
                 l->dpos = l->dlen = len;
@@ -1966,7 +1973,9 @@ static void edit_in_editor(lino_t *l) {
         if (fo != 0)
             lino_os.close_fn(fo);
 
-        remove(path);
+        if (!preserve)
+            remove(path);
+
         clear_sel(l);
     }
 }
