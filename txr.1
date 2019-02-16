@@ -40197,8 +40197,8 @@ If
 matches the stream before any characters are accumulated,
 then an empty string is returned.
 
-If the stream ends or an error occurs before any characters
-are accumulated, the function returns
+If the stream ends or an non-exception-throwing error occurs before any
+characters are accumulated, the function returns
 .codn nil .
 
 When the accumulation of characters terminates by a match on
@@ -40208,6 +40208,50 @@ removed from the stream.  If
 .meta include-match
 is true, that matching text is included in
 the returned string. Otherwise, it is discarded.
+
+.coNP Functions @ scan-until-match and @ count-until-match
+.synb
+.mets (scan-until-match < regex <> [ stream ])
+.mets (count-until-match < regex <> [ stream ])
+.syne
+.desc
+The functions
+.code scan-until-match
+and
+.code count-until-match
+read characters from
+.meta stream
+until a match occurs in the stream for regular expression
+.metn regex ,
+the stream runs out of characters, or an error occurs.
+
+If the stream runs out of characters, or a non-exception-throwing error
+occurs, before a match for
+.meta regex
+is identified, these functions return
+.codn nil .
+
+If a match for
+.meta regex
+occurs in
+.metn stream ,
+then
+.code count-until-match
+returns the number of characters that were read and discarded prior to
+encountering the first matching character.
+In the same situation, the
+.code scan-until-match
+function returns a
+.code cons
+cell whose
+.code car
+holds the count of discarded characters, that being the same value as what
+would be returned by
+.codn count-until-match ,
+and whose
+.code cdr
+holds a character string that comprises the text matched by
+.metn regex .
 
 .coNP Functions @, m^$ @ m^ and @ m$
 .synb

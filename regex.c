@@ -43,6 +43,7 @@
 #include "gc.h"
 #include "eval.h"
 #include "cadr.h"
+#include "itypes.h"
 #include "regex.h"
 #include "txr.h"
 
@@ -3113,11 +3114,12 @@ val regex_range_search_fun(val regex, val start, val from_end)
   return curry_1234_1(func_n4(range_regex), regex, start, from_end);
 }
 
-val read_until_match(val regex, val stream_in, val include_match_in)
+static val scan_until_common(val self, val regex, val stream_in,
+                             val include_match_in, val accum)
 {
-  val self = lit("read-until-match");
   regex_machine_t regm;
   val out = nil;
+  u64_t count = 0;
   val stack = nil;
   val match = nil;
   val stream = default_arg(stream_in, std_input);
@@ -3153,10 +3155,14 @@ val read_until_match(val regex, val stream_in, val include_match_in)
 
       ch = get_char(stream);
 
-      if (!out)
-        out = mkstring(one, ch);
-      else
-        string_extend(out, ch);
+      if (accum) {
+        if (!out)
+          out = mkstring(one, ch);
+        else
+          string_extend(out, ch);
+      } else {
+        count++;
+      }
 
       regex_machine_reset(&regm);
       continue;
@@ -3176,10 +3182,14 @@ val read_until_match(val regex, val stream_in, val include_match_in)
 out_match:
     while (stack && stack != match)
       unget_char(rcyc_pop(&stack), stream);
-    if (!out)
+    if (accum && !out)
       out = null_string;
     if (include_match)
       out = cat_str(cons(out, stack = nreverse(stack)), nil);
+    if (!accum && match) {
+      val c = unum_64(count);
+      out = if3(include_match, cons(c, out), c);
+    }
   }
 
   regex_machine_cleanup(&regm);
@@ -3188,6 +3198,22 @@ out_match:
     rcyc_pop(&stack);
 
   return out;
+}
+
+val read_until_match(val regex, val stream_in, val include_match_in)
+{
+  return scan_until_common(lit("read-until-match"), regex, stream_in,
+                           include_match_in, t);
+}
+
+val scan_until_match(val regex, val stream_in)
+{
+  return scan_until_common(lit("scan-until-match"), regex, stream_in, t, nil);
+}
+
+val count_until_match(val regex, val stream_in)
+{
+  return scan_until_common(lit("count-until-match"), regex, stream_in, nil, nil);
 }
 
 static char_set_t *create_wide_cs(void)
@@ -3293,6 +3319,8 @@ void regex_init(void)
           func_n1(reg_expand_nongreedy));
   reg_fun(intern(lit("reg-optimize"), system_package), func_n1(reg_optimize));
   reg_fun(intern(lit("read-until-match"), user_package), func_n3o(read_until_match, 1));
+  reg_fun(intern(lit("scan-until-match"), user_package), func_n2(scan_until_match));
+  reg_fun(intern(lit("count-until-match"), user_package), func_n2(count_until_match));
   reg_fun(intern(lit("f^$"), user_package), func_n2o(regex_match_full_fun, 1));
   reg_fun(intern(lit("f^"), user_package), func_n2o(regex_match_left_fun, 1));
   reg_fun(intern(lit("f$"), user_package), func_n2o(regex_match_right_fun, 1));

@@ -45,6 +45,8 @@ val match_regst_right(val str, val regex, val end);
 val regex_prefix_match(val reg, val str, val pos);
 val regsub(val regex, val repl, val str);
 val read_until_match(val regex, val stream, val keep_match);
+val scan_until_match(val regex, val stream_in);
+val count_until_match(val regex, val stream_in);
 val regex_match_full(val regex, val arg1, val arg2);
 val regex_match_full_fun(val regex, val pos);
 val regex_match_left_fun(val regex, val pos);
