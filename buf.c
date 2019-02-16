@@ -215,7 +215,7 @@ val buf_set_length(val buf, val len, val init_val)
 
 val length_buf(val buf)
 {
-  val self = lit("buf-set-len");
+  val self = lit("length-buf");
   struct buf *b = buf_handle(buf, self);
   return b->len;
 }
