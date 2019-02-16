@@ -2889,6 +2889,20 @@ val fill_buf(val buf, val pos_in, val stream_in)
   return ops->fill_buf(stream, buf, pos);
 }
 
+val fill_buf_adjust(val buf, val pos_in, val stream_in)
+{
+  val self = lit("fill-buf-adjust");
+  val stream = default_arg(stream_in, std_input);
+  cnum pos = c_num(default_arg(pos_in, zero));
+  val readpos;
+  struct strm_ops *ops = coerce(struct strm_ops *,
+                                cobj_ops(self, stream, stream_s));
+  buf_set_length(buf, buf_alloc_size(buf), zero);
+  readpos = ops->fill_buf(stream, buf, pos);
+  buf_set_length(buf, readpos, zero);
+  return readpos;
+}
+
 struct fmt {
   size_t minsize;
   const char *dec;
@@ -4624,6 +4638,7 @@ void stream_init(void)
   reg_fun(unget_byte_s, func_n2o(unget_byte, 1));
   reg_fun(put_buf_s, func_n3o(put_buf, 1));
   reg_fun(fill_buf_s, func_n3o(fill_buf, 1));
+  reg_fun(intern(lit("fill-buf-adjust"), user_package), func_n3o(fill_buf_adjust, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1o(flush_stream, 0));
   reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));
   reg_fun(intern(lit("truncate-stream"), user_package), func_n2o(truncate_stream, 1));

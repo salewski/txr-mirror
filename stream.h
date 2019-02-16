@@ -188,6 +188,7 @@ val unget_char(val ch, val stream);
 val unget_byte(val byte, val stream);
 val put_buf(val buf, val pos, val stream);
 val fill_buf(val buf, val pos, val stream);
+val fill_buf_adjust(val buf, val pos, val stream);
 val vformat(val stream, val string, va_list);
 val vformat_to_string(val string, va_list);
 val format(val stream, val string, ...);

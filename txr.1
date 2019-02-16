@@ -58014,9 +58014,10 @@ the length of the buffer.
 If an error occurs before any bytes are written, the function
 throws an error.
 
-.coNP Function @ fill-buf
+.coNP Functions @ fill-buf and @ fill-buf-adjust
 .synb
 .mets (fill-buf < buf >> [ pos <> [ stream ]])
+.mets (fill-buf-adjust < buf >> [ pos <> [ stream ]])
 .syne
 .desc
 The
@@ -58064,6 +58065,22 @@ any bytes are read, then an exception is thrown.
 
 If an end-of-file condition occurs before any bytes are read, then zero
 is returned.
+
+The
+.code fill-buf-adjust
+differs usefully from
+.code fill-buf
+as follows. Whereas
+.code fill-buf
+doesn't manipulate the length of the buffer at any stage of the operation, the
+.code fill-buf-adjust
+begins by adjusting the length of the buffer to the underlying allocated size.
+Then it performs the fill operation in
+exactly the same manner as
+.codn fill-buf .
+Finally, if the operation succeeds, then
+.code fill-buf-adjust
+adjusts the length of the buffer to match the position that is returned.
 
 .SS* Buffer streams
 A stream type exists which allows
