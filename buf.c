@@ -220,6 +220,13 @@ val length_buf(val buf)
   return b->len;
 }
 
+val buf_alloc_size(val buf)
+{
+  val self = lit("buf-alloc-size");
+  struct buf *b = buf_handle(buf, self);
+  return b->size;
+}
+
 mem_t *buf_get(val buf, val self)
 {
   struct buf *b = buf_handle(buf, self);
@@ -943,6 +950,7 @@ void buf_init(void)
   reg_fun(intern(lit("buf-trim"), user_package), func_n1(buf_trim));
   reg_fun(intern(lit("buf-set-length"), user_package), func_n3o(buf_set_length, 2));
   reg_fun(intern(lit("length-buf"), user_package), func_n1(length_buf));
+  reg_fun(intern(lit("buf-alloc-size"), user_package), func_n1(buf_alloc_size));
   reg_fun(intern(lit("copy-buf"), user_package), func_n1(copy_buf));
 
 #if HAVE_I8
