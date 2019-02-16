@@ -290,6 +290,7 @@ static val sysroot(val target)
 static void sysroot_init(void)
 {
   val prog_dir;
+  const wchar_t *psc = wref(coerce(const wchar_t *, path_sep_chars));
 
 #if HAVE_WINDOWS_H
   val slash = regex_compile(lit("\\\\"), nil);
@@ -300,6 +301,9 @@ static void sysroot_init(void)
   prog_path = regsub(slash, lit("/"), prog_path);
 #endif
   prog_dir = dir_name(prog_path);
+
+  if (ref(prog_dir, negone) != chr(psc[0]))
+    prog_dir = format(nil, lit("~a~a"), prog_dir, chr(psc[0]), nao);
 
   if (!(maybe_sysroot(lit(TXR_REL_PATH)) ||
         maybe_sysroot(lit(TXR_REL_PATH EXE_SUFF)) ||
