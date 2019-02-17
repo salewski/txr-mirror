@@ -734,6 +734,24 @@ static val op_instantiate(val set_fun)
   return nil;
 }
 
+static val save_exe_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~asave-exe"), stdlib_path, nao));
+  return nil;
+}
+
+static val save_exe_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("save-exe"),
+    nil
+  };
+
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -781,6 +799,8 @@ void lisplib_init(void)
 
   if (!opt_compat || opt_compat >= 185)
     dlt_register(dl_table, op_instantiate, op_set_entries);
+
+  dlt_register(dl_table, save_exe_instantiate, save_exe_set_entries);
 
   reg_fun(intern(lit("try-load"), system_package), func_n1(lisplib_try_load));
 }

@@ -65567,6 +65567,10 @@ and
 .code *args-full*
 variables).
 
+The function
+.code save-exe
+creates a copy of the \*(TX executable with a custom internal argument.
+
 .TP* Example:
 
 Suppose that \*(TX is copied to an executable in the same directory called
@@ -65649,66 +65653,42 @@ directory is a subdirectory of the executable directory.
 If one of these structures is not observed, the application
 may fail due to the failure of a library file to load.
 
-.coSS Utility program @ txr-embedded-arg.txr
+.coSS Function @ save-exe
 .synb
-.mets txr txr-embedded-arg.txr [ -w < new-string ] < executable
+.mets (save-exe < path << arg-string )
 .syne
 .desc
-At the root of the \*(TX source code tree, a program called
-.code txr-embedded-arg.txr
-is provided. This program can display or modify the
-embedded argument string inside a \*(TX executable.
+The
+.code save-exe
+function produces an edited copy of the \*(TX executable at the specified
+.metn path ,
+inserting
+.meta arg-string
+as the internal argument string.
+
+In order for the copied executable to be useful, the required installation
+directory structure must be provided around it, as described in the
+previous section, Deployment Directory Structure.
+
+The return value of
+.code save-exe
+is unspecified.
 
 The
-.meta executable
-argument must always be present. It should refer to a \*(TX
-executable.
-
-If the
-.code -w
-option and its
-.meta new-string
-argument are omitted, then
-.meta executable
-is examined, and the contents of embedded argument data
-area
-.code @(txr):
-are displayed on standard output (including all
-the padding/terminating null bytes), followed by a newline.
-
-If
-.code -w
-option and its argument
-are present, then
-.code new-string
-is truncated to 127 bytes, if necessary, and written into
-the embedded argument data area of
-.codn executable ,
-padded with sufficient null bytes to write a complete unit of 128 bytes.
-Nothing is displayed on standard output.
-
-Note that
-.code new-string
-is treated as a UTF-8 representation. The 127 character limit is on the
-number of UTF-8 bytes, not Unicode characters.
+.code arg-string
+should encode to 127 bytes of UTF-8 or less, or else it will be abruptly
+truncated, possibly in the middle of a UTF-8 sequence.
 
 .TP* Example:
 
-The following is a POSIX shell command, which writes a
-.code --args
-argument into the embedded data area of the
-"myapp" executable. This argument encodes two
-arguments:
-.code -e
-specifying an expression which will cause the executable
-to load a
-.str main.tl
-file that is co-located in the same directory as
-that executable.
+Create a copy of \*(TX called
+.code myapp
+which will load a file called
+.code main.tl
+that is located in the same directory.
 
 .cblk
-  txr txr-embedded-arg.txr \e
-    -w '--args=-e=(load `@{txr-path}main.tl`)' myapp
+  (save-exe "myapp" "--args|-e|(load `@(dir-name txr-path)/main.tl`)")
 .cble
 
 .SH* DEBUGGER
