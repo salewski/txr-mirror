@@ -211,12 +211,13 @@ static val struct_type_finalize(val obj)
 
     remhash(slot_hash, cons(slot, id));
 
-    for (i = 0; i < SLOT_CACHE_SIZE; i++)
-      for (j = 0; j < 4; j++)
-        if (slot_cache[i][j].id == st->id) {
-          slot_cache[i][j].id = 0;
-          slot_cache[i][j].slot = 0;
-        }
+    if (slot_cache != 0)
+      for (i = 0; i < SLOT_CACHE_SIZE; i++)
+        for (j = 0; j < 4; j++)
+          if (slot_cache[i][j].id == st->id) {
+            slot_cache[i][j].id = 0;
+            slot_cache[i][j].slot = 0;
+          }
   }
 
   return nil;
