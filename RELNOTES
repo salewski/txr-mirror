@@ -1,3 +1,39 @@
+                                    TXR 211
+                                   2019-02-18
+
+
+  Features
+
+  - App delivery:
+    - new function save-exe.
+    - new txr-exe-path variable.
+
+  - Regex:
+    - new functions scan-until-match and count-until-match, related
+      to read-until-match (scanning for regex inside I/O stream).
+
+  - Lib:
+    - new functions fill-buf-adjust and buf-alloc-size.
+
+  Bugs
+
+  - GC:
+    - Objects on which finalizers were invoked were being retained until the
+      next full GC, instead of being reclaimed at the next incremental GC.
+
+  - Listener:
+    - Fixed buffer flow in reading external file.
+    - When editing in external editor, preserve the file if it is too large
+      to be read back into the command line.
+    - Fixed vertical skip problem in multi-line mode, related
+      to the recent regressions.
+
+  - OOP:
+    - When struct types are removed, their IDs are now recycled, preventing
+      struct ID exhaustion.
+
+
+
                                     TXR 210
                                    2019-02-14
 
