@@ -514,9 +514,9 @@ static void call_postinitfun_chain(struct struct_type *st, val strct)
   }
 }
 
-val make_struct(val type, val plist, struct args *args)
+static val make_struct_impl(val self, val type,
+                            struct args *plist, struct args *args)
 {
-  val self = lit("make-struct");
   struct struct_type *st = stype_handle(&type, self);
   cnum nslots = st->nslots, sl;
   size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
@@ -546,8 +546,14 @@ val make_struct(val type, val plist, struct args *args)
 
   call_initfun_chain(st, sinst);
 
-  for (; plist; plist = cddr(plist))
-    slotset(sinst, car(plist), cadr(plist));
+  {
+    cnum index = 0;
+    while (args_more(plist, index)) {
+      val slot = args_get(plist, &index);
+      val value = args_get(plist, &index);
+      slotset(sinst, slot, value);
+    }
+  }
 
   if (args_more(args, 0)) {
     args_decl(args_copy, max(args->fill + 1, ARGS_MIN));
@@ -570,16 +576,22 @@ val make_struct(val type, val plist, struct args *args)
   return sinst;
 }
 
+val make_struct(val type, val plist, struct args *boa)
+{
+  args_decl_list(pargs, ARGS_MIN, plist);
+  return make_struct_impl(lit("make-struct"), type, pargs, boa);
+}
+
 val struct_from_plist(val type, struct args *plist)
 {
-  val list = args_get_list(plist);
   args_decl(boa, 0);
-  return make_struct(type, list, boa);
+  return make_struct_impl(lit("struct-from-plist"), type, plist, boa);
 }
 
 val struct_from_args(val type, struct args *boa)
 {
-  return make_struct(type, nil, boa);
+  args_decl(pargs, 0);
+  return make_struct_impl(lit("struct-from-args"), type, pargs, boa);
 }
 
 static void lazy_struct_init(val sinst, struct struct_inst *si)
