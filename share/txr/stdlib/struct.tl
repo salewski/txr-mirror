@@ -252,10 +252,12 @@
     (tree-case spec
       ((atom . args)
         (sys:check-struct form atom)
-        ^(make-struct ',atom (list ,*qpairs) ,*args))
+        (if qpairs
+          ^(make-struct ',atom (list ,*qpairs) ,*args)
+          ^(struct-from-args ',atom ,*args)))
       (atom
         (sys:check-struct form atom)
-        ^(make-struct ',atom (list ,*qpairs))))))
+        ^(struct-from-plist ',atom ,*qpairs)))))
 
 (defmacro lnew (:form form spec . pairs)
   (if (oddp (length pairs))
