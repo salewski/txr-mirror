@@ -268,7 +268,13 @@ val bignum_len(val num)
 
 int highest_bit(int_ptr_t n)
 {
-#if CHAR_BIT * SIZEOF_PTR == 64
+#if defined __GNUC__ && SIZEOF_PTR == SIZEOF_INT
+  return (n == 0) ? 0 : (CHAR_BIT * SIZEOF_PTR - __builtin_clz(n));
+#elif defined __GNUC__ && SIZEOF_PTR == SIZEOF_LONG
+  return (n == 0) ? 0 : (CHAR_BIT * SIZEOF_PTR - __builtin_clzl(n));
+#elif defined __GNUC__ && SIZEOF_PTR == SIZEOF_LONGLONG_T
+  return (n == 0) ? 0 : (CHAR_BIT * SIZEOF_PTR - __builtin_clzll(n));
+#elif CHAR_BIT * SIZEOF_PTR == 64
   if (n & 0x7FFFFFFF00000000) {
     if (n & 0x7FFF000000000000) {
       if (n & 0x7F00000000000000) {

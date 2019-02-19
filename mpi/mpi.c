@@ -2949,7 +2949,13 @@ void s_mp_clamp(mp_int *mp)
 
 static mp_size s_highest_bit(mp_digit n)
 {
-#if MP_DIGIT_SIZE == 8
+#if defined __GNUC__ && MP_DIGIT_SIZE == SIZEOF_INT
+  return (n == 0) ? 0 : (MP_DIGIT_BIT - __builtin_clz(n));
+#elif defined __GNUC__ && MP_DIGIT_SIZE == SIZEOF_LONG
+  return (n == 0) ? 0 : (MP_DIGIT_BIT - __builtin_clzl(n));
+#elif defined __GNUC__ && MP_DIGIT_SIZE == SIZEOF_LONGLONG_T
+  return (n == 0) ? 0 : (MP_DIGIT_BIT - __builtin_clzll(n));
+#elif MP_DIGIT_SIZE == 8
   if (n & 0xFFFFFFFF00000000) {
     if (n & 0xFFFF000000000000) {
       if (n & 0xFF00000000000000) {
