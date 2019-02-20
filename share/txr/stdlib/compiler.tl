@@ -1239,8 +1239,8 @@
 (defmeth compiler comp-prof (me oreg env form)
   (mac-param-bind form (op . forms) form
     (let ((bfrag me.(comp-progn oreg env forms)))
-      (new (frag bfrag.oreg
-                 ^((prof ,bfrag.oreg)
+      (new (frag oreg
+                 ^((prof ,oreg)
                    ,*bfrag.code
                    (end ,bfrag.oreg))
                  bfrag.fvars bfrag.ffuns)))))
