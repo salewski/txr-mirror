@@ -3067,24 +3067,27 @@ static val me_delay(val form, val menv)
 
 static val me_pprof(val form, val menv)
 {
-  val retval = gensym(lit("retval-"));
-  val mbytes = gensym(lit("mal-bytes-"));
-  val gcbytes = gensym(lit("gc-bytes-"));
-  val msecs = gensym(lit("usecs-"));
-
   (void) menv;
-  return list(tree_bind_s,
-              list(retval, mbytes, gcbytes, msecs, nao),
-              cons(prof_s, rest(form)),
-              list(format_s, t, lit("malloc bytes:  ~12a\n"
-                                    "gc heap bytes: ~12a\n"
-                                    "total:         ~12a\n"
-                                    "milliseconds:  ~12a\n"),
-                   mbytes, gcbytes,
-                   list(plus_s, mbytes, gcbytes, nao),
-                   msecs, nao),
-              retval,
-              nao);
+  return list(intern(lit("rt-pprof"), system_package),
+              cons(prof_s, rest(form)), nao);
+}
+
+static val rt_pprof(val prof_list)
+{
+  val retval = pop(&prof_list);
+  val malloc_bytes = pop(&prof_list);
+  val gc_bytes = pop(&prof_list);
+  val msecs = pop(&prof_list);
+
+  format(t, lit("malloc bytes:  ~12a\n"
+                "gc heap bytes: ~12a\n"
+                "total:         ~12a\n"
+                "milliseconds:  ~12a\n"),
+         malloc_bytes, gc_bytes,
+         plus(malloc_bytes, gc_bytes),
+         msecs, nao);
+
+  return retval;
 }
 
 static val me_when(val form, val menv)
@@ -6866,6 +6869,7 @@ void eval_init(void)
   reg_fun(intern(lit("rt-defun"), system_package), func_n2(rt_defun));
   reg_fun(intern(lit("rt-defmacro"), system_package), func_n3(rt_defmacro));
   reg_fun(intern(lit("rt-defsymacro"), system_package), func_n2(rt_defsymacro));
+  reg_fun(intern(lit("rt-pprof"), system_package), func_n1(rt_pprof));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
