@@ -1328,10 +1328,11 @@ val repl(val bindings, val in_stream, val out_stream)
                                            in_stream, out_stream));
         val pprin = cdr(pprint_var);
         val (*pfun)(val, val) = if3(pprin, pprinl, prinl);
+        val (*tsfun)(val) = if3(pprin, tostringp, tostring);
         reg_varl(var_sym, value);
         sethash(result_hash, var_counter, value);
         pfun(value, out_stream);
-        lino_set_result(ls, chk_strdup(c_str(tostring(value))));
+        lino_set_result(ls, chk_strdup(c_str(tsfun(value))));
         lino_hist_add(ls, line_w);
         if (cdr(greedy_eval)) {
           val error_p = nil;
