@@ -807,13 +807,13 @@ static void show_help(lino_t *l)
         L"^F forward  ^E end buf/ln   ^D del right     ^K del ln end  Tab complete\r"
         L"^5 parmatch ^] parmatch     ^W del word left ^V next ch verbatim [p. 1/3]",
 
-        L"^L refresh  ^P hist prev    ^S select        ^Q paste   ^J multi ln toggle\r"
-        L"^C cancel   ^N hist next    ^^ sel endpt swp ^D sel cut\r"
+        L"^L refresh  ^P hist prev    ^S select        ^Q paste   ^J     multi ln toggle\r"
+        L"^C cancel   ^N hist next    ^^ sel endpt swp ^D sel cut ^X+Tab substr complete\r"
         L"^Z suspend  ^O undo         ^Y yank          ^W sel + word cut   [p. 2/3]",
 
         L"^X^V verbatim ins mode  ^X^A     ins prev ln atom      ^X^E extrn editor\r"
-        L"^X^R ins prev ln        ^X+Enter submit; keep hist pos ^X^Q exch clip/sel\r"
-        L"^X^W ins prev ln word   ^X+Tab   substring complete              [p. 3/3]"
+        L"^X^R ins prev ln        ^X^P     ins prev eval output  ^X^Q exch clip/sel\r"
+        L"^X^W ins prev ln word   ^X+Enter submit; keep hist pos           [p. 3/3]"
     };
     lc->mlmode = 1;
     lc->prompt = L"";
