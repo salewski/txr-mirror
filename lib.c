@@ -5557,40 +5557,68 @@ val symbol_visible(val package, val sym)
 val symbol_needs_prefix(val self, val package, val sym)
 {
   val name = symbol_name(sym);
+  val sym_pkg = sym->s.package;
   type_check (self, package, PKG);
 
+  if (!sym_pkg)
+    return lit("#");
+
+  if (sym_pkg == keyword_package)
+    return null_string;
+
+  if (sym_pkg == package) {
+    if (us_hash_count(package->pk.hidhash) != zero) {
+      val here_cell = gethash_e(self, package->pk.symhash, name);
+
+      if (here_cell) {
+        int found_here = (eq(cdr(here_cell), sym) != nil);
+        if (found_here)
+          return nil;
+      }
+
+      return lit("#");
+    }
+
+    return nil;
+  }
+
   {
-    int homed_here = (sym->s.package == package);
-    val home_cell = gethash_e(self, package->pk.symhash, name);
-    int present_here = (eq(cdr(home_cell), sym) != nil);
     val fallback = get_hash_userdata(package->pk.symhash);
-    val fb_cell = nil;
-    int in_fallback = 0;
 
     for (; fallback; fallback = cdr(fallback)) {
       val fb_pkg = car(fallback);
-      val cell = gethash_e(self, fb_pkg->pk.symhash, name);
 
-      if (cell) {
-        fb_cell = cell;
-        if (eq(cdr(cell), sym) != nil) {
-          in_fallback = 1;
-          break;
+      if (sym_pkg == fb_pkg) {
+        if (us_hash_count(fb_pkg->pk.hidhash) != zero) {
+          val cell = gethash_e(self, fb_pkg->pk.symhash, name);
+          if (cell) {
+            int found_in_fallback = (eq(cdr(cell), sym) != nil);
+            if (found_in_fallback)
+              return nil;
+            break;
+          }
         }
+        return nil;
+      } else {
+        if (gethash_e(self, fb_pkg->pk.symhash, name))
+          break;
       }
     }
-
-    if (!homed_here && !present_here && !in_fallback)
-      return t;
-
-    if ((homed_here || present_here) && fb_cell)
-      return t;
-
-    if (in_fallback && home_cell)
-      return t;
   }
 
-  return nil;
+  if (us_hash_count(sym_pkg->pk.hidhash) != zero) {
+    val home_cell = gethash_e(self, sym_pkg->pk.symhash, name);
+
+    if (home_cell) {
+      int found_in_home = (eq(cdr(home_cell), sym) != nil);
+      if (found_in_home)
+        return sym_pkg->pk.name;
+    }
+
+    return lit("#");
+  }
+
+  return sym_pkg->pk.name;
 }
 
 val find_symbol(val str, val package_in)
@@ -11504,12 +11532,10 @@ dot:
         if (obj->s.package == keyword_package)
           put_char(chr(':'), out);
     } else {
-      if (!obj->s.package) {
-        put_string(lit("#:"), out);
-      } else if (obj->s.package == keyword_package) {
-        put_char(chr(':'), out);
-      } else if (symbol_needs_prefix(lit("print"), cur_package, obj)) {
-        put_string(obj->s.package->pk.name, out);
+      val prefix = symbol_needs_prefix(lit("print"), cur_package, obj);
+
+      if (prefix) {
+        put_string(prefix, out);
         put_char(chr(':'), out);
       }
     }
