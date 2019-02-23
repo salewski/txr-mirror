@@ -886,6 +886,12 @@ val hash_count(val hash)
   return num_fast(h->count);
 }
 
+val us_hash_count(val hash)
+{
+  struct hash *h = coerce(struct hash *, hash->co.handle);
+  return num_fast(h->count);
+}
+
 val get_hash_userdata(val hash)
 {
   val self = lit("get-hash-userdata");
