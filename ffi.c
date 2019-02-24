@@ -244,6 +244,7 @@ static void ffi_type_common_mark(struct txr_ffi_type *tft)
 {
   gc_mark(tft->lt);
   gc_mark(tft->syntax);
+  gc_mark(tft->tag);
 }
 
 static void ffi_type_mark(val obj)
