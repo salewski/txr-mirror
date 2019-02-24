@@ -876,6 +876,7 @@ val clearhash(val hash)
   h->modulus = c_num(mod);
   h->count = 0;
   h->table = table;
+  setcheck(hash, table);
   return oldcount ? num(oldcount) : nil;
 }
 
