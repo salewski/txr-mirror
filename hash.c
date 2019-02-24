@@ -609,7 +609,7 @@ static void hash_grow(struct hash *h, val hash)
 
   h->modulus = new_modulus;
   h->table = new_table;
-  set(mkloc(h->table, hash), new_table);
+  setcheck(hash, new_table);
 }
 
 static val hash_assoc(val key, cnum hash, val list)
