@@ -3013,14 +3013,14 @@ static val make_ffi_type_enum(val syntax, val enums,
                                     chk_calloc(1, sizeof *tft));
   struct txr_ffi_type *btft = ffi_type_struct(base_type);
 
+  val sym_num = make_hash(nil, nil, t);
+  val num_sym = make_hash(nil, nil, nil);
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_enum_ops);
   cnum lowest = INT_PTR_MAX;
   cnum highest = INT_PTR_MIN - 1;
   cnum cur = -1;
   ucnum count = 0;
   val iter;
-  val sym_num = make_hash(nil, nil, t);
-  val num_sym = make_hash(nil, nil, nil);
   val enum_env = make_env(nil, nil, nil);
   val shadow_menv = make_env(nil, nil, nil);
 
@@ -3040,6 +3040,9 @@ static val make_ffi_type_enum(val syntax, val enums,
   tft->alloc = btft->alloc;
   tft->free = btft->free;
   tft->eltype = base_type;
+
+  tft->num_sym = num_sym;
+  tft->sym_num = sym_num;
 
   for (iter = enums; !endp(iter); iter = cdr(iter), count++) {
     val en = car(iter);
@@ -3091,9 +3094,6 @@ static val make_ffi_type_enum(val syntax, val enums,
         lowest = cur;
     }
   }
-
-  tft->num_sym = num_sym;
-  tft->sym_num = sym_num;
 
   return obj;
 }
