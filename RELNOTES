@@ -1,3 +1,41 @@
+                                    TXR 212
+                                   2019-02-24
+
+
+  Features
+
+  - OOP:
+    - more efficient new operator: now avoids extraneous consing.
+
+  - Printer:
+    - changed conditions for when symbols are printed with a package
+      prefix.
+    - the code is also optimized, and handles more cases when symbols
+      should be printed with the #: uninterned prefix.
+
+  - Lib:
+    - pprof macro generates much smaller code.
+    - faster "highest bit set" calculation, using GCC primitives.
+    - new bracket function.
+
+  Bugs
+
+  - GC:
+    - fixed GC bug in the parser, in relation to parsing circular notation.
+    - fixed GC bug in clearhash function.
+    - fixed two GC bugs in FFI: in the enum type and cptr type.
+
+  - Compiler:
+    - Fixed miscompilation of (prof <form>) in cases when <form>
+      is known at compile-time to return nil.
+
+  - Listener:
+   - Fixed hang issue that occurs when evaluation produces a circular
+     object even though *print-circle* is turned on.
+   - Fixed Ctrl-X Ctrl-P not being mentioned in the "cheatsheet".
+
+
+
                                     TXR 211
                                    2019-02-18
 
