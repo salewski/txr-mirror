@@ -740,6 +740,7 @@ val minv(val first, struct args *rest);
 val maxl(val first, val rest);
 val minl(val first, val rest);
 val clamp(val low, val high, val num);
+val bracket(val larg, struct args *args);
 val expt(val base, val exp);
 val exptv(struct args *nlist);
 val exptmod(val base, val exp, val mod);

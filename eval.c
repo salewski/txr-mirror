@@ -6470,6 +6470,7 @@ void eval_init(void)
   reg_fun(intern(lit("max"), user_package), func_n1v(maxv));
   reg_fun(intern(lit("min"), user_package), func_n1v(minv));
   reg_fun(intern(lit("clamp"), user_package), func_n3(clamp));
+  reg_fun(intern(lit("bracket"), user_package), func_n1v(bracket));
   reg_fun(intern(lit("pos-max"), user_package), func_n3o(pos_max, 1));
   reg_fun(intern(lit("pos-min"), user_package), func_n3o(pos_min, 1));
   reg_fun(intern(lit("mismatch"), user_package), func_n4o(mismatch, 2));

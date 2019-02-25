@@ -36197,6 +36197,78 @@ More precisely,
 is equivalent to
 .codn "(max a (min b c))" .
 
+.coNP Function @ bracket
+.synb
+.mets (bracket < value << level *)
+.syne
+.desc
+The
+.code bracket
+function's arguments consist of one required
+.meta value
+followed by
+.I n
+.meta level
+arguments.
+The
+.meta level
+arguments are optional; in other words,
+.I n
+may be zero.
+
+The
+.code bracket
+function calculates the
+.I bracket
+of the
+.meta value
+argument: a zero-based positional index of the value, in relation to the
+.meta level
+arguments.
+
+Each of the
+.meta level
+arguments, of which there may be none, is associated with
+an integer index, starting at zero, in left to right order. The
+.meta level
+arguments are examined in that order. When a
+.meta level
+argument is encountered which exceeds
+.metn value ,
+that
+.meta level
+argument's index is returned.
+If
+.meta value
+exceeds all of the
+.meta level
+arguments, then
+.I n
+is returned.
+
+Determining whether
+.meta value
+exceeds a
+.meta level
+is performed using the
+.code less
+function.
+
+.TP* Examples:
+
+.cblk
+  (bracket 42) -> 0
+  (bracket 5 10) -> 0
+  (bracket 15 10) -> 1
+  (bracket 15 10 20) -> 1
+  (bracket 15 10 20 30) -> 1
+  (bracket 20 10 20 30) -> 2
+  (bracket 35 10 20 30) -> 3
+  (bracket "a" "aardvark" "zebra") -> 0
+  (bracket "ant" "aardvark" "zebra") -> 1
+  (bracket "zebu" "aardvark" "zebra") -> 2
+.cble
+
 .coNP Functions @, int-str @ flo-str and @ num-str
 .synb
 .mets (int-str < string <> [ radix ])

@@ -3586,6 +3586,19 @@ static val rexpt(val right, val left)
   return expt(left, right);
 }
 
+val bracket(val larg, struct args *args)
+{
+  cnum index = 0;
+
+  while (args_more(args, index)) {
+    val rarg = args_get(args, &index);
+    if (less(larg, rarg))
+      return num(index - 1);
+  }
+
+  return num(index);
+}
+
 val exptv(struct args *nlist)
 {
   cnum nargs = args_count(nlist);
