@@ -40765,6 +40765,129 @@ and
 .cble
 
 .SS* Hashing Library
+
+A hash table is an object which retains an association between pairs of
+objects. Each pair consists of a key and value. Given an object which is
+similar to a key in the hash table, it is possible to retrieve the
+corresponding value. Entries in a hash table are not ordered in any way, and
+lookup is facilitated by hashing: quickly mapping a key object to a numeric
+value which is then used to index into one of many buckets where the matching
+key will be found (if such a key is present in the hash table).
+
+In addition to keys and values, a hash table contains a storage location
+which allows it to be associated with user data.
+
+Important to the operation of a hash table is the criterion by which keys are
+considered same. By default, this similarity follows the eql function.  A hash
+table will search for a stored key which is
+.code eql
+to the given search key.
+A hash table constructed with the
+.codn equal -based
+property compares keys using
+the
+.code equal
+function instead.
+
+In addition to storing key-value pairs, a hash table can have a piece of
+information associated with it, called the user data.
+
+\*(TX hash tables contain a seed value which permutes the hashing operation,
+at least for keys of certain types.  This feature, if the seed is randomized,
+helps to prevent software from being susceptible to hash collision
+denial-of-service attacks. However, by default, the seed is not randomized.
+Newly created hash tables for which a seed value is not specified take their
+seed value from the
+.code *hash-seed*
+special variable, which is initialized to zero. That includes hash tables
+created by parsing hash literal syntax.
+Security-sensitive programs
+requiring protection against collision attacks may use
+.code gen-hash-seed
+to create a randomized hash seed, and, depending on their specific need, either
+store that value in
+.codn *hash-seed* ,
+or pass the value to hash table constructors like
+.codn make-hash ,
+or both.
+Note: randomization of hash seeding isn't a default behavior because it affects
+program reproducibility. The seed value affects the order in which keys are
+traversed, which can change the output of programs whose inputs have not
+changed, and whose logic is is otherwise deterministic.
+
+A hash table can be traversed to visit all of the keys and data.  The order of
+traversal bears no relation to the order of insertion, or to any properties of
+the key type.
+
+During an open traversal, new keys can be inserted into a hash table or deleted
+from it while a a traversal is in progress. Insertion of a new key during
+traversal will not cause any existing key to be visited twice or to be skipped;
+however, it is not specified whether the new key will be traversed. Similarly,
+if a key is deleted during traversal, and that key has not yet been visited, it
+is not specified whether it will be visited during the remainder of the
+traversal. These remarks apply not only to deletion via
+.code remhash
+or the
+.code del
+operator, but also to wholesale deletion of all keys via
+.codn clearhash .
+
+The garbage collection of hash tables supports weak keys and weak values.
+If a hash table has weak keys, this means that from the point of view
+of garbage collection, that table holds only weak references to the keys
+stored in it.  Similarly, if a hash table has weak values, it means that it
+holds a weak reference to each value stored. A weak reference is one
+which does not prevent the reclamation of an object by the garbage
+collector. That is to say, when the garbage collector discovers that the only
+references to some object are weak references, then that object is considered
+garbage, just as if it had no references to it. The object is reclaimed, and
+the weak references "lapse" in some way, which depends on what kind they are.
+Hash table weak references lapse by entry removal.  When an object used
+as a key in in one or more weak-key hash tables becomes unreachable, those
+hash entries disappear. Similarly, when an object appearing as a value in
+one or more hash table entries in weak-value hash tables becomes unreachable,
+those entries disappear. When a hash table has both weak keys and weak values,
+then its entries are removed when either keys or values become unreachable.
+In other words, both the key and value must be reachable in order to
+retain the entry.
+
+An open traversal of a hash table is performed by the
+.code maphash
+function and the
+.code dohash
+operator. The traversal is open because code supplied by the program
+is evaluated for each entry.
+
+The functions
+.codn hash-keys ,
+.codn hash-values ,
+.codn hash-pairs ,
+and
+.code hash-alist
+also perform an open traversal, because they return
+lazy lists. The traversal isn't complete until the returned lazy list
+is fully instantiated. In the meanwhile, the
+\*(TX program can mutate the hash table from which the lazy list
+is being generated.
+
+Certain hash operations expose access to the internal key-value association
+entries of a hash table, which are represented as ordinary
+.code cons
+cells. Modifying the
+.code car
+field of such a cell potentially violates the integrity of the hash table;
+the behavior of subsequent lookup and insertion operations becomes unspecified.
+
+Similarly, if an object is used as a key in an
+.codn equal -based
+hash table, and that object is mutated in such a way that its equality to
+other objects under the
+.code equal
+function is affected or its hash value under
+.code hash-equal
+is altered, the behavior of subsequent lookup and insertion operations on the
+becomes unspecified.
+
 .coNP Functions @ make-hash and @ hash
 .synb
 .mets (make-hash < weak-keys < weak-vals < equal-based <> [ hash-seed ])
@@ -40774,14 +40897,6 @@ and
 .syne
 .desc
 These functions construct a new hash table.
-
-A hash table is an object which retains an association between pairs of
-objects. Each pair consists of a key and value. Given an object which is
-similar to a key in the hash table, it is possible to retrieve the
-corresponding value. Entries in a hash table are not ordered in any way, and
-lookup is facilitated by hashing: quickly mapping a key object to a numeric
-value which is then used to index into one of many buckets where the matching
-key will be found (if such a key is present in the hash table).
 
 .code make-hash
 takes three mandatory Boolean arguments. The
@@ -40854,83 +40969,6 @@ is present, it must be followed by an argument value; that value
 specifies the user data for the hash table, which can be retrieved using the
 .code hash-userdata
 function.
-
-If a hash table has weak keys, this means that from the point of view
-of garbage collection, that table holds only weak references to the keys
-stored in it.  Similarly, if a hash table has weak values, it means that it
-holds a weak reference to each value stored. A weak reference is one
-which does not prevent the reclamation of an object by the garbage
-collector. That is to say, when the garbage collector discovers that the only
-references to some object are weak references, then that object is considered
-garbage, just as if it had no references to it. The object is reclaimed, and
-the weak references "lapse" in some way, which depends on what kind they are.
-Hash table weak references lapse by entry removal: if either a key or a value
-object is reclaimed, then the corresponding key-value entry is erased from the
-hash table.
-
-Important to the operation of a hash table is the criterion by which keys are
-considered same. By default, this similarity follows the eql function.  A hash
-table will search for a stored key which is
-.code eql
-to the given search key.
-A hash table constructed with the
-.codn equal -based
-property compares keys using
-the
-.code equal
-function instead.
-
-In addition to storing key-value pairs, a hash table can have a piece of
-information associated with it, called the user data.
-
-A hash table can be traversed to visit all of the keys and data.  The order of
-traversal bears no relation to the order of insertion, or to any properties of
-the key type.
-
-During an open traversal, new keys can be inserted into a hash table or deleted
-from it while a a traversal is in progress. Insertion of a new key during
-traversal will not cause any existing key to be visited twice or to be skipped;
-however, it is not specified whether the new key will be traversed. Similarly,
-if a key is deleted during traversal, and that key has not yet been visited, it
-is not specified whether it will be visited during the remainder of the
-traversal.
-
-An open traversal of a hash table is performed by the
-.code maphash
-function and the
-.code dohash
-operator. The traversal is open because code supplied by the program
-is evaluated for each entry.
-
-The functions
-.codn hash-keys ,
-.codn hash-values ,
-.codn hash-pairs ,
-and
-.code hash-alist
-also perform an open traversal, because they return
-lazy lists. The traversal isn't complete until the returned lazy list
-is fully instantiated. In the meanwhile, the
-\*(TX program can mutate the hash table from which the lazy list
-is being generated.
-
-Certain hash operations expose access to the internal key-value association
-entries of a hash table, which are represented as ordinary
-.code cons
-cells. Modifying the
-.code car
-field of such a cell potentially violates the integrity of the hash table;
-the behavior of subsequent lookup and insertion operations becomes unspecified.
-
-Similarly, if an object is used as a key in an
-.codn equal -based
-hash table, and that object is mutated in such a way that its equality to
-other objects under the
-.code equal
-function is affected or its hash value under
-.code hash-equal
-is altered, the behavior of subsequent lookup and insertion operations on the
-becomes unspecified.
 
 .coNP Functions @, hash-construct @ hash-from-pairs and @ hash-from-alist
 .synb
