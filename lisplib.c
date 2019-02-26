@@ -590,12 +590,17 @@ static val keyparams_set_entries(val dlt, val fun)
     lit("extract-keys"),
     nil
   };
+  val name_noload[] = {
+    lit("--"),
+    nil
+  };
   val key_k = intern(lit("key"), keyword_package);
   set_dlt_entries_sys(dlt, sys_name, fun);
   if (fun)
     sethash(dlt, key_k, fun);
   else
     remhash(dlt, key_k);
+  intern_only(name_noload);
   return nil;
 }
 
