@@ -1272,7 +1272,8 @@ static void move_cursor_multiline(lino_t *l, int npos)
         ab_append(&ab, seq, wcslen(seq));
     }
 
-    (void) lino_os.puts_fn(l->tty_ofs, ab.b);
+    if (ab.b)
+        (void) lino_os.puts_fn(l->tty_ofs, ab.b);
     ab_free(&ab);
     l->dpos = npos;
     l->oldrow = nrow;
