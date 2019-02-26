@@ -181,10 +181,10 @@ opt/%.o: %.S
 	$(call COMPILE_C_WITH_DEPS,)
 
 dbg/%-win.o: $(top_srcdir)%.c
-	$(call COMPILE_C_WITH_DEPS,-DCONFIG_WIN_MAIN=1)
+	$(call COMPILE_C_WITH_DEPS,)
 
 opt/%-win.o: $(top_srcdir)%.c
-	$(call COMPILE_C_WITH_DEPS,-DCONFIG_WIN_MAIN=1 $(OPT_FLAGS))
+	$(call COMPILE_C_WITH_DEPS, $(OPT_FLAGS))
 
 win/%.res: $(top_srcdir)win/%.rc $(top_srcdir)win/%.ico
 	$(call WINDRES)
