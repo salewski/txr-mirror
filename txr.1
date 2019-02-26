@@ -33638,7 +33638,7 @@ evaluation order.
   (call car-update-expander 'getit 'setit '(car [a 0])
     '(setit (+ (getit) 1)))
 
-  -->  ;; Resulting code:
+  ;; --> Resulting code:
 
   (rlet ((#:g0032 [a 0]))
     (macrolet ((getit nil
@@ -33648,16 +33648,16 @@ evaluation order.
                          (list '#:g0032) (list val))))
       (setit (+ (getit) 1))))
 
-  ;; Same expander call as above, with a sys:expand to show the
-  ;; fully expanded version of the returned code, in which the
-  ;; setit and getit calls have disappeared, replaced by their
-  ;; macro-expansions.
+  ;; Same expander call as above, with a call to expand added
+  ;; to show the fully expanded version of the returned code,
+  ;; in which the ;; setit and getit calls have disappeared,
+  ;; replaced by their macro-expansions.
 
-  (sys:expand
+  (expand
     (call car-update-expander 'getit 'setit '(car [a 0])
       '(setit (+ (getit) 1))))
 
-  -->
+  ;; --> Resulting code:
 
   (let ((#:g0032 [a 0]))
     (sys:rplaca #:g0032 (+ (car #:g0032) 1)))
@@ -33899,7 +33899,7 @@ A full expansion, with the
 local macros expanded out:
 
 .cblk
-  (sys:expand '(swap a b))
+  (expand '(swap a b))
 
   -->
 
@@ -34623,7 +34623,7 @@ are assignable, and provide temporary storage.
            (y a))
       (+ x y)))  -->  43
 
-  (sys:expand
+  (expand
     '(let ((a 42))
       (rlet ((x 1)
              (y a))
