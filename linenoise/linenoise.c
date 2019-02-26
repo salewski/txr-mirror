@@ -1148,6 +1148,12 @@ static void refresh_multiline(lino_t *l) {
 
     if (l->need_refresh == 2) {
         l->oldrow = nrow;
+         if (nrow > rows) {
+            (void) lino_os.puts_fn(l->tty_ofs, L"\r\n");
+            rows++;
+            if (rows > l->maxrows)
+                l->maxrows = rows;
+         }
         return;
     }
 
