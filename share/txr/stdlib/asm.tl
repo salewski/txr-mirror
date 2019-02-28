@@ -765,7 +765,7 @@
         (t asm.(put-insn me.code (enc-small-op 1) idx)
            asm.(asm-one ^(mov ,(operand-to-exp dst) t1))))))
   (:method dis (me asm dst idx)
-    ^(,me.symbol ,(operand-to-sym dst) ,idx)))
+    ^(,me.symbol ,(small-op-to-sym dst) ,idx)))
 
 (defopcode op-setlx setlx auto
   (:method asm (me asm syntax)
@@ -777,7 +777,7 @@
         (t asm.(asm-one ^(mov t1 ,(operand-to-exp src)))
            asm.(put-insn me.code (enc-small-op 1) idx)))))
   (:method dis (me asm src idx)
-    ^(,me.symbol ,(operand-to-sym src) ,idx)))
+    ^(,me.symbol ,(small-op-to-sym src) ,idx)))
 
 (defopcode-derived op-getf getf auto op-getlx)
 
