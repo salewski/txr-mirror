@@ -1008,7 +1008,7 @@
                                            (if fbind fbind.loc me.(get-sidx arg))
                                            (cdr args))))
                      ((and (consp arg) (eq (car arg) 'lambda))
-                      me.(comp-fun-form oreg env ^(sym ,arg ,*(cdr args))))
+                      me.(comp-fun-form oreg env ^(,sym ,arg ,*(cdr args))))
                      (t :)))
               (lambda me.(comp-inline-lambda oreg env opcode
                                              (car args) (cdr args)))
