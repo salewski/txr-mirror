@@ -26,6 +26,10 @@
 
 (load "vm-param")
 
+(compile-only
+  (unless (find-struct-type 'sys:param-parser-base)
+    (load "param")))
+
 (defstruct (frag oreg code : fvars ffuns) nil
   oreg
   code
@@ -165,44 +169,6 @@
          (set (qref ,comp-var tregs) ,saved-tregs
               (qref ,comp-var treg-cntr) ,saved-treg-cntr
               (qref ,comp-var nlev) ,saved-nlev)))))
-
-(compile-only
-  (defstruct param-parser-base nil
-    syntax form
-    rest req opt key
-    nreq nopt nfix
-
-    (:postinit (me)
-      (let* ((rest (nthlast 0 me.syntax))
-             (fixed (ldiff me.syntax rest))
-             nonkey key)
-        (cond
-          (me.mac-param-p
-            (while fixed
-              (let ((pp (pop fixed)))
-                (caseq pp
-                  ((:env :whole :form)
-                   (unless fixed
-                     (compile-error me.form "~s requires argument" pp))
-                   (push (cons pp (pop fixed)) key))
-                  (t (push pp nonkey)))))
-            (set nonkey (nreverse nonkey)
-                 key (nreverse key)))
-          (t (set nonkey fixed)))
-        (tree-bind (: rp opt) (split* nonkey (op where (op eq :)))
-          (set me.rest rest
-               me.req rp
-               me.opt (mapcar [iffi atom list] opt)
-               me.key key
-               me.nreq (len rp)
-               me.nopt (len opt)
-               me.nfix (+ me.nreq me.nopt))))))
-
-  (defstruct (fun-param-parser syntax form) param-parser-base
-    (mac-param-p nil))
-
-  (defstruct (mac-param-parser syntax form) param-parser-base
-    (mac-param-p t)))
 
 (defvarl %gcall-op% (relate '(apply usr:apply call) '(gapply gapply gcall)))
 
