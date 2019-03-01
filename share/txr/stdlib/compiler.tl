@@ -898,10 +898,14 @@
                             bfrag.ffuns)))))))))
 
 (defmeth compiler comp-fun (me oreg env form)
-  (mac-param-bind form (op sym) form
-    (iflet ((fbin env.(lookup-fun sym t)))
-      (new (frag fbin.loc nil nil (list sym)))
-      (new (frag oreg ^((getf ,oreg ,me.(get-sidx sym))) nil (list sym))))))
+  (mac-param-bind form (op arg) form
+    (let ((fbin env.(lookup-fun arg t)))
+      (cond
+        (fbin (new (frag fbin.loc nil nil (list arg))))
+        ((and (consp arg) (eq (car arg) 'lambda))
+         me.(compile oreg env arg))
+        (t (new (frag oreg ^((getf ,oreg ,me.(get-sidx arg)))
+                      nil (list arg))))))))
 
 (defmeth compiler comp-progn (me oreg env args)
   (let* (ffuns fvars
