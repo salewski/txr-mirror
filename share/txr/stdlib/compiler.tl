@@ -1498,13 +1498,16 @@
                 (while (and fix-arg-exprs pars.opt)
                   (add ^(,(car (pop pars.opt)) ,(pop fix-arg-exprs))))
                 (cond
-                  ((and (null fix-arg-exprs)
-                        (null pars.req)
+                  ((and (null pars.req)
                         (null pars.opt))
-                   (when (or pars.rest apply-list-expr)
-                     (add ^(,(or pars.rest ign-sym) ,apply-list-expr))))
-                  (fix-arg-exprs
-                    (lambda-too-many-args lm-expr))
+                   (if fix-arg-exprs
+                     (if pars.rest
+                       (add ^(,pars.rest (list* ,*fix-arg-exprs ,apply-list-expr)))
+                       (lambda-too-many-args lm-expr))
+                     (when (or pars.rest apply-list-expr)
+                       (add ^(,(or pars.rest ign-sym) ,apply-list-expr)))))
+                  ((and fix-arg-exprs apply-list-expr)
+                   (lambda-too-many-args lm-expr))
                   (apply-list-expr
                     (add ^(,al-val ,apply-list-expr))
                     (when pars.req
