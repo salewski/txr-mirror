@@ -1474,17 +1474,12 @@ static wchar_t *lino_getl(mem_t *stream_in, wchar_t *buf, size_t nchar)
   if (nchar == 0)
     return buf;
 
-  while (nchar > 1) {
+  while (nchar-- > 1) {
     val ch = get_char(stream);
     if (!ch)
       break;
     if ((*ptr++ = c_num(ch)) == '\n')
       break;
-  }
-
-  if (ptr == buf) {
-    *ptr++ = 0;
-    return 0;
   }
 
   *ptr++ = 0;
