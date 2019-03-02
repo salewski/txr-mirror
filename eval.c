@@ -4275,6 +4275,45 @@ static val me_load_time(val form, val menv)
   return list(load_time_lit_s, nil, expr, nao);
 }
 
+static val me_load_for(val form, val menv)
+{
+  val sym = car(form);
+  val args = cdr(form);
+  val rt_load_for_s = intern(lit("rt-load-for"), system_package);
+  list_collect_decl (out, ptail);
+  val iter;
+
+  for (iter = args; iter; iter = cdr(iter)) {
+    val arg = car(iter);
+
+    if (consp(arg)) {
+      val kind = car(arg);
+      if (kind != usr_var_s && kind != fun_s && kind != macro_s
+          && kind != struct_s && kind != pkg_s)
+        eval_error(form, lit("~s: unrecognized clause symbol ~s"),
+                   sym, kind, nao);
+      if (!bindable(cadr(arg)))
+        eval_error(form, lit("~s: first argument in ~s must be bindable symbol"),
+                   sym, arg, nao);
+      if (length(arg) != three)
+        eval_error(form, lit("~s: clause ~s expected to have two arguments"),
+                   sym, arg, nao);
+      ptail = list_collect(ptail, list(list_s,
+                                       list(quote_s, car(arg), nao),
+                                       list(quote_s, cadr(arg), nao),
+                                       caddr(arg),
+                                       nao));
+    } else {
+      eval_error(form, lit("~s: invalid clause ~s"), sym, arg, nao);
+    }
+  }
+
+  if (!out)
+    return nil;
+
+  return cons(rt_load_for_s, out);
+}
+
 val load(val target)
 {
   val self = lit("load");
@@ -4348,6 +4387,43 @@ val load(val target)
   }
 
   uw_catch_end;
+
+  return nil;
+}
+
+static val rt_load_for(struct args *args)
+{
+  val self = lit("sys:rt-load-for");
+  cnum index = 0;
+
+  while (args_more(args, index)) {
+    val clause = args_get(args, &index);
+    val kind = pop(&clause);
+    val sym = pop(&clause);
+    val file = car(clause);
+    val (*testfun)(val);
+
+    if (kind == usr_var_s)
+      testfun = boundp;
+    else if (kind == fun_s)
+      testfun = fboundp;
+    else if (kind == macro_s)
+      testfun = mboundp;
+    else if (kind == struct_s)
+      testfun = find_struct_type;
+    else if (kind == pkg_s)
+      testfun = find_package;
+    else
+      uw_throwf(error_s, lit("~a: unrecognized kind ~s"),
+                self, kind, nao);
+
+    if (!testfun(sym)) {
+      load(file);
+      if (!testfun(sym))
+        uw_throwf(error_s, lit("~a: file ~s didn't define ~a ~s"),
+                  self, file, kind, sym, nao);
+    }
+  }
 
   return nil;
 }
@@ -6258,6 +6334,7 @@ void eval_init(void)
   reg_mac(intern(lit("lcons"), user_package), func_n2(me_lcons));
   reg_mac(intern(lit("mlet"), user_package), func_n2(me_mlet));
   reg_mac(load_time_s, func_n2(me_load_time));
+  reg_mac(intern(lit("load-for"), user_package), func_n2(me_load_for));
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
@@ -6873,6 +6950,7 @@ void eval_init(void)
   reg_fun(intern(lit("rt-defmacro"), system_package), func_n3(rt_defmacro));
   reg_fun(intern(lit("rt-defsymacro"), system_package), func_n2(rt_defsymacro));
   reg_fun(intern(lit("rt-pprof"), system_package), func_n1(rt_pprof));
+  reg_fun(intern(lit("rt-load-for"), system_package), func_n0v(rt_load_for));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);

@@ -57077,6 +57077,112 @@ parsing and processing of a loaded \*(TX source file.
 Also, during the processing of the profile file (see Interactive Profile File),
 the variable is bound to the name of that file.
 
+.coNP Macro @ load-for
+.synb
+.mets (load-for >> {( kind < sym << target )}*)
+.syne
+.desc
+The
+.code load-for
+macro takes multiple arguments, each of which is a three-element
+clause. Each clause specifies that a given
+.meta target
+file is to be conditionally loaded based on whether a symbol
+.meta sym
+has a certain kind of binding.
+
+Each argument clause has the syntax
+.cblk
+.meti >> ( kind < sym << target )
+.cble
+where
+.meta kind
+is one of the five symbols
+.codn var ,
+.codn fun ,
+.codn macro ,
+.code struct
+or
+.codn pkg .
+The
+.meta sym
+element is a symbol suitable for use as a variable, function
+or structure name, and
+.meta target
+is an expression which is evaluated to produce a value that is suitable
+as an argument to the
+.code load
+function.
+
+First, all
+.code target
+expressions in all clauses are unconditionally evaluated in left to right
+order. Then the clauses are processed in that order. If the
+.meta kind
+symbol of a clause is
+.codn var ,
+then
+.code load-for
+tests whether
+.meta sym
+has a binding in the variable namespace using the
+.code boundp
+function. If a binding does not exist, then the value of the
+.meta target
+expression is passed to the
+.code load
+function. Otherwise,
+.code load
+is not called.
+Similarly, if
+.meta kind
+is the symbol
+.codn fun ,
+then
+.meta sym
+is instead tested using
+.codn fboundp ,
+if
+.meta kind
+is
+.codn macro ,
+then
+.meta sym
+is tested using
+.codn mboundp ,
+if
+.meta kind
+is
+.codn struct ,
+then
+.meta sym
+is tested using
+.codn find-struct-type ,
+and if
+.meta kind
+is
+.codn pkg ,
+then
+.meta sym
+is tested using
+.codn find-package .
+
+When
+.code load-for
+invokes the
+.code load
+function, it confirms whether loading file has had the expected effect of
+providing a definition of
+.meta sym
+of the right
+.metn kind .
+If this isn't the case, an error is thrown.
+
+The
+.code load-for
+function returns
+.codn nil .
+
 .coNP Variable @ txr-exe-path
 .desc
 This variable holds the absolute path name of the executable file
