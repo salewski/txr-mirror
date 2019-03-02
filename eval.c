@@ -73,7 +73,7 @@ val dyn_env;
 
 val eval_error_s;
 val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s, dvbind_s;
-val sys_catch_s, handler_bind_s, cond_s, if_s, iflet_s, when_s;
+val sys_catch_s, handler_bind_s, cond_s, if_s, iflet_s, when_s, usr_var_s;
 val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s, macro_s;
 val tree_case_s, tree_bind_s, mac_param_bind_s;
 val sys_mark_special_s;
@@ -6064,6 +6064,7 @@ void eval_init(void)
   equal_s = intern(lit("equal"), user_package);
   if_s = intern(lit("if"), user_package);
   when_s = intern(lit("when"), user_package);
+  usr_var_s = intern(lit("var"), user_package);
   iflet_s = intern(lit("iflet"), user_package);
   defvar_s = intern(lit("defvar"), user_package);
   defvarl_s = intern(lit("defvarl"), user_package);
