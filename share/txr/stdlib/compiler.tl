@@ -27,8 +27,7 @@
 (load "vm-param")
 
 (compile-only
-  (unless (find-struct-type 'sys:param-parser-base)
-    (load "param")))
+  (load-for (struct sys:param-parser-base "param")))
 
 (defstruct (frag oreg code : fvars ffuns) nil
   oreg
