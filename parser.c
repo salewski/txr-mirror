@@ -1483,7 +1483,7 @@ static wchar_t *lino_getl(mem_t *stream_in, wchar_t *buf, size_t nchar)
   }
 
   *ptr++ = 0;
-  return buf;
+  return (ptr == buf + 1) ? 0 : buf;
 }
 
 static wchar_t *lino_gets(mem_t *stream_in, wchar_t *buf, size_t nchar)
@@ -1502,7 +1502,7 @@ static wchar_t *lino_gets(mem_t *stream_in, wchar_t *buf, size_t nchar)
   }
 
   *ptr++ = 0;
-  return buf;
+  return (ptr == buf + 1) ? 0 : buf;
 }
 
 
