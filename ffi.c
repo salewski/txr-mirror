@@ -111,7 +111,7 @@ val le_float_s, le_double_s;
 
 val array_s, zarray_s, carray_s;
 
-val struct_s, union_s;
+val union_s;
 
 val str_d_s, wstr_s, wstr_d_s, bstr_s, bstr_d_s;
 
@@ -5501,7 +5501,6 @@ void ffi_init(void)
   array_s = intern(lit("array"), user_package);
   zarray_s = intern(lit("zarray"), user_package);
   carray_s = intern(lit("carray"), user_package);
-  struct_s = intern(lit("struct"), user_package);
   union_s = intern(lit("union"), user_package);
   str_d_s = intern(lit("str-d"), user_package);
   wstr_s = intern(lit("wstr"), user_package);

@@ -97,7 +97,7 @@ val op_s, identity_s;
 val hash_lit_s, hash_construct_s, struct_lit_s, qref_s, uref_s;
 val vector_lit_s, vec_list_s;
 val macro_time_s, macrolet_s;
-val defsymacro_s, symacrolet_s, prof_s, switch_s;
+val defsymacro_s, symacrolet_s, prof_s, switch_s, struct_s;
 val fbind_s, lbind_s, flet_s, labels_s;
 val load_path_s, load_recursive_s;
 val load_time_s, load_time_lit_s;
@@ -6142,6 +6142,7 @@ void eval_init(void)
   symacro_k = intern(lit("symacro"), keyword_package);
   prof_s = intern(lit("prof"), user_package);
   switch_s = intern(lit("switch"), system_package);
+  struct_s = intern(lit("struct"), user_package);
   load_path_s = intern(lit("*load-path*"), user_package);
   load_recursive_s = intern(lit("*load-recursive*"), system_package);
   load_time_s = intern(lit("load-time"), user_package);
