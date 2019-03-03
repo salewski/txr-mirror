@@ -5436,7 +5436,7 @@ static val makunbound(val sym)
 
 static val fmakunbound(val sym)
 {
-  lisplib_try_load(sym),
+  lisplib_try_load(sym);
   remhash(top_fb, sym);
   if (opt_compat && opt_compat <= 127)
     remhash(top_mb, sym);
@@ -5446,7 +5446,7 @@ static val fmakunbound(val sym)
 
 static val mmakunbound(val sym)
 {
-  lisplib_try_load(sym),
+  lisplib_try_load(sym);
   remhash(top_mb, sym);
   return sym;
 }
