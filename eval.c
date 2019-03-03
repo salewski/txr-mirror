@@ -538,8 +538,8 @@ val lookup_fun(val env, val sym)
         }
       } else if (car(sym) == macro_s) {
         return lookup_mac(nil, cadr(sym));
-      } else if (car(sym) == lambda_s) {
-        return cons(sym, func_interp(env, sym));
+      } else {
+        return nil;
       }
     }
     return or2(gethash(top_fb, sym),
@@ -1516,6 +1516,10 @@ static val do_eval(val form, val env, val ctx,
       debug_return (ret);
     } else {
       val fbinding = lookup_fun(env, oper);
+
+      if (!fbinding && consp(oper) && car(oper) == lambda_s)
+        fbinding = cons(oper, func_interp(env, oper));
+
       if (!fbinding) {
         last_form_evaled = form;
         eval_error(form, lit("~s does not name a function or operator"), oper, nao);
@@ -1833,6 +1837,9 @@ static val op_fun(val form, val env)
 {
   val name = second(form);
   val fbinding = lookup_fun(env, name);
+
+  if (!fbinding && consp(name) && car(name) == lambda_s)
+    fbinding = cons(name, func_interp(env, name));
 
   if (!fbinding)
     eval_error(form, lit("no function exists named ~s"), name, nao);
@@ -4855,10 +4862,9 @@ again:
         }
       }
 
-      if (consp(insym) && car(insym) == lambda_s)
+      if (consp(insym) && car(insym) == lambda_s) {
         insym_ex = expand(insym, menv);
-
-      if (!lookup_fun(menv, sym) && !special_operator_p(sym)) {
+      } else if (!lookup_fun(menv, sym) && !special_operator_p(sym)) {
         if (!bindable(sym))
           eval_warn(last_form_expanded,
                     lit("~s appears in operator position"), sym, nao);
