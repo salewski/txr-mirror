@@ -40971,6 +40971,14 @@ specifies the user data for the hash table, which can be retrieved using the
 .code hash-userdata
 function.
 
+Note: there doesn't exist a keyword for specifying the seed.
+This omission is deliberate. These hash construction keywords may appear in the
+hash literal
+.code #H
+syntax. A seed keyword would allow literals to specify their own seed, which
+would allow malicious hash literals to be crafted that perpetrate a hash
+collision attack against the parser.
+
 .coNP Functions @, hash-construct @ hash-from-pairs and @ hash-from-alist
 .synb
 .mets (hash-construct < hash-args << key-val-pairs )
