@@ -757,6 +757,23 @@ static val save_exe_set_entries(val dlt, val fun)
   return nil;
 }
 
+static val defset_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~adefset"), stdlib_path, nao));
+  return nil;
+}
+
+static val defset_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("defset"),
+    nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -806,6 +823,7 @@ void lisplib_init(void)
     dlt_register(dl_table, op_instantiate, op_set_entries);
 
   dlt_register(dl_table, save_exe_instantiate, save_exe_set_entries);
+  dlt_register(dl_table, defset_instantiate, defset_set_entries);
 
   reg_fun(intern(lit("try-load"), system_package), func_n1(lisplib_try_load));
 }

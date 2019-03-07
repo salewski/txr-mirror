@@ -12463,6 +12463,8 @@ are both open-ended. Code can be written quite easily in \*(TL to introduce
 new kinds of places, as well as new place-mutating operators.
 New places can be introduced with the help of the
 .code defplace
+or
+.code defset
 macro, or possibly the
 .code define-place-macro
 macro in simple cases when a new syntactic place can be expressed as a
@@ -33470,6 +33472,8 @@ evaluations of the place form.
 The programmer who implements a new place does not write expanders directly,
 but rather defines them via the
 .code defplace
+or
+.code defset
 macro.
 
 The programmer who implements a new place update macro likewise does not
@@ -34493,6 +34497,262 @@ cells:
       ^(macrolet ((,deleter () ^(pop ,',cell)))
          ,body)))
 .cble
+
+.coNP Macro @ defset
+.synb
+.mets (defset < name < params < new-val-sym < get-form << set-form )
+.mets (defset < get-fun-sym << set-fun-sym )
+.syne
+.desc
+The
+.code defset
+macro provides a mechanism for introducing a new kind of syntactic place.
+It is simpler to use than
+.code defplace
+and more concise, but not as general.
+
+The
+.code defset
+macro is designed for situations in which a function or macro which evaluates
+all of its arguments is required to serve as a syntactic place.
+It provides two flavors of syntax: the long form, indicated by giving
+.code defset
+five arguments, and a short form, which uses two arguments.
+
+In the long form of
+.codn defset ,
+the syntactic place is described by
+.meta name
+and
+.metn params .
+The
+.code defset
+form expresses the request that call to the function or operator named
+.meta name
+is to be treated as a syntactic place, which has arguments described by
+the parameter list
+.metn params .
+
+The
+.meta new-val-sym
+parameter is the name of a symbol which will be bound to
+an expression which calculates the new value being stored into
+the syntactic place. This is intended to be referenced in the
+.meta set-form
+only, which should ensure that the expression that
+.meta new-val-sym
+holds is evaluated only once.
+
+The
+.meta get-form
+and
+.meta set-form
+arguments specify forms which generate the code for, respectively,
+accessing the value of the place, and storing a new value.
+
+The
+.code defset
+macro makes the necessary arrangements such that when an operator form
+named by
+.meta name
+is treated as a syntactic place, then at macro-expansion time, code is
+generated to evaluate all of its argument expressions into machine-generated
+variables. The names of those variables are automatically bound to the
+corresponding symbols given in the
+.meta params
+argument list of the
+.code defset
+syntax. Code is also generated to evaluate the expression which gives the
+new value to be stored, and that is bound to a generated variable whose
+name is bound to the
+.code new-val-sym
+symbol. Then arrangements are made to invoke the
+.code get-form
+and
+.code set-form
+in an environment in which these symbol bindings are visible. The task of
+these forms is to insert the values of the symbols from
+.meta params
+and
+.meta new-val-sym
+into suitable code templates that will perform the access and store actions.
+
+If
+.meta params
+list contains optional parameters, the default value expressions of those
+parameters shall be evaluated in the scope of the
+.code defset
+definition.
+
+The
+.meta params
+list may specify a rest parameter. In the expansion, this parameter will
+capture a list of temporary symbols, corresponding to the list of variadic
+argument expressions. For instance if the
+.code defset
+parameter list for a place
+.code g
+is
+.codn "(a b . c)" ,
+featuring the rest parameter
+.codn c ,
+and its
+.meta set-form
+is
+.code "^(s ,a ,b ,*c)"
+and the place is invoked as
+.code "(g (i) (j) (k) (l))"
+then parameter
+.code c
+will be bound to a list of gensyms such as
+.code "(#:g0123 #:g0124)"
+so that the evaluation of
+.meta set-form
+will yield syntax resembling
+.codn "(s #:g0121 #:g0122 #:g0123 #:g0124)" .
+Here, gensyms
+.code #:g0123
+and
+.code #:g0124
+are understood to be bound to the values of the expressions
+.code (k)
+and
+.codn (l) ,
+the two trailing parameters corresponding to the rest parameter
+.codn c .
+
+Syntactic places defined by
+.code defset
+may not use improper syntax such as
+.codn "(set (g 1 2 . 3) v)" .
+
+The short, two-argument form of
+.code defset
+simply specifies the names of two functions or operators:
+.code get-fun-sym
+names the operator which accesses the place, and
+.code set-fun-sym
+names the operator which stores a new value into the place.
+It is expected that all arguments of these operators are evaluated
+expressions, and that the store operator takes one argument more
+than the access operator. The operators are otherwise assumed to be
+variadic: each instance of a place based on
+.code get-fun-sym
+individually determines how many arguments are passed to that operator
+and to the one named by
+.codn set-fun-sym .
+
+The definition
+.code "(defset g s)"
+means that
+.code "(inc (g x y))"
+will generate code which ensures that
+.code x
+and
+.code y
+are evaluated exactly once, and then those two values are passed as
+arguments to
+.code g
+which returns the current value of the place. That value is then incremented
+by one, and stored into the place by calling the
+.code s
+function/operator with three arguments: the two values that were passed to
+.code g
+and the new value.  The exact number of arguments is determined by each
+individual use of
+.code g
+as a place; the
+.code defset
+form doesn't specify the arity of
+.code g
+and
+.codn s ,
+only that
+.code s
+must accept one more argument relative to
+.codn g .
+
+The following equivalence holds between the short and long forms:
+
+.cblk
+   (defset g s)  <-->  (defset g (. r) n ^(g ,*r) ^(s ,*r ,n))
+.cble
+
+.TP* "Example:"
+
+Implementation of
+.code car
+as a syntactic place using a long form
+.codn defset :
+
+.cblk
+  (defset car (cell) new
+    ^(car ,cell)
+    (let ((n (gensym)))
+      ^(rlet ((,n ,new))
+         (progn (rplaca ,cell ,n) ,n))))
+.cble
+
+Given such a definition, the expression
+.code "(inc (car abc))"
+expands to code closely resembling:
+
+.cblk
+  (let ((#:g0014 (abc)))
+    (let ((#:g0028 (succ (car #:g0014))))
+        (rplaca #:g0014 #:g0028)
+            #:g0028))
+.cble
+
+The
+.code defset
+macro has arranged for the argument expression
+.code (abc)
+of
+.code car
+to be evaluated to a temporary variable
+.codn #:g0014 ,
+a
+.codn gensym .
+This, then, holds the
+.code cons
+cell being operated on.
+At macro-expansion time, the variable
+.code cell
+from the parameter list specified by the
+.code defset
+is bound to this symbol. The subexpression
+.code "(car #:0014)"
+is derived from the
+.meta get-form
+.code "^(car ,cell)"
+which inserted the value of
+.code cell
+into a backquote template, that value being the symbol
+.codn #:g0014 .
+The
+.code new
+variable was bound to the expression giving the new value, namely
+.codn "(succ (car #:g0014))" .
+The
+.meta set-form
+is careful to evaluate this only one time, storing its value into
+the temporary variable
+.codn #:g0028 ,
+referenced by the variable
+.codn n .
+The
+.metn set-form 's
+.code "(rplaca ,cell ,n)"
+fragment thus turned into
+.code "(rplaca #:g0014 #:g0028)"
+where
+.code #:g0014
+references the cons cell being operated on, and
+.code #:g0028
+the calculated new value to be stored into its
+.code car
+field.
 
 .coNP Macro @ define-place-macro
 .synb

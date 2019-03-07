@@ -54,11 +54,17 @@
                me.key key
                me.nreq (len rp)
                me.nopt (len opt)
-               me.nfix (+ me.nreq me.nopt))))))
+               me.nfix (+ me.nreq me.nopt)))))
+
+    (:method opt-syms (me)
+      (build
+        (each ((o me.opt))
+          (caseql (len o)
+            ((1 2) (add (car o)))
+            (3 (add (car o) (caddr o))))))))
 
   (defstruct (fun-param-parser syntax form) param-parser-base
     (mac-param-p nil))
 
   (defstruct (mac-param-parser syntax form) param-parser-base
     (mac-param-p t)))
-
