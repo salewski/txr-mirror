@@ -34625,6 +34625,39 @@ Syntactic places defined by
 .code defset
 may not use improper syntax such as
 .codn "(set (g 1 2 . 3) v)" .
+Although syntactic places defined by
+.code defset
+perform macro-parameter-like destructuring of the place form, binding
+unevaluated argument expressions to the parameter symbols,
+nested macro parameter lists are not supported:
+.meta params
+specifies a function parameter list.
+
+The parameter list may use parameter macros, keeping in mind that
+the parameter expansion is applied at the time the
+.code defset
+form is processed, specifying an expanded parameter list which
+receives unevaluated expressions. The
+.meta get-form
+and
+.meta set-form
+may refer to all symbols produced by parameter list expansion, other
+than generated symbols. For instance, if a parameter list macro
+.code :addx
+exists which adds the parameter symbol
+.code x
+to the parameter list, and this
+.code :addx
+is invoked in the
+.meta params
+list of a
+.codn defset ,
+then
+.code x
+will be visible to the
+.meta get-form
+and
+.metn set-form .
 
 The short, two-argument form of
 .code defset

@@ -56,37 +56,39 @@
                  ,body)))))))
 
 (defun defset-expander (env macform name params newval getform setform)
-  (let* ((fp (new fun-param-parser form macform syntax params))
+  (let* ((ap (analyze-params params))
+         (exp-params (car ap))
+         (total-syms (cadr ap))
+         (fp (new fun-param-parser form macform syntax exp-params))
          (fixpars (append fp.req fp.(opt-syms)))
-         (restpar fp.rest))
+         (restpar (if (symbol-package fp.rest) fp.rest))
+         (extsyms [keep-if symbol-package
+                           (diff total-syms (cons restpar fixpars))]))
     (with-gensyms (getter setter)
       ^(defplace (,name ,*params) body
          (,getter ,setter
-            (let* ((gpf-pairs (append (mapcar (op list (gensym) @1)
+            (let* ((gpf-pairs (append (mapcar (op list (gensym))
                                               (list ,*fixpars))))
                    (gpr-pairs (if ',restpar
-                                (mapcar (ret ^(,(gensym) ,@1)) ,restpar)))
+                                (mapcar (op list (gensym)) ,restpar)))
+                   (ext-pairs (mapcar (op list (gensym)) (list ,*extsyms)))
                    (pgens [mapcar car gpf-pairs])
-                   (rgens [mapcar car gpr-pairs]))
-              ^(alet (,*gpf-pairs ,*gpr-pairs)
+                   (rgens [mapcar car gpr-pairs])
+                   (egens [mapcar car ext-pairs]))
+              ^(alet (,*gpf-pairs ,*gpr-pairs ,*ext-pairs)
                  ,(expand ^(symacrolet (,*(zip ',fixpars
                                                (mapcar (ret ^',@1) pgens))
-                                         ,*(if gpr-pairs
-                                             ^((,',restpar ',rgens))))
+                                        ,*(zip ',extsyms
+                                               (mapcar (ret ^',@1) egens))
+                                        ,*(if gpr-pairs
+                                            ^((,',restpar ',rgens))))
                              (macrolet ((,,getter () ,',getform)
                                         (,,setter (,',newval) ,',setform))
                                ,body))
                           ,env))))))))
 
-(defun defset-expander-hairy (env macform name params newval getform setform)
-  (compile-error macform "param list macro support is being researched"))
-
 (defmacro usr:defset (:env e :form mf . args)
   (tree-case args
-    ((name (param . params) newval getform setform)
-     (if (and (keywordp param) (neq : param))
-       (defset-expander-hairy e mf . args)
-       (defset-expander e mf . args)))
     ((name (. params) newval getform setform)
      (defset-expander e mf . args))
     ((get-fun set-fun)
