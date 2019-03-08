@@ -67,10 +67,11 @@
     (with-gensyms (getter setter)
       ^(defplace (,name ,*params) body
          (,getter ,setter
-            (let* ((gpf-pairs (append (mapcar (op list (gensym))
-                                              (list ,*fixpars))))
+            (let* ((gpf-pairs (mapcar (op list (gensym)) (list ,*fixpars)))
                    (gpr-pairs (if ',restpar
-                                (mapcar (op list (gensym)) ,restpar)))
+                                (if (consp ,restpar)
+                                  (mapcar (op list (gensym)) ,restpar)
+                                  (list (list (gensym) ,restpar)))))
                    (ext-pairs (mapcar (op list (gensym)) (list ,*extsyms)))
                    (pgens [mapcar car gpf-pairs])
                    (rgens [mapcar car gpr-pairs])
@@ -81,7 +82,9 @@
                                         ,*(zip ',extsyms
                                                (mapcar (ret ^',@1) egens))
                                         ,*(if gpr-pairs
-                                            ^((,',restpar ',rgens))))
+                                            (if (consp ,restpar)
+                                              ^((,',restpar ',rgens))
+                                              ^((,',restpar ',(car rgens))))))
                              (macrolet ((,,getter () ,',getform)
                                         (,,setter (,',newval) ,',setform))
                                ,body))

@@ -34623,8 +34623,21 @@ the two trailing parameters corresponding to the rest parameter
 
 Syntactic places defined by
 .code defset
-may not use improper syntax such as
-.codn "(set (g 1 2 . 3) v)" .
+that have a rest parameter may be invoked with improper syntax such as
+.codn "(set (g x y . z) v)" .
+In this situation, that rest parameter will be bound to the name of
+a temporary variable which holds the value of
+.code z
+rather than to a list of temporary variable names holding the values
+of trailing expressions.
+The
+.code get-form
+and
+.code set-form
+must be prepared for this situation. In particular, the rest parameter's value
+is an atom, then it cannot be spliced in the backquote syntax, except at the
+last position of a list.
+
 Although syntactic places defined by
 .code defset
 perform macro-parameter-like destructuring of the place form, binding
