@@ -4673,10 +4673,10 @@ again:
       val params = pop(&args);
       val expr = pop(&args);
       val body = args;
-      val new_menv = make_var_shadowing_env(menv, get_param_syms(params));
-      val ctx_expr_ex = expand(ctx_expr, menv);
       cons_bind (params_ex, body_ex0,
                  expand_params(params, body, menv, t, form));
+      val new_menv = make_var_shadowing_env(menv, get_param_syms(params_ex));
+      val ctx_expr_ex = expand(ctx_expr, menv);
       val body_ex = expand_progn(body_ex0, new_menv);
       val expr_ex = expand(expr, new_menv);
 
