@@ -35805,6 +35805,11 @@ If the
 .meta divisor
 is omitted, it defaults to 1.
 
+A zero
+.meta divisor
+results in an exception of type
+.codn numeric-error .
+
 If both inputs are integers,
 the result is of type integer.
 
@@ -35897,6 +35902,13 @@ then generalized into the floating point domain. For instance the expression
 yields a residue of 0.25 because 0.5 "goes into" 0.75 only
 once, with a "remainder" of 0.25.
 
+If
+.meta divisor
+is zero,
+.code mod
+throws an exception of type
+.codn numeric-error .
+
 .coNP Functions @, trunc-rem @, floor-rem @ ceil-rem and @ round-rem
 .synb
 .mets (trunc-rem < dividend <> [ divisor ])
@@ -35934,6 +35946,11 @@ value obeys the following identity:
 .cblk
 .mets (eql < remainder (- < dividend >> (* divisor << quotient )))
 .cble
+
+If
+.meta divisor
+is zero, these functions throw an exception of type
+.codn numeric-error .
 
 .coNP Functions @, sin @, cos @, tan @, asin @, acos @ atan and @ atan2
 .synb
