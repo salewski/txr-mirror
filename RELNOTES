@@ -1,3 +1,49 @@
+                                    TXR 213
+                                   2019-03-08
+
+
+  Features
+
+  - new load-for function:
+    - loads another module conditionally on a variable,
+      function, struct or package not being defined.
+
+  - listener:
+    - input limit raise from 1023 to 4095 characters.
+
+  - new defset macro:
+    - like defsetf in ANSI CL; define function-like syntactic places easily.
+
+  Bugs
+
+  - listener:
+    - fixed some lingering line wrap glitches in optimized
+      character append logic.
+    - fixed buffer overflow when loading history, when lines
+      are too large for the maximum input length.
+    - fixed hang when evaluation produces cirular object,
+      even though *print-circle* is on.
+
+  - library symbol regression:
+    - two library symbols regressed into the sys package: the --
+      delimiter in :key parameter lists and the lnew (lazy new)
+      for instantiating structs lazily.
+
+  - disassembler:
+    - operands of getlx, setlx instructions disassembled wrongly.
+
+  - compiler:
+    - fixed two cases of incorrect handling of lambda expressions
+      that are immediately called.
+    - fixed (fun (lambda ...)) operator yielding an interpreted function,
+      even though it's compiled.
+
+  - core semantics:
+    - lambda expressions are no longer fboundp.
+    - incorrect macro environment handling when expanding tree-bind.
+
+
+
                                     TXR 212
                                    2019-02-24
 

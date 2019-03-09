@@ -123,12 +123,13 @@ extern val uid_s, uint16_s, uint32_s, uint64_s, uint8_s;
 extern val uint_s, ulong_s, unbound_s, unget_byte_s, unget_char_s;
 extern val union_s, unique_s, unquote_s, until_s, until_star_s;
 extern val upcase_k, uref_s, user_package_s, userdata_k, ushort_s;
-extern val uw_protect_s, val_s, var_k, var_s, vars_k;
-extern val vec_list_s, vec_s, vecref_s, vector_lit_s, vm_closure_s;
-extern val vm_desc_s, void_s, warning_s, wchar_s, weak_keys_k;
-extern val weak_vals_k, when_s, while_s, while_star_s, whole_k;
-extern val wild_s, word_char_k, wrap_k, wstr_d_s, wstr_s;
-extern val year_s, zap_s, zarray_s, zeroplus_s, zone_s;
+extern val usr_var_s, uw_protect_s, val_s, var_k, var_s;
+extern val vars_k, vec_list_s, vec_s, vecref_s, vector_lit_s;
+extern val vm_closure_s, vm_desc_s, void_s, warning_s, wchar_s;
+extern val weak_keys_k, weak_vals_k, when_s, while_s, while_star_s;
+extern val whole_k, wild_s, word_char_k, wrap_k, wstr_d_s;
+extern val wstr_s, year_s, zap_s, zarray_s, zeroplus_s;
+extern val zone_s;
 
 #if CONFIG_DEBUG_SUPPORT
 extern val debug_quit_s;
@@ -252,12 +253,13 @@ val *protected_sym[] = {
   &uint_s, &ulong_s, &unbound_s, &unget_byte_s, &unget_char_s,
   &union_s, &unique_s, &unquote_s, &until_s, &until_star_s,
   &upcase_k, &uref_s, &user_package_s, &userdata_k, &ushort_s,
-  &uw_protect_s, &val_s, &var_k, &var_s, &vars_k,
-  &vec_list_s, &vec_s, &vecref_s, &vector_lit_s, &vm_closure_s,
-  &vm_desc_s, &void_s, &warning_s, &wchar_s, &weak_keys_k,
-  &weak_vals_k, &when_s, &while_s, &while_star_s, &whole_k,
-  &wild_s, &word_char_k, &wrap_k, &wstr_d_s, &wstr_s,
-  &year_s, &zap_s, &zarray_s, &zeroplus_s, &zone_s,
+  &usr_var_s, &uw_protect_s, &val_s, &var_k, &var_s,
+  &vars_k, &vec_list_s, &vec_s, &vecref_s, &vector_lit_s,
+  &vm_closure_s, &vm_desc_s, &void_s, &warning_s, &wchar_s,
+  &weak_keys_k, &weak_vals_k, &when_s, &while_s, &while_star_s,
+  &whole_k, &wild_s, &word_char_k, &wrap_k, &wstr_d_s,
+  &wstr_s, &year_s, &zap_s, &zarray_s, &zeroplus_s,
+  &zone_s,
 
 #if CONFIG_DEBUG_SUPPORT
   &debug_quit_s,
