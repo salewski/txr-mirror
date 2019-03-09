@@ -55,7 +55,7 @@
                           (,,setter (val) ^(,',',set-fun ,*',pgens ,val)))
                  ,body)))))))
 
-(defun defset-expander (env macform name params newval getform setform)
+(defun defset-expander (env macform name params newval setform)
   (let* ((ap (analyze-params params))
          (exp-params (car ap))
          (total-syms (cadr ap))
@@ -64,35 +64,42 @@
          (restpar (if (symbol-package fp.rest) fp.rest))
          (extsyms [keep-if symbol-package
                            (diff total-syms (cons restpar fixpars))]))
-    (with-gensyms (getter setter)
-      ^(defplace (,name ,*params) body
+    (with-gensyms (getter setter args)
+      ^(defplace (,name . ,args) body
          (,getter ,setter
-            (let* ((gpf-pairs (mapcar (op list (gensym)) (list ,*fixpars)))
-                   (gpr-pairs (if ',restpar
-                                (if (consp ,restpar)
-                                  (mapcar (op list (gensym)) ,restpar)
-                                  (list (list (gensym) ,restpar)))))
-                   (ext-pairs (mapcar (op list (gensym)) (list ,*extsyms)))
-                   (pgens [mapcar car gpf-pairs])
-                   (rgens [mapcar car gpr-pairs])
-                   (egens [mapcar car ext-pairs]))
-              ^(alet (,*gpf-pairs ,*gpr-pairs ,*ext-pairs)
-                 ,(expand ^(symacrolet (,*(zip ',fixpars
-                                               (mapcar (ret ^',@1) pgens))
-                                        ,*(zip ',extsyms
-                                               (mapcar (ret ^',@1) egens))
-                                        ,*(if gpr-pairs
-                                            (if (consp ,restpar)
-                                              ^((,',restpar ',rgens))
-                                              ^((,',restpar ',(car rgens))))))
-                             (macrolet ((,,getter () ,',getform)
-                                        (,,setter (,',newval) ,',setform))
-                               ,body))
-                          ,env))))))))
+           (tree-bind (,*params) ,args
+             (let* ((gpf-pairs (mapcar (op list (gensym)) (list ,*fixpars)))
+                    (gpr-pairs (if ',restpar
+                                 (if (consp ,restpar)
+                                   (mapcar (op list (gensym)) ,restpar)
+                                   (list (list (gensym) ,restpar)))))
+                    (ext-pairs (mapcar (op list (gensym)) (list ,*extsyms)))
+                    (pgens [mapcar car gpf-pairs])
+                    (rgens [mapcar car gpr-pairs])
+                    (egens [mapcar car ext-pairs])
+                    (all-pairs (append gpf-pairs gpr-pairs ext-pairs))
+                    (agens (collect-each ((a ,args))
+                             (let ((p [pos a all-pairs eq cadr]))
+                               (if p
+                                 (car (del [all-pairs p]))
+                                 a)))))
+               ^(alet (,*gpf-pairs ,*gpr-pairs ,*ext-pairs)
+                  ,(expand ^(symacrolet (,*(zip ',fixpars
+                                                (mapcar (ret ^',@1) pgens))
+                                         ,*(zip ',extsyms
+                                                (mapcar (ret ^',@1) egens))
+                                         ,*(if gpr-pairs
+                                             (if (consp ,restpar)
+                                               ^((,',restpar ',rgens))
+                                               ^((,',restpar ',(car rgens))))))
+                              (macrolet ((,,getter () ^(,',',name ,',*agens))
+                                         (,,setter (,',newval) ,',setform))
+                                ,body))
+                           ,env)))))))))
 
 (defmacro usr:defset (:env e :form mf . args)
   (tree-case args
-    ((name (. params) newval getform setform)
+    ((name (. params) newval setform)
      (defset-expander e mf . args))
     ((get-fun set-fun)
      (defset-expander-simple mf get-fun set-fun))
