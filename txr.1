@@ -35531,6 +35531,9 @@ follows, then that value is divided by that subsequent divisor.
 This process repeats until all divisors are exhausted, and the
 value of the last division is returned.
 
+A division by zero throws an exception of type
+.codn numeric-error .
+
 .coNP Functions @ sum and @ prod
 .synb
 .mets (sum < sequence <> [ keyfun ])
@@ -36037,8 +36040,16 @@ similarly to the way nested exponents work in standard algebraic
 notation.
 
 Exponentiation is done pairwise using a binary operation.
-If both operands to this binary operation are integers, then the
-result is an integer. If either operand is a float, then the other
+If both operands to this binary operation are non-negative integers, then the
+result is an integer.
+
+If the exponent is negative, and the base is zero, the situation is
+treated as a division by zero: an exception of type
+.code numeric-error
+is thrown. Otherwise, a negative exponent is converted to floating-point,
+if it already isn't, and a floating-point exponentiation is performed.
+
+If either operand is a float, then the other
 operand is converted to a float, and a floating point exponentiation
 is performed. Exponentiation that would produce a complex number is
 not supported.

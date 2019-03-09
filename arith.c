@@ -1966,11 +1966,14 @@ tail:
       mp_int tmpa;
       val n;
       mp_err mpe = MP_OKAY;
-      if (b < 0)
-        goto negexp;
-      if (bnum == zero)
+      if (b < 0) {
+        if (anum == zero)
+          goto divzero;
+        return flo(pow(a, b));
+      }
+      if (b == 0)
         return one;
-      if (bnum == one)
+      if (b == 1)
         return anum;
       n = make_bignum();
       mp_init(&tmpa);
@@ -1995,8 +1998,12 @@ tail:
       mp_int tmpa;
       val n;
       mp_err mpe = MP_OKAY;
-      if (mp_cmp_z(mp(bnum)) == MP_LT)
-        goto negexp;
+      if (mp_cmp_z(mp(bnum)) == MP_LT) {
+        if (anum == zero)
+          goto divzero;
+        bnum = flo_int(bnum);
+        goto tail;
+      }
       n = make_bignum();
       mp_init(&tmpa);
       mp_set_intptr(&tmpa, a);
@@ -2011,11 +2018,15 @@ tail:
       cnum b = c_n(bnum);
       val n;
       mp_err mpe = MP_OKAY;
-      if (b < 0)
-        goto negexp;
-      if (bnum == zero)
+      if (b < 0) {
+        if (mp_cmp_z(mp(anum)) == MP_LT)
+          goto divzero;
+        anum = flo_int(anum);
+        goto tail;
+      }
+      if (b == 0)
         return one;
-      if (bnum == one)
+      if (b == 1)
         return anum;
       n = make_bignum();
       if (sizeof (int_ptr_t) <= sizeof (mp_digit)) {
@@ -2035,8 +2046,13 @@ tail:
     {
       val n;
       mp_err mpe = MP_OKAY;
-      if (mp_cmp_z(mp(bnum)) == MP_LT)
-        goto negexp;
+      if (mp_cmp_z(mp(bnum)) == MP_LT) {
+        if (mp_cmp_z(mp(anum)) == MP_LT)
+          goto divzero;
+        anum = flo_int(anum);
+        bnum = flo_int(bnum);
+        goto tail;
+      }
       n = make_bignum();
       mpe = mp_expt(mp(anum), mp(bnum), mp(n));
       if (mpe != MP_OKAY)
@@ -2045,12 +2061,32 @@ tail:
       return n;
     }
   case TYPE_PAIR(NUM, FLNUM):
-    /* TODO: error checking */
-    return flo(pow(c_n(anum), c_flo(bnum, self)));
+    {
+      cnum a = c_n(anum);
+      double b = c_flo(bnum, self);
+
+      if (a == 0 && b < 0)
+        goto divzero;
+      return flo(pow(a, b));
+    }
   case TYPE_PAIR(FLNUM, NUM):
+    {
+      double a = c_flo(anum, self);
+      cnum b = c_n(bnum);
+
+      if (a == 0 && b < 0)
+        goto divzero;
+      return flo(pow(a, b));
+    }
     return flo(pow(c_flo(anum, self), c_n(bnum)));
   case TYPE_PAIR(FLNUM, FLNUM):
-    return flo(pow(c_flo(anum, self), c_flo(bnum, self)));
+    {
+      double a = c_flo(anum, self);
+      double b = c_flo(bnum, self);
+      if (a == 0 && b < 0)
+        goto divzero;
+      return flo(pow(a, b));
+    }
   case TYPE_PAIR(BGNUM, FLNUM):
     anum = flo_int(anum);
     goto tail;
@@ -2060,8 +2096,8 @@ tail:
   }
 
   invalid_ops(self, anum, bnum);
-negexp:
-  uw_throwf(type_error_s, lit("~a: negative exponent"), self, nao);
+divzero:
+  divzero(self);
 }
 
 val exptmod(val base, val exp, val mod)
