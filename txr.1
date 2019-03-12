@@ -11026,7 +11026,14 @@ syntax does not intern the symbol
 .code bar
 in the
 .code foo
-package; the symbol must exist or else the syntax is erroneous.
+package; the symbol must exist and be an exported symbol, or else the syntax is
+erroneous. In ANSI Common Lisp, the syntax
+.code foo::bar
+does intern
+.code foo
+in the
+.code bar
+package. \*(TX's package system has no double-colon syntax, and lacks the concept of exported symbols.
 
 .NP* Uninterned Symbols
 
