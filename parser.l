@@ -137,6 +137,12 @@ static void yyerrprepf(scanner_t *scanner, val fmt, ...)
   }
 }
 
+static void out_of_range_float(scanner_t *scanner, val tok)
+{
+    yyerrorf(scanner, lit("out-of-range floating-point literal: ~a"),
+             tok, nao);
+}
+
 static wchar_t char_esc(int letter)
 {
   switch (letter) {
@@ -344,7 +350,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->val = flo_str(str);
+  if ((yylval->val = flo_str(str)) == nil)
+    out_of_range_float(yyg, str);
+
   return NUMBER;
 }
 
@@ -360,7 +368,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->val = flo_str(str);
+  if ((yylval->val = flo_str(str)) == nil)
+    out_of_range_float(yyg, str);
+
   return NUMBER;
 }
 
@@ -372,7 +382,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  yylval->val = flo_str(str);
+  if ((yylval->val = flo_str(str)) == nil)
+    out_of_range_float(yyg, str);
+
   return NUMBER;
 }
 
