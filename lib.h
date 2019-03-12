@@ -499,7 +499,7 @@ extern val query_error_s, file_error_s, process_error_s, syntax_error_s;
 extern val timeout_error_s, system_error_s, alloc_error_s;
 extern val warning_s, defr_warning_s, restart_s, continue_s;
 extern val gensym_counter_s;
-extern val rplaca_s, rplacd_s;
+extern val rplaca_s, rplacd_s, seq_iter_s;
 
 #define gensym_counter (deref(lookup_var_l(nil, gensym_counter_s)))
 
@@ -532,6 +532,9 @@ seq_info_t seq_info(val cobj);
 void seq_iter_init(val self, seq_iter_t *it, val obj);
 void seq_iter_rewind(val self, seq_iter_t *it);
 INLINE int seq_get(seq_iter_t *it, val *pval) { return it->get(it, pval); }
+val seq_begin(val obj);
+val seq_next(val iter, val end_val);
+val seq_reset(val iter, val obj);
 val throw_mismatch(val self, val obj, type_t);
 INLINE val type_check(val self, val obj, type_t typecode)
 {

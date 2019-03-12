@@ -109,7 +109,7 @@ val query_error_s, file_error_s, process_error_s, syntax_error_s;
 val timeout_error_s, system_error_s, alloc_error_s;
 val warning_s, defr_warning_s, restart_s, continue_s;
 val gensym_counter_s, nullify_s, from_list_s, lambda_set_s, length_s;
-val rplaca_s, rplacd_s;
+val rplaca_s, rplacd_s, seq_iter_s;
 
 val nothrow_k, args_k, colon_k, auto_k, fun_k;
 val wrap_k, reflect_k;
@@ -400,6 +400,57 @@ void seq_iter_init(val self, seq_iter_t *it, val obj)
   default:
     unsup_obj(self, obj);
   }
+}
+
+static void seq_iter_mark(val seq_iter)
+{
+  struct seq_iter *si = coerce(struct seq_iter *, seq_iter->co.handle);
+
+  gc_mark(si->inf.obj);
+
+  switch (si->inf.kind) {
+  case SEQ_LISTLIKE:
+  case SEQ_HASHLIKE:
+    gc_mark(si->ui.iter);
+    break;
+  default:
+    break;
+  }
+}
+
+static struct cobj_ops seq_iter_ops = cobj_ops_init(eq,
+                                                    cobj_print_op,
+                                                    cobj_destroy_free_op,
+                                                    seq_iter_mark,
+                                                    cobj_eq_hash_op);
+
+val seq_begin(val obj)
+{
+  val self = lit("seq-begin");
+  val si_obj;
+  struct seq_iter *si = coerce(struct seq_iter *, chk_calloc(1, sizeof *si));
+  si_obj = cobj(coerce(mem_t *, si), seq_iter_s, &seq_iter_ops);
+  seq_iter_init(self, si, obj);
+  si->inf.obj = nil;
+  return si_obj;
+}
+
+val seq_next(val iter, val end_val)
+{
+  val self = lit("seq-next");
+  struct seq_iter *si = coerce(struct seq_iter *,
+                               cobj_handle(self, iter, seq_iter_s));
+  val item = nil;
+  return if3(seq_get(si, &item), item, end_val);
+}
+
+val seq_reset(val iter, val obj)
+{
+  val self = lit("seq-reset");
+  struct seq_iter *si = coerce(struct seq_iter *,
+                               cobj_handle(self, iter, seq_iter_s));
+  seq_iter_init(self, si, obj);
+  return iter;
 }
 
 val throw_mismatch(val self, val obj, type_t t)
@@ -11087,6 +11138,7 @@ static void obj_init(void)
   length_s = intern(lit("length"), user_package);
   rplaca_s = intern(lit("rplaca"), user_package);
   rplacd_s = intern(lit("rplacd"), user_package);
+  seq_iter_s = intern(lit("seq-iter"), user_package);
 
   args_k = intern(lit("args"), keyword_package);
   nothrow_k = intern(lit("nothrow"), keyword_package);

@@ -6858,6 +6858,9 @@ void eval_init(void)
   reg_fun(intern(lit("where"), user_package), func_n2(where));
   reg_fun(intern(lit("select"), user_package), func_n2(sel));
   reg_fun(intern(lit("relate"), user_package), func_n3o(relate, 2));
+  reg_fun(intern(lit("seq-begin"), user_package), func_n1(seq_begin));
+  reg_fun(intern(lit("seq-next"), user_package), func_n2(seq_next));
+  reg_fun(intern(lit("seq-reset"), user_package), func_n2(seq_reset));
 
   reg_fun(intern(lit("rcons"), user_package), func_n2(rcons));
   reg_fun(intern(lit("rangep"), user_package), func_n1(rangep));

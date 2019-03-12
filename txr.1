@@ -30332,6 +30332,66 @@ sequences using
 and tests for termination with
 .codn nil .
 
+.SS* Open Sequence Traversal
+
+Functions in this category perform efficient traversal of sequences
+of various kinds.
+
+.coNP Function @ seq-begin
+.synb
+.mets (seq-begin << object )
+.syne
+.desc
+The
+.code seq-begin
+function returns an iterator object specialized to the task of traversing
+the sequence represented by the input
+.metn object .
+
+If
+.meta object
+isn't a sequence, an exception is thrown.
+
+.coNP Function @ seq-next
+.synb
+.mets (seq-next < iter << end-value )
+.syne
+.desc
+The
+.code seq-next
+function retrieves the next available item from the sequence iterated by
+.metn iter ,
+which must be an object returned by
+.codn seq-begin .
+
+If the sequence has no more items to be traversed, then
+.meta end-value
+is returned instead.
+
+Note: to avoid ambiguities, the application should provide an
+.meta end-value
+which is guaranteed distinct from any item in the sequence, such as a
+freshly allocated object.
+
+.coNP Function @ seq-reset
+.synb
+.mets (seq-reset < iter << object )
+.syne
+.desc
+The
+.code seq-reset
+re-initializes the existing iterator object
+.meta iter
+to begin a new traversal over the given
+.metn object ,
+which must be a value of a kind that would be a suitable argument for
+.codn seq-begin .
+
+The
+.code seq-reset
+function returns
+.metn iter .
+
 .SS* Procedural List Construction
 
 \*(TL provides an a structure type called
