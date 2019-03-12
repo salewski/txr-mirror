@@ -27950,7 +27950,7 @@ If
 is a sequence, the
 .code where
 function returns
-a list of the numeric indices of those of its elements which satisfy
+a lazy list of the numeric indices of those of its elements which satisfy
 .metn function .
 The numeric indices appear in increasing order.
 
@@ -27958,9 +27958,10 @@ If
 .meta object
 is a hash, the
 .code where
-function returns an unordered list
+function returns a lazy list of
 of keys which have values which satisfy
 .metn function .
+These keys are not subject to an order.
 
 .meta function
 must be a function that can be called with one argument.

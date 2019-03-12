@@ -10758,67 +10758,102 @@ val rsearch(val seq, val key, val testfun, val keyfun)
   }
 }
 
-val where(val func, val seq)
+static val lazy_where_func(val seq_iter, val lcons)
 {
-  list_collect_decl (out, ptail);
+  struct seq_iter *si = coerce(struct seq_iter *, seq_iter->co.handle);
+  val index = succ(us_car(lcons));
+  val func = si->inf.obj;
 
-  if (opt_compat && opt_compat <= 100) {
-    val f = seq, s = func;
-    func = s;
-    seq = f;
+  for (;;) {
+    val item;
+    if (!si->get(si, &item)) {
+      si->inf.obj = nil;
+      return nil;
+    }
+    if (funcall1(func, item))
+      break;
+    index = succ(index);
   }
 
-  seq = nullify(seq);
+  {
+    val cell = make_lazy_cons(lcons_fun(lcons));
+    us_rplaca(cell, index);
+    us_rplacd(lcons, cell);
+    return nil;
+  }
+}
 
-  switch (type(seq)) {
-  case COBJ:
-    if (seq->co.cls == hash_s) {
-      val hiter = hash_begin(seq);
-      val cell;
+static val lazy_where_hash_func(val hash_iter, val lcons)
+{
+  val func = us_cdr(lcons);
+  val key;
 
-      while ((cell = hash_next(hiter)))
-        if (funcall1(func, us_cdr(cell)))
-          ptail = list_collect(ptail, us_car(cell));
+  for (;;) {
+    val hcell = hash_next(hash_iter);
+    if (!hcell) {
+      us_rplacd(lcons, nil);
+      return nil;
+    }
+    if (funcall1(func, us_cdr(hcell))) {
+      key = us_car(hcell);
       break;
     }
-    /* fallthrough */
-  case NIL:
-  case CONS:
-  case LCONS:
-    {
-      val idx = zero;
-
-      gc_hint(seq);
-
-      for (; seq; seq = cdr(seq), idx = plus(idx, one)) {
-        val elt = car(seq);
-        if (funcall1(func, elt))
-          ptail = list_collect(ptail, idx);
-      }
-    }
-    break;
-  case LIT:
-  case STR:
-  case LSTR:
-  case VEC:
-    {
-      val idx;
-      val len = length(seq);
-
-      gc_hint(seq);
-
-      for (idx = zero; lt(idx, len); idx = plus(idx, one)) {
-        val elt = ref(seq, idx);
-        if (funcall1(func, elt))
-          ptail = list_collect(ptail, idx);
-      }
-    }
-    break;
-  default:
-    type_mismatch(lit("where: ~s is not a sequence"), seq, nao);
   }
 
-  return out;
+  {
+    val cell = make_lazy_cons(lcons_fun(lcons));
+    us_rplaca(cell, key);
+    us_rplacd(cell, func);
+    us_rplacd(lcons, cell);
+    return nil;
+  }
+}
+
+val where(val func, val seq)
+{
+  if (!hashp(seq)) {
+    val seq_iter = seq_begin(seq);
+    val index = zero;
+    struct seq_iter *si = coerce(struct seq_iter *, seq_iter->co.handle);
+
+    for (;;) {
+      val item;
+      if (!si->get(si, &item)) {
+        si->inf.obj = nil;
+        return nil;
+      }
+      if (funcall1(func, item))
+        break;
+      index = succ(index);
+    }
+
+    {
+      val cell = make_lazy_cons(func_f1(seq_iter, lazy_where_func));
+      si->inf.obj = func;
+      us_rplaca(cell, index);
+      return cell;
+    }
+  } else {
+    val hash_iter = hash_begin(seq);
+    val key;
+
+    for (;;) {
+      val hcell = hash_next(hash_iter);
+      if (!hcell)
+        return nil;
+      if (funcall1(func, us_cdr(hcell))) {
+        key = us_car(hcell);
+        break;
+      }
+    }
+
+    {
+      val cell = make_lazy_cons(func_f1(hash_iter, lazy_where_hash_func));
+      us_rplaca(cell, key);
+      us_rplacd(cell, func);
+      return cell;
+    }
+  }
 }
 
 val sel(val seq_in, val where_in)
