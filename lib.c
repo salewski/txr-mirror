@@ -3268,12 +3268,32 @@ cnum c_fixnum(val num, val self)
   }
 }
 
+#if HAVE_FPCLASSIFY
+INLINE int bad_float(double d)
+{
+  switch fpclassify(d) {
+  case FP_ZERO:
+  case FP_NORMAL:
+  case FP_SUBNORMAL:
+    return 0;
+  default:
+    return 1;
+  }
+}
+#else
+#define bad_float(d) (0)
+#endif
+
 val flo(double n)
 {
-  val obj = make_obj();
-  obj->fl.type = FLNUM;
-  obj->fl.n = n;
-  return obj;
+  if (bad_float(n)) {
+    uw_throw(numeric_error_s, lit("out-of-range floating-point result"));
+  } else {
+    val obj = make_obj();
+    obj->fl.type = FLNUM;
+    obj->fl.n = n;
+    return obj;
+  }
 }
 
 double c_flo(val num, val self)

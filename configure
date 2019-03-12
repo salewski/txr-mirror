@@ -1432,6 +1432,33 @@ else
   printf "no\n"
 fi
 
+printf "Checking for fpclassify ..."
+
+cat > conftest.c <<!
+#include <math.h>
+
+int main(void)
+{
+  double x = 3.14;
+  switch (fpclassify(x)) {
+  case FP_ZERO:
+  case FP_NORMAL:
+  case FP_SUBNORMAL:
+  case FP_INFINITE:
+  case FP_NAN:
+  default:
+    break;
+  }
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_FPCLASSIFY 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
 #
 # Valgrind
 #
