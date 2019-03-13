@@ -664,6 +664,7 @@ mem_t *chk_xalloc(ucnum m, ucnum n, val self);
 val cons(val car, val cdr);
 val make_lazy_cons(val func);
 val make_lazy_cons_car(val func, val car);
+val make_lazy_cons_car_cdr(val func, val car, val cdr);
 void rcyc_cons(val cons);
 void rcyc_list(val list);
 void rcyc_empty(void);

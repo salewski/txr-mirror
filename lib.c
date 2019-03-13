@@ -3012,6 +3012,16 @@ val make_lazy_cons_car(val func, val car)
   return obj;
 }
 
+val make_lazy_cons_car_cdr(val func, val car, val cdr)
+{
+  val obj = make_obj();
+  obj->lc.type = LCONS;
+  obj->lc.car = car;
+  obj->lc.cdr = cdr;
+  obj->lc.func = func;
+  return obj;
+}
+
 void rcyc_cons(val cons)
 {
   cons->c.cdr = recycled_conses;
@@ -10776,9 +10786,7 @@ static val lazy_where_func(val seq_iter, val lcons)
   }
 
   {
-    val cell = make_lazy_cons(lcons_fun(lcons));
-    us_rplaca(cell, index);
-    us_rplacd(lcons, cell);
+    us_rplacd(lcons, make_lazy_cons_car(lcons_fun(lcons), index));
     return nil;
   }
 }
@@ -10801,10 +10809,7 @@ static val lazy_where_hash_func(val hash_iter, val lcons)
   }
 
   {
-    val cell = make_lazy_cons(us_lcons_fun(lcons));
-    us_rplaca(cell, key);
-    us_rplacd(cell, func);
-    us_rplacd(lcons, cell);
+    us_rplacd(lcons, make_lazy_cons_car_cdr(us_lcons_fun(lcons), key, func));
     return nil;
   }
 }
@@ -10828,9 +10833,8 @@ val where(val func, val seq)
     }
 
     {
-      val cell = make_lazy_cons(func_f1(seq_iter, lazy_where_func));
+      val cell = make_lazy_cons_car(func_f1(seq_iter, lazy_where_func), index);
       si->inf.obj = func;
-      us_rplaca(cell, index);
       return cell;
     }
   } else {
@@ -10847,12 +10851,8 @@ val where(val func, val seq)
       }
     }
 
-    {
-      val cell = make_lazy_cons(func_f1(hash_iter, lazy_where_hash_func));
-      us_rplaca(cell, key);
-      us_rplacd(cell, func);
-      return cell;
-    }
+    return make_lazy_cons_car_cdr(func_f1(hash_iter, lazy_where_hash_func),
+                                  key, func);
   }
 }
 
