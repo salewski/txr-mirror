@@ -20137,7 +20137,7 @@ functions than less functions, the excess key functions are ignored.
 .SS* Lazy Lists and Lazy Evaluation
 .coNP Function @ make-lazy-cons
 .synb
-.mets (make-lazy-cons << function )
+.mets (make-lazy-cons < function >> [ car <> [ cdr ]])
 .syne
 .desc
 The function
@@ -20155,9 +20155,15 @@ A lazy cons has
 and
 .code cdr
 fields like a regular cons, and those
-fields are initialized to
-.code nil
-when the lazy cons is created. A lazy cons also
+fields are initialized to the values of the
+.meta car
+and
+.meta cdr
+arguments of
+.code make-lazy-cons
+when the lazy cons is created. These arguments default to
+.meta nil
+if omitted.  A lazy cons also
 has an update function, which is specified by the
 .meta function
 argument to
@@ -20182,12 +20188,19 @@ and
 .code cdr
 fields. Once the function is called, it is removed
 from the lazy cons: the lazy cons no longer has an update function.
-If the function attempts to retrieve the value of the
+If the update function itself attempts to retrieve the value of the
 lazy cons cell's
 .code car
 or
 .code cdr
 field, it will be recursively invoked.
+
+The functions
+.code lcons-car
+and
+.code lcons-cdr
+may be used to access the fields of a lazy cons without
+triggering the update function.
 
 Storing a value into either the
 .code car
@@ -20270,6 +20283,45 @@ executing, it is still accessible. This allows the update function
 to retrieve a reference to itself and propagate itself into
 another lazy cons (as in the example under
 .codn make-lazy-cons ).
+
+.coNP Functions @ lcons-car and @ lcons-cdr
+.synb
+.mets (lcons-car << lazy-cons )
+.mets (lcons-cdr << lazy-cons )
+.syne
+.desc
+The functions
+.code lcons-car
+and
+.code lcons-cdr
+retrieve the
+.code car
+and
+.code cdr
+fields of
+.metn lazy-cons ,
+without triggering the invocation of its associated update function.
+
+The
+.meta lazy-cons
+argument must be an object of type
+.codn lcons .
+Unlike the functions
+.code car
+and
+.codn cdr ,
+These functions cannot be applied to any other type of object.
+
+Note: these functions may be used by the update function to retrieve
+the values which were stored into
+.meta lazy-cons
+by the
+.code make-lazy-cons
+constructor, without triggering recursion. The function may then
+overwrite either or both of these values.  This allows the fields of the lazy
+cons to store state information necessary for the propagation of a lazy list.
+If that state information consists of no more than two values, then
+no additional context object need be allocated.
 
 .coNP Macro @ lcons
 .synb

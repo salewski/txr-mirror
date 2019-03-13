@@ -6343,8 +6343,11 @@ void eval_init(void)
   reg_mac(intern(lit("load-for"), user_package), func_n2(me_load_for));
 
   reg_fun(cons_s, func_n2(cons));
-  reg_fun(intern(lit("make-lazy-cons"), user_package), func_n1(make_lazy_cons));
+  reg_fun(intern(lit("make-lazy-cons"), user_package),
+          func_n3o(make_lazy_cons_pub, 1));
   reg_fun(intern(lit("lcons-fun"), user_package), func_n1(lcons_fun));
+  reg_fun(intern(lit("lcons-car"), user_package), func_n1(lcons_car));
+  reg_fun(intern(lit("lcons-cdr"), user_package), func_n1(lcons_cdr));
   reg_fun(car_s, car_f);
   reg_fun(cdr_s, cdr_f);
   reg_fun(rplaca_s, func_n2(rplaca));

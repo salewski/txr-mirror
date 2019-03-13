@@ -3022,6 +3022,23 @@ val make_lazy_cons_car_cdr(val func, val car, val cdr)
   return obj;
 }
 
+val make_lazy_cons_pub(val func, val car, val cdr)
+{
+  return make_lazy_cons_car_cdr(func, default_null_arg(car), default_null_arg(cdr));
+}
+
+val lcons_car(val lcons)
+{
+  type_check(lit("lcons-car"), lcons, LCONS);
+  return lcons->lc.car;
+}
+
+val lcons_cdr(val lcons)
+{
+  type_check(lit("lcons-cdr"), lcons, LCONS);
+  return lcons->lc.cdr;
+}
+
 void rcyc_cons(val cons)
 {
   cons->c.cdr = recycled_conses;
