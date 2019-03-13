@@ -5218,15 +5218,15 @@ static val mappendv(val fun, struct args *lists)
 
 static val lazy_mapcar_func(val env, val lcons)
 {
-  cons_bind (fun, list, env);
+  us_cons_bind (fun, list, env);
 
-  rplaca(lcons, funcall1(fun, car(list)));
-  rplacd(env, cdr(list));
+  us_rplaca(lcons, funcall1(fun, car(list)));
+  us_rplacd(env, cdr(list));
 
   if (cdr(list))
-    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
   else
-    rplacd(lcons, nil);
+    us_rplacd(lcons, nil);
   return nil;
 }
 
@@ -5240,17 +5240,17 @@ val lazy_mapcar(val fun, val list)
 
 static val lazy_mapcarv_func(val env, val lcons)
 {
-  cons_bind (fun, lofl, env);
+  us_cons_bind (fun, lofl, env);
   val args = mapcar(car_f, lofl);
   val next = mapcar(cdr_f, lofl);
 
-  rplaca(lcons, apply(fun, z(args)));
-  rplacd(env, next);
+  us_rplaca(lcons, apply(fun, z(args)));
+  us_rplacd(env, next);
 
   if (all_satisfy(next, identity_f, identity_f))
-    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
   else
-    rplacd(lcons, nil);
+    us_rplacd(lcons, nil);
   return nil;
 }
 
@@ -5459,25 +5459,25 @@ static val mmakunbound(val sym)
 
 static val range_func(val env, val lcons)
 {
-  cons_bind (from, to_step, env);
-  cons_bind (to, step, to_step);
+  us_cons_bind (from, to_step, env);
+  us_cons_bind (to, step, to_step);
   val next = if3(functionp(step),
                  funcall1(step, from),
                  plus(from, step));
 
-  rplaca(lcons, from);
+  us_rplaca(lcons, from);
 
   if (to &&
       (numeq(from, to) ||
        ((lt(from, to) && gt(next, to)) ||
         (gt(from, to) && lt(next, to)))))
   {
-    rplacd(lcons, nil);
+    us_rplacd(lcons, nil);
     return nil;
   }
 
-  rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
-  rplaca(env, next);
+  us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
+  us_rplaca(env, next);
   return nil;
 }
 
@@ -5493,13 +5493,13 @@ static val range(val from_in, val to_in, val step_in)
 
 static val range_star_func(val env, val lcons)
 {
-  cons_bind (from, to_step, env);
-  cons_bind (to, step, to_step);
+  us_cons_bind (from, to_step, env);
+  us_cons_bind (to, step, to_step);
   val next = if3(functionp(step),
                  funcall1(step, from),
                  plus(from, step));
 
-  rplaca(lcons, from);
+  us_rplaca(lcons, from);
 
   if (to &&
       (numeq(next, to) ||
@@ -5510,8 +5510,8 @@ static val range_star_func(val env, val lcons)
     return nil;
   }
 
-  rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
-  rplaca(env, next);
+  us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
+  us_rplaca(env, next);
   return nil;
 }
 
@@ -5570,15 +5570,15 @@ static val rlist_star(struct args *items)
 
 static val generate_func(val env, val lcons)
 {
-  cons_bind (while_pred, gen_fun, env);
+  us_cons_bind (while_pred, gen_fun, env);
 
   if (!funcall(while_pred)) {
     rplacd(lcons, nil);
   } else {
     val next_item = funcall(gen_fun);
-    val lcons_next = make_lazy_cons(lcons_fun(lcons));
-    rplacd(lcons, lcons_next);
-    rplaca(lcons_next, next_item);
+    val lcons_next = make_lazy_cons(us_lcons_fun(lcons));
+    us_rplacd(lcons, lcons_next);
+    us_rplaca(lcons_next, next_item);
   }
   return nil;
 }
@@ -5597,13 +5597,13 @@ val generate(val while_pred, val gen_fun)
 
 static val giterate_func(val env, val lcons)
 {
-  cons_bind (while_pred, gen_fun, env);
-  val next_item = funcall1(gen_fun, lcons->lc.car);
+  us_cons_bind (while_pred, gen_fun, env);
+  val next_item = funcall1(gen_fun, us_car(lcons));
 
   if (funcall1(while_pred, next_item)) {
-    val lcons_next = make_lazy_cons(lcons_fun(lcons));
-    rplacd(lcons, lcons_next);
-    rplaca(lcons_next, next_item);
+    val lcons_next = make_lazy_cons(us_lcons_fun(lcons));
+    us_rplacd(lcons, lcons_next);
+    us_rplaca(lcons_next, next_item);
   }
   return nil;
 }
@@ -5616,22 +5616,22 @@ static val giterate(val while_pred, val gen_fun, val init_val)
     return nil;
   } else {
     val lc = make_lazy_cons(func_f1(cons(while_pred, gen_fun), giterate_func));
-    rplaca(lc, init_val);
+    us_rplaca(lc, init_val);
     return lc;
   }
 }
 
 static val ginterate_func(val env, val lcons)
 {
-  cons_bind (while_pred, gen_fun, env);
-  val next_item = funcall1(gen_fun, lcons->lc.car);
+  us_cons_bind (while_pred, gen_fun, env);
+  val next_item = funcall1(gen_fun, us_car(lcons));
 
   if (funcall1(while_pred, next_item)) {
-    val lcons_next = make_lazy_cons(lcons_fun(lcons));
-    rplacd(lcons, lcons_next);
-    rplaca(lcons_next, next_item);
+    val lcons_next = make_lazy_cons(us_lcons_fun(lcons));
+    us_rplacd(lcons, lcons_next);
+    us_rplaca(lcons_next, next_item);
   } else {
-    rplacd(lcons, cons(next_item, nil));
+    us_rplacd(lcons, cons(next_item, nil));
   }
   return nil;
 }
@@ -5652,18 +5652,18 @@ static val ginterate(val while_pred, val gen_fun, val init_val)
 
 static val expand_right_fun(val env, val lcons)
 {
-  cons_bind (pair, gen_fun, env);
-  cons_bind (elem, init_val, pair);
+  us_cons_bind (pair, gen_fun, env);
+  us_cons_bind (elem, init_val, pair);
 
   val next_pair = funcall1(gen_fun, init_val);
 
-  rplaca(lcons, elem);
+  us_rplaca(lcons, elem);
 
   if (next_pair) {
-    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
-    rplaca(env, next_pair);
+    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
+    us_rplaca(env, next_pair);
   } else {
-    rplacd(lcons, nil);
+    us_rplacd(lcons, nil);
   }
 
   return nil;
@@ -5714,31 +5714,31 @@ static val nexpand_left(val gen_fun, val init_val)
 
 static val repeat_infinite_func(val env, val lcons)
 {
-  if (!car(env))
-    rplaca(env, cdr(env));
-  rplaca(lcons, pop(valptr(car_l(env))));
-  rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+  if (!us_car(env))
+    us_rplaca(env, cdr(env));
+  us_rplaca(lcons, pop(valptr(car_l(env))));
+  us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
   return nil;
 }
 
 static val repeat_times_func(val env, val lcons)
 {
-  cons_bind (stack, list_count, env);
-  cons_bind (list, count, list_count);
+  us_cons_bind (stack, list_count, env);
+  us_cons_bind (list, count, list_count);
 
   if (!stack) {
-    rplaca(env, list);
-    rplacd(list_count, count = minus(count, one));
+    us_rplaca(env, list);
+    us_rplacd(list_count, count = minus(count, one));
   }
 
-  rplaca(lcons, pop(valptr(car_l(env))));
+  us_rplaca(lcons, pop(valptr(car_l(env))));
 
   if (!car(env) && count == one) {
-    rplacd(lcons, nil);
+    us_rplacd(lcons, nil);
     return nil;
   }
 
-  rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+  us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
   return nil;
 }
 
@@ -5758,19 +5758,19 @@ static val repeat(val list, val count)
 
 static val pad_func(val env, val lcons)
 {
-  cons_bind (list, item_count, env);
+  us_cons_bind (list, item_count, env);
   val next = cdr(list);
 
-  rplaca(lcons, car(list));
+  us_rplaca(lcons, car(list));
 
   if (next && seqp(next)) {
-    rplaca(env, next);
-    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+    us_rplaca(env, next);
+    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
     return nil;
   } else if (!next) {
-    val count = cdr(item_count);
-    rplacd(item_count, nil);
-    rplacd(lcons, repeat(item_count, count));
+    val count = us_cdr(item_count);
+    us_rplacd(item_count, nil);
+    us_rplacd(lcons, repeat(item_count, count));
   } else {
     uw_throwf(error_s, lit("pad: cannot pad improper list terminated by ~s"),
               next, nao);

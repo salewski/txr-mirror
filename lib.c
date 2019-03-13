@@ -748,8 +748,8 @@ val conses(val list)
 
 static val lazy_conses_func(val env, val lcons)
 {
-  val fun = lcons_fun(lcons);
-  rplaca(lcons, env);
+  val fun = us_lcons_fun(lcons);
+  us_rplaca(lcons, env);
   func_set_env(fun, env = cdr(env));
 
   if (env)
@@ -1516,11 +1516,11 @@ static val lazy_appendv_func(val env, val lcons)
   cons_bind (fl, rl, env);
   cons_bind (fe, re, fl);
 
-  rplaca(lcons, fe);
+  us_rplaca(lcons, fe);
 
   if (re) {
-    rplaca(env, re);
-    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+    us_rplaca(env, re);
+    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
   } else if (rl) {
     do {
       fl = car(rl);
@@ -1529,11 +1529,11 @@ static val lazy_appendv_func(val env, val lcons)
 
     if (fl) {
       if (rl) {
-        rplaca(env, fl);
-        rplacd(env, rl);
-        rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+        us_rplaca(env, fl);
+        us_rplacd(env, rl);
+        us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
       } else {
-        rplacd(lcons, fl);
+        us_rplacd(lcons, fl);
       }
     }
   }
@@ -1974,8 +1974,8 @@ static val rem_lazy_rec(val obj, val list, val env, val func);
 static val rem_lazy_func(val env, val lcons)
 {
   cons_bind (pred, list, env);
-  val rest = rem_lazy_rec(pred, list, env, lcons_fun(lcons));
-  rplacd(lcons, rem_lazy_rec(pred, list, env, lcons_fun(lcons)));
+  val rest = rem_lazy_rec(pred, list, env, us_lcons_fun(lcons));
+  us_rplacd(lcons, rem_lazy_rec(pred, list, env, us_lcons_fun(lcons)));
   return rest;
 }
 
@@ -2194,16 +2194,16 @@ static val lazy_flatten_scan(val list, val *escape)
 
 static val lazy_flatten_func(val env, val lcons)
 {
-  cons_bind (list, escape, env);
+  us_cons_bind (list, escape, env);
   val atom = car(list);
   val next = lazy_flatten_scan(cdr(list), &escape);
 
-  rplaca(lcons, atom);
-  rplaca(env, next);
-  rplacd(env, escape);
+  us_rplaca(lcons, atom);
+  us_rplaca(env, next);
+  us_rplacd(env, escape);
 
   if (next)
-    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
 
   return nil;
 }
@@ -2250,7 +2250,7 @@ static val lazy_flatcar_scan(val tree, val *cont)
 
 static val lazy_flatcar_func(val env, val lcons)
 {
-  val tree = car(env);
+  val tree = us_car(env);
   val cont = nil;
   val atom = lazy_flatcar_scan(tree, &cont);
 
@@ -2258,7 +2258,7 @@ static val lazy_flatcar_func(val env, val lcons)
   rplaca(env, cont);
 
   if (cont)
-    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
 
   return nil;
 }
@@ -2282,8 +2282,8 @@ val lazy_flatcar(val tree)
 static val tuples_func(val env, val lcons)
 {
   list_collect_decl (out, ptail);
-  cons_bind (seq_in, envr, env);
-  cons_bind (n, fill, envr);
+  us_cons_bind (seq_in, envr, env);
+  us_cons_bind (n, fill, envr);
   val seq = seq_in;
   val count;
 
@@ -2294,11 +2294,11 @@ static val tuples_func(val env, val lcons)
     for (; gt(count, zero); count = minus(count, one))
       ptail = list_collect(ptail, fill);
 
-  rplaca(env, seq);
+  us_rplaca(env, seq);
 
   if (seq)
-    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
-  rplaca(lcons, make_like(out, seq_in));
+    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
+  us_rplaca(lcons, make_like(out, seq_in));
 
   return nil;
 }
@@ -2317,8 +2317,8 @@ val tuples(val n, val seq, val fill)
 static val partition_by_func(val env, val lcons)
 {
   list_collect_decl (out, ptail);
-  cons_bind (flast_seq, func, env);
-  cons_bind (flast, seq_in, flast_seq);
+  us_cons_bind (flast_seq, func, env);
+  us_cons_bind (flast, seq_in, flast_seq);
   val seq = seq_in;
   val fnext = nil;
 
@@ -2337,13 +2337,13 @@ static val partition_by_func(val env, val lcons)
     flast = fnext;
   }
 
-  rplaca(flast_seq, fnext);
-  rplacd(flast_seq, seq);
+  us_rplaca(flast_seq, fnext);
+  us_rplacd(flast_seq, seq);
 
   if (seq)
-    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
 
-  rplaca(lcons, make_like(out, seq_in));
+  us_rplaca(lcons, make_like(out, seq_in));
   return nil;
 }
 
@@ -2361,8 +2361,8 @@ val partition_by(val func, val seq)
 
 static val partition_func(val env, val lcons)
 {
-  cons_bind (seq, indices_base, env);
-  cons_bind (indices, base, indices_base);
+  us_cons_bind (seq, indices_base, env);
+  us_cons_bind (indices, base, indices_base);
   val len = nil;
 
   for (;;) {
@@ -2379,17 +2379,17 @@ static val partition_func(val env, val lcons)
         val first = sub(seq, zero, index_rebased);
         val rest = nullify(sub(seq, index_rebased, t));
 
-        rplaca(env, rest);
-        rplaca(indices_base, indices);
-        rplacd(indices_base, index);
+        us_rplaca(env, rest);
+        us_rplaca(indices_base, indices);
+        us_rplacd(indices_base, index);
 
         if (rest)
-          rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+          us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
 
-        rplaca(lcons, first);
+        us_rplaca(lcons, first);
       }
     } else {
-      rplaca(lcons, seq);
+      us_rplaca(lcons, seq);
     }
     break;
   }
@@ -2399,8 +2399,8 @@ static val partition_func(val env, val lcons)
 
 static val split_func(val env, val lcons)
 {
-  cons_bind (seq, indices_base, env);
-  cons_bind (indices, base, indices_base);
+  us_cons_bind (seq, indices_base, env);
+  us_cons_bind (indices, base, indices_base);
   val len = nil;
 
   for (;;) {
@@ -2418,18 +2418,18 @@ static val split_func(val env, val lcons)
         val rsub = sub(seq, index_rebased, t);
         val rest = nullify(rsub);
 
-        rplaca(env, rest);
-        rplaca(indices_base, indices);
-        rplacd(indices_base, index);
+        us_rplaca(env, rest);
+        us_rplaca(indices_base, indices);
+        us_rplacd(indices_base, index);
 
-        rplacd(lcons, if3(rest,
-                          make_lazy_cons(lcons_fun(lcons)),
-                          cons(rsub, nil)));
+        us_rplacd(lcons, if3(rest,
+                             make_lazy_cons(us_lcons_fun(lcons)),
+                             cons(rsub, nil)));
 
-        rplaca(lcons, first);
+        us_rplaca(lcons, first);
       }
     } else {
-      rplaca(lcons, seq);
+      us_rplaca(lcons, seq);
     }
     break;
   }
@@ -2439,8 +2439,8 @@ static val split_func(val env, val lcons)
 
 static val split_star_func(val env, val lcons)
 {
-  cons_bind (seq, indices_base, env);
-  cons_bind (indices, base, indices_base);
+  us_cons_bind (seq, indices_base, env);
+  us_cons_bind (indices, base, indices_base);
   val len = nil;
 
   for (;;) {
@@ -2458,18 +2458,18 @@ static val split_star_func(val env, val lcons)
         val rsub = sub(seq, succ(index_rebased), t);
         val rest = nullify(rsub);
 
-        rplaca(env, rest);
-        rplaca(indices_base, indices);
-        rplacd(indices_base, succ(index));
+        us_rplaca(env, rest);
+        us_rplaca(indices_base, indices);
+        us_rplacd(indices_base, succ(index));
 
-        rplacd(lcons, if3(rest,
-                          make_lazy_cons(lcons_fun(lcons)),
-                          cons(rsub, nil)));
+        us_rplacd(lcons, if3(rest,
+                             make_lazy_cons(us_lcons_fun(lcons)),
+                             cons(rsub, nil)));
 
-        rplaca(lcons, first);
+        us_rplaca(lcons, first);
       }
     } else {
-      rplaca(lcons, seq);
+      us_rplaca(lcons, seq);
     }
     break;
   }
@@ -2519,8 +2519,8 @@ static val partition_star_func(val env, val lcons)
   val len = nil;
 
   for (;;) {
-    cons_bind (seq, indices_base, env);
-    cons_bind (indices, base, indices_base);
+    us_cons_bind (seq, indices_base, env);
+    us_cons_bind (indices, base, indices_base);
 
     if (indices) {
       val raw_index = pop(&indices);
@@ -2540,19 +2540,19 @@ static val partition_star_func(val env, val lcons)
         pop(&indices);
       }
 
-      rplaca(env, seq);
-      rplaca(indices_base, indices);
-      rplacd(indices_base, base);
+      us_rplaca(env, seq);
+      us_rplaca(indices_base, indices);
+      us_rplacd(indices_base, base);
 
       if (!first)
         continue;
 
-      rplaca(lcons, first);
+      us_rplaca(lcons, first);
 
       if (seq)
-        rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+        us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
     } else {
-      rplaca(lcons, seq);
+      us_rplaca(lcons, seq);
     }
 
     break;
@@ -8543,16 +8543,16 @@ val window_mappend(val range, val boundary, val fun, val seq)
 
 static val lazy_interpose_func(val env, val lcons)
 {
-  cons_bind (sep, list, env);
+  us_cons_bind (sep, list, env);
   val next = cdr(list);
-  val fun = lcons_fun(lcons);
+  val fun = us_lcons_fun(lcons);
 
-  rplaca(lcons, car(list));
+  us_rplaca(lcons, car(list));
 
   if (next) {
-    rplacd(env, next);
+    us_rplacd(env, next);
     func_set_env(fun, env);
-    rplacd(lcons, cons(sep, make_lazy_cons(fun)));
+    us_rplacd(lcons, cons(sep, make_lazy_cons(fun)));
   }
 
   return nil;
@@ -9800,16 +9800,16 @@ val ends_with(val little, val big, val testfun, val keyfun)
 
 static val take_list_fun(val env, val lcons)
 {
-  cons_bind (list, count, env);
+  us_cons_bind (list, count, env);
 
-  rplaca(lcons, pop(&list));
+  us_rplaca(lcons, pop(&list));
 
   if3(le((count = pred(count)), zero) || list == nil,
-      rplacd(lcons, nil),
-      rplacd(lcons, make_lazy_cons(lcons_fun(lcons))));
+      us_rplacd(lcons, nil),
+      us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons))));
 
-  rplaca(env, list);
-  rplacd(env, count);
+  us_rplaca(env, list);
+  us_rplacd(env, count);
   return nil;
 }
 
@@ -9835,17 +9835,17 @@ val take(val count, val seq)
 
 static val take_while_list_fun(val env, val lcons)
 {
-  cons_bind (list, cell, env);
-  cons_bind (pred, keyfun, cell);
+  us_cons_bind (list, cell, env);
+  us_cons_bind (pred, keyfun, cell);
 
-  rplaca(lcons, pop(&list));
+  us_rplaca(lcons, pop(&list));
 
   if (!list || !funcall1(pred, funcall1(keyfun, car(list))))
-    rplacd(lcons, nil);
+    us_rplacd(lcons, nil);
   else
-    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
 
-  rplaca(env, list);
+  us_rplaca(env, list);
   return nil;
 }
 
@@ -9878,18 +9878,18 @@ val take_while(val pred, val seq, val keyfun)
 
 static val take_until_list_fun(val env, val lcons)
 {
-  cons_bind (list, cell, env);
-  cons_bind (pred, keyfun, cell);
+  us_cons_bind (list, cell, env);
+  us_cons_bind (pred, keyfun, cell);
   val item = pop(&list);
 
-  rplaca(lcons, item);
+  us_rplaca(lcons, item);
 
   if (!list || funcall1(pred, funcall1(keyfun, item)))
-    rplacd(lcons, nil);
+    us_rplacd(lcons, nil);
   else
-    rplacd(lcons, make_lazy_cons(lcons_fun(lcons)));
+    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
 
-  rplaca(env, list);
+  us_rplaca(env, list);
   return nil;
 }
 
@@ -10801,7 +10801,7 @@ static val lazy_where_hash_func(val hash_iter, val lcons)
   }
 
   {
-    val cell = make_lazy_cons(lcons_fun(lcons));
+    val cell = make_lazy_cons(us_lcons_fun(lcons));
     us_rplaca(cell, key);
     us_rplacd(cell, func);
     us_rplacd(lcons, cell);

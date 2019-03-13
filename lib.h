@@ -668,6 +668,7 @@ void rcyc_cons(val cons);
 void rcyc_list(val list);
 void rcyc_empty(void);
 val lcons_fun(val lcons);
+INLINE val us_lcons_fun(val lcons) { return lcons->lc.func; }
 val list(val first, ...); /* terminated by nao */
 val listv(struct args *);
 val consp(val obj);
@@ -1224,6 +1225,11 @@ loc list_collect_revappend(loc ptail, val obj);
   obj_t *r_n_g ## FROM ## TO = RANGE;           \
   obj_t *FROM = from(r_n_g ## FROM ## TO);      \
   obj_t *TO = ((r_n_g ## FROM ## TO)->rn.to)
+
+#define us_cons_bind(CAR, CDR, CONS)            \
+  obj_t *c_o_n_s ## CAR ## CDR = CONS;          \
+  obj_t *CAR = us_car(c_o_n_s ## CAR ## CDR);   \
+  obj_t *CDR = us_cdr(c_o_n_s ## CAR ## CDR)
 
 #define zero num_fast(0)
 #define one num_fast(1)
