@@ -7757,7 +7757,7 @@ toobig:
 static val simple_lazy_stream_func(val stream, val lcons)
 {
   if (set(mkloc(lcons->lc.car, lcons), get_line(stream)) != nil) {
-    set(mkloc(lcons->lc.cdr, lcons), make_lazy_cons(lcons->lc.func));
+    set(mkloc(lcons->lc.cdr, lcons), make_lazy_cons(us_lcons_fun(lcons)));
   } else {
     close_stream(stream, t);
     lcons->lc.cdr = nil;
@@ -7785,7 +7785,8 @@ static val lazy_stream_func(val env, val lcons)
   val prefetched_line = cdr(env);
 
   set(mkloc(lcons->lc.car, lcons), prefetched_line);
-  set(mkloc(lcons->lc.cdr, lcons), lazy_stream_cont(stream, lcons->lc.func, env));
+  set(mkloc(lcons->lc.cdr, lcons), lazy_stream_cont(stream,
+                                                    us_lcons_fun(lcons), env));
 
   return prefetched_line;
 }
