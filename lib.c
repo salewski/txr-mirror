@@ -1989,7 +1989,7 @@ static val rem_lazy_rec(val pred, val list, val env, val func)
     func = func_f1(cons(pred, cdr(list)), rem_lazy_func);
   else
     rplacd(env, cdr(list));
-  return make_half_lazy_cons(func, car(list));
+  return make_lazy_cons_car(func, car(list));
 }
 
 val remq_lazy(val obj, val list)
@@ -3002,7 +3002,7 @@ val make_lazy_cons(val func)
   return obj;
 }
 
-val make_half_lazy_cons(val func, val car)
+val make_lazy_cons_car(val func, val car)
 {
   val obj = make_obj();
   obj->lc.type = LCONS;
