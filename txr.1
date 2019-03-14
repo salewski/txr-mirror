@@ -17115,7 +17115,7 @@ brackets indicate a plurality of types which are not listed by name:
         |                    |
         |                    +--- struct-type
         |                    |
-        |                    +--- <structures>
+        |                    +--- <all structures>
         |                    |
         |                    +--- ... others
         |
@@ -17161,6 +17161,8 @@ In addition to the above hierarchy, the following relationships also exist:
                     +--- nil
 
   sym --- null
+
+  struct ---- <all structures>
 .cble
 
 That is to say, the types are exhaustively partitioned into atoms and conses;
@@ -17194,7 +17196,7 @@ which is the type of the
 .code nil
 symbol.
 
-Lastly, because the type of
+Because the type of
 .code nil
 is the type
 .code null
@@ -17204,6 +17206,10 @@ is also a symbol, the
 .code null
 type is a subtype of
 .codn sym .
+
+Lastly, the symbol
+.code struct
+serves as the supertype of all structures.
 
 .coNP Function @ typeof
 .synb
@@ -17307,6 +17313,10 @@ both name structure types, then
 .code subtypep
 yields true if the types are the same struct type, or if the right
 type is a direct or indirect supertype of the left.
+
+The type symbol
+.code struct
+is a supertype of all structure types.
 
 .coNP Function @ typep
 .synb

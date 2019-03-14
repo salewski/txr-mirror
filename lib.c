@@ -257,6 +257,8 @@ val subtypep(val sub, val sup)
     return tnil(sub == str_s || sub == lit_s || sub == lstr_s);
   } else if (sup == stream_s) {
     return tnil(sub == stdio_stream_s);
+  } else if (sup == struct_s) {
+    return tnil(find_struct_type(sub));
   } else {
     val sub_struct = find_struct_type(sub);
     val sup_struct = find_struct_type(sup);
