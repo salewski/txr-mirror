@@ -24795,6 +24795,13 @@ If no struct type is registered under
 then it returns
 .codn nil .
 
+A
+.code struct-type
+object exists for each structure type and holds information about it.
+These objects are not themselves structures and are all of the
+same type,
+.codn struct-type .
+
 .coNP Function @ struct-type-p
 .synb
 .mets (struct-type-p << obj )
@@ -24806,6 +24813,11 @@ function returns t if
 .meta obj
 is a structure type, otherwise it returns
 .codn nil .
+
+A structure type is an object of type
+.codn struct-type ,
+returned by
+.codn find-struct-type .
 
 .coNP Function @ super
 .synb
