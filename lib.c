@@ -6432,6 +6432,12 @@ val func_set_env(val fun, val env)
   return env;
 }
 
+val us_func_set_env(val fun, val env)
+{
+  set(mkloc(fun->f.env, fun), env);
+  return env;
+}
+
 val functionp(val obj)
 {
   return type(obj) == FUN ? t : nil;

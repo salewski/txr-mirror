@@ -948,6 +948,7 @@ val copy_fun(val ofun);
 val func_get_form(val fun);
 val func_get_env(val fun);
 val func_set_env(val fun, val env);
+val us_func_set_env(val fun, val env);
 val functionp(val);
 val interp_fun_p(val);
 val vm_fun_p(val);
