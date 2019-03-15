@@ -2281,11 +2281,10 @@ val lazy_flatcar(val tree)
 }
 
 
-static val tuples_func(val env, val lcons)
+static val tuples_func(val n, val lcons)
 {
   list_collect_decl (out, ptail);
-  us_cons_bind (seq_in, envr, env);
-  us_cons_bind (n, fill, envr);
+  us_cons_bind (seq_in, fill, lcons);
   val seq = seq_in;
   val count;
 
@@ -2296,10 +2295,10 @@ static val tuples_func(val env, val lcons)
     for (; gt(count, zero); count = minus(count, one))
       ptail = list_collect(ptail, fill);
 
-  us_rplaca(env, seq);
-
   if (seq)
-    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
+    us_rplacd(lcons, make_lazy_cons_car_cdr(us_lcons_fun(lcons), seq, fill));
+  else
+    us_rplacd(lcons, nil);
   us_rplaca(lcons, make_like(out, seq_in));
 
   return nil;
@@ -2312,8 +2311,7 @@ val tuples(val n, val seq, val fill)
   if (!seq)
     return nil;
 
-  return make_lazy_cons(func_f1(cons(seq, cons(n, fill)),
-                                tuples_func));
+  return make_lazy_cons_car_cdr(func_f1(n, tuples_func), seq, fill);
 }
 
 static val partition_by_func(val env, val lcons)
