@@ -2195,16 +2195,16 @@ static val lazy_flatten_scan(val list, val *escape)
 
 static val lazy_flatten_func(val env, val lcons)
 {
-  us_cons_bind (list, escape, env);
+  us_cons_bind (list, escape, lcons);
   val atom = car(list);
   val next = lazy_flatten_scan(cdr(list), &escape);
 
   us_rplaca(lcons, atom);
-  us_rplaca(env, next);
-  us_rplacd(env, escape);
 
   if (next)
-    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
+    us_rplacd(lcons, make_lazy_cons_car_cdr(us_lcons_fun(lcons), next, escape));
+  else
+    us_rplacd(lcons, nil);
 
   return nil;
 }
@@ -2220,7 +2220,8 @@ val lazy_flatten(val list)
     if (!next)
       return nil;
 
-    return make_lazy_cons(func_f1(cons(next, escape), lazy_flatten_func));
+    return make_lazy_cons_car_cdr(func_f1(nil, lazy_flatten_func),
+                                  next, escape);
   }
 }
 
