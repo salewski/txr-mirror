@@ -2250,17 +2250,17 @@ static val lazy_flatcar_scan(val tree, val *cont)
   }
 }
 
-static val lazy_flatcar_func(val env, val lcons)
+static val lazy_flatcar_func(val tree, val lcons)
 {
-  val tree = us_car(env);
   val cont = nil;
   val atom = lazy_flatcar_scan(tree, &cont);
+  val fun = us_lcons_fun(lcons);
 
   rplaca(lcons, atom);
-  rplaca(env, cont);
+  us_func_set_env(fun, cont);
 
   if (cont)
-    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
+    us_rplacd(lcons, make_lazy_cons(fun));
 
   return nil;
 }
@@ -2276,7 +2276,7 @@ val lazy_flatcar(val tree)
     if (!cont)
       return cons(nextatom, nil);
 
-    return make_lazy_cons(func_f1(cons(tree, nil), lazy_flatcar_func));
+    return make_lazy_cons(func_f1(tree, lazy_flatcar_func));
   }
 }
 
