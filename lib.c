@@ -1513,16 +1513,15 @@ val replace_list(val list, val items, val from, val to)
   }
 }
 
-static val lazy_appendv_func(val env, val lcons)
+static val lazy_appendv_func(val rl, val lcons)
 {
-  cons_bind (fl, rl, env);
+  val fl = us_car(lcons);
   cons_bind (fe, re, fl);
 
   us_rplaca(lcons, fe);
 
   if (re) {
-    us_rplaca(env, re);
-    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
+    us_rplacd(lcons, make_lazy_cons_car(us_lcons_fun(lcons), re));
   } else if (rl) {
     do {
       fl = car(rl);
@@ -1531,9 +1530,9 @@ static val lazy_appendv_func(val env, val lcons)
 
     if (fl) {
       if (rl) {
-        us_rplaca(env, fl);
-        us_rplacd(env, rl);
-        us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
+        val fun = us_lcons_fun(lcons);
+        us_func_set_env(fun, rl);
+        us_rplacd(lcons, make_lazy_cons_car(fun, fl));
       } else {
         us_rplacd(lcons, fl);
       }
@@ -1562,8 +1561,8 @@ val lazy_appendv(struct args *args)
               nonempty, nao);
 
   {
-    return make_lazy_cons(func_f1(cons(nonempty, args_get_rest(args, index)),
-                                  lazy_appendv_func));
+    return make_lazy_cons_car(func_f1(args_get_rest(args, index),
+                                      lazy_appendv_func), nonempty);
   }
 }
 
