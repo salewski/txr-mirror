@@ -28514,6 +28514,14 @@ The length of
 is added to any negative indices. An index which is still negative
 after being thus displaced is discarded.
 
+Note: the principal difference between
+.code split
+and
+.code partition
+is that
+.code partition
+does not produce empty pieces.
+
 .TP* Examples:
 .cblk
   (split '(1 2 3) 1) -> ((1) (2 3))
