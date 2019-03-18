@@ -2314,11 +2314,10 @@ val tuples(val n, val seq, val fill)
   return make_lazy_cons_car_cdr(func_f1(n, tuples_func), seq, fill);
 }
 
-static val partition_by_func(val env, val lcons)
+static val partition_by_func(val func, val lcons)
 {
   list_collect_decl (out, ptail);
-  us_cons_bind (flast_seq, func, env);
-  us_cons_bind (flast, seq_in, flast_seq);
+  us_cons_bind (flast, seq_in, lcons);
   val seq = seq_in;
   val fnext = nil;
 
@@ -2337,12 +2336,9 @@ static val partition_by_func(val env, val lcons)
     flast = fnext;
   }
 
-  us_rplaca(flast_seq, fnext);
-  us_rplacd(flast_seq, seq);
-
-  if (seq)
-    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
-
+  us_rplacd(lcons, if2(seq,
+                       make_lazy_cons_car_cdr(us_lcons_fun(lcons),
+                                              fnext, seq)));
   us_rplaca(lcons, make_like(out, seq_in));
   return nil;
 }
@@ -2354,9 +2350,8 @@ val partition_by(val func, val seq)
   if (!seq)
     return nil;
 
-  return make_lazy_cons(func_f1(cons(cons(funcall1(func, car(seq)), seq),
-                                     func),
-                                partition_by_func));
+  return make_lazy_cons_car_cdr(func_f1(func, partition_by_func),
+                                funcall1(func, car(seq)), seq);
 }
 
 static val partition_func(val env, val lcons)
