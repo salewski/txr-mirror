@@ -2354,10 +2354,9 @@ val partition_by(val func, val seq)
                                 funcall1(func, car(seq)), seq);
 }
 
-static val partition_func(val env, val lcons)
+static val partition_func(val base, val lcons)
 {
-  us_cons_bind (seq, indices_base, env);
-  us_cons_bind (indices, base, indices_base);
+  us_cons_bind (seq, indices, lcons);
   val len = nil;
 
   for (;;) {
@@ -2374,17 +2373,19 @@ static val partition_func(val env, val lcons)
         val first = sub(seq, zero, index_rebased);
         val rest = nullify(sub(seq, index_rebased, t));
 
-        us_rplaca(env, rest);
-        us_rplaca(indices_base, indices);
-        us_rplacd(indices_base, index);
-
-        if (rest)
-          us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
+        if (rest) {
+          val fun = us_lcons_fun(lcons);
+          us_func_set_env(fun, index);
+          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest, indices));
+        } else {
+          us_rplacd(lcons, nil);
+        }
 
         us_rplaca(lcons, first);
       }
     } else {
       us_rplaca(lcons, seq);
+      us_rplacd(lcons, nil);
     }
     break;
   }
@@ -2392,10 +2393,9 @@ static val partition_func(val env, val lcons)
   return nil;
 }
 
-static val split_func(val env, val lcons)
+static val split_func(val base, val lcons)
 {
-  us_cons_bind (seq, indices_base, env);
-  us_cons_bind (indices, base, indices_base);
+  us_cons_bind (seq, indices, lcons);
   val len = nil;
 
   for (;;) {
@@ -2413,18 +2413,19 @@ static val split_func(val env, val lcons)
         val rsub = sub(seq, index_rebased, t);
         val rest = nullify(rsub);
 
-        us_rplaca(env, rest);
-        us_rplaca(indices_base, indices);
-        us_rplacd(indices_base, index);
-
-        us_rplacd(lcons, if3(rest,
-                             make_lazy_cons(us_lcons_fun(lcons)),
-                             cons(rsub, nil)));
+        if (rest) {
+          val fun = us_lcons_fun(lcons);
+          us_func_set_env(fun, index);
+          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest, indices));
+        } else {
+          us_rplacd(lcons, cons(rsub, nil));
+        }
 
         us_rplaca(lcons, first);
       }
     } else {
       us_rplaca(lcons, seq);
+      us_rplacd(lcons, nil);
     }
     break;
   }
@@ -2432,10 +2433,9 @@ static val split_func(val env, val lcons)
   return nil;
 }
 
-static val split_star_func(val env, val lcons)
+static val split_star_func(val base, val lcons)
 {
-  us_cons_bind (seq, indices_base, env);
-  us_cons_bind (indices, base, indices_base);
+  us_cons_bind (seq, indices, lcons);
   val len = nil;
 
   for (;;) {
@@ -2453,18 +2453,19 @@ static val split_star_func(val env, val lcons)
         val rsub = sub(seq, succ(index_rebased), t);
         val rest = nullify(rsub);
 
-        us_rplaca(env, rest);
-        us_rplaca(indices_base, indices);
-        us_rplacd(indices_base, succ(index));
-
-        us_rplacd(lcons, if3(rest,
-                             make_lazy_cons(us_lcons_fun(lcons)),
-                             cons(rsub, nil)));
+        if (rest) {
+          val fun = us_lcons_fun(lcons);
+          us_func_set_env(fun, succ(index));
+          us_rplacd(lcons, make_lazy_cons_car_cdr(fun, rest, indices));
+        } else {
+          us_rplacd(lcons, cons(rsub, nil));
+        }
 
         us_rplaca(lcons, first);
       }
     } else {
       us_rplaca(lcons, seq);
+      us_rplacd(lcons, nil);
     }
     break;
   }
@@ -2491,7 +2492,7 @@ static val partition_split_common(val seq, val indices,
   if (!seqp(indices))
     indices = cons(indices, nil);
 
-  return make_lazy_cons(func_f1(cons(seq, cons(indices, zero)), split_fptr));
+  return make_lazy_cons_car_cdr(func_f1(zero, split_fptr), seq, indices);
 }
 
 val partition(val seq, val indices)
