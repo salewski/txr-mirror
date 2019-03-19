@@ -8565,27 +8565,23 @@ val window_mappend(val range, val boundary, val fun, val seq)
   }
 }
 
-static val lazy_interpose_func(val env, val lcons)
+static val lazy_interpose_func(val sep, val lcons)
 {
-  us_cons_bind (sep, list, env);
+  val list = us_car(lcons);
   val next = cdr(list);
   val fun = us_lcons_fun(lcons);
 
   us_rplaca(lcons, car(list));
 
-  if (next) {
-    us_rplacd(env, next);
-    func_set_env(fun, env);
-    us_rplacd(lcons, cons(sep, make_lazy_cons(fun)));
-  }
+  if (next)
+    us_rplacd(lcons, cons(sep, make_lazy_cons_car(fun, next)));
 
   return nil;
 }
 
 static val lazy_interpose(val sep, val list)
 {
-  return make_lazy_cons(func_f1(cons(sep, list),
-                                lazy_interpose_func));
+  return make_lazy_cons_car(func_f1(sep, lazy_interpose_func), list);
 }
 
 val interpose(val sep, val seq)
