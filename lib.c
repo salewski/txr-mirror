@@ -2510,14 +2510,13 @@ val split_star(val seq, val indices)
   return partition_split_common(seq, indices, split_star_func);
 }
 
-static val partition_star_func(val env, val lcons)
+static val partition_star_func(val base, val lcons)
 {
+  us_cons_bind (seq, indices, lcons);
+  val fun = us_lcons_fun(lcons);
   val len = nil;
 
   for (;;) {
-    us_cons_bind (seq, indices_base, env);
-    us_cons_bind (indices, base, indices_base);
-
     if (indices) {
       val raw_index = pop(&indices);
       val index = if3((!opt_compat || opt_compat > 170) && minusp(raw_index),
@@ -2536,21 +2535,16 @@ static val partition_star_func(val env, val lcons)
         pop(&indices);
       }
 
-      us_rplaca(env, seq);
-      us_rplaca(indices_base, indices);
-      us_rplacd(indices_base, base);
-
       if (!first)
         continue;
-
       us_rplaca(lcons, first);
-
-      if (seq)
-        us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
+      us_rplacd(lcons, if2(seq, make_lazy_cons_car_cdr(fun, seq, indices)));
     } else {
       us_rplaca(lcons, seq);
+      us_rplacd(lcons, nil);
     }
 
+    us_func_set_env(fun, base);
     break;
   }
 
@@ -2590,8 +2584,8 @@ val partition_star(val seq, val indices)
     if (!indices)
       return cons(seq, nil);
 
-    return make_lazy_cons(func_f1(cons(seq, cons(indices, base)),
-                                  partition_star_func));
+    return make_lazy_cons_car_cdr(func_f1(base, partition_star_func),
+                                  seq, indices);
   }
 }
 
