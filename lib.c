@@ -9818,79 +9818,79 @@ val ends_with(val little, val big, val testfun, val keyfun)
   return tnil(!mm || eql(pred(neg(mm)), length(little)));
 }
 
-static val take_list_fun(val env, val lcons)
+static val lazy_take_list_fun(val list, val lcons)
 {
-  us_cons_bind (list, count, env);
+  val count = us_car(lcons);
 
   us_rplaca(lcons, pop(&list));
 
-  if3(le((count = pred(count)), zero) || list == nil,
-      us_rplacd(lcons, nil),
-      us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons))));
+  if (list == nil || le((count = pred(count)), zero)) {
+    us_rplacd(lcons, nil);
+  } else {
+    val fun = us_lcons_fun(lcons);
+    us_rplacd(lcons, make_lazy_cons_car(fun, count));
+    us_func_set_env(fun, list);
+  }
 
-  us_rplaca(env, list);
-  us_rplacd(env, count);
   return nil;
 }
 
 val take(val count, val seq)
 {
-  switch (type(seq)) {
-  case NIL:
+  seq_info_t si = seq_info(seq);
+
+  switch (si.kind) {
+  case SEQ_NIL:
     return nil;
-  case CONS:
-  case LCONS:
+  case SEQ_LISTLIKE:
     if (le(count, zero))
       return nil;
-    return make_lazy_cons(func_f1(cons(seq, count), take_list_fun));
-  case LSTR:
-  case LIT:
-  case STR:
-  case VEC:
+    return make_lazy_cons_car(func_f1(si.obj, lazy_take_list_fun), count);
+  case SEQ_VECLIKE:
     return sub(seq, zero, count);
+  case SEQ_HASHLIKE:
+    type_mismatch(lit("take: hashes not supported"), nao);
   default:
     type_mismatch(lit("take: ~s is not a sequence"), seq, nao);
   }
 }
 
-static val take_while_list_fun(val env, val lcons)
+static val lazy_take_while_list_fun(val pred, val lcons)
 {
-  us_cons_bind (list, cell, env);
-  us_cons_bind (pred, keyfun, cell);
+  us_cons_bind (keyfun, list, lcons);
 
   us_rplaca(lcons, pop(&list));
 
   if (!list || !funcall1(pred, funcall1(keyfun, car(list))))
     us_rplacd(lcons, nil);
   else
-    us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
+    us_rplacd(lcons, make_lazy_cons_car_cdr(us_lcons_fun(lcons), keyfun, list));
 
-  us_rplaca(env, list);
   return nil;
 }
 
 val take_while(val pred, val seq, val keyfun)
 {
-  switch (type(seq)) {
-  case NIL:
+  seq_info_t si = seq_info(seq);
+
+  switch (si.kind) {
+  case SEQ_NIL:
     return nil;
-  case CONS:
-  case LCONS:
+  case SEQ_LISTLIKE:
     keyfun = default_arg(keyfun, identity_f);
     if (!funcall1(pred, funcall1(keyfun, (car(seq)))))
       return nil;
-    return make_lazy_cons(func_f1(cons(seq, cons(pred, keyfun)),
-                                  take_while_list_fun));
-  case LSTR:
-  case LIT:
-  case STR:
-  case VEC:
+    return make_lazy_cons_car_cdr(func_f1(pred, lazy_take_while_list_fun),
+                                  keyfun, si.obj);
+  case SEQ_VECLIKE:
     {
       val pos = pos_if(notf(pred), seq, keyfun);
       if (!pos)
         return seq;
       return sub(seq, zero, pos);
     }
+  case SEQ_HASHLIKE:
+    type_mismatch(lit("take-while: hashes not supported"), nao);
   default:
     type_mismatch(lit("take-while: ~s is not a sequence"), seq, nao);
   }
