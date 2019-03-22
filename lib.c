@@ -3288,7 +3288,7 @@ cnum c_fixnum(val num, val self)
 #if HAVE_FPCLASSIFY
 INLINE int bad_float(double d)
 {
-  switch fpclassify(d) {
+  switch (fpclassify(d)) {
   case FP_ZERO:
   case FP_NORMAL:
   case FP_SUBNORMAL:
