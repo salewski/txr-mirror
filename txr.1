@@ -13675,6 +13675,8 @@ In this situation, if the call does not specify a value for the parameter
 (colon)) then the parameter takes on the
 value of the expression
 .metn expr .
+This expression is only evaluated when its value is required.
+
 If
 .meta sym
 is specified, then
@@ -13683,7 +13685,9 @@ will be
 introduced as an additional binding with a Boolean value which indicates
 whether or not the optional parameter had been specified by the caller.
 
-The initializer expressions are evaluated an environment in which
+Each
+.code expr
+that is evaluated is evaluated an environment in which
 all of the previous parameters are visible, in addition to the surrounding
 environment of the lambda. For instance:
 
@@ -13706,6 +13710,22 @@ the expression default, and it refers to the binding established
 by the surrounding let. This reference is captured as part of the
 .codn lambda 's
 lexical closure.
+
+Keyword symbols, and the symbols
+.code t
+and
+.code nil
+may not be used as parameter names.
+The behavior is unspecified if the same symbol is specified
+more than once anywhere in the parameter list, whether as a parameter name or as
+the indicator
+.code sym
+in an optional parameter or any combination.
+
+Implementation note: the \*(TX compiler diagnoses and rejects duplicate
+symbols in
+.code lambda
+whereas the interpreter ignores the situation.
 
 .TP* Examples:
 .IP "Counting function:"
