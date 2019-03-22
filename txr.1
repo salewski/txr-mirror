@@ -13346,18 +13346,37 @@ evaluate forms in that scope. The operator symbol, either
 .code let
 or
 .codn let* ,
-is followed by a list which can contain any mixture of variable
-name symbols, or
+is followed by a list which can contain any mixture of
+.meta sym
+or
 .cblk
 .meti >> ( sym << init-form )
 .cble
-pairs.  A symbol
-denotes the name of variable to be instantiated and initialized
-to the value
-.codn nil .
-A symbol specified with an init-form denotes
-a variable which is initialized from the value of the
+pairs.
+Each
+.meta sym
+must be a symbol, and specifies the name of variable to be instantiated and
+initialized.
+
+The
+.cblk
+.meti >> ( sym << init-form )
+.cble
+variant specifies that the new variable
+.meta sym
+receives an initial value from the
+evaluation of
 .metn init-form .
+The plain
+.meta sym
+variant specifies a variable which is initialized to
+.codn nil .
+The
+.metn init-form -s
+are evaluated in order, by both
+.code let
+and
+.codn let* .
 
 The symbols
 .code t
@@ -13374,19 +13393,20 @@ is that in
 .codn let* ,
 later
 .codn init-form -s
-have visibility over the variables established by earlier variables
-in the same let* construct. In plain
+are in scope of the variables established by earlier variables in the same
+.code let*
+construct. In plain
 .codn let ,
-the variables are not visible to any of the
-.metn init-form -s.
+the
+.metn init-form -s
+are evaluated in a scope which does not include any of the variables.
 
-When the variables are established, then the
+When the variables are established, the
 .metn body-form -s
 are evaluated in order. The value of the last
 .meta body-form
 becomes the return value of the
 .codn let .
-
 If there are no
 .metn body-form -s,
 then the return value
@@ -13394,6 +13414,89 @@ then the return value
 is produced.
 
 The list of variables may be empty.
+
+The list of variables may contain duplicate
+.metn sym -s
+if the operator is
+.codn let* .
+In that situation, a given
+.meta init-form
+has in scope the rightmost duplicate of any given
+.meta sym
+that has been previously established.
+The
+.metn body-form -s
+have in scope the rightmost duplicate of any
+.meta sym
+in the construct.
+Therefore, the following form calculates the value 3:
+
+.cblk
+  (let* ((a 1)
+         (a (succ a))
+         (a (succ a)))
+    a)
+.cble
+
+Each duplicate is a separately instantiated binding, and may be independently
+captured by a lexical closure placed in a subsequent
+.codn init-form :
+
+.cblk
+  (let* ((a 0)
+         (f1 (lambda () (inc a)))
+         (a 0)
+         (f2 (lambda () (inc a))))
+    (list [f1] [f1] [f1] [f2] [f2] [f2]))
+
+  --> (1 2 3 1 2 3)
+.cble
+
+The preceding example shows that there are two mutable variables named
+.code a
+in independent scopes, each respectively captured by the separate closures
+.code f1
+and
+.codn f2 .
+Three calls to
+.code f1
+increment the first
+.code a
+while the second
+.code a
+retains its initial value.
+
+Under
+.codn let ,
+the behavior of duplicate variables is unspecified.
+
+Implementation note: the \*(TX compiler diagnoses and rejects duplicate
+symbols in
+.code let
+whereas the interpreter ignores the situation.
+
+When the names of a special variables is specified in
+.code let
+or
+.code let*
+remain, a new binding is created for them in the dynamic environment, rather
+than the lexical environment.
+In
+.codn let* ,
+later
+.metn init-form -s
+are evaluated in a dynamic scope in which previous dynamic variables
+are established, and later dynamic variables are not yet established.
+A special variable may appear multiple times in a
+.codn let* ,
+just like a lexical variable. Each duplicate occurrence extends the
+dynamic environment with a new dynamic binding.
+All these dynamic environments are removed when the
+.code let
+or
+.code let*
+form terminates. Dynamic environments aren't captured by lexical
+closures, but are captured in delimited continuations.
 
 .TP* Examples:
 .cblk
