@@ -1,3 +1,44 @@
+                                    TXR 214
+                                   2019-03-22
+
+
+  Features
+
+  - Improved expt function
+    - raising integers to negative integers works.
+    - raising zero to negative exponents throws division by zero.
+
+  - Floating-point error checking
+    - Infinity and NaN results are turned into exceptions rather than
+      propagating as #<bad-float>
+
+  - New generic sequence iterator objects.
+    - seq-begin, seq-next
+
+  - Function where becomes lazy.
+
+  - Optimization in various lazy list processing functions.
+
+  - Lazy cons improvements:
+    - New lcons-car and lcons-cdr functions can access
+      fields in a lazy cons without triggering the update function.
+    - make-lazy-cons takes two optional arguments to initialize
+      the car and cdr fields
+    - thus, propagation of state in lazy list generation can use
+      the lcons itself as temporary storage.
+
+  - OOP:
+    - Type struct introduced:
+      - all struct instances have struct as a supertype
+
+  Bugs
+
+  - Parser:
+    - out of range floating-point tokens now trigger error
+      rather than turn to nil.
+
+
+
                                     TXR 213
                                    2019-03-08
 
