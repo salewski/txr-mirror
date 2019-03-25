@@ -54,6 +54,8 @@
 #define CNUM_BIT ((int) sizeof (cnum) * CHAR_BIT)
 #define ABS(A) ((A) < 0 ? -(A) : (A))
 
+val plus_s;
+
 val make_bignum(void)
 {
   val n = make_obj();
@@ -3446,6 +3448,53 @@ void arith_init(void)
     reg_varl(intern(lit("*pi*"), user_package), flo(M_PI));
     reg_varl(intern(lit("*e*"), user_package), flo(M_E));
   }
+
+  reg_fun(plus_s = intern(lit("+"), user_package), func_n0v(plusv));
+  reg_fun(intern(lit("-"), user_package), func_n1v(minusv));
+  reg_fun(intern(lit("*"), user_package), func_n0v(mulv));
+  reg_fun(intern(lit("sum"), user_package), func_n2o(sum, 1));
+  reg_fun(intern(lit("prod"), user_package), func_n2o(prod, 1));
+  reg_fun(intern(lit("abs"), user_package), func_n1(abso));
+  reg_fun(intern(lit("trunc"), user_package), func_n2o(trunc, 1));
+  reg_fun(intern(lit("mod"), user_package), func_n2(mod));
+  reg_fun(intern(lit("wrap"), user_package), func_n3(wrap));
+  reg_fun(intern(lit("wrap*"), user_package), func_n3(wrap_star));
+  reg_fun(intern(lit("/"), user_package), func_n1v(divv));
+  reg_fun(intern(lit("expt"), user_package), func_n0v(exptv));
+  reg_fun(intern(lit("exptmod"), user_package), func_n3(exptmod));
+  reg_fun(intern(lit("isqrt"), user_package), func_n1(isqrt));
+  reg_fun(intern(lit("square"), user_package), func_n1(square));
+  reg_fun(intern(lit("gcd"), user_package), func_n0v(gcdv));
+  reg_fun(intern(lit("lcm"), user_package), func_n0v(lcmv));
+  reg_fun(intern(lit("floor"), user_package), func_n2o(floordiv, 1));
+  reg_fun(intern(lit("ceil"), user_package), func_n2o(ceildiv, 1));
+  reg_fun(intern(lit("round"), user_package), func_n2o(roundiv, 1));
+  reg_fun(intern(lit("trunc-rem"), user_package), func_n2o(trunc_rem, 1));
+  reg_fun(intern(lit("floor-rem"), user_package), func_n2o(floor_rem, 1));
+  reg_fun(intern(lit("ceil-rem"), user_package), func_n2o(ceil_rem, 1));
+  reg_fun(intern(lit("round-rem"), user_package), func_n2o(round_rem, 1));
+  reg_fun(intern(lit("sin"), user_package), func_n1(sine));
+  reg_fun(intern(lit("cos"), user_package), func_n1(cosi));
+  reg_fun(intern(lit("tan"), user_package), func_n1(tang));
+  reg_fun(intern(lit("asin"), user_package), func_n1(asine));
+  reg_fun(intern(lit("acos"), user_package), func_n1(acosi));
+  reg_fun(intern(lit("atan"), user_package), func_n1(atang));
+  reg_fun(intern(lit("atan2"), user_package), func_n2(atang2));
+  reg_fun(intern(lit("log"), user_package), func_n1(loga));
+  reg_fun(intern(lit("log10"), user_package), func_n1(logten));
+  reg_fun(intern(lit("log2"), user_package), func_n1(logtwo));
+  reg_fun(intern(lit("exp"), user_package), func_n1(expo));
+  reg_fun(intern(lit("sqrt"), user_package), func_n1(sqroot));
+  reg_fun(intern(lit("cum-norm-dist"), user_package), func_n1(cum_norm_dist));
+  reg_fun(intern(lit("inv-cum-norm"), user_package), func_n1(inv_cum_norm));
+  reg_fun(intern(lit("n-choose-k"), user_package), func_n2(n_choose_k));
+  reg_fun(intern(lit("n-perm-k"), user_package), func_n2(n_perm_k));
+  reg_fun(intern(lit("fixnump"), user_package), func_n1(fixnump));
+  reg_fun(intern(lit("bignump"), user_package), func_n1(bignump));
+  reg_fun(intern(lit("floatp"), user_package), func_n1(floatp));
+  reg_fun(intern(lit("integerp"), user_package), func_n1(integerp));
+  reg_fun(intern(lit("numberp"), user_package), func_n1(numberp));
+
 
   reg_fun(intern(lit("signum"), user_package), func_n1(signum));
 
