@@ -6491,24 +6491,6 @@ void eval_init(void)
   reg_fun(intern(lit("neql"), user_package), func_n2(neql));
   reg_fun(intern(lit("nequal"), user_package), func_n2(nequal));
 
-  reg_fun(intern(lit("zerop"), user_package), func_n1(zerop));
-  reg_fun(intern(lit("nzerop"), user_package), func_n1(nzerop));
-  reg_fun(intern(lit("plusp"), user_package), func_n1(plusp));
-  reg_fun(intern(lit("minusp"), user_package), func_n1(minusp));
-  reg_fun(intern(lit("evenp"), user_package), func_n1(evenp));
-  reg_fun(intern(lit("oddp"), user_package), func_n1(oddp));
-  reg_fun(intern(lit("succ"), user_package), func_n1(succ));
-  reg_fun(intern(lit("ssucc"), user_package), func_n1(ssucc));
-  reg_fun(intern(lit("sssucc"), user_package), func_n1(sssucc));
-  reg_fun(intern(lit("pred"), user_package), func_n1(pred));
-  reg_fun(intern(lit("ppred"), user_package), func_n1(ppred));
-  reg_fun(intern(lit("pppred"), user_package), func_n1(pppred));
-  reg_fun(intern(lit(">"), user_package), func_n1v(gtv));
-  reg_fun(intern(lit("<"), user_package), func_n1v(ltv));
-  reg_fun(intern(lit(">="), user_package), func_n1v(gev));
-  reg_fun(intern(lit("<="), user_package), func_n1v(lev));
-  reg_fun(intern(lit("="), user_package), func_n1v(numeqv));
-  reg_fun(intern(lit("/="), user_package), func_n0v(numneqv));
   reg_fun(intern(lit("max"), user_package), func_n1v(maxv));
   reg_fun(intern(lit("min"), user_package), func_n1v(minv));
   reg_fun(intern(lit("clamp"), user_package), func_n3(clamp));
@@ -6526,19 +6508,6 @@ void eval_init(void)
   reg_fun(intern(lit("drop-while"), user_package), func_n3o(drop_while, 2));
   reg_fun(intern(lit("drop-until"), user_package), func_n3o(drop_until, 2));
   reg_fun(intern(lit("in"), user_package), func_n4o(in, 2));
-  reg_fun(intern(lit("logand"), user_package), func_n0v(logandv));
-  reg_fun(intern(lit("logior"), user_package), func_n0v(logiorv));
-  reg_fun(intern(lit("logxor"), user_package),
-          func_n2(if3(opt_compat && opt_compat <= 202, logxor_old, logxor)));
-  reg_fun(intern(lit("logtest"), user_package), func_n2(logtest));
-  reg_fun(intern(lit("lognot"), user_package), func_n2o(lognot, 1));
-  reg_fun(intern(lit("logtrunc"), user_package), func_n2(logtrunc));
-  reg_fun(intern(lit("sign-extend"), user_package), func_n2(sign_extend));
-  reg_fun(intern(lit("ash"), user_package), func_n2(ash));
-  reg_fun(intern(lit("bit"), user_package), func_n2(bit));
-  reg_fun(intern(lit("mask"), user_package), func_n0v(maskv));
-  reg_fun(intern(lit("width"), user_package), func_n1(width));
-  reg_fun(intern(lit("logcount"), user_package), func_n1(logcount));
 
   reg_fun(intern(lit("sort-group"), user_package), func_n3o(sort_group, 1));
   reg_fun(intern(lit("unique"), user_package), func_n2ov(unique, 1));
