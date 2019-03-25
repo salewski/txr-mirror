@@ -604,9 +604,11 @@ tail:
   case TAG_PAIR(TAG_CHR, TAG_PTR):
     if (type(bnum) == RNG)
       return rcons(plus(anum, from(bnum)), plus(anum, to(bnum)));
+    break;
   case TAG_PAIR(TAG_PTR, TAG_CHR):
     if (type(anum) == RNG)
       return rcons(plus(from(anum), bnum), plus(to(anum), bnum));
+    break;
   }
   invalid_ops(self, anum, bnum);
 char_range:
