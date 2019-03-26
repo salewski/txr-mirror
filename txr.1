@@ -52484,19 +52484,73 @@ tests for the group read permission.
 
 .coNP Function @ umask
 .synb
-.mets (umask << mask )
+.mets (umask <> [ mask ])
 .syne
 .desc
 The
 .code umask
 function provides access to the Unix C library function of the same name,
 which controls which permissions are denied
-when files are newly created. If
+when files are newly created.
+
+If
+.code umask
+is called with no argument, it returns the current value of the mask.
+
+If the
 .meta mask
-is a
-.code fixnum
-integer, this succeeds and returns
-.codn t .
+argument is present, it must be an integer specifying the new mask to be
+installed.  The previous mask is returned.
+
+If
+.meta mask
+is absent, then
+.code umask
+returns the previous mask.
+
+Note: the value of the
+.meta mask
+argument may be calculated as a bitwise or of the following constants:
+.codn s-irwxu ,
+.codn s-irusr ,
+.codn s-iwusr ,
+.codn s-ixusr ,
+.codn s-irwxg ,
+.codn s-irgrp ,
+.codn s-iwgrp ,
+.codn s-ixgrp ,
+.codn s-irwxo ,
+.codn s-iroth ,
+.code s-iwoth
+and
+.codn s-ixoth ,
+which correspond to the POSIX C constants
+.codn S_IRWXU ,
+.codn S_IRUSR ,
+.codn S_IWUSR ,
+.codn S_IXUSR ,
+.codn S_IRWXG ,
+.codn S_IRGRP ,
+.codn S_IWGRP ,
+.codn S_IXGRP ,
+.codn S_IRWXO ,
+.codn S_IROTH ,
+.code S_IWOTH
+and
+.codn S_IXOTH .
+
+Implementation note: since the
+.code umask
+C library function provides no way to retrieve the current mask without
+overwriting with a new one, the \*(TX
+.code umask
+function, when given no argument, simulates the pure retrieval of the mask
+by calling the C function with an argument of
+.code #o777
+to temporarily install the maximally safe mask. The value returned is then
+reinstated as the mask by another call to
+.codn umask ,
+and that value is also returned.
 
 .coNP Functions @, makedev @ minor and @ major
 .synb
