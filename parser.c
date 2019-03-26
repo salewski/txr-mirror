@@ -41,6 +41,9 @@
 #ifdef __CYGWIN__
 #include <sys/utsname.h>
 #endif
+#if HAVE_SYS_STAT
+#include <sys/stat.h>
+#endif
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"
@@ -1520,11 +1523,15 @@ static mem_t *lino_open(const wchar_t *name_in, lino_file_mode_t mode_in)
 {
   val name = string(name_in);
   val mode = static_str(lino_mode_str[mode_in]);
-  mem_t *ret = 0;
+  val ret = 0;
   ignerr_begin;
-  ret = coerce(mem_t *, open_file(name, mode));
+  ret = open_file(name, mode);
+#if HAVE_CHMOD
+  if (mode_in == lino_overwrite)
+    (void) fchmod(c_num(stream_fd(ret)), S_IRUSR | S_IWUSR);
+#endif
   ignerr_end;
-  return ret;
+  return coerce(mem_t *, ret);
 }
 
 static mem_t *lino_open8(const char *name_in, lino_file_mode_t mode_in)
