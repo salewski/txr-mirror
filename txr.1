@@ -37798,6 +37798,515 @@ is zero, the value returned is zero.
 
 The argument may be a character.
 
+.SS* User-Defined Arithmetic Types
+
+\*(TL makes it possible for the user application program to define structure
+types which can participate in arithmetic operations as if they were numbers.
+Under most arithmetic functions, a structure object may be used instead of a
+number, if that structure object implements a specific method which is required
+by that arithmetic function.
+
+The following paragraphs give general remarks about the method conventions.
+Not all arithmetic and bit manipulation functions have a corresponding
+method, and a small number of functions do not follow these conventions.
+
+In the simplest case of arithmetic functions which are unary, the method
+takes no argument other than the object itself. Most unary arithmetic functions
+expect a structure argument to have a method which has the same name as that
+function. For instance, if
+.code x
+is a structure, then
+.code "(cos x)"
+will invoke
+.codn "x.(cos)" .
+If
+.code x
+has no
+.code cos
+method, then an
+.code error
+exception is thrown. A few unary methods are not named after the corresponding function.
+The unary case of the
+.code -
+function excepts an object to have a method named
+.codn neg ;
+thus,
+.code "(- x)"
+invokes
+.codn "x.(neg)" .
+Unary division requires a method called
+.codn recip ;
+thus,
+.codn "(/ x)" ,
+invokes
+.codn "x.(recip)" .
+
+When a structure object is used as an argument in a two-argument (binary)
+arithmetic function, there are several cases to consider. If the left argument
+to a binary function is an object, then that object is expected to support a
+binary method. That method is called with two arguments: the object itself, of
+course, and the right argument of the arithmetic operation.  In this case, the
+method is named after the function. For instance, if
+.code x
+is an object, then
+.code "(+ x 3)"
+invokes
+.codn "x.(+ 3)" .
+If the right argument, and only the right argument, of a binary operation is an
+object, then the situation falls into two cases depending on whether the operation
+is commutative. If the operation is commutative, then the same method is used
+as in the case when the object is the left argument. The arguments are merely reversed.
+Thus
+.code "(+ 3 x)"
+also invokes
+.codn "x.(+ 3)" .
+If the operation is not commutative, then the object must supply an alternative
+method. For most functions, that method is named by a symbol whose name begins
+with a
+.code r-
+prefix.  For instance
+.code "(mod x 5)"
+invokes
+.code "x.(mod 5)"
+whereas
+.code "(mod 5 x)"
+invokes
+.codn "x.(r-mod 5)" .
+Note: the "r" may be remembered as indicating that the object is the
+.B right
+argument
+of the binary operation or that the arguments are
+.BR reversed .
+Two functions do not follow the
+.code r-
+convention. These are
+.code -
+and
+.codn / .
+For these, the methods used for the object as a right argument, respectively, are
+.code --
+and
+.codn // .
+Thus
+.code "(/ 5 x)"
+invokes
+.code "x.(// 5)"
+and
+.code "(- 5 x)"
+invokes
+.codn "x.(-- 5)" .
+Several binary functions do not support an object as the right argument. These are
+.codn sign-extend ,
+.code ash
+and
+.codn bit .
+
+Variadic arithmetic functions, when given three or more arguments, are regarded
+as performing a left-associative decimation of the arguments through a binary
+function. Thus for instance
+.code "(- 1 x 4)"
+is understood as
+.code "(- (- 1 x) 4)"
+where
+.code "x.(-- 1)"
+is evaluated first. If that method yields an object
+.code o
+then
+.code "o.(- 4)"
+is invoked.
+
+Certain variadic arithmetic functions, if invoked with one argument, just
+return that argument: for instance,
+.code +
+and
+.code *
+are in this category. A special concession exists in these functions: if
+their one and only argument is a structure, then that structure is returned
+without any error checking, even if it implements no methods related
+to arithmetic.
+
+The following sections describe each of the methods that must be implemented
+by an object for the associated arithmetic function to work with that object,
+either at all, or in a specific argument position, as the case may be.
+These methods are not provided by \*(TL; the application is required to provide
+them.
+
+.de bmc
+.  coNP Method @ \\$1
+.  synb
+.  mets << obj .(\\$1 << arg )
+.  syne
+.  desc
+The
+.  code \\$1
+method is invoked when a structure is used as an argument to the
+.  code \\$1
+function.
+
+If an object
+.  meta obj
+is combined with an argument
+.  metn arg ,
+either as
+.  cblk
+.  meti (\\$1 < obj << arg )
+.  cble
+or as
+.  cblk
+.  meti (\\$1 < arg << obj )
+.  cble
+then, effectively, the method call
+.  cblk
+.  meti << obj .(\\$1 << arg )
+.  cble
+takes place, and its return value is taken as the result
+of the operation.
+..
+
+.de bmcv
+.  coNP Method @ \\$1
+.  synb
+.  mets << obj .(\\$1 << arg )
+.  syne
+.  desc
+The
+.  code \\$1
+method is invoked when a structure is used as an argument to the
+.  code \\$1
+function together with at least one other operand.
+
+If an object
+.  meta obj
+is combined with an argument
+.  metn arg ,
+either as
+.  cblk
+.  meti (\\$1 < obj << arg )
+.  cble
+or as
+.  cblk
+.  meti (\\$1 < arg << obj )
+.  cble
+then, effectively, the method call
+.  cblk
+.  meti << obj .(\\$1 << arg )
+.  cble
+takes place, and its return value is taken as the result
+of the operation.
+..
+
+.de bmnl
+.  coNP Method @ \\$1
+.  synb
+.  mets << obj .(\\$1 << arg )
+.  syne
+.  desc
+The
+.  code \\$1
+method is invoked when the structure
+.  meta obj
+is used as the left argument of the
+.  code \\$1
+function.
+
+If an object
+.  meta obj
+is combined with an argument
+.  metn arg ,
+as
+.  cblk
+.  meti (\\$1 < obj << arg )
+.  cble
+then, effectively, the method call
+.  cblk
+.  meti << obj .(\\$1 << arg )
+.  cble
+takes place, and its return value is taken as the result
+of the operation.
+..
+
+.de bmnr
+.  coNP Method @ \\$1
+.  synb
+.  mets << obj .(\\$1 << arg )
+.  syne
+.  desc
+The
+.  code \\$1
+method is invoked when the structure
+.  meta obj
+is used as the right argument of the
+.  code \\$2
+function.
+
+If an object
+.  meta obj
+is combined with an argument
+.  metn arg ,
+as
+.  cblk
+.  meti (\\$2 < arg << obj )
+.  cble
+then, effectively, the method call
+.  cblk
+.  meti << obj .(\\$1 << arg )
+.  cble
+takes place, and its return value is taken as the result
+of the operation.
+..
+
+.de umv
+.  coNP Method @ \\$1
+.  synb
+.  mets << obj .(\\$1)
+.  syne
+.  desc
+The
+.  code \\$1
+method is invoked when the structure
+.  meta obj
+is used as the sole argument to the
+.  code \\$2
+function.
+
+If an object
+.  meta obj
+is passed to the function as
+.  cblk
+.  meti (\\$2 << obj )
+.  cble
+then, effectively, the method call
+.  cblk
+.  meti << obj .(\\$1)
+.  cble
+takes place, and its return value is taken as the result
+of the operation.
+..
+
+.de bma
+.  coNP Method @ \\$1
+.  synb
+.  mets << obj .(\\$1 << arg )
+.  syne
+.  desc
+The
+.  code \\$1
+method is invoked when the
+.  code \\$1
+function is invoked with two operands, and the structure
+.  meta obj
+is the left operand.
+The method is also invoked when the
+.  code \\$2
+function is invoked with two operands, and
+.meta obj
+is the right operand.
+
+If an object
+.  meta obj
+is combined with an argument
+.  metn arg ,
+either as
+.  cblk
+.  meti (\\$1 < obj << arg )
+.  cble
+or as
+.  cblk
+.  meti (\\$2 < arg << obj )
+.  cble
+then, effectively, the method call
+.  cblk
+.  meti << obj .(\\$1 << arg )
+.  cble
+takes place, and its return value is taken as the result
+of the operation.
+..
+
+.de um
+.  coNP Method @ \\$1
+.  synb
+.  mets << obj .(\\$1)
+.  syne
+.  desc
+The
+.  code \\$1
+method is invoked when a structure is used as the argument to the
+.  code \\$1
+function.
+
+If an object
+.  meta obj
+is passed to the function as
+.  cblk
+.  meti (\\$1 << obj )
+.  cble
+then, effectively, the method call
+.  cblk
+.  meti << obj .(\\$1)
+.  cble
+takes place, and its return value is taken as the result
+of the operation.
+..
+
+.de tmnl
+.  coNP Method @ \\$1
+.  synb
+.  mets << obj .(\\$1 < arg1 << arg2 )
+.  syne
+.  desc
+The
+.  code \\$1
+method is invoked when the structure
+.  meta obj
+is used as the left argument of the
+.  code \\$1
+function.
+
+If an object
+.  meta obj
+is combined with arguments
+.  meta arg1
+and
+.  metn arg2 ,
+as
+.  cblk
+.  meti (\\$1 < obj < arg1 << arg2 )
+.  cble
+then, effectively, the method call
+.  cblk
+.  meti << obj .(\\$1 < arg1 << arg2 )
+.  cble
+takes place, and its return value is taken as the result
+of the operation.
+..
+
+.bmcv +
+.bmnl -
+.bmnr -- -
+.umv neg -
+.bmcv *
+.bmnl /
+.bmnr // /
+.umv recip /
+.um abs
+.um signum
+.bmnl trunc
+.bmnr r-trunc trunc
+.umv trunc1 trunc
+.bmnl mod
+.bmnr r-mod mod
+.bmnl expt
+.bmnr r-expt expt
+.tmnl exptmod
+
+Note: the
+.code exptmod
+function doesn't support structure objects in the second and
+third argument positions. The
+.meta exponent
+and
+.meta base
+arguments must be integers.
+
+.um isqrt
+.um square
+.bma > <
+.bma < >
+.bma >= <=
+.bma <= >=
+.bmc =
+.um zerop
+.um plusp
+.um minusp
+.um evenp
+.um oddp
+.bmnl floor
+.bmnr r-floor floor
+.umv floor1 floor
+.umv ceil1 ceil
+
+Note: the two-argument version of the
+.code ceil
+function is internally defined in terms of unary
+.code -
+and
+.codn floor .
+Therefore, there is no
+.code ceil
+method required for supporting structure arguments to the
+.code ceil
+function; however, the
+.code neg
+and
+.code floor
+methods are required.
+
+.umv round
+
+Note: the two-argument version of the
+.code round
+function is internally defined in terms of
+.codn floor ,
+.codn - ,
+.codn + ,
+.codn * ,
+.code <
+and
+.codn minusp .
+Therefore, there is no
+.code round
+method required for supporting structure arguments to the
+.code round
+function; however, the methods corresponding to the
+above functions are required.
+
+.um sin
+.um cos
+.um tan
+.um asin
+.um acos
+.um atan
+.bmnl atan
+.bmnr r-atan atan
+.um log
+.um log2
+.um log10
+.um exp
+.um sqrt
+.bmcv logand
+.bmcv logior
+.bmnl lognot
+.bmnr lognot-r lognot
+.umv lognot1 lognot
+.bmnl logtrunc
+.bmnr r-logtrunc logtrunc
+.bmnl sign-extend
+
+Note: the
+.code sign-extend
+function doesn't support a structure as the right argument,
+.metn bits ,
+which must be an integer.
+
+.bmnl ash
+
+Note: the
+.code ash
+function doesn't support a structure as the right argument,
+.metn bits ,
+which must be an integer.
+
+.bmnl bit
+
+Note: the
+.code bit
+function doesn't support a structure as the right argument,
+.metn bit ,
+which must be an integer.
+
+.um width
+.um logcount
+
 .SS* Exception Handling
 
 An

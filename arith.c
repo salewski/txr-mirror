@@ -47,6 +47,7 @@
 #include "args.h"
 #include "eval.h"
 #include "itypes.h"
+#include "struct.h"
 #include "txr.h"
 #include "arith.h"
 
@@ -57,7 +58,19 @@
 #define CNUM_BIT ((int) sizeof (cnum) * CHAR_BIT)
 #define ABS(A) ((A) < 0 ? -(A) : (A))
 
-val plus_s;
+val plus_s, minus_s, inv_minus_s, neg_s, abs_s, signum_s;
+val mul_s, div_s, recip_s, inv_div_s;
+val trunc1_s, trunc_s, r_trunc_s, mod_s, r_mod_s;
+val zerop_s, plusp_s, minusp_s, evenp_s, oddp_s;
+val gt_s, lt_s, ge_s, le_s, numeq_s;
+val expt_s, r_expt_s, exptmod_s, isqrt_s, square_s;
+val floor_s, floor1_s, r_floor_s;
+val ceil_s, ceil1_s, round_s, round1_s;
+val sin_s, cos_s, tan_s, asin_s, acos_s, atan_s, atan2_s, r_atan2_s;
+val log_s, log2_s, log10_s, exp_s, sqrt_s;
+val logand_s, logior_s, logxor_s;
+val lognot1_s, lognot_s, r_lognot_s, logtrunc_s, r_logtrunc_s;
+val sign_extend_s, ash_s, bit_s, width_s, logcount_s;
 
 val make_bignum(void)
 {
@@ -463,9 +476,60 @@ void do_mp_error(val self, mp_err code)
   uw_throwf(numeric_error_s, lit("~a: ~a"), self, errstr, nao);
 }
 
+static noreturn void not_struct_error(val self, val obj)
+{
+  uw_throwf(error_s, lit("~a: ~s isn't a structure"),
+            self, obj, nao);
+}
+
+static noreturn void method_error(val self, val obj, val fun)
+{
+  uw_throwf(error_s, lit("~a: object ~s lacks ~a method"),
+            self, obj, fun, nao);
+}
+
+static val do_unary_method(val self, val sym, val obj)
+{
+  val meth = maybe_slot(obj, sym);
+
+  if (!obj_struct_p(obj))
+    not_struct_error(self, obj);
+
+  if (!meth)
+    method_error(self, obj, sym);
+
+  return funcall1(meth, obj);
+}
+
+static val do_binary_method(val self, val sym, val obj, val arg)
+{
+  val meth = maybe_slot(obj, sym);
+
+  if (!obj_struct_p(obj))
+    not_struct_error(self, obj);
+
+  if (!meth)
+    method_error(self, obj, sym);
+
+  return funcall2(meth, obj, arg);
+}
+
+static val do_ternary_method(val self, val sym, val obj, val arg1, val arg2)
+{
+  val meth = maybe_slot(obj, sym);
+
+  if (!obj_struct_p(obj))
+    not_struct_error(self, obj);
+
+  if (!meth)
+    method_error(self, obj, sym);
+
+  return funcall3(meth, obj, arg1, arg2);
+}
+
 val plus(val anum, val bnum)
 {
-  val self = lit("+");
+  val self = plus_s;
 
 tail:
   switch (TAG_PAIR(tag(anum), tag(bnum))) {
@@ -510,6 +574,8 @@ tail:
       return flo(c_n(anum) + c_flo(bnum, self));
     case RNG:
       return rcons(plus(anum, from(bnum)), plus(anum, to(bnum)));
+    case COBJ:
+      return do_binary_method(self, self, bnum, anum);
     default:
       break;
     }
@@ -545,6 +611,8 @@ tail:
       return flo(c_n(bnum) + c_flo(anum, self));
     case RNG:
       return rcons(plus(from(anum), bnum), plus(to(anum), bnum));
+    case COBJ:
+      return do_binary_method(self, self, anum, bnum);
     default:
       break;
     }
@@ -577,6 +645,11 @@ tail:
     case TYPE_PAIR(RNG, BGNUM):
     case TYPE_PAIR(RNG, FLNUM):
       return rcons(plus(from(anum), bnum), plus(to(anum), bnum));
+    case TYPE_PAIR(COBJ, BGNUM):
+    case TYPE_PAIR(COBJ, FLNUM):
+    case TYPE_PAIR(COBJ, RNG):
+    case TYPE_PAIR(COBJ, COBJ):
+      return do_binary_method(self, self, anum, bnum);
     default:
       break;
     }
@@ -619,7 +692,7 @@ char_range:
 
 val minus(val anum, val bnum)
 {
-  val self = lit("-");
+  val self = minus_s;
 
 tail:
   switch (TAG_PAIR(tag(anum), tag(bnum))) {
@@ -669,6 +742,8 @@ tail:
       return flo(c_n(anum) - c_flo(bnum, self));
     case RNG:
       return rcons(minus(anum, from(bnum)), minus(anum, to(bnum)));
+    case COBJ:
+      return do_binary_method(self, inv_minus_s, bnum, anum);
     default:
       break;
     }
@@ -704,6 +779,8 @@ tail:
       return flo(c_flo(anum, self) - c_n(bnum));
     case RNG:
       return rcons(minus(from(anum), bnum), minus(to(anum), bnum));
+    case COBJ:
+      return do_binary_method(self, self, anum, bnum);
     default:
       break;
     }
@@ -736,6 +813,11 @@ tail:
     case TYPE_PAIR(RNG, BGNUM):
     case TYPE_PAIR(RNG, FLNUM):
       return rcons(minus(from(anum), bnum), minus(to(anum), bnum));
+    case TYPE_PAIR(COBJ, BGNUM):
+    case TYPE_PAIR(COBJ, FLNUM):
+    case TYPE_PAIR(COBJ, RNG):
+    case TYPE_PAIR(COBJ, COBJ):
+      return do_binary_method(self, self, anum, bnum);
     default:
       break;
     }
@@ -767,7 +849,7 @@ tail:
 
 val neg(val anum)
 {
-  val self = lit("-");
+  val self = minus_s;
 
   switch (type(anum)) {
   case BGNUM:
@@ -782,6 +864,8 @@ val neg(val anum)
     return num(-c_n(anum));
   case RNG:
     return rcons(neg(from(anum)), neg(to(anum)));
+  case COBJ:
+    return do_unary_method(self, neg_s, anum);
   default:
     not_number(self, anum);
   }
@@ -789,7 +873,7 @@ val neg(val anum)
 
 val abso(val anum)
 {
-  val self = lit("abs");
+  val self = abs_s;
 
   switch (type(anum)) {
   case BGNUM:
@@ -807,6 +891,8 @@ val abso(val anum)
     }
   case RNG:
     return rcons(abso(from(anum)), abso(to(anum)));
+  case COBJ:
+    return do_unary_method(self, self, anum);
   default:
     not_number(self, anum);
   }
@@ -814,6 +900,8 @@ val abso(val anum)
 
 static val signum(val anum)
 {
+  val self = signum_s;
+
   switch (type(anum)) {
   case BGNUM:
     return if3(mp_isneg(mp(anum)), negone, one);
@@ -827,14 +915,16 @@ static val signum(val anum)
       cnum a = c_n(anum);
       return if3(a > 0, one, if3(a < 0, negone, zero));
     }
+  case COBJ:
+    return do_unary_method(self, self, anum);
   default:
-    not_number(lit("signum"), anum);
+    not_number(self, anum);
   }
 }
 
 val mul(val anum, val bnum)
 {
-  val self = lit("*");
+  val self = mul_s;
 
 tail:
   switch (TAG_PAIR(tag(anum), tag(bnum))) {
@@ -900,6 +990,8 @@ tail:
       return flo(c_n(anum) * c_flo(bnum, self));
     case RNG:
       return rcons(mul(anum, from(bnum)), mul(anum, to(bnum)));
+    case COBJ:
+      return do_binary_method(self, self, bnum, anum);
     default:
       break;
     }
@@ -934,6 +1026,8 @@ tail:
       return flo(c_flo(anum, self) * c_n(bnum));
     case RNG:
       return rcons(mul(from(anum), bnum), mul(to(anum), bnum));
+    case COBJ:
+      return do_binary_method(self, self, anum, bnum);
     default:
       break;
     }
@@ -966,6 +1060,11 @@ tail:
     case TYPE_PAIR(RNG, BGNUM):
     case TYPE_PAIR(RNG, FLNUM):
       return rcons(mul(from(anum), bnum), mul(to(anum), bnum));
+    case TYPE_PAIR(COBJ, BGNUM):
+    case TYPE_PAIR(COBJ, FLNUM):
+    case TYPE_PAIR(COBJ, RNG):
+    case TYPE_PAIR(COBJ, COBJ):
+      return do_binary_method(self, self, anum, bnum);
     default:
       break;
     }
@@ -987,6 +1086,8 @@ static val trunc1(val self, val num)
     }
   case RNG:
     return rcons(trunc1(self, from(num)), trunc1(self, to(num)));
+  case COBJ:
+    return do_unary_method(self, trunc1_s, num);
   default:
     break;
   }
@@ -1000,7 +1101,7 @@ static noreturn void divzero(val self)
 
 val trunc(val anum, val bnum)
 {
-  val self = lit("trunc");
+  val self = trunc_s;
 
   if (missingp(bnum))
     return trunc1(self, anum);
@@ -1034,6 +1135,8 @@ tail:
         else
           return flo((x - fmod(x, y))/y);
       }
+    case COBJ:
+      return do_binary_method(self, r_trunc_s, bnum, anum);
     default:
       break;
     }
@@ -1075,6 +1178,8 @@ tail:
       }
     case RNG:
       return rcons(trunc(from(anum), bnum), trunc(to(anum), bnum));
+    case COBJ:
+      return do_binary_method(self, self, anum, bnum);
     default:
       break;
     }
@@ -1106,6 +1211,10 @@ tail:
     case TYPE_PAIR(RNG, BGNUM):
     case TYPE_PAIR(RNG, FLNUM):
       return rcons(trunc(from(anum), bnum), trunc(to(anum), bnum));
+    case TYPE_PAIR(COBJ, BGNUM):
+    case TYPE_PAIR(COBJ, FLNUM):
+    case TYPE_PAIR(COBJ, COBJ):
+      return do_binary_method(self, self, anum, bnum);
     }
   }
   invalid_ops(self, anum, bnum);
@@ -1126,7 +1235,7 @@ static double dmod(double a, double b)
 
 val mod(val anum, val bnum)
 {
-  val self = lit("mod");
+  val self = mod_s;
 
 tail:
   switch (TAG_PAIR(tag(anum), tag(bnum))) {
@@ -1175,6 +1284,8 @@ tail:
       }
     case FLNUM:
       return flo(dmod(c_n(anum), c_flo(bnum, self)));
+    case COBJ:
+      return do_binary_method(self, r_mod_s, bnum, anum);
     default:
       break;
     }
@@ -1226,6 +1337,8 @@ tail:
       }
     case FLNUM:
       return flo(dmod(c_flo(anum, self), c_n(bnum)));
+    case COBJ:
+      return do_binary_method(self, self, anum, bnum);
     default:
       break;
     }
@@ -1263,6 +1376,10 @@ tail:
     case TYPE_PAIR(FLNUM, BGNUM):
       bnum = flo_int(bnum);
       goto tail;
+    case TYPE_PAIR(COBJ, BGNUM):
+    case TYPE_PAIR(COBJ, FLNUM):
+    case TYPE_PAIR(COBJ, COBJ):
+      return do_binary_method(self, self, anum, bnum);
     }
   }
   invalid_ops(self, anum, bnum);
@@ -1272,7 +1389,7 @@ divzero:
 
 val floordiv(val anum, val bnum)
 {
-  val self = lit("floor");
+  val self = floor_s;
 
   if (missingp(bnum))
     return floorf(anum);
@@ -1320,6 +1437,8 @@ tail:
         else
           return flo((x - dmod(x, y))/y);
       }
+    case COBJ:
+      return do_binary_method(self, r_floor_s, bnum, anum);
     default:
       break;
     }
@@ -1379,6 +1498,8 @@ tail:
       }
     case RNG:
       return rcons(floordiv(from(anum), bnum), floordiv(to(anum), bnum));
+    case COBJ:
+      return do_binary_method(self, self, anum, bnum);
     default:
       break;
     }
@@ -1421,6 +1542,10 @@ tail:
     case TYPE_PAIR(RNG, BGNUM):
     case TYPE_PAIR(RNG, FLNUM):
       return rcons(floordiv(from(anum), bnum), floordiv(to(anum), bnum));
+    case TYPE_PAIR(COBJ, BGNUM):
+    case TYPE_PAIR(COBJ, FLNUM):
+    case TYPE_PAIR(COBJ, COBJ):
+      return do_binary_method(self, self, anum, bnum);
     }
   }
   invalid_ops(self, anum, bnum);
@@ -1454,6 +1579,8 @@ static val round1(val self, val num)
 #endif
   case RNG:
     return rcons(round1(self, from(num)), round1(self, to(num)));
+  case COBJ:
+    return do_unary_method(self, round1_s, num);
   default:
     break;
   }
@@ -1463,7 +1590,7 @@ static val round1(val self, val num)
 
 val roundiv(val anum, val bnum)
 {
-  val self = lit("round");
+  val self = round_s;
 
   if (missingp(bnum))
     return round1(self, anum);
@@ -1553,15 +1680,23 @@ static val to_float(val func, val num)
 
 val divi(val anum, val bnum)
 {
-  val self = lit("/");
+  val self = div_s;
 
   if (missingp(bnum)) {
-    double b = c_flo(to_float(self, anum), self);
-    if (b == 0.0)
-      goto divzero;
-    return flo(1.0 / b);
+    if (cobjp(bnum)) {
+      return do_unary_method(self, recip_s, anum);
+    } else {
+      double b = c_flo(to_float(self, anum), self);
+      if (b == 0.0)
+        goto divzero;
+      return flo(1.0 / b);
+    }
   } else if (type(anum) == RNG) {
     return rcons(divi(from(anum), bnum), divi(to(anum), bnum));
+  } else if (type(bnum) == COBJ) {
+    return do_binary_method(self, inv_div_s, bnum, anum);
+  } else if (type(anum) == COBJ) {
+    return do_binary_method(self, self, anum, bnum);
   } else {
     double a = c_flo(to_float(self, anum), self);
     double b = c_flo(to_float(self, bnum), self);
@@ -1577,7 +1712,7 @@ divzero:
 
 val zerop(val num)
 {
-  val self = lit("zerop");
+  val self = zerop_s;
 
   if (num == zero)
     return t;
@@ -1592,6 +1727,8 @@ val zerop(val num)
     return tnil(num == chr(0));
   case RNG:
     return and2(zerop(from(num)), zerop(to(num)));
+  case COBJ:
+    return do_unary_method(self, self, num);
   default:
     not_number(self, num);
   }
@@ -1614,6 +1751,8 @@ val nzerop(val num)
     return tnil(num != chr(0));
   case RNG:
     return tnil(nzerop(from(num)) || nzerop(to(num)));
+  case COBJ:
+    return tnil(!do_unary_method(self, zerop_s, num));
   default:
     not_number(self, num);
   }
@@ -1621,7 +1760,7 @@ val nzerop(val num)
 
 val plusp(val num)
 {
-  val self = lit("plusp");
+  val self = plusp_s;
 
   switch (type(num)) {
   case NUM:
@@ -1632,6 +1771,8 @@ val plusp(val num)
     return tnil(c_flo(num, self) > 0.0);
   case CHR:
     return tnil(num != chr(0));
+  case COBJ:
+    return do_unary_method(self, self, num);
   default:
     not_number(self, num);
   }
@@ -1639,7 +1780,7 @@ val plusp(val num)
 
 val minusp(val num)
 {
-  val self = lit("minusp");
+  val self = minusp_s;
 
   switch (type(num)) {
   case NUM:
@@ -1650,6 +1791,8 @@ val minusp(val num)
     return tnil(c_flo(num, self) < 0.0);
   case CHR:
     return nil;
+  case COBJ:
+    return do_unary_method(self, self, num);
   default:
     not_number(self, num);
   }
@@ -1657,26 +1800,33 @@ val minusp(val num)
 
 val evenp(val num)
 {
+  val self = evenp_s;
+
   switch (type(num)) {
   case NUM:
     return (c_n(num) % 2 == 0) ? t : nil;
   case BGNUM:
     return mp_iseven(mp(num)) ? t : nil;
+  case COBJ:
+    return do_unary_method(self, self, num);
   default:
-    not_integer(lit("evenp"), num);
+    not_integer(self, num);
   }
 }
 
 val oddp(val num)
 {
+  val self = oddp_s;
+
   switch (type(num)) {
   case NUM:
     return (c_n(num) % 2 != 0) ? t : nil;
   case BGNUM:
     return mp_isodd(mp(num)) ? t : nil;
+  case COBJ:
+    return do_unary_method(self, self, num);
   default:
-    not_integer(lit("oddp"), num);
-    return nil;
+    not_integer(self, num);
   }
 }
 
@@ -1712,7 +1862,7 @@ val pppred(val num)
 
 val gt(val anum, val bnum)
 {
-  val self = lit(">");
+  val self = gt_s;
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
@@ -1755,6 +1905,19 @@ tail:
 
       return nil;
     }
+  case TYPE_PAIR(COBJ, NUM):
+  case TYPE_PAIR(COBJ, CHR):
+  case TYPE_PAIR(COBJ, BGNUM):
+  case TYPE_PAIR(COBJ, FLNUM):
+  case TYPE_PAIR(COBJ, RNG):
+  case TYPE_PAIR(COBJ, COBJ):
+    return do_binary_method(self, self, anum, bnum);
+  case TYPE_PAIR(NUM, COBJ):
+  case TYPE_PAIR(CHR, COBJ):
+  case TYPE_PAIR(BGNUM, COBJ):
+  case TYPE_PAIR(FLNUM, COBJ):
+  case TYPE_PAIR(RNG, COBJ):
+    return do_binary_method(self, lt_s, bnum, anum);
   }
 
   invalid_ops(self, anum, bnum);
@@ -1762,7 +1925,7 @@ tail:
 
 val lt(val anum, val bnum)
 {
-  val self = lit("<");
+  val self = lt_s;
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
@@ -1805,6 +1968,19 @@ tail:
 
       return nil;
     }
+  case TYPE_PAIR(COBJ, NUM):
+  case TYPE_PAIR(COBJ, CHR):
+  case TYPE_PAIR(COBJ, BGNUM):
+  case TYPE_PAIR(COBJ, FLNUM):
+  case TYPE_PAIR(COBJ, RNG):
+  case TYPE_PAIR(COBJ, COBJ):
+    return do_binary_method(self, self, anum, bnum);
+  case TYPE_PAIR(NUM, COBJ):
+  case TYPE_PAIR(CHR, COBJ):
+  case TYPE_PAIR(BGNUM, COBJ):
+  case TYPE_PAIR(FLNUM, COBJ):
+  case TYPE_PAIR(RNG, COBJ):
+    return do_binary_method(self, gt_s, bnum, anum);
   }
 
   invalid_ops(self, anum, bnum);
@@ -1812,7 +1988,7 @@ tail:
 
 val ge(val anum, val bnum)
 {
-  val self = lit(">=");
+  val self = ge_s;
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
@@ -1860,6 +2036,19 @@ tail:
 
       return nil;
     }
+  case TYPE_PAIR(COBJ, NUM):
+  case TYPE_PAIR(COBJ, CHR):
+  case TYPE_PAIR(COBJ, BGNUM):
+  case TYPE_PAIR(COBJ, FLNUM):
+  case TYPE_PAIR(COBJ, RNG):
+  case TYPE_PAIR(COBJ, COBJ):
+    return do_binary_method(self, self, anum, bnum);
+  case TYPE_PAIR(NUM, COBJ):
+  case TYPE_PAIR(CHR, COBJ):
+  case TYPE_PAIR(BGNUM, COBJ):
+  case TYPE_PAIR(FLNUM, COBJ):
+  case TYPE_PAIR(RNG, COBJ):
+    return do_binary_method(self, le_s, bnum, anum);
   }
 
   invalid_ops(self, anum, bnum);
@@ -1867,7 +2056,7 @@ tail:
 
 val le(val anum, val bnum)
 {
-  val self = lit("<=");
+  val self = le_s;
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
@@ -1915,6 +2104,19 @@ tail:
 
       return nil;
     }
+  case TYPE_PAIR(COBJ, NUM):
+  case TYPE_PAIR(COBJ, CHR):
+  case TYPE_PAIR(COBJ, BGNUM):
+  case TYPE_PAIR(COBJ, FLNUM):
+  case TYPE_PAIR(COBJ, RNG):
+  case TYPE_PAIR(COBJ, COBJ):
+    return do_binary_method(self, self, anum, bnum);
+  case TYPE_PAIR(NUM, COBJ):
+  case TYPE_PAIR(CHR, COBJ):
+  case TYPE_PAIR(BGNUM, COBJ):
+  case TYPE_PAIR(FLNUM, COBJ):
+  case TYPE_PAIR(RNG, COBJ):
+    return do_binary_method(self, ge_s, bnum, anum);
   }
 
   invalid_ops(self, anum, bnum);
@@ -1922,7 +2124,7 @@ tail:
 
 val numeq(val anum, val bnum)
 {
-  val self = lit("=");
+  val self = numeq_s;
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
   case TYPE_PAIR(NUM, NUM):
@@ -1955,6 +2157,19 @@ tail:
   case TYPE_PAIR(RNG, RNG):
     return and2(numeq(from(anum), from(bnum)),
                 numeq(to(anum), to(bnum)));
+  case TYPE_PAIR(COBJ, NUM):
+  case TYPE_PAIR(COBJ, CHR):
+  case TYPE_PAIR(COBJ, BGNUM):
+  case TYPE_PAIR(COBJ, FLNUM):
+  case TYPE_PAIR(COBJ, RNG):
+  case TYPE_PAIR(COBJ, COBJ):
+    return do_binary_method(self, self, anum, bnum);
+  case TYPE_PAIR(NUM, COBJ):
+  case TYPE_PAIR(CHR, COBJ):
+  case TYPE_PAIR(BGNUM, COBJ):
+  case TYPE_PAIR(FLNUM, COBJ):
+  case TYPE_PAIR(RNG, COBJ):
+    return do_binary_method(self, self, bnum, anum);
   }
 
   invalid_ops(self, anum, bnum);
@@ -1962,7 +2177,7 @@ tail:
 
 val expt(val anum, val bnum)
 {
-  val self = lit("expt");
+  val self = expt_s;
 
 tail:
   switch (TYPE_PAIR(type(anum), type(bnum))) {
@@ -2100,6 +2315,19 @@ tail:
   case TYPE_PAIR(FLNUM, BGNUM):
     bnum = flo_int(bnum);
     goto tail;
+  case TYPE_PAIR(COBJ, NUM):
+  case TYPE_PAIR(COBJ, CHR):
+  case TYPE_PAIR(COBJ, BGNUM):
+  case TYPE_PAIR(COBJ, FLNUM):
+  case TYPE_PAIR(COBJ, RNG):
+  case TYPE_PAIR(COBJ, COBJ):
+    return do_binary_method(self, self, anum, bnum);
+  case TYPE_PAIR(NUM, COBJ):
+  case TYPE_PAIR(CHR, COBJ):
+  case TYPE_PAIR(BGNUM, COBJ):
+  case TYPE_PAIR(FLNUM, COBJ):
+  case TYPE_PAIR(RNG, COBJ):
+    return do_binary_method(self, r_expt_s, bnum, anum);
   }
 
   invalid_ops(self, anum, bnum);
@@ -2109,7 +2337,7 @@ divzero:
 
 val exptmod(val base, val exp, val mod)
 {
-  val self = lit("exptmod");
+  val self = exptmod_s;
   mp_err mpe = MP_OKAY;
   val n;
 
@@ -2131,7 +2359,11 @@ val exptmod(val base, val exp, val mod)
     goto bad;
 
   return normalize(n);
+
 inval:
+  if (cobjp(base))
+    return do_ternary_method(self, self, base, exp, mod);
+
   uw_throwf(error_s, lit("~a: non-integral operands ~s ~s ~s"),
             self, base, exp, mod, nao);
 bad:
@@ -2154,6 +2386,8 @@ static int_ptr_t isqrt_fixnum(int_ptr_t a)
 
 val isqrt(val anum)
 {
+  val self = isqrt_s;
+
   switch (type(anum)) {
   case NUM:
     {
@@ -2169,18 +2403,20 @@ val isqrt(val anum)
         goto negop;
       return normalize(n);
     }
+  case COBJ:
+    return do_unary_method(self, self, anum);
   default:
     break;
   }
 
-  uw_throwf(error_s, lit("isqrt: non-integer operand ~s"), anum, nao);
+  uw_throwf(error_s, lit("~s: non-integer operand ~s"), self, anum, nao);
 negop:
-  uw_throw(error_s, lit("isqrt: negative operand"));
+  uw_throwf(error_s, lit("~s: negative operand"), self, nao);
 }
 
 val square(val anum)
 {
-  val self = lit("square");
+  val self = square_s;
 
   switch (type(anum)) {
   case NUM:
@@ -2224,11 +2460,13 @@ val square(val anum)
     }
   case RNG:
     return rcons(square(from(anum)), square(to(anum)));
+  case COBJ:
+    return do_unary_method(self, self, anum);
   default:
     break;
   }
 
-  uw_throwf(error_s, lit("square: invalid operand ~s"), anum, nao);
+  uw_throwf(error_s, lit("~a: invalid operand ~s"), self, anum, nao);
 }
 
 val gcd(val anum, val bnum)
@@ -2309,6 +2547,8 @@ val floorf(val num)
     return flo(floor(c_flo(num, self)));
   case RNG:
     return rcons(floorf(from(num)), floorf(to(num)));
+  case COBJ:
+    return do_unary_method(self, floor1_s, num);
   default:
     break;
   }
@@ -2318,7 +2558,7 @@ val floorf(val num)
 
 val ceili(val num)
 {
-  val self = lit("ceil");
+  val self = ceil_s;
 
   switch (type(num)) {
   case NUM:
@@ -2328,6 +2568,8 @@ val ceili(val num)
     return flo(ceil(c_flo(num, self)));
   case RNG:
     return rcons(ceili(from(num)), ceili(to(num)));
+  case COBJ:
+    return do_unary_method(self, ceil1_s, num);
   default:
     break;
   }
@@ -2337,56 +2579,76 @@ val ceili(val num)
 
 val sine(val num)
 {
-  val self = lit("sin");
+  val self = sin_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
   return flo(sin(c_flo(to_float(self, num), self)));
 }
 
 val cosi(val num)
 {
-  val self = lit("cos");
+  val self = cos_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
   return flo(cos(c_flo(to_float(self, num), self)));
 }
 
 val tang(val num)
 {
-  val self = lit("tan");
+  val self = tan_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
   return flo(tan(c_flo(to_float(self, num), self)));
 }
 
 val asine(val num)
 {
-  val self = lit("asin");
+  val self = asin_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
   return flo(asin(c_flo(to_float(self, num), self)));
 }
 
 val acosi(val num)
 {
-  val self = lit("acos");
+  val self = acos_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
   return flo(acos(c_flo(to_float(self, num), self)));
 }
 
 val atang(val num)
 {
-  val self = lit("atan");
+  val self = atan_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
   return flo(atan(c_flo(to_float(self, num), self)));
 }
 
 val atang2(val y, val x)
 {
-  val self = lit("atan2");
+  val self = atan2_s;
+  if (cobjp(y))
+    return do_binary_method(self, self, y, x);
+  if (cobjp(x))
+    return do_binary_method(self, r_atan2_s, x, y);
   return flo(atan2(c_flo(to_float(self, y), self),
                    c_flo(to_float(self, x), self)));
 }
 
 val loga(val num)
 {
-  val self = lit("log");
+  val self = log_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
   return flo(log(c_flo(to_float(self, num), self)));
 }
 
 val logten(val num)
 {
-  val self = lit("log10");
+  val self = log10_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
   return flo(log10(c_flo(to_float(self, num), self)));
 }
 
@@ -2414,19 +2676,25 @@ static double log2(double x)
 
 val logtwo(val num)
 {
-  val self = lit("log2");
+  val self = log2_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
   return flo(log2(c_flo(to_float(self, num), self)));
 }
 
 val expo(val num)
 {
-  val self = lit("exp");
+  val self = exp_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
   return flo(exp(c_flo(to_float(self, num), self)));
 }
 
 val sqroot(val num)
 {
-  val self = lit("sqrt");
+  val self = sqrt_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
   return flo(sqrt(c_flo(to_float(self, num), self)));
 }
 
@@ -2513,6 +2781,7 @@ val flo_int(val i)
 
 val logand(val a, val b)
 {
+  val self = logand_s;
   val c;
 
   switch (TYPE_PAIR(type(a), type(b))) {
@@ -2546,16 +2815,24 @@ val logand(val a, val b)
     if (mp_and(mp(a), mp(b), mp(c)) != MP_OKAY)
       goto bad;
     return normalize(c);
+  case TYPE_PAIR(COBJ, NUM):
+  case TYPE_PAIR(COBJ, BGNUM):
+  case TYPE_PAIR(COBJ, COBJ):
+    return do_binary_method(self, self, a, b);
+  case TYPE_PAIR(NUM, COBJ):
+  case TYPE_PAIR(BGNUM, COBJ):
+    return do_binary_method(self, self, b, a);
   default:
-    uw_throwf(error_s, lit("logand: non-integral operands ~s ~s"), a, b, nao);
+    uw_throwf(error_s, lit("~a: non-integral operands ~s ~s"), self, a, b, nao);
   }
 
 bad:
-  uw_throwf(error_s, lit("logand: operation failed on ~s ~s"), a, b, nao);
+  uw_throwf(error_s, lit("~a: operation failed on ~s ~s"), self, a, b, nao);
 }
 
 val logior(val a, val b)
 {
+  val self = logior_s;
   val c;
 
   switch (TYPE_PAIR(type(a), type(b))) {
@@ -2589,16 +2866,24 @@ val logior(val a, val b)
     if (mp_or(mp(a), mp(b), mp(c)) != MP_OKAY)
       goto bad;
     return normalize(c);
+  case TYPE_PAIR(COBJ, NUM):
+  case TYPE_PAIR(COBJ, BGNUM):
+  case TYPE_PAIR(COBJ, COBJ):
+    return do_binary_method(self, self, a, b);
+  case TYPE_PAIR(NUM, COBJ):
+  case TYPE_PAIR(BGNUM, COBJ):
+    return do_binary_method(self, self, b, a);
   default:
-    uw_throwf(error_s, lit("logior: non-integral operands ~s ~s"), a, b, nao);
+    uw_throwf(error_s, lit("~a: non-integral operands ~s ~s"), self, a, b, nao);
   }
 
 bad:
-  uw_throwf(error_s, lit("logior: operation failed on ~s ~s"), a, b, nao);
+  uw_throwf(error_s, lit("~a: operation failed on ~s ~s"), self, a, b, nao);
 }
 
 val logxor(val a, val b)
 {
+  val self = logxor_s;
   val c;
 
   switch (TYPE_PAIR(type(a), type(b))) {
@@ -2632,12 +2917,19 @@ val logxor(val a, val b)
     if (mp_xor(mp(a), mp(b), mp(c)) != MP_OKAY)
       goto bad;
     return normalize(c);
+  case TYPE_PAIR(COBJ, NUM):
+  case TYPE_PAIR(COBJ, BGNUM):
+  case TYPE_PAIR(COBJ, COBJ):
+    return do_binary_method(self, self, a, b);
+  case TYPE_PAIR(NUM, COBJ):
+  case TYPE_PAIR(BGNUM, COBJ):
+    return do_binary_method(self, self, b, a);
   default:
-    uw_throwf(error_s, lit("logxor: non-integral operands ~s ~s"), a, b, nao);
+    uw_throwf(error_s, lit("~a: non-integral operands ~s ~s"), self, a, b, nao);
   }
 
 bad:
-  uw_throwf(error_s, lit("logxor: operation failed on ~s ~s"), a, b, nao);
+  uw_throwf(error_s, lit("~a: operation failed on ~s ~s"), self, a, b, nao);
 }
 
 val logxor_old(val a, val b)
@@ -2698,6 +2990,7 @@ val logtest(val a, val b)
 
 static val comp_trunc(val a, val bits)
 {
+  val self = lognot1_s;
   cnum an, bn;
   val b;
   const cnum num_mask = (NUM_MAX << 1) | 1;
@@ -2725,25 +3018,32 @@ static val comp_trunc(val a, val bits)
     if (mp_trunc_comp(mp(a), mp(b), bn) != MP_OKAY)
       goto bad;
     return normalize(b);
+  case COBJ:
+    return do_binary_method(self, lognot_s, a, bits);
   default:
     goto bad3;
   }
 
 bad:
-  uw_throwf(error_s, lit("lognot: operation failed on ~s"), a, nao);
+  uw_throwf(error_s, lit("~a: operation failed on ~s"), self, a, nao);
 
 bad2:
-  uw_throwf(error_s, lit("lognot: bits value ~s is not a fixnum"), bits, nao);
+  if (cobjp(a))
+    return do_binary_method(self, lognot_s, a, bits);
+  if (cobjp(bits))
+    return do_binary_method(self, r_lognot_s, bits, a);
+  uw_throwf(error_s, lit("~a: bits value ~s is not a fixnum"), bits, nao);
 
 bad3:
-  uw_throwf(error_s, lit("lognot: non-integral operand ~s"), a, nao);
+  uw_throwf(error_s, lit("~a: non-integral operand ~s"), self, a, nao);
 
 bad4:
-  uw_throwf(error_s, lit("lognot: negative bits value ~s"), bits, nao);
+  uw_throwf(error_s, lit("~a: negative bits value ~s"), self, bits, nao);
 }
 
 val lognot(val a, val bits)
 {
+  val self = lognot1_s;
   val b;
 
   if (default_null_arg(bits))
@@ -2757,17 +3057,19 @@ val lognot(val a, val bits)
     if (mp_comp(mp(a), mp(b)) != MP_OKAY)
       goto bad;
     return normalize(b);
+  case COBJ:
+    return do_unary_method(self, self, a);
   default:
-    uw_throwf(error_s, lit("lognot: non-integral operand ~s"), a, nao);
+    uw_throwf(error_s, lit("~a: non-integral operand ~s"), self, a, nao);
   }
 
 bad:
-  uw_throwf(error_s, lit("lognot: operation failed on ~s"), a, nao);
+  uw_throwf(error_s, lit("~a: operation failed on ~s"), self, a, nao);
 }
 
 val logtrunc(val a, val bits)
 {
-  val self = lit("logtrunc");
+  val self = logtrunc_s;
   cnum an, bn;
   val b;
   const cnum num_mask = (NUM_MAX << 1) | 1;
@@ -2796,11 +3098,17 @@ val logtrunc(val a, val bits)
     if ((mpe = mp_trunc(mp(a), mp(b), bn)) != MP_OKAY)
       do_mp_error(self, mpe);
     return normalize(b);
+  case COBJ:
+    return do_binary_method(self, r_logtrunc_s, bits, a);
   default:
     goto bad3;
   }
 
 bad2:
+  if (cobjp(a))
+    return do_binary_method(self, self, a, bits);
+  if (cobjp(bits))
+    return do_binary_method(self, r_logtrunc_s, bits, a);
   uw_throwf(error_s, lit("~a: bits value ~s is not a fixnum"), self, bits, nao);
 
 bad3:
@@ -2812,6 +3120,7 @@ bad4:;
 
 val sign_extend(val n, val nbits)
 {
+  val self = sign_extend_s;
   val msb = minus(nbits, one);
   val ntrunc = logtrunc(n, nbits);
 
@@ -2829,10 +3138,13 @@ val sign_extend(val n, val nbits)
         mp_err mpe;
         mp_2comp(mp(ntrunc), mp(out), mp(ntrunc)->used);
         if ((mpe = mp_trunc(mp(out), mp(out), c_n(nbits))) != MP_OKAY)
-          do_mp_error(lit("sign-extend"), mpe);
+          do_mp_error(self, mpe);
         mp_neg(mp(out), mp(out));
         return normalize(out);
       }
+    case COBJ:
+      ntrunc = do_binary_method(self, self, ntrunc, nbits);
+      break;
     default:
       internal_error("impossible case");
     }
@@ -2842,12 +3154,16 @@ val sign_extend(val n, val nbits)
 
 val ash(val a, val bits)
 {
-  val self = lit("ash");
+  val self = ash_s;
+  type_t ta = type(a);
   cnum an, bn;
   val b;
   int hb;
   const int num_bits = CHAR_BIT * sizeof (cnum) - TAG_SHIFT;
   mp_err mpe = MP_OKAY;
+
+  if (ta == COBJ)
+    return do_binary_method(self, self, a, bits);
 
   if (!fixnump(bits))
     goto bad2;
@@ -2855,7 +3171,7 @@ val ash(val a, val bits)
   bn = c_n(bits);
 
   if (bn == 0) {
-    switch (type(a)) {
+    switch (ta) {
     case NUM:
     case BGNUM:
       return a;
@@ -2863,7 +3179,7 @@ val ash(val a, val bits)
       goto bad3;
     }
   } else if (bn > 0) {
-    switch (type(a)) {
+    switch (ta) {
     case NUM:
       an = c_n(a);
       hb = highest_significant_bit(an);
@@ -2882,7 +3198,7 @@ val ash(val a, val bits)
       goto bad3;
     }
   } else {
-    switch (type(a)) {
+    switch (ta) {
     case NUM:
       bn = -bn;
       an = c_n(a);
@@ -2913,9 +3229,13 @@ bad4:
 
 val bit(val a, val bit)
 {
-  val self = lit("bit");
+  val self = bit_s;
+  type_t ta = type(a);
   cnum bn;
   mp_err mpe = MP_OKAY;
+
+  if (ta == COBJ)
+    return do_binary_method(self, self, a, bit);
 
   if (!fixnump(bit))
     goto bad;
@@ -2925,7 +3245,7 @@ val bit(val a, val bit)
   if (bn < 0)
     goto bad2;
 
-  switch (type(a)) {
+  switch (ta) {
   case NUM:
   case CHR:
     {
@@ -2980,7 +3300,7 @@ val maskv(struct args *bits)
 
 val logcount(val n)
 {
-  val self = lit("logcount");
+  val self = logcount_s;
 
   switch (type(n)) {
   case NUM:
@@ -3015,6 +3335,8 @@ val logcount(val n)
         internal_error("problem in bignum arithmetic");
       return unum(co);
     }
+  case COBJ:
+    return do_unary_method(self, self, n);
   default:
     uw_throwf(error_s, lit("~a: non-integral operand ~s"), self, n, nao);
   }
@@ -3230,9 +3552,11 @@ val tointz(val obj, val base)
 
 val width(val obj)
 {
-  switch (tag(obj)) {
-  case TAG_NUM:
-  case TAG_CHR:
+  val self = width_s;
+
+  switch (type(obj)) {
+  case CHR:
+  case NUM:
     {
       cnum n = c_n(obj);
 
@@ -3243,8 +3567,8 @@ val width(val obj)
       }
       return num_fast(highest_bit(n));
     }
-  case TAG_PTR:
-    if (type(obj) == BGNUM) {
+  case BGNUM:
+    {
       mp_size count;
       if (mp_cmp_z(mp(obj)) == MP_LT) {
         mp_int tmp;
@@ -3262,10 +3586,12 @@ val width(val obj)
       }
       return unum(count);
     }
+  case COBJ:
+    return do_unary_method(self, self, obj);
   default:
     break;
   }
-  uw_throwf(error_s, lit("width: ~s isn't an integer"), obj, nao);
+  uw_throwf(error_s, lit("~a: ~s isn't an integer"), self, obj, nao);
 }
 
 val bits(val obj)
@@ -3600,9 +3926,15 @@ val nary_simple_op(val self, val (*bfun)(val, val),
 
 static val unary_num(val self, val arg)
 {
-  if (!numberp(arg))
+  switch (type(arg)) {
+  case NUM:
+  case BGNUM:
+  case FLNUM:
+  case COBJ:
+    return arg;
+  default:
     uw_throwf(error_s, lit("~a: ~s isn't a number"), self, arg, nao);
-  return arg;
+  }
 }
 
 static val unary_arith(val self, val arg)
@@ -3612,6 +3944,7 @@ static val unary_arith(val self, val arg)
   case CHR:
   case BGNUM:
   case FLNUM:
+  case COBJ:
     return arg;
   default:
     uw_throwf(error_s, lit("~a: invalid argument ~s"), self, arg, nao);
@@ -3627,7 +3960,7 @@ static val unary_int(val self, val arg)
 
 val plusv(struct args *nlist)
 {
-  return nary_op(lit("+"), plus, unary_arith, nlist, zero);
+  return nary_op(plus_s, plus, unary_arith, nlist, zero);
 }
 
 val minusv(val minuend, struct args *nlist)
@@ -3648,7 +3981,7 @@ val minusv(val minuend, struct args *nlist)
 
 val mulv(struct args *nlist)
 {
-  return nary_op(lit("*"), mul, unary_num, nlist, one);
+  return nary_op(mul_s, mul, unary_num, nlist, one);
 }
 
 val divv(val dividend, struct args *nlist)
@@ -3669,12 +4002,12 @@ val divv(val dividend, struct args *nlist)
 
 val logandv(struct args *nlist)
 {
-  return nary_op(lit("logand"), logand, unary_int, nlist, negone);
+  return nary_op(logand_s, logand, unary_int, nlist, negone);
 }
 
 val logiorv(struct args *nlist)
 {
-  return nary_op(lit("logior"), logior, unary_int, nlist, zero);
+  return nary_op(logior_s, logior, unary_int, nlist, zero);
 }
 
 val gtv(val first, struct args *rest)
@@ -3689,7 +4022,7 @@ val gtv(val first, struct args *rest)
   }
 
   if (index == 0)
-    (void) unary_arith(lit(">"), first);
+    (void) unary_arith(gt_s, first);
 
   return t;
 }
@@ -3706,7 +4039,7 @@ val ltv(val first, struct args *rest)
   }
 
   if (index == 0)
-    (void) unary_arith(lit("<"), first);
+    (void) unary_arith(lt_s, first);
 
   return t;
 }
@@ -3723,7 +4056,7 @@ val gev(val first, struct args *rest)
   }
 
   if (index == 0)
-    (void) unary_arith(lit(">="), first);
+    (void) unary_arith(ge_s, first);
 
   return t;
 }
@@ -3740,7 +4073,7 @@ val lev(val first, struct args *rest)
   }
 
   if (index == 0)
-    (void) unary_arith(lit("<="), first);
+    (void) unary_arith(le_s, first);
 
   return t;
 }
@@ -3757,7 +4090,7 @@ val numeqv(val first, struct args *rest)
   }
 
   if (index == 0)
-    (void) unary_arith(lit("="), first);
+    (void) unary_arith(numeq_s, first);
 
   return t;
 }
@@ -3782,7 +4115,7 @@ val numneqv(struct args *args)
 
 static val sumv(struct args *nlist, val keyfun)
 {
-  return nary_op_keyfun(lit("+"), plus, unary_arith, nlist, zero, keyfun);
+  return nary_op_keyfun(plus_s, plus, unary_arith, nlist, zero, keyfun);
 }
 
 val sum(val seq, val keyfun)
@@ -3793,7 +4126,7 @@ val sum(val seq, val keyfun)
 
 static val prodv(struct args *nlist, val keyfun)
 {
-  return nary_op_keyfun(lit("*"), mul, unary_num, nlist, one, keyfun);
+  return nary_op_keyfun(mul_s, mul, unary_num, nlist, one, keyfun);
 }
 
 val prod(val seq, val keyfun)
@@ -3812,7 +4145,7 @@ val exptv(struct args *nlist)
   cnum nargs = args_count(nlist);
   args_decl(rnlist, max(ARGS_MIN, nargs));
   args_copy_reverse(rnlist, nlist, nargs);
-  return nary_op(lit("expt"), rexpt, unary_num, rnlist, one);
+  return nary_op(expt_s, rexpt, unary_num, rnlist, one);
 }
 
 static val abso_self(val self, val arg)
@@ -3835,6 +4168,70 @@ val lcmv(struct args *nlist)
 void arith_init(void)
 {
   log2_init();
+
+  plus_s = intern(lit("+"), user_package);
+  minus_s = intern(lit("-"), user_package);
+  inv_minus_s = intern(lit("--"), user_package);
+  neg_s = intern(lit("neg"), user_package);
+  abs_s = intern(lit("abs"), user_package);
+  signum_s = intern(lit("signum"), user_package);
+  mul_s = intern(lit("*"), user_package);
+  div_s = intern(lit("/"), user_package);
+  recip_s = intern(lit("recip"), user_package);
+  inv_div_s = intern(lit("//"), user_package);
+  trunc1_s = intern(lit("trunc1"), user_package);
+  trunc_s = intern(lit("trunc"), user_package);
+  r_trunc_s = intern(lit("r-trunc"), user_package);
+  mod_s = intern(lit("mod"), user_package);
+  r_mod_s = intern(lit("r-mod"), user_package);
+  zerop_s = intern(lit("zerop"), user_package);
+  plusp_s = intern(lit("plusp"), user_package);
+  minusp_s = intern(lit("minusp"), user_package);
+  evenp_s = intern(lit("evenp"), user_package);
+  oddp_s = intern(lit("oddp"), user_package);
+  gt_s = intern(lit(">"), user_package);
+  lt_s = intern(lit("<"), user_package);
+  ge_s = intern(lit(">="), user_package);
+  le_s = intern(lit("<="), user_package);
+  numeq_s = intern(lit("="), user_package);
+  expt_s = intern(lit("expt"), user_package);
+  r_expt_s = intern(lit("r-expt"), user_package);
+  exptmod_s = intern(lit("exptmod"), user_package);
+  isqrt_s = intern(lit("isqrt"), user_package);
+  square_s = intern(lit("square"), user_package);
+  floor_s = intern(lit("floor"), user_package);
+  floor1_s = intern(lit("floor1"), user_package);
+  r_floor_s = intern(lit("r-floor"), user_package);
+  ceil_s = intern(lit("ceil"), user_package);
+  ceil1_s = intern(lit("ceil1"), user_package);
+  round_s = intern(lit("round"), user_package);
+  round1_s = intern(lit("round1"), user_package);
+  sin_s = intern(lit("sin"), user_package);
+  cos_s = intern(lit("cos"), user_package);
+  tan_s = intern(lit("tan"), user_package);
+  asin_s = intern(lit("asin"), user_package);
+  acos_s = intern(lit("acos"), user_package);
+  atan_s = intern(lit("atan"), user_package);
+  atan2_s = intern(lit("atan2"), user_package);
+  r_atan2_s = intern(lit("r-atan2"), user_package);
+  log_s = intern(lit("log"), user_package);
+  log2_s = intern(lit("log2"), user_package);
+  log10_s = intern(lit("log10"), user_package);
+  exp_s = intern(lit("exp"), user_package);
+  sqrt_s = intern(lit("sqrt"), user_package);
+  logand_s = intern(lit("logand"), user_package);
+  logior_s = intern(lit("logior"), user_package);
+  logxor_s = intern(lit("logxor"), user_package);
+  lognot1_s = intern(lit("lognot1"), user_package);
+  lognot_s = intern(lit("lognot"), user_package);
+  r_lognot_s = intern(lit("r-logtruncnot"), user_package);
+  logtrunc_s = intern(lit("logtrunc"), user_package);
+  r_logtrunc_s = intern(lit("r-logtrunc"), user_package);
+  sign_extend_s = intern(lit("sign-extend"), user_package);
+  ash_s = intern(lit("ash"), user_package);
+  bit_s = intern(lit("bit"), user_package);
+  width_s = intern(lit("width"), user_package);
+  logcount_s = intern(lit("logcount"), user_package);
 
   if (opt_compat && opt_compat <= 199) {
     reg_varl(intern(lit("*flo-dig*"), user_package), num_fast(DBL_DIG));
@@ -3865,73 +4262,73 @@ void arith_init(void)
     reg_varl(intern(lit("*e*"), user_package), flo(M_E));
   }
 
-  reg_fun(plus_s = intern(lit("+"), user_package), func_n0v(plusv));
-  reg_fun(intern(lit("-"), user_package), func_n1v(minusv));
-  reg_fun(intern(lit("*"), user_package), func_n0v(mulv));
+  reg_fun(plus_s, func_n0v(plusv));
+  reg_fun(minus_s, func_n1v(minusv));
+  reg_fun(mul_s, func_n0v(mulv));
   reg_fun(intern(lit("sum"), user_package), func_n2o(sum, 1));
   reg_fun(intern(lit("prod"), user_package), func_n2o(prod, 1));
-  reg_fun(intern(lit("abs"), user_package), func_n1(abso));
-  reg_fun(intern(lit("trunc"), user_package), func_n2o(trunc, 1));
-  reg_fun(intern(lit("mod"), user_package), func_n2(mod));
-  reg_fun(intern(lit("zerop"), user_package), func_n1(zerop));
+  reg_fun(abs_s, func_n1(abso));
+  reg_fun(trunc_s, func_n2o(trunc, 1));
+  reg_fun(mod_s, func_n2(mod));
+  reg_fun(zerop_s, func_n1(zerop));
   reg_fun(intern(lit("nzerop"), user_package), func_n1(nzerop));
-  reg_fun(intern(lit("plusp"), user_package), func_n1(plusp));
-  reg_fun(intern(lit("minusp"), user_package), func_n1(minusp));
-  reg_fun(intern(lit("evenp"), user_package), func_n1(evenp));
-  reg_fun(intern(lit("oddp"), user_package), func_n1(oddp));
+  reg_fun(plusp_s, func_n1(plusp));
+  reg_fun(minusp_s, func_n1(minusp));
+  reg_fun(evenp_s, func_n1(evenp));
+  reg_fun(oddp_s, func_n1(oddp));
   reg_fun(intern(lit("succ"), user_package), func_n1(succ));
   reg_fun(intern(lit("ssucc"), user_package), func_n1(ssucc));
   reg_fun(intern(lit("sssucc"), user_package), func_n1(sssucc));
   reg_fun(intern(lit("pred"), user_package), func_n1(pred));
   reg_fun(intern(lit("ppred"), user_package), func_n1(ppred));
   reg_fun(intern(lit("pppred"), user_package), func_n1(pppred));
-  reg_fun(intern(lit(">"), user_package), func_n1v(gtv));
-  reg_fun(intern(lit("<"), user_package), func_n1v(ltv));
-  reg_fun(intern(lit(">="), user_package), func_n1v(gev));
-  reg_fun(intern(lit("<="), user_package), func_n1v(lev));
-  reg_fun(intern(lit("="), user_package), func_n1v(numeqv));
+  reg_fun(gt_s, func_n1v(gtv));
+  reg_fun(lt_s, func_n1v(ltv));
+  reg_fun(ge_s, func_n1v(gev));
+  reg_fun(le_s, func_n1v(lev));
+  reg_fun(numeq_s, func_n1v(numeqv));
   reg_fun(intern(lit("/="), user_package), func_n0v(numneqv));
   reg_fun(intern(lit("wrap"), user_package), func_n3(wrap));
   reg_fun(intern(lit("wrap*"), user_package), func_n3(wrap_star));
-  reg_fun(intern(lit("/"), user_package), func_n1v(divv));
-  reg_fun(intern(lit("expt"), user_package), func_n0v(exptv));
-  reg_fun(intern(lit("exptmod"), user_package), func_n3(exptmod));
-  reg_fun(intern(lit("isqrt"), user_package), func_n1(isqrt));
-  reg_fun(intern(lit("square"), user_package), func_n1(square));
+  reg_fun(div_s, func_n1v(divv));
+  reg_fun(expt_s, func_n0v(exptv));
+  reg_fun(exptmod_s, func_n3(exptmod));
+  reg_fun(isqrt_s, func_n1(isqrt));
+  reg_fun(square_s, func_n1(square));
   reg_fun(intern(lit("gcd"), user_package), func_n0v(gcdv));
   reg_fun(intern(lit("lcm"), user_package), func_n0v(lcmv));
-  reg_fun(intern(lit("floor"), user_package), func_n2o(floordiv, 1));
-  reg_fun(intern(lit("ceil"), user_package), func_n2o(ceildiv, 1));
-  reg_fun(intern(lit("round"), user_package), func_n2o(roundiv, 1));
+  reg_fun(floor_s, func_n2o(floordiv, 1));
+  reg_fun(ceil_s, func_n2o(ceildiv, 1));
+  reg_fun(round_s, func_n2o(roundiv, 1));
   reg_fun(intern(lit("trunc-rem"), user_package), func_n2o(trunc_rem, 1));
   reg_fun(intern(lit("floor-rem"), user_package), func_n2o(floor_rem, 1));
   reg_fun(intern(lit("ceil-rem"), user_package), func_n2o(ceil_rem, 1));
   reg_fun(intern(lit("round-rem"), user_package), func_n2o(round_rem, 1));
-  reg_fun(intern(lit("sin"), user_package), func_n1(sine));
-  reg_fun(intern(lit("cos"), user_package), func_n1(cosi));
-  reg_fun(intern(lit("tan"), user_package), func_n1(tang));
-  reg_fun(intern(lit("asin"), user_package), func_n1(asine));
-  reg_fun(intern(lit("acos"), user_package), func_n1(acosi));
-  reg_fun(intern(lit("atan"), user_package), func_n1(atang));
-  reg_fun(intern(lit("atan2"), user_package), func_n2(atang2));
-  reg_fun(intern(lit("log"), user_package), func_n1(loga));
-  reg_fun(intern(lit("log10"), user_package), func_n1(logten));
-  reg_fun(intern(lit("log2"), user_package), func_n1(logtwo));
-  reg_fun(intern(lit("exp"), user_package), func_n1(expo));
-  reg_fun(intern(lit("sqrt"), user_package), func_n1(sqroot));
-  reg_fun(intern(lit("logand"), user_package), func_n0v(logandv));
-  reg_fun(intern(lit("logior"), user_package), func_n0v(logiorv));
-  reg_fun(intern(lit("logxor"), user_package),
+  reg_fun(sin_s, func_n1(sine));
+  reg_fun(cos_s, func_n1(cosi));
+  reg_fun(tan_s, func_n1(tang));
+  reg_fun(asin_s, func_n1(asine));
+  reg_fun(acos_s, func_n1(acosi));
+  reg_fun(atan_s, func_n1(atang));
+  reg_fun(atan2_s, func_n2(atang2));
+  reg_fun(log_s, func_n1(loga));
+  reg_fun(log10_s, func_n1(logten));
+  reg_fun(log2_s, func_n1(logtwo));
+  reg_fun(exp_s, func_n1(expo));
+  reg_fun(sqrt_s, func_n1(sqroot));
+  reg_fun(logand_s, func_n0v(logandv));
+  reg_fun(logior_s, func_n0v(logiorv));
+  reg_fun(logxor_s,
           func_n2(if3(opt_compat && opt_compat <= 202, logxor_old, logxor)));
   reg_fun(intern(lit("logtest"), user_package), func_n2(logtest));
-  reg_fun(intern(lit("lognot"), user_package), func_n2o(lognot, 1));
-  reg_fun(intern(lit("logtrunc"), user_package), func_n2(logtrunc));
-  reg_fun(intern(lit("sign-extend"), user_package), func_n2(sign_extend));
-  reg_fun(intern(lit("ash"), user_package), func_n2(ash));
-  reg_fun(intern(lit("bit"), user_package), func_n2(bit));
+  reg_fun(lognot_s, func_n2o(lognot, 1));
+  reg_fun(logtrunc_s, func_n2(logtrunc));
+  reg_fun(sign_extend_s, func_n2(sign_extend));
+  reg_fun(ash_s, func_n2(ash));
+  reg_fun(bit_s, func_n2(bit));
   reg_fun(intern(lit("mask"), user_package), func_n0v(maskv));
-  reg_fun(intern(lit("width"), user_package), func_n1(width));
-  reg_fun(intern(lit("logcount"), user_package), func_n1(logcount));
+  reg_fun(width_s, func_n1(width));
+  reg_fun(logcount_s, func_n1(logcount));
   reg_fun(intern(lit("cum-norm-dist"), user_package), func_n1(cum_norm_dist));
   reg_fun(intern(lit("inv-cum-norm"), user_package), func_n1(inv_cum_norm));
   reg_fun(intern(lit("n-choose-k"), user_package), func_n2(n_choose_k));
@@ -3943,7 +4340,7 @@ void arith_init(void)
   reg_fun(intern(lit("numberp"), user_package), func_n1(numberp));
 
 
-  reg_fun(intern(lit("signum"), user_package), func_n1(signum));
+  reg_fun(signum_s, func_n1(signum));
 
   reg_fun(intern(lit("bignum-len"), user_package), func_n1(bignum_len));
   reg_fun(intern(lit("divides"), user_package), func_n2(divides));
@@ -3962,7 +4359,7 @@ void arith_init(void)
   reg_fun(intern(lit("b-"), system_package), func_n2(minus));
   reg_fun(intern(lit("b*"), system_package), func_n2(mul));
   reg_fun(intern(lit("b/"), system_package), func_n2(divi));
-  reg_fun(intern(lit("neg"), system_package), func_n1(neg));
+  reg_fun(neg_s, func_n1(neg));
 
 #if HAVE_ROUNDING_CTL_H
   reg_varl(intern(lit("flo-near"), user_package), num(FE_TONEAREST));
