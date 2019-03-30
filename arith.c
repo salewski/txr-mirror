@@ -650,6 +650,10 @@ tail:
     case TYPE_PAIR(COBJ, RNG):
     case TYPE_PAIR(COBJ, COBJ):
       return do_binary_method(self, self, anum, bnum);
+    case TYPE_PAIR(BGNUM, COBJ):
+    case TYPE_PAIR(FLNUM, COBJ):
+    case TYPE_PAIR(RNG, COBJ):
+      return do_binary_method(self, self, bnum, anum);
     default:
       break;
     }
@@ -818,6 +822,10 @@ tail:
     case TYPE_PAIR(COBJ, RNG):
     case TYPE_PAIR(COBJ, COBJ):
       return do_binary_method(self, self, anum, bnum);
+    case TYPE_PAIR(BGNUM, COBJ):
+    case TYPE_PAIR(FLNUM, COBJ):
+    case TYPE_PAIR(RNG, COBJ):
+      return do_binary_method(self, inv_minus_s, bnum, anum);
     default:
       break;
     }
@@ -1065,6 +1073,10 @@ tail:
     case TYPE_PAIR(COBJ, RNG):
     case TYPE_PAIR(COBJ, COBJ):
       return do_binary_method(self, self, anum, bnum);
+    case TYPE_PAIR(BGNUM, COBJ):
+    case TYPE_PAIR(FLNUM, COBJ):
+    case TYPE_PAIR(RNG, COBJ):
+      return do_binary_method(self, self, bnum, anum);
     default:
       break;
     }
@@ -1380,6 +1392,9 @@ tail:
     case TYPE_PAIR(COBJ, FLNUM):
     case TYPE_PAIR(COBJ, COBJ):
       return do_binary_method(self, self, anum, bnum);
+    case TYPE_PAIR(BGNUM, COBJ):
+    case TYPE_PAIR(FLNUM, COBJ):
+      return do_binary_method(self, r_mod_s, bnum, anum);
     }
   }
   invalid_ops(self, anum, bnum);
@@ -1544,8 +1559,13 @@ tail:
       return rcons(floordiv(from(anum), bnum), floordiv(to(anum), bnum));
     case TYPE_PAIR(COBJ, BGNUM):
     case TYPE_PAIR(COBJ, FLNUM):
+    case TYPE_PAIR(COBJ, RNG):
     case TYPE_PAIR(COBJ, COBJ):
       return do_binary_method(self, self, anum, bnum);
+    case TYPE_PAIR(BGNUM, COBJ):
+    case TYPE_PAIR(FLNUM, COBJ):
+    case TYPE_PAIR(RNG, COBJ):
+      return do_binary_method(self, r_floor_s, bnum, anum);
     }
   }
   invalid_ops(self, anum, bnum);
