@@ -38223,43 +38223,12 @@ arguments must be integers.
 .bmnl floor
 .bmnr r-floor floor
 .umv floor1 floor
+.bmnl ceil
+.bmnr r-ceil ceil
 .umv ceil1 ceil
-
-Note: the two-argument version of the
-.code ceil
-function is internally defined in terms of unary
-.code -
-and
-.codn floor .
-Therefore, there is no
-.code ceil
-method required for supporting structure arguments to the
-.code ceil
-function; however, the
-.code neg
-and
-.code floor
-methods are required.
-
+.bmnl round
+.bmnr r-round round
 .umv round1 round
-
-Note: the two-argument version of the
-.code round
-function is internally defined in terms of
-.codn floor ,
-.codn - ,
-.codn + ,
-.codn * ,
-.code <
-and
-.codn minusp .
-Therefore, there is no
-.code round
-method required for supporting structure arguments to the
-.code round
-function; however, the methods corresponding to the
-above functions are required.
-
 .um sin
 .um cos
 .um tan

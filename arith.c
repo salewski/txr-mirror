@@ -65,7 +65,8 @@ val zerop_s, plusp_s, minusp_s, evenp_s, oddp_s;
 val gt_s, lt_s, ge_s, le_s, numeq_s;
 val expt_s, r_expt_s, exptmod_s, isqrt_s, square_s;
 val floor_s, floor1_s, r_floor_s;
-val ceil_s, ceil1_s, round_s, round1_s;
+val ceil_s, ceil1_s, r_ceil_s;
+val round_s, round1_s, r_round_s;
 val sin_s, cos_s, tan_s, asin_s, acos_s, atan_s, atan2_s, r_atan2_s;
 val log_s, log2_s, log10_s, exp_s, sqrt_s;
 val logand_s, logior_s, logxor_s;
@@ -1575,8 +1576,13 @@ divzero:
 
 val ceildiv(val anum, val bnum)
 {
+  val self = ceil_s;
   if (missingp(bnum))
     return ceili(anum);
+  if (type(anum) == COBJ)
+    return do_binary_method(self, self, anum, bnum);
+  if (type(bnum) == COBJ)
+    return do_binary_method(self, r_ceil_s, bnum, anum);
   return neg(floordiv(neg(anum), bnum));
 }
 
@@ -1611,18 +1617,28 @@ static val round1(val self, val num)
 val roundiv(val anum, val bnum)
 {
   val self = round_s;
+  type_t ta, tb;
 
   if (missingp(bnum))
     return round1(self, anum);
+
+  ta = type(anum);
+  tb = type(bnum);
+
+  if (ta == COBJ)
+    return do_binary_method(self, self, anum, bnum);
+
+  if (tb == COBJ)
+    return do_binary_method(self, r_round_s, bnum, anum);
 
   if (minusp(bnum)) {
     anum = neg(anum);
     bnum = neg(bnum);
   }
 
-  if (rangep(anum)) {
+  if (ta == RNG) {
     return rcons(roundiv(from(anum), bnum), roundiv(to(anum), bnum));
-  } else if (floatp(anum) || floatp(bnum)) {
+  } else if (ta == FLNUM || tb == FLNUM) {
     val quot = divi(anum, bnum);
 #if HAVE_ROUND
     return flo(round(c_flo(quot, self)));
@@ -4229,8 +4245,10 @@ void arith_init(void)
   r_floor_s = intern(lit("r-floor"), user_package);
   ceil_s = intern(lit("ceil"), user_package);
   ceil1_s = intern(lit("ceil1"), user_package);
+  r_ceil_s = intern(lit("r-ceil"), user_package);
   round_s = intern(lit("round"), user_package);
   round1_s = intern(lit("round1"), user_package);
+  r_round_s = intern(lit("r-round"), user_package);
   sin_s = intern(lit("sin"), user_package);
   cos_s = intern(lit("cos"), user_package);
   tan_s = intern(lit("tan"), user_package);
