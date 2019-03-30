@@ -1683,7 +1683,7 @@ val divi(val anum, val bnum)
   val self = div_s;
 
   if (missingp(bnum)) {
-    if (cobjp(bnum)) {
+    if (cobjp(anum)) {
       return do_unary_method(self, recip_s, anum);
     } else {
       double b = c_flo(to_float(self, anum), self);
@@ -3099,7 +3099,7 @@ val logtrunc(val a, val bits)
       do_mp_error(self, mpe);
     return normalize(b);
   case COBJ:
-    return do_binary_method(self, r_logtrunc_s, bits, a);
+    return do_binary_method(self, self, a, bits);
   default:
     goto bad3;
   }
@@ -3121,35 +3121,40 @@ bad4:;
 val sign_extend(val n, val nbits)
 {
   val self = sign_extend_s;
-  val msb = minus(nbits, one);
-  val ntrunc = logtrunc(n, nbits);
 
-  if (bit(ntrunc, msb)) {
-    switch (type(ntrunc)) {
-    case NUM:
-      {
-        cnum cn = c_n(ntrunc);
-        cnum nb = c_n(nbits);
-        return num(cn | (INT_PTR_MAX << nb));
+  if (cobjp(n)) {
+      return do_binary_method(self, self, n, nbits);
+  } else {
+    val msb = minus(nbits, one);
+    val ntrunc = logtrunc(n, nbits);
+
+    if (bit(ntrunc, msb)) {
+      switch (type(ntrunc)) {
+      case NUM:
+        {
+          cnum cn = c_n(ntrunc);
+          cnum nb = c_n(nbits);
+          return num(cn | (INT_PTR_MAX << nb));
+        }
+      case BGNUM:
+        {
+          val out = make_ubignum();
+          mp_err mpe;
+          mp_2comp(mp(ntrunc), mp(out), mp(ntrunc)->used);
+          if ((mpe = mp_trunc(mp(out), mp(out), c_n(nbits))) != MP_OKAY)
+            do_mp_error(self, mpe);
+          mp_neg(mp(out), mp(out));
+          return normalize(out);
+        }
+      case COBJ:
+        ntrunc = do_binary_method(self, self, ntrunc, nbits);
+        break;
+      default:
+        internal_error("impossible case");
       }
-    case BGNUM:
-      {
-        val out = make_ubignum();
-        mp_err mpe;
-        mp_2comp(mp(ntrunc), mp(out), mp(ntrunc)->used);
-        if ((mpe = mp_trunc(mp(out), mp(out), c_n(nbits))) != MP_OKAY)
-          do_mp_error(self, mpe);
-        mp_neg(mp(out), mp(out));
-        return normalize(out);
-      }
-    case COBJ:
-      ntrunc = do_binary_method(self, self, ntrunc, nbits);
-      break;
-    default:
-      internal_error("impossible case");
     }
+    return ntrunc;
   }
-  return ntrunc;
 }
 
 val ash(val a, val bits)
@@ -3990,7 +3995,7 @@ val divv(val dividend, struct args *nlist)
   cnum index = 0;
 
   if (!args_more(nlist, index))
-    return divi(one, acc);
+    return divi(acc, colon_k);
 
   do {
     next = args_get(nlist, &index);
@@ -4224,7 +4229,7 @@ void arith_init(void)
   logxor_s = intern(lit("logxor"), user_package);
   lognot1_s = intern(lit("lognot1"), user_package);
   lognot_s = intern(lit("lognot"), user_package);
-  r_lognot_s = intern(lit("r-logtruncnot"), user_package);
+  r_lognot_s = intern(lit("r-lognot"), user_package);
   logtrunc_s = intern(lit("logtrunc"), user_package);
   r_logtrunc_s = intern(lit("r-logtrunc"), user_package);
   sign_extend_s = intern(lit("sign-extend"), user_package);
