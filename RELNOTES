@@ -1,3 +1,23 @@
+                                    TXR 215
+                                   2019-03-30
+
+
+  Features
+
+  - Math:
+    - User-defined arithmetic types are now possible.
+      - objects which implement certain methods accoring to the
+        documentation can be passed into arithmetic functions.
+
+  Bugs
+
+  - Listener:
+    - we now ensure that the .txr_history as well as the temporary
+      files created by the Ctrl-X E command (edit in external editor)
+      are readable only to the user: perms rw-------.
+
+
+
                                     TXR 214
                                    2019-03-22
 
