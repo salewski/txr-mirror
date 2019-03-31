@@ -40,6 +40,7 @@
 #if HAVE_ROUNDING_CTL_H
 #include <fenv.h>
 #endif
+#include "alloca.h"
 #include "lib.h"
 #include "signal.h"
 #include "unwind.h"
