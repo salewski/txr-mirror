@@ -48,6 +48,7 @@
 #include "debug.h"
 #include "eval.h"
 #include "cadr.h"
+#include "arith.h"
 #include "match.h"
 
 int opt_print_bindings = 0;
@@ -57,7 +58,7 @@ int opt_arraydims = 1;
 val decline_k, next_spec_k, repeat_spec_k;
 val mingap_k, maxgap_k, gap_k, mintimes_k, maxtimes_k, times_k;
 val lines_k, chars_k;
-val text_s, choose_s, gather_s, do_s, mdo_s, mod_s, modlast_s;
+val text_s, choose_s, gather_s, do_s, mdo_s, modlast_s; /* mod_s in arith.c */
 val line_s, data_s, fuzz_s, load_s;
 val include_s, close_s, require_s, in_package_s;
 val else_s, elif_s;

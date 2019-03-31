@@ -122,7 +122,7 @@ val ptr_in_s, ptr_out_s, ptr_in_d_s, ptr_out_d_s, ptr_out_s_s, ptr_s;
 
 val closure_s;
 
-val sbit_s, ubit_s, bit_s;
+val sbit_s, ubit_s; /* bit_s is in arith.c */
 
 val enum_s, enumed_s;
 
