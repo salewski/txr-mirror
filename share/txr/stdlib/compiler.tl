@@ -524,7 +524,12 @@
   (mac-param-bind form (op idx-form cases-vec) form
     (let* ((ncases (len cases-vec))
            (cs (and (plusp ncases) (conses [cases-vec 0])))
-           (shared (and cs (all [cases-vec 1..:] (op memq @1 cs))))
+           (shared (and cs
+                        (let ((c cs)
+                              (d (cdr (list-vec cases-vec))))
+                          (whilet ((m (if d (memq (pop d) c))))
+                            (set c m))
+                          (null d))))
            (cases (if shared
                     (let ((cs-nil ^(,*cs nil)))
                       [mapcar ldiff cs-nil (cdr cs-nil)])
