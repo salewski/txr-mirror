@@ -3233,32 +3233,26 @@ val expand_forms(val form, val menv)
   }
 }
 
-static val expand_forms_ss(val form, val menv, val ss_hash)
+static val expand_forms_ss(val forms, val menv, val ss_hash)
 {
-  uses_or2;
+  val fh;
 
-  if (atom(form)) {
-    if (!form)
-      return form;
-    dotted_form_error(form);
+  if (atom(forms)) {
+    if (!forms)
+      return forms;
+    dotted_form_error(forms);
+  } else if ((fh = gethash(ss_hash, forms)) != nil) {
+    return fh;
   } else {
-    val f = car(form);
-    val r = cdr(form);
-    val ss_f = gethash(ss_hash, f);
-    val ss_r = gethash(ss_hash, r);
-    val ex_f = or2(ss_f, expand(f, menv));
-    val ex_r = or2(ss_r, expand_forms_ss(r, menv, ss_hash));
-
-    if (!ss_f)
-      sethash(ss_hash, f, ex_f);
-
-    if (!ss_r)
-      sethash(ss_hash, r, ex_r);
+    val f = car(forms);
+    val r = cdr(forms);
+    val ex_f = expand(f, menv);
+    val ex_r = expand_forms_ss(r, menv, ss_hash);
 
     if (ex_f == f && ex_r == r)
-      return form;
+      return sethash(ss_hash, forms, forms);
 
-    return sethash(ss_hash, form, rlcp(cons(ex_f, ex_r), form));
+    return sethash(ss_hash, forms, rlcp(cons(ex_f, ex_r), forms));
   }
 }
 
