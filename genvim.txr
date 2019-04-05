@@ -57,6 +57,7 @@ static void dir_tables_init(void)
                                               sys:setqf new lnew
                                               meth umeth usl))
                         (list text)))))
+@(bind comments #"\\;\\;\\; \\;\\; \\;")
 @(define generate (txr-p))
 @  (output @(if txr-p "txr.vim" "tl.vim") :named out)
 " VIM Syntax file for txr
@@ -221,6 +222,7 @@ hi def link txr_ign_bkt Comment
 let b:current_syntax = "lisp"
 
 set lispwords=@{lispwords ","},:method,:function,:init,:postinit,:fini
+set comments=@{[mapcar (ret `:@(if txr-p #\@ "")@1`) comments] ","}
 @  (end)
 @(end)
 @(generate t)
