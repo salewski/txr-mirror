@@ -283,7 +283,7 @@ static val tleval(val spec, val form, val bindings)
 {
   val ret;
 
-  uw_env_begin;
+  uw_match_env_begin;
 
   if (opt_compat && opt_compat <= 121) {
     uw_set_match_context(cons(spec, bindings));
@@ -297,7 +297,7 @@ static val tleval(val spec, val form, val bindings)
     set_dyn_env(saved_de);
   }
 
-  uw_env_end;
+  uw_match_env_end;
   return ret;
 }
 
@@ -306,7 +306,7 @@ static val tleval_progn(val spec, val forms, val bindings)
 {
   val ret;
 
-  uw_env_begin;
+  uw_match_env_begin;
 
   if (opt_compat && opt_compat <= 121) {
     uw_set_match_context(cons(spec, bindings));
@@ -320,7 +320,7 @@ static val tleval_progn(val spec, val forms, val bindings)
     set_dyn_env(saved_de);
   }
 
-  uw_env_end;
+  uw_match_env_end;
   return ret;
 }
 
@@ -1404,7 +1404,7 @@ static val h_fun(match_line_ctx *c)
     {
       args_decl_list(args, ARGS_MIN, bindings_cp);
       uw_block_begin(nil, result);
-      uw_env_begin;
+      uw_match_env_begin;
       debug_frame(sym, args, ub_p_a_pairs, c->bindings, c->dataline, c->data_lineno, c->pos);
 
       uw_simple_catch_begin;
@@ -1418,7 +1418,7 @@ static val h_fun(match_line_ctx *c)
       uw_catch_end;
 
       debug_end;
-      uw_env_end;
+      uw_match_env_end;
       uw_block_end;
 
       if (!result) {
@@ -1671,7 +1671,7 @@ static val tx_subst_vars(val spec, val bindings, val filter)
 {
   if (opt_compat && opt_compat <= 128) {
     list_collect_decl(out, iter);
-    uw_env_begin;
+    uw_match_env_begin;
 
     uw_set_match_context(cons(spec, bindings));
 
@@ -1737,7 +1737,7 @@ static val tx_subst_vars(val spec, val bindings, val filter)
       spec = cdr(spec);
     }
 
-    uw_env_end;
+    uw_match_env_end;
     return out;
   } else {
     val saved_de = set_dyn_env(make_env(bindings, nil, nil));
@@ -3644,12 +3644,12 @@ static val v_bind(match_files_ctx *c)
     testfun = curry_1234_34(func_n4(filter_equal), lfilt, rfilt);
   }
 
-  uw_env_begin;
+  uw_match_env_begin;
   uw_set_match_context(cons(c->spec, c->bindings));
 
   c->bindings = dest_bind(specline, c->bindings, pattern, value, testfun);
 
-  uw_env_end;
+  uw_match_env_end;
 
   if (c->bindings == t)
     return nil;
@@ -3736,7 +3736,7 @@ static val v_output(match_files_ctx *c)
   val stream = nil;
   val ret = next_spec_k;
 
-  uw_env_begin;
+  uw_match_env_begin;
 
   val saved_de = set_dyn_env(make_env(c->bindings, nil, nil));
 
@@ -3862,7 +3862,7 @@ static val v_output(match_files_ctx *c)
 
 out:
   set_dyn_env(saved_de);
-  uw_env_end;
+  uw_match_env_end;
   return ret;
 }
 
@@ -4118,7 +4118,7 @@ static val v_filter(match_files_ctx *c)
   if (!filter)
     sem_error(specline, lit("~s specifies unknown filter"), filter_spec, nao);
 
-  uw_env_begin;
+  uw_match_env_begin;
   uw_set_match_context(cons(c->spec, c->bindings));
 
   for (; vars; vars = cdr(vars)) {
@@ -4127,7 +4127,7 @@ static val v_filter(match_files_ctx *c)
     rplacd(existing, filter_string_tree(filter, cdr(existing)));
   }
 
-  uw_env_end;
+  uw_match_env_end;
   return next_spec_k;
 }
 
@@ -4181,7 +4181,7 @@ static val v_fun(match_files_ctx *c)
     {
       args_decl_list(args, ARGS_MIN, bindings_cp);
       uw_block_begin(nil, result);
-      uw_env_begin;
+      uw_match_env_begin;
       debug_frame(sym, args, ub_p_a_pairs, c->bindings, if2(consp(c->data), car(c->data)),
                   c->data_lineno, nil);
 
@@ -4196,7 +4196,7 @@ static val v_fun(match_files_ctx *c)
       uw_catch_end;
 
       debug_end;
-      uw_env_end;
+      uw_match_env_end;
       uw_block_end;
 
       if (!result) {

@@ -27,7 +27,7 @@
 
 typedef union uw_frame uw_frame_t;
 typedef enum uw_frtype {
-  UW_BLOCK, UW_CAPTURED_BLOCK, UW_ENV, UW_CATCH, UW_HANDLE,
+  UW_BLOCK, UW_CAPTURED_BLOCK, UW_MENV, UW_CATCH, UW_HANDLE,
   UW_CONT_COPY, UW_GUARD, UW_DBG
 } uw_frtype_t;
 
@@ -117,7 +117,7 @@ union uw_frame {
 } UW_FRAME_ALIGN;
 
 void uw_push_block(uw_frame_t *, val tag);
-void uw_push_env(uw_frame_t *);
+void uw_push_match_env(uw_frame_t *);
 val uw_get_func(val sym);
 val uw_set_func(val sym, val value);
 val uw_get_match_context(void);
@@ -193,12 +193,12 @@ noreturn val type_mismatch(val, ...);
     uw_pop_block(&uw_blk, uw_rslt);             \
   } while (0)
 
-#define uw_env_begin                    \
+#define uw_match_env_begin              \
   do {                                  \
     uw_frame_t uw_env;                  \
-    uw_push_env(&uw_env)
+    uw_push_match_env(&uw_env)
 
-#define uw_env_end                      \
+#define uw_match_env_end                \
     uw_pop_frame(&uw_env);              \
   } while (0)
 

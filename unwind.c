@@ -52,7 +52,7 @@
 #define UW_CONT_FRAME_AFTER (16 * sizeof (val))
 
 static uw_frame_t *uw_stack;
-static uw_frame_t *uw_env_stack;
+static uw_frame_t *uw_menv_stack;
 static uw_frame_t *uw_exit_point;
 static uw_frame_t toplevel_env;
 static uw_frame_t unhandled_ex;
@@ -99,9 +99,9 @@ static void uw_unwind_to_exit_point(void)
       /* 1 means unwind only. */
       extended_longjmp(uw_stack->ca.jb, 1);
       abort();
-    case UW_ENV:
+    case UW_MENV:
       /* Maintain consistency of unwind stack pointer */
-      uw_env_stack = uw_env_stack->ev.up_env;
+      uw_menv_stack = uw_menv_stack->ev.up_env;
       break;
     case UW_GUARD:
       if (uw_stack->gu.uw_ok)
@@ -145,7 +145,7 @@ static void uw_unwind_to_exit_point(void)
   case UW_BLOCK:
     extended_longjmp(uw_stack->bl.jb, 1);
     abort();
-  case UW_ENV: /* env frame cannot be exit point */
+  case UW_MENV: /* env frame cannot be exit point */
     abort();
   case UW_CATCH:
     /* 2 means actual catch, not just unwind */
@@ -161,8 +161,8 @@ static void uw_abscond_to_exit_point(void)
 
   for (; uw_stack && uw_stack != uw_exit_point; uw_stack = uw_stack->uw.up) {
     switch (uw_stack->uw.type) {
-    case UW_ENV:
-      uw_env_stack = uw_env_stack->ev.up_env;
+    case UW_MENV:
+      uw_menv_stack = uw_menv_stack->ev.up_env;
       break;
     default:
       break;
@@ -196,20 +196,20 @@ void uw_push_block(uw_frame_t *fr, val tag)
 
 static uw_frame_t *uw_find_env(void)
 {
-  return uw_env_stack ? uw_env_stack : &toplevel_env;
+  return uw_menv_stack ? uw_menv_stack : &toplevel_env;
 }
 
-void uw_push_env(uw_frame_t *fr)
+void uw_push_match_env(uw_frame_t *fr)
 {
   uw_frame_t *prev_env = uw_find_env();
   memset(fr, 0, sizeof *fr);
-  fr->ev.type = UW_ENV;
+  fr->ev.type = UW_MENV;
   fr->ev.up_env = prev_env;
   fr->ev.func_bindings = nil;
   fr->ev.match_context = nil;
   fr->ev.up = uw_stack;
   uw_stack = fr;
-  uw_env_stack = fr;
+  uw_menv_stack = fr;
 }
 
 val uw_get_func(val sym)
@@ -277,9 +277,9 @@ void uw_pop_frame(uw_frame_t *fr)
 {
   assert (fr == uw_stack);
   uw_stack = fr->uw.up;
-  if (fr->uw.type == UW_ENV) {
-    assert (fr == uw_env_stack);
-    uw_env_stack = fr->ev.up_env;
+  if (fr->uw.type == UW_MENV) {
+    assert (fr == uw_menv_stack);
+    uw_menv_stack = fr->ev.up_env;
   }
 }
 
@@ -926,8 +926,8 @@ static val revive_cont(val dc, val arg)
     uw_block_begin (cont->tag, result);
 
     for (fr = new_uw_stack; ; fr = fr->uw.up) {
-      if (!env_set && fr->uw.type == UW_ENV) {
-        uw_env_stack = fr;
+      if (!env_set && fr->uw.type == UW_MENV) {
+        uw_menv_stack = fr;
         env_set = 1;
       }
       if (fr->uw.up == 0) {
