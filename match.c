@@ -3734,6 +3734,13 @@ static val v_output(match_files_ctx *c)
   val named_var = nil, continue_expr = nil, finish_expr = nil;
   val alist;
   val stream = nil;
+  val ret = next_spec_k;
+
+  uw_env_begin;
+
+  val saved_de = set_dyn_env(make_env(c->bindings, nil, nil));
+
+  uw_set_match_context(cons(c->spec, c->spec));
 
   if (first(dest_spec) == nothrow_k) {
     if (rest(dest_spec))
@@ -3812,7 +3819,7 @@ static val v_output(match_files_ctx *c)
           c->bindings = acons(into_var, list_out, c->bindings);
         }
       }
-      return next_spec_k;
+      goto out;
     }
   }
 
@@ -3831,7 +3838,7 @@ static val v_output(match_files_ctx *c)
     if (finish_expr)
       close_stream(stream, t);
 
-    return next_spec_k;
+    goto out;
   }
 
   stream = complex_open(dest, t, append, nothrow, nil);
@@ -3841,7 +3848,8 @@ static val v_output(match_files_ctx *c)
   if (!stream) {
     debuglf(specline, lit("could not open ~a: "
                           "treating as failed match due to nothrow"), dest, nao);
-    return nil;
+    ret = nil;
+    goto out;
   } else {
     do_output(c->bindings, specs, filter, stream);
     flush_stream(stream);
@@ -3852,7 +3860,10 @@ static val v_output(match_files_ctx *c)
       close_stream(stream, t);
   }
 
-  return next_spec_k;
+out:
+  set_dyn_env(saved_de);
+  uw_env_end;
+  return ret;
 }
 
 static val v_try(match_files_ctx *c)
