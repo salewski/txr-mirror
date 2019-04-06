@@ -12,10 +12,6 @@
 #define MP_NUMTH 1 /* include number theoretic functions? */
 #endif
 
-#ifndef MP_LOGTAB
-#define MP_LOGTAB 1 /* use table of logs instead of log()? */
-#endif
-
 #ifndef MP_MEMSET
 #define MP_MEMSET 1 /* use memset() to zero buffers? */
 #endif

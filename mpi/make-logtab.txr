@@ -1,22 +1,21 @@
-@(bind logs @(tuples 4 ^(0.0 0.0 ,*(take 63 (mapcar* [chain log2 /] (range 2))))))
-@(do (set *pprint-flo-format* "~0,9f"))
+@(bind scale 16384)
+@(bind type "unsigned int")
+@(bind logs @(tuples 4 ^(0.0 0.0
+                         ,*(take 63
+                                 (mapcar* [chain log2 / (op * scale) ceil toint]
+                                          (range 2))))))
 @(output)
 /*
- * A table of the logs of 2 for various bases (the 0 and 1 entries of
- * this table are meaningless and should not be referenced).
+ * A table of the logs of 2 for various bases scaled by a factor
+ * and converted to integer.
  *
- * This table is used to compute output lengths for the mp_toradix()
- * function.  Since a number n in radix r takes up about log_r(n)
- * digits, we estimate the output size by taking the least integer
- * greater than log_r(n), where:
- *
- * log_r(n) = log_2(n) * log_r(2)
- *
- * This table, therefore, is a table of log_r(2) for 2 <= r <= 36,
- * which are the output bases supported.
+ * This table is used to compute output lengths for the mp_toradix
+ * function.
  */
 
-const double s_logv_2[] = {
+#define MP_LOG_SCALE @scale
+
+const @type s_logv_2[] = {
 @  (repeat)
   @(rep)@logs, @(last)@logs,@(end)
 @  (last)

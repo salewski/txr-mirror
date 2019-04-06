@@ -43,17 +43,7 @@ extern mem_t *chk_calloc(size_t n, size_t size);
 #define DIAG(T,V)
 #endif
 
-/* If MP_LOGTAB is not defined, use the math library to compute the
- * logarithms on the fly.  Otherwise, use the static table below.
- * Pick which works best for your system.
- */
-#if MP_LOGTAB
 #include "logtab.h"
-#define LOG_V_2(R) s_logv_2[(R)]
-#else
-#include <math.h>
-#define LOG_V_2(R) (log(2.0)/log(R))
-#endif
 
 /* Default precision for newly created mp_int's */
 static mp_size s_mp_defprec = MP_DEFPREC;
@@ -4147,5 +4137,9 @@ char s_mp_todigit(int val, int r, int low)
  */
 size_t s_mp_outlen(mp_size bits, int r)
 {
-  return convert(size_t, convert(double, bits) * LOG_V_2(r) + 0.5);
+  mp_size units = bits / MP_LOG_SCALE;
+  mp_size rem = bits % MP_LOG_SCALE;
+  mp_size log2 = s_logv_2[r];
+
+  return convert(size_t, units * log2 + (rem * log2 + (MP_LOG_SCALE - 1)) / MP_LOG_SCALE);
 }
