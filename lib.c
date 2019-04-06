@@ -7723,6 +7723,13 @@ val cptr_type(val cptr)
   return cptr->co.cls;
 }
 
+val cptr_size_hint(val cptr, val size)
+{
+  (void) cptr;
+  malloc_bytes += c_unum(size);
+  return nil;
+}
+
 val cptr_int(val n, val type_sym_in)
 {
   val type_sym = default_null_arg(type_sym_in);

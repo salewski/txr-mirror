@@ -59882,6 +59882,26 @@ The expression
 .code "(cptr-int 0)"
 also produces a null pointer on all platforms where \*(TX is found.
 
+.coNP Function @ cptr-size-hint
+.synb
+.mets (cptr-size-hint < cptr << bytes )
+.syne
+.desc
+The
+.code cptr-size-hint
+function indicates to the garbage collector that the given
+.meta cptr
+object is associated with
+.meta bytes
+of foreign memory that are otherwise invisible to the garbage collector.
+
+Note: this function should be used if the foreign memory is indirectly
+managed by the
+.meta cptr
+object in cooperation with the garbage collector. Specifically,
+.meta cptr
+should have a finalizer registered against it which will liberate the
+foreign memory.
 
 .SH* FOREIGN FUNCTION INTERFACE
 

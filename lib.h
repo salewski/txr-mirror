@@ -1020,6 +1020,7 @@ val cptr(mem_t *ptr);
 val cptr_typed(mem_t *handle, val type_sym, struct cobj_ops *ops);
 val cptrp(val obj);
 val cptr_type(val cptr);
+val cptr_size_hint(val cptr, val size);
 val cptr_int(val n, val type_sym);
 val cptr_obj(val obj, val type_sym);
 val cptr_zap(val cptr);

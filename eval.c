@@ -6872,6 +6872,7 @@ void eval_init(void)
   reg_fun(intern(lit("int-cptr"), user_package), func_n1(int_cptr));
   reg_fun(intern(lit("cptrp"), user_package), func_n1(cptrp));
   reg_fun(intern(lit("cptr-type"), user_package), func_n1(cptr_type));
+  reg_fun(intern(lit("cptr-size-hint"), user_package), func_n2(cptr_size_hint));
   reg_varl(intern(lit("cptr-null"), user_package), cptr(0));
 
   reg_fun(intern(lit("rt-defvarl"), system_package), func_n1(rt_defvarl));
