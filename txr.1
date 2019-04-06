@@ -59820,6 +59820,35 @@ family of memory allocation functions, or has already been freed, or
 copies of the pointer exist which are still in use, the consequences are
 likely catastrophic.
 
+.coNP Function @ cptrp
+.synb
+.mets (cptrp << value )
+.syne
+.desc
+The
+.code cptrp
+function tests whether
+.meta value
+is a
+.codn cptr .
+It returns
+.code t
+if this is the
+case,
+.code nil
+otherwise.
+
+.coNP Function @ cptr-type
+.synb
+.mets (cptr-type << cptr )
+.syne
+.desc
+The
+.code cptr-type
+function retrieves the
+.meta cptr
+object's type tag.
+
 .coNP Variable @ cptr-null
 .desc
 The
