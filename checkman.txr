@@ -86,17 +86,31 @@
 @  (end)
 @(end)
 @;;
-@;; Check .cblk/.cble pairing
+@;; Check .mono/.onom pairing
 @;;
-@(define check-cblk ())
-.cblk
-@  (assert bad ln `.cblk not closed`)
+@(define check-mono ())
+.mono
+@  (assert bad ln `.mono not closed`)
 @  (repeat :gap 0)
 @    (none)
-.cblk
+.mono
 @    (end)
 @  (last :mandatory)
-.cble
+.onom
+@  (end)
+@(end)
+@;;
+@;; Check .verb/.brev pairing
+@;;
+@(define check-verb ())
+.verb
+@  (assert bad ln `.verb not closed`)
+@  (repeat :gap 0)
+@    (none)
+.verb
+@    (end)
+@  (last :mandatory)
+.brev
 @  (end)
 @(end)
 @;;
@@ -121,7 +135,9 @@
 @    (or)
 @      (check-code)
 @    (or)
-@      (check-cblk)
+@      (check-verb)
+@    (or)
+@      (check-mono)
 @    (or)
 @      (check-synb)
 @    (or)
