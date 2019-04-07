@@ -19360,8 +19360,11 @@ of the new value and the last
 elements of the original list, according to the following equivalence:
 
 .verb
-  (set (butlastn n x) v)  <--> (progn (set x (append v (nthlast n x)))
-                                      v)
+  (set (butlastn n x) v)
+
+  <-->
+
+  (progn (set x (append v (nthlast n x))) v)
 .brev
 
 except that
@@ -20386,8 +20389,9 @@ of the lazy cons.
               ;; and extend with another lazy cons
               (t
                 (inc counter)
-                (rplacd lcons (make-lazy-cons
-                                (lcons-fun lcons))))))))))
+                (rplacd lcons
+                        (make-lazy-cons
+                          (lcons-fun lcons))))))))))
 .brev
 
 .coNP Function @ lconsp
@@ -21279,7 +21283,8 @@ function:
 
 .verb
   (defmacro gen (while-expr produce-expr)
-    ^(generate (lambda () ,while-expr) (lambda () ,produce-expr)))
+    ^(generate (lambda () ,while-expr)
+               (lambda () ,produce-expr)))
 .brev
 
 Note 2:
@@ -28671,7 +28676,9 @@ does not produce empty pieces.
   (split "abc" '(1 1 1)) -> ("a" "" "" "bc")
 
   (split* "abc" 0) -> ("" "bc") ;; "a" is removed
-  (split* "abc" '(0 1 2)) -> ("" "" "" "") ;; all characters removed
+
+  ;; all characters removed
+  (split* "abc" '(0 1 2)) -> ("" "" "" "")
 .brev
 
 .coNP Function @ partition*
@@ -29439,7 +29446,8 @@ on a list of the arguments. The following equivalences hold:
   (transpose #("abc" "def" '(1 2 3))) ;; error!
 
   ;; String elements are catenated:
-  (transpose #("abc" "def" ("UV" "XY" "WZ"))) -> #("adUV" "beXY" "cfWZ")
+  (transpose #("abc" "def" ("UV" "XY" "WZ")))
+  -> #("adUV" "beXY" "cfWZ")
 
   (zip '(a b c) '(c d e)) ->  ((a c) (b d) (c e))
 .brev
@@ -29759,7 +29767,8 @@ with an improper argument list.
   ;; this effectively invokes (list 1 2 . 3)
   (apply (fun list) 1 2 3)) -> (1 2 . 3)
 
-  ;; "abc" is separated into characters which become arguments of list
+  ;; "abc" is separated into characters
+  ;; which become arguments of list
   (apply (fun list) "abc") -> (#\ea #\eb #\ec)
 .brev
 
@@ -30267,7 +30276,11 @@ based on the equivalence of the elements under
 The following equivalence holds:
 
 .verb
-  (sort-group sq lf kf) <--> (partition-by kf (sort (copy sq) kf lf))
+  (sort-group sq lf kf)
+
+  <-->
+
+  (partition-by kf (sort (copy sq) kf lf))
 .brev
 
 Note the reversed order of
@@ -32574,7 +32587,7 @@ terminates, returning
   (defun tb-reverse (obj)
     (tree-case obj
       (() ())      ;; the empty list is just returned
-      ((a) obj)    ;; one-element list returned (unnecessary case)
+      ((a) obj)    ;; one-element list returned
       ((a . b) ^(,*(tb-reverse b) ,a)) ;; car/cdr recursion
       (a a)))     ;; atom is just returned
 .brev
@@ -32590,6 +32603,7 @@ is important: even more so than the order of cases in a
 .code cond
 or
 .codn caseql .
+The one-element list case is unnecessary; it can be removed.
 
 .coNP Macro @ tb
 .synb
@@ -41867,7 +41881,8 @@ and
 .TP* Examples:
 
 .verb
-  ;; Remove leading digits from "123A456", other than first digit:
+  ;; Remove leading digits from "123A456",
+  ;; other than first digit:
   (regsub (fr^ #/\ed+/ 1) "" "123A456")
   --> "1A456"
 .brev
@@ -44349,7 +44364,8 @@ The following equivalence holds, except for the order of evaluation of
 arguments:
 
 .verb
-  (callf fm f0 f1 f2 ...) <--> (chain (juxt f0 f1 f2 ...) (apf fm))
+  (callf fm f0 f1 f2 ...) <--> (chain (juxt f0 f1 f2 ...)
+                                      (apf fm))
 .brev
 
 .TP* Example:
@@ -44411,7 +44427,9 @@ The following equivalence holds:
 
 .verb
   (mapf fm f0 f1 ...) <--> (lambda (. rest)
-                              [apply fm [mapcar call (list f0 f1 ...) rest]])
+                              [apply fm [mapcar call
+                                                (list f0 f1 ...)
+                                                rest]])
 .brev
 
 .TP* Example:
@@ -51843,7 +51861,8 @@ environment variable, one per line:
 
 .verb
   ;; Process variable as if it were a file:
-  (awk (:inputs (make-string-input-stream (getenv "PATH")))
+  (awk (:inputs (make-string-input-stream
+                  (getenv "PATH")))
        (:set fs ":")
        (t (tprint f)))
 
@@ -52364,7 +52383,8 @@ The
 function follows this equivalence:
 
 .verb
-  (opt a b c d)  <-->  (new opt-desc short a long b type c helptext d)
+  (opt a b c d)  <-->  (new opt-desc short a long b
+                                     type c helptext d)
 .brev
 
 .coNP Structure @ opts
@@ -56573,7 +56593,8 @@ struct:
 
 .verb
   ;; clear the ignbrk, brkint, and various other flags:
-  tio.(clear-iflags ignbrk brkint parmrk istrip inlcr igncr icrnl ixon)
+  tio.(clear-iflags ignbrk brkint parmrk istrip
+                    inlcr igncr icrnl ixon)
 
   ;; set the csize and parenb flags:
   tio.(set-cflags csize parenb)
@@ -57521,7 +57542,8 @@ the binding for the corresponding argument.
   @{year /\ed\ed\ed\ed/}-@{month /\ed\ed/}-@{day /\ed\ed/}
   @(end)
   @(do
-     (each ((date '("09-10-20" "2009-10-20" "July-15-2014" "foo")))
+     (each ((date '("09-10-20" "2009-10-20"
+                    "July-15-2014" "foo")))
        (txr-if date (y m d) date
          (put-line `match: year @y, month @m, day @d`)
          (put-line `no match for @date`))))
@@ -62984,7 +63006,8 @@ argument.
 The following equivalence holds:
 
 .verb
-  (znew s a i b j ...)  <-->  (make-zstruct (ffi s) 'a i 'b j ...)
+  (znew s a i b j ...)  <-->  (make-zstruct (ffi s)
+                                            'a i 'b j ...)
 .brev
 
 .TP* Example
@@ -67127,7 +67150,8 @@ which will load a file called
 that is located in the same directory.
 
 .verb
-  (save-exe "myapp" "--args|-e|(load `@(dir-name txr-path)/main.tl`)")
+  (save-exe "myapp"
+            "--args|-e|(load `@(dir-name txr-path)/main.tl`)")
 .brev
 
 .SH* DEBUGGER
