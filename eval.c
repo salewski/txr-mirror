@@ -1486,20 +1486,17 @@ val eval_intrinsic_noerr(val form, val env, val *error_p)
 static val do_eval(val form, val env, val ctx,
                    val (*lookup)(val env, val sym))
 {
-  debug_enter;
-
-  debug_check(consp(form) ? form : ctx, env, nil, nil, nil, nil);
   sig_check_fast();
 
   if (nilp(form)) {
-    debug_return (nil);
+    return nil;
   } else if (symbolp(form)) {
     if (!bindable(form)) {
-      debug_return (form);
+      return form;
     } else {
       val binding = lookup(env, form);
       if (binding)
-        debug_return (cdr(binding));
+        return cdr(binding);
       eval_error(ctx, lit("unbound variable ~s"), form, nao);
       abort();
     }
@@ -1513,7 +1510,7 @@ static val do_eval(val form, val env, val ctx,
       last_form_evaled = form;
       ret = fp(form, env);
       last_form_evaled = lfe_save;
-      debug_return (ret);
+      return ret;
     } else {
       val fbinding = lookup_fun(env, oper);
 
@@ -1534,20 +1531,16 @@ static val do_eval(val form, val env, val ctx,
         last_form_evaled = form;
 
         do_eval_args(rest(form), env, form, &lookup_var, args);
-        debug_frame(oper, args, nil, env, nil, nil, nil);
         ret = generic_funcall(cdr(fbinding), args);
-        debug_end;
 
         last_form_evaled = lfe_save;
 
-        debug_return (ret);
+        return ret;
       }
     }
   } else {
-    debug_return (form);
+    return form;
   }
-
-  debug_leave;
 }
 
 val eval(val form, val env, val ctx)
@@ -2020,8 +2013,6 @@ static val op_defun(val form, val env)
 
 static val me_interp_macro(val expander, val form, val menv)
 {
-  debug_enter;
-  val name = car(form);
   val arglist = rest(form);
   val env = car(expander);
   val params = cadr(expander);
@@ -2029,15 +2020,10 @@ static val me_interp_macro(val expander, val form, val menv)
   val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
   val exp_env = bind_macro_params(env, menv, params, arglist, nil, form);
   val result;
-  args_decl_list(args, ARGS_MIN, arglist);
-
-  debug_frame(name, args, nil, env, nil, nil, nil);
   result = eval_progn(body, exp_env, body);
-  debug_end;
   set_dyn_env(saved_de);
   set_origin(result, form);
-  debug_return(result);
-  debug_leave;
+  return result;
 }
 
 static val op_defmacro(val form, val env)

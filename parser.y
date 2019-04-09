@@ -1851,8 +1851,7 @@ int parse_once(val stream, val name, parser_t *parser)
 {
   int res = 0;
 #if CONFIG_DEBUG_SUPPORT
-  debug_state_t ds = debug_set_state(opt_dbg_expansion ? 0 : -1,
-                                     opt_dbg_expansion);
+  int ds = debug_set_state(opt_dbg_expansion);
 #endif
 
   parser_common_init(parser);
@@ -1875,7 +1874,7 @@ int parse_once(val stream, val name, parser_t *parser)
   uw_unwind {
     parser_cleanup(parser);
 #if CONFIG_DEBUG_SUPPORT
-    debug_restore_state(ds);
+    debug_set_state(ds);
 #endif
   }
 

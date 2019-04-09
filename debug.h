@@ -26,93 +26,23 @@
  */
 
 extern int opt_debugger;
-extern int debug_depth;
 
-val debug(val form, val bindings, val data, val line, val pos, val base);
+int debug_state;
 
 #if CONFIG_DEBUG_SUPPORT
 
-typedef struct {
-  int next_depth;
-  int step_mode;
-} debug_state_t;
-
-#define debug_enter                             \
-  {                                             \
-    int debug_depth_save = debug_depth++;       \
-    val debug_result = nil;                     \
-    (void) 0
-
-#define debug_leave                             \
-  debug_return_out:                             \
-    debug_depth = debug_depth_save;             \
-    return debug_result;                        \
-  }
-
-#define debug_return(VAL)               \
-  do {                                  \
-    debug_result = VAL;                 \
-    goto debug_return_out;              \
-  } while (0)
-
-INLINE val debug_check(val ctx, val bindings, val data, val line,
-                       val pos, val base)
-{
-  return (opt_debugger) ? debug(ctx, bindings, data, line, pos, base) : nil;
-}
-
-debug_state_t debug_set_state(int depth, int step);
-void debug_restore_state(debug_state_t);
 void debug_init(void);
 
-#define debug_frame(FUNC, ARGS, UBP,    \
-                    BINDINGS, DATA,     \
-                    LINE, CHR)          \
-  do {                                  \
-    uw_frame_t db_env;                  \
-    if (opt_debugger) {                 \
-      uw_push_debug(&db_env, FUNC, ARGS,\
-                    UBP, BINDINGS, DATA,\
-                    LINE, CHR);         \
-    }                                   \
-    (void) 0
-
-#define debug_end                       \
-    if (opt_debugger) {                 \
-      uw_pop_frame(&db_env);            \
-    }                                   \
-  } while (0)
+INLINE int debug_set_state(int state)
+{
+  int ret = debug_state;
+  debug_state = state;
+  return ret;
+}
 
 #else
 
-typedef int debug_state_t;
-
-#define debug_enter {
-
-#define debug_leave }
-
-#define debug_return(VAL) return VAL
-
-INLINE val debug_check(val form, val bindings, val data, val line,
-                       val pos, val base)
-{
-  return nil;
-}
-
-#define debug_frame(FUNC, ARGS, UBP,    \
-                    BINDINGS, DATA,     \
-                    LINE, CHR)          \
-  do {                                  \
-    (void) 0
-
-#define debug_end                       \
-  } while (0)
-
-#define debug_set_state(D, S) (0)
-#define debug_restore_state(S) ((void) 0)
-
-INLINE void debug_init(void)
-{
-}
+#define debug_init() ((void) 0)
+#define debug_set_state(S) 0
 
 #endif

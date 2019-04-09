@@ -26,20 +26,9 @@
  */
 
 
-#if CONFIG_DEBUG_SUPPORT
-extern int debug_depth;
-#define EJ_DBG_MEMB volatile int dbg_depth;
-#define EJ_DBG_SAVE(EJB) (EJB).dbg_depth = debug_depth,
-#define EJ_DBG_REST(EJB) debug_depth = (EJB).dbg_depth,
-#else
-#define EJ_DBG_MEMB
-#define EJ_DBG_SAVE(EJB)
-#define EJ_DBG_REST(EJB)
-#endif
-
-#define EJ_OPT_MEMB EJ_DBG_MEMB
-#define EJ_OPT_SAVE(EJB) EJ_DBG_SAVE(EJB)
-#define EJ_OPT_REST(EJB) EJ_DBG_REST(EJB)
+#define EJ_OPT_MEMB
+#define EJ_OPT_SAVE(EJB)
+#define EJ_OPT_REST(EJB)
 
 #if __i386__
 

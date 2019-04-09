@@ -1405,8 +1405,6 @@ static val h_fun(match_line_ctx *c)
       args_decl_list(args, ARGS_MIN, bindings_cp);
       uw_block_begin(nil, result);
       uw_match_env_begin;
-      debug_frame(sym, args, ub_p_a_pairs, c->bindings, c->dataline, c->data_lineno, c->pos);
-
       uw_simple_catch_begin;
 
       result = match_line(ml_bindings_specline(*c, bindings_cp, body));
@@ -1417,7 +1415,6 @@ static val h_fun(match_line_ctx *c)
 
       uw_catch_end;
 
-      debug_end;
       uw_match_env_end;
       uw_block_end;
 
@@ -1525,8 +1522,6 @@ static val do_match_line(match_line_ctx *c)
 {
   val lfe_save = set_last_form_evaled(nil);
 
-  debug_enter;
-
   while (c->specline) {
     val elem = first(c->specline);
 
@@ -1536,9 +1531,6 @@ static val do_match_line(match_line_ctx *c)
       c->pos = length_str(c->dataline);
 
     consume_prefix(c);
-
-    debug_check(c->specline, c->bindings, c->dataline, c->data_lineno,
-                c->pos, c->base);
 
     switch (type(elem)) {
     case CONS: /* directive */
@@ -1551,7 +1543,7 @@ static val do_match_line(match_line_ctx *c)
 
           if (!len) {
             LOG_MISMATCH("string tree");
-            debug_return (nil);
+            return nil;
           }
 
           newpos = plus(c->pos, len);
@@ -1568,7 +1560,7 @@ static val do_match_line(match_line_ctx *c)
             } else if (result == repeat_spec_k) {
               continue;
             } else {
-              debug_return (result);
+              return result;
             }
           } else {
             val result = h_fun(c);
@@ -1597,10 +1589,10 @@ static val do_match_line(match_line_ctx *c)
                   sem_error(elem, lit("no such function or directive: ~a"),
                             directive, nao);
               } else {
-                debug_return (vresult);
+                return vresult;
               }
             } else {
-              debug_return (result);
+              return result;
             }
           }
         }
@@ -1613,7 +1605,7 @@ static val do_match_line(match_line_ctx *c)
         val newpos;
         if (!match_str(c->dataline, elem, c->pos)) {
           LOG_MISMATCH("string");
-          debug_return (nil);
+          return nil;
         }
         newpos = plus(c->pos, length_str(elem));
         LOG_MATCH("string", newpos);
@@ -1625,7 +1617,7 @@ static val do_match_line(match_line_ctx *c)
         val past = match_regex(c->dataline, elem, c->pos);
         if (nilp(past)) {
           LOG_MISMATCH("regex");
-          debug_return (nil);
+          return nil;
         }
         LOG_MATCH("regex", past);
         c->pos = past;
@@ -1639,8 +1631,7 @@ static val do_match_line(match_line_ctx *c)
     c->specline = cdr(c->specline);
   }
 
-  debug_return (cons(c->bindings, plus(c->pos, c->base)));
-  debug_leave;
+  return cons(c->bindings, plus(c->pos, c->base));
 
   set_last_form_evaled(lfe_save);
 }
@@ -4182,8 +4173,6 @@ static val v_fun(match_files_ctx *c)
       args_decl_list(args, ARGS_MIN, bindings_cp);
       uw_block_begin(nil, result);
       uw_match_env_begin;
-      debug_frame(sym, args, ub_p_a_pairs, c->bindings, if2(consp(c->data), car(c->data)),
-                  c->data_lineno, nil);
 
       uw_simple_catch_begin;
 
@@ -4195,7 +4184,6 @@ static val v_fun(match_files_ctx *c)
 
       uw_catch_end;
 
-      debug_end;
       uw_match_env_end;
       uw_block_end;
 
@@ -4599,8 +4587,6 @@ static void open_data_source(match_files_ctx *c)
 
 static val match_files(match_files_ctx c)
 {
-  debug_enter;
-
   gc_hint(c.data);
 
   for (; c.spec; c.spec = rest(c.spec),
@@ -4611,8 +4597,6 @@ repeat_spec_same_data:
     spec_bind (specline, first_spec, c.spec);
 
     open_data_source(&c);
-
-    debug_check(specline, c.bindings, c.data, c.data_lineno, nil, nil);
 
     /* Line with nothing but a single directive or call: vertical mode. */
     if (consp(first_spec) && !rest(specline)) {
@@ -4635,7 +4619,7 @@ repeat_spec_same_data:
         } else if (result == decline_k) {
           /* Vertical directive declined; go to horizontal processing */
         } else {
-          debug_return (result);
+          return result;
         }
       } else if (gethash(h_directive_table,sym)) {
         /* Lone horizontal-only directive: go to horizontal processing */
@@ -4653,7 +4637,7 @@ repeat_spec_same_data:
              since rest(specline) is nil, this is not horizontal fallback. */
           sem_error(specline, lit("function ~s not found"), sym, nao);
         } else {
-          debug_return (result);
+          return result;
         }
       }
     }
@@ -4670,20 +4654,18 @@ repeat_spec_same_data:
                                               c.data, c.data_lineno, c.curfile)));
 
       if (!success)
-        debug_return (nil);
+        return nil;
 
       c.bindings = new_bindings;
     } else if (consp(c.data) || nilp(c.data)) {
       debuglf(specline, lit("spec ran out of data"), nao);
-      debug_return (nil);
+      return nil;
     } else {
       internal_error("bug in data stream opening logic");
     }
   }
 
-  debug_return (cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t)));
-
-  debug_leave;
+  return cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t));
 }
 
 val match_filter(val name, val arg, val other_args)
@@ -4737,21 +4719,15 @@ val match_fun(val name, val args, val input_in, val files_in)
   match_files_ctx c = mf_all(spec, files, in_bindings, data, curfile);
   val ret;
 
-  debug_enter;
-
-  debug_check(call, c.bindings, c.data, c.data_lineno, nil, nil);
-
   ret = v_fun(&c);
 
   if (ret == nil)
-    debug_return (nil);
+    return nil;
 
   if (ret == decline_k)
     sem_error(nil, lit("match-fun: function ~s not found"), name, nao);
 
-  debug_return (cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t)));
-
-  debug_leave;
+  return cons(c.bindings, if3(c.data, cons(c.data, c.data_lineno), t));
 }
 
 val include(val specline)

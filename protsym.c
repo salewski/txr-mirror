@@ -143,9 +143,6 @@ extern val while_star_s, whole_k, width_s, wild_s, word_char_k;
 extern val wrap_k, wstr_d_s, wstr_s, year_s, zap_s;
 extern val zarray_s, zerop_s, zeroplus_s, zone_s;
 
-#if CONFIG_DEBUG_SUPPORT
-extern val debug_quit_s;
-#endif
 #if HAVE_DLOPEN
 extern val dlhandle_s, dlsym_s;
 #endif
@@ -285,9 +282,6 @@ val *protected_sym[] = {
   &wrap_k, &wstr_d_s, &wstr_s, &year_s, &zap_s,
   &zarray_s, &zerop_s, &zeroplus_s, &zone_s,
 
-#if CONFIG_DEBUG_SUPPORT
-  &debug_quit_s,
-#endif
 #if HAVE_DLOPEN
   &dlhandle_s, &dlsym_s,
 #endif

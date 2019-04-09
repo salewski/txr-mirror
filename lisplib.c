@@ -833,14 +833,14 @@ val lisplib_try_load(val sym)
   val fun = gethash(dl_table, sym);
 
   if (fun) {
-     debug_state_t ds = debug_set_state(opt_dbg_autoload ? 0 : -1, opt_dbg_autoload);
+     int ds = debug_set_state(opt_dbg_autoload);
      val saved_dyn_env = dyn_env;
      dyn_env = make_env(nil, nil, dyn_env);
      env_vbind(dyn_env, package_s, system_package);
      env_vbind(dyn_env, package_alist_s, packages);
      funcall(fun);
      dyn_env = saved_dyn_env;
-     debug_restore_state(ds);
+     debug_set_state(ds);
      return t;
   }
   return nil;

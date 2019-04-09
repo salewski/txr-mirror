@@ -256,23 +256,6 @@ void uw_push_guard(uw_frame_t *fr, int uw_ok)
   uw_stack = fr;
 }
 
-void uw_push_debug(uw_frame_t *fr, val func, struct args *args,
-                   val ub_p_a_pairs, val env, val data,
-                   val line, val chr)
-{
-  memset(fr, 0, sizeof *fr);
-  fr->db.type = UW_DBG;
-  fr->db.func = func;
-  fr->db.args = args;
-  fr->db.ub_p_a_pairs = ub_p_a_pairs;
-  fr->db.env = env;
-  fr->db.data = data;
-  fr->db.line = line;
-  fr->db.chr = chr;
-  fr->db.up = uw_stack;
-  uw_stack = fr;
-}
-
 void uw_pop_frame(uw_frame_t *fr)
 {
   assert (fr == uw_stack);

@@ -28,7 +28,7 @@
 typedef union uw_frame uw_frame_t;
 typedef enum uw_frtype {
   UW_BLOCK, UW_CAPTURED_BLOCK, UW_MENV, UW_CATCH, UW_HANDLE,
-  UW_CONT_COPY, UW_GUARD, UW_DBG
+  UW_CONT_COPY, UW_GUARD
 } uw_frtype_t;
 
 struct uw_common {
@@ -87,18 +87,6 @@ struct uw_guard {
   int uw_ok;
 };
 
-struct uw_debug {
-  uw_frame_t *up;
-  uw_frtype_t type;
-  val func;
-  struct args *args;
-  val ub_p_a_pairs;
-  val env;
-  val data;
-  val line;
-  val chr;
-};
-
 #if __aarch64__
 #define UW_FRAME_ALIGN __attribute__ ((aligned (16)))
 #else
@@ -113,7 +101,6 @@ union uw_frame {
   struct uw_handler ha;
   struct uw_cont_copy cp;
   struct uw_guard gu;
-  struct uw_debug db;
 } UW_FRAME_ALIGN;
 
 void uw_push_block(uw_frame_t *, val tag);
@@ -147,9 +134,6 @@ val uw_register_subtype(val sub, val super);
 val uw_exception_subtype_p(val sub, val sup);
 void uw_continue(uw_frame_t *target);
 void uw_push_guard(uw_frame_t *, int uw_ok);
-void uw_push_debug(uw_frame_t *, val func, struct args *,
-                   val ub_p_a_pairs, val env, val data,
-                   val line, val chr);
 void uw_pop_frame(uw_frame_t *);
 void uw_pop_block(uw_frame_t *, val *pret);
 void uw_pop_until(uw_frame_t *);
