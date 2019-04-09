@@ -1105,7 +1105,7 @@ repl:
   env_vbind(dyn_env, package_s,
             opt_compat && opt_compat <= 190 ? user_package : public_package);
   env_vbind(dyn_env, load_recursive_s, nil);
-  repl(bindings, std_input, std_output);
+  repl(bindings, std_input, std_output, nil);
 #endif
   return 0;
 }

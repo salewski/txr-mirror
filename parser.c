@@ -72,6 +72,8 @@ val listener_hist_len_s, listener_multi_line_p_s, listener_sel_inclusive_p_s;
 val listener_pprint_s, listener_greedy_eval_s;
 val rec_source_loc_s;
 val intr_s;
+static lino_t *lino_ctx;
+static int repl_level = 0;
 
 static val stream_parser_hash, catch_all;
 
@@ -1210,10 +1212,12 @@ static int is_balanced_line(const wchar_t *line, void *ctx)
 
 static_forward(lino_os_t linenoise_txr_binding);
 
-val repl(val bindings, val in_stream, val out_stream)
+val repl(val bindings, val in_stream, val out_stream, val env)
 {
-  lino_t *ls = lino_make(coerce(mem_t *, in_stream),
-                         coerce(mem_t *, out_stream));
+  lino_t *ls = if3(repl_level++,
+                   lino_ctx,
+                   lino_ctx = lino_make(coerce(mem_t *, in_stream),
+                                        coerce(mem_t *, out_stream)));
   wchar_t *line_w = 0;
   val quit_k = intern(lit("quit"), keyword_package);
   val read_k = intern(lit("read"), keyword_package);
@@ -1225,7 +1229,7 @@ val repl(val bindings, val in_stream, val out_stream)
   val result_hash = make_hash(nil, nil, nil);
   val done = nil;
   val counter = one;
-  val home = get_home_path();
+  val home = if3(repl_level == 1, get_home_path(), nil);
   val histfile = if2(home, format(nil, lit("~a/.txr_history"), home, nao));
   const wchar_t *histfile_w = if3(home, c_str(histfile), NULL);
   val rcfile = if2(home, format(nil, lit("~a/.txr_profile"), home, nao));
@@ -1237,6 +1241,7 @@ val repl(val bindings, val in_stream, val out_stream)
   val greedy_eval = lookup_global_var(listener_greedy_eval_s);
   val rw_f = func_f1v(out_stream, repl_warning);
   val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
+  val brackets = mkstring(num_fast(repl_level), chr('>'));
 
   env_vbind(dyn_env, stderr_s, out_stream);
 
@@ -1263,7 +1268,7 @@ val repl(val bindings, val in_stream, val out_stream)
   lino_set_noninteractive(ls, opt_noninteractive);
 
   while (!done) {
-    val prompt = format(nil, lit("~d> "), counter, nao);
+    val prompt = format(nil, lit("~d~a "), counter, brackets,nao);
     val prev_counter = counter;
     val var_counter = mod(counter, num_fast(100));
     val var_name = format(nil, lit("*~d"), var_counter, nao);
@@ -1328,7 +1333,7 @@ val repl(val bindings, val in_stream, val out_stream)
         counter = prev_counter;
       } else {
         val value = if3(form != read_k,
-                        eval_intrinsic(form, nil),
+                        eval_intrinsic(form, env),
                         read_eval_ret_last(nil, prev_counter,
                                            in_stream, out_stream));
         val pprin = cdr(pprint_var);
@@ -1344,6 +1349,7 @@ val repl(val bindings, val in_stream, val out_stream)
           while (bindable(value) || consp(value))
           {
             value = eval_intrinsic_noerr(value, nil, &error_p);
+            /* env deliberately not passed to eval here */
             if (error_p)
               break;
             pfun(value, out_stream);
@@ -1394,7 +1400,10 @@ val repl(val bindings, val in_stream, val out_stream)
   }
 
   free(line_w);
-  lino_free(ls);
+  if (--repl_level == 0) {
+    lino_free(lino_ctx);
+    lino_ctx = 0;
+  }
   gc_hint(histfile);
   return nil;
 }
@@ -1591,4 +1600,5 @@ void parse_init(void)
   reg_fun(intern(lit("get-parser"), system_package), func_n1(get_parser));
   reg_fun(intern(lit("parser-errors"), system_package), func_n1(parser_errors));
   reg_fun(intern(lit("parser-eof"), system_package), func_n1(parser_eof));
+  reg_fun(intern(lit("repl"), system_package), func_n4(repl));
 }
