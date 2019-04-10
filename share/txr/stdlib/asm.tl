@@ -653,11 +653,12 @@
 
 (defopcode op-catch catch auto
   (:method asm (me asm syntax)
-    me.(chk-arg-count 4 syntax)
-    (tree-bind (sym args catch-syms dst) asm.(parse-args me syntax '(d d r l))
+    me.(chk-arg-count 5 syntax)
+    (tree-bind (sym args catch-syms desc dst)
+               asm.(parse-args me syntax '(d d r r l))
       asm.(put-insn me.code (ash dst -16) (logtrunc dst 16))
       asm.(put-pair sym args)
-      asm.(put-pair 0 catch-syms)))
+      asm.(put-pair desc catch-syms)))
 
   (:method backpatch (me asm at dst)
     asm.(put-insn me.code (ash dst -16) (logtrunc dst 16)))
@@ -665,9 +666,10 @@
  (:method dis (me asm high16 low16)
    (let ((dst (logior (ash high16 16) low16)))
      (tree-bind (sym args) asm.(get-pair)
-       (let ((catch-syms (cadr asm.(get-pair))))
+       (tree-bind (desc catch-syms) asm.(get-pair)
          ^(,me.symbol ,(operand-to-sym sym) ,(operand-to-sym args)
-                      ,(operand-to-sym catch-syms) ,dst))))))
+                      ,(operand-to-sym catch-syms)
+                      ,(operand-to-sym desc) ,dst))))))
 
 (defopcode op-handle handle auto
   (:method asm (me asm syntax)

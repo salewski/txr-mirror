@@ -57,7 +57,8 @@ static uw_frame_t *uw_exit_point;
 static uw_frame_t toplevel_env;
 static uw_frame_t unhandled_ex;
 
-static val unhandled_hook_s, types_s, jump_s, sys_cont_s, sys_cont_poison_s;
+static val unhandled_hook_s, types_s, jump_s, desc_s;
+static val sys_cont_s, sys_cont_poison_s;
 static val sys_cont_free_s, sys_capture_cont_s;
 
 static val frame_type, catch_frame_type, handle_frame_type;
@@ -363,10 +364,12 @@ static val uw_find_frames_impl(val extype, val frtype, val just_one)
         args_decl(args, ARGS_MIN);
         val fr = make_struct(frtype, nil, args);
         slotset(fr, types_s, ex->ca.matches);
-        if (et == UW_CATCH)
+        if (et == UW_CATCH) {
+          slotset(fr, desc_s, ex->ca.desc);
           slotset(fr, jump_s, cptr(coerce(mem_t *, ex)));
-        else
+        } else {
           slotset(fr, fun_s, ex->ha.fun);
+        }
         if (just_one)
           return fr;
         ptail = list_collect(ptail, fr);
@@ -1054,6 +1057,7 @@ void uw_late_init(void)
           &deferred_warnings, &tentative_defs, convert(val *, 0));
   types_s = intern(lit("types"), user_package);
   jump_s = intern(lit("jump"), user_package);
+  desc_s = intern(lit("desc"), user_package);
   sys_cont_s = intern(lit("cont"), system_package);
   sys_cont_poison_s = intern(lit("cont-poison"), system_package);
   sys_cont_free_s = intern(lit("cont-free"), system_package);
@@ -1062,7 +1066,7 @@ void uw_late_init(void)
   catch_frame_type = make_struct_type(intern(lit("catch-frame"),
                                              user_package),
                                       frame_type, nil,
-                                      list(types_s, jump_s, nao),
+                                      list(types_s, desc_s, jump_s, nao),
                                       nil, nil, nil, nil);
   handle_frame_type = make_struct_type(intern(lit("handle-frame"),
                                               user_package),

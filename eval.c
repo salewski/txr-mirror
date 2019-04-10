@@ -2595,17 +2595,19 @@ static val op_dwim(val form, val env)
 
 static val op_catch(val form, val env)
 {
-  val catch_syms = second(form);
-  val try_form = third(form);
+  val args = cdr(form);
+  val catch_syms = pop(&args);
+  val try_form = pop(&args);
+  val desc = pop(&args);
+  val catches = args;
   val result = nil;
 
-  uw_catch_begin (catch_syms, exsym, exvals);
+  uw_catch_begin_w_desc (catch_syms, exsym, exvals, desc);
 
   result = eval(try_form, env, try_form);
 
   uw_catch(exsym, exvals) {
     args_decl(args, ARGS_MIN);
-    val catches = rest(rest(rest(form)));
     val iter;
 
     args_add(args, exsym);
@@ -4437,19 +4439,23 @@ static val expand_catch(val form, val menv)
   val sym = pop(&args);
   val catch_syms = pop(&args);
   val try_form = pop(&args);
+  val desc = pop(&args);
   val catch_clauses = args;
   val try_form_ex = expand(try_form, menv);
+  val desc_ex = expand(desc, menv);
   val catch_clauses_ex = rlcp(mapcar(curry_12_1(func_n2(expand_catch_clause),
                                                 menv),
                                      catch_clauses),
                               catch_clauses);
 
-  if (try_form_ex == try_form && catch_clauses_ex == catch_clauses)
+  if (try_form_ex == try_form && desc_ex == desc &&
+      catch_clauses_ex == catch_clauses)
     return form;
 
   return rlcp(cons(sym,
                    cons(catch_syms,
-                        cons(try_form_ex, catch_clauses_ex))), form);
+                        cons(try_form_ex,
+                             cons(desc_ex, catch_clauses_ex)))), form);
 }
 
 static val expand_list_of_form_lists(val lofl, val menv, val ss_hash)

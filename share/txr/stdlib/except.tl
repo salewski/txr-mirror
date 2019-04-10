@@ -35,11 +35,11 @@
                                                                    e nil form)
                                        ^(,type (,(gensym) ,*args-ex) ,*body-ex)))
                                    catch-clauses)))
-    ^(sys:catch ,catch-syms ,try-form ,*sys-catch-clauses)))
+    ^(sys:catch ,catch-syms ,try-form nil ,*sys-catch-clauses)))
 
 (defmacro catch* (try-form . catch-clauses)
   (let ((catch-syms [mapcar car catch-clauses]))
-    ^(sys:catch ,catch-syms ,try-form ,*catch-clauses)))
+    ^(sys:catch ,catch-syms ,try-form nil ,*catch-clauses)))
 
 (defun sys:expand-handle (form try-form handle-clauses)
   (let* ((oper (car form))

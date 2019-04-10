@@ -61,6 +61,7 @@ struct uw_catch {
   int visible;
   val sym;
   val args;
+  val desc;
   uw_frame_t *cont;
   extended_jmp_buf jb;
 };
@@ -203,6 +204,16 @@ noreturn val type_mismatch(val, ...);
     switch (extended_setjmp(uw_catch.ca.jb)) {  \
     case 0:
 
+#define uw_catch_begin_w_desc(MATCHES, SYMVAR,  \
+                              EXCVAR, DESC)     \
+  do {                                          \
+    obj_t *SYMVAR = nil;                        \
+    obj_t *EXCVAR = nil;                        \
+    uw_frame_t uw_catch;                        \
+    uw_push_catch(&uw_catch, MATCHES);          \
+    uw_catch.ca.desc = (DESC);                  \
+    switch (extended_setjmp(uw_catch.ca.jb)) {  \
+    case 0:
 #define uw_catch(SYMVAR, EXCVAR)        \
     goto uw_unwind_label;               \
       break;                            \

@@ -859,9 +859,10 @@ NOINLINE static void vm_catch(struct vm *vm, vm_word_t insn)
   unsigned sym_reg = vm_arg_operand_hi(arg1);
   unsigned args_reg = vm_arg_operand_lo(arg1);
   val catch_syms = vm_get(vm->dspl, vm_arg_operand_lo(arg2));
+  val desc = vm_get(vm->dspl, vm_arg_operand_hi(arg2));
   int saved_lev = vm->lev;
 
-  uw_catch_begin (catch_syms, exsym, exvals);
+  uw_catch_begin_w_desc (catch_syms, exsym, exvals, desc);
 
   vm_execute(vm);
 

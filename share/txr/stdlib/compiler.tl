@@ -658,12 +658,13 @@
                  (uni ffrag.ffuns bfrag.ffuns))))))
 
 (defmeth compiler comp-catch (me oreg env form)
-  (mac-param-bind form (op symbols try-expr . clauses) form
+  (mac-param-bind form (op symbols try-expr desc-expr . clauses) form
     (with-gensyms (ex-sym-var ex-args-var)
       (let* ((nenv (new env up env co me))
              (esvb (cdar nenv.(extend-var ex-sym-var)))
              (eavb (cdar nenv.(extend-var ex-args-var)))
              (tfrag me.(compile oreg env try-expr))
+             (dfrag me.(compile oreg env desc-expr))
              (lhand (gensym "l"))
              (lhend (gensym "l"))
              (treg me.(alloc-treg))
@@ -691,7 +692,9 @@
         me.(free-treg treg)
         (new (frag tfrag.oreg
                    ^((frame ,nenv.lev ,nenv.v-cntr)
-                     (catch ,esvb.loc ,eavb.loc ,me.(get-dreg symbols) ,lhand)
+                     ,*dfrag.code
+                     (catch ,esvb.loc ,eavb.loc
+                            ,me.(get-dreg symbols) ,dfrag.oreg ,lhand)
                      ,*tfrag.code
                      (jmp ,lhend)
                      ,lhand
@@ -1580,7 +1583,7 @@
 
 (defvarl %big-endian% (equal (ffi-put 1 (ffi uint32)) #b'00000001'))
 
-(defvarl %tlo-ver% ^(4 0 ,%big-endian%))
+(defvarl %tlo-ver% ^(5 0 ,%big-endian%))
 
 (defvarl %package-manip% '(make-package delete-package
                            use-package unuse-package
