@@ -38662,6 +38662,8 @@ string and additional arguments.
 .mets \ \  >> {( symbol <> ( arg *) << body-form *)}*)
 .mets (catch* < try-expression
 .mets \ \  >> {( symbol >> ( type-arg << arg *) << body-form *)}*)
+.mets (catch** < try-expression
+.mets \ \  >> {( symbol < desc >> ( type-arg << arg *) << body-form *)}*)
 .syne
 .desc
 The
@@ -38727,6 +38729,19 @@ invokes a clause, it passes the exception symbol as the leftmost argument
 Then the exception arguments follow. In contrast,
 only the exception arguments are passed to the clauses of
 .codn catch .
+
+The
+.code catch**
+macro is a further variant, which differs from
+.code catch*
+by requiring each catch clause to provide a description
+.metn desc ,
+an expression which evaluates to a character string.
+The
+.meta desc
+expressions are evaluated in left-to-right order prior to the
+evaluation of
+.metn try-expression .
 
 Also see: the
 .code unwind-protect
@@ -39297,7 +39312,7 @@ and not a derived representation.
 .coNP Structures @, frame @ catch-frame and @ handle-frame
 .synb
 .mets (defstruct frame nil)
-.mets (defstruct catch-frame frame types jump)
+.mets (defstruct catch-frame frame types desc jump)
 .mets (defstruct handle-frame frame types fun)
 .syne
 .desc
@@ -39339,6 +39354,19 @@ have a
 .code types
 slot. This holds the list of exception type symbols which are matched
 by the catch or handler.
+
+The
+.code desc
+slot of a
+.code catch-frame
+holds a list of the descriptions produced by the
+.code catch**
+macro. If there are no descriptions, then this member is
+.codn nil ,
+otherwise it is a list whose elements are in correspondence
+with the list in the
+.code types
+slot.
 
 The
 .code jump

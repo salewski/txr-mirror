@@ -41,6 +41,20 @@
   (let ((catch-syms [mapcar car catch-clauses]))
     ^(sys:catch ,catch-syms ,try-form nil ,*catch-clauses)))
 
+(defmacro catch** (try-form . catch-clauses)
+  (let ((catch-syms [mapcar car catch-clauses])
+        sys-catch-clauses descs)
+    (each ((cl catch-clauses))
+      (mac-param-bind cl (type desc args . body) cl
+        (push ^(,type ,args ,*body) sys-catch-clauses)
+        (push desc descs)))
+    (sys:setq sys-catch-clauses (nreverse sys-catch-clauses))
+    (sys:setq descs (nreverse descs))
+    (let ((desc-expr (if [all descs constantp]
+                       ^'(,*[mapcar eval descs])
+                       ^(list ,*descs))))
+      ^(sys:catch ,catch-syms ,try-form ,desc-expr ,*sys-catch-clauses))))
+
 (defun sys:expand-handle (form try-form handle-clauses)
   (let* ((oper (car form))
          (exc-sym (gensym))
