@@ -866,7 +866,6 @@
                                         (set specials [remq var-sym specials cdr])
                                         ^((bindv ,vbind.loc ,me.(get-dreg (car spec-sub)))))
                                     ,*(whenlet ((spec-sub [find have-sym specials : cdr]))
-                                        (prinl 'have)
                                         (set specials [remq have-sym specials cdr])
                                         ^((bindv ,have-bind.loc ,me.(get-dreg (car spec-sub))))))))))
                  (benv (if specials (new env up nenv co me) nenv))
