@@ -145,6 +145,7 @@ val uw_find_frame(val extype, val frtype);
 val uw_find_frames(val extype, val frtype);
 val uw_invoke_catch(val catch_frame, val sym, struct args *);
 val uw_muffle_warning(val exc, struct args *);
+val uw_trace_error(val ctx, val exc, struct args *);
 val uw_capture_cont(val tag, val fun, val ctx_form);
 void uw_push_cont_copy(uw_frame_t *, mem_t *ptr,
                        void (*copy)(mem_t *ptr, int parent));
@@ -274,13 +275,19 @@ noreturn val type_mismatch(val, ...);
                             #EXPR       \
                             " failed")
 
-#define ignerr_func_body(type, init, expr, exsym,       \
-                         exargs, stream, prefix)        \
+#define ignerr_func_body(type, init, expr,              \
+                         stream, prefix)                \
+   val (_s_y_m_s) = cons(error_s, nil);                 \
    type (_r_e_t) = (init);                              \
-   uw_catch_begin (cons(error_s, nil), exsym, exargs);  \
+   uw_frame_t _h_n_d;                                   \
+   uw_catch_begin (_s_y_m_s, _e_x, _e_x_a);             \
+   uw_push_handler(&_h_n_d, _s_y_m_s,                   \
+                   func_f1v(cons(stream, prefix),       \
+                            uw_trace_error));           \
    _r_e_t = expr;                                       \
-   uw_catch(exsym, exargs)                              \
-   error_trace(exsym, exargs, stream, prefix);          \
+   uw_pop_frame(&_h_n_d);                               \
+   uw_catch(_e_x, _e_x_a);                              \
+   (void) _e_x_a;                                       \
    uw_unwind { }                                        \
    uw_catch_end;                                        \
    return _r_e_t;

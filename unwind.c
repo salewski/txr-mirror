@@ -422,6 +422,13 @@ val uw_muffle_warning(val exc, struct args *args)
   uw_throw(continue_s, nil);
 }
 
+val uw_trace_error(val ctx, val exc, struct args *args)
+{
+  cons_bind (stream, prefix, ctx);
+  error_trace(exc, args_get_list(args), stream, prefix);
+  return nil;
+}
+
 void uw_push_cont_copy(uw_frame_t *fr, mem_t *ptr,
                        void (*copy)(mem_t *ptr, int parent))
 {

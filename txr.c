@@ -472,15 +472,14 @@ static void no_dbg_support(val arg)
 static int parse_once_noerr(val stream, val name, parser_t *parser)
 {
   val pfx = format(nil, lit("~a:"), name, nao);
-  ignerr_func_body(int, 0, parse_once(stream, name, parser),
-                   exsym, exargs, std_error, pfx);
+  ignerr_func_body(int, 0, parse_once(stream, name, parser), std_error, pfx);
 }
 
 static val read_eval_stream_noerr(val self, val stream, val name, val error_stream)
 {
   val pfx = format(nil, lit("~a:"), name, nao);
   ignerr_func_body(val, nil, read_eval_stream(self, stream, error_stream),
-                   exsym, exargs, std_error, pfx);
+                   std_error, pfx);
 }
 
 int txr_main(int argc, char **argv)
