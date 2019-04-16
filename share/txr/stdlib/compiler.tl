@@ -868,7 +868,7 @@
                                     ,*(whenlet ((spec-sub [find have-sym specials : cdr]))
                                         (set specials [remq have-sym specials cdr])
                                         ^((bindv ,have-bind.loc ,me.(get-dreg (car spec-sub))))))))))
-                 (benv (if specials (new env up nenv co me) nenv))
+                 (benv (if need-dframe (new env up nenv co me) nenv))
                  (btreg me.(alloc-treg))
                  (bfrag me.(comp-progn btreg benv body))
                  (boreg (if env.(out-of-scope bfrag.oreg) btreg bfrag.oreg))
