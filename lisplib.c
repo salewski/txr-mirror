@@ -720,6 +720,25 @@ static val compiler_set_entries(val dlt, val fun)
   return nil;
 }
 
+static val debugger_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~adebugger"), stdlib_path, nao));
+  return nil;
+}
+
+static val debugger_set_entries(val dlt, val fun)
+{
+  val sys_name[] = {
+    lit("debugger"), lit("print-backtrace"),
+    nil
+  };
+
+  set_dlt_entries_sys(dlt, sys_name, fun);
+  return nil;
+}
+
+
 static val op_set_entries(val dlt, val fun)
 {
   val name[] = {
@@ -818,6 +837,7 @@ void lisplib_init(void)
   dlt_register(dl_table, stream_wrap_instantiate, stream_wrap_set_entries);
   dlt_register(dl_table, asm_instantiate, asm_set_entries);
   dlt_register(dl_table, compiler_instantiate, compiler_set_entries);
+  dlt_register(dl_table, debugger_instantiate, debugger_set_entries);
 
   if (!opt_compat || opt_compat >= 185)
     dlt_register(dl_table, op_instantiate, op_set_entries);
@@ -833,14 +853,14 @@ val lisplib_try_load(val sym)
   val fun = gethash(dl_table, sym);
 
   if (fun) {
-     int ds = debug_set_state(opt_dbg_autoload);
+     unsigned ds = debug_clear(opt_dbg_autoload ? 0 : DBG_ENABLE);
      val saved_dyn_env = dyn_env;
      dyn_env = make_env(nil, nil, dyn_env);
      env_vbind(dyn_env, package_s, system_package);
      env_vbind(dyn_env, package_alist_s, packages);
      funcall(fun);
      dyn_env = saved_dyn_env;
-     debug_set_state(ds);
+     debug_restore(ds);
      return t;
   }
   return nil;

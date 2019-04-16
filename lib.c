@@ -72,6 +72,7 @@
 #include "buf.h"
 #include "ffi.h"
 #include "txr.h"
+#include "debug.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -6044,7 +6045,7 @@ static noreturn void callerror(val fun, val msg)
   abort();
 }
 
-val generic_funcall(val fun, struct args *args_in)
+INLINE val do_generic_funcall(val fun, struct args *args_in)
 {
   int variadic, fixparam, reqargs;
   struct args *args = args_in;
@@ -6257,6 +6258,18 @@ val generic_funcall(val fun, struct args *args_in)
   internal_error("corrupt function type field");
 }
 
+val generic_funcall(val fun, struct args *args)
+{
+  if (dbg_backtrace) {
+    val ret;
+    dbg_fcall_begin(fun, args);
+    ret = do_generic_funcall(fun, args);
+    dbg_fcall_end;
+    return ret;
+  }
+  return do_generic_funcall(fun, args);
+}
+
 static noreturn void wrongargs(val fun)
 {
   callerror(fun, lit("wrong number of arguments"));
@@ -6264,7 +6277,7 @@ static noreturn void wrongargs(val fun)
 
 val funcall(val fun)
 {
-  if (type(fun) != FUN || fun->f.optargs) {
+  if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
     args_decl(args, ARGS_MIN);
     return generic_funcall(fun, args);
   }
@@ -6305,7 +6318,7 @@ val funcall(val fun)
 
 val funcall1(val fun, val arg)
 {
-  if (type(fun) != FUN || fun->f.optargs) {
+  if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
     args_decl(args, ARGS_MIN);
     args_add(args, arg);
     return generic_funcall(fun, args);
@@ -6357,7 +6370,7 @@ val funcall1(val fun, val arg)
 
 val funcall2(val fun, val arg1, val arg2)
 {
-  if (type(fun) != FUN || fun->f.optargs) {
+  if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
     args_decl(args, ARGS_MIN);
     args_add2(args, arg1, arg2);
     return generic_funcall(fun, args);
@@ -6415,7 +6428,7 @@ val funcall2(val fun, val arg1, val arg2)
 
 val funcall3(val fun, val arg1, val arg2, val arg3)
 {
-  if (type(fun) != FUN || fun->f.optargs) {
+  if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
     args_decl(args, ARGS_MIN);
     args_add3(args, arg1, arg2, arg3);
     return generic_funcall(fun, args);
@@ -6479,7 +6492,7 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
 
 val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
 {
-  if (type(fun) != FUN || fun->f.optargs) {
+  if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
     args_decl(args, ARGS_MIN);
     args_add4(args, arg1, arg2, arg3, arg4);
     return generic_funcall(fun, args);

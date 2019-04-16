@@ -38,17 +38,50 @@
 #include "unwind.h"
 #include "stream.h"
 #include "parser.h"
+#include "struct.h"
 #include "eval.h"
+#include "arith.h"
 #include "txr.h"
 #include "debug.h"
 
 int opt_debugger;
-int debug_state;
+unsigned debug_state;
 
-#if __STDC_VERSION__ >= 199901L
-int debug_set_state(int state);
-#endif
+static val sys_print_backtrace_s;
+
+static val dbg_clear(val mask)
+{
+  return unum(debug_clear(c_unum(mask)));
+}
+
+static val dbg_set(val mask)
+{
+  return unum(debug_set(c_unum(mask)));
+}
+
+static val dbg_restore(val state)
+{
+  debug_restore(c_unum(state));
+  return nil;
+}
 
 void debug_init(void)
 {
+  sys_print_backtrace_s = intern(lit("print-backtrace"), system_package);
+  reg_varl(intern(lit("dbg-enable"), system_package), num_fast(DBG_ENABLE));
+  reg_varl(intern(lit("dbg-step"), system_package), num_fast(DBG_STEP));
+  reg_varl(intern(lit("dbg-backtrace"), system_package), num_fast(DBG_BACKTRACE));
+  reg_varl(intern(lit("dbg-all"), system_package), num_fast(DBG_ALL));
+  reg_fun(intern(lit("dbg-clear"), system_package), func_n1(dbg_clear));
+  reg_fun(intern(lit("dbg-set"), system_package), func_n1(dbg_set));
+  reg_fun(intern(lit("dbg-restore"), system_package), func_n1(dbg_restore));
+}
+
+void debug_dump_backtrace(val stream, val prefix)
+{
+  val fb = lookup_fun(nil, sys_print_backtrace_s);
+  if (fb)
+    funcall2(cdr(fb), stream, prefix);
+  else
+    format(nil, lit("~s: no function binding"), sys_print_backtrace_s, nao);
 }

@@ -25,24 +25,65 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern int opt_debugger;
 
-int debug_state;
+#define DBG_ENABLE      1
+#define DBG_STEP        2
+#define DBG_BACKTRACE   4
+#define DBG_ALL         7
 
 #if CONFIG_DEBUG_SUPPORT
 
+extern unsigned debug_state;
+
 void debug_init(void);
 
-INLINE int debug_set_state(int state)
+INLINE unsigned debug_clear(unsigned mask)
 {
   int ret = debug_state;
-  debug_state = state;
+  debug_state &= ~mask;
   return ret;
 }
 
+INLINE unsigned debug_set(unsigned mask)
+{
+  int ret = debug_state;
+  debug_state |= mask;
+  return ret;
+}
+
+INLINE void debug_restore(unsigned state)
+{
+  debug_state = state;
+}
+
+void debug_dump_backtrace(val stream, val prefix);
+
+#define dbg_backtrace (debug_state & DBG_BACKTRACE)
+
+#define dbg_fcall_begin(fun, args)      \
+  {                                     \
+    uw_frame_t uw_fc;                   \
+    args_decl(args_cp, args->argc);     \
+    args_copy(args_cp, args);           \
+    uw_push_fcall(&uw_fc, fun, args_cp)
+
+#define dbg_fcall_end                   \
+    uw_pop_frame(&uw_fc);               \
+  }
+
 #else
 
-#define debug_init() ((void) 0)
-#define debug_set_state(S) 0
+#define debug_clear(mask) 0
+#define debug_set(mask) 0
+#define debug_restore(state) ((void) 0)
+#define debug_dump_backtrace(stream, prefix) ((void) 0)
+
+#define dbg_backtrace 0
+
+#define dbg_fcall_begin(fun, args)      \
+  {
+
+#define dbg_fcall_end                   \
+  }
 
 #endif

@@ -438,6 +438,17 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
       break;
     }
   }
+
+#if CONFIG_DEBUG_SUPPORT
+  if (dbg_backtrace) {
+    format(out_stream, lit("~a backtrace:\n"), prefix, nao);
+    debug_dump_backtrace(out_stream, prefix);
+  } else {
+    format(std_error, lit("~a run with --backtrace to enable backtraces\n"), prefix, nao);
+  }
+#else
+  format(std_error, lit("~a not compiled with backtrace support\n"), prefix, nao);
+#endif
 }
 
 val lookup_global_var(val sym)

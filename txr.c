@@ -111,7 +111,7 @@ static void help(void)
 "-l                     If dumping bindings, use TXR Lisp format.\n"
 "-i                     Interactive TXR Lisp listener mode.\n"
 "                       (Requires compiled-in support.)\n"
-"-d                     Debugger mode.\n"
+"-d                     Enable debugger. Implies --backtrace.\n"
 "-n                     Noninteractive input mode for standard input stream,\n"
 "                       even if its connected to a terminal device.\n"
 "                       Also, forces the interactive listener into\n"
@@ -144,6 +144,7 @@ static void help(void)
 "--compiled             Treat unsuffixed query files as compiled TXR Lisp.\n"
 "--lisp-bindings        Synonym for -l\n"
 "--debugger             Synonym for -d\n"
+"--backtrace            Enable backtraces.\n"
 "--noninteractive       Synonym for -n\n"
 "--compat=N             Synonym for -C N\n"
 "--gc-delta=N           Invoke garbage collection when malloc activity\n"
@@ -730,6 +731,7 @@ int txr_main(int argc, char **argv)
         drop_privilege();
 #if CONFIG_DEBUG_SUPPORT
         opt_debugger = 1;
+        debug_set(DBG_ENABLE | DBG_BACKTRACE);
         continue;
 #else
         no_dbg_support(arg);
@@ -740,6 +742,7 @@ int txr_main(int argc, char **argv)
 #if CONFIG_DEBUG_SUPPORT
         opt_debugger = 1;
         opt_dbg_autoload = 1;
+        debug_set(DBG_ENABLE | DBG_BACKTRACE);
         continue;
 #else
         no_dbg_support(opt);
@@ -750,6 +753,7 @@ int txr_main(int argc, char **argv)
 #if CONFIG_DEBUG_SUPPORT
         opt_debugger = 1;
         opt_dbg_expansion = 1;
+        debug_set(DBG_ENABLE | DBG_BACKTRACE);
         continue;
 #else
         no_dbg_support(opt);
@@ -770,6 +774,14 @@ int txr_main(int argc, char **argv)
                  prog_string, arg, nao);
           return EXIT_FAILURE;
         }
+      } else if (equal(opt, lit("backtrace"))) {
+#if CONFIG_DEBUG_SUPPORT
+        debug_set(DBG_BACKTRACE);
+        continue;
+#else
+        no_dbg_support(arg);
+        return EXIT_FAILURE;
+#endif
       } else if (equal(opt, lit("noninteractive"))) {
         opt_noninteractive = 1;
         stream_set_prop(std_input, real_time_k, nil);
@@ -965,6 +977,7 @@ int txr_main(int argc, char **argv)
           drop_privilege();
 #if CONFIG_DEBUG_SUPPORT
           opt_debugger = 1;
+          debug_set(DBG_ENABLE | DBG_BACKTRACE);
 #else
           no_dbg_support(opch);
           return EXIT_FAILURE;

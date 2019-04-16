@@ -46,7 +46,9 @@
 #include "struct.h"
 #include "cadr.h"
 #include "alloca.h"
+#include "arith.h"
 #include "unwind.h"
+#include "debug.h"
 
 #define UW_CONT_FRAME_BEFORE (32 * sizeof (val))
 #define UW_CONT_FRAME_AFTER (16 * sizeof (val))
@@ -58,10 +60,14 @@ static uw_frame_t toplevel_env;
 static uw_frame_t unhandled_ex;
 
 static val unhandled_hook_s, types_s, jump_s, desc_s;
+#if CONFIG_DEBUG_SUPPORT
+static val args_s;
+#endif
 static val sys_cont_s, sys_cont_poison_s;
 static val sys_cont_free_s, sys_capture_cont_s;
 
 static val frame_type, catch_frame_type, handle_frame_type;
+static val fcall_frame_type;
 
 static val deferred_warnings, tentative_defs;
 
@@ -76,6 +82,7 @@ val uw_block_return(val tag, val result);
 
 static void uw_unwind_to_exit_point(void)
 {
+  uw_frame_t *orig_stack = uw_stack;
   assert (uw_exit_point);
 
   for (; uw_stack && uw_stack != uw_exit_point; uw_stack = uw_stack->uw.up) {
@@ -126,6 +133,7 @@ static void uw_unwind_to_exit_point(void)
       format(std_error, lit("~a unhandled exception of type ~a:\n"),
              prefix, sym, nao);
 
+      uw_stack = orig_stack;
       error_trace(sym, args, std_error, prefix);
     }
     if (uw_exception_subtype_p(sym, query_error_s) ||
@@ -390,6 +398,59 @@ val uw_find_frames(val extype, val frtype)
   return uw_find_frames_impl(extype, frtype, nil);
 }
 
+#if CONFIG_DEBUG_SUPPORT
+
+val uw_find_frames_by_mask(val mask_in)
+{
+  ucnum mask = c_unum(mask_in);
+  list_collect_decl (out, ptail);
+  uw_frame_t *fr;
+
+  for (fr = uw_stack; fr != 0; fr = fr->uw.up) {
+    uw_frtype_t type = fr->uw.type;
+    if (((1U << type) & mask) != 0) {
+      val frame = nil;
+      args_decl(args, ARGS_MIN);
+      switch (type) {
+      case UW_CATCH:
+        {
+          frame = make_struct(catch_frame_type, nil, args);
+          slotset(frame, types_s, fr->ca.matches);
+          slotset(frame, desc_s, fr->ca.desc);
+          slotset(frame, jump_s, cptr(coerce(mem_t *, fr)));
+          break;
+        }
+      case UW_HANDLE:
+        {
+          frame = make_struct(handle_frame_type, nil, args);
+          slotset(frame, types_s, fr->ha.matches);
+          slotset(frame, fun_s, fr->ha.fun);
+          break;
+        }
+      case UW_FCALL:
+        {
+          struct args *frargs = fr->fc.args;
+          args_decl(acopy, frargs->argc);
+          args_copy(acopy, frargs);
+          frame = make_struct(fcall_frame_type, nil, args);
+          slotset(frame, fun_s, fr->fc.fun);
+          slotset(frame, args_s, args_get_list(acopy));
+          break;
+        }
+      default:
+        break;
+      }
+
+      if (frame)
+        ptail = list_collect(ptail, frame);
+    }
+  }
+
+  return out;
+}
+
+#endif
+
 val uw_invoke_catch(val catch_frame, val sym, struct args *args)
 {
   uw_frame_t *ex, *ex_point;
@@ -506,6 +567,20 @@ void uw_push_handler(uw_frame_t *fr, val matches, val fun)
   fr->ha.package_alist = deref(cur_package_alist_loc);
   uw_stack = fr;
 }
+
+#if CONFIG_DEBUG_SUPPORT
+
+void uw_push_fcall(uw_frame_t *fr, val fun, struct args *args)
+{
+  memset(fr, 0, sizeof *fr);
+  fr->fc.type = UW_FCALL;
+  fr->fc.fun = fun;
+  fr->fc.args = args;
+  fr->fc.up = uw_stack;
+  uw_stack = fr;
+}
+
+#endif
 
 static val exception_subtypes;
 
@@ -1062,9 +1137,15 @@ void uw_late_init(void)
 {
   protect(&frame_type, &catch_frame_type, &handle_frame_type,
           &deferred_warnings, &tentative_defs, convert(val *, 0));
+#if CONFIG_DEBUG_SUPPORT
+  protect(&fcall_frame_type, convert(val *, 0));
+#endif
   types_s = intern(lit("types"), user_package);
   jump_s = intern(lit("jump"), user_package);
   desc_s = intern(lit("desc"), user_package);
+#if CONFIG_DEBUG_SUPPORT
+  args_s = intern(lit("args"), user_package);
+#endif
   sys_cont_s = intern(lit("cont"), system_package);
   sys_cont_poison_s = intern(lit("cont-poison"), system_package);
   sys_cont_free_s = intern(lit("cont-free"), system_package);
@@ -1080,6 +1161,12 @@ void uw_late_init(void)
                                        frame_type, nil,
                                        list(types_s, fun_s, nao),
                                        nil, nil, nil, nil);
+#if CONFIG_DEBUG_SUPPORT
+  fcall_frame_type = make_struct_type(intern(lit("fcall-frame"), user_package),
+                                      frame_type, nil,
+                                      list(fun_s, args_s, nao),
+                                      nil, nil, nil, nil);
+#endif
   reg_mac(intern(lit("defex"), user_package), func_n2(me_defex));
   reg_var(unhandled_hook_s = intern(lit("*unhandled-hook*"),
           user_package), nil);
@@ -1105,6 +1192,17 @@ void uw_late_init(void)
           func_n2v(uw_invoke_catch));
   reg_fun(sys_capture_cont_s = intern(lit("capture-cont"), system_package),
           func_n3o(uw_capture_cont, 2));
+#if CONFIG_DEBUG_SUPPORT
+  reg_varl(intern(lit("uw-block"), user_package), num_fast(1U << UW_BLOCK));
+  reg_varl(intern(lit("uw-captured-block"), user_package), num_fast(1U << UW_CAPTURED_BLOCK));
+  reg_varl(intern(lit("uw-menv"), user_package), num_fast(1U <<UW_MENV));
+  reg_varl(intern(lit("uw-catch"), user_package), num_fast(1U <<UW_CATCH));
+  reg_varl(intern(lit("uw-handle"), user_package), num_fast(1U <<UW_HANDLE));
+  reg_varl(intern(lit("uw-cont-copy"), user_package), num_fast(1U <<UW_CONT_COPY));
+  reg_varl(intern(lit("uw-guard"), user_package), num_fast(1U <<UW_GUARD));
+  reg_varl(intern(lit("uw-fcall"), user_package), num_fast(1U <<UW_FCALL));
+  reg_fun(intern(lit("find-frames-by-mask"), user_package), func_n1(uw_find_frames_by_mask));
+#endif
   uw_register_subtype(continue_s, restart_s);
   uw_register_subtype(warning_s, t);
   uw_register_subtype(defr_warning_s, warning_s);

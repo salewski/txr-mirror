@@ -1851,9 +1851,8 @@ int parse_once(val stream, val name, parser_t *parser)
 {
   int res = 0;
 #if CONFIG_DEBUG_SUPPORT
-  int ds = debug_set_state(opt_dbg_expansion);
+  unsigned dbg_state = debug_clear(opt_dbg_expansion ? 0 : DBG_ENABLE);
 #endif
-
   parser_common_init(parser);
 
   parser->stream = stream;
@@ -1861,6 +1860,7 @@ int parse_once(val stream, val name, parser_t *parser)
   parser->rec_source_loc = 1;
 
   uw_catch_begin(cons(error_s, nil), esym, eobj);
+
 
   res = yyparse(parser->scanner, parser);
 
@@ -1874,7 +1874,7 @@ int parse_once(val stream, val name, parser_t *parser)
   uw_unwind {
     parser_cleanup(parser);
 #if CONFIG_DEBUG_SUPPORT
-    debug_set_state(ds);
+    debug_set(dbg_state);
 #endif
   }
 

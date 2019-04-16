@@ -26,9 +26,20 @@
  */
 
 
-#define EJ_OPT_MEMB
-#define EJ_OPT_SAVE(EJB)
-#define EJ_OPT_REST(EJB)
+#if CONFIG_DEBUG_SUPPORT
+extern unsigned debug_state;
+#define EJ_DBG_MEMB int ds;
+#define EJ_DBG_SAVE(EJB) ((EJB).ds = debug_state),
+#define EJ_DBG_REST(EJB) (debug_state = (EJB).ds),
+#else
+#define EJ_DBG_MEMB
+#define EJ_DBG_SAVE(EJB)
+#define EJ_DBG_REST(EJB)
+#endif
+
+#define EJ_OPT_MEMB EJ_DBG_MEMB
+#define EJ_OPT_SAVE(EJB) EJ_DBG_SAVE(EJB)
+#define EJ_OPT_REST(EJB) EJ_DBG_REST(EJB)
 
 #if __i386__
 

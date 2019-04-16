@@ -28,7 +28,10 @@
 typedef union uw_frame uw_frame_t;
 typedef enum uw_frtype {
   UW_BLOCK, UW_CAPTURED_BLOCK, UW_MENV, UW_CATCH, UW_HANDLE,
-  UW_CONT_COPY, UW_GUARD
+  UW_CONT_COPY, UW_GUARD,
+#if CONFIG_DEBUG_SUPPORT
+  UW_FCALL,
+#endif
 } uw_frtype_t;
 
 struct uw_common {
@@ -88,6 +91,17 @@ struct uw_guard {
   int uw_ok;
 };
 
+#if CONFIG_DEBUG_SUPPORT
+
+struct uw_fcall {
+  uw_frame_t *up;
+  uw_frtype_t type;
+  val fun;
+  struct args *args;
+};
+
+#endif
+
 #if __aarch64__
 #define UW_FRAME_ALIGN __attribute__ ((aligned (16)))
 #else
@@ -102,6 +116,9 @@ union uw_frame {
   struct uw_handler ha;
   struct uw_cont_copy cp;
   struct uw_guard gu;
+#if CONFIG_DEBUG_SUPPORT
+  struct uw_fcall fc;
+#endif
 } UW_FRAME_ALIGN;
 
 void uw_push_block(uw_frame_t *, val tag);
@@ -118,6 +135,9 @@ INLINE val uw_block_return(val tag, val result)
 val uw_block_abscond(val tag, val result);
 void uw_push_catch(uw_frame_t *, val matches);
 void uw_push_handler(uw_frame_t *, val matches, val fun);
+#if CONFIG_DEBUG_SUPPORT
+void uw_push_fcall(uw_frame_t *, val fun, struct args *args);
+#endif
 noreturn val uw_throw(val sym, val exception);
 noreturn val uw_throwv(val sym, struct args *);
 noreturn val uw_throwf(val sym, val fmt, ...);
@@ -143,6 +163,9 @@ uw_frame_t *uw_current_exit_point(void);
 val uw_get_frames(void);
 val uw_find_frame(val extype, val frtype);
 val uw_find_frames(val extype, val frtype);
+#if CONFIG_DEBUG_SUPPORT
+val uw_find_frames_by_mask(val mask);
+#endif
 val uw_invoke_catch(val catch_frame, val sym, struct args *);
 val uw_muffle_warning(val exc, struct args *);
 val uw_trace_error(val ctx, val exc, struct args *);
