@@ -1445,8 +1445,8 @@ static void struct_inst_print(val obj, val out, val pretty,
 {
   struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
   struct struct_type *st = si->type;
-  val save_mode = test_set_indent_mode(out, num_fast(indent_off),
-                                       num_fast(indent_data));
+  val save_mode = test_neq_set_indent_mode(out, num_fast(indent_foff),
+                                           num_fast(indent_data));
   val save_indent, iter, once;
   int force_br = 0;
   int compat = opt_compat && opt_compat <= 154;

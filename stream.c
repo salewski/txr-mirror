@@ -3449,8 +3449,8 @@ val formatv(val stream_in, val fmtstr, struct args *al)
           }
           goto output_num;
         case '!':
-          save_mode = test_set_indent_mode(stream, num_fast(indent_off),
-                                           num_fast(indent_data));
+          save_mode = test_neq_set_indent_mode(stream, num_fast(indent_foff),
+                                               num_fast(indent_data));
           if (lt)
             set_indent(stream, plus(save_indent, num(width)));
           else
@@ -3558,7 +3558,7 @@ val put_string(val string, val stream_in)
 
     const wchar_t *str = c_str(string), *p = str;
 
-    if (s->indent_mode != indent_off) {
+    if (s->indent_mode != indent_off && s->indent_mode != indent_foff) {
       while (*str)
         put_char(chr(*str++), stream);
       return t;
@@ -3602,7 +3602,9 @@ val put_char(val ch, val stream_in)
     s->force_break = 0;
     break;
   case L'\t':
-    if (s->column == 0 && s->indent_mode != indent_off) {
+    if (s->column == 0 && s->indent_mode != indent_off &&
+        s->indent_mode != indent_foff)
+    {
       put_indent(stream, ops, s->indent_chars);
       s->column = s->indent_chars;
     }
@@ -3610,7 +3612,9 @@ val put_char(val ch, val stream_in)
     s->column = (s->column + 1) | 7;
     break;
   default:
-    if (s->column == 0 && s->indent_mode != indent_off) {
+    if (s->column == 0 && s->indent_mode != indent_off &&
+        s->indent_mode != indent_foff)
+    {
       put_indent(stream, ops, s->indent_chars);
       s->column = s->indent_chars;
     }
@@ -3720,6 +3724,17 @@ val test_set_indent_mode(val stream, val compare, val mode)
   return oldval;
 }
 
+val test_neq_set_indent_mode(val stream, val compare, val mode)
+{
+  val self = lit("test-neq-set-indent-mode");
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(self, stream, stream_s));
+  val oldval = num_fast(s->indent_mode);
+  if (oldval != compare)
+    s->indent_mode = convert(enum indent_mode, c_num(mode));
+  return oldval;
+}
+
 val set_indent_mode(val stream, val mode)
 {
   val self = lit("set-indent-mode");
@@ -3773,7 +3788,8 @@ val width_check(val stream, val alt)
        s->column >= s->indent_chars + s->code_width) ||
       (s->indent_mode == indent_data &&
        s->column >= s->indent_chars + s->data_width) ||
-      (s->indent_mode != indent_off && s->force_break))
+      (s->indent_mode != indent_off &&
+       s->indent_mode != indent_foff && s->force_break))
   {
     put_char(chr('\n'), stream);
     s->force_break = 0;
@@ -4679,6 +4695,7 @@ void stream_init(void)
   reg_varl(intern(lit("path-sep-chars"), user_package), static_str(path_sep_chars));
   reg_fun(intern(lit("get-indent-mode"), user_package), func_n1(get_indent_mode));
   reg_fun(intern(lit("test-set-indent-mode"), user_package), func_n3(test_set_indent_mode));
+  reg_fun(intern(lit("test-neq-set-indent-mode"), user_package), func_n3(test_neq_set_indent_mode));
   reg_fun(intern(lit("set-indent-mode"), user_package), func_n2(set_indent_mode));
   reg_fun(intern(lit("get-indent"), user_package), func_n1(get_indent));
   reg_fun(intern(lit("set-indent"), user_package), func_n2(set_indent));
@@ -4688,6 +4705,7 @@ void stream_init(void)
   reg_varl(intern(lit("indent-off"), user_package), num_fast(indent_off));
   reg_varl(intern(lit("indent-data"), user_package), num_fast(indent_data));
   reg_varl(intern(lit("indent-code"), user_package), num_fast(indent_code));
+  reg_varl(intern(lit("indent-foff"), user_package), num_fast(indent_foff));
 
 #if HAVE_SOCKETS
   uw_register_subtype(socket_error_s, error_s);

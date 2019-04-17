@@ -11124,7 +11124,7 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         if (sym == lambda_s && consp(cdr(obj)) && symbolp(second(obj))) {
           indent = one;
           save_indent = inc_indent(out, indent);
-          set_indent_mode(out, num_fast(indent_code));
+          test_neq_set_indent_mode(out, num_fast(indent_foff), num_fast(indent_code));
           obj_print_impl(sym, out, pretty, ctx);
           if (second(obj)) {
             put_string(lit(" (. "), out);
@@ -11137,12 +11137,12 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
           goto finish;
         } else if (special_operator_p(sym) || macro_form_p(obj, nil)) {
           indent = one;
-          set_indent_mode(out, num_fast(indent_code));
+          test_neq_set_indent_mode(out, num_fast(indent_foff), num_fast(indent_code));
         } else if (fboundp(sym)) {
           obj_print_impl(sym, out, pretty, ctx);
           indent = one;
           save_indent = inc_indent(out, indent);
-          set_indent_mode(out, num_fast(indent_code));
+          test_neq_set_indent_mode(out, num_fast(indent_foff), num_fast(indent_code));
           iter = obj;
           goto finish;
         }

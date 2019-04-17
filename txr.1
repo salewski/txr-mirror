@@ -46953,31 +46953,55 @@ function does not interact with indentation. The column position tracking
 will be incorrect if byte and character output are mixed, affecting
 the placement of indentation.
 
-Indentation mode takes on three numeric values, given by the three
+Indentation mode takes on four numeric values, given by the four
 variables
 .codn indent-off ,
 .codn indent-data ,
+.code indent-code
 and
-.codn indent-code .
-As far as stream output is concerned, the code and data modes behave
+.codn indent-foff .
+As far as stream output is concerned, the code and data modes
+represented by
+.code indent-code
+and
+.code indent-data
+behave
 the same way: both represent the "indentation turned on" state.
 The difference between them influences the behavior of the
 .code width-check
-function. This function isn't used by any stream output routines.
-It is used by the object printing functions like
+function. This function isn't used by any lower-level stream output
+routines. It is used by the object printing functions like
 .code print
 and
 .code pprint
 to break up long lines.
+The
+.code indent-off
+and
+.code intent-foff
+modes are also treated the same way by lower level stream output,
+indicating "indentation turned off". The modes are distinguished
+by
+.code print
+and
+.code pprint
+in the following way:
+.code indent-off
+is a "soft" disable which allows these object-printing routines
+to temporarily turn on indentation while traversing aggregate objects.
+Whereas the
+.code indent-foff
+("force off") value is a "hard" disable: the object-printing routines will not
+enable indentation and will not break up long lines.
 
-.coNP Variables @, indent-off @ indent-data and @ indent-code
+.coNP Variables @, indent-off @, indent-data @ indent-code and @ indent-foff
 .desc
 These variables hold integer values representing output stream
 indentation modes. The value of
 .code indent-off
 is zero.
 
-.coNP Functions @, get-indent-mode @ set-indent-mode and @ test-set-indent-mode
+.coNP Functions @ get-indent-mode and @ set-indent-mode
 .synb
 .mets (get-indent-mode << stream )
 .mets (set-indent-mode < stream << new-mode )
@@ -46989,7 +47013,6 @@ The
 .code get-indent-mode
 retrieves the current indent mode of
 .metn stream .
-
 The
 .code set-indent-mode
 function sets the indent mode of
@@ -46997,17 +47020,6 @@ function sets the indent mode of
 to
 .meta new-mode
 and returns the previous mode.
-
-The
-.code test-set-indent-mode
-function sets the indent mode of
-.meta stream
-to
-.meta new-mode
-if, and only if,
-its current mode is equal to
-.metn compare-mode .
-Whether or not it changes the mode, it returns the previous mode.
 
 Note: it is encouraged to save and restore the indentation mode,
 and in a way that is exception safe.
@@ -47019,6 +47031,35 @@ effect and affect subsequent output. The
 macro or
 .code unwind-protect
 operator may be used.
+
+.coNP Functions @ test-set-indent-mode and @ test-neq-set-indent-mode
+.synb
+.mets (test-set-indent-mode < stream < compare-mode << new-mode )
+.mets (test-neq-set-indent-mode < stream < compare-mode << new-mode )
+.syne
+.desc
+The
+.code test-set-indent-mode
+function sets the indent mode of
+.meta stream
+to
+.meta new-mode
+if, and only if,
+its current mode is equal to
+.metn compare-mode .
+Whether or not it changes the mode, it returns the previous mode.
+
+The
+.code test-neq-set-indent-mode
+only differs in that it sets
+.meta stream
+to
+.meta new-mode
+if, and only if,
+the current mode is
+.B not
+equal to
+.metn compare-mode .
 
 .coNP Functions @, get-indent @ set-indent and @ inc-indent
 .synb

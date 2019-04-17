@@ -634,8 +634,8 @@ val buf_print(val buf, val stream_in)
   struct buf *b = buf_handle(buf, lit("buf-print"));
   cnum len = c_num(b->len), count = 0;
   mem_t *data = b->data;
-  val save_mode = test_set_indent_mode(stream, num_fast(indent_off),
-                                       num_fast(indent_data));
+  val save_mode = test_neq_set_indent_mode(stream, num_fast(indent_foff),
+                                           num_fast(indent_data));
   val save_indent;
   int fb = 0;
 

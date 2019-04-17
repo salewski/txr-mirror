@@ -34,7 +34,8 @@ enum strm_whence {
 enum indent_mode {
   indent_off,
   indent_data,
-  indent_code
+  indent_code,
+  indent_foff
 };
 
 struct strm_ctx {
@@ -205,6 +206,7 @@ val seek_stream(val stream, val offset, val whence);
 val truncate_stream(val stream, val len);
 val get_indent_mode(val stream);
 val test_set_indent_mode(val stream, val compare, val mode);
+val test_neq_set_indent_mode(val stream, val compare, val mode);
 val set_indent_mode(val stream, val mode);
 val get_indent(val stream);
 val set_indent(val stream, val indent);
