@@ -42,6 +42,8 @@ struct strm_ctx {
   val obj_hash;
   val obj_hash_prev;
   val counter;
+  cnum depth;
+  struct strm_base *strm;
 };
 
 struct strm_base {
@@ -51,6 +53,8 @@ struct strm_base {
   cnum indent_chars;
   cnum column;
   unsigned force_break;
+  cnum max_length;
+  cnum max_depth;
   struct strm_ctx *ctx;
 };
 
@@ -213,6 +217,8 @@ val set_indent(val stream, val indent);
 val inc_indent(val stream, val delta);
 val width_check(val stream, val alt);
 val force_break(val stream);
+val set_max_length(val stream, val length);
+val set_max_depth(val stream, val depth);
 struct strm_ctx *get_set_ctx(val stream, struct strm_ctx *);
 struct strm_ctx *get_ctx(val stream);
 val get_string(val stream, val nchars, val close_after_p);

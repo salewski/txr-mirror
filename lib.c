@@ -7492,11 +7492,13 @@ val lazy_str_force(val lstr)
   return lstr->ls.prefix;
 }
 
-val lazy_str_put(val lstr, val stream)
+val lazy_str_put(val lstr, val stream, struct strm_base *s)
 {
-  val lim, term, iter;
-  lim = lstr->ls.props->limit;
-  term = lstr->ls.props->term;
+  val lim = lstr->ls.props->limit;
+  val term = lstr->ls.props->term;
+  val iter;
+  cnum max_len = s->max_length;
+  cnum max_chr = if3(max_len, max(max_len, 15), 0);
 
   put_string(lstr->ls.prefix, stream);
 
@@ -7506,12 +7508,26 @@ val lazy_str_put(val lstr, val stream)
     val str = car(iter);
     if (!str)
       break;
+    if (max_len) {
+      if (length_str_gt(str, num(max_chr))) {
+        put_string(sub_str(str, zero, num(max_chr)), stream);
+        goto max_reached;
+      }
+      if (--max_len == 0)
+        goto max_reached;
+      max_chr -= c_num(length_str(str));
+    }
     if (lim)
       lim = pred(lim);
     put_string(str, stream);
     put_string(term, stream);
   }
 
+  return t;
+
+max_reached:
+  put_string(lit("..."), stream);
+  put_string(term, stream);
   return t;
 }
 
@@ -10901,14 +10917,16 @@ static void out_str_readable(const wchar_t *ptr, val out, int *semi_flag)
     out_str_char(*ptr, out, semi_flag, 0);
 }
 
-static void out_lazy_str(val lstr, val out)
+static void out_lazy_str(val lstr, val out, struct strm_base *strm)
 {
   int semi_flag = 0;
-  val lim, term, iter;
+  val lim = lstr->ls.props->limit;
+  val term = lstr->ls.props->term;
+  val iter;
   const wchar_t *wcterm;
+  cnum max_len = strm->max_length;
+  cnum max_chr = if3(max_len, max(max_len, 15), 0);
 
-  lim = lstr->ls.props->limit;
-  term = lstr->ls.props->term;
   wcterm = c_str(term);
 
   put_char(chr('"'), out);
@@ -10921,12 +10939,25 @@ static void out_lazy_str(val lstr, val out)
     val str = car(iter);
     if (!str)
       break;
+    if (max_len) {
+      if (length_str_gt(str, num(max_chr))) {
+        out_str_readable(c_str(sub_str(str, zero, num(max_chr))), out, &semi_flag);
+        goto max_reached;
+      }
+      if (--max_len == 0)
+        goto max_reached;
+      max_chr -= c_num(length_str(str));
+    }
     out_str_readable(c_str(str), out, &semi_flag);
     out_str_readable(wcterm, out, &semi_flag);
     if (lim)
       lim = pred(lim);
   }
 
+  if (0) {
+max_reached:
+    put_string(lit("\\..."), out);
+  }
   put_char(chr('"'), out);
 }
 
@@ -10951,7 +10982,7 @@ static void out_quasi_str_sym(val name, val mods, val rem_args,
   put_char(chr('@'), out);
   if (need_brace)
     put_char(chr('{'), out);
-  obj_print_impl(namestr, out, t, ctx);
+  put_string(namestr, out);
   while (mods) {
     put_char(chr(' '), out);
     obj_print_impl(car(mods), out, nil, ctx);
@@ -10964,6 +10995,10 @@ static void out_quasi_str_sym(val name, val mods, val rem_args,
 static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
 {
   val iter, next;
+  cnum max_len = ctx->strm->max_length, max_count = max_len;
+
+  if (max_len)
+    max_len = max(15, max_len);
 
   for (iter = cdr(args); iter; iter = next) {
     val elem = car(iter);
@@ -10971,7 +11006,18 @@ static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
 
     if (stringp(elem)) {
       int semi_flag = 0;
-      out_str_readable(c_str(elem), out, &semi_flag);
+      if (max_len && length_str_gt(elem, num(max_len))) {
+        out_str_readable(c_str(sub_str(elem, zero, num(max_len))), out, &semi_flag);
+        goto max_exceeded;
+      } else {
+        out_str_readable(c_str(elem), out, &semi_flag);
+        if (max_len) {
+          max_len -= c_num(length(elem));
+          if (max_len == 0) {
+            goto max_reached;
+          }
+        }
+      }
     } else if (consp(elem)) {
       val sym = car(elem);
       if (sym == var_s)
@@ -10987,7 +11033,17 @@ static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
     } else {
       obj_print_impl(elem, out, nil, ctx);
     }
+
+    if (--max_count == 0)
+      goto max_reached;
   }
+
+  return;
+
+max_reached:
+  if (next)
+max_exceeded:
+    put_string(lit("\\..."), out);
 }
 
 INLINE int circle_print_eligible(val obj)
@@ -11008,8 +11064,9 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
 {
   val self = lit("print");
   val ret = obj;
+  cnum save_depth = ctx->depth;
 
-  if (ctx && circle_print_eligible(obj)) {
+  if (ctx->obj_hash && circle_print_eligible(obj)) {
     loc pcdr = gethash_l(self, ctx->obj_hash, obj, nulloc);
     val label = deref(pcdr);
 
@@ -11024,6 +11081,37 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
     } else if (!label) {
       set(pcdr, colon_k);
     }
+  }
+
+  if (ctx->strm->max_depth) {
+    if (ctx->depth > ctx->strm->max_depth) {
+      put_string(lit("..."), out);
+      return obj;
+    }
+
+    if (ctx->depth == ctx->strm->max_depth) {
+      switch (type(obj)) {
+      case CONS:
+      case LCONS:
+        put_string(lit("(...)"), out);
+        return obj;
+      case VEC:
+        put_string(lit("#(...)"), out);
+        return obj;
+      case COBJ:
+        if (hashp(obj)) {
+          put_string(lit("#H(...)"), out);
+          return obj;
+        } else if (structp(obj)) {
+          put_string(lit("#S(...)"), out);
+          return obj;
+        }
+      default:
+        break;
+      }
+    }
+
+    ctx->depth++;
   }
 
   switch (type(obj)) {
@@ -11095,6 +11183,7 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         out_quasi_str(obj, out, ctx);
         put_char(chr('`'), out);
       } else if (sym == quasilist_s && consp(cdr(obj))) {
+        cnum max_length = ctx->strm->max_length;
         val args = cdr(obj);
         put_string(lit("#`"), out);
         if (args) {
@@ -11103,6 +11192,10 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         }
         while (args) {
           put_char(chr(' '), out);
+          if (max_length && --max_length == 0) {
+            put_string(lit("..."), out);
+            break;
+          }
           out_quasi_str(car(args), out, ctx);
           args = cdr(args);
         }
@@ -11112,6 +11205,8 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         val closepar = chr(')');
         val indent = zero;
         int force_br = 0;
+        cnum max_len = ctx->strm->max_length;
+        cnum max_count = max_len;
 
         if (sym == dwim_s && consp(cdr(obj))) {
           put_char(chr('['), out);
@@ -11174,13 +11269,18 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
               }
             }
 
-            obj_print_impl(a, out, pretty, ctx);
+            if (max_len && --max_count < 0) {
+              put_string(lit("..."), out);
+              iter = nil;
+            } else {
+              obj_print_impl(a, out, pretty, ctx);
+            }
           }
 finish:
           d = cdr(iter);
           if (nilp(d)) {
             put_char(closepar, out);
-          } else if (ctx && gethash(ctx->obj_hash, d)) {
+          } else if (ctx->obj_hash && gethash(ctx->obj_hash, d)) {
             iter = nil;
             goto dot;
           } else if (consp(d)) {
@@ -11205,15 +11305,31 @@ dot:
     }
   case LIT:
   case STR:
-    if (pretty) {
-      put_string(obj, out);
-    } else {
-      int semi_flag = 0;
-      put_char(chr('"'), out);
+    {
+      cnum max_length = ctx->strm->max_length;
+      cnum eff_max_length = max(15, max_length);
 
-      out_str_readable(c_str(obj), out, &semi_flag);
+      if (pretty) {
+        if (!max_length || le(length_str(obj), num(eff_max_length))) {
+          put_string(obj, out);
+        } else {
+          put_string(sub_str(obj, zero, num(eff_max_length)), out);
+          put_string(lit("..."), out);
+        }
+      } else {
+        int semi_flag = 0;
+        put_char(chr('"'), out);
 
-      put_char(chr('"'), out);
+        if (!max_length || le(length_str(obj), num(eff_max_length))) {
+          out_str_readable(c_str(obj), out, &semi_flag);
+        } else {
+          out_str_readable(c_str(sub_str(obj, zero, num(eff_max_length))),
+                           out, &semi_flag);
+          put_string(lit("\\..."), out);
+        }
+
+        put_char(chr('"'), out);
+      }
     }
     break;
   case CHR:
@@ -11305,6 +11421,7 @@ dot:
   case VEC:
     {
       cnum i, length = c_num(obj->v.vec[vec_length]);
+      cnum max_length = ctx->strm->max_length;
       val save_mode = test_set_indent_mode(out, num_fast(indent_off),
                                            num_fast(indent_data));
       val save_indent;
@@ -11316,6 +11433,10 @@ dot:
 
       for (i = 0; i < length; i++) {
         val elem = obj->v.vec[i];
+        if (max_length && i >= max_length) {
+          put_string(lit("..."), out);
+          break;
+        }
         obj_print_impl(elem, out, pretty, ctx);
         if (i < length - 1)
           if (width_check(out, chr(' ')))
@@ -11333,9 +11454,9 @@ dot:
     break;
   case LSTR:
     if (pretty) {
-      lazy_str_put(obj, out);
+      lazy_str_put(obj, out, ctx->strm);
     } else {
-      out_lazy_str(obj, out);
+      out_lazy_str(obj, out, ctx->strm);
     }
     break;
   case COBJ:
@@ -11359,6 +11480,9 @@ dot:
     format(out, lit("#<garbage: ~p>"), obj, nao);
     break;
   }
+
+  if (ctx->depth != save_depth)
+    ctx->depth = save_depth;
 
   return ret;
 }
@@ -11466,6 +11590,7 @@ static void obj_hash_merge(val parent_hash, val child_hash)
 
 val obj_print(val obj, val out, val pretty)
 {
+  val self = lit("print");
   val ret = nil;
   val save_mode = get_indent_mode(out);
   val save_indent = get_indent(out);
@@ -11486,18 +11611,21 @@ val obj_print(val obj, val out, val pretty)
       obj_hash_merge(ctx->obj_hash_prev, ctx->obj_hash);
       ctx->obj_hash = ctx->obj_hash_prev;
       ctx->obj_hash_prev = nil;
-    } else {
-      ctx = 0;
     }
   } else {
-    if (print_circle_s && cdr(lookup_var(nil, print_circle_s))) {
-      ctx = &ctx_struct;
-      ctx->obj_hash = make_hash(nil, nil, nil);
-      ctx->obj_hash_prev = nil;
-      ctx->counter = zero;
-      get_set_ctx(out, ctx);
+    struct strm_base *s = coerce(struct strm_base *,
+                                 cobj_handle(self, out, stream_s));
+    ctx = &ctx_struct;
+    ctx->strm = s;
+    ctx->counter = zero;
+    ctx->obj_hash_prev = nil;
+    ctx->obj_hash = if2(print_circle_s &&
+                        cdr(lookup_var(nil, print_circle_s)),
+                        make_hash(nil, nil, nil));
+    ctx->depth = 0;
+    get_set_ctx(out, ctx);
+    if (ctx->obj_hash)
       populate_obj_hash(obj, ctx);
-    }
   }
 
   ret = obj_print_impl(obj, out, pretty, ctx);

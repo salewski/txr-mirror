@@ -102,7 +102,7 @@ val shell, shell_arg;
 
 void strm_base_init(struct strm_base *s)
 {
-  static struct strm_base init = { indent_off, 60, 10, 0, 0, 0, 0 };
+  static struct strm_base init = { indent_off, 60, 10, 0, 0, 0, 0, 0, 0 };
   *s = init;
 }
 
@@ -3547,13 +3547,14 @@ static val put_indent(val stream, struct strm_ops *ops, cnum chars)
 val put_string(val string, val stream_in)
 {
   val self = lit("put-string");
+  val stream = default_arg(stream_in, std_output);
+  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+
   if (lazy_stringp(string)) {
-    return lazy_str_put(string, stream_in);
+    return lazy_str_put(string, stream_in, s);
   } else {
-    val stream = default_arg(stream_in, std_output);
     struct strm_ops *ops = coerce(struct strm_ops *,
                                   cobj_ops(self, stream, stream_s));
-    struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
     cnum col = s->column;
 
     const wchar_t *str = c_str(string), *p = str;
@@ -3808,6 +3809,26 @@ val force_break(val stream)
                                cobj_handle(self, stream, stream_s));
   s->force_break = 1;
   return stream;
+}
+
+val set_max_length(val stream, val length)
+{
+  val self = lit("set-max-length");
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(self, stream, stream_s));
+  cnum old_max = s->max_length;
+  s->max_length = c_num(length);
+  return num(old_max);
+}
+
+val set_max_depth(val stream, val depth)
+{
+  val self = lit("set-max-depth");
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(self, stream, stream_s));
+  cnum old_max = s->max_depth;
+  s->max_depth = c_num(depth);
+  return num(old_max);
 }
 
 struct strm_ctx *get_set_ctx(val stream, struct strm_ctx *ctx)
@@ -4702,6 +4723,8 @@ void stream_init(void)
   reg_fun(intern(lit("inc-indent"), user_package), func_n2(inc_indent));
   reg_fun(intern(lit("width-check"), user_package), func_n2(width_check));
   reg_fun(intern(lit("force-break"), user_package), func_n1(force_break));
+  reg_fun(intern(lit("set-max-length"), user_package), func_n2(set_max_length));
+  reg_fun(intern(lit("set-max-depth"), user_package), func_n2(set_max_depth));
   reg_varl(intern(lit("indent-off"), user_package), num_fast(indent_off));
   reg_varl(intern(lit("indent-data"), user_package), num_fast(indent_data));
   reg_varl(intern(lit("indent-code"), user_package), num_fast(indent_code));

@@ -494,11 +494,19 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
   put_string(lit(")"), out);
   {
     val iter = hash_begin(hash), cell;
+    cnum max_len = ctx->strm->max_length;
+    cnum max_count = max_len;
+
     while ((cell = hash_next(iter))) {
       val key = us_car(cell);
       val value = us_cdr(cell);
       if (width_check(out, chr(' ')))
         force_br = 1;
+
+      if (max_len && --max_count < 0) {
+        put_string(lit("..."), out);
+        break;
+      }
 
       put_string(lit("("), out);
       obj_print_impl(key, out, pretty, ctx);
