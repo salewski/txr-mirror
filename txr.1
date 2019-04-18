@@ -39071,14 +39071,15 @@ are present.
 
 .TP* "Example:"
 
-The following opens a text file and reads a line from it, returning that line,
-while ensuring that the stream is closed immediately:
+The following expression opens a text file and reads a line from it,
+returning that line, while ensuring that the stream is closed
+immediately:
 
-.mono
-(with-resources ((f (open-file "/etc/motd") (close-stream f)))
-  (whilet ((l (get-line f)))
-    (put-line l)))
-.onom
+.verb
+  (with-resources ((f (open-file "/etc/motd") (close-stream f)))
+    (whilet ((l (get-line f)))
+      (put-line l)))
+.brev
 
 
 
