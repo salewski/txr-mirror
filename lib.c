@@ -3742,6 +3742,8 @@ val sub_str(val str_in, val from, val to)
 
   if (ge(from, to)) {
     return null_string;
+  } else if (from == zero && eql(to, len)) {
+    return str_in;
   } else {
     size_t nchar = c_num(to) - c_num(from) + 1;
     wchar_t *sub = chk_wmalloc(nchar);
