@@ -1990,14 +1990,14 @@ static val op_defun(val form, val env)
 
   if (!consp(name)) {
     val block = cons(block_s, cons(name, body));
-    val fun = cons(name, cons(params, cons(block, nil)));
+    val fun = rlcp(cons(name, cons(params, cons(block, nil))), form);
     return rt_defun(name, func_interp(env, fun));
   } else if (car(name) == meth_s) {
     val binding = lookup_fun(nil, intern(lit("define-method"), system_package));
     val type_sym = second(name);
     val meth_name = third(name);
     val block = cons(block_s, cons(meth_name, body));
-    val fun = cons(meth_name, cons(params, cons(block, nil)));
+    val fun = rlcp(cons(meth_name, cons(params, cons(block, nil))), form);
 
     bug_unless (binding);
 
@@ -2005,7 +2005,7 @@ static val op_defun(val form, val env)
   } else if (car(name) == macro_s) {
     val sym = cadr(name);
     val block = cons(block_s, cons(sym, body));
-    val fun = cons(name, cons(params, cons(block, nil)));
+    val fun = rlcp(cons(name, cons(params, cons(block, nil))), form);
 
     if (!bindable(sym))
       eval_error(form, lit("defun: ~s isn't a bindable symbol in ~s"),
@@ -2043,7 +2043,7 @@ static val op_defmacro(val form, val env)
   val name = first(args);
   val params = second(args);
   val body = rest(rest(args));
-  val block = rlcp(cons(block_s, cons(name, body)), body);
+  val block = rlcp(cons(block_s, cons(name, body)), form);
 
   if (gethash(op_table, name))
     eval_error(form, lit("defmacro: ~s is a special operator"), name, nao);
