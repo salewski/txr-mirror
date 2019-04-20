@@ -114,6 +114,7 @@ static val make_struct_type_compat(val name, val super, val slots,
                                    val initfun, val boactor);
 static val call_super_method(val inst, val sym, struct args *);
 static val call_super_fun(val type, val sym, struct args *);
+static val allocate_struct(val type);
 
 void struct_init(void)
 {
@@ -157,6 +158,7 @@ void struct_init(void)
   reg_fun(intern(lit("make-lazy-struct"), user_package),
           func_n2(make_lazy_struct));
   reg_fun(make_struct_lit_s, func_n2(make_struct_lit));
+  reg_fun(intern(lit("allocate-struct"), user_package), func_n1(allocate_struct));
   reg_fun(intern(lit("copy-struct"), user_package), func_n1(copy_struct));
   reg_fun(intern(lit("replace-struct"), user_package), func_n2(replace_struct));
   reg_fun(intern(lit("clear-struct"), user_package), func_n2o(clear_struct, 1));
@@ -512,6 +514,21 @@ static void call_postinitfun_chain(struct struct_type *st, val strct)
     if (!derived_first && st->postinitfun)
       funcall1(st->postinitfun, strct);
   }
+}
+
+static val allocate_struct(val type)
+{
+  val self = lit("allocate-struct");
+  struct struct_type *st = stype_handle(&type, self);
+  cnum nslots = st->nslots;
+  size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
+  struct struct_inst *si = coerce(struct struct_inst *, chk_calloc(1, size));
+  si->type = st;
+  si->id = st->id;
+  si->lazy = 0;
+  si->dirty = 1;
+  bug_unless (type == st->self);
+  return cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
 }
 
 static val make_struct_impl(val self, val type,

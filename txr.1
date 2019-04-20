@@ -25126,6 +25126,30 @@ The following equivalences hold:
   <-->  (make-struct a nil v0 v1 v2 ...)
 .brev
 
+.coNP Function @ allocate-struct
+.synb
+.mets (allocate-struct << type )
+.syne
+.desc
+The
+.code allocate-struct
+provides a low-level allocator for structure objects.
+
+The
+.meta type
+argument must either be a
+.code struct-type
+object, or else a symbol which is the name of a structure.
+
+The
+.code allocate-struct
+creates and returns a new instance of
+.meta type
+all of whose instance slots take on the value
+.codn nil .
+No initializations are performed. The struct type's
+registered initialization functions are not invoked.
+
 .coNP Function @ copy-struct
 .synb
 .mets (copy-struct << struct-obj )
