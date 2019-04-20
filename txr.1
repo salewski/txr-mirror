@@ -477,6 +477,14 @@ description of this mode.
 .coIP -d
 .coIP --debugger
 Invoke the interactive \*(TX debugger. See the DEBUGGER section.
+Implies
+.codn --backtrace .
+
+.coIP --backtrace
+Turns on the establishment of backtrace frames for function calls so that a
+backtrace can be produced when an unhandled exception occurs, and in other
+situations. Backtraces are helpful in identifying the causes of errors, but
+require extra stack space and slow down execution.
 
 .coIP -n
 .coIP --noninteractive
@@ -758,12 +766,16 @@ This option turns on debugging, like
 but also requests stepping into the auto-load processing of
 \*(TL library code.  Normally, debugging through the evaluations
 triggered by auto-loading is suppressed.
+Implies
+.codn --backtrace .
 
 .meIP --debug-expansion
 This option turns on debugging, like
 .code --debugger
 but also requests stepping into the parse-time macro-expansion
 of \*(TL code embedded in \*(TX queries. Normally, this is suppressed.
+Implies
+.codn --backtrace .
 
 .coIP --help
 Prints usage summary on standard output, and terminates successfully.
