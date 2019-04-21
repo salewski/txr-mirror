@@ -1055,6 +1055,7 @@ val mappend(val fun, val list);
 val mapdo(val fun, val list);
 val window_map(val range, val boundary, val fun, val seq);
 val window_mappend(val range, val boundary, val fun, val seq);
+val window_mapdo(val range, val boundary, val fun, val seq);
 val interpose(val sep, val seq);
 val merge(val list1, val list2, val lessfun, val keyfun);
 val sort(val seq, val lessfun, val keyfun);

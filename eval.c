@@ -6404,6 +6404,7 @@ void eval_init(void)
   reg_fun(intern(lit("maprend"), user_package), func_n1v(maprendv));
   reg_fun(intern(lit("window-map"), user_package), func_n4(window_map));
   reg_fun(intern(lit("window-mappend"), user_package), func_n4(window_mappend));
+  reg_fun(intern(lit("window-mapdo"), user_package), func_n4(window_mapdo));
   {
     val apply_f = func_n1v(applyv);
     reg_fun(apply_s, apply_f);

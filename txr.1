@@ -29488,10 +29488,11 @@ on a list of the arguments. The following equivalences hold:
   (zip '(a b c) '(c d e)) ->  ((a c) (b d) (c e))
 .brev
 
-.coNP Functions @ window-map and @ window-mappend
+.coNP Functions @, window-map @ window-mappend and @ window-mapdo
 .synb
 .mets (window-map < range < boundary < function << sequence )
 .mets (window-mappend < range < boundary < function << sequence )
+.mets (window-mapdo < range < boundary < function << sequence )
 .syne
 .desc
 The
@@ -29527,6 +29528,13 @@ Unlike these, they operate only on a single sequence, and over this sequence
 they perform a
 .IR "sliding window mapping" ,
 whose description follows.
+
+The function
+.code window-mappend
+avoids accumulating a sequence, and instead returns
+.codn nil ;
+it is analogous to
+.codn mapdo .
 
 The argument to the
 .meta range

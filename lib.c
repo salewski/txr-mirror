@@ -8092,7 +8092,12 @@ static cnum calc_win_size(cnum ra)
   return ws;
 }
 
-static val window_map_list(val range, val boundary, val fun, val list, val app)
+enum wmap_op {
+  WMAP_MAP, WMAP_MAPPEND, WMAP_MAPDO
+};
+
+static val window_map_list(val range, val boundary, val fun, val list,
+                           enum wmap_op op)
 {
   val self = lit("window-map");
   cnum i, j, ra = c_fixnum(range, self), ws = calc_win_size(ra);
@@ -8126,12 +8131,14 @@ static val window_map_list(val range, val boundary, val fun, val list, val app)
 
   for (;;) {
     args_decl (args_cp, ws);
-
     args_copy(args_cp, args);
+    val item = generic_funcall(fun, args_cp);
 
-    ptail = if3(app,
-                list_collect_append,
-                list_collect)(ptail, generic_funcall(fun, args_cp));
+    switch (op) {
+    case WMAP_MAP: ptail = list_collect(ptail, item); break;
+    case WMAP_MAPPEND: ptail = list_collect_append(ptail, item); break;
+    case WMAP_MAPDO: (void) item; break;
+    }
 
     if (nilp(list = cdr(list)))
       break;
@@ -8150,10 +8157,11 @@ static val window_map_list(val range, val boundary, val fun, val list, val app)
   return out;
 }
 
-static val window_map_vec(val range, val boundary, val fun, val seq, val app)
+static val window_map_vec(val range, val boundary, val fun, val seq,
+                          enum wmap_op op)
 {
   val list = tolist(seq);
-  val out = window_map_list(range, boundary, fun, list, app);
+  val out = window_map_list(range, boundary, fun, list, op);
   return make_like(out, seq);
 }
 
@@ -8164,12 +8172,12 @@ val window_map(val range, val boundary, val fun, val seq)
     return nil;
   case CONS:
   case LCONS:
-    return window_map_list(range, boundary, fun, seq, nil);
+    return window_map_list(range, boundary, fun, seq, WMAP_MAP);
   case VEC:
   case LIT:
   case STR:
   case LSTR:
-    return window_map_vec(range, boundary, fun, seq, nil);
+    return window_map_vec(range, boundary, fun, seq, WMAP_MAP);
   default:
     type_mismatch(lit("window-map: ~s is not a sequence"), seq, nao);
   }
@@ -8182,14 +8190,34 @@ val window_mappend(val range, val boundary, val fun, val seq)
     return nil;
   case CONS:
   case LCONS:
-    return window_map_list(range, boundary, fun, seq, t);
+    return window_map_list(range, boundary, fun, seq, WMAP_MAPPEND);
   case VEC:
   case LIT:
   case STR:
   case LSTR:
-    return window_map_vec(range, boundary, fun, seq, t);
+    return window_map_vec(range, boundary, fun, seq, WMAP_MAPPEND);
   default:
-    type_mismatch(lit("window-map: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("window-mappend: ~s is not a sequence"), seq, nao);
+  }
+}
+
+val window_mapdo(val range, val boundary, val fun, val seq)
+{
+  switch (type(seq)) {
+  case NIL:
+    return nil;
+  case CONS:
+  case LCONS:
+    (void) window_map_list(range, boundary, fun, seq, WMAP_MAPDO);
+    return nil;
+  case VEC:
+  case LIT:
+  case STR:
+  case LSTR:
+    (void) window_map_vec(range, boundary, fun, seq, WMAP_MAPDO);
+    return nil;
+  default:
+    type_mismatch(lit("window-mapdo: ~s is not a sequence"), seq, nao);
   }
 }
 
