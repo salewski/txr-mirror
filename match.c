@@ -4331,18 +4331,19 @@ static val v_load(match_files_ctx *c)
 
     if (!txr_lisp_p) {
       int gc = gc_state(0);
-      parser_t parser;
+      val parser_obj = ensure_parser(stream);
+      parser_t *parser = parser_get_impl(self, parser_obj);
 
-      parse_once(stream, name, &parser);
+      parse_once(self, stream, name);
       gc_state(gc);
 
-      if (parser.errors)
+      if (parser->errors)
         sem_error(specline, lit("~s: errors encountered in ~a"), sym, path, nao);
 
       if (sym == include_s) {
-        ret = parser.syntax_tree;
+        ret = parser->syntax_tree;
       } else {
-        val spec = parser.syntax_tree;
+        val spec = parser->syntax_tree;
         val result = match_files(mf_spec(*c, spec));
 
         if (!result) {

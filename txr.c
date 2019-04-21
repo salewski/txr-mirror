@@ -470,10 +470,11 @@ static void no_dbg_support(val arg)
 }
 #endif
 
-static int parse_once_noerr(val stream, val name, parser_t *parser)
+static int parse_once_noerr(val stream, val name)
 {
   val pfx = format(nil, lit("~a:"), name, nao);
-  ignerr_func_body(int, 0, parse_once(stream, name, parser), std_error, pfx);
+  ignerr_func_body(int, 0, parse_once(prog_string, stream, name),
+                   std_error, pfx);
 }
 
 static val read_compiled_file_noerr(val self, val stream, val name, val error_stream)
@@ -1052,22 +1053,23 @@ int txr_main(int argc, char **argv)
   if (!txr_lisp_p)
   {
     int gc = gc_state(0);
-    parser_t parser;
-    parse_once_noerr(parse_stream, spec_file_str, &parser);
+    val parser_obj = ensure_parser(parse_stream);
+    parser_t *parser = parser_get_impl(prog_string, parser_obj);
+    parse_once_noerr(parse_stream, spec_file_str);
     gc_state(gc);
 
     close_stream(parse_stream, nil);
 
     uw_release_deferred_warnings();
 
-    spec = parser.syntax_tree;
+    spec = parser->syntax_tree;
 
     opt_loglevel = match_loglevel;
 
     if (opt_compat && opt_compat <= 199)
       reg_var(intern(lit("*self-path*"), user_package), spec_file_str);
 
-    if (parser.errors) {
+    if (parser->errors) {
       if (enter_repl)
         goto repl;
       return EXIT_FAILURE;

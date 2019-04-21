@@ -173,12 +173,12 @@ val parser(val stream, val lineno)
   return parser;
 }
 
-static parser_t *get_parser_impl(val self, val parser)
+parser_t *parser_get_impl(val self, val parser)
 {
   return coerce(parser_t *, cobj_handle(self, parser, parser_s));
 }
 
-static val ensure_parser(val stream)
+val ensure_parser(val stream)
 {
   loc pcdr = gethash_l(lit("internal error"), stream_parser_hash, stream, nulloc);
   val pars = deref(pcdr);
@@ -541,7 +541,7 @@ static val lisp_parse_impl(val self, val interactive, val rlcp_p, val source_in,
                      stream_get_prop(input_stream, name_k)));
   val parser = ensure_parser(input_stream);
   val saved_dyn = dyn_env;
-  parser_t *pi = get_parser_impl(self, parser);
+  parser_t *pi = parser_get_impl(self, parser);
   volatile val parsed = nil;
 
   if (rlcp_p)
@@ -628,7 +628,7 @@ static val read_file_common(val self, val stream, val error_stream, val compiled
   val parser = ensure_parser(stream);
 
   if (compiled) {
-    parser_t *pi = get_parser_impl(self, parser);
+    parser_t *pi = parser_get_impl(self, parser);
     pi->rec_source_loc = 0;
   }
 

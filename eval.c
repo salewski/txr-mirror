@@ -4364,21 +4364,22 @@ val load(val target)
     }
   } else {
     int gc = gc_state(0);
-    parser_t parser;
-    parse_once(stream, name, &parser);
+    val parser_obj = ensure_parser(stream);
+    parser_t *parser = parser_get_impl(self, parser_obj);
+    parse_once(self, stream, name);
     gc_state(gc);
 
     close_stream(stream, nil);
 
     uw_release_deferred_warnings();
 
-    if (parser.errors)
+    if (parser->errors)
       uw_throwf(query_error_s, lit("~a: parser errors in ~a"),
                 self, path, nao);
     {
       val match_ctx = uw_get_match_context();
       val bindings = cdr(match_ctx);
-      val result = extract(parser.syntax_tree, nil, bindings);
+      val result = extract(parser->syntax_tree, nil, bindings);
       cons_bind (new_bindings, success, result);
       if (success)
         uw_set_match_context(cons(car(match_ctx), new_bindings));

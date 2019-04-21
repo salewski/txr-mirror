@@ -1847,16 +1847,14 @@ void yybadtoken(parser_t *parser, int tok, val context)
         yyerrorf(scnr, lit("unexpected character ~a"), chr(tok), nao);
 }
 
-int parse_once(val stream, val name, parser_t *parser)
+int parse_once(val self, val stream, val name)
 {
   int res = 0;
 #if CONFIG_DEBUG_SUPPORT
   unsigned dbg_state = debug_clear(opt_dbg_expansion ? 0 : DBG_ENABLE);
 #endif
-  parser_common_init(parser);
-
-  parser->stream = stream;
-  parser->name = name;
+  val parser_obj = ensure_parser(stream);
+  parser_t *parser = parser_get_impl(self, parser_obj);
   parser->rec_source_loc = 1;
 
   uw_catch_begin(cons(error_s, nil), esym, eobj);
@@ -1872,7 +1870,6 @@ int parse_once(val stream, val name, parser_t *parser)
   }
 
   uw_unwind {
-    parser_cleanup(parser);
 #if CONFIG_DEBUG_SUPPORT
     debug_set(dbg_state);
 #endif
