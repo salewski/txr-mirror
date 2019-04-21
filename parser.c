@@ -193,6 +193,14 @@ static void pushback_token(parser_t *p, struct yy_token *tok)
   p->tok_pushback[p->tok_idx++] = *tok;
 }
 
+val parser_set_lineno(val self, val stream, val lineno)
+{
+  val parser = ensure_parser(stream);
+  parser_t *pi = parser_get_impl(self, parser);
+  pi->lineno = c_num(lineno);
+  return stream;
+}
+
 void prime_parser(parser_t *p, val name, enum prime_parser prim)
 {
   struct yy_token sec_tok = { 0 };

@@ -189,13 +189,14 @@ static void hint(void)
 }
 #endif
 
-static val check_hash_bang(val stream, val args)
+static val check_hash_bang(val stream, val args, int *occurs)
 {
   val line = get_line(stream);
 
   if (line) {
     if (match_str(line, lit("#!"), nil)) {
       val pos = search_str(line, lit("\xdc00"), nil, nil);
+      *occurs = 1;
 
       if (pos) {
         val after_null = sub_str(line, succ(pos), t);
@@ -511,6 +512,7 @@ int txr_main(int argc, char **argv)
   val compat_var = lit("TXR_COMPAT");
   val compat_val = getenv_wrap(compat_var);
   val orig_args = nil, ref_arg_list = nil;
+  int hb_occurs = 0;
   list_collect_decl(arg_list, arg_tail);
   list_collect_decl(eff_arg_list, eff_arg_tail);
 
@@ -576,7 +578,7 @@ int txr_main(int argc, char **argv)
         simulate_setuid_setgid(parse_stream);
         dyn_env = make_env(nil, nil, dyn_env);
         env_vbind(dyn_env, load_path_s, spec_file_str);
-        arg_list = check_hash_bang(parse_stream, arg_undo);
+        arg_list = check_hash_bang(parse_stream, arg_undo, &hb_occurs);
         set(eff_arg_tail, butlastn(one, deref(eff_arg_tail)));
         continue;
       }
@@ -877,7 +879,7 @@ int txr_main(int argc, char **argv)
           simulate_setuid_setgid(parse_stream);
           dyn_env = make_env(nil, nil, dyn_env);
           env_vbind(dyn_env, load_path_s, spec_file_str);
-          arg_list = check_hash_bang(parse_stream, arg_list);
+          arg_list = check_hash_bang(parse_stream, arg_list, &hb_occurs);
         } else {
           drop_privilege();
           spec_file_str = lit("stdin");
@@ -1049,6 +1051,9 @@ int txr_main(int argc, char **argv)
   reg_varl(self_path_s, spec_file_str);
 
   env_vbind(dyn_env, load_recursive_s, t);
+
+  if (hb_occurs)
+    parser_set_lineno(prog_string, parse_stream, two);
 
   if (!txr_lisp_p)
   {

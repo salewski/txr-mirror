@@ -132,6 +132,7 @@ val parser(val stream, val lineno);
 parser_t *parser_get_impl(val self, val parser);
 val get_parser(val stream);
 val ensure_parser(val stream);
+val parser_set_lineno(val self, val stream, val lineno);
 val parser_errors(val parser);
 val parser_eof(val parser);
 void parse_init(void);
