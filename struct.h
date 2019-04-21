@@ -44,6 +44,7 @@ val struct_from_plist(val type, struct args *plist);
 val struct_from_args(val type, struct args *boa);
 val make_lazy_struct(val type, val argfun);
 val make_struct_lit(val type, val plist);
+val allocate_struct(val type);
 val copy_struct(val strct);
 val clear_struct(val strct, val value);
 val replace_struct(val target, val source);

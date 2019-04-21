@@ -114,7 +114,6 @@ static val make_struct_type_compat(val name, val super, val slots,
                                    val initfun, val boactor);
 static val call_super_method(val inst, val sym, struct args *);
 static val call_super_fun(val type, val sym, struct args *);
-static val allocate_struct(val type);
 
 void struct_init(void)
 {
@@ -516,7 +515,7 @@ static void call_postinitfun_chain(struct struct_type *st, val strct)
   }
 }
 
-static val allocate_struct(val type)
+val allocate_struct(val type)
 {
   val self = lit("allocate-struct");
   struct struct_type *st = stype_handle(&type, self);

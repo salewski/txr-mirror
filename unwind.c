@@ -314,8 +314,7 @@ val uw_get_frames(void)
     switch (ex->uw.type) {
     case UW_CATCH:
       if (ex->ca.matches && ex->ca.visible) {
-        args_decl(args, ARGS_MIN);
-        val cf = make_struct(catch_frame_type, nil, args);
+        val cf = allocate_struct(catch_frame_type);
         slotset(cf, types_s, ex->ca.matches);
         slotset(cf, jump_s, cptr(coerce(mem_t *, ex)));
         ptail = list_collect(ptail, cf);
@@ -323,8 +322,7 @@ val uw_get_frames(void)
       break;
     case UW_HANDLE:
       if (ex->ha.visible) {
-        args_decl(args, ARGS_MIN);
-        val hf = make_struct(handle_frame_type, nil, args);
+        val hf = allocate_struct(handle_frame_type);
         slotset(hf, types_s, ex->ha.matches);
         slotset(hf, fun_s, ex->ha.fun);
         ptail = list_collect(ptail, hf);
@@ -369,8 +367,7 @@ static val uw_find_frames_impl(val extype, val frtype, val just_one)
         if (uw_exception_subtype_p(extype, car(match)))
           break;
       if (match) {
-        args_decl(args, ARGS_MIN);
-        val fr = make_struct(frtype, nil, args);
+        val fr = allocate_struct(frtype);
         slotset(fr, types_s, ex->ca.matches);
         if (et == UW_CATCH) {
           slotset(fr, desc_s, ex->ca.desc);
@@ -410,11 +407,10 @@ val uw_find_frames_by_mask(val mask_in)
     uw_frtype_t type = fr->uw.type;
     if (((1U << type) & mask) != 0) {
       val frame = nil;
-      args_decl(args, ARGS_MIN);
       switch (type) {
       case UW_CATCH:
         {
-          frame = make_struct(catch_frame_type, nil, args);
+          frame = allocate_struct(catch_frame_type);
           slotset(frame, types_s, fr->ca.matches);
           slotset(frame, desc_s, fr->ca.desc);
           slotset(frame, jump_s, cptr(coerce(mem_t *, fr)));
@@ -422,7 +418,7 @@ val uw_find_frames_by_mask(val mask_in)
         }
       case UW_HANDLE:
         {
-          frame = make_struct(handle_frame_type, nil, args);
+          frame = allocate_struct(handle_frame_type);
           slotset(frame, types_s, fr->ha.matches);
           slotset(frame, fun_s, fr->ha.fun);
           break;
@@ -432,7 +428,7 @@ val uw_find_frames_by_mask(val mask_in)
           struct args *frargs = fr->fc.args;
           args_decl(acopy, frargs->argc);
           args_copy(acopy, frargs);
-          frame = make_struct(fcall_frame_type, nil, args);
+          frame = allocate_struct(fcall_frame_type);
           slotset(frame, fun_s, fr->fc.fun);
           slotset(frame, args_s, args_get_list(acopy));
           break;
