@@ -61,13 +61,13 @@ static uw_frame_t unhandled_ex;
 
 static val unhandled_hook_s, types_s, jump_s, desc_s;
 #if CONFIG_DEBUG_SUPPORT
-static val args_s;
+static val args_s, form_s;
 #endif
 static val sys_cont_s, sys_cont_poison_s;
 static val sys_cont_free_s, sys_capture_cont_s;
 
 static val frame_type, catch_frame_type, handle_frame_type;
-static val fcall_frame_type;
+static val fcall_frame_type, eval_frame_type;
 
 static val deferred_warnings, tentative_defs;
 
@@ -433,6 +433,13 @@ val uw_find_frames_by_mask(val mask_in)
           slotset(frame, args_s, args_get_list(acopy));
           break;
         }
+      case UW_EVAL:
+        {
+          frame = allocate_struct(eval_frame_type);
+          slotset(frame, form_s, fr->el.form);
+          slotset(frame, env_s, fr->el.env);
+          break;
+        }
       default:
         break;
       }
@@ -573,6 +580,16 @@ void uw_push_fcall(uw_frame_t *fr, val fun, struct args *args)
   fr->fc.fun = fun;
   fr->fc.args = args;
   fr->fc.up = uw_stack;
+  uw_stack = fr;
+}
+
+void uw_push_eval(uw_frame_t *fr, val form, val env)
+{
+  memset(fr, 0, sizeof *fr);
+  fr->el.type = UW_EVAL;
+  fr->el.form = form;
+  fr->el.env = env;
+  fr->el.up = uw_stack;
   uw_stack = fr;
 }
 
@@ -1134,13 +1151,14 @@ void uw_late_init(void)
   protect(&frame_type, &catch_frame_type, &handle_frame_type,
           &deferred_warnings, &tentative_defs, convert(val *, 0));
 #if CONFIG_DEBUG_SUPPORT
-  protect(&fcall_frame_type, convert(val *, 0));
+  protect(&fcall_frame_type, &eval_frame_type, convert(val *, 0));
 #endif
   types_s = intern(lit("types"), user_package);
   jump_s = intern(lit("jump"), user_package);
   desc_s = intern(lit("desc"), user_package);
 #if CONFIG_DEBUG_SUPPORT
   args_s = intern(lit("args"), user_package);
+  form_s = intern(lit("form"), user_package);
 #endif
   sys_cont_s = intern(lit("cont"), system_package);
   sys_cont_poison_s = intern(lit("cont-poison"), system_package);
@@ -1162,6 +1180,10 @@ void uw_late_init(void)
                                       frame_type, nil,
                                       list(fun_s, args_s, nao),
                                       nil, nil, nil, nil);
+  eval_frame_type = make_struct_type(intern(lit("eval-frame"), user_package),
+                                     frame_type, nil,
+                                     list(form_s, env_s, nao),
+                                     nil, nil, nil, nil);
 #endif
   reg_mac(intern(lit("defex"), user_package), func_n2(me_defex));
   reg_var(unhandled_hook_s = intern(lit("*unhandled-hook*"),
@@ -1197,6 +1219,7 @@ void uw_late_init(void)
   reg_varl(intern(lit("uw-cont-copy"), user_package), num_fast(1U <<UW_CONT_COPY));
   reg_varl(intern(lit("uw-guard"), user_package), num_fast(1U <<UW_GUARD));
   reg_varl(intern(lit("uw-fcall"), user_package), num_fast(1U <<UW_FCALL));
+  reg_varl(intern(lit("uw-eval"), user_package), num_fast(1U <<UW_EVAL));
   reg_fun(intern(lit("find-frames-by-mask"), user_package), func_n1(uw_find_frames_by_mask));
 #endif
   uw_register_subtype(continue_s, restart_s);

@@ -1497,19 +1497,27 @@ val eval_intrinsic_noerr(val form, val env, val *error_p)
 static val do_eval(val form, val env, val ctx,
                    val (*lookup)(val env, val sym))
 {
+  uw_frame_t *ev = 0;
+  val ret = nil;
+
+  if (dbg_backtrace) {
+    ev = coerce(uw_frame_t *, alloca(sizeof *ev));
+    uw_push_eval(ev, form, env);
+  }
+
   sig_check_fast();
 
-  if (nilp(form)) {
-    return nil;
-  } else if (symbolp(form)) {
+  if (form && symbolp(form)) {
     if (!bindable(form)) {
-      return form;
+      ret = form;
     } else {
       val binding = lookup(env, form);
-      if (binding)
-        return cdr(binding);
-      eval_error(ctx, lit("unbound variable ~s"), form, nao);
-      abort();
+      if (binding) {
+        ret = cdr(binding);
+      } else {
+        eval_error(ctx, lit("unbound variable ~s"), form, nao);
+        abort();
+      }
     }
   } else if (consp(form)) {
     val oper = car(form);
@@ -1517,11 +1525,10 @@ static val do_eval(val form, val env, val ctx,
 
     if (entry) {
       opfun_t fp = coerce(opfun_t, cptr_get(entry));
-      val ret, lfe_save = last_form_evaled;
+      val lfe_save = last_form_evaled;
       last_form_evaled = form;
       ret = fp(form, env);
       last_form_evaled = lfe_save;
-      return ret;
     } else {
       val fbinding = lookup_fun(env, oper);
 
@@ -1536,7 +1543,7 @@ static val do_eval(val form, val env, val ctx,
         val arglist = rest(form);
         cnum alen = if3(consp(arglist), c_num(length(arglist)), 0);
         cnum argc = max(alen, ARGS_MIN);
-        val ret, lfe_save = last_form_evaled;
+        val lfe_save = last_form_evaled;
         args_decl(args, argc);
 
         last_form_evaled = form;
@@ -1545,13 +1552,16 @@ static val do_eval(val form, val env, val ctx,
         ret = generic_funcall(cdr(fbinding), args);
 
         last_form_evaled = lfe_save;
-
-        return ret;
       }
     }
   } else {
-    return form;
+    ret = form;
   }
+
+  if (ev != 0)
+    uw_pop_frame(ev);
+
+  return ret;
 }
 
 val eval(val form, val env, val ctx)

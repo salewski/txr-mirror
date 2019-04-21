@@ -30,7 +30,7 @@ typedef enum uw_frtype {
   UW_BLOCK, UW_CAPTURED_BLOCK, UW_MENV, UW_CATCH, UW_HANDLE,
   UW_CONT_COPY, UW_GUARD,
 #if CONFIG_DEBUG_SUPPORT
-  UW_FCALL,
+  UW_FCALL, UW_EVAL
 #endif
 } uw_frtype_t;
 
@@ -100,6 +100,13 @@ struct uw_fcall {
   struct args *args;
 };
 
+struct uw_eval {
+  uw_frame_t *up;
+  uw_frtype_t type;
+  val form;
+  val env;
+};
+
 #endif
 
 #if __aarch64__
@@ -118,6 +125,7 @@ union uw_frame {
   struct uw_guard gu;
 #if CONFIG_DEBUG_SUPPORT
   struct uw_fcall fc;
+  struct uw_eval el;
 #endif
 } UW_FRAME_ALIGN;
 
@@ -137,6 +145,7 @@ void uw_push_catch(uw_frame_t *, val matches);
 void uw_push_handler(uw_frame_t *, val matches, val fun);
 #if CONFIG_DEBUG_SUPPORT
 void uw_push_fcall(uw_frame_t *, val fun, struct args *args);
+void uw_push_eval(uw_frame_t *, val form, val env);
 #endif
 noreturn val uw_throw(val sym, val exception);
 noreturn val uw_throwv(val sym, struct args *);
