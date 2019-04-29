@@ -51,7 +51,7 @@
          (args fr.args)
          (name (if (functionp fun)
                  (func-get-name fun)))
-         (loc nx-fr.(loc))
+         (loc (if nx-fr nx-fr.(loc)))
          (kind
            (cond
              ((interp-fun-p fun) "I")
