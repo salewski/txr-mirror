@@ -78,6 +78,15 @@
                  ^[,(cadr form)]
                  ^(,sym)))))))
 
+(defmeth expand-frame print-trace (fr pr-fr nx-fr prefix)
+  (let* ((form fr.form)
+         (loc (source-loc-str form)))
+    (put-string `@prefix X:@(if loc `(@loc):`)`)
+    (prinl form)))
+
+(defmeth expand-frame loc (fr)
+  (source-loc-str fr.form))
+
 (defun print-backtrace (: (*stdout* *stdout*) (prefix ""))
   (with-resources ((imode (set-indent-mode *stdout* indent-foff)
                           (set-indent-mode *stdout* imode))
@@ -86,7 +95,7 @@
                    (length (set-max-length *stdout* 10)
                            (set-max-length *stdout* length)))
     (window-map 1 nil (lambda (pr el nx) el.(print-trace pr nx prefix))
-                (find-frames-by-mask (logior uw-fcall uw-eval)))))
+                (find-frames-by-mask (logior uw-fcall uw-eval uw-expand)))))
 
 (defun debugger ()
   (with-disabled-debugging

@@ -30,7 +30,7 @@ typedef enum uw_frtype {
   UW_BLOCK, UW_CAPTURED_BLOCK, UW_MENV, UW_CATCH, UW_HANDLE,
   UW_CONT_COPY, UW_GUARD,
 #if CONFIG_DEBUG_SUPPORT
-  UW_FCALL, UW_EVAL
+  UW_FCALL, UW_EVAL, UW_EXPAND
 #endif
 } uw_frtype_t;
 
@@ -146,6 +146,7 @@ void uw_push_handler(uw_frame_t *, val matches, val fun);
 #if CONFIG_DEBUG_SUPPORT
 void uw_push_fcall(uw_frame_t *, val fun, struct args *args);
 void uw_push_eval(uw_frame_t *, val form, val env);
+void uw_push_expand(uw_frame_t *, val form, val env);
 #endif
 noreturn val uw_throw(val sym, val exception);
 noreturn val uw_throwv(val sym, struct args *);
@@ -174,6 +175,9 @@ val uw_find_frame(val extype, val frtype);
 val uw_find_frames(val extype, val frtype);
 #if CONFIG_DEBUG_SUPPORT
 val uw_find_frames_by_mask(val mask);
+val uw_last_form_expanded(void);
+#else
+define uw_last_form_expanded() ((void) 0)
 #endif
 val uw_invoke_catch(val catch_frame, val sym, struct args *);
 val uw_muffle_warning(val exc, struct args *);

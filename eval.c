@@ -106,7 +106,7 @@ val eval_only_s, compile_only_s;
 val special_s, unbound_s;
 val whole_k, form_k, symacro_k;
 
-val last_form_evaled, last_form_expanded;
+val last_form_evaled;
 
 val call_f;
 
@@ -359,6 +359,7 @@ val set_last_form_evaled(val form)
 void error_trace(val exsym, val exvals, val out_stream, val prefix)
 {
   val last = last_form_evaled;
+  val xlast = uw_last_form_expanded();
   val info = source_loc_str(last, nil);
 
   if (cdr(exvals) || !stringp(car(exvals)))
@@ -401,23 +402,23 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
     }
   }
 
-  if (last_form_expanded) {
-    val ex_info = source_loc_str(last_form_expanded, nil);
-    val form = last_form_expanded;
+  if (xlast) {
+    val ex_info = source_loc_str(xlast, nil);
+    val form = xlast;
 
     if (ex_info)
       format(out_stream, lit("~a during expansion at ~a of form ~!~s\n"),
-             prefix, ex_info, last_form_expanded, nao);
+             prefix, ex_info, xlast, nao);
     else
       format(out_stream, lit("~a during expansion of form ~!~s\n"),
-             prefix, last_form_expanded, nao);
+             prefix, xlast, nao);
 
     if (info)
       format(out_stream, lit("~a by macro code located at ~a\n"), prefix,
              info, nao);
 
     for (;;) {
-      val origin = lookup_origin(form);
+      val origin = lookup_origin(xlast);
       val oinfo = source_loc_str(origin, nil);
 
       if (origin) {
@@ -1433,13 +1434,11 @@ val funcall_interp(val interp_fun, struct args *args)
 static val expand_eval(val form, val env)
 {
   val lfe_save = last_form_evaled;
-  val lfx_save = last_form_expanded;
-  val form_ex = (last_form_expanded = last_form_evaled = nil,
+  val form_ex = (last_form_evaled = nil,
                  expand(form, nil));
   val loading = cdr(lookup_var(dyn_env, load_recursive_s));
   val ret = ((void) (loading || uw_release_deferred_warnings()),
              eval(form_ex, default_null_arg(env), form));
-  last_form_expanded = lfx_save;
   last_form_evaled = lfe_save;
   return ret;
 }
@@ -2389,7 +2388,7 @@ static val expand_lisp1_setq(val form, val menv)
         eval_error(form, lit("~s: misapplied to form ~s"),
                    op, sym, nao);
       if (!lookup_var(nil, sym) && !lookup_fun(nil, sym))
-        eval_defr_warn(last_form_expanded,
+        eval_defr_warn(uw_last_form_expanded(),
                        cons(var_s, sym),
                        lit("~s: unbound variable/function ~s"),
                        op, sym, nao);
@@ -2421,7 +2420,7 @@ static val expand_setqf(val form, val menv)
       eval_error(form, lit("~s: cannot assign lexical function ~s"), op, sym, nao);
 
     if (!lookup_fun(nil, sym))
-      eval_defr_warn(last_form_expanded,
+      eval_defr_warn(uw_last_form_expanded(),
                      cons(fun_s, sym), lit("~s: unbound function ~s"),
                      op, sym, nao);
 
@@ -3310,7 +3309,7 @@ tail:
         !uw_tentative_def_exists(cons(var_s, form)) &&
         !uw_tentative_def_exists(cons(fun_s, form)))
     {
-      eval_defr_warn(last_form_expanded,
+      eval_defr_warn(uw_last_form_expanded(),
                      cons(sym_s, form),
                      lit("unbound variable/function ~s"), form, nao);
     }
@@ -4535,7 +4534,7 @@ again:
       return expand(rlcp_tree(symac, form), menv);
     }
     if (!lookup_var(menv, form))
-      eval_defr_warn(last_form_expanded,
+      eval_defr_warn(uw_last_form_expanded(),
                      cons(var_s, form),
                      lit("unbound variable ~s"), form, nao);
     return form;
@@ -4710,13 +4709,13 @@ again:
       }
       if (!lookup_fun(menv, arg)) {
         if (special_operator_p(arg))
-          eval_warn(last_form_expanded,
+          eval_warn(uw_last_form_expanded(),
                     lit("fun used on special operator ~s"), arg, nao);
         else if (!bindable(arg))
-          eval_warn(last_form_expanded,
+          eval_warn(uw_last_form_expanded(),
                     lit("~s appears in operator position"), arg, nao);
         else
-          eval_defr_warn(last_form_expanded,
+          eval_defr_warn(uw_last_form_expanded(),
                          cons(fun_s, arg),
                          lit("unbound function ~s"),
                          arg, nao);
@@ -4876,10 +4875,10 @@ again:
         insym_ex = expand(insym, menv);
       } else if (!lookup_fun(menv, sym) && !special_operator_p(sym)) {
         if (!bindable(sym))
-          eval_warn(last_form_expanded,
+          eval_warn(uw_last_form_expanded(),
                     lit("~s appears in operator position"), sym, nao);
         else
-          eval_defr_warn(last_form_expanded,
+          eval_defr_warn(uw_last_form_expanded(),
                          cons(fun_s, sym),
                          lit("unbound function ~s"),
                          sym, nao);
@@ -4909,16 +4908,19 @@ again:
 val expand(val form, val menv)
 {
   val ret = nil;
-  val lfe_save = last_form_expanded;
+#if CONFIG_DEBUG_SUPPORT
+  uw_frame_t expand_fr;
+  uw_push_expand(&expand_fr, form, menv);
+#endif
 
-  if (consp(form))
-    last_form_expanded = form;
   ret = do_expand(form, menv);
-  last_form_expanded = lfe_save;
 
   if (!lookup_origin(ret))
     set_origin(ret, form);
 
+#if CONFIG_DEBUG_SUPPORT
+  uw_pop_frame(&expand_fr);
+#endif
   return ret;
 }
 
@@ -5000,23 +5002,26 @@ val macro_form_p(val form, val menv)
 static val do_macroexpand_1(val form, val menv, val (*lookup)(val, val))
 {
   val macro;
+#if CONFIG_DEBUG_SUPPORT
+  uw_frame_t expand_fr;
+  uw_push_expand(&expand_fr, form, menv);
+#endif
 
   menv = default_null_arg(menv);
 
   if (consp(form) && (macro = lookup_mac(menv, car(form)))) {
     val mac_expand = expand_macro(form, macro, menv);
-    if (mac_expand == form)
-      return form;
-    return rlcp_tree(rlcp_tree(mac_expand, form), macro);
-  }
-
-  if (bindable(form) && (macro = lookup(menv, form))) {
+    if (mac_expand != form)
+      form = rlcp_tree(rlcp_tree(mac_expand, form), macro);
+  } else if (bindable(form) && (macro = lookup(menv, form))) {
     val mac_expand = cdr(macro);
-    if (mac_expand == form)
-      return form;
-    return rlcp_tree(mac_expand, macro);
+    if (mac_expand != form)
+      form = rlcp_tree(mac_expand, macro);
   }
 
+#if CONFIG_DEBUG_SUPPORT
+  uw_pop_frame(&expand_fr);
+#endif
   return form;
 }
 
@@ -6112,7 +6117,7 @@ void eval_init(void)
   val length_f = func_n1(length);
 
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
-          &op_table, &pm_table, &last_form_evaled, &last_form_expanded,
+          &op_table, &pm_table, &last_form_evaled,
           &call_f, &unbound_s, &origin_hash, convert(val *, 0));
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);

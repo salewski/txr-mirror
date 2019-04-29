@@ -67,7 +67,7 @@ static val sys_cont_s, sys_cont_poison_s;
 static val sys_cont_free_s, sys_capture_cont_s;
 
 static val frame_type, catch_frame_type, handle_frame_type;
-static val fcall_frame_type, eval_frame_type;
+static val fcall_frame_type, eval_frame_type, expand_frame_type;
 
 static val deferred_warnings, tentative_defs;
 
@@ -440,6 +440,13 @@ val uw_find_frames_by_mask(val mask_in)
           slotset(frame, env_s, fr->el.env);
           break;
         }
+      case UW_EXPAND:
+        {
+          frame = allocate_struct(expand_frame_type);
+          slotset(frame, form_s, fr->el.form);
+          slotset(frame, env_s, fr->el.env);
+          break;
+        }
       default:
         break;
       }
@@ -450,6 +457,22 @@ val uw_find_frames_by_mask(val mask_in)
   }
 
   return out;
+}
+
+#endif
+
+#if CONFIG_DEBUG_SUPPORT
+
+val uw_last_form_expanded(void)
+{
+  uw_frame_t *fr;
+
+  for (fr = uw_stack; fr != 0; fr = fr->uw.up) {
+    if (fr->uw.type == UW_EXPAND)
+      return fr->el.form;
+  }
+
+  return nil;
 }
 
 #endif
@@ -587,6 +610,16 @@ void uw_push_eval(uw_frame_t *fr, val form, val env)
 {
   memset(fr, 0, sizeof *fr);
   fr->el.type = UW_EVAL;
+  fr->el.form = form;
+  fr->el.env = env;
+  fr->el.up = uw_stack;
+  uw_stack = fr;
+}
+
+void uw_push_expand(uw_frame_t *fr, val form, val env)
+{
+  memset(fr, 0, sizeof *fr);
+  fr->el.type = UW_EXPAND;
   fr->el.form = form;
   fr->el.env = env;
   fr->el.up = uw_stack;
@@ -1184,6 +1217,10 @@ void uw_late_init(void)
                                      frame_type, nil,
                                      list(form_s, env_s, nao),
                                      nil, nil, nil, nil);
+  expand_frame_type = make_struct_type(intern(lit("expand-frame"), user_package),
+                                       frame_type, nil,
+                                       list(form_s, env_s, nao),
+                                       nil, nil, nil, nil);
 #endif
   reg_mac(intern(lit("defex"), user_package), func_n2(me_defex));
   reg_var(unhandled_hook_s = intern(lit("*unhandled-hook*"),
@@ -1220,6 +1257,7 @@ void uw_late_init(void)
   reg_varl(intern(lit("uw-guard"), system_package), num_fast(1U <<UW_GUARD));
   reg_varl(intern(lit("uw-fcall"), system_package), num_fast(1U <<UW_FCALL));
   reg_varl(intern(lit("uw-eval"), system_package), num_fast(1U <<UW_EVAL));
+  reg_varl(intern(lit("uw-expand"), system_package), num_fast(1U <<UW_EXPAND));
   reg_fun(intern(lit("find-frames-by-mask"), user_package), func_n1(uw_find_frames_by_mask));
 #endif
   uw_register_subtype(continue_s, restart_s);
