@@ -1211,15 +1211,15 @@ void uw_late_init(void)
   reg_fun(sys_capture_cont_s = intern(lit("capture-cont"), system_package),
           func_n3o(uw_capture_cont, 2));
 #if CONFIG_DEBUG_SUPPORT
-  reg_varl(intern(lit("uw-block"), user_package), num_fast(1U << UW_BLOCK));
-  reg_varl(intern(lit("uw-captured-block"), user_package), num_fast(1U << UW_CAPTURED_BLOCK));
-  reg_varl(intern(lit("uw-menv"), user_package), num_fast(1U <<UW_MENV));
-  reg_varl(intern(lit("uw-catch"), user_package), num_fast(1U <<UW_CATCH));
-  reg_varl(intern(lit("uw-handle"), user_package), num_fast(1U <<UW_HANDLE));
-  reg_varl(intern(lit("uw-cont-copy"), user_package), num_fast(1U <<UW_CONT_COPY));
-  reg_varl(intern(lit("uw-guard"), user_package), num_fast(1U <<UW_GUARD));
-  reg_varl(intern(lit("uw-fcall"), user_package), num_fast(1U <<UW_FCALL));
-  reg_varl(intern(lit("uw-eval"), user_package), num_fast(1U <<UW_EVAL));
+  reg_varl(intern(lit("uw-block"), system_package), num_fast(1U << UW_BLOCK));
+  reg_varl(intern(lit("uw-captured-block"), system_package), num_fast(1U << UW_CAPTURED_BLOCK));
+  reg_varl(intern(lit("uw-menv"), system_package), num_fast(1U <<UW_MENV));
+  reg_varl(intern(lit("uw-catch"), system_package), num_fast(1U <<UW_CATCH));
+  reg_varl(intern(lit("uw-handle"), system_package), num_fast(1U <<UW_HANDLE));
+  reg_varl(intern(lit("uw-cont-copy"), system_package), num_fast(1U <<UW_CONT_COPY));
+  reg_varl(intern(lit("uw-guard"), system_package), num_fast(1U <<UW_GUARD));
+  reg_varl(intern(lit("uw-fcall"), system_package), num_fast(1U <<UW_FCALL));
+  reg_varl(intern(lit("uw-eval"), system_package), num_fast(1U <<UW_EVAL));
   reg_fun(intern(lit("find-frames-by-mask"), user_package), func_n1(uw_find_frames_by_mask));
 #endif
   uw_register_subtype(continue_s, restart_s);
