@@ -84,6 +84,7 @@ help=
 #
 # config
 #
+build_in_srcdir=
 prefix='/usr/local'
 install_prefix=
 bindir='bin'
@@ -629,6 +630,12 @@ lndir()
   done
 }
 
+inode()
+{
+  set -- $(ls -idL "$1")
+  printf "%s\n" "$1"
+}
+
 case "$top_srcdir" in
 " "* | *" "* | *" " )
   printf " bad (contains spaces)\n"
@@ -639,7 +646,7 @@ case "$top_srcdir" in
   ;;
 esac
 
-if [ "$source_dir" != "." ] ; then
+if [ $(inode "$source_dir") != $(inode ".") ] ; then
   for x in Makefile ; do
     printf "Symlinking %s -> $source_dir/%s\n" $x $x
     ln -sf "$source_dir/$x" .
@@ -650,6 +657,7 @@ if [ "$source_dir" != "." ] ; then
   done
 else
   printf "** Note: it's recommended to build in a separate directory\n"
+  build_in_srcdir=y
 fi
 
 gen_config_make()
@@ -669,6 +677,9 @@ txr_ver := $txr_ver
 
 # absolute path to source code directory
 top_srcdir := $top_srcdir
+
+# build directory is top_srcdir
+build_in_srcdir = $build_in_srcdir
 
 # ultimate installation prefix, where the
 # application will be run.

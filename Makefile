@@ -203,7 +203,7 @@ notconfigured:
 	$(V)exit 1
 endif
 
-ifneq ($(top_srcdir),)
+ifneq ($(build_in_srcdir),y)
 ifneq ($(wildcard $(top_srcdir)/config.h $(top_srcdir)/y.tab.h),)
 .PHONY: tainted
 tainted:
