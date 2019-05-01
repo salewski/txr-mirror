@@ -770,9 +770,10 @@ static val open_sockfd(val fd, val family, val type, val mode_str)
     FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str, m_rpb))));
 
     if (!f) {
+      int eno = errno;
       close(c_num(fd));
-      uw_throwf(file_error_s, lit("error creating stream for socket ~a: ~d/~s"),
-                fd, num(errno), string_utf8(strerror(errno)), nao);
+      uw_throwf(errno_to_file_error(eno), lit("error creating stream for socket ~a: ~d/~s"),
+                fd, num(eno), string_utf8(strerror(eno)), nao);
     }
 
     return set_mode_props(m, make_sock_stream(f, family, type));

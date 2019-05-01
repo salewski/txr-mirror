@@ -43,6 +43,7 @@ typedef long off_t;
 #define OFF_T_MIN (-OFF_T_MAX)
 #endif
 
+val errno_to_file_error(int err);
 val getenv_wrap(val name);
 val at_exit_call(val func);
 val at_exit_do_not_call(val func);

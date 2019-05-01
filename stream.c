@@ -3881,9 +3881,12 @@ val open_directory(val path)
 {
   DIR *d = w_opendir(c_str(path));
 
-  if (!d)
-    uw_throwf(file_error_s, lit("error opening directory ~a: ~d/~s"),
-              path, num(errno), string_utf8(strerror(errno)), nao);
+  if (!d) {
+    int eno = errno;
+    uw_throwf(errno_to_file_error(eno),
+              lit("error opening directory ~a: ~d/~s"),
+              path, num(eno), string_utf8(strerror(eno)), nao);
+  }
 
   return make_dir_stream(d);
 }
@@ -3893,9 +3896,11 @@ val open_file(val path, val mode_str)
   struct stdio_mode m, m_r = stdio_mode_init_r;
   FILE *f = w_fopen(c_str(path), c_str(normalize_mode(&m, mode_str, m_r)));
 
-  if (!f)
-    uw_throwf(file_error_s, lit("error opening ~a: ~d/~s"),
-              path, num(errno), string_utf8(strerror(errno)), nao);
+  if (!f) {
+    int eno = errno;
+    uw_throwf(errno_to_file_error(eno), lit("error opening ~a: ~d/~s"),
+              path, num(eno), string_utf8(strerror(eno)), nao);
+  }
 
   return set_mode_props(m, make_stdio_stream(f, path));
 }
@@ -3906,9 +3911,10 @@ val open_fileno(val fd, val mode_str)
   FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str, m_r))));
 
   if (!f) {
+    int eno = errno;
     close(c_num(fd));
-    uw_throwf(file_error_s, lit("error opening descriptor ~a: ~d/~s"),
-              fd, num(errno), string_utf8(strerror(errno)), nao);
+    uw_throwf(errno_to_file_error(eno), lit("error opening descriptor ~a: ~d/~s"),
+              fd, num(eno), string_utf8(strerror(eno)), nao);
   }
 
   return set_mode_props(m, make_stdio_stream(f, format(nil,
@@ -4020,9 +4026,11 @@ val open_command(val path, val mode_str)
 
   f = w_popen(c_str(path), c_str(mode));
 
-  if (!f)
-    uw_throwf(file_error_s, lit("error opening pipe ~a: ~d/~s"),
-              path, num(errno), string_utf8(strerror(errno)), nao);
+  if (!f) {
+    int eno = errno;
+    uw_throwf(errno_to_file_error(eno), lit("error opening pipe ~a: ~d/~s"),
+              path, num(eno), string_utf8(strerror(eno)), nao);
+  }
 
   uw_unwind {
     fds_restore(&sfds);
@@ -4063,9 +4071,11 @@ val open_process(val name, val mode_str, val args)
   argv = coerce(char **, chk_xalloc(nargs + 1, sizeof *argv, self));
 
   if (pipe(fd) == -1) {
+    int eno = errno;
     free(argv);
-    uw_throwf(file_error_s, lit("opening pipe ~a, pipe syscall failed: ~d/~s"),
-              name, num(errno), string_utf8(strerror(errno)), nao);
+    uw_throwf(errno_to_file_error(eno),
+              lit("opening pipe ~a, pipe syscall failed: ~d/~s"),
+              name, num(eno), string_utf8(strerror(eno)), nao);
   }
 
   for (i = 0, iter = cons(name, args); iter; i++, iter = cdr(iter)) {
@@ -4080,7 +4090,7 @@ val open_process(val name, val mode_str, val args)
     for (i = 0; i < nargs; i++)
       free(argv[i]);
     free(argv);
-    uw_throwf(file_error_s, lit("opening pipe ~a, fork syscall failed: ~d/~s"),
+    uw_throwf(process_error_s, lit("opening pipe ~a, fork syscall failed: ~d/~s"),
               name, num(errno), string_utf8(strerror(errno)), nao);
   }
 
@@ -4276,7 +4286,7 @@ static val run(val name, val args)
     for (i = 0; i < nargs; i++)
       free(argv[i]);
     free(argv);
-    uw_throwf(file_error_s, lit("opening process ~a, fork syscall failed: ~d/~s"),
+    uw_throwf(process_error_s, lit("opening process ~a, fork syscall failed: ~d/~s"),
               name, num(errno), string_utf8(strerror(errno)), nao);
   }
 
@@ -4369,9 +4379,11 @@ static val sh(val command)
 val remove_path(val path, val throw_on_error)
 {
   if (w_remove(c_str(path)) < 0) {
-    if (default_null_arg(throw_on_error) || errno != ENOENT)
-      uw_throwf(file_error_s, lit("trying to remove ~a: ~d/~s"),
-                  path, num(errno), string_utf8(strerror(errno)), nao);
+    if (default_null_arg(throw_on_error) || errno != ENOENT) {
+      int eno = errno;
+      uw_throwf(errno_to_file_error(eno), lit("trying to remove ~a: ~d/~s"),
+                path, num(eno), string_utf8(strerror(eno)), nao);
+    }
     return nil;
   }
 
@@ -4380,9 +4392,13 @@ val remove_path(val path, val throw_on_error)
 
 val rename_path(val from, val to)
 {
-  if (w_rename(c_str(from), c_str(to)) < 0)
-    uw_throwf(file_error_s, lit("trying to rename ~a to ~a: ~d/~s"),
-                from, to, num(errno), string_utf8(strerror(errno)), nao);
+  if (w_rename(c_str(from), c_str(to)) < 0) {
+    int eno = errno;
+    uw_throwf(errno_to_file_error(eno),
+              lit("trying to rename ~a to ~a: ~d/~s"),
+              from, to, num(eno), string_utf8(strerror(eno)), nao);
+  }
+
   return t;
 }
 

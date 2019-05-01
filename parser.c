@@ -498,7 +498,8 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
 #ifdef ENOENT
 except:
 #endif
-      uw_throwf(file_error_s, lit("unable to open ~a"), spec_file_try, nao);
+      uw_throwf(errno_to_file_error(errno),
+                lit("unable to open ~a"), spec_file_try, nao);
     }
 
     *stream = make_stdio_stream(in, spec_file_try);

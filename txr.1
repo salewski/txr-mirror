@@ -38478,7 +38478,11 @@ subtype of every exception type:
                       |
                       +--- query-error
                       |
-                      +--- file-error
+                      +--- file-error -------+--- path-not-found
+                      |                      |
+                      |                      +--- path-exists
+                      |                      |
+                      |                      +--- path-permission
                       |
                       +--- process-error
                       |

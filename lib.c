@@ -108,6 +108,7 @@ val error_s, type_error_s, internal_error_s, panic_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s, syntax_error_s;
 val timeout_error_s, system_error_s, alloc_error_s;
+val path_not_found_s, path_exists_s, path_permission_s;
 val warning_s, defr_warning_s, restart_s, continue_s;
 val gensym_counter_s, nullify_s, from_list_s, lambda_set_s, length_s;
 val rplaca_s, rplacd_s, seq_iter_s;
@@ -10844,6 +10845,9 @@ static void obj_init(void)
   system_error_s = intern(lit("system-error"), user_package);
   timeout_error_s = intern(lit("timeout-error"), user_package);
   alloc_error_s = intern(lit("alloc-error"), user_package);
+  path_not_found_s = intern(lit("path-not-found"), user_package);
+  path_exists_s = intern(lit("path-exists"), user_package);
+  path_permission_s = intern(lit("path-permission"), user_package);
   assert_s = intern(lit("assert"), user_package);
   warning_s = intern(lit("warning"), user_package);
   defr_warning_s = intern(lit("defr-warning"), user_package);

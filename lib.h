@@ -497,6 +497,7 @@ extern val error_s, type_error_s, internal_error_s, panic_s;
 extern val numeric_error_s, range_error_s;
 extern val query_error_s, file_error_s, process_error_s, syntax_error_s;
 extern val timeout_error_s, system_error_s, alloc_error_s;
+extern val path_not_found_s, path_exists_s, path_permission_s;
 extern val warning_s, defr_warning_s, restart_s, continue_s;
 extern val gensym_counter_s;
 extern val rplaca_s, rplacd_s, seq_iter_s;

@@ -1177,6 +1177,9 @@ void uw_init(void)
   uw_register_subtype(timeout_error_s, error_s);
   uw_register_subtype(assert_s, error_s);
   uw_register_subtype(syntax_error_s, error_s);
+  uw_register_subtype(path_not_found_s, file_error_s);
+  uw_register_subtype(path_exists_s, file_error_s);
+  uw_register_subtype(path_permission_s, file_error_s);
 }
 
 void uw_late_init(void)
