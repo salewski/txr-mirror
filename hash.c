@@ -100,11 +100,6 @@ static struct hash_iter *reachable_iters;
 
 static int hash_str_limit = INT_MAX, hash_rec_limit = 32;
 
-/* C99 inline instantiations. */
-#if __STDC_VERSION__ >= 199901L
-loc gethash_l(val self, val hash, val key, loc new_p);
-#endif
-
 static u32_t randbox[] = {
   0x49848f1bU, 0xe6255dbaU, 0x36da5bdcU, 0x47bf94e9U,
   0x8cbcce22U, 0x559fc06aU, 0xd268f536U, 0xe10af79aU,

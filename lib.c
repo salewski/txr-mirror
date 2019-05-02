@@ -131,27 +131,6 @@ val year_s, month_s, day_s, hour_s, min_s, sec_s, dst_s, gmtoff_s, zone_s;
 static val env_list;
 static val recycled_conses;
 
-/* C99 inline instantiations. */
-#if __STDC_VERSION__ >= 199901L
-loc mkloc_fun(val *ptr, val obj);
-cnum tag(val obj);
-int is_ptr(val obj);
-int is_num(val obj);
-int is_chr(val obj);
-int is_lit(val obj);
-type_t type(val obj);
-val auto_str(const wchli_t *str);
-val static_str(const wchli_t *str);
-wchar_t *litptr(val obj);
-val num_fast(cnum n);
-mp_int *mp(val bign);
-val chr(wchar_t ch);
-val eq(val a, val b);
-val null(val v);
-int null_or_missing_p(val v);
-val default_null_arg(val arg);
-#endif
-
 const seq_kind_t seq_kind_tab[MAXTYPE+1] = {
   SEQ_NIL,      /* NIL */
   SEQ_NOTSEQ,   /* NUM */

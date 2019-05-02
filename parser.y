@@ -1305,11 +1305,6 @@ const int have_yydebug = YYDEBUG;
 
 int yylex(YYSTYPE *, yyscan_t scanner);
 
-/* C99 inline instantiations. */
-#if __STDC_VERSION__ >= 199901L
-val rlcp(val to, val from);
-#endif
-
 void yydebug_onoff(int val)
 {
 #if YYDEBUG

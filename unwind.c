@@ -75,11 +75,6 @@ static val deferred_warnings, tentative_defs;
 static int uw_break_on_error;
 #endif
 
-/* C99 inline instantiations. */
-#if __STDC_VERSION__ >= 199901L
-val uw_block_return(val tag, val result);
-#endif
-
 static void uw_unwind_to_exit_point(void)
 {
   uw_frame_t *orig_stack = uw_stack;
