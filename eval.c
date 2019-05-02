@@ -1401,13 +1401,8 @@ static void do_eval_args(val form, val env, val ctx,
                          val (*lookup)(val env, val sym),
                          struct args *args)
 {
-  for (; consp(form); form = cdr(form))
+  for (; form; form = cdr(form))
     args_add(args, do_eval(car(form), env, ctx, lookup));
-
-  if (form) {
-    val dotpos = do_eval(form, env, ctx, lookup);
-    args_add_list(args, if3(listp(dotpos), dotpos, tolist(dotpos)));
-  }
 }
 
 val set_dyn_env(val de)
