@@ -439,58 +439,67 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
     suffix = tl;
   else if (match_str(spec_file, lit(".tlo"), negone))
     suffix = tlo;
+  else if (match_str(spec_file, lit(".txr_profile"), negone))
+    suffix = tl;
   else
     suffix = none;
 
   errno = 0;
 
   {
-    val spec_file_try = spec_file;
-    FILE *in = w_fopen(c_str(spec_file_try), L"r");
+    val spec_file_try = nil;
+    FILE *in = 0;
 
-    if (in != 0) {
-      switch (suffix) {
-      case tl:
-        *txr_lisp_p = t;
-        break;
-      case tlo:
-        *txr_lisp_p = chr('o');
-        break;
-      case txr:
-        *txr_lisp_p = nil;
-        break;
-      default:
-        break;
-      }
-    }
-
-#ifdef ENOENT
-    if (in == 0 && errno != ENOENT)
-      goto except;
-    errno = 0;
-#endif
-
-    if (suffix == none && in == 0 && !*txr_lisp_p) {
+    if (suffix == none && !*txr_lisp_p) {
       spec_file_try = scat(lit("."), spec_file, lit("txr"), nao);
       in = w_fopen(c_str(spec_file_try), L"r");
 #ifdef ENOENT
       if (in == 0 && errno != ENOENT)
         goto except;
-      errno = 0;
 #endif
     }
-
 
     if (suffix == none) {
       if (in == 0) {
         spec_file_try = scat(lit("."), spec_file, lit("tlo"), nao);
+        errno = 0;
         in = w_fopen(c_str(spec_file_try), L"r");
         *txr_lisp_p = chr('o');
+#ifdef ENOENT
+        if (in == 0 && errno != ENOENT)
+          goto except;
+#endif
       }
       if (in == 0) {
         spec_file_try = scat(lit("."), spec_file, lit("tl"), nao);
+        errno = 0;
         in = w_fopen(c_str(spec_file_try), L"r");
         *txr_lisp_p = t;
+#ifdef ENOENT
+        if (in == 0 && errno != ENOENT)
+          goto except;
+#endif
+      }
+    }
+
+    if (in == 0) {
+      spec_file_try = spec_file;
+      errno = 0;
+      in = w_fopen(c_str(spec_file_try), L"r");
+      if (in != 0) {
+        switch (suffix) {
+        case tl:
+          *txr_lisp_p = t;
+          break;
+        case tlo:
+          *txr_lisp_p = chr('o');
+          break;
+        case txr:
+          *txr_lisp_p = nil;
+          break;
+        default:
+          break;
+        }
       }
     }
 
@@ -705,10 +714,6 @@ static void load_rcfile(val name)
   val stream = nil;
   val catch_syms = cons(error_s, nil);
   val path_private_to_me_p =  intern(lit("path-private-to-me-p"), user_package);
-  val path_exists_p =  intern(lit("path-exists-p"), user_package);
-
-  if (!funcall1(path_exists_p, name))
-    return;
 
   uw_catch_begin (catch_syms, sy, va);
 
@@ -730,9 +735,11 @@ static void load_rcfile(val name)
   uw_catch(sy, va)
   {
     (void) va;
-    format(std_output, lit("** type ~s exception while loading ~a\n"),
-           sy, name, nao);
-    format(std_output, lit("** details: ~a\n"), car(va), nao);
+    if (stream || sy != path_not_found_s) {
+      format(std_output, lit("** type ~s exception while loading ~a\n"),
+             sy, name, nao);
+      format(std_output, lit("** details: ~a\n"), car(va), nao);
+    }
   }
 
   uw_unwind {

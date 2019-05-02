@@ -8500,27 +8500,39 @@ Where
 is a Lisp expression that
 evaluates to a string giving the path of the file to load.
 
-If the
+Firstly, the path given by
+.meta expr
+is converted to an effective path, as follows.
+
+If the value of the
 .code *load-path*
-has a current value which is not
+variable has a current value which is not
 .code nil
 and the path is pure relative according to the
 .code pure-rel-path-p
-function, then the path is interpreted relative
+function, then the effective path is interpreted taken relative
 to the directory portion of the path which is stored in
 .codn *load-path* .
 
 If
 .code *load-path*
-is nil, or the load path is not pure relative, then it the path is
-taken as-is.
+is nil, or the load path is not pure relative, then the
+path is taken as-is as the effective path.
 
-If the file named by the path cannot be opened, then the
+Next, an attempt is made to open the file for processing, in
+almost exactly the same manner as by the \*(TL function
+.codn load .
+The difference is that if the effective path is unsuffixed,
+then the
 .code .txr
-suffix is added and another
-attempt is made. Thus load expressions need not refer to the suffix.
-In the future, additional suffixes may be searched (compiled versions
-of a file).
+suffix is added to it, and that resulting path is tried first,
+and if it succeeds, then the file is treated as \*(TX Pattern
+Language syntax.
+If that fails, then the suffix
+.code .tlo
+is tried, and so forth, as described for the
+.code load
+function.
 
 Both the
 .code load
@@ -8529,44 +8541,57 @@ and
 directives bind the
 .code *load-path*
 variable to the path of the loaded file just before parsing syntax from it,
-and remove the binding when their processing of the file is complete.
-Processing \*(TL code means that each of its forms is read, and evaluated.
-Processing \*(TX code means parsing the entire file in its entirety,
-and then executing its directives against the current input.
-
 The
+.code *package*
+variable is also given a new dynamic binding, whose value is the
+same as the existing binding. These bindings are removed when the
+load operation completes, restoring the prior values of these
+variables.
+
+If the file opened for processing is \*(TL source, or
+a compiled \*(TL file, then it is processed in the manner
+described for the
+.code load
+function.
+
+Different requirements apply to the processing of the file under the
 .code load
 and
 .code include
-directives differ as follows.
-The action of
+directives.
+
+The
+.code include
+directive performs the processing of the file at parse time. If the
+file being processed is \*(TX Pattern Language, then it is parsed,
+and then its syntax replaces the
+.code include
+directive, as if it had originally appeared in its place.
+If a \*(TL source or a compiled \*(TL file is processed by
+.code include
+then the
+.code include
+directive is removed from the syntax.
+
+The
 .code load
-is not performed immediately but at evaluation time. Evaluation time
+directive performs the processing of the file at evaluation time.
+Evaluation time
 occurs after a \*(TX program is read from beginning to end and parsed.
 That is to say, when a \*(TX query is parsed, any embedded
 .code "@(load ...)"
 forms in it are parsed and constitute part of its syntax tree.
-They are executed when that query is executed and its execution
+They are executed when that query is executed, whenever its execution
 reaches those
 .code load
-directives.
-
-By contrast, the action of
-.code include
-is performed immediately, right after the
-.code "@(include ...)"
-directive syntax is parsed.  That is to say, as the \*(TX parser encounters
-this syntax it processes it immediately. The included material is read
-and processed. If it is \*(TX syntax, then it is parsed and incorporated
-into the syntax tree in place of the
-.code include
-directive. The parser then
-continues processing the original file after the
-.code include
-directive. If \*(TL code is processed by the
-.code include
-directive, then its forms are read and evaluated. An empty directive
-is substituted into the syntax tree in this case.
+directives. When the
+.code load
+directive processes \*(TX Pattern Language syntax, it parses
+the file in its entirety and then executes that file's directives
+against the current input position. Repeated executions of the
+same
+.code load
+directive result in repeated processing of the file.
 
 Note: the
 .code include
@@ -58399,43 +58424,60 @@ directory.
 
 Once the effective path name is determined,
 .code load
-first tries to open that exact path name.
-If this succeeds, then the file will be treated as containing \*(TL,
-unless
-.meta target
-ends with the
+determines whether the name is suffixed. The name is suffixed if it
+ends in any of these four suffixes:
+.codn .tlo ,
+.codn .tl ,
 .code .txr
-suffix, in which case the file will be treated as containing
-\*(TX pattern language syntax, or ends with the suffix
-.code .tlo
-in which case it will be treated as a compiled file.
+or
+.codn .txr_profile .
 
-If loading the original effective path name fails, and that name is unsuffixed,
-then the
+Depending on whether the effective path name is suffixed,
+.code load
+tries to make one or more attempts to open several variations of that name.
+If any attempt fails due to an error other than non-existence,
+such as a permission error, then no further attempts are made; the
+error exception propagates to
+.codn load 's
+caller.
+
+If the effective path name is suffixed, then
+.code load
+tries to open a file by that exact path name. If that attempt
+fails, no other names are tried.
+
+If the effective path name is unsuffixed, then first the suffix
 .code .tlo
-suffix is added and a second attempt is made. If that succeeds, the file
-is treated as a compiled \*(TL file.
-Otherwise, the suffix
+is appended to the name, and an attempt is made to open a file
+with this path. If that file is not found, then the suffix
 .code .tl
-suffix is added to the original unsuffixed name, and one more attempt is made.
-If that succeeds, the file will be treated as \*(TL.
+is similarly tried. If that file is not found, then the unsuffixed
+name is tried.
 
-If a file is successfully resolved and opened for \*(TL processing,
-then \*(TL forms are read from it in succession. Each form is evaluated as if
-by the
+If an unsuffixed file is opened, its contents are treated as interpreted Lisp.
+Files ending in
+.code .txr_profile
+are also treated as interpreted Lisp. Files ending in
+.code .tlo
+are treated as compiled Lisp, and those ending in
+.code .txr
+are treated as the \*(TX Pattern Language.
+
+If the file is treated as \*(TL, then Lisp forms are read from it in
+succession. Each form is evaluated as if by the
 .code eval
 function, before the next form is read.
 If a syntax error is encountered, an exception of type
 .code eval-error
 is thrown.
 
-If a file is successfully resolved and opened for processing as a
-compiled \*(TL object file, then the compiled images of top-level forms
-are read from it, converted into compiled objects, and executed.
+If a file is treated as a compiled \*(TL object file, then the compiled images
+of top-level forms are read from it, converted into compiled objects, and
+executed.
 
-If a file is successfully resolved and opened for \*(TX processing,
-then its contents are parsed in their entirety as a \*(TX
-query. If the parse is successful, the query is executed.
+If the file treated as \*(TX Pattern Language code,
+then its contents are parsed in their entirety.
+If the parse is successful, the query is executed.
 Previous \*(TX pattern variable and function bindings are in
 effect. If the query binds new variables and functions,
 these emerge from the
