@@ -1205,7 +1205,7 @@ val applyv(val fun, struct args *args)
     uw_throwf(error_s, lit("apply: trailing-args argument missing"), nao);
 
   if (!args->list)
-    args->list = z(args->arg[--args->fill]);
+    args->list = tolist(z(args->arg[--args->fill]));
   else
     args->list = apply_intrinsic_frob_args(args->list);
 
