@@ -2034,8 +2034,7 @@ static val me_interp_macro(val expander, val form, val menv)
   val body = cddr(expander);
   val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
   val exp_env = bind_macro_params(env, menv, params, arglist, nil, form);
-  val result;
-  result = eval_progn(body, exp_env, body);
+  val result = eval_progn(body, exp_env, body);
   set_dyn_env(saved_de);
   set_origin(result, form);
   return result;
