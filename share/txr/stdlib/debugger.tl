@@ -94,8 +94,8 @@
                           (set-max-depth *stdout* depth))
                    (length (set-max-length *stdout* 10)
                            (set-max-length *stdout* length)))
-    (window-map 1 nil (lambda (pr el nx) el.(print-trace pr nx prefix))
-                (find-frames-by-mask (logior uw-fcall uw-eval uw-expand)))))
+    (window-mapdo 1 nil (lambda (pr el nx) el.(print-trace pr nx prefix))
+                  (find-frames-by-mask (logior uw-fcall uw-eval uw-expand)))))
 
 (defun debugger ()
   (with-disabled-debugging
