@@ -244,36 +244,46 @@
     (t (with-gensyms (ovar)
          ^(lambda (,ovar) (qref ,ovar ,*args))))))
 
-(defmacro new (:form form spec . pairs)
-  (if (oddp (length pairs))
-    (throwf 'eval-error "~s: slot initform arguments must occur pairwise"
-            'new))
+(defun sys:new-type (op form type)
+  (caseq op
+    ((new lnew) (sys:check-struct form type) ^',type)
+    (t type)))
+
+(defun sys:new-expander (op form spec pairs)
+  (when (oddp (length pairs))
+    (compile-error form
+                   "~s: slot initform arguments must occur pairwise" op))
   (let ((qpairs (mappend (aret ^(',@1 ,@2)) (tuples 2 pairs))))
     (tree-case spec
-      ((atom . args)
-        (sys:check-struct form atom)
-        (if qpairs
-          ^(make-struct ',atom (list ,*qpairs) ,*args)
-          ^(struct-from-args ',atom ,*args)))
-      (atom
-        (sys:check-struct form atom)
-        ^(struct-from-plist ',atom ,*qpairs)))))
+      ((texpr . args)
+       (let ((type (sys:new-type op form texpr)))
+         (caseq op
+           ((new new*) (if qpairs
+                         ^(make-struct ,type (list ,*qpairs) ,*args)
+                         ^(struct-from-args ,type ,*args)))
+           ((new* lnew*) ^(make-lazy-struct ,type
+                                            (lambda ()
+                                              (cons (list ,*qpairs)
+                                                    (list ,*args))))))))
+      (texpr
+        (let ((type (sys:new-type op form texpr)))
+          (caseq op
+            ((new new*) ^(struct-from-plist ,type ,*qpairs))
+            ((lnew lnew*) ^(make-lazy-struct type
+                                             (lambda ()
+                                               (list (list ,*qpairs)))))))))))
+
+(defmacro new (:form form spec . pairs)
+  (sys:new-expander (car form) form spec pairs))
+
+(defmacro new* (:form form spec . pairs)
+  (sys:new-expander (car form) form spec pairs))
 
 (defmacro lnew (:form form spec . pairs)
-  (if (oddp (length pairs))
-    (throwf 'eval-error "~s: slot initform arguments must occur pairwise"
-            'lnew))
-  (let ((qpairs (mappend (aret ^(',@1 ,@2)) (tuples 2 pairs))))
-    (tree-case spec
-      ((atom . args)
-        (sys:check-struct form atom)
-        ^(make-lazy-struct ',atom
-                           (lambda ()
-                             (cons (list ,*qpairs)
-                                   (list ,*args)))))
-      (atom
-        (sys:check-struct form atom)
-        ^(make-lazy-struct ',atom (lambda () (list (list ,*qpairs))))))))
+  (sys:new-expander (car form) form spec pairs))
+
+(defmacro lnew* (:form form spec . pairs)
+  (sys:new-expander (car form) form spec pairs))
 
 (defmacro meth (obj slot . bound-args)
   ^[(fun method) ,obj ',slot ,*bound-args])

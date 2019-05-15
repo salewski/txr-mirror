@@ -24297,6 +24297,33 @@ initialization. Thus, during initialization, its instance slots may be
 freely accessed. Slots not yet initialized evaluate as
 .codn nil .
 
+.coNP Macros @ new* and @ lnew*
+.synb
+.mets (new* >> { expr | >> ( expr << arg *)} >> { slot << init-form }*)
+.mets (lnew* >> { expr | >> ( expr << arg *)} >> { slot << init-form }*)
+.syne
+.desc
+The
+.code new*
+and
+.code lnew*
+macros are variants, respectively, of
+.code new
+and
+.codn lnew .
+
+The only difference in behavior in these macros relative to
+.code new
+and
+.code lnew
+is that the
+.meta name
+argument is replaced with an expression
+.meta expr
+which is evaluated. The value of
+.meta expr
+must be a struct type, or a symbol which is the name of a struct type.
+
 .coNP Macro @ with-slots
 .synb
 .mets (with-slots >> ({ slot | >> ( sym << slot )}*) < struct-expr
