@@ -26141,6 +26141,38 @@ form. If a special function or method is defined as an instance slot,
 then the behavior of library functions which depend on this method is
 unspecified.
 
+Special functions introduced below by the word "Method" receive an object
+instance as an argument. Their syntax is indicated using the same notation
+which may be used to invoke them, such as:
+
+.verb
+.mets << object .(function-name < arg << ... )
+.brev
+
+However, those introduced as "Function" do not operate on an instance. For
+brevity, their syntax is nevertheless exemplified as
+
+.verb
+.meti << object .'['function-name < arg << ... ']'
+.brev
+
+If such a invocation is actually used, the
+.meta object
+instance only serves for identifying the struct type whose static slot
+.code function-name
+provides the function;
+.meta object
+doesn't participate in the call. An object is not required since
+the function can be called using
+
+.verb
+.meti [(static-slot < type 'function-name) < arg << ... ]
+.brev
+
+which looks up the function in the struct
+.meta type
+directly.
+
 .coNP Method @ equal
 .synb
 .mets << object .(equal)
@@ -26550,17 +26582,6 @@ situations with an argument which is a list object. The function's purpose
 is to construct a new instance of the structure type, derived from that
 list.
 
-Note: the
-.code from-list
-function isn't a method; it doesn't receive
-.meta object
-as an argument. In the style of call depicted by the syntax description
-above,
-.meta object
-is used to identify the structure type whose
-.meta from-list
-static slot provides the function definition.
-
 The purpose of this function is to allow sequence processing operations
 such as
 .code mapcar
@@ -26579,6 +26600,41 @@ methods, but does not have a
 .code from-list
 function, then those sequence-processing operations which return a sequence
 will always return a plain list of items.
+
+.coNP Function @ derived
+.synb
+.mets << object .'['derived < supertype << subtype ']'
+.syne
+.desc
+If a structure type supports a function called
+.metn derived ,
+this function is called whenever a new type is defined which names
+that type as its supertype.
+
+The function is called with two arguments which are both struct types.
+The
+.meta supertype
+argument gives the type that is being inherited from.
+The
+.meta subtype
+gives the new type that is inheriting from
+.metn supertype .
+
+The function is called at most once for the creation of a given
+.metn subtype ,
+only for its immediate supertype, if and only if that supertype
+has defined this function.
+
+The function is not retroactively invoked if it is defined for
+a structure type from which subtypes have already been derived.
+
+Note: the
+.meta supertype
+parameter exists because the
+.code derived
+function is itself inherited. If the same version of this function is shared by
+multiple structure types due to inheritance, this argument informs the function
+which of those types it is being invoked for.
 
 .SS* Sequence Manipulation
 .coNP Function @ seqp

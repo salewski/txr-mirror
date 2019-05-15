@@ -27,7 +27,7 @@
 
 extern val struct_type_s, meth_s, print_s, make_struct_lit_s;
 extern val init_k, postinit_k;
-extern val slot_s;
+extern val slot_s, derived_s;
 extern struct cobj_ops struct_inst_ops;
 val make_struct_type(val name, val super,
                      val static_slots, val slots,

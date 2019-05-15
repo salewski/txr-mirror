@@ -99,7 +99,7 @@ struct struct_inst {
 
 val struct_type_s, meth_s, print_s, make_struct_lit_s;
 val init_k, postinit_k;
-val slot_s;
+val slot_s, derived_s;
 
 static val struct_type_hash;
 static val slot_hash;
@@ -110,6 +110,7 @@ static val static_slot_type_hash;
 static val struct_type_finalize(val obj);
 static_forward(struct cobj_ops struct_type_ops);
 
+static struct stslot *lookup_static_slot_desc(struct struct_type *st, val sym);
 static val make_struct_type_compat(val name, val super, val slots,
                                    val initfun, val boactor);
 static val call_super_method(val inst, val sym, struct args *);
@@ -127,6 +128,7 @@ void struct_init(void)
   init_k = intern(lit("init"), keyword_package);
   postinit_k = intern(lit("postinit"), keyword_package);
   slot_s = intern(lit("slot"), user_package);
+  derived_s = intern(lit("derived"), user_package);
   struct_type_hash = make_hash(nil, nil, nil);
   slot_hash = make_hash(nil, nil, t);
   slot_type_hash = make_hash(nil, nil, nil);
@@ -308,6 +310,7 @@ val make_struct_type(val name, val super,
     val super_slots = if2(su, su->slots);
     val all_slots = uniq(append2(super_slots, append2(static_slots, slots)));
     val stype = cobj(coerce(mem_t *, st), struct_type_s, &struct_type_ops);
+    struct stslot *dvmeth = if3(su, lookup_static_slot_desc(su, derived_s), 0);
     val iter;
     cnum sl, stsl;
     cnum stsl_upb = c_num(plus(length(static_slots),
@@ -393,6 +396,9 @@ val make_struct_type(val name, val super,
     call_stinitfun_chain(st, stype);
 
     uw_purge_deferred_warning(cons(struct_type_s, name));
+
+    if (dvmeth)
+      funcall2(stslot_place(dvmeth), su->self, stype);
 
     return stype;
   }
