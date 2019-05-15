@@ -65,6 +65,7 @@ val static_slot_p(val type, val sym);
 val slots(val stype);
 val structp(val obj);
 val struct_type(val strct);
+val struct_type_name(val stype);
 val method(val strct, val slotsym);
 val method_args(val strct, val slotsym, struct args *);
 val super_method(val strct, val slotsym);

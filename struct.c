@@ -184,6 +184,7 @@ void struct_init(void)
   reg_fun(intern(lit("static-slot-p"), user_package), func_n2(static_slot_p));
   reg_fun(intern(lit("structp"), user_package), func_n1(structp));
   reg_fun(intern(lit("struct-type"), user_package), func_n1(struct_type));
+  reg_fun(intern(lit("struct-type-name"), user_package), func_n1(struct_type_name));
   reg_fun(intern(lit("method"), user_package), func_n2v(method_args));
   reg_fun(intern(lit("super-method"), user_package), func_n2(super_method));
   reg_fun(intern(lit("uslot"), user_package), func_n1(uslot));
@@ -1332,6 +1333,12 @@ val struct_type(val strct)
   const val self = lit("struct-type");
   struct struct_inst *si = struct_handle(strct, self);
   return si->type->self;
+}
+
+val struct_type_name(val stype)
+{
+  struct struct_type *st = stype_handle(&stype, lit("struct-type-name"));
+  return st->name;
 }
 
 static val method_fun(val env, varg args)
