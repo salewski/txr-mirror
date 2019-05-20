@@ -4342,7 +4342,9 @@ val load(val target)
   uw_simple_catch_begin;
 
   dyn_env = make_env(nil, nil, dyn_env);
-  env_vbind(dyn_env, load_path_s, path);
+  env_vbind(dyn_env, load_path_s, if3(opt_compat && opt_compat <= 215,
+                                      path,
+                                      stream_get_prop(stream, name_k)));
   env_vbind(dyn_env, load_recursive_s, t);
   env_vbind(dyn_env, package_s, cur_package);
 

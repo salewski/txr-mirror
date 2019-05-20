@@ -58495,8 +58495,8 @@ as compiled files.
 
 Firstly, the value in
 .meta target
-is converted to an
-.I "effective pathname"
+is converted to a
+.I "tentative pathname"
 as follows.
 
 If
@@ -58519,7 +58519,7 @@ then a pure relative
 pathname is used as-is, and thus resolved relative to the current working
 directory.
 
-Once the effective path name is determined,
+Once the tentative path name is determined,
 .code load
 determines whether the name is suffixed. The name is suffixed if it
 ends in any of these four suffixes:
@@ -58529,24 +58529,26 @@ ends in any of these four suffixes:
 or
 .codn .txr_profile .
 
-Depending on whether the effective path name is suffixed,
+Depending on whether the tentative path name is suffixed,
 .code load
 tries to make one or more attempts to open several variations of that name.
+These variations are called
+.I "actual paths" .
 If any attempt fails due to an error other than non-existence,
 such as a permission error, then no further attempts are made; the
 error exception propagates to
 .codn load 's
 caller.
 
-If the effective path name is suffixed, then
+If the tentative path name is suffixed, then
 .code load
-tries to open a file by that exact path name. If that attempt
+tries to open a file by that actual path name. If that attempt
 fails, no other names are tried.
 
-If the effective path name is unsuffixed, then first the suffix
+If the tentative path name is unsuffixed, then first the suffix
 .code .tlo
 is appended to the name, and an attempt is made to open a file
-with this path. If that file is not found, then the suffix
+with this actual path. If that file is not found, then the suffix
 .code .tl
 is similarly tried. If that file is not found, then the unsuffixed
 name is tried.
@@ -58592,10 +58594,7 @@ Over the evaluation of either a \*(TL, compiled file, or \*(TX file,
 establishes a new dynamic binding for several special
 variables. The variable
 .code *load-path*
-is given a new binding containing the effective path name. This excludes any
-.code .tl
-suffix that was added by
-.codn load .
+is given a new binding containing the actual path name.
 The
 .code *package*
 variable is also given a new dynamic binding, whose value is the
@@ -58660,12 +58659,12 @@ If the
 command line option is used to enter the interactive listener,
 and a file to be loaded is also specified, then the
 .code *load-path*
-macro remains bound to the name of that file inside the
+variable remains bound to the name of that file inside the
 listener.
 
 The
 .code load
-macro establishes a binding for
+function establishes a binding for
 .code *load-path*
 prior to processing and evaluating all the top-level forms
 in the target file. When the forms are evaluated, the binding
@@ -67638,6 +67637,18 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 215
+After \*(TX 215, the behavior of the
+.code load
+function changed with respect to its treatment of the
+.code *load-path*
+variable. In cases where
+.code load
+resolved the path by adding a suffix,
+.code *load-path*
+was bound to the unsuffixed name, which was a documented behavior.
+The old behavior is restored if 215 or lower compatibility
+is requested.
 .IP 202
 Up to \*(TX 202, the
 .code logxor
