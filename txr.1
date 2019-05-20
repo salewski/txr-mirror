@@ -58673,6 +58673,11 @@ is discarded and
 returns.
 
 The
+.code compile-file
+function also establishes a binding for
+.codn *load-path* .
+
+The
 .code @(load)
 directive, also similarly establishes a binding around the
 parsing and processing of a loaded \*(TX source file.
@@ -65575,28 +65580,89 @@ The
 .code compile-file
 function reads forms from an input file, and produces a compiled output file.
 
-If
+First,
 .meta input-path
-has no suffix, and cannot be opened, then the
-.meta .tl
-suffix is added to it for a second attempt.
+is converted to a
+.I "tentative path name"
+as follows.
 
 If
+.meta input-path
+specifies a pure relative pathname, as defined by the
+.code pure-rel-path-p
+function, then a special behavior applies.
+If an existing load operation is in progress, then the special variable
+.code *load-path*
+has a binding. In this case,
+.code load
+will assume that the relative pathname is a reference relative to the
+directory portion of that path name.
+
+If
+.code *load-path*
+has the value
+.codn nil ,
+then a pure relative
+.meta input-path
+pathname is used as-is, and thus resolved relative to the current working
+directory.
+
+The tentative path name is converted to an
+.I "actual input path name"
+as follows. Firstly, if the tentative path name ends with one of the suffixes
+.code .tl
+or
+.code .txr
+then it is considered suffixed, otherwise it is considered unsuffixed.
+If it is suffixed, then the actual path name is the same as the tentative path name.
+In the unsuffixed case, two possible actual input path names are formed. First,
+the suffix
+.code .tl
+is added to the tentative path name. If that path exists, it is taken
+taken as the actual path. Otherwise, the unmodified tentative path
+is taken as the actual input path.
+
+If the actual path ends in the suffix
+.code .txr
+then the behavior is unspecified.
+
+If the
 .meta output-path
-isn't specified, it is derived from
-.meta input-path
-as follows: if
-.meta input-path
-is unsuffixed, then
+parameter is given an argument, then that argument specifies the
+output path.
+Otherwise the output path is derived from the tentative input path
+as follows. If the tentative input path is unsuffixed, then
 .code .tlo
-is added to it to produce the
-.metn output-path ;
-otherwise,
-the suffix is removed from
-.meta input-path
+is added to it to produce the output path.
+Otherwise, the suffix is removed from the tentative input path
+and replaced with the
+.code .tlo
+suffix.
+
+The
+.code compile-file
+function binds the variables
+.code *load-path*
 and
-.code .tlo
-is added.
+.code *package*
+similarly to the
+.code load
+function.
+
+Over the compilation of the input file,
+.code compile-file
+establishes a new dynamic binding for several special
+variables. The variable
+.code *load-path*
+is given a new binding containing the actual input path name.
+The
+.code *package*
+variable is also given a new dynamic binding, whose value is the
+same as the existing binding. Thus if the compilation of the
+file has side the effect of altering the value of
+.codn *package* ,
+that effect will be undone when the binding is removed
+after the compilation completes.
 
 Compilation proceeds according to the File Compilation Model.
 

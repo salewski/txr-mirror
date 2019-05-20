@@ -1591,24 +1591,28 @@
                            use-sym unuse-sym))
 
 (defun open-compile-streams (in-path out-path)
-  (let* ((rsuff (r$ %file-suff-rx% in-path))
+  (let* ((parent (or *load-path* ""))
+         (sep [path-sep-chars 0])
+         (in-path (if (pure-rel-path-p in-path)
+                    `@(dir-name parent)@sep@{in-path}`
+                    in-path))
+         (rsuff (r$ %file-suff-rx% in-path))
          (suff (if rsuff [in-path rsuff]))
          (ip-nosuff (if rsuff [in-path 0..(from rsuff)] in-path))
          in-stream out-stream)
     (cond
-      ((equal suff ".txr")
+      ((ends-with ".txr" in-path)
        (error "~s: cannot compile TXR files" 'compile-file))
-      ((null suff)
-       (set in-stream (or (ignerr (open-file ip-nosuff))
-                          (ignerr (open-file `@{ip-nosuff}.tl`)))))
+      ((ends-with ".tl" in-path)
+       (set in-stream (ignerr (open-file in-path))
+            out-path (or out-path `@{in-path [0..-3]}.tlo`)))
       (t
-       (set in-stream (ignerr (open-file in-path)))))
+        (set in-stream (or (ignerr (open-file `@{in-path}.tl`))
+                           (ignerr (open-file in-path)))
+             out-path (or out-path `@{in-path}.tlo`))))
 
     (unless in-stream
       (error "~s: unable to open input file ~s" 'compile-file in-path))
-
-    (unless out-path
-      (set out-path `@{ip-nosuff}.tlo`))
 
     (set out-stream (ignerr (open-file out-path "w")))
 
@@ -1645,13 +1649,13 @@
     (delete-package *package*)))
 
 (defun usr:compile-file (in-path : out-path)
-  (let ((streams (open-compile-streams in-path out-path))
-        (err-ret (gensym))
-        (*package* *package*)
-        (*emit* t)
-        (*eval* t)
-        (*load-path* in-path)
-        (*rec-source-loc* t))
+  (let* ((streams (open-compile-streams in-path out-path))
+         (err-ret (gensym))
+         (*package* *package*)
+         (*emit* t)
+         (*eval* t)
+         (*load-path* (stream-get-prop (car streams) :name))
+         (*rec-source-loc* t))
     (with-compilation-unit
       (with-resources ((in-stream (car streams) (close-stream in-stream))
                        (out-stream (cadr streams) (close-stream out-stream))
