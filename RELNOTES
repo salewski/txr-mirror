@@ -1,3 +1,67 @@
+                                    TXR 216
+                                   2019-05-20
+
+
+  Features
+
+  - Doc: .cblk/.cble replaced by .verb/.brev and .mono/.onom.
+
+  - Debugging:
+    - crude debugger removed
+    - work under way for new debugger
+    - backtraces for interpreted code, enabled by --backtrace
+
+  - Exceptions:
+    - new catch** macro which provides a description of each
+      clause
+
+  - I/O and system interface:
+    - Streams support third variant of indentation: "force indent off".
+    - Streams support depth and length limitation on objects.
+    - More nuanced exceptions: exception types distinguish permission
+      from non-existence and other errors.
+
+  - OOP:
+    - New function, allocate-struct: no frills, fast allocation
+      of instances.
+    - New function struct-type-name.
+    - New macros new* and lnew*: these evaluate type expression.
+    - New "derived hook": a class function called derived
+      is invoked when a class is the target of inheritence.
+
+  - Lib:
+    - Substring operation no-op case now returns original string
+      instead of copying.
+    - New window-mapdo function: non-accumulating window-map.
+
+  - System:
+    - New cptr-size-hint function informs the garbage collector of
+      the size of a foreign array.
+    - load function now tries suffixed versions of path first,
+      (.tlo followed by .tl) then falls back on trying unsuffixed.
+    - *load-path* is bound to the actual path used to open the file,
+      rather than the unsuffixed input path.
+    - compile-file now resolves relative paths relative to existing
+      *load-path* value, just like load does.
+    - it is documented that compile-file sets *load-path*.
+    - Input file search strategy of compile-file is harmonized
+      with that of load.
+
+  Bugs
+
+  - tagbody: code replication bug leading to excessively
+    large translation instead of jumps into single code vector.
+  - issue in interaction between @(output) and lazy-list-valued variables.
+  - MPI: floating-point math eliminated from radix length calculation.
+  - compiler:
+    - bug leading to "frame level mismatch" in VM execution.
+    - triggered by special variables used as optional parameters in lambda.
+  - build: allow $(pwd)/configure to work.
+  - long-running regression in apply function has been fixed.
+  - parser: line numbers off by one for hash bang files.
+
+
+
                                     TXR 215
                                    2019-03-30
 
