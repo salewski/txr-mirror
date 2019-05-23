@@ -867,7 +867,19 @@
   (with-gensyms (tmp-place pl-getter pl-setter)
     (unwind-protect
       (progn
-        (sethash *place-update-expander* tmp-place
+        ;; This temporary proxy place installed into the
+        ;; *place-update-expander* hash, and the forced expansion
+        ;; of the symacrolet form are necessary for correctness.
+        ;; If we don't perform that expand, then the temporary proxy
+        ;; place is not used, and sym ends up being an alias
+        ;; for the getter form (,',pl-getter) of the original place.
+        ;; Then, placelet will only work for places whose getter forms
+        ;; themselves places. This is not required in general. A (foo ...)
+        ;; place can, for instance, use (get-foo ...) and (set-foo ...)
+        ;; getters and setters, where (get-foo ...) is not a place.
+        ;; If sym turns into a symbol macro for a (get-foo ...) form,
+        ;; uses of sym as a place will fail due to get-foo not being a place.
+       (sethash *place-update-expander* tmp-place
                  (lambda (tmp-getter tmp-setter tmp-place tmp-body)
                    ^(macrolet ((,tmp-getter () ^(,',pl-getter))
                                (,tmp-setter (val) ^(,',pl-setter ,val)))
