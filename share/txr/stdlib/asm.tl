@@ -224,8 +224,6 @@
 
 (defvarl %oc-list-builder% (new list-builder))
 
-(defsymacro %oc-list% %oc-list-builder%.(get))
-
 (defvarl %oc-hash% (hash))
 
 (defparml %oc-code% 0)
