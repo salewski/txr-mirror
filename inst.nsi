@@ -1,4 +1,5 @@
 !include win\env.nsh
+!include win\fassoc.nsh
 
 # name the installer
 outFile "txr-installer.exe"
@@ -70,6 +71,9 @@ section "TXR"
   CreateShortCut "$SMPROGRAMS\txr\install-root.lnk" "$INSTDIR\txr"
   CreateShortCut "$STARTMENU\txr.lnk" "$INSTDIR\txr\bin\txr.exe"
   ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\txr\bin"
+  ${RegisterExtension} "$INSTDIR\txr\bin\txr-win.exe" ".txr" "TXR Pattern Language"
+  ${RegisterExtension} "$INSTDIR\txr\bin\txr-win.exe" ".tl" "TXR Lisp"
+  ${RegisterExtension} "$INSTDIR\txr\bin\txr-win.exe" ".tlo" "Compiled TXR Lisp"
 sectionEnd
 
 section "Uninstall"
@@ -78,6 +82,9 @@ section "Uninstall"
   # not the $INSTDIR that was used during installation!
 
   ${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\bin"
+  ${UnregisterExtension} ".txr" "TXR Pattern Language"
+  ${UnregisterExtension} ".tl" "TXR Lisp"
+  ${UnregisterExtension} ".tlo" "Compiled TXR Lisp"
   RMDir /r "$INSTDIR"
   Delete "$SMPROGRAMS\txr\txr.lnk"
   Delete "$STARTMENU\txr.lnk"
