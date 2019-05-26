@@ -1246,8 +1246,6 @@ loc list_collect_revappend(loc ptail, val obj);
 #define three num_fast(3)
 #define four num_fast(4)
 #define negone num_fast(-1)
-#define maxint num_fast(NUM_MAX)
-#define minint num_fast(NUM_MIN)
 
 #ifdef __cplusplus
 #define static_forward(decl) namespace { extern decl; }
