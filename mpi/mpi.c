@@ -364,7 +364,8 @@ void mp_set(mp_int *mp, mp_digit d)
 mp_err mp_set_int(mp_int *mp, long z)
 {
   mp_size ix;
-  unsigned long v = abs(z);
+  unsigned long w = z;
+  unsigned long v = z >= 0 ? w : -w;
   mp_err res;
 
   ARGCHK(mp != NULL, MP_BADARG);
@@ -422,7 +423,8 @@ mp_err mp_set_uintptr(mp_int *mp, uint_ptr_t z)
 
 mp_err mp_set_intptr(mp_int *mp, int_ptr_t z)
 {
-  int_ptr_t v = z > 0 ? z : -z;
+  uint_ptr_t w = z;
+  uint_ptr_t v = z >= 0 ? w : -w;
   mp_err err = mp_set_uintptr(mp, v);
 
   if (err == MP_OKAY && z < 0)
@@ -496,7 +498,8 @@ int mp_in_uintptr_range(mp_int *mp)
 mp_err mp_set_double_intptr(mp_int *mp, double_intptr_t z)
 {
   mp_size ix, shift;
-  double_intptr_t v = z > 0 ? z : -z;
+  double_uintptr_t w = z;
+  double_uintptr_t v = z >= 0 ? w : -w;
   const mp_size nd = (sizeof v + sizeof (mp_digit) - 1) / sizeof (mp_digit);
 
   ARGCHK(mp != NULL, MP_BADARG);
