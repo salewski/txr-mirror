@@ -3018,7 +3018,7 @@ static val make_ffi_type_enum(val syntax, val enums,
   val num_sym = make_hash(nil, nil, nil);
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_enum_ops);
   cnum lowest = INT_PTR_MAX;
-  cnum highest = INT_PTR_MIN - 1;
+  cnum highest = INT_PTR_MIN;
   cnum cur = -1;
   ucnum count = 0;
   val iter;

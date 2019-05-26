@@ -463,8 +463,9 @@ int mp_in_range(mp_int *mp, uint_ptr_t lim, int unsig)
 {
   const unsigned ptrnd = (SIZEOF_PTR + MP_DIGIT_BIT - 1) / MP_DIGIT_BIT;
   mp_size nd = USED(mp);
+  int neg = ISNEG(mp);
 
-  if (unsig && ISNEG(mp))
+  if (unsig && neg)
     return 0;
 
   if (nd < ptrnd)
@@ -476,7 +477,7 @@ int mp_in_range(mp_int *mp, uint_ptr_t lim, int unsig)
   {
     mp_digit top = DIGITS(mp)[ptrnd - 1];
     lim >>= ((ptrnd - 1) * MP_DIGIT_BIT);
-    return top <= lim;
+    return (top - neg) <= lim;
   }
 }
 
