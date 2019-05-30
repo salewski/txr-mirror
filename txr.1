@@ -54730,6 +54730,28 @@ holds the write end.
 If the function fails, it throws an exception of type
 .codn file-error .
 
+.coNP Function @ close
+.synb
+.mets (close < fileno <> [  throw-on-error-p ])
+.syne
+.desc
+The
+.code close
+function passes the integer descriptor
+.meta fileno
+to the POSIX
+.code close
+function.  If the operation is successful, then
+.code t
+is returned. Otherwise an exception of type
+.code file-error
+is thrown, unless the
+.meta throw-on-error-p
+argument is present, with a true value. In that case,
+.code close
+indicates failure by returning
+.codn nil .
+
 .coNP Function @ poll
 .synb
 .mets (poll < poll-list <> [ timeout ])

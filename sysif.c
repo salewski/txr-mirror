@@ -609,6 +609,22 @@ static val dup_wrap(val old, val neu)
   return num(dup2(c_num(old), c_num(neu)));
 }
 
+static val close_wrap(val fd, val throw_on_error)
+{
+  int res = close(c_int(fd, lit("close")));
+
+  if (res < 0) {
+    if (default_null_arg(throw_on_error)) {
+      int eno = errno;
+      uw_throwf(errno_to_file_error(eno), lit("close ~a: ~d/~s"),
+                fd, num(eno), string_utf8(strerror(eno)), nao);
+    }
+    return nil;
+  }
+
+  return t;
+}
+
 val exec_wrap(val file, val args_opt)
 {
   val self = lit("execvp");
@@ -1846,6 +1862,7 @@ void sysif_init(void)
   reg_varl(intern(lit("w-continued"), user_package), num_fast(WCONTINUED));
 #endif
   reg_fun(intern(lit("dupfd"), user_package), func_n2o(dup_wrap, 1));
+  reg_fun(intern(lit("close"), user_package), func_n2o(close_wrap, 1));
 #endif
 #if HAVE_PIPE
   reg_fun(intern(lit("pipe"), user_package), func_n0(pipe_wrap));
