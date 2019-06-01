@@ -3127,6 +3127,7 @@ val length_list(val list)
   if (len < INT_PTR_MAX)
     return num(len);
 
+  list = cdr(list);
   bn_len = num(INT_PTR_MAX);
 
   while (consp(list)) {
@@ -3152,6 +3153,7 @@ static val length_proper_list(val list)
   if (len < INT_PTR_MAX)
     return num(len);
 
+  list = cdr(list);
   bn_len = num(INT_PTR_MAX);
 
   while (list) {
