@@ -2743,7 +2743,7 @@ val int_flo(val f)
   val self = lit("int-flo");
   double d = c_flo(f, self);
 
-  if (d >= INT_PTR_MIN - 1 && d <= INT_PTR_MAX) {
+  if (d >= INT_PTR_MIN && d <= INT_PTR_MAX) {
     cnum n = d;
     if (n < NUM_MIN || n > NUM_MAX)
       return bignum(n);
