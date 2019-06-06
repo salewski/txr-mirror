@@ -35291,34 +35291,46 @@ It specifies a macro transformation for a compound form which has the
 .meta name
 symbol in its leftmost position.
 
-Forms which are used as syntactic places are subject to a modified
-macro-expansion algorithm. If a place macro applies to a place, then it is
-expanded, otherwise it is taken as-is. Then the place is expanded as a ordinary
-macro (possibly a symbol macro), if possible, but only through at most
-one round of macro-expansion, as if by
-.codn macroexpand-1 .
-If the macro-expansion succeeds, its its output might be, again, a place
-macro form, and so the process is tried again. Place macros can expand to other place
-macros or ordinary macros and vice versa.
-
 Place macro expansion doesn't use an environment; place macros are in a single
 global namespace, special to place macros. There are no lexically scoped place
 macros. Such an effect can be achieved by having a place macro expand to
 an a form which is the target of a global or local macro, as necessary.
-That said, it needs to be made clear that the ordinary macro-expansion
-that may be interleaved within place-macro-expansion does take place
-in the surrounding macro environment. A place macro can expand to a form
-which matches a lexical macro visible at that point.
 
+To support place macros, forms which are used as syntactic places are subject
+to a modified macro-expansion algorithm:
+.RS
+.IP 1.
+If a place macro exists for a form that is being used as a place, then the
+that place macro is invoked to expand the
+form, and the expansion is taken in place of the original form. This process
+repeats until the form can no longer be expanded as a place macro, or
+the place macro declines to expand the form by returning the unexpanded
+input.
+.IP 2.
+A form that has been fully expanded as a place macro is then subject
+to a single-round of macro-expansion, as if by
+.codn macroexpand-1 ,
+which takes place in the original form's lexical environment.
+If the form doesn't expand, or the result of expansion is
+.code nil
+or a
+non-symbolic atom, then the process terminates. Otherwise, the
+process is repeated from step 1.
+.RE
+
+.IP
 The
 .code define-place-macro
-form does not cause
+macro does not cause
 .meta name
 to become
 .codn mboundp .
 
-There can exist both an ordinary macro and a place macro of the same name;
-moreover, this is potentially useful.
+There can exist both an ordinary macro and a place macro of the same name.
+In this situation, when the macro call appears as a place form, it is
+expanded as a place macro, according to the above steps. When the macro call
+appears as an evaluated form, not being used as a place, the form is
+expanded using the ordinary macro.
 
 .TP* "Example:"
 

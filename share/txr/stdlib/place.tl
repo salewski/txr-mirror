@@ -63,18 +63,18 @@
 
 (defun sys:pl-expand (unex-place env)
   (while t
-    (let ((place unex-place))
-      (let ((pm-expander (sys:get-place-macro (if (consp unex-place)
-                                                (car unex-place)))))
-        (when pm-expander
-          (sys:setq place (sys:set-macro-ancestor
-                            [pm-expander unex-place]
-                            unex-place))))
+    (let ((place unex-place)
+          pm-expander)
+      (while (and (consp place)
+                  (sys:setq pm-expander (sys:get-place-macro (car place)))
+                  (sys:setq place (sys:set-macro-ancestor [pm-expander place] place))
+                  (neq place unex-place))
+        (sys:setq unex-place place))
       (sys:setq place (macroexpand-1 place env))
       (when (or (eq place unex-place)
                 (null place)
                 (and (atom place) (not (symbolp place))))
-        (return place))
+        (return-from sys:pl-expand place))
       (sys:setq unex-place place))))
 
 (defun place-form-p (unex-place env)
