@@ -1736,7 +1736,7 @@ int main(int argc, char **argv)
 
 if conftest ; then
   printf "yes\n"
-  printf "#define HAVE_FCNTL_H 1\n" >> config.h
+  printf "#define HAVE_FCNTL 1\n" >> config.h
 else
   printf "no\n"
 fi

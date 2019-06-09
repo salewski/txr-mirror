@@ -54815,6 +54815,174 @@ only entries which polled positive. The
 .code cdr
 of every pair now holds a bitmask of the events which were to have occurred.
 
+.SS* Unix File Control
+
+.coNP Variables @, o-accmode @, o-rdonly @, o-wronly @, o-rdwr @, o-creat @, o-noctty @, o-trunc @, o-append @, o-nonblock @, o-sync @, o-async @, o-directory @, o-nofollow @, o-cloexec @, o-direct @ o-noatime and @ o-path
+.desc
+These variables correspond to the POSIX file mode constants
+.codn O_ACCMODE ,
+.codn O_RDONLY ,
+.codn O_WRONLY ,
+.codn O_RDWR ,
+.codn O_CREAT ,
+.codn O_NOCTTY ,
+and so forth.
+
+The availability of the variables
+.codn o-async ,
+.codn o-directory ,
+.codn o-nofollow ,
+.codn o-cloexec ,
+.codn o-direct ,
+.code o-noatime
+and
+.code o-path
+depends on the host platform.
+
+Some of these flags may be set or cleared on an existing file descriptor
+using the
+.code f-setfl
+command of the
+.code fcntl
+function, in accordance with POSIX and the host platform documentation.
+
+.coNP Variables @, seek-set @ seek-cur and @ seek-end
+.desc
+These variables correspond to the ISO C constants
+.codn SEEK_SET ,
+.code SEEK_CUR
+and
+.codn SEEK_END .
+These values, usually associated with the ISO C
+.code fseek
+function, are also used in the
+.code fcntl
+file locking interface as values of the
+.code whence
+member of the
+.code flock
+structure.
+
+.coNP Variables @, f-dupfd @, f-dupfd-cloexec @, f-getfd @, f-setfd @, f-getfl @, f-setfl @, f-getlk @ f-setlk and @ f-setlkw
+.desc
+These variables correspond to the POSIX
+.code fcntl
+command constants
+.codn F_DUPFD ,
+.codn F_GETFD ,
+.codn F_SETFD ,
+and so forth. Availability of the
+.code f-dupfd-cloexec
+depends on the host platform.
+
+.coNP Variable @ fd-cloexec
+.desc
+The
+.code fd-cloexec
+variable corresponds to the POSIX
+.code FD_CLOEXEC
+constant. It denotes the flag which may  be set by the
+.code fd-setfd
+command of the
+.code fcntl
+function.
+
+.coNP Variables @, f-rdlck @ f-wrlck and @ f-unlck
+.desc
+These variables correspond to the POSIX lock type constants
+.codn F_RDLCK ,
+.code F_WRLCK
+and
+.codn F_UNLCK .
+They specify the possible values of the
+.code type
+field of the
+.code flock
+structure.
+
+.coNP Structure @ flock
+.synb
+.mets (defstruct flock nil
+.mets \ \  type whence
+.mets \ \  start len
+.mets \ \  pid)
+.syne
+.desc
+The
+.code flock
+structure corresponds to the POSIX structure of the same name.
+An instance of this structure must be specified as the third
+argument of the
+.code fcntl
+function when the
+.meta command
+argument is one of the values
+.codn f-getlk ,
+.code f-setlk
+or
+.codn f-setlkw .
+
+All slots must be initialized with appropriate values before
+calling
+.code fcntl
+with the exception that the
+.code f-getlk
+command does not access the existing value of the
+.code pid
+slot.
+
+.coNP Function @ fcntl
+.synb
+.mets (fcntl < fileno < command <> [ arg ])
+.syne
+.desc
+The
+.code fcntl
+function corresponds to the same-named POSIX function.
+The
+.meta fileno
+and
+.meta command
+arguments must be integers.
+The \*(TL
+.code fileno
+restricts the
+.meta command
+argument to the supported values for which symbolic variable names are provided.
+Other integer
+.meta command
+values are rejected by returning -1 and setting the
+.code errno
+variable to
+.codn EINVAL .
+Whether the third argument is required, and what type it must be, depends on the
+.meta command
+value. Commands not requiring the third argument ignore it if it is passed.
+
+.code fcntl
+commands for which POSIX requires an argument of type
+.code long
+require
+.meta arg
+to be an integer.
+
+The file locking commands
+.codn f-getlk ,
+.code f-setlk
+and
+.code f-setlkw
+require
+.meta arg
+to be a
+.code flock
+structure.
+
+The
+.code fcntl
+function doesn't throw an error if the underlying POSIX function indicates
+failure; the underlying function's return value is converted to a Lisp integer
+and returned.
+
 .SS* Unix Itimers
 Itimers ("interval timers") can be used in combination with signal handling to
 execute asynchronous actions. Itimers deliver delayed, one-time signals,

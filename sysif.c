@@ -37,7 +37,7 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_FCNTL_H
+#if HAVE_FCNTL
 #include <fcntl.h>
 #endif
 #if HAVE_SYS_WAIT
@@ -111,6 +111,10 @@ val group_s, mem_s;
 #if HAVE_UNAME
 val utsname_s, sysname_s, nodename_s, release_s, version_s, machine_s;
 val domainname_s;
+#endif
+
+#if HAVE_FCNTL
+val flock_s, type_s, whence_s, start_s, len_s, pid_s;
 #endif
 
 #if HAVE_DLOPEN
@@ -528,6 +532,72 @@ static val readlink_wrap(val path)
       return out;
     }
   }
+}
+
+#endif
+
+#if HAVE_FCNTL
+
+static void flock_pack(val self, val in, struct flock *out)
+{
+  out->l_type = c_short(slot(in, type_s), self);
+  out->l_whence = c_short(slot(in, whence_s), self);
+  out->l_start = c_num(slot(in, start_s));
+  out->l_len = c_num(slot(in, len_s));
+}
+
+static void flock_unpack(val self, val out, struct flock *in)
+{
+  slotset(out, type_s, num(in->l_type));
+  slotset(out, whence_s, num(in->l_whence));
+  slotset(out, start_s, num(in->l_start));
+  slotset(out, len_s, num(in->l_len));
+  slotset(out, pid_s, num(in->l_pid));
+}
+
+static val fcntl_wrap(val fd_in, val cmd_in, val arg_in)
+{
+  val self = lit("fcntl");
+  int fd = c_int(fd_in, self);
+  int cmd = c_int(cmd_in, self);
+  int res = -1;
+
+  switch (cmd) {
+  case F_DUPFD:
+#ifdef F_DUPFD_CLOEXEC
+  case F_DUPFD_CLOEXEC:
+#endif
+  case F_SETFD:
+  case F_SETFL:
+    if (missingp(arg_in)) {
+      errno = EINVAL;
+    } else {
+      long arg = c_long(arg_in, self);
+      res = fcntl(fd, cmd, arg);
+    }
+    break;
+  case F_GETFD:
+  case F_GETFL:
+    res = fcntl(fd, cmd);
+    break;
+  case F_SETLK:
+  case F_SETLKW:
+  case F_GETLK:
+    if (missingp(arg_in)) {
+      errno = EINVAL;
+    } else {
+      struct flock fl = { 0 };
+      flock_pack(self, arg_in, &fl);
+      res  = fcntl(fd, cmd, &fl);
+      if (cmd == F_GETLK)
+        flock_unpack(self, arg_in, &fl);
+    }
+  default:
+    errno = EINVAL;
+    break;
+  }
+
+  return num(res);
 }
 
 #endif
@@ -1661,6 +1731,14 @@ void sysif_init(void)
   machine_s = intern(lit("machine"), user_package);
   domainname_s = intern(lit("domainname"), user_package);
 #endif
+#if HAVE_FCNTL
+  flock_s = intern(lit("flock"), user_package);
+  type_s = intern(lit("type"), user_package);
+  whence_s = intern(lit("whence"), user_package);
+  start_s = intern(lit("start"), user_package);
+  len_s = intern(lit("len"), user_package);
+  pid_s = intern(lit("pid"), user_package);
+#endif
 
   make_struct_type(stat_s, nil, nil,
                    list(dev_s, ino_s, mode_s, nlink_s, uid_s, gid_s,
@@ -1680,6 +1758,11 @@ void sysif_init(void)
   make_struct_type(utsname_s, nil, nil,
                    list(sysname_s, nodename_s, release_s,
                         version_s, machine_s, domainname_s, nao),
+                   nil, nil, nil, nil);
+#endif
+#if HAVE_FCNTL
+  make_struct_type(flock_s, nil, nil,
+                   list(type_s, whence_s, start_s, len_s, pid_s, nao),
                    nil, nil, nil, nil);
 #endif
 
@@ -1731,6 +1814,64 @@ void sysif_init(void)
   reg_fun(intern(lit("symlink"), user_package), func_n2(symlink_wrap));
   reg_fun(intern(lit("link"), user_package), func_n2(link_wrap));
   reg_fun(intern(lit("readlink"), user_package), func_n1(readlink_wrap));
+#endif
+
+#if HAVE_FCNTL
+  reg_varl(intern(lit("o-accmode"), user_package), num_fast(O_ACCMODE));
+  reg_varl(intern(lit("o-rdonly"), user_package), num_fast(O_RDONLY));
+  reg_varl(intern(lit("o-wronly"), user_package), num_fast(O_WRONLY));
+  reg_varl(intern(lit("o-rdwr"), user_package), num_fast(O_RDWR));
+  reg_varl(intern(lit("o-creat"), user_package), num_fast(O_CREAT));
+  reg_varl(intern(lit("o-noctty"), user_package), num_fast(O_NOCTTY));
+  reg_varl(intern(lit("o-trunc"), user_package), num_fast(O_TRUNC));
+  reg_varl(intern(lit("o-append"), user_package), num_fast(O_APPEND));
+  reg_varl(intern(lit("o-nonblock"), user_package), num_fast(O_NONBLOCK));
+  reg_varl(intern(lit("o-sync"), user_package), num_fast(O_SYNC));
+#ifdef O_ASYNC
+  reg_varl(intern(lit("o-async"), user_package), num_fast(O_ASYNC));
+#endif
+#ifdef O_DIRECTORY
+  reg_varl(intern(lit("o-directory"), user_package), num_fast(O_DIRECTORY));
+#endif
+#ifdef O_NOFOLLOW
+  reg_varl(intern(lit("o-nofollow"), user_package), num_fast(O_NOFOLLOW));
+#endif
+#ifdef O_CLOEXEC
+  reg_varl(intern(lit("o-cloexec"), user_package), num_fast(O_CLOEXEC));
+#endif
+#ifdef O_DIRECT
+  reg_varl(intern(lit("o-direct"), user_package), num_fast(O_DIRECT));
+#endif
+#ifdef O_NOATIME
+  reg_varl(intern(lit("o-noatime"), user_package), num_fast(O_NOATIME));
+#endif
+#ifdef O_PATH
+  reg_varl(intern(lit("o-path"), user_package), num_fast(O_PATH));
+#endif
+
+  reg_varl(intern(lit("f-dupfd"), user_package), num_fast(F_DUPFD));
+#ifdef F_DUPFD_CLOEXEC
+  reg_varl(intern(lit("f-dupfd-cloexec"), user_package), num_fast(F_DUPFD_CLOEXEC));
+#endif
+  reg_varl(intern(lit("f-getfd"), user_package), num_fast(F_GETFD));
+  reg_varl(intern(lit("f-setfd"), user_package), num_fast(F_SETFD));
+
+  reg_varl(intern(lit("fd-cloexec"), user_package), num_fast(FD_CLOEXEC));
+
+  reg_varl(intern(lit("f-getfl"), user_package), num_fast(F_GETFL));
+  reg_varl(intern(lit("f-setfl"), user_package), num_fast(F_SETFL));
+
+  reg_varl(intern(lit("f-getlk"), user_package), num_fast(F_GETLK));
+  reg_varl(intern(lit("f-setlk"), user_package), num_fast(F_SETLK));
+  reg_varl(intern(lit("f-setlkw"), user_package), num_fast(F_SETLKW));
+  reg_varl(intern(lit("f-rdlck"), user_package), num_fast(F_RDLCK));
+  reg_varl(intern(lit("f-wrlck"), user_package), num_fast(F_WRLCK));
+  reg_varl(intern(lit("f-unlck"), user_package), num_fast(F_UNLCK));
+  reg_varl(intern(lit("seek-set"), user_package), num_fast(SEEK_SET));
+  reg_varl(intern(lit("seek-cur"), user_package), num_fast(SEEK_CUR));
+  reg_varl(intern(lit("seek-end"), user_package), num_fast(SEEK_END));
+
+  reg_fun(intern(lit("fcntl"), user_package), func_n3o(fcntl_wrap, 2));
 #endif
 
   reg_fun(intern(lit("stat"), user_package), func_n1(statp));
