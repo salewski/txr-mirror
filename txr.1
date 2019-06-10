@@ -52988,6 +52988,25 @@ These are platform-independent
 indicators of failed or successful termination. The numeric value 0 also
 indicates success.
 
+.coNP Variables @, e2big @, eacces @, eaddrinuse @, eaddrnotavail @, eafnosupport @, eagain @, ealready @, ebadf @, ebadmsg @, ebusy @, ecanceled @, echild @, econnaborted @, econnrefused @, econnreset @, edeadlk @, edestaddrreq @, edom @, edquot @, eexist @, efault @, efbig @, ehostunreach @, eidrm @, eilseq @, einprogress @, eintr @, einval @, eio @, eisconn @, eisdir @, eloop @, emfile @, emlink @, emsgsize @, emultihop @, enametoolong @, enetdown @, enetreset @, enetunreach @, enfile @, enobufs @, enodata @, enodev @, enoent @, enoexec @, enolck @, enolink @, enomem @, enomsg @, enoprotoopt @, enospc @, enosr @, enostr @, enosys @, enotconn @, enotdir @, enotempty @, enotrecoverable @, enotsock @, enotsup @, enotty @, enxio @, eopnotsupp @, eoverflow @, eownerdead @, eperm @, epipe @, eproto @, eprotonosupport @, eprototype @, erange @, erofs @, espipe @, esrch @, estale @, etime @, etimedout @, etxtbsy @ ewouldblock and @ exdev
+.desc
+These variables correspond to the POSIX
+.cod2 \(dq errno
+constants\(dq, namely
+.codn E2BIG ,
+.codn EACCES ,
+.code EADDRINUSE
+and so forth.
+Variables corresponding to all of the
+.code "<errno.h>"
+constants from the Issue 6 2004 edition of POSIX are included.
+The variables
+.code eownerdead
+and
+.code enotrecoverable
+from Issue 7 2018 are subject to the availability of the corresponding constants
+in the host platform.
+
 .coNP Function @ abort
 .synb
 .mets (abort)
