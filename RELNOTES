@@ -1,3 +1,34 @@
+                                    TXR 217
+                                   2019-06-10
+
+  Features:
+
+  - Integrated POSIX fcntl function, supporting
+    F_SETFD, F_SETFL and F_SETLK.
+  - errno constants are now provided.
+  - POSIX close function added.
+  - Windows installer associates .txr, .tl and .tlo suffixes with the
+    txr executable.
+  - fixnum range now includes the most negative two's
+    complement value that fits into its representation,
+    rather than excluding it.
+  - place macros: slight adjustment to expansion strategy.
+
+  Bugs:
+
+  - Fixed failure to handle most-negative integer value in situations
+    when a Lisp integer is converted to a fixed C integer.
+    - Fixes a regression in the minimal Windows program example, in which
+      (defvarl CW_USEDEFAULT #x-80000000) appears.
+  - path-private-to-me-p function was considering superuser as
+    just another user
+    - properly locked down root-owned file was not considered private.
+    - same with path-strictly-private-to-me
+  - list length: off-by-one error for huge lazy lists that overflow
+    a pointer-wide counter.
+
+
+
                                     TXR 216
                                    2019-05-20
 

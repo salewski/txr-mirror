@@ -147,6 +147,10 @@ extern val zerop_s, zeroplus_s, zone_s;
 #if HAVE_DLOPEN
 extern val dlhandle_s, dlsym_s;
 #endif
+#if HAVE_FCNTL
+extern val flock_s, len_s, pid_s, start_s, type_s;
+extern val whence_s;
+#endif
 #if HAVE_GRGID
 extern val group_s, mem_s;
 #endif
@@ -286,6 +290,10 @@ val *protected_sym[] = {
 
 #if HAVE_DLOPEN
   &dlhandle_s, &dlsym_s,
+#endif
+#if HAVE_FCNTL
+  &flock_s, &len_s, &pid_s, &start_s, &type_s,
+  &whence_s,
 #endif
 #if HAVE_GRGID
   &group_s, &mem_s,
