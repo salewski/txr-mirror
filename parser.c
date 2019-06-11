@@ -452,7 +452,8 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
 
     if (suffix == none && !*txr_lisp_p) {
       spec_file_try = scat(lit("."), spec_file, lit("txr"), nao);
-      in = w_fopen(c_str(spec_file_try), L"r");
+      if ((in = w_fopen(c_str(spec_file_try), L"r")) != 0)
+        goto found;
 #ifdef ENOENT
       if (in == 0 && errno != ENOENT)
         goto except;
@@ -460,21 +461,25 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
     }
 
     if (suffix == none) {
-      if (in == 0) {
+      {
         spec_file_try = scat(lit("."), spec_file, lit("tlo"), nao);
         errno = 0;
-        in = w_fopen(c_str(spec_file_try), L"r");
-        *txr_lisp_p = chr('o');
+        if ((in = w_fopen(c_str(spec_file_try), L"r")) != 0) {
+          *txr_lisp_p = chr('o');
+          goto found;
+        }
 #ifdef ENOENT
         if (in == 0 && errno != ENOENT)
           goto except;
 #endif
       }
-      if (in == 0) {
+      {
         spec_file_try = scat(lit("."), spec_file, lit("tl"), nao);
         errno = 0;
-        in = w_fopen(c_str(spec_file_try), L"r");
-        *txr_lisp_p = t;
+        if ((in = w_fopen(c_str(spec_file_try), L"r")) != 0) {
+          *txr_lisp_p = t;
+          goto found;
+        }
 #ifdef ENOENT
         if (in == 0 && errno != ENOENT)
           goto except;
@@ -482,7 +487,7 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
       }
     }
 
-    if (in == 0) {
+    {
       spec_file_try = spec_file;
       errno = 0;
       in = w_fopen(c_str(spec_file_try), L"r");
@@ -511,6 +516,7 @@ except:
                 lit("unable to open ~a"), spec_file_try, nao);
     }
 
+found:
     *stream = make_stdio_stream(in, spec_file_try);
     *name = spec_file_try;
   }
