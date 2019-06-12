@@ -379,6 +379,7 @@ typedef struct seq_iter {
     cnum len;
   } ul;
   int (*get)(struct seq_iter *, val *pval);
+  int (*peek)(struct seq_iter *, val *pval);
 } seq_iter_t;
 
 extern const seq_kind_t seq_kind_tab[MAXTYPE+1];
@@ -533,6 +534,8 @@ seq_info_t seq_info(val cobj);
 void seq_iter_init(val self, seq_iter_t *it, val obj);
 void seq_iter_rewind(val self, seq_iter_t *it);
 INLINE int seq_get(seq_iter_t *it, val *pval) { return it->get(it, pval); }
+INLINE int seq_peek(seq_iter_t *it, val *pval) { return it->peek(it, pval); }
+val seq_geti(seq_iter_t *it);
 val seq_begin(val obj);
 val seq_next(val iter, val end_val);
 val seq_reset(val iter, val obj);
