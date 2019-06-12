@@ -973,6 +973,31 @@ val hash_next(val iter)
   return us_car(hi->cons);
 }
 
+val hash_peek(val iter)
+{
+  val self = lit("hash-peek");
+  struct hash_iter *hi = coerce(struct hash_iter *,
+                                cobj_handle(self, iter, hash_iter_s));
+  val hash = hi->hash;
+  struct hash *h = hash ? coerce(struct hash *, hash->co.handle) : 0;
+  cnum chain = hi->chain;
+  val cell = hi->cons;
+
+  if (!h)
+    return nil;
+  if (cell) {
+    val peek = us_cdr(cell);
+    if (peek)
+      return us_car(peek);
+  }
+  do {
+    if (++chain >= h->modulus)
+      return nil;
+    cell = vecref(h->table, num_fast(chain));
+  } while (!cell);
+  return us_car(cell);
+}
+
 val maphash(val fun, val hash)
 {
   val iter = hash_begin(hash);
@@ -1651,6 +1676,7 @@ void hash_init(void)
   reg_fun(intern(lit("hash-revget"), user_package), func_n4o(hash_revget, 2));
   reg_fun(intern(lit("hash-begin"), user_package), func_n1(hash_begin));
   reg_fun(intern(lit("hash-next"), user_package), func_n1(hash_next));
+  reg_fun(intern(lit("hash-peek"), user_package), func_n1(hash_peek));
   reg_fun(intern(lit("set-hash-str-limit"), system_package),
           func_n1(set_hash_str_limit));
   reg_fun(intern(lit("set-hash-rec-limit"), system_package),

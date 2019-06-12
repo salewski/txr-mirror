@@ -43264,10 +43264,11 @@ applies
 first, as above. If that is true, and the two hashes have the same number of
 elements, the result is falsified.
 
-.coNP Functions @ hash-begin and @ hash-next
+.coNP Functions @, hash-begin @ hash-next and @ hash-peek
 .synb
 .mets (hash-begin << hash )
 .mets (hash-next << hash-iter )
+.mets (hash-peek << hash-iter )
 .syne
 .desc
 The
@@ -43279,18 +43280,34 @@ one by one.
 
 The
 .code hash-next
-function applies to a hash iterator returned by
+function's
+.meta hash-iter
+argument is a hash iterator returned by
 .codn hash-begin .
-
-If unvisited entries remain, it returns the next one as a cons cell
-whose
+If unvisited entries remain in
+.metn hash ,
+then
+.code hash-next
+returns the next one as a cons cell whose
 .code car
 holds the key and whose
 .code cdr
-holds the value.
-
-If no more entries remain to be visited, it returns
+holds the value. That entry is then considered visited by the iterator.
+If no more entries remain to be visited,
+.code hash-next
+returns
 .codn nil .
+
+The
+.code hash-peek
+function returns the same value that a subsequent call to
+.code hash-next
+will return for the same
+.metn hash-iter ,
+without changing the state of
+.metn hash-iter .
+That is to say, if a cell representing a hash entry is returned, that entry
+remains unvisited by the iterator.
 
 .coNP Macro @ with-hash-iter
 .synb
