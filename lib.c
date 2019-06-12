@@ -1430,61 +1430,44 @@ val sub_list(val list, val from, val to)
 
 val replace_list(val list, val items, val from, val to)
 {
+  val self = lit("replace-list");
   val len = nil;
 
-  items = toseq(items);
-
   if (!list)
-    return items;
+    return tolist(items);
 
-  if (listp(from)) {
-    val where = from;
-    val seq = list;
-    val idx = zero;
-
-    if (!missingp(to))
-      uw_throwf(error_s,
-                lit("replace-list: to-arg not applicable when from-arg is a list"),
-                nao);
-
-    for (; seq && where && items; seq = cdr(seq), idx = plus(idx, one)) {
-      val wh = nil;
-
-      for (; where && lt(wh = car(where), idx); where = cdr(where))
-        ; /* empty */
-
-      if (eql(wh, idx))
-        rplaca(seq, pop(&items));
-    }
-
-    return list;
-  } else if (vectorp(from)) {
-    val where = from;
-    val seq = list;
-    val idx = zero;
-    val wlen = length_vec(where);
-    val widx = zero;
-
-    if (!missingp(to))
-      uw_throwf(error_s,
-                lit("replace-str: to-arg not applicable when from-arg is a vector"),
-                nao);
-
-    for (; seq && items && lt(widx, wlen); seq = cdr(seq), idx = plus(idx, one)) {
-      val wh = nil;
-
-      for (; lt(widx, wlen) && lt(wh = vecref(where, widx), idx); widx = plus(widx, one))
-        ; /* empty */
-
-      if (eql(wh, idx))
-        rplaca(seq, pop(&items));
-    }
-
-    return list;
-  } else if (missingp(from)) {
+  if (missingp(from)) {
     from = zero;
   } else if (from == t) {
     from = nil;
+  } else if (!integerp(from)) {
+    seq_iter_t wh_iter;
+    val iter = list, idx = zero, item, wh;
+    seq_iter_t item_iter;
+    seq_iter_init(self, &item_iter, items);
+    seq_iter_init(self, &wh_iter, from);
+
+    if (!missingp(to))
+      uw_throwf(error_s,
+                lit("~a: to-arg not applicable when from-arg is a list"),
+                self, nao);
+
+    while (iter && seq_peek(&item_iter, &item) && seq_peek(&wh_iter, &wh)) {
+      if (lt(wh, idx)) {
+        seq_geti(&wh_iter);
+        seq_geti(&item_iter);
+        continue;
+      } else if (eql(wh, idx)) {
+        rplaca(iter, item);
+        seq_geti(&wh_iter);
+        seq_geti(&item_iter);
+      }
+
+      iter = cdr(iter);
+      idx = plus(idx, one);
+    }
+
+    return list;
   } else if (lt(from, zero)) {
     from = plus(from, len ? len : (len = length(list)));
     if (to == zero)
@@ -1500,7 +1483,7 @@ val replace_list(val list, val items, val from, val to)
 
   if (!to || (len && ge(to, len)))  {
     if (from && zerop(from)) {
-      return (listp(items)) ? items : list_vec(items);
+      return tolist(items);
     } else {
       val i;
       list_collect_decl (out, ptail);
@@ -1511,8 +1494,8 @@ val replace_list(val list, val items, val from, val to)
         ptail = list_collect(ptail, car(list));
       }
 
-      ptail = list_collect_nconc(ptail, if3(listp(items),
-                                            items, list_vec(items)));
+      list_collect_nconc(ptail, tolist(items));
+
       return out;
     }
   } else {
@@ -1526,9 +1509,14 @@ val replace_list(val list, val items, val from, val to)
         ptail = list_collect(ptail, car(list));
     }
 
-    ptail = list_collect_nconc(ptail, append2(if3(listp(items), items,
-                                                  list_vec(items)),
-                                      list));
+    if (listp(items)) {
+      ptail = list_collect_nconc(ptail, items);
+      list_collect_append(ptail, list);
+    } else {
+      ptail = list_collect_nconc(ptail, tolist(items));
+      list_collect_nconc(ptail, list);
+    }
+
     return out;
   }
 }
