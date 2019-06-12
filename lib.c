@@ -3765,55 +3765,37 @@ val sub_str(val str_in, val from, val to)
 
 val replace_str(val str_in, val items, val from, val to)
 {
-  val itseq = toseq(items);
+  val self = lit("replace-str");
   val len = length_str(str_in);
 
   if (type(str_in) != STR) {
-    uw_throwf(error_s, lit("replace-str: ~s of type ~s is not "
+    uw_throwf(error_s, lit("~a: ~s of type ~s is not "
                            "a modifiable string"),
-              str_in, typeof(str_in), nao);
+              self, str_in, typeof(str_in), nao);
   }
 
-  if (listp(from)) {
-    val where = from;
-    val len = length_str(str_in);
-
-    if (!missingp(to))
-      uw_throwf(error_s,
-                lit("replace-str: to-arg not applicable when from-arg is a list"),
-                nao);
-
-    for (; where && itseq; where = cdr(where)) {
-      val wh = car(where);
-      if (ge(wh, len))
-        break;
-      chr_str_set(str_in, wh, pop(&itseq));
-    }
-
-    return str_in;
-  } else if (vectorp(from)) {
-    val where = from;
-    val len = length_str(str_in);
-    val wlen = length_vec(from);
-    val i;
-
-    if (!missingp(to))
-      uw_throwf(error_s,
-                lit("replace-str: to-arg not applicable when from-arg is a vector"),
-                nao);
-
-    for (i = zero; lt(i, wlen) && itseq; i = plus(i, one)) {
-      val wh = vecref(where, i);
-      if (ge(wh, len))
-        break;
-      chr_str_set(str_in, wh, pop(&itseq));
-    }
-
-    return str_in;
-  } else if (missingp(from)) {
+  if (missingp(from)) {
     from = zero;
   } else if (from == t) {
     from = len;
+  } else if (!integerp(from)) {
+    val len = length_str(str_in), wh, item;
+    seq_iter_t wh_iter, item_iter;
+    seq_iter_init(self, &item_iter, items);
+    seq_iter_init(self, &wh_iter, from);
+
+    if (!missingp(to))
+      uw_throwf(error_s,
+                lit("~a: to-arg not applicable when from-arg is a list"),
+                self, nao);
+
+    while (seq_get(&wh_iter, &wh) && seq_get(&item_iter, &item)) {
+      if (ge(wh, len))
+        break;
+      chr_str_set(str_in, wh, item);
+    }
+
+    return str_in;
   } else if (lt(from, zero)) {
     from = plus(from, len);
     if (to == zero)
@@ -3831,7 +3813,7 @@ val replace_str(val str_in, val items, val from, val to)
 
   {
     val len_rep = minus(to, from);
-    val len_it = length(itseq);
+    val len_it = length(items);
 
     if (gt(len_rep, len_it)) {
       val len_diff = minus(len_rep, len_it);
@@ -3855,24 +3837,16 @@ val replace_str(val str_in, val items, val from, val to)
 
     if (zerop(len_it))
       return str_in;
-    if (stringp(itseq)) {
-      wmemcpy(str_in->st.str + c_num(from), c_str(itseq), c_num(len_it));
+    if (stringp(items)) {
+      wmemcpy(str_in->st.str + c_num(from), c_str(items), c_num(len_it));
     } else {
-      val iter;
+      seq_iter_t item_iter;
+      seq_iter_init(self, &item_iter, items);
       cnum f = c_num(from);
       cnum t = c_num(to);
-      cnum s;
 
-      if (listp(itseq)) {
-        for (iter = itseq; iter && f != t; iter = cdr(iter), f++)
-          str_in->st.str[f] = c_chr(car(iter));
-      } else if (vectorp(itseq)) {
-        for (s = 0; f != t; f++, s++)
-          str_in->st.str[f] = c_chr(vecref(itseq, num(s)));
-      } else {
-        uw_throwf(error_s, lit("replace-str: source object ~s not supported"),
-                  itseq, nao);
-      }
+      for (; f != t; f++)
+        str_in->st.str[f] = c_chr(seq_geti(&item_iter));
     }
   }
 
@@ -7204,49 +7178,31 @@ val sub_vec(val vec_in, val from, val to)
 
 val replace_vec(val vec_in, val items, val from, val to)
 {
-  val it_seq = toseq(items);
+  val self = lit("replace-vec");
   val len = length_vec(vec_in);
 
-  if (listp(from)) {
-    val where = from;
-    val len = length_vec(vec_in);
-
-    if (!missingp(to))
-      uw_throwf(error_s,
-                lit("replace-vec: to-arg not applicable when from-arg is a list"),
-                nao);
-
-    for (; where && it_seq; where = cdr(where)) {
-      val wh = car(where);
-      if (ge(wh, len))
-        break;
-      set(vecref_l(vec_in, wh), pop(&it_seq));
-    }
-
-    return vec_in;
-  } else if (vectorp(from)) {
-    val where = from;
-    val len = length_vec(vec_in);
-    val wlen = length_vec(from);
-    val i;
-
-    if (!missingp(to))
-      uw_throwf(error_s,
-                lit("replace-vec: to-arg not applicable when from-arg is a vector"),
-                nao);
-
-    for (i = zero; lt(i, wlen) && it_seq; i = plus(i, one)) {
-      val wh = vecref(where, i);
-      if (ge(wh, len))
-        break;
-      set(vecref_l(vec_in, wh), pop(&it_seq));
-    }
-
-    return vec_in;
-  } else if (missingp(from)) {
+  if (missingp(from)) {
     from = zero;
   } else if (from == t) {
     from = len;
+  } else if (!integerp(from)) {
+    seq_iter_t wh_iter, item_iter;
+    val len = length_vec(vec_in), wh, item;
+    seq_iter_init(self, &wh_iter, from);
+    seq_iter_init(self, &item_iter, items);
+
+    if (!missingp(to))
+      uw_throwf(error_s,
+                lit("~a: to-arg not applicable when from-arg is a list"),
+                self, nao);
+
+    while (seq_get(&wh_iter, &wh) && seq_get(&item_iter, &item)) {
+      if (ge(wh, len))
+        break;
+      set(vecref_l(vec_in, wh), item);
+    }
+
+    return vec_in;
   } else if (lt(from, zero)) {
     from = plus(from, len);
     if (to == zero)
@@ -7263,7 +7219,7 @@ val replace_vec(val vec_in, val items, val from, val to)
 
   {
     val len_rep = minus(to, from);
-    val len_it = length(it_seq);
+    val len_it = length(items);
 
     if (gt(len_rep, len_it)) {
       val len_diff = minus(len_rep, len_it);
@@ -7291,26 +7247,26 @@ val replace_vec(val vec_in, val items, val from, val to)
 
     if (zerop(len_it))
       return vec_in;
-    if (vectorp(it_seq)) {
-      memcpy(vec_in->v.vec + c_num(from), it_seq->v.vec,
+    if (vectorp(items)) {
+      memcpy(vec_in->v.vec + c_num(from), items->v.vec,
              sizeof *vec_in->v.vec * c_num(len_it));
       mut(vec_in);
-    } else if (stringp(it_seq)) {
-      cnum f = c_num(from);
-      cnum t = c_num(to);
-      cnum s;
-      const wchar_t *str = c_str(it_seq);
-
-      for (s = 0; f != t; f++, s++)
-        vec_in->v.vec[f] = chr(str[s]);
     } else {
-      val iter;
+      seq_iter_t item_iter;
+      seq_iter_init(self, &item_iter, items);
+      int mut_needed = 0;
       cnum f = c_num(from);
       cnum t = c_num(to);
 
-      for (iter = it_seq; iter && f != t; iter = cdr(iter), f++)
-        vec_in->v.vec[f] = car(iter);
-      mut(vec_in);
+      for (; f != t; f++) {
+        val item = seq_geti(&item_iter);
+        if (is_ptr(item))
+          mut_needed = 1;
+        vec_in->v.vec[f] = item;
+      }
+
+      if (mut_needed)
+        mut(vec_in);
     }
   }
 
