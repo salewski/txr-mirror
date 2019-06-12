@@ -62161,15 +62161,15 @@ type is particularly useful in situations when
 foreign code generates such an array, and the size of that array
 isn't known from the object itself.
 
-It is also useful, instead of
-.code varray
+It is also useful, instead of a variable-length
+.code zarray
 for passing a dynamic array to foreign code in situations when the application benefits
-from managing the memory for the array. The
-.code varray
+from managing the memory for the array. The variable-length
+.code zarray
 FFI type's disadvantage relative to
 .code carray
-is that
-.code varray
+is that the
+.code zarray
 converts an entire Lisp sequence to a temporarily allocated
 array, which is used only for one call. By contrast, the
 .code carray
