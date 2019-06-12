@@ -9996,6 +9996,8 @@ val sub(val seq, val from, val to)
     return sub_str(seq, from, to);
   case VEC:
     return sub_vec(seq, from, to);
+  case BUF:
+    return sub_buf(seq, from, to);
   case COBJ:
     if (seq->co.cls == carray_s)
       return carray_sub(seq, from, to);
@@ -10097,6 +10099,8 @@ val refset(val seq, val ind, val newval)
 
 val replace(val seq, val items, val from, val to)
 {
+  val self = lit("replace");
+
   switch (type(seq)) {
   case NIL:
   case CONS:
@@ -10114,8 +10118,10 @@ val replace(val seq, val items, val from, val to)
     if (obj_struct_p(seq))
       return replace_obj(seq, items, from, to);
     /* fallthrough */
+  case BUF:
+    type_mismatch(lit("~a: operation doesn't support buf type"), self, nao);
   default:
-    type_mismatch(lit("replace: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
 }
 

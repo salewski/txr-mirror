@@ -239,6 +239,38 @@ void buf_fill(val buf, mem_t *src, val self)
   memcpy(b->data, src, c_num(b->len));
 }
 
+val sub_buf(val buf, val from, val to)
+{
+  struct buf *b = buf_handle(buf, lit("sub"));
+  val len = b->len;
+
+  if (null_or_missing_p(from))
+    from = zero;
+  else if (from == t)
+    from = len;
+  else if (lt(from, zero)) {
+    from = plus(from, len);
+    if (to == zero)
+      to = len;
+  }
+
+  if (null_or_missing_p(to) || to == t)
+    to = len;
+  else if (lt(to, zero))
+    to = plus(to, len);
+
+  from = max2(zero, min2(from, len));
+  to = max2(zero, min2(to, len));
+
+  if (ge(from, to)) {
+    return make_buf(zero, nil, zero);
+  } else if (from == 0 && to == len) {
+    return buf;
+  } else {
+    return make_duplicate_buf(minus(to, from), b->data + c_num(from));
+  }
+}
+
 static void buf_put_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
 {
   struct buf *b = buf_handle(buf, self);
