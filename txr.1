@@ -61528,7 +61528,20 @@ The
 type is a variant of
 .codn array .
 When converting from Lisp to C, it ensures that the array is null-terminated.
-This means that the last element of the array is written out as all zero bytes.
+This means that if the
+.meta zarray
+is dimensioned, then the
+.mono
+.meti >> [ dim - 1]
+.onom
+element of the C array is written out as all zero bytes,
+ignoring the corresponding Lisp value in the Lisp array.
+If the
+.meta zarray
+is undimensioned, then the size of the C array is deemed to be one greater
+than the actual length of the Lisp array.  The elements in the Lisp array are
+converted to the corresponding elements of the C array, and then the
+last element of the C array is filled with null bytes.
 The
 .code zarray
 type is useful for handling null terminated character arrays representing
@@ -61542,7 +61555,9 @@ when a
 passed by pointer a foreign function is converted back to Lisp,
 the Lisp object is required to have only four elements. If the Lisp object
 has five elements, then the fifth one will be decoded from the C array
-in earnest; it is not expected to be null.
+in earnest; it is not expected to be null. However, when that Lisp
+representation is converted back to C, that extra element will be ignored and
+output as a zero bytes.
 Lastly, the
 .code zarray
 further extends the special treatment which the
@@ -61574,10 +61589,6 @@ Like that type, it corresponds to the concept of an incomplete
 array in the C language. It may not be used as an array element
 or structure member, and cannot be passed as an argument or returned
 as a value.
-
-When a Lisp sequence is encoded to the foreign representation under control of
-this type, an extra element of all-zero bytes is written out after the
-representation of the last element.
 
 Unlike the ordinary variable-length
 .codn array ,
