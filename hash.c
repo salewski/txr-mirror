@@ -970,7 +970,7 @@ val hash_next(val iter)
     }
     set(mkloc(hi->cons, iter), vecref(h->table, num_fast(hi->chain)));
   }
-  return if2(hi->cons, us_car(hi->cons));
+  return us_car(hi->cons);
 }
 
 val maphash(val fun, val hash)
