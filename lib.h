@@ -588,7 +588,6 @@ val rcyc_pop(val *plist);
 val push(val v, val *plist);
 val copy_list(val list);
 val make_like(val list, val thatobj);
-val toseq(val obj);
 val tolist(val seq);
 val nullify(val seq);
 val seqp(val obj);

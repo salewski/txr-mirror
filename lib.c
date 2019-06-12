@@ -973,21 +973,6 @@ val make_like(val list, val thatobj)
   return list;
 }
 
-val toseq(val seq)
-{
-  seq_info_t si = seq_info(seq);
-
-  switch (si.kind) {
-  case SEQ_NIL:
-    return nil;
-  case SEQ_LISTLIKE:
-  case SEQ_VECLIKE:
-    return (si.type == COBJ) ? si.obj : nullify(si.obj);
-  default:
-    return cons(si.obj, nil);
-  }
-}
-
 val tolist(val seq)
 {
   switch (type(seq)) {
