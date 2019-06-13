@@ -7144,6 +7144,8 @@ val sub_vec(val vec_in, val from, val to)
 
   if (ge(from, to)) {
     return vector(zero, nil);
+  } else if (from == zero && eql(to, len)) {
+    return vec_in;
   } else {
     cnum cfrom = c_num(from);
     size_t nelem = c_num(to) - cfrom;
