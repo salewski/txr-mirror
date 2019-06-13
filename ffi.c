@@ -4891,21 +4891,38 @@ val carray_replace(val carray, val values, val from, val to)
   struct carray *scry = carray_struct_checked(self, carray);
   cnum ln = scry->nelem;
   val len = num(ln);
-  val vlen = length(values);
 
-  if (null_or_missing_p(from))
+  if (null_or_missing_p(from)) {
     from = zero;
+  } else if (!integerp(from)) {
+    seq_iter_t wh_iter, item_iter;
+    val wh, item;
+    seq_iter_init(self, &wh_iter, from);
+    seq_iter_init(self, &item_iter, values);
+
+    if (!missingp(to))
+      uw_throwf(error_s,
+                lit("~a: to-arg not applicable when from-arg is a list"),
+                self, nao);
+
+    while (seq_get(&wh_iter, &wh) && seq_get(&item_iter, &item)) {
+      if (ge(wh, len))
+        break;
+      carray_refset(carray, wh, item);
+    }
+
+    return carray;
+  } else if (minusp(from)) {
+    from = plus(from, len);
+  }
 
   if (null_or_missing_p(to))
     to = len;
-
-  if (minusp(to))
+  else if (minusp(to))
     to = plus(to, len);
 
-  if (minusp(from))
-    from = plus(from, len);
-
   {
+    val vlen = length(values);
     cnum fn = c_num(from);
     cnum tn = c_num(to);
     struct txr_ffi_type *eltft = scry->eltft;
