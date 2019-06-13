@@ -338,7 +338,7 @@ distclean:
 	$(V)echo "executing generic cleanup for non-configured directory"
 	rm -f txr txr.exe txr-dbg txr-dbg.exe txr-win.exe txr-win-dbg.exe
 	rm -rf y.tab.c lex.yy.c y.tab.h y.output
-	rm -rf config opt dbg
+	rm -rf config opt dbg share/txr/stdlib/*.tlo*
 	rm -f config.*
 	rm -rf mpi-1.?.?
 else
