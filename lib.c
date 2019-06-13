@@ -3764,7 +3764,7 @@ val replace_str(val str_in, val items, val from, val to)
   } else if (from == t) {
     from = len;
   } else if (!integerp(from)) {
-    val len = length_str(str_in), wh, item;
+    val wh, item;
     seq_iter_t wh_iter, item_iter;
     seq_iter_init(self, &item_iter, items);
     seq_iter_init(self, &wh_iter, from);
@@ -7174,7 +7174,7 @@ val replace_vec(val vec_in, val items, val from, val to)
     from = len;
   } else if (!integerp(from)) {
     seq_iter_t wh_iter, item_iter;
-    val len = length_vec(vec_in), wh, item;
+    val wh, item;
     seq_iter_init(self, &wh_iter, from);
     seq_iter_init(self, &item_iter, items);
 
