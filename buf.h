@@ -38,6 +38,7 @@ val buf_alloc_size(val buf);
 mem_t *buf_get(val buf, val self);
 void buf_fill(val buf, mem_t *src, val self);
 val sub_buf(val seq, val from, val to);
+val replace_buf(val buf, val items, val from, val to);
 
 #if HAVE_I8
 val buf_put_i8(val buf, val pos, val num);

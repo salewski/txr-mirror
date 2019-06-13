@@ -10089,7 +10089,7 @@ val replace(val seq, val items, val from, val to)
       return replace_obj(seq, items, from, to);
     /* fallthrough */
   case BUF:
-    type_mismatch(lit("~a: operation doesn't support buf type"), self, nao);
+    return replace_buf(seq, items, from, to);
   default:
     type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }

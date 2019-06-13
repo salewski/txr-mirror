@@ -271,6 +271,95 @@ val sub_buf(val buf, val from, val to)
   }
 }
 
+val replace_buf(val buf, val items, val from, val to)
+{
+  val self = lit("replace");
+  val len = length_buf(buf);
+
+  if (missingp(from)) {
+    from = zero;
+  } else if (from == t) {
+    from = len;
+  } else if (!integerp(from)) {
+    seq_iter_t wh_iter, item_iter;
+    val wh, item;
+    seq_iter_init(self, &wh_iter, from);
+    seq_iter_init(self, &item_iter, items);
+
+    if (!missingp(to))
+      uw_throwf(error_s,
+                lit("~a: to-arg not applicable when from-arg is a list"),
+                self, nao);
+
+    while (seq_get(&wh_iter, &wh) && seq_get(&item_iter, &item)) {
+      if (ge(wh, len))
+        break;
+      buf_put_uchar(buf, wh, item);
+    }
+
+    return buf;
+  } else if (lt(from, zero)) {
+    from = plus(from, len);
+    if (to == zero)
+      to = len;
+  }
+
+  if (null_or_missing_p(to) || to == t)
+    to = len;
+  else if (lt(to, zero))
+    to = plus(to, len);
+
+  from = max2(zero, min2(from, len));
+  to = max2(zero, min2(to, len));
+
+  {
+    val len_rep = minus(to, from);
+    val len_it = length(items);
+
+    if (gt(len_rep, len_it)) {
+      val len_diff = minus(len_rep, len_it);
+      cnum t = c_num(to);
+      cnum l = c_num(len);
+
+      memmove(buf->b.data + t - c_num(len_diff),
+              buf->b.data + t,
+              l - t);
+
+      buf_set_length(buf, minus(len, len_diff), zero);
+      to = plus(from, len_it);
+    } else if (lt(len_rep, len_it)) {
+      val len_diff = minus(len_it, len_rep);
+      cnum t = c_num(to);
+      cnum l = c_num(len);
+
+      buf_set_length(buf, plus(len, len_diff), zero);
+
+      memmove(buf->b.data + t + c_num(len_diff),
+              buf->b.data + t,
+              l - t);
+      to = plus(from, len_it);
+    }
+
+    if (zerop(len_it))
+      return buf;
+    if (bufp(items)) {
+      memcpy(buf->b.data + c_num(from), items->b.data, c_num(len_it));
+    } else {
+      seq_iter_t item_iter;
+      seq_iter_init(self, &item_iter, items);
+      cnum f = c_num(from);
+      cnum t = c_num(to);
+
+      for (; f != t; f++) {
+        val item = seq_geti(&item_iter);
+        buf_put_uchar(buf, num(f), item);
+      }
+    }
+  }
+
+  return buf;
+}
+
 static void buf_put_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
 {
   struct buf *b = buf_handle(buf, self);
