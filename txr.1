@@ -28469,14 +28469,16 @@ If
 is a sequence, then
 .meta index-list
 consists of numeric
-indices.  The
-.code select
-function stops processing
-.meta object
-upon encountering an
-index inside
+indices. The length of the sequence, as reported by the
+.code length
+function, is added to every
 .meta index-list
-which is out of range. (Rationale: without
+value which is negative.
+The
+.code select
+function stops collecting values upon encountering an index value which is
+greater than or equal to the length of the sequence.
+(Rationale: without
 this strict behavior,
 .code select
 would not be able to terminate if
@@ -28485,7 +28487,7 @@ is infinite.)
 
 If
 .meta object
-is a list, then
+is, more specifically, a list-like sequence, then
 .meta index-list
 must contain monotonically increasing
 numeric values, even if no value is out of range, since the
@@ -28493,6 +28495,12 @@ numeric values, even if no value is out of range, since the
 function
 makes a single pass through the list based on the assumption that indices
 are ordered. (Rationale: optimization.)
+This requirement for monotonicity applies to the values which
+result after negative indices are displaced by the sequence length
+Also, in this list-like sequence case, values taken from
+.meta index-list
+which are still negative after being displaced by the sequence length are
+ignored.
 
 If
 .meta object
@@ -28509,6 +28517,7 @@ All of
 is processed, even if it contains
 keys which are not in
 .metn object .
+The nonexistent keys are ignored.
 
 The
 .code select

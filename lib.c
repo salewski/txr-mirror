@@ -10479,66 +10479,72 @@ val where(val func, val seq)
   }
 }
 
-val sel(val seq_in, val where_in)
+val sel(val seq, val where_in)
 {
-  val self = lit("sel");
+  val self = lit("select");
   list_collect_decl (out, ptail);
-  val seq = nullify(seq_in);
   val where = if3(functionp(where_in),
                   funcall1(where_in, seq),
-                  nullify(where_in));
+                  where_in);
+  seq_info_t si = seq_info(seq);
+  seq_iter_t wh_iter;
+  val wh;
 
-  switch (type(seq)) {
-  case NIL:
+  seq_iter_init(self, &wh_iter, where);
+
+  switch (si.kind) {
+  case SEQ_NIL:
     return nil;
-  case COBJ:
-    if (hashp(seq))
+  case SEQ_HASHLIKE:
     {
-      val newhash = make_similar_hash(seq);
+      val newhash = make_similar_hash(si.obj);
 
-      for (; where; where = cdr(where)) {
-        val key = car(where);
-        val found = gethash_e(self, seq, key);
-
+      while (seq_get(&wh_iter, &wh)) {
+        val found = gethash_e(self, seq, wh);
         if (found)
-          sethash(newhash, key, cdr(found));
+          sethash(newhash, wh, cdr(found));
       }
 
       return newhash;
     }
-    if (seq->co.cls == carray_s)
-      goto carray;
-    /* fallthrough */
-  case CONS:
-  case LCONS:
+  case SEQ_LISTLIKE:
     {
       val idx = zero;
+      val iter = si.obj;
+      val len = nil;
 
-      for (; seq && where; seq = cdr(seq), idx = plus(idx, one)) {
-        val wh = nil;
+      while (iter && seq_peek(&wh_iter, &wh)) {
+        if (minusp(wh))
+          wh = plus(wh, len ? len : (len = length(seq)));
+        if (lt(wh, idx)) {
+          seq_geti(&wh_iter);
+          continue;
+        } else if (eql(wh, idx)) {
+          ptail = list_collect(ptail, car(iter));
+          seq_geti(&wh_iter);
+        }
 
-        for (; where && lt(wh = car(where), idx); where = cdr(where))
-          ; /* empty */
-
-        if (eql(wh, idx))
-          ptail = list_collect (ptail, car(seq));
+        iter = cdr(iter);
+        idx = plus(idx, one);
       }
     }
     break;
-  carray:
-  default:
+  case SEQ_VECLIKE:
     {
       val len = length(seq);
-      for (; where; where = cdr(where)) {
-        val wh = car(where);
+
+      while (seq_get(&wh_iter, &wh)) {
         if (ge(wh, len))
           break;
-        ptail = list_collect (ptail, ref(seq, car(where)));
+        ptail = list_collect(ptail, ref(si.obj, wh));
       }
     }
     break;
+  case SEQ_NOTSEQ:
+    type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
-  return make_like(out, seq_in);
+
+  return make_like(out, seq);
 }
 
 static val do_relate(val env, val arg)
