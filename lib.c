@@ -1438,6 +1438,8 @@ val replace_list(val list, val items, val from, val to)
                 self, nao);
 
     while (iter && seq_peek(&item_iter, &item) && seq_peek(&wh_iter, &wh)) {
+      if (minusp(wh))
+        wh = plus(wh, len ? len : (len = length(list)));
       if (lt(wh, idx)) {
         seq_geti(&wh_iter);
         seq_geti(&item_iter);

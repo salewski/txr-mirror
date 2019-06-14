@@ -27017,6 +27017,11 @@ and
 .meta index-list
 are of different lengths, then the shorter of the two determines
 the maximum number of elements which are overwritten.
+Whenever a negative value occurs in
+.meta index-list
+the length of
+.meta sequence
+is added to that value.
 Furthermore, similar restrictions apply on
 .meta index-list
 as under the
@@ -27030,7 +27035,8 @@ furthermore, if
 is a list, then
 .meta index-list
 must
-be monotonically increasing.
+be monotonically increasing, after consideration of the
+displacement of negative values.
 
 If
 .meta sequence
@@ -27067,11 +27073,13 @@ arguments are converted to single range object,
 whereas an
 .meta index-list
 is passed as-is.
-It is an error if a
-.code to
-argument is given, and
+It is an error if the
 .code from
-is a list; the situation is diagnosed. If either
+argument is a sequence, indicating an
+.metn index-list ,
+and a
+.code to
+argument is also given; the situation is diagnosed. If either
 .code from
 or
 .code to
