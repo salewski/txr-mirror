@@ -4829,6 +4829,9 @@ val carray_refset(val carray, val idx, val newval)
   struct carray *scry = carray_struct_checked(self, carray);
   cnum ix = c_num(idx);
 
+  if (ix < 0)
+    ix += scry->nelem;
+
   if (ix < 0 || (scry->nelem >= 0 && ix >= scry->nelem)) {
     uw_throwf(error_s, lit("~a: ~s: index ~s out of bounds"),
               self, carray, idx, nao);
