@@ -64,9 +64,11 @@ static cnum buf_check_alloc_size(val alloc_size, cnum len, val self)
   return ah;
 }
 
-static cnum buf_check_index(val index, val self)
+static cnum buf_check_index(struct buf *b, val index, val self)
 {
   cnum ix = c_num(index);
+  if (ix < 0)
+    ix = c_num(plus(b->len, index));
   if (ix < 0)
     uw_throwf(error_s, lit("~a: negative byte index ~s specified"),
               self, index, nao);
@@ -363,8 +365,8 @@ val replace_buf(val buf, val items, val from, val to)
 static void buf_put_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
 {
   struct buf *b = buf_handle(buf, self);
-  cnum p = buf_check_index(pos, self);
-  val req_len = plus(pos, num(size));
+  cnum p = buf_check_index(b, pos, self);
+  val req_len = plus(num(p), num(size));
   if (gt(req_len, b->len))
     buf_do_set_len(buf, b, req_len, nil, self);
   memcpy(b->data + p, ptr, size);
@@ -375,7 +377,7 @@ val buf_put_i8(val buf, val pos, val num)
 {
   val self = lit("buf-put-i8");
   struct buf *b = buf_handle(buf, self);
-  cnum p = buf_check_index(pos, self);
+  cnum p = buf_check_index(b, pos, self);
   i8_t v = c_i8(num, self);
   if (p >= c_num(b->len))
     buf_do_set_len(buf, b, succ(pos), nil, self);
@@ -387,7 +389,7 @@ val buf_put_u8(val buf, val pos, val num)
 {
   val self = lit("buf-put-u8");
   struct buf *b = buf_handle(buf, self);
-  cnum p = buf_check_index(pos, self);
+  cnum p = buf_check_index(b, pos, self);
   cnum v = c_u8(num, self);
   if (p >= c_num(b->len))
     buf_do_set_len(buf, b, succ(pos), nil, self);
@@ -454,7 +456,7 @@ val buf_put_char(val buf, val pos, val num)
 {
   val self = lit("buf-put-char");
   struct buf *b = buf_handle(buf, self);
-  cnum p = buf_check_index(pos, self);
+  cnum p = buf_check_index(b, pos, self);
   char v = c_char(num, self);
   if (p >= c_num(b->len))
     buf_do_set_len(buf, b, succ(pos), nil, self);
@@ -466,7 +468,7 @@ val buf_put_uchar(val buf, val pos, val num)
 {
   val self = lit("buf-put-uchar");
   struct buf *b = buf_handle(buf, self);
-  cnum p = buf_check_index(pos, self);
+  cnum p = buf_check_index(b, pos, self);
   unsigned char v = c_uchar(num, self);
   if (p >= c_num(b->len))
     buf_do_set_len(buf, b, succ(pos), nil, self);
@@ -555,7 +557,7 @@ val buf_put_cptr(val buf, val pos, val cptr)
 static void buf_get_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
 {
   struct buf *b = buf_handle(buf, self);
-  cnum p = buf_check_index(pos, self);
+  cnum p = buf_check_index(b, pos, self);
   cnum e = p + size;
   cnum l = c_num(b->len);
 
@@ -570,7 +572,7 @@ val buf_get_i8(val buf, val pos)
 {
   val self = lit("buf-get-i8");
   struct buf *b = buf_handle(buf, self);
-  cnum p = buf_check_index(pos, self);
+  cnum p = buf_check_index(b, pos, self);
   if (p >= c_num(b->len))
     uw_throwf(error_s, lit("~a: attempted read past buffer end"), self, nao);
   return num_fast(convert(i8_t, b->data[p]));
@@ -580,7 +582,7 @@ val buf_get_u8(val buf, val pos)
 {
   val self = lit("buf-get-u8");
   struct buf *b = buf_handle(buf, self);
-  cnum p = buf_check_index(pos, self);
+  cnum p = buf_check_index(b, pos, self);
   if (p >= c_num(b->len))
     uw_throwf(error_s, lit("~a: attempted read past buffer end"), self, nao);
   return num_fast(convert(u8_t, b->data[p]));
@@ -851,7 +853,7 @@ static int buf_strm_get_byte_callback(mem_t *ctx)
   val self = lit("get-byte");
   struct buf_strm *s = coerce(struct buf_strm *, ctx);
   struct buf *b = buf_handle(s->buf, self);
-  cnum p = buf_check_index(s->pos, self);
+  cnum p = buf_check_index(b, s->pos, self);
   s->pos = num(p + 1);
   return (p >= c_num(b->len)) ? EOF : b->data[p];
 }
@@ -914,6 +916,7 @@ static val buf_strm_seek(val stream, val offset, enum strm_whence whence)
 {
   val self = lit("seek-stream");
   struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
+  struct buf *b = buf_handle(s->buf, self);
   val npos;
 
   switch (whence) {
@@ -926,16 +929,15 @@ static val buf_strm_seek(val stream, val offset, enum strm_whence whence)
     npos = plus(s->pos, offset);
     break;
   case strm_end:
-    {
-      struct buf *b = buf_handle(s->buf, self);
-      npos = minus(b->len, offset);
-    }
+    npos = minus(b->len, offset);
     break;
   default:
     internal_error("invalid whence value");
   }
 
-  (void) buf_check_index(npos, self);
+  if (minusp(npos))
+    uw_throwf(error_s, lit("~a: cannot seek to negative position ~s"),
+              self, index, nao);
 
   s->pos = npos;
   return t;
