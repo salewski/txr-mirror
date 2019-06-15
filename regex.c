@@ -2701,9 +2701,9 @@ val match_regex(val str, val reg, val pos)
 
   if (null_or_missing_p(pos)) {
     pos = zero;
-  } else if (lt(pos, zero)) {
+  } else if (minusp(pos)) {
     pos = plus(pos, length_str(str));
-    if (lt(pos, zero))
+    if (minusp(pos))
       return nil;
   } else if (length_str_lt(str, pos)) {
     return nil;
@@ -2750,7 +2750,7 @@ static val match_regex_right_old(val str, val regex, val end)
 
   if (null_or_missing_p(end) || gt(end, slen))
     end = slen;
-  else if (lt(end, zero))
+  else if (minusp(end))
     end = plus(end, slen);
 
   while (le(pos, end)) {
@@ -2778,7 +2778,7 @@ val match_regex_right(val str, val regex, val end)
     end = len;
   } else if (minusp(end)) {
     end = plus(end, len);
-    if (lt(end, zero))
+    if (minusp(end))
       return nil;
   } else if (gt(end, len)) {
     return nil;
@@ -2824,9 +2824,9 @@ val regex_prefix_match(val reg, val str, val pos)
 
   if (null_or_missing_p(pos)) {
     pos = zero;
-  } else if (lt(pos, zero)) {
+  } else if (minusp(pos)) {
     pos = plus(pos, length_str(str));
-    if (lt(pos, zero))
+    if (minusp(pos))
       return nil;
   } else if (length_str_lt(str, pos)) {
     return nil;
@@ -3045,7 +3045,7 @@ val regex_range_left(val regex, val arg1, val arg2)
     val len = match_regex(arg1, regex, arg2);
     return if2(len, rcons(zero, len));
   } else {
-    val pos = if3(lt(arg1, zero), plus(arg1, length_str(arg2)), arg1);
+    val pos = if3(minusp(arg1), plus(arg1, length_str(arg2)), arg1);
     val new_pos = if3(minusp(pos), nil, match_regex(arg2, regex, pos));
     return if2(new_pos, rcons(pos, new_pos));
   }
@@ -3062,7 +3062,7 @@ val regex_range_right(val regex, val arg1, val arg2)
       return nil;
     }
   } else {
-    val end = if3(lt(arg1, zero), plus(arg1, length_str(arg2)), arg1);
+    val end = if3(minusp(arg1), plus(arg1, length_str(arg2)), arg1);
     val len = match_regex_right(arg2, regex, end);
     return if2(len, rcons(minus(end, len), end));
   }

@@ -791,9 +791,9 @@ val lazy_conses(val list)
 val listref(val list, val ind)
 {
   gc_hint(list);
-  if (lt(ind, zero)) {
+  if (minusp(ind)) {
     ind = plus(ind, length_list(list));
-    if (lt(ind, zero))
+    if (minusp(ind))
       return nil;
   }
   for (; gt(ind, zero); ind = minus(ind, one))
@@ -1375,7 +1375,7 @@ val sub_list(val list, val from, val to)
     from = zero;
   else if (from == t)
     from = nil;
-  else if (lt(from, zero)) {
+  else if (minusp(from)) {
     from = plus(from, len = length(list));
     if (to == zero)
       to = nil;
@@ -1383,7 +1383,7 @@ val sub_list(val list, val from, val to)
 
   if (to == t || null_or_missing_p(to))
     to = nil;
-  else if (!null_or_missing_p(to) && lt(to, zero))
+  else if (!null_or_missing_p(to) && minusp(to))
     to = plus(to, if3(len, len, len = length(list)));
 
   gc_hint(list);
@@ -1455,7 +1455,7 @@ val replace_list(val list, val items, val from, val to)
     }
 
     return list;
-  } else if (lt(from, zero)) {
+  } else if (minusp(from)) {
     from = plus(from, len ? len : (len = length(list)));
     if (to == zero)
       to = len;
@@ -1463,7 +1463,7 @@ val replace_list(val list, val items, val from, val to)
 
   if (to == t || null_or_missing_p(to))
     to = nil;
-  if (to && lt(to, zero))
+  if (to && minusp(to))
     to = plus(to, len ? len : (len = length(list)));
 
   gc_hint(list);
@@ -2401,7 +2401,7 @@ static val split_func(val base, val lcons)
                       raw_index);
       val index_rebased = minus(index, base);
 
-      if (lt(index_rebased, zero)) {
+      if (minusp(index_rebased)) {
         continue;
       } else {
         val first = sub(seq, zero, index_rebased);
@@ -2441,7 +2441,7 @@ static val split_star_func(val base, val lcons)
                       raw_index);
       val index_rebased = minus(index, base);
 
-      if (lt(index_rebased, zero)) {
+      if (minusp(index_rebased)) {
         continue;
       } else {
         val first = sub(seq, zero, index_rebased);
@@ -3628,7 +3628,7 @@ val match_str(val bigstr, val str, val pos)
         return nil;
     }
 
-    return lt(i, zero) ? t : nil;
+    return minusp(i);
   }
 }
 
@@ -3664,7 +3664,7 @@ static val lazy_sub_str(val lstr, val from, val to)
   } else if (from == t) {
     return null_string;
   } else {
-    if (lt(from, zero)) {
+    if (minusp(from)) {
       from = plus(from, len = length_str(lstr));
       from = max2(zero, from);
 
@@ -3681,7 +3681,7 @@ static val lazy_sub_str(val lstr, val from, val to)
   if (null_or_missing_p(to) || to == t) {
     to = t;
   } else {
-    if (lt(to, zero)) {
+    if (minusp(to)) {
       to = plus(to, len = length_str(lstr));
       to = max(zero, to);
     }
@@ -3722,7 +3722,7 @@ val sub_str(val str_in, val from, val to)
     from = zero;
   else if (from == t)
     return null_string;
-  else if (lt(from, zero)) {
+  else if (minusp(from)) {
     from = plus(from, len);
     if (to == zero)
       to = len;
@@ -3730,7 +3730,7 @@ val sub_str(val str_in, val from, val to)
 
   if (null_or_missing_p(to) || to == t)
     to = len;
-  else if (lt(to, zero))
+  else if (minusp(to))
     to = plus(to, len);
 
   from = max2(zero, min2(from, len));
@@ -3783,7 +3783,7 @@ val replace_str(val str_in, val items, val from, val to)
     }
 
     return str_in;
-  } else if (lt(from, zero)) {
+  } else if (minusp(from)) {
     from = plus(from, len);
     if (to == zero)
       to = len;
@@ -3791,7 +3791,7 @@ val replace_str(val str_in, val items, val from, val to)
 
   if (null_or_missing_p(to) || to == t)
     to = len;
-  else if (lt(to, zero))
+  else if (minusp(to))
     to = plus(to, len);
 
   from = max2(zero, min2(from, len));
@@ -7150,7 +7150,7 @@ val sub_vec(val vec_in, val from, val to)
     from = zero;
   else if (from == t)
     from = len;
-  else if (lt(from, zero)) {
+  else if (minusp(from)) {
     from = plus(from, len);
     if (to == zero)
       to = len;
@@ -7158,7 +7158,7 @@ val sub_vec(val vec_in, val from, val to)
 
   if (null_or_missing_p(to) || to == t)
     to = len;
-  else if (lt(to, zero))
+  else if (minusp(to))
     to = plus(to, len);
 
   from = max2(zero, min2(from, len));
@@ -7212,7 +7212,7 @@ val replace_vec(val vec_in, val items, val from, val to)
     }
 
     return vec_in;
-  } else if (lt(from, zero)) {
+  } else if (minusp(from)) {
     from = plus(from, len);
     if (to == zero)
       to = len;
@@ -7220,7 +7220,7 @@ val replace_vec(val vec_in, val items, val from, val to)
 
   if (null_or_missing_p(to) || to == t)
     to = len;
-  else if (lt(to, zero))
+  else if (minusp(to))
     to = plus(to, len);
 
   from = max2(zero, min2(from, len));

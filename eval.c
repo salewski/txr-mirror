@@ -2722,8 +2722,8 @@ static val do_format_field(val obj, val n, val sep,
   }
 
   {
-    val right = lt(n, zero);
-    val width = if3(lt(n, zero), neg(n), n);
+    val right = minusp(n);
+    val width = if3(minusp(n), neg(n), n);
     val diff = minus(width, length_str(str));
 
     if (le(diff, zero))

@@ -250,7 +250,7 @@ val sub_buf(val buf, val from, val to)
     from = zero;
   else if (from == t)
     from = len;
-  else if (lt(from, zero)) {
+  else if (minusp(from)) {
     from = plus(from, len);
     if (to == zero)
       to = len;
@@ -258,7 +258,7 @@ val sub_buf(val buf, val from, val to)
 
   if (null_or_missing_p(to) || to == t)
     to = len;
-  else if (lt(to, zero))
+  else if (minusp(to))
     to = plus(to, len);
 
   from = max2(zero, min2(from, len));
@@ -300,7 +300,7 @@ val replace_buf(val buf, val items, val from, val to)
     }
 
     return buf;
-  } else if (lt(from, zero)) {
+  } else if (minusp(from)) {
     from = plus(from, len);
     if (to == zero)
       to = len;
@@ -308,7 +308,7 @@ val replace_buf(val buf, val items, val from, val to)
 
   if (null_or_missing_p(to) || to == t)
     to = len;
-  else if (lt(to, zero))
+  else if (minusp(to))
     to = plus(to, len);
 
   from = max2(zero, min2(from, len));

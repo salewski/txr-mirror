@@ -213,7 +213,7 @@ val perm(val seq, val k)
     if (!integerp(k))
       type_mismatch(lit("perm: ~s is not an integer"), k, nao);
 
-    if (lt(k, zero))
+    if (minusp(k))
       uw_throwf(numeric_error_s, lit("perm: ~s is not a positive integer"),
                 k, nao);
   }
@@ -304,7 +304,7 @@ val rperm(val seq, val k)
   if (!integerp(k))
     type_mismatch(lit("rperm: ~s is not an integer"), k, nao);
 
-  if (lt(k, zero))
+  if (minusp(k))
     uw_throwf(numeric_error_s, lit("rperm: ~s is not a positive integer"),
               k, nao);
 
@@ -463,7 +463,7 @@ val comb(val seq, val k)
   if (!integerp(k))
     type_mismatch(lit("comb: ~s is not an integer"), k, nao);
 
-  if (lt(k, zero))
+  if (minusp(k))
     uw_throwf(numeric_error_s, lit("comb: ~s is not a positive integer"),
               k, nao);
 
@@ -593,7 +593,7 @@ val rcomb(val seq, val k)
   if (!integerp(k))
     type_mismatch(lit("rcomb: ~s is not an integer"), k, nao);
 
-  if (lt(k, zero))
+  if (minusp(k))
     uw_throwf(numeric_error_s, lit("rcomb: ~s is not a positive integer"),
               k, nao);
 

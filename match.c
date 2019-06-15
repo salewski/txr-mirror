@@ -221,12 +221,12 @@ static val weird_merge(val left, val right)
   val left_depth = depth(left);
   val right_depth = depth(right);
 
-  while (lt(left_depth, right_depth) || zerop(left_depth)) {
+  while (!plusp(left_depth)) {
     left = cons(left, nil);
     left_depth = plus(left_depth, one);
   }
 
-  while (lt(right_depth, left_depth) || zerop(right_depth)) {
+  while (!plusp(right_depth)) {
     right = cons(right, nil);
     right_depth = plus(right_depth, one);
   }
