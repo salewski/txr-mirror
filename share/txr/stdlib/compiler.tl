@@ -1662,7 +1662,10 @@
                        (out (new list-builder)))
         (iflet ((line (get-line in-stream))
                 ((starts-with "#!" line)))
-          (put-line line out-stream)
+          (progn
+            (set line `@line `)
+            (upd line (regsub #/--lisp[^\-]/ (ret `--compiled@[@1 -1]`)))
+            (put-line (butlast line) out-stream))
           (seek-stream in-stream 0 :from-start))
         (labels ((compile-form (unex-form)
                    (let ((form (macroexpand unex-form)))

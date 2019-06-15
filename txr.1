@@ -65461,7 +65461,11 @@ circular structures are reproduced.
 When a source file begins with the
 .code #!
 ("hash-bang") character sequence, the file compiler propagates that
-line to the compiled file, verbatim.
+line (all characters up to and including the terminating newline) to the
+compiled file, subject to the following transformation: occurrences of
+.str --lisp
+which are not followed by a dash are replaced with
+.strn --compiled .
 
 \*(TX supports the hash bang mechanism in compiled
 .code .tlo
