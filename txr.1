@@ -22030,7 +22030,7 @@ function.
 
 .coNP Function @ cat-str
 .synb
-.mets (cat-str < string-list <> [ sep-string ])
+.mets (cat-str < string-list <> [ sep ])
 .syne
 .desc
 The
@@ -22039,9 +22039,10 @@ function catenates a list of strings given by
 .meta string-list
 into a
 single string.  The optional
-.meta sep-string
-argument specifies a separator string
+.meta sep
+argument specifies a separator
 which is interposed between the catenated strings.
+It must be either a character or a string.
 
 .coNP Function @ split-str
 .synb
@@ -22055,8 +22056,9 @@ function breaks the
 into pieces, returning a list
 thereof. The
 .meta sep
-argument must be either a string or a regular expression.
-It specifies the separator character sequence within
+argument must be one of three types: a string, a character
+or a regular expression. It determines the separator character
+sequences within
 .metn string .
 
 All non-overlapping matches for

@@ -3845,7 +3845,18 @@ val cat_str(val list, val sep)
   cnum total = 0;
   val iter;
   wchar_t *str, *ptr;
-  cnum len_sep = (!null_or_missing_p(sep)) ? c_num(length_str(sep)) : 0;
+  wchar_t onech[] = wini(" ");
+  cnum len_sep;
+
+  if (null_or_missing_p(sep)) {
+    len_sep = 0;
+  } else if (chrp(sep)) {
+    onech[0] = c_chr(sep);
+    len_sep = 1;
+    sep = auto_str(coerce(const wchli_t *, wref(onech)));
+  } else {
+    len_sep = c_num(length_str(sep));
+  }
 
   for (iter = list; iter != nil; iter = cdr(iter)) {
     val item = car(iter);
@@ -4018,7 +4029,16 @@ val split_str_keep(val str, val sep, val keep_sep)
 
     return out;
   } else {
-    size_t len_sep = c_num(length_str(sep));
+    size_t len_sep;
+    wchar_t onech[] = wini(" ");
+
+    if (chrp(sep)) {
+      onech[0] = c_chr(sep);
+      len_sep = 1;
+      sep = auto_str(coerce(const wchli_t *, wref(onech)));
+    } else {
+      len_sep = c_num(length_str(sep));
+    }
 
     if (len_sep == 0) {
       if (opt_compat && opt_compat <= 100) {
