@@ -19208,7 +19208,9 @@ for the empty list
 .mets (copy-cons << cons )
 .syne
 .desc
-This function creates a fresh cons cell, whose
+The
+.code copy-cons
+function creates a fresh cons cell, whose
 .code car
 and
 .code cdr
@@ -20044,7 +20046,9 @@ function.
 .mets (aconsql-new < car < cdr << alist )
 .syne
 .desc
-This function is like
+The
+.code aconsql-new
+function has similar same parameters and semantics as
 .codn acons-new ,
 except that the
 .code eql
@@ -22425,7 +22429,9 @@ ASCII. This function is not affected by locale.
 .mets (chr-isalpha << char )
 .syne
 .desc
-This function returns
+The
+.code chr-isalpha
+function returns
 .code t
 if the code of character
 .meta char
@@ -22438,7 +22444,9 @@ returns
 .mets (chr-iscntrl << char )
 .syne
 .desc
-This function returns
+The
+.code chr-iscntrl
+function returns
 .code t
 if the character
 .meta char
@@ -22470,7 +22478,9 @@ a value in the range 0 to 9.  Otherwise, both functions return
 .mets (chr-isgraph << char )
 .syne
 .desc
-This function returns
+The
+.code chr-isgraph
+function returns
 .code t
 if
 .meta char
@@ -22485,7 +22495,9 @@ above 127.
 .mets (chr-islower << char )
 .syne
 .desc
-This function returns
+The
+.code chr-islower
+function returns
 .code t
 if
 .meta char
@@ -22497,7 +22509,9 @@ is an ASCII lower case letter. Otherwise it returns
 .mets (chr-isprint << char )
 .syne
 .desc
-This function returns
+The
+.code chr-isprint
+function returns
 .code t
 if
 .meta char
@@ -22512,7 +22526,9 @@ characters with a code above 127.
 .mets (chr-ispunct << char )
 .syne
 .desc
-This function returns
+The
+.code chr-ispunct
+function returns
 .code t
 if
 .meta char
@@ -22525,7 +22541,9 @@ characters with a code above 127.
 .mets (chr-isspace << char )
 .syne
 .desc
-This function returns
+The
+.code chr-isspace
+function returns
 .code t
 if
 .meta char
@@ -22547,7 +22565,9 @@ For all other characters, it returns
 .mets (chr-isblank << char )
 .syne
 .desc
-This function returns
+The
+.code chr-isblank
+function returns
 .code t
 if
 .meta char
@@ -22563,7 +22583,9 @@ For all other characters, it returns
 .mets (chr-isunisp << char )
 .syne
 .desc
-This function returns
+The
+.code chr-isunisp
+function returns
 .code t
 if
 .meta char
@@ -22602,7 +22624,9 @@ For all other characters, it returns
 .mets (chr-isupper < char )
 .syne
 .desc
-This function returns
+The
+.code chr-isupper
+function returns
 .code t
 if
 .meta char
@@ -23317,7 +23341,9 @@ The previous length of the vector (which is also the position of
 .metn elem )
 is returned.
 
-This function performs similarly to the generic function
+The
+.code vec-push
+function performs similarly to the generic function
 .codn ref ,
 except that the
 first argument must be a vector.
@@ -23360,7 +23386,9 @@ allocation operations having to be performed.
 .mets (vec-list << list )
 .syne
 .desc
-This function returns a vector which contains all of the same elements
+The
+.code vec-list
+function returns a vector which contains all of the same elements
 and in the same order as list
 .metn list .
 
@@ -25918,7 +25946,9 @@ from which the slot is inherited.
 .mets (call-super-method < struct-obj < name << argument *)
 .syne
 .desc
-This function is deprecated. Solutions involving
+The
+.code call-super-method
+function is deprecated. Solutions involving
 .code call-super-method
 should be reworked in terms of
 .codn call-super-fun .
@@ -42890,7 +42920,9 @@ to be replaced with that value.
 .mets (get-hash-userdata << hash )
 .syne
 .desc
-This function is a deprecated synonym for
+The
+.code get-hash-userdata
+function is a deprecated synonym for
 .codn hash-userdata .
 
 .coNP Function @ set-hash-userdata
@@ -45835,7 +45867,9 @@ entries in Unix filesystems are not skipped.
 .mets (make-string-input-stream << string )
 .syne
 .desc
-This function produces an input stream object. Character read operations on the
+The
+.code make-string-input-stream
+function produces an input stream object. Character read operations on the
 stream object read successive characters from
 .metn string .
 Output operations and byte operations are not supported.
@@ -45845,7 +45879,9 @@ Output operations and byte operations are not supported.
 .mets (make-string-byte-input-stream << string )
 .syne
 .desc
-This function produces an input stream object. Byte read operations on
+The
+.code make-string-byte-input-stream
+function produces an input stream object. Byte read operations on
 this stream object read successive byte values obtained by encoding
 .meta string
 into UTF-8. Character read operations are not supported, and neither
@@ -45868,7 +45904,9 @@ Output operations and byte operations are not supported.
 .mets (make-string-output-stream)
 .syne
 .desc
-This function, which takes no arguments, creates a string output stream.
+The
+.code make-string-output-stream
+function, which takes no arguments, creates a string output stream.
 Data sent to this stream is accumulated into a string object.
 String output streams supports both character and byte output operations.
 Bytes are assumed to represent a UTF-8 encoding, and are decoded in order
@@ -45915,7 +45953,9 @@ After this function is called, further output on the stream is not possible.
 .mets (make-strlist-output-stream)
 .syne
 .desc
-This function is very similar to
+The
+.code make-strlist-output-stream
+function is very similar to
 .codn make-string-output-stream .
 However, the stream object produced by this function does not produce a string,
 but a list of strings.  The data is broken into multiple strings by newline
@@ -45927,7 +45967,9 @@ string list. Also, byte output operations are not supported.
 .mets (get-list-from-stream << stream )
 .syne
 .desc
-This function returns the string list which has accumulated inside
+The
+.code get-list-from-stream
+function returns the string list which has accumulated inside
 a string output stream given by
 .metn stream .
 The string output stream is
@@ -46439,7 +46481,9 @@ Both functions return
 .mets (flush-stream <> [ stream ])
 .syne
 .desc
-This function is meaningful for output streams which accumulate data
+The
+.code flush-stream
+function is meaningful for output streams which accumulate data
 which is passed on to the operating system in larger transfer units.
 Calling
 .code flush-stream
@@ -55300,7 +55344,9 @@ function should be used on these values.
 .mets (syslog < priority < format << format-arg *)
 .syne
 .desc
-This function is the interface to the
+The
+.code syslog
+function is the interface to the
 .code syslog
 C function. The
 .code printf
@@ -55623,7 +55669,9 @@ For each visited entry, it calls the supplied
 .meta callback-func
 function, which receives five arguments.
 
-This function can continue the traversal by returning any non-integer value,
+The
+.code ftw
+function can continue the traversal by returning any non-integer value,
 or the integer value zero.
 If
 .code ftw-actionretval
@@ -57754,7 +57802,9 @@ The compressed representation of a trie does not support the
 .code trie-add
 function.
 
-This function destructively manipulates
+The
+.code trie-compress
+function destructively manipulates
 .metn trie ,
 and may return an object
 that is the same object as
@@ -58616,7 +58666,7 @@ function registers
 to be invoked in the situation when
 .meta object
 is identified by the garbage collector as unreachable.
-This function is called a finalizer.
+A function registered in this way is called a finalizer.
 
 If and when this situation occurs, the finalizer
 .meta function
