@@ -26873,6 +26873,13 @@ object, then the function behaves like
 
 If
 .meta sequence
+is a
+.code buf
+object, then the function behaves like
+.codn buf-sub .
+
+If
+.meta sequence
 is a structure, it must support the
 .code lambda
 method. The
@@ -27048,6 +27055,15 @@ object, then
 .code replace
 behaves like
 .codn carray-replace .
+
+If
+.meta sequence
+is a
+.code buf
+object, then
+.code replace
+behaves like
+.codn buf-replace .
 
 If
 .meta sequence
@@ -59541,6 +59557,49 @@ which has the same length and contents, and compares
 .code equal
 to
 .metn buf .
+
+.coNP Function @ sub-buf
+.synb
+.mets (sub-buf < buf >> [ from <> [ to ]])
+.syne
+.desc
+The
+.code sub-buf
+function has the same semantics as the
+.code sub
+function, except that the first argument must be a buffer.
+
+The extracted sub-range of a buffer is itself a buffer object.
+
+For a description of the arguments and semantics, refer to the
+.code sub
+function.
+
+.coNP Function @ replace-buf
+.synb
+.mets (replace-buf < buf < item-sequence >> [ from <> [ to ]])
+.syne
+.desc
+The
+.code replace-buf
+function has the same semantics as the
+.code replace
+function, except that the first argument must be a buffer.
+
+The elements of
+.code item-sequence
+are stored into
+.meta buf
+as if using the
+.code buf-put-u8
+function and therefore must be suitable
+.meta val
+arguments for that function.
+
+The of the arguments, semantics and return value given for
+.code replace
+apply to
+.codn replace-buf .
 
 .coNP Function @ buf-put-i8
 .synb

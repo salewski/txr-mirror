@@ -1075,6 +1075,8 @@ void buf_init(void)
   reg_fun(intern(lit("length-buf"), user_package), func_n1(length_buf));
   reg_fun(intern(lit("buf-alloc-size"), user_package), func_n1(buf_alloc_size));
   reg_fun(intern(lit("copy-buf"), user_package), func_n1(copy_buf));
+  reg_fun(intern(lit("sub-buf"), user_package), func_n3(sub_buf));
+  reg_fun(intern(lit("replace-buf"), user_package), func_n4(replace_buf));
 
 #if HAVE_I8
   reg_fun(intern(lit("buf-put-i8"), user_package), func_n3(buf_put_i8));
