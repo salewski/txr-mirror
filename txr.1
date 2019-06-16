@@ -19107,6 +19107,12 @@ is a proper list.
 traverses the
 list, and its execution will not terminate if the list is circular.
 
+These functions return
+.code nil
+for list-like sequences that are not made of actual
+.code cons
+cells.
+
 Dialect Note: in \*(TX 137 and older,
 .code proper-list-p
 is called
