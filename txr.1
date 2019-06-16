@@ -19031,14 +19031,16 @@ because the latter is equivalent to
 .mets (sub-list < list >> [ from <> [ to ]])
 .syne
 .desc
-This function is like the
+The
+.code sub-list
+function has the same parameters and semantics as the
 .code sub
-function, except that it operates
-strictly on lists.
-
-For a description of the arguments and semantics, refer to the
-.code sub
-function.
+function, except that it operates on its
+.meta list
+argument using list operations, and assumes that
+.meta list
+it is terminated by
+.codn nil .
 
 .coNP Function @ replace-list
 .synb
@@ -19047,12 +19049,16 @@ function.
 .desc
 The
 .code replace-list
-function is like the replace function, except that the first
-argument must be a list.
-
-For a description of the arguments, semantics and return value, refer to the
+function is like the
 .code replace
-function.
+function, except that it operates on its
+.meta list
+argument using list operations. It assumes that
+.meta list
+it is terminated by
+.codn nil ,
+and that it is made of cells which can be mutated using
+.codn rplaca .
 
 .coNP Functions @ listp and @ proper-list-p
 .synb
@@ -22004,13 +22010,11 @@ exactly like match-str.
 .desc
 The
 .code sub-str
-function is like the more generic function
-.codn sub ,
-except that it
-operates only on strings.  For a description of the arguments and semantics,
-refer to the
+function has the same parameters and semantics as the
 .code sub
-function.
+function,
+function, except that the first argument is operated upon
+using string operations.
 
 .coNP Function @ replace-str
 .synb
@@ -22019,14 +22023,10 @@ function.
 .desc
 The
 .code replace-str
-function is like the
+function has the same parameters and semantics as the
 .code replace
-function, except that the first
-argument must be a string.
-
-For a description of the arguments, semantics and return value, refer to the
-.code replace
-function.
+function, except that the first argument is operated upon
+using string operations.
 
 .coNP Function @ cat-str
 .synb
@@ -23393,14 +23393,12 @@ and containing the same elements in the same order.
 .desc
 The
 .code sub-vec
-function is like the more generic function
+function has the same parameters and semantics as the
+function
 .codn sub ,
-except that it
-operates only on vectors.
-
-For a description of the arguments and semantics, refer to the
-.code sub
-function.
+except that the
+.meta vec
+argument must be a vector.
 
 .coNP Function @ replace-vec
 .synb
@@ -23411,12 +23409,9 @@ The
 .code replace-vec
 is like the
 .code replace
-function, except that the first argument
-must be a vector.
-
-For a description of the arguments, semantics and return value, refer to the
-.code replace
-function.
+function except that the
+.meta vec
+argument must be a vector.
 
 .coNP Function @ cat-vec
 .synb
@@ -59571,10 +59566,6 @@ function, except that the first argument must be a buffer.
 
 The extracted sub-range of a buffer is itself a buffer object.
 
-For a description of the arguments and semantics, refer to the
-.code sub
-function.
-
 .coNP Function @ replace-buf
 .synb
 .mets (replace-buf < buf < item-sequence >> [ from <> [ to ]])
@@ -65062,7 +65053,7 @@ function is a specialized version of
 .code replace
 which works on
 .code carray
-objects. It replaces a sub-range of 
+objects. It replaces a sub-range of
 .meta carray
 with elements from
 .metn item-sequence .
