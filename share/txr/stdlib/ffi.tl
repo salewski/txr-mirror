@@ -148,6 +148,9 @@
 (defset carray-sub (carray : (from 0) (to t)) items
   ^(progn (carray-replace ,carray ,items ,from ,to) ,items))
 
+(defset sub-buf (buf : (from 0) (to t)) items
+  ^(progn (replace-buf ,buf ,items ,from ,to) ,items))
+
 (defmacro znew (type . pairs)
   (if (oddp (length pairs))
     (throwf 'eval-error "~s: slot initform arguments must occur pairwise"

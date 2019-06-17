@@ -620,7 +620,7 @@ static val ffi_set_entries(val dlt, val fun)
     lit("deffi-sym"), lit("deffi-var"), lit("typedef"), lit("sizeof"),
     lit("alignof"), lit("offsetof"), lit("arraysize"), lit("elemsize"),
     lit("elemtype"), lit("ffi"), lit("carray-ref"), lit("carray-sub"),
-    lit("znew"),
+    lit("sub-buf"), lit("znew"),
     nil
   };
   set_dlt_entries(dlt, name, fun);

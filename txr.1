@@ -59655,9 +59655,10 @@ which has the same length and contents, and compares
 to
 .metn buf .
 
-.coNP Function @ sub-buf
+.coNP Accessor @ sub-buf
 .synb
 .mets (sub-buf < buf >> [ from <> [ to ]])
+.mets (set (sub-buf < buf >> [ from <> [ to ]]) << new-val )
 .syne
 .desc
 The
@@ -59667,6 +59668,21 @@ function has the same semantics as the
 function, except that the first argument must be a buffer.
 
 The extracted sub-range of a buffer is itself a buffer object.
+
+If
+.code sub-buf
+is used as a syntactic place, the argument expressions
+.metn buf ,
+.metn from ,
+.meta to
+and
+.meta new-val
+are evaluated just once. The prior value, if required, is accessed by calling
+.code buf-sub
+and
+.meta new-val
+is then stored via
+.codn replace-buf .
 
 .coNP Function @ replace-buf
 .synb
