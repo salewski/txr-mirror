@@ -175,7 +175,7 @@ static void buf_shrink(struct buf *b)
   val len = b->len;
 
   if (len == zero)
-    len = succ(len);
+    len = succ(len); /* avoid reallocing to zero length; i.e. freeing */
 
   if (len != b->size) {
     b->data = chk_realloc(b->data, c_num(len));
