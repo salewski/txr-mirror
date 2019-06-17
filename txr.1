@@ -12516,10 +12516,11 @@ Syntactic places, as well as operators upon syntactic places,
 are both open-ended. Code can be written quite easily in \*(TL to introduce
 new kinds of places, as well as new place-mutating operators.
 New places can be introduced with the help of the
-.code defplace
+.codn defplace ,
+.code define-accessor
 or
 .code defset
-macro, or possibly the
+macros, or possibly the
 .code define-place-macro
 macro in simple cases when a new syntactic place can be expressed as a
 transformation to the syntax of an existing place.
@@ -33999,7 +34000,8 @@ evaluations of the place form.
 
 The programmer who implements a new place does not write expanders directly,
 but rather defines them via the
-.code defplace
+.codn defplace ,
+.code define-accessor
 or
 .code defset
 macro.
@@ -35252,6 +35254,13 @@ The following equivalence holds between the short and long forms:
    (defset g s)  <-->  (defset g (. r) n ^(g ,*r) ^(s ,*r ,n))
 .brev
 
+Note:
+the short form of
+.code defset
+is similar to the
+.code define-accessor
+macro.
+
 .TP* "Example:"
 
 Implementation of
@@ -35614,6 +35623,11 @@ treat the situation  in a satisfactory way using a
 .code define-place-macro
 definition, which effectively then supplies inline code whenever a certain form
 is used as a place, and that code itself is treated as a place.
+
+Note:
+.code define-accessor
+is very similar to the short form of
+.codn defset .
 
 .coNP Special variables @, *place-update-expander* @ *place-clobber-expander* and @ *place-delete-expander*
 .desc
