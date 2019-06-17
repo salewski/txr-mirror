@@ -26939,8 +26939,15 @@ is used for the corresponding element of the range.
 When a
 .code sub
 form is used as a syntactic place, that place denotes a slice of
-.metn seq ,
-which must be a syntactic place itself.
+.metn seq .
+The
+.meta seq
+argument must be itself be syntactic place, because
+receives a new value, which may be different from its original value in
+cases when
+.meta seq
+is a list.
+
 Overwriting that slice is equivalent to using the
 .code replace
 function. The following equivalences give the semantics, except that
@@ -26952,12 +26959,37 @@ and
 are evaluated only once, in left-to-right order:
 
 .verb
-  (set (sub x a b) v)  <-->  (progn (replace x v a b)
+  (set (sub x a b) v)  <-->  (progn (set x (replace x v a b))
                                     v)
 
   (del (sub x a b))    <-->  (prog1 (sub x a b)
-                                    (replace x nil a b))
+                                    (set x (replace x nil a b)))
 .brev
+
+Note that the value of
+.code x
+is overwritten with the value returned by
+.codn replace .
+If
+.code x
+is a vector or string, then the return value of
+.code replace
+is just
+.codn x :
+the identity of the object doesn't change under mutation.
+However, if
+.code x
+is a list, its identity changes when items are added to or removed from
+the front of the list, and in those cases
+.code replace
+will return a value different from its first argument.
+Similarly, if
+.code x
+is an object with a
+.code lambda-set
+method, that method's return value becomes the return value of
+.code replace
+and must be taken into account.
 
 .coNP Function @ replace
 .synb
