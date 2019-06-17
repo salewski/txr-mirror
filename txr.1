@@ -65108,9 +65108,18 @@ and modifications in the original are not reflected in the subrange.
 
 If
 .code carray-sub
-is used as a syntactic place, behaves exactly like the
-.code sub
-accessor, via a place macro substitution to that form.
+is used as a syntactic place, the argument expressions
+.metn carray ,
+.metn from ,
+.meta to
+and
+.meta new-val
+are evaluated just once. The prior value, if required, is accessed by calling
+.code carray-sub
+and
+.meta new-val
+is then stored via
+.codn carray-replace .
 
 .coNP Function @ carray-replace
 .synb

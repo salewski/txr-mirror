@@ -145,8 +145,8 @@
 
 (define-accessor carray-ref carray-refset)
 
-(define-place-macro carray-sub (carray : (from 0) (to t))
-  ^(sub ,carray ,from ,to))
+(defset carray-sub (carray : (from 0) (to t)) items
+  ^(progn (carray-replace ,carray ,items ,from ,to) ,items))
 
 (defmacro znew (type . pairs)
   (if (oddp (length pairs))
