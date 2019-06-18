@@ -68,7 +68,7 @@
                    pgens rgens egens all-pairs agens)
       ^(defplace (,name . ,args) body
          (,getter ,setter
-           (tree-bind (,*params) ,args
+           (tree-bind ,params ,args
              (let* ((,gpf-pairs (mapcar (op (fun list) (gensym)) (list ,*fixpars)))
                     (,gpr-pairs (if ',restpar
                                   (if (consp ,restpar)
