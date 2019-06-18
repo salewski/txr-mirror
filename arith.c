@@ -72,7 +72,7 @@ val sin_s, cos_s, tan_s, asin_s, acos_s, atan_s, atan2_s, r_atan2_s;
 val log_s, log2_s, log10_s, exp_s, sqrt_s;
 val logand_s, logior_s, logxor_s;
 val lognot1_s, lognot_s, r_lognot_s, logtrunc_s, r_logtrunc_s;
-val sign_extend_s, ash_s, bit_s, width_s, logcount_s;
+val sign_extend_s, ash_s, bit_s, width_s, bitset_s, logcount_s;
 
 val make_bignum(void)
 {
@@ -3340,6 +3340,66 @@ val maskv(struct args *bits)
   return accum;
 }
 
+val bitset(val n)
+{
+  val self = bitset_s;
+  list_collect_decl (out, ptail);
+
+  switch (type(n)) {
+  case NUM:
+  case CHR:
+    {
+      cnum c = c_n(n);
+      ucnum d = c;
+      int p = 0;
+
+      if (c < 0)
+        d = ~d;
+
+      for (; d; d >>= 1, p++)
+        if (d & 1)
+          ptail = list_collect(ptail, num_fast(p));
+
+      return out;
+    }
+  case BGNUM:
+    {
+      mp_int *mn = mp(n);
+
+      if (mp_cmp_z(mn) == MP_LT) {
+        mp_int tmp;
+        mp_size i = 0;
+        ucnum p = 0;
+        mp_2comp(mn, &tmp, mn->used);
+        for (; i < tmp.used; i++) {
+          mp_digit m;
+          mp_digit d = tmp.dp[i];
+          for (m = 1; m; m <<= 1, p++)
+            if ((d & m) == 0)
+              ptail = list_collect(ptail, unum(p));
+        }
+        mp_clear(&tmp);
+      } else {
+        mp_size i = 0;
+        ucnum p = 0;
+        for (; i < mn->used; i++) {
+          mp_digit m;
+          mp_digit d = mn->dp[i];
+          for (m = 1; m; m <<= 1, p++)
+            if ((d & m) != 0)
+              ptail = list_collect(ptail, unum(p));
+        }
+      }
+
+      return out;
+    }
+  case COBJ:
+    return do_unary_method(self, self, n);
+  default:
+    uw_throwf(error_s, lit("~a: non-integral operand ~s"), self, n, nao);
+  }
+}
+
 val logcount(val n)
 {
   val self = logcount_s;
@@ -4275,6 +4335,7 @@ void arith_init(void)
   ash_s = intern(lit("ash"), user_package);
   bit_s = intern(lit("bit"), user_package);
   width_s = intern(lit("width"), user_package);
+  bitset_s = intern(lit("bitset"), user_package);
   logcount_s = intern(lit("logcount"), user_package);
 
   if (opt_compat && opt_compat <= 199) {
@@ -4373,6 +4434,7 @@ void arith_init(void)
   reg_fun(intern(lit("mask"), user_package), func_n0v(maskv));
   reg_fun(width_s, func_n1(width));
   reg_fun(logcount_s, func_n1(logcount));
+  reg_fun(bitset_s, func_n1(bitset));
   reg_fun(intern(lit("cum-norm-dist"), user_package), func_n1(cum_norm_dist));
   reg_fun(intern(lit("inv-cum-norm"), user_package), func_n1(inv_cum_norm));
   reg_fun(intern(lit("n-choose-k"), user_package), func_n2(n_choose_k));

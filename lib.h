@@ -796,6 +796,7 @@ val ash(val a, val bits);
 val bit(val a, val bit);
 val maskv(struct args *bits);
 val logcount(val n);
+val bitset(val n);
 val string_own(wchar_t *str);
 val string(const wchar_t *str);
 val string_utf8(const char *str);

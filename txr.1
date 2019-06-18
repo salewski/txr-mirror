@@ -38152,6 +38152,63 @@ In other words, the following equivalences hold:
   (mask a b c ...) <--> (logior (mask a) (mask b) (mask c) ...)
 .brev
 
+.coNP Function @ bitset
+.synb
+.mets (bitset << integer )
+.syne
+.desc
+The
+.code bitset
+function returns a list of the positions of bits which have a value of
+1 in a positive
+.meta integer
+argument, or the positions of bits which have a value of zero in a negative
+.meta integer
+argument. The positions are ordered from least to greatest. The least
+significant bit has position zero. If
+.meta integer
+is zero, the empty list
+.code nil
+is returned.
+
+A negative integer is treated as an infinite bit two's complement
+representation.
+
+The argument may be a character.
+
+If
+.meta integer
+.code x
+is non-negative, the following equivalence holds:
+
+.verb
+  x  <-->  [apply mask (bitset x)]
+.brev
+
+That is to say, the value of
+.code x
+may be reconstituted by applying the bit positions returned by
+.code bitset
+as arguments to the
+.code mask
+function.
+
+The value of a negative
+.code x
+may be reconstituted from its
+.code bitset
+as follows:
+
+.verb
+  x  <-->  (pred (- [apply mask (bitset x)]))
+.brev
+
+also, more trivially, thus:
+
+.verb
+  x  <-->  (- [apply mask (bitset (- x))])
+.brev
+
 .coNP Function @ width
 .synb
 .mets (width << integer *)
@@ -38675,6 +38732,7 @@ which must be an integer.
 
 .um width
 .um logcount
+.um bitset
 
 .SS* Exception Handling
 
