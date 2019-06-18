@@ -19027,9 +19027,10 @@ cannot be rewritten as
 because the latter is equivalent to
 .codn "(list 1 2 func 3)" .
 
-.coNP Function @ sub-list
+.coNP Accessor @ sub-list
 .synb
 .mets (sub-list < list >> [ from <> [ to ]])
+.mets (set (sub-list < list >> [ from <> [ to ]]) << new-value )
 .syne
 .desc
 The
@@ -19042,6 +19043,36 @@ argument using list operations, and assumes that
 .meta list
 it is terminated by
 .codn nil .
+
+If a
+.code sub-list
+form is used as a place, then the
+.meta list
+argument form must also be a place.
+
+The
+.code sub-list
+place denotes a subrange of
+.meta list
+as if it were a storage location. The previous value of this location,
+if needed, is fetched by a call to
+.codn sub-list .
+Storing
+.meta new-value
+to the place is performed by a call to
+.codn replace-list .
+The return value of
+.meta replace-list
+is stored into
+.metn list .
+In an update operation which accesses the prior value and stores a new value,
+the arguments
+.metn list ,
+.metn from ,
+.meta to
+and
+.meta new-value
+are evaluated once.
 
 .coNP Function @ replace-list
 .synb
@@ -22014,9 +22045,10 @@ If
 is a single string atom, then the function behaves
 exactly like match-str.
 
-.coNP Function @ sub-str
+.coNP Accessor @ sub-str
 .synb
-.mets (sub-str < string >> [ from <> [ to ]])
+.mets (sub-str < str >> [ from <> [ to ]])
+.mets (set (sub-str < str >> [ from <> [ to ]]) << new-value )
 .syne
 .desc
 The
@@ -22026,6 +22058,33 @@ function has the same parameters and semantics as the
 function,
 function, except that the first argument is operated upon
 using string operations.
+
+If a
+.code sub-str
+form is used as a place, it denotes a subrange of
+.meta list
+as if it were a storage location. The previous value of this location,
+if needed, is fetched by a call to
+.codn sub-str .
+Storing
+.meta new-value
+to the place is performed by a call to
+.codn replace-str .
+In an update operation which accesses the prior value and stores a new value,
+the arguments
+.metn str ,
+.metn from ,
+.meta to
+and
+.meta new-value
+are evaluated once.
+
+The
+.meta str
+argument is not itself required to be a place; it is not updated
+when a value is written to the
+.code sub-str
+storage location.
 
 .coNP Function @ replace-str
 .synb
@@ -23421,9 +23480,10 @@ as
 .meta vec
 and containing the same elements in the same order.
 
-.coNP Function @ sub-vec
+.coNP Accessor @ sub-vec
 .synb
 .mets (sub-vec < vec >> [ from <> [ to ]])
+.mets (set (sub-vec < vec >> [ from <> [ to ]]) << new-value )
 .syne
 .desc
 The
@@ -23434,6 +23494,33 @@ function
 except that the
 .meta vec
 argument must be a vector.
+
+If a
+.code sub-vec
+form is used as a place, it denotes a subrange of
+.meta list
+as if it were a storage location. The previous value of this location,
+if needed, is fetched by a call to
+.codn sub-vec .
+Storing
+.meta new-value
+to the place is performed by a call to
+.codn replace-vec .
+In an update operation which accesses the prior value and stores a new value,
+the arguments
+.metn vec ,
+.metn from ,
+.meta to
+and
+.meta new-value
+are evaluated once.
+
+The
+.meta vec
+argument is not itself required to be a place; it is not updated
+when a value is written to the
+.code sub-vec
+storage location.
 
 .coNP Function @ replace-vec
 .synb

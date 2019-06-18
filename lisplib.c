@@ -787,7 +787,7 @@ static val defset_instantiate(val set_fun)
 static val defset_set_entries(val dlt, val fun)
 {
   val name[] = {
-    lit("defset"),
+    lit("defset"), lit("sub-list"), lit("sub-vec"), lit("sub-str"),
     nil
   };
   set_dlt_entries(dlt, name, fun);

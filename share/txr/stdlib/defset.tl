@@ -105,3 +105,18 @@
     ((get-fun set-fun)
      (defset-expander-simple mf get-fun set-fun))
     (x (compile-error mf "invalid syntax"))))
+
+(defset sub-list (list : (from 0) (to t)) items
+  (let ((it (gensym)))
+    ^(alet ((,it ,items))
+       (progn (set ,list (replace-list ,list ,it ,from ,to)) ,it))))
+
+(defset sub-vec (vec : (from 0) (to t)) items
+  (let ((it (gensym)))
+    ^(alet ((,it ,items))
+       (progn (replace-vec ,vec ,it ,from ,to) ,it))))
+
+(defset sub-str (str : (from 0) (to t)) items
+  (let ((it (gensym)))
+    ^(alet ((,it ,items))
+       (progn (replace-str ,str ,it ,from ,to) ,it))))
