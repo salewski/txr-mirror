@@ -69,18 +69,18 @@
       ^(defplace (,name . ,args) body
          (,getter ,setter
            (tree-bind (,*params) ,args
-             (let* ((,gpf-pairs (mapcar (op list (gensym)) (list ,*fixpars)))
+             (let* ((,gpf-pairs (mapcar (op (fun list) (gensym)) (list ,*fixpars)))
                     (,gpr-pairs (if ',restpar
                                   (if (consp ,restpar)
-                                    (mapcar (op list (gensym)) ,restpar)
+                                    (mapcar (op (fun list) (gensym)) ,restpar)
                                     (list (list (gensym) ,restpar)))))
-                    (,ext-pairs (mapcar (op list (gensym)) (list ,*extsyms)))
-                    (,pgens [mapcar car ,gpf-pairs])
-                    (,rgens [mapcar car ,gpr-pairs])
-                    (,egens [mapcar car ,ext-pairs])
+                    (,ext-pairs (mapcar (op (fun list) (gensym)) (list ,*extsyms)))
+                    (,pgens (mapcar (fun car) ,gpf-pairs))
+                    (,rgens (mapcar (fun car) ,gpr-pairs))
+                    (,egens (mapcar (fun car) ,ext-pairs))
                     (,all-pairs (append ,gpf-pairs ,gpr-pairs ,ext-pairs))
                     (,agens (collect-each ((a ,args))
-                             (let ((p [pos a ,all-pairs eq cadr]))
+                             (let ((p (pos a ,all-pairs (fun eq) (fun cadr))))
                                (if p
                                  (car (del [,all-pairs p]))
                                  a)))))
