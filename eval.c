@@ -2346,23 +2346,24 @@ static val expand_lisp1_value(val form, val menv)
 
   {
     val sym = second(form);
-    val binding_type = lexical_lisp1_binding(menv, sym);
+    val sym_ex = expand(sym, menv);
+    val binding_type = lexical_lisp1_binding(menv, sym_ex);
 
     if (nilp(binding_type)) {
-      if (!bindable(sym))
+      if (!bindable(sym_ex))
         eval_error(form, lit("~s: misapplied to form ~s"),
-                   first(form), sym, nao);
+                   first(form), sym_ex, nao);
       return form;
     }
 
     if (binding_type == var_k)
-      return sym;
+      return sym_ex;
 
     if (binding_type == fun_k)
-      return rlcp(cons(fun_s, cons(sym, nil)), form);
+      return rlcp(cons(fun_s, cons(sym_ex, nil)), form);
 
-    eval_error(form, lit("~s: misapplied to symbol macro ~s"),
-               first(form), sym, nao);
+    eval_error(form, lit("~s: applied to unexpanded symbol macro ~s"),
+               first(form), sym_ex, nao);
   }
 }
 
@@ -2374,29 +2375,30 @@ static val expand_lisp1_setq(val form, val menv)
   {
     val op = car(form);
     val sym = cadr(form);
+    val sym_ex = expand(sym, menv);
     val newval = caddr(form);
-    val binding_type = lexical_lisp1_binding(menv, sym);
+    val binding_type = lexical_lisp1_binding(menv, sym_ex);
 
     if (nilp(binding_type)) {
-      if (!bindable(sym))
+      if (!bindable(sym_ex))
         eval_error(form, lit("~s: misapplied to form ~s"),
-                   op, sym, nao);
-      if (!lookup_var(nil, sym) && !lookup_fun(nil, sym))
+                   op, sym_ex, nao);
+      if (!lookup_var(nil, sym_ex) && !lookup_fun(nil, sym_ex))
         eval_defr_warn(uw_last_form_expanded(),
-                       cons(var_s, sym),
+                       cons(var_s, sym_ex),
                        lit("~s: unbound variable/function ~s"),
-                       op, sym, nao);
-      return rlcp(cons(op, cons(sym, cons(expand(newval, menv), nil))),
+                       op, sym_ex, nao);
+      return rlcp(cons(op, cons(sym_ex, cons(expand(newval, menv), nil))),
                   form);
     }
 
     if (binding_type == var_k)
-      return expand(rlcp(cons(setq_s, cons(sym, cddr(form))), form), menv);
+      return expand(rlcp(cons(setq_s, cons(sym_ex, cddr(form))), form), menv);
 
     if (binding_type == fun_k)
-      eval_error(form, lit("~s: cannot assign lexical function ~s"), op, sym, nao);
+      eval_error(form, lit("~s: cannot assign lexical function ~s"), op, sym_ex, nao);
 
-    eval_error(form, lit("~s: misapplied to symbol macro ~s"), op, sym, nao);
+    eval_error(form, lit("~s: applied to unexpanded symbol macro ~s"), op, sym_ex, nao);
   }
 }
 
@@ -4854,15 +4856,11 @@ again:
           eval_error(form, lit("~s: excess arguments"), sym, nao);
 
         {
-          val target = car(args);
+          val target = car(args_ex);
 
           if (!consp(target) || car(target) != var_s) {
             if (!bindable(target))
-              not_bindable_warning(form, car(args));
-
-            if (car(args_ex) != target)
-              eval_error(form, lit("~s: misapplied to symbol macro ~a"), sym,
-                         car(args), nao);
+              not_bindable_warning(form, car(args_ex));
           }
         }
       }
