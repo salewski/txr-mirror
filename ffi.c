@@ -4934,6 +4934,8 @@ val carray_replace(val carray, val values, val from, val to)
     cnum vn = c_num(vlen);
     cnum sn;
     mem_t *ptr;
+    seq_iter_t item_iter;
+    seq_iter_init(self, &item_iter, values);
 
     if (fn < 0)
       fn = 0;
@@ -4976,21 +4978,9 @@ val carray_replace(val carray, val values, val from, val to)
       }
     }
 
-    if (consp(values)) {
-      val iter;
-
-      for (iter = values; fn < sn; iter = cdr(iter), fn++, ptr += elsize)
-      {
-        val newval = car(iter);
-        eltft->put(eltft, newval, ptr, self);
-      }
-    } else if (values) {
-      cnum i;
-
-      for (i = 0; fn < sn; i++, fn++, ptr += elsize) {
-        val newval = ref(values, num_fast(i));
-        eltft->put(eltft, newval, ptr, self);
-      }
+    for (; fn != tn; fn++, ptr += elsize) {
+      val item = seq_geti(&item_iter);
+      eltft->put(eltft, item, ptr, self);
     }
 
     return carray;
