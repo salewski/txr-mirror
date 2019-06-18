@@ -146,10 +146,14 @@
 (define-accessor carray-ref carray-refset)
 
 (defset carray-sub (carray : (from 0) (to t)) items
-  ^(progn (carray-replace ,carray ,items ,from ,to) ,items))
+  (with-gensyms (it)
+    ^(alet ((,it ,items))
+       (progn (carray-replace ,carray ,it ,from ,to) ,it))))
 
 (defset sub-buf (buf : (from 0) (to t)) items
-  ^(progn (replace-buf ,buf ,items ,from ,to) ,items))
+  (with-gensyms (it)
+    ^(alet ((,it ,items))
+       (progn (replace-buf ,buf ,it ,from ,to) ,it))))
 
 (defmacro znew (type . pairs)
   (if (oddp (length pairs))
