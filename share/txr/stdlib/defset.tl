@@ -64,35 +64,36 @@
          (restpar (if (symbol-package fp.rest) fp.rest))
          (extsyms [keep-if symbol-package
                            (diff total-syms (cons restpar fixpars))]))
-    (with-gensyms (getter setter args)
+    (with-gensyms (getter setter args gpf-pairs gpr-pairs ext-pairs
+                   pgens rgens egens all-pairs agens)
       ^(defplace (,name . ,args) body
          (,getter ,setter
            (tree-bind (,*params) ,args
-             (let* ((gpf-pairs (mapcar (op list (gensym)) (list ,*fixpars)))
-                    (gpr-pairs (if ',restpar
-                                 (if (consp ,restpar)
-                                   (mapcar (op list (gensym)) ,restpar)
-                                   (list (list (gensym) ,restpar)))))
-                    (ext-pairs (mapcar (op list (gensym)) (list ,*extsyms)))
-                    (pgens [mapcar car gpf-pairs])
-                    (rgens [mapcar car gpr-pairs])
-                    (egens [mapcar car ext-pairs])
-                    (all-pairs (append gpf-pairs gpr-pairs ext-pairs))
-                    (agens (collect-each ((a ,args))
-                             (let ((p [pos a all-pairs eq cadr]))
+             (let* ((,gpf-pairs (mapcar (op list (gensym)) (list ,*fixpars)))
+                    (,gpr-pairs (if ',restpar
+                                  (if (consp ,restpar)
+                                    (mapcar (op list (gensym)) ,restpar)
+                                    (list (list (gensym) ,restpar)))))
+                    (,ext-pairs (mapcar (op list (gensym)) (list ,*extsyms)))
+                    (,pgens [mapcar car ,gpf-pairs])
+                    (,rgens [mapcar car ,gpr-pairs])
+                    (,egens [mapcar car ,ext-pairs])
+                    (,all-pairs (append ,gpf-pairs ,gpr-pairs ,ext-pairs))
+                    (,agens (collect-each ((a ,args))
+                             (let ((p [pos a ,all-pairs eq cadr]))
                                (if p
-                                 (car (del [all-pairs p]))
+                                 (car (del [,all-pairs p]))
                                  a)))))
-               ^(alet (,*gpf-pairs ,*gpr-pairs ,*ext-pairs)
+               ^(alet (,*,gpf-pairs ,*,gpr-pairs ,*,ext-pairs)
                   ,(expand ^(symacrolet (,*(zip ',fixpars
-                                                (mapcar (ret ^',@1) pgens))
+                                                (mapcar (ret ^',@1) ,pgens))
                                          ,*(zip ',extsyms
-                                                (mapcar (ret ^',@1) egens))
-                                         ,*(if gpr-pairs
+                                                (mapcar (ret ^',@1) ,egens))
+                                         ,*(if ,gpr-pairs
                                              (if (consp ,restpar)
-                                               ^((,',restpar ',rgens))
-                                               ^((,',restpar ',(car rgens))))))
-                              (macrolet ((,,getter () ^(,',',name ,',*agens))
+                                               ^((,',restpar ',,rgens))
+                                               ^((,',restpar ',(car ,rgens))))))
+                              (macrolet ((,,getter () ^(,',',name ,',*,agens))
                                          (,,setter (,',newval) ,',setform))
                                 ,body))
                            ,env)))))))))
