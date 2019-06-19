@@ -4940,13 +4940,13 @@ val gensym(val prefix)
 
 static val make_package_common(val name)
 {
+  val sh = make_hash(nil, nil, lit("t")); /* don't have t yet! */
+  val hh = make_hash(nil, nil, lit("t"));
   val obj = make_obj();
   obj->pk.type = PKG;
   obj->pk.name = name;
-  obj->pk.symhash = nil; /* make_hash calls below could trigger gc! */
-  obj->pk.hidhash = nil;
-  obj->pk.symhash = make_hash(nil, nil, lit("t")); /* don't have t yet! */
-  obj->pk.hidhash = make_hash(nil, nil, lit("t"));
+  obj->pk.symhash = sh;
+  obj->pk.hidhash = hh;
   return obj;
 }
 
