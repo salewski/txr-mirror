@@ -309,11 +309,11 @@ val make_struct_type(val name, val super,
     val id = num_fast(coerce(ucnum, st) / (uptopow2(sizeof *st) / 2));
     val super_slots = if2(su, su->slots);
     val all_slots = uniq(append2(super_slots, append2(static_slots, slots)));
+    cnum stsl_upb = c_num(plus(length(static_slots),
+                               num(if3(su, su->nstslots, 0))));
     val stype = cobj(coerce(mem_t *, st), struct_type_s, &struct_type_ops);
     val iter;
     cnum sl, stsl;
-    cnum stsl_upb = c_num(plus(length(static_slots),
-                               num(if3(su, su->nstslots, 0))));
     struct stslot null_ptr = { nil, 0, 0, nil };
 
     st->self = stype;
