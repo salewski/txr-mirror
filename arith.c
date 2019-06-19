@@ -3425,10 +3425,10 @@ val logcount(val n)
       d = ((d & 0xF0F0F0F0) >>  4) + (d & 0x0F0F0F0F);
       d = ((d & 0xFF00FF00) >>  8) + (d & 0x00FF00FF);
       d = ((d & 0xFFFF0000) >> 16) + (d & 0x0000FFFF);
-      return unum(d);
 #else
 #error portme
 #endif
+      return unum(d);
     }
   case BGNUM:
     {
