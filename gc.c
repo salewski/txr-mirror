@@ -521,7 +521,7 @@ static int sweep_one(obj_t *block)
 #endif
 
 #if CONFIG_EXTRA_DEBUGGING
-  if (block == break_obj) {
+  if (block == break_obj && (block->t.type & FREE) == 0) {
 #if HAVE_VALGRIND
     VALGRIND_PRINTF_BACKTRACE("object %p swept (type = %x)\n",
                               convert(void *, block),
