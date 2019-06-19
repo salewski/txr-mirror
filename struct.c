@@ -310,7 +310,6 @@ val make_struct_type(val name, val super,
     val super_slots = if2(su, su->slots);
     val all_slots = uniq(append2(super_slots, append2(static_slots, slots)));
     val stype = cobj(coerce(mem_t *, st), struct_type_s, &struct_type_ops);
-    struct stslot *dvmeth = if3(su, lookup_static_slot_desc(su, derived_s), 0);
     val iter;
     cnum sl, stsl;
     cnum stsl_upb = c_num(plus(length(static_slots),
@@ -397,8 +396,11 @@ val make_struct_type(val name, val super,
 
     uw_purge_deferred_warning(cons(struct_type_s, name));
 
-    if (dvmeth)
-      funcall2(stslot_place(dvmeth), su->self, stype);
+    if (su) {
+      struct stslot *dvmeth = lookup_static_slot_desc(su, derived_s);
+      if (dvmeth)
+        funcall2(stslot_place(dvmeth), su->self, stype);
+    }
 
     return stype;
   }
