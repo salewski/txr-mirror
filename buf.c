@@ -937,7 +937,7 @@ static val buf_strm_seek(val stream, val offset, enum strm_whence whence)
 
   if (minusp(npos))
     uw_throwf(error_s, lit("~a: cannot seek to negative position ~s"),
-              self, index, nao);
+              self, npos, nao);
 
   s->pos = npos;
   return t;
