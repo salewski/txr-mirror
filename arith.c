@@ -3198,9 +3198,7 @@ val ash(val a, val bits)
 {
   val self = ash_s;
   type_t ta = type(a);
-  cnum an, bn;
-  val b;
-  int hb;
+  cnum bn;
   const int num_bits = CHAR_BIT * sizeof (cnum) - TAG_SHIFT;
   mp_err mpe = MP_OKAY;
 
@@ -3223,36 +3221,52 @@ val ash(val a, val bits)
   } else if (bn > 0) {
     switch (ta) {
     case NUM:
-      an = c_n(a);
-      hb = highest_significant_bit(an);
-      if (bn + hb < num_bits)
-        return num_fast(an << bn);
-      a = bignum(an);
-      /* fallthrough */
+      {
+        cnum an = c_n(a);
+        int hb = highest_significant_bit(an);
+        if (bn + hb < num_bits) {
+          return num_fast(an << bn);
+        } else {
+          val b = make_bignum();
+          mp_int tmp;
+          mp_init(&tmp);
+          mp_set_intptr(&tmp, an);
+          mpe = mp_shift(&tmp, mp(b), bn);
+          mp_clear(&tmp);
+          if (mpe != MP_OKAY)
+            break;
+          return normalize(b);
+        }
+      }
     case BGNUM:
-      if (bn < INT_MIN || bn > INT_MAX)
+      if (bn < INT_MIN || bn > INT_MAX) {
         goto bad4;
-      b = make_bignum();
-      if ((mpe = mp_shift(mp(a), mp(b), bn)) != MP_OKAY)
-        break;
-      gc_hint(a);
-      return normalize(b);
+      } else {
+        val b = make_bignum();
+        if ((mpe = mp_shift(mp(a), mp(b), bn)) != MP_OKAY)
+          break;
+        return normalize(b);
+      }
     default:
       goto bad3;
     }
   } else {
     switch (ta) {
     case NUM:
-      bn = -bn;
-      an = c_n(a);
-      if (bn <= num_bits)
-        return num_fast(an >> bn);
-      return num_fast(an >> num_bits);
+      {
+        cnum an = c_n(a);
+        bn = -bn;
+        if (bn <= num_bits)
+          return num_fast(an >> bn);
+        return num_fast(an >> num_bits);
+      }
     case BGNUM:
-      b = make_bignum();
-      if ((mpe = mp_shift(mp(a), mp(b), bn)) != MP_OKAY)
-        break;
-      return normalize(b);
+      {
+        val b = make_bignum();
+        if ((mpe = mp_shift(mp(a), mp(b), bn)) != MP_OKAY)
+          break;
+        return normalize(b);
+      }
     default:
       goto bad3;
     }
