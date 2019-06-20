@@ -3235,6 +3235,7 @@ val ash(val a, val bits)
       b = make_bignum();
       if ((mpe = mp_shift(mp(a), mp(b), bn)) != MP_OKAY)
         break;
+      gc_hint(a);
       return normalize(b);
     default:
       goto bad3;
