@@ -1,3 +1,54 @@
+                                    TXR 218
+                                   2019-06-19
+
+  Features:
+
+  - Lib:
+    - new hash-peek function.
+    - New seq-peek function for peeking at next item in iteration.
+    - Sequence functions sub, replace, and their list, vec and
+      str specializiations have been substantially rewritten to
+      tighter semantic specifications.
+      - The sub- functions are also all accessors now.
+    - cat-str, split-str and spl now accept character object as separator.
+    - New bitset function for breaking integer into bit positions.
+
+  - FFI:
+    - sub-buf accessor and replace-buf function introduced.
+    - Semantics of variable length zarray made more sensible.
+    - carray-sub accessor is improved; the syntactic place works
+      via carray-replace, rather than generic replace.
+
+  - Compiler:
+    - A "--lisp" argument in the hash bang line of a source file
+      is translated to "--compiled" in compiled file's hash bang line.
+
+  Bugs:
+
+  - Command line:
+    - regression: unsuffixed hash bang script wrongly treated as Lisp.
+
+  - Lib:
+    - Multiple bugfixes in replace-list, such as negative indices
+      in index list assignment now follow the usual convention.
+    - select function handles negative indices; internals rewritten.
+    - logcount crashing for fixnum arguments on 64 bit builds.
+
+  - FFI:
+    - carray-replace now performs index list assignment like
+      other replace functions.
+    - carray-refset now allows negative indices, with usual conventions.
+    - buffers likewise support negative indexing.
+
+  - GC:
+    - stability issues fixed in make-struct, make-package and
+      the arithmetic function ash.
+
+  - Expansion:
+    - Several hygiene bugs fixed in defset.
+
+
+
                                     TXR 217
                                    2019-06-10
 
