@@ -1640,7 +1640,7 @@
            (release-deferred-warnings)
            (compiler-emit-warnings))))))
 
-(defun usr:dump-to-tlo (out-stream out)
+(defun dump-to-tlo (out-stream out)
   (let* ((*print-circle* t)
          (*package* (sys:make-anon-package))
          (out-forms (split* out.(get) (op where (op eq :fence)))))
