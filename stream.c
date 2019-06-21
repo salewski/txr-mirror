@@ -514,15 +514,15 @@ static val stdio_maybe_read_error(val stream)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   if (h->f == 0)
-    uw_throwf(file_error_s, lit("error reading ~a: file closed"), stream, nao);
+    uw_throwf(file_error_s, lit("error reading ~s: file closed"), stream, nao);
   if (ferror(h->f)) {
     val err = num(errno);
     h->err = err;
 #ifdef EAGAIN
     if (errno == EAGAIN)
-      uw_throwf(timeout_error_s, lit("timed out reading ~a"), stream, nao);
+      uw_throwf(timeout_error_s, lit("timed out reading ~s"), stream, nao);
 #endif
-    uw_throwf(file_error_s, lit("error reading ~a: ~d/~s"),
+    uw_throwf(file_error_s, lit("error reading ~s: ~d/~s"),
               stream, err, errno_to_string(err), nao);
   }
   if (feof(h->f))
@@ -535,13 +535,13 @@ static val stdio_maybe_error(val stream, val action)
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   val err = num(errno);
   if (h->f == 0)
-    uw_throwf(file_error_s, lit("error ~a ~a: file closed"), stream, action, nao);
+    uw_throwf(file_error_s, lit("error ~a ~s: file closed"), stream, action, nao);
   h->err = err;
 #ifdef EAGAIN
   if (errno == EAGAIN)
-    uw_throwf(timeout_error_s, lit("timed out on ~a"), stream, nao);
+    uw_throwf(timeout_error_s, lit("timed out on ~s"), stream, nao);
 #endif
-  uw_throwf(file_error_s, lit("error ~a ~a: ~d/~s"),
+  uw_throwf(file_error_s, lit("error ~a ~s: ~d/~s"),
             stream, action, err, errno_to_string(err), nao);
 }
 
@@ -909,7 +909,7 @@ static val stdio_close(val stream, val throw_on_error)
     h->f = 0;
     if (result == EOF && throw_on_error) {
       h->err = num(errno);
-      uw_throwf(file_error_s, lit("error closing ~a: ~d/~s"),
+      uw_throwf(file_error_s, lit("error closing ~s: ~d/~s"),
                 stream, num(errno), string_utf8(strerror(errno)), nao);
     }
     return result != EOF ? t : nil;
@@ -1268,21 +1268,21 @@ static val pipe_close(val stream, val throw_on_error)
     if (status < 0) {
       if (throw_on_error)
         uw_throwf(process_error_s,
-                  lit("unable to obtain status of command ~a: ~d/~s"),
+                  lit("unable to obtain status of command ~s: ~d/~s"),
                   stream, num(errno), string_utf8(strerror(errno)), nao);
     } else {
 #ifdef HAVE_SYS_WAIT
       if (throw_on_error) {
         if (WIFSIGNALED(status)) {
           int termsig = WTERMSIG(status);
-          uw_throwf(process_error_s, lit("pipe ~a terminated by signal ~a"),
+          uw_throwf(process_error_s, lit("pipe ~s terminated by signal ~a"),
                     stream, num(termsig), nao);
 #ifndef WIFCONTINUED
 #define WIFCONTINUED(X) 0
 #endif
         } else if (WIFSTOPPED(status) || WIFCONTINUED(status)) {
           uw_throwf(process_error_s,
-                    lit("processes of closed pipe ~a still running"),
+                    lit("processes of closed pipe ~s still running"),
                     stream, nao);
         }
       }
@@ -1292,7 +1292,7 @@ static val pipe_close(val stream, val throw_on_error)
       }
 #else
       if (status != 0 && throw_on_error)
-        uw_throwf(process_error_s, lit("closing pipe ~a failed"), stream, nao);
+        uw_throwf(process_error_s, lit("closing pipe ~s failed"), stream, nao);
 #endif
       return status == 0 ? zero : nil;
     }
@@ -1405,7 +1405,7 @@ struct stdio_mode parse_mode(val mode_str, struct stdio_mode m_dfl)
 {
   struct stdio_mode m = do_parse_mode(mode_str, m_dfl);
   if (m.malformed)
-    uw_throwf(file_error_s, lit("invalid mode string ~a"), mode_str, nao);
+    uw_throwf(file_error_s, lit("invalid mode string ~s"), mode_str, nao);
   return m;
 }
 
@@ -1447,7 +1447,7 @@ val normalize_mode(struct stdio_mode *m, val mode_str, struct stdio_mode m_dfl)
   *m = do_parse_mode(mode_str, m_dfl);
 
   if (m->malformed)
-    uw_throwf(file_error_s, lit("invalid file open mode ~a"), mode_str, nao);
+    uw_throwf(file_error_s, lit("invalid file open mode ~s"), mode_str, nao);
 
   return format_mode(*m);
 }
@@ -1460,7 +1460,7 @@ val normalize_mode_no_bin(struct stdio_mode *m, val mode_str, struct stdio_mode 
   *m = do_parse_mode(mode_str, m_dfl);
 
   if (m->malformed)
-    uw_throwf(file_error_s, lit("invalid file open mode ~a"), mode_str, nao);
+    uw_throwf(file_error_s, lit("invalid file open mode ~s"), mode_str, nao);
 
   m->binary = 0;
 
@@ -2407,7 +2407,7 @@ static val cat_unget_byte(val stream, int byte)
 
   if (!s->streams) {
     uw_throwf(file_error_s,
-              lit("unget-byte on catenated stream ~a: stream list empty"),
+              lit("unget-byte on catenated stream ~s: stream list empty"),
               stream, nao);
   } else {
     val stream = car(s->streams);
@@ -2423,7 +2423,7 @@ static val cat_unget_char(val stream, val ch)
 
   if (!s->streams) {
     uw_throwf(file_error_s,
-              lit("unget-char on catenated stream ~a: stream list empty"),
+              lit("unget-char on catenated stream ~s: stream list empty"),
               stream, nao);
   } else {
     val stream = car(s->streams);
@@ -2863,7 +2863,7 @@ val unget_byte(val byte, val stream_in)
                                 cobj_ops(self, stream, stream_s));
 
   if (b < 0 || b > 255)
-    uw_throwf(file_error_s, lit("~a: stream ~s, byte value ~a out of range"),
+    uw_throwf(file_error_s, lit("~a: stream ~s: byte value ~a out of range"),
               self, stream, byte, nao);
 
   return ops->unget_byte(stream, b);
@@ -3884,7 +3884,7 @@ val open_directory(val path)
   if (!d) {
     int eno = errno;
     uw_throwf(errno_to_file_error(eno),
-              lit("error opening directory ~a: ~d/~s"),
+              lit("error opening directory ~s: ~d/~s"),
               path, num(eno), string_utf8(strerror(eno)), nao);
   }
 
@@ -3898,7 +3898,7 @@ val open_file(val path, val mode_str)
 
   if (!f) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("error opening ~a: ~d/~s"),
+    uw_throwf(errno_to_file_error(eno), lit("error opening ~s: ~d/~s"),
               path, num(eno), string_utf8(strerror(eno)), nao);
   }
 
@@ -3933,7 +3933,7 @@ val open_tail(val path, val mode_str, val seek_end_p)
 
   if (f && default_null_arg(seek_end_p))
     if (fseek(f, 0, SEEK_END) < 0)
-      uw_throwf(file_error_s, lit("error seeking to end of ~a: ~d/~s"),
+      uw_throwf(file_error_s, lit("error seeking to end of ~s: ~d/~s"),
                 path, num(errno), string_utf8(strerror(errno)), nao);
 
   stream = make_tail_stream(f, path);
@@ -4028,7 +4028,7 @@ val open_command(val path, val mode_str)
 
   if (!f) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("error opening pipe ~a: ~d/~s"),
+    uw_throwf(errno_to_file_error(eno), lit("error opening pipe ~s: ~d/~s"),
               path, num(eno), string_utf8(strerror(eno)), nao);
   }
 
@@ -4074,7 +4074,7 @@ val open_process(val name, val mode_str, val args)
     int eno = errno;
     free(argv);
     uw_throwf(errno_to_file_error(eno),
-              lit("opening pipe ~a, pipe syscall failed: ~d/~s"),
+              lit("opening pipe ~s, pipe syscall failed: ~d/~s"),
               name, num(eno), string_utf8(strerror(eno)), nao);
   }
 
@@ -4090,7 +4090,7 @@ val open_process(val name, val mode_str, val args)
     for (i = 0; i < nargs; i++)
       free(argv[i]);
     free(argv);
-    uw_throwf(process_error_s, lit("opening pipe ~a, fork syscall failed: ~d/~s"),
+    uw_throwf(process_error_s, lit("opening pipe ~s, fork syscall failed: ~d/~s"),
               name, num(errno), string_utf8(strerror(errno)), nao);
   }
 
@@ -4137,7 +4137,7 @@ val open_process(val name, val mode_str, val args)
       while (waitpid(pid, &status, 0) == -1 && errno == EINTR)
         ;
       free(utf8mode);
-      uw_throwf(file_error_s, lit("opening pipe ~a, fdopen failed: ~d/~s"),
+      uw_throwf(file_error_s, lit("opening pipe ~s, fdopen failed: ~d/~s"),
                 name, num(errno), string_utf8(strerror(errno)), nao);
     }
 
@@ -4286,7 +4286,7 @@ static val run(val name, val args)
     for (i = 0; i < nargs; i++)
       free(argv[i]);
     free(argv);
-    uw_throwf(process_error_s, lit("opening process ~a, fork syscall failed: ~d/~s"),
+    uw_throwf(process_error_s, lit("opening process ~s, fork syscall failed: ~d/~s"),
               name, num(errno), string_utf8(strerror(errno)), nao);
   }
 
@@ -4381,7 +4381,7 @@ val remove_path(val path, val throw_on_error)
   if (w_remove(c_str(path)) < 0) {
     if (default_null_arg(throw_on_error) || errno != ENOENT) {
       int eno = errno;
-      uw_throwf(errno_to_file_error(eno), lit("trying to remove ~a: ~d/~s"),
+      uw_throwf(errno_to_file_error(eno), lit("trying to remove ~s: ~d/~s"),
                 path, num(eno), string_utf8(strerror(eno)), nao);
     }
     return nil;
@@ -4395,7 +4395,7 @@ val rename_path(val from, val to)
   if (w_rename(c_str(from), c_str(to)) < 0) {
     int eno = errno;
     uw_throwf(errno_to_file_error(eno),
-              lit("trying to rename ~a to ~a: ~d/~s"),
+              lit("trying to rename ~s to ~s: ~d/~s"),
               from, to, num(eno), string_utf8(strerror(eno)), nao);
   }
 
