@@ -54100,7 +54100,7 @@ exists and has the "sticky" permission bit set.
 tests whether
 .meta path
 exists, and is effectively owned by the calling process; that is,
-has a user ID equal to the effective user ID of the process.
+it has a user ID equal to the effective user ID of the process.
 
 .code path-my-group-p
 tests whether
@@ -65676,8 +65676,8 @@ No other forms are top-level forms.
 
 A top-level form is a
 .I primary
-top-level form if it doesn't contain any other top-level forms;
-that is, is not a form based on any of the operators
+top-level form if it doesn't contain any other top-level forms.
+This means that it is not a form based on any of the operators
 .codn progn ,
 .code compile-only
 or
