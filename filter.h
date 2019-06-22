@@ -49,6 +49,7 @@ val base64_stream_dec(val out_stream, val in_stream);
 
 val base64_encode(val str, val wrap_cols);
 val base64_decode(val str);
+val base64_decode_buf(val str);
 
 void filter_init(void);
 

@@ -57779,17 +57779,23 @@ be suitable for insertion into a HTML template, depending on the
 context of its insertion. It is suitable as text placed between
 tags but not necessarily as tag attribute material.
 
-.coNP Functions @ base64-encode and @ base64-decode
+.coNP Functions @, base64-encode @ base64-decode and @ base64-decode-buf
 .synb
-.mets (base64-encode < string <> [ column-width ])
+.mets (base64-encode >> [ string | << buf ] <> [ column-width ])
 .mets (base64-decode < string)
+.mets (base64-decode-buf < string)
 .syne
 .desc
 The
 .code base64-encode
 function converts the UTF-8 representation of
-.meta string
+.metn string ,
+or the contents of
+.metn buf ,
 to Base64 and returns that representation as a string.
+
+The second argument must either be a character string, or
+a buffer object.
 
 The
 .code base64-decode
@@ -57797,9 +57803,17 @@ functions performs the opposite conversion; it extracts the
 bytes encoded in a Base64 string, and decodes them as UTF-8
 to return a character string.
 
-The Base64 encoding divides the UTF-8 representation into groups of
-six bits, each representing the values 0 to 63. Each value is then
-mapped to the characters
+The
+.code base64-decode-buf
+extracts the bytes encoded in a Base64 string, and returns
+a new buffer object containing these bytes.
+
+The Base64 encoding divides the UTF-8 representation of
+.meta string
+or the bytes contained in
+.meta buf
+into groups of six bits, each representing the values 0 to 63. Each value is
+then mapped to the characters
 .code A
 to
 .codn Z ,
@@ -57825,7 +57839,8 @@ function enforces this convention, but
 .code base64-decode
 doesn't require these padding characters.
 
-Base64-encoding an empty string results in an empty string.
+Base64-encoding an empty string or zero-length buffer results in an empty
+string.
 
 If the
 .meta column-width

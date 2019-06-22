@@ -40,6 +40,7 @@
 #include "filter.h"
 #include "eval.h"
 #include "stream.h"
+#include "buf.h"
 
 val filters_s;
 val filter_k, lfilt_k, rfilt_k, tohtml_k, fromhtml_k;
@@ -799,7 +800,7 @@ val base64_stream_enc(val out, val in, val nbytes, val wrap_cols)
 
 val base64_encode(val str, val wrap_cols)
 {
-  val in = make_string_byte_input_stream(str);
+  val in = make_byte_input_stream(str);
   val out = make_string_output_stream();
 
   (void) base64_stream_enc(out, in, nil, wrap_cols);
@@ -902,6 +903,16 @@ val base64_decode(val str)
   return get_string_from_stream(out);
 }
 
+val base64_decode_buf(val str)
+{
+  val in = make_string_input_stream(str);
+  val out = make_buf_stream(nil);
+
+  (void) base64_stream_dec(out, in);
+
+  return get_buf_from_stream(out);
+}
+
 static val html_encode(val str)
 {
   return trie_filter_string(get_filter(tohtml_k), str);
@@ -984,6 +995,7 @@ void filter_init(void)
   reg_fun(intern(lit("base64-stream-dec"), user_package), func_n2(base64_stream_dec));
   reg_fun(intern(lit("base64-encode"), user_package), func_n2o(base64_encode, 1));
   reg_fun(intern(lit("base64-decode"), user_package), func_n1(base64_decode));
+  reg_fun(intern(lit("base64-decode-buf"), user_package), func_n1(base64_decode_buf));
   reg_fun(intern(lit("html-encode"), user_package), func_n1(html_encode));
   reg_fun(intern(lit("html-encode*"), user_package),
           func_n1(html_encode_star));

@@ -239,5 +239,6 @@ val pure_rel_path_p(val path);
 val base_name(val path);
 val dir_name(val path);
 val path_cat(val dir_name, val base_name);
+val make_byte_input_stream(val obj);
 
 void stream_init(void);

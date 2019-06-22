@@ -4588,6 +4588,23 @@ val path_cat(val dir_name, val base_name)
   return scat(lit("/"), dir_name, base_name, nao);
 }
 
+val make_byte_input_stream(val obj)
+{
+  val self = lit("make-byte-input-stream");
+
+  switch (type(obj)) {
+  case LIT:
+  case STR:
+  case LSTR:
+    return make_string_byte_input_stream(obj);
+  case BUF:
+    return make_buf_stream(obj);
+  default:
+    uw_throwf(file_error_s, lit("~a: ~s is neither a string nor buffer"),
+              self, obj, nao);
+  }
+}
+
 void stream_init(void)
 {
   prot1(&ap_regex);
