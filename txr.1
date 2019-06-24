@@ -51825,6 +51825,49 @@ savings time).
 
 .SS* Data Integrity
 
+.coNP Function @ crc32-stream
+.synb
+.mets (crc32-stream < stream <> [ nbytes ])
+.syne
+.desc
+The
+.code crc32-stream
+calculates the CRC-32 sum over the bytes read from
+.metn stream ,
+starting at the stream's current position.
+
+If the
+.meta nbytes
+argument is specified, it should be a nonnegative
+integer. It gives the number of bytes which should be read
+and included in the sum. If the argument is omitted, then bytes are read
+until the end of the stream.
+
+The CRC-32 is returned as a non-negative integer.
+
+.coNP Function @ crc32
+.synb
+.mets (crc32 << obj )
+.syne
+.desc
+The
+.code crc32
+function calculates the CRC-32 sum over
+.metn obj ,
+which may be a character string or a buffer.
+
+If
+.meta obj
+is a buffer, then the sum is calculated over all of the bytes contained
+in that buffer, according to its current length.
+
+If
+.meta obj
+is a character string, then the sum is calculated over the bytes
+which constitute its UTF-8 representation.
+
+The CRC-32 is returned as a non-negative integer.
+
 .coNP Function @ sha256-stream
 .synb
 .mets (sha256-stream < stream <> [ nbytes ])
