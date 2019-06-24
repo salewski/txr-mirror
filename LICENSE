@@ -10,6 +10,10 @@ Linenoise:
    Copyright (c) 2010-2013, Pieter Noordhuis <pcnoordhuis at gmail dot com>
    All rights reserved.
 
+SHA-256:
+   Copyright 2005 Colin Percival
+   All rights reserved.
+
 MPI:
    Written Michael Fromberger 1998-2006; assigned into the public
    domain in, or prior to 2002.

@@ -71,6 +71,7 @@
 #include "itypes.h"
 #include "buf.h"
 #include "ffi.h"
+#include "chksum.h"
 #include "txr.h"
 #include "debug.h"
 
@@ -12189,6 +12190,7 @@ void init(val *stack_bottom)
 #endif
   cadr_init();
   time_init();
+  chksum_init();
 
   gc_state(gc_save);
 }

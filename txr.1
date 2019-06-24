@@ -51823,6 +51823,51 @@ It may or may not have any effect
 on the output (since the UTC zone by definition doesn't have daylight
 savings time).
 
+.SS* Data Integrity
+
+.coNP Function @ sha256-stream
+.synb
+.mets (sha256-stream < stream <> [ nbytes ])
+.syne
+.desc
+The
+.code sha256-stream
+calculates the NIST SHA-256 digest over the bytes read from
+.metn stream ,
+starting at the stream's current position.
+
+If the
+.meta nbytes
+argument is specified, it should be a nonnegative
+integer. It gives the number of bytes which should be read
+and included in the digest. If the argument is omitted, then bytes are read
+until the end of the stream.
+
+The 256 bit digest value is returned as a buffer containing 32 bytes.
+
+.coNP Function @ sha256
+.synb
+.mets (sha256 << obj )
+.syne
+.desc
+The
+.code sha256
+function calculates the NIST SHA-256 digest over
+.metn obj ,
+which may be a character string or a buffer.
+
+If
+.meta obj
+is a buffer, then the digest is calculated over all of the bytes contained
+in that buffer, according to its current length.
+
+If
+.meta obj
+is a character string, then the digest is calculated over the bytes
+which constitute its UTF-8 representation.
+
+The 256 bit digest value is returned as a buffer containing 32 bytes.
+
 .SS* The Awk Utility
 
 The \*(TL library provides a macro called
