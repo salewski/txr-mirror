@@ -261,7 +261,7 @@
            ((new new*) (if qpairs
                          ^(make-struct ,type (list ,*qpairs) ,*args)
                          ^(struct-from-args ,type ,*args)))
-           ((new* lnew*) ^(make-lazy-struct ,type
+           ((lnew lnew*) ^(make-lazy-struct ,type
                                             (lambda ()
                                               (cons (list ,*qpairs)
                                                     (list ,*args))))))))
@@ -269,7 +269,7 @@
         (let ((type (sys:new-type op form texpr)))
           (caseq op
             ((new new*) ^(struct-from-plist ,type ,*qpairs))
-            ((lnew lnew*) ^(make-lazy-struct type
+            ((lnew lnew*) ^(make-lazy-struct ,type
                                              (lambda ()
                                                (list (list ,*qpairs)))))))))))
 
