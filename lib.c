@@ -9495,6 +9495,7 @@ static val lazy_take_list_fun(val list, val lcons)
 val take(val count, val seq)
 {
   seq_info_t si = seq_info(seq);
+  val self = lit("take");
 
   switch (si.kind) {
   case SEQ_NIL:
@@ -9506,9 +9507,9 @@ val take(val count, val seq)
   case SEQ_VECLIKE:
     return sub(seq, zero, count);
   case SEQ_HASHLIKE:
-    type_mismatch(lit("take: hashes not supported"), nao);
+    type_mismatch(lit("~a: hashes not supported"), self, nao);
   default:
-    type_mismatch(lit("take: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
 }
 
@@ -9529,6 +9530,7 @@ static val lazy_take_while_list_fun(val pred, val lcons)
 val take_while(val pred, val seq, val keyfun)
 {
   seq_info_t si = seq_info(seq);
+  val self = lit("take-while");
 
   switch (si.kind) {
   case SEQ_NIL:
@@ -9547,9 +9549,9 @@ val take_while(val pred, val seq, val keyfun)
       return sub(seq, zero, pos);
     }
   case SEQ_HASHLIKE:
-    type_mismatch(lit("take-while: hashes not supported"), nao);
+    type_mismatch(lit("~a: hashes not supported"), self, nao);
   default:
-    type_mismatch(lit("take-while: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
 }
 
@@ -9570,6 +9572,7 @@ static val lazy_take_until_list_fun(val pred, val lcons)
 val take_until(val pred, val seq, val keyfun)
 {
   seq_info_t si = seq_info(seq);
+  val self = lit("take-until");
 
   switch (si.kind) {
   case SEQ_NIL:
@@ -9586,9 +9589,9 @@ val take_until(val pred, val seq, val keyfun)
       return sub(seq, zero, succ(pos));
     }
   case SEQ_HASHLIKE:
-    type_mismatch(lit("take-until: hashes not supported"), nao);
+    type_mismatch(lit("~a: hashes not supported"), self, nao);
   default:
-    type_mismatch(lit("take-until: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
 }
 
@@ -9602,6 +9605,7 @@ val drop(val count, val seq)
 val drop_while(val pred, val seq, val keyfun)
 {
   seq_info_t si = seq_info(seq);
+  val self = lit("drop-while");
 
   switch (si.kind) {
   case SEQ_NIL:
@@ -9619,15 +9623,16 @@ val drop_while(val pred, val seq, val keyfun)
       return sub(seq, pos, t);
     }
   case SEQ_HASHLIKE:
-    type_mismatch(lit("drop-while: hashes not supported"), nao);
+    type_mismatch(lit("~a: hashes not supported"), self, nao);
   default:
-    type_mismatch(lit("drop-while: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
 }
 
 val drop_until(val pred, val seq, val keyfun)
 {
   seq_info_t si = seq_info(seq);
+  val self = lit("drop-until");
 
   switch (si.kind) {
   case SEQ_NIL:
@@ -9651,9 +9656,9 @@ val drop_until(val pred, val seq, val keyfun)
       return sub(seq, succ(pos), t);
     }
   case SEQ_HASHLIKE:
-    type_mismatch(lit("drop-until: hashes not supported"), nao);
+    type_mismatch(lit("~a: hashes not supported"), self, nao);
   default:
-    type_mismatch(lit("drop-until: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
 }
 
