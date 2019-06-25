@@ -10105,14 +10105,14 @@ val replace(val seq, val items, val from, val to)
     return replace_str(seq, items, from, to);
   case VEC:
     return replace_vec(seq, items, from, to);
+  case BUF:
+    return replace_buf(seq, items, from, to);
   case COBJ:
     if (seq->co.cls == carray_s)
       return carray_replace(seq, items, from, to);
     if (obj_struct_p(seq))
       return replace_obj(seq, items, from, to);
     /* fallthrough */
-  case BUF:
-    return replace_buf(seq, items, from, to);
   default:
     type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
