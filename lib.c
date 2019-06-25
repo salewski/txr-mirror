@@ -1047,6 +1047,15 @@ loc list_collect(loc ptail, val obj)
   case LSTR:
     replace_str(tailobj, items, t, t);
     return ptail;
+  case COBJ:
+    if (tailobj->co.cls == carray_s) {
+      carray_replace(tailobj, items, t, t);
+      return ptail;
+    }
+    if (obj_struct_p(tailobj)) {
+      replace_obj(tailobj, items, t, t);
+      return ptail;
+    }
   default:
     uw_throwf(error_s, lit("cannot append ~s"), deref(ptail), nao);
   }
@@ -7277,7 +7286,7 @@ val replace_vec(val vec_in, val items, val from, val to)
   return vec_in;
 }
 
-static val replace_obj(val obj, val items, val from, val to)
+val replace_obj(val obj, val items, val from, val to)
 {
   val self = lit("replace");
   val lambda_set_meth = maybe_slot(obj, lambda_set_s);
