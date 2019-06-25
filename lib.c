@@ -1008,6 +1008,8 @@ val nullify(val seq)
     return if3(length_str_gt(seq, zero), seq, nil);
   case VEC:
     return if3(length_vec(seq) != zero, seq, nil);
+  case BUF:
+    return if3(length_buf(seq) != zero, seq, nil);
   case COBJ:
     if (obj_struct_p(seq)) {
       val nullify_meth = maybe_slot(seq, nullify_s);
@@ -1047,6 +1049,9 @@ loc list_collect(loc ptail, val obj)
   case LSTR:
     replace_str(tailobj, items, t, t);
     return ptail;
+  case BUF:
+    replace_buf(tailobj, items, t, t);
+    return ptail;
   case COBJ:
     if (tailobj->co.cls == carray_s) {
       carray_replace(tailobj, items, t, t);
@@ -1082,6 +1087,9 @@ loc list_collect_nconc(loc ptail, val obj)
   case LSTR:
     replace_str(tailobj, obj, t, t);
     return ptail;
+  case BUF:
+    replace_buf(tailobj, obj, t, t);
+    return ptail;
   case COBJ:
     set(ptail, tolist(tailobj));
     ptail = tail(deref(ptail));
@@ -1116,6 +1124,10 @@ loc list_collect_append(loc ptail, val obj)
   case LSTR:
     set(ptail, copy_str(tailobj));
     replace_str(deref(ptail), obj, t, t);
+    return ptail;
+  case BUF:
+    set(ptail, copy_buf(tailobj));
+    replace_buf(deref(ptail), obj, t, t);
     return ptail;
   case COBJ:
     set(ptail, tolist(tailobj));
@@ -1153,6 +1165,9 @@ loc list_collect_nreconc(loc ptail, val obj)
   case LIT:
   case LSTR:
     replace_str(tailobj, rev, t, t);
+    return ptail;
+  case BUF:
+    replace_buf(tailobj, obj, t, t);
     return ptail;
   default:
     uw_throwf(error_s, lit("cannot nconc ~s to ~s"), obj, tailobj, nao);
@@ -1213,6 +1228,10 @@ loc list_collect_revappend(loc ptail, val obj)
   case LSTR:
     set(ptail, copy_str(tailobj));
     replace_str(deref(ptail), reverse(obj), t, t);
+    return ptail;
+  case BUF:
+    set(ptail, copy_buf(tailobj));
+    replace_buf(deref(ptail), reverse(obj), t, t);
     return ptail;
   default:
     uw_throwf(error_s, lit("cannot append to ~s"), tailobj, nao);
