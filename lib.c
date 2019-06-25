@@ -9601,25 +9601,25 @@ val drop(val count, val seq)
 
 val drop_while(val pred, val seq, val keyfun)
 {
-  switch (type(seq)) {
-  case NIL:
+  seq_info_t si = seq_info(seq);
+
+  switch (si.kind) {
+  case SEQ_NIL:
     return nil;
-  case CONS:
-  case LCONS:
+  case SEQ_LISTLIKE:
     keyfun = default_arg(keyfun, identity_f);
     while (seq && funcall1(pred, funcall1(keyfun, car(seq))))
       pop(&seq);
     return seq;
-  case LSTR:
-  case LIT:
-  case STR:
-  case VEC:
+  case SEQ_VECLIKE:
     {
       val pos = pos_if(notf(pred), seq, keyfun);
       if (!pos)
         return make_like(nil, seq);
       return sub(seq, pos, t);
     }
+  case SEQ_HASHLIKE:
+    type_mismatch(lit("drop-while: hashes not supported"), nao);
   default:
     type_mismatch(lit("drop-while: ~s is not a sequence"), seq, nao);
   }
@@ -9627,11 +9627,12 @@ val drop_while(val pred, val seq, val keyfun)
 
 val drop_until(val pred, val seq, val keyfun)
 {
-  switch (type(seq)) {
-  case NIL:
+  seq_info_t si = seq_info(seq);
+
+  switch (si.kind) {
+  case SEQ_NIL:
     return nil;
-  case CONS:
-  case LCONS:
+  case SEQ_LISTLIKE:
     {
       val key = default_arg(keyfun, identity_f);
       val item;
@@ -9642,16 +9643,15 @@ val drop_until(val pred, val seq, val keyfun)
 
       return seq;
     }
-  case LSTR:
-  case LIT:
-  case STR:
-  case VEC:
+  case SEQ_VECLIKE:
     {
       val pos = pos_if(pred, seq, keyfun);
       if (!pos)
         return seq;
       return sub(seq, succ(pos), t);
     }
+  case SEQ_HASHLIKE:
+    type_mismatch(lit("drop-until: hashes not supported"), nao);
   default:
     type_mismatch(lit("drop-until: ~s is not a sequence"), seq, nao);
   }
