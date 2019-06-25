@@ -9989,6 +9989,8 @@ val empty(val seq)
   case COBJ:
     if (seq->co.cls == hash_s)
       return eq(hash_count(seq), zero);
+    if (seq->co.cls == carray_s)
+      return eq(length_carray(seq), zero);
     if (obj_struct_p(seq)) {
       val length_meth = maybe_slot(seq, length_s);
       val nullify_meth = if2(nilp(length_meth), maybe_slot(seq, nullify_s));
