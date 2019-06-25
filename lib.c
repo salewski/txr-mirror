@@ -9665,33 +9665,11 @@ val drop_until(val pred, val seq, val keyfun)
 val in(val seq, val item, val testfun, val keyfun)
 {
   val self = lit("in");
-  switch (type(seq)) {
+  seq_info_t si = seq_info(seq);
+
+  switch (si.type) {
   case NIL:
     return nil;
-  case COBJ:
-    if (seq->co.cls == hash_s)
-      return tnil(gethash_e(self, seq, item));
-    /* fallthrough */
-  case CONS:
-  case LCONS:
-    {
-      testfun = default_arg(testfun, equal_f);
-      keyfun = default_arg(keyfun, identity_f);
-
-      seq = nullify(seq);
-
-      gc_hint(seq);
-
-      for (; seq; seq = cdr(seq)) {
-        val elem = car(seq);
-        val key = funcall1(keyfun, elem);
-
-        if (funcall2(testfun, item, key))
-          return t;
-      }
-
-      return nil;
-    }
   case LIT:
   case STR:
   case LSTR:
@@ -9729,7 +9707,31 @@ val in(val seq, val item, val testfun, val keyfun)
       return nil;
     }
   default:
-    type_mismatch(lit("in: ~s is not a sequence or hash"), seq, nao);
+    switch (si.kind) {
+    case SEQ_HASHLIKE:
+      return tnil(gethash_e(self, si.obj, item));
+    case SEQ_LISTLIKE:
+    case SEQ_VECLIKE:
+      {
+        seq_iter_t iter;
+        val elem;
+
+        seq_iter_init(self, &iter, seq);
+
+        testfun = default_arg(testfun, equal_f);
+        keyfun = default_arg(keyfun, identity_f);
+
+        while (seq_get(&iter, &elem)) {
+          val key = funcall1(keyfun, elem);
+          if (funcall2(testfun, item, key))
+            return t;
+        }
+
+        return nil;
+      }
+    default:
+      type_mismatch(lit("in: ~s is not a sequence"), seq, nao);
+    }
   }
 }
 
