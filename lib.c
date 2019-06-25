@@ -1011,6 +1011,10 @@ val nullify(val seq)
   case BUF:
     return if3(length_buf(seq) != zero, seq, nil);
   case COBJ:
+    if (seq->co.cls == carray_s)
+      return if3(length_carray(seq) != zero, seq, nil);
+    if (seq->co.cls == hash_s)
+      return if3(hash_count(seq) != zero, seq, nil);
     if (obj_struct_p(seq)) {
       val nullify_meth = maybe_slot(seq, nullify_s);
       if (nullify_meth)
