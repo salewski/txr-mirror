@@ -27715,10 +27715,25 @@ if
 is a sequence, otherwise
 .codn nil .
 
-A sequence is defined as a list, vector or string. The object
+Lists, vectors and strings are sequences. The object
 .code nil
 denotes
 the empty list and so is a sequence.
+
+Objects of type
+.code buf
+and
+.code carray
+are sequences, as are hash tables.
+
+Structures which implement the
+.code length
+or
+.code car
+methods are considered sequences.
+
+No other objects are sequences. However, future revisions of
+the language may specify additional objects that are sequences.
 
 .coNP Functions @ length and @ len
 .synb

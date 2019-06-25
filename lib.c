@@ -1021,18 +1021,8 @@ val nullify(val seq)
 
 val seqp(val obj)
 {
-  switch (type(obj)) {
-  case NIL:
-  case CONS:
-  case LCONS:
-  case VEC:
-  case STR:
-  case LSTR:
-  case LIT:
-    return t;
-  default:
-    return nil;
-  }
+  seq_info_t si = seq_info(obj);
+  return tnil(si.kind != SEQ_NOTSEQ);
 }
 
 loc list_collect(loc ptail, val obj)
