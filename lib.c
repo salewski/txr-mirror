@@ -1027,22 +1027,25 @@ val seqp(val obj)
 
 loc list_collect(loc ptail, val obj)
 {
-  switch (type(deref(ptail))) {
+  val items = cons(obj, nil);
+  val tailobj = deref(ptail);
+
+  switch (type(tailobj)) {
   case NIL:
-    set(ptail, cons(obj, nil));
+    set(ptail, items);
     return ptail;
   case CONS:
   case LCONS:
-    ptail = tail(deref(ptail));
-    set(ptail, cons(obj, nil));
+    ptail = tail(tailobj);
+    set(ptail, items);
     return ptail;
   case VEC:
-    replace_vec(deref(ptail), cons(obj, nil), t, t);
+    replace_vec(tailobj, items, t, t);
     return ptail;
   case STR:
   case LIT:
   case LSTR:
-    replace_str(deref(ptail), cons(obj, nil), t, t);
+    replace_str(tailobj, items, t, t);
     return ptail;
   default:
     uw_throwf(error_s, lit("cannot append ~s"), deref(ptail), nao);
@@ -1052,16 +1055,15 @@ loc list_collect(loc ptail, val obj)
 loc list_collect_nconc(loc ptail, val obj)
 {
   val tailobj = deref(ptail);
-  obj = nullify(obj);
 
   switch (type(tailobj)) {
   case NIL:
-    set(ptail, obj);
+    set(ptail, nullify(obj));
     return ptail;
   case CONS:
   case LCONS:
     ptail = tail(tailobj);
-    set(ptail, obj);
+    set(ptail, nullify(obj));
     return ptail;
   case VEC:
     replace_vec(tailobj, obj, t, t);
@@ -1119,11 +1121,12 @@ loc list_collect_append(loc ptail, val obj)
 loc list_collect_nreconc(loc ptail, val obj)
 {
   val rev = nreverse(nullify(obj));
+  val tailobj = deref(ptail);
 
-  switch (type(deref(ptail))) {
+  switch (type(tailobj)) {
   case CONS:
   case LCONS:
-    ptail = tail(deref(ptail));
+    ptail = tail(tailobj);
     /* fallthrough */
   case NIL:
     set(ptail, rev);
@@ -1135,15 +1138,15 @@ loc list_collect_nreconc(loc ptail, val obj)
       return ptail;
     }
   case VEC:
-    replace_vec(deref(ptail), rev, t, t);
+    replace_vec(tailobj, rev, t, t);
     return ptail;
   case STR:
   case LIT:
   case LSTR:
-    replace_str(deref(ptail), rev, t, t);
+    replace_str(tailobj, rev, t, t);
     return ptail;
   default:
-    uw_throwf(error_s, lit("cannot nconc ~s to ~s"), obj, deref(ptail), nao);
+    uw_throwf(error_s, lit("cannot nconc ~s to ~s"), obj, tailobj, nao);
   }
 }
 
@@ -1170,11 +1173,12 @@ loc list_collect_revappend(loc ptail, val obj)
 {
   val last;
   obj = nullify(obj);
+  val tailobj = deref(ptail);
 
-  switch (type(deref(ptail))) {
+  switch (type(tailobj)) {
   case CONS:
   case LCONS:
-    set(ptail, copy_list(deref(ptail)));
+    set(ptail, copy_list(tailobj));
     ptail = tail(deref(ptail));
     /* fallthrough */
   case NIL:
@@ -1192,17 +1196,17 @@ loc list_collect_revappend(loc ptail, val obj)
     set(ptail, obj);
     return ptail;
   case VEC:
-    set(ptail, copy_vec(deref(ptail)));
+    set(ptail, copy_vec(tailobj));
     replace_vec(deref(ptail), reverse(obj), t, t);
     return ptail;
   case STR:
   case LIT:
   case LSTR:
-    set(ptail, copy_str(deref(ptail)));
+    set(ptail, copy_str(tailobj));
     replace_str(deref(ptail), reverse(obj), t, t);
     return ptail;
   default:
-    uw_throwf(error_s, lit("cannot append to ~s"), deref(ptail), nao);
+    uw_throwf(error_s, lit("cannot append to ~s"), tailobj, nao);
   }
 }
 
