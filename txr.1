@@ -31833,7 +31833,7 @@ by using
 
 .coNP Function @ nullify
 .synb
-.mets (nullify << sequence )
+.mets (nullify << obj )
 .syne
 .desc
 The
@@ -31841,11 +31841,32 @@ The
 function returns
 .code nil
 if
-.meta sequence
+.meta obj
 is an empty sequence.
-Otherwise it returns
-.meta sequence
-itself.
+Otherwise, if
+.meta obj
+is not an empty sequence, or isn't a sequence, then
+.meta obj
+itself is returned.
+
+If
+.meta obj
+is a structure, then
+.meta obj
+is returned if it doesn't support the
+.code nullify
+method, even if it has other methods such as
+.code length
+by which it could be inferred that it represents an empty sequence.
+
+If
+.meta obj
+has a
+.code nullify
+method, then the
+.code nullify
+function invokes that method and returns whatever value
+that method returns.
 
 Note: the
 .code nullify
