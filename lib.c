@@ -9709,7 +9709,9 @@ val in(val seq, val item, val testfun, val keyfun)
   default:
     switch (si.kind) {
     case SEQ_HASHLIKE:
-      return tnil(gethash_e(self, si.obj, item));
+      if (null_or_missing_p(testfun) && null_or_missing_p(keyfun))
+        return tnil(gethash_e(self, si.obj, item));
+      /* fallthrough */
     case SEQ_LISTLIKE:
     case SEQ_VECLIKE:
       {

@@ -29748,11 +29748,36 @@ to produce the comparison keys. Without this
 argument, the elements themselves are taken
 as the comparison keys.
 
-If the object being searched is a hash, then the
+If the object being searched is a hash, then if neither of the arguments
 .meta keyfun
-and
+nor
 .meta testfun
-arguments are ignored.
+is specified,
+.code in
+performs a hash lookup for
+.codn key ,
+returning
+.code t
+if the key is found,
+.code nil
+otherwise.
+If either of
+.meta keyfun
+or
+.meta testfun
+is specified, then
+.code in
+performs an exhaustive search of the hash table, as if it were
+a sequence of
+.code cons
+cells whose
+.code car
+fields are keys, and whose
+.code cdr
+keys are values. Thus to search by key, the
+.code car
+function must be specified as
+.metn keyfun .
 
 The
 .code in
