@@ -12685,9 +12685,11 @@ defined by \*(TX programs.
 .mets (cddr << object )
 .mets ...
 .mets (cdddddr << object )
-.mets (nthcdr < index << list )
-.mets (nthlast < index << list )
-.mets (butlastn < num << list )
+.mets (nthcdr < index << obj )
+.mets (nthlast < index << obj )
+.mets (butlastn < num << obj )
+.mets (last < num << obj )
+.mets (nth < index << obj )
 .mets (ref < seq << idx )
 .mets (sub < sequence >> [ from <> [ to ]])
 .mets (vecref < vec << idx )
@@ -12695,6 +12697,9 @@ defined by \*(TX programs.
 .mets (gethash < hash < key <> [ alt ])
 .mets (hash-userdata << hash )
 .mets (dwim < obj-place < index <> [ alt ])
+.mets (sub-list < obj >> [ from <> [ to ]])
+.mets (sub-vec < obj >> [ from <> [ to ]])
+.mets (sub-str < str >> [ from <> [ to ]])
 .mets >> [ obj-place < index <> [ alt ]] ;; equivalent to dwim
 .mets (symbol-value << symbol-valued-form )
 .mets (symbol-function << function-name-valued-form )
@@ -12706,6 +12711,8 @@ defined by \*(TX programs.
 .mets (qref < struct-obj << slot-name ) ;; by macro-expansion to (slot ...)
 .mets < struct-obj . < slot-name ;; equivalent to qref
 .mets (sock-peer << socket )
+.mets (carray-sub < carray >> [ from <> [ to ]])
+.mets (sub-buf < buf >> [ from <> [ to ]])
 .onom
 
 .NP* Built-In Place-Mutating Operators
