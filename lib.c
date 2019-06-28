@@ -454,7 +454,6 @@ val seq_begin(val obj)
   struct seq_iter *si = coerce(struct seq_iter *, chk_calloc(1, sizeof *si));
   si_obj = cobj(coerce(mem_t *, si), seq_iter_s, &seq_iter_ops);
   seq_iter_init(self, si, obj);
-  si->inf.obj = nil;
   return si_obj;
 }
 

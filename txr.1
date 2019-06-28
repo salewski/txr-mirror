@@ -31952,6 +31952,14 @@ If
 .meta object
 isn't a sequence, an exception is thrown.
 
+Note that if
+.meta object
+is a lazy list, the returned iterator maintains a reference to the
+head of that list during the traversal; therefore, generic iteration
+based on iterators from
+.code seq-begin
+is not suitable for indefinite iteration over infinite lists.
+
 .coNP Function @ seq-next
 .synb
 .mets (seq-next < iter << end-value )
