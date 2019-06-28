@@ -268,17 +268,12 @@ seq_info_t seq_info(val obj)
   seq_info_t ret;
   type_t to = type(obj);
 
+  ret.obj = obj;
+
   if (to != COBJ) {
-    ret.obj = obj;
     ret.type = to;
     ret.kind = seq_kind_tab[to];
     return ret;
-  }
-
-  ret.obj = obj = nullify(obj);
-
-  if (!obj || (ret.type = to = type(obj)) != COBJ) {
-    ret.kind = seq_kind_tab[to];
   } else {
     val cls = obj->co.cls;
 
@@ -287,12 +282,23 @@ seq_info_t seq_info(val obj)
     } else if (cls == carray_s) {
       ret.kind = SEQ_VECLIKE;
     } else if (obj_struct_p(obj)) {
-      if (maybe_slot(obj, length_s))
-        ret.kind = SEQ_VECLIKE;
-      if (maybe_slot(obj, car_s))
-        ret.kind = SEQ_LISTLIKE;
-      else
-        ret.kind = SEQ_NOTSEQ;
+      val sub = nullify(obj);
+
+      if (!sub) {
+        ret.kind = SEQ_NIL;
+        ret.obj = nil;
+      } else if (sub != obj) {
+        return seq_info(sub);
+      } else {
+        if (maybe_slot(obj, length_s))
+          ret.kind = SEQ_VECLIKE;
+        if (maybe_slot(obj, car_s))
+          ret.kind = SEQ_LISTLIKE;
+        if (maybe_slot(obj, car_s))
+          ret.kind = SEQ_LISTLIKE;
+        else
+          ret.kind = SEQ_NOTSEQ;
+      }
     } else {
       ret.kind = SEQ_NOTSEQ;
     }
