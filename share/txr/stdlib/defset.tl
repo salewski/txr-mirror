@@ -56,21 +56,20 @@
                  ,body)))))))
 
 (defun defset-expander (env macform name params newval setform)
-  (let* ((ap (analyze-params params))
-         (exp-params (car ap))
-         (total-syms (cadr ap))
-         (fp (new fun-param-parser form macform syntax exp-params))
-         (fixpars (append fp.req fp.(opt-syms)))
-         (restpar (if (symbol-package fp.rest) fp.rest))
-         (extsyms [keep-if symbol-package
-                           (diff total-syms (cons restpar fixpars))])
-         (nvsym (gensym))
-         (xsetform ^^(alet ((,',nvsym ,,newval))
-                       ,,(expand ^(symacrolet ((,newval ',nvsym))
-                                    ,setform)
-                                 env))))
-    (with-gensyms (getter setter args gpf-pairs gpr-pairs ext-pairs
-                   pgens rgens egens all-pairs agens)
+  (with-gensyms (getter setter args gpf-pairs gpr-pairs ext-pairs
+                 pgens rgens egens all-pairs agens nvsym)
+    (let* ((ap (analyze-params params))
+           (exp-params (car ap))
+           (total-syms (cadr ap))
+           (fp (new fun-param-parser form macform syntax exp-params))
+           (fixpars (append fp.req fp.(opt-syms)))
+           (restpar (if (symbol-package fp.rest) fp.rest))
+           (extsyms [keep-if symbol-package
+                             (diff total-syms (cons restpar fixpars))])
+           (xsetform ^^(alet ((,',nvsym ,,newval))
+                         ,,(expand ^(symacrolet ((,newval ',nvsym))
+                                      ,setform)
+                                   env))))
       ^(defplace (,name . ,args) body
          (,getter ,setter
            (tree-bind ,params ,args
