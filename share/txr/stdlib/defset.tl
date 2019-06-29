@@ -63,7 +63,12 @@
          (fixpars (append fp.req fp.(opt-syms)))
          (restpar (if (symbol-package fp.rest) fp.rest))
          (extsyms [keep-if symbol-package
-                           (diff total-syms (cons restpar fixpars))]))
+                           (diff total-syms (cons restpar fixpars))])
+         (nvsym (gensym))
+         (xsetform ^^(alet ((,',nvsym ,,newval))
+                       ,,(expand ^(symacrolet ((,newval ',nvsym))
+                                    ,setform)
+                                 env))))
     (with-gensyms (getter setter args gpf-pairs gpr-pairs ext-pairs
                    pgens rgens egens all-pairs agens)
       ^(defplace (,name . ,args) body
@@ -94,7 +99,8 @@
                                                ^((,',restpar ',,rgens))
                                                ^((,',restpar ',(car ,rgens))))))
                               (macrolet ((,,getter () ^(,',',name ,',*,agens))
-                                         (,,setter (,',newval) ,',setform))
+                                         (,,setter (,',newval)
+                                            ,',xsetform))
                                 ,body))
                            ,env)))))))))
 
@@ -107,16 +113,10 @@
     (x (compile-error mf "invalid syntax"))))
 
 (defset sub-list (list : (from 0) (to t)) items
-  (let ((it (gensym)))
-    ^(alet ((,it ,items))
-       (progn (set ,list (replace-list ,list ,it ,from ,to)) ,it))))
+  ^(progn (set ,list (replace-list ,list ,items ,from ,to)) ,items))
 
 (defset sub-vec (vec : (from 0) (to t)) items
-  (let ((it (gensym)))
-    ^(alet ((,it ,items))
-       (progn (replace-vec ,vec ,it ,from ,to) ,it))))
+  ^(progn (replace-vec ,vec ,items ,from ,to) ,items))
 
 (defset sub-str (str : (from 0) (to t)) items
-  (let ((it (gensym)))
-    ^(alet ((,it ,items))
-       (progn (replace-str ,str ,it ,from ,to) ,it))))
+  ^(progn (replace-str ,str ,items ,from ,to) ,items))
