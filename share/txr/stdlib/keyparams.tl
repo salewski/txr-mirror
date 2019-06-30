@@ -36,8 +36,8 @@
     (each ((k keys))
       (add (if (memp k args) t)))))
 
-(defun sys:build-key-list (key-params)
-  (let ((constant (group-by [chain second constantp] key-params)))
+(defun sys:build-key-list (key-params menv)
+  (let ((constant (group-by (opip second (constantp @1 menv)) key-params)))
     (let ((var-keys (mapcar (ret ^(cons ',(intern (symbol-name (first @1))
                                                   'keyword)
                                         ,(second @1)))
@@ -83,7 +83,7 @@
     (let* ((key-params-p [keep-if third key-params])
            (key-vars [mapcar first key-params])
            (key-vars-p [mapcar third key-params-p])
-           (keys (sys:build-key-list key-params))
+           (keys (sys:build-key-list key-params menv))
            (keys-p (mapcar (op intern (symbol-name (first @1)) 'keyword)
                            key-params-p)))
       (list eff-param
