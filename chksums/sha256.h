@@ -36,5 +36,5 @@ typedef struct SHA256 {
 } SHA256_t;
 
 void SHA256_init(SHA256_t *);
-void SHA256_update(SHA256_t *, const void *, size_t);
+void SHA256_update(SHA256_t *, const unsigned char *, size_t);
 void SHA256_final(SHA256_t *, unsigned char *);

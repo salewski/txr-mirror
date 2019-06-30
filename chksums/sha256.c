@@ -263,11 +263,10 @@ void SHA256_init(SHA256_t *ctx)
 }
 
 /* Add bytes into the hash */
-void SHA256_update(SHA256_t *ctx, const void *in, size_t len)
+void SHA256_update(SHA256_t *ctx, const unsigned char *src, size_t len)
 {
   u64_t bitlen;
   u32_t r;
-  const unsigned char *src = in;
 
   /* Number of bytes left in the buffer from previous updates */
   r = (ctx->count >> 3) & 0x3f;
