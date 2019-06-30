@@ -41,7 +41,7 @@
   (let ((catch-syms [mapcar car catch-clauses]))
     ^(sys:catch ,catch-syms ,try-form nil ,*catch-clauses)))
 
-(defmacro catch** (try-form . catch-clauses)
+(defmacro catch** (:env menv try-form . catch-clauses)
   (let ((catch-syms [mapcar car catch-clauses])
         sys-catch-clauses descs)
     (each ((cl catch-clauses))
@@ -50,7 +50,7 @@
         (push desc descs)))
     (sys:setq sys-catch-clauses (nreverse sys-catch-clauses))
     (sys:setq descs (nreverse descs))
-    (let ((desc-expr (if [all descs constantp]
+    (let ((desc-expr (if [all descs (op constantp @1 menv)]
                        ^'(,*[mapcar eval descs])
                        ^(list ,*descs))))
       ^(sys:catch ,catch-syms ,try-form ,desc-expr ,*sys-catch-clauses))))

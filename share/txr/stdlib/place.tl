@@ -940,21 +940,21 @@
 (define-place-macro ninth (obj) ^(ref ,obj 8))
 (define-place-macro tenth (obj) ^(ref ,obj 9))
 
-(define-place-macro last (obj : (n nil have-n))
+(define-place-macro last (:env e obj : (n nil have-n))
   (cond
-    ((and have-n (constantp n) (not (plusp n)))
+    ((and have-n (constantp n e) (not (plusp n)))
      ^(sub ,obj t t))
-    ((and have-n (constantp n))
+    ((and have-n (constantp n e))
      ^(sub ,obj ,(- n) t))
     (have-n
      ^(sub ,obj (- (max ,n 0)) t))
     (t ^(sub ,obj -1 t))))
 
-(define-place-macro butlast (obj : (n nil have-n))
+(define-place-macro butlast (:env e obj : (n nil have-n))
   (cond
-    ((and have-n (constantp n) (not (plusp n)))
+    ((and have-n (constantp n e) (not (plusp n)))
      obj)
-    ((and have-n (constantp n))
+    ((and have-n (constantp n e))
      ^(sub ,obj 0 ,(- n)))
     (have-n
      ^(sub ,obj 0 (- (max ,n 0))))
