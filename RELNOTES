@@ -1,3 +1,34 @@
+                                    TXR 219
+                                   2019-07-01
+
+
+  Features
+
+  - Base64 functions now work on buffers.
+  - New sha256 and crc32 functions.
+  - Sequences improvements:
+    - numerous internal changes for better maintainability and performance
+    - buffers and carrays considered sequences
+      - (append #b'...' #b'....) works
+      - nconc ditto
+    - nullify function handles hashes, buffers and carrays
+    - empty function handles buffers and carray
+    - in function allows testfun and keyfun on hashes
+  - defset now provides temporary variable for store value, so store form
+    doesn't have responsibility of once-only evaluation.
+
+  Bugs
+
+  - lnew: two regressions fixed.
+  - at-exit-do-not-call: logically reversed return value fixed.
+  - seq-begin: due to bug, worked only with lists.
+  - :key parameter macro: fixed bug causing key values to go to
+    wrong variables.
+  - various macros that use the constantp function were calling it
+    with a null environment.
+
+
+
                                     TXR 218
                                    2019-06-19
 
