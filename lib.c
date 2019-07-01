@@ -10000,6 +10000,8 @@ val empty(val seq)
     return eq(length_vec(seq), zero);
   case RNG:
     return eql(from(seq), to(seq));
+  case BUF:
+    return eq(length_buf(seq), zero);
   case COBJ:
     if (seq->co.cls == hash_s)
       return eq(hash_count(seq), zero);
