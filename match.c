@@ -663,7 +663,7 @@ static val h_var(match_line_ctx *c)
     return repeat_spec_k;
   } else if (consp(modifier) || regexp(modifier)) { /* var bound over text matched by form */
     cons_bind (new_bindings, new_pos,
-               match_line(ml_specline(*c, modifiers)));
+               match_line(ml_specline(*c, cons(modifier, nil))));
 
     if (!new_pos) {
       LOG_MISMATCH("var spanning form");
