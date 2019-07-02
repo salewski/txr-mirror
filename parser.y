@@ -521,7 +521,7 @@ elem : texts                    { $$ = rlc(cons(text_s, $1), $1);
      | DEFINE exprs ')' elems END
                                 { $$ = list(define_s, t, $4, $2, nao);
                                   rl($$, num($1));
-                                  match_reg_params($2); }
+                                  match_reg_params(second($2)); }
      ;
 
 clause_parts_h : elems_opt additional_parts_h   { $$ = if2($1, cons($1, $2)); }
@@ -536,7 +536,7 @@ define_clause : DEFINE exprs ')' newl
                 clauses_opt
                 END newl        { $$ = list(define_s, $2, $5, nao);
                                   rl($$, num($1));
-                                  match_reg_params($2); }
+                                  match_reg_params(second($2)); }
               | DEFINE ')' newl
                 clauses_opt
                 END newl        { $$ = list(define_s, nil, $4, nao);
