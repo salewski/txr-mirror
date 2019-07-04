@@ -754,6 +754,7 @@ void gc(void)
   save_context(mc);
   gc_enabled = 0;
   rcyc_empty();
+  iobuf_list_empty();
   mark(&mc, &gc_stack_top);
   hash_process_weak();
   prepare_finals();

@@ -51,8 +51,8 @@ val sha256_stream(val stream, val nbytes)
 {
   SHA256_t s256;
   unsigned char *hash = chk_malloc(SHA256_DIGEST_LENGTH);
-  val bfsz = num_fast(BUFSIZ);
-  val buf = make_buf(bfsz, nil, nil);
+  val buf = iobuf_get();
+  val bfsz = length_buf(buf);
   SHA256_init(&s256);
 
   if (null_or_missing_p(nbytes)) {
@@ -88,6 +88,7 @@ val sha256_stream(val stream, val nbytes)
   }
 
   SHA256_final(&s256, hash);
+  iobuf_put(buf);
   return make_borrowed_buf(num_fast(SHA256_DIGEST_LENGTH), hash);
 }
 

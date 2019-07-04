@@ -240,5 +240,7 @@ val base_name(val path);
 val dir_name(val path);
 val path_cat(val dir_name, val base_name);
 val make_byte_input_stream(val obj);
-
+val iobuf_get(void);
+void iobuf_put(val buf);
+void iobuf_list_empty(void);
 void stream_init(void);

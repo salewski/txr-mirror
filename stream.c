@@ -4605,6 +4605,33 @@ val make_byte_input_stream(val obj)
   }
 }
 
+static val iobuf_free_list;
+
+val iobuf_get(void)
+{
+  val buf = iobuf_free_list;
+
+  if (buf) {
+    val next = buf->b.len;
+    buf->b.len = buf->b.size;
+    iobuf_free_list = next;
+    return buf;
+  } else {
+    return make_buf(num_fast(BUFSIZ), nil, nil);
+  }
+}
+
+void iobuf_put(val buf)
+{
+  buf->b.len = iobuf_free_list;
+  iobuf_free_list = buf;
+}
+
+void iobuf_list_empty(void)
+{
+  iobuf_free_list = nil;
+}
+
 void stream_init(void)
 {
   prot1(&ap_regex);
