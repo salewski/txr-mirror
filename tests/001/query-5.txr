@@ -1,0 +1,4 @@
+@(bind cmd-rx #/sshd.*/)
+@(collect)
+@nil @nil @nil @nil @nil @nil @nil @{cmd cmd-rx}
+@(end)

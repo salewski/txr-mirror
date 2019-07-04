@@ -1,0 +1,7 @@
+cmd-rx="#/sshd.*/"
+cmd[0]="sshd: kaz [priv] "
+cmd[1]="sshd: kaz@pts/2  "
+cmd[2]="sshd: kaz [priv] "
+cmd[3]="sshd: kaz@pts/4  "
+cmd[4]="sshd: kaz [priv] "
+cmd[5]="sshd: kaz@pts/1  "
