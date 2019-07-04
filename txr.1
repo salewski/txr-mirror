@@ -47306,6 +47306,37 @@ from the string output stream, as if by the
 function, and returned as the result value
 of the form.
 
+.coNP Function @ make-byte-input-stream
+.synb
+.mets (make-byte-input-stream << obj )
+.syne
+.desc
+The
+.code make-byte-input-stream
+creates a stream which supports the
+.code get-byte
+operation for traversing a byte-wise representation of
+.metn obj .
+
+The function serves as a generic interface for calling one of
+several other stream constructing functions based on the
+type of the
+.meta obj
+argument.
+
+The
+.meta obj
+argument must be either a buffer, in which case
+.code make-byte-input-stream
+behaves like
+.codn make-buf-stream ,
+or else a string, in which case the function behaves like
+.codn make-string-byte-input-stream .
+
+Note: the repertoire of types handled by
+.code make-byte-input-stream
+may expand in future language versions.
+
 .coNP Function @ close-stream
 .synb
 .mets (close-stream < stream <> [ throw-on-error-p ])

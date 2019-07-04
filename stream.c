@@ -4690,6 +4690,7 @@ void stream_init(void)
   reg_fun(intern(lit("get-string-from-stream"), user_package), func_n1(get_string_from_stream));
   reg_fun(intern(lit("make-strlist-output-stream"), user_package), func_n0(make_strlist_output_stream));
   reg_fun(intern(lit("get-list-from-stream"), user_package), func_n1(get_list_from_stream));
+  reg_fun(intern(lit("make-byte-input-stream"), user_package), func_n1(make_byte_input_stream));
   reg_fun(intern(lit("close-stream"), user_package), func_n2o(close_stream, 1));
   reg_fun(get_error_s, func_n1(get_error));
   reg_fun(get_error_str_s, func_n1(get_error_str));
