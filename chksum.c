@@ -165,8 +165,8 @@ val sha256(val obj, val buf_in)
 val crc32_stream(val stream, val nbytes)
 {
   u32_t crc = 0;
-  val bfsz = num_fast(BUFSIZ);
-  val buf = make_buf(bfsz, nil, nil);
+  val buf = iobuf_get();
+  val bfsz = length_buf(buf);
 
   if (null_or_missing_p(nbytes)) {
     for (;;) {
@@ -200,6 +200,7 @@ val crc32_stream(val stream, val nbytes)
     }
   }
 
+  iobuf_put(buf);
   return unum(crc);
 }
 
