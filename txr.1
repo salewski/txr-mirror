@@ -51969,7 +51969,7 @@ The CRC-32 is returned as a non-negative integer.
 
 .coNP Function @ sha256-stream
 .synb
-.mets (sha256-stream < stream <> [ nbytes ])
+.mets (sha256-stream < stream >> [ nbytes <> [ buf ]])
 .syne
 .desc
 The
@@ -51985,11 +51985,17 @@ integer. It gives the number of bytes which should be read
 and included in the digest. If the argument is omitted, then bytes are read
 until the end of the stream.
 
-The 256 bit digest value is returned as a buffer containing 32 bytes.
+If the
+.meta buf
+argument is omitted, the 256 bit digest value is returned as a new,
+32-byte-long buffer object. If the
+.meta buf
+argument is specified, it must be a buffer that is at least 32 bytes long.
+The hash is placed into that buffer, which is then returned.
 
 .coNP Function @ sha256
 .synb
-.mets (sha256 << obj )
+.mets (sha256 < obj <> [ buf ])
 .syne
 .desc
 The
@@ -52008,7 +52014,13 @@ If
 is a character string, then the digest is calculated over the bytes
 which constitute its UTF-8 representation.
 
-The 256 bit digest value is returned as a buffer containing 32 bytes.
+If the
+.meta buf
+argument is omitted, the 256 bit digest value is returned as a new,
+32-byte-long buffer object. If the
+.meta buf
+argument is specified, it must be a buffer that is at least 32 bytes long.
+The hash is placed into that buffer, which is then returned.
 
 .SS* The Awk Utility
 

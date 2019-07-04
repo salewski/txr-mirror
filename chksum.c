@@ -47,10 +47,9 @@
 #include "chksums/crc32.h"
 #include "chksum.h"
 
-val sha256_stream(val stream, val nbytes)
+static void sha256_stream_impl(val stream, val nbytes, unsigned char *hash)
 {
   SHA256_t s256;
-  unsigned char *hash = chk_malloc(SHA256_DIGEST_LENGTH);
   val buf = iobuf_get();
   val bfsz = length_buf(buf);
   SHA256_init(&s256);
@@ -89,13 +88,36 @@ val sha256_stream(val stream, val nbytes)
 
   SHA256_final(&s256, hash);
   iobuf_put(buf);
-  return make_borrowed_buf(num_fast(SHA256_DIGEST_LENGTH), hash);
 }
 
-static val sha256_buf(val buf, val self)
+static val sha256_ensure_buf(val self, val buf_in, unsigned char **phash)
+{
+  const cnum sdl = SHA256_DIGEST_LENGTH;
+
+  if (null_or_missing_p(buf_in)) {
+    *phash = chk_malloc(sdl);
+    return make_borrowed_buf(num_fast(sdl), *phash);
+  } else {
+    *phash = buf_get(buf_in, self);
+    if (lt(length_buf(buf_in), num_fast(sdl)))
+      uw_throwf(error_s, lit("~s: buffer ~s too small for SHA-256 hash"),
+                self, buf_in, nao);
+    return buf_in;
+  }
+}
+
+val sha256_stream(val stream, val nbytes, val buf_in)
+{
+  val self = lit("sha256-stream");
+  unsigned char *hash;
+  val buf = sha256_ensure_buf(self, buf_in, &hash);
+  sha256_stream_impl(stream, nbytes, hash);
+  return buf;
+}
+
+static void sha256_buf(val buf, unsigned char *hash)
 {
   SHA256_t s256;
-  unsigned char *hash = chk_malloc(SHA256_DIGEST_LENGTH);
   SHA256_init(&s256);
   ucnum len = c_unum(buf->b.len);
   mem_t *data = buf->b.data;
@@ -111,26 +133,29 @@ static val sha256_buf(val buf, val self)
     SHA256_update(&s256, data, len);
 
   SHA256_final(&s256, hash);
-  return make_borrowed_buf(num_fast(SHA256_DIGEST_LENGTH), hash);
 }
 
-static val sha256_str(val str, val self)
+static void sha256_str(val str, unsigned char *hash)
 {
   val s = make_byte_input_stream(str);
-  return sha256_stream(s, nil);
+  sha256_stream_impl(s, nil, hash);
 }
 
-val sha256(val obj)
+val sha256(val obj, val buf_in)
 {
   val self = lit("sha256");
+  unsigned char *hash;
+  val buf = sha256_ensure_buf(self, buf_in, &hash);
 
   switch (type(obj)) {
   case STR:
   case LSTR:
   case LIT:
-    return sha256_str(obj, self);
+    sha256_str(obj, hash);
+    return buf;
   case BUF:
-    return sha256_buf(obj, self);
+    sha256_buf(obj, hash);
+    return buf;
   default:
     uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
               self, obj, nao);
@@ -223,8 +248,8 @@ val crc32(val obj)
 
 void chksum_init(void)
 {
-  reg_fun(intern(lit("sha256-stream"), user_package), func_n2o(sha256_stream, 1));
-  reg_fun(intern(lit("sha256"), user_package), func_n1(sha256));
+  reg_fun(intern(lit("sha256-stream"), user_package), func_n3o(sha256_stream, 1));
+  reg_fun(intern(lit("sha256"), user_package), func_n2o(sha256, 1));
   reg_fun(intern(lit("crc32-stream"), user_package), func_n2o(crc32_stream, 1));
   reg_fun(intern(lit("crc32"), user_package), func_n1(crc32));
 }

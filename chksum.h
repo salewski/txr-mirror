@@ -25,8 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-val sha256_stream(val stream, val nbytes);
-val sha256(val obj);
+val sha256_stream(val stream, val nbytes, val buf);
+val sha256(val obj, val buf);
 val crc32_stream(val stream, val nbytes);
 val crc32(val obj);
 void chksum_init(void);
