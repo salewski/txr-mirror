@@ -362,6 +362,24 @@ val replace_buf(val buf, val items, val from, val to)
   return buf;
 }
 
+static void buf_move_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
+{
+  struct buf *b = buf_handle(buf, self);
+  cnum p = buf_check_index(b, pos, self);
+  val req_len = plus(num(p), num(size));
+  if (gt(req_len, b->len))
+    buf_do_set_len(buf, b, req_len, nil, self);
+  memmove(b->data + p, ptr, size);
+}
+
+val buf_put_buf(val dbuf, val sbuf, val pos)
+{
+  val self = lit("buf-put-buf");
+  struct buf *sb = buf_handle(sbuf, self);
+  buf_move_bytes(dbuf, pos, sb->data, c_num(sb->len), self);
+  return sbuf;
+}
+
 static void buf_put_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
 {
   struct buf *b = buf_handle(buf, self);
@@ -1077,6 +1095,7 @@ void buf_init(void)
   reg_fun(intern(lit("copy-buf"), user_package), func_n1(copy_buf));
   reg_fun(intern(lit("sub-buf"), user_package), func_n3(sub_buf));
   reg_fun(intern(lit("replace-buf"), user_package), func_n4(replace_buf));
+  reg_fun(intern(lit("buf-put-buf"), user_package), func_n3(buf_put_buf));
 
 #if HAVE_I8
   reg_fun(intern(lit("buf-put-i8"), user_package), func_n3(buf_put_i8));

@@ -23829,6 +23829,35 @@ The of the arguments, semantics and return value given for
 apply to
 .codn replace-buf .
 
+.coNP Function @ buf-put-buf
+.synb
+.mets (buf-put-buf < dst-buf < pos << src-buf )
+.syne
+.desc
+The
+.code buf-put-buf
+function stores a copy of buffer
+.meta src-buf
+into
+.meta dst-buf
+at the offset indicated by
+.metn pos .
+
+The source and destination memory regions may overlap.
+
+The return value is
+.metn src-buf .
+
+Note: the effect of a
+.code buf-put-buf
+operation may also be performed by a suitable call to
+.codn replace-buf ;
+however,
+.code buf-put-buf
+is less general: it doesn't insert or delete by replacing
+destination ranges with data of differing length,
+and requires a source operand of buffer type.
+
 .coNP Function @ buf-put-i8
 .synb
 .mets (buf-put-i8 < buf < pos << val )
