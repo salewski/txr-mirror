@@ -28195,6 +28195,18 @@ be monotonically increasing, after consideration of the
 displacement of negative values.
 
 If
+.meta replacement-sequence
+shares storage with the target range of
+.metn sequence ,
+or, in the case when that range is resized by the
+.code replace
+operation, shares storage with any portion of
+.meta sequence
+above that range, then the effect of
+.code replace
+on either object is unspecified.
+
+If
 .meta sequence
 is a
 .code carray

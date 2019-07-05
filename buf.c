@@ -339,7 +339,7 @@ val replace_buf(val buf, val items, val from, val to)
     if (zerop(len_it))
       return buf;
     if (bufp(items)) {
-      memcpy(buf->b.data + c_num(from), items->b.data, c_num(len_it));
+      memmove(buf->b.data + c_num(from), items->b.data, c_num(len_it));
     } else {
       seq_iter_t item_iter;
       seq_iter_init(self, &item_iter, items);

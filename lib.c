@@ -3857,7 +3857,7 @@ val replace_str(val str_in, val items, val from, val to)
     if (zerop(len_it))
       return str_in;
     if (stringp(items)) {
-      wmemcpy(str_in->st.str + c_num(from), c_str(items), c_num(len_it));
+      wmemmove(str_in->st.str + c_num(from), c_str(items), c_num(len_it));
     } else {
       seq_iter_t item_iter;
       seq_iter_init(self, &item_iter, items);
@@ -7289,8 +7289,8 @@ val replace_vec(val vec_in, val items, val from, val to)
     if (zerop(len_it))
       return vec_in;
     if (vectorp(items)) {
-      memcpy(vec_in->v.vec + c_num(from), items->v.vec,
-             sizeof *vec_in->v.vec * c_num(len_it));
+      memmove(vec_in->v.vec + c_num(from), items->v.vec,
+              sizeof *vec_in->v.vec * c_num(len_it));
       mut(vec_in);
     } else {
       seq_iter_t item_iter;
