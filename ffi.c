@@ -4978,7 +4978,7 @@ val carray_replace(val carray, val values, val from, val to)
       }
     }
 
-    for (; fn != tn; fn++, ptr += elsize) {
+    for (; fn < vn; fn++, ptr += elsize) {
       val item = seq_geti(&item_iter);
       eltft->put(eltft, item, ptr, self);
     }
