@@ -235,12 +235,6 @@ mem_t *buf_get(val buf, val self)
   return b->data;
 }
 
-void buf_fill(val buf, mem_t *src, val self)
-{
-  struct buf *b = buf_handle(buf, self);
-  memcpy(b->data, src, c_num(b->len));
-}
-
 val sub_buf(val buf, val from, val to)
 {
   struct buf *b = buf_handle(buf, lit("sub"));
