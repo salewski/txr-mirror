@@ -45044,15 +45044,15 @@ from a quasiliteral within a nested
   (op ... (op ... `@@@1`))
 .brev
 
-.TP* Example:
+.TP* Examples:
 
 .verb
-  ;; Take a list of pairs and produce a list in which those pairs
-  ;; are reversed.
+  (let ((c 0))
+    (mapcar (op cons (inc c)) '(a b c)))
+  --> ((1 . a) (2 . b) (3 . c))
 
-  (mapcar (op list @2 @1) '((1 2) (a b)))   ->   ((2 1) (b a))
+  (reduce-left (op + (* 10 @1) @2) '(1 2 3)) --> 123
 .brev
-
 .coNP Macro @ lop
 .synb
 .mets (lop << form +)
@@ -45229,6 +45229,15 @@ See also: the
 and
 .code ipf
 functions.
+
+.TP* Example:
+
+.verb
+  ;; Take a list of pairs and produce a list in which those pairs
+  ;; are reversed.
+
+  (mapcar (ap list @2 @1) '((1 2) (a b)))   ->   ((2 1) (b a))
+.brev
 
 .coNP Macros @ opip and @ oand
 .synb
