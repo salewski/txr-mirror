@@ -1686,7 +1686,7 @@
                                   (sys:vm-execute-toplevel vm-desc)
                                   (when (or (neq pa *package-alist*))
                                     (set fence t))))
-                              (when *emit*
+                              (when (and *emit* (consp form))
                                 out.(add flat-vd)
                                 (when fence
                                   out.(add :fence))))))))))
