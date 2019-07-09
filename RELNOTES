@@ -1,3 +1,37 @@
+                                    TXR 220
+                                   2019-07-08
+
+
+  Features:
+
+  - New make-byte-input-stream function for abstracting byte streams
+    creation over objects of different kinds.
+  - sha256:
+    - program can specify buffer where sha256 is placed to avoid
+      allocating a new one.
+  - sha256, crc32:
+    - stream hashing operations internally use recycled I/O buffer.
+  - New function buf-put-buf: more efficient way to plant one buffer's
+    contents into another.
+
+  Bugs
+
+   - @(define): fixed problem in parametr list code walk, leading to spurious
+    undefined variable warnings.
+   - @{var1 var2}: fixed November 2011 regression: not working when var2
+     is bound to a regex or string list.
+   - Broken carray-replace repaired.
+   - overlapping use of replace family of functions:
+     - semantics addressed in documentation
+     - implementation fixed to avoid overlapping memcpy
+   - compile-file:
+     - no longer silently ignores top-level forms that are atoms or that
+       macro-expand to atoms.
+     - top-level atoms are compiled to produce diagnostics; then
+       the compilation result is discarded.
+
+
+
                                     TXR 219
                                    2019-07-01
 
