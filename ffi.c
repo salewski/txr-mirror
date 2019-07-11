@@ -182,6 +182,7 @@ struct txr_ffi_type {
   val (*in)(struct txr_ffi_type *, int copy, mem_t *src, val obj, val self);
   void (*out)(struct txr_ffi_type *, int copy, val obj, mem_t *dest, val self);
   void (*release)(struct txr_ffi_type *, val obj, mem_t *dst);
+  cnum (*dynsize)(struct txr_ffi_type *, val obj, val self);
   mem_t *(*alloc)(struct txr_ffi_type *, val obj, val self);
   void (*free)(void *);
 #if !HAVE_LITTLE_ENDIAN
@@ -376,9 +377,26 @@ static void ffi_void_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
 {
 }
 
+static cnum ffi_fixed_dynsize(struct txr_ffi_type *tft, val obj, val self)
+{
+  return tft->size;
+}
+
 static mem_t *ffi_fixed_alloc(struct txr_ffi_type *tft, val obj, val self)
 {
   return chk_calloc(1, tft->size);
+}
+
+static cnum ffi_varray_dynsize(struct txr_ffi_type *tft, val obj, val self)
+{
+  cnum len = c_num(length(obj)) + tft->null_term;
+  val eltype = tft->eltype;
+  struct txr_ffi_type *etft = ffi_type_struct(eltype);
+  if (etft->size == 0)
+    uw_throwf(error_s, lit("~a: zero size array element"), self, nao);
+  if (INT_PTR_MAX / etft->size < len)
+    uw_throwf(error_s, lit("~a: array too large"), self,  nao);
+  return len * etft->size;
 }
 
 static mem_t *ffi_varray_alloc(struct txr_ffi_type *tft, val obj, val self)
@@ -2648,6 +2666,7 @@ static val make_ffi_type_builtin(val syntax, val lisp_type,
   tft->put = put;
   tft->get = get;
   tft->alloc = ffi_fixed_alloc;
+  tft->dynsize = ffi_fixed_dynsize;
   tft->free = free;
 #if !HAVE_LITTLE_ENDIAN
   tft->rput = (rput ? rput : put);
@@ -2700,6 +2719,7 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
     tft->out = out;
     tft->release = release;
     tft->alloc = ffi_fixed_alloc;
+    tft->dynsize = ffi_fixed_dynsize;
     tft->free = free;
     tft->by_value_in = 1;
 
@@ -2758,6 +2778,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   tft->in = ffi_struct_in;
   tft->release = ffi_struct_release;
   tft->alloc = ffi_fixed_alloc;
+  tft->dynsize = ffi_fixed_dynsize;
   tft->free = free;
   tft->memb = memb;
 
@@ -2889,6 +2910,7 @@ static val make_ffi_type_union(val syntax, val lisp_type,
 #endif
   tft->in = ffi_union_in;
   tft->alloc = ffi_fixed_alloc;
+  tft->dynsize = ffi_fixed_dynsize;
   tft->free = free;
   tft->memb = memb;
 
@@ -2983,6 +3005,7 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->in = ffi_array_in;
   tft->release = ffi_array_release;
   tft->alloc = ffi_fixed_alloc;
+  tft->dynsize = ffi_fixed_dynsize;
   tft->free = free;
   tft->by_value_in = etft->by_value_in;
   tft->size = etft->size * nelem;
@@ -3196,6 +3219,7 @@ val ffi_type_compile(val syntax)
         else if (etft->syntax == bchar_s)
           tft->bchar_conv = 1;
         tft->alloc = ffi_varray_alloc;
+        tft->dynsize = ffi_varray_dynsize;
         tft->free = free;
         tft->size = 0;
         return type;
@@ -4377,10 +4401,11 @@ val ffi_put_into(val dstbuf, val obj, val type, val offset_in)
   val offset = default_arg(offset_in, zero);
   cnum offsn = c_num(offset);
   cnum room = c_num(minus(length_buf(dstbuf), offset));
+  cnum size = tft->dynsize(tft, obj, self);
   if (offsn < 0)
     uw_throwf(error_s, lit("~a: negative offset ~s specified"),
               self, offset, nao);
-  if (room < tft->size)
+  if (room < size)
     uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s at offset ~s"),
               self, dstbuf, type, offset, nao);
   tft->put(tft, obj, dst + offsn, self);
@@ -4391,7 +4416,7 @@ val ffi_put(val obj, val type)
 {
   val self = lit("ffi-put");
   struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
-  val buf = make_buf(num_fast(tft->size), zero, nil);
+  val buf = make_buf(num(tft->dynsize(tft, obj, self)), zero, nil);
   mem_t *dst = buf_get(buf, self);
   tft->put(tft, obj, dst, self);
   return buf;
@@ -4405,10 +4430,11 @@ val ffi_in(val srcbuf, val obj, val type, val copy_p, val offset_in)
   val offset = default_arg(offset_in, zero);
   cnum offsn = c_num(offset);
   cnum room = c_num(minus(length_buf(srcbuf), offset));
+  cnum size = tft->dynsize(tft, obj, self);
   if (offsn < 0)
     uw_throwf(error_s, lit("~a: negative offset ~s specified"),
               self, offset, nao);
-  if (room < tft->size)
+  if (room < size)
     uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s at offset ~s"),
               self, srcbuf, type, offset, nao);
   if (tft->in != 0)
@@ -4443,10 +4469,11 @@ val ffi_out(val dstbuf, val obj, val type, val copy_p, val offset_in)
   val offset = default_arg(offset_in, zero);
   cnum offsn = c_num(offset);
   cnum room = c_num(minus(length_buf(dstbuf), offset));
+  cnum size = tft->dynsize(tft, obj, self);
   if (offsn < 0)
     uw_throwf(error_s, lit("~a: negative offset ~s specified"),
               self, offset, nao);
-  if (room < tft->size)
+  if (room < size)
     uw_throwf(error_s, lit("~a: buffer ~s is too small for type ~s at offset ~s"),
               self, dstbuf, type, offset, nao);
   if (tft->out != 0)

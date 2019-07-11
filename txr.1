@@ -64622,6 +64622,12 @@ The
 .meta type
 argument must be a compiled FFI type.
 
+If
+.meta type
+is has a variable length, then the actual size of the foreign representation is
+calculated from
+.metn obj .
+
 The
 .meta obj
 argument must be an object compatible with the conversions
@@ -64639,15 +64645,14 @@ is stored. The default value is zero.
 These functions perform the "put semantics" encoding action very similar to
 what happens to the arguments of an outgoing foreign function call.
 
+
 Caution: incorrect use of this this function, or its use in isolation
 without a matching
 .code ffi-in
 call, can cause memory leaks, because, depending on
 .metn type ,
 temporary resources may be allocated, and pointers to those resources
-will be stored in the buffer. \*(TX's garbage collector doesn't know
-about these resources; it doesn't traverse buffer contents looking for
-pointers, and those pointers aren't references to Lisp heap objects anyway.
+will be stored in the buffer.
 
 .coNP Function @ ffi-in
 .synb
@@ -64706,6 +64711,12 @@ but that structure can have pointers to objects which are updated by
 the called function. Those indirect objects are passed by pointer.
 They get updated, but the parent structure cannot.
 
+If
+.meta type
+is has a variable length, then the actual size of the foreign representation is
+calculated from
+.metn obj .
+
 The
 .code ffi-in
 function returns either
@@ -64752,6 +64763,11 @@ operation is similar to the "get semantics" performed by FFI
 in order to extract the return value of foreign function
 calls, and by the FFI callback mechanism to extract the
 arguments coming into a callback.
+
+The
+.meta type
+argument may not be a variable length type, such as an array of
+unspecified size.
 
 .coNP Functions @ file-get-buf and @ command-get-buf
 .synb
