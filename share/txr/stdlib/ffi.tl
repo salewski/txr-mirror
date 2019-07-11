@@ -122,8 +122,12 @@
        (defvarl ,var-sym (carray-cptr ,var-ref ,type-sym 1))
        (defsymacro ,name (carray-ref ,var-sym 0)))))
 
-(defmacro sizeof (type)
-  (ffi-size (ffi-type-compile type)))
+(defmacro sizeof (type : (obj nil obj-p) :env menv)
+  (if obj-p
+    (if (constantp obj menv)
+      (sys:dyn-size (ffi-type-compile type) obj)
+      ^(sys:dyn-size (load-time (ffi-type-compile ',type)) ,obj))
+    (ffi-size (ffi-type-compile type))))
 
 (defmacro alignof (type)
   (ffi-alignof (ffi-type-compile type)))

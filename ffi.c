@@ -5494,6 +5494,13 @@ val fill_obj(val obj, val type, val stream)
   return tft->in(tft, 1, data, obj, self);
 }
 
+static val dyn_size(val type, val obj)
+{
+  val self = lit("sizeof");
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
+  return num(tft->dynsize(tft, obj, self));
+}
+
 void ffi_init(void)
 {
   prot1(&ffi_typedef_hash);
@@ -5625,6 +5632,7 @@ void ffi_init(void)
   reg_fun(intern(lit("put-obj"), user_package), func_n3o(put_obj, 2));
   reg_fun(intern(lit("get-obj"), user_package), func_n2o(get_obj, 1));
   reg_fun(intern(lit("fill-obj"), user_package), func_n3o(fill_obj, 2));
+  reg_fun(intern(lit("dyn-size"), system_package), func_n2(dyn_size));
   ffi_typedef_hash = make_hash(nil, nil, nil);
   ffi_init_types();
   ffi_init_extra_types();

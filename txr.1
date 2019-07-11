@@ -64059,17 +64059,40 @@ as its value.
 
 .coNP Macro @ sizeof
 .synb
-.mets (sizeof << type-syntax )
+.mets (sizeof < type-syntax <> [ object-expr ])
 .syne
 .desc
 The macro
 .code sizeof
 calculates the size of the FFI type denoted by
+.codn type-syntax .
+
+The
+.meta type-syntax
+expression is compiled to a type using
+.codn ffi-type-compile .
+The
+.meta object-expr
+expression is evaluated to an object value.
+
+If
 .code type-syntax
-at macro-expansion time, and produces that
-integer value as its expansion, such that there is no
-run-time computation. It uses the
-.code ffi-sizeof
+denotes a variable length type, and the
+.meta object-expr
+argument is present, then a
+.I "dynamic size" is computed: the actual number of bytes required to store
+that object value as a foreign representation of the specified variable length
+type.
+
+The
+.code sizeof
+macro arranges for the size calculation to be carried out at macro-expansion
+time, if possible, so that the
+.code sizeof
+form is replaced by an integer constant. This is possible when the
+.meta object-expr
+is omitted, or if it is a constant expression according to the
+.code constantp
 function.
 
 .coNP Macro @ alignof
