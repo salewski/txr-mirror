@@ -2839,7 +2839,7 @@ mem_t *chk_malloc_gc_more(size_t size)
 mem_t *chk_calloc(size_t n, size_t size)
 {
   mem_t *ptr = convert(mem_t *, calloc(n, size));
-  cnum total = convert(cnum, size) * convert(cnum, n);
+  alloc_bytes_t total = convert(alloc_bytes_t, size) * n;
 
   assert (!async_sig_enabled);
 
