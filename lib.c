@@ -10628,13 +10628,37 @@ static val do_relate_dfl(val env, val arg)
   return if3(pos, ref(rng, pos), dfl);
 }
 
+static val do_relate_hash(val hash, val arg)
+{
+  val cell = gethash_e(lit("relate"), hash, arg);
+  return if3(cell, cdr(cell), arg);
+}
+
+static val do_relate_hash_dfl(val env, val arg)
+{
+  cons_bind (hash, dfl, env);
+  val cell = gethash_e(lit("relate"), hash, arg);
+  return if3(cell, cdr(cell), dfl);
+}
 
 val relate(val domain_seq, val range_seq, val dfl_val)
 {
+  val lds = length(domain_seq);
+  val use_hash = and2(gt(lds, num_fast(10)),
+                      le(lds, length(range_seq)));
+  args_decl(args, ARGS_MIN);
+  val hash = if2(use_hash, hash_zip(domain_seq, range_seq, args));
+
   return if3(missingp(dfl_val),
-             func_f1(cons(domain_seq, range_seq), do_relate),
-             func_f1(vec(domain_seq, range_seq, dfl_val, nao),
-                     do_relate_dfl));
+             if3(use_hash,
+                 func_f1(hash, do_relate_hash),
+                 func_f1(cons(domain_seq, range_seq), do_relate)),
+             if3(use_hash,
+                 if3(null(dfl_val),
+                     hash,
+                     func_f1(cons(hash, dfl_val), do_relate_hash_dfl)),
+                 func_f1(vec(domain_seq, range_seq, dfl_val, nao),
+                         do_relate_dfl)));
 }
 
 val rcons(val from, val to)
