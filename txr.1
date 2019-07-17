@@ -43691,6 +43691,36 @@ and returned.
 
 The value associated with each key is that key itself.
 
+.coNP Function @ hash-zip
+.synb
+.mets (hash-zip < key-seq < value-seq << hash-arg *)
+.syne
+.desc
+The
+.code hash-zip
+function constructs a hash as if by a call to
+.mono
+.meti (apply hash << hash-args ),
+.onom
+where
+.meta hash-args
+is a list of the individual
+.meta hash-arg
+variadic arguments.
+
+The hash is then populated with keys taken from
+.meta key-seq
+which are paired with values taken from from
+.metn value-seq ,
+and returned.
+
+If
+.meta key-seq
+is longer than
+.metn value-seq ,
+then the excess keys are ignored, and
+.IR "vice versa" .
+
 .coNP Function @ hash-update
 .synb
 .mets (hash-update < hash << function )

@@ -1249,6 +1249,22 @@ val hash_list(val keys, struct args *hashv_args)
   return hash;
 }
 
+val hash_zip(val keys, val vals, struct args *hashv_args)
+{
+  val self = lit("hash-zip");
+  seq_iter_t key_iter, val_iter;
+  val k, v;
+  val hash = hashv(hashv_args);
+
+  seq_iter_init(self, &key_iter, keys);
+  seq_iter_init(self, &val_iter, vals);
+
+  while (seq_get(&key_iter, &k) && seq_get(&val_iter, &v))
+    sethash(hash, k, v);
+
+  return hash;
+}
+
 val group_by(val func, val seq, struct args *hashv_args)
 {
   val self = lit("group-by");
@@ -1642,6 +1658,7 @@ void hash_init(void)
   reg_fun(intern(lit("hash-from-pairs"), user_package), func_n1v(hash_from_pairs_v));
   reg_fun(intern(lit("hash-from-alist"), user_package), func_n1v(hash_from_alist_v));
   reg_fun(intern(lit("hash-list"), user_package), func_n1v(hash_list));
+  reg_fun(intern(lit("hash-zip"), user_package), func_n2v(hash_zip));
   reg_fun(intern(lit("gethash"), user_package), func_n3o(gethash_n, 2));
   reg_fun(intern(lit("inhash"), user_package), func_n3o(inhash, 2));
   reg_fun(intern(lit("sethash"), user_package), func_n3(sethash));
