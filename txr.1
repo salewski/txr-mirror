@@ -64714,7 +64714,7 @@ will be stored in the buffer.
 
 .coNP Function @ ffi-in
 .synb
-.mets (ffi-in < src-buf < obj < type << copy-p )
+.mets (ffi-in < src-buf < obj < type < copy-p <> [ offset ])
 .syne
 .desc
 The
@@ -64774,6 +64774,14 @@ If
 is has a variable length, then the actual size of the foreign representation is
 calculated from
 .metn obj .
+
+The optional
+.meta offset
+argument specifies a byte offset from the beginning of the data area of
+.meta src-buf
+from which the foreign-representation of
+.meta obj
+is taken.
 
 The
 .code ffi-in
