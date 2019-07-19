@@ -64712,6 +64712,59 @@ call, can cause memory leaks, because, depending on
 temporary resources may be allocated, and pointers to those resources
 will be stored in the buffer.
 
+.coNP Function @ ffi-out
+.synb
+.mets (ffi-out < dst-buf < obj < type < copy-p <> [ offset ])
+.syne
+.desc
+The
+.code ffi-out
+function performs the "out semantics" encoding action, similar
+to the treatment applied to the arguments of a callback prior to
+returning to foreign code.
+
+It is assumed that
+.meta dst-buf
+is a buffer that was earlier used in a call to
+.code ffi-get
+and that
+.meta type
+and
+.meta obj
+are the same values that were passed as the
+corresponding arguments of that function.
+
+The
+.meta copy-p
+argument is a Boolean flag which is true if the buffer represents a datum
+that is being passed by pointer. If
+.meta copy-p
+is true, then
+.meta obj
+is converted to a foreign representation which is stored into
+.metn dst-buf .
+If it is false, it indicates that the buffer itself is a pass-by-value object.
+This means that the object itself will not be copied, but if it is an aggregate
+which contains pointers, the operation will recurse on those objects, invoking
+their "out semantics" action with pass-by-pointer semantics. The required
+pointers to these indirect objects are obtained from
+.metn dst-buf .
+
+The optional
+.meta offset
+argument specifies a byte offset from the beginning of the data area of
+.meta dst-buf
+where the foreign-representation of
+.meta obj
+is understood to be stored, and where it is updated if requested by
+.metn copy-p .
+The default value is zero.
+
+The
+.code ffi-out
+function returns
+.metn dst-buf .
+
 .coNP Function @ ffi-in
 .synb
 .mets (ffi-in < src-buf < obj < type < copy-p <> [ offset ])
