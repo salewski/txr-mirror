@@ -62011,6 +62011,22 @@ and
 .code bit
 compound type operators.
 
+A structure member must not be an incomplete or zero sized array,
+unless it is the last member. If the last member of FFI structure is
+an incomplete array, then it is a flexible structure.
+
+A structure member must not be a flexible structure, unless it is the
+last member; the containing structure is then itself a flexible structure.
+
+Flexible structures correspond to the C concept of a "flexible array member":
+the idea that the last member of a structure may be an array of unknown size,
+which allows for variable-length data at the end of a structure, provided
+that the memory is suitably allocated.
+
+Flexible structures are subject to special restrictions and requirements.  See
+the section Flexible Structures below. In particular, flexible structures
+may not be passed or returned by value.
+
 See also: the
 .code make-zstruct
 function and the
@@ -63024,6 +63040,73 @@ members of structs and elements of arrays.
 \*(TL's FFI performs the automatic conversion from the abstract Lisp integer
 representation to the foreign representations exhibiting the specified
 endianness.
+
+.SS* Incomplete Types
+
+In the \*(TL FFI type system, the following types are
+.IR incomplete :
+the type
+.codn void ,
+arrays of unspecified size, and any
+.code struct
+whose last element is of incomplete type.
+
+An incomplete type cannot used as a function parameter type, or a return
+value type. It may not be used as an array element or union member type.
+A struct member type may be incomplete only if it is the last member.
+
+An incomplete structure whose last member is an array is a
+.IR "flexible structure" .
+
+.SS* Flexible Structures
+
+If a FFI
+.code struct
+type is defined with an incomplete array (an array of unspecified size) as its
+last member, then it specifies an incomplete type known as a
+.IR "flexible structure" .
+That array is the
+.IR "terminating array" .
+The terminating array corresponds to a slot in the Lisp structure; that
+slot is the
+.IR "last slot" .
+
+A structure which has a flexible structure as its last member is also,
+effectively, a flexible structure.
+
+When a Lisp structure is being converted to the foreign representation
+under the control of a flexible structure FFI type, the number of elements
+in the terminating array is determined from the length of the object
+stored in the last slot of the Lisp structure. The length includes the
+terminating null element for
+.code zarray
+types. The conversion is consistent with the semantics of an incomplete
+arrays that is not a structure member.
+
+In the reverse direction, when a foreign representation is being converted
+to a Lisp structure under the control of a flexible structure FFI type,
+the size of the array that is accessed and extracted is determined from
+the length of the object stored in the last slot, or, if the array type
+is a
+.code zarray
+from detecting null-termination of the foreign array. The conversion of
+the array itself is consistent with the semantics of an incomplete
+arrays that is not a structure member.
+Before the conversion takes place, all of the members of the
+structure prior to the the terminating array, are extracted and converted to
+Lisp representations.  The corresponding slots of the Lisp structure are
+updated. Then if the Lisp structure type has a
+.code length
+method, that method is invoked. The return value of the method is used
+to perform an adjustment on the object in the last slot.
+If the existing object in the last slot is a vector, its length is adjusted to
+the value returned by the method. If the existing
+object isn't a vector, then it is replaced by a new
+.codn nil -filled
+vector, whose length is given by the return value of
+.codn length .
+The conversion of the terminating array to Lisp representation the proceeds
+after this adjustment, using the adjusted last slot object.
 
 .SS* Bitfield Allocation Rules
 The \*(TL FFI type system follows rules for bitfield allocation which were
@@ -64112,12 +64195,11 @@ expression is evaluated to an object value.
 
 If
 .code type-syntax
-denotes a variable length type, and the
+denotes an incomplete array or structure type, and the
 .meta object-expr
 argument is present, then a
 .I "dynamic size" is computed: the actual number of bytes required to store
-that object value as a foreign representation of the specified variable length
-type.
+that object value as a foreign representation.
 
 The
 .code sizeof
@@ -64129,6 +64211,18 @@ form is replaced by an integer constant. This is possible when the
 is omitted, or if it is a constant expression according to the
 .code constantp
 function.
+
+For the type
+.codn void ,
+incomplete array types, and bitfield types, the one-argument form of
+.code sizeof
+reports zero.
+
+For incomplete structure types, the one-argument
+.code sizeof
+reports a size which is equivalent to the offset of the last member.
+The size of an incomplete structure does not include padding
+for the most strictly aligned member.
 
 .coNP Macro @ alignof
 .synb

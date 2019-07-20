@@ -176,6 +176,8 @@ struct txr_ffi_type {
   unsigned char_conv : 1;
   unsigned wchar_conv : 1;
   unsigned bchar_conv : 1;
+  unsigned incomplete : 1;
+  unsigned bitfield : 1;
   struct txr_ffi_type *(*clone)(struct txr_ffi_type *);
   void (*put)(struct txr_ffi_type *, val obj, mem_t *dst, val self);
   val (*get)(struct txr_ffi_type *, mem_t *src, val self);
@@ -392,8 +394,8 @@ static cnum ffi_varray_dynsize(struct txr_ffi_type *tft, val obj, val self)
   cnum len = c_num(length(obj)) + tft->null_term;
   val eltype = tft->eltype;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
-  if (etft->size == 0)
-    uw_throwf(error_s, lit("~a: zero size array element"), self, nao);
+  if (etft->incomplete)
+    uw_throwf(error_s, lit("~a: incomplete type array element"), self, nao);
   if (INT_PTR_MAX / etft->size < len)
     uw_throwf(error_s, lit("~a: array too large"), self,  nao);
   return len * etft->size;
@@ -405,6 +407,24 @@ static mem_t *ffi_varray_alloc(struct txr_ffi_type *tft, val obj, val self)
   val eltype = tft->eltype;
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
   return chk_calloc(len, etft->size);
+}
+
+static cnum ffi_flex_dynsize(struct txr_ffi_type *tft, val obj, val self)
+{
+  struct smemb *lastm = &tft->memb[tft->nelem - 1];
+  struct txr_ffi_type *ltft = lastm->mtft;
+  val lobj = slot(obj, lastm->mname);
+  cnum lmds = ltft->dynsize(ltft, lobj, self);
+
+  if (lastm->offs > INT_PTR_MAX - lmds)
+    uw_throwf(error_s, lit("~a: flexible struct size overflow"), self, nao);
+
+  return lastm->offs + lmds;
+}
+
+static mem_t *ffi_flex_alloc(struct txr_ffi_type *tft, val obj, val self)
+{
+  return chk_calloc(1, ffi_flex_dynsize(tft, obj, self));
 }
 
 static void ffi_noop_free(void *ptr)
@@ -2007,11 +2027,27 @@ static void ffi_ptr_in_release(struct txr_ffi_type *tft, val obj, mem_t *dst)
   *loc = 0;
 }
 
+static void ffi_flex_struct_in(struct txr_ffi_type *tft, val strct, val self)
+{
+  struct smemb *lastm = &tft->memb[tft->nelem - 1];
+  val length_meth = maybe_slot(strct, length_s);
+
+  if (length_meth) {
+    val len = funcall1(length_meth, strct);
+    val memb = slot(strct, lastm->mname);
+    if (vectorp(memb))
+      vec_set_length(memb, len);
+    else
+      slotset(strct, lastm->mname, vector(len, nil));
+  }
+}
+
 static val ffi_struct_in(struct txr_ffi_type *tft, int copy, mem_t *src,
                          val strct, val self)
 {
   cnum i, nmemb = tft->nelem;
   struct smemb *memb = tft->memb;
+  int flexp = tft->incomplete;
 
   if (!copy && (!tft->by_value_in || strct == nil))
     return strct;
@@ -2026,6 +2062,8 @@ static val ffi_struct_in(struct txr_ffi_type *tft, int copy, mem_t *src,
     struct txr_ffi_type *mtft = memb[i].mtft;
     ucnum offs = memb[i].offs;
     if (slsym) {
+      if (flexp && copy && i == nmemb - 1)
+        ffi_flex_struct_in(tft, strct, self);
       if (mtft->in != 0) {
         val slval = slot(strct, slsym);
         slotset(strct, slsym, mtft->in(mtft, copy, src + offs, slval, self));
@@ -2084,12 +2122,15 @@ static val ffi_struct_get(struct txr_ffi_type *tft, mem_t *src, val self)
   struct smemb *memb = tft->memb;
   args_decl(args, 0);
   val strct = make_struct(tft->lt, nil, args);
+  int flexp = tft->incomplete;
 
   for (i = 0; i < nmemb; i++) {
     val slsym = memb[i].mname;
     struct txr_ffi_type *mtft = memb[i].mtft;
     ucnum offs = memb[i].offs;
     if (slsym) {
+      if (flexp && i == nmemb - 1)
+        ffi_flex_struct_in(tft, strct, self);
       val slval = mtft->get(mtft, src + offs, self);
       slotset(strct, slsym, slval);
     }
@@ -2624,16 +2665,6 @@ static val ffi_union_get(struct txr_ffi_type *tft, mem_t *src, val self)
   return make_union_tft(src, tft);
 }
 
-static val bitfield_syntax_p(val syntax)
-{
-  if (!consp(syntax)) {
-    return nil;
-  } else {
-    val sym = car(syntax);
-    return tnil(sym == sbit_s || sym == ubit_s || sym == bit_s);
-  }
-}
-
 static struct txr_ffi_type *ffi_simple_clone(struct txr_ffi_type *orig)
 {
   return coerce(struct txr_ffi_type *, chk_copy_obj(coerce(mem_t *, orig),
@@ -2692,7 +2723,7 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
   val self = lit("ffi-type-compile");
   struct txr_ffi_type *tgtft = ffi_type_struct(tgtype);
 
-  if (bitfield_syntax_p(tgtft->syntax)) {
+  if (tgtft->bitfield) {
     uw_throwf(error_s, lit("~a: type combination ~s not allowed"),
               self, syntax, nao);
   } else {
@@ -2747,7 +2778,7 @@ static struct txr_ffi_type *ffi_struct_clone(struct txr_ffi_type *orig)
 }
 
 static val make_ffi_type_struct(val syntax, val lisp_type,
-                                val slots, val types)
+                                val slots, val types, int flexp)
 {
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
                                     chk_calloc(1, sizeof *tft));
@@ -2777,10 +2808,11 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 #endif
   tft->in = ffi_struct_in;
   tft->release = ffi_struct_release;
-  tft->alloc = ffi_fixed_alloc;
-  tft->dynsize = ffi_fixed_dynsize;
+  tft->alloc = flexp ? ffi_flex_alloc : ffi_fixed_alloc;
+  tft->dynsize = flexp ? ffi_flex_dynsize : ffi_fixed_dynsize;
   tft->free = free;
   tft->memb = memb;
+  tft->incomplete = flexp;
 
   for (i = 0; i < nmemb; i++) {
     val type = pop(&types);
@@ -2792,7 +2824,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     memb[i].mname = slot;
     memb[i].mtft = mtft;
 
-    if (bitfield_syntax_p(mtft->syntax)) {
+    if (mtft->bitfield) {
       ucnum size = mtft->size;
       ucnum bits_type = 8 * size;
       ucnum bits = mtft->nelem;
@@ -2868,7 +2900,11 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   if (need_out_handler)
     tft->out = ffi_struct_out;
 
-  tft->size = (offs + most_align - 1) & ~(most_align - 1);
+  if (flexp)
+    tft->size = offs;
+  else
+    tft->size = (offs + most_align - 1) & ~(most_align - 1);
+
   tft->align = most_align;
 
 #if HAVE_LIBFFI
@@ -2930,7 +2966,7 @@ static val make_ffi_type_union(val syntax, val lisp_type,
     if (biggest_size < (ucnum) mtft->size)
       biggest_size = mtft->size;
 
-    if (bitfield_syntax_p(mtft->syntax)) {
+    if (mtft->bitfield) {
       ucnum bits = mtft->nelem;
 
       if (bits == 0) {
@@ -3129,7 +3165,7 @@ static val ffi_type_copy(val orig)
   return cobj(coerce(mem_t *, ctft), orig->co.cls, orig->co.ops);
 }
 
-static val ffi_struct_compile(val membs, val *ptypes, val self)
+static val ffi_membs_compile(val membs, val *ptypes, int *pflexp, val self)
 {
   list_collect_decl (slots, pstail);
   list_collect_decl (types, pttail);
@@ -3143,10 +3179,13 @@ static val ffi_struct_compile(val membs, val *ptypes, val self)
     if (cddr(mp))
       uw_throwf(error_s, lit("~a: excess elements in type-member pair ~s"),
                 self, mp, nao);
-    if (ctft->size == 0)
-      uw_throwf(error_s,
-                lit("~a: incomplete type ~s cannot be struct/union member"),
-                self, type, nao);
+    if (ctft->incomplete) {
+      if (!endp(cdr(membs)))
+        uw_throwf(error_s,
+                  lit("~a: incomplete type ~s cannot be struct/union member"),
+                  self, type, nao);
+      *pflexp = 1;
+    }
     pttail = list_collect(pttail, comp_type);
     pstail = list_collect(pstail, name);
   }
@@ -3172,26 +3211,32 @@ val ffi_type_compile(val syntax)
 
     if (sym == struct_s) {
       uses_or2;
+      int flexp = 0;
       val name = cadr(syntax);
       val membs = cddr(syntax);
       val types;
       val sname = if3(name, name, gensym(lit("ffi-struct-")));
-      val slots = ffi_struct_compile(membs, &types, self);
+      val slots = ffi_membs_compile(membs, &types, &flexp, self);
       val stype = or2(if2(name, find_struct_type(sname)),
                       make_struct_type(sname, nil, nil,
                                        remq(nil, slots, nil),
                                        nil, nil, nil, nil));
       val xsyntax = cons(struct_s,
                          cons(sname, membs));
-      return make_ffi_type_struct(xsyntax, stype, slots, types);
+      return make_ffi_type_struct(xsyntax, stype, slots, types, flexp);
     } else if (sym == union_s) {
+      int flexp = 0;
       val name = cadr(syntax);
       val membs = cddr(syntax);
       val sname = if3(name, name, gensym(lit("ffi-union-")));
       val types;
-      val slots = ffi_struct_compile(membs, &types, self);
+      val slots = ffi_membs_compile(membs, &types, &flexp, self);
       val xsyntax = cons(union_s,
                          cons(sname, membs));
+      if (flexp)
+        uw_throwf(error_s,
+                  lit("~a: unions cannot contain incomplete member"),
+                  self, nao);
       return make_ffi_type_union(xsyntax, union_s, slots, types);
     } else if (sym == array_s || sym == zarray_s) {
       if (length(syntax) == two) {
@@ -3203,10 +3248,13 @@ val ffi_type_compile(val syntax)
                                          eltype);
         struct txr_ffi_type *tft = ffi_type_struct(type);
         struct txr_ffi_type *etft = ffi_type_struct(eltype);
-        if (etft->size == 0)
+        if (etft->incomplete || etft->bitfield)
           uw_throwf(error_s,
-                    lit("~a: incomplete type ~s cannot be array element"),
-                    self, eltype_syntax, nao);
+                    lit("~a: ~a ~s cannot be array element"),
+                    self,
+                    if3(etft->bitfield,
+                        lit("bitfield"), lit("incomplete type")),
+                    eltype_syntax, nao);
         if (sym == zarray_s) {
           tft->null_term = 1;
           tft->get = ffi_varray_null_term_get;
@@ -3222,6 +3270,7 @@ val ffi_type_compile(val syntax)
         tft->dynsize = ffi_varray_dynsize;
         tft->free = free;
         tft->size = 0;
+        tft->incomplete = 1;
         return type;
       } else if (length(syntax) == three) {
         val dim = ffi_eval_expr(cadr(syntax), nil, nil);
@@ -3230,10 +3279,13 @@ val ffi_type_compile(val syntax)
         val xsyntax = list(sym, dim, eltype_syntax, nao);
         struct txr_ffi_type *etft = ffi_type_struct(eltype);
 
-        if (etft->size == 0)
+        if (etft->incomplete || etft->bitfield)
           uw_throwf(error_s,
-                    lit("~a: incomplete type ~s cannot be array element"),
-                    self, eltype_syntax, nao);
+                    lit("~a: ~a ~s cannot be array element"),
+                    self,
+                    if3(etft->bitfield,
+                        lit("bitfield"), lit("incomplete type")),
+                    eltype_syntax, nao);
 
         if (minusp(dim))
           uw_throwf(error_s, lit("~a: negative dimension in ~s"),
@@ -3381,6 +3433,7 @@ val ffi_type_compile(val syntax)
                                "must be 0 to ~s"),
                   self, nbits, num_fast(bits_int), nao);
       tft->nelem = c_num(nbits);
+      tft->bitfield = 1;
       return type;
     } else if (sym == bit_s && !consp(cddr(syntax))) {
       goto toofew;
@@ -3419,6 +3472,7 @@ val ffi_type_compile(val syntax)
       tft_cp->nelem = nb;
       tft_cp->put = if3(unsgnd, ffi_generic_ubit_put, ffi_generic_sbit_put);
       tft_cp->get = if3(unsgnd, ffi_generic_ubit_get, ffi_generic_sbit_get);
+      tft_cp->bitfield = 1;
       return type_copy;
     } else if (sym == enum_s) {
       val name = cadr(syntax);
@@ -3854,10 +3908,16 @@ static void ffi_init_types(void)
                                                0, 0));
 #endif
 
-  ffi_typedef(void_s, make_ffi_type_builtin(void_s, null_s, 0, 0,
-                                            &ffi_type_void,
-                                            ffi_void_put, ffi_void_get,
-                                            0, 0));
+  {
+    val type = ffi_typedef(void_s, make_ffi_type_builtin(void_s, null_s,
+                                                         0, 0,
+                                                         &ffi_type_void,
+                                                         ffi_void_put,
+                                                         ffi_void_get,
+                                                         0, 0));
+    struct txr_ffi_type *tft = ffi_type_struct(type);
+    tft->incomplete = 1;
+  }
 
   ffi_typedef(bool_s, ffi_type_compile(cons(bool_s, cons(uchar_s, nil))));
 }
@@ -4031,10 +4091,10 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
   for (i = 0; i < nt; i++) {
     val type = pop(&argtypes);
     struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
-    if (tft->size == 0)
-      uw_throwf(error_s, lit("~a: can't pass type ~s by value"),
+    if (tft->incomplete)
+      uw_throwf(error_s, lit("~a: can't pass incomplete type ~s by value"),
                 self, type, nao);
-    if (bitfield_syntax_p(tft->syntax))
+    if (tft->bitfield)
       uw_throwf(error_s, lit("~a: can't pass bitfield as argument"),
                 self, nao);
     args[i] = tft->ft;
@@ -4042,10 +4102,10 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
 
   {
     struct txr_ffi_type *tft = ffi_type_struct_checked(self, rettype);
-    if (tft->size == 0 && tft->ft != &ffi_type_void)
-      uw_throwf(error_s, lit("~a: can't return type ~s by value"),
+    if (tft->incomplete && tft->ft != &ffi_type_void)
+      uw_throwf(error_s, lit("~a: can't return incomplete type ~s by value"),
                 self, rettype, nao);
-    if (bitfield_syntax_p(tft->syntax))
+    if (tft->bitfield)
       uw_throwf(error_s, lit("~a: can't return bitfield from function"),
                 self, nao);
   }
@@ -4308,7 +4368,7 @@ val ffi_typedef(val name, val type)
 {
   val self = lit("ffi-typedef");
   struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
-  if (bitfield_syntax_p(tft->syntax))
+  if (tft->bitfield)
     uw_throwf(error_s, lit("~a: cannot create a typedef for bitfield type"),
               self, nao);
   return sethash(ffi_typedef_hash, name, type);
@@ -4318,7 +4378,7 @@ val ffi_size(val type)
 {
   val self = lit("ffi-size");
   struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
-  if (bitfield_syntax_p(tft->syntax))
+  if (tft->bitfield)
     uw_throwf(error_s, lit("~a: bitfield type ~s has no size"),
               self, type, nao);
   return num(tft->size);
@@ -4328,7 +4388,7 @@ val ffi_alignof(val type)
 {
   val self = lit("ffi-alignof");
   struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
-  if (bitfield_syntax_p(tft->syntax))
+  if (tft->bitfield)
     uw_throwf(error_s, lit("~a: bitfield type ~s has no alignment"),
               self, type, nao);
   return num(tft->align);
@@ -4722,6 +4782,16 @@ val carray_blank(val nelem, val type)
   }
 }
 
+static void carray_elem_check(struct txr_ffi_type *tft, val self)
+{
+  if (tft->incomplete || tft->bitfield)
+    uw_throwf(error_s,
+              lit("~a: ~s ~s cannot be carray element"),
+              self, if3(tft->bitfield,
+                        lit("bitfield"), lit("incomplete type")),
+              tft->syntax, nao);
+}
+
 val carray_buf(val buf, val type, val offs_in)
 {
   val self = lit("carray-buf");
@@ -4739,10 +4809,7 @@ val carray_buf(val buf, val type, val offs_in)
     uw_throwf(error_s,
               lit("~a: offset ~s past end of buffer ~s"),
               self, offs, buf, nao);
-  if (tft->size == 0)
-    uw_throwf(error_s,
-              lit("~a: incomplete type ~s cannot be carray element"),
-              self, tft->syntax, nao);
+  carray_elem_check(tft, self);
   return make_carray(type, data + offsn, nelem, buf, offsn);
 }
 
@@ -5097,10 +5164,7 @@ val carray_pun(val carray, val type)
   cnum elsize = scry->eltft->size;
   cnum size = (ucnum) len * (ucnum) elsize;
 
-  if (tft->size == 0)
-    uw_throwf(error_s,
-              lit("~a: incomplete type ~s cannot be carray element"),
-              self, tft->syntax, nao);
+  carray_elem_check(tft, self);
 
   if (len != 0 && size / elsize != len)
     uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
@@ -5114,10 +5178,7 @@ val carray_unum(val num, val eltype_in)
   val eltype = default_arg(eltype_in, ffi_type_compile(uchar_s));
   struct txr_ffi_type *tft = ffi_type_struct(eltype);
 
-  if (tft->size == 0)
-    uw_throwf(error_s,
-              lit("~a: incomplete type ~s cannot be carray element"),
-              self, tft->syntax, nao);
+  carray_elem_check(tft, self);
 
   switch (type(num)) {
   case NUM: case CHR:
@@ -5152,10 +5213,7 @@ val carray_num(val num, val eltype_in)
   val eltype = default_arg(eltype_in, ffi_type_compile(uchar_s));
   struct txr_ffi_type *tft = ffi_type_struct(eltype);
 
-  if (tft->size == 0)
-    uw_throwf(error_s,
-              lit("~a: incomplete type ~s cannot be carray element"),
-              self, tft->syntax, nao);
+  carray_elem_check(tft, self);
 
   switch (type(num)) {
   case NUM: case CHR:
