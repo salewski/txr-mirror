@@ -160,7 +160,7 @@ void parser_reset(parser_t *p)
   yyset_extra(p, p->scanner);
 }
 
-val parser(val stream, val lineno)
+val parser(val stream, val name, val lineno)
 {
   parser_t *p = coerce(parser_t *, chk_malloc(sizeof *p));
   val parser;
@@ -168,6 +168,7 @@ val parser(val stream, val lineno)
   parser = cobj(coerce(mem_t *, p), parser_s, &parser_ops);
   p->parser = parser;
   p->lineno = c_num(default_arg(lineno, one));
+  p->name = name;
   p->stream = stream;
 
   return parser;
@@ -178,13 +179,15 @@ parser_t *parser_get_impl(val self, val parser)
   return coerce(parser_t *, cobj_handle(self, parser, parser_s));
 }
 
-val ensure_parser(val stream)
+val ensure_parser(val stream, val name)
 {
+  uses_or2;
   loc pcdr = gethash_l(lit("internal error"), stream_parser_hash, stream, nulloc);
   val pars = deref(pcdr);
   if (pars)
     return pars;
-  return set(pcdr, parser(stream, one));
+  return set(pcdr,
+             parser(stream, or2(name, stream_get_prop(stream, name_k)), one));
 }
 
 static void pushback_token(parser_t *p, struct yy_token *tok)
@@ -195,7 +198,7 @@ static void pushback_token(parser_t *p, struct yy_token *tok)
 
 val parser_set_lineno(val self, val stream, val lineno)
 {
-  val parser = ensure_parser(stream);
+  val parser = ensure_parser(stream, nil);
   parser_t *pi = parser_get_impl(self, parser);
   pi->lineno = c_num(lineno);
   return stream;
@@ -563,7 +566,7 @@ static val lisp_parse_impl(val self, val interactive, val rlcp_p, val source_in,
                  if3(stringp(source),
                      lit("string"),
                      stream_get_prop(input_stream, name_k)));
-  val parser = ensure_parser(input_stream);
+  val parser = ensure_parser(input_stream, name);
   val saved_dyn = dyn_env;
   parser_t *pi = parser_get_impl(self, parser);
   volatile val parsed = nil;
@@ -649,7 +652,7 @@ static val read_file_common(val self, val stream, val error_stream, val compiled
   val name = stream_get_prop(stream, name_k);
   val first = t;
   val big_endian = nil;
-  val parser = ensure_parser(stream);
+  val parser = ensure_parser(stream, name);
 
   if (compiled) {
     parser_t *pi = parser_get_impl(self, parser);

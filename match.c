@@ -4331,7 +4331,7 @@ static val v_load(match_files_ctx *c)
 
     if (!txr_lisp_p) {
       int gc = gc_state(0);
-      val parser_obj = ensure_parser(stream);
+      val parser_obj = ensure_parser(stream, name);
       parser_t *parser = parser_get_impl(self, parser_obj);
 
       parse_once(self, stream, name);

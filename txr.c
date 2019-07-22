@@ -1058,7 +1058,7 @@ int txr_main(int argc, char **argv)
   if (!txr_lisp_p)
   {
     int gc = gc_state(0);
-    val parser_obj = ensure_parser(parse_stream);
+    val parser_obj = ensure_parser(parse_stream, spec_file_str);
     parser_t *parser = parser_get_impl(prog_string, parser_obj);
     parse_once_noerr(parse_stream, spec_file_str);
     gc_state(gc);

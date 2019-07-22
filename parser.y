@@ -1848,7 +1848,7 @@ int parse_once(val self, val stream, val name)
 #if CONFIG_DEBUG_SUPPORT
   unsigned dbg_state = debug_clear(opt_dbg_expansion ? 0 : DBG_ENABLE);
 #endif
-  val parser_obj = ensure_parser(stream);
+  val parser_obj = ensure_parser(stream, name);
   parser_t *parser = parser_get_impl(self, parser_obj);
   parser->rec_source_loc = 1;
 

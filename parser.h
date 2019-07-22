@@ -128,10 +128,10 @@ val repl(val bindings, val in_stream, val out_stream, val env);
 #endif
 void parser_common_init(parser_t *);
 void parser_cleanup(parser_t *);
-val parser(val stream, val lineno);
+val parser(val stream, val name, val lineno);
 parser_t *parser_get_impl(val self, val parser);
 val get_parser(val stream);
-val ensure_parser(val stream);
+val ensure_parser(val stream, val name);
 val parser_set_lineno(val self, val stream, val lineno);
 val parser_errors(val parser);
 val parser_eof(val parser);
