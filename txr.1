@@ -6306,15 +6306,15 @@ are bind expressions.
 
 The
 .code merge
-directive provides a way of combining two or more variables or
-expressions in a somewhat complicated but very useful way.
+directive provides a way of combining collected data from multiple
+nested lists in a way which normalizes different nesting levels
+among the sources.  This directive is useful for combining the results from
+collects at different levels of nesting into a single nested list such that
+parallel elements are at equal depth.
+
 A new binding is created for the
 .meta destination
 variable, which holds the result of the operation.
-
-This directive is useful for combining the results from collects at different
-levels of nesting into a single nested list such that parallel elements are at
-equal depth.
 
 The
 .code merge
