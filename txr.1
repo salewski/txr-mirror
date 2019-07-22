@@ -794,7 +794,7 @@ The
 option provides a way to encode multiple arguments as a single
 argument, which is useful on some systems which have limitations in
 their implementation of the "hash bang" mechanism. For details about
-its special syntax, See Hash Bang Support below. It is also very useful in
+its special syntax, See Hash Bang Support below. It is also useful in
 stand-alone application deployment. See the section
 STAND-ALONE APPLICATION SUPPORT, in which example uses of
 .code --args
@@ -875,7 +875,8 @@ See the section SETUID/SETGID OPERATION.
 .coIP --gc-debug
 This option enables a behavior which stresses the garbage collector with
 frequent garbage collection requests. The purpose is to make it more likely
-to reproduce certain kinds of bugs. It makes \*(TX run very slowly.
+to reproduce certain kinds of bugs. Use of this option severely degrades
+the performance of \*(TX.
 
 .coIP --vg-debug
 If \*(TX is enabled with Valgrind support, then this option is available.
@@ -3880,7 +3881,7 @@ The syntax
 .mono
 .meti @(next :tlist << bind-expr )
 .onom
-is very similar to
+is similar to
 .code "@(next :list ...)"
 except that
 .meta bind-expr
@@ -4201,7 +4202,7 @@ lines".
 is the same as
 .codn "@(skip 1)" ,
 which is a noop, because it means: "the remainder of the query must match
-starting on the very next line", or, more briefly, "skip exactly zero lines",
+starting on the next line", or, more briefly, "skip exactly zero lines",
 which is the behavior if the
 .code skip
 directive is omitted altogether.
@@ -8468,7 +8469,7 @@ variable.
 Note that function names are resolved to functions in the environment
 that is apparent at the point in execution where the
 .code call
-takes place. Very simply, the directive
+takes place. The directive
 .code "@(call f args ...)"
 is precisely equivalent to
 .code "@(s args ...)"
@@ -9101,11 +9102,11 @@ a list to be iterated.
 
 Thus
 .code :vars
-Firstly, it is needed for situations in which
+Firstly, it is needed for situations in which \*(TL expressions which
+reference variables are embedded in
 .code @(repeat)
-is not able to deduce the existence of a variable in the block.
-It does not dig very deeply to discover variables, and does not "see"
-variables that are referenced via embedded \*(TL expressions.
+blocks.  Variables references embedded in Lisp code are not found
+.codn @(repeat) .
 For instance, the following produces no output:
 
 .verb
@@ -12408,7 +12409,10 @@ are global lexicals, because they provide constant values
 for which overriding doesn't make sense. On the other hand the standard
 output stream variable
 .code *stdout*
-is special. Overriding it over a dynamic scope is very useful.
+is special. Overriding it over a dynamic scope is useful, as a means of
+redirecting the output of functions which write to the
+.code *stdout*
+stream.
 
 .TP* "Dialect Note 3:"
 
@@ -14048,7 +14052,7 @@ Furthermore, for those arguments of
 which are symbols (after all macro-expansion is performed), the evaluation
 rules are altered. For the purposes of resolving symbols to values, the
 function and variable binding namespaces are considered to be merged into a
-single space, creating a situation that is very similar to a Lisp-1 style
+single space, creating a situation that is similar to a Lisp-1 style
 dialect.
 
 This special Lisp-1 evaluation is not recursively applied.  All arguments of
@@ -24983,7 +24987,7 @@ specifier are not surrounded by an implicit
 .meIP (:postinit <> ( param ) << body-form *)
 The
 .code :postinit
-specifier is very similar to
+specifier is similar to
 .codn :init .
 Both specify forms which are evaluated during object instantiation.
 The difference is that the
@@ -27190,7 +27194,7 @@ of the struct type.
 .desc
 The
 .code with-objects
-macro provides a binding construct very similar to
+macro provides a binding construct similar to
 .codn let* .
 
 Each
@@ -34728,7 +34732,7 @@ The macros
 .code pinc
 and
 .code pdec
-are very similar to
+are similar to
 .code inc
 and
 .codn dec .
@@ -36802,7 +36806,7 @@ is used as a place, and that code itself is treated as a place.
 
 Note:
 .code define-accessor
-is very similar to the short form of
+is similar to the short form of
 .codn defset .
 
 .coNP Special variables @, *place-update-expander* @ *place-clobber-expander* and @ *place-delete-expander*
@@ -39989,7 +39993,7 @@ perspective, \*(TL exceptions are a lot like CL restarts, except that the
 symbols are arranged in an inheritance hierarchy. \*(TL exceptions are used
 both as the equivalent of ANSI CL conditions and as restarts.
 
-In \*(TL the terminology "catch" and "handle" is used in a very specific way.
+In \*(TL the terminology "catch" and "handle" is used in a specific way.
 To handle an exception means to receive it without unwinding, with the possibility
 of declining to handle it, so that the search continues for another handler.
 To catch an exception means to match an exception to a catch handler, terminate
@@ -40801,9 +40805,8 @@ between the first two.
 
 If the program alters the tree structure returned by
 .codn exception-map-p ,
-the consequences are unspecified; this structure may in fact
-be the very object which actually represents the type hierarchy,
-and not a derived representation.
+the consequences are unspecified; this structure may be the actual object which
+represents the type hierarchy.
 
 .coNP Structures @, frame @ catch-frame and @ handle-frame
 .synb
@@ -42024,7 +42027,7 @@ Note the use of
 .code "(yield-from acc)"
 with no arguments to receive the value passed to the first
 call to the resume function, without yielding an item.
-The very first return value
+The first return value
 .code 1
 is produced by the
 .code "(yield-from acc sum)"
@@ -45225,7 +45228,7 @@ notation.
 
 The
 .code ip
-macro is very similar to the
+macro is similar to the
 .code ap
 macro, except that it is based
 on the semantics of the function
@@ -46484,7 +46487,7 @@ function.  Objects for
 which read-print consistency is possible are printed in a way such that
 if their notation is implanted in \*(TX source, they are readable.
 The field width specifier is honored, including the left-right adjustment
-semantics. The precision field is treated very similarly to the
+semantics. The precision field is treated similarly to the
 .code ~a
 format directive, except that non-exponentiated floating point numbers that
 would be mistaken for integers include a trailing
@@ -47242,7 +47245,7 @@ After this function is called, further output on the stream is not possible.
 .desc
 The
 .code make-strlist-output-stream
-function is very similar to
+function is similar to
 .codn make-string-output-stream .
 However, the stream object produced by this function does not produce a string,
 but a list of strings.  The data is broken into multiple strings by newline
@@ -47911,7 +47914,7 @@ operation, that position is one byte past the end of the file.
 These functions get and set properties on a stream. Only certain properties
 are meaningful with certain kinds of streams, and the meaning depends on
 the stream. If two or more stream types support a property of the same name, it
-is expected that the property has the same or very similar meaning for both
+is expected that the property has the same or similar meaning for both
 streams to the maximum extent that similarity is possible.
 
 The
@@ -50746,7 +50749,7 @@ is a package object.
 
 Note: the \*(TL application can overwrite or re-bind this
 variable to manipulate the active package list.  This is
-very useful for
+useful for
 .IR sandboxing :
 safely evaluating code that is obtained as an input
 from an untrusted source, or calculated from such an input.
@@ -52112,7 +52115,7 @@ The hash is placed into that buffer, which is then returned.
 The \*(TL library provides a macro called
 .code awk
 which is inspired by the Unix utility Awk. The macro implements
-a processing paradigm very similar to that of the utility: it scans
+a processing paradigm similar to that of the utility: it scans
 one or more input streams, which are divided into records or fields,
 under the control of user-settable regular-expression-based delimiters.
 The records and fields are matched against a sequence of programmer-defined
@@ -62848,7 +62851,7 @@ view over a buffer, using
 .desc
 The parametrized
 .code cptr
-type is very similar to the unparametrized
+type is similar to the unparametrized
 .codn cptr .
 It also converts between Lisp objects of type
 .code cptr
@@ -64794,7 +64797,7 @@ where the foreign-representation of
 .meta obj
 is stored. The default value is zero.
 
-These functions perform the "put semantics" encoding action very similar to
+These functions perform the "put semantics" encoding action similar to
 what happens to the arguments of an outgoing foreign function call.
 
 
@@ -64866,7 +64869,7 @@ function returns
 .desc
 The
 .code ffi-in
-function performs the "in semantics" decoding action, very similar to the
+function performs the "in semantics" decoding action, similar to the
 treatment applied to the arguments of a foreign function call after
 it returns, in order to free temporary resources and recover the new
 values of objects that have been modified by the foreign function.
@@ -66130,7 +66133,7 @@ and are much more resistant to reverse engineering.
 
 .SS* Top-Level Forms
 
-A very important concept in file compilation via
+An important concept in file compilation via
 .code compile-file
 is that of the
 .IR "top-level form" ,
@@ -66203,7 +66206,7 @@ it and converted back to compiled objects, which are executed in sequence.
 
 Partial expansion means that file compilation doesn't fully expand each
 form that is encountered. Rather, an incremental expansion is performed,
-very similar to the algorithm used by the
+similar to the algorithm used by the
 .code eval
 function:
 .RS
