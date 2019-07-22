@@ -68620,7 +68620,7 @@ executable can then be edited so that the data area which follows the
 bytes contains the following string:
 
 .verb
-  --args|-e|(load `@{txr-path}main.tl`)
+  --args|-e|(load (path-cat (dir-name txr-exe-path) "main.tl"))
 .brev
 
 When the
@@ -68718,8 +68718,9 @@ which will load a file called
 that is located in the same directory.
 
 .verb
-  (save-exe "myapp"
-            "--args|-e|(load `@(dir-name txr-path)/main.tl`)")
+  (save-exe
+    "myapp"
+    "--args|-e|(load (path-cat (dir-name txr-exe-path) \e"main.tl\e"))")
 .brev
 
 .SH* DEBUGGER
