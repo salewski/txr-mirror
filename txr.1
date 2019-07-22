@@ -3348,7 +3348,7 @@ Effectively,
 .code collect
 is a reserved symbol in the \*(TX language. A \*(TX program cannot use
 this symbol as the name of a pattern function, due to its role in the syntax.
-Lisp code, of course, can use the symbol.
+The symbol has no reserved role in \*(TL.
 
 Usually if this type of directive occurs alone in a line, not
 preceded or followed by other material, it is involved in a "vertical" (or line
@@ -4038,7 +4038,7 @@ of the query will successfully match. If no such line is found, the
 directive fails. If a matching position is found, the remainder of
 the query is processed from that point.
 
-Of course, the remainder of the query can itself contain
+The remainder of the query can itself contain
 .code skip
 directives.
 Each such directive performs a recursive subsearch.
@@ -4310,7 +4310,7 @@ next block, and backtracking will not take place to a block which completed
 (unless all these blocks are enclosed in some larger construct which
 backtracks, causing the blocks to be re-executed.
 
-Of course, this rewrite is not equivalent, and cannot be used for instance
+This rewrite is not equivalent, and cannot be used for instance
 in backreferencing situations such as:
 
 .verb
@@ -5179,7 +5179,7 @@ The syntax follows this pattern
   @(end)
 .brev
 
-Of course the multi-line clauses are optional.   The
+The multi-line clauses are optional.   The
 .code gather
 directive takes
 keyword parameters, see below.
@@ -5379,12 +5379,7 @@ If no
 .cod3 until / last
 last clause is specified, and the collect is not limited
 using parameters, the collection is unbounded: it consumes the entire data
-file. If any query material follows such the
-.code collect
-clause, it will fail if it
-tries to match anything in the current file; but of course, it is possible to
-continue matching in another file by means of
-.codn @(next) .
+file.
 
 .coNP The @ until / @ last clause in @ collect
 
@@ -6153,7 +6148,7 @@ when the
 clause meets a match, the matching material
 is not consumed.
 
-This repetition can, of course, be avoided by using
+This repetition can be avoided by using
 .code @(last)
 instead of
 .code @(until)
@@ -6723,7 +6718,7 @@ is equivalent to
 
 For a description of filters, see Output Filtering below.
 
-Of course, compound filters like
+Compound filters like
 .code "(:fromhtml :upcase)"
 are supported with all these keywords. The filters apply across arbitrary
 patterns and nested data.
@@ -7695,7 +7690,7 @@ If the
 .code accept
 invocation is removed from
 .codn fun ,
-then of course the function returns normally, producing the
+then the function returns normally, producing the
 .code x
 binding. In that case, the line
 .code "this line is skipped by accept"
@@ -8408,7 +8403,7 @@ that symbol names a function which takes no arguments, then
 .verb
   @(call fun-expr)
 .brev
-may be used to invoke the function. Of course, additional
+may be used to invoke the function. Additional
 expressions may be supplied which specify arguments.
 
 Example 1:
@@ -8441,7 +8436,7 @@ is the \*(TL syntax for quoting a symbol. (See the
 .code quote
 operator).
 
-Of course, this particular
+This particular
 .code call
 expression can just be replaced by the direct invocation
 syntax
@@ -9427,9 +9422,9 @@ encoding.
 Decode from URL encoding, which is like percent encoding, except that
 if the unencoded
 .code +
-character occurs, it is decoded to a space character.  Of course
+character occurs, it is decoded to a space character. The
 .code %20
-still decodes to space, and
+sequence still decodes to space, and
 .code %2B
 to the
 .code +
@@ -9603,7 +9598,7 @@ to
 .strn bar ,
 so that there is a match.
 
-Of course, function filters can be used in a chain:
+Function filters can be used in a chain:
 
 .verb
   @(output :filter (:downcase (:fun foo_to_bar) :upcase))
@@ -10244,7 +10239,7 @@ exception, the first one will be invoked.
 
 When a
 .code catch
-is invoked, it is of course understood that the main clause did
+is invoked, it is understood that the main clause did
 not terminate normally, and so the main clause could not have produced any
 bindings.
 
@@ -10595,7 +10590,7 @@ Every type is a supertype of itself: an
 .code A
 is a kind of
 .codn A .
-This of course implies that every type is a subtype of itself
+This implies that every type is a subtype of itself
 also.  Furthermore, every type is a subtype of the type
 .codn t ,
 which has no
@@ -10979,7 +10974,7 @@ underscores:
  ! $ % & * + - < = > ? \e ~ /
 .onom
 
-and of course, may not look like a number.
+and may not look like a number.
 
 A
 .meta lident
@@ -11434,7 +11429,7 @@ A vector can be quasiquoted, for example:
   ^#(1 2 3)
 .brev
 
-Of course, unquotes can occur within it.
+Unquotes can occur within a quasiquoted vector:
 
 .verb
   (let ((a 42))
@@ -12562,7 +12557,7 @@ whereas a global variable may be.
 A place which denotes a hash table entry may be deleted, and results in the
 entry being removed from the hash table. Deleting a place in a list
 causes the trailing items, if any, or else the terminating atom, to
-move in to close the gap. Users may, of course, define new kinds of places
+move in to close the gap. Users may define new kinds of places
 which support deletion semantics.
 
 .NP* Evaluation of Places
@@ -12627,7 +12622,7 @@ among built-in syntactic places, are DWIM forms. A DWIM form has the syntax
 .mets (dwim < obj-place < index <> [ alt ])
 .onom
 
-and of course the square-bracket-notation equivalent:
+and the square-bracket-notation equivalent:
 
 .mono
 .mets >> [ obj-place < index <> [ alt ]]
@@ -12669,7 +12664,7 @@ objects in order to maintain the array-like container illusion.
 .NP* Built-In Syntactic Places
 
 The following is a summary of the built-in place forms, in addition to symbolic
-places denoting variables. Of course, new syntactic place forms can be
+places denoting variables. New syntactic place forms can be
 defined by \*(TX programs.
 
 .mono
@@ -17804,7 +17799,7 @@ are
 .code eql
 then they are also
 .codn equal ,
-though of course the converse isn't necessarily the case.
+though the converse isn't necessarily the case.
 
 If two objects are both cons cells, then they are equal if their
 .code car
@@ -18556,9 +18551,9 @@ place supports deletion, according to the following near equivalence:
                                 (set place (car place)))
 .brev
 
-Of course,
+The
 .code place
-is evaluated only once.
+expression is evaluated only once.
 
 Note that this is symmetric with the delete semantics of
 .code car
@@ -21174,7 +21169,7 @@ produces a terminating list, then the following equivalence holds:
   (expand-left f v) <--> (reverse (expand-right f v))
 .brev
 
-Of course, the equivalence cannot hold for arguments to
+The equivalence cannot hold for arguments to
 .code expand-left
 which produce an infinite list.
 
@@ -24610,7 +24605,7 @@ macro can be used for adding new methods and functions to an existing
 structure and its descendants.
 
 Static slots may be assigned just like instance slots. Changing a static
-slot, of course, changes that slot in every structure of the same type.
+slot changes that slot in every structure of the same type.
 
 Static slots are not listed in the
 .code #S(...)
@@ -27382,7 +27377,7 @@ If a structure type provides a method called
 .code lambda
 then it can be used as a function.
 
-Of course, this method can be called by name, using the syntax given
+This method can be called by name, using the syntax given
 in the above syntactic description.
 
 However, the intended use is that it allows the structure instance itself to be
@@ -27390,7 +27385,7 @@ used as a function.  When arguments are applied to a structure object as if it
 were a function, this is erroneous, unless that object has a
 .code lambda
 method. In that case, the arguments are passed to the lambda method.
-Of course, the leftmost argument of the method is the structure instance
+The leftmost argument of the method is the structure instance
 itself.
 
 That is to say, the following equivalences apply, except that
@@ -28583,7 +28578,7 @@ list.
 
 Dialect note: a destructive function similar to Common Lisp's
 .code nbutlast
-isn't provided. Of course, assignment to an
+isn't provided. Assignment to a
 .code butlast
 form is destructive; Common Lisp doesn't support
 .code butlast
@@ -31186,7 +31181,7 @@ the dotted position,
 must evaluate to a list or vector. The list or
 vector's elements are pulled out and treated as additional arguments for
 .codn foo .
-Of course, this syntax can only be used if
+This syntax can only be used if
 .code x
 is a symbolic form or an atom.  It
 cannot be a compound form, because
@@ -33736,7 +33731,7 @@ form, lexical function bindings also shadow symbol macros.
 This is consistent with the Lisp-1-style name resolution which
 applies inside a
 .code dwim
-form. Of course, lexical operator macros do not shadow
+form. Lexical operator macros do not shadow
 symbol macros under any circumstances.
 
 .coNP Macros @ placelet and @ placelet*
@@ -33897,7 +33892,7 @@ When that is evaluated, it yields
 
 If
 .code a
-is quoted, then of course the result is
+is quoted, then the result is
 .codn a :
 no expansion or evaluation takes place.
 Whereas if
@@ -35605,9 +35600,9 @@ variable in the
 macro. The getter is a macro which simply expands to a
 .codn a :
 straightforward access to the variable a.
-Of course,
+The
 .code #:g0035
-is nothing but the value of the
+symbol is the value of the
 .code tmp
 variable. Thus the swap macro's
 .mono
@@ -36040,7 +36035,7 @@ macro parameter lists, or the
 .code :env
 or
 .code :whole
-special parameters. It can use optional parameters. Of course, it may be empty.
+special parameters. It can use optional parameters, and may be empty.
 
 The
 .code define-modify-macro
@@ -36099,7 +36094,7 @@ function, and so 1 is added to the value previously retrieved from
 .codn "(car a)" .
 The resulting sum is then stored back
 .code "(car a)"
-without, of course, evaluating
+without evaluating
 .code "(car a)"
 again.
 
@@ -45014,7 +45009,7 @@ the first
 .code @1
 is argument of the outer function, and the second
 .code @1
-is the first argument of the inner function. Of course, if there
+is the first argument of the inner function. If there
 are three levels of nesting, then three
 .code @
 meta-prefixes are needed to insert
@@ -53983,7 +53978,7 @@ macro cannot refer to the associations established in an outer
 .code awk
 macro. An outer
 .code awk
-macro can, of course, obtain an association's stream object and communicate
+macro can obtain an association's stream object and communicate
 that stream to the nested macro where it can be used.
 
 When the
@@ -62112,7 +62107,7 @@ type creates a correspondence between Lisp sequences and
 "by value" fixed size arrays in C. It converts Lisp sequences to C arrays, and
 C arrays to Lisp vectors.
 
-Of course, arrays passed by values do not exist
+Arrays passed by values do not exist
 in the C language syntax. Rather, the C type which corresponds to the
 FFI array is a C array that is encapsulated in a
 .codn struct .
@@ -66305,8 +66300,8 @@ encoding is in the local byte order ("endianness") of the host machine.
 The byte order is explicitly indicated in the files, and the
 .code load
 function resolves it. Thus a file produced by \*(TX running on a 64 bit big
-endian Power PC can be loaded by \*(TX running on 32 bit x86, which is,
-of course, little endian.
+endian Power PC can be loaded by \*(TX running on 32 bit x86, which is
+little endian.
 
 A given \*(TX version may also be capable of loading files produced by
 an older version, or even ones produced by a newer version. Whether this
@@ -68434,7 +68429,7 @@ history. Only the value of the original expression is saved in the result hash
 or a numbered variable.  The command line number
 .code *n
 is incremented by one. The additional evaluations are only performed for
-the purpose of producing useful output. Of course, the evaluations may
+the purpose of producing useful output. The evaluations may
 have side effects.
 
 .TP* Example:
@@ -68471,7 +68466,7 @@ the contents of
 .codn d .
 That object is a Lisp expression and is evaluated, producing
 .code "(+ 2 2)"
-and that of course is also an expression, which reduces to
+and that is also an expression, which reduces to
 .codn 4 .
 The object
 .code 4
