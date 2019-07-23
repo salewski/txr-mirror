@@ -1,3 +1,34 @@
+                                    TXR 221
+                                   2019-07-23
+
+
+  Features
+
+  - FFI:
+    - Structures with flexible array at the end ("flexible structures")
+      are now supported.
+    - FFI types now have a dynamic size.
+      - this can be explored with two-argument form of sizeof operator,
+        which takes a prototype Lisp object as an argument.
+        - (sizeof (array uint32) #(1 2 3)) -> 12.
+    - Previously undocumented ffi-out function is now documented.
+  - hashes:
+    - New hash-zip function for constructing a hash from
+      a separately given sequence of keys and sequence of values.
+  - lib:
+    - relate function optimized with hashes.
+
+  Bugs
+
+  - FFI:
+    - Buffer operations ff-put and others now work with variable length arrays
+      instead of accessing out of bounds.
+  - TXR:
+    - Fixed 2019-04-21 regression causing the file name to be missing
+      from error messages.
+
+
+
                                     TXR 220
                                    2019-07-08
 
