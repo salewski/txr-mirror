@@ -4463,7 +4463,7 @@ val ffi_elemsize(val type)
   val self = lit("ffi-elemsize");
   struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   if (!tft->eltype) {
-    uw_throwf(error_s, lit("~a: ~s isn't an array or pointer"),
+    uw_throwf(error_s, lit("~a: ~s isn't an array, pointer or enum"),
               self, type, nao);
   } else {
     struct txr_ffi_type *etft = ffi_type_struct(tft->eltype);
@@ -4478,7 +4478,7 @@ val ffi_elemtype(val type)
   val eltype = tft->eltype;
 
   if (!eltype) {
-    uw_throwf(error_s, lit("~a: ~s isn't an array or pointer"),
+    uw_throwf(error_s, lit("~a: ~s isn't an array, pointer or enum"),
               self, type, nao);
   }
 

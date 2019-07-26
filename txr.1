@@ -63744,17 +63744,20 @@ or
 The
 .code ffi-elemsize
 function reports the size of the element type of an array,
-or of the target type of pointer.
+of the target type of a pointer, or of the base integer type of an enumeration.
 The
 .meta type
-argument must be an array or pointer type: an
+argument must be an array, pointer or enumeration type: a type constructed
+by one of the operators
 .codn array ,
 .codn zarray ,
 .codn carray ,
 .codn ptr ,
-.code ptr-in
+.codn ptr-in ,
+.codn ptr-out ,
+.code enum
 or
-.codn ptr-out .
+.codn enumed .
 
 .TP* Example:
 
@@ -63770,17 +63773,20 @@ or
 The
 .code ffi-elemtype
 function retrieves the element type of an array type,
-or target type of a pointer type.
+target type of a pointer type, or base integer type of an enumeration.
 The
 .meta type
-argument must be an array or pointer type: an
+argument must be an array, pointer or enumeration type: a type constructed
+by one of the operators
 .codn array ,
 .codn zarray ,
 .codn carray ,
 .codn ptr ,
-.code ptr-in
+.codn ptr-in ,
+.codn ptr-out ,
+.code enum
 or
-.codn ptr-out .
+.codn enumed .
 
 .TP* Example:
 
