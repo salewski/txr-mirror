@@ -63014,6 +63014,24 @@ can be written as
 .code S.M.N
 instead.
 
+.coNP FFI type @ elemtype
+.synb
+.mets (elemtype << type )
+.syne
+.desc
+The FFI type operator
+.code elemtype
+denotes the element type of
+.metn type ,
+which must be a pointer, array or enum.
+
+Note: there is also a macro
+.codn elemtype .
+The macro expression
+.code "(elemtype X)"
+is equivalent to the expression
+.codn "(ffi (elemtype X))" .
+
 .coNP FFI types @, blkcnt-t @, blksize-t @, clockid-t @, dev-t @, fsblkcnt-t @, fsfilcnt-t @, gid-t @, id-t @, ino-t @, key-t @, loff-t @, mode-t @, nlink-t @, off-t @, pid-t @ ssize-t and @ uid-t
 The additional names of various common POSIX types may also be available,
 depending on platform. They are provided as
@@ -64352,10 +64370,18 @@ The macro
 .code elemtype
 produce the element type of an array type, or
 the target type of a pointer type indicated by
-.metn type-syntax ,
-using the
-.code ffi-elemsize
-function.
+.metn type-syntax .
+Note: the
+.code elemtype
+macro may be understood in terms of several possible implementations.
+The form
+.code "(elemtype X)"
+is equivalent to
+.codn "(ffi-elemtype (ffi-type-compile X))" .
+Since there exists an
+.code elemtype
+type operator, the expression is also equivalent to
+.codn "(ffi-type-compile '(elemtype X))" .
 
 .coNP Macro @ ffi
 .synb

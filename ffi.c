@@ -124,7 +124,7 @@ val closure_s;
 
 val sbit_s, ubit_s; /* bit_s is in arith.c */
 
-val enum_s, enumed_s;
+val enum_s, enumed_s, elemtype_s;
 
 val align_s;
 
@@ -3568,6 +3568,22 @@ val ffi_type_compile(val syntax)
         uw_throwf(error_s, lit("~a: invalid ~s syntax"), self, sym, nao);
 
       return type;
+    } else if (sym == elemtype_s) {
+      val args = cdr(syntax);
+      if (!consp(args) || cdr(args)) {
+        uw_throwf(error_s, lit("~a: one argument required"), self, qref_s, nao);
+      } else {
+        val expr = car(args);
+        val type = ffi_type_compile(expr);
+        struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
+
+        if (!tft->eltype) {
+          uw_throwf(error_s, lit("~a: ~s isn't an array, pointer or enum"),
+                    self, type, nao);
+        }
+
+        return tft->eltype;
+      }
     }
 
     uw_throwf(error_s, lit("~a: unrecognized type operator: ~s"),
@@ -5654,6 +5670,7 @@ void ffi_init(void)
   bit_s = intern(lit("bit"), user_package);
   enum_s = intern(lit("enum"), user_package);
   enumed_s = intern(lit("enumed"), user_package);
+  elemtype_s = intern(lit("elemtype"), user_package);
   align_s = intern(lit("align"), user_package);
   bool_s = intern(lit("bool"), user_package);
   ffi_type_s = intern(lit("ffi-type"), user_package);
