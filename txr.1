@@ -62971,6 +62971,49 @@ These additional FFI types for common C language types are provided as
 .code typedef
 aliases.
 
+.coNP FFI type @ qref
+.synb
+.mets (qref < struct-type < member1 >> [ member2 ...])
+.syne
+.desc
+The FFI type operator
+.code qref
+provides a way to reference the type of a member of a struct or union.
+The
+.meta struct-type
+argument must be a type expression denoting a struct or union.
+The
+.meta member1
+argument and any additional arguments must be symbols.
+
+If
+.code S
+is a struct or union type, and
+.code M
+is a member, then
+.code "(qref S M)"
+is a type expression denoting the type of
+.codn M .
+Moreover, if
+.code M
+itself is a struct or union, which has a member named
+.code N
+then the type of
+.code N
+can be denoted by the expression
+.codn "(qref S M N)" .
+Similarly, additional symbols reference through additional struct/union
+nestings.
+
+Note: the referencing dot syntax can be used to write
+.code qref
+expressions.
+For instance,
+.code "(qref S M N)"
+can be written as
+.code S.M.N
+instead.
+
 .coNP FFI types @, blkcnt-t @, blksize-t @, clockid-t @, dev-t @, fsblkcnt-t @, fsfilcnt-t @, gid-t @, id-t @, ino-t @, key-t @, loff-t @, mode-t @, nlink-t @, off-t @, pid-t @ ssize-t and @ uid-t
 The additional names of various common POSIX types may also be available,
 depending on platform. They are provided as

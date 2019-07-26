@@ -3542,6 +3542,32 @@ val ffi_type_compile(val syntax)
       tft->rput = ffi_bool_rput;
 #endif
       return type_copy;
+    } else if (sym == qref_s) {
+      val args = cdr(syntax);
+      val type = nil;
+      struct txr_ffi_type *tft = 0;
+
+      for (; consp(args); args = cdr(args)) {
+        val next = car(args);
+        if (!tft) {
+          type = ffi_type_compile(next);
+          tft = ffi_type_struct(type);
+          if (tft->clone != ffi_struct_clone)
+            uw_throwf(error_s, lit("~a: ~s in ~s isn't a struct/union type"),
+                      self, next, syntax, nao);
+        } else {
+          tft = ffi_find_memb(tft, next);
+          if (!tft)
+            uw_throwf(error_s, lit("~a: ~s in ~s is a nonexistent member"),
+                      self, next, syntax, nao);
+          type = tft->self;
+        }
+      }
+
+      if (type == nil || args)
+        uw_throwf(error_s, lit("~a: invalid ~s syntax"), self, sym, nao);
+
+      return type;
     }
 
     uw_throwf(error_s, lit("~a: unrecognized type operator: ~s"),
