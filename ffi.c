@@ -1895,6 +1895,8 @@ static val ffi_ptr_in_in(struct txr_ffi_type *tft, int copy, mem_t *src,
   val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t **loc = coerce(mem_t **, src);
+  if (!*loc)
+    return nil;
   if (tgtft->in != 0 && tgtft->by_value_in)
     tgtft->in(tgtft, 0, *loc, obj, self);
   tgtft->free(*loc);
@@ -1908,6 +1910,8 @@ static val ffi_ptr_in_d_in(struct txr_ffi_type *tft, int copy, mem_t *src,
   val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t **loc = coerce(mem_t **, src);
+  if (!*loc)
+    return nil;
   if (tgtft->in != 0 && tgtft->by_value_in)
     tgtft->in(tgtft, 0, *loc, obj, self);
   return obj;
@@ -1930,6 +1934,8 @@ static val ffi_ptr_out_in(struct txr_ffi_type *tft, int copy, mem_t *src,
   val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t **loc = coerce(mem_t **, src);
+  if (!*loc)
+    return nil;
   if (tgtft->in != 0)
     obj = tgtft->in(tgtft, 1, *loc, obj, self);
   else
@@ -2009,6 +2015,8 @@ static val ffi_ptr_out_s_in(struct txr_ffi_type *tft, int copy,
   val tgttype = tft->eltype;
   struct txr_ffi_type *tgtft = ffi_type_struct(tgttype);
   mem_t **loc = coerce(mem_t **, src);
+  if (!*loc)
+    return nil;
   if (tgtft->in != 0)
     obj = tgtft->in(tgtft, 1, *loc, obj, self);
   else
