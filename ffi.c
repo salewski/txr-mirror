@@ -2882,6 +2882,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
   tft->incomplete = 1;
 
+  setcheck(obj, syntax);
+  setcheck(obj, lisp_type);
+
   sethash(ffi_struct_tag_hash, cadr(syntax), obj);
 
   for (i = 0; i < nmemb; i++) {
@@ -2896,6 +2899,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     memb[i].mtype = type;
     memb[i].mname = slot;
     memb[i].mtft = mtft;
+
+    setcheck(obj, slot);
+    setcheck(obj, type);
 
     if (mtft->bitfield) {
       ucnum size = mtft->size;
@@ -3045,6 +3051,8 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
 
   tft->incomplete = 1;
 
+  setcheck(obj, syntax);
+
   sethash(ffi_struct_tag_hash, cadr(syntax), obj);
 
   for (i = 0; i < nmemb; i++) {
@@ -3057,6 +3065,9 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
     memb[i].mname = slot;
     memb[i].mtft = mtft;
     memb[i].offs = 0;
+
+    setcheck(obj, slot);
+    setcheck(obj, type);
 
     if (most_align < (ucnum) mtft->align)
       most_align = mtft->align;
