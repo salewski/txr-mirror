@@ -2843,7 +2843,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   cnum nmemb = c_num(length(slot_exprs)), i;
   struct smemb *memb = coerce(struct smemb *,
                               chk_calloc(nmemb, sizeof *memb));
-  val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
+  val obj = if3(use_existing,
+                tft->self,
+                cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops));
   ucnum offs = 0;
   ucnum most_align = 0;
   int need_out_handler = 0;
@@ -3006,7 +3008,9 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
   cnum nmemb = c_num(length(slot_exprs)), i;
   struct smemb *memb = coerce(struct smemb *,
                               chk_calloc(nmemb, sizeof *memb));
-  val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
+  val obj = if3(use_existing,
+                tft->self,
+                cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops));
   ucnum most_align = 0;
   ucnum biggest_size = 0;
   const unsigned bits_int = 8 * sizeof(int);
