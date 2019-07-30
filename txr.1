@@ -61968,13 +61968,22 @@ and a C
 .codn struct .
 The
 .meta name
-argument of the syntax gives the structure a name. This name is significant
-because it specifies the Lisp
+argument of the syntax gives the structure type name, known as the tag.
+If this argument is the symbol
+.meta nil
+then the structure type is named by a newly generated uninterned
+symbol (gensym).
+
+The
+.meta name
+is entered into a global namespace of tags which is shared by structures
+and unions.
+
+The
+.meta name
+also specifies the Lisp
 .code struct
-name associated with the FFI type. The association isn't unique:
-More than one FFI
-.code struct
-definition can use the same name.
+name associated with the FFI type.
 
 The
 .meta slot
@@ -61985,6 +61994,74 @@ pairs specify the structure members. The
 elements must be symbols, and the
 .meta type
 elements must be FFI type expressions.
+
+A
+.meta struct
+definition with no member refers to a previously defined
+.code struct
+or
+.code union
+type which has the same
+.meta name
+in the global
+.cod3 struct / union
+tag space.
+
+If no prior
+.code struct
+or
+.code union
+exists, then a definition with no slots specifies a new,
+structure type that is incomplete.
+A
+.meta struct
+definition with no members never causes a Lisp structure type to be created.
+
+A
+.meta struct
+definition that specifies one or more members either defines a new structure
+type, or completes an existing one. If an incomplete structure or union
+type which has the same
+.meta name
+exists, then the newly appearing definition is understood to provide
+a completion of that type. If the incomplete type is a
+.codn union ,
+it thereby converted to a
+.code struct
+type.
+
+If a complete structure type which has the
+same
+.meta name
+already exists, then the newly appearing definition replaces that type
+in the tag namespace.
+
+A struct
+.code struct
+definition with members is entered into the
+.cod3 struct / union
+tag space immediately as an incomplete type (if it isn't already), before the
+members are processed. Therefore, the member definitions can refer to the
+.code struct
+type. The type becomes complete when the last member is processed,
+except in the special situation when that member causes the type to become
+a flexible structure, described several paragraphs below.
+
+A
+.meta struct
+definition that specifies members causes a Lisp
+.code struct
+having the same
+.code name
+to exist, if such a type doesn't already exist. If such a type is
+created, instance slots are defined for it which correspond to the
+member definitions in the FFI
+.code struct
+definition.  Those members whose
+.meta slot
+name is specified as
+.code nil
+is ignored; no instance slots are created in the Lisp type.
 
 When a Lisp object is converted to a struct, it must, firstly, be of the struct
 type specified by
@@ -62050,6 +62127,75 @@ type resembles the
 type syntactically. It provides handling for foreign objects of C
 .code union
 type.
+
+The
+.meta name
+argument specifies the name for the union type, known as a tag.
+If this argument is the symbol
+.meta nil
+then the union type is named by a newly generated uninterned
+symbol (gensym).
+
+The
+.meta name
+is entered into a global namespace of tags which is shared by structures
+and unions.
+
+The
+.meta slot
+and
+.code type
+pairs specify the union members. The
+.meta slot
+elements must be symbols, and the
+.meta type
+elements must be FFI type expressions.
+
+A
+.meta union
+definition with no member refers to a previously defined
+.code struct
+or
+.code union
+type which has the same
+.meta name
+in the global
+.cod3 struct / union
+tag space.
+
+If no prior
+.code struct
+or
+.code union
+exists, then a definition with no slots specifies a new,
+.code union
+type that is incomplete.
+
+A
+.meta union
+definition that specifies one or more members either defines a new structure
+type, or completes an existing one. If an incomplete structure type which has
+the same
+.meta name
+exists, then the newly appearing definition is understood to provide
+a completion of that type. If the prior incomplete type is a
+.codn struct ,
+it is converted to
+.code union
+type.  If a complete structure or union type which has the
+same
+.meta name
+already exists, then the newly appearing definition replaces that type
+in the tag namespace.
+
+A struct
+.code union
+definition with members is entered into the
+.cod3 struct / union
+tag space immediately as an incomplete type (if it isn't already), before the
+members are processed. Therefore, the member definitions can refer to the
+.code union
+type. The type becomes complete when the last member is processed.
 
 Unlike the FFI
 .code struct
