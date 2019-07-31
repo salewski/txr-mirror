@@ -1,3 +1,35 @@
+                                    TXR 222
+                                   2019-07-30
+
+
+  Features
+
+  - FFI:
+    - type.a.b.c syntax for navigating struct and union types.
+      - for instance given (struct foo (x int)):
+        - foo.x denotes int
+        - (sizeof foo.x) is same as (sizeof int)
+    - elemtype is a type operator now, not only macro:
+      - (struct foo (x int) (y (elemtype foo.x))) declares y of type int.
+    - elemsize and elemtype work on enums.
+      - worked previously, now documented.
+    - structs and unions may now be self-referential:
+      - (struct foo (datum int) (next (ptr (struct foo))))
+      - type system will convert a Lisp linked list to C, and vice versa.
+
+  Bugs
+
+  - FFI:
+    - null pointers handled in "in" operation:
+      - e.g. when struct argument passed into a C function contains
+        pointer that is nulled out.
+        - struct is converted back to Lisp.
+  - parser:
+    - fixed failure to pinpoint start of unterminated expression,
+      when it starts on line 1 of the stream.
+
+
+
                                     TXR 221
                                    2019-07-23
 
