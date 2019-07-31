@@ -3487,9 +3487,8 @@ val ffi_type_compile(val syntax)
       return type;
     } else if (sym == cptr_s) {
       val tag = cadr(syntax);
-      val type = make_ffi_type_builtin(cptr_s, cptr_s, sizeof (mem_t *),
-                                       FFI_KIND_PTR,
-                                       alignof (mem_t *),
+      val type = make_ffi_type_builtin(cptr_s, cptr_s, FFI_KIND_PTR,
+                                       sizeof (mem_t *), alignof (mem_t *),
                                        &ffi_type_pointer,
                                        ffi_cptr_put, ffi_cptr_get, 0, 0);
       struct txr_ffi_type *tft = ffi_type_struct(type);
@@ -3721,15 +3720,17 @@ static void ffi_init_types(void)
 #endif
 
 #if HAVE_I8
-  ffi_typedef(uint8_s, make_ffi_type_builtin(uint8_s, integer_s, sizeof (i8_t),
+  ffi_typedef(uint8_s, make_ffi_type_builtin(uint8_s, integer_s,
                                              FFI_KIND_NUM,
-                                             alignof (i8_t), &ffi_type_uint8,
+                                             sizeof (i8_t), alignof (i8_t),
+                                             &ffi_type_uint8,
                                              ffi_u8_put, ffi_u8_get,
                                              ifbe(ffi_u8_rput),
                                              ifbe(ffi_u8_rget)));
-  ffi_typedef(int8_s, make_ffi_type_builtin(int8_s, integer_s, sizeof (i8_t),
+  ffi_typedef(int8_s, make_ffi_type_builtin(int8_s, integer_s,
                                             FFI_KIND_NUM,
-                                            alignof (i8_t), &ffi_type_sint8,
+                                            sizeof (i8_t), alignof (i8_t),
+                                            &ffi_type_sint8,
                                             ffi_i8_put, ffi_i8_get,
                                             ifbe(ffi_i8_rput),
                                             ifbe(ffi_i8_rget)));
@@ -3778,20 +3779,23 @@ static void ffi_init_types(void)
                                              &ffi_type_sint64,
                                              ffi_i64_put, ffi_i64_get, 0, 0));
 #endif
-  ffi_typedef(uchar_s, make_ffi_type_builtin(uchar_s, integer_s, 1, 1,
+  ffi_typedef(uchar_s, make_ffi_type_builtin(uchar_s, integer_s,
                                              FFI_KIND_NUM,
+                                             1, 1,
                                              &ffi_type_uchar,
                                              ffi_uchar_put, ffi_uchar_get,
                                              ifbe(ffi_uchar_rput),
                                              ifbe(ffi_uchar_rget)));
-  ffi_typedef(char_s, make_ffi_type_builtin(char_s, integer_s, 1, 1,
+  ffi_typedef(char_s, make_ffi_type_builtin(char_s, integer_s,
                                             FFI_KIND_NUM,
+                                            1, 1,
                                             ffi_char, ffi_char_put,
                                             ffi_char_get,
                                             ifbe(ffi_char_rput),
                                             ifbe(ffi_char_rget)));
-  ffi_typedef(bchar_s, make_ffi_type_builtin(bchar_s, char_s, 1, 1,
+  ffi_typedef(bchar_s, make_ffi_type_builtin(bchar_s, char_s,
                                              FFI_KIND_NUM,
+                                             1, 1,
                                              &ffi_type_uchar,
                                              ffi_uchar_put, ffi_bchar_get,
                                              ifbe(ffi_uchar_rput),
