@@ -1684,7 +1684,7 @@
                               (when *eval*
                                 (let ((pa *package-alist*))
                                   (sys:vm-execute-toplevel vm-desc)
-                                  (when (or (neq pa *package-alist*))
+                                  (when (neq pa *package-alist*)
                                     (set fence t))))
                               (when (and *emit* (consp form))
                                 out.(add flat-vd)
