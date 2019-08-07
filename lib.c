@@ -10765,7 +10765,7 @@ static void obj_init(void)
    */
 
   protect(&packages, &system_package, &keyword_package,
-          &user_package, &public_package, &null_string, &nil_string,
+          &user_package, &public_package,
           &null_list, &equal_f, &eq_f, &eql_f,
           &car_f, &cdr_f, &null_f, &list_f,
           &identity_f, &less_f, &greater_f, &prog_string, &env_list,
