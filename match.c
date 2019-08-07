@@ -1087,13 +1087,16 @@ static val h_coll(match_line_ctx *c)
         for (iter = strictly_new_bindings; iter; iter = cdr(iter))
         {
           val binding = car(iter);
-          val vars_binding = assoc(car(binding), vars);
+          val sym = car(binding);
 
-          if (!have_vars || vars_binding) {
-            val existing = assoc(car(binding), bindings_coll);
-            bindings_coll = acons_new(car(binding),
-                                      cons(cdr(binding), cdr(existing)),
-                                      bindings_coll);
+          if (!have_vars || assoc(sym, vars)) {
+            val existing = assoc(sym, bindings_coll);
+            val newlist = cons(cdr(binding), cdr(existing));
+
+            if (existing)
+              rplacd(existing, newlist);
+            else
+              bindings_coll = acons(sym, newlist, bindings_coll);
           }
         }
       }
@@ -3429,12 +3432,16 @@ static val v_collect(match_files_ctx *c)
         for (iter = strictly_new_bindings; iter; iter = cdr(iter))
         {
           val binding = car(iter);
-          val vars_binding = assoc(car(binding), vars);
+          val sym = car(binding);
 
-          if (!have_vars || vars_binding) {
-            val existing = assoc(car(binding), bindings_coll);
+          if (!have_vars || assoc(sym, vars)) {
+            val existing = assoc(sym, bindings_coll);
+            val newlist = cons(cdr(binding), cdr(existing));
 
-            bindings_coll = acons_new(car(binding), cons(cdr(binding), cdr(existing)), bindings_coll);
+            if (existing)
+              rplacd(existing, newlist);
+            else
+              bindings_coll = acons(sym, newlist, bindings_coll);
           }
         }
       }
