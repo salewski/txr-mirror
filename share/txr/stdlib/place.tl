@@ -275,7 +275,7 @@
 (defmacro pop (place :env env)
   (with-gensyms (tmp)
     (with-update-expander (getter setter) place env
-      ^(let ((,tmp (,getter)))
+      ^(alet ((,tmp (,getter)))
          (prog1 (car ,tmp) (,setter (cdr ,tmp)))))))
 
 (defmacro pushnew (new-item place :env env :
