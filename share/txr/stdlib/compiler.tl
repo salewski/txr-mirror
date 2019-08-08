@@ -1506,7 +1506,10 @@
                 (while (and fix-arg-exprs pars.req)
                   (add ^(,(pop pars.req) ,(pop fix-arg-exprs))))
                 (while (and fix-arg-exprs pars.opt)
-                  (add ^(,(car (pop pars.opt)) ,(pop fix-arg-exprs))))
+                  (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
+                    (add ^(,var-sym ,(pop fix-arg-exprs)))
+                    (if have-sym
+                      (add ^(,have-sym t)))))
                 (cond
                   ((and (null pars.req)
                         (null pars.opt))
@@ -1526,20 +1529,28 @@
                     (while pars.req
                       (add ^(,(pop pars.req) (pop ,al-val))))
                     (while pars.opt
-                      (add ^(,(caar pars.opt)
-                              (if ,al-val
-                                (pop ,al-val)
-                                ,(cadar pars.opt))))
-                      (pop pars.opt))
+                      (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
+                        (cond
+                          (have-sym
+                            (add ^(,var-sym (if ,al-val
+                                              (car ,al-val)
+                                              ,init-form)))
+                            (add ^(,have-sym (when ,al-val
+                                               (pop ,al-val)
+                                               t))))
+                          (t (add ^(,var-sym (if ,al-val
+                                               (pop ,al-val)
+                                               ,init-form)))))))
                     (when pars.rest
                       (add ^(,pars.rest ,al-val))))
                   (pars.req
                     (lambda-too-few-args lm-expr))
                   (pars.opt
                     (while pars.opt
-                      (add ^(,(caar pars.opt)
-                              ,(cadar pars.opt)))
-                      (pop pars.opt))
+                      (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
+                        (add ^(,var-sym ,init-form))
+                        (if have-sym
+                          (add ^(,have-sym)))))
                     (when pars.rest
                       (add ^(,pars.rest))))))
          ,*lm-body))))
