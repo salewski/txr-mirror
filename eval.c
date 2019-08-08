@@ -4867,15 +4867,15 @@ again:
 
       if (consp(insym) && car(insym) == lambda_s) {
         insym_ex = expand(insym, menv);
-      } else if (!lookup_fun(menv, sym) && !special_operator_p(sym)) {
-        if (!bindable(sym))
+      } else if (!lookup_fun(menv, insym) && !special_operator_p(insym)) {
+        if (!bindable(insym))
           eval_warn(uw_last_form_expanded(),
-                    lit("~s appears in operator position"), sym, nao);
+                    lit("~s appears in operator position"), insym, nao);
         else
           eval_defr_warn(uw_last_form_expanded(),
-                         cons(fun_s, sym),
+                         cons(fun_s, insym),
                          lit("unbound function ~s"),
-                         sym, nao);
+                         insym, nao);
       }
 
       if (insym_ex == rcons_s &&
