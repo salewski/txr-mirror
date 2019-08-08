@@ -1502,10 +1502,15 @@
     (let* ((pars (new (fun-param-parser lm-args lm-expr)))
            (fix-vals (mapcar (ret (gensym)) fix-arg-exprs))
            (ign-sym (gensym))
-           (al-val (gensym)))
-      ^(let (,*(zip fix-vals fix-arg-exprs)
-             ,*(if apply-list-expr ^((,al-val ,apply-list-expr))))
+           (al-val (gensym))
+           (shadow-p (let ((all-vars (append pars.req pars.(opt-syms)
+                                             (if pars.rest (list pars.rest)))))
+                       (or (isec all-vars fix-arg-exprs)
+                           (member apply-list-expr all-vars)))))
+      ^(,(if shadow-p 'let 'alet) ,(zip fix-vals fix-arg-exprs)
          (let* ,(build
+                  (if apply-list-expr
+                    (add ^(,al-val ,apply-list-expr)))
                   (while (and fix-vals pars.req)
                     (add ^(,(pop pars.req) ,(pop fix-vals))))
                   (while (and fix-vals pars.opt)
