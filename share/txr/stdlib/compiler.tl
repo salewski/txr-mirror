@@ -1522,7 +1522,7 @@
                   ((and fix-arg-exprs apply-list-expr)
                    (lambda-too-many-args lm-expr))
                   (apply-list-expr
-                    (add ^(,al-val ,apply-list-expr))
+                    (add* ^(,al-val ,apply-list-expr))
                     (when pars.req
                       (add ^(,ign-sym (if (< (len ,al-val) ,(len pars.req))
                                         (lambda-short-apply-list)))))
