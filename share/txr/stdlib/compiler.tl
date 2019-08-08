@@ -1500,60 +1500,62 @@
 (defun lambda-apply-transform (lm-expr fix-arg-exprs apply-list-expr)
   (mac-param-bind lm-expr (lambda lm-args . lm-body) lm-expr
     (let* ((pars (new (fun-param-parser lm-args lm-expr)))
+           (fix-vals (mapcar (ret (gensym)) fix-arg-exprs))
            (ign-sym (gensym))
            (al-val (gensym)))
-      ^(let* ,(build
-                (while (and fix-arg-exprs pars.req)
-                  (add ^(,(pop pars.req) ,(pop fix-arg-exprs))))
-                (while (and fix-arg-exprs pars.opt)
-                  (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
-                    (add ^(,var-sym ,(pop fix-arg-exprs)))
-                    (if have-sym
-                      (add ^(,have-sym t)))))
-                (cond
-                  ((and (null pars.req)
-                        (null pars.opt))
-                   (if fix-arg-exprs
-                     (if pars.rest
-                       (add ^(,pars.rest (list* ,*fix-arg-exprs ,apply-list-expr)))
-                       (lambda-too-many-args lm-expr))
-                     (when (or pars.rest apply-list-expr)
-                       (add ^(,(or pars.rest ign-sym) ,apply-list-expr)))))
-                  ((and fix-arg-exprs apply-list-expr)
-                   (lambda-too-many-args lm-expr))
-                  (apply-list-expr
-                    (add* ^(,al-val ,apply-list-expr))
-                    (when pars.req
-                      (add ^(,ign-sym (if (< (len ,al-val) ,(len pars.req))
-                                        (lambda-short-apply-list)))))
-                    (while pars.req
-                      (add ^(,(pop pars.req) (pop ,al-val))))
-                    (while pars.opt
-                      (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
-                        (cond
-                          (have-sym
-                            (add ^(,var-sym (if ,al-val
-                                              (car ,al-val)
-                                              ,init-form)))
-                            (add ^(,have-sym (when ,al-val
-                                               (pop ,al-val)
-                                               t))))
-                          (t (add ^(,var-sym (if ,al-val
-                                               (pop ,al-val)
-                                               ,init-form)))))))
-                    (when pars.rest
-                      (add ^(,pars.rest ,al-val))))
-                  (pars.req
-                    (lambda-too-few-args lm-expr))
-                  (pars.opt
-                    (while pars.opt
-                      (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
-                        (add ^(,var-sym ,init-form))
-                        (if have-sym
-                          (add ^(,have-sym)))))
-                    (when pars.rest
-                      (add ^(,pars.rest))))))
-         ,*lm-body))))
+      ^(let (,*(zip fix-vals fix-arg-exprs)
+             ,*(if apply-list-expr ^((,al-val ,apply-list-expr))))
+         (let* ,(build
+                  (while (and fix-vals pars.req)
+                    (add ^(,(pop pars.req) ,(pop fix-vals))))
+                  (while (and fix-vals pars.opt)
+                    (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
+                      (add ^(,var-sym ,(pop fix-vals)))
+                      (if have-sym
+                        (add ^(,have-sym t)))))
+                  (cond
+                    ((and (null pars.req)
+                          (null pars.opt))
+                     (if fix-vals
+                       (if pars.rest
+                         (add ^(,pars.rest (list* ,*fix-arg-exprs ,apply-list-expr)))
+                         (lambda-too-many-args lm-expr))
+                       (when (or pars.rest apply-list-expr)
+                         (add ^(,(or pars.rest ign-sym) ,apply-list-expr)))))
+                    ((and fix-vals apply-list-expr)
+                     (lambda-too-many-args lm-expr))
+                    (apply-list-expr
+                      (when pars.req
+                        (add ^(,ign-sym (if (< (len ,al-val) ,(len pars.req))
+                                          (lambda-short-apply-list)))))
+                      (while pars.req
+                        (add ^(,(pop pars.req) (pop ,al-val))))
+                      (while pars.opt
+                        (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
+                          (cond
+                            (have-sym
+                              (add ^(,var-sym (if ,al-val
+                                                (car ,al-val)
+                                                ,init-form)))
+                              (add ^(,have-sym (when ,al-val
+                                                 (pop ,al-val)
+                                                 t))))
+                            (t (add ^(,var-sym (if ,al-val
+                                                 (pop ,al-val)
+                                                 ,init-form)))))))
+                      (when pars.rest
+                        (add ^(,pars.rest ,al-val))))
+                    (pars.req
+                      (lambda-too-few-args lm-expr))
+                    (pars.opt
+                      (while pars.opt
+                        (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
+                          (add ^(,var-sym ,init-form))
+                          (if have-sym
+                            (add ^(,have-sym)))))
+                      (when pars.rest
+                        (add ^(,pars.rest))))))
+           ,*lm-body)))))
 
 (defun system-symbol-p (sym)
   (member (symbol-package sym)
