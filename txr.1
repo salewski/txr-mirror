@@ -48234,7 +48234,7 @@ Examples of strings which are not pure relative paths:
 .coNP Functions @ dir-name and @ base-name
 .synb
 .mets (dir-name << path )
-.mets (base-name << path )
+.mets (base-name < path <> [ suffix ])
 .syne
 .desc
 The
@@ -48299,6 +48299,17 @@ The
 .code base-name
 function returns the remaining part of the effective path, after
 the raw directory prefix.
+
+If the
+.meta suffix
+argument is given to
+.codn base-name ,
+then the returned base name is adjusted as follows. If the base
+name ends in
+.meta suffix
+then a trimmed version of the base name is returned instead, with that suffix
+removed. This adjustment isn't performed if it would result in an empty
+string being returned.
 
 .coNP Function @ path-cat
 .synb

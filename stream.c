@@ -4486,7 +4486,7 @@ static void detect_path_separators(void)
 #endif
 }
 
-val base_name(val path)
+val base_name(val path, val suff)
 {
   const wchar_t *wpath = c_str(path);
   const wchar_t *end = wpath + c_num(length_str(path));
@@ -4510,7 +4510,11 @@ val base_name(val path)
 
   {
     val base = mkustring(num_fast(end - rsep));
-    return init_str(base, rsep);
+    init_str(base, rsep);
+    return if3(!null_or_missing_p(suff) && ends_with(suff, base, nil, nil) &&
+               neql(length(suff), length(base)),
+               sub(base, zero, neg(length(suff))),
+               base);
   }
 }
 
@@ -4771,7 +4775,7 @@ void stream_init(void)
   reg_fun(intern(lit("open-files*"), user_package), func_n2o(open_files_star, 1));
   reg_fun(intern(lit("abs-path-p"), user_package), func_n1(abs_path_p));
   reg_fun(intern(lit("pure-rel-path-p"), user_package), func_n1(pure_rel_path_p));
-  reg_fun(intern(lit("base-name"), user_package), func_n1(base_name));
+  reg_fun(intern(lit("base-name"), user_package), func_n2o(base_name, 1));
   reg_fun(intern(lit("dir-name"), user_package), func_n1(dir_name));
   reg_fun(intern(lit("path-cat"), user_package), func_n2(path_cat));
   reg_varl(intern(lit("path-sep-chars"), user_package), static_str(path_sep_chars));
