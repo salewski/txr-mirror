@@ -1328,7 +1328,7 @@ val reverse(val seq_in)
       return obj;
     }
   default:
-    uw_throwf(error_s, lit("reverse: cannot reverse ~s"), in, nao);
+    uw_throwf(error_s, lit("reverse: cannot reverse ~s"), seq_in, nao);
   }
 }
 
