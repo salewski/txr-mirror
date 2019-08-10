@@ -989,6 +989,7 @@ static val h_coll(match_line_ctx *c)
   cnum ctimin = if3(times, c_num(times), if3(mintimes, c_num(mintimes), 0));
   cnum cchars = if3(chars, c_num(chars), 0);
   cnum timescounter = 0, charscounter = 0;
+  int compat_222 = opt_compat && opt_compat <= 222;
   val iter;
 
   if (op_sym == rep_s) {
@@ -1064,6 +1065,7 @@ static val h_coll(match_line_ctx *c)
         val strictly_new_bindings = set_diff(new_bindings,
                                              c->bindings, eq_f, nil);
         val have_new = strictly_new_bindings;
+        val all_dfl = t, some_required = nil;
 
         new_pos = minus(new_pos, c->base);
         LOG_MATCH("coll", new_pos);
@@ -1071,32 +1073,38 @@ static val h_coll(match_line_ctx *c)
         for (iter = vars; iter; iter = cdr(iter)) {
           cons_bind (var, dfl, car(iter));
           val exists = tx_lookup_var(var, new_bindings);
+          int is_dfl = (dfl != noval_s);
 
-          if (!exists) {
-            if (dfl == noval_s)
-              ptail = list_collect(ptail, var);
-            else
-              strictly_new_bindings = acons(var, dfl, strictly_new_bindings);
-          }
+          if (!is_dfl)
+            some_required = t;
+
+          if (exists)
+            all_dfl = nil;
+          else if (is_dfl)
+            strictly_new_bindings = acons(var, dfl, strictly_new_bindings);
+          else
+            ptail = list_collect(ptail, var);
         }
 
         if (have_new && missing)
           sem_error(elem, lit("~s failed to bind ~a"),
                     op_sym, missing, nao);
 
-        for (iter = strictly_new_bindings; iter; iter = cdr(iter))
-        {
-          val binding = car(iter);
-          val sym = car(binding);
+        if (!vars || !all_dfl || !some_required || compat_222) {
+          for (iter = strictly_new_bindings; iter; iter = cdr(iter))
+          {
+            val binding = car(iter);
+            val sym = car(binding);
 
-          if (!have_vars || assoc(sym, vars)) {
-            val existing = assoc(sym, bindings_coll);
-            val newlist = cons(cdr(binding), cdr(existing));
+            if (!have_vars || assoc(sym, vars)) {
+              val existing = assoc(sym, bindings_coll);
+              val newlist = cons(cdr(binding), cdr(existing));
 
-            if (existing)
-              rplacd(existing, newlist);
-            else
-              bindings_coll = acons(sym, newlist, bindings_coll);
+              if (existing)
+                rplacd(existing, newlist);
+              else
+                bindings_coll = acons(sym, newlist, bindings_coll);
+            }
           }
         }
       }
@@ -3321,6 +3329,7 @@ static val v_collect(match_files_ctx *c)
   volatile cnum timescounter = 0, linescounter = 0;
   cnum ctimes = if3(times, c_num(times), 0);
   cnum clines = if3(lines, c_num(lines), 0);
+  int compat_222 = opt_compat && opt_compat <= 222;
   val iter;
   uw_mark_frame;
   uw_block_begin(nil, result);
@@ -3409,6 +3418,7 @@ static val v_collect(match_files_ctx *c)
         val strictly_new_bindings = set_diff(new_bindings,
                                              c->bindings, eq_f, nil);
         val have_new = strictly_new_bindings;
+        val all_dfl = t, some_required = nil;
 
         debuglf(specline, lit("~s matched ~a:~d"),
                 op_sym, c->curfile, c->data_lineno, nao);
@@ -3416,32 +3426,38 @@ static val v_collect(match_files_ctx *c)
         for (iter = vars; iter; iter = cdr(iter)) {
           cons_bind (var, dfl, car(iter));
           val exists = tx_lookup_var(var, new_bindings);
+          int is_dfl = (dfl != noval_s);
 
-          if (!exists) {
-            if (dfl == noval_s)
-              ptail = list_collect(ptail, var);
-            else
-              strictly_new_bindings = acons(var, dfl, strictly_new_bindings);
-          }
+          if (!is_dfl)
+            some_required = t;
+
+          if (exists)
+            all_dfl = nil;
+          else if (is_dfl)
+            strictly_new_bindings = acons(var, dfl, strictly_new_bindings);
+          else
+            ptail = list_collect(ptail, var);
         }
 
         if (have_new && missing)
           sem_error(specline, lit("~s failed to bind ~a"),
                     op_sym, missing, nao);
 
-        for (iter = strictly_new_bindings; iter; iter = cdr(iter))
-        {
-          val binding = car(iter);
-          val sym = car(binding);
+        if (!vars || !all_dfl || !some_required || compat_222) {
+          for (iter = strictly_new_bindings; iter; iter = cdr(iter))
+          {
+            val binding = car(iter);
+            val sym = car(binding);
 
-          if (!have_vars || assoc(sym, vars)) {
-            val existing = assoc(sym, bindings_coll);
-            val newlist = cons(cdr(binding), cdr(existing));
+            if (!have_vars || assoc(sym, vars)) {
+              val existing = assoc(sym, bindings_coll);
+              val newlist = cons(cdr(binding), cdr(existing));
 
-            if (existing)
-              rplacd(existing, newlist);
-            else
-              bindings_coll = acons(sym, newlist, bindings_coll);
+              if (existing)
+                rplacd(existing, newlist);
+              else
+                bindings_coll = acons(sym, newlist, bindings_coll);
+            }
           }
         }
       }

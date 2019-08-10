@@ -5784,48 +5784,56 @@ body.
 The argument to
 .code :vars
 is a list of variable specs. A variable spec is either a
-symbol, or a
+symbol, denoting a required variable, or a
 .mono
 .meti >> ( symbol << default-value )
 .onom
 pair, where
 .meta default-value
 is a Lisp expression whose value specifies a default value
-for the variable.
+for the variable, which is optional.
 
 When a
 .code :vars
 list is specified, it means that only the given variables can
 emerge from the successful collect. Any newly introduced bindings for other
-variables do not propagate.
+variables do not propagate. More precisely,  whenever the collect body matches
+successfully, the following three rules apply:
+.IP 1
+If
+.code :vars
+specifies required variables, the collect body must bind all of them,
+or else must not bind any variable at all, whether listed in
+.code :vars
+or not, otherwise an exception of type
+.code query-error
+is thrown.
+.IP 2
+If
+.code :vars
+specifies required variables, and also specifies default variables,
+and the collect body binds no variable at all, then the default variables
+are not bound to their default values.
+.IP 3
+If
+.code :vars
+specifies optional variables, and all required variables are bound by
+the collect body, then all those optional variables that are not bound
+by the collect body are bound to their default values. Under this rule, if
+.code :vars
+specifies no required variables, that is deemed to be
+logically equivalent to all required variables being bound.
+.PP
 
-Furthermore, for any variable which is not specified with a default value, the
-collect body, whenever it matches successfully, must bind that variable. If it
-neglects to bind the variable, an exception of type query-error is thrown.
-(If a
-.code collect
-body matches successfully, but produces no new bindings, then
-this error is suppressed.)
-
-For any variable which does have a default value, if the
-.code collect
-body neglects
-to bind that variable, the behavior is as if
-.code collect
-did bind that variable
-to that default value.
-
-The default values are expressions, and so can be quasiliterals.
-
-Lastly, if in the event that
+In the event that
 .code collect
 does not match anything, the variables
 specified in
-.code :vars
-(whether or not they have a default value) are all bound to
-empty lists. (These bindings are established after the processing of the
+.codn :vars ,
+whether required or optional, are all bound to
+empty lists. These bindings are established after the processing of the
 .cod3 until / last
-last clause, if present.)
+last clause, if present.
 
 Example:
 
@@ -69038,6 +69046,21 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 222
+After \*(TX 222, the behavior of
+.code :vars
+in
+.code @(collect)
+was subject to an adjustment. Previously, if the collect body
+didn't bind any variables, and both required and optional variables
+were specified in
+.codn :vars ,
+it would still bind all of the optional ones to their default values.
+This was a poor behavior which violated the idea that
+.code :vars
+enforces an all-or-nothing binding discipline to keep the collected
+lists consistent. Selecting 222 compatibility or lower restores this
+behavior.
 .IP 215
 After \*(TX 215, the behavior of the
 .code load
