@@ -309,12 +309,8 @@ static void mark_obj(val obj)
 {
   type_t t;
 
-#if 1
 tail_call:
 #define mark_obj_tail(o) do { obj = (o); goto tail_call; } while (0)
-#else
-#define mark_obj_tail(o) return mark_obj(o)
-#endif
 
   if (!is_ptr(obj))
     return;
@@ -760,10 +756,6 @@ void gc(void)
   prepare_finals();
   swept = sweep();
 #if CONFIG_GEN_GC
-#if 0
-  printf("sweep: freed %d full_gc == %d exhausted == %d\n",
-         (int) swept, full_gc, exhausted);
-#endif
   if (++gc_counter >= FULL_GC_INTERVAL ||
       freshobj_idx >= FRESHOBJ_VEC_SIZE)
   {
