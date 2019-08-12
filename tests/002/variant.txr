@@ -1,0 +1,18 @@
+@(collect :vars (f1 (f2 "*") (f3 "%") (f4 "$")))
+@  (cases)
+
+@  (or)
+@f1 @f2 @f3 @f4
+@  (or)
+@f1 @f2 @f3
+@  (or)
+@f1 @f2
+@  (or)
+@f1
+@  (end)
+@(end)
+@(output)
+@  (repeat)
+@f1-@f2-@f3-@f4
+@  (end)
+@(end)
