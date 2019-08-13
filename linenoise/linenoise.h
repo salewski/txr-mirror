@@ -68,6 +68,7 @@ typedef struct lino_os {
     void (*free_fn)(void *);
     int (*fileno_fn)(mem_t *stream);
     int (*puts_fn)(mem_t *stream, const wchar_t *str);
+    int (*puts_file_fn)(mem_t *stream, const wchar_t *str);
     wint_t (*getch_fn)(mem_t *stream);
     wchar_t *(*getl_fn)(mem_t *stream, wchar_t *buf, size_t nchar);
     wchar_t *(*gets_fn)(mem_t *stream, wchar_t *buf, size_t nchar);
@@ -80,11 +81,12 @@ typedef struct lino_os {
 } lino_os_t;
 
 #define lino_os_init(alloc, realloc, wmalloc, wrealloc, wstrdup, free,  \
-                     fileno, puts, getch, getl, gets, eof,              \
-                     open, open8, fdopen, close, wide_disp)             \
+                     fileno, puts, puts_file, getch, getl, gets,        \
+                     eof, open, open8, fdopen, close, wide_disp)        \
 {                                                                       \
   alloc, realloc, wmalloc, wrealloc, wstrdup, free,                     \
-  fileno, puts, getch, getl, gets, eof, open, open8, fdopen, close,     \
+  fileno, puts, puts_file, getch, getl, gets, eof,                      \
+  open, open8, fdopen, close,                                           \
   wide_disp                                                             \
 }
 

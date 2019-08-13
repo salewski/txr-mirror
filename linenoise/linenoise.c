@@ -1947,7 +1947,7 @@ static void edit_in_editor(lino_t *l) {
         int preserve = 0;
         tr(l->data, '\r', '\n');
 
-        if (lino_os.puts_fn(fo, l->data) && lino_os.puts_fn(fo, L"\n"))
+        if (lino_os.puts_file_fn(fo, l->data) && lino_os.puts_file_fn(fo, L"\n"))
         {
             mem_t *fi;
             lino_os.close_fn(fo);
@@ -2745,8 +2745,8 @@ int lino_hist_save(lino_t *ls, const wchar_t *filename) {
     }
 
     for (j = 0; j < ls->history_len; j++) {
-        lino_os.puts_fn(fp, ls->history[j]);
-        lino_os.puts_fn(fp, L"\n");
+        lino_os.puts_file_fn(fp, ls->history[j]);
+        lino_os.puts_file_fn(fp, L"\n");
     }
 
     lino_os.close_fn(fp);

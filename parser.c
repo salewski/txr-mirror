@@ -1478,6 +1478,16 @@ static int lino_puts(mem_t *stream_in, const wchar_t *str_in)
   return 1;
 }
 
+static int lino_puts_file(mem_t *stream_in, const wchar_t *str_in)
+{
+  val stream = coerce(val, stream_in);
+  wchar_t ch;
+  while ((ch = *str_in++))
+    if (put_char(chr(ch), stream) != t)
+      return 0;
+  return 1;
+}
+
 static wint_t lino_getch(mem_t *stream_in)
 {
   wint_t ret = WEOF;
@@ -1593,7 +1603,7 @@ static void lino_close(mem_t *stream)
 static_def(lino_os_t linenoise_txr_binding =
            lino_os_init(chk_malloc, chk_realloc, chk_wmalloc,
                         chk_wrealloc, chk_strdup, free,
-                        lino_fileno, lino_puts, lino_getch,
+                        lino_fileno, lino_puts, lino_puts_file, lino_getch,
                         lino_getl, lino_gets, lino_feof,
                         lino_open, lino_open8, lino_fdopen, lino_close,
                         wide_display_char_p));
