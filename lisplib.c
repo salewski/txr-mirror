@@ -94,6 +94,8 @@ static val place_set_entries(val dlt, val fun)
     lit("set"), lit("pset"), lit("zap"), lit("flip"), lit("inc"), lit("dec"),
     lit("pinc"), lit("pdec"),
     lit("push"), lit("pop"), lit("swap"), lit("shift"), lit("rotate"),
+    lit("test-set"), lit("test-clear"), lit("compare-swap"),
+    lit("test-inc"), lit("test-dec"),
     lit("pushnew"), lit("del"), lit("lset"), lit("upd"),
     lit("defplace"), lit("define-place-macro"), lit("define-modify-macro"),
     lit("placelet"), lit("placelet*"), lit("define-accessor"),
