@@ -4903,8 +4903,10 @@ val expand(val form, val menv)
 {
   val ret = nil;
 #if CONFIG_DEBUG_SUPPORT
+  val is_cons = consp(form);
   uw_frame_t expand_fr;
-  uw_push_expand(&expand_fr, form, menv);
+  if (is_cons)
+    uw_push_expand(&expand_fr, form, menv);
 #endif
 
   ret = do_expand(form, menv);
@@ -4913,7 +4915,8 @@ val expand(val form, val menv)
     set_origin(ret, form);
 
 #if CONFIG_DEBUG_SUPPORT
-  uw_pop_frame(&expand_fr);
+  if (is_cons)
+    uw_pop_frame(&expand_fr);
 #endif
   return ret;
 }
