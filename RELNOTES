@@ -1,3 +1,41 @@
+                                    TXR 223
+                                   2019-08-14
+
+                             Celebrating Ten Years!
+
+  Features
+
+  - Pattern Language:
+    - small performance improvement in @(collect) and @(coll)
+    - important semantics improvement in :vars feature of @(collect)/@(coll).
+  - lib:
+    - base-name now takes second optional argument: suffix to strip away.
+      - just like POSIX basename command
+  - compiler:
+    - better code generation for immediately-called lambda
+    - improved code from pop macro
+  - listener:
+    - faster history saving due to taking advantage of buffered I/O
+      instead of flushing each line.
+
+  Bugs
+
+  - Fixed issues in compilation of immediately-called lambda:
+    - incomplete optional parameter support.
+    - evaluation order problems.
+    - subtle scope problems.
+  - reverse function no longer complains about a #<garbage ...> object
+    when given an unsuitable argument.
+  - added missing autoloads for a number of macros:
+    - test-set, test-clear, compare-swap, test-inc and test-dec
+    - because of the way compilation of the library works, these
+      documented operators were unavailable even when their containing
+      module was loaded due to some other symbol.
+  - fixed regression: lack of file and line number reporting for
+    unbound variables.
+
+
+
                                     TXR 222
                                    2019-07-30
 
