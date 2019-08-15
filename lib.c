@@ -10459,22 +10459,21 @@ val rsearch(val seq, val key, val testfun, val keyfun)
 static val lazy_where_func(val seq_iter, val lcons)
 {
   struct seq_iter *si = coerce(struct seq_iter *, seq_iter->co.handle);
-  val index = succ(us_car(lcons));
-  val func = si->inf.obj;
+  us_cons_bind (index, func, lcons);
 
   for (;;) {
     val item;
     if (!si->get(si, &item)) {
-      si->inf.obj = nil;
+      us_rplacd(lcons, nil);
       return nil;
     }
+    index = succ(index);
     if (funcall1(func, item))
       break;
-    index = succ(index);
   }
 
   {
-    us_rplacd(lcons, make_lazy_cons_car(lcons_fun(lcons), index));
+    us_rplacd(lcons, make_lazy_cons_car_cdr(lcons_fun(lcons), index, func));
     return nil;
   }
 }
@@ -10511,20 +10510,15 @@ val where(val func, val seq)
 
     for (;;) {
       val item;
-      if (!si->get(si, &item)) {
-        si->inf.obj = nil;
+      if (!si->get(si, &item))
         return nil;
-      }
       if (funcall1(func, item))
         break;
       index = succ(index);
     }
 
-    {
-      val cell = make_lazy_cons_car(func_f1(seq_iter, lazy_where_func), index);
-      si->inf.obj = func;
-      return cell;
-    }
+    return make_lazy_cons_car_cdr(func_f1(seq_iter, lazy_where_func),
+                                  index, func);
   } else {
     val hash_iter = hash_begin(seq);
     val key;
