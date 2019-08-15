@@ -375,9 +375,7 @@ typedef struct seq_iter {
     val iter;
     cnum index;
   } ui;
-  union {
-    cnum len;
-  } ul;
+  cnum len;
   int (*get)(struct seq_iter *, val *pval);
   int (*peek)(struct seq_iter *, val *pval);
 } seq_iter_t;

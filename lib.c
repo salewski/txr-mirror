@@ -342,7 +342,7 @@ static int seq_iter_peek_list(seq_iter_t *it, val *pval)
 
 static int seq_iter_get_vec(seq_iter_t *it, val *pval)
 {
-  if (it->ui.index < it->ul.len) {
+  if (it->ui.index < it->len) {
     *pval = ref(it->inf.obj, num(it->ui.index++));
     return 1;
   }
@@ -351,7 +351,7 @@ static int seq_iter_get_vec(seq_iter_t *it, val *pval)
 
 static int seq_iter_peek_vec(seq_iter_t *it, val *pval)
 {
-  if (it->ui.index < it->ul.len) {
+  if (it->ui.index < it->len) {
     *pval = ref(it->inf.obj, num(it->ui.index));
     return 1;
   }
@@ -404,25 +404,25 @@ void seq_iter_init(val self, seq_iter_t *it, val obj)
   switch (it->inf.kind) {
   case SEQ_NIL:
     it->ui.iter = nil;
-    it->ul.len = 0;
+    it->len = 0;
     it->get = seq_iter_get_nil;
     it->peek = seq_iter_peek_nil;
     break;
   case SEQ_LISTLIKE:
     it->ui.iter = it->inf.obj;
-    it->ul.len = 0;
+    it->len = 0;
     it->get = seq_iter_get_list;
     it->peek = seq_iter_peek_list;
     break;
   case SEQ_VECLIKE:
     it->ui.index = 0;
-    it->ul.len = c_num(length(it->inf.obj));
+    it->len = c_num(length(it->inf.obj));
     it->get = seq_iter_get_vec;
     it->peek = seq_iter_peek_vec;
     break;
   case SEQ_HASHLIKE:
     it->ui.iter = hash_begin(it->inf.obj);
-    it->ul.len = 0;
+    it->len = 0;
     it->get = seq_iter_get_hash;
     it->peek = seq_iter_peek_hash;
     break;
