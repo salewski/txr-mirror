@@ -1704,6 +1704,10 @@
                                        [mapdo compile-form (cdr form)]))
                        (eval-only (let ((*emit* nil))
                                     [mapdo compile-form (cdr form)]))
+                       (sys:load-time-lit
+                         (if (cadr form)
+                           (compile-form ^(quote ,(caddr form)))
+                           (compile-form (caddr form))))
                        (t (when (and (or *eval* *emit*)
                                      (not (constantp form)))
                             (let* ((vm-desc (compile-toplevel form))

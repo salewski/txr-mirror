@@ -66408,11 +66408,15 @@ If a
 .code eval-only
 form is top-level form, then each of its constituent forms is also a top-level
 form.
-.IP 5.
+.IP 5
+If a
+.code load-time
+form is top-level form, then its argument is a top-level form.
+.IP 6.
 When a form is identified as a top-level form by the above rule 1,
 its constituents are considered under rules 2-4 only after the form is
 fully macro-expanded.
-.IP 6.
+.IP 7.
 No other forms are top-level forms.
 .RE
 
@@ -67220,8 +67224,8 @@ form, if any.
 
 If a
 .code load-time
-form appears in an expression which is compiled, it arranges for
-the compiled version of
+form appears in a non-top-level expression which is compiled, the
+compiler arranges for the compiled version of
 .meta form
 to be executed when compiled version of the entire expression is
 executed. This execution occurs early, before the execution of
@@ -67235,6 +67239,15 @@ Whenever the value of that
 .code load-time
 form is required, the compiled code references it from the data
 vector as if it were a true literal.
+
+When a
+.code load-time
+top-level form is processed by
+.codn compile-file ,
+it has no unusual semantics; the effect is that it is replaced by
+its argument
+.metn form ,
+which is in that case also considered a top-level form.
 
 The implications of the translation scheme may be understood
 separately from the perspective of code processed with
@@ -67263,7 +67276,7 @@ in the compiled version of the function.
 
 A
 .code load-time
-form appearing in an expression inside a file that is processed by
+form appearing as a non-top-level form inside a file that is processed by
 .code compile-file
 is compiled along with that form and deposited into the object file.
 When the object file is loaded, each compiled top-level form is executed.
