@@ -67454,6 +67454,36 @@ to a lexical for the sake of speed. That said,
 .code load-time
 eliminates that copying step too.
 
+A
+.code load-time
+is also useful when the value is not required, and instead the form produces
+a useful effect, which should be hoisted to load time. For instance, consider
+a macro which produces the following expansion:
+
+.verb
+  (progn (load-time (defvar #:g0025)) (other-logic ... #:g0025))
+.brev
+
+no matter where this expansion is inserted,
+.code compile-file
+and
+.code load
+will ensure that the
+.code defvar
+is executed once, when the compiled file is loaded, as if that
+.code defvar
+appeared on its own as a top-level form. Then the
+.code other-logic
+form can refer to the variable, without the
+.code defvar
+being evaluated on each execution of the
+.codn progn .
+
+The author of a macro can use
+.code load-time
+to stage the evaluation of global effects that the macro expansion depends on
+simply by bundling these effects into the expansion, wrapped in
+.codn load-time .
 
 .TP* "Dialect note:"
 The
@@ -67478,6 +67508,28 @@ as
 This is not true of \*(TL's
 .code load-time
 which requires once-only evaluation even in interpreted code.
+The name
+.code load-time
+is used instead of
+.code load-time-value
+for several reasons.
+Firstly,
+.code load-time
+is useful for staging effects, like definitions, to load time, even when the
+resulting value is not used.
+Secondly, unlike \*(TL, ANSI CL features multiple values: a form
+can yield zero or more values. The ANSI CL
+.code load-time-value
+operator, however, is restricted to yielding a single value, and its
+name may have been chosen to emphasize this aspect/restriction.
+That doesn't apply in the context of \*(TL in which all expressions
+which terminate normally yield exactly one value, making
+.str -value
+a suffix that adds no value. Lastly,
+.code load-time
+is shorter, and harmonizes with
+.codn macro-time ,
+which preceded it by four years.
 
 .coNP Function @ disassemble
 .synb
