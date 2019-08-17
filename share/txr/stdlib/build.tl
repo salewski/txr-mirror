@@ -83,7 +83,35 @@
         (set self.tail pf))))
 
   (:method get (self)
-    (cdr self.head)))
+    (cdr self.head))
+
+  (:method del (self)
+    (whenlet ((hd self.head)
+              (chd (cdr self.head)))
+      (when (eq self.tail chd)
+        (set self.tail hd))
+      (prog1 (car chd) (usr:rplacd hd (cdr chd)))))
+
+  (:method del* (self)
+    (whenlet ((hd self.head)
+              (chd (cdr self.head)))
+      (if (cdr chd)
+        (let* ((tl self.tail)
+               (l2 (nthlast 2 tl)))
+          (if (cdr l2)
+            (prog1
+              (cadr l2)
+              (usr:rplacd l2 nil))
+            (let* ((l10 (nthlast 10 hd))
+                   (l2 (nthlast 2 l10)))
+              (prog1
+                (cadr l2)
+                (usr:rplacd l2 nil)
+                (set self.tail l10)))))
+        (prog1
+          (car chd)
+          (usr:rplacd hd nil)
+          (set self.tail hd))))))
 
 (defun sys:list-builder-flets (lb-form)
   (nconc
@@ -91,14 +119,26 @@
       ^(,op (. args)
          (qref ,lb-form (,op . args))))
     ^((get ()
-        (qref ,lb-form (get))))))
+        (qref ,lb-form (get)))
+      (del* ()
+        (qref ,lb-form (del*)))
+      (do-del ()
+        (qref ,lb-form (del))))))
 
 (defun build-list (: init)
   (new list-builder head init))
 
-(defmacro build (. forms)
+(defun sys:build-expander (forms return-get)
   (with-gensyms (name)
     ^(let ((,name (new list-builder)))
        (flet ,(sys:list-builder-flets name)
-         ,*forms
-         (qref ,name (get))))))
+         (macrolet ((del (:form f : (expr nil expr-p))
+                      (if expr-p f '(do-del))))
+           ,*forms
+           ,*(if return-get ^((qref ,name (get)))))))))
+
+(defmacro build (. forms)
+  (sys:build-expander forms t))
+
+(defmacro buildn (. forms)
+  (sys:build-expander forms nil))

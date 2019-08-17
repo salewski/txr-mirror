@@ -426,11 +426,13 @@ static val awk_instantiate(val set_fun)
 static val build_set_entries(val dlt, val fun)
 {
   val name[] = {
-    lit("list-builder"), lit("build-list"), lit("build"), nil
+    lit("list-builder"), lit("build-list"), lit("build"), lit("buildn"), nil
   };
   val name_noload[] = {
     lit("head"), lit("tail"), lit("add"), lit("add*"), lit("pend"),
-    lit("pend*"), lit("ncon"), lit("ncon*"), lit("get"), nil
+    lit("pend*"), lit("ncon"), lit("ncon*"), lit("get"),
+    lit("del"), lit("del*"),
+    nil
   };
 
   set_dlt_entries(dlt, name, fun);

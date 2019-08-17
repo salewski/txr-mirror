@@ -32073,6 +32073,13 @@ iterative or recursive process can be collected easily using
 .code list-builder
 in the order they are visited.
 
+The
+.code list-builder
+type provides methods for adding and removing items at either end of
+the list, making it suitable where a
+.I dequeue
+structure is required.
+
 The basic workflow begins with the instantiation of a
 .code list-builder
 object. This object may be initialized with a piece of list material which
@@ -32320,22 +32327,57 @@ into the construction methods on the same object.
   -> (1 2 1 2 1 2 1 2)
 .brev
 
-.coNP Macro @ build
+.coNP Methods @ del and @ del*
+.synb
+.mets << list-builder .(del)
+.mets << list-builder .(del*)
+.syne
+.desc
+The
+.code del
+and
+.code del*
+methods each remove an element from the list and return it.
+If the list is empty, they return
+.codn nil .
+
+The
+.code del
+method removes an element from the front of the list, whereas
+.code del*
+removes an element from the end of the list.
+
+Note: this orientation is opposite to
+.code add
+and
+.codn add* .
+Thus
+.code del
+pairs with
+.code add
+to produce FIFO queuing behavior.
+
+.coNP Macros @ build and @ buildn
 .synb
 .mets (build << form *)
+.mets (buildn << form *)
 .syne
 .desc
 The
 .code build
-macro provides a shorthand notation for constructing lists using the
+and
+.code buildn
+macros provide a shorthand notation for constructing lists using the
 .code list-builder
-structure. It eliminates the explicit call to the
+structure. They eliminate the explicit call to the
 .code build-list
-function to construct the object, and eliminates the explicit
+function to construct the object, and eliminate the explicit
 references to the object.
 
 Instead,
 .code build
+and
+.code buildn
 creates a lexical environment in which a
 .code list-builder
 object is implicitly constructed and bound to a hidden variable.
@@ -32344,13 +32386,44 @@ Local functions which mimic the
 methods operate implicitly on this hidden variable, so that
 the object need not be mentioned as an argument.
 
+Then, each
+.meta form
+is evaluated in order.
+
+When the last
+.meta form
+is evaluated,
+.code build
+returns the constructed list, whereas
+.code buildn
+returns the value of the last
+.metn form .
+
+If no forms are enclosed, both macros return
+.codn nil .
+
 With the exception of
 .codn get ,
-these local functions
-.codn get ,
-have unspecified return values, like the same-named
+the local functions have unspecified return values, like the same-named
 .code list-builder
 methods.
+
+Note: because the local function
+.code del
+has the same name as a global macro, it is implemented as a
+.code macrolet.
+Inside a
+.code build
+or
+.codn buildn ,
+if
+.code del
+is invoked with no arguments, then it denotes a call to the
+.code list-builder
+.code del
+method. If invoked with an argument, then it resolves to the global
+.code del
+macro for deleting a place.
 
 .TP* Examples:
 
