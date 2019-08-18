@@ -198,21 +198,21 @@ spec : clauses_opt              { parser->syntax_tree = $1; }
      ;
 
 
-hash_semi_or_n_expr : HASH_SEMI                 { parser->circ_suppress = 1; }
-                      n_expr                    { parser->circ_suppress = 0;
+hash_semi_or_n_expr : HASH_SEMI                 { parser->ignore = 1; }
+                      n_expr                    { parser->ignore = 0;
                                                   $$ = nao; }
-                    | HASH_SEMI '.'             { parser->circ_suppress = 1; }
-                      n_expr                    { parser->circ_suppress = 0;
+                    | HASH_SEMI '.'             { parser->ignore = 1; }
+                      n_expr                    { parser->ignore = 0;
                                                   $$ = nao; }
                     | n_expr                    { $$ = $1; }
                     | '.' n_expr                { $$ = uref_helper(parser, $2); }
                     ;
 
-hash_semi_or_i_expr : HASH_SEMI                 { parser->circ_suppress = 1; }
-                      i_expr                    { parser->circ_suppress = 0;
+hash_semi_or_i_expr : HASH_SEMI                 { parser->ignore = 1; }
+                      i_expr                    { parser->ignore = 0;
                                                   $$ = nao; }
-                    | HASH_SEMI '.'             { parser->circ_suppress = 1; }
-                      i_expr                    { parser->circ_suppress = 0;
+                    | HASH_SEMI '.'             { parser->ignore = 1; }
+                      i_expr                    { parser->ignore = 0;
                                                   $$ = nao; }
                     | i_expr                    { $$ = $1; }
                     | '.' i_expr                { $$ = uref_helper(parser, $2); }
@@ -910,11 +910,11 @@ n_exprs : r_exprs               { val term_atom = pop(&$1);
 r_exprs : n_expr                { val exprs = cons($1, nil);
                                   rlc(exprs, $1);
                                   $$ = rlc(cons(unique_s, exprs), exprs); }
-        | HASH_SEMI             { parser->circ_suppress = 1; }
-          n_expr                { parser->circ_suppress = 0;
+        | HASH_SEMI             { parser->ignore = 1; }
+          n_expr                { parser->ignore = 0;
                                   $$ = cons(unique_s, nil); }
-        | r_exprs HASH_SEMI     { parser->circ_suppress = 1; }
-          n_expr                { parser->circ_suppress = 0;
+        | r_exprs HASH_SEMI     { parser->ignore = 1; }
+          n_expr                { parser->ignore = 0;
                                   $$ = $1; }
         | r_exprs n_expr        { uses_or2;
                                   val term_atom_cons = $1;
@@ -1882,10 +1882,10 @@ int parse(parser_t *parser, val name, enum prime_parser prim)
 
   parser->errors = 0;
   parser->eof = 0;
+  parser->ignore = 0;
   parser->prepared_msg = nil;
   parser->circ_ref_hash = nil;
   parser->circ_count = 0;
-  parser->circ_suppress = 0;
   parser->syntax_tree = nil;
   parser->quasi_level = 0;
 

@@ -50,7 +50,8 @@ struct parser {
   val parser;
   cnum lineno;
   int errors;
-  int eof;
+  unsigned char eof;
+  unsigned char ignore;
   val stream;
   val name;
   val prepared_msg;
@@ -58,7 +59,6 @@ struct parser {
   int quasi_level;
   val circ_ref_hash;
   cnum circ_count;
-  int circ_suppress;
   scanner_t *scanner;
   struct yy_token recent_tok;
   struct yy_token tok_pushback[4];
