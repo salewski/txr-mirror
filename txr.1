@@ -32181,7 +32181,8 @@ whereas
 .code add*
 adds elements at the front.
 
-The return value of these methods is unspecified.
+These methods return
+.codn nil .
 
 .TP* Example:
 
@@ -32225,7 +32226,8 @@ Both methods have the property that the
 constructed list does not share structure
 with the input lists.
 
-The return value of these methods is unspecified.
+These methods return
+.codn nil .
 
 .TP* Example:
 
@@ -32277,7 +32279,8 @@ which is an atom. This atom will simply be
 installed as the terminating atom of the
 list being constructed.
 
-The return value of these methods is unspecified.
+These methods return
+.codn nil .
 
 .TP* Example:
 
@@ -32374,19 +32377,37 @@ structure. They eliminate the explicit call to the
 function to construct the object, and eliminate the explicit
 references to the object.
 
-Instead,
-.code build
-and
-.code buildn
-creates a lexical environment in which a
+Both of these macros create a lexical environment in which a
 .code list-builder
 object is implicitly constructed and bound to a hidden variable.
-Local functions which mimic the
-.code list-builder
-methods operate implicitly on this hidden variable, so that
-the object need not be mentioned as an argument.
+This lexical environment also provides local functions named
+.codn add ,
+.codn add* ,
+.codn pend ,
+.codn pend* ,
+.codn ncon ,
+.codn ncon* ,
+.codn get ,
+.code del
+and
+.codn del* ,
 
-Then, each
+which mimic the
+.code list-builder
+methods, but operate implicitly on this hidden variable, so that
+the object need not be mentioned as an argument.
+With the exception of
+.codn get ,
+.code del
+and
+.codn del* ,
+the local functions return
+.codn nil ,
+like the same-named
+.code list-builder
+methods.
+
+In this lexical environment, each
 .meta form
 is evaluated in order.
 
@@ -32401,12 +32422,6 @@ returns the value of the last
 
 If no forms are enclosed, both macros return
 .codn nil .
-
-With the exception of
-.codn get ,
-the local functions have unspecified return values, like the same-named
-.code list-builder
-methods.
 
 Note: because the local function
 .code del
