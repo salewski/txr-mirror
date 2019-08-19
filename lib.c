@@ -5337,19 +5337,60 @@ val symbol_needs_prefix(val self, val package, val sym)
   return sym_pkg->pk.name;
 }
 
-val find_symbol(val str, val package_in)
+val find_symbol(val name, val package_in, val notfound_val_in)
 {
   val self = lit("find-symbol");
-  val package = get_package(self, package_in, nil);
-  val found;
+  val package = get_package(self, package_in, t);
 
-  if (!stringp(str))
-    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
+  if (!stringp(name))
+    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, name, nao);
 
-  if ((found = gethash_e(self, package->pk.symhash, str)))
-    return cdr(found);
+  {
+    val cell = gethash_e(self, package->pk.symhash, name);
+    if (cell)
+      return cdr(cell);
+  }
 
-  return zero;
+  {
+    val fallback = get_hash_userdata(package->pk.symhash);
+
+    for (; fallback; fallback = cdr(fallback)) {
+      val fb_pkg = car(fallback);
+      val cell = gethash_e(self, fb_pkg->pk.symhash, name);
+      if (cell)
+        return cdr(cell);
+    }
+  }
+
+  return default_null_arg(notfound_val_in);
+}
+
+val find_symbol_fb(val name, val package_in, val notfound_val_in)
+{
+  val self = lit("find-symbol-fb");
+  val package = get_package(self, package_in, t);
+
+  if (!stringp(name))
+    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, name, nao);
+
+  {
+    val cell = gethash_e(self, package->pk.symhash, name);
+    if (cell)
+      return cdr(cell);
+  }
+
+  {
+    val fallback = get_hash_userdata(package->pk.symhash);
+
+    for (; fallback; fallback = cdr(fallback)) {
+      val fb_pkg = car(fallback);
+      val cell = gethash_e(self, fb_pkg->pk.symhash, name);
+      if (cell)
+        return cdr(cell);
+    }
+  }
+
+  return default_null_arg(notfound_val_in);
 }
 
 val intern(val str, val package_in)

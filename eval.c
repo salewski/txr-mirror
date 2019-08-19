@@ -6627,6 +6627,8 @@ void eval_init(void)
   reg_fun(intern(lit("unuse-package"), user_package), func_n2o(unuse_package, 1));
   reg_fun(intern(lit("intern"), user_package), func_n2o(intern, 1));
   reg_fun(intern(lit("unintern"), user_package), func_n2o(unintern, 1));
+  reg_fun(intern(lit("find-symbol"), user_package), func_n3o(find_symbol, 1));
+  reg_fun(intern(lit("find-symbol-fb"), user_package), func_n3o(find_symbol_fb, 1));
   reg_fun(intern(lit("rehome-sym"), user_package), func_n2o(rehome_sym, 1));
   reg_fun(intern(lit("package-fallback-list"), user_package), func_n1(package_fallback_list));
   reg_fun(intern(lit("set-package-fallback-list"), user_package), func_n2(set_package_fallback_list));

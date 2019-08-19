@@ -51096,6 +51096,64 @@ is not found in the package as either an interned or hidden
 symbol, then the function has no effect and returns
 .codn nil .
 
+.coNP Functions @ find-symbol and @ find-symbol-fb
+.synb
+.mets (find-symbol < name >> [ package <> [ notfound-val ]])
+.mets (find-symbol-fb < name >> [ package <> [ notfound-val ]])
+.syne
+.desc
+The
+.code find-symbol
+and
+.code find-symbol-fb
+functions search
+.meta package
+for a symbol called
+.metn name .
+That argument must be a character string.
+
+If the
+.meta package
+argument is omitted, the parameter defaults to the
+current value of
+.codn *package* .
+
+If the symbol is found in
+.meta package
+then it is returned.
+
+If the symbol is not found in
+.metn package ,
+then the function
+.code find-symbol-fb
+also searches the packages listed in the fallback list of
+.meta package
+are searched, in order. Only these packages themselves are searched,
+not their own fallback lists. If a symbol called
+.meta name
+is found, the search terminates and that symbol is returned.
+
+The function
+.code find-symbol
+only searches
+.metn package ,
+ignoring its fallback list.
+
+If a symbol called
+.meta name
+isn't found, then these functions return
+.meta notfound-val
+is returned, which defaults to
+.codn nil .
+
+Note: an ambiguous situation exists when
+.meta notfound-val
+is a symbol, such as its default value
+.codn nil ,
+because if that symbol is successfully found,
+it is indistinguishable from
+.metn notfound-val .
+
 .coNP Function @ rehome-sym
 .synb
 .mets (rehome-sym < symbol <> [ package ])
