@@ -81,6 +81,7 @@ int yyparse(scanner_t *, parser_t *);
 #define symhlpr(lexeme, meta_allowed) sym_helper(parser, lexeme, meta_allowed)
 #define yyerr(msg) yyerror(scnr, parser, msg)
 #define yybadtok(tok, context) yybadtoken(parser, tok, context)
+#define ifnign(expr) (parser->ignore ? nil : (expr))
 
 INLINE val expand_forms_ver(val forms, int ver)
 {
@@ -950,7 +951,7 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
                                   $$ = term_atom_cons; }
         ;
 
-i_expr : SYMTOK                 { $$ = symhlpr($1, t); }
+i_expr : SYMTOK                 { $$ = ifnign(symhlpr($1, t)); }
        | METANUM                { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(parser->lineno)); }
        | NUMBER                 { $$ = $1; }
@@ -989,7 +990,7 @@ i_expr : SYMTOK                 { $$ = symhlpr($1, t); }
 i_dot_expr : '.' i_expr         { $$ = uref_helper(parser, $2); }
            | i_expr %prec LOW   { $$ = $1; }
            ;
-n_expr : SYMTOK                 { $$ = symhlpr($1, t); }
+n_expr : SYMTOK                 { $$ = ifnign(symhlpr($1, t)); }
        | METANUM                { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(parser->lineno)); }
        | NUMBER                 { $$ = $1; }
