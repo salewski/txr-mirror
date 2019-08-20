@@ -833,13 +833,13 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <SPECIAL,QSPECIAL,NESTED,BRACED>{UANYN} {
   val ch = chr_str(string_utf8(yytext), zero);
   if (chr_isspace(ch))
-    yyerrprepf(yyg, lit("unexpected whitespace character #\\x~02x"),
+    yyerrprepf(yyg, lit("unexpected whitespace character #\\x~,02x"),
                ch, nao);
   else if (chr_isunisp(ch))
-    yyerrprepf(yyg, lit("unexpected Unicode space character #\\x~02x"),
+    yyerrprepf(yyg, lit("unexpected Unicode space character #\\x~,02x"),
                ch, nao);
   else if (chr_iscntrl(ch))
-    yyerrprepf(yyg, lit("unexpected control character #\\x~02x"),
+    yyerrprepf(yyg, lit("unexpected control character #\\x~,02x"),
                ch, nao);
   else
     yyerrprepf(yyg, lit("unexpected character #\\~a"),
