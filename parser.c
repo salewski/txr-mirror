@@ -124,6 +124,7 @@ void parser_common_init(parser_t *p)
   p->lineno = 1;
   p->errors = 0;
   p->eof = 0;
+  p->ignore = 0;
   p->stream = nil;
   p->name = nil;
   p->prepared_msg = nil;
