@@ -50364,7 +50364,10 @@ clause of the
 .code defpackage
 macro.  The fallback package list plays a role only in three situations:
 one in the \*(TL parser, one in the printer, and one in the interactive
-listener.
+listener. Besides that, two library functions refer to it:
+.code intern-fb
+and
+.codn find-symbol-fb .
 
 The parser situation involving the fallback list occurs when the
 \*(TL parser resolves an unqualified symbol token: a symbol token not carrying
@@ -51004,7 +51007,7 @@ package objects. Strings are taken to be package names, which must
 resolve to existing packages. Symbols are reduced to strings via
 .codn symbol-name .
 
-.coNP Function @ intern
+.coNP Functions @ intern and @ intern-fb
 .synb
 .mets (intern < name <> [ package ])
 .syne
@@ -51032,6 +51035,25 @@ is created and inserted into
 .metn package ,
 and that symbol is returned. In this case, the package becomes the
 symbol's home package.
+
+The
+.code intern-fb
+function is very similar to
+.code intern
+except that if the symbol is not found in
+.meta package
+then the packages listed in the fallback list of
+.meta package
+are searched, in order. Only these packages themselves are searched,
+not their own fallback lists. If a symbol called
+.meta name
+is found, the search terminates and that symbol is returned.
+Only if nothing is found in the fallback list will
+.code intern-fb
+create a new symbol and insert it into
+.metn package ,
+exactly like
+.codn intern .
 
 .coNP Function @ unintern
 .synb

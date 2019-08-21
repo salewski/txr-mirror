@@ -901,6 +901,7 @@ val package_foreign_symbols(val package);
 val package_fallback_list(val package);
 val set_package_fallback_list(val package, val list);
 val intern_fallback(val str, val package);
+val intern_fallback_intrinsic(val str, val package_in);
 val symbolp(val sym);
 val symbol_name(val sym);
 val symbol_package(val sym);

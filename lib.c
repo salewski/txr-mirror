@@ -5532,6 +5532,17 @@ val intern_fallback(val str, val package)
   }
 }
 
+val intern_fallback_intrinsic(val str, val package_in)
+{
+  val self = lit("intern-fallback");
+  val package = get_package(self, package_in, nil);
+
+  if (!stringp(str))
+    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
+
+  return intern_fallback(str, package);
+}
+
 val symbolp(val sym)
 {
   switch (type(sym)) {
