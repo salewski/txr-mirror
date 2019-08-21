@@ -5393,17 +5393,11 @@ val find_symbol_fb(val name, val package_in, val notfound_val_in)
   return default_null_arg(notfound_val_in);
 }
 
-val intern(val str, val package_in)
+val intern(val str, val package)
 {
   val self = lit("intern");
   val new_p;
-  loc place;
-  val package = get_package(self, package_in, t);
-
-  if (!stringp(str))
-    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
-
-  place = gethash_l(self, package->pk.symhash, str, mkcloc(new_p));
+  loc place = gethash_l(self, package->pk.symhash, str, mkcloc(new_p));
 
   if (!new_p) {
     return deref(place);
@@ -5412,6 +5406,17 @@ val intern(val str, val package_in)
     newsym->s.package = package;
     return set(place, newsym);
   }
+}
+
+val intern_intrinsic(val str, val package_in)
+{
+  val self = lit("intern");
+  val package = get_package(self, package_in, t);
+
+  if (!stringp(str))
+    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
+
+  return intern(str, package);
 }
 
 val unintern(val symbol, val package_in)
@@ -5492,14 +5497,10 @@ val set_package_fallback_list(val package_in, val list_in)
   return set_hash_userdata(package->pk.symhash, list);
 }
 
-val intern_fallback(val str, val package_in)
+val intern_fallback(val str, val package)
 {
   val self = lit("intern-fallback");
-  val package = get_package(self, package_in, nil);
   val fblist = get_hash_userdata(package->pk.symhash);
-
-  if (!stringp(str))
-    uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
 
   if (fblist) {
     val found = gethash_e(self, package->pk.symhash, str);

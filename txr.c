@@ -636,7 +636,7 @@ int txr_main(int argc, char **argv)
       val dopt_arg = sub(arg, two, t);
       cons_bind(var, def, split_str(dopt_arg, lit("=")));
       val deflist = if2(def, split_str(car(def), lit(",")));
-      val sym = intern(var, nil);
+      val sym = intern(var, cur_package);
 
       if (rest(deflist))
         bindings = cons(cons(sym, deflist), bindings);

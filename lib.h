@@ -894,6 +894,7 @@ val symbol_needs_prefix(val self, val package, val sym);
 val find_symbol(val name, val package, val notfound_val);
 val find_symbol_fb(val name, val package, val notfound_val);
 val intern(val str, val package);
+val intern_intrinsic(val str, val package_in);
 val unintern(val sym, val package);
 val rehome_sym(val sym, val package);
 val package_foreign_symbols(val package);
