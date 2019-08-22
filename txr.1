@@ -49649,6 +49649,18 @@ This symbol becomes the
 .code cptr
 object's type tag.
 
+The lifetime of the returned
+.cptr
+object is independent from that of
+.metn object .
+If the lifetime of
+.meta object
+reaches its end before that of the
+.code cptr ,
+the pointer stored inside the
+.code cptr
+becomes invalid.
+
 .coNP Function @ int-cptr
 .synb
 .mets (int-cptr << cptr )
