@@ -7832,6 +7832,13 @@ val cptr_obj(val obj, val type_sym_in)
   return cptr_typed(coerce(mem_t *, obj), type_sym, 0);
 }
 
+val cptr_buf(val buf, val type_sym_in)
+{
+  val type_sym = default_null_arg(type_sym_in);
+  mem_t *ptr = buf_get(buf, lit("cptr-buf"));
+  return cptr_typed(ptr, type_sym, 0);
+}
+
 val cptr_zap(val cptr)
 {
   (void) cptr_handle(cptr, nil, lit("cptr-zap"));

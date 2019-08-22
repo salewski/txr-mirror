@@ -49650,13 +49650,13 @@ This symbol becomes the
 object's type tag.
 
 The lifetime of the returned
-.cptr
+.code cptr
 object is independent from that of
 .metn object .
 If the lifetime of
 .meta object
 reaches its end before that of the
-.code cptr ,
+.codn cptr ,
 the pointer stored inside the
 .code cptr
 becomes invalid.
@@ -49682,6 +49682,41 @@ type, then the expression
 .onom
 reproduces
 .metn n .
+
+.coNP Function @ cptr-buf
+.synb
+.mets (cptr-obj < buf <> [ type-symbol ])
+.syne
+.desc
+The
+.code cptr-buf
+returns a
+.code cptr
+object which holds a pointer to a buffer object's storage
+area. The
+.meta buf
+argument must be of type
+.codn buf .
+
+The
+.meta type-symbol
+argument should be a symbol. If omitted, it defaults to
+.codn nil .
+This symbol becomes the
+.code cptr
+object's type tag.
+
+The lifetime of the returned
+.code cptr
+object is independent from that of
+.metn buf .
+If the lifetime of
+.meta buf
+reaches its end before that of the
+.codn cptr ,
+the pointer stored inside the
+.code cptr
+becomes invalid.
 
 .coNP Function @ cptr-cast
 .synb

@@ -1030,6 +1030,7 @@ val cptr_type(val cptr);
 val cptr_size_hint(val cptr, val size);
 val cptr_int(val n, val type_sym);
 val cptr_obj(val obj, val type_sym);
+val cptr_buf(val buf, val type_sym);
 val cptr_zap(val cptr);
 val cptr_free(val cptr);
 val cptr_cast(val to_type, val cptr);
