@@ -119,23 +119,23 @@ val sha256_stream(val stream, val nbytes, val buf_in)
   return buf;
 }
 
+static void sha256_szmax_upd(SHA256_t *ps256, mem_t *data, ucnum len)
+{
+  const size_t szmax = convert(size_t, -1) / 4 + 1;
+  while (len >= szmax) {
+    SHA256_update(ps256, data, szmax);
+    data += szmax;
+    len -= szmax;
+  }
+  if (len > 0)
+    SHA256_update(ps256, data, len);
+}
+
 static void sha256_buf(val buf, unsigned char *hash)
 {
   SHA256_t s256;
   SHA256_init(&s256);
-  ucnum len = c_unum(buf->b.len);
-  mem_t *data = buf->b.data;
-  const size_t szmax = convert(size_t, -1) / 4 + 1;
-
-  while (len >= szmax) {
-    SHA256_update(&s256, data, szmax);
-    data += szmax;
-    len -= szmax;
-  }
-
-  if (len > 0)
-    SHA256_update(&s256, data, len);
-
+  sha256_szmax_upd(&s256, buf->b.data, c_unum(buf->b.len));
   SHA256_final(&s256, hash);
 }
 
@@ -199,7 +199,7 @@ val sha256_hash(val ctx, val obj)
     }
     break;
   case BUF:
-    SHA256_update(ps256, obj->b.data, c_unum(obj->b.len));
+    sha256_szmax_upd(ps256, obj->b.data, c_unum(obj->b.len));
     break;
   default:
     uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
@@ -360,23 +360,23 @@ val md5_stream(val stream, val nbytes, val buf_in)
   return buf;
 }
 
+static void md5_szmax_upd(MD5_t *pmd5, mem_t *data, ucnum len)
+{
+  const size_t szmax = convert(size_t, -1) / 4 + 1;
+  while (len >= szmax) {
+    MD5_update(pmd5, data, szmax);
+    data += szmax;
+    len -= szmax;
+  }
+  if (len > 0)
+    MD5_update(pmd5, data, len);
+}
+
 static void md5_buf(val buf, unsigned char *hash)
 {
   MD5_t md5;
   MD5_init(&md5);
-  ucnum len = c_unum(buf->b.len);
-  mem_t *data = buf->b.data;
-  const size_t szmax = convert(size_t, -1) / 4 + 1;
-
-  while (len >= szmax) {
-    MD5_update(&md5, data, szmax);
-    data += szmax;
-    len -= szmax;
-  }
-
-  if (len > 0)
-    MD5_update(&md5, data, len);
-
+  md5_szmax_upd(&md5, buf->b.data, c_unum(buf->b.len));
   MD5_final(&md5, hash);
 }
 
@@ -440,7 +440,7 @@ val md5_hash(val ctx, val obj)
     }
     break;
   case BUF:
-    MD5_update(pmd5, obj->b.data, c_unum(obj->b.len));
+    md5_szmax_upd(pmd5, obj->b.data, c_unum(obj->b.len));
     break;
   default:
     uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
