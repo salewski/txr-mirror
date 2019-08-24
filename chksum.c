@@ -45,6 +45,7 @@
 #include "buf.h"
 #include "chksums/sha256.h"
 #include "chksums/crc32.h"
+#include "chksums/md5.h"
 #include "chksum.h"
 
 static void sha256_stream_impl(val stream, val nbytes, unsigned char *hash)
@@ -90,18 +91,18 @@ static void sha256_stream_impl(val stream, val nbytes, unsigned char *hash)
   iobuf_put(buf);
 }
 
-static val sha256_ensure_buf(val self, val buf_in, unsigned char **phash)
+static val chksum_ensure_buf(val self, val buf_in,
+                             val len, unsigned char **phash,
+                             val hash_name)
 {
-  const cnum sdl = SHA256_DIGEST_LENGTH;
-
   if (null_or_missing_p(buf_in)) {
-    *phash = chk_malloc(sdl);
-    return make_borrowed_buf(num_fast(sdl), *phash);
+    *phash = chk_malloc(c_unum(len));
+    return make_borrowed_buf(len, *phash);
   } else {
     *phash = buf_get(buf_in, self);
-    if (lt(length_buf(buf_in), num_fast(sdl)))
-      uw_throwf(error_s, lit("~s: buffer ~s too small for SHA-256 hash"),
-                self, buf_in, nao);
+    if (lt(length_buf(buf_in), len))
+      uw_throwf(error_s, lit("~s: buffer ~s too small for ~a hash"),
+                self, buf_in, hash_name, nao);
     return buf_in;
   }
 }
@@ -110,7 +111,8 @@ val sha256_stream(val stream, val nbytes, val buf_in)
 {
   val self = lit("sha256-stream");
   unsigned char *hash;
-  val buf = sha256_ensure_buf(self, buf_in, &hash);
+  val buf = chksum_ensure_buf(self, buf_in, num_fast(SHA256_DIGEST_LENGTH),
+                              &hash, lit("SHA-256"));
   sha256_stream_impl(stream, nbytes, hash);
   return buf;
 }
@@ -145,7 +147,8 @@ val sha256(val obj, val buf_in)
 {
   val self = lit("sha256");
   unsigned char *hash;
-  val buf = sha256_ensure_buf(self, buf_in, &hash);
+  val buf = chksum_ensure_buf(self, buf_in, num_fast(SHA256_DIGEST_LENGTH),
+                              &hash, lit("SHA-256"));
 
   switch (type(obj)) {
   case STR:
@@ -247,10 +250,113 @@ val crc32(val obj)
   }
 }
 
+static void md5_stream_impl(val stream, val nbytes, unsigned char *hash)
+{
+  MD5_t md5;
+  val buf = iobuf_get();
+  val bfsz = length_buf(buf);
+  MD5_init(&md5);
+
+  if (null_or_missing_p(nbytes)) {
+    for (;;) {
+      val read = fill_buf(buf, zero, stream);
+      cnum rd = c_num(read);
+
+      if (!rd)
+        break;
+
+      MD5_update(&md5, buf->b.data, rd);
+    }
+  } else {
+    while (ge(nbytes, bfsz)) {
+      val read = fill_buf(buf, zero, stream);
+      cnum rd = c_num(read);
+
+      if (zerop(read))
+        break;
+
+      MD5_update(&md5, buf->b.data, rd);
+      nbytes = minus(nbytes, read);
+    }
+
+    buf_set_length(buf, nbytes, nil);
+
+    {
+      val read = fill_buf(buf, zero, stream);
+      cnum rd = c_num(read);
+      if (rd)
+        MD5_update(&md5, buf->b.data, rd);
+    }
+  }
+
+  MD5_final(&md5, hash);
+  iobuf_put(buf);
+}
+
+val md5_stream(val stream, val nbytes, val buf_in)
+{
+  val self = lit("md5-stream");
+  unsigned char *hash;
+  val buf = chksum_ensure_buf(self, buf_in, num_fast(MD5_DIGEST_LENGTH),
+                              &hash, lit("MD5"));
+  md5_stream_impl(stream, nbytes, hash);
+  return buf;
+}
+
+static void md5_buf(val buf, unsigned char *hash)
+{
+  MD5_t md5;
+  MD5_init(&md5);
+  ucnum len = c_unum(buf->b.len);
+  mem_t *data = buf->b.data;
+  const size_t szmax = convert(size_t, -1) / 4 + 1;
+
+  while (len >= szmax) {
+    MD5_update(&md5, data, szmax);
+    data += szmax;
+    len -= szmax;
+  }
+
+  if (len > 0)
+    MD5_update(&md5, data, len);
+
+  MD5_final(&md5, hash);
+}
+
+static void md5_str(val str, unsigned char *hash)
+{
+  val s = make_byte_input_stream(str);
+  md5_stream_impl(s, nil, hash);
+}
+
+val md5(val obj, val buf_in)
+{
+  val self = lit("md5");
+  unsigned char *hash;
+  val buf = chksum_ensure_buf(self, buf_in, num_fast(MD5_DIGEST_LENGTH),
+                              &hash, lit("MD5"));
+
+  switch (type(obj)) {
+  case STR:
+  case LSTR:
+  case LIT:
+    md5_str(obj, hash);
+    return buf;
+  case BUF:
+    md5_buf(obj, hash);
+    return buf;
+  default:
+    uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
+              self, obj, nao);
+  }
+}
+
 void chksum_init(void)
 {
   reg_fun(intern(lit("sha256-stream"), user_package), func_n3o(sha256_stream, 1));
   reg_fun(intern(lit("sha256"), user_package), func_n2o(sha256, 1));
   reg_fun(intern(lit("crc32-stream"), user_package), func_n2o(crc32_stream, 1));
   reg_fun(intern(lit("crc32"), user_package), func_n1(crc32));
+  reg_fun(intern(lit("md5-stream"), user_package), func_n3o(md5_stream, 1));
+  reg_fun(intern(lit("md5"), user_package), func_n2o(md5, 1));
 }

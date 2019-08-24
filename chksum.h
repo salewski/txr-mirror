@@ -29,4 +29,6 @@ val sha256_stream(val stream, val nbytes, val buf);
 val sha256(val obj, val buf);
 val crc32_stream(val stream, val nbytes);
 val crc32(val obj);
+val md5_stream(val stream, val nbytes, val buf);
+val md5(val obj, val buf_in);
 void chksum_init(void);
