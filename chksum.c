@@ -48,6 +48,8 @@
 #include "chksums/md5.h"
 #include "chksum.h"
 
+static val sha256_ctx_s, md5_ctx_s;
+
 static void sha256_stream_impl(val stream, val nbytes, unsigned char *hash)
 {
   SHA256_t s256;
@@ -163,6 +165,57 @@ val sha256(val obj, val buf_in)
     uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
               self, obj, nao);
   }
+}
+
+static struct cobj_ops sha256_ops = cobj_ops_init(cobj_equal_handle_op,
+                                                  cobj_print_op,
+                                                  cobj_destroy_free_op,
+                                                  cobj_mark_op,
+                                                  cobj_handle_hash_op);
+val sha256_begin(void)
+{
+  SHA256_t *ps256 = coerce(SHA256_t *, chk_malloc(sizeof *ps256));
+  SHA256_init(ps256);
+  return cobj(coerce(mem_t *, ps256), sha256_ctx_s, &sha256_ops);
+}
+
+val sha256_hash(val ctx, val obj)
+{
+  val self = lit("sha256-hash");
+  SHA256_t *ps256 = coerce(SHA256_t *, cobj_handle(self, ctx, sha256_ctx_s));
+
+  switch (type(obj)) {
+  case STR:
+  case LSTR:
+  case LIT:
+    {
+      char *str = utf8_dup_to(c_str(obj));
+      SHA256_update(ps256, coerce(const unsigned char *, str), strlen(str));
+      free(str);
+    }
+    break;
+  case BUF:
+    SHA256_update(ps256, obj->b.data, c_unum(obj->b.len));
+    break;
+  default:
+    uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
+              self, obj, nao);
+  }
+
+  return obj;
+}
+
+val sha256_end(val ctx, val buf_in)
+{
+  val self = lit("sha256-end");
+  unsigned char *hash;
+  SHA256_t *ps256 = coerce(SHA256_t *, cobj_handle(self, ctx, sha256_ctx_s));
+  val buf = chksum_ensure_buf(self, buf_in, num_fast(SHA256_DIGEST_LENGTH),
+                              &hash, lit("SHA-256"));
+
+  SHA256_final(ps256, hash);
+  SHA256_init(ps256);
+  return buf;
 }
 
 val crc32_stream(val stream, val nbytes)
@@ -351,12 +404,71 @@ val md5(val obj, val buf_in)
   }
 }
 
+static struct cobj_ops md5_ops = cobj_ops_init(cobj_equal_handle_op,
+                                                  cobj_print_op,
+                                                  cobj_destroy_free_op,
+                                                  cobj_mark_op,
+                                                  cobj_handle_hash_op);
+val md5_begin(void)
+{
+  MD5_t *pmd5 = coerce(MD5_t *, chk_malloc(sizeof *pmd5));
+  MD5_init(pmd5);
+  return cobj(coerce(mem_t *, pmd5), md5_ctx_s, &md5_ops);
+}
+
+val md5_hash(val ctx, val obj)
+{
+  val self = lit("md5-hash");
+  MD5_t *pmd5 = coerce(MD5_t *, cobj_handle(self, ctx, md5_ctx_s));
+
+  switch (type(obj)) {
+  case STR:
+  case LSTR:
+  case LIT:
+    {
+      char *str = utf8_dup_to(c_str(obj));
+      MD5_update(pmd5, coerce(const unsigned char *, str), strlen(str));
+      free(str);
+    }
+    break;
+  case BUF:
+    MD5_update(pmd5, obj->b.data, c_unum(obj->b.len));
+    break;
+  default:
+    uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
+              self, obj, nao);
+  }
+
+  return obj;
+}
+
+val md5_end(val ctx, val buf_in)
+{
+  val self = lit("md5-end");
+  unsigned char *hash;
+  MD5_t *pmd5 = coerce(MD5_t *, cobj_handle(self, ctx, md5_ctx_s));
+  val buf = chksum_ensure_buf(self, buf_in, num_fast(MD5_DIGEST_LENGTH),
+                              &hash, lit("SHA-256"));
+
+  MD5_final(pmd5, hash);
+  MD5_init(pmd5);
+  return buf;
+}
+
 void chksum_init(void)
 {
+  sha256_ctx_s = intern(lit("sha256-ctx"), user_package);
+  md5_ctx_s = intern(lit("md5-ctx"), user_package);
   reg_fun(intern(lit("sha256-stream"), user_package), func_n3o(sha256_stream, 1));
   reg_fun(intern(lit("sha256"), user_package), func_n2o(sha256, 1));
+  reg_fun(intern(lit("sha256-begin"), user_package), func_n0(sha256_begin));
+  reg_fun(intern(lit("sha256-hash"), user_package), func_n2(sha256_hash));
+  reg_fun(intern(lit("sha256-end"), user_package), func_n2o(sha256_end, 1));
   reg_fun(intern(lit("crc32-stream"), user_package), func_n2o(crc32_stream, 1));
   reg_fun(intern(lit("crc32"), user_package), func_n1(crc32));
   reg_fun(intern(lit("md5-stream"), user_package), func_n3o(md5_stream, 1));
   reg_fun(intern(lit("md5"), user_package), func_n2o(md5, 1));
+  reg_fun(intern(lit("md5-begin"), user_package), func_n0(md5_begin));
+  reg_fun(intern(lit("md5-hash"), user_package), func_n2(md5_hash));
+  reg_fun(intern(lit("md5-end"), user_package), func_n2o(md5_end, 1));
 }
