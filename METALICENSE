@@ -2,9 +2,8 @@ Copyright (C) 2009-2019, Kaz Kylheku <kaz@kylheku.com>.
 All rights reserved.
 
 The document named LICENSE specifies the license for the TXR program,
-including the linenoise library which it uses, found in the
-linenoise/ subdirectory. Linenoise uses exactly the same Two-Clause
-BSD License, and so the two licenses are combined.
+including the library modules which it it uses, most of which are likewise
+BSD licensed.
 
 The MPI library, found in the mpi/ subdirectory, was developed over
 the yeras 1998-2006 by Michael J. Fromberger. Its license consists
@@ -21,6 +20,14 @@ controversial, so the MPI library may have to be regarded as being copyrighted
 by Michael J. Fromberger. The above text can be reasonably understood to
 constitute a license grant which is compatible with TXR's Two-Clause BSD
 license in the sense that it is at least as permissive.
+
+The RSA-derived MD5 digest routines are used in in accordance with the
+permission granted by a February 23, 2000 memo from John Linn
+<jlinn@rsasecurity.com> to the IETF. License-like wording from this memo
+has been placed by the TXR project into block comments of the md5.c
+and md5.h files. The permission is compatible with the BSD license,
+as it allows unfettered redistribution and use, without any advertizing
+clauses.
 
 TXR is ported to Windows with the help of a derivative of the Cygwin library.
 For user convenience, a packaged version of TXR includes the CYGWIN1.DLL, in

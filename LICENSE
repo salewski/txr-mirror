@@ -14,6 +14,11 @@ SHA-256:
    Copyright 2005 Colin Percival
    All rights reserved.
 
+MD5:
+   Copyright (C) 1991-2, RSA Data Security, Inc.
+   Created 1991.
+   All rights reserved.
+
 MPI:
    Written Michael Fromberger 1998-2006; assigned into the public
    domain in, or prior to 2002.
