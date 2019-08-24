@@ -141,8 +141,12 @@ static void sha256_buf(val buf, unsigned char *hash)
 
 static void sha256_str(val str, unsigned char *hash)
 {
-  val s = make_byte_input_stream(str);
-  sha256_stream_impl(s, nil, hash);
+  char *s = utf8_dup_to(c_str(str));
+  SHA256_t s256;
+  SHA256_init(&s256);
+  SHA256_update(&s256, coerce(const unsigned char *, s), strlen(s));
+  free(s);
+  SHA256_final(&s256, hash);
 }
 
 val sha256(val obj, val buf_in)
@@ -378,8 +382,12 @@ static void md5_buf(val buf, unsigned char *hash)
 
 static void md5_str(val str, unsigned char *hash)
 {
-  val s = make_byte_input_stream(str);
-  md5_stream_impl(s, nil, hash);
+  char *s = utf8_dup_to(c_str(str));
+  MD5_t md5;
+  MD5_init(&md5);
+  MD5_update(&md5, coerce(const unsigned char *, s), strlen(s));
+  free(s);
+  MD5_final(&md5, hash);
 }
 
 val md5(val obj, val buf_in)
