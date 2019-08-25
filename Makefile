@@ -33,7 +33,7 @@ TXR_CFLAGS := $(CFLAGS)
 TXR_CFLAGS += -iquote . $(if $(top_srcdir), -iquote $(top_srcdir)) \
               $(LANG_FLAGS) $(DIAG_FLAGS) \
               $(DBG_FLAGS) $(PLATFORM_CFLAGS) $(EXTRA_FLAGS)
-TXR_CFLAGS += $(filter-out $(REMOVE_FLAGS),$(TXR_CFLAGS))
+TXR_CFLAGS := $(filter-out $(REMOVE_FLAGS),$(TXR_CFLAGS))
 TXR_LDFLAGS := $(LDFLAGS)
 TXR_LDFLAGS += -lm $(CONF_LDFLAGS) $(PLATFORM_LDFLAGS) $(EXTRA_LDFLAGS)
 
