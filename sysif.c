@@ -76,6 +76,9 @@
 #if HAVE_DLOPEN
 #include <dlfcn.h>
 #endif
+#if HAVE_CRYPT_R
+#include <crypt.h>
+#endif
 #include "alloca.h"
 #include "lib.h"
 #include "stream.h"
@@ -1446,7 +1449,7 @@ static val getgrnam_wrap(val wname)
 
 #endif
 
-#if HAVE_CRYPT
+#if HAVE_CRYPT || HAVE_CRYPT_R
 
 static val crypt_wrap(val wkey, val wsalt)
 {
@@ -1454,7 +1457,12 @@ static val crypt_wrap(val wkey, val wsalt)
   const wchar_t *cwsalt = c_str(wsalt);
   char *key = utf8_dup_to(cwkey);
   char *salt = utf8_dup_to(cwsalt);
+#if HAVE_CRYPT_R
+  struct crypt_data cd;
+  char *hash = (cd.initialized = 0, crypt_r(key, salt, &cd));
+#else
   char *hash = crypt(key, salt);
+#endif
   val whash = string_utf8(hash);
   free(key);
   free(salt);
@@ -2137,7 +2145,7 @@ void sysif_init(void)
   reg_fun(intern(lit("getgrnam"), user_package), func_n1(getgrnam_wrap));
 #endif
 
-#if HAVE_CRYPT
+#if HAVE_CRYPT || HAVE_CRYPT_R
   reg_fun(intern(lit("crypt"), user_package), func_n2(crypt_wrap));
 #endif
 

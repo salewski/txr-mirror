@@ -2619,6 +2619,35 @@ for try_lcrypt in "" "-lcrypt" "no" ; do
   fi
 done
 
+printf "Checking for crypt_r ... "
+
+cat > conftest.c <<!
+#include <crypt.h>
+
+int main(void)
+{
+  static struct crypt_data cd;
+  char *c = crypt_r("foo", "bar", &cd);
+  return 0;
+}
+!
+
+for try_lcrypt in "" "-lcrypt" "no" ; do
+  if [ "$try_lcrypt" = "no" ] ; then
+    printf "no\n"
+    break
+  fi
+  if conftest EXTRA_LDFLAGS=$try_lcrypt; then
+    printf "yes\n"
+    printf "#define HAVE_CRYPT_R 1\n" >> config.h
+    if [ -n "$try_lcrypt" ] ; then
+      conf_ldflags="${conf_ldflags:+"$conf_ldflags "}-lcrypt"
+    fi
+    break;
+  fi
+done
+
+
 printf "Checking for alloca ... "
 
 for try_header in stdlib alloca malloc ; do
