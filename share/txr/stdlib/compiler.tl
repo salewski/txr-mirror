@@ -1097,7 +1097,7 @@
                    ,*bfrag.code
                    ,*nfrag.code
                    (jmp ,lback)
-                   ,*(if test
+                   ,*(if test-p
                        ^(,lskip
                          ,*rfrag.code)))
                    [reduce-left uni frags nil .fvars]
