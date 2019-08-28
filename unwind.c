@@ -1180,7 +1180,9 @@ void uw_init(void)
 void uw_late_init(void)
 {
   protect(&frame_type, &catch_frame_type, &handle_frame_type,
-          &deferred_warnings, &tentative_defs, convert(val *, 0));
+          &deferred_warnings, &tentative_defs,
+          &unhandled_ex.ca.sym, &unhandled_ex.ca.args,
+          convert(val *, 0));
 #if CONFIG_DEBUG_SUPPORT
   protect(&fcall_frame_type, &eval_frame_type, convert(val *, 0));
 #endif
