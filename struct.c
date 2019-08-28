@@ -1246,14 +1246,14 @@ val static_slot_ensure(val stype, val sym, val newval, val no_error_p)
     uw_throwf(error_s, lit("~a: ~s isn't a valid slot name"),
               self, sym, nao);
 
-  no_error_p = default_null_arg(no_error_p);
-  res = static_slot_ens_rec(stype, sym, newval, no_error_p, self, 0);
-
   if (trace_loaded) {
     struct struct_type *st = stype_handle(&stype, self);
     val name = list(meth_s, st->name, sym, nao);
     trace_check(name);
   }
+
+  no_error_p = default_null_arg(no_error_p);
+  res = static_slot_ens_rec(stype, sym, newval, no_error_p, self, 0);
 
   return res;
 }
