@@ -1383,7 +1383,7 @@
                                         (len ,obj-var) 0))))
                      ,*(cond
                          ((eq strict t)
-                          ^((sys:bind-mac-check ,err-form ',params
+                          ^((sys:bind-mac-check ,err-form ',par-syntax
                                                 ,obj-var ,pars.nreq
                                                 ,(unless pars.rest pars.nfix))))
                          ((null strict) nil)
