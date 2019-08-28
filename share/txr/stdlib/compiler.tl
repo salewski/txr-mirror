@@ -1419,10 +1419,9 @@
                               ^((set ,curs (or (car ,obj-var)
                                              (sys:upenv ,init-form)))
                                 (cond
-                                  ((and ,obj-var
-                                        (prog1
-                                          (neq (set ,curs (car ,obj-var)) :)
-                                          (set ,obj-var (cdr ,obj-var))))
+                                  (,obj-var
+                                    (set ,curs (car ,obj-var))
+                                    (set ,obj-var (cdr ,obj-var))
                                     ,*(if pres-p
                                         ^((set ,pres-p t))))
                                   (t
@@ -1434,11 +1433,10 @@
                                (when pres-p
                                  (push pres-p vars))
                                ^((cond
-                                   ((and ,obj-var
-                                         (prog1
-                                           (neq (set ,p (car ,obj-var)) :)
-                                           (set ,obj-var (cdr ,obj-var))))
-                                    ,*(if pres-p
+                                   (,obj-var
+                                     (set ,p (car ,obj-var))
+                                     (set ,obj-var (cdr ,obj-var))
+                                     ,*(if pres-p
                                         ^((set ,pres-p t))))
                                    (t
                                      ,*(if init-form
