@@ -110,10 +110,10 @@
              (throwf 'warning "~!~s won't be traced, though it overrides\n\
                                ~s which is currently traced"
                       name orig-name))
-          (t (throwf 'warning "previously traced ~s is redefined and no\ \
+          (t (sys:untrace (list name))
+             (throwf 'warning "previously traced ~s is redefined and no\ \
                                longer traced"
-                      name)
-             (sys:untrace (list name))))
+                      name)))
         (continue ())))))
 
 (defmacro usr:trace (. names)
