@@ -52411,8 +52411,9 @@ by including
 .meta obj
 into the digest calculation. The
 .meta obj
-argument may be a character string, whose UTF-8 representation is digested,
-or a buffer object, whose contents are digested.
+argument may be: a character or character string, whose UTF-8 representation is
+digested; a buffer object, whose contents are digested; or an integer,
+representing a byte value in the range 0 to 255 included in the digest.
 The
 .code sha256-hash
 function may be called multiple times to include any mixture of
@@ -52467,8 +52468,9 @@ by including
 .meta obj
 into the digest calculation. The
 .meta obj
-argument may be a character string, whose UTF-8 representation is digested,
-or a buffer object, whose contents are digested.
+argument may be: a character or character string, whose UTF-8 representation is
+digested; a buffer object, whose contents are digested; or an integer,
+representing a byte value in the range 0 to 255 included in the digest.
 The
 .code md5-hash
 function may be called multiple times to include any mixture of

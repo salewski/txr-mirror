@@ -183,6 +183,14 @@ val sha256_begin(void)
   return cobj(coerce(mem_t *, ps256), sha256_ctx_s, &sha256_ops);
 }
 
+static int sha256_utf8_byte_callback(int b, mem_t *ctx)
+{
+  SHA256_t *ps256 = coerce(SHA256_t *, ctx);
+  unsigned char uc = b;
+  SHA256_update(ps256, &uc, 1);
+  return 1;
+}
+
 val sha256_hash(val ctx, val obj)
 {
   val self = lit("sha256-hash");
@@ -200,6 +208,19 @@ val sha256_hash(val ctx, val obj)
     break;
   case BUF:
     sha256_szmax_upd(ps256, obj->b.data, c_unum(obj->b.len));
+    break;
+  case CHR:
+    utf8_encode(c_chr(obj), sha256_utf8_byte_callback, coerce(mem_t *, ps256));
+    break;
+  case NUM:
+    {
+      cnum n = c_num(obj);
+      unsigned char uc = n;
+      if (n < 0 || n > 255)
+        uw_throwf(error_s, lit("~a: byte value ~s out of range"),
+                  self, obj, nao);
+      SHA256_update(ps256, &uc, 1);
+    }
     break;
   default:
     uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
@@ -424,6 +445,14 @@ val md5_begin(void)
   return cobj(coerce(mem_t *, pmd5), md5_ctx_s, &md5_ops);
 }
 
+static int md5_utf8_byte_callback(int b, mem_t *ctx)
+{
+  MD5_t *ps256 = coerce(MD5_t *, ctx);
+  unsigned char uc = b;
+  MD5_update(ps256, &uc, 1);
+  return 1;
+}
+
 val md5_hash(val ctx, val obj)
 {
   val self = lit("md5-hash");
@@ -441,6 +470,19 @@ val md5_hash(val ctx, val obj)
     break;
   case BUF:
     md5_szmax_upd(pmd5, obj->b.data, c_unum(obj->b.len));
+    break;
+  case CHR:
+    utf8_encode(c_chr(obj), md5_utf8_byte_callback, coerce(mem_t *, pmd5));
+    break;
+  case NUM:
+    {
+      cnum n = c_num(obj);
+      unsigned char uc = n;
+      if (n < 0 || n > 255)
+        uw_throwf(error_s, lit("~a: byte value ~s out of range"),
+                  self, obj, nao);
+      MD5_update(pmd5, &uc, 1);
+    }
     break;
   default:
     uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
