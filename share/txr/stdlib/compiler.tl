@@ -206,6 +206,9 @@
      (or [*dedup* obj] (set [*dedup* obj] obj)))
     (t obj)))
 
+(defun null-reg (reg)
+  (equal reg '(t 0)))
+
 (defmeth compiler get-dreg (me obj)
   (let ((dobj (dedup obj)))
     (condlet
@@ -748,8 +751,9 @@
                                     (frag me.(compile bind.loc fenv form)))
                                (when seq
                                  fenv.(rename-var tmp sym))
-                               (pend frag.code
-                                     (maybe-mov bind.loc frag.oreg))
+                               (pend frag.code)
+                               (unless (null-reg frag.oreg)
+                                 (pend (maybe-mov bind.loc frag.oreg)))
                                (set ffuns (uni ffuns frag.ffuns)
                                     fvars (uni fvars
                                                (if seq
