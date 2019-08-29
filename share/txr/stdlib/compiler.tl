@@ -1373,7 +1373,7 @@
 
 (defun expand-bind-mac-params (ctx-form err-form params menv-var
                                obj-var strict err-block body)
-  (let (gen-stk stmt vars (plen (if (and strict (neq strict t)) (gensym))))
+  (let (gen-stk stmt vars)
     (labels ((get-gen ()
                (or (pop gen-stk) (gensym)))
              (put-gen (g)
@@ -1398,9 +1398,6 @@
                             vars)))
                  (let ((pars (new (mac-param-parser par-syntax ctx-form))))
                    (progn
-                     (when plen
-                       (emit-var plen ^(if (consp ,obj-var)
-                                         (len ,obj-var) 0)))
                      (cond
                        ((eq strict t)
                         (emit-stmt
@@ -1411,11 +1408,13 @@
                        ((null strict))
                        ((symbolp strict)
                         (emit-stmt
-                          (if pars.rest
-                            ^(unless (<= ,pars.nreq ,plen)
-                               (return-from ,err-block ',strict))
-                            ^(unless (<= ,pars.nreq ,plen ,pars.nfix)
-                               (return-from ,err-block ',strict))))))
+                          (let ((len-expr ^(if (consp ,obj-var)
+                                             (len ,obj-var) 0)))
+                            (if pars.rest
+                              ^(unless (<= ,pars.nreq ,len-expr)
+                                 (return-from ,err-block ',strict))
+                              ^(unless (<= ,pars.nreq ,len-expr ,pars.nfix)
+                                 (return-from ,err-block ',strict)))))))
                      (each ((k pars.key))
                        (tree-bind (key . sym) k
                          (caseq key
@@ -1478,7 +1477,7 @@
       (expand-rec params obj-var nil)
       (when stmt
         (push ^(,(gensym) (progn ,*(nreverse stmt))) vars))
-      ^(let* (,*(if plen ^(,plen)) ,*gen-stk ,*(nreverse vars))
+      ^(let* (,*gen-stk ,*(nreverse vars))
          ,*body))))
 
 (defun expand-defvarl (form)
