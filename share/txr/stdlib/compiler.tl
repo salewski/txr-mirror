@@ -1438,10 +1438,10 @@
                                             (,obj-var
                                               (set ,curs (car ,obj-var))
                                               (set ,obj-var (cdr ,obj-var))
-                                              ,(if pres-p t))
+                                              ,*(if pres-p '(t)))
                                             (t
                                               (set ,curs ,init-form)
-                                              ,(if pres-p nil)))))
+                                              ,*(if pres-p '(nil))))))
                                (if pres-p
                                  (emit-var pres-p stmt)
                                  (emit-stmt stmt))
@@ -1450,19 +1450,25 @@
                                  (expand-rec p curs cv)
                                  (put-gen curs))))
                            (t
-                             (let ((stmt ^(cond
-                                            (,obj-var
-                                              (set ,p (car ,obj-var))
-                                              (set ,obj-var (cdr ,obj-var))
-                                             ,(if pres-p t))
-                                            (t
-                                              ,(if init-form
-                                                  ^(set ,p ,init-form))
-                                              ,(if pres-p nil)))))
-                               (emit-var p nil)
-                               (if pres-p
-                                 (emit-var pres-p stmt)
-                                 (emit-stmt stmt)))))))
+                             (cond
+                               (pres-p
+                                 (emit-var p nil)
+                                 (emit-var pres-p
+                                           ^(cond
+                                              (,obj-var
+                                                (set ,p (car ,obj-var))
+                                                (set ,obj-var (cdr ,obj-var))
+                                                ,(if pres-p t))
+                                              (t
+                                                ,(if init-form
+                                                   ^(set ,p ,init-form))
+                                                ,(if pres-p nil)))))
+                               (t
+                                 (emit-var p ^(if ,obj-var
+                                                (prog1
+                                                  (car ,obj-var)
+                                                  (set ,obj-var (cdr ,obj-var)))
+                                                (if ,init-form ,init-form)))))))))
                      (when pars.rest
                        (emit-var pars.rest obj-var)))))))
       (expand-rec params obj-var nil)
