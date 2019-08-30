@@ -1,3 +1,60 @@
+                                    TXR 224
+                                   2019-08-29
+
+
+  Features
+
+  - compiler:
+    - load-time now optimized away if top-level form.
+      - argument of load time top-level form if load-time is
+    - improved code generation for destructuring.
+    - case of wasteful nil-initialization of local variable elided.
+
+  - lib:
+    - list-builder now has dequeue capabilities:
+      - delete item from head and tail
+      - new buildn macro to complement build:
+        - returns last form instead of constructed list
+    - new functions find-symbol, find-symbol-fb:
+      - find symbol in package, with or without fallback lookup.
+    - new function intern-fb:
+      - like intern, but with fallback lookup.
+    - new function cptr-buf:
+      - obtaining cptr object referencing buffer contents.
+    - MD5 digest support.
+    - State-object-based, multi-step SHA-256 and MD5 digesting.
+    - More efficient SHA256 string hash (not using string-byte-input stream).
+
+  Bugs
+
+  - lib:
+    - regression in where function: not working for non-list sequences.
+  - parser:
+    - symbols no longer interned within object suppressed by #; notation.
+    - uninitialized flag field in parser structure:
+      - affects TXR 157 through 223.
+      - affects circular notation like #1=(#1#) embedded in the
+        pattern language.
+    - cosmetic issue in bad character diganostics from lexical analyzer.
+  - build:
+    - remove_flags configure option was broken;
+    - compiler flags were duplicated in the commandline.
+  - unwind:
+    - GC problem: neglect to GC-protect global unhandled-error structure.
+  - compiler:
+    - miscompilation of infinite for loop: (for init (nil) step ...)
+      - where terminating condition is explicitly given as (nil ...)
+        rather than implicitly as ().
+    - destructuring:
+      - error mismatch diagnostics indicating wrong substructure.
+      - inappropriate special handling of colon args to optional params.
+      - incorrect scoping for optional param init-forms in destructuring.
+  - trace:
+    - failure to remove trace from traced function being redefined.
+    - redefinition of a traced method resurrects old version, clobbering new.
+
+
+
                                     TXR 223
                                    2019-08-14
 
