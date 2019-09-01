@@ -1654,12 +1654,7 @@ static val bindings_helper(val vars, val env, val sequential,
                            val ret_new_bindings, val ctx)
 {
   val iter, var;
-  struct bindings_helper_vars v;
   list_collect_decl (new_bindings, ptail);
-  uw_frame_t uw_cc;
-  v.ne = if3(sequential, env, make_env(nil, nil, env));
-
-  uw_push_cont_copy(&uw_cc, coerce(mem_t *, &v), copy_bh_env_handler);
 
   if (sequential) {
     for (iter = vars; iter; iter = cdr(iter)) {
@@ -1668,21 +1663,29 @@ static val bindings_helper(val vars, val env, val sequential,
 
       if (consp(item)) {
         var = pop(&item);
-        value = eval(pop(&item), v.ne, ctx);
+        value = eval(pop(&item), env, ctx);
       } else {
         var = item;
       }
 
       {
-        val le = make_env(nil, nil, v.ne);
+        val le = make_env(nil, nil, env);
         val binding = env_vbind(le, var, value);
         if (ret_new_bindings)
           ptail = list_collect (ptail, binding);
-        v.ne = le;
+        env = le;
       }
     }
+
+    return env;
   } else {
+    struct bindings_helper_vars v;
+    uw_frame_t uw_cc;
     val de_in = dyn_env, new_de = de_in;
+
+    v.ne = make_env(nil, nil, env);
+
+    uw_push_cont_copy(&uw_cc, coerce(mem_t *, &v), copy_bh_env_handler);
 
     for (iter = vars; iter; iter = cdr(iter)) {
       val item = car(iter);
@@ -1707,11 +1710,11 @@ static val bindings_helper(val vars, val env, val sequential,
       }
     }
     dyn_env = new_de;
+
+    uw_pop_frame(&uw_cc);
+
+    return v.ne;
   }
-
-  uw_pop_frame(&uw_cc);
-
-  return v.ne;
 }
 
 static val fbindings_helper(val vars, val env, val lbind, val ctx)
