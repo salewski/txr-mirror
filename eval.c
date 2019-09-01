@@ -1656,7 +1656,7 @@ static val bindings_helper(val vars, val env, val sequential,
   val iter, var;
   list_collect_decl (new_bindings, ptail);
 
-  if (sequential) {
+  if (sequential || vars == nil || cdr(vars) == nil) {
     for (iter = vars; iter; iter = cdr(iter)) {
       val item = car(iter);
       val value = nil;
