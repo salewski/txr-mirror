@@ -17425,7 +17425,7 @@ Character.
 
 .coIP fixnum
 Fixnum integer: an integer that fits into the value word, not having to
-be heap allocated.
+be heap-allocated.
 
 .coIP bignum
 A bignum integer: arbitrary precision integer that is heap-allocated.
@@ -42414,7 +42414,7 @@ allocated in storage which isn't captured by delimited continuations.
 The
 .code h
 in the names stands for "heap", serving as a mnemonic based on the
-implementation concept of these bindings being "heap allocated".
+implementation concept of these bindings being "heap-allocated".
 
 .SS* Regular Expression Library
 
@@ -60787,7 +60787,7 @@ heap areas are not counted as
 .meta malloc-bytes
 includes storage
 such as the space used for dynamic strings, vectors and bignums (in addition to
-their gc-heap allocated nodes), and the various structures used by the
+their gc-heap-allocated nodes), and the various structures used by the
 .code cobj
 type objects such as streams and hashes. Objects in external libraries that use
 uninstrumented allocators are not counted: for instance the C
@@ -61685,7 +61685,7 @@ representation. This takes place by converting Lisp objects into
 stack-allocated temporary buffers representing C objects. For aggregate objects
 containing pointers, additional buffers are allocated dynamically. For
 instance, suppose a structure contains a string and is passed by value. The
-structure will be converted to a stack allocated equivalent C structure, in
+structure will be converted to a stack-allocated equivalent C structure, in
 which the string will appear as a pointer.  That pointer may use dynamically
 allocated (via
 .codn malloc )
