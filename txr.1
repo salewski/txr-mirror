@@ -489,7 +489,7 @@ require extra stack space and slow down execution.
 .coIP -n
 .coIP --noninteractive
 This option affects behavior related to \*(TX's
-.code *std-input*
+.code *stdin*
 stream.  It also has a another, unrelated effect, on the
 behavior of the interactive listener; see below.
 
@@ -502,14 +502,14 @@ and
 The
 .code -n
 option suppresses this behavior; the
-.code *std-input*
+.code *stdin*
 stream remains ordinary.
 
 The \*(TX pattern language reads standard input via
 a lazy list, created by applying the
 .code lazy-stream-cons
 function to the
-.code *std-input*
+.code *stdin*
 stream. If that stream is marked real-time, then the lazy list which is
 returned by that function has behaviors that are better suited for scanning
 interactive input. A more detailed explanation is given under the description
@@ -15088,13 +15088,13 @@ and used as the basis of the test.
 
 .TP* Examples:
 .verb
-  ;; read lines of text from *std-input* and print them,
+  ;; read lines of text from *stdin* and print them,
   ;; until the end-of-stream condition:
 
   (whilet ((line (get-line)))
     (put-line line))
 
-  ;; read lines of text from *std-input* and print them,
+  ;; read lines of text from *stdin* and print them,
   ;; until the end-of-stream condition occurs or
   ;; a line is identical to the character string "end".
 
@@ -15707,7 +15707,7 @@ differ from
 .codn each ,
 .code collect-each
 and
-.code append-each*
+.code append-each
 in the following way. The plain forms evaluate the
 .metn init-form -s
 in an environment in which none of the
@@ -15733,22 +15733,22 @@ of their lists.
 .mono
  ;; print numbers from 1 to 10 and whether they are even or odd
  (each* ((n (range 1 10)) ;; n list a list here!
-         (even (collect-each ((n m)) (evenp m))))
+         (even (collect-each ((m n)) (evenp m))))
    ;; n is an item here!
    (format t "~s is ~s\en" n (if even "even" "odd")))
 .onom
 .TP* Output:
 .mono
- 1 is odd
- 2 is even
- 3 is odd
- 4 is even
- 5 is odd
- 6 is even
- 7 is odd
- 8 is even
- 9 is odd
- 10 is even
+ 1 is "odd"
+ 2 is "even"
+ 3 is "odd"
+ 4 is "even"
+ 5 is "odd"
+ 6 is "even"
+ 7 is "odd"
+ 8 is "even"
+ 9 is "odd"
+ 10 is "even"
 .onom
 
 .coNP Operators @ for and @ for*
@@ -21540,7 +21540,7 @@ as if by the call
 Note that the expression
 .code 1..10..2
 stands for the expression
-.code "(range 1 (range 10 2))"
+.code "(rcons 1 (rcons 10 2))"
 which evaluates to
 .codn "#R(1 #R(10 2))" .
 
@@ -21572,7 +21572,7 @@ It is also permissible to apply an infinite argument list to
 .TP* Examples:
 .verb
   (rlist 1 "two" :three)  ->  (1 "two" :three)
-  (rlist 10 15..16 #\ea..#\ed 2) -> (10 15 16 #\ea #\eb #\ec 2)
+  (rlist 10 15..16 #\ea..#\ed 2) -> (10 15 16 #\ea #\eb #\ec #\ed 2)
   (take 7 (rlist 1 2 5..:)) -> (1 2 5 6 7 8 9)
 .brev
 
@@ -21802,10 +21802,10 @@ The following equivalences hold:
 
 .verb
   (in-range r x)  <-->  (and (lequal (from r) x)
-                             (lequal (to r) x))
+                             (lequal x (to r)))
 
   (in-range* r x)  <-->  (and (lequal (from r) x)
-                              (less (to r) x))
+                              (less x (to r)))
 .brev
 .SS* Characters and Strings
 .coNP Function @ mkstring
@@ -22409,7 +22409,7 @@ parameter.
 
 .coNP Function @ tok
 .synb
-.mets (tok-str < regex <> [ keep-between ] << string )
+.mets (tok < regex <> [ keep-between ] << string )
 .syne
 .desc
 The
@@ -22503,11 +22503,11 @@ ASCII. This function is not affected by locale.
 
 .coNP Function @ chr-isascii
 .synb
-.mets (chr-isalpha << char )
+.mets (chr-isascii << char )
 .syne
 .desc
 The
-.code chr-isalpha
+.code chr-isascii
 function returns
 .code t
 if the code of character
@@ -24938,7 +24938,7 @@ also apply to
 The
 .code :init
 specifier doesn't describe a slot. Rather, it specifies code
-which is executed when a structure is instantiated, after
+which is executed when a structure is instantiated, before
 the slot initializations specific to the structure type
 are performed. The code consists of
 .metn body-form -s
@@ -32580,7 +32580,7 @@ That is to say, the permutations are lexicographically ordered.
 .TP* Examples:
 
 .verb
-  (rperm "01" 4) -> ("000" "001" "010" "011"
+  (rperm "01" 3) -> ("000" "001" "010" "011"
                      "100" "101" "110" "111")
 
   (rperm #(1) 3) -> (#(1 1 1))
@@ -33272,7 +33272,7 @@ form in the context of that environment.
 .TP* Example:
 
 .verb
-  ;; (foo x) expands x, and if x begins with a number,
+  ;; (rem-num x) expands x, and if x begins with a number,
   ;; it removes  the number and returns the resulting
   ;; form. Otherwise, it returns the entire form.
 
@@ -33282,11 +33282,11 @@ form in the context of that environment.
         (cdr expanded)
         some-form)))
 
-  ;; The following yields (42 a).
-
   (macrolet ((foo () '(1 list 42))
              (bar () '(list 'a)))
-    (list (rem-num (foo)) (rem-num (bar)))))
+    (list (rem-num (foo)) (rem-num (bar))))
+
+  --> ((42) (a))
 .brev
 
 The
@@ -33536,6 +33536,10 @@ shadowed by the environments between
 and
 .metn outer-env .
 
+Within each of the lists of variables returned by
+.codn expand-with-free-refs ,
+the order of the variables is not specified.
+
 .TP* Example:
 
 Suppose that
@@ -33547,7 +33551,7 @@ in the following code snippet:
   (let (a c) ;; <- outer-env
     (let (b)
       (let (c) ;; <- inner-env
-        (mac (list a b c d))))
+        (mac (list a b c d)))))
 .brev
 
 Suppose that
@@ -33561,13 +33565,21 @@ argument form as
 and two macro-time environment objects corresponding to the indicated
 environments.
 
-The return value of
-.code expand-with-free-refs
-shall be:
+Then the following object shall be a correct return value of
+.codn expand-with-free-refs :
 
 .verb
-  ((list a b c d) (a d) (list) (b c d) (list))
+  ((list a b c d) (d) nil (d c b) nil)
 .brev
+
+A complete code example of this is given below.
+
+Other correct return values are possible due to permitted variations in the
+order of the variables within the four lists. For instance, instead of
+.code "(d c b)"
+the list
+.code "(c b d)"
+may appear.
 
 The
 .meta fv-inner
@@ -33605,6 +33617,26 @@ which leaves
 .code "(b c d)"
 free.
 
+The following is a complete code sample demonstrating the above
+descriptions:
+
+.verb
+  ;; Given this macro:
+  (defmacro bigmac (:env out-env big-form)
+    ^(macrolet ((mac (:env in-env little-form)
+                      ^',(expand-with-free-refs
+                            little-form in-env ,out-env)))
+      ,big-form))
+
+  (let (a c) ;; <- outer-env, surrounding bigmac
+    (bigmac
+      (let (b)
+        (let (c) ;; <- inner-env, surrounding mac
+          (mac (list a b c d))))))
+
+  --> ((list a b c d) (d) nil (d c b) nil)
+.brev
+
 Note: this information is useful because a set difference can be calculated
 between the two reported sets. The set difference between the
 .meta fv-outer
@@ -33627,6 +33659,11 @@ which appear bound in
 .metn inner-env ,
 but are not bound due to a binding coming from
 .metn outer-env .
+In the above example, these are the variables enclosed in the
+.code bigmac
+macro, but external to the inner
+.code mac
+macro.
 
 The variable
 .code d
@@ -33695,7 +33732,7 @@ bindings can shadow macros.
   (let ((x 1) (y 2))
     (symacrolet ((y x))
       (flet ((f () (+ 2 2)))
-        (list (classify x) (classify y) (classify z)))))
+        (list (classify x) (classify y) (classify f)))))
 .brev
 
 .TP* Note:
@@ -34442,7 +34479,7 @@ keyword.
 
 .coNP Parameter list macro @ :key
 .synb
-.mets (:key << param *
+.mets (:key << non-key-param *
 .mets \ \  [ -- >> { sym | >> ( sym >> [ init-form <> [ p-sym ]])}* ]
 .mets \ \  [ . rest-param ])
 .syne
@@ -42389,8 +42426,8 @@ non-deterministically:
   (amb-scope
     (let ((x (amb 1 2 3))
           (y (amb 4 5 6)))
-      (amb (eql (* x y) 8)
-      (list x y))))
+      (amb (eql (* x y) 8))
+      (list x y)))
   -> (2 4)
 .brev
 
@@ -42427,7 +42464,7 @@ parenthesized sub-expression matches into registers. Parenthesis syntax
 denotes only grouping, with no additional meaning.
 
 The semantics of whether a regular expression is used for a substring
-search, prefix match, suffix match, spring splitting and so forth comes from
+search, prefix match, suffix match, string splitting and so forth comes from
 the functions which use regular expressions to perform these operations.
 
 .NP* Regular Expressions as Functions
@@ -43007,7 +43044,7 @@ accumulating them into a string, which is returned.
 If an argument is not specified for
 .metn stream ,
 then the
-.code *std-input*
+.code *stdin*
 stream is used.
 
 The
@@ -47057,7 +47094,7 @@ The ordinary lazy streams read ahead by one line and suppress this extra
 item, so their representation is more accurate.
 
 When \*(TX starts up, it automatically marks the
-.code *std-input*
+.code *stdin*
 stream as real-time, if it is connected to a TTY device (a device for which
 the POSIX function
 .code isatty
@@ -50852,7 +50889,7 @@ macro rather than by direct use of
 
 .coNP Function @ delete-package
 .synb
-.mets (make-package << package )
+.mets (delete-package << package )
 .syne
 .desc
 The
