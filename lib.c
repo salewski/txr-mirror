@@ -234,7 +234,7 @@ val subtypep(val sub, val sup)
   } else if (sup == sequence_s) {
     return tnil(sub == str_s || sub == lit_s || sub == lstr_s ||
                 sub == vec_s || sub == null_s || sub == cons_s ||
-                sub == list_s);
+                sub == lcons_s || sub == list_s || sub == string_s);
   } else if (sup == string_s) {
     return tnil(sub == str_s || sub == lit_s || sub == lstr_s);
   } else if (sup == stream_s) {
