@@ -882,6 +882,9 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
       val key = cons(sym, num_fast(id));
       val sl = gethash(slot_hash, key);
       cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
+
+      rcyc_cons(key);
+
       if (sl) {
         cache_set_insert(*set, id, slnum);
         if (slnum >= STATIC_SLOT_BASE) {
@@ -903,6 +906,8 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
     cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
 
     sym->s.slot_cache = slot_cache;
+
+    rcyc_cons(key);
 
     if (sl) {
       cache_set_insert(*set, id, slnum);
@@ -934,6 +939,9 @@ static struct stslot *lookup_static_slot_desc(struct struct_type *st, val sym)
       val key = cons(sym, num_fast(id));
       val sl = gethash(slot_hash, key);
       cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
+
+      rcyc_cons(key);
+
       if (sl) {
         cache_set_insert(*set, id, slnum);
         if (slnum >= STATIC_SLOT_BASE)
@@ -950,6 +958,8 @@ static struct stslot *lookup_static_slot_desc(struct struct_type *st, val sym)
     cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
 
     sym->s.slot_cache = slot_cache;
+
+    rcyc_cons(key);
 
     if (sl) {
       cache_set_insert(*set, id, slnum);
@@ -1317,6 +1327,8 @@ val static_slot_p(val type, val sym)
     val key = cons(sym, num_fast(st->id));
     val sl = gethash(slot_hash, key);
     cnum slnum = coerce(cnum, sl) >> TAG_SHIFT;
+
+    rcyc_cons(key);
 
     if (sl && slnum >= STATIC_SLOT_BASE)
       return t;
