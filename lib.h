@@ -613,6 +613,7 @@ val partition(val seq, val indices);
 val split(val seq, val indices);
 val partition_star(val seq, val indices);
 val split_star(val seq, val indices);
+val tailp(val obj, val list);
 val memq(val obj, val list);
 val rmemq(val obj, val list);
 val memql(val obj, val list);

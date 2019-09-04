@@ -1682,6 +1682,16 @@ val ldiff_old(val list1, val list2)
   return make_like(out, list_orig);
 }
 
+val tailp(val obj, val list)
+{
+  while (obj != list) {
+    if (atom(list))
+      return nil;
+    list = cdr(list);
+  }
+  return t;
+}
+
 val memq(val obj, val list)
 {
   val list_orig = list;

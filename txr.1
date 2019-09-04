@@ -19568,6 +19568,59 @@ is only a function, not an accessor;
 .code nthcdr
 forms do not denote places.
 
+.coNP Function @ tailp
+.synb
+.mets (tailp < object << list)
+.syne
+.desc
+The
+.code tailp
+function tests whether
+.meta object
+is a tail of
+.metn list .
+This means that
+.meta object
+is either
+.meta list
+itself, or else one of the
+.code cons
+cells of
+.meta list
+or else the terminating atom of
+.metn list .
+
+More formally, a recursive definition follows.
+If
+.meta object
+and
+.meta list
+are the same object (thus equal under the
+.code eq
+function) then
+.code tailp
+returns
+.codn t .
+If
+.meta list
+is an atom, and is not
+.metn object ,
+then the function returns
+.codn nil .
+Otherwise,
+.meta list
+is a
+.code cons
+that is not
+.meta object
+and
+.code tailp
+yields the same value as the
+.mono
+.meti "(tailp < object (cdr << list ))"
+.onom
+expression.
+
 .coNP Accessors @, caar @, cadr @, cdar @, cddr @ ... and @ cdddddr
 .synb
 .mets (caar << object )

@@ -6458,6 +6458,7 @@ void eval_init(void)
   reg_fun(intern(lit("split"), user_package), func_n2(split));
   reg_fun(intern(lit("split*"), user_package), func_n2(split_star));
   reg_fun(intern(lit("partition*"), user_package), func_n2(partition_star));
+  reg_fun(intern(lit("tailp"), user_package), func_n2(tailp));
   reg_fun(memq_s, func_n2(memq));
   reg_fun(memql_s, func_n2(memql));
   reg_fun(memqual_s, func_n2(memqual));
