@@ -294,8 +294,6 @@ seq_info_t seq_info(val obj)
           ret.kind = SEQ_VECLIKE;
         if (maybe_slot(obj, car_s))
           ret.kind = SEQ_LISTLIKE;
-        if (maybe_slot(obj, car_s))
-          ret.kind = SEQ_LISTLIKE;
         else
           ret.kind = SEQ_NOTSEQ;
       }
