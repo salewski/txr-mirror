@@ -60,6 +60,7 @@
 
 #define STATIC_SLOT_BASE 0x10000000
 
+#define SLOT_CACHE_SIZE 8
 
 struct stslot {
   val home_type;

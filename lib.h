@@ -124,8 +124,6 @@ struct string {
   val alloc;
 };
 
-#define SLOT_CACHE_SIZE 8
-
 typedef struct {
   cnum id;
   cnum slot;
