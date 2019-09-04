@@ -72,13 +72,18 @@ struct stslot {
 #define stslot_loc(s) mkloc(*(s)->home, (s)->home_type)
 #define stslot_place(s) (*(s)->home)
 
+enum special_slot {
+  equal_meth,
+  num_special_slots
+};
+
 struct struct_type {
   val self;
   val name;
   cnum id;
   cnum nslots;
   cnum nstslots;
-  struct stslot *eqmslot;
+  struct stslot *spslot[num_special_slots];
   val super;
   struct struct_type *super_handle;
   val slots;
@@ -316,12 +321,12 @@ val make_struct_type(val name, val super,
     val iter;
     cnum sl, stsl;
     struct stslot null_ptr = { nil, 0, 0, nil };
+    int i;
 
     st->self = stype;
     st->name = name;
     st->id = c_num(id);
     st->nslots = st->nstslots = 0;
-    st->eqmslot = 0;
     st->slots = all_slots;
     st->super = super;
     st->stslot = 0;
@@ -331,6 +336,9 @@ val make_struct_type(val name, val super,
     st->boactor = boactor;
     st->postinitfun = default_null_arg(postinitfun);
     st->dvtypes = nil;
+
+    for (i = 0; i < num_special_slots; i++)
+      st->spslot[i] = 0;
 
     gc_finalize(stype, struct_type_finalize_f, nil);
 
@@ -1085,6 +1093,15 @@ val static_slot(val stype, val sym)
   no_such_static_slot(self, stype, sym);
 }
 
+static void invalidate_special_slot_nonexistence(struct struct_type *st)
+{
+  int i;
+  for (i = 0; i < num_special_slots; i++) {
+    if (st->spslot[i] == coerce(struct stslot *, -1))
+      st->spslot[i] = 0;
+  }
+}
+
 val static_slot_set(val stype, val sym, val newval)
 {
   val self = lit("static-slot-set");
@@ -1093,8 +1110,7 @@ val static_slot_set(val stype, val sym, val newval)
   if (symbolp(sym)) {
     loc ptr = lookup_static_slot(st, sym);
     if (!nullocp(ptr)) {
-      if (st->eqmslot == coerce(struct stslot *, -1))
-        st->eqmslot = 0;
+      invalidate_special_slot_nonexistence(st);
       return set(ptr, newval);
     }
   }
@@ -1180,8 +1196,7 @@ static val static_slot_ens_rec(val stype, val sym, val newval,
 
   no_error_p = default_null_arg(no_error_p);
 
-  if (st->eqmslot == coerce(struct stslot *, -1))
-    st->eqmslot = 0;
+  invalidate_special_slot_nonexistence(st);
 
   if (stsl != 0 && opt_compat && opt_compat <= 151) {
     set(stslot_loc(stsl), newval);
@@ -1585,22 +1600,28 @@ static ucnum struct_inst_hash(val obj, int *count, ucnum seed)
   return out;
 }
 
-static val get_equal_method(struct struct_type *st)
+static val get_special_static_slot(struct struct_type *st,
+                                   struct stslot **pstsl, val stslot)
 {
-  if (st->eqmslot == coerce(struct stslot *, -1)) {
+  if (*pstsl == coerce(struct stslot *, -1)) {
     return nil;
-  } else if (st->eqmslot) {
-    struct stslot *stsl = st->eqmslot;
+  } else if (*pstsl) {
+    struct stslot *stsl = *pstsl;
     return stslot_place(stsl);
   } else {
-    struct stslot *stsl = lookup_static_slot_desc(st, equal_s);
+    struct stslot *stsl = lookup_static_slot_desc(st, stslot);
     if (stsl != 0) {
-      st->eqmslot = stsl;
+      *pstsl = stsl;
       return stslot_place(stsl);
     }
-    st->eqmslot = coerce(struct stslot *, -1);
+    *pstsl = coerce(struct stslot *, -1);
     return nil;
   }
+}
+
+static val get_equal_method(struct struct_type *st)
+{
+  return get_special_static_slot(st, &st->spslot[equal_meth], equal_s);
 }
 
 static val struct_inst_equalsub(val obj)
