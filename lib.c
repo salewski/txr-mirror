@@ -292,7 +292,7 @@ seq_info_t seq_info(val obj)
       } else {
         if (get_special_slot(obj, length_m))
           ret.kind = SEQ_VECLIKE;
-        if (get_special_slot(obj, car_m))
+        else if (get_special_slot(obj, car_m))
           ret.kind = SEQ_LISTLIKE;
         else
           ret.kind = SEQ_NOTSEQ;
