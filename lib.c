@@ -254,7 +254,7 @@ val subtypep(val sub, val sup)
       return nil;
     }
 
-    return eq(sub, sup);
+    return nil;
   }
 }
 
