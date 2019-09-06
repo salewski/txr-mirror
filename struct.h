@@ -87,5 +87,6 @@ val static_slot_types(val slot);
 val slot_type_reg(val slot, val strct);
 val static_slot_type_reg(val slot, val strct);
 val get_special_slot(val obj, enum special_slot spidx);
+val get_special_slot_by_type(val stype, enum special_slot spidx);
 INLINE int obj_struct_p(val obj) { return obj->co.ops == &struct_inst_ops; }
 void struct_init(void);

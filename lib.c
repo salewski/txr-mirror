@@ -232,6 +232,13 @@ val subtypep(val sub, val sup)
   } else if (sup == list_s) {
     return tnil(sub == null_s || sub == cons_s || sub == lcons_s);
   } else if (sup == sequence_s) {
+    val sub_struct = find_struct_type(sub);
+    if (sub_struct) {
+      if (get_special_slot_by_type(sub_struct, length_m) ||
+          get_special_slot_by_type(sub_struct, car_m))
+        return t;
+      return nil;
+    }
     return tnil(sub == str_s || sub == lit_s || sub == lstr_s ||
                 sub == vec_s || sub == null_s || sub == cons_s ||
                 sub == lcons_s || sub == list_s || sub == string_s);

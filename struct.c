@@ -1773,6 +1773,13 @@ val get_special_slot(val obj, enum special_slot spidx)
   return get_special_static_slot(si->type, spidx, slot);
 }
 
+val get_special_slot_by_type(val stype, enum special_slot spidx)
+{
+  struct struct_type *st = coerce(struct struct_type *, stype->co.handle);
+  val slot = *special_sym[spidx];
+  return get_special_static_slot(st, spidx, slot);
+}
+
 static_def(struct cobj_ops struct_type_ops =
            cobj_ops_init(eq, struct_type_print, struct_type_destroy,
                          struct_type_mark, cobj_eq_hash_op));
