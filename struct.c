@@ -1626,16 +1626,11 @@ static val get_special_static_slot(struct struct_type *st,
   }
 }
 
-static val get_equal_method(struct struct_type *st)
-{
-  return get_special_static_slot(st, equal_meth, equal_s);
-}
-
 static val struct_inst_equalsub(val obj)
 {
   struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
   struct struct_type *st = si->type;
-  val equal_method = get_equal_method(st);
+  val equal_method = get_special_static_slot(st, equal_m, equal_s);
   if (equal_method) {
     val sub = funcall1(equal_method, obj);
     if (nilp(sub)) {
