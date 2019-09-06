@@ -2050,7 +2050,7 @@ static void ffi_ptr_in_release(struct txr_ffi_type *tft, val obj, mem_t *dst)
 static val ffi_flex_struct_in(struct txr_ffi_type *tft, val strct, val self)
 {
   struct smemb *lastm = &tft->memb[tft->nelem - 1];
-  val length_meth = maybe_slot(strct, length_s);
+  val length_meth = get_special_slot(strct, length_m);
 
   if (length_meth) {
     val len = funcall1(length_meth, strct);

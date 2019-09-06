@@ -69566,6 +69566,16 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 224
+After \*(TX 224, the treatment of certain special structure functions
+has changed. Selecting 224 compatibility or lower restores that behavior.
+The specification given in the
+.B "Special Structure Functions"
+paragraph has always stated that special functions must be static slots,
+and that the behavior is unspecified if they are instance slots.
+The behavior of \*(TX 224 and earlier was that these functions worked anyway
+if they were instance slots; after \*(TX 224, they some special functions
+will no longer be recognized if bound to instance slots.
 .IP 222
 After \*(TX 222, the behavior of
 .code :vars

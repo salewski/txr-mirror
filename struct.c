@@ -72,11 +72,6 @@ struct stslot {
 #define stslot_loc(s) mkloc(*(s)->home, (s)->home_type)
 #define stslot_place(s) (*(s)->home)
 
-enum special_slot {
-  equal_meth,
-  num_special_slots
-};
-
 struct struct_type {
   val self;
   val name;
@@ -107,6 +102,13 @@ val struct_type_s, meth_s, print_s, make_struct_lit_s;
 val init_k, postinit_k;
 val slot_s, derived_s;
 
+val nullify_s, from_list_s, lambda_set_s;
+
+static val *special_sym[num_special_slots] = {
+  &equal_s, &nullify_s, &from_list_s, &lambda_s, &lambda_set_s,
+  &length_s, &car_s, &cdr_s, &rplaca_s, &rplacd_s
+};
+
 static val struct_type_hash;
 static val slot_hash;
 static val struct_type_finalize_f;
@@ -135,6 +137,9 @@ void struct_init(void)
   postinit_k = intern(lit("postinit"), keyword_package);
   slot_s = intern(lit("slot"), user_package);
   derived_s = intern(lit("derived"), user_package);
+  nullify_s = intern(lit("nullify"), user_package);
+  from_list_s = intern(lit("from-list"), user_package);
+  lambda_set_s = intern(lit("lambda-set"), user_package);
   struct_type_hash = make_hash(nil, nil, nil);
   slot_hash = make_hash(nil, nil, t);
   slot_type_hash = make_hash(nil, nil, nil);
@@ -1757,6 +1762,15 @@ val static_slot_type_reg(val slot, val strct)
   }
 
   return slot;
+}
+
+val get_special_slot(val obj, enum special_slot spidx)
+{
+  val slot = *special_sym[spidx];
+  if (opt_compat && opt_compat <= 224)
+    return maybe_slot(obj, slot);
+  struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
+  return get_special_static_slot(si->type, spidx, slot);
 }
 
 static_def(struct cobj_ops struct_type_ops =

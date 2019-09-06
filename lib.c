@@ -111,7 +111,7 @@ val query_error_s, file_error_s, process_error_s, syntax_error_s;
 val timeout_error_s, system_error_s, alloc_error_s;
 val path_not_found_s, path_exists_s, path_permission_s;
 val warning_s, defr_warning_s, restart_s, continue_s;
-val gensym_counter_s, nullify_s, from_list_s, lambda_set_s, length_s;
+val gensym_counter_s, length_s;
 val rplaca_s, rplacd_s, seq_iter_s;
 
 val nothrow_k, args_k, colon_k, auto_k, fun_k;
@@ -290,9 +290,9 @@ seq_info_t seq_info(val obj)
       } else if (sub != obj) {
         return seq_info(sub);
       } else {
-        if (maybe_slot(obj, length_s))
+        if (get_special_slot(obj, length_m))
           ret.kind = SEQ_VECLIKE;
-        if (maybe_slot(obj, car_s))
+        if (get_special_slot(obj, car_m))
           ret.kind = SEQ_LISTLIKE;
         else
           ret.kind = SEQ_NOTSEQ;
@@ -521,12 +521,12 @@ val car(val cons)
   case COBJ:
     if (obj_struct_p(cons)) {
       {
-        val car_meth = maybe_slot(cons, car_s);
+        val car_meth = get_special_slot(cons, car_m);
         if (car_meth)
           return funcall1(car_meth, cons);
       }
       {
-        val lambda_meth = maybe_slot(cons, lambda_s);
+        val lambda_meth = get_special_slot(cons, lambda_m);
         if (lambda_meth)
           return funcall2(lambda_meth, cons, zero);
       }
@@ -563,12 +563,12 @@ val cdr(val cons)
   case COBJ:
     if (obj_struct_p(cons)) {
       {
-        val cdr_meth = maybe_slot(cons, cdr_s);
+        val cdr_meth = get_special_slot(cons, cdr_m);
         if (cdr_meth)
           return funcall1(cdr_meth, cons);
       }
       {
-        val lambda_meth = maybe_slot(cons, lambda_s);
+        val lambda_meth = get_special_slot(cons, lambda_m);
         if (lambda_meth)
           return funcall2(lambda_meth, cons, rcons(one, t));
       }
@@ -595,14 +595,14 @@ val rplaca(val cons, val new_car)
   default:
     if (structp(cons)) {
       {
-        val rplaca_meth = maybe_slot(cons, rplaca_s);
+        val rplaca_meth = get_special_slot(cons, rplaca_m);
         if (rplaca_meth) {
           (void) funcall2(rplaca_meth, cons, new_car);
           return cons;
         }
       }
       {
-        val lambda_set_meth = maybe_slot(cons, lambda_set_s);
+        val lambda_set_meth = get_special_slot(cons, lambda_set_m);
         if (lambda_set_meth) {
           (void) funcall3(lambda_set_meth, cons, zero, new_car);
           return cons;
@@ -632,7 +632,7 @@ val rplacd(val cons, val new_cdr)
   default:
     if (structp(cons)) {
       {
-        val rplacd_meth = maybe_slot(cons, rplacd_s);
+        val rplacd_meth = get_special_slot(cons, rplacd_m);
         if (rplacd_meth) {
           (void) funcall2(rplacd_meth, cons, new_cdr);
           return cons;
@@ -959,7 +959,7 @@ val make_like(val list, val thatobj)
       break;
     case COBJ:
       if (obj_struct_p(thatobj)) {
-        val from_list_meth = maybe_slot(thatobj, from_list_s);
+        val from_list_meth = get_special_slot(thatobj, from_list_m);
         if (from_list_meth)
           return funcall1(from_list_meth, list);
       }
@@ -1019,7 +1019,7 @@ val nullify(val seq)
     if (seq->co.cls == hash_s)
       return if3(hash_count(seq) != zero, seq, nil);
     if (obj_struct_p(seq)) {
-      val nullify_meth = maybe_slot(seq, nullify_s);
+      val nullify_meth = get_special_slot(seq, nullify_m);
       if (nullify_meth)
         return funcall1(nullify_meth, seq);
     }
@@ -7378,7 +7378,7 @@ val replace_vec(val vec_in, val items, val from, val to)
 val replace_obj(val obj, val items, val from, val to)
 {
   val self = lit("replace");
-  val lambda_set_meth = maybe_slot(obj, lambda_set_s);
+  val lambda_set_meth = get_special_slot(obj, lambda_set_m);
 
   if (!lambda_set_meth)
     uw_throwf(error_s, lit("~a: object ~s lacks ~s method"),
@@ -10035,12 +10035,12 @@ val length(val seq)
     if (seq->co.cls == carray_s)
       return length_carray(seq);
     if (obj_struct_p(seq)) {
-      val length_meth = maybe_slot(seq, length_s);
+      val length_meth = get_special_slot(seq, length_m);
 
       if (length_meth)
         return funcall1(length_meth, seq);
 
-      if (maybe_slot(seq, car_s))
+      if (get_special_slot(seq, car_m))
         return length_proper_list(nullify(seq));
 
       type_mismatch(lit("length: ~s has no length or car method"), seq, nao);
@@ -10076,8 +10076,8 @@ val empty(val seq)
     if (seq->co.cls == carray_s)
       return eq(length_carray(seq), zero);
     if (obj_struct_p(seq)) {
-      val length_meth = maybe_slot(seq, length_s);
-      val nullify_meth = if2(nilp(length_meth), maybe_slot(seq, nullify_s));
+      val length_meth = get_special_slot(seq, length_m);
+      val nullify_meth = if2(nilp(length_meth), get_special_slot(seq, nullify_m));
       if (length_meth)
         return eq(funcall1(length_meth, seq), zero);
       return if3(nullify_meth && funcall1(nullify_meth, seq), nil, seq);
@@ -10107,7 +10107,7 @@ val sub(val seq, val from, val to)
     if (seq->co.cls == carray_s)
       return carray_sub(seq, from, to);
     if (structp(seq)) {
-      val lambda_meth = maybe_slot(seq, lambda_s);
+      val lambda_meth = get_special_slot(seq, lambda_m);
       if (lambda_meth)
         return funcall2(lambda_meth, seq, rcons(from, to));
       seq = nullify(seq);
@@ -10130,7 +10130,7 @@ val ref(val seq, val ind)
     if (seq->co.cls == carray_s)
       return carray_ref(seq, ind);
     if (obj_struct_p(seq)) {
-      val lambda_meth = maybe_slot(seq, lambda_s);
+      val lambda_meth = get_special_slot(seq, lambda_m);
       if (lambda_meth)
         return funcall2(lambda_meth, seq, ind);
     }
@@ -10181,14 +10181,14 @@ val refset(val seq, val ind, val newval)
       return carray_refset(seq, ind, newval);
     if (obj_struct_p(seq)) {
       {
-        val lambda_set_meth = maybe_slot(seq, lambda_set_s);
+        val lambda_set_meth = get_special_slot(seq, lambda_set_m);
         if (lambda_set_meth) {
           (void) funcall3(lambda_set_meth, seq, ind, newval);
           return newval;
         }
       }
       {
-        val car_meth = maybe_slot(seq, car_s);
+        val car_meth = get_special_slot(seq, car_m);
         if (car_meth)
           goto list;
       }
@@ -10257,13 +10257,13 @@ val dwim_set(val place_p, val seq, varg vargs)
       }
       if (obj_struct_p(seq)) {
         {
-          val lambda_set_meth = maybe_slot(seq, lambda_set_s);
+          val lambda_set_meth = get_special_slot(seq, lambda_set_m);
           if (lambda_set_meth) {
             (void) funcall(method_args(seq, lambda_set_s, vargs));
             return seq;
           }
         }
-        if (maybe_slot(seq, car_s))
+        if (get_special_slot(seq, car_m))
           goto list;
         type_mismatch(lit("~a: object ~s lacks "
                           "~s or ~s method"),
@@ -10970,9 +10970,6 @@ static void obj_init(void)
   restart_s = intern(lit("restart"), user_package);
   continue_s = intern(lit("continue"), user_package);
   name_s = intern(lit("name"), user_package);
-  nullify_s = intern(lit("nullify"), user_package);
-  from_list_s = intern(lit("from-list"), user_package);
-  lambda_set_s = intern(lit("lambda-set"), user_package);
   length_s = intern(lit("length"), user_package);
   rplaca_s = intern(lit("rplaca"), user_package);
   rplacd_s = intern(lit("rplacd"), user_package);

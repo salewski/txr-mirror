@@ -28,7 +28,16 @@
 extern val struct_type_s, meth_s, print_s, make_struct_lit_s;
 extern val init_k, postinit_k;
 extern val slot_s, derived_s;
+extern val lambda_set_s;
+
 extern struct cobj_ops struct_inst_ops;
+
+enum special_slot {
+  equal_m, nullify_m, from_list_m, lambda_m, lambda_set_m,
+  length_m, car_m, cdr_m, rplaca_m, rplacd_m,
+  num_special_slots
+};
+
 val make_struct_type(val name, val super,
                      val static_slots, val slots,
                      val static_initfun, val initfun, val boactor,
@@ -77,5 +86,6 @@ val slot_types(val slot);
 val static_slot_types(val slot);
 val slot_type_reg(val slot, val strct);
 val static_slot_type_reg(val slot, val strct);
+val get_special_slot(val obj, enum special_slot spidx);
 INLINE int obj_struct_p(val obj) { return obj->co.ops == &struct_inst_ops; }
 void struct_init(void);
