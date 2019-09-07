@@ -3732,7 +3732,7 @@ static val digcommon(int pow, val self, val n, val base_in)
     val p = nil, p0;
     list_collect_decl (out, ptail);
 
-    while (lt(k, n)) {
+    while (le(k, n)) {
       push(k, &p);
       k = mul(k, r);
     }
