@@ -3729,7 +3729,7 @@ static val digcommon(int pow, val self, val n, val base_in)
 
   {
     val k = r;
-    val p = nil, p0;
+    val p = nil;
     list_collect_decl (out, ptail);
 
     while (le(k, n)) {
@@ -3737,7 +3737,8 @@ static val digcommon(int pow, val self, val n, val base_in)
       k = mul(k, r);
     }
 
-    while ((p0 = pop(&p))) {
+    while (p) {
+      val p0 = rcyc_pop(&p);
       cnum i = 0;
       while (ge(n, p0)) {
         i++;
