@@ -3723,7 +3723,7 @@ static val digcommon(int pow, val self, val n, val base_in)
   if (!integerp(n) || minusp(n))
     uw_throwf(error_s, lit("~a: value ~s must be positive integer"),
               self, n, nao);
-  if (!integerp(r) || lt(r, one))
+  if (!integerp(r) || le(r, one))
     uw_throwf(error_s, lit("~a: base ~s must be positive integer"),
               self, r, nao);
 
