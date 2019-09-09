@@ -1046,6 +1046,7 @@ loc list_collect(loc ptail, val obj)
   val items = cons(obj, nil);
   val tailobj = deref(ptail);
 
+again:
   switch (type(tailobj)) {
   case NIL:
     set(ptail, items);
@@ -1053,8 +1054,8 @@ loc list_collect(loc ptail, val obj)
   case CONS:
   case LCONS:
     ptail = tail(tailobj);
-    set(ptail, items);
-    return ptail;
+    tailobj = deref(ptail);
+    goto again;
   case VEC:
     replace_vec(tailobj, items, t, t);
     return ptail;
@@ -1084,6 +1085,7 @@ loc list_collect_nconc(loc ptail, val obj)
 {
   val tailobj = deref(ptail);
 
+again:
   switch (type(tailobj)) {
   case NIL:
     set(ptail, nullify(obj));
@@ -1091,8 +1093,8 @@ loc list_collect_nconc(loc ptail, val obj)
   case CONS:
   case LCONS:
     ptail = tail(tailobj);
-    set(ptail, nullify(obj));
-    return ptail;
+    tailobj = deref(ptail);
+    goto again;
   case VEC:
     replace_vec(tailobj, obj, t, t);
     return ptail;
@@ -1110,7 +1112,7 @@ loc list_collect_nconc(loc ptail, val obj)
     set(ptail, tolist(obj));
     return ptail;
   default:
-    uw_throwf(error_s, lit("cannot nconc ~s to ~s"), obj, tailobj, nao);
+    uw_throwf(error_s, lit("cannot nconc to ~s"), tailobj, nao);
   }
 }
 
@@ -1119,6 +1121,7 @@ loc list_collect_append(loc ptail, val obj)
   val tailobj = deref(ptail);
   obj = nullify(obj);
 
+again:
   switch (type(tailobj)) {
   case NIL:
     set(ptail, obj);
@@ -1127,8 +1130,8 @@ loc list_collect_append(loc ptail, val obj)
   case LCONS:
     set(ptail, copy_list(tailobj));
     ptail = tail(deref(ptail));
-    set(ptail, obj);
-    return ptail;
+    tailobj = deref(ptail);
+    goto again;
   case VEC:
     set(ptail, copy_vec(tailobj));
     replace_vec(deref(ptail), obj, t, t);
@@ -1158,11 +1161,13 @@ loc list_collect_nreconc(loc ptail, val obj)
   val rev = nreverse(nullify(obj));
   val tailobj = deref(ptail);
 
+again:
   switch (type(tailobj)) {
   case CONS:
   case LCONS:
     ptail = tail(tailobj);
-    /* fallthrough */
+    tailobj = deref(ptail);
+    goto again;
   case NIL:
     set(ptail, rev);
     switch (type(obj)) {
@@ -1213,12 +1218,14 @@ loc list_collect_revappend(loc ptail, val obj)
   obj = nullify(obj);
   val tailobj = deref(ptail);
 
+again:
   switch (type(tailobj)) {
   case CONS:
   case LCONS:
     set(ptail, copy_list(tailobj));
     ptail = tail(deref(ptail));
-    /* fallthrough */
+    tailobj = deref(ptail);
+    goto again;
   case NIL:
     switch (type(obj)) {
     case CONS:
