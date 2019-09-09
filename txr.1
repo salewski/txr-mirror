@@ -32199,12 +32199,16 @@ without an argument to produce an object
 .meta obj
 the invoking the method call
 .mono
-.meti << obj .(ncon << list )
+.meti << obj .(ncon << initial-list )
 .onom
 on this object. The object produced by the expression
 .meta list
 is installed (without being copied) into the
 object as the prefix of the list to be constructed.
+
+The
+.meta initial-list
+argument can be a sequence other than a list.
 
 .TP* Example:
 
@@ -32239,7 +32243,18 @@ adds elements at the front.
 These methods return
 .codn nil .
 
-.TP* Example:
+The precise semantics is as follows.
+All of the
+.meta element
+arguments are combined into a list as if by the
+.code list
+function, and the resulting list combined with the current contents of the
+.code list-builder
+object as if using the
+.code append
+function. The resulting list becomes the new contents.
+
+.TP* Examples:
 
 .verb
   ;; Build the list (1 2 3 4)
@@ -32249,6 +32264,14 @@ These methods return
     lb.(add* 1 2)
     lb.(get))
   -> (1 2 3 4)
+
+  ;; Add "c" to "abc"
+  ;; same semantics as (append "abc" #\ec)
+
+  (let ((lb (build-list "ab")))
+    lb.(add #\ec)
+    lb.(get))
+  -> "abc"
 .brev
 
 .coNP Methods @ pend and @ pend*
@@ -32277,9 +32300,18 @@ method is similar, except it prepends the
 catenated lists to the front of the list
 being constructed.
 
-Both methods have the property that the
-constructed list does not share structure
-with the input lists.
+The
+.code pend
+and
+.code pend*
+operations do not mutate the input lists, but may cause the
+resulting list to share structure with the input lists.
+
+These functions may mutate the list already contained in
+.metn list-builder ;
+however, they avoid mutating those parts of the current list
+that are shared with inputs that were given in earlier
+calls to these functions.
 
 These methods return
 .codn nil .
@@ -32322,17 +32354,31 @@ method is similar, except it prepends
 the catenated lists to the front of the
 list being constructed.
 
-These methods destructively manipulate
-the input lists. Moreover, they cause the
-list being constructed to share substructure
-with the input lists.
+These methods may destructively manipulate the list already contained in the
+.meta list-builder
+object, and likewise may destructively manipulate the input lists.
+They may cause the list being constructed to share substructure with the input
+lists.
 
-Additionally, the
+Additionally, these methods may destructively manipulate the list already
+contained in the
+.meta list-builder
+object without regard for shared structure between that list and inputs
+given earlier any of the
+.codn pend ,
+.codn pend* ,
+.code ncon
+or
+.code ncon*
+functions.
+
+The
 .code ncon*
 function can be called with a single argument
 which is an atom. This atom will simply be
 installed as the terminating atom of the
-list being constructed.
+list being constructed, if the current list is
+an ordinary list.
 
 These methods return
 .codn nil .
