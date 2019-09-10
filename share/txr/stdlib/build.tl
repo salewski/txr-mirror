@@ -60,7 +60,7 @@
 
   (:method pend* (self . lists)
     (let* ((h self.head)
-           (pf [apply apply (append lists (list (cdr h)))]))
+           (pf [apply append (append lists (list (cdr h)))]))
       (usr:rplacd h pf)
       (set self.tail self.head))
     nil)
