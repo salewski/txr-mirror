@@ -338,7 +338,7 @@ distclean:
 	$(V)echo "executing generic cleanup for non-configured directory"
 	rm -f txr txr.exe txr-dbg txr-dbg.exe txr-win.exe txr-win-dbg.exe
 	rm -rf y.tab.c lex.yy.c y.tab.h y.output
-	rm -rf config opt dbg share/txr/stdlib/*.tlo*
+	rm -rf config opt dbg share/txr/stdlib/*.tlo* run.sh
 	rm -f config.*
 	rm -rf mpi-1.?.?
 else
@@ -348,7 +348,7 @@ clean: conftest.clean clean-tlo
 	rm -f $(PROG)$(EXE) $(PROG)-dbg$(EXE) y.tab.c lex.yy.c y.tab.h y.output
 	rm -f y.tab.h.old
 	rm -f $(PROG)-win$(EXE) $(PROG)-win-dbg$(EXE)
-	rm -rf opt dbg $(EXTRA_OBJS-y)
+	rm -rf opt dbg $(EXTRA_OBJS-y) run.sh
 
 clean-tlo:
 	rm -f $(STDLIB_TLOS)
