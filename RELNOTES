@@ -1,3 +1,40 @@
+                                    TXR 225
+                                   2019-09-11
+
+
+  Features
+
+  - Lib:
+    - tailp function added
+    - Unicode BOM character object now prints as #\xFEFF rather than
+      #\ followed by a literal zero-width non-breaking space.
+
+  - OOP:
+    - cons cell used in non-cached slot lookup now recycled.
+    - access to common special methods like length now optimized.
+    - objects with length or car method now recognized as subtypes
+      of sequence.
+
+  Bugs
+
+  - Interpreter:
+    - issue between in let* and continuations: copy-env throws error.
+
+  - list-builder:
+    - significant rewrite of some internals.
+    - fixed broken self-appending and deviation from append semantics.
+
+  - Type system:
+    - subtypep now reports string and lcons as subtypes of sequence.
+    - objects with only length method now reported as sequences.
+
+  - Lib:
+    - Incorrectness in digits and digpow functions.
+    - bracket function incorrect when some or all arguments
+      passed via apply mechanism.
+
+
+
                                     TXR 224
                                    2019-08-29
 
