@@ -3341,15 +3341,15 @@ val clamp(val low, val high, val num)
 
 val bracket(val larg, struct args *args)
 {
-  cnum index = 0;
+  cnum index = 0, i = 0;
 
-  while (args_more(args, index)) {
+  for (; args_more(args, index); i++) {
     val rarg = args_get(args, &index);
     if (less(larg, rarg))
-      return num(index - 1);
+      return num(i);
   }
 
-  return num(index);
+  return num(i);
 }
 
 val string_own(wchar_t *str)

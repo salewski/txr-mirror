@@ -57,3 +57,17 @@
 (test (digits 3 2) (1 1))
 (test (digits 7 2) (1 1 1))
 (test (digits 8 2) (1 0 0 0))
+
+(test (bracket 0 10 20 30) 0)
+(test (bracket 9 10 20 30) 0)
+(test (bracket 10 10 20 30) 1)
+(test (bracket 15 10 20 30) 1)
+(test (bracket 25 10 20 30) 2)
+(test (bracket 30 10 20 30) 3)
+
+(test [apply bracket '(0 10 20 30)] 0)
+(test [apply bracket '(9 10 20 30)] 0)
+(test [apply bracket '(10 10 20 30)] 1)
+(test [apply bracket '(15 10 20 30)] 1)
+(test [apply bracket '(25 10 20 30)] 2)
+(test [apply bracket '(30 10 20 30)] 3)
