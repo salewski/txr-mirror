@@ -11513,10 +11513,13 @@ dot:
       case 27: put_string(lit("esc"), out); break;
       case ' ': put_string(lit("space"), out); break;
       case 0xDC00: put_string(lit("pnul"), out); break;
+      case 0xFEFF: case 0xFFFE: case 0xFFFF:
+        goto fourhex;
       default:
         if ((ch < 0x20) || (ch >= 0x7F && ch < 0xA0))
           fmt = lit("x~,02X");
-        else if ((ch >= 0xD800 && ch < 0xE000) || ch == 0xFFFE || ch == 0xFFFF)
+        else if (ch >= 0xD800 && ch < 0xE000)
+        fourhex:
           fmt = lit("x~,04X");
         else if (ch >= 0xFFFF)
           fmt = lit("x~,06X");
