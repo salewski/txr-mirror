@@ -140,10 +140,10 @@ static void more(void)
   if (free_list == 0)
     free_tail = &heap->block[0].t.next;
 
-  if (end > heap_max_bound)
+  if (!heap_max_bound || end > heap_max_bound)
     heap_max_bound = end;
 
-  if (block < heap_min_bound)
+  if (!heap_min_bound || block < heap_min_bound)
     heap_min_bound = block;
 
   while (block < end) {
