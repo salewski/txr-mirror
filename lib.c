@@ -3896,7 +3896,7 @@ val replace_str(val str_in, val items, val from, val to)
 
 val cat_str(val list, val sep)
 {
-  cnum total = 0;
+  size_t total = 1;
   val iter;
   wchar_t *str, *ptr;
   wchar_t onech[] = wini(" ");
@@ -3917,7 +3917,7 @@ val cat_str(val list, val sep)
     if (!item)
       continue;
     if (stringp(item)) {
-      cnum ntotal = total + c_num(length_str(item));
+      size_t ntotal = total + c_num(length_str(item));
 
       if (len_sep && cdr(iter))
         ntotal += len_sep;
@@ -3930,7 +3930,7 @@ val cat_str(val list, val sep)
       continue;
     }
     if (chrp(item)) {
-      cnum ntotal = total + 1;
+      size_t ntotal = total + 1;
 
       if (len_sep && cdr(iter))
         ntotal += len_sep;
@@ -3946,7 +3946,7 @@ val cat_str(val list, val sep)
               item, nao);
   }
 
-  str = chk_wmalloc(total + 1);
+  str = chk_wmalloc(total);
 
   for (ptr = str, iter = list; iter != nil; iter = cdr(iter)) {
     val item = car(iter);
@@ -3976,7 +3976,7 @@ oflow:
 
 static val vscat(val sep, va_list vl1, va_list vl2)
 {
-  cnum total = 0;
+  size_t total = 1;
   val item, next;
   wchar_t *str, *ptr;
   cnum len_sep = (!null_or_missing_p(sep)) ? c_num(length_str(sep)) : 0;
@@ -3986,7 +3986,7 @@ static val vscat(val sep, va_list vl1, va_list vl2)
     next = va_arg(vl1, val);
 
     if (stringp(item)) {
-      cnum ntotal = total + c_num(length_str(item));
+      size_t ntotal = total + c_num(length_str(item));
 
       if (len_sep && next != nao)
         ntotal += len_sep;
@@ -3999,7 +3999,7 @@ static val vscat(val sep, va_list vl1, va_list vl2)
       continue;
     }
     if (chrp(item)) {
-      cnum ntotal = total + 1;
+      size_t ntotal = total + 1;
 
       if (len_sep && next != nao)
         ntotal += len_sep;
@@ -4015,7 +4015,7 @@ static val vscat(val sep, va_list vl1, va_list vl2)
               item, nao);
   }
 
-  str = chk_wmalloc(total + 1);
+  str = chk_wmalloc(total);
 
   for (ptr = str, item = va_arg(vl2, val); item != nao; item = next)
   {
