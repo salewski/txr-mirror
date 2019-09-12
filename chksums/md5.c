@@ -52,7 +52,6 @@ static void MD5_transform(u32_t [4], const unsigned char [64]);
 static void encode(unsigned char *output, u32_t *input, unsigned int len)
 {
   unsigned int i;
-  u32_t *op = (u32_t *)output;
 
   for (i = 0; i < len; i += 4) {
     u32_t iw = input[i/4];
