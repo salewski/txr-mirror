@@ -30,7 +30,7 @@
 typedef int_ptr_t cnum;
 typedef uint_ptr_t ucnum;
 
-#ifdef HAVE_DOUBLE_INTPTR_T
+#if HAVE_DOUBLE_INTPTR_T
 typedef double_intptr_t dbl_cnum;
 typedef double_uintptr_t dbl_ucnum;
 #endif

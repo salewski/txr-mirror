@@ -41,7 +41,7 @@
 #include <assert.h>
 #include "config.h"
 #include "alloca.h"
-#ifdef HAVE_GETENVIRONMENTSTRINGS
+#if HAVE_GETENVIRONMENTSTRINGS
 #define NOMINMAX
 #include <windows.h>
 #endif

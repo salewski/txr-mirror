@@ -159,7 +159,7 @@ static val sockaddr_unpack(int family, struct sockaddr_storage *src)
   }
 }
 
-#ifdef HAVE_GETADDRINFO
+#if HAVE_GETADDRINFO
 
 static void addrinfo_in(struct addrinfo *dest, val src)
 {
@@ -1080,7 +1080,7 @@ void sock_load_init(void)
   flow_info_s = intern(lit("flow-info"), user_package);
   scope_id_s = intern(lit("scope-id"), user_package);
 
-#ifdef HAVE_GETADDRINFO
+#if HAVE_GETADDRINFO
   reg_fun(intern(lit("getaddrinfo"), user_package), func_n3o(getaddrinfo_wrap, 1));
 #endif
 
@@ -1100,7 +1100,7 @@ void sock_load_init(void)
 #ifdef SOCK_CLOEXEC
   reg_varl(intern(lit("sock-cloexec"), user_package), num_fast(SOCK_CLOEXEC));
 #endif
-#ifdef HAVE_GETADDRINFO
+#if HAVE_GETADDRINFO
   reg_varl(intern(lit("ai-passive"), user_package), num_fast(AI_PASSIVE));
   reg_varl(intern(lit("ai-canonname"), user_package), num_fast(AI_CANONNAME));
   reg_varl(intern(lit("ai-numerichost"), user_package), num_fast(AI_NUMERICHOST));

@@ -493,7 +493,7 @@ int mp_in_uintptr_range(mp_int *mp)
   return mp_in_range(mp, UINT_PTR_MAX, 1);
 }
 
-#ifdef HAVE_DOUBLE_INTPTR_T
+#if HAVE_DOUBLE_INTPTR_T
 
 mp_err mp_set_double_intptr(mp_int *mp, double_intptr_t z)
 {

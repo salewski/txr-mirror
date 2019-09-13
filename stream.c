@@ -1271,7 +1271,7 @@ static val pipe_close(val stream, val throw_on_error)
                   lit("unable to obtain status of command ~s: ~d/~s"),
                   stream, num(errno), string_utf8(strerror(errno)), nao);
     } else {
-#ifdef HAVE_SYS_WAIT
+#if HAVE_SYS_WAIT
       if (throw_on_error) {
         if (WIFSIGNALED(status)) {
           int termsig = WTERMSIG(status);
@@ -4749,7 +4749,7 @@ void stream_init(void)
   reg_fun(intern(lit("stream-set-prop"), user_package), func_n3(stream_set_prop));
   reg_fun(intern(lit("stream-get-prop"), user_package), func_n2(stream_get_prop));
   reg_fun(intern(lit("fileno"), user_package), func_n1(stream_fd));
-#ifdef HAVE_SOCKETS
+#if HAVE_SOCKETS
   reg_fun(intern(lit("sock-family"), user_package), func_n1(sock_family));
   reg_fun(intern(lit("sock-type"), user_package), func_n1(sock_type));
   reg_fun(intern(lit("sock-peer"), user_package), func_n1(sock_peer));

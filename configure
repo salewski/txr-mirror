@@ -1199,10 +1199,10 @@ if [ -z "$intptr" ] ; then
 #include <limits.h>
 #include "config.h"
 char SIZEOF_BYTE[CHAR_BIT];
-#ifdef HAVE_SUPERLONG_T
+#if HAVE_SUPERLONG_T
 char SIZEOF_SUPERLONG_T[sizeof (superlong_t)];
 #endif
-#ifdef HAVE_LONGLONG_T
+#if HAVE_LONGLONG_T
 char SIZEOF_LONGLONG_T[sizeof (longlong_t)];
 #endif
 char SIZEOF_PTR[sizeof (char *)];
@@ -1668,7 +1668,7 @@ printf "Checking for POSIX fork/pipe/exec/waitpid ... "
 
 cat > conftest.c <<!
 #include "config.h"
-#ifdef HAVE_SYS_WAIT
+#if HAVE_SYS_WAIT
 #include <sys/wait.h>
 #endif
 #include <sys/types.h>
