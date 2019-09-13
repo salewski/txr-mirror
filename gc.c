@@ -57,9 +57,15 @@
 #define STACK_TOP_EXTRA_WORDS 0
 #endif
 
+#if HAVE_MEMALIGN || HAVE_POSIX_MEMALIGN
+#define OBJ_ALIGN (sizeof (obj_t))
+#else
+#define OBJ_ALIGN 8
+#endif
+
 typedef struct heap {
-  struct heap *next;
   obj_t block[HEAP_SIZE];
+  struct heap *next;
 } heap_t;
 
 typedef struct mach_context {
@@ -427,13 +433,22 @@ static int in_heap(val ptr)
   if (!is_ptr(ptr))
     return 0;
 
+  if (coerce(uint_ptr_t, ptr) % OBJ_ALIGN != 0)
+    return 0;
+
   if (ptr < heap_min_bound || ptr >= heap_max_bound)
     return 0;
 
   for (heap = heap_list; heap != 0; heap = heap->next) {
-    if (ptr >= heap->block && ptr < heap->block + HEAP_SIZE)
-      if ((coerce(char *, ptr) - coerce(char *, heap->block)) % sizeof (obj_t) == 0)
+    if (ptr >= heap->block && ptr < heap->block + HEAP_SIZE) {
+#if HAVE_MEMALIGN || HAVE_POSIX_MEMALIGN
+      return 1;
+#else
+      if ((coerce(char *, ptr) -
+           coerce(char *, heap->block)) % sizeof (obj_t) == 0)
         return 1;
+#endif
+    }
   }
 
   return 0;

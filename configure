@@ -2675,6 +2675,44 @@ if [ -z "$have_alloca" ] ; then
   exit 1
 fi
 
+printf "Checking for malloc-with-alignment function ... "
+
+while true ; do
+  cat > conftest.c <<!
+#include <malloc.h>
+
+int main(void)
+{
+  void *bytes = memalign(16, 42);
+  return 0;
+}
+!
+
+  if ! conftest ; then
+    printf "memalign\n"
+    printf "#define HAVE_MEMALIGN 1\n" $try_header >> config.h
+    break;
+  fi
+
+  cat > conftest.c <<!
+#include <stdlib.h>
+
+int main(void)
+{
+  void *bytes;
+  int res = posix_memalign(&bytes, 16, 42);
+  return 0;
+}
+!
+  if conftest ; then
+    printf "posix_memalign\n"
+    printf "#define HAVE_POSIX_MEMALIGN 1\n" $try_header >> config.h
+    break;
+  fi
+
+  printf "none\n"
+done
+
 printf "Checking for termios ... "
 
 cat > conftest.c <<!

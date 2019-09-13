@@ -45,6 +45,9 @@
 #define NOMINMAX
 #include <windows.h>
 #endif
+#if HAVE_MEMALIGN
+#include <malloc.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "arith.h"
@@ -2849,9 +2852,29 @@ mem_t *chk_malloc(size_t size)
   return ptr;
 }
 
+#if HAVE_POSIX_MEMALIGN
+
+static void *memalign(size_t align, size_t size)
+{
+  void *ptr;
+  if (posix_memalign(&ptr, align, size) == 0)
+    return ptr;
+  return 0;
+}
+
+#elif !HAVE_MEMALIGN
+
+static void *memalign(size_t align, size_t size)
+{
+  (void) align;
+  return malloc(size);
+}
+
+#endif
+
 mem_t *chk_malloc_gc_more(size_t size)
 {
-  mem_t *ptr = convert(mem_t *, malloc(size));
+  mem_t *ptr = convert(mem_t *, memalign(sizeof (obj_t), size));
   assert (!async_sig_enabled);
   if (size && ptr == 0)
     oom();
