@@ -77,7 +77,7 @@
   (let* ((ctx (make-struct 'sys:op-ctx ^(form ,f)))
          (sys:*op-ctx* ctx)
          (sym (car f))
-         (syntax-0 (if (eq sym 'do) ^(,*args) ^[,*args]))
+         (syntax-0 (if (eq sym 'do) args ^[,*args]))
          (syntax-1 (sys:op-alpha-rename f e syntax-0 nil))
          (syntax-2 (sys:op-alpha-rename f e syntax-1 t))
          (metas (slot ctx 'gens))
