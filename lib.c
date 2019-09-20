@@ -2681,12 +2681,31 @@ val equal(val left, val right)
   case NUM:
     break;
   case CONS:
-  case LCONS:
-    if (type(right) == CONS || type(right) == LCONS)
-    {
-      if (equal(car(left), car(right)) && equal(cdr(left), cdr(right)))
+    switch (type(right)) {
+    case CONS:
+      if (equal(left->c.car, right->c.car) && equal(left->c.cdr, right->c.cdr))
         return t;
       return nil;
+    case LCONS:
+      if (equal(left->c.car, car(right)) && equal(left->c.cdr, right->c.cdr))
+        return t;
+      return nil;
+    default:
+      break;
+    }
+    return nil;
+  case LCONS:
+    switch (type(right)) {
+    case CONS:
+      if (equal(car(left), right->c.car) && equal(left->c.cdr, right->c.cdr))
+        return t;
+      return nil;
+    case LCONS:
+      if (equal(car(left), car(right)) && equal(left->c.cdr, right->c.cdr))
+        return t;
+      return nil;
+    default:
+      break;
     }
     break;
   case LIT:
