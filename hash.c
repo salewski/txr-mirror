@@ -201,21 +201,21 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
     return hash_c_str(litptr(obj), seed);
   case CONS:
     return equal_hash(obj->c.car, count, seed)
-            + 2 * equal_hash(obj->c.cdr, count, seed);
+            + equal_hash(obj->c.cdr, count, seed + (CONS << 8));
   case STR:
     return hash_c_str(obj->st.str, seed);
   case CHR:
-    return c_chr(obj);
+    return c_chr(obj) * seed;
   case NUM:
-    return c_num(obj);
+    return c_num(obj) * seed;
   case SYM:
   case PKG:
   case ENV:
     switch (CHAR_BIT * sizeof (mem_t *)) {
     case 32:
-      return coerce(ucnum, obj) >> 4;
+      return (coerce(ucnum, obj) >> 4) * seed;
     case 64: default:
-      return coerce(ucnum, obj) >> 5;
+      return (coerce(ucnum, obj) >> 5) * seed;
     }
     break;
   case FUN:
@@ -226,24 +226,25 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
       val length = obj->v.vec[vec_length];
       ucnum h = equal_hash(obj->v.vec[vec_length], count, seed);
       cnum i, len = c_num(length);
+      ucnum lseed;
 
-      for (i = 0; i < len; i++) {
+      for (i = 0, lseed = seed; i < len; i++, lseed += seed) {
         h *= 2;
-        h += equal_hash(obj->v.vec[i], count, seed);
+        h += equal_hash(obj->v.vec[i], count, lseed);
       }
 
       return h;
     }
   case LCONS:
     return equal_hash(car(obj), count, seed)
-            + 2 * equal_hash(cdr(obj), count, seed);
+            + equal_hash(cdr(obj), count, seed + (CONS << 8));
   case LSTR:
     lazy_str_force_upto(obj, num(hash_str_limit - 1));
     return equal_hash(obj->ls.prefix, count, seed);
   case BGNUM:
-    return mp_hash(mp(obj));
+    return mp_hash(mp(obj)) * seed;
   case FLNUM:
-    return hash_double(obj->fl.n);
+    return hash_double(obj->fl.n) * seed;
   case COBJ:
   case CPTR:
     if (obj->co.ops->equalsub) {
@@ -254,7 +255,7 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
     return obj->co.ops->hash(obj, count, seed);
   case RNG:
     return equal_hash(obj->rn.from, count, seed)
-            + 2 * equal_hash(obj->rn.to, count, seed);
+            + equal_hash(obj->rn.to, count, seed + (RNG << 8));
   case BUF:
     return hash_buf(obj->b.data, c_unum(obj->b.len), seed);
   }
