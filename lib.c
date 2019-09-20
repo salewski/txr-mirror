@@ -4563,6 +4563,7 @@ static void less_tab_init(void)
   type_prec[BGNUM] = 1;
   type_prec[FLNUM] = 1;
   type_prec[RNG] = 2;
+  type_prec[BUF] = 6;
 
   for (l = 0; l <= MAXTYPE; l++)
     for (r = 0; r <= MAXTYPE; r++) {
@@ -4689,6 +4690,19 @@ tail:
 
       return nil;
     }
+  case BUF:
+    {
+      cnum ll = c_num(left->b.len);
+      cnum rl = c_num(right->b.len);
+      cnum len = min(ll, rl);
+      int cmp = memcmp(left->b.data, right->b.data, len);
+
+      if (cmp < 0 || (cmp == 0 && ll < rl))
+        return t;
+
+      return nil;
+    }
+    break;
   default:
     internal_error("unhandled case in less function");
   }

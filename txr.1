@@ -17971,7 +17971,7 @@ and
 The
 .code less
 function is capable of comparing numbers, characters, symbols, strings,
-as well as lists and vectors of these.
+as well as lists and vectors of these. It can also compare buffers.
 
 If both arguments are the same object so that
 .mono
@@ -18047,7 +18047,6 @@ Note that the empty
 list nil compared to a cons is handled by type-based precedence, described
 below.
 
-
 Two vectors are compared by
 .code less
 lexicographically, similarly
@@ -18062,6 +18061,10 @@ of
 is the outcome of comparing those differing elements themselves
 with
 .codn less .
+
+Two buffers are also compared by
+.code less
+lexicographically, as if they were vectors of integer byte values.
 
 Two ranges are compared by
 .code less
@@ -18088,7 +18091,8 @@ then
 .code less
 resolves the situation based on the following precedence: numbers and
 characters are less than ranges, which are less than strings, which are less
-than symbols, which are less than conses, which are less than vectors.
+than symbols, which are less than conses, which are less than vectors,
+which are less than buffers.
 
 Note that since
 .code nil
