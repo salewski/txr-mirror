@@ -266,6 +266,7 @@ static void finalize(val obj)
   case ENV:
   case FLNUM:
   case RNG:
+  case TNOD:
     return;
   case SYM:
     free(obj->s.slot_cache);
@@ -417,6 +418,10 @@ tail_call:
   case BUF:
     mark_obj(obj->b.len);
     mark_obj_tail(obj->b.size);
+  case TNOD:
+    mark_obj(obj->tn.left);
+    mark_obj(obj->tn.right);
+    mark_obj_tail(obj->tn.key);
   }
 
   assert (0 && "corrupt type field");

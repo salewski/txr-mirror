@@ -258,6 +258,10 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
             + equal_hash(obj->rn.to, count, seed + (RNG << 8));
   case BUF:
     return hash_buf(obj->b.data, c_unum(obj->b.len), seed);
+  case TNOD:
+    return equal_hash(obj->tn.left, count, (seed + TNOD))
+            + equal_hash(obj->tn.right, count, seed + (TNOD << 8));
+            + equal_hash(obj->tn.key, count, seed + (TNOD << 16));
   }
 
   internal_error("unhandled case in equal function");

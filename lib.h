@@ -67,7 +67,7 @@ typedef double_uintptr_t dbl_ucnum;
 typedef enum type {
   NIL = TAG_PTR, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
   STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, CPTR, ENV,
-  BGNUM, FLNUM, RNG, BUF, MAXTYPE = BUF
+  BGNUM, FLNUM, RNG, BUF, TNOD, MAXTYPE = TNOD
   /* If extending, check TYPE_SHIFT and all ocurrences of MAX_TYPE */
 } type_t;
 
@@ -300,6 +300,12 @@ struct buf {
   val size;
 };
 
+struct tnod {
+  obj_common;
+  val left, right;
+  val key;
+};
+
 union obj {
   struct any t;
   struct cons c;
@@ -317,6 +323,7 @@ union obj {
   struct flonum fl;
   struct range rn;
   struct buf b;
+  struct tnod tn;
 };
 
 #if CONFIG_GEN_GC
@@ -476,7 +483,7 @@ extern val null_s, t, cons_s, str_s, chr_s, fixnum_sl;
 extern val sym_s, pkg_s, fun_s, vec_s;
 extern val stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 extern val atom_s, integer_s, number_s, sequence_s, string_s;
-extern val env_s, bignum_s, float_s, range_s, rcons_s, buf_s;
+extern val env_s, bignum_s, float_s, range_s, rcons_s, buf_s, tnode_s;
 extern val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 extern val nongreedy_s;
 extern val quote_s, qquote_s, unquote_s, splice_s;

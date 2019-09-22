@@ -54,6 +54,7 @@
 #include "struct.h"
 #include "cadr.h"
 #include "filter.h"
+#include "tree.h"
 #include "vm.h"
 #include "eval.h"
 
@@ -3464,6 +3465,11 @@ static val expand_qquote_rec(val qquoted_form, val qq, val unq, val spl)
     val frexp = expand_qquote(from(qquoted_form), qq, unq, spl);
     val toexp = expand_qquote(to(qquoted_form), qq, unq, spl);
     return rlcp(list(rcons_s, frexp, toexp, nao), qquoted_form);
+  } else if (tnodep(qquoted_form)) {
+    val kyexp = expand_qquote(key(qquoted_form), qq, unq, spl);
+    val leexp = expand_qquote(left(qquoted_form), qq, unq, spl);
+    val riexp = expand_qquote(right(qquoted_form), qq, unq, spl);
+    return rlcp(list(tnode_s, kyexp, leexp, riexp, nao), qquoted_form);
   } else if (atom(qquoted_form)) {
     return cons(quote_s, cons(qquoted_form, nil));
   } else {

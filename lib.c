@@ -53,6 +53,7 @@
 #include "arith.h"
 #include "rand.h"
 #include "hash.h"
+#include "tree.h"
 #include "signal.h"
 #include "unwind.h"
 #include "args.h"
@@ -94,7 +95,7 @@ val package_s, system_package_s, keyword_package_s, user_package_s;
 val null_s, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 val lit_s, stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 val atom_s, integer_s, number_s, sequence_s, string_s;
-val env_s, bignum_s, float_s, range_s, rcons_s, buf_s;
+val env_s, bignum_s, float_s, range_s, rcons_s, buf_s, tnode_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s;
 val quote_s, qquote_s, unquote_s, splice_s;
@@ -155,6 +156,7 @@ const seq_kind_t seq_kind_tab[MAXTYPE+1] = {
   SEQ_NOTSEQ,   /* FLNUM */
   SEQ_NOTSEQ,   /* RNG */
   SEQ_VECLIKE,  /* BUF */
+  SEQ_NOTSEQ,   /* TNOD */
 };
 
 val identity(val obj)
@@ -184,6 +186,7 @@ static val code2type(int code)
   case FLNUM: return float_s;
   case RNG: return range_s;
   case BUF: return buf_s;
+  case TNOD: return tnode_s;
   }
   return nil;
 }
@@ -2822,6 +2825,15 @@ val equal(val left, val right)
       cnum rl = c_num(right->b.len);
       if (ll == rl && memcmp(left->b.data, right->b.data, ll) == 0)
         return t;
+    }
+    break;
+  case TNOD:
+    if (type(right) == TNOD) {
+      if (equal(left->tn.key, right->tn.key) &&
+          equal(left->tn.left, right->tn.left) &&
+          equal(left->tn.right, right->tn.right))
+        return t;
+      return nil;
     }
     break;
   case COBJ:
@@ -10956,6 +10968,7 @@ static void obj_init(void)
   range_s = intern(lit("range"), user_package);
   rcons_s = intern(lit("rcons"), user_package);
   buf_s = intern(lit("buf"), user_package);
+  tnode_s = intern(lit("tnode"), user_package);
   var_s = intern(lit("var"), system_package);
   expr_s = intern(lit("expr"), system_package);
   regex_s = intern(lit("regex"), user_package);
@@ -11696,6 +11709,10 @@ dot:
     else
       buf_print(obj, out);
     break;
+  case TNOD:
+    format(out, if3(pretty, lit("#N(~a ~a ~a)"), lit("#N(~s ~s ~s)")),
+           obj->tn.key, obj->tn.left, obj->tn.right, nao);
+    break;
   default:
     format(out, lit("#<garbage: ~p>"), obj, nao);
     break;
@@ -11758,6 +11775,13 @@ tail:
     {
       populate_obj_hash(from(obj), ctx);
       obj = to(obj);
+      goto tail;
+    }
+  case TNOD:
+    {
+      populate_obj_hash(obj->tn.left, ctx);
+      populate_obj_hash(obj->tn.right, ctx);
+      obj = obj->tn.key;
       goto tail;
     }
   case COBJ:
@@ -12358,6 +12382,7 @@ void init(val *stack_bottom)
   eval_init();
   hash_init();
   struct_init();
+  tree_init();
   itypes_init();
   buf_init();
   ffi_init();

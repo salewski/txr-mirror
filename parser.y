@@ -47,6 +47,7 @@
 #include "hash.h"
 #include "struct.h"
 #include "eval.h"
+#include "tree.h"
 #include "y.tab.h"
 #include "gc.h"
 #include "debug.h"
@@ -118,7 +119,7 @@ INLINE val expand_form_ver(val form, int ver)
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY IF
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S HASH_R HASH_SEMI
-%token <lineno> HASH_B_QUOTE
+%token <lineno> HASH_B_QUOTE HASH_N
 %token <lineno> WORDS WSPLICE QWORDS QWSPLICE
 %token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E SECRET_ESCAPE_I
 %token <lineno> OLD_DOTDOT
@@ -137,7 +138,7 @@ INLINE val expand_form_ver(val form, int ver)
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> if_clause elif_clauses_opt else_clause_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
-%type <val> text texts elem var var_op modifiers vector hash struct range
+%type <val> text texts elem var var_op modifiers vector hash struct range tnode
 %type <val> exprs exprs_opt n_exprs r_exprs i_expr i_dot_expr
 %type <val> n_expr n_exprs_opt n_dot_expr
 %type <val> list dwim meta compound
@@ -856,6 +857,15 @@ range : HASH_R list             { if (length($2) != two)
                                   yybadtok(yychar, lit("range literal")); }
       ;
 
+tnode : HASH_N list             { if (gt(length($2), three))
+                                    yyerr("excess elements in tree node");
+                                  { val tn = tnode(first($2), second($2),
+                                                   third($2));
+                                    $$ = rl(tn, num($1)); } }
+      | HASH_N error            { $$ = nil;
+                                  yybadtok(yychar, lit("tree node literal")); }
+      ;
+
 list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' '.' n_exprs ')'      { val a = car($3);
                                   val ur = uref_helper(parser, a);
@@ -960,6 +970,7 @@ i_expr : SYMTOK                 { $$ = ifnign(symhlpr($1, t)); }
        | hash                   { $$ = $1; }
        | struct                 { $$ = $1; }
        | range                  { $$ = $1; }
+       | tnode                  { $$ = $1; }
        | lisp_regex             { $$ = $1; }
        | chrlit                 { $$ = $1; }
        | strlit                 { $$ = $1; }
@@ -999,6 +1010,7 @@ n_expr : SYMTOK                 { $$ = ifnign(symhlpr($1, t)); }
        | hash                   { $$ = $1; }
        | struct                 { $$ = $1; }
        | range                  { $$ = $1; }
+       | tnode                  { $$ = $1; }
        | lisp_regex             { $$ = $1; }
        | chrlit                 { $$ = $1; }
        | strlit                 { $$ = $1; }
@@ -1811,6 +1823,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case HASH_H:         problem = lit("#H"); break;
   case HASH_S:         problem = lit("#S"); break;
   case HASH_R:         problem = lit("#R"); break;
+  case HASH_N:         problem = lit("#N"); break;
   case HASH_SEMI:      problem = lit("#;"); break;
   case HASH_N_EQUALS:  problem = lit("#<n>="); break;
   case HASH_N_HASH:    problem = lit("#<n>#"); break;

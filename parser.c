@@ -336,6 +336,31 @@ tail:
       obj = e;
       goto tail;
     }
+  case TNOD:
+    {
+      val k = obj->tn.key;
+      val l = obj->tn.left;
+      val r = obj->tn.right;
+      val rk = patch_ref(p, k);
+      val rl = patch_ref(p, l);
+      val rr = patch_ref(p, r);
+
+      if (rl)
+        set(mkloc(obj->tn.left, obj), rl);
+      else
+        circ_backpatch(p, &cs, l);
+
+      if (rr)
+        set(mkloc(obj->tn.right, obj), rr);
+      else
+        circ_backpatch(p, &cs, r);
+
+      if (rk)
+        set(mkloc(obj->tn.key, obj), rk);
+
+      obj = k;
+      goto tail;
+    }
   case COBJ:
     if (hashp(obj)) {
       val u = get_hash_userdata(obj);
