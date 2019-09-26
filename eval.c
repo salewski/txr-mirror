@@ -533,40 +533,40 @@ val lookup_fun(val env, val sym)
 {
   uses_or2;
 
-  if (nilp(env)) {
-    if (consp(sym)) {
-      if (car(sym) == meth_s) {
-        val strct = cadr(sym);
-        val slot = caddr(sym);
-        val type = or2(find_struct_type(strct),
-                       if2(lisplib_try_load(strct),
-                         find_struct_type(strct)));
-        if (slot == init_k) {
-          return cons(sym, struct_get_initfun(type));
-        } else if (slot == postinit_k) {
-          return cons(sym, struct_get_postinitfun(type));
-        } else {
-          return if2(and2(type, static_slot_p(type, slot)),
-                     cons(sym, static_slot(type, slot)));
-        }
-      } else if (car(sym) == macro_s) {
-        return lookup_mac(nil, cadr(sym));
+  if (consp(sym)) {
+    if (car(sym) == meth_s) {
+      val strct = cadr(sym);
+      val slot = caddr(sym);
+      val type = or2(find_struct_type(strct),
+                     if2(lisplib_try_load(strct),
+                       find_struct_type(strct)));
+      if (slot == init_k) {
+        return cons(sym, struct_get_initfun(type));
+      } else if (slot == postinit_k) {
+        return cons(sym, struct_get_postinitfun(type));
       } else {
-        return nil;
+        return if2(and2(type, static_slot_p(type, slot)),
+                   cons(sym, static_slot(type, slot)));
       }
+    } else if (car(sym) == macro_s) {
+      return lookup_mac(nil, cadr(sym));
+    } else {
+      return nil;
     }
-    return or2(gethash(top_fb, sym),
-               if2(lisplib_try_load(sym), gethash(top_fb, sym)));
-  } else  {
+  }
+
+  if (env) {
     type_check(lit("function lookup"), env, ENV);
 
-    {
+    for (; env; env = env->e.up_env) {
       val binding = assoc(sym, env->e.fbindings);
       if (binding)
         return binding;
-      return lookup_fun(env->e.up_env, sym);
     }
   }
+
+  return or2(gethash(top_fb, sym),
+             if2(lisplib_try_load(sym), gethash(top_fb, sym)));
 }
 
 val func_get_name(val fun, val env)
