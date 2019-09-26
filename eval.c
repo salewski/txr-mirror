@@ -571,22 +571,27 @@ val lookup_fun(val env, val sym)
 
 val func_get_name(val fun, val env)
 {
+  val self = lit("func-get-name");
   env = default_null_arg(env);
 
+  type_check(self, fun, FUN);
+
   if (env) {
-    type_check(lit("func-get-name"), env, ENV);
+    type_check(self, env, ENV);
 
     {
       val iter;
-      for (iter = env->e.fbindings; iter; iter = cdr(iter)) {
-        val binding = car(iter);
-        if (cdr(binding) == fun)
-          return car(binding);
+      for (; env; env = env->e.up_env) {
+        for (iter = env->e.fbindings; iter; iter = cdr(iter)) {
+          val binding = car(iter);
+          if (cdr(binding) == fun)
+            return car(binding);
+        }
       }
-
-      return func_get_name(fun, env->e.up_env);
     }
-  } else {
+  }
+
+  {
     val name;
 
     if ((name = hash_revget(top_fb, fun, eq_f, cdr_f)))
@@ -600,9 +605,9 @@ val func_get_name(val fun, val env)
 
     if (interp_fun_p(fun))
       return func_get_form(fun);
-
-    return nil;
   }
+
+  return nil;
 }
 
 static val lookup_mac(val menv, val sym)
