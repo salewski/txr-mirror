@@ -491,7 +491,7 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
     put_char(chr(' '), out);
     obj_print_impl(h->userdata, out, pretty, ctx);
   }
-  put_string(lit(")"), out);
+  put_char(chr(')'), out);
   {
     val iter = hash_begin(hash), cell;
     cnum max_len = ctx->strm->max_length;
@@ -508,18 +508,18 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
         break;
       }
 
-      put_string(lit("("), out);
+      put_char(chr('('), out);
       obj_print_impl(key, out, pretty, ctx);
 
       if (value) {
-        put_string(lit(" "), out);
+        put_char(chr(' '), out);
         obj_print_impl(value, out, pretty, ctx);
       }
 
-      put_string(lit(")"), out);
+      put_char(chr(')'), out);
     }
   }
-  put_string(lit(")"), out);
+  put_char(chr(')'), out);
 
   if (force_br)
     force_break(out);

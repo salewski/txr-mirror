@@ -11374,7 +11374,7 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         put_string(lit(",*"), out);
         obj_print_impl(second(obj), out, pretty, ctx);
       } else if (sym == vector_lit_s && two_elem) {
-        put_string(lit("#"), out);
+        put_char(chr('#'), out);
         obj_print_impl(second(obj), out, pretty, ctx);
       } else if (sym == hash_lit_s) {
         put_string(lit("#H"), out);
@@ -11399,13 +11399,13 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
           next = cdr(iter);
           obj_print_impl(car(iter), out, pretty, ctx);
           if (next)
-            put_string(lit("."), out);
+            put_char(chr('.'), out);
           iter = next;
         }
       } else if (sym == uref_s && simple_qref_args_p(cdr(obj), one)) {
         val iter;
         for (iter = cdr(obj); iter; iter = cdr(iter)) {
-          put_string(lit("."), out);
+          put_char(chr('.'), out);
           obj_print_impl(car(iter), out, pretty, ctx);
         }
       } else if (sym == quasi_s && consp(cdr(obj))) {
