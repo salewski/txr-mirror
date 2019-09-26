@@ -25,9 +25,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+extern val tree_s, tree_fun_whitelist_s;
+
+#define tree_fun_whitelist (deref(lookup_var_l(nil, tree_fun_whitelist_s)))
+
 val tnode(val key, val left, val right);
 val tnodep(val obj);
 val left(val node);
 val right(val node);
 val key(val node);
+val tree(val keys, val key_fn, val less_fn, val equal_fn);
 void tree_init(void);

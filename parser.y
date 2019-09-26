@@ -69,6 +69,7 @@ static val make_expr(parser_t *, val sym, val rest, val lineno);
 static val check_parse_time_action(val spec_rev);
 static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons);
 static val uref_helper(parser_t *, val expr);
+static val fname_helper(parser_t *, val name);
 
 #if YYBISON
 union YYSTYPE;
@@ -119,7 +120,7 @@ INLINE val expand_form_ver(val form, int ver)
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY IF
 %token <lineno> ERRTOK /* deliberately not used in grammar */
 %token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S HASH_R HASH_SEMI
-%token <lineno> HASH_B_QUOTE HASH_N
+%token <lineno> HASH_B_QUOTE HASH_N HASH_T
 %token <lineno> WORDS WSPLICE QWORDS QWSPLICE
 %token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E SECRET_ESCAPE_I
 %token <lineno> OLD_DOTDOT
@@ -138,7 +139,8 @@ INLINE val expand_form_ver(val form, int ver)
 %type <val> output_clause define_clause try_clause catch_clauses_opt
 %type <val> if_clause elif_clauses_opt else_clause_opt
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
-%type <val> text texts elem var var_op modifiers vector hash struct range tnode
+%type <val> text texts elem var var_op modifiers
+%type <val> vector hash struct range tnode tree
 %type <val> exprs exprs_opt n_exprs r_exprs i_expr i_dot_expr
 %type <val> n_expr n_exprs_opt n_dot_expr
 %type <val> list dwim meta compound
@@ -866,6 +868,20 @@ tnode : HASH_N list             { if (gt(length($2), three))
                                   yybadtok(yychar, lit("tree node literal")); }
       ;
 
+tree : HASH_T list             { val opts = first($2);
+                                 val key_fn_name = pop(&opts);
+                                 val less_fn_name = pop(&opts);
+                                 val equal_fn_name = pop(&opts);
+                                 val key_fn = fname_helper(parser, key_fn_name);
+                                 val less_fn = fname_helper(parser, less_fn_name);
+                                 val equal_fn = fname_helper(parser, equal_fn_name);
+                                 val tr = tree(rest($2), key_fn,
+                                               less_fn, equal_fn);
+                                   $$ = rl(tr, num($1)); }
+     | HASH_T error            { $$ = nil;
+                                 yybadtok(yychar, lit("tree node literal")); }
+     ;
+
 list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' '.' n_exprs ')'      { val a = car($3);
                                   val ur = uref_helper(parser, a);
@@ -971,6 +987,7 @@ i_expr : SYMTOK                 { $$ = ifnign(symhlpr($1, t)); }
        | struct                 { $$ = $1; }
        | range                  { $$ = $1; }
        | tnode                  { $$ = $1; }
+       | tree                   { $$ = $1; }
        | lisp_regex             { $$ = $1; }
        | chrlit                 { $$ = $1; }
        | strlit                 { $$ = $1; }
@@ -1011,6 +1028,7 @@ n_expr : SYMTOK                 { $$ = ifnign(symhlpr($1, t)); }
        | struct                 { $$ = $1; }
        | range                  { $$ = $1; }
        | tnode                  { $$ = $1; }
+       | tree                   { $$ = $1; }
        | lisp_regex             { $$ = $1; }
        | chrlit                 { $$ = $1; }
        | strlit                 { $$ = $1; }
@@ -1768,6 +1786,27 @@ static val uref_helper(parser_t *parser, val expr)
   }
 }
 
+static val fname_helper(parser_t *parser, val name)
+{
+  if (!name) {
+    return nil;
+  } else if (!bindable(name)) {
+    yyerrorf(parser->scanner, lit("#T: ~s isn't a function name"),
+             name, nao);
+  } else if (!memq(name, tree_fun_whitelist)) {
+    yyerrorf(parser->scanner, lit("#T: ~s not in *tree-fun-whitelist*"),
+             name, nao);
+  } else {
+    val fbinding = lookup_fun(nil, name);
+    if (fbinding)
+      return cdr(fbinding);
+    yyerrorf(parser->scanner, lit("#T: function named ~s doesn't exist"),
+             name, nao);
+  }
+
+  return nil;
+}
+
 #ifndef YYEOF
 #define YYEOF 0
 #endif
@@ -1824,6 +1863,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case HASH_S:         problem = lit("#S"); break;
   case HASH_R:         problem = lit("#R"); break;
   case HASH_N:         problem = lit("#N"); break;
+  case HASH_T:         problem = lit("#T"); break;
   case HASH_SEMI:      problem = lit("#;"); break;
   case HASH_N_EQUALS:  problem = lit("#<n>="); break;
   case HASH_N_HASH:    problem = lit("#<n>#"); break;

@@ -81,7 +81,7 @@ val sys_mark_special_s;
 val caseq_s, caseql_s, casequal_s;
 val caseq_star_s, caseql_star_s, casequal_star_s;
 val memq_s, memql_s, memqual_s;
-val eq_s, eql_s, equal_s;
+val eq_s, eql_s, equal_s, less_s;
 val car_s, cdr_s, not_s, vecref_s;
 val setq_s, setqf_s, sys_lisp1_value_s, sys_lisp1_setq_s;
 val sys_l1_val_s, sys_l1_setq_s;
@@ -6165,6 +6165,7 @@ void eval_init(void)
   eq_s = intern(lit("eq"), user_package);
   eql_s = intern(lit("eql"), user_package);
   equal_s = intern(lit("equal"), user_package);
+  less_s = intern(lit("less"), user_package);
   if_s = intern(lit("if"), user_package);
   when_s = intern(lit("when"), user_package);
   usr_var_s = intern(lit("var"), user_package);

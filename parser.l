@@ -739,6 +739,11 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return HASH_N;
 }
 
+<NESTED,BRACED>#T {
+  yylval->lineno = yyextra->lineno;
+  return HASH_T;
+}
+
 <NESTED,BRACED>#; {
   yylval->lineno = yyextra->lineno;
   return HASH_SEMI;

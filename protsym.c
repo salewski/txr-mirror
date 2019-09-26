@@ -57,7 +57,7 @@ extern val dev_k, dev_s, digit_k, div_s, do_s;
 extern val dohash_s, double_s, downcase_k, dst_s, dvbind_s;
 extern val dwim_s, each_op_s, each_s, each_star_s, elemtype_s;
 extern val elif_s, else_s, empty_s, enum_s, enumed_s;
-extern val env_k, env_s, eof_s, eol_s, eq_s;
+extern val env_k, env_s, eof_s, eol_s, eq_s, less_s;
 extern val eql_based_k, eql_s, equal_based_k, equal_s, error_s;
 extern val eval_error_s, eval_only_s, evenp_s, exp_s, expr_s;
 extern val expt_s, exptmod_s, fail_s, fbind_s, fd_k;
