@@ -1855,11 +1855,11 @@ static val op_fun(val form, val env)
   val name = second(form);
   val fbinding = lookup_fun(env, name);
 
-  if (!fbinding && consp(name) && car(name) == lambda_s)
-    fbinding = cons(name, func_interp(env, name));
-
-  if (!fbinding)
+  if (!fbinding) {
+    if (consp(name) && car(name) == lambda_s)
+      return func_interp(env, name);
     eval_error(form, lit("no function exists named ~s"), name, nao);
+  }
 
   return cdr(fbinding);
 }
