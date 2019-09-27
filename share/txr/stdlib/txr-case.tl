@@ -45,7 +45,7 @@
 (defmacro txr-when (name args input . body)
   ^(txr-if ,name ,args ,input (progn ,*body)))
 
-(defmacro txr-case-impl (sym . clauses)
+(defmacro txr-case-impl (:form f sym . clauses)
   (tree-case clauses
     (((name args . body) . other-clauses)
      (if (eq name t) :
@@ -55,15 +55,12 @@
     (((sym . rest) . other-clauses)
      (if (eq sym t)
        (if other-clauses
-         (compile-error "~s: clauses after (t ...) clause ignored"
-                        'txr-case)
+         (compile-error f "clauses after (t ...) clause ignored")
          ^(progn ,*rest))
-       (compile-error "~s: bad syntax: ~s" (car clauses)
-                      'txr-case)))
+       (compile-error f "bad syntax: ~s" (car clauses))))
     (() ())
     (atom
-       (compile-error "~s: unexpected atom in syntax: ~s"
-                      'txr-case atom))))
+       (compile-error f "unexpected atom in syntax: ~s" atom))))
 
 (defmacro txr-case (input-expr . clauses)
   (let ((input (gensym "input-")))

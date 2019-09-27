@@ -24,7 +24,7 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(defmacro ifa (:env e test then : else)
+(defmacro ifa (:env e :form f test then : else)
   (flet ((candidate-p (form)
            (not (or (constantp form e) (symbolp form)))))
     (cond
@@ -32,8 +32,7 @@
                                              (if it ,then ,else)))
       ((member (first test) '(not null false))
        (unless (eql (length test) 2)
-         (compile-error "~s: wrong number of arguments to ~s"
-                        'ifa (first test)))
+         (compile-error f "wrong number of arguments to ~s" (first test)))
        ^(ifa ,(second test) ,else ,then))
       (t (let* ((sym (first test))
                 (args (if (eq 'dwim sym) (cddr test) (cdr test)))
@@ -43,11 +42,11 @@
                        (and (or (functionp (symbol-function sym))
                                 (eq sym 'dwim)
                                 (null (symbol-function sym)))))
-             (compile-error "~s: test expression must be \
-                            \ a simple function call" 'ifa))
+             (compile-error f "test expression must be \
+                              \ a simple function call"))
            (when (> n-candidate-args 1)
-             (compile-error "~s: ambiguous situation: \
-                            \ not clear what can be \"it\"" 'ifa))
+             (compile-error f "ambiguous situation: \
+                              \ not clear what can be \"it\""))
            (iflet ((it-form (macroexpand [args pos-candidate] e))
                    (is-place (place-form-p it-form e)))
              (let ((before-it [args 0..pos-candidate])
@@ -69,15 +68,15 @@
 (defmacro whena (test . body)
   ^(ifa ,test (progn ,*body)))
 
-(defun sys:if-to-cond (if-oper cond-oper pairs)
+(defun sys:if-to-cond (f if-oper cond-oper pairs)
   (tree-case pairs
     (((test . forms) . rest) ^(,if-oper ,test (progn ,*forms)
                                         (,cond-oper ,*rest)))
     (() ())
-    (else (compile-error "~s: bad syntax: ~s" cond-oper pairs))))
+    (else (compile-error f "bad syntax: ~s" pairs))))
 
-(defmacro conda (. pairs)
-  (sys:if-to-cond 'ifa 'conda pairs))
+(defmacro conda (:form f . pairs)
+  (sys:if-to-cond f 'ifa 'conda pairs))
 
-(defmacro condlet (. pairs)
-  (sys:if-to-cond 'iflet 'condlet pairs))
+(defmacro condlet (:form f . pairs)
+  (sys:if-to-cond f 'iflet 'condlet pairs))

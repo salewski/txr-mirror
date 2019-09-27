@@ -24,7 +24,7 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(defmacro with-resources (res-bindings . body)
+(defmacro with-resources (:form f res-bindings . body)
   (tree-case res-bindings
     (((sym init cleanup) . rest)
      ^(let ((,sym ,init))
@@ -40,7 +40,7 @@
         (with-resources ,rest ,*body)))
     (nil
       ^(progn ,*body))
-    (other (compile-error "~s: bad syntax" 'with-resources))))
+    (other (compile-error f "bad syntax"))))
 
 (defmacro with-objects (var-init-forms . body)
   (let ((gens (mapcar (ret (gensym)) var-init-forms)))
