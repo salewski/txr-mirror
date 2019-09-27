@@ -776,7 +776,7 @@
                     ^(fmakunbound ',',sym)))
        ,body)))
 
-(defun sys:get-fun-getter-setter (sym)
+(defun sys:get-fun-getter-setter (f sym)
   (tree-case sym
     ((type struct slot)
       (if (eq type 'meth)
@@ -795,6 +795,10 @@
           (cons (op cdr)
                 (op sys:rplacd cell)))
         :))
+    ((op . rest)
+     (if (eq op 'lambda)
+       (compile-error f "cannot assign to lambda")
+       (compile-error f "invalid function syntax ~s" sym)))
     (else
       (let ((cell (or (gethash sys:top-fb sym)
                       (sethash sys:top-fb sym (cons sym nil)))))
@@ -804,7 +808,7 @@
 (defplace (symbol-function sym-expr) body
   (getter setter
     (with-gensyms (gs-sym)
-      ^(let ((,gs-sym (sys:get-fun-getter-setter ,sym-expr)))
+      ^(let ((,gs-sym (sys:get-fun-getter-setter ',sys:*pl-form* ,sym-expr)))
           (macrolet ((,getter () ^(call (car ,',gs-sym)))
                      (,setter (val) ^(call (cdr ,',gs-sym) ,val)))
             ,body))))

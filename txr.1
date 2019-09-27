@@ -16747,10 +16747,10 @@ returns
 .SS* Global Environment
 .coNP Accessors @, symbol-function @ symbol-macro and @ symbol-value
 .synb
-.mets (symbol-function >> { symbol | << method-name } )
+.mets (symbol-function >> { symbol | < method-name | << lambda-expr })
 .mets (symbol-macro << symbol )
 .mets (symbol-value << symbol )
-.mets (set (symbol-function << symbol ) << new-value )
+.mets (set (symbol-function >> { symbol | << method-name }) << new-value )
 .mets (set (symbol-macro << symbol ) << new-value )
 .mets (set (symbol-value << symbol ) << new-value )
 .syne
@@ -16796,6 +16796,13 @@ function also supports names of the form
 which denote macros. Thus,
 .code symbol-function
 provides unified access to functions, methods and macros.
+
+If a
+.code lambda
+expression is passed to
+.codn symbol-function ,
+then the function implied by that expression is returned.
+It is unspecified whether this function is interpreted or compiled.
 
 The
 .code symbol-macro
@@ -16883,6 +16890,10 @@ Storing a value, using any one of these three accessors, to a nonexistent
 variable, function or macro binding, is not erroneous. It has has the effect of
 creating that binding.
 
+Using
+.code symbol-function
+accessor to assign to a lambda expression is erroneous.
+
 Deleting a binding, using any of these three accessors, when the binding does not
 exist, also isn't erroneous. There is no effect and the
 .code del
@@ -16905,22 +16916,29 @@ function doesn't exist in Common Lisp.
 .coNP Functions @, boundp @ fboundp and @ mboundp
 .synb
 .mets (boundp << symbol )
-.mets (fboundp << symbol )
+.mets (fboundp >> { symbol | < method-name | << lambda-expr })
 .mets (mboundp << symbol )
 .syne
 .desc
 .code boundp
 returns
 .code t
-if the symbol is bound as a variable or symbol macro in the global
+if the
+.meta symbol
+is bound as a variable or symbol macro in the global
 environment, otherwise
 .codn nil .
 
 .code fboundp
 returns
 .code t
-if the symbol has a function binding in the global
-environment, otherwise it returns nil
+if the
+.meta symbol
+has a function binding in the global
+environment, the method specified by
+.meta method-name
+exists, or a lambda expression argument is given.
+Otherwise it returns nil
 .codn nil .
 
 .code mboundp
