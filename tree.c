@@ -564,6 +564,30 @@ val tree(val keys_in, val key_fn, val less_fn, val equal_fn)
   return tree;
 }
 
+static val tree_construct_fname(val name)
+{
+  if (!name) {
+    return nil;
+  } else if (bindable(name)) {
+    val fun = cdr(lookup_fun(nil, name));
+    if (fun)
+      return fun;
+    uw_throwf(error_s, lit("#T: function named ~s doesn't exist"), name, nao);
+  } else if (functionp(name)) {
+    return name;
+  } else {
+    uw_throwf(error_s, lit("#T: ~s isn't a function name"), name, nao);
+  }
+}
+
+static val tree_construct(val opts, val keys)
+{
+  val key_fn = tree_construct_fname(pop(&opts));
+  val less_fn = tree_construct_fname(pop(&opts));
+  val equal_fn = tree_construct_fname(pop(&opts));
+  return tree(keys, key_fn, less_fn, equal_fn);
+}
+
 void tree_init(void)
 {
   tree_s = intern(lit("tree"), user_package);
@@ -573,6 +597,7 @@ void tree_init(void)
   reg_fun(intern(lit("right"), user_package), func_n1(right));
   reg_fun(intern(lit("key"), user_package), func_n1(key));
   reg_fun(tree_s, func_n4o(tree, 0));
+  reg_fun(tree_construct_s, func_n2(tree_construct));
   reg_fun(intern(lit("tree-insert-node"), user_package), func_n2(tree_insert_node));
   reg_fun(intern(lit("tree-insert"), user_package), func_n2(tree_insert));
   reg_fun(intern(lit("tree-lookup-node"), user_package), func_n2(tree_lookup_node));

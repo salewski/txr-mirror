@@ -868,16 +868,19 @@ tnode : HASH_N list             { if (gt(length($2), three))
                                   yybadtok(yychar, lit("tree node literal")); }
       ;
 
-tree : HASH_T list             { val opts = first($2);
-                                 val key_fn_name = pop(&opts);
-                                 val less_fn_name = pop(&opts);
-                                 val equal_fn_name = pop(&opts);
-                                 val key_fn = fname_helper(parser, key_fn_name);
-                                 val less_fn = fname_helper(parser, less_fn_name);
-                                 val equal_fn = fname_helper(parser, equal_fn_name);
-                                 val tr = tree(rest($2), key_fn,
-                                               less_fn, equal_fn);
-                                   $$ = rl(tr, num($1)); }
+tree : HASH_T list             { if (parser->quasi_level > 0 && unquotes_occur($2, 0))
+                                   $$ = rl(cons(tree_lit_s, $2), num($1));
+                                 else
+                                 { val opts = first($2);
+                                   val key_fn_name = pop(&opts);
+                                   val less_fn_name = pop(&opts);
+                                   val equal_fn_name = pop(&opts);
+                                   val key_fn = fname_helper(parser, key_fn_name);
+                                   val less_fn = fname_helper(parser, less_fn_name);
+                                   val equal_fn = fname_helper(parser, equal_fn_name);
+                                   val tr = tree(rest($2), key_fn,
+                                                 less_fn, equal_fn);
+                                     $$ = rl(tr, num($1)); } }
      | HASH_T error            { $$ = nil;
                                  yybadtok(yychar, lit("tree node literal")); }
      ;

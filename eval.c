@@ -96,7 +96,7 @@ val gen_s, gun_s, generate_s, rest_s;
 val promise_s, promise_forced_s, promise_inprogress_s, force_s;
 val op_s, identity_s;
 val hash_lit_s, hash_construct_s, struct_lit_s, qref_s, uref_s;
-val vector_lit_s, vec_list_s;
+val vector_lit_s, vec_list_s, tree_lit_s, tree_construct_s;
 val macro_time_s, macrolet_s;
 val defsymacro_s, symacrolet_s, prof_s, switch_s, struct_s;
 val fbind_s, lbind_s, flet_s, labels_s;
@@ -3502,6 +3502,10 @@ static val expand_qquote_rec(val qquoted_form, val qq, val unq, val spl)
       val args = expand_qquote(second(qquoted_form), qq, unq, spl);
       val pairs = expand_qquote(rest(rest(qquoted_form)), qq, unq, spl);
       return rlcp(list(make_struct_lit_s, args, pairs, nao), qquoted_form);
+    } else if (sym == tree_lit_s) {
+      val opts = expand_qquote(second(qquoted_form), qq, unq, spl);
+      val keys = expand_qquote(rest(rest(qquoted_form)), qq, unq, spl);
+      return rlcp(list(tree_construct_s, opts, keys, nao), qquoted_form);
     } else {
       val f = sym;
       val r = cdr(qquoted_form);
@@ -6238,6 +6242,8 @@ void eval_init(void)
   uref_s = intern(lit("uref"), user_package);
   vector_lit_s = intern(lit("vector-lit"), system_package);
   vec_list_s = intern(lit("vec-list"), user_package);
+  tree_lit_s = intern(lit("tree-lit"), system_package);
+  tree_construct_s = intern(lit("tree-construct"), system_package);
   macro_time_s = intern(lit("macro-time"), user_package);
   macrolet_s = intern(lit("macrolet"), user_package);
   symacrolet_s = intern(lit("symacrolet"), user_package);
