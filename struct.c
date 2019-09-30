@@ -433,7 +433,7 @@ val find_struct_type(val sym)
 
 val struct_type_p(val obj)
 {
-  return tnil(typeof(obj) == struct_type_s);
+  return cobjclassp(obj, struct_type_s);
 }
 
 val struct_get_initfun(val type)

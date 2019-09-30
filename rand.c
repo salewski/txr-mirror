@@ -83,7 +83,7 @@ static val make_state(void)
 
 val random_state_p(val obj)
 {
-  return typeof(obj) == random_state_s ? t : nil;
+  return cobjclassp(obj, random_state_s);
 }
 
 INLINE rand32_t *rstate(struct rand_state *r, int offs)

@@ -682,7 +682,7 @@ static char_set_t *char_set_compile(val args, val comp)
       val from = car(item);
       val to = cdr(item);
 
-      assert (typeof(from) == chr_s && typeof(to) == chr_s);
+      assert (is_chr(from) && is_chr(to));
 
       if (c_chr(from) < min)
         min = c_chr(from);
@@ -693,7 +693,7 @@ static char_set_t *char_set_compile(val args, val comp)
         min = c_chr(to);
       if (c_chr(to) > max)
         max = c_chr(to);
-    } else if (typeof(item) == chr_s) {
+    } else if (is_chr(item)) {
       if (c_chr(item) < min)
         min = c_chr(item);
       if (c_chr(item) > max)
@@ -745,9 +745,9 @@ static char_set_t *char_set_compile(val args, val comp)
         val from = car(item);
         val to = cdr(item);
 
-        assert (typeof(from) == chr_s && typeof(to) == chr_s);
+        assert (is_chr(from) && is_chr(to));
         char_set_add_range(set, c_chr(from), c_chr(to));
-      } else if (typeof(item) == chr_s) {
+      } else if (is_chr(item)) {
         char_set_add(set, c_chr(item));
       } else if (item == space_k) {
         char_set_add_str(set, spaces);
@@ -1835,7 +1835,7 @@ static val reg_derivative(val exp, val ch)
     return t;
   } else if (chrp(exp)) {
     return null(eq(exp, ch));
-  } else if (typeof(exp) == chset_s) {
+  } else if (cobjclassp(exp, chset_s)) {
     char_set_t *set = coerce(char_set_t *, exp->co.handle);
     return if3(char_set_contains(set, c_chr(ch)), nil, t);
   } else if (exp == wild_s) {
@@ -2240,7 +2240,7 @@ val regex_compile(val regex_sexp, val error_stream)
 
 val regexp(val obj)
 {
-  return typeof(obj) == regex_s ? t : nil;
+  return cobjclassp(obj, regex_s);
 }
 
 val regex_source(val compiled_regex)

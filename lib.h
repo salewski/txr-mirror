@@ -1027,6 +1027,7 @@ val length_str_lt(val str, val len);
 val length_str_le(val str, val len);
 val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops);
 val cobjp(val obj);
+val cobjclassp(val obj, val cls_sym);
 mem_t *cobj_handle(val self, val cobj, val cls_sym);
 struct cobj_ops *cobj_ops(val self, val cobj, val cls_sym);
 val cptr(mem_t *ptr);

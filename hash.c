@@ -919,7 +919,7 @@ val set_hash_userdata(val hash, val data)
 
 val hashp(val obj)
 {
-  return typeof(obj) == hash_s ? t : nil;
+  return cobjclassp(obj, hash_s);
 }
 
 static void hash_iter_mark(val hash_iter)

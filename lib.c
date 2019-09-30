@@ -499,8 +499,7 @@ val throw_mismatch(val self, val obj, type_t t)
 
 val class_check(val self, val cobj, val class_sym)
 {
-  type_assert (is_ptr(cobj) && cobj->t.type == COBJ &&
-              (cobj->co.cls == class_sym || subtypep(cobj->co.cls, class_sym)),
+  type_assert (cobjclassp(cobj, class_sym),
                (lit("~a: ~s is not of type ~s"), self, cobj, class_sym, nao));
   return t;
 }
@@ -7826,6 +7825,13 @@ val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops)
 val cobjp(val obj)
 {
   return type(obj) == COBJ ? t : nil;
+}
+
+val cobjclassp(val obj, val cls_sym)
+{
+  return if2(is_ptr(obj) && obj->t.type == COBJ &&
+             (obj->co.cls == cls_sym || subtypep(obj->co.cls, cls_sym)),
+             one);
 }
 
 mem_t *cobj_handle(val self, val cobj, val cls_sym)

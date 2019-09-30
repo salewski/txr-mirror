@@ -4806,7 +4806,7 @@ val make_carray(val type, mem_t *data, cnum nelem, val ref, cnum offs)
 
 val carrayp(val obj)
 {
-  return tnil(typeof(obj) == carray_s);
+  return cobjclassp(obj, carray_s);
 }
 
 val carray_set_length(val carray, val nelem)
