@@ -588,6 +588,11 @@ static val tree_construct(val opts, val keys)
   return tree(keys, key_fn, less_fn, equal_fn);
 }
 
+val treep(val obj)
+{
+  return tnil(type(obj) == COBJ && obj->co.cls == tree_s);
+}
+
 void tree_init(void)
 {
   tree_s = intern(lit("tree"), user_package);
@@ -598,6 +603,7 @@ void tree_init(void)
   reg_fun(intern(lit("key"), user_package), func_n1(key));
   reg_fun(tree_s, func_n4o(tree, 0));
   reg_fun(tree_construct_s, func_n2(tree_construct));
+  reg_fun(intern(lit("treep"), user_package), func_n1(treep));
   reg_fun(intern(lit("tree-insert-node"), user_package), func_n2(tree_insert_node));
   reg_fun(intern(lit("tree-insert"), user_package), func_n2(tree_insert));
   reg_fun(intern(lit("tree-lookup-node"), user_package), func_n2(tree_lookup_node));

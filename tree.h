@@ -35,4 +35,5 @@ val left(val node);
 val right(val node);
 val key(val node);
 val tree(val keys, val key_fn, val less_fn, val equal_fn);
+val treep(val obj);
 void tree_init(void);
