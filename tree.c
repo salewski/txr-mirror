@@ -265,11 +265,16 @@ static void tr_insert(struct tree *tr, struct tree_iter *ti,
     val parent = ti->path[ti->depth - 1];
     node->tn.left = subtree->tn.left;
     node->tn.right = subtree->tn.right;
+    if (ti->depth > 0) {
+      val parent = ti->path[ti->depth - 1];
 
-    if (parent->tn.left == subtree)
-      parent->tn.left = node;
-    else
-      parent->tn.right = node;
+      if (parent->tn.left == subtree)
+        parent->tn.left = node;
+      else
+        parent->tn.right = node;
+    } else {
+      tr->root = node;
+    }
   } else {
     if (subtree->tn.right) {
       ti->path[ti->depth++] = subtree;
