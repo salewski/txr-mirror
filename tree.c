@@ -128,18 +128,18 @@ static ucnum tn_size_one_child(val node, val child, ucnum size)
 
 static val tn_lookup(struct tree *tr, val node, val key)
 {
-  val tn_key = if3(tr->key_fn,
+  val tr_key = if3(tr->key_fn,
                    funcall1(tr->key_fn, node->tn.key),
                    node->tn.key);
 
   if (if3(tr->less_fn,
-          funcall2(tr->less_fn, key, tn_key),
-          less(key, tn_key)))
+          funcall2(tr->less_fn, key, tr_key),
+          less(key, tr_key)))
   {
     return if2(node->tn.left, tn_lookup(tr, node->tn.left, key));
   } else if (if3(tr->equal_fn == nil,
-                 equal(key, tn_key),
-                 funcall2(tr->equal_fn, key, tn_key))) {
+                 equal(key, tr_key),
+                 funcall2(tr->equal_fn, key, tr_key))) {
     return node;
   } else {
     return if2(node->tn.left, tn_lookup(tr, node->tn.left, key));
@@ -239,14 +239,16 @@ static void tr_find_rebuild_scapegoat(struct tree *tr, struct tree_iter *ti,
 static void tr_insert(struct tree *tr, struct tree_iter *ti,
                       val subtree, val node)
 {
-  val key = node->tn.key;
   val tn_key = if3(tr->key_fn,
+                   funcall1(tr->key_fn, node->tn.key),
+                   node->tn.key);
+  val tr_key = if3(tr->key_fn,
                    funcall1(tr->key_fn, subtree->tn.key),
                    subtree->tn.key);
 
   if (if3(tr->less_fn,
-          funcall2(tr->less_fn, key, tn_key),
-          less(key, tn_key)))
+          funcall2(tr->less_fn, tn_key, tr_key),
+          less(tn_key, tr_key)))
   {
     if (subtree->tn.left) {
       ti->path[ti->depth++] = subtree;
@@ -260,9 +262,8 @@ static void tr_insert(struct tree *tr, struct tree_iter *ti,
       }
     }
   } else if (if3(tr->equal_fn == nil,
-                 equal(key, tn_key),
-                 funcall2(tr->equal_fn, key, tn_key))) {
-    val parent = ti->path[ti->depth - 1];
+                 equal(tn_key, tr_key),
+                 funcall2(tr->equal_fn, tn_key, tr_key))) {
     node->tn.left = subtree->tn.left;
     node->tn.right = subtree->tn.right;
     if (ti->depth > 0) {
@@ -297,20 +298,20 @@ static val tr_lookup(struct tree *tree, val key)
 
 static val tr_do_delete(struct tree *tr, val subtree, val parent, val key)
 {
-  val tn_key = if3(tr->key_fn,
+  val tr_key = if3(tr->key_fn,
                    funcall1(tr->key_fn, subtree->tn.key),
                    subtree->tn.key);
 
   if (if3(tr->less_fn,
-          funcall2(tr->less_fn, key, tn_key),
-          less(key, tn_key)))
+          funcall2(tr->less_fn, key, tr_key),
+          less(key, tr_key)))
   {
     if (subtree->tn.left)
       return tr_do_delete(tr, subtree->tn.left, subtree, key);
     return nil;
   } else if (if3(tr->equal_fn == nil,
-                 equal(key, tn_key),
-                 funcall2(tr->equal_fn, key, tn_key))) {
+                 equal(key, tr_key),
+                 funcall2(tr->equal_fn, key, tr_key))) {
     val le = subtree->tn.left;
     val ri = subtree->tn.right;
 
