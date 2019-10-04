@@ -776,7 +776,7 @@
                     ^(fmakunbound ',',sym)))
        ,body)))
 
-(defun sys:get-fun-getter-setter (f sym)
+(defun sys:get-fun-getter-setter (sym : f)
   (tree-case sym
     ((type struct slot)
       (if (eq type 'meth)
@@ -808,7 +808,7 @@
 (defplace (symbol-function sym-expr) body
   (getter setter
     (with-gensyms (gs-sym)
-      ^(let ((,gs-sym (sys:get-fun-getter-setter ',sys:*pl-form* ,sym-expr)))
+      ^(let ((,gs-sym (sys:get-fun-getter-setter ,sym-expr ',sys:*pl-form*)))
           (macrolet ((,getter () ^(call (car ,',gs-sym)))
                      (,setter (val) ^(call (cdr ,',gs-sym) ,val)))
             ,body))))
