@@ -27,7 +27,7 @@
 (defvar sys:*op-ctx*)
 
 (sys:make-struct-type
-  'sys:op-ctx nil nil '(form gens up meta) nil
+  'sys:op-ctx nil nil '(form gens up meta rec recvar) nil
   (lambda (me)
     (slotset me 'up sys:*op-ctx*)
     (slotset me 'meta (gensym "meta-")))
@@ -54,19 +54,36 @@
                       ((eq x 'sys:var) (or (integerp y)
                                            (eq y 'rest))))))))
 
+(defun sys:op-rec-p (expr)
+  (tree-case expr
+    ((x (y . r)) (and (eq x 'sys:expr) (eq y 'usr:rec)))))
+
+(defun sys:op-ensure-rec (ctx : recvar)
+  (when recvar
+    (slotset ctx 'recvar t))
+  (or (slot ctx 'rec) (slotset ctx 'rec (gensym "rec-"))))
+
 (defun sys:op-alpha-rename (f e op-args do-nested-metas)
   (let* ((ctx sys:*op-ctx*)
          (code ^(macrolet ((sys:expr (:form f arg)
                              (let ((ctx ,ctx))
-                               (if (and (slot ctx 'up) (sys:op-meta-p arg))
-                                 ^(,(slot (slot ctx 'up) 'meta) (quote ,arg))
-                               f)))
+                               (cond
+                                 ((and (slot ctx 'up)
+                                       (or (sys:op-meta-p arg)
+                                           (sys:op-rec-p arg)
+                                           (equal arg '(sys:var usr:rec))))
+                                  ^(,(slot (slot ctx 'up) 'meta) (quote ,arg)))
+                                 ((sys:op-rec-p f)
+                                  ^(,(sys:op-ensure-rec ctx) ,*(rest arg)))
+                                 (t f))))
                            (sys:var (:form f arg . mods)
                              (cond
-                               ((and (not mods) (sys:op-meta-p f))
+                               ((sys:op-meta-p f)
                                 (unless (integerp arg)
                                   (sys:setq arg 0))
                                 (sys:ensure-op-arg ,ctx arg))
+                               ((equal f '(sys:var usr:rec))
+                                (sys:op-ensure-rec ,ctx t))
                                (t f)))
                            ,*(if do-nested-metas
                                ^((,(slot ctx 'meta) ((quote arg)) arg))))
@@ -74,6 +91,8 @@
     (expand code e)))
 
 (defun sys:op-expand (f e args)
+  (unless args
+    ['compile-error f "arguments required"])
   (let* ((ctx (make-struct 'sys:op-ctx ^(form ,f)))
          (sys:*op-ctx* ctx)
          (sym (car f))
@@ -81,21 +100,30 @@
          (syntax-1 (sys:op-alpha-rename f e syntax-0 nil))
          (syntax-2 (sys:op-alpha-rename f e syntax-1 t))
          (metas (slot ctx 'gens))
-         (rest-sym (sys:ensure-op-arg ctx 0)))
-     (unless args
-       ['compile-error f "arguments required"])
-    ^(lambda (,*(cdr metas) . ,rest-sym)
-       ,(let ((fargs (cdr (cdr syntax-2))))
-          (cond
-            ((and (eq sym 'lop) fargs)
-             (let ((fargs-l1 (mapcar (lambda (farg)
-                                       ^(sys:l1-val ,farg))
-                                     fargs)))
-               ^[sys:apply ,(car (cdr syntax-2))
-                           (append ,rest-sym (list ,*fargs-l1))]))
-            ((or metas (eq sym 'do))
-             syntax-2)
-            (t (append syntax-2 rest-sym)))))))
+         (rec (slot ctx 'rec))
+         (recvar (slot ctx 'recvar))
+         (rest-sym (sys:ensure-op-arg ctx 0))
+         (lambda-interior (let ((fargs (cdr (cdr syntax-2))))
+                            (cond
+                              ((and (eq sym 'lop) fargs)
+                               (let ((fargs-l1 (mapcar (lambda (farg)
+                                                         ^(sys:l1-val ,farg))
+                                                       fargs)))
+                                 ^[sys:apply ,(car (cdr syntax-2))
+                                             (append ,rest-sym (list ,*fargs-l1))]))
+                              ((or metas (eq sym 'do))
+                               syntax-2)
+                              (t (append syntax-2 rest-sym))))))
+    (cond
+      (recvar ^(sys:lbind ((,rec (lambda (,*(cdr metas) . ,rest-sym)
+                                   (let ((,rec (fun ,rec)))
+                                     ,lambda-interior))))
+                 (fun ,rec)))
+      (rec ^(sys:lbind ((,rec (lambda (,*(cdr metas) . ,rest-sym)
+                                ,lambda-interior)))
+              (fun ,rec)))
+      (t ^(lambda (,*(cdr metas) . ,rest-sym)
+            ,lambda-interior)))))
 
 (defmacro op (:form f :env e . args)
   (sys:op-expand f e args))
