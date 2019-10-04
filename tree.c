@@ -76,9 +76,15 @@ struct tree_iter {
   val path[TREE_DEPTH_MAX];
 };
 
+struct tree_diter {
+  struct tree_iter ti;
+  struct tree *tr;
+  val lastnode;
+};
+
 #define tree_iter_init() { 0, tr_visited_nothing }
 
-val tree_s, tree_fun_whitelist_s;
+val tree_s, tree_iter_s, tree_fun_whitelist_s;
 
 val tnode(val key, val left, val right)
 {
@@ -599,9 +605,54 @@ val treep(val obj)
   return tnil(type(obj) == COBJ && obj->co.cls == tree_s);
 }
 
+static void tree_iter_mark(val tree_iter)
+{
+  struct tree_diter *tdi = coerce(struct tree_diter *, tree_iter->co.handle);
+  int i;
+
+  for (i = 0; i < tdi->ti.depth; i++)
+    gc_mark(tdi->ti.path[i]);
+
+  gc_mark(tdi->lastnode);
+}
+
+static struct cobj_ops tree_iter_ops = cobj_ops_init(eq,
+                                                     cobj_print_op,
+                                                     cobj_destroy_free_op,
+                                                     tree_iter_mark,
+                                                     cobj_eq_hash_op);
+
+val tree_begin(val tree)
+{
+  val self = lit("tree-begin");
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  struct tree_diter *tdi = coerce(struct tree_diter *,
+                                  chk_calloc(1, sizeof *tdi));
+  tdi->tr = tr;
+  tdi->lastnode = tr->root;
+
+  return cobj(coerce(mem_t *, tdi), tree_iter_s, &tree_iter_ops);
+}
+
+val tree_next(val iter)
+{
+  val self = lit("tree-next");
+  struct tree_diter *tdi = coerce(struct tree_diter *,
+                                  cobj_handle(self, iter, tree_iter_s));
+
+  if (tdi->lastnode) {
+    val node = tn_find_next(tdi->lastnode, &tdi->ti);
+    set(mkloc(tdi->lastnode, iter), node);
+    return node;
+  }
+
+  return nil;
+}
+
 void tree_init(void)
 {
   tree_s = intern(lit("tree"), user_package);
+  tree_iter_s = intern(lit("tree-iter"), user_package);
   tree_fun_whitelist_s = intern(lit("*tree-fun-whitelist*"), user_package);
   reg_fun(tnode_s, func_n3(tnode));
   reg_fun(intern(lit("left"), user_package), func_n1(left));
@@ -616,5 +667,7 @@ void tree_init(void)
   reg_fun(intern(lit("tree-lookup"), user_package), func_n2(tree_lookup));
   reg_fun(intern(lit("tree-delete"), user_package), func_n2(tree_delete));
   reg_fun(intern(lit("tree-root"), user_package), func_n1(tree_root));
+  reg_fun(intern(lit("tree-begin"), user_package), func_n1(tree_begin));
+  reg_fun(intern(lit("tree-next"), user_package), func_n1(tree_next));
   reg_var(tree_fun_whitelist_s, list(identity_s, equal_s, less_s, nao));
 }
