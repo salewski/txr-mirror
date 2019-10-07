@@ -367,6 +367,9 @@ tail:
       val ru = patch_ref(p, u);
       if (ru)
         set_hash_userdata(obj, ru);
+      else
+        circ_backpatch(p, &cs, u);
+
       if (p->circ_count) {
         val iter = hash_begin(obj);
         val cell;
