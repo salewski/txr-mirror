@@ -388,6 +388,9 @@ static val tree_insert_node(val tree, val node)
 
   type_check(self, node, TNOD);
 
+  node->tn.left = nil;
+  node->tn.right = nil;
+
   if (tr->root == nil) {
     tr->size = 1;
     tr->max_size = 1;
