@@ -381,7 +381,7 @@ static val tr_delete(struct tree *tr, val key)
   return nil;
 }
 
-static val tree_insert_node(val tree, val node)
+val tree_insert_node(val tree, val node)
 {
   val self = lit("tree-insert-node");
   struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));

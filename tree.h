@@ -36,6 +36,7 @@ val right(val node);
 val key(val node);
 val tree(val keys, val key_fn, val less_fn, val equal_fn);
 val treep(val obj);
+val tree_insert_node(val tree, val node);
 val tree_begin(val tree);
 val tree_next(val iter);
 void tree_init(void);
