@@ -57,6 +57,7 @@
 #include "sysif.h"
 #include "cadr.h"
 #include "struct.h"
+#include "tree.h"
 #include "parser.h"
 #include "regex.h"
 #include "itypes.h"
@@ -400,7 +401,31 @@ tail:
         else
           circ_backpatch(p, &cs, sv);
       }
+    } else if (treep(obj)) {
+      val iter = tree_begin(obj);
+      val node;
+      val nodes = nil;
+
+      while ((node = tree_next(iter))) {
+        val k = node->tn.key;
+        val rk = patch_ref(p, k);
+        if (rk)
+          set(mkloc(node->tn.key, node), rk);
+        else
+          circ_backpatch(p, &cs, k);
+        push(node, &nodes);
+      }
+
+      if (nodes) {
+        tree_clear(obj);
+
+        while (nodes) {
+          val node = pop(&nodes);
+          tree_insert_node(obj, node);
+        }
+      }
     }
+
     break;
   case FUN:
     if (obj->f.functype == FINTERP) {

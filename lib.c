@@ -11808,6 +11808,11 @@ tail:
         val sn = car(iter);
         populate_obj_hash(slot(obj, sn), ctx);
       }
+    } else if (treep(obj)) {
+      val iter = tree_begin(obj);
+      val node;
+      while ((node = tree_next(iter)))
+        populate_obj_hash(key(node), ctx);
     }
     break;
   case FUN:
