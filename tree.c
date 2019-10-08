@@ -652,6 +652,16 @@ val tree_next(val iter)
   return nil;
 }
 
+val tree_clear(val tree)
+{
+  val self = lit("tree-clear");
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  cnum oldsize = tr->size;
+  tr->root = nil;
+  tr->size = tr->max_size = 0;
+  return oldsize ? num(oldsize) : nil;
+}
+
 void tree_init(void)
 {
   tree_s = intern(lit("tree"), user_package);
@@ -672,5 +682,6 @@ void tree_init(void)
   reg_fun(intern(lit("tree-root"), user_package), func_n1(tree_root));
   reg_fun(intern(lit("tree-begin"), user_package), func_n1(tree_begin));
   reg_fun(intern(lit("tree-next"), user_package), func_n1(tree_next));
+  reg_fun(intern(lit("tree-clear"), user_package), func_n1(tree_clear));
   reg_var(tree_fun_whitelist_s, list(identity_s, equal_s, less_s, nao));
 }
