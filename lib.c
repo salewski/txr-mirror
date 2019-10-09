@@ -8477,10 +8477,6 @@ static val sort_list(val list, val lessfun, val keyfun)
                           funcall1(keyfun, first(list))))
     {
       val cons2 = cdr(list);
-      /* This assignment is a dangerous mutation since the list
-         may contain mixtures of old and new objects, and
-         so we could be reversing a newer->older pointer
-         relationship. */
       rplacd(cons2, list);
       rplacd(list, nil);
       return cons2;
@@ -8605,13 +8601,8 @@ val sort(val seq_in, val lessfun, val keyfun)
   keyfun = default_arg(keyfun, identity_f);
   lessfun = default_arg(lessfun, less_f);
 
-  if (consp(seq)) {
-    /* The list could have a mixture of generation 0 and 1
-       objects. Sorting the list could reverse some of the
-       pointers between the generations resulting in a backpointer.
-       Thus we better inform the collector about this object. */
+  if (consp(seq))
     return sort_list(seq, lessfun, keyfun);
-  }
 
   sort_vec(seq, lessfun, keyfun);
   return seq;
