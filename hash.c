@@ -55,6 +55,12 @@ typedef enum hash_flags {
   hash_weak_both = 3
 } hash_flags_t;
 
+typedef enum hash_type {
+  hash_type_eq,
+  hash_type_eql,
+  hash_type_equal
+} hash_type_t;
+
 struct hash_ops {
   ucnum (*hash_fun)(val, int *, ucnum);
   val (*equal_fun)(val, val);
@@ -86,10 +92,12 @@ struct hash_iter {
 
 #define hash_seed (deref(lookup_var_l(nil, hash_seed_s)))
 
+static_forward(struct hash_ops hash_eq_ops);
 static_forward(struct hash_ops hash_eql_ops);
 static_forward(struct hash_ops hash_equal_ops);
 
-val weak_keys_k, weak_vals_k, equal_based_k, eql_based_k, userdata_k;
+val weak_keys_k, weak_vals_k, userdata_k;
+val equal_based_k, eql_based_k, eq_based_k;
 val hash_seed_s;
 
 /*
@@ -304,10 +312,43 @@ static ucnum eql_hash(val obj, int *count)
   abort();
 }
 
+static ucnum eq_hash(val obj)
+{
+  switch (tag(obj)) {
+  case TAG_PTR:
+    switch (CHAR_BIT * sizeof (mem_t *)) {
+    case 32:
+      return coerce(ucnum, obj) >> 4;
+    case 64: default:
+      return coerce(ucnum, obj) >> 5;
+    }
+  case TAG_CHR:
+    return c_chr(obj);
+  case TAG_NUM:
+    return c_num(obj);
+  case TAG_LIT:
+    switch (CHAR_BIT * sizeof (mem_t *)) {
+    case 32:
+      return coerce(ucnum, obj) >> 2;
+    case 64: default:
+      return coerce(ucnum, obj) >> 3;
+    }
+  }
+  /* notreached */
+  abort();
+}
+
 static ucnum eql_hash_op(val obj, int *count, ucnum seed)
 {
   (void) seed;
   return eql_hash(obj, count);
+}
+
+static ucnum eq_hash_op(val obj, int *count, ucnum seed)
+{
+  (void) seed;
+  (void) count;
+  return eq_hash(obj);
 }
 
 ucnum cobj_eq_hash_op(val obj, int *count, ucnum seed)
@@ -456,12 +497,16 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
   put_char(chr('('), out);
 
   if (opt_compat && opt_compat <= 188) {
-    if (h->hops == &hash_equal_ops)
+    if (h->hops == &hash_eq_ops)
+      obj_print_impl(eq_based_k, out, pretty, ctx);
+    else if (h->hops == &hash_equal_ops)
       obj_print_impl(equal_based_k, out, pretty, ctx);
     need_space = 1;
   } else {
     if (h->hops == &hash_eql_ops)
       obj_print_impl(eql_based_k, out, pretty, ctx);
+    else if (h->hops == &hash_eq_ops)
+      obj_print_impl(eq_based_k, out, pretty, ctx);
     need_space = 1;
   }
 
@@ -644,6 +689,19 @@ static val hash_assql(val key, cnum hash, val list)
   return nil;
 }
 
+static val hash_assq(val key, cnum hash, val list)
+{
+  while (list) {
+    val elem = us_car(list);
+    if (elem->ch.hash == hash && us_car(elem) == key)
+      return elem;
+    list = us_cdr(list);
+  }
+
+  return nil;
+}
+
+
 static val hash_acons_new_c(val key, cnum hash, loc new_p, loc list)
 {
   val existing = hash_assoc(key, hash, deref(list));
@@ -680,6 +738,28 @@ static val hash_aconsql_new_c(val key, cnum hash, loc new_p, loc list)
   }
 }
 
+static val hash_aconsq_new_c(val key, cnum hash, loc new_p, loc list)
+{
+  val existing = hash_assq(key, hash, deref(list));
+
+  if (existing) {
+    if (!nullocp(new_p))
+      deref(new_p) = nil;
+    return existing;
+  } else {
+    val nc = cons(key, nil);
+    nc->ch.hash = hash;
+    set(list, cons(nc, deref(list)));
+    if (!nullocp(new_p))
+      deref(new_p) = t;
+    return nc;
+  }
+}
+
+static_def(struct hash_ops hash_eq_ops = hash_ops_init(eq_hash_op, eql,
+                                                       hash_assq,
+                                                       hash_aconsq_new_c));
+
 static_def(struct hash_ops hash_eql_ops = hash_ops_init(eql_hash_op, eql,
                                                         hash_assql,
                                                         hash_aconsql_new_c));
@@ -688,9 +768,10 @@ static_def(struct hash_ops hash_equal_ops = hash_ops_init(equal_hash, equal,
                                                           hash_assoc,
                                                           hash_acons_new_c));
 
-val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed)
+static val do_make_hash(val weak_keys, val weak_vals,
+                        hash_type_t type, val seed)
 {
-  if (weak_keys && equal_based) {
+  if (weak_keys && type == hash_type_equal) {
     uw_throwf(error_s,
               lit("make-hash: bad combination :weak-keys with :equal-based"),
               nao);
@@ -711,15 +792,39 @@ val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed)
     h->userdata = nil;
 
     h->usecount = 0;
-    h->hops = equal_based ? &hash_equal_ops : &hash_eql_ops;
+
+    switch (type) {
+    case hash_type_eq:
+      h->hops = &hash_eq_ops;
+      break;
+    case hash_type_eql:
+      h->hops = &hash_eql_ops;
+      break;
+    case hash_type_equal:
+    default:
+      h->hops = &hash_equal_ops;
+      break;
+    }
 
     return hash;
   }
 }
 
+val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed)
+{
+  return do_make_hash(weak_keys, weak_vals,
+                      if3(equal_based, hash_type_equal, hash_type_eql),
+                      seed);
+}
+
 val make_hash(val weak_keys, val weak_vals, val equal_based)
 {
   return make_seeded_hash(weak_keys, weak_vals, equal_based, nil);
+}
+
+val make_eq_hash(val weak_keys, val weak_vals)
+{
+  return do_make_hash(weak_keys, weak_vals, hash_type_eq, nil);
 }
 
 val make_similar_hash(val existing)
@@ -1186,16 +1291,20 @@ static val equal_based_p(val equal, val eql, val wkeys)
 
 val hashv(struct args *args)
 {
-  val wkeys = nil, wvals = nil, equal = nil, eql = nil, userdata = nil;
+  val wkeys = nil, wvals = nil, equal = nil, eql = nil;
+  val eq = nil, userdata = nil;
   struct args_bool_key akv[] = {
     { weak_keys_k, nil, &wkeys },
     { weak_vals_k, nil, &wvals },
     { equal_based_k, nil, &equal },
     { eql_based_k, nil, &eql },
+    { eq_based_k, nil, &eq },
     { userdata_k, t, &userdata }
   };
   val hash = (args_keys_extract(args, akv, sizeof akv / sizeof akv[0]),
-              make_hash(wkeys, wvals, equal_based_p(equal, eql, wkeys)));
+              if3(eq,
+                  make_eq_hash(wkeys, wvals),
+                  make_hash(wkeys, wvals, equal_based_p(equal, eql, wkeys))));
   if (userdata)
     set_hash_userdata(hash, userdata);
   return hash;
@@ -1649,6 +1758,7 @@ void hash_init(void)
   weak_vals_k = intern(lit("weak-vals"), keyword_package);
   equal_based_k = intern(lit("equal-based"), keyword_package);
   eql_based_k = intern(lit("eql-based"), keyword_package);
+  eq_based_k = intern(lit("eq-based"), keyword_package);
   userdata_k = intern(lit("userdata"), keyword_package);
   hash_seed_s = intern(lit("*hash-seed*"), user_package);
   val ghu = func_n1(get_hash_userdata);
