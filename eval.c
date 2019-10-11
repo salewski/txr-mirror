@@ -6141,7 +6141,7 @@ void eval_init(void)
 
   call_f = func_n1v(generic_funcall);
 
-  origin_hash = make_hash(t, nil, nil);
+  origin_hash = make_eq_hash(t, nil);
 
   dwim_s = intern(lit("dwim"), user_package);
   progn_s = intern(lit("progn"), user_package);
