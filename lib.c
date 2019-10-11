@@ -11852,7 +11852,7 @@ val obj_print(val obj, val out, val pretty)
   if (ctx) {
     if (cdr(lookup_var(nil, print_circle_s))) {
       ctx->obj_hash_prev = ctx->obj_hash;
-      ctx->obj_hash = make_hash(nil, nil, nil);
+      ctx->obj_hash = make_eq_hash(nil, nil);
       populate_obj_hash(obj, ctx);
       obj_hash_merge(ctx->obj_hash_prev, ctx->obj_hash);
       ctx->obj_hash = ctx->obj_hash_prev;
@@ -11867,7 +11867,7 @@ val obj_print(val obj, val out, val pretty)
     ctx->obj_hash_prev = nil;
     ctx->obj_hash = if2(print_circle_s &&
                         cdr(lookup_var(nil, print_circle_s)),
-                        make_hash(nil, nil, nil));
+                        make_eq_hash(nil, nil));
     ctx->depth = 0;
     get_set_ctx(out, ctx);
     if (ctx->obj_hash)
