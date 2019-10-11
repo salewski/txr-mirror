@@ -456,7 +456,7 @@ void parser_resolve_circ(parser_t *p)
 void parser_circ_def(parser_t *p, val num, val expr)
 {
   if (!p->circ_ref_hash) {
-    p->circ_ref_hash = make_hash(nil, nil, nil);
+    p->circ_ref_hash = make_eq_hash(nil, nil);
     setcheck(p->parser, p->circ_ref_hash);
   }
 
