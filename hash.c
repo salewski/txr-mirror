@@ -1267,15 +1267,21 @@ void hash_process_weak(void)
   do_iters();
 }
 
-static val equal_based_p(val equal, val eql, val wkeys)
+static val equal_based_p(val equal, val eql, val eq, val wkeys)
 {
+  val mutex = lit("make-hash: mutually exclusive ~s and ~s");
+
   if (opt_compat && opt_compat <= 187)
     return equal;
 
   if (equal && eql)
-    uw_throwf(error_s,
-              lit("make-hash: mutually exclusive :equal-based and :eql-based"),
-              nao);
+    uw_throwf(error_s, mutex, equal_based_k, eql_based_k, nao);
+
+  if (equal && eq)
+    uw_throwf(error_s, mutex, equal_based_k, eq_based_k, nao);
+
+  if (eql && eq)
+    uw_throwf(error_s, mutex, eql_based_k, eq_based_k, nao);
 
   if (wkeys) {
     if (equal)
@@ -1301,10 +1307,9 @@ val hashv(struct args *args)
     { eq_based_k, nil, &eq },
     { userdata_k, t, &userdata }
   };
-  val hash = (args_keys_extract(args, akv, sizeof akv / sizeof akv[0]),
-              if3(eq,
-                  make_eq_hash(wkeys, wvals),
-                  make_hash(wkeys, wvals, equal_based_p(equal, eql, wkeys))));
+  val ebp = (args_keys_extract(args, akv, sizeof akv / sizeof akv[0]),
+             equal_based_p(equal, eql, eq, wkeys));
+  val hash = if3(eq, make_eq_hash(wkeys, wvals), make_hash(wkeys, wvals, ebp));
   if (userdata)
     set_hash_userdata(hash, userdata);
   return hash;
