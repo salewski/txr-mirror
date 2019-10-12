@@ -11559,6 +11559,7 @@ keywords as are used when calling the function hash to construct
 a hash table. Allowed keywords are:
 .codn :equal-based ,
 .codn :eql-based ,
+.codn :eq-based ,
 .codn :weak-keys ,
 .codn :weak-values ,
 and
@@ -11572,9 +11573,10 @@ can be retrieved using the
 .code hash-userdata
 function.
 The
-.code :equal-based
-and
+.codn :equal-based ,
 .code :eql-based
+and
+.code :eq-based
 keywords are mutually exclusive.
 
 An empty list can be specified as
@@ -17867,7 +17869,9 @@ Two hashes are
 if they use the same equality (both are
 .codn :equal-based ,
 or both are
-.codn :eql-based ),
+.code :eql-based
+or else both are
+.codn :eq-based ),
 if their associated user data elements are equal (see the function
 .codn hash-userdata ),
 if their sets of keys are identical, and if the data items associated with
@@ -43817,7 +43821,7 @@ becomes unspecified.
 .mets \ \ \ \ \ \ \ \ \ \  < equal-based <> [ hash-seed ])
 .mets (hash {:weak-keys | :weak-vals |
 .mets \ \ \ \ \ \  :eql-based | :equal-based |
-.mets \ \ \ \ \ \  :userdata << obj }*)
+.mets \ \ \ \ \ \  :eq-based | :userdata << obj }*)
 .syne
 .desc
 These functions construct a new hash table.
@@ -43859,21 +43863,24 @@ keyword arguments. The supported keyword symbols are:
 .codn :weak-vals ,
 .codn :equal-based ,
 .code :eql-based
+.code :eq-based
 and
 .code :userdata
 which can be specified in any order to turn on the corresponding properties in
 the newly constructed hash table.
 
 Only one of
-.code :equal-based
-and
+.codn :equal-based ,
 .code :eql-based
+and
+.code :eq-based
 may be specified. If specified, then the hash table uses
-.code equal
-or
+.codn equal ,
 .code eql
+or
+.code eq
 equality, respectively, for considering two keys to be the same key.
-If neither is specified, the
+If none of these is specified, the
 .code hash
 function produces an
 .code :equal-based
@@ -43881,9 +43888,7 @@ hash table by default.
 
 If
 .code :weak-keys
-is specified, then it automatically implies
-.code :eql-based
-and, therefore,
+is specified, then
 .code :equal-based
 may not be specified.
 
