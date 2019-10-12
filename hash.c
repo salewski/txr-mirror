@@ -593,8 +593,7 @@ static void hash_mark(val hash)
   case hash_weak_keys:
     /* Keys are weak: mark the values only. */
     for (i = 0; i < h->modulus; i++) {
-      val ind = num_fast(i);
-      val chain = vecref(h->table, ind);
+      val chain = h->table->v.vec[i];
       val iter;
 
       for (iter = chain; iter != nil; iter = us_cdr(iter)) {
@@ -609,8 +608,7 @@ static void hash_mark(val hash)
     /* Values are weak: mark the keys only. */
 
     for (i = 0; i < h->modulus; i++) {
-      val ind = num_fast(i);
-      val chain = vecref(h->table, ind);
+      val chain = h->table->v.vec[i];
       val iter;
 
       for (iter = chain; iter != nil; iter = us_cdr(iter)) {
@@ -647,13 +645,13 @@ static void hash_grow(struct hash *h, val hash)
   new_table = vector(num_fast(new_modulus), nil);
 
   for (i = 0; i < h->modulus; i++) {
-    val conses = vecref(h->table, num_fast(i));
+    val conses = h->table->v.vec[i];
 
     while (conses) {
       val entry = us_car(conses);
       val next = us_cdr(conses);
-      loc pchain = vecref_l(new_table,
-                            num_fast(entry->ch.hash % new_modulus));
+      loc pchain = mkloc(new_table->v.vec[entry->ch.hash % new_modulus],
+                         new_table);
       us_rplacd(conses, deref(pchain));
       set(pchain, conses);
       conses = next;
@@ -869,9 +867,9 @@ val copy_hash(val existing)
   struct hash *ex = coerce(struct hash *, cobj_handle(self, existing, hash_s));
   struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
   val mod = num_fast(ex->modulus);
-  val table = vector(mod, nil);
   val hash = cobj(coerce(mem_t *, h), hash_s, &hash_ops);
-  val iter;
+  val table = vector(mod, nil);
+  cnum i;
 
   h->modulus = ex->modulus;
   h->count = ex->count;
@@ -883,8 +881,9 @@ val copy_hash(val existing)
   h->usecount = 0;
   h->hops = ex->hops;
 
-  for (iter = zero; lt(iter, mod); iter = plus(iter, one))
-    set(vecref_l(h->table, iter), copy_hash_chain(vecref(ex->table, iter)));
+  for (i = 0; i < h->modulus; i++)
+    set(mkloc(h->table->v.vec[i], h->table),
+        copy_hash_chain(ex->table->v.vec[i]));
 
   return hash;
 }
@@ -894,7 +893,7 @@ val gethash_c(val self, val hash, val key, loc new_p)
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   int lim = hash_rec_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
-  loc pchain = vecref_l(h->table, num_fast(hv % h->modulus));
+  loc pchain = mkloc(h->table->v.vec[hv % h->modulus], h->table);
   val old = deref(pchain);
   val cell = h->hops->acons_new_c_fun(key, hv, new_p, pchain);
   if (old != deref(pchain) && ++h->count > 2 * h->modulus && h->usecount == 0)
@@ -907,7 +906,7 @@ val gethash_e(val self, val hash, val key)
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   int lim = hash_rec_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
-  val chain = vecref(h->table, num_fast(hv % h->modulus));
+  val chain = h->table->v.vec[hv % h->modulus];
   return h->hops->assoc_fun(key, hv, chain);
 }
 
@@ -961,7 +960,7 @@ val remhash(val hash, val key)
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   int lim = hash_rec_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
-  val *pchain = valptr(vecref_l(h->table, num_fast(hv % h->modulus)));
+  val *pchain = &h->table->v.vec[hv % h->modulus];
   val existing = h->hops->assoc_fun(key, hv, *pchain);
 
   if (existing) {
@@ -1078,7 +1077,7 @@ val hash_next(val iter)
       h->usecount--;
       return nil;
     }
-    set(mkloc(hi->cons, iter), vecref(h->table, num_fast(hi->chain)));
+    set(mkloc(hi->cons, iter), h->table->v.vec[hi->chain]);
   }
   return us_car(hi->cons);
 }
@@ -1103,7 +1102,7 @@ val hash_peek(val iter)
   do {
     if (++chain >= h->modulus)
       return nil;
-    cell = vecref(h->table, num_fast(chain));
+    cell = h->table->v.vec[chain];
   } while (!cell);
   return us_car(cell);
 }
@@ -1155,8 +1154,7 @@ static void do_weak_tables(void)
       /* Sweep through all entries. Delete any which have keys
          that are garbage. */
       for (i = 0; i < h->modulus; i++) {
-        val ind = num_fast(i);
-        val *pchain = valptr(vecref_l(h->table, ind));
+        val *pchain = &h->table->v.vec[i];
         val *iter;
 
         for (iter = pchain; !gc_is_reachable(*iter); ) {
@@ -1179,8 +1177,7 @@ static void do_weak_tables(void)
       /* Sweep through all entries. Delete any which have values
          that are garbage. */
       for (i = 0; i < h->modulus; i++) {
-        val ind = num_fast(i);
-        val *pchain = valptr(vecref_l(h->table, ind));
+        val *pchain = &h->table->v.vec[i];
         val *iter;
 
         for (iter = pchain; !gc_is_reachable(*iter); ) {
@@ -1203,8 +1200,7 @@ static void do_weak_tables(void)
       /* Sweep through all entries. Delete any which have keys
          or values that are garbage. */
       for (i = 0; i < h->modulus; i++) {
-        val ind = num_fast(i);
-        val *pchain = valptr(vecref_l(h->table, ind));
+        val *pchain = &h->table->v.vec[i];
         val *iter;
 
         for (iter = pchain; !gc_is_reachable(*iter); ) {
