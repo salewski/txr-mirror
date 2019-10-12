@@ -1257,5 +1257,5 @@ void scrub_scanner(scanner_t *yyg, int yy_char, wchar_t *lexeme)
 void parser_l_init(void)
 {
   prot1(&form_to_ln_hash);
-  form_to_ln_hash = make_hash(t, nil, nil);
+  form_to_ln_hash = make_eq_hash(t, nil);
 }
