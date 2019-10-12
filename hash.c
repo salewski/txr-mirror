@@ -64,8 +64,8 @@ typedef enum hash_type {
 struct hash_ops {
   ucnum (*hash_fun)(val, int *, ucnum);
   val (*equal_fun)(val, val);
-  val (*assoc_fun)(val key, cnum hash, val list);
-  val (*acons_new_c_fun)(val key, cnum hash, loc new_p, loc list);
+  val (*assoc_fun)(val key, ucnum hash, val list);
+  val (*acons_new_c_fun)(val key, ucnum hash, loc new_p, loc list);
 };
 
 #define hash_ops_init(hash, equal, assoc, acons) \
@@ -665,7 +665,7 @@ static void hash_grow(struct hash *h, val hash)
   setcheck(hash, new_table);
 }
 
-static val hash_assoc(val key, cnum hash, val list)
+static val hash_assoc(val key, ucnum hash, val list)
 {
   while (list) {
     val elem = us_car(list);
@@ -677,7 +677,7 @@ static val hash_assoc(val key, cnum hash, val list)
   return nil;
 }
 
-static val hash_assql(val key, cnum hash, val list)
+static val hash_assql(val key, ucnum hash, val list)
 {
   while (list) {
     val elem = us_car(list);
@@ -689,7 +689,7 @@ static val hash_assql(val key, cnum hash, val list)
   return nil;
 }
 
-static val hash_assq(val key, cnum hash, val list)
+static val hash_assq(val key, ucnum hash, val list)
 {
   while (list) {
     val elem = us_car(list);
@@ -702,7 +702,7 @@ static val hash_assq(val key, cnum hash, val list)
 }
 
 
-static val hash_acons_new_c(val key, cnum hash, loc new_p, loc list)
+static val hash_acons_new_c(val key, ucnum hash, loc new_p, loc list)
 {
   val existing = hash_assoc(key, hash, deref(list));
 
@@ -720,7 +720,7 @@ static val hash_acons_new_c(val key, cnum hash, loc new_p, loc list)
   }
 }
 
-static val hash_aconsql_new_c(val key, cnum hash, loc new_p, loc list)
+static val hash_aconsql_new_c(val key, ucnum hash, loc new_p, loc list)
 {
   val existing = hash_assql(key, hash, deref(list));
 
@@ -738,7 +738,7 @@ static val hash_aconsql_new_c(val key, cnum hash, loc new_p, loc list)
   }
 }
 
-static val hash_aconsq_new_c(val key, cnum hash, loc new_p, loc list)
+static val hash_aconsq_new_c(val key, ucnum hash, loc new_p, loc list)
 {
   val existing = hash_assq(key, hash, deref(list));
 
@@ -893,7 +893,7 @@ val gethash_c(val self, val hash, val key, loc new_p)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   int lim = hash_rec_limit;
-  cnum hv = h->hops->hash_fun(key, &lim, h->seed);
+  ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
   loc pchain = vecref_l(h->table, num_fast(hv % h->modulus));
   val old = deref(pchain);
   val cell = h->hops->acons_new_c_fun(key, hv, new_p, pchain);
@@ -906,7 +906,7 @@ val gethash_e(val self, val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   int lim = hash_rec_limit;
-  cnum hv = h->hops->hash_fun(key, &lim, h->seed);
+  ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
   val chain = vecref(h->table, num_fast(hv % h->modulus));
   return h->hops->assoc_fun(key, hv, chain);
 }
@@ -960,7 +960,7 @@ val remhash(val hash, val key)
   val self = lit("remhash");
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   int lim = hash_rec_limit;
-  cnum hv = h->hops->hash_fun(key, &lim, h->seed);
+  ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
   val *pchain = valptr(vecref_l(h->table, num_fast(hv % h->modulus)));
   val existing = h->hops->assoc_fun(key, hv, *pchain);
 

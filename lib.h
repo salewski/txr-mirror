@@ -114,7 +114,7 @@ struct cons {
 struct cons_hash_entry {
   obj_common;
   val car, cdr;
-  cnum hash;
+  ucnum hash;
 };
 
 struct string {
