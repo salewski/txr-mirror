@@ -1450,7 +1450,7 @@ static val macroexpand(val form, val menv);
 
 val eval_intrinsic(val form, val env)
 {
-  val form_ex = macroexpand(form, env);
+  val form_ex = macroexpand(form, nil);
   val op;
 
   if (consp(form_ex) &&
