@@ -11647,6 +11647,85 @@ or more of the digits
 or
 .codn 1 .
 
+.NP* Tree Node Literals
+
+.meIP >> #N([ key >> [ left <> [ right ]]])
+
+The notation
+.code #N
+followed by list syntax denotes a tree node literal. The list syntax must be a
+proper list that has up to three elements. If the list is empty, it may not
+be written as
+.codn nil .
+
+A tree node is an object of type
+.codn tnode .
+Every
+.code tnode
+has three elements: a
+.metn key ,
+a
+.meta left
+link and a
+.meta right
+link.  They may be objects of any type.
+If the tree node literal syntax omits any of these, they default to
+.codn nil .
+
+.NP* Tree Literals
+
+.meIP >> #T([([ keyfun >> [ lessfun <> [ equalfun ]]]) << item *])
+
+The notation
+.code #T
+followed by list syntax denotes a tree literal, which specifies an
+object of type
+.codn tree .
+Objects of type
+.code tree
+are search trees.
+
+The list syntax which follows
+.code #T
+may be empty. If so, it cannot be written as
+.codn nil .
+
+The first element of the
+.code #T
+syntax, if present, must be a list of zero to three elements.
+These elements are symbols giving the names of the
+.code tree
+object's
+.IR "key abstraction functions" .
+.meta keyfun
+specifies the key function which is applied to each element to
+retrieve its key. If it is omitted, the object shall use the
+.code identity
+function as its key.
+The
+.meta lessfun
+specifies the name of the comparison function by which keys are compared
+for inequality. It defaults to
+.codn less .
+The
+.meta equalfun
+specifies the function by which keys are compared for equality. It
+defaults to
+.codn equal .
+A symbol which is specified as the name of any of these three special
+functions must be an element of the list stored in the special variable
+.codn *tree-fun-whitelist* ,
+otherwise the string literal is diagnosed as erroneous.
+Note: this is due to security considerations, since these three
+functions are executed during the processing of tree syntax.
+
+A tree object is constructed from a tree literal by first creating an empty
+tree endowed with the three key abstraction functions that are indicated in the
+syntax, either explicitly or as defaults. Then, every
+.meta element
+object is constructed from its respective literal syntax and inserted into
+the tree.
+
 .coNP The @ .. notation
 In \*(TL, there is a special "dotdot" notation consisting of a pair of dots.
 This can be written between successive atoms or compound expressions, and is a
@@ -17321,6 +17400,10 @@ brackets indicate a plurality of types which are not listed by name:
         |                    |
         |                    +--- buf
         |                    |
+        |                    +--- tree
+        |                    |
+        |                    +--- tree-iter
+        |                    |
         |                    +--- cptr
         |                    |
         |                    +--- struct-type
@@ -17357,6 +17440,8 @@ brackets indicate a plurality of types which are not listed by name:
         +--- env
         |
         +--- range
+        |
+        +--- tnode
         |
         +--- pkg
         |
@@ -45044,6 +45129,483 @@ functions.
 
 The value is derived from the host environment, from information such
 as the process ID and time of day.
+
+.SS* Search Tree Library
+
+\*(TL provides binary search trees, which are objects of type
+.codn tree .
+Trees have a printed notation denoted by the
+.code #T
+prefix. A tree may be constructed by invoking the
+.code tree
+function.
+
+Binary search trees differ from hashes in that they maintain items in
+order. They also differ from hashes in that they store only elements,
+not key-value pairs. Every tree is associated with three
+.IR "key abstraction functions" :
+It has a
+.I "key function"
+which is applied to the elements to map each one to a key.
+It also has a
+.I "less function"
+and
+.I "equal function"
+for comparing keys.
+
+If these three functions are not specified, they respectively default to
+.codn identity ,
+.code less
+and
+.codn equal ,
+which means that the tree uses its elements as keys directly, and
+that they are compared using
+.code less
+and
+.codn equal .
+Note: these default functions work for simple elements such as character
+strings or numbers, and also structures implementing
+.IR "equality substitution" .
+
+The elements are stored inside a tree using tree nodes, which are objects
+of type
+.codn tnode ,
+whose printed notation is introduced by the
+.code #N
+prefix.
+
+Several tree-related functions take
+.code tnode
+objects as arguments or return
+.code tnode
+objects.
+
+.coNP Function @ tnode
+.synb
+.mets (tnode < key < left << right)
+.syne
+.desc
+The
+.code tnode
+function allocates, initializes and returns a single tree node.
+A tree node has three fields
+.metn key ,
+.meta left
+and
+.metn right ,
+which are accessed using the functions
+.codn key ,
+.code left
+and
+.codn right .
+
+.coNP Function @ tnodep
+.synb
+.mets (tnodep << value )
+.syne
+.desc
+The
+.code tnodep
+function returns
+.code t
+if
+.meta value
+is a tree node. Otherwise, it returns
+.codn nil .
+
+.coNP Functions @, key @ left and @ right
+.synb
+.mets (key << node )
+.mets (left << node )
+.mets (right << node )
+.syne
+.desc
+The
+.codn key ,
+.code left
+and
+.code right
+functions retrieve the corresponding fields of the
+.meta node
+object, which must be of type
+.codn tnode .
+
+.coNP Function @ tree
+.synb
+.mets (tree >> [ elems >> [ keyfun >> [ lessfun <> [ equalfun ]]]])
+.syne
+.desc
+The
+.code tree
+function constructs and returns a new tree object. All arguments are optional.
+
+The
+.meta elems
+argument specifies a sequence of the elements to be stored in the tree.
+If the argument is absent or the sequence is empty, then an empty
+tree is created.
+
+The
+.meta keyfun
+argument specifies the function which is applied to every element
+to produce a key. If omitted, the the tree object shall behave as if the
+.code identity
+function were used, taking the elements themselves to be keys.
+
+The
+.meta lessfun
+argument specifies the function by which two keys are compared for
+inequality. If omitted, the
+.code less
+function is used. A function used as
+.meta lessfun
+should take two arguments, produce a Boolean result, and have ordering
+properties similar to the
+.code less
+function.
+
+The
+.meta equalfun
+argument specifies the function by which two keys are compared for
+equality. The default value is the
+.code equal
+function. A function used as
+.meta equalfun
+should take two arguments, produce a Boolean result, and have the
+properties of an equivalence relation.
+
+These three functions are collectively referred to as the tree's
+.IR "key abstraction functions" .
+
+.coNP Function @ treep
+.synb
+.mets (treep << value )
+.syne
+.desc
+The
+.code treep
+function returns
+.code t
+if
+.meta value
+is a tree. Otherwise, it returns
+.codn nil .
+
+.coNP Function @ tree-insert-node
+.synb
+.mets (tree-insert-node < tree << node )
+.syne
+.desc
+The
+.code tree-insert-node
+function inserts an existing
+.meta node
+object into a search tree.
+
+The
+.meta tree
+object must be of type
+.codn tree ,
+and
+.meta node
+must be of type
+.codn tnode .
+
+The
+.code key
+field of the
+.meta node
+object holds the element that is being inserted. The actual search key
+which is associated with this element is determined by applying
+.metn tree 's
+.meta keyfun
+to the the
+.metn node 's
+.code key
+value.
+
+The
+.meta node
+object must not currently be inserted into any existing tree.
+The values stored in the
+.code left
+and
+.code right
+fields of
+.meta node
+are overwritten as required by the semantics of the insertion operation.
+Their original values are ignored.
+
+If
+.meta tree
+already contains node with with a matching key, then
+.meta node
+replaces that node; that node is deleted from the tree.
+
+The
+.code tree-insert-node
+function returns the
+.meta node
+argument.
+
+.coNP Function @ tree-insert-node
+.synb
+.mets (tree-insert < tree << elem )
+.syne
+.desc
+The
+.code tree-insert
+function inserts
+.meta elem
+into
+.metn tree .
+
+The
+.meta tree
+argument must be an object of type
+.codn tree .
+
+The
+.meta elem
+value may be of any type which is semantically compatible with
+.metn tree 's
+key abstraction functions.
+
+The
+.code tree-insert
+function allocates a new
+.code tnode
+as if by invoking
+.mono
+.meti (tnode < elem nil nil)
+.onom
+function, and inserts that
+.code tnode
+as if by using the
+.code tree-insert-node
+function.
+
+The
+.code tree-insert
+function returns the newly inserted
+.code tnode
+object.
+
+.coNP Function @ tree-lookup-node
+.synb
+.mets (tree-lookup-node < tree << key )
+.syne
+.desc
+The
+.code tree-lookup-node
+searches
+.meta tree
+for an element which matches
+.metn key .
+
+The
+.meta tree
+argument must be an object of type
+.codn tree .
+
+The
+.meta key
+argument may be a value of any type.
+
+An element inside
+.meta tree
+matches
+.meta key
+if the tree's
+.meta keyfun
+applied to that element produces a key value which is equal to
+.meta key
+under the tree's
+.meta equalfun
+function.
+
+If such an element is found, then
+.code tree-lookup-node
+returns the tree node which contains that element as its
+.meta key
+field.
+
+If no such element is found, then
+.code tree-lookup-node
+returns
+.codn nil .
+
+.coNP Function @ tree-lookup
+.synb
+.mets (tree-lookup < tree << key )
+.syne
+.desc
+The
+.code tree-lookup
+function finds an element inside
+.meta tree
+which matches the given
+.metn key .
+
+If the element is found, it is returned. Otherwise,
+.code nil
+is returned.
+
+Note: the semantics of the
+.code tree-lookup
+function can be understood in terms of
+.codn tree-lookup-node .
+A possible implementation is this:
+
+.verb
+  (defun tree-lookup (tree key)
+    (iflet ((node (tree-lookup-node tree key)))
+      (key node)))
+.brev
+
+.coNP Function @ tree-delete
+.synb
+.mets (tree-delete < tree << key )
+.syne
+.desc
+The
+.code tree-delete
+function searches
+.meta tree
+for an element which matches
+.metn key .
+
+The
+.meta tree
+argument must be an object of type
+.codn tree .
+
+The
+.meta key
+argument may be a value of any type which is semantically compatible with
+.metn tree 's
+key abstraction functions.
+
+If the matching element is found, then its node is removed from
+the tree, and returned.
+
+Otherwise, if a matching element is not found, then
+.code nil
+is returned.
+
+.coNP Function @ tree-root
+.synb
+.mets (tree-root < tree )
+.syne
+.desc
+The
+.code tree-root
+function returns the root node of
+.metn tree ,
+which must be a
+.code tree
+object.
+
+If
+.meta tree
+is empty, then
+.code nil
+is returned.
+
+.coNP Function @ tree-clear
+.synb
+.mets (tree-root < tree )
+.syne
+.desc
+The
+.code tree-clear
+function deletes all elements from
+.metn tree ,
+which must be a
+.code tree
+object.
+
+If
+.meta tree
+is already empty, then the function returns
+.codn nil ,
+otherwise it returns an integer which gives the count of the number
+of deleted nodes.
+
+.coNP Function @ tree-begin
+.synb
+.mets (tree-begin < tree )
+.syne
+.desc
+The
+.code tree-begin
+function returns a new object of type
+.code tree-iter
+which provides in-order traversal of the elements stored in the tree.
+
+The
+.meta tree
+argument must be an object of type
+.codn tree .
+
+Note: the elements are traversed by applying the
+.code tree-next
+function to the
+.code tree-iter
+object.
+
+.coNP Function @ tree-next
+.synb
+.mets (tree-next < iter )
+.syne
+.desc
+The
+.code tree-next
+function returns the next node in sequence from the tree iterator
+.metn iter ,
+which must be an object of type
+.codn tree-iter .
+Note: the
+.code tree-begin
+function returns such a
+.code tree-iter
+object.
+
+If there are no more nodes to be visited, the function returns
+.codn nil .
+
+If, during the traversal of a tree, nodes are inserted or deleted,
+the behavior of
+.code tree-next
+on
+.code tree-iter
+object that were obtained prior to the insertion or deletion is
+not specified. An attempt to complete the iteration may not successfully
+visit all keys that should be visited.
+
+.coNP Special variable @ *tree-fun-whitelist*
+.desc
+The
+.code *tree-fun-whitelist*
+variable holds a list of function names
+that may be used in the
+.code #T
+tree literal syntax as the
+.metn keyfun ,
+.meta lessfun
+or
+.meta equalfun
+operations of a tree. The initial value of this variable is a list which
+holds at least the following three symbols:
+.codn identity ,
+.code less
+and
+.codn equal .
+
+The application may change the value of this variable, or dynamically
+bind it, in order to allow
+.code #T
+literals to be processed which specify functions other than these three.
 
 .SS* Partial Evaluation and Combinators
 .coNP Macros @ op and @ do
