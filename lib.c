@@ -8550,10 +8550,10 @@ static cnum med_of_three(val vec, val lessfun, val keyfun, cnum from, cnum to,
 static cnum middle_pivot(val vec, val lessfun, val keyfun, cnum from, cnum to,
                          val *pkval)
 {
-    cnum pivot = from + (to - from) / 2;
-    val pval = ref(vec, num_fast(pivot));
-    *pkval = funcall1(keyfun, pval);
-    return pivot;
+  cnum pivot = from + (to - from) / 2;
+  val pval = ref(vec, num_fast(pivot));
+  *pkval = funcall1(keyfun, pval);
+  return pivot;
 }
 
 static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
