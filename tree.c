@@ -423,11 +423,17 @@ static val tree_lookup(val tree, val key)
   return if2(node, node->tn.key);
 }
 
-static val tree_delete(val tree, val key)
+static val tree_delete_node(val tree, val key)
 {
-  val self = lit("tree-delete");
+  val self = lit("tree-delete-node");
   struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
   return tr_delete(tr, key);
+}
+
+static val tree_delete(val tree, val key)
+{
+  val node = tree_delete_node(tree, key);
+  return if2(node, node->tn.key);
 }
 
 static val tree_root(val tree)
@@ -678,6 +684,7 @@ void tree_init(void)
   reg_fun(intern(lit("tree-insert"), user_package), func_n2(tree_insert));
   reg_fun(intern(lit("tree-lookup-node"), user_package), func_n2(tree_lookup_node));
   reg_fun(intern(lit("tree-lookup"), user_package), func_n2(tree_lookup));
+  reg_fun(intern(lit("tree-delete-node"), user_package), func_n2(tree_delete_node));
   reg_fun(intern(lit("tree-delete"), user_package), func_n2(tree_delete));
   reg_fun(intern(lit("tree-root"), user_package), func_n1(tree_root));
   reg_fun(intern(lit("tree-begin"), user_package), func_n1(tree_begin));

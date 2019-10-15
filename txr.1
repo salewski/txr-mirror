@@ -45463,13 +45463,13 @@ A possible implementation is this:
       (key node)))
 .brev
 
-.coNP Function @ tree-delete
+.coNP Function @ tree-delete-node
 .synb
-.mets (tree-delete < tree << key )
+.mets (tree-delete-node < tree << key )
 .syne
 .desc
 The
-.code tree-delete
+.code tree-delete-node
 function searches
 .meta tree
 for an element which matches
@@ -45492,6 +45492,33 @@ the tree, and returned.
 Otherwise, if a matching element is not found, then
 .code nil
 is returned.
+
+.coNP Function @ tree-delete
+.synb
+.mets (tree-delete < tree << key )
+.syne
+.desc
+The
+.code tree-delete
+function tries to removes from
+.meta tree
+the element which matches
+.metn key .
+
+If successful, it returns that element, otherwise it returns
+.codn nil .
+
+Note: the semantics of the
+.code tree-delete
+function can be understood in terms of
+.codn tree-delete-node .
+A possible implementation is this:
+
+.verb
+  (defun tree-delete (tree key)
+    (iflet ((node (tree-delete-node tree key)))
+      (key node)))
+.brev
 
 .coNP Function @ tree-root
 .synb
