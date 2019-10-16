@@ -8177,7 +8177,10 @@ val copy_cons(val cell)
 
 val copy_alist(val list)
 {
-  return mapcar(func_n1(copy_cons), list);
+  list_collect_decl (out, ptail);
+  for (; !endp(list); list = cdr(list))
+    ptail = list_collect(ptail, copy_cons(car(list)));
+  return out;
 }
 
 val mapcar_listout(val fun, val seq)
