@@ -24799,6 +24799,69 @@ Finally, if the operation succeeds, then
 .code fill-buf-adjust
 adjusts the length of the buffer to match the position that is returned.
 
+.coNP Functions @ file-get-buf and @ command-get-buf
+.synb
+.mets (file-get-buf << name )
+.mets (command-get-buf << cmd )
+.syne
+.desc
+The
+.code file-get-buf
+function opens a text stream over the file indicated by the string argument
+.meta name
+for reading. The entire file is read and its contents are returned as a
+buffer object. The buffer's length corresponds to the number of bytes
+read from the file.
+
+The
+.code command-get
+function opens text stream over an input command pipe created for
+the command string
+.metn cmd ,
+as if by the
+.code open-command
+function.  It read bytes from the pipe until the indication that no more
+input is available. The bytes are returned aggregated into a buffer object.
+
+.coNP Functions @, file-put-buf @ file-append-buf and @ command-put-buf
+.synb
+.mets (file-put-buf < name << buf )
+.mets (file-append-buf < name << buf )
+.mets (command-put-buf < cmd << buf )
+.syne
+.desc
+The
+.code file-put-buf
+function opens a text stream over the file indicated by the string argument
+.metn name ,
+writes the contents of the buffer object
+.meta buf
+into the file, and then closes the file.  If the file doesn't exist, it is
+created.  If it exists, it is truncated to zero length and overwritten.
+
+The
+.code file-append-buf
+function is similar to
+.code file-put-buf
+except that if the file exists, it isn't overwritten. Rather, the buffer
+is appended to the file.
+
+The
+.code command-put-buf
+function opens an output text stream over an output command pipe created
+for the command specified in the string argument
+.metn cmd ,
+as if by the
+.code open-command
+function.
+It then writes the contents of buffer
+.meta buf
+into the stream and closes the stream.
+
+The return value of all three functions is that of the
+.code put-buf
+operation which is implicitly performed.
+
 .SS* Structures
 
 \*(TX supports a structure data type. Structures are objects which
@@ -66558,69 +66621,6 @@ The
 .meta type
 argument may not be a variable length type, such as an array of
 unspecified size.
-
-.coNP Functions @ file-get-buf and @ command-get-buf
-.synb
-.mets (file-get-buf << name )
-.mets (command-get-buf << cmd )
-.syne
-.desc
-The
-.code file-get-buf
-function opens a text stream over the file indicated by the string argument
-.meta name
-for reading. The entire file is read and its contents are returned as a
-buffer object. The buffer's length corresponds to the number of bytes
-read from the file.
-
-The
-.code command-get
-function opens text stream over an input command pipe created for
-the command string
-.metn cmd ,
-as if by the
-.code open-command
-function.  It read bytes from the pipe until the indication that no more
-input is available. The bytes are returned aggregated into a buffer object.
-
-.coNP Functions @, file-put-buf @ file-append-buf and @ command-put-buf
-.synb
-.mets (file-put-buf < name << buf )
-.mets (file-append-buf < name << buf )
-.mets (command-put-buf < cmd << buf )
-.syne
-.desc
-The
-.code file-put-buf
-function opens a text stream over the file indicated by the string argument
-.metn name ,
-writes the contents of the buffer object
-.meta buf
-into the file, and then closes the file.  If the file doesn't exist, it is
-created.  If it exists, it is truncated to zero length and overwritten.
-
-The
-.code file-append-buf
-function is similar to
-.code file-put-buf
-except that if the file exists, it isn't overwritten. Rather, the buffer
-is appended to the file.
-
-The
-.code command-put-buf
-function opens an output text stream over an output command pipe created
-for the command specified in the string argument
-.metn cmd ,
-as if by the
-.code open-command
-function.
-It then writes the contents of buffer
-.meta buf
-into the stream and closes the stream.
-
-The return value of all three functions is that of the
-.code put-buf
-operation which is implicitly performed.
 
 .SS* Foreign Arrays
 
