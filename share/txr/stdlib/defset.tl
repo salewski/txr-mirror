@@ -119,3 +119,12 @@
 
 (defset sub-str (str : (from 0) (to t)) items
   ^(progn (replace-str ,str ,items ,from ,to) ,items))
+
+(defset left (node) nleft
+  ^(progn (set-left ,node ,nleft) ,nleft))
+
+(defset right (node) nright
+  ^(progn (set-right ,node ,nright) ,nright))
+
+(defset key (node) nkey
+  ^(progn (set-key ,node ,nkey) ,nkey))

@@ -12804,6 +12804,9 @@ defined by \*(TX programs.
 .mets (sock-peer << socket )
 .mets (carray-sub < carray >> [ from <> [ to ]])
 .mets (sub-buf < buf >> [ from <> [ to ]])
+.mets (left << node )
+.mets (right << node )
+.mets (key << node )
 .onom
 
 .NP* Built-In Place-Mutating Operators
@@ -45215,11 +45218,15 @@ if
 is a tree node. Otherwise, it returns
 .codn nil .
 
-.coNP Functions @, key @ left and @ right
+.coNP Accessors @, key @ left and @ right
 .synb
 .mets (key << node )
 .mets (left << node )
 .mets (right << node )
+.mets (set (car << object ) << new-value )
+.mets (set (key << node ) << new-key )
+.mets (set (left << node ) << new-left )
+.mets (set (right << node ) << new-right )
 .syne
 .desc
 The
@@ -45231,6 +45238,59 @@ functions retrieve the corresponding fields of the
 .meta node
 object, which must be of type
 .codn tnode .
+
+Forms based on the
+.codn key ,
+.code left
+and
+.code right
+symbol are defined as syntactic places.
+Assigning a value
+.code v
+to
+.code "(key n)"
+using the
+.code set
+operator, as in
+.codn "(set (key n) v)" ,
+is equivalent to
+.code "(set-key n v)"
+except that the value of the expression is
+.code v
+rather than
+.codn n .
+Similar statements hold true for
+.code left
+and
+.code right
+in relation to
+.code set-left
+and
+.codn set-right .
+
+.coNP Functions @, set-key @ set-left and @ set-right
+.synb
+.mets (set-key < node << new-key )
+.mets (set-left < node << new-left )
+.mets (set-right < node << new-right )
+.syne
+.desc
+The
+.codn set-key ,
+.code set-left
+and
+.code set-right
+functions replace the corresponding fields of
+.meta node
+with new values.
+
+The
+.meta node
+argument must be of type
+.codn tnode .
+
+These functions all return
+.metn node .
 
 .coNP Function @ copy-tnode
 .synb
