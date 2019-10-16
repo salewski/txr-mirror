@@ -28073,6 +28073,8 @@ the type of the argument, as follows:
 .meti (copy-carray << object )
 .coIP random-state
 .meti (make-random-state << object )
+.coIP tnode
+.meti (copy-tnode << object )
 .RE
 
 .IP
@@ -45229,6 +45231,23 @@ functions retrieve the corresponding fields of the
 .meta node
 object, which must be of type
 .codn tnode .
+
+.coNP Function @ copy-tnode
+.synb
+.mets (copy-tnode << node )
+.syne
+.desc
+The
+.code copy-tnode
+function creates a new
+.code tnode
+objects, whose
+.codn key ,
+.code left
+and
+.code right
+fields are copied from
+.codn node .
 
 .coNP Function @ tree
 .synb

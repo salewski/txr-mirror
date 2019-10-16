@@ -119,6 +119,13 @@ val key(val node)
   return node->tn.key;
 }
 
+val copy_tnode(val node)
+{
+  val obj = (type_check(lit("copy-tnode"), node, TNOD), make_obj());
+  obj->tn = node->tn;
+  return obj;
+}
+
 static ucnum tn_size(val node)
 {
   return 1 + if3(node->tn.right, tn_size(node->tn.right), 0) +
@@ -677,6 +684,7 @@ void tree_init(void)
   reg_fun(intern(lit("left"), user_package), func_n1(left));
   reg_fun(intern(lit("right"), user_package), func_n1(right));
   reg_fun(intern(lit("key"), user_package), func_n1(key));
+  reg_fun(intern(lit("copy-tnode"), user_package), func_n1(copy_tnode));
   reg_fun(tree_s, func_n4o(tree, 0));
   reg_fun(tree_construct_s, func_n2(tree_construct));
   reg_fun(intern(lit("treep"), user_package), func_n1(treep));

@@ -10072,6 +10072,8 @@ val copy(val seq)
     return copy_buf(seq);
   case FUN:
     return copy_fun(seq);
+  case TNOD:
+    return copy_tnode(seq);
   case COBJ:
     if (seq->co.cls == hash_s)
       return copy_hash(seq);
