@@ -8160,9 +8160,19 @@ val alist_nremove1(val list, val key)
   return list;
 }
 
-val copy_cons(val c)
+val copy_cons(val cell)
 {
-  return cons(car(c), cdr(c));
+  switch (type(cell)) {
+  case CONS:
+  case LCONS:
+    {
+      val obj = make_obj();
+      *obj = *cell;
+      return obj;
+    }
+  default:
+    type_mismatch(lit("copy-cons: ~s is not a cons"), cell, nao);
+  }
 }
 
 val copy_alist(val list)

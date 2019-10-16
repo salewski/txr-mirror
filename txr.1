@@ -19377,12 +19377,28 @@ for the empty list
 .desc
 The
 .code copy-cons
-function creates a fresh cons cell, whose
-.code car
-and
-.code cdr
-fields are copied from
-.codn cons .
+function creates and returns a new object that is a replica of
+.metn cons .
+
+The
+.meta cons
+argument must be either a
+.code cons
+cell, or else a lazy cons: an object of type
+.codn lcons .
+
+A new cell of the same type as
+.meta cons
+is created, and all of its fields are initialized by
+copying the corresponding fields from
+.metn cons .
+
+If
+.meta cons
+is lazy, the newly created object is in the same
+state as the original. If the original has not yet been updated
+and thus has an update function, the copy also has not yet been
+updated and has the same update function.
 
 .coNP Functions @ reverse and @ nreverse
 .synb
