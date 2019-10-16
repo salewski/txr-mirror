@@ -43449,6 +43449,16 @@ removed from the stream.  If
 .meta include-match
 is true, that matching text is included in
 the returned string. Otherwise, it is discarded.
+The next available character in the stream is the first
+non-matching character following the matched text.
+However, the next available character, as well as some number of
+subsequent characters, may originate from the stream's push-back buffer,
+rather than from the underlying operating system object,
+due to this function's internal use of the
+.code unget-char
+function. Therefore, the stream position, as would be reported by
+.codn seek-stream ,
+is unspecified.
 
 .coNP Functions @ scan-until-match and @ count-until-match
 .synb
@@ -43493,6 +43503,19 @@ and whose
 .code cdr
 holds a character string that comprises the text matched by
 .metn regex .
+The text matched by
+.meta regex
+is as long as possible, and is removed from the stream.
+The next available character in the stream is the first
+non-matching character following the matched text.
+However, the next available character, as well as some number of
+subsequent characters, may originate from the stream's push-back buffer,
+rather than from the underlying operating system object,
+due to these functions' internal use of the
+.code unget-char
+function. Therefore, the stream position, as would be reported by
+.codn seek-stream ,
+is unspecified.
 
 .coNP Functions @, m^$ @ m^ and @ m$
 .synb
