@@ -11553,7 +11553,7 @@ expression.
 
 The notation
 .code #H
-followed by a nested list syntax denotes a hash table literal.
+followed by list syntax denotes a hash table literal.
 The first item in the syntax is a list of keywords. These are the same
 keywords as are used when calling the function hash to construct
 a hash table. Allowed keywords are:
@@ -11587,6 +11587,13 @@ which defaults to a
 hash table based on the
 .code eql
 function, with no weak semantics or user data.
+
+The entire syntax following
+.code #H
+may be an empty list; however, that empty list may not
+be specified as
+.codn nil ;
+the empty parentheses notation is required.
 
 The hash table key-value contents are specified as zero or more
 two-element lists, whose first element specifies the
