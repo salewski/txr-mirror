@@ -596,14 +596,18 @@ val tree(val keys_in, val key_fn, val less_fn, val equal_fn)
   val keys = default_null_arg(keys_in), key;
   val tree = cobj(coerce(mem_t *, tr), tree_s, &tree_ops);
   seq_iter_t ki;
+  uses_or2;
 
   tr->key_fn = default_null_arg(key_fn);
   tr->less_fn = default_null_arg(less_fn);
   tr->equal_fn = default_null_arg(equal_fn);
 
-  tr->key_fn_name = if2(tr->key_fn, func_get_name(tr->key_fn, nil));
-  tr->less_fn_name = if2(tr->less_fn, func_get_name(tr->less_fn, nil));
-  tr->equal_fn_name = if2(tr->equal_fn, func_get_name(tr->equal_fn, nil));
+  tr->key_fn_name = if2(tr->key_fn,
+                        or2(func_get_name(tr->key_fn, nil), tr->key_fn));
+  tr->less_fn_name = if2(tr->less_fn,
+                         or2(func_get_name(tr->less_fn, nil), tr->key_fn));
+  tr->equal_fn_name = if2(tr->equal_fn,
+                          or2(func_get_name(tr->equal_fn, nil), tr->key_fn));
 
   seq_iter_init(tree_s, &ki, keys);
 
