@@ -19400,6 +19400,69 @@ state as the original. If the original has not yet been updated
 and thus has an update function, the copy also has not yet been
 updated and has the same update function.
 
+.coNP Function @ copy-tree
+.synb
+.mets (copy-tree << obj )
+.syne
+.desc
+The
+.code copy-tree
+function returns a copy of
+.meta obj
+which represents an arbitrary
+.codn cons -cell-based
+structure.
+
+The cell structure of
+.meta obj
+is traversed and a similar structure is constructed, but without regard for
+substructure sharing or circularity.
+
+More precisely, if
+.meta obj
+is an atom, then it is returned.
+If it is an ordinary
+.code cons
+cell, then
+.code copy-tree
+is recursively applied to the
+.code car
+and
+.code cdr
+fields to produce their individual replicas. A new
+.code cons
+cell is then produced from the replicated
+.code car
+and
+.codn cdr .
+If
+.meta obj
+is a lazy
+.codn cons ,
+then just like in the ordinary
+.code cons
+case, the
+.code car
+and
+.code cdr
+fields are duplicated with a recursive call to
+.codn copy-tree .
+Then, a lazy
+.code cons
+is created from these replicated fields. If
+.meta cell
+has an update function, then the newly created lazy
+.code cons
+has the same update function; the function isn't copied.
+
+Like
+.codn copy-cons ,
+the
+.code copy-tree
+function doesn't trigger the update of lazy conses.
+The copies of lazy conses which have not been updated
+are also conses which have not been updated.
+
 .coNP Functions @ reverse and @ nreverse
 .synb
 .mets (reverse << list )

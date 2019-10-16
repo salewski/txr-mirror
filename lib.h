@@ -1061,6 +1061,7 @@ val alist_nremove(val list, val keys);
 val alist_nremovev(val list, struct args *keys);
 val alist_nremove1(val list, val key);
 val copy_cons(val cons);
+val copy_tree(val tree);
 val copy_alist(val list);
 val mapcar_listout(val fun, val list);
 val mapcar(val fun, val list);

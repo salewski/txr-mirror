@@ -8175,6 +8175,21 @@ val copy_cons(val cell)
   }
 }
 
+val copy_tree(val tree)
+{
+  if (atom(tree)) {
+    return tree;
+  } else {
+    val car = copy_tree(tree->c.car);
+    val cdr = copy_tree(tree->c.cdr);
+    val copy = make_obj();
+    *copy = *tree;
+    copy->c.car = car;
+    copy->c.cdr = cdr;
+    return copy;
+  }
+}
+
 val copy_alist(val list)
 {
   list_collect_decl (out, ptail);
