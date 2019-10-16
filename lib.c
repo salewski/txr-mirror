@@ -10081,6 +10081,8 @@ val copy(val seq)
       return make_random_state(seq, nil);
     if (seq->co.cls == carray_s)
       return copy_carray(seq);
+    if (seq->co.cls == tree_s)
+      return copy_search_tree(seq);
     if (obj_struct_p(seq))
       return copy_struct(seq);
     /* fallthrough */

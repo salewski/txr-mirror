@@ -28078,6 +28078,8 @@ the type of the argument, as follows:
 .meti (make-random-state << object )
 .coIP tnode
 .meti (copy-tnode << object )
+.coIP tree
+.meti (copy-search-tree << object )
 .RE
 
 .IP
@@ -45637,6 +45639,28 @@ is already empty, then the function returns
 .codn nil ,
 otherwise it returns an integer which gives the count of the number
 of deleted nodes.
+
+.coNP Function @ copy-search-tree
+.synb
+.mets (copy-search-tree << tree )
+.syne
+.desc
+The
+.code copy-search-tree
+returns a new tree object which is a copy of
+.metn tree .
+
+The
+.meta tree
+argument must be an object of type
+.codn tree .
+
+The returned object has the same key abstraction functions as
+.meta tree
+and contains the same elements.
+
+The nodes held inside the new tree are freshly allocated,
+but their key objects are shared with the original tree.
 
 .coNP Function @ tree-begin
 .synb

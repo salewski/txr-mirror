@@ -637,6 +637,27 @@ static val tree_construct(val opts, val keys)
   return tree(keys, key_fn, less_fn, equal_fn);
 }
 
+static val deep_copy_tnode(val node)
+{
+  if (node == nil)
+    return nil;
+  return tnode(node->tn.key,
+               deep_copy_tnode(node->tn.left),
+               deep_copy_tnode(node->tn.right));
+}
+
+val copy_search_tree(val tree)
+{
+  val self = lit("copy-search-tree");
+  struct tree *ntr = coerce(struct tree *, malloc(sizeof *ntr));
+  struct tree *otr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  val nroot = deep_copy_tnode(otr->root);
+  val ntree = cobj(coerce(mem_t *, ntr), tree_s, &tree_ops);
+  *ntr = *otr;
+  ntr->root = nroot;
+  return ntree;
+}
+
 val treep(val obj)
 {
   return tnil(type(obj) == COBJ && obj->co.cls == tree_s);
@@ -711,6 +732,7 @@ void tree_init(void)
   reg_fun(intern(lit("copy-tnode"), user_package), func_n1(copy_tnode));
   reg_fun(tree_s, func_n4o(tree, 0));
   reg_fun(tree_construct_s, func_n2(tree_construct));
+  reg_fun(intern(lit("copy-search-tree"), user_package), func_n1(copy_search_tree));
   reg_fun(intern(lit("treep"), user_package), func_n1(treep));
   reg_fun(intern(lit("tree-insert-node"), user_package), func_n2(tree_insert_node));
   reg_fun(intern(lit("tree-insert"), user_package), func_n2(tree_insert));
