@@ -34,3 +34,4 @@
 (defsymacro %max-sm-lev-idx% (macro-time (pred %sm-lev-size%)))
 (defsymacro %max-sm-lev% 15)
 (defsymacro %sm-lev-bits% 6)
+(defsymacro %max-lambda-fixed-args% 127)

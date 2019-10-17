@@ -819,6 +819,9 @@
            (need-frame (or (plusp pars.nfix) pars.rest))
            (nenv (if need-frame (new env up env co me) env))
            lexsyms fvars specials need-dframe)
+      (when (> pars.nfix %max-lambda-fixed-args%)
+        (compile-warning form "~s arguments in a lambda (max is ~s)"
+                         pars.nfix %max-lambda-fixed-args%))
       (flet ((spec-sub (sym)
                (cond
                  ((special-var-p sym)
