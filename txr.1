@@ -59136,7 +59136,7 @@ functions which are usually used for datagram programming.
 Datagram I/O assumes that the datagram datagram socket is connected to a
 specific remote peer, and that peer is implicitly used for all I/O.
 
-Datagram streams solves the message framing problem essentially by
+Datagram streams solve the message framing problem by
 considering a single datagram to be an entire stream.  On input, a datagram
 stream holds an entire datagram in a buffer. The stream ends
 (experiences the EOF condition) after the last byte of this buffer
