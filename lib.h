@@ -147,10 +147,13 @@ struct package {
 
 typedef struct args *varg;
 
+#define FIXPARAM_BITS 7
+#define FIXPARAM_MAX  ((1U << FIXPARAM_BITS) - 1)
+
 struct func {
   obj_common;
-  unsigned fixparam : 7; /* total non-variadic parameters */
-  unsigned optargs : 7;  /* fixparam - optargs = required args */
+  unsigned fixparam : FIXPARAM_BITS; /* total non-variadic parameters */
+  unsigned optargs : FIXPARAM_BITS;  /* fixparam - optargs = required args */
   unsigned variadic : 1;
   unsigned : 1;
   unsigned functype : 16;

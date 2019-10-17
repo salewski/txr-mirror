@@ -6128,15 +6128,23 @@ val func_interp(val env, val form)
 
 val func_vm(val closure, val desc, int fixparam, int reqargs, int variadic)
 {
-  val obj = make_obj();
-  obj->f.type = FUN;
-  obj->f.functype = FVM;
-  obj->f.env = closure;
-  obj->f.f.vm_desc = desc;
-  obj->f.fixparam = fixparam;
-  obj->f.optargs = fixparam - reqargs;
-  obj->f.variadic = (variadic != 0);
-  return obj;
+  if (fixparam > FIXPARAM_MAX) {
+    uw_throwf(error_s, lit("closure in ~s with more than ~s fixed parameters"),
+              desc, unum(FIXPARAM_MAX), nao);
+  } else if (fixparam < 0 || reqargs < 0 || reqargs > fixparam) {
+    uw_throwf(error_s, lit("closure in ~s with bogus parameters"),
+              desc, nao);
+  } else {
+    val obj = make_obj();
+    obj->f.type = FUN;
+    obj->f.functype = FVM;
+    obj->f.env = closure;
+    obj->f.f.vm_desc = desc;
+    obj->f.fixparam = fixparam;
+    obj->f.optargs = fixparam - reqargs;
+    obj->f.variadic = (variadic != 0);
+    return obj;
+  }
 }
 
 val copy_fun(val ofun)
