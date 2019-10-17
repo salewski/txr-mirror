@@ -24862,6 +24862,44 @@ The return value of all three functions is that of the
 .code put-buf
 operation which is implicitly performed.
 
+.coNP Functions @ buf-str and @ str-buf
+.synb
+.mets (buf-str < buf <> [ null-term-p ])
+.mets (str-buf < str <> [ null-term-p ])
+.syne
+.desc
+The
+.code buf-str
+and
+.code str-buf
+functions perform UTF-8 conversion between the buffer and character string
+data types.
+
+The
+.code buf-str
+function takes the contents of buffer
+.meta buf
+to be UTF-8 data, which is converted to a character string and returned.
+Null bytes in the buffer are mapped to the pseudo-null character
+.codn #\exDC00 .
+If a true argument is given to the
+.meta null-term-p
+parameter, then if the contents of
+.meta buf
+end in a null byte, that byte is not included in the conversion.
+
+The
+.code str-buf
+function UTF-8-encodes
+.meta str
+and returns a buffer containing the converted representation.
+If a true argument is given to the
+.meta null-term-p
+parameter, then a null terminating byte is added to the buffer.
+This byte is added even if the previous byte is already a null byte
+from the conversion of a pseudo-null character occurring in
+.metn str .
+
 .SS* Structures
 
 \*(TX supports a structure data type. Structures are objects which

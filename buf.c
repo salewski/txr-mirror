@@ -130,6 +130,12 @@ val make_duplicate_buf(val len, mem_t *data)
   return obj;
 }
 
+static val make_owned_buf(val len, mem_t *data)
+{
+  val buf = make_borrowed_buf(len, data);
+  buf->b.size = len;
+  return buf;
+}
 
 static struct buf *buf_handle(val buf, val ctx)
 {
@@ -1078,6 +1084,27 @@ void buf_swap32(val buf)
   }
 }
 
+static val buf_str(val str, val null_term)
+{
+  size_t sz;
+  val nt = default_null_arg(null_term);
+  unsigned char *u8 = utf8_dup_to_buf(c_str(str), &sz, nt != nil);
+  return make_owned_buf(unum(sz), u8);
+}
+
+static val str_buf(val buf, val null_term)
+{
+  val self = lit("str-buf");
+  struct buf *b = buf_handle(buf, self);
+  val nt = default_null_arg(null_term);
+  size_t blen = c_unum(b->len);
+  size_t len = (nt && blen > 0 && !b->data[blen-1]) ? blen - 1 : blen;
+  wchar_t *str = utf8_dup_from_buf(coerce(const char *, b->data), len);
+  return string_own(str);
+}
+
+unsigned char *utf8_dup_to_buf(const wchar_t *, size_t *pnbytes,
+                               int null_term);
 void buf_init(void)
 {
   reg_fun(intern(lit("make-buf"), user_package), func_n3o(make_buf, 1));
@@ -1157,6 +1184,9 @@ void buf_init(void)
 
   reg_fun(intern(lit("make-buf-stream"), user_package), func_n1o(make_buf_stream, 0));
   reg_fun(intern(lit("get-buf-from-stream"), user_package), func_n1(get_buf_from_stream));
+
+  reg_fun(intern(lit("buf-str"), user_package), func_n2o(buf_str, 1));
+  reg_fun(intern(lit("str-buf"), user_package), func_n2o(str_buf, 1));
 
   fill_stream_ops(&buf_strm_ops);
 }
