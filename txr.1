@@ -64883,10 +64883,33 @@ has a nonzero value, then the offset
 .I O
 is incremented by one to cover that byte.
 
-Lastly, the size of the structure is then padded up to a size
-which is a multiple of the alignment of the most strictly aligned
-member.
+As the last allocation step, the size of the structure is then padded up to a
+size which is a multiple of the alignment of the most strictly aligned member.
 
+The description isn't complete without a treatment of byte and bit order.
+Bitfield allocation follows an imaginary "bit endianness" whose direction
+follows the machine's byte order: most significant bits are allocated first on
+big endian, least significant bits first on little-endian.
+
+If a one-bit-wide bitfield is allocated into a hitherto empty structure, it
+will be placed into the first byte of that structure, regardless of the
+machine's endianness, and regardless of the underlying storage unit size for
+that bitfield. Within that first byte, it will be placed into the most
+significant bit position on a big-endian machine (bit 7); and on a
+little-endian machine, it will be placed into the least significant bit
+position (bit 0). If another one-bit-wide is allocated, it is placed into
+bit 6 on big-endian, and bit 1 on little-endian.
+
+More generally, whenever a bitfield is allocated for a big-endian machine, and
+the storage unit is determined into which that bitfield shall be placed, that
+field will be placed at that unit's most significant bit position that is still
+available for allocation. On a little-endian machine, that field will be placed
+at the least significant available bit position of the storage unit. On either
+type of machine, that field will be placed at the lowest-addressed byte or
+bytes that are available, and within that byte or those bytes, the field
+will occupy the most significant bit positions that are available. If the
+field partially occupies a byte, the bits that remain free are the least
+significant ones.
 
 .SS* FFI Call Descriptors
 
