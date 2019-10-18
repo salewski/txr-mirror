@@ -6856,6 +6856,9 @@ void eval_init(void)
   reg_fun(intern(lit("functionp"), user_package), func_n1(functionp));
   reg_fun(intern(lit("interp-fun-p"), user_package), func_n1(interp_fun_p));
   reg_fun(intern(lit("vm-fun-p"), user_package), func_n1(vm_fun_p));
+  reg_fun(intern(lit("fun-fixparam-count"), user_package), func_n1(fun_fixparam_count));
+  reg_fun(intern(lit("fun-optparam-count"), user_package), func_n1(fun_optparam_count));
+  reg_fun(intern(lit("fun-variadic"), user_package), func_n1(fun_variadic));
   reg_fun(intern(lit("ctx-form"), system_package), func_n1(ctx_form));
   reg_fun(intern(lit("ctx-name"), system_package), func_n1(ctx_name));
 

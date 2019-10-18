@@ -17321,6 +17321,61 @@ function
 The environment object holds the captured bindings of a
 lexical closure.
 
+.coNP Functions @ fun-fixparam-count and @ fun-optparam-count
+.synb
+.mets (fun-fixparam-count << func )
+.mets (fun-optparam-count << func )
+.syne
+.desc
+The
+.code fun-fixparam-count
+reports
+.metn func 's
+number of fixed parameters. The fixed parameters consist of the required
+parameters and the optional parameters.  Variadic functions have a parameter
+which captures the remaining arguments which are in excess of the fixed
+parameters. That parameter is not considered a fixed parameter and therefore
+doesn't contribute to this count.
+
+The
+.code fun-optparam-count
+reports
+.metn func 's
+number of optional parameters.
+
+The
+.meta func
+argument must be a function.
+
+Note: if a function isn't variadic (see the
+.meta fun-variadic
+function) then the value reported by
+.code fun-fixparam-count
+represents the maximum number of arguments which can be passed to the function.
+The minimum number of required arguments can be calculated for any function by
+subtracting the value from
+.code fun-optparam-count
+from the value from
+.codn fun-fixparam-count .
+
+.coNP Function @ fun-variadic
+.synb
+.mets (fun-variadic << func )
+.syne
+.desc
+The
+.code fun-variadic
+function returns
+.code t
+if
+.meta func
+is a variadic function, otherwise
+.codn nil .
+
+The
+.meta func
+argument must be a function.
+
 .coNP Function @ interp-fun-p
 .synb
 .mets (interp-fun-p << obj )

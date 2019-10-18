@@ -6206,6 +6206,69 @@ val vm_fun_p(val obj)
   return (functionp(obj) && obj->f.functype == FVM) ? t : nil;
 }
 
+static val get_param_counts(val params, cnum *fixparam, cnum *optparam)
+{
+  cnum fx = 0, oa = -1;
+
+  for (; consp(params); params = us_cdr(params)) {
+    val param = us_car(params);
+    if (param == colon_k && oa < 0) {
+      oa = 0;
+    } else {
+      fx++;
+      oa += (oa >= 0);
+    }
+  }
+
+  *fixparam = fx;
+  *optparam = oa;
+  return params;
+}
+
+val fun_fixparam_count(val fun)
+{
+  type_check(lit("func-fixparam-count"), fun, FUN);
+
+  if (fun->f.functype != FINTERP) {
+    return num(fun->f.fixparam);
+  } else {
+    val form = fun->f.f.interp_fun;
+    cnum fixparam, optparam;
+    val params = cadr(form);
+    (void) get_param_counts(params, &fixparam, &optparam);
+    return num(fixparam);
+  }
+}
+
+val fun_optparam_count(val fun)
+{
+  type_check(lit("func-optparam-count"), fun, FUN);
+
+  if (fun->f.functype != FINTERP) {
+    return num(fun->f.optargs);
+  } else {
+    val form = fun->f.f.interp_fun;
+    cnum fixparam, optparam;
+    val params = cadr(form);
+    (void) get_param_counts(params, &fixparam, &optparam);
+    return num(optparam);
+  }
+}
+
+val fun_variadic(val fun)
+{
+  type_check(lit("func-variadic"), fun, FUN);
+
+  if (fun->f.functype != FINTERP) {
+    return tnil(fun->f.variadic);
+  } else {
+    val form = fun->f.f.interp_fun;
+    cnum fixparam, optparam;
+    val params = cadr(form);
+    return tnil(get_param_counts(params, &fixparam, &optparam));
+  }
+}
+
 static noreturn void callerror(val fun, val msg)
 {
   uses_or2;
