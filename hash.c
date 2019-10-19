@@ -239,6 +239,8 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
       for (i = 0, lseed = seed; i < len; i++, lseed += seed) {
         h *= 2;
         h += equal_hash(obj->v.vec[i], count, lseed);
+        if ((*count)-- <= 0)
+          break;
       }
 
       return h;
@@ -474,7 +476,7 @@ static ucnum hash_hash_op(val obj, int *count, ucnum seed)
 
   iter = hash_begin(obj);
 
-  while ((cell = hash_next(iter)) != nil) {
+  while ((*count)-- > 0 && (cell = hash_next(iter)) != nil) {
     out += equal_hash(cell, count, seed);
     out &= NUM_MAX;
   }
