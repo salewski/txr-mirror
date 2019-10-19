@@ -106,7 +106,7 @@ val hash_seed_s;
 static struct hash *reachable_weak_hashes;
 static struct hash_iter *reachable_iters;
 
-static int hash_str_limit = INT_MAX, hash_rec_limit = 32;
+static int hash_rec_limit = 32;
 
 static u32_t randbox[] = {
   0x49848f1bU, 0xe6255dbaU, 0x36da5bdcU, 0x47bf94e9U,
@@ -115,9 +115,9 @@ static u32_t randbox[] = {
   0x69232f74U, 0xfead7bb3U, 0xe9089ab6U, 0xf012f6aeU,
 };
 
-static u32_t hash_c_str(const wchar_t *str, u32_t seed)
+static u32_t hash_c_str(const wchar_t *str, u32_t seed, int *pcount)
 {
-  int count = hash_str_limit;
+  int count = *pcount << 2;
   u32_t acc = seed;
   u32_t ch;
 
@@ -135,13 +135,15 @@ static u32_t hash_c_str(const wchar_t *str, u32_t seed)
   acc = acc >> 1 | acc << (32 - 1);
   acc ^= randbox[acc & 0xf];
 
+  *pcount = count >> 2;
+
   return acc;
 }
 
-static u32_t hash_buf(const mem_t *ptr, ucnum size, u32_t seed)
+static u32_t hash_buf(const mem_t *ptr, ucnum size, u32_t seed, int *pcount)
 {
   const u32_t *buf = coerce(const u32_t *, ptr);
-  int count = hash_str_limit;
+  int count = *pcount << 2;
   u32_t acc = seed;
 
   for (; size >= sizeof *buf && count--; size -= sizeof *buf, buf++) {
@@ -177,6 +179,8 @@ static u32_t hash_buf(const mem_t *ptr, ucnum size, u32_t seed)
   acc = acc >> 1 | acc << (32 - 1);
   acc ^= randbox[acc & 0xf];
 
+  *pcount = count >> 2;
+
   return acc;
 }
 
@@ -206,12 +210,12 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
   case NIL:
     return convert(ucnum, -1);
   case LIT:
-    return hash_c_str(litptr(obj), seed);
+    return hash_c_str(litptr(obj), seed, count);
   case CONS:
     return equal_hash(obj->c.car, count, seed)
             + equal_hash(obj->c.cdr, count, seed + (CONS << 8));
   case STR:
-    return hash_c_str(obj->st.str, seed);
+    return hash_c_str(obj->st.str, seed, count);
   case CHR:
     return c_chr(obj) * seed;
   case NUM:
@@ -249,7 +253,7 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
     return equal_hash(car(obj), count, seed)
             + equal_hash(cdr(obj), count, seed + (CONS << 8));
   case LSTR:
-    lazy_str_force_upto(obj, num(hash_str_limit - 1));
+    lazy_str_force_upto(obj, num(*count - 1));
     return equal_hash(obj->ls.prefix, count, seed);
   case BGNUM:
     return mp_hash(mp(obj)) * seed;
@@ -267,7 +271,7 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
     return equal_hash(obj->rn.from, count, seed)
             + equal_hash(obj->rn.to, count, seed + (RNG << 8));
   case BUF:
-    return hash_buf(obj->b.data, c_unum(obj->b.len), seed);
+    return hash_buf(obj->b.data, c_unum(obj->b.len), seed, count);
   case TNOD:
     return equal_hash(obj->tn.left, count, (seed + TNOD))
             + equal_hash(obj->tn.right, count, seed + (TNOD << 8));
@@ -1728,13 +1732,6 @@ val hash_revget(val hash, val value, val test, val keyfun)
   return nil;
 }
 
-static val set_hash_str_limit(val lim)
-{
-  val old = num(hash_str_limit);
-  hash_str_limit = c_num(lim);
-  return old;
-}
-
 static val set_hash_rec_limit(val lim)
 {
   val old = num(hash_rec_limit);
@@ -1812,8 +1809,6 @@ void hash_init(void)
   reg_fun(intern(lit("hash-begin"), user_package), func_n1(hash_begin));
   reg_fun(intern(lit("hash-next"), user_package), func_n1(hash_next));
   reg_fun(intern(lit("hash-peek"), user_package), func_n1(hash_peek));
-  reg_fun(intern(lit("set-hash-str-limit"), system_package),
-          func_n1(set_hash_str_limit));
   reg_fun(intern(lit("set-hash-rec-limit"), system_package),
           func_n1(set_hash_rec_limit));
   reg_fun(intern(lit("gen-hash-seed"), user_package), func_n0(gen_hash_seed));
