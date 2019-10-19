@@ -106,7 +106,7 @@ val hash_seed_s;
 static struct hash *reachable_weak_hashes;
 static struct hash_iter *reachable_iters;
 
-static int hash_rec_limit = 32;
+static int hash_traversal_limit = 32;
 
 static u32_t randbox[] = {
   0x49848f1bU, 0xe6255dbaU, 0x36da5bdcU, 0x47bf94e9U,
@@ -897,7 +897,7 @@ val copy_hash(val existing)
 val gethash_c(val self, val hash, val key, loc new_p)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
-  int lim = hash_rec_limit;
+  int lim = hash_traversal_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
   loc pchain = mkloc(h->table->v.vec[hv % h->modulus], h->table);
   val old = deref(pchain);
@@ -910,7 +910,7 @@ val gethash_c(val self, val hash, val key, loc new_p)
 val gethash_e(val self, val hash, val key)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
-  int lim = hash_rec_limit;
+  int lim = hash_traversal_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
   val chain = h->table->v.vec[hv % h->modulus];
   return h->hops->assoc_fun(key, hv, chain);
@@ -964,7 +964,7 @@ val remhash(val hash, val key)
 {
   val self = lit("remhash");
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
-  int lim = hash_rec_limit;
+  int lim = hash_traversal_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
   val *pchain = &h->table->v.vec[hv % h->modulus];
   val existing = h->hops->assoc_fun(key, hv, *pchain);
@@ -1130,7 +1130,7 @@ val hash_eql(val obj)
 
 val hash_equal(val obj, val seed)
 {
-  int lim = hash_rec_limit;
+  int lim = hash_traversal_limit;
   return num_fast(equal_hash(obj, &lim, if3(missingp(seed), 0, c_unum(seed))));
 }
 
@@ -1732,10 +1732,10 @@ val hash_revget(val hash, val value, val test, val keyfun)
   return nil;
 }
 
-static val set_hash_rec_limit(val lim)
+static val set_hash_traversal_limit(val lim)
 {
-  val old = num(hash_rec_limit);
-  hash_rec_limit = c_num(lim);
+  val old = num(hash_traversal_limit);
+  hash_traversal_limit = c_num(lim);
   return old;
 }
 
@@ -1809,7 +1809,7 @@ void hash_init(void)
   reg_fun(intern(lit("hash-begin"), user_package), func_n1(hash_begin));
   reg_fun(intern(lit("hash-next"), user_package), func_n1(hash_next));
   reg_fun(intern(lit("hash-peek"), user_package), func_n1(hash_peek));
-  reg_fun(intern(lit("set-hash-rec-limit"), system_package),
-          func_n1(set_hash_rec_limit));
+  reg_fun(intern(lit("set-hash-traversal-limit"), system_package),
+          func_n1(set_hash_traversal_limit));
   reg_fun(intern(lit("gen-hash-seed"), user_package), func_n0(gen_hash_seed));
 }
