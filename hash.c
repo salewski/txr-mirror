@@ -283,6 +283,9 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
 
 static ucnum eql_hash(val obj, int *count)
 {
+  if ((*count)-- <= 0)
+    return 0;
+
   switch (tag(obj)) {
   case TAG_PTR:
     switch (type(obj)) {
