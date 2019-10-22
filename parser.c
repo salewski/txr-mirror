@@ -366,12 +366,14 @@ tail:
     if (hashp(obj)) {
       val u = get_hash_userdata(obj);
       val ru = patch_ref(p, u);
+      cnum old_circ_count = p->circ_count;
+
       if (ru)
         set_hash_userdata(obj, ru);
       else
         circ_backpatch(p, &cs, u);
 
-      if (p->circ_count) {
+      if (old_circ_count > 0) {
         val iter = hash_begin(obj);
         val cell;
         val pairs = nil;
@@ -381,11 +383,13 @@ tail:
           push(cell, &pairs);
         }
 
-        clearhash(obj);
+        if (old_circ_count != p->circ_count) {
+          clearhash(obj);
 
-        while (pairs) {
-          val cell = pop(&pairs);
-          sethash(obj, us_car(cell), us_cdr(cell));
+          while (pairs) {
+            val cell = pop(&pairs);
+            sethash(obj, us_car(cell), us_cdr(cell));
+          }
         }
       }
     } else if (structp(obj)) {
@@ -400,11 +404,14 @@ tail:
           slotset(obj, sn, rsv);
         else
           circ_backpatch(p, &cs, sv);
+        if (p->circ_count <= 0)
+          break;
       }
     } else if (treep(obj)) {
       val iter = tree_begin(obj);
       val node;
       val nodes = nil;
+      cnum old_circ_count = p->circ_count;
 
       while ((node = tree_next(iter))) {
         val k = node->tn.key;
@@ -416,7 +423,7 @@ tail:
         push(node, &nodes);
       }
 
-      if (nodes) {
+      if (nodes && old_circ_count != p->circ_count) {
         tree_clear(obj);
 
         while (nodes) {
