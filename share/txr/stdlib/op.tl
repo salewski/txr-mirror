@@ -90,14 +90,30 @@
                   ,op-args)))
     (expand code e)))
 
+(eval-only
+  (defmacro op-ignerr (x)
+    ^(sys:catch (error) ,x () (error (. args)))))
+
 (defun sys:op-expand (f e args)
   (unless args
     ['compile-error f "arguments required"])
-  (let* ((ctx (make-struct 'sys:op-ctx ^(form ,f)))
+  (let* ((compat (and (plusp sys:compat) (<= sys:compat 255)))
+         (ctx (make-struct 'sys:op-ctx ^(form ,f)))
+         (do-gen)
          (sys:*op-ctx* ctx)
          (sym (car f))
          (syntax-0 (if (eq sym 'do) args ^[,*args]))
-         (syntax-1 (sys:op-alpha-rename f e syntax-0 nil))
+         (syntax-1 (if (or (null syntax-0) (neq sym 'do) compat)
+                     (sys:op-alpha-rename f e syntax-0 nil)
+                     (or (op-ignerr (sys:op-alpha-rename f e syntax-0 nil))
+                         (let ((syn (sys:op-alpha-rename
+                                      f e (append syntax-0
+                                                  (list (sys:setq do-gen
+                                                                  (gensym))))
+                                      nil)))
+                           (when (slot ctx 'gens)
+                             (sys:op-alpha-rename f e syntax-0 nil))
+                           syn))))
          (syntax-2 (sys:op-alpha-rename f e syntax-1 t))
          (metas (slot ctx 'gens))
          (rec (slot ctx 'rec))
@@ -111,19 +127,28 @@
                                                        fargs)))
                                  ^[sys:apply ,(car (cdr syntax-2))
                                              (append ,rest-sym (list ,*fargs-l1))]))
-                              ((or metas (eq sym 'do))
-                               syntax-2)
+                              (metas syntax-2)
+                              ((eq sym 'do)
+                               (cond
+                                 (compat syntax-2)
+                                 (do-gen
+                                   (let ((arg1 (sys:ensure-op-arg ctx 1)))
+                                     ^(symacrolet ((,do-gen ,arg1))
+                                        ,syntax-2)))
+                                 (t (let ((arg1 (sys:ensure-op-arg ctx 1)))
+                                      (append syntax-2 (list arg1))))))
                               (t (append syntax-2 rest-sym))))))
-    (cond
-      (recvar ^(sys:lbind ((,rec (lambda (,*(cdr metas) . ,rest-sym)
-                                   (let ((,rec (fun ,rec)))
-                                     ,lambda-interior))))
-                 (fun ,rec)))
-      (rec ^(sys:lbind ((,rec (lambda (,*(cdr metas) . ,rest-sym)
-                                ,lambda-interior)))
-              (fun ,rec)))
-      (t ^(lambda (,*(cdr metas) . ,rest-sym)
-            ,lambda-interior)))))
+    (let ((metas (slot ctx 'gens)))
+      (cond
+        (recvar ^(sys:lbind ((,rec (lambda (,*(cdr metas) . ,rest-sym)
+                                     (let ((,rec (fun ,rec)))
+                                       ,lambda-interior))))
+                   (fun ,rec)))
+        (rec ^(sys:lbind ((,rec (lambda (,*(cdr metas) . ,rest-sym)
+                                  ,lambda-interior)))
+                (fun ,rec)))
+        (t ^(lambda (,*(cdr metas) . ,rest-sym)
+              ,lambda-interior))))))
 
 (defmacro op (:form f :env e . args)
   (sys:op-expand f e args))

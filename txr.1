@@ -46006,23 +46006,21 @@ literals to be processed which specify functions other than these three.
 .coNP Macros @ op and @ do
 .synb
 .mets (op << form +)
-.mets (do << form +)
+.mets (do < oper << form *)
 .syne
 .desc
+Like the
+.code lambda
+operator, the
+.code op
+macro denotes an anonymous function.
+Unlike
+.codn lambda ,
+the arguments of the function are implicit, or
+optionally specified within the expression, rather than as a formal
+parameter list which precedes a body.
+
 The
-.code op
-and
-.code do
-macro operators are similar.
-
-Like the lambda operator, the
-.code op
-operator creates an anonymous function based on its syntax.
-The difference is that the arguments of the function are implicit, or
-optionally specified within the function body, rather than as a formal
-parameter list before the body.
-
-Also, the
 .meta form
 arguments of
 .code op
@@ -46031,39 +46029,9 @@ which means that argument evaluation follows Lisp-1 rules.  (See the
 .code dwim
 operator).
 
-The
-.code do
-operator is like the
+The argument forms of
 .code op
-operator with the following difference:
-the
-.meta form
-arguments of
-.code do
-are not implicitly treated as DWIM expressions,
-but as ordinary expressions. In particular, this means that operator
-syntax is permitted. Note that the syntax
-.code "(op @1)"
-makes sense, since
-the argument can be a function, which will be invoked, but
-.code "(do @1)"
-doesn't
-make sense because it will produce a Lisp-2 form like
-.code "(#:arg1 ...)"
-referring
-to nonexistent function
-.codn #:arg1 .
-Because it accepts operators,
-.code do
-can be used with imperative constructs
-which are not functions, like set: like set: for instance
-.code "(do set x)"
-produces
-an anonymous function which, if called with one argument, stores that argument
-into
-.codn x .
-
-The argument forms are arbitrary expressions, within which special
+are arbitrary expressions, within which special
 conventions is permitted regarding the use of certain implicit variables:
 .RS
 .meIP >> @ num
@@ -46156,11 +46124,71 @@ denotes a function which takes any number of arguments, and ignores
 all but the first one, which is passed to
 .codn foo .
 
+The
+.code do
+operator is similar to
+.code op
+op, with the following three differences:
+.RS
+.IP 1.
+The first argument of
+.codn do ,
+namely
+.metn oper ,
+is an operator. This argument is not processed for the presence of
+implicit variables. Thus for instance
+.code "(do @1 ...)"
+is invalid. By contrast,
+.code "(op @1 ...)"
+is possible and make sense under the right circumstances.
+The
+.meta oper
+argument may be the name of a macro or special operator, whereas
+.code op
+doesn't support the invocation of macros or special operators.
+For instance
+.code "(do let ((x @1)) (+ x 1))"
+is possible.
+.IP 2.
+The
+.meta form
+arguments of
+.code do
+are not implicitly treated as DWIM expressions,
+but as ordinary expressions.
+.IP 3.
+When
+.code do
+syntax doesn't contain any references to implicit variables (metanumbers or
+.codn @rest )
+then a variadic function is generated which requires one argument.
+That argument is added to the form. Thus for instance
+.code "(do set x)"
+effectively serves as a shorthand for
+.codn "(do set x @1)" .
+The corresponding defaulting behavior in
+.code op
+is that a variadic function is generated which requires no arguments.
+All of the available arguments are applied. Thus
+.code "(op f x)"
+is effectively a shorthand for
+.codn "(op f x . @rest)" .
+.RE
+.IP
+Because it accepts operators,
+.code do
+can be used with imperative constructs
+which are not functions, like set: like set: for instance
+.code "(do set x)"
+produces an anonymous function which, if called with one argument, stores that
+argument into
+.codn x .
+
 The actions of
 .code op
-be understood by these examples, which show
-how
-.code op
+and
+.code do
+be understood by these examples, which convey how the syntax is
 is rewritten to lambda.  However, note that the real translator
 uses generated symbols for the arguments, which are not equal to any
 symbols in the program.
@@ -46185,16 +46213,16 @@ symbols in the program.
 
   (op foo @rest @1) -> (lambda (arg1 . rest) [foo rest arg1])
 
-  (do + foo) -> (lambda rest (+ foo . rest))
+  (do + foo) -> (lambda (arg1 . rest) (+ foo arg1))
 
-  (do @1 @2) -> (lambda (arg1 arg2 . rest) (arg1 arg2))
+  (do @1 @2) -> (lambda (arg1 arg2 . rest) (@1 arg2)) ;; invalid!
 
   (do foo @rest @1) -> (lambda (arg1 . rest) (foo rest arg1))
 .brev
 
 Note that if argument
 .meta @n
-appears, it is not necessary
+appears in the syntax, it is not necessary
 for arguments
 .meta @1
 through
@@ -70580,6 +70608,31 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 225
+After \*(TX 225, the behavior of the
+.code do
+operator was adjusted. Previously, a form like
+.code "(do set x)"
+which contains no variable references like
+.codn @1 ,
+.code @2
+or
+.codn @rest ,
+generated a function similar to
+.codn "(lambda (. rest) (set x))" .
+This was contrary to documentation, which states that
+.code "(do set x)"
+should produce a variadic function which has one required argument,
+and which assigns that argument to the variable
+.code x
+when invoked. The current implementation is that
+.code "(do set x)"
+is equivalent to
+.code "(do set x @1)"
+which produces the documented behavior. If 225 or lower compatibility is
+selected, then the old behavior of
+.code do
+takes effect.
 .IP 224
 After \*(TX 224, the treatment of certain special structure functions
 has changed. Selecting 224 compatibility or lower restores that behavior.
