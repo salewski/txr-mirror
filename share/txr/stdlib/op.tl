@@ -159,6 +159,9 @@
 (defmacro lop (:form f :env e . args)
   (sys:op-expand f e args))
 
+(defmacro ldo (op . args)
+  ^(do ,op @1 ,*args))
+
 (defmacro ap (. args)
   ^(apf (op ,*args)))
 

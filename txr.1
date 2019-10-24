@@ -46466,6 +46466,44 @@ are replaced with hygienic, unique symbols.
 
 .brev
 
+.coNP Macro @ ldo
+.synb
+.mets (ldo < oper << form *)
+.syne
+.desc
+The
+.code ldo
+macro provides a shorthand notation for uses of the
+.code do
+macro which inserts the first argument of the anonymous function
+as the leftmost argument of the specified operator.
+
+The
+.code ldo
+syntax can be understood in terms of these equivalences:
+
+.verb
+  (ldo f)  <-->  (do f @1)
+  (ldo f x)  <-->  (do f @1 x)
+  (ldo f x y)  <-->  (do f @1 x y)
+  (ldo f x @2 y)  <-->  (do f @1 x @2 y)
+.brev
+
+The implicit argument
+.code @1
+is always inserted as the leftmost argument of the operator
+specified by the first form.
+
+.TP* Example:
+
+.verb
+  ;; push elements of l1 onto l2.
+  (let ((l1 '(a b c)) l2)
+    (mapdo (ldo push l2) l1)
+    l2)
+  --> (c b a)
+.brev
+
 .coNP Macros @, ap @, ip @ ado and @ ido.
 .synb
 .mets (ap << form +)

@@ -747,7 +747,7 @@ static val debugger_set_entries(val dlt, val fun)
 static val op_set_entries(val dlt, val fun)
 {
   val name[] = {
-    lit("op"), lit("do"), lit("lop"), lit("ap"), lit("ip"),
+    lit("op"), lit("do"), lit("lop"), lit("ldo"), lit("ap"), lit("ip"),
     lit("ado"), lit("ido"), lit("ret"), lit("aret"),
     lit("opip"), lit("oand"),
     nil
