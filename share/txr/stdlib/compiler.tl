@@ -151,23 +151,24 @@
     lt-frags
     last-form))
 
-(defmacro compile-in-toplevel (comp . body)
-  (with-gensyms (comp-var saved-tregs saved-treg-cntr saved-nlev)
-    ^(let* ((,comp-var ,comp)
-            (,saved-tregs (qref ,comp-var tregs))
-            (,saved-treg-cntr (qref ,comp-var treg-cntr))
-            (,saved-nlev (qref ,comp-var nlev)))
-       (unwind-protect
-         (progn
-           (set (qref ,comp-var tregs) nil
-                (qref ,comp-var treg-cntr) 2
-                (qref ,comp-var nlev) 2)
-           (prog1
-             (progn ,*body)
-             (qref ,comp-var (check-treg-leak))))
-         (set (qref ,comp-var tregs) ,saved-tregs
-              (qref ,comp-var treg-cntr) ,saved-treg-cntr
-              (qref ,comp-var nlev) ,saved-nlev)))))
+(eval-only
+  (defmacro compile-in-toplevel (comp . body)
+    (with-gensyms (comp-var saved-tregs saved-treg-cntr saved-nlev)
+      ^(let* ((,comp-var ,comp)
+              (,saved-tregs (qref ,comp-var tregs))
+              (,saved-treg-cntr (qref ,comp-var treg-cntr))
+              (,saved-nlev (qref ,comp-var nlev)))
+         (unwind-protect
+           (progn
+             (set (qref ,comp-var tregs) nil
+                  (qref ,comp-var treg-cntr) 2
+                  (qref ,comp-var nlev) 2)
+             (prog1
+               (progn ,*body)
+               (qref ,comp-var (check-treg-leak))))
+           (set (qref ,comp-var tregs) ,saved-tregs
+                (qref ,comp-var treg-cntr) ,saved-treg-cntr
+                (qref ,comp-var nlev) ,saved-nlev))))))
 
 (defvarl %gcall-op% (relate '(apply usr:apply call) '(gapply gapply gcall)))
 

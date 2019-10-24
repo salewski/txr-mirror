@@ -265,12 +265,13 @@
              (ix (int-str [str -3..:] 16)))
          (+ (* %lev-size% (ssucc lv)) ix)))))
 
-(defmacro with-lev-idx ((lev-var idx-var) val-expr . body)
-  (with-gensyms (val-var)
-    ^(let* ((,val-var ,val-expr)
-            (,lev-var (ash ,val-var (macro-time (- %lev-bits%))))
-            (,idx-var (logtrunc ,val-var %lev-bits%)))
-       ,*body)))
+(eval-only
+  (defmacro with-lev-idx ((lev-var idx-var) val-expr . body)
+    (with-gensyms (val-var)
+      ^(let* ((,val-var ,val-expr)
+              (,lev-var (ash ,val-var (macro-time (- %lev-bits%))))
+              (,idx-var (logtrunc ,val-var %lev-bits%)))
+         ,*body))))
 
 (defun operand-to-sym (val)
   (with-lev-idx (lv ix) val
@@ -327,20 +328,21 @@
 (defvarl %backpatch-low16% (new backpatch-low16))
 (defvarl %backpatch-high16% (new backpatch-high16))
 
-(defmacro defopcode (class symbol code . slot-defs)
-  ^(symacrolet ((auto (pinc %oc-code%)))
-     (defstruct ,class oc-base
-       (:static symbol ',symbol)
-       (:static code ,code)
-       ,*slot-defs)
-     (register-opcode (new ,class))))
+(eval-only
+  (defmacro defopcode (class symbol code . slot-defs)
+    ^(symacrolet ((auto (pinc %oc-code%)))
+       (defstruct ,class oc-base
+         (:static symbol ',symbol)
+         (:static code ,code)
+         ,*slot-defs)
+       (register-opcode (new ,class))))
 
-(defmacro defopcode-derived (class symbol code orig-class)
-  ^(symacrolet ((auto (pinc %oc-code%)))
-     (defstruct ,class ,orig-class
-       (:static symbol ',symbol)
-       (:static code ,code))
-     (register-opcode (new ,class))))
+  (defmacro defopcode-derived (class symbol code orig-class)
+    ^(symacrolet ((auto (pinc %oc-code%)))
+       (defstruct ,class ,orig-class
+         (:static symbol ',symbol)
+         (:static code ,code))
+       (register-opcode (new ,class)))))
 
 (defopcode op-label label nil
   (:method asm (me asm syntax)

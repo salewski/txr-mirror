@@ -27,9 +27,10 @@
 (defun sys:do-path-test (statfun path testfun)
   [testfun (if (stringp path) (ignerr [statfun path]) path)])
 
-(defmacro sys:path-test ((sym statfun path) . body)
-  ^[sys:do-path-test ,statfun ,path
-     (lambda (,sym) (when ,sym ,*body))])
+(eval-only
+  (defmacro sys:path-test ((sym statfun path) . body)
+    ^[sys:do-path-test ,statfun ,path
+       (lambda (,sym) (when ,sym ,*body))]))
 
 (defun sys:path-test-mode (statfun path mask)
   (sys:path-test (s statfun path)
