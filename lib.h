@@ -599,6 +599,7 @@ val nullify(val seq);
 val seqp(val obj);
 val nreverse(val in);
 val reverse(val in);
+val us_nreverse(val in);
 val append2(val list1, val list2);
 val nappend2(val list1, val list2);
 val revappend(val list1, val list2);

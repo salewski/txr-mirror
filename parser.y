@@ -233,7 +233,7 @@ clauses_rev : clause                    { $$ = check_parse_time_action(cons($1, 
             | clauses_rev clause        { $$ = check_parse_time_action(cons($2, $1));  }
             ;
 
-clauses_opt : clauses_rev       { $$ = nreverse($1); }
+clauses_opt : clauses_rev       { $$ = us_nreverse($1); }
             | /* empty */       { $$ = nil; }
             ;
 
@@ -932,7 +932,7 @@ exprs_opt : exprs               { $$ = $1; }
 
 n_exprs : r_exprs               { val term_atom = pop(&$1);
                                   val tail_cons = $1;
-                                  $$ = nreverse($1);
+                                  $$ = us_nreverse($1);
                                   if (term_atom != unique_s)
                                     rplacd(tail_cons, term_atom); }
         ;
@@ -958,14 +958,14 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
                                   misplaced_consing_dot_check(scnr, term_atom_cons);
                                   rplaca(term_atom_cons, $3);
                                   $$ = $1; }
-        | WSPLICE wordslit      { $$ = cons(unique_s, nreverse(rl($2, num($1))));
+        | WSPLICE wordslit      { $$ = cons(unique_s, us_nreverse(rl($2, num($1))));
                                   rlc($$, cdr($$)); }
         | r_exprs WSPLICE
           wordslit              { val term_atom_cons = $1;
                                   val exprs = cdr($1);
                                   misplaced_consing_dot_check(scnr, term_atom_cons);
                                   rplacd(term_atom_cons,
-                                         nappend2(rl(nreverse($3), num($2)),
+                                         nappend2(rl(us_nreverse($3), num($2)),
                                                   exprs));
                                   $$ = term_atom_cons; }
         | QWSPLICE wordsqlit    { $$ = cons(unique_s, rl($2, num($1)));
@@ -975,7 +975,7 @@ r_exprs : n_expr                { val exprs = cons($1, nil);
                                   val exprs = cdr($1);
                                   misplaced_consing_dot_check(scnr, term_atom_cons);
                                   rplacd(term_atom_cons,
-                                         nappend2(rl(nreverse($3), num($2)),
+                                         nappend2(rl(us_nreverse($3), num($2)),
                                                   exprs));
                                   $$ = term_atom_cons; }
         ;

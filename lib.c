@@ -1349,6 +1349,20 @@ val reverse(val seq_in)
   }
 }
 
+val us_nreverse(val in)
+{
+  val rev = nil;
+
+  while (in) {
+    val temp = us_cdr(in);
+    us_rplacd(in, rev);
+    rev = in;
+    in = temp;
+  }
+
+  return rev;
+}
+
 val append2(val list1, val list2)
 {
   list_collect_decl (out, ptail);
