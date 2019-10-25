@@ -1,6 +1,6 @@
 @(in-package :sys)
 @(mdo (find-struct-type 'assembler))
-@(bind oc @(keep-if .code %oc-list%))
+@(bind oc @(keep-if .code %oc-list-builder%.(get)))
 @(next "vm.h")
 @(collect)
 @{copyright}
