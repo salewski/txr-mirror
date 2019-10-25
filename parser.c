@@ -387,9 +387,12 @@ tail:
           clearhash(obj);
 
           while (pairs) {
-            val cell = pop(&pairs);
+            val cell = rcyc_pop(&pairs);
             sethash(obj, us_car(cell), us_cdr(cell));
           }
+        } else {
+          while (pairs)
+            rcyc_pop(&pairs);
         }
       }
     } else if (structp(obj)) {
@@ -427,9 +430,12 @@ tail:
         tree_clear(obj);
 
         while (nodes) {
-          val node = pop(&nodes);
+          val node = rcyc_pop(&nodes);
           tree_insert_node(obj, node);
         }
+      } else {
+        while (nodes)
+          rcyc_pop(&nodes);
       }
     }
 
