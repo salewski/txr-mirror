@@ -217,17 +217,17 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
   case STR:
     return hash_c_str(obj->st.str, seed, count);
   case CHR:
-    return c_chr(obj) * seed;
+    return c_chr(obj);
   case NUM:
-    return c_num(obj) * seed;
+    return c_num(obj);
   case SYM:
   case PKG:
   case ENV:
     switch (CHAR_BIT * sizeof (mem_t *)) {
     case 32:
-      return (coerce(ucnum, obj) >> 4) * seed;
+      return coerce(ucnum, obj) >> 4;
     case 64: default:
-      return (coerce(ucnum, obj) >> 5) * seed;
+      return coerce(ucnum, obj) >> 5;
     }
     break;
   case FUN:
