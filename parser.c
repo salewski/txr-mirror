@@ -280,18 +280,17 @@ tail:
   switch (type(obj)) {
   case CONS:
     {
-      val a = car(obj);
-      val d = cdr(obj);
+      us_cons_bind(a, d, obj);
       val ra = patch_ref(p, a);
       val rd = patch_ref(p, d);
 
       if (ra)
-        rplaca(obj, ra);
+        us_rplaca(obj, ra);
       else
         circ_backpatch(p, &cs, a);
 
       if (rd) {
-        rplacd(obj, rd);
+        us_rplacd(obj, rd);
         break;
       }
 
@@ -304,11 +303,10 @@ tail:
       cnum l = c_num(length_vec(obj));
 
       for (i = 0; i < l; i++) {
-        val in = num(i);
-        val v = vecref(obj, in);
+        val v = obj->v.vec[i];
         val rv = patch_ref(p, v);
         if (rv)
-          set(vecref_l(obj, in), rv);
+          set(mkloc(obj->v.vec[i], obj), rv);
         else
           circ_backpatch(p, &cs, v);
         if (!p->circ_count)
