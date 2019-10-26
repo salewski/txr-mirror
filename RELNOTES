@@ -1,3 +1,67 @@
+                                    TXR 226
+                                   2019-10-25
+
+
+  Features
+
+  - New data types: binary search trees and their nodes.
+
+  - buffers:
+    - now comparable for inequality with less function.
+    - convenience functions buf-str and str-buf for
+      converting between a string and a buffer holding UTF-8.
+  - gc:
+    - Heap objects are now more strictly aligned in memory,
+      allowing for a faster in-heap test in the garbage collector.
+  - hashing:
+    - Better use is made of the hash seed for lists and vectors.
+    - New feature: eq-based hash tables.
+    - Performance improvements: recompile time of the .tl files
+      in stdlib improved by 10%.
+  - eval & environments:
+    - symbol-function supports lambda expressions.
+    - accessors now provided for additional function properties:
+      - number of fixed and optional args
+      - is the function variadic
+  - op:
+    - new @rec metavar for self reference, allowing anonymous recursion
+    - do behavior revised in light of mismatch between documentation
+      and implementation.
+    - new macro ldo: version of do that inserts left argument.
+  - lib:
+    - copy-cons now copies lconses and is more efficient.
+
+  Bugs
+
+  - Build: added forgotten "alloca.h" header into version control.
+  - Improved overflow detection in string catenation.
+  - gc:
+    - fixed bug in heap bounding box calculation, making
+      the in-heap test less efficient.
+  - func-get-name: bogus return for nil argument.
+  - stdlib: numerous incorrect uses of compile-error.
+  - circle notation:
+    - on read, not handling circular refs in hash userdata.
+  - lib:
+    - memory leak in bit function.
+    - fixed buggy type tests that application code could subvert.
+    - affects hashes, carrays, random-state objects, regex char sets and
+      struct types.
+  - hash:
+    - use unsigned type ucnum consistently for hash values.
+    - do not negatively index into hash table vector.
+    - traversal limit observed when traversing keys that are vectors
+      and hashes.
+    - strings keys now subject to traversal limit, at a rate of 4:1:
+      four characters count as traversing one node in the object graph.
+  - eval:
+    - eval function wrongly passed eval environment to macroexpand.
+  - lib/vm/compiler:
+    - not handling excess number of function arguments, leading
+      to overflow in the fixparam field in the function object.
+
+
+
                                     TXR 225
                                    2019-09-11
 
