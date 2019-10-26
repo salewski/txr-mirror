@@ -45,7 +45,7 @@
 #define NOMINMAX
 #include <windows.h>
 #endif
-#if HAVE_MEMALIGN
+#if HAVE_MALLOC_H
 #include <malloc.h>
 #endif
 #include "lib.h"

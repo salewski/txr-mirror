@@ -2482,6 +2482,7 @@ elif conftest EXTRA_FLAGS=-D__EXTENSIONS__=1 ; then
   printf "yes\n"
   printf "#define HAVE_SETGROUPS 1\n" >> config.h
   lang_flags="$lang_flags -D__EXTENSIONS__=1" # Solaris buggery
+  gen_config_make
   have_unistd=y
   have_sys_types=y
 else
@@ -2679,6 +2680,25 @@ printf "Checking for malloc-with-alignment function ... "
 
 while true ; do
   cat > conftest.c <<!
+#include <stdlib.h>
+
+int main(void)
+{
+  void *bytes = memalign(16, 42);
+  return 0;
+}
+!
+
+  if conftest ; then
+    printf "memalign\n"
+    printf "#define HAVE_MEMALIGN 1\n" $try_header >> config.h
+    break;
+  fi
+
+  cat conftest.err
+  exit 1
+
+  cat > conftest.c <<!
 #include <malloc.h>
 
 int main(void)
@@ -2688,9 +2708,10 @@ int main(void)
 }
 !
 
-  if ! conftest ; then
+  if conftest ; then
     printf "memalign\n"
     printf "#define HAVE_MEMALIGN 1\n" $try_header >> config.h
+    printf "#define HAVE_MALLOC_H 1\n" $try_header >> config.h
     break;
   fi
 
@@ -2711,6 +2732,7 @@ int main(void)
   fi
 
   printf "none\n"
+  break
 done
 
 printf "Checking for termios ... "
