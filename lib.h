@@ -148,7 +148,7 @@ struct package {
 typedef struct args *varg;
 
 #define FIXPARAM_BITS 7
-#define FIXPARAM_MAX  ((1U << FIXPARAM_BITS) - 1)
+#define FIXPARAM_MAX  ((1 << FIXPARAM_BITS) - 1)
 
 struct func {
   obj_common;

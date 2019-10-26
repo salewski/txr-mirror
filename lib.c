@@ -6144,7 +6144,7 @@ val func_vm(val closure, val desc, int fixparam, int reqargs, int variadic)
 {
   if (fixparam > FIXPARAM_MAX) {
     uw_throwf(error_s, lit("closure in ~s with more than ~s fixed parameters"),
-              desc, unum(FIXPARAM_MAX), nao);
+              desc, num(FIXPARAM_MAX), nao);
   } else if (fixparam < 0 || reqargs < 0 || reqargs > fixparam) {
     uw_throwf(error_s, lit("closure in ~s with bogus parameters"),
               desc, nao);
