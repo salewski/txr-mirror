@@ -2695,9 +2695,6 @@ int main(void)
     break;
   fi
 
-  cat conftest.err
-  exit 1
-
   cat > conftest.c <<!
 #include <malloc.h>
 
