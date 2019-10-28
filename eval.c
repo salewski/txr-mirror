@@ -4923,6 +4923,8 @@ val expand(val form, val menv)
     uw_push_expand(&expand_fr, form, menv);
 #endif
 
+  sig_check_fast();
+
   ret = do_expand(form, menv);
 
   if (!lookup_origin(ret))
