@@ -44933,6 +44933,101 @@ is the
 .code eql
 function.
 
+.coNP Function @ hash-invert
+.synb
+.mets (hash-invert >> hash >> [ joinfun >> [ unitfun  << hash-arg *]])
+.syne
+.desc
+The
+.code hash-invert
+function calculates and returns an inversion of hash table
+.metn hash .
+The values in
+.meta hash
+become keys in the returned hash table. Conversely, the values
+in the returned hash table are derived from the keys.
+
+The optional
+.meta joinfun
+and
+.meta unitfun
+arguments must be functions, if they are given.
+These functions determine the behavior of
+.code hash-invert
+with regard to duplicate values in
+.meta hash
+which turn into duplicate keys.
+The
+.meta joinfun
+function must be callable with two arguments, and
+.meta joinfun
+must accept one argument.
+If
+.meta joinfun
+is omitted, it defaults to the
+.code identity*
+function;
+.meta unitfun
+defaults to
+.codn identity .
+
+The
+.code hash-invert
+function constructs a hash table as if by a call to the
+.code hash
+function, passing the
+.meta hash-arg
+arguments which determine the properties of the newly created hash.
+
+The new hash table is then populated by iterating over the key-value pairs of
+.meta hash
+and inserting them as follows:
+The key from
+.meta hash
+is turned into a value
+.meta v1
+by invoking the
+.meta unitfun
+function on it, and taking the return value.
+The value from
+.meta hash
+is used as a key to perform a lookup in the new hash table.
+If no entry exists, then a new entry is created, whose value is
+.metn v1 .
+Otherwise if the entry already exists, then the value
+.meta v0
+of that entry is combined with
+.meta v1
+by calling the
+.meta joinfun
+on the arguments
+.meta v0
+and
+.metn v1 .
+The entry is updated with the resulting value.
+
+The new hash table is then returned.
+
+.TP* Examples:
+
+.verb
+  ;; Invert simple 1 to 1 table:
+
+  (hash-invert #H(() (a 1) (b 2) (c 3)))
+  --> #H(() (1 a) (2 b) (3 c))
+
+  ;; Invert table such that the keys of duplicate values
+  ;; are accumulated into lists:
+
+  [hash-invert #H(() (1 a) (2 a) (3 c) (5 c) (7 d)) append list]
+  --> #H(() (d (7)) (c (3 5)) (a (1 2)))
+
+  ;; Invert table such that keys of duplicate values are summed:
+
+  [hash-invert #H(() (1 a) (2 a) (3 c) (5 c) (7 d)) +]
+  --> #H(() (d 7) (c 8) (a 3))
+.brev
+
 .coNP Functions @ hash-eql and @ hash-equal
 .synb
 .mets (hash-eql << object )

@@ -1735,6 +1735,36 @@ val hash_revget(val hash, val value, val test, val keyfun)
   return nil;
 }
 
+val hash_invert(val hash, val joinfun, val unitfun, struct args *hashv_args)
+{
+  val self = lit("hash-invert");
+  val hout = hashv(hashv_args);
+  val iter = hash_begin(hash);
+  val jfun = default_arg(joinfun, identity_star_f);
+  val ufun = default_arg(unitfun, identity_f);
+  val cell;
+
+  if (jfun == identity_star_f && ufun == identity_f) {
+    while ((cell = hash_next(iter)) != nil) {
+      us_cons_bind(k, v, cell);
+      sethash(hout, v, k);
+    }
+  } else {
+    while ((cell = hash_next(iter)) != nil) {
+      us_cons_bind(k, v, cell);
+      val new_p;
+      loc place = gethash_l(self, hout, v, mkcloc(new_p));
+      val ukey = funcall1(ufun, k);
+      if (new_p)
+        set(place, ukey);
+      else
+        set(place, funcall2(jfun, deref(place), ukey));
+    }
+  }
+
+  return hout;
+}
+
 static val set_hash_traversal_limit(val lim)
 {
   val old = num(hash_traversal_limit);
@@ -1809,6 +1839,7 @@ void hash_init(void)
   reg_fun(intern(lit("hash-update-1"), user_package),
           func_n4o(hash_update_1, 3));
   reg_fun(intern(lit("hash-revget"), user_package), func_n4o(hash_revget, 2));
+  reg_fun(intern(lit("hash-invert"), user_package), func_n3ov(hash_invert, 1));
   reg_fun(intern(lit("hash-begin"), user_package), func_n1(hash_begin));
   reg_fun(intern(lit("hash-next"), user_package), func_n1(hash_next));
   reg_fun(intern(lit("hash-peek"), user_package), func_n1(hash_peek));
