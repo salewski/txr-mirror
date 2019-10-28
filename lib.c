@@ -125,7 +125,8 @@ val null_string;
 val nil_string;
 val null_list;
 
-val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
+val identity_f, identity_star_f;
+val equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
 val list_f, less_f, greater_f;
 
 val prog_string;
@@ -162,6 +163,14 @@ const seq_kind_t seq_kind_tab[MAXTYPE+1] = {
 val identity(val obj)
 {
   return obj;
+}
+
+static val identity_star(varg args)
+{
+  int index = 0;
+  if (args_more(args, index))
+    return args_get(args, &index);
+  return nil;
 }
 
 static val code2type(int code)
@@ -11026,7 +11035,8 @@ static void obj_init(void)
           &user_package, &public_package,
           &null_list, &equal_f, &eq_f, &eql_f,
           &car_f, &cdr_f, &null_f, &list_f,
-          &identity_f, &less_f, &greater_f, &prog_string, &env_list,
+          &identity_f, &identity_star_f, &less_f, &greater_f,
+          &prog_string, &env_list,
           convert(val *, 0));
 
   nil_string = lit("nil");
@@ -11184,6 +11194,7 @@ static void obj_init(void)
   eq_f = func_n2(eq);
   eql_f = func_n2(eql);
   identity_f = func_n1(identity);
+  identity_star_f = func_n0v(identity_star);
   car_f = func_n1(car);
   cdr_f = func_n1(cdr);
   null_f = func_n1(null);

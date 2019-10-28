@@ -17743,9 +17743,10 @@ previous clauses match.
 
 .SS* Object Equivalence
 
-.coNP Functions @ identity and @ use
+.coNP Functions @, identity @ identity and @ use
 .synb
 .mets (identity << value )
+.mets (identity* << value *)
 .mets (use << value )
 .syne
 .desc
@@ -17753,9 +17754,15 @@ The
 .code identity
 function returns its argument.
 
+If the
+.code identity*
+function is given at least one argument, then it returns its
+leftmost argument, otherwise it returns nil.
+
 The
 .code use
-function is a synonym.
+function is a synonym of
+.codn identity .
 
 .TP* Notes:
 The

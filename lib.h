@@ -516,7 +516,8 @@ extern val nothrow_k, args_k, colon_k, auto_k, fun_k;
 extern val null_string;
 extern val null_list; /* (nil) */
 
-extern val identity_f, equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
+extern val identity_f, identity_star_f;
+extern val equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
 extern val list_f, less_f, greater_f;
 
 extern val prog_string;
