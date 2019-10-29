@@ -65,7 +65,7 @@ static int errfunc_thunk(const char *errpath, int errcode)
   return result ? 1 : 0;
 }
 
-val glob_wrap(val pattern, val flags, val errfunc)
+val glob_wrap(val pattern, val flags, val errfun)
 {
   cnum c_flags = c_num(default_arg(flags, zero));
   char *pat_u8 = utf8_dup_to(c_str(pattern));
@@ -77,7 +77,7 @@ val glob_wrap(val pattern, val flags, val errfunc)
                            "its error callback function"), nao);
   }
 
-  s_errfunc = default_null_arg(errfunc);
+  s_errfunc = default_null_arg(errfun);
 
   (void) glob(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
 

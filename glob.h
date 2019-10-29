@@ -25,5 +25,5 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-val glob_wrap(val pattern, val flags, val errfunc);
+val glob_wrap(val pattern, val flags, val errfun);
 void glob_init(void);

@@ -1533,7 +1533,7 @@ val hash_alist(val hash)
   return make_lazy_cons_car(func_f1(iter, hash_alist_lazy), cell);
 }
 
-val hash_uni(val hash1, val hash2, val join_func)
+val hash_uni(val hash1, val hash2, val joinfun)
 {
   val self = lit("hash-uni");
   struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_s));
@@ -1558,7 +1558,7 @@ val hash_uni(val hash1, val hash2, val join_func)
          entry;
          entry = hash_next(hiter))
     {
-      if (missingp(join_func)) {
+      if (missingp(joinfun)) {
         sethash(hout, us_car(entry), us_cdr(entry));
       } else {
         val new_p;
@@ -1566,7 +1566,7 @@ val hash_uni(val hash1, val hash2, val join_func)
         if (new_p)
           sethash(hout, us_car(entry), us_cdr(entry));
         else
-          set(ptr, funcall2(join_func, us_cdr(entry), deref(ptr)));
+          set(ptr, funcall2(joinfun, us_cdr(entry), deref(ptr)));
       }
     }
 
@@ -1633,7 +1633,7 @@ val hash_symdiff(val hash1, val hash2)
   }
 }
 
-val hash_isec(val hash1, val hash2, val join_func)
+val hash_isec(val hash1, val hash2, val joinfun)
 {
   val self = lit("hash-isec");
   struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_s));
@@ -1653,10 +1653,10 @@ val hash_isec(val hash1, val hash2, val join_func)
     {
       val found = gethash_e(self, hash2, us_car(entry));
       if (found) {
-        if (missingp(join_func))
+        if (missingp(joinfun))
           sethash(hout, us_car(entry), us_cdr(entry));
         else
-          sethash(hout, us_car(entry), funcall2(join_func, us_cdr(entry), us_cdr(found)));
+          sethash(hout, us_car(entry), funcall2(joinfun, us_cdr(entry), us_cdr(found)));
       }
     }
 

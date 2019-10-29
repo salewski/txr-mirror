@@ -21308,7 +21308,7 @@ then
 returns the empty list
 .code nil
 instead of a lazy list. Otherwise, it instantiates a lazy list, and invokes the
-.code gen-func
+.code gen-fun
 to populate it with the first item.
 
 The
@@ -45191,10 +45191,10 @@ or
 
 .coNP Functions @, hash-uni @, hash-diff @ hash-symdiff and @ hash-isec
 .synb
-.mets (hash-uni < hash1 < hash2 <> [ join-func ])
+.mets (hash-uni < hash1 < hash2 <> [ joinfun ])
 .mets (hash-diff < hash1 << hash2 )
 .mets (hash-symdiff < hash1 << hash2 )
-.mets (hash-isec < hash1 < hash2 <> [ join-func ])
+.mets (hash-isec < hash1 < hash2 <> [ joinfun ])
 .syne
 .desc
 These functions perform basic set operations on hash tables in a nondestructive
@@ -45231,12 +45231,12 @@ and
 .metn hash2 ,
 then it occurs only once
 in the resulting hash. In this case, if the
-.meta join-func
+.meta joinfun
 argument is not given,
 the value associated with this key is the one from
 .metn hash1 .
 If
-.meta join-func
+.meta joinfun
 is specified then it is called with two arguments: the respective
 data items from
 .meta hash1
@@ -45283,12 +45283,12 @@ only those keys which occur both in
 and
 .metn hash2 .
 If
-.meta join-func
+.meta joinfun
 is not
 specified, the values selected for these common keys are those from
 .metn hash1 .
 If
-.meta join-func
+.meta joinfun
 is specified, then for each key which occurs in both
 .meta hash1
 and
@@ -47125,8 +47125,8 @@ and then inverts the result as if by application of the
 
 .coNP Functions @ iff and @ iffi
 .synb
-.mets (iff < cond-func >> [ then-func <> [ else-func ]])
-.mets (iffi < cond-func < then-func <> [ else-func ])
+.mets (iff < condfun >> [ thenfun <> [ elsefun ]])
+.mets (iffi < condfun < thenfun <> [ elsefun ])
 .syne
 .desc
 The
@@ -47137,18 +47137,18 @@ operator. It accepts
 functional arguments and returns a function.
 
 The resulting function takes its arguments, if any, and applies them to
-.metn cond-func .
+.metn condfun .
 If
-.meta cond-func
+.meta condfun
 yields true, then the arguments are passed to
-.meta then-func
+.meta thenfun
 and the
 resulting value is returned. Otherwise the arguments are passed to
-.meta else-func
+.meta elsefun
 and the resulting value is returned.
 
 If
-.meta then-func
+.meta thenfun
 is omitted then
 .code identity
 is used as default. This omission is not permitted by
@@ -47157,7 +47157,7 @@ only
 .codn iff .
 
 If
-.meta else-func
+.meta elsefun
 needs to be called, but is omitted, then
 .code nil
 is returned.
@@ -47168,9 +47168,9 @@ function differs from
 .code iff
 only in the defaulting behavior with respect
 to the
-.meta else-func
+.meta elsefun
 argument. If
-.meta else-func
+.meta elsefun
 is omitted in a call to
 .code iffi
 then the default function is
@@ -58920,7 +58920,7 @@ implementation of
 
 .coNP Function @ glob
 .synb
-.mets (glob < pattern >> [ flags <> [ error-func ]])
+.mets (glob < pattern >> [ flags <> [ errfun ]])
 .syne
 .desc
 The
@@ -58945,7 +58945,7 @@ values of the variables
 and others.
 
 If the
-.meta error-func
+.meta errfun
 argument is specified, it gives a callback function which is invoked
 when
 .code glob
@@ -58958,18 +58958,18 @@ Boolean. If the function returns true, then
 will terminate.
 
 The
-.meta error-func
+.meta errfun
 may terminate the traversal by a nonlocal exit, such as by throwing
 an exception or performing a block return.
 
 The
-.meta error-func
+.meta errfun
 may not re-enter the
 .code glob
 function. This situation is detected and diagnosed by an exception.
 
 The
-.meta error-func
+.meta errfun
 may not capture a continuation across the error boundary. That is to say,
 code invoked from the error may not capture a continuation up to a prompt
 which surrounds the
@@ -59105,8 +59105,8 @@ These variables correspond to the C constants
 
 .coNP Function @ ftw
 .synb
-.mets (ftw < path-or-list < callback-func >> [ flags <> [ nopenfd ]])
-.mets >> [ callback-func < path < type < stat-struct < level << base ]
+.mets (ftw < path-or-list < callbackfun >> [ flags <> [ nopenfd ]])
+.mets >> [ callbackfun < path < type < stat-struct < level << base ]
 .syne
 .desc
 The
@@ -59178,7 +59178,7 @@ argument and
 bitmask arguments.
 
 For each visited entry, it calls the supplied
-.meta callback-func
+.meta callbackfun
 function, which receives five arguments.
 
 The
@@ -59250,22 +59250,22 @@ upon successful completion and
 on failure. If
 .code ftw
 is terminated by a return value from
-.metn callback-func ,
+.metn callbackfun ,
 then that value is returned. Such a value is always a nonzero integer.
 
 The
-.meta callback-func
+.meta callbackfun
 may terminate the traversal by a nonlocal exit, such as by throwing
 an exception or performing a block return.
 
 The
-.meta callback-func
+.meta callbackfun
 may not re-enter the
 .code ftw
 function. This situation is detected and diagnosed by an exception.
 
 The
-.meta callback-func
+.meta callbackfun
 may not capture a continuation across the callback boundary. That is to say,
 code invoked from the callback may not capture a continuation up to a prompt
 which surrounds the
