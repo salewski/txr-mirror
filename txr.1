@@ -56889,8 +56889,9 @@ as a way of specifying a command to execute.
 .synb
 .mets (defstruct stat nil
 .mets \ \  dev ino mod nlink uid gid
-.mets \ \  rdev size blksize blocks atime
-.mets \ \  mtime ctime path)
+.mets \ \  rdev size blksize blocks
+.mets \ \  atime atime-nsec mtime mtime-nsec
+.mets \ \  ctime ctime-nsec path)
 .syne
 .desc
 The
@@ -56903,6 +56904,10 @@ and
 .code fstat
 functions.  Except for
 .codn path ,
+.codn atime-nsec ,
+.code ctime-nsec
+and
+.codn mtime-nsec ,
 the slots are the direct counterparts of the
 members of POSIX C structure
 .codn "struct stat" .
@@ -56910,6 +56915,7 @@ For instance the slot
 .code dev
 corresponds to
 .codn st_dev .
+
 The
 .code path
 slot is set by the functions
@@ -56919,6 +56925,22 @@ and
 Its value is
 .code nil
 when the path is not available.
+
+The
+.codn atime-nsec ,
+.code ctime-nsec
+and
+.code mtime-nsec
+fields give the fractional parts of
+.codn atime ,
+.code ctime
+and
+.codn mtime ,
+respectively. They are derived from the newer style information
+in which the POSIX function provides the timestamps in
+.code "struct timespec"
+format. If that is not available from the platform, these
+fields take on values of zero.
 
 .coNP Functions @, stat @ lstat and @ fstat
 .synb
@@ -57579,6 +57601,16 @@ The
 function is equivalent to
 .code path-newer
 with the arguments reversed.
+
+Note:
+.code path-newer
+takes advantage of sub-second timestamp resolution information,
+if available. The implementation is based on using the
+.code mtime-nsec
+field of the
+.code stat
+structure, if it isn't
+.codn nil .
 
 .coNP Function @ path-same-object
 .synb

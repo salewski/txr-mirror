@@ -101,7 +101,9 @@ val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 val atime_k, mtime_k, ctime_k;
 val dev_s, ino_s, mode_s, nlink_s, uid_s;
 val gid_s, rdev_s, size_s, blksize_s, blocks_s;
-val atime_s, mtime_s, ctime_s, path_s;
+val atime_s, mtime_s, ctime_s;
+val atime_nsec_s, mtime_nsec_s, ctime_nsec_s;
+val path_s;
 
 #if HAVE_PWUID
 val passwd_s, gecos_s, dir_s, shell_s;
@@ -822,6 +824,15 @@ val stat_to_struct(struct stat st, val path)
   slotset(strct, atime_s, num(st.st_atime));
   slotset(strct, mtime_s, num(st.st_mtime));
   slotset(strct, ctime_s, num(st.st_ctime));
+#if HAVE_STAT_NSEC
+  slotset(strct, atime_nsec_s, num(st.st_atim.tv_nsec));
+  slotset(strct, mtime_nsec_s, num(st.st_mtim.tv_nsec));
+  slotset(strct, ctime_nsec_s, num(st.st_ctim.tv_nsec));
+#else
+  slotset(strct, atime_nsec_s, zero);
+  slotset(strct, mtime_nsec_s, zero);
+  slotset(strct, ctime_nsec_s, zero);
+#endif
   if (path)
     slotset(strct, path_s, path);
 
@@ -1719,6 +1730,9 @@ void sysif_init(void)
   atime_s = intern(lit("atime"), user_package);
   mtime_s = intern(lit("mtime"), user_package);
   ctime_s = intern(lit("ctime"), user_package);
+  atime_nsec_s = intern(lit("atime-nsec"), user_package);
+  mtime_nsec_s = intern(lit("mtime-nsec"), user_package);
+  ctime_nsec_s = intern(lit("ctime-nsec"), user_package);
   path_s = intern(lit("path"), user_package);
 #if HAVE_PWUID
   passwd_s = intern(lit("passwd"), user_package);
@@ -1750,8 +1764,10 @@ void sysif_init(void)
 
   make_struct_type(stat_s, nil, nil,
                    list(dev_s, ino_s, mode_s, nlink_s, uid_s, gid_s,
-                        rdev_s, size_s, blksize_s, blocks_s, atime_s,
-                        mtime_s, ctime_s, path_s, nao), nil, nil, nil, nil);
+                        rdev_s, size_s, blksize_s, blocks_s,
+                        atime_s, atime_nsec_s, mtime_s, mtime_nsec_s,
+                        ctime_s, ctime_nsec_s, path_s, nao),
+                   nil, nil, nil, nil);
 #if HAVE_PWUID
   make_struct_type(passwd_s, nil, nil,
                    list(name_s, passwd_s, uid_s, gid_s,

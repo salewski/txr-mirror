@@ -127,6 +127,7 @@ debug_support=y
 gen_gc=y
 have_dbl_decimal_dig=
 have_unistd=
+have_sys_stat=
 have_sys_types=
 have_sys_time=
 have_makedev=
@@ -1609,10 +1610,32 @@ int main(void)
 if conftest ; then
   printf "yes\n"
   printf "#define HAVE_SYS_STAT 1\n" >> config.h
+  have_sys_stat=y
 else
   printf "no\n"
 fi
 
+if [ "$have_sys_stat" ] ; then
+  printf "Checking for sub-second resolution time in struct stat ... "
+
+  cat > conftest.c <<!
+
+#include <sys/stat.h>
+
+struct stat s;
+
+int main(void)
+{
+  return s.st_mtim.tv_nsec != 0;
+}
+!
+  if conftest ; then
+    printf "yes\n"
+    printf "#define HAVE_STAT_NSEC 1\n" >> config.h
+  else
+    printf "no\n"
+  fi
+fi
 
 #
 # environ

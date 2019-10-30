@@ -153,7 +153,13 @@
 (defun path-newer (path-0 path-1)
   (sys:path-examine (s0 stat path-0)
     (sys:path-examine (s1 stat path-1)
-      (and s0 (or (not s1) (> s0.mtime s1.mtime))))))
+      (if s0
+        (or (null s1)
+            (let ((mt0 s0.mtime)
+                  (mt1 s1.mtime))
+              (or (> mt0 mt1)
+                  (and (= mt0 mt1)
+                       (> s0.mtime-nsec s1.mtime-nsec)))))))))
 
 (defun path-older (path-0 path-1)
   (path-newer path-1 path-0))

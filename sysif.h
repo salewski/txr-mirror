@@ -31,7 +31,9 @@ extern val gid_k, rdev_k, size_k, blksize_k, blocks_k;
 extern val atime_k, mtime_k, ctime_k;
 extern val dev_s, ino_s, mode_s, nlink_s, uid_s;
 extern val gid_s, rdev_s, size_s, blksize_s, blocks_s;
-extern val atime_s, mtime_s, ctime_s, path_s;
+extern val atime_s, mtime_s, ctime_s;
+extern val atime_nsec_s, mtime_nsec_s, ctime_nsec_s;
+extern val path_s;
 
 #if !HAVE_FTRUNCATE
 typedef long off_t;
