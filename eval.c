@@ -2344,14 +2344,16 @@ static val op_lisp1_setq(val form, val env)
   return sys_rplacd(binding, eval(newval, env, form));
 }
 
+static val expand_lisp1(val form, val menv);
+
 static val expand_lisp1_value(val form, val menv)
 {
   if (length(form) != two)
     eval_error(form, lit("~s: invalid syntax"), first(form), nao);
 
   {
-    val sym = second(form);
-    val sym_ex = expand(sym, menv);
+    val sym = cadr(form);
+    val sym_ex = expand_lisp1(sym, menv);
     val binding_type = lexical_lisp1_binding(menv, sym_ex);
 
     if (nilp(binding_type)) {
@@ -2380,7 +2382,7 @@ static val expand_lisp1_setq(val form, val menv)
   {
     val op = car(form);
     val sym = cadr(form);
-    val sym_ex = expand(sym, menv);
+    val sym_ex = expand_lisp1(sym, menv);
     val newval = caddr(form);
     val binding_type = lexical_lisp1_binding(menv, sym_ex);
 
@@ -2388,11 +2390,6 @@ static val expand_lisp1_setq(val form, val menv)
       if (!bindable(sym_ex))
         eval_error(form, lit("~s: misapplied to form ~s"),
                    op, sym_ex, nao);
-      if (!lookup_var(nil, sym_ex) && !lookup_fun(nil, sym_ex))
-        eval_defr_warn(uw_last_form_expanded(),
-                       cons(var_s, sym_ex),
-                       lit("~s: unbound variable/function ~s"),
-                       op, sym_ex, nao);
       return rlcp(cons(op, cons(sym_ex, cons(expand(newval, menv), nil))),
                   form);
     }
