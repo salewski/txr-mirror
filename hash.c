@@ -46,6 +46,7 @@
 #include "eval.h"
 #include "itypes.h"
 #include "arith.h"
+#include "sysif.h"
 #include "hash.h"
 
 typedef enum hash_flags {
@@ -1818,8 +1819,8 @@ static val set_hash_traversal_limit(val lim)
 static val gen_hash_seed(void)
 {
     val time = time_sec_usec();
-    ucnum sec = convert(ucnum, c_num(car(time)));
-    ucnum usec = convert(ucnum, c_num(cdr(time)));
+    ucnum sec = convert(ucnum, c_time(car(time)));
+    ucnum usec = c_unum(cdr(time));
 #if HAVE_UNISTD_H
     ucnum pid = convert(ucnum, getpid());
 #else

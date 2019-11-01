@@ -12079,7 +12079,7 @@ val time_sec_usec(void)
   struct timeval tv;
   if (gettimeofday(&tv, 0) == -1)
     return nil;
-  return cons(num(tv.tv_sec), num(tv.tv_usec));
+  return cons(num_time(tv.tv_sec), num(tv.tv_usec));
 }
 
 #if !HAVE_GMTIME_R
@@ -12126,7 +12126,7 @@ static val string_time(struct tm *(*break_time_fn)(const time_t *, struct tm *),
 
 val time_string_local(val time, val format)
 {
-  time_t secs = c_num(time);
+  time_t secs = c_time(time);
   const wchar_t *wcfmt = c_str(format);
   char *u8fmt = utf8_dup_to(wcfmt);
   val timestr = string_time(localtime_r, u8fmt, secs);
@@ -12136,7 +12136,7 @@ val time_string_local(val time, val format)
 
 val time_string_utc(val time, val format)
 {
-  time_t secs = c_num(time);
+  time_t secs = c_time(time);
   const wchar_t *wcfmt = c_str(format);
   char *u8fmt = utf8_dup_to(wcfmt);
   val timestr = string_time(gmtime_r, u8fmt, secs);
@@ -12186,7 +12186,7 @@ static val broken_time_struct(struct tm *tms)
 val time_fields_local(val time)
 {
   struct tm tms;
-  time_t secs = c_num(time);
+  time_t secs = c_time(time);
 
   if (localtime_r(&secs, &tms) == 0)
     return nil;
@@ -12197,7 +12197,7 @@ val time_fields_local(val time)
 val time_fields_utc(val time)
 {
   struct tm tms;
-  time_t secs = c_num(time);
+  time_t secs = c_time(time);
 
   if (gmtime_r(&secs, &tms) == 0)
     return nil;
@@ -12208,7 +12208,7 @@ val time_fields_utc(val time)
 val time_struct_local(val time)
 {
   struct tm tms;
-  time_t secs = c_num(time);
+  time_t secs = c_time(time);
 
   if (localtime_r(&secs, &tms) == 0)
     return nil;
@@ -12219,7 +12219,7 @@ val time_struct_local(val time)
 val time_struct_utc(val time)
 {
   struct tm tms;
-  time_t secs = c_num(time);
+  time_t secs = c_time(time);
 
   if (gmtime_r(&secs, &tms) == 0)
     return nil;
@@ -12288,7 +12288,7 @@ static val make_time_impl(time_t (*pmktime)(struct tm *),
                     hour, minute, second, isdst);
   time = pmktime(&local);
 
-  return time == -1 ? nil : num(time);
+  return time == -1 ? nil : num_time(time);
 }
 
 val make_time(val year, val month, val day,
@@ -12458,9 +12458,9 @@ val time_parse_utc(val format, val string)
   if (!strptime_wrap(string, format, &tms))
     return nil;
 #if HAVE_TIMEGM
-  return num(timegm(&tms));
+  return num_time(timegm(&tms));
 #else
-  return num(timegm_hack(&tms));
+  return num_time(timegm_hack(&tms));
 #endif
 }
 

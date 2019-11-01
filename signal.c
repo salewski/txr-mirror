@@ -40,6 +40,7 @@
 #endif
 #include "lib.h"
 #include "gc.h"
+#include "sysif.h"
 #include "signal.h"
 #include "unwind.h"
 #include "eval.h"
@@ -396,8 +397,8 @@ val getitimer_wrap(val which)
   if (getitimer(c_num(which), &itv) < 0)
     return nil;
 
-  return list(tv_to_usec(num(itv.it_interval.tv_sec), num(itv.it_interval.tv_usec)),
-              tv_to_usec(num(itv.it_value.tv_sec), num(itv.it_value.tv_usec)),
+  return list(tv_to_usec(num_time(itv.it_interval.tv_sec), num(itv.it_interval.tv_usec)),
+              tv_to_usec(num_time(itv.it_value.tv_sec), num(itv.it_value.tv_usec)),
               nao);
 }
 
@@ -406,16 +407,16 @@ val setitimer_wrap(val which, val interval, val currval)
   struct itimerval itn, itv;
   const val meg = num_fast(1000000);
 
-  itn.it_interval.tv_sec = c_num(trunc(interval, meg));
+  itn.it_interval.tv_sec = c_time(trunc(interval, meg));
   itn.it_interval.tv_usec = c_num(mod(interval, meg));
-  itn.it_value.tv_sec = c_num(trunc(currval, meg));
+  itn.it_value.tv_sec = c_time(trunc(currval, meg));
   itn.it_value.tv_usec = c_num(mod(currval, meg));
 
   if (setitimer(c_num(which), &itn, &itv) < 0)
     return nil;
 
-  return list(tv_to_usec(num(itv.it_interval.tv_sec), num(itv.it_interval.tv_usec)),
-              tv_to_usec(num(itv.it_value.tv_sec), num(itv.it_value.tv_usec)),
+  return list(tv_to_usec(num_time(itv.it_interval.tv_sec), num(itv.it_interval.tv_usec)),
+              tv_to_usec(num_time(itv.it_value.tv_sec), num(itv.it_value.tv_usec)),
               nao);
 }
 

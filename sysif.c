@@ -778,6 +778,16 @@ static int w_fstat(val stream, struct stat *buf)
 }
 #endif
 
+time_t c_time(val time)
+{
+  return if3(convert(time_t, -1) > 0, c_unum(time), c_num(time));
+}
+
+val num_time(time_t time)
+{
+  return if3(convert(time_t, -1) > 0, unum(time), num(time));
+}
+
 #if HAVE_SYS_STAT
 static val stat_to_list(struct stat st)
 {
@@ -821,9 +831,9 @@ val stat_to_struct(struct stat st, val path)
   slotset(strct, blksize_s, zero);
   slotset(strct, blocks_s, zero);
 #endif
-  slotset(strct, atime_s, num(st.st_atime));
-  slotset(strct, mtime_s, num(st.st_mtime));
-  slotset(strct, ctime_s, num(st.st_ctime));
+  slotset(strct, atime_s, num_time(st.st_atime));
+  slotset(strct, mtime_s, num_time(st.st_mtime));
+  slotset(strct, ctime_s, num_time(st.st_ctime));
 #if HAVE_STAT_NSEC
   slotset(strct, atime_nsec_s, num(st.st_atim.tv_nsec));
   slotset(strct, mtime_nsec_s, num(st.st_mtim.tv_nsec));

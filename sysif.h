@@ -53,6 +53,8 @@ val usleep_wrap(val usec);
 #if HAVE_FORK_STUFF
 val exec_wrap(val file, val args_opt);
 #endif
+time_t c_time(val time);
+val num_time(time_t time);
 #if HAVE_SYS_STAT
 struct stat;
 val stat_to_struct(struct stat st, val path);
