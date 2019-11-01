@@ -1072,7 +1072,7 @@ static void us_hash_iter_init(struct hash_iter *hi, val hash)
   h->usecount++;
 }
 
-static val hash_iter_next(struct hash_iter *hi, val iter)
+static val hash_iter_next_impl(struct hash_iter *hi, val iter)
 {
   val hash = hi->hash;
   struct hash *h = hash ? coerce(struct hash *, hash->co.handle) : 0;
@@ -1090,6 +1090,11 @@ static val hash_iter_next(struct hash_iter *hi, val iter)
     set(mkloc(hi->cons, iter), h->table->v.vec[hi->chain]);
   }
   return us_car(hi->cons);
+}
+
+static val hash_iter_next(struct hash_iter *hi)
+{
+  return hash_iter_next_impl(hi, 0);
 }
 
 static val hash_iter_peek(struct hash_iter *hi)
@@ -1130,7 +1135,7 @@ val hash_next(val iter)
   val self = lit("hash-next");
   struct hash_iter *hi = coerce(struct hash_iter *,
                                 cobj_handle(self, iter, hash_iter_s));
-  return hash_iter_next(hi, iter);
+  return hash_iter_next_impl(hi, iter);
 }
 
 
@@ -1152,7 +1157,7 @@ val maphash(val fun, val hash)
 
   gc_hint(hash);
 
-  while ((cell = hash_iter_next(&hi, 0)) != nil)
+  while ((cell = hash_iter_next(&hi)) != nil)
     funcall2(fun, us_car(cell), us_cdr(cell));
 
   return nil;
@@ -1447,7 +1452,7 @@ val group_by(val func, val seq, struct args *hashv_args)
 
     us_hash_iter_init(&hi, hash);
 
-    while ((cell = hash_iter_next(&hi, 0)) != nil)
+    while ((cell = hash_iter_next(&hi)) != nil)
       us_rplacd(cell, nreverse(us_cdr(cell)));
 
     return hash;
@@ -1493,7 +1498,7 @@ val group_reduce(val hash, val by_fun, val reduce_fun, val seq,
     val cell;
     hash_iter_init(&hi, hash, self);
 
-    while ((cell = hash_iter_next(&hi, 0)) != nil)
+    while ((cell = hash_iter_next(&hi)) != nil)
       us_rplacd(cell, funcall1(filter_fun, us_cdr(cell)));
   }
 
@@ -1586,13 +1591,13 @@ val hash_uni(val hash1, val hash2, val joinfun)
 
     hash_iter_init(&hi, hash2, self);
 
-    for (entry = hash_iter_next(&hi, 0); entry; entry = hash_iter_next(&hi, 0)) {
+    for (entry = hash_iter_next(&hi); entry; entry = hash_iter_next(&hi)) {
       sethash(hout, us_car(entry), us_cdr(entry));
     }
 
     hash_iter_init(&hi, hash1, self);
 
-    for (entry = hash_iter_next(&hi, 0); entry; entry = hash_iter_next(&hi, 0)) {
+    for (entry = hash_iter_next(&hi); entry; entry = hash_iter_next(&hi)) {
       if (missingp(joinfun)) {
         sethash(hout, us_car(entry), us_cdr(entry));
       } else {
@@ -1626,7 +1631,7 @@ val hash_diff(val hash1, val hash2)
 
     hash_iter_init(&hi, hash2, self);
 
-    for (entry = hash_iter_next(&hi, 0); entry; entry = hash_iter_next(&hi, 0)) {
+    for (entry = hash_iter_next(&hi); entry; entry = hash_iter_next(&hi)) {
       remhash(hout, us_car(entry));
     }
 
@@ -1651,13 +1656,14 @@ val hash_symdiff(val hash1, val hash2)
 
     hash_iter_init(&hi, hash1, self);
 
-    for (entry = hash_iter_next(&hi, 0); entry; entry = hash_iter_next(&hi, 0)) { if (!gethash_e(self, hash2, us_car(entry)))
+    for (entry = hash_iter_next(&hi); entry; entry = hash_iter_next(&hi)) {
+      if (!gethash_e(self, hash2, us_car(entry)))
         sethash(hout, us_car(entry), us_cdr(entry));
     }
 
     hash_iter_init(&hi, hash2, self);
 
-    for (entry = hash_iter_next(&hi, 0); entry; entry = hash_iter_next(&hi, 0)) {
+    for (entry = hash_iter_next(&hi); entry; entry = hash_iter_next(&hi)) {
       if (!gethash_e(self, hash1, us_car(entry)))
         sethash(hout, us_car(entry), us_cdr(entry));
     }
@@ -1683,7 +1689,7 @@ val hash_isec(val hash1, val hash2, val joinfun)
 
     hash_iter_init(&hi, hash1, self);
 
-    for (entry = hash_iter_next(&hi, 0); entry; entry = hash_iter_next(&hi, 0)) {
+    for (entry = hash_iter_next(&hi); entry; entry = hash_iter_next(&hi)) {
       val found = gethash_e(self, hash2, us_car(entry));
       if (found) {
         if (missingp(joinfun))
@@ -1705,7 +1711,7 @@ val hash_subset(val hash1, val hash2)
 
   hash_iter_init(&hi, hash1, self);
 
-  for (entry = hash_iter_next(&hi, 0); entry; entry = hash_iter_next(&hi, 0)) {
+  for (entry = hash_iter_next(&hi); entry; entry = hash_iter_next(&hi)) {
     if (!inhash(hash2, us_car(entry), colon_k))
       return nil;
   }
@@ -1727,7 +1733,7 @@ val hash_update(val hash, val fun)
 
   hash_iter_init(&hi, hash, self);
 
-  while ((cell = hash_iter_next(&hi, 0)) != nil) {
+  while ((cell = hash_iter_next(&hi)) != nil) {
     loc ptr = mkloc(*us_cdr_p(cell), cell);
     set(ptr, funcall1(fun, deref(ptr)));
   }
@@ -1769,7 +1775,7 @@ val hash_revget(val hash, val value, val test, val keyfun)
   test = default_arg(test, eql_f);
   keyfun = default_arg(keyfun, identity_f);
 
-  while ((cell = hash_iter_next(&hi, 0)) != nil) {
+  while ((cell = hash_iter_next(&hi)) != nil) {
     if (funcall2(test, value, funcall1(keyfun, us_cdr(cell))))
       return us_car(cell);
   }
@@ -1789,12 +1795,12 @@ val hash_invert(val hash, val joinfun, val unitfun, struct args *hashv_args)
   hash_iter_init(&hi, hash, self);
 
   if (jfun == identity_star_f && ufun == identity_f) {
-    while ((cell = hash_iter_next(&hi, 0)) != nil) {
+    while ((cell = hash_iter_next(&hi)) != nil) {
       us_cons_bind(k, v, cell);
       sethash(hout, v, k);
     }
   } else {
-    while ((cell = hash_iter_next(&hi, 0)) != nil) {
+    while ((cell = hash_iter_next(&hi)) != nil) {
       us_cons_bind(k, v, cell);
       val new_p;
       loc place = gethash_l(self, hout, v, mkcloc(new_p));
