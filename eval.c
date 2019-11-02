@@ -2488,21 +2488,24 @@ static val op_for(val form, val env)
 
 static val op_dohash(val form, val env)
 {
+  val op = first(form);
   val spec = second(form);
   val keysym = first(spec);
   val valsym = second(spec);
   val hashform = third(spec);
   val resform = fourth(spec);
   val body = rest(rest(form));
-  val iter = hash_begin(eval(hashform, env, hashform));
   val keyvar = cons(keysym, nil);
   val valvar = cons(valsym, nil);
   val new_env = make_env(cons(keyvar, cons(valvar, nil)), nil, env);
   val cell;
+  struct hash_iter hi;
+
+  hash_iter_init(&hi, eval(hashform, env, hashform), op);
 
   uw_block_begin (nil, result);
 
-  while ((cell = hash_next(iter)) != nil) {
+  while ((cell = hash_iter_next(&hi)) != nil) {
     /* These assignments are gc-safe, because keyvar and valvar
        are newer objects than existing entries in the hash,
        unless the body mutates hash by inserting newer objects,

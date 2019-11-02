@@ -5181,10 +5181,12 @@ val package_local_symbols(val package_in)
 {
   val package = get_package(lit("package-local-symbols"), package_in, t);
   list_collect_decl (out, ptail);
-  val hiter = hash_begin(package->pk.symhash);
+  struct hash_iter hi;
   val cell;
 
-  while ((cell = hash_next(hiter))) {
+  us_hash_iter_init(&hi, package->pk.symhash);
+
+  while ((cell = hash_iter_next(&hi))) {
     val sym = us_cdr(cell);
     if (symbol_package(sym) == package)
       ptail = list_collect(ptail, sym);
@@ -5197,10 +5199,12 @@ val package_foreign_symbols(val package_in)
 {
   val package = get_package(lit("package-foreign-symbols"), package_in, t);
   list_collect_decl (out, ptail);
-  val hiter = hash_begin(package->pk.symhash);
+  struct hash_iter hi;
   val cell;
 
-  while ((cell = hash_next(hiter))) {
+  us_hash_iter_init(&hi, package->pk.symhash);
+
+  while ((cell = hash_iter_next(&hi))) {
     val sym = us_cdr(cell);
     if (symbol_package(sym) != package)
       ptail = list_collect(ptail, sym);
@@ -9034,12 +9038,12 @@ val find_max(val seq, val testfun, val keyfun)
     return nil;
   case SEQ_HASHLIKE:
     {
-      val hiter = hash_begin(si.obj);
-      val cell = hash_next(hiter);
+      struct hash_iter hi;
+      val cell = (hash_iter_init(&hi, si.obj, self), hash_iter_next(&hi));
       val maxelt = cell;
       val maxkey = if2(cell, funcall1(keyfun, cell));
 
-      while (cell && (cell = hash_next(hiter))) {
+      while (cell && (cell = hash_iter_next(&hi))) {
         val key = funcall1(keyfun, cell);
         if (funcall2(testfun, key, maxkey)) {
           maxkey = key;
@@ -9113,10 +9117,12 @@ val find_if(val pred, val seq, val key)
     break;
   case SEQ_HASHLIKE:
     {
-      val hiter = hash_begin(si.obj);
+      struct hash_iter hi;
       val cell;
 
-      while ((cell = hash_next(hiter))) {
+      hash_iter_init(&hi, si.obj, self);
+
+      while ((cell = hash_iter_next(&hi))) {
         val key = funcall1(keyfun, cell);
         if (funcall1(pred, key))
           return cell;
@@ -9172,10 +9178,12 @@ val rfind_if(val predi, val seq, val key)
     break;
   case SEQ_HASHLIKE:
     {
-      val hiter = hash_begin(si.obj);
+      struct hash_iter hi;
       val cell;
 
-      while ((cell = hash_next(hiter))) {
+      hash_iter_init(&hi, si.obj, self);
+
+      while ((cell = hash_iter_next(&hi))) {
         val key = funcall1(keyfun, cell);
         if (funcall1(predi, key))
           found = cell;
@@ -11911,9 +11919,10 @@ tail:
     }
   case COBJ:
     if (hashp(obj)) {
-      val iter = hash_begin(obj);
+      struct hash_iter hi;
       val cell;
-      while ((cell = hash_next(iter))) {
+      us_hash_iter_init(&hi, obj);
+      while ((cell = hash_iter_next(&hi))) {
         populate_obj_hash(us_car(cell), ctx);
         populate_obj_hash(us_cdr(cell), ctx);
       }
@@ -11949,9 +11958,10 @@ tail:
 static void obj_hash_merge(val parent_hash, val child_hash)
 {
   val self = lit("print");
-  val iter, cell;
+  struct hash_iter hi;
+  val cell;
 
-  for (iter = hash_begin(child_hash); (cell = hash_next(iter));) {
+  for (us_hash_iter_init(&hi, child_hash); (cell = hash_iter_next(&hi));) {
     val new_p;
     loc pcdr = gethash_l(self, parent_hash, us_car(cell), mkcloc(new_p));
     if (new_p)

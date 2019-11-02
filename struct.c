@@ -1649,10 +1649,12 @@ static val struct_inst_equalsub(val obj)
 
 val method_name(val fun)
 {
-  val sth_iter = hash_begin(struct_type_hash);
+  struct hash_iter sthi;
   val sth_cell;
 
-  while ((sth_cell = hash_next(sth_iter))) {
+  us_hash_iter_init(&sthi, struct_type_hash);
+
+  while ((sth_cell = hash_iter_next(&sthi))) {
     val sym = us_car(sth_cell);
     val stype = us_cdr(sth_cell);
     val sl_iter;
@@ -1695,10 +1697,12 @@ val method_name(val fun)
 val get_slot_syms(val package, val is_current, val method_only)
 {
   val result_hash = make_hash(nil, nil, nil);
-  val sth_iter = hash_begin(struct_type_hash);
+  struct hash_iter sthi;
   val sth_cell;
 
-  while ((sth_cell = hash_next(sth_iter))) {
+  us_hash_iter_init(&sthi, struct_type_hash);
+
+  while ((sth_cell = hash_iter_next(&sthi))) {
     val stype = us_cdr(sth_cell);
     val sl_iter;
     struct struct_type *st = coerce(struct struct_type *, stype->co.handle);

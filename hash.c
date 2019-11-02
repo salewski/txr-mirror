@@ -374,9 +374,10 @@ static val hash_equal_op(val left, val right)
   uses_or2;
   struct hash *l = coerce(struct hash *, left->co.handle);
   struct hash *r = coerce(struct hash *, right->co.handle);
-  val liter, riter, lcell, rcell;
+  val lcell, rcell;
   val free_conses = nil;
   val pending = nil;
+  struct hash_iter lhi, rhi;
 
   if (l->hops != r->hops)
     return nil;
@@ -390,10 +391,10 @@ static val hash_equal_op(val left, val right)
   if (l->count == 0)
     return t;
 
-  liter = hash_begin(left);
-  riter = hash_begin(right);
+  us_hash_iter_init(&lhi, left);
+  us_hash_iter_init(&rhi, right);
 
-  while ((lcell = hash_next(liter)) && ((rcell = hash_next(riter)))) {
+  while ((lcell = hash_iter_next(&lhi)) && ((rcell = hash_iter_next(&rhi)))) {
     val ncons = or2(pop(&free_conses), cons(nil, nil));
     val found;
 
@@ -460,7 +461,8 @@ static ucnum hash_hash_op(val obj, int *count, ucnum seed)
 {
   ucnum out = 0;
   struct hash *h = coerce(struct hash *, obj->co.handle);
-  val iter, cell;
+  val cell;
+  struct hash_iter hi;
 
   if ((*count)-- <= 0)
     return 0;
@@ -475,9 +477,9 @@ static ucnum hash_hash_op(val obj, int *count, ucnum seed)
   out += equal_hash(h->userdata, count, seed);
   out &= NUM_MAX;
 
-  iter = hash_begin(obj);
+  us_hash_iter_init(&hi, obj);
 
-  while ((*count)-- > 0 && (cell = hash_next(iter)) != nil) {
+  while ((*count)-- > 0 && (cell = hash_iter_next(&hi)) != nil) {
     out += equal_hash(cell, count, seed);
     out &= NUM_MAX;
   }
@@ -541,11 +543,14 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
   }
   put_char(chr(')'), out);
   {
-    val iter = hash_begin(hash), cell;
+    val cell;
+    struct hash_iter hi;
     cnum max_len = ctx->strm->max_length;
     cnum max_count = max_len;
 
-    while ((cell = hash_next(iter))) {
+    us_hash_iter_init(&hi, hash);
+
+    while ((cell = hash_iter_next(&hi))) {
       val key = us_car(cell);
       val value = us_cdr(cell);
       if (width_check(out, chr(' ')))

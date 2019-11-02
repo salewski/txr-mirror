@@ -94,14 +94,15 @@ static void trie_compress(loc ptrie)
     if (zerop(count)) {
       set(ptrie, value);
     } else if (count == one && nilp(value)) {
-      val iter = hash_begin(trie);
-      val cell = hash_next(iter);
+      struct hash_iter hi;
+      val cell = (us_hash_iter_init(&hi, trie), hash_iter_next(&hi));
       set(ptrie, cons(us_car(cell), us_cdr(cell)));
       trie_compress(cdr_l(deref(ptrie)));
     } else {
-      val cell, iter = hash_begin(trie);
-
-      for (cell = hash_next(iter); cell; cell = hash_next(iter))
+      val cell;
+      struct hash_iter hi;
+      us_hash_iter_init(&hi, trie);
+      for (cell = hash_iter_next(&hi); cell; cell = hash_iter_next(&hi))
         trie_compress(mkloc(*us_cdr_p(cell), cell));
     }
   } else if (consp(trie)) {
@@ -146,9 +147,12 @@ static val regex_from_trie(val trie)
         return nil;
       } else {
         list_collect_decl (out, ptail);
-        val iter = hash_begin(trie);
         val cell;
-        while ((cell = hash_next(iter)) != nil) {
+        struct hash_iter hi;
+
+        us_hash_iter_init(&hi, trie);
+
+        while ((cell = hash_iter_next(&hi)) != nil) {
           val rx = regex_from_trie(us_cdr(cell));
           ptail = list_collect(ptail,
                                if3(consp(rx) && car(rx) == compound_s,

@@ -372,11 +372,13 @@ tail:
         circ_backpatch(p, &cs, u);
 
       if (old_circ_count > 0) {
-        val iter = hash_begin(obj);
         val cell;
         val pairs = nil;
+        struct hash_iter hi;
 
-        while ((cell = hash_next(iter))) {
+        us_hash_iter_init(&hi, obj);
+
+        while ((cell = hash_iter_next(&hi))) {
           circ_backpatch(p, &cs, cell);
           push(cell, &pairs);
         }
@@ -836,10 +838,13 @@ static val get_visible_syms(val package, int include_fallback)
     for (; fblist; fblist = cdr(fblist))
     {
       val fb_pkg = car(fblist);
-      val hiter = hash_begin(fb_pkg->pk.symhash);
       val fcell;
       val new_p;
-      while ((fcell = hash_next(hiter))) {
+      struct hash_iter hi;
+
+      us_hash_iter_init(&hi, fb_pkg->pk.symhash);
+
+      while ((fcell = hash_iter_next(&hi))) {
         loc pcdr = gethash_l(lit("listener"), symhash, us_car(fcell), mkcloc(new_p));
         if (new_p)
           set(pcdr, us_cdr(fcell));
