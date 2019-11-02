@@ -25,6 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+struct hash_iter {
+  struct hash_iter *next;
+  val hash;
+  cnum chain;
+  val cons;
+};
+
 extern val weak_keys_k, weak_vals_k, userdata_k;
 extern val equal_based_k, eql_based_k, eq_based_k;
 
@@ -49,6 +56,10 @@ val get_hash_userdata(val hash);
 val set_hash_userdata(val hash, val data);
 val hashp(val obj);
 val maphash(val func, val hash);
+void hash_iter_init(struct hash_iter *hi, val hash, val self);
+void us_hash_iter_init(struct hash_iter *hi, val hash);
+val hash_iter_next(struct hash_iter *hi);
+val hash_iter_peek(struct hash_iter *hi);
 val hash_begin(val hash);
 val hash_next(val iter);
 val hash_peek(val iter);

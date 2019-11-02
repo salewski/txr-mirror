@@ -84,13 +84,6 @@ struct hash {
   struct hash_ops *hops;
 };
 
-struct hash_iter {
-  struct hash_iter *next;
-  val hash;
-  cnum chain;
-  val cons;
-};
-
 #define hash_seed (deref(lookup_var_l(nil, hash_seed_s)))
 
 static_forward(struct hash_ops hash_eq_ops);
@@ -1052,7 +1045,7 @@ static struct cobj_ops hash_iter_ops = cobj_ops_init(eq,
                                                      hash_iter_mark,
                                                      cobj_eq_hash_op);
 
-static void hash_iter_init(struct hash_iter *hi, val hash, val self)
+void hash_iter_init(struct hash_iter *hi, val hash, val self)
 {
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
   hi->next = 0;
@@ -1062,7 +1055,7 @@ static void hash_iter_init(struct hash_iter *hi, val hash, val self)
   h->usecount++;
 }
 
-static void us_hash_iter_init(struct hash_iter *hi, val hash)
+void us_hash_iter_init(struct hash_iter *hi, val hash)
 {
   struct hash *h = coerce(struct hash *, hash->co.handle);
   hi->next = 0;
@@ -1092,12 +1085,12 @@ static val hash_iter_next_impl(struct hash_iter *hi, val iter)
   return us_car(hi->cons);
 }
 
-static val hash_iter_next(struct hash_iter *hi)
+val hash_iter_next(struct hash_iter *hi)
 {
   return hash_iter_next_impl(hi, 0);
 }
 
-static val hash_iter_peek(struct hash_iter *hi)
+val hash_iter_peek(struct hash_iter *hi)
 {
   val hash = hi->hash;
   struct hash *h = hash ? coerce(struct hash *, hash->co.handle) : 0;
