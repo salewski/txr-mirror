@@ -45344,9 +45344,10 @@ applies
 first, as above. If that is true, and the two hashes have the same number of
 elements, the result is falsified.
 
-.coNP Functions @, hash-begin @ hash-next and @ hash-peek
+.coNP Functions @, hash-begin @, hash-reset @ hash-next and @ hash-peek
 .synb
 .mets (hash-begin << hash )
+.mets (hash-reset < hash-iter << hash )
 .mets (hash-next << hash-iter )
 .mets (hash-peek << hash-iter )
 .syne
@@ -45357,6 +45358,20 @@ function returns a an iterator object capable of retrieving the
 entries in stored in
 .meta hash
 one by one.
+
+The
+.code hash-reset
+function changes the state of an existing iterator, such that it
+becomes prepared to retrieve the entries stored in the newly given
+.metn hash ,
+which may be the same one as the previously associated hash.
+In addition,
+.code hash-reset
+may be given a
+.meta hash
+argument of
+.codn nil ,
+which dissociates it from its hash table.
 
 The
 .code hash-next
@@ -45377,6 +45392,12 @@ If no more entries remain to be visited,
 .code hash-next
 returns
 .codn nil .
+The
+.code hash-next
+function also returns
+.code nil
+if the iterator has been dissociated from a hash table by
+.codn hash-reset .
 
 The
 .code hash-peek

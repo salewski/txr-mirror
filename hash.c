@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 #include <limits.h>
 #include <signal.h>
 #include "config.h"
@@ -1145,6 +1146,24 @@ val hash_peek(val iter)
   return hash_iter_peek(hi);
 }
 
+val hash_reset(val iter, val hash)
+{
+  val self = lit("hash-reset");
+  struct hash_iter *hi = coerce(struct hash_iter *,
+                                cobj_handle(self, iter, hash_iter_s));
+
+  if (hi->hash) {
+    struct hash *h = coerce(struct hash *, hash->co.handle);
+    h->usecount--;
+  }
+
+  if (hash)
+    hash_iter_init(hi, hash, self);
+  else
+    memset(hi, 0, sizeof hi);
+  return iter;
+}
+
 val maphash(val fun, val hash)
 {
   val self = lit("maphash");
@@ -1891,6 +1910,7 @@ void hash_init(void)
   reg_fun(intern(lit("hash-begin"), user_package), func_n1(hash_begin));
   reg_fun(intern(lit("hash-next"), user_package), func_n1(hash_next));
   reg_fun(intern(lit("hash-peek"), user_package), func_n1(hash_peek));
+  reg_fun(intern(lit("hash-reset"), user_package), func_n2(hash_reset));
   reg_fun(intern(lit("set-hash-traversal-limit"), system_package),
           func_n1(set_hash_traversal_limit));
   reg_fun(intern(lit("gen-hash-seed"), user_package), func_n0(gen_hash_seed));
