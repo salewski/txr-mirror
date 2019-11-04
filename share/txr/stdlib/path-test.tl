@@ -32,6 +32,10 @@
     ^[sys:do-path-test ,statfun ,path
        (lambda (,sym) (when ,sym ,*body))]))
 
+(defun sys:path-test-type (statfun path code)
+  (sys:path-test (s statfun path)
+    (eql (logand s.mode s-ifmt) code)))
+
 (defun sys:path-test-mode (statfun path mask)
   (sys:path-test (s statfun path)
     (plusp (logand s.mode mask))))
@@ -40,25 +44,25 @@
   (sys:path-test (s stat path) t))
 
 (defun path-file-p (path)
-  [sys:path-test-mode stat path s-ifreg])
+  [sys:path-test-type stat path s-ifreg])
 
 (defun path-dir-p (path)
-  [sys:path-test-mode stat path s-ifdir])
+  [sys:path-test-type stat path s-ifdir])
 
 (defun path-symlink-p (path)
-  [sys:path-test-mode lstat path s-iflnk])
+  [sys:path-test-type lstat path s-iflnk])
 
 (defun path-blkdev-p (path)
-  [sys:path-test-mode stat path s-ifblk])
+  [sys:path-test-type stat path s-ifblk])
 
 (defun path-chrdev-p (path)
-  [sys:path-test-mode stat path s-ifchr])
+  [sys:path-test-type stat path s-ifchr])
 
 (defun path-sock-p (path)
-  [sys:path-test-mode stat path s-ifsock])
+  [sys:path-test-type stat path s-ifsock])
 
 (defun path-pipe-p (path)
-  [sys:path-test-mode stat path s-ififo])
+  [sys:path-test-type stat path s-ififo])
 
 (defun path-setgid-p (path)
   [sys:path-test-mode stat path s-isgid])
