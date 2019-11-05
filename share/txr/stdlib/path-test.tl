@@ -144,7 +144,7 @@
         (and (or (zerop s.uid)
                  (eql euid s.uid))
              (zerop (logand m (logior s-iroth s-iwoth)))
-             (or (zerop (logand m (logior s-iroth s-iwgrp)))
+             (or (zerop (logand m (logior s-irgrp s-iwgrp)))
                  (null g.mem)
                  (and (all g.mem (orf (op equal name)
                                       (op equal suname))))))))))
