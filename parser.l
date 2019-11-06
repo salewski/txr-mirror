@@ -801,6 +801,16 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return '.';
 }
 
+<SPECIAL,QSPECIAL,NESTED>\.\? {
+  yylval->chr = '.';
+  return OREFDOT;
+}
+
+<SPECIAL,QSPECIAL,NESTED,BRACED>{REQWS}\.\? {
+  yylval->chr = '.';
+  return UOREFDOT;
+}
+
 <SPECIAL,QSPECIAL,NESTED,BRACED>[\\]{NL}{WS} {
   if (YYSTATE == SPECIAL)
     yy_pop_state(yyscanner);  /* @\ continuation */

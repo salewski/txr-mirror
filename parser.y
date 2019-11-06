@@ -69,6 +69,8 @@ static val make_expr(parser_t *, val sym, val rest, val lineno);
 static val check_parse_time_action(val spec_rev);
 static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons);
 static val uref_helper(parser_t *, val expr);
+static val uoref_helper(parser_t *, val expr);
+static val qref_helper(parser_t *, val lexpr, val rexpr);
 static val fname_helper(parser_t *, val name);
 
 #if YYBISON
@@ -128,7 +130,8 @@ INLINE val expand_form_ver(val form, int ver)
 %token <val> NUMBER METANUM
 %token <val> HASH_N_EQUALS HASH_N_HASH
 
-%token <chr> REGCHAR REGTOKEN LITCHAR SPLICE CONSDOT LAMBDOT UREFDOT
+%token <chr> REGCHAR REGTOKEN LITCHAR SPLICE
+%token <chr> CONSDOT LAMBDOT UREFDOT OREFDOT UOREFDOT
 
 %type <val> spec hash_semi_or_n_expr hash_semi_or_i_expr
 %type <val> clauses_rev clauses_opt clause
@@ -166,7 +169,7 @@ INLINE val expand_form_ver(val form, int ver)
 %left '&'
 %right '~' '*' '?' '+' '%'
 %right DOTDOT
-%right '.' CONSDOT LAMBDOT UREFDOT REGCHAR REGTOKEN LITCHAR
+%right '.' CONSDOT LAMBDOT UREFDOT OREFDOT UOREFDOT REGCHAR REGTOKEN LITCHAR
 %right OLD_DOTDOT
 
 %%
@@ -1072,17 +1075,12 @@ n_expr : SYMTOK                 { $$ = ifnign(symhlpr($1, t)); }
                                                           uref_helper(parser, $4),
                                                           nao),
                                             or2($1, $4)); }
-       | n_expr '.' n_expr      { uses_or2;
-                                  if (consp($3) && car($3) == qref_s) {
-                                    rplacd($3, rlc(cons($1, cdr($3)), $1));
-                                    rl($$, num(parser->lineno));
-                                    $$ = $3;
-                                  } else {
-                                    $$ = rl(rlc(list(qref_s, $1, $3, nao),
-                                                 or2($1, $3)),
-                                                 num(parser->lineno));
-                                  } }
+       | n_expr '.' n_expr      { $$ = qref_helper(parser, $1, $3); }
+       | n_expr OREFDOT n_expr  { $$ = qref_helper(parser,
+                                                   cons(t, cons($1, nil)),
+                                                        $3); }
        | UREFDOT n_expr         { $$ = uref_helper(parser, $2); }
+       | UOREFDOT n_expr        { $$ = uoref_helper(parser, $2); }
        | HASH_N_EQUALS          { parser_circ_def(parser, $1, unique_s); }
          n_dot_expr             { parser_circ_def(parser, $1, $3);
                                   $$ = $3; }
@@ -1094,6 +1092,7 @@ n_exprs_opt : n_exprs           { $$ = $1; }
           ;
 
 n_dot_expr : '.' n_expr         { $$ = uref_helper(parser, $2); }
+           | OREFDOT n_expr     { $$ = uoref_helper(parser, $2); }
            | n_expr %prec LOW   { $$ = $1; }
            ;
 
@@ -1786,6 +1785,27 @@ static val uref_helper(parser_t *parser, val expr)
     return rplaca(expr, uref_s);
   } else {
     return rl(rlc(list(uref_s, expr, nao), expr), num(parser->lineno));
+  }
+}
+
+static val uoref_helper(parser_t *parser, val expr)
+{
+  val uref = uref_helper(parser, expr);
+  rplacd(uref, cons(t, cdr(uref)));
+  return uref;
+}
+
+static val qref_helper(parser_t *parser, val lexpr, val rexpr)
+{
+  uses_or2;
+
+  if (consp(rexpr) && car(rexpr) == qref_s) {
+    rplacd(rexpr, rlc(cons(lexpr, cdr(rexpr)), lexpr));
+    return rl(rexpr, num(parser->lineno));
+  } else {
+    return rl(rlc(list(qref_s, lexpr, rexpr, nao),
+                  or2(lexpr, rexpr)),
+                  num(parser->lineno));
   }
 }
 

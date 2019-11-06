@@ -11526,20 +11526,34 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         obj_print_impl(second(obj), out, pretty, ctx);
         put_string(lit(".."), out);
         obj_print_impl(third(obj), out, pretty, ctx);
-      } else if (sym == qref_s && simple_qref_args_p(cdr(obj), zero)) {
-        val iter, next;
-        for (iter = cdr(obj); iter; iter = next) {
-          next = cdr(iter);
-          obj_print_impl(car(iter), out, pretty, ctx);
-          if (next)
+      } else if ((sym == uref_s || sym == qref_s) &&
+                 simple_qref_args_p(cdr(obj), if3(sym == uref_s, zero, one)))
+      {
+        val iter = cdr(obj), next;
+
+        if (sym == uref_s) {
+          if (car(iter) == t) {
+            put_string(lit(".?"), out);
+            iter = cdr(iter);
+          } else {
             put_char(chr('.'), out);
-          iter = next;
+          }
         }
-      } else if (sym == uref_s && simple_qref_args_p(cdr(obj), one)) {
-        val iter;
-        for (iter = cdr(obj); iter; iter = cdr(iter)) {
-          put_char(chr('.'), out);
-          obj_print_impl(car(iter), out, pretty, ctx);
+
+        for (; iter; iter = next) {
+          val el = car(iter);
+          val qmark = nil;
+          next = cdr(iter);
+          if (next && consp(el) && car(el) == t && consp(cdr(el)) && !cddr(el)) {
+            el = cadr(el);
+            qmark = t;
+          }
+          obj_print_impl(el, out, pretty, ctx);
+          if (next) {
+            put_char(chr('.'), out);
+            if (qmark)
+              put_char(chr('?'), out);
+          }
         }
       } else if (sym == quasi_s && consp(cdr(obj))) {
         put_char(chr('`'), out);

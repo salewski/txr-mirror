@@ -11159,8 +11159,9 @@ A dot token which is flanked by expressions on both sides, without any
 intervening whitespace, is the referencing dot, and not the consing dot.
 The referencing dot is a syntactic sugar which translated to the
 .code qref
-syntax ("quoted ref"). This syntax denotes structure access;
-see Structures.
+syntax ("quoted ref"). When evaluated as a form, this syntax denotes structure
+access; see Structures. However, it is possible to put this syntax to use for
+other purposes, in other contexts.
 
 .verb
   ;; a.b may be almost any expressions
@@ -11185,6 +11186,31 @@ and then adjoining
 .code a
 to produce
 .codn "(qref a b c)" .
+
+If the referencing dot is immediately followed by a question mark, it forms
+a single token, which produces the following syntactic variation:
+
+.verb
+  a.?b     <-->  (t a).b         <--> (qref (t a) b)
+  a.?b.?c  <-->  (t a).(t b).c   <--> (qref (t a) (t b) c)
+.brev
+
+This syntax denotes
+.I null-safe
+access to structure slots.
+.code a.?b
+means that
+.code a
+may evaluate to
+.codn nil ,
+in which case the expression yields
+.codn nil ;
+otherwise,
+.code a
+must evaluate to a
+.code struct
+which has a slot
+.codn b .
 
 Integer tokens cannot be involved in this syntax, because they
 form floating-point constants when juxtaposed with a dot.
@@ -11211,8 +11237,22 @@ This is a syntactic sugar which translates to
 syntax:
 
 .verb
-  .a            <--> (uref a)
-  .a.b          <--> (uref a b)
+  .a       <--> (uref a)
+  .a.b     <--> (uref a b)
+  .a.?b    <--> (uref (t a) b)
+.brev
+
+If the unbound referencing dot is itself combined with a question
+mark to form the
+.code .?
+token, then the translation to
+.code uref
+is as follows:
+
+.verb
+  .?a      <--> (uref t a)
+  .?a.b    <--> (uref t a b)
+  .?a.?b    <--> (uref t a (t b))
 .brev
 
 When the unbound referencing dot is applied to a dotted expression,
@@ -11247,6 +11287,15 @@ represents a "disembodied" reference: it produces a function which takes an
 object as an argument and then performs the implied slot referencing on that
 argument. When the function is called, it is said to bind the referencing to
 the object. Hence that referencing is "unbound".
+
+Whereas the expression
+.code .a
+produces a function whose argument must be an object,
+.code .?a
+produces a function whose argument may be
+.codn nil .
+The function detects this case and returns
+.codn nil .
 
 .NP* Quote and Quasiquote
 
@@ -25975,15 +26024,25 @@ another
 .code qref
 operation, and so forth.
 
+If the null-safe syntax
+.code "(t ...)"
+is present, the equivalence becomes more complicated:
+
+.verb
+  (qref (t obj) d1 d2 ...)  <---> (qref (qref (t obj) d1) d2 ...)
+
+  (qref obj (t d1) d2 ...)  <---> (qref (t (qref obj d1)) d2 ...)
+.brev
+
 Thus,
 .code qref
-can be understood entirely in terms of the semantics of the
+can be understood in terms of the semantics of the
 binary form
 .mono
 .meti (qref < object-form << designator )
 .onom
 
-Designators come in three forms: a lone symbol, an ordinary compound expression
+Designators come in three basic forms: a lone symbol, an ordinary compound expression
 consisting of a symbol followed by arguments, or a DWIM expression
 consisting of a symbol followed by arguments.
 
@@ -26024,6 +26083,34 @@ indexable or callable object. The following equivalence applies:
 .verb
   (qref obj [name arg ...])  <-->  [(slot obj 'name) arg ...]
 .brev
+
+If the
+.meta object-form
+has the syntax
+.mono
+.meti (t << expression )
+.onom
+this indicates null-safe access: if
+.meta expression
+evaluates to
+.code nil
+then the entire expression
+.mono
+.meti (qref (t << expression ) << designator )
+.onom
+form yields
+.codn nil .
+This syntax is produced by the
+.code .?
+notation.
+
+The null-safe access notation prevents not only slot access, but also
+method or function calls on
+.codn nil .
+When a method or function call is suppressed due to the object being
+.codn nil ,
+no aspect of the method or function call is evaluated; not only
+is the slot not accessed, but the argument expressions are not evaluated.
 
 .TP* Example:
 
@@ -26078,6 +26165,7 @@ dot syntactic sugar:
 
 .verb
   .a          -->  (uref a)
+  .?a         -->  (uref t a)
   .(f x)      -->  (uref (f x))
   .(f x).b    -->  (uref (f x) b)
   .a.(f x).b  -->  (uref a (f x) b)
@@ -26087,7 +26175,8 @@ The macro may be understood in terms of the following translation
 scheme:
 
 .verb
-  (uref a b c ...)  -->  (lambda (o) (qref o a b c ...))
+  (uref a b ...)    -->  (lambda (o) (qref o a b ...))
+  (uref t a b ...)  -->  (lambda (o) (if o (qref o a b ...)))
 .brev
 
 where
