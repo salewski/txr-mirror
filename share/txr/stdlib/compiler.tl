@@ -61,7 +61,7 @@
 
   (:postinit (me)
     (unless me.lev
-      (set me.lev (if me.up (succ me.up.lev) 1)))
+      (set me.lev (succ (or me.up.?lev 0))))
     (unless (or me.co (null me.up))
       (set me.co me.up.co))
     me.co.(new-env me))
