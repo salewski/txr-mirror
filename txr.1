@@ -48507,7 +48507,7 @@ grammar. Note that it permits no whitespace characters:
 .mets < mode-string := [ < mode ] [ < options ]
 .mets < mode := { < selector [ + ] | + }
 .mets < selector := { r | w | a }
-.mets < options := { b | l | u | < digit }
+.mets < options := { b | l | u | < digit | < redirection }
 .mets < digit := { 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }
 .onom
 
@@ -48599,6 +48599,13 @@ specifying 524288 bytes. If no such digit is specified, then the
 stream uses a default buffer size. It is erroneous for the
 size order digit to be present together with the option
 .codn u .
+.meIP redirection
+This option refers to a special syntax that only has an effect
+in mode strings that are passed to the
+.code open-process
+function; the syntax performs I/O redirections in the child process
+created by that function, and is described in that function's
+documentation.
 .RE
 
 .coNP Function @ open-tail
@@ -50522,6 +50529,16 @@ the value
 if it is missing.  See the
 .code open-file
 function for a discussion of modes.
+The
+.code open-command
+function is implemented using POSIX
+.codn popen .
+Those elements of
+.meta mode-string
+which are applicable to
+.code popen
+are passed to it, and hence their semantics follows from
+their processing in that function.
 
 The
 .code open-command
@@ -50546,12 +50563,6 @@ the program, the child process will exit, using the value of the C variable
 .code errno
 as its exit status. This value can be retrieved via
 .codn close-stream .
-
-The
-.meta mode-string
-argument follows the convention used by the POSIX
-.code popen
-function.
 
 The
 .meta argument-list
@@ -50648,6 +50659,100 @@ yet been read by the program. The program is responsible for preventing this
 situation also.
 
 If a coprocess terminates abnormally or unsuccessfully, an exception is raised.
+
+On platforms which have the
+.code fork
+function, the
+.meta mode-string
+argument of
+.code open-process
+supports a special
+.meta redirection
+syntax. This syntax specifies I/O redirections which are done in the
+context of the child process, before the specified program is executed.
+Instances of the syntax are considered options; if
+.meta mode-string
+specifies a mode such as
+.code r
+that mode must precede the redirections. Redirections may be mixed with
+other options.
+
+Up to four redirections may be specified using one
+of two forms: a short form or the long form. If more than four
+redirections are specified, the
+.meta mode-string
+is considered ill-formed.
+
+The short form of the syntax consists of three characters: the prefix
+character
+.codn > ,
+a single decimal digit indicating the file descriptor to be redirected,
+and then a third character which is either another digit, or else one of the
+two characters
+.code n
+or
+.codn x .
+If the third character is a digit, it indicates the target file descriptor
+of the redirection. For instance
+.code >21
+indicates that file descriptor 2 is to be redirected to 1 (so that material
+written to standard error goes to the same destination as that written
+to standard output).
+If the third character is
+.codn n ,
+it means that the file descriptor will be redirected to the file
+.codn /dev/null .
+For instance,
+.code >2n
+indicates that descriptor 2 (standard error) will be redirected to
+the null device. If the third character is
+.codn x ,
+it indicates that the file descriptor shall be closed. For instance
+.code >0x
+means to close descriptor 0 (standard input).
+
+The long form of the syntax allows file descriptors that require more
+than one decimal digit. It consists of the same prefix character
+.code >
+which is immediately followed by an open parenthesis
+.codn ( .
+The parenthesis is immediately followed by one or more digits which
+give the to-be-redirected file descriptor. This is followed by
+one or more whitespace characters, and then either another multi-digit decimal file descriptor
+or one of the two letters
+.code n
+or
+.codn x .
+This second element must be immediately followed by the closing
+parenthesis
+.codn ) .
+Thus
+.code >21
+and
+.code >2n
+may be written in the long form, respectively, as
+.code ">(2 1)"
+and
+.codn ">(2 n)" ,
+while
+.code ">(32 47)"
+has no short form equivalent.
+Multiple redirections may be specified, in any mixture of the long and
+short form. For instance
+.code "r>21>0n>(27 31)"
+specifies a process pipe that is open for reading, capturing the
+output of the process. In that process, standard error is redirected
+to standard output, standard input is connected to the null device,
+and descriptor 27 is redirected to descriptor 31.
+
+Note: on platforms which don't have a
+.code fork
+function, the implementation of
+.code open-process
+is simulated via
+.code open-command
+and therefore does not support the redirection syntax; it is parsed
+and ignored.
 
 .SS* I/O-Related Convenience Functions
 

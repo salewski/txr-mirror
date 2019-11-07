@@ -1332,6 +1332,7 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl)
 {
   struct stdio_mode m = stdio_mode_init_blank;
   const wchar_t *ms = c_str(default_arg(mode_str, lit("")));
+  int nredir = 0;
 
   switch (*ms) {
   case 'r':
@@ -1392,11 +1393,63 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl)
       }
       m.buforder = *ms - '0';
       break;
+    case '>':
+      if (nredir >= STDIO_MODE_NREDIRS) {
+        m.malformed = 1;
+        return m;
+      }
+
+      if (ms[1] != '(') {
+        if (!isdigit((unsigned char) ms[1]) || !ms[2]) {
+          m.malformed = 1;
+          return m;
+        }
+
+        m.redir[nredir][0] = ms[1] - '0';
+        if (isdigit((unsigned char) ms[2])) {
+          m.redir[nredir][1] = ms[2] - '0';
+        } else switch (ms[2]) {
+        case 'n': case 'x':
+          m.redir[nredir][1] = ms[2];
+          break;
+        default:
+          m.malformed = 1;
+          return m;
+        }
+
+        ms += 2;
+        nredir++;
+        break;
+      }
+
+      {
+        char code[2];
+        char rpar[2];
+        unsigned to, from;
+
+        if (swscanf(ms, L">(%u %[nx]%[)]", &to, code, rpar) == 3) {
+          m.redir[nredir][0] = to;
+          m.redir[nredir][1] = code[0];
+        } else if (swscanf(ms, L">(%u %u%[)]", &to, &from, rpar) == 3) {
+          m.redir[nredir][0] = to;
+          m.redir[nredir][1] = from;
+        } else {
+          m.malformed = 1;
+          return m;
+        }
+
+        ms = wcschr(ms, ')');
+        nredir++;
+        break;
+      }
     default:
       m.malformed = 1;
       return m;
     }
   }
+
+  if (nredir < STDIO_MODE_NREDIRS)
+    m.redir[nredir][0] = -1;
 
   return m;
 }
@@ -4105,6 +4158,34 @@ val open_process(val name, val mode_str, val args)
       if (fd[0] != STDIN_FILENO) /* You never know */
         close(fd[0]);
       close(fd[1]);
+    }
+
+    for (i = 0; i < STDIO_MODE_NREDIRS; i++) {
+      int to = m.redir[i][0];
+      int from = m.redir[i][1];
+
+      if (to < 0)
+        break;
+
+      switch (from) {
+      case 'n':
+#if HAVE_FCNTL
+        {
+          int n = open("/dev/null", O_RDWR);
+          if (n > 0) {
+            dup2(n, to);
+            close(n);
+          }
+        }
+#endif
+        break;
+      case 'x':
+        close(to);
+        break;
+      default:
+        dup2(from, to);
+        break;
+      }
     }
 
     execvp(argv[0], argv);

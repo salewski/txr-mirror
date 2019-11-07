@@ -99,6 +99,8 @@ struct strm_ops {
     get_error, get_error_str, clear_error, get_fd, 0, 0, 0, 0                \
 }
 
+#define STDIO_MODE_NREDIRS 4
+
 struct stdio_mode {
   unsigned malformed : 1;
   unsigned read : 1;
@@ -110,6 +112,7 @@ struct stdio_mode {
   unsigned unbuf : 1;
   unsigned linebuf : 1;
   int buforder : 5;
+  int redir[STDIO_MODE_NREDIRS][2];
 };
 
 #define stdio_mode_init_blank { 0, 0, 0, 0, 0, 0, 0, 0, 0, -1 }
