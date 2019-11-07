@@ -43,7 +43,7 @@
 #ifdef __CYGWIN__
 #include <sys/utsname.h>
 #endif
-#if HAVE_FCNTL_H
+#if HAVE_FCNTL
 #include <fcntl.h>
 #endif
 #include <float.h>
@@ -4126,7 +4126,7 @@ val open_process(val name, val mode_str, val args)
       free(argv[i]);
     free(argv);
 
-#if HAVE_FCNTL_H
+#if HAVE_FCNTL
     fcntl(whichfd, F_SETFD, FD_CLOEXEC);
 #endif
 
