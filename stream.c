@@ -4095,9 +4095,9 @@ val open_command(val path, val mode_str)
 }
 
 #if HAVE_FORK_STUFF
-val open_process(val name, val mode_str, val args)
+static val open_subprocess(val name, val mode_str, val args, val fun)
 {
-  val self = lit("open-process");
+  val self = lit("open-subprocess");
   struct stdio_mode m, m_r = stdio_mode_init_r;
   val mode = normalize_mode(&m, mode_str, m_r);
   int input = m.read != 0;
@@ -4110,7 +4110,11 @@ val open_process(val name, val mode_str, val args)
   val ret = nil;
 
   args = default_null_arg(args);
+  fun = default_null_arg(fun);
   nargs = c_num(length(args)) + 1;
+
+  if (!name && !fun)
+    uw_throwf(error_s, lit("~a: program name and/or function required"), self, nao);
 
   fds_init(&sfds);
 
@@ -4121,7 +4125,8 @@ val open_process(val name, val mode_str, val args)
   if (nargs < 0 || nargs == INT_MAX)
     uw_throwf(error_s, lit("~a: argument list overflow"), self, nao);
 
-  argv = coerce(char **, chk_xalloc(nargs + 1, sizeof *argv, self));
+  if (name)
+    argv = coerce(char **, chk_xalloc(nargs + 1, sizeof *argv, self));
 
   if (pipe(fd) == -1) {
     int eno = errno;
@@ -4131,18 +4136,22 @@ val open_process(val name, val mode_str, val args)
               name, num(eno), string_utf8(strerror(eno)), nao);
   }
 
-  for (i = 0, iter = cons(name, args); iter; i++, iter = cdr(iter)) {
-    val arg = car(iter);
-    argv[i] = utf8_dup_to(c_str(arg));
+  if (argv) {
+    for (i = 0, iter = cons(name, args); iter; i++, iter = cdr(iter)) {
+      val arg = car(iter);
+      argv[i] = utf8_dup_to(c_str(arg));
+    }
+    argv[i] = 0;
   }
-  argv[i] = 0;
 
   pid = fork();
 
   if (pid == -1) {
-    for (i = 0; i < nargs; i++)
-      free(argv[i]);
-    free(argv);
+    if (argv) {
+      for (i = 0; i < nargs; i++)
+        free(argv[i]);
+      free(argv);
+    }
     uw_throwf(process_error_s, lit("opening pipe ~s, fork syscall failed: ~d/~s"),
               name, num(errno), string_utf8(strerror(errno)), nao);
   }
@@ -4188,7 +4197,11 @@ val open_process(val name, val mode_str, val args)
       }
     }
 
-    execvp(argv[0], argv);
+    if (fun)
+      funcall(fun);
+
+    if (argv)
+      execvp(argv[0], argv);
     _exit(errno);
   } else {
     int whichfd;
@@ -4203,9 +4216,11 @@ val open_process(val name, val mode_str, val args)
       whichfd = fd[1];
     }
 
-    for (i = 0; i < nargs; i++)
-      free(argv[i]);
-    free(argv);
+    if (argv) {
+      for (i = 0; i < nargs; i++)
+        free(argv[i]);
+      free(argv);
+    }
 
 #if HAVE_FCNTL
     fcntl(whichfd, F_SETFD, FD_CLOEXEC);
@@ -4234,6 +4249,11 @@ val open_process(val name, val mode_str, val args)
   uw_catch_end;
 
   return ret;
+}
+
+val open_process(val name, val mode_str, val args)
+{
+  return open_subprocess(name, mode_str, nil, args);
 }
 #else
 
@@ -4848,6 +4868,9 @@ void stream_init(void)
   reg_fun(intern(lit("open-command"), user_package), func_n2o(open_command, 1));
   reg_fun(intern(lit("open-pipe"), user_package), func_n2(open_command));
   reg_fun(intern(lit("open-process"), user_package), func_n3o(open_process, 2));
+#if HAVE_FORK_STUFF
+  reg_fun(intern(lit("open-subprocess"), user_package), func_n4o(open_subprocess, 2));
+#endif
   reg_fun(intern(lit("sh"), user_package), func_n1(sh));
   reg_fun(intern(lit("run"), user_package), func_n2o(run, 1));
   reg_fun(intern(lit("remove-path"), user_package), func_n2o(remove_path, 1));

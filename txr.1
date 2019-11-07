@@ -50511,6 +50511,8 @@ function returns the previous value.
 .synb
 .mets (open-command < system-command <> [ mode-string ])
 .mets (open-process < program < mode-string <> [ argument-list ])
+.mets (open-subprocess < program < mode-string
+.mets \ \  >> [ argument-list <> [ function ]])
 .syne
 .desc
 These functions spawn external programs which execute concurrently
@@ -50753,6 +50755,36 @@ is simulated via
 .code open-command
 and therefore does not support the redirection syntax; it is parsed
 and ignored.
+
+The
+.code open-subprocess
+function is a variant of
+.code open-process
+that is available on platforms which have a
+.code fork
+function. This function has all the same argument conventions and semantics as
+.codn open-process ,
+adding the
+.meta function
+argument. If this argument isn't
+.codn nil ,
+then it must specify a function which can be called with no arguments.
+This function is called in the child process after any redirections are
+established, just before the program specified by the
+.meta program
+argument is executed. Moreover, the
+.code open-subprocess
+function allows
+.meta program
+to be specified as
+.code nil
+in which case
+.meta function
+must be specified. When
+.meta function
+returns, the child process terminates as if by a call to
+.code exit*
+with an argument of zero.
 
 .SS* I/O-Related Convenience Functions
 
