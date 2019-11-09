@@ -607,7 +607,7 @@ static int sweep_one(obj_t *block)
 static int_ptr_t sweep(void)
 {
   int_ptr_t free_count = 0;
-  heap_t *heap;
+  heap_t **pph;
 #if HAVE_VALGRIND
   const int vg_dbg = opt_vg_debug;
 #endif
@@ -632,8 +632,11 @@ static int_ptr_t sweep(void)
 
 #endif
 
-  for (heap = heap_list; heap != 0; heap = heap->next) {
+  for (pph = &heap_list; *pph != 0; ) {
     obj_t *block, *end;
+    heap_t *heap = *pph;
+    int_ptr_t old_count = free_count;
+    val old_free_list = free_list;
 
 #if HAVE_VALGRIND
     if (vg_dbg)
@@ -645,6 +648,42 @@ static int_ptr_t sweep(void)
          block++)
     {
       free_count += sweep_one(block);
+    }
+
+    if (free_count - old_count == HEAP_SIZE) {
+      val *ppf;
+
+      free_list = old_free_list;
+#if HAVE_VALGRIND
+      if (vg_dbg) {
+        val iter;
+        for (iter = free_list; iter; iter = iter->t.next)
+          VALGRIND_MAKE_MEM_DEFINED(iter, sizeof *iter);
+      }
+#endif
+      for (ppf = &free_list; *ppf != nil; ) {
+        val block = *ppf;
+        if (block >= heap->block && block < end) {
+          *ppf = block->t.next;
+        } else {
+          ppf = &block->t.next;
+        }
+      }
+      if (free_list == 0)
+        free_tail = &free_list;
+      *pph = heap->next;
+      free(heap);
+#if HAVE_VALGRIND
+      if (vg_dbg) {
+        val iter, next;
+        for (iter = free_list; iter; iter = next) {
+          next = iter->t.next;
+          VALGRIND_MAKE_MEM_NOACCESS(iter, sizeof *iter);
+        }
+      }
+#endif
+    } else {
+      pph = &(*pph)->next;
     }
   }
 
