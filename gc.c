@@ -665,13 +665,12 @@ static int_ptr_t sweep(void)
       for (ppf = &free_list; *ppf != nil; ) {
         val block = *ppf;
         if (block >= heap->block && block < end) {
-          *ppf = block->t.next;
+          if ((*ppf = block->t.next) == 0)
+            free_tail = ppf;
         } else {
           ppf = &block->t.next;
         }
       }
-      if (free_list == 0)
-        free_tail = &free_list;
       *pph = heap->next;
       free(heap);
 #if HAVE_VALGRIND
