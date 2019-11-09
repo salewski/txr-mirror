@@ -608,6 +608,7 @@ static int_ptr_t sweep(void)
 {
   int_ptr_t free_count = 0;
   heap_t **pph;
+  val hminb = nil, hmaxb = nil;
 #if HAVE_VALGRIND
   const int vg_dbg = opt_vg_debug;
 #endif
@@ -683,10 +684,16 @@ static int_ptr_t sweep(void)
       }
 #endif
     } else {
+      if (!hmaxb || end > hmaxb)
+        hmaxb = end;
+      if (!hminb || heap->block < hminb)
+        hminb = heap->block;
       pph = &(*pph)->next;
     }
   }
 
+  heap_min_bound = hminb;
+  heap_max_bound = hmaxb;
   return free_count;
 }
 
