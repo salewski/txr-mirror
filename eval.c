@@ -232,6 +232,34 @@ static void env_vb_to_fb(val env)
   }
 }
 
+static val env_to_menv(val env, val self, val menv)
+{
+  if (env == nil) {
+    return menv;
+  } else {
+    val iter;
+    type_check(self, env, ENV);
+
+    if (!menv)
+      menv = make_env(nil, nil, nil);
+
+    if (env->e.up_env)
+      menv = env_to_menv(env->e.up_env, self, menv);
+
+    for (iter = env->e.vbindings; iter; iter = cdr(iter)) {
+      val binding = car(iter);
+      env_vbind(menv, car(binding), special_s);
+    }
+
+    for (iter = env->e.fbindings; iter; iter = cdr(iter)) {
+      val binding = car(iter);
+      env_fbind(menv, car(binding), special_s);
+    }
+
+    return menv;
+  }
+}
+
 val ctx_form(val obj)
 {
   if (consp(obj))
@@ -1434,11 +1462,11 @@ val funcall_interp(val interp_fun, struct args *args)
   return ret;
 }
 
-static val expand_eval(val form, val env)
+static val expand_eval(val form, val env, val menv)
 {
   val lfe_save = last_form_evaled;
   val form_ex = (last_form_evaled = nil,
-                 expand(form, nil));
+                 expand(form, menv));
   val loading = cdr(lookup_var(dyn_env, load_recursive_s));
   val ret = ((void) (loading || uw_release_deferred_warnings()),
              eval(form_ex, default_null_arg(env), form));
@@ -1450,7 +1478,8 @@ static val macroexpand(val form, val menv);
 
 val eval_intrinsic(val form, val env)
 {
-  val form_ex = macroexpand(form, nil);
+  val menv = env_to_menv(default_null_arg(env), lit("eval"), nil);
+  val form_ex = macroexpand(form, menv);
   val op;
 
   if (consp(form_ex) &&
@@ -1460,14 +1489,14 @@ val eval_intrinsic(val form, val env)
     val res = nil, next = cdr(form_ex);
 
     while (next) {
-      res = expand_eval(car(next), env);
+      res = expand_eval(car(next), env, menv);
       next = cdr(next);
     }
 
     return res;
   }
 
-  return expand_eval(form_ex, env);
+  return expand_eval(form_ex, env, menv);
 }
 
 val eval_intrinsic_noerr(val form, val env, val *error_p)
