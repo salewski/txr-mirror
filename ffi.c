@@ -5392,7 +5392,7 @@ val carray_unum(val num, val eltype_in)
 
 val carray_num(val num, val eltype_in)
 {
-  val self = lit("carray-unum");
+  val self = lit("carray-num");
   val eltype = default_arg(eltype_in, ffi_type_compile(uchar_s));
   struct txr_ffi_type *tft = ffi_type_struct(eltype);
 
