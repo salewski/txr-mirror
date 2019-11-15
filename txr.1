@@ -47532,11 +47532,15 @@ macro.
 .desc
 The
 .code apf
-function returns a one-argument function which accepts
-a list. When the function is called, it treats the list as
-arguments which are applied to
+function returns a one-argument function whose argument conventions
+are similar to those of the
+.code apply
+function: it accepts one or more arguments, the last of which should
+be a list.  When that function is called, it applies these arguments to
 .meta function
-as if by apply. It returns whatever
+as if by
+.codn apply .
+It then returns whatever
 .meta function
 returns.
 
@@ -47544,8 +47548,11 @@ The
 .code ipf
 function is similar to
 .codn apf ,
-except that the returned
-function applies arguments as if by
+except that the argument conventions of the function returned by
+.code ipf
+are based on
+.codn iapply ,
+and that function applies arguments as if by
 .code iapply
 rather than
 .codn apply .
