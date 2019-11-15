@@ -43477,10 +43477,10 @@ and
 The
 .code regsub
 function operates in two modes, depending on whether
-the second argument is a regular expression,
+the first argument is a regular expression,
 or function.
 
-If the second argument is a regular expression it searches
+If the first argument is a regular expression it searches
 .meta string
 for multiple occurrences of non-overlapping matches for that
 .metn regex .
@@ -43505,7 +43505,7 @@ which case for every match which is found, this function is invoked,
 with the matching piece of text as an argument. The function's
 return value is then taken to be the replacement text.
 
-If the second argument is a function, then it is called, with
+If the first argument is a function, then it is called, with
 .meta string
 as its argument. The return value must be either a range
 object (see the
