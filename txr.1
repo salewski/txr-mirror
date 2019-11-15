@@ -25004,6 +25004,113 @@ This byte is added even if the previous byte is already a null byte
 from the conversion of a pseudo-null character occurring in
 .metn str .
 
+.coNP Functions @ buf-int and @ buf-uint
+.synb
+.mets (buf-int < integer )
+.mets (buf-uint < integer )
+.syne
+.desc
+The
+.code buf-int
+and
+.code buf-uint
+functions convert a signed and unsigned integer, respectively, or else a
+character, into a binary representation, which is returned as a buffer object.
+
+Under both functions, the representation uses big endian byte order: most
+significant byte first.
+
+The
+.code buf-uint
+function requires a non-negative
+.meta integer
+argument, which may be a character. The representation stored in the
+buffer is a pure binary representation of the value using the smallest
+number of bytes required for the given
+.meta integer
+value.
+
+The
+.code buf-int
+function requires an integer or character argument. The representation
+stored in the buffer is a two's complement representation of
+.meta integer
+using the smallest number of bytes which can represent that value.
+If
+.meta integer
+is non-negative, then the first byte of the buffer lies in the range
+0 to 127.
+If
+.meta integer
+is negative, then the first byte of the buffer lies in the range 128 to 255.
+The integer 255 therefore doesn't convert to the buffer
+.code #b'ff'
+but rather
+.codn #b'00ff' .
+The buffer
+.code #b'ff'
+represents -1.
+
+If the
+.meta integer
+argument is a character object, it is taken to be its Unicode code
+point value, as returned by the
+.code int-chr
+function.
+
+.coNP Functions @ int-buf and @ uint-buf
+.synb
+.mets (int-buf < buf )
+.mets (uint-buf < buf )
+.syne
+.desc
+The
+.code int-buf
+and
+.code uint-buf
+functions recover an integer value from its binary form which appears
+inside
+.metn buf ,
+which must be a buffer object. These functions expect
+.meta buf
+to contain the representation produced by, respectively, the functions
+.code buf-int
+and
+.codn buf-uint .
+
+If
+.meta buf
+holds the representation of an integer value
+.metn n ,
+as produced by
+.mono
+.meti (buf-int << n )
+.onom
+then
+.mono
+.meti (int-buf << buf )
+.onom
+returns
+.metn n .
+
+The same relationship holds between
+.code buf-uint
+and
+.codn uint-buf .
+
+Thus, these equalities hold:
+
+.verb
+.mets (= (int-buf (buf-int << n )) << n )
+.mets (= (uint-buf (buf-uint << n )) << n )
+.brev
+
+provided that
+.meta n
+is of integer type and, in the case of
+.codn buf-uint ,
+nonnegative.
+
 .SS* Structures
 
 \*(TX supports a structure data type. Structures are objects which

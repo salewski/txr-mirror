@@ -1103,6 +1103,87 @@ static val str_buf(val buf, val null_term)
   return string_own(str);
 }
 
+static val buf_int(val num)
+{
+  val self = lit("buf-int");
+
+  switch (type(num)) {
+  case NUM: case CHR:
+    num = bignum(c_num(num));
+    /* fallthrough */
+  case BGNUM:
+    {
+      val wi = width(num);
+      val bits = succ(wi);
+      val bytes = ash(plus(bits, num_fast(7)), num_fast(-3));
+      val bitsround = ash(bytes, num_fast(3));
+      val un = logtrunc(num, bitsround);
+      val ube = if3(bignump(un), un, bignum(c_num(un)));
+      mp_int *m = mp(ube);
+      size_t numsize = mp_unsigned_bin_size(m);
+      size_t bufsize = c_unum(bytes);
+      mem_t *data = chk_malloc(bufsize);
+      data[0] = 0;
+      mp_to_unsigned_bin(m, data + (bufsize - numsize));
+      return make_owned_buf(unum(bufsize), data);
+    }
+  default:
+    uw_throwf(type_error_s, lit("~a: ~s isn't an integer or character"),
+              self, num, nao);
+  }
+}
+
+static val buf_uint(val num)
+{
+  val self = lit("buf-uint");
+
+  switch (type(num)) {
+  case NUM: case CHR:
+    num = bignum(c_num(num));
+    /* fallthrough */
+  case BGNUM:
+    {
+      mp_int *m = mp(num);
+      if (!mp_isneg(m)) {
+        size_t size = mp_unsigned_bin_size(m);
+        mem_t *data = chk_malloc(size);
+        mp_to_unsigned_bin(m, data);
+        return make_owned_buf(unum(size), data);
+      }
+    }
+    uw_throwf(type_error_s, lit("~a: ~s isn't a non-negative integer"),
+              self, num, nao);
+  default:
+    uw_throwf(type_error_s, lit("~a: ~s isn't an integer or character"),
+              self, num, nao);
+  }
+}
+
+static val int_buf(val buf)
+{
+  val self = lit("int-buf");
+  struct buf *b = buf_handle(buf, self);
+  ucnum size = c_unum(b->size);
+  ucnum bits = size * 8;
+  val ubn = make_bignum();
+  mp_err mpe = mp_read_unsigned_bin(mp(ubn), b->data, size);
+  if (mpe != MP_OKAY)
+    do_mp_error(self, mpe);
+  return sign_extend(normalize(ubn), unum(bits));
+}
+
+static val uint_buf(val buf)
+{
+  val self = lit("int-buf");
+  struct buf *b = buf_handle(buf, self);
+  ucnum size = c_unum(b->size);
+  val ubn = make_bignum();
+  mp_err mpe = mp_read_unsigned_bin(mp(ubn), b->data, size);
+  if (mpe != MP_OKAY)
+    do_mp_error(self, mpe);
+  return normalize(ubn);
+}
+
 unsigned char *utf8_dup_to_buf(const wchar_t *, size_t *pnbytes,
                                int null_term);
 void buf_init(void)
@@ -1187,6 +1268,10 @@ void buf_init(void)
 
   reg_fun(intern(lit("buf-str"), user_package), func_n2o(buf_str, 1));
   reg_fun(intern(lit("str-buf"), user_package), func_n2o(str_buf, 1));
+  reg_fun(intern(lit("buf-int"), user_package), func_n1(buf_int));
+  reg_fun(intern(lit("buf-uint"), user_package), func_n1(buf_uint));
+  reg_fun(intern(lit("int-buf"), user_package), func_n1(int_buf));
+  reg_fun(intern(lit("uint-buf"), user_package), func_n1(uint_buf));
 
   fill_stream_ops(&buf_strm_ops);
 }
