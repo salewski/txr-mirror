@@ -39614,7 +39614,7 @@ value that lies in the direction of negative infinity.
 .coIP flo-up
 Round up: the result of an operation is rounded to the nearest representable
 value that lies in the direction of positive infinity.
-.coIP flo-up
+.coIP flo-zero
 Round to zero: the result of an operation is rounded to the nearest
 representable value that lies in the direction of zero.
 .RE
@@ -59934,7 +59934,7 @@ C language structure. Their meaning and use are beyond the scope of this documen
 The
 .code family
 static slot holds the value
-.codn af-inet .
+.codn af-inet6 .
 
 .coNP Structure @ sockaddr-un
 .synb
@@ -59992,7 +59992,7 @@ followed by null padding bytes.
 The
 .code family
 static slot holds the value
-.codn af-inet .
+.codn af-unix .
 
 .coNP Structure @ addrinfo
 .synb
@@ -60386,7 +60386,7 @@ is thrown.
 .syne
 .desc
 The
-.code sock-connect
+.code sock-bind
 function binds a socket stream to a local address.
 
 The
