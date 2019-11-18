@@ -167,7 +167,7 @@ val identity(val obj)
 
 static val identity_star(varg args)
 {
-  int index = 0;
+  cnum index = 0;
   if (args_more(args, index))
     return args_get(args, &index);
   return nil;
