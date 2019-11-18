@@ -59,6 +59,7 @@
 #include "utf8.h"
 #include "hash.h"
 #include "ffi.h"
+#include "txr.h"
 
 #define zalloca(size) memset(alloca(size), 0, size)
 
@@ -5355,9 +5356,9 @@ val carray_pun(val carray, val type)
   return make_carray(type, scry->data, size / tft->size, carray, 0);
 }
 
-val carray_unum(val num, val eltype_in)
+val carray_uint(val num, val eltype_in)
 {
-  val self = lit("carray-unum");
+  val self = lit("carray-uint");
   val eltype = default_arg(eltype_in, ffi_type_compile(uchar_s));
   struct txr_ffi_type *tft = ffi_type_struct(eltype);
 
@@ -5390,9 +5391,9 @@ val carray_unum(val num, val eltype_in)
   }
 }
 
-val carray_num(val num, val eltype_in)
+val carray_int(val num, val eltype_in)
 {
-  val self = lit("carray-num");
+  val self = lit("carray-int");
   val eltype = default_arg(eltype_in, ffi_type_compile(uchar_s));
   struct txr_ffi_type *tft = ffi_type_struct(eltype);
 
@@ -5428,9 +5429,9 @@ val carray_num(val num, val eltype_in)
   }
 }
 
-val unum_carray(val carray)
+val uint_carray(val carray)
 {
-  val self = lit("unum-carray");
+  val self = lit("uint-carray");
   struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *etft = scry->eltft;
   ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
@@ -5441,9 +5442,9 @@ val unum_carray(val carray)
   return normalize(ubn);
 }
 
-val num_carray(val carray)
+val int_carray(val carray)
 {
-  val self = lit("num-carray");
+  val self = lit("int-carray");
   struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *etft = scry->eltft;
   ucnum size = (ucnum) etft->size * (ucnum) scry->nelem;
@@ -5858,10 +5859,24 @@ void ffi_init(void)
   reg_fun(intern(lit("carray-put"), user_package), func_n2(carray_put));
   reg_fun(intern(lit("carray-putz"), user_package), func_n2(carray_putz));
   reg_fun(intern(lit("carray-pun"), user_package), func_n2(carray_pun));
-  reg_fun(intern(lit("carray-unum"), user_package), func_n2o(carray_unum, 1));
-  reg_fun(intern(lit("carray-num"), user_package), func_n2o(carray_num, 1));
-  reg_fun(intern(lit("unum-carray"), user_package), func_n1(unum_carray));
-  reg_fun(intern(lit("num-carray"), user_package), func_n1(num_carray));
+  {
+    val ca_uint = func_n2o(carray_uint, 1);
+    val ca_int = func_n2o(carray_int, 1);
+    val uint_ca = func_n1(uint_carray);
+    val int_ca = func_n1(int_carray);
+
+    reg_fun(intern(lit("carray-uint"), user_package), ca_uint);
+    reg_fun(intern(lit("carray-int"), user_package), ca_int);
+    reg_fun(intern(lit("uint-carray"), user_package), uint_ca);
+    reg_fun(intern(lit("int-carray"), user_package), int_ca);
+
+    if (opt_compat && opt_compat <= 227) {
+      reg_fun(intern(lit("carray-unum"), user_package), ca_uint);
+      reg_fun(intern(lit("carray-num"), user_package), ca_int);
+      reg_fun(intern(lit("unum-carray"), user_package), uint_ca);
+      reg_fun(intern(lit("num-carray"), user_package), int_ca);
+    }
+  }
   reg_fun(intern(lit("put-carray"), user_package), func_n3o(put_carray, 1));
   reg_fun(intern(lit("fill-carray"), user_package), func_n3o(fill_carray, 1));
   reg_fun(intern(lit("make-union"), user_package), func_n3o(make_union, 1));
