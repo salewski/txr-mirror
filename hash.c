@@ -1160,7 +1160,7 @@ val hash_reset(val iter, val hash)
   if (hash)
     hash_iter_init(hi, hash, self);
   else
-    memset(hi, 0, sizeof hi);
+    memset(hi, 0, sizeof *hi);
   return iter;
 }
 
