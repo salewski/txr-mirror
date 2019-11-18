@@ -97,7 +97,7 @@
 (defun sys:op-expand (f e args)
   (unless args
     ['compile-error f "arguments required"])
-  (let* ((compat (and (plusp sys:compat) (<= sys:compat 255)))
+  (let* ((compat (and (plusp sys:compat) (<= sys:compat 225)))
          (ctx (make-struct 'sys:op-ctx ^(form ,f)))
          (do-gen)
          (sys:*op-ctx* ctx)
