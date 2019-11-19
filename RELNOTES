@@ -1,3 +1,65 @@
+                                    TXR 228
+                                   2019-11-19
+
+
+  Features
+
+  - Syntax:
+    - New null-safe slot access operator .?:
+      - a.?b means: (if a a.b), with a evaluated once, of course.
+      - .?b means (lambda (arg) (if arg arg.b)).
+  - Hashing:
+    - New hash-invert function for reversing a hash table
+      (values become keys and vice versa).
+    - New hash-reset function to restart a hash iterator,
+      possibly with a different hash.
+  - Lib:
+    - New identity* function; like identity, but with flexible
+      arguments.
+  - Expander:
+    - expansion now interruptible with Ctrl-C
+  - System Interface:
+    - stat function now exposes high resolution time stamps.
+    - open process supports a new < > syntax in the mode string, for
+      arranging file descriptor redirections.
+      - E.g. redirect stderr of gcc to stdout, like shell's 2>&1:
+          (open-process "gcc" "r>21" '("foo.c" "-c"))
+    - new open-subprocess function
+      - like open-process but allows caller to specify Lisp funtion to execute
+        in child process, before the specified program is executed.
+      - executing a program is optional in open-subprocess
+  - GC:
+    - GC now gives memory back to malloc when all objects in a heap
+      block are freed; on GNU/Linux this results in a munmap which
+      gives back the memory the OS.
+  - Buffers:
+    - new functions for buffer-integer conversion: buf-int, buf-uint,
+      uint-buf, int-buf.
+  - FFI:
+    - These carray functions were renamed: carray-unum, carray-num,
+      unum-carray and num-carray.
+      - "num" changes to "int"
+
+  Bugs
+
+  - Expander:
+    - fixed a situation producing bogus undefined variable warnings.
+  - Evaluator:
+    - bugfix: eval was expanding the form in a null macro environment,
+      yielding spurious warnings when eval is used with an eval argument.
+    - now expands in a macro environment derived from the passed-in
+      eval environment.
+  - op macro:
+    - Wrongly producing backwards-compatible behavior for compat values
+      up to 255, rather than up to 225.
+  - System Interface:
+    - bugs fixed in path-file-p, path-dir-p, path-symlink-p, path-blkdev-p,
+      path-chrdev-p, path-sock-p, path-pipe-p as well as
+      path-strictly-private-to-me-p.
+    - close-on-exec regression: not setting close-on-exec flag for pipe.
+
+
+
                                     TXR 227
                                    2019-10-26
 
