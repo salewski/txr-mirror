@@ -211,8 +211,12 @@ hash_semi_or_n_expr : HASH_SEMI                 { parser->ignore = 1; }
                     | HASH_SEMI '.'             { parser->ignore = 1; }
                       n_expr                    { parser->ignore = 0;
                                                   $$ = nao; }
+                    | HASH_SEMI OREFDOT         { parser->ignore = 1; }
+                      n_expr                    { parser->ignore = 0;
+                                                  $$ = nao; }
                     | n_expr                    { $$ = $1; }
                     | '.' n_expr                { $$ = uref_helper(parser, $2); }
+                    | OREFDOT n_expr            { $$ = uoref_helper(parser, $2); }
                     ;
 
 hash_semi_or_i_expr : HASH_SEMI                 { parser->ignore = 1; }
@@ -221,8 +225,12 @@ hash_semi_or_i_expr : HASH_SEMI                 { parser->ignore = 1; }
                     | HASH_SEMI '.'             { parser->ignore = 1; }
                       i_expr                    { parser->ignore = 0;
                                                   $$ = nao; }
+                    | HASH_SEMI OREFDOT         { parser->ignore = 1; }
+                      i_expr                    { parser->ignore = 0;
+                                                  $$ = nao; }
                     | i_expr                    { $$ = $1; }
                     | '.' i_expr                { $$ = uref_helper(parser, $2); }
+                    | OREFDOT i_expr            { $$ = uoref_helper(parser, $2); }
                     ;
 
 
