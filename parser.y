@@ -1876,7 +1876,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case REGCHAR: problem = lit("regular expression character"); break;
   case REGTOKEN: problem = lit("regular expression token"); break;
   case LITCHAR: problem = lit("string literal character"); break;
-  case CONSDOT: problem = lit("consing dot"); break;
+  case CONSDOT:
   case LAMBDOT: problem = lit("consing dot"); break;
   case DOTDOT: problem = lit(".."); break;
   case OLD_DOTDOT:     problem = lit(".."); break;
