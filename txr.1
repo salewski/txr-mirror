@@ -33613,32 +33613,83 @@ that of the quote, in this case
 forms do not see the surrounding lexical environment; the see only
 global function and variable bindings and macros.
 
-Note 1:
+Note:
 .code macro-time
-is intended for defining helper functions and variables that
-are used by macros. A macro cannot "see" a
-.code defun
-function or
-.code defvar
-variable
-because
-.code defun
-and
-.code defvar
-forms are evaluated at evaluation time, which occurs
-after expansion time.  The macro-time operator hoists the evaluation of these
-forms to macro-expansion time.
+supports techniques that require a calculation to be performed in the
+environment where the program is being compiled, and inserting the result of
+that calculation as a literal into the program source. Possibly, the
+calculation can have some useful effect in that environment, or use
+as an input information that is available in that environment.
+The
+.code load-time
+operator also inserts a calculated value as a
+.I "de facto"
+literal into the program, but it performs that calculation in the
+environment where the compiled file is being loaded.
+The two operators may be considered complementary in this sense.
 
-Note 2:
-.code defmacro
-forms are implicitly in macro-time; they do not have to
-be wrapped with the
+Consider the source file:
+
+.verb
+  (defun host-name-c () (macro-time (uname).nodename))
+
+  (defun host-name-l () (load-time (uname).nodename))
+.brev
+
+If this is compiled via
+.codn compile-file ,
+the
+.code uname
+call in
+.code host-name-c
+takes place when it is macro-expanded. Thereafter, the compiled version
+of the function returns the name of the machine where the
+compilation took place, no matter in what environment it is subsequently
+loaded and called.
+
+In contrast, the compilation of
+.code host-name-l
+arranges for that function's
+.code uname
+call to take place just one time, whenever the compiled file is loaded.
+Each time the function is subsequently called, it will
+return the name of the machine where it was loaded, without making
+any additional calls to
+.codn uname .
+
+The
 .code macro-time
-operator. The
-.code macro-time
-operator doesn't have
-to be used in programs whose macros do not make references to variables
-or functions.
+operator can occasionally be required in order for some constructs to evaluate
+or compile. One way that occurs is when a construct that is being fully
+expanded itself defines a macro which is later required in that same construct.
+For example:
+
+.verb
+  (progn (defmacro mac () 42) (mac))
+.brev
+
+This specific example actually works under
+.code eval
+or file compilation, because in that situation it isn't fully expanded
+all at once. When
+.code eval
+and
+.code compile-file
+process a top-level form that is a
+.codn progn ,
+they treat its argument forms as individual, separate top-level forms. In
+general, \*(TL is designed in such a way as to not to require, in most ordinary
+programs, extra verbiage to tell the compiler or evaluator that certain
+definitions are required by macros. However, somewhat unusual situations can
+arise which are not handled in this way.
+
+Also,
+.codn macro-time ,
+or the related
+.code @(mdo)
+directive, can be occasionally necessary in \*(TX
+queries, which are parsed and subject to macro-expansion in their entirety
+before being executed.
 
 .coNP Operator @ defmacro
 .synb
