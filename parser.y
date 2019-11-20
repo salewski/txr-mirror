@@ -1880,6 +1880,9 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case LAMBDOT: problem = lit("consing dot"); break;
   case DOTDOT: problem = lit(".."); break;
   case OLD_DOTDOT:     problem = lit(".."); break;
+  case UREFDOT:        problem = lit("referencing dot"); break;
+  case OREFDOT:
+  case UOREFDOT:       problem = lit("referencing .?"); break;
   case HASH_BACKSLASH: problem = lit("#\\"); break;
   case HASH_SLASH:     problem = lit("#/"); break;
   case HASH_H:         problem = lit("#H"); break;
