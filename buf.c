@@ -362,6 +362,23 @@ val replace_buf(val buf, val items, val from, val to)
   return buf;
 }
 
+val buf_list(val list)
+{
+  val self = lit("buf-list");;
+  val len = length(list);
+  val buf = make_buf(zero, zero, len);
+  seq_iter_t iter;
+  val elem;
+  cnum i;
+
+  for (i = 0, seq_iter_init(self, &iter, list); seq_get(&iter, &elem); i++)
+    buf->b.data[i] = c_uchar(elem, self);
+
+  buf->b.len = len;
+
+  return buf;
+}
+
 static void buf_move_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
 {
   struct buf *b = buf_handle(buf, self);
@@ -1197,6 +1214,7 @@ void buf_init(void)
   reg_fun(intern(lit("copy-buf"), user_package), func_n1(copy_buf));
   reg_fun(intern(lit("sub-buf"), user_package), func_n3(sub_buf));
   reg_fun(intern(lit("replace-buf"), user_package), func_n4(replace_buf));
+  reg_fun(intern(lit("buf-list"), user_package), func_n1(buf_list));
   reg_fun(intern(lit("buf-put-buf"), user_package), func_n3(buf_put_buf));
 
 #if HAVE_I8

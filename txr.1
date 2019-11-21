@@ -24200,6 +24200,26 @@ The of the arguments, semantics and return value given for
 apply to
 .codn replace-buf .
 
+.coNP Function @ buf-list
+.synb
+.mets (buf-list << list )
+.syne
+.desc
+The
+.code buf-list
+function creates and returns a new buffer, whose contents are derived from the
+elements of
+.metn list ,
+which may be any kind of sequence.
+
+The elements of
+.meta list
+must be integers whose values lie in the range 0 to 255, or else
+characters whose code point values lie in that range.
+These values are placed into the newly created buffer, which
+therefore has the same length as
+.metn list .
+
 .coNP Function @ buf-put-buf
 .synb
 .mets (buf-put-buf < dst-buf < pos << src-buf )
