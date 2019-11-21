@@ -539,6 +539,10 @@ val car(val cons)
     if (zerop(length_str(cons)))
       return nil;
     return chr_str(cons, zero);
+  case BUF:
+    if (zerop(length_buf(cons)))
+      return nil;
+    return buf_get_uchar(cons, zero);
   case COBJ:
     if (obj_struct_p(cons)) {
       {
@@ -581,6 +585,10 @@ val cdr(val cons)
     if (le(length(cons), one))
       return nil;
     return sub(cons, one, t);
+  case BUF:
+    if (le(length_buf(cons), one))
+      return nil;
+    return sub_buf(cons, one, nil);
   case COBJ:
     if (obj_struct_p(cons)) {
       {
@@ -612,6 +620,9 @@ val rplaca(val cons, val new_car)
   case STR:
   case LSTR:
     refset(cons, zero, new_car);
+    return cons;
+  case BUF:
+    buf_put_uchar(cons, zero, new_car);
     return cons;
   default:
     if (structp(cons)) {
@@ -648,6 +659,7 @@ val rplacd(val cons, val new_cdr)
   case VEC:
   case STR:
   case LSTR:
+  case BUF:
     replace(cons, new_cdr, one, t);
     return cons;
   default:
@@ -977,6 +989,12 @@ val make_like(val list, val thatobj)
       }
       if (is_chr(car(list)))
         return cat_str(list, nil);
+      break;
+    case BUF:
+      if (!list)
+        return make_buf(zero, zero, zero);
+      if (integerp(car(list)))
+        return buf_list(list);
       break;
     case COBJ:
       if (obj_struct_p(thatobj)) {
