@@ -1155,12 +1155,17 @@ static int is_balanced_line(const wchar_t *line, void *ctx)
         break;
       case ')': case ']': case '}':
         {
-          enum state match = state[sp];
+          enum state match = 0;
+          switch (ch) {
+          case ')': match = ST_PAR; break;
+          case ']': match = ST_BKT; break;
+          case '}': match = ST_BRC; break;
+          }
 
           while (sp > 0 && state[sp] != match)
             sp--;
           if (state[sp] != match)
-            return 1;
+            return 0;
           if (count[sp] == 0)
             sp--;
           else
