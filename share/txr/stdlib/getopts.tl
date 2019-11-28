@@ -157,14 +157,12 @@
 
 (defmeth sys:opt-processor build-hash (me)
   (each ((od me.od-list))
-    (each ((str (list od.long od.short)))
-      (when (and str [me.od-hash str])
-        (error "opt-processor: duplicate option ~s" str)))
     (unless (or od.long od.short)
       (error "opt-processor: no short or long name in option ~s" od))
     (each ((str (list od.long od.short)))
-      (when str
-        (set [me.od-hash str] od)))))
+      (when (and str [me.od-hash str])
+        (error "opt-processor: duplicate option ~s" str))
+      (set [me.od-hash str] od))))
 
 (defmeth sys:opt-processor parse-long (me out opt : arg)
   (iflet ((ieq (unless (stringp arg) (break-str opt "="))))
