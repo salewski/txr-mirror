@@ -246,9 +246,9 @@
     (put-line "\nOptions:\n")
     (each ((od sorted))
       (let* ((type (cond
-                     ((keywordp od.type) (upcase-str (tostringp od.type)))
+                     ((keywordp od.type) (upcase-str (symbol-name od.type)))
                      ((and (consp od.type) (eq (car od.type) 'list))
-                        (let ((ts (upcase-str (tostringp (cadr od.type)))))
+                        (let ((ts (upcase-str (symbol-name (cadr od.type)))))
                           `@ts[,@ts...]`))
                      (t "ARG")))
              (long (if od.long
