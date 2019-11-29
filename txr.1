@@ -56913,6 +56913,23 @@ is possible. This replaces the value associated with option
 The assignment is erroneous if no such option was parsed
 from the command line, even if it is a valid option.
 
+If an option is defined with both a long form and a short form,
+and either form of that option occurs in the command line being
+processed, then the option appears under both names in the index.
+
+For instance if option
+.str --verbose
+has the short form
+.strn -v ,
+and either option occurs, then both the keys
+.str "v"
+and
+.str "verbose"
+will exist in the
+.code opts
+structure returned by
+.codn getopts .
+
 .coNP Function @ getopts
 .synb
 .mets (getopts < option-desc-list << arg-list )
