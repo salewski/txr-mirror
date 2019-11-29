@@ -5669,7 +5669,7 @@ val intern_fallback(val str, val package)
 val intern_fallback_intrinsic(val str, val package_in)
 {
   val self = lit("intern-fb");
-  val package = get_package(self, package_in, nil);
+  val package = get_package(self, package_in, t);
 
   if (!stringp(str))
     uw_throwf(error_s, lit("~a: name ~s isn't a string"), self, str, nao);
