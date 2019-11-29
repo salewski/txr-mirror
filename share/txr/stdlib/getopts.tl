@@ -52,6 +52,7 @@
 (defstruct sys:opt-processor nil
   od-list
   (od-hash (hash :equal-based)) ;; string to opt-desc
+  opts
   (:postinit (me)
     me.(build-hash)))
 
@@ -163,49 +164,51 @@
         (error "opt-processor: duplicate option ~s" str))
       (set [me.od-hash str] od))))
 
-(defmeth sys:opt-processor parse-long (me out opt : arg)
+(defmeth sys:opt-processor parse-long (me opt : arg)
   (iflet ((ieq (unless (stringp arg) (break-str opt "="))))
     (let ((oname [opt 0..ieq])
           (arg [opt (succ ieq)..:]))
-      me.(parse-long out oname arg))
-    (let ((od [me.od-hash opt]))
+      me.(parse-long oname arg))
+    (let ((od [me.od-hash opt])
+          (opts me.opts))
       (cond
         ((null od)
            (sys:opt-err "unrecognized option: --~a" opt))
         ((and arg od.arg-p)
-           out.(add (new (sys:opt-parsed opt arg od))))
+           opts.(add (new (sys:opt-parsed opt arg od))))
         ((stringp arg)
            (sys:opt-err "option --~a doesn't take an argument" opt))
         (od.arg-p
-           (iflet ((arg (pop out.out-args)))
-             out.(add (new (sys:opt-parsed opt arg od)))
+           (iflet ((arg (pop opts.out-args)))
+             opts.(add (new (sys:opt-parsed opt arg od)))
              (sys:opt-err "option --~a requires an argument" opt)))
-        (out.(add (new (sys:opt-parsed opt arg od))))))))
+        (t opts.(add (new (sys:opt-parsed opt arg od))))))))
 
-(defmeth sys:opt-processor parse-shorts (me out opts)
+(defmeth sys:opt-processor parse-shorts (me opts)
   (each ((o (split-str opts #//)))
-    (iflet ((od [me.od-hash o]))
+    (iflet ((opts me.opts)
+            (od [me.od-hash o]))
       (let ((arg (when od.arg-p
                    (when (> (length opts) 1)
                      (sys:opt-err "argument -~a includes -~a, which does not clump"
                             opts o))
-                 (unless out.out-args
+                 (unless opts.out-args
                    (sys:opt-err "option -~a requires an argument" o))
-                 (pop out.out-args))))
-      out.(add (new (sys:opt-parsed o arg od))))
+                 (pop opts.out-args))))
+      opts.(add (new (sys:opt-parsed o arg od))))
     (sys:opt-err "unrecognized option: -~a" o))))
 
 (defmeth sys:opt-processor parse-opts (me args)
-  (let ((out (new opts in-args args out-args args)))
-    (whilet ((arg (pop out.out-args)))
+  (let ((opts me.opts))
+    (whilet ((arg (pop opts.out-args)))
       (cond
         ((equal "--" arg) (return))
-        ((r^ #/--no-/ arg) me.(parse-long out [arg 5..:] :explicit-no))
-        ((r^ #/--/ arg) me.(parse-long out [arg 2..:]))
-        ((r^ #/-.+/ arg) me.(parse-shorts out [arg 1..:]))
-        (t (push arg out.out-args)
+        ((r^ #/--no-/ arg) me.(parse-long [arg 5..:] :explicit-no))
+        ((r^ #/--/ arg) me.(parse-long [arg 2..:]))
+        ((r^ #/-.+/ arg) me.(parse-shorts [arg 1..:]))
+        (t (push arg opts.out-args)
            (return))))
-    out))
+    opts))
 
 (defun sys:wdwrap (string columns)
   (let ((words (tok-str string #/\S+/))
@@ -234,7 +237,8 @@
   (new opt-desc short short long long helptext helptext type type))
 
 (defun getopts (opt-desc-list args)
-  (let ((opr (new sys:opt-processor od-list opt-desc-list)))
+  (let* ((opts (new opts in-args args out-args args))
+         (opr (new sys:opt-processor od-list opt-desc-list opts opts)))
     opr.(parse-opts args)))
 
 (defun opthelp (opt-desc-list : (stream *stdout*))
