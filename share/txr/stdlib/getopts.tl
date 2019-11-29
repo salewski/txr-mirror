@@ -341,3 +341,26 @@
                       (:text  "  TEXT   - Unprocessed text"))))
            (put-line ln)))
     (put-line))))
+
+(defmacro define-option-struct (name super . opts)
+  (let* ((slots (mapcar (tb ((short long . rest))
+                          (or long short))
+                        opts)))
+    ^(defstruct ,name ,super
+       ,*slots
+       in-args
+       out-args
+       (:static slot-hash #H(() ,*(mapcar [juxt symbol-name identity] slots)))
+       (:static opt-desc-list ',(mapcar (tb ((short long . rest))
+                                          (opt (if short (symbol-name short))
+                                               (if long (symbol-name long))
+                                               . rest))
+                                        opts))
+       (:method add-opt (me opt)
+         (slotset me [me.slot-hash (or opt.desc.long opt.desc.short)] opt.arg))
+       (:method getopts (me args)
+         (set me.in-args args me.out-args args)
+         (let ((opr (new sys:opt-processor od-list me.opt-desc-list opts me)))
+           opr.(parse-opts args)))
+       (:method opthelp (me : (stream *stdout*))
+         (opthelp me.opt-desc-list stream)))))

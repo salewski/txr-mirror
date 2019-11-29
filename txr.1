@@ -56565,6 +56565,13 @@ and generates help text on that stream. A program supporting a
 option can use this to generate that portion of its help text which
 describes the available options, as well as the conventions that they use.
 
+The
+.code define-option-struct
+macro provides a more streamlined, declarative mechanism built on the
+same facility. The options are declared in a more condensed way, and
+using symbols instead of strings. Furthermore, the parsed option values
+become slot values of an object, named by the same symbols.
+
 .NP* Command Line Option Conventions
 
 A command line option can have a short or long name. A short name is always
@@ -56626,7 +56633,7 @@ occurs in the command line where an option would otherwise be recognized,
 it signifies the end of the options. The subsequent arguments are the
 non-option arguments, even if they resemble options.
 
-.NP* Command Line Processing Example
+.NP* Command Line Processing Examples
 
 The following example illustrates a complete \*(TL program which
 parses command line options:
@@ -56663,6 +56670,47 @@ parses command line options:
       (put-line `  @{prog-name} [options] arg*`)
       (opthelp options)
       (exit 0))
+    (put-line `args after opts are: @{o.out-args ", "}`))
+.brev
+
+The next example is equivalent to the previous, but using the
+.code define-option-struct
+macro:
+
+.verb
+  (define-option-struct prog-opts nil
+    (v   verbose :dec
+                 "Verbosity level. Higher values produce more chatter.")
+    (nil help    :bool
+                 "List this help text.")
+    (x   nil     :hex
+                 "The X factor: a number with a mysterious\e \e
+                  interpretation, affecting the program\e \e
+                  behavior in strange ways.")
+    ;; undocumented Boolean:
+    (z   nil)
+    (nil cee     :cint
+                 "C style integer.")
+    (g   gravity :float
+                 "Gravitational constant. This gives\e \e
+                  the gravitational field\e \e
+                  strength at the Earth's surface.")
+    (l   lit     :str
+                 "A character string given in TXR Lisp notation.")
+    (c   nil     upcase-str
+                 "Custom treatment: ARG is converted to upper case.")
+    (b   bool    :bool
+         "A flag you can flip true."))
+
+  (defvarl prog-name *load-path*)
+
+  (let ((o (new prog-opts)))
+    o.(getopts *args*)
+    (when o.help
+      (put-line "Usage:\en")
+      (put-line `  @{prog-name} [options] arg*`)
+      o.(opthelp)
+      (exit -1))
     (put-line `args after opts are: @{o.out-args ", "}`))
 .brev
 
@@ -56929,6 +56977,11 @@ will exist in the
 .code opts
 structure returned by
 .codn getopts .
+Note that this behavior is different from that of the structure produced
+.code define-option-struct
+macro. Under that approach, if an option is defined with a long and short name,
+the structure will have only a single slot for that option, named after the
+long name.
 
 .coNP Function @ getopts
 .synb
@@ -56995,6 +57048,87 @@ If there are problems in
 itself, then an exception of type
 .code error
 is thrown.
+
+.coNP Macro @ define-option-struct
+.synb
+.mets (define-option-struct < name < super << opt-specifier *)
+.syne
+.desc
+The
+.code define-option-struct
+macro defines a struct type instances of which provides command line option
+parsing.
+
+The
+.meta name
+and
+.meta super
+parameters are subject to the same requirements and have the same
+semantics as the same-named parameters of
+.codn defstruct .
+
+The
+.meta opt-specifier
+arguments are lists of between two and four elements:
+.meti >> ( short-symbol < long-symbol >> [ type <> [ help-text ]]).
+The
+.meta short-symbol
+and
+.meta long-symbol
+must be symbols suitable for use as slot names. One of them may be
+specified as
+.code nil
+indicating that the option has no long form, or no short form.
+
+If a
+.meta opt-specifier
+specifies both a
+.meta short-symbol
+and a
+.meta long-symbol
+then only a slot named by
+.meta long-symbol
+shall exist in the structure.
+
+The struct type defined by
+.code define-option-struct
+has two methods:
+.code getopts
+and
+.codn opthelp .
+It also has two slots:
+.code in-args
+and
+.codn out-args ,
+which function in a manner identical to their same-named
+counterparts in the
+.code opts
+class.
+
+The
+.code getopts
+method takes a single argument: the argument list to be processed.
+When the argument list is successfully processed.
+
+The
+.code opthelp
+method takes an optional stream argument.
+
+Note: to encode the option names
+.str "t"
+or
+.strn "nil" ,
+or option names which clash with the slot names
+.code in-args
+and
+.code out-args
+or the methods
+.code getopts
+or
+.codn opthelp ,
+symbols with these names from a package other than
+.code usr
+must be used.
 
 .SS* System Programming
 .coNP Accessor @ errno
