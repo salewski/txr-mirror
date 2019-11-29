@@ -47,8 +47,7 @@
 (defstruct opts nil
   (opt-hash (hash :equal-based)) ;; string to sys:opt-parsed
   in-args
-  out-args
-  opt-processor) ;; sys:opt-processor
+  out-args)
 
 (defstruct sys:opt-processor nil
   od-list
@@ -197,7 +196,7 @@
     (sys:opt-err "unrecognized option: -~a" o))))
 
 (defmeth sys:opt-processor parse-opts (me args)
-  (let ((out (new opts in-args args out-args args opt-processor me)))
+  (let ((out (new opts in-args args out-args args)))
     (whilet ((arg (pop out.out-args)))
       (cond
         ((equal "--" arg) (return))
