@@ -149,7 +149,7 @@
     (set o.arg val)
     (error "opts: cannot set option ~s to ~s: no such option" key val)))
 
-(defmeth opts add (me opt)
+(defmeth opts add-opt (me opt)
   (whenlet ((n opt.desc.short))
     (set [me.opt-hash n] opt))
   (whenlet ((n opt.desc.long))
@@ -175,14 +175,14 @@
         ((null od)
            (sys:opt-err "unrecognized option: --~a" opt))
         ((and arg od.arg-p)
-           opts.(add (new (sys:opt-parsed opt arg od))))
+           opts.(add-opt (new (sys:opt-parsed opt arg od))))
         ((stringp arg)
            (sys:opt-err "option --~a doesn't take an argument" opt))
         (od.arg-p
            (iflet ((arg (pop opts.out-args)))
-             opts.(add (new (sys:opt-parsed opt arg od)))
+             opts.(add-opt (new (sys:opt-parsed opt arg od)))
              (sys:opt-err "option --~a requires an argument" opt)))
-        (t opts.(add (new (sys:opt-parsed opt arg od))))))))
+        (t opts.(add-opt (new (sys:opt-parsed opt arg od))))))))
 
 (defmeth sys:opt-processor parse-shorts (me opts)
   (each ((o (split-str opts #//)))
@@ -195,7 +195,7 @@
                  (unless opts.out-args
                    (sys:opt-err "option -~a requires an argument" o))
                  (pop opts.out-args))))
-      opts.(add (new (sys:opt-parsed o arg od))))
+      opts.(add-opt (new (sys:opt-parsed o arg od))))
     (sys:opt-err "unrecognized option: -~a" o))))
 
 (defmeth sys:opt-processor parse-opts (me args)
