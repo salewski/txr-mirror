@@ -5633,7 +5633,7 @@ val set_package_fallback_list(val package_in, val list_in)
 
 val intern_fallback(val str, val package)
 {
-  val self = lit("intern-fallback");
+  val self = lit("intern-fb");
   val fblist = get_hash_userdata(package->pk.symhash);
 
   if (fblist) {
@@ -5668,7 +5668,7 @@ val intern_fallback(val str, val package)
 
 val intern_fallback_intrinsic(val str, val package_in)
 {
-  val self = lit("intern-fallback");
+  val self = lit("intern-fb");
   val package = get_package(self, package_in, nil);
 
   if (!stringp(str))
