@@ -720,6 +720,7 @@ static val read_file_common(val self, val stream, val error_stream, val compiled
   val first = t;
   val big_endian = nil;
   val parser = ensure_parser(stream, name);
+  val not_compiled = null(compiled);
 
   if (compiled) {
     parser_t *pi = parser_get_impl(self, parser);
@@ -727,7 +728,8 @@ static val read_file_common(val self, val stream, val error_stream, val compiled
   }
 
   for (;;) {
-    val form = lisp_parse(stream, error_stream, error_val, name, colon_k);
+    val form = lisp_parse_impl(self, nil, not_compiled, stream,
+                               error_stream, error_val, name, colon_k);
 
     if (form == error_val) {
       if (parser_errors(parser) != zero)
