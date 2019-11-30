@@ -278,8 +278,8 @@
     (caseql lv
       (0 (if (zerop ix)
            nil
-           (intern (fmt "t~,03X" ix))))
-      (1 (intern (fmt "d~,03X" ix)))
+           (intern (fmt "t~s" ix))))
+      (1 (intern (fmt "d~s" ix)))
       (t (intern (fmt "v~,02X~,03X" (ppred lv) ix))))))
 
 (defun operand-to-exp (val)
