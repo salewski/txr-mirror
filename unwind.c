@@ -793,6 +793,28 @@ val uw_errorfv(val fmt, struct args *args)
   abort();
 }
 
+val uw_warningf(val fmt, ...)
+{
+  va_list vl;
+
+  val stream = make_string_output_stream();
+  va_start (vl, fmt);
+  (void) vformat(stream, fmt, vl);
+  va_end (vl);
+
+  uw_catch_begin (cons(continue_s, nil), exsym, exvals);
+
+  uw_throw(warning_s, get_string_from_stream(stream));
+
+  uw_catch(exsym, exvals) { (void) exsym; (void) exvals; }
+
+  uw_unwind;
+
+  uw_catch_end;
+
+  return nil;
+}
+
 val type_mismatch(val fmt, ...)
 {
   va_list vl;
