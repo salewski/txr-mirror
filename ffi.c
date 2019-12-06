@@ -2811,7 +2811,7 @@ static val ffi_memb_compile(val syntax, int last, int *pflexp, val self)
   val type = cadr(syntax);
   val comp_type = ffi_type_compile(type);
   struct txr_ffi_type *ctft = ffi_type_struct(comp_type);
-  if (cddr(syntax))
+  if (consp(cddr(syntax)) && cdddr(syntax))
     uw_throwf(error_s, lit("~a: excess elements in type-member pair ~s"),
               self, syntax, nao);
   if (ctft->flexible || (ctft->incomplete && ctft->kind == FFI_KIND_ARRAY)) {
@@ -3287,6 +3287,18 @@ static val ffi_type_lookup(val sym)
   return gethash(ffi_typedef_hash, sym);
 }
 
+static val ffi_struct_init(val slot_init, val strct)
+{
+  val stype = struct_type(strct);
+  for (; slot_init; slot_init = us_cdr(slot_init)) {
+    us_cons_bind(slot, initval, us_car(slot_init));
+    if (!static_slot_p(stype, slot))
+      slotset(strct, slot, initval);
+  }
+
+  return nil;
+}
+
 val ffi_type_compile(val syntax)
 {
   val self = lit("ffi-type-compile");
@@ -3312,14 +3324,33 @@ val ffi_type_compile(val syntax)
         }
       } else {
         uses_or2;
-        val slots = mapcar(car_f, membs);
-        val stype = or2(if2(name, find_struct_type(sname)),
-                        make_struct_type(sname, nil, nil,
-                                         remq(nil, slots, nil),
-                                         nil, nil, nil, nil));
-        val xsyntax = cons(struct_s,
-                           cons(sname, membs));
-        return make_ffi_type_struct(xsyntax, stype, existing_type, self);
+        val iter;
+        list_collect_decl (slots, ptslots);
+        list_collect_decl (slot_inits, ptinits);
+
+        for (iter = membs; iter; iter = cdr(iter)) {
+          val spec = car(iter);
+          val slot = car(spec);
+          val init = caddr(spec);
+          if (!slot && init)
+            uw_warningf(lit("~a: padding slot struct ~s specifies init-form"),
+                        self, name, nao);
+          if (slot)
+            ptslots = list_collect(ptslots, slot);
+          if (slot && init)
+            ptinits = list_collect(ptinits, cons(slot, ffi_eval_expr(init, nil, nil)));
+        }
+
+        {
+          val stype = or2(if2(name, find_struct_type(sname)),
+                          make_struct_type(sname, nil, nil,
+                                           slots, nil,
+                                           if2(slot_inits, func_f1(slot_inits, ffi_struct_init)),
+                                           nil, nil));
+          val xsyntax = cons(struct_s,
+                             cons(sname, membs));
+          return make_ffi_type_struct(xsyntax, stype, existing_type, self);
+        }
       }
     } else if (sym == union_s) {
       val name = cadr(syntax);

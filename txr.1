@@ -64261,7 +64261,7 @@ through the enumeration is is attempted at run time.
 
 .coNP FFI type @ struct
 .synb
-.mets (struct < name >> {( slot << type )}*)
+.mets (struct < name >> {( slot << type <> [ init-form ])}*)
 .syne
 .desc
 The FFI
@@ -64361,11 +64361,49 @@ to exist, if such a type doesn't already exist. If such a type is
 created, instance slots are defined for it which correspond to the
 member definitions in the FFI
 .code struct
-definition.  Those members whose
+definition.
+
+For any
+.meta slot
+which specifies an
+.meta init-form
+expression, that expression is evaluated during the processing of the type syntax,
+in the global environment. The resulting value then becomes the initial value for
+the slot. The semantics of this value is similar to that of a quoted object
+appearing as an
+.meta init-form
+in the
+.code defstruct
+macro's
+.meta slot-specifier
+syntax. For example, if the type expression
+.codn "(struct s (a int expr))" ,
+which specifies a slot
+.code a
+initialized by
+.codn expr ,
+generates a Lisp struct type, the manner in which that type is generated
+will resemble that of
+.code "(defstruct s nil (a (quote [value-of-expr])))"
+where
+.code [value-of-expr]
+denotes the substitution of the value of
+.code expr
+which had been obtained by evaluation in the global environment.
+Note: if more flexible initialization semantics is required, the application must
+define the Lisp struct type first with the desired characteristics, before
+processing the FFI struct type. The FFI struct type will then related to the
+existing Lisp struct type.
+
+Those members whose
 .meta slot
 name is specified as
 .code nil
 is ignored; no instance slots are created in the Lisp type.
+If a
+.meta init-form
+is specified for such a slot, there exists is no situation in which that
+form will be evaluated.
 
 When a Lisp object is converted to a struct, it must, firstly, be of the struct
 type specified by
