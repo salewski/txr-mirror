@@ -69,6 +69,7 @@ val floor_s, floor1_s, r_floor_s;
 val ceil_s, ceil1_s, r_ceil_s;
 val round_s, round1_s, r_round_s;
 val sin_s, cos_s, tan_s, asin_s, acos_s, atan_s, atan2_s, r_atan2_s;
+val sinh_s, cosh_s, tanh_s, asinh_s, acosh_s, atanh_s;
 val log_s, log2_s, log10_s, exp_s, sqrt_s;
 val logand_s, logior_s, logxor_s;
 val lognot1_s, lognot_s, r_lognot_s, logtrunc_s, r_logtrunc_s;
@@ -2673,6 +2674,91 @@ val atang2(val y, val x)
                    c_flo(to_float(self, x), self)));
 }
 
+#if !HAVE_HYPERBOLICS
+
+double sinh(double x)
+{
+  return (exp(x) - exp(-x)) / 2;
+}
+
+double cosh(double x)
+{
+  if (x == 0)
+    return 1;
+  return (exp(x) + exp(-x)) / 2;
+}
+
+double tanh(double x)
+{
+  double e2x = exp(2*x);
+  return (e2x - 1) / (e2x + 1);
+}
+
+double asinh(double x)
+{
+  return log(x + sqrt(1 + x*x));
+}
+
+double acosh(double x)
+{
+  return log(x + sqrt(x + 1)*sqrt(x - 1));
+}
+
+double atanh(double x)
+{
+  return (log(1 + x) - log(1 - x))/2;
+}
+
+#endif
+
+val sineh(val num)
+{
+  val self = sinh_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+  return flo(sinh(c_flo(to_float(self, num), self)));
+}
+
+val cosih(val num)
+{
+  val self = cosh_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+  return flo(cosh(c_flo(to_float(self, num), self)));
+}
+
+val tangh(val num)
+{
+  val self = tanh_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+  return flo(tanh(c_flo(to_float(self, num), self)));
+}
+
+val asineh(val num)
+{
+  val self = asinh_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+  return flo(asinh(c_flo(to_float(self, num), self)));
+}
+
+val acosih(val num)
+{
+  val self = acosh_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+  return flo(acosh(c_flo(to_float(self, num), self)));
+}
+
+val atangh(val num)
+{
+  val self = atanh_s;
+  if (cobjp(num))
+    return do_unary_method(self, self, num);
+  return flo(atanh(c_flo(to_float(self, num), self)));
+}
+
 val loga(val num)
 {
   val self = log_s;
@@ -4334,6 +4420,12 @@ void arith_init(void)
   atan_s = intern(lit("atan"), user_package);
   atan2_s = intern(lit("atan2"), user_package);
   r_atan2_s = intern(lit("r-atan2"), user_package);
+  sinh_s = intern(lit("sinh"), user_package);
+  cosh_s = intern(lit("cosh"), user_package);
+  tanh_s = intern(lit("tanh"), user_package);
+  asinh_s = intern(lit("asinh"), user_package);
+  acosh_s = intern(lit("acosh"), user_package);
+  atanh_s = intern(lit("atanh"), user_package);
   log_s = intern(lit("log"), user_package);
   log2_s = intern(lit("log2"), user_package);
   log10_s = intern(lit("log10"), user_package);
@@ -4432,6 +4524,12 @@ void arith_init(void)
   reg_fun(acos_s, func_n1(acosi));
   reg_fun(atan_s, func_n1(atang));
   reg_fun(atan2_s, func_n2(atang2));
+  reg_fun(sinh_s, func_n1(sineh));
+  reg_fun(cosh_s, func_n1(cosih));
+  reg_fun(tanh_s, func_n1(tangh));
+  reg_fun(asinh_s, func_n1(asineh));
+  reg_fun(acosh_s, func_n1(acosih));
+  reg_fun(atanh_s, func_n1(atangh));
   reg_fun(log_s, func_n1(loga));
   reg_fun(log10_s, func_n1(logten));
   reg_fun(log2_s, func_n1(logtwo));

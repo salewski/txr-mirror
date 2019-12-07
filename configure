@@ -2334,7 +2334,27 @@ else
   printf "no\n"
 fi
 
+printf "Checking for hyperbolic functions (sinh, ...) ... "
+cat > conftest.c <<!
+#include <math.h>
 
+int main(void)
+{
+  double a = cosh(0.5);
+  double b = sinh(0.5);
+  double c = tanh(0.5);
+  double d = acosh(0.5);
+  double e = asinh(0.5);
+  double f = atanh(0.5);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_HYPERBOLICS 1\n" >> config.h
+else
+  printf "no\n"
+fi
 
 printf "Checking for glob ... "
 
