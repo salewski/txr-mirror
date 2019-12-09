@@ -58016,6 +58016,34 @@ for a socket and
 .code path-pipe-p
 for a named pipe.
 
+.coNP Function @ path-dir-empty
+.synb
+.mets (path-dir-empty << path )
+.syne
+.desc
+The
+.code path-dir-empty
+function returns
+.code t
+if
+.meta path
+is an empty directory.
+
+Implementation note: this function performs a test similar to
+.codn path-dir-p ;
+then, if it is confirmed that
+.meta path
+is a directory, a directory stream is opened and entries are read.
+If an entry is seen which has a name other than
+.str .
+or
+.str ..
+then it is concluded that the directory is not empty and
+.code nil
+is returned. If no such entry is seen, then the directory is deemed empty and
+.code t
+is returned.
+
 .coNP Functions @, path-setgid-p @ path-setuid-p and @ path-sticky-p
 .synb
 .mets (path-setgid-p << path )

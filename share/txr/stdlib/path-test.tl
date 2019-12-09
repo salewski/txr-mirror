@@ -174,3 +174,12 @@
       (and s0 s1
            (eql s0.dev s1.dev)
            (eql s0.ino s1.ino)))))
+
+(defun path-dir-empty (path)
+  (when (path-dir-p path)
+    (let ((name (if (stringp path) path path.path)))
+      (with-stream (ds (open-directory name))
+        (for (ent) ((set ent (get-line ds)) t) ()
+          (casequal ent
+            (("." ".."))
+            (t (return nil))))))))
