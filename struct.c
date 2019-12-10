@@ -370,7 +370,7 @@ val make_struct_type(val name, val super,
           ss->home_type = stype;
           ss->home_offs = n;
           ss->home = &ss->store;
-          ss->store = if2(msl, stslot_place(&su->stslot[m]));
+          ss->store = if2(m >= 0, stslot_place(&su->stslot[m]));
         } else {
           *ss = su->stslot[m];
           ss->store = nil;
