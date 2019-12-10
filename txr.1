@@ -25267,6 +25267,37 @@ but are of a different kind: an instance slot in the supertype
 can be replaced by a static slot in the derived type or
 .IR "vice versa" .
 
+Note that, in light of the above type overriding possibility, the static slot
+value propagation happens only from the immediate supertype.
+If
+.code D
+is is derived from
+.code G
+which has a static slot
+.codn s ,
+whereas
+.code D
+specifies
+.code s
+as an instance slot, but then
+.code B
+again specifies a static slot
+.codn s ,
+then
+.codn B 's
+slot
+.code s
+will not inherit the value from
+.codn G 's
+.code s
+slot.
+Simply,
+.codn B 's
+supertype is
+.code D
+and that supertype is not considered to have a static slot
+.codn s .
+
 A structure type is associated with a static initialization function
 which may be used to store initial values into static slots. This function
 is invoked once in a type's life time, when the type is created.
