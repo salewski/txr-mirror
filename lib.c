@@ -267,14 +267,8 @@ val subtypep(val sub, val sup)
     val sub_struct = find_struct_type(sub);
     val sup_struct = find_struct_type(sup);
 
-    if (sub_struct && sup_struct) {
-      do {
-        sub_struct = super(sub_struct);
-        if (sub_struct == sup_struct)
-          return t;
-      } while (sub_struct);
-      return nil;
-    }
+    if (sub_struct && sup_struct)
+      return struct_subtype_p(sub_struct, sup_struct);
 
     return nil;
   }

@@ -25133,9 +25133,10 @@ nonnegative.
 
 .SS* Structures
 
-\*(TX supports a structure data type. Structures are objects which
-hold multiple storage locations called slots, which are named by symbols.
-Structures can be related to each other by inheritance.
+\*(TX supports application-defined types in the form of structures. Structures
+are objects which hold multiple storage locations called slots, which are named
+by symbols.  Structures can be related to each other by inheritance. Multiple
+inheritance is permitted.
 
 The type of a structure is itself an object, of type
 .codn struct-type .
@@ -25144,7 +25145,8 @@ When the program defines a new structure type, it does so by creating a new
 .code struct-type
 instance, with properties which describe the new structure type: its
 name, its list of slots, its initialization and "boa constructor" functions,
-and the structure type it inherits from (the "super").
+and the structures type it inherits from (the
+.IR supertypes ).
 
 The
 .code struct-type
@@ -25214,7 +25216,10 @@ read from a stream, if static slots are present, they will be processed
 and their values stored in the static locations they represent, thus
 changing their values for all instances.
 
-Static slots are inherited just like instance slots. If a given structure
+Static slots are inherited just like instance slots. The following
+simplified discussion is restricted to single inheritance. A detailed
+description of multiple inheritance is given in the Multiple Inheritance
+section below.  If a given structure
 .meta B
 has some static slot
 .metn s ,
@@ -25303,6 +25308,61 @@ which may be used to store initial values into static slots. This function
 is invoked once in a type's life time, when the type is created.
 The function is also inherited by derived struct types and invoked when
 they are created.
+
+.NP* Multiple Inheritance
+When a structure type is defined, two or more supertypes may be specified.  The
+new structure type then potentially inherits instance and static slots from all
+of the specified supertypes, and is considered to be a subtype of all of them.
+This situation with two or more supertypes is called
+.IR "multiple inheritance" .
+The contrasting term is
+.IR "single inheritance" ,
+denoting the situation when a structure has exactly one supertype.
+The term
+.IR "strict single inheritance"
+refers to the situation when a structure has exactly one supertype;
+its supertype has at most one supertype; and, recursively, any additional
+indirect supertypes all have at most one supertype.
+Note: \*(TX 228 and older versions permitted only single inheritance,
+thus programs were restricted to strict single inheritance.
+\*(TL's multiple-inheritance is a straightforward extension of its
+single inheritance semantics.
+
+In the
+.code make-struct-type
+function and
+.code defstruct
+macro, a list of supertypes can be given instead of just one.
+The type then inherits slots from all of the specified types.
+If any conflicts arise among the supertypes due to slots having the same name,
+the leftmost supertype dominates: that type's slot will be inherited.
+If the leftmost slot is static, then that static slot will be inherited.
+Otherwise, the instance slot will be inherited.
+
+Of course, any slot which is specified in the newly defined type itself
+dominates over any same-named slots among the supertypes.
+
+The new structure type inherits all of the slot initializing expressions, as
+well as
+.code :init
+and
+.code :postinit
+methods of all of its supertypes.
+
+Each time the structure is instantiated, the
+.code :init
+initializing expressions inherited from the supertypes, together with the slot
+initializing expressions, are all evaluated, in right-to-left order:
+the initializations contributed by each supertype are performed before
+considering the next supertype to the left.
+The
+.code :postinit
+methods are similarly invoked in right-to-left order, before the
+.code :postinit
+methods of the new type itself.
+Thus the order is: supertype inits, own inits, supertype post-inits,
+own post-inits.  If a supertype is referenced, directly or indirectly, two or
+more times, then its initializing expressions are evaluated that many times.
 
 .NP* Dirty Flags
 All structure instances contain a Boolean flag called the
@@ -25410,10 +25470,12 @@ must also be a bindable symbol.
 The
 .meta super
 argument must either be
-.code nil
-or a symbol which names an existing struct type.
+.codn nil ,
+or a symbol which names an existing struct type,
+or else a list of such symbols.
 The newly defined struct type will inherit all slots,
-as well as initialization behaviors from this type.
+as well as initialization behaviors from the specified
+struct types.
 
 The
 .code defstruct
@@ -25578,7 +25640,11 @@ is instantiated, the
 .code :init
 code of a base structure type, if any, is executed
 before any initializations specific to a derived
-structure type.
+structure type. Under multiple inheritance, the
+.code :init
+code of the rightmost base type is executed first,
+then that of the remaining bases in right-to-left
+order.
 
 The
 .code :init
@@ -25640,7 +25706,8 @@ actions,
 .code :postinit
 actions registered at different levels of the type's
 inheritance hierarchy are invoked in the base-to-derived
-order.
+order, and in right-to-left order among multiple bases
+at the same level.
 .meIP (:fini <> ( param ) << body-form *)
 The
 .code :fini
@@ -26710,6 +26777,9 @@ of
 .codn make-struct .
 Each function is passed the newly created structure
 object, and may alter its slots.
+If multiple inheritance occurs, the
+.meta initfun
+functions of multiple supertypes are called in right-to-left order.
 
 The
 .meta boactor
@@ -26750,7 +26820,9 @@ functions are called after all other initialization processing,
 rather than before. They are are also called in order of
 inheritance: the
 .meta postinitfun
-of a structure's supertype is called before its own.
+of a structure's supertype is called before its own,
+and in right-to-left order among multiple supertypes
+under multiple inheritance.
 
 .coNP Function @ find-struct-type
 .synb
@@ -28394,13 +28466,14 @@ The
 gives the new type that is inheriting from
 .metn supertype .
 
-The function is called at most once for the creation of a given
-.metn subtype ,
-only for its immediate supertype, if and only if that supertype
-has defined this function.
+When a new structure type is defined, its list of immediate
+supertypes is considered. For each of those supertypes which defines the
+.code derived
+function, the function is invoked.
 
-The function is not retroactively invoked if it is defined for
-a structure type from which subtypes have already been derived.
+The function is not retroactively invoked. If it is defined for
+a structure type from which subtypes have already been derived,
+it is not invoked for those existing subtypes.
 
 Note: the
 .meta supertype

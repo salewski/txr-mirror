@@ -33,7 +33,7 @@
                     (not init-form-present)))
              slot-init-forms))
 
-(defmacro defstruct (:form form name-spec super . slot-specs)
+(defmacro defstruct (:form form name-spec super-spec . slot-specs)
   (tree-bind (name args) (tree-case name-spec
                            ((atom . args) (list atom args))
                            (atom (list atom nil)))
@@ -111,12 +111,9 @@
                                   ^(:instance ,name nil))
                                 (name
                                   ^(:instance ,name nil)))))
-           (super-type (if super
-                         (or (find-struct-type super)
-                             (compile-defr-warning form ^(struct-type . ,super)
-                                                   "inheritance base ~s \
-                                                   \ does not name a struct type"
-                                                   super))))
+           (supers (if (and super-spec (atom super-spec))
+                     (list super-spec)
+                     super-spec))
            (stat-si-forms [keep-if (op member @1 '(:static :function))
                                    slot-init-forms car])
            (pruned-si-forms (sys:prune-missing-inits stat-si-forms))
@@ -132,6 +129,12 @@
                          "slot name ~s isn't a bindable symbol"
                          "invalid slot specifier syntax: ~s")
                        bad))
+      (each ((s supers))
+        (or (find-struct-type s)
+            (compile-defr-warning form ^(struct-type . ,s)
+                                  "inheritance base ~s \
+                                  \ does not name a struct type"
+                                  s)))
       (let ((arg-sym (gensym))
             (type-sym (gensym)))
         (register-tentative-def ^(struct-type . ,name))
@@ -140,7 +143,7 @@
         (each ((s inst-slots))
           (register-tentative-def ^(slot . ,s)))
         ^(sys:make-struct-type
-           ',name ',super ',stat-slots ',inst-slots
+           ',name ',supers ',stat-slots ',inst-slots
            ,(if (or func-si-forms val-si-forms)
                ^(lambda (,arg-sym)
                   ,*(mapcar (aret ^(when (static-slot-p ,arg-sym ',@2)

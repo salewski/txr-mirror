@@ -78,8 +78,9 @@ struct struct_type {
   cnum id;
   cnum nslots;
   cnum nstslots;
-  val super;
-  struct struct_type *super_handle;
+  cnum nsupers;
+  val supers;
+  struct struct_type **sus;
   val slots;
   val stinitfun;
   val initfun;
@@ -163,7 +164,7 @@ void struct_init(void)
   reg_fun(intern(lit("struct-set-initfun"), user_package), func_n2(struct_set_initfun));
   reg_fun(intern(lit("struct-get-postinitfun"), user_package), func_n1(struct_get_postinitfun));
   reg_fun(intern(lit("struct-set-postinitfun"), user_package), func_n2(struct_set_postinitfun));
-  reg_fun(intern(lit("super"), user_package), func_n1(super));
+  reg_fun(intern(lit("super"), user_package), func_n2o(super, 1));
   reg_fun(intern(lit("make-struct"), user_package), func_n2v(make_struct));
   reg_fun(intern(lit("struct-from-plist"), user_package), func_n1v(struct_from_plist));
   reg_fun(intern(lit("struct-from-args"), user_package), func_n1v(struct_from_args));
@@ -241,8 +242,8 @@ static val struct_type_finalize(val obj)
 static void call_stinitfun_chain(struct struct_type *st, val stype)
 {
   if (st) {
-    if (st->super && opt_compat && opt_compat <= 151)
-      call_stinitfun_chain(st->super_handle, stype);
+    if (st->nsupers == 1 && opt_compat && opt_compat <= 151)
+      call_stinitfun_chain(st->sus[0], stype);
     if (st->stinitfun)
       funcall1(st->stinitfun, stype);
   }
@@ -288,20 +289,89 @@ static void static_slot_home_fixup(struct struct_type *st)
   }
 }
 
-val make_struct_type(val name, val super,
+static struct struct_type **get_struct_handles(cnum nsupers, val supers,
+                                               val self)
+{
+  cnum i;
+  struct struct_type **sus = coerce(struct struct_type **,
+                                    chk_malloc(nsupers * sizeof *sus));
+  for (i = 0; i < nsupers; i++, supers = us_cdr(supers)) {
+    val super = us_car(supers);
+    sus[i] = stype_handle(&super, self);
+  }
+
+  return sus;
+}
+
+static cnum count_super_stslots(cnum nsupers, struct struct_type **sus,
+                                val self)
+{
+  cnum c = 0, i;
+
+  for (i = 0; i < nsupers; i++) {
+    struct struct_type *s = sus[i];
+    if (c > INT_PTR_MAX - s->nstslots)
+      uw_throwf(error_s, lit("~a: too many static slots among supertypes"),
+                self, nao);
+    c += s->nstslots;
+  }
+
+  return c;
+}
+
+static val get_super_slots(cnum nsupers, struct struct_type **sus, val self)
+{
+  cnum i;
+  val slots = nil;
+
+  for (i = 0; i < nsupers; i++)
+    slots = append2(slots, sus[i]->slots);
+
+  return slots;
+}
+
+static struct struct_type *find_super_for_slot(cnum nsupers,
+                                               struct struct_type **sus,
+                                               val slot)
+{
+  cnum i;
+
+  for (i = 0; i < nsupers; i++) {
+    if (memq(slot, sus[i]->slots))
+      return sus[i];
+  }
+
+  return 0;
+}
+
+val make_struct_type(val name, val supers,
                      val static_slots, val slots,
                      val static_initfun, val initfun, val boactor,
                      val postinitfun)
 {
   val self = lit("make-struct-type");
+  val iter;
 
-  if (super && symbolp(super)) {
-    val supertype = find_struct_type(super);
-    if (!supertype)
-      no_such_struct(self, super);
-    super = supertype;
-  } else if (super) {
-    class_check(self, super, struct_type_s);
+  if (!listp(supers))
+    supers = cons(supers, nil);
+
+  {
+    list_collect_decl (stypes, ptail);
+
+    for (iter = supers; iter; iter = cdr(iter)) {
+      val super = car(iter);
+      if (symbolp(super)) {
+        val supertype = find_struct_type(super);
+        if (!supertype)
+          no_such_struct(self, super);
+        ptail = list_collect(ptail, supertype);
+      } else {
+        class_check(self, super, struct_type_s);
+        ptail = list_collect(ptail, super);
+      }
+    }
+
+    supers = stypes;
   }
 
   if (!bindable(name)) {
@@ -316,15 +386,16 @@ val make_struct_type(val name, val super,
   } else {
     struct struct_type *st = coerce(struct struct_type *,
                                     chk_malloc(sizeof *st));
-    struct struct_type *su = if3(super, stype_handle(&super, self), 0);
+    cnum nsupers = c_num(length(supers));
+    struct struct_type **sus = get_struct_handles(nsupers, supers, self);
     val id = num_fast(coerce(ucnum, st) / (uptopow2(sizeof *st) / 2));
-    val super_slots = if2(su, su->slots);
+    val super_slots = get_super_slots(nsupers, sus, self);
     val all_slots = uniq(append2(super_slots, append2(static_slots, slots)));
     cnum stsl_upb = c_num(plus(length(static_slots),
-                               num(if3(su, su->nstslots, 0))));
+                               num(count_super_stslots(nsupers, sus, self))));
     val stype = cobj(coerce(mem_t *, st), struct_type_s, &struct_type_ops);
     val iter;
-    cnum sl, stsl;
+    cnum sl, stsl, i;
     struct stslot null_ptr = { nil, 0, 0, nil };
 
     st->self = stype;
@@ -332,9 +403,10 @@ val make_struct_type(val name, val super,
     st->id = c_num(id);
     st->nslots = st->nstslots = 0;
     st->slots = all_slots;
-    st->super = super;
+    st->nsupers = nsupers;
+    st->supers = supers;
     st->stslot = 0;
-    st->super_handle = su;
+    st->sus = sus;
     st->stinitfun = static_initfun;
     st->initfun = initfun;
     st->boactor = boactor;
@@ -353,6 +425,8 @@ val make_struct_type(val name, val super,
          iter = cdr(iter))
     {
       val slot = car(iter);
+      struct struct_type *su = find_super_for_slot(nsupers, sus, slot);
+      val super = if2(su, su->self);
       val new_tslot_p = memq(slot, static_slots);
       int inherited_p = !new_tslot_p && !memq(slot, slots);
       val ts_p = if3(inherited_p,
@@ -400,14 +474,17 @@ val make_struct_type(val name, val super,
 
     sethash(struct_type_hash, name, stype);
 
-    if (super)
-      mpush(stype, mkloc(su->dvtypes, super));
+    for (i = 0; i < nsupers; i++) {
+      struct struct_type *su = sus[i];
+      mpush(stype, mkloc(su->dvtypes, su->self));
+    }
 
     call_stinitfun_chain(st, stype);
 
     uw_purge_deferred_warning(cons(struct_type_s, name));
 
-    if (su) {
+    for (i = 0; i < nsupers; i++) {
+      struct struct_type *su = sus[i];
       struct stslot *dvmeth = lookup_static_slot_desc(su, derived_s);
       if (dvmeth)
         funcall2(stslot_place(dvmeth), su->self, stype);
@@ -462,14 +539,27 @@ val struct_set_postinitfun(val type, val fun)
   return fun;
 }
 
-val super(val type)
+val super(val type, val idx)
 {
-  if (structp(type)) {
-    struct struct_inst *si = coerce(struct struct_inst *, type->co.handle);
-    return si->type->super;
-  } else {
-    struct struct_type *st = stype_handle(&type, lit("super"));
-    return st->super;
+  val self = lit("super");
+  cnum ix = c_num(default_arg(idx, zero));
+
+  if (ix < 0)
+    uw_throwf(error_s,
+              lit("~a: index must be non-negative, ~s given"),
+              self, idx, nao);
+
+  {
+    struct struct_type *st;
+
+    if (structp(type)) {
+      struct struct_inst *si = coerce(struct struct_inst *, type->co.handle);
+      st = si->type;
+    } else {
+      st = stype_handle(&type, self);
+    }
+
+    return if2(ix < st->nsupers, st->sus[ix]->self);
   }
 }
 
@@ -485,6 +575,7 @@ static void struct_type_destroy(val obj)
   struct struct_type *st = coerce(struct struct_type *, obj->co.handle);
   free(st->stslot);
   free(st->spslot);
+  free(st->sus);
   free(st);
 }
 
@@ -494,7 +585,7 @@ static void struct_type_mark(val obj)
   cnum stsl;
 
   gc_mark(st->name);
-  gc_mark(st->super);
+  gc_mark(st->supers);
   gc_mark(st->slots);
   gc_mark(st->stinitfun);
   gc_mark(st->initfun);
@@ -515,8 +606,10 @@ static void struct_type_mark(val obj)
 static void call_initfun_chain(struct struct_type *st, val strct)
 {
   if (st) {
-    if (st->super)
-      call_initfun_chain(st->super_handle, strct);
+    cnum i;
+
+    for (i = st->nsupers - 1; i >= 0; i--)
+      call_initfun_chain(st->sus[i], strct);
     if (st->initfun)
       funcall1(st->initfun, strct);
   }
@@ -526,11 +619,12 @@ static void call_postinitfun_chain(struct struct_type *st, val strct)
 {
   if (st) {
     int derived_first = (opt_compat && opt_compat <= 148);
+    cnum i;
 
     if (derived_first && st->postinitfun)
       funcall1(st->postinitfun, strct);
-    if (st->super)
-      call_postinitfun_chain(st->super_handle, strct);
+    for (i = st->nsupers - 1; i >= 0; i--)
+      call_postinitfun_chain(st->sus[i], strct);
     if (!derived_first && st->postinitfun)
       funcall1(st->postinitfun, strct);
   }
@@ -1305,7 +1399,7 @@ val static_slot_home(val stype, val sym)
 static val call_super_method(val inst, val sym, struct args *args)
 {
   val type = struct_type(inst);
-  val suptype = super(type);
+  val suptype = super(type, zero);
 
   if (suptype) {
     val meth = static_slot(suptype, sym);
@@ -1323,11 +1417,14 @@ static val call_super_fun(val type, val sym, struct args *args)
 {
   val self = lit("call-super-fun");
   struct struct_type *st = stype_handle(&type, self);
-  val suptype = st->super;
 
-  if (suptype) {
-    val fun = static_slot(suptype, sym);
-    return generic_funcall(fun, args);
+  if (st->nsupers) {
+    val suptype = st->sus[0]->self;
+
+    if (suptype) {
+      val fun = static_slot(suptype, sym);
+      return generic_funcall(fun, args);
+    }
   }
 
   uw_throwf(error_s, lit("~a: ~s has no supertype"),
@@ -1382,6 +1479,31 @@ val struct_type_name(val stype)
   return st->name;
 }
 
+static val do_struct_subtype_p(struct struct_type *sb,
+                               struct struct_type *su,
+                               val self)
+{
+  if (sb == su) {
+    return t;
+  } else {
+    cnum i;
+    for (i = 0; i < sb->nsupers; i++) {
+      if (do_struct_subtype_p(sb->sus[i], su, self))
+        return t;
+    }
+
+    return nil;
+  }
+}
+
+val struct_subtype_p(val sub, val sup)
+{
+  const val self = lit("struct-subtype-p");
+  struct struct_type *sb = stype_handle(&sub, self);
+  struct struct_type *su = stype_handle(&sup, self);
+  return do_struct_subtype_p(sb, su, self);
+}
+
 static val method_fun(val env, varg args)
 {
   cons_bind (fun, strct, env);
@@ -1421,7 +1543,7 @@ val method_args(val strct, val slotsym, struct args *args)
 
 val super_method(val strct, val slotsym)
 {
-  val super_slot = static_slot(super(struct_type(strct)), slotsym);
+  val super_slot = static_slot(super(struct_type(strct), zero), slotsym);
   return func_f0v(cons(super_slot, strct), method_fun);
 }
 
@@ -1647,6 +1769,25 @@ static val struct_inst_equalsub(val obj)
   return nil;
 }
 
+static struct struct_type *ancestor_with_static_slot(struct struct_type *st,
+                                                     val slot,
+                                                     val value)
+{
+  cnum i;
+  loc sptr = lookup_static_slot(st, slot);
+
+  if (nullocp(sptr) || deref(sptr) != value)
+    return 0;
+
+  for (i = 0; i < st->nsupers; i++) {
+    struct struct_type *sa = ancestor_with_static_slot(st->sus[i], slot, value);
+    if (sa)
+      return sa;
+  }
+
+  return st;
+}
+
 val method_name(val fun)
 {
   struct hash_iter sthi;
@@ -1662,26 +1803,9 @@ val method_name(val fun)
 
     for (sl_iter = st->slots; sl_iter; sl_iter = cdr(sl_iter)) {
       val slot = car(sl_iter);
-      loc ptr = lookup_static_slot(st, slot);
-
-      if (!nullocp(ptr) && deref(ptr) == fun) {
-        val sstype;
-
-        while ((sstype = super(stype)) != nil) {
-          struct struct_type *sst = coerce(struct struct_type *,
-                                           sstype->co.handle);
-          loc sptr = lookup_static_slot(sst, slot);
-          if (!nullocp(sptr) && deref(sptr) == fun) {
-            stype = sstype;
-            sym = sst->name;
-            continue;
-          }
-
-          break;
-        }
-
-        return list(meth_s, sym, slot, nao);
-      }
+      struct struct_type *sa = ancestor_with_static_slot(st, slot, fun);
+      if (sa)
+        return list(meth_s, sa->name, slot, nao);
     }
 
     if (st->initfun == fun)

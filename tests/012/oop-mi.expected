@@ -1,0 +1,8 @@
+#S(der0 gx gx gy dgy x dx y dy z dz)
+dgs0
+gs1-b1
+#S(der1 x b3x gx b3gx gy gy y b2y)
+gs0
+gs1-b1
+(meth base3 b3m0)
+(meth der1 b3m1)
