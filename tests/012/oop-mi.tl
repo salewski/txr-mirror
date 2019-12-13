@@ -60,4 +60,6 @@
 (prinl (call-super-fun 'der3 'm nil))
 (prinl (call-super-fun 'der3 'gm nil))
 
-
+(prinl (static-slot-home 'der2 'm))
+(prinl (static-slot-home 'der3 'm))
+(prinl (static-slot-home 'der3 'gm))
