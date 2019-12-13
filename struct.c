@@ -1396,39 +1396,56 @@ val static_slot_home(val stype, val sym)
   no_such_static_slot(self, stype, sym);
 }
 
+static val do_super(struct struct_type *st,
+                    val inst, val sym, val self,
+                    struct args *args)
+{
+  val type = st->self;
+  cnum i;
+
+  for (i = 0; i < st->nsupers; i++) {
+    struct struct_type *su = st->sus[i];
+    loc ptr = lookup_static_slot_load(su, sym);
+    if (!nullocp(ptr)) {
+      val meth = deref(ptr);
+      if (inst == t) {
+        return meth;
+      } else if (inst) {
+        args_decl(args_copy, max(args->fill + 1, ARGS_MIN));
+        args_add(args_copy, inst);
+        args_cat_zap(args_copy, args);
+        return generic_funcall(meth, args_copy);
+      } else {
+        return generic_funcall(meth, args);
+      }
+    }
+  }
+
+  if (st->nsupers)
+    if (bindable(sym))
+      uw_throwf(error_s, lit("~s: slot ~s not found among supertypes of ~s"),
+                self, sym, type, nao);
+    else
+      uw_throwf(error_s, lit("~s: ~s isn't a valid slot name"),
+                self, sym);
+  else
+    uw_throwf(error_s, lit("~s: ~s has no supertype"),
+              type, nao);
+}
+
 static val call_super_method(val inst, val sym, struct args *args)
 {
   val type = struct_type(inst);
-  val suptype = super(type, zero);
-
-  if (suptype) {
-    val meth = static_slot(suptype, sym);
-    args_decl(args_copy, max(args->fill + 1, ARGS_MIN));
-    args_add(args_copy, inst);
-    args_cat_zap(args_copy, args);
-    return generic_funcall(meth, args_copy);
-  }
-
-  uw_throwf(error_s, lit("call-super-method: ~s has no supertype"),
-            suptype, nao);
+  val self = lit("call-super-method");
+  struct struct_type *st = stype_handle(&type, self);
+  return do_super(st, inst, sym, self, args);
 }
 
 static val call_super_fun(val type, val sym, struct args *args)
 {
   val self = lit("call-super-fun");
   struct struct_type *st = stype_handle(&type, self);
-
-  if (st->nsupers) {
-    val suptype = st->sus[0]->self;
-
-    if (suptype) {
-      val fun = static_slot(suptype, sym);
-      return generic_funcall(fun, args);
-    }
-  }
-
-  uw_throwf(error_s, lit("~a: ~s has no supertype"),
-            self, type, nao);
+  return do_super(st, nil, sym, self, args);
 }
 
 val slotp(val type, val sym)
@@ -1540,11 +1557,13 @@ val method_args(val strct, val slotsym, struct args *args)
                          cons(slot(strct, slotsym), strct)), method_args_fun);
 }
 
-
 val super_method(val strct, val slotsym)
 {
-  val super_slot = static_slot(super(struct_type(strct), zero), slotsym);
-  return func_f0v(cons(super_slot, strct), method_fun);
+  val type = struct_type(strct);
+  val self = lit("super-method");
+  struct struct_type *st = stype_handle(&type, self);
+  val meth = do_super(st, t, slotsym, self, 0);
+  return func_f0v(cons(meth, strct), method_fun);
 }
 
 static val uslot_fun(val sym, val strct)

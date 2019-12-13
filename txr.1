@@ -27442,7 +27442,7 @@ the slot name isn't a computed value.
 The
 .code super-method
 function retrieves a function from a static
-slot belonging to the supertype of the structure type of
+slot belonging to one of the direct supertypes of the structure type of
 .metn struct-obj .
 
 It then returns a function which binds
@@ -27450,11 +27450,14 @@ that function's left argument to the structure.
 
 The
 .meta struct-obj
-argument must be a structure which has a supertype, and
+argument must be a structure which has at least one supertype, and
 .meta slot-name
-must be a symbol denoting a static slot in that supertype.
+must be a symbol denoting a static slot in one of those supertypes.
 The slot must hold a function of at least one
-argument.
+argument. The supertypes are searched from left to right for a static
+slot named
+.metn slot-name ;
+when the first such slot is found, its value is used.
 
 The
 .code super-method
@@ -27768,9 +27771,9 @@ should be reworked in terms of
 
 The
 .code call-super-method
-retrieves the function stored in the slot
+retrieves the function stored in the static slot
 .meta name
-of the supertype of
+of one of the direct supertypes of
 .meta struct-obj
 and invokes it, passing to that function
 .meta struct-obj
@@ -27781,10 +27784,11 @@ if any.
 The
 .meta struct-obj
 argument must be of structure type. Moreover,
-that structure type must be derived from another structure type,
+that structure type must be derived from one or more supertypes,
 and
 .meta name
-must name a static slot of that structure type.
+must name a static slot available from at least one of those supertypes.
+The supertypes are searched left to right in search of this slot.
 
 The object retrieved from that static slot must be
 callable as a function, and accept the arguments.
@@ -27808,7 +27812,7 @@ The
 .code call-super-fun
 retrieves the function stored in the slot
 .meta name
-of the supertype of
+of one of the supertypes of
 .meta type
 and invokes it, passing to that function the given
 .metn argument -s,
@@ -27817,10 +27821,11 @@ if any.
 The
 .meta type
 argument must be a structure type. Moreover,
-that structure type must be derived from another structure type,
+that structure type must be derived from one or more supertypes,
 and
 .meta name
-must name a static slot of that structure type.
+must name a static slot available from at least one of those supertypes.
+The supertypes are searched left to right in search of this slot.
 
 The object retrieved from that static slot must be
 callable as a function, and accept the arguments.

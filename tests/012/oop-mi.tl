@@ -4,17 +4,21 @@
   (gx 'gx)
   (gy 'gy)
   (:static gs0 'gs0)
-  (:static gs1 'gs1))
+  (:static gs1 'gs1)
+  (:method gm (me) 'gm))
 
-(defstruct base0 nil)
+(defstruct base0 nil
+  (:method m (me) 'm0))
 
 (defstruct base1 grand
   (x 'b1x)
-  (:static gs1 'gs1-b1))
+  (:static gs1 'gs1-b1)
+  (:method m (me) 'm1))
 
 (defstruct base2 grand
   (y 'b2y)
-  (:static gs1 'gs1-b2))
+  (:static gs1 'gs1-b2)
+  (:method m (me) 'm2))
 
 (defstruct base3 nil
   (x 'b3x)
@@ -45,3 +49,15 @@
 
 (prinl (func-get-name d0.b3m0))
 (prinl (func-get-name d1.b3m1))
+
+(defstruct der2 (base3 base1 base2))
+(defstruct der3 (base3 base2 base1))
+
+(prinl (call-super-method (new der2) 'm))
+(prinl (call-super-method (new der3) 'm))
+(prinl (call-super-method (new der3) 'gm))
+(prinl (call-super-fun 'der2 'm nil))
+(prinl (call-super-fun 'der3 'm nil))
+(prinl (call-super-fun 'der3 'gm nil))
+
+
