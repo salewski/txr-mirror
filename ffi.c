@@ -101,7 +101,7 @@ val uint16_s, int16_s;
 val uint32_s, int32_s;
 val uint64_s, int64_s;
 
-val char_s, uchar_s, bchar_s, wchar_s;
+val char_s, zchar_s, uchar_s, bchar_s, wchar_s;
 val short_s, ushort_s;
 val int_s, uint_s;
 val long_s, ulong_s;
@@ -172,6 +172,7 @@ struct smemb {
 enum char_conv {
   conv_none,
   conv_char,
+  conv_zchar,
   conv_wchar,
   conv_bchar
 };
@@ -2228,6 +2229,25 @@ static void ffi_char_array_put(struct txr_ffi_type *tft, val str, mem_t *dst,
     dst[nelem - 1] = 0;
 }
 
+static val ffi_zchar_array_get(struct txr_ffi_type *tft, mem_t *src,
+                               cnum nelem)
+{
+  if (nelem == 0) {
+    return null_string;
+  } else {
+    const char *chptr = coerce(const char *, src);
+    if (tft->null_term) {
+      return string_utf8(chptr);
+    } else if (memchr(chptr, 0, nelem)) {
+      return string_utf8(chptr);
+    } else {
+      wchar_t *wch = utf8_dup_from_buf(chptr, nelem);
+      return string_own(wch);
+    }
+  }
+}
+
+
 static val ffi_wchar_array_get(struct txr_ffi_type *tft, mem_t *src,
                                cnum nelem)
 {
@@ -2330,6 +2350,11 @@ static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
         val str = ffi_char_array_get(tft, src, tft->nelem);
         return if3(vec, replace(vec, str, zero, t), str);
       }
+    case conv_zchar:
+      {
+        val str = ffi_zchar_array_get(tft, src, tft->nelem);
+        return if3(vec, replace(vec, str, zero, t), str);
+      }
     case conv_wchar:
       {
         val str = ffi_wchar_array_get(tft, src, tft->nelem);
@@ -2398,6 +2423,7 @@ static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
   if (tft->ch_conv != conv_none && stringp(vec)) {
     switch (tft->ch_conv) {
     case conv_char:
+    case conv_zchar:
       ffi_char_array_put(tft, vec, dst, tft->nelem);
       break;
     case conv_wchar:
@@ -2465,6 +2491,8 @@ static val ffi_array_get_common(struct txr_ffi_type *tft, mem_t *src, val self,
   switch (tft->ch_conv) {
   case conv_char:
     return ffi_char_array_get(tft, src, nelem);
+  case conv_zchar:
+    return ffi_zchar_array_get(tft, src, nelem);
   case conv_wchar:
     return ffi_wchar_array_get(tft, src, nelem);
   case conv_bchar:
@@ -3420,6 +3448,8 @@ val ffi_type_compile(val syntax)
         }
         if (etft->syntax == char_s)
           tft->ch_conv = conv_char;
+        else if (etft->syntax == zchar_s)
+          tft->ch_conv = conv_zchar;
         else if (etft->syntax == wchar_s)
           tft->ch_conv = conv_wchar;
         else if (etft->syntax == bchar_s)
@@ -3462,6 +3492,8 @@ val ffi_type_compile(val syntax)
 
           if (etft->syntax == char_s)
             tft->ch_conv = conv_char;
+          else if (etft->syntax == zchar_s)
+            tft->ch_conv = conv_zchar;
           else if (etft->syntax == wchar_s)
             tft->ch_conv = conv_wchar;
           else if (etft->syntax == bchar_s)
@@ -3858,6 +3890,13 @@ static void ffi_init_types(void)
                                             ffi_char_get,
                                             ifbe(ffi_char_rput),
                                             ifbe(ffi_char_rget)));
+  ffi_typedef(zchar_s, make_ffi_type_builtin(zchar_s, integer_s,
+                                             FFI_KIND_NUM,
+                                             1, 1,
+                                             ffi_char, ffi_char_put,
+                                             ffi_char_get,
+                                             ifbe(ffi_char_rput),
+                                             ifbe(ffi_char_rget)));
   ffi_typedef(bchar_s, make_ffi_type_builtin(bchar_s, char_s,
                                              FFI_KIND_NUM,
                                              1, 1,
@@ -5821,6 +5860,7 @@ void ffi_init(void)
   uint64_s = intern(lit("uint64"), user_package);
   int64_s = intern(lit("int64"), user_package);
   char_s = intern(lit("char"), user_package);
+  zchar_s = intern(lit("zchar"), user_package);
   uchar_s = intern(lit("uchar"), user_package);
   bchar_s = intern(lit("bchar"), user_package);
   wchar_s = intern(lit("wchar"), user_package);

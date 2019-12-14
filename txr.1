@@ -63891,35 +63891,61 @@ basic type, which corresponds to the C type
 
 .SS* Simple FFI Types
 
-.coNP FFI types @, char @ uchar and @ bchar
-These first of these two types correspond to the C character types
+.coNP FFI types @, char @, zchar @ uchar and @ bchar
+These first two of these types,
 .code char
 and
-.codn "unsigned char" ,
-respectively. The
+.code zchar
+correspond to the C character type
+.codn char .
+The
+.code uchar
+and
 .code bchar
-type (byte char)
-also corresponds to
+types correspond to
 .codn "unsigned char" .
 Both Lisp integers and character values
 convert to these representation, if they are in their numeric range.
 Out-of-range values produce an exception.
 A foreign
-.code char
+.codn char ,
+.codn zchar ,
 and
 .code bchar
 value converts to a Lisp character, whereas a
 .code uchar
-value converts to an integer. Moreover,
+value converts to an integer.
+
+If these types are used for representing individual scalar values,
+there is no difference among
+.codn char ,
+.code zchar
+and
+.codn bchar .
+
+What is different among these three types is that the
 .code array
 and
 .code zarray
-type constructors treat
-.code char
-and
+type constructors treat them specially. Arrays of these types are
+subject to conversion to and from Lisp strings. The variation among
+these types expresses different conversion semantics. That is to say,
+an array of
 .code bchar
-specially, but apply no special treatment to
-.codn uchar .
+converts between the foreign and native Lisp representation differently
+from an array of
+.codn zchar ,
+which in turn converts differently from an array of
+.codn char .
+
+Note: it is recommended to avoid using the types
+.code bchar
+and
+.code zchar
+other than for expressing the element type of an
+.code array
+or
+.codn zarray .
 
 .coNP FFI types @, short @, ushort @, int @, uint @, long @ and @ ulong
 These types correspond to the C integer types
@@ -64799,12 +64825,13 @@ In addition, several types are treated specially: when
 .meta type
 is one of
 .codn char ,
+.codn zchar ,
 .code bchar
 or
 .codn wchar ,
 the array type establishes a special correspondence with Lisp strings.
 When the C array is decoded, a Lisp string is created or updated in place
-to reflect the new contents.
+to reflect the new contents. This is described in detail below.
 
 The second form, whose syntax omits the
 .meta dim
@@ -64819,6 +64846,30 @@ Since the type has unknown length, it has a trivial get operation which returns
 .codn nil .
 It is useful for passing a variable amount of data into a foreign
 function by pointer.
+
+An array of
+.code char
+represents non-null-terminated UTF-8 character data, which converts to
+and from a Lisp string. Any null bytes in the data correspond to
+the pseudo-null character
+.code #\exDC00
+also notated as
+.codn #\epnul .
+
+An array of
+.code zchar
+represents a field of optionally null-terminated UTF-8 character data.
+If a null byte occurs in the data then the text terminates before that
+null byte, otherwise the data comprises the entire foreign array.
+Thus, null bytes do not occur in the data. A null byte in the array will
+not generate a pseudo-null character in the Lisp string.
+
+An array of
+.code bchar
+values represents 8-bit character data that isn't UTF-8 encoded,
+and is not null terminated. Each byte holds a character whose code is
+in the range 0 to 255. If a null byte occurs in the data, is interpreted
+as a string terminator.
 
 .coNP FFI type @ zarray
 .synb
@@ -64861,27 +64912,41 @@ has five elements, then the fifth one will be decoded from the C array
 in earnest; it is not expected to be null. However, when that Lisp
 representation is converted back to C, that extra element will be ignored and
 output as a zero bytes.
+
 Lastly, the
 .code zarray
 further extends the special treatment which the
 .code array
 type applies to the types
+.codn zchar ,
 .codn char ,
 .code wchar
 and
 .codn bchar .
-Namely,
+The
 .code zarray
-assumes, and depends on the incoming data being null-terminated, and converts it to a Lisp
-string accordingly. The regular
+type assumes, and depends on the incoming data being null-terminated, and
+converts it to a Lisp string accordingly. The regular
 .code array
-type doesn't assume null termination. In particular, this means that an
+type doesn't assume null termination. In particular, this means that whereas
 .code "(array 42 char)"
-will decode 42 bytes of UTF-8, even if some of them are null. The null bytes
-convert to U+DC00. In contrast, a
+will decode 42 bytes of UTF-8, even if some of them are null, converting
+those null bytes the U+DC00 pseudo-null, in contrast, a
 .code zarray
 will treat the 42 bytes as a null-terminated string, and decode UTF-8 only
 up to the first null.
+In the other direction, when converting from Lisp string to the foreign array,
+.code zarray
+ensures null termination.
+
+Note that the type combination
+.code zarray
+of
+.code zchar
+behaves in a manner indistinguishable from a
+.code zarray
+of
+.codn char .
 
 The one-argument variant of the
 .code zarray
