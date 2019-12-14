@@ -1,3 +1,39 @@
+                                    TXR 229
+                                   2019-12-14
+
+
+  Features
+
+  - OOP:
+    - multiple inheritance now supported.
+  - FFI:
+    - FFI structs now allow initforms in slots.
+      - limited evaluation semantics
+    - New zchar type for defining arrays char that
+      are optionally null terminated.
+  - math:
+    - hyperbolic functions and their inverses added.
+  - buffers:
+    - buf-list function: convert buffer to list of bytes.
+    - buffers support list ops like car, cdr.
+  - getopts:
+    - new define-option-struct macro for simplified
+      specification of command line options.
+  - path testing:
+    - new path-dir-empty test for empty directories.
+  - disassemble: improvement in output.
+
+
+  Bugs
+
+  - issue with .? not parsing as a top-level expression.
+  - listener: serious bug in balanced line check.
+  - intern-fb: bug in optional argument handling.
+  - load: wastefully gathered source loc info for .tlo files.
+  - OOP: serious stability bug in static slot inheritance logic.
+
+
+
                                     TXR 228
                                    2019-11-19
 
