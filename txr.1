@@ -24057,8 +24057,11 @@ must lie in the range 0 to 255.
 The
 .meta alloc-size
 parameter indicates how much memory to actually allocate for
-the buffer. If an argument is specified, its value must not
-be less than
+the buffer.
+If an argument is not given, the parameter takes on
+the same value as
+.metn len .
+If an argument is given, its value must not be less than
 .metn len .
 
 .coNP Function @ bufp
