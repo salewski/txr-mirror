@@ -169,6 +169,13 @@ struct smemb {
   cnum offs;
 };
 
+enum char_conv {
+  conv_none,
+  conv_char,
+  conv_wchar,
+  conv_bchar
+};
+
 struct txr_ffi_type {
   val self;
   ffi_kind_t kind;
@@ -183,11 +190,9 @@ struct txr_ffi_type {
   struct smemb *memb;
   val tag;
   val sym_num, num_sym;
+  enum char_conv ch_conv : 3;
   unsigned null_term : 1;
   unsigned by_value_in : 1;
-  unsigned char_conv : 1;
-  unsigned wchar_conv : 1;
-  unsigned bchar_conv : 1;
   unsigned incomplete : 1;
   unsigned flexible : 1;
   unsigned bitfield : 1;
@@ -2319,15 +2324,24 @@ static val ffi_array_in(struct txr_ffi_type *tft, int copy, mem_t *src,
                         val vec, val self)
 {
   if (copy) {
-    if (tft->char_conv) {
-      val str = ffi_char_array_get(tft, src, tft->nelem);
-      return if3(vec, replace(vec, str, zero, t), str);
-    } else if (tft->wchar_conv) {
-      val str = ffi_wchar_array_get(tft, src, tft->nelem);
-      return if3(vec, replace(vec, str, zero, t), str);
-    } else if (tft->bchar_conv) {
-      val str = ffi_bchar_array_get(tft, src, tft->nelem);
-      return if3(vec, replace(vec, str, zero, t), str);
+    switch (tft->ch_conv) {
+    case conv_char:
+      {
+        val str = ffi_char_array_get(tft, src, tft->nelem);
+        return if3(vec, replace(vec, str, zero, t), str);
+      }
+    case conv_wchar:
+      {
+        val str = ffi_wchar_array_get(tft, src, tft->nelem);
+        return if3(vec, replace(vec, str, zero, t), str);
+      }
+    case conv_bchar:
+      {
+        val str = ffi_bchar_array_get(tft, src, tft->nelem);
+        return if3(vec, replace(vec, str, zero, t), str);
+      }
+    case conv_none:
+      break;
     }
   }
   return ffi_array_in_common(tft, copy, src, vec, self, tft->nelem);
@@ -2381,14 +2395,21 @@ static void ffi_array_put_common(struct txr_ffi_type *tft, val vec, mem_t *dst,
 static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
                           val self)
 {
-  if (tft->char_conv && stringp(vec))
-    ffi_char_array_put(tft, vec, dst, tft->nelem);
-  else if (tft->wchar_conv && stringp(vec))
-    ffi_wchar_array_put(tft, vec, dst, tft->nelem);
-  else if (tft->bchar_conv && stringp(vec))
-    ffi_bchar_array_put(tft, vec, dst, tft->nelem, self);
-  else
+  if (tft->ch_conv != conv_none && stringp(vec)) {
+    switch (tft->ch_conv) {
+    case conv_char:
+      ffi_char_array_put(tft, vec, dst, tft->nelem);
+      break;
+    case conv_wchar:
+      ffi_wchar_array_put(tft, vec, dst, tft->nelem);
+      break;
+    case conv_bchar:
+      ffi_bchar_array_put(tft, vec, dst, tft->nelem, self);
+      break;
+    }
+  } else {
     ffi_array_put_common(tft, vec, dst, self, tft->nelem);
+  }
 }
 
 static void ffi_array_out_common(struct txr_ffi_type *tft, int copy, val vec,
@@ -2420,14 +2441,20 @@ static void ffi_array_out_common(struct txr_ffi_type *tft, int copy, val vec,
 static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
                           mem_t *dst, val self)
 {
-  if (tft->char_conv && stringp(vec))
-    ffi_char_array_put(tft, vec, dst, tft->nelem);
-  else if (tft->wchar_conv && stringp(vec))
-    ffi_wchar_array_put(tft, vec, dst, tft->nelem);
-  else if (tft->bchar_conv && stringp(vec))
-    ffi_bchar_array_put(tft, vec, dst, tft->nelem, self);
-  else
+  if (tft->ch_conv != conv_none && stringp(vec)) {
+    switch (tft->ch_conv) {
+    case conv_char:
+      ffi_char_array_put(tft, vec, dst, tft->nelem);
+      break;
+    case conv_wchar:
+      ffi_wchar_array_put(tft, vec, dst, tft->nelem);
+      break;
+    case conv_bchar:
+      ffi_bchar_array_put(tft, vec, dst, tft->nelem, self);
+    }
+  } else {
     ffi_array_out_common(tft, copy, vec, dst, self, tft->nelem);
+  }
 }
 
 static val ffi_array_get_common(struct txr_ffi_type *tft, mem_t *src, val self,
@@ -2435,27 +2462,33 @@ static val ffi_array_get_common(struct txr_ffi_type *tft, mem_t *src, val self,
 {
   val eltype = tft->eltype;
 
-  if (tft->char_conv) {
+  switch (tft->ch_conv) {
+  case conv_char:
     return ffi_char_array_get(tft, src, nelem);
-  } else if (tft->wchar_conv) {
+  case conv_wchar:
     return ffi_wchar_array_get(tft, src, nelem);
-  } else if (tft->bchar_conv) {
+  case conv_bchar:
     return ffi_bchar_array_get(tft, src, nelem);
-  } else {
-    cnum znelem = if3(tft->null_term && nelem > 0, nelem - 1, nelem);
-    val vec = vector(num_fast(znelem), nil);
-    struct txr_ffi_type *etft = ffi_type_struct(eltype);
-    cnum elsize = etft->size;
-    cnum offs, i;
+  case conv_none:
+    {
+      cnum znelem = if3(tft->null_term && nelem > 0, nelem - 1, nelem);
+      val vec = vector(num_fast(znelem), nil);
+      struct txr_ffi_type *etft = ffi_type_struct(eltype);
+      cnum elsize = etft->size;
+      cnum offs, i;
 
-    for (i = 0, offs = 0; i < znelem; i++) {
-      val elval = etft->get(etft, src + offs, self);
-      refset(vec, num_fast(i), elval);
-      offs += elsize;
+      for (i = 0, offs = 0; i < znelem; i++) {
+        val elval = etft->get(etft, src + offs, self);
+        refset(vec, num_fast(i), elval);
+        offs += elsize;
+      }
+
+      return vec;
     }
-
-    return vec;
   }
+
+  /* notreached */
+  return nil;
 }
 
 static val ffi_array_get(struct txr_ffi_type *tft, mem_t *src, val self)
@@ -2477,7 +2510,7 @@ static void ffi_array_release_common(struct txr_ffi_type *tft, val vec,
   if (vec == nil)
     return;
 
-  if (tft->char_conv || tft->bchar_conv || tft->wchar_conv)
+  if (tft->ch_conv != conv_none)
     return;
 
   for (i = 0; i < znelem; i++) {
@@ -2550,7 +2583,7 @@ static val ffi_varray_null_term_get(struct txr_ffi_type *tft, mem_t *src,
 {
   val eltype = tft->eltype;
 
-  if (tft->char_conv || tft->wchar_conv || tft->bchar_conv) {
+  if (tft->ch_conv != conv_none) {
     return ffi_array_get_common(tft, src, self, INT_PTR_MAX);
   } else {
     val vec = vector(zero, nil);
@@ -3386,11 +3419,11 @@ val ffi_type_compile(val syntax)
           tft->in = ffi_varray_null_term_in;
         }
         if (etft->syntax == char_s)
-          tft->char_conv = 1;
+          tft->ch_conv = conv_char;
         else if (etft->syntax == wchar_s)
-          tft->wchar_conv = 1;
+          tft->ch_conv = conv_wchar;
         else if (etft->syntax == bchar_s)
-          tft->bchar_conv = 1;
+          tft->ch_conv = conv_bchar;
         tft->alloc = ffi_varray_alloc;
         tft->dynsize = ffi_varray_dynsize;
         tft->free = free;
@@ -3428,11 +3461,11 @@ val ffi_type_compile(val syntax)
           }
 
           if (etft->syntax == char_s)
-            tft->char_conv = 1;
+            tft->ch_conv = conv_char;
           else if (etft->syntax == wchar_s)
-            tft->wchar_conv = 1;
+            tft->ch_conv = conv_wchar;
           else if (etft->syntax == bchar_s)
-            tft->bchar_conv = 1;
+            tft->ch_conv = conv_bchar;
           return type;
         }
       } else {
@@ -5309,11 +5342,11 @@ static void carray_ensure_artype(val carray, struct carray *scry, val self)
     {
       struct txr_ffi_type *atft = ffi_type_struct(scry->artype);
       if (etft->syntax == char_s)
-        atft->char_conv = 1;
+        atft->ch_conv = conv_char;
       else if (etft->syntax == wchar_s)
-        atft->wchar_conv = 1;
+        atft->ch_conv = conv_wchar;
       else if (etft->syntax == bchar_s)
-        atft->bchar_conv = 1;
+        atft->ch_conv = conv_bchar;
     }
   }
 }
