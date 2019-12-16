@@ -2432,6 +2432,9 @@ static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
     case conv_bchar:
       ffi_bchar_array_put(tft, vec, dst, tft->nelem, self);
       break;
+    case conv_none:
+      /* notreached */
+      break;
     }
   } else {
     ffi_array_put_common(tft, vec, dst, self, tft->nelem);
@@ -2477,6 +2480,10 @@ static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
       break;
     case conv_bchar:
       ffi_bchar_array_put(tft, vec, dst, tft->nelem, self);
+      break;
+    case conv_none:
+      /* notreached */
+      break;
     }
   } else {
     ffi_array_out_common(tft, copy, vec, dst, self, tft->nelem);
