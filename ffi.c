@@ -2473,6 +2473,7 @@ static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
   if (tft->ch_conv != conv_none && stringp(vec)) {
     switch (tft->ch_conv) {
     case conv_char:
+    case conv_zchar:
       ffi_char_array_put(tft, vec, dst, tft->nelem);
       break;
     case conv_wchar:
