@@ -1175,6 +1175,37 @@ val uw_capture_cont(val tag, val fun, val ctx_form)
   return capture_cont(tag, fun, fr);
 }
 
+void extjmp_save(extended_jmp_buf *ejb)
+{
+   ejb->de = dyn_env;
+   ejb->gc = gc_enabled;
+   ejb->gc_pt = gc_prot_top;
+#if HAVE_POSIX_SIGS
+   ejb->se = async_sig_enabled;
+   ejb->blocked.set = sig_blocked_cache.set;
+#endif
+#if CONFIG_DEBUG_SUPPORT
+   ejb->ds = debug_state;
+#endif
+}
+
+void extjmp_restore(extended_jmp_buf *ejb)
+{
+   dyn_env = ejb->de;
+   gc_enabled = ejb->gc;
+   gc_prot_top = ejb->gc_pt;
+#if HAVE_POSIX_SIGS
+   async_sig_enabled = ejb->se;
+   ejb->blocked.set = sig_blocked_cache.set;
+   sig_mask(SIG_SETMASK,
+            strip_qual(small_sigset_t *, &ejb->blocked), 0);
+
+#endif
+#if CONFIG_DEBUG_SUPPORT
+   ejb->ds = debug_state;
+#endif
+}
+
 void uw_init(void)
 {
   protect(&toplevel_env.ev.func_bindings,

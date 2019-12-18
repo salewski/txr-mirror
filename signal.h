@@ -26,21 +26,6 @@
  */
 
 
-#if CONFIG_DEBUG_SUPPORT
-extern unsigned debug_state;
-#define EJ_DBG_MEMB int ds;
-#define EJ_DBG_SAVE(EJB) ((EJB).ds = debug_state),
-#define EJ_DBG_REST(EJB) (debug_state = (EJB).ds),
-#else
-#define EJ_DBG_MEMB
-#define EJ_DBG_SAVE(EJB)
-#define EJ_DBG_REST(EJB)
-#endif
-
-#define EJ_OPT_MEMB EJ_DBG_MEMB
-#define EJ_OPT_SAVE(EJB) EJ_DBG_SAVE(EJB)
-#define EJ_OPT_REST(EJB) EJ_DBG_REST(EJB)
-
 #if __i386__
 
 struct jmp {
@@ -172,11 +157,21 @@ void jmp_restore(struct jmp *, int);
 }
 #endif
 
+#if CONFIG_DEBUG_SUPPORT
+#define EJ_DBG_MEMB int ds;
+#else
+#define EJ_DBG_MEMB
+#endif
+
+#define EJ_OPT_MEMB EJ_DBG_MEMB
+
 #if HAVE_POSIX_SIGS
 
 typedef struct {
   unsigned int set;
 } small_sigset_t;
+
+extern small_sigset_t sig_blocked_cache;
 
 #define sig_save_enable                         \
   do {                                          \
@@ -225,29 +220,6 @@ typedef struct {
   volatile int rv;
 } extended_jmp_buf;
 
-#define extended_setjmp(EJB)                    \
-  (jmp_save(&(EJB).jb)                          \
-   ? (async_sig_enabled = (EJB).se,             \
-      dyn_env = (EJB).de,                       \
-      gc_enabled = (EJB).gc,                    \
-      gc_prot_top = (EJB).gc_pt,                \
-      sig_mask(SIG_SETMASK,                     \
-               strip_qual(small_sigset_t *,     \
-                          &(EJB).blocked), 0),  \
-      EJ_OPT_REST(EJB)                          \
-      (EJB).rv)                                 \
-   : ((EJB).se = async_sig_enabled,             \
-      (EJB).de = dyn_env,                       \
-      (EJB).gc = gc_enabled,                    \
-      (EJB).gc_pt = gc_prot_top,                \
-      (EJB).blocked.set = sig_blocked_cache.set,\
-      EJ_OPT_SAVE(EJB)                          \
-      0))
-
-#define extended_longjmp(EJB, ARG)              \
-  ((EJB).rv = (ARG), jmp_restore(&(EJB).jb, 1))
-
-extern small_sigset_t sig_blocked_cache;
 extern volatile sig_atomic_t async_sig_enabled;
 
 #else
@@ -269,28 +241,20 @@ typedef struct {
   volatile int rv;
 } extended_jmp_buf;
 
-#define extended_setjmp(EJB)                    \
-  (jmp_save(&(EJB).jb)                          \
-   ? (dyn_env = (EJB).de,                       \
-      gc_enabled = ((EJB).gc),                  \
-      gc_prot_top = (EJB).gc_pt,                \
-      EJ_OPT_REST(EJB)                          \
-      (EJB).rv)                                 \
-   : ((EJB).de = dyn_env,                       \
-      (EJB).gc = gc_enabled,                    \
-      (EJB).gc_pt = gc_prot_top,                \
-      EJ_OPT_SAVE(EJB)                          \
-      0))
-
-#define extended_longjmp(EJB, ARG)              \
-  ((EJB).rv = (ARG), jmp_restore(&(EJB).jb, 1))
-
 extern int async_sig_enabled;
 
 #endif
 
-extern val dyn_env; /* eval.c */
+#define extended_setjmp(EJB)                    \
+  (jmp_save(&(EJB).jb)                          \
+   ? ((EJB).rv)                                 \
+   : (extjmp_save(&(EJB)), 0))
 
+#define extended_longjmp(EJB, ARG)              \
+  ((EJB).rv = (ARG), extjmp_restore(&(EJB)), jmp_restore(&(EJB).jb, 1))
+
+void extjmp_save(extended_jmp_buf *ejb);
+void extjmp_restore(extended_jmp_buf *);
 void sig_init(void);
 val set_sig_handler(val signo, val lambda);
 val get_sig_handler(val signo);

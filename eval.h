@@ -35,6 +35,8 @@ extern val last_form_evaled;
 extern val load_path_s, load_recursive_s;
 extern val special_s, struct_s;
 
+extern val dyn_env;
+
 #define load_path (deref(lookup_var_l(nil, load_path_s)))
 
 noreturn val eval_error(val ctx, val fmt, ...);
