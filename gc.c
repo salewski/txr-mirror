@@ -42,6 +42,7 @@
 #include "eval.h"
 #include "gc.h"
 #include "signal.h"
+#include "unwind.h"
 
 #define PROT_STACK_SIZE         1024
 #define HEAP_SIZE               16384
