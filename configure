@@ -883,6 +883,31 @@ fi
 
 rm -f conftest$exe
 
+printf "Checking how to disable PIE ..."
+
+nopie_flags=
+
+for flag in -nopie -no-pie ; do
+  if conftest EXTRA_FLAGS=$flag ; then
+    nopie_flags=" $flag"
+    break
+  fi
+done
+
+for flag in -fnopie -fno-pie ; do
+  if conftest EXTRA_FLAGS=$flag ; then
+    nopie_flags="$nopie_flags $flag"
+    break
+  fi
+done
+
+if [ -n "$nopie_flags" ]; then
+  printf "%s\n" "$nopie_flags"
+  opt_flags="$opt_flags$nopie_flags"
+else
+  printf " n/a\n"
+fi
+
 #
 # Check for annoying clashes from non-conforming BSD-derived systems that don't
 # honor Unix/POSIX feature selection macros!
