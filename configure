@@ -499,14 +499,14 @@ if [ -z "$make" ] ; then
     output=$($make --version 2> /dev/null) || true
     set -- $output
 
-    if [ $# -lt 2 ] || [ $1 != "GNU" -o $2 != "Make" ] ; then
+    if [ $# -lt 3 ] || [ $1 != "GNU" -o $2 != "Make" ] ; then
       continue
     fi
     break
   done
 fi
 
-if [ -z "$make" ] ; then
+if [ $# -lt 3 ] ; then
   printf "missing\n"
   exit 1
 fi
