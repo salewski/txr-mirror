@@ -1,3 +1,22 @@
+                                    TXR 230
+                                   2019-12-20
+
+
+  Features:
+
+  - build: PIE (position-independent executable) builds are disabled.
+    - PIE caused a crash in non-local transfer logic.
+    - causes an 22% or more penalty on 32 bits x86.
+
+  Bugs:
+
+  - FFI: fixed bug in implementation of newly added zchar type.
+  - mitigated crash in non-local control transfer logic (extended_setjmp)
+    caused by PIE executable compilation
+    - PIE is now enabled in some leading distros.
+
+
+
                                     TXR 229
                                    2019-12-14
 
