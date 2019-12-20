@@ -888,14 +888,14 @@ printf "Checking how to disable PIE ..."
 nopie_flags=
 
 for flag in -nopie -no-pie ; do
-  if conftest EXTRA_FLAGS=$flag ; then
+  if conftest EXTRA_FLAGS=$flag && ! grep -q option conftest.err ; then
     nopie_flags=" $flag"
     break
   fi
 done
 
 for flag in -fnopie -fno-pie ; do
-  if conftest EXTRA_FLAGS=$flag ; then
+  if conftest EXTRA_FLAGS="$flag$nopie_flags" && ! grep -q option conftest.err ; then
     nopie_flags="$nopie_flags $flag"
     break
   fi
