@@ -69426,9 +69426,10 @@ In all cases, the return value of
 .code compile
 is the compiled function.
 
-.coNP Function @ compile-file
+.coNP Functions @ compile-file and @ compile-update-file
 .synb
 .mets (compile-file < input-path <> [ output-path ])
+.mets (compile-update-file < input-path <> [ output-path ])
 .syne
 .desc
 The
@@ -69520,6 +69521,36 @@ that effect will be undone when the binding is removed
 after the compilation completes.
 
 Compilation proceeds according to the File Compilation Model.
+
+If the compilation process fails to produce a successful translation
+for each form in the input file, the output file is removed.
+
+The
+.code compile-update-file
+function differs from
+.code compile-file
+in the following regard: compilation is performed only if the input
+file is newer than the output file, or else if the output file doesn't
+exist.
+
+The
+.code compile-file
+always returns
+.code t
+if it terminates normally, which occurs if it successfully translates
+every form in the input file, depositing the translation into the output
+file. If compilation fails,
+.code compile-file
+terminates by throwing an exception.
+
+The
+.code compile-update-file
+function returns
+.code t
+if it successfully compiles, similarly to
+.codn compile-file .
+If compilation is skipped, the function returns
+.codn nil .
 
 .coNP Macro @ with-compilation-unit
 .synb

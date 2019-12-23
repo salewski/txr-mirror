@@ -716,7 +716,8 @@ static val compiler_set_entries(val dlt, val fun)
     nil
   };
   val name[] = {
-    lit("compile-toplevel"), lit("compile-file"), lit("compile"),
+    lit("compile-toplevel"), lit("compile"), lit("compile-file"),
+    lit("compile-update-file"),
     lit("with-compilation-unit"), lit("dump-compiled-objects"),
     nil
   };

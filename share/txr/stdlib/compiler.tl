@@ -1650,7 +1650,7 @@
                            intern unintern rehome-sym
                            use-sym unuse-sym))
 
-(defun open-compile-streams (in-path out-path)
+(defun open-compile-streams (in-path out-path test-fn)
   (let* ((parent (or *load-path* ""))
          (sep [path-sep-chars 0])
          (in-path (if (pure-rel-path-p in-path)
@@ -1674,13 +1674,17 @@
     (unless in-stream
       (error "~s: unable to open input file ~s" 'compile-file in-path))
 
+    (unless [test-fn in-stream out-path]
+      (close-stream in-stream)
+      (return-from open-compile-streams nil))
+
     (set out-stream (ignerr (open-file out-path "w")))
 
     (unless out-stream
       (close-stream in-stream)
       (error "~s: unable to open output file ~s" 'compile-file in-stream))
 
-    (list in-stream out-stream)))
+    (list in-stream out-stream out-path)))
 
 (defun list-from-vm-desc (vd)
   (list (sys:vm-desc-nlevels vd)
@@ -1708,62 +1712,74 @@
     [mapdo (op prinl @1 out-stream) out-forms]
     (delete-package *package*)))
 
-(defun usr:compile-file (in-path : out-path)
-  (let* ((streams (open-compile-streams in-path out-path))
-         (err-ret (gensym))
-         (*package* *package*)
-         (*emit* t)
-         (*eval* t)
-         (*load-path* (stream-get-prop (car streams) :name))
-         (*rec-source-loc* t))
-    (with-compilation-unit
-      (with-resources ((in-stream (car streams) (close-stream in-stream))
-                       (out-stream (cadr streams) (close-stream out-stream))
-                       (out (new list-builder)))
-        (iflet ((line (get-line in-stream))
-                ((starts-with "#!" line)))
-          (progn
-            (set line `@line `)
-            (upd line (regsub #/--lisp[^\-]/ (ret `--compiled@[@1 -1]`)))
-            (put-line (butlast line) out-stream))
-          (seek-stream in-stream 0 :from-start))
-        (labels ((compile-form (unex-form)
-                   (let* ((form (macroexpand unex-form))
-                          (sym (if (consp form) (car form))))
-                     (caseq sym
-                       (progn [mapdo compile-form (cdr form)])
-                       (compile-only (let ((*eval* nil))
-                                       [mapdo compile-form (cdr form)]))
-                       (eval-only (let ((*emit* nil))
-                                    [mapdo compile-form (cdr form)]))
-                       (sys:load-time-lit
-                         (if (cadr form)
-                           (compile-form ^(quote ,(caddr form)))
-                           (compile-form (caddr form))))
-                       (t (when (and (or *eval* *emit*)
-                                     (not (constantp form)))
-                            (let* ((vm-desc (compile-toplevel form))
-                                   (flat-vd (list-from-vm-desc vm-desc))
-                                   (fence (member sym %package-manip%)))
-                              (when *eval*
-                                (let ((pa *package-alist*))
-                                  (sys:vm-execute-toplevel vm-desc)
-                                  (when (neq pa *package-alist*)
-                                    (set fence t))))
-                              (when (and *emit* (consp form))
-                                out.(add flat-vd)
-                                (when fence
-                                  out.(add :fence))))))))))
-          (unwind-protect
-            (whilet ((obj (read in-stream *stderr* err-ret))
-                     ((neq obj err-ret)))
-              (compile-form obj))
-            (dump-to-tlo out-stream out))
+(defun compile-file-conditionally (in-path out-path test-fn)
+  (whenlet ((success nil)
+            (streams (open-compile-streams in-path out-path test-fn)))
+    (with-resources ((in-stream (car streams) (close-stream in-stream))
+                     (out-stream (cadr streams) (progn
+                                                  (close-stream out-stream)
+                                                  (unless success
+                                                    (remove-path (caddr streams))))))
+      (let* ((err-ret (gensym))
+             (*package* *package*)
+             (*emit* t)
+             (*eval* t)
+             (*load-path* (stream-get-prop (car streams) :name))
+             (*rec-source-loc* t)
+             (out (new list-builder)))
+        (with-compilation-unit
+          (iflet ((line (get-line in-stream))
+                  ((starts-with "#!" line)))
+            (progn
+              (set line `@line `)
+              (upd line (regsub #/--lisp[^\-]/ (ret `--compiled@[@1 -1]`)))
+              (put-line (butlast line) out-stream))
+            (seek-stream in-stream 0 :from-start))
+          (labels ((compile-form (unex-form)
+                     (let* ((form (macroexpand unex-form))
+                            (sym (if (consp form) (car form))))
+                       (caseq sym
+                         (progn [mapdo compile-form (cdr form)])
+                         (compile-only (let ((*eval* nil))
+                                         [mapdo compile-form (cdr form)]))
+                         (eval-only (let ((*emit* nil))
+                                      [mapdo compile-form (cdr form)]))
+                         (sys:load-time-lit
+                           (if (cadr form)
+                             (compile-form ^(quote ,(caddr form)))
+                             (compile-form (caddr form))))
+                         (t (when (and (or *eval* *emit*)
+                                       (not (constantp form)))
+                              (let* ((vm-desc (compile-toplevel form))
+                                     (flat-vd (list-from-vm-desc vm-desc))
+                                     (fence (member sym %package-manip%)))
+                                (when *eval*
+                                  (let ((pa *package-alist*))
+                                    (sys:vm-execute-toplevel vm-desc)
+                                    (when (neq pa *package-alist*)
+                                      (set fence t))))
+                                (when (and *emit* (consp form))
+                                  out.(add flat-vd)
+                                  (when fence
+                                    out.(add :fence))))))))))
+            (unwind-protect
+              (whilet ((obj (read in-stream *stderr* err-ret))
+                       ((neq obj err-ret)))
+                (compile-form obj))
+              (dump-to-tlo out-stream out))
 
-          (let ((parser (sys:get-parser in-stream)))
-            (when (> (sys:parser-errors parser) 0)
-              (error "~s: compilation of ~s failed" 'compile-file
-                     (stream-get-prop in-stream :name)))))))))
+            (let ((parser (sys:get-parser in-stream)))
+              (when (> (sys:parser-errors parser) 0)
+                (error "~s: compilation of ~s failed" 'compile-file
+                       (stream-get-prop in-stream :name)))))
+          (flush-stream out-stream)
+          (set success t))))))
+
+(defun usr:compile-file (in-path : out-path)
+  [compile-file-conditionally in-path out-path tf])
+
+(defun usr:compile-update-file (in-path : out-path)
+  [compile-file-conditionally in-path out-path [mapf path-newer fstat identity]])
 
 (defun usr:dump-compiled-objects (out-stream . compiled-objs)
   (symacrolet ((self 'dump-compiled-object))
