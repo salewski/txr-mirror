@@ -35395,11 +35395,16 @@ paragraph regarding the evaluation scope of
 .RE
 
 .IP
-Arguments to keyword appear as a property list which begins
-after the last required or optional argument. A property list
-consists of interleaved indicators and values. The indicators
-for keyword parameters are keyword symbols whose names match
-the parameter names. For instance, the indicator-value pair
+In a call to a
+.codn :key -enabled
+function, keyword arguments begin after those arguments which satisfy
+all of the required and optional parameters. Keyword arguments consist
+of interleaved indicators and values, which are separate arguments.
+Thus passing a keyword argument actually requires the passing of two
+function arguments: an indicator keyword symbol, followed by the
+associated value. The indicator keywords are expected to have the
+same symbol name as the defined keyword parameters. For instance, the
+indicator-value pair
 .code ":xyz 42"
 passes the value
 .code 42
@@ -35410,22 +35415,31 @@ in any package: it may be
 or
 .code mypackage:xyz
 and so forth.
+Arguments specifying unrecognized keywords are ignored.
 
 If the function has a
-.meta rest-param
-then that param receives the keyword parameter list. That is to say, the
+.metn rest-param ,
+then that parameter receives the keyword arguments as a list.
+Since that list contains indicators and values, it is a
+.I "de facto"
+property list. In detail, the
 .code :key
 mechanism generates a regular variadic function which receives the keyword
-parameters as the trailing arguments. The function is endowed with code which
-parses these extra arguments out of the trailing list, and binds them to
-the keyword parameter symbols. If a
+arguments as the trailing argument list. That function
+parses the recognized keyword arguments out of the trailing list, and
+binds them to the keyword parameter symbols as local variables. If a
 .meta rest-param
-argument present, then it specifies a symbol to be used as the name of
-the rest parameter, making the entire keyword argument list available
-under that name. If there is no
+parameter is defined, then the entire keyword argument list is available
+through that parameter, and the keyword argument parsing logic also refers to
+the value of that parameter to gain access to the keyword arguments. If
+there is no
 .meta rest-param
-then a machine-generated rest parameter is substituted; the keyword argument
-parsing logic refers to that instead.
+specified, then the
+.code :key
+macro adds a
+.meta rest-param
+using a machine-generated symbol. The argument parsing logic then
+refers to the value of that symbol.
 
 .TP* Example:
 
