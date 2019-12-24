@@ -69565,6 +69565,22 @@ if it successfully compiles, similarly to
 If compilation is skipped, the function returns
 .codn nil .
 
+Note: the following idiom may be used to load a file, compiling it if
+necessary:
+
+.verb
+  (or (compile-update-file "file")
+      (load-file "file"))
+.brev
+
+However, note that it relies on the effect of compiling a source file being the
+same as the effect of loading the compiled file.
+This can only be true if the source file contains no
+.code compile-only
+or
+.code eval-only
+top-level forms.
+
 .coNP Macro @ with-compilation-unit
 .synb
 .mets (with-compilation-unit << form *)
