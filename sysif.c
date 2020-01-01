@@ -1492,7 +1492,9 @@ static val crypt_wrap(val wkey, val wsalt)
 
 #endif
 
-off_t off_t_num(val num, val self)
+#if HAVE_FSEEKO
+
+static off_t off_t_num(val num, val self)
 {
   switch (CHAR_BIT * sizeof(off_t)) {
   case 32:
@@ -1504,7 +1506,7 @@ off_t off_t_num(val num, val self)
   }
 }
 
-val num_off_t(off_t off)
+static val num_off_t(off_t off)
 {
   if (sizeof (off_t) <= sizeof (cnum)) {
     return num(off);
@@ -1516,6 +1518,8 @@ val num_off_t(off_t off)
     internal_error("portme: unsupported off_t size");
   }
 }
+
+#endif
 
 val stdio_ftell(FILE *f)
 {

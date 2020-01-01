@@ -35,16 +35,6 @@ extern val atime_s, mtime_s, ctime_s;
 extern val atime_nsec_s, mtime_nsec_s, ctime_nsec_s;
 extern val path_s;
 
-#if !HAVE_FTRUNCATE
-typedef long off_t;
-#define OFF_T_MAX LONG_MAX
-#define OFF_T_MIN LONG_MIN
-#else
-#define OFF_T_MAX ((((convert(off_t, 1) << \
-                      ((sizeof(off_t) * CHAR_BIT) - 2)) - 1) << 1) + 1)
-#define OFF_T_MIN (-OFF_T_MAX)
-#endif
-
 val errno_to_file_error(int err);
 val getenv_wrap(val name);
 val at_exit_call(val func);
@@ -61,8 +51,6 @@ val stat_to_struct(struct stat st, val path);
 #endif
 val statp(val path);
 val statf(val path);
-off_t off_t_num(val num, val self);
-val num_off_t(off_t offnum);
 val stdio_ftell(FILE *);
 int stdio_fseek(FILE *, val, int whence);
 #if HAVE_GETEUID
