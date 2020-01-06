@@ -2143,7 +2143,7 @@ static val maybe_quote(val form)
   return cons(quote_s, cons(form, nil));
 }
 
-static void builtin_reject_test(val op, val sym, val form)
+static void builtin_reject_test(val op, val sym, val form, val def_kind)
 {
     val builtin_kind = gethash(builtin, sym);
     val is_operator = gethash(op_table, sym);
@@ -2160,8 +2160,12 @@ static void builtin_reject_test(val op, val sym, val form)
     } else if (sym == expr_s || sym == var_s) {
       /* empty */
     } else if (builtin_kind) {
-      eval_warn(form, lit("~s: redefining ~s, which is a built-in ~s"),
-                op, sym, builtin_kind, nao);
+      if (builtin_kind == def_kind)
+        eval_warn(form, lit("~s: redefining ~s, which is a built-in ~s"),
+                  op, sym, builtin_kind, nao);
+      else
+        eval_warn(form, lit("~s: defining ~s, which is also a built-in ~s"),
+                  op, sym, builtin_kind, nao);
     } else if (is_operator) {
       eval_warn(form, lit("~s: redefining ~s, which is a built-in operator"),
                 op, sym, nao);
@@ -2213,7 +2217,7 @@ static val expand_macrolet(val form, val menv)
     val macro_out = expand_forms(macro_ex, new_menv);
     val block = rlcp_tree(cons(block_s, cons(name, macro_out)), macro_ex);
 
-    builtin_reject_test(op, name, form);
+    builtin_reject_test(op, name, form, defmacro_s);
 
     /* We store the macrolet in the same form as a top level defmacro,
      * so they can be treated uniformly. The nil at the head of the
@@ -3679,7 +3683,7 @@ static val expand_fbind_vars(val vars, val menv, val form)
     val rest_vars_ex = rlcp(expand_fbind_vars(rest_vars, menv, form),
                             rest_vars);
 
-    builtin_reject_test(car(form), var, form);
+    builtin_reject_test(car(form), var, form, defun_s);
 
     if (init == init_ex && rest_vars == rest_vars_ex)
       return vars;
@@ -4688,7 +4692,7 @@ again:
       val name = second(form);
       val params = third(form);
 
-      builtin_reject_test(sym, name, form);
+      builtin_reject_test(sym, name, form, sym);
 
       if (sym == defun_s)
         uw_register_tentative_def(cons(fun_s, name));
