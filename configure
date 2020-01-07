@@ -1435,6 +1435,7 @@ int main(void)
     printf "yes (%s)\n" $try_sym
     printf "#define FLO_MAX_DIG $try_sym\n" >> config.h
     have_dbl_decimal_dig=y
+    break
   fi
 done
 
