@@ -84,6 +84,7 @@ typedef struct ffi_type {
   char type, size;
 } ffi_type;
 #define FFI_TYPE_STRUCT 0
+typedef unsigned long ffi_arg;
 #endif
 
 typedef enum {
