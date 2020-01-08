@@ -908,6 +908,33 @@ else
   printf " n/a\n"
 fi
 
+printf "Checking for disabling source code quoting in compiler errors ... "
+
+cat > conftest.c <<!
+#include <stdio.h>
+int main(void)
+{
+!
+
+if ! conftest && grep -q -E '^ +\^' conftest.err ; then
+  cat > conftest.c <<!
+#include <stdio.h>
+int main(void)
+{
+return 0;
+}
+!
+  opt=-fno-diagnostics-show-caret
+  if conftest EXTRA_FLAGS=$opt ; then
+    printf "needed\n"
+    diag_flags="$diag_flags $opt"
+  else
+    printf "unable\n"
+  fi
+else
+  printf "no need\n"
+fi
+
 #
 # Check for annoying clashes from non-conforming BSD-derived systems that don't
 # honor Unix/POSIX feature selection macros!
