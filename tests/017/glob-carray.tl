@@ -10,7 +10,7 @@
 			 (nil int)
 			 (nil size-t)
 			 (nil int)
-			 (pathv (carray str-d))
+			 (pathv (carray str))
 			 (nil (array 4 cptr)))))
   ((:cygnal :cygwin)
     (deffi-type glob-t (struct glob-t
@@ -18,12 +18,13 @@
 			 (nil size-t)
 			 (nil size-t)
 			 (nil int)
-			 (pathv (carray str-d))
+			 (pathv (carray str))
 			 (nil (array 6 cptr)))))
   (t (deffi-type glob-t (struct glob-t
                           (pathc size-t)
-                          (pathv (carray str-d))
+                          (pathv (carray str))
                           (reserve size-t)
+                          (nil int)
                           (nil (array 5 cptr))))))
 
 (with-dyn-lib (libc)
