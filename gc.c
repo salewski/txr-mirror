@@ -494,7 +494,7 @@ static void mark_mem_region(val *low, val *high)
     mark_obj_maybe(*low);
 }
 
-static void mark(mach_context_t *pmc, val *gc_stack_top)
+static void mark(val *gc_stack_top)
 {
   val **rootloc;
 
@@ -517,11 +517,6 @@ static void mark(mach_context_t *pmc, val *gc_stack_top)
       mark_obj(mutobj[i]);
   }
 #endif
-
-  /*
-   * Then the machine context
-   */
-  mark_mem_region(coerce(val *, pmc), coerce(val *, (pmc + 1)));
 
   /*
    * Finally, the stack.
@@ -794,7 +789,6 @@ static void call_finals(void)
 
 void gc(void)
 {
-  val gc_stack_top = nil;
 #if CONFIG_GEN_GC
   int exhausted = (free_list == 0);
   int full_gc_next_time = 0;
@@ -817,7 +811,7 @@ void gc(void)
   gc_enabled = 0;
   rcyc_empty();
   iobuf_list_empty();
-  mark(&mc, &gc_stack_top);
+  mark(coerce(val *, &mc));
   hash_process_weak();
   prepare_finals();
   swept = sweep();
