@@ -53,7 +53,7 @@
 #define DFL_MALLOC_DELTA_THRESH (64L * 1024 * 1024)
 
 #if __aarch64__
-#define STACK_TOP_EXTRA_WORDS 4
+#define STACK_TOP_EXTRA_WORDS 12
 #else
 #define STACK_TOP_EXTRA_WORDS 0
 #endif
