@@ -32,6 +32,7 @@
 #include <wchar.h>
 #include <signal.h>
 #include "config.h"
+#include "alloca.h"
 #if HAVE_VALGRIND
 #include <valgrind/memcheck.h>
 #endif
@@ -51,12 +52,6 @@
 #define FULL_GC_INTERVAL        40
 #define FRESHOBJ_VEC_SIZE       (8 * HEAP_SIZE)
 #define DFL_MALLOC_DELTA_THRESH (64L * 1024 * 1024)
-
-#if __aarch64__
-#define STACK_TOP_EXTRA_WORDS 12
-#else
-#define STACK_TOP_EXTRA_WORDS 0
-#endif
 
 #if HAVE_MEMALIGN || HAVE_POSIX_MEMALIGN
 #define OBJ_ALIGN (sizeof (obj_t))
@@ -521,7 +516,7 @@ static void mark(val *gc_stack_top)
   /*
    * Finally, the stack.
    */
-  mark_mem_region(gc_stack_top - STACK_TOP_EXTRA_WORDS, gc_stack_bottom);
+  mark_mem_region(gc_stack_top, gc_stack_bottom);
 }
 
 static int sweep_one(obj_t *block)
@@ -795,7 +790,7 @@ void gc(void)
   static int gc_counter;
 #endif
   int swept;
-  mach_context_t mc;
+  mach_context_t *pmc = convert(mach_context_t *, alloca(sizeof *pmc));
 
   assert (gc_enabled);
 
@@ -807,11 +802,11 @@ void gc(void)
     full_gc = 1;
 #endif
 
-  save_context(mc);
+  save_context(*pmc);
   gc_enabled = 0;
   rcyc_empty();
   iobuf_list_empty();
-  mark(coerce(val *, &mc));
+  mark(coerce(val *, pmc));
   hash_process_weak();
   prepare_finals();
   swept = sweep();
