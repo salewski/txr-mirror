@@ -1593,7 +1593,6 @@ printf '"%s"\n' "$lexname"
 printf "Checking for yacc program ... "
 
 if [ -z "$yacc_given" -a -z "$yaccname_given" ] ; then
-  rm -f conftest.yacc
   for yaccname in '$(YACC)' "yacc" "byacc" "bison -y" "" ; do
     yaccpath=$($make yaccname="$yaccname" conftest.yacc)
     if command -v $yaccpath > /dev/null ; then
