@@ -106,6 +106,7 @@ yaccname_given=
 yaccname='' # test tries $(YACC) first
 yacc='$(cross)$(tool_prefix)$(yaccname)'
 yacc_given=
+yacc_is_newer_bison=
 nm='$(cross)$(tool_prefix)nm'
 opt_flags='-O2 -fno-stack-protector'
 lang_flags='-ansi -D_XOPEN_SOURCE=700 -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE'
@@ -747,6 +748,8 @@ EXE := $exe
 have_git := $have_git
 
 add_win_res := $([ -n "$have_windows_h" -a -n "$have_windres" ] && echo "y")
+
+yacc_is_newer_bison := $yacc_is_newer_bison
 
 TXR_CC := $cc
 TXR_LEX := $lex
@@ -1621,6 +1624,21 @@ else
     printf "given\n"
     ;;
   esac
+fi
+
+printf "Checking if yacc program is GNU Bison ... "
+
+gen_config_make
+
+bison_version="$($make conftest.yacc-version | grep -E '[Bb]ison')" || true
+
+if [ -n "$bison_version" ] ; then
+  set -- $bison_version
+  printf "yes (%s)\n" "$4"
+  save_ifs=$IFS ; IFS=. ; set -- $4 ; IFS=$save_ifs
+  [ $1 -ge 3 ] && yacc_is_newer_bison=y
+else
+  printf "no\n"
 fi
 
 #

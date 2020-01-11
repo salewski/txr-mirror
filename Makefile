@@ -93,6 +93,12 @@ OBJS := $(DBG_OBJS) $(OPT_OBJS)
 
 TXR := ./$(PROG)
 
+ifneq ($(yacc_is_newer_bison),)
+YACC_FLAGS := -Wno-yacc -Wno-deprecated
+else
+YACC_FLAGS :=
+endif
+
 .SUFFIXES:
 MAKEFLAGS += --no-builtin-rules
 
@@ -288,7 +294,7 @@ y.tab.c: $(top_srcdir)parser.y
 	  if [ -e y.tab.h ]; then mv y.tab.h y.tab.h.old ; fi)
 	$(call SH,rm -f y.tab.c)
 	$(call SH,                                              \
-	  if $(TXR_YACC) -v -d $< ; then                        \
+	  if $(TXR_YACC) $(YACC_FLAGS) -v -d $< ; then          \
 	    grep -qs '$(BS_LIC_FROM)' y.tab.c &&                \
 	      grep -qs '$(BS_LIC_TO)' y.tab.c &&                \
 	      sed -e '/$(BS_LIC_FROM)/$(CM)/$(BS_LIC_TO)/d'     \
@@ -551,6 +557,10 @@ conftest.syms: conftest.o
 .PHONY: conftest.yacc
 conftest.yacc:
 	$(V)echo $(TXR_YACC)
+
+.PHONY: conftest.yacc-version
+conftest.yacc-version:
+	$(V)$(TXR_YACC) --version 2> /dev/null || true
 
 .PHONY: conftest.ccver
 conftest.ccver:
