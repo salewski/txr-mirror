@@ -1,3 +1,36 @@
+                                    TXR 231
+                                   2020-01-12
+
+
+  Features:
+
+  - compiler:
+    - New function: compile-update-file for compiling
+      a file only if necessary.
+
+  Bugs:
+
+  - gc:
+    - aarch64 corrupt behavior due to not scanning for
+      roots sufficiently far into the topmost (lowest address)
+      stack frame.
+  - build:
+    - problem building on musl: sysif.h header
+      referencing undeclared type off_t.
+    - build breakage on big endian systems when
+      libffi disabled.
+    - double definition of FLO_MAX_DIG in config.h
+      when configuring under musl.
+  - misleading diagnostic when the name of builtin macro
+    is defined as a function or vice versa.
+  - incorrect FFI test cases (targeting glob function),
+    leading to crash on musl.
+  - hash:
+    - equal-based hashing not traversing the key field
+      of a tree node.
+
+
+
                                     TXR 230
                                    2019-12-20
 
