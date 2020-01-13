@@ -269,7 +269,7 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
     return hash_buf(obj->b.data, c_unum(obj->b.len), seed, count);
   case TNOD:
     return equal_hash(obj->tn.left, count, (seed + TNOD))
-            + equal_hash(obj->tn.right, count, seed + (TNOD << 8));
+            + equal_hash(obj->tn.right, count, seed + (TNOD << 8))
             + equal_hash(obj->tn.key, count, seed + (TNOD << 16));
   }
 
