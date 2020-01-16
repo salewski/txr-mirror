@@ -57697,7 +57697,7 @@ fields take on values of zero.
 .synb
 .mets (stat << path )
 .mets (lstat << path )
-.mets (fstat << stream )
+.mets (fstat > { stream | << fd })
 .syne
 .desc
 The
@@ -57731,8 +57731,12 @@ The
 .code fstat
 function retrieves information about the file system object associated with
 the open stream
-.metn stream .
-The stream must be of a kind from which the
+.meta stream
+or numeric file descriptor
+.metn fd .
+If a
+.meta stream
+is specified, that stream must be of a kind from which the
 .code fileno
 function can retrieve a file descriptor, otherwise an exception of type
 .code file-error

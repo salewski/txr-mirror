@@ -449,8 +449,7 @@ static val mknod_wrap(val path, val mode, val dev)
 
 #endif
 
-#if HAVE_CHMOD
-
+#if HAVE_CHMOD || HAVE_SYS_STAT
 static int get_fd(val stream, val self)
 {
   val fd_in = if3(integerp(stream), stream, stream_get_prop(stream, fd_k));
@@ -467,6 +466,9 @@ static int get_fd(val stream, val self)
 
   return c_int(fd_in, self);
 }
+#endif
+
+#if HAVE_CHMOD
 
 static val chmod_wrap(val target, val mode)
 {
@@ -790,16 +792,9 @@ static int w_lstat(val wpath, struct stat *buf)
 
 static int w_fstat(val stream, struct stat *buf)
 {
-  val fd = stream_get_prop(stream, fd_k);
-
-  if (fd) {
-    int res = fstat(c_num(fd), buf);
-    return res;
-  }
-
-  uw_throwf(file_error_s,
-            lit("cannot fstat stream ~s: it has no :fd property"),
-            stream, nao);
+  val self = lit("fstat");
+  int fd = get_fd(stream, self);
+  return fstat(fd, buf);
 }
 #endif
 
