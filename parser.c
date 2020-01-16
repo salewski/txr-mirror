@@ -798,7 +798,7 @@ static void load_rcfile(val name)
   open_txr_file(name, &lisp_p, &resolved_name, &stream);
 
   if (stream) {
-    if (!funcall1(path_private_to_me_p, statf(stream))) {
+    if (!funcall1(path_private_to_me_p, fstat_wrap(stream))) {
       format(std_output,
              lit("** possible security problem: ~a is writable to others\n"),
              name, nao);

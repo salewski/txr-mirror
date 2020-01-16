@@ -770,7 +770,7 @@ static val exit_star_wrap(val status)
 #endif
 
 #if HAVE_SYS_STAT
-static int w_stat(val wpath, struct stat *buf)
+static int do_stat(val wpath, struct stat *buf)
 {
   char *path = utf8_dup_to(c_str(wpath));
   int res = stat(path, buf);
@@ -779,7 +779,7 @@ static int w_stat(val wpath, struct stat *buf)
 }
 
 #ifdef S_IFLNK
-static int w_lstat(val wpath, struct stat *buf)
+static int do_lstat(val wpath, struct stat *buf)
 {
   char *path = utf8_dup_to(c_str(wpath));
   int res = lstat(path, buf);
@@ -787,10 +787,10 @@ static int w_lstat(val wpath, struct stat *buf)
   return res;
 }
 #else
-#define w_lstat w_stat
+#define do_lstat do_stat
 #endif
 
-static int w_fstat(val stream, struct stat *buf)
+static int do_fstat(val stream, struct stat *buf)
 {
   val self = lit("fstat");
   int fd = get_fd(stream, self);
@@ -890,19 +890,19 @@ static val stat_impl(val obj, int (*statfn)(val, struct stat *),
 #endif
 }
 
-val statp(val path)
+static val stat_wrap(val path)
 {
-  return stat_impl(path, w_stat, lit("stat"), path);
+  return stat_impl(path, do_stat, lit("stat"), path);
 }
 
-static val statl(val path)
+static val lstat_wrap(val path)
 {
-  return stat_impl(path, w_lstat, lit("lstat"), path);
+  return stat_impl(path, do_lstat, lit("lstat"), path);
 }
 
-val statf(val stream)
+val fstat_wrap(val stream)
 {
-  return stat_impl(stream, w_fstat, lit("fstat"), nil);
+  return stat_impl(stream, do_fstat, lit("fstat"), nil);
 }
 
 #if HAVE_SYS_STAT
@@ -2018,9 +2018,9 @@ void sysif_init(void)
   reg_fun(intern(lit("fcntl"), user_package), func_n3o(fcntl_wrap, 2));
 #endif
 
-  reg_fun(intern(lit("stat"), user_package), func_n1(statp));
-  reg_fun(intern(lit("lstat"), user_package), func_n1(statl));
-  reg_fun(intern(lit("fstat"), user_package), func_n1(statf));
+  reg_fun(intern(lit("stat"), user_package), func_n1(stat_wrap));
+  reg_fun(intern(lit("lstat"), user_package), func_n1(lstat_wrap));
+  reg_fun(intern(lit("fstat"), user_package), func_n1(fstat_wrap));
 
 #if HAVE_SYS_STAT
 #ifndef S_IFSOCK
