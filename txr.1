@@ -41539,7 +41539,7 @@ only the exception arguments are passed to the clauses of
 
 .coNP Macro @ with-resources
 .synb
-.mets (with-resources >> ({ sym >> [ init-form <> [ cleanup-form ])}*)
+.mets (with-resources >> ({ sym >> [ init-form <> [ cleanup-form *])}*)
 .mets \ \  << body-form *)
 .syne
 .desc
@@ -41567,27 +41567,48 @@ is bound to the value
 If an
 .meta init-form
 is supplied, but no
-.metn cleanup-form ,
+.metn cleanup-form -s,
 then
 .meta sym
 is bound to the value of the
 .metn init-form .
 
-If a
-.meta cleanup-form
-is supplied in addition to
+If one or more
+.metn cleanup-form -s
+are supplied in addition to
 .metn init-form ,
-it specifies code to be executed upon the termination of the
-entire
+they specifies forms to be executed upon the termination of the
 .code with-resources
 construct.
 
 When an instance of
 .code with-resources
-terminates, all of the
+terminates, either normally or by a non-local control transfer,
+then for each
+.meta sym
+whose
+.meta init-form
+had executed, thus causing that
+.code sym
+to be bound to a value, the
 .metn cleanup-form -s
-specified in its binding clauses are evaluated, in reverse (right-to-left)
-order. The value of the last
+corresponding to
+.meta sym
+are evaluated in the usual left-to-right order.
+
+The
+.metn sym -s
+are cleaned up in reverse (right-to-left) order. The
+.metn cleanup-form -s
+of the most recently bound
+.meta sym
+are processed first; those of the least recently bound
+.meta sym
+are processed last.
+
+When the
+.code with-resources
+form terminates normally, the value of the last
 .meta body-form
 is returned, or else
 .code nil

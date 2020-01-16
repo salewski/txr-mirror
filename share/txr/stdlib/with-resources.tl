@@ -26,15 +26,15 @@
 
 (defmacro with-resources (:form f res-bindings . body)
   (tree-case res-bindings
-    (((sym init cleanup) . rest)
+    (((sym init) . rest)
+     ^(let ((,sym ,init))
+        (with-resources ,rest ,*body)))
+    (((sym init . cleanup) . rest)
      ^(let ((,sym ,init))
         (when ,sym
           (unwind-protect
             (with-resources ,rest ,*body)
-            ,cleanup))))
-    (((sym init) . rest)
-     ^(let ((,sym ,init))
-        (with-resources ,rest ,*body)))
+            ,*cleanup))))
     ((sym . rest)
      ^(let (,sym)
         (with-resources ,rest ,*body)))
