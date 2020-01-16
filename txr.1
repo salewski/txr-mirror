@@ -57880,15 +57880,18 @@ from a combined device number.
 
 .coNP Function @ chmod
 .synb
-.mets (chmod < path << mode )
+.mets (chmod < target << mode )
 .syne
 .desc
 The
 .code chmod
-function changes the permissions of the filesystem objects
+function changes the permissions of the filesystem object
 specified by
-.metn path .
-It is a direct wrapper for the POSIX C library function of the same name.
+.metn target .
+It is implemented in terms of the POSIX functions
+.code chmod
+and
+.codn fchmod .
 
 The permissions are specified by
 .metn mode ,
@@ -57902,6 +57905,24 @@ The function throws a
 .code file-error
 exception if an error occurs, otherwise it returns
 .codn t .
+
+The
+.meta target
+argument may be a character string, in which case it specifies a pathname in
+the filesystem. In this case, the POSIX function
+.code chmod
+is invoked.
+
+The
+.meta target
+argument may also be an integer file descriptor, or a stream. In these two
+cases, the POSIX
+.code fchmod
+function is invoked. For a stream
+.metn target ,
+the integer file descriptor is retrieved from the stream using
+.code fileno
+function.
 
 .TP* Example:
 .verb

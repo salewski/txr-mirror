@@ -2278,13 +2278,14 @@ else
   printf "no\n"
 fi
 
-printf "Checking for chmod ... "
+printf "Checking for chmod/fchmod ... "
 cat > conftest.c <<!
 #include <sys/stat.h>
 
 int main(void)
 {
-  int r = chmod("a", S_IWUSR);
+  int r0 = chmod("a", S_IWUSR);
+  int r1 = fchmod(4, S_IWUSR);
   return 0;
 }
 !

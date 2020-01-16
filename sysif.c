@@ -451,17 +451,42 @@ static val mknod_wrap(val path, val mode, val dev)
 
 #if HAVE_CHMOD
 
-static val chmod_wrap(val path, val mode)
+static int get_fd(val stream, val self)
 {
+  val fd_in = if3(integerp(stream), stream, stream_get_prop(stream, fd_k));
+
+  if (stream && !fd_in)
+    uw_throwf(file_error_s,
+              lit("~a: stream ~s has no :fd property"),
+              self, stream, nao);
+
+  if (!stream)
+    uw_throwf(file_error_s,
+              lit("~a: ~s isn't a stream object"),
+              self, stream, nao);
+
+  return c_int(fd_in, self);
+}
+
+static val chmod_wrap(val target, val mode)
+{
+  val self = lit("chmod");
   cnum cmode = c_num(mode);
-  char *u8path = utf8_dup_to(c_str(path));
-  int err = chmod(u8path, cmode);
-  free(u8path);
+  int err;
+
+  if (stringp(target)) {
+    char *u8path = utf8_dup_to(c_str(target));
+    err = chmod(u8path, cmode);
+    free(u8path);
+  } else {
+    int fd = get_fd(target, self);
+    err = fchmod(fd, cmode);
+  }
 
   if (err < 0) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("chmod ~a #o~o: ~d/~s"),
-              path, mode, num(eno), string_utf8(strerror(eno)), nao);
+    uw_throwf(errno_to_file_error(eno), lit("~a ~a #o~o: ~d/~s"),
+              self, target, mode, num(eno), string_utf8(strerror(eno)), nao);
   }
 
   return t;
