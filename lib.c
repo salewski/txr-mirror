@@ -3648,6 +3648,11 @@ val length_str(val str)
   }
 }
 
+val coded_length(val str)
+{
+  return unum(utf8_to_buf(0, c_str(str), 0));
+}
+
 const wchar_t *c_str(val obj)
 {
   switch (type(obj)) {

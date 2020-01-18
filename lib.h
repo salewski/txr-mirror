@@ -827,6 +827,7 @@ val string_extend(val str, val tail);
 val stringp(val str);
 val lazy_stringp(val str);
 val length_str(val str);
+val coded_length(val str);
 const wchar_t *c_str(val str);
 val search_str(val haystack, val needle, val start_num, val from_end);
 val search_str_tree(val haystack, val tree, val start_num, val from_end);

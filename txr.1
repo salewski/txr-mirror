@@ -22293,6 +22293,24 @@ function returns the length
 .meta string
 in characters.  The argument must be a string.
 
+.coNP Function @ coded-length
+.synb
+.mets (coded-length << string )
+.syne
+.desc
+The
+.code coded-length
+function returns the number of bytes required to encode
+.meta string
+in UTF-8.
+
+The argument must be a character string.
+
+If the string contains only characters in the ASCII range U+0001 to U+007F
+range, then the value returned shall be the same as that returned by the
+.code length-str
+function.
+
 .coNP Function @ search-str
 .synb
 .mets (search-str < haystack < needle >> [ start <> [ from-end ]])

@@ -6701,6 +6701,7 @@ void eval_init(void)
   reg_fun(intern(lit("stringp"), user_package), func_n1(stringp));
   reg_fun(intern(lit("lazy-stringp"), user_package), func_n1(lazy_stringp));
   reg_fun(intern(lit("length-str"), user_package), func_n1(length_str));
+  reg_fun(intern(lit("coded-length"), user_package), func_n1(coded_length));
   reg_fun(intern(lit("search-str"), user_package), func_n4o(search_str, 2));
   reg_fun(intern(lit("search-str-tree"), user_package), func_n4o(search_str_tree, 2));
   reg_fun(intern(lit("match-str"), user_package), func_n3o(match_str, 2));
