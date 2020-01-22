@@ -52,6 +52,9 @@
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#if HAVE_SYS_TIME
+#include <sys/time.h>
+#endif
 #if HAVE_SYS_SYSMACROS_H
 #include <sys/sysmacros.h>
 #endif
@@ -78,6 +81,9 @@
 #endif
 #if HAVE_CRYPT_R
 #include <crypt.h>
+#endif
+#if HAVE_UTIME
+#include <utime.h>
 #endif
 #include "alloca.h"
 #include "lib.h"
@@ -449,7 +455,7 @@ static val mknod_wrap(val path, val mode, val dev)
 
 #endif
 
-#if HAVE_CHMOD || HAVE_SYS_STAT
+#if HAVE_CHMOD || HAVE_SYS_STAT || HAVE_FILE_STAMP_CHANGE
 static int get_fd(val stream, val self)
 {
   val fd_in = if3(integerp(stream), stream, stream_get_prop(stream, fd_k));
@@ -904,6 +910,107 @@ val fstat_wrap(val stream)
 {
   return stat_impl(stream, do_fstat, lit("fstat"), nil);
 }
+
+#if HAVE_FILE_STAMP_CHANGE
+
+#if HAVE_FUTIMENS
+static long timens(val arg, val self)
+{
+  return if3(arg == t, UTIME_NOW, if3(arg, c_long(arg, self), UTIME_OMIT));
+}
+#endif
+
+static val do_utimes(val target, val atime, val atimens,
+                     val mtime, val mtimens,
+                     val symlink_nofollow, val self)
+{
+  int res = -1;
+
+  if (stringp(target)) {
+    char *u8path = utf8_dup_to(c_str(target));
+#if HAVE_FUTIMENS
+    int flags = if3(symlink_nofollow, AT_SYMLINK_NOFOLLOW, 0);
+    struct timespec times[2];
+    times[0].tv_sec = c_time(atime);
+    times[0].tv_nsec = timens(atimens, self);
+    times[1].tv_sec = c_time(mtime);
+    times[1].tv_nsec = timens(mtimens, self);
+    res = utimensat(AT_FDCWD, u8path, times, flags);
+#else
+    errno = -EINVAL;
+    if (integerp(atimens) || integerp(mtimens)) {
+      struct timeval times[2];
+      times[0].tv_sec = c_time(atime);
+      times[0].tv_usec = c_long(trunc(atimens, num_fast(1000)), self);
+      times[1].tv_sec = c_time(mtime);
+      times[1].tv_usec = c_long(trunc(mtimens, num_fast(1000)), self);
+      if (symlink_nofollow) {
+#if HAVE_LUTIMES
+        res = lutimes(u8path, times);
+#endif
+      } else {
+#if HAVE_UTIMES
+        res = utimes(u8path, times);
+#elif HAVE_UTIME
+        struct utimbuf utb;
+        utb.actime = times[0].tv_sec;
+        utb.modtime = times[1].tv_sec;
+        res = utime(u8path, &utb);
+#endif
+      }
+    }
+#endif
+    free(u8path);
+  } else {
+#if HAVE_FUTIMENS
+    struct timespec times[2];
+    int fd = get_fd(target, self);
+    times[0].tv_sec = c_time(atime);
+    times[0].tv_nsec = timens(atimens, self);
+    times[1].tv_sec = c_time(mtime);
+    times[1].tv_nsec = timens(mtimens, self);
+    res = futimens(fd, times);
+#elif HAVE_FUTIMES
+    struct timeval times[2];
+    int fd = get_fd(target, self);
+    errno = -EINVAL;
+    if (integerp(atimens) || integerp(mtimens)) {
+      times[0].tv_sec = c_time(atime);
+      times[0].tv_usec = c_long(trunc(atimens, num_fast(1000)), self);
+      times[1].tv_sec = c_time(mtime);
+      times[1].tv_usec = c_long(trunc(mtimens, num_fast(1000)), self);
+      res = futimes(fd, times);
+    }
+#else
+    errno = -EINVAL;
+#endif
+  }
+
+  if (res == -1) {
+    int eno = errno;
+    uw_throwf(errno_to_file_error(eno), lit("~s: failed: ~d/~s"),
+              self, num(eno), string_utf8(strerror(eno)), nao);
+  }
+
+  return t;
+}
+
+static val wrap_utimes(val target, val atime, val atimens,
+                       val mtime, val mtimens)
+{
+  val self = lit("utimes");
+  return do_utimes(target, atime, atimens, mtime, mtimens, nil, self);
+}
+
+static val wrap_lutimes(val target, val atime, val atimens,
+                        val mtime, val mtimens)
+{
+  val self = lit("lutimes");
+  return do_utimes(target, atime, atimens, mtime, mtimens, t, self);
+}
+
+#endif
+
 
 #if HAVE_SYS_STAT
 
@@ -2016,6 +2123,11 @@ void sysif_init(void)
   reg_varl(intern(lit("seek-end"), user_package), num_fast(SEEK_END));
 
   reg_fun(intern(lit("fcntl"), user_package), func_n3o(fcntl_wrap, 2));
+#endif
+
+#if HAVE_FILE_STAMP_CHANGE
+  reg_fun(intern(lit("utimes"), user_package), func_n5(wrap_utimes));
+  reg_fun(intern(lit("lutimes"), user_package), func_n5(wrap_lutimes));
 #endif
 
   reg_fun(intern(lit("stat"), user_package), func_n1(stat_wrap));

@@ -1708,6 +1708,114 @@ int main(void)
 fi
 
 #
+# utime, utimes, utimensat and futimens
+#
+
+printf "Checking for utime ... "
+
+cat > conftest.c <<!
+#include <utime.h>
+
+int main(void)
+{
+  struct utimbuf utb;
+  int res = utime("path", &utb);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_UTIME 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
+printf "Checking for utimes ... "
+
+cat > conftest.c <<!
+#include <sys/time.h>
+
+int main(void)
+{
+  struct timeval tv[2];
+  int res = utimes("path", tv);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_UTIMES 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
+printf "Checking for futimes ... "
+
+cat > conftest.c <<!
+#include <sys/time.h>
+
+int main(void)
+{
+  struct timeval tv[2];
+  int res = futimes(42, tv);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_FUTIMES 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
+printf "Checking for lutimes ... "
+
+cat > conftest.c <<!
+#include <sys/time.h>
+
+int main(void)
+{
+  struct timeval tv[2];
+  int res = lutimes("path", tv);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_LUTIMES 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
+printf "Checking for utimensat and futimens ... "
+
+cat > conftest.c <<!
+#include <sys/stat.h>
+#include <fcntl.h>
+
+int main(void)
+{
+  struct timespec ts[2];
+  int resu = utimensat(AT_FDCWD, "path", ts, AT_SYMLINK_NOFOLLOW);
+  int resf = futimens(0, ts);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_FUTIMENS 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
+printf "#define HAVE_FILE_STAMP_CHANGE " >> config.h
+printf "(HAVE_UTIMES || HAVE_FUTIMES || HAVE_FUTIMENS)\n" >> config.h
+#
 # environ
 #
 

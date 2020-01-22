@@ -57982,6 +57982,111 @@ function.
                            s-iroth))
 .brev
 
+.coNP Functions @ utimes and @ lutimes
+.synb
+.mets (utimes < target < atime-s < atime-ns < mtime-s << mtime-ns )
+.mets (lutimes < target < atime-s < atime-ns < mtime-s << mtime-ns )
+.syne
+.desc
+The functions
+.code utimes
+and
+.code lutimes
+change the access and modification timestamps of a file indicated by the
+.meta target
+argument.
+
+The difference between the two functions is that if
+.meta target
+is the path name of a symbolic link, then
+.code lutimes
+operates on the symbolic link itself, whereas
+.code utimes
+resolves the symbolic link.
+
+Note: the full, complete functionality of these functions requires the
+platform to provide the POSIX functions
+.code futimens
+and
+.code utimensat
+functions.  If these functions are not available, then other functions are
+relied on, with some reductions in functionality, that are documented below.
+
+The
+.meta target
+argument specifies the file to operate on. It may be an integer file descriptor,
+an open stream, or a character string representing a path name.
+
+The
+.meta atime-s
+and
+.meta mtime-s
+parameters specify the whole seconds part of the new access and modification
+times, expressed as seconds since the epoch.
+
+The
+.meta atime-ns
+and
+.meta mtime-ns
+parameters specify the fractional part of the access and modification
+times, expressed in nanoseconds. If an integer argument is given to these
+parameters, it must lie in the range 0 to 999999999, or else the symbols
+.code nil
+or
+.code t
+may be passed as arguments.
+
+If the symbol
+.code nil
+is passed as the nanoseconds part of the access or modification time,
+then the access or modification time, respectively, shall not be modified
+by the operation. The corresponding seconds argument is ignored.
+
+If the symbol
+.code t
+is passed as the nanoseconds part of the access or modification time,
+then the access or modification time, respectively, shall be obtained
+from the current system time. The corresponding seconds argument is ignored.
+
+If the
+.code utimensat
+and
+.code futimens
+functions are not available from the host system, then the above
+.code nil
+and
+.code t
+convention in the nanoseconds arguments is not supported; the function
+will fail by throwing an exception if an attempt is made to pass these
+arguments.
+
+If the
+.code utimensat
+and
+.code futimens
+functions are not available from the host system, then operating on
+a symbolic link with
+.code lutimes
+is only possible if the system provides the
+.code lutimes
+C library function, otherwise the operation fails by throwing an exception
+(if given a path argument for
+.metn target ,
+even if that path isn't a symbolic link).
+
+If the implementation falls back on the
+.codn utimes ,
+.codn futimes ,
+and
+.code lutimes
+functions, then the nanoseconds arguments are truncated to microsecond
+precision.
+
+If the implementation falls back on
+.codn utime ,
+then the nanoseconds arguments are ignored; the times are effectively
+truncated to whole seconds.
+
 .coNP Function @ mknod
 .synb
 .mets (mknod < path < mode <> [ dev ])
