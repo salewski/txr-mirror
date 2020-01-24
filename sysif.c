@@ -2054,7 +2054,7 @@ void sysif_init(void)
 #endif
 
 #if HAVE_MKNOD
-  reg_fun(intern(lit("mknod"), user_package), func_n3(mknod_wrap));
+  reg_fun(intern(lit("mknod"), user_package), func_n3o(mknod_wrap, 2));
 #endif
 
 #if HAVE_CHMOD
