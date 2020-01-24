@@ -455,6 +455,27 @@ static val mknod_wrap(val path, val mode, val dev)
 
 #endif
 
+#if HAVE_MKFIFO
+
+static val mkfifo_wrap(val path, val mode)
+{
+  cnum cmode = c_num(mode);
+  char *u8path = utf8_dup_to(c_str(path));
+  int err = mkfifo(u8path, cmode);
+  free(u8path);
+
+  if (err < 0) {
+    int eno = errno;
+    uw_throwf(errno_to_file_error(eno), lit("mknod ~a ~a: ~d/~s"),
+              path, mode, num(eno),
+              string_utf8(strerror(eno)), nao);
+  }
+
+  return t;
+}
+
+#endif
+
 #if HAVE_CHMOD || HAVE_SYS_STAT || HAVE_FILE_STAMP_CHANGE
 static int get_fd(val stream, val self)
 {
@@ -2055,6 +2076,10 @@ void sysif_init(void)
 
 #if HAVE_MKNOD
   reg_fun(intern(lit("mknod"), user_package), func_n3o(mknod_wrap, 2));
+#endif
+
+#if HAVE_MKFIFO
+  reg_fun(intern(lit("mkfifo"), user_package), func_n2(mkfifo_wrap));
 #endif
 
 #if HAVE_CHMOD

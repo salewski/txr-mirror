@@ -2386,6 +2386,27 @@ else
   printf "no\n"
 fi
 
+printf "Checking for mkfifo ... "
+
+cat > conftest.c <<!
+#include "config.h"
+#if HAVE_SYS_STAT
+#include <sys/stat.h>
+#endif
+
+int main(void)
+{
+  int e = mkfifo("a", 0);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_MKFIFO 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
 printf "Checking for chmod/fchmod ... "
 cat > conftest.c <<!
 #include <sys/stat.h>

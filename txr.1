@@ -58138,6 +58138,33 @@ function.
    (mknod "dev/foo" (logior #o700 s-ifchr) (makedev 8 3))
 .brev
 
+.coNP Function @ mkfifo
+.synb
+.mets (mkfifo < path << mode )
+.syne
+.desc
+The
+.code mkfifo
+function creates a POSIX FIFO object.
+If it is successful,
+it returns
+.codn t ,
+otherwise it throws an exception of type
+.codn file-error .
+
+The
+.meta mode
+argument is a bitwise or combination of the requested permissions,
+and is subject to the system
+.codn umask .
+
+Note: the
+.code mknod
+function can also create FIFOs, specified via the bitwise combination
+of the
+.code s-ififo
+type and the permission mode bits.
+
 .coNP Functions @ symlink and @ link
 .synb
 .mets (symlink < target << path )
