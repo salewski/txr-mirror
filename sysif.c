@@ -301,6 +301,28 @@ static val mkdir_wrap(val path, val mode)
 }
 #endif
 
+#if HAVE_SYS_STAT
+static int do_stat(val wpath, struct stat *buf)
+{
+  char *path = utf8_dup_to(c_str(wpath));
+  int res = stat(path, buf);
+  free(path);
+  return res;
+}
+
+#ifdef S_IFLNK
+static int do_lstat(val wpath, struct stat *buf)
+{
+  char *path = utf8_dup_to(c_str(wpath));
+  int res = lstat(path, buf);
+  free(path);
+  return res;
+}
+#else
+#define do_lstat do_stat
+#endif
+#endif
+
 #if HAVE_MKDIR || HAVE_WINDOWS_H
 static val mkdir_nothrow_exists(val path, val mode)
 {
@@ -317,6 +339,14 @@ static val mkdir_nothrow_exists(val path, val mode)
       ret = num(errno);
       break;
     case EEXIST:
+#if HAVE_SYS_STAT
+      {
+        struct stat st;
+        int err = do_stat(path, &st);
+        if (err == 0 && !S_ISDIR(st.st_mode))
+          ret = num(EEXIST);
+      }
+#endif
       break;
     default:
       uw_throw(esym, eobj);
@@ -797,26 +827,6 @@ static val exit_star_wrap(val status)
 #endif
 
 #if HAVE_SYS_STAT
-static int do_stat(val wpath, struct stat *buf)
-{
-  char *path = utf8_dup_to(c_str(wpath));
-  int res = stat(path, buf);
-  free(path);
-  return res;
-}
-
-#ifdef S_IFLNK
-static int do_lstat(val wpath, struct stat *buf)
-{
-  char *path = utf8_dup_to(c_str(wpath));
-  int res = lstat(path, buf);
-  free(path);
-  return res;
-}
-#else
-#define do_lstat do_stat
-#endif
-
 static int do_fstat(val stream, struct stat *buf)
 {
   val self = lit("fstat");

@@ -57497,7 +57497,10 @@ The function
 is similar to
 .code mkdir
 except that it attempts to create all the missing parent directories
-as necessary, and does not throw an error if the directory exists.
+as necessary, and does not throw an error if
+.meta path
+refers to an existing object, if that object is a directory or a symbolic
+link to a directory.
 
 .coNP Function @ chdir
 .synb
