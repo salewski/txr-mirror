@@ -57494,13 +57494,18 @@ are subject to the system
 
 The function
 .code ensure-dir
-is similar to
-.code mkdir
-except that it attempts to create all the missing parent directories
-as necessary, and does not throw an error if
+also creates a directory named
+.metn path .
+Unlike
+.codn mkdir ,
+it also attempt to create all the necessary parent directories,
+and does not throw an error if
 .meta path
 refers to an existing object, if that object is a directory or a symbolic
-link to a directory.
+link to a directory. Rather, in that case it returns
+.code nil
+instead of
+.codn t .
 
 .coNP Function @ chdir
 .synb

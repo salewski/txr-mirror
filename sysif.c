@@ -339,6 +339,7 @@ static val mkdir_nothrow_exists(val path, val mode)
       ret = num(errno);
       break;
     case EEXIST:
+      ret = nil;
 #if HAVE_SYS_STAT
       {
         struct stat st;
@@ -384,7 +385,7 @@ static val ensure_dir(val path, val mode)
                           partial_path, sep, pop(&split_path), nao);
   }
 
-  if (ret != t) {
+  if (integerp(ret)) {
     int eno = c_num(ret);
     uw_throwf(errno_to_file_error(eno),
               lit("ensure-dir: ~a: ~d/~s"), path, ret,
