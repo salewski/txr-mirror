@@ -507,7 +507,7 @@ static val mkfifo_wrap(val path, val mode)
 
 #endif
 
-#if HAVE_CHMOD || HAVE_SYS_STAT || HAVE_FILE_STAMP_CHANGE
+#if HAVE_CHMOD || HAVE_CHOWN || HAVE_SYS_STAT || HAVE_FILE_STAMP_CHANGE
 static int get_fd(val stream, val self)
 {
   val fd_in = if3(integerp(stream), stream, stream_get_prop(stream, fd_k));
@@ -550,6 +550,45 @@ static val chmod_wrap(val target, val mode)
   }
 
   return t;
+}
+
+#endif
+
+#if HAVE_CHOWN
+
+static val do_chown(val target, val uid, val gid, val link_p, val self)
+{
+  cnum cuid = c_num(uid);
+  cnum cgid = c_num(gid);
+  int err;
+
+  if (stringp(target)) {
+    char *u8path = utf8_dup_to(c_str(target));
+    err = if3(link_p, lchown, chown)(u8path, cuid, cgid);
+    free(u8path);
+  } else {
+    int fd = get_fd(target, self);
+    err = fchown(fd, cuid, cgid);
+  }
+
+  if (err < 0) {
+    int eno = errno;
+    uw_throwf(errno_to_file_error(eno), lit("~a ~a ~a ~a: ~d/~s"),
+              self, target, uid, gid, num(eno),
+              string_utf8(strerror(eno)), nao);
+  }
+
+  return t;
+}
+
+static val chown_wrap(val target, val uid, val gid)
+{
+  return do_chown(target, uid, gid, nil, lit("chown"));
+}
+
+static val lchown_wrap(val target, val uid, val gid)
+{
+  return do_chown(target, uid, gid, t, lit("lchown"));
 }
 
 #endif
@@ -2095,6 +2134,11 @@ void sysif_init(void)
 
 #if HAVE_CHMOD
   reg_fun(intern(lit("chmod"), user_package), func_n2(chmod_wrap));
+#endif
+
+#if HAVE_CHOWN
+  reg_fun(intern(lit("chown"), user_package), func_n3(chown_wrap));
+  reg_fun(intern(lit("lchown"), user_package), func_n3(lchown_wrap));
 #endif
 
 #if HAVE_SYMLINK

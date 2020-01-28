@@ -2425,6 +2425,25 @@ else
   printf "no\n"
 fi
 
+printf "Checking for chown/fchown/lchown ... "
+cat > conftest.c <<!
+#include <unistd.h>
+
+int main(void)
+{
+  int r0 = chown("a", 0, 0);
+  int r1 = fchown(4, 0, 0);
+  int r2 = lchown("a", 0, 0);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_CHOWN 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
 printf "Checking for pipe ... "
 cat > conftest.c <<!
 #include <unistd.h>

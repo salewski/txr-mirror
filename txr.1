@@ -57990,6 +57990,83 @@ function.
                            s-iroth))
 .brev
 
+.coNP Functions @ chown and @ lchown
+.synb
+.mets (chown < target < id << gid )
+.mets (lchown < target < id << gid )
+.syne
+.desc
+The
+.code chown
+and
+.code lchown
+functions change the user and group ownership of the filesystem object
+specified by
+.metn target .
+
+They implemented in terms of the POSIX functions
+.codn chown ,
+.code fchown
+and
+.codn lchown .
+
+The ownership attributes are specified by
+.meta uid
+and
+.metn gid ,
+both integer arguments.
+
+The existing ownership attributes may be obtained using the
+.code stat
+function.
+
+These functions throw a
+.code file-error
+exception if an error occurs, otherwise they returns
+.codn t .
+
+The
+.meta target
+argument may be a character string, in which case it specifies a pathname in
+the filesystem. In this case, the same-named POSIX function
+.code chown
+is invoked by
+.codn chown ,
+whereas
+.code lchown
+likewise invokes its respective same-named POSIX counterpart.
+The difference is that if
+.meta target
+is a pathname denoting a symbolic link, then
+.code lchown
+operates on the symbolic link, whereas
+.code chown
+dereferences the symbolic link.
+
+The
+.meta target
+argument may also be an integer file descriptor, or a stream. In these two
+cases, the POSIX
+.code fchown
+function is invoked by either function. For a stream
+.metn target ,
+the integer file descriptor is retrieved from the stream using
+.code fileno
+function.
+
+Note: in most POSIX systems, unprivileged processes may not change the user
+ownership denoted by
+.metn uid .
+They may change the group ownership indicated in
+.metn gid ,
+if that value corresponds to the effective group ID of the calling
+process or one of its ancillary group IDs.
+
+To avoid trying to change the user ownership (and therefore failing),
+the caller should specify a
+.meta uid
+value which matches the object's existing owner.
+
 .coNP Functions @ utimes and @ lutimes
 .synb
 .mets (utimes < target < atime-s < atime-ns < mtime-s << mtime-ns )
