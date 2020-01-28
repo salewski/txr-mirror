@@ -30,6 +30,8 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
+#include <errno.h>
 #include <ftw.h>
 #include "config.h"
 #include "alloca.h"
@@ -122,7 +124,11 @@ val ftw_wrap(val dirpath, val fn, val flags_in, val nopenfd_in)
     case 0:
       return t;
     case -1:
-      return nil;
+      {
+        int eno = errno;
+        uw_throwf(errno_to_file_error(eno), lit("ftw ~a: ~d/~s"),
+                  dirpath, num(eno), string_utf8(strerror(eno)), nao);
+      }
     default:
       return num(res);
     }
