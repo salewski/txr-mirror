@@ -437,6 +437,21 @@ val getcwd_wrap(void)
     }
   }
 }
+
+static val rmdir_wrap(val path)
+{
+  char *u8path = utf8_dup_to(c_str(path));
+  int err = rmdir(u8path);
+  free(u8path);
+
+  if (err < 0) {
+    int eno = errno;
+    uw_throwf(errno_to_file_error(eno), lit("rmdir ~a: ~d/~s"),
+              path, num(eno), string_utf8(strerror(eno)), nao);
+  }
+
+  return t;
+}
 #endif
 
 #if HAVE_MAKEDEV
@@ -2116,6 +2131,7 @@ void sysif_init(void)
 #if HAVE_UNISTD_H
   reg_fun(intern(lit("chdir"), user_package), func_n1(chdir_wrap));
   reg_fun(intern(lit("pwd"), user_package), func_n0(getcwd_wrap));
+  reg_fun(intern(lit("rmdir"), user_package), func_n1(rmdir_wrap));
 #endif
 
 #if HAVE_MAKEDEV

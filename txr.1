@@ -57536,6 +57536,26 @@ other than
 .codn ERANGE ,
 an exception will be thrown.
 
+.coNP Function @ rmdir
+.synb
+.mets (rmdir << path )
+.syne
+.desc
+The
+.code rmdir
+function removes the directory named by
+.codn path .
+If successful, it returns
+.metn t ,
+otherwise it throws an exception of type
+.codn file-error .
+
+Note:
+.code rmdir
+calls the same-named POSIX function, which requires
+.code path
+to be the name of an empty directory.
+
 .coNP Function @ remove-path
 .synb
 .mets (remove-path < path <> [ throw-on-error-p ])
