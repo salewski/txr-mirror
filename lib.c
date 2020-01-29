@@ -5177,6 +5177,25 @@ val delete_package(val package_in)
   return nil;
 }
 
+val merge_delete_package(val to_in, val victim_in)
+{
+  val self = lit("merge-delete-package");
+  val to = get_package(self, to_in, nil);
+  val victim = get_package(self, victim_in, t);
+  struct hash_iter hi;
+  val cell;
+
+  us_hash_iter_init(&hi, victim->pk.symhash);
+
+  while ((cell = hash_iter_next(&hi))) {
+    val sym = us_cdr(cell);
+    if (symbol_package(sym) == victim)
+      rehome_sym(sym, to);
+  }
+
+  return delete_package(victim);
+}
+
 val package_alist(void)
 {
   return deref(cur_package_alist_loc);

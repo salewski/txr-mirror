@@ -6670,6 +6670,7 @@ void eval_init(void)
   reg_fun(intern(lit("make-anon-package"), system_package), func_n0(make_anon_package));
   reg_fun(intern(lit("find-package"), user_package), func_n1(find_package));
   reg_fun(intern(lit("delete-package"), user_package), func_n1(delete_package));
+  reg_fun(intern(lit("merge-delete-package"), user_package), func_n2o(merge_delete_package, 1));
   reg_fun(intern(lit("package-alist"), user_package), func_n0(package_alist));
   reg_fun(intern(lit("package-name"), user_package), func_n1(package_name));
   reg_fun(intern(lit("package-symbols"), user_package), func_n1(package_symbols));

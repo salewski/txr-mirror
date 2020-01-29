@@ -899,6 +899,7 @@ val make_anon_package(void);
 val packagep(val obj);
 val find_package(val name);
 val delete_package(val package);
+val merge_delete_package(val to, val victim);
 val package_alist(void);
 val package_name(val package);
 val package_symbols(val package);

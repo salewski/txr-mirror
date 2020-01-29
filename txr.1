@@ -52801,6 +52801,29 @@ are scrubbed of any foreign symbols which are the local symbols
 of the deleted
 .metn package .
 
+.coNP Function @ merge-delete-package
+.synb
+.mets (merge-delete-package dst-package <> [ src-package ])
+.syne
+.desc
+The
+.code merge-delete-package
+iterates over all of the local symbols of
+.meta src-package
+and rehomes each symbol into
+.metn dst-package .
+Then, it deletes
+.metn src-package .
+
+Note: the local symbols are identified as if using
+.codn package-local-symbols ,
+rehoming is performed as if using
+.codn rehome-sym ,
+and deleting
+.meta src-package
+is performed as if using
+.codn delete-package .
+
 .coNP Function @ packagep
 .synb
 .mets (packagep << obj )
