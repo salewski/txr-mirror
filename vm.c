@@ -415,7 +415,9 @@ static void vm_do_frame(struct vm *vm, vm_word_t insn, int capturable)
   int size = vm_insn_operand(insn);
 
   if (lev != vm->lev + 1)
-    uw_throwf(error_s, lit("frame level mismatch"), nao);
+    uw_throwf(error_s,
+              lit("~s: frame level mismatch at ~s: right ~s, actual ~s"),
+              vm->vd->self, unum(vm->ip), num(vm->lev + 1), num(lev), nao);
 
   vm->lev = lev;
   vm->dspl[lev].mem = coerce(val *, zalloca(size * sizeof (val *)));
