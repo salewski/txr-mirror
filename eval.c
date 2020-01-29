@@ -6673,9 +6673,9 @@ void eval_init(void)
   reg_fun(intern(lit("merge-delete-package"), user_package), func_n2o(merge_delete_package, 1));
   reg_fun(intern(lit("package-alist"), user_package), func_n0(package_alist));
   reg_fun(intern(lit("package-name"), user_package), func_n1(package_name));
-  reg_fun(intern(lit("package-symbols"), user_package), func_n1(package_symbols));
-  reg_fun(intern(lit("package-local-symbols"), user_package), func_n1(package_local_symbols));
-  reg_fun(intern(lit("package-foreign-symbols"), user_package), func_n1(package_foreign_symbols));
+  reg_fun(intern(lit("package-symbols"), user_package), func_n1o(package_symbols, 0));
+  reg_fun(intern(lit("package-local-symbols"), user_package), func_n1o(package_local_symbols, 0));
+  reg_fun(intern(lit("package-foreign-symbols"), user_package), func_n1o(package_foreign_symbols, 0));
   reg_fun(intern(lit("use-sym"), user_package), func_n2o(use_sym, 1));
   reg_fun(intern(lit("unuse-sym"), user_package), func_n2o(unuse_sym, 1));
   reg_fun(intern(lit("use-package"), user_package), func_n2o(use_package, 1));
