@@ -58377,6 +58377,313 @@ value is available using the
 .code errno
 function.
 
+.SS* Unix Filesystem Complex Operations
+
+Functions in this category are complex functionality implemented using
+a combination of multiple calls into the host system's POSIX API.
+
+.coNP Functions @ copy-file and @ copy-files
+.synb
+.mets (copy-file < from-path < to-path >> [ perms-p <> [ times-p ]])
+.mets (copy-file < from-list < to-dir >> [ perms-p <> [ times-p ]])
+.syne
+.desc
+The
+.code copy-file
+function creates a replica of the file
+.code from-path
+at the destination path
+.metn to-path .
+
+Both paths are opened using
+.code open-file
+in binary mode, as if using
+.mono
+.meti (open-file < from-path "b")
+.onom
+and
+.mono
+.meti (open-file < to-path "wb")
+.onom
+respectively. Then bytes are read from one stream and written to the other,
+in blocks which whose size is a power of two at least as large as 16834.
+
+If the optional Boolean parameter
+.meta perms-p
+is specified, and is true, then the permissions of
+.meta from-path
+are propagated to
+.metn to-path .
+
+If the optional Boolean parameter
+.meta times-p
+is specified, and is true, then the access and modification timestamps of
+.meta from-path
+are propagated to
+.metn to-path .
+
+The
+.code copy-file
+function returns
+.code nil
+if it is successful, and throws an exception derived from
+.code file-error
+on failure.
+
+The
+.code copy-files
+function copies multiple files, whose pathnames are given by the list argument
+.meta from-list
+into the target directory whose path is given by
+.metn to-dir .
+
+The target directory must exist.
+
+For source each path in
+.metn from-list ,
+the
+.code copy-files
+function forms a target path by combining the base name of the
+source path with
+.metn target-dir .
+(See the
+.code base-name
+and
+.code path-cat
+functions).
+Then, the source path is copied to the resulting target path, as if by the
+.code copy-file
+function.
+
+The
+.code copy-files
+function returns
+.code nil
+if it is successful, and throws an exception derived from
+.code file-error
+on failure.
+
+Additionally,
+.code copy-files
+provides an internal catch for the
+.code retry
+and
+.code skip
+restart exceptions. If the caller, using a handler frame established by
+.codn handle ,
+catches an error emanating from the
+.code copy-files
+function, it can retry the failed operation by throwing the
+.code retry
+exception, or continue copying with the next file by throwing the
+.code skip
+exception.
+
+.TP* Example:
+
+.verb
+  ;; Copy all "/mnt/cdrom/*.jpg" files into "images" directory,
+  ;; preserving their time stamps,
+  ;; continuing the operation in the face of
+  ;; file-error exceptions.
+  (handle
+    (copy-files (glob "/mnt/cdrom/*.jpg") "images" nil t)
+    (file-error (throw 'skip)))
+.brev
+
+.coNP Function @ copy-path-rec
+.synb
+.mets (copy-path-rec < from-path < to-path << option *)
+.syne
+.desc
+The
+.code copy-path-rec
+function replicates a file system object identified by the path name
+.metn from-path ,
+creating a similar object named
+.metn to-path .
+
+If
+.code from-path
+is a directory, it is recursively traversed and its structure and content
+is replicated under
+.codn to-path .
+
+The
+.meta option
+arguments are keywords, which may be the following:
+.RS
+.IP :perms
+Propagate the permissions of all objects under
+.meta from-path
+onto their
+.meta to-path
+counterparts. In the absence of this option, the copied objects
+receive permissions with are calculated by applying the
+.code umask
+of the calling process to the maximally liberal.
+.IP :times
+Propagate the modification and access time stamps of all objects under
+.meta from-path
+onto their
+.meta to-path
+counterparts.
+.IP :symlinks
+Copy symbolic links literally rather than dereferencing them.
+Symbolic links are not altered in any way; their exact content
+is preserved. Thus, relative symlinks which point outside of the
+.meta from-path
+tree may turn into dangling symlinks in the
+.meta to-path
+tree.
+.IP :owner
+Propagate the ownership of all objects under
+.meta from-path
+to their
+.meta to-path
+counterparts. Ownership refers to the owner user ID and group ID.
+Without this option, the ownership of the copied objects is derived
+from the effective user ID and group ID of the calling process.
+Note that it is assumed that the host system may requires superuser
+privileges to set both ownerships IDs of an object, and to set them to an
+arbitrary value. An unprivileged process may not change the user ID of a file,
+and may only change the group ID of a file which they own, to one of the groups
+of which that process is a member, either via the effective GID, or the
+ancillary list. The
+.code copy-path-rec
+function tests whether the application is running under superuser privileges;
+if not, then it only honors the
+.code :owner
+option for those objects under
+.meta from-path
+which are owned by the caller, and owned by a group to
+which the caller belongs.
+Other objects are copied as if the
+.code :owner
+option were not in effect, avoiding an attempt to set their ownership
+that is likely to fail.
+.IP :all
+The
+.code :all
+keyword is a shorthand representing all of the options being applied:
+permissions, times, symlinks and ownership are replicated.
+.RE
+
+.IP
+The
+.code copy-path-rec
+function creates all necessary path name components required for
+.meta to-path
+to come into existence, as if by using the
+.code ensure-dir
+function.
+
+Whenever an object under
+.meta from-path
+has a counterpart in
+.meta to-path
+which already exists, the situation is handled as follows:
+.RS
+.IP 1.
+If a directory object is copied to an existing directory object,
+then that existing directory object is accepted as the copy, and
+the operation continues recursively within that directory. If any options are
+specified, then the requested attributes are propagated to that existing
+directory.
+.IP 2.
+If a non-directory object is copied to a directory object, the
+situation throws an exception: the
+.code copy-path-rec
+function refuses to delete an entire directory or subdirectory in order
+to make way for a file, symbolic link, special device or any other kind
+of non-directory object.
+.IP 3.
+If any object is copied to an existing non-directory object,
+that target object is removed first, then the copy operation proceeds.
+.RE
+Copying of files takes place similarly as what is described for the
+.code copy-file
+function.
+
+Special objects such as FIFOs, character devices, block devices and sockets
+are copied by creating a new, similar objects at the destination path.
+In the case of devices, the major and minor numbers of the copy are
+derived from the original, so that the copy refers to the same device.
+However, the copy of a socket or a FIFO is effectively a new, different
+endpoint because these objects are identified by their path name.
+Processes using the copy of a socket or a FIFO will not connect to
+processes which are working with the original.
+
+The
+.code copy-path-rec
+function returns
+.code nil
+if it is successful. It throws an exception derived from
+.code file-error
+when encountering failures.
+
+Additionally
+.code copy-path-rec
+provides an internal catch for the
+.code retry
+and
+.code skip
+restart exceptions. If the caller, using a handler frame established by
+.codn handle ,
+catches an error emanating from the
+.code copy-files
+function, it can retry the failed operation by throwing the
+.code retry
+exception, or continue copying with the next object by throwing the
+.code skip
+exception.
+
+.coNP Function @ remove-path-rec
+.synb
+.mets (remove-path-rec << path )
+.syne
+.desc
+The
+.code remove-path-rec
+function attempts to remove the filesystem object named by
+.metn path .
+If
+.meta path
+refers to a directory, that directory is recursively traversed
+to remove all of its contents, and is then removed.
+
+The
+.code remove-path-rec
+function returns
+.code nil
+if it is successful. It throws an exception derived from
+.code file-error
+when encountering failures.
+
+Additionally
+.code remove-path-rec
+provides an internal catch for the
+.code retry
+and
+.code skip
+restart exceptions. If the caller, using a handler frame established by
+.codn handle ,
+catches an error emanating from the
+.code copy-files
+function, it can retry the failed operation by throwing the
+.code retry
+exception, or continue removing other objects by throwing the
+.code skip
+exception. Skipping a failed remove operation may cause subsequent
+operations to fail. Notably, the failure to remove an item inside
+a directory means that removal of that directory itself will fail,
+and ultimately,
+.meta path
+will still exist when
+.code remove-path-rec
+completes and returns.
+
+
 .SS* Unix Filesystem Object Existence, Type and Access Tests
 
 The following functions all accept, as the

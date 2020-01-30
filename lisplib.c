@@ -800,6 +800,25 @@ static val defset_set_entries(val dlt, val fun)
   set_dlt_entries(dlt, name, fun);
   return nil;
 }
+ 
+static val copy_file_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(format(nil, lit("~acopy-file"), stdlib_path, nao));
+  return nil;
+}
+
+static val copy_file_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("copy-path-opts"), lit("copy-file"), lit("copy-files"),
+    lit("copy-path-rec"), lit("remove-path-rec"),
+    nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
 
 val dlt_register(val dlt,
                  val (*instantiate)(val),
@@ -852,6 +871,7 @@ void lisplib_init(void)
 
   dlt_register(dl_table, save_exe_instantiate, save_exe_set_entries);
   dlt_register(dl_table, defset_instantiate, defset_set_entries);
+  dlt_register(dl_table, copy_file_instantiate, copy_file_set_entries);
 
   reg_fun(intern(lit("try-load"), system_package), func_n1(lisplib_try_load));
 }
