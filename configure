@@ -52,22 +52,45 @@ set -u
 
 #
 # Save command line in a way that can be re-run.
-# This takes care of spaces, but if there are shell-meta characters
-# in the arguments, oops.
 #
 
 cmdline=
 for arg in "$0" ${@+"$@"} ; do
   [ -n "$cmdline" ] && cmdline="$cmdline "
   case $arg in
-  *" "* | " "* | *" " )
-    cmdline=$cmdline$(printf "\"%s\"" "$arg")
+  *"'"* )
+    case $arg in
+    *'"'* | *'$'* )
+      cmdline="$cmdline'$(printf "%s" "$arg" | sed -e "s/'/'\\\\''/g")'"
+      ;;
+    * )
+      cmdline="$cmdline\"$arg\""
+      ;;
+    esac
+    ;;
+  *'"'* | *['$*?[']* | '~'* )
+    cmdline="$cmdline'$arg'"
     ;;
   * )
-    cmdline=$cmdline$arg
+    cmdline="$cmdline$arg"
     ;;
   esac
 done
+
+#
+# Tentatively save configuration in config.log
+#
+cat > reconfigure <<!
+#!/bin/sh
+#
+# Configured on $(date) using:
+
+$cmdline
+
+# The above did not complete.
+!
+
+chmod a+x reconfigure
 
 #
 # Establish default values for any variables that are not specified
@@ -232,6 +255,10 @@ dynamically configurable when the software is run.
 Configuration variables are recorded in a file called config.make.
 This is a GNU makefile, and consequently uses the GNU make syntax. It is
 included in the main Makefile by an include statement.
+
+The configuration command line is recorded in a script called reconfigure.
+To re-run the configure script again with the same parameters, without
+repeating those parameters, run the ./reconfigure script.
 
 The configure script is flexible. It allows variables to be entered in any
 of these forms:
@@ -3509,13 +3536,14 @@ gen_config_make
 printf "done\n"
 
 #
-# Save configuration in config.log
+# Save configuration in reconfigure
 #
-cat > config.log <<!
+cat > reconfigure <<!
+#!/bin/sh
+#
+# Configured on $(date) using:
 
-Configured on $(date) using
-
-   $cmdline
+$cmdline
 
 !
 #
@@ -3535,5 +3563,8 @@ If that is successful, please follow the INSTALL guide.
 Usually, most users just need to "$make tests" and "$make install",
 possibly switching to superuser for "$make install" if the prefix
 points to a privileged location like /usr/local/.
+
+Also, a script called ./reconfigure has been generated.
+This can be used to re-run the configuration with the same parameters.
 
 !

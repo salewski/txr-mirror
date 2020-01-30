@@ -346,7 +346,7 @@ distclean:
 	rm -f txr txr.exe txr-dbg txr-dbg.exe txr-win.exe txr-win-dbg.exe
 	rm -rf y.tab.c lex.yy.c y.tab.h y.output
 	rm -rf config opt dbg share/txr/stdlib/*.tlo* run.sh
-	rm -f config.*
+	rm -f config.* reconfigure
 	rm -rf mpi-1.?.?
 else
 rebuild: clean repatch $(PROG)
@@ -361,7 +361,7 @@ clean-tlo:
 	rm -f $(STDLIB_TLOS)
 
 distclean: clean
-	rm -f config.h config.make config.log
+	rm -f config.h config.make reconfigure
 endif
 
 TESTS_OK := $(addprefix tst/,\
