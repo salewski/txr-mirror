@@ -40960,7 +40960,11 @@ subtype of every exception type:
 .verb
   t ----+--- warning
         |
-        +--- restart --- continue
+        +--- restart ---+--- continue
+        |               |
+        |               +--- retry
+        |               |
+        |               +--- skip
         |
         +--- error ---+--- type-error
                       |
@@ -41004,6 +41008,19 @@ type. The
 type is intended to be the root of a hierarchy of exception
 types used for denoting restart points: designers are encouraged
 to derive restarts from this type.
+A catch for the
+.code continue
+exception should be established around constructs which can throw an
+error from which it is possible to recover. That exception provides
+the entry point into the recovery which resumes execution.
+A catch for
+.code retry
+should be provided in situations when it is possible and makes sense for a failed
+operation to be tried again.
+A catch for
+.code skip
+should be provided in situations when it is possible and sensible to continue
+with subsequent operations even though an operation has failed.
 
 .NP* Dialect Notes
 

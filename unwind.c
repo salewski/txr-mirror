@@ -1314,6 +1314,8 @@ void uw_late_init(void)
   reg_fun(intern(lit("find-frames-by-mask"), user_package), func_n1(uw_find_frames_by_mask));
 #endif
   uw_register_subtype(continue_s, restart_s);
+  uw_register_subtype(intern(lit("retry"), user_package), restart_s);
+  uw_register_subtype(skip_s, restart_s);
   uw_register_subtype(warning_s, t);
   uw_register_subtype(defr_warning_s, warning_s);
 }
