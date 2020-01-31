@@ -65,19 +65,22 @@
   (with-resources ((buf (make-buf copy-size)
                         (buf-set-length buf 0) (buf-trim buf))
                    (ist (open-file from-path "b") (close-stream ist))
-                   (ost (open-file to-path "wb") (close-stream ost)))
+                   (ista (fstat ist))
+                   (ost (if (path-dir-p ista)
+                          (throwf 'path-permission `~s: ~a is a directory`
+                                  'copy-file from-path)
+                          (open-file to-path "wb"))
+                        (close-stream ost)))
     (while (eql (len buf) copy-size)
       (fill-buf-adjust buf 0 ist)
       (put-buf buf 0 ost))
-    (when (or preserve-perms preserve-times)
-      (let ((st (fstat ist)))
-        (when preserve-perms
-          (chmod ost st.mode))
-        (when preserve-times
-          (flush-stream ost)
-          (utimes ost
-                  st.atime (or st.atime-nsec 0)
-                  st.mtime (or st.mtime-nsec 0)))))
+    (when preserve-perms
+      (chmod ost ista.mode))
+    (when preserve-times
+      (flush-stream ost)
+      (utimes ost
+              ista.atime (or ista.atime-nsec 0)
+              ista.mtime (or ista.mtime-nsec 0)))
     nil))
 
 (defun copy-files (paths dest-dir : preserve-perms preserve-times)
