@@ -50010,8 +50010,8 @@ of
 
 .coNP Functions @ open-files and @ open-files*
 .synb
-.mets (open-files < path-list <> [ alternative-stream ])
-.mets (open-files* < path-list <> [ alternative-stream ])
+.mets (open-files < path-list >> [ alternative-stream <> [ mode-string ]])
+.mets (open-files* < path-list >> [ alternative-stream <> [ mode-string ]])
 .syne
 .desc
 The
@@ -50019,8 +50019,19 @@ The
 and
 .code open-files*
 functions create a list of streams by invoking
-the open-file function on each element of
+the
+.code open-file
+function on each element of
 .metn path-list .
+By default, the mode string
+.str r
+is passed to
+.codn open-file ;
+if the
+.meta mode-string
+argument specified, it overrides this default. In that situation,
+the specified mode should permit reading.
+
 These streams are turned
 into a catenated stream as if applied as arguments to
 .codn make-catenated-stream .

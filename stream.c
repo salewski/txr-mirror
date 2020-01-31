@@ -4503,23 +4503,31 @@ val rename_path(val from, val to)
   return t;
 }
 
-static val open_files(val file_list, val substitute_stream)
+static val open_files(val file_list, val substitute_stream, val mode)
 {
   substitute_stream = default_null_arg(substitute_stream);
+  mode = default_null_arg(mode);
 
   if (nilp(file_list) && substitute_stream) {
     return substitute_stream;
+  } else if (mode) {
+    return make_catenated_stream(mapcar(curry_12_1(func_n2o(open_file, 1),
+                                                   mode), file_list));
   } else {
     return make_catenated_stream(mapcar(func_n2o(open_file, 1), file_list));
   }
 }
 
-static val open_files_star(val file_list, val substitute_stream)
+static val open_files_star(val file_list, val substitute_stream, val mode)
 {
   substitute_stream = default_null_arg(substitute_stream);
+  mode = default_null_arg(mode);
 
   if (nilp(file_list) && substitute_stream) {
     return substitute_stream;
+  } else if (mode) {
+    return make_catenated_stream(lazy_mapcar(curry_12_1(func_n2o(open_file, 1),
+                                                        mode), file_list));
   } else {
     return make_catenated_stream(lazy_mapcar(func_n2o(open_file, 1), file_list));
   }
@@ -4875,8 +4883,8 @@ void stream_init(void)
   reg_fun(intern(lit("run"), user_package), func_n2o(run, 1));
   reg_fun(intern(lit("remove-path"), user_package), func_n2o(remove_path, 1));
   reg_fun(intern(lit("rename-path"), user_package), func_n2(rename_path));
-  reg_fun(intern(lit("open-files"), user_package), func_n2o(open_files, 1));
-  reg_fun(intern(lit("open-files*"), user_package), func_n2o(open_files_star, 1));
+  reg_fun(intern(lit("open-files"), user_package), func_n3o(open_files, 1));
+  reg_fun(intern(lit("open-files*"), user_package), func_n3o(open_files_star, 1));
   reg_fun(intern(lit("abs-path-p"), user_package), func_n1(abs_path_p));
   reg_fun(intern(lit("pure-rel-path-p"), user_package), func_n1(pure_rel_path_p));
   reg_fun(intern(lit("base-name"), user_package), func_n2o(base_name, 1));
