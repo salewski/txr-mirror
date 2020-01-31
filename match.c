@@ -170,7 +170,7 @@ static void dump_var(val var, char *pfx1, size_t len1,
     pprint(value, ss);
     str = get_string_from_stream(ss);
 
-    put_string(var, std_output);
+    put_string(symbol_name(var), std_output);
     dump_byte_string(pfx1);
     dump_byte_string(pfx2);
     put_char(chr('='), std_output);

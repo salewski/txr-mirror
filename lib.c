@@ -3660,11 +3660,13 @@ const wchar_t *c_str(val obj)
     return litptr(obj);
   case STR:
     return obj->st.str;
-  case SYM:
-    return c_str(symbol_name(obj));
   case LSTR:
     lazy_str_force(obj);
     return c_str(obj->ls.prefix);
+  case SYM:
+    if (opt_compat && opt_compat <= 231)
+      return c_str(symbol_name(obj));
+    /* fallthrough */
   default:
     type_mismatch(lit("~s is not a string"), obj, nao);
   }

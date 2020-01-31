@@ -72394,6 +72394,16 @@ and
 respectively.
 If 227 or lower compatibility is selected, these functions become
 available under their old names in addition to their new names.
+.IP 231
+Versions of \*(TX until 231 contained an undocumented feature: some
+library functions which are documented as having parameters that must be of
+string type were allowing the arguments to be symbols.  For such symbolic
+arguments, the name of the symbol obtained from
+.code symbol-name
+was implicitly taken as the required string value. This behavior was removed:
+passing symbolic arguments to library function parameters documented as
+strings will cause an exception to the thrown. If a compatibility value
+of 231 or lower is specified, however, the tolerant behavior is restored.
 .IP 225
 After \*(TX 225, the behavior of the
 .code do
