@@ -41752,22 +41752,9 @@ has three or more arguments, they are processed from left to right.
 If errors are encountered during the processing, the correct registrations
 already made for prior arguments remain in place.
 
-It is erroneous to register a duplicate relationship. If symbol
-.code a
-is already a direct or indirect subtype of
-.code b
-then
-.code "(defex a b)"
-and
-.code "(defex a x b)"
-are erroneous.
-
 Every symbol is implicitly considered to be its own exception subtype,
 therefore it is erroneous to explicitly register a symbol as its
 own subtype.
-
-The foregoing rules eliminate the possibility of creating cycles in the
-exception subtype inheritance graph.
 
 The symbol
 .code nil
@@ -41787,6 +41774,15 @@ is erroneous to attempt to register it as an exception subtype.
 Using
 .code t
 as a supertype in a registration is also erroneous.
+
+A symbol
+.code a
+may not be registered as a subtype of a symbol
+.code b
+if the reverse relationship already exists between those two symbols.
+
+The foregoing rules allow redefinitions to take place, while forbidding cycles
+from being created in the exception subtype inheritance graph.
 
 Keyword symbols may be used as exception types.
 
