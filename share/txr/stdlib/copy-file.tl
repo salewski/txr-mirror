@@ -183,5 +183,34 @@
              (retry `retry copying @path` (exc . args)))))
        (logior ftw-phys ftw-depth)))
 
+(defun chmod-rec (path perm)
+  (ftw path
+       (lambda (path type stat . rest)
+         (while t
+           (catch**
+             (return
+               (caseql* type
+                 ((ftw-dnr ftw-ns) (error "~s: unable to access ~s"
+                                          'remove-rec path))
+                 (ftw-sl)
+                 (t (chmod path perm))))
+             (skip `skip chmod @path` (exc . args) (return))
+             (retry `retry chmod @path` (exc . args)))))
+       (logior ftw-phys)))
+
+(defun chown-rec (path uid gid)
+  (ftw path
+       (lambda (path type stat . rest)
+         (while t
+           (catch**
+             (return
+               (caseql* type
+                 ((ftw-dnr ftw-ns) (error "~s: unable to access ~s"
+                                          'remove-rec path))
+                 (t (lchown path uid gid))))
+             (skip `skip chown @path` (exc . args) (return))
+             (retry `retry chown @path` (exc . args)))))
+       (logior ftw-phys)))
+
 (eval-only
   (merge-delete-package 'sys))

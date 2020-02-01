@@ -58690,6 +58690,49 @@ will still exist when
 .code remove-path-rec
 completes and returns.
 
+.coNP Functions @ chmod-rec and @ chown-rec
+.synb
+.mets (chmod-rec < path << mode )
+.mets (chown-rec < path < uid << gid )
+.syne
+.desc
+The
+.code chmod-rec
+and
+.code chown-rec
+functions are recursive counterparts of
+.code chmod
+and
+.codn lchown .
+
+The filesystem object given by
+.meta path
+is recursively traversed, and each of its constituent objects
+is subject to a permission change in the case of
+.codn chown-rec ,
+or an ownership change in the case of
+.codn chown-rec .
+
+The
+.code chmod-rec
+function alters the permission of each object that is not a symbolic link
+using the
+.code chmod
+function. Each object which is a symbolic link is ignored.
+
+The
+.code chown-rec
+function alters the permission of each object encountered, including
+symbolic links, using the
+.code lchown
+function.
+
+These functions establish restart catches, similarly to
+.code remove-path-rec
+and
+.codn copy-path-rec ,
+allowing the caller to retry individual failed operations or skip the objects
+on which operations have failed.
 
 .SS* Unix Filesystem Object Existence, Type and Access Tests
 
