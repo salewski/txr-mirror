@@ -543,20 +543,169 @@ static int get_fd(val stream, val self)
 
 #if HAVE_CHMOD
 
+#define CHM_O 4
+#define CHM_G 2
+#define CHM_U 1
+
+enum chm_state { chm_who, chm_perm, chm_nxtop, chm_comma };
+enum chm_op { chm_add, chm_sub, chm_set };
+
+static val stat_wrap(val path);
+
 static val chmod_wrap(val target, val mode)
 {
   val self = lit("chmod");
-  cnum cmode = c_num(mode);
-  int err;
+  cnum cmode = 0;
+  int err = 0;
+  char *u8path = if3(stringp(target), utf8_dup_to(c_str(target)), 0);
+  int fd = if3(u8path, -1, get_fd(target, self));
 
-  if (stringp(target)) {
-    char *u8path = utf8_dup_to(c_str(target));
-    err = chmod(u8path, cmode);
+  if (integerp(mode)) {
+    cmode = c_num(mode);
+  } else if (stringp(mode)) {
+#if HAVE_SYS_STAT
+    struct stat st;
+    unsigned who = 0;
+    enum chm_state cs = chm_who;
+    enum chm_op op = chm_add;
+
+    if (u8path)
+      err = stat(u8path, &st);
+    else
+      err = fstat(fd, &st);
+
+    if (err == 0) {
+      const wchar_t *cm = c_str(mode);
+      wchar_t ch;
+      mode_t srcm = 0;
+
+      cmode = st.st_mode;
+
+      while ((ch = *cm++) != 0) {
+        switch (cs) {
+        case chm_who:
+          switch (ch) {
+          case 'u': who |= CHM_U; continue;
+          case 'g': who |= CHM_G; continue;
+          case 'o': who |= CHM_O; continue;
+          case 'a': who |= CHM_U | CHM_G | CHM_O; continue;
+          case '+': op = chm_add; cs = chm_perm; continue;
+          case '-': op = chm_sub; cs = chm_perm; continue;
+          case '=': op = chm_set; cs = chm_perm; break;
+          default:
+            goto inval;
+          }
+          break;
+        case chm_nxtop:
+          srcm = 0;
+          switch (ch) {
+          case '+': op = chm_add; cs = chm_perm; continue;
+          case '-': op = chm_sub; cs = chm_perm; continue;
+          case '=': op = chm_set; cs = chm_perm; break;
+          default: goto perm;
+          }
+          break;
+        perm:
+        case chm_perm:
+          switch (ch) {
+          case 'u': srcm |= (cmode & 0700) >> 6; cs = chm_comma; break;
+          case 'g': srcm |= (cmode & 0070) >> 3; cs = chm_comma; break;
+          case 'o': srcm |= (cmode & 0007);      cs = chm_comma; break;
+          case 'r': srcm |= 4;                   cs = chm_nxtop; break;
+          case 'w': srcm |= 2;                   cs = chm_nxtop; break;
+          case 'x': srcm |= 1;                   cs = chm_nxtop; break;
+          case 's': srcm |= 010;                 cs = chm_nxtop; break;
+          case 't': srcm |= 020;                 cs = chm_nxtop; break;
+          case 'X': srcm |= ((cmode & 0111) != 0 ||
+                             S_ISDIR(cmode));    cs = chm_nxtop; break;
+          case ',': srcm = 0; who = 0;           cs = chm_who; continue;
+          default:
+            goto inval;
+          }
+          break;
+        case chm_comma:
+          if (ch != ',')
+            goto inval;
+          cs = chm_who;
+          break;
+        }
+
+        {
+          mode_t bits = 0;
+          mode_t mask = 0;
+          int do_um = (who == 0);
+
+          if (do_um)
+            who = CHM_U | CHM_G | CHM_O;
+
+          if ((srcm & 020))
+            bits |= S_ISVTX;
+
+          if ((who & CHM_U) != 0) {
+            mask |= 0700;
+            if ((srcm & 010))
+              bits |= S_ISUID;
+            bits |= (srcm & 7) << 6;
+          }
+
+          if ((who & CHM_G) != 0) {
+            mask |= 0070;
+            if ((srcm & 010))
+              bits |= S_ISGID;
+            bits |= (srcm & 7) << 3;
+          }
+
+          if ((who & CHM_O) != 0) {
+            mask |= 0007;
+            bits |= (srcm & 7);
+          }
+
+          if (do_um) {
+            mode_t um = umask(0777);
+            umask(um);
+            bits &= ~um;
+          }
+
+          switch (op) {
+          case chm_add: cmode |= bits; break;
+          case chm_sub: cmode &= ~bits; break;
+          case chm_set:
+            cmode &= ~mask;
+            if ((who & CHM_O) != 0)
+              bits &= ~S_ISVTX; /* GNU Coreutils 8.28 chmod behavior */
+            if (!S_ISDIR(cmode))
+              cmode &= ~(S_ISUID | S_ISGID);
+            cmode |= bits;
+            break;
+          }
+        }
+      }
+
+      if (cs == chm_who)
+        goto inval;
+    }
+#else
     free(u8path);
+    uw_throwf(file_error_s, lit("~s: ~s mode requires stat"),
+              self, mode, nao);
+#endif
   } else {
-    int fd = get_fd(target, self);
-    err = fchmod(fd, cmode);
+inval:
+    free(u8path);
+    uw_throwf(file_error_s, lit("~s: invalid mode ~s"),
+              self, mode, nao);
   }
+
+  if (err == 0) {
+    if (u8path) {
+      err = chmod(u8path, cmode);
+    } else {
+      int fd = get_fd(target, self);
+      err = fchmod(fd, cmode);
+    }
+  }
+
+  free(u8path);
 
   if (err < 0) {
     int eno = errno;

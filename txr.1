@@ -58010,14 +58010,59 @@ It is implemented in terms of the POSIX functions
 .code chmod
 and
 .codn fchmod .
+If
+.meta mode
+is a character string representing a symbolic mode, then the function
+also makes use of
+.code stat
+or
+.code fstat
+and
+.codn umask .
+
 
 The permissions are specified by
 .metn mode ,
-an integer argument.
+which must be an integer or a string.
 
-The existing permissions may be obtained using the
-.code stat
+An integer
+.meta mode
+is a bitwise combination of permission mode bits. The value is passed
+directly to the POSIX
+.code chmod
+or
+.code fchmod
 function.
+Note: to construct a mode value, applications may use
+.code logior
+to combine the values
+of the variables like
+.code s-irusr
+or
+.code s-ixoth
+or take advantage of the well-known numeric structure of POSIX
+permissions to express them octal in octal notation.  For instance the mode
+.code #o750
+denotes that the owner has read, write and execute permissions,
+the group owner has read and execute, others have no permission.
+This value may also be calculated using
+.codn "(logior s-irwxu s-irgrp s-ixgrp)" .
+
+If the argument to
+.meta mode
+is a string, it is interpreted according to the symbolic syntax
+of the POSIX
+.code chmod
+utility. For instance, a
+.meta mode
+value of
+.str a+w,-s
+means to give all users (owner, group and others) write permission,
+and remove the setuid and setgid bits.
+
+The full syntax and semantics of symbolic
+.meta mode
+strings is given in the POSIX standard IEEE 1003.1.
 
 The function throws a
 .code file-error
@@ -58056,6 +58101,14 @@ function.
                            s-irgrp
                            s-iroth))
 .brev
+
+Implementation note: The implementation of the symbolic
+.meta mode
+processing is based on the descriptions given in IEEE 1003.1-2018,
+Issue 7 and also on the
+.code chmod
+program from from GNU Coreutils 8.28: and experiments with its behavior,
+and its documentation.
 
 .coNP Functions @ chown and @ lchown
 .synb
@@ -58718,7 +58771,10 @@ The
 function alters the permission of each object that is not a symbolic link
 using the
 .code chmod
-function. Each object which is a symbolic link is ignored.
+function, and
+.meta mode
+is interpreted accordingly: it may be an integer or string.
+Each object which is a symbolic link is ignored.
 
 The
 .code chown-rec
