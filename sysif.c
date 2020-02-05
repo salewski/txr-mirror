@@ -556,8 +556,6 @@ static val mkfifo_wrap(val path, val mode)
 enum chm_state { chm_who, chm_perm, chm_nxtop, chm_comma };
 enum chm_op { chm_add, chm_sub, chm_set };
 
-static val stat_wrap(val path);
-
 static val chmod_wrap(val target, val mode)
 {
   val self = lit("chmod");
@@ -1128,7 +1126,7 @@ static val stat_impl(val obj, int (*statfn)(val, struct stat *),
 #endif
 }
 
-static val stat_wrap(val path)
+val stat_wrap(val path)
 {
   return stat_impl(path, do_stat, lit("stat"), path);
 }
@@ -1136,11 +1134,6 @@ static val stat_wrap(val path)
 static val lstat_wrap(val path)
 {
   return stat_impl(path, do_lstat, lit("lstat"), path);
-}
-
-val fstat_wrap(val stream)
-{
-  return stat_impl(stream, do_stat, lit("fstat"), nil);
 }
 
 #if HAVE_FILE_STAMP_CHANGE
@@ -2372,9 +2365,12 @@ void sysif_init(void)
   reg_fun(intern(lit("lutimes"), user_package), func_n5(wrap_lutimes));
 #endif
 
-  reg_fun(intern(lit("stat"), user_package), func_n1(stat_wrap));
+  {
+    val fn = func_n1(stat_wrap);
+    reg_fun(intern(lit("stat"), user_package), fn);
+    reg_fun(intern(lit("fstat"), user_package), fn);
+  }
   reg_fun(intern(lit("lstat"), user_package), func_n1(lstat_wrap));
-  reg_fun(intern(lit("fstat"), user_package), func_n1(fstat_wrap));
 
 #if HAVE_SYS_STAT
 #ifndef S_IFSOCK
