@@ -924,15 +924,17 @@ static void provide_completions(const wchar_t *data,
 
   (void) ctx;
 
+  uw_catch_begin (catch_all, exsym, exvals);
+
   if (!ptr)
-    return;
+    goto out;
 
   while ((iswalnum(convert(wint_t, *ptr)) || wcschr(gly, *ptr)) &&
          (sym = ptr) && ptr > data)
     ptr--;
 
   if (!sym)
-    return;
+    goto out;
 
   end = sym;
 
@@ -999,6 +1001,16 @@ static void provide_completions(const wchar_t *data,
                          sym_pfx, line_pfx, kind, if2(package, null(keyword)));
     }
   }
+
+out:
+  uw_catch (exsym, exvals) {
+    (void) exsym;
+    (void) exvals;
+  }
+
+  uw_unwind;
+
+  uw_catch_end;
 }
 
 static wchar_t *provide_atom(lino_t *l, const wchar_t *str, int n, void *ctx)
