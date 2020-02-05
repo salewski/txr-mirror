@@ -57742,10 +57742,9 @@ The
 .code stat
 structure defines the type of object which is returned
 by the
-.codn stat ,
-.codn lstat ,
+.code stat
 and
-.code fstat
+.code lstat
 functions.  Except for
 .codn path ,
 .codn atime-nsec ,
@@ -57788,21 +57787,33 @@ fields take on values of zero.
 
 .coNP Functions @, stat @ lstat and @ fstat
 .synb
-.mets (stat << path )
+.mets (stat > { path | < stream | << fd })
 .mets (lstat << path )
-.mets (fstat > { stream | << fd })
+.mets (fstat > { path | stream | << fd })
 .syne
 .desc
 The
 .code stat
-function inquires the filesystem about the existence of an object
-denoted by the string
-.metn path .
+function retrieves information about a filesystem object whose pathname
+is given by the string argument
+.metn path ,
+or else about a system object associated with the open stream
+.metn stream ,
+or one associated with the integer file descriptor
+.metn fd .
+
+If a
+.meta stream
+is specified, that stream must be of a kind from which the
+.code fileno
+function can retrieve a file descriptor, otherwise an exception of type
+.code file-error
+is thrown.
+
 If the object is not found or cannot be
 accessed, an exception is thrown.
-
-Otherwise, information is retrieved about the object. The information takes
-the form of a structure of type
+Otherwise, information is retrieved and returned, in the form
+of a structure of type
 .codn stat .
 
 If
@@ -57817,23 +57828,8 @@ The
 .code lstat
 function behaves the same as
 .code stat
-or objects which are not symbolic links. For a symbolic link, it retrieves
+on objects which are not symbolic links. For a symbolic link, it retrieves
 information about the link itself, rather than its target.
-
-The
-.code fstat
-function retrieves information about the file system object associated with
-the open stream
-.meta stream
-or numeric file descriptor
-.metn fd .
-If a
-.meta stream
-is specified, that stream must be of a kind from which the
-.code fileno
-function can retrieve a file descriptor, otherwise an exception of type
-.code file-error
-is thrown.
 
 The
 .code path
@@ -57841,10 +57837,33 @@ slot of the returned structure
 holds a copy of their
 .meta path
 argument value.
-In the case of
-.codn fstat ,
-this slot is
+When information is retrieved using a
+.meta stream
+or
+.meta fd
+argument, this slot is
 .codn nil .
+
+The
+.code fstat
+function is an alias for
+.codn stat .
+
+Note: until \*(TX 231,
+.code stat
+and
+.code fstat
+were distinct functions:
+.code stat
+accepted only
+.meta path
+arguments, whereas
+.code fstat
+function accepted only
+.meta stream
+or
+.meta fd
+arguments.
 
 .coNP Variables @, s-ifmt @, s-iflnk @, s-ifreg @, s-ifblk ... , @ s-ixoth
 .desc

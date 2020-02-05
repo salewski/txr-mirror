@@ -301,13 +301,38 @@ static val mkdir_wrap(val path, val mode)
 }
 #endif
 
+#if HAVE_CHMOD || HAVE_CHOWN || HAVE_SYS_STAT || HAVE_FILE_STAMP_CHANGE
+static int get_fd(val stream, val self)
+{
+  val fd_in = if3(integerp(stream), stream, stream_get_prop(stream, fd_k));
+
+  if (stream && !fd_in)
+    uw_throwf(file_error_s,
+              lit("~a: stream ~s has no :fd property"),
+              self, stream, nao);
+
+  if (!stream)
+    uw_throwf(file_error_s,
+              lit("~a: ~s isn't a stream object"),
+              self, stream, nao);
+
+  return c_int(fd_in, self);
+}
+#endif
+
 #if HAVE_SYS_STAT
 static int do_stat(val wpath, struct stat *buf)
 {
-  char *path = utf8_dup_to(c_str(wpath));
-  int res = stat(path, buf);
-  free(path);
-  return res;
+  if (stringp(wpath)) {
+    char *path = utf8_dup_to(c_str(wpath));
+    int res = stat(path, buf);
+    free(path);
+    return res;
+  } else {
+    val self = lit("stat");
+    int fd = get_fd(wpath, self);
+    return fstat(fd, buf);
+  }
 }
 
 #ifdef S_IFLNK
@@ -520,25 +545,6 @@ static val mkfifo_wrap(val path, val mode)
   return t;
 }
 
-#endif
-
-#if HAVE_CHMOD || HAVE_CHOWN || HAVE_SYS_STAT || HAVE_FILE_STAMP_CHANGE
-static int get_fd(val stream, val self)
-{
-  val fd_in = if3(integerp(stream), stream, stream_get_prop(stream, fd_k));
-
-  if (stream && !fd_in)
-    uw_throwf(file_error_s,
-              lit("~a: stream ~s has no :fd property"),
-              self, stream, nao);
-
-  if (!stream)
-    uw_throwf(file_error_s,
-              lit("~a: ~s isn't a stream object"),
-              self, stream, nao);
-
-  return c_int(fd_in, self);
-}
 #endif
 
 #if HAVE_CHMOD
@@ -1030,15 +1036,6 @@ static val exit_star_wrap(val status)
 
 #endif
 
-#if HAVE_SYS_STAT
-static int do_fstat(val stream, struct stat *buf)
-{
-  val self = lit("fstat");
-  int fd = get_fd(stream, self);
-  return fstat(fd, buf);
-}
-#endif
-
 time_t c_time(val time)
 {
   return if3(convert(time_t, -1) > 0, c_unum(time), c_num(time));
@@ -1143,7 +1140,7 @@ static val lstat_wrap(val path)
 
 val fstat_wrap(val stream)
 {
-  return stat_impl(stream, do_fstat, lit("fstat"), nil);
+  return stat_impl(stream, do_stat, lit("fstat"), nil);
 }
 
 #if HAVE_FILE_STAMP_CHANGE
