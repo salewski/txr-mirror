@@ -713,8 +713,15 @@ inval:
 
   if (err < 0) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("~a ~a #o~o: ~d/~s"),
-              self, target, mode, num(eno), string_utf8(strerror(eno)), nao);
+    val error = errno_to_file_error(eno);
+    val errstr = string_utf8(strerror(eno));
+
+    if (stringp(mode))
+      uw_throwf(error, lit("~a ~a ~a: ~d/~s"),
+                self, target, mode, num(eno), errstr, nao);
+    else
+      uw_throwf(error, lit("~a ~a #o~o: ~d/~s"),
+                self, target, mode, num(eno), errstr, nao);
   }
 
   return t;
