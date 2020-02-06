@@ -24916,7 +24916,8 @@ do not support
 
 The
 .code fill-buf
-function returns the position of the last byte that was successfully read.
+function returns the position that is one byte past the last byte that
+was successfully read.
 If an end-of-file or other error condition occurs before the buffer is filled
 through to the end, then the value returned is smaller than the buffer length.
 In this case, the area of the buffer beyond the read size retains its previous
