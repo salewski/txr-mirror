@@ -894,10 +894,10 @@ static val stdio_fill_buf(val stream, val buf, cnum pos)
   if (h->f != 0) {
     cnum nread = fread(ptr + pos, 1, len - pos, h->f);
     if (nread > 0)
-      return unum(pos + nread);
+      return num(pos + nread);
   }
   stdio_maybe_read_error(stream);
-  return zero;
+  return num(pos);
 }
 
 static val stdio_close(val stream, val throw_on_error)
