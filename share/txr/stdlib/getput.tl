@@ -24,16 +24,25 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(defun sys:get-buf-common (s)
-  (let ((b (make-buf 4096))
+(defun sys:get-buf-common (s bytes seek)
+  (let ((b (make-buf 0 0 (min bytes 4096)))
         (o 0))
-    (while t
-      (let ((p (fill-buf b o s)))
-        (when (< p (len b))
-          (buf-set-length b (if (plusp p) p o))
+    (when (plusp seek)
+      (unless (ignerr (seek-stream s seek :from-current))
+        (let ((b (make-buf (min seek 4096)))
+              (c 0))
+          (while (< c seek)
+            (let ((p (fill-buf b 0 s)))
+              (if (zerop p)
+                (return))
+              (inc c p))))))
+    (while (or (null bytes) (< (len b) bytes))
+      (let ((p (fill-buf-adjust b o s)))
+        (when (= p o)
           (return))
-        (buf-set-length b (+ p (len b)))
-        (set o p)))
+        (set o p)
+        (when (eql p (buf-alloc-size b))
+          (buf-set-length b (min (+ p p) bytes)))))
     b))
 
 (defun file-get (name)
@@ -71,9 +80,9 @@
   (with-stream (s (open-file name "a"))
     (put-lines lines s)))
 
-(defun file-get-buf (name)
+(defun file-get-buf (name : bytes (seek 0))
   (with-stream (s (open-file name "rb"))
-    (sys:get-buf-common s)))
+    (sys:get-buf-common s bytes seek)))
 
 (defun file-put-buf (name buf)
   (with-stream (s (open-file name "wb"))
@@ -106,9 +115,9 @@
   (with-stream (s (open-command cmd "w"))
     (put-lines lines s)))
 
-(defun command-get-buf (cmd)
+(defun command-get-buf (cmd : bytes (skip 0))
   (with-stream (s (open-command cmd "rb"))
-    (sys:get-buf-common s)))
+    (sys:get-buf-common s bytes skip)))
 
 (defun command-put-buf (cmd buf)
   (with-stream (s (open-command cmd "wb"))

@@ -24947,15 +24947,15 @@ adjusts the length of the buffer to match the position that is returned.
 
 .coNP Functions @ file-get-buf and @ command-get-buf
 .synb
-.mets (file-get-buf << name )
-.mets (command-get-buf << cmd )
+.mets (file-get-buf < name >> [ max-bytes <> [ skip-bytes ]])
+.mets (command-get-buf < cmd >> [ max-bytes <> [ skip-bytes ]])
 .syne
 .desc
 The
 .code file-get-buf
 function opens a binary stream over the file indicated by the string argument
 .meta name
-for reading. The entire file is read and its contents are returned as a
+for reading. By default, the entire file is read and its contents are returned as a
 buffer object. The buffer's length corresponds to the number of bytes
 read from the file.
 
@@ -24968,6 +24968,24 @@ as if by the
 .code open-command
 function.  It read bytes from the pipe until the indication that no more
 input is available. The bytes are returned aggregated into a buffer object.
+
+If the
+.meta max-bytes
+parameter is given an argument, it must be a non-negative integer.
+That value specifies a limit on the number of bytes to read. A buffer
+no longer than
+.meta max-bytes
+shall be returned.
+
+If the
+.meta skip-bytes
+parameter is given an argument, it must be a non-negative integer.
+That value specifies how many initial bytes of the input should be
+discarded before accumulation of the buffer begins.
+If possible, the semantics of this parameter is achieved by performing a
+.code seek-stream
+operation, falling back on reading and discarding bytes if the
+stream doesn't support seeking.
 
 .coNP Functions @, file-put-buf @ file-append-buf and @ command-put-buf
 .synb
