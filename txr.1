@@ -24953,7 +24953,7 @@ adjusts the length of the buffer to match the position that is returned.
 .desc
 The
 .code file-get-buf
-function opens a text stream over the file indicated by the string argument
+function opens a binary stream over the file indicated by the string argument
 .meta name
 for reading. The entire file is read and its contents are returned as a
 buffer object. The buffer's length corresponds to the number of bytes
@@ -24961,7 +24961,7 @@ read from the file.
 
 The
 .code command-get
-function opens text stream over an input command pipe created for
+function opens a binary stream over an input command pipe created for
 the command string
 .metn cmd ,
 as if by the
