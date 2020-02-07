@@ -78,11 +78,11 @@ static cnum buf_check_index(struct buf *b, val index, val self)
 val make_buf(val len, val init_val, val alloc_size)
 {
   val self = lit("make-buf");
-  cnum l = buf_check_len(len, self);
+  cnum blen = buf_check_len(len, self);
   val alloc = if3(null_or_missing_p(alloc_size), len, alloc_size);
-  cnum size = buf_check_alloc_size(alloc, l, self);
+  cnum size = buf_check_alloc_size(alloc, blen, self);
   cnum iv = c_u8(default_arg(init_val, zero), self);
-  mem_t *data = if3(iv == 0,
+  mem_t *data = if3(iv == 0 && size == blen,
                     chk_calloc(size, 1),
                     chk_malloc(size));
   val obj = make_obj();
@@ -92,8 +92,8 @@ val make_buf(val len, val init_val, val alloc_size)
   obj->b.len = len;
   obj->b.size = num(size);
 
-  if (iv != 0)
-    memset(data, convert(unsigned char, iv), c_num(len));
+  if (iv != 0 || size != blen)
+    memset(data, convert(unsigned char, iv), blen);
 
   return obj;
 }
@@ -153,29 +153,6 @@ val copy_buf(val buf)
              make_borrowed_buf(b->len, b->data));
 }
 
-static void buf_grow(struct buf *b, val init_val, val self)
-{
-  cnum len = c_num(b->len);
-  cnum oldsize = c_num(b->size), size = oldsize;
-  cnum iv = c_u8(default_arg(init_val, zero), self);
-
-  if (size < len) {
-    if (size > INT_PTR_MAX - INT_PTR_MAX / 5) {
-      size = INT_PTR_MAX;
-    } else {
-      size = size + size / 4;
-      if (size < len)
-        size = len;
-    }
-  }
-
-  if (size > oldsize) {
-    b->data = chk_realloc(b->data, size);
-    b->size = num(size);
-    memset(b->data + oldsize, convert(unsigned char, iv), size - oldsize);
-  }
-}
-
 static void buf_shrink(struct buf *b)
 {
   val len = b->len;
@@ -201,16 +178,39 @@ val buf_trim(val buf)
   return oldsize;
 }
 
-static val buf_do_set_len(val buf, struct buf *b, val len,
+static val buf_do_set_len(val buf, struct buf *b, val newlen,
                           val init_val, val self)
 {
   val oldlen = b->len;
+  cnum olen = c_num(oldlen), len = c_num(newlen);
+  cnum oldsize = c_num(b->size), size = oldsize;
+  cnum iv = c_u8(default_arg(init_val, zero), self);
+
   if (!b->size)
     uw_throwf(error_s, lit("~a: ~s is a fixed buffer"),
               self, buf, nao);
-  (void) buf_check_len(len, self);
-  b->len = len;
-  buf_grow(b, init_val, self);
+  (void) buf_check_len(newlen, self);
+
+  b->len = newlen;
+
+  if (size < len) {
+    if (size > INT_PTR_MAX - INT_PTR_MAX / 5) {
+      size = INT_PTR_MAX;
+    } else {
+      size = size + size / 4;
+      if (size < len)
+        size = len;
+    }
+  }
+
+  if (size > oldsize) {
+    b->data = chk_realloc(b->data, size);
+    b->size = num(size);
+  }
+
+  if (len > olen)
+    memset(b->data + olen, convert(unsigned char, iv), len - olen);
+
   return oldlen;
 }
 
