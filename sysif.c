@@ -630,8 +630,7 @@ static val chmod_wrap(val target, val mode)
         case chm_comma:
           if (ch != ',')
             goto inval;
-          cs = chm_who;
-          break;
+          srcm = 0; who = 0; cs = chm_who; continue;
         }
 
         {

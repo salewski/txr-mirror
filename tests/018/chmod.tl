@@ -40,3 +40,4 @@
 (cht "------------" "+rwx,g-r+w,o-r+w"  "---rwx-wx-wx")
 (cht "---------rwx" "u=rwsx"            "s--rwx---rwx")
 (cht "---------rwx" "u=rwsx,g=rwx,go-x" "s--rwxrw-rw-")
+(cht "---------rwx" "g=o,g-w+s,u=g,o-x" "-g-r-xr-xrw-")
