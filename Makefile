@@ -397,6 +397,7 @@ tst/tests/010/align-columns.ok: TXR_ARGS := tests/010/align-columns.dat
 tst/tests/010/block.ok: TXR_OPTS := -B
 tst/tests/010/reghash.ok: TXR_OPTS := -B
 tst/tests/013/maze.ok: TXR_ARGS := 20 20
+tst/tests/018/chmod.ok: TXR_ARGS := tst/tests/018/tempfile
 
 tst/tests/002/%: TXR_SCRIPT_ON_CMDLINE := y
 
@@ -407,6 +408,7 @@ tst/tests/014/%: TXR_DBG_OPTS :=
 tst/tests/015/%: TXR_DBG_OPTS :=
 tst/tests/016/%: TXR_DBG_OPTS :=
 tst/tests/017/%: TXR_DBG_OPTS :=
+tst/tests/018/%: TXR_DBG_OPTS :=
 
 TST_EXPECTED  = $(word 2,$^)
 TST_OUT = $(patsubst %.expected,tst/%.out,$(TST_EXPECTED))
