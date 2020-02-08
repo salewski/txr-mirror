@@ -48925,7 +48925,7 @@ grammar. Note that it permits no whitespace characters:
 .mono
 .mets < mode-string := [ < mode ] [ < options ]
 .mets < mode := { < selector [ + ] | + }
-.mets < selector := { r | w | a }
+.mets < selector := { r | w | a | m }
 .mets < options := { b | l | u | < digit | < redirection }
 .mets < digit := { 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }
 .onom
@@ -48968,6 +48968,14 @@ to zero length. If it doesn't exist, it is created.
 .coIP w+
 The file is opened for reading and writing. If it exists, it
 is truncated to zero length. If it doesn't exist, it is created.
+.coIP m
+The file is opened for modification. This is the same as
+.code w
+except that the file is not truncated if it exists.
+.coIP m+
+The file is opened for reading and modification. This is the same as
+.code w+
+except that the file is not truncated if it exists.
 .coIP a
 The file is opened for writing. If it doesn't exist, it is
 created. If it exists, the current position is advanced to

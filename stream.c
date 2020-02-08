@@ -1044,6 +1044,28 @@ static struct strm_ops stdio_ops =
 static struct strm_ops stdio_sock_ops;
 #endif
 
+static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
+                          const struct stdio_mode m)
+{
+#if HAVE_FCNTL
+  if (m.notrunc) {
+    char *name = utf8_dup_to(wname);
+    int flags = (m.read ? O_RDWR : O_WRONLY) | O_CREAT;
+    int fd = open(name, flags, 0777);
+    free(name);
+    if (fd < 0)
+      return NULL;
+    return (fd < 0) ? NULL : w_fdopen(fd, mode);
+  }
+#else
+  if (m.notrunc)
+    uw_throwf(file_error_s,
+              lit("open-file: system doesn't support \"o\" mode"), nao);
+#endif
+  return w_fopen(wname, mode);
+}
+
+
 static void tail_calc(unsigned long *state, int *usec, int *mod)
 {
   unsigned long count = (*state)++;
@@ -1096,7 +1118,7 @@ static void tail_strategy(val stream, unsigned long *state)
 
       /* Try to open the file.
        */
-      if (!(newf = w_fopen(c_str(h->descr), c_str(mode)))) {
+      if (!(newf = w_fopen_mode(c_str(h->descr), c_str(mode), m))) {
         /* If already have the file open previously, and the name
          * does not open any more, then the file has rotated.
          * Have the caller try to read the last bit of data
@@ -1348,6 +1370,12 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl)
     ms++;
     m.write = 1;
     m.append = 1;
+    break;
+  case 'm':
+    ms++;
+    m.write = 1;
+    m.create = 1;
+    m.notrunc = 1;
     break;
   default:
     break;
@@ -3947,7 +3975,8 @@ val open_directory(val path)
 val open_file(val path, val mode_str)
 {
   struct stdio_mode m, m_r = stdio_mode_init_r;
-  FILE *f = w_fopen(c_str(path), c_str(normalize_mode(&m, mode_str, m_r)));
+  val norm_mode = normalize_mode(&m, mode_str, m_r);
+  FILE *f = w_fopen_mode(c_str(path), c_str(norm_mode), m);
 
   if (!f) {
     int eno = errno;
@@ -3979,7 +4008,7 @@ val open_tail(val path, val mode_str, val seek_end_p)
 {
   struct stdio_mode m, m_r = stdio_mode_init_r;
   val mode = normalize_mode(&m, mode_str, m_r);
-  FILE *f = w_fopen(c_str(path), c_str(mode));
+  FILE *f = w_fopen_mode(c_str(path), c_str(mode), m);
   struct stdio_handle *h;
   val stream;
   unsigned long state = 0;
