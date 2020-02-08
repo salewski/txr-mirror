@@ -91,7 +91,7 @@
     (put-buf buf 0 s)))
 
 (defun file-place-buf (name buf : (seek 0))
-  (with-stream (s (open-file name "r+"))
+  (with-stream (s (open-file name "mb"))
     (unless (zerop seek)
       (seek-stream s seek :from-current))
     (put-buf buf 0 s)))
