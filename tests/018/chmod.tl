@@ -19,8 +19,8 @@
     (let* ((st (stat tgt))
            (m (logand st.mode #xFFF)))
       (unless (eql m exp)
-        (error "failed to set mode: expected ~s, actual ~s"
-               expected (enc-perm m))))))
+        (error "failed to set mode with ~s: expected ~s, actual ~s"
+               mode expected (enc-perm m))))))
 
 (remove-path tgt)
 (with-stream (s (open-file tgt "w")))
@@ -32,10 +32,11 @@
 (cht "------------" "g+s"               "-g----------")
 (cht "------------" "+t"                "--t---------")
 (cht "sgtrwxrwxrwx" "="                 "------------")
-(cht "sgtrwxrwxrwx" "u="                "--t---rwxrwx")
-(cht "sgtrwxrwxrwx" "g="                "--trwx---rwx")
-(cht "sgtrwxrwxrwx" "o="                "---rwxrwx---")
+(cht "sgtrwxrwxrwx" "u="                "-gt---rwxrwx")
+(cht "sgtrwxrwxrwx" "g="                "s-trwx---rwx")
+(cht "sgtrwxrwxrwx" "o="                "sg-rwxrwx---")
 (cht "------------" "u+s,g+s"           "sg----------")
 (cht "------------" "u+r,g+r,o+r,+t,+s" "sgtr--r--r--")
 (cht "------------" "+rwx,g-r+w,o-r+w"  "---rwx-wx-wx")
 (cht "---------rwx" "u=rwsx"            "s--rwx---rwx")
+(cht "---------rwx" "u=rwsx,g=rwx,go-x" "s--rwxrw-rw-")

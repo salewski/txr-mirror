@@ -643,14 +643,14 @@ static val chmod_wrap(val target, val mode)
             bits |= S_ISVTX;
 
           if (implicit_all || (who & CHM_U) != 0) {
-            mask |= 0700;
+            mask |= (0700 | S_ISUID);
             if ((srcm & 010))
               bits |= S_ISUID;
             bits |= (srcm & 7) << 6;
           }
 
           if (implicit_all || (who & CHM_G) != 0) {
-            mask |= 0070;
+            mask |= (0070 | S_ISGID);
             if ((srcm & 010))
               bits |= S_ISGID;
             bits |= (srcm & 7) << 3;
@@ -675,8 +675,6 @@ static val chmod_wrap(val target, val mode)
               cmode &= ~mask;
               if (implicit_all || (who & CHM_O) != 0)
                 cmode &= ~S_ISVTX; /* GNU Coreutils 8.28 chmod behavior */
-              if (!S_ISDIR(cmode))
-                cmode &= ~(S_ISUID | S_ISGID);
             }
             cmode |= bits;
             break;
