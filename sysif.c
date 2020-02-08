@@ -673,6 +673,7 @@ static val chmod_wrap(val target, val mode)
           case chm_sub: cmode &= ~bits; break;
           case chm_set:
             if (cs == chm_perm) {
+              oldm = cmode;
               cmode &= ~mask;
               if (implicit_all || (who & CHM_O) != 0)
                 cmode &= ~S_ISVTX; /* GNU Coreutils 8.28 chmod behavior */
