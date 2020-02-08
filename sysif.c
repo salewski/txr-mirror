@@ -676,7 +676,7 @@ static val chmod_wrap(val target, val mode)
           case chm_set:
             cmode &= ~mask;
             if ((who & CHM_O) != 0)
-              bits &= ~S_ISVTX; /* GNU Coreutils 8.28 chmod behavior */
+              cmode &= ~S_ISVTX; /* GNU Coreutils 8.28 chmod behavior */
             if (!S_ISDIR(cmode))
               cmode &= ~(S_ISUID | S_ISGID);
             cmode |= bits;
