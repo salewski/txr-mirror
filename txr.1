@@ -24990,7 +24990,8 @@ stream doesn't support seeking.
 
 .coNP Functions @, file-put-buf @ file-append-buf and @ command-put-buf
 .synb
-.mets (file-put-buf < name << buf )
+.mets (file-put-buf < name < buf << skip-bytes )
+.mets (file-place-buf < name < buf << skip-bytes )
 .mets (file-append-buf < name << buf )
 .mets (command-put-buf < cmd << buf )
 .syne
@@ -25003,6 +25004,20 @@ writes the contents of the buffer object
 .meta buf
 into the file, and then closes the file.  If the file doesn't exist, it is
 created.  If it exists, it is truncated to zero length and overwritten.
+The default value of the optional
+.meta skip-bytes
+parameter is zero. If an argument is given, it must be a non-negative integer.
+If it is nonzero, then after opening the file, before writing the buffer,
+the function will seek to an offset of that many bytes from the start of the
+file. The contents of
+.meta buf
+will be written at that offset.
+
+The
+.code file-place-buf
+function doees not truncate an existing file to zero length.
+In all other regards, it is equivalent to
+.codn file-put-buf .
 
 The
 .code file-append-buf
