@@ -637,34 +637,31 @@ static val chmod_wrap(val target, val mode)
         {
           mode_t bits = 0;
           mode_t mask = 0;
-          int do_um = (who == 0);
-
-          if (do_um)
-            who = CHM_U | CHM_G | CHM_O;
+          int implicit_all = (who == 0);
 
           if ((srcm & 020))
             bits |= S_ISVTX;
 
-          if ((who & CHM_U) != 0) {
+          if (implicit_all || (who & CHM_U) != 0) {
             mask |= 0700;
             if ((srcm & 010))
               bits |= S_ISUID;
             bits |= (srcm & 7) << 6;
           }
 
-          if ((who & CHM_G) != 0) {
+          if (implicit_all || (who & CHM_G) != 0) {
             mask |= 0070;
             if ((srcm & 010))
               bits |= S_ISGID;
             bits |= (srcm & 7) << 3;
           }
 
-          if ((who & CHM_O) != 0) {
+          if (implicit_all || (who & CHM_O) != 0) {
             mask |= 0007;
             bits |= (srcm & 7);
           }
 
-          if (do_um) {
+          if (implicit_all) {
             mode_t um = umask(0777);
             umask(um);
             bits &= ~um;
@@ -675,7 +672,7 @@ static val chmod_wrap(val target, val mode)
           case chm_sub: cmode &= ~bits; break;
           case chm_set:
             cmode &= ~mask;
-            if ((who & CHM_O) != 0)
+            if (implicit_all || (who & CHM_O) != 0)
               cmode &= ~S_ISVTX; /* GNU Coreutils 8.28 chmod behavior */
             if (!S_ISDIR(cmode))
               cmode &= ~(S_ISUID | S_ISGID);
