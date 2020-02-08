@@ -581,9 +581,9 @@ static val chmod_wrap(val target, val mode)
     if (err == 0) {
       const wchar_t *cm = c_str(mode);
       wchar_t ch;
-      mode_t srcm = 0;
+      mode_t srcm = 0, oldm = st.st_mode;
 
-      cmode = st.st_mode;
+      cmode = oldm;
 
       while ((ch = *cm++) != 0) {
         switch (cs) {
@@ -612,9 +612,9 @@ static val chmod_wrap(val target, val mode)
         perm:
         case chm_perm:
           switch (ch) {
-          case 'u': srcm |= (cmode & 0700) >> 6; cs = chm_comma; break;
-          case 'g': srcm |= (cmode & 0070) >> 3; cs = chm_comma; break;
-          case 'o': srcm |= (cmode & 0007);      cs = chm_comma; break;
+          case 'u': srcm |= (oldm & 0700) >> 6;  cs = chm_comma; break;
+          case 'g': srcm |= (oldm & 0070) >> 3;  cs = chm_comma; break;
+          case 'o': srcm |= (oldm & 0007);       cs = chm_comma; break;
           case 'r': srcm |= 4;                   cs = chm_nxtop; break;
           case 'w': srcm |= 2;                   cs = chm_nxtop; break;
           case 'x': srcm |= 1;                   cs = chm_nxtop; break;
@@ -622,7 +622,7 @@ static val chmod_wrap(val target, val mode)
           case 't': srcm |= 020;                 cs = chm_nxtop; break;
           case 'X': srcm |= ((cmode & 0111) != 0 ||
                              S_ISDIR(cmode));    cs = chm_nxtop; break;
-          case ',': srcm = 0; who = 0;           cs = chm_who; continue;
+          case ',': goto nextmode;
           default:
             goto inval;
           }
@@ -630,7 +630,9 @@ static val chmod_wrap(val target, val mode)
         case chm_comma:
           if (ch != ',')
             goto inval;
-          srcm = 0; who = 0; cs = chm_who; continue;
+        nextmode:
+          srcm = 0; who = 0; oldm = cmode; cs = chm_who;
+          continue;
         }
 
         {
