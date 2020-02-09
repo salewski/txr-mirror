@@ -436,7 +436,7 @@ static mem_t *ffi_varray_alloc(struct txr_ffi_type *tft, val obj, val self)
 {
   cnum dynsize = ffi_varray_dynsize(tft, obj, self);
   size_t size = dynsize;
-  if (size != dynsize)
+  if ((cnum) size != dynsize)
     uw_throwf(error_s, lit("~a: array too large"), self,  nao);
   return chk_calloc(size, 1);
 }
