@@ -826,8 +826,8 @@ static val h_skip(match_line_ctx *c)
   val elem = first(c->specline);
   val max = tleval_144(elem, second(elem), c->bindings);
   val min = tleval_144(elem, third(elem), c->bindings);
-  cnum cmax = if3(max, c_num(max), 0);
-  cnum cmin = if3(min, c_num(min), 0);
+  cnum cmax = integerp(max) ? c_num(max) : 0;
+  cnum cmin = integerp(min) ? c_num(min) : 0;
   val greedy = eq(max, greedy_k);
   val last_good_result = nil, last_good_pos = nil;
 
@@ -2333,8 +2333,8 @@ static val v_skip(match_files_ctx *c)
     val args = rest(first_spec);
     val max = tleval_144(skipspec, first(args), c->bindings);
     val min = tleval_144(skipspec, second(args), c->bindings);
-    cnum cmax = if3(max, c_num(max), 0);
-    cnum cmin = if3(min, c_num(min), 0);
+    cnum cmax = integerp(max) ? c_num(max) : 0;
+    cnum cmin = integerp(min) ? c_num(min) : 0;
     val greedy = eq(max, greedy_k);
     volatile val last_good_result = nil;
     volatile val last_good_line = zero;
