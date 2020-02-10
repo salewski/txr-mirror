@@ -3,28 +3,35 @@
 
 (defvarl tgt [*args* 0])
 
+(remove-path tgt)
+(with-stream (s (open-file tgt "w")))
+(umask #o022)
+
+(defvarl test-sticky (progn
+                       (chmod tgt s-isvtx)
+                       (let ((st (stat tgt)))
+                         (plusp (logand s-isvtx st.mode)))))
+
 (defmacro mode-bits (st-mode)
   ^(logand ,st-mode #xFFF))
 
 (defun cht (init mode expected)
-  (let ((ini (dec-perm init))
-        (exp (dec-perm expected)))
-    (chmod tgt ini)
-    (let* ((st (stat tgt))
-           (m (mode-bits st.mode)))
-      (unless (eql m ini)
-        (error "failed to set initial mode: expected: ~s, actual: ~s "
-               init (enc-perm m))))
-    (chmod tgt mode)
-    (let* ((st (stat tgt))
-           (m (mode-bits st.mode)))
-      (unless (eql m exp)
-        (error "failed to set mode with ~s: expected ~s, actual ~s"
-               mode expected (enc-perm m))))))
-
-(remove-path tgt)
-(with-stream (s (open-file tgt "w")))
-(umask #o022)
+  (when (or test-sticky
+            (not (find #\t `@init@mode@expected`)))
+    (let ((ini (dec-perm init))
+	  (exp (dec-perm expected)))
+      (chmod tgt ini)
+      (let* ((st (stat tgt))
+	     (m (mode-bits st.mode)))
+	(unless (eql m ini)
+	  (error "failed to set initial mode: expected: ~s, actual: ~s "
+		 init (enc-perm m))))
+      (chmod tgt mode)
+      (let* ((st (stat tgt))
+	     (m (mode-bits st.mode)))
+	(unless (eql m exp)
+	  (error "failed to set mode with ~s: expected ~s, actual ~s"
+		 mode expected (enc-perm m)))))))
 
 (cht "------------" "a+strwx"           "sgtrwxrwxrwx")
 (cht "------------" "+strwx"            "sgtrwxr-xr-x")
