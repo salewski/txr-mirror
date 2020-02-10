@@ -4,20 +4,20 @@
 (defvarl tgt [*args* 0])
 
 (defmacro mode-bits (st-mode)
-  (logand st-mode #xFFF))
+  ^(logand ,st-mode #xFFF))
 
 (defun cht (init mode expected)
   (let ((ini (dec-perm init))
         (exp (dec-perm expected)))
     (chmod tgt ini)
     (let* ((st (stat tgt))
-           (m (logand st.mode #xFFF)))
+           (m (mode-bits st.mode)))
       (unless (eql m ini)
         (error "failed to set initial mode: expected: ~s, actual: ~s "
                init (enc-perm m))))
     (chmod tgt mode)
     (let* ((st (stat tgt))
-           (m (logand st.mode #xFFF)))
+           (m (mode-bits st.mode)))
       (unless (eql m exp)
         (error "failed to set mode with ~s: expected ~s, actual ~s"
                mode expected (enc-perm m))))))
