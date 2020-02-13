@@ -1060,7 +1060,7 @@ static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
 #else
   if (m.notrunc)
     uw_throwf(file_error_s,
-              lit("open-file: system doesn't support \"o\" mode"), nao);
+              lit("open-file: \"m\" mode not supported on this system"), nao);
 #endif
   return w_fopen(wname, mode);
 }
