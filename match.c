@@ -2305,7 +2305,16 @@ static match_files_ctx mf_file_data(match_files_ctx c, val file,
 
 static match_files_ctx mf_from_ml(match_line_ctx ml)
 {
-  return mf_all(cons(ml.specline, nil), nil, ml.bindings, nil, ml.file);
+  match_files_ctx mf;
+
+  mf.spec = cons(ml.specline, nil);
+  mf.files = nil;
+  mf.curfile = ml.file;
+  mf.bindings = ml.bindings;
+  mf.data = nil;
+  mf.data_lineno = ml.data_lineno;
+
+  return mf;
 }
 
 static val match_files(match_files_ctx a);
