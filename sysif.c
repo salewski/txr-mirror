@@ -1830,10 +1830,65 @@ static val getgrnam_wrap(val wname)
 
 #if HAVE_CRYPT || HAVE_CRYPT_R
 
+static int salt_char_p(wchar_t ch)
+{
+  return ((ch >= 'a' && ch <= 'z') ||
+          (ch >= 'A' && ch <= 'Z') ||
+          (ch >= '0' && ch <= '9') ||
+          (ch == '.') || (ch == '/'));
+}
+
+static const wchar_t *validate_salt(val salt_in)
+{
+  const wchar_t *salt = c_str(salt_in), *s = salt;
+
+  if (salt_char_p(*s)) {
+    if (salt_char_p(*++s))
+      return salt;
+    else
+      goto badsalt;
+  }
+
+  if (*s++ != '$')
+    goto badsalt;
+
+  switch (*s++) {
+  case '1': case '5': case '6':
+    break;
+  case '2':
+    if (*s >= 'a' && *s++ <= 'z')
+      break;
+    /* fallthrough */
+  default:
+    goto badsalt;
+  }
+
+  if (*s++ != '$')
+    goto badsalt;
+
+  if (wcsncmp(s, L"rounds=", 7) == 0) {
+    size_t ispn = wcsspn(s += 7, L"0123456789");
+    s += ispn;
+    if (*s++ != '$')
+      goto badsalt;
+  }
+
+  while (salt_char_p(*s))
+    s++;
+
+  if (*s && *s != '$')
+    goto badsalt;
+
+  return salt;
+badsalt:
+  uw_throwf(error_s, lit("crypt failed: ~d/~s"), num(EINVAL),
+            string_utf8(strerror(EINVAL)), nao);
+}
+
 static val crypt_wrap(val wkey, val wsalt)
 {
   const wchar_t *cwkey = c_str(wkey);
-  const wchar_t *cwsalt = c_str(wsalt);
+  const wchar_t *cwsalt = validate_salt(wsalt);
   char *key = utf8_dup_to(cwkey);
   char *salt = utf8_dup_to(cwsalt);
 #if HAVE_CRYPT_R
@@ -1842,10 +1897,12 @@ static val crypt_wrap(val wkey, val wsalt)
 #else
   char *hash = crypt(key, salt);
 #endif
-  val whash = string_utf8(hash);
   free(key);
   free(salt);
-  return whash;
+  if (hash == 0)
+    uw_throwf(error_s, lit("crypt failed: ~d/~s"), num(errno),
+              string_utf8(strerror(errno)), nao);
+  return string_utf8(hash);
 }
 
 #endif
