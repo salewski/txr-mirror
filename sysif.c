@@ -1838,9 +1838,9 @@ static int salt_char_p(wchar_t ch)
           (ch == '.') || (ch == '/'));
 }
 
-static const wchar_t *validate_salt(val salt_in)
+static const wchar_t *validate_salt(const wchar_t *salt)
 {
-  const wchar_t *salt = c_str(salt_in), *s = salt;
+  const wchar_t *s = salt;
 
   if (salt_char_p(*s)) {
     if (salt_char_p(*++s))
@@ -1880,29 +1880,34 @@ static const wchar_t *validate_salt(val salt_in)
     goto badsalt;
 
   return salt;
+
 badsalt:
-  uw_throwf(error_s, lit("crypt failed: ~d/~s"), num(EINVAL),
-            string_utf8(strerror(EINVAL)), nao);
+  errno = EINVAL;
+  return 0;
 }
 
 static val crypt_wrap(val wkey, val wsalt)
 {
   const wchar_t *cwkey = c_str(wkey);
-  const wchar_t *cwsalt = validate_salt(wsalt);
-  char *key = utf8_dup_to(cwkey);
-  char *salt = utf8_dup_to(cwsalt);
+  const wchar_t *cwsalt = validate_salt(c_str(wsalt));
+
+  if (cwsalt != 0) {
+    char *key = utf8_dup_to(cwkey);
+    char *salt = utf8_dup_to(cwsalt);
 #if HAVE_CRYPT_R
-  struct crypt_data cd;
-  char *hash = (cd.initialized = 0, crypt_r(key, salt, &cd));
+    struct crypt_data cd;
+    char *hash = (cd.initialized = 0, crypt_r(key, salt, &cd));
 #else
-  char *hash = crypt(key, salt);
+    char *hash = crypt(key, salt);
 #endif
-  free(key);
-  free(salt);
-  if (hash == 0)
-    uw_throwf(error_s, lit("crypt failed: ~d/~s"), num(errno),
-              string_utf8(strerror(errno)), nao);
-  return string_utf8(hash);
+    free(key);
+    free(salt);
+    if (hash != 0)
+      return string_utf8(hash);
+  }
+
+  uw_throwf(error_s, lit("crypt failed: ~d/~s"), num(errno),
+            string_utf8(strerror(errno)), nao);
 }
 
 #endif
