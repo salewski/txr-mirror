@@ -2506,7 +2506,7 @@ else
   printf "no\n"
 fi
 
-printf "Checking for _wspawnlp ... "
+printf "Checking for _wspawnvp ... "
 
 cat > conftest.c <<!
 #include "config.h"
@@ -2516,13 +2516,32 @@ cat > conftest.c <<!
 int main(int argc, char **argv)
 {
   wchar_t *wargv[] = { L"foo", L"bar", 0 };
-  int r = _wspawnlp(_P_WAIT, L"foo", wargv);
+  int r = _wspawnvp(_P_WAIT, L"foo", wargv);
   return 0;
 }
 !
 if conftest ; then
   printf "yes\n"
   printf "#define HAVE_WSPAWN 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
+printf "Checking for spawnvp ... "
+
+cat > conftest.c <<!
+#include "config.h"
+#include <process.h>
+
+int main(int argc, char **argv)
+{
+  int r = spawnvp(_P_WAIT, "foo", argv);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_SPAWN 1\n" >> config.h
 else
   printf "no\n"
 fi

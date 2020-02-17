@@ -56,6 +56,9 @@
 #if HAVE_SOCKETS
 #include <sys/socket.h>
 #endif
+#if HAVE_WSPAWN || HAVE_SPAWN
+#include <process.h>
+#endif
 #include "alloca.h"
 #include "lib.h"
 #include "gc.h"
@@ -4379,7 +4382,84 @@ val open_process(val name, val mode_str, val args)
 }
 #endif
 
-#if HAVE_FORK_STUFF
+#if HAVE_WSPAWN || HAVE_SPAWN
+
+#if !HAVE_WSPAWN
+static int w_spawnvp(int mode, const wchar_t *wpath, int wargc,
+                     const wchar_t **wargv)
+{
+  char *path = utf8_dup_to(wpath);
+  const char **argv = coerce(const char **,
+			     chk_malloc(sizeof *argv * (wargc + 1)));
+  int i, res;
+
+  for (i = 0; i < wargc; i++)
+    argv[i] = utf8_dup_to(wargv[i]);
+  argv[i] = 0;
+
+  res = spawnvp(mode, path, argv);
+
+  for (i = 0; i < wargc; i++)
+    free(strip_qual(char *, argv[i]));
+  free(argv);
+  free(path);
+
+  return res;
+}
+#endif
+
+static val run(val command, val args)
+{
+  val self = lit("run");
+  const wchar_t **wargv = 0;
+  val iter;
+  int i, nargs, status = 0;
+  struct save_fds sfds;
+
+  args = default_null_arg(args);
+  nargs = c_num(length(args)) + 1;
+
+  fds_init(&sfds);
+
+  uw_simple_catch_begin;
+
+  fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR);
+
+  if (nargs < 0 || nargs == INT_MAX)
+    uw_throwf(error_s, lit("~a: argument list overflow"), self, nao);
+
+  wargv = coerce(const wchar_t **, chk_xalloc(nargs + 1, sizeof *wargv, self));
+
+  for (i = 0, iter = cons(command, args); iter; i++, iter = cdr(iter))
+    wargv[i] = c_str(car(iter));
+  wargv[i] = 0;
+
+#if HAVE_WSPAWN
+  status = _wspawnvp(_P_WAIT, c_str(command), wargv);
+#else
+  status = w_spawnvp(_P_WAIT, c_str(command), nargs, wargv);
+#endif
+
+  free(strip_qual(wchar_t **, wargv));
+
+  gc_hint(args);
+
+  uw_unwind {
+    fds_restore(&sfds);
+  }
+
+  uw_catch_end;
+
+  return (status < 0) ? nil : num(status);
+}
+
+static val sh(val command)
+{
+  return run(lit("cmd.exe"), list(lit("/C"), command, nao));
+}
+
+#elif HAVE_FORK_STUFF
+
 static val run(val name, val args)
 {
   val self = lit("run");
@@ -4456,52 +4536,7 @@ static val sh(val command)
 {
   return run(shell, list(shell_arg, command, nao));
 }
-#elif HAVE_WSPAWN
-static val run(val command, val args)
-{
-  val self = lit("run");
-  const wchar_t **wargv = 0;
-  val iter;
-  int i, nargs, status;
-  struct save_fds sfds;
 
-  args = default_null_arg(args);
-  nargs = c_num(length(args)) + 1;
-
-  fds_init(&sfds);
-
-  uw_simple_catch_begin;
-
-  fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR);
-
-  if (nargs < 0 || nargs == INT_MAX)
-    uw_throwf(error_s, lit("~a: argument list overflow"), self, nao);
-
-  wargv = coerce(const wchar_t **, chk_xalloc(nargs + 1, sizeof *wargv, self));
-
-  for (i = 0, iter = cons(command, args); iter; i++, iter = cdr(iter))
-    wargv[i] = c_str(car(iter));
-  wargv[i] = 0;
-
-  status = _wspawnvp(_P_WAIT, c_str(command), wargv);
-
-  free(strip_qual(wchar_t **, wargv));
-
-  gc_hint(args);
-
-  uw_unwind {
-    fds_restore(&sfds);
-  }
-
-  uw_catch_end;
-
-  return (status < 0) ? nil : num(status);
-}
-
-static val sh(val command)
-{
-  return run(lit("cmd.exe"), list(lit("/C"), command, nao));
-}
 #else
 #error port me!
 #endif
