@@ -72025,9 +72025,32 @@ option isn't present.
 The history is maintained in a text file called
 .code .txr_history
 in the user's home directory. Whenever the interactive listener terminates,
-this file is overwritten with the history contents stored in the listener's
+this file is updated with the history contents stored in the listener's
 memory.  The next time the listener starts, it first re-loads the history from
-this file, making the commands of a previous session available for recall.
+this file, making the most recent
+.code *listener-hist-len*
+expressions of a previous session available for recall.
+
+The history file is maintained in a way that is somewhat
+robust against the loss of history arising from the situation that a user
+manages multiple simultaneous \*(TX sessions.  When a session terminates, it
+doesn't blindly overwrite the history file, which may have already been updated
+with new history produced by another session.  Rather, it appends new entries
+to the history file. New entries are those that had not been previously read
+from the history file, but have been newly entered into the listener.
+
+An effort is made to keep the history file trimmed to no more than
+twice the number of entries specified in
+.codn *listener-hist-len* .
+The terminating session first makes a temporary copy of the existing
+history, which is trimmed to the most recent
+.code *listener-hist-len*
+entries. New entries are then appended to this temporary file.
+Finally, the actual history file is replaced with this temporary file by a
+.code rename-path
+a rename operation. This algorithm doesn't use locking, and is therefore not
+robust against the situation when a two or more multiple interactive \*(TX
+sessions belonging to the same user terminate at around the same time.
 
 The home directory is determined from the
 contents of the

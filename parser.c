@@ -1505,12 +1505,19 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   dyn_env = saved_dyn_env;
 
   if (histfile_w) {
-    val histfile_tmp = format(nil, lit("~a/.txr_history.tmp"), home, nao);
-    if (lino_hist_save(ls, c_str(histfile_tmp)) == 0)
+    val histfile_tmp = format(nil, lit("~a.tmp"), histfile, nao);
+    const wchar_t *histfile_tmp_w = c_str(histfile_tmp);
+    lino_t *ltmp = lino_make(coerce(mem_t *, in_stream),
+                             coerce(mem_t *, out_stream));
+    lino_hist_set_max_len(ltmp, c_num(cdr(hist_len_var)));
+    lino_hist_load(ltmp, histfile_w);
+    lino_hist_save(ltmp, histfile_tmp_w, 0);
+    if (lino_hist_save(ls, histfile_tmp_w, 1) == 0)
       rename_path(histfile_tmp, histfile);
     else
       put_line(lit("** unable to save history file"), out_stream);
     gc_hint(histfile_tmp);
+    lino_free(ltmp);
   }
 
   free(line_w);
@@ -1649,7 +1656,7 @@ static int lino_feof(mem_t *stream_in)
 }
 
 static const wchli_t *lino_mode_str[] = {
-  wli("r"), wli("w")
+  wli("r"), wli("w"), wli("a")
 };
 
 static mem_t *lino_open(const wchar_t *name_in, lino_file_mode_t mode_in)
@@ -1660,7 +1667,7 @@ static mem_t *lino_open(const wchar_t *name_in, lino_file_mode_t mode_in)
   ignerr_begin;
   ret = open_file(name, mode);
 #if HAVE_CHMOD
-  if (mode_in == lino_overwrite)
+  if (mode_in == lino_overwrite || mode_in == lino_append)
     (void) fchmod(c_num(stream_fd(ret)), S_IRUSR | S_IWUSR);
 #endif
   ignerr_end;

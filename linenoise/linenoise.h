@@ -58,6 +58,7 @@ typedef unsigned char mem_t;
 typedef enum lino_file_mode {
     lino_read,
     lino_overwrite,
+    lino_append,
 } lino_file_mode_t;
 
 typedef struct lino_os {
@@ -112,7 +113,7 @@ lino_error_t lino_get_error(lino_t *);
 lino_error_t lino_set_error(lino_t *, lino_error_t); /* returns old */
 int lino_hist_add(lino_t *, const wchar_t *line);
 int lino_hist_set_max_len(lino_t *, int len);
-int lino_hist_save(lino_t *, const wchar_t *filename);
+int lino_hist_save(lino_t *, const wchar_t *filename, int new_only);
 int lino_hist_load(lino_t *, const wchar_t *filename);
 void lino_set_result(lino_t *, wchar_t *); /* takes ownership of malloced mem; modifies it */
 int lino_clear_screen(lino_t *);

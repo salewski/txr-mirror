@@ -106,6 +106,7 @@ struct lino_state {
     int mlmode;         /* Multi line mode. Default is single line. */
     int history_max_len;
     int history_len;
+    int loaded_lines;   /* How many lines come from load. */
     wchar_t **history;
     wchar_t *clip;      /* Selection */
     wchar_t *result;    /* Previous command result. */
@@ -2680,6 +2681,7 @@ int lino_hist_add(lino_t *ls, const wchar_t *line) {
         ls->history = coerce(wchar_t **, lino_os.alloc_fn(size));
         if (ls->history == NULL) return 0;
         memset(ls->history, 0, size);
+        ls->loaded_lines = 0;
     }
 
     /* Don't add duplicated lines, unless we are resubmitting historic lines. */
@@ -2695,6 +2697,8 @@ int lino_hist_add(lino_t *ls, const wchar_t *line) {
         lino_os.free_fn(ls->history[0]);
         memmove(ls->history,ls->history+1,(ls->history_max_len-1)*sizeof *ls->history);
         ls->history_len--;
+        if (ls->loaded_lines > 0)
+            ls->loaded_lines--;
     }
     ls->history[ls->history_len] = linecopy;
     ls->history_len++;
@@ -2723,6 +2727,10 @@ int lino_hist_set_max_len(lino_t *ls, int len) {
             for (j = 0; j < tocopy-len; j++)
                 lino_os.free_fn(ls->history[j]);
             tocopy = len;
+
+            ls->loaded_lines -= (tocopy - len);
+            if (ls->loaded_lines < 0)
+                ls->loaded_lines = 0;
         }
         memset(nsv, 0, sizeof *nsv * len);
         memcpy(nsv, ls->history+(ls->history_len-tocopy), sizeof *ls->history * tocopy);
@@ -2736,8 +2744,10 @@ int lino_hist_set_max_len(lino_t *ls, int len) {
 
 /* Save the history in the specified file. On success 0 is returned
  * otherwise -1 is returned. */
-int lino_hist_save(lino_t *ls, const wchar_t *filename) {
-    mem_t *fp = lino_os.open_fn(filename, lino_overwrite);
+int lino_hist_save(lino_t *ls, const wchar_t *filename, int new_only) {
+    int from = new_only ? ls->loaded_lines : 0;
+    mem_t *fp = lino_os.open_fn(filename,
+                                new_only ? lino_append : lino_overwrite);
     int j;
 
     if (fp == NULL) {
@@ -2745,10 +2755,12 @@ int lino_hist_save(lino_t *ls, const wchar_t *filename) {
         return -1;
     }
 
-    for (j = 0; j < ls->history_len; j++) {
+    for (j = from; j < ls->history_len; j++) {
         lino_os.puts_file_fn(fp, ls->history[j]);
         lino_os.puts_file_fn(fp, L"\n");
     }
+
+    ls->loaded_lines = ls->history_len;
 
     lino_os.close_fn(fp);
     return 0;
@@ -2768,6 +2780,12 @@ int lino_hist_load(lino_t *ls, const wchar_t *filename) {
         return -1;
     }
 
+    if (ls->history) {
+        ls->error = lino_error;
+        lino_os.close_fn(fp);
+        return -1;
+    }
+
     while (lino_os.getl_fn(fp, buf, LINENOISE_MAX_LINE) != NULL) {
         wchar_t *p = wcschr(buf, '\n');
         if (p)
@@ -2776,6 +2794,7 @@ int lino_hist_load(lino_t *ls, const wchar_t *filename) {
     }
 
     lino_os.close_fn(fp);
+    ls->loaded_lines = ls->history_len;
     return 0;
 }
 
