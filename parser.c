@@ -1326,6 +1326,27 @@ static int is_balanced_line(const wchar_t *line, void *ctx)
 
 static_forward(lino_os_t linenoise_txr_binding);
 
+static void hist_save(lino_t *ls, val in_stream, val out_stream,
+                      val histfile, const wchar_t *histfile_w,
+                      val hist_len_var)
+{
+  if (histfile_w) {
+    val histfile_tmp = format(nil, lit("~a.tmp"), histfile, nao);
+    const wchar_t *histfile_tmp_w = c_str(histfile_tmp);
+    lino_t *ltmp = lino_make(coerce(mem_t *, in_stream),
+                             coerce(mem_t *, out_stream));
+    lino_hist_set_max_len(ltmp, c_num(cdr(hist_len_var)));
+    lino_hist_load(ltmp, histfile_w);
+    lino_hist_save(ltmp, histfile_tmp_w, 0);
+    if (lino_hist_save(ls, histfile_tmp_w, 1) == 0)
+      rename_path(histfile_tmp, histfile);
+    else
+      put_line(lit("** unable to save history file"), out_stream);
+    gc_hint(histfile_tmp);
+    lino_free(ltmp);
+  }
+}
+
 val repl(val bindings, val in_stream, val out_stream, val env)
 {
   lino_t *ls = if3(repl_level++,
@@ -1337,6 +1358,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   val read_k = intern(lit("read"), keyword_package);
   val prompt_k = intern(lit("prompt"), keyword_package);
   val p_k = intern(lit("p"), keyword_package);
+  val save_k = intern(lit("save"), keyword_package);
   val counter_sym = intern(lit("*n"), user_package);
   val var_counter_sym = intern(lit("*v"), user_package);
   val result_hash_sym = intern(lit("*r"), user_package);
@@ -1445,6 +1467,9 @@ val repl(val bindings, val in_stream, val out_stream, val env)
       } else if (form == p_k) {
         pprinl(prev_counter, out_stream);
         counter = prev_counter;
+      } else if (form == save_k) {
+        hist_save(ls, in_stream, out_stream, histfile, histfile_w, hist_len_var);
+        counter = prev_counter;
       } else {
         val value = if3(form != read_k,
                         eval_intrinsic(form, env),
@@ -1504,21 +1529,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
 
   dyn_env = saved_dyn_env;
 
-  if (histfile_w) {
-    val histfile_tmp = format(nil, lit("~a.tmp"), histfile, nao);
-    const wchar_t *histfile_tmp_w = c_str(histfile_tmp);
-    lino_t *ltmp = lino_make(coerce(mem_t *, in_stream),
-                             coerce(mem_t *, out_stream));
-    lino_hist_set_max_len(ltmp, c_num(cdr(hist_len_var)));
-    lino_hist_load(ltmp, histfile_w);
-    lino_hist_save(ltmp, histfile_tmp_w, 0);
-    if (lino_hist_save(ls, histfile_tmp_w, 1) == 0)
-      rename_path(histfile_tmp, histfile);
-    else
-      put_line(lit("** unable to save history file"), out_stream);
-    gc_hint(histfile_tmp);
-    lino_free(ltmp);
-  }
+  hist_save(ls, in_stream, out_stream, histfile, histfile_w, hist_len_var);
 
   free(line_w);
   if (--repl_level == 0) {

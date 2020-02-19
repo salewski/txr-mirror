@@ -72061,6 +72061,16 @@ on MS Windows. If this variable doesn't exist, or the user doesn't
 have permissions to write to this directory or to an existing history file
 in that directory, then the history isn't saved.
 
+It is possible to save the history without terminating the interactive
+session, using the
+.code :save
+command. This saves the history in the manner described above.
+Each invocation of
+.code :save
+only adds to the history file new input since the most recent
+.code :save
+command.
+
 .SS* Parenthesis Matching
 
 A feature of the listener is visual parenthesis matching in the form of a
