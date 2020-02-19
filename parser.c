@@ -1330,7 +1330,7 @@ static void hist_save(lino_t *ls, val in_stream, val out_stream,
                       val histfile, const wchar_t *histfile_w,
                       val hist_len_var)
 {
-  if (histfile_w) {
+  if (histfile_w && lino_have_new_lines(ls)) {
     val histfile_tmp = format(nil, lit("~a.tmp"), histfile, nao);
     const wchar_t *histfile_tmp_w = c_str(histfile_tmp);
     lino_t *ltmp = lino_make(coerce(mem_t *, in_stream),

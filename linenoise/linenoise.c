@@ -2798,6 +2798,11 @@ int lino_hist_load(lino_t *ls, const wchar_t *filename) {
     return 0;
 }
 
+int lino_have_new_lines(lino_t *ls)
+{
+    return ls->history_len > ls->loaded_lines;
+}
+
 void lino_set_result(lino_t *ls, wchar_t *res)
 {
     lino_os.free_fn(ls->result);
