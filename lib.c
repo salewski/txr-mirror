@@ -2898,6 +2898,33 @@ val equal(val left, val right)
   return nil;
 }
 
+val meq(val item, varg args)
+{
+  cnum index = 0;
+  while (args_more(args, index))
+    if (eq(item, args_get(args, &index)))
+      return t;
+  return nil;
+}
+
+val meql(val item, varg args)
+{
+  cnum index = 0;
+  while (args_more(args, index))
+    if (eql(item, args_get(args, &index)))
+      return t;
+  return nil;
+}
+
+val mequal(val item, varg args)
+{
+  cnum index = 0;
+  while (args_more(args, index))
+    if (equal(item, args_get(args, &index)))
+      return t;
+  return nil;
+}
+
 alloc_bytes_t malloc_bytes;
 
 static void oom(void)

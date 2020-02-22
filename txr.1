@@ -18152,6 +18152,42 @@ and between
 and
 .codn nequal .
 
+.coNP Functions @, meq @ meql and @ mequal
+.synb
+.mets (meq < left-obj << right-obj *)
+.mets (meql < left-obj << right-obj *)
+.mets (mequal < left-obj << right-obj *)
+.syne
+.desc
+The functions
+.codn meq ,
+.code meql
+and
+.code mequal
+("member equal" or "multi-equal")
+provide a particular kind of a generalization of the binary
+equality functions
+.codn eq ,
+.code eql
+and
+.code equal
+to multiple arguments.
+
+The
+.meta left-obj
+value is compared to each
+.meta right-obj
+value using the corresponding binary equality function.
+If a match occurs, then
+.code t
+is returned, otherwise
+.codn nil .
+
+The traversal of the
+.meta right-obj
+argument values proceeds from left to right, and stops
+when a match is found.
+
 .coNP Function @ less
 .synb
 .mets (less < left-obj << right-obj )
