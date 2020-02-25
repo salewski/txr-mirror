@@ -20394,28 +20394,35 @@ The first such cons is returned. If no such cons is found,
 .code nil
 is returned.
 
-.coNP Function @ assql
+.coNP Functions @ assq and @ assql
 .synb
+.mets (assq < key << alist )
 .mets (assql < key << alist )
 .syne
 .desc
 The
+.code assq
+and
 .code assql
-function is just like
+functions are very similar to
 .codn assoc ,
-except that the equality test
-is determined using the
+with the only difference being that they determine equality using,
+respectively, the
+.code eq
+and
 .code eql
-function rather than
+functions rather than
 .codn equal .
 
-.coNP Functions @ rassql and @ rassoc
+.coNP Functions @, rassq @ rassql and @ rassoc
 .synb
+.mets (rassq < value << alist )
 .mets (rassql < value << alist )
 .mets (rassoc < value << alist )
 .syne
 .desc
 The
+.codn rassq ,
 .code rassql
 and
 .code rassoc
@@ -20432,7 +20439,7 @@ rather than the
 field.
 
 The
-.code rassql
+.code rassoc
 function searches association list
 .meta alist
 for a cons whose
@@ -20440,18 +20447,22 @@ for a cons whose
 field equivalent to
 .meta value
 according to the
-.code eql
+.code equal
 function. If such a cons is found, it is returned.
 Otherwise
 .code nil
 is returned.
 
 The
-.code rassoc
-function searches in the same way as
+.code rassq
+and
 .code rassql
-but compares values using
-.codn equal .
+functions search in the same way as
+.code rassoc
+but compares values using, respectively,
+.code eq
+and
+.codn eql .
 
 .coNP Function @ acons
 .synb

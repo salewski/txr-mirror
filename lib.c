@@ -8178,6 +8178,20 @@ val assql(val key, val list)
   return nil;
 }
 
+val assq(val key, val list)
+{
+  list = nullify(list);
+
+  while (list) {
+    val elem = car(list);
+    if (eq(car(elem), key))
+      return elem;
+    list = cdr(list);
+  }
+
+  return nil;
+}
+
 val rassoc(val key, val list)
 {
   list = nullify(list);
@@ -8199,6 +8213,20 @@ val rassql(val key, val list)
   while (list) {
     val elem = car(list);
     if (eql(cdr(elem), key))
+      return elem;
+    list = cdr(list);
+  }
+
+  return nil;
+}
+
+val rassq(val key, val list)
+{
+  list = nullify(list);
+
+  while (list) {
+    val elem = car(list);
+    if (eq(cdr(elem), key))
       return elem;
     list = cdr(list);
   }
