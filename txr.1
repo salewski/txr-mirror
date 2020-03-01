@@ -69781,23 +69781,18 @@ file name suffix) is translated into an object file (named with a
 .code .tlo
 suffix) containing a compiled version of those forms.
 
-The intent is that loading the compiled
-.code .tlo
-file via the
+The compiled object file can then be loaded via the
 .code load
-function produces the same effect as loading the
-.code .tl
-file. The main difference is that the compiled file
-contains no Lisp source code; only the machine code instructions for the
-virtual machine, and some accompanying data such as literals and referenced
-symbols. Note that the behavior of compiled code can differ from interpreted
-code in a number of ways. Differences in behavior can be deliberately induced.
-Certain erroneous or dubious situations can also cause compiled code to behave
-differently from interpreted code.
+function instead of the source file. Usually, loading the compiled file
+produces the same effect as if the source file were loaded. However, note that
+the behavior of compiled code can differ from interpreted code in a number of
+ways. Differences in behavior can be deliberately induced.  Certain erroneous
+or dubious situations can also cause compiled code to behave differently from
+interpreted code.
 
-Compilation not only provides faster execution. Compiled files load much
-faster.  Compiled files can be distributed unaccompanied by the source files,
-and are much more resistant to reverse engineering.
+Compilation not only provides faster execution; compiled files also load much
+faster than source files. Moreover, they can be distributed unaccompanied by
+the source files, and resist reverse engineering.
 
 .SS* Top-Level Forms
 
