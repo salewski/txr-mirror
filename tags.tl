@@ -4,8 +4,13 @@
   ident
   path
   pattern
+  (type "?")
+
   (:postinit (me)
-    (upd me.ident tostringp)))
+    (upd me.ident tostringp))
+
+  (:method text (me)
+    `@{me.ident}\t@{me.path}\t/^@{me.pattern}$/;"\t@{me.type}`))
 
 (defun escape (str)
   (mappend (do caseql @1
@@ -20,27 +25,25 @@
     `@{me.ident}\t@{me.path}\t;"\tF`))
 
 (defstruct fun-tag tag
-  (:method text (me)
-    `@{me.ident}\t@{me.path}\t/^@{me.pattern}$/;"\tf`))
+  (type "f"))
 
 (defstruct var-tag tag
-  (:method text (me)
-    `@{me.ident}\t@{me.path}\t/^@{me.pattern}$/;"\tv`))
+  (type "v"))
 
 (defstruct struct-tag tag
-  (:method text (me)
-    `@{me.ident}\t@{me.path}\t/^@{me.pattern}$/;"\ts`))
+  (type "s"))
 
 (defstruct type-tag tag
-  (:method text (me)
-    `@{me.ident}\t@{me.path}\t/^@{me.pattern}$/;"\tt`))
+  (type "t"))
 
 (defstruct slot-tag tag
+  (type "m")
   parent
   expattern
   (:method text (me)
     `@{me.ident}\t@{me.path}\t/^@{me.pattern}$/ \
-     @(if me.expattern `;/@(escape me.ident)/`);"\tm\tstruct:@{me.parent}`))
+     @(if me.expattern `;/@(escape me.ident)/`);"\t \
+     @{me.type}\tstruct:@{me.parent}`))
 
 (defvarl err-ret (gensym))
 
