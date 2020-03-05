@@ -61,82 +61,56 @@
       (build
         (add (new file-tag
                   path path))
-        (labels ((process-form (obj)
-                   (when (consp obj)
-                     (caseq (car obj)
-                       ((progn eval-only compile-only with-dyn-lib)
-                        [mapdo process-form (cdr obj)])
-                       ((defun defmacro define-place-macro deffi deffi-cb)
-                        (add (new fun-tag
-                                  ident (cadr obj)
-                                  path path
-                                  pattern (get-pat lines obj))))
-                       ((defvar defvarl defparm defparml defsymacro)
-                        (add (new var-tag
-                                  ident (cadr obj)
-                                  path path
-                                  pattern (get-pat lines obj))))
-                       ((defmeth)
-                        (add (new slot-tag
-                                  ident (caddr obj)
-                                  path path
-                                  pattern (get-pat lines obj)
-                                  parent (cadr obj))))
-                       ((defplace)
-                        (tree-bind (op (name . args) . body) obj
-                          (add (new fun-tag
-                                    ident name
-                                    path path
-                                    pattern (get-pat lines obj)))))
-                       ((typedef)
-                        (add (new type-tag
-                                  ident (cadr obj)
-                                  path path
-                                  pattern (get-pat lines obj))))
-                       ((defpackage)
-                        (add (new struct-tag
-                                  ident (cadr obj)
-                                  path path
-                                  pattern (get-pat lines obj))))
-                       ((defstruct)
-                        (let ((struct-name (tree-case (cadr obj)
-                                             ((atom . rest) atom)
-                                             (atom atom))))
-                          (add (new struct-tag
-                                    ident struct-name
-                                    path path
-                                    pattern (get-pat lines obj)))
-                          (each ((slot (cdddr obj)))
-                            (tree-case slot
-                              ((word name . rest)
-                               (caseq word
-                                 ((:method :function :static :instance)
-                                  (add (new slot-tag
-                                            ident name
-                                            path path
-                                            pattern (get-pat lines slot)
-                                            parent struct-name)))
-                                 (t :)))
-                              ((word (arg) . body)
-                               (caseq word
-                                 ((:init :postinit :fini))
-                                 (t :)))
-                              ((name . rest)
-                               (add (new slot-tag
-                                         ident name
-                                         path path
-                                         pattern (get-pat lines slot)
-                                         parent struct-name)))
-                              (name
-                                (add (new slot-tag
-                                          ident name
-                                          path path
-                                          pattern (get-pat lines obj)
-                                          expattern t
-                                          parent struct-name)))))))))))
-          (whilet ((obj (read stream *stderr* err-ret))
-                   ((neq obj err-ret)))
-            (process-form obj)))))))
+        (macrolet ((ntag (type ident : parent pattern-obj)
+                     ^(new ,type ident ,ident
+                                 path path
+                                 pattern ,*(if pattern-obj
+                                             ^((get-pat lines ,pattern-obj))
+                                             ^((get-pat lines obj)))
+                                 ,*(if parent ^(parent ,parent))
+                                 ,*(if pattern-obj ^(expattern t)))))
+          (labels ((process-form (obj)
+                     (when (consp obj)
+                       (caseq (car obj)
+                         ((progn eval-only compile-only with-dyn-lib)
+                          [mapdo process-form (cdr obj)])
+                         ((defun defmacro define-place-macro deffi deffi-cb)
+                          (add (ntag fun-tag (cadr obj))))
+                         ((defvar defvarl defparm defparml defsymacro)
+                          (add (ntag var-tag (cadr obj))))
+                         ((defmeth)
+                          (add (ntag slot-tag (caddr obj) (cadr obj))))
+                         ((defplace)
+                          (tree-bind (op (name . args) . body) obj
+                            (add (ntag fun-tag name))))
+                         ((typedef)
+                          (add (ntag type-tag (cadr obj))))
+                         ((defpackage)
+                          (add (ntag struct-tag (cadr obj))))
+                         ((defstruct)
+                          (let ((struct-obj obj)
+                                (struct-name (tree-case (cadr obj)
+                                               ((atom . rest) atom)
+                                               (atom atom))))
+                            (add (ntag struct-tag struct-name))
+                            (each ((obj (cdddr obj)))
+                              (tree-case obj
+                                ((word name . rest)
+                                 (caseq word
+                                   ((:method :function :static :instance)
+                                    (add (ntag slot-tag name struct-name)))
+                                   (t :)))
+                                ((word (arg) . body)
+                                 (caseq word
+                                   ((:init :postinit :fini))
+                                   (t :)))
+                                ((name . rest)
+                                 (add (ntag slot-tag name struct-name)))
+                                (name
+                                 (add (ntag slot-tag name struct-name struct-obj)))))))))))
+            (whilet ((obj (read stream *stderr* err-ret))
+                     ((neq obj err-ret)))
+              (process-form obj))))))))
 
 (defun write-tagfile (tags)
   (with-stream (stream (open-file "tags" "w"))
