@@ -18251,6 +18251,42 @@ even if the function doesn't handle comparing different instances
 of that type. In other words, no object is less than itself, no matter
 what it is.
 
+The
+.code less
+function pairs with the
+.code equal
+function. If values
+.code a
+and
+.code b
+are objects which are of suitable types to the
+.code less
+function, then exactly one of the following three expressions must be true:
+.codn "(equal a b)" ,
+.code "(less a b)"
+or
+.codn "(less b a)" .
+
+The
+.code less
+relation is: antisymmetric, such that if
+.code "(less a b)"
+is true, then
+then
+.code "(less b a)"
+is false; irreflexive, such that
+.code "(less a a)"
+is false; and transitive, such that
+.code "(less a b)"
+and
+.code "(less b c)"
+imply
+.codn "(less a c)" .
+
+The following are detailed criteria that
+.code less
+applies to arguments of different types and combinations thereof.
+
 If both arguments are numbers or characters, they are compared as if using the
 .code <
 function.
@@ -18259,10 +18295,31 @@ If both arguments are strings, they are compared as if using the
 .code string-lt
 function.
 
-If both arguments are symbols, then their names are compared in
-their place, as if by the
+If both arguments are symbols, the following rules apply.
+If the symbols have names which are different, then the result is
+that of their names being compared by the
 .code string-lt
-function.
+function. If
+.code less
+is passed symbols which have the same name, and neither of these
+symbols has a home package, then the raw bit patterns of their
+values are compared as integers: effectively, the object with the
+lower machine address is considered lesser than the other.
+If only one of the two same-named symbols has no home package, then if
+that symbol is the left argument,
+.code less
+returns
+.codn t ,
+otherwise
+.codn nil .
+If both same-named symbols have home packages, then the result of
+.code less
+is that of
+.code string-lt
+applied to the names of their respective packages. Thus
+.code a:foo
+is less than
+.codn z:foo .
 
 If both arguments are conses, then they are compared as follows:
 .RS
@@ -18352,8 +18409,8 @@ is applied to the
 .code to
 fields and that result is returned.
 
-If the two arguments are of the above types, but of mutually different types,
-then
+If the two arguments are of the above types, but of different types from
+each other, then
 .code less
 resolves the situation based on the following precedence: numbers and
 characters are less than ranges, which are less than strings, which are less

@@ -4731,7 +4731,26 @@ tail:
   case NIL:
     return str_lt(nil_string, symbol_name(right));
   case SYM:
-    return str_lt(left->s.name, symbol_name(right));
+    {
+      val cmp = cmp_str(left->s.name, symbol_name(right));
+      if (cmp == negone) {
+        return t;
+      } else if (cmp == one) {
+        return nil;
+      } else {
+        val lpkg = left->s.package;
+        val rpkg = right->s.package;
+
+        if (lpkg == nil && rpkg == nil)
+          return tnil(left < right);
+        if (lpkg == nil)
+          return t;
+        if (rpkg == nil)
+          return nil;
+
+        return str_lt(lpkg->pk.name, rpkg->pk.name);
+      }
+    }
   case CONS:
   case LCONS:
     for (;;) {
