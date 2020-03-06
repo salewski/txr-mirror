@@ -1,5 +1,10 @@
 #!/usr/bin/env txr
 
+(define-option-struct tags-opts nil
+  (nil help    :bool "List this help text.")
+  (a   append  :bool "Append to existing tags file, without sorting.")
+  (m   merge   :bool "Merge with existing tags file, sorting combined content."))
+
 (defstruct tag ()
   ident
   path
@@ -44,6 +49,10 @@
     `@{me.ident}\t@{me.path}\t/^@{me.pattern}$/ \
      @(if me.expattern `;/@(escape me.ident)/`);"\t \
      @{me.type}\tstruct:@{me.parent}`))
+
+(defstruct orig-tag tag
+  line
+  (:method text (me) me.line))
 
 (defvarl err-ret (gensym))
 
@@ -112,16 +121,42 @@
                      ((neq obj err-ret)))
               (process-form obj))))))))
 
-(defun write-tagfile (tags)
-  (with-stream (stream (open-file "tags" "w"))
-    (each ((tag tags))
+(defun write-tagfile (tags o)
+  (when o.merge
+    (catch
+      (let* ((lines (file-get-lines "tags"))
+             (orig-tags (collect-each ((line lines))
+                          (new orig-tag ident (m^ #/[^\t]*/ line)
+                                        line line))))
+        (set tags (append tags orig-tags)))
+      (path-not-found (e))))
+  (with-stream (stream (open-file "tags" (if o.append "a" "w")))
+    (each ((tag (sort tags : .ident)))
       (put-line tag.(text) stream))))
 
-(let ((tags (build
-              (ftw *args*
-                   (lambda (path type stat . rest)
-                     (when (and (eql type ftw-f)
-                                (ends-with ".tl" path))
-                       (pend (ignerr (collect-tags path)))))
-                   ftw-phys))))
-  (write-tagfile (sort tags : .ident)))
+(let ((o (new tags-opts)))
+  o.(getopts *args*)
+  (when o.help
+    (put-line "\nUsage:\n")
+    (put-line `  @{*load-path*} [options] {file|dir}*\n`)
+    (put-line `Directory arguments are recursively searched for *.tl files.`)
+    (put-line `If no arguments are given, the current directory is searched.`)
+    o.(opthelp)
+    (exit t))
+
+  (unless o.out-args
+    (push "." o.out-args))
+
+  (when (and o.merge o.append)
+    (put-line `@{*load-path*}: --append and --merge are mutually exclusive`)
+    (exit nil))
+
+  (let ((tags (build
+                (ftw o.out-args
+                     (lambda (path type stat . rest)
+                       (when (and (eql type ftw-f)
+                                  (or (member path o.out-args)
+                                      (ends-with ".tl" path)))
+                         (pend (ignerr (collect-tags path)))))
+                     ftw-phys))))
+    (write-tagfile (sort tags : .ident) o)))
