@@ -101,8 +101,10 @@
                           (let ((struct-name (cadr obj)))
                             (add (ntag struct-tag struct-name))
                             (each ((obj (cdddr obj)))
-                              (add (ntag slot-tag (car obj) struct-name))
-                              (add (ntag slot-tag (cadr obj) struct-name)))))
+                              (tree-bind (short long . rest) obj
+                                (cond
+                                  (long (add (ntag slot-tag long struct-name)))
+                                  (short (add (ntag slot-tag short struct-name))))))))
                          ((defstruct)
                           (let ((struct-obj obj)
                                 (struct-name (tree-case (cadr obj)
