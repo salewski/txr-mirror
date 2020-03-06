@@ -135,10 +135,10 @@
              (orig-tags (collect-each ((line lines))
                           (new orig-tag ident (m^ #/[^\t]*/ line)
                                         line line))))
-        (set tags (append tags orig-tags)))
+        (set tags (merge tags orig-tags : .ident)))
       (path-not-found (e))))
   (with-stream (stream (open-file "tags" (if o.append "a" "w")))
-    (each ((tag (sort tags : .ident)))
+    (each ((tag tags))
       (put-line tag.(text) stream))))
 
 (let ((o (new tags-opts)))
