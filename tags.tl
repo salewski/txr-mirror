@@ -65,7 +65,8 @@
          (stream (make-strlist-input-stream lines))
          (*rec-source-loc* t))
     (with-stream (stream (open-file path))
-      (unless (starts-with "#!" (get-line stream))
+      (if (starts-with "#!" (get-line stream))
+        (pop lines)
         (seek-stream stream 0 :from-start))
       (build
         (add (new file-tag
