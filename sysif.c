@@ -2645,7 +2645,7 @@ void sysif_init(void)
 #ifdef FNM_CASEFOLD
   reg_varl(intern(lit("fnm-casefold"), user_package), num_fast(FNM_CASEFOLD));
 #endif
-#ifdef FNM_ESTMATCH
+#ifdef FNM_EXTMATCH
   reg_varl(intern(lit("fnm-extmatch"), user_package), num_fast(FNM_EXTMATCH));
 #endif
 #endif
