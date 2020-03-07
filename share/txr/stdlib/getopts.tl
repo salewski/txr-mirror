@@ -184,19 +184,19 @@
              (sys:opt-err "option --~a requires an argument" opt)))
         (t opts.(add-opt (new (sys:opt-parsed opt arg od))))))))
 
-(defmeth sys:opt-processor parse-shorts (me opts)
-  (each ((o (split-str opts #//)))
+(defmeth sys:opt-processor parse-shorts (me oarg)
+  (each ((o (split-str oarg #//)))
     (iflet ((opts me.opts)
             (od [me.od-hash o]))
       (let ((arg (when od.arg-p
-                   (when (> (length opts) 1)
+                   (when (> (length oarg) 1)
                      (sys:opt-err "argument -~a includes -~a, which does not clump"
-                            opts o))
+                                  oarg o))
                  (unless opts.out-args
                    (sys:opt-err "option -~a requires an argument" o))
                  (pop opts.out-args))))
-      opts.(add-opt (new (sys:opt-parsed o arg od))))
-    (sys:opt-err "unrecognized option: -~a" o))))
+        opts.(add-opt (new (sys:opt-parsed o arg od))))
+      (sys:opt-err "unrecognized option: -~a" o))))
 
 (defmeth sys:opt-processor parse-opts (me args)
   (let ((opts me.opts))
