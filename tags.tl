@@ -3,7 +3,9 @@
 (define-option-struct tags-opts nil
   (nil help    :bool "List this help text.")
   (a   append  :bool "Append to existing tags file, without sorting.")
-  (m   merge   :bool "Merge with existing tags file, sorting combined content."))
+  (m   merge   :bool "Merge with existing tags file, sorting combined content.")
+  (nil exclude (cumul :text) "Skip paths matching glob pattern given \ \
+                              in TEXT. Multiple patterns can be specified."))
 
 (defstruct tag ()
   ident
@@ -143,6 +145,13 @@
     (each ((tag tags))
       (put-line tag.(text) stream))))
 
+(defvarl ftw-actionretval 0)
+(defvarl ftw-continue 0)
+(defvarl ftw-skip-subtree 0)
+
+(defmacro static-when (expr . body)
+  (when expr ^(progn ,*body)))
+
 (let ((o (new tags-opts)))
   o.(getopts *args*)
   (when o.help
@@ -160,12 +169,27 @@
     (put-line `@{*load-path*}: --append and --merge are mutually exclusive`)
     (exit nil))
 
-  (let ((tags (build
-                (ftw o.out-args
-                     (lambda (path type stat . rest)
-                       (when (and (eql type ftw-f)
-                                  (or (member path o.out-args)
-                                      (ends-with ".tl" path)))
-                         (pend (ignerr (collect-tags path)))))
-                     ftw-phys))))
+  (let* ((have-arv (boundp 'ftw-actionretval))
+         (excf [apply orf (mapcar (do op fnmatch @@1 @1) o.exclude)])
+         (skips ())
+         (tags (build
+                 (ftw o.out-args
+                      (lambda (path type stat . rest)
+                        (caseql* type
+                          (ftw-f (when (and (or (member path o.out-args)
+                                                (ends-with ".tl" path))
+                                            (not [excf path])
+                                            (not [excf (base-name path)])
+                                            (not (some skips (op starts-with @1 path))))
+                                   (pend (ignerr (collect-tags path)))
+                                   ftw-continue))
+                          (ftw-d (while (and skips (starts-with path (car skips)))
+                                   (pop skips))
+                                 (cond
+                                   ((or [excf path] [excf (base-name path)])
+                                    (static-when (plusp ftw-actionretval)
+                                      (push `@path/` skips))
+                                    ftw-skip-subtree)))
+                          (t ftw-continue)))
+                      (logior ftw-phys ftw-actionretval)))))
     (write-tagfile (sort tags : .ident) o)))
