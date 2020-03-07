@@ -57203,7 +57203,41 @@ and converted accordingly. The option's argument is then a list object
 whose elements are the converted pieces. For instance
 .code "(list :dec)"
 will convert a list of comma-separated decimal integer tokens into
-a list of integer objects.
+a list of integer objects. The
+.code list
+option type does not nest.
+.meIP (cumul << type )
+If the type is specified as a compound form headed by the
+.code cumul
+symbol, it indicates that if the option is specified multiple times,
+the values coming from the multiple occurrences are accumulated into a list.
+The
+.meta type
+argument may be a
+.code list
+type, exemplified by
+.code "(cumul (list :dec))"
+or a basic type, such as
+.codn "(cumul :str)" .
+However, this type specifier does not nest. Combinations such as
+.code "(cumul (cumul ...)"
+and
+.code "(list (cumul ...))"
+are invalid.
+The option values are accumulated in reverse order, so that the rightmost
+repetition becomes the first item in the list. For instance, if the
+.code -x
+option has type
+.codn "(cumul :dec)" ,
+and the arguments presented for parsing are
+.codn "(\(dq-x\(dq \(dq1\(dq \(dq-x\(dq \(dq2\(dq)" ,
+then the option's value will be
+.codn "(2 1)" .
+If a
+.codn list -typed
+option is cumulative, then the option value will be a list of lists.
+Each repetition of the option produces a list, and the lists are accumulated.
+
 .RE
 
 .IP

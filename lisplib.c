@@ -479,7 +479,7 @@ static val getopts_set_entries(val dlt, val fun)
   };
   val name_noload[] = {
     lit("short"), lit("long"), lit("helptext"), lit("type"),
-    lit("in-args"), lit("out-args"), nil
+    lit("in-args"), lit("out-args"), lit("cumul"), nil
   };
   set_dlt_entries(dlt, name, fun);
   intern_only(name_noload);

@@ -42,6 +42,7 @@
   arg  ;; string, integer, real, ...
   desc ;; opt-desc
   eff-type
+  cumul
   (:postinit (me) me.(convert-type)))
 
 (defstruct opts nil
@@ -65,12 +66,27 @@
 (defun sys:opt-dash (name)
   `@(if (> (length name) 1) "-")-@name`)
 
+(defmeth opt-desc basic-type-p (me type)
+  (or (functionp type) (fboundp type) (member type me.valid-types)))
+
+(defmeth opt-desc list-type-p (me type)
+  (tree-case type
+    ((indicator btype) (and (eq indicator 'list)
+                            me.(basic-type-p btype)))
+    (x nil)))
+
+(defmeth opt-desc cumul-type-p (me type)
+  (tree-case type
+    ((indicator btype) (and (eq indicator 'usr:cumul)
+                            (or me.(basic-type-p btype)
+                                me.(list-type-p btype))))
+    (x nil)))
+
 (defmeth opt-desc check (me)
-  (unless (or (functionp me.type)
-              (fboundp me.type)
-              (and (consp me.type) (eq (car me.type) 'list))
-              (member me.type me.valid-types))
-    (getopts-error "type must be a function or valid keyword, not ~s"
+  (unless (or me.(basic-type-p me.type)
+              me.(list-type-p me.type)
+              me.(cumul-type-p me.type))
+    (getopts-error "invalid option type specifier ~s"
                    me.type))
   (when me.long
     (when (< (length me.long) 2)
@@ -138,6 +154,12 @@
                                                                rec-type))
                                        pieces)))
                 (set me.arg (mapcar (usl arg) sub-opts))))
+           ((and (consp type) (eq (car type) 'cumul))
+              (let* ((rec-type (cadr type))
+                     (sub-opt (new (sys:opt-parsed me.name me.arg
+                                                   me.desc rec-type))))
+                (set me.arg sub-opt.arg
+                     me.cumul t)))
            ((or (symbolp type) (functionp type))
               (set me.arg (call type me.arg))))))))
 
@@ -150,6 +172,11 @@
     (error "opts: cannot set option ~s to ~s: no such option" key val)))
 
 (defmeth opts add-opt (me opt)
+  (when opt.cumul
+    (let* ((old-opt [me.opt-hash (or opt.desc.long
+                                     opt.desc.short)])
+           (old-arg (if old-opt old-opt.arg)))
+      (set opt.arg (cons opt.arg old-arg))))
   (whenlet ((n opt.desc.short))
     (set [me.opt-hash n] opt))
   (whenlet ((n opt.desc.long))
@@ -248,16 +275,19 @@
         (undocumented (keep-if (op null @1.helptext) opt-desc-list)))
     (put-line "\nOptions:\n")
     (each ((od sorted))
-      (let* ((type (cond
-                     ((keywordp od.type) (upcase-str (symbol-name od.type)))
-                     ((and (consp od.type) (eq (car od.type) 'list))
-                        (let ((ts (upcase-str (symbol-name (cadr od.type)))))
+      (let* ((type (if (and (consp od.type) (eq (car od.type) 'cumul))
+                     (cadr od.type)
+                     od.type))
+             (tstr (cond
+                     ((keywordp type) (upcase-str (symbol-name type)))
+                     ((and (consp type) (eq (car type) 'list))
+                        (let ((ts (upcase-str (symbol-name (cadr type)))))
                           `@ts[,@ts...]`))
                      (t "ARG")))
              (long (if od.long
-                     `--@{od.long}@(if od.arg-p `=@type`)`))
+                     `--@{od.long}@(if od.arg-p `=@tstr`)`))
              (short (if od.short
-                      `-@{od.short}@(if od.arg-p ` @type`)`))
+                      `-@{od.short}@(if od.arg-p ` @tstr`)`))
              (ls (cond
                    ((and long short) `@{long 21} (@short)`)
                    (long long)
@@ -348,7 +378,11 @@
   (:static slot-hash)
   (:static opt-desc-list)
   (:method add-opt (me opt)
-    (slotset me [me.slot-hash (or opt.desc.long opt.desc.short)] opt.arg))
+    (let* ((sl [me.slot-hash (or opt.desc.long opt.desc.short)])
+           (arg (if opt.cumul
+                  (cons opt.arg (slot me sl))
+                  opt.arg)))
+      (slotset me sl arg)))
   (:method getopts (me args)
     (set me.in-args args me.out-args args)
     (let ((opr (new sys:opt-processor od-list me.opt-desc-list opts me)))
