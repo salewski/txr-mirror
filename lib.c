@@ -4467,7 +4467,10 @@ val cmp_str(val astr, val bstr)
    case TYPE_PAIR(STR, STR):
    case TYPE_PAIR(LIT, STR):
    case TYPE_PAIR(STR, LIT):
-     return num(wcscmp(c_str(astr), c_str(bstr)));
+     {
+       int cmp = wcscmp(c_str(astr), c_str(bstr));
+       return if3(cmp < 0, negone, if3(cmp > 0, one, zero));
+     }
    case TYPE_PAIR(LSTR, LIT):
    case TYPE_PAIR(LSTR, STR):
    case TYPE_PAIR(LIT, LSTR):

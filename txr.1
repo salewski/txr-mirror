@@ -23695,12 +23695,12 @@ that length.
 .desc
 The
 .code cmp-str
-function returns a negative integer if
+function returns -1 if
 .meta left-string
 is lexicographically prior to
-.metn right-string ,
-and a positive integer
-if the reverse situation is the case. Otherwise the strings are equal
+.metn right-string .
+If the reverse relationship holds, it returns 1.
+Otherwise the strings are equal
 and zero is returned.
 
 If either or both of the strings are lazy, then they are only forced to the
@@ -23711,6 +23711,12 @@ position in which they differ.
 The lexicographic ordering is naive, based on the character code point
 values in Unicode taken as integers, without regard for locale-specific
 collation orders.
+
+Note: in \*(TX 232 and earlier versions,
+.code cmp-str
+conforms to a weaker requirements: any negative integer value
+may be returned rather than -1, and any positive integer value
+can be returned instead of 1.
 
 .coNP Functions @, str= @, str< @, str> @ str>= and @ str<=
 .synb
