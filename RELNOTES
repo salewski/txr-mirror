@@ -1,3 +1,62 @@
+                                    TXR 233
+                                   2020-03-08
+
+
+  Features:
+
+  - Lib:
+    - crypt function now validates arguments rigorously
+      before calling underlying C library function,
+      which likes to crash with bad arguments.
+    - new meq, meql and mequal functions for testing whether
+      left argument is equal to any of the remaining arguments.
+    - new assq and assql functions, so TXR Lisp now supports
+      Ashwin Ram's (cdr (assq key a-list)) as written.
+    - New "cumulative" option type in getopts:
+      - multiple occurrences of cumulative option are
+        accumulated into a list.
+
+  - Vim support:
+    - New utility: tags.tl is a utility for generating Vim-compatible
+      tags from TXR Lisp sources.
+      - can work in conjunction with ctags: ctags can add
+        tags to a file generatd by tags.tl and vice versa.
+    - Vim syntax files: the : character is no longer an identifier
+      constituent.
+
+  - Cygwin:
+    - run and sh functions now use spawnvp instead of fork.
+
+  - Listener:
+    - Now appends new entries into .txr_history instead of
+      overwriting it, helping uses who have multiple interactive
+      invocations of txr.
+    - History can be saved early at any time with :save command.
+    - If no new lines have been entered when quitting, no
+      history saving takes place.
+
+  Bugs:
+
+  - fixed broken inequality string comparison:
+    - problem caused by string comparison functions misinterpreting
+      the return value of cmp-str, which happens to work in the
+      expected way on newer Glibc versions.
+    - affected functions were str<, str>, str<=, str>= and less;
+      indirectly, anything using any of these by default like
+      sort, sort-group and so on.
+  - @(line) directive now obtains correct line number
+    in horizontal mode instead of zero.
+  - chmod tests now work on platforms where sticky bit
+    manipulation is restricted.
+  - Fixed broken semantics of less comparison for symbols, allowing
+    both (less a b) and (less b a) to be false, when a and b are
+    different symbols having the same name.
+  - Fixed breakage in getopts: processing of short options.
+  - Fixed missing fnm-extmatch variable (related to fnmatch function)
+    which should be defined on platforms that have FNM_EXTMATCH.
+
+
+
                                     TXR 232
                                    2020-02-09
 
