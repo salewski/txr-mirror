@@ -1200,9 +1200,9 @@ val hash_equal(val obj, val seed)
 static void do_weak_tables(void)
 {
   struct hash *h;
-  cnum i;
 
   for (h = reachable_weak_hashes; h != 0; h = h->next) {
+    cnum i, c;
     /* The table of a weak hash was spuriously reached by conservative GC;
        it's a waste of time doing weak processing, since all keys and
        values have been transitively marked as reachable; and so we
@@ -1217,7 +1217,7 @@ static void do_weak_tables(void)
     case hash_weak_keys:
       /* Sweep through all entries. Delete any which have keys
          that are garbage. */
-      for (i = 0; i < h->modulus; i++) {
+      for (c = 0, i = 0; i < h->modulus; i++) {
         val *pchain = &h->table->v.vec[i];
         val *iter;
 
@@ -1231,16 +1231,18 @@ static void do_weak_tables(void)
 #endif
           } else {
             iter = us_cdr_p(*iter);
+            c++;
           }
         }
       }
       /* Garbage is gone now. Seal things by marking the vector. */
       gc_mark(h->table);
+      h->count = c;
       break;
     case hash_weak_vals:
       /* Sweep through all entries. Delete any which have values
          that are garbage. */
-      for (i = 0; i < h->modulus; i++) {
+      for (i = 0, c = 0; i < h->modulus; i++) {
         val *pchain = &h->table->v.vec[i];
         val *iter;
 
@@ -1254,16 +1256,18 @@ static void do_weak_tables(void)
 #endif
           } else {
             iter = us_cdr_p(*iter);
+            c++;
           }
         }
       }
       /* Garbage is gone now. Seal things by marking the vector. */
       gc_mark(h->table);
+      h->count = c;
       break;
     case hash_weak_both:
       /* Sweep through all entries. Delete any which have keys
          or values that are garbage. */
-      for (i = 0; i < h->modulus; i++) {
+      for (i = 0, c = 0; i < h->modulus; i++) {
         val *pchain = &h->table->v.vec[i];
         val *iter;
 
@@ -1281,11 +1285,13 @@ static void do_weak_tables(void)
 #endif
           } else {
             iter = us_cdr_p(*iter);
+            c++;
           }
         }
       }
       /* Garbage is gone now. Seal things by marking the vector. */
       gc_mark(h->table);
+      h->count = c;
       break;
     }
   }
