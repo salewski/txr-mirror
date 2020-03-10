@@ -150,44 +150,45 @@
 (defmacro static-when (expr . body)
   (when expr ^(progn ,*body)))
 
-(let ((o (new tags-opts)))
-  o.(getopts *args*)
-  (when o.help
-    (put-line "\nUsage:\n")
-    (put-line `  @{*load-path*} [options] {file|dir}*\n`)
-    (put-line `Directory arguments are recursively searched for *.tl files.`)
-    (put-line `If no arguments are given, the current directory is searched.`)
-    o.(opthelp)
-    (exit t))
+(compile-only
+  (let ((o (new tags-opts)))
+    o.(getopts *args*)
+    (when o.help
+      (put-line "\nUsage:\n")
+      (put-line `  @{*load-path*} [options] {file|dir}*\n`)
+      (put-line `Directory arguments are recursively searched for *.tl files.`)
+      (put-line `If no arguments are given, the current directory is searched.`)
+      o.(opthelp)
+      (exit t))
 
-  (unless o.out-args
-    (push "." o.out-args))
+    (unless o.out-args
+      (push "." o.out-args))
 
-  (when (and o.merge o.append)
-    (put-line `@{*load-path*}: --append and --merge are mutually exclusive`)
-    (exit nil))
+    (when (and o.merge o.append)
+      (put-line `@{*load-path*}: --append and --merge are mutually exclusive`)
+      (exit nil))
 
-  (let* ((have-arv (boundp 'ftw-actionretval))
-         (excf [apply orf (mapcar (do op fnmatch @@1 @1) o.exclude)])
-         (skips ())
-         (tags (build
-                 (ftw o.out-args
-                      (lambda (path type stat . rest)
-                        (caseql* type
-                          (ftw-f (when (and (or (member path o.out-args)
-                                                (ends-with ".tl" path))
-                                            (not [excf path])
-                                            (not [excf (base-name path)])
-                                            (not (some skips (op starts-with @1 path))))
-                                   (pend (ignerr (collect-tags path)))
-                                   ftw-continue))
-                          (ftw-d (while (and skips (starts-with path (car skips)))
-                                   (pop skips))
-                                 (cond
-                                   ((or [excf path] [excf (base-name path)])
-                                    (static-when (plusp ftw-actionretval)
-                                      (push `@path/` skips))
-                                    ftw-skip-subtree)))
-                          (t ftw-continue)))
-                      (logior ftw-phys ftw-actionretval)))))
-    (write-tagfile (sort tags : .ident) o)))
+    (let* ((have-arv (boundp 'ftw-actionretval))
+           (excf [apply orf (mapcar (do op fnmatch @@1 @1) o.exclude)])
+           (skips ())
+           (tags (build
+                   (ftw o.out-args
+                        (lambda (path type stat . rest)
+                          (caseql* type
+                            (ftw-f (when (and (or (member path o.out-args)
+                                                  (ends-with ".tl" path))
+                                              (not [excf path])
+                                              (not [excf (base-name path)])
+                                              (not (some skips (op starts-with @1 path))))
+                                     (pend (ignerr (collect-tags path)))
+                                     ftw-continue))
+                            (ftw-d (while (and skips (starts-with path (car skips)))
+                                     (pop skips))
+                                   (cond
+                                     ((or [excf path] [excf (base-name path)])
+                                      (static-when (plusp ftw-actionretval)
+                                        (push `@path/` skips))
+                                      ftw-skip-subtree)))
+                            (t ftw-continue)))
+                        (logior ftw-phys ftw-actionretval)))))
+      (write-tagfile (sort tags : .ident) o))))
