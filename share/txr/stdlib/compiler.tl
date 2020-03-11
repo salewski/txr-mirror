@@ -1711,11 +1711,29 @@
     [mapdo (op prinl @1 out-stream) out-forms]
     (delete-package *package*)))
 
+(defun propagate-perms (in-stream out-stream)
+  (let ((sti (stat in-stream)))
+    (when (plusp (logand sti.mode s-ixusr))
+      (let ((mode "+x")
+            (suid (if (plusp (logand sti.mode s-isuid)) ",u+s"))
+            (sgid (if (and (plusp (logand sti.mode s-isgid))
+                           (plusp (logand sti.mode s-ixgrp))) ",g+s")))
+        (when (or suid sgid)
+          (let ((sto (stat out-stream)))
+            (set mode (append mode
+                              (if (eql sti.uid sto.uid) suid)
+                              (if (eql sti.gid sto.gid) sgid)))))
+        (chmod out-stream mode)))))
+
 (defun compile-file-conditionally (in-path out-path test-fn)
   (whenlet ((success nil)
+            (perms nil)
             (streams (open-compile-streams in-path out-path test-fn)))
     (with-resources ((in-stream (car streams) (close-stream in-stream))
                      (out-stream (cadr streams) (progn
+                                                  (when perms
+                                                    (propagate-perms in-stream
+                                                                     out-stream))
                                                   (close-stream out-stream)
                                                   (unless success
                                                     (remove-path (caddr streams))))))
@@ -1732,7 +1750,8 @@
             (progn
               (set line `@line `)
               (upd line (regsub #/--lisp[^\-]/ (ret `--compiled@[@1 -1]`)))
-              (put-line (butlast line) out-stream))
+              (put-line (butlast line) out-stream)
+              (set perms t))
             (seek-stream in-stream 0 :from-start))
           (labels ((compile-form (unex-form)
                      (let* ((form (macroexpand unex-form))

@@ -70042,6 +70042,10 @@ circular structures are reproduced.
 
 .SS* Treatment of The Hash Bang Line
 
+\*(TX supports the hash bang mechanism in compiled
+.code .tlo
+files, thereby allowing compiled scripts to be executable.
+
 When a source file begins with the
 .code #!
 ("hash-bang") character sequence, the file compiler propagates that
@@ -70051,9 +70055,21 @@ compiled file, subject to the following transformation: occurrences of
 which are not followed by a dash are replaced with
 .strn --compiled .
 
-\*(TX supports the hash bang mechanism in compiled
-.code .tlo
-files, thereby allowing compiled scripts to be executable.
+Furthermore, certain permissions are propagated from a hash bang source
+file to the target file. If the source file is executable to its owner,
+then the target file is made executable as if by using
+.code chmod
+with the
+.code +x
+mode: all the executable permissions that are allowed by the current
+.code umask
+are are enabled on the target file. If the target file is thus being marked
+executable, then additional permissions are also treated as follows.  If the
+target file has the same owner as the source file, and the source file's setuid
+permission bit is set, then this is propagated to the target file. Similarly,
+if the target file has the same group owner as the source file, and the source
+file's group execute bit and setgid permission bit are set, then the setgid
+bit is set on the target file.
 
 .SS* Compiled File Compatibility
 
