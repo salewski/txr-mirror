@@ -148,7 +148,7 @@
 (defvarl ftw-skip-subtree 0)
 
 (defmacro static-when (expr . body)
-  (when expr ^(progn ,*body)))
+  (when (eval expr) ^(progn ,*body)))
 
 (compile-only
   (let ((o (new tags-opts)))
