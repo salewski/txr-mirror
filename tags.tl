@@ -186,7 +186,7 @@
                                      (pop skips))
                                    (cond
                                      ((or [excf path] [excf (base-name path)])
-                                      (static-when (plusp ftw-actionretval)
+                                      (static-when (zerop ftw-actionretval)
                                         (push `@path/` skips))
                                       ftw-skip-subtree)))
                             (t ftw-continue)))
