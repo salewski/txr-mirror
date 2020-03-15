@@ -156,8 +156,8 @@
     (when o.help
       (put-line "\nUsage:\n")
       (put-line `  @{*load-path*} [options] {file|dir}*\n`)
-      (put-line `Directory arguments are recursively searched for *.tl files.`)
-      (put-line `If no arguments are given, the current directory is searched.`)
+      (put-line "Directory arguments are recursively searched for *.tl files.")
+      (put-line "If no arguments are given, the current directory is searched.")
       o.(opthelp)
       (exit t))
 
