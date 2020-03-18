@@ -210,14 +210,14 @@ val get_filter(val spec)
 {
   if (consp(spec)) {
     if (car(spec) == fun_k) {
-      return curry_123_2(func_n3(match_filter), second(spec), rest(rest(spec)));
+      return pa_123_2(func_n3(match_filter), second(spec), rest(rest(spec)));
     } else {
       val filter_list = mapcar(func_n1(get_filter), spec);
 
       if (memqual(nil, filter_list))
         return nil;
 
-      return curry_12_2(func_n2(compound_filter), filter_list);
+      return pa_12_2(func_n2(compound_filter), filter_list);
     }
   }
 
@@ -248,7 +248,7 @@ static val build_filter_from_list(val list)
 
   for (iter = list; iter; iter = cdr(iter)) {
     val tuple = reverse(car(iter));
-    mapcar(curry_123_2(func_n3(trie_add), trie, first(tuple)), rest(tuple));
+    mapcar(pa_123_2(func_n3(trie_add), trie, first(tuple)), rest(tuple));
   }
 
   trie_compress(mkcloc(trie));
@@ -303,7 +303,7 @@ val filter_string_tree(val filter, val obj)
   case NIL:
     return nil;
   case CONS:
-    return mapcar(curry_12_2(func_n2(filter_string_tree), filter), obj);
+    return mapcar(pa_12_2(func_n2(filter_string_tree), filter), obj);
   default:
     {
       val type = typeof(filter);
@@ -1064,18 +1064,18 @@ void filter_init(void)
           get_filter(fromhtml_k));
   sethash(fh, upcase_k, func_n1(upcase_str));
   sethash(fh, downcase_k, func_n1(downcase_str));
-  sethash(fh, topercent_k, curry_12_1(func_n2(url_encode), nil));
-  sethash(fh, frompercent_k, curry_12_1(func_n2(url_decode), nil));
-  sethash(fh, tourl_k, curry_12_1(func_n2(url_encode), t));
-  sethash(fh, fromurl_k, curry_12_1(func_n2(url_decode), t));
-  sethash(fh, tobase64_k, curry_12_1(func_n2(base64_encode), 0));
+  sethash(fh, topercent_k, pa_12_1(func_n2(url_encode), nil));
+  sethash(fh, frompercent_k, pa_12_1(func_n2(url_decode), nil));
+  sethash(fh, tourl_k, pa_12_1(func_n2(url_encode), t));
+  sethash(fh, fromurl_k, pa_12_1(func_n2(url_decode), t));
+  sethash(fh, tobase64_k, pa_12_1(func_n2(base64_encode), 0));
   sethash(fh, frombase64_k, func_n1(base64_decode));
-  sethash(fh, tobase64url_k, curry_12_1(func_n2(base64url_encode), 0));
+  sethash(fh, tobase64url_k, pa_12_1(func_n2(base64url_encode), 0));
   sethash(fh, frombase64url_k, func_n1(base64url_decode));
   sethash(fh, tonumber_k, func_n1(num_str));
-  sethash(fh, toint_k, curry_12_1(func_n2(int_str), nil));
+  sethash(fh, toint_k, pa_12_1(func_n2(int_str), nil));
   sethash(fh, tofloat_k, func_n1(flo_str));
-  sethash(fh, hextoint_k, curry_12_1(func_n2(int_str), num_fast(16)));
+  sethash(fh, hextoint_k, pa_12_1(func_n2(int_str), num_fast(16)));
 
   reg_fun(intern(lit("make-trie"), user_package), func_n0(make_trie));
   reg_fun(intern(lit("trie-add"), user_package), func_n3(trie_add));

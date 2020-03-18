@@ -2889,7 +2889,7 @@ val subst_vars(val forms, val env, val filter)
 
         if (modifiers) {
           forms = cons(format_field(str, modifiers, filter,
-                                    curry_123_1(func_n3(eval), env, form)),
+                                    pa_123_1(func_n3(eval), env, form)),
                        rest(forms));
         } else {
           str = fmt_cat(str, lit(" "));
@@ -3395,14 +3395,14 @@ static val xform_listed_quote_f;
 
 static void qquote_init(void)
 {
-  val eq_to_list_f = curry_12_1(eq_f, list_s);
-  val eq_to_quote_f = curry_12_1(eq_f, quote_s);
+  val eq_to_list_f = pa_12_1(eq_f, list_s);
+  val eq_to_quote_f = pa_12_1(eq_f, quote_s);
   val cons_f = func_n2(cons);
 
   protect(&consp_f, &second_f, &list_form_p_f,
           &quote_form_p_f, &xform_listed_quote_f, convert(val *, 0));
 
-  eq_to_list_f = curry_12_1(eq_f, list_s);
+  eq_to_list_f = pa_12_1(eq_f, list_s);
   consp_f = func_n1(consp);
   second_f = func_n1(second);
   list_form_p_f = andf(consp_f,
@@ -3421,8 +3421,8 @@ static void qquote_init(void)
                                    chain(cdr_f, car_f, car_f, eq_to_quote_f, nao),
                                    nao),
                               chain(cdr_f, car_f, cdr_f,
-                                    curry_12_1(cons_f, nil),
-                                    curry_12_2(cons_f, quote_s),
+                                    pa_12_1(cons_f, nil),
+                                    pa_12_2(cons_f, quote_s),
                                     nao),
                               nil);
 }
@@ -4511,8 +4511,8 @@ static val expand_catch(val form, val menv)
   val catch_clauses = args;
   val try_form_ex = expand(try_form, menv);
   val desc_ex = expand(desc, menv);
-  val catch_clauses_ex = rlcp(mapcar(curry_12_1(func_n2(expand_catch_clause),
-                                                menv),
+  val catch_clauses_ex = rlcp(mapcar(pa_12_1(func_n2(expand_catch_clause),
+                                             menv),
                                      catch_clauses),
                               catch_clauses);
 
@@ -5890,7 +5890,7 @@ static val weavev(struct args *args)
 {
   val lists = args_get_list(args);
   val uniq = cons(nil, nil);
-  val padded_lists = mapcar(curry_123_1(func_n3(pad), uniq, colon_k), lists);
+  val padded_lists = mapcar(pa_123_1(func_n3(pad), uniq, colon_k), lists);
   val tuples = lazy_mapcarl(list_f, padded_lists);
   val env = cons(uniq, tuples);
   val whil = func_f0(env, weave_while);

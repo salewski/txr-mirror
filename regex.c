@@ -3092,26 +3092,26 @@ val regex_range_all(val regex, val arg1, val arg2, val arg3)
 
 val regex_range_full_fun(val regex, val pos)
 {
-  return curry_123_3(func_n3(regex_range_full),
-                     regex, default_arg(pos, zero));
+  return pa_123_3(func_n3(regex_range_full),
+                  regex, default_arg(pos, zero));
 }
 
 val regex_range_left_fun(val regex, val pos)
 {
-  return curry_123_3(func_n3(regex_range_left),
-                     regex, default_arg(pos, zero));
+  return pa_123_3(func_n3(regex_range_left),
+                  regex, default_arg(pos, zero));
 }
 
 val regex_range_right_fun(val regex, val end)
 {
   if (null_or_missing_p(end))
-    return curry_123_2(func_n3(regex_range_right), regex, end);
-  return curry_123_3(func_n3(regex_range_left), regex, end);
+    return pa_123_2(func_n3(regex_range_right), regex, end);
+  return pa_123_3(func_n3(regex_range_left), regex, end);
 }
 
 val regex_range_search_fun(val regex, val start, val from_end)
 {
-  return curry_1234_1(func_n4(range_regex), regex, start, from_end);
+  return pa_1234_1(func_n4(range_regex), regex, start, from_end);
 }
 
 static val scan_until_common(val self, val regex, val stream_in,

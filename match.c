@@ -1700,7 +1700,7 @@ static val tx_subst_vars(val spec, val bindings, val filter)
 
           if (modifiers) {
             spec = cons(format_field(str, modifiers, filter,
-                                     curry_123_2(func_n3(txeval), spec, bindings)),
+                                     pa_123_2(func_n3(txeval), spec, bindings)),
                         rest(spec));
           } else {
             if (!stringp(str))
@@ -1789,7 +1789,7 @@ static val do_txeval(val spec, val form, val bindings, val allow_unbound)
       } else if (sym == var_s || sym == expr_s) {
         ret = tleval(spec, second(form), bindings);
       } else {
-        ret =  mapcar(curry_123_2(func_n3(txeval), spec, bindings), form);
+        ret =  mapcar(pa_123_2(func_n3(txeval), spec, bindings), form);
       }
     } else if (stringp(form)) {
       ret = form;
@@ -2521,7 +2521,7 @@ static val v_freeform(match_files_ctx *c)
   spec_bind (specline, first_spec, c->spec);
 
   val args = rest(first_spec);
-  val vals = mapcar(curry_123_2(func_n3(tleval_144), first_spec, c->bindings),
+  val vals = mapcar(pa_123_2(func_n3(tleval_144), first_spec, c->bindings),
                     args);
 
   if ((c->spec = rest(c->spec)) == nil) {
@@ -3649,7 +3649,7 @@ static val v_bind(match_files_ctx *c)
                 filter_spec, nao);
     }
 
-    testfun = curry_1234_34(func_n4(filter_equal), filter, filter);
+    testfun = pa_1234_34(func_n4(filter_equal), filter, filter);
   } else if (rfilt_spec || lfilt_spec) {
     val rfilt = if3(rfilt_spec, get_filter(rfilt_spec), identity_f);
     val lfilt = if3(lfilt_spec, get_filter(lfilt_spec), identity_f);
@@ -3664,7 +3664,7 @@ static val v_bind(match_files_ctx *c)
                 lfilt_spec, nao);
     }
 
-    testfun = curry_1234_34(func_n4(filter_equal), lfilt, rfilt);
+    testfun = pa_1234_34(func_n4(filter_equal), lfilt, rfilt);
   }
 
   uw_match_env_begin;
@@ -4090,7 +4090,7 @@ static val v_throw(match_files_ctx *c)
     sem_error(specline, lit("throw: ~a is not a type symbol"),
               type, nao);
   {
-    val values = mapcar(curry_123_2(func_n3(txeval_allow_ub),
+    val values = mapcar(pa_123_2(func_n3(txeval_allow_ub),
                                     specline, c->bindings), args);
     uw_throw(type, values);
   }
@@ -4111,11 +4111,11 @@ static val v_deffilter(match_files_ctx *c)
 
     if (!all_satisfy(table_evaled, andf(func_n1(listp),
                                         chain(func_n1(length_list),
-                                              curry_12_1(func_n2(ge), two), nao),
+                                              pa_12_1(func_n2(ge), two), nao),
                                         chain(func_n1(rest),
-                                              curry_123_1(func_n3(all_satisfy),
-                                                          func_n1(stringp),
-                                                          nil),
+                                              pa_123_1(func_n3(all_satisfy),
+                                                       func_n1(stringp),
+                                                       nil),
                                               nao),
                                         nao),
                                    nil))
@@ -4309,7 +4309,7 @@ static val v_assert(match_files_ctx *c)
     if (result) {
       return result;
     } else if (type) {
-      val values = mapcar(curry_123_2(func_n3(txeval_allow_ub),
+      val values = mapcar(pa_123_2(func_n3(txeval_allow_ub),
                                       specline, c->bindings), args);
       uw_throw(type, values);
     } else {
@@ -4546,8 +4546,8 @@ static val h_assert(match_line_ctx *c)
   if (result) {
     return result;
   } else if (type) {
-    val values = mapcar(curry_123_2(func_n3(txeval_allow_ub),
-                                    c->specline, c->bindings), elem);
+    val values = mapcar(pa_123_2(func_n3(txeval_allow_ub),
+                                 c->specline, c->bindings), elem);
     uw_throw(type, values);
   } else {
     if (c->file)

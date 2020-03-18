@@ -955,7 +955,7 @@ static val me_defex(val form, val menv)
     eval_error(form, lit("defex: arguments must all be symbols"), nao);
 
   return cons(intern(lit("register-exception-subtypes"), user_package),
-              mapcar(curry_12_2(list_f, quote_s), types));
+              mapcar(pa_12_2(list_f, quote_s), types));
 }
 
 static val exception_subtype_map(void)

@@ -992,17 +992,17 @@ val reduce_left(val fun, val list, val init, val key);
 val reduce_right(val fun, val list, val init, val key);
 val transposev(struct args *lists);
 val transpose(val lists);
-/* The notation curry_12_2 means take some function f(arg1, arg2) and
+/* The notation pa_12_2 means take some function f(arg1, arg2) and
    fix a value for argument 1 to create a g(arg2).
    Other variations follow by analogy. */
-val curry_12_2(val fun2, val arg);
-val curry_12_1(val fun2, val arg2);
-val curry_123_3(val fun3, val arg1, val arg2);
-val curry_123_2(val fun3, val arg1, val arg3);
-val curry_123_1(val fun3, val arg2, val arg3);
-val curry_123_23(val fun3, val arg1);
-val curry_1234_1(val fun4, val arg2, val arg3, val arg4);
-val curry_1234_34(val fun3, val arg1, val arg2);
+val pa_12_2(val fun2, val arg);
+val pa_12_1(val fun2, val arg2);
+val pa_123_3(val fun3, val arg1, val arg2);
+val pa_123_2(val fun3, val arg1, val arg3);
+val pa_123_1(val fun3, val arg2, val arg3);
+val pa_123_23(val fun3, val arg1);
+val pa_1234_1(val fun4, val arg2, val arg3, val arg4);
+val pa_1234_34(val fun3, val arg1, val arg2);
 val chain(val first_fun, ...);
 val chainv(struct args *funlist);
 val chandv(struct args *funlist);

@@ -2084,17 +2084,17 @@ static val rem_lazy_rec(val pred, val list, val env, val func)
 
 val remq_lazy(val obj, val list)
 {
-  return rem_lazy_rec(curry_12_1(eq_f, obj), nullify(list), nil, nil);
+  return rem_lazy_rec(pa_12_1(eq_f, obj), nullify(list), nil, nil);
 }
 
 val remql_lazy(val obj, val list)
 {
-  return rem_lazy_rec(curry_12_1(eql_f, obj), nullify(list), nil, nil);
+  return rem_lazy_rec(pa_12_1(eql_f, obj), nullify(list), nil, nil);
 }
 
 val remqual_lazy(val obj, val list)
 {
-  return rem_lazy_rec(curry_12_1(equal_f, obj), nullify(list), nil, nil);
+  return rem_lazy_rec(pa_12_1(equal_f, obj), nullify(list), nil, nil);
 }
 
 val remove_if_lazy(val pred, val list, val key)
@@ -2114,8 +2114,8 @@ val tree_find(val obj, val tree, val testfun)
   if (funcall2(default_arg(testfun, equal_f), obj, tree))
     return t;
   else if (consp(tree))
-    return some_satisfy(tree, curry_123_2(func_n3(tree_find),
-                                          obj, testfun), nil);
+    return some_satisfy(tree, pa_123_2(func_n3(tree_find),
+                                       obj, testfun), nil);
   return nil;
 }
 
@@ -6962,77 +6962,77 @@ val reduce_right(val fun, val list, val init, val key)
                                       init));
 }
 
-static val do_curry_12_2(val fcons, val arg2)
+static val do_pa_12_2(val fcons, val arg2)
 {
   return funcall2(car(fcons), cdr(fcons), arg2);
 }
 
-val curry_12_2(val fun2, val arg)
+val pa_12_2(val fun2, val arg)
 {
-  return func_f1(cons(fun2, arg), do_curry_12_2);
+  return func_f1(cons(fun2, arg), do_pa_12_2);
 }
 
-static val do_curry_12_1(val fcons, val arg1)
+static val do_pa_12_1(val fcons, val arg1)
 {
   return funcall2(car(fcons), arg1, cdr(fcons));
 }
 
-val curry_12_1(val fun2, val arg2)
+val pa_12_1(val fun2, val arg2)
 {
-  return func_f1(cons(fun2, arg2), do_curry_12_1);
+  return func_f1(cons(fun2, arg2), do_pa_12_1);
 }
 
-static val do_curry_12_1_v(val fcons, struct args *args)
+static val do_pa_12_1_v(val fcons, struct args *args)
 {
   return funcall2(car(fcons), args_get_list(args), cdr(fcons));
 }
 
-static val curry_12_1_v(val fun2, val arg2)
+static val pa_12_1_v(val fun2, val arg2)
 {
-  return func_f0v(cons(fun2, arg2), do_curry_12_1_v);
+  return func_f0v(cons(fun2, arg2), do_pa_12_1_v);
 }
 
-static val do_curry_123_3(val fcons, val arg3)
+static val do_pa_123_3(val fcons, val arg3)
 {
   return funcall3(car(fcons), car(cdr(fcons)), cdr(cdr(fcons)), arg3);
 }
 
-val curry_123_3(val fun3, val arg1, val arg2)
+val pa_123_3(val fun3, val arg1, val arg2)
 {
-  return func_f1(cons(fun3, cons(arg1, arg2)), do_curry_123_3);
+  return func_f1(cons(fun3, cons(arg1, arg2)), do_pa_123_3);
 }
 
-static val do_curry_123_2(val fcons, val arg2)
+static val do_pa_123_2(val fcons, val arg2)
 {
   return funcall3(car(fcons), car(cdr(fcons)), arg2, cdr(cdr(fcons)));
 }
 
-val curry_123_2(val fun3, val arg1, val arg3)
+val pa_123_2(val fun3, val arg1, val arg3)
 {
-  return func_f1(cons(fun3, cons(arg1, arg3)), do_curry_123_2);
+  return func_f1(cons(fun3, cons(arg1, arg3)), do_pa_123_2);
 }
 
-static val do_curry_123_1(val fcons, val arg1)
+static val do_pa_123_1(val fcons, val arg1)
 {
   return funcall3(car(fcons), arg1, car(cdr(fcons)), cdr(cdr(fcons)));
 }
 
-val curry_123_1(val fun3, val arg2, val arg3)
+val pa_123_1(val fun3, val arg2, val arg3)
 {
-  return func_f1(cons(fun3, cons(arg2, arg3)), do_curry_123_1);
+  return func_f1(cons(fun3, cons(arg2, arg3)), do_pa_123_1);
 }
 
-static val do_curry_123_23(val fcons, val arg2, val arg3)
+static val do_pa_123_23(val fcons, val arg2, val arg3)
 {
   return funcall3(car(fcons), cdr(fcons), arg2, arg3);
 }
 
-val curry_123_23(val fun3, val arg1)
+val pa_123_23(val fun3, val arg1)
 {
-  return func_f2(cons(fun3, arg1), do_curry_123_23);
+  return func_f2(cons(fun3, arg1), do_pa_123_23);
 }
 
-static val do_curry_1234_1(val fcons, val arg1)
+static val do_pa_1234_1(val fcons, val arg1)
 {
   cons_bind (fun, dr, fcons);
   cons_bind (arg2, ddr, dr);
@@ -7042,19 +7042,19 @@ static val do_curry_1234_1(val fcons, val arg1)
   return funcall4(fun, arg1, arg2, arg3, arg4);
 }
 
-val curry_1234_1(val fun4, val arg2, val arg3, val arg4)
+val pa_1234_1(val fun4, val arg2, val arg3, val arg4)
 {
-  return func_f1(list(fun4, arg2, arg3, arg4, nao), do_curry_1234_1);
+  return func_f1(list(fun4, arg2, arg3, arg4, nao), do_pa_1234_1);
 }
 
-static val do_curry_1234_34(val fcons, val arg3, val arg4)
+static val do_pa_1234_34(val fcons, val arg3, val arg4)
 {
   return funcall4(car(fcons), car(cdr(fcons)), cdr(cdr(fcons)), arg3, arg4);
 }
 
-val curry_1234_34(val fun4, val arg1, val arg2)
+val pa_1234_34(val fun4, val arg1, val arg2)
 {
-  return func_f2(cons(fun4, cons(arg1, arg2)), do_curry_1234_34);
+  return func_f2(cons(fun4, cons(arg1, arg2)), do_pa_1234_34);
 }
 
 val transposev(struct args *list)
@@ -7068,7 +7068,7 @@ val transposev(struct args *list)
   case STR:
   case LSTR:
   case LIT:
-    func = curry_12_1_v(func_n2(cat_str), nil);
+    func = pa_12_1_v(func_n2(cat_str), nil);
     break;
   case VEC:
     func = func_n0v(vectorv);
@@ -7152,7 +7152,7 @@ val chandv(struct args *funlist)
 
 static val do_juxt(val funcs, struct args *args)
 {
-  return mapcar(curry_12_1(func_n2(apply), args_get_list(args)), funcs);
+  return mapcar(pa_12_1(func_n2(apply), args_get_list(args)), funcs);
 }
 
 val juxtv(struct args *funlist)

@@ -327,7 +327,7 @@ gather_clause : GATHER exprs_opt ')'
                 newl gather_parts
                 END newl                { val args = match_expand_keyword_args($2);
                                           $$ = list(gather_s,
-                                                    append2(mapcar(curry_12_1(func_n2(cons), nil),
+                                                    append2(mapcar(pa_12_1(func_n2(cons), nil),
                                                                    first($5)), rest($5)),
                                                     args, nao);
                                           rl($$, num($1)); }
@@ -338,7 +338,7 @@ gather_clause : GATHER exprs_opt ')'
                 clauses_opt
                 END newl                { val args = match_expand_keyword_args($2);
                                           $$ = list(gather_s,
-                                                    append2(mapcar(curry_12_1(func_n2(cons), nil),
+                                                    append2(mapcar(pa_12_1(func_n2(cons), nil),
                                                                    first($5)), rest($5)),
                                                     args, cons(cdr($6),
                                                              cons($7, $10)), nao);
