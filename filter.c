@@ -47,6 +47,7 @@ val filter_k, lfilt_k, rfilt_k, tohtml_k, fromhtml_k;
 val tohtml_star_k;
 val upcase_k, downcase_k;
 val topercent_k, frompercent_k, tourl_k, fromurl_k, tobase64_k, frombase64_k;
+val tobase64url_k, frombase64url_k;
 val tonumber_k, toint_k, tofloat_k, hextoint_k;
 
 static val make_trie(void)
@@ -740,11 +741,9 @@ INLINE void col_check(cnum *pcol, cnum wcol, val out)
   }
 }
 
-val base64_stream_enc(val out, val in, val nbytes, val wrap_cols)
+static val base64_stream_enc_impl(val out, val in, val nbytes, val wrap_cols,
+                                  const char *b64)
 {
-  static const char *b64 = {
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
-  };
   int ulim = nilp(default_null_arg(nbytes));
   cnum col = 0;
   cnum nb = if3(ulim, 0, c_num(nbytes));
@@ -802,12 +801,38 @@ val base64_stream_enc(val out, val in, val nbytes, val wrap_cols)
   return plus(ret, num_fast(count));
 }
 
+val base64_stream_enc(val out, val in, val nbytes, val wrap_cols)
+{
+  static const char *b64 = {
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+  };
+  return base64_stream_enc_impl(out, in, nbytes, wrap_cols, b64);
+}
+
 val base64_encode(val str, val wrap_cols)
 {
   val in = make_byte_input_stream(str);
   val out = make_string_output_stream();
 
   (void) base64_stream_enc(out, in, nil, wrap_cols);
+
+  return get_string_from_stream(out);
+}
+
+val base64url_stream_enc(val out, val in, val nbytes, val wrap_cols)
+{
+  static const char *b64 = {
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+  };
+  return base64_stream_enc_impl(out, in, nbytes, wrap_cols, b64);
+}
+
+val base64url_encode(val str, val wrap_cols)
+{
+  val in = make_byte_input_stream(str);
+  val out = make_string_output_stream();
+
+  (void) base64url_stream_enc(out, in, nil, wrap_cols);
 
   return get_string_from_stream(out);
 }
@@ -845,22 +870,24 @@ INLINE int b64_code(cnum c)
   }
 }
 
-val base64_stream_dec(val out, val in)
+static val base64_stream_dec_impl(val out, val in,
+                                  cnum (*get_char)(val),
+                                  int (*get_code)(cnum))
 {
   val ret = zero;
   cnum count = 0;
 
   for (;;) {
-    cnum c0 = get_base64_char(in);
-    cnum c1 = c0 ? get_base64_char(in) : 0;
-    cnum c2 = c1 ? get_base64_char(in) : 0;
-    cnum c3 = c2 ? get_base64_char(in) : 0;
+    cnum c0 = get_char(in);
+    cnum c1 = c0 ? get_char(in) : 0;
+    cnum c2 = c1 ? get_char(in) : 0;
+    cnum c3 = c2 ? get_char(in) : 0;
 
     if (c3) {
-      long f0 = b64_code(c0);
-      long f1 = b64_code(c1);
-      long f2 = b64_code(c2);
-      long f3 = b64_code(c3);
+      long f0 = get_code(c0);
+      long f1 = get_code(c1);
+      long f2 = get_code(c2);
+      long f3 = get_code(c3);
       long word = (f0 << 18) | (f1 << 12) | (f2 << 6) | f3;
 
       put_byte(num_fast((word >> 16)       ), out);
@@ -868,9 +895,9 @@ val base64_stream_dec(val out, val in)
       put_byte(num_fast( word        & 0xff), out);
       count += 3;
     } else if (c2) {
-      long f0 = b64_code(c0);
-      long f1 = b64_code(c1);
-      long f2 = b64_code(c2);
+      long f0 = get_code(c0);
+      long f1 = get_code(c1);
+      long f2 = get_code(c2);
       long word = (f0 << 18) | (f1 << 12) | (f2 << 6);
 
       put_byte(num_fast((word >> 16)       ), out);
@@ -878,8 +905,8 @@ val base64_stream_dec(val out, val in)
       count += 2;
       break;
     } else if (c0 || c1) {
-      long f0 = b64_code(c0);
-      long f1 = b64_code(c1);
+      long f0 = get_code(c0);
+      long f1 = get_code(c1);
       long word = (f0 << 18) | (f1 << 12);
       put_byte(num_fast((word >> 16)       ), out);
       count += 1;
@@ -895,6 +922,11 @@ val base64_stream_dec(val out, val in)
   }
 
   return plus(ret, num_fast(count));
+}
+
+val base64_stream_dec(val out, val in)
+{
+  return base64_stream_dec_impl(out, in, get_base64_char, b64_code);
 }
 
 val base64_decode(val str)
@@ -913,6 +945,64 @@ val base64_decode_buf(val str)
   val out = make_buf_stream(nil);
 
   (void) base64_stream_dec(out, in);
+
+  return get_buf_from_stream(out);
+}
+
+INLINE cnum get_base64url_char(val in)
+{
+  for (;;) {
+    val ch = get_char(in);
+    if (!ch)
+      return 0;
+    if (chr_isalnum(ch) || ch == chr('-') || ch == chr('_'))
+      return c_chr(ch);
+    if (!chr_isspace(ch) && ch != chr('=')) {
+      unget_char(ch, in);
+      return 0;
+    }
+  }
+}
+
+INLINE int b64url_code(cnum c)
+{
+  if ('A' <= c && c <= 'Z')
+    return c - 'A';
+  if ('a' <= c && c <= 'z')
+    return c - 'a' + 26;
+  if ('0' <= c && c <= '9')
+    return c - '0' + 26 + 26;
+  switch (c) {
+  case '-':
+    return 62;
+  case '_':
+    return 63;
+  default:
+    return 0;
+  }
+}
+
+val base64url_stream_dec(val out, val in)
+{
+  return base64_stream_dec_impl(out, in, get_base64url_char, b64url_code);
+}
+
+val base64url_decode(val str)
+{
+  val in = make_string_input_stream(str);
+  val out = make_string_output_stream();
+
+  (void) base64url_stream_dec(out, in);
+
+  return get_string_from_stream(out);
+}
+
+val base64url_decode_buf(val str)
+{
+  val in = make_string_input_stream(str);
+  val out = make_buf_stream(nil);
+
+  (void) base64url_stream_dec(out, in);
 
   return get_buf_from_stream(out);
 }
@@ -952,6 +1042,8 @@ void filter_init(void)
   tonumber_k = intern(lit("tonumber"), keyword_package);
   tobase64_k = intern(lit("tobase64"), keyword_package);
   frombase64_k = intern(lit("frombase64"), keyword_package);
+  tobase64url_k = intern(lit("tobase64url"), keyword_package);
+  frombase64url_k = intern(lit("frombase64url"), keyword_package);
   toint_k = intern(lit("toint"), keyword_package);
   tofloat_k = intern(lit("tofloat"), keyword_package);
   hextoint_k = intern(lit("hextoint"), keyword_package);
@@ -978,6 +1070,8 @@ void filter_init(void)
   sethash(fh, fromurl_k, curry_12_1(func_n2(url_decode), t));
   sethash(fh, tobase64_k, curry_12_1(func_n2(base64_encode), 0));
   sethash(fh, frombase64_k, func_n1(base64_decode));
+  sethash(fh, tobase64url_k, curry_12_1(func_n2(base64url_encode), 0));
+  sethash(fh, frombase64url_k, func_n1(base64url_decode));
   sethash(fh, tonumber_k, func_n1(num_str));
   sethash(fh, toint_k, curry_12_1(func_n2(int_str), nil));
   sethash(fh, tofloat_k, func_n1(flo_str));
@@ -1000,6 +1094,11 @@ void filter_init(void)
   reg_fun(intern(lit("base64-encode"), user_package), func_n2o(base64_encode, 1));
   reg_fun(intern(lit("base64-decode"), user_package), func_n1(base64_decode));
   reg_fun(intern(lit("base64-decode-buf"), user_package), func_n1(base64_decode_buf));
+  reg_fun(intern(lit("base64url-stream-enc"), user_package), func_n4o(base64url_stream_enc, 2));
+  reg_fun(intern(lit("base64url-stream-dec"), user_package), func_n2(base64url_stream_dec));
+  reg_fun(intern(lit("base64url-encode"), user_package), func_n2o(base64url_encode, 1));
+  reg_fun(intern(lit("base64url-decode"), user_package), func_n1(base64url_decode));
+  reg_fun(intern(lit("base64url-decode-buf"), user_package), func_n1(base64url_decode_buf));
   reg_fun(intern(lit("html-encode"), user_package), func_n1(html_encode));
   reg_fun(intern(lit("html-encode*"), user_package),
           func_n1(html_encode_star));

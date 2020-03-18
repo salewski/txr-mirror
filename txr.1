@@ -9454,10 +9454,27 @@ reserved set, encodes to
 .codn %2B .
 
 .coIP :frombase64
-Decode from the Base64 encoding described in RFC 4648.
+Decode from the Base 64 encoding described in RFC 4648, section 5.
 
 .coIP :tobase64
-Encodes to the RFC 4648 Base64 encoding.
+Encode to the Base 64 encoding described in RFC 4648, section 5.
+
+.coIP :frombase64url
+Decode from the Base64 encoding described in RFC 4648, section 6.
+This uses the URL and filename safe alphabet, in which the
+.code +
+(plus) and
+.code /
+(slash) characters used in regular Base 64 are respectively replaced with
+.code -
+(minus) and
+.code _
+(underscore).
+
+.coIP :tobase64url
+Encode to the Base 64 encoding described in RFC 4648, section 6.  See
+.code :frombase64url
+above.
 
 .coIP :tonumber
 Converts strings to numbers. Strings that contain a period,
@@ -62902,6 +62919,7 @@ function converts the UTF-8 representation of
 or the contents of
 .metn buf ,
 to Base64 and returns that representation as a string.
+The Base64 encoding is described in RFC 4648, section 5.
 
 The second argument must either be a character string, or
 a buffer object.
@@ -62971,6 +62989,7 @@ The
 and
 .code base64-stream-dec
 perform, respectively, bulk Base64 encoding and decoding between streams.
+This format is described in RFC 4648, section 5.
 
 The
 .meta in
@@ -63039,6 +63058,69 @@ function returns the number of bytes encoded;
 the
 .code base64-stream-dec
 function returns the number of bytes decoded.
+
+.coNP Functions @, base64url-encode @ base64url-decode and @ base64url-decode-buf
+.synb
+.mets (base64url-encode >> [ string | << buf ] <> [ column-width ])
+.mets (base64url-decode < string)
+.mets (base64url-decode-buf < string)
+.syne
+.desc
+The
+.codn base64url-encode ,
+.code base64url-decode
+and
+.code base64url-decode-buf
+functions conform, in nearly every respect, to the descriptions of,
+respectively,
+.codn base64-encode ,
+.code base64-decode
+and
+.codn base64-decode-buf .
+The difference is that these functions use the encoding described in
+section 6 of RFC 4648, rather than section 5. This means that, in the
+encoding alphabet, instead of the symbols
+.code +
+(plus)
+and
+.code /
+(slash)
+the symbols
+.code -
+(minus)
+and
+.code _
+(underline) are used.
+
+.coNP Functions @ base64url-stream-enc and @ base64url-stream-dec
+.synb
+.mets (base64url-stream-enc < out < in >> [ nbytes <> [ column-width ]])
+.mets (base64url-stream-dec < out << in )
+.syne
+.desc
+The
+.code base64url-stream-enc
+and
+.code base64url-stream-dec
+functions conform, in nearly every respect, to the descriptions of,
+respectively,
+.code base64-stream-enc
+and
+.codn base64-stream-dec .
+The difference is that these functions use the encoding described in
+section 6 of RFC 4648, rather than section 5. This means that, in the
+encoding alphabet, instead of the symbols
+.code +
+(plus)
+and
+.code /
+(slash)
+the symbols
+.code -
+(minus)
+and
+.code _
+(underline) are used.
 
 .SS* Filter Module
 The filter module provides a trie (pronounced "try") data structure,
