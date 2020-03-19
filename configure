@@ -149,6 +149,7 @@ lit_align=
 extra_debugging=
 debug_support=y
 gen_gc=y
+small_mem=
 have_dbl_decimal_dig=
 have_unistd=
 have_sys_stat=
@@ -483,6 +484,14 @@ gen-gc [$gen_gc]
 
   When disabled, the garbage collector performs a full object traversal and
   sweep on each garbage collection.
+
+small-mem [$small_mem]
+
+  Use --small-mem to make the memory management use less memory,
+  for embedded systems with less RAM, at the possible cost of some
+  run-time penalty. Objects are allocated in smaller blocks,
+  and certain global book-keeping arrays in the generational garbage
+  collector are smaller, resulting in more frequent collections.
 
 !
   exit 1
@@ -3545,6 +3554,7 @@ $make conftest.clean
 
 [ -n "$debug_support" ] && printf "#define CONFIG_DEBUG_SUPPORT 1\n" >> config.h
 [ -n "$gen_gc" ] && printf "#define CONFIG_GEN_GC 1\n" >> config.h
+[ "$small_mem" ] && printf "#define CONFIG_SMALL_MEM 1\n" >> config.h
 
 #
 # Regenerate config.make

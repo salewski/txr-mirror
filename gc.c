@@ -46,12 +46,22 @@
 #include "unwind.h"
 
 #define PROT_STACK_SIZE         1024
+
+#if CONFIG_SMALL_MEM
+#define HEAP_SIZE               4096
+#define CHECKOBJ_VEC_SIZE       HEAP_SIZE
+#define MUTOBJ_VEC_SIZE         HEAP_SIZE
+#define FULL_GC_INTERVAL        20
+#define FRESHOBJ_VEC_SIZE       (2 * HEAP_SIZE)
+#define DFL_MALLOC_DELTA_THRESH (16L * 1024 * 1024)
+#else
 #define HEAP_SIZE               16384
 #define CHECKOBJ_VEC_SIZE       (2 * HEAP_SIZE)
 #define MUTOBJ_VEC_SIZE         (2 * HEAP_SIZE)
 #define FULL_GC_INTERVAL        40
 #define FRESHOBJ_VEC_SIZE       (8 * HEAP_SIZE)
 #define DFL_MALLOC_DELTA_THRESH (64L * 1024 * 1024)
+#endif
 
 #if HAVE_MEMALIGN || HAVE_POSIX_MEMALIGN
 #define OBJ_ALIGN (sizeof (obj_t))
