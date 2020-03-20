@@ -1597,7 +1597,7 @@ val hash_alist(val hash)
   return make_lazy_cons_car(func_f1(iter, hash_alist_lazy), cell);
 }
 
-val hash_uni(val hash1, val hash2, val joinfun)
+val hash_uni(val hash1, val hash2, val joinfun, val map1fun, val map2fun)
 {
   val self = lit("hash-uni");
   struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_s));
@@ -1615,21 +1615,29 @@ val hash_uni(val hash1, val hash2, val joinfun)
     hash_iter_init(&hi, hash2, self);
 
     for (entry = hash_iter_next(&hi); entry; entry = hash_iter_next(&hi)) {
-      sethash(hout, us_car(entry), us_cdr(entry));
+      val rentry = us_cdr(entry);
+      if (!missingp(map2fun))
+        rentry = funcall1(map2fun, rentry);
+      sethash(hout, us_car(entry), rentry);
     }
 
     hash_iter_init(&hi, hash1, self);
 
     for (entry = hash_iter_next(&hi); entry; entry = hash_iter_next(&hi)) {
+      val lentry = us_cdr(entry);
+      if (!missingp(map1fun))
+        lentry = funcall1(map1fun, lentry);
+
       if (missingp(joinfun)) {
-        sethash(hout, us_car(entry), us_cdr(entry));
+        sethash(hout, us_car(entry), lentry);
       } else {
         val new_p;
         loc ptr = gethash_l(self, hout, us_car(entry), mkcloc(new_p));
-        if (new_p)
-          sethash(hout, us_car(entry), us_cdr(entry));
-        else
-          set(ptr, funcall2(joinfun, us_cdr(entry), deref(ptr)));
+        if (new_p) {
+          sethash(hout, us_car(entry), lentry);
+        } else {
+          set(ptr, funcall2(joinfun, lentry, deref(ptr)));
+        }
       }
     }
 
@@ -1899,7 +1907,7 @@ void hash_init(void)
   reg_fun(intern(lit("hash-values"), user_package), func_n1(hash_values));
   reg_fun(intern(lit("hash-pairs"), user_package), func_n1(hash_pairs));
   reg_fun(intern(lit("hash-alist"), user_package), func_n1(hash_alist));
-  reg_fun(intern(lit("hash-uni"), user_package), func_n3o(hash_uni, 2));
+  reg_fun(intern(lit("hash-uni"), user_package), func_n5o(hash_uni, 2));
   reg_fun(intern(lit("hash-diff"), user_package), func_n2(hash_diff));
   reg_fun(intern(lit("hash-symdiff"), user_package), func_n2(hash_symdiff));
   reg_fun(intern(lit("hash-isec"), user_package), func_n3o(hash_isec, 2));

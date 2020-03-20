@@ -45819,7 +45819,7 @@ or
 
 .coNP Functions @, hash-uni @, hash-diff @ hash-symdiff and @ hash-isec
 .synb
-.mets (hash-uni < hash1 < hash2 <> [ joinfun ])
+.mets (hash-uni < hash1 < hash2  >> [ joinfun >> [ map1fun <> [ map2fun ]]])
 .mets (hash-diff < hash1 << hash2 )
 .mets (hash-symdiff < hash1 << hash2 )
 .mets (hash-isec < hash1 < hash2 <> [ joinfun ])
@@ -45872,6 +45872,19 @@ and
 .metn hash2 .
 The return value of this function is used
 as the value in the union hash.
+If
+.meta map1fun
+is specified it must be a function that can be called with one
+argument. All values from
+.meta hash1
+are projected through this function: the function is applied
+to each value, and the function's return value is used
+in place of the original value.
+Similarly, if
+.meta map2fun
+is present, specifies a function through which values from
+.meta hash2
+are projected.
 
 The
 .code hash-diff
