@@ -1496,6 +1496,27 @@ static void flash(lino_t *l, int ch)
     }
 }
 
+static void yank(lino_t *l, int start_in, int end_in, int inclusive)
+{
+    int notrev = start_in <= end_in;
+    int start = notrev ? start_in : end_in;
+    int end = notrev ? end_in : start_in;
+
+    if (inclusive && l->data[end] && l->data[end] != '\r')
+        end++;
+
+    if (end - start > 0) {
+        lino_os.free_fn(l->clip);
+        l->clip = coerce(wchar_t *, lino_os.wmalloc_fn(end - start + 1));
+        wmemcpy(l->clip, l->data + start, end - start);
+        l->clip[end - start] = 0;
+    }
+}
+
+static void yank_by_ptr(lino_t *l, const wchar_t *start, const wchar_t *end)
+{
+    yank(l, start - l->data, end - l->data, 0);
+}
 
 static void update_sel(lino_t *l)
 {
@@ -1518,20 +1539,8 @@ static void clear_sel(lino_t *l)
 static void yank_sel(lino_t *l)
 {
     if (l->selmode) {
-        int notrev = l->dsel <= l->dend;
-        int sel = notrev ? l->dsel : l->dend;
-        int end = notrev ? l->dend : l->dsel;
-
-        if (l->selinclusive && l->data[end] && l->data[end] != '\r')
-            end++;
-
-        if (end - sel > 0) {
-            lino_os.free_fn(l->clip);
-            l->clip = coerce(wchar_t *, lino_os.wmalloc_fn(end - sel + 1));
-            wmemcpy(l->clip, l->data + sel, end - sel);
-            l->clip[end - sel] = 0;
-            l->dpos = sel;
-        }
+        yank(l, l->dsel, l->dend, l->selinclusive);
+        l->dpos = (l->dsel <= l->dend ? l->dsel : l->dend);
     }
 }
 
@@ -1743,9 +1752,10 @@ static void edit_history_next(lino_t *l, int dir) {
 }
 
 /* Delete the character at the right of the cursor without altering the cursor
- * position. Basically this is what happens with the "Delete" keyboard key. */
+ * position, or if a visual selection is in effect, delete that selection. */
 static void edit_delete(lino_t *l) {
     if (l->selmode) {
+        yank_sel(l);
         record_undo(l);
         delete_sel(l);
         return;
@@ -1790,6 +1800,7 @@ static void edit_delete_prev_all(lino_t *l)
 
     if (!l->mlmode) {
         if (l->dpos > 0) {
+            yank(l, 0, l->dpos, 0);
             record_undo(l);
             wmemmove(l->data, l->data + l->dpos, l->dlen - l->dpos + 1);
             l->dlen -= l->dpos;
@@ -1806,6 +1817,7 @@ static void edit_delete_prev_all(lino_t *l)
         delta = e - s;
 
         if (delta > 0) {
+            yank_by_ptr(l, s, e);
             record_undo(l);
             wmemmove(s, e, l->data + l->dlen - e);
             l->dlen -= delta;
@@ -1822,6 +1834,7 @@ static void edit_delete_to_eol(lino_t *l)
 
     if (l->dlen != l->dpos) {
         if (!l->mlmode) {
+            yank(l, l->dpos, l->dlen, 0);
             record_undo(l);
             l->data[l->dpos] = '\0';
             l->dlen = l->dpos;
@@ -1829,6 +1842,7 @@ static void edit_delete_to_eol(lino_t *l)
         } else {
             int delsize = wcscspn(l->data + l->dpos, L"\r");
             if (delsize != 0) {
+                yank(l, l->dpos, l->dpos + delsize, 0);
                 record_undo(l);
                 if (l->dlen - delsize)
                     wmemmove(l->data + l->dpos, l->data + l->dpos + delsize,
@@ -1841,13 +1855,19 @@ static void edit_delete_to_eol(lino_t *l)
     }
 }
 
-/* Delete the previosu word, maintaining the cursor at the start of the
+/* Delete the previous word, maintaining the cursor at the start of the
  * current word. */
 static void edit_delete_prev_word(lino_t *l) {
     int odpos, diff;
     static const wchar_t *space = L"\r\t ";
+    int in_selmode = l->selmode;
 
-    delete_sel(l);
+    record_undo(l);
+
+    if (in_selmode) {
+        yank_sel(l);
+        delete_sel(l);
+    }
 
     odpos = l->dpos;
     while (l->dpos > 0 && wcschr(space, l->data[l->dpos - 1]))
@@ -1856,11 +1876,13 @@ static void edit_delete_prev_word(lino_t *l) {
         l->dpos--;
     diff = odpos - l->dpos;
     if (diff != 0) {
-        record_undo(l);
+        if (!in_selmode)
+            yank(l, l->dpos, odpos, 0);
         wmemmove(l->data + l->dpos, l->data + odpos, l->dlen - odpos + 1);
         l->dlen -= diff;
         l->need_refresh = 1;
     }
+    remove_noop_undo(l);
 }
 
 static void edit_delete_line(lino_t *l)
@@ -1880,6 +1902,7 @@ static void edit_delete_line(lino_t *l)
         delta = e - s;
 
         if (delta > 0) {
+            yank_by_ptr(l, s, e);
             record_undo(l);
             wmemmove(s, e, l->data + l->dlen - e);
             l->dlen -= delta;
@@ -2279,7 +2302,6 @@ static int edit(lino_t *l, const wchar_t *prompt)
         case CTL('D'):   /* remove char at right of cursor, or if the
                             line is empty, act as end-of-file. */
             if (l->dlen > 0) {
-                yank_sel(l);
                 edit_delete(l);
             } else {
                 l->error = lino_eof;
