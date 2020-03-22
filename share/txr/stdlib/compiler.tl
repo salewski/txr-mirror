@@ -1800,7 +1800,7 @@
   [compile-file-conditionally in-path out-path [mapf path-newer fstat identity]])
 
 (defun usr:dump-compiled-objects (out-stream . compiled-objs)
-  (symacrolet ((self 'dump-compiled-object))
+  (symacrolet ((self 'dump-compiled-objects))
     (let ((out (new list-builder)))
       (flet ((vm-from-fun (fun)
                (unless (vm-fun-p fun)
