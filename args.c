@@ -97,6 +97,15 @@ struct args *args_copy_zap(struct args *to, struct args *from)
   return to;
 }
 
+struct args *args_cat(struct args *to, struct args *from)
+{
+  size_t size = sizeof *from->arg * from->fill;
+  to->list = from->list;
+  memcpy(to->arg + to->fill, from->arg, size);
+  to->fill += from->fill;
+  return to;
+}
+
 struct args *args_cat_zap(struct args *to, struct args *from)
 {
   size_t size = sizeof *from->arg * from->fill;

@@ -1607,22 +1607,23 @@ static val umethod_fun(val sym, struct args *args)
   }
 }
 
-static val umethod_args_fun(val env, struct args *args)
+static val umethod_args_fun(val dargs, struct args *args)
 {
   val self = lit("umethod");
-  cons_bind (sym, curried_args, env);
+  val sym = dargs->a.car;
+  struct args *da = dargs->a.args;
 
   if (!args_more(args, 0)) {
     uw_throwf(error_s, lit("~a: object argument required to call ~s"),
               self, env, nao);
   } else {
-    cnum ca_len = c_num(length(curried_args));
+    cnum da_nargs = da->fill + c_num(length(da->list));
     cnum index = 0;
     val strct = args_get(args, &index);
-    args_decl(args_call, max(args->fill + ca_len, ARGS_MIN));
+    args_decl(args_call, max(args->fill + da_nargs, ARGS_MIN));
     args_add(args_call, strct);
-    args_add_list(args_call, curried_args);
-    args_normalize_exact(args_call, ca_len + 1);
+    args_cat(args_call, da);
+    args_normalize_exact(args_call, da_nargs + 1);
     args_cat_zap_from(args_call, args, index);
 
     struct struct_inst *si = struct_handle_for_slot(strct, self, sym);
@@ -1642,7 +1643,7 @@ val umethod(val slot, struct args *args)
   if (!args_more(args, 0))
     return func_f0v(slot, umethod_fun);
   else
-    return func_f0v(cons(slot, args_get_list(args)), umethod_args_fun);
+    return func_f0v(dyn_args(args, slot, nil), umethod_args_fun);
 }
 
 static void struct_inst_print(val obj, val out, val pretty,
