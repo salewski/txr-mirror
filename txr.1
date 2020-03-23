@@ -47974,8 +47974,8 @@ macro.
 
 .coNP Functions @ apf and @ ipf
 .synb
-.mets (apf << function )
-.mets (ipf << function )
+.mets (apf < function << arg *)
+.mets (ipf < function << arg *)
 .syne
 .desc
 The
@@ -47991,6 +47991,18 @@ as if by
 It then returns whatever
 .meta function
 returns.
+
+If one or more additional
+.metn arg -s
+are passed to
+.codn apf ,
+then these are stored in the function which is returned.
+When the function is invoked, it prepends all of these stored
+arguments to those that it is being given, and the resulting combined
+arguments are applied. Thus the
+.metn arg -s
+become the leftmost arguments of
+.metn function .
 
 The
 .code ipf

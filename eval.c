@@ -6042,9 +6042,25 @@ static val do_apf(val fun, struct args *args)
   return applyv(fun, args);
 }
 
-static val apf(val fun)
+static val do_args_apf(val dargs, struct args *args)
 {
-  return func_f0v(fun, do_apf);
+  val fun = dargs->a.car;
+  struct args *da = dargs->a.args;
+  cnum da_nargs = da->fill + c_num(length(da->list));
+  args_decl(args_call, max(args->fill + da_nargs, ARGS_MIN));
+  args_copy(args_call, da);
+  args_normalize_exact(args_call, da_nargs);
+  args_cat_zap_from(args_call, args, 0);
+  args_add_list(args_call, args->list);
+  return applyv(fun, args_call);
+}
+
+static val apf(val fun, struct args *args)
+{
+  if (!args || !args_more(args, 0))
+    return func_f0v(fun, do_apf);
+  else
+    return func_f0v(dyn_args(args, fun, nil), do_args_apf);
 }
 
 static val do_ipf(val fun, struct args *args)
@@ -6052,15 +6068,32 @@ static val do_ipf(val fun, struct args *args)
   return iapply(fun, args);
 }
 
-static val ipf(val fun)
+static val do_args_ipf(val dargs, struct args *args)
 {
-  return func_f0v(fun, do_ipf);
+  val fun = dargs->a.car;
+  struct args *da = dargs->a.args;
+  cnum da_nargs = da->fill + c_num(length(da->list));
+  args_decl(args_call, max(args->fill + da_nargs, ARGS_MIN));
+  args_copy(args_call, da);
+  args_normalize_exact(args_call, da_nargs);
+  args_cat_zap_from(args_call, args, 0);
+  args_add_list(args_call, args->list);
+  return iapply(fun, args_call);
+}
+
+
+static val ipf(val fun, struct args *args)
+{
+  if (!args || !args_more(args, 0))
+    return func_f0v(fun, do_ipf);
+  else
+    return func_f0v(dyn_args(args, fun, nil), do_args_ipf);
 }
 
 static val callf(val func, struct args *funlist)
 {
   val juxt_fun = juxtv(funlist);
-  val apf_fun = apf(func);
+  val apf_fun = apf(func, 0);
   return chain(juxt_fun, apf_fun, nao);
 }
 
@@ -6633,8 +6666,8 @@ void eval_init(void)
   reg_fun(intern(lit("or"), user_package), func_n0v(or_fun));
   reg_fun(intern(lit("and"), user_package), func_n0v(and_fun));
   reg_fun(intern(lit("retf"), user_package), func_n1(retf));
-  reg_fun(intern(lit("apf"), user_package), func_n1(apf));
-  reg_fun(intern(lit("ipf"), user_package), func_n1(ipf));
+  reg_fun(intern(lit("apf"), user_package), func_n1v(apf));
+  reg_fun(intern(lit("ipf"), user_package), func_n1v(ipf));
   reg_fun(intern(lit("callf"), user_package), func_n1v(callf));
   reg_fun(intern(lit("mapf"), user_package), func_n1v(mapf));
   reg_fun(intern(lit("tf"), user_package), func_n0v(tf));
