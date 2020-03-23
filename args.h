@@ -189,3 +189,4 @@ void args_for_each(struct args *args,
                    int (*fn)(val arg, int ix, mem_t *ctx),
                    mem_t *ctx);
 void args_keys_extract(struct args *args, struct args_bool_key *, int n);
+val dyn_args(struct args *args, val car, val cdr);

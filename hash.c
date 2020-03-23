@@ -218,6 +218,7 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
   case SYM:
   case PKG:
   case ENV:
+  case DARG:
     switch (CHAR_BIT * sizeof (mem_t *)) {
     case 32:
       return coerce(ucnum, obj) >> 4;

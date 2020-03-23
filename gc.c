@@ -44,6 +44,7 @@
 #include "gc.h"
 #include "signal.h"
 #include "unwind.h"
+#include "args.h"
 
 #define PROT_STACK_SIZE         1024
 
@@ -304,6 +305,10 @@ static void finalize(val obj)
       obj->b.data = 0;
     }
     return;
+  case DARG:
+    free(obj->a.args);
+    obj->a.args = 0;
+    return;
   }
 
   assert (0 && "corrupt type field");
@@ -428,6 +433,20 @@ tail_call:
     mark_obj(obj->tn.left);
     mark_obj(obj->tn.right);
     mark_obj_tail(obj->tn.key);
+  case DARG:
+    {
+      struct args *args = obj->a.args;
+      cnum i, n = args->fill;
+      val *arg = args->arg;
+
+      mark_obj(obj->a.car);
+      mark_obj(obj->a.cdr);
+
+      for (i = 0; i < n; i++)
+        mark_obj(arg[i]);
+
+      mark_obj_tail(args->list);
+    }
   }
 
   assert (0 && "corrupt type field");

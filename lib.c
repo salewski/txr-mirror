@@ -95,7 +95,7 @@ val package_s, system_package_s, keyword_package_s, user_package_s;
 val null_s, t, cons_s, str_s, chr_s, fixnum_s, sym_s, pkg_s, fun_s, vec_s;
 val lit_s, stream_s, hash_s, hash_iter_s, lcons_s, lstr_s, cobj_s, cptr_s;
 val atom_s, integer_s, number_s, sequence_s, string_s;
-val env_s, bignum_s, float_s, range_s, rcons_s, buf_s, tnode_s;
+val env_s, bignum_s, float_s, range_s, rcons_s, buf_s, tnode_s, args_s;
 val var_s, expr_s, regex_s, chset_s, set_s, cset_s, wild_s, oneplus_s;
 val nongreedy_s;
 val quote_s, qquote_s, unquote_s, splice_s;
@@ -196,6 +196,7 @@ static val code2type(int code)
   case RNG: return range_s;
   case BUF: return buf_s;
   case TNOD: return tnode_s;
+  case DARG: return args_s;
   }
   return nil;
 }
@@ -2884,6 +2885,8 @@ val equal(val left, val right)
   case CPTR:
     if (type(right) == CPTR && left->co.ops == right->co.ops)
       return left->co.ops->equal(left, right);
+  case DARG:
+    break;
   }
 
   if (type(right) != COBJ)
@@ -11216,6 +11219,7 @@ static void obj_init(void)
   rcons_s = intern(lit("rcons"), user_package);
   buf_s = intern(lit("buf"), user_package);
   tnode_s = intern(lit("tnode"), user_package);
+  args_s = intern(lit("args"), user_package);
   var_s = intern(lit("var"), system_package);
   expr_s = intern(lit("expr"), system_package);
   regex_s = intern(lit("regex"), user_package);

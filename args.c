@@ -198,3 +198,18 @@ void args_keys_extract(struct args *args, struct args_bool_key *akv, int n)
     args_for_each(args, args_key_check_store, coerce(mem_t *, &acx));
   }
 }
+
+val dyn_args(struct args *args, val car, val cdr)
+{
+  size_t size = offsetof(struct args, arg) + sizeof (val) * args->argc;
+  struct args *copy = coerce(struct args *, chk_copy_obj(coerce(mem_t *, args),
+                                                         size));
+  val obj = make_obj();
+
+  obj->a.type = DARG;
+  obj->a.car = car;
+  obj->a.cdr = cdr;
+  obj->a.args = copy;
+
+  return obj;
+}
