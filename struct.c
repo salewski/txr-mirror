@@ -1530,15 +1530,16 @@ static val method_fun(val env, varg args)
   return generic_funcall(fun, args_copy);
 }
 
-static val method_args_fun(val env, varg args)
+static val method_args_fun(val dargs, varg args)
 {
-  cons_bind (curried_args, fun_strct, env);
-  cons_bind (fun, strct, fun_strct);
-  cnum ca_len = c_num(length(curried_args));
-  args_decl(args_call, max(args->fill + 1 + ca_len, ARGS_MIN));
+  struct args *da = dargs->a.args;
+  val fun = dargs->a.car;
+  val strct = dargs->a.cdr;
+  cnum da_nargs = da->fill + c_num(length(da->list));
+  args_decl(args_call, max(args->fill + 1 + da_nargs, ARGS_MIN));
   args_add(args_call, strct);
-  args_add_list(args_call, curried_args);
-  args_normalize_exact(args_call, ca_len + 1);
+  args_cat(args_call, da);
+  args_normalize_exact(args_call, da_nargs + 1);
   args_cat_zap(args_call, args);
   return generic_funcall(fun, args_call);
 }
@@ -1553,8 +1554,8 @@ val method_args(val strct, val slotsym, struct args *args)
   if (!args_more(args, 0))
     return func_f0v(cons(slot(strct, slotsym), strct), method_fun);
   else
-    return func_f0v(cons(args_get_list(args),
-                         cons(slot(strct, slotsym), strct)), method_args_fun);
+    return func_f0v(dyn_args(args, slot(strct, slotsym), strct),
+                    method_args_fun);
 }
 
 val super_method(val strct, val slotsym)
