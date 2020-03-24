@@ -10786,6 +10786,11 @@ val search(val seq, val key, val testfun, val keyfun)
   }
 }
 
+val contains(val key, val seq, val testfun, val keyfun)
+{
+  return search(seq, key, testfun, keyfun);
+}
+
 static val rsearch_list(val seq, val key, val testfun, val keyfun)
 {
   val siter, kiter;

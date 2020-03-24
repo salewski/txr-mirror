@@ -1155,6 +1155,7 @@ val butlast(val seq, val idx);
 val replace(val seq, val items, val from, val to);
 val update(val seq, val fun);
 val search(val seq, val key, val from, val to);
+val contains(val key, val seq, val testfun, val keyfun);
 val rsearch(val seq, val key, val from, val to);
 val where(val func, val seq);
 val sel(val seq, val where);

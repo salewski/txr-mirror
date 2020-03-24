@@ -29680,7 +29680,7 @@ is returned.
 
 .coNP Function @ search
 .synb
-.mets (search < haystack < needle >> [ testfun <> [ keyfun ])
+.mets (search < haystack < needle >> [ testfun <> [ keyfun ]])
 .syne
 .desc
 The
@@ -29772,6 +29772,21 @@ with one argument. If it is not supplied, it defaults to
   ;; using vector of characters as key
   [search "abcd" #(#\eC #\eD) : chr-toupper] -> 2
 .brev
+
+.coNP Function @ contains
+.synb
+.mets (contains < needle < haystack >> [ testfun <> [ keyfun ]])
+.syne
+.desc
+The syntax of the
+.code contains
+function differs from that of
+.codn search :
+that the
+.meta needle
+and
+.meta haystack
+arguments are reversed. The semantics is identical.
 
 .coNP Function @ rsearch
 .synb
