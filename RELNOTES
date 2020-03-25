@@ -1,3 +1,58 @@
+                                    TXR 234
+                                   2020-03-25
+
+
+  Features
+
+  - New base64url encoding:
+    - :frombase64url, :tobase64url filters.
+    - base64url-encode, base64url-decode and other functions.
+  - Compiler:
+    - When a TXR Lisp hash-bang script is compiled, the
+      execute permissions are now propagated to the
+      compiled file, too.
+  - Editing support:
+    - tags.tl script can now be compiled by compile-file,
+      and no longer scans files twice.
+  - GC:
+    - small memory support: ./configure --small-mem.
+    - reduces start-up footprint and size of incremental
+      heap allocations.
+  - Listener:
+    - All major delete operations now yank the deleted
+      text into the clipboard.
+  - Hashing:
+    - hash-uni function has two useful new functional
+      arguments in addition to the join function.
+  - Lib:
+    - apf and ipf functions take additional arguments
+      which are retained and inserted into the apply call.
+    - search function now available under the name contains.
+      - contains reverses the arguments:
+        (search seq it) -> (contains it seq)
+  - OOP:
+    - more efficient stored argument in method and umethod.
+      - (mapcar .(foo 1 2 3 ...) objlist) now allocates one
+        special object that stores the 1 2 3 ... args
+        compactly, rather than consing a list.
+      - more use of this mechanism will be made going forward.
+
+  Bugs
+
+  - Regression in open-process dating to TXR 228.
+  - The hash-count value of weak hashes was not maintained
+    when the garbage collector removed lapsed entries.
+    This was broken from the start; never implemented.
+  - tags.tl: correctly take advantage of FTW_ACTIONRETVAL
+    on glibc.
+  - listener:
+    - Del key not copying to clipboard, rendering it
+      inequivalent to Ctrl-D.
+    - Ctrl-W, when deleting a visual selection and the
+      previous word, not recording undo history properly.
+
+
+
                                     TXR 233
                                    2020-03-08
 
