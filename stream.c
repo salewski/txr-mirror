@@ -4285,7 +4285,7 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
 
 val open_process(val name, val mode_str, val args)
 {
-  return open_subprocess(name, mode_str, nil, args);
+  return open_subprocess(name, mode_str, args, nil);
 }
 #else
 
