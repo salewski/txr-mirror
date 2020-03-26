@@ -71675,11 +71675,20 @@ also performs the same action, since it corresponds to ASCII BS.
 
 .NP* Delete Character Right
 
-The Ctrl-D command is overloaded with two meanings. If the line is empty, it is
-a quit indication. Otherwise, it deletes the character under the cursor
-without changing the cursor position.  On terminals which have a Delete key,
-the deleting action may also be performed with that key. The Delete key doesn't
-have the quit indication meaning of Ctrl-D.
+The Ctrl-D command deletes the character under the cursor, if the cursor
+is block-shaped, or to the right of the cursor if the cursor is an I-beam.
+the cursor maintains its current character position relative to the
+start of the line. In multi-line mode, if Ctrl-D is at the end of a line that
+is not the last line, it deletes the newline character, causing the
+following line to be joined to the end of the current line.
+If the cursor is at the end of the buffer, then Ctrl-D does nothing,
+except if the buffer is completely empty, in which case it is a quit
+indication.  The Delete key, if available on the terminal, is a near synonym of
+Ctrl-D. It performs all the same functions, except that it does not
+act as a quit indication; Delete has no effect  when the buffer is empty.
+
+When a visual selection is in effect, then Ctrl-D and Del delete
+that selection, and copy it to the clipboard.
 
 .NP* Delete Word Left
 
@@ -71687,24 +71696,23 @@ The Ctrl-W ("word") command deletes the word to the left of the cursor
 position. More precisely, this command first deletes any consecutive whitespace
 characters (spaces or tabs) to the left of the cursor. Then, it deletes
 consecutive non-whitespace characters. Material under the cursor or to the
-right remains.
+right remains. The deleted material is copied into the clipboard.
 
 .NP* Delete to Beginning of Line
 
 The Ctrl-U ("undo typing") command is a "super backspace" operation: it deletes
 all characters to the left of the cursor position. The cursor is moved to
-the leftmost position.
-
-In multi-line mode, Ctrl-U deletes only to the beginning of the current
+the leftmost position. In multi-line mode, Ctrl-U deletes only to the beginning of the current
 physical line, not all the way to the first position of the buffer.
+Ctrl-U copies the deleted material into the clipboard.
 
 .NP* Delete to End of Line
 
 The Ctrl-K ("kill") command deletes the character under the cursor position
 and all subsequent characters. The cursor position doesn't change.
-
 In multi-line mode, Ctrl-K deletes only until the end of the current
 physical line, not the entire buffer.
+The material deleted by Ctrl-K is copied into the clipboard.
 
 .NP* Verbatim Character Insert
 
@@ -71729,7 +71737,9 @@ in line mode.
 The Ctrl-X, Ctrl-K command sequence may be used in multi-line mode
 to delete the entire physical line under the cursor. Any lines below that
 line move up to close the gap. In line mode, the command has no effect,
-other than canceling select mode.
+other than canceling select mode.  The deleted line, including the
+terminating newline character, if it has one, is copied into the
+clipboard.
 
 .NP* History Recall
 
@@ -72009,8 +72019,8 @@ in the history entry.
 .SS* Visual Selection Mode
 
 The interactive listener supports visual copy and paste operation.
-Text may be visually selected for copying into a clipboard (copy)
-or deletion. In visual selection mode, the actions of some editing
+Text may be visually selected for copying into a clipboard or
+or for deletion. In visual selection mode, the actions of some editing
 commands are modified so that they act upon the selection instead
 of their usual target, or upon both the target and the selection.
 
@@ -72070,12 +72080,11 @@ If \*(TX terminates, it is lost.
 
 If the Ctrl-D command is invoked while a selection is in effect, then
 instead of deleting the character under the cursor, it deletes the
-selection, and copies it to the clipboard.
+selection, and copies it to the clipboard. The Delete key has the same
+effect.
 
-Ctrl-D has no effect on the clipboard when visual selection is not in effect.
-
-No other commands which delete text have any effect on the clipboard,
-whether or not selection mode is in effect.
+Ctrl-D and Del have no effect on the clipboard when visual selection is not in
+effect, and they operate on just one character.
 
 .NP* Clipboard Paste
 
@@ -72112,13 +72121,14 @@ This applies to the Clipboard Paste (Ctrl-Q) command also. If a
 selection is effect when Ctrl-Q is invoked, the selected text
 is replaced with the clipboard buffer contents.
 
-When a selection is replaced, nothing is copied to the clipboard.
+When a selection is replaced in this manner, the contents
+of the clipboard are unaffected.
 
 .NP* Delete in Selection Mode
 
 In visual mode, it is possible to issue commands which delete text.
 
-One such command is Ctrl-D. It's special behavior in selection mode,
+One such command is Ctrl-D. Its special behavior in selection mode,
 Visual Cut, is described above.
 
 The Backspace key and Ctrl-H also have a special behavior in select mode. If
@@ -72126,18 +72136,15 @@ the cursor is at the rightmost endpoint of the selection, then these commands
 delete the selection and nothing else.  If the cursor is at the leftmost
 endpoint of the selection, then these commands delete the selection, and take
 their usual effect of deleting a character also.  In both cases, selection mode
-is canceled.
+is canceled. The clipboard is not affected.
 
-The Ctrl-W command to delete the previous word, when used in visual
+The Ctrl-W command for deleting the previous word, when used in visual
 selection mode, deletes the selection and cancels selection mode,
-and then deletes the word before the selection.
+and then deletes the word before the selection. Only the deleted
+selection is copied into the clipboard, not the deleted word.
 
 All other deletion commands such as Ctrl-K simply cancel visual
 selection mode and take their usual effect.
-
-No deletion command other than Ctrl-D has any effect on the clipboard,
-and Ctrl-D only copies to the clipboard when a selection is being
-deleted.
 
 .SS* Multi-Line Mode
 
