@@ -118,6 +118,7 @@ cross=
 compiler_prefix=
 ccname='$(CC)'
 cc='$(cross)$(compiler_prefix)$(ccname)'
+cplusplus=
 intptr=
 exe=
 tool_prefix=
@@ -696,6 +697,39 @@ if [ $(inode "$source_dir") != $(inode ".") ] ; then
 else
   printf "** Note: it's recommended to build in a separate directory\n"
   build_in_srcdir=y
+fi
+
+printf "Are we using a C++ compiler ..."
+
+case $ccname in
+*'++' | *'$(CXX)' )
+   cplusplus=y
+   ;;
+esac
+
+case $cc in
+*'++' | '$(CXX)' )
+  cplusplus=y
+  ;;
+esac
+
+if [ $cplusplus ] ; then
+   printf "yes\n"
+   set -- $diag_flags
+   diag_flags=''
+   for flag in "$@" ; do
+     case $flag in
+       *=implicit-function-declaration | \
+       *=missing-prototypes | \
+       *=strict-prototypes )
+       continue
+       ;;
+     esac
+     diag_flags="$diag_flags $flag"
+   done
+   diag_flags=${diag_flags# }
+else
+   printf "no\n"
 fi
 
 gen_config_make()
