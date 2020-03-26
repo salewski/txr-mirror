@@ -225,7 +225,7 @@ while [ $# -gt 0 ] ; do
     exit 1
   fi
 
-  eval "$var='$val'"
+  eval "$var='$(printf "%s" "$val" | sed -e "s/'/'\\\\''/g")'"
 
   eval "var_given_exists=\${${var}_given+y}"
 
