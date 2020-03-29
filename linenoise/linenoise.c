@@ -2212,12 +2212,14 @@ static int edit(lino_t *l, const wchar_t *prompt)
                     }
                     break;
                 }
+                /* fallthrough */
+                l->save_hist_idx = l->history_index;
+            case CTL('F'):
+                ret = l->len;
                 if (l->mlmode)
                     edit_move_end(l);
                 if (l->need_refresh)
                     refresh_line(l);
-                ret = l->len;
-                l->save_hist_idx = l->history_index;
                 goto out;
             case '?':
                 extended = 0;

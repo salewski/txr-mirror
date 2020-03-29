@@ -71427,6 +71427,16 @@ such a line
 .B is
 entered into the history.
 
+The listener does not allow lines containing certain bad syntax to be submitted
+with Enter.  If the buffer contains an expression with unbalanced parentheses
+or brackets, or unterminated literals, then Enter generates a newline character
+which is inserted into the buffer. In that situation, if that newline character
+is being added at the very end of the buffer, the listener flashes the
+exclamation mark character (!) two times to warn the user that line has not
+been submitted: no computation is taking place, and the listener is waiting for
+more input.  It is possible to force the submission of an unbalanced line using
+the sequence Ctrl-X, Ctrl-F.
+
 .SS* Limitations
 
 The interactive listener can only accept up to 4095 abstract characters of
