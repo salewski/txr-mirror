@@ -63810,6 +63810,56 @@ otherwise the forms are evaluated in order and the value of the last
 one specifies the result of
 .codn txr-case .
 
+.coNP Function @ txr-parse
+.synb
+.mets (txr-parse >> [ source >> [ error-stream
+.mets \ \ \ \ \ \ \ \ \ \ \  >> [ error-retval <> [ name ]]]])
+.syne
+.desc
+The
+.code txr-parse
+function converts textual \*(TX query syntax into a Lisp data
+structure representation.
+
+The
+.meta source
+argument may be either a character
+string, or a stream.  If it is omitted, then
+.code *stdin*
+is used as the stream.
+
+The
+.meta source
+must provide the text representation of one complete \*(TX query.
+
+The optional
+.meta error-stream
+argument can be used to specify a stream to which
+parse errors diagnostics are sent. If absent, the diagnostics are suppressed.
+
+The optional
+.meta name
+argument can be used to specify the file name which is used for reporting
+errors. If this argument is missing, the name is taken from the name
+property of the
+.meta source
+argument if it is a stream, or else the word
+.code string
+is used as the name if
+.meta source
+is a string.
+
+If there are no parse errors, the function returns the parsed data
+structure. If there are parse errors, and the
+.meta error-retval
+parameter is
+present, its value is returned. If the
+.meta error-retval
+parameter
+is not present, then an exception of type
+.code syntax-error
+is thrown.
+
 .SS* Debugging Functions
 .coNP Functions @ source-loc and @ source-loc-str
 .synb

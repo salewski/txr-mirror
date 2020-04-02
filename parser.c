@@ -783,6 +783,47 @@ val read_compiled_file(val self, val stream, val error_stream)
   return read_file_common(self, stream, error_stream, t);
 }
 
+val txr_parse(val source_in, val error_stream,
+              val error_return_val, val name_in)
+{
+  uses_or2;
+  val self = lit("txr-parse");
+  val source = default_null_arg(source_in);
+  val input_stream = if3(stringp(source),
+                         make_string_byte_input_stream(source),
+                         or2(source, std_input));
+  val name = or2(default_null_arg(name_in),
+                 if3(stringp(source),
+                     lit("string"),
+                     stream_get_prop(input_stream, name_k)));
+  int gc = gc_state(0);
+  val saved_dyn = dyn_env;
+  val parser_obj = ensure_parser(input_stream, name);
+  parser_t *pi = parser_get_impl(self, parser_obj);
+
+  dyn_env = make_env(nil, nil, dyn_env);
+  error_stream = default_null_arg(error_stream);
+  error_stream = if3(error_stream == t, std_output, or2(error_stream, std_null));
+  class_check (self, error_stream, stream_s);
+
+  parse_once(self, input_stream, name);
+
+  dyn_env = saved_dyn;
+  gc_state(gc);
+
+  if (pi->errors || pi->syntax_tree == nao) {
+    if (missingp(error_return_val))
+      uw_throwf(syntax_error_s, lit("~a: ~a: ~a"), self, name,
+                if3(pi->syntax_tree == nao,
+                    lit("end of input reached without seeing object"),
+                    lit("errors encountered")), nao);
+
+    return error_return_val;
+  }
+
+  return pi->syntax_tree;
+}
+
 #if HAVE_TERMIOS
 
 static void load_rcfile(val name)
