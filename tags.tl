@@ -21,7 +21,7 @@
 
 (defun escape (str)
   (mappend (do caseql @1
-             ((#\^ #\$ #\/) (list #\\ @1))
+             ((#\^ #\$ #\/ #\\) (list #\\ @1))
              (t (list @1)))
            str))
 
