@@ -62,7 +62,84 @@
   (tree-case (source-loc form)
     ((line . file) (escape [lines line]))))
 
-(defun collect-tags (path)
+(defmacro with-tag-shorthand-macro ((name-sym path-var lines-var obj-var)
+                                    . body)
+  ^(macrolet ((,name-sym (type ident : parent pattern-obj)
+                ^(new ,type ident ,ident
+                            path ,',path-var
+                            pattern ,*(if pattern-obj
+                                        ^((get-pat ,',lines-var ,pattern-obj))
+                                        ^((get-pat ,',lines-var ,',obj-var)))
+                            ,*(if parent ^(parent ,parent))
+                            ,*(if pattern-obj ^(expattern t)))))
+    ,*body))
+
+(defun process-form (path lines obj)
+  (build
+    (with-tag-shorthand-macro (ntag path lines obj)
+      (when (consp obj)
+        (caseq (car obj)
+          ((progn eval-only compile-only with-dyn-lib)
+           [mapdo (op process-form path lines) (cdr obj)])
+          ((defun defmacro define-place-macro deffi deffi-cb)
+           (add (ntag fun-tag (cadr obj))))
+          ((defvar defvarl defparm defparml defsymacro)
+           (add (ntag var-tag (cadr obj))))
+          ((defmeth)
+           (add (ntag slot-tag (caddr obj) (cadr obj))))
+          ((defplace)
+           (tree-bind (op (name . args) . body) obj
+             (add (ntag fun-tag name))))
+          ((typedef)
+           (add (ntag type-tag (cadr obj))))
+          ((defpackage)
+           (add (ntag struct-tag (cadr obj))))
+          ((define-option-struct)
+           (let ((struct-name (cadr obj)))
+             (add (ntag struct-tag struct-name))
+             (each ((obj (cdddr obj)))
+               (tree-bind (short long . rest) obj
+                 (cond
+                   (long (add (ntag slot-tag long struct-name)))
+                   (short (add (ntag slot-tag short struct-name))))))))
+          ((defstruct)
+           (let ((struct-obj obj)
+                 (struct-name (tree-case (cadr obj)
+                                ((atom . rest) atom)
+                                (atom atom))))
+             (add (ntag struct-tag struct-name))
+             (each ((obj (cdddr obj)))
+               (tree-case obj
+                 ((word name . rest)
+                  (caseq word
+                    ((:method :function :static :instance)
+                     (add (ntag slot-tag name struct-name)))
+                    (t :)))
+                 ((word (arg) . body)
+                  (caseq word
+                    ((:init :postinit :fini))
+                    (t :)))
+                 ((name . rest)
+                  (add (ntag slot-tag name struct-name)))
+                 (name
+                   (add (ntag slot-tag name struct-name struct-obj))))))))))))
+
+(defun process-clause (path lines clause)
+  (when (consp clause)
+    (let ((elem (car clause)))
+      (build
+        (with-tag-shorthand-macro (ntag path lines elem)
+          (when (consp elem)
+            (caseq (car elem)
+              (define (let ((args (if (eq t (cadr elem))
+                                    (cadddr elem)
+                                    (cadr elem))))
+                        (add (ntag fun-tag (car args)))))
+              (bind (let ((syms (flatten (cadr elem))))
+                      (each ((sym syms))
+                        (add (ntag fun-tag sym))))))))))))
+
+(defun collect-tags-tl (path)
   (let* ((text (file-get-string path))
          (text (if (starts-with "#!" text) `;@text` text))
          (lines (cons "" (spl #\newline text)))
@@ -71,64 +148,32 @@
     (build
       (add (new file-tag
                 path path))
-      (macrolet ((ntag (type ident : parent pattern-obj)
-                   ^(new ,type ident ,ident
-                               path path
-                               pattern ,*(if pattern-obj
-                                           ^((get-pat lines ,pattern-obj))
-                                           ^((get-pat lines obj)))
-                               ,*(if parent ^(parent ,parent))
-                               ,*(if pattern-obj ^(expattern t)))))
-        (labels ((process-form (obj)
-                   (when (consp obj)
-                     (caseq (car obj)
-                       ((progn eval-only compile-only with-dyn-lib)
-                        [mapdo process-form (cdr obj)])
-                       ((defun defmacro define-place-macro deffi deffi-cb)
-                        (add (ntag fun-tag (cadr obj))))
-                       ((defvar defvarl defparm defparml defsymacro)
-                        (add (ntag var-tag (cadr obj))))
-                       ((defmeth)
-                        (add (ntag slot-tag (caddr obj) (cadr obj))))
-                       ((defplace)
-                        (tree-bind (op (name . args) . body) obj
-                          (add (ntag fun-tag name))))
-                       ((typedef)
-                        (add (ntag type-tag (cadr obj))))
-                       ((defpackage)
-                        (add (ntag struct-tag (cadr obj))))
-                       ((define-option-struct)
-                        (let ((struct-name (cadr obj)))
-                          (add (ntag struct-tag struct-name))
-                          (each ((obj (cdddr obj)))
-                            (tree-bind (short long . rest) obj
-                              (cond
-                                (long (add (ntag slot-tag long struct-name)))
-                                (short (add (ntag slot-tag short struct-name))))))))
-                       ((defstruct)
-                        (let ((struct-obj obj)
-                              (struct-name (tree-case (cadr obj)
-                                             ((atom . rest) atom)
-                                             (atom atom))))
-                          (add (ntag struct-tag struct-name))
-                          (each ((obj (cdddr obj)))
-                            (tree-case obj
-                              ((word name . rest)
-                               (caseq word
-                                 ((:method :function :static :instance)
-                                  (add (ntag slot-tag name struct-name)))
-                                 (t :)))
-                              ((word (arg) . body)
-                               (caseq word
-                                 ((:init :postinit :fini))
-                                 (t :)))
-                              ((name . rest)
-                               (add (ntag slot-tag name struct-name)))
-                              (name
-                               (add (ntag slot-tag name struct-name struct-obj)))))))))))
-          (whilet ((obj (read stream *stderr* err-ret path))
-                   ((neq obj err-ret)))
-            (process-form obj)))))))
+      (whilet ((obj (read stream *stderr* err-ret path))
+               ((neq obj err-ret)))
+        (pend (process-form path lines obj))))))
+
+(defun collect-tags-txr (path)
+  (let* ((text (file-get-string path))
+         (text (if (starts-with "#!" text) `\@;@text` text))
+         (lines (cons "" (spl #\newline text)))
+         (stream (make-string-byte-input-stream text))
+         (*rec-source-loc* t)
+         (syntax (txr-parse stream *stderr* nil path)))
+    (build
+      (each ((clause syntax))
+        (pend (process-clause path lines clause))))))
+
+(defun collect-tags-guess (path)
+  (with-stream (s (open-file path))
+    (iflet ((line (get-line s)))
+      (if (and (starts-with "#!" line)
+               (search-str line "txr"))
+        (if (search-str line "--lisp")
+          (collect-tags-tl path)
+          (collect-tags-txr path))
+        (progn
+          (put-line `@path: unable to determine file type` *stderr*)
+          nil)))))
 
 (defun write-tagfile (tags o)
   (when o.merge
@@ -156,7 +201,7 @@
     (when o.help
       (put-line "\nUsage:\n")
       (put-line `  @{*load-path*} [options] {file|dir}*\n`)
-      (put-line "Directory arguments are recursively searched for *.tl files.")
+      (put-line "Directory arguments are recursively searched for .tl and .txr files.")
       (put-line "If no arguments are given, the current directory is searched.")
       o.(opthelp)
       (exit t))
@@ -175,13 +220,17 @@
                    (ftw o.out-args
                         (lambda (path type stat . rest)
                           (caseql* type
-                            (ftw-f (when (and (or (member path o.out-args)
-                                                  (ends-with ".tl" path))
-                                              (not [excf path])
+                            (ftw-f (when (and (not [excf path])
                                               (not [excf (base-name path)])
                                               (not (some skips (op starts-with @1 path))))
-                                     (pend (ignerr (collect-tags path)))
-                                     ftw-continue))
+                                     (cond
+                                       ((ends-with ".tl" path)
+                                        (pend (ignerr (collect-tags-tl path))))
+                                       ((ends-with ".txr" path)
+                                        (pend (ignerr (collect-tags-txr path))))
+                                       ((member path o.out-args)
+                                        (pend (ignerr (collect-tags-guess path))))
+                                       (t ftw-continue))))
                             (ftw-d (while (and skips (starts-with path (car skips)))
                                      (pop skips))
                                    (cond
