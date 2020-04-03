@@ -124,6 +124,11 @@
                  (name
                    (add (ntag slot-tag name struct-name struct-obj))))))))))))
 
+(defun unexpand (form)
+  (whilet ((anc (macro-ancestor form)))
+    (set form anc))
+  form)
+
 (defun process-clause (path lines clause)
   (when (consp clause)
     (let ((elem (car clause)))
@@ -137,7 +142,10 @@
                         (add (ntag fun-tag (car args)))))
               (bind (let ((syms (flatten (cadr elem))))
                       (each ((sym syms))
-                        (add (ntag fun-tag sym))))))))))))
+                        (add (ntag fun-tag sym)))))
+              (do (let ((forms [mapcar unexpand (cdr elem)]))
+                    (each ((form forms))
+                      (pend (process-form path lines form))))))))))))
 
 (defun collect-tags-tl (path)
   (let* ((text (file-get-string path))
