@@ -88,7 +88,10 @@
   (caseq (car form)
     (load (fake-load (cadr form)))
     (load-for (each ((clause (cdr form)))
-                (fake-load (caddr clause))))
+                (tree-bind (kind sym arg) clause
+                  (when (and (eq kind 'pkg)
+                             (not (find-package sym)))
+                    (fake-load (caddr clause))))))
     (defpackage (make-package (symbol-name (cadr form))))))
 
 (defun fake-load (path)
