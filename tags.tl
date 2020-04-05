@@ -112,7 +112,7 @@
       (when (consp obj)
         (process-package-influencing-form obj)
         (caseq (car obj)
-          ((progn eval-only compile-only with-dyn-lib)
+          ((progn eval-only compile-only with-dyn-lib macro-time)
            (pend [mappend (op process-form path lines) (cdr obj)]))
           ((defun defmacro define-place-macro deffi deffi-cb)
            (add (ntag fun-tag (cadr obj))))
