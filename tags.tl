@@ -113,7 +113,7 @@
         (process-package-influencing-form obj)
         (caseq (car obj)
           ((progn eval-only compile-only with-dyn-lib)
-           [mapdo (op process-form path lines) (cdr obj)])
+           (pend [mappend (op process-form path lines) (cdr obj)]))
           ((defun defmacro define-place-macro deffi deffi-cb)
            (add (ntag fun-tag (cadr obj))))
           ((defvar defvarl defparm defparml defsymacro)
