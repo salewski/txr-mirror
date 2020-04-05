@@ -58,6 +58,8 @@
 
 (defvarl err-ret (gensym))
 
+(defvar *fake-load-path*)
+
 (defun get-pat (lines form)
   (tree-case (source-loc form)
     ((line . file) (escape [lines line]))))
@@ -84,10 +86,30 @@
                             ,*(if pattern-obj ^(expattern t)))))
     ,*body))
 
+(defun process-package-influencing-form (form)
+  (caseq (car form)
+    (load (fake-load (cadr form)))
+    (load-for (each ((clause (cdr form)))
+                (fake-load (caddr clause))))
+    (defpackage (make-package (symbol-name (cadr form))))))
+
+(defun fake-load (path)
+  (unless (abs-path-p path)
+    (set path (path-cat (dir-name *fake-load-path*) path))
+    (let ((*fake-load-path* path)
+          (stream (if (ends-with ".tl" path)
+                    (open-file path)
+                    (or (ignerr (open-file `@path.tl`))))))
+      (whilet ((obj (read stream *stderr* err-ret path))
+               ((neq obj err-ret)))
+        (when (consp obj)
+          (process-package-influencing-form obj))))))
+
 (defun process-form (path lines obj)
   (build
     (with-tag-shorthand-macro (ntag path lines obj)
       (when (consp obj)
+        (process-package-influencing-form obj)
         (caseq (car obj)
           ((progn eval-only compile-only with-dyn-lib)
            [mapdo (op process-form path lines) (cdr obj)])
@@ -162,7 +184,8 @@
          (text (if (starts-with "#!" text) `;@text` text))
          (lines (cons "" (spl #\newline text)))
          (stream (make-string-byte-input-stream text))
-         (*rec-source-loc* t))
+         (*rec-source-loc* t)
+         (*fake-load-path* path))
     (build
       (add (new file-tag
                 path path))
