@@ -140,7 +140,7 @@
                                     (cadddr elem)
                                     (cadr elem))))
                         (add (ntag fun-tag (car args)))))
-              (bind (let ((syms (flatten (cadr elem))))
+              (bind (let ((syms (flatcar (cadr elem))))
                       (each ((sym syms))
                         (add (ntag fun-tag sym)))))
               (do (let ((forms [mapcar unexpand (cdr elem)]))
