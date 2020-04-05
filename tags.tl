@@ -62,6 +62,16 @@
   (tree-case (source-loc form)
     ((line . file) (escape [lines line]))))
 
+(defmacro in-anon-package (. body)
+  (with-gensyms (pkg)
+    ^(let* ((,pkg (make-package "anon"))
+            (*package* ,pkg))
+       (unwind-protect
+         (progn
+           (set-package-fallback-list *package* '(:usr))
+           ,*body)
+         (delete-package ,pkg)))))
+
 (defmacro with-tag-shorthand-macro ((name-sym path-var lines-var obj-var)
                                     . body)
   ^(macrolet ((,name-sym (type ident : parent pattern-obj)
@@ -156,9 +166,10 @@
     (build
       (add (new file-tag
                 path path))
-      (whilet ((obj (read stream *stderr* err-ret path))
-               ((neq obj err-ret)))
-        (pend (process-form path lines obj))))))
+      (in-anon-package
+        (whilet ((obj (read stream *stderr* err-ret path))
+                 ((neq obj err-ret)))
+          (pend (process-form path lines obj)))))))
 
 (defun collect-tags-txr (path)
   (let* ((text (file-get-string path))
@@ -166,7 +177,7 @@
          (lines (cons "" (spl #\newline text)))
          (stream (make-string-byte-input-stream text))
          (*rec-source-loc* t)
-         (syntax (txr-parse stream *stderr* nil path)))
+         (syntax (in-anon-package (txr-parse stream *stderr* nil path))))
     (build
       (each ((clause syntax))
         (pend (process-clause path lines clause))))))
