@@ -66,13 +66,11 @@
 
 (defmacro in-anon-package (. body)
   (with-gensyms (pkg)
-    ^(let* ((,pkg (make-package "anon"))
+    ^(let* ((*package-alist* *package-alist*)
+            (,pkg (make-package "anon"))
             (*package* ,pkg))
-       (unwind-protect
-         (progn
-           (set-package-fallback-list *package* '(:usr))
-           ,*body)
-         (delete-package ,pkg)))))
+       (set-package-fallback-list *package* '(:usr))
+       ,*body)))
 
 (defmacro with-tag-shorthand-macro ((name-sym path-var lines-var obj-var)
                                     . body)
