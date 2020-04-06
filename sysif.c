@@ -895,6 +895,7 @@ static val fcntl_wrap(val fd_in, val cmd_in, val arg_in)
       if (cmd == F_GETLK)
         flock_unpack(arg_in, &fl);
     }
+    break;
   default:
     errno = EINVAL;
     break;

@@ -155,10 +155,13 @@ static u32_t hash_buf(const mem_t *ptr, ucnum size, u32_t seed, int *pcount)
     switch (size) {
     case 3:
       in |= convert(u32_t, tail[2]) << 16;
+      /* fallthrough */
     case 2:
       in |= convert(u32_t, tail[1]) << 8;
+      /* fallthrough */
     case 1:
       in |= convert(u32_t, tail[0]);
+      break;
     }
 
     acc ^= in;
@@ -472,8 +475,10 @@ static ucnum hash_hash_op(val obj, int *count, ucnum seed)
   switch (CHAR_BIT * sizeof (mem_t *)) {
   case 32:
     out += coerce(ucnum, h->hops) >> 4;
+    break;
   case 64: default:
     out += coerce(ucnum, h->hops) >> 5;
+    break;
   }
 
   out += equal_hash(h->userdata, count, seed);

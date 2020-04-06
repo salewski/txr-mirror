@@ -601,6 +601,7 @@ val cdr(val cons)
           return funcall2(lambda_meth, cons, rcons(one, t));
       }
     }
+    /* fallthrough */
   default:
     type_mismatch(lit("cdr: ~s is not a cons"), cons, nao);
   }
@@ -1061,6 +1062,7 @@ val nullify(val seq)
       if (nullify_meth)
         return funcall1(nullify_meth, seq);
     }
+    /* fallthrough */
   default:
     return seq;
   }
@@ -1107,6 +1109,7 @@ again:
       replace_obj(tailobj, items, t, t);
       return ptail;
     }
+    /* fallthrough */
   default:
     uw_throwf(error_s, lit("cannot append ~s"), deref(ptail), nao);
   }
@@ -4568,8 +4571,10 @@ val int_str(val str, val base)
     case 'x': case 'X':
       zerox = 1;
       wcs += 2;
+      break;
     default:
       octzero = 1;
+      break;
     }
     break;
   }
@@ -10415,6 +10420,7 @@ val empty(val seq)
         return eq(funcall1(length_meth, seq), zero);
       return if3(nullify_meth && funcall1(nullify_meth, seq), nil, seq);
     }
+    /* fallthrough */
   default:
     type_mismatch(lit("empty: ~s is not a sequence"), seq, nao);
   }

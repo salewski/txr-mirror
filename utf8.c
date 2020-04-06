@@ -90,10 +90,10 @@ size_t utf8_from_buf(wchar_t *wdst, const unsigned char *src, size_t nbytes)
           wch_min = 0x10000;
           break;
         }
-        /* fallthrough */
 #else
         conversion_error();
 #endif
+        /* fallthrough */
       default:
         if (wdst)
           *wdst++ = 0xDC00 | ch;
@@ -321,10 +321,10 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
           ud->wch_min = 0x10000;
           break;
         }
-        /* fallthrough */
 #else
         conversion_error();
 #endif
+        /* fallthrough */
       default:
         ud->back = ud->tail;
         return 0xDC00 | ch;

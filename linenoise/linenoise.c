@@ -2212,8 +2212,8 @@ static int edit(lino_t *l, const wchar_t *prompt)
                     }
                     break;
                 }
-                /* fallthrough */
                 l->save_hist_idx = l->history_index;
+                /* fallthrough */
             case CTL('F'):
                 ret = l->len;
                 if (l->mlmode)

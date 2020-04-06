@@ -150,7 +150,7 @@ extern "C" {
 #endif
 
 int jmp_save(struct jmp *);
-void jmp_restore(struct jmp *, int);
+noreturn void jmp_restore(struct jmp *, int);
 
 #ifdef __cplusplus
 }
