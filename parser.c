@@ -107,13 +107,11 @@ static void parser_destroy(val obj)
   free(p);
 }
 
-static struct cobj_ops parser_ops = {
-  eq,
-  cobj_print_op,
-  parser_destroy,
-  parser_mark,
-  cobj_eq_hash_op,
-};
+static struct cobj_ops parser_ops = cobj_ops_init(eq,
+                                                  cobj_print_op,
+                                                  parser_destroy,
+                                                  parser_mark,
+                                                  cobj_eq_hash_op);
 
 void parser_common_init(parser_t *p)
 {

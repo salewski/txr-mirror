@@ -8067,13 +8067,11 @@ ucnum cobj_handle_hash_op(val obj, int *count, ucnum seed)
   return cobj_eq_hash_op(coerce(val, handle), count, seed);
 }
 
-static struct cobj_ops cptr_ops = {
-  cobj_equal_handle_op,
-  cptr_print_op,
-  cobj_destroy_stub_op,
-  cobj_mark_op,
-  cobj_handle_hash_op
-};
+static struct cobj_ops cptr_ops = cobj_ops_init(cobj_equal_handle_op,
+                                                cptr_print_op,
+                                                cobj_destroy_stub_op,
+                                                cobj_mark_op,
+                                                cobj_handle_hash_op);
 
 val cptr_typed(mem_t *handle, val type_sym, struct cobj_ops *ops)
 {

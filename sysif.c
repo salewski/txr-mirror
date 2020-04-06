@@ -2015,13 +2015,11 @@ static void cptr_dl_destroy_op(val obj)
   }
 }
 
-static struct cobj_ops cptr_dl_ops = {
-  cobj_equal_handle_op,
-  cptr_print_op,
-  cptr_dl_destroy_op,
-  cobj_mark_op,
-  cobj_handle_hash_op
-};
+static struct cobj_ops cptr_dl_ops = cobj_ops_init(cobj_equal_handle_op,
+                                                   cptr_print_op,
+                                                   cptr_dl_destroy_op,
+                                                   cobj_mark_op,
+                                                   cobj_handle_hash_op);
 
 static val dlopen_wrap(val name, val flags)
 {

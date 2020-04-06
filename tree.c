@@ -82,7 +82,7 @@ struct tree_diter {
   val lastnode;
 };
 
-#define tree_iter_init() { 0, tr_visited_nothing }
+#define tree_iter_init() { 0, tr_visited_nothing, { 0 } }
 
 val tree_s, tree_iter_s, tree_fun_whitelist_s;
 
@@ -243,7 +243,11 @@ static val tn_build_tree(ucnum n, val x)
 
 static void tr_rebuild(struct tree *tr, val node, val parent, ucnum size)
 {
-  obj_t dummy = { { TNOD } };
+#if CONFIG_GEN_GC
+  obj_t dummy = { { TNOD, 0, { 0 }, 0 } };
+#else
+  obj_t dummy = { { TNOD, { 0 }, 0 } };
+#endif
   val flat = tn_flatten(node, &dummy);
   val new_root = (tn_build_tree(size, flat), dummy.tn.left);
 

@@ -159,7 +159,7 @@ enum key_action {
 };
 
 static lino_os_t lino_os;
-static lino_t lino_list = { &lino_list, &lino_list };
+static lino_t lino_list;
 volatile sig_atomic_t lino_list_busy;
 static int atexit_registered = 0; /* Register atexit just 1 time. */
 
@@ -2840,4 +2840,5 @@ void lino_set_result(lino_t *ls, wchar_t *res)
 void lino_init(lino_os_t *os)
 {
     lino_os = *os;
+    lino_list.next = lino_list.prev = &lino_list;
 }
