@@ -177,6 +177,8 @@ static int args_key_check_store(val arg, int ix, mem_t *ctx)
   struct args_bool_ctx *acx = coerce(struct args_bool_ctx *, ctx);
   int i, n = acx->n;
 
+  (void) ix;
+
   if (acx->next_arg_store != 0) {
     *acx->next_arg_store = arg;
     acx->next_arg_store = 0;

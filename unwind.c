@@ -951,6 +951,8 @@ static val me_defex(val form, val menv)
 {
   val types = cdr(form);
 
+  (void) menv;
+
   if (!all_satisfy(types, func_n1(symbolp), nil))
     eval_error(form, lit("defex: arguments must all be symbols"), nao);
 

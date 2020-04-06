@@ -1093,6 +1093,8 @@ static wchar_t *provide_atom(lino_t *l, const wchar_t *str, int n, void *ctx)
 
 static val repl_intr(val signo, val async_p)
 {
+  (void) signo;
+  (void) async_p;
   uw_throw(intr_s, lit("intr"));
 }
 
@@ -1106,6 +1108,8 @@ static val read_eval_ret_last(val env, val counter,
   val loading = cdr(lookup_var(dyn_env, load_recursive_s));
   val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
   env_vbind(dyn_env, load_recursive_s, t);
+
+  (void) env;
 
   for (;; lineno = succ(lineno)) {
     val form = lisp_parse(in_stream, out_stream, error_val, name, lineno);
@@ -1149,6 +1153,8 @@ static val repl_warning(val out_stream, val exc, struct args *rest)
 {
   val args = args_get_list(rest);
 
+  (void) exc;
+
   if (cdr(args))
     uw_defer_warning(args);
   else
@@ -1169,6 +1175,8 @@ static int is_balanced_line(const wchar_t *line, void *ctx)
   count[sp] = 0;
   state[sp] = ST_START;
   wchar_t ch;
+
+  (void) ctx;
 
   while ((ch = *line++) != 0) {
   again:

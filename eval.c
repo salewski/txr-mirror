@@ -1644,18 +1644,21 @@ static val eval_prog1(val forms, val env, val ctx)
 
 static val op_error(val form, val env)
 {
+  (void) env;
   eval_error(form, lit("unexpanded ~s encountered"), car(form), nao);
   abort();
 }
 
 static val op_meta_error(val form, val env)
 {
+  (void) env;
   eval_error(form, lit("meta with no meaning: ~s"), form, nao);
 }
 
 static val op_quote(val form, val env)
 {
   val d = cdr(form);
+  (void) env;
 
   if (!consp(d) || cdr(d))
     eval_error(form, lit("bad quote syntax: ~s"), form, nao);
@@ -1664,14 +1667,14 @@ static val op_quote(val form, val env)
 
 static val op_qquote_error(val form, val env)
 {
+  (void) env;
   eval_error(form, lit("unexpanded quasiquote encountered"), nao);
-  return second(form);
 }
 
 static val op_unquote_error(val form, val env)
 {
+  (void) env;
   eval_error(form, lit("unquote/splice without matching quote"), nao);
-  return second(form);
 }
 
 struct bindings_helper_vars {
@@ -2992,6 +2995,7 @@ static val op_upenv(val form, val env)
 
 static val op_load_time_lit(val form, val env)
 {
+  (void) env;
   val args = cdr(form);
   if (car(args)) {
     return cadr(args);
@@ -3065,7 +3069,7 @@ static val me_each(val form, val menv)
   val append = or2(eq(each, append_each_s), eq(each, append_each_star_s));
   val eff_each = if3(collect, collect_each_s,
                      if3(append, append_each_s, each_s));
-
+  (void) menv;
   return list(if3(star, let_star_s, let_s), vars,
               cons(each_op_s, cons(eff_each,
                                    cons(if2(star || specials_occur, var_syms),
@@ -3081,6 +3085,7 @@ static val me_for(val form, val menv)
   int oldscope = opt_compat && opt_compat <= 123;
   val basic = list(if3(forsym == for_star_s, let_star_s, let_s),
                    vars, cons(for_op_s, cons(nil, body)), nao);
+  (void) menv;
   return if3(oldscope,
              basic,
              list(block_s, nil, basic, nao));
@@ -3184,6 +3189,7 @@ static val me_while_until_star(val form, val menv)
 
 static val me_quasilist(val form, val menv)
 {
+  (void) menv;
   return cons(list_s, cdr(form));
 }
 
@@ -3917,6 +3923,8 @@ static val me_flet_labels(val form, val menv)
   val funcs = pop(&body);
   list_collect_decl (lambdas, ptail);
 
+  (void) menv;
+
   for (; funcs; funcs = cdr(funcs)) {
     val func = car(funcs);
     val name = pop(&func);
@@ -3938,6 +3946,7 @@ static val compares_with_eq(val obj)
 static val hash_min_max(val env, val key, val value)
 {
   cons_bind (minkey, maxkey, env);
+  (void) value;
   if (!minkey || lt(key, minkey))
     minkey = key;
   if (!maxkey || gt(key, maxkey))
@@ -3970,6 +3979,8 @@ static val me_case(val form, val menv)
   val idxsym = gensym(lit("index-"));
   list_collect_decl (condpairs, ptail);
   list_collect_decl (hashforms, qtail);
+
+  (void) menv;
 
   if (atom(cdr(form_orig)))
     eval_error(form_orig, lit("~s: missing test form"), casesym, nao);
@@ -4160,6 +4171,7 @@ static val me_tc(val form, val menv)
 
 static val me_ignerr(val form, val menv)
 {
+  (void) menv;
   return list(catch_s, cons(progn_s, rest(form)),
               list(error_s, error_s, nao), nao);
 }
@@ -4172,6 +4184,8 @@ static val me_whilet(val form, val env)
   val lastlet_cons = last(lets, nil);
   val lastlet = car(lastlet_cons);
   val not_done = gensym(lit("not-done"));
+
+  (void) env;
 
   if (nilp(lastlet_cons))
     eval_error(form, lit("~s: empty binding list"), sym, nao);
@@ -4198,6 +4212,8 @@ static val me_iflet_whenlet(val form, val env)
   val args = form;
   val sym = pop(&args);
   val lets = pop(&args);
+
+  (void) env;
 
   if (atom(lets)) {
     return apply_frob_args(list(if3(sym == iflet_s, if_s, when_s),
@@ -4246,6 +4262,7 @@ static val me_dotimes(val form, val env)
                  list(list(lt, counter, count, nao), result, nao),
                  list(list(inc_s, counter, nao), nao),
                  body, nao);
+  (void) env;
 
   return apply_frob_args(raw);
 }
@@ -4280,6 +4297,8 @@ static val me_mlet(val form, val menv)
   list_collect_decl (gensyms, ptail_gensyms);
   list_collect_decl (smacs, ptail_smacs);
   list_collect_decl (sets, ptail_sets);
+
+  (void) menv;
 
   for (; consp(bindings); bindings = cdr(bindings)) {
     val binding = car(bindings);
@@ -4324,6 +4343,7 @@ static val me_mlet(val form, val menv)
 static val me_load_time(val form, val menv)
 {
   val expr = cadr(form);
+  (void) menv;
   return list(load_time_lit_s, nil, expr, nao);
 }
 
@@ -4334,6 +4354,8 @@ static val me_load_for(val form, val menv)
   val rt_load_for_s = intern(lit("rt-load-for"), system_package);
   list_collect_decl (out, ptail);
   val iter;
+
+  (void) menv;
 
   for (iter = args; iter; iter = cdr(iter)) {
     val arg = car(iter);

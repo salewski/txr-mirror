@@ -330,11 +330,15 @@ static void noreturn unsup_obj(val self, val obj)
 
 static int seq_iter_get_nil(seq_iter_t *it, val *pval)
 {
+  (void) it;
+  (void) pval;
   return 0;
 }
 
 static int seq_iter_peek_nil(seq_iter_t *it, val *pval)
 {
+  (void) it;
+  (void) pval;
   return 0;
 }
 

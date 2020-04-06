@@ -533,6 +533,9 @@ static val dgram_flush(val stream)
 static val dgram_close(val stream, val throw_on_error)
 {
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
+
+  (void) throw_on_error;
+
   if (d->fd != -1) {
     dgram_flush(stream);
     close(d->fd);

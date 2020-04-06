@@ -149,6 +149,7 @@ static void perm_list_gen_fill(val out, cnum i, val v)
 {
   val tail = cdr(out);
   val nc = cons(v, nil);
+  (void) i;
   if (tail)
     rplacd(tail, nc);
   else

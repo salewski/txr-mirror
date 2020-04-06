@@ -2507,6 +2507,8 @@ static void sigwinch_handler(int sig)
 {
     lino_t *li;
 
+    (void) sig;
+
     if (lino_list_busy)
         return;
 

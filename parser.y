@@ -1350,6 +1350,8 @@ void yydebug_onoff(int val)
 {
 #if YYDEBUG
   yydebug = val;
+#else
+  (void) val;
 #endif
 }
 

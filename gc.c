@@ -316,6 +316,7 @@ static void finalize(val obj)
 
 void cobj_destroy_stub_op(val obj)
 {
+  (void) obj;
 }
 
 void cobj_destroy_free_op(val obj)
@@ -454,6 +455,7 @@ tail_call:
 
 void cobj_mark_op(val obj)
 {
+  (void) obj;
 }
 
 static int in_heap(val ptr)

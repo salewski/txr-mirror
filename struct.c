@@ -566,6 +566,7 @@ val super(val type, val idx)
 static void struct_type_print(val obj, val out, val pretty, struct strm_ctx *c)
 {
   struct struct_type *st = coerce(struct struct_type *, obj->co.handle);
+  (void) pretty;
   (void) c;
   format(out, lit("#<struct-type ~s>"), st->name, nao);
 }

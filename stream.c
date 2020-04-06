@@ -149,16 +149,19 @@ static noreturn void unimpl(val stream, val op)
 
 static noreturn val unimpl_put_string(val stream, val str)
 {
+  (void) str;
   unimpl(stream, lit("put-string"));
 }
 
 static noreturn val unimpl_put_char(val stream, val ch)
 {
+  (void) ch;
   unimpl(stream, lit("put-char"));
 }
 
 static noreturn val unimpl_put_byte(val stream, int byte)
 {
+  (void) byte;
   unimpl(stream, lit("put-byte"));
 }
 
@@ -179,31 +182,40 @@ static noreturn val unimpl_get_byte(val stream)
 
 static noreturn val unimpl_unget_char(val stream, val ch)
 {
+  (void) ch;
   unimpl(stream, lit("unget-char"));
 }
 
 static noreturn val unimpl_unget_byte(val stream, int byte)
 {
+  (void) byte;
   unimpl(stream, lit("unget-byte"));
 }
 
 static noreturn val unimpl_put_buf(val stream, val buf, cnum pos)
 {
+  (void) buf;
+  (void) pos;
   unimpl(stream, lit("put-buf"));
 }
 
 static noreturn val unimpl_fill_buf(val stream, val buf, cnum pos)
 {
+  (void) buf;
+  (void) pos;
   unimpl(stream, lit("fill-buf"));
 }
 
 static noreturn val unimpl_seek(val stream, val off, enum strm_whence whence)
 {
+  (void) off;
+  (void) whence;
   unimpl(stream, lit("seek-stream"));
 }
 
 static noreturn val unimpl_truncate(val stream, val len)
 {
+  (void) len;
   unimpl(stream, lit("truncate-stream"));
 }
 
@@ -229,51 +241,67 @@ static noreturn val unimpl_get_sock_peer(val stream)
 
 static noreturn val unimpl_set_sock_peer(val stream, val peer)
 {
+  (void) peer;
   unimpl(stream, lit("sock-set-peer"));
 }
 
 static val null_put_string(val stream, val str)
 {
+  (void) stream;
+  (void) str;
   return nil;
 }
 
 static val null_put_char(val stream, val ch)
 {
+  (void) stream;
+  (void) ch;
   return nil;
 }
 
 static val null_put_byte(val stream, int byte)
 {
+  (void) stream;
+  (void) byte;
   return nil;
 }
 
 static val null_get_line(val stream)
 {
+  (void) stream;
   return nil;
 }
 
 static val null_get_char(val stream)
 {
+  (void) stream;
   return nil;
 }
 
 static val null_get_byte(val stream)
 {
+  (void) stream;
   return nil;
 }
 
 static val null_close(val stream, val throw_on_error)
 {
+  (void) stream;
+  (void) throw_on_error;
   return nil;
 }
 
 static val null_flush(val stream)
 {
+  (void) stream;
   return nil;
 }
 
 static val null_seek(val stream, val off, enum strm_whence whence)
 {
+  (void) stream;
+  (void) off;
+  (void) whence;
   return nil;
 }
 
@@ -289,26 +317,33 @@ static val null_get_prop(val stream, val ind)
 
 static val null_set_prop(val stream, val ind, val value)
 {
+  (void) stream;
+  (void) ind;
+  (void) value;
   return nil;
 }
 
 static val null_get_error(val stream)
 {
+  (void) stream;
   return nil;
 }
 
 static val null_get_error_str(val stream)
 {
+  (void) stream;
   return nil;
 }
 
 static val null_clear_error(val stream)
 {
+  (void) stream;
   return nil;
 }
 
 static val null_get_fd(val stream)
 {
+  (void) stream;
   return nil;
 }
 
@@ -1739,6 +1774,7 @@ static val dir_get_line(val stream)
 static val dir_close(val stream, val throw_on_error)
 {
   struct dir_handle *h = coerce(struct dir_handle *, stream->co.handle);
+  (void) throw_on_error;
 
   if (h->d != 0) {
     closedir(coerce(DIR *, h->d));
