@@ -4114,7 +4114,7 @@ static val nary_op_keyfun(val self, val (*bfun)(val, val),
 }
 
 
-val nary_simple_op(val self, val (*bfun)(val, val),
+val nary_simple_op(val (*bfun)(val, val),
                    struct args *args, val firstval)
 {
   val acc = firstval, next;

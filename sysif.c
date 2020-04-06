@@ -849,7 +849,7 @@ static void flock_pack(val self, val in, struct flock *out)
   out->l_len = c_num(slot(in, len_s));
 }
 
-static void flock_unpack(val self, val out, struct flock *in)
+static void flock_unpack(val out, struct flock *in)
 {
   slotset(out, type_s, num(in->l_type));
   slotset(out, whence_s, num(in->l_whence));
@@ -893,7 +893,7 @@ static val fcntl_wrap(val fd_in, val cmd_in, val arg_in)
       flock_pack(self, arg_in, &fl);
       res  = fcntl(fd, cmd, &fl);
       if (cmd == F_GETLK)
-        flock_unpack(self, arg_in, &fl);
+        flock_unpack(arg_in, &fl);
     }
   default:
     errno = EINVAL;

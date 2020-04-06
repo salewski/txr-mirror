@@ -319,7 +319,7 @@ static cnum count_super_stslots(cnum nsupers, struct struct_type **sus,
   return c;
 }
 
-static val get_super_slots(cnum nsupers, struct struct_type **sus, val self)
+static val get_super_slots(cnum nsupers, struct struct_type **sus)
 {
   cnum i;
   val slots = nil;
@@ -389,7 +389,7 @@ val make_struct_type(val name, val supers,
     cnum nsupers = c_num(length(supers));
     struct struct_type **sus = get_struct_handles(nsupers, supers, self);
     val id = num_fast(coerce(ucnum, st) / (uptopow2(sizeof *st) / 2));
-    val super_slots = get_super_slots(nsupers, sus, self);
+    val super_slots = get_super_slots(nsupers, sus);
     val all_slots = uniq(append2(super_slots, append2(static_slots, slots)));
     cnum stsl_upb = c_num(plus(length(static_slots),
                                num(count_super_stslots(nsupers, sus, self))));

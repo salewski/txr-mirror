@@ -396,7 +396,7 @@ val seq_geti(seq_iter_t *it)
   return v;
 }
 
-void seq_iter_rewind(val self, seq_iter_t *it)
+void seq_iter_rewind(seq_iter_t *it)
 {
   switch (it->inf.kind) {
   case SEQ_NIL:
@@ -2287,7 +2287,7 @@ static val lazy_flatten_scan(val list, val *escape)
   }
 }
 
-static val lazy_flatten_func(val env, val lcons)
+static val lazy_flatten_func(val lcons)
 {
   us_cons_bind (list, escape, lcons);
   val atom = car(list);
@@ -2314,7 +2314,7 @@ val lazy_flatten(val list)
     if (!next)
       return nil;
 
-    return make_lazy_cons_car_cdr(func_f1(nil, lazy_flatten_func),
+    return make_lazy_cons_car_cdr(func_n1(lazy_flatten_func),
                                   next, escape);
   }
 }
@@ -3436,12 +3436,12 @@ val min2(val a, val b)
 
 val maxv(val first, struct args *rest)
 {
-  return nary_simple_op(lit("max"), max2, rest, first);
+  return nary_simple_op(max2, rest, first);
 }
 
 val minv(val first, struct args *rest)
 {
-  return nary_simple_op(lit("min"), min2, rest, first);
+  return nary_simple_op(min2, rest, first);
 }
 
 val maxl(val first, val rest)
@@ -8795,7 +8795,7 @@ static cnum med_of_three(val vec, val lessfun, val keyfun, cnum from, cnum to,
   }
 }
 
-static cnum middle_pivot(val vec, val lessfun, val keyfun, cnum from, cnum to,
+static cnum middle_pivot(val vec, val keyfun, cnum from, cnum to,
                          val *pkval)
 {
   cnum pivot = from + (to - from) / 2;
@@ -8811,7 +8811,7 @@ static void quicksort(val vec, val lessfun, val keyfun, cnum from, cnum to)
     cnum i, j;
     cnum pivot = if3(to - from > 15,
                      med_of_three(vec, lessfun, keyfun, from, to, &pkval),
-                     middle_pivot(vec, lessfun, keyfun, from, to, &pkval));
+                     middle_pivot(vec, keyfun, from, to, &pkval));
 
     swap(vec, num_fast(pivot), num_fast(to - 1));
 
@@ -10159,7 +10159,7 @@ val diff(val seq1, val seq2, val testfun, val keyfun)
     val el2;
     int found = 0;
 
-    seq_iter_rewind(self, &si2);
+    seq_iter_rewind(&si2);
 
     while (seq_get(&si2, &el2)) {
       val el2_key = funcall1(keyfun, el2);
@@ -10265,7 +10265,7 @@ val isec(val seq1, val seq2, val testfun, val keyfun)
     val el1_key = funcall1(keyfun, el1);
     val el2;
 
-    seq_iter_rewind(self, &si2);
+    seq_iter_rewind(&si2);
 
     while (seq_get(&si2, &el2)) {
       val el2_key = funcall1(keyfun, el2);

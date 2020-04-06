@@ -285,7 +285,7 @@ val crc32_stream(val stream, val nbytes)
   return unum(crc);
 }
 
-static val crc32_buf(val buf, val self)
+static val crc32_buf(val buf)
 {
   ucnum len = c_unum(buf->b.len);
   mem_t *data = buf->b.data;
@@ -304,7 +304,7 @@ static val crc32_buf(val buf, val self)
   return unum(crc);
 }
 
-static val crc32_str(val str, val self)
+static val crc32_str(val str)
 {
   val s = make_byte_input_stream(str);
   return crc32_stream(s, nil);
@@ -319,9 +319,9 @@ val crc32(val obj)
   case STR:
   case LSTR:
   case LIT:
-    return crc32_str(obj, self);
+    return crc32_str(obj);
   case BUF:
-    return crc32_buf(obj, self);
+    return crc32_buf(obj);
   default:
     uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
               self, obj, nao);

@@ -547,7 +547,7 @@ val subtypep(val sub, val sup);
 val typep(val obj, val type);
 seq_info_t seq_info(val cobj);
 void seq_iter_init(val self, seq_iter_t *it, val obj);
-void seq_iter_rewind(val self, seq_iter_t *it);
+void seq_iter_rewind(seq_iter_t *it);
 INLINE int seq_get(seq_iter_t *it, val *pval) { return it->get(it, pval); }
 INLINE int seq_peek(seq_iter_t *it, val *pval) { return it->peek(it, pval); }
 val seq_geti(seq_iter_t *it);
@@ -723,7 +723,7 @@ val numberp(val num);
 val nary_op(val self, val (*bfun)(val, val),
             val (*ufun)(val self, val),
             struct args *args, val emptyval);
-val nary_simple_op(val self, val (*bfun)(val, val),
+val nary_simple_op(val (*bfun)(val, val),
                    struct args *args, val emptyval);
 val plus(val anum, val bnum);
 val plusv(struct args *);

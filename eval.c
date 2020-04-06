@@ -785,7 +785,7 @@ static val special_var_p(val sym)
              if2(lisplib_try_load(sym), gethash(special, sym)));
 }
 
-static void copy_env_handler(mem_t *ptr, int parent)
+static void copy_env_handler(mem_t *ptr)
 {
   val *penv = coerce(val *, ptr);
   *penv = copy_env(*penv);
@@ -1681,7 +1681,7 @@ struct bindings_helper_vars {
   val ne;
 };
 
-static void copy_bh_env_handler(mem_t *ptr, int parent)
+static void copy_bh_env_handler(mem_t *ptr)
 {
   struct bindings_helper_vars *pv = coerce(struct bindings_helper_vars *, ptr);
   pv->ne = copy_env(pv->ne);
@@ -3848,7 +3848,7 @@ static val cons_find(val obj, val structure, val test)
              cons_find(obj, cdr(structure), test));
 }
 
-static val supplement_op_syms(val ssyms, val max)
+static val supplement_op_syms(val ssyms)
 {
   list_collect_decl (outsyms, tl);
   val si, ni;
@@ -3892,7 +3892,7 @@ static val me_op(val form, val menv)
                sym, max, nao);
 
   if (!eql(max, length(nums)) && !zerop(min))
-    ssyms = supplement_op_syms(ssyms, max);
+    ssyms = supplement_op_syms(ssyms);
 
   rlcp(body_trans, body);
 

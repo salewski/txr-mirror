@@ -258,7 +258,7 @@ struct uw_cont_copy {
   uw_frame_t *up;
   uw_frtype_t type;
   mem_t *ptr;
-  void (*copy)(mem_t *ptr, int parent);
+  void (*copy)(mem_t *ptr);
 };
 
 struct uw_guard {
@@ -361,7 +361,7 @@ val uw_muffle_warning(val exc, struct args *);
 val uw_trace_error(val ctx, val exc, struct args *);
 val uw_capture_cont(val tag, val fun, val ctx_form);
 void uw_push_cont_copy(uw_frame_t *, mem_t *ptr,
-                       void (*copy)(mem_t *ptr, int parent));
+                       void (*copy)(mem_t *ptr));
 void uw_init(void);
 void uw_late_init(void);
 
