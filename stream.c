@@ -803,7 +803,7 @@ val generic_get_line(val stream)
 
   for (;;) {
     val chr = ops->get_char(stream);
-    wint_t ch = chr ? c_chr(chr) : WEOF;
+    wint_t ch = chr ? (wint_t) c_chr(chr) : WEOF;
 
     if (ch == WEOF && buf == 0)
       break;

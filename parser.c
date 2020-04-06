@@ -1655,7 +1655,7 @@ static wint_t lino_getch(mem_t *stream_in)
   stream = coerce(val, stream_in);
   ch = get_char(stream);
 
-  ret = if3(ch, c_num(ch), WEOF);
+  ret = if3(ch, (wint_t) c_num(ch), WEOF);
 
   uw_catch (sy, va) {
     (void) sy;

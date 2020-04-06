@@ -4255,7 +4255,7 @@ val split_str_keep(val str, val sep, val keep_sep)
 
       for (;;) {
         const wchar_t *psep = wcsstr(cstr, csep);
-        size_t span = (psep != 0) ? psep - cstr : wcslen(cstr);
+        size_t span = (psep != 0) ? (size_t) (psep - cstr) : wcslen(cstr);
         val piece = mkustring(num(span));
         init_str(piece, cstr);
         iter = list_collect(iter, piece);
@@ -7316,7 +7316,7 @@ val vector(val length, val initval)
   unsigned i;
   ucnum len = c_unum(length);
   ucnum alloc_plus = len + 2;
-  ucnum size = if3(alloc_plus > len, alloc_plus, -1);
+  ucnum size = if3(alloc_plus > len, alloc_plus, (ucnum) -1);
   val *v = coerce(val *, chk_xalloc(size, sizeof *v, lit("vector")));
   val vec = make_obj();
   vec->v.type = VEC;

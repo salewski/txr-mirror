@@ -66,7 +66,7 @@
 #define alignof(type) offsetof(struct {char x; type y;}, y)
 
 #define pad_retval(size) (!(size) || convert(size_t, size) > sizeof (ffi_arg) \
-                          ? (size) \
+                          ? (size_t) (size) \
                           : sizeof (ffi_arg))
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
