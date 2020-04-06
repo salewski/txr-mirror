@@ -1298,3 +1298,9 @@ loc list_collect_revappend(loc ptail, val obj);
 #define static_forward(decl) static decl
 #define static_def(def) static def
 #endif
+
+#ifdef __cplusplus
+#define all_zero_init { }
+#else
+#define all_zero_init { 0 }
+#endif

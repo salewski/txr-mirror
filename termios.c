@@ -337,7 +337,7 @@ static val tcflow_wrap(val action, val stream)
 
 static val encode_speeds(val termios)
 {
-  struct termios tio = { 0 };
+  struct termios tio = all_zero_init;
 
   tio.c_iflag = c_num(slot(termios, iflag_s));
   tio.c_cflag = c_num(slot(termios, cflag_s));
@@ -351,7 +351,7 @@ static val encode_speeds(val termios)
 
 static val decode_speeds(val termios)
 {
-  struct termios tio = { 0 };
+  struct termios tio = all_zero_init;
 
   tio.c_cflag = c_num(slot(termios, cflag_s));
   tio.c_iflag = c_num(slot(termios, iflag_s));

@@ -819,7 +819,7 @@ static val sock_mark_connected(val sock)
 
   if (sfd) {
     val family = sock_family(sock);
-    struct sockaddr_storage sa = { 0 };
+    struct sockaddr_storage sa = all_zero_init;
     socklen_t salen = sizeof sa;
 
     (void) getpeername(c_num(sfd), coerce(struct sockaddr *, &sa), &salen);

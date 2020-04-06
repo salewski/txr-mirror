@@ -889,7 +889,7 @@ static val fcntl_wrap(val fd_in, val cmd_in, val arg_in)
     if (missingp(arg_in)) {
       errno = EINVAL;
     } else {
-      struct flock fl = { 0 };
+      struct flock fl = all_zero_init;
       flock_pack(self, arg_in, &fl);
       res  = fcntl(fd, cmd, &fl);
       if (cmd == F_GETLK)

@@ -12437,7 +12437,7 @@ static val make_time_impl(time_t (*pmktime)(struct tm *),
                           val hour, val minute, val second,
                           val isdst)
 {
-  struct tm local = { 0 };
+  struct tm local = all_zero_init;
   time_t time;
 
   time_fields_to_tm(&local, year, month, day,
@@ -12458,7 +12458,7 @@ val make_time(val year, val month, val day,
 
 static struct tm epoch_tm(void)
 {
-  struct tm ep = { 0 };
+  struct tm ep = all_zero_init;
   ep.tm_year = 70;
   ep.tm_mday = 1;
   return ep;
@@ -12560,7 +12560,7 @@ static val time_meth(val utc_p, val time_struct)
 
 static val time_string_meth(val time_struct, val format)
 {
-  struct tm tms = { 0 };
+  struct tm tms = all_zero_init;
   time_struct_to_tm(&tms, time_struct, t);
   char buffer[512] = "";
   char *fmt = utf8_dup_to(c_str(format));
@@ -12577,7 +12577,7 @@ static val time_string_meth(val time_struct, val format)
 
 static val time_parse_meth(val time_struct, val format, val string)
 {
-  struct tm tms = { 0 };
+  struct tm tms = all_zero_init;
   time_struct_to_tm(&tms, time_struct, nil);
   val ret = nil;
 

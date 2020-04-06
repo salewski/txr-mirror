@@ -206,7 +206,7 @@ val parser_set_lineno(val self, val stream, val lineno)
 
 void prime_parser(parser_t *p, val name, enum prime_parser prim)
 {
-  struct yy_token sec_tok = { 0 };
+  struct yy_token sec_tok = all_zero_init;
 
   switch (prim) {
   case prime_lisp:
