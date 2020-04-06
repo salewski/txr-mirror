@@ -41031,14 +41031,20 @@ which must be an integer.
 An
 .I exception
 in \*(TX is a special event in the execution of the program which
-results in transfer of control. An exception is identified by a symbol,
-known as the
+potentially results in a transfer of control. An exception is identified by a
+symbol, known as the
 .IR "exception type" ,
 and it carries zero or more arguments, called the
 .IR "exception arguments" .
 
 When an exception is initiated, it is said to be
 .IR thrown .
+This action is initiated by the following functions:
+.codn throw ,
+.code throwf
+and
+.codn error ,
+and possibly other functions which invoke these.
 When an exception is thrown, \*(TX enters into exception processing
 mode. Exception processing mode terminates in one of several ways:
 .IP -
@@ -41054,22 +41060,48 @@ Handlers are defined by the
 .code handler-bind
 operator or
 .code handle
-macro.
+macro. If a handler returns, then by so doing it declines to
+handle the exception.
 .IP -
-If no catch or accepting handler is found, control is transferred
-to the function stored in the
-.code *unhandled-hook*
-variable. If that function returns, then unwinding is performed
-after which the process terminates (unless the unwinding actions
-intercept the control to prevent that).
-.IP -
-If no catch or accepting handler is found and
+If no catch or accepting handler is found for an exception derived from
+.code error
+exception and
 .code *unhandled-hook*
 is
 .codn nil ,
 then a built-in strategy for handling the exception is invoked,
 consisting of unwinding, and then printing some informational messages and
 terminating.
+If the
+.code *unhandled-hook*
+variable contains a value that isn't
+.codn nil ,
+then control is transferred to the function stored in the
+that variable first; only if that function returns is the above
+built-in strategy invoked.
+.IP -
+If no catch or accepting handler is found for an exception derived from
+.codn warning ,
+then a warning diagnostic is issued on the
+.code *stderr*
+stream and a
+.code continue
+exception is thrown with no arguments. If no catch or handler is found
+for that exception, then control returns normally to the site which
+threw the warning exception.
+.IP -
+If no catch or accepting handler is found for an exception that is
+neither derived from
+.code error
+nor from
+.codn warning ,
+then no control transfer takes place; control returns to the
+.code throw
+or
+.code throwf
+function which returns normally, with a return value of
+.codn nil .
+
 .PP
 
 .NP* Catches and Handlers
@@ -41402,6 +41434,26 @@ argument: a character string created by a formatted print to a string stream
 using the
 .code format
 string and additional arguments.
+
+Because
+.code error
+throws an error exception, it does not return. If an error exception
+is not handled, \*(TX will issue diagnostic messages and terminate.
+Likewise,
+.code throw
+or
+.code throwf
+are used to generate an error exception, they do not return.
+
+If the
+.code throw
+and
+.code throwf
+functions are used to generate an exception not derived from
+.codn error ,
+and no handler is found which accepts the exception, they return normally, with
+a value of
+.codn nil .
 
 .coNP Macros @, catch @ catch* and @ catch**
 .synb
@@ -42335,18 +42387,25 @@ more information which is deduced.
 .code warning
 to identify certain situations of interest. Ordinary non-deferrable
 warnings have a structure identical to errors, except for the exception
-symbol. \*(TX's built-in handling of warnings expects these exceptions
-to be continuable. What this means is that a
-.code catch
-for the
+symbol. \*(TX's provides built-in "auto continue" handling for warnings. If a warning
+exception is not intercepted by a catch or an accepting handler, then a
+diagnostic is issued on the
+.code *stderr*
+stream, after which a
 .code continue
-exception is expected to be visible. The handler for a warning exception
-issues a diagnostic which incorporates the warning message. Then the
-handler throws a
+exception is thrown with no arguments. If that
 .code continue
+exception is not handled, then control returns normally to the point that
 exception to resume the computation which generated the warning.
 
-The generation of a warning thus conforms to the following pattern:
+Callers which invoke code that may generate warning exceptions are therefore
+not required to handle them. However, callers which do handle warning
+exceptions expect to be able to throw a
+.code continue
+exception in order to resume the computation that triggered the warning,
+without allowing other handlers to see the exception.
+
+The generation of a warning should thus conform to the following pattern:
 
 .verb
   (catch
@@ -42424,11 +42483,26 @@ The
 .code compile-warning
 function throws an exception of type
 .code warning
-and internally provides the expected
+and internally provides a
 .code catch
 for the
 .code continue
-exception needed to resume after the warning.
+exception which allow a warning handler to resume execution
+after the warning. If a handler throws a
+.code continue
+exception which is caught by
+.codn compile-warning ,
+then
+.code compile-warning
+returns
+.codn nil .
+
+Because
+.code compile-warning
+throws a non-error exception, it returns
+.code nil
+in the event that no catch is found for the exception, and no handler which
+accepts it.
 
 The argument conventions are the same for both functions.
 The
@@ -42457,7 +42531,7 @@ The
 .code compile-defr-warning
 function throws an exception of type
 .code defr-warning
-and internally provides the expected
+and internally provides a
 .code catch
 for the
 .code continue
@@ -42477,6 +42551,15 @@ This diagnostic message constitutes the first
 argument of the exception. The
 .meta tag
 argument is taken as the second argument.
+
+If the exception isn't intercepted by a catch or by
+an accepting handler,
+.code compile-defr-warning
+returns
+.codn nil .
+In also returns nil if it catches a
+.code continue
+exception.
 
 .coNP Function @ purge-deferred-warning
 .synb
@@ -72921,6 +73004,24 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 234
+In \*(TX 234 and older versions, the exception throwing functions
+.code throw
+and
+.code throwf
+did not return, regardless of the exception type. All unhandled exceptions
+triggered internal handling leading to unwinding and termination.
+The current behavior is that only
+.code error
+exceptions lead to termination. When a non-error exception isn't intercepted
+by a catch or handler, the
+.code throw
+or
+.code throwf
+returns normally, yielding the value
+.codn nil .
+If a compatibility value equal to or lower than 234 is requested,
+the old behavior occurs: all unhandled exceptions terminate.
 .IP 227
 In \*(TX 227 and older versions, the functions
 .codn carray-uint ,

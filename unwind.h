@@ -324,10 +324,11 @@ void uw_push_fcall(uw_frame_t *, val fun, struct args *args);
 void uw_push_eval(uw_frame_t *, val form, val env);
 void uw_push_expand(uw_frame_t *, val form, val env);
 #endif
+val uw_rthrow(val sym, val exception);
+val uw_rthrowv(val sym, struct args *);
+val uw_rthrowfv(val sym, val fmt, struct args *);
 noreturn val uw_throw(val sym, val exception);
-noreturn val uw_throwv(val sym, struct args *);
 noreturn val uw_throwf(val sym, val fmt, ...);
-noreturn val uw_throwfv(val sym, val fmt, struct args *);
 noreturn val uw_errorf(val fmt, ...);
 noreturn val uw_errorfv(val fmt, struct args *args);
 val uw_warningf(val fmt, ...);

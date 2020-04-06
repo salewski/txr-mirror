@@ -658,7 +658,7 @@ static void invoke_handler(uw_frame_t *fr, struct args *args)
   uw_catch_end;
 }
 
-val uw_throw(val sym, val args)
+val uw_rthrow(val sym, val args)
 {
   uw_frame_t *ex;
   static int reentry_count = 0;
@@ -705,18 +705,28 @@ val uw_throw(val sym, val args)
   }
 
   if (ex == 0) {
-    if (std_error == 0) {
-      fprintf(stderr, "txr: unhandled exception in early initialization\n");
-      abort();
-    }
-
     if (uw_exception_subtype_p(sym, warning_s)) {
       --reentry_count;
       if (uw_exception_subtype_p(sym, defr_warning_s))
         uw_defer_warning(args);
-      else
+      else if (std_error != 0)
         format(std_error, lit("warning: ~a\n"), car(args), nao);
+      if (!opt_compat || opt_compat >= 234) {
+        uw_rthrow(continue_s, nil);
+        return nil;
+      }
       uw_throw(continue_s, nil);
+    }
+
+    if (!opt_compat || opt_compat >= 234) {
+      if (!uw_exception_subtype_p(sym, error_s)) {
+        --reentry_count;
+        return nil;
+      }
+    }
+
+    if (std_error == 0) {
+      fprintf(stderr, "txr: unhandled exception in early initialization\n");
       abort();
     }
 
@@ -746,9 +756,23 @@ val uw_throw(val sym, val args)
   abort();
 }
 
-val uw_throwv(val sym, struct args *arglist)
+val uw_rthrowv(val sym, struct args *arglist)
 {
-  uw_throw(sym, args_get_list(arglist));
+  return uw_rthrow(sym, args_get_list(arglist));
+}
+
+val uw_rthrowfv(val sym, val fmt, struct args *args)
+{
+  val stream = make_string_output_stream();
+  (void) formatv(stream, fmt, args);
+  return uw_rthrow(sym, get_string_from_stream(stream));
+  abort();
+}
+
+val uw_throw(val sym, val args)
+{
+  uw_rthrow(sym, args);
+  abort();
 }
 
 val uw_throwf(val sym, val fmt, ...)
@@ -760,14 +784,6 @@ val uw_throwf(val sym, val fmt, ...)
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
-  uw_throw(sym, get_string_from_stream(stream));
-  abort();
-}
-
-val uw_throwfv(val sym, val fmt, struct args *args)
-{
-  val stream = make_string_output_stream();
-  (void) formatv(stream, fmt, args);
   uw_throw(sym, get_string_from_stream(stream));
   abort();
 }
@@ -1280,8 +1296,8 @@ void uw_late_init(void)
   reg_mac(intern(lit("defex"), user_package), func_n2(me_defex));
   reg_var(unhandled_hook_s = intern(lit("*unhandled-hook*"),
           user_package), nil);
-  reg_fun(throw_s, func_n1v(uw_throwv));
-  reg_fun(intern(lit("throwf"), user_package), func_n2v(uw_throwfv));
+  reg_fun(throw_s, func_n1v(uw_rthrowv));
+  reg_fun(intern(lit("throwf"), user_package), func_n2v(uw_rthrowfv));
   reg_fun(error_s, func_n1v(uw_errorfv));
   reg_fun(intern(lit("purge-deferred-warning"), user_package),
           func_n1(uw_purge_deferred_warning));
