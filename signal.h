@@ -40,7 +40,7 @@ extern small_sigset_t sig_blocked_cache;
       sig_check();                              \
     async_sig_enabled = 1;                      \
     {                                           \
-      do ; while (0)
+      do { } while (0)
 
 #define sig_restore_enable                      \
     }                                           \
@@ -52,7 +52,7 @@ extern small_sigset_t sig_blocked_cache;
     int sig_save = async_sig_enabled;           \
     async_sig_enabled = 0;                      \
     {                                           \
-      do ; while (0)
+      do { } while (0)
 
 #define sig_restore_disable                     \
     }                                           \
