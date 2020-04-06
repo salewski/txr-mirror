@@ -840,14 +840,14 @@ static void show_help(lino_t *l)
                 break;
             continue;
         case ESC:
-            if ((seq[0] = lino_os.getch_fn(l->tty_ifs)) < 0)
+            if ((seq[0] = lino_os.getch_fn(l->tty_ifs)) == WEOF)
                 break;
-            if ((seq[1] = lino_os.getch_fn(l->tty_ifs)) < 0)
+            if ((seq[1] = lino_os.getch_fn(l->tty_ifs)) == WEOF)
                 break;
 
             if (seq[0] == '[') {
                 if (seq[1] >= '0' && seq[1] <= '9') {
-                    if ((seq[2] = lino_os.getch_fn(l->tty_ifs)) < 0)
+                    if ((seq[2] = lino_os.getch_fn(l->tty_ifs)) == WEOF)
                         break;
                     if (seq[2] == '~') {
                         switch(seq[1]) {
@@ -2261,7 +2261,7 @@ static int edit(lino_t *l, const wchar_t *prompt)
             break;
         }
 
-        if (c < 0)
+        if (c == WEOF)
             goto out;
         if (c == 0)
             continue;

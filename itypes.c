@@ -90,7 +90,7 @@ i32_t c_i32(val n, val self)
 u32_t c_u32(val n, val self)
 {
   uint_ptr_t v = c_unum(n);
-  if (v < 0 || v > 0xFFFFFFFF)
+  if (v > 0xFFFFFFFF)
     uw_throwf(error_s, lit("~a: value ~s is out of unsigned 32 bit range"),
               self, n, nao);
   return v;
@@ -228,7 +228,7 @@ int c_int(val n, val self)
 unsigned int c_uint(val n, val self)
 {
   uint_ptr_t v = c_unum(n);
-  if (v < 0 || v > UINT_MAX)
+  if (v > UINT_MAX)
     uw_throwf(error_s, lit("~a: value ~s is out of unsigned int range"),
               self, n, nao);
   return v;
@@ -253,7 +253,7 @@ unsigned long c_ulong(val n, val self)
 {
 #if SIZEOF_LONG <= SIZEOF_PTR
   uint_ptr_t v = c_unum(n);
-  if (v < 0 || v > ULONG_MAX)
+  if (v > ULONG_MAX)
     uw_throwf(error_s, lit("~a: value ~s is out of unsigned long range"),
               self, n, nao);
   return v;
