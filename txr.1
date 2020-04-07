@@ -50679,8 +50679,10 @@ function.
 
 .coNP Functions @ read and @ iread
 .synb
-.mets (read >> [ source >> [ error-stream >> [ error-retval <> [ name ]]]])
-.mets (iread >> [ source >> [ error-stream >> [ error-retval <> [ name ]]]])
+.mets (read >> [ source
+.mets \ \ \ \ \ \  >> [ err-stream >> [ err-retval >> [ name <> [ lineno ]]]]])
+.mets (iread >> [ source
+.mets \ \ \ \ \ \ \  >> [ err-stream >> [ err-retval >> [ name <> [ lineno ]]]]])
 .syne
 .desc
 The
@@ -50700,7 +50702,7 @@ from the stream. To parse successive objects from a string, it is necessary
 to convert it to a string stream.
 
 The optional
-.meta error-stream
+.meta err-stream
 argument can be used to specify a stream to which
 parse errors diagnostics are sent. If absent, the diagnostics are suppressed.
 
@@ -50716,12 +50718,19 @@ is used as the name if
 .meta source
 is a string.
 
+The optional
+.code lineno
+argument, defaulting to 1, specifies the starting line number. This,
+like the
+.meta name
+argument, is used for reporting errors.
+
 If there are no parse errors, the function returns the parsed data
 structure. If there are parse errors, and the
-.meta error-retval
+.meta err-retval
 parameter is
 present, its value is returned. If the
-.meta error-retval
+.meta err-retval
 parameter
 is not present, then an exception of type
 .code syntax-error
