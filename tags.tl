@@ -175,7 +175,7 @@
                         (add (ntag fun-tag (car args)))))
               (bind (let ((syms (flatcar (cadr elem))))
                       (each ((sym syms))
-                        (add (ntag fun-tag sym)))))
+                        (add (ntag var-tag sym)))))
               (do (let ((forms [mapcar unexpand (cdr elem)]))
                     (each ((form forms))
                       (pend (process-form path lines form))))))))))))
