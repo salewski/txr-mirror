@@ -10593,6 +10593,25 @@ if
 .code abc
 matches.
 
+If
+.code throw
+is used to generate an exception derived from type
+.code error
+and that exception is not handled, \*(TX will issue diagnostics on the
+.code *stderr*
+stream and terminate. If an exception derived from
+.code warning
+is not handled, \*(TX will generate diagnostics on the
+.code *stderr*
+stream, after which control returns to the
+.code throw
+directive, and proceeds with the next directive.
+If an exception not derived from
+.code error
+is thrown, control returns to the
+.code throw
+directive and proceeds with the next directive.
+
 .dir defex
 
 The
@@ -10855,6 +10874,25 @@ is matched, then it must be
 followed by a successful match for
 .strn "d@x" ,
 or else an exception is thrown.
+
+If the exception is not handled, and is derived from
+.code error
+then \*(TX issues diagnostics on the
+.code *stderr*
+stream and terminates. If the exception is derived from
+.code warning
+and not handled, \*(TX issues a diagnostic on
+.code *stderr*
+after which control returns to the
+.code assert
+directive. Control silently returns to the
+.code assert
+directive if an exception of any other kind is not handled.
+
+When control returns to
+.code assert
+due to an unhandled exception, it behaves like a failed match,
+similarly to the require directive.
 
 .SH* TXR LISP
 The \*(TX language contains an embedded Lisp dialect called \*(TL.

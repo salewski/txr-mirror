@@ -4092,7 +4092,8 @@ static val v_throw(match_files_ctx *c)
   {
     val values = mapcar(pa_123_2(func_n3(txeval_allow_ub),
                                     specline, c->bindings), args);
-    return uw_rthrow(type, values);
+    uw_rthrow(type, values);
+    return next_spec_k;
   }
 }
 
@@ -4311,7 +4312,7 @@ static val v_assert(match_files_ctx *c)
     } else if (type) {
       val values = mapcar(pa_123_2(func_n3(txeval_allow_ub),
                                       specline, c->bindings), args);
-      uw_rthrow(type, values);
+      return uw_rthrow(type, values);
     } else {
       if (c->curfile)
         typed_error(assert_s, first_spec, lit("assertion (at ~a:~d)"), c->curfile, c->data_lineno, nao);
@@ -4548,7 +4549,7 @@ static val h_assert(match_line_ctx *c)
   } else if (type) {
     val values = mapcar(pa_123_2(func_n3(txeval_allow_ub),
                                  c->specline, c->bindings), elem);
-    uw_rthrow(type, values);
+    return uw_rthrow(type, values);
   } else {
     if (c->file)
       typed_error(assert_s, elem, lit("assertion (at ~a:~d)"), c->file, c->data_lineno, nao);
