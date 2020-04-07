@@ -501,7 +501,7 @@ val uw_muffle_warning(val exc, struct args *args)
 {
   (void) exc;
   (void) args;
-  uw_throw(continue_s, nil);
+  return uw_rthrow(continue_s, nil);
 }
 
 val uw_trace_error(val ctx, val exc, struct args *args)
@@ -890,7 +890,7 @@ val uw_release_deferred_warnings(void)
 
     uw_catch_begin (cons(continue_s, nil), exsym, exvals);
 
-    uw_throw(warning_s, caar(wl));
+    uw_rthrow(warning_s, caar(wl));
 
     uw_catch(exsym, exvals) { (void) exsym; (void) exvals; }
 

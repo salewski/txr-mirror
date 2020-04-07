@@ -1093,7 +1093,7 @@ static val repl_intr(val signo, val async_p)
 {
   (void) signo;
   (void) async_p;
-  uw_throw(intr_s, lit("intr"));
+  return uw_rthrow(intr_s, lit("intr"));
 }
 
 static val read_eval_ret_last(val env, val counter,
@@ -1158,7 +1158,7 @@ static val repl_warning(val out_stream, val exc, struct args *rest)
   else
     format(out_stream, lit("** warning: ~!~a\n"), car(args), nao);
 
-  uw_throw(continue_s, nil);
+  return uw_rthrow(continue_s, nil);
 }
 
 static int is_balanced_line(const wchar_t *line, void *ctx)

@@ -283,7 +283,7 @@ val ctx_name(val obj)
   return nil;
 }
 
-noreturn static void eval_exception(val sym, val ctx, val fmt, va_list vl)
+static void eval_exception(val sym, val ctx, val fmt, va_list vl)
 {
   uses_or2;
   val form = ctx_form(ctx);
@@ -298,7 +298,7 @@ noreturn static void eval_exception(val sym, val ctx, val fmt, va_list vl)
 
   uw_release_deferred_warnings();
 
-  uw_throw(sym, get_string_from_stream(stream));
+  uw_rthrow(sym, get_string_from_stream(stream));
 }
 
 noreturn val eval_error(val ctx, val fmt, ...)
@@ -349,8 +349,8 @@ static val eval_defr_warn(val ctx, val tag, val fmt, ...)
 
     (void) vformat(stream, fmt, vl);
 
-    uw_throw(defr_warning_s,
-             cons(get_string_from_stream(stream), cons(tag, nil)));
+    uw_rthrow(defr_warning_s,
+              cons(get_string_from_stream(stream), cons(tag, nil)));
   }
 
   uw_catch(exsym, exvals) { (void) exsym; (void) exvals; }
@@ -5022,7 +5022,7 @@ static val gather_free_refs(val info_cons, val exc, struct args *args)
       if (!memq(sym, deref(dl)))
         mpush(sym, dl);
     }
-    uw_throw(continue_s, nil);
+    uw_rthrow(continue_s, nil);
   }
 
   return nil;
@@ -5032,7 +5032,7 @@ static val gather_free_refs_nw(val info_cons, val exc,
                                struct args *args)
 {
   gather_free_refs(info_cons, exc, args);
-  uw_throw(continue_s, nil);
+  return uw_rthrow(continue_s, nil);
 }
 
 static val expand_with_free_refs(val form, val menv_in, val upto_menv_in)
