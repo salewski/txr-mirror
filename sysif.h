@@ -48,6 +48,7 @@ val num_time(time_t time);
 #if HAVE_SYS_STAT
 struct stat;
 val stat_to_struct(struct stat st, val path);
+val umask_wrap(val mask);
 #endif
 val stat_wrap(val path);
 val stdio_ftell(FILE *);

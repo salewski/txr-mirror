@@ -1246,7 +1246,7 @@ static val wrap_lutimes(val target, val atime, val atimens,
 
 #if HAVE_SYS_STAT
 
-static val umask_wrap(val mask)
+val umask_wrap(val mask)
 {
   if (missingp(mask)) {
     mode_t m = umask(0777);

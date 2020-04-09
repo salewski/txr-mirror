@@ -824,6 +824,26 @@ val txr_parse(val source_in, val error_stream,
 
 #if HAVE_TERMIOS
 
+static void report_security_problem(val name)
+{
+  static int umask_warned;
+
+  format(std_output,
+         lit("** possible security problem: ~a is writable to others\n"),
+         name, nao);
+#if HAVE_SYS_STAT
+  if (!umask_warned++)
+  {
+    val um = umask_wrap(colon_k);
+    if ((c_num(um) & 022) != 022) {
+      format(std_output,
+             lit("** possible reason: your umask has an insecure value: ~,03o\n"),
+             um, nao);
+    }
+  }
+#endif
+}
+
 static void load_rcfile(val name)
 {
   val resolved_name;
@@ -837,10 +857,8 @@ static void load_rcfile(val name)
   open_txr_file(name, &lisp_p, &resolved_name, &stream);
 
   if (stream) {
-    if (!funcall1(path_private_to_me_p, stat_wrap(stream))) {
-      format(std_output,
-             lit("** possible security problem: ~a is writable to others\n"),
-             name, nao);
+    if (!funcall1(path_private_to_me_p, stream)) {
+      report_security_problem(name);
     } else {
       val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
       env_vbind(dyn_env, load_path_s, resolved_name);
@@ -1409,6 +1427,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   val counter_sym = intern(lit("*n"), user_package);
   val var_counter_sym = intern(lit("*v"), user_package);
   val result_hash_sym = intern(lit("*r"), user_package);
+  val path_private_to_me_p =  intern(lit("path-private-to-me-p"), user_package);
   val result_hash = make_hash(nil, nil, nil);
   val done = nil;
   val counter = one;
@@ -1445,8 +1464,11 @@ val repl(val bindings, val in_stream, val out_stream, val env)
 
   lino_hist_set_max_len(ls, c_num(cdr(hist_len_var)));
 
-  if (histfile_w)
+  if (histfile_w) {
+    if (!funcall1(path_private_to_me_p, histfile))
+      report_security_problem(histfile);
     lino_hist_load(ls, histfile_w);
+  }
 
   lino_set_noninteractive(ls, opt_noninteractive);
 
