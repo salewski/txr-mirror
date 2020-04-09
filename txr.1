@@ -59194,32 +59194,43 @@ on which operations have failed.
 
 .SS* Unix Filesystem Object Existence, Type and Access Tests
 
-The following functions all accept, as the
-.meta path
-argument, either a character string, or a structure returned by the
-.code stat
-or
-.code lstat
-functions.
+Functions in this category perform various tests on the attributes of
+filesystem objects.
 
-If the
+The functions all have a
 .meta path
-argument is a string, then
+parameter, which accepts three types of arguments. If a character
+string is specified, it denotes a filesystem path to
+be probed for properties such as ownership and permissions.
+The object is probed using the
 .code stat
-is used to retrieve information about it, except in the case of
-the
+function except in the case of
 .code path-symlink-p
-function, which uses
+which uses
 .codn lstat .
-The subsequent test is then based on the result of this call.
 
-If the
-.meta path
-argument is the result of a
+If instead a stream is specified as
+.metn path ,
+then the associated filesystem descriptor is probed for these properties.
+Otherwise, a
+.code stat
+structure, for example one returned by the
 .code stat
 or
 .code lstat
-call, then the testing is based on that object.
+function may be specified, in which case no system object
+is probed. The properties to be tested are those given in the
+.code stat
+object.
+
+Note: in a situation when it is necessary to use any of these functions to
+probe the properties of a symbolic link itself (other than the function
+.code path-symlink-p
+which does so implicitly) it is necessary to first invoke
+.code lstat
+on the symlink's path, and then pass the resulting
+.code stat
+structure to that function instead of the path.
 
 Some of the accessibility tests (functions which determine whether the
 calling process has certain access rights) may not be perfectly accurate, since
