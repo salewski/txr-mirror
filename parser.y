@@ -71,8 +71,6 @@ static val uref_helper(parser_t *, val expr);
 static val uoref_helper(parser_t *, val expr);
 static val qref_helper(parser_t *, val lexpr, val rexpr);
 static val fname_helper(parser_t *, val name);
-static struct list_accum lacc(val obj);
-static struct list_accum splacc(val list);
 
 #if YYBISON
 union YYSTYPE;
@@ -114,7 +112,6 @@ INLINE val expand_form_ver(val form, int ver)
   union obj *val;
   wchar_t chr;
   cnum lineno;
-  struct list_accum lacc;
 }
 
 %token <lexeme> SPACE TEXT SYMTOK
@@ -146,8 +143,7 @@ INLINE val expand_form_ver(val form, int ver)
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers
 %type <val> vector hash struct range tnode tree
-%type <val> exprs exprs_opt n_exprs i_expr i_dot_expr
-%type <lacc> listacc
+%type <val> exprs exprs_opt n_exprs listacc i_expr i_dot_expr
 %type <val> n_expr n_exprs_opt n_dot_expr
 %type <val> list dwim meta compound
 %type <val> out_clauses out_clauses_opt out_clause
@@ -944,37 +940,38 @@ exprs_opt : exprs               { $$ = $1; }
           | /* empty */         { $$ = nil; }
           ;
 
-n_exprs : listacc               { $$ = $1.head; }
+n_exprs : listacc               { $$ = $1->c.cdr;
+                                  $1->c.cdr = nil; }
         | listacc CONSDOT n_expr
-                                { rplacd($1.tail, $3);
-                                  $$ = $1.head; }
+                                { $$ = $1->c.cdr;
+                                  $1->c.cdr = $3; }
         ;
 
-listacc : n_expr                { $$ = lacc($1);
-                                  rlc($$.head, $1); }
+listacc : n_expr                { $$ = cons($1, nil);
+                                  rlc($$, $1);
+                                  $$->c.cdr = $$; }
         | HASH_SEMI             { parser->ignore = 1; }
           n_expr                { parser->ignore = 0;
-                                  $$ = lacc(nil); }
+                                  $$ = cons(nil, nil);
+                                  $$->c.cdr = $$; }
         | listacc HASH_SEMI     { parser->ignore = 1; }
           n_expr                { parser->ignore = 0;
                                   $$ = $1; }
         | listacc n_expr        { uses_or2;
-                                  val cell = rlc(cons($2, nil), or2($2, $1.head));
-                                  rplacd($1.tail, cell);
-                                  $1.tail = cell;
-                                  $$ = $1; }
-        | WSPLICE wordslit      { $$ = splacc(rl($2, num($1))); }
+                                  $$ = rlc(cons($2, $1->c.cdr), or2($2, $1->c.cdr));
+                                  $1->c.cdr = $$; }
+        | WSPLICE wordslit      { $$ = lastcons(rl($2, num($1)));
+                                  $$->c.cdr = $2; }
         | listacc WSPLICE
-          wordslit              { val list = rl($3, num($2));
-                                  rplacd($1.tail, list);
-                                  $1.tail = lastcons(list);
-                                  $$ = $1; }
-        | QWSPLICE wordsqlit    { $$ = splacc(rl($2, num($1))); }
+          wordslit              { $$ = lastcons(rl($3, num($2)));
+                                  $$->c.cdr = $1->c.cdr;
+                                  $1->c.cdr = $3; }
+        | QWSPLICE wordsqlit    { $$ = lastcons(rl($2, num($1)));
+                                  $$->c.cdr = $2; }
         | listacc QWSPLICE
-          wordsqlit             { val list = rl($3, num($2));
-                                  rplacd($1.tail, list);
-                                  $1.tail = lastcons(list);
-                                  $$ = $1; }
+          wordsqlit             { $$ = lastcons(rl($3, num($2)));
+                                  $$->c.cdr = $1->c.cdr;
+                                  $1->c.cdr = $3; }
         ;
 
 i_expr : SYMTOK                 { $$ = ifnign(symhlpr($1, t)); }
@@ -1816,23 +1813,6 @@ static val fname_helper(parser_t *parser, val name)
   }
 
   return nil;
-}
-
-static struct list_accum lacc(val obj)
-{
-  struct list_accum la;
-  val cell = cons(obj, nil);
-  la.head = cell;
-  la.tail = cell;
-  return la;
-}
-
-static struct list_accum splacc(val list)
-{
-  struct list_accum la;
-  la.head = list;
-  la.tail = lastcons(list);
-  return la;
 }
 
 #ifndef YYEOF
