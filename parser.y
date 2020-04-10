@@ -67,11 +67,13 @@ static val rlcp_parser(parser_t *parser, val to, val from);
 static wchar_t char_from_name(const wchar_t *name);
 static val make_expr(parser_t *, val sym, val rest, val lineno);
 static val check_parse_time_action(val spec_rev);
-static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons);
+static void misplaced_consing_dot_check(scanner_t *scanner, val dot);
 static val uref_helper(parser_t *, val expr);
 static val uoref_helper(parser_t *, val expr);
 static val qref_helper(parser_t *, val lexpr, val rexpr);
 static val fname_helper(parser_t *, val name);
+static struct list_accum lacc(val obj);
+static struct list_accum splacc(val list);
 
 #if YYBISON
 union YYSTYPE;
@@ -113,6 +115,7 @@ INLINE val expand_form_ver(val form, int ver)
   union obj *val;
   wchar_t chr;
   cnum lineno;
+  struct list_accum lacc;
 }
 
 %token <lexeme> SPACE TEXT SYMTOK
@@ -144,7 +147,8 @@ INLINE val expand_form_ver(val form, int ver)
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers
 %type <val> vector hash struct range tnode tree
-%type <val> exprs exprs_opt n_exprs r_exprs i_expr i_dot_expr
+%type <val> exprs exprs_opt n_exprs i_expr i_dot_expr
+%type <lacc> listacc
 %type <val> n_expr n_exprs_opt n_dot_expr
 %type <val> list dwim meta compound
 %type <val> out_clauses out_clauses_opt out_clause
@@ -941,54 +945,43 @@ exprs_opt : exprs               { $$ = $1; }
           | /* empty */         { $$ = nil; }
           ;
 
-n_exprs : r_exprs               { val term_atom = pop(&$1);
-                                  val tail_cons = $1;
-                                  $$ = us_nreverse($1);
-                                  if (term_atom != unique_s)
-                                    rplacd(tail_cons, term_atom); }
+n_exprs : listacc               { if ($1.dot != nao)
+                                    rplacd($1.tail, $1.dot);
+                                  $$ = $1.head; }
         ;
 
-r_exprs : n_expr                { val exprs = cons($1, nil);
-                                  rlc(exprs, $1);
-                                  $$ = rlc(cons(unique_s, exprs), exprs); }
+listacc : n_expr                { $$ = lacc($1);
+                                  rlc($$.head, $1); }
         | HASH_SEMI             { parser->ignore = 1; }
           n_expr                { parser->ignore = 0;
-                                  $$ = cons(unique_s, nil); }
-        | r_exprs HASH_SEMI     { parser->ignore = 1; }
+                                  $$ = lacc(nil); }
+        | listacc HASH_SEMI     { parser->ignore = 1; }
           n_expr                { parser->ignore = 0;
                                   $$ = $1; }
-        | r_exprs n_expr        { uses_or2;
-                                  val term_atom_cons = $1;
-                                  val exprs = cdr($1);
-                                  misplaced_consing_dot_check(scnr, term_atom_cons);
-                                  rplacd(term_atom_cons,
-                                         rlc(cons($2, exprs), or2($2, exprs)));
-                                  $$ = term_atom_cons; }
-        | r_exprs CONSDOT n_expr
-                                { val term_atom_cons = $1;
-                                  misplaced_consing_dot_check(scnr, term_atom_cons);
-                                  rplaca(term_atom_cons, $3);
+        | listacc n_expr        { uses_or2;
+                                  val cell = rlc(cons($2, nil), or2($2, $1.head));
+                                  misplaced_consing_dot_check(scnr, $1.dot);
+                                  rplacd($1.tail, cell);
+                                  $1.tail = cell;
                                   $$ = $1; }
-        | WSPLICE wordslit      { $$ = cons(unique_s, us_nreverse(rl($2, num($1))));
-                                  rlc($$, cdr($$)); }
-        | r_exprs WSPLICE
-          wordslit              { val term_atom_cons = $1;
-                                  val exprs = cdr($1);
-                                  misplaced_consing_dot_check(scnr, term_atom_cons);
-                                  rplacd(term_atom_cons,
-                                         nappend2(rl(us_nreverse($3), num($2)),
-                                                  exprs));
-                                  $$ = term_atom_cons; }
-        | QWSPLICE wordsqlit    { $$ = cons(unique_s, rl($2, num($1)));
-                                  rlc($$, cdr($$)); }
-        | r_exprs QWSPLICE
-          wordsqlit             { val term_atom_cons = $1;
-                                  val exprs = cdr($1);
-                                  misplaced_consing_dot_check(scnr, term_atom_cons);
-                                  rplacd(term_atom_cons,
-                                         nappend2(rl(us_nreverse($3), num($2)),
-                                                  exprs));
-                                  $$ = term_atom_cons; }
+        | listacc CONSDOT n_expr
+                                { misplaced_consing_dot_check(scnr, $1.dot);
+                                  $1.dot = $3;
+                                  $$ = $1; }
+        | WSPLICE wordslit      { $$ = splacc(rl($2, num($1))); }
+        | listacc WSPLICE
+          wordslit              { val list = rl($3, num($2));
+                                  misplaced_consing_dot_check(scnr, $1.dot);
+                                  rplacd($1.tail, list);
+                                  $1.tail = lastcons(list);
+                                  $$ = $1; }
+        | QWSPLICE wordsqlit    { $$ = splacc(rl($2, num($1))); }
+        | listacc QWSPLICE
+          wordsqlit             { val list = rl($3, num($2));
+                                  misplaced_consing_dot_check(scnr, $1.dot);
+                                  rplacd($1.tail, list);
+                                  $1.tail = lastcons(list);
+                                  $$ = $1; }
         ;
 
 i_expr : SYMTOK                 { $$ = ifnign(symhlpr($1, t)); }
@@ -1781,12 +1774,10 @@ static val check_parse_time_action(val spec_rev)
   return spec_rev;
 }
 
-static void misplaced_consing_dot_check(scanner_t *scanner, val term_atom_cons)
+static void misplaced_consing_dot_check(scanner_t *scanner, val dot)
 {
-  if (car(term_atom_cons) != unique_s) {
+  if (dot != nao)
     yyerrorf(scanner, lit("misplaced consing dot"), nao);
-    rplaca(term_atom_cons, unique_s);
-  }
 }
 
 static val uref_helper(parser_t *parser, val expr)
@@ -1838,6 +1829,25 @@ static val fname_helper(parser_t *parser, val name)
   }
 
   return nil;
+}
+
+static struct list_accum lacc(val obj)
+{
+  struct list_accum la;
+  val cell = cons(obj, nil);
+  la.head = cell;
+  la.tail = cell;
+  la.dot = nao;
+  return la;
+}
+
+static struct list_accum splacc(val list)
+{
+  struct list_accum la;
+  la.head = list;
+  la.tail = lastcons(list);
+  la.dot = nao;
+  return la;
 }
 
 #ifndef YYEOF

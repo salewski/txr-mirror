@@ -337,6 +337,12 @@ union obj {
   struct dyn_args a;
 };
 
+struct list_accum {
+  obj_t *head;
+  obj_t *tail;
+  obj_t *dot;
+};
+
 #if CONFIG_GEN_GC
 typedef struct {
   val *ptr;
