@@ -340,7 +340,6 @@ union obj {
 struct list_accum {
   obj_t *head;
   obj_t *tail;
-  obj_t *dot;
 };
 
 #if CONFIG_GEN_GC

@@ -67,7 +67,6 @@ static val rlcp_parser(parser_t *parser, val to, val from);
 static wchar_t char_from_name(const wchar_t *name);
 static val make_expr(parser_t *, val sym, val rest, val lineno);
 static val check_parse_time_action(val spec_rev);
-static void misplaced_consing_dot_check(scanner_t *scanner, val dot);
 static val uref_helper(parser_t *, val expr);
 static val uoref_helper(parser_t *, val expr);
 static val qref_helper(parser_t *, val lexpr, val rexpr);
@@ -945,8 +944,9 @@ exprs_opt : exprs               { $$ = $1; }
           | /* empty */         { $$ = nil; }
           ;
 
-n_exprs : listacc               { if ($1.dot != nao)
-                                    rplacd($1.tail, $1.dot);
+n_exprs : listacc               { $$ = $1.head; }
+        | listacc CONSDOT n_expr
+                                { rplacd($1.tail, $3);
                                   $$ = $1.head; }
         ;
 
@@ -960,25 +960,18 @@ listacc : n_expr                { $$ = lacc($1);
                                   $$ = $1; }
         | listacc n_expr        { uses_or2;
                                   val cell = rlc(cons($2, nil), or2($2, $1.head));
-                                  misplaced_consing_dot_check(scnr, $1.dot);
                                   rplacd($1.tail, cell);
                                   $1.tail = cell;
-                                  $$ = $1; }
-        | listacc CONSDOT n_expr
-                                { misplaced_consing_dot_check(scnr, $1.dot);
-                                  $1.dot = $3;
                                   $$ = $1; }
         | WSPLICE wordslit      { $$ = splacc(rl($2, num($1))); }
         | listacc WSPLICE
           wordslit              { val list = rl($3, num($2));
-                                  misplaced_consing_dot_check(scnr, $1.dot);
                                   rplacd($1.tail, list);
                                   $1.tail = lastcons(list);
                                   $$ = $1; }
         | QWSPLICE wordsqlit    { $$ = splacc(rl($2, num($1))); }
         | listacc QWSPLICE
           wordsqlit             { val list = rl($3, num($2));
-                                  misplaced_consing_dot_check(scnr, $1.dot);
                                   rplacd($1.tail, list);
                                   $1.tail = lastcons(list);
                                   $$ = $1; }
@@ -1774,12 +1767,6 @@ static val check_parse_time_action(val spec_rev)
   return spec_rev;
 }
 
-static void misplaced_consing_dot_check(scanner_t *scanner, val dot)
-{
-  if (dot != nao)
-    yyerrorf(scanner, lit("misplaced consing dot"), nao);
-}
-
 static val uref_helper(parser_t *parser, val expr)
 {
   if (consp(expr) && car(expr) == qref_s) {
@@ -1837,7 +1824,6 @@ static struct list_accum lacc(val obj)
   val cell = cons(obj, nil);
   la.head = cell;
   la.tail = cell;
-  la.dot = nao;
   return la;
 }
 
@@ -1846,7 +1832,6 @@ static struct list_accum splacc(val list)
   struct list_accum la;
   la.head = list;
   la.tail = lastcons(list);
-  la.dot = nao;
   return la;
 }
 
