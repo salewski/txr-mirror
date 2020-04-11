@@ -965,9 +965,12 @@ static val gc_set_delta(val delta)
   return nil;
 }
 
-static val gc_wrap(void)
+static val gc_wrap(val full)
 {
   if (gc_enabled) {
+#if CONFIG_GEN_GC
+    full_gc = !null_or_missing_p(full);
+#endif
     gc();
     return t;
   }
@@ -1026,7 +1029,7 @@ val valid_object_p(val obj)
 
 void gc_late_init(void)
 {
-  reg_fun(intern(lit("gc"), system_package), func_n0(gc_wrap));
+  reg_fun(intern(lit("gc"), system_package), func_n1o(gc_wrap, 0));
   reg_fun(intern(lit("gc-set-delta"), system_package), func_n1(gc_set_delta));
   reg_fun(intern(lit("finalize"), user_package), func_n3o(gc_finalize, 2));
   reg_fun(intern(lit("call-finalizers"), user_package),

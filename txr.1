@@ -64245,7 +64245,7 @@ operator.
 .SS* Garbage Collection
 .coNP Function @ sys:gc
 .synb
-.mets (sys:gc)
+.mets (sys:gc <> [ full ])
 .syne
 .desc
 The
@@ -64258,6 +64258,16 @@ The function returns
 .code nil
 if garbage collection is disabled (and consequently nothing is done), otherwise
 .codn t .
+
+The Boolean
+.meta full
+argument, defaulting to
+.codn nil ,
+indicates whether a full garbage collection should be requested.
+
+Even if this argument is
+.codn nil ,
+a full garbage collection may occur due to having been scheduled.
 
 .coNP Function @ sys:gc-set-delta
 .synb
