@@ -591,7 +591,6 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
 static void hash_mark(val hash)
 {
   struct hash *h = coerce(struct hash *, hash->co.handle);
-  cnum i;
 
   gc_mark(h->userdata);
 
@@ -606,39 +605,18 @@ static void hash_mark(val hash)
     gc_mark(h->table);
     break;
   case hash_weak_keys:
-    /* Keys are weak: mark the values only. */
-    for (i = 0; i < h->modulus; i++) {
-      val chain = h->table->v.vec[i];
-      val iter;
-
-      for (iter = chain; iter != nil; iter = us_cdr(iter)) {
-        val entry = us_car(iter);
-        gc_mark(us_cdr(entry));
-      }
-    }
-    h->next = reachable_weak_hashes;
-    reachable_weak_hashes = h;
-    break;
   case hash_weak_vals:
-    /* Values are weak: mark the keys only. */
-
-    for (i = 0; i < h->modulus; i++) {
-      val chain = h->table->v.vec[i];
-      val iter;
-
-      for (iter = chain; iter != nil; iter = us_cdr(iter)) {
-        val entry = us_car(iter);
-        gc_mark(us_car(entry));
-      }
-    }
-    h->next = reachable_weak_hashes;
-    reachable_weak_hashes = h;
-    break;
   case hash_weak_both:
-    /* Values and keys are weak: don't mark anything. */
-    h->next = reachable_weak_hashes;
-    reachable_weak_hashes = h;
-    break;
+    /* If the hash is weak, we don't touch it at this time,
+       but add it to the list of reachable weak hashes,
+       unless it is empty. */
+    if (h->count > 0) {
+      h->next = reachable_weak_hashes;
+      reachable_weak_hashes = h;
+    } else {
+      gc_mark(h->table);
+      break;
+    }
   }
 }
 
