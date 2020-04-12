@@ -1,3 +1,55 @@
+                                    TXR 235
+                                   2020-04-12
+
+
+  Features
+
+  - Lib:
+    - new txr-parse function, opening access to the
+      parser for the TXR Pattern Language.
+      - used by tags.tl.
+    - path testing funtions now accept stream argument.
+  - Exceptions:
+    - unhandled non-error exception throws now simply
+      return instead of terminating.
+    - in pattern language unhandled @(assert) with
+      a non-error exception behaves as failed match.
+  - Parser:
+    - more efficient handling of list syntax.
+  - Listener:
+    - Ctrl-X Ctrl-F command to force submission of unbalanced line.
+    - dot file security tests improved.
+      - permissions of .txr_history files checked also
+      - if permissions on .txr_profile or .txr_history are
+        bad, txr checks and diagnoses the user's umask.
+  - tags.tl script:
+    - now handles txr files: define and bind directives,
+      as well as Lisp forms in @(do ...).
+    - now follows load forms and processes defpackage.
+    - each file read in new temporary package, and
+      restores list of packages after each file.
+  - Build:
+    - Now builds cleanly with -Wextra under GCC 7+.
+
+  Bugs
+
+  - tags.tl:
+    - backslashes not escaped in tags file.
+    - macro-time forms not handled.
+  - configure:
+    - quote characters handled in config variable values.
+  - Doc:
+    - existing lineno argumnt of read and iread documented.
+  - Hashing:
+    - flaw in weak hash algorithm leading to spurious retention in situations
+      when keys are weak, but values have reference to keys, or vice versa.
+    - caused streams and parsers to leak.
+  - Pattern Language
+    - addressed spurious retention issues, causing memory
+      growth proportional to the amount of input scanned.
+
+
+
                                     TXR 234
                                    2020-03-25
 
