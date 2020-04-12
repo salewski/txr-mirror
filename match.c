@@ -2308,6 +2308,19 @@ static match_files_ctx *mf_file_data(match_files_ctx *nc,
   return nc;
 }
 
+NOINLINE static match_files_ctx *mf_file_lazy(match_files_ctx *nc,
+                                              match_files_ctx *c, val file,
+                                              val stream, val data_lineno)
+{
+  *nc = *c;
+  nc->files = cons(file, c->files);
+  nc->curfile = file;
+  nc->data = lazy_stream_cons(stream);
+  nc->data_lineno = data_lineno;
+  return nc;
+}
+
+
 static match_files_ctx *mf_from_ml(match_files_ctx *nc, match_line_ctx *ml)
 {
   nc->spec = cons(ml->specline, nil);
@@ -2857,8 +2870,8 @@ static val v_next_impl(match_files_ctx *c)
         if (stream) {
           match_files_ctx cs;
           cons_bind (new_bindings, success,
-                     match_files(mf_file_data(&cs, c, str,
-                                              lazy_stream_cons(stream), one)));
+                     match_files(mf_file_lazy(&cs, c, str,
+                                              stream, one)));
 
           if (success)
             return cons(new_bindings,
@@ -4584,7 +4597,7 @@ static val h_assert(match_line_ctx *c)
   abort();
 }
 
-static void open_data_source(match_files_ctx *c)
+NOINLINE static void open_data_source(match_files_ctx *c)
 {
   spec_bind (specline, first_spec, c->spec);
   int non_matching_dir = (consp(first_spec) &&
