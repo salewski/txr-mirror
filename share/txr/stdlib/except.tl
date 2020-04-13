@@ -85,4 +85,4 @@
   (sys:expand-handle form try-form handle-clauses))
 
 (defmacro ignwarn (. forms)
-  ^(handler-bind (lambda (exc-sym arg) (throw 'continue)) (warning) ,*forms))
+  ^(handler-bind (lambda (exc-sym . args) (throw 'continue)) (warning) ,*forms))
