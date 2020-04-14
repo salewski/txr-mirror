@@ -798,6 +798,9 @@ val txr_parse(val source_in, val error_stream,
   val saved_dyn = dyn_env;
   val parser_obj = ensure_parser(input_stream, name);
   parser_t *pi = parser_get_impl(self, parser_obj);
+  val loading = cdr(lookup_var(dyn_env, load_recursive_s));
+
+  uw_simple_catch_begin;
 
   dyn_env = make_env(nil, nil, dyn_env);
   error_stream = default_null_arg(error_stream);
@@ -806,8 +809,14 @@ val txr_parse(val source_in, val error_stream,
 
   parse_once(self, input_stream, name);
 
-  dyn_env = saved_dyn;
-  gc_state(gc);
+  uw_unwind {
+    dyn_env = saved_dyn;
+    gc_state(gc);
+    if (!loading)
+      uw_release_deferred_warnings();
+  }
+
+  uw_catch_end;
 
   if (pi->errors || pi->syntax_tree == nao) {
     if (missingp(error_return_val))
