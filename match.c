@@ -4408,8 +4408,10 @@ static val v_load(match_files_ctx *c)
       parse_once(self, stream, name);
       gc_state(gc);
 
-      if (parser->errors)
+      if (parser->errors) {
+        uw_release_deferred_warnings();
         sem_error(specline, lit("~s: errors encountered in ~a"), sym, path, nao);
+      }
 
       if (sym == include_s) {
         ret = parser->syntax_tree;

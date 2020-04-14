@@ -4444,11 +4444,12 @@ val load(val target)
 
     close_stream(stream, nil);
 
-    uw_release_deferred_warnings();
-
-    if (parser->errors)
+    if (parser->errors) {
+      uw_release_deferred_warnings();
       uw_throwf(query_error_s, lit("~a: parser errors in ~a"),
                 self, path, nao);
+    }
+
     {
       val match_ctx = uw_get_match_context();
       val bindings = cdr(match_ctx);
