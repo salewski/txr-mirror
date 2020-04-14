@@ -344,6 +344,7 @@ static val sock_set_entries(val dlt, val fun)
     lit("ai-numericserv"),
     lit("str-inaddr"), lit("str-in6addr"),
     lit("str-inaddr-net"), lit("str-in6addr-net"),
+    lit("shut-rd"), lit("shut-wr"), lit("shut-rdwr"),
     lit("open-socket"), lit("open-socket-pair"),
     lit("sock-bind"), lit("sock-connect"), lit("sock-listen"),
     lit("sock-accept"), lit("sock-shutdown"), lit("open-socket"),

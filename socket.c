@@ -1114,6 +1114,9 @@ void sock_load_init(void)
   reg_varl(intern(lit("ai-addrconfig"), user_package), num_fast(AI_ADDRCONFIG));
   reg_varl(intern(lit("ai-numericserv"), user_package), num_fast(AI_NUMERICSERV));
 #endif
+  reg_varl(intern(lit("shut-rd"), user_package), num_fast(SHUT_RD));
+  reg_varl(intern(lit("shut-wr"), user_package), num_fast(SHUT_WR));
+  reg_varl(intern(lit("shut-rdwr"), user_package), num_fast(SHUT_RDWR));
 
   reg_fun(intern(lit("sock-bind"), user_package), func_n2(sock_bind));
   reg_fun(intern(lit("sock-connect"), user_package), func_n3o(sock_connect, 2));
