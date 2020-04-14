@@ -1945,7 +1945,8 @@ static val rt_defvarl(val sym)
 {
   val self = lit("defvar");
   val new_p;
-  val cell = gethash_c(self, top_vb, sym, mkcloc(new_p));
+  val cell = (lisplib_try_load(sym),
+              gethash_c(self, top_vb, sym, mkcloc(new_p)));
 
   if (new_p || !cdr(cell)) {
     uw_purge_deferred_warning(cons(var_s, sym));
@@ -1978,6 +1979,7 @@ static val op_defsymacro(val form, val env)
 
   (void) env;
 
+  lisplib_try_load(sym);
   remhash(top_vb, sym);
   if (!opt_compat || opt_compat > 143)
     remhash(special, sym);
@@ -1987,6 +1989,7 @@ static val op_defsymacro(val form, val env)
 
 static val rt_defsymacro(val sym, val def)
 {
+  lisplib_try_load(sym);
   remhash(top_vb, sym);
   remhash(special, sym);
   sethash(top_smb, sym, cons(sym, def));
@@ -2008,6 +2011,7 @@ void trace_check(val name)
 
 static val rt_defun(val name, val function)
 {
+  lisplib_try_load(name);
   sethash(top_fb, name, cons(name, function));
   uw_purge_deferred_warning(cons(fun_s, name));
   uw_purge_deferred_warning(cons(sym_s, name));
@@ -2016,6 +2020,7 @@ static val rt_defun(val name, val function)
 
 static val rt_defmacro(val sym, val name, val function)
 {
+  lisplib_try_load(sym);
   sethash(top_mb, sym, cons(name, function));
   return name;
 }

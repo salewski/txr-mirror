@@ -352,6 +352,8 @@ val make_struct_type(val name, val supers,
   val self = lit("make-struct-type");
   val iter;
 
+  lisplib_try_load(name);
+
   if (!listp(supers))
     supers = cons(supers, nil);
 
