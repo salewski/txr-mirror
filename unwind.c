@@ -1214,7 +1214,6 @@ void extjmp_restore(extended_jmp_buf *ejb)
    gc_prot_top = ejb->gc_pt;
 #if HAVE_POSIX_SIGS
    async_sig_enabled = ejb->se;
-   ejb->blocked.set = sig_blocked_cache.set;
    sig_mask(SIG_SETMASK,
             strip_qual(small_sigset_t *, &ejb->blocked), 0);
 
