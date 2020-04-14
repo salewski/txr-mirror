@@ -1047,7 +1047,7 @@ static val socketpair_wrap(val family, val type, val mode_str)
 
   {
     val s0 = open_sockfd(num(sv[0]), family, type, mode_str);
-    val s1 = open_sockfd(num(sv[1]), family, type, mode_str); 
+    val s1 = open_sockfd(num(sv[1]), family, type, mode_str);
 
     sock_mark_connected(s0);
     sock_mark_connected(s1);
@@ -1056,10 +1056,12 @@ static val socketpair_wrap(val family, val type, val mode_str)
   }
 
   uw_unwind {
-    if (sv[0] != -1)
-      close(sv[0]);
-    if (sv[1] != -1)
-      close(sv[1]);
+    if (!out) {
+      if (sv[0] != -1)
+        close(sv[0]);
+      if (sv[1] != -1)
+        close(sv[1]);
+    }
   }
 
   uw_catch_end;
