@@ -573,14 +573,14 @@ static val stdio_maybe_error(val stream, val action)
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   val err = num(errno);
   if (h->f == 0)
-    uw_throwf(file_error_s, lit("error ~a ~s: file closed"), stream, action, nao);
+    uw_throwf(file_error_s, lit("error ~a ~s: file closed"), action, stream, nao);
   h->err = err;
 #ifdef EAGAIN
   if (errno == EAGAIN)
     uw_throwf(timeout_error_s, lit("timed out on ~s"), stream, nao);
 #endif
   uw_throwf(file_error_s, lit("error ~a ~s: ~d/~s"),
-            stream, action, err, errno_to_string(err), nao);
+            action, stream, err, errno_to_string(err), nao);
 }
 
 static int se_putc(int ch, FILE *f)
