@@ -59197,6 +59197,37 @@ and
 allowing the caller to retry individual failed operations or skip the objects
 on which operations have failed.
 
+.coNP Function @ touch
+.synb
+.mets (touch < path <> [ ref-path ])
+.syne
+.desc
+The
+.code touch
+function updates the modification timestamp of the filesystem object
+named by
+.metn path .
+If the object doesn't exist, it is created as a regular file.
+
+If
+.meta ref-path
+is specified, then the modification timestamp of the object denoted by
+.meta path
+is updated to be equivalent to the modification timestamp of
+the object denoted by
+.metn ref-path .
+Otherwise
+.meta ref-path
+being absent, the modification timestamp of
+.meta path
+is set to the current time.
+
+If
+.meta path
+is a symbolic link, it is dereferenced;
+.code touch
+operates on the target of the link.
+
 .SS* Unix Filesystem Object Existence, Type and Access Tests
 
 Functions in this category perform various tests on the attributes of

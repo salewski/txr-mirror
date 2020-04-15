@@ -212,5 +212,12 @@
              (retry `retry chown @path` (exc . args)))))
        (logior ftw-phys)))
 
+(defun touch (path : ref-path)
+  (with-stream (s (or (ignerr (open-file path "mn")) (open-file path "n")))
+    (if ref-path
+      (let ((rst (stat ref-path)))
+        (utimes s 0 nil rst.mtime rst.mtime-nsec))
+      (utimes s 0 nil 0 t))))
+
 (eval-only
   (merge-delete-package 'sys))
