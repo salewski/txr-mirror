@@ -1085,21 +1085,25 @@ static struct strm_ops stdio_sock_ops;
 static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
                           const struct stdio_mode m)
 {
+  if (m.notrunc || m.nonblock) {
 #if HAVE_FCNTL
-  if (m.notrunc) {
     char *name = utf8_dup_to(wname);
-    int flags = (m.read ? O_RDWR : O_WRONLY) | O_CREAT;
+    int flags = (if3(m.read && m.write, O_RDWR, 0) |
+                 if3(m.read && !m.write, O_RDONLY, 0) |
+                 if3(!m.read && m.write,
+                     if3(!m.notrunc, O_TRUNC, 0) | O_WRONLY | O_CREAT, 0) |
+                 if3(m.nonblock, O_NONBLOCK, 0));
     int fd = open(name, flags, 0666);
     free(name);
     if (fd < 0)
       return NULL;
     return (fd < 0) ? NULL : w_fdopen(fd, mode);
-  }
 #else
-  if (m.notrunc)
     uw_throwf(file_error_s,
-              lit("open-file: \"m\" mode not supported on this system"), nao);
+              lit("open-file: specified mode not supported on this system"),
+                  nao);
 #endif
+  }
   return w_fopen(wname, mode);
 }
 
@@ -1450,6 +1454,9 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl)
         return m;
       }
       m.unbuf = 1;
+      break;
+    case 'n':
+      m.nonblock = 1;
       break;
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':

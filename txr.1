@@ -49226,7 +49226,7 @@ grammar. Note that it permits no whitespace characters:
 .mets < mode-string := [ < mode ] [ < options ]
 .mets < mode := { < selector [ + ] | + }
 .mets < selector := { r | w | a | m }
-.mets < options := { b | l | u | < digit | < redirection }
+.mets < options := { b | l | u | i | n | < digit | < redirection }
 .mets < digit := { 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }
 .onom
 
@@ -49314,6 +49314,8 @@ In addition, for a stream opened for writing or reading and writing, the
 mode letter specifies that the stream will be line buffered, unless
 specified as unbuffered with
 .codn u .
+.coIP n
+Specifies that the operation shall not block.
 .meIP digit
 A decimal digit specifies the the stream buffer size
 as binary exponential buffer size order, such that
