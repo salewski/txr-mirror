@@ -1089,7 +1089,7 @@ static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
   if (m.notrunc) {
     char *name = utf8_dup_to(wname);
     int flags = (m.read ? O_RDWR : O_WRONLY) | O_CREAT;
-    int fd = open(name, flags, 0777);
+    int fd = open(name, flags, 0666);
     free(name);
     if (fd < 0)
       return NULL;
