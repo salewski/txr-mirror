@@ -1085,26 +1085,32 @@ static struct strm_ops stdio_sock_ops;
 static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
                           const struct stdio_mode m)
 {
-  if (m.notrunc || m.nonblock) {
 #if HAVE_FCNTL
-    char *name = utf8_dup_to(wname);
-    int flags = (if3(m.read && m.write, O_RDWR, 0) |
-                 if3(m.read && !m.write, O_RDONLY, 0) |
-                 if3(!m.read && m.write,
-                     if3(!m.notrunc, O_TRUNC, 0) | O_WRONLY | O_CREAT, 0) |
-                 if3(m.nonblock, O_NONBLOCK, 0));
-    int fd = open(name, flags, 0666);
-    free(name);
-    if (fd < 0)
-      return NULL;
-    return (fd < 0) ? NULL : w_fdopen(fd, mode);
+  char *name = utf8_dup_to(wname);
+  size_t nsiz = strlen(name) + 1;
+  int flags = (if3(m.read && m.write, O_RDWR, 0) |
+               if3(m.read && !m.write, O_RDONLY, 0) |
+               if3(!m.read && m.write,
+                   if3(!m.notrunc, O_TRUNC, 0) | O_WRONLY | O_CREAT, 0) |
+               if3(m.nonblock, O_NONBLOCK, 0));
+  char *stkname = coerce(char *, alloca(nsiz));
+  int fd;
+
+  memcpy(stkname, name, nsiz);
+  free(name);
+
+  sig_save_enable;
+  fd = open(stkname, flags, 0666);
+  sig_restore_enable;
+
+  return (fd < 0) ? NULL : w_fdopen(fd, mode);
 #else
+  if (m.notrunc || m.nonblock)
     uw_throwf(file_error_s,
               lit("open-file: specified mode not supported on this system"),
                   nao);
-#endif
-  }
   return w_fopen(wname, mode);
+#endif
 }
 
 
