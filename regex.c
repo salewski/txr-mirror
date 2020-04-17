@@ -320,8 +320,10 @@ static void L1_fill_range(cset_L1_t *L1, wchar_t ch0, wchar_t ch1)
     cset_L0_t *L0;
 
     if (i1 > i10 && i1 < i11) {
-      free((*L1)[i1]);
-      (*L1)[i1] = coerce(cset_L0_t *, -1);
+      if ((*L1)[i1] != coerce(cset_L0_t *, -1)) {
+        free((*L1)[i1]);
+        (*L1)[i1] = coerce(cset_L0_t *, -1);
+      }
       continue;
     } else if (i10 == i11) {
       c0 = ch0;
@@ -401,8 +403,10 @@ static void L2_fill_range(cset_L2_t *L2, wchar_t ch0, wchar_t ch1)
     cset_L1_t *L1;
 
     if (i2 > i20 && i2 < i21) {
-      free((*L2)[i2]);
-      (*L2)[i2] = coerce(cset_L1_t *, -1);
+      if ((*L2)[i2] != coerce(cset_L1_t *, -1)) {
+        free((*L2)[i2]);
+        (*L2)[i2] = coerce(cset_L1_t *, -1);
+      }
       continue;
     } else if (i20 == i21) {
       c0 = ch0;
@@ -473,8 +477,10 @@ static void L3_fill_range(cset_L3_t *L3, wchar_t ch0, wchar_t ch1)
     cset_L2_t *L2;
 
     if (i3 > i30 && i3 < i31) {
-      free((*L3)[i3]);
-      (*L3)[i3] = coerce(cset_L2_t *, -1);
+      if ((*L3)[i3] != coerce(cset_L2_t *, -1)) {
+        free((*L3)[i3]);
+        (*L3)[i3] = coerce(cset_L2_t *, -1);
+      }
       continue;
     } else if (i30 == i31) {
       c0 = ch0;
