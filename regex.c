@@ -3257,10 +3257,17 @@ static char_set_t *create_wide_cs(void)
 
 #ifdef FULL_UNICODE
   char_set_add_range(cs, 0x1B000, 0x1B001);
+  char_set_add_range(cs, 0x1F004, 0x1F004);
+  char_set_add_range(cs, 0x1F0CF, 0x1F0CF);
+  char_set_add_range(cs, 0x1F170, 0x1F171);
+  char_set_add_range(cs, 0x1F17E, 0x1F17F);
+  char_set_add_range(cs, 0x1F191, 0x1F19A);
   char_set_add_range(cs, 0x1F200, 0x1F202);
   char_set_add_range(cs, 0x1F210, 0x1F23A);
   char_set_add_range(cs, 0x1F240, 0x1F248);
   char_set_add_range(cs, 0x1F250, 0x1F251);
+  char_set_add_range(cs, 0x1F300, 0x1F7FF);
+  char_set_add_range(cs, 0x1F900, 0x1FAFF);
   char_set_add_range(cs, 0x20000, 0x2FFFF);
   char_set_add_range(cs, 0x30000, 0x3FFFF);
 #endif
