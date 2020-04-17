@@ -3226,14 +3226,13 @@ static char_set_t *create_wide_cs(void)
 
   char_set_t *cs = char_set_create(cst, 0, 1);
 
-  char_set_add_range(cs, 0x1100, 0x115F);
+  char_set_add_range(cs, 0x1100, 0x11F9);
   char_set_add_range(cs, 0x2329, 0x232A);
   char_set_add_range(cs, 0x2E80, 0x2E99);
   char_set_add_range(cs, 0x2E9B, 0x2EF3);
   char_set_add_range(cs, 0x2F00, 0x2FD5);
   char_set_add_range(cs, 0x2FF0, 0x2FFB);
-  char_set_add_range(cs, 0x3000, 0x303E);
-  char_set_add_range(cs, 0x3000, 0x303E);
+  char_set_add_range(cs, 0x3000, 0x303F);
   char_set_add_range(cs, 0x3041, 0x3096);
   char_set_add_range(cs, 0x3099, 0x30FF);
   char_set_add_range(cs, 0x3105, 0x312D);
@@ -3242,13 +3241,13 @@ static char_set_t *create_wide_cs(void)
   char_set_add_range(cs, 0x31C0, 0x31E3);
   char_set_add_range(cs, 0x31F0, 0x321E);
   char_set_add_range(cs, 0x3220, 0x3247);
-  char_set_add_range(cs, 0x3250, 0x32FE);
-  char_set_add_range(cs, 0x3300, 0x4DB5);
+  char_set_add_range(cs, 0x3250, 0x4DBF);
   char_set_add_range(cs, 0x4E00, 0x9FFF);
   char_set_add_range(cs, 0xA000, 0xA48C);
   char_set_add_range(cs, 0xA490, 0xA4C6);
   char_set_add_range(cs, 0xA960, 0xA97C);
   char_set_add_range(cs, 0xAC00, 0xD7A3);
+  char_set_add_range(cs, 0xE000, 0xE757);
   char_set_add_range(cs, 0xF900, 0xFAFF);
   char_set_add_range(cs, 0xFE10, 0xFE19);
   char_set_add_range(cs, 0xFE30, 0xFE52);
