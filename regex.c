@@ -3261,8 +3261,8 @@ static char_set_t *create_wide_cs(void)
   char_set_add_range(cs, 0x1F210, 0x1F23A);
   char_set_add_range(cs, 0x1F240, 0x1F248);
   char_set_add_range(cs, 0x1F250, 0x1F251);
-  char_set_add_range(cs, 0x20000, 0x2FFFD);
-  char_set_add_range(cs, 0x30000, 0x3FFFD);
+  char_set_add_range(cs, 0x20000, 0x2FFFF);
+  char_set_add_range(cs, 0x30000, 0x3FFFF);
 #endif
 
   return cs;
