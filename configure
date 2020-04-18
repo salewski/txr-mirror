@@ -27,28 +27,60 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# The #!/bin/sh might be some legacy piece of crap,
-# not even up to 1990 POSIX.2 spec. So the first step
-# is to look for a better shell in some known places
-# and re-execute ourselves with that interpreter.
+# The #!/bin/sh might be some legacy piece of junk, not even up to 1990 POSIX.2
+# spec. So the first step is to look for a better shell in some known places
+# and re-execute ourselves with that interpreter, unless there is evidence we
+# are already running in a usable shell.
 #
 
-if test x$txr_shell = x ; then
-  for shell in /bin/bash /usr/bin/bash /usr/xpg4/bin/sh ; do
-    if test -x $shell ; then
+while true ; do
+  # we have already recursed into a desired shell
+  if test "x$txr_shell" != x ; then
+    break
+  fi
+
+  # Evidence we are running on Bash in POSIX mode.
+  if test x$POSIXLY_CORRECT = y ; then
+    break
+  fi
+
+  # Evidence we are running on Bash in regular mode.
+  if test x$BASH_VERSION != x ; then
+    break
+  fi
+
+  # Slow path: find a suitable shell.
+  # First choice is $CONFIG_SHELL, a convention from GNU Autoconf.
+  for shell in "$CONFIG_SHELL" \
+               /bin/bash /usr/bin/bash /usr/local/bin/bash \
+               /bin/dash /usr/bin/dash /usr/local/bin/dash \
+               /usr/xpg4/bin/sh
+  do
+    if test -x "$shell" ; then
        txr_shell=$shell
        break
     fi
   done
-  if test x$txr_shell = x ; then
-    echo "No known POSIX shell found: falling back on /bin/sh, which may not work"
-    txr_shell=/bin/sh
+
+  if test "x$txr_shell" = x ; then
+    echo "No known modern shell found; sticking with this one."
+    break;
   fi
+
+  # we export txr_shell because it acts as a flag indicating the recursed case
   export txr_shell
-  exec $txr_shell $0 ${@+"$@"}
-fi
+  echo "Re-executing using $txr_shell"
+  exec "$txr_shell" $0 ${@+"$@"}
+  break
+done
 
 set -u
+
+if [ -n "${txr_shell+y}" ] ; then
+  printf "Now running in %s shell\n" $txr_shell
+else
+  printf "Running in original shell.\n"
+fi
 
 #
 # Save command line in a way that can be re-run.
@@ -524,8 +556,6 @@ printf "+%s+\n|%s|\n+%s+\n" $banner_box "$banner_text" $banner_box
 
 set -e
 
-printf "We are using this shell: %s\n" $txr_shell
-
 #
 # Check for GNU make
 #
@@ -740,10 +770,10 @@ gen_config_make()
 # Changes to this file are lost when the above is re-run.
 #
 
-# Shell used by make for running recipes; this
+${txr_shell:+# Shell used by make for running recipes; this
 # is the as the shell we chose for the configure script,
 # derived from the txr_shell variable.
-SHELL := $txr_shell
+SHELL := $txr_shell}
 
 txr_ver := $txr_ver
 
