@@ -39,20 +39,12 @@ while true ; do
     break
   fi
 
-  # Evidence we are running on Bash in POSIX mode.
-  if test x$POSIXLY_CORRECT = y ; then
-    break
-  fi
-
-  # Evidence we are running on Bash in regular mode.
-  if test x$BASH_VERSION != x ; then
-    break
-  fi
-
-  # If the shell has PS2 and PS4 with these values, it is
-  # probably a good shell: late-model Ash, Dash or the XPG
-  # shell on Solaris and perhaps others.
-  if test "x$PS2" = "x> " && test "x$PS4" = "x+ " ; then
+  # If PS4 is set to "+ ", we are probably running on a good shell: GNU
+  # Bash sets it like this, as does late-model Ash, Dash, Korn Shell 93,
+  # and the XPG shell on Solaris 10. Zsh sets PS4 to "+ " this in its
+  # POSIX mode, which handles our script, but to some other value in its
+  # regular mode which doesn't handle our script.
+  if test "x$PS4" = "x+ " ; then
     break
   fi
 
