@@ -49,6 +49,13 @@ while true ; do
     break
   fi
 
+  # If the shell has PS2 and PS4 with these values, it is
+  # probably a good shell: late-model Ash, Dash or the XPG
+  # shell on Solaris and perhaps others.
+  if test "x$PS2" = "x> " && test "x$PS4" = "x+ " ; then
+    break
+  fi
+
   # Slow path: find a suitable shell.
   # First choice is $CONFIG_SHELL, a convention from GNU Autoconf.
   for shell in "$CONFIG_SHELL" \
