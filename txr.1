@@ -59244,10 +59244,11 @@ function except in the case of
 .code path-symlink-p
 which uses
 .codn lstat .
-
 If instead a stream is specified as
 .metn path ,
 then the associated filesystem descriptor is probed for these properties.
+If an integer value is specified, it is treated as a POSIX
+open file descriptor that is to be probed.
 Otherwise, a
 .code stat
 structure, for example one returned by the

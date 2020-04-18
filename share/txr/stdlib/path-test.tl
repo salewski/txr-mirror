@@ -25,10 +25,9 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defun sys:do-path-test (statfun path testfun)
-  [testfun (if (or (stringp path)
-                   (streamp path))
-             (ignerr [statfun path])
-             path)])
+  [testfun (if (typep path 'stat)
+             path
+             (ignerr [statfun path]))])
 
 (eval-only
   (defmacro sys:path-test ((sym statfun path) . body)
