@@ -1092,6 +1092,7 @@ static FILE *w_fopen_mode(const wchar_t *wname, const wchar_t *mode,
                if3(m.read && !m.write, O_RDONLY, 0) |
                if3(!m.read && m.write,
                    if3(!m.notrunc, O_TRUNC, 0) | O_WRONLY | O_CREAT, 0) |
+               if3(m.append, O_APPEND, 0) |
                if3(m.nonblock, O_NONBLOCK, 0));
   char *stkname = coerce(char *, alloca(nsiz));
   int fd;
@@ -1418,6 +1419,7 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl)
     ms++;
     m.write = 1;
     m.append = 1;
+    m.notrunc = 1;
     break;
   case 'm':
     ms++;
