@@ -1,3 +1,48 @@
+                                    TXR 236
+                                   2020-04-18
+
+
+  Features
+
+  - open-file:
+    - new "n" mode for non-blocking open.
+    - now allows async signal delivery during open so blocking open can be
+      interrupted.
+  - New touch function, analogous to Unix utility.
+  - Unicode:
+    - map of characters that need two spaces on the terminal has been updated
+    - now includes emoji in the U+1Fxxxx plane.
+  - Listener:
+    - Tab completion over Unicode identifiers works now.
+  - Path testing functions now also accept integer file descriptor.
+  - configure:
+    - shell identification and re-execution logic in configure script
+    - now avoids re-execution if the original shell seems good.
+
+  Bugs
+
+  - ignwarn: fixed neglect to handle warning exceptions
+    with multiple arguments.
+  - autoloading: definitions now trigger autoload, not only references.
+    Otherwise if user code redefines some system entity that as not yet been
+    loaded, a subsequent attempt to use that entity will trigger autoload,
+    clobbering the user's definition.
+  - open-socket-pair: fix broken function.
+  - sockets: add missing shut-rd, shut-wr and shut-rw variables that are
+    already documented.
+  - unwind/signals: fixed signal mask restoring regression that first
+    appeared in TXR 230.
+  - txr-parse: release deferred warnings if erroring.
+  - open-file: when "m" flag is in effect and POSIX open is used,
+    use 0666 mode, not 0777, else the file will be created with
+    execute permissios if the umask doesn't remove them.
+  - regex: fix crash caused by duplicate regex character range.
+  - vim: work around bug in Vim that causes it to treat "contains"
+    (the name of a TXR Lisp function) as a reserved keyword in the syntax
+    highlighting definition.
+
+
+
                                     TXR 235
                                    2020-04-12
 
