@@ -995,7 +995,8 @@ static void provide_completions(const wchar_t *data,
   if (!ptr)
     goto out;
 
-  while ((iswalnum(convert(wint_t, *ptr)) || wcschr(gly, *ptr)) &&
+  while ((iswalnum(convert(wint_t, *ptr)) || wcschr(gly, *ptr) ||
+          *ptr >= 0x80) &&
          (sym = ptr) && ptr > data)
     ptr--;
 
@@ -1010,7 +1011,8 @@ static void provide_completions(const wchar_t *data,
     } else {
       ptr--;
 
-      while ((iswalnum(convert(wint_t, *ptr)) || wcschr(gly, *ptr)) &&
+      while ((iswalnum(convert(wint_t, *ptr)) || wcschr(gly, *ptr) ||
+              *ptr >= 0x80) &&
              (pkg = ptr) && ptr > data)
         ptr--;
 
