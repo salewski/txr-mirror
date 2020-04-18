@@ -25,7 +25,9 @@ static void dir_tables_init(void)
                             ("keyword" ":")
                             ("usr" "")
                             (t `@{pkg-name}:`))))
-              (list `@qualif@(symbol-name sym)`))))
+             (if (eq sym 'contains)
+               '("contain[s]") ;; Vim doesn't like the word "contains"
+               (list `@qualif@(symbol-name sym)`)))))
 @(do (set [txr-sym 0..0] '("end" "and" "or"
                            "catch" "finally"
                            "until" "last"
