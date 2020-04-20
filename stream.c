@@ -3038,6 +3038,35 @@ val fill_buf_adjust(val buf, val pos_in, val stream_in)
   return readpos;
 }
 
+val get_line_as_buf(val stream_in)
+{
+  val self = lit("get-line-as-buf");
+  val stream = default_arg(stream_in, std_input);
+  struct strm_ops *ops = coerce(struct strm_ops *,
+                                cobj_ops(self, stream, stream_s));
+  val buf = make_buf(zero, nil, num_fast(128));
+  unsigned char bytes[128];
+  size_t count = 0;
+
+  for (;;) {
+    val b = ops->get_byte(stream);
+    if (b == nil || b == num('\n'))
+      break;
+    bytes[count++] = c_num(b);
+
+    if (count == sizeof bytes) {
+      buf_put_bytes(buf, length_buf(buf), bytes, count, self);
+      count = 0;
+    }
+  }
+
+  if (count > 0)
+    buf_put_bytes(buf, length_buf(buf), bytes, count, self);
+
+  buf_trim(buf);
+  return buf;
+}
+
 struct fmt {
   size_t minsize;
   const char *dec;
@@ -4964,6 +4993,7 @@ void stream_init(void)
   reg_fun(unget_byte_s, func_n2o(unget_byte, 1));
   reg_fun(put_buf_s, func_n3o(put_buf, 1));
   reg_fun(fill_buf_s, func_n3o(fill_buf, 1));
+  reg_fun(intern(lit("get-line-as-buf"), user_package), func_n1o(get_line_as_buf, 0));
   reg_fun(intern(lit("fill-buf-adjust"), user_package), func_n3o(fill_buf_adjust, 1));
   reg_fun(intern(lit("flush-stream"), user_package), func_n1o(flush_stream, 0));
   reg_fun(intern(lit("seek-stream"), user_package), func_n3(seek_stream));

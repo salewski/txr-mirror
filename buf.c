@@ -397,7 +397,7 @@ val buf_put_buf(val dbuf, val sbuf, val pos)
   return sbuf;
 }
 
-static void buf_put_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
+void buf_put_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
 {
   struct buf *b = buf_handle(buf, self);
   cnum p = buf_check_index(b, pos, self);
@@ -589,7 +589,7 @@ val buf_put_cptr(val buf, val pos, val cptr)
   return cptr;
 }
 
-static void buf_get_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
+void buf_get_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
 {
   struct buf *b = buf_handle(buf, self);
   cnum p = buf_check_index(b, pos, self);

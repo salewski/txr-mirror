@@ -25120,6 +25120,29 @@ Finally, if the operation succeeds, then
 .code fill-buf-adjust
 adjusts the length of the buffer to match the position that is returned.
 
+.coNP Function @ get-line-as-buf
+.synb
+.mets (get-line-as-buf <> [ stream ])
+.syne
+.desc
+The
+.code get-line-as-buf
+reads bytes from
+.meta stream
+as if using the
+.code get-byte
+function, until either a the newline character is encountered, or else the end
+of input is encountered. The bytes which are read, exclusive of the newline
+character, are returned in a new buffer object.  The newline character, if it
+occurs, is consumed.
+
+If
+.meta stream
+is omitted, it defaults to
+.codn *stdin* .
+
+The stream is required to support byte input.
+
 .coNP Functions @ file-get-buf and @ command-get-buf
 .synb
 .mets (file-get-buf < name >> [ max-bytes <> [ skip-bytes ]])

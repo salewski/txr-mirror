@@ -41,6 +41,8 @@ val replace_buf(val buf, val items, val from, val to);
 val buf_list(val list);
 val buf_put_buf(val dbuf, val sbuf, val pos);
 
+void buf_put_bytes(val buf, val pos, mem_t *ptr, cnum size, val self);
+
 #if HAVE_I8
 val buf_put_i8(val buf, val pos, val num);
 val buf_put_u8(val buf, val pos, val num);
@@ -72,6 +74,8 @@ val buf_put_ulong(val buf, val pos, val num);
 val buf_put_float(val buf, val pos, val num);
 val buf_put_double(val buf, val pos, val num);
 val buf_put_cptr(val buf, val pos, val cptr);
+
+void buf_get_bytes(val buf, val pos, mem_t *ptr, cnum size, val self);
 
 #if HAVE_I8
 val buf_get_i8(val buf, val pos);
