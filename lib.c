@@ -286,9 +286,9 @@ seq_info_t seq_info(val obj)
   type_t to = type(obj);
 
   ret.obj = obj;
+  ret.type = to;
 
   if (to != COBJ) {
-    ret.type = to;
     ret.kind = seq_kind_tab[to];
     return ret;
   } else {
