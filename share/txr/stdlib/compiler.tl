@@ -429,7 +429,7 @@
        ((null test)
         me.(compile oreg env else))
        ((constantp test)
-        me.(compile oreg env then))
+        me.(compile oreg env (if (eval test) then else)))
        ((and (consp test) (member (car test) %test-funs%))
         me.(compile oreg env ^(ift ,(car test) ,(cadr test) ,(caddr test)
                                    ,then ,else)))
@@ -457,7 +457,7 @@
      (cond
        ((null test) me.(compile oreg env nil))
        ((constantp test)
-        me.(compile oreg env then))
+        me.(compile oreg env (if (eval test) then)))
        ((and (consp test) (member (car test) %test-funs%))
         me.(compile oreg env ^(ift ,(car test) ,(cadr test) ,(caddr test)
                                    ,then)))
