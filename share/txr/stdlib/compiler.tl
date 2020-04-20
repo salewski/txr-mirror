@@ -193,7 +193,7 @@
 
 (defvarl %bin-ops% '(b< b> b<= b=> b= b+ b- b* b/))
 
-(defvarl %bin-op% (relate %nary-ops% %bin-ops%))
+(defvarl %bin-op% (relate %nary-ops% %bin-ops% nil))
 
 (defvarl assumed-fun)
 
