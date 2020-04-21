@@ -39394,15 +39394,17 @@ subtract 2 and 3 from their argument.
 
 .coNP Functions @, > @, < @, >= @ <= and @ =
 .synb
-.mets (> < number << number *)
-.mets (> < number << number *)
-.mets (>= < number << number *)
-.mets (<= < number << number *)
-.mets (= < number << number *)
+.mets (> < object << object *)
+.mets (< < object << object *)
+.mets (>= < object << object *)
+.mets (<= < object << object *)
+.mets (= < object << object *)
 .syne
 .desc
-These relational functions compare characters and numbers for numeric equality
-or inequality. The arguments must be one or more numbers or characters.
+These relational functions compare characters, numbers ranges and sequences of
+characters or numbers for numeric equality or inequality. The arguments must be
+one or more numbers, characters, ranges, or sequences of these objects,
+or, recursively, of sequences.
 
 If just one argument is given, then these functions all return
 .codn t .
@@ -39445,6 +39447,109 @@ and if that comparison succeeds, then in the second comparison,
 .meta character
 will be converted to integer so that it can be compared to
 .metn integer .
+
+Ranges may only be compared with ranges. Corresponding
+fields of ranges are compared for equality by
+.code =
+such that
+.code "#R(0 1)"
+and
+.code "#R(0 1.0)"
+are reported as equal.
+The inequality comparisons are lexicographic, such that the
+.code from
+field of the range is considered more major than the
+.code to
+field. For example the inequalities
+.code "(< #R(1 2) #R(2 0))"
+and
+.code "(< #R(1 2) #R(1 3))"
+hold.
+
+Sequences may only be compared with sequences, but
+mixtures of any kinds of sequences may be compared:
+lists with vectors, vectors with strings, and so on.
+
+The
+.code =
+function considers a pair of sequences of unequal length
+to be unequal, reporting
+.codn nil .
+Sequences are equal if they have the same length
+and their corresponding elements are recursively
+equal under the
+.code =
+function.
+
+The inequality functions treat sequences lexicographically.
+A pair of sequences is compared by comparing corresponding
+elements. The
+.code <
+function tests each successive pair of corresponding
+elements recursively using the
+.code <
+function. If this recursive comparison reports
+.codn t ,
+then the function immediately returns
+.code t
+without considering any more pairs of elements.
+Otherwise the same pair of elements is compared again
+using the
+.code =
+function. If that reports false, then the function reports false without
+considering any more pairs of elements. Otherwise processing continues with the
+next pair, if any.  If all corresponding elements are equal, but the right
+sequence is longer,
+.code <
+returns
+.codn t ,
+otherwise the function reports
+.codn nil .
+The
+.code <=
+function tests each successive pair of corresponding
+elements recursively using the
+.code <=
+function. If this returns
+.code nil
+then the function returns
+.code nil
+without considering any more pairs. Otherwise processing continues
+with the next pair, if any.
+If all corresponding elements satisfy the test, but the
+left sequence is longer, then
+.code nil
+is returned. Otherwise
+.code t
+is returned.
+
+The inequality relations exhibit symmetry, which means that
+the functions
+.code >
+and
+.code >=
+functions are equivalent, respectively, to
+.code <
+and
+.code <=
+with the order of the argument values reversed. For instance, the expression
+.code "(< a b c)"
+is equivalent to
+.code "(> c b a)"
+except for the difference in evaluation order of the
+.codn a ,
+.code b
+and
+.code c
+operands themselves. Any semantic description of
+.code <
+or
+.code <=
+applies, respectively, also to
+.code >
+or
+.code >=
+with the appropriate adjustment for argument order reversal.
 
 .coNP Function @ /=
 .synb

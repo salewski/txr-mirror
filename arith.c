@@ -1898,6 +1898,62 @@ val pppred(val num)
   return minus(num, three);
 }
 
+static val seq_lt(val self, val aseq, val bseq)
+{
+  seq_iter_t ita, itb;
+  seq_iter_init(self, &ita, aseq);
+  seq_iter_init(self, &itb, bseq);
+
+  for (;;) {
+    val aelem, belem;
+    switch (seq_peek(&ita, &aelem) << 1 | seq_peek(&itb, &belem)) {
+    case 0:
+      return nil;
+    case 1:
+      return t;
+    case 2:
+      return nil;
+    case 3:
+      if (lt(aelem, belem))
+        return t;
+      if (!numeq(aelem, belem))
+        return nil;
+      seq_geti(&ita);
+      seq_geti(&itb);
+      break;
+    default:
+      internal_error("bad return value from iterator peek");
+    }
+  }
+}
+
+static val seq_le(val self, val aseq, val bseq)
+{
+  seq_iter_t ita, itb;
+  seq_iter_init(self, &ita, aseq);
+  seq_iter_init(self, &itb, bseq);
+
+  for (;;) {
+    val aelem, belem;
+    switch (seq_peek(&ita, &aelem) << 1 | seq_peek(&itb, &belem)) {
+    case 0:
+      return t;
+    case 1:
+      return t;
+    case 2:
+      return nil;
+    case 3:
+      if (!le(aelem, belem))
+        return nil;
+      seq_geti(&ita);
+      seq_geti(&itb);
+      break;
+    default:
+      internal_error("bad return value from iterator peek");
+    }
+  }
+}
+
 val gt(val anum, val bnum)
 {
   val self = gt_s;
@@ -1956,9 +2012,9 @@ tail:
   case TYPE_PAIR(FLNUM, COBJ):
   case TYPE_PAIR(RNG, COBJ):
     return do_binary_method(self, lt_s, bnum, anum);
+  default:
+    return seq_lt(self, bnum, anum);
   }
-
-  invalid_ops(self, anum, bnum);
 }
 
 val lt(val anum, val bnum)
@@ -2019,9 +2075,9 @@ tail:
   case TYPE_PAIR(FLNUM, COBJ):
   case TYPE_PAIR(RNG, COBJ):
     return do_binary_method(self, gt_s, bnum, anum);
+  default:
+    return seq_lt(self, anum, bnum);
   }
-
-  invalid_ops(self, anum, bnum);
 }
 
 val ge(val anum, val bnum)
@@ -2087,9 +2143,9 @@ tail:
   case TYPE_PAIR(FLNUM, COBJ):
   case TYPE_PAIR(RNG, COBJ):
     return do_binary_method(self, le_s, bnum, anum);
+  default:
+    return seq_le(self, bnum, anum);
   }
-
-  invalid_ops(self, anum, bnum);
 }
 
 val le(val anum, val bnum)
@@ -2155,9 +2211,39 @@ tail:
   case TYPE_PAIR(FLNUM, COBJ):
   case TYPE_PAIR(RNG, COBJ):
     return do_binary_method(self, ge_s, bnum, anum);
+  default:
+    return seq_le(self, anum, bnum);
+  }
+}
+
+static val seq_numeq(val self, val aseq, val bseq)
+{
+  seq_iter_t ita, itb;
+  seq_iter_init(self, &ita, aseq);
+  seq_iter_init(self, &itb, bseq);
+
+  if (ita.inf.kind == SEQ_VECLIKE && itb.inf.kind == SEQ_VECLIKE) {
+    if (length(aseq) != length(bseq))
+      return nil;
   }
 
-  invalid_ops(self, anum, bnum);
+  for (;;) {
+    val aelem, belem;
+    switch (seq_peek(&ita, &aelem) + seq_peek(&itb, &belem)) {
+    case 0:
+      return t;
+    case 1:
+      return nil;
+    case 2:
+      if (!numeq(aelem, belem))
+        return nil;
+      seq_geti(&ita);
+      seq_geti(&itb);
+      break;
+    default:
+      internal_error("bad return value from iterator peek");
+    }
+  }
 }
 
 val numeq(val anum, val bnum)
@@ -2208,9 +2294,9 @@ tail:
   case TYPE_PAIR(FLNUM, COBJ):
   case TYPE_PAIR(RNG, COBJ):
     return do_binary_method(self, self, bnum, anum);
+  default:
+    return seq_numeq(self, anum, bnum);
   }
-
-  invalid_ops(self, anum, bnum);
 }
 
 val expt(val anum, val bnum)
