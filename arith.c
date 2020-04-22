@@ -4387,20 +4387,35 @@ val numeqv(val first, struct args *rest)
 
 val numneqv(struct args *args)
 {
-  val i, j;
-  val list = args_get_list(args);
+  if (!args->list) {
+    cnum i, j, n = args->fill;
 
-  if (list && !cdr(list)) {
-    (void) unary_arith(lit("/="), car(list));
+    if (n == 1) {
+      (void) unary_arith(lit("/="), args->arg[0]);
+      return t;
+    }
+
+    for (i = 0; i < n; i++)
+      for (j = i + 1; j < n; j++)
+        if (numeq(args->arg[i], args->arg[j]))
+          return nil;
+
+    return t;
+  } else {
+    val i, j;
+    val list = args_get_list(args);
+
+    if (list && !cdr(list)) {
+      (void) unary_arith(lit("/="), car(list));
+      return t;
+    }
+
+    for (i = list; i; i = cdr(i))
+      for (j = cdr(i); j; j = cdr(j))
+        if (numeq(car(i), car(j)))
+          return nil;
     return t;
   }
-
-  for (i = list; i; i = cdr(i))
-    for (j = cdr(i); j; j = cdr(j))
-      if (numeq(car(i), car(j)))
-        return nil;
-
-  return t;
 }
 
 static val sumv(struct args *nlist, val keyfun)
