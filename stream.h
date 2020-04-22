@@ -194,6 +194,7 @@ val clear_error(val stream);
 val get_line(val);
 val get_char(val);
 val get_byte(val);
+val get_bytes(val self, val, mem_t *ptr, ucnum len);
 val unget_char(val ch, val stream);
 val unget_byte(val byte, val stream);
 val put_buf(val buf, val pos, val stream);

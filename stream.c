@@ -2972,6 +2972,14 @@ val get_byte(val stream_in)
   return ops->get_byte(stream);
 }
 
+val get_bytes(val self, val stream_in, mem_t *ptr, ucnum len)
+{
+  val stream = default_arg(stream_in, std_input);
+  struct strm_ops *ops = coerce(struct strm_ops *,
+                                cobj_ops(self, stream, stream_s));
+  return unum(ops->fill_buf(stream, ptr, len, 0));
+}
+
 val unget_char(val ch, val stream_in)
 {
   val self = lit("unget-char");

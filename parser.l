@@ -52,13 +52,11 @@
 #include "parser.h"
 #include "txr.h"
 
-#define YY_INPUT(buf, result, max_size)           \
-  do {                                            \
-    val c = get_byte(yyextra->stream);            \
-    int n = 0;                                    \
-    if (c)                                        \
-      buf[n++] = convert(char, c_num(c));         \
-    result = n;                                   \
+#define YY_INPUT(buf, result, max_size)                                 \
+  do {                                                                  \
+    val n = get_bytes(lit("parser"), yyextra->stream,                   \
+                      convert(mem_t *,  buf), max_size);                \
+    result = c_num(n);                                                  \
   } while (0)
 
 #define YY_DECL \
