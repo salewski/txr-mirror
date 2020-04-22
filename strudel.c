@@ -37,6 +37,8 @@
 #include "gc.h"
 #include "eval.h"
 #include "struct.h"
+#include "arith.h"
+#include "buf.h"
 #include "strudel.h"
 
 struct strudel_base { /* stru-ct del-egate :) */
@@ -120,20 +122,24 @@ static val strudel_unget_byte(val stream, int byte)
   return funcall2(meth, obj, num_fast(byte));
 }
 
-static val strudel_put_buf(val stream, val buf, cnum pos)
+static ucnum strudel_put_buf(val stream, mem_t *ptr, ucnum len, ucnum pos)
 {
   struct strudel_base *sb = coerce(struct strudel_base *, stream->co.handle);
+  obj_t buf_obj;
+  val buf = init_borrowed_buf(&buf_obj, unum(len), ptr);
   val obj = sb->obj;
   val meth = slot(obj, put_buf_s);
-  return funcall3(meth, obj, buf, num(pos));
+  return c_unum(funcall3(meth, obj, buf, num(pos)));
 }
 
-static val strudel_fill_buf(val stream, val buf, cnum pos)
+static ucnum strudel_fill_buf(val stream, mem_t *ptr, ucnum len, ucnum pos)
 {
   struct strudel_base *sb = coerce(struct strudel_base *, stream->co.handle);
+  obj_t buf_obj;
+  val buf = init_borrowed_buf(&buf_obj, unum(len), ptr);
   val obj = sb->obj;
   val meth = slot(obj, fill_buf_s);
-  return funcall3(meth, obj, buf, num(pos));
+  return c_unum(funcall3(meth, obj, buf, num(pos)));
 }
 
 static val strudel_close(val stream, val throw_on_error)

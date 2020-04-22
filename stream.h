@@ -69,8 +69,8 @@ struct strm_ops {
   val (*get_byte)(val);
   val (*unget_char)(val, val);
   val (*unget_byte)(val, int);
-  val (*put_buf)(val, val, cnum);
-  val (*fill_buf)(val, val, cnum);
+  ucnum (*put_buf)(val, mem_t *, ucnum len, ucnum pos);
+  ucnum (*fill_buf)(val, mem_t *, ucnum len, ucnum pos);
   val (*close)(val, val);
   val (*flush)(val);
   val (*seek)(val, val, enum strm_whence);

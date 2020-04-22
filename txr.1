@@ -52509,6 +52509,18 @@ description of the
 .code put-buf
 stream I/O function.
 
+Note: there is a severe restriction on the use of the
+.meta buf
+argument. The buffer object denoted by the
+.meta buf
+argument may be specially allocated and have a lifetime
+which is scoped to the method invocation. The
+.code put-buf
+method shall not permit the
+.meta buf
+object to be used beyond the duration of the method
+invocaton.
+
 .coNP Method @ fill-buf
 .synb
 .mets << stream .(fill-buf buf pos)
@@ -52521,6 +52533,18 @@ It should behave in a manner consistent with the
 description of the
 .code fill-buf
 stream I/O function.
+
+Note: there is a severe restriction on the use of the
+.meta buf
+argument. The buffer object denoted by the
+.meta buf
+argument may be specially allocted and have a lifetime
+which is scoped to the method invocation. The
+.code put-buf
+method shall not permit the
+.meta buf
+object to be used beyond the duration of the method
+invocaton.
 
 .coNP Method @ close
 .synb
