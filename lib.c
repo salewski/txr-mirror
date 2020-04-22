@@ -5497,6 +5497,9 @@ val symbol_needs_prefix(val self, val package, val sym)
   if (sym_pkg == keyword_package)
     return null_string;
 
+  if (length_str(name) == zero)
+    return sym_pkg->pk.name;
+
   if (sym_pkg == package) {
     if (us_hash_count(package->pk.hidhash) != zero) {
       val here_cell = gethash_e(self, package->pk.symhash, name);
