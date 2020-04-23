@@ -3324,7 +3324,7 @@ else
 fi
 
 if [ $have_sockets ] ; then
-  printf "Checking whether we have <sys/select.h> ... "
+  printf "Checking for select ... "
 
   cat > conftest.c <<!
 #include <sys/select.h>
@@ -3341,7 +3341,7 @@ int main(int argc, char **argv)
 !
   if conftest; then
     printf "yes\n"
-    printf "#define HAVE_SYS_SELECT_H 1\n" >> config.h
+    printf "#define HAVE_SELECT 1\n" >> config.h
   else
     printf "no\n"
   fi

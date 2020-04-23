@@ -39,7 +39,9 @@
 #include <netdb.h>
 #include "config.h"
 #include "alloca.h"
-#if HAVE_SYS_SELECT_H
+#if HAVE_POLL
+#include <poll.h>
+#elif HAVE_SELECT
 #include <sys/select.h>
 #endif
 #include "lib.h"
@@ -702,25 +704,68 @@ static val sock_bind(val sock, val sockaddr)
   uw_throwf(socket_error_s, lit("sock-bind: cannot bind ~s"), sock, nao);
 }
 
-static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
-                      val sock, val sockaddr, val timeout)
+#if HAVE_POLL
+
+static int fd_timeout(int fd, val timeout, int write)
 {
-  if (!timeout) {
+    cnum ms = c_num(timeout) / 1000;
+    int pollms = (ms > INT_MAX) ? INT_MAX : ms;
+    struct pollfd pfd;
     int res;
+
+    if (write)
+      pfd.events = POLLOUT;
+    else
+      pfd.events = POLLIN;
+
+    pfd.fd = fd;
 
     sig_save_enable;
 
-    res = connect(fd, addr, len);
+    res = poll(&pfd, 1, pollms);
 
     sig_restore_enable;
 
     return res;
-  } else {
-    cnum u = c_num(timeout);
+}
+
+#elif HAVE_SELECT
+
+static int fd_timeout(int fd, val timeout, int write)
+{
+    cnum us = c_num(timeout);
     struct timeval tv;
+    fd_set fds;
+
+    tv.tv_sec = us / 1000000;
+    tv.tv_usec = us % 1000000;
+
+    FD_ZERO(&fds);
+    FD_SET(fd, &fds);
+
+    sig_save_enable;
+
+    if (write)
+      res = select(fd + 1, 0 ,&rfds, 0, &tv);
+    else
+      res = select(fd + 1, &rfds, 0, 0, &tv);
+
+
+    sig_restore_enable;
+
+    return res;
+}
+
+#endif
+
+static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
+                      val sock, val sockaddr, val timeout)
+{
+  int res;
+
+#if HAVE_POLL || HAVE_SELECT
+  if (timeout) {
     int flags = fcntl(fd, F_GETFL);
-    int res;
-    fd_set rfds;
 
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
       return -1;
@@ -738,17 +783,7 @@ static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
       break;
     }
 
-    tv.tv_sec = u / 1000000;
-    tv.tv_usec = u % 1000000;
-
-    FD_ZERO(&rfds);
-    FD_SET(fd, &rfds);
-
-    sig_save_enable;
-
-    res = select(fd + 1, &rfds, 0, 0, &tv);
-
-    sig_restore_enable;
+    res = fd_timeout(fd, timeout, 1);
 
     switch (res) {
     case -1:
@@ -760,6 +795,17 @@ static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
       return 0;
     }
   }
+#else
+  (void) timeout;
+#endif
+
+  sig_save_enable;
+
+  res = connect(fd, addr, len);
+
+  sig_restore_enable;
+
+  return res;
 }
 
 static val open_sockfd(val fd, val family, val type, val mode_str)
@@ -875,22 +921,9 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
   if (!sfd)
     goto badfd;
 
+#if HAVE_POLL || HAVE_SELECT
   if (timeout) {
-    struct timeval tv;
-    cnum u = c_num(timeout);
-    fd_set rfds;
-    int res;
-
-    tv.tv_sec = u / 1000000;
-    tv.tv_usec = u % 1000000;
-    FD_ZERO(&rfds);
-    FD_SET(fd, &rfds);
-
-    sig_save_enable;
-
-    res = select(fd + 1, &rfds, 0, 0, &tv);
-
-    sig_restore_enable;
+    int res = fd_timeout(fd, timeout, 0);
 
     switch (res) {
     case -1:
@@ -901,6 +934,9 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
       break;
     }
   }
+#else
+  (void) timeout;
+#endif
 
   if (type == num_fast(SOCK_DGRAM)) {
     struct dgram_stream *d = coerce(struct dgram_stream *, sock->co.handle);
