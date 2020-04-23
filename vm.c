@@ -26,9 +26,7 @@
  */
 
 #include <stddef.h>
-#include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <signal.h>

@@ -28,7 +28,6 @@
 #include <stddef.h>
 #include <signal.h>
 #include <string.h>
-#include <stdarg.h>
 #include "config.h"
 #include "alloca.h"
 #include "lib.h"

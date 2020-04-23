@@ -30,7 +30,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <wchar.h>
-#include <signal.h>
 #include <syslog.h>
 #include "config.h"
 #include "alloca.h"

@@ -39,7 +39,6 @@
 #include "lib.h"
 #include "stream.h"
 #include "hash.h"
-#include "txr.h"
 #include "eval.h"
 #include "gc.h"
 #include "signal.h"

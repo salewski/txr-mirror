@@ -27,7 +27,6 @@
 
 #include <string.h>
 #include <wctype.h>
-#include <stdarg.h>
 #include <wchar.h>
 #include <limits.h>
 #include <signal.h>

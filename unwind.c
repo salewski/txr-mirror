@@ -46,7 +46,6 @@
 #include "struct.h"
 #include "cadr.h"
 #include "alloca.h"
-#include "arith.h"
 #include "unwind.h"
 #include "debug.h"
 

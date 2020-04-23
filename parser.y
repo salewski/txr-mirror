@@ -31,10 +31,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <limits.h>
-#include <dirent.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <setjmp.h>
 #include <wchar.h>
 #include <signal.h>
 #include "config.h"
@@ -49,7 +46,6 @@
 #include "eval.h"
 #include "tree.h"
 #include "y.tab.h"
-#include "gc.h"
 #include "debug.h"
 #include "txr.h"
 #include "itypes.h"

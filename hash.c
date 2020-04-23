@@ -46,7 +46,6 @@
 #include "stream.h"
 #include "eval.h"
 #include "itypes.h"
-#include "arith.h"
 #include "sysif.h"
 #include "hash.h"
 

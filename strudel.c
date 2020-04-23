@@ -25,12 +25,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdarg.h>
 #include <wchar.h>
-#include <signal.h>
 #include "config.h"
 #include "lib.h"
 #include "stream.h"

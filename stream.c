@@ -53,9 +53,6 @@
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
-#if HAVE_SOCKETS
-#include <sys/socket.h>
-#endif
 #if HAVE_WSPAWN || HAVE_SPAWN
 #include <process.h>
 #endif

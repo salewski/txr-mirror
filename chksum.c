@@ -26,7 +26,6 @@
 #include <stddef.h>
 #include <wchar.h>
 #include <limits.h>
-#include <float.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -34,7 +33,6 @@
 #include <stdio.h>
 #include "config.h"
 #include "lib.h"
-#include "gc.h"
 #include "itypes.h"
 #include "signal.h"
 #include "unwind.h"

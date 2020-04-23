@@ -34,19 +34,12 @@
 #include <signal.h>
 #include "config.h"
 #include "alloca.h"
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #include "lib.h"
 #include "gc.h"
-#include "args.h"
-#include "txr.h"
 #include "signal.h"
 #include "unwind.h"
 #include "stream.h"
 #include "eval.h"
-#include "itypes.h"
-#include "arith.h"
 #include "hash.h"
 #include "tree.h"
 

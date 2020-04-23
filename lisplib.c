@@ -32,7 +32,6 @@
 #include "config.h"
 #include "lib.h"
 #include "eval.h"
-#include "signal.h"
 #include "stream.h"
 #include "hash.h"
 #include "gc.h"

@@ -26,21 +26,12 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdarg.h>
 #include <wchar.h>
-#include <signal.h>
 #include "config.h"
 #include "lib.h"
-#include "gc.h"
-#include "args.h"
-#include "signal.h"
-#include "unwind.h"
 #include "stream.h"
-#include "parser.h"
-#include "struct.h"
 #include "eval.h"
-#include "txr.h"
 #include "debug.h"
 
 int opt_debugger;

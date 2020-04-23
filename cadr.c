@@ -31,7 +31,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <signal.h>
 #include "config.h"
 #include "lib.h"
 #include "eval.h"

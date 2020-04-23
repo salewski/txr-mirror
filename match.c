@@ -45,10 +45,8 @@
 #include "txr.h"
 #include "filter.h"
 #include "hash.h"
-#include "debug.h"
 #include "eval.h"
 #include "cadr.h"
-#include "arith.h"
 #include "match.h"
 
 int opt_print_bindings = 0;
