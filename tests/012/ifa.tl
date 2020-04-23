@@ -10,8 +10,11 @@
              (isqrt it)))
       7)
 
-;; ambiguous: is "it" x or is "it" y?
-(test (let (x y) (ifa (> x y) (print it))) :error)
+;; no it-candidates: "it" is leftmost arg x.
+(test (let ((x 1) (y 0)) (ifa (> x y) it)) 1)
+
+;; multiple it-candidates: error
+(test (let (x y) (ifa (> (* x x) (* y y)) it)) :error)
 
 ;; "it" is (+ 3 (* 2 x))
 (test (let ((x 5))
