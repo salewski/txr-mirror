@@ -1311,7 +1311,7 @@ static val poll_wrap(val poll_list, val timeout_in)
 {
   nfds_t i, len = c_num(length(poll_list));
   val iter;
-  struct pollfd *pfd = coerce(struct pollfd *, chk_calloc(len, sizeof *pfd));
+  struct pollfd *pfd = coerce(struct pollfd *, alloca(len * sizeof *pfd));
   val timeout = default_arg(timeout_in, negone);
   int res;
 
@@ -1346,18 +1346,18 @@ static val poll_wrap(val poll_list, val timeout_in)
     }
   }
 
+  sig_save_enable;
+
   res = poll(pfd, len, c_num(timeout));
 
-  if (res < 0) {
-    free(pfd);
+  sig_restore_enable;
+
+  if (res < 0)
     uw_throwf(file_error_s, lit("poll failed: ~d/~s"),
               num(errno), string_utf8(strerror(errno)), nao);
-  }
 
-  if (res == 0) {
-    free(pfd);
+  if (res == 0)
     return nil;
-  }
 
   {
     list_collect_decl (out, ptail);
@@ -1368,7 +1368,6 @@ static val poll_wrap(val poll_list, val timeout_in)
         ptail = list_collect(ptail, cons(car(pair), num(pfd[i].revents)));
     }
 
-    free(pfd);
     return out;
   }
 }
