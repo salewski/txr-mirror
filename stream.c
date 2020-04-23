@@ -71,7 +71,6 @@
 #include "eval.h"
 #include "regex.h"
 #include "txr.h"
-#include "arith.h"
 #include "buf.h"
 
 /* Adhere to ISO C rules about direction switching on update streams. */

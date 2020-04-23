@@ -37,7 +37,6 @@
 #include "gc.h"
 #include "eval.h"
 #include "struct.h"
-#include "arith.h"
 #include "buf.h"
 #include "strudel.h"
 

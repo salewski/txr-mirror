@@ -96,7 +96,6 @@
 #include "eval.h"
 #include "args.h"
 #include "struct.h"
-#include "arith.h"
 #include "itypes.h"
 #include "txr.h"
 #include "sysif.h"

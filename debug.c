@@ -40,7 +40,6 @@
 #include "parser.h"
 #include "struct.h"
 #include "eval.h"
-#include "arith.h"
 #include "txr.h"
 #include "debug.h"
 

@@ -40,7 +40,6 @@
 #include "unwind.h"
 #include "eval.h"
 #include "stream.h"
-#include "arith.h"
 #include "utf8.h"
 #include "buf.h"
 #include "chksums/sha256.h"

@@ -43,7 +43,6 @@
 #include "args.h"
 #include "itypes.h"
 #include "buf.h"
-#include "arith.h"
 #include "vmop.h"
 #include "vm.h"
 
