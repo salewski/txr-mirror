@@ -10,11 +10,6 @@
  */
 #include "mpi-config.h"
 
-#if MP_DEBUG
-#undef MP_IOFUNC
-#define MP_IOFUNC 1
-#endif
-
 #include <limits.h>
 
 #define MP_NEG 1

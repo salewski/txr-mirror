@@ -32,10 +32,6 @@
 #define MP_ARGCHK 2 /* how to check input arguments */
 #endif
 
-#ifndef MP_DEBUG
-#define MP_DEBUG 0 /* print diagnostic output? */
-#endif
-
 #ifndef MP_DEFPREC
 #define MP_DEFPREC 8 /* default precision, in digits */
 #endif

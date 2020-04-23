@@ -35,14 +35,6 @@
 typedef unsigned char mem_t;
 extern mem_t *chk_calloc(size_t n, size_t size);
 
-#if MP_DEBUG
-#include <stdio.h>
-
-#define DIAG(T,V) {fprintf(stderr,T);mp_print(V,stderr);fputc('\n',stderr);}
-#else
-#define DIAG(T,V)
-#endif
-
 #include "logtab.h"
 
 /* Default precision for newly created mp_int's */
