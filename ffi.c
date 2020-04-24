@@ -5103,7 +5103,7 @@ struct carray {
   cnum nelem;
   val ref;
   cnum offs;
-  val artype;
+  val artype[2];
 };
 
 static struct carray *carray_struct(val carray)
@@ -5131,7 +5131,8 @@ static void carray_mark_op(val obj)
   struct carray *scry = carray_struct(obj);
   gc_mark(scry->eltype);
   gc_mark(scry->ref);
-  gc_mark(scry->artype);
+  gc_mark(scry->artype[0]);
+  gc_mark(scry->artype[1]);
 }
 
 static void carray_destroy_op(val obj)
@@ -5166,7 +5167,7 @@ val make_carray(val type, mem_t *data, cnum nelem, val ref, cnum offs)
   scry->data = data;
   scry->nelem = nelem;
   scry->ref = nil;
-  scry->artype = nil;
+  scry->artype[0] = scry->artype[1] = nil;
   obj = cobj(coerce(mem_t *, scry), carray_s, &carray_borrowed_ops);
   scry->eltype = type;
   scry->ref = ref;
@@ -5196,6 +5197,7 @@ val carray_set_length(val carray, val nelem)
               carray, nao);
 
   scry->nelem = nel;
+  scry->artype[0] = scry->artype[1] = nil;
   return nil;
 }
 
@@ -5272,9 +5274,12 @@ val copy_carray(val carray)
 {
   val self = lit("copy-carray");
   struct carray *scry = carray_struct_checked(self, carray);
-  val copy = make_carray(scry->eltype, scry->data, scry->nelem, nil, 0);
-  carray_dup(copy);
-  return copy;
+  if (scry->nelem >= 0) {
+    val copy = make_carray(scry->eltype, scry->data, scry->nelem, nil, 0);
+    carray_dup(copy);
+    return copy;
+  }
+  uw_throwf(error_s, lit("~a: size of ~s carray unknown"), self, carray, nao);
 }
 
 mem_t *carray_ptr(val carray, val type, val self)
@@ -5388,8 +5393,11 @@ val buf_carray(val carray)
   val self = lit("buf-carray");
   struct carray *scry = carray_struct_checked(self, carray);
   struct txr_ffi_type *etft = scry->eltft;
-  cnum bytes = scry->nelem * etft->size;
-  return  make_duplicate_buf(num(bytes), scry->data);
+  if (scry->nelem >= 0) {
+    cnum bytes = scry->nelem * etft->size;
+    return make_duplicate_buf(num(bytes), scry->data);
+  }
+  uw_throwf(error_s, lit("~a: size of ~s carray unknown"), self, carray, nao);
 }
 
 val carray_cptr(val cptr, val type, val len)
@@ -5455,7 +5463,7 @@ val carray_ref(val carray, val idx)
   struct carray *scry = carray_struct_checked(self, carray);
   cnum ix = c_num(idx);
 
-  if (ix < 0)
+  if (ix < 0 && scry->nelem >= 0)
     ix += scry->nelem;
 
   if (ix < 0 || (scry->nelem >= 0 && ix >= scry->nelem)) {
@@ -5476,7 +5484,7 @@ val carray_refset(val carray, val idx, val newval)
   struct carray *scry = carray_struct_checked(self, carray);
   cnum ix = c_num(idx);
 
-  if (ix < 0)
+  if (ix < 0 && scry->nelem >= 0)
     ix += scry->nelem;
 
   if (ix < 0 || (scry->nelem >= 0 && ix >= scry->nelem)) {
@@ -5502,14 +5510,23 @@ val carray_sub(val carray, val from, val to)
   if (null_or_missing_p(from))
     from = zero;
 
-  if (null_or_missing_p(to))
+  if (null_or_missing_p(to)) {
+    if (ln < 0)
+      goto nolen;
     to = len;
+  }
 
-  if (minusp(to))
+  if (minusp(to)) {
+    if (ln < 0)
+      goto nolen;
     to = plus(to, len);
+  }
 
-  if (minusp(from))
+  if (minusp(from)) {
+    if (ln < 0)
+      goto nolen;
     from = plus(from, len);
+  }
 
   {
     cnum fn = c_num(from);
@@ -5533,6 +5550,8 @@ val carray_sub(val carray, val from, val to)
 
     return make_carray(scry->eltype, scry->data + fn * elsize, tn - fn, carray, 0);
   }
+nolen:
+  uw_throwf(error_s, lit("~a: operation requires size of ~s to be known"), self, carray, nao);
 }
 
 val carray_replace(val carray, val values, val from, val to)
@@ -5556,6 +5575,8 @@ val carray_replace(val carray, val values, val from, val to)
                 self, nao);
 
     while (seq_get(&wh_iter, &wh) && seq_get(&item_iter, &item)) {
+      if (ln < 0)
+        goto nolen;
       if (ge(wh, len))
         break;
       carray_refset(carray, wh, item);
@@ -5563,13 +5584,20 @@ val carray_replace(val carray, val values, val from, val to)
 
     return carray;
   } else if (minusp(from)) {
+    if (ln < 0)
+      goto nolen;
     from = plus(from, len);
   }
 
-  if (null_or_missing_p(to))
+  if (null_or_missing_p(to)) {
+    if (ln < 0)
+      goto nolen;
     to = len;
-  else if (minusp(to))
+  } else if (minusp(to)) {
+    if (ln < 0)
+      goto nolen;
     to = plus(to, len);
+  }
 
   {
     val vlen = length(values);
@@ -5632,26 +5660,34 @@ val carray_replace(val carray, val values, val from, val to)
 
     return carray;
   }
+nolen:
+  uw_throwf(error_s, lit("~a: operation requires size of ~s to be known"), self, carray, nao);
 }
 
-static void carray_ensure_artype(val carray, struct carray *scry, val self)
+static void carray_ensure_artype(val carray, struct carray *scry, int null_term, val self)
 {
-  if (!scry->artype) {
+  if (!scry->artype[null_term]) {
     val dim = num(scry->nelem);
-    val syntax = list(carray_s, dim, scry->eltft->syntax, nao);
+    val syntax = if3(scry->nelem < 0,
+                     list(carray_s, scry->eltft->syntax, nao),
+                     list(carray_s, dim, scry->eltft->syntax, nao));
     struct txr_ffi_type *etft = scry->eltft;
-    set(mkloc(scry->artype, carray), make_ffi_type_array(syntax, vec_s,
-                                                         dim, scry->eltype,
-                                                         self));
+    set(mkloc(scry->artype[null_term], carray),
+        make_ffi_type_array(syntax, vec_s,
+                            dim, scry->eltype,
+                            self));
 
     {
-      struct txr_ffi_type *atft = ffi_type_struct(scry->artype);
+      struct txr_ffi_type *atft = ffi_type_struct(scry->artype[null_term]);
+
       if (etft->syntax == char_s)
         atft->ch_conv = conv_char;
       else if (etft->syntax == wchar_s)
         atft->ch_conv = conv_wchar;
       else if (etft->syntax == bchar_s)
         atft->ch_conv = conv_bchar;
+
+      atft->null_term = null_term;
     }
   }
 }
@@ -5660,11 +5696,10 @@ static val carray_get_common(val carray, val self, unsigned null_term)
 {
   struct carray *scry = carray_struct_checked(self, carray);
 
-  carray_ensure_artype(carray, scry, self);
+  carray_ensure_artype(carray, scry, null_term, self);
 
   {
-    struct txr_ffi_type *atft = ffi_type_struct(scry->artype);
-    atft->null_term = null_term;
+    struct txr_ffi_type *atft = ffi_type_struct(scry->artype[null_term]);
     return atft->get(atft, scry->data, self);
   }
 }
@@ -5673,11 +5708,10 @@ static void carray_put_common(val carray, val seq, val self, unsigned null_term)
 {
   struct carray *scry = carray_struct_checked(self, carray);
 
-  carray_ensure_artype(carray, scry, self);
+  carray_ensure_artype(carray, scry, null_term, self);
 
   {
-    struct txr_ffi_type *atft = ffi_type_struct(scry->artype);
-    atft->null_term = null_term;
+    struct txr_ffi_type *atft = ffi_type_struct(scry->artype[null_term]);
     return atft->put(atft, seq, scry->data, self);
   }
 }
