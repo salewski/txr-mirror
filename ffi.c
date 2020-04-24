@@ -5209,9 +5209,9 @@ val carray_dup(val carray)
   if (carray->co.ops == &carray_owned_ops) {
     return nil;
   } else if (scry->nelem < 0) {
-    uw_throwf(error_s, lit("~a: size of ~s array unknown"), self, carray, nao);
+    uw_throwf(error_s, lit("~a: size of ~s carray unknown"), self, carray, nao);
   } else if (scry->data == 0) {
-    uw_throwf(error_s, lit("~a: ~s: array data pointer is null"),
+    uw_throwf(error_s, lit("~a: ~s: carray data pointer is null"),
               self, carray, nao);
   } else {
     cnum elsize = scry->eltft->size;
@@ -5219,7 +5219,7 @@ val carray_dup(val carray)
     mem_t *dup = chk_copy_obj(scry->data, scry->nelem * scry->eltft->size);
 
     if (size < 0 || (elsize > 0 && size / elsize != scry->nelem))
-      uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
+      uw_throwf(error_s, lit("~a: carray size overflow"), self, nao);
 
     carray->co.ops = &carray_owned_ops;
     scry->data = dup;
@@ -5331,7 +5331,7 @@ val carray_blank(val nelem, val type)
   struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
 
   if (nel < 0) {
-    uw_throwf(error_s, lit("~a: negative array size"), self, nao);
+    uw_throwf(error_s, lit("~a: negative carray size"), self, nao);
   } else {
     mem_t *data = chk_calloc(nel, tft->size);
     val carray = make_carray(type, data, nel, nil, 0);
@@ -5472,7 +5472,7 @@ val carray_ref(val carray, val idx)
   } else {
     struct txr_ffi_type *eltft = scry->eltft;
     if (scry->data == 0)
-      uw_throwf(error_s, lit("~a: ~s: array was freed"),
+      uw_throwf(error_s, lit("~a: ~s: carray storage was freed"),
                 self, carray, nao);
     return eltft->get(eltft, scry->data + eltft->size * ix, self);
   }
@@ -5493,7 +5493,7 @@ val carray_refset(val carray, val idx, val newval)
   } else {
     struct txr_ffi_type *eltft = scry->eltft;
     if (scry->data == 0)
-      uw_throwf(error_s, lit("~a: ~s: array was freed"),
+      uw_throwf(error_s, lit("~a: ~s: carray storage was freed"),
                 self, carray, nao);
     eltft->put(eltft, newval, scry->data + eltft->size * ix, self);
     return newval;
@@ -5633,7 +5633,7 @@ val carray_replace(val carray, val values, val from, val to)
       sn = ln;
 
     if (size < 0 || (ln != 0 && size / elsize != ln) || (sn < fn))
-      uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
+      uw_throwf(error_s, lit("~a: carray size overflow"), self, nao);
 
     ptr = scry->data + fn * elsize;
 
@@ -5754,7 +5754,7 @@ val carray_pun(val carray, val type)
   carray_elem_check(tft, self);
 
   if (len != 0 && size / elsize != len)
-    uw_throwf(error_s, lit("~a: array size overflow"), self, nao);
+    uw_throwf(error_s, lit("~a: carray size overflow"), self, nao);
 
   return make_carray(type, scry->data, size / tft->size, carray, 0);
 }
