@@ -217,11 +217,6 @@ static noreturn val unimpl_truncate(val stream, val len)
   unimpl(stream, lit("truncate-stream"));
 }
 
-static noreturn val unimpl_get_fd(val stream)
-{
-  unimpl(stream, lit("fileno"));
-}
-
 static noreturn val unimpl_get_sock_family(val stream)
 {
   unimpl(stream, lit("sock-family"));
@@ -421,7 +416,7 @@ void fill_stream_ops(struct strm_ops *ops)
   if (!ops->clear_error)
     ops->clear_error = null_clear_error;
   if (!ops->get_fd)
-    ops->get_fd = unimpl_get_fd;
+    ops->get_fd = null_get_fd;
   if (!ops->get_sock_family)
     ops->get_sock_family = unimpl_get_sock_family;
   if (!ops->get_sock_type)
@@ -726,8 +721,6 @@ static val stdio_get_prop(val stream, val ind)
     return h->is_real_time ? t : nil;
   } else if (ind == name_k) {
     return h->descr;
-  } else if (ind == fd_k) {
-    return h->f ? num(fileno(h->f)) : nil;
   } else if (ind == byte_oriented_k) {
     return h->is_byte_oriented ? t : nil;
   }
@@ -2896,6 +2889,10 @@ val stream_get_prop(val stream, val ind)
   val self = lit("stream-get-prop");
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
+
+  if (ind == fd_k && ops->get_fd != null_get_fd)
+    return ops->get_fd(stream);
+
   return ops->get_prop(stream, ind);
 }
 

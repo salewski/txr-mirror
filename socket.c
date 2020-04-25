@@ -552,9 +552,6 @@ static val dgram_get_prop(val stream, val ind)
 {
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
 
-  if (ind == fd_k)
-    return num(d->fd);
-
   if (ind == name_k) {
     if (d->fd == -1)
       return lit("closed");

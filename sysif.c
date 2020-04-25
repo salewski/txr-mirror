@@ -303,7 +303,7 @@ static val mkdir_wrap(val path, val mode)
 #if HAVE_CHMOD || HAVE_CHOWN || HAVE_SYS_STAT || HAVE_FILE_STAMP_CHANGE
 static int get_fd(val stream, val self)
 {
-  val fd_in = if3(integerp(stream), stream, stream_get_prop(stream, fd_k));
+  val fd_in = if3(integerp(stream), stream, stream_fd(stream));
 
   if (stream && !fd_in)
     uw_throwf(file_error_s,
@@ -1326,7 +1326,7 @@ static val poll_wrap(val poll_list, val timeout_in)
       break;
     case COBJ:
       if (subtypep(obj->co.cls, stream_s)) {
-        val fdval = stream_get_prop(obj, fd_k);
+        val fdval = stream_fd(obj);
         if (!fdval) {
           free(pfd);
           uw_throwf(file_error_s,
@@ -1553,7 +1553,7 @@ void simulate_setuid_setgid(val open_script)
     return;
 
   {
-    val fdv = stream_get_prop(open_script, fd_k);
+    val fdv = stream_fd(open_script);
 
     if (fdv) {
       struct stat stb;
