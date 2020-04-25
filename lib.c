@@ -3574,7 +3574,7 @@ val copy_str(val str)
 val upcase_str(val str)
 {
   val len = length_str(str);
-  wchar_t *dst = chk_wmalloc(c_num(len) + 1);
+  wchar_t *dst = chk_wmalloc(c_unum(len) + 1);
   const wchar_t *src = c_str(str);
   val out = string_own(dst);
 
@@ -3587,7 +3587,7 @@ val upcase_str(val str)
 val downcase_str(val str)
 {
   val len = length_str(str);
-  wchar_t *dst = chk_wmalloc(c_num(len) + 1);
+  wchar_t *dst = chk_wmalloc(c_unum(len) + 1);
   const wchar_t *src = c_str(str);
   val out = string_own(dst);
 
@@ -7553,7 +7553,7 @@ val sub_vec(val vec_in, val from, val to)
 #endif
     v += 2;
     vec->v.vec = v;
-    v[vec_length] = v[vec_alloc] = num(nelem);
+    v[vec_length] = v[vec_alloc] = unum(nelem);
     memcpy(vec->v.vec, vec_in->v.vec + cfrom, nelem * sizeof *vec->v.vec);
     return vec;
   }

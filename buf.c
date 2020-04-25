@@ -160,7 +160,7 @@ static void buf_shrink(struct buf *b)
     len = succ(len); /* avoid reallocing to zero length; i.e. freeing */
 
   if (len != b->size) {
-    b->data = chk_realloc(b->data, c_num(len));
+    b->data = chk_realloc(b->data, c_unum(len));
     b->size = b->len;
   }
 }
