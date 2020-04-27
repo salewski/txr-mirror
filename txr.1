@@ -67529,15 +67529,12 @@ position (bit 0). If another one-bit-wide is allocated, it is placed into
 bit 6 on big-endian, and bit 1 on little-endian.
 
 More generally, whenever a bitfield is allocated for a big-endian machine, and
-the storage unit is determined into which that bitfield shall be placed, that
-field will be placed at that unit's most significant bit position that is still
-available for allocation. On a little-endian machine, that field will be placed
-at the least significant available bit position of the storage unit. On either
-type of machine, that field will be placed at the lowest-addressed byte or
-bytes that are available, and within that byte or those bytes, the field
-will occupy the most significant bit positions that are available. If the
-field partially occupies a byte, the bits that remain free are the least
-significant ones.
+the storage unit is determined into which that bitfield shall be placed, the
+most significant bits of that storage unit are filled first on a big-endian
+machine, whereas the least significant bits are filled first on a little-endian
+machine.  From this it follows that on either type of machine, that field shall
+be placed at the lowest-addressed byte or bytes in which unallocated bits
+remain.
 
 .SS* FFI Call Descriptors
 
