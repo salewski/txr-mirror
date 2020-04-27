@@ -67503,7 +67503,8 @@ partially filled, then
 is adjusted to point to the next unit after that, and
 .I B
 is reset to zero. Note that according to this semantics, a zero-width bitfield
-can have an effect even if placed between non-bitfield members.
+can have an effect even if placed between non-bitfield members, or appears
+as the last member of a structure.
 
 If, after the placement of all structure members,
 .I B
