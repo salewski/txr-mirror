@@ -61,21 +61,19 @@
               'str-inaddr addr)
       `@a.@b.@c.@d@p`)))
 
+
 (defun sys:in6addr-condensed-text (numeric-pieces)
-  (let ((parted [partition-by zerop numeric-pieces]))
-    (if (or (cdr parted) (nzerop (caar parted)))
-      (let* ((notyet t)
-             (texts (window-mappend
-                      1 nil
-                      (lambda (pre chunk post)
-                        (cond
-                          ((and notyet (zerop (car chunk)) (cdr chunk))
-                           (zap notyet)
-                           (if (and post pre) '("") '(":")))
-                          (t (mapcar (op format nil "~x") chunk))))
-                      parted)))
-        `@{texts ":"}`)
-      "::")))
+  (let* ((str (cat-str [mapcar (load-time (op fmt "~x")) numeric-pieces] ":"))
+         (zr (rra #/0(:0)+/ str))
+         (lp [pos-max zr : (load-time [callf - to from])])
+         (lr [zr lp]))
+    (when lp
+      (del [str lr]))
+    (cond
+      ((equal "" str) "::")
+      ((starts-with ":" str) `:@str`)
+      ((ends-with ":" str) `@str:`)
+      (t str))))
 
 (defun str-in6addr (addr : port)
   (let ((str (if (and (<= (width addr) 48)
