@@ -62,17 +62,20 @@
       `@a.@b.@c.@d@p`)))
 
 (defun sys:in6addr-condensed-text (numeric-pieces)
-  (let* ((notyet t)
-         (texts (window-mappend
-                  1 nil
-                  (lambda (pre chunk post)
-                    (cond
-                      ((and notyet (zerop (car chunk)) (cdr chunk))
-                       (zap notyet)
-                       (if (and post pre) '("") '(":")))
-                      (t (mapcar (op format nil "~x") chunk))))
-                  [partition-by zerop numeric-pieces])))
-    `@{texts ":"}`))
+  (let ((parted [partition-by zerop numeric-pieces]))
+    (if (or (cdr parted) (nzerop (caar parted)))
+      (let* ((notyet t)
+             (texts (window-mappend
+                      1 nil
+                      (lambda (pre chunk post)
+                        (cond
+                          ((and notyet (zerop (car chunk)) (cdr chunk))
+                           (zap notyet)
+                           (if (and post pre) '("") '(":")))
+                          (t (mapcar (op format nil "~x") chunk))))
+                      parted)))
+        `@{texts ":"}`)
+      "::")))
 
 (defun str-in6addr (addr : port)
   (let ((str (if (and (<= (width addr) 48)
