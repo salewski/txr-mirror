@@ -1242,16 +1242,14 @@
     (if loaded-p
       me.(compile oreg env ^(quote ,exp))
       (compile-in-toplevel me
-        (let* ((oreg me.(alloc-treg))
-               (dreg me.(alloc-dreg))
-               (exp me.(compile oreg (new env co me) exp))
+        (let* ((dreg me.(alloc-dreg))
+               (exp me.(compile dreg (new env co me) exp))
                (lt-frag (new (frag dreg
                                    ^(,*exp.code
-                                     (mov ,dreg ,exp.oreg))
+                                     ,*(maybe-mov dreg exp.oreg))
                                    exp.fvars
                                    exp.ffuns))))
           (misleading-ref-check exp env form)
-          me.(free-treg oreg)
           (push lt-frag me.lt-frags)
           (new (frag dreg nil)))))))
 
