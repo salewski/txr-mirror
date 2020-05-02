@@ -199,6 +199,8 @@
 
 (defvar *dedup*)
 
+(defvar *load-time*)
+
 (defun dedup (obj)
   (cond
     ((null obj) nil)
@@ -815,7 +817,8 @@
 
 (defmeth compiler comp-lambda (me oreg env form)
   (mac-param-bind form (op par-syntax . body) form
-    (let* ((pars (new (fun-param-parser par-syntax form)))
+    (let* ((*load-time* nil)
+           (pars (new (fun-param-parser par-syntax form)))
            (need-frame (or (plusp pars.nfix) pars.rest))
            (nenv (if need-frame (new env up env co me) env))
            lexsyms fvars specials need-dframe)
@@ -1239,19 +1242,21 @@
 
 (defmeth compiler comp-load-time-lit (me oreg env form)
   (mac-param-bind form (op loaded-p exp) form
-    (if loaded-p
-      me.(compile oreg env ^(quote ,exp))
-      (compile-in-toplevel me
-        (let* ((dreg me.(alloc-dreg))
-               (exp me.(compile dreg (new env co me) exp))
-               (lt-frag (new (frag dreg
-                                   ^(,*exp.code
-                                     ,*(maybe-mov dreg exp.oreg))
-                                   exp.fvars
-                                   exp.ffuns))))
-          (misleading-ref-check exp env form)
-          (push lt-frag me.lt-frags)
-          (new (frag dreg nil)))))))
+    (cond
+      (loaded-p me.(compile oreg env ^(quote ,exp)))
+      (*load-time* me.(compile oreg env exp))
+      (t (compile-in-toplevel me
+           (let* ((*load-time* t)
+                  (dreg me.(alloc-dreg))
+                  (exp me.(compile dreg (new env co me) exp))
+                  (lt-frag (new (frag dreg
+                                      ^(,*exp.code
+                                         ,*(maybe-mov dreg exp.oreg))
+                                      exp.fvars
+                                      exp.ffuns))))
+             (misleading-ref-check exp env form)
+             (push lt-frag me.lt-frags)
+             (new (frag dreg nil))))))))
 
 (defun maybe-mov (to-reg from-reg)
   (if (nequal to-reg from-reg)

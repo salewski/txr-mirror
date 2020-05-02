@@ -71443,6 +71443,52 @@ the immediately enclosing form which surrounds the
 .code load-time
 form.
 
+A
+.code load-time
+form may be nested inside another
+.code load-time
+form. In this situation, two cases occur.
+
+If the two forms are not embedded in a
+.codn lambda ,
+or else are embedded in the same
+.codn lambda ,
+then the inner
+.code load-time
+form is superfluous due to the presence of the outer
+.codn load-time .
+That is to say, the inner
+.mono
+.meti (load-time << form )
+.onom
+expression is equivalent to
+.metn form ,
+because the outer form already establishes its evaluation to be in a load-time
+context.
+
+If the inner
+.code load-time
+form occurs in a
+.codn lambda ,
+but the outer form occurs outside of that
+.codn lambda ,
+then the semantics of the inner
+.code load-time
+form is relevant and necessary. This is because expressions occurring in a
+.code lambda
+are evaluated when the
+.code lambda
+is called, which may take place from a non-load-time context, even if the
+.code lambda
+itself was produced in a load-time context.
+
+An expression being embedded in a
+.code lambda
+means that it appears either in the
+.code lambda
+body, or else in the parameter list as the initializing
+expression for an optional parameter.
+
 .TP* Notes:
 
 When interpreted code containing
