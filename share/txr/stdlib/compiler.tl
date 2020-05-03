@@ -815,7 +815,7 @@
                    (uni (diff bfrag.ffuns lexfuns)
                         (if rec (diff ffuns lexfuns) ffuns))))))))
 
-(defmeth compiler comp-lambda (me oreg env form)
+(defmeth compiler comp-lambda-impl (me oreg env form)
   (mac-param-bind form (op par-syntax . body) form
     (let* ((*load-time* nil)
            (pars (new (fun-param-parser par-syntax form)))
@@ -912,6 +912,20 @@
                        (uni fvars (diff bfrag.fvars lexsyms))
                        (uni [reduce-left uni ifrags nil .ffuns]
                             bfrag.ffuns)))))))))
+
+(defmeth compiler comp-lambda (me oreg env form)
+  (if *load-time*
+    me.(comp-lambda-impl oreg env form)
+    (let* ((lambda-frag me.(comp-lambda-impl oreg env form))
+           (ok-lift-var-pov (all lambda-frag.fvars
+                                 (lambda (sym)
+                                   (not env.(lookup-var sym)))))
+           (ok-lift-fun-pov (all lambda-frag.ffuns
+                                 (lambda (sym)
+                                   (not env.(lookup-fun sym))))))
+      (if (and ok-lift-var-pov ok-lift-fun-pov)
+        me.(compile oreg env ^(sys:load-time-lit nil ,form))
+        lambda-frag))))
 
 (defmeth compiler comp-fun (me oreg env form)
   (mac-param-bind form (op arg) form
