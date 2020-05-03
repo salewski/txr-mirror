@@ -1244,7 +1244,7 @@
   (mac-param-bind form (op loaded-p exp) form
     (cond
       (loaded-p me.(compile oreg env ^(quote ,exp)))
-      (*load-time* me.(compile oreg env exp))
+      ((or *load-time* (constantp exp)) me.(compile oreg env exp))
       (t (compile-in-toplevel me
            (let* ((*load-time* t)
                   (dreg me.(alloc-dreg))
