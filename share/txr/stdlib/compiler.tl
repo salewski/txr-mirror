@@ -1614,7 +1614,8 @@
   (let ((co (new compiler))
         (as (new assembler))
         (*dedup* (or *dedup* (hash))))
-    (let* ((oreg co.(alloc-treg))
+    (let* ((*load-time* t)
+           (oreg co.(alloc-treg))
            (xexp (if expanded-p
                    exp
                    (unwind-protect
