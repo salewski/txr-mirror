@@ -71539,6 +71539,20 @@ closure which is returned. Invoking the closure doesn't cause the
 .code load-time
 expressions to be evaluated.
 
+The
+.code load-time
+form is subject to compiler optimizations. A top-level expression is assumed to
+be evaluated in load time, so
+.code load-time
+does nothing in a top-level expression. It becomes active inside forms
+embedded in a
+.code lambda
+expressions. Since
+.code load-time
+may be used to hoist calculations outside of loops,
+.code load-time
+is also active in those parts of loops which are repeatedly evaluated.
+
 The use of
 .code load-time
 is similar to defining a variable and then referring to the variable.

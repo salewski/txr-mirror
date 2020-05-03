@@ -1087,6 +1087,7 @@
   (mac-param-bind form (op inits (: (test nil test-p) . rets) incs . body) form
     (let* ((treg me.(alloc-treg))
            (ifrag me.(comp-progn treg env inits))
+           (*load-time* nil)
            (tfrag (if test-p me.(compile oreg env test)))
            (rfrag me.(comp-progn oreg env rets))
            (nfrag me.(comp-progn treg env incs))
