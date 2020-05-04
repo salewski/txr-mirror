@@ -579,7 +579,7 @@ val lookup_fun(val env, val sym)
     } else if (car(sym) == macro_s) {
       return lookup_mac(nil, cadr(sym));
     } else if (car(sym) == lambda_s) {
-      return cons(sym, func_interp(env, sym));
+      return cons(sym, func_interp(env, expand(sym, nil)));
     } else {
       return nil;
     }

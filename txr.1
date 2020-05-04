@@ -16996,7 +16996,8 @@ If a
 .code lambda
 expression is passed to
 .codn symbol-function ,
-then the function implied by that expression is returned.
+then the expression is macro-expanded and if that is successful, the function
+implied by that expression is returned.
 It is unspecified whether this function is interpreted or compiled.
 
 The
