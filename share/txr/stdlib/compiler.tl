@@ -287,7 +287,7 @@
     ((atom form) me.(comp-atom oreg form))
     (t (let ((sym (car form)))
          (cond
-           ((special-operator-p sym)
+           ((bindable sym)
             (caseq sym
               (quote me.(comp-atom oreg (cadr form)))
               (sys:setq me.(comp-setq oreg env form))
@@ -327,6 +327,11 @@
               (sys:upenv me.(compile oreg env.up (cadr form)))
               (sys:dvbind me.(compile oreg env (caddr form)))
               (sys:load-time-lit me.(comp-load-time-lit oreg env form))
+              ;; compiler-only special operators:
+              (ift me.(comp-ift oreg env form))
+              ;; specially treated functions
+              ((call apply usr:apply) me.(comp-apply-call oreg env form))
+              ;; error cases
               ((macrolet symacrolet macro-time)
                (compile-error form "unexpanded ~s encountered" sym))
               ((sys:var sys:expr)
@@ -334,9 +339,8 @@
               ((usr:qquote usr:unquote usr:splice
                            sys:qquote sys:unquote sys:splice)
                (compile-error form "unexpanded quasiquote encountered"))
-              (t
-                (compile-error form "unrecognized special operator ~s" sym))))
-           ((bindable sym) me.(comp-fun-form oreg env form))
+              ;; function call
+              (t me.(comp-fun-form oreg env form))))
            ((and (consp sym)
                  (eq (car sym) 'lambda)) me.(compile oreg env ^(call ,*form)))
            (t (compile-error form "invalid operator")))))))
@@ -1027,35 +1031,35 @@
                  form (cons sym args)))
          ((identity + * min max) (return-from comp-fun-form
                                    me.(compile oreg env (car args)))))))
-    (caseql sym
-      ((call apply usr:apply)
-       (let ((gopcode [%gcall-op% sym])
-             (opcode [%call-op% sym]))
-         (tree-case (car args)
-           ((op arg . more)
-            (caseq op
-              (fun (cond
-                     (more (compile-error form "excess args in fun form"))
-                     ((bindable arg)
-                      (let ((fbind env.(lookup-fun arg t)))
-                        me.(comp-call-impl oreg env (if fbind opcode gopcode)
-                                           (if fbind fbind.loc me.(get-sidx arg))
-                                           (cdr args))))
-                     ((and (consp arg) (eq (car arg) 'lambda))
-                      me.(comp-fun-form oreg env ^(,sym ,arg ,*(cdr args))))
-                     (t :)))
-              (lambda me.(comp-inline-lambda oreg env opcode
-                                             (car args) (cdr args)))
-              (t :)))
-           (arg me.(comp-call oreg env
-                              (if (eq sym 'usr:apply) 'apply sym) args)))))
-      (ift me.(comp-ift oreg env form))
-      (t (let* ((fbind env.(lookup-fun sym t))
-                (cfrag me.(comp-call-impl oreg env (if fbind 'call 'gcall)
-                                          (if fbind fbind.loc me.(get-sidx sym))
-                                          args)))
-           (pushnew sym cfrag.ffuns)
-           cfrag)))))
+    (let* ((fbind env.(lookup-fun sym t))
+           (cfrag me.(comp-call-impl oreg env (if fbind 'call 'gcall)
+                                     (if fbind fbind.loc me.(get-sidx sym))
+                                     args)))
+      (pushnew sym cfrag.ffuns)
+      cfrag)))
+
+(defmeth compiler comp-apply-call (me oreg env form)
+  (tree-bind (sym . args) form
+    (let ((gopcode [%gcall-op% sym])
+          (opcode [%call-op% sym]))
+      (tree-case (car args)
+        ((op arg . more)
+         (caseq op
+           (fun (cond
+                  (more (compile-error form "excess args in fun form"))
+                  ((bindable arg)
+                   (let ((fbind env.(lookup-fun arg t)))
+                     me.(comp-call-impl oreg env (if fbind opcode gopcode)
+                                        (if fbind fbind.loc me.(get-sidx arg))
+                                        (cdr args))))
+                  ((and (consp arg) (eq (car arg) 'lambda))
+                   me.(comp-fun-form oreg env ^(,sym ,arg ,*(cdr args))))
+                  (t :)))
+           (lambda me.(comp-inline-lambda oreg env opcode
+                                          (car args) (cdr args)))
+           (t :)))
+        (arg me.(comp-call oreg env
+                           (if (eq sym 'usr:apply) 'apply sym) args))))))
 
 (defmeth compiler comp-call (me oreg env opcode args)
   (tree-bind (fform . fargs) args
