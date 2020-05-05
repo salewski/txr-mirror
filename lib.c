@@ -2127,116 +2127,139 @@ val tree_find(val obj, val tree, val testfun)
   return nil;
 }
 
-val countqual(val obj, val list)
+val countqual(val obj, val seq)
 {
-  val count = zero;
+  val self = lit("countqual");
+  seq_iter_t iter;
+  ucnum count = 0;
+  val ocount = zero;
+  val elem;
 
-  list = nullify(list);
+  seq_iter_init(self, &iter, z(seq));
 
-  gc_hint(list);
+  while (seq_get(&iter, &elem))
+    if (equal(elem, obj))
+      if (++count == 0)
+        ocount = plus(ocount, one);
 
-  for (; list; list = cdr(list))
-    if (equal(car(list), obj))
-      count = plus(count, one);
-
-  return count;
+  return if3(ocount == zero,
+             unum(count),
+             plus(unum(count), ash(ocount, num_fast(CHAR_BIT * sizeof count))));
 }
 
-val countql(val obj, val list)
+val countql(val obj, val seq)
 {
-  val count = zero;
+  val self = lit("countql");
+  seq_iter_t iter;
+  ucnum count = 0;
+  val ocount = zero;
+  val elem;
 
-  list = nullify(list);
+  seq_iter_init(self, &iter, z(seq));
 
-  gc_hint(list);
+  while (seq_get(&iter, &elem))
+    if (eql(elem, obj))
+      if (++count == 0)
+        ocount = plus(ocount, one);
 
-  for (; list; list = cdr(list))
-    if (eql(car(list), obj))
-      count = plus(count, one);
-
-  return count;
+  return if3(ocount == zero,
+             unum(count),
+             plus(unum(count), ash(ocount, num_fast(CHAR_BIT * sizeof count))));
 }
 
-val countq(val obj, val list)
+val countq(val obj, val seq)
 {
-  val count = zero;
+  val self = lit("countq");
+  seq_iter_t iter;
+  ucnum count = 0;
+  val ocount = zero;
+  val elem;
 
-  list = nullify(list);
+  seq_iter_init(self, &iter, z(seq));
 
-  gc_hint(list);
+  while (seq_get(&iter, &elem))
+    if (elem == obj)
+      if (++count == 0)
+        ocount = plus(ocount, one);
 
-  for (; list; list = cdr(list))
-    if (car(list) == obj)
-      count = plus(count, one);
-
-  return count;
+  return if3(ocount == zero,
+             unum(count),
+             plus(unum(count), ash(ocount, num_fast(CHAR_BIT * sizeof count))));
 }
 
-val count_if(val pred, val list, val key)
+val count_if(val pred, val seq, val key_in)
 {
-  val count = zero;
+  val self = lit("count-if");
+  seq_iter_t iter;
+  ucnum count = 0;
+  val ocount = zero;
+  val key = default_arg(key_in, identity_f);
+  val elem;
 
-  key = default_arg(key, identity_f);
-  list = nullify(list);
+  seq_iter_init(self, &iter, z(seq));
 
-  gc_hint(list);
-
-  for (; list; list = cdr(list)) {
-    val subj = funcall1(key, car(list));
-    val satisfies = funcall1(pred, subj);
-
-    if (satisfies)
-      count = plus(count, one);
+  while (seq_get(&iter, &elem)) {
+    val subj = funcall1(key, elem);
+    if (funcall1(pred, subj))
+      if (++count == 0)
+        ocount = plus(ocount, one);
   }
 
-  return count;
+  return if3(ocount == zero,
+             unum(count),
+             plus(unum(count), ash(ocount, num_fast(CHAR_BIT * sizeof count))));
 }
 
-val some_satisfy(val list, val pred, val key)
+val some_satisfy(val seq, val pred_in, val key_in)
 {
-  pred = default_arg(pred, identity_f);
-  key = default_arg(key, identity_f);
-  list = nullify(list);
+  val pred = default_arg(pred_in, identity_f);
+  val key = default_arg(key_in, identity_f);
+  val self = lit("some");
+  seq_iter_t iter;
+  val elem;
 
-  gc_hint(list);
+  seq_iter_init(self, &iter, z(seq));
 
-  for (; list; list = cdr(list)) {
-    val item;
-    if ((item = funcall1(pred, funcall1(key, car(list)))) != nil)
+  while (seq_get(&iter, &elem)) {
+    val item = funcall1(pred, funcall1(key, elem));
+    if (item != nil)
       return item;
   }
 
   return nil;
 }
 
-val all_satisfy(val list, val pred, val key)
+val all_satisfy(val seq, val pred_in, val key_in)
 {
-  val item = t;
+  val pred = default_arg(pred_in, identity_f);
+  val key = default_arg(key_in, identity_f);
+  val self = lit("some");
+  seq_iter_t iter;
+  val elem;
+  val ret = t;
 
-  pred = default_arg(pred, identity_f);
-  key = default_arg(key, identity_f);
-  list = nullify(list);
+  seq_iter_init(self, &iter, z(seq));
 
-  gc_hint(list);
-
-  for (; list; list = cdr(list)) {
-    if ((item = funcall1(pred, funcall1(key, car(list)))) == nil)
+  while (seq_get(&iter, &elem)) {
+    if ((ret = funcall1(pred, funcall1(key, elem))) == nil)
       return nil;
   }
 
-  return item;
+  return ret;
 }
 
-val none_satisfy(val list, val pred, val key)
+val none_satisfy(val seq, val pred_in, val key_in)
 {
-  pred = default_arg(pred, identity_f);
-  key = default_arg(key, identity_f);
-  list = nullify(list);
+  val pred = default_arg(pred_in, identity_f);
+  val key = default_arg(key_in, identity_f);
+  val self = lit("none");
+  seq_iter_t iter;
+  val elem;
 
-  gc_hint(list);
+  seq_iter_init(self, &iter, z(seq));
 
-  for (; list; list = cdr(list)) {
-    if (funcall1(pred, funcall1(key, car(list))))
+  while (seq_get(&iter, &elem)) {
+    if (funcall1(pred, funcall1(key, elem)))
       return nil;
   }
 
