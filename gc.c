@@ -519,7 +519,7 @@ static void mark_mem_region(val *low, val *high)
     mark_obj_maybe(*low);
 }
 
-static void mark(val *gc_stack_top)
+NOINLINE static void mark(val *gc_stack_top)
 {
   val **rootloc;
 
@@ -625,7 +625,7 @@ static int sweep_one(obj_t *block)
   return 1;
 }
 
-static int_ptr_t sweep(void)
+NOINLINE static int_ptr_t sweep(void)
 {
   int_ptr_t free_count = 0;
   heap_t **pph;
@@ -731,7 +731,7 @@ static int is_reachable(val obj)
   return (t & REACHABLE) != 0;
 }
 
-static void prepare_finals(void)
+NOINLINE static void prepare_finals(void)
 {
   struct fin_reg *f;
 
@@ -807,7 +807,7 @@ static int is_unreachable_final(struct fin_reg *f, val ctx)
   return !f->reachable;
 }
 
-static void call_finals(void)
+NOINLINE static void call_finals(void)
 {
   (void) call_finalizers_impl(nil, is_unreachable_final);
 }
