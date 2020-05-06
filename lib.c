@@ -6709,7 +6709,7 @@ val funcall1(val fun, val arg)
 {
   if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
     args_decl(args, ARGS_MIN);
-    args_add(args, arg);
+    args_add(args, z(arg));
     return generic_funcall(fun, args);
   }
 
@@ -6761,7 +6761,7 @@ val funcall2(val fun, val arg1, val arg2)
 {
   if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
     args_decl(args, ARGS_MIN);
-    args_add2(args, arg1, arg2);
+    args_add2(args, z(arg1), z(arg2));
     return generic_funcall(fun, args);
   }
 
@@ -6819,7 +6819,7 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
 {
   if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
     args_decl(args, ARGS_MIN);
-    args_add3(args, arg1, arg2, arg3);
+    args_add3(args, z(arg1), z(arg2), z(arg3));
     return generic_funcall(fun, args);
   }
 
@@ -6883,7 +6883,7 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
 {
   if (type(fun) != FUN || fun->f.optargs || dbg_backtrace) {
     args_decl(args, ARGS_MIN);
-    args_add4(args, arg1, arg2, arg3, arg4);
+    args_add4(args, z(arg1), z(arg2), z(arg3), z(arg4));
     return generic_funcall(fun, args);
   }
 
