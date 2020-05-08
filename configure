@@ -110,21 +110,6 @@ for arg in "$0" ${@+"$@"} ; do
 done
 
 #
-# Tentatively save configuration in config.log
-#
-cat > reconfigure <<!
-#!/bin/sh
-#
-# Configured on $(date) using:
-
-$cmdline
-
-# The above did not complete.
-!
-
-chmod a+x reconfigure
-
-#
 # Establish default values for any variables that are not specified
 # on the command line. The default derivations from prefix are in
 # Make syntax. They go verbatim into the generated config.make.
@@ -529,6 +514,22 @@ small-mem [$small_mem]
 !
   exit 1
 fi
+
+#
+# Tentatively save configuration in config.log
+#
+cat > reconfigure <<!
+#!/bin/sh
+#
+# Configured on $(date) using:
+
+$cmdline
+
+# The above did not complete.
+!
+
+chmod a+x reconfigure
+
 
 #
 # Variables are read, --help wasn't given, so let's configure!
