@@ -60589,6 +60589,39 @@ only entries which polled positive. The
 .code cdr
 of every pair now holds a bitmask of the events which were to have occurred.
 
+.coNP Function @ isatty
+.synb
+.mets (isatty << stream )
+.mets (isatty << fileno )
+.syne
+.desc
+The
+.code isatty
+function provides access to the underlying POSIX function of the same name.
+
+If the argument is a
+.meta stream
+object which has a
+.code :fd
+property, then the file descriptor number is retrieved. The behavior is
+then as if that descriptor number were passed as the
+.meta fileno
+argument.
+
+If the argument is not a
+.metn stream ,
+it must be a
+.metn fileno :
+an integer in the representation range of the C type
+.codn int .
+
+The POSIX
+.code isatty
+is invoked on this integer. If it that returns 1, then
+.code t
+is returned, otherwise
+.codn nil .
+
 .SS* Unix File Control
 
 .coNP Variables @, o-accmode @, o-rdonly @, o-wronly @, o-rdwr @, o-creat @, o-noctty @, o-trunc @, o-append @, o-nonblock @, o-sync @, o-async @, o-directory @, o-nofollow @, o-cloexec @, o-direct @ o-noatime and @ o-path

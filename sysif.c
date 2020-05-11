@@ -2128,6 +2128,26 @@ static val realpath_wrap(val path)
 }
 #endif
 
+#if HAVE_ISATTY
+static val isatty_wrap(val spec)
+{
+  val fdval;
+  val self = lit("isatty");
+
+  if (streamp(spec))
+    fdval = stream_get_prop(spec, fd_k);
+  else
+    fdval = spec;
+
+  if (fdval) {
+    int fd = c_int(fdval, self);
+    return if2(fd && isatty(fd) > 0, t);
+  }
+
+  return nil;
+}
+#endif
+
 void sysif_init(void)
 {
   prot1(&at_exit_list);
@@ -2683,5 +2703,9 @@ void sysif_init(void)
 
 #if HAVE_REALPATH
   reg_fun(intern(lit("realpath"), user_package), func_n1(realpath_wrap));
+#endif
+
+#if HAVE_ISATTY
+  reg_fun(intern(lit("isatty"), user_package), func_n1(isatty_wrap));
 #endif
 }
