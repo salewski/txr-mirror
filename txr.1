@@ -32550,13 +32550,14 @@ is a transformed list of rows which is reconstituted into a list of columns.
   ;; (op remove-if (ap eql @3 20))
 .brev
 
-.coNP Function @ sort
+.coNP Functions @ sort and @ nsort
 .synb
 .mets (sort < sequence >> [ lessfun <> [ keyfun ]])
+.mets (nsort < sequence >> [ lessfun <> [ keyfun ]])
 .syne
 .desc
 The
-.code sort
+.code nsort
 function destructively sorts
 .metn sequence ,
 producing a sequence
@@ -32596,7 +32597,21 @@ function.
 
 The
 .code sort
-function is stable for sequences which are lists. This means that the
+function has the same argument requirements as
+.code nsort
+but is non-destructive: it returns a new object, leaving the input
+.meta sequence
+unmodified, as if a copy of the input object were made using the
+function
+.code copy
+and then that copy were sorted in-place using
+.codn nsort .
+
+The
+.code sort
+and
+.code nsort
+functions are stable for sequences which are lists. This means that the
 original order of items which are considered identical is preserved.
 For strings and vectors,
 .code sort
@@ -32604,7 +32619,9 @@ is not stable.
 
 The
 .code sort
-function can be applied to hashes. It produces meaningful behavior
+and
+.code nsort
+functions can be applied to hashes. It produces meaningful behavior
 for a hash table which contains
 .I N
 keys which are the integers from 0 to
@@ -32660,13 +32677,14 @@ in the APL language.
   [grade "Hello" >] -> (4 2 3 1 0)
 .brev
 
-.coNP Function @ shuffle
+.coNP Functions @ shuffle and @ nshuffle
 .synb
 .mets (shuffle << sequence )
+.mets (nshuffle << sequence )
 .syne
 .desc
 The
-.code shuffle
+.code nshuffle
 function pseudo-randomly rearranges the elements of
 .metn sequence .
 This is performed in place:
@@ -32682,11 +32700,24 @@ The rearrangement depends on pseudo-random numbers obtained from the
 function.
 
 The
-.code shuffle
+.code nshuffle
 function supports hash tables in a manner analogous to the way
-.code sort
+.code nsort
 supports hash tables; the same remarks apply as in the description
 of that function.
+
+The
+.code shuffle
+function has the same argument requirements and
+semantics, but differs from
+.code nshuffle
+in that it avoids in-place modification of
+.metn sequence :
+a new, shuffled sequence is returned, as if a copy of
+.meta sequence
+were made using
+.code copy
+and then that copy were shuffled in-place and returned.
 
 .coNP Function @ sort-group
 .synb

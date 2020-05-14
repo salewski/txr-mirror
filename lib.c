@@ -8867,9 +8867,9 @@ static void sort_vec(val vec, val lessfun, val keyfun)
   quicksort(vec, lessfun, keyfun, 0, len);
 }
 
-val sort(val seq, val lessfun, val keyfun)
+val nsort(val seq, val lessfun, val keyfun)
 {
-  val self = lit("sort");
+  val self = lit("nsort");
   seq_info_t si = seq_info(seq);
 
   keyfun = default_arg(keyfun, identity_f);
@@ -8891,7 +8891,31 @@ val sort(val seq, val lessfun, val keyfun)
   abort();
 }
 
-val shuffle(val seq)
+val sort(val seq, val lessfun, val keyfun)
+{
+  val self = lit("sort");
+  seq_info_t si = seq_info(seq);
+
+  keyfun = default_arg(keyfun, identity_f);
+  lessfun = default_arg(lessfun, less_f);
+
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_VECLIKE:
+  case SEQ_HASHLIKE:
+    sort_vec(copy(seq), lessfun, keyfun);
+    return seq;
+  case SEQ_LISTLIKE:
+    return sort_list(copy_list(seq), lessfun, keyfun);
+  case SEQ_NOTSEQ:
+    unsup_obj(self, seq);
+  }
+
+  abort();
+}
+
+val nshuffle(val seq)
 {
   seq_info_t si = seq_info(seq);
 
@@ -8928,10 +8952,17 @@ val shuffle(val seq)
       return seq;
     }
   case SEQ_NOTSEQ:
-    type_mismatch(lit("shuffle: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("nshuffle: ~s is not a sequence"), seq, nao);
   }
 
   abort();
+}
+
+val shuffle(val seq)
+{
+  if (seqp(seq))
+    return nshuffle(copy(seq));
+  type_mismatch(lit("nshuffle: ~s is not a sequence"), seq, nao);
 }
 
 static val multi_sort_less(val funcs_cons, val llist, val rlist)
@@ -8976,8 +9007,7 @@ val sort_group(val seq, val keyfun, val lessfun)
 {
   val kf = default_arg(keyfun, identity_f);
   val lf = default_arg(lessfun, less_f);
-  val seq_copy = copy(seq);
-  val sorted = sort(seq_copy, lf, kf);
+  val sorted = sort(seq, lf, kf);
   return partition_by(kf, sorted);
 }
 
@@ -9054,7 +9084,7 @@ val grade(val seq, val lessfun, val keyfun_in)
     {
       list_collect_decl (out, ptail);
 
-      sort(v, lessfun, keyfun);
+      nsort(v, lessfun, keyfun);
 
       for (i = 0; i < len; i++)
         ptail = list_collect(ptail, cdr(v->v.vec[i]));

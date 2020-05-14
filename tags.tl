@@ -284,4 +284,4 @@
                                       ftw-skip-subtree)))
                             (t ftw-continue)))
                         (logior ftw-phys ftw-actionretval)))))
-      (write-tagfile (sort tags : .ident) o))))
+      (write-tagfile (nsort tags : .ident) o))))
