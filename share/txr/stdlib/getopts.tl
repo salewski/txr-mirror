@@ -269,9 +269,9 @@
     opr.(parse-opts args)))
 
 (defun opthelp (opt-desc-list : (stream *stdout*))
-  (let ((sorted [sort (remove-if (op null @1.helptext)
-                                             opt-desc-list) :
-                      (do if @1.long @1.long @1.short)])
+  (let ((sorted [nsort (copy-list (remove-if (op null @1.helptext)
+                                             opt-desc-list)) :
+                       (do if @1.long @1.long @1.short)])
         (undocumented (keep-if (op null @1.helptext) opt-desc-list)))
     (put-line "\nOptions:\n")
     (each ((od sorted))
