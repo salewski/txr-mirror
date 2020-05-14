@@ -8867,31 +8867,38 @@ static void sort_vec(val vec, val lessfun, val keyfun)
   quicksort(vec, lessfun, keyfun, 0, len);
 }
 
-val sort(val seq_in, val lessfun, val keyfun)
+val sort(val seq, val lessfun, val keyfun)
 {
-  val seq_orig = seq_in;
-  val seq = nullify(seq_in);
-
-  if (!seq)
-    return make_like(nil, seq_orig);
+  val self = lit("sort");
+  seq_info_t si = seq_info(seq);
 
   keyfun = default_arg(keyfun, identity_f);
   lessfun = default_arg(lessfun, less_f);
 
-  if (consp(seq))
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_VECLIKE:
+  case SEQ_HASHLIKE:
+    sort_vec(seq, lessfun, keyfun);
+    return seq;
+  case SEQ_LISTLIKE:
     return sort_list(seq, lessfun, keyfun);
+  case SEQ_NOTSEQ:
+    unsup_obj(self, seq);
+  }
 
-  sort_vec(seq, lessfun, keyfun);
-  return seq;
+  abort();
 }
 
 val shuffle(val seq)
 {
-  switch (type(seq)) {
-  case NIL:
+  seq_info_t si = seq_info(seq);
+
+  switch (si.kind) {
+  case SEQ_NIL:
     return nil;
-  case CONS:
-  case LCONS:
+  case SEQ_LISTLIKE:
     if (cdr(seq))
     {
       val v = shuffle(vec_list(seq));
@@ -8901,11 +8908,8 @@ val shuffle(val seq)
         rplaca(l, ref(v, i));
     }
     return seq;
-  case LIT:
-    uw_throwf(error_s, lit("shuffle: ~s is a literal"), seq, nao);
-  case STR:
-  case LSTR:
-  case VEC:
+  case SEQ_VECLIKE:
+  case SEQ_HASHLIKE:
     {
       val rs = random_state;
       val n = length(seq);
@@ -8923,9 +8927,11 @@ val shuffle(val seq)
 
       return seq;
     }
-  default:
+  case SEQ_NOTSEQ:
     type_mismatch(lit("shuffle: ~s is not a sequence"), seq, nao);
   }
+
+  abort();
 }
 
 static val multi_sort_less(val funcs_cons, val llist, val rlist)

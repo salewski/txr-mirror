@@ -32602,6 +32602,19 @@ For strings and vectors,
 .code sort
 is not stable.
 
+The
+.code sort
+function can be applied to hashes. It produces meaningful behavior
+for a hash table which contains
+.I N
+keys which are the integers from 0 to
+.IR "N - 1" .
+Such as hash is treated as if it were a vector. The values are sorted
+and re-assigned to sorted order to the integer keys.
+The behavior of
+.code sort
+is not specified for hashes whose contents do not conform to this convention.
+
 .coNP Function @ grade
 .synb
 .mets (grade < sequence >> [ lessfun <> [ keyfun ]])
@@ -32667,6 +32680,13 @@ itself.
 The rearrangement depends on pseudo-random numbers obtained from the
 .code rand
 function.
+
+The
+.code shuffle
+function supports hash tables in a manner analogous to the way
+.code sort
+supports hash tables; the same remarks apply as in the description
+of that function.
 
 .coNP Function @ sort-group
 .synb
