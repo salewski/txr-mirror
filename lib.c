@@ -6265,6 +6265,13 @@ val func_n3ov(val (*fun)(val, val, val, varg), int reqargs)
   return obj;
 }
 
+val func_n4ov(val (*fun)(val, val, val, val, varg), int reqargs)
+{
+  val obj = func_n4v(fun);
+  obj->f.optargs = 4 - reqargs;
+  return obj;
+}
+
 val func_interp(val env, val form)
 {
   val obj = make_obj();

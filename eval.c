@@ -5222,6 +5222,48 @@ static val me_l1_setq(val form, val menv)
   }
 }
 
+static val rt_assert_fail(val file, val line, val expr,
+                          val fmt, struct args *args)
+{
+  val str_stream = make_string_output_stream();
+
+  if (!missingp(fmt)) {
+    if (line && file) {
+      format(str_stream, lit("assertion ~s failed in ~a:~a: "),
+             expr, file, line, nao);
+    } else {
+      format(str_stream, lit("assertion ~s failed: "), expr, nao);
+    }
+    formatv(str_stream, fmt, args);
+  } else {
+    if (line && file) {
+      format(str_stream, lit("assertion ~s failed in ~a:~a\n"),
+             expr, file, line, nao);
+    } else {
+      format(str_stream, lit("assertion ~s failed"), expr, nao);
+    }
+  }
+
+  uw_throw(assert_s, get_string_from_stream(str_stream));
+  return nil;
+}
+
+static val me_assert(val form, val menv)
+{
+  cons_bind (line, file, source_loc(form));
+  val extra_args = cddr(form);
+  val rt_assert_fail = intern(lit("rt-assert-fail"), system_package);
+
+  (void) menv;
+
+  return list(or_s, cadr(form),
+              apply_frob_args(list(rt_assert_fail, file, line,
+                                   list(quote_s, cadr(form), nao),
+                                   extra_args, nao)),
+              nao);
+}
+
+
 static val return_star(val name, val retval)
 {
   uw_block_return(name, retval);
@@ -6466,6 +6508,7 @@ void eval_init(void)
   reg_mac(intern(lit("mlet"), user_package), func_n2(me_mlet));
   reg_mac(load_time_s, func_n2(me_load_time));
   reg_mac(intern(lit("load-for"), user_package), func_n2(me_load_for));
+  reg_mac(intern(lit("assert"), user_package), func_n2(me_assert));
 
   reg_fun(cons_s, func_n2(cons));
   reg_fun(intern(lit("make-lazy-cons"), user_package),
@@ -7036,6 +7079,8 @@ void eval_init(void)
   reg_fun(intern(lit("rt-defsymacro"), system_package), func_n2(rt_defsymacro));
   reg_fun(intern(lit("rt-pprof"), system_package), func_n1(rt_pprof));
   reg_fun(intern(lit("rt-load-for"), system_package), func_n0v(rt_load_for));
+
+  reg_fun(intern(lit("rt-assert-fail"), system_package), func_n4ov(rt_assert_fail, 3));
 
   eval_error_s = intern(lit("eval-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);

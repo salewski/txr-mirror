@@ -42594,6 +42594,41 @@ The frame receives control even if it it is not otherwise eligible for
 catching the exception type denoted by
 .metn symbol .
 
+.coNP Macro @ assert
+.synb
+.mets (assert < expr >> [ format-string << format-arg *])
+.syne
+.desc
+The
+.code assert
+macro evaluates
+.metn expr .
+If
+.meta expr
+yields any true value, then
+.code assert
+terminates normally, and that value is returned.
+
+If instead
+.meta expr
+yields
+.codn nil ,
+then
+.code assert
+throws an exception of type
+.codn assert .
+The exception carries an informative character string that contains
+a diagnostic detailing the expression which yielded
+.codn nil ,
+and the source location of that expression, if available.
+
+If the
+.meta format-string
+and possibly additional format arguments are given to
+.code assert
+then those arguments are used to format additional text which is appended to
+the diagnostic message after a separating character such as a colon.
+
 .SS* Static Error Diagnosis
 
 This section describes a number of features related to the diagnosis

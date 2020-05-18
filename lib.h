@@ -979,6 +979,7 @@ val func_n8o(val (*fun)(val, val, val, val, val, val, val, val), int reqargs);
 val func_n1ov(val (*fun)(val, varg), int reqargs);
 val func_n2ov(val (*fun)(val, val, varg), int reqargs);
 val func_n3ov(val (*fun)(val, val, val, varg), int reqargs);
+val func_n4ov(val (*fun)(val, val, val, val, varg), int reqargs);
 val func_interp(val env, val form);
 val func_vm(val closure, val desc, int fixparam, int reqargs, int variadic);
 val copy_fun(val ofun);
