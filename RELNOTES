@@ -1,3 +1,37 @@
+                                    TXR 238
+                                   2020-05-18
+
+
+  Features
+
+  - Compiler:
+    - optimization of load-time and fine-tuning of its semantics.
+    - compiler now does lambda lifting: lambdas that don't reference
+      lexical variables are created one time at load-time.
+      - Now almost no penalty for moving a defun into a labels/flet,
+        unless capture is introduced.
+  - Lib:
+    - Functions countqual, countql, countq, count-if, some, all, none
+      now use the sequence iteration, so they are more efficient on
+      non-list objects.
+      - This is part of a slow-moving, on-going effort.
+    - sort and shuffle are now non-destructive
+      - the original destructive functions are available as
+        nsort and nshuffle, respectively.
+      - compat mode (value 237 or lower) restores destructive behavior.
+    - New assert macro: something that has been conspicuously missing.
+  - System Interface:
+    - isatty function exposed.
+
+  Bugs
+
+  - sockets: bug in formatting IPv6 textual address.
+  - symbol-function: fix failure to expand lambda expression arguments.
+  - compile function no longer wastefully expands already expanded input.
+  - configure: ./configure --help no longer clobbers ./reconfigure script.
+
+
+
                                     TXR 237
                                    2020-04-26
 
