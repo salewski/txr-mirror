@@ -115,7 +115,7 @@ struct lino_state {
     int save_hist_idx;  /* Jump to history position on entry into edit */
 
     /* Volatile state pertaining to just one linenoise call */
-    wchar_t buf[LINENOISE_MAX_DISP];    /* Displayed line bufer. */
+    wchar_t buf[LINENOISE_MAX_DISP];    /* Displayed line buffer. */
     wchar_t data[LINENOISE_MAX_LINE];   /* True data corresponding to display */
     const wchar_t *prompt;      /* Prompt to display. */
     const char *suffix;         /* Suffix when creating temp file. */
