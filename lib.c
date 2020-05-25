@@ -10745,11 +10745,13 @@ val butlast(val seq, val idx)
 
 val update(val seq, val fun)
 {
-  switch (type(seq)) {
-  case NIL:
-    break;
-  case CONS:
-  case LCONS:
+  val self = lit("update");
+  seq_info_t si = seq_info(seq);
+
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_LISTLIKE:
     {
       val iter = seq;
 
@@ -10759,10 +10761,7 @@ val update(val seq, val fun)
       }
     }
     break;
-  case LIT:
-  case STR:
-  case LSTR:
-  case VEC:
+  case SEQ_VECLIKE:
     {
       val len = length(seq);
       val i;
@@ -10770,12 +10769,10 @@ val update(val seq, val fun)
         refset(seq, i, funcall1(fun, ref(seq, i)));
     }
     break;
-  case COBJ:
-    if (hashp(seq))
-      return hash_update(seq, fun);
-    /* fallthrough */
+  case SEQ_HASHLIKE:
+    return hash_update(seq, fun);
   default:
-    type_mismatch(lit("update: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
 
   return seq;
