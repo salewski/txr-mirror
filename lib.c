@@ -4049,152 +4049,138 @@ val replace_str(val str_in, val items, val from, val to)
   return str_in;
 }
 
-val cat_str(val list, val sep)
-{
-  size_t total = 1;
-  val iter;
-  wchar_t *str, *ptr;
-  wchar_t onech[] = wini(" ");
+struct cat_str {
+  val sep;
   cnum len_sep;
+  size_t total;
+  wchar_t *str, *ptr;
+};
+
+static void cat_str_init(struct cat_str *cs, val sep, wchar_t *onech)
+{
+  cs->sep = sep;
+  cs->total = 1;
+  cs->str = cs->ptr = 0;
 
   if (null_or_missing_p(sep)) {
-    len_sep = 0;
+    cs->len_sep = 0;
   } else if (chrp(sep)) {
     onech[0] = c_chr(sep);
-    len_sep = 1;
-    sep = auto_str(coerce(const wchli_t *, wref(onech)));
+    cs->len_sep = 1;
+    cs->sep = auto_str(coerce(const wchli_t *, wref(onech)));
   } else {
-    len_sep = c_num(length_str(sep));
+    cs->len_sep = c_num(length_str(cs->sep));
+  }
+}
+
+static void cat_str_measure(struct cat_str *cs, val item, val more_p)
+{
+  if (!item)
+    return;
+
+  if (stringp(item)) {
+    size_t ntotal = cs->total + c_num(length_str(item));
+
+    if (cs->len_sep && more_p)
+      ntotal += cs->len_sep;
+
+    if (ntotal < cs->total)
+      goto oflow;
+
+    cs->total = ntotal;
+    return;
   }
 
-  for (iter = list; iter != nil; iter = cdr(iter)) {
-    val item = car(iter);
-    if (!item)
-      continue;
-    if (stringp(item)) {
-      size_t ntotal = total + c_num(length_str(item));
+  if (chrp(item)) {
+    size_t ntotal = cs->total + 1;
 
-      if (len_sep && cdr(iter))
-        ntotal += len_sep;
+    if (cs->len_sep && more_p)
+      ntotal += cs->len_sep;
 
-      if (ntotal < total)
-        goto oflow;
+    if (ntotal < cs->total)
+      goto oflow;
 
-      total = ntotal;
-
-      continue;
-    }
-    if (chrp(item)) {
-      size_t ntotal = total + 1;
-
-      if (len_sep && cdr(iter))
-        ntotal += len_sep;
-
-      if (ntotal < total)
-        goto oflow;
-
-      total = ntotal;
-
-      continue;
-    }
-    uw_throwf(error_s, lit("cat-str: ~s is not a character or string"),
-              item, nao);
+    cs->total = ntotal;
+    return;
   }
 
-  str = chk_wmalloc(total);
-
-  for (ptr = str, iter = list; iter != nil; iter = cdr(iter)) {
-    val item = car(iter);
-
-    if (!item)
-      continue;
-    if (stringp(item)) {
-      cnum len = c_num(length_str(item));
-      wmemcpy(ptr, c_str(item), len);
-      ptr += len;
-    } else {
-      *ptr++ = c_chr(item);
-    }
-
-    if (len_sep && cdr(iter)) {
-      wmemcpy(ptr, c_str(sep), len_sep);
-      ptr += len_sep;
-    }
-  }
-  *ptr = 0;
-
-  return string_own(str);
-
+  uw_throwf(error_s, lit("cat-str: ~s is not a character or string"),
+            item, nao);
 oflow:
   uw_throwf(error_s, lit("cat-str: string length overflow"), nao);
 }
 
+static void cat_str_alloc(struct cat_str *cs)
+{
+  cs->ptr = cs->str = chk_wmalloc(cs->total);
+}
+
+static void cat_str_append(struct cat_str *cs, val item, val more_p)
+{
+  if (!item)
+    return;
+  if (stringp(item)) {
+    cnum len = c_num(length_str(item));
+    wmemcpy(cs->ptr, c_str(item), len);
+    cs->ptr += len;
+  } else {
+    *cs->ptr++ = c_chr(item);
+  }
+
+  if (cs->len_sep && more_p) {
+    wmemcpy(cs->ptr, c_str(cs->sep), cs->len_sep);
+    cs->ptr += cs->len_sep;
+  }
+}
+
+static val cat_str_get(struct cat_str *cs)
+{
+  *cs->ptr = 0;
+  return string_own(cs->str);
+}
+
+val cat_str(val list, val sep)
+{
+  val iter;
+  struct cat_str cs;
+  wchar_t onech[] = wini(" ");
+
+  cat_str_init(&cs, sep, onech);
+
+  for (iter = list; iter != nil; iter = cdr(iter))
+    cat_str_measure(&cs, car(iter), cdr(iter));
+
+  cat_str_alloc(&cs);
+
+  for (iter = list; iter != nil; iter = cdr(iter))
+    cat_str_append(&cs, car(iter), cdr(iter));
+
+  return cat_str_get(&cs);
+}
+
 static val vscat(val sep, va_list vl1, va_list vl2)
 {
-  size_t total = 1;
   val item, next;
-  wchar_t *str, *ptr;
-  cnum len_sep = (!null_or_missing_p(sep)) ? c_num(length_str(sep)) : 0;
+  struct cat_str cs;
+  wchar_t onech[] = wini(" ");
+
+  cat_str_init(&cs, sep, onech);
 
   for (item = va_arg(vl1, val); item != nao; item = next)
   {
     next = va_arg(vl1, val);
-
-    if (stringp(item)) {
-      size_t ntotal = total + c_num(length_str(item));
-
-      if (len_sep && next != nao)
-        ntotal += len_sep;
-
-      if (ntotal < total)
-        goto oflow;
-
-      total = ntotal;
-
-      continue;
-    }
-    if (chrp(item)) {
-      size_t ntotal = total + 1;
-
-      if (len_sep && next != nao)
-        ntotal += len_sep;
-
-      if (ntotal < total)
-        goto oflow;
-
-      total = ntotal;
-
-      continue;
-    }
-    uw_throwf(error_s, lit("scat: ~s is not a character or string"),
-              item, nao);
+    cat_str_measure(&cs, item, tnil(next != nao));
   }
 
-  str = chk_wmalloc(total);
+  cat_str_alloc(&cs);
 
-  for (ptr = str, item = va_arg(vl2, val); item != nao; item = next)
+  for (item = va_arg(vl2, val); item != nao; item = next)
   {
     next = va_arg(vl2, val);
-
-    if (stringp(item)) {
-      cnum len = c_num(length_str(item));
-      wmemcpy(ptr, c_str(item), len);
-      ptr += len;
-    } else {
-      *ptr++ = c_chr(item);
-    }
-
-    if (len_sep && next != nao) {
-      wmemcpy(ptr, c_str(sep), len_sep);
-      ptr += len_sep;
-    }
+    cat_str_append(&cs, item, tnil(next != nao));
   }
-  *ptr = 0;
 
-  return string_own(str);
-
-oflow:
-  uw_throwf(error_s, lit("scat: string length overflow"), nao);
+  return cat_str_get(&cs);
 }
 
 val scat(val sep, ...)
