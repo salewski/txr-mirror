@@ -10798,7 +10798,7 @@ static val search_list(val seq, val key, val testfun, val keyfun)
     /* TODO: optimize me */
     gc_hint(seq);
 
-    for (; seq; seq = cdr(seq)) {
+    for (; seq; seq = cdr(seq), pos = plus(pos, one)) {
       for (siter = seq, kiter = key;
            siter && kiter;
            siter = cdr(siter), kiter = cdr(kiter))
@@ -10807,7 +10807,6 @@ static val search_list(val seq, val key, val testfun, val keyfun)
                       funcall1(keyfun, car(siter)),
                       funcall1(keyfun, car(kiter))))
         {
-          pos = plus(pos, one);
           break;
         }
       }
@@ -10872,7 +10871,7 @@ static val rsearch_list(val seq, val key, val testfun, val keyfun)
     /* TODO: optimize me */
     gc_hint(seq);
 
-    for (; seq; seq = cdr(seq)) {
+    for (; seq; seq = cdr(seq), pos = plus(pos, one)) {
       for (siter = seq, kiter = key;
            siter && kiter;
            siter = cdr(siter), kiter = cdr(kiter))
@@ -10881,7 +10880,6 @@ static val rsearch_list(val seq, val key, val testfun, val keyfun)
                       funcall1(keyfun, car(siter)),
                       funcall1(keyfun, car(kiter))))
         {
-          pos = plus(pos, one);
           break;
         }
       }
