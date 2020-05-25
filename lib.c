@@ -10820,7 +10820,7 @@ static val search_list(val seq, val key, val testfun, val keyfun)
     }
     break;
   default:
-    type_mismatch(lit("search: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("search: ~s is not a sequence"), key, nao);
   }
 
   return nil;
@@ -10894,7 +10894,7 @@ static val rsearch_list(val seq, val key, val testfun, val keyfun)
     }
     break;
   default:
-    type_mismatch(lit("rsearch: ~s is not a sequence"), seq, nao);
+    type_mismatch(lit("rsearch: ~s is not a sequence"), key, nao);
   }
 
   return found;
