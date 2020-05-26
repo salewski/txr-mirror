@@ -551,6 +551,8 @@ void seq_iter_rewind(seq_iter_t *it);
 INLINE int seq_get(seq_iter_t *it, val *pval) { return it->get(it, pval); }
 INLINE int seq_peek(seq_iter_t *it, val *pval) { return it->peek(it, pval); }
 val seq_geti(seq_iter_t *it);
+val seq_getpos(val self, seq_iter_t *it);
+void seq_setpos(val self, seq_iter_t *it, val pos);
 val seq_begin(val obj);
 val seq_next(val iter, val end_val);
 val seq_reset(val iter, val obj);

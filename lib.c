@@ -450,6 +450,34 @@ void seq_iter_init(val self, seq_iter_t *it, val obj)
   }
 }
 
+val seq_getpos(val self, seq_iter_t *it)
+{
+  switch (it->inf.kind) {
+  case SEQ_NIL:
+  case SEQ_LISTLIKE:
+    return it->ui.iter;
+  case SEQ_VECLIKE:
+    return num(it->ui.index);;
+  default:
+    unsup_obj(self, it->inf.obj);
+  }
+}
+
+void seq_setpos(val self, seq_iter_t *it, val pos)
+{
+  switch (it->inf.kind) {
+  case SEQ_NIL:
+  case SEQ_LISTLIKE:
+    it->ui.iter = pos;
+    break;
+  case SEQ_VECLIKE:
+    it->ui.index = c_num(pos);
+    break;
+  default:
+    unsup_obj(self, it->inf.obj);
+  }
+}
+
 static void seq_iter_mark(val seq_iter)
 {
   struct seq_iter *si = coerce(struct seq_iter *, seq_iter->co.handle);
@@ -10778,144 +10806,88 @@ val update(val seq, val fun)
   return seq;
 }
 
-static val search_list(val seq, val key, val testfun, val keyfun)
+static val search_common(val self, int from_right,
+                         val seq, val key, val testfun, val keyfun)
 {
-  val siter, kiter;
-  val pos = zero;
+  testfun = default_arg(testfun, equal_f);
+  keyfun = default_arg(keyfun, identity_f);
+  seq_iter_t si, ki;
 
-  switch (type(key)) {
-  case NIL:
-    return pos;
-  case CONS:
-  case LCONS:
-  case LIT:
-  case STR:
-  case LSTR:
-  case VEC:
-    /* TODO: optimize me */
-    gc_hint(seq);
+  seq_iter_init(self, &si, seq);
+  seq_iter_init(self, &ki, key);
 
-    for (; seq; seq = cdr(seq), pos = plus(pos, one)) {
-      for (siter = seq, kiter = key;
-           siter && kiter;
-           siter = cdr(siter), kiter = cdr(kiter))
+  if (si.inf.kind == SEQ_NIL) {
+    return if3(length(key) == zero, zero, nil);
+  } else if (ki.inf.kind == SEQ_HASHLIKE || si.inf.kind == SEQ_HASHLIKE) {
+    type_mismatch(lit("~a: hashes not supported"), self, nao);
+  } else if (ki.inf.kind == SEQ_NIL) {
+    return if3(from_right, length(seq), zero);
+  } else {
+    val selem, kelem;
+    val pos = zero, found = nil;
+
+    if (!seq_peek(&ki, &kelem))
+      return if3(from_right, length(seq), zero);
+
+    for (;;) {
+      val did_save = nil;
+      val saved_seq_pos = nil;
+      val saved_key_pos = nil;
+      int more_seq, more_key;
+
+      while ((more_seq = seq_peek(&si, &selem),
+              more_key = seq_peek(&ki, &kelem),
+              more_key && more_seq))
       {
+        if (!did_save)
+          saved_key_pos = seq_getpos(self, &ki);
+
+        seq_geti(&si);
+        seq_geti(&ki);
+
+        if (!did_save) {
+          saved_seq_pos = seq_getpos(self, &si);
+          did_save = t;
+        }
+
         if (!funcall2(testfun,
-                      funcall1(keyfun, car(siter)),
-                      funcall1(keyfun, car(kiter))))
+                      funcall1(keyfun, selem),
+                      funcall1(keyfun, kelem)))
         {
           break;
         }
       }
 
-      if (!kiter)
-        return pos;
+      if (!more_key) {
+        if (from_right)
+          found = pos;
+        else
+          return pos;
+      }
 
-      if (!siter)
-        break;
+      if (!more_seq)
+        return found;
+
+      pos = plus(pos, one);
+      seq_setpos(self, &si, saved_seq_pos);
+      seq_setpos(self, &ki, saved_key_pos);
     }
-    break;
-  default:
-    type_mismatch(lit("search: ~s is not a sequence"), key, nao);
   }
-
-  return nil;
 }
 
 val search(val seq, val key, val testfun, val keyfun)
 {
-  testfun = default_arg(testfun, equal_f);
-  keyfun = default_arg(keyfun, identity_f);
-  seq = nullify(seq);
-
-  switch (type(seq)) {
-  case NIL:
-    return if3(length(key) == zero, zero, nil);
-  case CONS:
-  case LCONS:
-  case LIT:
-  case STR:
-  case LSTR:
-  case VEC:
-  case COBJ:
-    /* TODO: optimize me */
-    return search_list(seq, key, testfun, keyfun);
-  default:
-    type_mismatch(lit("search: ~s is not a sequence"), seq, nao);
-  }
-}
-
-val contains(val key, val seq, val testfun, val keyfun)
-{
-  return search(seq, key, testfun, keyfun);
-}
-
-static val rsearch_list(val seq, val key, val testfun, val keyfun)
-{
-  val siter, kiter;
-  val pos = zero;
-  val found = nil;
-
-  switch (type(key)) {
-  case NIL:
-    return pos;
-  case CONS:
-  case LCONS:
-  case LIT:
-  case STR:
-  case LSTR:
-  case VEC:
-    /* TODO: optimize me */
-    gc_hint(seq);
-
-    for (; seq; seq = cdr(seq), pos = plus(pos, one)) {
-      for (siter = seq, kiter = key;
-           siter && kiter;
-           siter = cdr(siter), kiter = cdr(kiter))
-      {
-        if (!funcall2(testfun,
-                      funcall1(keyfun, car(siter)),
-                      funcall1(keyfun, car(kiter))))
-        {
-          break;
-        }
-      }
-
-      if (!kiter)
-        found = pos;
-
-      if (!siter)
-        break;
-    }
-    break;
-  default:
-    type_mismatch(lit("rsearch: ~s is not a sequence"), key, nao);
-  }
-
-  return found;
+  return search_common(lit("search"), 0, seq, key, testfun, keyfun);
 }
 
 val rsearch(val seq, val key, val testfun, val keyfun)
 {
-  testfun = default_arg(testfun, equal_f);
-  keyfun = default_arg(keyfun, identity_f);
-  seq = nullify(seq);
+  return search_common(lit("rsearch"), 1, seq, key, testfun, keyfun);
+}
 
-  switch (type(seq)) {
-  case NIL:
-    return if3(length(key) == zero, zero, nil);
-  case CONS:
-  case LCONS:
-  case LIT:
-  case STR:
-  case LSTR:
-  case VEC:
-  case COBJ:
-    /* TODO: optimize me */
-    return rsearch_list(seq, key, testfun, keyfun);
-  default:
-    type_mismatch(lit("rsearch: ~s is not a sequence"), seq, nao);
-  }
+val contains(val key, val seq, val testfun, val keyfun)
+{
+  return search_common(lit("contains"), 0, seq, key, testfun, keyfun);
 }
 
 static val lazy_where_func(val seq_iter, val lcons)

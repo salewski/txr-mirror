@@ -29782,12 +29782,11 @@ The arguments
 .meta haystack
 and
 .meta needle
-are sequences: lists, vectors
-or strings, in any combination.
+are sequences. They may not be hash tables.
 
 If
 .meta needle
-is not empty, then occurs at some position N within
+is not empty, then it occurs at some position N within
 .meta haystack
 if
 the first element of
@@ -29865,7 +29864,9 @@ The
 .code rsearch
 function is like
 .code search
-except that if
+except for two differences.
+
+Firstly, if
 .meta needle
 matches
 .meta haystack
@@ -29873,6 +29874,17 @@ in multiple places,
 .code rsearch
 returns the right-most matching position rather than
 the leftmost.
+
+Secondly, if
+.meta needle
+is an empty sequence, then
+.code rsearch
+returns the length of
+.codn haystack ,
+thereby effectively declaring that the rightmost match for an empty
+.meta needle
+key occurs at the imaginary position past the element of
+.metn haystack .
 
 .coNP Functions @ ref and @ refset
 .synb
