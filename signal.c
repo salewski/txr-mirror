@@ -211,40 +211,42 @@ void sig_init(void)
 #if HAVE_SIGALTSTACK
 
 static mem_t *stack;
+int stack_refcount;
 
-static void setup_alt_stack(void)
+static void addref_alt_stack(void)
 {
-  stack_t ss;
-
-  if (!stack)
+  if (stack_refcount++ == 0) {
+    stack_t ss;
     stack = chk_malloc(SIGSTKSZ);
+    ss.ss_sp = stack;
+    ss.ss_size = SIGSTKSZ;
+    ss.ss_flags = 0;
 
-  ss.ss_sp = stack;
-  ss.ss_size = SIGSTKSZ;
-  ss.ss_flags = 0;
-
-  if (sigaltstack(&ss, NULL) == -1) {
-    free(stack);
-    stack = 0;
+    if (sigaltstack(&ss, NULL) == -1) {
+      free(stack);
+      stack = 0;
+    }
   }
 }
 
-static void teardown_alt_stack(void)
+static void release_alt_stack(void)
 {
-  stack_t ss;
+  if (--stack_refcount == 0) {
+    stack_t ss;
 
-  if (!stack)
-    return;
+    if (!stack)
+      return;
 
-  ss.ss_sp = stack;
-  ss.ss_size = SIGSTKSZ;
-  ss.ss_flags = SS_DISABLE;
+    ss.ss_sp = stack;
+    ss.ss_size = SIGSTKSZ;
+    ss.ss_flags = SS_DISABLE;
 
-  if (sigaltstack(&ss, NULL) == -1)
-    return;
+    if (sigaltstack(&ss, NULL) == -1)
+      return;
 
-  free(stack);
-  stack = 0;
+    free(stack);
+    stack = 0;
+  }
 }
 
 #endif
@@ -259,7 +261,7 @@ val set_sig_handler(val signo, val lambda)
   static struct sigaction blank;
   val self = lit("set-sig-handler");
   cnum sig = c_num(signo);
-  val old_lambda;
+  val old;
   small_sigset_t block, saved;
 
   small_sigfillset(&block);
@@ -268,17 +270,18 @@ val set_sig_handler(val signo, val lambda)
   if (sig < 0 || sig >= MAX_SIG)
     uw_throwf(error_s, lit("~a: signal ~s out of range"), self, sig, nao);
 
-  old_lambda = sig_lambda[sig];
+  old = sig_lambda[sig];
 
-  if (lambda != old_lambda) {
+  if (lambda != old) {
     unsigned long mask = 1UL << sig;
 
-    if (lambda == nil) {
-      signal(sig, SIG_IGN);
+    if (lambda == nil || lambda == t) {
+      signal(sig, if3(lambda, SIG_DFL, SIG_IGN));
       sig_deferred &= ~mask;
-    } else if (lambda == t) {
-      signal(sig, SIG_DFL);
-      sig_deferred &= ~mask;
+#if HAVE_SIGALTSTACK
+      if ((sig == SIGSEGV || sig == SIGBUS) && old != t && old != nil)
+        release_alt_stack();
+#endif
     } else {
       struct sigaction sa = blank;
 
@@ -288,25 +291,20 @@ val set_sig_handler(val signo, val lambda)
       sa.sa_handler = sig_handler;
       sigfillset(&sa.sa_mask);
 #if HAVE_SIGALTSTACK
-      if (sig == SIGSEGV || sig == SIGBUS) {
-        setup_alt_stack();
+      if ((sig == SIGSEGV || sig == SIGBUS) && (old == t || old == nil)) {
+        addref_alt_stack();
         sa.sa_flags |= SA_ONSTACK;
       }
 #endif
       sigaction(sig, &sa, 0);
     }
 
-#if HAVE_SIGALTSTACK
-    if ((sig == SIGSEGV || sig == SIGBUS) && (lambda == nil || lambda == t))
-        teardown_alt_stack();
-#endif
-
     sig_lambda[sig] = lambda;
   }
 
   sig_mask(SIG_SETMASK, &saved, 0);
 
-  return old_lambda;
+  return old;
 }
 
 val get_sig_handler(val signo)
