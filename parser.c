@@ -966,9 +966,9 @@ static void find_matching_syms(lino_completions_t *cpl,
         continue;
 
       if (qualify)
-        comple = format(nil, lit("~a~a:~a"), line_prefix, pkg_name, name, nao);
+        comple = scat(line_prefix, pkg_name, lit(":"), name, nao);
       else
-        comple = format(nil, lit("~a~a"), line_prefix, name, nao);
+        comple = scat2(line_prefix, name);
 
       lino_add_completion(cpl, c_str(comple));
       gc_hint(comple);
@@ -1406,7 +1406,7 @@ static void hist_save(lino_t *ls, val in_stream, val out_stream,
                       val hist_len_var)
 {
   if (histfile_w && lino_have_new_lines(ls)) {
-    val histfile_tmp = format(nil, lit("~a.tmp"), histfile, nao);
+    val histfile_tmp = scat2(histfile, lit(".tmp"));
     const wchar_t *histfile_tmp_w = c_str(histfile_tmp);
     lino_t *ltmp = lino_make(coerce(mem_t *, in_stream),
                              coerce(mem_t *, out_stream));
@@ -1442,9 +1442,9 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   val done = nil;
   val counter = one;
   val home = if3(repl_level == 1, get_home_path(), nil);
-  val histfile = if2(home, format(nil, lit("~a/.txr_history"), home, nao));
+  val histfile = if2(home, scat2(home, lit("/.txr_history")));
   const wchar_t *histfile_w = if3(home, c_str(histfile), NULL);
-  val rcfile = if2(home, format(nil, lit("~a/.txr_profile"), home, nao));
+  val rcfile = if2(home, scat2(home, lit("/.txr_profile")));
   val old_sig_handler = set_sig_handler(num(SIGINT), func_n2(repl_intr));
   val hist_len_var = lookup_global_var(listener_hist_len_s);
   val multi_line_var = lookup_global_var(listener_multi_line_p_s);

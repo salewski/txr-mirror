@@ -405,8 +405,7 @@ static val ensure_dir(val path, val mode)
     if (!split_path)
       break;
 
-    partial_path = format(nil, lit("~a~a~a"),
-                          partial_path, sep, pop(&split_path), nao);
+    partial_path = scat3(partial_path, sep, pop(&split_path));
   }
 
   if (integerp(ret)) {

@@ -110,7 +110,7 @@ static val place_set_entries(val dlt, val fun)
 static val place_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aplace"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("place")));
   return nil;
 }
 
@@ -124,7 +124,7 @@ static val ver_set_entries(val dlt, val fun)
 static val ver_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aver"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("ver")));
   return nil;
 }
 
@@ -140,7 +140,7 @@ static val ifa_set_entries(val dlt, val fun)
 static val ifa_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aifa"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("ifa")));
   return nil;
 }
 
@@ -154,7 +154,7 @@ static val txr_case_set_entries(val dlt, val fun)
 static val txr_case_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~atxr-case"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("txr-case")));
   return nil;
 }
 
@@ -172,7 +172,7 @@ static val with_resources_set_entries(val dlt, val fun)
 static val with_resources_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~awith-resources"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("with-resources")));
   return nil;
 }
 
@@ -200,7 +200,7 @@ static val path_test_set_entries(val dlt, val fun)
 static val path_test_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~apath-test"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("path-test")));
   return nil;
 }
 
@@ -229,7 +229,7 @@ static val struct_set_entries(val dlt, val fun)
 static val struct_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~astruct"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("struct")));
   return nil;
 }
 
@@ -252,7 +252,7 @@ static val with_stream_set_entries(val dlt, val fun)
 static val with_stream_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~awith-stream"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("with-stream")));
   return nil;
 }
 
@@ -266,7 +266,7 @@ static val hash_set_entries(val dlt, val fun)
 static val hash_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~ahash"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("hash")));
   return nil;
 }
 
@@ -284,7 +284,7 @@ static val except_set_entries(val dlt, val fun)
 static val except_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aexcept"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("except")));
   return nil;
 }
 
@@ -298,7 +298,7 @@ static val type_set_entries(val dlt, val fun)
 static val type_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~atype"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("type")));
   return nil;
 }
 
@@ -322,7 +322,7 @@ static val yield_set_entries(val dlt, val fun)
 static val yield_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~ayield"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("yield")));
   return nil;
 }
 
@@ -364,7 +364,7 @@ static val sock_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
   sock_load_init();
-  load(format(nil, lit("~asocket"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("socket")));
   return nil;
 }
 
@@ -387,7 +387,7 @@ static val termios_set_entries(val dlt, val fun)
 static val termios_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~atermios"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("termios")));
   return nil;
 }
 
@@ -420,7 +420,7 @@ static val awk_set_entries(val dlt, val fun)
 static val awk_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aawk"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("awk")));
   return nil;
 }
 
@@ -444,7 +444,7 @@ static val build_set_entries(val dlt, val fun)
 static val build_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~abuild"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("build")));
   return nil;
 }
 
@@ -465,7 +465,7 @@ static val trace_set_entries(val dlt, val fun)
 static val trace_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~atrace"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("trace")));
   trace_loaded = t;
   return nil;
 }
@@ -489,7 +489,7 @@ static val getopts_set_entries(val dlt, val fun)
 static val getopts_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~agetopts"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("getopts")));
   return nil;
 }
 
@@ -506,7 +506,7 @@ static val package_set_entries(val dlt, val fun)
 static val package_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~apackage"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("package")));
   return nil;
 }
 
@@ -531,7 +531,7 @@ static val getput_set_entries(val dlt, val fun)
 static val getput_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~agetput"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("getput")));
   return nil;
 }
 
@@ -547,7 +547,7 @@ static val tagbody_set_entries(val dlt, val fun)
 static val tagbody_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~atagbody"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("tagbody")));
   return nil;
 }
 
@@ -563,7 +563,7 @@ static val pmac_set_entries(val dlt, val fun)
 static val pmac_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~apmac"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("pmac")));
   return nil;
 }
 
@@ -587,7 +587,7 @@ static val error_set_entries(val dlt, val fun)
 static val error_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aerror"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("error")));
   return nil;
 }
 
@@ -614,7 +614,7 @@ static val keyparams_set_entries(val dlt, val fun)
 static val keyparams_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~akeyparams"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("keyparams")));
   return nil;
 }
 
@@ -636,7 +636,7 @@ static val ffi_set_entries(val dlt, val fun)
 static val ffi_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~affi"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("ffi")));
   return nil;
 }
 
@@ -653,7 +653,7 @@ static val doloop_set_entries(val dlt, val fun)
 static val doloop_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~adoloop"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("doloop")));
   return nil;
 }
 
@@ -676,14 +676,14 @@ static val stream_wrap_set_entries(val dlt, val fun)
 static val stream_wrap_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~astream-wrap"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("stream-wrap")));
   return nil;
 }
 
 static val asm_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aasm"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("asm")));
   return nil;
 }
 
@@ -706,7 +706,7 @@ static val asm_set_entries(val dlt, val fun)
 static val compiler_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~acompiler"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("compiler")));
   return nil;
 }
 
@@ -731,7 +731,7 @@ static val compiler_set_entries(val dlt, val fun)
 static val debugger_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~adebugger"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("debugger")));
   return nil;
 }
 
@@ -762,14 +762,14 @@ static val op_set_entries(val dlt, val fun)
 static val op_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~aop"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("op")));
   return nil;
 }
 
 static val save_exe_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~asave-exe"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("save-exe")));
   return nil;
 }
 
@@ -787,7 +787,7 @@ static val save_exe_set_entries(val dlt, val fun)
 static val defset_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~adefset"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("defset")));
   return nil;
 }
 
@@ -805,7 +805,7 @@ static val defset_set_entries(val dlt, val fun)
 static val copy_file_instantiate(val set_fun)
 {
   funcall1(set_fun, nil);
-  load(format(nil, lit("~acopy-file"), stdlib_path, nao));
+  load(scat2(stdlib_path, lit("copy-file")));
   return nil;
 }
 

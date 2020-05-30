@@ -852,6 +852,8 @@ val replace_str(val str_in, val items, val from, val to);
 val sub_str(val str_in, val from_num, val to_num);
 val cat_str(val list, val sep);
 val scat(val sep, ...);
+val scat2(val s1, val s2);
+val scat3(val s1, val sep, val s2);
 val fmt_join(struct args *args);
 val split_str(val str, val sep);
 val split_str_keep(val str, val sep, val keep_sep);

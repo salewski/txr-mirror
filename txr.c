@@ -254,7 +254,7 @@ static val get_self_path(void)
   val execname = string_utf8(getexecname());
   if (car(execname) == chr('/'))
     return execname;
-  return format(nil, lit("~a/~a"), getcwd_wrap(), execname, nao);
+  return scat3(getcwd_wrap(), chr('/'), execname);
 }
 #else
 static val get_self_path(void)
@@ -278,15 +278,13 @@ static val substitute_basename(val edited_path, val source_path)
                      source_path);
 
   return if3(lslash,
-             format(nil, lit("~a~a"),
-                    sub_str(edited_path, 0, succ(lslash)),
-                    basename, nao),
+             scat2(sub_str(edited_path, 0, succ(lslash)), basename),
              basename);
 }
 
 static val sysroot(val target)
 {
-  return format(nil, lit("~a~a"), sysroot_path, target, nao);
+  return scat2(sysroot_path, target);
 }
 
 static void sysroot_init(void)
@@ -305,7 +303,7 @@ static void sysroot_init(void)
   prog_dir = dir_name(prog_path);
 
   if (ref(prog_dir, negone) != chr(psc[0]))
-    prog_dir = format(nil, lit("~a~a"), prog_dir, chr(psc[0]), nao);
+    prog_dir = scat3(prog_dir, chr(psc[0]), lit(""));
 
   if (!(maybe_sysroot(lit(TXR_REL_PATH)) ||
         maybe_sysroot(lit(TXR_REL_PATH EXE_SUFF)) ||
@@ -473,21 +471,21 @@ static void no_dbg_support(val arg)
 
 static int parse_once_noerr(val stream, val name)
 {
-  val pfx = format(nil, lit("~a:"), name, nao);
+  val pfx = scat2(name, lit(":"));
   ignerr_func_body(int, 0, parse_once(prog_string, stream, name),
                    std_error, pfx);
 }
 
 static val read_compiled_file_noerr(val self, val stream, val name, val error_stream)
 {
-  val pfx = format(nil, lit("~a:"), name, nao);
+  val pfx = scat2(name, lit(":"));
   ignerr_func_body(val, nil, read_compiled_file(self, stream, error_stream),
                    std_error, pfx);
 }
 
 static val read_eval_stream_noerr(val self, val stream, val name, val error_stream)
 {
-  val pfx = format(nil, lit("~a:"), name, nao);
+  val pfx = scat2(name, lit(":"));
   ignerr_func_body(val, nil, read_eval_stream(self, stream, error_stream),
                    std_error, pfx);
 }

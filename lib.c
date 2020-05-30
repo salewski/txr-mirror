@@ -4223,6 +4223,41 @@ val scat(val sep, ...)
   return ret;
 }
 
+val scat2(val s1, val s2)
+{
+  struct cat_str cs;
+
+  cat_str_init(&cs, nil, NULL);
+
+  cat_str_measure(&cs, s1, 1);
+  cat_str_measure(&cs, s2, 0);
+
+  cat_str_alloc(&cs);
+
+  cat_str_append(&cs, s1, 1);
+  cat_str_append(&cs, s2, 0);
+
+  return cat_str_get(&cs);
+}
+
+val scat3(val s1, val sep, val s2)
+{
+  struct cat_str cs;
+  wchar_t onech[] = wini(" ");
+
+  cat_str_init(&cs, sep, onech);
+
+  cat_str_measure(&cs, s1, 1);
+  cat_str_measure(&cs, s2, 0);
+
+  cat_str_alloc(&cs);
+
+  cat_str_append(&cs, s1, 1);
+  cat_str_append(&cs, s2, 0);
+
+  return cat_str_get(&cs);
+}
+
 val fmt_join(struct args *args)
 {
   cnum index;
