@@ -2870,11 +2870,6 @@ static val fmt_flex(val obj, val plist, struct args *args)
   return do_format_field(fmt_tostring(obj), n, sep, range_ix, plist, nil);
 }
 
-static val fmt_join(struct args *args)
-{
-  return cat_str(args_get_list(args), lit(""));
-}
-
 val subst_vars(val forms, val env, val filter)
 {
   list_collect_decl(out, iter);

@@ -130,6 +130,11 @@ INLINE int args_two_more(struct args *args, cnum index)
     cdr(args->list);
 }
 
+INLINE int args_more_nozap(struct args *args, cnum index, val list)
+{
+  return list || index < args->fill;
+}
+
 void args_normalize_exact(struct args *args, cnum fill);
 void args_normalize_least(struct args *args, cnum fill);
 void args_normalize_fill(struct args *args, cnum minfill, cnum maxfill);
@@ -171,6 +176,13 @@ INLINE val args_get(struct args *args, cnum *arg_index)
   if (*arg_index < args->fill)
     return z(args->arg[(*arg_index)++]);
   return pop(&args->list);
+}
+
+INLINE val args_get_nozap(struct args *args, cnum *arg_index, val *list)
+{
+  if (*arg_index < args->fill)
+    return args->arg[(*arg_index)++];
+  return pop(list);
 }
 
 INLINE cnum args_count(struct args *args)

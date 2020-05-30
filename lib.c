@@ -4101,7 +4101,7 @@ static void cat_str_init(struct cat_str *cs, val sep, wchar_t *onech)
   }
 }
 
-static void cat_str_measure(struct cat_str *cs, val item, val more_p)
+static void cat_str_measure(struct cat_str *cs, val item, int more_p)
 {
   if (!item)
     return;
@@ -4143,7 +4143,7 @@ static void cat_str_alloc(struct cat_str *cs)
   cs->ptr = cs->str = chk_wmalloc(cs->total);
 }
 
-static void cat_str_append(struct cat_str *cs, val item, val more_p)
+static void cat_str_append(struct cat_str *cs, val item, int more_p)
 {
   if (!item)
     return;
@@ -4176,12 +4176,12 @@ val cat_str(val list, val sep)
   cat_str_init(&cs, sep, onech);
 
   for (iter = list; iter != nil; iter = cdr(iter))
-    cat_str_measure(&cs, car(iter), cdr(iter));
+    cat_str_measure(&cs, car(iter), cdr(iter) != nil);
 
   cat_str_alloc(&cs);
 
   for (iter = list; iter != nil; iter = cdr(iter))
-    cat_str_append(&cs, car(iter), cdr(iter));
+    cat_str_append(&cs, car(iter), cdr(iter) != nil);
 
   return cat_str_get(&cs);
 }
@@ -4197,7 +4197,7 @@ static val vscat(val sep, va_list vl1, va_list vl2)
   for (item = va_arg(vl1, val); item != nao; item = next)
   {
     next = va_arg(vl1, val);
-    cat_str_measure(&cs, item, tnil(next != nao));
+    cat_str_measure(&cs, item, next != nao);
   }
 
   cat_str_alloc(&cs);
@@ -4205,7 +4205,7 @@ static val vscat(val sep, va_list vl1, va_list vl2)
   for (item = va_arg(vl2, val); item != nao; item = next)
   {
     next = va_arg(vl2, val);
-    cat_str_append(&cs, item, tnil(next != nao));
+    cat_str_append(&cs, item, next != nao);
   }
 
   return cat_str_get(&cs);
@@ -4221,6 +4221,34 @@ val scat(val sep, ...)
   va_end (vl1);
   va_end (vl2);
   return ret;
+}
+
+val fmt_join(struct args *args)
+{
+  cnum index;
+  val iter;
+  int more;
+  struct cat_str cs;
+
+  cat_str_init(&cs, nil, 0);
+
+  for (index = 0, iter = args->list, more = args_more_nozap(args, index, iter);
+       more;)
+  {
+    val item = args_get_nozap(args, &index, &iter);
+    cat_str_measure(&cs, item, more = args_more_nozap(args, index, iter));
+  }
+
+  cat_str_alloc(&cs);
+
+  for (index = 0, iter = args->list, more = args_more_nozap(args, index, iter);
+       more;)
+  {
+    val item = args_get_nozap(args, &index, &iter);
+    cat_str_append(&cs, item, more = args_more_nozap(args, index, iter));
+  }
+
+  return cat_str_get(&cs);
 }
 
 val split_str_keep(val str, val sep, val keep_sep)
