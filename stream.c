@@ -3071,7 +3071,7 @@ val get_line_as_buf(val stream_in)
 }
 
 struct fmt {
-  size_t minsize;
+  const char *type;
   const char *dec;
   const char *oct;
   const char *hex;
@@ -3079,13 +3079,14 @@ struct fmt {
 };
 
 static struct fmt fmt_tab[] = {
-  { sizeof(short),"%hd",   "%ho",   "%hx",   "%hX"   },
-  { sizeof(int),  "%d",    "%o",    "%x",    "%X"    },
-  { sizeof(long), "%ld",   "%lo",   "%lx",   "%llX"  },
-  { sizeof(cnum), "%lld",  "%llo",  "%llx",  "%llX"  },
-  { sizeof(cnum), "%Ld",   "%Lo",   "%Lx",   "%llX"  },
-  { sizeof(cnum), "%qd",   "%qo",   "%qx",   "%qX",  },
-  { sizeof(cnum), "%I64d", "%I64o", "%I64x", "%I64X" },
+  { "short",      "%hd",   "%ho",   "%hx",   "%hX"   },
+  { "int",        "%d",    "%o",    "%x",    "%X"    },
+  { "long",       "%ld",   "%lo",   "%lx",   "%lX"   },
+  { "long long",  "%lld",  "%llo",  "%llx",  "%llX"  },
+  { "long long",  "%Ld",   "%Lo",   "%Lx",   "%LX"   },
+  { "long long",  "%qd",   "%qo",   "%qx",   "%qX",  },
+  { "int64",      "%I64d", "%I64o", "%I64x", "%I64X" },
+  { "__int64",    "%I64d", "%I64o", "%I64x", "%I64X" },
   { 0,            0,       0,       0,       0       }
 };
 
@@ -3096,16 +3097,29 @@ static void detect_format_string(void)
   struct fmt *f;
   char buf[64];
   cnum num = 1234;
+  const char *cnum_type = if3(strcmp(INTPTR_TYPE, "longlong_t") == 0,
+                              LONGLONG_TYPE, INTPTR_TYPE);
 
-  for (f = fmt_tab; f->minsize != 0; f++) {
-    memset(buf, 0, sizeof buf);
-    if (f->minsize != sizeof num)
+  for (f = fmt_tab; f->type != 0; f++) {
+    if (strcmp(cnum_type, f->type) != 0)
       continue;
-    if (sprintf(buf, f->dec, num) == 4 && strcmp(buf, "1234") == 0) {
-      num_fmt = f;
-      break;
-    }
+    memset(buf, 0, sizeof buf);
+    if (sprintf(buf, f->dec, num) != 4 || strcmp(buf, "1234") != 0)
+      continue;
+    memset(buf, 0, sizeof buf);
+    if (sprintf(buf, f->oct, num) != 4 || strcmp(buf, "2322") != 0)
+      continue;
+    memset(buf, 0, sizeof buf);
+    if (sprintf(buf, f->hex, num) != 3 || strcmp(buf, "4d2") != 0)
+      continue;
+    memset(buf, 0, sizeof buf);
+    if (sprintf(buf, f->HEX, num) != 3 || strcmp(buf, "4D2") != 0)
+      continue;
+    num_fmt = f;
+    break;
   }
+
+  bug_unless (num_fmt != 0);
 }
 
 enum align { al_left, al_center, al_right };

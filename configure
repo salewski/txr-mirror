@@ -1205,6 +1205,7 @@ done
 if [ -n "$longlong" ] ; then
   printf '"%s"\n' "$longlong"
   printf "#define HAVE_LONGLONG_T 1\n" >> config.h
+  printf "#define LONGLONG_TYPE \"%s\"\n" "$longlong" >> config.h
   printf "typedef $longlong longlong_t;\n" >> config.h
 else
   printf "none\n"
@@ -1411,6 +1412,7 @@ fi
 printf '"%s"\n' "$intptr"
 printf "typedef $intptr int_ptr_t;\n" >> config.h
 printf "typedef unsigned $intptr uint_ptr_t;\n" >> config.h
+printf "#define INTPTR_TYPE \"%s\"\n" "$intptr" >> config.h
 intptr_max_expr="((((convert(int_ptr_t, 1) << $((SIZEOF_PTR * SIZEOF_BYTE - 2))) - 1) << 1) + 1)"
 printf "#define INT_PTR_MAX %s\n" "$intptr_max_expr" >> config.h
 printf "#define INT_PTR_MIN (-INT_PTR_MAX-1)\n" >> config.h
