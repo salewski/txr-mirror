@@ -810,7 +810,7 @@ NOINLINE static void vm_no_block_err(struct vm *vm, val name)
   else
     eval_error(vm->vd->bytecode,
                lit("return: no anonymous block is visible"),
-               name, nao);
+               nao);
 }
 
 NOINLINE static void vm_retsr(struct vm *vm, vm_word_t insn)
