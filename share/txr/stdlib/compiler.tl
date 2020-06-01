@@ -1369,12 +1369,13 @@
   (mac-param-bind form (op (key-var val-var hash-form : res-form) . body) form
     (with-gensyms (iter-var cell-var)
       ^(let (,key-var ,val-var (,iter-var (hash-begin ,hash-form)) ,cell-var)
-         (sys:for-op ((sys:setq ,cell-var (hash-next ,iter-var)))
-                     (,cell-var ,res-form)
-                     ((sys:setq ,cell-var (hash-next ,iter-var)))
-            (sys:setq ,key-var (car ,cell-var))
-            (sys:setq ,val-var (cdr ,cell-var))
-            ,*body)))))
+         (block nil
+           (sys:for-op ((sys:setq ,cell-var (hash-next ,iter-var)))
+                       (,cell-var ,res-form)
+                       ((sys:setq ,cell-var (hash-next ,iter-var)))
+              (sys:setq ,key-var (car ,cell-var))
+              (sys:setq ,val-var (cdr ,cell-var))
+              ,*body))))))
 
 (defun expand-each (form env)
   (mac-param-bind form (op each-type vars . body) form
@@ -1385,16 +1386,17 @@
                   (gensym)))
            (accum (if out (gensym))))
       ^(let* (,*(zip gens vars) ,*(if accum ^((,out (cons nil nil)) (,accum ,out))))
-         (sys:for-op ()
-                     ((and ,*gens) ,*(if accum ^((cdr ,out))))
-                     (,*(mapcar (ret ^(sys:setq ,@1 (cdr ,@1))) gens))
-           ,*(mapcar (ret ^(sys:setq ,@1 (car ,@2))) vars gens)
-           ,*(caseq each-type
-               (collect-each ^((rplacd ,accum (cons (progn ,*body) nil))
-                               (sys:setq ,accum (cdr ,accum))))
-               (append-each ^((rplacd ,accum (append (cdr ,accum) (progn ,*body)))
-                              (sys:setq ,accum (last ,accum))))
-               (t body)))))))
+         (block nil
+           (sys:for-op ()
+                       ((and ,*gens) ,*(if accum ^((cdr ,out))))
+                       (,*(mapcar (ret ^(sys:setq ,@1 (cdr ,@1))) gens))
+             ,*(mapcar (ret ^(sys:setq ,@1 (car ,@2))) vars gens)
+             ,*(caseq each-type
+                 (collect-each ^((rplacd ,accum (cons (progn ,*body) nil))
+                                 (sys:setq ,accum (cdr ,accum))))
+                 (append-each ^((rplacd ,accum (append (cdr ,accum) (progn ,*body)))
+                                (sys:setq ,accum (last ,accum))))
+                 (t body))))))))
 
 (defun expand-bind-mac-params (ctx-form err-form params menv-var
                                obj-var strict err-block body)
