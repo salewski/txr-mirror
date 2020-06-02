@@ -416,9 +416,10 @@ void seq_iter_rewind(seq_iter_t *it)
   }
 }
 
-void seq_iter_init(val self, seq_iter_t *it, val obj)
+static void seq_iter_init_with_info(val self, seq_iter_t *it,
+                                    val obj, seq_info_t si)
 {
-  it->inf = seq_info(obj);
+  it->inf = si;
 
   switch (it->inf.kind) {
   case SEQ_NIL:
@@ -448,6 +449,11 @@ void seq_iter_init(val self, seq_iter_t *it, val obj)
   default:
     unsup_obj(self, obj);
   }
+}
+
+void seq_iter_init(val self, seq_iter_t *it, val obj)
+{
+  seq_iter_init_with_info(self, it, obj, seq_info(obj));
 }
 
 val seq_getpos(val self, seq_iter_t *it)
@@ -526,6 +532,107 @@ val seq_reset(val iter, val obj)
                                cobj_handle(self, iter, seq_iter_s));
   seq_iter_init(self, si, obj);
   return iter;
+}
+
+val iter_begin(val obj)
+{
+  val self = lit("iter-begin");
+  seq_info_t sinf = seq_info(obj);
+
+  switch (sinf.kind) {
+  case SEQ_NIL:
+  case SEQ_LISTLIKE:
+    return sinf.obj;
+  default:
+    {
+      val si_obj;
+      struct seq_iter *si = coerce(struct seq_iter *,
+                                   chk_calloc(1, sizeof *si));
+      si_obj = cobj(coerce(mem_t *, si), seq_iter_s, &seq_iter_ops);
+      seq_iter_init_with_info(self, si, obj, sinf);
+      return si_obj;
+    }
+  }
+}
+
+val iter_more(val iter)
+{
+  switch (type(iter)) {
+  case NIL:
+    return nil;
+  case COBJ:
+    if (iter->co.cls == seq_iter_s)
+    {
+      struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
+      val item = nil;
+      return if2(seq_peek(si, &item), t);
+    }
+    /* fallthrough */
+  default:
+    return t;
+  }
+}
+
+val iter_item(val iter)
+{
+  switch (type(iter)) {
+  case NIL:
+    return nil;
+  case COBJ:
+    if (iter->co.cls == seq_iter_s)
+    {
+      struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
+      val item = nil;
+      return if2(seq_peek(si, &item), item);
+    }
+    /* fallthrough */
+  default:
+    return car(iter);
+  }
+}
+
+val iter_step(val iter)
+{
+  switch (type(iter)) {
+  case NIL:
+    return nil;
+  case COBJ:
+    if (iter->co.cls == seq_iter_s)
+    {
+      struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
+      val item = nil;
+      (void) seq_get(si, &item);
+      return iter;
+    }
+    /* fallthrough */
+  default:
+    return cdr(iter);
+  }
+}
+
+val iter_reset(val iter, val obj)
+{
+  val self = lit("iter-reset");
+  seq_info_t sinf = seq_info(obj);
+
+  switch (sinf.kind) {
+  case SEQ_NIL:
+  case SEQ_LISTLIKE:
+    return sinf.obj;
+  default:
+    switch (type(iter)) {
+    case COBJ:
+      if (iter->co.cls == seq_iter_s)
+      {
+        struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
+        seq_iter_init_with_info(self, si, obj, sinf);
+        return iter;
+      }
+      /* fallthrough */
+    default:
+      return iter_begin(obj);
+    }
+  }
 }
 
 val throw_mismatch(val self, val obj, type_t t)

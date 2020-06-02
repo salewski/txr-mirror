@@ -6970,6 +6970,11 @@ void eval_init(void)
   reg_fun(intern(lit("seq-begin"), user_package), func_n1(seq_begin));
   reg_fun(intern(lit("seq-next"), user_package), func_n2(seq_next));
   reg_fun(intern(lit("seq-reset"), user_package), func_n2(seq_reset));
+  reg_fun(intern(lit("iter-begin"), user_package), func_n1(iter_begin));
+  reg_fun(intern(lit("iter-more"), user_package), func_n1(iter_more));
+  reg_fun(intern(lit("iter-item"), user_package), func_n1(iter_item));
+  reg_fun(intern(lit("iter-step"), user_package), func_n1(iter_step));
+  reg_fun(intern(lit("iter-reset"), user_package), func_n2(iter_reset));
 
   reg_fun(intern(lit("rcons"), user_package), func_n2(rcons));
   reg_fun(intern(lit("rangep"), user_package), func_n1(rangep));

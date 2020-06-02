@@ -556,6 +556,11 @@ void seq_setpos(val self, seq_iter_t *it, val pos);
 val seq_begin(val obj);
 val seq_next(val iter, val end_val);
 val seq_reset(val iter, val obj);
+val iter_begin(val obj);
+val iter_more(val iter);
+val iter_item(val iter);
+val iter_step(val iter);
+val iter_reset(val iter, val obj);
 val throw_mismatch(val self, val obj, type_t);
 INLINE val type_check(val self, val obj, type_t typecode)
 {

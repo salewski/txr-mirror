@@ -33080,15 +33080,167 @@ and tests for termination with
 
 .SS* Open Sequence Traversal
 
-Functions in this category perform efficient traversal of sequences
-of various kinds.
+Functions in this category perform efficient traversal of sequences.
+
+There are two flavors of these functions: functions in the
+.code iter-begin
+group, and functions in the
+.code seq-begin
+group. The latter are obsolescent.
+
+.coNP Function @ iter-begin
+.synb
+.mets (iter-begin << seq )
+.syne
+.desc
+The
+.code iter-begin
+function returns an iterator object specialized for the task of traversing
+the sequence
+.metn seq .
+
+If
+.meta object
+isn't a sequence, an exception is thrown.
+
+Note: if
+.meta seq
+is a list-like sequence, then
+.code iter-begin
+may return
+.meta seq
+itself as the iterator.
+
+.coNP Function @ iter-more
+.synb
+.mets (iter-more << iter )
+.syne
+.desc
+The
+.code iter-more
+function returns
+.code t
+if there remain more elements to be traversed.
+Otherwise it returns
+.codn nil .
+
+The
+.meta iter
+argument must be a valid iterator returned by a call to
+.metn iter-begin ,
+.meta iter-step
+or
+.metn iter-reset .
+
+The
+.code iter-more
+function doesn't change the state of
+.metn iter .
+
+.coNP Function @ iter-item
+.synb
+.mets (iter-item << iter )
+.syne
+.desc
+If the
+.code iter-more
+function indicates that more items remain to be visited, then
+the next item can be retrieved using
+.codn iter-item .
+
+The
+.meta iter
+argument must be a valid iterator returned by a call to
+.metn iter-begin ,
+.meta iter-step
+or
+.metn iter-reset .
+
+The
+.code iter-more
+function doesn't change the state of
+.metn iter .
+
+If
+.code iter-more
+is invoked on an iterator which indicates that no more items
+remain to be visited, the return value is
+.codn nil .
+
+.coNP Function @ iter-step
+.synb
+.mets (iter-step << iter )
+.syne
+.desc
+If the
+.code iter-more
+function indicates that more items remain to be visited, then the
+.code iter-step
+function may be used to consume the next item.
+
+The function returns an iterator denoting the traversal of the
+remaining items in the sequence.
+
+The
+.meta iter
+argument must be a valid iterator returned by a call to
+.metn iter-begin ,
+.meta iter-step
+or
+.metn iter-reset .
+
+The
+.code iter-step
+function may return a new object, in which case it avoids
+changing the state of
+.metn iter ,
+or else it may change the state of
+.meta iter
+and return it.
+
+If the application discontinues the use of
+.metn iter ,
+and continues the
+traversal using the returned iterator, it will work correctly in either
+situation.
+
+If
+.code iter-step
+is invoked on an iterator which indicates that no more items
+remain to be visited, the return value is unspecified.
+
+.coNP Function @ iter-reset
+.synb
+.mets (iter-reset < iter << seq )
+.syne
+.desc
+The
+.code iter-reset
+function returns an iterator object specialized for the task of traversing
+the sequence
+.metn seq .
+
+If it is possible for
+.meta iter
+to be that object, then the function may adjust the state of
+.meta iter
+and return it.
+
+If
+.code iter-reset
+doesn't use
+.metn iter ,
+then it behaves exactly like
+.code iter-begin
+being invoked on
+.metn seq .
 
 .coNP Function @ seq-begin
 .synb
 .mets (seq-begin << object )
 .syne
 .desc
-The
+The obsolescent
 .code seq-begin
 function returns an iterator object specialized to the task of traversing
 the sequence represented by the input
@@ -33111,7 +33263,7 @@ is not suitable for indefinite iteration over infinite lists.
 .mets (seq-next < iter << end-value )
 .syne
 .desc
-The
+The obsolescent
 .code seq-next
 function retrieves the next available item from the sequence iterated by
 .metn iter ,
@@ -33132,7 +33284,7 @@ freshly allocated object.
 .mets (seq-reset < iter << object )
 .syne
 .desc
-The
+The obsolescent
 .code seq-reset
 re-initializes the existing iterator object
 .meta iter
