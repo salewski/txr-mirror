@@ -1385,12 +1385,13 @@
            (out (if (member each-type '(collect-each append-each))
                   (gensym)))
            (accum (if out (gensym))))
-      ^(let* (,*(zip gens vars) ,*(if accum ^((,out (cons nil nil)) (,accum ,out))))
+      ^(let* (,*(mapcar (ret ^(,@1 (iter-begin ,@2))) gens vars)
+               ,*(if accum ^((,out (cons nil nil)) (,accum ,out))))
          (block nil
            (sys:for-op ()
-                       ((and ,*gens) ,*(if accum ^((cdr ,out))))
-                       (,*(mapcar (ret ^(sys:setq ,@1 (cdr ,@1))) gens))
-             ,*(mapcar (ret ^(sys:setq ,@1 (car ,@2))) vars gens)
+                       ((and ,*(mapcar (op list 'iter-more) gens)) ,*(if accum ^((cdr ,out))))
+                       (,*(mapcar (ret ^(sys:setq ,@1 (iter-step ,@1))) gens))
+             ,*(mapcar (ret ^(sys:setq ,@1 (iter-item ,@2))) vars gens)
              ,*(caseq each-type
                  (collect-each ^((rplacd ,accum (cons (progn ,*body) nil))
                                  (sys:setq ,accum (cdr ,accum))))

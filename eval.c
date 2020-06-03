@@ -109,7 +109,7 @@ val whole_k, form_k, symacro_k;
 
 val last_form_evaled;
 
-val call_f;
+val call_f, get_iter_f;
 
 val origin_hash;
 
@@ -1840,23 +1840,23 @@ static val op_each(val form, val env)
   val bindings = if3(vars,
                      get_bindings(vars, env),
                      env->e.vbindings);
-  val lists = mapcar(cdr_f, bindings);
+  val iters = mapcar(get_iter_f, bindings);
   list_collect_decl (collection, ptail);
 
   uw_block_begin (nil, result);
 
   for (;;) {
-    val biter, liter;
+    val biter, iiter;
 
-    for (biter = bindings, liter = lists; biter;
-         biter = cdr(biter), liter = cdr(liter))
+    for (biter = bindings, iiter = iters; biter;
+         biter = cdr(biter), iiter = cdr(iiter))
     {
       val binding = car(biter);
-      val list = car(liter);
-      if (!list)
+      val iter = car(iiter);
+      if (!iter_more(iter))
         goto out;
-      rplacd(binding, car(list));
-      rplaca(liter, cdr(list));
+      rplacd(binding, iter_item(iter));
+      rplaca(iiter, iter_step(iter));
     }
 
     {
@@ -6262,7 +6262,7 @@ void eval_init(void)
 
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
           &op_table, &pm_table, &last_form_evaled,
-          &call_f, &unbound_s, &origin_hash, convert(val *, 0));
+          &call_f, &get_iter_f, &unbound_s, &origin_hash, convert(val *, 0));
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
   top_mb = make_hash(t, nil, nil);
@@ -6273,6 +6273,7 @@ void eval_init(void)
   pm_table = make_hash(nil, nil, nil);
 
   call_f = func_n1v(generic_funcall);
+  get_iter_f = chain(cdr_f, func_n1(iter_begin), nao);
 
   origin_hash = make_eq_hash(t, nil);
 
