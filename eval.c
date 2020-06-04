@@ -5275,7 +5275,7 @@ static val abscond_star(val name, val retval)
   abort();
 }
 
-static val map_common(val fun, struct args *lists,
+static val map_common(val self, val fun, struct args *lists,
                       loc (*collect_fn)(loc ptail, val obj),
                       val (*map_fn)(val fun, val seq))
 {
@@ -5284,26 +5284,34 @@ static val map_common(val fun, struct args *lists,
   } else if (!args_two_more(lists, 0)) {
     return map_fn(fun, args_atz(lists, 0));
   } else {
-    val list_of_lists = args_get_list(lists);
-    val list_of_iters = mapcar_listout(iter_begin_f, list_of_lists);
-    val list_orig = car(list_of_lists);
+    cnum i, idx, argc = args_count(lists);
+    seq_iter_t *iter_array = coerce(seq_iter_t *,
+                                    alloca(argc * sizeof *iter_array));
     list_collect_decl (out, otail);
 
-    for (;;) {
-      val iiter, fun_ret;
-      list_collect_decl (args, atail);
+    for (i = 0, idx = 0; i < argc; i++)
+    {
+      val arg = args_get(lists, &idx);
+      seq_iter_init(self, &iter_array[i], arg);
+    }
 
-      for (iiter = list_of_iters; iiter; iiter = cdr(iiter)) {
-        val iter = car(iiter);
-        if (!iter_more(iter)) {
-          rcyc_list(list_of_iters);
-          return collect_fn != 0 ? make_like(out, list_orig) : nil;
-        }
-        atail = list_collect(atail, iter_item(iter));
-        deref(car_l(iiter)) = iter_step(iter);
+    for (;;) {
+      val fun_ret;
+      args_decl(args_fun, max(argc, ARGS_MIN));
+
+      args_fun->fill = argc;
+
+      for (i = 0; i < argc; i++) {
+        val elem;
+        seq_iter_t *iter = &iter_array[i];
+
+        if (!seq_get(iter, &elem))
+          return collect_fn != 0 ? make_like(out, args_at(lists, 0)) : nil;
+
+        args_fun->arg[i] = elem;
       }
 
-      fun_ret = apply(fun, z(args));
+      fun_ret = generic_funcall(fun, args_fun);
 
       if (collect_fn != 0)
         otail = collect_fn(otail, fun_ret);
@@ -5313,7 +5321,7 @@ static val map_common(val fun, struct args *lists,
 
 val mapcarv(val fun, struct args *lists)
 {
-  return map_common(fun, lists, list_collect, mapcar);
+  return map_common(lit("mapcar"), fun, lists, list_collect, mapcar);
 }
 
 val mapcarl(val fun, val list_of_lists)
@@ -5324,12 +5332,12 @@ val mapcarl(val fun, val list_of_lists)
 
 static val mappendv(val fun, struct args *lists)
 {
-  return map_common(fun, lists, list_collect_append, mappend);
+  return map_common(lit("mappend"), fun, lists, list_collect_append, mappend);
 }
 
 static val mapdov(val fun, struct args *lists)
 {
-  return map_common(fun, lists, 0, mapdo);
+  return map_common(lit("mapdo"), fun, lists, 0, mapdo);
 }
 
 static val lazy_mapcar_func(val env, val lcons)
