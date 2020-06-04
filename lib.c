@@ -8799,35 +8799,20 @@ val copy_alist(val list)
 val mapcar_listout(val fun, val seq)
 {
   val self = lit("mapcar");
-  seq_info_t si = seq_info(seq);
-  list_collect_decl (out, iter);
+  seq_iter_t iter;
+  seq_iter_init(self, &iter, seq);
+  val elem;
+  list_collect_decl (out, ptail);
 
-  switch (si.kind) {
-  case SEQ_NIL:
-    return nil;
-  case SEQ_VECLIKE:
-    {
-      val v = si.obj;
-      cnum i, len = c_fixnum(length(v), self);
-
-      for (i = 0; i < len; i++)
-        iter = list_collect(iter, funcall1(fun, ref(v, num_fast(i))));
-    }
-    break;
-  case SEQ_LISTLIKE:
-    for (seq = z(si.obj); seq; seq = cdr(seq))
-      iter = list_collect(iter, funcall1(fun, car(seq)));
-    break;
-  default:
-    unsup_obj(self, seq);
-  }
+  while (seq_get(&iter, &elem))
+    ptail = list_collect(ptail, funcall1(fun, elem));
 
   return out;
 }
 
-val mapcar(val fun, val list)
+val mapcar(val fun, val seq)
 {
-  return make_like(mapcar_listout(fun, list), list);
+  return make_like(mapcar_listout(fun, seq), seq);
 }
 
 val mapcon(val fun, val list)
@@ -8843,29 +8828,29 @@ val mapcon(val fun, val list)
   return make_like(out, list_orig);
 }
 
-val mappend(val fun, val list)
+val mappend(val fun, val seq)
 {
-  list_collect_decl (out, iter);
-  val list_orig = list;
+  val self = lit("mappend");
+  seq_iter_t iter;
+  seq_iter_init(self, &iter, seq);
+  val elem;
+  list_collect_decl (out, ptail);
 
-  list = nullify(list);
+  while (seq_get(&iter, &elem))
+    ptail = list_collect_append(ptail, funcall1(fun, elem));
 
-  gc_hint(list);
-
-  for (; list; list = cdr(list))
-    iter = list_collect_append(iter, funcall1(fun, car(list)));
-
-  return make_like(out, list_orig);
+  return make_like(out, seq);
 }
 
-val mapdo(val fun, val list)
+val mapdo(val fun, val seq)
 {
-  list = nullify(list);
+  val self = lit("mapdo");
+  seq_iter_t iter;
+  seq_iter_init(self, &iter, seq);
+  val elem;
 
-  gc_hint(list);
-
-  for (; list; list = cdr(list))
-    funcall1(fun, car(list));
+  while (seq_get(&iter, &elem))
+    funcall1(fun, elem);
 
   return nil;
 }

@@ -109,7 +109,8 @@ val whole_k, form_k, symacro_k;
 
 val last_form_evaled;
 
-val call_f, get_iter_f;
+val call_f, iter_begin_f, iter_from_binding_f, iter_more_f;
+val iter_item_f, iter_step_f;
 
 val origin_hash;
 
@@ -1840,7 +1841,7 @@ static val op_each(val form, val env)
   val bindings = if3(vars,
                      get_bindings(vars, env),
                      env->e.vbindings);
-  val iters = mapcar(get_iter_f, bindings);
+  val iters = mapcar(iter_from_binding_f, bindings);
   list_collect_decl (collection, ptail);
 
   uw_block_begin (nil, result);
@@ -5279,25 +5280,25 @@ val mapcarv(val fun, struct args *lists)
   if (!args_more(lists, 0)) {
     return nil;
   } else if (!args_two_more(lists, 0)) {
-    return mapcar(fun, nullify(args_atz(lists, 0)));
+    return mapcar(fun, args_atz(lists, 0));
   } else {
     val list_of_lists = args_get_list(lists);
-    val lofl = mapcar_listout(func_n1(nullify), list_of_lists);
+    val list_of_iters = mapcar_listout(iter_begin_f, list_of_lists);
     val list_orig = car(list_of_lists);
     list_collect_decl (out, otail);
 
     for (;;) {
-      val iter;
+      val iiter;
       list_collect_decl (args, atail);
 
-      for (iter = lofl; iter; iter = cdr(iter)) {
-        val list = car(iter);
-        if (!list) {
-          rcyc_list(lofl);
+      for (iiter = list_of_iters; iiter; iiter = cdr(iiter)) {
+        val iter = car(iiter);
+        if (!iter_more(iter)) {
+          rcyc_list(list_of_iters);
           return make_like(out, list_orig);
         }
-        atail = list_collect(atail, car(list));
-        deref(car_l(iter)) = cdr(list);
+        atail = list_collect(atail, iter_item(iter));
+        deref(car_l(iiter)) = iter_step(iter);
       }
 
       otail = list_collect(otail, apply(fun, z(args)));
@@ -5319,22 +5320,22 @@ static val mappendv(val fun, struct args *lists)
     return mappend(fun, args_atz(lists, 0));
   } else {
     val list_of_lists = args_get_list(lists);
-    val lofl = mapcar(func_n1(nullify), list_of_lists);
+    val list_of_iters = mapcar_listout(iter_begin_f, list_of_lists);
     val list_orig = car(list_of_lists);
     list_collect_decl (out, otail);
 
     for (;;) {
-      val iter;
+      val iiter;
       list_collect_decl (args, atail);
 
-      for (iter = lofl; iter; iter = cdr(iter)) {
-        val list = car(iter);
-        if (!list) {
-          rcyc_list(lofl);
+      for (iiter = list_of_iters; iiter; iiter = cdr(iiter)) {
+        val iter = car(iiter);
+        if (!iter_more(iter)) {
+          rcyc_list(list_of_iters);
           return make_like(out, list_orig);
         }
-        atail = list_collect(atail, car(list));
-        rplaca(iter, cdr(list));
+        atail = list_collect(atail, iter_item(iter));
+        deref(car_l(iiter)) = iter_step(iter);
       }
 
       otail = list_collect_append(otail, apply(fun, z(args)));
@@ -5344,12 +5345,12 @@ static val mappendv(val fun, struct args *lists)
 
 static val lazy_mapcar_func(val env, val lcons)
 {
-  us_cons_bind (fun, list, env);
+  us_cons_bind (fun, iter, env);
 
-  us_rplaca(lcons, funcall1(fun, car(list)));
-  us_rplacd(env, cdr(list));
+  us_rplaca(lcons, funcall1(fun, iter_item(iter)));
+  us_rplacd(env, iter_step(iter));
 
-  if (cdr(list))
+  if (iter_more(iter))
     us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
   else
     us_rplacd(lcons, nil);
@@ -5358,22 +5359,22 @@ static val lazy_mapcar_func(val env, val lcons)
 
 val lazy_mapcar(val fun, val list)
 {
-  list = nullify(list);
-  if (!list)
+  val iter = iter_begin(list);
+  if (!iter_more(iter))
     return nil;
-  return make_lazy_cons(func_f1(cons(fun, list), lazy_mapcar_func));
+  return make_lazy_cons(func_f1(cons(fun, iter), lazy_mapcar_func));
 }
 
 static val lazy_mapcarv_func(val env, val lcons)
 {
-  us_cons_bind (fun, lofl, env);
-  val args = mapcar(car_f, lofl);
-  val next = mapcar(cdr_f, lofl);
+  us_cons_bind (fun, list_of_iters, env);
+  val args = mapcar(iter_item_f, list_of_iters);
+  val next = mapcar(iter_step_f, list_of_iters);
 
   us_rplaca(lcons, apply(fun, z(args)));
   us_rplacd(env, next);
 
-  if (all_satisfy(next, identity_f, identity_f))
+  if (all_satisfy(next, iter_more_f, identity_f))
     us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
   else
     us_rplacd(lcons, nil);
@@ -5388,11 +5389,12 @@ static val lazy_mapcarv(val fun, struct args *lists)
     return lazy_mapcar(fun, args_atz(lists, 0));
   } else {
     val list_of_lists = args_get_list(lists);
-    if (some_satisfy(list_of_lists, null_f, identity_f)) {
+    if (!all_satisfy(list_of_lists, iter_more_f, identity_f)) {
       return nil;
     } else {
-      val lofl = mapcar(func_n1(nullify), list_of_lists);
-      return make_lazy_cons(func_f1(cons(fun, lofl), lazy_mapcarv_func));
+      val list_of_iters = mapcar(iter_begin_f, list_of_lists);
+      return make_lazy_cons(func_f1(cons(fun, list_of_iters),
+                                    lazy_mapcarv_func));
     }
   }
 }
@@ -5416,20 +5418,20 @@ static val mapdov(val fun, struct args *lists)
     return mapdo(fun, args_atz(lists, 0));
   } else {
     val list_of_lists = args_get_list(lists);
-    val lofl = mapcar_listout(func_n1(nullify), list_of_lists);
+    val list_of_iters = mapcar_listout(iter_begin_f, list_of_lists);
 
     for (;;) {
-      val iter;
+      val iiter;
       list_collect_decl (args, atail);
 
-      for (iter = lofl; iter; iter = cdr(iter)) {
-        val list = car(iter);
-        if (!list) {
-          rcyc_list(lofl);
+      for (iiter = list_of_iters; iiter; iiter = cdr(iiter)) {
+        val iter = car(iiter);
+        if (!iter_more(iter)) {
+          rcyc_list(list_of_iters);
           return nil;
         }
-        atail = list_collect(atail, car(list));
-        rplaca(iter, cdr(list));
+        atail = list_collect(atail, iter_item(iter));
+        deref(car_l(iiter)) = iter_step(iter);
       }
 
       apply(fun, z(args));
@@ -5446,41 +5448,39 @@ static val prod_common(val fun, struct args *lists,
     return mappendv(fun, lists);
   } else {
     cnum argc = args_count(lists), i;
+    list_collect_decl (out, ptail);
     args_decl(args_reset, max(argc, ARGS_MIN));
     args_decl(args_work, max(argc, ARGS_MIN));
     args_copy(args_reset, lists);
     args_normalize_exact(args_reset, argc);
-    args_copy(args_work, args_reset);
-    list_collect_decl (out, ptail);
+    args_work->fill = args_reset->fill;
 
     for (i = 0; i < argc; i++)
-      args_work->arg[i] = nullify(args_work->arg[i]);
+      if (!iter_more((args_work->arg[i] = iter_begin(args_reset->arg[i]))))
+        goto out;
 
     for (;;) {
       args_decl(args_fun, max(argc, ARGS_MIN));
-      for (i = 0; i < argc; i++) {
-        val seq_i = args_work->arg[i];
-        if (!seq_i)
-          goto out;
-        args_fun->arg[i] = car(seq_i);
-      }
 
+      for (i = 0; i < argc; i++)
+        args_fun->arg[i] = iter_item(args_work->arg[i]);
       args_fun->fill = argc;
+
       ptail = collect_fptr(ptail, generic_funcall(fun, args_fun));
 
       for (i = argc - 1; ; i--) {
-        val cdr_i = cdr(args_work->arg[i]);
-        if (cdr_i) {
-          args_work->arg[i] = cdr_i;
+        val step_i = iter_step(args_work->arg[i]);
+        if (iter_more(step_i)) {
+          args_work->arg[i] = step_i;
           break;
         }
         if (i == 0)
           goto out;
-        args_work->arg[i] = args_reset->arg[i];
+        args_work->arg[i] = iter_begin(args_reset->arg[i]);
       }
     }
   out:
-    return make_like(out, args_reset->arg[0]);
+    return make_like(out, args_at(lists, 0));
   }
 }
 
@@ -6262,7 +6262,9 @@ void eval_init(void)
 
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
           &op_table, &pm_table, &last_form_evaled,
-          &call_f, &get_iter_f, &unbound_s, &origin_hash, convert(val *, 0));
+          &call_f, &iter_begin_f, &iter_from_binding_f, &iter_more_f,
+          &iter_item_f, &iter_step_f,
+          &unbound_s, &origin_hash, convert(val *, 0));
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
   top_mb = make_hash(t, nil, nil);
@@ -6273,7 +6275,11 @@ void eval_init(void)
   pm_table = make_hash(nil, nil, nil);
 
   call_f = func_n1v(generic_funcall);
-  get_iter_f = chain(cdr_f, func_n1(iter_begin), nao);
+  iter_begin_f = func_n1(iter_begin);
+  iter_from_binding_f = chain(cdr_f, iter_begin_f, nao);
+  iter_more_f = func_n1(iter_more);
+  iter_item_f = func_n1(iter_item);
+  iter_step_f = func_n1(iter_step);
 
   origin_hash = make_eq_hash(t, nil);
 
