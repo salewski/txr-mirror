@@ -5440,12 +5440,13 @@ static val mapdov(val fun, struct args *lists)
 }
 
 static val prod_common(val fun, struct args *lists,
-                       loc (*collect_fptr)(loc ptail, val obj))
+                       loc (*collect_fn)(loc ptail, val obj),
+                       val (*mapv_fn)(val fun, struct args *lists))
 {
   if (!args_more(lists, 0)) {
     return nil;
   } else if (!args_two_more(lists, 0)) {
-    return mappendv(fun, lists);
+    return mapv_fn(fun, lists);
   } else {
     cnum argc = args_count(lists), i;
     list_collect_decl (out, ptail);
@@ -5466,7 +5467,7 @@ static val prod_common(val fun, struct args *lists,
         args_fun->arg[i] = iter_item(args_work->arg[i]);
       args_fun->fill = argc;
 
-      ptail = collect_fptr(ptail, generic_funcall(fun, args_fun));
+      ptail = collect_fn(ptail, generic_funcall(fun, args_fun));
 
       for (i = argc - 1; ; i--) {
         val step_i = iter_step(args_work->arg[i]);
@@ -5486,12 +5487,12 @@ static val prod_common(val fun, struct args *lists,
 
 val maprodv(val fun, struct args *lists)
 {
-  return prod_common(fun, lists, list_collect);
+  return prod_common(fun, lists, list_collect, mapcarv);
 }
 
 val maprendv(val fun, struct args *lists)
 {
-  return prod_common(fun, lists, list_collect_append);
+  return prod_common(fun, lists, list_collect_append, mappendv);
 }
 
 static val symbol_value(val sym)
