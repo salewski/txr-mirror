@@ -361,7 +361,7 @@ static int seq_iter_peek_list(seq_iter_t *it, val *pval)
 
 static int seq_iter_get_vec(seq_iter_t *it, val *pval)
 {
-  if (it->ui.index < it->len) {
+  if (it->ui.index < it->ul.len) {
     *pval = ref(it->inf.obj, num(it->ui.index++));
     return 1;
   }
@@ -370,7 +370,7 @@ static int seq_iter_get_vec(seq_iter_t *it, val *pval)
 
 static int seq_iter_peek_vec(seq_iter_t *it, val *pval)
 {
-  if (it->ui.index < it->len) {
+  if (it->ui.index < it->ul.len) {
     *pval = ref(it->inf.obj, num(it->ui.index));
     return 1;
   }
@@ -387,6 +387,92 @@ static int seq_iter_peek_hash(seq_iter_t *it, val *pval)
 {
   *pval = hash_peek(it->ui.iter);
   return *pval != nil;
+}
+
+static int seq_iter_get_range_cnum(seq_iter_t *it, val *pval)
+{
+  if (it->ui.index < it->ul.len) {
+    *pval = num(it->ui.index++);
+    return 1;
+  }
+  return 0;
+}
+
+static int seq_iter_peek_range_cnum(seq_iter_t *it, val *pval)
+{
+  if (it->ui.index < it->ul.len) {
+    *pval = num(it->ui.index);
+    return 1;
+  }
+  return 0;
+}
+
+static int seq_iter_get_range_chr(seq_iter_t *it, val *pval)
+{
+  if (it->ui.index < it->ul.len) {
+    *pval = chr(it->ui.index++);
+    return 1;
+  }
+  return 0;
+}
+
+static int seq_iter_peek_range_chr(seq_iter_t *it, val *pval)
+{
+  if (it->ui.index < it->ul.len) {
+    *pval = chr(it->ui.index);
+    return 1;
+  }
+  return 0;
+}
+
+static int seq_iter_get_range_bignum(seq_iter_t *it, val *pval)
+{
+  if (lt(it->ui.iter, it->ul.lim)) {
+    *pval = it->ui.iter;
+    it->ui.iter = succ(it->ui.iter);
+    return 1;
+  }
+  return 0;
+}
+
+static int seq_iter_peek_range_bignum(seq_iter_t *it, val *pval)
+{
+  if (lt(it->ui.iter, it->ul.lim)) {
+    *pval = it->ui.iter;
+    return 1;
+  }
+  return 0;
+}
+
+static int seq_iter_get_chr(seq_iter_t *it, val *pval)
+{
+  if (it->ui.index <= 0x10FFFF) {
+    *pval = chr(it->ui.index++);
+    return 1;
+  }
+  return 0;
+}
+
+static int seq_iter_peek_chr(seq_iter_t *it, val *pval)
+{
+  if (it->ui.index <= 0x10FFFF) {
+    *pval = chr(it->ui.index);
+    return 1;
+  }
+  return 0;
+}
+
+static int seq_iter_get_num(seq_iter_t *it, val *pval)
+{
+  *pval = it->ui.iter;
+  it->ui.iter = succ(it->ui.iter);
+  return 1;
+}
+
+static int seq_iter_peek_num(seq_iter_t *it, val *pval)
+{
+  *pval = it->ui.iter;
+  return 1;
 }
 
 val seq_geti(seq_iter_t *it)
@@ -424,30 +510,78 @@ static void seq_iter_init_with_info(val self, seq_iter_t *it,
   switch (it->inf.kind) {
   case SEQ_NIL:
     it->ui.iter = nil;
-    it->len = 0;
+    it->ul.len = 0;
     it->get = seq_iter_get_nil;
     it->peek = seq_iter_peek_nil;
     break;
   case SEQ_LISTLIKE:
     it->ui.iter = it->inf.obj;
-    it->len = 0;
+    it->ul.len = 0;
     it->get = seq_iter_get_list;
     it->peek = seq_iter_peek_list;
     break;
   case SEQ_VECLIKE:
     it->ui.index = 0;
-    it->len = c_num(length(it->inf.obj));
+    it->ul.len = c_num(length(it->inf.obj));
     it->get = seq_iter_get_vec;
     it->peek = seq_iter_peek_vec;
     break;
   case SEQ_HASHLIKE:
     it->ui.iter = hash_begin(it->inf.obj);
-    it->len = 0;
+    it->ul.len = 0;
     it->get = seq_iter_get_hash;
     it->peek = seq_iter_peek_hash;
     break;
   default:
-    unsup_obj(self, obj);
+    switch (it->inf.type) {
+    case RNG:
+      {
+        val rf = from(obj);
+        val rt = to(obj);
+
+        switch (type(rf))
+        {
+        case NUM:
+          it->ui.index = c_num(rf);
+          it->ul.len = c_num(rt);
+          it->get = seq_iter_get_range_cnum;
+          it->peek = seq_iter_peek_range_cnum;
+          break;
+        case CHR:
+          it->ui.index = c_chr(rf);
+          it->ul.len = c_chr(rt);
+          it->get = seq_iter_get_range_chr;
+          it->peek = seq_iter_peek_range_chr;
+          break;
+        case BGNUM:
+          it->ui.iter = rf;
+          it->ul.lim = rt;
+          it->get = seq_iter_get_range_bignum;
+          it->peek = seq_iter_peek_range_bignum;
+          break;
+        default:
+          unsup_obj(self, obj);
+        }
+      }
+      break;
+    case CHR:
+      it->ui.index = c_chr(it->inf.obj);
+      it->ul.len = 0;
+      it->get = seq_iter_get_chr;
+      it->peek = seq_iter_peek_chr;
+      break;
+    case NUM:
+    case BGNUM:
+    case FLNUM:
+      it->ui.iter = it->inf.obj;
+      it->ul.lim = nil;
+      it->get = seq_iter_get_num;
+      it->peek = seq_iter_peek_num;
+      break;
+    default:
+      unsup_obj(self, obj);
+    }
+    break;
   }
 }
 
@@ -544,13 +678,20 @@ val iter_begin(val obj)
   case SEQ_LISTLIKE:
     return sinf.obj;
   default:
-    {
-      val si_obj;
-      struct seq_iter *si = coerce(struct seq_iter *,
-                                   chk_calloc(1, sizeof *si));
-      si_obj = cobj(coerce(mem_t *, si), seq_iter_s, &seq_iter_ops);
-      seq_iter_init_with_info(self, si, obj, sinf);
-      return si_obj;
+    switch (sinf.type) {
+    case CHR:
+    case NUM:
+    case BGNUM:
+      return obj;
+    default:
+      {
+        val si_obj;
+        struct seq_iter *si = coerce(struct seq_iter *,
+                                     chk_calloc(1, sizeof *si));
+        si_obj = cobj(coerce(mem_t *, si), seq_iter_s, &seq_iter_ops);
+        seq_iter_init_with_info(self, si, obj, sinf);
+        return si_obj;
+      }
     }
   }
 }
@@ -560,6 +701,11 @@ val iter_more(val iter)
   switch (type(iter)) {
   case NIL:
     return nil;
+  case CHR:
+    return if2(c_chr(iter) <= 0x10FFFF, t);
+  case NUM:
+  case BGNUM:
+    return t;
   case COBJ:
     if (iter->co.cls == seq_iter_s)
     {
@@ -578,6 +724,10 @@ val iter_item(val iter)
   switch (type(iter)) {
   case NIL:
     return nil;
+  case CHR:
+  case NUM:
+  case BGNUM:
+    return iter;
   case COBJ:
     if (iter->co.cls == seq_iter_s)
     {
@@ -596,6 +746,10 @@ val iter_step(val iter)
   switch (type(iter)) {
   case NIL:
     return nil;
+  case CHR:
+  case NUM:
+  case BGNUM:
+    return plus(iter, one);
   case COBJ:
     if (iter->co.cls == seq_iter_s)
     {
@@ -621,6 +775,10 @@ val iter_reset(val iter, val obj)
     return sinf.obj;
   default:
     switch (type(iter)) {
+    case CHR:
+    case NUM:
+    case BGNUM:
+      return obj;
     case COBJ:
       if (iter->co.cls == seq_iter_s)
       {
