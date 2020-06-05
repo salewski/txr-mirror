@@ -15956,22 +15956,25 @@ is visible.
 .syne
 .desc
 These operators establish a loop for iterating over the elements of one or more
-lists. Each
+sequences. Each
 .meta init-form
-must evaluate to a list. The lists are then iterated in
+must evaluate to an iterable object that is suitable as an argument for the
+.code iter-begin
+function.
+The sequences are then iterated in
 parallel over repeated evaluations of the
 .metn body-form -s,
 with each
 .meta sym
-variable being assigned to successive elements of its list. The shortest list
-determines the number of iterations, so if any of the
+variable being assigned to successive elements of its sequence. The shortest
+list determines the number of iterations, so if any of the
 .metn init-form -s
 evaluate to
-an empty list, the body is not executed.
+an empty sequence, the body is not executed.
 
 If the list of
 .mono
-.meti >> ( syn  << init-form )
+.meti >> ( sym << init-form )
 .onom
 pairs itself is empty, then an infinite loop is specified.
 
@@ -16047,9 +16050,9 @@ of their lists.
 .TP* Example:
 .mono
  ;; print numbers from 1 to 10 and whether they are even or odd
- (each* ((n (range 1 10)) ;; n list a list here!
+ (each* ((n 1..11) ;; n is just a range object in this scope
          (even (collect-each ((m n)) (evenp m))))
-   ;; n is an item here!
+   ;; n is an integer in this scope
    (format t "~s is ~s\en" n (if even "even" "odd")))
 .onom
 .TP* Output:
