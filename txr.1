@@ -12427,6 +12427,126 @@ The lazy versions of these functions such as
 do not have this behavior;
 they produce lazy lists.
 
+.SS* Generalization of Iteration
+
+\*(TL implements a unified paradigm for iterating over sequence-like
+container structures and abstract spaces such as bounded and unbounded ranges
+of integers. This concept is based around an iterator abstraction which is
+directly compatible with Lisp cons cell traversal in the sense that when
+iteration takes place over lists, the iterator instance is nothing but a cons
+cell.
+
+An iterator is created using the constructor function
+.code iter-begin
+which takes a single argument. The argument denotes a space to be traversed;
+the iterator provides the means for that traversal.
+
+When the
+.code iter-begin
+function is applied to a list (a
+.code cons
+cell or the
+.code nil
+object), the return value is that object itself. The remaining functions
+in the iterator API then behave like aliases for list processing functions.
+The
+.code iter-more
+function behaves like
+.codn identity ,
+.code iter-item
+behaves like
+.code car
+and
+.code iter-step
+behaves like
+.codn cdr .
+
+For example, the following loops not only produce identical behavior,
+but the
+.code iter
+variable steps through the
+.code cons
+cells in the same manner in both:
+
+.verb
+  ;; print all symbols in the list (a b c d):
+
+  (let ((iter '(a b c d)))
+    (while iter
+      (prinl (car iter))
+      (set iter (cdr iter))))
+
+  ;; likewise:
+
+  (let ((iter (iter-begin '(a b c d))))
+    (while (iter-more iter)
+      (prinl (iter-item iter))
+      (set iter (iter-step iter))))
+.brev
+
+There are three important differences.
+
+Firstly, both examples will still work
+if the list
+.code "(a b c d)"
+is replaced by a different kind of sequence, such as the string
+.str abcd
+or the vector
+.codn "#(a b c d)" .
+However, the former example will not execute efficiently on these objects.
+The reason is that the
+.code cdr
+function will construct successive suffixes of the string and list object.
+That requires not only the allocation of memory, but changes the running time
+complexity of the loop from linear to quadratic.
+
+Secondly, the former example with
+.cod3 car / cdr
+will not work correctly if the sequence is an empty non-list sequence, like
+the null string or empty vector. Rectifying this problem requires the
+.code nullify
+function to be used:
+
+.verb
+  ;; print all symbols in the list (a b c d):
+
+  (let ((iter (nullify "abcd")))
+    (while iter
+      (prinl (car iter))
+      (set iter (cdr iter))))
+.brev
+
+The
+.code nullify
+function converts empty sequences of all kinds into the empty list
+.codn nil .
+
+Thirdly, the second
+example will work even if the input list is replaced with certain objects
+which are not sequences at all:
+
+.verb
+  ;; Print the integers from 0 to 3
+
+  (let ((iter (iter-begin 0..4)))
+    (while (iter-more iter)
+      (prinl (iter-item iter))
+      (set iter (iter-step iter))))
+
+  ;; Print incrementing integers starting at 1,
+  ;; breaking out of the loop after 100.
+
+  (let ((iter (iter-begin 1)))
+    (while (iter-more iter)
+      (if (eql 100 (prinl (iter-item iter)))
+        (return))
+      (set iter (iter-step iter))))
+.brev
+
+In \*(TL, numerous functions that appear as list processing functions in other
+contemporary Lisp dialects, and historically, are actually sequence processing
+functions based on the above iterator paradigm.
+
 .SS* Callable Objects
 
 In \*(TL, sequences (strings, vectors and lists) as well as hashes and
