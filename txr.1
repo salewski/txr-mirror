@@ -28866,6 +28866,32 @@ multiple structure types due to inheritance, this argument informs the function
 which of those types it is being invoked for.
 
 .SS* Sequence Manipulation
+
+Functions in this category uniformly manipulate abstract sequences. Lists,
+strings and vectors are sequences.
+
+Structure objects can behave
+like sequences, either list-like or vector-like sequences, if they have
+certain methods: see the previous section Special Structure Functions.
+
+Moreover, hash tables behave like sequences of key-value entries represented by
+.code cons
+pairs. Not all sequence-processing functions accept hash table sequences.
+
+Additionally, some sequence-processing functions work not only with sequences
+but with all iterable objects: objects that can be used as arguments to the
+.code iter-begin
+function. Such arguments are called
+.meta iterable
+rather than
+.metn sequence ,
+possibly abbreviated to
+.meta iter
+with or without a numeric suffix.
+Hash tables are always supported if they appear as
+.meta iterable
+arguments.
+
 .coNP Function @ seqp
 .synb
 .mets (seqp << object )
@@ -28902,8 +28928,8 @@ the language may specify additional objects that are sequences.
 
 .coNP Functions @ length and @ len
 .synb
-.mets (length << object )
-.mets (len << object )
+.mets (length << iterable )
+.mets (len << iterable )
 .syne
 .desc
 If
@@ -28937,6 +28963,7 @@ The length of
 is -11 and of
 .codn "#R(0.5 3)" ,
 2.5.
+
 .coIP buf
 The buffer length calculated by
 .code length-buf
@@ -28949,14 +28976,18 @@ calculated by
 is returned.
 .RE
 
+An attempt to calculate the length of infinite lazy lists will not terminate.
+Iterable objects representing infinite ranges, such as integers and characters
+are invalid arguments.
+
 .IP
-For other types,
+For all other types,
 .code length
 throws an error exception.
 
 .coNP Function @ empty
 .synb
-.mets (empty << object )
+.mets (empty << iterable )
 .syne
 .desc
 If
@@ -28969,18 +29000,30 @@ Returns
 .code t
 if
 .mono
-.meti (length << object )
+.meti (length << iterable )
 .onom
 is zero, otherwise
 .codn nil .
 
-If
-.meta object
-is not a suitable argument for
-.codn length ,
-then
+The
 .code empty
-throws an error exception.
+function also supports certain objects not suitable as arguments for
+.codn length .
+
+An infinite lazy list is not empty, and so
+.code empty
+returns
+.code nil
+for such an object.
+
+The function also returns
+.code nil
+for iterable objects representing non-empty spaces, even if
+those spaces are infinite. For instance
+.code "(empty 0)"
+yields
+.code nil
+because the set of integers beginning with 0 isn't empty.
 
 .coNP Function @ copy
 .synb
@@ -30368,9 +30411,9 @@ but produce lazy lists.
 
 .coNP Functions @, countqual @ countql and @ countq
 .synb
-.mets (countq < object << list )
-.mets (countql < object << list )
-.mets (countqual < object << list )
+.mets (countq < object << iterable )
+.mets (countql < object << iterable )
+.mets (countqual < object << iterable )
 .syne
 .desc
 The
@@ -30380,7 +30423,7 @@ and
 .code countqual
 functions count the number of objects
 in
-.meta list
+.meta iterable
 which are
 .codn eq ,
 .code eql
@@ -30392,13 +30435,13 @@ and return the count.
 
 .coNP Function @ count-if
 .synb
-.mets (count-if < predicate-function < list <> [ key-function ])
+.mets (count-if < predicate-function < iterable <> [ key-function ])
 .syne
 .desc
 The
 .code count-if
 function counts the number of elements of
-.meta list
+.meta iterable
 which satisfy
 .meta predicate-function
 and returns the count.
@@ -30661,11 +30704,11 @@ which must accept two arguments, and defaults to
 
 .coNP Function @ where
 .synb
-.mets (where < function << object )
+.mets (where < function << iterable )
 .syne
 .desc
 If
-.meta object
+.meta iterable
 is a sequence, the
 .code where
 function returns
@@ -30674,10 +30717,10 @@ a lazy list of the numeric indices of those of its elements which satisfy
 The numeric indices appear in increasing order.
 
 If
-.meta object
-is a hash, the
+.meta iterable
+is a hash, the following special behavior applies:
 .code where
-function returns a lazy list of
+returns a lazy list of
 of keys which have values which satisfy
 .metn function .
 These keys are not subject to an order.
@@ -30685,7 +30728,7 @@ These keys are not subject to an order.
 .meta function
 must be a function that can be called with one argument.
 For each element of
-.metn object ,
+.metn iterable ,
 .meta function
 is called with that element
 as an argument.  If a
@@ -31475,10 +31518,10 @@ regarding duplicate maxima.
 
 .coNP Functions @, uni @, isec @ diff and @ symdiff
 .synb
-.mets (uni < seq1 < seq2 >> [ testfun <> [ keyfun ]])
-.mets (isec < seq1 < seq2 >> [ testfun <> [ keyfun ]])
-.mets (diff < seq1 < seq2 >> [ testfun <> [ keyfun ]])
-.mets (symdiff < seq1 < seq2 >> [ testfun <> [ keyfun ]])
+.mets (uni < iter1 < iter1 >> [ testfun <> [ keyfun ]])
+.mets (isec < iter1 < iter1 >> [ testfun <> [ keyfun ]])
+.mets (diff < iter1 < iter1 >> [ testfun <> [ keyfun ]])
+.mets (symdiff < iter1 < iter2 >> [ testfun <> [ keyfun ]])
 .syne
 .desc
 The functions
@@ -31488,28 +31531,28 @@ The functions
 and
 .code symdiff
 treat the sequences
-.meta seq1
+.meta iter1
 and
-.meta seq2
+.meta iter2
 as if they were sets.
 
 They, respectively, compute the set union, set intersection,
 set difference and symmetric difference of
-.meta seq1
+.meta iter1
 and
-.metn seq2 ,
+.metn iter2 ,
 returning a new sequence.
 
 The arguments
-.meta seq1
+.meta iter1
 and
-.meta seq2
+.meta iter2
 need not be of the same kind. They may be hash tables.
 
 The returned sequence is of the same kind as
-.metn seq1 .
+.metn iter1 .
 If
-.meta seq1
+.meta iter1
 is a hash table, the returned sequence is a list.
 
 For the purposes of these functions, an input which is a hash table
@@ -31529,68 +31572,68 @@ de-duplicate the sequences.
 The union sequence produced by
 .code uni
 contains all of the elements which occur in both
-.meta seq1
+.meta iter1
 and
-.metn seq2 .
+.metn iter2 .
 If a given element occurs exactly once only in
-.meta seq1
+.meta iter1
 or exactly once only in
-.metn seq2 ,
+.metn iter2 ,
 or exactly once in both sequences, then it occurs exactly once in the union
 sequence.  If a given element occurs at least once in either
-.metn seq1 ,
-.meta seq2
+.metn iter1 ,
+.meta iter2
 or both, then it occurs at least once in the union sequence.
 
 The intersection sequence produced by
 .code isec
 contains all of the elements which occur in both
-.meta seq1
+.meta iter1
 and
-.metn seq2 .
+.metn iter2 .
 If a given element occurs exactly once in
-.meta seq1
+.meta iter1
 and exactly once in
-.metn seq2 ,
+.metn iter2 ,
 then in occurs exactly once in the intersection sequence.
 If a given element occurs at least once in
-.meta seq1
+.meta iter1
 and at least once in
-.metn seq2 ,
+.metn iter2 ,
 then in occurs at least once in the intersection sequence.
 
 The difference sequence produced by
 .code diff
 contains all of the elements which occur in
-.meta seq1
+.meta iter1
 but do not occur in
-.metn seq2 .
+.metn iter2 .
 If an element occurs exactly once in
-.meta seq1
+.meta iter1
 and does not occur in
-.metn seq2 ,
+.metn iter2 ,
 then it occurs exactly once in the difference sequence.
 If an element occurs at least once in
-.meta seq1
+.meta iter1
 and does not occur in
-.metn seq2 ,
+.metn iter2 ,
 then it occurs at least once in the difference sequence.
 If an element occurs at least once in
-.metn seq2 ,
+.metn iter2 ,
 then it does not occur in the difference sequence.
 
 The symmetric difference sequence produced by
 .code symdiff
 contains all of the elements of
-.meta seq1
+.meta iter1
 which do not occur in
-.meta seq2
+.meta iter2
 and
 .IR "vice versa" :
 it also contains all of the elements of
-.meta seq2
+.meta iter2
 which do not occur in
-.metn seq1 .
+.metn iter1 .
 
 Element equivalence is determined by a combination of
 .meta testfun
@@ -31620,7 +31663,7 @@ For the
 .code set-diff
 function, the requirement was specified to preserve the original
 order of items from
-.meta seq1
+.meta iter1
 that survive into the output sequence.
 This requirement is not documented for the
 .code diff
@@ -31651,10 +31694,10 @@ should be used instead.
 
 .coNP Functions @, mapcar @, mappend @ mapcar* and @ mappend*
 .synb
-.mets (mapcar < function << sequence *)
-.mets (mappend < function << sequence *)
-.mets (mapcar* < function << sequence *)
-.mets (mappend* < function << sequence *)
+.mets (mapcar < function << iterable *)
+.mets (mappend < function << iterable *)
+.mets (mapcar* < function << iterable *)
+.mets (mappend* < function << iterable *)
 .syne
 .desc
 When given only one argument, the
@@ -31669,11 +31712,11 @@ When given two arguments, the
 function applies
 .meta function
 to each elements of
-.meta sequence
+.meta iterable
 and returns a sequence of the resulting values
 in the same order as the original values.
 The returned sequence is the same kind as
-.metn sequence ,
+.metn iterable ,
 if possible. If the accumulated values cannot be
 elements of that type of sequence, then a list is returned.
 
@@ -31771,8 +31814,8 @@ and so doesn't return.
 
 .coNP Functions @ maprod and @ maprend
 .synb
-.mets (maprod < function << sequence *)
-.mets (maprend < function << sequence *)
+.mets (maprod < function << iterable *)
+.mets (maprend < function << iterable *)
 .syne
 .desc
 The
@@ -31784,13 +31827,13 @@ functions resemble
 and
 .codn mappend ,
 respectively. When given no
-.meta sequence
+.meta iterable
 arguments or exactly one
-.meta sequence
+.meta iterable
 argument, they behave exactly like those two functions.
 
 When two or more
-.meta sequence
+.meta iterable
 arguments are present,
 .code maprod
 differs from
@@ -31798,7 +31841,7 @@ differs from
 in the following way. Whereas
 .code mapcar
 iterates over the
-.meta sequence
+.meta iterable
 values in parallel, taking successive tuples of element
 values and passing them to
 .metn function ,
@@ -31811,14 +31854,14 @@ of elements from the sequences: the Cartesian product. The
 suffix stands for "product".
 
 If one or more
-.meta sequence
+.meta iterable
 arguments specify an empty sequence, then the Cartesian product is empty.
 In this situation,
 .meta function
 is not called. The result of the function is then
 .code nil
 converted to the same kind of sequence as the leftmost
-.metn sequence .
+.metn iterable .
 
 The
 .code maprod
@@ -31828,17 +31871,17 @@ does. Just like
 .codn mapcar ,
 it converts the resulting list into the same kind of sequence
 as the leftmost
-.meta sequence
+.meta iterable
 argument, if possible. For instance, if the resulting list is
 a list or vector of characters, and the leftmost
-.meta sequence
+.meta iterable
 is a character string, then the list or vector of characters
 is converted to a character string and returned.
 
 The
 .code maprend
 function ("map product through function and append") iterates the
-.meta sequence
+.meta iterable
 element combinations exactly like
 .codn maprod ,
 passing them as arguments to
@@ -31851,11 +31894,11 @@ function. The return values are expected to be sequences which
 are appended together as if by
 .codn append ,
 and the final result is converted to the same kind of sequence as the leftmost
-.meta sequence
+.meta iterable
 if possible.
 
 The combination iteration gives priority to the rightmost
-.metn sequence ,
+.metn iterable ,
 which means that the rightmost element of each generated tuple varies
 fastest: the tuples are traversed in "rightmost major" order.
 This is made clear in the examples.
@@ -31883,7 +31926,7 @@ This is made clear in the examples.
 
 .coNP Function @ mapdo
 .synb
-.mets (mapdo < function << sequence *)
+.mets (mapdo < function << iterable *)
 .syne
 .desc
 The
@@ -31908,17 +31951,17 @@ and
 is returned.
 
 If a single
-.meta sequence
+.meta iterable
 argument is given, then
 .code mapdo
 iterates over
-.metn sequence ,
+.metn iterable ,
 invoking
 .meta function
 on each element.
 
 If two or more
-.meta sequence
+.meta iterable
 arguments are given, then
 .code mapdo
 iterates over
@@ -31930,31 +31973,31 @@ arguments as there are sequences.
 
 .coNP Functions @ transpose and @ zip
 .synb
-.mets (transpose << sequence )
-.mets (zip << sequence *)
+.mets (transpose << iterable )
+.mets (zip << iterable *)
 .syne
 .desc
 The
 .code transpose
 function performs a transposition on
-.metn sequence .
+.metn iterable .
 This means that the
 elements of
-.meta sequence
-must be sequences.  These sequences are understood to be
+.meta iterable
+must be iterable.  These iterables are understood to be
 columns; transpose exchanges rows and columns, returning a sequence of the rows
 which make up the columns.  The returned sequence is of the same kind as
-.metn sequence ,
+.metn iterable ,
 and the rows are also the same kind of sequence as the first column
 of the original sequence. The number of rows returned is limited by the
 shortest column among the sequences.
 
 All of the input sequences (the elements of
-.metn sequence )
+.metn iterable )
 must have elements
 which are compatible with the first sequence. This means that if the first
 element of
-.meta sequence
+.meta iterable
 is a string, then the remaining sequences must be
 strings, or else sequences of characters, or of strings.
 
@@ -31987,6 +32030,10 @@ on a list of the arguments. The following equivalences hold:
   ;; String elements are catenated:
   (transpose #("abc" "def" ("UV" "XY" "WZ")))
   -> #("adUV" "beXY" "cfWZ")
+
+  ;; Transpose list of ranges
+  (transpose (list 1..4 4..8 8..12))
+  -> ((1 4 8) (2 5 9) (3 6 10))
 
   (zip '(a b c) '(c d e)) ->  ((a c) (b d) (c e))
 .brev
@@ -33136,7 +33183,7 @@ by using
 
 .coNP Function @ nullify
 .synb
-.mets (nullify << obj )
+.mets (nullify << iterable )
 .syne
 .desc
 The
