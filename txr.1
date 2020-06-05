@@ -33095,13 +33095,12 @@ group. The latter are obsolescent.
 .desc
 The
 .code iter-begin
-function returns an iterator object specialized for the task of traversing
-the sequence
-.metn seq .
-
-If
-.meta object
-isn't a sequence, an exception is thrown.
+function returns an iterator object specialized for the task of traversing the
+.meta seq
+object. The
+.meta seq
+argument may be any sequence. Additionally, it may be a character, number or
+a numeric or character range.
 
 Note: if
 .meta seq
@@ -33109,7 +33108,28 @@ is a list-like sequence, then
 .code iter-begin
 may return
 .meta seq
-itself as the iterator.
+itself as the iterator. Likewise if
+.meta seq
+is a number.
+
+A range is considered to be a numeric or character range if the
+.code from
+element is a number or character. The
+.code to
+is then required to to be either value which is comparable with that number
+or character using the
+.code <
+function, or else it must be one of the two objects
+.code t
+or
+.codn : ,
+either of which indicate that the range is unbounded. In this unbounded range
+case, the expressions
+.code "(iter-begin X..:)"
+and
+.code "(iter-begin X..t)"
+are equivalent to
+.codn "(iter-begin X)" .
 
 .coNP Function @ iter-more
 .synb
@@ -33136,6 +33156,72 @@ The
 .code iter-more
 function doesn't change the state of
 .metn iter .
+
+If
+.code iter
+is the object
+.code nil
+then
+.code nil
+is returned.
+Note: the
+.code iter-begin
+may return
+.code nil
+if its argument is
+.code nil
+or any empty sequence, or an empty range (a range whose
+.code to
+and
+.code from
+fields are the same number or character).
+
+If
+.meta iter
+is a
+.code cons
+cell, then
+.code iter-more
+returns
+.codn t .
+
+If
+.meta iter
+is a number, then
+.code iter-more
+returns
+.codn t .
+This is the case even if calculating the successor of that number isn't possible
+due to floating-point overflow or insufficient system resources.
+
+If
+.meta iter
+is a character, then
+.code iter-more
+returns
+.code t
+if
+.meta iter
+isn't the highest possible character code, otherwise
+.codn nil .
+
+If
+.meta iter
+was formed from a descending range, meaning that
+.code iter-begin
+was invoked on a range with a
+.code from
+fielding exceeding its
+.code to
+value, then
+.code iter-begin
+returns true while the current iterator value is greater than the
+the limiting value given by the
+.code to
+field. For an ascending range, it returns true if the current iterator value is
+lower than the limiting value. However, note the peculiar semantics of
+.code iter-item
+with regard to descending range iteration.
 
 .coNP Function @ iter-item
 .synb
@@ -33166,6 +33252,62 @@ If
 is invoked on an iterator which indicates that no more items
 remain to be visited, the return value is
 .codn nil .
+
+If
+.meta iter
+is a
+.code cons
+cell, then
+.code iter-item
+returns the
+.code car
+field of that cell.
+
+If
+.meta iter
+is a character or number, then
+.code iter-item
+returns that character or number itself.
+
+If
+.meta iter
+is based on an ascending numeric or character range, then
+.code iter-item
+returns the current iteration value, which is initialized by
+.code iter-begin
+as a copy of the range's
+.code from
+field. Thus, the range
+.code 0..3
+traverses the values
+.codn 0 ,
+.code 1
+and
+.codn 2 ,
+excluding the
+.codn 3 .
+
+If
+.meta iter
+is based on a descending numeric or character range, then
+.code iter-item
+returns the predecessor of the current iteration value, which is initialized
+.code iter-begin
+as a copy of the range's
+.code from
+field.
+Thus, the range
+.code 3..0
+traverses the values
+.codn 2 ,
+.code 1
+and
+.codn 0 ,
+excluding the
+.codn 3 :
+exactly the same values are visited as for the range
+.code 0..3
+only in reverse order.
 
 .coNP Function @ iter-step
 .synb
@@ -33208,6 +33350,24 @@ If
 .code iter-step
 is invoked on an iterator which indicates that no more items
 remain to be visited, the return value is unspecified.
+
+If
+.meta iter
+is a
+.code cons
+cell, then
+.code iter-step
+returns the
+.code cdr
+field of that cell.
+
+If
+.meta iter
+is a character or number, then
+.code iter-step
+returns its successor, as if using the
+.code succ
+function.
 
 .coNP Function @ iter-reset
 .synb
