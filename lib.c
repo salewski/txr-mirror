@@ -7557,10 +7557,10 @@ val transposev(struct args *list)
   return mapcarv(func, list);
 }
 
-val transpose(val list)
+val transpose(val seq)
 {
-  args_decl_list(args, ARGS_MIN, copy(list));
-  return make_like(transposev(args), list);
+  args_decl_list(args, ARGS_MIN, tolist(seq));
+  return make_like(transposev(args), seq);
 }
 
 static val do_chain(val fun1_list, struct args *args)
