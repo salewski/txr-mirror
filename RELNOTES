@@ -1,3 +1,31 @@
+                                    TXR 240
+                                   2020-06-06
+
+
+  Features
+
+  - New iteration paradigm for sequences.
+    - iter-begin function takes an iterable, returns an iterator.
+    - iter-more tests whether iterator has more items.
+    - iter-item gets first available item
+    - iter-step takes an iterator, returns either new iterator,
+      or the same iterator, mutated.
+    - integrated into sequence processing functions.
+    - works for sequences, as well as integers and ranges.
+    - e.g. [mapcar list '(a b c) 1] -> ((a 1) (b 2) (c 3))
+  - each, collect-each, ... operators work with this paradigm.
+  - mapcar, mappend, mapdo, maprod, maprend now optimized:
+    - work well with sequences of all types
+    - allocate parallel iterators on the native stack
+
+  Bugs
+
+  - maprod bug: wrongly reducing to mapcar, rather than mappend
+    in the one-sequence case.
+  - fixed interpreter segfault on (each ()) expression.
+
+
+
                                     TXR 239
                                    2020-06-02
 
