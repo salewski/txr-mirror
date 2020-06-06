@@ -29152,6 +29152,63 @@ methods are considered sequences.
 No other objects are sequences. However, future revisions of
 the language may specify additional objects that are sequences.
 
+.coNP Function @ make-like
+.synb
+.mets (make-like < list << object )
+.syne
+.desc
+The
+.meta list
+argument must be a list.  If
+.meta object
+is a sequence type,
+then
+.meta list
+is converted to the same type of sequence and returned.
+Otherwise the original
+.meta list
+is returned.
+
+Conversion is supported to string and vector type.
+
+Conversion to a structure type is possible for structures. If
+.meta object
+is an object of a structure type which has a static function
+.codn from-list ,
+then
+.code make-like
+calls that function, passing to it, and the resulting value is returned.
+.meta list
+and returns whatever value that function returns.
+
+If
+.meta object
+is a
+.codn carray ,
+then
+.meta list
+is passed to the
+.code carray-list
+function, and the resulting value is returned. The second argument in the
+.code carray-list
+call is the element type taken from
+.metn object .
+The third argument is
+.codn nil ,
+indicating that the resulting
+.code carray
+is not to be null terminated.
+
+Note: the
+.code make-like
+function is a helper which supports the development of
+unoptimized versions of a generic function that accepts any type of
+sequence as input, and produces a sequence of the same type as output.
+The implementation of such a function can internally accumulate a list, and
+then convert the resulting list to the same type as an input value
+by using
+.codn make-like .
+
 .coNP Functions @ length and @ len
 .synb
 .mets (length << iterable )
@@ -33123,63 +33180,6 @@ function.
   (partition-by (op = 3) #(1 2 3 4 5 6 7)) -> (#(1 2) #(3)
                                                #(4 5 6 7))
 .brev
-
-.coNP Function @ make-like
-.synb
-.mets (make-like < list << ref-sequence )
-.syne
-.desc
-The
-.meta list
-argument must be a list.  If
-.meta ref-sequence
-is a sequence type,
-then
-.meta list
-is converted to the same type of sequence and returned.
-Otherwise the original
-.meta list
-is returned.
-
-Conversion is supported to string and vector type.
-
-Conversion to a structure type is possible for structures. If
-.meta ref-sequence
-is an object of a structure type which has a static function
-.codn from-list ,
-then
-.code make-like
-calls that function, passing to it, and the resulting value is returned.
-.meta list
-and returns whatever value that function returns.
-
-If
-.meta ref-sequence
-is a
-.codn carray ,
-then
-.meta list
-is passed to the
-.code carray-list
-function, and the resulting value is returned. The second argument in the
-.code carray-list
-call is the element type taken from
-.metn ref-sequence .
-The third argument is
-.codn nil ,
-indicating that the resulting
-.code carray
-is not to be null terminated.
-
-Note: the
-.code make-like
-function is a helper which supports the development of
-unoptimized versions of a generic function that accepts any type of
-sequence as input, and produces a sequence of the same type as output.
-The implementation of such a function can internally accumulate a list, and
-then convert the resulting list to the same type as an input value
-by using
-.codn make-like .
 
 .coNP Function @ nullify
 .synb
