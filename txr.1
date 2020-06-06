@@ -29940,14 +29940,14 @@ itself or a copy.
 
 .coNP Accessor @ last
 .synb
-.mets (last < seq <> [ num ])
-.mets (set (last < seq <> [ num ]) << new-value)
+.mets (last < sequence <> [ num ])
+.mets (set (last < sequence <> [ num ]) << new-value)
 .syne
 .desc
 The
 .meta last
 function returns a subsequence of
-.meta seq
+.meta sequence
 consisting of the last
 .meta num
 of its elements, where
@@ -29959,15 +29959,15 @@ If
 is zero or negative, then an empty sequence is returned.
 If
 .meta num
-is positive, and greater than or equal to the length of seq,
-then seq
-.meta seq
+is positive, and greater than or equal to the length of sequence,
+then sequence
+.meta sequence
 is returned.
 
 If a
 .code last
 form is used as a place, then
-.code seq
+.code sequence
 must be a place. The following equivalence gives the semantics
 of assignment to a
 .codn last :
@@ -30356,8 +30356,8 @@ key occurs at the imaginary position past the element of
 
 .coNP Functions @ ref and @ refset
 .synb
-.mets (ref < seq << index )
-.mets (refset < seq < index << new-value )
+.mets (ref < sequence << index )
+.mets (refset < sequence < index << new-value )
 .syne
 .desc
 The
@@ -30371,14 +30371,14 @@ and
 .codn carray .
 
 If the
-.meta seq
+.meta sequence
 parameter is a hash, then these functions perform
 has retrieval and storage; in that case
 .meta index
 isn't restricted to an integer value.
 
 If
-.meta seq
+.meta sequence
 is a structure, it supports
 .code ref
 directly if it has a
@@ -30425,16 +30425,16 @@ the function fails with an error exception.
 The
 .code ref
 function retrieves an element of
-.metn seq ,
+.metn sequence ,
 whereas
 .code refset
 overwrites an
 element of
-.meta seq
+.meta sequence
 with a new value.
 
 If
-.meta seq
+.meta sequence
 is a sequence then
 .meta index
 argument must be an integer. The first element of the sequence
@@ -30447,7 +30447,7 @@ description of the
 operator.
 
 If
-.meta seq
+.meta sequence
 is a list, then out-of-range indices, whether positive or negative,
 are treated leniently by
 .codn ref :
@@ -30477,7 +30477,7 @@ and
 and the DWIM bracket syntax, provided that
 .meta idx
 is a scalar index and
-.meta seq
+.meta sequence
 is a sequence object, rather than a hash.
 
 .verb
@@ -30502,24 +30502,33 @@ and
 
 .coNP Function @ update
 .synb
-.mets (update < sequence-or-hash << function )
+.mets (update < sequence << function )
 .syne
 .desc
 The
 .code update
-function replaces each elements in a sequence, or each value
-in a hash table, with the value of
+function replaces each elements in
+.meta sequence
+in a hash table, with the result of
 .meta function
-applied to that element
-or value.
+being applied to that element value.
 
-The sequence or hash table is returned.
+The
+.meta sequence
+is returned.
+
+The
+.meta sequence
+may be a hash table. In that case,
+.meta function
+is invoked with each hash value, which is replaced with the function's return
+value.
 
 .coNP Functions @, remq @ remql and @ remqual
 .synb
-.mets (remq < object < list <> [ key-function ])
-.mets (remql < object < list <> [ key-function ])
-.mets (remqual < object < list <> [ key-function ])
+.mets (remq < object < sequence <> [ key-function ])
+.mets (remql < object < sequence <> [ key-function ])
+.mets (remqual < object < sequence <> [ key-function ])
 .syne
 .desc
 The
@@ -30527,8 +30536,8 @@ The
 .code remql
 and
 .code remqual
-functions produce a new list based on
-.metn list ,
+functions produce a new sequence based on
+.metn sequence ,
 removing the elements whose associated keys are
 .codn eq ,
 .code eql
@@ -30538,11 +30547,11 @@ to
 .metn object .
 
 The input
-.meta list
-is unmodified, but the returned list may share substructure
+.meta sequence
+is unmodified, but the returned sequence may share substructure
 with it. If no items are removed, it is possible that the return value
 is
-.meta list
+.meta sequence
 itself.
 
 If
@@ -30558,9 +30567,9 @@ is that element's key which is compared to
 
 .coNP Functions @, remq* @ remql* and @ remqual*
 .synb
-.mets (remq* < object << list )
-.mets (remql* < object << list )
-.mets (remqual* < object << list )
+.mets (remq* < object << sequence )
+.mets (remql* < object << sequence )
+.mets (remqual* < object << sequence )
 .syne
 .desc
 The
@@ -30568,12 +30577,12 @@ The
 .code remql*
 and
 .code remqual*
-functions are lazy versions of
+functions are lazy analogs of
 .codn remq ,
 .code remql
 and
 .codn remqual .
-Rather than computing the entire new list
+Rather than computing the entire new sequence
 prior to returning, these functions return a lazy list.
 
 Caution: these functions can still get into infinite looping behavior.
@@ -30598,9 +30607,9 @@ does not have to be deleted, in order to instantiate the first lazy value.
 
 .coNP Functions @, keepq @ keepql and @ keepqual
 .synb
-.mets (keepq < object < list <> [ key-function ])
-.mets (keepql < object < list <> [ key-function ])
-.mets (keepqual < object < list <> [ key-function ])
+.mets (keepq < object < sequence <> [ key-function ])
+.mets (keepql < object < sequence <> [ key-function ])
+.mets (keepqual < object < sequence <> [ key-function ])
 .syne
 .desc
 The
@@ -30608,8 +30617,8 @@ The
 .code keepql
 and
 .code keepqual
-functions produce a new list based on
-.metn list ,
+functions produce a new sequence based on
+.metn sequence ,
 removing the items whose keys are not
 .codn eq ,
 .code eql
@@ -30619,48 +30628,48 @@ to
 .metn object .
 
 The input
-.meta list
-is unmodified, but the returned list may share substructure
+.meta sequence
+is unmodified, but the returned sequence may share substructure
 with it. If no items are removed, it is possible that the return value
 is
-.meta list
+.meta sequence
 itself.
 
 The optional
 .meta key-function
 is applied to each element from the
-.meta list
+.meta sequence
 to convert it to a key which is compared to
 .metn object .
 If
 .meta key-function
 is omitted, then each element itself of
-.meta list
+.meta sequence
 is compared to
 .metn object .
 
 .coNP Functions @, remove-if @, keep-if @ remove-if* and @ keep-if*
 .synb
-.mets (remove-if < predicate-function < list <> [ key-function ])
-.mets (keep-if < predicate-function < list <> [ key-function ])
-.mets (remove-if* < predicate-function < list <> [ key-function ])
-.mets (keep-if* < predicate-function < list <> [ key-function ])
+.mets (remove-if < predicate-function < sequence <> [ key-function ])
+.mets (keep-if < predicate-function < sequence <> [ key-function ])
+.mets (remove-if* < predicate-function < sequence <> [ key-function ])
+.mets (keep-if* < predicate-function < sequence <> [ key-function ])
 .syne
 .desc
 The
 .code remove-if
-function produces a list whose contents are those of
-.meta list
+function produces a sequence whose contents are those of
+.meta sequence
 but with those elements removed which satisfy
 .metn predicate-function .
 Those elements which are not removed appear in the same order.
-The result list may share substructure with the input list,
-and may even be the same list object if no items are removed.
+The result sequence may share substructure with the input sequence,
+and may even be the same sequence object if no items are removed.
 
 The optional
 .meta key-function
 specifies how each element from the
-.meta list
+.meta sequence
 is transformed to an argument to
 .metn predicate-function .
 If this argument is omitted
@@ -30750,8 +30759,8 @@ and returns the count.
 
 The optional
 .meta key-function
-specifies how each element from the
-.meta list
+specifies how each element from
+.meta iterable
 is transformed to an argument to
 .metn predicate-function .
 If this argument is omitted
@@ -30763,9 +30772,9 @@ being
 
 .coNP Functions @, posq @ posql and @ posqual
 .synb
-.mets (posq < object << list )
-.mets (posql < object << list )
-.mets (posqual < object << list )
+.mets (posq < object << sequence )
+.mets (posql < object << sequence )
+.mets (posqual < object << sequence )
 .syne
 .desc
 The
@@ -30775,7 +30784,7 @@ and
 .code posqual
 functions return the zero-based position of the
 first item in
-.meta list
+.meta sequence
 which is, respectively,
 .codn eq ,
 .code eql
@@ -30786,8 +30795,8 @@ to
 
 .coNP Functions @ pos and @ pos-if
 .synb
-.mets (pos < key < list >> [ testfun <> [ keyfun ]])
-.mets (pos-if < predfun < list <> [ keyfun ])
+.mets (pos < key < sequence >> [ testfun <> [ keyfun ]])
+.mets (pos-if < predfun < sequence <> [ keyfun ])
 .syne
 .desc
 The
@@ -30795,7 +30804,7 @@ The
 and
 .code pos-if
 functions search through
-.meta list
+.meta sequence
 for an item which matches
 .metn key ,
 or satisfies predicate function
@@ -30807,10 +30816,10 @@ The
 .meta keyfun
 argument specifies a function which is applied to the elements
 of
-.meta list
+.meta sequence
 to produce the comparison key. If this argument is omitted,
 then the untransformed elements of
-.meta list
+.meta sequence
 are examined.
 
 The
@@ -30819,14 +30828,14 @@ function's
 .meta testfun
 argument specifies the test function which
 is used to compare the comparison keys from
-.meta list
+.meta sequence
 to
 .metn key .
 If this argument is omitted, then the
 .code equal
 function is used.
 The position of the first element
-.meta list
+.meta sequence
 whose comparison key (as
 retrieved by
 .metn keyfun )
@@ -30843,7 +30852,7 @@ function's
 .meta predfun
 argument specifies a predicate function
 which is applied to the successive comparison keys taken from
-.meta list
+.meta sequence
 by applying
 .meta keyfun
 to successive elements. The position of
@@ -30856,11 +30865,11 @@ is returned.
 
 .coNP Functions @, rposq @, rposql @, rposqual @ rpos and @ rpos-if
 .synb
-.mets (rposq < object << list )
-.mets (rposql < object << list )
-.mets (rposqual < object << list )
-.mets (rpos < key < list >> [ testfun <> [ keyfun ]])
-.mets (rpos-if < predfun < list <> [ keyfun ])
+.mets (rposq < object << sequence )
+.mets (rposql < object << sequence )
+.mets (rposqual < object << sequence )
+.mets (rpos < key < sequence >> [ testfun <> [ keyfun ]])
+.mets (rpos-if < predfun < sequence <> [ keyfun ])
 .syne
 .desc
 These functions are counterparts of
@@ -31117,15 +31126,15 @@ which defaults to
 
 .coNP Function @ select
 .synb
-.mets (select < object >> { index-list <> | function })
+.mets (select < sequence >> { index-list <> | function })
 .syne
 .desc
 The
 .code select
-function returns an object, of the same kind as
-.metn object ,
+function returns a sequence, of the same kind as
+.metn sequence ,
 which consists of those elements of
-.meta object
+.meta sequence
 which are identified by
 the indices in
 .metn index-list ,
@@ -31138,14 +31147,14 @@ is given instead of
 then
 .meta function
 is invoked with
-.meta object
+.meta sequence
 as its argument. The return value is then taken as
 if it were the
 .meta index-list
 argument .
 
 If
-.meta object
+.meta sequence
 is a sequence, then
 .meta index-list
 consists of numeric
@@ -31166,7 +31175,7 @@ would not be able to terminate if
 is infinite.)
 
 If
-.meta object
+.meta sequence
 is, more specifically, a list-like sequence, then
 .meta index-list
 must contain monotonically increasing
@@ -31183,12 +31192,12 @@ which are still negative after being displaced by the sequence length are
 ignored.
 
 If
-.meta object
+.meta sequence
 is a hash, then
 .meta index-list
 is a list of keys. A new hash is
 returned which contains those elements of
-.meta object
+.meta sequence
 whose keys appear
 in
 .metn index-list .
@@ -31196,7 +31205,7 @@ All of
 .meta index-list
 is processed, even if it contains
 keys which are not in
-.metn object .
+.metn sequence .
 The nonexistent keys are ignored.
 
 The
@@ -31204,7 +31213,7 @@ The
 function also supports objects of type
 .codn carray ,
 in a manner similar to vectors. The indicated elements are extracted
-from the input object, and a new
+from the input sequence, and a new
 .code carray
 is returned whose storage is initialized by converting the extracted
 values back to the foreign representation.
