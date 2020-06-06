@@ -14286,6 +14286,152 @@ on a named function; equivalent to
   (call (fun list) 1 2)
 .brev
 
+.coNP Functions @ apply and @ iapply
+.synb
+.mets (apply < function <> [ arg * << trailing-args ])
+.mets (iapply < function <> [ arg * << trailing-args ])
+.syne
+.desc
+The
+.code apply
+function invokes
+.metn function ,
+optionally passing to it an argument
+list. The return value of the
+.code apply
+call is that of
+.metn function .
+
+If no arguments are present after
+.metn function ,
+then
+.meta function
+is invoked without arguments.
+
+If one argument is present after
+.metn function ,
+then it is interpreted as
+.metn trailing-args .
+If this is a sequence (a list, vector or string),
+then the elements of the sequence are passed as individual arguments to
+.metn function .
+If
+.meta trailing-args
+is not a sequence, then
+.meta function
+is invoked
+with an improper argument list, terminated by the
+.meta trailing-args
+atom.
+
+If two or more arguments are present after
+.metn function ,
+then the last of these arguments is interpreted as
+.metn trailing-args .
+The previous arguments represent leading arguments which are applied to
+.metn function ,
+prior to the arguments taken from
+.metn trailing-args .
+
+Note that if
+.meta trailing-args
+value is an atom or an improper list, the function is then
+invoked with an improper argument list. Only a variadic
+function may be invoked with an improper argument lists.
+Moreover, all of the function's required and optional
+parameters must be satisfied by elements of the
+improper list, such that the terminating atom either
+matches the
+.meta rest-param
+directly (see the
+.code lambda
+operator) or else the
+.meta rest-param
+receives an improper list terminated by that atom.
+To treat the terminating atom of an improper list as an
+ordinary element which can satisfy a required or optional
+function parameter, the
+.code iapply
+function may be used, described next.
+
+The
+.code iapply
+function ("improper apply") is similar to
+.codn apply ,
+except with regard to the treatment of
+.metn trailing-args .
+Firstly, under
+.codn iapply ,
+if
+.meta trailing-args
+is an atom other than
+.code nil
+(possibly a sequence, such as a vector or string),
+then it is treated as an ordinary argument:
+.meta function
+is invoked with a proper argument list, whose last element is
+.metn trailing-args .
+Secondly, if
+.meta trailing-args
+is a list, but an improper list, then the terminating atom of
+.meta trailing-args
+becomes an individual argument.
+This terminating atom is not split into multiple arguments,
+even if it is a sequence.
+Thus, in all possible cases,
+.code iapply
+treats an extra
+.cod2 non- nil
+atom as an argument, and never calls
+.meta function
+with an improper argument list.
+
+.TP* Examples:
+.verb
+  ;; '(1 2 3) becomes arguments to list, thus (list 1 2 3).
+  (apply (fun list) '(1 2 3)) -> (1 2 3)
+
+  ;; this effectively invokes (list 1 2 3 4)
+  (apply (fun list) 1 2 '(3 4)) -> (1 2 3 4)
+
+  ;; this effectively invokes (list 1 2 . 3)
+  (apply (fun list) 1 2 3)) -> (1 2 . 3)
+
+  ;; "abc" is separated into characters
+  ;; which become arguments of list
+  (apply (fun list) "abc") -> (#\ea #\eb #\ec)
+.brev
+
+.TP* "Dialect Note:"
+Note that some uses of this function that are necessary in other Lisp dialects
+are not necessary in \*(TL. The reason is that in \*(TL, improper list
+syntax is accepted as a compound form, and performs application:
+
+.verb
+  (foo a b . x)
+.brev
+
+Here, the variables
+.code a
+and
+.code b
+supply the first two arguments for
+.codn foo .
+In
+the dotted position,
+.code x
+must evaluate to a list or vector. The list or
+vector's elements are pulled out and treated as additional arguments for
+.codn foo .
+This syntax can only be used if
+.code x
+is a symbolic form or an atom.  It
+cannot be a compound form, because
+.code "(foo a b . (x))"
+and
+.code "(foo a b x)"
+are equivalent structures.
+
 .coNP Operator @ fun
 .synb
 .mets (fun << function-name )
@@ -32249,152 +32395,6 @@ suffix.
   (interpose t (range 0 1)) -> (0 t 1)
   (interpose t (range 0 2)) -> (0 t 1 t 2)
 .brev
-
-.coNP Functions @ apply and @ iapply
-.synb
-.mets (apply < function <> [ arg * << trailing-args ])
-.mets (iapply < function <> [ arg * << trailing-args ])
-.syne
-.desc
-The
-.code apply
-function invokes
-.metn function ,
-optionally passing to it an argument
-list. The return value of the
-.code apply
-call is that of
-.metn function .
-
-If no arguments are present after
-.metn function ,
-then
-.meta function
-is invoked without arguments.
-
-If one argument is present after
-.metn function ,
-then it is interpreted as
-.metn trailing-args .
-If this is a sequence (a list, vector or string),
-then the elements of the sequence are passed as individual arguments to
-.metn function .
-If
-.meta trailing-args
-is not a sequence, then
-.meta function
-is invoked
-with an improper argument list, terminated by the
-.meta trailing-args
-atom.
-
-If two or more arguments are present after
-.metn function ,
-then the last of these arguments is interpreted as
-.metn trailing-args .
-The previous arguments represent leading arguments which are applied to
-.metn function ,
-prior to the arguments taken from
-.metn trailing-args .
-
-Note that if
-.meta trailing-args
-value is an atom or an improper list, the function is then
-invoked with an improper argument list. Only a variadic
-function may be invoked with an improper argument lists.
-Moreover, all of the function's required and optional
-parameters must be satisfied by elements of the
-improper list, such that the terminating atom either
-matches the
-.meta rest-param
-directly (see the
-.code lambda
-operator) or else the
-.meta rest-param
-receives an improper list terminated by that atom.
-To treat the terminating atom of an improper list as an
-ordinary element which can satisfy a required or optional
-function parameter, the
-.code iapply
-function may be used, described next.
-
-The
-.code iapply
-function ("improper apply") is similar to
-.codn apply ,
-except with regard to the treatment of
-.metn trailing-args .
-Firstly, under
-.codn iapply ,
-if
-.meta trailing-args
-is an atom other than
-.code nil
-(possibly a sequence, such as a vector or string),
-then it is treated as an ordinary argument:
-.meta function
-is invoked with a proper argument list, whose last element is
-.metn trailing-args .
-Secondly, if
-.meta trailing-args
-is a list, but an improper list, then the terminating atom of
-.meta trailing-args
-becomes an individual argument.
-This terminating atom is not split into multiple arguments,
-even if it is a sequence.
-Thus, in all possible cases,
-.code iapply
-treats an extra
-.cod2 non- nil
-atom as an argument, and never calls
-.meta function
-with an improper argument list.
-
-.TP* Examples:
-.verb
-  ;; '(1 2 3) becomes arguments to list, thus (list 1 2 3).
-  (apply (fun list) '(1 2 3)) -> (1 2 3)
-
-  ;; this effectively invokes (list 1 2 3 4)
-  (apply (fun list) 1 2 '(3 4)) -> (1 2 3 4)
-
-  ;; this effectively invokes (list 1 2 . 3)
-  (apply (fun list) 1 2 3)) -> (1 2 . 3)
-
-  ;; "abc" is separated into characters
-  ;; which become arguments of list
-  (apply (fun list) "abc") -> (#\ea #\eb #\ec)
-.brev
-
-.TP* "Dialect Note:"
-Note that some uses of this function that are necessary in other Lisp dialects
-are not necessary in \*(TL. The reason is that in \*(TL, improper list
-syntax is accepted as a compound form, and performs application:
-
-.verb
-  (foo a b . x)
-.brev
-
-Here, the variables
-.code a
-and
-.code b
-supply the first two arguments for
-.codn foo .
-In
-the dotted position,
-.code x
-must evaluate to a list or vector. The list or
-vector's elements are pulled out and treated as additional arguments for
-.codn foo .
-This syntax can only be used if
-.code x
-is a symbolic form or an atom.  It
-cannot be a compound form, because
-.code "(foo a b . (x))"
-and
-.code "(foo a b x)"
-are equivalent structures.
 
 .coNP Functions @ reduce-left and @ reduce-right
 .synb
