@@ -29308,6 +29308,105 @@ yields
 .code nil
 because the set of integers beginning with 0 isn't empty.
 
+.coNP Function @ nullify
+.synb
+.mets (nullify << iterable )
+.syne
+.desc
+The
+.code nullify
+function returns
+.code nil
+if
+.meta iterable
+denotes an empty sequence.
+Otherwise, if
+.meta iterable
+is not an empty sequence, or isn't a sequence, then
+.meta iterable
+itself is returned.
+
+If
+.meta iterable
+is a structure object which supports the
+.code nullify
+method, then that method is called. If it returns
+.code nil
+then
+.code nil
+is returned. If the
+.code nullify
+method returns a substitute object other than the
+.meta iterable
+object itself, then
+.code nullify
+is invoked on that returned substitute object.
+
+Note: the
+.code nullify
+function is a helper to support unoptimized generic
+traversal of sequences.  Thanks to the generalized behavior of
+.codn cdr ,
+non-list sequences can be traversed using
+.codn cdr ,
+similarly to proper lists, by checking for
+.code cdr
+returning the terminating value
+.codn nil .
+However, empty non-list sequences are handled incorrectly because
+since they are not the
+.code nil
+object, they look non-empty under this paradigm of traversal.
+The
+.code nullify
+function provides a correction: if the input sequence is filtered
+through
+.code nullify
+then the subsequent list-like iteration works correctly.
+
+Examples:
+
+.verb
+  ;; Incorrect for empty strings:
+
+  (defun print-chars (string)
+    (while string
+      (prinl (pop string))))
+
+  ;; Corrected with nullify:
+
+  (defun print-chars (string)
+    (let ((s (nullify string)))
+      (while s
+        (prinl (pop s)))))
+.brev
+
+Note: optimized generic iteration is available in the form of iteration
+based on
+.code iter-begin
+rather than
+.cod3 car / cdr
+and
+.codn nullify .
+
+Examples:
+
+.verb
+  ;; Efficient with iterators,
+  ;; at the cost of verbosity:
+
+  (defun print-chars (string)
+    (let ((i (iter-begin string)))
+      (while (iter-more i)
+        (prinl (iter-item s))
+        (set s (iter-step s)))))
+
+  ;; Using mapping function built on iterators:
+
+  (defun print-chars (string)
+    [mapdo prinl string])
+.brev
+
 .coNP Accessor @ sub
 .synb
 .mets (sub < sequence >> [ from <> [ to ]])
@@ -33179,105 +33278,6 @@ function.
 
   (partition-by (op = 3) #(1 2 3 4 5 6 7)) -> (#(1 2) #(3)
                                                #(4 5 6 7))
-.brev
-
-.coNP Function @ nullify
-.synb
-.mets (nullify << iterable )
-.syne
-.desc
-The
-.code nullify
-function returns
-.code nil
-if
-.meta iterable
-denotes an empty sequence.
-Otherwise, if
-.meta iterable
-is not an empty sequence, or isn't a sequence, then
-.meta iterable
-itself is returned.
-
-If
-.meta iterable
-is a structure object which supports the
-.code nullify
-method, then that method is called. If it returns
-.code nil
-then
-.code nil
-is returned. If the
-.code nullify
-method returns a substitute object other than the
-.meta iterable
-object itself, then
-.code nullify
-is invoked on that returned substitute object.
-
-Note: the
-.code nullify
-function is a helper to support unoptimized generic
-traversal of sequences.  Thanks to the generalized behavior of
-.codn cdr ,
-non-list sequences can be traversed using
-.codn cdr ,
-similarly to proper lists, by checking for
-.code cdr
-returning the terminating value
-.codn nil .
-However, empty non-list sequences are handled incorrectly because
-since they are not the
-.code nil
-object, they look non-empty under this paradigm of traversal.
-The
-.code nullify
-function provides a correction: if the input sequence is filtered
-through
-.code nullify
-then the subsequent list-like iteration works correctly.
-
-Examples:
-
-.verb
-  ;; Incorrect for empty strings:
-
-  (defun print-chars (string)
-    (while string
-      (prinl (pop string))))
-
-  ;; Corrected with nullify:
-
-  (defun print-chars (string)
-    (let ((s (nullify string)))
-      (while s
-        (prinl (pop s)))))
-.brev
-
-Note: optimized generic iteration is available in the form of iteration
-based on
-.code iter-begin
-rather than
-.cod3 car / cdr
-and
-.codn nullify .
-
-Examples:
-
-.verb
-  ;; Efficient with iterators,
-  ;; at the cost of verbosity:
-
-  (defun print-chars (string)
-    (let ((i (iter-begin string)))
-      (while (iter-more i)
-        (prinl (iter-item s))
-        (set s (iter-step s)))))
-
-  ;; Using mapping function built on iterators:
-
-  (defun print-chars (string)
-    [mapdo prinl string])
 .brev
 
 .SS* Open Sequence Traversal
