@@ -299,7 +299,13 @@ seq_info_t seq_info(val obj)
     } else if (cls == carray_s) {
       ret.kind = SEQ_VECLIKE;
     } else if (obj_struct_p(obj)) {
-      val sub = nullify(obj);
+      val sub = obj;
+
+      if (obj_struct_p(obj)) {
+        val nullify_meth = get_special_slot(obj, nullify_m);
+        if (nullify_meth)
+          sub = funcall1(nullify_meth, obj);
+      }
 
       if (!sub) {
         ret.kind = SEQ_NIL;
@@ -1418,37 +1424,29 @@ val tolist(val seq)
   }
 }
 
-val nullify(val seq)
+val nullify(val obj)
 {
-  switch (type(seq)) {
-  case NIL:
-    return nil;
-  case CONS:
-  case LCONS:
-    return seq;
-  case LIT:
-  case STR:
-    return c_str(seq)[0] ? seq : nil;
-  case LSTR:
-    return if3(length_str_gt(seq, zero), seq, nil);
-  case VEC:
-    return if3(length_vec(seq) != zero, seq, nil);
-  case BUF:
-    return if3(length_buf(seq) != zero, seq, nil);
-  case COBJ:
-    if (seq->co.cls == carray_s)
-      return if3(length_carray(seq) != zero, seq, nil);
-    if (seq->co.cls == hash_s)
-      return if3(hash_count(seq) != zero, seq, nil);
-    if (obj_struct_p(seq)) {
-      val nullify_meth = get_special_slot(seq, nullify_m);
-      if (nullify_meth)
-        return funcall1(nullify_meth, seq);
-    }
-    /* fallthrough */
-  default:
-    return seq;
+  val self = lit("nullify");
+  val elem;
+  seq_info_t si = seq_info(obj);
+
+  if (si.kind == SEQ_NOTSEQ && si.type != RNG) {
+    return obj;
+  } else {
+    seq_iter_t iter;
+    seq_iter_init_with_info(self, &iter, si, 0);
+    return if2(seq_peek(&iter, &elem), obj);
   }
+}
+
+val empty(val seq)
+{
+  val self = lit("empty");
+  val elem;
+  seq_iter_t iter;
+  seq_iter_init(self, &iter, seq);
+
+  return tnil(!seq_peek(&iter, &elem));
 }
 
 val seqp(val obj)
@@ -10872,43 +10870,6 @@ val length(val seq)
     /* fallthrough */
   default:
     type_mismatch(lit("length: ~s is not a sequence"), seq, nao);
-  }
-}
-
-val empty(val seq)
-{
-  switch (type(seq)) {
-  case NIL:
-    return t;
-  case CONS:
-  case LCONS:
-    return nil;
-  case LIT:
-  case STR:
-    return if2(c_str(seq)[0] == 0, t);
-  case LSTR:
-    return length_str_le(seq, zero);
-  case VEC:
-    return eq(length_vec(seq), zero);
-  case RNG:
-    return eql(from(seq), to(seq));
-  case BUF:
-    return eq(length_buf(seq), zero);
-  case COBJ:
-    if (seq->co.cls == hash_s)
-      return eq(hash_count(seq), zero);
-    if (seq->co.cls == carray_s)
-      return eq(length_carray(seq), zero);
-    if (obj_struct_p(seq)) {
-      val length_meth = get_special_slot(seq, length_m);
-      val nullify_meth = if2(nilp(length_meth), get_special_slot(seq, nullify_m));
-      if (length_meth)
-        return eq(funcall1(length_meth, seq), zero);
-      return if3(nullify_meth && funcall1(nullify_meth, seq), nil, seq);
-    }
-    /* fallthrough */
-  default:
-    type_mismatch(lit("empty: ~s is not a sequence"), seq, nao);
   }
 }
 
