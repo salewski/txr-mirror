@@ -1379,7 +1379,7 @@
 
 (defun expand-each (form env)
   (mac-param-bind form (op each-type vars . body) form
-    (unless vars
+    (when (eq vars t)
       (set vars [mapcar car env.vb]))
     (let* ((gens (mapcar (ret (gensym)) vars))
            (out (if (member each-type '(collect-each append-each))

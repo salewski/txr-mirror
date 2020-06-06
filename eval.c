@@ -1838,9 +1838,9 @@ static val op_each(val form, val env)
   val body = args;
   val collect = eq(each, collect_each_s);
   val append = eq(each, append_each_s);
-  val bindings = if3(vars,
-                     get_bindings(vars, env),
-                     env->e.vbindings);
+  val bindings = if3(vars == t,
+                     env->e.vbindings,
+                     get_bindings(vars, env));
   val iters = mapcar(iter_from_binding_f, bindings);
   list_collect_decl (collection, ptail);
 
@@ -3073,7 +3073,8 @@ static val me_each(val form, val menv)
   (void) menv;
   return list(if3(star, let_star_s, let_s), vars,
               cons(each_op_s, cons(eff_each,
-                                   cons(if2(star || specials_occur, var_syms),
+                                   cons(if3(!vars || star || specials_occur,
+                                            var_syms, t),
                                         args))), nao);
 }
 
