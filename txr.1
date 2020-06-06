@@ -18832,6 +18832,86 @@ in the same way as do
 and
 .codn greater .
 
+.coNP Function @ copy
+.synb
+.mets (copy << object )
+.syne
+.desc
+The
+.code copy
+function duplicates objects of various supported types: sequences, hashes,
+structures and random states.  If
+.meta object
+is
+.codn nil ,
+it
+returns
+.codn nil .
+Otherwise,
+.code copy
+is equivalent to invoking a more specific copying function according to
+the type of the argument, as follows:
+.RS
+.coIP cons
+.meti (copy-list << object )
+.coIP str
+.meti (copy-str << object )
+.coIP vec
+.meti (copy-vec << object )
+.coIP hash
+.meti (copy-hash << object )
+.IP "struct type"
+.meti (copy-struct << object )
+.coIP fun
+.meti (copy-fun << object )
+.coIP buf
+.meti (copy-buf << object )
+.coIP carray
+.meti (copy-carray << object )
+.coIP random-state
+.meti (make-random-state << object )
+.coIP tnode
+.meti (copy-tnode << object )
+.coIP tree
+.meti (copy-search-tree << object )
+.RE
+
+.IP
+For all other types of
+.metn object ,
+the invocation is erroneous.
+
+Except in the case when
+.meta sequence
+is
+.codn nil ,
+.code copy
+returns a value that
+is distinct from (not
+.code eq
+to)
+.metn sequence .
+This is different from
+the behavior of
+.mono
+.meti >> [ sequence 0..t]
+.onom
+or
+.mono
+.meti (sub < sequence 0 t)
+.onom
+which recognize
+that they need not make a copy of
+.metn sequence ,
+and just return it.
+
+Note however, that the elements of the returned sequence may be
+eq to elements of the original sequence. In other words, copy is
+a deeper copy than just duplicating the
+.code sequence
+value itself,
+but it is not a deep copy.
+
 .SS* List Manipulation
 .coNP Function @ cons
 .synb
@@ -29170,86 +29250,6 @@ those spaces are infinite. For instance
 yields
 .code nil
 because the set of integers beginning with 0 isn't empty.
-
-.coNP Function @ copy
-.synb
-.mets (copy << object )
-.syne
-.desc
-The
-.code copy
-function duplicates objects of various supported types: sequences, hashes,
-structures and random states.  If
-.meta object
-is
-.codn nil ,
-it
-returns
-.codn nil .
-Otherwise,
-.code copy
-is equivalent to invoking a more specific copying function according to
-the type of the argument, as follows:
-.RS
-.coIP cons
-.meti (copy-list << object )
-.coIP str
-.meti (copy-str << object )
-.coIP vec
-.meti (copy-vec << object )
-.coIP hash
-.meti (copy-hash << object )
-.IP "struct type"
-.meti (copy-struct << object )
-.coIP fun
-.meti (copy-fun << object )
-.coIP buf
-.meti (copy-buf << object )
-.coIP carray
-.meti (copy-carray << object )
-.coIP random-state
-.meti (make-random-state << object )
-.coIP tnode
-.meti (copy-tnode << object )
-.coIP tree
-.meti (copy-search-tree << object )
-.RE
-
-.IP
-For all other types of
-.metn object ,
-the invocation is erroneous.
-
-Except in the case when
-.meta sequence
-is
-.codn nil ,
-.code copy
-returns a value that
-is distinct from (not
-.code eq
-to)
-.metn sequence .
-This is different from
-the behavior of
-.mono
-.meti >> [ sequence 0..t]
-.onom
-or
-.mono
-.meti (sub < sequence 0 t)
-.onom
-which recognize
-that they need not make a copy of
-.metn sequence ,
-and just return it.
-
-Note however, that the elements of the returned sequence may be
-eq to elements of the original sequence. In other words, copy is
-a deeper copy than just duplicating the
-.code sequence
-value itself,
-but it is not a deep copy.
 
 .coNP Accessor @ sub
 .synb
