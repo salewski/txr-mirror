@@ -559,6 +559,37 @@ void seq_iter_rewind(seq_iter_t *it)
     it->ui.iter = hash_begin(it->inf.obj);
     break;
   default:
+    switch (it->inf.type) {
+    case RNG:
+      {
+        val rf = from(it->inf.obj);
+
+        switch (type(rf)) {
+        case NUM:
+          it->ui.cn = c_num(rf);
+          break;
+        case CHR:
+          it->ui.cn = c_chr(rf);
+          break;
+        case BGNUM:
+          it->ui.vn = rf;
+          break;
+        default:
+          break;
+        }
+      }
+      break;
+    case CHR:
+      it->ui.cn = c_chr(it->inf.obj);
+      break;
+    case NUM:
+    case BGNUM:
+    case FLNUM:
+      it->ui.vn = it->inf.obj;
+      break;
+    default:
+      break;
+    }
     break;
   }
 }
