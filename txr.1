@@ -24473,7 +24473,7 @@ order.
 
 .SS* Buffers
 
-.coSS The @ buf type
+.coNP The @ buf type
 
 Object of the type
 .code buf
@@ -52619,11 +52619,14 @@ if no forms are specified.
   -> #b'48656c6c6f2c2077 6f726c6421'
 .brev
 
-.coSS The @ cptr type
+.SS* Foreign Pointers
+
+.coNP The @ cptr type
 
 Objects of type
 .code cptr
-are Lisp values which contain a C pointer. This data type is used by the
+are Lisp values which contain a foreign pointer ("C pointer"). This data type
+is used by the
 .code dlopen
 function and is generally useful in conjunction with the Foreign Function
 Interface (FFI).  An arbitrary pointer emanating from a foreign function
