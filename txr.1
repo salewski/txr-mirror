@@ -183,8 +183,17 @@
 .              shift
 .            \}
 .            el \{\
-.              as s \\$1 
-.              shift
+.              ie "\\$1"><" \{\
+.                shift
+.                as s \fI<\\$1>\fP\\$2\fI<\\$3>\fP 
+.                shift
+.                shift
+.                shift
+.              \}
+.              el \{\
+.                as s \\$1 
+.                shift
+.              \}
 .            \}
 .          \}
 .        \}
@@ -224,8 +233,17 @@
 .              shift
 .            \}
 .            el \{\
-.              as s \\$1 
-.              shift
+.              ie "\\$1"><" \{\
+.                shift
+.                as s \\f5\\$1\\f4\\$2\f5\\$3\\f4 
+.                shift
+.                shift
+.                shift
+.              \}
+.              el \{\
+.                as s \\$1 
+.                shift
+.              \}
 .            \}
 .          \}
 .        \}
@@ -13031,7 +13049,7 @@ defined by \*(TX programs.
 .mets (errno)
 .mets (slot < struct-obj << slot-name-valued-form )
 .mets (qref < struct-obj << slot-name ) ;; by macro-expansion to (slot ...)
-.mets < struct-obj . < slot-name ;; equivalent to qref
+.mets >< struct-obj . slot-name ;; equivalent to qref
 .mets (sock-peer << socket )
 .mets (carray-sub < carray >> [ from <> [ to ]])
 .mets (sub-buf < buf >> [ from <> [ to ]])
