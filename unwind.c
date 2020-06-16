@@ -637,15 +637,18 @@ val uw_exception_subtype_p(val sub, val sup)
 static void invoke_handler(uw_frame_t *fr, struct args *args)
 {
   val saved_dyn_env = dyn_env;
+  val cur_pkg_alist = deref(cur_package_alist_loc);
+  val cur_pkg = cur_package;
 
   fr->ha.visible = 0;
 
   uw_simple_catch_begin;
 
-  dyn_env = make_env(nil, nil, dyn_env);
-
-  env_vbind(dyn_env, package_s, fr->ha.package);
-  env_vbind(dyn_env, package_alist_s, fr->ha.package_alist);
+  if (cur_pkg_alist != fr->ha.package_alist || cur_pkg != fr->ha.package) {
+    dyn_env = make_env(nil, nil, dyn_env);
+    env_vbind(dyn_env, package_s, fr->ha.package);
+    env_vbind(dyn_env, package_alist_s, fr->ha.package_alist);
+  }
 
   generic_funcall(fr->ha.fun, args);
 
