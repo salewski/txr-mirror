@@ -141,7 +141,7 @@ struct jmp {
    x19-x28, x29(fp), x30(lr), (x31)sp, d8-d15.  Other registers are not
    saved.  */
 
-#elif _MIPS_SZPTR == 32
+#elif __mips__
 
 struct jmp {
   unsigned long s0; /* $16 */

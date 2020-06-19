@@ -365,6 +365,41 @@ DEFUN(jmp_restore)
   jr $ra
   move $2, $5
 
+#elif _MIPS_SZPTR == 64
+
+  .set noreorder
+
+DEFUN(jmp_save)
+  sd $16, 0($4)
+  sd $17, 8($4)
+  sd $18, 16($4)
+  sd $19, 24($4)
+  sd $20, 32($4)
+  sd $21, 40($4)
+  sd $22, 48($4)
+  sd $23, 56($4)
+  sd $28, 64($4)
+  sd $29, 72($4)
+  sd $30, 80($4)
+  sd $ra, 88($4)
+  jr $ra
+  li $2, 0
+
+DEFUN(jmp_restore)
+  ld $16, 0($4)
+  ld $17, 8($4)
+  ld $18, 16($4)
+  ld $19, 24($4)
+  ld $20, 32($4)
+  ld $21, 40($4)
+  ld $22, 48($4)
+  ld $23, 56($4)
+  ld $28, 64($4)
+  ld $29, 72($4)
+  ld $ra, 80($4)
+  ld $30, 88($4)
+  jr $ra
+  move $2, $5
 #else
 #error port me!
 #endif
