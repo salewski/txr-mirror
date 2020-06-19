@@ -753,8 +753,8 @@ static val read_file_common(val self, val stream, val error_stream, val compiled
         val datavec = pop(&item);
         val funvec = car(item);
         val desc = vm_make_desc(nlevels, nregs, bytecode, datavec, funvec);
-        if ((big_endian && itypes_little_endian) ||
-            (!big_endian && !itypes_little_endian))
+        if ((big_endian && HAVE_LITTLE_ENDIAN) ||
+            (!big_endian && !HAVE_LITTLE_ENDIAN))
           buf_swap32(bytecode);
         (void) vm_execute_toplevel(desc);
         gc_hint(desc);

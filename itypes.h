@@ -116,6 +116,3 @@ unsigned int c_uint(val, val self);
 
 long c_long(val, val self);
 unsigned long c_ulong(val, val self);
-
-extern int itypes_little_endian;
-void itypes_init(void);

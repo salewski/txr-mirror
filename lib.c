@@ -13086,7 +13086,6 @@ void init(val *stack_bottom)
   hash_init();
   struct_init();
   tree_init();
-  itypes_init();
   buf_init();
   ffi_init();
   sysif_init();

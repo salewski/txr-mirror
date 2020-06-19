@@ -35,8 +35,6 @@
 #include "arith.h"
 #include "itypes.h"
 
-int itypes_little_endian;
-
 #if HAVE_I8
 i8_t c_i8(val n, val self)
 {
@@ -262,17 +260,4 @@ unsigned long c_ulong(val n, val self)
 #else
 #error portme
 #endif
-}
-
-extern int itypes_little_endian;
-void itypes_init(void);
-
-void itypes_init()
-{
-  union u {
-    volatile unsigned ui;
-    volatile unsigned char uc[sizeof (unsigned)];
-  } u = { 0xff };
-
-  itypes_little_endian = (u.uc[0] == 0xff);
 }
