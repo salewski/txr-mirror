@@ -329,6 +329,40 @@ DEFUN(jmp_restore)
   mov w0, w1
   br x30
 
+#elif _MIPS_SZPTR == 32
+
+DEFUN(jmp_save)
+  sw $16, 0($4)
+  sw $17, 4($4)
+  sw $18, 8($4)
+  sw $19, 12($4)
+  sw $20, 16($4)
+  sw $21, 20($4)
+  sw $22, 24($4)
+  sw $23, 28($4)
+  sw $28, 32($4)
+  sw $29, 36($4)
+  sw $30, 40($4)
+  sw $ra, 44($4)
+  jr $ra
+  li $2, 0
+
+DEFUN(jmp_restore)
+  lw $16, 0($4)
+  lw $17, 4($4)
+  lw $18, 8($4)
+  lw $19, 12($4)
+  lw $20, 16($4)
+  lw $21, 20($4)
+  lw $22, 24($4)
+  lw $23, 28($4)
+  lw $28, 32($4)
+  lw $29, 36($4)
+  lw $ra, 44($4)
+  lw $30, 40($4)
+  jr $ra
+  move $2, $5
+
 #else
 #error port me!
 #endif
