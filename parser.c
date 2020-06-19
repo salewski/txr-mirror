@@ -1475,9 +1475,11 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   lino_hist_set_max_len(ls, c_num(cdr(hist_len_var)));
 
   if (histfile_w) {
-    if (!funcall1(path_private_to_me_p, histfile))
+    if (lino_hist_load(ls, histfile_w) == 0 &&
+        !funcall1(path_private_to_me_p, histfile))
+    {
       report_security_problem(histfile);
-    lino_hist_load(ls, histfile_w);
+    }
   }
 
   lino_set_noninteractive(ls, opt_noninteractive);
