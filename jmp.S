@@ -331,6 +331,8 @@ DEFUN(jmp_restore)
 
 #elif _MIPS_SZPTR == 32
 
+  .set noreorder
+
 DEFUN(jmp_save)
   sw $16, 0($4)
   sw $17, 4($4)
