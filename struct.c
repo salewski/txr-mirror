@@ -1889,7 +1889,10 @@ val slot_types(val slot)
 
 val static_slot_types(val slot)
 {
-  return gethash(static_slot_type_hash, slot);
+  uses_or2;
+  return or2(gethash(static_slot_type_hash, slot),
+             if2(lisplib_try_load(slot),
+                 gethash(static_slot_type_hash, slot)));
 }
 
 val slot_type_reg(val slot, val strct)
@@ -1909,7 +1912,7 @@ val static_slot_type_reg(val slot, val strct)
   val typelist = gethash(static_slot_type_hash, slot);
 
   if (!memq(strct, typelist)) {
-    sethash(slot_type_hash, slot, cons(strct, typelist));
+    sethash(static_slot_type_hash, slot, cons(strct, typelist));
     uw_purge_deferred_warning(cons(slot_s, slot));
   }
 
