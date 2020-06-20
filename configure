@@ -173,6 +173,7 @@ have_unistd=
 have_sys_stat=
 have_sys_types=
 have_sys_time=
+have_strerror_r=
 have_makedev=
 have_syslog=
 have_glob=
@@ -2020,6 +2021,37 @@ if conftest ; then
 else
   printf "no\n"
 fi
+
+#
+# errno stuff
+#
+
+printf "Checking for strerror_r ..."
+
+for type in int 'char *' ; do
+  cat > conftest.c <<!
+#include <string.h>
+
+int main(int argc, char **argv)
+{
+  $type (*fp)(int, char *, size_t) = strerror_r;
+  return 0;
+}
+!
+  if conftest EXTRA_FLAGS=-Werror=incompatible-pointer-types ; then
+    if [ "$type" = int ] ; then
+      printf "yes (POSIX)\n"
+      printf "#define HAVE_STRERROR_POSIX 1\n" >> config.h
+    else
+      printf "yes (GNU)\n"
+      printf "#define HAVE_STRERROR_GNU 1\n" >> config.h
+    fi
+    have_strerror_r=y
+    break
+  fi
+done
+
+[ $have_strerror_r ] || printf "no\n"
 
 #
 # fcntl

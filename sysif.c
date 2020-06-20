@@ -141,6 +141,21 @@ static val errno_wrap(val newval)
   return oldval;
 }
 
+static val strerror_wrap(val errnum)
+{
+  val self = lit("strerror");
+  int eno = c_int(errnum, self);
+#if HAVE_STRERROR_POSIX
+  char buf[128];
+  return strerror_r(eno, buf, sizeof buf) >= 0 ? string_utf8(buf) : nil;
+#elif HAVE_STRERROR_GNU
+  char buf[128];
+  return string_utf8(strerror_r(eno, buf, sizeof buf));
+#else
+  return string_utf8(strerror(eno));
+#endif
+}
+
 #if HAVE_DAEMON
 static val daemon_wrap(val nochdir, val noclose)
 {
@@ -2327,6 +2342,7 @@ void sysif_init(void)
   reg_varl(intern(lit("exdev"), user_package), num_fast(EXDEV));
 
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
+  reg_fun(intern(lit("strerror"), user_package), func_n1o(strerror_wrap, 0));
   reg_fun(intern(lit("exit"), user_package), func_n1(exit_wrap));
   reg_fun(intern(lit("at-exit-call"), user_package), func_n1(at_exit_call));
   reg_fun(intern(lit("at-exit-do-not-call"), user_package), func_n1(at_exit_do_not_call));

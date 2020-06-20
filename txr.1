@@ -58584,6 +58584,23 @@ The place form of
 .code errno
 does not take an argument.
 
+.coNP Function @ strerror
+.synb
+.mets (strerror << errno-value )
+.syne
+.desc
+The
+.code strerror
+returns a character string which provides the host platform's description
+of the integer
+.meta errno-value
+obtained from the
+.code errno
+function.
+
+If the host platform fails to provide a descripion, the function returns
+.codn nil .
+
 .coNP Function @ exit
 .synb
 .mets (exit << status )
