@@ -525,10 +525,8 @@ static void stdio_stream_mark(val stream)
 
 val errno_to_string(val err)
 {
-  if (err == zero)
-    return lit("unspecified error");
-  else if (is_num(err))
-    return string_utf8(strerror(c_num(err)));
+  if (is_num(err))
+    return errno_to_str(c_num(err));
   else if (!err)
     return lit("no error");
   else if (err == t)
@@ -931,7 +929,7 @@ static val stdio_close(val stream, val throw_on_error)
     if (result == EOF && throw_on_error) {
       h->err = num(errno);
       uw_throwf(file_error_s, lit("error closing ~s: ~d/~s"),
-                stream, num(errno), string_utf8(strerror(errno)), nao);
+                stream, num(errno), errno_to_str(errno), nao);
     }
     return result != EOF ? t : nil;
   }
@@ -1323,7 +1321,7 @@ static val pipe_close(val stream, val throw_on_error)
       if (throw_on_error)
         uw_throwf(process_error_s,
                   lit("unable to obtain status of command ~s: ~d/~s"),
-                  stream, num(errno), string_utf8(strerror(errno)), nao);
+                  stream, num(errno), errno_to_str(errno), nao);
     } else {
 #if HAVE_SYS_WAIT
       if (throw_on_error) {
@@ -4066,7 +4064,7 @@ val open_directory(val path)
     int eno = errno;
     uw_throwf(errno_to_file_error(eno),
               lit("error opening directory ~s: ~d/~s"),
-              path, num(eno), string_utf8(strerror(eno)), nao);
+              path, num(eno), errno_to_str(eno), nao);
   }
 
   return make_dir_stream(d);
@@ -4081,7 +4079,7 @@ val open_file(val path, val mode_str)
   if (!f) {
     int eno = errno;
     uw_throwf(errno_to_file_error(eno), lit("error opening ~s: ~d/~s"),
-              path, num(eno), string_utf8(strerror(eno)), nao);
+              path, num(eno), errno_to_str(eno), nao);
   }
 
   return set_mode_props(m, make_stdio_stream(f, path));
@@ -4096,7 +4094,7 @@ val open_fileno(val fd, val mode_str)
     int eno = errno;
     close(c_num(fd));
     uw_throwf(errno_to_file_error(eno), lit("error opening descriptor ~a: ~d/~s"),
-              fd, num(eno), string_utf8(strerror(eno)), nao);
+              fd, num(eno), errno_to_str(eno), nao);
   }
 
   return set_mode_props(m, make_stdio_stream(f, format(nil,
@@ -4116,7 +4114,7 @@ val open_tail(val path, val mode_str, val seek_end_p)
   if (f && default_null_arg(seek_end_p))
     if (fseek(f, 0, SEEK_END) < 0)
       uw_throwf(file_error_s, lit("error seeking to end of ~s: ~d/~s"),
-                path, num(errno), string_utf8(strerror(errno)), nao);
+                path, num(errno), errno_to_str(errno), nao);
 
   stream = make_tail_stream(f, path);
   h = coerce(struct stdio_handle *, stream->co.handle);
@@ -4157,7 +4155,7 @@ static int fds_subst(val stream, int fd_std)
     }
 
     uw_throwf(file_error_s, lit("failed to duplicate file descriptor: ~d/~s"),
-              num(errno), string_utf8(strerror(errno)), nao);
+              num(errno), errno_to_str(errno), nao);
   }
 }
 
@@ -4211,7 +4209,7 @@ val open_command(val path, val mode_str)
   if (!f) {
     int eno = errno;
     uw_throwf(errno_to_file_error(eno), lit("error opening pipe ~s: ~d/~s"),
-              path, num(eno), string_utf8(strerror(eno)), nao);
+              path, num(eno), errno_to_str(eno), nao);
   }
 
   uw_unwind {
@@ -4262,7 +4260,7 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
     free(argv);
     uw_throwf(errno_to_file_error(eno),
               lit("opening pipe ~s, pipe syscall failed: ~d/~s"),
-              name, num(eno), string_utf8(strerror(eno)), nao);
+              name, num(eno), errno_to_str(eno), nao);
   }
 
   if (argv) {
@@ -4282,7 +4280,7 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
       free(argv);
     }
     uw_throwf(process_error_s, lit("opening pipe ~s, fork syscall failed: ~d/~s"),
-              name, num(errno), string_utf8(strerror(errno)), nao);
+              name, num(errno), errno_to_str(errno), nao);
   }
 
   if (pid == 0) {
@@ -4363,7 +4361,7 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
         ;
       free(utf8mode);
       uw_throwf(file_error_s, lit("opening pipe ~s, fdopen failed: ~d/~s"),
-                name, num(errno), string_utf8(strerror(errno)), nao);
+                name, num(errno), errno_to_str(errno), nao);
     }
 
     free(utf8mode);
@@ -4594,7 +4592,7 @@ static val run(val name, val args)
       free(argv[i]);
     free(argv);
     uw_throwf(process_error_s, lit("opening process ~s, fork syscall failed: ~d/~s"),
-              name, num(errno), string_utf8(strerror(errno)), nao);
+              name, num(errno), errno_to_str(errno), nao);
   }
 
   if (pid == 0) {
@@ -4644,7 +4642,7 @@ val remove_path(val path, val throw_on_error)
     if (default_null_arg(throw_on_error) || errno != ENOENT) {
       int eno = errno;
       uw_throwf(errno_to_file_error(eno), lit("trying to remove ~s: ~d/~s"),
-                path, num(eno), string_utf8(strerror(eno)), nao);
+                path, num(eno), errno_to_str(eno), nao);
     }
     return nil;
   }
@@ -4658,7 +4656,7 @@ val rename_path(val from, val to)
     int eno = errno;
     uw_throwf(errno_to_file_error(eno),
               lit("trying to rename ~s to ~s: ~d/~s"),
-              from, to, num(eno), string_utf8(strerror(eno)), nao);
+              from, to, num(eno), errno_to_str(eno), nao);
   }
 
   return t;

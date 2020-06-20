@@ -44,6 +44,7 @@
 #include "unwind.h"
 #include "stream.h"
 #include "struct.h"
+#include "sysif.h"
 #include "termios.h"
 
 val termios_s, iflag_s, oflag_s, cflag_s, lflag_s, cc_s, ispeed_s, ospeed_s;
@@ -256,7 +257,7 @@ static val tcgetattr_wrap(val stream)
 
   if (res < 0)
     uw_throwf(system_error_s, lit("tcgetattr failed: ~d/~s"),
-              num(errno), string_utf8(strerror(errno)), nao);
+              num(errno), errno_to_str(errno), nao);
 
   return termios_unpack(&tio);
 }
@@ -273,7 +274,7 @@ static val tcsetattr_wrap(val termios, val actions, val stream)
 
   if (res < 0)
     uw_throwf(system_error_s, lit("tcgetattr failed: ~d/~s"),
-              num(errno), string_utf8(strerror(errno)), nao);
+              num(errno), errno_to_str(errno), nao);
 
   termios_pack(&tio, termios);
 
@@ -281,7 +282,7 @@ static val tcsetattr_wrap(val termios, val actions, val stream)
 
   if (res < 0)
     uw_throwf(system_error_s, lit("tcsetattr failed: ~d/~s"),
-              num(errno), string_utf8(strerror(errno)), nao);
+              num(errno), errno_to_str(errno), nao);
 
   return termios;
 }
@@ -294,7 +295,7 @@ static val tcsendbreak_wrap(val duration, val stream)
 
   if (res < 0)
     uw_throwf(system_error_s, lit("tcsendbreak failed: ~d/~s"),
-              num(errno), string_utf8(strerror(errno)), nao);
+              num(errno), errno_to_str(errno), nao);
 
   return t;
 }
@@ -306,7 +307,7 @@ static val tcdrain_wrap(val stream)
 
   if (res < 0)
     uw_throwf(system_error_s, lit("tcdrain failed: ~d/~s"),
-              num(errno), string_utf8(strerror(errno)), nao);
+              num(errno), errno_to_str(errno), nao);
 
   return t;
 }
@@ -318,7 +319,7 @@ static val tcflush_wrap(val queue, val stream)
 
   if (res < 0)
     uw_throwf(system_error_s, lit("tcflush failed: ~d/~s"),
-              num(errno), string_utf8(strerror(errno)), nao);
+              num(errno), errno_to_str(errno), nao);
 
   return t;
 }
@@ -330,7 +331,7 @@ static val tcflow_wrap(val action, val stream)
 
   if (res < 0)
     uw_throwf(system_error_s, lit("tcflow failed: ~d/~s"),
-              num(errno), string_utf8(strerror(errno)), nao);
+              num(errno), errno_to_str(errno), nao);
 
   return t;
 }

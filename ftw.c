@@ -126,7 +126,7 @@ val ftw_wrap(val dirpath, val fn, val flags_in, val nopenfd_in)
       {
         int eno = errno;
         uw_throwf(errno_to_file_error(eno), lit("ftw ~a: ~d/~s"),
-                  dirpath, num(eno), string_utf8(strerror(eno)), nao);
+                  dirpath, num(eno), errno_to_str(eno), nao);
       }
     default:
       return num(res);
