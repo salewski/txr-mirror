@@ -173,7 +173,9 @@ static val exit_wrap(val status)
 {
   int stat;
 
-  if (status == nil)
+  if missingp(status)
+    stat = EXIT_SUCCESS;
+  else if (status == nil)
     stat = EXIT_FAILURE;
   else if (status == t)
     stat = EXIT_SUCCESS;
@@ -2348,7 +2350,7 @@ void sysif_init(void)
 
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
   reg_fun(intern(lit("strerror"), user_package), func_n1o(strerror_wrap, 0));
-  reg_fun(intern(lit("exit"), user_package), func_n1(exit_wrap));
+  reg_fun(intern(lit("exit"), user_package), func_n1o(exit_wrap, 0));
   reg_fun(intern(lit("at-exit-call"), user_package), func_n1(at_exit_call));
   reg_fun(intern(lit("at-exit-do-not-call"), user_package), func_n1(at_exit_do_not_call));
   reg_fun(intern(lit("abort"), user_package), func_n0(abort_wrap));

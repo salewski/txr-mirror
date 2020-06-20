@@ -58603,28 +58603,30 @@ If the host platform fails to provide a description, the function returns
 
 .coNP Function @ exit
 .synb
-.mets (exit << status )
+.mets (exit <> [ status ])
 .syne
 .desc
 The
 .code exit
 function terminates the entire process (running \*(TX image), specifying
-the termination status to the operating system. Values of
+the termination status to the operating system. Values of the optional
 .meta status
-may be
+parameter may be
 .codn nil ,
 .codn t ,
 or an integer value.  The value
 .code nil
-corresponds to the C constant
-.codn EXIT_FAILURE ,
-and
+indicates an unsuccessful termination status, whereas
 .code t
-corresponds to
-.codn EXIT_SUCCESS .
-These are platform-independent
-indicators of failed or successful termination. The numeric value 0 also
-indicates success.
+indicates a successful termination status.
+An absence of the
+.meta status
+argument also specifies a successful termination status.
+If
+.meta status
+is an integer value, it specifies a successful termination if it is
+.code 0
+otherwise the interpretation of the value is platform specific.
 
 .coNP Variables @, e2big @, eacces @, eaddrinuse @, eaddrnotavail @, eafnosupport @, eagain @, ealready @, ebadf @, ebadmsg @, ebusy @, ecanceled @, echild @, econnaborted @, econnrefused @, econnreset @, edeadlk @, edestaddrreq @, edom @, edquot @, eexist @, efault @, efbig @, ehostunreach @, eidrm @, eilseq @, einprogress @, eintr @, einval @, eio @, eisconn @, eisdir @, eloop @, emfile @, emlink @, emsgsize @, emultihop @, enametoolong @, enetdown @, enetreset @, enetunreach @, enfile @, enobufs @, enodata @, enodev @, enoent @, enoexec @, enolck @, enolink @, enomem @, enomsg @, enoprotoopt @, enospc @, enosr @, enostr @, enosys @, enotconn @, enotdir @, enotempty @, enotrecoverable @, enotsock @, enotsup @, enotty @, enxio @, eopnotsupp @, eoverflow @, eownerdead @, eperm @, epipe @, eproto @, eprotonosupport @, eprototype @, erange @, erofs @, espipe @, esrch @, estale @, etime @, etimedout @, etxtbsy @ ewouldblock and @ exdev
 .desc
