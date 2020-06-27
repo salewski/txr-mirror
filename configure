@@ -2397,6 +2397,25 @@ else
   printf "no\n"
 fi
 
+printf "Checking for strsignal ... "
+
+cat > conftest.c <<!
+#include <string.h>
+#include <signal.h>
+
+int main(void)
+{
+  const char *s = strsignal(SIGABRT);
+  return 0;
+}
+!
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_STRSIGNAL 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
 printf "Checking for setitimer/getitimer ... "
 
 cat > conftest.c <<!

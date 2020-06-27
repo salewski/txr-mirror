@@ -161,6 +161,20 @@ static val strerror_wrap(val errnum)
   return errno_to_str(eno);
 }
 
+#if HAVE_STRSIGNAL
+
+static val strsignal_wrap(val signum)
+{
+  val self = lit("strsignal");
+  int sig = c_int(signum, self);
+  const char *str = strsignal(sig);
+  return if3(str,
+             string_utf8(strsignal(sig)),
+             format(nil, lit("Unknown signal %s"), signum, nao));
+}
+
+#endif
+
 #if HAVE_DAEMON
 static val daemon_wrap(val nochdir, val noclose)
 {
@@ -2350,6 +2364,9 @@ void sysif_init(void)
 
   reg_fun(intern(lit("errno"), user_package), func_n1o(errno_wrap, 0));
   reg_fun(intern(lit("strerror"), user_package), func_n1o(strerror_wrap, 0));
+#if HAVE_STRSIGNAL
+  reg_fun(intern(lit("strsignal"), user_package), func_n1(strsignal_wrap));
+#endif
   reg_fun(intern(lit("exit"), user_package), func_n1o(exit_wrap, 0));
   reg_fun(intern(lit("at-exit-call"), user_package), func_n1(at_exit_call));
   reg_fun(intern(lit("at-exit-do-not-call"), user_package), func_n1(at_exit_do_not_call));
