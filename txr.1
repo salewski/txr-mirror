@@ -29262,58 +29262,19 @@ requiring them to be a mixture of characters and strings.
 .mets (len << iterable )
 .syne
 .desc
-If
-.meta object
-is a sequence, the
+The
 .code length
-function returns the number of items it
-contains.
+function returns the number of items contained in
+.metn iterable .
 
 The
 .code len
 function is a synonym of
 .codn length .
 
-The function supports these additional types:
-.RS
-.coIP hash
-The value of
-.code hash-count
-is returned.
-.coIP range
-The length of the interval
-represented by the range is returned.
-The length of a range
-.code r
-is defined as
-.codn "(- (to r) (from r))" ,
-and thus may be negative.
-The length of
-.code "#R(1 -10)"
-is -11 and of
-.codn "#R(0.5 3)" ,
-2.5.
-
-.coIP buf
-The buffer length calculated by
-.code length-buf
-is returned.
-.coIP carray
-The number of elements in
-.meta object
-calculated by
-.code length-carray
-is returned.
-.RE
-
 An attempt to calculate the length of infinite lazy lists will not terminate.
 Iterable objects representing infinite ranges, such as integers and characters
 are invalid arguments.
-
-.IP
-For all other types,
-.code length
-throws an error exception.
 
 .coNP Function @ empty
 .synb
@@ -29321,7 +29282,7 @@ throws an error exception.
 .syne
 .desc
 If
-.meta object
+.meta iterable
 is a suitable argument for the
 .code length
 function, then the
