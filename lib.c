@@ -1486,6 +1486,52 @@ val seqp(val obj)
   return tnil(si.kind != SEQ_NOTSEQ);
 }
 
+val list_seq(val seq)
+{
+  val self = lit("list-seq");
+  seq_iter_t iter;
+  val elem;
+  seq_iter_init(self, &iter, seq);
+  list_collect_decl (out, ptail);
+
+  while (seq_get(&iter, &elem))
+    ptail = list_collect(ptail, elem);
+
+  return out;
+}
+
+val vec_seq(val seq)
+{
+  val self = lit("vec-seq");
+  seq_iter_t iter;
+  val elem;
+  val vec = vector(zero, nil);
+  seq_iter_init(self, &iter, seq);
+
+  while (seq_get(&iter, &elem))
+    vec_push(vec, elem);
+
+  return vec;
+}
+
+val str_seq(val seq)
+{
+  val self = lit("str-seq");
+  seq_iter_t iter;
+  val elem;
+  val str = mkustring(zero);
+  seq_iter_init(self, &iter, seq);
+
+  while (seq_get(&iter, &elem)) {
+    if (chrp(elem) || stringp(elem))
+      string_extend(str, elem);
+    else
+      unsup_obj(self, elem);
+  }
+
+  return str;
+}
+
 loc list_collect(loc ptail, val obj)
 {
   val items = cons(obj, nil);

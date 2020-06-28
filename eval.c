@@ -6926,6 +6926,9 @@ void eval_init(void)
   reg_fun(intern(lit("uni"), user_package), func_n4o(uni, 2));
 
   reg_fun(intern(lit("seqp"), user_package), func_n1(seqp));
+  reg_fun(intern(lit("list-seq"), user_package), func_n1(list_seq));
+  reg_fun(intern(lit("vec-seq"), user_package), func_n1(vec_seq));
+  reg_fun(intern(lit("str-seq"), user_package), func_n1(str_seq));
   reg_fun(intern(lit("length"), user_package), length_f);
   reg_fun(intern(lit("len"), user_package), length_f);
   reg_fun(intern(lit("empty"), user_package), func_n1(empty));

@@ -29227,6 +29227,35 @@ then convert the resulting list to the same type as an input value
 by using
 .codn make-like .
 
+.coNP Functions @, list-seq @ vec-seq and @ str-seq
+.synb
+.mets (list-seq << iterable )
+.mets (vec-seq << iterable )
+.mets (str-seq << iterable )
+.syne
+.desc
+The
+.codn list-seq ,
+.code vec-seq
+and
+.code str-seq
+functions convert an iterable object of any type into a list, vector
+or string, respectively.
+
+The
+.code list-seq
+and
+.code vec-seq
+iterate the items of
+.meta iterable
+and accumulate these items into a new list or vector.
+
+The
+.code str-seq
+similarly iterates the items of
+.metn iterable ,
+requiring them to be a mixture of characters and strings.
+
 .coNP Functions @ length and @ len
 .synb
 .mets (length << iterable )
