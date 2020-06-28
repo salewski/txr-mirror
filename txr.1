@@ -16211,6 +16211,56 @@ iteration, however, the
 variables are assigned the first item from each
 of their lists.
 
+.TP* Note:
+The semantics of
+.code collect-each
+may be understood in terms of an equivalence to a code pattern involving
+.codn mapcar :
+
+.mono
+  (collect-each ((x xinit)        (mapcar (lambda (x y)
+                 (y yinit))  <-->           body)
+    body)                                 xinit yinit)
+.onom
+
+The
+.code collect-each*
+variant may be understood in terms of the following equivalence involving
+.code let*
+for sequential binding and
+.codn mapcar :
+
+.mono
+  (collect-each* ((x xinit)        (let* ((x xinit)
+                  (y yinit))  <-->        (y yinit))
+    body)                            (mapcar (lambda (x y)
+                                                body)
+                                             x y))
+.onom
+
+However, note that the
+.code let*
+as well as each invocation of the
+.code lambda
+binds fresh instances of the variables, whereas these operators are permitted
+to bind a single instance of the variables, which are first initialized with
+the initializing expressions, and then re-used as iteration variables which are
+stepped by assignment.
+
+The other operators may be understood likewise, with the substitution
+of the
+.code mapdo
+function in the case of
+.code each
+and
+.code each*
+and of the
+.code mappend
+function in the case of
+.code append-each
+and
+.codn append-each* .
+
 .TP* Example:
 .mono
  ;; print numbers from 1 to 10 and whether they are even or odd
@@ -16499,6 +16549,128 @@ the ANSI CL macros do not feature the automatic replication of
 into the
 .meta step-form
 position.
+
+.coNP Macros @, each-prod @ collect-each-prod and @ append-each-prod
+.synb
+.mets (each-prod >> ({( sym << init-form )}*) << body-form *)
+.mets (collect-each-prod >> ({( sym << init-form )}*) << body-form *)
+.mets (append-each-prod >> ({( sym << init-form )}*) << body-form *)
+.syne
+.desc
+The macros
+.codn each-prod ,
+.code collect-each-prod
+and
+.code append-each-prod
+have a similar syntax to
+.codn each ,
+.code collect-each
+and
+.codn collect-each-prod .
+However, instead of iterating over sequences in parallel, they iterate over
+the Cartesian product of the elements from the sequences.
+The difference between
+.code collect-each
+and
+.code collect-each-prod
+is analogous to that between the functions
+.code mapcar
+and
+.codn maprod .
+
+These macros can be understood as providing syntactic sugar according to the
+pattern established by the following equivalences:
+
+.mono
+  (each-prod               (mapdo (lambda (x y)
+    ((x xinit)                      body)
+     (y yinit))       <-->        xinit
+    body)                         yinit)
+
+  (collect-each-prod       (maprod (lambda (x y)
+    ((x xinit)                       body)
+     (y yinit))       <-->         xinit
+    body)                          yinit)
+
+  (append-each-prod        (maprend (lambda (x y)
+    ((x xinit)                        body)
+     (y yinit))       <-->          xinit
+    body)                           yinit)
+.onom
+
+However, note that each invocation of the
+.code lambda
+binds fresh instances of the variables, whereas these operators are
+permitted to bind a single instance of the variables, which are then stepped by
+assignment.
+
+.TP* Example:
+
+.mono
+  (collect-each-prod ((a '(a b c))
+                      (n #(1 2)))
+    (cons a n))
+
+ --> ((a . 1) (a . 2) (b . 1) (b . 2) (c . 1) (c . 2))
+.onom
+
+.coNP Macros @, each-prod* @ collect-each-prod* and @ append-each-prod*
+.synb
+.mets (each-prod* >> ({( sym << init-form )}*) << body-form *)
+.mets (collect-each-prod* >> ({( sym << init-form )}*) << body-form *)
+.mets (append-each-prod* >> ({( sym << init-form )}*) << body-form *)
+.syne
+.desc
+The macros
+.codn each-prod* ,
+.code collect-each-prod*
+and
+.code append-each-prod*
+are variants of
+.codn each-prod* ,
+.code collect-each-prod*
+and
+.code append-each-prod*
+with sequential binding.
+
+These macros can be understood as providing syntactic sugar according to the
+pattern established by the following equivalences:
+
+.mono
+  (each-prod*              (let* ((x xinit)
+    ((x xinit)                    (y yinit))
+     (y yinit))       <-->   (mapdo (lambda (x y) body)
+    body)                           x y)
+
+  (collect-each-prod*      (let* ((x xinit)
+    ((x xinit)                    (y yinit))
+     (y yinit))       <-->   (maprod (lambda (x y) body)
+    body)                            x y)
+
+  (append-each-prod*       (let* ((x xinit)
+    ((x xinit)                    (y yinit))
+     (y yinit))       <-->   (maprend (lambda (x y) body)
+    body)                             x y)
+.onom
+
+However, note that the
+.code let*
+as well as each invocation of the
+.code lambda
+binds fresh instances of the variables, whereas these operators are permitted
+to bind a single instance of the variables, which are first initialized with
+the initializing expressions, and then re-used as iteration variables which are
+stepped by assignment.
+
+.TP* Example:
+
+.mono
+  (collect-each-prod* ((a "abc")
+                       (b (upcase-str a)))
+    `@a@b`)
+
+  --> ("aA" "aB" "aC" "bA" "bB" "bC" "cA" "cB" "cC")
+.onom
 
 .coNP Operators @ block and @ block*
 .synb

@@ -821,6 +821,23 @@ static val copy_file_set_entries(val dlt, val fun)
   return nil;
 }
 
+static val each_prod_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(scat2(stdlib_path, lit("each-prod")));
+  return nil;
+}
+
+static val each_prod_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("each-prod"), lit("collect-each-prod"), lit("append-each-prod"),
+    lit("each-prod*"), lit("collect-each-prod*"), lit("append-each-prod*"),
+    nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
 
 val dlt_register(val dlt,
                  val (*instantiate)(val),
@@ -874,6 +891,7 @@ void lisplib_init(void)
   dlt_register(dl_table, save_exe_instantiate, save_exe_set_entries);
   dlt_register(dl_table, defset_instantiate, defset_set_entries);
   dlt_register(dl_table, copy_file_instantiate, copy_file_set_entries);
+  dlt_register(dl_table, each_prod_instantiate, each_prod_set_entries);
 
   reg_fun(intern(lit("try-load"), system_package), func_n1(lisplib_try_load));
 }
