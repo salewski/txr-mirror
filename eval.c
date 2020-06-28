@@ -5463,6 +5463,17 @@ val maprendv(val fun, struct args *lists)
   return prod_common(fun, lists, list_collect_append, mappendv);
 }
 
+static loc collect_nothing(loc ptail, val obj)
+{
+  (void) obj;
+  return ptail;
+}
+
+static val maprodo(val fun, struct args *lists)
+{
+  return prod_common(fun, lists, collect_nothing, mappendv);
+}
+
 static val symbol_value(val sym)
 {
   uses_or2;
@@ -6535,6 +6546,7 @@ void eval_init(void)
   reg_fun(intern(lit("mapdo"), user_package), func_n1v(mapdov));
   reg_fun(intern(lit("maprod"), user_package), func_n1v(maprodv));
   reg_fun(intern(lit("maprend"), user_package), func_n1v(maprendv));
+  reg_fun(intern(lit("maprodo"), user_package), func_n1v(maprodo));
   reg_fun(intern(lit("window-map"), user_package), func_n4(window_map));
   reg_fun(intern(lit("window-mappend"), user_package), func_n4(window_mappend));
   reg_fun(intern(lit("window-mapdo"), user_package), func_n4(window_mapdo));

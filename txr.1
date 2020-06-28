@@ -32131,25 +32131,28 @@ and so doesn't return.
   -> (2 4)
 .brev
 
-.coNP Functions @ maprod and @ maprend
+.coNP Functions @, maprod @ maprend and @ maprodo
 .synb
 .mets (maprod < function << iterable *)
 .mets (maprend < function << iterable *)
+.mets (maprodo < function << iterable *)
 .syne
 .desc
 The
-.code maprod
-and
+.codn maprod ,
 .code maprend
-functions resemble
-.code mapcar
 and
-.codn mappend ,
+.code maprodo
+functions resemble
+.codn mapcar ,
+.code mappend
+and
+.codn mapdo ,
 respectively. When given no
 .meta iterable
 arguments or exactly one
 .meta iterable
-argument, they behave exactly like those two functions.
+argument, they behave exactly like those three functions.
 
 When two or more
 .meta iterable
@@ -32157,7 +32160,9 @@ arguments are present,
 .code maprod
 differs from
 .code mapcar
-in the following way. Whereas
+in the following way, as do the remaining functions
+from their aforementioned counterparts.
+Whereas
 .code mapcar
 iterates over the
 .meta iterable
@@ -32215,6 +32220,15 @@ are appended together as if by
 and the final result is converted to the same kind of sequence as the leftmost
 .meta iterable
 if possible.
+
+The
+.code maprodo
+function, like
+.codn mapdo ,
+ignores the result of
+.meta function
+and returns
+.codn nil .
 
 The combination iteration gives priority to the rightmost
 .metn iterable ,
