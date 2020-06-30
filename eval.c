@@ -1529,6 +1529,7 @@ val eval_intrinsic_noerr(val form, val env, val *error_p)
 static val do_eval(val form, val env, val ctx,
                    val (*lookup)(val env, val sym))
 {
+  val self = lit("eval");
   uw_frame_t *ev = 0;
   val ret = nil;
 
@@ -1570,7 +1571,7 @@ static val do_eval(val form, val env, val ctx,
         abort();
       } else {
         val arglist = rest(form);
-        cnum alen = if3(consp(arglist), c_num(length(arglist)), 0);
+        cnum alen = if3(consp(arglist), c_num(length(arglist), self), 0);
         cnum argc = max(alen, ARGS_MIN);
         val lfe_save = last_form_evaled;
         args_decl(args, argc);
@@ -2642,7 +2643,7 @@ static val op_dwim(val form, val env)
 {
   val argexps = rest(form);
   val objexpr = pop(&argexps);
-  cnum alen = if3(consp(argexps), c_num(length(argexps)), 0);
+  cnum alen = if3(consp(argexps), c_num(length(argexps), car(form)), 0);
   cnum argc = max(alen, ARGS_MIN);
   args_decl(args, argc);
 
@@ -3889,7 +3890,7 @@ static val me_op(val form, val menv)
                    gethash(op_table, car(body_trans)));
   uw_pop_frame(&uw_handler);
 
-  if (c_num(max) > 1024)
+  if (c_num(max, sym) > 1024)
     eval_error(form, lit("~a: @~a calls for function with too many arguments"),
                sym, max, nao);
 
@@ -5008,11 +5009,12 @@ static val no_warn_expand(val form, val menv)
 
 static val gather_free_refs(val info_cons, val exc, struct args *args)
 {
+  val self = lit("expand-with-free-refs");
   (void) exc;
 
   args_normalize_least(args, 2);
 
-  if (args_count(args) == 2) {
+  if (args_count(args, self) == 2) {
     val tag = args_at(args, 1);
     cons_bind (kind, sym, tag);
 
@@ -5285,7 +5287,7 @@ static val map_common(val self, val fun, struct args *lists,
   } else if (!args_two_more(lists, 0)) {
     return map_fn(fun, args_atz(lists, 0));
   } else {
-    cnum i, idx, argc = args_count(lists);
+    cnum i, idx, argc = args_count(lists, self);
     seq_iter_t *iter_array = coerce(seq_iter_t *,
                                     alloca(argc * sizeof *iter_array));
     args_decl(args_fun, max(argc, ARGS_MIN));
@@ -5407,7 +5409,7 @@ static val lazy_mappendv(val fun, struct args *lists)
   return lazy_appendl(lazy_mapcarv(fun, lists));
 }
 
-static val prod_common(val fun, struct args *lists,
+static val prod_common(val self, val fun, struct args *lists,
                        loc (*collect_fn)(loc ptail, val obj),
                        val (*mapv_fn)(val fun, struct args *lists))
 {
@@ -5416,7 +5418,7 @@ static val prod_common(val fun, struct args *lists,
   } else if (!args_two_more(lists, 0)) {
     return mapv_fn(fun, lists);
   } else {
-    cnum argc = args_count(lists), i;
+    cnum argc = args_count(lists, self), i;
     list_collect_decl (out, ptail);
     args_decl(args_reset, max(argc, ARGS_MIN));
     args_decl(args_work, max(argc, ARGS_MIN));
@@ -5455,12 +5457,12 @@ static val prod_common(val fun, struct args *lists,
 
 val maprodv(val fun, struct args *lists)
 {
-  return prod_common(fun, lists, list_collect, mapcarv);
+  return prod_common(lit("maprodv"), fun, lists, list_collect, mapcarv);
 }
 
 val maprendv(val fun, struct args *lists)
 {
-  return prod_common(fun, lists, list_collect_append, mappendv);
+  return prod_common(lit("maprendv"), fun, lists, list_collect_append, mappendv);
 }
 
 static loc collect_nothing(loc ptail, val obj)
@@ -5471,7 +5473,7 @@ static loc collect_nothing(loc ptail, val obj)
 
 static val maprodo(val fun, struct args *lists)
 {
-  return prod_common(fun, lists, collect_nothing, mappendv);
+  return prod_common(lit("maprodo"), fun, lists, collect_nothing, mappendv);
 }
 
 static val symbol_value(val sym)
@@ -6089,9 +6091,10 @@ static val do_apf(val fun, struct args *args)
 
 static val do_args_apf(val dargs, struct args *args)
 {
+  val self = lit("apf");
   val fun = dargs->a.car;
   struct args *da = dargs->a.args;
-  cnum da_nargs = da->fill + c_num(length(da->list));
+  cnum da_nargs = da->fill + c_num(length(da->list), self);
   args_decl(args_call, max(args->fill + da_nargs, ARGS_MIN));
   args_copy(args_call, da);
   args_normalize_exact(args_call, da_nargs);
@@ -6115,9 +6118,10 @@ static val do_ipf(val fun, struct args *args)
 
 static val do_args_ipf(val dargs, struct args *args)
 {
+  val self = lit("ipf");
   val fun = dargs->a.car;
   struct args *da = dargs->a.args;
-  cnum da_nargs = da->fill + c_num(length(da->list));
+  cnum da_nargs = da->fill + c_num(length(da->list), self);
   args_decl(args_call, max(args->fill + da_nargs, ARGS_MIN));
   args_copy(args_call, da);
   args_normalize_exact(args_call, da_nargs);

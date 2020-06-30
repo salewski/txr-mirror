@@ -89,9 +89,10 @@ void syslog_init(void)
 
 val openlog_wrap(val wident, val optmask, val facility)
 {
+  val self = lit("openlog");
   static char *ident;
-  cnum coptmask = c_num(default_arg(optmask, zero));
-  cnum cfacility = c_num(default_arg(facility, num_fast(LOG_USER)));
+  cnum coptmask = c_num(default_arg(optmask, zero), self);
+  cnum cfacility = c_num(default_arg(facility, num_fast(LOG_USER)), self);
   char *old_ident = ident;
 
   ident = utf8_dup_to(c_str(wident));
@@ -105,13 +106,15 @@ val openlog_wrap(val wident, val optmask, val facility)
 
 val setlogmask_wrap(val mask)
 {
-  return num(setlogmask(c_num(mask)));
+  val self = lit("setlogmask");
+  return num(setlogmask(c_num(mask, self)));
 }
 
 val syslog_wrapv(val prio, val fmt, struct args *args)
 {
+  val self = lit("syslog");
   val text = formatv(nil, fmt, args);
-  cnum cprio = c_num(prio);
+  cnum cprio = c_num(prio, self);
   char *u8text = utf8_dup_to(c_str(text));
   syslog(cprio, "%s", u8text);
   return nil;

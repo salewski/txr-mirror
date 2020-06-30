@@ -131,7 +131,7 @@ val make_random_state(val seed, val warmup)
         dig++, bit = 0;
     }
   } else if (fixnump(seed)) {
-    cnum s = c_num(seed) & NUM_MAX;
+    cnum s = c_num(seed, self) & NUM_MAX;
 
     r->state[0] = s & 0xFFFFFFFFul;
     i = 1;
@@ -144,8 +144,8 @@ val make_random_state(val seed, val warmup)
 #endif
   } else if (nilp(seed)) {
     val time = time_sec_usec();
-    r->state[0] = convert(rand32_t, c_num(car(time)));
-    r->state[1] = convert(rand32_t, c_num(cdr(time)));
+    r->state[0] = convert(rand32_t, c_num(car(time), self));
+    r->state[1] = convert(rand32_t, c_num(cdr(time), self));
 #if HAVE_UNISTD_H
     r->state[2] = convert(rand32_t, getpid());
     i = 3;
@@ -163,9 +163,9 @@ val make_random_state(val seed, val warmup)
                 seed, nao);
 
     for (i = 0; i < 16; i++)
-      r->state[i] = c_unum(seed->v.vec[i]);
+      r->state[i] = c_unum(seed->v.vec[i], self);
 
-    r->cur = c_num(seed->v.vec[i]);
+    r->cur = c_num(seed->v.vec[i], self);
     return rs;
   } else {
     uw_throwf(error_s, lit("make-random-state: seed ~s is not a number"),
@@ -182,7 +182,7 @@ val make_random_state(val seed, val warmup)
 
   {
     uses_or2;
-    cnum wu = c_num(or2(warmup, random_warmup));
+    cnum wu = c_num(or2(warmup, random_warmup), self);
 
     for (i = 0; i < wu; i++)
       (void) rand32(r);
@@ -298,7 +298,7 @@ val random(val state, val modulus)
 
     return normalize(out);
   } else if (fixnump(modulus)) {
-    cnum m = c_num(modulus);
+    cnum m = c_num(modulus, self);
     if (m == 1) {
       return zero;
     } else if (m > 1) {

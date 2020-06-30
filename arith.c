@@ -198,7 +198,7 @@ val normalize(val bignum)
   }
 }
 
-ucnum c_unum(val num)
+ucnum c_unum(val num, val self)
 {
   switch (type(num)) {
   case CHR: case NUM:
@@ -216,10 +216,10 @@ ucnum c_unum(val num)
     }
     /* fallthrough */
   range:
-    uw_throwf(error_s, lit("~s is out of allowed range [0, ~a]"),
-              num, unum(UINT_PTR_MAX), nao);
+    uw_throwf(error_s, lit("~a: ~s is out of allowed range [0, ~a]"),
+              self, num, unum(UINT_PTR_MAX), nao);
   default:
-    type_mismatch(lit("~s is not an integer"), num, nao);
+    uw_throwf(type_error_s, lit("~a: ~s is not an integer"), self, num, nao);
   }
 }
 
@@ -3782,6 +3782,8 @@ val tofloat(val obj)
 
 val toint(val obj, val base)
 {
+  val self = lit("toint");
+
   switch (tag(obj)) {
   case TAG_NUM:
     return obj;
@@ -3796,7 +3798,7 @@ val toint(val obj, val base)
 
       if (iswalpha(ch)) {
         cnum n = 10 + towupper(ch) - 'A';
-        cnum b = c_num(default_arg(base, num_fast(10)));
+        cnum b = c_num(default_arg(base, num_fast(10)), self);
 
         if (n < b)
           return num(n);
@@ -4041,7 +4043,7 @@ val num(cnum n)
   return (n >= NUM_MIN && n <= NUM_MAX) ? num_fast(n) : bignum(n);
 }
 
-cnum c_num(val n)
+cnum c_num(val n, val self)
 {
   switch (type(n)) {
   case CHR: case NUM:
@@ -4052,10 +4054,10 @@ cnum c_num(val n)
       mp_get_intptr(mp(n), &out);
       return out;
     }
-    uw_throwf(error_s, lit("~s is out of allowed range [~s, ~s]"),
-              n, num(INT_PTR_MIN), num(INT_PTR_MAX), nao);
+    uw_throwf(error_s, lit("~a: ~s is out of allowed range [~s, ~s]"),
+              self, n, num(INT_PTR_MIN), num(INT_PTR_MAX), nao);
   default:
-    type_mismatch(lit("~s is not an integer"), n, nao);
+    uw_throwf(type_error_s, lit("~a: ~s is not an integer"), self, n, nao);
   }
 }
 
@@ -4446,7 +4448,8 @@ static val rexpt(val right, val left)
 
 val exptv(struct args *nlist)
 {
-  cnum nargs = args_count(nlist);
+  val self = lit("exptv");
+  cnum nargs = args_count(nlist, self);
   args_decl(rnlist, max(ARGS_MIN, nargs));
   args_copy_reverse(rnlist, nlist, nargs);
   return nary_op(expt_s, rexpt, unary_num, rnlist, one);

@@ -388,13 +388,14 @@ val make_struct_type(val name, val supers,
   } else {
     struct struct_type *st = coerce(struct struct_type *,
                                     chk_malloc(sizeof *st));
-    cnum nsupers = c_num(length(supers));
+    cnum nsupers = c_num(length(supers), self);
     struct struct_type **sus = get_struct_handles(nsupers, supers, self);
     val id = num_fast(coerce(ucnum, st) / (uptopow2(sizeof *st) / 2));
     val super_slots = get_super_slots(nsupers, sus);
     val all_slots = uniq(append2(super_slots, append2(static_slots, slots)));
     cnum stsl_upb = c_num(plus(length(static_slots),
-                               num(count_super_stslots(nsupers, sus, self))));
+                               num(count_super_stslots(nsupers, sus, self))),
+                          self);
     val stype = cobj(coerce(mem_t *, st), struct_type_s, &struct_type_ops);
     val iter;
     cnum sl, stsl, i;
@@ -402,7 +403,7 @@ val make_struct_type(val name, val supers,
 
     st->self = stype;
     st->name = name;
-    st->id = c_num(id);
+    st->id = c_num(id, self);
     st->nslots = st->nstslots = 0;
     st->slots = all_slots;
     st->nsupers = nsupers;
@@ -544,7 +545,7 @@ val struct_set_postinitfun(val type, val fun)
 val super(val type, val idx)
 {
   val self = lit("super");
-  cnum ix = c_num(default_arg(idx, zero));
+  cnum ix = c_num(default_arg(idx, zero), self);
 
   if (ix < 0)
     uw_throwf(error_s,
@@ -1535,10 +1536,11 @@ static val method_fun(val env, varg args)
 
 static val method_args_fun(val dargs, varg args)
 {
+  val self = lit("method");
   struct args *da = dargs->a.args;
   val fun = dargs->a.car;
   val strct = dargs->a.cdr;
-  cnum da_nargs = da->fill + c_num(length(da->list));
+  cnum da_nargs = da->fill + c_num(length(da->list), self);
   args_decl(args_call, max(args->fill + 1 + da_nargs, ARGS_MIN));
   args_add(args_call, strct);
   args_cat(args_call, da);
@@ -1621,7 +1623,7 @@ static val umethod_args_fun(val dargs, struct args *args)
     uw_throwf(error_s, lit("~a: object argument required to call ~s"),
               self, env, nao);
   } else {
-    cnum da_nargs = da->fill + c_num(length(da->list));
+    cnum da_nargs = da->fill + c_num(length(da->list), self);
     cnum index = 0;
     val strct = args_get(args, &index);
     args_decl(args_call, max(args->fill + da_nargs, ARGS_MIN));

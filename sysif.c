@@ -135,9 +135,10 @@ static val at_exit_list;
 
 static val errno_wrap(val newval)
 {
+  val self = lit("errno");
   val oldval = num(errno);
   if (default_null_arg(newval))
-    errno = c_num(newval);
+    errno = c_num(newval, self);
   return oldval;
 }
 
@@ -185,6 +186,7 @@ static val daemon_wrap(val nochdir, val noclose)
 
 static val exit_wrap(val status)
 {
+  val self = lit("exit");
   int stat;
 
   if missingp(status)
@@ -194,7 +196,7 @@ static val exit_wrap(val status)
   else if (status == t)
     stat = EXIT_SUCCESS;
   else
-    stat = c_num(status);
+    stat = c_num(status, self);
 
   exit(stat);
   /* notreached */
@@ -229,8 +231,9 @@ static val abort_wrap(void)
 
 val usleep_wrap(val usec)
 {
+  val self = lit("usleep");
   val retval;
-  cnum u = c_num(usec);
+  cnum u = c_num(usec, self);
 
   sig_save_enable;
 
@@ -307,7 +310,8 @@ val errno_to_file_error(int err)
 #if HAVE_MKDIR
 static val mkdir_wrap(val path, val mode)
 {
-  cnum cmode = c_num(default_arg(mode, num_fast(0777)));
+  val self = lit("mkdir");
+  cnum cmode = c_num(default_arg(mode, num_fast(0777)), self);
   char *u8path = utf8_dup_to(c_str(path));
   int err = mkdir(u8path, cmode);
   free(u8path);
@@ -423,6 +427,7 @@ static val mkdir_nothrow_exists(val path, val mode)
 
 static val ensure_dir(val path, val mode)
 {
+  val self = lit("ensure-dir");
 #if HAVE_WINDOWS_H
   val sep = lit("\\");
   val sep_set = lit("\\/");
@@ -445,7 +450,7 @@ static val ensure_dir(val path, val mode)
   }
 
   if (integerp(ret)) {
-    int eno = c_num(ret);
+    int eno = c_num(ret, self);
     uw_throwf(errno_to_file_error(eno),
               lit("ensure-dir: ~a: ~d/~s"), path, ret,
               errno_to_str(eno), nao);
@@ -517,17 +522,20 @@ static val rmdir_wrap(val path)
 
 static val makedev_wrap(val major, val minor)
 {
-  return num(makedev(c_num(major), c_num(minor)));
+  val self = lit("makedev");
+  return num(makedev(c_num(major, self), c_num(minor, self)));
 }
 
 static val minor_wrap(val dev)
 {
-  return num(minor(c_num(dev)));
+  val self = lit("minor");
+  return num(minor(c_num(dev, self)));
 }
 
 static val major_wrap(val dev)
 {
-  return num(major(c_num(dev)));
+  val self = lit("major");
+  return num(major(c_num(dev, self)));
 }
 
 #endif
@@ -536,8 +544,9 @@ static val major_wrap(val dev)
 
 static val mknod_wrap(val path, val mode, val dev)
 {
-  cnum cmode = c_num(mode);
-  cnum cdev = c_num(default_arg(dev, zero));
+  val self = lit("mknod");
+  cnum cmode = c_num(mode, self);
+  cnum cdev = c_num(default_arg(dev, zero), self);
   char *u8path = utf8_dup_to(c_str(path));
   int err = mknod(u8path, cmode, cdev);
   free(u8path);
@@ -564,7 +573,8 @@ static val mknod_wrap(val path, val mode, val dev)
 
 static val mkfifo_wrap(val path, val mode)
 {
-  cnum cmode = c_num(mode);
+  val self = lit("mkfifo");
+  cnum cmode = c_num(mode, self);
   char *u8path = utf8_dup_to(c_str(path));
   int err = mkfifo(u8path, cmode);
   free(u8path);
@@ -599,7 +609,7 @@ static val chmod_wrap(val target, val mode)
   int fd = if3(u8path, -1, get_fd(target, self));
 
   if (integerp(mode)) {
-    cmode = c_num(mode);
+    cmode = c_num(mode, self);
   } else if (stringp(mode)) {
 #if HAVE_SYS_STAT
     struct stat st;
@@ -766,8 +776,8 @@ inval:
 
 static val do_chown(val target, val uid, val gid, val link_p, val self)
 {
-  cnum cuid = c_num(uid);
-  cnum cgid = c_num(gid);
+  cnum cuid = c_num(uid, self);
+  cnum cgid = c_num(gid, self);
   int err;
 
   if (stringp(target)) {
@@ -879,8 +889,8 @@ static void flock_pack(val self, val in, struct flock *out)
 {
   out->l_type = c_short(slot(in, type_s), self);
   out->l_whence = c_short(slot(in, whence_s), self);
-  out->l_start = c_num(slot(in, start_s));
-  out->l_len = c_num(slot(in, len_s));
+  out->l_start = c_num(slot(in, start_s), self);
+  out->l_len = c_num(slot(in, len_s), self);
 }
 
 static void flock_unpack(val out, struct flock *in)
@@ -952,69 +962,79 @@ static val fork_wrap(void)
 
 static val wait_wrap(val pid, val flags)
 {
-  cnum p = c_num(default_arg(pid, negone));
-  cnum f = c_num(default_arg(flags, zero));
+  val self = lit("wait");
+  cnum p = c_num(default_arg(pid, negone), self);
+  cnum f = c_num(default_arg(flags, zero), self);
   int status = 0, result = waitpid(p, &status, f);
   return if2(result >= 0, cons(num(result), num(status)));
 }
 
 static val wifexited(val status)
 {
-  int s = c_num(if3(consp(status), cdr(status), status));
+  val self = lit("wifexited");
+  int s = c_num(if3(consp(status), cdr(status), status), self);
   return tnil(WIFEXITED(s));
 }
 
 static val wexitstatus(val status)
 {
-  int s = c_num(if3(consp(status), cdr(status), status));
+  val self = lit("wexitstatus");
+  int s = c_num(if3(consp(status), cdr(status), status), self);
   return num(WEXITSTATUS(s));
 }
 
 static val wifsignaled(val status)
 {
-  int s = c_num(if3(consp(status), cdr(status), status));
+  val self = lit("wifsignaled");
+  int s = c_num(if3(consp(status), cdr(status), status), self);
   return tnil(WIFSIGNALED(s));
 }
 
 static val wtermsig(val status)
 {
-  int s = c_num(if3(consp(status), cdr(status), status));
+  val self = lit("wtermsig");
+  int s = c_num(if3(consp(status), cdr(status), status), self);
   return num(WTERMSIG(s));
 }
 
 #ifdef WCOREDUMP
 static val wcoredump(val status)
 {
-  int s = c_num(if3(consp(status), cdr(status), status));
+  val self = lit("wcoredump");
+  int s = c_num(if3(consp(status), cdr(status), status), self);
   return tnil(WCOREDUMP(s));
 }
 #endif
 
 static val wifstopped(val status)
 {
-  int s = c_num(if3(consp(status), cdr(status), status));
+  val self = lit("wifstopped");
+  int s = c_num(if3(consp(status), cdr(status), status), self);
   return tnil(WIFSTOPPED(s));
 }
 
 static val wstopsig(val status)
 {
-  int s = c_num(if3(consp(status), cdr(status), status));
+  val self = lit("wstopsig");
+  int s = c_num(if3(consp(status), cdr(status), status), self);
   return num(WSTOPSIG(s));
 }
 
 #ifdef WIFCONTINUED
 static val wifcontinued(val status)
 {
-  int s = c_num(if3(consp(status), cdr(status), status));
+  val self = lit("wifcontinued");
+  int s = c_num(if3(consp(status), cdr(status), status), self);
   return tnil(WIFCONTINUED(s));
 }
 #endif
 
 static val dup_wrap(val old, val neu)
 {
+  val self = lit("dupfd");
   if (missingp(neu))
-    return num(dup(c_num(old)));
-  return num(dup2(c_num(old), c_num(neu)));
+    return num(dup(c_num(old, self)));
+  return num(dup2(c_num(old, self), c_num(neu, self)));
 }
 
 static val close_wrap(val fd, val throw_on_error)
@@ -1037,7 +1057,7 @@ val exec_wrap(val file, val args_opt)
 {
   val self = lit("execvp");
   val args = default_null_arg(args_opt);
-  int nargs = c_num(length(args)) + 1;
+  int nargs = c_num(length(args), self) + 1;
   char **argv = if3(nargs < 0 || nargs == INT_MAX,
                     (uw_throwf(process_error_s, lit("~a: argument list overflow"),
                                self, nao), convert(char **, 0)),
@@ -1059,6 +1079,7 @@ val exec_wrap(val file, val args_opt)
 
 static val exit_star_wrap(val status)
 {
+  val self = lit("exit*");
   int stat;
 
   if (status == nil)
@@ -1066,7 +1087,7 @@ static val exit_star_wrap(val status)
   else if (status == t)
     stat = EXIT_SUCCESS;
   else
-    stat = c_num(status);
+    stat = c_num(status, self);
 
   _exit(stat);
   /* notreached */
@@ -1075,9 +1096,9 @@ static val exit_star_wrap(val status)
 
 #endif
 
-time_t c_time(val time)
+time_t c_time(val time, val self)
 {
-  return if3(convert(time_t, -1) > 0, (time_t) c_unum(time), (time_t) c_num(time));
+  return if3(convert(time_t, -1) > 0, (time_t) c_unum(time, self), (time_t) c_num(time, self));
 }
 
 val num_time(time_t time)
@@ -1197,18 +1218,18 @@ static val do_utimes(val target, val atime, val atimens,
 #if HAVE_FUTIMENS
     int flags = if3(symlink_nofollow, AT_SYMLINK_NOFOLLOW, 0);
     struct timespec times[2];
-    times[0].tv_sec = c_time(atime);
+    times[0].tv_sec = c_time(atime, self);
     times[0].tv_nsec = timens(atimens, self);
-    times[1].tv_sec = c_time(mtime);
+    times[1].tv_sec = c_time(mtime, self);
     times[1].tv_nsec = timens(mtimens, self);
     res = utimensat(AT_FDCWD, u8path, times, flags);
 #else
     errno = -EINVAL;
     if (integerp(atimens) || integerp(mtimens)) {
       struct timeval times[2];
-      times[0].tv_sec = c_time(atime);
+      times[0].tv_sec = c_time(atime, self);
       times[0].tv_usec = c_long(trunc(atimens, num_fast(1000)), self);
-      times[1].tv_sec = c_time(mtime);
+      times[1].tv_sec = c_time(mtime, self);
       times[1].tv_usec = c_long(trunc(mtimens, num_fast(1000)), self);
       if (symlink_nofollow) {
 #if HAVE_LUTIMES
@@ -1231,9 +1252,9 @@ static val do_utimes(val target, val atime, val atimens,
 #if HAVE_FUTIMENS
     struct timespec times[2];
     int fd = get_fd(target, self);
-    times[0].tv_sec = c_time(atime);
+    times[0].tv_sec = c_time(atime, self);
     times[0].tv_nsec = timens(atimens, self);
-    times[1].tv_sec = c_time(mtime);
+    times[1].tv_sec = c_time(mtime, self);
     times[1].tv_nsec = timens(mtimens, self);
     res = futimens(fd, times);
 #elif HAVE_FUTIMES
@@ -1241,9 +1262,9 @@ static val do_utimes(val target, val atime, val atimens,
     int fd = get_fd(target, self);
     errno = -EINVAL;
     if (integerp(atimens) || integerp(mtimens)) {
-      times[0].tv_sec = c_time(atime);
+      times[0].tv_sec = c_time(atime, self);
       times[0].tv_usec = c_long(trunc(atimens, num_fast(1000)), self);
-      times[1].tv_sec = c_time(mtime);
+      times[1].tv_sec = c_time(mtime, self);
       times[1].tv_usec = c_long(trunc(mtimens, num_fast(1000)), self);
       res = futimes(fd, times);
     }
@@ -1282,12 +1303,14 @@ static val wrap_lutimes(val target, val atime, val atimens,
 
 val umask_wrap(val mask)
 {
+  val self = lit("umask");
+
   if (missingp(mask)) {
     mode_t m = umask(0777);
     (void) umask(m);
     return num(m);
   }
-  return num(umask(c_num(mask)));
+  return num(umask(c_num(mask, self)));
 }
 
 #endif
@@ -1344,7 +1367,8 @@ static val unsetenv_wrap(val name)
 
 static val poll_wrap(val poll_list, val timeout_in)
 {
-  nfds_t i, len = c_num(length(poll_list));
+  val self = lit("poll");
+  nfds_t i, len = c_num(length(poll_list), self);
   val iter;
   struct pollfd *pfd = coerce(struct pollfd *, alloca(len * sizeof *pfd));
   val timeout = default_arg(timeout_in, negone);
@@ -1353,11 +1377,11 @@ static val poll_wrap(val poll_list, val timeout_in)
   for (i = 0, iter = poll_list; iter; iter = cdr(iter), i++) {
     cons_bind (obj, events, car(iter));
 
-    pfd[i].events = c_num(events);
+    pfd[i].events = c_num(events, self);
 
     switch (type(obj)) {
     case NUM:
-      pfd[i].fd = c_num(obj);
+      pfd[i].fd = c_num(obj, self);
       break;
     case COBJ:
       if (subtypep(obj->co.cls, stream_s)) {
@@ -1368,7 +1392,7 @@ static val poll_wrap(val poll_list, val timeout_in)
                     lit("poll: stream ~s doesn't have a file descriptor"),
                     obj, nao);
         }
-        pfd[i].fd = c_num(fdval);
+        pfd[i].fd = c_num(fdval, self);
         break;
       }
       /* fallthrough */
@@ -1383,7 +1407,7 @@ static val poll_wrap(val poll_list, val timeout_in)
 
   sig_save_enable;
 
-  res = poll(pfd, len, c_num(timeout));
+  res = poll(pfd, len, c_num(timeout, self));
 
   sig_restore_enable;
 
@@ -1463,7 +1487,8 @@ static val getgroups_wrap(void)
 
 static val setuid_wrap(val nval)
 {
-  if (setuid(c_num(nval)) == -1)
+  val self = lit("setuid");
+  if (setuid(c_num(nval, self)) == -1)
     uw_throwf(system_error_s, lit("setuid failed: ~d/~s"),
               num(errno), errno_to_str(errno), nao);
   return t;
@@ -1471,7 +1496,8 @@ static val setuid_wrap(val nval)
 
 static val seteuid_wrap(val nval)
 {
-  if (seteuid(c_num(nval)) == -1)
+  val self = lit("seteuid");
+  if (seteuid(c_num(nval, self)) == -1)
     uw_throwf(system_error_s, lit("seteuid failed: ~d/~s"),
               num(errno), errno_to_str(errno), nao);
   return t;
@@ -1479,7 +1505,8 @@ static val seteuid_wrap(val nval)
 
 static val setgid_wrap(val nval)
 {
-  if (setgid(c_num(nval)) == -1)
+  val self = lit("setgid");
+  if (setgid(c_num(nval, self)) == -1)
     uw_throwf(system_error_s, lit("setgid failed: ~d/~s"),
               num(errno), errno_to_str(errno), nao);
   return t;
@@ -1487,7 +1514,8 @@ static val setgid_wrap(val nval)
 
 static val setegid_wrap(val nval)
 {
-  if (setegid(c_num(nval)) == -1)
+  val self = lit("setegid");
+  if (setegid(c_num(nval, self)) == -1)
     uw_throwf(system_error_s, lit("setegid failed: ~d/~s"),
               num(errno), errno_to_str(errno), nao);
   return t;
@@ -1581,6 +1609,8 @@ void drop_privilege(void)
 
 void simulate_setuid_setgid(val open_script)
 {
+  val self = lit("txr");
+
   if (repress_called != RC_MAGIC || (is_setuid && seteuid(orig_euid) != 0))
     abort();
 
@@ -1592,7 +1622,7 @@ void simulate_setuid_setgid(val open_script)
 
     if (fdv) {
       struct stat stb;
-      cnum fd = c_num(fdv);
+      cnum fd = c_num(fdv, self);
 
       if (fstat(fd, &stb) != 0)
         goto drop;
@@ -1620,7 +1650,7 @@ drop:
 static val setgroups_wrap(val list)
 {
   val self = lit("setgroups");
-  ucnum len = c_num(length(list));
+  ucnum len = c_num(length(list), self);
 
   if (convert(ucnum, convert(size_t, len)) != len) {
     uw_throwf(system_error_s, lit("~a: list too long"), self, nao);
@@ -1629,7 +1659,7 @@ static val setgroups_wrap(val list)
     int i = 0, res;
 
     for (; list; i++, list = cdr(list)) {
-      cnum gid = c_num(car(list));
+      cnum gid = c_num(car(list), self);
       arr[i] = gid;
     }
 
@@ -1669,7 +1699,8 @@ static val getresgid_wrap(void)
 
 static val setresuid_wrap(val r, val e, val s)
 {
-  if (setresuid(c_num(r), c_num(e), c_num(s)) != 0)
+  val self = lit("setresuid");
+  if (setresuid(c_num(r, self), c_num(e, self), c_num(s, self)) != 0)
     uw_throwf(system_error_s, lit("setresuid failed: ~d/~s"),
               num(errno), errno_to_str(errno), nao);
   return t;
@@ -1677,7 +1708,8 @@ static val setresuid_wrap(val r, val e, val s)
 
 static val setresgid_wrap(val r, val e, val s)
 {
-  if (setresuid(c_num(r), c_num(e), c_num(s)) != 0)
+  val self = lit("setresgid");
+  if (setresuid(c_num(r, self), c_num(e, self), c_num(s, self)) != 0)
     uw_throwf(system_error_s, lit("setresuid failed: ~d/~s"),
               num(errno), errno_to_str(errno), nao);
   return t;
@@ -1733,9 +1765,10 @@ static val getpwent_wrap(void)
 
 static val getpwuid_wrap(val uid)
 {
+  val self = lit("getpwuid");
   char buf[1024];
   struct passwd pw, *p;
-  int res = getpwuid_r(c_num(uid), &pw, buf, sizeof buf, &p);
+  int res = getpwuid_r(c_num(uid, self), &pw, buf, sizeof buf, &p);
 
   return (res == 0 && p != 0) ? make_pwstruct(&pw) : nil;
 }
@@ -1761,7 +1794,7 @@ static val getpwent_wrap(void)
 
 static val getpwuid_wrap(val uid)
 {
-  struct passwd *p = getpwuid(c_num(uid));
+  struct passwd *p = getpwuid(c_num(uid, self));
   return (p != 0) ? make_pwstruct(p) : nil;
 }
 
@@ -1826,9 +1859,10 @@ static val getgrent_wrap(void)
 
 static val getgrgid_wrap(val uid)
 {
+  val self = lit("getgrgid");
   char buf[1024];
   struct group gr, *g;
-  int res = getgrgid_r(c_num(uid), &gr, buf, sizeof buf, &g);
+  int res = getgrgid_r(c_num(uid, self), &gr, buf, sizeof buf, &g);
 
   return (res == 0 && g != 0) ? make_grstruct(&gr) : nil;
 }
@@ -1848,7 +1882,7 @@ static val getgrnam_wrap(val wname)
 
 static val getgrgid_wrap(val uid)
 {
-  struct group *g = getgrgid(c_num(uid));
+  struct group *g = getgrgid(c_num(uid, self));
   return (g != 0) ? make_grstruct(g) : nil;
 }
 
@@ -1997,9 +2031,10 @@ int stdio_fseek(FILE *f, val off, int whence)
 #if HAVE_FNMATCH
 static val fnmatch_wrap(val pattern, val string, val flags)
 {
+  val self = lit("fnmatch");
   const wchar_t *pattern_ws = c_str(pattern);
   const wchar_t *string_ws = c_str(string);
-  cnum c_flags = c_num(default_arg(flags, zero));
+  cnum c_flags = c_num(default_arg(flags, zero), self);
   char *pattern_u8 = utf8_dup_to(pattern_ws);
   char *string_u8 = utf8_dup_to(string_ws);
   int res = fnmatch(pattern_u8, string_u8, c_flags);
@@ -2057,10 +2092,11 @@ static struct cobj_ops cptr_dl_ops = cobj_ops_init(cobj_equal_handle_op,
 
 static val dlopen_wrap(val name, val flags)
 {
+  val self = lit("dlopen");
   const wchar_t *name_ws = if3(null_or_missing_p(name),
                                0, c_str(name));
   char *name_u8 = if3(name_ws != 0, utf8_dup_to(name_ws), 0);
-  cnum f = if3(missingp(flags), RTLD_LAZY, c_num(flags));
+  cnum f = if3(missingp(flags), RTLD_LAZY, c_num(flags, self));
   mem_t *ptr = coerce(mem_t *, (dlerror(), dlopen(name_u8, f)));
   free(name_u8);
   if (ptr == 0) {

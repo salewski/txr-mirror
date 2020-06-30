@@ -325,6 +325,7 @@ void cobj_destroy_free_op(val obj)
 
 static void mark_obj(val obj)
 {
+  val self = lit("gc");
   type_t t;
 
 tail_call:
@@ -397,7 +398,7 @@ tail_call:
     {
       val alloc_size = obj->v.vec[vec_alloc];
       val len = obj->v.vec[vec_length];
-      cnum i, fp = c_num(len);
+      cnum i, fp = c_num(len, self);
 
       mark_obj(alloc_size);
       mark_obj(len);
@@ -960,7 +961,8 @@ val gc_push(val obj, loc plist)
 
 static val gc_set_delta(val delta)
 {
-  opt_gc_delta = c_num(delta);
+  val self = lit("gc");
+  opt_gc_delta = c_num(delta, self);
   return nil;
 }
 

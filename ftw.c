@@ -52,6 +52,7 @@ static uw_frame_t *s_exit_point;
 static int ftw_callback(const char *c_path, const struct stat *c_sb,
                         int c_type, struct FTW *fb)
 {
+  val self = lit("ftw");
   int c_result = 1;
   uw_frame_t cont_guard;
 
@@ -72,7 +73,7 @@ static int ftw_callback(const char *c_path, const struct stat *c_sb,
     args_decl(args, max(ARGS_MIN, 5));
     args_add5(args, path, type, sb, level, base);
     result = generic_funcall(s_callback, args);
-    c_result = if3(integerp(result), c_num(result), 0);
+    c_result = if3(integerp(result), c_num(result, self), 0);
   }
 
   uw_unwind {
@@ -89,6 +90,8 @@ static int ftw_callback(const char *c_path, const struct stat *c_sb,
 
 val ftw_wrap(val dirpath, val fn, val flags_in, val nopenfd_in)
 {
+  val self = lit("ftw");
+
   if (s_callback) {
     uw_throwf(error_s, lit("ftw: cannot be re-entered from "
                            "ftw callback"), nao);
@@ -105,8 +108,8 @@ val ftw_wrap(val dirpath, val fn, val flags_in, val nopenfd_in)
     }
     return ret;
   } else {
-    int nopenfd = c_num(default_arg(nopenfd_in, num_fast(20)));
-    int flags = c_num(default_arg(flags_in, zero));
+    int nopenfd = c_num(default_arg(nopenfd_in, num_fast(20)), self);
+    int flags = c_num(default_arg(flags_in, zero), self);
     char *dirpath_u8 = utf8_dup_to(c_str(dirpath));
     int res = (s_callback = fn,
                nftw(dirpath_u8, ftw_callback, nopenfd, flags));

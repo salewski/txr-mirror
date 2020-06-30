@@ -185,9 +185,9 @@ INLINE val args_get_nozap(struct args *args, cnum *arg_index, val *list)
   return pop(list);
 }
 
-INLINE cnum args_count(struct args *args)
+INLINE cnum args_count(struct args *args, val self)
 {
-  return args->fill + c_num(length_list(args->list));
+  return args->fill + c_num(length_list(args->list), self);
 }
 
 val args_get_checked(val name, struct args *args, cnum *arg_index);

@@ -359,6 +359,7 @@ static ucnum generic_put_buf(val stream, mem_t *ptr, ucnum len, ucnum pos)
 
 static ucnum generic_fill_buf(val stream, mem_t *ptr, ucnum len, ucnum pos)
 {
+  val self = lit("fill-buf");
   struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
   ucnum i;
 
@@ -366,7 +367,7 @@ static ucnum generic_fill_buf(val stream, mem_t *ptr, ucnum len, ucnum pos)
     val byte = ops->get_byte(stream);
     if (!byte)
       break;
-    *ptr++ = c_num(byte);
+    *ptr++ = c_num(byte, self);
   }
 
   if (i > len)
@@ -525,8 +526,9 @@ static void stdio_stream_mark(val stream)
 
 val errno_to_string(val err)
 {
+  val self = lit("get-error-str");
   if (is_num(err))
-    return errno_to_str(c_num(err));
+    return errno_to_str(c_num(err, self));
   else if (!err)
     return lit("no error");
   else if (err == t)
@@ -939,8 +941,9 @@ static val stdio_close(val stream, val throw_on_error)
 #if HAVE_FTRUNCATE || HAVE_CHSIZE
 static val stdio_truncate(val stream, val len)
 {
+  val self = lit("truncate-stream");
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
-  cnum l = c_num(len);
+  cnum l = c_num(len, self);
 #if HAVE_FTRUNCATE
   typedef off_t trunc_off_t;
   int (*truncfun)(int, off_t) = ftruncate;
@@ -2221,6 +2224,7 @@ static val string_out_byte_flush(struct string_out *so, val stream)
 
 static val string_out_put_string(val stream, val str)
 {
+  val self = lit("put-string");
   struct string_out *so = coerce(struct string_out *, stream->co.handle);
 
   if (so->buf == 0)
@@ -2231,7 +2235,7 @@ static val string_out_put_string(val stream, val str)
 
   {
     const wchar_t *s = c_str(str);
-    size_t len = c_num(length_str(str));
+    size_t len = c_num(length_str(str), self);
     size_t old_size = so->size;
     size_t required_size = len + so->fill + 1;
 
@@ -2252,7 +2256,7 @@ static val string_out_put_string(val stream, val str)
     so->fill += len;
     return t;
 oflow:
-    uw_throw(error_s, lit("string output stream overflow"));
+    uw_throwf(error_s, lit("~a: string output stream overflow"), self, nao);
   }
 }
 
@@ -2985,7 +2989,7 @@ val unget_char(val ch, val stream_in)
 val unget_byte(val byte, val stream_in)
 {
   val self = lit("unget-byte");
-  cnum b = c_num(byte);
+  cnum b = c_num(byte, self);
   val stream = default_arg(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
@@ -3001,8 +3005,8 @@ val put_buf(val buf, val pos_in, val stream_in)
 {
   val self = lit("put-buf");
   val stream = default_arg(stream_in, std_output);
-  ucnum pos = c_unum(default_arg(pos_in, zero));
-  ucnum len = c_unum(length_buf(buf));
+  ucnum pos = c_unum(default_arg(pos_in, zero), self);
+  ucnum len = c_unum(length_buf(buf), self);
   mem_t *ptr = buf_get(buf, self);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
@@ -3014,8 +3018,8 @@ val fill_buf(val buf, val pos_in, val stream_in)
 {
   val self = lit("fill-buf");
   val stream = default_arg(stream_in, std_input);
-  ucnum pos = c_unum(default_arg(pos_in, zero));
-  ucnum len = c_unum(length_buf(buf));
+  ucnum pos = c_unum(default_arg(pos_in, zero), self);
+  ucnum len = c_unum(length_buf(buf), self);
   mem_t *ptr = buf_get(buf, self);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
@@ -3026,9 +3030,9 @@ val fill_buf_adjust(val buf, val pos_in, val stream_in)
 {
   val self = lit("fill-buf-adjust");
   val stream = default_arg(stream_in, std_input);
-  ucnum pos = c_unum(default_arg(pos_in, zero));
+  ucnum pos = c_unum(default_arg(pos_in, zero), self);
   val alloc_size = buf_alloc_size(buf);
-  ucnum len = c_unum(alloc_size);
+  ucnum len = c_unum(alloc_size, self);
   mem_t *ptr = buf_get(buf, self);
   val readpos;
   struct strm_ops *ops = coerce(struct strm_ops *,
@@ -3053,7 +3057,7 @@ val get_line_as_buf(val stream_in)
     val b = ops->get_byte(stream);
     if (b == nil || b == num('\n'))
       break;
-    bytes[count++] = c_num(b);
+    bytes[count++] = c_num(b, self);
 
     if (count == sizeof bytes) {
       buf_put_bytes(buf, length_buf(buf), bytes, count, self);
@@ -3249,7 +3253,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
                    or2(stream_in, make_string_output_stream()));
   val save_indent = get_indent(stream);
   val save_mode = nil;
-  val name = lit("format");
+  val self = lit("format");
 
   uw_simple_catch_begin;
 
@@ -3358,7 +3362,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
           digits = (digits * 10) + (ch - '0');
           if (digits > 999999)
             uw_throwf(assert_s, lit("~a: ridiculous precision or field"),
-                      name, nao);
+                      self, nao);
           continue;
         default:
   do_digits:
@@ -3391,15 +3395,15 @@ val formatv(val stream_in, val fmtstr, struct args *al)
         }
         break;
       case vf_star:
-        obj = args_get_checked(name, al, &arg_ix);
-        digits = c_num(obj);
+        obj = args_get_checked(self, al, &arg_ix);
+        digits = c_num(obj, self);
         goto do_digits;
         break;
       case vf_spec:
         state = vf_init;
         switch (ch) {
         case 'x': case 'X':
-          obj = args_get_checked(name, al, &arg_ix);
+          obj = args_get_checked(self, al, &arg_ix);
           typ = type(obj);
         hex:
           if (typ == BGNUM) {
@@ -3409,7 +3413,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
             mp_toradix_case(mp(obj), coerce(unsigned char *, pnum), 16, ch == 'x');
           } else {
             const char *fmt = ch == 'x' ? num_fmt->hex : num_fmt->HEX;
-            value = c_num(obj);
+            value = c_num(obj, self);
             if (value < 0) {
               num_buf[0] = '-';
               sprintf(num_buf + 1, fmt, -value);
@@ -3419,7 +3423,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
           }
           goto output_num;
         case 'o': case 'b':
-          obj = args_get_checked(name, al, &arg_ix);
+          obj = args_get_checked(self, al, &arg_ix);
           typ = type(obj);
         oct:
           if (typ == BGNUM) {
@@ -3429,10 +3433,10 @@ val formatv(val stream_in, val fmtstr, struct args *al)
               pnum = coerce(char *, chk_malloc(nchars + 1));
             mp_toradix(mp(obj), coerce(unsigned char *, pnum), rad);
           } else if (ch == 'o') {
-            cnum value = c_num(obj);
+            cnum value = c_num(obj, self);
             sprintf(num_buf, num_fmt->oct, value);
           } else {
-            cnum val = c_num(obj);
+            cnum val = c_num(obj, self);
             int s = (val < 0);
             int i = sizeof num_buf;
 
@@ -3454,7 +3458,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
           }
           goto output_num;
         case 'f': case 'e':
-          obj = args_get_checked(name, al, &arg_ix);
+          obj = args_get_checked(self, al, &arg_ix);
 
           {
             double n;
@@ -3467,7 +3471,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
               n = c_flo(obj, lit("format"));
               break;
             case NUM:
-              n = convert(double, c_num(obj));
+              n = convert(double, c_num(obj, self));
               break;
             default:
               uw_throwf(error_s, lit("format: ~~~a conversion requires "
@@ -3477,7 +3481,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
 
             if (!precision_p) {
               if (!dfl_digits)
-                dfl_digits = c_num(cdr(lookup_var(nil, print_flo_digits_s)));
+                dfl_digits = c_num(cdr(lookup_var(nil, print_flo_digits_s)), self);
               precision = dfl_digits;
             }
 
@@ -3523,16 +3527,16 @@ val formatv(val stream_in, val fmtstr, struct args *al)
             goto output_num;
           }
         case 'd':
-          obj = args_get_checked(name, al, &arg_ix);
+          obj = args_get_checked(self, al, &arg_ix);
           typ = type(obj);
           goto dec;
         case 'a': case 's':
-          obj = args_get_checked(name, al, &arg_ix);
+          obj = args_get_checked(self, al, &arg_ix);
           typ = type(obj);
 
           if (typ == NUM || typ == BGNUM) {
             if (!print_base)
-              print_base = c_num(cdr(lookup_var(nil, print_base_s)));
+              print_base = c_num(cdr(lookup_var(nil, print_base_s)), self);
             switch (print_base) {
             case 0:
             case 2:
@@ -3553,7 +3557,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
         dec:
           switch (typ) {
           case NUM:
-            value = c_num(obj);
+            value = c_num(obj, self);
             sprintf(num_buf, num_fmt->dec, value);
             goto output_num;
           case BGNUM:
@@ -3568,7 +3572,8 @@ val formatv(val stream_in, val fmtstr, struct args *al)
             if (!precision_p) {
               if (!dfl_precision)
                 dfl_precision = c_num(cdr(lookup_var(nil,
-                                                     print_flo_precision_s)));
+                                                     print_flo_precision_s)),
+                                      self);
               precision = dfl_precision;
             }
 
@@ -3622,7 +3627,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
           continue;
         case 'p':
           {
-            val ptr = args_get_checked(name, al, &arg_ix);
+            val ptr = args_get_checked(self, al, &arg_ix);
             value = coerce(cnum, ptr);
             sprintf(num_buf, num_fmt->hex, value);
           }
@@ -3656,7 +3661,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
     }
 
     if (args_more(al, arg_ix))
-      uw_throwf(assert_s, lit("~a: excess arguments"), name, nao);
+      uw_throwf(assert_s, lit("~a: excess arguments"), self, nao);
   }
 
 
@@ -3814,7 +3819,7 @@ val put_byte(val byte, val stream_in)
   val stream = default_arg(stream_in, std_output);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
-  cnum b = c_num(byte);
+  cnum b = c_num(byte, self);
 
   if (b < 0 || b > 255)
     uw_throwf(file_error_s, lit("~a: stream ~s: byte value ~a out of range"),
@@ -3900,7 +3905,7 @@ val test_set_indent_mode(val stream, val compare, val mode)
                                cobj_handle(self, stream, stream_s));
   val oldval = num_fast(s->indent_mode);
   if (oldval == compare)
-    s->indent_mode = convert(enum indent_mode, c_num(mode));
+    s->indent_mode = convert(enum indent_mode, c_num(mode, self));
   return oldval;
 }
 
@@ -3911,7 +3916,7 @@ val test_neq_set_indent_mode(val stream, val compare, val mode)
                                cobj_handle(self, stream, stream_s));
   val oldval = num_fast(s->indent_mode);
   if (oldval != compare)
-    s->indent_mode = convert(enum indent_mode, c_num(mode));
+    s->indent_mode = convert(enum indent_mode, c_num(mode, self));
   return oldval;
 }
 
@@ -3921,7 +3926,7 @@ val set_indent_mode(val stream, val mode)
   struct strm_base *s = coerce(struct strm_base *,
                                cobj_handle(self, stream, stream_s));
   val oldval = num_fast(s->indent_mode);
-  s->indent_mode = convert(enum indent_mode, c_num(mode));
+  s->indent_mode = convert(enum indent_mode, c_num(mode, self));
   return oldval;
 }
 
@@ -3939,7 +3944,7 @@ val set_indent(val stream, val indent)
   struct strm_base *s = coerce(struct strm_base *,
                                cobj_handle(self, stream, stream_s));
   val oldval = num(s->indent_chars);
-  s->indent_chars = c_num(indent);
+  s->indent_chars = c_num(indent, self);
   if (s->indent_chars < 0)
     s->indent_chars = 0;
   return oldval;
@@ -3952,7 +3957,7 @@ val inc_indent(val stream, val delta)
                                cobj_handle(self, stream, stream_s));
   val oldval = num(s->indent_chars);
   val col = num(s->column);
-  s->indent_chars = c_num(plus(delta, col));
+  s->indent_chars = c_num(plus(delta, col), self);
   if (s->indent_chars < 0)
     s->indent_chars = 0;
   return oldval;
@@ -3996,7 +4001,7 @@ val set_max_length(val stream, val length)
   struct strm_base *s = coerce(struct strm_base *,
                                cobj_handle(self, stream, stream_s));
   cnum old_max = s->max_length;
-  s->max_length = c_num(length);
+  s->max_length = c_num(length, self);
   return num(old_max);
 }
 
@@ -4006,7 +4011,7 @@ val set_max_depth(val stream, val depth)
   struct strm_base *s = coerce(struct strm_base *,
                                cobj_handle(self, stream, stream_s));
   cnum old_max = s->max_depth;
-  s->max_depth = c_num(depth);
+  s->max_depth = c_num(depth, self);
   return num(old_max);
 }
 
@@ -4087,12 +4092,13 @@ val open_file(val path, val mode_str)
 
 val open_fileno(val fd, val mode_str)
 {
+  val self = lit("open-fileno");
   struct stdio_mode m, m_r = stdio_mode_init_r;
-  FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str, m_r))));
+  FILE *f = (errno = 0, w_fdopen(c_num(fd, self), c_str(normalize_mode(&m, mode_str, m_r))));
 
   if (!f) {
     int eno = errno;
-    close(c_num(fd));
+    close(c_num(fd, self));
     uw_throwf(errno_to_file_error(eno), lit("error opening descriptor ~a: ~d/~s"),
               fd, num(eno), errno_to_str(eno), nao);
   }
@@ -4139,9 +4145,9 @@ static void fds_init(struct save_fds *fds)
   fds->in = fds->out = fds->err = -1;
 }
 
-static int fds_subst(val stream, int fd_std)
+static int fds_subst(val stream, int fd_std, val self)
 {
-  int fd_orig = c_num(stream_fd(stream));
+  int fd_orig = c_num(stream_fd(stream), self);
 
   if (fd_orig == fd_std)
     return -1;
@@ -4159,16 +4165,16 @@ static int fds_subst(val stream, int fd_std)
   }
 }
 
-static void fds_swizzle(struct save_fds *fds, int flags)
+static void fds_swizzle(struct save_fds *fds, int flags, val self)
 {
   if ((flags & FDS_IN) != 0)
-    fds->in = fds_subst(std_input, STDIN_FILENO);
+    fds->in = fds_subst(std_input, STDIN_FILENO, self);
 
   if ((flags & FDS_OUT) != 0)
-    fds->out = fds_subst(std_output, STDOUT_FILENO);
+    fds->out = fds_subst(std_output, STDOUT_FILENO, self);
 
   if ((flags & FDS_ERR) != 0)
-    fds->err = fds_subst(std_error, STDERR_FILENO);
+    fds->err = fds_subst(std_error, STDERR_FILENO, self);
 }
 
 static void fds_restore(struct save_fds *fds)
@@ -4192,6 +4198,7 @@ static void fds_restore(struct save_fds *fds)
 
 val open_command(val path, val mode_str)
 {
+  val self = lit("open-command");
   struct stdio_mode m, m_r = stdio_mode_init_r;
   val mode = normalize_mode_no_bin(&m, mode_str, m_r);
   int input = m.read != 0;
@@ -4202,14 +4209,14 @@ val open_command(val path, val mode_str)
 
   uw_simple_catch_begin;
 
-  fds_swizzle(&sfds, (input ? FDS_IN : FDS_OUT) | FDS_ERR);
+  fds_swizzle(&sfds, (input ? FDS_IN : FDS_OUT) | FDS_ERR, self);
 
   f = w_popen(c_str(path), c_str(mode));
 
   if (!f) {
     int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("error opening pipe ~s: ~d/~s"),
-              path, num(eno), errno_to_str(eno), nao);
+    uw_throwf(errno_to_file_error(eno), lit("~a: error opening pipe ~s: ~d/~s"),
+              self, path, num(eno), errno_to_str(eno), nao);
   }
 
   uw_unwind {
@@ -4238,7 +4245,7 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
 
   args = default_null_arg(args);
   fun = default_null_arg(fun);
-  nargs = c_num(length(args)) + 1;
+  nargs = c_num(length(args), self) + 1;
 
   if (!name && !fun)
     uw_throwf(error_s, lit("~a: program name and/or function required"), self, nao);
@@ -4247,7 +4254,7 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
 
   uw_simple_catch_begin;
 
-  fds_swizzle(&sfds, (input ? FDS_IN : FDS_OUT) | FDS_ERR);
+  fds_swizzle(&sfds, (input ? FDS_IN : FDS_OUT) | FDS_ERR, self);
 
   if (nargs < 0 || nargs == INT_MAX)
     uw_throwf(error_s, lit("~a: argument list overflow"), self, nao);
@@ -4512,7 +4519,7 @@ static val run(val command, val args)
   struct save_fds sfds;
 
   args = default_null_arg(args);
-  nargs = c_num(length(args)) + 1;
+  nargs = c_num(length(args), self) + 1;
 
   fds_init(&sfds);
 
@@ -4566,7 +4573,7 @@ static val run(val name, val args)
   val ret = nil;
 
   args = default_null_arg(args);
-  nargs = c_num(length(args)) + 1;
+  nargs = c_num(length(args), self) + 1;
 
   if (nargs < 0 || nargs == INT_MAX)
     uw_throwf(error_s, lit("~a: argument list overflow"), self, nao);
@@ -4583,7 +4590,7 @@ static val run(val name, val args)
 
   uw_simple_catch_begin;
 
-  fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR);
+  fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR, self);
 
   pid = fork();
 
@@ -4756,8 +4763,9 @@ static void detect_path_separators(void)
 
 val base_name(val path, val suff)
 {
+  val self = lit("base-name");
   const wchar_t *wpath = c_str(path);
-  const wchar_t *end = wpath + c_num(length_str(path));
+  const wchar_t *end = wpath + c_num(length_str(path), self);
   const wchar_t *rsep;
   const wchar_t *psc = wref(coerce(const wchar_t *, path_sep_chars));
 
@@ -4778,7 +4786,7 @@ val base_name(val path, val suff)
 
   {
     val base = mkustring(num_fast(end - rsep));
-    init_str(base, rsep);
+    init_str(base, rsep, self);
     return if3(!null_or_missing_p(suff) && ends_with(suff, base, nil, nil) &&
                neql(length(suff), length(base)),
                sub(base, zero, neg(length(suff))),
@@ -4788,8 +4796,9 @@ val base_name(val path, val suff)
 
 val dir_name(val path)
 {
+  val self = lit("dir-name");
   const wchar_t *wpath = c_str(path);
-  const wchar_t *rsep = wpath + c_num(length_str(path));
+  const wchar_t *rsep = wpath + c_num(length_str(path), self);
   const wchar_t *psc = wref(coerce(const wchar_t *, path_sep_chars));
 
   if (rsep == wpath)
@@ -4817,7 +4826,7 @@ val dir_name(val path)
 
   {
     val base = mkustring(num_fast(rsep - wpath - 1));
-    return init_str(base, wpath);
+    return init_str(base, wpath, self);
   }
 }
 

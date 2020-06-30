@@ -128,7 +128,7 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
   {
     mem_t *code = buf_get(bytecode, self);
     val dvl = length_vec(datavec);
-    cnum stsz = c_num(length_vec(symvec));
+    cnum stsz = c_num(length_vec(symvec), self);
     loc data_loc = if3(dvl != zero, vecref_l(datavec, zero), nulloc);
     struct vm_desc *vd = coerce(struct vm_desc *, chk_malloc(sizeof *vd));
     struct vm_desc *vtail = vmd_list.prev, *vnull = vtail->lnk.next;
@@ -234,6 +234,7 @@ static struct vm_closure *vm_closure_struct(val self, val obj)
 
 static val vm_make_closure(struct vm *vm, int frsz)
 {
+  val self = lit("vm");
   size_t dspl_sz = vm->nlvl * sizeof (struct vm_env);
   struct vm_closure *vc = coerce(struct vm_closure *,
                                  chk_malloc(offsetof (struct vm_closure, dspl)
@@ -266,7 +267,7 @@ static val vm_make_closure(struct vm *vm, int frsz)
     case NUM:
       {
         val heap_vec = vector(vec, nil);
-        size_t size = sizeof *cdi->mem * c_num(vec);
+        size_t size = sizeof *cdi->mem * c_num(vec, self);
         cdi->vec = heap_vec;
         cdi->mem = heap_vec->v.vec;
         memcpy(cdi->mem, mem, size);
@@ -750,8 +751,9 @@ NOINLINE static void vm_ifql(struct vm *vm, vm_word_t insn)
 
 NOINLINE static void vm_swtch(struct vm *vm, vm_word_t insn)
 {
+  val self = lit("vm");
   unsigned tblsz = vm_insn_extra(insn);
-  ucnum idx = c_unum(vm_get(vm->dspl, vm_insn_operand(insn)));
+  ucnum idx = c_unum(vm_get(vm->dspl, vm_insn_operand(insn)), self);
 
   if (idx < tblsz) {
     vm_word_t tgt = vm->code[vm->ip + idx / 2];

@@ -47,7 +47,8 @@
 
 static val sha256_ctx_s, md5_ctx_s;
 
-static void sha256_stream_impl(val stream, val nbytes, unsigned char *hash)
+static void sha256_stream_impl(val stream, val nbytes, unsigned char *hash,
+                               val self)
 {
   SHA256_t s256;
   val buf = iobuf_get();
@@ -57,7 +58,7 @@ static void sha256_stream_impl(val stream, val nbytes, unsigned char *hash)
   if (null_or_missing_p(nbytes)) {
     for (;;) {
       val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read);
+      cnum rd = c_num(read, self);
 
       if (!rd)
         break;
@@ -67,7 +68,7 @@ static void sha256_stream_impl(val stream, val nbytes, unsigned char *hash)
   } else {
     while (ge(nbytes, bfsz)) {
       val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read);
+      cnum rd = c_num(read, self);
 
       if (zerop(read))
         break;
@@ -80,7 +81,7 @@ static void sha256_stream_impl(val stream, val nbytes, unsigned char *hash)
 
     {
       val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read);
+      cnum rd = c_num(read, self);
       if (rd)
         SHA256_update(&s256, buf->b.data, rd);
     }
@@ -95,7 +96,7 @@ static val chksum_ensure_buf(val self, val buf_in,
                              val hash_name)
 {
   if (null_or_missing_p(buf_in)) {
-    *phash = chk_malloc(c_unum(len));
+    *phash = chk_malloc(c_unum(len, self));
     return make_borrowed_buf(len, *phash);
   } else {
     *phash = buf_get(buf_in, self);
@@ -112,7 +113,7 @@ val sha256_stream(val stream, val nbytes, val buf_in)
   unsigned char *hash;
   val buf = chksum_ensure_buf(self, buf_in, num_fast(SHA256_DIGEST_LENGTH),
                               &hash, lit("SHA-256"));
-  sha256_stream_impl(stream, nbytes, hash);
+  sha256_stream_impl(stream, nbytes, hash, self);
   return buf;
 }
 
@@ -128,11 +129,11 @@ static void sha256_szmax_upd(SHA256_t *ps256, mem_t *data, ucnum len)
     SHA256_update(ps256, data, len);
 }
 
-static void sha256_buf(val buf, unsigned char *hash)
+static void sha256_buf(val buf, unsigned char *hash, val self)
 {
   SHA256_t s256;
   SHA256_init(&s256);
-  sha256_szmax_upd(&s256, buf->b.data, c_unum(buf->b.len));
+  sha256_szmax_upd(&s256, buf->b.data, c_unum(buf->b.len, self));
   SHA256_final(&s256, hash);
 }
 
@@ -160,7 +161,7 @@ val sha256(val obj, val buf_in)
     sha256_str(obj, hash);
     return buf;
   case BUF:
-    sha256_buf(obj, hash);
+    sha256_buf(obj, hash, self);
     return buf;
   default:
     uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
@@ -204,14 +205,14 @@ val sha256_hash(val ctx, val obj)
     }
     break;
   case BUF:
-    sha256_szmax_upd(ps256, obj->b.data, c_unum(obj->b.len));
+    sha256_szmax_upd(ps256, obj->b.data, c_unum(obj->b.len, self));
     break;
   case CHR:
     utf8_encode(c_chr(obj), sha256_utf8_byte_callback, coerce(mem_t *, ps256));
     break;
   case NUM:
     {
-      cnum n = c_num(obj);
+      cnum n = c_num(obj, self);
       unsigned char uc = n;
       if (n < 0 || n > 255)
         uw_throwf(error_s, lit("~a: byte value ~s out of range"),
@@ -242,6 +243,7 @@ val sha256_end(val ctx, val buf_in)
 
 val crc32_stream(val stream, val nbytes)
 {
+  val self = lit("crc32-stream");
   u32_t crc = 0;
   val buf = iobuf_get();
   val bfsz = length_buf(buf);
@@ -249,7 +251,7 @@ val crc32_stream(val stream, val nbytes)
   if (null_or_missing_p(nbytes)) {
     for (;;) {
       val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read);
+      cnum rd = c_num(read, self);
 
       if (!rd)
         break;
@@ -259,7 +261,7 @@ val crc32_stream(val stream, val nbytes)
   } else {
     while (ge(nbytes, bfsz)) {
       val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read);
+      cnum rd = c_num(read, self);
 
       if (zerop(read))
         break;
@@ -272,7 +274,7 @@ val crc32_stream(val stream, val nbytes)
 
     {
       val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read);
+      cnum rd = c_num(read, self);
       if (rd)
         crc = crc32_cont(buf->b.data, rd, crc);
     }
@@ -282,9 +284,9 @@ val crc32_stream(val stream, val nbytes)
   return unum(crc);
 }
 
-static val crc32_buf(val buf)
+static val crc32_buf(val buf, val self)
 {
-  ucnum len = c_unum(buf->b.len);
+  ucnum len = c_unum(buf->b.len, self);
   mem_t *data = buf->b.data;
   const size_t szmax = convert(size_t, -1) / 4 + 1;
   u32_t crc = 0;
@@ -318,14 +320,15 @@ val crc32(val obj)
   case LIT:
     return crc32_str(obj);
   case BUF:
-    return crc32_buf(obj);
+    return crc32_buf(obj, self);
   default:
     uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
               self, obj, nao);
   }
 }
 
-static void md5_stream_impl(val stream, val nbytes, unsigned char *hash)
+static void md5_stream_impl(val stream, val nbytes, unsigned char *hash,
+                            val self)
 {
   MD5_t md5;
   val buf = iobuf_get();
@@ -335,7 +338,7 @@ static void md5_stream_impl(val stream, val nbytes, unsigned char *hash)
   if (null_or_missing_p(nbytes)) {
     for (;;) {
       val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read);
+      cnum rd = c_num(read, self);
 
       if (!rd)
         break;
@@ -345,7 +348,7 @@ static void md5_stream_impl(val stream, val nbytes, unsigned char *hash)
   } else {
     while (ge(nbytes, bfsz)) {
       val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read);
+      cnum rd = c_num(read, self);
 
       if (zerop(read))
         break;
@@ -358,7 +361,7 @@ static void md5_stream_impl(val stream, val nbytes, unsigned char *hash)
 
     {
       val read = fill_buf(buf, zero, stream);
-      cnum rd = c_num(read);
+      cnum rd = c_num(read, self);
       if (rd)
         MD5_update(&md5, buf->b.data, rd);
     }
@@ -374,7 +377,7 @@ val md5_stream(val stream, val nbytes, val buf_in)
   unsigned char *hash;
   val buf = chksum_ensure_buf(self, buf_in, num_fast(MD5_DIGEST_LENGTH),
                               &hash, lit("MD5"));
-  md5_stream_impl(stream, nbytes, hash);
+  md5_stream_impl(stream, nbytes, hash, self);
   return buf;
 }
 
@@ -390,11 +393,11 @@ static void md5_szmax_upd(MD5_t *pmd5, mem_t *data, ucnum len)
     MD5_update(pmd5, data, len);
 }
 
-static void md5_buf(val buf, unsigned char *hash)
+static void md5_buf(val buf, unsigned char *hash, val self)
 {
   MD5_t md5;
   MD5_init(&md5);
-  md5_szmax_upd(&md5, buf->b.data, c_unum(buf->b.len));
+  md5_szmax_upd(&md5, buf->b.data, c_unum(buf->b.len, self));
   MD5_final(&md5, hash);
 }
 
@@ -422,7 +425,7 @@ val md5(val obj, val buf_in)
     md5_str(obj, hash);
     return buf;
   case BUF:
-    md5_buf(obj, hash);
+    md5_buf(obj, hash, self);
     return buf;
   default:
     uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
@@ -466,14 +469,14 @@ val md5_hash(val ctx, val obj)
     }
     break;
   case BUF:
-    md5_szmax_upd(pmd5, obj->b.data, c_unum(obj->b.len));
+    md5_szmax_upd(pmd5, obj->b.data, c_unum(obj->b.len, self));
     break;
   case CHR:
     utf8_encode(c_chr(obj), md5_utf8_byte_callback, coerce(mem_t *, pmd5));
     break;
   case NUM:
     {
-      cnum n = c_num(obj);
+      cnum n = c_num(obj, self);
       unsigned char uc = n;
       if (n < 0 || n > 255)
         uw_throwf(error_s, lit("~a: byte value ~s out of range"),

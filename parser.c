@@ -161,12 +161,13 @@ void parser_reset(parser_t *p)
 
 val parser(val stream, val name, val lineno)
 {
+  val self = lit("parser");
   parser_t *p = coerce(parser_t *, chk_malloc(sizeof *p));
   val parser;
   parser_common_init(p);
   parser = cobj(coerce(mem_t *, p), parser_s, &parser_ops);
   p->parser = parser;
-  p->lineno = c_num(default_arg(lineno, one));
+  p->lineno = c_num(default_arg(lineno, one), self);
   p->name = name;
   p->stream = stream;
 
@@ -199,7 +200,7 @@ val parser_set_lineno(val self, val stream, val lineno)
 {
   val parser = ensure_parser(stream, nil);
   parser_t *pi = parser_get_impl(self, parser);
-  pi->lineno = c_num(lineno);
+  pi->lineno = c_num(lineno, self);
   return stream;
 }
 
@@ -264,6 +265,7 @@ static val patch_ref(parser_t *p, val obj)
 
 static void circ_backpatch(parser_t *p, struct circ_stack *up, val obj)
 {
+  val self = lit("parser");
   struct circ_stack cs = { up, obj };
 
   if (!parser_callgraph_circ_check(up, obj))
@@ -297,7 +299,7 @@ tail:
   case VEC:
     {
       cnum i;
-      cnum l = c_num(length_vec(obj));
+      cnum l = c_num(length_vec(obj), self);
 
       for (i = 0; i < l; i++) {
         val v = obj->v.vec[i];
@@ -647,7 +649,7 @@ static val lisp_parse_impl(val self, val interactive, val rlcp_p, val source_in,
   class_check (self, error_stream, stream_s);
 
   if (lineno && !missingp(lineno))
-    pi->lineno = c_num(lineno);
+    pi->lineno = c_num(lineno, self);
 
   env_vbind(dyn_env, stderr_s, error_stream);
 
@@ -834,6 +836,7 @@ val txr_parse(val source_in, val error_stream,
 
 static void report_security_problem(val name)
 {
+  val self = lit("listener");
   static int umask_warned;
 
   format(std_output,
@@ -843,7 +846,7 @@ static void report_security_problem(val name)
   if (!umask_warned++)
   {
     val um = umask_wrap(colon_k);
-    if ((c_num(um) & 022) != 022) {
+    if ((c_num(um, self) & 022) != 022) {
       format(std_output,
              lit("** possible reason: your umask has an insecure value: ~,03o\n"),
              um, nao);
@@ -1405,12 +1408,13 @@ static void hist_save(lino_t *ls, val in_stream, val out_stream,
                       val histfile, const wchar_t *histfile_w,
                       val hist_len_var)
 {
+  val self = lit("listener");
   if (histfile_w && lino_have_new_lines(ls)) {
     val histfile_tmp = scat2(histfile, lit(".tmp"));
     const wchar_t *histfile_tmp_w = c_str(histfile_tmp);
     lino_t *ltmp = lino_make(coerce(mem_t *, in_stream),
                              coerce(mem_t *, out_stream));
-    lino_hist_set_max_len(ltmp, c_num(cdr(hist_len_var)));
+    lino_hist_set_max_len(ltmp, c_num(cdr(hist_len_var), self));
     lino_hist_load(ltmp, histfile_w);
     lino_hist_save(ltmp, histfile_tmp_w, 0);
     if (lino_hist_save(ls, histfile_tmp_w, 1) == 0)
@@ -1424,6 +1428,7 @@ static void hist_save(lino_t *ls, val in_stream, val out_stream,
 
 val repl(val bindings, val in_stream, val out_stream, val env)
 {
+  val self = lit("listener");
   lino_t *ls = if3(repl_level++,
                    lino_ctx,
                    lino_ctx = lino_make(coerce(mem_t *, in_stream),
@@ -1472,7 +1477,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   if (rcfile)
     load_rcfile(rcfile);
 
-  lino_hist_set_max_len(ls, c_num(cdr(hist_len_var)));
+  lino_hist_set_max_len(ls, c_num(cdr(hist_len_var), self));
 
   if (histfile_w) {
     if (lino_hist_load(ls, histfile_w) == 0 &&
@@ -1492,7 +1497,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
     val var_sym = intern(var_name, user_package);
     uw_frame_t uw_handler;
 
-    lino_hist_set_max_len(ls, c_num(cdr(hist_len_var)));
+    lino_hist_set_max_len(ls, c_num(cdr(hist_len_var), self));
     lino_set_multiline(ls, cdr(multi_line_var) != nil);
     lino_set_selinclusive(ls, cdr(sel_inclusive_var) != nil);
     reg_varl(counter_sym, counter);
@@ -1650,8 +1655,9 @@ static val circref(val n)
 
 static int lino_fileno(mem_t *stream_in)
 {
+  val self = lit("listener");
   val stream = coerce(val, stream_in);
-  return c_num(stream_fd(stream));
+  return c_num(stream_fd(stream), self);
 }
 
 static int lino_puts(mem_t *stream_in, const wchar_t *str_in)
@@ -1678,6 +1684,7 @@ static int lino_puts_file(mem_t *stream_in, const wchar_t *str_in)
 
 static wint_t lino_getch(mem_t *stream_in)
 {
+  val self = lit("listener");
   wint_t ret = WEOF;
 
   val stream, ch;
@@ -1687,7 +1694,7 @@ static wint_t lino_getch(mem_t *stream_in)
   stream = coerce(val, stream_in);
   ch = get_char(stream);
 
-  ret = if3(ch, (wint_t) c_num(ch), WEOF);
+  ret = if3(ch, (wint_t) c_num(ch, self), WEOF);
 
   uw_catch (sy, va) {
     (void) sy;
@@ -1703,6 +1710,7 @@ static wint_t lino_getch(mem_t *stream_in)
 
 static wchar_t *lino_getl(mem_t *stream_in, wchar_t *buf, size_t nchar)
 {
+  val self = lit("listener");
   wchar_t *ptr = buf;
   val stream = coerce(val, stream_in);
 
@@ -1713,7 +1721,7 @@ static wchar_t *lino_getl(mem_t *stream_in, wchar_t *buf, size_t nchar)
     val ch = get_char(stream);
     if (!ch)
       break;
-    if ((*ptr++ = c_num(ch)) == '\n')
+    if ((*ptr++ = c_num(ch, self)) == '\n')
       break;
   }
 
@@ -1723,6 +1731,7 @@ static wchar_t *lino_getl(mem_t *stream_in, wchar_t *buf, size_t nchar)
 
 static wchar_t *lino_gets(mem_t *stream_in, wchar_t *buf, size_t nchar)
 {
+  val self = lit("listener");
   wchar_t *ptr = buf;
   val stream = coerce(val, stream_in);
 
@@ -1733,7 +1742,7 @@ static wchar_t *lino_gets(mem_t *stream_in, wchar_t *buf, size_t nchar)
     val ch = get_char(stream);
     if (!ch)
       break;
-    *ptr++ = c_num(ch);
+    *ptr++ = c_num(ch, self);
   }
 
   *ptr++ = 0;
@@ -1753,6 +1762,7 @@ static const wchli_t *lino_mode_str[] = {
 
 static mem_t *lino_open(const wchar_t *name_in, lino_file_mode_t mode_in)
 {
+  val self = lit("listener");
   val name = string(name_in);
   val mode = static_str(lino_mode_str[mode_in]);
   val ret = 0;
@@ -1760,7 +1770,7 @@ static mem_t *lino_open(const wchar_t *name_in, lino_file_mode_t mode_in)
   ret = open_file(name, mode);
 #if HAVE_CHMOD
   if (mode_in == lino_overwrite || mode_in == lino_append)
-    (void) fchmod(c_num(stream_fd(ret)), S_IRUSR | S_IWUSR);
+    (void) fchmod(c_num(stream_fd(ret), self), S_IRUSR | S_IWUSR);
 #endif
   ignerr_end;
   return coerce(mem_t *, ret);

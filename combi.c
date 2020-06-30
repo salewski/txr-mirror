@@ -38,14 +38,15 @@
 
 static val perm_while_fun(val state)
 {
+  val self = lit("perm");
   val p = vecref(state, zero);
-  cnum k = c_num(vecref(state, one));
+  cnum k = c_num(vecref(state, one), self);
   val c = vecref(state, two);
-  cnum n = c_num(length(p));
+  cnum n = c_num(length(p), self);
   cnum i, j;
 
   for (i = k - 1, j = n - k + 1; i >= 0; i--, j++) {
-    cnum ci = c_num(c->v.vec[i]) + 1;
+    cnum ci = c_num(c->v.vec[i], self) + 1;
 
     if (ci >= j) {
       if (i == 0)
@@ -78,16 +79,17 @@ static cnum perm_index(cnum n, val b)
 static void perm_gen_fun_common(val state, val out,
                                 void (*fill)(val out, cnum i, val v))
 {
+  val self = lit("perm");
   val p = vecref(state, zero);
   val kk = vecref(state, one);
   val c = vecref(state, two);
   val nn = length(p);
   val b = vector(nn, nil);
-  cnum k = c_num(kk);
+  cnum k = c_num(kk, self);
   cnum i;
 
   for (i = 0; i < k; i++) {
-    cnum ci = c_num(c->v.vec[i]);
+    cnum ci = c_num(c->v.vec[i], self);
     cnum j = perm_index(ci, b);
     fill(out, i, p->v.vec[j]);
     b->v.vec[j] = t;
@@ -184,10 +186,11 @@ static void perm_str_gen_fill(val out, cnum i, val v)
 
 static val perm_str_gen_fun(val state)
 {
+  val self = lit("perm");
   val kk = vecref(state, one);
   val out = mkustring(kk);
   perm_gen_fun_common(state, out, perm_str_gen_fill);
-  out->st.str[c_num(kk)] = 0;
+  out->st.str[c_num(kk, self)] = 0;
   return out;
 }
 
@@ -243,10 +246,11 @@ static val rperm_while_fun(val env)
 
 static val rperm_gen_fun(val env)
 {
+  val self = lit("rperm");
   cons_bind (list, vec, env);
   list_collect_decl(out, ptail);
   cnum i;
-  cnum len = c_num(length_vec(vec));
+  cnum len = c_num(length_vec(vec), self);
 
   for (i = 0; i < len; i++)
     ptail = list_collect(ptail, car(vec->v.vec[i]));
@@ -392,8 +396,9 @@ static val comb_list(val list, val k)
 
 static val comb_vec_gen_fun(val state)
 {
+  val self = lit("comb");
   val nn = length_list(state);
-  cnum i, n = c_num(nn);
+  cnum i, n = c_num(nn, self);
   val iter, out = vector(nn, nil);
 
   for (iter = state, i = n - 1; i >= 0; iter = cdr(iter), i--)
@@ -412,8 +417,9 @@ static val comb_vec(val vec, val k)
 
 static val comb_str_gen_fun(val state)
 {
+  val self = lit("comb");
   val nn = length_list(state);
-  cnum i, n = c_num(nn);
+  cnum i, n = c_num(nn, self);
   val iter, out = mkustring(nn);
 
   out->st.str[n] = 0;
@@ -549,8 +555,9 @@ static val rcomb_list(val list, val k)
 
 static val rcomb_vec_gen_fun(val state)
 {
+  val self = lit("rcomb");
   val nn = length_list(state);
-  cnum i, n = c_num(nn);
+  cnum i, n = c_num(nn, self);
   val iter, out = vector(nn, nil);
 
   for (iter = state, i = n - 1; i >= 0; iter = cdr(iter), i--)
@@ -569,8 +576,9 @@ static val rcomb_vec(val vec, val k)
 
 static val rcomb_str_gen_fun(val state)
 {
+  val self = lit("rcomb");
   val nn = length_list(state);
-  cnum i, n = c_num(nn);
+  cnum i, n = c_num(nn, self);
   val iter, out = mkustring(nn);
 
   out->st.str[n] = 0;

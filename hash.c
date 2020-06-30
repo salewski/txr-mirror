@@ -200,6 +200,8 @@ static ucnum hash_double(double n)
 
 ucnum equal_hash(val obj, int *count, ucnum seed)
 {
+  val self = lit("hash-equal");
+
   if ((*count)-- <= 0)
     return 0;
 
@@ -216,7 +218,7 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
   case CHR:
     return c_chr(obj);
   case NUM:
-    return c_num(obj);
+    return c_num(obj, self);
   case SYM:
   case PKG:
   case ENV:
@@ -235,7 +237,7 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
     {
       val length = obj->v.vec[vec_length];
       ucnum h = equal_hash(obj->v.vec[vec_length], count, seed);
-      cnum i, len = c_num(length);
+      cnum i, len = c_num(length, self);
       ucnum lseed;
 
       for (i = 0, lseed = seed; i < len; i++, lseed += seed) {
@@ -269,7 +271,7 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
     return equal_hash(obj->rn.from, count, seed)
             + equal_hash(obj->rn.to, count, seed + (RNG << 8));
   case BUF:
-    return hash_buf(obj->b.data, c_unum(obj->b.len), seed, count);
+    return hash_buf(obj->b.data, c_unum(obj->b.len, self), seed, count);
   case TNOD:
     return equal_hash(obj->tn.left, count, (seed + TNOD))
             + equal_hash(obj->tn.right, count, seed + (TNOD << 8))
@@ -281,6 +283,8 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
 
 static ucnum eql_hash(val obj, int *count)
 {
+  val self = lit("hash-eql");
+
   if ((*count)-- <= 0)
     return 0;
 
@@ -306,7 +310,7 @@ static ucnum eql_hash(val obj, int *count)
   case TAG_CHR:
     return c_chr(obj);
   case TAG_NUM:
-    return c_num(obj);
+    return c_num(obj, self);
   case TAG_LIT:
     switch (CHAR_BIT * sizeof (mem_t *)) {
     case 32:
@@ -321,6 +325,8 @@ static ucnum eql_hash(val obj, int *count)
 
 static ucnum eq_hash(val obj)
 {
+  val self = lit("hash");
+
   switch (tag(obj)) {
   case TAG_PTR:
     switch (CHAR_BIT * sizeof (mem_t *)) {
@@ -332,7 +338,7 @@ static ucnum eq_hash(val obj)
   case TAG_CHR:
     return c_chr(obj);
   case TAG_NUM:
-    return c_num(obj);
+    return c_num(obj, self);
   case TAG_LIT:
     switch (CHAR_BIT * sizeof (mem_t *)) {
     case 32:
@@ -761,6 +767,8 @@ static_def(struct hash_ops hash_equal_ops = hash_ops_init(equal_hash, equal,
 static val do_make_hash(val weak_keys, val weak_vals,
                         hash_type_t type, val seed)
 {
+  val self = lit("make-hash");
+
   if (weak_keys && type == hash_type_equal) {
     uw_throwf(error_s,
               lit("make-hash: bad combination :weak-keys with :equal-based"),
@@ -774,9 +782,9 @@ static val do_make_hash(val weak_keys, val weak_vals,
 
     h->seed = convert(u32_t, c_unum(default_arg(seed,
                                                 if3(hash_seed_s,
-                                                    hash_seed, zero))));
+                                                    hash_seed, zero)), self));
     h->flags = convert(hash_flags_t, flags);
-    h->modulus = c_num(mod);
+    h->modulus = c_num(mod, self);
     h->count = 0;
     h->table = table;
     h->userdata = nil;
@@ -826,7 +834,7 @@ val make_similar_hash(val existing)
   val table = vector(mod, nil);
   val hash = cobj(coerce(mem_t *, h), hash_s, &hash_ops);
 
-  h->modulus = c_num(mod);
+  h->modulus = c_num(mod, self);
   h->count = 0;
   h->table = table;
   h->userdata = ex->userdata;
@@ -977,7 +985,7 @@ val clearhash(val hash)
   val mod = num_fast(256);
   val table = vector(mod, nil);
   cnum oldcount = h->count;
-  h->modulus = c_num(mod);
+  h->modulus = c_num(mod, self);
   h->count = 0;
   h->table = table;
   setcheck(hash, table);
@@ -1171,8 +1179,10 @@ val hash_eql(val obj)
 
 val hash_equal(val obj, val seed)
 {
+  val self = lit("hash-equal");
   int lim = hash_traversal_limit;
-  return num_fast(equal_hash(obj, &lim, if3(missingp(seed), 0, c_unum(seed))));
+  return num_fast(equal_hash(obj, &lim,
+                             if3(missingp(seed), 0, c_unum(seed, self))));
 }
 
 /*
@@ -1831,22 +1841,24 @@ val hash_invert(val hash, val joinfun, val unitfun, struct args *hashv_args)
 
 static val set_hash_traversal_limit(val lim)
 {
+  val self = lit("set-hash-traversal-limit");
   val old = num(hash_traversal_limit);
-  hash_traversal_limit = c_num(lim);
+  hash_traversal_limit = c_num(lim, self);
   return old;
 }
 
 static val gen_hash_seed(void)
 {
-    val time = time_sec_usec();
-    ucnum sec = convert(ucnum, c_time(car(time)));
-    ucnum usec = c_unum(cdr(time));
+  val self = lit("gen-hash-seed");
+  val time = time_sec_usec();
+  ucnum sec = convert(ucnum, c_time(car(time), self));
+  ucnum usec = c_unum(cdr(time), self);
 #if HAVE_UNISTD_H
-    ucnum pid = convert(ucnum, getpid());
+  ucnum pid = convert(ucnum, getpid());
 #else
-    ucnum pid = 0;
+  ucnum pid = 0;
 #endif
-    return unum(sec ^ (usec << 12) ^ pid);
+  return unum(sec ^ (usec << 12) ^ pid);
 }
 
 void hash_init(void)

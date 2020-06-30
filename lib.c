@@ -543,7 +543,7 @@ val seq_geti(seq_iter_t *it)
   return v;
 }
 
-void seq_iter_rewind(seq_iter_t *it)
+static void seq_iter_rewind(seq_iter_t *it, val self)
 {
   switch (it->inf.kind) {
   case SEQ_NIL:
@@ -566,7 +566,7 @@ void seq_iter_rewind(seq_iter_t *it)
 
         switch (type(rf)) {
         case NUM:
-          it->ui.cn = c_num(rf);
+          it->ui.cn = c_num(rf, self);
           break;
         case CHR:
           it->ui.cn = c_chr(rf);
@@ -616,7 +616,7 @@ static void seq_iter_init_with_info(val self, seq_iter_t *it,
     break;
   case SEQ_VECLIKE:
     it->ui.index = 0;
-    it->ul.len = c_num(length(it->inf.obj));
+    it->ul.len = c_num(length(it->inf.obj), self);
     it->get = seq_iter_get_vec;
     it->peek = seq_iter_peek_vec;
     break;
@@ -640,8 +640,8 @@ static void seq_iter_init_with_info(val self, seq_iter_t *it,
 
         if (lt(rf, rt)) switch (type(rf)) {
         case NUM:
-          it->ui.cn = c_num(rf);
-          it->ul.cbound = c_num(rt);
+          it->ui.cn = c_num(rf, self);
+          it->ul.cbound = c_num(rt, self);
           it->get = seq_iter_get_range_cnum;
           it->peek = seq_iter_peek_range_cnum;
           break;
@@ -661,8 +661,8 @@ static void seq_iter_init_with_info(val self, seq_iter_t *it,
           unsup_obj(self, it->inf.obj);
         } else if (gt(rf, rt)) switch (type(rf)) {
         case NUM:
-          it->ui.cn = c_num(rf);
-          it->ul.cbound = c_num(rt);
+          it->ui.cn = c_num(rf, self);
+          it->ul.cbound = c_num(rt, self);
           it->get = seq_iter_get_rev_range_cnum;
           it->peek = seq_iter_peek_rev_range_cnum;
           break;
@@ -738,7 +738,7 @@ void seq_setpos(val self, seq_iter_t *it, val pos)
     it->ui.iter = pos;
     break;
   case SEQ_VECLIKE:
-    it->ui.index = c_num(pos);
+    it->ui.index = c_num(pos, self);
     break;
   default:
     unsup_obj(self, it->inf.obj);
@@ -1301,10 +1301,11 @@ val last(val seq, val n)
 
 val nthcdr(val pos, val list)
 {
-  cnum n = c_num(pos);
+  val self = lit("nthcdr");
+  cnum n = c_num(pos, self);
 
   if (n < 0)
-    uw_throwf(error_s, lit("nthcdr: negative index ~s given"), pos, nao);
+    uw_throwf(error_s, lit("~a: negative index ~s given"), self, pos, nao);
 
   gc_hint(list);
 
@@ -3167,7 +3168,7 @@ val partition_star(val seq, val indices)
   }
 }
 
-cnum c_num(val num);
+cnum c_num(val num, val self);
 
 val eql(val left, val right)
 {
@@ -3198,6 +3199,8 @@ val eql(val left, val right)
 
 val equal(val left, val right)
 {
+  val self = lit("equal");
+
   if (left == right)
     return t;
 
@@ -3299,7 +3302,7 @@ val equal(val left, val right)
       cnum i, length;
       if (!equal(left->v.vec[vec_length], right->v.vec[vec_length]))
         return nil;
-      length = c_num(left->v.vec[vec_length]);
+      length = c_num(left->v.vec[vec_length], self);
       for (i = 0; i < length; i++) {
         if (!equal(left->v.vec[i], right->v.vec[i]))
           return nil;
@@ -3344,8 +3347,8 @@ val equal(val left, val right)
     break;
   case BUF:
     if (type(right) == BUF) {
-      cnum ll = c_num(left->b.len);
-      cnum rl = c_num(right->b.len);
+      cnum ll = c_num(left->b.len, self);
+      cnum rl = c_num(right->b.len, self);
       if (ll == rl && memcmp(left->b.data, right->b.data, ll) == 0)
         return t;
     }
@@ -4009,10 +4012,11 @@ val string_8bit_size(const unsigned char *str, size_t sz)
 
 val mkstring(val len, val ch_in)
 {
+  val self = lit("mkstring");
   size_t l = if3(minusp(len),
-                 (uw_throwf(error_s, lit("mkstring: negative size ~s specified"),
-                            len, nao), 0),
-                 c_num(len));
+                 (uw_throwf(error_s, lit("~a: negative size ~s specified"),
+                            self, len, nao), 0),
+                 c_num(len, self));
   wchar_t *str = chk_wmalloc(l + 1);
   val s = string_own(str);
   val ch = default_arg_strict(ch_in, chr(' '));
@@ -4025,10 +4029,11 @@ val mkstring(val len, val ch_in)
 
 val mkustring(val len)
 {
+  val self = lit("mkustring");
   cnum l = if3(minusp(len),
-               (uw_throwf(error_s, lit("mkustring: negative size ~s specified"),
+               (uw_throwf(error_s, lit("~a: negative size ~s specified"),
                           len, nao), 0),
-               c_num(len));
+               c_num(len, self));
   wchar_t *str = chk_wmalloc(l + 1);
   val s = string_own(str);
   str[l] = 0;
@@ -4037,9 +4042,9 @@ val mkustring(val len)
   return s;
 }
 
-val init_str(val str, const wchar_t *data)
+val init_str(val str, const wchar_t *data, val self)
 {
-  wmemcpy(str->st.str, data, c_num(str->st.len));
+  wmemcpy(str->st.str, data, c_num(str->st.len, self));
   return str;
 }
 
@@ -4054,8 +4059,9 @@ val copy_str(val str)
 
 val upcase_str(val str)
 {
+  val self = lit("upcase-str");
   val len = length_str(str);
-  wchar_t *dst = chk_wmalloc(c_unum(len) + 1);
+  wchar_t *dst = chk_wmalloc(c_unum(len, self) + 1);
   const wchar_t *src = c_str(str);
   val out = string_own(dst);
 
@@ -4067,8 +4073,9 @@ val upcase_str(val str)
 
 val downcase_str(val str)
 {
+  val self = lit("downcase-str");
   val len = length_str(str);
-  wchar_t *dst = chk_wmalloc(c_unum(len) + 1);
+  wchar_t *dst = chk_wmalloc(c_unum(len, self) + 1);
   const wchar_t *src = c_str(str);
   val out = string_own(dst);
 
@@ -4192,6 +4199,7 @@ const wchar_t *c_str(val obj)
 
 val search_str(val haystack, val needle, val start_num, val from_end)
 {
+  val self = lit("search-str");
   from_end = default_null_arg(from_end);
   start_num = default_arg(start_num, zero);
 
@@ -4199,7 +4207,7 @@ val search_str(val haystack, val needle, val start_num, val from_end)
     return nil;
   } else {
     val h_is_lazy = lazy_stringp(haystack);
-    cnum start = c_num(start_num);
+    cnum start = c_num(start_num, self);
     cnum good = -1, pos = -1;
     const wchar_t *n = c_str(needle), *h;
 
@@ -4219,7 +4227,7 @@ val search_str(val haystack, val needle, val start_num, val from_end)
           pos = -1;
       } while (pos != -1 && (good = pos) != -1 && from_end && h[start++]);
     } else {
-      size_t ln = c_num(length_str(needle));
+      size_t ln = c_num(length_str(needle), self);
 
       if (start < 0) {
         lazy_str_force(haystack);
@@ -4378,6 +4386,7 @@ static val lazy_sub_str(val lstr, val from, val to)
 
 val sub_str(val str_in, val from, val to)
 {
+  val self = lit("sub-str");
   val len = nil;
 
   if (lazy_stringp(str_in))
@@ -4408,10 +4417,10 @@ val sub_str(val str_in, val from, val to)
   } else if (from == zero && eql(to, len)) {
     return str_in;
   } else {
-    size_t nchar = c_num(to) - c_num(from) + 1;
+    size_t nchar = c_num(to, self) - c_num(from, self) + 1;
     wchar_t *sub = chk_wmalloc(nchar);
     const wchar_t *str = c_str(str_in);
-    wcsncpy(sub, str + c_num(from), nchar);
+    wcsncpy(sub, str + c_num(from, self), nchar);
     sub[nchar-1] = 0;
     return string_own(sub);
   }
@@ -4471,20 +4480,20 @@ val replace_str(val str_in, val items, val from, val to)
 
     if (gt(len_rep, len_it)) {
       val len_diff = minus(len_rep, len_it);
-      cnum t = c_num(to);
-      cnum l = c_num(len);
+      cnum t = c_num(to, self);
+      cnum l = c_num(len, self);
 
-      wmemmove(str_in->st.str + t - c_num(len_diff),
+      wmemmove(str_in->st.str + t - c_num(len_diff, self),
                str_in->st.str + t, (l - t) + 1);
       set(mkloc(str_in->st.len, str_in), minus(len, len_diff));
       to = plus(from, len_it);
     } else if (lt(len_rep, len_it)) {
       val len_diff = minus(len_it, len_rep);
-      cnum t = c_num(to);
-      cnum l = c_num(len);
+      cnum t = c_num(to, self);
+      cnum l = c_num(len, self);
 
       string_extend(str_in, len_diff);
-      wmemmove(str_in->st.str + t + c_num(len_diff),
+      wmemmove(str_in->st.str + t + c_num(len_diff, self),
                str_in->st.str + t, (l - t) + 1);
       to = plus(from, len_it);
     }
@@ -4492,12 +4501,12 @@ val replace_str(val str_in, val items, val from, val to)
     if (zerop(len_it))
       return str_in;
     if (stringp(items)) {
-      wmemmove(str_in->st.str + c_num(from), c_str(items), c_num(len_it));
+      wmemmove(str_in->st.str + c_num(from, self), c_str(items), c_num(len_it, self));
     } else {
       seq_iter_t item_iter;
       seq_iter_init(self, &item_iter, items);
-      cnum f = c_num(from);
-      cnum t = c_num(to);
+      cnum f = c_num(from, self);
+      cnum t = c_num(to, self);
 
       for (; f != t; f++)
         str_in->st.str[f] = c_chr(seq_geti(&item_iter));
@@ -4514,7 +4523,7 @@ struct cat_str {
   wchar_t *str, *ptr;
 };
 
-static void cat_str_init(struct cat_str *cs, val sep, wchar_t *onech)
+static void cat_str_init(struct cat_str *cs, val sep, wchar_t *onech, val self)
 {
   cs->sep = sep;
   cs->total = 1;
@@ -4527,17 +4536,17 @@ static void cat_str_init(struct cat_str *cs, val sep, wchar_t *onech)
     cs->len_sep = 1;
     cs->sep = auto_str(coerce(const wchli_t *, wref(onech)));
   } else {
-    cs->len_sep = c_num(length_str(cs->sep));
+    cs->len_sep = c_num(length_str(cs->sep), self);
   }
 }
 
-static void cat_str_measure(struct cat_str *cs, val item, int more_p)
+static void cat_str_measure(struct cat_str *cs, val item, int more_p, val self)
 {
   if (!item)
     return;
 
   if (stringp(item)) {
-    size_t ntotal = cs->total + c_num(length_str(item));
+    size_t ntotal = cs->total + c_num(length_str(item), self);
 
     if (cs->len_sep && more_p)
       ntotal += cs->len_sep;
@@ -4573,12 +4582,12 @@ static void cat_str_alloc(struct cat_str *cs)
   cs->ptr = cs->str = chk_wmalloc(cs->total);
 }
 
-static void cat_str_append(struct cat_str *cs, val item, int more_p)
+static void cat_str_append(struct cat_str *cs, val item, int more_p, val self)
 {
   if (!item)
     return;
   if (stringp(item)) {
-    cnum len = c_num(length_str(item));
+    cnum len = c_num(length_str(item), self);
     wmemcpy(cs->ptr, c_str(item), len);
     cs->ptr += len;
   } else {
@@ -4599,35 +4608,36 @@ static val cat_str_get(struct cat_str *cs)
 
 val cat_str(val list, val sep)
 {
+  val self = lit("cat-str");
   val iter;
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
-  cat_str_init(&cs, sep, onech);
+  cat_str_init(&cs, sep, onech, self);
 
   for (iter = list; iter != nil; iter = cdr(iter))
-    cat_str_measure(&cs, car(iter), cdr(iter) != nil);
+    cat_str_measure(&cs, car(iter), cdr(iter) != nil, self);
 
   cat_str_alloc(&cs);
 
   for (iter = list; iter != nil; iter = cdr(iter))
-    cat_str_append(&cs, car(iter), cdr(iter) != nil);
+    cat_str_append(&cs, car(iter), cdr(iter) != nil, self);
 
   return cat_str_get(&cs);
 }
 
-static val vscat(val sep, va_list vl1, va_list vl2)
+static val vscat(val sep, va_list vl1, va_list vl2, val self)
 {
   val item, next;
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
-  cat_str_init(&cs, sep, onech);
+  cat_str_init(&cs, sep, onech, self);
 
   for (item = va_arg(vl1, val); item != nao; item = next)
   {
     next = va_arg(vl1, val);
-    cat_str_measure(&cs, item, next != nao);
+    cat_str_measure(&cs, item, next != nao, self);
   }
 
   cat_str_alloc(&cs);
@@ -4635,7 +4645,7 @@ static val vscat(val sep, va_list vl1, va_list vl2)
   for (item = va_arg(vl2, val); item != nao; item = next)
   {
     next = va_arg(vl2, val);
-    cat_str_append(&cs, item, next != nao);
+    cat_str_append(&cs, item, next != nao, self);
   }
 
   return cat_str_get(&cs);
@@ -4643,11 +4653,12 @@ static val vscat(val sep, va_list vl1, va_list vl2)
 
 val scat(val sep, ...)
 {
+  val self = lit("scat");
   va_list vl1, vl2;
   val ret;
   va_start (vl1, sep);
   va_start (vl2, sep);
-  ret = vscat(sep, vl1, vl2);
+  ret = vscat(sep, vl1, vl2, self);
   va_end (vl1);
   va_end (vl2);
   return ret;
@@ -4655,53 +4666,56 @@ val scat(val sep, ...)
 
 val scat2(val s1, val s2)
 {
+  val self = lit("scat2");
   struct cat_str cs;
 
-  cat_str_init(&cs, nil, NULL);
+  cat_str_init(&cs, nil, NULL, self);
 
-  cat_str_measure(&cs, s1, 1);
-  cat_str_measure(&cs, s2, 0);
+  cat_str_measure(&cs, s1, 1, self);
+  cat_str_measure(&cs, s2, 0, self);
 
   cat_str_alloc(&cs);
 
-  cat_str_append(&cs, s1, 1);
-  cat_str_append(&cs, s2, 0);
+  cat_str_append(&cs, s1, 1, self);
+  cat_str_append(&cs, s2, 0, self);
 
   return cat_str_get(&cs);
 }
 
 val scat3(val s1, val sep, val s2)
 {
+  val self = lit("scat3");
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
-  cat_str_init(&cs, sep, onech);
+  cat_str_init(&cs, sep, onech, self);
 
-  cat_str_measure(&cs, s1, 1);
-  cat_str_measure(&cs, s2, 0);
+  cat_str_measure(&cs, s1, 1, self);
+  cat_str_measure(&cs, s2, 0, self);
 
   cat_str_alloc(&cs);
 
-  cat_str_append(&cs, s1, 1);
-  cat_str_append(&cs, s2, 0);
+  cat_str_append(&cs, s1, 1, self);
+  cat_str_append(&cs, s2, 0, self);
 
   return cat_str_get(&cs);
 }
 
 val fmt_join(struct args *args)
 {
+  val self = lit("sys:fmt-join");
   cnum index;
   val iter;
   int more;
   struct cat_str cs;
 
-  cat_str_init(&cs, nil, 0);
+  cat_str_init(&cs, nil, 0, self);
 
   for (index = 0, iter = args->list, more = args_more_nozap(args, index, iter);
        more;)
   {
     val item = args_get_nozap(args, &index, &iter);
-    cat_str_measure(&cs, item, more = args_more_nozap(args, index, iter));
+    cat_str_measure(&cs, item, more = args_more_nozap(args, index, iter), self);
   }
 
   cat_str_alloc(&cs);
@@ -4710,7 +4724,7 @@ val fmt_join(struct args *args)
        more;)
   {
     val item = args_get_nozap(args, &index, &iter);
-    cat_str_append(&cs, item, more = args_more_nozap(args, index, iter));
+    cat_str_append(&cs, item, more = args_more_nozap(args, index, iter), self);
   }
 
   return cat_str_get(&cs);
@@ -4718,6 +4732,7 @@ val fmt_join(struct args *args)
 
 val split_str_keep(val str, val sep, val keep_sep)
 {
+  val self = lit("split-str");
   keep_sep = default_null_arg(keep_sep);
 
   if (regexp(sep)) {
@@ -4753,7 +4768,7 @@ val split_str_keep(val str, val sep, val keep_sep)
       len_sep = 1;
       sep = auto_str(coerce(const wchli_t *, wref(onech)));
     } else {
-      len_sep = c_num(length_str(sep));
+      len_sep = c_num(length_str(sep), self);
     }
 
     if (len_sep == 0) {
@@ -4767,7 +4782,7 @@ val split_str_keep(val str, val sep, val keep_sep)
 
           for (; *cstr; cstr++) {
             val piece = mkustring(one);
-            init_str(piece, cstr);
+            init_str(piece, cstr, self);
             iter = list_collect(iter, piece);
             if (keep_sep && *(cstr+1))
               iter = list_collect(iter, null_string);
@@ -4790,7 +4805,7 @@ val split_str_keep(val str, val sep, val keep_sep)
         const wchar_t *psep = wcsstr(cstr, csep);
         size_t span = (psep != 0) ? (size_t) (psep - cstr) : wcslen(cstr);
         val piece = mkustring(num(span));
-        init_str(piece, cstr);
+        init_str(piece, cstr, self);
         iter = list_collect(iter, piece);
         cstr += span;
         if (psep != 0) {
@@ -4824,6 +4839,7 @@ val split_str(val str, val sep)
 
 val split_str_set(val str, val set)
 {
+  val self = lit("split-str-set");
   const wchar_t *cstr = c_str(str);
   const wchar_t *cset = c_str(set);
   list_collect_decl (out, iter);
@@ -4831,7 +4847,7 @@ val split_str_set(val str, val set)
   for (;;) {
     size_t span = wcscspn(cstr, cset);
     val piece = mkustring(num(span));
-    init_str(piece, cstr);
+    init_str(piece, cstr, self);
     iter = list_collect(iter, piece);
     cstr += span;
     if (*cstr) {
@@ -4972,8 +4988,9 @@ val list_str(val str)
 
 val trim_str(val str)
 {
+  val self = lit("trim-str");
   const wchar_t *start = c_str(str);
-  const wchar_t *end = start + c_num(length_str(str));
+  const wchar_t *end = start + c_num(length_str(str), self);
 
   if (opt_compat && opt_compat <= 148) {
     while (start[0] && iswspace(start[0]))
@@ -5071,10 +5088,11 @@ val str_ge(val astr, val bstr)
 
 val int_str(val str, val base)
 {
+  val self = lit("int-str");
   const wchar_t *wcs = c_str(str);
   wchar_t *ptr;
   long value;
-  cnum b = c_num(default_arg(base, num_fast(10)));
+  cnum b = c_num(default_arg(base, num_fast(10)), self);
   int zerox = 0, octzero = 0, minus = 0, flip = 0;
 
   switch (wcs[0]) {
@@ -5355,8 +5373,8 @@ tail:
     }
   case BUF:
     {
-      cnum ll = c_num(left->b.len);
-      cnum rl = c_num(right->b.len);
+      cnum ll = c_num(left->b.len, self);
+      cnum rl = c_num(right->b.len, self);
       cnum len = min(ll, rl);
       int cmp = memcmp(left->b.data, right->b.data, len);
 
@@ -5565,7 +5583,8 @@ val int_chr(val ch)
 
 val chr_int(val num)
 {
-  cnum n = c_num(num);
+  val self = lit("chr-int");
+  cnum n = c_num(num, self);
   if (n < 0 || n > 0x10FFFF)
     uw_throwf(numeric_error_s,
               lit("chr-num: ~s is out of character range"), num, nao);
@@ -5574,11 +5593,12 @@ val chr_int(val num)
 
 val chr_str(val str, val ind)
 {
-  cnum index = c_num(ind);
+  val self = lit("chr-str");
+  cnum index = c_num(ind, self);
 
   if (index < 0) {
     ind = plus(length_str(str), ind);
-    index = c_num(ind);
+    index = c_num(ind, self);
   }
 
   if (index < 0 || !length_str_gt(str, ind))
@@ -5595,7 +5615,8 @@ val chr_str(val str, val ind)
 
 val chr_str_set(val str, val ind, val chr)
 {
-  cnum index = c_num(ind);
+  val self = lit("chr-str-set");
+  cnum index = c_num(ind, self);
 
   if (is_lit(str)) {
     uw_throwf(error_s, lit("chr-str-set: cannot modify literal string ~s"),
@@ -5604,7 +5625,7 @@ val chr_str_set(val str, val ind, val chr)
 
   if (index < 0) {
     ind = plus(length_str(str), ind);
-    index = c_num(ind);
+    index = c_num(ind, self);
   }
 
   if (index < 0 || !length_str_gt(str, ind))
@@ -7858,8 +7879,9 @@ val dupl(val fun)
 
 val vector(val length, val initval)
 {
+  val self = lit("vector");
   unsigned i;
-  ucnum len = c_unum(length);
+  ucnum len = c_unum(length, self);
   ucnum alloc_plus = len + 2;
   ucnum size = if3(alloc_plus > len, alloc_plus, (ucnum) -1);
   val *v = coerce(val *, chk_xalloc(size, sizeof *v, lit("vector")));
@@ -7889,9 +7911,9 @@ val vec_set_length(val vec, val length)
   type_check(self, vec, VEC);
 
   {
-    cnum new_length = c_num(length);
-    cnum old_length = c_num(vec->v.vec[vec_length]);
-    cnum old_alloc = c_num(vec->v.vec[vec_alloc]);
+    cnum new_length = c_num(length, self);
+    cnum old_length = c_num(vec->v.vec[vec_length], self);
+    cnum old_alloc = c_num(vec->v.vec[vec_alloc], self);
 
     if (new_length < 0)
       uw_throwf(error_s, lit("~a: negative length ~s specified"),
@@ -7935,25 +7957,27 @@ val vec_set_length(val vec, val length)
 
 val vecref(val vec, val ind)
 {
-  cnum index = c_num(ind);
-  cnum len = c_num(length_vec(vec));
+  val self = lit("vecref");
+  cnum index = c_num(ind, self);
+  cnum len = c_num(length_vec(vec), self);
   if (index < 0)
     index = len + index;
   if (index < 0 || index >= len)
-    uw_throwf(error_s, lit("vecref: ~s is out of range for vector ~s"),
-              ind, vec, nao);
+    uw_throwf(error_s, lit("~a: ~s is out of range for vector ~s"),
+              self, ind, vec, nao);
   return vec->v.vec[index];
 }
 
 loc vecref_l(val vec, val ind)
 {
-  cnum index = c_num(ind);
-  cnum len = c_num(length_vec(vec));
+  val self = lit("vecref");
+  cnum index = c_num(ind, self);
+  cnum len = c_num(length_vec(vec), self);
   if (index < 0)
     index = len + index;
   if (index < 0 || index >= len)
-    uw_throwf(error_s, lit("vecref: ~s is out of range for vector ~s"),
-              ind, vec, nao);
+    uw_throwf(error_s, lit("~a: ~s is out of range for vector ~s"),
+              self, ind, vec, nao);
   return mkloc(vec->v.vec[index], vec);
 }
 
@@ -8022,12 +8046,13 @@ val vec_list(val list)
 
 val list_vec(val vec)
 {
+  val self = lit("list-vec");
   list_collect_decl (list, ptail);
   int i, len;
 
-  type_check(lit("list-vec"), vec, VEC);
+  type_check(self, vec, VEC);
 
-  len = c_num(vec->v.vec[vec_length]);
+  len = c_num(vec->v.vec[vec_length], self);
 
   for (i = 0; i < len; i++)
     ptail = list_collect(ptail, vec->v.vec[i]);
@@ -8037,9 +8062,10 @@ val list_vec(val vec)
 
 val copy_vec(val vec_in)
 {
+  val self = lit("copy-vec");
   val length = length_vec(vec_in);
-  ucnum alloc_plus = c_unum(length) + 2;
-  val *v = coerce(val *, chk_xalloc(alloc_plus, sizeof *v, lit("copy-vec")));
+  ucnum alloc_plus = c_unum(length, self) + 2;
+  val *v = coerce(val *, chk_xalloc(alloc_plus, sizeof *v, self));
   val vec = make_obj();
   vec->v.type = VEC;
 #if HAVE_VALGRIND
@@ -8055,6 +8081,7 @@ val copy_vec(val vec_in)
 
 val sub_vec(val vec_in, val from, val to)
 {
+  val self = lit("sub-vec");
   val len = length_vec(vec_in);
 
   if (null_or_missing_p(from))
@@ -8080,9 +8107,9 @@ val sub_vec(val vec_in, val from, val to)
   } else if (from == zero && eql(to, len)) {
     return vec_in;
   } else {
-    cnum cfrom = c_num(from);
-    size_t nelem = c_num(to) - cfrom;
-    val *v = coerce(val *, chk_xalloc((nelem + 2), sizeof *v, lit("sub-vec")));
+    cnum cfrom = c_num(from, self);
+    size_t nelem = c_num(to, self) - cfrom;
+    val *v = coerce(val *, chk_xalloc((nelem + 2), sizeof *v, self));
     val vec = make_obj();
     vec->v.type = VEC;
 #if HAVE_VALGRIND
@@ -8143,10 +8170,10 @@ val replace_vec(val vec_in, val items, val from, val to)
 
     if (gt(len_rep, len_it)) {
       val len_diff = minus(len_rep, len_it);
-      cnum t = c_num(to);
-      cnum l = c_num(len);
+      cnum t = c_num(to, self);
+      cnum l = c_num(len, self);
 
-      memmove(vec_in->v.vec + t - c_num(len_diff),
+      memmove(vec_in->v.vec + t - c_num(len_diff, self),
               vec_in->v.vec + t,
               (l - t) * sizeof vec_in->v.vec);
 
@@ -8154,12 +8181,12 @@ val replace_vec(val vec_in, val items, val from, val to)
       to = plus(from, len_it);
     } else if (lt(len_rep, len_it)) {
       val len_diff = minus(len_it, len_rep);
-      cnum t = c_num(to);
-      cnum l = c_num(len);
+      cnum t = c_num(to, self);
+      cnum l = c_num(len, self);
 
       vec_set_length(vec_in, plus(len, len_diff));
 
-      memmove(vec_in->v.vec + t + c_num(len_diff),
+      memmove(vec_in->v.vec + t + c_num(len_diff, self),
               vec_in->v.vec + t,
               (l - t) * sizeof vec_in->v.vec);
       to = plus(from, len_it);
@@ -8168,15 +8195,15 @@ val replace_vec(val vec_in, val items, val from, val to)
     if (zerop(len_it))
       return vec_in;
     if (vectorp(items)) {
-      memmove(vec_in->v.vec + c_num(from), items->v.vec,
-              sizeof *vec_in->v.vec * c_num(len_it));
+      memmove(vec_in->v.vec + c_num(from, self), items->v.vec,
+              sizeof *vec_in->v.vec * c_num(len_it, self));
       mut(vec_in);
     } else {
       seq_iter_t item_iter;
       seq_iter_init(self, &item_iter, items);
       int mut_needed = 0;
-      cnum f = c_num(from);
-      cnum t = c_num(to);
+      cnum f = c_num(from, self);
+      cnum t = c_num(to, self);
 
       for (; f != t; f++) {
         val item = seq_geti(&item_iter);
@@ -8218,6 +8245,7 @@ val replace_obj(val obj, val items, val from, val to)
 
 val cat_vec(val list)
 {
+  val self = lit("cat-vec");
   ucnum total = 0;
   val iter;
   val vec, *v;
@@ -8225,7 +8253,7 @@ val cat_vec(val list)
   list = nullify(list);
 
   for (iter = list; iter != nil; iter = cdr(iter)) {
-    ucnum newtot = total + c_unum(length_vec(car(iter)));
+    ucnum newtot = total + c_unum(length_vec(car(iter)), self);
     if (newtot < total)
       goto toobig;
     total = newtot;
@@ -8234,7 +8262,7 @@ val cat_vec(val list)
   if (total + 2 < total)
     goto toobig;
 
-  v = coerce(val *, chk_xalloc(total + 2, sizeof *v, lit("cat-vec")));
+  v = coerce(val *, chk_xalloc(total + 2, sizeof *v, self));
   vec = make_obj();
   vec->v.type = VEC;
 
@@ -8247,14 +8275,14 @@ val cat_vec(val list)
 
   for (iter = list; iter != nil; iter = cdr(iter)) {
     val item = car(iter);
-    cnum len = c_num(item->v.vec[vec_length]);
+    cnum len = c_num(item->v.vec[vec_length], self);
     memcpy(v, item->v.vec, len * sizeof *v);
     v += len;
   }
 
   return vec;
 toobig:
-  uw_throwf(error_s, lit("cat-vec: resulting vector too large"), nao);
+  uw_throwf(error_s, lit("~a: resulting vector too large"), self, nao);
 }
 
 static val simple_lazy_stream_func(val stream, val lcons)
@@ -8381,6 +8409,7 @@ val lazy_str_force(val lstr)
 
 val lazy_str_put(val lstr, val stream, struct strm_base *s)
 {
+  val self = lit("lazy-str-put");
   val lim = lstr->ls.props->limit;
   val term = lstr->ls.props->term;
   val iter;
@@ -8402,7 +8431,7 @@ val lazy_str_put(val lstr, val stream, struct strm_base *s)
       }
       if (--max_len == 0)
         goto max_reached;
-      max_chr -= c_num(length_str(str));
+      max_chr -= c_num(length_str(str), self);
     }
     if (lim)
       lim = pred(lim);
@@ -8451,11 +8480,12 @@ val lazy_str_force_upto(val lstr, val index)
 
 val length_str_gt(val str, val len)
 {
+  val self = lit("length-str-gt");
   switch (type(str)) {
   case LIT:
     {
       const wchar_t *cstr = c_str(str);
-      size_t clen = c_num(len);
+      size_t clen = c_num(len, self);
       const wchar_t *nult = wmemchr(cstr, 0, clen + 1);
       return nult == 0 ? t : nil;
     }
@@ -8465,17 +8495,18 @@ val length_str_gt(val str, val len)
     lazy_str_force_upto(str, len);
     return gt(length_str(str->ls.prefix), len);
   default:
-    type_mismatch(lit("length-str-gt: ~s is not a string"), str, nao);
+    type_mismatch(lit("~a: ~s is not a string"), self, str, nao);
   }
 }
 
 val length_str_ge(val str, val len)
 {
+  val self = lit("length-str-ge");
   switch (type(str)) {
   case LIT:
     {
       const wchar_t *cstr = c_str(str);
-      size_t clen = c_num(len);
+      size_t clen = c_num(len, self);
       const wchar_t *nult = wmemchr(cstr, 0, clen);
       return nult == 0 ? t : nil;
     }
@@ -8485,17 +8516,18 @@ val length_str_ge(val str, val len)
     lazy_str_force_upto(str, len);
     return ge(length_str(str->ls.prefix), len);
   default:
-    type_mismatch(lit("length-str-ge: ~s is not a string"), str, nao);
+    type_mismatch(lit("~a: ~s is not a string"), self, str, nao);
   }
 }
 
 val length_str_lt(val str, val len)
 {
+  val self = lit("length-str-lt");
   switch (type(str)) {
   case LIT:
     {
       const wchar_t *cstr = c_str(str);
-      size_t clen = c_num(len);
+      size_t clen = c_num(len, self);
       const wchar_t *nult = wmemchr(cstr, 0, clen);
       return nult != 0 ? t : nil;
     }
@@ -8505,17 +8537,18 @@ val length_str_lt(val str, val len)
     lazy_str_force_upto(str, len);
     return lt(length_str(str->ls.prefix), len);
   default:
-    type_mismatch(lit("length-str-lt: ~s is not a string"), str, nao);
+    type_mismatch(lit("~a: ~s is not a string"), self, str, nao);
   }
 }
 
 val length_str_le(val str, val len)
 {
+  val self = lit("length-str-le");
   switch (type(str)) {
   case LIT:
     {
       const wchar_t *cstr = c_str(str);
-      size_t clen = c_num(len);
+      size_t clen = c_num(len, self);
       const wchar_t *nult = wmemchr(cstr, 0, clen + 1);
       return nult != 0 ? t : nil;
     }
@@ -8525,7 +8558,7 @@ val length_str_le(val str, val len)
     lazy_str_force_upto(str, len);
     return le(length_str(str->ls.prefix), len);
   default:
-    type_mismatch(lit("length-str-lt: ~s is not a string"), str, nao);
+    type_mismatch(lit("~a: ~s is not a string"), self, str, nao);
   }
 }
 
@@ -8646,15 +8679,17 @@ val cptr_type(val cptr)
 
 val cptr_size_hint(val cptr, val size)
 {
+  val self = lit("cptr-size-hint");
   (void) cptr;
-  malloc_bytes += c_unum(size);
+  malloc_bytes += c_unum(size, self);
   return nil;
 }
 
 val cptr_int(val n, val type_sym_in)
 {
+  val self = lit("cptr-int");
   val type_sym = default_null_arg(type_sym_in);
-  return cptr_typed(coerce(mem_t *, c_num(n)), type_sym, 0);
+  return cptr_typed(coerce(mem_t *, c_num(n, self)), type_sym, 0);
 }
 
 val cptr_obj(val obj, val type_sym_in)
@@ -10723,7 +10758,7 @@ val diff(val seq1, val seq2, val testfun, val keyfun)
     val el2;
     int found = 0;
 
-    seq_iter_rewind(&si2);
+    seq_iter_rewind(&si2, self);
 
     while (seq_get(&si2, &el2)) {
       val el2_key = funcall1(keyfun, el2);
@@ -10829,7 +10864,7 @@ val isec(val seq1, val seq2, val testfun, val keyfun)
     val el1_key = funcall1(keyfun, el1);
     val el2;
 
-    seq_iter_rewind(&si2);
+    seq_iter_rewind(&si2, self);
 
     while (seq_get(&si2, &el2)) {
       val el2_key = funcall1(keyfun, el2);
@@ -11877,6 +11912,7 @@ static void out_str_readable(const wchar_t *ptr, val out, int *semi_flag)
 
 static void out_lazy_str(val lstr, val out, struct strm_base *strm)
 {
+  val self = lit("print");
   int semi_flag = 0;
   val lim = lstr->ls.props->limit;
   val term = lstr->ls.props->term;
@@ -11904,7 +11940,7 @@ static void out_lazy_str(val lstr, val out, struct strm_base *strm)
       }
       if (--max_len == 0)
         goto max_reached;
-      max_chr -= c_num(length_str(str));
+      max_chr -= c_num(length_str(str), self);
     }
     out_str_readable(c_str(str), out, &semi_flag);
     out_str_readable(wcterm, out, &semi_flag);
@@ -11952,6 +11988,7 @@ static void out_quasi_str_sym(val name, val mods, val rem_args,
 
 static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
 {
+  val self = lit("print");
   val iter, next;
   cnum max_len = ctx->strm->max_length, max_count = max_len;
 
@@ -11970,7 +12007,7 @@ static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
       } else {
         out_str_readable(c_str(elem), out, &semi_flag);
         if (max_len) {
-          max_len -= c_num(length(elem));
+          max_len -= c_num(length(elem), self);
           if (max_len == 0) {
             goto max_reached;
           }
@@ -12395,7 +12432,7 @@ dot:
     break;
   case VEC:
     {
-      cnum i, length = c_num(obj->v.vec[vec_length]);
+      cnum i, length = c_num(obj->v.vec[vec_length], self);
       cnum max_length = ctx->strm->max_length;
       val save_mode = test_set_indent_mode(out, num_fast(indent_off),
                                            num_fast(indent_data));
@@ -12504,7 +12541,7 @@ tail:
   case VEC:
     {
       cnum i;
-      cnum l = c_num(length_vec(obj));
+      cnum l = c_num(length_vec(obj), self);
 
       for (i = 0; i < l; i++) {
         val in = num(i);
@@ -12745,7 +12782,8 @@ static val string_time(struct tm *(*break_time_fn)(const time_t *, struct tm *),
 
 val time_string_local(val time, val format)
 {
-  time_t secs = c_time(time);
+  val self = lit("time-string-local");
+  time_t secs = c_time(time, self);
   const wchar_t *wcfmt = c_str(format);
   char *u8fmt = utf8_dup_to(wcfmt);
   val timestr = string_time(localtime_r, u8fmt, secs);
@@ -12755,7 +12793,8 @@ val time_string_local(val time, val format)
 
 val time_string_utc(val time, val format)
 {
-  time_t secs = c_time(time);
+  val self = lit("time-string-utc");
+  time_t secs = c_time(time, self);
   const wchar_t *wcfmt = c_str(format);
   char *u8fmt = utf8_dup_to(wcfmt);
   val timestr = string_time(gmtime_r, u8fmt, secs);
@@ -12804,8 +12843,9 @@ static val broken_time_struct(struct tm *tms)
 
 val time_fields_local(val time)
 {
+  val self = lit("time-fields-local");
   struct tm tms;
-  time_t secs = c_time(time);
+  time_t secs = c_time(time, self);
 
   if (localtime_r(&secs, &tms) == 0)
     return nil;
@@ -12815,8 +12855,9 @@ val time_fields_local(val time)
 
 val time_fields_utc(val time)
 {
+  val self = lit("time-fields-utc");
   struct tm tms;
-  time_t secs = c_time(time);
+  time_t secs = c_time(time, self);
 
   if (gmtime_r(&secs, &tms) == 0)
     return nil;
@@ -12826,8 +12867,9 @@ val time_fields_utc(val time)
 
 val time_struct_local(val time)
 {
+  val self = lit("time-struct-local");
   struct tm tms;
-  time_t secs = c_time(time);
+  time_t secs = c_time(time, self);
 
   if (localtime_r(&secs, &tms) == 0)
     return nil;
@@ -12837,8 +12879,9 @@ val time_struct_local(val time)
 
 val time_struct_utc(val time)
 {
+  val self = lit("time-struct-utc");
   struct tm tms;
-  time_t secs = c_time(time);
+  time_t secs = c_time(time, self);
 
   if (gmtime_r(&secs, &tms) == 0)
     return nil;
@@ -12848,15 +12891,16 @@ val time_struct_utc(val time)
 
 static void time_fields_to_tm(struct tm *ptm,
                               val year, val month, val day,
-                              val hour, val min, val sec, val dst)
+                              val hour, val min, val sec, val dst,
+                              val self)
 {
   uses_or2;
-  ptm->tm_year = c_num(or2(year, zero)) - 1900;
-  ptm->tm_mon = c_num(or2(month, zero)) - 1;
-  ptm->tm_mday = c_num(or2(day, zero));
-  ptm->tm_hour = c_num(or2(hour, zero));
-  ptm->tm_min = c_num(or2(min, zero));
-  ptm->tm_sec = c_num(or2(sec, zero));
+  ptm->tm_year = c_num(or2(year, zero), self) - 1900;
+  ptm->tm_mon = c_num(or2(month, zero), self) - 1;
+  ptm->tm_mday = c_num(or2(day, zero), self);
+  ptm->tm_hour = c_num(or2(hour, zero), self);
+  ptm->tm_min = c_num(or2(min, zero), self);
+  ptm->tm_sec = c_num(or2(sec, zero), self);
 
   if (!dst)
     ptm->tm_isdst = 0;
@@ -12873,7 +12917,8 @@ static void time_fields_to_tm(struct tm *ptm,
 #endif
 }
 
-static void time_struct_to_tm(struct tm *ptm, val time_struct, val strict)
+static void time_struct_to_tm(struct tm *ptm, val time_struct, val strict,
+                              val self)
 {
   val year = slot(time_struct, year_s);
   val month = slot(time_struct, month_s);
@@ -12892,19 +12937,19 @@ static void time_struct_to_tm(struct tm *ptm, val time_struct, val strict)
     sec = (sec ? sec : zero);
   }
 
-  time_fields_to_tm(ptm, year, month, day, hour, min, sec, dst);
+  time_fields_to_tm(ptm, year, month, day, hour, min, sec, dst, self);
 }
 
 static val make_time_impl(time_t (*pmktime)(struct tm *),
                           val year, val month, val day,
                           val hour, val minute, val second,
-                          val isdst)
+                          val isdst, val self)
 {
   struct tm local = all_zero_init;
   time_t time;
 
   time_fields_to_tm(&local, year, month, day,
-                    hour, minute, second, isdst);
+                    hour, minute, second, isdst, self);
   time = pmktime(&local);
 
   return time == -1 ? nil : num_time(time);
@@ -12914,7 +12959,9 @@ val make_time(val year, val month, val day,
               val hour, val minute, val second,
               val isdst)
 {
-  return make_time_impl(mktime, year, month, day, hour, minute, second, isdst);
+  val self = lit("make-time");
+  return make_time_impl(mktime, year, month, day, hour, minute, second,
+                        isdst, self);
 }
 
 #if HAVE_STRPTIME
@@ -12998,13 +13045,15 @@ val make_time_utc(val year, val month, val day,
                   val hour, val minute, val second,
                   val isdst)
 {
+  val self = lit("make-time-utc");
 #if HAVE_TIMEGM
   time_t (*pmktime)(struct tm *) = timegm;
 #else
   time_t (*pmktime)(struct tm *) = timegm_hack;
 #endif
 
-  return make_time_impl(pmktime, year, month, day, hour, minute, second, isdst);
+  return make_time_impl(pmktime, year, month, day, hour, minute, second,
+                        isdst, self);
 }
 
 static val time_meth(val utc_p, val time_struct)
@@ -13023,8 +13072,9 @@ static val time_meth(val utc_p, val time_struct)
 
 static val time_string_meth(val time_struct, val format)
 {
+  val self = lit("(meth time-string)");
   struct tm tms = all_zero_init;
-  time_struct_to_tm(&tms, time_struct, t);
+  time_struct_to_tm(&tms, time_struct, t, self);
   char buffer[512] = "";
   char *fmt = utf8_dup_to(c_str(format));
 
@@ -13040,8 +13090,9 @@ static val time_string_meth(val time_struct, val format)
 
 static val time_parse_meth(val time_struct, val format, val string)
 {
+  val self = lit("(meth time-parse)");
   struct tm tms = all_zero_init;
-  time_struct_to_tm(&tms, time_struct, nil);
+  time_struct_to_tm(&tms, time_struct, nil, self);
   val ret = nil;
 
   {

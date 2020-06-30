@@ -118,7 +118,8 @@ static void sig_handler(int sig)
 
 static val kill_wrap(val pid, val sig)
 {
-  cnum p = c_num(pid), s = c_num(default_arg(sig, num_fast(SIGTERM)));
+  val self = lit("kill");
+  cnum p = c_num(pid, self), s = c_num(default_arg(sig, num_fast(SIGTERM)), self);
   int res = kill(p, s);
   if (opt_compat && opt_compat <= 114)
     return num(res);
@@ -127,7 +128,8 @@ static val kill_wrap(val pid, val sig)
 
 static val raise_wrap(val sig)
 {
-  int res = raise(c_num(sig));
+  val self = lit("raise");
+  int res = raise(c_num(sig, self));
   return tnil(res == 0);
 }
 
@@ -260,7 +262,7 @@ val set_sig_handler(val signo, val lambda)
 {
   static struct sigaction blank;
   val self = lit("set-sig-handler");
-  cnum sig = c_num(signo);
+  cnum sig = c_num(signo, self);
   val old;
   small_sigset_t block, saved;
 
@@ -309,10 +311,11 @@ val set_sig_handler(val signo, val lambda)
 
 val get_sig_handler(val signo)
 {
-  cnum sig = c_num(signo);
+  val self = lit("get-sig-handler");
+  cnum sig = c_num(signo, self);
 
   if (sig < 0 || sig >= MAX_SIG)
-    uw_throwf(error_s, lit("get-sig-handler: signal ~s out of range"), sig, nao);
+    uw_throwf(error_s, lit("~a: signal ~s out of range"), self, sig, nao);
 
   return sig_lambda[sig];
 }
@@ -389,9 +392,10 @@ static val tv_to_usec(val sec, val usec)
 
 val getitimer_wrap(val which)
 {
+  val self = lit("getitimer");
   struct itimerval itv;
 
-  if (getitimer(c_num(which), &itv) < 0)
+  if (getitimer(c_num(which, self), &itv) < 0)
     return nil;
 
   return list(tv_to_usec(num_time(itv.it_interval.tv_sec), num(itv.it_interval.tv_usec)),
@@ -401,15 +405,16 @@ val getitimer_wrap(val which)
 
 val setitimer_wrap(val which, val interval, val currval)
 {
+  val self = lit("setitimer");
   struct itimerval itn, itv;
   const val meg = num_fast(1000000);
 
-  itn.it_interval.tv_sec = c_time(trunc(interval, meg));
-  itn.it_interval.tv_usec = c_num(mod(interval, meg));
-  itn.it_value.tv_sec = c_time(trunc(currval, meg));
-  itn.it_value.tv_usec = c_num(mod(currval, meg));
+  itn.it_interval.tv_sec = c_time(trunc(interval, meg), self);
+  itn.it_interval.tv_usec = c_num(mod(interval, meg), self);
+  itn.it_value.tv_sec = c_time(trunc(currval, meg), self);
+  itn.it_value.tv_usec = c_num(mod(currval, meg), self);
 
-  if (setitimer(c_num(which), &itn, &itv) < 0)
+  if (setitimer(c_num(which, self), &itn, &itv) < 0)
     return nil;
 
   return list(tv_to_usec(num_time(itv.it_interval.tv_sec), num(itv.it_interval.tv_usec)),

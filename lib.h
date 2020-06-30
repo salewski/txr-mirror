@@ -553,7 +553,6 @@ val subtypep(val sub, val sup);
 val typep(val obj, val type);
 seq_info_t seq_info(val cobj);
 void seq_iter_init(val self, seq_iter_t *it, val obj);
-void seq_iter_rewind(seq_iter_t *it);
 INLINE int seq_get(seq_iter_t *it, val *pval) { return it->get(it, pval); }
 INLINE int seq_peek(seq_iter_t *it, val *pval) { return it->peek(it, pval); }
 val seq_geti(seq_iter_t *it);
@@ -730,8 +729,8 @@ val improper_plist_to_alist(val list, val boolean_keys);
 val num(cnum val);
 val unum(ucnum u);
 val flo(double val);
-cnum c_num(val num);
-ucnum c_unum(val num);
+cnum c_num(val num, val self);
+ucnum c_unum(val num, val self);
 cnum c_fixnum(val num, val self);
 double c_flo(val self, val num);
 val fixnump(val num);
@@ -849,7 +848,7 @@ val string_8bit(const unsigned char *str);
 val string_8bit_size(const unsigned char *str, size_t sz);
 val mkstring(val len, val ch);
 val mkustring(val len); /* must initialize immediately with init_str! */
-val init_str(val str, const wchar_t *);
+val init_str(val str, const wchar_t *, val self);
 val copy_str(val str);
 val upcase_str(val str);
 val downcase_str(val str);

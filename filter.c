@@ -676,12 +676,13 @@ static int is_url_reserved(int ch)
 
 val url_encode(val str, val space_plus)
 {
+  val self = lit("url-encode");
   val in_byte = make_string_byte_input_stream(str);
   val out = make_string_output_stream();
   val ch;
 
   while ((ch = get_byte(in_byte)) != nil) {
-    int c = c_num(ch);
+    int c = c_num(ch, self);
 
     if (space_plus && c == ' ')
       put_char(chr('+'), out);
@@ -696,6 +697,7 @@ val url_encode(val str, val space_plus)
 
 val url_decode(val str, val space_plus)
 {
+  val self = lit("url-encode");
   val in = make_string_input_stream(str);
   val out = make_string_output_stream();
 
@@ -707,7 +709,7 @@ val url_decode(val str, val space_plus)
       val ch3 = get_char(in);
 
       if (ch2 && ch3 && chr_isxdigit(ch2) && chr_isxdigit(ch3)) {
-        int byte = digit_value(c_num(ch2)) << 4 | digit_value(c_num(ch3));
+        int byte = digit_value(c_num(ch2, self)) << 4 | digit_value(c_num(ch3, self));
         put_byte(num_fast(byte), out);
       } else {
         put_char(ch, out);
@@ -744,12 +746,13 @@ INLINE void col_check(cnum *pcol, cnum wcol, val out)
 static val base64_stream_enc_impl(val out, val in, val nbytes, val wrap_cols,
                                   const char *b64)
 {
+  val self = lit("base64-stream-enc");
   int ulim = nilp(default_null_arg(nbytes));
   cnum col = 0;
-  cnum nb = if3(ulim, 0, c_num(nbytes));
+  cnum nb = if3(ulim, 0, c_num(nbytes, self));
   cnum count = 0;
   val ret = zero;
-  cnum wcol = c_num(default_arg(wrap_cols, zero));
+  cnum wcol = c_num(default_arg(wrap_cols, zero), self);
 
   for (; ulim || nb > 0; ulim ? --nb : 0) {
     val bv0 = get_byte(in);
@@ -757,9 +760,9 @@ static val base64_stream_enc_impl(val out, val in, val nbytes, val wrap_cols,
     val bv2 = if2(bv1 && (ulim || --nb > 0), get_byte(in));
 
     if (bv2) {
-      cnum b0 = c_num(bv0);
-      cnum b1 = c_num(bv1);
-      cnum b2 = c_num(bv2);
+      cnum b0 = c_num(bv0, self);
+      cnum b1 = c_num(bv1, self);
+      cnum b2 = c_num(bv2, self);
       cnum word = (b0 << 16) | (b1 << 8) | b2;
       put_char(chr(b64[(word >> 18)       ]), out); col_check(&col, wcol, out);
       put_char(chr(b64[(word >> 12) & 0x3F]), out); col_check(&col, wcol, out);
@@ -767,8 +770,8 @@ static val base64_stream_enc_impl(val out, val in, val nbytes, val wrap_cols,
       put_char(chr(b64[(word      ) & 0x3F]), out); col_check(&col, wcol, out);
       count += 3;
     } else if (bv1) {
-      cnum b0 = c_num(bv0);
-      cnum b1 = c_num(bv1);
+      cnum b0 = c_num(bv0, self);
+      cnum b1 = c_num(bv1, self);
       cnum word = (b0 << 16) | (b1 << 8);
       put_char(chr(b64[(word >> 18)       ]), out); col_check(&col, wcol, out);
       put_char(chr(b64[(word >> 12) & 0x3F]), out); col_check(&col, wcol, out);
@@ -777,7 +780,7 @@ static val base64_stream_enc_impl(val out, val in, val nbytes, val wrap_cols,
       count += 2;
       break;
     } else if (bv0) {
-      cnum b0 = c_num(bv0);
+      cnum b0 = c_num(bv0, self);
       cnum word = (b0 << 16);
       put_char(chr(b64[(word >> 18)       ]), out); col_check(&col, wcol, out);
       put_char(chr(b64[(word >> 12) & 0x3F]), out); col_check(&col, wcol, out);

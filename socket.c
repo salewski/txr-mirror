@@ -163,16 +163,17 @@ static val sockaddr_unpack(int family, struct sockaddr_storage *src)
 
 #if HAVE_GETADDRINFO
 
-static void addrinfo_in(struct addrinfo *dest, val src)
+static void addrinfo_in(struct addrinfo *dest, val src, val self)
 {
-  dest->ai_flags = c_num(default_arg(slot(src, flags_s), zero));
-  dest->ai_family = c_num(default_arg(slot(src, family_s), zero));
-  dest->ai_socktype = c_num(default_arg(slot(src, socktype_s), zero));
-  dest->ai_protocol = c_num(default_arg(slot(src, protocol_s), zero));
+  dest->ai_flags = c_num(default_arg(slot(src, flags_s), zero), self);
+  dest->ai_family = c_num(default_arg(slot(src, family_s), zero), self);
+  dest->ai_socktype = c_num(default_arg(slot(src, socktype_s), zero), self);
+  dest->ai_protocol = c_num(default_arg(slot(src, protocol_s), zero), self);
 }
 
 static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
 {
+  val self = lit("getaddrinfo");
   val node = default_arg(node_in, nil);
   val service = default_arg(service_in, nil);
   val hints = default_arg(hints_in, nil);
@@ -188,7 +189,7 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
 
   if (hints) {
     memset(&hints_ai, 0, sizeof hints_ai);
-    addrinfo_in(&hints_ai, hints);
+    addrinfo_in(&hints_ai, hints, self);
   }
 
   res = getaddrinfo(node_u8, service_u8, phints, &alist);
@@ -209,7 +210,7 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
           if (node_num_p)
             ipv4_addr_from_num(&sa->sin_addr, node);
           if (svc_num_p)
-            sa->sin_port = htons(c_num(service));
+            sa->sin_port = htons(c_num(service, self));
           ptail = list_collect(ptail, sockaddr_in_unpack(sa));
         }
         break;
@@ -219,7 +220,7 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
           if (node_num_p)
             ipv6_addr_from_num(&sa->sin6_addr, node);
           if (svc_num_p)
-            sa->sin6_port = ntohs(c_num(service));
+            sa->sin6_port = ntohs(c_num(service, self));
           ptail = list_collect(ptail, sockaddr_in6_unpack(sa));
         }
         break;
@@ -243,7 +244,8 @@ static void addr_mismatch(val addr, val family)
 }
 
 static void sockaddr_pack(val sockaddr, val family,
-                          struct sockaddr_storage *buf, socklen_t *len)
+                          struct sockaddr_storage *buf, socklen_t *len,
+                          val self)
 {
   val addr_type = typeof(sockaddr);
 
@@ -256,7 +258,7 @@ static void sockaddr_pack(val sockaddr, val family,
     memset(sa, 0, sizeof *sa);
     sa->sin_family = AF_INET;
     ipv4_addr_from_num(&sa->sin_addr, addr);
-    sa->sin_port = ntohs(c_num(port));
+    sa->sin_port = ntohs(c_num(port, self));
     *len = sizeof *sa;
   } else if (addr_type == sockaddr_in6_s) {
     val addr = slot(sockaddr, addr_s);
@@ -271,7 +273,7 @@ static void sockaddr_pack(val sockaddr, val family,
     ipv6_addr_from_num(&sa->sin6_addr, addr);
     ipv6_flow_info_from_num(sa, flow);
     ipv6_scope_id_from_num(sa, scope);
-    sa->sin6_port = ntohs(c_num(port));
+    sa->sin6_port = ntohs(c_num(port, self));
     *len = sizeof *sa;
   } else if (addr_type == sockaddr_un_s) {
     val path = slot(sockaddr, path_s);
@@ -642,8 +644,9 @@ static val dgram_get_sock_peer(val stream)
 
 static val dgram_set_sock_peer(val stream, val peer)
 {
+  val self = lit("set-sock-peer");
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
-  sockaddr_pack(peer, d->family, &d->peer_addr, &d->pa_len);
+  sockaddr_pack(peer, d->family, &d->peer_addr, &d->pa_len, self);
   return set(mkloc(d->peer, stream), peer);
 }
 
@@ -677,10 +680,11 @@ static_def(struct strm_ops dgram_strm_ops =
 
 static val sock_bind(val sock, val sockaddr)
 {
+  val self = lit("sock-bind");
   val sfd = stream_fd(sock);
 
   if (sfd) {
-    int fd = c_num(sfd);
+    int fd = c_num(sfd, self);
     val family = sock_family(sock);
     struct sockaddr_storage sa;
     socklen_t salen;
@@ -688,7 +692,7 @@ static val sock_bind(val sock, val sockaddr)
 
     (void) setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 
-    sockaddr_pack(sockaddr, family, &sa, &salen);
+    sockaddr_pack(sockaddr, family, &sa, &salen, self);
 
     if (bind(fd, coerce(struct sockaddr *, &sa), salen) != 0)
       uw_throwf(socket_error_s, lit("sock-bind failed: ~d/~s"),
@@ -703,9 +707,9 @@ static val sock_bind(val sock, val sockaddr)
 
 #if HAVE_POLL
 
-static int fd_timeout(int fd, val timeout, int write)
+static int fd_timeout(int fd, val timeout, int write, val self)
 {
-    cnum ms = c_num(timeout) / 1000;
+    cnum ms = c_num(timeout, self) / 1000;
     int pollms = (ms > INT_MAX) ? INT_MAX : ms;
     struct pollfd pfd;
     int res;
@@ -728,9 +732,9 @@ static int fd_timeout(int fd, val timeout, int write)
 
 #elif HAVE_SELECT
 
-static int fd_timeout(int fd, val timeout, int write)
+static int fd_timeout(int fd, val timeout, int write, val self)
 {
-    cnum us = c_num(timeout);
+    cnum us = c_num(timeout, self);
     struct timeval tv;
     fd_set fds;
 
@@ -756,7 +760,7 @@ static int fd_timeout(int fd, val timeout, int write)
 #endif
 
 static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
-                      val sock, val sockaddr, val timeout)
+                      val sock, val sockaddr, val timeout, val self)
 {
   int res;
 
@@ -780,7 +784,7 @@ static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
       break;
     }
 
-    res = fd_timeout(fd, timeout, 1);
+    res = fd_timeout(fd, timeout, 1, self);
 
     switch (res) {
     case -1:
@@ -805,19 +809,19 @@ static int to_connect(int fd, struct sockaddr *addr, socklen_t len,
   return res;
 }
 
-static val open_sockfd(val fd, val family, val type, val mode_str)
+static val open_sockfd(val fd, val family, val type, val mode_str, val self)
 {
   struct stdio_mode m, m_rpb = stdio_mode_init_rpb;
 
   if (type == num_fast(SOCK_DGRAM)) {
-    return make_dgram_sock_stream(c_num(fd), family, nil, 0, 0, 0, 0,
+    return make_dgram_sock_stream(c_num(fd, self), family, nil, 0, 0, 0, 0,
                                   parse_mode(mode_str, m_rpb), 0);
   } else {
-    FILE *f = (errno = 0, w_fdopen(c_num(fd), c_str(normalize_mode(&m, mode_str, m_rpb))));
+    FILE *f = (errno = 0, w_fdopen(c_num(fd, self), c_str(normalize_mode(&m, mode_str, m_rpb))));
 
     if (!f) {
       int eno = errno;
-      close(c_num(fd));
+      close(c_num(fd, self));
       uw_throwf(errno_to_file_error(eno), lit("error creating stream for socket ~a: ~d/~s"),
                 fd, num(eno), errno_to_str(eno), nao);
     }
@@ -829,6 +833,7 @@ static val open_sockfd(val fd, val family, val type, val mode_str)
 
 static val sock_connect(val sock, val sockaddr, val timeout)
 {
+  val self = lit("sock-connect");
   val sfd = stream_fd(sock);
 
   if (sfd) {
@@ -836,12 +841,12 @@ static val sock_connect(val sock, val sockaddr, val timeout)
     struct sockaddr_storage sa;
     socklen_t salen;
 
-    sockaddr_pack(sockaddr, family, &sa, &salen);
+    sockaddr_pack(sockaddr, family, &sa, &salen, self);
 
-    if (to_connect(c_num(sfd), coerce(struct sockaddr *, &sa), salen,
-                   sock, sockaddr, default_null_arg(timeout)) != 0)
-      uw_throwf(socket_error_s, lit("sock-connect ~s to addr ~s: ~d/~s"),
-                sock, sockaddr, num(errno), errno_to_str(errno), nao);
+    if (to_connect(c_num(sfd, self), coerce(struct sockaddr *, &sa), salen,
+                   sock, sockaddr, default_null_arg(timeout), self) != 0)
+      uw_throwf(socket_error_s, lit("~a: ~s to addr ~s: ~d/~s"),
+                self, sock, sockaddr, num(errno), errno_to_str(errno), nao);
 
     sock_set_peer(sock, sockaddr);
 
@@ -853,10 +858,10 @@ static val sock_connect(val sock, val sockaddr, val timeout)
     return sock;
   }
 
-  uw_throwf(socket_error_s, lit("sock-connect: cannot connect ~s"), sock, nao);
+  uw_throwf(socket_error_s, lit("~a: cannot connect ~s"), self, sock, nao);
 }
 
-static val sock_mark_connected(val sock)
+static val sock_mark_connected(val sock, val self)
 {
   val sfd = stream_fd(sock);
 
@@ -865,9 +870,9 @@ static val sock_mark_connected(val sock)
     struct sockaddr_storage sa = all_zero_init;
     socklen_t salen = sizeof sa;
 
-    (void) getpeername(c_num(sfd), coerce(struct sockaddr *, &sa), &salen);
+    (void) getpeername(c_num(sfd, self), coerce(struct sockaddr *, &sa), &salen);
 
-    sock_set_peer(sock, sockaddr_unpack(c_num(family), &sa));
+    sock_set_peer(sock, sockaddr_unpack(c_num(family, self), &sa));
 
     if (sock_type(sock) == num_fast(SOCK_DGRAM)) {
       struct dgram_stream *d = coerce(struct dgram_stream *, sock->co.handle);
@@ -882,11 +887,12 @@ static val sock_mark_connected(val sock)
 
 static val sock_listen(val sock, val backlog)
 {
+  val self = lit("sock-listen");
   val sfd = stream_fd(sock);
 
   if (!sfd)
-    uw_throwf(socket_error_s, lit("sock-listen: cannot listen on ~s"),
-              sock, nao);
+    uw_throwf(socket_error_s, lit("~a: cannot listen on ~s"),
+              self, sock, nao);
 
   if (sock_type(sock) == num_fast(SOCK_DGRAM)) {
     if (sock_peer(sock)) {
@@ -894,20 +900,21 @@ static val sock_listen(val sock, val backlog)
       goto failed;
     }
   } else {
-    if (listen(c_num(sfd), c_num(default_arg(backlog, num_fast(16)))))
+    if (listen(c_num(sfd, self), c_num(default_arg(backlog, num_fast(16)), self)))
       goto failed;
   }
 
   return t;
 failed:
-    uw_throwf(socket_error_s, lit("sock-listen failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_throwf(socket_error_s, lit("~a: failed: ~d/~s"),
+              self, num(errno), errno_to_str(errno), nao);
 }
 
 static val sock_accept(val sock, val mode_str, val timeout_in)
 {
+  val self = lit("sock-accept");
   val sfd = stream_fd(sock);
-  int fd = sfd ? c_num(sfd) : -1;
+  int fd = sfd ? c_num(sfd, self) : -1;
   val family = sock_family(sock);
   val type = sock_type(sock);
   struct sockaddr_storage sa;
@@ -920,13 +927,13 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
 
 #if HAVE_POLL || HAVE_SELECT
   if (timeout) {
-    int res = fd_timeout(fd, timeout, 0);
+    int res = fd_timeout(fd, timeout, 0, self);
 
     switch (res) {
     case -1:
       goto badfd;
     case 0:
-      uw_throwf(timeout_error_s, lit("sock-accept ~s: timeout"), sock, nao);
+      uw_throwf(timeout_error_s, lit("~a: ~s: timeout"), self, sock, nao);
     default:
       break;
     }
@@ -966,7 +973,7 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
     if (nbytes == -1)
       goto failed;
 
-    if (nilp(peer = sockaddr_unpack(c_num(family), &sa))) {
+    if (nilp(peer = sockaddr_unpack(c_num(family, self), &sa))) {
       free(dgram);
       uw_throwf(socket_error_s, lit("sock-accept: ~s isn't a supported socket family"),
                 family, nao);
@@ -1000,12 +1007,13 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
     if (afd < 0)
       goto failed;
 
-    if (nilp(peer = sockaddr_unpack(c_num(family), &sa)))
+    if (nilp(peer = sockaddr_unpack(c_num(family, self), &sa)))
       uw_throwf(socket_error_s, lit("accept: ~s isn't a supported socket family"),
                 family, nao);
 
     {
-      val stream = open_sockfd(num(afd), family, num_fast(SOCK_STREAM), mode_str);
+      val stream = open_sockfd(num(afd), family, num_fast(SOCK_STREAM),
+                               mode_str, self);
       sock_set_peer(stream, peer);
       return stream;
     }
@@ -1020,22 +1028,23 @@ badfd:
 
 static val sock_shutdown(val sock, val how)
 {
+  val self = lit("sock-shutdown");
   val sfd = stream_fd(sock);
 
   flush_stream(sock);
 
-  if (shutdown(c_num(sfd), c_num(default_arg(how, num_fast(SHUT_WR)))))
-    uw_throwf(socket_error_s, lit("shutdown failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+  if (shutdown(c_num(sfd, self), c_num(default_arg(how, num_fast(SHUT_WR)), self)))
+    uw_throwf(socket_error_s, lit("~a failed: ~d/~s"),
+              self, num(errno), errno_to_str(errno), nao);
 
   return t;
 }
 
 #if defined SO_SNDTIMEO && defined SO_RCVTIMEO
-static val sock_timeout(val sock, val usec, val name, int which)
+static val sock_timeout(val sock, val usec, val name, int which, val self)
 {
-  cnum fd = c_num(stream_fd(sock));
-  cnum u = c_num(usec);
+  cnum fd = c_num(stream_fd(sock), self);
+  cnum u = c_num(usec, self);
   struct timeval tv;
 
   tv.tv_sec = u / 1000000;
@@ -1051,25 +1060,29 @@ static val sock_timeout(val sock, val usec, val name, int which)
 
 static val sock_send_timeout(val sock, val usec)
 {
-  return sock_timeout(sock, usec, lit("sock-send-timeout"), SO_SNDTIMEO);
+  val self = lit("sock-send-timeout");
+  return sock_timeout(sock, usec, self, SO_SNDTIMEO, self);
 }
 
 static val sock_recv_timeout(val sock, val usec)
 {
-  return sock_timeout(sock, usec, lit("sock-recv-timeout"), SO_RCVTIMEO);
+  val self = lit("sock-recv-timeout");
+  return sock_timeout(sock, usec, self, SO_RCVTIMEO, self);
 }
 #endif
 
 static val open_socket(val family, val type, val mode_str)
 {
-  int fd = socket(c_num(family), c_num(type), 0);
-  return open_sockfd(num(fd), family, type, mode_str);
+  val self = lit("open-socket");
+  int fd = socket(c_num(family, self), c_num(type, self), 0);
+  return open_sockfd(num(fd), family, type, mode_str, self);
 }
 
 static val socketpair_wrap(val family, val type, val mode_str)
 {
+  val self = lit("open-socket-pair");
   int sv[2] = { -1, -1 };
-  int res = socketpair(c_num(family), c_num(type), 0, sv);
+  int res = socketpair(c_num(family, self), c_num(type, self), 0, sv);
   val out = nil;
 
   uw_simple_catch_begin;
@@ -1079,11 +1092,11 @@ static val socketpair_wrap(val family, val type, val mode_str)
               num(errno), errno_to_str(errno), nao);
 
   {
-    val s0 = open_sockfd(num(sv[0]), family, type, mode_str);
-    val s1 = open_sockfd(num(sv[1]), family, type, mode_str);
+    val s0 = open_sockfd(num(sv[0]), family, type, mode_str, self);
+    val s1 = open_sockfd(num(sv[1]), family, type, mode_str, self);
 
-    sock_mark_connected(s0);
-    sock_mark_connected(s1);
+    sock_mark_connected(s0, self);
+    sock_mark_connected(s1, self);
 
     out = list(s0, s1, nao);
   }

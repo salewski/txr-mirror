@@ -48,9 +48,10 @@
 
 #define YY_INPUT(buf, result, max_size)                                 \
   do {                                                                  \
-    val n = get_bytes(lit("parser"), yyextra->stream,                   \
+    val self = lit("parser");                                           \
+    val n = get_bytes(self, yyextra->stream,                            \
                       coerce(mem_t *, buf), max_size);                  \
-    result = c_num(n);                                                  \
+    result = c_num(n, self);                                            \
   } while (0)
 
 #define YY_DECL \

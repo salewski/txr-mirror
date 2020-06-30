@@ -516,14 +516,14 @@ typedef val (*h_match_func)(match_line_ctx *c);
   debuglf(elem, lit(KIND " mismatch, position ~a (~a:~d)"),             \
           plus(c->pos, c->base), c->file, c->data_lineno, nao);         \
   debuglf(elem, lit("  ~a"), c->dataline, nao);                         \
-  if (c_num(c->pos) < 77)                                               \
+  if (c_num(c->pos, lit("txr")) < 77)                                   \
     debuglf(elem, lit("  ~*a^"), c->pos, lit(""), nao)
 
 #define LOG_MATCH(KIND, EXTENT)                                         \
   debuglf(elem, lit(KIND " matched, position ~a-~a (~a:~d)"),           \
           plus(c->pos, c->base), EXTENT, c->file, c->data_lineno, nao); \
   debuglf(elem, lit("  ~a"), c->dataline, nao);                         \
-  if (c_num(EXTENT) < 77)                                               \
+  if (c_num(EXTENT, lit("txr")) < 77)                                   \
     debuglf(elem, lit("  ~*a~<*a^"), c->pos, lit(""),                   \
               minus(EXTENT, c->pos), lit("^"), nao)
 
@@ -821,11 +821,12 @@ static val h_var(match_line_ctx *c)
 
 static val h_skip(match_line_ctx *c)
 {
+  val self = lit("skip");
   val elem = first(c->specline);
   val max = tleval_144(elem, second(elem), c->bindings);
   val min = tleval_144(elem, third(elem), c->bindings);
-  cnum cmax = integerp(max) ? c_num(max) : 0;
-  cnum cmin = integerp(min) ? c_num(min) : 0;
+  cnum cmax = integerp(max) ? c_num(max, self) : 0;
+  cnum cmin = integerp(min) ? c_num(min, self) : 0;
   val greedy = eq(max, greedy_k);
   val last_good_result = nil, last_good_pos = nil;
 
@@ -951,6 +952,7 @@ static val h_accept_fail(match_line_ctx *c)
 
 static val h_coll(match_line_ctx *c)
 {
+  val self = lit("coll");
   val elem = first(c->specline);
   val op_sym = first(elem);
   val coll_specline = second(elem);
@@ -980,12 +982,12 @@ static val h_coll(match_line_ctx *c)
   val have_vars, have_lists;
   val vars = getplist_f(args, vars_k, mkcloc(have_vars));
   val lists = getplist_f(args, lists_k, mkcloc(have_lists));
-  cnum cmax = if3(gap, c_num(gap), if3(max, c_num(max), 0));
-  cnum cmin = if3(gap, c_num(gap), if3(min, c_num(min), 0));
+  cnum cmax = if3(gap, c_num(gap, self), if3(max, c_num(max, self), 0));
+  cnum cmin = if3(gap, c_num(gap, self), if3(min, c_num(min, self), 0));
   cnum mincounter = cmin, maxcounter = 0;
-  cnum ctimax = if3(times, c_num(times), if3(maxtimes, c_num(maxtimes), 0));
-  cnum ctimin = if3(times, c_num(times), if3(mintimes, c_num(mintimes), 0));
-  cnum cchars = if3(chars, c_num(chars), 0);
+  cnum ctimax = if3(times, c_num(times, self), if3(maxtimes, c_num(maxtimes, self), 0));
+  cnum ctimin = if3(times, c_num(times, self), if3(mintimes, c_num(mintimes, self), 0));
+  cnum cchars = if3(chars, c_num(chars, self), 0);
   cnum timescounter = 0, charscounter = 0;
   int compat_222 = opt_compat && opt_compat <= 222;
   val iter;
@@ -1977,6 +1979,8 @@ static val extract_bindings(val bindings, val output_spec, val vars)
 
 static void do_output_line(val bindings, val specline, val filter, val out)
 {
+  val self = lit("output");
+
   if (specline == t)
     return;
 
@@ -2034,7 +2038,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
             val counter_bind = if2(counter, cons(counter_var, nil));
             cnum i;
 
-            for (i = 0; i < c_num(max_depth); i++) {
+            for (i = 0; i < c_num(max_depth, self); i++) {
               val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
               val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
@@ -2046,7 +2050,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
 
               if (i == 0 && first_clauses) {
                 do_output_line(bind_a, first_clauses, filter, out);
-              } else if (i == c_num(max_depth) - 1 &&
+              } else if (i == c_num(max_depth, self) - 1 &&
                          (last_clauses || modlast_clauses)) {
                 if (modlast_clauses) {
                   val iter;
@@ -2128,6 +2132,8 @@ static void do_output_line(val bindings, val specline, val filter, val out)
 
 static void do_output(val bindings, val specs, val filter, val out)
 {
+  val self = lit("output");
+
   if (specs == t)
     return;
 
@@ -2173,7 +2179,7 @@ static void do_output(val bindings, val specs, val filter, val out)
           val counter_bind = if2(counter, cons(counter_var, nil));
           cnum i;
 
-          for (i = 0; i < c_num(max_depth); i++) {
+          for (i = 0; i < c_num(max_depth, self); i++) {
             val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
             val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
 
@@ -2185,7 +2191,7 @@ static void do_output(val bindings, val specs, val filter, val out)
 
             if (i == 0 && first_clauses) {
               do_output(bind_a, first_clauses, filter, out);
-            } else if (i == c_num(max_depth) - 1 &&
+            } else if (i == c_num(max_depth, self) - 1 &&
                        (last_clauses || modlast_clauses))
             {
               if (modlast_clauses) {
@@ -2341,6 +2347,7 @@ typedef val (*v_match_func)(match_files_ctx *cout);
 
 static val v_skip(match_files_ctx *c)
 {
+  val self = lit("skip");
   spec_bind (specline, first_spec, c->spec);
 
   if (rest(specline))
@@ -2356,8 +2363,8 @@ static val v_skip(match_files_ctx *c)
     val args = rest(first_spec);
     val max = tleval_144(skipspec, first(args), c->bindings);
     val min = tleval_144(skipspec, second(args), c->bindings);
-    cnum cmax = integerp(max) ? c_num(max) : 0;
-    cnum cmin = integerp(min) ? c_num(min) : 0;
+    cnum cmax = integerp(max) ? c_num(max, self) : 0;
+    cnum cmin = integerp(min) ? c_num(min, self) : 0;
     val greedy = eq(max, greedy_k);
     volatile val last_good_result = nil;
     volatile val last_good_line = zero;
@@ -2430,6 +2437,7 @@ static val v_skip(match_files_ctx *c)
 
 static val v_fuzz(match_files_ctx *c)
 {
+  val self = lit("fuzz");
   spec_bind (specline, first_spec, c->spec);
 
   if (rest(specline))
@@ -2445,8 +2453,8 @@ static val v_fuzz(match_files_ctx *c)
     val args = rest(first_spec);
     val m = tleval_144(fuzz_spec, first(args), c->bindings);
     val n = tleval_144(fuzz_spec, second(args), c->bindings);
-    cnum cm = if3(m, c_num(m), 0);
-    cnum cn = if3(n, c_num(n), 0);
+    cnum cm = if3(m, c_num(m, self), 0);
+    cnum cn = if3(n, c_num(n, self), 0);
 
     {
       cnum reps, good;
@@ -3328,6 +3336,7 @@ out:
 
 static val v_collect(match_files_ctx *c)
 {
+  val self = lit("collect");
   spec_bind (specline, first_spec, c->spec);
   val op_sym = first(first_spec);
   val coll_spec = second(first_spec);
@@ -3357,14 +3366,14 @@ static val v_collect(match_files_ctx *c)
   val have_vars, have_lists;
   volatile val vars = getplist_f(args, vars_k, mkcloc(have_vars));
   val lists = getplist_f(args, lists_k, mkcloc(have_lists));
-  cnum cmax = if3(gap, c_num(gap), if3(max, c_num(max), 0));
-  cnum cmin = if3(gap, c_num(gap), if3(min, c_num(min), 0));
+  cnum cmax = if3(gap, c_num(gap, self), if3(max, c_num(max, self), 0));
+  cnum cmin = if3(gap, c_num(gap, self), if3(min, c_num(min, self), 0));
   cnum mincounter = cmin, maxcounter = 0;
-  cnum ctimax = if3(times, c_num(times), if3(maxtimes, c_num(maxtimes), 0));
-  cnum ctimin = if3(times, c_num(times), if3(mintimes, c_num(mintimes), 0));
+  cnum ctimax = if3(times, c_num(times, self), if3(maxtimes, c_num(maxtimes, self), 0));
+  cnum ctimin = if3(times, c_num(times, self), if3(mintimes, c_num(mintimes, self), 0));
   volatile cnum timescounter = 0, linescounter = 0;
-  cnum ctimes = if3(times, c_num(times), 0);
-  cnum clines = if3(lines, c_num(lines), 0);
+  cnum ctimes = if3(times, c_num(times, self), 0);
+  cnum clines = if3(lines, c_num(lines, self), 0);
   int compat_222 = opt_compat && opt_compat <= 222;
   val iter;
   uw_mark_frame;

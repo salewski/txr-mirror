@@ -47,7 +47,7 @@
 
 static cnum buf_check_len(val len, val self)
 {
-  cnum l = c_num(len);
+  cnum l = c_num(len, self);
   if (l < 0)
     uw_throwf(error_s, lit("~a: negative length ~s specified"),
               self, len, nao);
@@ -56,7 +56,7 @@ static cnum buf_check_len(val len, val self)
 
 static cnum buf_check_alloc_size(val alloc_size, cnum len, val self)
 {
-  cnum ah = c_num(alloc_size);
+  cnum ah = c_num(alloc_size, self);
   if (ah < len)
     uw_throwf(error_s, lit("~a: alloc size size ~s lower than length"),
               self, alloc_size, nao);
@@ -65,9 +65,9 @@ static cnum buf_check_alloc_size(val alloc_size, cnum len, val self)
 
 static cnum buf_check_index(struct buf *b, val index, val self)
 {
-  cnum ix = c_num(index);
+  cnum ix = c_num(index, self);
   if (ix < 0)
-    ix = c_num(plus(b->len, index));
+    ix = c_num(plus(b->len, index), self);
   if (ix < 0)
     uw_throwf(error_s, lit("~a: negative byte index ~s specified"),
               self, index, nao);
@@ -119,10 +119,11 @@ val make_borrowed_buf(val len, mem_t *data)
 
 val make_duplicate_buf(val len, mem_t *data)
 {
+  val self = lit("make-duplicate-buf");
   val obj = make_obj();
 
   obj->b.type = BUF;
-  obj->b.data = chk_copy_obj(data, c_num(len));
+  obj->b.data = chk_copy_obj(data, c_num(len, self));
   obj->b.len = len;
   obj->b.size = len;
 
@@ -154,13 +155,14 @@ val copy_buf(val buf)
 
 static void buf_shrink(struct buf *b)
 {
+  val self = lit("buf-trim");
   val len = b->len;
 
   if (len == zero)
     len = succ(len); /* avoid reallocing to zero length; i.e. freeing */
 
   if (len != b->size) {
-    b->data = chk_realloc(b->data, c_unum(len));
+    b->data = chk_realloc(b->data, c_unum(len, self));
     b->size = b->len;
   }
 }
@@ -181,8 +183,8 @@ static val buf_do_set_len(val buf, struct buf *b, val newlen,
                           val init_val, val self)
 {
   val oldlen = b->len;
-  cnum olen = c_num(oldlen), len = c_num(newlen);
-  cnum oldsize = c_num(b->size), size = oldsize;
+  cnum olen = c_num(oldlen, self), len = c_num(newlen, self);
+  cnum oldsize = c_num(b->size, self), size = oldsize;
   cnum iv = c_u8(default_arg(init_val, zero), self);
 
   if (!b->size)
@@ -242,6 +244,7 @@ mem_t *buf_get(val buf, val self)
 
 val sub_buf(val buf, val from, val to)
 {
+  val self = lit("sub-buf");
   struct buf *b = buf_handle(buf, lit("sub"));
   val len = b->len;
 
@@ -268,7 +271,7 @@ val sub_buf(val buf, val from, val to)
   } else if (from == 0 && to == len) {
     return buf;
   } else {
-    return make_duplicate_buf(minus(to, from), b->data + c_num(from));
+    return make_duplicate_buf(minus(to, from), b->data + c_num(from, self));
   }
 }
 
@@ -319,10 +322,10 @@ val replace_buf(val buf, val items, val from, val to)
 
     if (gt(len_rep, len_it)) {
       val len_diff = minus(len_rep, len_it);
-      cnum t = c_num(to);
-      cnum l = c_num(len);
+      cnum t = c_num(to, self);
+      cnum l = c_num(len, self);
 
-      memmove(buf->b.data + t - c_num(len_diff),
+      memmove(buf->b.data + t - c_num(len_diff, self),
               buf->b.data + t,
               l - t);
 
@@ -330,12 +333,12 @@ val replace_buf(val buf, val items, val from, val to)
       to = plus(from, len_it);
     } else if (lt(len_rep, len_it)) {
       val len_diff = minus(len_it, len_rep);
-      cnum t = c_num(to);
-      cnum l = c_num(len);
+      cnum t = c_num(to, self);
+      cnum l = c_num(len, self);
 
       buf_set_length(buf, plus(len, len_diff), zero);
 
-      memmove(buf->b.data + t + c_num(len_diff),
+      memmove(buf->b.data + t + c_num(len_diff, self),
               buf->b.data + t,
               l - t);
       to = plus(from, len_it);
@@ -344,12 +347,12 @@ val replace_buf(val buf, val items, val from, val to)
     if (zerop(len_it))
       return buf;
     if (bufp(items)) {
-      memmove(buf->b.data + c_num(from), items->b.data, c_num(len_it));
+      memmove(buf->b.data + c_num(from, self), items->b.data, c_num(len_it, self));
     } else {
       seq_iter_t item_iter;
       seq_iter_init(self, &item_iter, items);
-      cnum f = c_num(from);
-      cnum t = c_num(to);
+      cnum f = c_num(from, self);
+      cnum t = c_num(to, self);
 
       for (; f != t; f++) {
         val item = seq_geti(&item_iter);
@@ -392,7 +395,7 @@ val buf_put_buf(val dbuf, val sbuf, val pos)
 {
   val self = lit("buf-put-buf");
   struct buf *sb = buf_handle(sbuf, self);
-  buf_move_bytes(dbuf, pos, sb->data, c_num(sb->len), self);
+  buf_move_bytes(dbuf, pos, sb->data, c_num(sb->len, self), self);
   return sbuf;
 }
 
@@ -413,7 +416,7 @@ val buf_put_i8(val buf, val pos, val num)
   struct buf *b = buf_handle(buf, self);
   cnum p = buf_check_index(b, pos, self);
   i8_t v = c_i8(num, self);
-  if (p >= c_num(b->len))
+  if (p >= c_num(b->len, self))
     buf_do_set_len(buf, b, succ(pos), nil, self);
   b->data[p] = v;
   return num;
@@ -425,7 +428,7 @@ val buf_put_u8(val buf, val pos, val num)
   struct buf *b = buf_handle(buf, self);
   cnum p = buf_check_index(b, pos, self);
   cnum v = c_u8(num, self);
-  if (p >= c_num(b->len))
+  if (p >= c_num(b->len, self))
     buf_do_set_len(buf, b, succ(pos), nil, self);
   b->data[p] = v;
   return num;
@@ -492,7 +495,7 @@ val buf_put_char(val buf, val pos, val num)
   struct buf *b = buf_handle(buf, self);
   cnum p = buf_check_index(b, pos, self);
   char v = c_char(num, self);
-  if (p >= c_num(b->len))
+  if (p >= c_num(b->len, self))
     buf_do_set_len(buf, b, succ(pos), nil, self);
   b->data[p] = v;
   return num;
@@ -504,7 +507,7 @@ val buf_put_uchar(val buf, val pos, val num)
   struct buf *b = buf_handle(buf, self);
   cnum p = buf_check_index(b, pos, self);
   unsigned char v = c_uchar(num, self);
-  if (p >= c_num(b->len))
+  if (p >= c_num(b->len, self))
     buf_do_set_len(buf, b, succ(pos), nil, self);
   b->data[p] = v;
   return num;
@@ -593,7 +596,7 @@ void buf_get_bytes(val buf, val pos, mem_t *ptr, cnum size, val self)
   struct buf *b = buf_handle(buf, self);
   cnum p = buf_check_index(b, pos, self);
   cnum e = p + size;
-  cnum l = c_num(b->len);
+  cnum l = c_num(b->len, self);
 
   if (e > l || e < 0)
     uw_throwf(error_s, lit("~a: attempted read past buffer end"), self, nao);
@@ -607,7 +610,7 @@ val buf_get_i8(val buf, val pos)
   val self = lit("buf-get-i8");
   struct buf *b = buf_handle(buf, self);
   cnum p = buf_check_index(b, pos, self);
-  if (p >= c_num(b->len))
+  if (p >= c_num(b->len, self))
     uw_throwf(error_s, lit("~a: attempted read past buffer end"), self, nao);
   return num_fast(convert(i8_t, b->data[p]));
 }
@@ -617,7 +620,7 @@ val buf_get_u8(val buf, val pos)
   val self = lit("buf-get-u8");
   struct buf *b = buf_handle(buf, self);
   cnum p = buf_check_index(b, pos, self);
-  if (p >= c_num(b->len))
+  if (p >= c_num(b->len, self))
     uw_throwf(error_s, lit("~a: attempted read past buffer end"), self, nao);
   return num_fast(convert(u8_t, b->data[p]));
 }
@@ -787,9 +790,10 @@ val buf_get_cptr(val buf, val pos)
 
 val buf_print(val buf, val stream_in)
 {
+  val self = lit("buf-print");
   val stream = default_arg(stream_in, std_output);
-  struct buf *b = buf_handle(buf, lit("buf-print"));
-  cnum len = c_num(b->len), count = 0;
+  struct buf *b = buf_handle(buf, self);
+  cnum len = c_num(b->len, self), count = 0;
   mem_t *data = b->data;
   val save_mode = test_neq_set_indent_mode(stream, num_fast(indent_foff),
                                            num_fast(indent_data));
@@ -818,9 +822,10 @@ val buf_print(val buf, val stream_in)
 
 val buf_pprint(val buf, val stream_in)
 {
+  val self = lit("buf-pprint");
   val stream = default_arg(stream_in, std_output);
-  struct buf *b = buf_handle(buf, lit("buf-print"));
-  cnum len = c_num(b->len);
+  struct buf *b = buf_handle(buf, self);
+  cnum len = c_num(b->len, self);
   mem_t *data = b->data;
 
   while (len-- > 0)
@@ -889,7 +894,7 @@ static int buf_strm_get_byte_callback(mem_t *ctx)
   struct buf *b = buf_handle(s->buf, self);
   cnum p = buf_check_index(b, s->pos, self);
   s->pos = num(p + 1);
-  return (p >= c_num(b->len)) ? EOF : b->data[p];
+  return (p >= c_num(b->len, self)) ? EOF : b->data[p];
 }
 
 static val buf_strm_get_char(val stream)
@@ -933,7 +938,7 @@ static val buf_strm_unget_byte(val stream, int byte)
   val self = lit("unget-byte");
   struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
   struct buf *b = buf_handle(s->buf, self);
-  cnum p = c_num(s->pos);
+  cnum p = c_num(s->pos, self);
 
   if (p <= 0) {
     uw_throwf(file_error_s,
@@ -1090,7 +1095,7 @@ void buf_swap32(val buf)
 {
   val self = lit("buf-swap32");
   struct buf *b = buf_handle(buf, self);
-  mem_t *data = b->data, *end = data + c_num(b->len);
+  mem_t *data = b->data, *end = data + c_num(b->len, self);
 
   for (; data + 3 < end; data += 4) {
     u32_t sw32 = *coerce(u32_t *, data);
@@ -1113,7 +1118,7 @@ static val str_buf(val buf, val null_term)
   val self = lit("str-buf");
   struct buf *b = buf_handle(buf, self);
   val nt = default_null_arg(null_term);
-  size_t blen = c_unum(b->len);
+  size_t blen = c_unum(b->len, self);
   size_t len = (nt && blen > 0 && !b->data[blen-1]) ? blen - 1 : blen;
   wchar_t *str = utf8_dup_from_buf(coerce(const char *, b->data), len);
   return string_own(str);
@@ -1125,7 +1130,7 @@ static val buf_int(val num)
 
   switch (type(num)) {
   case NUM: case CHR:
-    num = bignum(c_num(num));
+    num = bignum(c_num(num, self));
     /* fallthrough */
   case BGNUM:
     {
@@ -1134,10 +1139,10 @@ static val buf_int(val num)
       val bytes = ash(plus(bits, num_fast(7)), num_fast(-3));
       val bitsround = ash(bytes, num_fast(3));
       val un = logtrunc(num, bitsround);
-      val ube = if3(bignump(un), un, bignum(c_num(un)));
+      val ube = if3(bignump(un), un, bignum(c_num(un, self)));
       mp_int *m = mp(ube);
       size_t numsize = mp_unsigned_bin_size(m);
-      size_t bufsize = c_unum(bytes);
+      size_t bufsize = c_unum(bytes, self);
       mem_t *data = chk_malloc(bufsize);
       data[0] = 0;
       mp_to_unsigned_bin(m, data + (bufsize - numsize));
@@ -1155,7 +1160,7 @@ static val buf_uint(val num)
 
   switch (type(num)) {
   case NUM: case CHR:
-    num = bignum(c_num(num));
+    num = bignum(c_num(num, self));
     /* fallthrough */
   case BGNUM:
     {
@@ -1179,7 +1184,7 @@ static val int_buf(val buf)
 {
   val self = lit("int-buf");
   struct buf *b = buf_handle(buf, self);
-  ucnum size = c_unum(b->size);
+  ucnum size = c_unum(b->size, self);
   ucnum bits = size * 8;
   val ubn = make_bignum();
   mp_err mpe = mp_read_unsigned_bin(mp(ubn), b->data, size);
@@ -1192,7 +1197,7 @@ static val uint_buf(val buf)
 {
   val self = lit("int-buf");
   struct buf *b = buf_handle(buf, self);
-  ucnum size = c_unum(b->size);
+  ucnum size = c_unum(b->size, self);
   val ubn = make_bignum();
   mp_err mpe = mp_read_unsigned_bin(mp(ubn), b->data, size);
   if (mpe != MP_OKAY)

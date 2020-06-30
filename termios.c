@@ -207,22 +207,22 @@ static val termios_unpack(struct termios *in)
   return out;
 }
 
-static void termios_pack(struct termios *out, val in)
+static void termios_pack(struct termios *out, val in, val self)
 {
   int i, cc_sz = convert(int, sizeof out->c_cc / sizeof out->c_cc[0]);
   val cc = slot(in, cc_s);
 
-  out->c_iflag = c_num(slot(in, iflag_s));
-  out->c_oflag = c_num(slot(in, oflag_s));
-  out->c_cflag = c_num(slot(in, cflag_s));
-  out->c_lflag = c_num(slot(in, lflag_s));
+  out->c_iflag = c_num(slot(in, iflag_s), self);
+  out->c_oflag = c_num(slot(in, oflag_s), self);
+  out->c_cflag = c_num(slot(in, cflag_s), self);
+  out->c_lflag = c_num(slot(in, lflag_s), self);
 
-  cfsetispeed(out, termios_baud_to_speed(c_num(slot(in, ispeed_s))));
-  cfsetospeed(out, termios_baud_to_speed(c_num(slot(in, ospeed_s))));
+  cfsetispeed(out, termios_baud_to_speed(c_num(slot(in, ispeed_s), self)));
+  cfsetospeed(out, termios_baud_to_speed(c_num(slot(in, ospeed_s), self)));
 
   for (i = 0; i < cc_sz; i++) {
     val ch = vecref(cc, num_fast(i));
-    cnum c = c_num(ch);
+    cnum c = c_num(ch, self);
 
     out->c_cc[i] = c;
 
@@ -249,39 +249,41 @@ static val get_fd(val stream)
 
 static val tcgetattr_wrap(val stream)
 {
+  val self = lit("tcgetattr");
   struct termios tio;
   int res;
   val fd = get_fd(stream);
 
-  res = tcgetattr(c_num(fd), &tio);
+  res = tcgetattr(c_num(fd, self), &tio);
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("tcgetattr failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_throwf(system_error_s, lit("~a: failed: ~d/~s"),
+              self, num(errno), errno_to_str(errno), nao);
 
   return termios_unpack(&tio);
 }
 
 static val tcsetattr_wrap(val termios, val actions, val stream)
 {
+  val self = lit("tcsetattr");
   struct termios tio;
   int res;
   val fd = get_fd(stream);
 
   actions = default_arg(actions, num(TCSADRAIN));
 
-  res = tcgetattr(c_num(fd), &tio);
+  res = tcgetattr(c_num(fd, self), &tio);
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("tcgetattr failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_throwf(system_error_s, lit("~a: failed to retrieve settings: ~d/~s"),
+              self, num(errno), errno_to_str(errno), nao);
 
-  termios_pack(&tio, termios);
+  termios_pack(&tio, termios, self);
 
-  res = tcsetattr(c_num(fd), c_num(actions), &tio);
+  res = tcsetattr(c_num(fd, self), c_num(actions, self), &tio);
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("tcsetattr failed: ~d/~s"),
+    uw_throwf(system_error_s, lit("~a: failed: ~d/~s"),
               num(errno), errno_to_str(errno), nao);
 
   return termios;
@@ -289,61 +291,66 @@ static val tcsetattr_wrap(val termios, val actions, val stream)
 
 static val tcsendbreak_wrap(val duration, val stream)
 {
+  val self = lit("tcsendbreak");
   val fd = get_fd(stream);
-  int res = tcsendbreak(c_num(fd), if3(missingp(duration),
-                                       500, c_num(duration)));
+  int res = tcsendbreak(c_num(fd, self), if3(missingp(duration),
+                                       500, c_num(duration, self)));
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("tcsendbreak failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_throwf(system_error_s, lit("~a: failed: ~d/~s"),
+              self, num(errno), errno_to_str(errno), nao);
 
   return t;
 }
 
 static val tcdrain_wrap(val stream)
 {
+  val self = lit("tcdrain");
   val fd = get_fd(stream);
-  int res = tcdrain(c_num(fd));
+  int res = tcdrain(c_num(fd, self));
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("tcdrain failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_throwf(system_error_s, lit("~a: failed: ~d/~s"),
+              self, num(errno), errno_to_str(errno), nao);
 
   return t;
 }
 
 static val tcflush_wrap(val queue, val stream)
 {
+  val self = lit("tcflush");
   val fd = get_fd(stream);
-  int res = tcflush(c_num(fd), c_num(queue));
+  int res = tcflush(c_num(fd, self), c_num(queue, self));
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("tcflush failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_throwf(system_error_s, lit("~a: failed: ~d/~s"),
+              self, num(errno), errno_to_str(errno), nao);
 
   return t;
 }
 
 static val tcflow_wrap(val action, val stream)
 {
+  val self = lit("tcflush");
   val fd = get_fd(stream);
-  int res = tcflow(c_num(fd), c_num(action));
+  int res = tcflow(c_num(fd, self), c_num(action, self));
 
   if (res < 0)
-    uw_throwf(system_error_s, lit("tcflow failed: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_throwf(system_error_s, lit("~a: failed: ~d/~s"),
+              self, num(errno), errno_to_str(errno), nao);
 
   return t;
 }
 
 static val encode_speeds(val termios)
 {
+  val self = lit("encode-speeds");
   struct termios tio = all_zero_init;
 
-  tio.c_iflag = c_num(slot(termios, iflag_s));
-  tio.c_cflag = c_num(slot(termios, cflag_s));
-  cfsetispeed(&tio, termios_baud_to_speed(c_num(slot(termios, ispeed_s))));
-  cfsetospeed(&tio, termios_baud_to_speed(c_num(slot(termios, ospeed_s))));
+  tio.c_iflag = c_num(slot(termios, iflag_s), self);
+  tio.c_cflag = c_num(slot(termios, cflag_s), self);
+  cfsetispeed(&tio, termios_baud_to_speed(c_num(slot(termios, ispeed_s), self)));
+  cfsetospeed(&tio, termios_baud_to_speed(c_num(slot(termios, ospeed_s), self)));
   slotset(termios, iflag_s, num(tio.c_iflag));
   slotset(termios, cflag_s, num(tio.c_cflag));
 
@@ -352,10 +359,11 @@ static val encode_speeds(val termios)
 
 static val decode_speeds(val termios)
 {
+  val self = lit("decode-speeds");
   struct termios tio = all_zero_init;
 
-  tio.c_cflag = c_num(slot(termios, cflag_s));
-  tio.c_iflag = c_num(slot(termios, iflag_s));
+  tio.c_cflag = c_num(slot(termios, cflag_s), self);
+  tio.c_iflag = c_num(slot(termios, iflag_s), self);
   slotset(termios, ispeed_s, num(termios_speed_to_baud(cfgetispeed(&tio))));
   slotset(termios, ospeed_s, num(termios_speed_to_baud(cfgetospeed(&tio))));
 

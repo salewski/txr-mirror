@@ -393,7 +393,8 @@ val uw_find_frames(val extype, val frtype)
 
 val uw_find_frames_by_mask(val mask_in)
 {
-  ucnum mask = c_unum(mask_in);
+  val self = lit("find-frames-by-mask");
+  ucnum mask = c_unum(mask_in, self);
   list_collect_decl (out, ptail);
   uw_frame_t *fr;
 

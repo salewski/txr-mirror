@@ -120,22 +120,24 @@ static val strudel_unget_byte(val stream, int byte)
 
 static ucnum strudel_put_buf(val stream, mem_t *ptr, ucnum len, ucnum pos)
 {
+  val self = lit("put-buf");
   struct strudel_base *sb = coerce(struct strudel_base *, stream->co.handle);
   obj_t buf_obj;
   val buf = init_borrowed_buf(&buf_obj, unum(len), ptr);
   val obj = sb->obj;
   val meth = slot(obj, put_buf_s);
-  return c_unum(funcall3(meth, obj, buf, num(pos)));
+  return c_unum(funcall3(meth, obj, buf, num(pos)), self);
 }
 
 static ucnum strudel_fill_buf(val stream, mem_t *ptr, ucnum len, ucnum pos)
 {
+  val self = lit("fill-buf");
   struct strudel_base *sb = coerce(struct strudel_base *, stream->co.handle);
   obj_t buf_obj;
   val buf = init_borrowed_buf(&buf_obj, unum(len), ptr);
   val obj = sb->obj;
   val meth = slot(obj, fill_buf_s);
-  return c_unum(funcall3(meth, obj, buf, num(pos)));
+  return c_unum(funcall3(meth, obj, buf, num(pos)), self);
 }
 
 static val strudel_close(val stream, val throw_on_error)

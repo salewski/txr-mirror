@@ -418,7 +418,7 @@ static int do_fixnum_opt(int (*opt_func)(val), val opt, val arg)
 
 static int compat(val optval)
 {
-  int compat = c_num(optval);
+  int compat = c_num(optval, lit("txr"));
   int min = compat_fixup(compat);
 
   if (min) {
@@ -436,14 +436,14 @@ static int compat(val optval)
 
 static int array_dim(val optval)
 {
-  opt_arraydims = c_num(optval);
+  opt_arraydims = c_num(optval, lit("txr"));
   opt_print_bindings = 1;
   return 1;
 }
 
 static int gc_delta(val optval)
 {
-  opt_gc_delta = c_num(mul(optval, num_fast(1048576)));
+  opt_gc_delta = c_num(mul(optval, num_fast(1048576)), lit("gc"));
   return 1;
 }
 

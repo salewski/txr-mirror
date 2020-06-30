@@ -2296,6 +2296,8 @@ static void paren_print_rec(val exp, val stream, int *semi_flag)
 
 static void print_rec(val exp, val stream, int *semi_flag)
 {
+  val self = lit("regex-print");
+
   if (exp == space_k) {
     puts_clear_flag(lit("\\s"), stream, semi_flag);
   } else if (exp == digit_k) {
@@ -2325,7 +2327,7 @@ static void print_rec(val exp, val stream, int *semi_flag)
     }
   } else if (stringp(exp)) {
     cnum i;
-    cnum l = c_num(length(exp));
+    cnum l = c_num(length(exp), self);
     for (i = 0; i < l; i++)
       print_rec(chr_str(exp, num(i)), stream, semi_flag);
   } else if (consp(exp)) {
@@ -2590,7 +2592,7 @@ val search_regex(val haystack, val needle_regex, val start,
 
   if (from_end) {
     cnum i;
-    cnum s = c_num(start);
+    cnum s = c_num(start, self);
     const wchar_t *h = c_str(haystack);
 
     slen = (slen ? slen : length_str(haystack));
@@ -2598,7 +2600,7 @@ val search_regex(val haystack, val needle_regex, val start,
     if (regex_run(needle_regex, L"") >= 0)
       return cons(slen, zero);
 
-    for (i = c_num(slen) - 1; i >= s; i--) {
+    for (i = c_num(slen, self) - 1; i >= s; i--) {
       cnum span = regex_run(needle_regex, h + i);
       if (span >= 0)
         return cons(num(i), num(span));

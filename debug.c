@@ -41,17 +41,20 @@ static val sys_print_backtrace_s;
 
 static val dbg_clear(val mask)
 {
-  return unum(debug_clear(c_unum(mask)));
+  val self = lit("dbg-clear");
+  return unum(debug_clear(c_unum(mask, self)));
 }
 
 static val dbg_set(val mask)
 {
-  return unum(debug_set(c_unum(mask)));
+  val self = lit("dbg-set");
+  return unum(debug_set(c_unum(mask, self)));
 }
 
 static val dbg_restore(val state)
 {
-  debug_restore(c_unum(state));
+  val self = lit("dbg-restore");
+  debug_restore(c_unum(state, self));
   return nil;
 }
 
