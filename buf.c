@@ -1195,7 +1195,7 @@ static val int_buf(val buf)
 
 static val uint_buf(val buf)
 {
-  val self = lit("int-buf");
+  val self = lit("uint-buf");
   struct buf *b = buf_handle(buf, self);
   ucnum size = c_unum(b->size, self);
   val ubn = make_bignum();
