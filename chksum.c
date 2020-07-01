@@ -241,12 +241,12 @@ val sha256_end(val ctx, val buf_in)
   return buf;
 }
 
-val crc32_stream(val stream, val nbytes)
+val crc32_stream(val stream, val nbytes, val init)
 {
   val self = lit("crc32-stream");
-  u32_t crc = 0;
   val buf = iobuf_get();
   val bfsz = length_buf(buf);
+  u32_t crc = if3(missingp(init), 0, c_u32(init, self));
 
   if (null_or_missing_p(nbytes)) {
     for (;;) {
@@ -284,12 +284,12 @@ val crc32_stream(val stream, val nbytes)
   return unum(crc);
 }
 
-static val crc32_buf(val buf, val self)
+static val crc32_buf(val buf, val init, val self)
 {
   ucnum len = c_unum(buf->b.len, self);
   mem_t *data = buf->b.data;
   const size_t szmax = convert(size_t, -1) / 4 + 1;
-  u32_t crc = 0;
+  u32_t crc = if3(missingp(init), 0, c_u32(init, self));
 
   while (len >= szmax) {
     crc = crc32_cont(data, szmax, crc);
@@ -303,14 +303,14 @@ static val crc32_buf(val buf, val self)
   return unum(crc);
 }
 
-static val crc32_str(val str)
+static val crc32_str(val str, val init)
 {
   val s = make_byte_input_stream(str);
-  return crc32_stream(s, nil);
+  return crc32_stream(s, nil, init);
 }
 
 
-val crc32(val obj)
+val crc32(val obj, val init)
 {
   val self = lit("sha256");
 
@@ -318,9 +318,9 @@ val crc32(val obj)
   case STR:
   case LSTR:
   case LIT:
-    return crc32_str(obj);
+    return crc32_str(obj, init);
   case BUF:
-    return crc32_buf(obj, self);
+    return crc32_buf(obj, init, self);
   default:
     uw_throwf(error_s, lit("~a: cannot hash ~s, only buffer and strings"),
               self, obj, nao);
@@ -514,8 +514,8 @@ void chksum_init(void)
   reg_fun(intern(lit("sha256-begin"), user_package), func_n0(sha256_begin));
   reg_fun(intern(lit("sha256-hash"), user_package), func_n2(sha256_hash));
   reg_fun(intern(lit("sha256-end"), user_package), func_n2o(sha256_end, 1));
-  reg_fun(intern(lit("crc32-stream"), user_package), func_n2o(crc32_stream, 1));
-  reg_fun(intern(lit("crc32"), user_package), func_n1(crc32));
+  reg_fun(intern(lit("crc32-stream"), user_package), func_n3o(crc32_stream, 1));
+  reg_fun(intern(lit("crc32"), user_package), func_n2o(crc32, 1));
   reg_fun(intern(lit("md5-stream"), user_package), func_n3o(md5_stream, 1));
   reg_fun(intern(lit("md5"), user_package), func_n2o(md5, 1));
   reg_fun(intern(lit("md5-begin"), user_package), func_n0(md5_begin));

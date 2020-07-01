@@ -55574,7 +55574,7 @@ savings time).
 
 .coNP Function @ crc32-stream
 .synb
-.mets (crc32-stream < stream <> [ nbytes ])
+.mets (crc32-stream < stream >> [ nbytes <> [ crc-prev ]])
 .syne
 .desc
 The
@@ -55590,11 +55590,19 @@ integer. It gives the number of bytes which should be read
 and included in the sum. If the argument is omitted, then bytes are read
 until the end of the stream.
 
-The CRC-32 is returned as a non-negative integer.
+The optional
+.meta crc-prev
+argument defaults to zero. It is fully documented under the
+.code crc32
+function.
+
+The
+.code crc32-stream
+functions returns the calculated CRC-32 as a non-negative integer.
 
 .coNP Function @ crc32
 .synb
-.mets (crc32 << obj )
+.mets (crc32 < obj <> [ crc-prev ])
 .syne
 .desc
 The
@@ -55613,7 +55621,29 @@ If
 is a character string, then the sum is calculated over the bytes
 which constitute its UTF-8 representation.
 
-The CRC-32 is returned as a non-negative integer.
+The optional
+.meta crc-prev
+argument defaults to zero. If specified, it should be a nonnegative integer in
+the 32 bit range. This argument is useful when a single CRC-32 must be
+calculated in multiple operations over several objects. The first call should
+specify a value of zero, or omit the argument. To continue the checksum,
+each subsequent call to the function should pass as the
+.meta crc-prev
+argument the CRC-32 obtained from the previous call.
+
+The
+.code crc32
+function returns the calculated CRC-32 as a non-negative integer.
+
+.TP* Examples:
+
+.mono
+  ;; Single operation
+  (crc32 "ABCD") --> 3675725989
+
+  ;; In two steps, demonstrating crc-prev argument:
+  (crc32 "CD" (crc32 "AB")) -> 3675725989
+.onom
 
 .coNP Functions @ sha256-stream and @ md5-stream
 .synb
