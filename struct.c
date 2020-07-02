@@ -144,7 +144,6 @@ void struct_init(void)
   struct_type_hash = make_hash(nil, nil, nil);
   slot_hash = make_hash(nil, nil, t);
   slot_type_hash = make_hash(nil, nil, nil);
-  slot_type_hash = make_hash(nil, nil, nil);
   static_slot_type_hash = make_hash(nil, nil, nil);
   struct_type_finalize_f = func_n1(struct_type_finalize);
 
