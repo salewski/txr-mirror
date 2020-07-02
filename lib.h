@@ -619,6 +619,7 @@ val tolist(val seq);
 val nullify(val obj);
 val empty(val seq);
 val seqp(val obj);
+val iterable(val obj);
 val list_seq(val seq);
 val vec_seq(val seq);
 val str_seq(val seq);

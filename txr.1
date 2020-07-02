@@ -29342,6 +29342,30 @@ methods are considered sequences.
 No other objects are sequences. However, future revisions of
 the language may specify additional objects that are sequences.
 
+.coNP Function @ iterable
+.synb
+.mets (iterable << object )
+.syne
+.desc
+The
+.code iterable
+function returns
+.code t
+if
+.meta object
+is iterable, otherwise
+.conp nil .
+
+If
+.meta object
+is a sequence according to the
+.code seqp
+function, then it is iterable.
+
+Additional objects that are not sequences are also iterable:
+numeric or character ranges, and numbers. Future revisions
+of the language may specify additional iterable objects.
+
 .coNP Function @ make-like
 .synb
 .mets (make-like < list << object )

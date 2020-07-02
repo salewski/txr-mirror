@@ -328,6 +328,38 @@ seq_info_t seq_info(val obj)
   return ret;
 }
 
+static val seq_iterable(seq_info_t si)
+{
+  if (si.kind != SEQ_NOTSEQ)
+    return t;
+
+  switch (si.type) {
+  case RNG:
+    {
+      val rf = from(si.obj);
+
+      switch (type(rf)) {
+      case NUM:
+      case CHR:
+      case BGNUM:
+        return t;
+      default:
+        break;
+      }
+    }
+    break;
+  case CHR:
+  case NUM:
+  case BGNUM:
+  case FLNUM:
+    return t;
+  default:
+    break;
+  }
+
+  return nil;
+}
+
 static void noreturn unsup_obj(val self, val obj)
 {
   uw_throwf(error_s, lit("~a: unsupported object ~s"), self, obj, nao);
@@ -1459,16 +1491,17 @@ val tolist(val seq)
 val nullify(val obj)
 {
   val self = lit("nullify");
-  val elem;
   seq_info_t si = seq_info(obj);
 
-  if (si.kind == SEQ_NOTSEQ && si.type != RNG) {
-    return obj;
-  } else {
+  if (seq_iterable(si))
+  {
     seq_iter_t iter;
+    val elem;
     seq_iter_init_with_info(self, &iter, si, 0);
     return if2(seq_peek(&iter, &elem), obj);
   }
+
+  return si.obj;
 }
 
 val empty(val seq)
@@ -1485,6 +1518,12 @@ val seqp(val obj)
 {
   seq_info_t si = seq_info(obj);
   return tnil(si.kind != SEQ_NOTSEQ);
+}
+
+val iterable(val obj)
+{
+  seq_info_t si = seq_info(obj);
+  return seq_iterable(si);
 }
 
 val list_seq(val seq)
