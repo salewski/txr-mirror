@@ -1885,7 +1885,10 @@ val get_slot_syms(val package, val is_current, val method_only)
 
 val slot_types(val slot)
 {
-  return gethash(slot_type_hash, slot);
+  uses_or2;
+  return or2(gethash(slot_type_hash, slot),
+             if2(lisplib_try_load(slot),
+                 gethash(slot_type_hash, slot)));
 }
 
 val static_slot_types(val slot)
