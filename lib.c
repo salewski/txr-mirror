@@ -577,52 +577,51 @@ val seq_geti(seq_iter_t *it)
 
 static void seq_iter_rewind(seq_iter_t *it, val self)
 {
-  switch (it->inf.kind) {
-  case SEQ_NIL:
-    it->ui.iter = nil;
+  switch (it->inf.type) {
+  case RNG:
+    {
+      val rf = from(it->inf.obj);
+
+      switch (type(rf)) {
+      case NUM:
+        it->ui.cn = c_num(rf, self);
+        break;
+      case CHR:
+        it->ui.cn = c_chr(rf);
+        break;
+      case BGNUM:
+        it->ui.vn = rf;
+        break;
+      default:
+        break;
+      }
+    }
     break;
-  case SEQ_LISTLIKE:
-    it->ui.iter = it->inf.obj;
+  case CHR:
+    it->ui.cn = c_chr(it->inf.obj);
     break;
-  case SEQ_VECLIKE:
-    it->ui.index = 0;
-    break;
-  case SEQ_HASHLIKE:
-    it->ui.iter = hash_begin(it->inf.obj);
+  case NUM:
+  case BGNUM:
+  case FLNUM:
+    it->ui.vn = it->inf.obj;
     break;
   default:
-    switch (it->inf.type) {
-    case RNG:
-      {
-        val rf = from(it->inf.obj);
-
-        switch (type(rf)) {
-        case NUM:
-          it->ui.cn = c_num(rf, self);
-          break;
-        case CHR:
-          it->ui.cn = c_chr(rf);
-          break;
-        case BGNUM:
-          it->ui.vn = rf;
-          break;
-        default:
-          break;
-        }
-      }
+    switch (it->inf.kind) {
+    case SEQ_NIL:
+      it->ui.iter = nil;
       break;
-    case CHR:
-      it->ui.cn = c_chr(it->inf.obj);
+    case SEQ_LISTLIKE:
+      it->ui.iter = it->inf.obj;
       break;
-    case NUM:
-    case BGNUM:
-    case FLNUM:
-      it->ui.vn = it->inf.obj;
+    case SEQ_VECLIKE:
+      it->ui.index = 0;
+      break;
+    case SEQ_HASHLIKE:
+      it->ui.iter = hash_begin(it->inf.obj);
       break;
     default:
       break;
     }
-    break;
   }
 }
 
@@ -631,111 +630,110 @@ static void seq_iter_init_with_info(val self, seq_iter_t *it,
 {
   it->inf = si;
 
-  switch (it->inf.kind) {
-  case SEQ_NIL:
-    it->ui.iter = nil;
-    it->ul.len = 0;
-    it->get = seq_iter_get_nil;
-    it->peek = seq_iter_peek_nil;
+  switch (it->inf.type) {
+  case RNG:
+    {
+      val rf = from(it->inf.obj);
+      val rt = to(it->inf.obj);
+
+      if (rt == colon_k || rt == t) {
+        seq_iter_init_with_info(self, it, seq_info(rf), support_rewind);
+        break;
+      }
+
+      if (lt(rf, rt)) switch (type(rf)) {
+      case NUM:
+        it->ui.cn = c_num(rf, self);
+        it->ul.cbound = c_num(rt, self);
+        it->get = seq_iter_get_range_cnum;
+        it->peek = seq_iter_peek_range_cnum;
+        break;
+      case CHR:
+        it->ui.cn = c_chr(rf);
+        it->ul.cbound = c_chr(rt);
+        it->get = seq_iter_get_range_chr;
+        it->peek = seq_iter_peek_range_chr;
+        break;
+      case BGNUM:
+        it->ui.vn = rf;
+        it->ul.vbound = rt;
+        it->get = seq_iter_get_range_bignum;
+        it->peek = seq_iter_peek_range_bignum;
+        break;
+      default:
+        unsup_obj(self, it->inf.obj);
+      } else if (gt(rf, rt)) switch (type(rf)) {
+      case NUM:
+        it->ui.cn = c_num(rf, self);
+        it->ul.cbound = c_num(rt, self);
+        it->get = seq_iter_get_rev_range_cnum;
+        it->peek = seq_iter_peek_rev_range_cnum;
+        break;
+      case CHR:
+        it->ui.cn = c_chr(rf);
+        it->ul.cbound = c_chr(rt);
+        it->get = seq_iter_get_rev_range_chr;
+        it->peek = seq_iter_peek_rev_range_chr;
+        break;
+      case BGNUM:
+        it->ui.vn = rf;
+        it->ul.vbound = rt;
+        it->get = seq_iter_get_rev_range_bignum;
+        it->peek = seq_iter_peek_rev_range_bignum;
+        break;
+      default:
+        unsup_obj(self, it->inf.obj);
+      } else {
+        seq_iter_init_with_info(self, it, seq_info(nil), support_rewind);
+        break;
+      }
+    }
     break;
-  case SEQ_LISTLIKE:
-    it->ui.iter = it->inf.obj;
-    it->ul.len = 0;
-    it->get = seq_iter_get_list;
-    it->peek = seq_iter_peek_list;
-    if (!support_rewind)
-      it->inf.obj = nil;
+  case CHR:
+    it->ui.cn = c_chr(it->inf.obj);
+    it->ul.cbound = 0;
+    it->get = seq_iter_get_chr;
+    it->peek = seq_iter_peek_chr;
     break;
-  case SEQ_VECLIKE:
-    it->ui.index = 0;
-    it->ul.len = c_num(length(it->inf.obj), self);
-    it->get = seq_iter_get_vec;
-    it->peek = seq_iter_peek_vec;
-    break;
-  case SEQ_HASHLIKE:
-    it->ui.iter = hash_begin(it->inf.obj);
-    it->ul.len = 0;
-    it->get = seq_iter_get_hash;
-    it->peek = seq_iter_peek_hash;
+  case NUM:
+  case BGNUM:
+  case FLNUM:
+    it->ui.vn = it->inf.obj;
+    it->ul.vbound = nil;
+    it->get = seq_iter_get_num;
+    it->peek = seq_iter_peek_num;
     break;
   default:
-    switch (it->inf.type) {
-    case RNG:
-      {
-        val rf = from(it->inf.obj);
-        val rt = to(it->inf.obj);
-
-        if (rt == colon_k || rt == t) {
-          seq_iter_init_with_info(self, it, seq_info(rf), support_rewind);
-          break;
-        }
-
-        if (lt(rf, rt)) switch (type(rf)) {
-        case NUM:
-          it->ui.cn = c_num(rf, self);
-          it->ul.cbound = c_num(rt, self);
-          it->get = seq_iter_get_range_cnum;
-          it->peek = seq_iter_peek_range_cnum;
-          break;
-        case CHR:
-          it->ui.cn = c_chr(rf);
-          it->ul.cbound = c_chr(rt);
-          it->get = seq_iter_get_range_chr;
-          it->peek = seq_iter_peek_range_chr;
-          break;
-        case BGNUM:
-          it->ui.vn = rf;
-          it->ul.vbound = rt;
-          it->get = seq_iter_get_range_bignum;
-          it->peek = seq_iter_peek_range_bignum;
-          break;
-        default:
-          unsup_obj(self, it->inf.obj);
-        } else if (gt(rf, rt)) switch (type(rf)) {
-        case NUM:
-          it->ui.cn = c_num(rf, self);
-          it->ul.cbound = c_num(rt, self);
-          it->get = seq_iter_get_rev_range_cnum;
-          it->peek = seq_iter_peek_rev_range_cnum;
-          break;
-        case CHR:
-          it->ui.cn = c_chr(rf);
-          it->ul.cbound = c_chr(rt);
-          it->get = seq_iter_get_rev_range_chr;
-          it->peek = seq_iter_peek_rev_range_chr;
-          break;
-        case BGNUM:
-          it->ui.vn = rf;
-          it->ul.vbound = rt;
-          it->get = seq_iter_get_rev_range_bignum;
-          it->peek = seq_iter_peek_rev_range_bignum;
-          break;
-        default:
-          unsup_obj(self, it->inf.obj);
-        } else {
-          seq_iter_init_with_info(self, it, seq_info(nil), support_rewind);
-          break;
-        }
-      }
+    switch (it->inf.kind) {
+    case SEQ_NIL:
+      it->ui.iter = nil;
+      it->ul.len = 0;
+      it->get = seq_iter_get_nil;
+      it->peek = seq_iter_peek_nil;
       break;
-    case CHR:
-      it->ui.cn = c_chr(it->inf.obj);
-      it->ul.cbound = 0;
-      it->get = seq_iter_get_chr;
-      it->peek = seq_iter_peek_chr;
+    case SEQ_LISTLIKE:
+      it->ui.iter = it->inf.obj;
+      it->ul.len = 0;
+      it->get = seq_iter_get_list;
+      it->peek = seq_iter_peek_list;
+      if (!support_rewind)
+        it->inf.obj = nil;
       break;
-    case NUM:
-    case BGNUM:
-    case FLNUM:
-      it->ui.vn = it->inf.obj;
-      it->ul.vbound = nil;
-      it->get = seq_iter_get_num;
-      it->peek = seq_iter_peek_num;
+    case SEQ_VECLIKE:
+      it->ui.index = 0;
+      it->ul.len = c_num(length(it->inf.obj), self);
+      it->get = seq_iter_get_vec;
+      it->peek = seq_iter_peek_vec;
+      break;
+    case SEQ_HASHLIKE:
+      it->ui.iter = hash_begin(it->inf.obj);
+      it->ul.len = 0;
+      it->get = seq_iter_get_hash;
+      it->peek = seq_iter_peek_hash;
       break;
     default:
       unsup_obj(self, it->inf.obj);
     }
-    break;
   }
 }
 
