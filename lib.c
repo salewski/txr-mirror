@@ -353,6 +353,10 @@ static val seq_iterable(seq_info_t si)
   case BGNUM:
   case FLNUM:
     return t;
+  case COBJ:
+    if (get_special_slot(si.obj, iter_begin_m))
+      return t;
+    break;
   default:
     break;
   }
@@ -568,6 +572,94 @@ static int seq_iter_peek_num(seq_iter_t *it, val *pval)
   return 1;
 }
 
+static int seq_iter_get_oop(seq_iter_t *it, val *pval)
+{
+  val iter = it->ui.iter;
+
+  if (it->ul.next != nao) {
+    val iter_step_meth = get_special_required_slot(iter, iter_step_m);
+    *pval = it->ul.next;
+    it->ui.iter = funcall1(iter_step_meth, iter);
+    it->ul.next = nao;
+    return 1;
+  } else {
+    val iter_more_meth = get_special_required_slot(iter, iter_more_m);
+
+    if (!funcall1(iter_more_meth, iter)) {
+      return 0;
+    } else {
+      val iter_item_meth = get_special_required_slot(iter, iter_item_m);
+      val iter_step_meth = get_special_required_slot(iter, iter_step_m);
+      *pval = funcall1(iter_item_meth, iter);
+      it->ui.iter = funcall1(iter_step_meth, iter);
+      it->ul.next = nao;
+      return 1;
+    }
+  }
+}
+
+static int seq_iter_peek_oop(seq_iter_t *it, val *pval)
+{
+  val iter = it->ui.iter;
+
+  if (it->ul.next != nao) {
+    *pval = it->ul.next;
+    return 1;
+  } else {
+    val iter_more_meth = get_special_required_slot(iter, iter_more_m);
+
+    if (funcall1(iter_more_meth, iter)) {
+      val iter_item_meth = get_special_required_slot(iter, iter_item_m);
+      it->ul.next = *pval = funcall1(iter_item_meth, iter);
+    }
+
+    return 1;
+  }
+
+  return 0;
+}
+
+static int seq_iter_get_fast_oop(seq_iter_t *it, val *pval)
+{
+  val iter = it->ui.iter;
+
+  if (iter) {
+    val item = it->ul.next;
+    val iter_step_meth = get_special_required_slot(iter, iter_step_m);
+
+    if (item == nao) {
+      val iter_item_meth = get_special_required_slot(iter, iter_item_m);
+      *pval = funcall1(iter_item_meth, iter);
+    } else {
+      *pval = item;
+    }
+
+    it->ui.iter = funcall1(iter_step_meth, iter);
+    it->ul.next = nao;
+    return 1;
+  }
+
+  return 0;
+}
+
+static int seq_iter_peek_fast_oop(seq_iter_t *it, val *pval)
+{
+  val iter = it->ui.iter;
+
+  if (it->ul.next != nao) {
+    *pval = it->ul.next;
+    return 1;
+  }
+
+  if (iter) {
+    val iter_item_meth = get_special_required_slot(iter, iter_item_m);
+    it->ul.next = *pval = funcall1(iter_item_meth, iter);
+    return 1;
+  }
+
+  return 0;
+}
+
 val seq_geti(seq_iter_t *it)
 {
   val v = nil;
@@ -703,6 +795,35 @@ static void seq_iter_init_with_info(val self, seq_iter_t *it,
     it->get = seq_iter_get_num;
     it->peek = seq_iter_peek_num;
     break;
+  case COBJ:
+    if (obj_struct_p(it->inf.obj)) {
+      val iter_begin_meth = get_special_slot(it->inf.obj, iter_begin_m);
+      if (iter_begin_meth) {
+        val iter = funcall1(iter_begin_meth, it->inf.obj);
+        if (iter == nil) {
+          it->ui.iter = nil;
+          it->ul.len = 0;
+          it->get = seq_iter_get_nil;
+          it->peek = seq_iter_peek_nil;
+          break;
+        } else {
+          val iter_more_meth = get_special_slot(iter, iter_more_m);
+          if (iter_more_meth) {
+            it->ui.iter = iter;
+            it->ul.next = nao;
+            it->get = seq_iter_get_oop;
+            it->peek = seq_iter_peek_oop;
+          } else {
+            it->ui.iter = iter;
+            it->ul.next = nao;
+            it->get = seq_iter_get_fast_oop;
+            it->peek = seq_iter_peek_fast_oop;
+          }
+          break;
+        }
+      }
+    }
+    /* fallthrough */
   default:
     switch (it->inf.kind) {
     case SEQ_NIL:
@@ -787,6 +908,8 @@ static void seq_iter_mark(val seq_iter)
     gc_mark(si->ui.iter);
     break;
   default:
+    if (cobjp(seq_iter) && obj_struct_p(seq_iter))
+      gc_mark(si->ui.iter);
     break;
   }
 }
@@ -830,16 +953,23 @@ val iter_begin(val obj)
   val self = lit("iter-begin");
   seq_info_t sinf = seq_info(obj);
 
-  switch (sinf.kind) {
-  case SEQ_NIL:
-  case SEQ_LISTLIKE:
-    return sinf.obj;
+  switch (sinf.type) {
+  case CHR:
+  case NUM:
+  case BGNUM:
+    return obj;
+  case COBJ:
+    if (obj_struct_p(obj)) {
+      val iter_begin_meth = get_special_slot(obj, iter_begin_m);
+      if (iter_begin_meth)
+        return funcall1(iter_begin_meth, obj);
+    }
+    /* fallthrough */
   default:
-    switch (sinf.type) {
-    case CHR:
-    case NUM:
-    case BGNUM:
-      return obj;
+    switch (sinf.kind) {
+    case SEQ_NIL:
+    case SEQ_LISTLIKE:
+      return sinf.obj;
     default:
       {
         val si_obj;
@@ -869,6 +999,11 @@ val iter_more(val iter)
       struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
       val item = nil;
       return if2(seq_peek(si, &item), t);
+    }
+    if (obj_struct_p(iter)) {
+      val iter_more_meth = get_special_slot(iter, iter_more_m);
+      if (iter_more_meth)
+        return funcall1(iter_more_meth, iter);
     }
     /* fallthrough */
   default:
@@ -915,6 +1050,11 @@ val iter_step(val iter)
       (void) seq_get(si, &item);
       return iter;
     }
+    if (obj_struct_p(iter)) {
+      val iter_step_meth = get_special_slot(iter, iter_step_m);
+      if (iter_step_meth)
+        return funcall1(iter_step_meth, iter);
+    }
     /* fallthrough */
   default:
     return cdr(iter);
@@ -926,24 +1066,29 @@ val iter_reset(val iter, val obj)
   val self = lit("iter-reset");
   seq_info_t sinf = seq_info(obj);
 
-  switch (sinf.kind) {
-  case SEQ_NIL:
-  case SEQ_LISTLIKE:
-    return sinf.obj;
+  switch (type(iter)) {
+  case CHR:
+  case NUM:
+  case BGNUM:
+    return obj;
+  case COBJ:
+    if (iter->co.cls == seq_iter_s)
+    {
+      struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
+      seq_iter_init_with_info(self, si, sinf, 0);
+      return iter;
+    }
+    /* fallthrough */
   default:
-    switch (type(iter)) {
-    case CHR:
-    case NUM:
-    case BGNUM:
-      return obj;
-    case COBJ:
-      if (iter->co.cls == seq_iter_s)
-      {
-        struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
-        seq_iter_init_with_info(self, si, sinf, 0);
-        return iter;
-      }
-      /* fallthrough */
+    if (cobjp(obj) && obj_struct_p(obj)) {
+      val iter_reset_meth = get_special_slot(obj, iter_reset_m);
+      if (iter_reset_meth)
+        return funcall2(iter_reset_meth, obj, iter);
+    }
+    switch (sinf.kind) {
+    case SEQ_NIL:
+    case SEQ_LISTLIKE:
+      return sinf.obj;
     default:
       return iter_begin(obj);
     }

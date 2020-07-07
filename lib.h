@@ -397,6 +397,7 @@ typedef struct seq_iter {
     cnum len;
     val vbound;
     cnum cbound;
+    val next;
   } ul;
   int (*get)(struct seq_iter *, val *pval);
   int (*peek)(struct seq_iter *, val *pval);

@@ -105,9 +105,12 @@ val slot_s, derived_s;
 
 val nullify_s, from_list_s, lambda_set_s;
 
+val iter_begin_s, iter_more_s, iter_item_s, iter_step_s, iter_reset_s;
+
 static val *special_sym[num_special_slots] = {
   &equal_s, &nullify_s, &from_list_s, &lambda_s, &lambda_set_s,
-  &length_s, &car_s, &cdr_s, &rplaca_s, &rplacd_s
+  &length_s, &car_s, &cdr_s, &rplaca_s, &rplacd_s,
+  &iter_begin_s, &iter_more_s, &iter_item_s, &iter_step_s, &iter_reset_s
 };
 
 static val struct_type_hash;
@@ -141,6 +144,12 @@ void struct_init(void)
   nullify_s = intern(lit("nullify"), user_package);
   from_list_s = intern(lit("from-list"), user_package);
   lambda_set_s = intern(lit("lambda-set"), user_package);
+  iter_begin_s = intern(lit("iter-begin"), user_package);
+  iter_more_s = intern(lit("iter-more"), user_package);
+  iter_item_s = intern(lit("iter-item"), user_package);
+  iter_step_s = intern(lit("iter-step"), user_package);
+  iter_reset_s = intern(lit("iter-reset"), user_package);
+
   struct_type_hash = make_hash(nil, nil, nil);
   slot_hash = make_hash(nil, nil, t);
   slot_type_hash = make_hash(nil, nil, nil);
@@ -1930,6 +1939,17 @@ val get_special_slot(val obj, enum special_slot spidx)
     return maybe_slot(obj, slot);
   struct struct_inst *si = coerce(struct struct_inst *, obj->co.handle);
   return get_special_static_slot(si->type, spidx, slot);
+}
+
+val get_special_required_slot(val obj, enum special_slot spidx)
+{
+  val content = get_special_slot(obj, spidx);
+  if (content == nil) {
+    val slot = *special_sym[spidx];
+    uw_throwf(error_s, lit("~s is missing required ~s slot"),
+              obj, slot, nao);
+  }
+  return content;
 }
 
 val get_special_slot_by_type(val stype, enum special_slot spidx)

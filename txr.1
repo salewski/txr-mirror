@@ -29281,6 +29281,205 @@ function is itself inherited. If the same version of this function is shared by
 multiple structure types due to inheritance, this argument informs the function
 which of those types it is being invoked for.
 
+.coNP Methods @ iter-begin and @ iter-reset
+.synb
+.mets << object .(iter-begin)
+.mets << object .(iter-reset << iter )
+.syne
+.desc
+If an object supports the
+.code iter-begin
+method, it is considered iterable; the
+.code iterable
+function will return
+.code t
+if invoked on this object.
+
+The responsibility of the
+.code iter-begin
+method is to return an iterator object: an object which supports
+certain special methods related to iteration, according to one of two
+protocols, described below.
+
+The
+.code iter-reset
+method is optional. It is similar to
+.code iter-begin
+but takes an additional
+.meta iter
+argument, an iterator object that was previously returned by the
+.code iter-begin
+method of the same
+.metn object .
+
+If
+.code iter-reset
+determines that
+.meta iter
+can be re-used for a new iteration, then it can suitably mutate the
+state of
+.meta iter
+and return it.  Otherwise, it behaves like
+.code iter-begin
+and returns a new iterator.
+
+There are two protocols for iteration: the fast protocol, and the canonical
+protocol.
+Both protocols require the iterator object returned by the
+.code iter-begin
+method to provide the methods
+.code iter-item
+and
+.codn iter-step .
+If the iterator also provides the
+.code iter-more
+method, then the protocol which applies is the canonical protocol. If
+that method is absent, then the fast protocol is followed.
+
+Under the fast protocol, the
+.code iter-more
+method does not exist and is not involved. The iterable object's
+.code iter-begin
+method must return
+.code nil
+if the abstract sequence is empty. If an iterator is returned, it is assumed
+that an object can be retrieved from the iterator by invoking its
+.code iter-item
+method. The iterator's
+.code iter-next
+method should return
+.code nil
+if there are no more objects in the abstract sequence, or else it should
+return an iterator that obeys the fast protocol (possibly itself).
+
+Under the canonical protocol, the iterator implements the
+.code iter-more
+function. The iterable object's
+.code iter-begin
+always returns an iterator object. The iterator object's
+.code iter-more
+method is always invoked to determine whether another item is available
+from the sequence. The iterator object's
+.code iter-step
+method is expected to return an iterator object which conforms to the
+canonical protocol.
+
+.coNP Method @ iter-item
+.synb
+.mets << object .(iter-item)
+.syne
+.desc
+The
+.code iter-item
+method is invoked on an iterator
+.meta object
+to retrieve the next item in the sequence.
+
+Under the fast protocol, it
+is assumed that if
+.meta object
+was returned by an iterable object's
+.code iter-begin
+method, or by an iterator's
+.code iter-step
+method, that an item is available. This method will be unconditionally invoked.
+
+Under the canonical protocol for iteration, the
+.code iter-more
+method will be invoked on
+.meta object
+first. If that method yields true, then
+.code iter-item
+is expected to yield the next available item in the sequence.
+
+Note: calls to the
+.code iter-item
+function, with
+.meta object
+as its argument, invoke the
+.code iter-item
+method. It is possible for an application to call
+.code iter-item
+through this function or directly as a method call
+without first calling
+.codn iter-more .
+No iteration mechanism in the \*(TL standard library behaves this way.
+If the iterator
+.meta object
+has no more items available and
+.code iter-more
+is invoked anyway, no requirements apply to its behavior or return value.
+
+.coNP Method @ iter-step
+.synb
+.mets << object .(iter-step)
+.syne
+.desc
+The
+.code iter-step
+method is invoked on an iterator object to produce an iterator object for the
+remainder of the sequence, excluding the current item.
+
+Under the fast iteration protocol, this method returns
+.code nil
+if there are no more items in the sequence.
+
+Under the canonical iteration protocol, this method always returns
+an iterator object. If no items remain in the sequence, then that
+iterator object's
+.code iter-more
+method returns
+.codn nil .
+Furthermore, under this protocol,
+.code iter-step
+is not called if
+.code iter-more
+returns
+.codn nil .
+
+Note: calls to the
+.code iter-step
+function, with
+.meta object
+as its argument, invoke the
+.code iter-step
+method. It is possible for an application to call
+.code iter-step
+through this function or directly as a method call
+without first calling
+.codn iter-more .
+No iteration mechanism in the \*(TL standard library behaves this way.
+If the iterator
+.meta object
+has no more items available and
+.code iter-step
+is invoked anyway, no requirements apply to its behavior or return value.
+
+.coNP Method @ iter-more
+.synb
+.mets << object .(iter-more)
+.syne
+.desc
+If an iterator
+.meta object
+returned by
+.code iter-begin
+supports the
+.code iter-more
+method, then the canonical iteration protocol applies to that iteration
+session. All subsequent iterators that are involved in the iteration
+are assumed to conform to the protocol and should implement the
+.code iter-more
+method also. The behavior is unspecified otherwise.
+
+The
+.code iter-more
+method is used to interrogate an iterator whether more unvisited items
+remain in the sequence. This method does not advance the iteration,
+and does not change the state of the iterator. It is idempotent: if it is
+called multiple times without any intervening call to any other method,
+it yields the same value.
+
 .SS* Sequence Manipulation
 
 Functions in this category uniformly manipulate abstract sequences. Lists,
@@ -29354,13 +29553,19 @@ function returns
 if
 .meta object
 is iterable, otherwise
-.conp nil .
+.codn nil .
 
 If
 .meta object
 is a sequence according to the
 .code seqp
 function, then it is iterable.
+
+If
+.meta object
+is a structure which supports the
+.code iter-begin
+method, then it is iterable.
 
 Additional objects that are not sequences are also iterable:
 numeric or character ranges, and numbers. Future revisions
@@ -33517,6 +33722,22 @@ group, and functions in the
 .code seq-begin
 group. The latter are obsolescent.
 
+Application-defined iteration is possible via defining special methods on
+structures. An object supports iteration by defining the special method
+.code iter-begin
+which is different from the
+.code iter-begin
+function. This special function returns an iterator object which supports
+special methods
+.codn iter-item ,
+.code iter-more
+and
+.codn iter-step .
+Two protocols are supported, one of which is more efficient by eliminating the
+.code iter-more
+method. Details are specified in the section
+.BR "Special Structure Functions" .
+
 .coNP Function @ iter-begin
 .synb
 .mets (iter-begin << seq )
@@ -33559,6 +33780,12 @@ and
 .code "(iter-begin X..t)"
 are equivalent to
 .codn "(iter-begin X)" .
+
+If
+.meta seq
+is a structure which supports the
+.code iter-begin
+method, then that method is called and its return value is returned.
 
 .coNP Function @ iter-more
 .synb
@@ -33652,6 +33879,12 @@ lower than the limiting value. However, note the peculiar semantics of
 .code iter-item
 with regard to descending range iteration.
 
+If
+.meta iter
+is a structure which supports the
+.code iter-more
+method, then that method is called and its return value is returned.
+
 .coNP Function @ iter-item
 .synb
 .mets (iter-item << iter )
@@ -33738,6 +33971,12 @@ exactly the same values are visited as for the range
 .code 0..3
 only in reverse order.
 
+If
+.meta iter
+is a structure which supports the
+.code iter-item
+method, then that method is called and its return value is returned.
+
 .coNP Function @ iter-step
 .synb
 .mets (iter-step << iter )
@@ -33798,6 +34037,12 @@ returns its successor, as if using the
 .code succ
 function.
 
+If
+.meta iter
+is a structure which supports the
+.code iter-step
+method, then that method is called and its return value is returned.
+
 .coNP Function @ iter-reset
 .synb
 .mets (iter-reset < iter << seq )
@@ -33823,6 +34068,37 @@ then it behaves exactly like
 .code iter-begin
 being invoked on
 .metn seq .
+
+If
+.meta seq
+is a structure which supports the
+.code iter-reset
+method, then that method is called and its return value is returned.
+Note the reversed arguments. The
+.code iter-reset
+method is of the
+.meta seq
+object, not of
+.metn iter .
+That is to say, the call
+.mono
+.meti (iter-reset < iter << obj)
+.onom
+results in the
+.mono
+.meti << obj .(iter-reset << iter )
+.onom
+call. If
+.meta seq
+is a structure which doesn't support
+.code iter-reset
+then
+.meta iter
+is ignored,
+.code iter-begin
+is invoked on
+.meta seq
+and the result is returned.
 
 .coNP Function @ seq-begin
 .synb
