@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define UTF8_DECL_OPENDIR
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
@@ -4051,15 +4052,6 @@ val get_string(val stream_in, val nchars, val close_after_p)
 
   return get_string_from_stream(strstream);
 }
-
-static DIR *w_opendir(const wchar_t *wname)
-{
-  char *name = utf8_dup_to(wname);
-  DIR *d = opendir(name);
-  free(name);
-  return d;
-}
-
 
 val open_directory(val path)
 {

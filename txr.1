@@ -18080,6 +18080,8 @@ brackets indicate a plurality of types which are not listed by name:
         |                    |
         |                    +--- cptr
         |                    |
+        |                    +--- dir
+        |                    |
         |                    +--- struct-type
         |                    |
         |                    +--- <all structures>
@@ -62462,6 +62464,15 @@ the form of the analogous Lisp function
 .codn ftw ,
 accompanied by some numeric constants.
 
+Likewise, on platforms where the POSIX functions
+.code opendir
+and
+.code readdir
+are available, \*(TX provides the functionality in the form of same-named
+Lisp functions, a structure type named
+.code dirent
+and some accompanying numeric constants.
+
 .coNP Variables @, ftw-phys @, ftw-mount @, ftw-chdir @ ftw-depth and @ ftw-actionretval
 .desc
 These variables hold numeric values that may be combined into a single
@@ -62729,6 +62740,135 @@ code invoked from the callback may not capture a continuation up to a prompt
 which surrounds the
 .code ftw
 call. Such an attempt is detected and diagnosed by an exception.
+
+.coNP Structure @ dirent
+.synb
+.mets (defstruct dirent nil
+.mets \ \  name ino type)
+.syne
+.desc
+Objects of the
+.code dirent
+structure type are returned by the
+.code readdir
+function.
+
+The
+.code name
+slot is a character string giving the name of the directory entry.
+If the
+.code opendir
+function's
+.meta prefix-p
+argument is specified as true,
+then
+.code readdir
+operations produce
+.code dirent
+structures whose
+.code name
+slot is a path formed by combining the directory path with the directory
+entry name.
+
+The
+.code ino
+slot is an integer giving the inode number of the object named by the
+directory entry.
+
+The
+.code type
+slot indicates the type of the object, which is an integer code. Support for
+this member is platform-dependent. If the directory traversal doesn't provide
+the information, then this slot takes on the
+.code nil
+value. In this situation, if the information requires type information about
+the object, it must use the
+.code stat
+function to obtain it in a different form.
+
+.coNP Variables @, dt-blk @, dt-chr @, dt-dir @, dt-fifo @, dt-lnk @, dt-reg @ dt-sock and @ dt-unknown
+.desc
+These variables give the possible type code values exhibited by the
+.code type
+slot of the
+.code dirent
+structure.
+If this information is not available, then these variables do not exist.
+
+.coNP Function @ opendir
+.synb
+.mets (opendir < dir-path <> [ prefix-p ])
+.syne
+.desc
+The
+.code opendir
+function initiates a traversal of the directory object named by the
+string argument
+.metn dir-path ,
+which must be the name of a directory. If
+.code opendir
+is not able to open the directory traversal, it throws an exception of type
+.codn system-error .
+Otherwise an object of type
+.code dir
+is returned, which is a directory traversal handle suitable as an argument
+for the
+.code readdir
+function.
+
+If the
+.meta prefix-p
+argument is specified and has a true value, then it indicates that
+the subsequent
+.code readdir
+operations should produce the value of the
+.code name
+slot of the
+.code dirent
+structure by combining
+.meta dir-path
+with the directory entry name using the
+.code path-cat
+function.
+
+.coNP Function @ readdir
+.synb
+.mets (readdir < dir-handle <> [ dirent-struct ])
+.syne
+.desc
+The
+.code readdir
+function returns the next available directory entry from the directory
+traversal controlled by
+.metn dir-handle ,
+which must be a
+.code dir
+object returned by
+.codn opendir .
+
+If no more directory entries remain, then
+.code readdir
+returns
+.codn nil .
+
+Otherwise, the next available directory entry is returned as a
+structure object of type
+.codn dirent .
+
+If the
+.meta dirent-struct
+argument is specified, then it must be a
+.code dirent
+structure, or one which has all of the required slots.
+In this case,
+.code readdir
+stores values in that structure and returns it. If
+.meta dirent-struct
+is absent, then
+.code readdir
+allocates a fresh
+.code dirent
+structure.
 
 .SS* Unix Sockets
 

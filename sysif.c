@@ -25,10 +25,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define UTF8_DECL_OPENDIR
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 #include <wchar.h>
 #include <signal.h>
 #include <errno.h>
@@ -108,10 +110,10 @@ val dev_s, ino_s, mode_s, nlink_s, uid_s;
 val gid_s, rdev_s, size_s, blksize_s, blocks_s;
 val atime_s, mtime_s, ctime_s;
 val atime_nsec_s, mtime_nsec_s, ctime_nsec_s;
-val path_s;
+val path_s, dir_s, dirent_s;
 
 #if HAVE_PWUID
-val passwd_s, gecos_s, dir_s, shell_s;
+val passwd_s, gecos_s, shell_s;
 #endif
 
 #if HAVE_GRGID
@@ -132,6 +134,8 @@ val dlhandle_s, dlsym_s;
 #endif
 
 static val at_exit_list;
+
+static val dirent_st;
 
 static val errno_wrap(val newval)
 {
@@ -2219,9 +2223,74 @@ static val isatty_wrap(val spec)
 }
 #endif
 
+struct dir {
+  DIR *dir;
+  val path;
+};
+
+static void opendir_free(val obj)
+{
+  struct dir *d = coerce(struct dir *, obj->co.handle);
+  closedir(d->dir);
+  free(d);
+}
+
+static void opendir_mark(val obj)
+{
+  struct dir *d = coerce(struct dir *, obj->co.handle);
+  gc_mark(d->path);
+}
+
+static struct cobj_ops opendir_ops = cobj_ops_init(eq,
+                                                   cobj_print_op,
+                                                   opendir_free,
+                                                   opendir_mark,
+                                                   cobj_eq_hash_op);
+static val opendir_wrap(val path, val prefix_p)
+{
+  DIR *dir = w_opendir(c_str(path));
+
+  if (dir == 0) {
+    uw_throwf(system_error_s, lit("opendir failed for ~a: ~d/~s"),
+              path, num(errno), errno_to_str(errno), nao);
+  } else {
+    struct dir *d = coerce(struct dir *, chk_malloc(sizeof *d));
+    d->dir = dir;
+    d->path = if2(default_null_arg(prefix_p), path);
+    return cobj(coerce(mem_t *, d), dir_s, &opendir_ops);
+  }
+}
+
+static val readdir_wrap(val dirobj, val dirent_in)
+{
+  val self = lit("readdir");
+  struct dir *d = coerce(struct dir *, cobj_handle(self, dirobj, dir_s));
+  struct dirent *dent = readdir(d->dir);
+
+  if (dent == 0) {
+    return nil;
+  } else {
+    args_decl(args, ARGS_MIN);
+    val dirent = default_arg(dirent_in, make_struct(dirent_st, nil, args));
+    slotset(dirent, name_s,
+            if3(d->path,
+                path_cat(d->path, string_utf8(dent->d_name)),
+                string_utf8(dent->d_name)));
+    slotset(dirent, ino_s, num(dent->d_ino));
+#ifdef _DIRENT_HAVE_D_TYPE
+    slotset(dirent, type_s, num(dent->d_type));
+#else
+    if (dirent_in == dirent)
+      slotset(dirent, type_s, nil);
+#endif
+    return dirent;
+  }
+}
+
 void sysif_init(void)
 {
   prot1(&at_exit_list);
+  prot1(&dirent_st);
 
   atexit(at_exit_handler);
 
@@ -2256,10 +2325,11 @@ void sysif_init(void)
   mtime_nsec_s = intern(lit("mtime-nsec"), user_package);
   ctime_nsec_s = intern(lit("ctime-nsec"), user_package);
   path_s = intern(lit("path"), user_package);
+  dir_s = intern(lit("dir"), user_package);
+  dirent_s = intern(lit("dirent"), user_package);
 #if HAVE_PWUID
   passwd_s = intern(lit("passwd"), user_package);
   gecos_s = intern(lit("gecos"), user_package);
-  dir_s = intern(lit("dir"), user_package);
   shell_s = intern(lit("shell"), user_package);
 #endif
 #if HAVE_GRGID
@@ -2782,5 +2852,36 @@ void sysif_init(void)
 
 #if HAVE_ISATTY
   reg_fun(intern(lit("isatty"), user_package), func_n1(isatty_wrap));
+#endif
+
+  dirent_st = make_struct_type(dirent_s, nil, nil,
+                               list(name_s, ino_s, type_s, nao),
+                               nil, nil, nil, nil);
+  reg_fun(intern(lit("opendir"), user_package), func_n2o(opendir_wrap, 1));
+  reg_fun(intern(lit("readdir"), user_package), func_n2o(readdir_wrap, 1));
+
+#ifdef DT_BLK
+  reg_varl(intern(lit("dt-blk"), user_package), num_fast(DT_BLK));
+#endif
+#ifdef DT_CHR
+  reg_varl(intern(lit("dt-chr"), user_package), num_fast(DT_CHR));
+#endif
+#ifdef DT_DIR
+  reg_varl(intern(lit("dt-dir"), user_package), num_fast(DT_DIR));
+#endif
+#ifdef DT_FIFO
+  reg_varl(intern(lit("dt-fifo"), user_package), num_fast(DT_FIFO));
+#endif
+#ifdef DT_LNK
+  reg_varl(intern(lit("dt-lnk"), user_package), num_fast(DT_LNK));
+#endif
+#ifdef DT_REG
+  reg_varl(intern(lit("dt-reg"), user_package), num_fast(DT_REG));
+#endif
+#ifdef DT_SOCK
+  reg_varl(intern(lit("dt-sock"), user_package), num_fast(DT_SOCK));
+#endif
+#ifdef DT_UNKNOWN
+  reg_varl(intern(lit("dt-unknown"), user_package), num_fast(DT_UNKNOWN));
 #endif
 }

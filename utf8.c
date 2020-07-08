@@ -25,11 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define UTF8_DECL_OPENDIR
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
 #include <signal.h>
+#include <dirent.h>
 #include "config.h"
 #include "lib.h"
 #include "signal.h"
@@ -414,4 +416,12 @@ int w_rename(const wchar_t *wfrom, const wchar_t *wto)
   free(to);
   free(from);
   return err;
+}
+
+DIR *w_opendir(const wchar_t *wname)
+{
+  char *name = utf8_dup_to(wname);
+  DIR *d = opendir(name);
+  free(name);
+  return d;
 }

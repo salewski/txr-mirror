@@ -56,3 +56,6 @@ FILE *w_freopen(const wchar_t *, const wchar_t *, FILE *);
 FILE *w_fdopen(int, const wchar_t *);
 int w_remove(const wchar_t *);
 int w_rename(const wchar_t *, const wchar_t *);
+#ifdef UTF8_DECL_OPENDIR
+DIR *w_opendir(const wchar_t *wname);
+#endif
