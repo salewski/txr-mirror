@@ -2130,10 +2130,113 @@ static void do_output_line(val bindings, val specline, val filter, val out)
   }
 }
 
-static void do_output(val bindings, val specs, val filter, val out)
+static void do_output(val bindings, val specs, val filter, val out);
+
+static void do_repeat(val bindings, val repeat_syntax, val filter, val out)
 {
   val self = lit("output");
+  val clauses = cdr(repeat_syntax);
+  val args = pop(&clauses);
+  val main_clauses = pop(&clauses);
+  val single_clauses = pop(&clauses);
+  val first_clauses = pop(&clauses);
+  val last_clauses = pop(&clauses);
+  val empty_clauses = pop(&clauses);
+  val mod_clauses = pop(&clauses);
+  val modlast_clauses = pop(&clauses);
+  val counter_spec = getplist(args, counter_k);
+  val consp_counter = consp(counter_spec);
+  val counter = if3(consp_counter, first(counter_spec), counter_spec);
+  val counter_base = if3(consp_counter,
+                         tleval(repeat_syntax,
+                                second(counter_spec),
+                                bindings), zero);
+  val vars = getplist(args, vars_k);
+  val bind_cp = extract_bindings(bindings, repeat_syntax, vars);
+  val max_depth = reduce_left(func_n2(max2),
+                              bind_cp, zero,
+                              chain(func_n1(cdr),
+                                    func_n1(robust_length),
+                                    nao));
 
+  if (equal(max_depth, zero) && empty_clauses) {
+    do_output(nappend2(bind_cp, bindings), empty_clauses, filter, out);
+  } else if (equal(max_depth, one) && single_clauses) {
+    val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
+    do_output(bind_a, single_clauses, filter, out);
+  } else if (!zerop(max_depth)) {
+    val counter_var = if2(counter, cons(counter, nil));
+    val counter_bind = if2(counter, cons(counter_var, nil));
+    cnum i;
+
+    for (i = 0; i < c_num(max_depth, self); i++) {
+      val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
+      val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
+
+      if (counter) {
+        rplacd(counter_var, plus(num(i), counter_base));
+        rplacd(counter_bind, bind_a);
+        bind_a = counter_bind;
+      }
+
+      if (i == 0 && first_clauses) {
+        do_output(bind_a, first_clauses, filter, out);
+      } else if (i == c_num(max_depth, self) - 1 &&
+                 (last_clauses || modlast_clauses))
+      {
+        if (modlast_clauses) {
+          val iter;
+          list_collect_decl (active_mods, ptail);
+
+          for (iter = modlast_clauses; iter != nil; iter = cdr(iter)) {
+            val clause = car(iter);
+            val args = first(clause);
+            val n = tleval_144(args, first(args), bind_a);
+            val m = tleval_144(args, second(args), bind_a);
+
+            if (eql(mod(num(i), m), n))
+              ptail = list_collect_append(ptail, rest(clause));
+          }
+
+          if (active_mods)
+            do_output(bind_a, active_mods, filter, out);
+          else if (last_clauses)
+            do_output(bind_a, last_clauses, filter, out);
+          else
+            goto mod_fallback;
+        } else {
+          do_output(bind_a, last_clauses, filter, out);
+        }
+      } else if (mod_clauses) mod_fallback: {
+        val iter;
+        list_collect_decl (active_mods, ptail);
+
+        for (iter = mod_clauses; iter != nil; iter = cdr(iter)) {
+          val clause = car(iter);
+          val args = first(clause);
+          val n = tleval_144(args, first(args), bind_a);
+          val m = tleval_144(args, second(args), bind_a);
+
+          if (eql(mod(num(i), m), n))
+            ptail = list_collect_append(ptail, rest(clause));
+        }
+
+        if (active_mods)
+          do_output(bind_a, active_mods, filter, out);
+        else
+          do_output(bind_a, main_clauses, filter, out);
+      } else {
+        do_output(bind_a, main_clauses, filter, out);
+      }
+
+      bind_cp = bind_d;
+    }
+  }
+}
+
+
+void do_output(val bindings, val specs, val filter, val out)
+{
   if (specs == t)
     return;
 
@@ -2145,103 +2248,10 @@ static void do_output(val bindings, val specs, val filter, val out)
       val sym = first(first_elem);
 
       if (sym == repeat_s) {
-        val clauses = cdr(first_elem);
-        val args = pop(&clauses);
-        val main_clauses = pop(&clauses);
-        val single_clauses = pop(&clauses);
-        val first_clauses = pop(&clauses);
-        val last_clauses = pop(&clauses);
-        val empty_clauses = pop(&clauses);
-        val mod_clauses = pop(&clauses);
-        val modlast_clauses = pop(&clauses);
-        val counter_spec = getplist(args, counter_k);
-        val consp_counter = consp(counter_spec);
-        val counter = if3(consp_counter, first(counter_spec), counter_spec);
-        val counter_base = if3(consp_counter,
-                               tleval(first_elem,
-                                      second(counter_spec),
-                                      bindings), zero);
-        val vars = getplist(args, vars_k);
-        val bind_cp = extract_bindings(bindings, first_elem, vars);
-        val max_depth = reduce_left(func_n2(max2),
-                                    bind_cp, zero,
-                                    chain(func_n1(cdr),
-                                          func_n1(robust_length),
-                                          nao));
+        do_repeat(bindings, first_elem, filter, out);
+        continue;
+      }
 
-        if (equal(max_depth, zero) && empty_clauses) {
-          do_output(nappend2(bind_cp, bindings), empty_clauses, filter, out);
-        } else if (equal(max_depth, one) && single_clauses) {
-          val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
-          do_output(bind_a, single_clauses, filter, out);
-        } else if (!zerop(max_depth)) {
-          val counter_var = if2(counter, cons(counter, nil));
-          val counter_bind = if2(counter, cons(counter_var, nil));
-          cnum i;
-
-          for (i = 0; i < c_num(max_depth, self); i++) {
-            val bind_a = nappend2(mapcar(func_n1(bind_car), bind_cp), bindings);
-            val bind_d = mapcar(func_n1(bind_cdr), bind_cp);
-
-            if (counter) {
-              rplacd(counter_var, plus(num(i), counter_base));
-              rplacd(counter_bind, bind_a);
-              bind_a = counter_bind;
-            }
-
-            if (i == 0 && first_clauses) {
-              do_output(bind_a, first_clauses, filter, out);
-            } else if (i == c_num(max_depth, self) - 1 &&
-                       (last_clauses || modlast_clauses))
-            {
-              if (modlast_clauses) {
-                val iter;
-                list_collect_decl (active_mods, ptail);
-
-                for (iter = modlast_clauses; iter != nil; iter = cdr(iter)) {
-                  val clause = car(iter);
-                  val args = first(clause);
-                  val n = tleval_144(args, first(args), bind_a);
-                  val m = tleval_144(args, second(args), bind_a);
-
-                  if (eql(mod(num(i), m), n))
-                    ptail = list_collect_append(ptail, rest(clause));
-                }
-
-                if (active_mods)
-                  do_output(bind_a, active_mods, filter, out);
-                else if (last_clauses)
-                  do_output(bind_a, last_clauses, filter, out);
-                else
-                  goto mod_fallback;
-              } else {
-                do_output(bind_a, last_clauses, filter, out);
-              }
-            } else if (mod_clauses) mod_fallback: {
-              val iter;
-              list_collect_decl (active_mods, ptail);
-
-              for (iter = mod_clauses; iter != nil; iter = cdr(iter)) {
-                val clause = car(iter);
-                val args = first(clause);
-                val n = tleval_144(args, first(args), bind_a);
-                val m = tleval_144(args, second(args), bind_a);
-
-                if (eql(mod(num(i), m), n))
-                  ptail = list_collect_append(ptail, rest(clause));
-              }
-
-              if (active_mods)
-                do_output(bind_a, active_mods, filter, out);
-              else
-                do_output(bind_a, main_clauses, filter, out);
-            } else {
-              do_output(bind_a, main_clauses, filter, out);
-            }
-
-            bind_cp = bind_d;
-          }
-        }
         continue;
       }
     }
