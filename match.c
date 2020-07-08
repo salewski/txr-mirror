@@ -2234,6 +2234,18 @@ static void do_repeat(val bindings, val repeat_syntax, val filter, val out)
   }
 }
 
+static void do_output_if(val bindings, val if_syntax, val filter, val out)
+{
+  val args = cdr(if_syntax);
+
+  for (; args; args = cdr(args)) {
+    cons_bind (expr, specs, car(args));
+    if (tleval(args, expr, bindings)) {
+      do_output(bindings, specs, filter, out);
+      return;
+    }
+  }
+}
 
 void do_output(val bindings, val specs, val filter, val out)
 {
@@ -2252,6 +2264,8 @@ void do_output(val bindings, val specs, val filter, val out)
         continue;
       }
 
+      if (sym == if_s) {
+        do_output_if(bindings, first_elem, filter, out);
         continue;
       }
     }

@@ -3484,7 +3484,10 @@ directive with optional
 and
 .code else
 clauses allows one of multiple bodies of pattern matching directives to be
-conditionally selected by testing the values of Lisp expressions.
+conditionally selected by testing the values of Lisp expressions. It is
+also available inside
+.code @(output)
+for conditionally selecting output clauses.
 
 .coIP @(choose)
 Multiple clauses are applied to the same input. The one whose effect persists
@@ -5067,7 +5070,14 @@ Example:
 The
 .code if
 directive allows for conditional selection of pattern matching clauses,
-based on the Boolean results Lisp expressions.
+based on the Boolean results of Lisp expressions.
+
+A variant of the
+.code if
+directive is also available for use inside an
+.code output
+clauses, where it similarly allows for the conditional selection of output
+clauses.
 
 The syntax of the
 .code if
@@ -5152,6 +5162,41 @@ clause, then the
 .code if
 directive is deemed to have trivially succeeded, allowing matching to continue
 with whatever directive follows it.
+
+.coNP The Lisp @ if versus TXR @ if
+
+The
+.code @(output)
+directive supports the embedding of Lisp expressions, whose values are
+interpolated into the output. In particular, Lisp
+.code if
+expressions are useful. For instance
+.code "@(if expr \(dqA\(dq \(dqB\(dq)"
+reproduces
+.code A
+if
+.code expr
+yields a true value, otherwise
+.codn B .
+Yet the
+.code @(if)
+directive is also supported in
+.codn @(output) .
+How the apparent conflict between the two is resolved is that the two take
+different numbers of arguments. An
+.code @(if)
+which has no arguments at all is a syntax error. One that has one argument
+is the head of the
+.code if
+directive syntax which must be terminated by
+.code @(end)
+and which takes the optional
+.code @(elif)
+and
+.code @(else)
+clauses. An
+.code @(if)
+which has two or more arguments is parsed as a self-contained Lisp expression.
 
 .dir gather
 

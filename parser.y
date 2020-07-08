@@ -144,6 +144,7 @@ INLINE val expand_form_ver(val form, int ver)
 %type <val> list dwim meta compound
 %type <val> out_clauses out_clauses_opt out_clause
 %type <val> repeat_clause repeat_parts_opt o_line
+%type <val> out_if_clause out_elif_clauses_opt out_else_clause_opt
 %type <val> o_elems_opt o_elems o_elem o_var q_var rep_elem rep_parts_opt
 %type <val> regex lisp_regex regexpr regbranch
 %type <val> regterm regtoken regclass regclassterm regrange
@@ -649,6 +650,7 @@ out_clauses : out_clause                { $$ = cons($1, nil); }
             ;
 
 out_clause : repeat_clause              { $$ = cons($1, nil); }
+           | out_if_clause              { $$ = cons($1, nil); }
            | o_line                     { $$ = $1; }
            ;
 
@@ -701,6 +703,44 @@ repeat_parts_opt : SINGLE newl
                  | /* empty */          { $$ = nil; }
                  ;
 
+out_if_clause : IF n_expr ')' newl
+                out_clauses_opt
+                out_elif_clauses_opt
+                out_else_clause_opt
+                END newl        { val expr = expand($2, nil);
+                                  val ifs = $5;
+                                  val branch = cons(cons(expr, ifs), nil);
+                                  val elifs = $6;
+                                  val els = $7;
+                                  $$ = cons(if_s,
+                                            nappend2(branch, nappend2(elifs, els)));
+                                  rl($$, num($1)); }
+              | IF ')'
+                                { $$ = nil;
+                                  yyerr("if requires expression"); }
+              | IF n_expr ')' newl
+                error           { $$ = nil; yybadtok(yychar, lit("if clause")); }
+              ;
+
+out_elif_clauses_opt : ELIF n_exprs_opt ')' newl
+                       out_clauses_opt
+                       out_elif_clauses_opt
+                                { val expr = expand(car($2), nil);
+                                  val elifs = $5;
+                                  val branch = cons(cons(expr, elifs), nil);
+                                  if (null($2))
+                                    yyerr("elif requires expression");
+                                  else if (cdr($2))
+                                    yyerr("extra expression in elif");
+                                  $$ = nappend2(branch, $6); }
+                     |          { $$ = nil; }
+                     ;
+
+out_else_clause_opt : ELSE newl
+                      out_clauses_opt
+                                { $$ = cons(cons(t, $3), nil); }
+                      |         { $$ = nil; }
+                      ;
 
 out_clauses_opt : out_clauses   { $$ = $1; }
                 | /* empty */   { $$ = nil; }
@@ -1296,8 +1336,6 @@ not_a_clause : ALL              { $$ = mkexp(all_s, nil, num(parser->lineno)); }
              | OR               { $$ = mkexp(or_s, nil, num(parser->lineno)); }
              | TRY              { $$ = mkexp(try_s, nil, num(parser->lineno)); }
              | FINALLY          { $$ = mkexp(finally_s, nil, num(parser->lineno)); }
-             | ELSE             { $$ = mkexp(else_s, nil, num(parser->lineno)); }
-             | ELIF             { $$ = mkexp(elif_s, nil, num(parser->lineno)); }
              | BLOCK
                exprs_opt ')'    { $$ = mkexp(block_s, $2, nil); }
              | CHOOSE
@@ -1313,7 +1351,10 @@ not_a_clause : ALL              { $$ = mkexp(all_s, nil, num(parser->lineno)); }
              | CATCH
                exprs_opt ')'    { $$ = mkexp(catch_s, $2, nil); }
              | IF
-               exprs_opt ')'    { $$ = mkexp(if_s, $2, nil); }
+               n_expr n_expr exprs_opt ')'  { $$ = mkexp(if_s,
+                                                         cons($2,
+                                                              cons($3, $4)),
+                                                         nil); }
              | OUTPUT
                 exprs_opt ')'   { yyerr("@(output) doesn't nest"); }
 
