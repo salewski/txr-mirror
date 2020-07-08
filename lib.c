@@ -12042,10 +12042,18 @@ static val simple_qref_args_p(val args, val pos)
     return nil;
   } else {
     val arg = car(args);
-    if (symbolp(arg) || (consp(arg) &&
-                         car(arg) != qref_s &&
-                         car(arg) != uref_s))
-    {
+
+    if (symbolp(arg)) {
+      val name = symbol_name(arg);
+      if (length(name) == zero)
+        return nil;
+      if (!zerop(pos) && chr_isdigit(chr_str(name, zero)))
+      {
+        return nil;
+      }
+      return simple_qref_args_p(cdr(args), succ(pos));
+    }
+    if (consp(arg) && car(arg) != qref_s && car(arg) != uref_s) {
       return simple_qref_args_p(cdr(args), succ(pos));
     }
     return nil;
