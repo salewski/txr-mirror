@@ -61,7 +61,7 @@ static void dir_tables_init(void)
                         (list text)))))
 @(bind comments #"\\;\\;\\; \\;\\; \\;")
 @(define generate (txr-p))
-@  (output @(if txr-p "txr.vim" "tl.vim") :named out)
+@  (output @(if txr-p "txr.vim" "tl.vim"))
 " VIM Syntax file for txr
 " Kaz Kylheku <kaz@@kylheku.com>
 
@@ -84,10 +84,8 @@ syn spell toplevel
 
 setlocal iskeyword=a-z,A-Z,48-57,!,$,%,&,*,+,-,<,=,>,?,\\,_,~,/,^
 @  (rep) @{tl-sym}@(mod 0 4)@\nsyn keyword tl_keyword contained @{tl-sym}@(end)
-@  (end)
 @  (if txr-p)
-@    (output :continue out)
-@      (rep) @{txr-sym}@(mod 0 4)@\nsyn keyword txr_keyword contained @{txr-sym}@(end)
+@    (rep) @{txr-sym}@(mod 0 4)@\nsyn keyword txr_keyword contained @{txr-sym}@(end)
 syn match txr_error "@at[*]\?[\t ]*."
 syn match txr_atat "@at@@"
 syn match txr_comment "@at[#;].*"
@@ -97,9 +95,7 @@ syn match txr_error "@at\\[xo]"
 syn match txr_char "@at\\x[@hex]\+;\?"
 syn match txr_char "@at\\[@oct]\+;\?"
 syn match txr_regdir "@at/\(\\/\|[^/]\|\\\n\)*/"
-@    (end)
 @  (end)
-@  (output :continue out)
 syn match txr_nested_error "[^\t ]\+" contained
 syn match txr_variable "@at[*]\?[ \t]*[@alpha][@alnum]*"
 syn match txr_splicevar "@@[ \t,*@@]*[@alpha][@alnum]*" contained
@@ -149,13 +145,9 @@ syn match txr_buf_error "[^']" contained
 syn match txr_buf_interior "\([@hex][\n\t ]*[@hex]\|[\n\t ]\+\)" contained
 
 syn region txr_bracevar matchgroup=Delimiter start="@@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_pnum,tl_ident,tl_splice,tl_metanum,txr_metaat,txr_circ,txr_braced_ident,txr_dot,txr_dotdot,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_regex,txr_quasilit,txr_chr,txr_nested_error
-@  (end)
 @  (if txr-p)
-@    (output :continue out)
 syn region txr_directive matchgroup=Delimiter start="@@[ \t]*(" matchgroup=Delimiter end=")" contains=txr_keyword,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_num,txr_pnum,txr_badnum,tl_ident,tl_regex,txr_string,txr_chr,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
-@    (end)
 @  (end)
-@  (output :continue out)
 syn region txr_list @(if txr-p "contained ")matchgroup=Delimiter start="\(#[HSR]\?\)\?(" matchgroup=Delimiter end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
 syn region txr_bracket @(if txr-p "contained ")matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
 syn region txr_mlist @(if txr-p "contained ")matchgroup=Delimiter start="@@[ \t^',]*(" matchgroup=Delimiter end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
