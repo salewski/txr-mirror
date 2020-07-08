@@ -1873,7 +1873,9 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case NONE:    problem = lit("\"none\""); break;
   case MAYBE:   problem = lit("\"maybe\""); break;
   case CASES:   problem = lit("\"cases\""); break;
+  case BLOCK:   problem = lit("\"block\""); break;
   case CHOOSE:  problem = lit("\"choose\""); break;
+  case GATHER:  problem = lit("\"gather\""); break;
   case AND:     problem = lit("\"and\""); break;
   case OR:      problem = lit("\"or\""); break;
   case END:     problem = lit("\"end\""); break;
@@ -1887,6 +1889,8 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case FIRST:   problem = lit("\"first\""); break;
   case LAST:    problem = lit("\"last\""); break;
   case EMPTY:   problem = lit("\"empty\""); break;
+  case MOD:     problem = lit("\"mod\""); break;
+  case MODLAST: problem = lit("\"modlast\""); break;
   case DEFINE:  problem = lit("\"define\""); break;
   case TRY:     problem = lit("\"try\""); break;
   case CATCH:   problem = lit("\"catch\""); break;
@@ -1898,6 +1902,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case REGCHAR: problem = lit("regular expression character"); break;
   case REGTOKEN: problem = lit("regular expression token"); break;
   case LITCHAR: problem = lit("string literal character"); break;
+  case SPLICE:  problem = lit("*"); break;
   case CONSDOT:
   case LAMBDOT: problem = lit("consing dot"); break;
   case DOTDOT: problem = lit(".."); break;
