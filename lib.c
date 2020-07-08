@@ -1669,18 +1669,28 @@ val iterable(val obj)
   return seq_iterable(si);
 }
 
+static val list_seq_func(val lcons)
+{
+  val iter = us_car(lcons);
+  val item = iter_item(iter);
+  val new_iter = iter_step(iter);
+
+  us_rplaca(lcons, item);
+
+  if (iter_more(new_iter))
+    us_rplacd(lcons, make_lazy_cons_car(us_lcons_fun(lcons), new_iter));
+
+  return nil;
+}
+
 val list_seq(val seq)
 {
-  val self = lit("list-seq");
-  seq_iter_t iter;
-  val elem;
-  seq_iter_init(self, &iter, seq);
-  list_collect_decl (out, ptail);
+  val iter = iter_begin(seq);
 
-  while (seq_get(&iter, &elem))
-    ptail = list_collect(ptail, elem);
+  if (iter_more(iter))
+    return make_lazy_cons_car(func_n1(list_seq_func), iter);
 
-  return out;
+  return nil;
 }
 
 val vec_seq(val seq)
