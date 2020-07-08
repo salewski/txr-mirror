@@ -12351,7 +12351,7 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         put_string(lit(".."), out);
         obj_print_impl(third(obj), out, pretty, ctx);
       } else if ((sym == uref_s || sym == qref_s) &&
-                 simple_qref_args_p(cdr(obj), if3(sym == uref_s, zero, one)))
+                 simple_qref_args_p(cdr(obj), if3(sym == uref_s, one, zero)))
       {
         val iter = cdr(obj), next;
 
