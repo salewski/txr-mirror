@@ -29527,6 +29527,13 @@ and does not change the state of the iterator. It is idempotent: if it is
 called multiple times without any intervening call to any other method,
 it yields the same value.
 
+If an iterator does not implement the
+.code iter-more
+method, then if the
+.code iter-more
+function is applied to that iterator, it unconditionally returns
+.codn t .
+
 .SS* Sequence Manipulation
 
 Functions in this category uniformly manipulate abstract sequences. Lists,
@@ -33932,9 +33939,14 @@ with regard to descending range iteration.
 
 If
 .meta iter
-is a structure which supports the
+is a structure, then if it supports an
 .code iter-more
-method, then that method is called and its return value is returned.
+method, then that method is called with no arguments, and its return value
+is returned. If the structure does not have an
+.code iter-more
+method, then
+.code t
+is returned.
 
 .coNP Function @ iter-item
 .synb
