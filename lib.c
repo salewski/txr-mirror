@@ -1027,6 +1027,11 @@ val iter_item(val iter)
       val item = nil;
       return if2(seq_peek(si, &item), item);
     }
+    if (obj_struct_p(iter)) {
+      val iter_item_meth = get_special_slot(iter, iter_item_m);
+      if (iter_item_meth)
+        return funcall1(iter_item_meth, iter);
+    }
     /* fallthrough */
   default:
     return car(iter);
