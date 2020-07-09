@@ -2267,23 +2267,28 @@ static val readdir_wrap(val dirobj, val dirent_in)
   struct dir *d = coerce(struct dir *, cobj_handle(self, dirobj, dir_s));
   struct dirent *dent = readdir(d->dir);
 
-  if (dent == 0) {
-    return nil;
-  } else {
-    args_decl(args, ARGS_MIN);
-    val dirent = default_arg(dirent_in, make_struct(dirent_st, nil, args));
-    slotset(dirent, name_s,
-            if3(d->path,
-                path_cat(d->path, string_utf8(dent->d_name)),
-                string_utf8(dent->d_name)));
-    slotset(dirent, ino_s, num(dent->d_ino));
+  for (;;) {
+    if (dent == 0) {
+      return nil;
+    } else if (!strcmp(dent->d_name, ".") || !strcmp(dent->d_name, "..")) {
+      dent = readdir(d->dir);
+      continue;
+    } else {
+      args_decl(args, ARGS_MIN);
+      val dirent = default_arg(dirent_in, make_struct(dirent_st, nil, args));
+      slotset(dirent, name_s,
+              if3(d->path,
+                  path_cat(d->path, string_utf8(dent->d_name)),
+                  string_utf8(dent->d_name)));
+      slotset(dirent, ino_s, num(dent->d_ino));
 #ifdef _DIRENT_HAVE_D_TYPE
-    slotset(dirent, type_s, num(dent->d_type));
+      slotset(dirent, type_s, num(dent->d_type));
 #else
-    if (dirent_in == dirent)
-      slotset(dirent, type_s, nil);
+      if (dirent_in == dirent)
+        slotset(dirent, type_s, nil);
 #endif
-    return dirent;
+      return dirent;
+    }
   }
 }
 

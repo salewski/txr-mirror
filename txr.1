@@ -62867,6 +62867,15 @@ Otherwise, the next available directory entry is returned as a
 structure object of type
 .codn dirent .
 
+The
+.code readdir
+function intenally skips and does not report the
+.str .
+(dot)
+and
+.str ..
+(dotdot) directory entries.
+
 If the
 .meta dirent-struct
 argument is specified, then it must be a
