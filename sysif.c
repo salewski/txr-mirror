@@ -2255,9 +2255,10 @@ static val opendir_wrap(val path, val prefix_p)
               path, num(errno), errno_to_str(errno), nao);
   } else {
     struct dir *d = coerce(struct dir *, chk_malloc(sizeof *d));
+    val obj = cobj(coerce(mem_t *, d), dir_s, &opendir_ops);
     d->dir = dir;
     d->path = if2(default_null_arg(prefix_p), path);
-    return cobj(coerce(mem_t *, d), dir_s, &opendir_ops);
+    return obj;
   }
 }
 
