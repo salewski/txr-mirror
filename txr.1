@@ -62862,6 +62862,10 @@ If no more directory entries remain, then
 .code readdir
 returns
 .codn nil .
+In this situation, the
+.meta dir-handle
+is also closed, as if by a call to
+.codn closedir .
 
 Otherwise, the next available directory entry is returned as a
 structure object of type
@@ -62869,7 +62873,7 @@ structure object of type
 
 The
 .code readdir
-function intenally skips and does not report the
+function internally skips and does not report the
 .str .
 (dot)
 and
@@ -62890,6 +62894,37 @@ is absent, then
 allocates a fresh
 .code dirent
 structure.
+
+.coNP Function @ closedir
+.synb
+.mets (opendir << dir-handle )
+.syne
+.desc
+The
+.code closedir
+function terminates the directory traversal managed by
+.metn dir-handle ,
+releasing its resources.
+
+If this has already been done before,
+.code closedir
+returns
+.codn nil ,
+otherwise it returns
+.codn t .
+
+Further
+.code readdir
+calls on the same
+.meta dir-handle
+return
+.codn nil .
+
+Note: the
+.code readdir
+function implicitly closes
+.meta dir-handle
+when the handle indicates that no more directory entries remain to be traversed.
 
 .SS* Unix Sockets
 

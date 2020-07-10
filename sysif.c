@@ -2231,7 +2231,10 @@ struct dir {
 static void opendir_free(val obj)
 {
   struct dir *d = coerce(struct dir *, obj->co.handle);
-  closedir(d->dir);
+  if (d->dir != 0) {
+    closedir(d->dir);
+    d->dir = 0;
+  }
   free(d);
 }
 
@@ -2262,14 +2265,29 @@ static val opendir_wrap(val path, val prefix_p)
   }
 }
 
+static val closedir_wrap(val dirobj)
+{
+  val self = lit("closedir");
+  struct dir *d = coerce(struct dir *, cobj_handle(self, dirobj, dir_s));
+
+  if (d->dir != 0) {
+    closedir(d->dir);
+    d->dir = 0;
+    return t;
+  }
+
+  return nil;
+}
+
 static val readdir_wrap(val dirobj, val dirent_in)
 {
   val self = lit("readdir");
   struct dir *d = coerce(struct dir *, cobj_handle(self, dirobj, dir_s));
-  struct dirent *dent = readdir(d->dir);
+  struct dirent *dent = if3(d->dir != 0, readdir(d->dir), 0);
 
   for (;;) {
     if (dent == 0) {
+      closedir_wrap(dirobj);
       return nil;
     } else if (!strcmp(dent->d_name, ".") || !strcmp(dent->d_name, "..")) {
       dent = readdir(d->dir);
@@ -2864,6 +2882,7 @@ void sysif_init(void)
                                list(name_s, ino_s, type_s, nao),
                                nil, nil, nil, nil);
   reg_fun(intern(lit("opendir"), user_package), func_n2o(opendir_wrap, 1));
+  reg_fun(intern(lit("closedir"), user_package), func_n1(closedir_wrap));
   reg_fun(intern(lit("readdir"), user_package), func_n2o(readdir_wrap, 1));
 
 #ifdef DT_BLK
