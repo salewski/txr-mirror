@@ -62793,10 +62793,9 @@ slot indicates the type of the object, which is an integer code. Support for
 this member is platform-dependent. If the directory traversal doesn't provide
 the information, then this slot takes on the
 .code nil
-value. In this situation, if the information requires type information about
-the object, it must use the
-.code stat
-function to obtain it in a different form.
+value. In this situation, the
+.code dirstat
+function may be used to back-fill the missing information.
 
 .coNP Variables @, dt-blk @, dt-chr @, dt-dir @, dt-fifo @, dt-lnk @, dt-reg @ dt-sock and @ dt-unknown
 .desc
@@ -62805,7 +62804,26 @@ These variables give the possible type code values exhibited by the
 slot of the
 .code dirent
 structure.
-If this information is not available, then these variables do not exist.
+
+If the underlying host platform does not feature a
+.code d_type
+field in the
+.code dirent
+C structure, then almost all these variables are defined anyway using the values that they
+have on GNU/Linux.
+These definitions are useful in conjunction with the
+.code dirstat
+function below.
+
+If the host platform does does not feature a
+.code d_type
+field in the
+.code dirent
+structure, then the variable
+.code dt-unknown
+is not defined. Note: the application can take advantage of this this to detect
+the situation, in order to conditionally define code in such a way that some
+run-time checking is avoided.
 
 .coNP Function @ opendir
 .synb
@@ -62925,6 +62943,67 @@ Note: the
 function implicitly closes
 .meta dir-handle
 when the handle indicates that no more directory entries remain to be traversed.
+
+.coNP Function @ dirstat
+.synb
+.mets (dirstat < dirent-struct <> [ dir-path ])
+.syne
+.desc
+The
+.code dirstat
+function invokes
+.code stat
+on the object represented by the
+.code dirent
+structure
+.metn dirent-struct ,
+sets the
+.code type
+slot of the
+.meta dirent-struct
+accordingly, and also returns the
+.code stat
+structure.
+
+The
+.meta dir-path
+parameter must be specified, if the
+.code name
+slot of
+.meta dirent-struct
+is a simple directory entry name, rather than the full path to the object.
+In that case, the slot's value gives the effective path.
+If the
+.code name
+slot is already a path (due to, for instance, a true value of
+.meta prefix-p
+having been passed to
+.codn opendir )
+then
+.meta dir-path
+must not be specified.
+If
+.meta dir-path
+is specified, then its value is combined with the
+.meta name
+slot of
+.meta dirent-struct
+using
+.code path-cat
+to form the effective path.
+
+The
+.code stat
+function is invoked on the effective path, and if it succeeds,
+then type information is obtained from the resulting
+.code stat
+structure to set the value of the
+.code type
+slot of
+.metn dirent-struct .
+The
+.code stat
+structure is then returned.
 
 .SS* Unix Sockets
 

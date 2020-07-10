@@ -102,6 +102,17 @@
 #include "txr.h"
 #include "sysif.h"
 
+#ifndef DT_DIR
+#undef DT_UNKNOWN
+#define DT_FIFO 1
+#define DT_CHR 2
+#define DT_DIR 4
+#define DT_BLK 6
+#define DT_REG 8
+#define DT_LNK 10
+#define DT_SOCK 12
+#endif
+
 val stat_s;
 val dev_k, ino_k, mode_k, nlink_k, uid_k;
 val gid_k, rdev_k, size_k, blksize_k, blocks_k;
@@ -2311,6 +2322,35 @@ static val readdir_wrap(val dirobj, val dirent_in)
   }
 }
 
+static val dirstat(val dirent, val dir_path)
+{
+  val self = lit("dirstat");
+  val name = slot(dirent, name_s);
+  val path = if3(null_or_missing_p(dir_path), name, path_cat(dir_path, name));
+  val stat = stat_wrap(path);
+  val mode = slot(stat, mode_s);
+
+  if (mode) {
+    cnum mod = c_num(mode, self);
+    val type = nil;
+
+    switch (mod & S_IFMT) {
+    case S_IFBLK: type = num_fast(DT_BLK); break;
+    case S_IFCHR: type = num_fast(DT_CHR); break;
+    case S_IFDIR: type = num_fast(DT_DIR); break;
+    case S_IFIFO: type = num_fast(DT_FIFO); break;
+    case S_IFLNK: type = num_fast(DT_LNK); break;
+    case S_IFREG: type = num_fast(DT_REG); break;
+    case S_IFSOCK: type = num_fast(DT_SOCK); break;
+    }
+
+    if (type)
+      slotset(dirent, type_s, type);
+  }
+
+  return stat;
+}
+
 void sysif_init(void)
 {
   prot1(&at_exit_list);
@@ -2884,29 +2924,16 @@ void sysif_init(void)
   reg_fun(intern(lit("opendir"), user_package), func_n2o(opendir_wrap, 1));
   reg_fun(intern(lit("closedir"), user_package), func_n1(closedir_wrap));
   reg_fun(intern(lit("readdir"), user_package), func_n2o(readdir_wrap, 1));
+  reg_fun(intern(lit("dirstat"), user_package), func_n2o(dirstat, 1));
 
-#ifdef DT_BLK
-  reg_varl(intern(lit("dt-blk"), user_package), num_fast(DT_BLK));
-#endif
-#ifdef DT_CHR
-  reg_varl(intern(lit("dt-chr"), user_package), num_fast(DT_CHR));
-#endif
-#ifdef DT_DIR
-  reg_varl(intern(lit("dt-dir"), user_package), num_fast(DT_DIR));
-#endif
-#ifdef DT_FIFO
-  reg_varl(intern(lit("dt-fifo"), user_package), num_fast(DT_FIFO));
-#endif
-#ifdef DT_LNK
-  reg_varl(intern(lit("dt-lnk"), user_package), num_fast(DT_LNK));
-#endif
-#ifdef DT_REG
-  reg_varl(intern(lit("dt-reg"), user_package), num_fast(DT_REG));
-#endif
-#ifdef DT_SOCK
-  reg_varl(intern(lit("dt-sock"), user_package), num_fast(DT_SOCK));
-#endif
 #ifdef DT_UNKNOWN
   reg_varl(intern(lit("dt-unknown"), user_package), num_fast(DT_UNKNOWN));
 #endif
+  reg_varl(intern(lit("dt-fifo"), user_package), num_fast(DT_FIFO));
+  reg_varl(intern(lit("dt-chr"), user_package), num_fast(DT_CHR));
+  reg_varl(intern(lit("dt-dir"), user_package), num_fast(DT_DIR));
+  reg_varl(intern(lit("dt-blk"), user_package), num_fast(DT_BLK));
+  reg_varl(intern(lit("dt-reg"), user_package), num_fast(DT_REG));
+  reg_varl(intern(lit("dt-lnk"), user_package), num_fast(DT_LNK));
+  reg_varl(intern(lit("dt-sock"), user_package), num_fast(DT_SOCK));
 }
