@@ -28,6 +28,7 @@
 extern val dwim_s, lambda_s, progn_s, vector_lit_s, vec_list_s, list_s;
 extern val hash_lit_s, hash_construct_s, struct_lit_s, qref_s, uref_s;
 extern val tree_lit_s, tree_construct_s;
+extern val macro_time_s;
 extern val eval_error_s, if_s, call_s, identity_s;
 extern val eq_s, eql_s, equal_s, less_s;
 extern val car_s, cdr_s;
@@ -66,6 +67,7 @@ val macro_form_p(val form, val menv);
 val func_get_name(val fun, val env);
 void reg_varl(val sym, val val);
 void reg_var(val sym, val val);
+void reg_symacro(val sym, val val);
 void reg_fun(val sym, val fun);
 void reg_mac(val sym, val fun);
 val set_get_symacro(val sym, val form);

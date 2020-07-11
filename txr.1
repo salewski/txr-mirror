@@ -73541,6 +73541,25 @@ Thus, up to the previous hundred results can be referenced:
   10
 .brev
 
+.coNP Symbol Macros @, *-1 @, *-2 @, ... @ *-20
+The listener provides small number of symbol macros for referencing the 
+results of previous commands in a relative. The macro
+.code *-1
+refers to the value of the immediately previous command. The macro
+.code *-2
+refers to the value of the command before that one and so on.
+
+Note: each of these macros expands to a reference to the
+.code *r
+vector, according to the following pattern:
+
+.mono
+   *-1  -->  [*r (mod (- *v 1) 100)]
+   *-2  -->  [*r (mod (- *v 2) 100)]
+   ...
+   *-20 -->  [*r (mod (- *v 20) 100)]
+.onom
+
 .coNP Variable @ *n
 .desc
 The listener variable

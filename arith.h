@@ -25,7 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern val mod_s, bit_s;
+extern val mod_s, bit_s, minus_s;
 val make_bignum(void);
 val bignum(cnum cn);
 val bignum_from_long(long l);

@@ -6014,7 +6014,7 @@ void reg_var(val sym, val val)
   mark_special(sym);
 }
 
-static void reg_symacro(val sym, val form)
+void reg_symacro(val sym, val form)
 {
   loc pcdr = gethash_l(lit("internal initialization"), top_smb, sym, nulloc);
   val binding = deref(pcdr);

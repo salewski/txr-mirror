@@ -60,6 +60,7 @@
 #include "parser.h"
 #include "regex.h"
 #include "itypes.h"
+#include "arith.h"
 #include "buf.h"
 #include "vm.h"
 #include "txr.h"
@@ -1459,12 +1460,24 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   val rw_f = func_f1v(out_stream, repl_warning);
   val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
   val brackets = mkstring(num_fast(repl_level), chr('>'));
+  cnum i;
 
   env_vbind(dyn_env, stderr_s, out_stream);
 
   for (; bindings; bindings = cdr(bindings)) {
     val binding = car(bindings);
     reg_varl(car(binding), cdr(binding));
+  }
+
+  for (i = 1; i <= 20; i++) {
+    val name = format(nil, lit("*-~d"), num_fast(i), nao);
+    val sym = intern(name, user_package);
+    reg_symacro(sym, list(dwim_s, result_hash_sym,
+                          list(macro_time_s,
+                               list(mod_s,
+                                    list(minus_s, var_counter_sym,
+                                         num_fast(i), nao),
+                                    num_fast(100), nao), nao), nao));
   }
 
   reg_varl(result_hash_sym, result_hash);
