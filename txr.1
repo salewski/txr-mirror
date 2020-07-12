@@ -54483,7 +54483,7 @@ uses to form the name of the new symbol.
 
 .coNP Function @ make-package
 .synb
-.mets (make-package << name )
+.mets (make-package < name <> [ weak ])
 .syne
 .desc
 The
@@ -54498,6 +54498,24 @@ should be performed with the
 .code defpackage
 macro rather than by direct use of
 .codn make-package .
+
+If the
+.meta weak
+parameter is given an argument which is a Boolean true, then the resulting
+package holds symbols weakly, from a garbage collection point of view.  If the
+only reference to a symbol is that which occurs inside the weak package, then
+that symbol may be removed from the package and reclaimed by the garbage
+collector.
+
+Note: weak packages address the following problem. The application creates a
+package for the purpose of reading Lisp data. Symbols occurring in that data
+therefore are interned into the package. Subsequently, the application retains
+references to some of the symbols, discarding the others.  If the package isn't
+weak, then because the application is retaining some of the symbols, and those
+symbols hold a reference to the package, and the package holds a reference to
+all symbols that were interned in it, all of the symbols are retained. If a
+weak package is used, then the uninterested symbols are eligible for garbage
+collection.
 
 .coNP Function @ delete-package
 .synb

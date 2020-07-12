@@ -6761,8 +6761,8 @@ void eval_init(void)
   reg_var(package_alist_s = intern(lit("*package-alist*"), user_package), packages);
   reg_var(package_s = intern(lit("*package*"), user_package),
           (opt_compat && opt_compat <= 190) ? user_package : public_package);
-  reg_fun(intern(lit("make-package"), user_package), func_n1(make_package));
-  reg_fun(intern(lit("make-anon-package"), system_package), func_n0(make_anon_package));
+  reg_fun(intern(lit("make-package"), user_package), func_n2o(make_package, 1));
+  reg_fun(intern(lit("make-anon-package"), system_package), func_n1o(make_anon_package, 0));
   reg_fun(intern(lit("find-package"), user_package), func_n1(find_package));
   reg_fun(intern(lit("delete-package"), user_package), func_n1(delete_package));
   reg_fun(intern(lit("merge-delete-package"), user_package), func_n2o(merge_delete_package, 1));

@@ -5910,10 +5910,11 @@ val gensym(val prefix)
   return make_sym(name);
 }
 
-static val make_package_common(val name)
+static val make_package_common(val name, val weak)
 {
-  val sh = make_hash(nil, nil, lit("t")); /* don't have t yet! */
-  val hh = make_hash(nil, nil, lit("t"));
+  val weak_vals = default_null_arg(weak);
+  val sh = make_hash(nil, weak_vals, lit("t")); /* don't have t yet! */
+  val hh = make_hash(nil, weak_vals, lit("t"));
   val obj = make_obj();
   obj->pk.type = PKG;
   obj->pk.name = name;
@@ -5922,7 +5923,7 @@ static val make_package_common(val name)
   return obj;
 }
 
-val make_package(val name)
+val make_package(val name, val weak)
 {
   if (find_package(name)) {
     uw_throwf(error_s, lit("make-package: ~s exists already"), name, nao);
@@ -5932,15 +5933,15 @@ val make_package(val name)
     uw_throwf(error_s, lit("make-package: package name can't be empty string"),
               nao);
   } else {
-    val obj = make_package_common(name);
+    val obj = make_package_common(name, weak);
     mpush(cons(name, obj), cur_package_alist_loc);
     return obj;
   }
 }
 
-val make_anon_package(void)
+val make_anon_package(val weak)
 {
-  return make_package_common(lit("#<anon-package>"));
+  return make_package_common(lit("#<anon-package>"), weak);
 }
 
 val packagep(val obj)
@@ -11878,10 +11879,10 @@ static void obj_init(void)
   null_list = cons(nil, nil);
 
   hash_s = make_sym(lit("hash"));
-  system_package = make_package(lit("sys"));
-  keyword_package = make_package(lit("keyword"));
-  user_package = make_package(lit("usr"));
-  public_package = make_package(lit("pub"));
+  system_package = make_package(lit("sys"), nil);
+  keyword_package = make_package(lit("keyword"), nil);
+  user_package = make_package(lit("usr"), nil);
+  public_package = make_package(lit("pub"), nil);
 
   rehome_sym(hash_s, user_package);
 
