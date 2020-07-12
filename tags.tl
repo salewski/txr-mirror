@@ -67,7 +67,7 @@
 (defmacro in-anon-package (. body)
   (with-gensyms (pkg)
     ^(let* ((*package-alist* *package-alist*)
-            (,pkg (sys:make-anon-package))
+            (,pkg (sys:make-anon-package t))
             (*package* ,pkg))
        (set-package-fallback-list *package* '(:usr))
        ,*body)))
