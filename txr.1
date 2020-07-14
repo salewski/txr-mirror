@@ -70845,8 +70845,7 @@ is stored. The default value is zero.
 These functions perform the "put semantics" encoding action similar to
 what happens to the arguments of an outgoing foreign function call.
 
-
-Caution: incorrect use of this this function, or its use in isolation
+Caution: incorrect use of this function, or its use in isolation
 without a matching
 .code ffi-in
 call, can cause memory leaks, because, depending on
@@ -70866,15 +70865,14 @@ to the treatment applied to the arguments of a callback prior to
 returning to foreign code.
 
 It is assumed that
+.code obj
+is an object that was returned by an earlier call to
+.codn ffi-get ,
+and that the
 .meta dst-buf
-is a buffer that was earlier used in a call to
-.code ffi-get
-and that
-.meta type
 and
-.meta obj
-are the same values that were passed as the
-corresponding arguments of that function.
+.meta type
+arguments are the same objects that were used in that call.
 
 The
 .meta copy-p
