@@ -3670,6 +3670,15 @@ static val ffi_type_lookup(val sym)
   return gethash(ffi_typedef_hash, sym);
 }
 
+static val ffi_type_lookup_checked(val self, val sym)
+{
+  val type = gethash(ffi_typedef_hash, sym);
+  if (!type)
+    uw_throwf(error_s, lit("~a: unrecognized type specifier: ~s"),
+              self, sym, nao);
+  return type;
+}
+
 static val ffi_struct_init(val slot_init, val strct)
 {
   val stype = struct_type(strct);
@@ -5947,6 +5956,30 @@ val fill_carray(val carray, val offs, val stream)
   return ret;
 }
 
+static val cptr_getobj(val cptr, val type_in)
+{
+  val self = lit("cptr-get");
+  mem_t *data = cptr_get(cptr);
+  val type = default_arg(type_in, ffi_type_lookup_checked(self, cptr->co.cls));
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
+  if (data != 0)
+    return tft->get(tft, data, self);
+  uw_throwf(type_error_s, lit("~a: ~s is a null pointer"), self, cptr, nao);
+}
+
+static val cptr_out(val cptr, val obj, val type_in)
+{
+  val self = lit("cptr-out");
+  mem_t *data = cptr_get(cptr);
+  val type = default_arg(type_in, ffi_type_lookup_checked(self, cptr->co.cls));
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
+  if (data != 0) {
+    tft->out(tft, 0, obj, data, self);
+    return obj;
+  }
+  uw_throwf(type_error_s, lit("~a: ~s is a null pointer"), self, cptr, nao);
+}
+
 struct uni {
   struct txr_ffi_type *tft;
   mem_t *data;
@@ -6345,6 +6378,8 @@ void ffi_init(void)
   }
   reg_fun(intern(lit("put-carray"), user_package), func_n3o(put_carray, 1));
   reg_fun(intern(lit("fill-carray"), user_package), func_n3o(fill_carray, 1));
+  reg_fun(intern(lit("cptr-get"), user_package), func_n2o(cptr_getobj, 1));
+  reg_fun(intern(lit("cptr-out"), user_package), func_n3o(cptr_out, 2));
   reg_fun(intern(lit("make-union"), user_package), func_n3o(make_union, 1));
   reg_fun(intern(lit("union-members"), user_package), func_n1(union_members));
   reg_fun(intern(lit("union-get"), user_package), func_n2(union_get));

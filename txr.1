@@ -53452,6 +53452,137 @@ function retrieves the
 .meta cptr
 object's type tag.
 
+.coNP Function @ cptr-get
+.synb
+.mets (cptr-get < cptr <> [ type ])
+.syne
+.desc
+The
+.code cptr-get
+function extracts a Lisp value by converting a C object
+at the memory location denoted by
+.metn cptr ,
+according to the FFI type
+.metn type .
+The external representation at the specified memory location is
+is scanned according to the
+.meta type
+and converted to a Lisp value which is returned.
+
+If the
+.meta type
+argument is specified, it must be a FFI type object.
+If omitted, then the
+.code cptr
+object's type tag is interpreted as a FFI type symbol and resolved to
+a type; the resulting type, if one is found is substituted for
+.metn type .
+If the lookup fails an error exception is thrown.
+
+The
+.meta cptr
+object must be of type
+.code cptr
+and point to a memory area suitably aligned for, and large
+enough to hold a foreign representation of
+.metn type ,
+at the byte offset indicated by the
+.meta offset
+argument.
+
+If
+.meta cptr
+is a null pointer, an exception is thrown.
+
+The
+.code cptr-get
+operation is similar to the "get semantics" performed by FFI
+in order to extract the return value of foreign function
+calls, and by the FFI callback mechanism to extract the
+arguments coming into a callback.
+
+The
+.meta type
+argument may not be a variable length type, such as an array of
+unspecified size.
+
+Note: the
+.code cptr-get
+and
+.code cptr-out
+is useful in simplifying the interaction with "semi-opaque" foreign objects:
+objects which serve as a API handles that are treated as opaque pointers in API
+argument calls, but which expose some internal members that the application
+must access directly. The
+.code cptr
+objects pass through the foreign API without undergoing conversion,
+as usual. The application uses these two functions to perform conversion as
+necessary. Under this technique, the description of the foreign object need not
+be complete. Structure members which occur after the last member that the
+application is interested in need not be described in the FFI type.
+
+.coNP Function @ cptr-put
+.synb
+.mets (cptr-put < cptr < obj <> [ type ])
+.syne
+.desc
+The
+.code cptr-put
+function converts a Lisp value into a C representation,
+which is stored at the memory location denoted by
+.metn cptr ,
+according to the FFI type
+.metn type .
+The function's return value is
+.metn obj .
+
+If the
+.meta type
+argument is specified, it must be a FFI type object.
+If omitted, then the
+.code cptr
+object's type tag is interpreted as a FFI type symbol and resolved to
+a type; the resulting type, if one is found is substituted for
+.metn type .
+If the lookup fails an error exception is thrown.
+
+The
+.meta obj
+argument must be an object compatible with the conversions
+implied by
+.metn type .
+
+The
+.meta cptr
+object must be of type
+.code cptr
+and point to a memory area suitably aligned for, and large
+enough to hold a foreign representation of
+.metn type ,
+at the byte offset indicated by the
+.meta offset
+argument.
+
+If
+.meta cptr
+is a null pointer, an exception is thrown.
+
+It is assumed that
+.meta obj
+is an object which was returned by an earlier call to
+.codn cptr-get ,
+and that the
+.meta cptr
+and
+.meta type
+arguments are the same objects that were used in that call.
+
+The
+.code cptr-out
+function performs the "out semantics" encoding action, similar
+to the treatment applied to the arguments of a callback prior to
+returning to foreign code.
+
 .coNP Variable @ cptr-null
 .desc
 The
