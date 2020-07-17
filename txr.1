@@ -42375,21 +42375,26 @@ mode. Exception processing mode terminates in one of several ways:
 A
 .I catch
 is found which matches the exception, and control is transferred
-to the catch. Catches are defined by the
+to the catch by a non-local transfer which performs unwinding. Catches are
+defined by the
 .code catch
 macro.
 .IP -
-A handler accepts the exception by performing a non-local transfer.
+A
+.I handler
+is found which matches the exception, and control is transferred to
+the handler by invoking its function. The handler function accepts the
+exception by performing a non-local transfer to a destination of its choice, or
+else declines to accept the exception by returning.
 Handlers are defined by the
 .code handler-bind
 operator or
 .code handle
-macro. If a handler returns, then by so doing it declines to
-handle the exception.
+macro.
 .IP -
 If no catch or accepting handler is found for an exception derived from
 .code error
-exception and
+and
 .code *unhandled-hook*
 is
 .codn nil ,
@@ -42444,10 +42449,15 @@ or else declines the exception by performing an ordinary return.
 Catches and handlers are identified by exception type symbols. A catch or
 handler is eligible to process an exception if it handles a type which is
 a supertype of the exception which is being processed. Handles and catches
-are located in a combined search which proceeds from the innermost nesting
-to the outermost. When an eligible handle is encountered, it is called. If
-it returns, the search continues. When an eligible catch is encountered,
-the search stops and a control transfer takes place to the catch site.
+are found by means of a combined search which proceeds from the innermost
+nesting of dynamic scope to the outermost, without performing any unwinding.
+When an eligible handler is encountered, its registered function is called, thereby suspending the
+search.  If the handler function returns, the search continues from that scope
+to yet unvisited outer scopes. When an eligible catch is encountered rather
+than a handler, the search terminates and a control transfer takes place to the
+catch site. That control transfer then performs unwinding, which requires it to
+make a second pass through the same nestings of dynamic scope that had just
+been traversed in order to find that catch.
 
 .NP* Handlers and Sandboxing
 
