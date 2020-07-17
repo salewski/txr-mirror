@@ -42602,6 +42602,30 @@ may invoke a particular restart handler. Restart handlers are similar to
 exception handlers: they are functions associated with symbols in the
 dynamic environment.
 
+In \*(TL, the special behavior which occurs for exceptions derived from
+.code error
+and those from
+.code warning
+is built into the exception handling system, and tied to those types.
+When an error or warning exception is unhandled, the exception handling system
+itself reacts, so the special behaviors occur no matter how these exceptions
+are raised.  In ANSI CL, the special behavior for unhandled
+.code error
+conditions (of invoking the debugger) is implemented only in the
+.code error
+function;
+.code error
+conditions signalled other than via that function are not subject to
+any special behavior. There is a parallel situation with regard to
+warnings: the
+ANSI CL
+.code warn
+function implements a special behavior for unhandled warnings (of emitting
+a diagnostic) but warnings not signalled via that function are not
+treated that way.
+Thus in \*(TL, there is no way to raise an error or warning that is simply
+ignored due to being unhandled.
+
 In \*(TL exceptions are a unification of conditions and restarts. From an ANSI CL
 perspective, \*(TL exceptions are a lot like CL restarts, except that the
 symbols are arranged in an inheritance hierarchy. \*(TL exceptions are used
