@@ -59755,9 +59755,9 @@ fields take on values of zero.
 
 .coNP Functions @, stat @ lstat and @ fstat
 .synb
-.mets (stat >> { path | < stream | << fd })
+.mets (stat >> { path | < stream | << fd } <> [ struct ])
 .mets (lstat << path )
-.mets (fstat >> { path | stream | << fd })
+.mets (fstat >> { path | stream | << fd } <> [ struct ])
 .syne
 .desc
 The
@@ -59780,9 +59780,22 @@ is thrown.
 
 If the object is not found or cannot be
 accessed, an exception is thrown.
-Otherwise, information is retrieved and returned, in the form
-of a structure of type
+
+Otherwise, if the
+.meta struct
+argument is missing, information is retrieved and returned, in the form of a
+new structure of type
 .codn stat .
+If the
+.meta struct
+argument is present, it must be either: an instance of the
+.code struct
+structure type, or of a type derived from that type by inheritance, or
+else structure type which has all the same slots as the
+.code struct
+type. The retrieved information is stored into
+.meta struct
+and that object is returned rather than a new object.
 
 If
 .meta path
@@ -63129,7 +63142,7 @@ when the handle indicates that no more directory entries remain to be traversed.
 
 .coNP Function @ dirstat
 .synb
-.mets (dirstat < dirent-struct <> [ dir-path ])
+.mets (dirstat < dirent-struct >> [ dir-path <> [ struct ]])
 .syne
 .desc
 The
@@ -63144,9 +63157,14 @@ sets the
 .code type
 slot of the
 .meta dirent-struct
-accordingly, and also returns the
+accordingly, and then returns the value that
 .code stat
-structure.
+returned.
+
+If the
+.meta struct
+argument is specified, it is passed to
+.codn stat .
 
 The
 .meta dir-path

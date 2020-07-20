@@ -1145,10 +1145,10 @@ static val stat_to_list(struct stat st)
               nao);
 }
 
-val stat_to_struct(struct stat st, val path)
+val stat_to_struct(struct stat st, val path, val stat_opt)
 {
   args_decl(args, ARGS_MIN);
-  val strct = make_struct(stat_s, nil, args);
+  val strct = default_arg(stat_opt, make_struct(stat_s, nil, args));
   slotset(strct, dev_s, num(st.st_dev));
   slotset(strct, ino_s, num(st.st_ino));
   slotset(strct, mode_s, num(st.st_mode));
@@ -1184,7 +1184,7 @@ val stat_to_struct(struct stat st, val path)
 #endif
 
 static val stat_impl(val obj, int (*statfn)(val, struct stat *),
-                     val name, val path)
+                     val name, val path, val stat_opt)
 {
 #if HAVE_SYS_STAT
   struct stat st;
@@ -1197,20 +1197,20 @@ static val stat_impl(val obj, int (*statfn)(val, struct stat *),
   }
 
   return if3(opt_compat && opt_compat <= 113,
-             stat_to_list(st), stat_to_struct(st, path));
+             stat_to_list(st), stat_to_struct(st, path, stat_opt));
 #else
   uw_throwf(file_error_s, lit("~a is not implemented"), name, nao);
 #endif
 }
 
-val stat_wrap(val path)
+val stat_wrap(val path, val stat_opt)
 {
-  return stat_impl(path, do_stat, lit("stat"), path);
+  return stat_impl(path, do_stat, lit("stat"), path, stat_opt);
 }
 
-static val lstat_wrap(val path)
+static val lstat_wrap(val path, val stat_opt)
 {
-  return stat_impl(path, do_lstat, lit("lstat"), path);
+  return stat_impl(path, do_lstat, lit("lstat"), path, stat_opt);
 }
 
 #if HAVE_FILE_STAMP_CHANGE
@@ -2322,12 +2322,12 @@ static val readdir_wrap(val dirobj, val dirent_in)
   }
 }
 
-static val dirstat(val dirent, val dir_path)
+static val dirstat(val dirent, val dir_path, val stat_opt)
 {
   val self = lit("dirstat");
   val name = slot(dirent, name_s);
   val path = if3(null_or_missing_p(dir_path), name, path_cat(dir_path, name));
-  val stat = stat_wrap(path);
+  val stat = stat_wrap(path, stat_opt);
   val mode = slot(stat, mode_s);
 
   if (mode) {
@@ -2660,11 +2660,11 @@ void sysif_init(void)
 #endif
 
   {
-    val fn = func_n1(stat_wrap);
+    val fn = func_n2o(stat_wrap, 1);
     reg_fun(intern(lit("stat"), user_package), fn);
     reg_fun(intern(lit("fstat"), user_package), fn);
   }
-  reg_fun(intern(lit("lstat"), user_package), func_n1(lstat_wrap));
+  reg_fun(intern(lit("lstat"), user_package), func_n2o(lstat_wrap, 1));
 
 #if HAVE_SYS_STAT
 #ifndef S_IFSOCK
@@ -2924,7 +2924,7 @@ void sysif_init(void)
   reg_fun(intern(lit("opendir"), user_package), func_n2o(opendir_wrap, 1));
   reg_fun(intern(lit("closedir"), user_package), func_n1(closedir_wrap));
   reg_fun(intern(lit("readdir"), user_package), func_n2o(readdir_wrap, 1));
-  reg_fun(intern(lit("dirstat"), user_package), func_n2o(dirstat, 1));
+  reg_fun(intern(lit("dirstat"), user_package), func_n3o(dirstat, 2));
 
 #ifdef DT_UNKNOWN
   reg_varl(intern(lit("dt-unknown"), user_package), num_fast(DT_UNKNOWN));

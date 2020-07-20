@@ -48,10 +48,10 @@ time_t c_time(val time, val self);
 val num_time(time_t time);
 #if HAVE_SYS_STAT
 struct stat;
-val stat_to_struct(struct stat st, val path);
+val stat_to_struct(struct stat st, val path, val stat_opt);
 val umask_wrap(val mask);
 #endif
-val stat_wrap(val path);
+val stat_wrap(val path, val stat_opt);
 val stdio_ftell(FILE *);
 int stdio_fseek(FILE *, val, int whence);
 #if HAVE_GETEUID

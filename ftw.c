@@ -65,7 +65,7 @@ static int ftw_callback(const char *c_path, const struct stat *c_sb,
   {
     val path = string_utf8(c_path);
     val type = num(c_type);
-    val sb = stat_to_struct(*c_sb, path);
+    val sb = stat_to_struct(*c_sb, path, nil);
     val level = num(fb->level);
     val base = num(fb->base);
     val result;
