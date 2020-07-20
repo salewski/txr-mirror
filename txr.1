@@ -63148,7 +63148,7 @@ when the handle indicates that no more directory entries remain to be traversed.
 The
 .code dirstat
 function invokes
-.code stat
+.code lstat
 on the object represented by the
 .code dirent
 structure
@@ -63158,13 +63158,13 @@ sets the
 slot of the
 .meta dirent-struct
 accordingly, and then returns the value that
-.code stat
+.code lstat
 returned.
 
 If the
 .meta struct
 argument is specified, it is passed to
-.codn stat .
+.codn lstat .
 
 The
 .meta dir-path
@@ -63194,17 +63194,16 @@ using
 to form the effective path.
 
 The
-.code stat
+.code lstat
 function is invoked on the effective path, and if it succeeds,
 then type information is obtained from the resulting
-.code stat
 structure to set the value of the
 .code type
 slot of
 .metn dirent-struct .
-The
-.code stat
-structure is then returned.
+The same structure that was returned by
+.code lstat
+is then returned.
 
 .SS* Unix Sockets
 

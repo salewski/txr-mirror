@@ -2327,7 +2327,7 @@ static val dirstat(val dirent, val dir_path, val stat_opt)
   val self = lit("dirstat");
   val name = slot(dirent, name_s);
   val path = if3(null_or_missing_p(dir_path), name, path_cat(dir_path, name));
-  val stat = stat_wrap(path, stat_opt);
+  val stat = lstat_wrap(path, stat_opt);
   val mode = slot(stat, mode_s);
 
   if (mode) {
