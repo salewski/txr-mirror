@@ -23417,9 +23417,10 @@ family, in the common situation when
 .meta string
 is the unbound argument.
 
-.coNP Function @ split-str-set
+.coNP Functions @ split-str-set and @ sspl
 .synb
 .mets (split-str-set < string << set )
+.mets (sspl < set << string )
 .syne
 .desc
 The
@@ -23448,6 +23449,14 @@ be separate gaps which come between empty strings.
 This operation is nondestructive:
 .meta string
 is not modified in any way.
+
+The
+.code sspl
+function performs the same operation; the only difference between
+.code sspl
+and
+.code split-str-set
+is argument order.
 
 .coNP Functions @ tok-str and @ tok-where
 .synb

@@ -5060,6 +5060,11 @@ val split_str_set(val str, val set)
   return out;
 }
 
+val sspl(val set, val str)
+{
+  return split_str_set(str, set);
+}
+
 val tok_str(val str, val tok_regex, val keep_sep)
 {
   list_collect_decl (out, iter);

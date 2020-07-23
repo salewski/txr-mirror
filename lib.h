@@ -875,6 +875,7 @@ val split_str(val str, val sep);
 val split_str_keep(val str, val sep, val keep_sep);
 val spl(val sep, val arg1, val arg2);
 val split_str_set(val str, val set);
+val sspl(val set, val str);
 val tok_str(val str, val tok_regex, val keep_sep);
 val tok(val tok_regex, val arg1, val arg2);
 val tok_where(val str, val tok_regex);
