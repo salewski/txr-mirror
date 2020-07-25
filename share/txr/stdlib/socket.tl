@@ -29,10 +29,12 @@
 
 (defstruct sockaddr-in sockaddr
   (addr 0) (port 0)
+  (prefix 32)
   (:static family af-inet))
 
 (defstruct sockaddr-in6 sockaddr
   (addr 0) (port 0) (flow-info 0) (scope-id 0)
+  (prefix 128)
   (:static family af-inet6))
 
 (defstruct sockaddr-un sockaddr
@@ -151,6 +153,118 @@
              (cand-prefix [pieces 0..(trunc (+ w 15) 16)])
              (prefix (if (search cand-prefix '(0 0)) pieces cand-prefix)))
         `@(sys:in6addr-condensed-text prefix)/@(or width w)`))))
+
+(defun inaddr-str (str)
+  (labels ((invalid ()
+             (error "~s: invalid address ~s" 'inaddr-str str))
+           (mkaddr (octets port)
+             (unless [all octets (op <= 0 @1 255)]
+               (invalid))
+             (unless (<= 0 port 65535)
+               (invalid))
+             (new sockaddr-in
+                  addr (+ (ash (pop octets) 24)
+                          (ash (pop octets) 16)
+                          (ash (pop octets) 8)
+                          (car octets))
+                  port port))
+           (mkaddr-pf (octets prefix port)
+             (unless [all octets (op <= 0 @1 255)]
+               (invalid))
+             (unless (<= 0 prefix 32)
+               (invalid))
+             (unless (<= 0 port 65535)
+               (invalid))
+             (let* ((addr (+ (ash (or (pop octets) 0) 24)
+                             (ash (or (pop octets) 0) 16)
+                             (ash (or (pop octets) 0) 8)
+                             (or (car octets) 0))))
+               (new sockaddr-in
+                    addr (logand addr (ash -1 (- 32 prefix)))
+                    port port
+                    prefix prefix))))
+    (cond
+      ((r^$ #/\d+\.\d+\.\d+\.\d+:\d+/ str)
+       (tree-bind (addr port) (split* str (rpos #\: str))
+         (mkaddr [mapcar toint (spl #\. addr)] (toint port))))
+      ((r^$ #/\d+\.\d+\.\d+\.\d+(:\d+)?/ str)
+       (mkaddr [mapcar toint (spl #\. str)] 0))
+      ((r^$ #/\d+(\.\d+(\.\d+(\.\d+)?)?)?\/\d+/ str)
+       (tree-bind (addr prefix) (spl #\/ str)
+         (mkaddr-pf [mapcar toint (spl #\. addr)] (toint prefix) 0)))
+      ((r^$ #/\d+(\.\d+(\.\d+(\.\d+)?)?)?\/\d+:\d+/ str)
+       (tree-bind (addr prefix port) (split-str-set str ":/")
+         (mkaddr-pf [mapcar toint (spl #\. addr)] (toint prefix) (toint port))))
+      (t (invalid)))))
+
+(defun in6addr-str (str)
+  (labels ((invalid ()
+             (error "~s: invalid address ~s" 'in6addr-str str))
+           (mkaddr-full (pieces)
+             (unless [all pieces (op <= 0 @1 #xffff)]
+               (invalid))
+             (unless (eql 8 (length pieces))
+               (invalid))
+             (new sockaddr-in6
+                  addr (reduce-left (op + @2 (ash @1 16)) pieces)))
+           (mkaddr-brev (pieces-x pieces-y)
+             (let ((len-x (len pieces-x))
+                   (len-y (len pieces-y)))
+               (unless (<= (+ len-x len-y) 7)
+                 (invalid))
+               (let* ((val-x (reduce-left (op + @2 (ash @1 16)) pieces-x 0))
+                      (val-y (reduce-left (op + @2 (ash @1 16)) pieces-y 0))
+                      (addr (cond
+                              ((null pieces-x) val-y)
+                              ((null pieces-y) (ash val-x (* 16 (- 8 len-x))))
+                              (t (+ val-y
+                                    (ash val-x (* 16 (- 8 len-x))))))))
+                 (new sockaddr-in6
+                      addr addr))))
+           (str-to-pieces (str)
+              (unless (empty str)
+                [mapcar (lop toint 16) (spl #\: str)]))
+           (octets-to-pieces (octets)
+             (unless [all octets (op <= 0 @1 255)]
+               (invalid))
+             (list (+ (ash (pop octets) 8)
+                      (pop octets))
+                   (+ (ash (pop octets) 8)
+                      (pop octets)))))
+    (cond
+      ((r^$ #/\[.*\]:\d+/ str)
+       (tree-bind (addr-str port-str) (split* str (rpos #\: str))
+         (let ((addr (in6addr-str [addr-str 1..-1]))
+               (port (toint port-str)))
+           (unless (<= 0 port 65535)
+             (invalid))
+           (set addr.port port)
+           addr)))
+      ((r^$ #/[^\/]+\/\d+/ str)
+       (tree-bind (addr-str prefix-str) (split* str (rpos #\/ str))
+         (let ((addr (in6addr-str addr-str))
+               (prefix (toint prefix-str)))
+           (unless (<= 0 prefix 128)
+             (invalid))
+           (upd addr.addr (logand (ash -1 (- 128 prefix))))
+           (set addr.prefix prefix)
+           addr)))
+      ((r^$ #/[\da-fA-F]*(:[\da-fA-F]*)*/ str)
+       (upd str (regsub #/::/ "@"))
+       (let* ((str-splat (regsub #/::/ "@" str))
+              (maj-pieces (spl #\@ str-splat)))
+         (caseql (len maj-pieces)
+           (1 (mkaddr-full (str-to-pieces (car maj-pieces))))
+           (2 (mkaddr-brev (str-to-pieces (car maj-pieces))
+                           (str-to-pieces (cadr maj-pieces))))
+           (t (invalid)))))
+      ((r^$ #/::0*[fF][fF][fF][fF]:\d+\.\d+\.\d+\.\d+/ str)
+       (let* ((bigsplit (split* str (rpos #\: str)))
+              (4part (cadr bigsplit))
+              (octets [mapcar toint (spl #\. 4part)])
+              (pieces (cons #xffff (octets-to-pieces octets))))
+         (mkaddr-brev nil pieces)))
+      (t (invalid)))))
 
 (defplace (sock-peer sock) body
   (getter setter

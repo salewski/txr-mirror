@@ -343,6 +343,7 @@ static val sock_set_entries(val dlt, val fun)
     lit("ai-numericserv"),
     lit("str-inaddr"), lit("str-in6addr"),
     lit("str-inaddr-net"), lit("str-in6addr-net"),
+    lit("inaddr-str"), lit("in6addr-str"),
     lit("shut-rd"), lit("shut-wr"), lit("shut-rdwr"),
     lit("open-socket"), lit("open-socket-pair"),
     lit("sock-bind"), lit("sock-connect"), lit("sock-listen"),
@@ -352,7 +353,7 @@ static val sock_set_entries(val dlt, val fun)
   };
   val name_noload[] = {
     lit("family"), lit("addr"), lit("port"), lit("flow-info"),
-    lit("scope-id"), lit("path"), lit("flags"), lit("socktype"),
+    lit("scope-id"), lit("prefix"), lit("path"), lit("flags"), lit("socktype"),
     lit("protocol"), lit("canonname"), nil
   };
   set_dlt_entries(dlt, name, fun);

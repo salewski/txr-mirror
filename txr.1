@@ -63412,7 +63412,7 @@ which is static, and initialized to
 .coNP Structure @ sockaddr-in
 .synb
 .mets (defstruct sockaddr-in sockaddr
-.mets \ \  (addr 0) (port 0)
+.mets \ \  (addr 0) (port 0) (prefix 32)
 .mets \ \  (:static family af-inet))
 .syne
 .desc
@@ -63446,6 +63446,12 @@ function is used with the aim of looking up the address of a host, without
 caring about the port number.
 
 The
+.code prefix
+field is set by the function
+.codn inaddr-str ,
+when it recognizes and parses a prefix field in the textual representation.
+
+The
 .code family
 static slot holds the value
 .codn af-inet .
@@ -63454,6 +63460,7 @@ static slot holds the value
 .synb
 .mets (defstruct sockaddr-in6 sockaddr
 .mets \ \  (addr 0) (port 0) (flow-info 0) (scope-id 0)
+.mets \ \  (prefix 128)
 .mets \ \  (:static family af-inet6))
 .syne
 .desc
@@ -63486,6 +63493,12 @@ and
 slots of the
 .code sockaddr_in6
 C language structure. Their meaning and use are beyond the scope of this document.
+
+The
+.code prefix
+field is set by the function
+.codn in6addr-str ,
+when it recognizes and parses a prefix field in the textual representation.
 
 The
 .code family
@@ -64160,6 +64173,113 @@ is omitted, then it is calculated as the number of bits in the address,
 excluding the contiguous all-zero bits in the least significant position:
 how many times the address can be shifted to the right before a 1 appears
 in the least significant bit.
+
+.coNP Functions @ inaddr-str and @ in6addr-str
+.synb
+.mets (inaddr-str << string )
+.mets (in6addr-str << string )
+.syne
+.desc
+The
+.code inaddr-str
+and
+.code in6addr-str
+functions recover an IPv4 or IPv6 address from a textual representation.
+If the parse is successful, the address is returned as, respectively, a
+.code sockaddr-in
+or
+.code sockaddr-in6
+structure.
+
+If
+.meta string
+is a malformed address, due to any issue such as invalid syntax or
+a numeric value being out of range, an exception is thrown.
+
+The
+.code inaddr-str
+function recognizes the dot notation consisting of four decimal numbers
+separated by period characters. The numbers must be in the range 0 to 255.
+Note: superfluous leading zeros are permitted, though this is a nonstandard
+extension; not all implementations of this notations support this.
+
+A prefix may be specified in the notation as a slash followed by a decimal
+number, in the range 0 to 32. In this case, the integer value of the
+prefix appears as the
+.code prefix
+member of the returned
+.code sockaddr-in
+structure. Furthermore, the address is masked, so that any bits not
+included in the prefix are zero. For instance, the address
+.str 255.255.255.255/1
+is equivalent to
+.strn 128.0.0.0 ,
+except that the
+.code prefix
+if the returned structure is 1 rather than 32.
+When a prefix is not specified, the
+.code prefix
+member of the structure retains its default value of 32.
+When the prefix is specified, the address part need not contain all four
+octets; it may contain between one and four octets. Thus,
+.str 192.168/16
+is a valid address, equivalent to
+.strn 192.168.0.0/16 .
+
+A port number may be specified in the notation as a colon, followed by a
+decimal number in the range 0 to 65535. The integer value of this port
+number appears as the
+.code port
+member of the returned structure. An example of this notation is
+.strn 127.0.0.1:23 .
+
+A prefix and port number may both be specified; in this case the prefix must
+appear first, followed by the port number. For example,
+.strn "127/8:23" .
+
+The
+.code in6addr-str
+function recognizes the IPv6 notation consisting of 16-bit hexadecimal pieces
+separated by colons. If the operation is successful, it returns a
+.code sockaddr-in6
+structure.  Each piece must be a value in the range 0 to FFFF.
+The hexadecimal digits may be any mixture of upper and lower case. Leading
+zeros are permitted.
+Up to eight such pieces must be specified. If fewer pieces are specified,
+then the token
+.code ::
+(double colon)
+must appear in the address exactly once. That token denotes the condensation of
+a sufficient number of zero-valued pieces to make eight pieces.
+The token must be in one of three positions: it may be the leftmost element of
+the address, immediately followed by a hexadecimal piece; it may be the rightmost element
+of the address, preceded by a hexadecimal piece; or else, it may be in the
+middle of the address, flanked on both sides by hexadecimal pieces.
+
+The
+.code in6addr-str
+also recognizes the special notation for IPv6-mapped IPv4 addresses. This
+notation consists of the address string
+.str ::FFFF
+which may appear in any upper/lower case mixture, possibly with leading
+zeros, followed by an IPv4 address given in the four-octet dot notation.
+For example,
+.strn ::FFFF:127.0.0.1 .
+
+A prefix may be specified using a slash, followed by a decimal number in the
+range 0 to 128. The handling of the prefix is similar to that of
+.code inaddr-str
+except that pieces of the address may not be omitted. Condensing the
+pieces of the IPv6 address is always done by means of the
+.code ::
+token, whether or not a prefix is present. Furthermore, the octets specified in
+the IPv6-mapped IPv4 notation must all be present, regardless of the prefix.
+
+A port number may be specified in the notation as follows: the entire address,
+including any slash-separated prefix, must appear surrounded in square
+brackets. The closing square bracket must be followed by a colon and one or
+more digits denoting a decimal number in the range 0 to 65535. For instance
+.strn "[1:2:3::4/64]:1234".
 
 .SS* Unix Terminal Control
 
