@@ -35,6 +35,9 @@
 #include <wchar.h>
 #include <signal.h>
 #include "config.h"
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include "lib.h"
 #include "gc.h"
 #include "stream.h"
@@ -45,6 +48,8 @@
 #include "y.tab.h"
 #include "parser.h"
 #include "txr.h"
+
+#define YY_NO_UNISTD_H
 
 #define YY_INPUT(buf, result, max_size)                                 \
   do {                                                                  \
