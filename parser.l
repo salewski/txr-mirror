@@ -35,9 +35,6 @@
 #include <wchar.h>
 #include <signal.h>
 #include "config.h"
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #include "lib.h"
 #include "gc.h"
 #include "stream.h"
@@ -50,6 +47,10 @@
 #include "txr.h"
 
 #define YY_NO_UNISTD_H
+
+/* Defeat flex's calls to isatty, which happene even in batch mode */
+#undef isatty
+#define isatty(x) 0
 
 #define YY_INPUT(buf, result, max_size)                                 \
   do {                                                                  \
@@ -233,7 +234,7 @@ static wchar_t *unicode_ident(scanner_t *scn, const char *lex)
 
 %}
 
-%option stack noinput reentrant bison-bridge extra-type="parser_t *"
+%option stack noinput reentrant bison-bridge extra-type="parser_t *" batch
 
 TOK     [a-zA-Z0-9_]+
 SGN     [+\-]
