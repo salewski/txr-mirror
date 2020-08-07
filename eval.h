@@ -40,7 +40,7 @@ extern val dyn_env;
 
 #define load_path (deref(lookup_var_l(nil, load_path_s)))
 
-noreturn val eval_error(val ctx, val fmt, ...);
+NORETURN val eval_error(val ctx, val fmt, ...);
 val ctx_form(val obj);
 val ctx_name(val obj);
 val lookup_origin(val form);

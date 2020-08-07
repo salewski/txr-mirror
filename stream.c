@@ -137,59 +137,59 @@ void stream_mark_op(val stream)
   strm_base_mark(s);
 }
 
-static noreturn void unimpl(val stream, val op)
+static NORETURN void unimpl(val stream, val op)
 {
   uw_throwf(file_error_s, lit("~a: not supported by stream ~s"),
             op, stream, nao);
   abort();
 }
 
-static noreturn val unimpl_put_string(val stream, val str)
+static NORETURN val unimpl_put_string(val stream, val str)
 {
   (void) str;
   unimpl(stream, lit("put-string"));
 }
 
-static noreturn val unimpl_put_char(val stream, val ch)
+static NORETURN val unimpl_put_char(val stream, val ch)
 {
   (void) ch;
   unimpl(stream, lit("put-char"));
 }
 
-static noreturn val unimpl_put_byte(val stream, int byte)
+static NORETURN val unimpl_put_byte(val stream, int byte)
 {
   (void) byte;
   unimpl(stream, lit("put-byte"));
 }
 
-static noreturn val unimpl_get_line(val stream)
+static NORETURN val unimpl_get_line(val stream)
 {
   unimpl(stream, lit("get-line"));
 }
 
-static noreturn val unimpl_get_char(val stream)
+static NORETURN val unimpl_get_char(val stream)
 {
   unimpl(stream, lit("get-char"));
 }
 
-static noreturn val unimpl_get_byte(val stream)
+static NORETURN val unimpl_get_byte(val stream)
 {
   unimpl(stream, lit("get-byte"));
 }
 
-static noreturn val unimpl_unget_char(val stream, val ch)
+static NORETURN val unimpl_unget_char(val stream, val ch)
 {
   (void) ch;
   unimpl(stream, lit("unget-char"));
 }
 
-static noreturn val unimpl_unget_byte(val stream, int byte)
+static NORETURN val unimpl_unget_byte(val stream, int byte)
 {
   (void) byte;
   unimpl(stream, lit("unget-byte"));
 }
 
-static noreturn ucnum unimpl_put_buf(val stream, mem_t *ptr, ucnum len, ucnum pos)
+static NORETURN ucnum unimpl_put_buf(val stream, mem_t *ptr, ucnum len, ucnum pos)
 {
   (void) ptr;
   (void) len;
@@ -197,7 +197,7 @@ static noreturn ucnum unimpl_put_buf(val stream, mem_t *ptr, ucnum len, ucnum po
   unimpl(stream, lit("put-buf"));
 }
 
-static noreturn ucnum unimpl_fill_buf(val stream, mem_t *ptr, ucnum len, ucnum pos)
+static NORETURN ucnum unimpl_fill_buf(val stream, mem_t *ptr, ucnum len, ucnum pos)
 {
   (void) ptr;
   (void) len;
@@ -205,35 +205,35 @@ static noreturn ucnum unimpl_fill_buf(val stream, mem_t *ptr, ucnum len, ucnum p
   unimpl(stream, lit("fill-buf"));
 }
 
-static noreturn val unimpl_seek(val stream, val off, enum strm_whence whence)
+static NORETURN val unimpl_seek(val stream, val off, enum strm_whence whence)
 {
   (void) off;
   (void) whence;
   unimpl(stream, lit("seek-stream"));
 }
 
-static noreturn val unimpl_truncate(val stream, val len)
+static NORETURN val unimpl_truncate(val stream, val len)
 {
   (void) len;
   unimpl(stream, lit("truncate-stream"));
 }
 
-static noreturn val unimpl_get_sock_family(val stream)
+static NORETURN val unimpl_get_sock_family(val stream)
 {
   unimpl(stream, lit("sock-family"));
 }
 
-static noreturn val unimpl_get_sock_type(val stream)
+static NORETURN val unimpl_get_sock_type(val stream)
 {
   unimpl(stream, lit("sock-type"));
 }
 
-static noreturn val unimpl_get_sock_peer(val stream)
+static NORETURN val unimpl_get_sock_peer(val stream)
 {
   unimpl(stream, lit("sock-peer"));
 }
 
-static noreturn val unimpl_set_sock_peer(val stream, val peer)
+static NORETURN val unimpl_set_sock_peer(val stream, val peer)
 {
   (void) peer;
   unimpl(stream, lit("sock-set-peer"));

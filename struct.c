@@ -216,7 +216,7 @@ void struct_init(void)
   reg_fun(intern(lit("static-slot-types"), system_package), func_n1(static_slot_types));
 }
 
-static noreturn void no_such_struct(val ctx, val sym)
+static NORETURN void no_such_struct(val ctx, val sym)
 {
   uw_throwf(error_s, lit("~a: ~s does not name a struct type"),
             ctx, sym, nao);
@@ -1126,13 +1126,13 @@ static struct stslot *lookup_static_slot_desc_load(struct struct_type *st,
   return stsl;
 }
 
-static noreturn void no_such_slot(val ctx, val type, val slot)
+static NORETURN void no_such_slot(val ctx, val type, val slot)
 {
   uw_throwf(error_s, lit("~a: ~s has no slot named ~s"),
             ctx, type, slot, nao);
 }
 
-static noreturn void no_such_static_slot(val ctx, val type, val slot)
+static NORETURN void no_such_static_slot(val ctx, val type, val slot)
 {
   uw_throwf(error_s, lit("~a: ~s has no static slot named ~s"),
             ctx, type, slot, nao);

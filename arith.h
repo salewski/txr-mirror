@@ -60,6 +60,6 @@ val digits(val n, val base);
 val poly(val x, val seq);
 val rpoly(val x, val seq);
 
-noreturn void do_mp_error(val self, mp_err code);
+NORETURN void do_mp_error(val self, mp_err code);
 void arith_init(void);
 void arith_free_all(void);

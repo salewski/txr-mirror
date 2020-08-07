@@ -124,23 +124,23 @@ val num_from_buffer(mem_t *buf, int bytes)
   return normalize(n);
 }
 
-static noreturn void not_number(val self, val obj)
+static NORETURN void not_number(val self, val obj)
 {
   uw_throwf(type_error_s, lit("~a: ~s is not a number"), self, obj, nao);
 }
 
-static noreturn void not_integer(val self, val obj)
+static NORETURN void not_integer(val self, val obj)
 {
   uw_throwf(type_error_s, lit("~a: ~s is not an integer"), self, obj, nao);
 }
 
-static noreturn void invalid_ops(val self, val obj1, val obj2)
+static NORETURN void invalid_ops(val self, val obj1, val obj2)
 {
   uw_throwf(type_error_s, lit("~a: invalid operands ~s ~s"), self,
             obj1, obj2, nao);
 }
 
-static noreturn void invalid_op(val self, val obj)
+static NORETURN void invalid_op(val self, val obj)
 {
   uw_throwf(type_error_s, lit("~a: invalid operand ~s"), self, obj, nao);
 }
@@ -478,13 +478,13 @@ void do_mp_error(val self, mp_err code)
   uw_throwf(numeric_error_s, lit("~a: ~a"), self, errstr, nao);
 }
 
-static noreturn void not_struct_error(val self, val obj)
+static NORETURN void not_struct_error(val self, val obj)
 {
   uw_throwf(error_s, lit("~a: ~s isn't a structure"),
             self, obj, nao);
 }
 
-static noreturn void method_error(val self, val obj, val fun)
+static NORETURN void method_error(val self, val obj, val fun)
 {
   uw_throwf(error_s, lit("~a: object ~s lacks ~a method"),
             self, obj, fun, nao);
@@ -1108,7 +1108,7 @@ static val trunc1(val self, val num)
   invalid_op(self, num);
 }
 
-static noreturn void divzero(val self)
+static NORETURN void divzero(val self)
 {
   uw_throwf(numeric_error_s, lit("~a: division by zero"), self, nao);
 }

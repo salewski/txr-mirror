@@ -167,7 +167,7 @@ extern "C" {
 #endif
 
 int jmp_save(struct jmp *);
-noreturn void jmp_restore(struct jmp *, int);
+NORETURN void jmp_restore(struct jmp *, int);
 
 #ifdef __cplusplus
 }
@@ -344,10 +344,10 @@ void uw_push_expand(uw_frame_t *, val form, val env);
 val uw_rthrow(val sym, val exception);
 val uw_rthrowv(val sym, struct args *);
 val uw_rthrowfv(val sym, val fmt, struct args *);
-noreturn val uw_throw(val sym, val exception);
-noreturn val uw_throwf(val sym, val fmt, ...);
-noreturn val uw_errorf(val fmt, ...);
-noreturn val uw_errorfv(val fmt, struct args *args);
+NORETURN val uw_throw(val sym, val exception);
+NORETURN val uw_throwf(val sym, val fmt, ...);
+NORETURN val uw_errorf(val fmt, ...);
+NORETURN val uw_errorfv(val fmt, struct args *args);
 val uw_warningf(val fmt, ...);
 val uw_defer_warning(val args);
 val uw_warning_exists(val tag);
@@ -383,7 +383,7 @@ void uw_push_cont_copy(uw_frame_t *, mem_t *ptr,
 void uw_init(void);
 void uw_late_init(void);
 
-noreturn val type_mismatch(val, ...);
+NORETURN val type_mismatch(val, ...);
 
 #define uw_mark_frame                           \
   uw_frame_t *uw_top = uw_current_frame()

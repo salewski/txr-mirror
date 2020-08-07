@@ -57,10 +57,10 @@ typedef double_uintptr_t dbl_ucnum;
 #define PTR_BIT (SIZEOF_PTR * CHAR_BIT)
 
 #ifdef __GNUC__
-#define noreturn __attribute__((noreturn))
+#define NORETURN __attribute__((noreturn))
 #define NOINLINE __attribute__((noinline))
 #else
-#define noreturn
+#define NORETURN
 #define NOINLINE
 #endif
 

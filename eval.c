@@ -302,7 +302,7 @@ static void eval_exception(val sym, val ctx, val fmt, va_list vl)
   uw_rthrow(sym, get_string_from_stream(stream));
 }
 
-noreturn val eval_error(val ctx, val fmt, ...)
+NORETURN val eval_error(val ctx, val fmt, ...)
 {
   va_list vl;
   va_start (vl, fmt);
@@ -968,7 +968,7 @@ static val bind_args(val env, val params, struct args *args, val ctx)
   return new_env;
 }
 
-noreturn static val not_bindable_error(val form, val sym)
+NORETURN static val not_bindable_error(val form, val sym)
 {
   eval_error(form, lit("~s: ~s is not a bindable symbol"),
              car(form), sym, nao);
@@ -3259,7 +3259,7 @@ static val dot_to_apply(val form, val lisp1_p)
   return form;
 }
 
-noreturn static void dotted_form_error(val form)
+NORETURN static void dotted_form_error(val form)
 {
   uw_throwf(error_s, lit("dotted argument ~!~s not supported by form"),
             form, nao);

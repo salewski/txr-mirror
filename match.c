@@ -85,7 +85,7 @@ static void debuglf(val form, val fmt, ...)
   }
 }
 
-noreturn static void sem_error(val form, val fmt, ...)
+NORETURN static void sem_error(val form, val fmt, ...)
 {
   va_list vl;
   val stream = make_string_output_stream();

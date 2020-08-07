@@ -364,7 +364,7 @@ static val seq_iterable(seq_info_t si)
   return nil;
 }
 
-static void noreturn unsup_obj(val self, val obj)
+static void NORETURN unsup_obj(val self, val obj)
 {
   uw_throwf(error_s, lit("~a: unsupported object ~s"), self, obj, nao);
   abort();
@@ -7159,7 +7159,7 @@ val fun_variadic(val fun)
   }
 }
 
-static noreturn void callerror(val fun, val msg)
+static NORETURN void callerror(val fun, val msg)
 {
   uses_or2;
 
@@ -7397,7 +7397,7 @@ val generic_funcall(val fun, struct args *args)
   return do_generic_funcall(fun, args);
 }
 
-static noreturn void wrongargs(val fun)
+static NORETURN void wrongargs(val fun)
 {
   callerror(fun, lit("wrong number of arguments"));
 }
