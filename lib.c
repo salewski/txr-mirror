@@ -4810,7 +4810,7 @@ val cat_str(val list, val sep)
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
-  cat_str_init(&cs, sep, onech, self);
+  cat_str_init(&cs, sep, wref(onech), self);
 
   for (iter = list; iter != nil; iter = cdr(iter))
     cat_str_measure(&cs, car(iter), cdr(iter) != nil, self);
@@ -4829,7 +4829,7 @@ static val vscat(val sep, va_list vl1, va_list vl2, val self)
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
-  cat_str_init(&cs, sep, onech, self);
+  cat_str_init(&cs, sep, wref(onech), self);
 
   for (item = va_arg(vl1, val); item != nao; item = next)
   {
@@ -4885,7 +4885,7 @@ val scat3(val s1, val sep, val s2)
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
-  cat_str_init(&cs, sep, onech, self);
+  cat_str_init(&cs, sep, wref(onech), self);
 
   cat_str_measure(&cs, s1, 1, self);
   cat_str_measure(&cs, s2, 0, self);
@@ -4961,7 +4961,7 @@ val split_str_keep(val str, val sep, val keep_sep)
     wchar_t onech[] = wini(" ");
 
     if (chrp(sep)) {
-      onech[0] = c_chr(sep);
+      wref(onech)[0] = c_chr(sep);
       len_sep = 1;
       sep = auto_str(coerce(const wchli_t *, wref(onech)));
     } else {
