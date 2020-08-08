@@ -46,29 +46,6 @@
 #include "parser.h"
 #include "txr.h"
 
-#define VER(MAJ, MIN, SUB) ((MAJ) * 100000 + (MIN) * 1000 + SUB)
-
-#define FLEX_VER VER(YY_FLEX_MAJOR_VERSION,     \
-                     YY_FLEX_MINOR_VERSION,     \
-                     YY_FLEX_SUBMINOR_VERSION)
-
-#define YY_NO_UNISTD_H
-
-/* Defeat flex's calls to isatty, which happens even in batch mode */
-
-#undef isatty
-
-/*
- * Until 2.5.36, the Flex skeleton contained "extern int isatty(int)",
- * requiring special handling.
- */
-#if FLEX_VER <= VER(2, 5, 36)
-#define isatty(x) no_isatty
-int no_isatty = 0;
-#else
-#define isatty(x) 0
-#endif
-
 #define YY_INPUT(buf, result, max_size)                                 \
   do {                                                                  \
     val self = lit("parser");                                           \
@@ -251,7 +228,8 @@ static wchar_t *unicode_ident(scanner_t *scn, const char *lex)
 
 %}
 
-%option stack noinput reentrant bison-bridge extra-type="parser_t *" batch
+%option stack noinput reentrant bison-bridge extra-type="parser_t *"
+%option never-interactive
 
 TOK     [a-zA-Z0-9_]+
 SGN     [+\-]
