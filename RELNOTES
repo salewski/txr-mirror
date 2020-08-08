@@ -1,3 +1,66 @@
+                                    TXR 241
+                                   2020-08-08
+
+                          Eleventh Anniversary Edition
+
+
+  Features
+
+  - MIPS (32 and 64 bit) is a a target platform now.
+  - Lib:
+    - New list-seq, ved-seq and str-seq functions.
+    - New maprodo function: like maprod, but returns nil.
+    - New each-prod, collect-each-prod and append-each-prod operators:
+      - traverse cross product of the sequences rather than in parallel.
+    - crc32 has initial crc argument, allowing multi-step
+      crc32 calculation over multiple objects.
+    - New iterable predicate function for detecting whether object is iterable.
+  - Structs:
+    - New iteration protocol
+      - comes in two flavors, using either two or three methods.
+  - System Interface:
+    - New strerror and strsignal functions.
+    - Argument of exit now optional, defaulting to success.
+    - New opendir, readdir and closedir functions for lower-level directory
+      traversal (complementing ftw and glob).
+    - stat family of funtions can now fill an existing struct.
+  - TXR:
+    - @(if)/@(elif)/@(else)/@(end) syntax now supported in @(output).
+      - @(if test then [else]) Lisp form still supported.
+  - Listener:
+    - new *-1, *-2, ..., *-20 macros for referencing prior values
+      relatively.
+  - Symbols:
+    - packages can now be created weak. If a symbol is reachable only through a
+      weak package, it can be garbage-collected.
+  - FFI:
+    - new cptr-get and cptr-out functions for accessing through a cptr.
+  - Networking:
+    - New address parsing functions inaddr-str and in6addr-str.
+      - support for port number and / prefix notation.
+
+  Bugs
+
+  - listener: bogus permission complaint when .txr_history file missing.
+  - structs:
+    - static slot handling in autoload leading to spurious errors.
+    - autoload on instance slots also to prevent spurious no such slot errors.
+  - parser:
+    - minor omission in syntax error diagnostic logic leading to internal token
+      values being printed as if they were characters.
+  - TXR: regression in vertical-horizontal fallback (see 7006ede9).
+  - printer: bugs in printing uref and qref syntax.
+  - parser:
+    - fixed breakage on some platforms like newer Mac OS X due to Flex
+      scanner containing an #include <unistd.h> in the middle of lex.yy.c,
+      after we have included our headers which define numerous macros.
+    - eliminated calls to isatty from the lexer.
+  - cygwin:
+    - broken cat-str and split-str family of functions when using a character
+      object as a separator.
+
+
+
                                     TXR 240
                                    2020-06-06
 
