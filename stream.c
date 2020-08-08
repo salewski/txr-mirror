@@ -4517,7 +4517,7 @@ static val run(val command, val args)
 
   uw_simple_catch_begin;
 
-  fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR);
+  fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR, self);
 
   if (nargs < 0 || nargs == INT_MAX)
     uw_throwf(error_s, lit("~a: argument list overflow"), self, nao);

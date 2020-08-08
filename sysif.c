@@ -1809,6 +1809,7 @@ static val getpwent_wrap(void)
 
 static val getpwuid_wrap(val uid)
 {
+  val self = lit("getpwuid");
   struct passwd *p = getpwuid(c_num(uid, self));
   return (p != 0) ? make_pwstruct(p) : nil;
 }
