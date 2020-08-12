@@ -970,7 +970,7 @@ static void find_matching_syms(lino_completions_t *cpl,
         continue;
 
       if (qualify)
-        comple = scat(line_prefix, pkg_name, lit(":"), name, nao);
+        comple = scat(nil, line_prefix, pkg_name, lit(":"), name, nao);
       else
         comple = scat2(line_prefix, name);
 
