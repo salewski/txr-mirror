@@ -1,3 +1,16 @@
+                                    TXR 242
+                                   2020-08-14
+
+
+  Bugs
+
+  - TXR: fix serious regression introduced in TXR 235, affecting
+    correctness of behavior in multiple places.
+  - listener: fix regression introduced in TXR 239, causing funny
+    behavior when invoking Tab completion on keywords and qualified symbols.
+
+
+
                                     TXR 241
                                    2020-08-08
 
