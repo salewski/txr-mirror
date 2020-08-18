@@ -5040,7 +5040,7 @@ static val gather_free_refs_nw(val info_cons, val exc,
   return uw_rthrow(continue_s, nil);
 }
 
-static val expand_with_free_refs(val form, val menv_in, val upto_menv_in)
+val expand_with_free_refs(val form, val menv_in, val upto_menv_in)
 {
   val ret;
   val menv = default_null_arg(menv_in);

@@ -1519,7 +1519,11 @@ static val extract_vars(val output_spec)
           }
         }
       }
-    } else if (sym != expr_s) {
+    } else if (sym == expr_s) {
+      val expr = second(output_spec);
+      val frefs = expand_with_free_refs(expr, nil, nil);
+      tai = list_collect_nconc(tai, second(frefs));
+    } else {
       for (; output_spec; output_spec = cdr(output_spec))
         tai = list_collect_nconc(tai, extract_vars(car(output_spec)));
     }

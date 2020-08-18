@@ -9156,63 +9156,43 @@ which counts from 1.
 
 The
 .code :vars
-argument specifies a list of variable names, or pairs consisting of a variable
-name and Lisp expression. For every variable paired with a Lisp expression,
-the expression is evaluated, and a binding is introduced, associating
-that variable with the expression's value.
+argument specifies a list of variable name symbols
+.meta symbol
+or else pairs of the form
+.mono
+.meti >> ( symbol << init-form )
+.onom
+consisting of a variable name and Lisp expression. Historically, the former
+syntax informed
+.code repeat
+about references to variables contained in Lisp code. This usage is no
+longer necessary as of \*(TX 243, since the
+.code repeat
+construct walks Lisp code, identifying all free variables.
+The latter syntax introduces a new pattern variable binding for
+.meta symbol
+over the scope of the
+.code repeat
+construct. The
+.meta init-form
+specifies a Lisp expression which is evaluated to produce the
+binding's value.
 
 The
 .code repeat
 directive then processes the list of variables, selecting from it
-those which have a binding, either a previously existing binding or one just
-introduced from a Lisp expression. For each selected variable, repeat
-will assume that the variable occur in the repeat block and contains
+those which have a binding, either a previously existing binding or the
+one just introduced. For each selected variable, repeat
+will assume that the variable occurs in the repeat block and contains
 a list to be iterated.
 
-Thus
+The variable binding syntax supported by
 .code :vars
-Firstly, it is needed for situations in which \*(TL expressions which
-reference variables are embedded in
-.code @(repeat)
-blocks.  Variables references embedded in Lisp code are not found
-.codn @(repeat) .
-For instance, the following produces no output:
-
-.verb
-  @(bind list ("a" "b" "c"))
-  @(output)
-  @(repeat)
-  @(format nil "<~a>" list)
-  @(end)
-  @(end)
-.brev
-
-Although the list variable appears in the repeat block, it is embedded
-in a \*(TL construct. That construct will never be evaluated because
-no repetitions take place: the repeat construct doesn't find any variables
-and so doesn't iterate. The remedy is to provide a little help via
-the :vars parameter:
-
-.verb
-  @(bind list ("a" "b" "c"))
-  @(output)
-  @(repeat :vars (list))
-  @(format nil "<~a>" list)
-  @(end)
-  @(end)
-.brev
-
-Now the repeat block iterates over list and the output is:
-
-.verb
-  <a>
-  <b>
-  <c>
-.brev
-
-Secondly, The variable binding syntax supported by
-.code :vars
-additionally provides a solution for situations when it is necessary to iterate
+of the form
+.mono
+.meti >> ( symbol << init-form )
+.onom
+provides a solution for situations when it is necessary to iterate
 over some list, but that list is the result of an expression, and not stored in
 any variable. A repeat block iterates only over lists emanating from variables;
 it does not iterate over lists pulled from arbitrary expressions.
@@ -9228,6 +9208,62 @@ pattern in the current directory:
   @(end)
   @(end)
 .brev
+
+Prior to \*(TX 243, the simple variable binding syntax supported by
+.code :vars
+of the form
+.meta symbol
+binding was needed for situations in which \*(TL expressions which
+reference variables were embedded in
+.code @(repeat)
+blocks.  Variables references embedded in Lisp code were not identified
+.codn @(repeat) .
+For instance, the following produced no output, because no variables
+were found in the
+.code repeat
+body:
+
+.verb
+  @(bind trigraph ("abc" "def" "ghi"))
+  @(output)
+  @(repeat)
+  @(reverse trigraph)
+  @(end)
+  @(end)
+.brev
+
+There is a reference to
+.meta list
+but it's inside a Lisp
+.code "(reverse lisp)"
+expression that was not processed by
+.codn repeat .
+The solution was to mention
+.meta list
+via the
+.code :vars
+construct:
+
+.verb
+  @(bind trigraph ("abc" "def" "ghi"))
+  @(output)
+  @(repeat :vars (trigraph))
+  @(reverse trigraph)
+  @(end)
+  @(end)
+.brev
+
+Then the repeat block would iterates over list, producing the output:
+
+.verb
+  cba
+  fed
+  igh
+.brev
+
+This workaround is no longer required as of \*(TX 243; the output
+is produced by the first example, without
+.codn :vars .
 
 .coNP Nested @ repeat directives
 
