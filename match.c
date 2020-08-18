@@ -1886,59 +1886,13 @@ static val bind_cdr(val bind_cons)
                bind_cons);
 }
 
-static val extract_vars(val output_spec)
-{
-  list_collect_decl (vars, tai);
-
-  if (consp(output_spec)) {
-    val sym = first(output_spec);
-    if (sym == var_s) {
-      val name = second(output_spec);
-      val modifiers = third(output_spec);
-
-      if (bindable(name))
-        tai = list_collect(tai, name);
-      else
-        tai = list_collect_nconc(tai, extract_vars(name));
-
-      for (; modifiers; modifiers = cdr(modifiers)) {
-        val mod = car(modifiers);
-        if (bindable(mod)) {
-          tai = list_collect(tai, mod);
-        } else if (consp(mod)) {
-          val msym = car(mod);
-
-          if (msym == dwim_s) {
-            val arg = second(mod);
-
-            if (bindable(arg)) {
-              tai = list_collect(tai, arg);
-            } else if (consp(arg) && car(arg) == rcons_s) {
-              val f = second(arg);
-              val t = third(arg);
-              if (bindable(f))
-                tai = list_collect(tai, f);
-              if (bindable(t))
-                tai = list_collect(tai, t);
-            }
-          }
-        }
-      }
-    } else if (sym != expr_s) {
-      for (; output_spec; output_spec = cdr(output_spec))
-        tai = list_collect_nconc(tai, extract_vars(car(output_spec)));
-    }
-  }
-
-  return vars;
-}
-
-static val extract_bindings(val bindings, val output_spec, val vars)
+static val extract_bindings(val bindings, val output_spec,
+                            val vars, val occur_vars)
 {
   list_collect_decl (bindings_out, ptail);
   list_collect_decl (var_list, vtail);
 
-  vtail = list_collect_nconc(vtail, extract_vars(output_spec));
+  vtail = list_collect_nconc(vtail, occur_vars);
 
   for (; vars; vars = cdr(vars)) {
     val var = car(vars);
@@ -2007,6 +1961,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
           val empty_clauses = pop(&clauses);
           val mod_clauses = pop(&clauses);
           val modlast_clauses = pop(&clauses);
+          val occur_vars = pop(&clauses);
           val counter_spec = getplist(args, counter_k);
           val consp_counter = consp(counter_spec);
           val counter = if3(consp_counter, first(counter_spec), counter_spec);
@@ -2015,7 +1970,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
                                         second(counter_spec),
                                         bindings), zero);
           val vars = getplist(args, vars_k);
-          val bind_cp = extract_bindings(bindings, elem, vars);
+          val bind_cp = extract_bindings(bindings, elem, vars, occur_vars);
           val max_depth = reduce_left(func_n2(max2),
                                       bind_cp, zero,
                                       chain(func_n1(cdr),
@@ -2142,6 +2097,7 @@ static void do_repeat(val bindings, val repeat_syntax, val filter, val out)
   val empty_clauses = pop(&clauses);
   val mod_clauses = pop(&clauses);
   val modlast_clauses = pop(&clauses);
+  val occur_vars = pop(&clauses);
   val counter_spec = getplist(args, counter_k);
   val consp_counter = consp(counter_spec);
   val counter = if3(consp_counter, first(counter_spec), counter_spec);
@@ -2150,7 +2106,7 @@ static void do_repeat(val bindings, val repeat_syntax, val filter, val out)
                                 second(counter_spec),
                                 bindings), zero);
   val vars = getplist(args, vars_k);
-  val bind_cp = extract_bindings(bindings, repeat_syntax, vars);
+  val bind_cp = extract_bindings(bindings, repeat_syntax, vars, occur_vars);
   val max_depth = reduce_left(func_n2(max2),
                               bind_cp, zero,
                               chain(func_n1(cdr),

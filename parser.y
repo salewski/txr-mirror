@@ -1481,6 +1481,53 @@ static val expand_repeat_rep_args(val args)
   return out;
 }
 
+static val extract_vars(val output_spec)
+{
+  list_collect_decl (vars, tai);
+
+  if (consp(output_spec)) {
+    val sym = first(output_spec);
+    if (sym == var_s) {
+      val name = second(output_spec);
+      val modifiers = third(output_spec);
+
+      if (bindable(name))
+        tai = list_collect(tai, name);
+      else
+        tai = list_collect_nconc(tai, extract_vars(name));
+
+      for (; modifiers; modifiers = cdr(modifiers)) {
+        val mod = car(modifiers);
+        if (bindable(mod)) {
+          tai = list_collect(tai, mod);
+        } else if (consp(mod)) {
+          val msym = car(mod);
+
+          if (msym == dwim_s) {
+            val arg = second(mod);
+
+            if (bindable(arg)) {
+              tai = list_collect(tai, arg);
+            } else if (consp(arg) && car(arg) == rcons_s) {
+              val f = second(arg);
+              val t = third(arg);
+              if (bindable(f))
+                tai = list_collect(tai, f);
+              if (bindable(t))
+                tai = list_collect(tai, t);
+            }
+          }
+        }
+      }
+    } else if (sym != expr_s) {
+      for (; output_spec; output_spec = cdr(output_spec))
+        tai = list_collect_nconc(tai, extract_vars(car(output_spec)));
+    }
+  }
+
+  return vars;
+}
+
 static val repeat_rep_helper(val sym, val args, val main, val parts)
 {
   uses_or2;
@@ -1491,6 +1538,7 @@ static val repeat_rep_helper(val sym, val args, val main, val parts)
   val empty_parts = nil, empty_parts_p = nil;
   val mod_parts = nil, mod_parts_p = nil;
   val modlast_parts = nil, modlast_parts_p = nil;
+  val occur_vars = nil;
   val iter;
 
   for (iter = parts; iter != nil; iter = cdr(iter)) {
@@ -1528,9 +1576,17 @@ static val repeat_rep_helper(val sym, val args, val main, val parts)
   mod_parts = or2(nreverse(mod_parts), mod_parts_p);
   modlast_parts = or2(nreverse(modlast_parts), modlast_parts_p);
 
+  occur_vars = extract_vars(main);
+  occur_vars = nappend2(occur_vars, extract_vars(single_parts));
+  occur_vars = nappend2(occur_vars, extract_vars(first_parts));
+  occur_vars = nappend2(occur_vars, extract_vars(last_parts));
+  occur_vars = nappend2(occur_vars, extract_vars(empty_parts));
+  occur_vars = nappend2(occur_vars, extract_vars(mod_parts));
+  occur_vars = uniq(occur_vars);
+
   return list(sym, exp_args, main, single_parts, first_parts,
               last_parts, empty_parts, nreverse(mod_parts),
-              nreverse(modlast_parts), nao);
+              nreverse(modlast_parts), occur_vars, nao);
 }
 
 static void process_catch_exprs(val exprs)
