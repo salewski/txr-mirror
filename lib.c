@@ -11146,8 +11146,6 @@ val copy(val seq)
   }
 }
 
-static val length_proper_list(val list);
-
 val length(val seq)
 {
   switch (type(seq)) {

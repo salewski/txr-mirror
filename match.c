@@ -507,7 +507,6 @@ static match_line_ctx ml_bindings_specline_pos(match_line_ctx c, val bindings,
   return nc;
 }
 
-static val do_match_line(match_line_ctx *c);
 static val match_line(match_line_ctx c);
 
 typedef val (*h_match_func)(match_line_ctx *c);
