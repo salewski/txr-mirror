@@ -3293,6 +3293,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       ucnum unit_offs = offs & align_mask;
       ucnum bits_alloc = 8 * (offs - unit_offs) + bit_offs;
       ucnum room = bits_type - bits_alloc;
+      ucnum align = if3(slot, mtft->align, 1);
 
       if (bits == 0) {
         if (offs != unit_offs || bit_offs > 0)
@@ -3305,11 +3306,6 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       if (bits > room) {
         offs = unit_offs + size;
         bit_offs = bits_alloc = 0;
-      }
-
-      if (bits_alloc == 0) {
-        if (most_align < (ucnum) mtft->align)
-          most_align = mtft->align;
       }
 
       memb[i].offs = offs;
@@ -3326,6 +3322,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       bit_offs += bits;
       offs += bit_offs / 8;
       bit_offs %= 8;
+
+      if (most_align < align)
+        most_align = align;
     } else {
       ucnum align = mtft->align;
       ucnum almask = align - 1;
@@ -3451,14 +3450,10 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
     setcheck(obj, slot);
     setcheck(obj, type);
 
-    if (most_align < (ucnum) mtft->align)
-      most_align = mtft->align;
-
-    if (biggest_size < (ucnum) mtft->size)
-      biggest_size = mtft->size;
-
     if (mtft->bitfield) {
       ucnum bits = mtft->nelem;
+      ucnum size = (bits + 7) / 8;
+      ucnum align = if3(slot, mtft->align, 1);
 
       if (bits == 0) {
         nmemb--, i--;
@@ -3474,6 +3469,16 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
         mtft->mask = UINT_MAX;
       else
         mtft->mask = ((1U << bits) - 1) << mtft->shift;
+
+      if (most_align < align)
+        most_align = align;
+      if (biggest_size < size)
+        biggest_size = size;
+    } else {
+      if (most_align < (ucnum) mtft->align)
+        most_align = mtft->align;
+      if (biggest_size < (ucnum) mtft->size)
+        biggest_size = mtft->size;
     }
   }
 
@@ -3486,7 +3491,7 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
 
   tft->nelem = i;
 
-  tft->size = biggest_size;
+  tft->size = (biggest_size + most_align - 1) & ~(most_align - 1);
   tft->align = most_align;
 
 #if HAVE_LIBFFI

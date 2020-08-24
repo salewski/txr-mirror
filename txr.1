@@ -69387,16 +69387,6 @@ bitfield, according to the bitfield's width, then the bitfield is
 placed into that unit. Otherwise, the bitfield is placed into the
 next available unit.
 
-Whenever a bitfield is placed at the start of new unit of its size,
-it is called the
-.IR "leading bitfield" .
-The alignment of the leading bitfield is taken into account for
-the purposes of determining the most strictly aligned member of
-the structure. This alignment property of the leading bitfield
-can be altered with the
-.code align
-type operator, applied either to the bitfield type, or to its base type.
-
 After a bitfield is placed, the values of
 .I O
 and
@@ -69431,6 +69421,13 @@ is incremented by one to cover that byte.
 
 As the last allocation step, the size of the structure is then padded up to a
 size which is a multiple of the alignment of the most strictly aligned member.
+
+A named bitfield contributes to the alignment of the structure, according to
+its type, the same way as a non-bitfield member of the same type.
+An unnamed bitfield doesn't contribute alignment, or else may be regarded as
+having the weakest possible alignment, which is byte alignment.
+If all of the members of a structure are unnamed bitfield members of any type,
+it exhibits byte alignment.
 
 The description isn't complete without a treatment of byte and bit order.
 Bitfield allocation follows an imaginary "bit endianness" whose direction
