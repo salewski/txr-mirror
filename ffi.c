@@ -3260,7 +3260,6 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   tft->alloc = ffi_fixed_alloc;
   tft->dynsize = ffi_fixed_dynsize;
   tft->free = free;
-  tft->memb = memb;
 
   tft->incomplete = 1;
 
@@ -3351,6 +3350,8 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       tft->by_value_in = 1;
   }
 
+  tft->memb = memb;
+
   if (bit_offs > 0) {
     bug_unless (bit_offs < 8);
     offs++;
@@ -3429,7 +3430,6 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
   tft->alloc = ffi_fixed_alloc;
   tft->dynsize = ffi_fixed_dynsize;
   tft->free = free;
-  tft->memb = memb;
 
   tft->incomplete = 1;
 
@@ -3476,6 +3476,8 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
         mtft->mask = ((1U << bits) - 1) << mtft->shift;
     }
   }
+
+  tft->memb = memb;
 
   if (flexp)
     uw_throwf(error_s,
