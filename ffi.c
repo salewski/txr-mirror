@@ -3295,7 +3295,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       ucnum room = bits_type - bits_alloc;
 
       if (bits == 0) {
-        if (offs != unit_offs)
+        if (offs != unit_offs || bit_offs > 0)
           offs = unit_offs + size;
         bit_offs = 0;
         nmemb--, i--;
