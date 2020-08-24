@@ -69420,7 +69420,8 @@ is adjusted to point to the next unit after that, and
 .I B
 is reset to zero. Note that according to this semantics, a zero-width bitfield
 can have an effect even if placed between non-bitfield members, or appears
-as the last member of a structure.
+as the last member of a structure.  Also, a structure containing only a
+zero-width bitfield has size zero.
 
 If, after the placement of all structure members,
 .I B
