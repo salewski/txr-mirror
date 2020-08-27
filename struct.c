@@ -898,6 +898,7 @@ val make_lazy_struct(val type, val argfun)
   si->type = st;
   si->id = st->id;
   si->lazy = 1;
+  si->dirty = 1;
 
   sinst = cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
 
