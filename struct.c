@@ -753,9 +753,9 @@ static val make_struct_impl(val self, val type,
                             struct args *plist, struct args *args)
 {
   struct struct_type *st = stype_handle(&type, self);
-  cnum nslots = st->nslots, sl;
+  cnum nslots = st->nslots;
   size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nslots;
-  struct struct_inst *si = coerce(struct struct_inst *, chk_malloc(size));
+  struct struct_inst *si = coerce(struct struct_inst *, chk_calloc(1, size));
   val sinst;
   volatile val inited = nil;
   alloc_seen (seen, seensz);
@@ -767,11 +767,8 @@ static val make_struct_impl(val self, val type,
               self, type, nao);
   }
 
-  for (sl = 0; sl < nslots; sl++)
-    si->slot[sl] = nil;
   si->type = st;
   si->id = st->id;
-  si->lazy = 0;
   si->dirty = 1;
 
   sinst = cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
@@ -887,14 +884,12 @@ val make_lazy_struct(val type, val argfun)
 {
   val self = lit("make-lazy-struct");
   struct struct_type *st = stype_handle(&type, self);
-  cnum nslots = st->nslots, sl;
+  cnum nslots = st->nslots;
   cnum nalloc = nslots ? nslots : 1;
   size_t size = offsetof(struct struct_inst, slot) + sizeof (val) * nalloc;
-  struct struct_inst *si = coerce(struct struct_inst *, chk_malloc(size));
+  struct struct_inst *si = coerce(struct struct_inst *, chk_calloc(1, size));
   val sinst;
 
-  for (sl = 0; sl < nslots; sl++)
-    si->slot[sl] = nil;
   si->type = st;
   si->id = st->id;
   si->lazy = 1;
