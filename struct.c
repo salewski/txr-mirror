@@ -79,8 +79,10 @@ struct struct_type {
   cnum nslots;
   cnum nstslots;
   cnum nsupers;
+  cnum ndsupers;
   val supers;
   struct struct_type **sus;
+  struct struct_type **dsus;
   val slots;
   val stinitfun;
   val initfun;
@@ -297,6 +299,52 @@ static void static_slot_home_fixup(struct struct_type *st)
   }
 }
 
+static val get_all_supers(val supers, val self)
+{
+  list_collect_decl (all_supers, ptail);
+
+  ptail = list_collect_append(ptail, supers);
+
+  for (; supers; supers = us_cdr(supers)) {
+    val super = us_car(supers);
+    struct struct_type *su = stype_handle(&super, self);
+    int i;
+
+    ptail = list_collect_append(ptail, su->supers);
+
+    for (i = 0; i < su->nsupers; i++) {
+      struct struct_type *ssu = su->sus[i];
+      ptail = list_collect_append(ptail, get_all_supers(ssu->supers, self));
+    }
+  }
+
+  return all_supers;
+}
+
+static val get_duplicate_supers(val supers, val self)
+{
+  list_collect_decl (dup_supers, ptail);
+  val all_supers = get_all_supers(supers, self);
+  ucnum bloom = 0;
+  val iter;
+
+  for (iter = all_supers; iter; iter = us_cdr(iter)) {
+    val super = us_car(iter);
+    struct struct_type *st = stype_handle(&super, self);
+    int pos = st->id % (sizeof bloom * CHAR_BIT);
+    ucnum mask = (ucnum) 1 << pos;
+
+    if ((mask & bloom) != 0) {
+      if (memq(super, all_supers) != iter && !memq(super, dup_supers))
+        ptail = list_collect(ptail, super);
+    }
+
+    bloom |= mask;
+  }
+
+  return dup_supers;
+}
+
 static struct struct_type **get_struct_handles(cnum nsupers, val supers,
                                                val self)
 {
@@ -396,8 +444,12 @@ val make_struct_type(val name, val supers,
   } else {
     struct struct_type *st = coerce(struct struct_type *,
                                     chk_malloc(sizeof *st));
+    val dup_supers = if3(opt_compat && opt_compat <= 242,
+                         nil, get_duplicate_supers(supers, self));
     cnum nsupers = c_num(length(supers), self);
+    cnum ndsupers = c_num(length(dup_supers), self);
     struct struct_type **sus = get_struct_handles(nsupers, supers, self);
+    struct struct_type **dsus = get_struct_handles(ndsupers, dup_supers, self);
     val id = num_fast(coerce(ucnum, st) / (uptopow2(sizeof *st) / 2));
     val super_slots = get_super_slots(nsupers, sus);
     val all_slots = uniq(append2(super_slots, append2(static_slots, slots)));
@@ -415,9 +467,11 @@ val make_struct_type(val name, val supers,
     st->nslots = st->nstslots = 0;
     st->slots = all_slots;
     st->nsupers = nsupers;
+    st->ndsupers = ndsupers;
     st->supers = supers;
     st->stslot = 0;
     st->sus = sus;
+    st->dsus = dsus;
     st->stinitfun = static_initfun;
     st->initfun = initfun;
     st->boactor = boactor;
@@ -588,6 +642,7 @@ static void struct_type_destroy(val obj)
   free(st->stslot);
   free(st->spslot);
   free(st->sus);
+  free(st->dsus);
   free(st);
 }
 
@@ -615,28 +670,56 @@ static void struct_type_mark(val obj)
   }
 }
 
-static void call_initfun_chain(struct struct_type *st, val strct)
+static void call_initfun_chain(struct struct_type *st, val strct,
+                               struct struct_type *root, ucnum *seen)
 {
   if (st) {
     cnum i;
 
+    if (st != root)
+      for (i = 0; i < root->ndsupers; i++) {
+        if (st == root->dsus[i]) {
+          const int bits_ucnum = sizeof *seen * CHAR_BIT;
+          cnum index = i / bits_ucnum;
+          cnum bit = i % bits_ucnum;
+          ucnum mask = (ucnum) 1 << bit;
+          if ((seen[index] & mask) != 0)
+            return;
+          seen[index] |= mask;
+        }
+      }
+
     for (i = st->nsupers - 1; i >= 0; i--)
-      call_initfun_chain(st->sus[i], strct);
+      call_initfun_chain(st->sus[i], strct, root, seen);
     if (st->initfun)
       funcall1(st->initfun, strct);
   }
 }
 
-static void call_postinitfun_chain(struct struct_type *st, val strct)
+static void call_postinitfun_chain(struct struct_type *st, val strct,
+                                   struct struct_type *root, ucnum *seen)
 {
   if (st) {
     int derived_first = (opt_compat && opt_compat <= 148);
     cnum i;
 
+    if (st != root)
+      for (i = 0; i < root->ndsupers; i++) {
+        if (st == root->dsus[i]) {
+          const int bits_ucnum = sizeof *seen * CHAR_BIT;
+          cnum index = i / bits_ucnum;
+          cnum bit = i % bits_ucnum;
+          ucnum mask = (ucnum) 1 << bit;
+          if ((seen[index] & mask) != 0)
+            return;
+          seen[index] |= mask;
+        }
+      }
+
     if (derived_first && st->postinitfun)
       funcall1(st->postinitfun, strct);
     for (i = st->nsupers - 1; i >= 0; i--)
-      call_postinitfun_chain(st->sus[i], strct);
+      call_postinitfun_chain(st->sus[i], strct, root, seen);
     if (!derived_first && st->postinitfun)
       funcall1(st->postinitfun, strct);
   }
@@ -657,6 +740,15 @@ val allocate_struct(val type)
   return cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
 }
 
+#define alloc_seen(name, size_name)                                     \
+  const int bits_ucnum = sizeof (ucnum) * CHAR_BIT;                     \
+  size_t size_name = (st->ndsupers + bits_ucnum - 1) / bits_ucnum;      \
+  ucnum *name ## tmp = coerce(ucnum *, alloca(size_name));              \
+  ucnum *name = (memset(name ## tmp, 0, size_name), name ## tmp)
+
+#define clear_seen(name, size_name)                                     \
+  memset(name, 0, size_name)
+
 static val make_struct_impl(val self, val type,
                             struct args *plist, struct args *args)
 {
@@ -666,6 +758,7 @@ static val make_struct_impl(val self, val type,
   struct struct_inst *si = coerce(struct struct_inst *, chk_malloc(size));
   val sinst;
   volatile val inited = nil;
+  alloc_seen (seen, seensz);
 
   if (args_more(args, 0) && !st->boactor) {
     free(si);
@@ -687,7 +780,7 @@ static val make_struct_impl(val self, val type,
 
   uw_simple_catch_begin;
 
-  call_initfun_chain(st, sinst);
+  call_initfun_chain(st, sinst, st, seen);
 
   {
     cnum index = 0;
@@ -705,7 +798,9 @@ static val make_struct_impl(val self, val type,
     generic_funcall(st->boactor, args_copy);
   }
 
-  call_postinitfun_chain(st, sinst);
+  clear_seen(seen, seensz);
+
+  call_postinitfun_chain(st, sinst, st, seen);
 
   inited = t;
 
@@ -744,6 +839,7 @@ static void lazy_struct_init(val sinst, struct struct_inst *si)
   volatile val inited = nil;
   val cell = funcall(si->slot[0]);
   cons_bind (plist, args, cell);
+  alloc_seen (seen, seensz);
 
   si->slot[0] = nil;
 
@@ -755,7 +851,7 @@ static void lazy_struct_init(val sinst, struct struct_inst *si)
 
   uw_simple_catch_begin;
 
-  call_initfun_chain(st, sinst);
+  call_initfun_chain(st, sinst, st, seen);
 
   for (; plist; plist = cddr(plist))
     slotset(sinst, car(plist), cadr(plist));
@@ -765,7 +861,9 @@ static void lazy_struct_init(val sinst, struct struct_inst *si)
     generic_funcall(st->boactor, argv);
   }
 
-  call_postinitfun_chain(st, sinst);
+  clear_seen(seen, seensz);
+
+  call_postinitfun_chain(st, sinst, st, seen);
 
   inited = t;
 
@@ -909,6 +1007,7 @@ val reset_struct(val strct)
   cnum i;
   volatile val inited = nil;
   int compat_190 = opt_compat && opt_compat <= 190;
+  alloc_seen (seen, seensz);
 
   check_init_lazy_struct(strct, si);
 
@@ -917,10 +1016,12 @@ val reset_struct(val strct)
   for (i = 0; i < st->nslots; i++)
     si->slot[i] = nil;
 
-  call_initfun_chain(st, strct);
+  call_initfun_chain(st, strct, st, seen);
 
-  if (!compat_190)
-    call_postinitfun_chain(st, strct);
+  if (!compat_190) {
+    clear_seen(seen, seensz);
+    call_postinitfun_chain(st, strct, st, seen);
+  }
 
   inited = t;
 
