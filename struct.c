@@ -91,6 +91,7 @@ struct struct_type {
   val dvtypes;
   struct stslot *stslot;
   struct stslot **spslot;
+  unsigned dupe : 1;
 };
 
 struct struct_inst {
@@ -335,8 +336,10 @@ static val get_duplicate_supers(val supers, val self)
     ucnum mask = (ucnum) 1 << pos;
 
     if ((mask & bloom) != 0) {
-      if (memq(super, all_supers) != iter && !memq(super, dup_supers))
+      if (memq(super, all_supers) != iter && !memq(super, dup_supers)) {
         ptail = list_collect(ptail, super);
+        st->dupe = 1;
+      }
     }
 
     bloom |= mask;
@@ -443,7 +446,7 @@ val make_struct_type(val name, val supers,
               self, nao);
   } else {
     struct struct_type *st = coerce(struct struct_type *,
-                                    chk_malloc(sizeof *st));
+                                    chk_calloc(1, sizeof *st));
     val dup_supers = if3(opt_compat && opt_compat <= 242,
                          nil, get_duplicate_supers(supers, self));
     cnum nsupers = c_num(length(supers), self);
@@ -464,12 +467,10 @@ val make_struct_type(val name, val supers,
     st->self = stype;
     st->name = name;
     st->id = c_num(id, self);
-    st->nslots = st->nstslots = 0;
     st->slots = all_slots;
     st->nsupers = nsupers;
     st->ndsupers = ndsupers;
     st->supers = supers;
-    st->stslot = 0;
     st->sus = sus;
     st->dsus = dsus;
     st->stinitfun = static_initfun;
@@ -477,7 +478,6 @@ val make_struct_type(val name, val supers,
     st->boactor = boactor;
     st->postinitfun = default_null_arg(postinitfun);
     st->dvtypes = nil;
-    st->spslot = 0;
 
     gc_finalize(stype, struct_type_finalize_f, nil);
 
@@ -676,7 +676,7 @@ static void call_initfun_chain(struct struct_type *st, val strct,
   if (st) {
     cnum i;
 
-    if (st != root)
+    if (st != root && st->dupe)
       for (i = 0; i < root->ndsupers; i++) {
         if (st == root->dsus[i]) {
           const int bits_ucnum = sizeof *seen * CHAR_BIT;
@@ -703,7 +703,7 @@ static void call_postinitfun_chain(struct struct_type *st, val strct,
     int derived_first = (opt_compat && opt_compat <= 148);
     cnum i;
 
-    if (st != root)
+    if (st != root && st->dupe)
       for (i = 0; i < root->ndsupers; i++) {
         if (st == root->dsus[i]) {
           const int bits_ucnum = sizeof *seen * CHAR_BIT;
