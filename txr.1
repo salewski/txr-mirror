@@ -26268,23 +26268,35 @@ initialization. When an object is instantiated, only one initialization of a
 duplicated supertype occurs. The subsequent initializations that would take
 place in the absence of duplicate detection are suppressed.
 
+Note also that the
+.code :fini
+mechanism is tied to initialization. Initialization of an object
+registers the finalizers, and so in \*(TX 242,
+.code :fini
+finalizers are also executed multiple times, if
+.code :init
+initializers are.
+
 .TP* Examples:
 
 Consider following program:
 
 .verb
   (defstruct base ()
-    (:init (me) (put-line "base init")))
+    (:init (me) (put-line "base init"))
+    (:fini (me) (put-line "base fini")))
 
   (defstruct d1 (base)
-    (:init (me) (put-line "d1 init")))
+    (:init (me) (put-line "d1 init"))
+    (:fini (me) (put-line "d1 fini")))
 
   (defstruct d2 (base)
-    (:init (me) (put-line "d2 init")))
+    (:init (me) (put-line "d2 init"))
+    (:fini (me) (put-line "d2 fini")))
 
   (defstruct s (d1 d2))
 
-  (new s)
+  (call-finalizers (new s))
 .brev
 
 Under \*(TX 242, and earlier versions that support multiple inheritance, it
@@ -26295,6 +26307,10 @@ produces the output:
   d2 init
   base init
   d1 init
+  d1 fini
+  base fini
+  d2 fini
+  base fini
 .brev
 
 The supertypes are initialized in a right-to-left traversal of the
@@ -26308,10 +26324,15 @@ Starting with \*(TX 243, the output is:
   base init
   d2 init
   d1 init
+  d1 fini
+  d2 fini
+  base fini
 .brev
 
 The rightmost duplicate of the base is initialized, so that the initialization
 is complete prior to the initializations of any dependent types.
+Likewise, the same rightmost duplicate of the base is finalized, so that
+finalization takes place after that of any dependent struct types.
 
 Note, however, that the
 .code derived
