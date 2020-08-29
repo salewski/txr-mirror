@@ -26205,15 +26205,9 @@ This situation with two or more supertypes is called
 The contrasting term is
 .IR "single inheritance" ,
 denoting the situation when a structure has exactly one supertype.
-The term
-.IR "strict single inheritance"
-refers to the situation when a structure has exactly one supertype;
-its supertype has at most one supertype; and, recursively, any additional
-indirect supertypes all have at most one supertype.
-Note: \*(TX 228 and older versions permitted only single inheritance,
-thus programs were restricted to strict single inheritance.
-\*(TL's multiple-inheritance is a straightforward extension of its
-single inheritance semantics.
+\*(TL's struct types initially permitted only single inheritance.
+Multiple inheritance support was introduced in version 229, as a
+straightforward extension of single inheritance semantics.
 
 In the
 .code make-struct-type
