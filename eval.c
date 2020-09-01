@@ -6963,6 +6963,7 @@ void eval_init(void)
   reg_fun(intern(lit("contains"), user_package), func_n4o(contains, 2));
   reg_fun(intern(lit("where"), user_package), func_n2(where));
   reg_fun(intern(lit("select"), user_package), func_n2(sel));
+  reg_fun(intern(lit("reject"), user_package), func_n2(reject));
   reg_fun(intern(lit("relate"), user_package), func_n3o(relate, 2));
   reg_fun(intern(lit("seq-begin"), user_package), func_n1(seq_begin));
   reg_fun(intern(lit("seq-next"), user_package), func_n2(seq_next));

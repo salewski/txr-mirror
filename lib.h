@@ -1185,6 +1185,7 @@ val contains(val key, val seq, val testfun, val keyfun);
 val rsearch(val seq, val key, val from, val to);
 val where(val func, val seq);
 val sel(val seq, val where);
+val reject(val seq, val where);
 val relate(val domain_seq, val range_seq, val dfl_val);
 val rcons(val from, val to);
 val rangep(val obj);

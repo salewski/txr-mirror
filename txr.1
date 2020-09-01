@@ -31826,6 +31826,76 @@ from the input sequence, and a new
 is returned whose storage is initialized by converting the extracted
 values back to the foreign representation.
 
+.coNP Function @ reject
+.synb
+.mets (reject < sequence >> { index-list | << function })
+.syne
+.desc
+The
+.code reject
+function returns a sequence, of the same kind as
+.metn sequence ,
+which consists of all those elements of
+.meta sequence
+which are not identified by the indices in
+.metn index-list ,
+which may be a list or a vector.
+
+If
+.meta function
+is given instead of
+.metn index-list ,
+then
+.meta function
+is invoked with
+.meta sequence
+as its argument. The return value is then taken as
+if it were the
+.meta index-list
+argument .
+
+If
+.code sequence
+is a hash, then
+.meta index-list
+represents a list of keys. The
+.code reject
+function returns a duplicate of the hash, in which
+the keys specified in
+.meta index-list
+do not appear.
+
+Otherwise if
+.meta sequence
+is a vector-like sequence, then the behavior of
+.code reject
+may be understood by the following equivalence:
+
+.verb
+  (reject seq idx)  -->  (make-like
+                           [apply append (split* seq idx)]
+                           seq)
+.brev
+
+where it is to be understood that
+.meta seq
+is evaluated only once.
+
+If
+.meta sequence
+is a list, then, similarly, the following equivalence applies:
+
+.verb
+  (reject seq idx)  -->  (make-like
+                           [apply append* (split* seq idx)]
+                           seq)
+.brev
+
+The input sequence is split into pieces at the indicated indices, such that
+the elements at the indices are removed and do not appear in the pieces. The
+pieces are then appended together in order, and the resulting list is coerced
+into the same type of sequence as the input sequence.
+
 .coNP Function @ relate
 .synb
 .mets (relate < domain-seq < range-seq <> [ default-val ])

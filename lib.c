@@ -2071,6 +2071,12 @@ val appendv(struct args *lists)
   return out;
 }
 
+static val appendl(val lists)
+{
+  args_decl_list(args, ARGS_MIN, lists);
+  return appendv(args);
+}
+
 val nappend2(val list1, val list2)
 {
   list_collect_decl (out, ptail);
@@ -11715,6 +11721,45 @@ val sel(val seq, val where_in)
   }
 
   return make_like(out, seq);
+}
+
+val reject(val seq, val where_in)
+{
+  val self = lit("reject");
+  seq_info_t si = seq_info(seq);
+  val (*appendfn)(val) = lazy_appendl;
+
+  switch (si.kind) {
+  case SEQ_NIL:
+    return nil;
+  case SEQ_HASHLIKE:
+    {
+      seq_iter_t wh_iter;
+      val wh;
+      val newhash = copy_hash(si.obj);
+      val where = if3(functionp(where_in),
+                      funcall1(where_in, seq),
+                      where_in);
+      seq_iter_init(self, &wh_iter, where);
+
+      while (seq_get(&wh_iter, &wh))
+        remhash(newhash, wh);
+
+      return newhash;
+    }
+  case SEQ_VECLIKE:
+    appendfn = appendl;
+    /* fallthrough */
+  case SEQ_LISTLIKE:
+    {
+      val list = appendfn(split_star(seq, where_in));
+      return make_like(list, seq);
+    }
+    break;
+  case SEQ_NOTSEQ:
+  default:
+    type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
+  }
 }
 
 static val do_relate(val env, val arg)
