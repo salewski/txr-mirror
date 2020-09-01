@@ -126,8 +126,8 @@ static val struct_type_finalize(val obj);
 static_forward(struct cobj_ops struct_type_ops);
 
 static struct stslot *lookup_static_slot_desc(struct struct_type *st, val sym);
-static val make_struct_type_compat(val name, val super, val slots,
-                                   val initfun, val boactor);
+static val make_struct_type_compat(val name, val super,
+                                   val slots, val initfun, val boactor);
 static val call_super_method(val inst, val sym, struct args *);
 static val call_super_fun(val type, val sym, struct args *);
 

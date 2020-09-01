@@ -984,8 +984,8 @@ static val make_var_shadowing_env(val menv, val vars);
 
 static val get_param_syms(val params);
 
-static val expand_params_rec(val params, val menv,
-                             val macro_style_p, val form);
+static val expand_params_rec(val params, val menv, val macro_style_p,
+                             val form);
 
 static val expand_opt_params_rec(val params, val menv,
                                  val macro_style_p, val form)
@@ -1431,8 +1431,8 @@ nil_out:
   return nil;
 }
 
-static val do_eval(val form, val env, val ctx,
-                   val (*lookup)(val env, val sym));
+static val do_eval(val form, val env,
+                   val ctx, val (*lookup)(val env, val sym));
 
 static void do_eval_args(val form, val env, val ctx,
                          val (*lookup)(val env, val sym),

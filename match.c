@@ -1487,8 +1487,8 @@ typedef struct {
   val spec, files, curfile, bindings, data, data_lineno;
 } match_files_ctx;
 
-static match_files_ctx mf_all(val spec, val files, val bindings,
-                              val data, val curfile);
+static match_files_ctx mf_all(val spec, val files, val bindings, val data,
+                              val curfile);
 
 static val v_fun(match_files_ctx *c);
 
