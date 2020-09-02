@@ -1,3 +1,31 @@
+                                    TXR 243
+                                   2020-09-01
+
+
+  Features:
+
+  - TXR:
+    - output-side @(repeat) directive more intelligent:
+      - now identifies variables referenced in Lisp code
+      - many uses of :vars now unnecessary
+      - variables identified in expansion pass now, before query execution
+
+  - OOP:
+    - diamond problem in multiple inheritance addressed.
+      - duplicate inheritance bases no longer cause multiple
+        calls to :init, :postinit and :fini handlers.
+
+  - Lib:
+    - new reject funtion, complements select.
+
+  Bugs:
+
+  - FFI:
+    - several bugs addressed in the allocation of bitfields.
+    - documentation of Bitfield Allocation Rules also updated.
+
+
+
                                     TXR 242
                                    2020-08-14
 
