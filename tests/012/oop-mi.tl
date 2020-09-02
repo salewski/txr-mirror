@@ -1,8 +1,11 @@
 (load "../common")
 
 (defstruct grand nil
+  (li 'nil)
   (gx 'gx)
   (gy 'gy)
+  (:init (me) (push 'g me.li))
+  (:fini (me) (push 'gf me.li))
   (:static gs0 'gs0)
   (:static gs1 'gs1)
   (:method gm (me) 'gm))
@@ -12,11 +15,15 @@
 
 (defstruct base1 grand
   (x 'b1x)
+  (:init (me) (push 'b1 me.li))
+  (:fini (me) (push 'b1f me.li))
   (:static gs1 'gs1-b1)
   (:method m (me) 'm1))
 
 (defstruct base2 grand
   (y 'b2y)
+  (:init (me) (push 'b2 me.li))
+  (:fini (me) (push 'b2f me.li))
   (:static gs1 'gs1-b2)
   (:method m (me) 'm2))
 
@@ -63,3 +70,9 @@
 (prinl (static-slot-home 'der2 'm))
 (prinl (static-slot-home 'der3 'm))
 (prinl (static-slot-home 'der3 'gm))
+
+(each ((ty '(der0 der1 der2 der3)))
+  (let ((ob (new* ty)))
+    (prinl ob.li)
+    (call-finalizers ob)
+    (prinl ob.li)))
