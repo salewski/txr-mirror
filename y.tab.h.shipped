@@ -1,0 +1,174 @@
+/* A Bison parser, made by GNU Bison 2.5.  */
+
+
+
+/* Tokens.  */
+#ifndef YYTOKENTYPE
+# define YYTOKENTYPE
+   /* Put the tokens into the symbol table, so that GDB and other debuggers
+      know about them.  */
+   enum yytokentype {
+     SPACE = 258,
+     TEXT = 259,
+     SYMTOK = 260,
+     ALL = 261,
+     SOME = 262,
+     NONE = 263,
+     MAYBE = 264,
+     CASES = 265,
+     BLOCK = 266,
+     CHOOSE = 267,
+     GATHER = 268,
+     AND = 269,
+     OR = 270,
+     END = 271,
+     COLLECT = 272,
+     UNTIL = 273,
+     COLL = 274,
+     OUTPUT = 275,
+     REPEAT = 276,
+     REP = 277,
+     SINGLE = 278,
+     FIRST = 279,
+     LAST = 280,
+     EMPTY = 281,
+     MOD = 282,
+     MODLAST = 283,
+     DEFINE = 284,
+     TRY = 285,
+     CATCH = 286,
+     FINALLY = 287,
+     IF = 288,
+     ERRTOK = 289,
+     HASH_BACKSLASH = 290,
+     HASH_SLASH = 291,
+     DOTDOT = 292,
+     HASH_H = 293,
+     HASH_S = 294,
+     HASH_R = 295,
+     HASH_SEMI = 296,
+     HASH_B_QUOTE = 297,
+     HASH_N = 298,
+     HASH_T = 299,
+     WORDS = 300,
+     WSPLICE = 301,
+     QWORDS = 302,
+     QWSPLICE = 303,
+     SECRET_ESCAPE_R = 304,
+     SECRET_ESCAPE_E = 305,
+     SECRET_ESCAPE_I = 306,
+     OLD_DOTDOT = 307,
+     NUMBER = 308,
+     METANUM = 309,
+     HASH_N_EQUALS = 310,
+     HASH_N_HASH = 311,
+     REGCHAR = 312,
+     REGTOKEN = 313,
+     LITCHAR = 314,
+     SPLICE = 315,
+     CONSDOT = 316,
+     LAMBDOT = 317,
+     UREFDOT = 318,
+     OREFDOT = 319,
+     UOREFDOT = 320,
+     LOW = 321,
+     ELSE = 322,
+     ELIF = 323
+   };
+#endif
+/* Tokens.  */
+#define SPACE 258
+#define TEXT 259
+#define SYMTOK 260
+#define ALL 261
+#define SOME 262
+#define NONE 263
+#define MAYBE 264
+#define CASES 265
+#define BLOCK 266
+#define CHOOSE 267
+#define GATHER 268
+#define AND 269
+#define OR 270
+#define END 271
+#define COLLECT 272
+#define UNTIL 273
+#define COLL 274
+#define OUTPUT 275
+#define REPEAT 276
+#define REP 277
+#define SINGLE 278
+#define FIRST 279
+#define LAST 280
+#define EMPTY 281
+#define MOD 282
+#define MODLAST 283
+#define DEFINE 284
+#define TRY 285
+#define CATCH 286
+#define FINALLY 287
+#define IF 288
+#define ERRTOK 289
+#define HASH_BACKSLASH 290
+#define HASH_SLASH 291
+#define DOTDOT 292
+#define HASH_H 293
+#define HASH_S 294
+#define HASH_R 295
+#define HASH_SEMI 296
+#define HASH_B_QUOTE 297
+#define HASH_N 298
+#define HASH_T 299
+#define WORDS 300
+#define WSPLICE 301
+#define QWORDS 302
+#define QWSPLICE 303
+#define SECRET_ESCAPE_R 304
+#define SECRET_ESCAPE_E 305
+#define SECRET_ESCAPE_I 306
+#define OLD_DOTDOT 307
+#define NUMBER 308
+#define METANUM 309
+#define HASH_N_EQUALS 310
+#define HASH_N_HASH 311
+#define REGCHAR 312
+#define REGTOKEN 313
+#define LITCHAR 314
+#define SPLICE 315
+#define CONSDOT 316
+#define LAMBDOT 317
+#define UREFDOT 318
+#define OREFDOT 319
+#define UOREFDOT 320
+#define LOW 321
+#define ELSE 322
+#define ELIF 323
+
+
+
+
+#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+typedef union YYSTYPE
+{
+
+/* Line 2068 of yacc.c  */
+#line 106 "parser.y"
+
+  wchar_t *lexeme;
+  union obj *val;
+  wchar_t chr;
+  cnum lineno;
+
+
+
+/* Line 2068 of yacc.c  */
+#line 195 "y.tab.h"
+} YYSTYPE;
+# define YYSTYPE_IS_TRIVIAL 1
+# define yystype YYSTYPE /* obsolescent; will be withdrawn */
+# define YYSTYPE_IS_DECLARED 1
+#endif
+
+
+
+

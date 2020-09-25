@@ -265,9 +265,6 @@ $(eval $(foreach item,lex.yy.o txr.o match.o parser.o,\
 $(eval $(foreach item,y.tab.c y.tab.h lex.yy.c,\
           $(call DEP,$(item),config.make config.h)))
 
-BS_LIC_FROM := ^[/][*] Bison impl
-BS_LIC_TO := Bison.  [*][/]
-
 lex.yy.c: $(top_srcdir)parser.l
 	$(call ABBREV,LEX)
 	$(call SH,rm -f $@)
@@ -297,14 +294,7 @@ y.tab.c: $(top_srcdir)parser.y
 	$(call SH,rm -f y.tab.c)
 	$(call SH,                                              \
 	  if $(TXR_YACC) $(YACC_FLAGS) -v -d $< ; then          \
-	    grep -qs '$(BS_LIC_FROM)' y.tab.c &&                \
-	      grep -qs '$(BS_LIC_TO)' y.tab.c &&                \
-	      sed -e '/$(BS_LIC_FROM)/$(CM)/$(BS_LIC_TO)/d'     \
-	          < y.tab.c > y.tab.c.tmp &&                    \
-	      mv y.tab.c.tmp y.tab.c ;                          \
 	    chmod a-w y.tab.c ;                                 \
-	    sed -e '/yyparse/d' < y.tab.h > y.tab.h.tmp &&      \
-	      mv y.tab.h.tmp y.tab.h ;                          \
 	    if cmp -s y.tab.h y.tab.h.old ; then                \
 	      mv y.tab.h.old y.tab.h ;                          \
 	    fi ;                                                \
@@ -312,6 +302,13 @@ y.tab.c: $(top_srcdir)parser.y
 	    rm y.tab.c ;                                        \
 	    false ;                                             \
 	  fi)
+
+else
+
+%: $(top_srcdir)%.shipped
+	$(call ABBREV,COPY)
+	$(call SH,rm -f $@)
+	$(call SH,cp $< $@)
 
 endif
 
@@ -348,7 +345,7 @@ rebuild clean repatch: notconfigured
 distclean:
 	$(V)echo "executing generic cleanup for non-configured directory"
 	rm -f txr txr.exe txr-dbg txr-dbg.exe txr-win.exe txr-win-dbg.exe
-	rm -rf y.tab.c lex.yy.c y.tab.h y.output
+	rm -f y.tab.c lex.yy.c y.tab.h y.output
 	rm -rf config opt dbg share/txr/stdlib/*.tlo* run.sh
 	rm -f config.* reconfigure
 	rm -rf mpi-1.?.?
