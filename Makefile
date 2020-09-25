@@ -259,6 +259,8 @@ $(eval $(foreach item,lex.yy.o txr.o match.o parser.o,\
 $(eval $(foreach item,y.tab.c y.tab.h lex.yy.c,\
           $(call DEP,$(item),config.make config.h)))
 
+ifeq ($(maintainer),y)
+
 lex.yy.c: $(top_srcdir)parser.l
 	$(call ABBREV,LEX)
 	$(call SH,rm -f $@)
@@ -270,8 +272,6 @@ lex.yy.c: $(top_srcdir)parser.l
 	    exit 1 ;                                            \
 	  fi)
 	$(call SH,chmod a-w $@)
-
-ifeq ($(maintainer),y)
 
 y.tab.h: y.tab.c
 	$(call SH,                                              \

@@ -288,7 +288,7 @@ Canonical:
 
    variable=value      Defines the given variable as having the given value.
    variable=           Defines the variable as having an empty value.
-                       An empty value serves as boolean false.
+                       An empty value serves as Boolean false.
 
 Long-option style:
 
@@ -307,6 +307,14 @@ The following variables are supported.  Note that make variable syntax may
 be used in paths. Default values are shown in [square brackets].
 
 Variables are case-sensitive, but underscores and dashes are interchangeable.
+
+maintainer [$maintainer]
+
+  This a Boolean variable. If set to 'y', then it it specifies maintainer
+  mode, otherwise the build is configured for user mode. In maintainer mode,
+  the scanner and parser generator tools are expected to be available.
+  In user mode, the shipped parser and scanner are used. Changes to
+  the parser.l and parser.y files will have no effect.
 
 prefix [$prefix]
 
@@ -1671,34 +1679,34 @@ fi
 # Lex and Yacc tests
 #
 
-printf "Checking for lex ... "
-
-if [ -z "$lex_given" -a -z "$lexname_given" ] ; then
-  for lexname in '$(LEX)' "lex" "flex" "" ; do
-    rm -f lex.yy.c
-    if make lexname="$lexname" lex.yy.c > /dev/null 2>&1; then
-      break;
-    fi
-  done
-  if [ -z "$lexname" ] ; then
-    printf "not found\n"
-    exit 1
-  fi
-else
-  rm -f lex.yy.c
-  if ! make lexname="$lexname" lex.yy.c > /dev/null 2>&1; then
-    printf "error\n\n"
-    printf 'values --lexname="%s" --lex="%s" are not working\n\n' "$lexname" "$lex"
-    printf 'A GNU Flex compatible lex is required\n\n'
-    exit 1
-  fi
-fi
-
-rm -f lex.yy.c
-
-printf '"%s"\n' "$lexname"
-
 if [ $maintainer ] ; then
+  printf "Checking for lex ... "
+
+  if [ -z "$lex_given" -a -z "$lexname_given" ] ; then
+    for lexname in '$(LEX)' "lex" "flex" "" ; do
+      rm -f lex.yy.c
+      if make lexname="$lexname" lex.yy.c > /dev/null 2>&1; then
+        break;
+      fi
+    done
+    if [ -z "$lexname" ] ; then
+      printf "not found\n"
+      exit 1
+    fi
+  else
+    rm -f lex.yy.c
+    if ! make lexname="$lexname" lex.yy.c > /dev/null 2>&1; then
+      printf "error\n\n"
+      printf 'values --lexname="%s" --lex="%s" are not working\n\n' "$lexname" "$lex"
+      printf 'A GNU Flex compatible lex is required\n\n'
+      exit 1
+    fi
+  fi
+
+  rm -f lex.yy.c
+
+  printf '"%s"\n' "$lexname"
+
   printf "Checking for yacc program ... "
 
   if [ -z "$yacc_given" -a -z "$yaccname_given" ] ; then
