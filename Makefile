@@ -93,12 +93,6 @@ OBJS := $(DBG_OBJS) $(OPT_OBJS)
 
 TXR := ./$(PROG)
 
-ifneq ($(yacc_is_newer_bison),)
-YACC_FLAGS := -Wno-yacc -Wno-deprecated
-else
-YACC_FLAGS :=
-endif
-
 .SUFFIXES:
 MAKEFLAGS += --no-builtin-rules
 
@@ -293,7 +287,7 @@ y.tab.c: $(top_srcdir)parser.y
 	  if [ -e y.tab.h ]; then mv y.tab.h y.tab.h.old ; fi)
 	$(call SH,rm -f y.tab.c)
 	$(call SH,                                              \
-	  if $(TXR_YACC) $(YACC_FLAGS) -v -d $< ; then          \
+	  if $(TXR_YACC) -v -d $< ; then                        \
 	    chmod a-w y.tab.c ;                                 \
 	    if cmp -s y.tab.h y.tab.h.old ; then                \
 	      mv y.tab.h.old y.tab.h ;                          \

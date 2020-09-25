@@ -1698,54 +1698,59 @@ rm -f lex.yy.c
 
 printf '"%s"\n' "$lexname"
 
-printf "Checking for yacc program ... "
+if [ $maintainer ] ; then
+  printf "Checking for yacc program ... "
 
-if [ -z "$yacc_given" -a -z "$yaccname_given" ] ; then
-  for yaccname in '$(YACC)' "yacc" "byacc" "bison -y" "" ; do
-    yaccpath=$($make yaccname="$yaccname" conftest.yacc)
-    if command -v $yaccpath > /dev/null ; then
-      break;
-    fi
-  done
+  if [ -z "$yacc_given" -a -z "$yaccname_given" ] ; then
+    for yaccname in '$(YACC)' "yacc" "byacc" "bison -y" "" ; do
+      yaccpath=$($make yaccname="$yaccname" conftest.yacc)
+      if command -v $yaccpath > /dev/null ; then
+        break;
+      fi
+    done
 
-  if [ -z "$yaccname" ] ; then
-    printf "not found\n"
-    exit 1
-  fi
-
-  printf '"%s" (path "%s")\n' "$yaccname" "$yaccpath"
-else
-  yaccpath=$($make conftest.yacc)
-  case $yaccpath in
-  *bison )
-    printf "error\n\n"
-    printf "GNU Bison needs -y to behave like yacc\n\n"
-    printf "This needs to be specified in the --yaccname or --yacc option\n\n"
-    exit 1
-    ;;
-  * )
-    if ! command -v $yaccpath > /dev/null ; then
-      printf "not found\n\n"
+    if [ -z "$yaccname" ] ; then
+      printf "not found\n"
       exit 1
     fi
-    printf "given\n"
-    ;;
-  esac
-fi
 
-printf "Checking if yacc program is GNU Bison ... "
+    printf '"%s" (path "%s")\n' "$yaccname" "$yaccpath"
+  else
+    yaccpath=$($make conftest.yacc)
+    case $yaccpath in
+    *bison )
+      printf "error\n\n"
+      printf "GNU Bison needs -y to behave like yacc\n\n"
+      printf "This needs to be specified in the --yaccname or --yacc option\n\n"
+      exit 1
+      ;;
+    * )
+      if ! command -v $yaccpath > /dev/null ; then
+        printf "not found\n\n"
+        exit 1
+      fi
+      printf "given\n"
+      ;;
+    esac
+  fi
 
-gen_config_make
+  printf "Checking if yacc program is GNU Bison ... "
 
-bison_version="$($make conftest.yacc-version | grep -E '[Bb]ison')" || true
+  gen_config_make
 
-if [ -n "$bison_version" ] ; then
-  set -- $bison_version
-  printf "yes (%s)\n" "$4"
-  save_ifs=$IFS ; IFS=. ; set -- $4 ; IFS=$save_ifs
-  [ $1 -ge 3 ] && yacc_is_newer_bison=y
-else
-  printf "no\n"
+  bison_version="$($make conftest.yacc-version | grep -E '[Bb]ison')" || true
+
+  if [ -n "$bison_version" ] ; then
+    set -- $bison_version
+    printf "yes (%s)\n" "$4"
+    save_ifs=$IFS ; IFS=. ; set -- $4 ; IFS=$save_ifs
+    if [ "$1.$2" != "2.5" ] ; then
+      echo "GNU Bison 2.5 is required"
+      exit 1
+    fi
+  else
+    printf "no\n"
+  fi
 fi
 
 #
