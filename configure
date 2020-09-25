@@ -130,6 +130,7 @@ install_prefix=
 bindir='bin'
 datadir='share/txr'
 mandir='share/man'
+maintainer=
 make=
 cross=
 compiler_prefix=
@@ -778,6 +779,9 @@ ${txr_shell:+# Shell used by make for running recipes; this
 SHELL := $txr_shell}
 
 txr_ver := $txr_ver
+
+# is this configuration in maintainer mode
+maintainer := $maintainer
 
 # absolute path to source code directory
 top_srcdir := $top_srcdir

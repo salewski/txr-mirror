@@ -280,6 +280,8 @@ lex.yy.c: $(top_srcdir)parser.l
 	  fi)
 	$(call SH,chmod a-w $@)
 
+ifeq ($(maintainer),y)
+
 y.tab.h: y.tab.c
 	$(call SH,                                              \
 	  if ! [ -e y.tab.h ] ; then                            \
@@ -310,6 +312,8 @@ y.tab.c: $(top_srcdir)parser.y
 	    rm y.tab.c ;                                        \
 	    false ;                                             \
 	  fi)
+
+endif
 
 # Suppress useless sccs id array and unused label warning in byacc otuput.
 # Bison-generated parser also tests for this lint define.
