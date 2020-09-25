@@ -272,7 +272,7 @@ lex.yy.c: $(top_srcdir)parser.l
 	$(call ABBREV,LEX)
 	$(call SH,rm -f $@)
 	$(call SH,                                              \
-	  if $(TXR_LEX) $(LEX_DBG_FLAGS) $< ; then		\
+	  if $(TXR_LEX) $(LEX_DBG_FLAGS) $< ; then              \
 	    sed -e s@//.*@@ < $@ > $@.tmp ;                     \
 	    mv $@.tmp $@ ;                                      \
 	  else                                                  \
