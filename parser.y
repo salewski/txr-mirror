@@ -1488,13 +1488,17 @@ static val extract_vars(val output_spec)
   if (consp(output_spec)) {
     val sym = first(output_spec);
     if (sym == var_s) {
-      val name = second(output_spec);
+      val expr = second(output_spec);
       val modifiers = third(output_spec);
 
-      if (bindable(name))
-        tai = list_collect(tai, name);
-      else
-        tai = list_collect_nconc(tai, extract_vars(name));
+      if (bindable(expr)) {
+        tai = list_collect(tai, expr);
+      } else if (opt_compat && opt_compat <= 128) {
+        tai = list_collect_nconc(tai, extract_vars(expr));
+      } else {
+        val frefs = expand_with_free_refs(expr, nil, nil);
+        tai = list_collect_nconc(tai, second(frefs));
+      }
 
       for (; modifiers; modifiers = cdr(modifiers)) {
         val mod = car(modifiers);
