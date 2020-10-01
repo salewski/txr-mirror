@@ -29,7 +29,6 @@
 (defsymacro %lev-bits% 10)
 (defsymacro %max-lev% 63)
 (defsymacro %max-v-lev% (macro-time (ppred %max-lev%)))
-(defsymacro %imm-width% 32)
 (defsymacro %sm-lev-size% 64)
 (defsymacro %max-sm-lev-idx% (macro-time (pred %sm-lev-size%)))
 (defsymacro %max-sm-lev% 15)
