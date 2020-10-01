@@ -12,7 +12,8 @@
 
 typedef enum vm_op {
 @  (repeat)
-  @{oc.symbol :filter :upcase} = @{oc.code},
+  @{oc.symbol :filter :upcase} = @{oc.code},@(if oc.deprecated
+                                               " /* deprecated */")
 @  (end)
 } vm_op_t;
 @(end)

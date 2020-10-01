@@ -27,6 +27,7 @@
 (load "vm-param")
 
 (defstruct oc-base nil
+  (:static deprecated nil)
   (:method synerr (me fmt . args)
     (error `opcode @{me.symbol}: @fmt` . args))
 
@@ -484,6 +485,7 @@
         real.(asm asm syntax)))))
 
 (defopcode op-movrsi movrsi auto
+  (:static deprecated t)
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
     (tree-bind (dst imm) asm.(parse-args me syntax '(d si))
@@ -493,6 +495,7 @@
     ^(,me.symbol ,(operand-to-sym dst) ,(bits-to-obj imm 10))))
 
 (defopcode op-movsmi movsmi auto
+  (:static deprecated t)
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
     (tree-bind (dst imm) asm.(parse-args me syntax '(ds mi))
@@ -503,6 +506,7 @@
     ^(,me.symbol ,(small-op-to-sym dst) ,(bits-to-obj imm 16))))
 
 (defopcode op-movrbi movrbi auto
+  (:static deprecated t)
   (:method asm (me asm syntax)
     me.(chk-arg-count 2 syntax)
     (tree-bind (dst imm) asm.(parse-args me syntax '(d bi))
@@ -514,6 +518,7 @@
       ^(,me.symbol ,(operand-to-sym dst) ,(bits-to-obj imm 32)))))
 
 (defopcode op-movi-pseudo movi nil
+  (:static deprecated t)
   (:method asm (me asm syntax)
     (tree-bind (dst src) asm.(parse-args me syntax '(d bi))
       (let ((real [%oc-hash% (cond

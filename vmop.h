@@ -40,9 +40,9 @@ typedef enum vm_op {
   MOVRS = 11,
   MOVSR = 12,
   MOVRR = 13,
-  MOVRSI = 14,
-  MOVSMI = 15,
-  MOVRBI = 16,
+  MOVRSI = 14, /* deprecated */
+  MOVSMI = 15, /* deprecated */
+  MOVRBI = 16, /* deprecated */
   JMP = 17,
   IF = 18,
   IFQ = 19,
