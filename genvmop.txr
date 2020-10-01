@@ -11,7 +11,7 @@
 @{copyright "\n"}
 
 typedef enum vm_op {
-@  (repeat :vars (oc))
+@  (repeat)
   @{oc.symbol :filter :upcase} = @{oc.code},
 @  (end)
 } vm_op_t;
