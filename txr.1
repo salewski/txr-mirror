@@ -75097,6 +75097,37 @@ The object
 .code 4
 is self-evaluating, and so the greedy evaluation process stops.
 
+.SS* Listener-Related Miscellanea
+
+.coNP Function @ quip
+.synb
+.mets (quip)
+.syne
+.desc
+The
+.code quip
+function returns a randomly selected string containing a humorous quip,
+quote or witticism. The following code may be added to
+.code .txr_profile
+to produce the random quip on startup:
+
+.verb
+  (put-line (quip))
+.brev
+
+The
+.code quip
+function was introduced in \*(TX 244. If the
+.code .txr_profile
+is used with installations of older \*(TX versions, it is recommended to use
+the following, to avoid calling the undefined function, as well as to
+prevent a warning:
+
+.verb
+  (if (fboundp 'quip)
+    (put-line (quip))
+    (defun quip ()))
+.brev
 
 .SH* SETUID/SETGID OPERATION
 
