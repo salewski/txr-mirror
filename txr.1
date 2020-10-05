@@ -45689,6 +45689,77 @@ is a compiled regular expression
 object. For any other object type, it returns
 .codn nil .
 
+.coNP Functions @ trim-left and @ trim-right
+.synb
+.mets (trim-left >> { regex | << prefix } << string )
+.mets (trim-right >> { regex | << suffix } << string )
+.syne
+.desc
+The
+.code trim-left
+and
+.code trim-right
+functions return a new string, equivalent to
+.meta string
+with a leading or trailing portion removed.
+
+If the first argument is a regular expression
+.metn regex ,
+then, respectively,
+.code trim-left
+and
+.code trim-right
+find a prefix or suffix of
+.meta string
+which matches the regular expression.
+If there is no match, or if the match is empty, then
+.meta string
+is returned. Otherwise, a copy of
+.meta string
+is returned in which the matching characters are removed.
+If
+.meta regex
+matches all of
+.meta string
+then the empty string is returned.
+
+If the first argument is a character string, then it is treated
+as if it were a regular expression match for that literal
+sequence of characters. Thus,
+.code trim-left
+interprets that string as a
+.meta prefix
+to be removed, and
+.code trim-right
+as a
+.metn suffix .
+If
+.meta string
+starts with
+.metn prefix ,
+then
+.code trim-left
+returns a copy of
+.meta string
+with
+.meta prefix
+removed. Otherwise,
+.meta string
+is returned.
+Likewise, if
+.meta string
+ends with
+.metn suffix ,
+then
+.code trim-right
+returns a copy of
+.meta string
+with
+.meta suffix
+removed. Otherwise,
+.meta string
+is returned.
+
 .coNP Function @ regex-compile
 .synb
 .mets (regex-compile < form-or-string <> [ error-stream ])

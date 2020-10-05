@@ -3224,6 +3224,32 @@ val count_until_match(val regex, val stream_in)
   return scan_until_common(lit("count-until-match"), regex, stream_in, nil, nil);
 }
 
+static val trim_left(val regex, val string)
+{
+  if (regexp(regex)) {
+    val pos = match_regex(string, regex, nil);
+    if (pos)
+      return sub_str(string, pos, t);
+  } else if (starts_with(regex, string, nil, nil)) {
+    return sub_str(string, length(regex), t);
+  }
+
+  return string;
+}
+
+static val trim_right(val regex, val string)
+{
+  if (regexp(regex)) {
+    val pos = match_regex_right(string, regex, nil);
+    if (pos)
+      return sub_str(string, zero, minus(length(string), pos));
+  } else if (ends_with(regex, string, nil, nil)) {
+    return sub_str(string, zero, minus(length(string), length(regex)));
+  }
+
+  return string;
+}
+
 static char_set_t *create_wide_cs(void)
 {
 #ifdef FULL_UNICODE
@@ -3350,6 +3376,8 @@ void regex_init(void)
   reg_fun(intern(lit("fr^"), user_package), func_n2o(regex_range_left_fun, 1));
   reg_fun(intern(lit("fr$"), user_package), func_n2o(regex_range_right_fun, 1));
   reg_fun(intern(lit("frr"), user_package), func_n3o(regex_range_search_fun, 1));
+  reg_fun(intern(lit("trim-left"), user_package), func_n2(trim_left));
+  reg_fun(intern(lit("trim-right"), user_package), func_n2(trim_right));
   init_special_char_sets();
 }
 
