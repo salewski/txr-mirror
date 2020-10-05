@@ -65,6 +65,8 @@
     "Emergency exits are located in the standard library."
     "Your history may used for automatic recommendations, like 'stick to Python'."
     "Without the generosity of users like you, this program would exist just fine."
+    "TXR's no-spray organic production means every bug is carefully removed by hand."
+    "Upgrade to TXR Pro for a one-time fee of learning Lisp!"
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
