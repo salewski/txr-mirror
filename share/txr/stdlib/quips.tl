@@ -67,6 +67,10 @@
     "Without the generosity of users like you, this program would exist just fine."
     "TXR's no-spray organic production means every bug is carefully removed by hand."
     "Upgrade to TXR Pro for a one-time fee of learning Lisp!"
+    "When transferring between containers, do not siphon TXR by mouth."
+    "Use TXR only as directed. Unless you are intelligent, curious and creative."
+    "Reminder: your account balance of 37 closing parentheses is past due."
+    "Check with your physician before commencing any strenuous Lisp program."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
