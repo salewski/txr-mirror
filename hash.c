@@ -47,6 +47,7 @@
 #include "eval.h"
 #include "itypes.h"
 #include "sysif.h"
+#include "time.h"
 #include "hash.h"
 
 typedef enum hash_flags {

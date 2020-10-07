@@ -7038,20 +7038,6 @@ void eval_init(void)
 
   reg_fun(intern(lit("match-fun"), user_package), func_n4o(match_fun, 2));
 
-  reg_fun(intern(lit("time"), user_package), func_n0(time_sec));
-  reg_fun(intern(lit("time-usec"), user_package), func_n0(time_sec_usec));
-  reg_fun(intern(lit("time-string-local"), user_package), func_n2(time_string_local));
-  reg_fun(intern(lit("time-string-utc"), user_package), func_n2(time_string_utc));
-  reg_fun(intern(lit("time-fields-local"), user_package), func_n1(time_fields_local));
-  reg_fun(intern(lit("time-fields-utc"), user_package), func_n1(time_fields_utc));
-  reg_fun(intern(lit("time-struct-local"), user_package), func_n1(time_struct_local));
-  reg_fun(intern(lit("time-struct-utc"), user_package), func_n1(time_struct_utc));
-  reg_fun(intern(lit("make-time"), user_package), func_n7(make_time));
-  reg_fun(intern(lit("make-time-utc"), user_package), func_n7(make_time_utc));
-  reg_fun(intern(lit("time-parse"), user_package), func_n2(time_parse));
-  reg_fun(intern(lit("time-parse-local"), user_package), func_n2(time_parse_local));
-  reg_fun(intern(lit("time-parse-utc"), user_package), func_n2(time_parse_utc));
-
   reg_fun(intern(lit("source-loc"), user_package), func_n1(source_loc));
   reg_fun(intern(lit("source-loc-str"), user_package), func_n2o(source_loc_str, 1));
   reg_fun(intern(lit("macro-ancestor"), user_package), func_n1(lookup_origin));

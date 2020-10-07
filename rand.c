@@ -39,6 +39,7 @@
 #include "unwind.h"
 #include "arith.h"
 #include "eval.h"
+#include "time.h"
 #include "txr.h"
 #include "rand.h"
 

@@ -1208,25 +1208,6 @@ val display_width(val obj);
 void setenv(const char *name, const char *value, int overwrite);
 void unsetenv(const char *name);
 #endif
-val time_sec(void);
-val time_sec_usec(void);
-val time_string_local(val time, val format);
-val time_string_utc(val time, val format);
-val time_fields_local(val time);
-val time_fields_utc(val time);
-val time_struct_local(val time);
-val time_struct_utc(val time);
-val make_time(val year, val month, val day,
-              val hour, val minute, val second,
-              val isdst);
-val make_time_utc(val year, val month, val day,
-                  val hour, val minute, val second,
-                  val isdst);
-#if HAVE_STRPTIME
-val time_parse(val format, val string);
-val time_parse_local(val format, val string);
-val time_parse_utc(val format, val string);
-#endif
 
 void init(val *stack_bottom);
 int compat_fixup(int compat_ver);
