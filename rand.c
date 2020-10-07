@@ -38,8 +38,9 @@
 #include "signal.h"
 #include "unwind.h"
 #include "arith.h"
-#include "rand.h"
 #include "eval.h"
+#include "txr.h"
+#include "rand.h"
 
 #define random_warmup (deref(lookup_var_l(nil, random_warmup_s)))
 
@@ -90,7 +91,7 @@ INLINE rand32_t *rstate(struct rand_state *r, int offs)
   return &r->state[(r->cur + offs) % 16];
 }
 
-static rand32_t rand32(struct rand_state *r)
+static rand32_t rand32_bug(struct rand_state *r)
 {
   rand32_t s0 = *rstate(r, 0);
   rand32_t s9 = *rstate(r, 9);
@@ -108,6 +109,27 @@ static rand32_t rand32(struct rand_state *r)
   r->cur = (r->cur + 15) % 16;
   return ns15;
 }
+
+static rand32_t rand32_good(struct rand_state *r)
+{
+  rand32_t s0 = *rstate(r, 0);
+  rand32_t s9 = *rstate(r, 9);
+  rand32_t s13 = *rstate(r, 13);
+  rand32_t s15 = *rstate(r, 15);
+
+  rand32_t r1 = s0 ^ (s0 << 16) ^ s13 ^ (s13 << 15);
+  rand32_t r2 = s9 ^ (s9 >> 11);
+
+  rand32_t ns0 = *rstate(r, 0) = r1 ^ r2;
+  rand32_t ns15 = s15 ^ (s15 << 2) ^ r1 ^ (r1 << 18) ^ (r2 << 28) ^
+                  (ns0 ^ ((ns0 << 5) & 0xDA442D24UL));
+
+  *rstate(r, 15) = ns15;
+  r->cur = (r->cur + 15) % 16;
+  return ns15;
+}
+
+static rand32_t (*rand32)(struct rand_state *) = rand32_good;
 
 val make_random_state(val seed, val warmup)
 {
@@ -342,11 +364,14 @@ val rnd(val modulus, val state)
 
 void rand_compat_fixup(int compat_ver)
 {
-  if (compat_ver <= 139) {
+  if (compat_ver <= 243) {
     loc l = lookup_var_l(nil, random_state_var_s);
-    memset(rand_tab, 0xAA, sizeof rand_tab);
-    if (compat_ver <= 114)
-      random_state_s = random_state_var_s;
+    if (compat_ver <= 139) {
+      memset(rand_tab, 0xAA, sizeof rand_tab);
+      if (compat_ver <= 114)
+        random_state_s = random_state_var_s;
+    }
+    rand32 = rand32_bug;
     set(l, make_random_state(num_fast(42), num_fast(8)));
   }
 }

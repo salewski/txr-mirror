@@ -75522,6 +75522,14 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 243
+Two mistakes in the pseudo-random-number generator (PRNG) were discovered,
+affecting \*(TX 243 and older. Using this compatibility value, or lower, will
+restore the buggy behavior, allowing pseudo-random number sequences produced
+by those older versions can be reproduced. The PRNG is intended to be an
+implementation of the WELL-512 PRNG described by Panneton and L'Ecuyer.
+The coding mistakes, however, resulted in the PRNG being an implementation of
+something other than WELL-512.
 .IP 242
 In \*(TX 242 and older, the instantiation of an object whose type inherits
 from the same supertype more than once resulted in duplicate execution
