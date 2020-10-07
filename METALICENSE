@@ -29,6 +29,19 @@ and md5.h files. The permission is compatible with the BSD license,
 as it allows unfettered redistribution and use, without any advertizing
 clauses.
 
+TXR ships with files (y.tab.c, y.tab.h) generated from the file parser.y using
+GNU Bison. The source file parser.y is the original work of Kaz Kylheku, and
+licensed under the same terms as the rest of TXR. The generated files contain
+all of that material, plus material coming from Bison. The material coming from
+Bison is owned by the Free Software Foundation, distributed under the GPLv3
+license, with a special "Bison exception" which allows unrestricted,
+unencumbered redistribution in source or compiled form, similar to the BSD
+license. That special exception lapses if the material is borrowed for creating
+a parser skeleton for a parser generator program (analogous to Bison). In such
+a situation, the GPLv3 license comes into full force. TXR readily complies with
+this condition; therefore, those two files are compatible with TXR's BSD
+license, and may be redistributed as part of TXR.
+
 TXR is ported to Windows with the help of a derivative of the Cygwin library.
 For user convenience, a packaged version of TXR includes the CYGWIN1.DLL, in
 accordance with the terms of Cygwin's license, the GNU Lesser Public License,
