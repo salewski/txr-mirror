@@ -75522,12 +75522,6 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
-.IP 237
-Compatibility values of 237 or lower restore the destructive behavior of the
-.code sort
-and
-.code shuffle
-functions.
 .IP 242
 In \*(TX 242 and older, the instantiation of an object whose type inherits
 from the same supertype more than once resulted in duplicate execution
@@ -75536,6 +75530,12 @@ After 242, duplicate initialization is suppressed. For more information, see
 the section
 .BR "Duplicate Supertypes" . A compatibility value of 242 or lower restores
 the duplicate initialization behavior.
+.IP 237
+Compatibility values of 237 or lower restore the destructive behavior of the
+.code sort
+and
+.code shuffle
+functions.
 .IP 234
 In \*(TX 234 and older versions, the exception throwing functions
 .code throw
