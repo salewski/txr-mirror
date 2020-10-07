@@ -63,6 +63,22 @@ val time_sec_usec(void)
   return cons(num_time(tv.tv_sec), num(tv.tv_usec));
 }
 
+val time_sec_nsec(void)
+{
+#if HAVE_CLOCK_GETTIME
+  struct timespec ts;
+  if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
+    return nil;
+  return cons(num_time(ts.tv_sec), num(ts.tv_nsec));
+#else
+  struct timeval tv;
+  if (gettimeofday(&tv, 0) == -1)
+    return nil;
+  return cons(num_time(tv.tv_sec), num(1000 * tv.tv_usec));
+#endif
+}
+
+
 #if !HAVE_GMTIME_R
 struct tm *gmtime_r(const time_t *timep, struct tm *result);
 struct tm *localtime_r(const time_t *timep, struct tm *result);
@@ -497,6 +513,7 @@ void time_init(void)
 
   reg_fun(intern(lit("time"), user_package), func_n0(time_sec));
   reg_fun(intern(lit("time-usec"), user_package), func_n0(time_sec_usec));
+  reg_fun(intern(lit("time-nsec"), user_package), func_n0(time_sec_nsec));
   reg_fun(intern(lit("time-string-local"), user_package), func_n2(time_string_local));
   reg_fun(intern(lit("time-string-utc"), user_package), func_n2(time_string_utc));
   reg_fun(intern(lit("time-fields-local"), user_package), func_n1(time_fields_local));

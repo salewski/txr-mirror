@@ -3593,6 +3593,26 @@ else
   printf "no\n"
 fi
 
+printf "Checking for clock_gettime ... "
+cat > conftest.c <<!
+#include <time.h>
+
+int main(void)
+{
+  struct timespec ts;
+  (void) clock_gettime(CLOCK_REALTIME, &ts);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_CLOCK_GETTIME 1\n" >> config.h
+  have_sys_types=y
+else
+  printf "no\n"
+fi
+
 printf "Checking for loff_t ... "
 cat > conftest.c <<!
 #include <sys/types.h>

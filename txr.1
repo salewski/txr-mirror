@@ -55976,10 +55976,11 @@ parameter, which defaults to the value of
 .codn *random-state* .
 
 .SS* Time
-.coNP Functions @ time and @ time-usec
+.coNP Functions @, time @ time-usec and @ time-nsec
 .synb
 .mets (time)
 .mets (time-usec)
+.mets (time-nsec)
 .syne
 .desc
 The
@@ -55997,6 +55998,20 @@ field holds the seconds measured in the same way, and whose
 .code cdr
 field extends the precision by giving
 number of microseconds as an integer value between 0 and 999999.
+
+The
+.code time-nsec
+function is similar to
+.code time-usec
+except that the returned cons cell's
+.code cdr
+field gives a number of nanoseconds as an integer value
+between 0 and 999999999.
+
+Note: on hosts where obtaining nanosecond precision is not available, the
+.code time-nsec
+function obtains a microseconds value instead, and multiplies
+it by 1000.
 
 .coNP Functions @ time-string-local and @ time-string-utc
 .synb

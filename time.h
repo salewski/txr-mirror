@@ -31,6 +31,7 @@ extern val dst_s, gmtoff_s, zone_s;
 
 val time_sec(void);
 val time_sec_usec(void);
+val time_sec_nsec(void);
 val time_string_local(val time, val format);
 val time_string_utc(val time, val format);
 val time_fields_local(val time);
