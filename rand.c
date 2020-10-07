@@ -166,7 +166,7 @@ val make_random_state(val seed, val warmup)
 #error port me!
 #endif
   } else if (nilp(seed)) {
-    val time = time_sec_usec();
+    val time = time_sec_nsec();
     r->state[0] = convert(rand32_t, c_num(car(time), self));
     r->state[1] = convert(rand32_t, c_num(cdr(time), self));
 #if HAVE_UNISTD_H
