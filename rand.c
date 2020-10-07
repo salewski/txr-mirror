@@ -51,7 +51,7 @@ typedef unsigned long rand32_t;
 #endif
 
 /*
- * The algorithm here is WELL 512.
+ * The algorithm here is WELL512a.
  * (Francois Panneton, Pierre L'Ecuyer.)
  */
 struct rand_state {

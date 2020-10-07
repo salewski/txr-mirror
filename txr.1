@@ -55791,7 +55791,7 @@ values from it which are discarded, prior to use.  The number of values
 discarded is the
 .IR "warm-up period" .
 
-The WELL PRNG used in \*(TX produces 32-bit values, natively. Thus each
+The WELL512a PRNG used in \*(TX produces 32-bit values, natively. Thus each
 warm-up iteration retrieves and discards a 32-bit value. The PRNG has
 a state space consisting of a vector of sixteen 32-bit words, making
 the state space 4096 bits wide.
@@ -55932,7 +55932,7 @@ is used.
 .desc
 All three functions produce pseudo-random numbers, which are positive integers.
 
-The numbers are obtained from a WELL 512 PRNG, whose state is stored in the
+The numbers are obtained from a WELL512a PRNG, whose state is stored in the
 random state object.
 
 The
@@ -55969,7 +55969,7 @@ The
 .code random-float
 function produces a pseudo-random floating-point value in the range [0.0, 1.0).
 
-The numbers are obtained from a WELL 512 PRNG, whose state is stored in the
+The numbers are obtained from a WELL512a PRNG, whose state is stored in the
 random state object given by the argument to the optional
 .meta random-state
 parameter, which defaults to the value of
@@ -75527,9 +75527,9 @@ Two mistakes in the pseudo-random-number generator (PRNG) were discovered,
 affecting \*(TX 243 and older. Using this compatibility value, or lower, will
 restore the buggy behavior, allowing pseudo-random number sequences produced
 by those older versions can be reproduced. The PRNG is intended to be an
-implementation of the WELL-512 PRNG described by Panneton and L'Ecuyer.
+implementation of the WELL512a PRNG described by Panneton and L'Ecuyer.
 The coding mistakes, however, resulted in the PRNG being an implementation of
-something other than WELL-512.
+something other than WELL512a.
 .IP 242
 In \*(TX 242 and older, the instantiation of an object whose type inherits
 from the same supertype more than once resulted in duplicate execution
