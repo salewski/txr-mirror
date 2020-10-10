@@ -110,6 +110,13 @@ for arg in "$0" ${@+"$@"} ; do
 done
 
 #
+# Use the POSIX locale to suppress monkey business in the utilities
+# 
+
+export LC_ALL="C"
+export LANG="C"
+
+#
 # Establish default values for any variables that are not specified
 # on the command line. The default derivations from prefix are in
 # Make syntax. They go verbatim into the generated config.make.
@@ -934,15 +941,6 @@ conftest_o()
 }
 
 #
-# Like conftest but make conftest.syms
-#
-conftest_syms()
-{
-  rm -f conftest.o conftest.syms
-  $make conftest.syms ${@+"$@"} > conftest.err 2>&1
-}
-
-#
 # Check for git because we use it out of the Makefile
 # But this is pointless if we have no git repo.
 # "have_git" means we have a repo, and git.
@@ -1323,67 +1321,49 @@ fi
 
 printf "Checking what C integer type can hold a pointer ... "
 
-read_syms()
-{
-  print_into_config=${1-} 
-  deferred_offset=
-
-  while read symbol type offset size ; do
-    size=$(( 0$size + 0 ))
-    offset=$(( 0$offset + 0 ))
-    symbol=${symbol#_}
-    case "$type" in
-    C )
-      size=$(( offset + 0 ))
-      ;;
-    S )
-      if [ -n "$deferred_offset" ] ; then
-        size=$(( offset - deferred_offset ))
-        case "$deferred_sym" in
-        SIZEOF* )
-          eval $(printf "%s=%d\n" "$deferred_sym" "$size")
-            if [ -n "$print_into_config" ] ; then
-              printf "#define %s %s\n" "$deferred_sym" "$size" >> config.h
-            fi
-          ;;
-        esac
-      fi
-      deferred_sym=$symbol
-      deferred_offset=$offset
-      continue
-      ;;
-    esac
-    case "$symbol" in
-    SIZEOF* )
-      eval $(printf "%s=%d\n" "$symbol" "$size")
-      if [ -n "$print_into_config" ] ; then
-        printf "#define %s %s\n" "$symbol" "$size" >> config.h
-      fi
-      ;;
-    esac
-  done < conftest.syms
-}
-
 if [ -z "$intptr" ] ; then
   cat > conftest.c <<!
 #include <stddef.h>
 #include <limits.h>
 #include "config.h"
-char SIZEOF_BYTE[CHAR_BIT];
+
+#define D(N, Z) ((N) ? (N) + '0' : Z)
+#define UD(S) D((S) / 10, ' ')
+#define LD(S) D((S) % 10, '0')
+#define DEC(S) { UD(S), LD(S) }
+
+struct {
+  char h_BYTE[32], s_BYTE[2];
 #if HAVE_SUPERLONG_T
-char SIZEOF_SUPERLONG_T[sizeof (superlong_t)];
+  char h_SUPERLONG[32], s_SUPERLONG[2];
 #endif
 #if HAVE_LONGLONG_T
-char SIZEOF_LONGLONG_T[sizeof (longlong_t)];
+  char h_LONGLONG[32], s_LONGLONG[2];
 #endif
-char SIZEOF_PTR[sizeof (char *)];
-char SIZEOF_LONG[sizeof (long)];
-char SIZEOF_INT[sizeof (int)];
-char SIZEOF_SHORT[sizeof (short)];
-char SIZEOF_WCHAR_T[sizeof (wchar_t)];
-char DUMMY;
+  char h_PTR[32], s_PTR[2];
+  char h_LONG[32], s_LONG[2];
+  char h_INT[32], s_INT[2];
+  char h_SHORT[32], s_SHORT[2];
+  char h_WCHAR[32], s_WCHAR[2];
+  char nl[1];
+} foo = {
+  "\nSIZEOF_BYTE=", DEC(CHAR_BIT),
+#if HAVE_SUPERLONG_T
+  "\nSIZEOF_SUPERLONG_T=", DEC(sizeof (superlong_t)),
+#endif
+#if HAVE_LONGLONG_T
+  "\nSIZEOF_LONGLONG_T=", DEC(sizeof (longlong_t)),
+#endif
+  "\nSIZEOF_PTR=", DEC(sizeof (char *)),
+  "\nSIZEOF_LONG=", DEC(sizeof (long)),
+  "\nSIZEOF_INT=", DEC(sizeof (int)),
+  "\nSIZEOF_SHORT=", DEC(sizeof (short)),
+  "\nSIZEOF_WCHAR_T=", DEC(sizeof (wchar_t)),
+  "\n"
+};
 !
-  if ! conftest_syms ; then
+
+  if ! conftest_o ; then
     printf "failed\n\n"
 
     printf "Errors from compilation: \n\n"
@@ -1391,15 +1371,9 @@ char DUMMY;
     exit 1
   fi
 
-  SIZEOF_BYTE=0
-  SIZEOF_PTR=0
-  SIZEOF_SHORT=0
-  SIZEOF_INT=0
-  SIZEOF_LONG=0
-  SIZEOF_LONGLONG_T=0
-  SIZEOF_SUPERLONG_T=0
+  eval $(tr '\0' ' ' < conftest.o  | grep SIZEOF | sed -e 's/  *//')
 
-  read_syms y
+  tr '\0' ' ' < conftest.o  | grep SIZEOF | sed -e 's/=  */ /' -e 's/^/#define /' >> config.h
 
   if [ $SIZEOF_PTR -eq 0 -o $SIZEOF_BYTE -eq 0 ] ; then
     printf "failed\n"
@@ -1447,8 +1421,6 @@ then
   printf "typedef superlong_t double_intptr_t;\n" >> config.h
   printf "typedef superulong_t double_uintptr_t;\n" >> config.h
 fi
-
-#if HAVE_LONGLONG_T && 
 
 #
 # Alignment of wchar_t
@@ -3302,11 +3274,24 @@ for try in NOTHING _LARGE_FILES=1 _FILE_OFFSET_BITS=64 ; do
   cat > conftest.c <<!
 #include <limits.h>
 #include <sys/types.h>
-char SIZEOF_BYTE[CHAR_BIT];
-char SIZEOF_OFF_T[sizeof (off_t)];
-char DUMMY;
+
+#define D(N, Z) ((N) ? (N) + '0' : Z)
+#define UD(S) D((S) / 10, ' ')
+#define LD(S) D((S) % 10, '0')
+#define DEC(S) { UD(S), LD(S) }
+
+struct {
+  char h_BYTE[32], s_BYTE[2];
+  char h_OFF_T[32], s_OFF_T[2];
+  char nl[1];
+} foo = {
+  "\nSIZEOF_BYTE=", DEC(CHAR_BIT),
+  "\nSIZEOF_OFF_T=", DEC(sizeof (off_t)),
+  "\n"
+};
+
 !
-  if ! conftest_syms VERBOSE=y EXTRA_FLAGS=-D$try ; then
+  if ! conftest_o ; then
     printf "failed\n\n"
 
     printf "Errors from compilation: \n\n"
@@ -3314,10 +3299,9 @@ char DUMMY;
     exit 1
   fi
 
-  SIZEOF_BYTE=0
-  SIZEOF_OFF_T=0
+  eval $(tr '\0' ' ' < conftest.o  | grep SIZEOF | sed -e 's/  *//')
 
-  read_syms
+  tr '\0' ' ' < conftest.o  | grep SIZEOF | sed -e 's/=  */ /' -e 's/^/#define /' >> config.h
 
   if [ $SIZEOF_OFF_T -eq 0 -o $SIZEOF_BYTE -eq 0 ] ; then
     printf "failed\n"

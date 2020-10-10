@@ -548,9 +548,6 @@ conftest: conftest.c
 conftest2: conftest1.c conftest2.c
 	$(call LINK_PROG,)
 
-conftest.syms: conftest.o
-	$(TXR_NM) -n -t o -P $^ > $@
-
 .PHONY: conftest.yacc
 conftest.yacc:
 	$(V)echo $(TXR_YACC)
@@ -573,4 +570,4 @@ conftest.darwin:
 conftest.clean:
 	$(V)rm -f conftest$(EXE) conftest.[co] \
 	conftest2$(EXE) conftest[12].[oc] \
-	conftest.err conftest.syms
+	conftest.err
