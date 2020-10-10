@@ -1,3 +1,30 @@
+                                    TXR 245
+                                   2020-12-24
+
+
+  Features:
+
+  - Android is now a supported target platform: builds in termux environment.
+     - TXR executable builds as PIE, which is mandatory on Android.
+     - test suite passes nevertheless: PIE-related has not been observed.
+
+  - System Interface:
+    - env-hash now returns the same hash object every time it is called,
+      whose contents are updated by setenv, unsetenv and getenv.
+
+  - Build:
+    - C compiler now operated in C99 dialect, except in maintainer mode.
+
+
+  Bugs:
+
+  - math: bad edge-case in int-flo function affecting 64 bit systems.
+  - time: do not offer a make-time-utc function if we have neither timegm nor
+    setenv in the C library; we don't simulate setenv with putenv any more.
+  - printer: don't print leading zeros in characters printed in hexadecimal.
+
+
+
                                     TXR 244
                                    2020-10-10
 
