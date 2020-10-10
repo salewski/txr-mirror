@@ -5288,6 +5288,7 @@ static val map_common(val self, val fun, struct args *lists,
     return map_fn(fun, args_atz(lists, 0));
   } else {
     cnum i, idx, argc = args_count(lists, self);
+    val arg0 = args_at(lists, 0);
     seq_iter_t *iter_array = coerce(seq_iter_t *,
                                     alloca(argc * sizeof *iter_array));
     args_decl(args_fun, max(argc, ARGS_MIN));
@@ -5308,7 +5309,7 @@ static val map_common(val self, val fun, struct args *lists,
         seq_iter_t *iter = &iter_array[i];
 
         if (!seq_get(iter, &elem))
-          return collect_fn != 0 ? make_like(out, args_at(lists, 0)) : nil;
+          return collect_fn != 0 ? make_like(out, arg0) : nil;
 
         args_fun->arg[i] = elem;
       }
