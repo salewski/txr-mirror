@@ -1663,7 +1663,7 @@
 
 (defvarl %big-endian% (equal (ffi-put 1 (ffi uint32)) #b'00000001'))
 
-(defvarl %tlo-ver% ^(5 0 ,%big-endian%))
+(defvarl %tlo-ver% ^(5 1 ,%big-endian%))
 
 (defvarl %package-manip% '(make-package delete-package
                            use-package unuse-package
