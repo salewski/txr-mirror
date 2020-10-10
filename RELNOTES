@@ -1,3 +1,48 @@
+                                    TXR 244
+                                   2020-10-10
+
+
+  Features:
+
+  - Build:
+    - Dropped dependency on Bison/Byacc and Flex:
+      - TXR now ships the generated parser and scanner source.
+      - The --maintainer option must be given to congfigure to enable
+        regenerating these sources, otherwise the shipped ones are used.
+
+  - Lib:
+    - New trim-left and trim-right functions for removing a suffix.
+    - Time-related functionality moved out of lib.c into a new time.c module.
+    - New time-nsec function for nanosecond-precision time.
+    - PRNG uses nanoseconds now in seeding, rather than microseconds.
+
+  - Listener:
+    - New quip function produces a randomly selected humorous line,
+      suitable for printing out of the ~/.txr_profile startup file.
+
+  - Compiler/VM:
+    - movi family of instructions (move immediate operand into register)
+      are deprecated and no longer used by the compiler.
+      - It is cheaper to the integer or character operand in a D register
+        already, since no instruction needs to be executed to get it into a
+        register.
+      - The downside is that code which uses a large number of small integer
+        literals can now run out of D registers, whereas previously
+        it woudl have not run into any limit.
+
+  Bugs:
+
+    - output-side @(repeat) was still not finding Lisp variables embedded
+      in braced expansions.
+    - fixed two defects in the implementation of the WELL512a pseudo-random-number
+      generator.
+      - compat option (-C 243 or lower) restores broken PRNG behavior for
+        reproducibility of old PRNG sequences.
+    - regression in two-or-more-sequence form of mapcar: it was not
+      converting the output to the type of the leftmost sequence.
+
+
+
                                     TXR 243
                                    2020-09-01
 
