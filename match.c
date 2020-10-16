@@ -47,6 +47,7 @@
 #include "hash.h"
 #include "eval.h"
 #include "cadr.h"
+#include "sysif.h"
 #include "match.h"
 
 int opt_print_bindings = 0;

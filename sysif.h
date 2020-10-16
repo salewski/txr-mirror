@@ -36,6 +36,7 @@ extern val atime_nsec_s, mtime_nsec_s, ctime_nsec_s;
 extern val path_s;
 
 val errno_to_file_error(int err);
+val env(void);
 val getenv_wrap(val name);
 val errno_to_str(int err);
 val at_exit_call(val func);

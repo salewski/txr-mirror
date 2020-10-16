@@ -130,7 +130,6 @@ val list_f, less_f, greater_f;
 
 val prog_string;
 
-static val env_list;
 static val recycled_conses;
 
 const seq_kind_t seq_kind_tab[MAXTYPE+1] = {
@@ -11867,39 +11866,6 @@ val in_range_star(val range, val num)
   }
 }
 
-val env(void)
-{
-  if (env_list) {
-    return env_list;
-  } else {
-    list_collect_decl (out, ptail);
-#if HAVE_ENVIRON
-    extern char **environ;
-    char **iter = environ;
-
-    for (; *iter != 0; iter++)
-      ptail = list_collect(ptail, string_utf8(*iter));
-
-    return env_list = out;
-#elif HAVE_GETENVIRONMENTSTRINGS
-    wchar_t *env = GetEnvironmentStringsW();
-    wchar_t *iter = env;
-
-    if (iter == 0)
-      oom();
-
-    for (; *iter; iter += wcslen(iter) + 1)
-      ptail = list_collect(ptail, string(iter));
-
-    FreeEnvironmentStringsW(env);
-
-    return env_list = out;
-#else
-    uw_throwf(error_s, lit("environment strings not available"), nao);
-#endif
-  }
-}
-
 static void obj_init(void)
 {
   val self = lit("internal init");
@@ -11915,7 +11881,7 @@ static void obj_init(void)
           &null_list, &equal_f, &eq_f, &eql_f,
           &car_f, &cdr_f, &null_f, &list_f,
           &identity_f, &identity_star_f, &less_f, &greater_f,
-          &prog_string, &env_list,
+          &prog_string,
           convert(val *, 0));
 
   nil_string = lit("nil");

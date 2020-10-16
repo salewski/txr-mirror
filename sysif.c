@@ -148,6 +148,8 @@ static val at_exit_list;
 
 static val dirent_st;
 
+static val env_list;
+
 static val errno_wrap(val newval)
 {
   val self = lit("errno");
@@ -286,6 +288,39 @@ static val getppid_wrap(void)
 #endif
 
 #endif
+
+val env(void)
+{
+  if (env_list) {
+    return env_list;
+  } else {
+    list_collect_decl (out, ptail);
+#if HAVE_ENVIRON
+    extern char **environ;
+    char **iter = environ;
+
+    for (; *iter != 0; iter++)
+      ptail = list_collect(ptail, string_utf8(*iter));
+
+    return env_list = out;
+#elif HAVE_GETENVIRONMENTSTRINGS
+    wchar_t *env = GetEnvironmentStringsW();
+    wchar_t *iter = env;
+
+    if (iter == 0)
+      oom();
+
+    for (; *iter; iter += wcslen(iter) + 1)
+      ptail = list_collect(ptail, string(iter));
+
+    FreeEnvironmentStringsW(env);
+
+    return env_list = out;
+#else
+    uw_throwf(error_s, lit("environment strings not available"), nao);
+#endif
+  }
+}
 
 static val env_hash(void)
 {
@@ -2354,8 +2389,7 @@ static val dirstat(val dirent, val dir_path, val stat_opt)
 
 void sysif_init(void)
 {
-  prot1(&at_exit_list);
-  prot1(&dirent_st);
+  protect(&at_exit_list, dirent_st, &env_list, convert(val *, 0));
 
   atexit(at_exit_handler);
 
