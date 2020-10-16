@@ -1398,6 +1398,8 @@ val getenv_wrap(val name)
   return result;
 }
 
+#if HAVE_SETENV
+
 static val setenv_wrap(val name, val value, val overwrite)
 {
   val self = lit("setenv");
@@ -1441,6 +1443,8 @@ static val unsetenv_wrap(val name)
     remhash(env_hash, name);
   return name;
 }
+
+#endif
 
 #if HAVE_POLL
 
@@ -2861,8 +2865,10 @@ void sysif_init(void)
   reg_fun(intern(lit("pipe"), user_package), func_n0(pipe_wrap));
 #endif
   reg_fun(intern(lit("getenv"), user_package), func_n1(getenv_wrap));
+#if HAVE_SETENV
   reg_fun(intern(lit("setenv"), user_package), func_n3o(setenv_wrap, 2));
   reg_fun(intern(lit("unsetenv"), user_package), func_n1(unsetenv_wrap));
+#endif
 
 #if HAVE_GETEUID
   reg_fun(intern(lit("getuid"), user_package), func_n0(getuid_wrap));
