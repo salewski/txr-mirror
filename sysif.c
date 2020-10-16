@@ -148,7 +148,7 @@ static val at_exit_list;
 
 static val dirent_st;
 
-static val env_list;
+static val env_list, env_hash;
 
 static val errno_wrap(val newval)
 {
@@ -322,20 +322,27 @@ val env(void)
   }
 }
 
-static val env_hash(void)
+static val get_env_hash(void)
 {
-  val env_strings = env();
-  val hash = make_hash(nil, nil, t);
+  if (env_hash) {
+    return env_hash;
+  } else {
+    val env_strings = env();
+    val hash = make_hash(nil, nil, t);
 
-  for (; env_strings; env_strings = cdr(env_strings)) {
-    val estr = car(env_strings);
-    val eqpos = break_str(estr, lit("="));
-    val key = sub(estr, 0, eqpos);
-    val val = sub(estr, succ(eqpos), t);
-    sethash(hash, key, val);
+    for (; env_strings; env_strings = cdr(env_strings)) {
+      val estr = car(env_strings);
+      val eqpos = break_str(estr, lit("="));
+      val key = sub(estr, 0, eqpos);
+      val val = sub(estr, succ(eqpos), t);
+      sethash(hash, key, val);
+    }
+
+    if (!opt_compat || opt_compat > 244)
+      env_hash = hash;
+
+    return hash;
   }
-
-  return hash;
 }
 
 val errno_to_file_error(int err)
@@ -1386,20 +1393,39 @@ val getenv_wrap(val name)
   char *lookup = getenv(nameu8);
   val result = lookup ? string_utf8(lookup) : nil;
   free(nameu8);
+  if (env_hash)
+    sethash(env_hash, name, result);
   return result;
 }
 
 static val setenv_wrap(val name, val value, val overwrite)
 {
+  val self = lit("setenv");
   const wchar_t *wname = c_str(name);
   const wchar_t *wvalu = value ? c_str(value) : 0;
   int ovw = default_arg_strict(overwrite, t) != nil;
   char *nameu8 = utf8_dup_to(wname);
   char *valu8 = wvalu ? utf8_dup_to(wvalu) : 0;
-  if (valu8)
+  if (valu8) {
     setenv(nameu8, valu8, ovw);
-  else if (ovw)
+    env_list = nil;
+
+    if (env_hash) {
+        if (ovw) {
+          sethash(env_hash, name, value);
+        } else {
+          val new_p;
+          val cell = gethash_c(self, env_hash, name, mkcloc(new_p));
+          if (new_p)
+            us_rplacd(cell, value);
+        }
+    }
+  } else if (ovw) {
     unsetenv(nameu8);
+    env_list = nil;
+    if (env_hash)
+      remhash(env_hash, name);
+  }
   free(valu8);
   free(nameu8);
   return value;
@@ -1410,6 +1436,9 @@ static val unsetenv_wrap(val name)
   char *nameu8 = utf8_dup_to(c_str(name));
   unsetenv(nameu8);
   free(nameu8);
+  env_list = nil;
+  if (env_hash)
+    remhash(env_hash, name);
   return name;
 }
 
@@ -2389,7 +2418,7 @@ static val dirstat(val dirent, val dir_path, val stat_opt)
 
 void sysif_init(void)
 {
-  protect(&at_exit_list, dirent_st, &env_list, convert(val *, 0));
+  protect(&at_exit_list, dirent_st, &env_list, &env_hash, convert(val *, 0));
 
   atexit(at_exit_handler);
 
@@ -2585,7 +2614,7 @@ void sysif_init(void)
 #endif
 
   reg_fun(intern(lit("env"), user_package), func_n0(env));
-  reg_fun(intern(lit("env-hash"), user_package), func_n0(env_hash));
+  reg_fun(intern(lit("env-hash"), user_package), func_n0(get_env_hash));
 
 #if HAVE_DAEMON
   reg_fun(intern(lit("daemon"), user_package), func_n2(daemon_wrap));

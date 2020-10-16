@@ -58879,10 +58879,28 @@ function.
 .desc
 The
 .code env-hash
-function constructs and returns an
+function returns an
 .code :equal-based
-hash.  The hash is
-populated with the environment variables, represented as key-value pairs. 
+hash whose keys and values are strings. The hash table is populated populated
+with the environment variables, represented as key-value character string
+pairs.
+
+The
+.code env-hash
+function allocates the hash table when it is first invoked; thereafter,
+it returns the same hash table.
+
+The hash table is updated by the functions
+.codn setenv ,
+.code unsetenv
+and
+.codn getenv .
+
+Note: calls to the underlying C library functions
+.code setenv
+and
+.codn getenv ,
+and other direct manipulations of the environment, will not update the hash table.
 
 .coNP Functions @, getenv @ setenv and @ unsetenv
 .synb
@@ -58988,6 +59006,43 @@ In both cases, its previous value or, respectively, non-existence,
 is restored by the
 .code unwind-protect
 cleanup form.
+
+These functions interact with the list returned by the
+.code env
+function and with the hash table returned by the
+.code env-hash
+function as follows.
+
+A previously returned list returned by
+.code env
+is not modified. The
+.code setenv
+and
+.code unsetenv
+functions may cause a subsequent call to
+.code env
+to return a different list. The
+.code getenv
+function has no effect on the list.
+
+The hash table previously returned by
+.code env-hash
+is modified by
+.code setenv
+in the manner consistent with its semantics. A new entry is created in the table,
+if required, and an existing entry is overwritten only if the
+.code overwrite-p
+flag is specified. Likewise, if
+.code setenv
+is invoked in a way that causes the environment variable to be deleted, it
+is removed from the hash also.
+The
+.code unsetenv
+function causes the variable to be removed from the hash table also.
+The
+.code getenv
+function accesses the underlying environment, and updates the hash
+table with the name-value pair which is retrieved.
 
 .SS* Command Line Option Processing
 
@@ -75551,6 +75606,11 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 244
+Until \*(TX 244, the
+.code env-hash
+function returned a new hash table each time it was called. The behavior is
+restored if 244 or older compatibility is selected.
 .IP 243
 Two mistakes in the pseudo-random-number generator (PRNG) were discovered,
 affecting \*(TX 243 and older. Using this compatibility value, or lower, will
