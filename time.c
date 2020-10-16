@@ -341,24 +341,24 @@ val time_parse(val format, val string)
 
 static time_t timegm_hack(struct tm *tm)
 {
-    time_t ret;
-    char *tz;
+  time_t ret;
+  char *tz;
 
-    tz = getenv("TZ");
-    setenv("TZ", "UTC", 1);
+  tz = getenv("TZ");
+  setenv("TZ", "UTC", 1);
 #if HAVE_TZSET
-    tzset();
+  tzset();
 #endif
-    ret = mktime(tm);
-    if (tz)
-        setenv("TZ", tz, 1);
-    else
-        unsetenv("TZ");
+  ret = mktime(tm);
+  if (tz)
+    setenv("TZ", tz, 1);
+  else
+    unsetenv("TZ");
 #if HAVE_TZSET
-    tzset();
+  tzset();
 #endif
 
-    return ret;
+  return ret;
 }
 
 #endif
