@@ -1702,7 +1702,7 @@ static val umethod_fun(val sym, struct args *args)
 
   if (!args_more(args, 0)) {
     uw_throwf(error_s, lit("~a: object argument required to call ~s"),
-              self, env, nao);
+              self, sym, nao);
   } else {
     val strct = args_at(args, 0);
 
@@ -1726,7 +1726,7 @@ static val umethod_args_fun(val dargs, struct args *args)
 
   if (!args_more(args, 0)) {
     uw_throwf(error_s, lit("~a: object argument required to call ~s"),
-              self, env, nao);
+              self, sym, nao);
   } else {
     cnum da_nargs = da->fill + c_num(length(da->list), self);
     cnum index = 0;
