@@ -58860,6 +58860,14 @@ contains an
 (equal) character somewhere, separating the variable name
 from its value.
 
+Multiple calls to
+.code env
+may return the same list, or lists which share structure.
+
+If a list returned by
+.code env
+is modified, the behavior is unspecified.
+
 See also: the
 .code env-hash
 function.
