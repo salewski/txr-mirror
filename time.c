@@ -337,26 +337,7 @@ val time_parse(val format, val string)
 
 #endif
 
-#if !HAVE_SETENV
-
-void setenv(const char *name, const char *value, int overwrite)
-{
-  int len = strlen(name)+1+strlen(value)+1;
-  char *str = (char *) chk_malloc(len);
-  (void) overwrite;
-  sprintf(str, "%s=%s", name, value);
-  putenv(str);
-}
-
-void unsetenv(const char *name)
-{
-  setenv(name, "", 1);
-}
-
-#endif
-
-
-#if !HAVE_TIMEGM
+#if !HAVE_TIMEGM && HAVE_SETENV
 
 static time_t timegm_hack(struct tm *tm)
 {
@@ -379,6 +360,16 @@ static time_t timegm_hack(struct tm *tm)
 
     return ret;
 }
+
+#endif
+
+#if !HAVE_TIMEGM && !HAVE_SETENV
+
+static time_t timegm_hack(struct tm *tm)
+{
+  uw_throw(system_error_s, lit("timegm function missing"));
+}
+
 #endif
 
 val make_time_utc(val year, val month, val day,
@@ -520,7 +511,9 @@ void time_init(void)
   reg_fun(intern(lit("time-struct-local"), user_package), func_n1(time_struct_local));
   reg_fun(intern(lit("time-struct-utc"), user_package), func_n1(time_struct_utc));
   reg_fun(intern(lit("make-time"), user_package), func_n7(make_time));
+#if HAVE_TIMEGM || HAVE_SETENV
   reg_fun(intern(lit("make-time-utc"), user_package), func_n7(make_time_utc));
+#endif
   reg_fun(intern(lit("time-parse"), user_package), func_n2(time_parse));
   reg_fun(intern(lit("time-parse-local"), user_package), func_n2(time_parse_local));
   reg_fun(intern(lit("time-parse-utc"), user_package), func_n2(time_parse_utc));
