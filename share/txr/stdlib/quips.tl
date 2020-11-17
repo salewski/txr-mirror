@@ -71,6 +71,9 @@
     "Use TXR only as directed. Unless you are intelligent, curious and creative."
     "Reminder: your account balance of 37 closing parentheses is past due."
     "Check with your physician before commencing any strenuous Lisp program."
+    "Apply today for a TXR credit card, and get 1MB off your next allocation."
+    "Join TXR Rewards now, and get 15000 closing parentheses you can use anywhere."
+    "TXR's car insurance now offers cdr coverage for bumper-to-bumper protection."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
