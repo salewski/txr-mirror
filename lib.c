@@ -12562,7 +12562,6 @@ dot:
       put_char(obj, out);
     } else {
       wchar_t ch = c_chr(obj);
-      val fmt = nil;
 
       put_string(lit("#\\"), out);
       switch (ch) {
@@ -12578,20 +12577,18 @@ dot:
       case ' ': put_string(lit("space"), out); break;
       case 0xDC00: put_string(lit("pnul"), out); break;
       case 0xFEFF: case 0xFFFE: case 0xFFFF:
-        goto fourhex;
+      hex:
+        format(out, lit("x~X"), num(ch), nao);
+        break;
       default:
         if ((ch < 0x20) || (ch >= 0x7F && ch < 0xA0))
-          fmt = lit("x~,02X");
+          goto hex;
         else if (ch >= 0xD800 && ch < 0xE000)
-        fourhex:
-          fmt = lit("x~,04X");
+          goto hex;
         else if (ch >= 0xFFFF)
-          fmt = lit("x~,06X");
+          goto hex;
         else
           put_char(chr(ch), out);
-
-        if (fmt)
-          format(out, fmt, num(ch), nao);
       }
     }
     break;
