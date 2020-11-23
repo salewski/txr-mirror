@@ -4037,15 +4037,13 @@ mp_size s_mp_ispow2(mp_int *v)
 {
   mp_digit d, *dp;
   mp_size uv = USED(v);
-  mp_size extra = 0, ix;
+  mp_size ix;
 
   d = DIGIT(v, uv - 1); /* most significant digit of v */
 
   /* quick test */
   if ((d & (d - 1)) != 0)
     return MP_SIZE_MAX; /* not a power of two */
-
-  extra = s_highest_bit(d) - 1;
 
   if (uv >= 2) {
     ix = uv - 2;
@@ -4059,7 +4057,7 @@ mp_size s_mp_ispow2(mp_int *v)
     }
   }
 
-  return ((uv - 1) * DIGIT_BIT) + extra;
+  return ((uv - 1) * DIGIT_BIT) + s_highest_bit(d) - 1;
 }
 
 int s_mp_ispow2d(mp_digit d)
