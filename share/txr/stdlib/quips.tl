@@ -74,6 +74,7 @@
     "Apply today for a TXR credit card, and get 1MB off your next allocation."
     "Join TXR Rewards now, and get 15000 closing parentheses you can use anywhere."
     "TXR's car insurance now offers cdr coverage for bumper-to-bumper protection."
+    "Please listen carefully to the following spec, as our Lisp has changed."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
