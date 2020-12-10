@@ -1974,7 +1974,7 @@ static void do_output_line(val bindings, val specline, val filter, val out)
           val bind_cp = extract_bindings(bindings, elem, vars, occur_vars);
           val max_depth = reduce_left(func_n2(max2),
                                       bind_cp, zero,
-                                      chain(func_n1(cdr),
+                                      chain(cdr_f,
                                             func_n1(robust_length),
                                             nao));
 
@@ -2110,7 +2110,7 @@ static void do_repeat(val bindings, val repeat_syntax, val filter, val out)
   val bind_cp = extract_bindings(bindings, repeat_syntax, vars, occur_vars);
   val max_depth = reduce_left(func_n2(max2),
                               bind_cp, zero,
-                              chain(func_n1(cdr),
+                              chain(cdr_f,
                                     func_n1(robust_length),
                                     nao));
 
@@ -4100,7 +4100,7 @@ static val v_deffilter(match_files_ctx *c)
     if (!all_satisfy(table_evaled, andf(func_n1(listp),
                                         chain(func_n1(length_list),
                                               pa_12_1(func_n2(ge), two), nao),
-                                        chain(func_n1(rest),
+                                        chain(cdr_f,
                                               pa_123_1(func_n3(all_satisfy),
                                                        func_n1(stringp),
                                                        nil),

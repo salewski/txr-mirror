@@ -6509,8 +6509,8 @@ void eval_init(void)
   reg_fun(rplacd_s, func_n2(rplacd));
   reg_fun(intern(lit("rplaca"), system_package), func_n2(sys_rplaca));
   reg_fun(intern(lit("rplacd"), system_package), func_n2(sys_rplacd));
-  reg_fun(intern(lit("first"), user_package), func_n1(car));
-  reg_fun(rest_s, func_n1(cdr));
+  reg_fun(intern(lit("first"), user_package), car_f);
+  reg_fun(rest_s, cdr_f);
   reg_fun(intern(lit("sub-list"), user_package), func_n3o(sub_list, 1));
   reg_fun(intern(lit("replace-list"), user_package), func_n4o(replace_list, 2));
   reg_fun(append_s, func_n0v(appendv));
