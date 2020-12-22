@@ -158,7 +158,7 @@ yacc_given=
 yacc_is_newer_bison=
 nm='$(cross)$(tool_prefix)nm'
 opt_flags='-O2 -fno-stack-protector'
-lang_flags='-ansi -D_XOPEN_SOURCE=700 -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE'
+lang_flags='-D_XOPEN_SOURCE=700 -D_POSIX_C_SOURCE=200112 -D_GNU_SOURCE'
 diag_flags="-Wall -Wextra -Werror=implicit-function-declaration \
            -Werror=missing-prototypes -Werror=strict-prototypes \
            -Werror=old-style-declaration -Werror=old-style-definition"
@@ -323,7 +323,8 @@ maintainer [$maintainer]
   mode, otherwise the build is configured for user mode. In maintainer mode,
   the scanner and parser generator tools are expected to be available.
   In user mode, the shipped parser and scanner are used. Changes to
-  the parser.l and parser.y files will have no effect.
+  the parser.l and parser.y files will have no effect. In maintainer mode,
+  also, c90 is used if compiling the code as C.
 
 prefix [$prefix]
 
@@ -779,8 +780,14 @@ if [ $cplusplus ] ; then
      diag_flags="$diag_flags $flag"
    done
    diag_flags=${diag_flags# }
+   lang_flags="-std=c++98 $lang_flags"
 else
    printf "no\n"
+   if [ $maintainer ] ; then
+     lang_flags="-std=c90 $lang_flags"
+   else
+     lang_flags="-std=c99 $lang_flags"
+   fi
 fi
 
 gen_config_make()
