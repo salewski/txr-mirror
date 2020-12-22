@@ -771,6 +771,7 @@ if [ $cplusplus ] ; then
      case $flag in
        *=implicit-function-declaration | \
        *=missing-prototypes | \
+       *=old-style-* | \
        *=strict-prototypes )
        continue
        ;;
