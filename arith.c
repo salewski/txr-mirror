@@ -2913,13 +2913,20 @@ val int_flo(val f)
 {
   val self = lit("int-flo");
   double d = c_flo(f, self);
+#if SIZEOF_PTR >= 8
+  cnum margin = 512;
+  ucnum umargin = 1024;
+#else
+  cnum margin = 0;
+  ucnum umargin = 0;
+#endif
 
-  if (d >= INT_PTR_MIN && d <= INT_PTR_MAX) {
+  if (d >= INT_PTR_MIN && d <= INT_PTR_MAX - margin) {
     cnum n = d;
     if (n < NUM_MIN || n > NUM_MAX)
       return bignum(n);
     return num_fast(n);
-  } else if (d >= 0 && d <= UINT_PTR_MAX) {
+  } else if (d >= 0 && d <= UINT_PTR_MAX - umargin) {
     ucnum n = d;
     return unum(n);
   } else {
