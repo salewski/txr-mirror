@@ -1334,7 +1334,7 @@ if [ -z "$intptr" ] ; then
 #define LD(S) D((S) % 10, '0')
 #define DEC(S) { UD(S), LD(S) }
 
-struct {
+struct sizes {
   char h_BYTE[32], s_BYTE[2];
 #if HAVE_SUPERLONG_T
   char h_SUPERLONG[32], s_SUPERLONG[2];
@@ -1347,7 +1347,7 @@ struct {
   char h_INT[32], s_INT[2];
   char h_SHORT[32], s_SHORT[2];
   char h_WCHAR[32], s_WCHAR[2];
-  char nl[1];
+  char nl[2];
 } foo = {
   "\nSIZEOF_BYTE=", DEC(CHAR_BIT),
 #if HAVE_SUPERLONG_T
@@ -3282,10 +3282,10 @@ for try in NOTHING _LARGE_FILES=1 _FILE_OFFSET_BITS=64 ; do
 #define LD(S) D((S) % 10, '0')
 #define DEC(S) { UD(S), LD(S) }
 
-struct {
+struct sizes {
   char h_BYTE[32], s_BYTE[2];
   char h_OFF_T[32], s_OFF_T[2];
-  char nl[1];
+  char nl[2];
 } foo = {
   "\nSIZEOF_BYTE=", DEC(CHAR_BIT),
   "\nSIZEOF_OFF_T=", DEC(sizeof (off_t)),
