@@ -192,7 +192,6 @@ have_windows_h=
 have_windres=
 have_posix_sigs=
 have_sockets=
-need_darwin_c_source=
 have_git=
 have_pwuid=
 have_grgid=
@@ -202,6 +201,7 @@ have_winsize=
 termios_define=
 have_pkgconfig=
 libffi_cflags=
+darwin_target=
 
 #
 # Parse configuration variables
@@ -1134,7 +1134,7 @@ fi
 printf "Checking for Apple environment ... "
 if [ "$(make conftest.darwin)" = "yes" ] ; then
   printf "yes\n"
-  need_darwin_c_source=y
+  darwin_target=y
   lang_flags="$lang_flags -D_DARWIN_C_SOURCE"
   printf "Regenerating config.make ..."
   gen_config_make
@@ -1453,7 +1453,7 @@ if [ -z "$lit_align" ] ; then
     exit 1
   fi
 
-  if [ -n "$need_darwin_c_source" ] ; then
+  if [ -n "$darwin_target" ] ; then
     lit_align=2
   else
     lit_align=$SIZEOF_WCHAR_T
