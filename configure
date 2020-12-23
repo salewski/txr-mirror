@@ -1009,31 +1009,6 @@ fi
 
 rm -f conftest$exe
 
-printf "Checking how to disable PIE ..."
-
-nopie_flags=
-
-for flag in -nopie -no-pie ; do
-  if conftest EXTRA_FLAGS=$flag && ! grep -q option conftest.err ; then
-    nopie_flags=" $flag"
-    break
-  fi
-done
-
-for flag in -fnopie -fno-pie ; do
-  if conftest EXTRA_FLAGS="$flag$nopie_flags" && ! grep -q option conftest.err ; then
-    nopie_flags="$nopie_flags $flag"
-    break
-  fi
-done
-
-if [ -n "$nopie_flags" ]; then
-  printf "%s\n" "$nopie_flags"
-  opt_flags="$opt_flags$nopie_flags"
-else
-  printf " n/a\n"
-fi
-
 printf "Checking for disabling source code quoting in compiler errors ... "
 
 cat > conftest.c <<!
@@ -1193,6 +1168,35 @@ else
       break
     fi
   done
+fi
+
+printf "Checking how to disable PIE ..."
+
+if [ $android_target ] ; then
+  printf " n/a (Android)\n"
+else
+  nopie_flags=
+
+  for flag in -nopie -no-pie ; do
+    if conftest EXTRA_FLAGS=$flag && ! grep -q option conftest.err ; then
+      nopie_flags=" $flag"
+      break
+    fi
+  done
+
+  for flag in -fnopie -fno-pie ; do
+    if conftest EXTRA_FLAGS="$flag$nopie_flags" && ! grep -q option conftest.err ; then
+      nopie_flags="$nopie_flags $flag"
+      break
+    fi
+  done
+
+  if [ -n "$nopie_flags" ]; then
+    printf "%s\n" "$nopie_flags"
+    opt_flags="$opt_flags$nopie_flags"
+  else
+    printf " n/a\n"
+  fi
 fi
 
 #
