@@ -202,6 +202,7 @@ termios_define=
 have_pkgconfig=
 libffi_cflags=
 darwin_target=
+android_target=
 
 #
 # Parse configuration variables
@@ -1141,6 +1142,21 @@ if [ "$(make conftest.darwin)" = "yes" ] ; then
   printf "done\n"
 else
   printf "no\n"
+fi
+
+if ! [ $darwin_target ] ; then
+  printf "Checking for Android environment ... "
+
+  if [ "$(make conftest.android)" = "yes" ] ; then
+    printf "yes\n"
+    android_target=y
+    lang_flags="$lang_flags -D__ANDROID_API__=65535 -D_BSD_SOURCE"
+    printf "Regenerating config.make ..."
+    gen_config_make
+    printf "done\n"
+  else
+    printf "no\n"
+  fi
 fi
 
 #

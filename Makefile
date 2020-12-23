@@ -566,6 +566,12 @@ conftest.darwin:
 	  echo yes ; \
 	fi
 
+.PHONY: conftest.android
+conftest.android:
+	$(V)if echo | $(CC) -dM -E - | grep -s __ANDROID__ >  /dev/null 2>&1 ; then \
+	  echo yes ; \
+	fi
+
 .PHONY: conftest.clean
 conftest.clean:
 	$(V)rm -f conftest$(EXE) conftest.[co] \
