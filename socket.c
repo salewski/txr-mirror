@@ -44,6 +44,7 @@
 #elif HAVE_SELECT
 #include <sys/select.h>
 #endif
+#include <netinet/in.h>
 #include "lib.h"
 #include "stream.h"
 #include "signal.h"

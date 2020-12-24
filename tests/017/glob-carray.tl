@@ -12,7 +12,7 @@
 			 (nil int)
 			 (pathv (carray str))
 			 (nil (array 4 cptr)))))
-  ((:cygnal :cygwin)
+  ((:cygnal :cygwin :android)
     (deffi-type glob-t (struct glob-t
                          (pathc size-t)
 			 (nil size-t)
