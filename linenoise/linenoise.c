@@ -1303,7 +1303,7 @@ static void move_cursor(lino_t *l, int npos)
 static int scan_match_rev(const wchar_t *s, int i, wchar_t mch)
 {
     while (i > 0) {
-        int ch = s[--i];
+        wchar_t ch = s[--i];
 
         if (ch == mch)
             return i;
@@ -1348,7 +1348,7 @@ static int scan_rev(const wchar_t *s, int i)
 static int scan_match_fwd(const wchar_t *s, int i, wchar_t mch)
 {
     while (s[++i]) {
-        int ch = s[i];
+        wchar_t ch = s[i];
 
         if (ch == mch)
             return i;
