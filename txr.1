@@ -17647,9 +17647,11 @@ In ANSI Common Lisp, the
 function retrieves a function, macro or special operator binding
 of a symbol.
 These are all in one space and may not co-exist. In \*(TL, it
-retrieves a symbol's function binding only. The
-.code symbol-macro
-function doesn't exist in Common Lisp.
+retrieves a symbol's function binding only. Common Lisp has an accessor
+named
+.code macro-function
+similar to
+.codn symbol-macro .
 
 .coNP Functions @, boundp @ fboundp and @ mboundp
 .synb
