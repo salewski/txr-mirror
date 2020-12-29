@@ -9663,7 +9663,7 @@ val nshuffle(val seq)
   case SEQ_LISTLIKE:
     if (cdr(seq))
     {
-      val v = shuffle(vec_list(seq));
+      val v = nshuffle(vec_list(seq), randstate);
       val i, l;
 
       for (l = seq, i = zero; l; i = succ(i), l = cdr(l))
