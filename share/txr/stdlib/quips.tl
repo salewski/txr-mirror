@@ -84,6 +84,5 @@
 
 (defun quip ()
   (unless sys:%shuffled-quips%
-    (let ((*random-state* sys:%quip-rand-state%))
-      (set sys:%shuffled-quips% (shuffle sys:%quips%))))
+    (set sys:%shuffled-quips% (shuffle sys:%quips% sys:%quip-rand-state%)))
   (pop sys:%shuffled-quips%))
