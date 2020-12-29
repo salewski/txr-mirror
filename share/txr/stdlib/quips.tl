@@ -75,6 +75,7 @@
     "Join TXR Rewards now, and get 15000 closing parentheses you can use anywhere."
     "TXR's car insurance now offers cdr coverage for bumper-to-bumper protection."
     "Please listen carefully to the following spec, as our Lisp has changed."
+    "If TXR were TV, it would require music by Mike Post and Peter Carpenter."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
