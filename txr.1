@@ -33727,8 +33727,8 @@ in the APL language.
 
 .coNP Functions @ shuffle and @ nshuffle
 .synb
-.mets (shuffle << sequence )
-.mets (nshuffle << sequence )
+.mets (shuffle < sequence <> [ random-state ])
+.mets (nshuffle < sequence <> [ random-state ])
 .syne
 .desc
 The
@@ -33745,7 +33745,9 @@ itself.
 
 The rearrangement depends on pseudo-random numbers obtained from the
 .code rand
-function.
+function. The
+.meta random-state
+argument, if present, is passed to that function.
 
 The
 .code nshuffle

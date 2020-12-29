@@ -6927,9 +6927,9 @@ void eval_init(void)
   reg_fun(intern(lit("nsort"), user_package), func_n3o(nsort, 1));
   reg_fun(intern(lit("sort"), user_package),
           func_n3o(if3(opt_compat && opt_compat <= 237, nsort, sort), 1));
-  reg_fun(intern(lit("nshuffle"), user_package), func_n1(nshuffle));
+  reg_fun(intern(lit("nshuffle"), user_package), func_n2o(nshuffle, 1));
   reg_fun(intern(lit("shuffle"), user_package),
-          func_n1(if3(opt_compat && opt_compat <= 237, nshuffle, shuffle)));
+          func_n2o(if3(opt_compat && opt_compat <= 237, nshuffle, shuffle), 1));
   reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));
   reg_fun(intern(lit("rfind"), user_package), func_n4o(rfind, 2));
   reg_fun(intern(lit("find-if"), user_package), func_n3o(find_if, 2));

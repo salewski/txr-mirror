@@ -9653,7 +9653,7 @@ val sort(val seq, val lessfun, val keyfun)
   abort();
 }
 
-val nshuffle(val seq)
+val nshuffle(val seq, val randstate)
 {
   seq_info_t si = seq_info(seq);
 
@@ -9673,7 +9673,7 @@ val nshuffle(val seq)
   case SEQ_VECLIKE:
   case SEQ_HASHLIKE:
     {
-      val rs = random_state;
+      val rs = default_arg(randstate, random_state);
       val n = length(seq);
       val i;
 
@@ -9696,10 +9696,10 @@ val nshuffle(val seq)
   abort();
 }
 
-val shuffle(val seq)
+val shuffle(val seq, val randstate)
 {
   if (seqp(seq))
-    return nshuffle(copy(seq));
+    return nshuffle(copy(seq), randstate);
   type_mismatch(lit("nshuffle: ~s is not a sequence"), seq, nao);
 }
 
