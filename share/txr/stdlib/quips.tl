@@ -79,5 +79,10 @@
 
 (defparml sys:%quip-rand-state% (make-random-state))
 
+(defvarl sys:%shuffled-quips%)
+
 (defun quip ()
-  [sys:%quips% (rand (len sys:%quips%) sys:%quip-rand-state%)])
+  (unless sys:%shuffled-quips%
+    (let ((*random-state* sys:%quip-rand-state%))
+      (set sys:%shuffled-quips% (shuffle sys:%quips%))))
+  (pop sys:%shuffled-quips%))
