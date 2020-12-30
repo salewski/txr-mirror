@@ -409,7 +409,10 @@ static val awk_set_entries(val dlt, val fun)
     lit("next-file"), lit("rng"), lit("-rng"), lit("rng-"), lit("-rng-"),
     lit("--rng"), lit("--rng-"), lit("rng+"), lit("-rng+"), lit("--rng+"),
     lit("ff"), lit("f"), lit("mf"), lit("fconv"), lit("->"), lit("->>"),
-    lit("<-"), lit("!>"), lit("<!"), lit("prn"), nil
+    lit("<-"), lit("!>"), lit("<!"), lit("prn"),
+    lit("i"), lit("o"), lit("x"), lit("b"), lit("c"), lit("r"),
+    lit("iz"), lit("oz"), lit("xz"), lit("bz"), lit("cz"), lit("rz"),
+    nil
   };
 
   set_dlt_entries_sys(dlt, sys_name, fun);
