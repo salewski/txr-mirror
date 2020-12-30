@@ -58388,6 +58388,17 @@ The return value of
 is
 .codn f .
 
+Note: because
+.code f
+is
+.code nil
+when no fields have been extracted, a
+.code fconv
+expression can be used as the condition in an
+.code awk
+clause which triggers the action if one or more fields have been
+extracted, and performs conversions on them.
+
 .TP* Examples:
 
 .verb
