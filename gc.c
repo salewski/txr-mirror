@@ -783,16 +783,26 @@ static val call_finalizers_impl(val ctx,
 
   while (found) {
     struct fin_reg *next = found->next;
+    int dup, i, freshobj_idx_start = freshobj_idx;
     val obj = found->obj;
     funcall1(found->fun, obj);
 #if CONFIG_GEN_GC
-    /* Note: here an object may be added to freshobj more than once, since
-     * multiple finalizers can be registered.
-     */
-    if (freshobj_idx < FRESHOBJ_VEC_SIZE && obj->t.gen == 0)
-      freshobj[freshobj_idx++] = obj;
-    else
-      full_gc = 1;
+    if (inprogress) {
+      for (dup = 0, i = freshobj_idx_start; i < freshobj_idx; i++) {
+        if (freshobj[i] == obj) {
+          dup = 1;
+          break;
+        }
+      }
+
+      if (!dup) {
+        if (freshobj_idx < FRESHOBJ_VEC_SIZE && obj->t.gen == 0) {
+          freshobj[freshobj_idx++] = obj;
+        } else {
+          full_gc = 1;
+        }
+      }
+    }
 #endif
     free(found);
     found = next;
