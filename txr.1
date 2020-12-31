@@ -58372,6 +58372,8 @@ Thus fields which are non-numeric strings or the object
 .code nil
 get converted to 0, or 0.0 in the case of
 .codn rz .
+.coIP -
+Performs no conversion: the corresponding field is taken as-is.
 .RE
 .IP
 Because
@@ -58398,6 +58400,20 @@ expression can be used as the condition in an
 .code awk
 clause which triggers the action if one or more fields have been
 extracted, and performs conversions on them.
+
+
+Note: although
+.code fconv
+is intended for converting textual fields, and the semantic descriptions below
+consequently make references to string inputs, the behavior of
+.code fconv
+with respect to non-string fields can be inferred. For instance if a field
+actually holds the floating-point value 3.14, and the
+.code i
+conversion is applied to it, it will produce 3, because it works by
+means of the
+.code toint
+function which.
 
 .TP* Examples:
 
