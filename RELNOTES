@@ -1,3 +1,28 @@
+                                    TXR 246
+                                   2020-12-31
+
+
+  Features:
+
+  - Library:
+    - shuffle and nshuffle functions take optional random state
+      argument now.
+
+  Bugs:
+
+  - gc:
+    - bug in finalization leading to assertion in garbage collector.
+      - affects situations in which finalizers are explcitly called,
+        rather than naturally occurring during garbage collection.
+    - flaw in object finalization logic causing unnecessary full
+      generation to be requested.
+  - awk:
+    - fixed regression in fconv macro (probably dating back several years):
+      - the conversion shortcuts like i, x, o, r became unavailable
+        due to being sys: symbols rather than usr: symbols.
+
+
+
                                     TXR 245
                                    2020-12-24
 
