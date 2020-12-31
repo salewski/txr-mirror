@@ -1,0 +1,21 @@
+(load "../common")
+
+(defvarl inputs '("10E3 junk 20E3 30E3 40E3 50E3"))
+
+(defmacro tfconv (fconv expected)
+  ^(test (awk (:inputs inputs)
+              (t (fconv ,*fconv))
+              (:end f))
+         ,expected))
+
+(tfconv (i) (10 "junk" "20E3" "30E3" "40E3" "50E3"))
+(tfconv (: : i) ("10E3" "junk" "20E3" "30E3" "40E3" 50))
+(tfconv (: : o) ("10E3" "junk" "20E3" "30E3" "40E3" 40))
+(tfconv (: : x) ("10E3" "junk" "20E3" "30E3" "40E3" #x50E3))
+(tfconv (: x) (#x10E3 nil #x20E3 #x30E3 #x40E3 #x50E3))
+(tfconv (: r) (10000.0 nil 20000.0 30000.0 40000.0 50000.0))
+(tfconv (: b) (2 nil nil nil nil nil))
+(tfconv (: bz) (2 0 0 0 0 0))
+(tfconv (i : : x) (10 "junk" "20E3" "30E3" "40E3" #x50E3))
+(tfconv (- : i : -) ("10E3" nil 20 30 40 "50E3"))
+(tfconv (i : o r : x) (10 nil 20000.0 #o30 40000.0 #x50E3))
