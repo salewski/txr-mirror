@@ -787,7 +787,7 @@ static val call_finalizers_impl(val ctx,
     val obj = found->obj;
     funcall1(found->fun, obj);
 #if CONFIG_GEN_GC
-    if (inprogress) {
+    if (inprogress && obj->t.gen == 0) {
       for (dup = 0, i = freshobj_idx_start; i < freshobj_idx; i++) {
         if (freshobj[i] == obj) {
           dup = 1;
@@ -796,7 +796,7 @@ static val call_finalizers_impl(val ctx,
       }
 
       if (!dup) {
-        if (freshobj_idx < FRESHOBJ_VEC_SIZE && obj->t.gen == 0) {
+        if (freshobj_idx < FRESHOBJ_VEC_SIZE) {
           freshobj[freshobj_idx++] = obj;
         } else {
           full_gc = 1;
