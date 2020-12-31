@@ -66770,8 +66770,13 @@ will be called with
 .meta object
 as its only argument.
 
-Multiple finalizer functions can be registered for the same object.
-They are all called when the object becomes unreachable.
+Multiple finalizer functions can be registered for the same object,
+up to an internal limit which is not required to be greater than 255.
+If the limit is exceeded,
+.code finalize
+throws an error exception.
+
+All registered finalizers are called when the object becomes unreachable.
 Finalizers registered against an object may also be invoked
 and removed using the
 .code call-finalizers

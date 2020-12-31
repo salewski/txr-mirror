@@ -94,7 +94,8 @@ typedef unsigned char mem_t;
 #if CONFIG_GEN_GC
 #define obj_common \
   type_t type : PTR_BIT/2; \
-  int gen : PTR_BIT/2
+  unsigned fincount : PTR_BIT/4; \
+  int gen : PTR_BIT/4;
 #else
 #define obj_common \
   type_t type

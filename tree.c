@@ -237,7 +237,7 @@ static val tn_build_tree(ucnum n, val x)
 static void tr_rebuild(struct tree *tr, val node, val parent, ucnum size)
 {
 #if CONFIG_GEN_GC
-  obj_t dummy = { { TNOD, 0, { 0 }, 0 } };
+  obj_t dummy = { { TNOD, 0, 0, { 0 }, 0 } };
 #else
   obj_t dummy = { { TNOD, { 0 }, 0 } };
 #endif

@@ -220,6 +220,7 @@ val make_obj(void)
 #endif
 #if CONFIG_GEN_GC
       ret->t.gen = 0;
+      ret->t.fincount = 0;
       if (!full_gc)
         freshobj[freshobj_idx++] = ret;
 #endif
@@ -783,24 +784,14 @@ static val call_finalizers_impl(val ctx,
 
   while (found) {
     struct fin_reg *next = found->next;
-    int dup, i, freshobj_idx_start = freshobj_idx;
     val obj = found->obj;
     funcall1(found->fun, obj);
 #if CONFIG_GEN_GC
-    if (inprogress && obj->t.gen == 0) {
-      for (dup = 0, i = freshobj_idx_start; i < freshobj_idx; i++) {
-        if (freshobj[i] == obj) {
-          dup = 1;
-          break;
-        }
-      }
-
-      if (!dup) {
-        if (freshobj_idx < FRESHOBJ_VEC_SIZE) {
-          freshobj[freshobj_idx++] = obj;
-        } else {
-          full_gc = 1;
-        }
+    if (--obj->t.fincount == 0 && inprogress && obj->t.gen == 0) {
+      if (freshobj_idx < FRESHOBJ_VEC_SIZE) {
+        freshobj[freshobj_idx++] = obj;
+      } else {
+        full_gc = 1;
       }
     }
 #endif
@@ -990,7 +981,8 @@ static val gc_wrap(val full)
 
 val gc_finalize(val obj, val fun, val rev_order_p)
 {
-  type_check(lit("gc-finalize"), fun, FUN);
+  val self = lit("gc-finalize");
+  type_check(self, fun, FUN);
 
   rev_order_p = default_null_arg(rev_order_p);
 
@@ -999,6 +991,16 @@ val gc_finalize(val obj, val fun, val rev_order_p)
     f->obj = obj;
     f->fun = fun;
     f->reachable = 0;
+
+#if CONFIG_GEN_GC
+    if (++obj->t.fincount == 0) {
+      obj->t.fincount--;
+      free(f);
+      uw_throwf(error_s,
+                lit("~a: too many finalizations registered against object ~s"),
+                self, obj, nao);
+    }
+#endif
 
     if (rev_order_p) {
       if (!final_list)
