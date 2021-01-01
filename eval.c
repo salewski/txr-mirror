@@ -6722,9 +6722,9 @@ void eval_init(void)
   reg_fun(intern(lit("iffi"), user_package), func_n3o(iffi, 2));
   reg_fun(intern(lit("dup"), user_package), func_n1(dupl));
   reg_fun(intern(lit("flipargs"), user_package), func_n1(swap_12_21));
-  reg_fun(intern(lit("if"), user_package), func_n3o(if_fun, 2));
-  reg_fun(intern(lit("or"), user_package), func_n0v(or_fun));
-  reg_fun(intern(lit("and"), user_package), func_n0v(and_fun));
+  reg_fun(if_s, func_n3o(if_fun, 2));
+  reg_fun(or_s, func_n0v(or_fun));
+  reg_fun(and_s, func_n0v(and_fun));
   reg_fun(intern(lit("retf"), user_package), func_n1(retf));
   reg_fun(intern(lit("apf"), user_package), func_n1v(apf));
   reg_fun(intern(lit("ipf"), user_package), func_n1v(ipf));
