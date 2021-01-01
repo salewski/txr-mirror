@@ -6068,6 +6068,22 @@ static val and_fun(struct args *vals)
   return item;
 }
 
+static val progn_fun(struct args *vals)
+{
+  return if3(vals->list, car(lastcons(vals->list)), vals->arg[vals->fill - 1]);
+}
+
+static val prog1_fun(struct args *vals)
+{
+  return if2(args_more(vals, 0), args_at(vals, 0));
+}
+
+static val prog2_fun(struct args *vals)
+{
+  args_normalize_least(vals, 2);
+  return if2(vals->fill >= 2, vals->arg[1]);
+}
+
 static val not_null(val obj)
 {
   return if3(nilp(obj), nil, t);
@@ -6738,6 +6754,9 @@ void eval_init(void)
   reg_fun(if_s, func_n3o(if_fun, 2));
   reg_fun(or_s, func_n0v(or_fun));
   reg_fun(and_s, func_n0v(and_fun));
+  reg_fun(progn_s, func_n0v(progn_fun));
+  reg_fun(prog1_s, func_n0v(prog1_fun));
+  reg_fun(prog2_s, func_n0v(prog2_fun));
   reg_fun(intern(lit("retf"), user_package), func_n1(retf));
   reg_fun(intern(lit("apf"), user_package), func_n1v(apf));
   reg_fun(intern(lit("ipf"), user_package), func_n1v(ipf));

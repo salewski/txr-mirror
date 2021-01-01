@@ -15077,7 +15077,7 @@ The entire lexical environment is copied; the copy and original function do not
 share any portion of the environment at any level of nesting.
 
 .SS* Sequencing, Selection and Iteration
-.coNP Operators @ progn and @ prog1
+.coNP Operators/functions @ progn and @ prog1
 .synb
 .mets (progn << form *)
 .mets (prog1 << form *)
@@ -15110,12 +15110,26 @@ of a body of forms, the value of the last of which is returned.
 These operators are said to feature an implicit
 .codn progn .
 
-.TP* "Dialect Note:"
+These special operators are also functions. The
+.code progn
+function accepts zero or more arguments. It returns its last argument, or
+.code nil
+if called with no arguments. The
+.code prog1
+function likewise accepts zero or more arguments. It returns its first argument, or
+.code nil
+if called with no arguments.
+
+.TP* "Dialect Notes:"
 In ANSI Common Lisp,
 .code prog1
-requires at least one argument.
+requires at least one argument. Neither
+.code prog
+nor
+.code prog1
+exist as functions.
 
-.coNP Macro @ prog2
+.coNP Macro/function @ prog2
 .synb
 .mets (prog2 << form *)
 .syne
@@ -15142,10 +15156,19 @@ and
 yield
 .codn nil .
 
-.TP* "Dialect Note:"
+The
+.code prog2
+symbol also has a function binding. The
+.code prog2
+function accepts any number of arguments. If invoked with at least two arguments,
+it returns the second one. Otherwise it returns
+.codn nil .
+
+.TP* "Dialect Notes:"
 In ANSI Common Lisp,
 .code prog2
 requires at least two arguments.
+It does not exist as a function.
 
 .coNP Operator @ cond
 .synb
