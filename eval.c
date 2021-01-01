@@ -73,7 +73,8 @@ val op_table, pm_table;
 val dyn_env;
 
 val eval_error_s;
-val dwim_s, progn_s, prog1_s, let_s, let_star_s, lambda_s, call_s, dvbind_s;
+val dwim_s, progn_s, prog1_s, prog2_s;
+val let_s, let_star_s, lambda_s, call_s, dvbind_s;
 val sys_catch_s, handler_bind_s, cond_s, if_s, iflet_s, when_s, usr_var_s;
 val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s, macro_s;
 val tree_case_s, tree_bind_s, mac_param_bind_s;
@@ -4145,6 +4146,16 @@ static val me_case(val form, val menv)
               cons(cond_s, condpairs), nao);
 }
 
+static val me_prog2(val form, val menv)
+{
+  val arg1 = cadr(form);
+
+  (void) menv;
+
+  return list(progn_s, arg1,
+              cons(prog1_s, cddr(form)), nao);
+}
+
 static val me_tb(val form, val menv)
 {
   val opsym = pop(&form);
@@ -6271,6 +6282,7 @@ void eval_init(void)
   dwim_s = intern(lit("dwim"), user_package);
   progn_s = intern(lit("progn"), user_package);
   prog1_s = intern(lit("prog1"), user_package);
+  prog2_s = intern(lit("prog2"), user_package);
   let_s = intern(lit("let"), user_package);
   let_star_s = intern(lit("let*"), user_package);
   lambda_s = intern(lit("lambda"), user_package);
@@ -6484,6 +6496,7 @@ void eval_init(void)
   reg_mac(caseq_star_s, func_n2(me_case));
   reg_mac(caseql_star_s, func_n2(me_case));
   reg_mac(casequal_star_s, func_n2(me_case));
+  reg_mac(prog2_s, func_n2(me_prog2));
   reg_mac(intern(lit("tb"), user_package), func_n2(me_tb));
   reg_mac(intern(lit("tc"), user_package), func_n2(me_tc));
   reg_mac(intern(lit("ignerr"), user_package), func_n2(me_ignerr));

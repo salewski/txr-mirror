@@ -15085,16 +15085,20 @@ share any portion of the environment at any level of nesting.
 .desc
 The
 .code progn
-operator evaluates forms in order, and returns the value
-of the last form. The return value of the form
+operator evaluates each
+.meta form
+in in left-to-right order, and returns the value
+of the last form. The value of the form
 .code (progn)
 is
 .codn nil .
 
 The
 .code prog1
-operator evaluates forms in order, and returns the value
-of the first form. The return value of the form
+operator evaluates each
+.meta form
+in left-to-right order, and returns the value
+of the first form. The value of the form
 .code (prog1)
 is
 .codn nil .
@@ -15105,6 +15109,43 @@ also arrange for the evaluation
 of a body of forms, the value of the last of which is returned.
 These operators are said to feature an implicit
 .codn progn .
+
+.TP* "Dialect Note:"
+In ANSI Common Lisp,
+.code prog1
+requires at least one argument.
+
+.coNP Macro @ prog2
+.synb
+.mets (prog2 << form *)
+.syne
+.desc
+The
+.code prog2
+evaluates each
+.meta form
+in left-to-right order. The value is that of the second form, if present,
+otherwise it is
+.codn nil .
+
+The form
+.code "(prog2 1 2 3)"
+yields
+.codn 2 .
+The value of
+.code "(prog2 1 2)"
+is also
+.codn 2 ;
+.code "(prog2 1)"
+and
+.code "(prog2)"
+yield
+.codn nil .
+
+.TP* "Dialect Note:"
+In ANSI Common Lisp,
+.code prog2
+requires at least two arguments.
 
 .coNP Operator @ cond
 .synb
