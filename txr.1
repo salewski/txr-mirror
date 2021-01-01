@@ -66814,9 +66814,17 @@ A finalizer is itself permitted to call
 .code finalize
 to register the original
 .code object
-or any other object for finalization. Such registrations made during
-finalization execution are not eligible for the current phase of finalization
-processing; they will be processed in a later garbage collection pass.
+or any other object for finalization. Finalization processing can be
+understood as taking place in one or more rounds.  At the start of each round,
+finalizers are identified that are to be called, arranged in order, and removed
+from the registration list. If this identification stage produces no
+finalizers, then finalization ends. Otherwise, those finalizers are processed,
+and then another round is initiated, to look for finalizers that may have been
+registered during the previous round.
+
+Note: it is possible for the application to create an infinite finalization
+loop, if one or more objects have finalizers that register new finalizers,
+which register new finalizers and so on.
 
 .coNP Function @ call-finalizers
 .synb
@@ -66832,12 +66840,22 @@ If any finalizers are called, it returns
 otherwise
 .codn nil .
 
+Finalization performed by
+.code call-finalizers
+works in the manner described under the specification of he
+.code finalize
+function.
+
 It is permissible for a finalizer function itself to call
 .codn call-finalizers .
-Such a call can happen in two possible contexts: during actual
-reclamation driven by garbage collection, or under the scope of a
+Such a call can happen in two possible contexts: finalization
+initiated by by garbage collection, or under the scope of a
 .code call-finalizers
-invocation from application code.
+invocation from application code. Doing so is safe, since the finalization
+logic may be re-entered recursively.  When finalizers are being called during a
+round of processing, those finalizers have already been removed from the
+registration list, and will not be redundantly invoked by a recursive
+invocation of finalization.
 
 Under the scope of garbage-collection-driven reclamation, the
 order of finalizer calls may not be what the application logic

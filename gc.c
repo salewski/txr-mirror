@@ -757,47 +757,50 @@ NOINLINE static void prepare_finals(void)
 static val call_finalizers_impl(val ctx,
                                 int (*should_call)(struct fin_reg *, val))
 {
-  struct fin_reg *f, **tail;
-  struct fin_reg *found = 0, **ftail = &found;
   val ret = nil;
 
-  if (!final_list)
-    return ret;
+  for (;;) {
+    struct fin_reg *f, **tail;
+    struct fin_reg *found = 0, **ftail = &found;
 
-  for (f = final_list, tail = &final_list; f; ) {
-    struct fin_reg *next = f->next;
+    for (f = final_list, tail = &final_list; f; ) {
+      struct fin_reg *next = f->next;
 
-    if (should_call(f, ctx)) {
-      *ftail = f;
-      ftail = &f->next;
-      f->next = 0;
-    } else {
-      *tail = f;
-      tail = &f->next;
-    }
-
-    f = next;
-  }
-
-  *tail = 0;
-  final_tail = tail;
-
-  while (found) {
-    struct fin_reg *next = found->next;
-    val obj = found->obj;
-    funcall1(found->fun, obj);
-#if CONFIG_GEN_GC
-    if (--obj->t.fincount == 0 && inprogress && obj->t.gen == 0) {
-      if (freshobj_idx < FRESHOBJ_VEC_SIZE) {
-        freshobj[freshobj_idx++] = obj;
+      if (should_call(f, ctx)) {
+        *ftail = f;
+        ftail = &f->next;
+        f->next = 0;
       } else {
-        full_gc = 1;
+        *tail = f;
+        tail = &f->next;
       }
+
+      f = next;
     }
+
+    *tail = 0;
+    final_tail = tail;
+
+    if (!found)
+      break;
+
+    do {
+      struct fin_reg *next = found->next;
+      val obj = found->obj;
+      funcall1(found->fun, obj);
+#if CONFIG_GEN_GC
+      if (--obj->t.fincount == 0 && inprogress && obj->t.gen == 0) {
+        if (freshobj_idx < FRESHOBJ_VEC_SIZE) {
+          freshobj[freshobj_idx++] = obj;
+        } else {
+          full_gc = 1;
+        }
+      }
 #endif
-    free(found);
-    found = next;
-    ret = t;
+      free(found);
+      found = next;
+      ret = t;
+    } while (found);
   }
 
   return ret;
@@ -990,7 +993,7 @@ val gc_finalize(val obj, val fun, val rev_order_p)
     struct fin_reg *f = coerce(struct fin_reg *, chk_malloc(sizeof *f));
     f->obj = obj;
     f->fun = fun;
-    f->reachable = 0;
+    f->reachable = 1;
 
 #if CONFIG_GEN_GC
     if (++obj->t.fincount == 0) {
