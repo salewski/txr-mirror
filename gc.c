@@ -745,9 +745,6 @@ NOINLINE static void prepare_finals(void)
 
   for (f = final_list; f; f = f->next) {
     if (!f->reachable) {
-#if CONFIG_GEN_GC
-      f->obj->t.gen = 0;
-#endif
       mark_obj(f->obj);
     }
     mark_obj(f->fun);
@@ -789,8 +786,11 @@ static val call_finalizers_impl(val ctx,
       val obj = found->obj;
       funcall1(found->fun, obj);
 #if CONFIG_GEN_GC
-      if (--obj->t.fincount == 0 && inprogress && obj->t.gen == 0) {
+      if (--obj->t.fincount == 0 && inprogress &&
+          !full_gc && !found->reachable)
+      {
         if (freshobj_idx < FRESHOBJ_VEC_SIZE) {
+          obj->t.gen = 0;
           freshobj[freshobj_idx++] = obj;
         } else {
           full_gc = 1;
