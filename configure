@@ -1528,9 +1528,8 @@ printf "Checking how to declare inline functions ... "
 
 if [ -z "$inline" ] ; then
   for inline in \
-    "inline" "static inline" "extern inline" \
-    "__inline__" "static __inline__" "extern __inline__" \
-    "static"
+    "${cplusplus:+inline}" "static inline" \
+    "static __inline__" "static"
   do
     cat > conftest1.c <<!
 $inline int func(void)
