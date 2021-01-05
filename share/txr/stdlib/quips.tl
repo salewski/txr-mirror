@@ -34,7 +34,7 @@
     "Do not operate heavy equipment or motor vehicles while using TXR."
     "Use full-strength TXR for tough tasks, or dilute with shell scripts."
     "TXR causes vomiting if accidentally ingested; no need to induce such."
-    "If unwanted side effects persist, discontinue use of TXR."
+    "If unwanted side effects persist, discontinue imperative programming."
     "TXR works even if the application surface is not free of dirt and grease."
     "TXR may be used in areas that are not necessarily well ventilated."
     "TXR's button pops up when original seal is broken."
