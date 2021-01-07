@@ -76,6 +76,8 @@
     "TXR's car insurance now offers cdr coverage for bumper-to-bumper protection."
     "Please listen carefully to the following spec, as our Lisp has changed."
     "If TXR were TV, it would require music by Mike Post and Peter Carpenter."
+    "TXR was set to appear on the cover of SI. Yeah, no. Learned about the jinx."
+    "  |E|\n|V A N|\n  |S|\n  |T|"
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
