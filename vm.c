@@ -343,10 +343,6 @@ static void vm_reset(struct vm *vm, struct vm_desc *vd,
 #define vm_insn_bigop(insn) (((insn) & 0x3FFFFFFU))
 #define vm_arg_operand_lo(arg) ((arg) & 0xFFFFU)
 #define vm_arg_operand_hi(arg) ((arg) >> 16)
-#define VM_LEV_BITS 10
-#define VM_LEV_MASK 0x3FF
-#define VM_SM_LEV_BITS 6
-#define VM_SM_LEV_MASK 0x3F
 #define vm_lev(arg) ((arg) >> VM_LEV_BITS)
 #define vm_idx(arg) ((arg) & VM_LEV_MASK)
 #define vm_sm_lev(arg) ((arg) >> VM_SM_LEV_BITS)
