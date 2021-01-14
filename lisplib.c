@@ -860,6 +860,23 @@ static val quips_set_entries(val dlt, val fun)
   return nil;
 }
 
+static val match_instantiate(val set_fun)
+{
+  funcall1(set_fun, nil);
+  load(scat2(stdlib_path, lit("match")));
+  return nil;
+}
+
+static val match_set_entries(val dlt, val fun)
+{
+  val name[] = {
+    lit("when-match"),
+    nil
+  };
+  set_dlt_entries(dlt, name, fun);
+  return nil;
+}
+
 val dlt_register(val dlt,
                  val (*instantiate)(val),
                  val (*set_entries)(val, val))
@@ -914,6 +931,7 @@ void lisplib_init(void)
   dlt_register(dl_table, copy_file_instantiate, copy_file_set_entries);
   dlt_register(dl_table, each_prod_instantiate, each_prod_set_entries);
   dlt_register(dl_table, quips_instantiate, quips_set_entries);
+  dlt_register(dl_table, match_instantiate, match_set_entries);
 
   reg_fun(intern(lit("try-load"), system_package), func_n1(lisplib_try_load));
 }
