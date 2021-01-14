@@ -1,6 +1,6 @@
 %{
 
-/* Copyright 2009-2020
+/* Copyright 2009-2021
  * Kaz Kylheku <kaz@kylheku.com>
  * Vancouver, Canada
  * All rights reserved.

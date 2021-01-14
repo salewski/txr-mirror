@@ -1,4 +1,4 @@
-Copyright (C) 2009-2020, Kaz Kylheku <kaz@kylheku.com>.
+Copyright (C) 2009-2021, Kaz Kylheku <kaz@kylheku.com>.
 All rights reserved.
 
 The document named LICENSE specifies the license for the TXR program,
@@ -28,6 +28,10 @@ has been placed by the TXR project into block comments of the md5.c
 and md5.h files. The permission is compatible with the BSD license,
 as it allows unfettered redistribution and use, without any advertizing
 clauses.
+
+SHA-256 routines used in TXR are derived from code which is
+Copyright 2005 Colin Percival, and available under the same two-clause
+BSD license as TXR.
 
 TXR ships with files (y.tab.c, y.tab.h) generated from the file parser.y using
 GNU Bison. The source file parser.y is the original work of Kaz Kylheku, and
