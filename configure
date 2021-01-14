@@ -170,7 +170,9 @@ platform_cflags=
 remove_flags=
 lex_dbg_flags=
 conf_ldflags=
+conf_ldlibs=
 platform_ldflags=
+platform_ldlibs=
 txr_dbg_opts=--gc-debug
 valgrind=
 lit_align=
@@ -485,8 +487,15 @@ platform-cflags [$platform_cflags]
 platform-ldflags [$platform_ldflags]
 
   Specify additional linker flags for anything else, such as hardening,
+  linking as needed, et cetera.  Flas specifying librariews (-l options)
+  should be specified using platform-ldlibs instead.  Note that these are in
+  addition to any LDFLAGS from the environment or make command line.
+
+platform-ldlibs [$platform_ldlibs]
+
+  Specify additional linker flags for just libraries (-l options)
   linking as needed, et cetera. Note that these are in addition to
-  any LDFLAGS from the environment or make command line.
+  any LDLIBS from the environment or make command line.
 
 remove-flags [$remove_flags]
 
@@ -901,7 +910,9 @@ BUILD_TARGETS := $(if [ $debug_also ] ; then
                      echo '$(PROG)'; fi)
 PLATFORM_CFLAGS := $platform_cflags
 PLATFORM_LDFLAGS := $platform_ldflags
+PLATFORM_LDLIBS := $platform_ldlibs
 CONF_LDFLAGS := $conf_ldflags
+CONF_LDLIBS := $conf_ldlibs
 REMOVE_FLAGS := $remove_flags
 LEX_DBG_FLAGS := $lex_dbg_flags
 TXR_DBG_OPTS := $txr_dbg_opts
@@ -3063,11 +3074,11 @@ for try_lcrypt in "" "-lcrypt" "no" ; do
     printf "no\n"
     break
   fi
-  if conftest EXTRA_LDFLAGS=$try_lcrypt; then
+  if conftest EXTRA_LDLIBS=$try_lcrypt; then
     printf "yes\n"
     printf "#define HAVE_CRYPT 1\n" >> config.h
     if [ -n "$try_lcrypt" ] ; then
-      conf_ldflags="${conf_ldflags:+"$conf_ldflags "}-lcrypt"
+      conf_ldlibs="${conf_ldlibs:+"$conf_ldlibs "}-lcrypt"
     fi
     break;
   fi
@@ -3091,11 +3102,11 @@ for try_lcrypt in "" "-lcrypt" "no" ; do
     printf "no\n"
     break
   fi
-  if conftest EXTRA_LDFLAGS=$try_lcrypt; then
+  if conftest EXTRA_LDLIBS=$try_lcrypt; then
     printf "yes\n"
     printf "#define HAVE_CRYPT_R 1\n" >> config.h
     if [ -n "$try_lcrypt" ] ; then
-      conf_ldflags="${conf_ldflags:+"$conf_ldflags "}-lcrypt"
+      conf_ldlibs="${conf_ldlibs:+"$conf_ldlibs "}-lcrypt"
     fi
     break;
   fi
@@ -3394,12 +3405,12 @@ if conftest ; then
   printf "#define HAVE_SOCKETS 1\n" >> config.h
   have_sockets=y
   have_sys_types=y
-elif conftest EXTRA_LDFLAGS="-lsocket -lnsl" ; then
+elif conftest EXTRA_LDLIBS="-lsocket -lnsl" ; then
   printf "yes\n"
   printf "#define HAVE_SOCKETS 1\n" >> config.h
   have_sockets=y
   have_sys_types=y
-  conf_ldflags="${conf_ldflags:+"$conf_ldflags "}-lsocket -lnsl"
+  conf_ldlibs="${conf_ldlibs:+"$conf_ldlibs "}-lsocket -lnsl"
   printf "Need libs for sockets: regenerating config.make ..."
   gen_config_make
   printf "done\n"
@@ -3522,16 +3533,16 @@ int main(void)
 if conftest ; then
   printf "yes\n"
   printf "#define HAVE_DLOPEN 1\n" >> config.h
-elif conftest EXTRA_LDFLAGS=-ldl ; then
+elif conftest EXTRA_LDLIBS=-ldl ; then
   printf "yes\n"
   printf "#define HAVE_DLOPEN 1\n" >> config.h
-  conf_ldflags="${conf_ldflags:+"$conf_ldflags "}-ldl"
+  conf_ldlibs="${conf_ldlibs:+"$conf_ldlibs "}-ldl"
 else
   printf "no\n"
 fi
 
 printf "Checking for dlvsym ... "
-if conftest CONF_LDFLAGS="$conf_ldflags" EXTRA_FLAGS=-DTEST_DLVSYM=1 ; then
+if conftest CONF_LDLIBS="$conf_ldlibs" EXTRA_FLAGS=-DTEST_DLVSYM=1 ; then
   printf "yes\n"
   printf "#define HAVE_DLVSYM 1\n" >> config.h
 else
@@ -3568,16 +3579,19 @@ int main(void)
 if conftest ; then
   printf "yes\n"
   printf "#define HAVE_LIBFFI 1\n" >> config.h
-elif conftest EXTRA_LDFLAGS=-lffi ; then
+elif conftest EXTRA_LDLIBS=-lffi ; then
   printf "yes\n"
   printf "#define HAVE_LIBFFI 1\n" >> config.h
-  conf_ldflags="${conf_ldflags:+"$conf_ldflags "}-lffi"
+  conf_ldlibs="${conf_ldlibs:+"$conf_ldlibs "}-lffi"
 elif [ -n "$have_pkgconfig" ] && pkg-config --exists libffi ; then
   libffi_cflags=$(pkg-config --cflags libffi)
-  libffi_ldflags=$(pkg-config --libs libffi)
-  if conftest EXTRA_FLAGS="$libffi_cflags" EXTRA_LDFLAGS="$libffi_ldflags" ; then
+  libffi_ldlibs=$(pkg-config --libs-only-l libffi)
+  libffi_ldflags=$(pkg-config --libs-only-L libffi)
+  if conftest EXTRA_FLAGS="$libffi_cflags" EXTRA_LDFLAGS="$libffi_ldflags" \
+              EXTRA_LDLIBS="$libffi_ldlibs"; then
     printf "yes\n"
     printf "#define HAVE_LIBFFI 1\n" >> config.h
+    conf_ldlibs="${conf_ldlibs:+"$conf_ldlibs "}$libffi_ldlibs"
     conf_ldflags="${conf_ldflags:+"$conf_ldflags "}$libffi_ldflags"
   else
     printf "no\n"

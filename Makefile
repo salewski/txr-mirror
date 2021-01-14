@@ -29,13 +29,12 @@
 -include config.make
 
 VERBOSE :=
-TXR_CFLAGS := $(CFLAGS)
-TXR_CFLAGS += -iquote . $(if $(top_srcdir), -iquote $(top_srcdir)) \
+TXR_CFLAGS := -iquote . $(if $(top_srcdir), -iquote $(top_srcdir)) \
               $(LANG_FLAGS) $(DIAG_FLAGS) \
-              $(DBG_FLAGS) $(PLATFORM_CFLAGS) $(EXTRA_FLAGS)
+              $(DBG_FLAGS) $(PLATFORM_CFLAGS) $(EXTRA_FLAGS) $(CFLAGS)
 TXR_CFLAGS := $(filter-out $(REMOVE_FLAGS),$(TXR_CFLAGS))
-TXR_LDFLAGS := $(LDFLAGS)
-TXR_LDFLAGS += -lm $(CONF_LDFLAGS) $(PLATFORM_LDFLAGS) $(EXTRA_LDFLAGS)
+TXR_LDFLAGS := $(CONF_LDFLAGS) $(PLATFORM_LDFLAGS) $(EXTRA_LDFLAGS) $(LDFLAGS)
+TXR_LDLIBS := -lm $(CONF_LDLIBS) $(PLAFORM_LDLIBS) $(EXTRA_LDLIBS) $(LDLIBS)
 
 ifneq ($(subst g++,@,$(notdir $(TXR_CC))),$(notdir $(TXR_CC)))
 TXR_CFLAGS := $(filter-out -Wmissing-prototypes -Wstrict-prototypes,$(TXR_CFLAGS))
@@ -139,7 +138,7 @@ endef
 
 define LINK_PROG
 $(call ABBREVN,LINK)
-$(call SH,$(TXR_CC) $(1) $(TXR_CFLAGS) -o $@ $^ $(TXR_LDFLAGS))
+$(call SH,$(TXR_CC) $(1) $(TXR_CFLAGS) $(TXR_LDFLAGS) -o $@ $^ $(TXR_LDLIBS))
 endef
 
 define WINDRES
