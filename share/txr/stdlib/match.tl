@@ -163,7 +163,8 @@
 
 (defun compile-all-match (exp obj-var)
   (tree-bind (op match) exp
-    (let* ((item-var (gensym "item-"))
+    (let* ((list-test (if (eq op 'all) 'listp 'consp))
+           (item-var (gensym "item-"))
            (cm (compile-match match item-var))
            (all-match-p-var (gensym "all-match-p-"))
            (matched-p-var (gensym "matched-p-"))
@@ -188,7 +189,7 @@
            (guard (new match-guard
                        vars (cons all-match-p-var collect-vars)
                        var-exprs (list loop)
-                       guard-expr ^(consp ,obj-var))))
+                       guard-expr ^(,list-test ,obj-var))))
       (new compiled-match
            pattern exp
            obj-var obj-var
@@ -209,6 +210,7 @@
                  (require (compile-require-match exp obj-var))
                  (let (compile-let-match exp obj-var))
                  (all (compile-all-match exp obj-var))
+                 (usr:all* (compile-all-match exp obj-var))
                  (t (compile-predicate-match exp obj-var)))
                (compile-error *match-form*
                               "unrecognized pattern syntax ~s" pat))))

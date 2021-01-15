@@ -869,11 +869,17 @@ static val match_instantiate(val set_fun)
 
 static val match_set_entries(val dlt, val fun)
 {
+  val name_noload[] = {
+    lit("all*"),
+    nil
+  };
   val name[] = {
     lit("when-match"),
     nil
   };
+
   set_dlt_entries(dlt, name, fun);
+  intern_only(name_noload);
   return nil;
 }
 
