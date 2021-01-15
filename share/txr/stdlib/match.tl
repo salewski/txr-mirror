@@ -170,8 +170,9 @@
            (matched-p-var (gensym "matched-p-"))
            (iter-var (gensym "iter-"))
            (collect-vars [mapcar gensym cm.vars])
-           (loop ^(for ((,iter-var ,obj-var))
-                       (,iter-var t)
+           (loop ^(for ((,iter-var ,obj-var)
+                        (,all-match-p-var t))
+                       ((and ,all-match-p-var ,iter-var) ,all-match-p-var)
                        ((set ,iter-var (cdr ,iter-var)))
                     (let ((,cm.obj-var (car ,iter-var))
                           ,matched-p-var
@@ -185,7 +186,7 @@
                                              cm.vars
                                              collect-vars)))))
                       (unless ,matched-p-var
-                        (return nil)))))
+                        (set ,all-match-p-var nil)))))
            (guard (new match-guard
                        vars (cons all-match-p-var collect-vars)
                        var-exprs (list loop)
