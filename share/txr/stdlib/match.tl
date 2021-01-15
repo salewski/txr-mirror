@@ -161,6 +161,42 @@
       (push obj-var match.var-exprs)
       match)))
 
+(defun compile-all-match (exp obj-var)
+  (tree-bind (op match) exp
+    (let* ((item-var (gensym "item-"))
+           (cm (compile-match match item-var))
+           (all-match-p-var (gensym "all-match-p-"))
+           (matched-p-var (gensym "matched-p-"))
+           (iter-var (gensym "iter-"))
+           (collect-vars [mapcar gensym cm.vars])
+           (loop ^(for ((,iter-var ,obj-var))
+                       (,iter-var t)
+                       ((set ,iter-var (cdr ,iter-var)))
+                    (let ((,cm.obj-var (car ,iter-var))
+                          ,matched-p-var
+                          ,*cm.(get-vars))
+                      ,cm.(wrap-guards
+                            ^(progn ,*cm.(assignments)
+                               (if ,cm.test-expr
+                                 (progn
+                                   (set ,matched-p-var t)
+                                   ,*(mapcar (ret ^(push ,@1 ,@2))
+                                             cm.vars
+                                             collect-vars)))))
+                      (unless ,matched-p-var
+                        (return nil)))))
+           (guard (new match-guard
+                       vars (cons all-match-p-var collect-vars)
+                       var-exprs (list loop)
+                       guard-expr ^(consp ,obj-var))))
+      (new compiled-match
+           pattern exp
+           obj-var obj-var
+           guard-chain (list guard)
+           test-expr all-match-p-var
+           vars cm.vars
+           var-exprs (mapcar (ret ^(nreverse ,@1)) collect-vars)))))
+
 (defun compile-match (pat : (obj-var (gensym)))
   (cond
     ((consp pat)
@@ -172,6 +208,7 @@
                  (struct (compile-struct-match exp obj-var))
                  (require (compile-require-match exp obj-var))
                  (let (compile-let-match exp obj-var))
+                 (all (compile-all-match exp obj-var))
                  (t (compile-predicate-match exp obj-var)))
                (compile-error *match-form*
                               "unrecognized pattern syntax ~s" pat))))
