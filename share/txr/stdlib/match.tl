@@ -56,6 +56,8 @@
                       ,out))))
       out)))
 
+(defvar *match-form*)
+
 (defun compile-struct-match (struct-pat obj-var)
   (let* ((required-type (cadr struct-pat))
          (slot-pairs (plist-to-alist (cddr struct-pat)))
@@ -78,13 +80,15 @@
          vars [mappend .vars slot-matches]
          var-exprs [mappend .var-exprs slot-matches])))
 
-(defun compile-var-match (var-pat obj-var)
+(defun compile-var-match (sym obj-var)
+  (or (null sym) (bindable sym)
+      (compile-error *match-form* "~s is not a symbol" sym))
   (new compiled-match
-       pattern var-pat
+       pattern sym
        obj-var obj-var
        test-expr t
-       vars (if var-pat (list var-pat))
-       var-exprs (if var-pat (list obj-var))))
+       vars (if sym (list sym))
+       var-exprs (if sym (list obj-var))))
 
 (defun compile-vec-match (vec-pat obj-var)
   (let* ((elem-gensyms (mapcar (op gensym `elem-@1-`) (range* 0 (len vec-pat))))
@@ -113,8 +117,8 @@
 
 (defun compile-predicate-match (pred-expr obj-var)
   (tree-bind (fun sym) pred-expr
-    (unless (or (null sym) (bindable sym))
-      (error "bad variable ~s" sym))
+    (or (null sym) (bindable sym)
+        (compile-error *match-form* "~s is not a symbol" sym))
     (let ((var-match (compile-var-match sym obj-var)))
       (set var-match.test-expr ^(,fun ,obj-var))
       var-match)))
@@ -150,8 +154,8 @@
 
 (defun compile-let-match (exp obj-var)
   (tree-bind (op sym match) exp
-    (unless (bindable sym)
-      (error "bad variable ~s" sym))
+    (or (null sym) (bindable sym)
+        (compile-error *match-form* "~s is not a symbol" sym))
     (let ((match (compile-match match obj-var)))
       (push sym match.vars)
       (push obj-var match.var-exprs)
@@ -169,13 +173,13 @@
                  (require (compile-require-match exp obj-var))
                  (let (compile-let-match exp obj-var))
                  (t (compile-predicate-match exp obj-var)))
-               (error "unrecognized pattern syntax"))))
+               (compile-error *match-form*
+                              "unrecognized pattern syntax ~s" pat))))
          (sys:var (compile-var-match (cadr pat) obj-var))
          (t (compile-cons-structure pat obj-var))))
-    (t (compile-atom-match pat obj-var))
-    (t (error "invalid pattern"))))
+    (t (compile-atom-match pat obj-var))))
 
-(defmacro when-match (pat obj . body)
+(defmacro when-match (:form *match-form* pat obj . body)
   (let ((cm (compile-match pat)))
     ^(let ((,cm.obj-var ,obj)
            ,*cm.(get-vars))
