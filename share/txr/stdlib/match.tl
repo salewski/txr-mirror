@@ -174,11 +174,13 @@
            (loop ^(for ((,iter-var ,obj-var)
                         (,loop-continue-p-var t))
                        ((and ,loop-continue-p-var ,iter-var)
-                        ,loop-continue-p-var)
+                        ,(if (eq op 'some)
+                           ^(not ,loop-continue-p-var)
+                           loop-continue-p-var))
                        ((set ,iter-var (cdr ,iter-var)))
                     (let ((,cm.obj-var (car ,iter-var))
                           ,matched-p-var
-                          ,*cm.(get-vars))
+                          ,*(if (eq op 'some) cm.(get-temps) cm.(get-vars)))
                       ,cm.(wrap-guards
                             ^(progn ,*cm.(assignments)
                                (if ,cm.test-expr
@@ -187,7 +189,7 @@
                                    ,*(mapcar (ret ^(push ,@1 ,@2))
                                              cm.vars
                                              collect-vars)))))
-                      (unless ,matched-p-var
+                      (,(if (eq op 'some) 'when 'unless) ,matched-p-var
                         (set ,loop-continue-p-var nil)))))
            (guard (new match-guard
                        vars (cons loop-success-p-var collect-vars)
@@ -199,7 +201,8 @@
            guard-chain (list guard)
            test-expr loop-success-p-var
            vars cm.vars
-           var-exprs (mapcar (ret ^(nreverse ,@1)) collect-vars)))))
+           var-exprs (unless (eq op 'some)
+                       (mapcar (ret ^(nreverse ,@1)) collect-vars))))))
 
 (defun compile-match (pat : (obj-var (gensym)))
   (cond
@@ -214,6 +217,7 @@
                  (let (compile-let-match exp obj-var))
                  (all (compile-loop-match exp obj-var))
                  (usr:all* (compile-loop-match exp obj-var))
+                 (some (compile-loop-match exp obj-var))
                  (t (compile-predicate-match exp obj-var)))
                (compile-error *match-form*
                               "unrecognized pattern syntax ~s" pat))))
