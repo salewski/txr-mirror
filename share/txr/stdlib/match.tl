@@ -116,7 +116,7 @@
             test-expr ^(equal ,obj-var ',atom)))))
 
 (defun compile-predicate-match (pred-expr obj-var)
-  (tree-bind (fun sym) pred-expr
+  (tree-bind (fun : sym) pred-expr
     (or (null sym) (bindable sym)
         (compile-error *match-form* "~s is not a symbol" sym))
     (let ((var-match (compile-var-match sym obj-var)))
