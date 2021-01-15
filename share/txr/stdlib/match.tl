@@ -161,18 +161,20 @@
       (push obj-var match.var-exprs)
       match)))
 
-(defun compile-all-match (exp obj-var)
+(defun compile-loop-match (exp obj-var)
   (tree-bind (op match) exp
-    (let* ((list-test (if (eq op 'all) 'listp 'consp))
+    (let* ((list-test (if (eq op 'usr:all*) 'consp 'listp))
            (item-var (gensym "item-"))
            (cm (compile-match match item-var))
-           (all-match-p-var (gensym "all-match-p-"))
+           (loop-success-p-var (gensym "loop-success-p-"))
+           (loop-continue-p-var (gensym "loop-terminate-p"))
            (matched-p-var (gensym "matched-p-"))
            (iter-var (gensym "iter-"))
            (collect-vars [mapcar gensym cm.vars])
            (loop ^(for ((,iter-var ,obj-var)
-                        (,all-match-p-var t))
-                       ((and ,all-match-p-var ,iter-var) ,all-match-p-var)
+                        (,loop-continue-p-var t))
+                       ((and ,loop-continue-p-var ,iter-var)
+                        ,loop-continue-p-var)
                        ((set ,iter-var (cdr ,iter-var)))
                     (let ((,cm.obj-var (car ,iter-var))
                           ,matched-p-var
@@ -186,16 +188,16 @@
                                              cm.vars
                                              collect-vars)))))
                       (unless ,matched-p-var
-                        (set ,all-match-p-var nil)))))
+                        (set ,loop-continue-p-var nil)))))
            (guard (new match-guard
-                       vars (cons all-match-p-var collect-vars)
+                       vars (cons loop-success-p-var collect-vars)
                        var-exprs (list loop)
                        guard-expr ^(,list-test ,obj-var))))
       (new compiled-match
            pattern exp
            obj-var obj-var
            guard-chain (list guard)
-           test-expr all-match-p-var
+           test-expr loop-success-p-var
            vars cm.vars
            var-exprs (mapcar (ret ^(nreverse ,@1)) collect-vars)))))
 
@@ -210,8 +212,8 @@
                  (struct (compile-struct-match exp obj-var))
                  (require (compile-require-match exp obj-var))
                  (let (compile-let-match exp obj-var))
-                 (all (compile-all-match exp obj-var))
-                 (usr:all* (compile-all-match exp obj-var))
+                 (all (compile-loop-match exp obj-var))
+                 (usr:all* (compile-loop-match exp obj-var))
                  (t (compile-predicate-match exp obj-var)))
                (compile-error *match-form*
                               "unrecognized pattern syntax ~s" pat))))
