@@ -24,21 +24,24 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(defstruct match-guard ()
-  temps
-  temp-exprs
+(defstruct match-vars ()
+  vars
+  var-exprs
+
+  (:method assignments (me)
+    (mapcar (ret ^(set ,@1 ,@2)) me.vars me.var-exprs)))
+
+(defstruct match-guard (match-vars)
   guard-expr)
 
-(defstruct compiled-match ()
+(defstruct compiled-match (match-vars)
   pattern
   obj-var
   guard-chain
   test-expr
-  vars
-  var-exprs
 
   (:method get-temps (me)
-    (mappend .temps me.guard-chain))
+    (mappend .vars me.guard-chain))
 
   (:method get-vars (me)
     (append me.(get-temps) me.vars))
@@ -49,12 +52,9 @@
       (each ((g rev-guard-chain))
         (set out ^(when ,g.guard-expr
                     (progn
-                      ,*(assignments g.temps g.temp-exprs)
+                      ,*g.(assignments)
                       ,out))))
       out)))
-
-(defun assignments (vars exprs)
-  (mapcar (ret ^(set ,@1 ,@2)) vars exprs))
 
 (defun compile-struct-match (struct-pat obj-var)
   (let* ((required-type (cadr struct-pat))
@@ -66,8 +66,8 @@
          (slot-val-exprs [mapcar (ret ^(slot ,obj-var ',@1))
                                  required-slots])
          (guard (new match-guard
-                     temps slot-gensyms
-                     temp-exprs slot-val-exprs
+                     vars slot-gensyms
+                     var-exprs slot-val-exprs
                      guard-expr  ^(subtypep (typeof ,obj-var)
                                             ',required-type))))
     (new compiled-match
@@ -90,8 +90,8 @@
   (let* ((elem-gensyms (mapcar (op gensym `elem-@1-`) (range* 0 (len vec-pat))))
          (elem-matches (list-vec [mapcar compile-match vec-pat elem-gensyms]))
          (guard (new match-guard
-                     temps elem-gensyms
-                     temp-exprs (mapcar (ret ^[,obj-var ,@1])
+                     vars elem-gensyms
+                     var-exprs (mapcar (ret ^[,obj-var ,@1])
                                         (range* 0 (len vec-pat)))
                      guard-expr ^(and (vectorp ,obj-var)
                                       (eql (len ,obj-var) ,(len vec-pat))))))
@@ -130,8 +130,8 @@
                           (t (compile-cons-structure cdr cdr-gensym)))
                         (compile-atom-match cdr cdr-gensym)))
            (guard (new match-guard
-                       temps ^(,car-gensym ,cdr-gensym)
-                       temp-exprs ^((car ,obj-var) (cdr ,obj-var))
+                       vars ^(,car-gensym ,cdr-gensym)
+                       var-exprs ^((car ,obj-var) (cdr ,obj-var))
                        guard-expr ^(consp ,obj-var))))
       (new compiled-match
            pattern cons-pat
@@ -180,5 +180,5 @@
     ^(let ((,cm.obj-var ,obj)
            ,*cm.(get-vars))
        ,cm.(wrap-guards
-             ^(progn ,*(assignments cm.vars cm.var-exprs)
+             ^(progn ,*cm.(assignments)
                 (if ,cm.test-expr ,*body))))))
