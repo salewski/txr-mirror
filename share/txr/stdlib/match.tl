@@ -207,21 +207,22 @@
            var-exprs (unless some-p
                        (mapcar (ret ^(nreverse ,@1)) collect-vars))))))
 
-(defun compile-or-match (or-pat obj-var)
-  (flet ((submatch-fun (om)
-           ^(let ,om.(get-temps)
-              ,om.(wrap-guards
-                    ^(progn ,*om.(assignments)
-                       (if ,om.test-expr t))))))
-    (let* ((or-matches (mapcar (op compile-match @1 obj-var) (cdr or-pat)))
-           (guard (new match-guard
-                       guard-expr ^(or ,*[mapcar submatch-fun or-matches]))))
-      (new compiled-match
-           pattern or-pat
-           obj-var obj-var
-           guard-chain (list guard)
-           test-expr t
-           vars (uniq (mappend .vars or-matches))))))
+(defun compile-parallel-match (par-pat obj-var)
+  (tree-bind (op . pats) par-pat
+    (flet ((submatch-fun (pm)
+             ^(let ,pm.(get-temps)
+                ,pm.(wrap-guards
+                      ^(progn ,*pm.(assignments)
+                         (if ,pm.test-expr t))))))
+      (let* ((par-matches (mapcar (op compile-match @1 obj-var) pats))
+             (guard (new match-guard
+                         guard-expr ^(,op ,*[mapcar submatch-fun par-matches]))))
+        (new compiled-match
+             pattern par-pat
+             obj-var obj-var
+             guard-chain (list guard)
+             test-expr t
+             vars (uniq (mappend .vars par-matches)))))))
 
 (defun compile-match (pat : (obj-var (gensym)))
   (cond
@@ -237,7 +238,8 @@
                  (all (compile-loop-match exp obj-var))
                  (usr:all* (compile-loop-match exp obj-var))
                  (some (compile-loop-match exp obj-var))
-                 (or (compile-or-match exp obj-var))
+                 (or (compile-parallel-match exp obj-var))
+                 (and (compile-parallel-match exp obj-var))
                  (t (compile-predicate-match exp obj-var)))
                (compile-error *match-form*
                               "unrecognized pattern syntax ~s" pat))))
