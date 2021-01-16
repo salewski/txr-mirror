@@ -115,6 +115,11 @@
             obj-var obj-var
             test-expr ^(equal ,obj-var ',atom)))))
 
+(defun compile-op-match (op-expr obj-var)
+  (let ((var-match (compile-var-match nil obj-var)))
+    (set var-match.test-expr ^[,op-expr ,obj-var])
+    var-match))
+
 (defun compile-predicate-match (pred-expr obj-var)
   (tree-bind (fun : sym) pred-expr
     (or (null sym) (bindable sym)
@@ -240,6 +245,7 @@
                  (some (compile-loop-match exp obj-var))
                  (or (compile-parallel-match exp obj-var))
                  (and (compile-parallel-match exp obj-var))
+                 (op (compile-op-match exp obj-var))
                  (t (compile-predicate-match exp obj-var)))
                (compile-error *match-form*
                               "unrecognized pattern syntax ~s" pat))))
