@@ -294,3 +294,13 @@
     ^(let (,flag ,result)
        ,*clause-code
        ,result)))
+
+(defmacro lambda-match (. clauses)
+  (with-gensyms (args)
+    ^(lambda (. ,args)
+       (match-case ,args ,*clauses))))
+
+(defmacro defun-match (name . clauses)
+  (with-gensyms (args)
+    ^(defun ,name (. ,args)
+       (match-case ,args ,*clauses))))
