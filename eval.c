@@ -5473,12 +5473,12 @@ static val prod_common(val self, val fun, struct args *lists,
 
 val maprodv(val fun, struct args *lists)
 {
-  return prod_common(lit("maprodv"), fun, lists, list_collect, mapcarv);
+  return prod_common(lit("maprod"), fun, lists, list_collect, mapcarv);
 }
 
 val maprendv(val fun, struct args *lists)
 {
-  return prod_common(lit("maprendv"), fun, lists, list_collect_append, mappendv);
+  return prod_common(lit("maprend"), fun, lists, list_collect_append, mappendv);
 }
 
 static loc collect_nothing(loc ptail, val obj)
