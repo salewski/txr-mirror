@@ -260,3 +260,37 @@
        ,cm.(wrap-guards
              ^(progn ,*cm.(assignments)
                 (if ,cm.test-expr ,*body))))))
+
+(defmacro if-match (:form *match-form* pat obj then : else)
+  (let ((cm (compile-match pat))
+        (match-p (gensym "match-p-"))
+        (result (gensym "result-")))
+    ^(let ((,cm.obj-var ,obj)
+           ,match-p
+           ,*cm.(get-vars))
+       (let ((,result ,cm.(wrap-guards
+                            ^(progn ,*cm.(assignments)
+                               (when ,cm.test-expr
+                                 (set ,match-p t)
+                                 ,then)))))
+         (if ,match-p ,result ,else)))))
+
+(defmacro match-case (:form *match-form* obj . clauses)
+  (unless [all clauses [andf proper-listp [chain len plusp]]]
+    (compile-error *match-form* "bad clause syntax"))
+  (let* ((flag (gensym "flag-"))
+         (result (gensym "result-"))
+         (clause-matches [mapcar (op compile-match (car @1) obj) clauses])
+         (clause-code (collect-each ((cl clauses)
+                                     (cm clause-matches))
+                        (tree-bind (match . forms) cl
+                          ^(unless ,flag
+                             (let (,*cm.(get-vars))
+                               (set ,result ,cm.(wrap-guards
+                                                  ^(progn ,*cm.(assignments)
+                                                     (when ,cm.test-expr
+                                                       (set ,flag t)
+                                                       ,*forms))))))))))
+    ^(let (,flag ,result)
+       ,*clause-code
+       ,result)))

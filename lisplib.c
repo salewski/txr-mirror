@@ -874,7 +874,7 @@ static val match_set_entries(val dlt, val fun)
     nil
   };
   val name[] = {
-    lit("when-match"),
+    lit("when-match"), lit("match-case"), lit("if-match"),
     nil
   };
 
