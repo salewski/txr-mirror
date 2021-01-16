@@ -164,6 +164,7 @@
 (defun compile-loop-match (exp obj-var)
   (tree-bind (op match) exp
     (let* ((list-test (if (eq op 'usr:all*) 'consp 'listp))
+           (some-p (eq op 'some))
            (item-var (gensym "item-"))
            (cm (compile-match match item-var))
            (loop-success-p-var (gensym "loop-success-p-"))
@@ -174,25 +175,27 @@
            (loop ^(for ((,iter-var ,obj-var)
                         (,loop-continue-p-var t))
                        ((and ,loop-continue-p-var ,iter-var)
-                        ,(if (eq op 'some)
+                        ,(if some-p
                            ^(not ,loop-continue-p-var)
                            loop-continue-p-var))
                        ((set ,iter-var (cdr ,iter-var)))
                     (let ((,cm.obj-var (car ,iter-var))
                           ,matched-p-var
-                          ,*(if (eq op 'some) cm.(get-temps) cm.(get-vars)))
+                          ,*(if some-p cm.(get-temps) cm.(get-vars)))
                       ,cm.(wrap-guards
                             ^(progn ,*cm.(assignments)
                                (if ,cm.test-expr
                                  (progn
                                    (set ,matched-p-var t)
-                                   ,*(mapcar (ret ^(push ,@1 ,@2))
-                                             cm.vars
-                                             collect-vars)))))
-                      (,(if (eq op 'some) 'when 'unless) ,matched-p-var
+                                   ,*(unless some-p
+                                       (mapcar (ret ^(push ,@1 ,@2))
+                                               cm.vars
+                                               collect-vars))))))
+                      (,(if some-p 'when 'unless) ,matched-p-var
                         (set ,loop-continue-p-var nil)))))
            (guard (new match-guard
-                       vars (cons loop-success-p-var collect-vars)
+                       vars (cons loop-success-p-var (unless some-p
+                                                       collect-vars))
                        var-exprs (list loop)
                        guard-expr ^(,list-test ,obj-var))))
       (new compiled-match
@@ -201,7 +204,7 @@
            guard-chain (list guard)
            test-expr loop-success-p-var
            vars cm.vars
-           var-exprs (unless (eq op 'some)
+           var-exprs (unless some-p
                        (mapcar (ret ^(nreverse ,@1)) collect-vars))))))
 
 (defun compile-or-match (or-pat obj-var)
