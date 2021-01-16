@@ -5303,7 +5303,6 @@ static val map_common(val self, val fun, struct args *lists,
     seq_iter_t *iter_array = coerce(seq_iter_t *,
                                     alloca(argc * sizeof *iter_array));
     args_decl(args_fun, max(argc, ARGS_MIN));
-    args_fun->fill = argc;
     list_collect_decl (out, otail);
 
     for (i = 0, idx = 0; i < argc; i++)
@@ -5324,6 +5323,9 @@ static val map_common(val self, val fun, struct args *lists,
 
         args_fun->arg[i] = elem;
       }
+
+      args_fun->fill = argc;
+      args_fun->list = 0;
 
       fun_ret = generic_funcall(fun, args_fun);
 
@@ -5438,7 +5440,6 @@ static val prod_common(val self, val fun, struct args *lists,
     args_copy(args_reset, lists);
     args_normalize_exact(args_reset, argc);
     args_work->fill = argc;
-    args_fun->fill = argc;
 
     for (i = 0; i < argc; i++)
       if (!iter_more((args_work->arg[i] = iter_begin(args_reset->arg[i]))))
@@ -5448,6 +5449,9 @@ static val prod_common(val self, val fun, struct args *lists,
 
       for (i = 0; i < argc; i++)
         args_fun->arg[i] = iter_item(args_work->arg[i]);
+
+      args_fun->fill = argc;
+      args_fun->list = 0;
 
       ptail = collect_fn(ptail, generic_funcall(fun, args_fun));
 
