@@ -39964,6 +39964,54 @@ then the match is deemed to have failed.
   --> :no-match
 .brev
 
+.coNP Pattern operators @ all and @ all*
+.synb
+.mets @(all << pattern )
+.mets @(all* << pattern )
+.syne
+.desc
+The
+.code all
+and
+.code all*
+pattern operators require the corresponding object to be a list.
+The specified
+.meta pattern
+is applied against every element of the list. The match is successful if
+.meta pattern
+matches every element.
+
+Furthermore, in the case of a successful match, these operators take
+each of the variables specified in the
+.meta pattern
+and bind it to a list of the elements which that variable matched.
+
+The difference between
+.code all
+and
+.code all*
+is as follows. The
+.code all
+operator respects the vacuous truth of the match when the list is empty.
+In that case, the match is successful, and the variables are all bound to
+the empty list
+.codn nil .
+In contrast, the alternative
+.code all*
+operator behaves like a failed match when the list is empty.
+
+.TP* Examples:
+
+.verb
+  ;; all elements of list match the pattern (x @a @b)
+  ;; a is bound to (1 2 3); b to (a b c)
+
+  (when-match @(all (x @a @b))
+             '((x 1 a) (x 2 b) (x 3 c))
+    (list a b))
+  --> ((1 2 3) (a b c))
+.brev
+
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote
 .synb
