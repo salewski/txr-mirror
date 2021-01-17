@@ -39779,10 +39779,10 @@ against the corresponding vector element.
   --> (2 4)
 .brev
 
-.NP* Structure match
+.coNP Pattern operator @ struct
 .synb
-.mets @(structure << name >> { slot-name << pattern }*)
-.mets @(structure << pattern >> { slot-name << pattern }*)
+.mets @(struct < name >> { slot-name << pattern }*)
+.mets @(struct < pattern >> { slot-name << pattern }*)
 .syne
 .desc
 The structure pattern operator matches a structure object. The operator
