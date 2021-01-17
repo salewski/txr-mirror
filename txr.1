@@ -39731,7 +39731,9 @@ atom pattern nil
 .codn nil .
 
 The syntax
+.mono
 .meti (. << pattern )
+.onom
 is valid, but indistinguishable from
 .meta pattern
 and therefore is not a list pattern.
@@ -39874,6 +39876,92 @@ object's structure type: the type itself, rather than its symbolic name.
 
   --> ((#<struct-type grommet> :grom)
        (#<struct-type widget> :widg))
+.brev
+
+.coNP Pattern operator @ let
+.synb
+.mets @(let < name << pattern)
+.syne
+.desc
+The
+.code let
+pattern operator allows the entire object matched by a
+.meta pattern
+to be bound to a the variable given by
+.metn name .
+
+The
+.meta name
+argument must be a bindable symbol, or else
+.codn nil .
+If
+.meta name
+is
+.codn nil ,
+then no name is bound. Thus
+.mono
+.meti @(let nil << pattern )
+.onom
+is equivalent to just
+.metn pattern .
+
+If
+.meta pattern
+matches, then
+.meta name
+is included among the variables, and receives the entire
+object matched by
+.meta pattern
+as its value.
+
+.TP* Example:
+
+.verb
+  ;; w captures the entire (1 2 3) list:
+
+  (when-match @(let w (@a @b @c)) '(1 2 3) (list w a b c))
+  -> ((1 2 3) 1 2 3)
+.brev
+
+.coNP Pattern operator @ require
+.synb
+.mets @(require < pattern << expression *)
+.syne
+.desc
+The pattern operator
+.code require
+applies the specified
+.meta pattern
+to the corresponding object.
+If the
+.meta pattern
+matches, the operator then imposes the additional conditions specified by
+the extra
+.metn expression .
+The
+.meta expression
+is evaluated in a scope in which the variables from
+.meta pattern
+have already been established.
+However, the mach is considered to have succeeded only if
+.meta expression
+yields true. If it yields
+.codn nil ,
+then the match is deemed to have failed.
+
+.TP* Examples:
+
+.verb
+  ;; Match a (+ a b) expression where a and b are similar:
+
+  (when-match @(require (+ @a @b) (equal a b)) '(+ z z) (list a b))
+  --> (z z)
+
+  ;; Mismatched case
+  (if-match @(require (+ @a @b) (equal a b)) '(+ y z)
+     (list a b)
+     :no-match)
+  --> :no-match
 .brev
 
 .SS* Quasiquote Operator Syntax
