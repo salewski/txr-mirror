@@ -39782,16 +39782,28 @@ against the corresponding vector element.
 .NP* Structure match
 .synb
 .mets @(structure << name >> { slot-name << pattern }*)
+.mets @(structure << pattern >> { slot-name << pattern }*)
 .syne
 .desc
-The structure pattern operator matches a structure object.
-The first argument of the pattern operator is a symbol which gives the name of
-the structure type. The corresponding object being matched must be a structure
-instance, and must be of this type, otherwise there is no match
+The structure pattern operator matches a structure object. The operator
+supports two modes of matching, the choice of which depends on whether the
+first argument is a
+.meta name
+or a
+.metn pattern .
+
+The first argument is considered a
+.meta name
+if it is a bindable symbol according to the
+.code bindable
+function. In this situation, the operator operates in
+strict mode.  Otherwise, the operator is in loose mode.
 
 The
 .meta name
-is followed by zero or more
+or
+.meta pattern
+argument is followed by zero or more
 .meta "slot-name pattern"
 pairs, which are not enclosed in lists, similarly to the way
 slots are presented in the
@@ -39800,11 +39812,39 @@ struct syntax and in the argument conventions of the
 .code new
 macro.
 
-Each
+In strict mode,
+.meta name
+is assumed to be the name of an existing struct type.
+The object being matched is tested whether it is a subtype of this type, as
+if using the
+.code subtypep
+function. If it isn't, the match fails.
+
+In loose mode, the object being matched is tested whether it is a structure
+object of any structure type. If it isn't, the match fails.
+
+In strict mode, each
 .meta "slot-name pattern"
 pair requires that the object's slot of that name contain
 a value which matches
 .metn pattern .
+The operator assumes that all the
+.metn slot-name -s
+are slots of the struct type indicated by
+.metn name .
+
+In loose mode, no assumption is made that the object actually has the
+slots specified by the
+.meta slot-name
+arguments. The object's structure type is inquired to
+determine whether it has each of those slots. If it doesn't, the match fails.
+If the object has the required slots, then the values of those slots are
+matched against the patterns.
+
+In loose mode, the
+.meta pattern
+given in the first argument position of the syntax is matched against the
+object's structure type: the type itself, rather than its symbolic name.
 
 .TP* Examples:
 
@@ -39815,6 +39855,25 @@ a value which matches
   (when-match @(struct time year 2021 month @m)
               #S(time year 2021 month 1)
     m) -> 1
+
+  ;; match any structure with name and value slots,
+  ;; whose name is foo, and extract the value.
+
+  (defstruct widget ()
+    name
+    value)
+
+  (defstruct grommet ()
+    name
+    value)
+
+  (append-each ((obj (list (new grommet name "foo" value :grom)
+                           (new widget name "foo" value :widg))))
+    (when-match @(struct @type name "foo" value @v) obj
+      (list (list type v))))
+
+  --> ((#<struct-type grommet> :grom)
+       (#<struct-type widget> :widg))
 .brev
 
 .SS* Quasiquote Operator Syntax

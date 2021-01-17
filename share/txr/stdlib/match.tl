@@ -59,26 +59,54 @@
 (defvar *match-form*)
 
 (defun compile-struct-match (struct-pat obj-var)
-  (let* ((required-type (cadr struct-pat))
-         (slot-pairs (plist-to-alist (cddr struct-pat)))
-         (required-slots [mapcar car slot-pairs])
-         (slot-gensyms [mapcar gensym required-slots])
-         (slot-patterns [mapcar cdr slot-pairs])
-         (slot-matches [mapcar compile-match slot-patterns slot-gensyms])
-         (slot-val-exprs [mapcar (ret ^(slot ,obj-var ',@1))
-                                 required-slots])
-         (guard (new match-guard
-                     vars slot-gensyms
-                     var-exprs slot-val-exprs
-                     guard-expr  ^(subtypep (typeof ,obj-var)
-                                            ',required-type))))
-    (new compiled-match
-         pattern struct-pat
-         obj-var obj-var
-         guard-chain (cons guard (mappend .guard-chain slot-matches))
-         test-expr ^(and ,*(mapcar .test-expr slot-matches))
-         vars [mappend .vars slot-matches]
-         var-exprs [mappend .var-exprs slot-matches])))
+  (tree-bind (op required-type . pairs) struct-pat
+    (let* ((loose-p (not (bindable required-type)))
+           (slot-pairs (plist-to-alist pairs))
+           (required-slots [mapcar car slot-pairs])
+           (slot-gensyms [mapcar gensym required-slots])
+           (type-gensym (if loose-p
+                          (gensym "type-")))
+           (slot-patterns [mapcar cdr slot-pairs])
+           (slot-matches [mapcar compile-match slot-patterns slot-gensyms])
+           (type-match (if loose-p
+                         (compile-match required-type type-gensym)))
+           (all-matches (if loose-p
+                          (cons type-match slot-matches)
+                          slot-matches))
+           (slot-val-exprs [mapcar (ret ^(slot ,obj-var ',@1)) required-slots])
+           (guard0 (if loose-p
+                     (new match-guard
+                          vars (list type-gensym)
+                          var-exprs (list ^(struct-type ,obj-var))
+                          guard-expr ^(structp ,obj-var))))
+           (guard1 (new match-guard
+                        vars slot-gensyms
+                        var-exprs slot-val-exprs
+                        guard-expr (if loose-p
+                                     ^(and ,*(mapcar
+                                               (ret ^(slotp ,type-gensym ',@1))
+                                               required-slots))
+                                     ^(subtypep (typeof ,obj-var)
+                                                ',required-type)))))
+      (unless loose-p
+        (let ((type (find-struct-type required-type)))
+          (if type
+            (each ((slot required-slots))
+              (unless (slotp type slot)
+                (compile-defr-warning *match-form* ^(slot . ,slot)
+                                      "~s has no slot ~s"
+                                      required-type slot)))
+            (compile-defr-warning *match-form* ^(struct-type . ,required-type)
+                                  "no such struct type: ~s"
+                                  required-type))))
+      (new compiled-match
+           pattern struct-pat
+           obj-var obj-var
+           guard-chain ^(,*(if guard0 (list guard0)) ,guard1
+                         ,*(mappend .guard-chain all-matches))
+           test-expr ^(and ,*(mapcar .test-expr all-matches))
+           vars [mappend .vars all-matches]
+           var-exprs [mappend .var-exprs all-matches]))))
 
 (defun compile-var-match (sym obj-var)
   (or (null sym) (bindable sym)
