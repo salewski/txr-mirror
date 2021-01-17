@@ -39547,6 +39547,276 @@ then there is no such binding: compound forms beginning with
 .code sym
 do not undergo place macro expansion.
 
+.SS* Structural Pattern Matching
+\*(TL provides a structural pattern matching system. Structural pattern
+matching is a syntax which allows for the succinct expression of code
+which classifies objects according to their shape and content, and which
+accesses the elements within objects, or both.
+
+Note: \*(TL's macro-style parameter lists, appearing in
+.code tree-bind
+and related macros, also provide a form of structural pattern matching.
+Macro-style parameter list pattern matching is limited to objects which
+are nested
+.code cons
+cell structures resembling macro calls. It is only useful for matching on
+shape, not content.  Moreover, every position in a macro-style parameter
+list is required to specify a variable, whether or not the corresponding
+object element is used in the situation.
+
+The central concept in structural pattern matching is the resolution of a
+pattern (specified as syntax which is part of the program) against an object (a
+run-time value of unknown type, shape and other properties).  The primary
+decision is Boolean: does the object match the pattern?  If the object matches
+the pattern, then variables specified in the pattern are bound against elements
+extracted from the object, and some associated body of code is evaluated under
+the scope of the variables.
+
+Structural pattern matching is available via a number of different
+operators:
+.codn when-match ,
+.codn if-match ,
+.codn match-case ,
+.code lambda-match
+and
+.codn defun-match .
+The
+.code when-match
+macro is the simplest. It tests an object against a pattern, and if there is a
+match, evaluates zero or more forms in an environment in which the pattern
+variables have bindings to elements of the object.
+The
+.code if-match
+macro evaluates a single form if there is a match, otherwise an alternative form.
+The
+.code match-case
+macro evaluates the same object against multiple clauses, each consisting of a
+pattern and zero or more forms. The first case whose pattern matches the object
+is selected. The variables are bound, and the associated forms are evaluated.
+The
+.code lambda-match
+macro provides a way to express an anonymous function whose argument list
+is matched against multiple clauses similarly to
+.code match-case
+and
+.code defun-match
+provides a way to define a top-level function using the same concept.
+
+\*(TL's structural pattern matching notation is template based.
+With the exception of structures, objects are matched using patterns which
+are based on their printed notation.
+For instance instance, the pattern
+.code "(1 2 @a)"
+is a pattern matching the list
+.code "(1 2 3)"
+binding
+.code a
+to
+.codn 3 .
+The notation supports lists, vectors and atoms. Atoms are compared using the
+.code equal
+function. Thus, in the above pattern, the 1 and 2 in the pattern match the
+corresponding 1 and 2 atoms in the object using
+.codn equal .
+
+All parts of a pattern are static material which matches literally,
+except those parts introduced by the meta prefix
+.codn @ .
+This prefix denotes variables like
+.code @a
+as well as useful pattern matching operators like
+.meti @(all << pattern )
+which matches a list or sublist whose elements all match
+.metn pattern .
+
+Structure objects are matched using a dedicated
+.code "@(struct name ...)"
+operator rather than using
+.code "#S(name ...)"
+notation. The reason is that a struct literal produces an object
+which loses information about how it was specified in the literal syntax,
+but those details are critically important in pattern matching.
+
+The pattern-matching notation is documented in he following
+sections; sections describing the pattern matching macros follow.
+
+.NP* Atom match
+A pattern consisting of an atom other than a vector
+matches a similar object. The similarity is determined using the
+.code equal
+function.
+
+The atom is not subject to evaluation, which means that a symbolic atom stands
+for itself, and not the value of a variable.
+
+.TP* Examples:
+.verb
+  ;; the pattern 1 matches the object 1
+  (if-match 1 1 'yes 'no) --> yes
+
+  ;; the object 0 does not match
+  (if-match 1 0 'yes 'no) --> no
+
+  ;; a matches a, does not match b
+  (let ((sym 'a))
+    (list (if-match a sym 'yes 'no)
+          (if-match b sym 'yes 'no)))
+  --> (yes no)
+.brev
+
+.NP* Variable match
+.synb
+.mets >> @ symbol
+.syne
+.desc
+A meta-variable can be used as a pattern expression.
+This pattern unconditionally matches an object of any kind.
+
+The
+.meta symbol
+is required to be a either a bindable symbol according to the
+.code bindable
+function, or else the symbol
+.codn nil .
+
+If it is a bindable symbol, then the object is bound to that
+symbol.
+
+If
+.meta symbol
+is
+.codn nil ,
+then the match succeeds, without binding a variable.
+
+.TP* Examples:
+
+.verb
+  (when-match @a 42 (list a)) -> (42)
+
+  (when-match (@a @b @c) '(1 2 3) (list c b a)) -> (3 2 1)
+.brev
+
+.NP* List match
+.synb
+.mets <> ( pattern +)
+.mets <> ( pattern + . << pattern )
+.syne
+.desc
+Pattern syntax consisting of a non-empty, possibly improper list
+matches list structure. A pattern expression may be specified in the
+dotted position. If it is omitted, then there is an implicit terminating
+.code nil
+which constitutes an atom expression matching
+.codn nil .
+
+A list pattern matches a list of the same shape. For each
+.meta pattern
+expressions, there must exist an item in the list.
+
+A match occurs when every
+.meta pattern
+matches the corresponding element of the list, including the
+.meta pattern
+in the dotted position.
+
+Because a the dotted position
+.meta pattern
+matches a list, it is possible for a short pattern
+to match a longer list.
+
+The syntax is indicated as requiring at least one
+.meta pattern
+because otherwise the list is empty, which corresponds to the
+atom pattern nil
+.codn nil .
+
+The syntax
+.meti (. << pattern )
+is valid, but indistinguishable from
+.meta pattern
+and therefore is not a list pattern.
+
+.TP* Examples:
+
+.verb
+  (if-match (@a @b @c . @d) '(1 2 3 . 4) (list d c b a))
+  --> (4 3 2 1)
+
+  ;; 2 doesn't satisfy oddp
+  (if-match (@(oddp a) @b @c . @d) '(2 x y z)
+    (list a b c d)
+    :no-match)
+  --> :no-match
+
+  ;; 1 and 2 match, a takes (3 4)
+  (if-match (1 2 . @a) '(1 2 3 4) a) --> (3 4)
+
+  ;; nesting
+  (if-match ((1 2 @a) @b) '((1 2 3) 4) (list a b)) -> (3 4)
+.brev
+
+.NP* Vector match
+.synb
+.mets <> #( pattern *)
+.syne
+.desc
+A pattern match for a vector is expressed using vector notation enclosing
+pattern expressions.  This pattern matches a vector object which contains
+exactly as many elements as there are patterns.  Each pattern is applied
+against the corresponding vector element.
+
+.TP* Examples:
+
+.verb
+  ;; empty vector pattern matches empty vector
+  (if-match #() #() :yes :no) -> :yes
+
+  ;; empty vector pattern fails to match non-empty vector
+  (if-match #() #(1) :yes :no) -> :no
+
+  ;; match with nested list and vector
+  (if-match #((1 @a) #(3 @b)) #((1 2) #(3 4)) (list a b))
+  --> (2 4)
+.brev
+
+.NP* Structure match
+.synb
+.mets @(structure << name >> { slot-name << pattern }*)
+.syne
+.desc
+The structure pattern operator matches a structure object.
+The first argument of the pattern operator is a symbol which gives the name of
+the structure type. The corresponding object being matched must be a structure
+instance, and must be of this type, otherwise there is no match
+
+The
+.meta name
+is followed by zero or more
+.meta "slot-name pattern"
+pairs, which are not enclosed in lists, similarly to the way
+slots are presented in the
+.code #S
+struct syntax and in the argument conventions of the
+.code new
+macro.
+
+Each
+.meta "slot-name pattern"
+pair requires that the object's slot of that name contain
+a value which matches
+.metn pattern .
+
+.TP* Examples:
+
+.verb
+  ;; extract the month from a time structure
+  ;; that is required to have a year of 2021.
+
+  (when-match @(struct time year 2021 month @m)
+              #S(time year 2021 month 1)
+    m) -> 1
+.brev
+
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote
 .synb
