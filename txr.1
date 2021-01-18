@@ -40040,6 +40040,61 @@ Variables are extracted from the first matching which is found.
   -> (2 b)
 .brev
 
+.coNP Pattern operators @ and and @ or
+.synb
+.mets @(and << pattern *)
+.mets @(or << pattern *)
+.syne
+.desc
+The
+.code and
+and
+.code or
+operators match multiple patterns in parallel, against
+the same object.
+The
+.code and
+operator matches if every
+.meta pattern
+matches the object, otherwise there is no match.
+The
+.code or
+operator requires one
+.meta pattern
+to match. It tries the patterns in left to right order, and
+stops at the first matching one, declaring failure if none match.
+
+When the
+.code and
+matches, the variables from all of the
+patterns are bound.  Duplicate variables from multiple patterns are merged into
+a single instance. The rightmost occurrence of a variable takes precedence; its
+value is the one that appears.
+
+When the
+.code or
+operator matches, the variables from all of the patterns
+are bound.
+The variables from the matching
+.meta pattern
+take on the values implied by that pattern.
+The variables from the non-matching patterns that are not
+duplicates of variables in the matching
+.meta pattern
+take on
+.code nil
+values.
+
+.TP* Examples
+
+.verb
+  (if-match @(and (@x 2 3) (1 @y 3) (1 2 @z)) '(1 2 3)
+    (list x y z)) -> (1 2 3)
+
+  (if-match @(or (@x 3 3) (1 @x 3) (1 2 @x)) '(1 2 3)
+    x) -> 2
+.brev
+
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote
 .synb
