@@ -242,20 +242,25 @@
 
 (defun compile-parallel-match (par-pat obj-var)
   (tree-bind (op . pats) par-pat
-    (flet ((submatch-fun (pm)
-             ^(let ,pm.(get-temps)
-                ,pm.(wrap-guards
-                      ^(progn ,*pm.(assignments)
-                         (if ,pm.test-expr t))))))
-      (let* ((par-matches (mapcar (op compile-match @1 obj-var) pats))
-             (guard (new match-guard
-                         guard-expr ^(,op ,*[mapcar submatch-fun par-matches]))))
-        (new compiled-match
-             pattern par-pat
-             obj-var obj-var
-             guard-chain (list guard)
-             test-expr t
-             vars (uniq (mappend .vars par-matches)))))))
+    (let* ((par-matches (mapcar (op compile-match @1 obj-var) pats))
+           (all-vars (uniq (mappend .vars par-matches))))
+      (flet ((submatch-fun (pm)
+               ^(let ,pm.(get-temps)
+                  ,pm.(wrap-guards
+                        ^(progn ,*pm.(assignments)
+                           (when ,pm.test-expr
+                             ,*(if (eq op 'or)
+                                 (mapcar (ret ^(set ,@1 nil))
+                                         (diff all-vars pm.vars)))
+                             t))))))
+        (let ((guard (new match-guard
+                          guard-expr ^(,op ,*[mapcar submatch-fun par-matches]))))
+          (new compiled-match
+               pattern par-pat
+               obj-var obj-var
+               guard-chain (list guard)
+               test-expr t
+               vars (uniq (mappend .vars par-matches))))))))
 
 (defun compile-match (pat : (obj-var (gensym)))
   (cond
