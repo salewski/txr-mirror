@@ -40294,6 +40294,92 @@ if there are no forms.
      (@x :default)) --> :default
 .brev
 
+.coNP Macro @ lambda-match
+.synb
+.mets (lambda-match >> {( pattern << form *)}*)
+.syne
+.desc
+The
+.code lambda-match
+is closely based on
+.codn match-case .
+
+The arguments of
+.code lambda-match
+are zero or more clauses similar to those of
+.codn match-case .
+
+An invocation of
+.code lambda-match
+evaluates to an anonymous function which can take any number of arguments.
+
+Whenever the function is called, its arguments are treated as a list object
+which is subject to pattern matching via the clauses. The
+.mets pattern
+from every clause is tested against the argument list. If it matches
+each associated
+.meta form
+is evaluated in the scope of the variables emanating from that
+.meta pattern
+and the value of the last
+.meta form
+is returned. If no
+.meta pattern
+matches, the function returns
+.codn nil .
+
+Note: the
+.code lambda-macro
+can be understood in terms of the following equivalence:
+
+.verb
+  (lambda-match ...)   <-->   (lambda (. rest) (match-case rest ...))
+.brev
+
+Here, the
+.code rest
+variable is to be understood as a generated, unique symbol.
+
+Note: an anonymous function which takes one argument and matches that
+object against clauses using
+.code match-case
+can be obtained with the
+.code do
+operator, using the pattern:
+.codn "(do match @1 ...)" .
+
+.coNP Macro @ defun-match
+.synb
+.mets (defun-match < name >> {( pattern << form *)}*)
+.syne
+.desc
+The
+.code defun-match
+macro can be used to define a top-level function in the style of
+.codn lambda-match .
+
+It works according to the following equivalence:
+
+.verb
+  (defun-match name ...)  <-->  (defun name (. rest) (match-case rest ...))
+.brev
+
+Here, the
+.code rest
+variable is to be understood as a generated, unique symbol.
+
+Because
+.code defun-match
+is defined in terms of
+.codn defun ,
+it has all of the properties, such as a block of the same
+.meta name
+being established around the implicit
+.code match-case
+so that
+.code return-from
+is possible.
+
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote
 .synb
