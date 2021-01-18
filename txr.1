@@ -40176,6 +40176,124 @@ syntax denotes the predicate operator whenever the
 .meta operator
 symbol is not one of the predicates.
 
+.coNP Macros @ when-match and @ if-match
+.synb
+.mets (when-match < pattern < expr << form *)
+.mets (if-match < pattern < expr < then-form <> [ else-form ])
+.syne
+.desc
+The
+.code when-match
+and
+.code if-match
+macros conditionally evaluate code based on whether the value of
+.meta expr
+matches
+.metn pattern .
+
+The
+.code when-match
+macro arranges for every
+.meta form
+to be evaluated in the scope of the variables established by
+.meta pattern
+when it matches the object produced by
+.metn expr .
+The value of the last
+.meta form
+is returned, or else
+.code nil
+if there are no forms.
+If the match fails, the forms are not evaluated, and
+.code nil
+is produced.
+
+The
+.code if-match
+macro evaluates
+.meta then-form
+in the scope of he variables established by
+.meta pattern
+if the match is successful, and yields the value of that form.
+Otherwise, it evaluates
+.metn else-form ,
+which defaults to
+.code nil
+if it is not specified.
+
+.coNP Macro @ match-case
+.synb
+.mets (match-case < expr >> {( pattern << form *)}*)
+.syne
+.desc
+The
+.code match-case
+successively matches the value of
+.meta expr
+against zero or more patterns.
+
+The syntax of
+.code match-case
+consists of an expression
+.meta expr
+followed by zero or more clauses.
+Each clause is a compound expression whose first element is
+.metn pattern ,
+which is followed by zero or more forms.
+
+First,
+.meta expr
+is evaluated. Then, the value is matched against each
+.meta pattern
+in succession, stopping at the first pattern which provides
+a successful match.
+If no pattern provides a successful match, then
+.code match-case
+terminates and returns
+.codn nil .
+
+If a
+.meta pattern
+matches successfully, then each
+.meta form
+associated with the pattern is evaluated in the scope of the variable
+bindings established by that
+.metn pattern .
+Then
+.code match-case
+terminates, returning the value of the last
+.meta form
+or else
+.code nil
+if there are no forms.
+
+.TP* Examples:
+
+.verb
+  ;; classify sequence of objects by pattern matching,
+  ;; returning a list of the results
+
+  (collect-each ((obj (list '(1 2 3)
+                            '(4 5)
+                            '(3 5)
+                            #S(time year 2021 month 1 day 1)
+                            #(vec tor))))
+    (match-case obj
+      (@(struct time year @y) y)
+      (#(@x @y) (list x y))
+      ((@nil @nil @x) x)
+      ((4 @x) x)
+      ((@x 5) x)))
+
+   --> (3 5 3 2021 (vec tor))
+
+   ;; default case can be represented by a guaranteed match
+
+   (match-case 1
+     (2 :two)
+     (@x :default)) --> :default
+.brev
+
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote
 .synb

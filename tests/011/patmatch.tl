@@ -66,3 +66,17 @@
 (test (if-match @(op <= 10 @1 13) 11 :yes :no) :yes)
 (test (when-match @(let x @(op <= 10 @1 13)) 11 x) 11)
 (test (when-match (@(evenp) @(oddp x)) '(2 3) x) 3)
+
+(test
+  (collect-each ((obj (list '(1 2 3)
+                            '(4 5)
+                            '(3 5)
+                            #S(time year 2021 month 1 day 1)
+                            #(vec tor))))
+    (match-case obj
+      (@(struct time year @y) y)
+      (#(@x @y) (list x y))
+      ((@nil @nil @x) x)
+      ((4 @x) x)
+      ((@x 5) x)))
+  (3 5 3 2021 (vec tor)))
