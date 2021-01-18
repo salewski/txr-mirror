@@ -17,3 +17,6 @@
 
 (stest (build (add 1) (add 2) (ncon (get))) "#1=(1 2 . #1#)")
 (stest (build (add 1) (add 2) (ncon* (get))) "#1=(1 2 . #1#)")
+
+(test (mapcar (lambda (. args) (list . args)) '#(1 2 3) '#(4 5 6))
+      #((1 4) (2 5) (3 6)))
