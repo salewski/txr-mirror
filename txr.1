@@ -40012,6 +40012,34 @@ operator behaves like a failed match when the list is empty.
   --> ((1 2 3) (a b c))
 .brev
 
+.coNP Pattern operator @ some
+.synb
+.mets @(some << pattern )
+.syne
+.desc
+The
+.code some
+pattern operator requires the corresponding object to be a list.
+The specified
+.meta pattern
+is applied against every element of the list. The match is successful if
+.meta pattern
+finds a matching element.
+
+Variables are extracted from the first matching which is found.
+
+.TP* Example:
+
+.verb
+  ;; the second (x 2 b) element is the leftmost one
+  ;; which matches the (x @a @b) pattern
+
+  (when-match @(some (x @a @b))
+             '((y 1 a) (x 2 b) (z 3 c))
+    (list a b))
+  -> (2 b)
+.brev
+
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote
 .synb
