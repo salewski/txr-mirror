@@ -262,6 +262,22 @@
                test-expr t
                vars (uniq (mappend .vars par-matches))))))))
 
+(defun compile-not-match (pattern obj-var)
+  (tree-bind (op pattern) pattern
+    (let* ((pm (compile-match pattern obj-var))
+           (guard (new match-guard
+                       guard-expr ^(not (let ,pm.(get-vars)
+                                          ,pm.(wrap-guards
+                                                ^(progn ,*pm.(assignments)
+                                                   (when ,pm.test-expr
+                                                     t))))))))
+      (new compiled-match
+           pattern pattern
+           obj-var obj-var
+           guard-chain (list guard)
+           test-expr t
+           vars nil))))
+
 (defun compile-match (pat : (obj-var (gensym)))
   (cond
     ((consp pat)
@@ -278,6 +294,7 @@
                  (some (compile-loop-match exp obj-var))
                  (or (compile-parallel-match exp obj-var))
                  (and (compile-parallel-match exp obj-var))
+                 (not (compile-not-match exp obj-var))
                  (op (compile-op-match exp obj-var))
                  (t (compile-predicate-match exp obj-var)))
                (compile-error *match-form*

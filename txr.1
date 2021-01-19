@@ -40104,6 +40104,40 @@ values.
     x) -> 2
 .brev
 
+.coNP Pattern operator @ not
+.synb
+.mets @(not << pattern )
+.syne
+.desc
+The pattern operator
+.code not
+provides logical inverse semantics. It matches if, and only if, the
+.meta pattern
+does not match.
+
+Whether or not the
+.cond not
+operator matches, no variables are bound. If the embedded
+.meta pattern
+matches, the variables which it binds are suppressed by the
+.cond not
+operator.
+
+.TP* Examples:
+
+.verb
+   ;; @a matches unconditionally, so @(not @a) always fails:
+   (match-if @(not @a) 1 :yes :no) -> no
+
+   ;; error: a is not bound
+   (match-if @(not @a) 1 :yes a) -> error
+
+   (match-case '(1 2 3)
+     ((@(not 1) @b @c) (list :case1 b c))
+     ((@(not 0) @b @c) (list :case2 c b)))
+   --> (:case2 3 2)
+.brev
+
 .coNP Pattern operator @ op
 .synb
 .mets @(op << form +)
