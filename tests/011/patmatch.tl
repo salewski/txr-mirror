@@ -80,3 +80,5 @@
       ((4 @x) x)
       ((@x 5) x)))
   (3 5 3 2021 (vec tor)))
+
+(test (when-match (@(and @a @b) (x . @c)) '(1 (x 2 3 4)) c) (2 3 4))
