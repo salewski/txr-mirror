@@ -35598,12 +35598,12 @@ as the original function call.
   ;; and return 42.
   ;;
   ;; (dolist (x '(1 2 3) 42)
-  ;;   (format t "~s\en"))
+  ;;   (format t "~s\en" x))
 
   (defmacro dolist ((var list : result) . body)
-    (let ((i (my-gensym)))
-      ^(for ((i ,list)) (i ,result) ((set i (cdr i)))
-         (let ((,var (car i)))
+    (let ((i (gensym)))
+      ^(for ((,i ,list)) (,i ,result) ((set ,i (cdr ,i)))
+         (let ((,var (car ,i)))
            ,*body))))
 .brev
 
