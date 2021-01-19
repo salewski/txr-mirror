@@ -253,14 +253,16 @@
                                  (mapcar (ret ^(set ,@1 nil))
                                          (diff all-vars pm.vars)))
                              t))))))
-        (let ((guard (new match-guard
-                          guard-expr ^(,op ,*[mapcar submatch-fun par-matches]))))
+        (let ((guard0 (new match-guard
+                           guard-expr t
+                           vars all-vars))
+              (guard1 (new match-guard
+                           guard-expr ^(,op ,*[mapcar submatch-fun par-matches]))))
           (new compiled-match
                pattern par-pat
                obj-var obj-var
-               guard-chain (list guard)
-               test-expr t
-               vars (uniq (mappend .vars par-matches))))))))
+               guard-chain (list guard0 guard1)
+               test-expr t))))))
 
 (defun compile-not-match (pattern obj-var)
   (tree-bind (op pattern) pattern
