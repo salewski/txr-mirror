@@ -226,19 +226,23 @@
                                                collect-vars))))))
                       (,(if some-p 'when 'unless) ,matched-p-var
                         (set ,loop-continue-p-var nil)))))
-           (guard (new match-guard
-                       vars (cons loop-success-p-var (unless some-p
-                                                       collect-vars))
-                       var-exprs (list loop)
-                       guard-expr ^(,list-test ,obj-var))))
+           (guard0 (new match-guard
+                        vars (append cm.vars (unless some-p collect-vars))
+                        guard-expr t))
+           (guard1 (new match-guard
+                        vars (list loop-success-p-var)
+                        var-exprs (list loop)
+                        guard-expr ^(,list-test ,obj-var))))
       (new compiled-match
            pattern exp
            obj-var obj-var
-           guard-chain (list guard)
-           test-expr loop-success-p-var
-           vars cm.vars
-           var-exprs (unless some-p
-                       (mapcar (ret ^(nreverse ,@1)) collect-vars))))))
+           guard-chain (list guard0 guard1)
+           test-expr (if some-p
+                       loop-success-p-var
+                       ^(when ,loop-success-p-var
+                          ,*(mapcar (ret ^(set ,@1 (nreverse ,@2)))
+                                    cm.vars collect-vars)
+                          t))))))
 
 (defun compile-parallel-match (par-pat obj-var)
   (tree-bind (op . pats) par-pat
