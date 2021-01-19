@@ -309,8 +309,8 @@
               (sys:for-op me.(comp-for oreg env form))
               (sys:each-op me.(compile oreg env (expand-each form env)))
               ((progn eval-only compile-only) me.(comp-progn oreg env (cdr form)))
-              (and me.(comp-and-or oreg env form))
-              (or me.(comp-and-or oreg env form))
+              (and me.(compile oreg env (expand-and form)))
+              (or me.(comp-or oreg env form))
               (prog1 me.(comp-prog1 oreg env form))
               (sys:quasi me.(comp-quasi oreg env form))
               (dohash me.(compile oreg env (expand-dohash form)))
@@ -960,15 +960,14 @@
     me.(free-treg oreg-discard)
     (new (frag (if lastfrag lastfrag.oreg ^(t 0)) code fvars ffuns))))
 
-(defmeth compiler comp-and-or (me oreg env form)
-  (tree-case form
-    ((op) me.(compile oreg env (if (eq op 'and) t)))
+(defmeth compiler comp-or (me oreg env form)
+  (tree-case (simplify-or form)
+    ((op) me.(compile oreg env nil))
     ((op arg) me.(compile oreg env arg))
     ((op . args)
      (let* (ffuns fvars
             (nargs (len args))
             lastfrag
-            (is-and (eq op 'and))
             (lout (gensym "l"))
             (treg me.(maybe-alloc-treg oreg))
             (code (build
@@ -981,9 +980,7 @@
                           (pend frag.code
                                 (maybe-mov treg frag.oreg))
                           (unless islast
-                            (add (if is-and
-                                   ^(if ,treg ,lout)
-                                   ^(ifq ,treg ,nil ,lout))))
+                            (add ^(ifq ,treg ,nil ,lout)))
                           (set fvars (uni fvars frag.fvars))
                           (set ffuns (uni ffuns frag.ffuns))))))))
        me.(maybe-free-treg treg oreg)
@@ -1276,6 +1273,36 @@
 (defun maybe-mov (to-reg from-reg)
   (if (nequal to-reg from-reg)
     ^((mov ,to-reg ,from-reg))))
+
+(defun true-const-p (arg)
+  (and arg (constantp arg)))
+
+(defun expand-and (form)
+  (match-case form
+    ((and) t)
+    ((and @(true-const-p) . @rest) (expand-and ^(and ,*rest)))
+    ((and nil . @rest) nil)
+    ((and @a) a)
+    ((and @a @b) ^(if ,a ,b))
+    ((and @a . @rest) (expand-and ^(and ,a ,(expand-and ^(and ,*rest)))))
+    (@else else)))
+
+(defun flatten-or (form)
+  (match-case form
+    ((or . @args) ^(or ,*[mappend [chain flatten-or cdr] args]))
+    (@else ^(or ,else))))
+
+(defun reduce-or (form)
+  (match-case form
+    ((or) form)
+    ((or @a) form)
+    ((or nil . @rest) (reduce-or ^(or ,*rest)))
+    ((or @(true-const-p c) . @rest) ^(or ,c))
+    ((or @a . @rest) ^(or ,a ,*(cdr (reduce-or ^(or ,*rest)))))
+    (@else else)))
+
+(defun simplify-or (form)
+  (reduce-or (flatten-or form)))
 
 (defun expand-quasi-mods (obj mods : form)
   (let (plist num sep rng-ix scalar-ix-p flex gens)
