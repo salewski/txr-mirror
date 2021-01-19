@@ -59,7 +59,7 @@
 (defvar *match-form*)
 
 (defun compile-struct-match (struct-pat obj-var)
-  (tree-bind (op required-type . pairs) struct-pat
+  (mac-param-bind *match-form* (op required-type . pairs) struct-pat
     (let* ((loose-p (not (bindable required-type)))
            (slot-pairs (plist-to-alist pairs))
            (required-slots [mapcar car slot-pairs])
@@ -149,7 +149,7 @@
     var-match))
 
 (defun compile-predicate-match (pred-expr obj-var)
-  (tree-bind (fun : sym) pred-expr
+  (mac-param-bind *match-form* (fun : sym) pred-expr
     (or (null sym) (bindable sym)
         (compile-error *match-form* "~s is not a symbol" sym))
     (let ((var-match (compile-var-match sym obj-var)))
@@ -157,7 +157,7 @@
       var-match)))
 
 (defun compile-cons-structure (cons-pat obj-var)
-  (tree-bind (car . cdr) cons-pat
+  (mac-param-bind *match-form* (car . cdr) cons-pat
     (let* ((car-gensym (gensym))
            (cdr-gensym (gensym))
            (car-match (compile-match car car-gensym))
@@ -180,13 +180,13 @@
            var-exprs (append car-match.var-exprs cdr-match.var-exprs)))))
 
 (defun compile-require-match (exp obj-var)
-  (tree-bind (op match condition) exp
+  (mac-param-bind *match-form* (op match condition) exp
     (let ((match (compile-match match obj-var)))
       (set match.test-expr ^(and ,condition ,match.test-expr))
       match)))
 
 (defun compile-let-match (exp obj-var)
-  (tree-bind (op sym match) exp
+  (mac-param-bind *match-form* (op sym match) exp
     (or (null sym) (bindable sym)
         (compile-error *match-form* "~s is not a symbol" sym))
     (let ((match (compile-match match obj-var)))
@@ -195,7 +195,7 @@
       match)))
 
 (defun compile-loop-match (exp obj-var)
-  (tree-bind (op match) exp
+  (mac-param-bind *match-form* (op match) exp
     (let* ((list-test (if (eq op 'usr:all*) 'consp 'listp))
            (some-p (eq op 'some))
            (item-var (gensym "item-"))
@@ -245,7 +245,7 @@
                           t))))))
 
 (defun compile-parallel-match (par-pat obj-var)
-  (tree-bind (op . pats) par-pat
+  (mac-param-bind *match-form* (op . pats) par-pat
     (let* ((par-matches (mapcar (op compile-match @1 obj-var) pats))
            (all-vars (uniq (mappend .vars par-matches))))
       (flet ((submatch-fun (pm)
@@ -269,7 +269,7 @@
                test-expr t))))))
 
 (defun compile-not-match (pattern obj-var)
-  (tree-bind (op pattern) pattern
+  (mac-param-bind *match-form* (op pattern) pattern
     (let* ((pm (compile-match pattern obj-var))
            (guard (new match-guard
                        guard-expr ^(not (let ,pm.(get-vars)
@@ -339,7 +339,7 @@
          (clause-matches [mapcar (op compile-match (car @1) obj) clauses])
          (clause-code (collect-each ((cl clauses)
                                      (cm clause-matches))
-                        (tree-bind (match . forms) cl
+                        (mac-param-bind *match-form* (match . forms) cl
                           ^(unless ,flag
                              (let (,*cm.(get-vars))
                                (set ,result ,cm.(wrap-guards
