@@ -82,3 +82,5 @@
   (3 5 3 2021 (vec tor)))
 
 (test (when-match (@(and @a @b) (x . @c)) '(1 (x 2 3 4)) c) (2 3 4))
+
+(test (when-match (@(some @a) . @b) '((1 2 3) 2) (list a b)) (1 (2)))
