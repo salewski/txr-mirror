@@ -1808,6 +1808,26 @@ val hash_revget(val hash, val value, val test, val keyfun)
   return nil;
 }
 
+val hash_keys_of(val hash, val value, val test, val keyfun)
+{
+  val self = lit("hash-keys-of");
+  val cell;
+  struct hash_iter hi;
+  list_collect_decl(out, ptail);
+
+  hash_iter_init(&hi, hash, self);
+
+  test = default_arg(test, eql_f);
+  keyfun = default_arg(keyfun, identity_f);
+
+  while ((cell = hash_iter_next(&hi)) != nil) {
+    if (funcall2(test, value, funcall1(keyfun, us_cdr(cell))))
+      ptail = list_collect(ptail, us_car(cell));
+  }
+
+  return out;
+}
+
 val hash_invert(val hash, val joinfun, val unitfun, struct args *hashv_args)
 {
   val self = lit("hash-invert");
@@ -1916,6 +1936,7 @@ void hash_init(void)
   reg_fun(intern(lit("hash-update-1"), user_package),
           func_n4o(hash_update_1, 3));
   reg_fun(intern(lit("hash-revget"), user_package), func_n4o(hash_revget, 2));
+  reg_fun(intern(lit("hash-keys-of"), user_package), func_n4o(hash_keys_of, 2));
   reg_fun(intern(lit("hash-invert"), user_package), func_n3ov(hash_invert, 1));
   reg_fun(intern(lit("hash-begin"), user_package), func_n1(hash_begin));
   reg_fun(intern(lit("hash-next"), user_package), func_n1(hash_next));

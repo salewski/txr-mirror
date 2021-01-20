@@ -48244,9 +48244,10 @@ to
 The function returns
 .codn nil .
 
-.coNP Function @ hash-revget
+.coNP Functions @ hash-revget and @ hash-keys-of
 .synb
 .mets (hash-revget < hash < value >> [ testfun <> [ keyfun ]])
+.mets (hash-keys-of < hash < value >> [ testfun <> [ keyfun ]])
 .syne
 .desc
 The
@@ -48266,6 +48267,14 @@ is returned.
 
 If multiple matching entries exist, it is not specified which entry's
 key is returned.
+
+The
+.code hash-keys-of
+function has exactly the same argument conventions, and likewise
+searches the
+.metn hash .
+However, it returns a list of all keys whose values match
+.metn value .
 
 The
 .meta keyfun
