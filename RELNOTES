@@ -1,3 +1,60 @@
+                                    TXR 249
+                                   2020-01-24
+
+
+  Features:
+
+  - structural pattern matching:
+    - variables can now back-reference so that (@a @a)
+      matches a two-element list whose items are equal.
+    - @(some) and @(all) operators work with any sequences, not just lists.
+    - New pattern-matching @(coll ...) operator for collecting
+      from a sequence those objects which match.
+    - New @(hash ...) operator for matching hash tables on keys,
+      values or both.
+    - Matching ranges using range objects is now supported,
+      e.g. #R(@a @b) matches a range, and binds a and b to its from and to.
+    - Trivial patterns (those containing no operators or variables) are
+      now handled more efficiently. E.g. the pattern (1 2 3) or #(1 2 3)
+      will just be tested using equal as an atom, rather than
+      compiled into individual tests over the elements.
+
+  - hashing:
+    - hash-revget now uses equal equality for finding matching
+      values in the hash table, rather than eql.
+
+
+  Bugs:
+
+  - structural pattern matching:
+    - fixed order of evaluation problem in @(require)
+  - iter-step: no longer traverses into terminators of improper lists, which
+    caused situations like (each ((x '(1 2 . 3))) ...) to iterate indefinitely.
+  - fixed a regression which caused carrayp, hashp, random-state-p, regexp and
+    struct-type-p to indicate true as 1 instead of t.
+    - internally, the way t is initialized when TXR starts up has also been
+      improved as a result.
+  - parser:
+    - fixed badly designed low-precedence of the @ token: the one applied to
+      expressions as in @(foo).
+  - printer:
+    - fixed the print/read ambiguity that both (rcons @a @b) and @(rcons a b)
+      printed as @a..@b.
+    - @(rcons ...) now prints as @(rcons ...) and never as the x..y notation,
+      so only (rcons @a @b) prints as @a..@b.
+    - we also know that only (rcons @(a) @(b)) prints as @(a)..@(b), and
+      thanks to the parser fix mentioned above, @(a)..@(b) parses as
+      (rcons @(a) @(b)).
+  - places:
+    - The function name call-delete-expander was wrongly in sys package, rather
+      than the usr package, as documented.
+    - Addressed runaway recursion in place expansion logic, causing, for
+      instance the expansion of (let (a) (set a #1=(#1#))) to recurse
+      infinitely.
+  - manual: fixed wrong 2020 date.
+
+
+
                                     TXR 248
                                    2020-01-20
 
