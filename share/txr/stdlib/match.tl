@@ -180,9 +180,9 @@
            var-exprs (append car-match.var-exprs cdr-match.var-exprs)))))
 
 (defun compile-require-match (exp obj-var)
-  (mac-param-bind *match-form* (op match condition) exp
+  (mac-param-bind *match-form* (op match . conditions) exp
     (let ((match (compile-match match obj-var)))
-      (set match.test-expr ^(and ,condition ,match.test-expr))
+      (set match.test-expr ^(and ,match.test-expr ,*conditions))
       match)))
 
 (defun compile-let-match (exp obj-var)

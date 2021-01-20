@@ -39934,7 +39934,7 @@ as its value.
 
 .coNP Pattern operator @ require
 .synb
-.mets @(require < pattern << expression *)
+.mets @(require < pattern << condition *)
 .syne
 .desc
 The pattern operator
@@ -39944,19 +39944,36 @@ applies the specified
 to the corresponding object.
 If the
 .meta pattern
-matches, the operator then imposes the additional conditions specified by
-the extra
-.metn expression .
-The
-.meta expression
+matches, the operator then imposes the additional constraints
+specified by zero or more
+.meta condition
+forms.
+Each
+.meta condition
 is evaluated in a scope in which the variables from
 .meta pattern
 have already been established.
-However, the mach is considered to have succeeded only if
-.meta expression
-yields true. If it yields
+
+For the
+.code require
+operator to be a successful match, every
+.meta condition
+must evaluate true, otherwise the match fails.
+
+The
+.meta condition
+forms behave as if they were the arguments of an implicit
+.code and
+operator, which implies left-to-right evaluation behavior, stopping
+evaluation on the first
+.meta condition
+which produces
 .codn nil ,
-then the match is deemed to have failed.
+and defaulting to a result of
+.code t
+when no
+.meta condition
+forms are specified.
 
 .TP* Examples:
 
