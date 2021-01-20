@@ -1,3 +1,32 @@
+                                    TXR 247
+                                   2020-01-19
+
+
+  Features
+
+  - lib:
+    - structural pattern matching introduced.
+    - prog2 macro introduced.
+    - progn, prog1 and prog2 are now also functions.
+
+  - build:
+    - configure's test for how to define inline functions fixed.
+      - hopefully this will fix things for Brew.
+    - linker options and library flags are now separate;
+      there is a new platform-ldlibs configure option.
+    - LDLIBS variable is now honored, not just LDLIBS.
+
+  - gc:
+    - finalizers now registered during finalization processing
+      may be called in the same phase, if they are eligible.
+
+   Bugs
+
+   - show-stopper regression in mapcar/maprod.
+
+
+
+
                                     TXR 246
                                    2020-12-31
 
