@@ -67757,12 +67757,20 @@ understood as taking place in one or more rounds.  At the start of each round,
 finalizers are identified that are to be called, arranged in order, and removed
 from the registration list. If this identification stage produces no
 finalizers, then finalization ends. Otherwise, those finalizers are processed,
-and then another round is initiated, to look for finalizers that may have been
+and then another round is initiated, to look for eligible finalizers that may have been
 registered during the previous round.
 
 Note: it is possible for the application to create an infinite finalization
 loop, if one or more objects have finalizers that register new finalizers,
 which register new finalizers and so on.
+
+Note: if a finalizer is invoked by the garbage collector rather than explicit
+finalization via
+.codn call-finalizers ,
+and that finalizer calls
+.code finalize
+to make a registration, that registration will not be eligible for processing in
+the same phase, because the criteria for finalization is unreachability.
 
 .coNP Function @ call-finalizers
 .synb
