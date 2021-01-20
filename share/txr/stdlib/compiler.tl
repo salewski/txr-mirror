@@ -1280,11 +1280,10 @@
 (defun expand-and (form)
   (match-case form
     ((and) t)
+    ((and @a) a)
     ((and @(true-const-p) . @rest) (expand-and ^(and ,*rest)))
     ((and nil . @rest) nil)
-    ((and @a) a)
-    ((and @a @b) ^(if ,a ,b))
-    ((and @a . @rest) (expand-and ^(and ,a ,(expand-and ^(and ,*rest)))))
+    ((and @a . @rest) ^(if ,a ,(expand-and ^(and ,*rest))))
     (@else else)))
 
 (defun flatten-or (form)
