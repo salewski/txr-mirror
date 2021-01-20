@@ -1,3 +1,19 @@
+                                    TXR 248
+                                   2020-01-20
+
+
+  Features:
+
+  - hashing:
+    - new hash-key-of function: get all keys that map to the specified value.
+
+  Bugs:
+
+  - compiler regression: incorrect reduction of (and <true-constant>) forms
+    to t instead of <true-constant>.
+
+
+
                                     TXR 247
                                    2020-01-19
 
