@@ -203,18 +203,17 @@
       match)))
 
 (defun compile-let-match (exp obj-var var-list)
-  (mac-param-bind *match-form* (op sym match) exp
-    (unless (bindable sym)
-      (compile-error *match-form* "~s is not a bindable symbol" sym))
-    (let ((match (compile-match match obj-var var-list)))
-      (cond
-        (var-list.(exists sym)
-           (set match.test-expr
-                ^(and ,match.test-expr (equal ,sym ,match.obj-var))))
-        (t (push sym match.vars)
-           (push obj-var match.var-exprs)
-           var-list.(record sym)))
-      match)))
+  (mac-param-bind *match-form* (op sym pat) exp
+    (let ((var-match (compile-var-match sym obj-var var-list))
+          (pat-match (compile-match pat obj-var var-list)))
+      (new compiled-match
+           pattern exp
+           obj-var obj-var
+           guard-chain (append var-match.guard-chain
+                               pat-match.guard-chain)
+           test-expr ^(and ,var-match.test-expr ,pat-match.test-expr)
+           vars (append var-match.vars pat-match.vars)
+           var-exprs (append var-match.var-exprs pat-match.var-exprs)))))
 
 (defun compile-loop-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op match) exp
