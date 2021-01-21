@@ -247,17 +247,15 @@
                                                collect-vars))))))
                       (,(if some-p 'when 'unless) ,matched-p-var
                         (set ,loop-continue-p-var nil)))))
-           (guard0 (new match-guard
-                        vars (append cm.vars (unless some-p collect-vars))
-                        guard-expr t))
-           (guard1 (new match-guard
-                        vars (list loop-success-p-var)
-                        var-exprs (list loop)
-                        guard-expr ^(,list-test ,obj-var))))
+           (guard (new match-guard
+                       vars (append cm.vars (unless some-p collect-vars))
+                       guard-expr  ^(,list-test ,obj-var))))
       (new compiled-match
            pattern exp
            obj-var obj-var
-           guard-chain (list guard0 guard1)
+           guard-chain (list guard)
+           vars (list loop-success-p-var)
+           var-exprs (list loop)
            test-expr (if some-p
                        loop-success-p-var
                        ^(when ,loop-success-p-var
