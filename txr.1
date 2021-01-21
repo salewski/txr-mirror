@@ -39646,6 +39646,29 @@ notation. The reason is that a struct literal produces an object
 which loses information about how it was specified in the literal syntax,
 but those details are critically important in pattern matching.
 
+A pattern can contain multiple occurrences of the same variable.
+Except in the case when these variables occur in different branches
+of an
+.code @(or)
+or
+.code @(and)
+pattern operator, those repeated variables denote one variable.
+The left-most, or in the case of
+.code @(let)
+nesting, outermost, occurrence of the variable binds to the corresponding
+element of the object. The remaining occurrences of the variable must
+correspond to objects which are
+.code equal
+to that object, or else there is no match.
+For instance, the pattern
+.code "(@a @a)"
+matches a list like
+.code "(1 1)"
+and binds a to the leftmost
+.codn 1 ,
+and fails to match a list like
+.codn "(1 2)" .
+
 The pattern-matching notation is documented in the following
 sections; sections describing the pattern matching macros follow.
 

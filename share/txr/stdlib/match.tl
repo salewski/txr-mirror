@@ -56,9 +56,15 @@
                       ,out))))
       out)))
 
+(defstruct var-list ()
+  vars
+
+  (:method exists (me sym) (member sym me.vars))
+  (:method record (me sym) (push sym me.vars)))
+
 (defvar *match-form*)
 
-(defun compile-struct-match (struct-pat obj-var)
+(defun compile-struct-match (struct-pat obj-var var-list)
   (mac-param-bind *match-form* (op required-type . pairs) struct-pat
     (let* ((loose-p (not (bindable required-type)))
            (slot-pairs (plist-to-alist pairs))
@@ -67,9 +73,10 @@
            (type-gensym (if loose-p
                           (gensym "type-")))
            (slot-patterns [mapcar cdr slot-pairs])
-           (slot-matches [mapcar compile-match slot-patterns slot-gensyms])
+           (slot-matches [mapcar (lop compile-match var-list)
+                                 slot-patterns slot-gensyms])
            (type-match (if loose-p
-                         (compile-match required-type type-gensym)))
+                         (compile-match required-type type-gensym var-list)))
            (all-matches (if loose-p
                           (cons type-match slot-matches)
                           slot-matches))
@@ -108,19 +115,28 @@
            vars [mappend .vars all-matches]
            var-exprs [mappend .var-exprs all-matches]))))
 
-(defun compile-var-match (sym obj-var)
+(defun compile-var-match (sym obj-var var-list)
   (or (null sym) (bindable sym)
       (compile-error *match-form* "~s is not a symbol" sym))
-  (new compiled-match
-       pattern sym
-       obj-var obj-var
-       test-expr t
-       vars (if sym (list sym))
-       var-exprs (if sym (list obj-var))))
+  (cond
+    ((or (null sym)
+         (not var-list.(exists sym)))
+       var-list.(record sym)
+       (new compiled-match
+            pattern sym
+            obj-var obj-var
+            test-expr t
+            vars (if sym (list sym))
+            var-exprs (if sym (list obj-var))))
+    (t (new compiled-match
+            pattern sym
+            obj-var obj-var
+            test-expr ^(equal ,obj-var ,sym)))))
 
-(defun compile-vec-match (vec-pat obj-var)
+(defun compile-vec-match (vec-pat obj-var var-list)
   (let* ((elem-gensyms (mapcar (op gensym `elem-@1-`) (range* 0 (len vec-pat))))
-         (elem-matches (list-vec [mapcar compile-match vec-pat elem-gensyms]))
+         (elem-matches (list-vec [mapcar (lop compile-match var-list)
+                                         vec-pat elem-gensyms]))
          (guard (new match-guard
                      vars elem-gensyms
                      var-exprs (mapcar (ret ^[,obj-var ,@1])
@@ -135,37 +151,38 @@
          vars (mappend .vars elem-matches)
          var-exprs (mappend .var-exprs elem-matches))))
 
-(defun compile-atom-match (atom obj-var)
+(defun compile-atom-match (atom obj-var var-list)
   (typecase atom
-    (vec (compile-vec-match atom obj-var))
+    (vec (compile-vec-match atom obj-var var-list))
     (t (new compiled-match
             pattern atom
             obj-var obj-var
             test-expr ^(equal ,obj-var ',atom)))))
 
-(defun compile-op-match (op-expr obj-var)
-  (let ((var-match (compile-var-match nil obj-var)))
-    (set var-match.test-expr ^[,op-expr ,obj-var])
+(defun compile-op-match (op-expr obj-var var-list)
+  (let ((var-match (compile-var-match nil obj-var var-list)))
+    (set var-match.test-expr ^(and ,var-match.test-expr [,op-expr ,obj-var]))
     var-match))
 
-(defun compile-predicate-match (pred-expr obj-var)
+(defun compile-predicate-match (pred-expr obj-var var-list)
   (mac-param-bind *match-form* (fun : sym) pred-expr
     (or (null sym) (bindable sym)
         (compile-error *match-form* "~s is not a symbol" sym))
-    (let ((var-match (compile-var-match sym obj-var)))
-      (set var-match.test-expr ^(,fun ,obj-var))
+    (let ((var-match (compile-var-match sym obj-var var-list)))
+      (set var-match.test-expr ^(and ,var-match.test-expr (,fun ,obj-var)))
       var-match)))
 
-(defun compile-cons-structure (cons-pat obj-var)
+(defun compile-cons-structure (cons-pat obj-var var-list)
   (mac-param-bind *match-form* (car . cdr) cons-pat
     (let* ((car-gensym (gensym))
            (cdr-gensym (gensym))
-           (car-match (compile-match car car-gensym))
+           (car-match (compile-match car car-gensym var-list))
            (cdr-match (if (consp cdr)
                         (caseq (car cdr)
-                          ((sys:expr sys:var) (compile-match cdr cdr-gensym))
-                          (t (compile-cons-structure cdr cdr-gensym)))
-                        (compile-atom-match cdr cdr-gensym)))
+                          ((sys:expr sys:var) (compile-match cdr cdr-gensym
+                                                             var-list))
+                          (t (compile-cons-structure cdr cdr-gensym var-list)))
+                        (compile-atom-match cdr cdr-gensym var-list)))
            (guard (new match-guard
                        vars ^(,car-gensym ,cdr-gensym)
                        var-exprs ^((car ,obj-var) (cdr ,obj-var))
@@ -179,27 +196,32 @@
            vars (append car-match.vars cdr-match.vars)
            var-exprs (append car-match.var-exprs cdr-match.var-exprs)))))
 
-(defun compile-require-match (exp obj-var)
+(defun compile-require-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op match . conditions) exp
-    (let ((match (compile-match match obj-var)))
+    (let ((match (compile-match match obj-var var-list)))
       (set match.test-expr ^(and ,match.test-expr ,*conditions))
       match)))
 
-(defun compile-let-match (exp obj-var)
+(defun compile-let-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op sym match) exp
-    (or (null sym) (bindable sym)
-        (compile-error *match-form* "~s is not a symbol" sym))
-    (let ((match (compile-match match obj-var)))
-      (push sym match.vars)
-      (push obj-var match.var-exprs)
+    (unless (bindable sym)
+      (compile-error *match-form* "~s is not a bindable symbol" sym))
+    (let ((match (compile-match match obj-var var-list)))
+      (cond
+        (var-list.(exists sym)
+           (set match.test-expr
+                ^(and ,match.test-expr (equal ,sym ,match.obj-var))))
+        (t (push sym match.vars)
+           (push obj-var match.var-exprs)
+           var-list.(record sym)))
       match)))
 
-(defun compile-loop-match (exp obj-var)
+(defun compile-loop-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op match) exp
     (let* ((list-test (if (eq op 'usr:all*) 'consp 'listp))
            (some-p (eq op 'some))
            (item-var (gensym "item-"))
-           (cm (compile-match match item-var))
+           (cm (compile-match match item-var var-list))
            (loop-success-p-var (gensym "loop-success-p-"))
            (loop-continue-p-var (gensym "loop-terminate-p"))
            (matched-p-var (gensym "matched-p-"))
@@ -244,9 +266,11 @@
                                     cm.vars collect-vars)
                           t))))))
 
-(defun compile-parallel-match (par-pat obj-var)
+(defun compile-parallel-match (par-pat obj-var var-list)
   (mac-param-bind *match-form* (op . pats) par-pat
-    (let* ((par-matches (mapcar (op compile-match @1 obj-var) pats))
+    (let* ((var-lists (mapcar (ret (copy var-list)) pats))
+           (par-matches (mapcar (op compile-match @1 obj-var @2)
+                                pats var-lists))
            (all-vars (uniq (mappend .vars par-matches))))
       (flet ((submatch-fun (pm)
                ^(let ,pm.(get-temps)
@@ -268,9 +292,9 @@
                guard-chain (list guard0 guard1)
                test-expr t))))))
 
-(defun compile-not-match (pattern obj-var)
+(defun compile-not-match (pattern obj-var var-list)
   (mac-param-bind *match-form* (op pattern) pattern
-    (let* ((pm (compile-match pattern obj-var))
+    (let* ((pm (compile-match pattern obj-var var-list))
            (guard (new match-guard
                        guard-expr ^(not (let ,pm.(get-vars)
                                           ,pm.(wrap-guards
@@ -284,7 +308,7 @@
            test-expr t
            vars nil))))
 
-(defun compile-match (pat : (obj-var (gensym)))
+(defun compile-match (pat : (obj-var (gensym)) (var-list (new var-list)))
   (cond
     ((consp pat)
        (caseq (car pat)
@@ -292,22 +316,22 @@
            (let ((exp (cadr pat)))
              (if (consp exp)
                (caseq (car exp)
-                 (struct (compile-struct-match exp obj-var))
-                 (require (compile-require-match exp obj-var))
-                 (let (compile-let-match exp obj-var))
-                 (all (compile-loop-match exp obj-var))
-                 (usr:all* (compile-loop-match exp obj-var))
-                 (some (compile-loop-match exp obj-var))
-                 (or (compile-parallel-match exp obj-var))
-                 (and (compile-parallel-match exp obj-var))
-                 (not (compile-not-match exp obj-var))
-                 (op (compile-op-match exp obj-var))
-                 (t (compile-predicate-match exp obj-var)))
+                 (struct (compile-struct-match exp obj-var var-list))
+                 (require (compile-require-match exp obj-var var-list))
+                 (let (compile-let-match exp obj-var var-list))
+                 (all (compile-loop-match exp obj-var var-list))
+                 (usr:all* (compile-loop-match exp obj-var var-list))
+                 (some (compile-loop-match exp obj-var var-list))
+                 (or (compile-parallel-match exp obj-var var-list))
+                 (and (compile-parallel-match exp obj-var var-list))
+                 (not (compile-not-match exp obj-var var-list))
+                 (op (compile-op-match exp obj-var var-list))
+                 (t (compile-predicate-match exp obj-var var-list)))
                (compile-error *match-form*
                               "unrecognized pattern syntax ~s" pat))))
-         (sys:var (compile-var-match (cadr pat) obj-var))
-         (t (compile-cons-structure pat obj-var))))
-    (t (compile-atom-match pat obj-var))))
+         (sys:var (compile-var-match (cadr pat) obj-var var-list))
+         (t (compile-cons-structure pat obj-var var-list))))
+    (t (compile-atom-match pat obj-var var-list))))
 
 (defmacro when-match (:form *match-form* pat obj . body)
   (let ((cm (compile-match pat)))
