@@ -338,9 +338,10 @@
          (result (gensym "result-"))
          (clause-matches [mapcar (op compile-match (car @1) obj) clauses])
          (clause-code (collect-each ((cl clauses)
-                                     (cm clause-matches))
+                                     (cm clause-matches)
+                                     (i 0))
                         (mac-param-bind *match-form* (match . forms) cl
-                          ^(unless ,flag
+                          ^(unless ,(unless (zerop i) flag)
                              (let (,*cm.(get-vars))
                                (set ,result ,cm.(wrap-guards
                                                   ^(progn ,*cm.(assignments)
