@@ -1035,6 +1035,8 @@ val iter_item(val iter)
 
 val iter_step(val iter)
 {
+  val self = lit("iter-step");
+
   switch (type(iter)) {
   case NIL:
     return nil;
@@ -1042,6 +1044,14 @@ val iter_step(val iter)
   case NUM:
   case BGNUM:
     return plus(iter, one);
+  case CONS:
+  case LCONS:
+    {
+      val next = cdr(iter);
+      if (next && !consp(next))
+        uw_throwf(error_s, lit("~a: ~s is not a cons"), self, next, nao);
+      return next;
+    }
   case COBJ:
     if (iter->co.cls == seq_iter_s)
     {
@@ -1057,7 +1067,16 @@ val iter_step(val iter)
     }
     /* fallthrough */
   default:
-    return cdr(iter);
+    {
+      val next = cdr(iter);
+      if (next) {
+        seq_info_t sinf = seq_info(next);
+        if (sinf.kind != SEQ_LISTLIKE)
+          uw_throwf(error_s, lit("~a: ~s is improperly terminated"),
+                    self, iter, nao);
+      }
+      return next;
+    }
   }
 }
 
