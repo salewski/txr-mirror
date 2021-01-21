@@ -92,3 +92,32 @@
 (test (when-match (@a @(let a @(some @a))) '(#1=(1 2 #1# 3) #1#) :yes) :yes)
 
 (test (when-match (@a @(let a @(or x @a))) '(#1=(1 2 #1# 3) #1#) :yes) :yes)
+
+(defstruct node ()
+  left right)
+
+(mlet ((n (lnew node left (new node left n))))
+  (test (when-match @(let x @(struct node
+                                     left @(struct node left @x)))
+                    n :yes)
+        :yes))
+
+(test
+  (collect-each ((obj (list '(1 2 3)
+                            '(4 5)
+                            '(3 5)
+                            '(6 2 6)
+                            #(11 12)
+                            #S(time year 2021 month 1 day 2)
+                            #S(time year 2020 month 1 day 1)
+                            #(vec tor))))
+    (match-case obj
+      (@(struct @s year 2021 day @d) (list d (struct-type-name s)))
+      (@(struct time year @y month @x day @x) (list y x))
+      (#(@(integerp x) @(require @y (succ x))) (list x y))
+      (#(@x @y) (list x y))
+      ((@x @nil @x) x)
+      ((@nil @nil @x) x)
+      ((4 @x) x)
+      ((@x 5) x)))
+  (3 5 3 6 (11 12) (2 time) (2020 1) (vec tor)))
