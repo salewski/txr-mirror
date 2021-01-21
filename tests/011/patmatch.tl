@@ -90,3 +90,5 @@
 (test (when-match @(let a @(some @a)) '#1=(1 2 #1# 3) :yes) :yes)
 
 (test (when-match (@a @(let a @(some @a))) '(#1=(1 2 #1# 3) #1#) :yes) :yes)
+
+(test (when-match (@a @(let a @(or x @a))) '(#1=(1 2 #1# 3) #1#) :yes) :yes)
