@@ -40058,10 +40058,11 @@ The
 .code all
 and
 .code all*
-pattern operators require the corresponding object to be a list.
+pattern operators require the corresponding object to be a sequence.
+
 The specified
 .meta pattern
-is applied against every element of the list. The match is successful if
+is applied against every element of the sequence. The match is successful if
 .meta pattern
 matches every element.
 
@@ -40076,13 +40077,13 @@ and
 .code all*
 is as follows. The
 .code all
-operator respects the vacuous truth of the match when the list is empty.
+operator respects the vacuous truth of the match when the sequence is empty.
 In that case, the match is successful, and the variables are all bound to
 the empty list
 .codn nil .
 In contrast, the alternative
 .code all*
-operator behaves like a failed match when the list is empty.
+operator behaves like a failed match when the sequence is empty.
 
 .TP* Examples:
 
@@ -40103,10 +40104,10 @@ operator behaves like a failed match when the list is empty.
 .desc
 The
 .code some
-pattern operator requires the corresponding object to be a list.
+pattern operator requires the corresponding object to be a sequence.
 The specified
 .meta pattern
-is applied against every element of the list. The match is successful if
+is applied against every element of the sequence. The match is successful if
 .meta pattern
 finds a matching element.
 

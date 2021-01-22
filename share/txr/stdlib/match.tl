@@ -217,25 +217,31 @@
 
 (defun compile-loop-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op match) exp
-    (let* ((list-test (if (eq op 'usr:all*) 'consp 'listp))
+    (let* ((all*-p (eq op 'usr:all*))
            (some-p (eq op 'some))
            (item-var (gensym "item-"))
            (cm (compile-match match item-var var-list))
            (loop-success-p-var (gensym "loop-success-p-"))
            (loop-continue-p-var (gensym "loop-terminate-p"))
+           (loop-iterated-var (if all*-p (gensym "loop-iterated-p")))
            (matched-p-var (gensym "matched-p-"))
            (iter-var (gensym "iter-"))
            (collect-vars [mapcar gensym cm.vars])
-           (loop ^(for ((,iter-var ,obj-var)
-                        (,loop-continue-p-var t))
-                       ((and ,loop-continue-p-var ,iter-var)
-                        ,(if some-p
-                           ^(not ,loop-continue-p-var)
-                           loop-continue-p-var))
-                       ((set ,iter-var (cdr ,iter-var)))
-                    (let ((,cm.obj-var (car ,iter-var))
+           (loop ^(for ((,iter-var (iter-begin ,obj-var))
+                        (,loop-continue-p-var t)
+                        ,*(if all*-p ^((,loop-iterated-var nil))))
+                       ((and ,loop-continue-p-var (iter-more ,iter-var))
+                        ,(cond
+                           (some-p ^(not ,loop-continue-p-var))
+                           (all*-p ^(and ,loop-iterated-var
+                                         ,loop-continue-p-var))
+                           (t loop-continue-p-var)))
+                       ((set ,iter-var (iter-step ,iter-var)))
+                    (let ((,cm.obj-var (iter-item ,iter-var))
                           ,matched-p-var
                           ,*(if some-p cm.(get-temps) cm.(get-vars)))
+                      ,*(if all*-p
+                          ^((set ,loop-iterated-var t)))
                       ,cm.(wrap-guards
                             ^(progn ,*cm.(assignments)
                                (if ,cm.test-expr
@@ -249,7 +255,7 @@
                         (set ,loop-continue-p-var nil)))))
            (guard (new match-guard
                        vars (append cm.vars (unless some-p collect-vars))
-                       guard-expr  ^(,list-test ,obj-var))))
+                       guard-expr ^(seqp ,obj-var))))
       (new compiled-match
            pattern exp
            obj-var obj-var
