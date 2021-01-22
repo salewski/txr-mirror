@@ -320,8 +320,22 @@
              (collect-each ((pair pairs))
                (mac-param-bind *match-form* (key val) pair
                  (let ((key-pat-p (non-triv-pat-p key))
-                       (val-pat-p (non-triv-pat-p val)))
+                       (val-pat-p (non-triv-pat-p val))
+                       (key-var-sym (var-pat-p key)))
                    (cond
+                     ((and key-var-sym var-list.(exists key-var-sym))
+                       (let ((vm (compile-match val (gensym "val") var-list))
+                             (val-sym (gensym "val")))
+                         (push
+                           (new match-guard
+                                guard-expr ^(neq ,vm.obj-var ,hash-alt-val))
+                           vm.guard-chain)
+                         (push vm.obj-var vm.vars)
+                         (push ^(gethash ,obj-var ,key-var-sym
+                                         ,hash-alt-val) vm.var-exprs)
+                         (set vm.test-expr ^(and (neq ,vm.obj-var ,hash-alt-val)
+                                                 ,vm.test-expr))
+                       vm))
                      ((and key-pat-p val-pat-p)
                       (set need-alist-p t)
                       (compile-match ^@(coll (,key . ,val))
@@ -448,3 +462,7 @@
     ((@pat . @rest) (or (non-triv-pat-p pat)
                         (non-triv-pat-p rest)))
     (@(some @(non-triv-pat-p)) t)))
+
+(defun var-pat-p (syntax)
+  (when-match (@(op eq 'sys:var) @(bindable sym) . @nil) syntax
+    sym))

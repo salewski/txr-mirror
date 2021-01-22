@@ -40001,7 +40001,24 @@ which may be trivial or non-trivial.
 
 If
 .meta key-pattern
-is a non-trivial pattern, but
+is a simple variable pattern
+.mono
+.meti >> @ sym
+.onom
+and if
+.meta sym
+has an existing binding, then the value of
+.meta sym
+is looked up in the hash table. If it is not found, then
+the match fails, otherwise the corresponding value is matched
+against
+.metn value-pattern ,
+which may be trivial or non-trivial.
+
+If
+.meta key-pattern
+is a non-trivial pattern other than a variable pattern
+for a variable which has an existing binding, and if
 .meta value-pattern
 is trivial, then
 .meta value-pattern
@@ -40056,11 +40073,24 @@ operator matching against an association list.
   ;; First, (x @y) has a trivial key pattern so the x
   ;; entry from the hash table is retrieved, the
   ;; value being the symbol k. This k is bound to @y.
-  ;; Then the pattern (@y @datum) searches the entire
+  ;; Because y now a bound variable the pattern (@y @datum)
+  ;; is interpreted as search of the hash table for
+  ;; a single entry matching the value of @y. This
+  ;; is the k entry, whose value is 42. The @datum
+  ;; value match takes this 42.
+  (when-match @(hash (x @y) (@y @datum)) #H(() (x k) (k 42)) datum)
+  --> 42
+
+  ;; Again, (x @y) has a trivial key pattern so the x
+  ;; entry from the hash table is retrieved, the
+  ;; value being the symbol k. This k is bound to @y.
+  ;; This time the second pattern has a @(symbolp)
+  ;; predicate operator. This is not a variable, and
+  ;; so the pattern searches the entire
   ;; hash table. The @y variable has a binding to k,
   ;; so only the (k 42) entry is matched. The 42
   ;; value matches @datum, and is collected into a list.
-  (when-match @(hash (x @y) (@y @datum)) #H(() (x k) (k 42)) datum)
+  (when-match @(hash (x @y) (@(symbolp y) @datum)) #H(() (x k) (k 42)) datum)
   --> (42)
 .brev
 

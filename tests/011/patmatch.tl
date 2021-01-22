@@ -131,4 +131,7 @@
   (3 5 3 6 (11 12) (2 time) (2020 1) (vec tor)))
 
 (test (when-match @(hash (x @y) (@y @datum)) #H(() (x k) (k 42)) datum)
+      42)
+
+(test (when-match @(hash (x @y) (@(symbolp y) @datum)) #H(() (x k) (k 42)) datum)
       (42))
