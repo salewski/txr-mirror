@@ -1797,7 +1797,11 @@ val hash_revget(val hash, val value, val test, val keyfun)
 
   hash_iter_init(&hi, hash, self);
 
-  test = default_arg(test, eql_f);
+  if (opt_compat && opt_compat <= 248)
+    test = default_arg(test, eql_f);
+  else
+    test = default_arg(test, equal_f);
+
   keyfun = default_arg(keyfun, identity_f);
 
   while ((cell = hash_iter_next(&hi)) != nil) {
@@ -1817,7 +1821,7 @@ val hash_keys_of(val hash, val value, val test, val keyfun)
 
   hash_iter_init(&hi, hash, self);
 
-  test = default_arg(test, eql_f);
+  test = default_arg(test, equal_f);
   keyfun = default_arg(keyfun, identity_f);
 
   while ((cell = hash_iter_next(&hi)) != nil) {

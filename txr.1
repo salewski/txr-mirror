@@ -48421,7 +48421,7 @@ The comparison is performed using
 The default
 .meta testfun
 is the
-.code eql
+.code equal
 function.
 
 .coNP Function @ hash-invert
@@ -76742,6 +76742,15 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 248
+Until \*(TX 248, the
+.code hash-revget
+function defaulted to using
+.code eql
+equality for searching the hash table for matching values rather than the
+current
+.codn equal .
+A compatibility value of 248 or lower restores the behavior.
 .IP 244
 Until \*(TX 244, the
 .code env-hash
