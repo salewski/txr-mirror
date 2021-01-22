@@ -5914,7 +5914,7 @@ val symbol_package(val sym)
 
 val make_sym(val name)
 {
-  if (t && !stringp(name)) {
+  if (!stringp(name)) {
     uw_throwf(error_s, lit("make-sym: name ~s isn't a string"), name, nao);
   } else {
     val obj = make_obj();
@@ -5938,8 +5938,8 @@ val gensym(val prefix)
 static val make_package_common(val name, val weak)
 {
   val weak_vals = default_null_arg(weak);
-  val sh = make_hash(nil, weak_vals, lit("t")); /* don't have t yet! */
-  val hh = make_hash(nil, weak_vals, lit("t"));
+  val sh = make_hash(nil, weak_vals, t);
+  val hh = make_hash(nil, weak_vals, t);
   val obj = make_obj();
   obj->pk.type = PKG;
   obj->pk.name = name;
@@ -5952,7 +5952,7 @@ val make_package(val name, val weak)
 {
   if (find_package(name)) {
     uw_throwf(error_s, lit("make-package: ~s exists already"), name, nao);
-  } else if (t && !stringp(name)) {
+  } else if (!stringp(name)) {
     uw_throwf(error_s, lit("make-package: name ~s isn't a string"), name, nao);
   } else if (length(name) == zero) {
     uw_throwf(error_s, lit("make-package: package name can't be empty string"),
@@ -8822,9 +8822,8 @@ val cobjp(val obj)
 
 val cobjclassp(val obj, val cls_sym)
 {
-  return if2(is_ptr(obj) && obj->t.type == COBJ &&
-             (obj->co.cls == cls_sym || subtypep(obj->co.cls, cls_sym)),
-             one);
+  return tnil(is_ptr(obj) && obj->t.type == COBJ &&
+              (obj->co.cls == cls_sym || subtypep(obj->co.cls, cls_sym)));
 }
 
 mem_t *cobj_handle(val self, val cobj, val cls_sym)
@@ -11887,8 +11886,6 @@ val in_range_star(val range, val num)
 
 static void obj_init(void)
 {
-  val self = lit("internal init");
-
   /*
    * No need to GC-protect the convenience variables which hold the interned
    * symbols, because the interned_syms list holds a reference to all the
@@ -11920,10 +11917,8 @@ static void obj_init(void)
      symbol-manipulating function. */
   sethash(user_package->pk.symhash, nil_string, nil);
 
-  /* t can't be interned, because intern needs t in order to do its job. */
-  t = cdr(rplacd(gethash_c(self, user_package->pk.symhash,
-                           lit("t"), nulloc), make_sym(lit("t"))));
-  set(mkloc(t->s.package, t), user_package);
+  /* Replace fake t (value 1 set in init) with real symbol. */
+  t = intern(lit("t"), user_package);
 
   set_package_fallback_list(system_package, cons(user_package, nil));
   set_package_fallback_list(public_package, cons(user_package, nil));
@@ -12959,6 +12954,7 @@ void init(val *stack_bottom)
   int gc_save;
   gc_save = gc_state(0);
 
+  t = one;
   gc_init(stack_bottom);
   obj_init();
   uw_init();
