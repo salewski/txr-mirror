@@ -318,8 +318,8 @@
            (hash-matches
              (collect-each ((pair pairs))
                (mac-param-bind *match-form* (key val) pair
-                 (let ((key-pat-p (is-pattern key))
-                       (val-pat-p (is-pattern val)))
+                 (let ((key-pat-p (non-triv-pat-p key))
+                       (val-pat-p (non-triv-pat-p val)))
                    (cond
                      ((and key-pat-p val-pat-p)
                       (set need-alist-p t)
@@ -436,8 +436,10 @@
     ^(defun ,name (. ,args)
        (match-case ,args ,*clauses))))
 
-(defun is-pattern (syntax)
+(defun non-triv-pat-p (syntax)
   (match-case syntax
     ((@(op eq 'sys:expr) (@(bindable) . @nil)) t)
     ((@(op eq 'sys:var) @(bindable) . @nil) t)
-    (@(some @(is-pattern)) t)))
+    ((@pat . @rest) (or (non-triv-pat-p pat)
+                        (non-triv-pat-p rest)))
+    (@(some @(non-triv-pat-p)) t)))

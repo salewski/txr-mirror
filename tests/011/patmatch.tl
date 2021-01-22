@@ -129,3 +129,6 @@
       ((4 @x) x)
       ((@x 5) x)))
   (3 5 3 6 (11 12) (2 time) (2020 1) (vec tor)))
+
+(test (when-match @(hash (x @y) (@y @datum)) #H(() (x k) (k 42)) datum)
+      (42))

@@ -39647,8 +39647,8 @@ and
 provides a way to define a top-level function using the same concept.
 
 \*(TL's structural pattern matching notation is template based.
-With the exception of structures, objects are matched using patterns which
-are based on their printed notation.
+With the exception of structures and hash tables, objects are matched using
+patterns which are based on their printed notation.
 For instance instance, the pattern
 .code "(1 2 @a)"
 is a pattern matching the list
@@ -39680,6 +39680,16 @@ operator rather than using
 notation. The reason is that a struct literal produces an object
 which loses information about how it was specified in the literal syntax,
 but those details are critically important in pattern matching.
+
+Similarly, hash objects are matched using a
+.code "@(hash ...)"
+operator rather than
+.code "#H(...)"
+syntax. The reason is that the keys are not ordered in a hash
+table, whereas the order of sub-patterns in a pattern operator
+can be significant. One sub-pattern may be expected to produce
+a match for a variable, which is then back-referenced in another
+sub-pattern.
 
 A pattern can contain multiple occurrences of the same variable.
 Except in the case when these variables occur in different branches
@@ -39854,7 +39864,9 @@ against the corresponding vector element.
 .mets @(struct < pattern >> { slot-name << pattern }*)
 .syne
 .desc
-The structure pattern operator matches a structure object. The operator
+The
+.code struct
+pattern operator matches a structure object. The operator
 supports two modes of matching, the choice of which depends on whether the
 first argument is a
 .meta name
@@ -39943,6 +39955,113 @@ object's structure type: the type itself, rather than its symbolic name.
 
   --> ((#<struct-type grommet> :grom)
        (#<struct-type widget> :widg))
+.brev
+
+.coNP Pattern operator @ hash
+.synb
+.mets @(hash >> {( key-pattern << value-pattern )}*)
+.syne
+.desc
+The
+.code hash
+pattern operator matches a hash table object by means of patterns
+which target keys, values or both.
+
+An important concept in the requirements governing the operation of the
+.code hash
+operator is that of a trivial pattern.
+
+A pattern is non-trivial if it is a variable or operator pattern.
+A pattern is also non-trivial if it is a list or vector pattern
+containing at least one non-trivial pattern. Otherwise, it is trivial.
+
+The
+.code hash
+operator requires the corresponding object to be a hash table,
+otherwise the match fails.
+
+If the corresponding object is a hash table, then matches each
+.meta key-pattern
+and
+.meta value-pattern
+pair against that object as described below. Each of
+the pairs must successfully match, otherwise the overall
+match fails.
+
+If
+.meta key-pattern
+is a trivial pattern, then the semantics of the match is that
+.meta key-pattern
+is taken as a literal object representing a hash key. The hash
+table is searched for that key. If the key is not found,
+the match fails. Otherwise, the value corresponding to
+that key is matched against the
+.meta value-pattern
+which may be trivial or non-trivial.
+
+If
+.meta key-pattern
+is a non-trivial pattern, but
+.meta value-pattern
+is trivial, then
+.meta value-pattern
+is taken as a literal object, which is used for searching
+the hash table for one or more keys, as if it were the
+.meta value
+argument in a call to the
+.code hash-keys-of
+function, to find all keys which have a value
+.code equal
+to that value. If no keys are found, then the match
+fails. Otherwise, the
+.code key-pattern
+is then matched against the retrieved list of hash keys.
+
+Finally, if both
+.meta key-pattern
+and
+.meta value-pattern
+are non-trivial, then an exhaustive search is performed of the hash table.
+Every key in the hash table is matched against
+.meta key-pattern
+and if it matches, the value is matched against
+.metn value-pattern .
+If both match, then the values from the matches are collected into lists.
+At least one matching key-value pair must be found, otherwise
+the overall match fails.
+Note: this situation can be understood as if the hash table were association
+list of
+.code cons
+cells of the form
+
+.verb
+.mets >> ( key . << value )
+.brev
+
+and as if the two patterns were combined into a
+.code coll
+operator against this list in the following way:
+
+.verb
+.mets @(coll >> ( key-pattern . << value-pattern ))
+.brev
+
+such that the semantics can then be understood in terms of the
+.code coll
+operator matching against an association list.
+
+.TP* Example:
+
+.verb
+  ;; First, (x @y) has a trivial key pattern so the x
+  ;; entry from the hash table is retrieved, the
+  ;; value being the symbol k. This k is bound to @y.
+  ;; Then the pattern (@y @datum) searches the entire
+  ;; hash table. The @y variable has a binding to k,
+  ;; so only the (k 42) entry is matched. The 42
+  ;; value matches @datum, and is collected into a list.
+  (when-match @(hash (x @y) (@y @datum)) #H(() (x k) (k 42)) datum)
+  --> (42)
 .brev
 
 .coNP Pattern operator @ let
