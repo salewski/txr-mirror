@@ -32,7 +32,7 @@
     (mapcar (ret ^(set ,@1 ,@2)) me.vars me.var-exprs)))
 
 (defstruct match-guard (match-vars)
-  guard-expr)
+  (guard-expr t))
 
 (defstruct compiled-match (match-vars)
   pattern
@@ -286,7 +286,6 @@
                                          (diff all-vars pm.vars)))
                              t))))))
         (let ((guard (new match-guard
-                          guard-expr t
                           vars all-vars)))
           (new compiled-match
                pattern par-pat
@@ -329,7 +328,6 @@
                                                 var-list)))
                          (push
                            (new match-guard
-                                guard-expr t
                                 vars (list km.obj-var)
                                 var-exprs ^((hash-keys-of ,obj-var ',val)))
                            km.guard-chain)
@@ -338,7 +336,6 @@
                        (let ((vm (compile-match val (gensym "val") var-list)))
                          (push
                            (new match-guard
-                                guard-expr t
                                 vars (list vm.obj-var)
                                 var-exprs ^((gethash ,obj-var ',key)))
                            vm.guard-chain)
