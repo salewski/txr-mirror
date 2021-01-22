@@ -314,6 +314,7 @@
 (defun compile-hash-match (hash-expr obj-var var-list)
   (tree-bind (op . pairs) hash-expr
     (let* ((hash-alist-var (gensym "hash-alist-"))
+           (hash-alt-val ^',(gensym "alt"))
            (need-alist-p nil)
            (hash-matches
              (collect-each ((pair pairs))
@@ -338,8 +339,12 @@
                        (let ((vm (compile-match val (gensym "val") var-list)))
                          (push
                            (new match-guard
+                                guard-expr ^(neq ,vm.obj-var ,hash-alt-val))
+                           vm.guard-chain)
+                         (push
+                           (new match-guard
                                 vars (list vm.obj-var)
-                                var-exprs ^((gethash ,obj-var ',key)))
+                                var-exprs ^((gethash ,obj-var ',key, hash-alt-val)))
                            vm.guard-chain)
                          vm)))))))
            (guard (new match-guard
