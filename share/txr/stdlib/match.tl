@@ -221,13 +221,15 @@
            (some-p (eq op 'some))
            (coll-p (eq op 'coll))
            (item-var (gensym "item-"))
+           (in-vars var-list.vars)
            (cm (compile-match match item-var var-list))
            (loop-success-p-var (gensym "loop-success-p-"))
            (loop-continue-p-var (gensym "loop-terminate-p"))
            (loop-iterated-var (if no-vac-p (gensym "loop-iterated-p")))
            (matched-p-var (gensym "matched-p-"))
            (iter-var (gensym "iter-"))
-           (collect-vars [mapcar gensym cm.vars])
+           (collect-vars (diff cm.vars in-vars))
+           (collect-gens [mapcar gensym collect-vars])
            (loop ^(for ((,iter-var (iter-begin ,obj-var))
                         (,loop-continue-p-var t)
                         ,*(if no-vac-p ^((,loop-iterated-var nil))))
@@ -250,12 +252,12 @@
                                        ^((set ,loop-iterated-var t)))
                                    ,*(unless some-p
                                        (mapcar (ret ^(push ,@1 ,@2))
-                                               cm.vars
-                                               collect-vars))))))
+                                               collect-vars
+                                               collect-gens))))))
                       ,(unless coll-p ^(,(if some-p 'when 'unless) ,matched-p-var
                          (set ,loop-continue-p-var nil))))))
            (guard (new match-guard
-                       vars (append cm.vars (unless some-p collect-vars))
+                       vars (append cm.vars (unless some-p collect-gens))
                        guard-expr ^(seqp ,obj-var))))
       (new compiled-match
            pattern exp
@@ -267,7 +269,7 @@
                        loop-success-p-var
                        ^(when ,loop-success-p-var
                           ,*(mapcar (ret ^(set ,@1 (nreverse ,@2)))
-                                    cm.vars collect-vars)
+                                    collect-vars collect-gens)
                           t))))))
 
 (defun compile-parallel-match (par-pat obj-var var-list)

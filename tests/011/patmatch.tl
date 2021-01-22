@@ -54,6 +54,10 @@
         (list a b))
       ((1 2 3) (a b c)))
 
+(test (when-match (@x @(all @x)) '(1 (1 1 1 1)) x) 1)
+
+(test (when-match (@x @(all @x)) '(1 (1 1 1 2)) x) nil)
+
 (test (when-match @(some (x @a @b)) '((y 1 a) (x 2 b) (z 3 c))
         (list a b))
       (2 b))

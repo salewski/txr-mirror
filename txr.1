@@ -40066,10 +40066,15 @@ is applied against every element of the sequence. The match is successful if
 .meta pattern
 matches every element.
 
-Furthermore, in the case of a successful match, these operators take
-each of the variables specified in the
+Furthermore, in the case of a successful match, each variable that
+is freshly bound by
 .meta pattern
-and bind it to a list of the elements which that variable matched.
+is converted into a list of all of the objects which that variable
+encounters from all elements of the sequence.  Those variables which already
+have a binding from another
+.meta pattern
+are not converted to lists. Their existing values are merely required to match
+each corresponding object they encounter.
 
 The difference between
 .code all
@@ -40095,6 +40100,15 @@ operator behaves like a failed match when the sequence is empty.
              '((x 1 a) (x 2 b) (x 3 c))
     (list a b))
   --> ((1 2 3) (a b c))
+
+  ;; Match a two element list whose second element
+  ;; consists of nothing but zero or more repetitions
+  ;; of the first element. x is not turned into a list
+  ;; because it has a binding due to @x.
+  (when-match @(@x @(all x)) '(1 (1 1 1 1)) x) -> 1
+
+  ;; no match because of the 2
+  (when-match @(@x @(all x)) '(1 (1 1 1 2)) x) -> nil
 .brev
 
 .coNP Pattern operator @ some
@@ -40138,6 +40152,15 @@ The specified
 is applied against every element of the sequence. The match is successful if
 .meta pattern
 matches at least one element.
+
+Each variable that is freshly bound by the
+.meta pattern
+is converted into a list of all of the objects which that variable
+encounters from the matching elements of the sequence.  Those variables which
+already have a binding from another
+.meta pattern
+are not converted to lists. Their existing values are merely required to match
+each corresponding object they encounter.
 
 Variables are extracted from all matching elements, and collected into
 parallel lists, just like with the
