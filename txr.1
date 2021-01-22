@@ -40109,7 +40109,7 @@ The specified
 .meta pattern
 is applied against every element of the sequence. The match is successful if
 .meta pattern
-finds a matching element.
+matches at least one element.
 
 Variables are extracted from the first matching which is found.
 
@@ -40123,6 +40123,34 @@ Variables are extracted from the first matching which is found.
              '((y 1 a) (x 2 b) (z 3 c))
     (list a b))
   -> (2 b)
+.brev
+
+.coNP Pattern operator @ coll
+.synb
+.mets @(coll << pattern )
+.syne
+.desc
+The
+.code coll
+pattern operator requires the corresponding object to be a sequence.
+The specified
+.meta pattern
+is applied against every element of the sequence. The match is successful if
+.meta pattern
+matches at least one element.
+
+Variables are extracted from all matching elements, and collected into
+parallel lists, just like with the
+.code @(all)
+operator.
+
+.TP* Example:
+
+.verb
+  (when-match @(coll (x @a @b))
+             '((y 1 a) (x 2 b) (z 3 c) (x 4 d))
+    (list a b))
+  -> ((2 4) (b d))
 .brev
 
 .coNP Pattern operators @ and and @ or

@@ -58,6 +58,10 @@
         (list a b))
       (2 b))
 
+(test (when-match @(coll (x @a @b)) '((y 1 a) (x 2 b) (z 3 c) (x 4 d))
+            (list a b))
+      ((2 4) (b d)))
+
 (test (if-match @(and (@x 2 3) (1 @y 3) (1 2 @z)) '(1 2 3)
         (list x y z))
       (1 2 3))

@@ -217,42 +217,43 @@
 
 (defun compile-loop-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op match) exp
-    (let* ((all*-p (eq op 'usr:all*))
+    (let* ((no-vac-p (memq op '(coll usr:all*)))
            (some-p (eq op 'some))
+           (coll-p (eq op 'coll))
            (item-var (gensym "item-"))
            (cm (compile-match match item-var var-list))
            (loop-success-p-var (gensym "loop-success-p-"))
            (loop-continue-p-var (gensym "loop-terminate-p"))
-           (loop-iterated-var (if all*-p (gensym "loop-iterated-p")))
+           (loop-iterated-var (if no-vac-p (gensym "loop-iterated-p")))
            (matched-p-var (gensym "matched-p-"))
            (iter-var (gensym "iter-"))
            (collect-vars [mapcar gensym cm.vars])
            (loop ^(for ((,iter-var (iter-begin ,obj-var))
                         (,loop-continue-p-var t)
-                        ,*(if all*-p ^((,loop-iterated-var nil))))
+                        ,*(if no-vac-p ^((,loop-iterated-var nil))))
                        ((and ,loop-continue-p-var (iter-more ,iter-var))
                         ,(cond
                            (some-p ^(not ,loop-continue-p-var))
-                           (all*-p ^(and ,loop-iterated-var
+                           (no-vac-p ^(and ,loop-iterated-var
                                          ,loop-continue-p-var))
                            (t loop-continue-p-var)))
                        ((set ,iter-var (iter-step ,iter-var)))
                     (let ((,cm.obj-var (iter-item ,iter-var))
                           ,matched-p-var
                           ,*(if some-p cm.(get-temps) cm.(get-vars)))
-                      ,*(if all*-p
-                          ^((set ,loop-iterated-var t)))
                       ,cm.(wrap-guards
                             ^(progn ,*cm.(assignments)
                                (if ,cm.test-expr
                                  (progn
                                    (set ,matched-p-var t)
+                                   ,*(if no-vac-p
+                                       ^((set ,loop-iterated-var t)))
                                    ,*(unless some-p
                                        (mapcar (ret ^(push ,@1 ,@2))
                                                cm.vars
                                                collect-vars))))))
-                      (,(if some-p 'when 'unless) ,matched-p-var
-                        (set ,loop-continue-p-var nil)))))
+                      ,(unless coll-p ^(,(if some-p 'when 'unless) ,matched-p-var
+                         (set ,loop-continue-p-var nil))))))
            (guard (new match-guard
                        vars (append cm.vars (unless some-p collect-vars))
                        guard-expr ^(seqp ,obj-var))))
@@ -323,6 +324,7 @@
                  (all (compile-loop-match exp obj-var var-list))
                  (usr:all* (compile-loop-match exp obj-var var-list))
                  (some (compile-loop-match exp obj-var var-list))
+                 (coll (compile-loop-match exp obj-var var-list))
                  (or (compile-parallel-match exp obj-var var-list))
                  (and (compile-parallel-match exp obj-var var-list))
                  (not (compile-not-match exp obj-var var-list))
