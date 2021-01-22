@@ -340,7 +340,7 @@
            ,*cm.(get-vars))
        ,cm.(wrap-guards
              ^(progn ,*cm.(assignments)
-                (if ,cm.test-expr ,*body))))))
+                (when ,cm.test-expr ,*body))))))
 
 (defmacro if-match (:form *match-form* pat obj then : else)
   (let ((cm (compile-match pat))
