@@ -34367,7 +34367,42 @@ cell, then
 .code iter-step
 returns the
 .code cdr
-field of that cell.
+field of that cell. That value must itself be a
+.code cons
+or else
+.codn nil ,
+otherwise an error is thrown. This is to prevent iteration
+from wrongly iterating into the non-null terminators of improper
+lists. Without this rule, iteration of a list like
+.code "(1 2 . 3)"
+would reach the
+.code cons
+cell
+.code "(2 . 3)"
+at which point a subsequent
+.code iter-step
+would return the
+.code cdr
+field
+.codn 3 .
+But that value is a valid iterator which will then continue by
+stepping through
+.codn 4 ,
+.code 5
+and so on.
+
+If
+.meta iter
+is a list-like sequence, then
+.code cdr
+is invoked on it and that value is returned.
+The value must also be a list-like sequence, or else
+.codn nil .
+The reasoning for this is the same as for the similar
+restriction imposed in the case when
+.meta iter
+is a
+.codn cons .
 
 If
 .meta iter
