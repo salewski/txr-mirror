@@ -310,6 +310,53 @@
            test-expr t
            vars nil))))
 
+(defun compile-hash-match (hash-expr obj-var var-list)
+  (tree-bind (op . pairs) hash-expr
+    (let* ((hash-alist-var (gensym "hash-alist-"))
+           (need-alist-p nil)
+           (hash-matches
+             (collect-each ((pair pairs))
+               (mac-param-bind *match-form* (key val) pair
+                 (let ((key-pat-p (is-pattern key))
+                       (val-pat-p (is-pattern val)))
+                   (cond
+                     ((and key-pat-p val-pat-p)
+                      (set need-alist-p t)
+                      (compile-match ^@(coll (,key . ,val))
+                                     hash-alist-var var-list))
+                     (key-pat-p
+                       (let ((km (compile-match key (gensym "keys")
+                                                var-list)))
+                         (push
+                           (new match-guard
+                                guard-expr t
+                                vars (list km.obj-var)
+                                var-exprs ^((hash-keys-of ,obj-var ',val)))
+                           km.guard-chain)
+                         km))
+                     (t
+                       (let ((vm (compile-match val (gensym "val") var-list)))
+                         (push
+                           (new match-guard
+                                guard-expr t
+                                vars (list vm.obj-var)
+                                var-exprs ^((gethash ,obj-var ',key)))
+                           vm.guard-chain)
+                         vm)))))))
+           (guard (new match-guard
+                       guard-expr ^(hashp ,obj-var)
+                       vars (if need-alist-p
+                              (list hash-alist-var))
+                       var-exprs (if need-alist-p
+                                   (list ^(hash-alist ,obj-var))))))
+      (new compiled-match
+           pattern hash-expr
+           obj-var obj-var
+           guard-chain (cons guard (mappend .guard-chain hash-matches))
+           test-expr ^(and ,*(mapcar .test-expr hash-matches))
+           vars (mappend .vars hash-matches)
+           var-exprs (mappend .var-exprs hash-matches)))))
+
 (defun compile-match (pat : (obj-var (gensym)) (var-list (new var-list)))
   (cond
     ((consp pat)
@@ -329,6 +376,7 @@
                  (and (compile-parallel-match exp obj-var var-list))
                  (not (compile-not-match exp obj-var var-list))
                  (op (compile-op-match exp obj-var var-list))
+                 (hash (compile-hash-match exp obj-var var-list))
                  (t (compile-predicate-match exp obj-var var-list)))
                (compile-error *match-form*
                               "unrecognized pattern syntax ~s" pat))))
@@ -388,3 +436,9 @@
   (with-gensyms (args)
     ^(defun ,name (. ,args)
        (match-case ,args ,*clauses))))
+
+(defun is-pattern (syntax)
+  (match-case syntax
+    ((@(op eq 'sys:expr) (@(bindable) . @nil)) t)
+    ((@(op eq 'sys:var) @(bindable) . @nil) t)
+    (@(some @(is-pattern)) t)))
