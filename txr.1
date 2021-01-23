@@ -39690,6 +39690,15 @@ can be significant. One sub-pattern may be expected to produce
 a match for a variable, which is then back-referenced in another
 sub-pattern.
 
+Ranges can be
+matched using the
+.code "@(rcons ...)"
+notation or its
+.code ..
+syntactic sugar, or using the
+.code #R
+printed representation.
+
 A pattern can contain multiple occurrences of the same variable.
 Except in the case when these variables occur in different branches
 of an
@@ -39855,6 +39864,47 @@ against the corresponding vector element.
   ;; match with nested list and vector
   (if-match #((1 @a) #(3 @b)) #((1 2) #(3 4)) (list a b))
   --> (2 4)
+.brev
+
+.NP* Range match
+.synb
+.mets >> #R( from-pattern << to-pattern )
+.syne
+.desc
+A pattern match for a range can be expressed by embedding pattern
+expressions in the
+.code #R
+notation. The resulting pattern requires the corresponding object
+to be a range, otherwise the match fails. If the corresponding
+object is a range, then the
+.meta from-pattern
+is matched against its
+.code from
+and the
+.meta to-pattern
+is matched against its
+.code to
+part.
+
+Note: ranges can also be matched using the
+.mono
+.meti >> @(rcons from-pattern << to-pattern )
+.onom
+operator, also expressible using its syntactic sugar
+.mono
+.meti >> @ from-pattern..to-pattern
+.onom
+described under Pattern operator
+.codn rcons .
+
+.TP* Examples:
+
+.verb
+  (if-match #R(10 20) 10..20 :yes :no) -> :no
+  (if-match #R(10 20) #R(10 20) :yes :no) -> :yes
+  (if-match #R(10 20) #R(1 2) :yes :no) -> :no
+
+  (when-match #R(@a @b) 1..2 (list a b)) -> (1 2)
 .brev
 
 .coNP Pattern operator @ struct
@@ -40092,6 +40142,54 @@ operator matching against an association list.
   (when-match @(hash (x @y) (@(symbolp y) @datum)) #H(() (x k) (k 42)) datum)
   --> (42)
 .brev
+
+.coNP Pattern operator @ rcons
+.synb
+.mets >> @(rcons from-pattern << to-pattern )
+.mets >> @ from-pattern..to-pattern
+.syne
+.desc
+The
+.code rcons
+pattern matches a range. There is no semantic difference
+between the
+.code cons
+operator and the
+.mono
+.meti >> #R( from-pattern << to-pattern )
+.onom
+syntax. Refer to the Range match section for a semantic description.
+
+Note that if the dotdot syntactic sugar is used, the leading
+.code @
+is still required, because the unadorned expression
+.code "(rcons ...)"
+matches a list beginning with the symbol
+.code rcons
+and not a range object.
+In particular, note that
+.code "@(rcons @a @b)"
+corresponds to
+.code "@@a..@b"
+and not
+.code "@a..@b"
+or
+.codn "@(@a..@b)" .
+
+.TP* Examples:
+
+.verb
+  (if-match @(rcons 1 2) 1..2 :yes :no) -> :yes
+  (when-match @(rcons @a @b) (list a b)) -> (1 2)
+
+  ;; not a range match: match rcons source code:
+  (when-match @a..@b 'x..y (list a b)) -> (x y)
+
+  ;; de-sugared precise equivalent of previous:
+  (when-match (rcons @a @b) '(rcons x y)
+    (list a b)) -> (x y)
+.brev
+
 
 .coNP Pattern operator @ let
 .synb
