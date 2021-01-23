@@ -461,6 +461,8 @@
     ^(defun ,name (. ,args)
        (match-case ,args ,*clauses))))
 
+(defun non-triv-pat-p (syntax) t)
+
 (defun non-triv-pat-p (syntax)
   (match-case syntax
     ((@(op eq 'sys:expr) (@(bindable) . @nil)) t)
