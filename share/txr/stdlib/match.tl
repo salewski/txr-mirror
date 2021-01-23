@@ -152,12 +152,16 @@
          var-exprs (mappend .var-exprs elem-matches))))
 
 (defun compile-atom-match (atom obj-var var-list)
-  (typecase atom
-    (vec (compile-vec-match atom obj-var var-list))
-    (t (new compiled-match
-            pattern atom
-            obj-var obj-var
-            test-expr ^(equal ,obj-var ',atom)))))
+  (flet ((compile-as-atom ()
+           (new compiled-match
+                pattern atom
+                obj-var obj-var
+                test-expr ^(equal ,obj-var ',atom))))
+    (typecase atom
+      (vec (if (non-triv-pat-p atom)
+             (compile-vec-match atom obj-var var-list)
+             (compile-as-atom)))
+      (t (compile-as-atom)))))
 
 (defun compile-op-match (op-expr obj-var var-list)
   (let ((var-match (compile-var-match nil obj-var var-list)))
@@ -399,7 +403,9 @@
                (compile-error *match-form*
                               "unrecognized pattern syntax ~s" pat))))
          (sys:var (compile-var-match (cadr pat) obj-var var-list))
-         (t (compile-cons-structure pat obj-var var-list))))
+         (t (if (non-triv-pat-p pat)
+              (compile-cons-structure pat obj-var var-list)
+              (compile-atom-match pat obj-var var-list)))))
     (t (compile-atom-match pat obj-var var-list))))
 
 (defmacro when-match (:form *match-form* pat obj . body)
