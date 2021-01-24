@@ -12351,47 +12351,50 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
       val save_mode = test_set_indent_mode(out, num_fast(indent_off),
                                            num_fast(indent_data));
       val save_indent = nil;
-      int two_elem = consp(cdr(obj)) && !cddr(obj);
+      val args = cdr(obj);
+      int have_args = consp(args) != nil;
+      int two_elem = have_args && cdr(args) == nil;
+      val arg = if2(have_args, car(args));
 
       if (sym == quote_s && two_elem) {
         put_char(chr('\''), out);
-        obj_print_impl(second(obj), out, pretty, ctx);
+        obj_print_impl(arg, out, pretty, ctx);
       } else if (sym == sys_qquote_s && two_elem) {
         put_char(chr('^'), out);
-        obj_print_impl(second(obj), out, pretty, ctx);
+        obj_print_impl(arg, out, pretty, ctx);
       } else if (sym == sys_unquote_s && two_elem) {
-        val arg = second(obj);
+        val arg = car(args);
         put_char(chr(','), out);
         if (unquote_star_check(arg, pretty))
           put_char(chr(' '), out);
-        obj_print_impl(second(obj), out, pretty, ctx);
+        obj_print_impl(arg, out, pretty, ctx);
       } else if (sym == sys_splice_s && two_elem) {
         put_string(lit(",*"), out);
-        obj_print_impl(second(obj), out, pretty, ctx);
+        obj_print_impl(arg, out, pretty, ctx);
       } else if (sym == vector_lit_s && two_elem) {
         put_char(chr('#'), out);
-        obj_print_impl(second(obj), out, pretty, ctx);
+        obj_print_impl(arg, out, pretty, ctx);
       } else if (sym == hash_lit_s) {
         put_string(lit("#H"), out);
         obj_print_impl(rest(obj), out, pretty, ctx);
       } else if (sym == var_s && two_elem &&
-                 (symbolp(second(obj)) || integerp(second(obj))))
+                 (symbolp(arg) || integerp(arg)))
       {
         put_char(chr('@'), out);
-        obj_print_impl(second(obj), out, pretty, ctx);
-      } else if (sym == expr_s && two_elem && consp(second(obj))) {
+        obj_print_impl(arg, out, pretty, ctx);
+      } else if (sym == expr_s && two_elem && consp(arg)) {
         put_char(chr('@'), out);
-        obj_print_impl(second(obj), out, pretty, ctx);
-      } else if (sym == rcons_s && consp(cdr(obj))
-                 && consp(cddr(obj)) && !(cdddr(obj)))
+        obj_print_impl(arg, out, pretty, ctx);
+      } else if (sym == rcons_s && have_args
+                 && consp(cdr(args)) && !(cddr(args)))
       {
-        obj_print_impl(second(obj), out, pretty, ctx);
+        obj_print_impl(arg, out, pretty, ctx);
         put_string(lit(".."), out);
-        obj_print_impl(third(obj), out, pretty, ctx);
+        obj_print_impl(cadr(args), out, pretty, ctx);
       } else if ((sym == uref_s || sym == qref_s) &&
-                 simple_qref_args_p(cdr(obj), if3(sym == uref_s, one, zero)))
+                 simple_qref_args_p(args, if3(sym == uref_s, one, zero)))
       {
-        val iter = cdr(obj), next;
+        val iter = args, next;
 
         if (sym == uref_s) {
           if (car(iter) == t) {
@@ -12417,18 +12420,16 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
               put_char(chr('?'), out);
           }
         }
-      } else if (sym == quasi_s && consp(cdr(obj))) {
+      } else if (sym == quasi_s && have_args) {
         put_char(chr('`'), out);
         out_quasi_str(obj, out, ctx);
         put_char(chr('`'), out);
-      } else if (sym == quasilist_s && consp(cdr(obj))) {
+      } else if (sym == quasilist_s && have_args) {
         cnum max_length = ctx->strm->max_length;
-        val args = cdr(obj);
         put_string(lit("#`"), out);
-        if (args) {
-          out_quasi_str(car(args), out, ctx);
-          args = cdr(args);
-        }
+        out_quasi_str(arg, out, ctx);
+        args = cdr(args);
+
         while (args) {
           put_char(chr(' '), out);
           if (max_length && --max_length == 0) {
@@ -12447,9 +12448,9 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         cnum max_len = ctx->strm->max_length;
         cnum max_count = max_len;
 
-        if (sym == dwim_s && consp(cdr(obj))) {
+        if (sym == dwim_s && have_args) {
           put_char(chr('['), out);
-          obj = cdr(obj);
+          obj = args;
           closepar = chr(']');
         } else {
           put_char(chr('('), out);
