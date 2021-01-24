@@ -135,12 +135,13 @@
   ^(let ,(zip syms (repeat '((gensym)))) ,*body))
 
 (defun sys:propagate-ancestor (to-tree from-form . syms)
-  (tree-case to-tree
-    ((a . d)
-     (when (memq a syms)
-       (sys:set-macro-ancestor to-tree from-form))
-     (sys:propagate-ancestor a from-form . syms)
-     (sys:propagate-ancestor d from-form . syms)))
+  (unless (macro-ancestor to-tree)
+    (tree-case to-tree
+      ((a . d)
+       (when (memq a syms)
+         (sys:set-macro-ancestor to-tree from-form))
+       (sys:propagate-ancestor a from-form . syms)
+       (sys:propagate-ancestor d from-form . syms))))
   to-tree)
 
 (defun call-update-expander (getter setter unex-place env body)
