@@ -4651,7 +4651,7 @@ YY_RULE_SETUP
 #line 608 "parser.l"
 {
   yylval->lineno = yyextra->lineno;
-  return yytext[0];
+  return (opt_compat && opt_compat <= 248) ? OLD_AT : '@';
 }
 	YY_BREAK
 case 57:

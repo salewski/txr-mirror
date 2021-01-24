@@ -125,7 +125,7 @@ INLINE val expand_form_ver(val form, int ver)
 %token <val> NUMBER METANUM
 %token <val> HASH_N_EQUALS HASH_N_HASH
 
-%token <chr> REGCHAR REGTOKEN LITCHAR SPLICE
+%token <chr> REGCHAR REGTOKEN LITCHAR SPLICE OLD_AT
 %token <chr> CONSDOT LAMBDOT UREFDOT OREFDOT UOREFDOT
 
 %type <val> spec hash_semi_or_n_expr hash_semi_or_i_expr
@@ -160,13 +160,13 @@ INLINE val expand_form_ver(val form, int ver)
 %right OUTPUT REPEAT REP FIRST LAST EMPTY DEFINE IF ELIF ELSE
 %right SPACE TEXT NUMBER METANUM HASH_N_EQUALS HASH_N_HASH HASH_B_QUOTE
 %nonassoc '[' ']' '(' ')'
-%left '-' ',' '\'' '^' SPLICE '@'
+%left '-' ',' '\'' '^' SPLICE OLD_AT
 %left '|' '/'
 %left '&'
 %right '~' '*' '?' '+' '%'
 %right DOTDOT
 %right '.' CONSDOT LAMBDOT UREFDOT OREFDOT UOREFDOT REGCHAR REGTOKEN LITCHAR
-%right OLD_DOTDOT
+%right OLD_DOTDOT '@'
 
 %%
 
@@ -951,6 +951,15 @@ meta : '@' n_expr               { if (consp($2))
                                     $$ = rl(cons(var_s, cons($2, nil)),
                                             num($1)); }
      | '@' error                { $$ = nil;
+                                  yybadtok(yychar, lit("meta expression")); }
+     ;
+
+meta : OLD_AT n_expr            { if (consp($2))
+                                    $$ = rl(cons(expr_s, cons($2, nil)), num($1));
+                                  else
+                                    $$ = rl(cons(var_s, cons($2, nil)),
+                                            num($1)); }
+     | OLD_AT error             { $$ = nil;
                                   yybadtok(yychar, lit("meta expression")); }
      ;
 
@@ -1989,6 +1998,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case WSPLICE: problem = lit("#*\""); break;
   case QWORDS:         problem = lit("#`"); break;
   case QWSPLICE:       problem = lit("#*`"); break;
+  case OLD_AT:         problem = lit("@"); break;
   }
 
   if (problem != 0)

@@ -66,14 +66,15 @@
      REGTOKEN = 313,
      LITCHAR = 314,
      SPLICE = 315,
-     CONSDOT = 316,
-     LAMBDOT = 317,
-     UREFDOT = 318,
-     OREFDOT = 319,
-     UOREFDOT = 320,
-     LOW = 321,
-     ELSE = 322,
-     ELIF = 323
+     OLD_AT = 316,
+     CONSDOT = 317,
+     LAMBDOT = 318,
+     UREFDOT = 319,
+     OREFDOT = 320,
+     UOREFDOT = 321,
+     LOW = 322,
+     ELSE = 323,
+     ELIF = 324
    };
 #endif
 /* Tokens.  */
@@ -135,14 +136,15 @@
 #define REGTOKEN 313
 #define LITCHAR 314
 #define SPLICE 315
-#define CONSDOT 316
-#define LAMBDOT 317
-#define UREFDOT 318
-#define OREFDOT 319
-#define UOREFDOT 320
-#define LOW 321
-#define ELSE 322
-#define ELIF 323
+#define OLD_AT 316
+#define CONSDOT 317
+#define LAMBDOT 318
+#define UREFDOT 319
+#define OREFDOT 320
+#define UOREFDOT 321
+#define LOW 322
+#define ELSE 323
+#define ELIF 324
 
 
 
@@ -162,7 +164,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 195 "y.tab.h"
+#line 197 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

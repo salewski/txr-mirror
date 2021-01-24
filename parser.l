@@ -607,7 +607,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 <NESTED,BRACED,QSPECIAL>@ {
   yylval->lineno = yyextra->lineno;
-  return yytext[0];
+  return (opt_compat && opt_compat <= 248) ? OLD_AT : '@';
 }
 
 <NESTED,QSPECIAL,BRACED>,[*] {

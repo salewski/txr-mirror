@@ -76996,7 +76996,29 @@ function defaulted to using
 equality for searching the hash table for matching values rather than the
 current
 .codn equal .
-A compatibility value of 248 or lower restores the behavior.
+Also, until 248, the
+.code @
+token for denoting meta-expressions was treated with a low precedence
+relative to the range dot
+.code ..
+token. This led to strange results, such as
+.code @(a)..@(b)
+parsing in a way equivalent to
+.code "@(rcons a @(b))"
+rather than
+.codn "(rcons @(a) @(b))" .
+Not is that undesirable due to the lack of symmetry, it's also
+inconsistent with
+.code "@a..@b"
+denoting
+.codn "(rcons @a @b)" .
+The latter is because in that case the
+.code @
+is handled as part of the symbol token as a token, and not as a separate operator.
+A compatibility value of 248 or lower restores the above old behaviors of
+.code @
+and
+.codn hash-revget .
 .IP 244
 Until \*(TX 244, the
 .code env-hash
