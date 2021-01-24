@@ -296,6 +296,9 @@ y.tab.c: $(top_srcdir)parser.y
 	    false ;                                             \
 	  fi)
 
+%.shipped: $(top_srcdir)%
+	$(call SH,[ $^ -nt $@ ] && cp $^ $@)
+
 else
 
 %: $(top_srcdir)%.shipped
