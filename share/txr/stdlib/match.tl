@@ -27,9 +27,14 @@
 (defstruct match-vars ()
   vars
   var-exprs
+  pure-vars
+  pure-var-exprs
 
   (:method assignments (me)
-    (mapcar (ret ^(set ,@1 ,@2)) me.vars me.var-exprs)))
+    (mapcar (ret ^(set ,@1 ,@2)) me.vars me.var-exprs))
+
+  (:method lets (me)
+    (mapcar (ret ^(,@1 ,@2)) me.pure-vars me.pure-var-exprs)))
 
 (defstruct match-guard (match-vars)
   (guard-expr t))
@@ -51,7 +56,7 @@
           (out exp))
       (each ((g rev-guard-chain))
         (set out ^(when ,g.guard-expr
-                    (progn
+                    (alet ,g.(lets)
                       ,*g.(assignments)
                       ,out))))
       out)))
@@ -83,12 +88,12 @@
            (slot-val-exprs [mapcar (ret ^(slot ,obj-var ',@1)) required-slots])
            (guard0 (if loose-p
                      (new match-guard
-                          vars (list type-gensym)
-                          var-exprs (list ^(struct-type ,obj-var))
+                          pure-vars (list type-gensym)
+                          pure-var-exprs (list ^(struct-type ,obj-var))
                           guard-expr ^(structp ,obj-var))))
            (guard1 (new match-guard
-                        vars slot-gensyms
-                        var-exprs slot-val-exprs
+                        pure-vars slot-gensyms
+                        pure-var-exprs slot-val-exprs
                         guard-expr (if loose-p
                                      ^(and ,*(mapcar
                                                (ret ^(slotp ,type-gensym ',@1))
@@ -138,9 +143,9 @@
          (elem-matches (list-vec [mapcar (lop compile-match var-list)
                                          vec-pat elem-gensyms]))
          (guard (new match-guard
-                     vars elem-gensyms
-                     var-exprs (mapcar (ret ^[,obj-var ,@1])
-                                        (range* 0 (len vec-pat)))
+                     pure-vars elem-gensyms
+                     pure-var-exprs (mapcar (ret ^[,obj-var ,@1])
+                                            (range* 0 (len vec-pat)))
                      guard-expr ^(and (vectorp ,obj-var)
                                       (eql (len ,obj-var) ,(len vec-pat))))))
     (new compiled-match
@@ -192,8 +197,8 @@
                           (t (compile-cons-structure cdr cdr-gensym var-list)))
                         (compile-atom-match cdr cdr-gensym var-list)))
            (guard (new match-guard
-                       vars ^(,car-gensym ,cdr-gensym)
-                       var-exprs ^((car ,obj-var) (cdr ,obj-var))
+                       pure-vars ^(,car-gensym ,cdr-gensym)
+                       pure-var-exprs ^((car ,obj-var) (cdr ,obj-var))
                        guard-expr ^(consp ,obj-var))))
       (new compiled-match
            pattern cons-pat
@@ -353,8 +358,8 @@
                                                 var-list)))
                          (push
                            (new match-guard
-                                vars (list km.obj-var)
-                                var-exprs ^((hash-keys-of ,obj-var ',val)))
+                                pure-vars (list km.obj-var)
+                                pure-var-exprs ^((hash-keys-of ,obj-var ',val)))
                            km.guard-chain)
                          km))
                      (t
@@ -365,8 +370,8 @@
                            vm.guard-chain)
                          (push
                            (new match-guard
-                                vars (list vm.obj-var)
-                                var-exprs ^((gethash ,obj-var ',key, hash-alt-val)))
+                                pure-vars (list vm.obj-var)
+                                pure-var-exprs ^((gethash ,obj-var ',key, hash-alt-val)))
                            vm.guard-chain)
                          vm)))))))
            (guard (new match-guard
@@ -389,8 +394,8 @@
            (to-match (compile-match to (gensym "to") var-list))
            (guard (new match-guard
                        guard-expr ^(rangep ,obj-var)
-                       vars (list from-match.obj-var to-match.obj-var)
-                       var-exprs (list ^(from ,obj-var) ^(to ,obj-var)))))
+                       pure-vars (list from-match.obj-var to-match.obj-var)
+                       pure-var-exprs (list ^(from ,obj-var) ^(to ,obj-var)))))
       (new compiled-match
            pattern rcons-expr
            obj-var obj-var
@@ -432,24 +437,23 @@
 
 (defmacro when-match (:form *match-form* pat obj . body)
   (let ((cm (compile-match pat)))
-    ^(let ((,cm.obj-var ,obj)
-           ,*cm.(get-vars))
-       ,cm.(wrap-guards
-             ^(progn ,*cm.(assignments)
-                (when ,cm.test-expr ,*body))))))
+    ^(alet ((,cm.obj-var ,obj))
+       (let ,cm.(get-vars)
+         ,cm.(wrap-guards
+               ^(progn ,*cm.(assignments)
+                  (when ,cm.test-expr ,*body)))))))
 
 (defmacro if-match (:form *match-form* pat obj then : else)
   (let ((cm (compile-match pat))
         (match-p (gensym "match-p-"))
         (result (gensym "result-")))
-    ^(let ((,cm.obj-var ,obj)
-           ,match-p
-           ,*cm.(get-vars))
-       (let ((,result ,cm.(wrap-guards
-                            ^(progn ,*cm.(assignments)
-                               (when ,cm.test-expr
-                                 (set ,match-p t)
-                                 ,then)))))
+    ^(alet ((,cm.obj-var ,obj))
+       (let* (,match-p ,*cm.(get-vars)
+              (,result ,cm.(wrap-guards
+                             ^(progn ,*cm.(assignments)
+                                (when ,cm.test-expr
+                                  (set ,match-p t)
+                                  ,then)))))
          (if ,match-p ,result ,else)))))
 
 (defmacro match-case (:form *match-form* obj . clauses)
