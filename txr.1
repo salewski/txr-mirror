@@ -39656,7 +39656,8 @@ binding
 .code a
 to
 .codn 3 .
-The notation supports lists, vectors and atoms. Atoms are compared using the
+The notation supports lists, vectors, ranges and atoms. Atoms are compared
+using the
 .code equal
 function. Thus, in the above pattern, the 1 and 2 in the pattern match the
 corresponding 1 and 2 atoms in the object using
@@ -39689,15 +39690,6 @@ table, whereas the order of sub-patterns in a pattern operator
 can be significant. One sub-pattern may be expected to produce
 a match for a variable, which is then back-referenced in another
 sub-pattern.
-
-Ranges can be
-matched using the
-.code "@(rcons ...)"
-notation or its
-.code ..
-syntactic sugar, or using the
-.code #R
-printed representation.
 
 A pattern can contain multiple occurrences of the same variable.
 Except in the case when these variables occur in different branches
@@ -39886,21 +39878,10 @@ is matched against its
 .code to
 part.
 
-Note: ranges can also be matched using the
-.mono
-.meti >> @(rcons from-pattern << to-pattern )
-.onom
-operator, also expressible using its syntactic sugar
-.mono
-.meti >> @ from-pattern..to-pattern
-.onom
-described under Pattern operator
-.codn rcons .
-
 .TP* Examples:
 
 .verb
-  (if-match #R(10 20) 10..20 :yes :no) -> :no
+  (if-match #R(10 20) 10..20 :yes :no) -> :yes
   (if-match #R(10 20) #R(10 20) :yes :no) -> :yes
   (if-match #R(10 20) #R(1 2) :yes :no) -> :no
 

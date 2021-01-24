@@ -135,3 +135,12 @@
 
 (test (when-match @(hash (x @y) (@(symbolp y) @datum)) #H(() (x k) (k 42)) datum)
       (42))
+
+(test (if-match #R(10 20) 10..20 :yes :no) :yes)
+(test (if-match #R(10 20) #R(10 20) :yes :no) :yes)
+(test (if-match #R(10 20) #R(1 2) :yes :no) :no)
+(test (when-match #R(@a @b) 1..2 (list a b)) (1 2))
+(test (when-match #R(@a 2) 1..2 a) 1)
+(test (when-match #R(1 @a) 1..2 a) 2)
+(test (when-match #R(2 @a) 1..2 a) nil)
+(test (when-match #R(@a 1) 1..2 a) nil)

@@ -156,6 +156,24 @@
          vars (mappend .vars elem-matches)
          var-exprs (mappend .var-exprs elem-matches))))
 
+(defun compile-range-match (rcons-expr obj-var var-list)
+  (let ((from (from rcons-expr))
+        (to (to rcons-expr)))
+    (let* ((from-match (compile-match from (gensym "from") var-list))
+           (to-match (compile-match to (gensym "to") var-list))
+           (guard (new match-guard
+                       guard-expr ^(rangep ,obj-var)
+                       pure-vars (list from-match.obj-var to-match.obj-var)
+                       pure-var-exprs (list ^(from ,obj-var) ^(to ,obj-var)))))
+      (new compiled-match
+           pattern rcons-expr
+           obj-var obj-var
+           guard-chain (cons guard (append from-match.guard-chain
+                                           to-match.guard-chain))
+           test-expr ^(and ,from-match.test-expr ,to-match.test-expr)
+           vars (append from-match.vars to-match.vars)
+           var-exprs (append from-match.var-exprs to-match.var-exprs)))))
+
 (defun compile-atom-match (atom obj-var var-list)
   (flet ((compile-as-atom ()
            (new compiled-match
@@ -167,8 +185,7 @@
              (compile-vec-match atom obj-var var-list)
              (compile-as-atom)))
       (range (if (non-triv-pat-p atom)
-               (compile-range-match ^(rcons ,(from atom) ,(to atom))
-                                    obj-var var-list)
+               (compile-range-match atom obj-var var-list)
                (compile-as-atom)))
       (t (compile-as-atom)))))
 
@@ -387,23 +404,6 @@
            test-expr ^(and ,*(mapcar .test-expr hash-matches))
            vars (mappend .vars hash-matches)
            var-exprs (mappend .var-exprs hash-matches)))))
-
-(defun compile-range-match (rcons-expr obj-var var-list)
-  (tree-bind (op from to) rcons-expr
-    (let* ((from-match (compile-match from (gensym "from") var-list))
-           (to-match (compile-match to (gensym "to") var-list))
-           (guard (new match-guard
-                       guard-expr ^(rangep ,obj-var)
-                       pure-vars (list from-match.obj-var to-match.obj-var)
-                       pure-var-exprs (list ^(from ,obj-var) ^(to ,obj-var)))))
-      (new compiled-match
-           pattern rcons-expr
-           obj-var obj-var
-           guard-chain (cons guard (append from-match.guard-chain
-                                           to-match.guard-chain))
-           test-expr ^(and ,from-match.test-expr ,to-match.test-expr)
-           vars (append from-match.vars to-match.vars)
-           var-exprs (append from-match.var-exprs to-match.var-exprs)))))
 
 (defun compile-match (pat : (obj-var (gensym)) (var-list (new var-list)))
   (cond
