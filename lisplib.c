@@ -87,7 +87,7 @@ static val place_set_entries(val dlt, val fun)
     lit("place-form-p"),
     lit("rlet"), lit("slet"), lit("alet"), lit("with-gensyms"),
     lit("call-update-expander"), lit("call-clobber-expander"),
-    lit("call-delete-expander)"),
+    lit("call-delete-expander"),
     lit("with-update-expander"), lit("with-clobber-expander"),
     lit("with-delete-expander"),
     lit("set"), lit("pset"), lit("zap"), lit("flip"), lit("inc"), lit("dec"),
