@@ -12383,8 +12383,17 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         put_char(chr('@'), out);
         obj_print_impl(arg, out, pretty, ctx);
       } else if (sym == expr_s && two_elem && consp(arg)) {
+        val inarg = car(arg);
         put_char(chr('@'), out);
-        obj_print_impl(arg, out, pretty, ctx);
+        if (inarg != rcons_s) {
+          obj_print_impl(arg, out, pretty, ctx);
+        } else {
+          obj = arg;
+          sym = inarg;
+          args = cdr(obj);
+          arg = car(obj);
+          goto list;
+        }
       } else if (sym == rcons_s && have_args
                  && consp(cdr(args)) && !(cddr(args)))
       {
@@ -12440,7 +12449,7 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
           args = cdr(args);
         }
         put_char(chr('`'), out);
-      } else {
+      } else list: {
         val iter;
         val closepar = chr(')');
         val indent = zero;
