@@ -39878,6 +39878,12 @@ is matched against its
 .code to
 part.
 
+Note that if the range expression notation
+.code a..b
+is used as a pattern, that is actualy a list pattern, due to
+that being a syntactic sugar for
+.codn "(rcons a b)" .
+
 .TP* Examples:
 
 .verb
@@ -39886,6 +39892,13 @@ part.
   (if-match #R(10 20) #R(1 2) :yes :no) -> :no
 
   (when-match #R(@a @b) 1..2 (list a b)) -> (1 2)
+
+  ;; not a range match! rcons syntax match
+  (when-match @a..@b '1..2 (list a b)) -> (1 2)
+
+  ;; above, de-sugared:
+  (when-match (rcons @a @b) (rcons 1 2) (list a b)) -> (1 2)
+
 .brev
 
 .coNP Pattern operator @ struct

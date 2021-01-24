@@ -144,3 +144,6 @@
 (test (when-match #R(1 @a) 1..2 a) 2)
 (test (when-match #R(2 @a) 1..2 a) nil)
 (test (when-match #R(@a 1) 1..2 a) nil)
+
+(test (when-match @a..@b '1..2 (list a b)) (1 2))
+(test (when-match (rcons @a @b) '(rcons 1 2) (list a b)) (1 2))
