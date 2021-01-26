@@ -4589,9 +4589,10 @@ static val lazy_sub_str(val lstr, val from, val to)
     if (to != t) {
       return pfxsub;
     } else {
+      val pfxcopy = copy_str(pfxsub);
       val lsub = make_obj();
       lsub->ls.type = LSTR;
-      lsub->ls.prefix = pfxsub;
+      lsub->ls.prefix = pfxcopy;
       lsub->ls.list = lstr->ls.list;
       lsub->ls.props = coerce(struct lazy_string_props *,
                               chk_copy_obj(coerce(mem_t *, lstr->ls.props),
