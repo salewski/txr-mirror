@@ -122,6 +122,14 @@
 @  (throw bad ln `dangling @mac`)
 @(end)
 @;;
+@;; Check for .meti not wrapped in .mono/onom.
+@;; macros.
+@;;
+@(define check-meti ())
+.meti @(skip)
+@  (throw bad ln ".meti not in .mono")
+@(end)
+@;;
 @;; Main
 @;;
 @(bind errors 0)
@@ -142,6 +150,8 @@
 @      (check-synb)
 @    (or)
 @      (check-spurious)
+@    (or)
+@      (check-meti)
 @    (end)
 @  (catch bad (line msg))
 @    (do (inc errors)

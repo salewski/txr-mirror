@@ -19192,27 +19192,49 @@ is equivalent to invoking a more specific copying function according to
 the type of the argument, as follows:
 .RS
 .coIP cons
+.mono
 .meti (copy-list << object )
+.onom
 .coIP str
+.mono
 .meti (copy-str << object )
+.onom
 .coIP vec
+.mono
 .meti (copy-vec << object )
+.onom
 .coIP hash
+.mono
 .meti (copy-hash << object )
+.onom
 .IP "struct type"
+.mono
 .meti (copy-struct << object )
+.onom
 .coIP fun
+.mono
 .meti (copy-fun << object )
+.onom
 .coIP buf
+.mono
 .meti (copy-buf << object )
+.onom
 .coIP carray
+.mono
 .meti (copy-carray << object )
+.onom
 .coIP random-state
+.mono
 .meti (make-random-state << object )
+.onom
 .coIP tnode
+.mono
 .meti (copy-tnode << object )
+.onom
 .coIP tree
+.mono
 .meti (copy-search-tree << object )
+.onom
 .RE
 
 .IP
@@ -37402,7 +37424,9 @@ using the comparison function given by the function name
 .metn cmp-fun .
 
 This comparison takes places as if by evaluating the expression
+.mono
 .meti >> ( cmp-fun < value << cmp-val )
+.onom
 where
 .meta value
 denotes the current value of
@@ -39357,7 +39381,9 @@ by default is not supported by
 that is to say, the syntax
 .meta sym
 cannot be used in place of the
+.mono
 .meti >> ( sym << init-form )
+.onom
 syntax when
 .meta sym
 is to be initialized to
@@ -39669,7 +39695,9 @@ except those parts introduced by the meta prefix
 This prefix denotes variables like
 .code @a
 as well as useful pattern matching operators like
+.mono
 .meti @(all << pattern )
+.onom
 which matches a list or sublist whose elements all match
 .metn pattern .
 
@@ -60909,7 +60937,9 @@ semantics as the same-named parameters of
 The
 .meta opt-specifier
 arguments are lists of between two and four elements:
+.mono
 .meti >> ( short-symbol < long-symbol >> [ type <> [ help-text ]]).
+.onom
 The
 .meta short-symbol
 and
@@ -69474,7 +69504,9 @@ symbol has been assigned the highest possible value of the FFI
 type, then an error exception is thrown.
 
 If
+.mono
 .meti >> ( sym << value )
+.onom
 is given, then
 .meta sym
 is given the specified value. The
