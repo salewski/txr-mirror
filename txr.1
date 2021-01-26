@@ -39880,7 +39880,7 @@ part.
 
 Note that if the range expression notation
 .code a..b
-is used as a pattern, that is actualy a list pattern, due to
+is used as a pattern, that is actually a list pattern, due to
 that being a syntactic sugar for
 .codn "(rcons a b)" .
 
@@ -40136,54 +40136,6 @@ operator matching against an association list.
   (when-match @(hash (x @y) (@(symbolp y) @datum)) #H(() (x k) (k 42)) datum)
   --> (42)
 .brev
-
-.coNP Pattern operator @ rcons
-.synb
-.mets >> @(rcons from-pattern << to-pattern )
-.mets >> @ from-pattern..to-pattern
-.syne
-.desc
-The
-.code rcons
-pattern matches a range. There is no semantic difference
-between the
-.code cons
-operator and the
-.mono
-.meti >> #R( from-pattern << to-pattern )
-.onom
-syntax. Refer to the Range match section for a semantic description.
-
-Note that if the dotdot syntactic sugar is used, the leading
-.code @
-is still required, because the unadorned expression
-.code "(rcons ...)"
-matches a list beginning with the symbol
-.code rcons
-and not a range object.
-In particular, note that
-.code "@(rcons @a @b)"
-corresponds to
-.code "@@a..@b"
-and not
-.code "@a..@b"
-or
-.codn "@(@a..@b)" .
-
-.TP* Examples:
-
-.verb
-  (if-match @(rcons 1 2) 1..2 :yes :no) -> :yes
-  (when-match @(rcons @a @b) (list a b)) -> (1 2)
-
-  ;; not a range match: match rcons source code:
-  (when-match @a..@b 'x..y (list a b)) -> (x y)
-
-  ;; de-sugared precise equivalent of previous:
-  (when-match (rcons @a @b) '(rcons x y)
-    (list a b)) -> (x y)
-.brev
-
 
 .coNP Pattern operator @ let
 .synb
