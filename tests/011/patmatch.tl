@@ -147,3 +147,11 @@
 
 (test (when-match @a..@b '1..2 (list a b)) (1 2))
 (test (when-match (rcons @a @b) '(rcons 1 2) (list a b)) (1 2))
+
+(test (let ((h #H(() (a 1) (b 2))))
+        (when-match @[h x y] 'a (list x y)))
+      (a 1))
+
+(test (let ((h #H(() (a 1) (b 2))))
+        (when-match @[h x @(oddp y)] 'a (list x y)))
+      (a 1))

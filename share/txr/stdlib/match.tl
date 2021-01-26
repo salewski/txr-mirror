@@ -195,12 +195,28 @@
     var-match))
 
 (defun compile-dwim-predicate-match (pred-expr obj-var var-list)
-  (mac-param-bind *match-form* (dwim fun : sym) pred-expr
-    (or (null sym) (bindable sym)
-        (compile-error *match-form* "~s is not a symbol" sym))
+  (mac-param-bind *match-form* (dwim fun : sym pat) pred-expr
     (let ((var-match (compile-var-match sym obj-var var-list)))
-      (set var-match.test-expr ^(and ,var-match.test-expr [,fun ,obj-var]))
-      var-match)))
+      (if pat
+        (let* ((pat-match (if (symbolp pat)
+                            (compile-var-match pat (gensym) var-list)
+                            (compile-match pat (gensym) var-list)))
+               (guard (new match-guard
+                           vars (list pat-match.obj-var)
+                           var-exprs (list ^[,fun ,obj-var]))))
+          (new compiled-match
+               pattern pred-expr
+               obj-var obj-var
+               guard-chain (cons guard (append var-match.guard-chain
+                                               pat-match.guard-chain))
+               vars (append var-match.vars pat-match.vars)
+               var-exprs (append var-match.var-exprs pat-match.var-exprs)
+               test-expr ^(and ,var-match.test-expr
+                               ,pat-match.test-expr
+                               ,pat-match.obj-var)))
+        (progn
+          (set var-match.test-expr ^(and ,var-match.test-expr [,fun ,obj-var]))
+          var-match)))))
 
 (defun compile-predicate-match (pred-expr obj-var var-list)
   (mac-param-bind *match-form* (fun : sym) pred-expr

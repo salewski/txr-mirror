@@ -40519,8 +40519,8 @@ function is capable of being called with exactly one argument.
 
 .NP* Pattern predicate operator
 .synb
-.mets >> @( function <> [ symbol ])
-.mets >> @[ expression <> [ symbol ]]
+.mets >> @( function <> [ variable ])
+.mets >> @[ expression >> [ variable >> [ pattern | << variable ]]]
 .syne
 .desc
 Whenever the operator of a pattern predicate is not recognized and is
@@ -40532,13 +40532,13 @@ corresponding object as an argument. The match is successful if the function
 returns true.
 
 Optionally, if the
-.meta symbol
+.meta variable
 is specified, and is not
 .codn nil ,
 it is bound to the corresponding object.
 
 The
-.meta symbol
+.meta variable
 argument, if present, must be a
 .code bindable
 symbol, or else
@@ -40550,15 +40550,28 @@ must be capable of accepting exactly one argument.
 
 The
 .mono
-.meti >> @[ expression <> [ symbol ]]
+.mets >> @[ expression >> [ variable >> [ pattern | << variable ]]]
 .onom
-version of the syntax is always a predicate. It denotes the evaluation of
+variant of the predicate syntax is always a predicate. It denotes the evaluation of
 .mono
 .meti >> [ expression << arg ]
 .onom
 where
 .meta arg
-is the corresponding object.
+is the corresponding object, that evaluation being required to
+yield true. The
+.meta variable
+plays the same role.
+
+This syntax supports an optional third argument, which may be a
+.meta pattern
+or another
+.metn variable .
+This pattern or variable, if present, is matched against the value of applying
+.meta expression
+to its argument. It allows that value to be captured and subject to
+pattern matching. The restriction that this value must be true
+continues to apply.
 
 Note: a
 .code lambda
@@ -40567,7 +40580,7 @@ expression may be used as either
 or
 .metn expression .
 
-.TP* Example:
+.TP* Examples:
 
 .verb
   (when-match (@(evenp) @(oddp x)) '(2 3) x) -> 3
@@ -40576,6 +40589,16 @@ or
   (let ((h #H(() (a 1) (b 2))))
    (when-match @[h x] 'a x))
   -> a
+
+  ;; as above, also capture hash value
+  (let ((h #H(() (a 1) (b 2))))
+   (when-match @[h x y] 'a (list x y)))
+  -> (a 1)
+
+  ;; as above, also capture hash value, if odd
+  (let ((h #H(() (a 1) (b 2))))
+   (when-match @[h x @(odd y)] 'a (list x y)))
+  -> (a 1)
 .brev
 
 .coNP Macros @ when-match and @ if-match
