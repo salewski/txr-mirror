@@ -77144,8 +77144,23 @@ variable. In cases where
 resolved the path by adding a suffix,
 .code *load-path*
 was bound to the unsuffixed name, which was a documented behavior.
-The old behavior is restored if 215 or lower compatibility
-is requested.
+After \*(TX 215, also, the behavior of the
+.code sub-str
+function changed. When the arguments implicate the entire string,
+.code sub-str
+started just returning the original string, and not making a copy.
+The old behavior was to always make a copy.
+The above old behaviors of
+.code load
+and
+.code sub-str
+are restored if 215 or lower compatibility
+is requested. Note, however, that the restoration of the
+.code sub-str
+behavior in response to the compatibility option was only
+introduced in \*(TX 250. In \*(TX 249 and older, the
+compatibility value has no effect on the behavior of
+.codn sub-str .
 .IP 202
 Up to \*(TX 202, the
 .code logxor
