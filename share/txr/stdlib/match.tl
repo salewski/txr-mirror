@@ -194,6 +194,14 @@
     (set var-match.test-expr ^(and ,var-match.test-expr [,op-expr ,obj-var]))
     var-match))
 
+(defun compile-dwim-predicate-match (pred-expr obj-var var-list)
+  (mac-param-bind *match-form* (dwim fun : sym) pred-expr
+    (or (null sym) (bindable sym)
+        (compile-error *match-form* "~s is not a symbol" sym))
+    (let ((var-match (compile-var-match sym obj-var var-list)))
+      (set var-match.test-expr ^(and ,var-match.test-expr [,fun ,obj-var]))
+      var-match)))
+
 (defun compile-predicate-match (pred-expr obj-var var-list)
   (mac-param-bind *match-form* (fun : sym) pred-expr
     (or (null sym) (bindable sym)
@@ -426,6 +434,7 @@
                  (op (compile-op-match exp obj-var var-list))
                  (hash (compile-hash-match exp obj-var var-list))
                  (rcons (compile-range-match exp obj-var var-list))
+                 (dwim (compile-dwim-predicate-match exp obj-var var-list))
                  (t (compile-predicate-match exp obj-var var-list)))
                (compile-error *match-form*
                               "unrecognized pattern syntax ~s" pat))))

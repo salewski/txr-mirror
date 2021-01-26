@@ -40520,11 +40520,12 @@ function is capable of being called with exactly one argument.
 .NP* Pattern predicate operator
 .synb
 .mets >> @( function <> [ symbol ])
+.mets >> @[ expression <> [ symbol ]]
 .syne
 .desc
-Whenever the operator of a pattern predicate is not recognized, that operator
-is assumed to be the name of a function, and the syntax is treated as the
-predicate operator.
+Whenever the operator of a pattern predicate is not recognized and is
+a bindable symbol, that operator is assumed to be the name of a function, and
+the syntax is treated as the predicate operator.
 
 The pattern predicate operator invokes the function, passing it the
 corresponding object as an argument. The match is successful if the function
@@ -40547,24 +40548,35 @@ The
 .meta function
 must be capable of accepting exactly one argument.
 
+The
+.mono
+.meti >> @[ expression <> [ symbol ]]
+.onom
+version of the syntax is always a predicate. It denotes the evaluation of
+.mono
+.meti >> [ expression << arg ]
+.onom
+where
+.meta arg
+is the corresponding object.
+
 Note: a
 .code lambda
-expression may be used as
-.metn function .
+expression may be used as either
+.meta function
+or
+.metn expression .
 
 .TP* Example:
 
 .verb
   (when-match (@(evenp) @(oddp x)) '(2 3) x) -> 3
-.brev
 
-An instance of the
-.mono
-.meti >> @( operator ...)
-.onom
-syntax denotes the predicate operator whenever the
-.meta operator
-symbol is not one of the predicates.
+  ;; use hash table as predicate:
+  (let ((h #H(() (a 1) (b 2))))
+   (when-match @[h x] 'a x))
+  -> a
+.brev
 
 .coNP Macros @ when-match and @ if-match
 .synb
