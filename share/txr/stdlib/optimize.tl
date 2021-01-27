@@ -69,6 +69,12 @@
                            ((@(op eq jlabel) (jmp @(require @jjlabel (neq jjlabel jlabel))) . @nil)
                             ^((ifq ,reg ,creg ,jjlabel) ,*rest))
                            (@jelse insns))))
+                      (((close @reg @nargs @jlabel . @cargs) . @rest)
+                       (let ((jinsns [bb.hash jlabel]))
+                         (match-case jinsns
+                           ((@(op eq jlabel) (jmp @(require @jjlabel (neq jjlabel jlabel))) . @nil)
+                            ^((close ,reg ,nargs ,jjlabel ,*cargs) ,*rest))
+                           (@jelse insns))))
                       (@else insns)))
                   code))))
 
