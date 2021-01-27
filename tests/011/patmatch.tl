@@ -70,6 +70,9 @@
         (list x y z))
       (1 2 3))
 
+(test (when-match @(all @(or (@x @y) @z)) '((1 2) (3 4)) (list x y z))
+      ((1 3) (2 4) (nil nil)))
+
 (test (if-match @(or (@x 3 3) (1 @x 3) (1 2 @x)) '(1 2 3) x) 2)
 (test (if-match @(op <= 10 @1 13) 11 :yes :no) :yes)
 (test (when-match @(let x @(op <= 10 @1 13)) 11 x) 11)
