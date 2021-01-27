@@ -883,7 +883,7 @@
                  (btreg me.(alloc-treg))
                  (bfrag me.(comp-progn btreg benv body))
                  (boreg (if env.(out-of-scope bfrag.oreg) btreg bfrag.oreg))
-                 (lskip (gensym "l-"))
+                 (lskip (gensym "l"))
                  (frsize (if need-frame nenv.v-cntr 0)))
             me.(free-treg btreg)
             (new (frag oreg
