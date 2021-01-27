@@ -569,7 +569,7 @@
       me.(maybe-free-treg treg oreg)
       (new (frag oreg
                  ^(,*ifrag.code
-                   (swtch ,ifrag.oreg ,*clabels)
+                   (swtch ,ifrag.oreg ,*(list-vec clabels))
                    ,*(mappend .code cfrags)
                    ,*(when (and shared last-cfrag)
                        (maybe-mov oreg last-cfrag.oreg))
