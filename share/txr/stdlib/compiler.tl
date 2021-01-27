@@ -722,8 +722,7 @@
            (frsize (len lexsyms))
            (seq (eq sym 'let*))
            (nenv (new env up env co me))
-           (eenv (unless seq (new env up env co me)))
-           (fenv (if seq nenv eenv)))
+           (fenv (if seq nenv (new env up env co me))))
       (unless seq
         (each ((lsym lexsyms))
           nenv.(extend-var lsym)))
