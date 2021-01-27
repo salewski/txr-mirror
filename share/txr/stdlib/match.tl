@@ -282,7 +282,8 @@
            (loop-iterated-var (if no-vac-p (gensym "loop-iterated-p")))
            (matched-p-var (gensym "matched-p-"))
            (iter-var (gensym "iter-"))
-           (collect-vars (diff cm.vars in-vars))
+           (cm-vars cm.(get-vars))
+           (collect-vars (diff cm-vars in-vars))
            (collect-gens [mapcar gensym collect-vars])
            (loop ^(for ((,iter-var (iter-begin ,obj-var))
                         (,loop-continue-p-var t)
@@ -296,7 +297,7 @@
                        ((set ,iter-var (iter-step ,iter-var)))
                     (let ((,cm.obj-var (iter-item ,iter-var))
                           ,matched-p-var
-                          ,*(if some-p cm.(get-temps) cm.(get-vars)))
+                          ,*(if some-p cm.(get-temps) cm-vars))
                       ,cm.(wrap-guards
                             ^(progn ,*cm.(assignments)
                                (if ,cm.test-expr
@@ -311,7 +312,7 @@
                       ,(unless coll-p ^(,(if some-p 'when 'unless) ,matched-p-var
                          (set ,loop-continue-p-var nil))))))
            (guard (new match-guard
-                       vars (append cm.vars (unless some-p collect-gens))
+                       vars (append cm-vars (unless some-p collect-gens))
                        guard-expr ^(seqp ,obj-var))))
       (new compiled-match
            pattern exp
@@ -331,7 +332,7 @@
     (let* ((var-lists (mapcar (ret (copy var-list)) pats))
            (par-matches (mapcar (op compile-match @1 obj-var @2)
                                 pats var-lists))
-           (all-vars (uniq (mappend .vars par-matches))))
+           (all-vars (uniq (mappend .(get-vars) par-matches))))
       (flet ((submatch-fun (pm)
                ^(let ,pm.(get-temps)
                   ,pm.(wrap-guards
@@ -339,7 +340,7 @@
                            (when ,pm.test-expr
                              ,*(if (eq op 'or)
                                  (mapcar (ret ^(set ,@1 nil))
-                                         (diff all-vars pm.vars)))
+                                         (diff all-vars pm.(get-vars))))
                              t))))))
         (let ((guard (new match-guard
                           vars all-vars)))
