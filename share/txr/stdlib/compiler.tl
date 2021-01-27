@@ -25,6 +25,7 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (load "vm-param")
+(load "optimize")
 
 (compile-only
   (load-for (struct sys:param-parser-base "param")))
@@ -1270,6 +1271,11 @@
              (push lt-frag me.lt-frags)
              (new (frag dreg nil))))))))
 
+(defmeth compiler optimize (me insns)
+  (let* ((bb (new (basic-blocks insns))))
+    bb.(thread-jumps)
+    bb.(get-insns)))
+
 (defun maybe-mov (to-reg from-reg)
   (if (nequal to-reg from-reg)
     ^((mov ,to-reg ,from-reg))))
@@ -1669,7 +1675,9 @@
            (frag co.(compile oreg (new env co co) xexp)))
       co.(free-treg oreg)
       co.(check-treg-leak)
-      as.(asm ^(,*(mappend .code (nreverse co.lt-frags)) ,*frag.code (end ,frag.oreg)))
+      as.(asm co.(optimize ^(,*(mappend .code (nreverse co.lt-frags))
+                             ,*frag.code
+                             (end ,frag.oreg))))
       (vm-make-desc co.nlev (succ as.max-treg) as.buf co.(get-datavec) co.(get-symvec)))))
 
 (defun compiler-emit-warnings ()
