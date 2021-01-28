@@ -225,7 +225,8 @@
     (or (null sym) (bindable sym)
         (compile-error *match-form* "~s is not a symbol" sym))
     (let ((var-match (compile-var-match sym obj-var var-list)))
-      (set var-match.test-expr ^(and ,var-match.test-expr (,fun ,obj-var)))
+      (push (new match-guard guard-expr ^(and ,var-match.test-expr (,fun ,obj-var)))
+            var-match.guard-chain)
       var-match)))
 
 (defun compile-cons-structure (cons-pat obj-var var-list)
