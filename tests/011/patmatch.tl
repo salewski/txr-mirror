@@ -75,6 +75,8 @@
 
 (test (when-match @(or @(all @x)) '(1 2 3) x) (1 2 3))
 
+(test (when-match (foo @(all @x)) '(bar (1 2 . 3)) x) nil)
+
 (test (if-match @(or (@x 3 3) (1 @x 3) (1 2 @x)) '(1 2 3) x) 2)
 (test (if-match @(op <= 10 @1 13) 11 :yes :no) :yes)
 (test (when-match @(let x @(op <= 10 @1 13)) 11 x) 11)
