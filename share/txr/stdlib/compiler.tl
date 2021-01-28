@@ -1416,14 +1416,16 @@
                ,*(if accum ^((,out (cons nil nil)) (,accum ,out))))
          (block nil
            (sys:for-op ()
-                       ((and ,*(mapcar (op list 'iter-more) gens)) ,*(if accum ^((cdr ,out))))
+                       ((and ,*(mapcar (op list 'iter-more) gens))
+                        ,*(if accum (if (eq each-type 'collect-each)
+                                      ^((cdr ,out))
+                                      ^((sys:apply (fun append) ,out)))))
                        (,*(mapcar (ret ^(sys:setq ,@1 (iter-step ,@1))) gens))
              ,*(mapcar (ret ^(sys:setq ,@1 (iter-item ,@2))) vars gens)
              ,*(caseq each-type
-                 (collect-each ^((rplacd ,accum (cons (progn ,*body) nil))
-                                 (sys:setq ,accum (cdr ,accum))))
-                 (append-each ^((rplacd ,accum (append (cdr ,accum) (progn ,*body)))
-                                (sys:setq ,accum (last ,accum))))
+                 ((collect-each append-each)
+                    ^((rplacd ,accum (cons (progn ,*body) nil))
+                      (sys:setq ,accum (cdr ,accum))))
                  (t body))))))))
 
 (defun expand-bind-mac-params (ctx-form err-form params menv-var
