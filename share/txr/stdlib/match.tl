@@ -24,13 +24,14 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+(defvar *match-form*)
+
 (defstruct match-vars ()
   vars
   var-exprs
 
   (:method assignments (me)
     (mapcar (ret ^(set ,@1 ,@2)) me.vars me.var-exprs)))
-
 
 (defstruct match-guard (match-vars)
   temps
@@ -41,25 +42,85 @@
   (:method lets (me)
     (mapcar (ret ^(,@1 ,@2)) me.pure-temps me.pure-temp-exprs)))
 
+(defstruct guard-disjunction ()
+  guard-chains
+  sub-patterns
+  all-vars)
+
 (defstruct compiled-match (match-vars)
   pattern
   obj-var
   guard-chain
   test-expr
 
-  (:method get-vars (me)
-    (append me.vars (mappend .vars me.guard-chain)))
+  (:postinit (me)
+    (set me.guard-chain
+         (append me.guard-chain
+                 (list
+                   (new match-guard
+                        vars me.vars
+                        var-exprs me.var-exprs)
+                   (new match-guard
+                        guard-expr me.test-expr))))
+    (set me.vars nil
+         me.var-exprs nil
+         me.test-expr t))
 
-  (:method wrap-guards (me exp)
-    (let ((rev-guard-chain (reverse me.guard-chain))
-          (out exp))
-      (each ((g rev-guard-chain))
-        (set out ^(when ,g.guard-expr
-                    (alet ,g.(lets)
-                      (let ,g.temps
-                        ,*g.(assignments)
-                        ,out)))))
-      out)))
+  (:method get-vars (me)
+    (append me.vars (get-guard-values me.guard-chain .vars)))
+
+  (:method get-var-exprs (me)
+    (append me.var-exprs (get-guard-values me.guard-chain .var-exprs)))
+
+  (:method wrap-guards (me . forms)
+    (labels ((wrg (rgc exp)
+               (each ((g rgc))
+                 (typecase g
+                   (match-guard
+                     (let ((lets g.(lets))
+                           (temps g.temps))
+                       (cond
+                         ((and lets temps)
+                          (set exp ^(alet ,lets
+                                      (let ,temps
+                                        ,*g.(assignments)
+                                        ,exp))))
+                         (lets
+                          (set exp ^(alet ,lets
+                                      ,*g.(assignments)
+                                      ,exp)))
+                         (temps
+                          (set exp ^(let ,temps
+                                      ,*g.(assignments)
+                                      ,exp)))
+                         (t
+                          (set exp ^(progn ,*g.(assignments)
+                                     ,exp))))
+                       (when (neq t g.guard-expr)
+                         (set exp ^(if ,g.guard-expr ,exp)))))
+                   (guard-disjunction
+                     (let ((branches (collect-each ((gc g.guard-chains))
+                                       (wrg (reverse gc) t))))
+                       (set exp ^(when (or ,*branches)
+                                   ,exp))))
+                   (t (compile-error *match-form*
+                                     "internal error: bad guard ~s" g))))
+               exp))
+      (wrg (reverse me.guard-chain)
+           ^(progn ,*forms))))
+
+  (:method add-guard-pre (me guard)
+    (push guard me.guard-chain))
+
+  (:method add-guards-pre (me . guards)
+    (set me.guard-chain
+         (append guards
+                 me.guard-chain)))
+
+  (:method add-guards-post (me . guards)
+    (set me.guard-chain
+         (append me.guard-chain
+                 guards))))
 
 (defstruct var-list ()
   vars
@@ -67,7 +128,15 @@
   (:method exists (me sym) (member sym me.vars))
   (:method record (me sym) (push sym me.vars)))
 
-(defvar *match-form*)
+(defun get-guard-values (guard-chain fun)
+  (append-each ((g guard-chain))
+    (typecase g
+      (match-guard
+        [fun g])
+      (guard-disjunction
+        (append-each ((gc g.guard-chains))
+          (get-guard-values gc fun)))
+      (t (compile-error *match-form* "internal error: bad guard ~s" g)))))
 
 (defun compile-struct-match (struct-pat obj-var var-list)
   (mac-param-bind *match-form* (op required-type . pairs) struct-pat
@@ -116,7 +185,7 @@
            obj-var obj-var
            guard-chain ^(,*(if guard0 (list guard0)) ,guard1
                          ,*(mappend .guard-chain all-matches))
-           test-expr ^(and ,*(mapcar .test-expr all-matches))
+           test-expr t
            vars [mappend .vars all-matches]
            var-exprs [mappend .var-exprs all-matches]))))
 
@@ -152,7 +221,7 @@
          pattern vec-pat
          obj-var obj-var
          guard-chain (cons guard (mappend .guard-chain elem-matches))
-         test-expr ^(and ,*(mapcar .test-expr elem-matches))
+         test-expr t
          vars (mappend .vars elem-matches)
          var-exprs (mappend .var-exprs elem-matches))))
 
@@ -170,7 +239,7 @@
            obj-var obj-var
            guard-chain (cons guard (append from-match.guard-chain
                                            to-match.guard-chain))
-           test-expr ^(and ,from-match.test-expr ,to-match.test-expr)
+           test-expr t
            vars (append from-match.vars to-match.vars)
            var-exprs (append from-match.var-exprs to-match.var-exprs)))))
 
@@ -193,7 +262,9 @@
 
 (defun compile-op-match (op-expr obj-var var-list)
   (let ((var-match (compile-var-match nil obj-var var-list)))
-    (set var-match.test-expr ^(and ,var-match.test-expr [,op-expr ,obj-var]))
+    var-match.(add-guard-pre (new match-guard
+                                  guard-expr ^(and ,var-match.test-expr
+                                                   [,op-expr ,obj-var])))
     var-match))
 
 (defun compile-dwim-predicate-match (pred-expr obj-var var-list)
@@ -213,11 +284,11 @@
                                                pat-match.guard-chain))
                vars (append var-match.vars pat-match.vars)
                var-exprs (append var-match.var-exprs pat-match.var-exprs)
-               test-expr ^(and ,var-match.test-expr
-                               ,pat-match.test-expr
-                               ,pat-match.obj-var)))
+               test-expr pat-match.obj-var))
         (progn
-          (set var-match.test-expr ^(and ,var-match.test-expr [,fun ,obj-var]))
+          var-match.(add-guard-pre (new match-guard
+                                        guard-expr ^(and ,var-match.test-expr
+                                                         [,fun ,obj-var])))
           var-match)))))
 
 (defun compile-predicate-match (pred-expr obj-var var-list)
@@ -225,8 +296,9 @@
     (or (null sym) (bindable sym)
         (compile-error *match-form* "~s is not a symbol" sym))
     (let ((var-match (compile-var-match sym obj-var var-list)))
-      (push (new match-guard guard-expr ^(and ,var-match.test-expr (,fun ,obj-var)))
-            var-match.guard-chain)
+      var-match.(add-guard-pre (new match-guard
+                                    guard-expr ^(and ,var-match.test-expr
+                                                     (,fun ,obj-var))))
       var-match)))
 
 (defun compile-cons-structure (cons-pat obj-var var-list)
@@ -249,14 +321,15 @@
            obj-var obj-var
            guard-chain (cons guard (append car-match.guard-chain
                                            cdr-match.guard-chain))
-           test-expr ^(and ,car-match.test-expr ,cdr-match.test-expr)
+           test-expr t
            vars (append car-match.vars cdr-match.vars)
            var-exprs (append car-match.var-exprs cdr-match.var-exprs)))))
 
 (defun compile-require-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op match . conditions) exp
     (let ((match (compile-match match obj-var var-list)))
-      (set match.test-expr ^(and ,match.test-expr ,*conditions))
+      match.(add-guards-post (new match-guard
+                                  guard-expr ^(and ,*conditions)))
       match)))
 
 (defun compile-let-match (exp obj-var var-list)
@@ -268,7 +341,7 @@
            obj-var obj-var
            guard-chain (append var-match.guard-chain
                                pat-match.guard-chain)
-           test-expr ^(and ,var-match.test-expr ,pat-match.test-expr)
+           test-expr t
            vars (append var-match.vars pat-match.vars)
            var-exprs (append var-match.var-exprs pat-match.var-exprs)))))
 
@@ -302,18 +375,17 @@
                           ,matched-p-var
                           ,*(unless some-p cm-vars))
                       ,cm.(wrap-guards
-                            ^(progn ,*cm.(assignments)
-                               (if ,cm.test-expr
-                                 (progn
-                                   (set ,matched-p-var t)
-                                   ,*(if no-vac-p
-                                       ^((set ,loop-iterated-var t)))
-                                   ,*(unless some-p
-                                       (mapcar (ret ^(push ,@1 ,@2))
-                                               collect-vars
-                                               collect-gens))))))
-                      ,(unless coll-p ^(,(if some-p 'when 'unless) ,matched-p-var
-                         (set ,loop-continue-p-var nil))))))
+                            ^(progn
+                               (set ,matched-p-var t)
+                               ,*(if no-vac-p
+                                   ^((set ,loop-iterated-var t)))
+                               ,*(unless some-p
+                                   (mapcar (ret ^(push ,@1 ,@2))
+                                           collect-vars
+                                           collect-gens))))
+                      ,(unless coll-p ^(,(if some-p 'when 'unless)
+                                         ,matched-p-var
+                                         (set ,loop-continue-p-var nil))))))
            (guard (new match-guard
                        vars cm-vars
                        temps (unless some-p collect-gens)
@@ -331,37 +403,49 @@
                                     collect-vars collect-gens)
                           t))))))
 
-(defun compile-parallel-match (par-pat obj-var var-list)
+(defun compile-or-match (par-pat obj-var var-list)
   (mac-param-bind *match-form* (op . pats) par-pat
     (let* ((var-lists (mapcar (ret (copy var-list)) pats))
            (par-matches (mapcar (op compile-match @1 obj-var @2)
                                 pats var-lists))
-           (all-vars (uniq (mappend .(get-vars) par-matches))))
-      (flet ((submatch-fun (pm)
-               pm.(wrap-guards
-                    ^(progn ,*pm.(assignments)
-                       (when ,pm.test-expr
-                         ,*(if (eq op 'or)
-                             (mapcar (ret ^(set ,@1 nil))
-                                     (diff all-vars pm.(get-vars))))
-                         t)))))
-        (let ((guard (new match-guard
-                          vars all-vars)))
-          (new compiled-match
-               pattern par-pat
-               obj-var obj-var
-               guard-chain (list guard)
-               test-expr ^(,op ,*[mapcar submatch-fun par-matches])))))))
+           (all-var-exprs [unique [mapcar cons
+                                          (mappend .(get-vars) par-matches)
+                                          (mappend .(get-var-exprs) par-matches)]
+                                  car])
+           (guard (new match-guard
+                       vars [mapcar car all-var-exprs]))
+           (dj-guard (new guard-disjunction
+                          guard-chains (mapcar .guard-chain par-matches)
+                          sub-patterns par-matches)))
+      (new compiled-match
+           pattern par-pat
+           obj-var obj-var
+           guard-chain (list guard dj-guard)
+           test-expr t))))
+
+(defun compile-and-match (par-pat obj-var var-list)
+  (mac-param-bind *match-form* (op . pats) par-pat
+    (let* ((var-lists (mapcar (ret (copy var-list)) pats))
+           (par-matches (mapcar (op compile-match @1 obj-var @2)
+                                pats var-lists))
+           (all-var-exprs [unique [mapcar cons
+                                          (mappend .(get-vars) par-matches)
+                                          (mappend .(get-var-exprs) par-matches)]
+                                  car]))
+      (new compiled-match
+           pattern par-pat
+           obj-var obj-var
+           vars [mapcar car all-var-exprs]
+           var-exprs [mapcar cdr all-var-exprs]
+           guard-chain (mappend .guard-chain par-matches)
+           test-expr t))))
 
 (defun compile-not-match (pattern obj-var var-list)
   (mac-param-bind *match-form* (op pattern) pattern
     (let* ((pm (compile-match pattern obj-var var-list))
            (guard (new match-guard
                        guard-expr ^(not (let ,pm.(get-vars)
-                                          ,pm.(wrap-guards
-                                                ^(progn ,*pm.(assignments)
-                                                   (when ,pm.test-expr
-                                                     t))))))))
+                                          ,pm.(wrap-guards t))))))
       (new compiled-match
            pattern pattern
            obj-var obj-var
@@ -384,14 +468,15 @@
                      ((and key-var-sym var-list.(exists key-var-sym))
                        (let ((vm (compile-match val (gensym "val") var-list))
                              (val-sym (gensym "val")))
-                         (push
-                           (new match-guard
-                                guard-expr ^(neq ,vm.obj-var ,hash-alt-val))
-                           vm.guard-chain)
-                         (push vm.obj-var vm.vars)
-                         (push ^(gethash ,obj-var ,key-var-sym
-                                         ,hash-alt-val) vm.var-exprs)
-                       vm))
+                         vm.(add-guards-pre
+                              (new match-guard
+                                   vars (list vm.obj-var)
+                                   var-exprs ^((gethash ,obj-var ,key-var-sym
+                                                        ,hash-alt-val)))
+                              (new match-guard
+                                   guard-expr ^(neq ,vm.obj-var
+                                                    ,hash-alt-val)))
+                         vm))
                      ((and key-pat-p val-pat-p)
                       (set need-alist-p t)
                       (compile-match ^@(coll (,key . ,val))
@@ -399,23 +484,21 @@
                      (key-pat-p
                        (let ((km (compile-match key (gensym "keys")
                                                 var-list)))
-                         (push
-                           (new match-guard
-                                pure-temps (list km.obj-var)
-                                pure-temp-exprs ^((hash-keys-of ,obj-var ',val)))
-                           km.guard-chain)
+                         km.(add-guards-pre
+                              (new match-guard
+                                   pure-temps (list km.obj-var)
+                                   pure-temp-exprs ^((hash-keys-of ,obj-var
+                                                       ',val))))
                          km))
                      (t
                        (let ((vm (compile-match val (gensym "val") var-list)))
-                         (push
-                           (new match-guard
-                                guard-expr ^(neq ,vm.obj-var ,hash-alt-val))
-                           vm.guard-chain)
-                         (push
-                           (new match-guard
-                                pure-temps (list vm.obj-var)
-                                pure-temp-exprs ^((gethash ,obj-var ',key, hash-alt-val)))
-                           vm.guard-chain)
+                         vm.(add-guards-pre
+                              (new match-guard
+                                   pure-temps (list vm.obj-var)
+                                   pure-temp-exprs ^((gethash ,obj-var ',key,
+                                                              hash-alt-val)))
+                              (new match-guard
+                                   guard-expr ^(neq ,vm.obj-var ,hash-alt-val)))
                          vm)))))))
            (guard (new match-guard
                        guard-expr ^(hashp ,obj-var)
@@ -427,7 +510,7 @@
            pattern hash-expr
            obj-var obj-var
            guard-chain (cons guard (mappend .guard-chain hash-matches))
-           test-expr ^(and ,*(mapcar .test-expr hash-matches))
+           test-expr t
            vars (mappend .vars hash-matches)
            var-exprs (mappend .var-exprs hash-matches)))))
 
@@ -446,8 +529,8 @@
                  (usr:all* (compile-loop-match exp obj-var var-list))
                  (some (compile-loop-match exp obj-var var-list))
                  (coll (compile-loop-match exp obj-var var-list))
-                 (or (compile-parallel-match exp obj-var var-list))
-                 (and (compile-parallel-match exp obj-var var-list))
+                 (or (compile-or-match exp obj-var var-list))
+                 (and (compile-and-match exp obj-var var-list))
                  (not (compile-not-match exp obj-var var-list))
                  (op (compile-op-match exp obj-var var-list))
                  (hash (compile-hash-match exp obj-var var-list))
@@ -466,9 +549,7 @@
   (let ((cm (compile-match pat)))
     ^(alet ((,cm.obj-var ,obj))
        (let ,cm.(get-vars)
-         ,cm.(wrap-guards
-               ^(progn ,*cm.(assignments)
-                  (when ,cm.test-expr ,*body)))))))
+         ,cm.(wrap-guards . body)))))
 
 (defmacro if-match (:form *match-form* pat obj then : else)
   (let ((cm (compile-match pat))
@@ -477,10 +558,8 @@
     ^(alet ((,cm.obj-var ,obj))
        (let* (,match-p ,*cm.(get-vars)
               (,result ,cm.(wrap-guards
-                             ^(progn ,*cm.(assignments)
-                                (when ,cm.test-expr
-                                  (set ,match-p t)
-                                  ,then)))))
+                             ^(set ,match-p t)
+                             then)))
          (if ,match-p ,result ,else)))))
 
 (defmacro match-case (:form *match-form* obj . clauses)
@@ -496,10 +575,8 @@
                           ^(unless ,(unless (zerop i) flag)
                              (let (,*cm.(get-vars))
                                (set ,result ,cm.(wrap-guards
-                                                  ^(progn ,*cm.(assignments)
-                                                     (when ,cm.test-expr
-                                                       (set ,flag t)
-                                                       ,*forms))))))))))
+                                                  ^(set ,flag t)
+                                                  . forms))))))))
     ^(let (,flag ,result)
        ,*clause-code
        ,result)))
