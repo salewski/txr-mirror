@@ -391,8 +391,6 @@
                          (push vm.obj-var vm.vars)
                          (push ^(gethash ,obj-var ,key-var-sym
                                          ,hash-alt-val) vm.var-exprs)
-                         (set vm.test-expr ^(and (neq ,vm.obj-var ,hash-alt-val)
-                                                 ,vm.test-expr))
                        vm))
                      ((and key-pat-p val-pat-p)
                       (set need-alist-p t)
