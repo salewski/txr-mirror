@@ -179,7 +179,9 @@
            (new compiled-match
                 pattern atom
                 obj-var obj-var
-                test-expr ^(equal ,obj-var ',atom))))
+                guard-chain (list (new match-guard
+                                       guard-expr ^(equal ,obj-var ',atom)))
+                test-expr t)))
     (typecase atom
       (vec (if (non-triv-pat-p atom)
              (compile-vec-match atom obj-var var-list)
