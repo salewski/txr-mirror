@@ -52,10 +52,16 @@
   guard-chain
 
   (:method get-vars (me)
-    (get-guard-values me.guard-chain .vars))
-
-  (:method get-var-exprs (me)
-    (get-guard-values me.guard-chain .var-exprs))
+    (labels ((getv (gc)
+               (append-each ((g gc))
+                 (typecase g
+                   (match-guard
+                     g.vars)
+                   (guard-disjunction
+                     (append-each ((gc g.guard-chains)) (getv gc)))
+                   (t (compile-error *match-form*
+                                     "internal error: bad guard ~s" g))))))
+      (uniq (getv me.guard-chain))))
 
   (:method wrap-guards (me . forms)
     (labels ((wrg (rgc exp)
@@ -114,16 +120,6 @@
 
   (:method exists (me sym) (member sym me.vars))
   (:method record (me sym) (push sym me.vars)))
-
-(defun get-guard-values (guard-chain fun)
-  (append-each ((g guard-chain))
-    (typecase g
-      (match-guard
-        [fun g])
-      (guard-disjunction
-        (append-each ((gc g.guard-chains))
-          (get-guard-values gc fun)))
-      (t (compile-error *match-form* "internal error: bad guard ~s" g)))))
 
 (defun compile-struct-match (struct-pat obj-var var-list)
   (mac-param-bind *match-form* (op required-type . pairs) struct-pat
@@ -377,19 +373,13 @@
     (let* ((var-lists (mapcar (ret (copy var-list)) pats))
            (par-matches (mapcar (op compile-match @1 obj-var @2)
                                 pats var-lists))
-           (all-var-exprs [unique [mapcar cons
-                                          (mappend .(get-vars) par-matches)
-                                          (mappend .(get-var-exprs) par-matches)]
-                                  car])
-           (guard (new match-guard
-                       vars [mapcar car all-var-exprs]))
            (dj-guard (new guard-disjunction
                           guard-chains (mapcar .guard-chain par-matches)
                           sub-patterns par-matches)))
       (new compiled-match
            pattern par-pat
            obj-var obj-var
-           guard-chain (list guard dj-guard)))))
+           guard-chain (list dj-guard)))))
 
 (defun compile-and-match (par-pat obj-var var-list)
   (mac-param-bind *match-form* (op . pats) par-pat
