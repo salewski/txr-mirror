@@ -26,19 +26,17 @@
 
 (defvar *match-form*)
 
-(defstruct match-vars ()
+(defstruct match-guard ()
+  temps
   vars
   var-exprs
-
-  (:method assignments (me)
-    (mapcar (ret ^(set ,@1 ,@2)) me.vars me.var-exprs)))
-
-(defstruct match-guard (match-vars)
-  temps
   pure-temps
   pure-temp-exprs
   (guard-expr t)
   (test-expr t)
+
+  (:method assignments (me)
+    (mapcar (ret ^(set ,@1 ,@2)) me.vars me.var-exprs))
 
   (:method lets (me)
     (mapcar (ret ^(,@1 ,@2)) me.pure-temps me.pure-temp-exprs)))
@@ -48,29 +46,16 @@
   sub-patterns
   all-vars)
 
-(defstruct compiled-match (match-vars)
+(defstruct compiled-match ()
   pattern
   obj-var
   guard-chain
-  test-expr
-
-  (:postinit (me)
-    (set me.guard-chain
-         (append me.guard-chain
-                 (list
-                   (new match-guard
-                        vars me.vars
-                        var-exprs me.var-exprs
-                        test-expr me.test-expr))))
-    (set me.vars nil
-         me.var-exprs nil
-         me.test-expr t))
 
   (:method get-vars (me)
-    (append me.vars (get-guard-values me.guard-chain .vars)))
+    (get-guard-values me.guard-chain .vars))
 
   (:method get-var-exprs (me)
-    (append me.var-exprs (get-guard-values me.guard-chain .var-exprs)))
+    (get-guard-values me.guard-chain .var-exprs))
 
   (:method wrap-guards (me . forms)
     (labels ((wrg (rgc exp)
@@ -186,10 +171,7 @@
            pattern struct-pat
            obj-var obj-var
            guard-chain ^(,*(if guard0 (list guard0)) ,guard1
-                         ,*(mappend .guard-chain all-matches))
-           test-expr t
-           vars [mappend .vars all-matches]
-           var-exprs [mappend .var-exprs all-matches]))))
+                         ,*(mappend .guard-chain all-matches))))))
 
 (defun compile-var-match (sym obj-var var-list)
   (or (null sym) (bindable sym)
@@ -201,13 +183,14 @@
        (new compiled-match
             pattern sym
             obj-var obj-var
-            test-expr t
-            vars (if sym (list sym))
-            var-exprs (if sym (list obj-var))))
+            guard-chain (list (new match-guard
+                                   vars (if sym (list sym))
+                                   var-exprs (if sym (list obj-var))))))
     (t (new compiled-match
             pattern sym
             obj-var obj-var
-            test-expr ^(equal ,obj-var ,sym)))))
+            guard-chain (list (new match-guard
+                                   guard-expr ^(equal ,obj-var ,sym)))))))
 
 (defun compile-vec-match (vec-pat obj-var var-list)
   (let* ((elem-gensyms (mapcar (op gensym `elem-@1-`) (range* 0 (len vec-pat))))
@@ -222,10 +205,7 @@
     (new compiled-match
          pattern vec-pat
          obj-var obj-var
-         guard-chain (cons guard (mappend .guard-chain elem-matches))
-         test-expr t
-         vars (mappend .vars elem-matches)
-         var-exprs (mappend .var-exprs elem-matches))))
+         guard-chain (cons guard (mappend .guard-chain elem-matches)))))
 
 (defun compile-range-match (rcons-expr obj-var var-list)
   (let ((from (from rcons-expr))
@@ -240,10 +220,7 @@
            pattern rcons-expr
            obj-var obj-var
            guard-chain (cons guard (append from-match.guard-chain
-                                           to-match.guard-chain))
-           test-expr t
-           vars (append from-match.vars to-match.vars)
-           var-exprs (append from-match.var-exprs to-match.var-exprs)))))
+                                           to-match.guard-chain))))))
 
 (defun compile-atom-match (atom obj-var var-list)
   (flet ((compile-as-atom ()
@@ -251,8 +228,7 @@
                 pattern atom
                 obj-var obj-var
                 guard-chain (list (new match-guard
-                                       guard-expr ^(equal ,obj-var ',atom)))
-                test-expr t)))
+                                       guard-expr ^(equal ,obj-var ',atom))))))
     (typecase atom
       (vec (if (non-triv-pat-p atom)
              (compile-vec-match atom obj-var var-list)
@@ -265,8 +241,7 @@
 (defun compile-op-match (op-expr obj-var var-list)
   (let ((var-match (compile-var-match nil obj-var var-list)))
     var-match.(add-guard-pre (new match-guard
-                                  guard-expr ^(and ,var-match.test-expr
-                                                   [,op-expr ,obj-var])))
+                                  guard-expr ^ [,op-expr ,obj-var]))
     var-match))
 
 (defun compile-dwim-predicate-match (pred-expr obj-var var-list)
@@ -278,15 +253,13 @@
                             (compile-match pat (gensym) var-list)))
                (guard (new match-guard
                            pure-temps (list pat-match.obj-var)
-                           pure-temp-exprs (list ^[,fun ,obj-var]))))
+                           pure-temp-exprs (list ^[,fun ,obj-var])
+                           test-expr pat-match.obj-var)))
           (new compiled-match
                pattern pred-expr
                obj-var obj-var
                guard-chain (cons guard (append var-match.guard-chain
-                                               pat-match.guard-chain))
-               vars (append var-match.vars pat-match.vars)
-               var-exprs (append var-match.var-exprs pat-match.var-exprs)
-               test-expr pat-match.obj-var))
+                                               pat-match.guard-chain))))
         (progn
           var-match.(add-guard-pre (new match-guard
                                         guard-expr ^(and ,var-match.test-expr
@@ -299,8 +272,7 @@
         (compile-error *match-form* "~s is not a symbol" sym))
     (let ((var-match (compile-var-match sym obj-var var-list)))
       var-match.(add-guard-pre (new match-guard
-                                    guard-expr ^(and ,var-match.test-expr
-                                                     (,fun ,obj-var))))
+                                    guard-expr ^(,fun ,obj-var)))
       var-match)))
 
 (defun compile-cons-structure (cons-pat obj-var var-list)
@@ -322,10 +294,7 @@
            pattern cons-pat
            obj-var obj-var
            guard-chain (cons guard (append car-match.guard-chain
-                                           cdr-match.guard-chain))
-           test-expr t
-           vars (append car-match.vars cdr-match.vars)
-           var-exprs (append car-match.var-exprs cdr-match.var-exprs)))))
+                                           cdr-match.guard-chain))))))
 
 (defun compile-require-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op match . conditions) exp
@@ -342,10 +311,7 @@
            pattern exp
            obj-var obj-var
            guard-chain (append var-match.guard-chain
-                               pat-match.guard-chain)
-           test-expr t
-           vars (append var-match.vars pat-match.vars)
-           var-exprs (append var-match.var-exprs pat-match.var-exprs)))))
+                               pat-match.guard-chain)))))
 
 (defun compile-loop-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op match) exp
@@ -388,22 +354,23 @@
                       ,(unless coll-p ^(,(if some-p 'when 'unless)
                                          ,matched-p-var
                                          (set ,loop-continue-p-var nil))))))
-           (guard (new match-guard
-                       vars cm-vars
-                       temps (unless some-p collect-gens)
-                       guard-expr ^(seqp ,obj-var))))
+           (guard0 (new match-guard
+                        vars cm-vars
+                        temps (unless some-p collect-gens)
+                        guard-expr ^(seqp ,obj-var)))
+           (guard1 (new match-guard
+                        vars (list loop-success-p-var)
+                        var-exprs (list loop)
+                        test-expr (if some-p
+                                    loop-success-p-var
+                                    ^(when ,loop-success-p-var
+                                       ,*(mapcar (ret ^(set ,@1 (nreverse ,@2)))
+                                                 collect-vars collect-gens)
+                                       t)))))
       (new compiled-match
            pattern exp
            obj-var obj-var
-           guard-chain (list guard)
-           vars (list loop-success-p-var)
-           var-exprs (list loop)
-           test-expr (if some-p
-                       loop-success-p-var
-                       ^(when ,loop-success-p-var
-                          ,*(mapcar (ret ^(set ,@1 (nreverse ,@2)))
-                                    collect-vars collect-gens)
-                          t))))))
+           guard-chain (list guard0 guard1)))))
 
 (defun compile-or-match (par-pat obj-var var-list)
   (mac-param-bind *match-form* (op . pats) par-pat
@@ -422,25 +389,17 @@
       (new compiled-match
            pattern par-pat
            obj-var obj-var
-           guard-chain (list guard dj-guard)
-           test-expr t))))
+           guard-chain (list guard dj-guard)))))
 
 (defun compile-and-match (par-pat obj-var var-list)
   (mac-param-bind *match-form* (op . pats) par-pat
     (let* ((var-lists (mapcar (ret (copy var-list)) pats))
            (par-matches (mapcar (op compile-match @1 obj-var @2)
-                                pats var-lists))
-           (all-var-exprs [unique [mapcar cons
-                                          (mappend .(get-vars) par-matches)
-                                          (mappend .(get-var-exprs) par-matches)]
-                                  car]))
+                                pats var-lists)))
       (new compiled-match
            pattern par-pat
            obj-var obj-var
-           vars [mapcar car all-var-exprs]
-           var-exprs [mapcar cdr all-var-exprs]
-           guard-chain (mappend .guard-chain par-matches)
-           test-expr t))))
+           guard-chain (mappend .guard-chain par-matches)))))
 
 (defun compile-not-match (pattern obj-var var-list)
   (mac-param-bind *match-form* (op pattern) pattern
@@ -451,9 +410,7 @@
       (new compiled-match
            pattern pattern
            obj-var obj-var
-           guard-chain (list guard)
-           test-expr t
-           vars nil))))
+           guard-chain (list guard)))))
 
 (defun compile-hash-match (hash-expr obj-var var-list)
   (tree-bind (op . pairs) hash-expr
@@ -509,10 +466,7 @@
       (new compiled-match
            pattern hash-expr
            obj-var obj-var
-           guard-chain (cons guard (mappend .guard-chain hash-matches))
-           test-expr t
-           vars (mappend .vars hash-matches)
-           var-exprs (mappend .var-exprs hash-matches)))))
+           guard-chain (cons guard (mappend .guard-chain hash-matches))))))
 
 (defun compile-match (pat : (obj-var (gensym)) (var-list (new var-list)))
   (cond
