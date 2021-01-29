@@ -38,6 +38,7 @@
   pure-temps
   pure-temp-exprs
   (guard-expr t)
+  (test-expr t)
 
   (:method lets (me)
     (mapcar (ret ^(,@1 ,@2)) me.pure-temps me.pure-temp-exprs)))
@@ -59,9 +60,8 @@
                  (list
                    (new match-guard
                         vars me.vars
-                        var-exprs me.var-exprs)
-                   (new match-guard
-                        guard-expr me.test-expr))))
+                        var-exprs me.var-exprs
+                        test-expr me.test-expr))))
     (set me.vars nil
          me.var-exprs nil
          me.test-expr t))
@@ -79,6 +79,8 @@
                    (match-guard
                      (let ((lets g.(lets))
                            (temps g.temps))
+                       (if (neq t g.test-expr)
+                         (set exp ^(if ,g.test-expr ,exp)))
                        (cond
                          ((and lets temps)
                           (set exp ^(alet ,lets
@@ -472,10 +474,9 @@
                               (new match-guard
                                    vars (list vm.obj-var)
                                    var-exprs ^((gethash ,obj-var ,key-var-sym
-                                                        ,hash-alt-val)))
-                              (new match-guard
-                                   guard-expr ^(neq ,vm.obj-var
-                                                    ,hash-alt-val)))
+                                                        ,hash-alt-val))
+                                   test-expr ^(neq ,vm.obj-var
+                                                   ,hash-alt-val)))
                          vm))
                      ((and key-pat-p val-pat-p)
                       (set need-alist-p t)
@@ -496,9 +497,8 @@
                               (new match-guard
                                    pure-temps (list vm.obj-var)
                                    pure-temp-exprs ^((gethash ,obj-var ',key,
-                                                              hash-alt-val)))
-                              (new match-guard
-                                   guard-expr ^(neq ,vm.obj-var ,hash-alt-val)))
+                                                              hash-alt-val))
+                                   test-expr ^(neq ,vm.obj-var ,hash-alt-val)))
                          vm)))))))
            (guard (new match-guard
                        guard-expr ^(hashp ,obj-var)
