@@ -32125,7 +32125,7 @@ otherwise
 
 .coNP Function @ partition
 .synb
-.mets (partition < sequence >> { index-list | index | << function })
+.mets (partition < sequence >> { index-list | < index | << function })
 .syne
 .desc
 If
@@ -32229,8 +32229,8 @@ as are indices less than or equal to zero.
 
 .coNP Functions @ split and @ split*
 .synb
-.mets (split < sequence >> { index-list | index | << function })
-.mets (split* < sequence >> { index-list | index | << function })
+.mets (split < sequence >> { index-list | < index | << function })
+.mets (split* < sequence >> { index-list | < index | << function })
 .syne
 .desc
 If
@@ -32340,7 +32340,7 @@ does not produce empty pieces.
 
 .coNP Function @ partition*
 .synb
-.mets (partition* < sequence >> { index-list >> | index <> | function })
+.mets (partition* < sequence >> { index-list | < index | << function })
 .syne
 .desc
 If
