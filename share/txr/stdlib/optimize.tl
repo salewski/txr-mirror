@@ -47,10 +47,17 @@
                 ,*cases))
             ,list))
 
-(defmeth basic-blocks thread-jumps (bb)
+(defmeth basic-blocks peephole (bb)
   (dohash (label code bb.hash)
     (set [bb.hash label]
          (rewrite-case insns code
+           ;; dead code
+           ((@(or (jmp @nil) (if (t 0) @nil)) @nil . @rest)
+            (list (car insns)))
+           ;; always taken if
+           (((if (d @reg) @jlabel) . @rest)
+            rest)
+           ;; jump threading
            (((jmp @jlabel) . @rest)
             (let ((jinsns [bb.hash jlabel]))
               (match-case jinsns
@@ -87,6 +94,11 @@
                    (jmp @(require @jjlabel (neq jjlabel jlabel))) . @nil)
                  ^((close ,reg ,nargs ,jjlabel ,*cargs) ,*rest))
                 (@jelse insns))))
+           ;; wasteful moves
+           (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
+            (cdr insns))
+           (((mov @reg0 @reg1) (mov reg1 @reg0) . @rest)
+            ^(,(car insns) ,*rest))
            (@else insns)))))
 
 (defun rewrite (fun list)

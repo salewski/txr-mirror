@@ -1272,7 +1272,7 @@
 
 (defmeth compiler optimize (me insns)
   (let* ((bb (new (basic-blocks insns))))
-    bb.(thread-jumps)
+    bb.(peephole)
     bb.(get-insns)))
 
 (defun maybe-mov (to-reg from-reg)
