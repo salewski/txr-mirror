@@ -9,6 +9,7 @@
       (yes no))
 
 (test (when-match @a 42 (list a)) (42))
+(test (when-match (@nil) '(1) 'yes) yes)
 (test (when-match (@a @b @c) '(1 2 3) (list c b a)) (3 2 1))
 (test (if-match (@a @b @c . @d) '(1 2 3 . 4) (list d c b a)) (4 3 2 1))
 

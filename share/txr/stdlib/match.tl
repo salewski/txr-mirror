@@ -540,7 +540,7 @@
 (defun non-triv-pat-p (syntax)
   (match-case syntax
     ((@(op eq 'sys:expr) (@(bindable) . @nil)) t)
-    ((@(op eq 'sys:var) @(bindable) . @nil) t)
+    ((@(op eq 'sys:var) @(or @(bindable) nil) . @nil) t)
     ((@pat . @rest) (or (non-triv-pat-p pat)
                         (non-triv-pat-p rest)))
     (#R(@from @to) (or (non-triv-pat-p from)
