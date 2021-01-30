@@ -179,9 +179,9 @@
        (new compiled-match
             pattern sym
             obj-var obj-var
-            guard-chain (list (new match-guard
-                                   vars (if sym (list sym))
-                                   var-exprs (if sym (list obj-var))))))
+            guard-chain (if sym (list (new match-guard
+                                           vars (list sym)
+                                           var-exprs (list obj-var))))))
     (t (new compiled-match
             pattern sym
             obj-var obj-var
@@ -190,12 +190,16 @@
 
 (defun compile-vec-match (vec-pat obj-var var-list)
   (let* ((elem-gensyms (mapcar (op gensym `elem-@1-`) (range* 0 (len vec-pat))))
+         (elem-exprs (mapcar (ret ^[,obj-var ,@1]) (range* 0 (len vec-pat))))
          (elem-matches (list-vec [mapcar (lop compile-match var-list)
-                                         vec-pat elem-gensyms]))
+                                         vec-pat elem-gensyms])) 
+         (pruned-triple (multi (op keep-if .guard-chain @1 third)
+                               elem-gensyms
+                               elem-exprs
+                               elem-matches))
          (guard (new match-guard
-                     pure-temps elem-gensyms
-                     pure-temp-exprs (mapcar (ret ^[,obj-var ,@1])
-                                            (range* 0 (len vec-pat)))
+                     pure-temps (first pruned-triple)
+                     pure-temp-exprs (second pruned-triple)
                      guard-expr ^(and (vectorp ,obj-var)
                                       (eql (len ,obj-var) ,(len vec-pat))))))
     (new compiled-match
@@ -283,8 +287,14 @@
                           (t (compile-cons-structure cdr cdr-gensym var-list)))
                         (compile-atom-match cdr cdr-gensym var-list)))
            (guard (new match-guard
-                       pure-temps ^(,car-gensym ,cdr-gensym)
-                       pure-temp-exprs ^((car ,obj-var) (cdr ,obj-var))
+                       pure-temps (append (if car-match.guard-chain
+                                            (list car-gensym))
+                                          (if cdr-match.guard-chain
+                                            (list cdr-gensym)))
+                       pure-temp-exprs (append (if car-match.guard-chain
+                                                 ^((car ,obj-var)))
+                                               (if cdr-match.guard-chain
+                                                 ^((cdr ,obj-var))))
                        guard-expr ^(consp ,obj-var))))
       (new compiled-match
            pattern cons-pat
