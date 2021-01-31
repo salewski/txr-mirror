@@ -3707,7 +3707,7 @@ static val v_rebind(match_files_ctx *c)
   val form = second(args);
   val val = txeval(specline, form, c->bindings);
 
-  c->bindings = alist_remove(c->bindings, args);
+  c->bindings = alist_remove(c->bindings, flatten(pattern));
   c->bindings = dest_bind(specline, c->bindings,
                           pattern, val, equal_f);
 

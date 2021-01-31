@@ -370,6 +370,7 @@ TESTS_OK := $(addprefix tst/,\
 tests: $(TESTS_OK)
 	$(V)echo "** tests passed!"
 
+tst/tests/000/binding.ok: TXR_OPTS := -B
 tst/tests/001/%: TXR_ARGS := tests/001/data
 tst/tests/001/query-1.ok: TXR_OPTS := -B
 tst/tests/001/query-2.ok: TXR_OPTS := -B

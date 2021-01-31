@@ -6857,6 +6857,14 @@ produce equal values.
 
 .dir set
 
+The syntax of the
+.code set
+directive is:
+
+.mono
+.mets @(set < pattern << bind-expression )
+.onom
+
 The
 .code set
 directive syntactically resembles
@@ -6939,21 +6947,45 @@ Because it is preceded by the
 .code @
 escape, it is a Lisp variable, and not a pattern variable.
 
+The
+.code set
+directive also doesn't support Lisp expressions in the
+.metn pattern ,
+which must consist only of variables.
+
 .dir rebind
+
+The syntax of the
+.code rebind
+directive is:
+
+.mono
+.mets @(rebind < pattern << bind-expression )
+.onom
 
 The
 .code rebind
 directive resembles
-.code set
-but it is not an assignment.
+.codn bind .
 It combines the semantics of
-.codn local ,
-.code bind
+.code local
 and
-.codn set .
-The expression on the right hand side is evaluated in the current
-environment. Then the variables in the pattern on the left are introduced
-as new bindings, whose values come from the pattern.
+.code bind
+into a single directive.
+The
+.meta bind-expression
+is evaluated in the current
+environment, and its value remembered. Then a new
+environment is produced in which all the variables specified in
+.meta pattern
+are absent. Then, the pattern is newly bound in
+that environment against the previously produced value, as if using
+.codn bind .
+
+The old environment with the previous variables is not modified;
+it continues to exist. This is in contrast with the
+.code set
+directive, which mutates existing bindings.
 
 .code rebind
 makes it easy to create temporary bindings based on existing bindings.
@@ -6967,8 +6999,8 @@ makes it easy to create temporary bindings based on existing bindings.
 .brev
 
 When the function terminates, the previous value of recursion-level
-is restored. The effect is like the following, but much easier
-to write and faster to execute:
+is restored. The effect is less verbose and more efficient than
+the following equivalent
 
 .verb
   @(define pattern-function (arg))
@@ -6980,6 +7012,30 @@ to write and faster to execute:
   @;; ...
   @(end)
 .brev
+
+Like
+.codn bind ,
+.code rebind
+supports nested patterns, such as
+
+.verb
+  @(rebind (a (b c)) (1 (2 3))
+.brev
+
+but it does not support any keyword arguments. The filtering
+features of
+.code bind
+do not make sense in
+.code rebind
+because the variables are always re-introduced into an environment
+in which they don't exist, whereas filtering applies in
+situations when bound variables are matched against values.
+
+The
+.code rebind
+directive also doesn't support Lisp expressions in the
+.metn pattern ,
+which must consist only of variables.
 
 .dir forget
 
