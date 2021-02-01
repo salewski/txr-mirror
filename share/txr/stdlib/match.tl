@@ -262,8 +262,7 @@
                                                pat-match.guard-chain))))
         (progn
           var-match.(add-guard-pre (new match-guard
-                                        guard-expr ^(and ,var-match.test-expr
-                                                         [,fun ,obj-var])))
+                                        guard-expr ^[,fun ,obj-var]))
           var-match)))))
 
 (defun compile-predicate-match (pred-expr obj-var var-list)
