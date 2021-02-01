@@ -1,3 +1,45 @@
+                                    TXR 250
+                                   2020-01-31
+
+
+  Features
+
+  - structural pattern matching:
+    - new @[...] predicate operator.
+      - can capture object, as well as value of predicae
+    - better code generation
+
+  - compiler:
+    - jump threading optimization
+    - dead code removal
+    - peephole optimizations
+
+
+  Bugs
+
+  - structural pattern matching:
+    - numerous new test cases introduced showing various
+      breakage, and fixed.
+    - code substantially refactored
+    - @(or ...) pattern handled in new way.
+  - compiler:
+    - fixed totally broken treatment of append-each operator
+      - destructively catenating lists
+      - not observing append semantics w.r.t. generic sequences.
+  - sub-str: now subject to compatibility; -C 215 or lower
+    restores the behavior of always copying the input string,
+    even when sub-str covers the entire string.
+  - lazy strings: instance of invalid substrucure sharing
+    fixed in lazy-sub-str, causing incorrect behavior,
+    showing up as strangeness in @(freeform) processing
+    and anything else relying on lazy-sub-str.
+  - fixed broken @(rebind) directive.
+    - not removing variables from environment if left hand
+      side is a pattern with multiple variables.
+    - wrongly removing right hand side variable from environment.
+
+
+
                                     TXR 249
                                    2020-01-24
 
