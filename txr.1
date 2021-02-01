@@ -40643,17 +40643,17 @@ or
 
   ;; use hash table as predicate:
   (let ((h #H(() (a 1) (b 2))))
-   (when-match @[h x] 'a x))
+    (when-match @[h x] 'a x))
   -> a
 
   ;; as above, also capture hash value
   (let ((h #H(() (a 1) (b 2))))
-   (when-match @[h x y] 'a (list x y)))
+    (when-match @[h x y] 'a (list x y)))
   -> (a 1)
 
   ;; as above, also capture hash value, if odd
   (let ((h #H(() (a 1) (b 2))))
-   (when-match @[h x @(odd y)] 'a (list x y)))
+    (when-match @[h x @(oddp y)] 'a (list x y)))
   -> (a 1)
 .brev
 
