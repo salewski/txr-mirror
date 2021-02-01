@@ -39981,7 +39981,7 @@ that being a syntactic sugar for
   (when-match @a..@b '1..2 (list a b)) -> (1 2)
 
   ;; above, de-sugared:
-  (when-match (rcons @a @b) (rcons 1 2) (list a b)) -> (1 2)
+  (when-match (rcons @a @b) '(rcons 1 2) (list a b)) -> (1 2)
 
 .brev
 
