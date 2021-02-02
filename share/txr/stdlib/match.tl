@@ -120,7 +120,8 @@
   vars
 
   (:method exists (me sym) (member sym me.vars))
-  (:method record (me sym) (push sym me.vars)))
+  (:method record (me sym) (push sym me.vars))
+  (:method merge (me copy) (each ((v copy.vars)) (pushnew v me.vars))))
 
 (defun get-vars (guard-chain)
   (append-each ((g guard-chain))
@@ -414,6 +415,8 @@
            (dj-guard (new guard-disjunction
                           guard-chains (mapcar .guard-chain par-matches)
                           sub-patterns par-matches)))
+      (each ((vl var-lists))
+        var-list.(merge vl))
       (new compiled-match
            pattern par-pat
            obj-var obj-var
@@ -424,6 +427,8 @@
     (let* ((var-lists (mapcar (ret (copy var-list)) pats))
            (par-matches (mapcar (op compile-match @1 obj-var @2)
                                 pats var-lists)))
+      (each ((vl var-lists))
+        var-list.(merge vl))
       (new compiled-match
            pattern par-pat
            obj-var obj-var
