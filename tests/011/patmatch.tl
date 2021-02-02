@@ -90,6 +90,10 @@
 (test (when-match @(or @(require @a (oddp a)) @b @c) 2 (list a b c))
       (nil 2 nil))
 
+(test (if-match (@(or @a) @a) '(1 2) a :no) :no)
+(test (if-match (@(and @a) @a) '(1 2) a :no) :no)
+
+
 (test
   (collect-each ((obj (list '(1 2 3)
                             '(4 5)
