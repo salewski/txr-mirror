@@ -87,6 +87,9 @@
 (test (when-match @(let x @(op <= 10 @1 13)) 11 x) 11)
 (test (when-match (@(evenp) @(oddp x)) '(2 3) x) 3)
 
+(test (when-match @(or @(require @a (oddp a)) @b @c) 2 (list a b c))
+      (nil 2 nil))
+
 (test
   (collect-each ((obj (list '(1 2 3)
                             '(4 5)
