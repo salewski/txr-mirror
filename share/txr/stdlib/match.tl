@@ -134,9 +134,6 @@
                                  slot-patterns slot-gensyms])
            (type-match (if loose-p
                          (compile-match required-type type-gensym var-list)))
-           (all-matches (if loose-p
-                          (cons type-match slot-matches)
-                          slot-matches))
            (slot-val-exprs [mapcar (ret ^(slot ,obj-var ',@1)) required-slots])
            (guard0 (if loose-p
                      (list (new match-guard
@@ -168,8 +165,9 @@
            pattern struct-pat
            obj-var obj-var
            guard-chain (append guard0
+                               type-match.?guard-chain
                                guard1
-                               (mappend .guard-chain all-matches))))))
+                               (mappend .guard-chain slot-matches))))))
 
 (defun compile-var-match (sym obj-var var-list)
   (or (null sym) (bindable sym)
