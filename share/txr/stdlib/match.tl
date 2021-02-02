@@ -319,7 +319,7 @@
                                   guard-expr ^(and ,*conditions)))
       match)))
 
-(defun compile-let-match (exp obj-var var-list)
+(defun compile-as-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op sym pat) exp
     (let ((var-match (compile-var-match sym obj-var var-list))
           (pat-match (compile-match pat obj-var var-list)))
@@ -488,7 +488,7 @@
                (caseq (car exp)
                  (struct (compile-struct-match exp obj-var var-list))
                  (require (compile-require-match exp obj-var var-list))
-                 (let (compile-let-match exp obj-var var-list))
+                 (usr:as (compile-as-match exp obj-var var-list))
                  (all (compile-loop-match exp obj-var var-list))
                  (usr:all* (compile-loop-match exp obj-var var-list))
                  (some (compile-loop-match exp obj-var var-list))

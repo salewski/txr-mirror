@@ -43,7 +43,7 @@
        ^((,(find-struct-type 'grommet) :grom)
          (,(find-struct-type 'widget) :widg)))
 
-(test (when-match @(let w (@a @b @c)) '(1 2 3) (list w a b c)) ((1 2 3) 1 2 3))
+(test (when-match @(as w (@a @b @c)) '(1 2 3) (list w a b c)) ((1 2 3) 1 2 3))
 (test (when-match @(require (+ @a @b) (equal a b)) '(+ z z) (list a b)) (z z))
 
 (test (if-match @(require (+ @a @b) (equal a b)) '(+ y z)
@@ -84,7 +84,7 @@
 
 (test (if-match @(or (@x 3 3) (1 @x 3) (1 2 @x)) '(1 2 3) x) 2)
 (test (if-match @(op <= 10 @1 13) 11 :yes :no) :yes)
-(test (when-match @(let x @(op <= 10 @1 13)) 11 x) 11)
+(test (when-match @(as x @(op <= 10 @1 13)) 11 x) 11)
 (test (when-match (@(evenp) @(oddp x)) '(2 3) x) 3)
 
 (test (when-match @(or @(require @a (oddp a)) @b @c) 2 (list a b c))
@@ -110,17 +110,17 @@
 
 (set *print-circle* t)
 
-(test (when-match @(let a @(some @a)) '#1=(1 2 #1# 3) :yes) :yes)
+(test (when-match @(as a @(some @a)) '#1=(1 2 #1# 3) :yes) :yes)
 
-(test (when-match (@a @(let a @(some @a))) '(#1=(1 2 #1# 3) #1#) :yes) :yes)
+(test (when-match (@a @(as a @(some @a))) '(#1=(1 2 #1# 3) #1#) :yes) :yes)
 
-(test (when-match (@a @(let a @(or x @a))) '(#1=(1 2 #1# 3) #1#) :yes) :yes)
+(test (when-match (@a @(as a @(or x @a))) '(#1=(1 2 #1# 3) #1#) :yes) :yes)
 
 (defstruct node ()
   left right)
 
 (mlet ((n (lnew node left (new node left n))))
-  (test (when-match @(let x @(struct node
+  (test (when-match @(as x @(struct node
                                      left @(struct node left @x)))
                     n :yes)
         :yes))

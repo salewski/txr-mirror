@@ -870,7 +870,7 @@ static val match_instantiate(val set_fun)
 static val match_set_entries(val dlt, val fun)
 {
   val name_noload[] = {
-    lit("all*"),
+    lit("all*"), lit("as"),
     nil
   };
   val name[] = {

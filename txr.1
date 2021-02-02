@@ -39783,7 +39783,7 @@ or
 .code @(and)
 pattern operator, those repeated variables denote one variable.
 The left-most, or in the case of
-.code @(let)
+.code @(as)
 nesting, outermost, occurrence of the variable binds to the corresponding
 element of the object. The remaining occurrences of the variable must
 correspond to objects which are
@@ -40221,13 +40221,13 @@ operator matching against an association list.
   --> (42)
 .brev
 
-.coNP Pattern operator @ let
+.coNP Pattern operator @ as
 .synb
-.mets @(let < name << pattern)
+.mets @(as < name << pattern )
 .syne
 .desc
 The
-.code let
+.code as
 pattern operator allows the entire object matched by a
 .meta pattern
 to be bound to a the variable given by
@@ -40243,7 +40243,7 @@ is
 .codn nil ,
 then no name is bound. Thus
 .mono
-.meti @(let nil << pattern )
+.meti @(as nil << pattern )
 .onom
 is equivalent to just
 .metn pattern .
@@ -40262,7 +40262,7 @@ as its value.
 .verb
   ;; w captures the entire (1 2 3) list:
 
-  (when-match @(let w (@a @b @c)) '(1 2 3) (list w a b c))
+  (when-match @(as w (@a @b @c)) '(1 2 3) (list w a b c))
   -> ((1 2 3) 1 2 3)
 .brev
 
@@ -40569,8 +40569,8 @@ function is capable of being called with exactly one argument.
   ;; 11 matches, since it is in the 10-13 range
   (if-match @(op <= 10 @1 13) 11 :yes :no) -> :yes
 
-  ;; let can be used to capture into a variable
-  (when-match @(let x @(op <= 10 @1 13)) 11 x) -> 11
+  ;; as can be used to capture into a variable
+  (when-match @(as x @(op <= 10 @1 13)) 11 x) -> 11
 .brev
 
 .NP* Pattern predicate operator
