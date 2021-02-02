@@ -329,6 +329,24 @@
            guard-chain (append var-match.guard-chain
                                pat-match.guard-chain)))))
 
+(defun compile-with-match (exp obj-var var-list)
+  (mac-param-bind *match-form* (op side-pat-var side-expr main-pat) exp
+    (let* ((side-var (gensym))
+           (side-pat (if (or (null side-pat-var) (bindable side-pat-var))
+                       ^(sys:var ,side-pat-var)
+                       side-pat-var))
+           (side-match (compile-match side-pat side-var var-list))
+           (main-match (compile-match main-pat obj-var var-list))
+           (guard (new match-guard
+                      pure-temps (list side-var)
+                      pure-temp-exprs (list side-expr))))
+      (new compiled-match
+           pattern exp
+           obj-var obj-var
+           guard-chain (append (list guard)
+                               side-match.guard-chain
+                               main-match.guard-chain)))))
+
 (defun compile-loop-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op match) exp
     (let* ((no-vac-p (memq op '(coll usr:all*)))
@@ -489,6 +507,7 @@
                  (struct (compile-struct-match exp obj-var var-list))
                  (require (compile-require-match exp obj-var var-list))
                  (usr:as (compile-as-match exp obj-var var-list))
+                 (usr:with (compile-with-match exp obj-var var-list))
                  (all (compile-loop-match exp obj-var var-list))
                  (usr:all* (compile-loop-match exp obj-var var-list))
                  (some (compile-loop-match exp obj-var var-list))
