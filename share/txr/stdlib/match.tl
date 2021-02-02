@@ -139,19 +139,20 @@
                           slot-matches))
            (slot-val-exprs [mapcar (ret ^(slot ,obj-var ',@1)) required-slots])
            (guard0 (if loose-p
-                     (new match-guard
-                          pure-temps (list type-gensym)
-                          pure-temp-exprs (list ^(struct-type ,obj-var))
-                          guard-expr ^(structp ,obj-var))))
-           (guard1 (new match-guard
-                        pure-temps slot-gensyms
-                        pure-temp-exprs slot-val-exprs
-                        guard-expr (if loose-p
-                                     ^(and ,*(mapcar
-                                               (ret ^(slotp ,type-gensym ',@1))
+                     (list (new match-guard
+                                pure-temps (list type-gensym)
+                                pure-temp-exprs (list ^(struct-type ,obj-var))
+                                guard-expr ^(structp ,obj-var)))))
+           (guard1 (list (new match-guard
+                              pure-temps slot-gensyms
+                              pure-temp-exprs slot-val-exprs
+                              guard-expr (if loose-p
+                                           ^(and ,*(mapcar
+                                                     (ret ^(slotp ,type-gensym
+                                                                  ',@1))
                                                required-slots))
                                      ^(subtypep (typeof ,obj-var)
-                                                ',required-type)))))
+                                                ',required-type))))))
       (unless loose-p
         (let ((type (find-struct-type required-type)))
           (if type
@@ -166,8 +167,9 @@
       (new compiled-match
            pattern struct-pat
            obj-var obj-var
-           guard-chain ^(,*(if guard0 (list guard0)) ,guard1
-                         ,*(mappend .guard-chain all-matches))))))
+           guard-chain (append guard0
+                               guard1
+                               (mappend .guard-chain all-matches))))))
 
 (defun compile-var-match (sym obj-var var-list)
   (or (null sym) (bindable sym)
