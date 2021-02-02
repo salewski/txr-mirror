@@ -52,16 +52,7 @@
   guard-chain
 
   (:method get-vars (me)
-    (labels ((getv (gc)
-               (append-each ((g gc))
-                 (typecase g
-                   (match-guard
-                     g.vars)
-                   (guard-disjunction
-                     (append-each ((gc g.guard-chains)) (getv gc)))
-                   (t (compile-error *match-form*
-                                     "internal error: bad guard ~s" g))))))
-      (uniq (getv me.guard-chain))))
+    (uniq (get-vars me.guard-chain)))
 
   (:method wrap-guards (me . forms)
     (labels ((wrg (rgc exp)
@@ -92,8 +83,18 @@
                        (when (neq t g.guard-expr)
                          (set exp ^(if ,g.guard-expr ,exp)))))
                    (guard-disjunction
-                     (let ((branches (collect-each ((gc g.guard-chains))
-                                       (wrg (reverse gc) t))))
+                     (let* ((vars [mapcar get-vars g.guard-chains])
+                            (back-vars (cons nil
+                                         (reverse
+                                           [mapcar (ap append)
+                                                   (conses (reverse vars))])))
+                            (branches (collect-each ((gc g.guard-chains)
+                                                     (v vars)
+                                                     (bv back-vars))
+                                       ^(progn
+                                          (set ,*(mappend (ret ^(,@1 nil))
+                                                          (diff bv v)))
+                                          ,(wrg (reverse gc) t)))))
                        (set exp ^(when (or ,*branches)
                                    ,exp))))
                    (t (compile-error *match-form*
@@ -120,6 +121,16 @@
 
   (:method exists (me sym) (member sym me.vars))
   (:method record (me sym) (push sym me.vars)))
+
+(defun get-vars (guard-chain)
+  (append-each ((g guard-chain))
+    (typecase g
+      (match-guard
+        g.vars)
+      (guard-disjunction
+        (append-each ((gc g.guard-chains)) (get-vars gc)))
+      (t (compile-error *match-form*
+                        "internal error: bad guard ~s" g)))))
 
 (defun compile-struct-match (struct-pat obj-var var-list)
   (mac-param-bind *match-form* (op required-type . pairs) struct-pat
