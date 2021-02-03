@@ -282,6 +282,7 @@ seq_info_t seq_info(val obj)
 
   ret.obj = obj;
   ret.type = to;
+  ret.kind = SEQ_NOTSEQ;
 
   if (to != COBJ) {
     ret.kind = seq_kind_tab[to];
@@ -295,28 +296,22 @@ seq_info_t seq_info(val obj)
       ret.kind = SEQ_VECLIKE;
     } else if (obj_struct_p(obj)) {
       val sub = obj;
+      val nullify_meth = get_special_slot(obj, nullify_m);
 
-      if (obj_struct_p(obj)) {
-        val nullify_meth = get_special_slot(obj, nullify_m);
-        if (nullify_meth)
-          sub = funcall1(nullify_meth, obj);
+      if (nullify_meth) {
+        sub = funcall1(nullify_meth, obj);
+
+        if (sub != obj) {
+          if (!sub)
+            ret.obj = nil;
+          return seq_info(sub);
+        }
       }
 
-      if (!sub) {
-        ret.kind = SEQ_NIL;
-        ret.obj = nil;
-      } else if (sub != obj) {
-        return seq_info(sub);
-      } else {
-        if (get_special_slot(obj, length_m))
-          ret.kind = SEQ_VECLIKE;
-        else if (get_special_slot(obj, car_m))
-          ret.kind = SEQ_LISTLIKE;
-        else
-          ret.kind = SEQ_NOTSEQ;
-      }
-    } else {
-      ret.kind = SEQ_NOTSEQ;
+      if (get_special_slot(obj, length_m))
+        ret.kind = SEQ_VECLIKE;
+      else if (get_special_slot(obj, car_m))
+        ret.kind = SEQ_LISTLIKE;
     }
   }
 
@@ -1238,8 +1233,8 @@ val rplaca(val cons, val new_car)
   case BUF:
     buf_put_uchar(cons, zero, new_car);
     return cons;
-  default:
-    if (structp(cons)) {
+  case COBJ:
+    if (obj_struct_p(cons)) {
       {
         val rplaca_meth = get_special_slot(cons, rplaca_m);
         if (rplaca_meth) {
@@ -1257,6 +1252,8 @@ val rplaca(val cons, val new_car)
       type_mismatch(lit("rplaca: ~s lacks ~s or ~s method"),
                     cons, rplaca_s, lambda_set_s, nao);
     }
+    /* fallthrough */
+  default:
     type_mismatch(lit("rplaca: cannot modify ~s"), cons, nao);
   }
 }
@@ -1276,8 +1273,8 @@ val rplacd(val cons, val new_cdr)
   case BUF:
     replace(cons, new_cdr, one, t);
     return cons;
-  default:
-    if (structp(cons)) {
+  case COBJ:
+    if (obj_struct_p(cons)) {
       {
         val rplacd_meth = get_special_slot(cons, rplacd_m);
         if (rplacd_meth) {
@@ -1288,6 +1285,8 @@ val rplacd(val cons, val new_cdr)
       replace(cons, new_cdr, one, t);
       return cons;
     }
+    /* fallthrough */
+  default:
     type_mismatch(lit("rplacd: cannot modify ~s"), cons, nao);
   }
 }
@@ -11222,7 +11221,7 @@ val sub(val seq, val from, val to)
   case COBJ:
     if (seq->co.cls == carray_s)
       return carray_sub(seq, from, to);
-    if (structp(seq)) {
+    if (obj_struct_p(seq)) {
       val lambda_meth = get_special_slot(seq, lambda_m);
       if (lambda_meth)
         return funcall2(lambda_meth, seq, rcons(from, to));
