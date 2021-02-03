@@ -555,7 +555,8 @@
     (compile-error *match-form* "bad clause syntax"))
   (let* ((flag (gensym "flag-"))
          (result (gensym "result-"))
-         (clause-matches [mapcar (op compile-match (car @1) obj) clauses])
+         (objvar (gensym "obj-"))
+         (clause-matches [mapcar (op compile-match (car @1) objvar) clauses])
          (clause-code (collect-each ((cl clauses)
                                      (cm clause-matches)
                                      (i 0))
@@ -565,9 +566,10 @@
                                (set ,result ,cm.(wrap-guards
                                                   ^(set ,flag t)
                                                   . forms))))))))
-    ^(let (,flag ,result)
-       ,*clause-code
-       ,result)))
+    ^(alet ((,objvar ,obj))
+       (let (,flag ,result)
+         ,*clause-code
+         ,result))))
 
 (defmacro lambda-match (. clauses)
   (with-gensyms (args)
