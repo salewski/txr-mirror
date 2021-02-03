@@ -349,7 +349,7 @@ static val seq_iterable(seq_info_t si)
   case FLNUM:
     return t;
   case COBJ:
-    if (get_special_slot(si.obj, iter_begin_m))
+    if (obj_struct_p(si.obj) && get_special_slot(si.obj, iter_begin_m))
       return t;
     break;
   default:
