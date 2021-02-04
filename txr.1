@@ -37039,6 +37039,16 @@ or
 .code lambda
 form. This is intended for error reporting.
 
+A parameter transformer returns the transformed parameter list and body as a
+single object: a list whose first element is the parameter list,
+and whose remaining elements are the forms of the body. Thus, the following
+is a correct null transformer:
+
+.verb
+  (lambda (params body env form)
+    (cons params body))
+.brev
+
 .coNP Macro @ define-param-expander
 .synb
 .mets (define-param-expander < name >> ( pvar < bvar : < evar << fvar )
@@ -37085,6 +37095,10 @@ The
 .code define-param-expander
 form returns
 .metn name .
+
+The parameter macro returns the transformed parameter list and body as a
+single object: a list whose first element is the parameter list,
+and whose remaining elements are the forms of the body.
 
 .TP* Example:
 
