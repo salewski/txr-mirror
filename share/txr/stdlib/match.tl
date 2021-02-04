@@ -501,6 +501,19 @@
            obj-var obj-var
            guard-chain (cons guard (mappend .guard-chain hash-matches))))))
 
+(defun compile-exprs-match (exprs-syntax exprs var-list)
+  (let ((pats (cdr exprs-syntax))
+        (temps (mapcar (ret (gensym)) exprs)))
+    (let* ((matches (mapcar (op compile-match @1 @2 var-list)
+                            pats temps)))
+      (new compiled-match
+           pattern exprs-syntax
+           obj-var nil
+           guard-chain (cons (new match-guard
+                                  pure-temps temps
+                                  pure-temp-exprs exprs)
+                             (mappend .guard-chain matches))))))
+
 (defun compile-match (pat : (obj-var (gensym)) (var-list (new var-list)))
   (cond
     ((consp pat)
@@ -524,6 +537,7 @@
                  (hash (compile-hash-match exp obj-var var-list))
                  (rcons (compile-range-match exp obj-var var-list))
                  (dwim (compile-dwim-predicate-match exp obj-var var-list))
+                 (exprs (compile-exprs-match exp obj-var var-list))
                  (t (compile-predicate-match exp obj-var var-list)))
                (compile-error *match-form*
                               "unrecognized pattern syntax ~s" pat))))
@@ -571,15 +585,93 @@
          ,*clause-code
          ,result))))
 
+(defmacro when-exprs-match (pats exprs . forms)
+  (let ((em (compile-match ^@(exprs ,*pats) exprs)))
+    ^(let* (,*em.(get-vars))
+       ,em.(wrap-guards . forms))))
+
+(defstruct lambda-clause ()
+  orig-syntax
+  fixed-patterns
+  variadic-pattern
+  nfixed
+  forms
+
+  (:postinit (me)
+    (set me.nfixed (len me.fixed-patterns))))
+
+(defun parse-lambda-match-clause (clause)
+  (mac-param-bind *match-form* (args . body) clause
+    (cond
+      ((atom args) (new lambda-clause
+                          orig-syntax args
+                          variadic-pattern args
+                          forms body))
+      ((proper-list-p args)
+       (let* ((vpos (pos-if (lop meq 'sys:expr 'sys:var) args)))
+         (tree-bind (fixed-pats . variadic-pat) (split args vpos)
+           (new lambda-clause
+                orig-syntax args
+                fixed-patterns fixed-pats
+                variadic-pattern (car variadic-pat)
+                forms body))))
+      (t (new lambda-clause
+              orig-syntax args
+              fixed-patterns (butlast args 0)
+              variadic-pattern (last args 0)
+              forms body)))))
+
+(defun expand-lambda-match (clauses)
+  (let* ((parsed-clauses [mapcar parse-lambda-match-clause clauses])
+         (max-args (or [find-max parsed-clauses : .nfixed].?nfixed 0))
+         (min-args (or [find-min parsed-clauses : .nfixed].?nfixed 0))
+         (variadic [some parsed-clauses .variadic-pattern])
+         (fix-arg-temps (mapcar (op gensym `arg-@1`)
+                                (range* 0 min-args)))
+         (opt-arg-temps (mapcar (op gensym `arg-@1`)
+                                (range* min-args max-args)))
+         (rest-temp (if variadic (gensym `rest`)))
+         (present-p-temps (mapcar (op gensym `have-@1`)
+                                  (range* min-args max-args)))
+         (arg-temps (append fix-arg-temps opt-arg-temps))
+         (present-vec (vec-list (append (repeat '(t) min-args)
+                                        present-p-temps)))
+         (matched-p-temp (gensym "matched-p"))
+         (result-temp (gensym "result"))
+         (ex-clauses (collect-each ((pc parsed-clauses)
+                                    (counter 0))
+                       (let* ((vp pc.variadic-pattern)
+                              (exp ^(when-exprs-match
+                                      (,*pc.fixed-patterns
+                                        ,*(if vp (list vp)))
+                                      (,*[arg-temps 0..pc.nfixed]
+                                        ,*(if vp
+                                            ^((list* ,*[arg-temps pc.nfixed..:]
+                                                     ,rest-temp))))
+                                      (set ,matched-p-temp t)
+                                      (set ,result-temp (progn ,*pc.forms)))))
+                         (when (> pc.nfixed min-args)
+                           (set exp ^(when ,[present-vec (pred pc.nfixed)]
+                                        ,exp)))
+                         (when (< pc.nfixed max-args)
+                           (set exp ^(unless ,[present-vec pc.nfixed]
+                                        ,exp)))
+                         (unless (zerop counter)
+                           (set exp ^(unless ,result-temp ,exp)))
+                         exp))))
+    ^(lambda (,*fix-arg-temps
+              ,*(mapcar (ret ^(,@1 nil ,@2)) opt-arg-temps present-p-temps)
+              . ,rest-temp)
+       (let (,matched-p-temp ,result-temp)
+         ,*ex-clauses
+         ,result-temp))))
+
 (defmacro lambda-match (. clauses)
-  (with-gensyms (args)
-    ^(lambda (. ,args)
-       (match-case ,args ,*clauses))))
+  (expand-lambda-match clauses))
 
 (defmacro defun-match (name . clauses)
-  (with-gensyms (args)
-    ^(defun ,name (. ,args)
-       (match-case ,args ,*clauses))))
+  (tree-bind (lambda args . body) (expand-lambda-match clauses)
+    ^(defun ,name ,args . ,body)))
 
 (defun non-triv-pat-p (syntax) t)
 
