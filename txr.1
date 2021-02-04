@@ -40828,44 +40828,105 @@ if there are no forms.
 .desc
 The
 .code lambda-match
-is closely based on
+is conceptually similar to
 .codn match-case .
 
 The arguments of
 .code lambda-match
 are zero or more clauses similar to those of
-.codn match-case .
-
-An invocation of
-.code lambda-match
-evaluates to an anonymous function which can take any number of arguments.
-
-Whenever the function is called, its arguments are treated as a list object
-which is subject to pattern matching via the clauses. The
-.mets pattern
-from every clause is tested against the argument list. If it matches
-each associated
-.meta form
-is evaluated in the scope of the variables emanating from that
+.codn match-case ,
+each consisting of a compound expression headed by a
 .meta pattern
-and the value of the last
-.meta form
-is returned. If no
-.meta pattern
-matches, the function returns
-.codn nil .
+followed by zero or more
+.metn form -s.
 
-Note: the
-.code lambda-macro
-can be understood in terms of the following equivalence:
+The macro generates a
+.code lambda
+expression which evaluates to an anonymous function
+in the usual way.
+
+When the anonymous function is called, each clause's
+.meta pattern
+is matched against the the function's actual arguments. When a
+match occurs, each
+.meta form
+associated with the
+.meta pattern
+is evaluated, and the value of the last
+.meta form
+becomes the return value of the function.
+If none of the clauses match, then
+.code nil
+is returned.
+
+Whenever
+.meta pattern
+is a list-like pattern, it is not matched against a list object, as is the
+usual case with a list-like pattern, but against the actual arguments.
+For instance, the pattern
+.code "(@a @b @c)"
+expects that the function was called with exactly three arguments. If
+that is the case, the patterns are then matched to the arguments. The pattern
+.code @a
+takes the first argument, binding it to variable
+.code a
+and so forth.
+
+If
+.meta pattern
+is a dotted list-like pattern, then the dot position is matched
+against the remaining arguments. For instance, the pattern
+.code "(@a @b . @c)"
+requires at least two arguments. The first two are bound to
+.code a
+and
+.codn b ,
+respectively. The list of remaining arguments, if any, is bound to
+.codn c ,
+which will be
+.code nil
+if there are no remaining arguments.
+
+Any non-list-like
+.meta pattern
+.code P
+is analyzed as an equivalent list-like dotted pattern due to
+.code P
+syntax being equivalent to
+.code "(. P)"
+syntax. Such a pattern matches the list of all arguments.
+Thus, the following are all equivalent:
 
 .verb
-  (lambda-match ...)   <-->   (lambda (. rest) (match-case rest ...))
+  (lambda-match (@a a))
+  (lambda-match ((. @a) a))
+  (lambda a a)
+  (lambda (. a) a)
 .brev
 
-Here, the
-.code rest
-variable is to be understood as a generated, unique symbol.
+The characteristics of the resulting anonymous function are determined as
+follows.
+
+If at least one
+.meta pattern
+specified in a
+.meta lambda-match
+is a dotted pattern, the function is variadic.
+
+The arity of the resulting anonymous function is determined as follows, from
+the lengths of the patterns.  The length of a pattern is the number of
+elements, not including the dotted element.
+
+The length of the longest pattern determines the number of fixed
+arguments. Unless the function is variadic, it may not be called with more
+arguments than can be matched by the longest pattern.
+
+The length of the shortest pattern determines the number of required arguments.
+The function may not be called with fewer arguments than can be matched
+by the shortest pattern.
+
+If these two lengths are unequal, then the function has a number of optional
+arguments, equal to the difference.
 
 Note: an anonymous function which takes one argument and matches that
 object against clauses using
@@ -40874,6 +40935,34 @@ can be obtained with the
 .code do
 operator, using the pattern:
 .codn "(do match @1 ...)" .
+
+.TP* Examples:
+
+.verb
+  (let ((f (lambda-match
+             (() (list 0 :args))
+             ((@a) (list 1 :arg a))
+             ((@a @b) (list 2 :args a b))
+             ((@a @b . @c) (list* '> 2 :args a b c)))))
+    (list [f] [f 1] [f 1 2] [f 1 2 3]))
+  -->
+  ((0 :args) (1 :arg 1) (2 :args 1 2) (> 2 :args 1 2 3))
+
+  [(lambda-match
+     ((0 1) :zero-one)
+     ((1 0) :one-zero)
+     ((@x @y) :no-match)) 1 0] --> :one-zero
+
+  [(lambda-match
+     ((0 1) :zero-one)
+     ((1 0) :one-zero)
+     ((@x @y) :no-match)) 1 1] --> :no-match
+
+  [(lambda-match
+     ((0 1) :zero-one)
+     ((1 0) :one-zero)
+     ((@x @y) :no-match)) 1 2 3] --> ;; error
+.brev
 
 .coNP Macro @ defun-match
 .synb
@@ -40885,27 +40974,51 @@ The
 macro can be used to define a top-level function in the style of
 .codn lambda-match .
 
-It works according to the following equivalence:
-
-.verb
-  (defun-match name ...)  <-->  (defun name (. rest) (match-case rest ...))
-.brev
-
-Here, the
-.code rest
-variable is to be understood as a generated, unique symbol.
-
-Because
-.code defun-match
-is defined in terms of
+It produces a form which has all of the properties of
 .codn defun ,
-it has all of the properties, such as a block of the same
+such as a block of the same
 .meta name
 being established around the implicit
 .code match-case
 so that
 .code return-from
 is possible.
+
+The
+.mono
+.meti >> ( pattern << form *)
+.onom
+clauses of
+.code defun-match
+have exactly the same syntax and semantics as those of
+.codn lambda-match .
+
+.TP* Examples:
+
+.verb
+  ;; Fibonacci
+  (defun-match fib
+    ((0) 1)
+    ((1) 1)
+    ((@x) (+ (fib (pred x)) (fib (ppred x)))))
+
+  (fib 0) -> 1
+  (fib 1) -> 1
+  (fib 2) -> 2
+  (fib 3) -> 3
+  (fib 4) -> 5
+  (fib 5) -> 8
+
+  ;; Ackermann
+  (defun-match ack
+    ((0 @n) (+ n 1))
+    ((@m 0) (ack (- m 1) 1))
+    ((@m @n) (ack (- m 1) (ack m (- n 1)))))
+
+  (ack 3 7) -> 1021
+  (ack 1 1) -> 3
+  (ack 2 2) -> 7
+.brev
 
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote

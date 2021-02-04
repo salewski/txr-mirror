@@ -186,3 +186,53 @@
 (test (let ((h #H(() (a 1) (b 2))))
         (when-match @[h x @(oddp y)] 'a (list x y)))
       (a 1))
+
+(test
+  (let ((f (lambda-match
+             (() (list 0 :args))
+             ((@a) (list 1 :arg a))
+             ((@a @b) (list 2 :args a b))
+             ((@a @b . @c) (list* '> 2 :args a b c)))))
+    (list [f] [f 1] [f 1 2] [f 1 2 3]))
+  ((0 :args) (1 :arg 1) (2 :args 1 2) (> 2 :args 1 2 3)))
+
+(test
+  [(lambda-match
+     ((0 1) :zero-one)
+     ((1 0) :one-zero)
+     ((@x @y) :no-match)) 1 0]
+  :one-zero)
+
+(test
+  [(lambda-match
+     ((0 1) :zero-one)
+     ((1 0) :one-zero)
+     ((@x @y) :no-match)) 1 1]
+  :no-match)
+
+(test
+  [(lambda-match
+     ((0 1) :zero-one)
+     ((1 0) :one-zero)
+     ((@x @y) :no-match)) 1 2 3]
+  :error)
+
+(defun-match fib
+  ((0) 1)
+  ((1) 1)
+  ((@x) (+ (fib (pred x)) (fib (ppred x)))))
+
+(test (fib 0) 1)
+(test (fib 1) 1)
+(test (fib 2) 2)
+(test (fib 3) 3)
+(test (fib 4) 5)
+(test (fib 5) 8)
+
+(defun-match ack
+  ((0 @n) (+ n 1))
+  ((@m 0) (ack (- m 1) 1))
+  ((@m @n) (ack (- m 1) (ack m (- n 1)))))
+
+(test (ack 1 1) 3)
+(test (ack 2 2) 7)

@@ -656,11 +656,16 @@
                          (when (< pc.nfixed max-args)
                            (set exp ^(unless ,[present-vec pc.nfixed]
                                         ,exp)))
+                         (when (and variadic (not vp) (= pc.nfixed max-args))
+                           (set exp ^(unless ,rest-temp
+                                       ,exp)))
                          (unless (zerop counter)
                            (set exp ^(unless ,result-temp ,exp)))
                          exp))))
     ^(lambda (,*fix-arg-temps
-              ,*(mapcar (ret ^(,@1 nil ,@2)) opt-arg-temps present-p-temps)
+              ,*(if opt-arg-temps
+                  (cons : (mapcar (ret ^(,@1 nil ,@2))
+                                  opt-arg-temps present-p-temps)))
               . ,rest-temp)
        (let (,matched-p-temp ,result-temp)
          ,*ex-clauses
