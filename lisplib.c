@@ -878,6 +878,12 @@ static val match_set_entries(val dlt, val fun)
     lit("lambda-match"), lit("defun-match"),
     nil
   };
+  val match_k = intern(lit("match"), keyword_package);
+
+  if (fun)
+    sethash(dlt, match_k, fun);
+  else
+    remhash(dlt, match_k);
 
   set_dlt_entries(dlt, name, fun);
   intern_only(name_noload);

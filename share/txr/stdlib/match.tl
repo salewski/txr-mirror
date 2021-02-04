@@ -678,6 +678,19 @@
   (tree-bind (lambda args . body) (expand-lambda-match clauses)
     ^(defun ,name ,args . ,body)))
 
+(define-param-expander :match (params clauses menv form)
+  (unless (proper-list-p params)
+    (compile-error form "~s is incompatible with dotted parameter lists" :match))
+  (when (find : params)
+    (compile-error form "~s is incompatible with optional parameters" :match))
+  (tree-bind (lambda lparams . body) (expand-lambda-match clauses)
+    (let ((dashdash (member '-- params)))
+      (cons (append (ldiff params dashdash)
+                    (butlastn 0 lparams)
+                    dashdash
+                    (nthlast 0 lparams))
+            body))))
+
 (defun non-triv-pat-p (syntax) t)
 
 (defun non-triv-pat-p (syntax)
