@@ -24,26 +24,36 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+(defun sys:dig (ctx)
+  (whilet ((form (sys:ctx-form ctx))
+           (anc (unless (source-loc form)
+                  (macro-ancestor form))))
+    (set ctx anc))
+  ctx)
+
 (defun sys:loc (ctx)
-  (iflet ((loc (source-loc-str (sys:ctx-form ctx))))
-    `(@loc) ` ""))
+  (let ((form (sys:ctx-form ctx)))
+    `(@(source-loc-str form)) `))
 
 (defun compile-error (ctx fmt . args)
-  (let ((loc (sys:loc ctx))
-        (name (sys:ctx-name ctx)))
+  (let* ((nctx (sys:dig ctx))
+         (loc (sys:loc nctx))
+         (name (sys:ctx-name nctx)))
     (dump-deferred-warnings *stderr*)
     (throwf 'eval-error `@loc~s: @fmt` name . args)))
 
 (defun compile-warning (ctx fmt . args)
-  (let ((loc (sys:loc ctx))
-        (name (sys:ctx-name ctx)))
+  (let* ((nctx (sys:dig ctx))
+         (loc (sys:loc nctx))
+         (name (sys:ctx-name nctx)))
     (usr:catch
       (throwf 'warning `@loc~s: @fmt` name . args)
       (continue ()))))
 
 (defun compile-defr-warning (ctx tag fmt . args)
-  (let ((loc (sys:loc ctx))
-        (name (sys:ctx-name ctx)))
+  (let* ((nctx (sys:dig ctx))
+         (loc (sys:loc nctx))
+         (name (sys:ctx-name nctx)))
     (usr:catch
       (throw 'defr-warning (fmt `@loc~s: @fmt` name . args)  tag)
       (continue ()))))
