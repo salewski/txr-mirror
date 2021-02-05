@@ -585,7 +585,7 @@
          ,*clause-code
          ,result))))
 
-(defmacro when-exprs-match (pats exprs . forms)
+(defmacro when-exprs-match (:form *match-form* pats exprs . forms)
   (let ((em (compile-match ^@(exprs ,*pats) exprs)))
     ^(let* (,*em.(get-vars))
        ,em.(wrap-guards . forms))))
@@ -650,6 +650,7 @@
                                                      ,rest-temp))))
                                       (set ,matched-p-temp t)
                                       (set ,result-temp (progn ,*pc.forms)))))
+                         (sys:set-macro-ancestor exp pc.orig-syntax)
                          (when (> pc.nfixed min-args)
                            (set exp ^(when ,[present-vec (pred pc.nfixed)]
                                         ,exp)))
@@ -671,25 +672,30 @@
          ,*ex-clauses
          ,result-temp))))
 
-(defmacro lambda-match (. clauses)
+(defmacro lambda-match (:form *match-form* . clauses)
   (expand-lambda-match clauses))
 
-(defmacro defun-match (name . clauses)
+(defmacro defun-match (:form *match-form* name . clauses)
   (tree-bind (lambda args . body) (expand-lambda-match clauses)
     ^(defun ,name ,args . ,body)))
 
 (define-param-expander :match (params clauses menv form)
-  (unless (proper-list-p params)
-    (compile-error form "~s is incompatible with dotted parameter lists" :match))
-  (when (find : params)
-    (compile-error form "~s is incompatible with optional parameters" :match))
-  (tree-bind (lambda lparams . body) (expand-lambda-match clauses)
-    (let ((dashdash (member '-- params)))
-      (cons (append (ldiff params dashdash)
-                    (butlastn 0 lparams)
-                    dashdash
-                    (nthlast 0 lparams))
-            body))))
+  (let ((*match-form* form))
+    (unless (proper-list-p params)
+      (compile-error form
+                     "~s is incompatible with dotted parameter lists"
+                     :match))
+    (when (find : params)
+      (compile-error form
+                     "~s is incompatible with optional parameters"
+                     :match))
+    (tree-bind (lambda lparams . body) (expand-lambda-match clauses)
+      (let ((dashdash (member '-- params)))
+        (cons (append (ldiff params dashdash)
+                      (butlastn 0 lparams)
+                      dashdash
+                      (nthlast 0 lparams))
+              body)))))
 
 (defun non-triv-pat-p (syntax) t)
 
