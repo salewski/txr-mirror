@@ -183,7 +183,7 @@
 
 (defun compile-var-match (sym obj-var var-list)
   (or (null sym) (bindable sym)
-      (compile-error *match-form* "~s is not a symbol" sym))
+      (compile-error *match-form* "~s is not a bindable symbol" sym))
   (cond
     ((or (null sym)
          (not var-list.(exists sym)))
@@ -280,7 +280,7 @@
 (defun compile-predicate-match (pred-expr obj-var var-list)
   (mac-param-bind *match-form* (fun : sym) pred-expr
     (or (null sym) (bindable sym)
-        (compile-error *match-form* "~s is not a symbol" sym))
+        (compile-error *match-form* "~s is not a bindable symbol" sym))
     (let ((var-match (compile-var-match sym obj-var var-list)))
       var-match.(add-guard-pre (new match-guard
                                     guard-expr ^(,fun ,obj-var)))
