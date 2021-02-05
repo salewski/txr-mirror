@@ -567,23 +567,27 @@
 (defmacro match-case (:form *match-form* obj . clauses)
   (unless [all clauses [andf proper-listp [chain len plusp]]]
     (compile-error *match-form* "bad clause syntax"))
-  (let* ((flag (gensym "flag-"))
-         (result (gensym "result-"))
+  (let* ((matched-p-temp (gensym "matched-p-"))
+         (result-temp (gensym "result-"))
          (objvar (gensym "obj-"))
          (clause-matches [mapcar (op compile-match (car @1) objvar) clauses])
+         (nclauses (len clauses))
          (clause-code (collect-each ((cl clauses)
                                      (cm clause-matches)
-                                     (i 0))
+                                     (i 1))
                         (mac-param-bind *match-form* (match . forms) cl
-                          ^(unless ,(unless (zerop i) flag)
+                          ^(unless ,(unless (eql i 1) matched-p-temp)
                              (let (,*cm.(get-vars))
-                               (set ,result ,cm.(wrap-guards
-                                                  ^(set ,flag t)
-                                                  . forms))))))))
+                               (set ,result-temp
+                                    ,(if (eql i nclauses)
+                                       cm.(wrap-guards . forms)
+                                       cm.(wrap-guards
+                                            ^(set ,matched-p-temp t)
+                                            . forms)))))))))
     ^(alet ((,objvar ,obj))
-       (let (,flag ,result)
+       (let (,matched-p-temp ,result-temp)
          ,*clause-code
-         ,result))))
+         ,result-temp))))
 
 (defmacro when-exprs-match (:form *match-form* pats exprs . forms)
   (let ((em (compile-match ^@(exprs ,*pats) exprs)))
@@ -638,8 +642,9 @@
                                         present-p-temps)))
          (matched-p-temp (gensym "matched-p"))
          (result-temp (gensym "result"))
+         (nclauses (len parsed-clauses))
          (ex-clauses (collect-each ((pc parsed-clauses)
-                                    (counter 0))
+                                    (counter 1))
                        (let* ((vp pc.variadic-pattern)
                               (exp ^(when-exprs-match
                                       (,*pc.fixed-patterns
@@ -648,7 +653,8 @@
                                         ,*(if vp
                                             ^((list* ,*[arg-temps pc.nfixed..:]
                                                      ,rest-temp))))
-                                      (set ,matched-p-temp t)
+                                      ,*(unless (eql counter nclauses)
+                                          ^((set ,matched-p-temp t)))
                                       (set ,result-temp (progn ,*pc.forms)))))
                          (sys:set-macro-ancestor exp pc.orig-syntax)
                          (when (> pc.nfixed min-args)
@@ -660,7 +666,7 @@
                          (when (and variadic (not vp) (= pc.nfixed max-args))
                            (set exp ^(unless ,rest-temp
                                        ,exp)))
-                         (unless (zerop counter)
+                         (unless (eql 1 counter)
                            (set exp ^(unless ,matched-p-temp ,exp)))
                          exp))))
     ^(lambda (,*fix-arg-temps
