@@ -661,7 +661,7 @@
                            (set exp ^(unless ,rest-temp
                                        ,exp)))
                          (unless (zerop counter)
-                           (set exp ^(unless ,result-temp ,exp)))
+                           (set exp ^(unless ,matched-p-temp ,exp)))
                          exp))))
     ^(lambda (,*fix-arg-temps
               ,*(if opt-arg-temps
