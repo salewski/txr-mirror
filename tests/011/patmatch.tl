@@ -120,13 +120,18 @@
 
 (test (when-match (@a @(as a @(or x @a))) '(#1=(1 2 #1# 3) #1#) :yes) :yes)
 
-(test (when-match (@(with x 42 @a) @b @c) '(1 2 3) (list a b c x))
+(test (when-match (@(with @a x 42) @b @c) '(1 2 3) (list a b c x))
       (1 2 3 42))
 
 (test (let ((o 3))
-        (when-match (@(evenp x) @(with @(oddp y) o @z)) '(4 6)
+        (when-match (@(evenp x) @(with @z @(oddp y) o)) '(4 6)
           (list x y z)))
       (4 3 6))
+
+(test (let ((o 3))
+        (when-match (@(evenp x) @(with @(oddp y) o)) '(4 6)
+          (list x y)))
+      (4 3))
 
 (defstruct node ()
   left right)

@@ -40288,12 +40288,12 @@ as its value.
 
 .coNP Pattern operator @ with
 .synb
-.mets @(with >> [ side-pattern | << name ] < expr << main-pattern )
+.mets @(with <> [ main-pattern ] >> { side-pattern | << name } << expr )
 .syne
 .desc
 The
 .code with
-pattern operator matches the
+pattern operator matches the optional
 .meta main-pattern
 against a corresponding object, while matching a
 .meta side-pattern
@@ -40303,15 +40303,27 @@ against the value of the expression
 .meta expr
 which is embedded in the syntax.
 
-
-First,
-.meta expr
-is evaluated in the scope of earlier pattern variables. It is unspecified
-whether later pattern variables are visible. The matching of
-.meta side-pattern
-follows, and if that succeeds, then the matching of
+First, if
 .meta main-pattern
-against the corresponding object takes place.
+is present in the syntax,
+it is matched its corresponding object. This match must
+succeed, or else the
+.code with
+operator fails to match.
+
+Next,
+.meta expr
+is evaluated in the scope of earlier pattern variables, including any
+which that emanate from
+.metn main-pattern .
+It is unspecified
+whether later pattern variables are visible.
+
+Finally,
+.meta side-pattern
+is matched against the value of
+.metn expr .
+If that succeeds, then the operator has successfully matched.
 
 If a
 .meta name
@@ -40323,11 +40335,11 @@ it must be a bindable symbol or else
 .TP* Examples:
 
 .verb
-  (when-match (@(with x 42 @a) @b @c) '(1 2 3) (list a b c x))
+  (when-match (@(with @a x 42) @b @c) '(1 2 3) (list a b c x))
   --> (1 2 3 42)
 
   (let ((o 3))
-    (when-match (@(evenp x) @(with @(oddp y) o @z)) '(4 6)
+    (when-match (@(evenp x) @(with @z @(oddp y) o)) '(4 6)
       (list x y z)))
   --> (4 3 6)
 .brev
