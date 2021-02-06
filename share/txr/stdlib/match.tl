@@ -446,15 +446,11 @@
            obj-var obj-var
            guard-chain (list dj-guard)))))
 
-(defun compile-and-match (par-pat obj-var var-list)
-  (mac-param-bind *match-form* (op . pats) par-pat
-    (let* ((var-lists (mapcar (ret (copy var-list)) pats))
-           (par-matches (mapcar (op compile-match @1 obj-var @2)
-                                pats var-lists)))
-      (each ((vl var-lists))
-        var-list.(merge vl))
+(defun compile-and-match (and-pat obj-var var-list)
+  (mac-param-bind *match-form* (op . pats) and-pat
+    (let* ((par-matches (mapcar (lop compile-match obj-var var-list) pats)))
       (new compiled-match
-           pattern par-pat
+           pattern and-pat
            obj-var obj-var
            guard-chain (mappend .guard-chain par-matches)))))
 

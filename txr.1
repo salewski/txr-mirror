@@ -40307,15 +40307,11 @@ operator succeeds if
 .meta pattern
 matches.
 
-Note: the
+Note: in a situation when it is necessary to bind a variable to an object
+in parallel with one or more patterns, such that the variable can back-reference
+to an existing occurrence, the
 .code and
-operator can be used to bind a variable to an object, with back-referencing, in
-parallel with other patterns which also match the object. However, all of the
-elements of
-.code and
-are in separate scopes; back-referencing among branches of an
-.code and
-isn't possible.
+pattern operator can be used.
 
 .TP* Example:
 
@@ -40598,24 +40594,39 @@ operator requires one
 to match. It tries the patterns in left to right order, and
 stops at the first matching one, declaring failure if none match.
 
+The
+.code and
+and
+.code or
+operators have different scoping rules.
+Under
+.codn and ,
+later patterns are processed in the scopes of earlier patterns,
+just like with other pattern operators. Duplicate variables
+back-reference.
+Under
+.codn or ,
+the patterns are processed in separate, parallel scopes.
+No back-referencing takes place among same-named variables
+introduced in separate patterns of the same
+.codn or .
+
 When the
 .code and
 matches, the variables from all of the
-patterns are bound.  Duplicate variables from multiple patterns are merged into
-a single instance. The rightmost occurrence of a variable takes precedence; its
-value is the one that appears.
-
+patterns are bound.
 When the
 .code or
 operator matches, the variables from all of the patterns
-are bound.
-The variables from the matching
+are also bound. However, only the variables from the matching
 .meta pattern
 take on the values implied by that pattern.
-The variables from the non-matching patterns that are not
-duplicates of variables in the matching
-.meta pattern
-take on
+The variables from the non-matching patterns that do not have
+the same names as variables in the matching
+.metn pattern ,
+and that have been newly introduced in the
+.code or
+operator, take on
 .code nil
 values.
 
