@@ -205,6 +205,21 @@
             guard-chain (list (new match-guard
                                    guard-expr ^(equal ,obj-var ,sym)))))))
 
+(defun compile-new-var-match (sym obj-var var-list)
+  (cond
+    ((null sym)
+       (new compiled-match
+            obj-var obj-var))
+    ((not (bindable sym))
+       (compile-error *match-form* "~s is not a bindable symbol" sym))
+    (t var-list.(record sym)
+       (new compiled-match
+            pattern sym
+            obj-var obj-var
+            guard-chain (if sym (list (new match-guard
+                                           vars (list sym)
+                                           var-exprs (list obj-var))))))))
+
 (defun compile-vec-match (vec-pat obj-var var-list)
   (let* ((elem-gensyms (mapcar (op gensym `elem-@1-`) (range* 0 (len vec-pat))))
          (elem-exprs (mapcar (ret ^[,obj-var ,@1]) (range* 0 (len vec-pat))))
@@ -327,7 +342,7 @@
 
 (defun compile-as-match (exp obj-var var-list)
   (mac-param-bind *match-form* (op sym pat) exp
-    (let ((var-match (compile-var-match sym obj-var var-list))
+    (let ((var-match (compile-new-var-match sym obj-var var-list))
           (pat-match (compile-match pat obj-var var-list)))
       (new compiled-match
            pattern exp

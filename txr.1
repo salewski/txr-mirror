@@ -40273,10 +40273,13 @@ operator matching against an association list.
 .desc
 The
 .code as
-pattern operator allows the entire object matched by a
-.meta pattern
-to be bound to a the variable given by
-.metn name .
+pattern operator binds the corresponding object to a fresh variable given by
+.metn name ,
+similarly to the Lisp
+.code let
+operator. If another variable called
+.meta name
+exists, it is shadowed; thus, no back-referencing is performed.
 
 The
 .meta name
@@ -40290,17 +40293,29 @@ then no name is bound. Thus
 .mono
 .meti @(as nil << pattern )
 .onom
-is equivalent to just
+is equivalent to
 .metn pattern .
-
-If
+Otherwise,
 .meta pattern
-matches, then
+processed in a scope in which the new
 .meta name
-is included among the variables, and receives the entire
-object matched by
+binding is already visible.
+
+The
+.code as
+operator succeeds if
 .meta pattern
-as its value.
+matches.
+
+Note: the
+.code and
+operator can be used to bind a variable to an object, with back-referencing, in
+parallel with other patterns which also match the object. However, all of the
+elements of
+.code and
+are in separate scopes; back-referencing among branches of an
+.code and
+isn't possible.
 
 .TP* Example:
 
@@ -40308,7 +40323,11 @@ as its value.
   ;; w captures the entire (1 2 3) list:
 
   (when-match @(as w (@a @b @c)) '(1 2 3) (list w a b c))
-  -> ((1 2 3) 1 2 3)
+  --> ((1 2 3) 1 2 3)
+
+  ;; match a list which has itself as the third element
+  (when-match @(as a (1 2 @a 4)) '#1=(1 2 #1# 4) :yes)
+  --> :yes
 .brev
 
 .coNP Pattern operator @ with
