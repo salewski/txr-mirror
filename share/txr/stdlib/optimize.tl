@@ -61,8 +61,8 @@
            (((jmp @jlabel) . @rest)
             (let ((jinsns [bb.hash jlabel]))
               (match-case jinsns
-                ((@(op eq jlabel)
-                   (jmp @(require @jjlabel (neq jjlabel jlabel))) . @nil)
+                ((@jlabel
+                  (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                  ^((jmp ,jjlabel) ,*rest))
                 (@jelse insns))))
            (((if @reg @jlabel0)
@@ -75,30 +75,30 @@
            (((if @reg @jlabel) . @rest)
             (let ((jinsns [bb.hash jlabel]))
               (match-case jinsns
-                ((@(op eq jlabel)
-                   (if @(op eq reg)
-                       @(require @jjlabel (neq jjlabel jlabel))) . @nil)
+                ((@jlabel
+                  (if @reg
+                      @(and @jjlabel @(not @jlabel))) . @nil)
                  ^((if ,reg ,jjlabel) ,*rest))
-                ((@(op eq jlabel)
-                   (jmp @(require @jjlabel (neq jjlabel jlabel))) . @nil)
+                ((@jlabel
+                  (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                  ^((if ,reg ,jjlabel) ,*rest))
                 (@jelse insns))))
            (((ifq @reg @creg @jlabel) . @rest)
             (let ((jinsns [bb.hash jlabel]))
               (match-case jinsns
-                ((@(op eq jlabel)
-                   (ifq @(op eq reg) @(op eq creg)
-                        @(require @jjlabel (neq jjlabel jlabel))) . @nil)
+                ((@jlabel
+                 (ifq @reg @creg
+                      @(and @jjlabel @(not @jlabel))) . @nil)
                  ^((ifq ,reg ,creg ,jjlabel) ,*rest))
-                ((@(op eq jlabel)
-                   (jmp @(require @jjlabel (neq jjlabel jlabel))) . @nil)
+                ((@jlabel
+                  (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                  ^((ifq ,reg ,creg ,jjlabel) ,*rest))
                 (@jelse insns))))
            (((close @reg @nargs @jlabel . @cargs) . @rest)
             (let ((jinsns [bb.hash jlabel]))
               (match-case jinsns
-                ((@(op eq jlabel)
-                   (jmp @(require @jjlabel (neq jjlabel jlabel))) . @nil)
+                ((@jlabel
+                  (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                  ^((close ,reg ,nargs ,jjlabel ,*cargs) ,*rest))
                 (@jelse insns))))
            ;; wasteful moves
