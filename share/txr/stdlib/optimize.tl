@@ -66,14 +66,12 @@
                  ^((jmp ,jjlabel) ,*rest))
                 (@jelse insns))))
            (((if @reg @jlabel0)
-             (jmp @jlabel1) . @rest)
-            (let ((jinsns [bb.hash jlabel1]))
-              (if-match (@(op eq jlabel1)
-                         (if @(op eq reg) @nil)
-                         (jmp @jlabel3) . @nil)
-                        jinsns
-                ^(,(car insns) (jmp ,jlabel3) ,*rest)
-                insns)))
+             (jmp @(with @jlabel1
+                         @(hash (@jlabel1 (@jlabel1
+                                           (if @reg @nil)
+                                           (jmp @jlabel3) . @nil)))
+                         bb.hash)) . @rest)
+            ^(,(car insns) (jmp ,jlabel3) ,*rest))
            (((if @reg @jlabel) . @rest)
             (let ((jinsns [bb.hash jlabel]))
               (match-case jinsns
