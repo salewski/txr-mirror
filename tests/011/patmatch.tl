@@ -241,3 +241,24 @@
 
 (test (ack 1 1) 3)
 (test (ack 2 2) 7)
+
+(defun x-x-y (list x)
+  (when-match (@x @x @y) list y))
+
+(test (x-x-y '(1 1 2) 1) 2)
+(test (x-x-y '(1 2 3) 1) nil)
+(test (x-x-y '(1 1 2 r2) 1) nil)
+
+(test (let ((a 3) (x 0))
+        (match-case '(3 2 1)
+          ((@x 2 @b) ^(1 ,b))
+          ((@a 2 @b) ^(2 ,a))))
+      (2 3))
+
+(test
+  (let ((a 3) (x 0))
+    (labels ((local (:match)
+               ((@x 2 @b) ^(1 ,b))
+               ((@a 2 @b) ^(2 ,a))))
+      (local 3 2 1)))
+  (2 3))

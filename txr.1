@@ -39818,6 +39818,31 @@ and binds a to the leftmost
 and fails to match a list like
 .codn "(1 2)" .
 
+Pattern variables exist in the same namespace as Lisp variables,
+and are fully integrated in it. Patterns not only bind variables,
+but have visibility to existing variables in scope, including
+lexical variables and special/global variables. When a variable
+is mentioned in a pattern, if it already has a binding as a Lisp variable, then
+it denotes a reference to that variable in exactly the same way that a pattern
+variable back-references itself in a pattern: the Lisp variable
+is require to compare
+.code equal
+to the corresponding object being examined by the pattern. For instance,
+the following function returns the third element of a list, if the
+first two elements are repetitions of the
+.code x
+argument, otherwise
+.codn nil :
+
+.verb
+  (defun x-x-y (list x)
+    (when-match (@x @x @y) list y))
+
+  (x-x-y '(1 1 2) 1) -> 2
+  (x-x-y '(1 2 3) 1) -> nil    ;; no @x @x match
+  (x-x-y '(1 1 2 r2) 1) -> nil ;; list too long
+.brev
+
 The pattern-matching notation is documented in the following
 sections; sections describing the pattern matching macros follow.
 

@@ -118,8 +118,11 @@
 
 (defstruct var-list ()
   vars
+  menv
 
-  (:method exists (me sym) (member sym me.vars))
+  (:method exists (me sym) (or (member sym me.vars)
+                               (lexical-var-p me.menv sym)
+                               (boundp sym)))
   (:method record (me sym) (push sym me.vars))
   (:method merge (me copy) (each ((v copy.vars)) (pushnew v me.vars))))
 
@@ -551,14 +554,17 @@
               (compile-atom-match pat obj-var var-list)))))
     (t (compile-atom-match pat obj-var var-list))))
 
-(defmacro when-match (:form *match-form* pat obj . body)
-  (let ((cm (compile-match pat)))
+(defun get-var-list (env)
+  (new var-list menv env))
+
+(defmacro when-match (:form *match-form* :env e pat obj . body)
+  (let ((cm (compile-match pat : (get-var-list e))))
     ^(alet ((,cm.obj-var ,obj))
        (let ,cm.(get-vars)
          ,cm.(wrap-guards . body)))))
 
-(defmacro if-match (:form *match-form* pat obj then : else)
-  (let ((cm (compile-match pat))
+(defmacro if-match (:form *match-form* :env e pat obj then : else)
+  (let ((cm (compile-match pat : (get-var-list e)))
         (match-p (gensym "match-p-"))
         (result (gensym "result-")))
     ^(alet ((,cm.obj-var ,obj))
@@ -568,13 +574,16 @@
                              then)))
          (if ,match-p ,result ,else)))))
 
-(defmacro match-case (:form *match-form* obj . clauses)
+(defmacro match-case (:form *match-form* :env e obj . clauses)
   (unless [all clauses [andf proper-listp [chain len plusp]]]
     (compile-error *match-form* "bad clause syntax"))
   (let* ((matched-p-temp (gensym "matched-p-"))
          (result-temp (gensym "result-"))
          (objvar (gensym "obj-"))
-         (clause-matches [mapcar (op compile-match (car @1) objvar) clauses])
+         (var-list (get-var-list e))
+         (clause-matches [mapcar (op compile-match (car @1)
+                                     objvar (copy var-list))
+                                 clauses])
          (nclauses (len clauses))
          (clause-code (collect-each ((cl clauses)
                                      (cm clause-matches)
@@ -593,8 +602,8 @@
          ,*clause-code
          ,result-temp))))
 
-(defmacro when-exprs-match (:form *match-form* pats exprs . forms)
-  (let ((em (compile-match ^@(exprs ,*pats) exprs)))
+(defmacro when-exprs-match (:form *match-form* :env e pats exprs . forms)
+  (let ((em (compile-match ^@(exprs ,*pats) exprs (get-var-list e))))
     ^(let* (,*em.(get-vars))
        ,em.(wrap-guards . forms))))
 
