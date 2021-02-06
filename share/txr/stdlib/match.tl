@@ -185,11 +185,13 @@
                                (mappend .guard-chain slot-matches))))))
 
 (defun compile-var-match (sym obj-var var-list)
-  (or (null sym) (bindable sym)
-      (compile-error *match-form* "~s is not a bindable symbol" sym))
   (cond
-    ((or (null sym)
-         (not var-list.(exists sym)))
+    ((null sym)
+       (new compiled-match
+            obj-var obj-var))
+    ((not (bindable sym))
+       (compile-error *match-form* "~s is not a bindable symbol" sym))
+    ((not var-list.(exists sym))
        var-list.(record sym)
        (new compiled-match
             pattern sym
