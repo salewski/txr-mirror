@@ -83,8 +83,8 @@
 (test (when-match (@(oddp) @(all @x)) '(2 (1 2 . 3)) x) nil)
 
 (test (if-match @(or (@x 3 3) (1 @x 3) (1 2 @x)) '(1 2 3) x) 2)
-(test (if-match @(op <= 10 @1 13) 11 :yes :no) :yes)
-(test (when-match @(as x @(op <= 10 @1 13)) 11 x) 11)
+(test (if-match @(<= 10 @a 13) 11 :yes :no) :yes)
+(test (when-match @(as x @(<= 10 @a 13)) 11 x) 11)
 (test (when-match (@(evenp) @(oddp @x)) '(2 3) x) 3)
 (test (when-match @(<= 1 @x 10) 4 x) 4)
 (test (when-match @(@d (chr-digit @c)) #\5 (list d c)) (5 #\5))

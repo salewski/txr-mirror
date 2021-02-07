@@ -40676,38 +40676,6 @@ operator.
    --> (:case2 3 2)
 .brev
 
-.coNP Pattern operator @ op
-.synb
-.mets @(op << form +)
-.syne
-.desc
-The
-.code op
-operator uses the syntax of the
-.code op
-macro to produce an anonymous function, which is used as the basis of a
-predicate match. The function is applied to the corresponding object.
-If the function yields true, the match succeeds, otherwise it fails.
-
-The syntax and semantics of
-.code op
-is exactly that of the
-.code op
-macro.
-
-The syntax must be used in such a way that the resulting anonymous
-function is capable of being called with exactly one argument.
-
-.TP* Example
-
-.verb
-  ;; 11 matches, since it is in the 10-13 range
-  (if-match @(op <= 10 @1 13) 11 :yes :no) -> :yes
-
-  ;; as can be used to capture into a variable
-  (when-match @(as x @(op <= 10 @1 13)) 11 x) -> 11
-.brev
-
 .NP* Pattern predicate operator
 .synb
 .mets >> @( function << arg *)

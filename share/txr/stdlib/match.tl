@@ -270,12 +270,6 @@
                (compile-as-atom)))
       (t (compile-as-atom)))))
 
-(defun compile-op-match (op-expr obj-var var-list)
-  (let ((var-match (compile-var-match nil obj-var var-list)))
-    var-match.(add-guard-pre (new match-guard
-                                  guard-expr ^ [,op-expr ,obj-var]))
-    var-match))
-
 (defun compile-predicate-match (exp obj-var var-list)
   (let ((head (car exp)))
     (if (and (consp head) (eq (car head) 'sys:var))
@@ -561,7 +555,6 @@
                  (or (compile-or-match exp obj-var var-list))
                  (and (compile-and-match exp obj-var var-list))
                  (not (compile-not-match exp obj-var var-list))
-                 (op (compile-op-match exp obj-var var-list))
                  (hash (compile-hash-match exp obj-var var-list))
                  (rcons (compile-range-match exp obj-var var-list))
                  (exprs (compile-exprs-match exp obj-var var-list))
