@@ -39,7 +39,22 @@
       (mapdo (do set [bb.hash (car @1)] @1) bb.list))
 
     (:method get-insns (bb)
-      [mappend bb.hash bb.labels])))
+      [mappend bb.hash bb.labels])
+
+    (:method cut-block (bb label at insns)
+      (let ((nlabel (gensym "nl"))
+            (ltail (cdr (member label bb.labels))))
+        (set bb.labels (append (ldiff bb.labels ltail)
+                               (list nlabel)
+                               ltail))
+        (set [bb.hash nlabel] (cons nlabel at))
+        (set [bb.hash label] (ldiff insns at))
+        nlabel))
+
+    (:method next-block (bb label)
+      (let ((ltail (member label bb.labels)))
+        (iflet ((next (cdr ltail)))
+          (car next))))))
 
 (defmacro rewrite-case (sym list . cases)
   ^(rewrite (lambda (,sym)
@@ -106,6 +121,26 @@
             (cdr insns))
            (((mov @reg0 @reg1) (mov reg1 @reg0) . @rest)
             ^(,(car insns) ,*rest))
+           ;; frame reduction
+           (((frame @lev @size)
+             (@(or call gcall mov)
+               . @(require @(coll (v @vlev @nil))
+                           (none vlev (op eql (ppred lev)))))
+             . @rest)
+            ^(,(cadr insns) ,(car insns) ,*rest))
+           (((frame . @nil)
+             (if (t @reg) @jlabel) . @rest)
+            (let ((jinsns [bb.hash jlabel]))
+              (match-case jinsns
+                ((@jlabel
+                  (end (t @reg)) . @jrest)
+                 (let ((xlabel (if jrest
+                                 bb.(cut-block jlabel jrest jinsns)
+                                 bb.(next-block jlabel))))
+                   (if xlabel
+                     ^((if (t ,reg) ,xlabel) ,(car insns) ,*rest)
+                     insns)))
+                (@jelse insns))))
            (@else insns)))))
 
 (defun rewrite (fun list)
