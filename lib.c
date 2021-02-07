@@ -9745,15 +9745,22 @@ val multi_sort(val lists, val funcs, val key_funcs)
 {
   val tuples = mapcarl(list_f, nullify(lists));
 
-  key_funcs = default_null_arg(key_funcs);
+  if (tuples) {
+    key_funcs = default_null_arg(key_funcs);
 
-  if (functionp(funcs))
-    funcs = cons(funcs, nil);
+    if (functionp(funcs))
+      funcs = cons(funcs, nil);
 
-  tuples = sort_list(tuples, func_f2(cons(funcs, key_funcs),
-                                     multi_sort_less), identity_f);
+    tuples = sort_list(tuples, func_f2(cons(funcs, key_funcs),
+                                       multi_sort_less), identity_f);
 
-  return mapcarl(list_f, tuples);
+    return mapcarl(list_f, tuples);
+  } else {
+    list_collect_decl (out, ptail);
+    for (; !endp(lists); lists = us_cdr(lists))
+      ptail = list_collect(ptail, nil);
+    return out;
+  }
 }
 
 val sort_group(val seq, val keyfun, val lessfun)
