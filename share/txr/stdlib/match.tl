@@ -523,18 +523,21 @@
            obj-var obj-var
            guard-chain (cons guard (mappend .guard-chain hash-matches))))))
 
-(defun compile-exprs-match (exprs-syntax exprs var-list)
-  (let ((pats (cdr exprs-syntax))
-        (temps (mapcar (ret (gensym)) exprs)))
-    (let* ((matches (mapcar (op compile-match @1 @2 var-list)
-                            pats temps)))
-      (new compiled-match
-           pattern exprs-syntax
-           obj-var nil
-           guard-chain (cons (new match-guard
-                                  pure-temps temps
-                                  pure-temp-exprs exprs)
-                             (mappend .guard-chain matches))))))
+(defun compile-exprs-match (exprs-syntax uexprs var-list)
+  (let ((upats (cdr exprs-syntax))
+        (utemps (mapcar (ret (gensym)) uexprs)))
+    (tree-bind (pats temps exprs) (multi-sort (list upats utemps uexprs)
+                                              [list less]
+                                              [list non-triv-pat-p])
+      (let* ((matches (mapcar (op compile-match @1 @2 var-list)
+                              pats temps)))
+        (new compiled-match
+             pattern exprs-syntax
+             obj-var nil
+             guard-chain (cons (new match-guard
+                                    pure-temps utemps
+                                    pure-temp-exprs uexprs)
+                               (mappend .guard-chain matches)))))))
 
 (defun compile-match (pat : (obj-var (gensym)) (var-list (new var-list)))
   (cond
