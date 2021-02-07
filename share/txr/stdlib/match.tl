@@ -276,35 +276,43 @@
                                   guard-expr ^ [,op-expr ,obj-var]))
     var-match))
 
-(defun compile-dwim-predicate-match (pred-expr obj-var var-list)
-  (mac-param-bind *match-form* (dwim fun : sym pat) pred-expr
-    (let ((var-match (compile-var-match sym obj-var var-list)))
-      (if pat
-        (let* ((pat-match (if (symbolp pat)
-                            (compile-var-match pat (gensym) var-list)
-                            (compile-match pat (gensym) var-list)))
-               (guard (new match-guard
-                           pure-temps (list pat-match.obj-var)
-                           pure-temp-exprs (list ^[,fun ,obj-var])
-                           test-expr pat-match.obj-var)))
-          (new compiled-match
-               pattern pred-expr
-               obj-var obj-var
-               guard-chain (cons guard (append var-match.guard-chain
-                                               pat-match.guard-chain))))
-        (progn
-          var-match.(add-guard-pre (new match-guard
-                                        guard-expr ^[,fun ,obj-var]))
-          var-match)))))
-
-(defun compile-predicate-match (pred-expr obj-var var-list)
-  (mac-param-bind *match-form* (fun : sym) pred-expr
-    (or (null sym) (bindable sym)
-        (compile-error *match-form* "~s is not a bindable symbol" sym))
-    (let ((var-match (compile-var-match sym obj-var var-list)))
-      var-match.(add-guard-pre (new match-guard
-                                    guard-expr ^(,fun ,obj-var)))
-      var-match)))
+(defun compile-predicate-match (exp obj-var var-list)
+  (let ((head (car exp)))
+    (if (and (consp head) (eq (car head) 'sys:var))
+      (tree-case exp
+        (((sv rvar) (op . args))
+         (let* ((avar
+                  (condlet
+                    (((vm (member-if [andf consp (op eq (car @1) 'sys:var)]
+                                     args)))
+                     (let ((sym (cadar vm)))
+                       (set args (append (ldiff args vm)
+                                         (list sym)
+                                         (cdr vm)))
+                       sym))
+                    (((vm (memq 'sys:var args)))
+                     (let ((sym (cadr vm)))
+                       (set args (append (ldiff args vm) sym))
+                       sym))))
+                (res-var (if rvar rvar (gensym "res-")))
+                (arg-var (if avar avar (gensym "obj-"))))
+           (unless avar
+             (set args (append args (list arg-var))))
+           (let* ((guard (new match-guard
+                              pure-temps (list res-var)
+                              pure-temp-exprs ^((alet ((,arg-var ,obj-var))
+                                                  (,op ,*args)))
+                              test-expr res-var))
+                  (avar-match (compile-var-match avar obj-var var-list))
+                  (rvar-match (compile-var-match rvar res-var var-list)))
+             (new compiled-match
+                  pattern exp
+                  obj-var obj-var
+                  guard-chain  (append avar-match.guard-chain
+                                       (list guard)
+                                       rvar-match.guard-chain)))))
+        (els (compile-error *match-form* "invalid predicate syntax: ~s" exp)))
+      (compile-predicate-match (list '@nil exp) obj-var var-list))))
 
 (defun compile-cons-structure (cons-pat obj-var var-list)
   (mac-param-bind *match-form* (car . cdr) cons-pat
@@ -556,7 +564,6 @@
                  (op (compile-op-match exp obj-var var-list))
                  (hash (compile-hash-match exp obj-var var-list))
                  (rcons (compile-range-match exp obj-var var-list))
-                 (dwim (compile-dwim-predicate-match exp obj-var var-list))
                  (exprs (compile-exprs-match exp obj-var var-list))
                  (t (compile-predicate-match exp obj-var var-list)))
                (compile-error *match-form*
@@ -733,8 +740,8 @@
 
 (defun non-triv-pat-p (syntax)
   (match-case syntax
-    ((@(op eq 'sys:expr) (@(bindable) . @nil)) t)
-    ((@(op eq 'sys:var) @(or @(bindable) nil) . @nil) t)
+    ((@(eq 'sys:expr) (@(bindable) . @nil)) t)
+    ((@(eq 'sys:var) @(or @(bindable) nil) . @nil) t)
     ((@pat . @rest) (or (non-triv-pat-p pat)
                         (non-triv-pat-p rest)))
     (#R(@from @to) (or (non-triv-pat-p from)
@@ -742,5 +749,5 @@
     (@(some @(non-triv-pat-p)) t)))
 
 (defun var-pat-p (syntax)
-  (when-match (@(op eq 'sys:var) @(bindable sym) . @nil) syntax
+  (when-match (@(eq 'sys:var) @(bindable @sym) . @nil) syntax
     sym))

@@ -13,7 +13,7 @@
 (test (when-match (@a @b @c) '(1 2 3) (list c b a)) (3 2 1))
 (test (if-match (@a @b @c . @d) '(1 2 3 . 4) (list d c b a)) (4 3 2 1))
 
-(test (if-match (@(oddp a) @b @c . @d) '(2 x y z)
+(test (if-match (@(oddp @a) @b @c . @d) '(2 x y z)
         (list a b c d)
         :no-match)
       :no-match)
@@ -85,8 +85,9 @@
 (test (if-match @(or (@x 3 3) (1 @x 3) (1 2 @x)) '(1 2 3) x) 2)
 (test (if-match @(op <= 10 @1 13) 11 :yes :no) :yes)
 (test (when-match @(as x @(op <= 10 @1 13)) 11 x) 11)
-(test (when-match (@(evenp) @(oddp x)) '(2 3) x) 3)
-
+(test (when-match (@(evenp) @(oddp @x)) '(2 3) x) 3)
+(test (when-match @(<= 1 @x 10) 4 x) 4)
+(test (when-match @(@d (chr-digit @c)) #\5 (list d c)) (5 #\5))
 (test (when-match @(or @(require @a (oddp a)) @b @c) 2 (list a b c))
       (nil 2 nil))
 
@@ -124,12 +125,12 @@
       (1 2 3 42))
 
 (test (let ((o 3))
-        (when-match (@(evenp x) @(with @z @(oddp y) o)) '(4 6)
+        (when-match (@(evenp @x) @(with @z @(oddp @y) o)) '(4 6)
           (list x y z)))
       (4 3 6))
 
 (test (let ((o 3))
-        (when-match (@(evenp x) @(with @(oddp y) o)) '(4 6)
+        (when-match (@(evenp @x) @(with @(oddp @y) o)) '(4 6)
           (list x y)))
       (4 3))
 
@@ -154,7 +155,7 @@
     (match-case obj
       (@(struct @s year 2021 day @d) (list d (struct-type-name s)))
       (@(struct time year @y month @x day @x) (list y x))
-      (#(@(integerp x) @(require @y (succ x))) (list x y))
+      (#(@(integerp @x) @(require @y (succ x))) (list x y))
       (#(@x @y) (list x y))
       ((@x @nil @x) x)
       ((@nil @nil @x) x)
@@ -165,7 +166,7 @@
 (test (when-match @(hash (x @y) (@y @datum)) #H(() (x k) (k 42)) datum)
       42)
 
-(test (when-match @(hash (x @y) (@(symbolp y) @datum)) #H(() (x k) (k 42)) datum)
+(test (when-match @(hash (x @y) (@(symbolp @y) @datum)) #H(() (x k) (k 42)) datum)
       (42))
 
 (test (if-match #R(10 20) 10..20 :yes :no) :yes)
@@ -181,15 +182,11 @@
 (test (when-match (rcons @a @b) '(rcons 1 2) (list a b)) (1 2))
 
 (test (let ((h #H(() (a 1) (b 2))))
-        (when-match @[h x] 'a x))
+        (when-match @[h @x] 'a x))
       a)
 
 (test (let ((h #H(() (a 1) (b 2))))
-        (when-match @[h x y] 'a (list x y)))
-      (a 1))
-
-(test (let ((h #H(() (a 1) (b 2))))
-        (when-match @[h x @(oddp y)] 'a (list x y)))
+        (when-match @(@y [h @x]) 'a (list x y)))
       (a 1))
 
 (test

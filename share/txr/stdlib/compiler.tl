@@ -1309,7 +1309,7 @@
     ((or) form)
     ((or @a) form)
     ((or nil . @rest) (reduce-or ^(or ,*rest)))
-    ((or @(true-const-p c) . @rest) ^(or ,c))
+    ((or @(true-const-p @c) . @rest) ^(or ,c))
     ((or @a . @rest) ^(or ,a ,*(cdr (reduce-or ^(or ,*rest)))))
     (@else else)))
 

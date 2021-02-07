@@ -39951,7 +39951,7 @@ and therefore is not a list pattern.
   --> (4 3 2 1)
 
   ;; 2 doesn't satisfy oddp
-  (if-match (@(oddp a) @b @c . @d) '(2 x y z)
+  (if-match (@(oddp @a) @b @c . @d) '(2 x y z)
     (list a b c d)
     :no-match)
   --> :no-match
@@ -40250,7 +40250,8 @@ operator matching against an association list.
   ;; a single entry matching the value of @y. This
   ;; is the k entry, whose value is 42. The @datum
   ;; value match takes this 42.
-  (when-match @(hash (x @y) (@y @datum)) #H(() (x k) (k 42)) datum)
+  (when-match @(hash (x @y) (@y @datum))
+              #H(() (x k) (k 42)) datum)
   --> 42
 
   ;; Again, (x @y) has a trivial key pattern so the x
@@ -40262,7 +40263,8 @@ operator matching against an association list.
   ;; hash table. The @y variable has a binding to k,
   ;; so only the (k 42) entry is matched. The 42
   ;; value matches @datum, and is collected into a list.
-  (when-match @(hash (x @y) (@(symbolp y) @datum)) #H(() (x k) (k 42)) datum)
+  (when-match @(hash (x @y) (@(symbolp @y) @datum))
+              #H(() (x k) (k 42)) datum)
   --> (42)
 .brev
 
@@ -40379,7 +40381,7 @@ it must be a bindable symbol or else
   --> (1 2 3 42)
 
   (let ((o 3))
-    (when-match (@(evenp x) @(with @z @(oddp y) o)) '(4 6)
+    (when-match (@(evenp @x) @(with @z @(oddp y) o)) '(4 6)
       (list x y z)))
   --> (4 3 6)
 .brev
@@ -40708,85 +40710,111 @@ function is capable of being called with exactly one argument.
 
 .NP* Pattern predicate operator
 .synb
-.mets >> @( function <> [ variable ])
-.mets >> @[ expression >> [ variable >> [ pattern | << variable ]]]
+.mets >> @( function << arg *)
+.mets >> @( function << arg * >> @ avar << arg *)
+.mets >> @(@ rvar >> ( function << arg *))
+.mets >> @(@ rvar >> ( function << arg * >> @ avar << arg *))
 .syne
 .desc
-Whenever the operator of a pattern predicate is not recognized and is
-a bindable symbol, that operator is assumed to be the name of a function, and
-the syntax is treated as the predicate operator.
+Whenever the operator position of a pattern consists of a symbol which is not
+the name of a predicate operator, the expression denotes a predicate pattern,
+expected to conform to one of the first two syntax descriptions above.  Whenever
+the operator position of a pattern consists of a meta-variable, it is also a
+predicate pattern, expected to conform to one of the second two syntax
+descriptions.
 
-The pattern predicate operator invokes the function, passing it the
-corresponding object as an argument. The match is successful if the function
-returns true.
+The first form of the predicate pattern consists of a compound form consisting
+of an operator and arguments. Exactly one of the arguments may be a pattern
+variable
+.meta avar
+("argument variable") which must be a bindable symbol. The role of
+.meta avar
+and the consequences of omitting it are described below.
 
-Optionally, if the
-.meta variable
-is specified, and is not
-.codn nil ,
-it is bound to the corresponding object.
-
-The
-.meta variable
-argument, if present, must be a
-.code bindable
-symbol, or else
+The second form of the predicate pattern consists of a meta-variable
+.meta rvar
+("result variable")
+which must be a bindable symbol or else
 .codn nil .
+This is followed by a compound form which consists of an operator
+symbol, followed by arguments, one of which may be a pattern
+.code avar
+as in the simple form.
+If
+.meta rvar
+is
+.codn nil ,
+then the predicate pattern is equivalent to the first form. That is to say,
+the following are equivalent:
 
-The
-.meta function
-must be capable of accepting exactly one argument.
+.verb
+  @(@nil (f ...))  <-->  @(f ...)
+.brev
 
-The
+The matching of the predicate pattern is processed as follows.
+If the
+.meta avar
+variable is present, then the predicate pattern first binds the
+corresponding object to the
+.meta avar
+variable, performing an ordinary variable match with the potential
+back-referencing which that implies. If that succeeds, then the object is
+inserted into the compound form, substituted in the position indicated by the
 .mono
-.mets >> @[ expression >> [ variable >> [ pattern | << variable ]]]
+.meti >> @ avar
 .onom
-variant of the predicate syntax is always a predicate. It denotes the evaluation of
-.mono
-.meti >> [ expression << arg ]
-.onom
-where
-.meta arg
-is the corresponding object, that evaluation being required to
-yield true. The
-.meta variable
-plays the same role.
+variable. This form is then evaluated. If it yields true, then the
+match is successful, otherwise the match fails.
 
-This syntax supports an optional third argument, which may be a
-.meta pattern
-or another
-.metn variable .
-This pattern or variable, if present, is matched against the value of applying
-.meta expression
-to its argument. It allows that value to be captured and subject to
-pattern matching. The restriction that this value must be true
-continues to apply.
+If the
+.meta avar
+variable is absent, then no initial variable matching takes place.
+The corresponding object is inserted as an implicit extra argument into the
+compound form, which is evaluated. Its truth value then determines the success
+of the match, just like in the case with
+.metn avar .
 
-Note: a
-.code lambda
-expression may be used as either
-.meta function
-or
-.metn expression .
+If the second form is being processed, and specifies a
+.meta rvar
+that is not
+.codn nil ,
+and if the predicate has succeeded, then then an extra processing step takes
+place. A variable match is performed to bind the
+.meta rvar
+variable to the result of the predicate, with potential back-referencing.
+If that match succeeds, then the predicate pattern succeeds.
+
+The compound form may be headed by the
+.code dwim
+operator, and therefore the DWIM bracket notation may be used.
+For instance
+.code "@[f @x]"
+is equivalent to
+.code "@(dwim f @x)"
+and is processed accordingly. Similarly,
+.code "@(@y [f @x])"
+is equivalent to
+.codn "@(@y (dwim f @x))" .
 
 .TP* Examples:
 
 .verb
-  (when-match (@(evenp) @(oddp x)) '(2 3) x) -> 3
+  (when-match (@(evenp) @(oddp @x)) '(2 3) x) -> 3
+
+  (when-match @(<= 1 @x 10) 4 x) -> 4
+
+  (when-match @(@d (chr-digit @c)) #\e5 (list d c)) -> (5 #\e5)
+
+  (when-match @(<= 1 @x 10) 11 x) -> nil
 
   ;; use hash table as predicate:
   (let ((h #H(() (a 1) (b 2))))
-    (when-match @[h x] 'a x))
+    (when-match @[h @x] 'a x))
   -> a
 
   ;; as above, also capture hash value
   (let ((h #H(() (a 1) (b 2))))
-    (when-match @[h x y] 'a (list x y)))
-  -> (a 1)
-
-  ;; as above, also capture hash value, if odd
-  (let ((h #H(() (a 1) (b 2))))
-    (when-match @[h x @(oddp y)] 'a (list x y)))
+    (when-match @(@y [h @x]) 'a (list x y)))
   -> (a 1)
 .brev
 
