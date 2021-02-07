@@ -40680,22 +40680,25 @@ operator.
 .synb
 .mets >> @( function << arg *)
 .mets >> @( function << arg * >> @ avar << arg *)
+.mets >> @( function << arg * . <> @ avar )
 .mets >> @(@ rvar >> ( function << arg *))
 .mets >> @(@ rvar >> ( function << arg * >> @ avar << arg *))
+.mets >> @(@ rvar >> ( function << arg * . <> @ avar ))
 .syne
 .desc
 Whenever the operator position of a pattern consists of a symbol which is not
 the name of a predicate operator, the expression denotes a predicate pattern,
-expected to conform to one of the first two syntax descriptions above.  Whenever
+expected to conform to one of the first three syntax descriptions above.  Whenever
 the operator position of a pattern consists of a meta-variable, it is also a
-predicate pattern, expected to conform to one of the second two syntax
+predicate pattern, expected to conform to one of the three two syntax
 descriptions.
 
 The first form of the predicate pattern consists of a compound form consisting
 of an operator and arguments. Exactly one of the arguments may be a pattern
 variable
 .meta avar
-("argument variable") which must be a bindable symbol. The role of
+("argument variable") which must be a bindable symbol. The pattern variable
+may also appear in the dot position, rather than as an argument.  The role of
 .meta avar
 and the consequences of omitting it are described below.
 
@@ -40731,8 +40734,9 @@ inserted into the compound form, substituted in the position indicated by the
 .mono
 .meti >> @ avar
 .onom
-variable. This form is then evaluated. If it yields true, then the
-match is successful, otherwise the match fails.
+variable, either an ordinary argument position or the dot position. This form
+is then evaluated. If it yields true, then the match is successful, otherwise
+the match fails.
 
 If the
 .meta avar
