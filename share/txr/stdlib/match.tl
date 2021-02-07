@@ -581,11 +581,12 @@
         (match-p (gensym "match-p-"))
         (result (gensym "result-")))
     ^(alet ((,cm.obj-var ,obj))
-       (let* (,match-p ,*cm.(get-vars)
-              (,result ,cm.(wrap-guards
-                             ^(set ,match-p t)
-                             then)))
-         (if ,match-p ,result ,else)))))
+       (let* (,result ,*cm.(get-vars))
+         (if ,cm.(wrap-guards
+                   ^(set ,result ,then)
+                   t)
+           ,result
+           ,else)))))
 
 (defmacro match-case (:form *match-form* :env e obj . clauses)
   (unless [all clauses [andf proper-listp [chain len plusp]]]
@@ -599,20 +600,15 @@
                                  clauses])
          (nclauses (len clauses))
          (clause-code (collect-each ((cl clauses)
-                                     (cm clause-matches)
-                                     (i 1))
+                                     (cm clause-matches))
                         (mac-param-bind *match-form* (match . forms) cl
-                          ^(unless ,(unless (eql i 1) matched-p-temp)
-                             (let (,*cm.(get-vars))
-                               (set ,result-temp
-                                    ,(if (eql i nclauses)
-                                       cm.(wrap-guards . forms)
-                                       cm.(wrap-guards
-                                            ^(set ,matched-p-temp t)
-                                            . forms)))))))))
+                          ^(let (,*cm.(get-vars))
+                             ,cm.(wrap-guards ^(set ,result-temp
+                                                    (progn ,*forms))
+                                              t))))))
     ^(alet ((,objvar ,obj))
-       (let (,matched-p-temp ,result-temp)
-         ,*clause-code
+       (let (,result-temp)
+         (or ,*clause-code)
          ,result-temp))))
 
 (defmacro when-exprs-match (:form *match-form* :env e pats exprs . forms)
@@ -666,11 +662,9 @@
          (arg-temps (append fix-arg-temps opt-arg-temps))
          (present-vec (vec-list (append (repeat '(t) min-args)
                                         present-p-temps)))
-         (matched-p-temp (gensym "matched-p"))
          (result-temp (gensym "result"))
          (nclauses (len parsed-clauses))
-         (ex-clauses (collect-each ((pc parsed-clauses)
-                                    (counter 1))
+         (ex-clauses (collect-each ((pc parsed-clauses))
                        (let* ((vp pc.variadic-pattern)
                               (exp ^(when-exprs-match
                                       (,*pc.fixed-patterns
@@ -679,9 +673,8 @@
                                         ,*(if vp
                                             ^((list* ,*[arg-temps pc.nfixed..:]
                                                      ,rest-temp))))
-                                      ,*(unless (eql counter nclauses)
-                                          ^((set ,matched-p-temp t)))
-                                      (set ,result-temp (progn ,*pc.forms)))))
+                                      (set ,result-temp (progn ,*pc.forms))
+                                      t)))
                          (sys:set-macro-ancestor exp pc.orig-syntax)
                          (when (> pc.nfixed min-args)
                            (set exp ^(when ,[present-vec (pred pc.nfixed)]
@@ -692,16 +685,14 @@
                          (when (and variadic (not vp) (= pc.nfixed max-args))
                            (set exp ^(unless ,rest-temp
                                        ,exp)))
-                         (unless (eql 1 counter)
-                           (set exp ^(unless ,matched-p-temp ,exp)))
                          exp))))
     ^(lambda (,*fix-arg-temps
               ,*(if opt-arg-temps
                   (cons : (mapcar (ret ^(,@1 nil ,@2))
                                   opt-arg-temps present-p-temps)))
               . ,rest-temp)
-       (let (,matched-p-temp ,result-temp)
-         ,*ex-clauses
+       (let (,result-temp)
+         (or ,*ex-clauses)
          ,result-temp))))
 
 (defmacro lambda-match (:form *match-form* . clauses)
