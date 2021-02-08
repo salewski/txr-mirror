@@ -130,13 +130,13 @@
            (((mov @reg0 @reg1) (mov reg1 @reg0) . @rest)
             ^(,(car insns) ,*rest))
            ;; frame reduction
-           (((frame @lev @size)
+           (((@(or frame dframe) @lev @size)
              (@(or call gcall mov)
                . @(require @(coll (v @vlev @nil))
                            (none vlev (op eql (ppred lev)))))
              . @rest)
             ^(,(cadr insns) ,(car insns) ,*rest))
-           (((frame . @nil)
+           (((@(or frame dframe) . @nil)
              (if (t @reg) @jlabel) . @rest)
             (let ((jinsns [bb.hash jlabel]))
               (match-case jinsns
