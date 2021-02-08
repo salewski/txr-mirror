@@ -1,3 +1,49 @@
+                                    TXR 251
+                                   2021-02-08
+
+
+  Features
+
+  - structural pattern matching:
+    - now allows back-referencing with existing variables
+      outside of the pattern, greatly improving expressiveness.
+    - new @(with) operator, allows match between side pattern
+      and side object in parallel with main pattern and main object.
+    - @(let) renamed to @(as).
+    - clauses of @(and) now in same scope allowing back-referencing.
+    - redesign of lambda-match, using special argument matching rather
+      than a list pattern against the argument list.
+      - functions based on pattern matching now perform much better
+    - new :match parameter macro:
+      - adds pattern matching to any function in any situation
+      - supports mixture of regular arguments and pattern matching.
+    - predicate pattern syntax and semantics redesigned.
+      - predicates now have multiple arguments
+      - variable can be inserted anywhere in a predicate call,
+        including dot position
+      - variable can be omitted, giving rise to the object being
+        passed as the rightmost argument to the predicate call
+    - @(op ...) pattern is removed:
+      - not necessary due to improved predicate handling.
+
+  - compiler:
+    - new optimizations
+    - error location reporting improved.
+
+  Bugs
+
+  - structural pattern matching
+    - fixed bad hygiene in match-case due to not using gensym.
+  - lib:
+    - fixed crash in nullify and iterable, when argument is
+      a C object that is not a struct.
+    - fixed long-standing bug in multi-sort: when the list(s)
+      are empty, it must return a list of empty lists, not nil.
+      E.g. [multi-sort '(nil nil nil) less] now returns
+      (nil nil nil) as documented, and not nil.
+
+
+
                                     TXR 250
                                    2021-01-31
 
