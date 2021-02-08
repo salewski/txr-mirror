@@ -288,7 +288,7 @@
                      (let ((sym (cadr vm)))
                        (set args (append (ldiff args vm) sym))
                        sym))))
-                (res-var (if rvar rvar (gensym "res-")))
+                (res-var (gensym "res-"))
                 (arg-var (if avar avar (gensym "obj-"))))
            (unless avar
              (set args (append args (list arg-var))))

@@ -94,6 +94,12 @@
       (t (1 2 3)))
 (test (when-match @(@x (< . @sym)) '(3 2 1) (list x sym))
       nil)
+(test (let ((x t))
+        (when-match @(@x (< . @sym)) '(1 2 3) (list x sym)))
+      (t (1 2 3)))
+(test (let ((x nil))
+        (when-match @(@x (< . @sym)) '(1 2 3) (list x sym)))
+      nil)
 
 (test (if-match (@(or @a) @a) '(1 2) a :no) :no)
 (test (if-match (@(and @a) @a) '(1 2) a :no) :no)
