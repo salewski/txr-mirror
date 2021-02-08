@@ -97,6 +97,14 @@
                 ((@jlabel
                   (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                  ^((if ,reg ,jjlabel) ,*rest))
+                ((@jlabel
+                  (ifq @reg nil @jjlabel) . @jrest)
+                 (let ((xlabel (if jrest
+                                 bb.(cut-block jlabel jrest jinsns)
+                                 bb.(next-block jlabel))))
+                   (if xlabel
+                     ^((if ,reg ,xlabel) ,*rest)
+                     insns)))
                 (@jelse insns))))
            (((ifq @reg @creg @jlabel) . @rest)
             (let ((jinsns [bb.hash jlabel]))
