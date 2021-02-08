@@ -71,6 +71,9 @@
         (list x y z))
       (1 2 3))
 
+(test (if-match @(and (@x 1) (1 @x)) '(1 1) x) 1)
+(test (if-match @(and (@x 1) (1 @x)) '(1 2) x) nil)
+
 (test (when-match @(all @(or (@x @y) @z)) '((1 2) (3 4)) (list x y z))
       ((1 3) (2 4) (nil nil)))
 
