@@ -90,6 +90,10 @@
 (test (when-match @(@d (chr-digit @c)) #\5 (list d c)) (5 #\5))
 (test (when-match @(or @(require @a (oddp a)) @b @c) 2 (list a b c))
       (nil 2 nil))
+(test (when-match @(@x (< . @sym)) '(1 2 3) (list x sym))
+      (t (1 2 3)))
+(test (when-match @(@x (< . @sym)) '(3 2 1) (list x sym))
+      nil)
 
 (test (if-match (@(or @a) @a) '(1 2) a :no) :no)
 (test (if-match (@(and @a) @a) '(1 2) a :no) :no)
