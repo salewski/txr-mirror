@@ -77,6 +77,11 @@
 (test (when-match @(all @(or (@x @y) @z)) '((1 2) (3 4)) (list x y z))
       ((1 3) (2 4) (nil nil)))
 
+(test (let ((a 1) (b 2) (c 3))
+        (if-match @(or @a @b @c) 2
+          (list a b c)))
+      (1 2 3))
+
 (test (when-match @(or @(all @x)) '(1 2 3) x) (1 2 3))
 
 (test (when-match (foo @(all @x)) '(bar (1 2 . 3)) x) nil)
