@@ -36,10 +36,10 @@
   (test-expr t)
 
   (:method assignments (me)
-    (mapcar (ret ^(set ,@1 ,@2)) me.vars me.var-exprs))
+    (mapcar (op list 'set) me.vars me.var-exprs))
 
   (:method lets (me)
-    (mapcar (ret ^(,@1 ,@2)) me.pure-temps me.pure-temp-exprs)))
+    (zip me.pure-temps me.pure-temp-exprs)))
 
 (defstruct guard-disjunction ()
   guard-chains
