@@ -239,9 +239,9 @@
          obj-var obj-var
          guard-chain (cons guard (mappend .guard-chain elem-matches)))))
 
-(defun compile-range-match (rcons-expr obj-var var-list)
-  (let ((from (from rcons-expr))
-        (to (to rcons-expr)))
+(defun compile-range-match (range-expr obj-var var-list)
+  (let ((from (from range-expr))
+        (to (to range-expr)))
     (let* ((from-match (compile-match from (gensym "from") var-list))
            (to-match (compile-match to (gensym "to") var-list))
            (guard (new match-guard
@@ -249,7 +249,7 @@
                        pure-temps (list from-match.obj-var to-match.obj-var)
                        pure-temp-exprs (list ^(from ,obj-var) ^(to ,obj-var)))))
       (new compiled-match
-           pattern rcons-expr
+           pattern range-expr
            obj-var obj-var
            guard-chain (cons guard (append from-match.guard-chain
                                            to-match.guard-chain))))))
@@ -559,7 +559,6 @@
                  (and (compile-and-match exp obj-var var-list))
                  (not (compile-not-match exp obj-var var-list))
                  (hash (compile-hash-match exp obj-var var-list))
-                 (rcons (compile-range-match exp obj-var var-list))
                  (exprs (compile-exprs-match exp obj-var var-list))
                  (t (compile-predicate-match exp obj-var var-list)))
                (compile-error *match-form*
