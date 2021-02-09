@@ -73,23 +73,19 @@
   all-vars
 
   (:method wrap-expr (g exp)
-    (labels ((wrg (rgc exp)
-               (each ((g rgc))
-                 (set exp g.(wrap-expr exp)))
-               exp))
-      (let* ((vars [mapcar get-vars g.guard-chains])
-             (back-vars (cons nil
-                              (reverse
-                                [mapcar (ap append) (conses (reverse vars))])))
-             (branches (collect-each ((gc g.guard-chains)
-                                      (v vars)
-                                      (bv back-vars))
-                         ^(progn
-                            (set ,*(mappend (ret ^(,@1 nil)) (diff bv v)))
-                            ,(wrg (reverse gc) t)))))
-        (set exp ^(when (or ,*branches)
-                    ,exp))
-        exp))))
+    (let* ((vars [mapcar get-vars g.guard-chains])
+           (back-vars (cons nil
+                            (reverse
+                              [mapcar (ap append) (conses (reverse vars))])))
+           (branches (collect-each ((gc g.guard-chains)
+                                    (v vars)
+                                    (bv back-vars))
+                       ^(progn
+                          (set ,*(mappend (ret ^(,@1 nil)) (diff bv v)))
+                          ,(reduce-right (umeth wrap-expr) gc t)))))
+      (set exp ^(when (or ,*branches)
+                  ,exp))
+      exp)))
 
 (defstruct compiled-match ()
   pattern
@@ -100,12 +96,7 @@
     (uniq (get-vars me.guard-chain)))
 
   (:method wrap-guards (me . forms)
-    (labels ((wrg (rgc exp)
-               (each ((g rgc))
-                 (set exp g.(wrap-expr exp)))
-               exp))
-      (wrg (reverse me.guard-chain)
-           ^(progn ,*forms))))
+    (reduce-right (umeth wrap-expr) me.guard-chain ^(progn ,*forms)))
 
   (:method add-guard-pre (me guard)
     (push guard me.guard-chain))
