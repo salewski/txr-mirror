@@ -39,12 +39,57 @@
     (mapcar (op list 'set) me.vars me.var-exprs))
 
   (:method lets (me)
-    (zip me.pure-temps me.pure-temp-exprs)))
+    (zip me.pure-temps me.pure-temp-exprs))
+
+  (:method wrap-expr (g exp)
+    (let ((lets g.(lets))
+          (temps g.temps))
+      (if (neq t g.test-expr)
+        (set exp ^(if ,g.test-expr ,exp)))
+      (cond
+        ((and lets temps)
+         (set exp ^(alet ,lets
+                     (let ,temps
+                       ,*g.(assignments)
+                       ,exp))))
+        (lets
+          (set exp ^(alet ,lets
+                      ,*g.(assignments)
+                      ,exp)))
+        (temps
+          (set exp ^(let ,temps
+                      ,*g.(assignments)
+                      ,exp)))
+        (t
+          (set exp ^(progn ,*g.(assignments)
+                      ,exp))))
+      (when (neq t g.guard-expr)
+        (set exp ^(if ,g.guard-expr ,exp)))
+      exp)))
 
 (defstruct guard-disjunction ()
   guard-chains
   sub-patterns
-  all-vars)
+  all-vars
+
+  (:method wrap-expr (g exp)
+    (labels ((wrg (rgc exp)
+               (each ((g rgc))
+                 (set exp g.(wrap-expr exp)))
+               exp))
+      (let* ((vars [mapcar get-vars g.guard-chains])
+             (back-vars (cons nil
+                              (reverse
+                                [mapcar (ap append) (conses (reverse vars))])))
+             (branches (collect-each ((gc g.guard-chains)
+                                      (v vars)
+                                      (bv back-vars))
+                         ^(progn
+                            (set ,*(mappend (ret ^(,@1 nil)) (diff bv v)))
+                            ,(wrg (reverse gc) t)))))
+        (set exp ^(when (or ,*branches)
+                    ,exp))
+        exp))))
 
 (defstruct compiled-match ()
   pattern
@@ -57,48 +102,7 @@
   (:method wrap-guards (me . forms)
     (labels ((wrg (rgc exp)
                (each ((g rgc))
-                 (typecase g
-                   (match-guard
-                     (let ((lets g.(lets))
-                           (temps g.temps))
-                       (if (neq t g.test-expr)
-                         (set exp ^(if ,g.test-expr ,exp)))
-                       (cond
-                         ((and lets temps)
-                          (set exp ^(alet ,lets
-                                      (let ,temps
-                                        ,*g.(assignments)
-                                        ,exp))))
-                         (lets
-                          (set exp ^(alet ,lets
-                                      ,*g.(assignments)
-                                      ,exp)))
-                         (temps
-                          (set exp ^(let ,temps
-                                      ,*g.(assignments)
-                                      ,exp)))
-                         (t
-                          (set exp ^(progn ,*g.(assignments)
-                                     ,exp))))
-                       (when (neq t g.guard-expr)
-                         (set exp ^(if ,g.guard-expr ,exp)))))
-                   (guard-disjunction
-                     (let* ((vars [mapcar get-vars g.guard-chains])
-                            (back-vars (cons nil
-                                         (reverse
-                                           [mapcar (ap append)
-                                                   (conses (reverse vars))])))
-                            (branches (collect-each ((gc g.guard-chains)
-                                                     (v vars)
-                                                     (bv back-vars))
-                                       ^(progn
-                                          (set ,*(mappend (ret ^(,@1 nil))
-                                                          (diff bv v)))
-                                          ,(wrg (reverse gc) t)))))
-                       (set exp ^(when (or ,*branches)
-                                   ,exp))))
-                   (t (compile-error *match-form*
-                                     "internal error: bad guard ~s" g))))
+                 (set exp g.(wrap-expr exp)))
                exp))
       (wrg (reverse me.guard-chain)
            ^(progn ,*forms))))
