@@ -223,11 +223,21 @@
              :))
          (((dw sym . args))
           (if (eq dw 'dwim)
-            ^[(slot ,obj ',(sys:check-slot form sym)) ,*args]
+            (let ((osym (gensym)))
+              (sys:check-slot form sym)
+              ^(slet ((,osym ,obj))
+                 ,(if (and (plusp sys:compat) (<= sys:compat 251))
+                    ^[(slot ,osym ',sym) ,*args]
+                    ^[(slot ,osym ',sym) ,osym ,*args])))
             :))
          (((dw sym . args) . more)
           (if (eq dw 'dwim)
-            ^(qref [(slot ,obj ',(sys:check-slot form sym)) ,*args] ,*more)
+            (let ((osym (gensym)))
+              (sys:check-slot form sym)
+              ^(qref (slet ((,osym ,obj))
+                       ,(if (and (plusp sys:compat) (<= sys:compat 251))
+                          ^[(slot ,osym ',sym) ,*args]
+                          ^[(slot ,osym ',sym) ,osym ,*args])) ,*more))
             :))
          (((sym . args))
           (let ((osym (gensym)))

@@ -26727,9 +26727,9 @@ is visible. Consequently,
 may be used to terminate the execution of the function
 and return a value.
 Such functions are called using the
-.code "instance.[name arg ...]"
-syntax which doesn't insert the instance into
-the argument list.
+.code "(call instance.name arg ...)"
+or else the DWIM brackets syntax
+.codn "[instance.name arg ...]" .
 
 The remarks about inheritance and overriding
 in the description of
@@ -27422,12 +27422,17 @@ is evaluated only once:
   (qref o (n arg ...)) <--> (call (slot o 'n) o arg ...)
 .brev
 
-A DWIM designator indicates that the named slot is a function or an
-indexable or callable object. The following equivalence applies:
+A DWIM designator similarly indicates that the named slot is a function,
+and arguments are to be applied to it. The following equivalence applies:
 
 .verb
-  (qref obj [name arg ...])  <-->  [(slot obj 'name) arg ...]
+  (qref obj [name arg ...])  <-->  [(slot obj 'name) o arg ...]
 .brev
+
+Therefore, under this equivalence, this syntax provides the usual Lisp-1-style
+evaluation rule via the
+.code dwim
+operator.
 
 If the
 .meta object-form
@@ -27468,7 +27473,7 @@ is the slot not accessed, but the argument expressions are not evaluated.
   (defvarl s (new foo))
 
   ;; access third element of s.array:
-  s.[array 2]  -->  3
+  [s.array 2]  -->  3
 
   ;; increment first element of array by 42
   s.(increment 0 42)  -->  43
@@ -29120,11 +29125,12 @@ which may be used to invoke them, such as:
 .mets << object .(function-name < arg << ... )
 .brev
 
-However, those introduced as "Function" do not operate on an instance. For
-brevity, their syntax is nevertheless exemplified as
+However, those introduced as "Function" do not operate on an instance.
+Their syntax is likewise indicated using the notation that may be used
+to invoke them:
 
 .verb
-.mets << object .'['function-name < arg << ... ']'
+.mets <> '[' object .function-name < arg << ... ']'
 .brev
 
 If such a invocation is actually used, the
@@ -29133,7 +29139,7 @@ instance only serves for identifying the struct type whose static slot
 .code function-name
 provides the function;
 .meta object
-doesn't participate in the call. An object is not required since
+doesn't participate in the call. An object is not strictly required since
 the function can be called using
 
 .verb
@@ -29543,7 +29549,7 @@ is invoked.
 
 .coNP Function @ from-list
 .synb
-.mets << object .'['from-list << list ']'
+.mets <> '[' object .from-list << list ']'
 .syne
 .desc
 If a
@@ -29574,7 +29580,7 @@ will always return a plain list of items.
 
 .coNP Function @ derived
 .synb
-.mets << object .'['derived < supertype << subtype ']'
+.mets <> '[' object .derived < supertype << subtype ']'
 .syne
 .desc
 If a structure type supports a function called
@@ -77530,6 +77536,20 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 251
+Until \*(TX 251, the syntax
+.code "obj.[fun arg]"
+was equivalent to
+.codn "[obj.fun arg]" ,
+providing little utility.
+A compatibility value of 251 or lower restores that behavior. The new
+behavior is that
+.code "obj.[fun arg]"
+is equivalent to
+.codn "obj.[fun obj arg]" ,
+with
+.code obj
+evaluated only once, performing method dispatch.
 .IP 248
 Until \*(TX 248, the
 .code hash-revget

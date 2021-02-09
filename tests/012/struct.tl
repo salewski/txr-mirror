@@ -31,9 +31,9 @@
 (test (expand 's.a)
       (slot s 'a))
 (test (expand 's.[a])
-      [(slot s 'a)])
+      [(slot s 'a) s])
 (test (expand 's.[a b c])
-      [(slot s 'a) b c])
+      [(slot s 'a) s b c])
 
 (set *gensym-counter* 0)
 (stest (ignwarn (expand 's.(a)))
@@ -44,9 +44,9 @@
        "(call (slot s 'a)\n                     \
        \      s b c)")
 (test (expand 's.[a].d)
-      (slot [(slot s 'a)] 'd))
+      (slot [(slot s 'a) s] 'd))
 (test (expand 's.[a b c].d)
-      (slot [(slot s 'a) b c] 'd))
+      (slot [(slot s 'a) s b c] 'd))
 (set *gensym-counter* 0)
 (stest (ignwarn (expand 's.(a).d))
        "(slot (call (slot s 'a)\n               \
@@ -104,7 +104,7 @@
 (stest bz
        "#S(baz array #(1 2 3) increment #<interpreted fun: lambda (self which delta)>)")
 
-(test bz.[array 2] 3)
+(test [bz.array 2] 3)
 (test bz.(increment 0 42) 43)
 (test bz.array #(43 2 3))
 (test [(meth bz increment) 1 5] 7)
