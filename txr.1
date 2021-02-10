@@ -39806,19 +39806,19 @@ a match for a variable, which is then back-referenced in another
 sub-pattern.
 
 A pattern can contain multiple occurrences of the same variable.
-Except in the case when these variables occur in different branches
-of an
+Except in the case when these variables occur in different
+branches of an
 .code @(or)
-or
-.code @(and)
-pattern operator, those repeated variables denote one variable.
-The left-most, or in the case of
+pattern operator, or a fresh binding under the
 .code @(as)
-nesting, outermost, occurrence of the variable binds to the corresponding
-element of the object. The remaining occurrences of the variable must
-correspond to objects which are
+operator those repeated variables refer to one variable.
+If the variable does not exist in the scope surrounding the pattern,
+then the leftmost occurrence of the variable establishes a binding,
+taking the value from is corresponding object being matched by that
+occurrence of the variable. The remaining
+occurrences of the variable must correspond to objects which are
 .code equal
-to that object, or else there is no match.
+to that value, or else there is no match.
 For instance, the pattern
 .code "(@a @a)"
 matches a list like
@@ -39832,12 +39832,14 @@ Pattern variables exist in the same namespace as Lisp variables,
 and are fully integrated in it. Patterns not only bind variables,
 but have visibility to existing variables in scope, including
 lexical variables and special/global variables. When a variable
-is mentioned in a pattern, if it already has a binding as a Lisp variable, then
-it denotes a reference to that variable in exactly the same way that a pattern
-variable back-references itself in a pattern: the Lisp variable
-is require to compare
+is mentioned in a pattern, and is not freshly bound in that pattern
+using the
+.code as
+operator, if it already has a binding a variable outside the pattern, then
+it denotes a reference to that variable. That occurrence of the variable
+must match an object which compares equal
 .code equal
-to the corresponding object being examined by the pattern. For instance,
+to the variable's existing value. For instance,
 the following function returns the third element of a list, if the
 first two elements are repetitions of the
 .code x
