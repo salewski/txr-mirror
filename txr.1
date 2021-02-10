@@ -40784,6 +40784,25 @@ and is processed accordingly. Similarly,
 is equivalent to
 .codn "@(@y (dwim f @x))" .
 
+The dot position of
+.meta avar
+in the predicate syntax denotes function application. So that is to say, the
+pattern predicate form
+.code "(f . @a)"
+where
+.code @a
+is in the dotted position invokes the function
+.code f
+as if by evaluation of the form
+.code "(f . x)"
+where
+.code x
+is hidden temporary variable holding the object corresponding to the pattern.
+The form
+.code "(f . x)"
+is a standard \*(TL notation with the same meaning as
+.codn "(apply (fun f) x)" .
+
 .TP* Examples:
 
 .verb
@@ -40804,6 +40823,10 @@ is equivalent to
   (let ((h #H(() (a 1) (b 2))))
     (when-match @(@y [h @x]) 'a (list x y)))
   -> (a 1)
+
+  ;; apply (1 2 3) to < using dot position
+  (when-match @(@x (< . @sym)) '(1 2 3) (list x sym))
+ - > (t (1 2 3))
 .brev
 
 .coNP Macros @ when-match and @ if-match
