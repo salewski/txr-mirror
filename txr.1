@@ -40363,9 +40363,13 @@ is present in the syntax,
 it is matched its corresponding object. This match must
 succeed, or else the
 .code with
-operator fails to match.
+operator fails to match, in which case
+.meta expr
+is not evaluated.
 
-Next,
+Next, if
+.meta main-pattern
+successfully matched, or is absent,
 .meta expr
 is evaluated in the scope of earlier pattern variables, including any
 which that emanate from
