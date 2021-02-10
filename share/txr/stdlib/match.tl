@@ -463,7 +463,7 @@
            guard-chain (list guard)))))
 
 (defun compile-hash-match (hash-expr obj-var var-list)
-  (tree-bind (op . pairs) hash-expr
+  (mac-param-bind *match-form* (op . pairs) hash-expr
     (let* ((hash-alist-var (gensym "hash-alist-"))
            (hash-alt-val ^',(gensym "alt"))
            (need-alist-p nil)
