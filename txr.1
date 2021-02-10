@@ -41298,12 +41298,12 @@ in which case it inserts its own generated symbol.
 
   (defmacro my-cond (:match :form f)
     (() nil)
-    (((@(and @(constantp) @[eval test val])) . @rest)
-      (when (and val rest)
+    (((@(and @(constantp @test) @(eval))) . @rest)
+      (when rest
         (compile-error f "unreachable code after ~s" test))
       test)
-    (((@(and @(constantp) @[eval test val]) . @forms) . @rest)
-      (when (and val rest)
+    (((@(and @(constantp @test) @(eval)) . @forms) . @rest)
+      (when (and rest)
         (compile-error f "unreachable code after ~s" test))
       ^(progn ,*forms))
     (((@test) . @rest)
