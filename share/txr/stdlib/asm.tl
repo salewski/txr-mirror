@@ -727,13 +727,14 @@
   (:method asm (me asm syntax)
     me.(chk-arg-count-min 6 syntax)
     (let* ((syn-pat (repeat '(d) (- (length syntax) 7))))
-      (tree-bind (reg frsize dst fix req vari . regs)
-                 asm.(parse-args me syntax ^(d n l n n o ,*syn-pat))
+      (tree-bind (reg frsize ntreg dst fix req vari . regs)
+                 asm.(parse-args me syntax ^(d n n l n n o,*syn-pat))
         (unless (<= 0 frsize %lev-size%)
           me.(synerr "frame size must be 0 to ~a" %lev-size%))
         asm.(put-insn me.code (ash dst -16) (logtrunc dst 16))
         asm.(put-pair (logior (ash (if vari 1 0) %lev-bits%) frsize) reg)
         asm.(put-pair req fix)
+        asm.(put-pair 0 ntreg)
         (unless (eql fix (- (len regs) (if vari 1 0)))
           me.(synerr "wrong number of registers"))
         (while regs
@@ -749,18 +750,19 @@
       (tree-bind (vari-frsize reg) asm.(get-pair)
         (let ((vari (bit vari-frsize %lev-bits%)))
           (tree-bind (req fix) asm.(get-pair)
-            (build
-              (add me.symbol (operand-to-sym reg)
-                   (logtrunc vari-frsize %lev-bits%)
-                   dst fix req vari)
-              (when vari
-                (inc fix))
-              (while (> fix 0)
-                (dec fix 2)
-                (tree-bind (y x) asm.(get-pair)
-                  (add (operand-to-sym x))
-                  (unless (minusp fix)
-                    (add (operand-to-sym y))))))))))))
+            (tree-bind (ign ntreg) asm.(get-pair)
+              (build
+                (add me.symbol (operand-to-sym reg)
+                     (logtrunc vari-frsize %lev-bits%)
+                     ntreg dst fix req vari)
+                (when vari
+                  (inc fix))
+                (while (> fix 0)
+                  (dec fix 2)
+                  (tree-bind (y x) asm.(get-pair)
+                    (add (operand-to-sym x))
+                    (unless (minusp fix)
+                      (add (operand-to-sym y)))))))))))))
 
 (defopcode op-getlx getlx auto
   (:method asm (me asm syntax)

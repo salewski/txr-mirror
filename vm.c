@@ -91,6 +91,7 @@ struct vm {
 struct vm_closure {
   struct vm_desc *vd;
   int frsz;
+  int nreg;
   int nlvl;
   unsigned ip;
   struct vm_env dspl[1];
@@ -232,7 +233,7 @@ static struct vm_closure *vm_closure_struct(val self, val obj)
   return coerce(struct vm_closure *, cobj_handle(self, obj, vm_closure_s));
 }
 
-static val vm_make_closure(struct vm *vm, int frsz)
+static val vm_make_closure(struct vm *vm, int frsz, int nreg)
 {
   val self = lit("vm");
   size_t dspl_sz = vm->nlvl * sizeof (struct vm_env);
@@ -245,6 +246,7 @@ static val vm_make_closure(struct vm *vm, int frsz)
   vc->frsz = frsz;
   vc->ip = vm->ip;
   vc->nlvl = vm->lev + 1;
+  vc->nreg = nreg;
   vc->vd = vm->vd;
 
   memset(vc->dspl, 0, dspl_sz);
@@ -967,13 +969,15 @@ NOINLINE static void vm_close(struct vm *vm, vm_word_t insn)
   unsigned dst = vm_insn_bigop(insn);
   vm_word_t arg1 = vm->code[vm->ip++];
   vm_word_t arg2 = vm->code[vm->ip++];
+  vm_word_t arg3 = vm->code[vm->ip++];
   unsigned vari_fr = vm_arg_operand_hi(arg1);
   int variadic = vari_fr & (1 << VM_LEV_BITS);
   int frsz = vari_fr & VM_LEV_MASK;
   unsigned reg = vm_arg_operand_lo(arg1);
   int reqargs = vm_arg_operand_hi(arg2);
   int fixparam = vm_arg_operand_lo(arg2);
-  val closure = vm_make_closure(vm, frsz);
+  int ntregs = vm_arg_operand_lo(arg3);
+  val closure = vm_make_closure(vm, frsz, ntregs);
   val vf = func_vm(closure, vm->vd->self, fixparam, reqargs, variadic);
 
   vm_set(vm->dspl, reg, vf);
@@ -1152,15 +1156,16 @@ val vm_execute_closure(val fun, struct args *args)
   struct vm_desc *vd = vm_desc_struct(self, desc);
   struct vm_closure *vc = coerce(struct vm_closure *, closure->co.handle);
   struct vm vm;
-  val *frame = coerce(val *, zalloca(sizeof *frame * vd->frsz));
-  struct vm_env *dspl = coerce(struct vm_env *, frame + vd->nreg);
+  int frsz = vd->nlvl * 2 + vc->nreg;
+  val *frame = coerce(val *, zalloca(sizeof *frame * frsz));
+  struct vm_env *dspl = coerce(struct vm_env *, frame + vc->nreg);
   val vargs = if3(variadic, args_get_rest(args, fixparam), nil);
   cnum ix = 0;
   vm_word_t argw = 0;
 
   vm_reset(&vm, vd, dspl, vc->nlvl - 1, vc->ip);
 
-  vm.dspl = coerce(struct vm_env *, frame + vd->nreg);
+  vm.dspl = coerce(struct vm_env *, frame + vc->nreg);
 
   frame[0] = nil;
 
@@ -1214,10 +1219,11 @@ val vm_execute_closure(val fun, struct args *args)
   struct vm_desc *vd = vm_desc_struct(self, desc);                           \
   struct vm_closure *vc = coerce(struct vm_closure *, closure->co.handle);   \
   struct vm vm;                                                              \
-  val *frame = coerce(val *, zalloca(sizeof *frame * vd->frsz));             \
-  struct vm_env *dspl = coerce(struct vm_env *, frame + vd->nreg);           \
+  int frsz = vd->nlvl * 2 + vc->nreg;                                        \
+  val *frame = coerce(val *, zalloca(sizeof *frame * frsz));                 \
+  struct vm_env *dspl = coerce(struct vm_env *, frame + vc->nreg);           \
   vm_reset(&vm, vd, dspl, vc->nlvl - 1, vc->ip);                             \
-  vm.dspl = coerce(struct vm_env *, frame + vd->nreg);                       \
+  vm.dspl = coerce(struct vm_env *, frame + vc->nreg);                       \
   frame[0] = nil;                                                            \
   vm.dspl[0].mem = frame;                                                    \
   vm.dspl[0].vec = nil;                                                      \
