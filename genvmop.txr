@@ -23,4 +23,5 @@ typedef enum vm_op {
 #define VM_SM_LEV_MASK @(fmt "0x~X" (pred (ash 1  sys:%sm-lev-bits%)))
 #define VM_MAX_LEV @{sys:%max-lev%}
 #define VM_MAX_V_LEV @{sys:%max-v-lev%}
+#define VM_LEV_SIZE @{sys:%lev-size%}
 @(end)

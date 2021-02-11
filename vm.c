@@ -117,13 +117,13 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
   val self = lit("sys:vm-make-desc");
   int nlvl = c_int(nlevels, self), nreg = c_int(nregs, self);
 
-  if (nlvl < 2 || nlvl > 256)
-    uw_throwf(error_s, lit("~a: nlevels must be 2 to 256; ~s given"),
-              self, nlevels, nao);
+  if (nlvl < 2 || nlvl > VM_MAX_LEV)
+    uw_throwf(error_s, lit("~a: nlevels must be 2 to ~s; ~s given"),
+              self, num(VM_MAX_LEV), nlevels, nao);
 
-  if (nreg < 1 || nreg > 256)
-    uw_throwf(error_s, lit("~a: nregs must be 1 to 256; ~s given"),
-              self, nregs, nao);
+  if (nreg < 1 || nreg > VM_LEV_SIZE)
+    uw_throwf(error_s, lit("~a: nregs must be 1 to ~s; ~s given"),
+              self, num(VM_LEV_SIZE), nregs, nao);
 
   {
     mem_t *code = buf_get(bytecode, self);

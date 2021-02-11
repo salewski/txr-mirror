@@ -77,3 +77,4 @@ typedef enum vm_op {
 #define VM_SM_LEV_MASK 0x3F
 #define VM_MAX_LEV 63
 #define VM_MAX_V_LEV 61
+#define VM_LEV_SIZE 1024
