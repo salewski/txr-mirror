@@ -165,12 +165,10 @@
           list))
 
 (defun dedup-labels (insns)
-  (rewrite (lambda (tail)
-              (match-case tail
-                ((@(symbolp @label0) @(symbolp @label1) . @rest)
-                 (set insns (mapcar [iffi listp (op subst label1 label0)]
-                                    (remq label1 insns)))
-                 (list* label0 rest))
-                (@else tail)))
-            insns)
+  (rewrite-case tail insns
+    ((@(symbolp @label0) @(symbolp @label1) . @rest)
+     (set insns (mapcar [iffi listp (op subst label1 label0)]
+                        (remq label1 insns)))
+     (cons label0 rest))
+    (@else tail))
   insns)
