@@ -359,7 +359,7 @@ INLINE val vm_getz(struct vm_env *dspl, unsigned ref)
 {
   unsigned lev = vm_lev(ref);
   val *addr = &dspl[lev].mem[vm_idx(ref)];
-  return (lev == 0) ? z(*addr) : *addr;
+  return *addr;
 }
 
 INLINE val vm_sm_get(struct vm_env *dspl, unsigned ref)
@@ -1124,7 +1124,7 @@ val vm_execute_toplevel(val desc)
   val self = lit("vm-execute-toplevel");
   struct vm_desc *vd = vm_desc_struct(self, desc);
   struct vm vm;
-  val *frame = coerce(val *, alloca(sizeof *frame * vd->frsz));
+  val *frame = coerce(val *, zalloca(sizeof *frame * vd->frsz));
   struct vm_env *dspl = coerce(struct vm_env *, frame + vd->nreg);
 
   vm_reset(&vm, vd, dspl, 1, 0);
@@ -1152,7 +1152,7 @@ val vm_execute_closure(val fun, struct args *args)
   struct vm_desc *vd = vm_desc_struct(self, desc);
   struct vm_closure *vc = coerce(struct vm_closure *, closure->co.handle);
   struct vm vm;
-  val *frame = coerce(val *, alloca(sizeof *frame * vd->frsz));
+  val *frame = coerce(val *, zalloca(sizeof *frame * vd->frsz));
   struct vm_env *dspl = coerce(struct vm_env *, frame + vd->nreg);
   val vargs = if3(variadic, args_get_rest(args, fixparam), nil);
   cnum ix = 0;
@@ -1214,7 +1214,7 @@ val vm_execute_closure(val fun, struct args *args)
   struct vm_desc *vd = vm_desc_struct(self, desc);                           \
   struct vm_closure *vc = coerce(struct vm_closure *, closure->co.handle);   \
   struct vm vm;                                                              \
-  val *frame = coerce(val *, alloca(sizeof *frame * vd->frsz));              \
+  val *frame = coerce(val *, zalloca(sizeof *frame * vd->frsz));             \
   struct vm_env *dspl = coerce(struct vm_env *, frame + vd->nreg);           \
   vm_reset(&vm, vd, dspl, vc->nlvl - 1, vc->ip);                             \
   vm.dspl = coerce(struct vm_env *, frame + vd->nreg);                       \

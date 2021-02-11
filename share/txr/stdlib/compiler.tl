@@ -138,6 +138,39 @@
     (let* ((bn (new blockinfo sym sym env me)))
       (set me.bb (acons sym bn me.bb)))))
 
+(defstruct var-spy ()
+  env
+  acc-vars
+  set-vars
+  cap-vars
+
+  (:method accessed (me vbin sym)
+    (when (eq vbin.env me.env)
+      (pushnew sym me.acc-vars)))
+
+  (:method assigned (me vbin sym)
+    (when (eq vbin.env me.env)
+      (pushnew sym me.set-vars)))
+
+  (:method captured (me vbin sym)
+    (when (eq vbin.env me.env)
+      (pushnew sym me.cap-vars))))
+
+(defstruct capture-var-spy ()
+  var-spies
+
+  (:method accessed (me vbin sym)
+    (each ((spy me.var-spies))
+      (when (neq spy me)
+        spy.(captured vbin sym))))
+
+  (:method assigned (me vbin sym)
+    (each ((spy me.var-spies))
+      (when (neq spy me)
+        spy.(captured vbin sym))))
+
+  (:method captured (me vbin sym)))
+
 (compile-only
   (defstruct compiler nil
     (treg-cntr 2)
@@ -151,7 +184,8 @@
     (sidx (hash :eql-based))
     (stab (hash :eql-based))
     lt-frags
-    last-form))
+    last-form
+    var-spies))
 
 (eval-only
   (defmacro compile-in-toplevel (comp . body)
@@ -170,7 +204,15 @@
                (qref ,comp-var (check-treg-leak))))
            (set (qref ,comp-var tregs) ,saved-tregs
                 (qref ,comp-var treg-cntr) ,saved-treg-cntr
-                (qref ,comp-var nlev) ,saved-nlev))))))
+                (qref ,comp-var nlev) ,saved-nlev)))))
+
+  (defmacro with-var-spy (me flag spy spy-expr . body)
+    ^(let ((,spy (if ,flag ,spy-expr)))
+       (unwind-protect
+         (progn
+           (if ,spy (qref ,me (push-var-spy ,spy)))
+           ,*body)
+         (if ,spy (qref ,me (pop-var-spy ,spy)))))))
 
 (defvarl %gcall-op% (relate '(apply usr:apply call) '(gapply gapply gcall)))
 
@@ -251,6 +293,11 @@
     ((< me.treg-cntr %lev-size%) ^(t ,(pinc me.treg-cntr)))
     (t (compile-error me.last-form "code too complex: out of registers"))))
 
+(defmeth compiler alloc-new-treg (me)
+  (cond
+    ((< me.treg-cntr %lev-size%) ^(t ,(pinc me.treg-cntr)))
+    (t (compile-error me.last-form "code too complex: out of registers"))))
+
 (defmeth compiler alloc-discard-treg (me)
   (let ((treg me.(alloc-treg)))
     (push treg me.discards)
@@ -264,6 +311,9 @@
 
 (defmeth compiler free-tregs (me tregs)
   (mapdo (meth me free-treg) tregs))
+
+(defmeth compiler unalloc-reg-count (me)
+  (- %lev-size% me.treg-cntr))
 
 (defmeth compiler maybe-alloc-treg (me given)
   (if (and (eq t (car given)) (not (member given me.discards)))
@@ -289,6 +339,16 @@
       (compile-error me.last-form
                      "code too complex: lexical nesting too deep"))
     (set me.nlev (succ env.lev))))
+
+(defmeth compiler push-var-spy (me spy)
+  (push spy me.var-spies))
+
+(defmeth compiler pop-var-spy (me spy)
+  (let ((top (pop me.var-spies)))
+    (unless spy
+      (error "spy stack bug in compiler"))
+    (unless (eq top spy)
+      (error "spy stack balance problem in compiler"))))
 
 (defmeth compiler compile (me oreg env form)
   (set me.last-form form)
@@ -367,7 +427,10 @@
 (defmeth compiler comp-var (me oreg env sym)
   (let ((vbin env.(lookup-var sym)))
     (cond
-      (vbin (new (frag vbin.loc nil (list sym))))
+      (vbin
+        (each ((spy me.var-spies))
+          spy.(accessed vbin sym))
+        (new (frag vbin.loc nil (list sym))))
       ((special-var-p sym)
        (let ((dreg me.(get-dreg sym)))
          (new (frag oreg ^((getv ,oreg ,dreg)) (list sym)))))
@@ -382,6 +445,9 @@
                    (spec me.(get-dreg sym))
                    (t me.(get-sidx sym))))
            (vfrag me.(compile (if bind vloc oreg) env value)))
+      (when bind
+        (each ((spy me.var-spies))
+          spy.(assigned bind sym)))
       (new (frag vfrag.oreg
                  ^(,*vfrag.code
                    ,*(if bind
@@ -406,7 +472,9 @@
                         (setl1 ,vfrag.oreg ,l1loc))
                       (uni (list sym) vfrag.fvars)
                       vfrag.ffuns))))
-        (t me.(compile oreg env ^(sys:setq ,sym ,val)))))))
+        (t (each ((spy me.var-spies))
+             spy.(assigned bind sym))
+          me.(compile oreg env ^(sys:setq ,sym ,val)))))))
 
 (defmeth compiler comp-setqf (me oreg env form)
   (mac-param-bind form (op sym val) form
@@ -723,6 +791,40 @@
                    (uni tfrag.fvars [reduce-left uni cfrags nil .fvars])
                    (uni tfrag.ffuns [reduce-left uni cfrags nil .ffuns])))))))
 
+(defmeth compiler eliminate-frame (me code env)
+  (if (>= me.(unalloc-reg-count) (len env.vb))
+    (let ((trhash (hash))
+          (vbhash (hash))
+          (vlev (ppred env.lev)))
+      (each ((cell env.vb))
+        (tree-bind (sym . vbind) cell
+          (set [trhash vbind.loc] me.(alloc-new-treg))
+          (set [vbhash vbind.loc] vbind)))
+      (let ((ncode (append-each ((insns (conses (cdr code))))
+                     (match-case insns
+                       (((frame @lev @size) . @rest)
+                        ^((frame ,(pred lev) ,size)))
+                       (((dframe @lev @size) . @rest)
+                        ^((dframe ,(pred lev) ,size)))
+                       (((end @reg)))
+                       (((@op . @args) . @rest)
+                        (let ((nargs (mapcar (lambda-match
+                                               ((@(as arg (v @lev @idx)))
+                                                (or [trhash arg]
+                                                    (if (> lev vlev)
+                                                      ^(v ,(pred lev) ,idx)
+                                                      arg)))
+                                               ((@arg) arg))
+                                             args)))
+                          ^((,op ,*nargs))))
+                       ((@else . @rest) (list else))))))
+        (dohash (loc treg trhash)
+          (let ((vb [vbhash loc]))
+            (set vb.loc treg)
+            me.(free-treg treg)))
+        ncode))
+    code))
+
 (defmeth compiler comp-let (me oreg env form)
   (mac-param-bind form (sym raw-vis . body) form
     (let* ((vis (mapcar [iffi atom list] raw-vis))
@@ -735,56 +837,60 @@
            (seq (eq sym 'let*))
            (nenv (new env up env co me))
            (fenv (if seq nenv (new env up env co me))))
-      (unless seq
-        (each ((lsym lexsyms))
-          nenv.(extend-var lsym)))
-      (let* (ffuns fvars
-             (code (build
-                     (add ^(,(if specials-occur 'dframe 'frame)
-                            ,nenv.lev ,frsize))
-                     (each ((vi vis))
-                       (tree-bind (sym : form) vi
-                         (push sym allsyms)
-                         (cond
-                           ((special-var-p sym)
-                            (let ((frag me.(compile treg fenv form))
-                                  (dreg me.(get-dreg sym)))
-                              (pend frag.code)
-                              (add ^(bindv ,frag.oreg ,dreg))
-                              (set ffuns (uni ffuns frag.ffuns)
-                                   fvars (uni fvars
-                                              (if seq
-                                                (diff frag.fvars
-                                                      (cdr allsyms))
-                                                frag.fvars)))))
-                           (form
-                             (let* ((tmp (if seq (gensym)))
-                                    (bind (if seq
-                                            (cdar nenv.(extend-var tmp))
-                                            nenv.(lookup-var sym)))
-                                    (frag me.(compile bind.loc fenv form)))
-                               (when seq
-                                 fenv.(rename-var tmp sym))
-                               (pend frag.code)
-                               (unless (null-reg frag.oreg)
-                                 (pend me.(maybe-mov bind.loc frag.oreg)))
-                               (set ffuns (uni ffuns frag.ffuns)
-                                    fvars (uni fvars
-                                               (if seq
-                                                 (diff frag.fvars
-                                                       (cdr allsyms))
-                                                 frag.fvars)))))
-                           (t (if seq nenv.(extend-var* sym))))))))
-             (bfrag me.(comp-progn oreg nenv body))
-             (boreg (if env.(out-of-scope bfrag.oreg) oreg bfrag.oreg)))
-        (when treg
-          me.(free-treg treg))
-        (new (frag boreg
-                   (append code bfrag.code
-                           me.(maybe-mov boreg bfrag.oreg)
-                           ^((end ,boreg)))
-                   (uni (diff bfrag.fvars allsyms) fvars)
-                   (uni ffuns bfrag.ffuns)))))))
+      (with-var-spy me (not specials-occur) vspy (new var-spy env nenv)
+        (unless seq
+          (each ((lsym lexsyms))
+            nenv.(extend-var lsym)))
+        (let* (ffuns fvars
+               (code (build
+                       (add ^(,(if specials-occur 'dframe 'frame)
+                              ,nenv.lev ,frsize))
+                       (each ((vi vis))
+                         (tree-bind (sym : form) vi
+                           (push sym allsyms)
+                           (cond
+                             ((special-var-p sym)
+                              (let ((frag me.(compile treg fenv form))
+                                    (dreg me.(get-dreg sym)))
+                                (pend frag.code)
+                                (add ^(bindv ,frag.oreg ,dreg))
+                                (set ffuns (uni ffuns frag.ffuns)
+                                     fvars (uni fvars
+                                                (if seq
+                                                  (diff frag.fvars
+                                                        (cdr allsyms))
+                                                  frag.fvars)))))
+                             (form
+                               (let* ((tmp (if seq (gensym)))
+                                      (bind (if seq
+                                              (cdar nenv.(extend-var tmp))
+                                              nenv.(lookup-var sym)))
+                                      (frag me.(compile bind.loc fenv form)))
+                                 (when seq
+                                   fenv.(rename-var tmp sym))
+                                 (pend frag.code)
+                                 (unless (null-reg frag.oreg)
+                                   (pend me.(maybe-mov bind.loc frag.oreg)))
+                                 (set ffuns (uni ffuns frag.ffuns)
+                                      fvars (uni fvars
+                                                 (if seq
+                                                   (diff frag.fvars
+                                                         (cdr allsyms))
+                                                   frag.fvars)))))
+                             (t (if seq nenv.(extend-var* sym))))))))
+               (bfrag me.(comp-progn oreg nenv body))
+               (boreg (if env.(out-of-scope bfrag.oreg) oreg bfrag.oreg))
+               (code (append code bfrag.code
+                             me.(maybe-mov boreg bfrag.oreg)
+                             ^((end ,boreg)))))
+          (when (and vspy (null vspy.cap-vars))
+            (set code me.(eliminate-frame code nenv)))
+          (when treg
+            me.(free-treg treg))
+          (new (frag boreg
+                     code
+                     (uni (diff bfrag.fvars allsyms) fvars)
+                     (uni ffuns bfrag.ffuns))))))))
 
 (defmeth compiler comp-fbind (me oreg env form)
   (mac-param-bind form (sym raw-fis . body) form
@@ -829,101 +935,104 @@
 
 (defmeth compiler comp-lambda-impl (me oreg env form)
   (mac-param-bind form (op par-syntax . body) form
-    (let* ((*load-time* nil)
-           (pars (new (fun-param-parser par-syntax form)))
-           (need-frame (or (plusp pars.nfix) pars.rest))
-           (nenv (if need-frame (new env up env co me) env))
-           lexsyms fvars specials need-dframe)
-      (when (> pars.nfix %max-lambda-fixed-args%)
-        (compile-warning form "~s arguments in a lambda (max is ~s)"
-                         pars.nfix %max-lambda-fixed-args%))
-      (flet ((spec-sub (sym)
-               (cond
-                 ((special-var-p sym)
-                  (let ((sub (gensym)))
-                    (push (cons sym sub) specials)
-                    (set need-dframe t)
-                    nenv.(extend-var sub)
-                    sub))
-                 (t
-                   (push sym lexsyms)
-                   nenv.(extend-var sym)
-                   sym))))
-        (let* ((req-pars (collect-each ((rp pars.req))
-                           (spec-sub rp)))
-               (opt-pars (collect-each ((op pars.opt))
-                           (tree-bind (var-sym : init-form have-sym) op
-                             (list (spec-sub var-sym)
-                                   init-form
-                                   (if have-sym (spec-sub have-sym))))))
-               (rest-par (when pars.rest (spec-sub pars.rest)))
-               (allsyms req-pars))
-          (upd specials nreverse)
-          (let* ((col-reg (if opt-pars me.(get-dreg :)))
-                 (tee-reg (if opt-pars me.(get-dreg t)))
-                 (ifrags (collect-each ((op opt-pars))
-                           (tree-bind (var-sym init-form have-sym) op
-                             (let* ((vbind nenv.(lookup-var var-sym))
-                                    (ifrag me.(compile vbind.loc nenv init-form)))
-                               (set fvars (uni fvars
-                                               (diff ifrag.fvars allsyms)))
-                               (push var-sym allsyms)
-                               (push have-sym allsyms)
-                               ifrag))))
-                 (opt-code (append-each ((op opt-pars)
-                                         (ifrg ifrags))
+    (with-var-spy me me.var-spies
+                  spy (new capture-var-spy
+                           var-spies me.var-spies)
+      (let* ((*load-time* nil)
+             (pars (new (fun-param-parser par-syntax form)))
+             (need-frame (or (plusp pars.nfix) pars.rest))
+             (nenv (if need-frame (new env up env co me) env))
+             lexsyms fvars specials need-dframe)
+        (when (> pars.nfix %max-lambda-fixed-args%)
+          (compile-warning form "~s arguments in a lambda (max is ~s)"
+                           pars.nfix %max-lambda-fixed-args%))
+        (flet ((spec-sub (sym)
+                 (cond
+                   ((special-var-p sym)
+                    (let ((sub (gensym)))
+                      (push (cons sym sub) specials)
+                      (set need-dframe t)
+                      nenv.(extend-var sub)
+                      sub))
+                   (t
+                     (push sym lexsyms)
+                     nenv.(extend-var sym)
+                     sym))))
+          (let* ((req-pars (collect-each ((rp pars.req))
+                             (spec-sub rp)))
+                 (opt-pars (collect-each ((op pars.opt))
+                             (tree-bind (var-sym : init-form have-sym) op
+                               (list (spec-sub var-sym)
+                                     init-form
+                                     (if have-sym (spec-sub have-sym))))))
+                 (rest-par (when pars.rest (spec-sub pars.rest)))
+                 (allsyms req-pars))
+            (upd specials nreverse)
+            (let* ((col-reg (if opt-pars me.(get-dreg :)))
+                   (tee-reg (if opt-pars me.(get-dreg t)))
+                   (ifrags (collect-each ((op opt-pars))
                              (tree-bind (var-sym init-form have-sym) op
-                               (let ((vbind nenv.(lookup-var var-sym))
-                                     (have-bind nenv.(lookup-var have-sym))
-                                     (lskip (gensym "l")))
-                                 ^(,*(if have-sym
-                                       ^((mov ,have-bind.loc ,tee-reg)))
-                                    (ifq ,vbind.loc ,col-reg ,lskip)
-                                    ,*(if have-sym
-                                        ^((mov ,have-bind.loc nil)))
-                                    ,*ifrg.code
-                                    ,*me.(maybe-mov vbind.loc ifrg.oreg)
-                                    ,lskip
-                                    ,*(whenlet ((spec-sub [find var-sym specials : cdr]))
-                                        (set specials [remq var-sym specials cdr])
-                                        ^((bindv ,vbind.loc ,me.(get-dreg (car spec-sub)))))
-                                    ,*(whenlet ((spec-sub [find have-sym specials : cdr]))
-                                        (set specials [remq have-sym specials cdr])
-                                        ^((bindv ,have-bind.loc ,me.(get-dreg (car spec-sub))))))))))
-                 (benv (if need-dframe (new env up nenv co me) nenv))
-                 (btreg me.(alloc-treg))
-                 (bfrag me.(comp-progn btreg benv body))
-                 (boreg (if env.(out-of-scope bfrag.oreg) btreg bfrag.oreg))
-                 (lskip (gensym "l"))
-                 (frsize (if need-frame nenv.v-cntr 0)))
-            me.(free-treg btreg)
-            (new (frag oreg
-                       ^((close ,oreg ,frsize ,lskip ,pars.nfix ,pars.nreq
-                                ,(if rest-par t nil)
-                                ,*(collect-each ((rp req-pars))
-                                    nenv.(lookup-var rp).loc)
-                                ,*(collect-each ((op opt-pars))
-                                    nenv.(lookup-var (car op)).loc)
-                                ,*(if rest-par
-                                    (list nenv.(lookup-var rest-par).loc)))
-                         ,*(if need-dframe
-                             ^((dframe ,benv.lev 0)))
-                         ,*(if specials
-                             (collect-each ((vs specials))
-                               (tree-bind (special . gensym) vs
-                                 (let ((sub-bind nenv.(lookup-var gensym))
-                                       (dreg me.(get-dreg special)))
-                                   ^(bindv ,sub-bind.loc ,dreg)))))
-                         ,*opt-code
-                         ,*bfrag.code
-                         ,*(if need-dframe
-                             ^((end ,boreg)))
-                         ,*me.(maybe-mov boreg bfrag.oreg)
-                         (end ,boreg)
-                         ,lskip)
-                       (uni fvars (diff bfrag.fvars lexsyms))
-                       (uni [reduce-left uni ifrags nil .ffuns]
-                            bfrag.ffuns)))))))))
+                               (let* ((vbind nenv.(lookup-var var-sym))
+                                      (ifrag me.(compile vbind.loc nenv init-form)))
+                                 (set fvars (uni fvars
+                                                 (diff ifrag.fvars allsyms)))
+                                 (push var-sym allsyms)
+                                 (push have-sym allsyms)
+                                 ifrag))))
+                   (opt-code (append-each ((op opt-pars)
+                                           (ifrg ifrags))
+                               (tree-bind (var-sym init-form have-sym) op
+                                 (let ((vbind nenv.(lookup-var var-sym))
+                                       (have-bind nenv.(lookup-var have-sym))
+                                       (lskip (gensym "l")))
+                                   ^(,*(if have-sym
+                                         ^((mov ,have-bind.loc ,tee-reg)))
+                                      (ifq ,vbind.loc ,col-reg ,lskip)
+                                      ,*(if have-sym
+                                          ^((mov ,have-bind.loc nil)))
+                                      ,*ifrg.code
+                                      ,*me.(maybe-mov vbind.loc ifrg.oreg)
+                                      ,lskip
+                                      ,*(whenlet ((spec-sub [find var-sym specials : cdr]))
+                                          (set specials [remq var-sym specials cdr])
+                                          ^((bindv ,vbind.loc ,me.(get-dreg (car spec-sub)))))
+                                      ,*(whenlet ((spec-sub [find have-sym specials : cdr]))
+                                          (set specials [remq have-sym specials cdr])
+                                          ^((bindv ,have-bind.loc ,me.(get-dreg (car spec-sub))))))))))
+                   (benv (if need-dframe (new env up nenv co me) nenv))
+                   (btreg me.(alloc-treg))
+                   (bfrag me.(comp-progn btreg benv body))
+                   (boreg (if env.(out-of-scope bfrag.oreg) btreg bfrag.oreg))
+                   (lskip (gensym "l"))
+                   (frsize (if need-frame nenv.v-cntr 0)))
+              me.(free-treg btreg)
+              (new (frag oreg
+                         ^((close ,oreg ,frsize ,lskip ,pars.nfix ,pars.nreq
+                                  ,(if rest-par t nil)
+                                  ,*(collect-each ((rp req-pars))
+                                      nenv.(lookup-var rp).loc)
+                                  ,*(collect-each ((op opt-pars))
+                                      nenv.(lookup-var (car op)).loc)
+                                  ,*(if rest-par
+                                      (list nenv.(lookup-var rest-par).loc)))
+                           ,*(if need-dframe
+                               ^((dframe ,benv.lev 0)))
+                           ,*(if specials
+                               (collect-each ((vs specials))
+                                 (tree-bind (special . gensym) vs
+                                   (let ((sub-bind nenv.(lookup-var gensym))
+                                         (dreg me.(get-dreg special)))
+                                     ^(bindv ,sub-bind.loc ,dreg)))))
+                           ,*opt-code
+                           ,*bfrag.code
+                           ,*(if need-dframe
+                               ^((end ,boreg)))
+                           ,*me.(maybe-mov boreg bfrag.oreg)
+                           (end ,boreg)
+                           ,lskip)
+                         (uni fvars (diff bfrag.fvars lexsyms))
+                         (uni [reduce-left uni ifrags nil .ffuns]
+                              bfrag.ffuns))))))))))
 
 (defmeth compiler comp-lambda (me oreg env form)
   (if *load-time*
@@ -1212,6 +1321,8 @@
        (let ((bind env.(lookup-lisp1 arg t)))
          (cond
            (bind
+             (each ((spy me.var-spies))
+               spy.(accessed bind arg))
              (new (frag bind.loc
                         nil
                         (if (typep bind 'vbinding) (list arg))
@@ -1706,7 +1817,7 @@
 
 (defvarl %big-endian% (equal (ffi-put 1 (ffi uint32)) #b'00000001'))
 
-(defvarl %tlo-ver% ^(5 1 ,%big-endian%))
+(defvarl %tlo-ver% ^(6 0 ,%big-endian%))
 
 (defvarl %package-manip% '(make-package delete-package
                            use-package unuse-package
