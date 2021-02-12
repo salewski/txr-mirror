@@ -39821,23 +39821,34 @@ occurrences of the variable must correspond to objects which are
 to that value, or else there is no match.
 For instance, the pattern
 .code "(@a @a)"
-matches a list like
+matches the list like
 .code "(1 1)"
-and binds a to the leftmost
-.codn 1 ,
-and fails to match a list like
-.codn "(1 2)" .
+as follows. First
+.code @a
+binds to the leftmost
+.code 1
+and then the second
+.code 1
+matches the existing value of that
+.codn a .
+An input such as
+.code "(1 2)"
+fails to match because the second occurrence of
+.code @a
+retrieves an object that is not
+.code equal
+to that variable's existing value.
 
 Pattern variables exist in the same namespace as Lisp variables,
-and are fully integrated in it. Patterns not only bind variables,
+and are fully integrated into it. Patterns not only bind variables,
 but have visibility to existing variables in scope, including
 lexical variables and special/global variables. When a variable
 is mentioned in a pattern, and is not freshly bound in that pattern
 using the
 .code as
-operator, if it already has a binding a variable outside the pattern, then
-it denotes a reference to that variable. That occurrence of the variable
-must match an object which compares equal
+operator, if that symbol already has a variable binding outside the pattern,
+then it denotes a reference to that variable. Each occurrence of the variable
+in the pattern must match an object which compares
 .code equal
 to the variable's existing value. For instance,
 the following function returns the third element of a list, if the
