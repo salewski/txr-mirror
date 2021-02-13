@@ -389,7 +389,7 @@
               (if me.(comp-if oreg env form))
               (switch me.(comp-switch oreg env form))
               (unwind-protect me.(comp-unwind-protect oreg env form))
-              ((block block*) me.(comp-block oreg env form))
+              ((block block* sys:blk) me.(comp-block oreg env form))
               ((return-from sys:abscond-from) me.(comp-return-from oreg env form))
               (return me.(comp-return oreg env form))
               (handler-bind me.(comp-handler-bind oreg env form))
@@ -716,7 +716,9 @@
         me.(maybe-free-treg treg oreg))
       (if (and (not star)
                (not binfo.used)
-               [all bfrag.ffuns system-symbol-p]
+               (and (if (eq op 'sys:blk)
+                      [all bfrag.ffuns [orf system-symbol-p (op eq name)]]
+                      [all bfrag.ffuns system-symbol-p]))
                [none bfrag.ffuns (op member @1 %block-using-funs%)])
         bfrag
         (new (frag oreg
@@ -1686,19 +1688,19 @@
 
 (defun expand-defun (form)
   (mac-param-bind form (op name args . body) form
-    (flet ((mklambda (block-name)
-             ^(lambda ,args (block ,block-name ,*body))))
+    (flet ((mklambda (block-name block-sym)
+             ^(lambda ,args (,block-sym ,block-name ,*body))))
       (cond
         ((bindable name)
-         ^(sys:rt-defun ',name ,(mklambda name)))
+         ^(sys:rt-defun ',name ,(mklambda name 'sys:blk)))
         ((consp name)
          (caseq (car name)
            (meth
              (mac-param-bind form (meth type slot) name
-               ^(sys:define-method ',type ',slot ,(mklambda slot))))
+               ^(sys:define-method ',type ',slot ,(mklambda slot 'block))))
            (macro
              (mac-param-bind form (macro sym) name
-               ^(sys:rt-defmacro ',sym ',name ,(mklambda sym))))
+               ^(sys:rt-defmacro ',sym ',name ,(mklambda sym 'sys:blk))))
            (t (compile-error form "~s isn't a valid compound function name"
                              name))))
         (t (compile-error form "~s isn't a valid function name" name))))))

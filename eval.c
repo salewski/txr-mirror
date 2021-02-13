@@ -73,7 +73,7 @@ val op_table, pm_table;
 val dyn_env;
 
 val eval_error_s;
-val dwim_s, progn_s, prog1_s, prog2_s;
+val dwim_s, progn_s, prog1_s, prog2_s, sys_blk_s;
 val let_s, let_star_s, lambda_s, call_s, dvbind_s;
 val sys_catch_s, handler_bind_s, cond_s, if_s, iflet_s, when_s, usr_var_s;
 val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s, macro_s;
@@ -2038,7 +2038,7 @@ static val op_defun(val form, val env)
   trace_check(name);
 
   if (!consp(name)) {
-    val block = cons(block_s, cons(name, body));
+    val block = cons(sys_blk_s, cons(name, body));
     val fun = rlcp(cons(name, cons(params, cons(block, nil))), form);
     return rt_defun(name, func_interp(env, fun));
   } else if (car(name) == meth_s) {
@@ -2053,7 +2053,7 @@ static val op_defun(val form, val env)
     return funcall3(cdr(binding), type_sym, meth_name, func_interp(env, fun));
   } else if (car(name) == macro_s) {
     val sym = cadr(name);
-    val block = cons(block_s, cons(sym, body));
+    val block = cons(sys_blk_s, cons(sym, body));
     val fun = rlcp(cons(name, cons(params, cons(block, nil))), form);
 
     if (!bindable(sym))
@@ -6303,6 +6303,7 @@ void eval_init(void)
   progn_s = intern(lit("progn"), user_package);
   prog1_s = intern(lit("prog1"), user_package);
   prog2_s = intern(lit("prog2"), user_package);
+  sys_blk_s = intern(lit("blk"), system_package);
   let_s = intern(lit("let"), user_package);
   let_star_s = intern(lit("let*"), user_package);
   lambda_s = intern(lit("lambda"), user_package);
@@ -6463,6 +6464,7 @@ void eval_init(void)
   reg_op(uw_protect_s, op_unwind_protect);
   reg_op(block_s, op_block);
   reg_op(block_star_s, op_block_star);
+  reg_op(sys_blk_s, op_block);
   reg_op(return_s, op_return);
   reg_op(return_from_s, op_return_from);
   reg_op(sys_abscond_from_s, op_abscond_from);
