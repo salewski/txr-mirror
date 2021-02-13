@@ -12486,7 +12486,7 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
         } else if (special_operator_p(sym) || macro_form_p(obj, nil)) {
           indent = one;
           test_neq_set_indent_mode(out, num_fast(indent_foff), num_fast(indent_code));
-        } else if (fboundp(sym)) {
+        } else if (symbolp(sym) && fboundp(sym)) {
           obj_print_impl(sym, out, pretty, ctx);
           indent = one;
           save_indent = inc_indent(out, indent);
