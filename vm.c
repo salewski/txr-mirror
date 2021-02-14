@@ -458,12 +458,6 @@ NOINLINE static val vm_end(struct vm *vm, vm_word_t insn)
   return vm_get(vm->dspl, vm_insn_operand(insn));
 }
 
-NOINLINE static val vm_fin(struct vm *vm, vm_word_t insn)
-{
-  vm->ip--;
-  return vm_get(vm->dspl, vm_insn_operand(insn));
-}
-
 NOINLINE static void vm_call(struct vm *vm, vm_word_t insn)
 {
   unsigned nargs = vm_insn_extra(insn);
@@ -672,42 +666,6 @@ NOINLINE static void vm_movrr(struct vm *vm, vm_word_t insn)
   vm_word_t arg = vm->code[vm->ip++];
   val datum = vm_get(vm->dspl, vm_arg_operand_lo(arg));
   vm_set(vm->dspl, vm_insn_operand(insn), datum);
-}
-
-NOINLINE static void vm_movrsi(struct vm *vm, vm_word_t insn)
-{
-  unsigned dst = vm_insn_operand(insn);
-  ucnum negmask = ~convert(ucnum, 0x3FF);
-  ucnum imm = vm_insn_extra(insn);
-
-  if ((imm & TAG_MASK) == NUM && (imm & 0x200))
-    imm |= negmask;
-
-  vm_set(vm->dspl, dst, coerce(val, imm));
-}
-
-NOINLINE static void vm_movsmi(struct vm *vm, vm_word_t insn)
-{
-  unsigned dst = vm_insn_extra(insn);
-  ucnum negmask = ~convert(ucnum, 0xFFFF);
-  ucnum imm = vm_insn_operand(insn);
-
-  if ((imm & TAG_MASK) == NUM && (imm & 0x8000))
-    imm |= negmask;
-
-  vm_sm_set(vm->dspl, dst, coerce(val, imm));
-}
-
-NOINLINE static void vm_movrbi(struct vm *vm, vm_word_t insn)
-{
-  unsigned dst = vm_insn_operand(insn);
-  ucnum negmask = ~convert(ucnum, 0xFFFFFFFF);
-  ucnum imm = vm->code[vm->ip++];
-
-  if ((imm & TAG_MASK) == NUM && (imm & 0x80000000))
-    imm |= negmask;
-
-  vm_set(vm->dspl, dst, coerce(val, imm));
 }
 
 static void vm_jmp(struct vm *vm, vm_word_t insn)
@@ -1004,8 +962,6 @@ NOINLINE static val vm_execute(struct vm *vm)
       break;
     case END:
       return vm_end(vm, insn);
-    case FIN:
-      return vm_fin(vm, insn);
     case PROF:
       vm_prof(vm, insn);
       break;
@@ -1029,15 +985,6 @@ NOINLINE static val vm_execute(struct vm *vm)
       break;
     case MOVRR:
       vm_movrr(vm, insn);
-      break;
-    case MOVRSI:
-      vm_movrsi(vm, insn);
-      break;
-    case MOVSMI:
-      vm_movsmi(vm, insn);
-      break;
-    case MOVRBI:
-      vm_movrbi(vm, insn);
       break;
     case JMP:
       vm_jmp(vm, insn);

@@ -387,9 +387,8 @@
   (:method dis (me asm extension res)
     ^(,me.symbol ,(operand-to-sym res))))
 
-(defopcode-derived op-fin fin auto op-end)
 
-(defopcode-derived op-prof prof auto op-fin)
+(defopcode-derived op-prof prof auto op-end)
 
 (defopcode op-call call auto
   (:method asm (me asm syntax)
@@ -482,50 +481,6 @@
                                ((small-op-p dst) 'movsr)
                                ((small-op-p src) 'movrs)
                                (t 'movrr))]))
-        real.(asm asm syntax)))))
-
-(defopcode op-movrsi movrsi auto
-  (:static deprecated t)
-  (:method asm (me asm syntax)
-    me.(chk-arg-count 2 syntax)
-    (tree-bind (dst imm) asm.(parse-args me syntax '(d si))
-      asm.(put-insn me.code (logtrunc (sys:bits imm) 10) dst)))
-
-  (:method dis (me asm imm dst)
-    ^(,me.symbol ,(operand-to-sym dst) ,(bits-to-obj imm 10))))
-
-(defopcode op-movsmi movsmi auto
-  (:static deprecated t)
-  (:method asm (me asm syntax)
-    me.(chk-arg-count 2 syntax)
-    (tree-bind (dst imm) asm.(parse-args me syntax '(ds mi))
-      asm.(put-insn me.code (enc-small-op dst)
-                    (logtrunc (sys:bits imm) 16))))
-
-  (:method dis (me asm dst imm )
-    ^(,me.symbol ,(small-op-to-sym dst) ,(bits-to-obj imm 16))))
-
-(defopcode op-movrbi movrbi auto
-  (:static deprecated t)
-  (:method asm (me asm syntax)
-    me.(chk-arg-count 2 syntax)
-    (tree-bind (dst imm) asm.(parse-args me syntax '(d bi))
-      asm.(put-insn me.code 0 dst)
-      asm.(put-word (logtrunc (sys:bits imm) 32))))
-
-  (:method dis (me asm extension dst)
-    (let ((imm asm.(get-word)))
-      ^(,me.symbol ,(operand-to-sym dst) ,(bits-to-obj imm 32)))))
-
-(defopcode op-movi-pseudo movi nil
-  (:static deprecated t)
-  (:method asm (me asm syntax)
-    (tree-bind (dst src) asm.(parse-args me syntax '(d bi))
-      (let ((real [%oc-hash% (cond
-                               (asm.(immediate-fits-type src 'si) 'movrsi)
-                               ((and asm.(immediate-fits-type src 'si)
-                                     (small-op-p dst)) 'movsmi)
-                               (t 'movrbi))]))
         real.(asm asm syntax)))))
 
 (defopcode op-jmp jmp auto
