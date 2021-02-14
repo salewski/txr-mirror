@@ -693,7 +693,7 @@
         (t (new (frag pfrag.oreg
                       ^((uwprot ,lclean)
                         ,*pfrag.code
-                        (end nil)
+                        (jend nil)
                         ,lclean
                         ,*cfrag.code
                         (end nil))
@@ -807,7 +807,7 @@
                      ,lhand
                      ,*(mappend .code cfrags)
                      ,lhend
-                     (end ,tfrag.oreg)
+                     (jend ,tfrag.oreg)
                      (end ,tfrag.oreg))
                    (uni tfrag.fvars [reduce-left uni cfrags nil .fvars])
                    (uni tfrag.ffuns [reduce-left uni cfrags nil .ffuns])))))))
@@ -1050,7 +1050,7 @@
                              ,*(if need-dframe
                                  ^((end ,boreg)))
                              ,*me.(maybe-mov boreg bfrag.oreg)
-                             (end ,boreg)
+                             (jend ,boreg)
                              ,lskip)
                            (uni fvars (diff bfrag.fvars lexsyms))
                            (uni [reduce-left uni ifrags nil .ffuns]
@@ -1819,7 +1819,7 @@
       co.(check-treg-leak)
       as.(asm co.(optimize ^(,*(mappend .code (nreverse co.lt-frags))
                              ,*frag.code
-                             (end ,frag.oreg))))
+                             (jend ,frag.oreg))))
       (vm-make-desc co.nlev (succ as.max-treg) as.buf co.(get-datavec) co.(get-symvec)))))
 
 (defun compiler-emit-warnings ()

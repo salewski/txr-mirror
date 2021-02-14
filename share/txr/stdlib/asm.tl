@@ -343,7 +343,11 @@
        (defstruct ,class ,orig-class
          (:static symbol ',symbol)
          (:static code ,code))
-       (register-opcode (new ,class)))))
+       (register-opcode (new ,class))))
+
+  (defmacro defopcode-alias (alias-symbol orig-symbol)
+    ^(let ((oc [%oc-hash% ',orig-symbol]))
+       (set [%oc-hash% ',alias-symbol] oc))))
 
 (defopcode op-label label nil
   (:method asm (me asm syntax)
@@ -387,6 +391,7 @@
   (:method dis (me asm extension res)
     ^(,me.symbol ,(operand-to-sym res))))
 
+(defopcode-alias jend end)
 
 (defopcode-derived op-prof prof auto op-end)
 
