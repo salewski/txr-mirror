@@ -32,7 +32,7 @@
     list
     rescan
     (:static start (gensym "start-"))
-    (:static jump-ops '(jmp if ifq ifql swtch ret abscsr))
+    (:static jump-ops '(jmp if ifq ifql close swtch ret abscsr))
 
     (:postinit (bb)
       (let* ((insns (dedup-labels (cons bb.start bb.insns)))
