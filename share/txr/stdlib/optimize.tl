@@ -161,6 +161,7 @@
               ((and xlabel ylabel)
                (set [bb.hash ylabel]
                     ^(,ylabel ,(car insns) ,*(cdr yinsns)))
+               (push ylabel bb.rescan)
                ^((if (t ,reg) ,xlabel)))
               (t insns))))
          (@jelse insns))))
