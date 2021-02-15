@@ -30,6 +30,7 @@
     (hash (hash))
     labels
     list
+    rescan
     (:static start (gensym "start-"))
     (:static jump-ops '(jmp if ifq ifql swtch ret abscsr))
 
@@ -59,6 +60,7 @@
                                ltail))
         (set [bb.hash nlabel] (cons nlabel at))
         (set [bb.hash label] (ldiff insns at))
+        (push nlabel bb.rescan)
         nlabel))
 
     (:method next-block (bb label)
@@ -72,99 +74,107 @@
                 ,*cases))
             ,list))
 
+(defmeth basic-blocks peephole-block (bb label code)
+  (rewrite-case insns code
+    ;; dead code
+    ((@(or (jmp @nil) (if (t 0) @nil)) @nil . @rest)
+     (list (car insns)))
+    ;; always taken if
+    (((if (d @reg) @jlabel) . @rest)
+     rest)
+    ;; jump threading
+    (((jmp @jlabel) . @rest)
+     (let ((jinsns [bb.hash jlabel]))
+       (match-case jinsns
+         ((@jlabel
+            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
+          ^((jmp ,jjlabel) ,*rest))
+         (@jelse insns))))
+    (((if @reg @jlabel0)
+      (jmp @(with @jlabel1
+                  @(hash (@jlabel1 (@jlabel1
+                                     (if @reg @nil)
+                                     (jmp @jlabel2) . @nil)))
+                  bb.hash)) . @rest)
+     ^(,(car insns) (jmp ,jlabel2) ,*rest))
+    (((if @reg @jlabel) . @rest)
+     (let ((jinsns [bb.hash jlabel]))
+       (match-case jinsns
+         ((@jlabel
+            (if @reg
+              @(and @jjlabel @(not @jlabel))) . @nil)
+          ^((if ,reg ,jjlabel) ,*rest))
+         ((@jlabel
+            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
+          ^((if ,reg ,jjlabel) ,*rest))
+         ((@jlabel
+            (ifq @reg nil @jjlabel) . @jrest)
+          (let ((xlabel (if jrest
+                          bb.(cut-block jlabel jrest jinsns)
+                          bb.(next-block jlabel))))
+            (if xlabel
+              ^((if ,reg ,xlabel) ,*rest)
+              insns)))
+         (@jelse insns))))
+    (((ifq @reg @creg @jlabel) . @rest)
+     (let ((jinsns [bb.hash jlabel]))
+       (match-case jinsns
+         ((@jlabel
+            (ifq @reg @creg
+                 @(and @jjlabel @(not @jlabel))) . @nil)
+          ^((ifq ,reg ,creg ,jjlabel) ,*rest))
+         ((@jlabel
+            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
+          ^((ifq ,reg ,creg ,jjlabel) ,*rest))
+         (@jelse insns))))
+    (((close @reg @nargs @jlabel . @cargs) . @rest)
+     (let ((jinsns [bb.hash jlabel]))
+       (match-case jinsns
+         ((@jlabel
+            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
+          ^((close ,reg ,nargs ,jjlabel ,*cargs) ,*rest))
+         (@jelse insns))))
+    ;; wasteful moves
+    (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
+     (cdr insns))
+    (((mov @reg0 @reg1) (mov reg1 @reg0) . @rest)
+     ^(,(car insns) ,*rest))
+    ;; frame reduction
+    (((@(or frame dframe) @lev @size)
+      (@(or call gcall mov)
+        . @(require @(coll (v @vlev @nil))
+                    (none vlev (op eql (ppred lev)))))
+      . @rest)
+     ^(,(cadr insns) ,(car insns) ,*rest))
+    (((@(or frame dframe) . @nil)
+      (if (t @reg) @jlabel))
+     (let ((jinsns [bb.hash jlabel]))
+       (match-case jinsns
+         ((@jlabel
+            (end (t @reg)) . @jrest)
+          (let* ((xlabel (if jrest
+                           bb.(cut-block jlabel jrest jinsns)
+                           bb.(next-block jlabel)))
+                 (ylabel bb.(next-block label))
+                 (yinsns [bb.hash ylabel]))
+            (cond
+              ((and xlabel ylabel)
+               (set [bb.hash ylabel]
+                    ^(,ylabel ,(car insns) ,*(cdr yinsns)))
+               ^((if (t ,reg) ,xlabel)))
+              (t insns))))
+         (@jelse insns))))
+    (@else insns)))
+
 (defmeth basic-blocks peephole (bb)
   (dohash (label code bb.hash)
     (set [bb.hash label]
-         (rewrite-case insns code
-           ;; dead code
-           ((@(or (jmp @nil) (if (t 0) @nil)) @nil . @rest)
-            (list (car insns)))
-           ;; always taken if
-           (((if (d @reg) @jlabel) . @rest)
-            rest)
-           ;; jump threading
-           (((jmp @jlabel) . @rest)
-            (let ((jinsns [bb.hash jlabel]))
-              (match-case jinsns
-                ((@jlabel
-                  (jmp @(and @jjlabel @(not @jlabel))) . @nil)
-                 ^((jmp ,jjlabel) ,*rest))
-                (@jelse insns))))
-           (((if @reg @jlabel0)
-             (jmp @(with @jlabel1
-                         @(hash (@jlabel1 (@jlabel1
-                                           (if @reg @nil)
-                                           (jmp @jlabel2) . @nil)))
-                         bb.hash)) . @rest)
-            ^(,(car insns) (jmp ,jlabel2) ,*rest))
-           (((if @reg @jlabel) . @rest)
-            (let ((jinsns [bb.hash jlabel]))
-              (match-case jinsns
-                ((@jlabel
-                  (if @reg
-                      @(and @jjlabel @(not @jlabel))) . @nil)
-                 ^((if ,reg ,jjlabel) ,*rest))
-                ((@jlabel
-                  (jmp @(and @jjlabel @(not @jlabel))) . @nil)
-                 ^((if ,reg ,jjlabel) ,*rest))
-                ((@jlabel
-                  (ifq @reg nil @jjlabel) . @jrest)
-                 (let ((xlabel (if jrest
-                                 bb.(cut-block jlabel jrest jinsns)
-                                 bb.(next-block jlabel))))
-                   (if xlabel
-                     ^((if ,reg ,xlabel) ,*rest)
-                     insns)))
-                (@jelse insns))))
-           (((ifq @reg @creg @jlabel) . @rest)
-            (let ((jinsns [bb.hash jlabel]))
-              (match-case jinsns
-                ((@jlabel
-                 (ifq @reg @creg
-                      @(and @jjlabel @(not @jlabel))) . @nil)
-                 ^((ifq ,reg ,creg ,jjlabel) ,*rest))
-                ((@jlabel
-                  (jmp @(and @jjlabel @(not @jlabel))) . @nil)
-                 ^((ifq ,reg ,creg ,jjlabel) ,*rest))
-                (@jelse insns))))
-           (((close @reg @nargs @jlabel . @cargs) . @rest)
-            (let ((jinsns [bb.hash jlabel]))
-              (match-case jinsns
-                ((@jlabel
-                  (jmp @(and @jjlabel @(not @jlabel))) . @nil)
-                 ^((close ,reg ,nargs ,jjlabel ,*cargs) ,*rest))
-                (@jelse insns))))
-           ;; wasteful moves
-           (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
-            (cdr insns))
-           (((mov @reg0 @reg1) (mov reg1 @reg0) . @rest)
-            ^(,(car insns) ,*rest))
-           ;; frame reduction
-           (((@(or frame dframe) @lev @size)
-             (@(or call gcall mov)
-               . @(require @(coll (v @vlev @nil))
-                           (none vlev (op eql (ppred lev)))))
-             . @rest)
-            ^(,(cadr insns) ,(car insns) ,*rest))
-           (((@(or frame dframe) . @nil)
-             (if (t @reg) @jlabel))
-            (let ((jinsns [bb.hash jlabel]))
-              (match-case jinsns
-                ((@jlabel
-                   (end (t @reg)) . @jrest)
-                 (let* ((xlabel (if jrest
-                                  bb.(cut-block jlabel jrest jinsns)
-                                  bb.(next-block jlabel)))
-                        (ylabel bb.(next-block label))
-                        (yinsns [bb.hash ylabel]))
-                   (cond
-                     ((and xlabel ylabel)
-                      (set [bb.hash ylabel]
-                           ^(,ylabel ,(car insns) ,*(cdr yinsns)))
-                      ^((if (t ,reg) ,xlabel)))
-                     (t insns))))
-                (@jelse insns))))
-           (@else insns)))))
+         bb.(peephole-block label code)))
+  (whilet ((rescan bb.rescan))
+    (set bb.rescan nil)
+    (each ((label rescan))
+      (set [bb.hash label]
+           bb.(peephole-block label [bb.hash label])))))
 
 (defun rewrite (fun list)
   (build
