@@ -31,12 +31,22 @@
     labels
     list
     (:static start (gensym "start-"))
+    (:static jump-ops '(jmp if ifq ifql swtch ret abscsr))
 
     (:postinit (bb)
-      (set bb.list (partition (dedup-labels (cons bb.start bb.insns))
-                              (op where symbolp)))
-      (set bb.labels [mapcar car bb.list])
-      (mapdo (do set [bb.hash (car @1)] @1) bb.list))
+      (let* ((insns (dedup-labels (cons bb.start bb.insns)))
+             (cuts (merge [where symbolp insns]
+                          [where [andf consp
+                                       (op memq (car @1) bb.jump-ops)]
+                                 (cons nil insns)]))
+             (parts (partition insns cuts))
+             (lparts (mapcar [iff [chain car symbolp]
+                                  use
+                                  (op cons (gensym))]
+                             parts)))
+        (set bb.list lparts)
+        (set bb.labels [mapcar car lparts])
+        (mapdo (do set [bb.hash (car @1)] @1) lparts)))
 
     (:method get-insns (bb)
       [mappend bb.hash bb.labels])
@@ -137,17 +147,22 @@
              . @rest)
             ^(,(cadr insns) ,(car insns) ,*rest))
            (((@(or frame dframe) . @nil)
-             (if (t @reg) @jlabel) . @rest)
+             (if (t @reg) @jlabel))
             (let ((jinsns [bb.hash jlabel]))
               (match-case jinsns
                 ((@jlabel
-                  (end (t @reg)) . @jrest)
-                 (let ((xlabel (if jrest
-                                 bb.(cut-block jlabel jrest jinsns)
-                                 bb.(next-block jlabel))))
-                   (if xlabel
-                     ^((if (t ,reg) ,xlabel) ,(car insns) ,*rest)
-                     insns)))
+                   (end (t @reg)) . @jrest)
+                 (let* ((xlabel (if jrest
+                                  bb.(cut-block jlabel jrest jinsns)
+                                  bb.(next-block jlabel)))
+                        (ylabel bb.(next-block label))
+                        (yinsns [bb.hash ylabel]))
+                   (cond
+                     ((and xlabel ylabel)
+                      (set [bb.hash ylabel]
+                           ^(,ylabel ,(car insns) ,*(cdr yinsns)))
+                      ^((if (t ,reg) ,xlabel)))
+                     (t insns))))
                 (@jelse insns))))
            (@else insns)))))
 
