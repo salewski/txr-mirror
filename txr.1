@@ -8528,7 +8528,7 @@ Function indirection may be performed using the
 .code call
 directive. If
 .meta fun-expr
-is an expression which evaluates to a symbol, and
+is an Lisp expression which evaluates to a symbol, and
 that symbol names a function which takes no arguments, then
 .verb
   @(call fun-expr)
@@ -8542,7 +8542,7 @@ Example 1:
 \ @(define foo (arg))
   @(bind arg "abc")
   @(end)
-  @(call @'foo b)
+  @(call 'foo b)
 .onom
 
 In this example, the effect is that
@@ -8555,14 +8555,9 @@ ends up bound to
 The
 .code call
 directive here uses the
-.code @'foo
-expression to calculate the name of the function to be invoked.
-The
-.code @
-symbol indicates that the expression which follows is \*(TL ,
-and
 .code 'foo
-is the \*(TL syntax for quoting a symbol. (See the
+expression to calculate the name of the function to be invoked.
+(See the
 .code quote
 operator).
 
