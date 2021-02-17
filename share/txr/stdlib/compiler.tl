@@ -1418,6 +1418,7 @@
 (defmeth compiler optimize (me insns)
   (let* ((bb (new (basic-blocks insns))))
     bb.(peephole)
+    bb.(thread-jumps)
     bb.(get-insns)))
 
 (defun true-const-p (arg)
