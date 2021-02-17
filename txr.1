@@ -13671,19 +13671,39 @@ and instead returns
 .meta form
 itself as an object. For example, if
 .meta form
-is a symbol, then
-.meta form
-is not evaluated to the symbol's value; rather
-the symbol itself is returned.
+is a symbol
+.metn sym ,
+then the value of
+.mono
+.meti (quote << sym )
+.onom
+is
+.meta sym
+itself. Without
+.codn quote ,
+.meta sym
+would evaluate to the value held by the variable which is named
+.metn sym ,
+or else throw an error if there is no such variable.
+The
+.code quote
+operator never raises an error, if it is given exactly one argument,
+as required.
 
-Note: the quote syntax
+The notation
 .mono
-.meti >> ' form
+.meti >> ' obj
 .onom
-is translated to
+is translated to the object
 .mono
-.meti (quote << form ).
+.meti (quote << obj )
 .onom
+providing a shorthand for quoting.  Likewise, when an object of the form
+.mono
+.meti (quote << obj )
+.onom
+is printed, it appears as
+.codn 'obj .
 
 .TP* Example:
 
