@@ -4516,7 +4516,8 @@ static val v_call(match_files_ctx *c)
   if (ret == decline_k)
     sem_error(nil, lit("call: function ~s not found"), funval, nao);
 
-  return cons(ctx.bindings, if3(ctx.data, cons(ctx.data, ctx.data_lineno), t));
+  c->bindings = ctx.bindings;
+  return ret;
 }
 
 static val h_do(match_line_ctx *c)

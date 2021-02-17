@@ -1,0 +1,13 @@
+@(next :list '("1"))
+@(define match1 (A))
+@ (all)
+1
+@ (and)
+@A
+@ (end)
+@(end)
+@(call 'match1 A)
+@(output)
+correct
+@A
+@(end)
