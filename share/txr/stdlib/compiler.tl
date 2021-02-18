@@ -525,8 +525,15 @@
      (compile-error form "trailing atom in cond syntax"))))
 
 (defmeth compiler comp-if (me oreg env form)
-  (tree-case form
-    ((op test then else)
+  (match-case (cdr form)
+    (@(require ((equal @a @b) . @rest)
+               (or (eql-comparable a)
+                   (eql-comparable b)))
+      (let ((cf (if (or (eq-comparable a)
+                        (eq-comparable b))
+                  'eq 'eql)))
+        me.(compile oreg env ^(if (,cf ,a ,b) ,*rest))))
+    ((@test @then @else)
      (cond
        ((null test)
         me.(compile oreg env else))
@@ -555,7 +562,7 @@
                          ,lskip)
                       (uni te-frag.fvars (uni th-frag.fvars el-frag.fvars))
                       (uni te-frag.ffuns (uni th-frag.ffuns el-frag.ffuns))))))))
-    ((op test then)
+    ((@test @then)
      (cond
        ((null test) me.(compile oreg env nil))
        ((constantp test)
@@ -577,7 +584,7 @@
                           ,lskip)
                        (uni te-frag.fvars th-frag.fvars)
                        (uni te-frag.ffuns th-frag.ffuns)))))))
-    ((op test)
+    ((@test)
      (cond
        ((constantp test) me.(compile oreg env nil))
        ((and (consp test) (member (car test) %test-funs%))
@@ -588,8 +595,8 @@
                           (mov ,oreg nil))
                        te-frag.fvars
                        te-frag.ffuns))))))
-    ((op) me.(compile oreg env nil))
-    (form (compile-error form "excess argument forms"))))
+    (() me.(compile oreg env nil))
+    (@else (compile-error form "excess argument forms"))))
 
 (defmeth compiler comp-ift (me oreg env form)
   (mac-param-bind form (op fun left right : then else) form
@@ -1156,6 +1163,14 @@
 
 (defmeth compiler comp-fun-form (me oreg env form)
   (match-case form
+    ((equal @a @b)
+     (cond
+       ((or (eq-comparable a)
+            (eq-comparable b))
+        (set form ^(eq ,a ,b)))
+       ((or (eql-comparable a)
+            (eql-comparable b))
+        (set form ^(eql ,a ,b)))))
     ((@(@bin [%bin-op% @sym]) @a @b)
      (set form ^(,bin ,a ,b)))
     ((- @a)
@@ -1419,6 +1434,14 @@
 
 (defun true-const-p (arg)
   (and arg (constantp arg)))
+
+(defun eq-comparable (arg)
+  (and (constantp arg)
+       [[orf fixnump chrp symbolp] (eval arg)]))
+
+(defun eql-comparable (arg)
+  (and (constantp arg)
+       [[orf symbolp chrp numberp] (eval arg)]))
 
 (defun expand-and (form)
   (match-case form
