@@ -1155,18 +1155,14 @@
     me.(compile oreg env (expand qexp))))
 
 (defmeth compiler comp-fun-form (me oreg env form)
+  (match-case form
+    ((@(@bin [%bin-op% @sym]) @a @b)
+     (set form ^(,bin ,a ,b)))
+    ((- @a)
+     (set form ^(neg ,a)))
+    ((@(or identity + * min max) @a)
+     (return-from comp-fun-form me.(compile oreg env a))))
   (tree-bind (sym . args) form
-    (cond
-      ((= (len args) 2)
-       (iflet ((bin [%bin-op% sym]))
-         (set sym bin
-              form (cons sym args))))
-      ((= (len args) 1)
-       (caseq sym
-         (- (set sym 'neg
-                 form (cons sym args)))
-         ((identity + * min max) (return-from comp-fun-form
-                                   me.(compile oreg env (car args)))))))
     (let* ((fbind env.(lookup-fun sym t))
            (cfrag me.(comp-call-impl oreg env (if fbind 'call 'gcall)
                                      (if fbind fbind.loc me.(get-sidx sym))
