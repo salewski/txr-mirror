@@ -80,54 +80,54 @@
          (insn oinsn)
          (ninsn oinsn))
     (while* (nequal ninsn insn)
-      (pset insn ninsn
-            ninsn (match-case insn
-                    ((if (d @reg) @jlabel) nil)
-                    ((jmp @jlabel)
-                     (let ((jinsns [bb.hash jlabel]))
-                       (match-case jinsns
-                         ((@jlabel
-                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
-                          ^(jmp ,jjlabel))
-                         (@jelse insn))))
-                    ((if @reg @jlabel)
-                     (let ((jinsns [bb.hash jlabel]))
-                       (match-case jinsns
-                         ((@jlabel
-                            (if @reg
-                              @(and @jjlabel @(not @jlabel))) . @nil)
-                          ^(if ,reg ,jjlabel))
-                         ((@jlabel
-                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
-                          ^(if ,reg ,jjlabel))
-                         ((@jlabel
-                            (ifq @reg nil @jjlabel) . @jrest)
-                          (let ((xlabel (if jrest
-                                          bb.(cut-block jlabel jrest jinsns)
-                                          bb.(next-block jlabel))))
-                            (if xlabel
-                              ^(if ,reg ,xlabel)
-                              insn)))
-                         (@jelse insn))))
-                    ((ifq @reg @creg @jlabel)
-                     (let ((jinsns [bb.hash jlabel]))
-                       (match-case jinsns
-                         ((@jlabel
-                            (ifq @reg @creg
-                                 @(and @jjlabel @(not @jlabel))) . @nil)
-                          ^(ifq ,reg ,creg ,jjlabel))
-                         ((@jlabel
-                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
-                          ^(ifq ,reg ,creg ,jjlabel))
-                         (@jelse insn))))
-                    ((close @reg @nargs @jlabel . @cargs)
-                     (let ((jinsns [bb.hash jlabel]))
-                       (match-case jinsns
-                         ((@jlabel
-                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
-                          ^(close ,reg ,nargs ,jjlabel ,*cargs))
-                         (@jelse insn))))
-                    (@else else))))
+      (set insn ninsn
+           ninsn (match-case insn
+                   ((if (d @reg) @jlabel) nil)
+                   ((jmp @jlabel)
+                    (let ((jinsns [bb.hash jlabel]))
+                      (match-case jinsns
+                        ((@jlabel
+                           (jmp @(and @jjlabel @(not @jlabel))) . @nil)
+                         ^(jmp ,jjlabel))
+                        (@jelse insn))))
+                   ((if @reg @jlabel)
+                    (let ((jinsns [bb.hash jlabel]))
+                      (match-case jinsns
+                        ((@jlabel
+                           (if @reg
+                             @(and @jjlabel @(not @jlabel))) . @nil)
+                         ^(if ,reg ,jjlabel))
+                        ((@jlabel
+                           (jmp @(and @jjlabel @(not @jlabel))) . @nil)
+                         ^(if ,reg ,jjlabel))
+                        ((@jlabel
+                           (ifq @reg nil @jjlabel) . @jrest)
+                         (let ((xlabel (if jrest
+                                         bb.(cut-block jlabel jrest jinsns)
+                                         bb.(next-block jlabel))))
+                           (if xlabel
+                             ^(if ,reg ,xlabel)
+                             insn)))
+                        (@jelse insn))))
+                   ((ifq @reg @creg @jlabel)
+                    (let ((jinsns [bb.hash jlabel]))
+                      (match-case jinsns
+                        ((@jlabel
+                           (ifq @reg @creg
+                                @(and @jjlabel @(not @jlabel))) . @nil)
+                         ^(ifq ,reg ,creg ,jjlabel))
+                        ((@jlabel
+                           (jmp @(and @jjlabel @(not @jlabel))) . @nil)
+                         ^(ifq ,reg ,creg ,jjlabel))
+                        (@jelse insn))))
+                   ((close @reg @nargs @jlabel . @cargs)
+                    (let ((jinsns [bb.hash jlabel]))
+                      (match-case jinsns
+                        ((@jlabel
+                           (jmp @(and @jjlabel @(not @jlabel))) . @nil)
+                         ^(close ,reg ,nargs ,jjlabel ,*cargs))
+                        (@jelse insn))))
+                   (@else else))))
     (cond
       ((null ninsn) (ldiff code tail))
       ((nequal ninsn oinsn) (append (ldiff code tail) (list ninsn)))
