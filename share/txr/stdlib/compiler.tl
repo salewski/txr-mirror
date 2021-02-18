@@ -1470,7 +1470,7 @@
            form (match-case form
                   ((append (list . @largs) . @aargs)
                    ^(list* ,*largs (append ,*aargs)))
-                  ((append @arg) arg)
+                  ((@(or append list*) @arg) arg)
                   (@(require (list* . @(listp @args))
                              (equal '(nil) (last args)))
                     ^(list ,*(butlastn 1 args)))
