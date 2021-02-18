@@ -533,68 +533,56 @@
                         (eq-comparable b))
                   'eq 'eql)))
         me.(compile oreg env ^(if (,cf ,a ,b) ,*rest))))
+    ((@(constantp @test) @then @else)
+     me.(compile oreg env (if (eval test) then else)))
+    ((@(constantp @test) @then)
+     me.(compile oreg env (if (eval test) then)))
+    ((@(constantp @test))
+     me.(compile oreg env nil))
+    (((@(member @op %test-funs%) @a @b) . @rest)
+     me.(compile oreg env ^(ift ,op ,a ,b ,*rest)))
     ((@test @then @else)
-     (cond
-       ((null test)
-        me.(compile oreg env else))
-       ((constantp test)
-        me.(compile oreg env (if (eval test) then else)))
-       ((and (consp test) (member (car test) %test-funs%))
-        me.(compile oreg env ^(ift ,(car test) ,(cadr test) ,(caddr test)
-                                   ,then ,else)))
-       (t
-         (let* ((te-oreg me.(maybe-alloc-treg oreg))
-                (lelse (gensym "l"))
-                (lskip (gensym "l"))
-                (te-frag me.(compile te-oreg env test))
-                (th-frag me.(compile oreg env then))
-                (el-frag me.(compile oreg env else)))
-           me.(maybe-free-treg te-oreg oreg)
-           (new (frag oreg
-                      ^(,*te-frag.code
-                         (if ,te-frag.oreg ,lelse)
-                         ,*th-frag.code
-                         ,*me.(maybe-mov oreg th-frag.oreg)
-                         (jmp ,lskip)
-                         ,lelse
-                         ,*el-frag.code
-                         ,*me.(maybe-mov oreg el-frag.oreg)
-                         ,lskip)
-                      (uni te-frag.fvars (uni th-frag.fvars el-frag.fvars))
-                      (uni te-frag.ffuns (uni th-frag.ffuns el-frag.ffuns))))))))
+     (let* ((te-oreg me.(maybe-alloc-treg oreg))
+            (lelse (gensym "l"))
+            (lskip (gensym "l"))
+            (te-frag me.(compile te-oreg env test))
+            (th-frag me.(compile oreg env then))
+            (el-frag me.(compile oreg env else)))
+       me.(maybe-free-treg te-oreg oreg)
+       (new (frag oreg
+                  ^(,*te-frag.code
+                     (if ,te-frag.oreg ,lelse)
+                     ,*th-frag.code
+                     ,*me.(maybe-mov oreg th-frag.oreg)
+                     (jmp ,lskip)
+                     ,lelse
+                     ,*el-frag.code
+                     ,*me.(maybe-mov oreg el-frag.oreg)
+                     ,lskip)
+                  (uni te-frag.fvars (uni th-frag.fvars el-frag.fvars))
+                  (uni te-frag.ffuns (uni th-frag.ffuns el-frag.ffuns))))))
     ((@test @then)
-     (cond
-       ((null test) me.(compile oreg env nil))
-       ((constantp test)
-        me.(compile oreg env (if (eval test) then)))
-       ((and (consp test) (member (car test) %test-funs%))
-        me.(compile oreg env ^(ift ,(car test) ,(cadr test) ,(caddr test)
-                                   ,then)))
-       (t (let* ((lskip (gensym "l"))
-                 (te-oreg me.(maybe-alloc-treg oreg))
-                 (te-frag me.(compile te-oreg env test))
-                 (th-frag me.(compile oreg env then)))
-            me.(maybe-free-treg te-oreg oreg)
-            (new (frag oreg
-                       ^(,*te-frag.code
-                          ,*me.(maybe-mov oreg te-frag.oreg)
-                          (if ,te-frag.oreg ,lskip)
-                          ,*th-frag.code
-                          ,*me.(maybe-mov oreg th-frag.oreg)
-                          ,lskip)
-                       (uni te-frag.fvars th-frag.fvars)
-                       (uni te-frag.ffuns th-frag.ffuns)))))))
+     (let* ((lskip (gensym "l"))
+            (te-oreg me.(maybe-alloc-treg oreg))
+            (te-frag me.(compile te-oreg env test))
+            (th-frag me.(compile oreg env then)))
+       me.(maybe-free-treg te-oreg oreg)
+       (new (frag oreg
+                  ^(,*te-frag.code
+                     ,*me.(maybe-mov oreg te-frag.oreg)
+                     (if ,te-frag.oreg ,lskip)
+                     ,*th-frag.code
+                     ,*me.(maybe-mov oreg th-frag.oreg)
+                     ,lskip)
+                  (uni te-frag.fvars th-frag.fvars)
+                  (uni te-frag.ffuns th-frag.ffuns)))))
     ((@test)
-     (cond
-       ((constantp test) me.(compile oreg env nil))
-       ((and (consp test) (member (car test) %test-funs%))
-        me.(compile oreg env ^(ift ,(car test) ,(cadr test) ,(caddr test))))
-       (t (let ((te-frag me.(compile oreg env test)))
-            (new (frag oreg
-                       ^(,*te-frag.code
-                          (mov ,oreg nil))
-                       te-frag.fvars
-                       te-frag.ffuns))))))
+     (let ((te-frag me.(compile oreg env test)))
+       (new (frag oreg
+                  ^(,*te-frag.code
+                     (mov ,oreg nil))
+                  te-frag.fvars
+                  te-frag.ffuns))))
     (() me.(compile oreg env nil))
     (@else (compile-error form "excess argument forms"))))
 
