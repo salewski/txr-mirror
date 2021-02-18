@@ -3262,8 +3262,10 @@ static val dot_to_apply(val form, val lisp1_p)
 
 NORETURN static void dotted_form_error(val form)
 {
-  uw_throwf(error_s, lit("dotted argument ~!~s not supported by form"),
-            form, nao);
+  if (atom(form))
+    eval_error(form, lit("dotted argument ~!~s not allowed here"), form, nao);
+  else
+    eval_error(form, lit("dotted syntax ~!~s not allowed here"), form, nao);
 }
 
 val expand_forms(val form, val menv)
@@ -3275,13 +3277,18 @@ val expand_forms(val form, val menv)
   } else {
     val f = car(form);
     val r = cdr(form);
-    val ex_f = expand(f, menv);
-    val ex_r = expand_forms(r, menv);
 
-    if (ex_f == f && ex_r == r)
-      return form;
+    if (atom(r) && r && !(opt_compat && opt_compat <= 137)) {
+      dotted_form_error(form);
+    } else {
+      val ex_f = expand(f, menv);
+      val ex_r = expand_forms(r, menv);
 
-    return rlcp(cons(ex_f, ex_r), form);
+      if (ex_f == f && ex_r == r)
+        return form;
+
+      return rlcp(cons(ex_f, ex_r), form);
+    }
   }
 }
 
@@ -3298,13 +3305,17 @@ static val expand_forms_ss(val forms, val menv, val ss_hash)
   } else {
     val f = car(forms);
     val r = cdr(forms);
-    val ex_f = expand(f, menv);
-    val ex_r = expand_forms_ss(r, menv, ss_hash);
+    if (atom(r) && r && !(opt_compat && opt_compat <= 137)) {
+      dotted_form_error(forms);
+    } else {
+      val ex_f = expand(f, menv);
+      val ex_r = expand_forms_ss(r, menv, ss_hash);
 
-    if (ex_f == f && ex_r == r)
-      return sethash(ss_hash, forms, forms);
+      if (ex_f == f && ex_r == r)
+        return sethash(ss_hash, forms, forms);
 
-    return sethash(ss_hash, forms, rlcp(cons(ex_f, ex_r), forms));
+      return sethash(ss_hash, forms, rlcp(cons(ex_f, ex_r), forms));
+    }
   }
 }
 
@@ -3375,12 +3386,17 @@ static val expand_forms_lisp1(val form, val menv)
   } else {
     val f = car(form);
     val r = cdr(form);
-    val ex_f = expand_lisp1(f, menv);
-    val ex_r = expand_forms_lisp1(r, menv);
 
-    if (ex_f == f && ex_r == r)
-      return form;
-    return rlcp(cons(ex_f, ex_r), form);
+    if (atom(r) && r && !(opt_compat && opt_compat <= 137)) {
+      dotted_form_error(form);
+    } else {
+      val ex_f = expand_lisp1(f, menv);
+      val ex_r = expand_forms_lisp1(r, menv);
+
+      if (ex_f == f && ex_r == r)
+        return form;
+      return rlcp(cons(ex_f, ex_r), form);
+    }
   }
 }
 
