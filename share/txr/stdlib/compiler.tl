@@ -258,6 +258,8 @@
 
 (defvarl %bin-op% (relate %nary-ops% %bin-ops% nil))
 
+(defvarl %const-foldable-funs% '(+ - * / b- b+ b* b/ car cdr cadr caddr first second))
+
 (defvarl assumed-fun)
 
 (defvar *dedup*)
@@ -432,6 +434,8 @@
                            sys:qquote sys:unquote sys:splice)
                (compile-error form "unexpanded quasiquote encountered"))
               ;; function call
+              ((+ *) me.(comp-arith-form oreg env form))
+              ((- /) me.(comp-arith-neg-form oreg env form))
               (t me.(comp-fun-form oreg env form))))
            ((and (consp sym)
                  (eq (car sym) 'lambda)) me.(compile oreg env ^(call ,*form)))
@@ -1154,6 +1158,32 @@
   (let ((qexp (expand-quasi form)))
     me.(compile oreg env (expand qexp))))
 
+(defmeth compiler comp-arith-form (me oreg env form)
+  (let ((rform (reduce-constant form)))
+    (tree-case rform
+      ((op . args)
+       (let* ((pargs [partition-by constantp args])
+              (fargs (append-each ((pa pargs))
+                       (if (and (constantp (car pa))
+                                (all pa [chain eval integerp]))
+                         (list (eval ^(,op ,*pa)))
+                         pa))))
+         me.(comp-fun-form oreg env ^(,op ,*fargs))))
+      (else me.(compile oreg env rform)))))
+
+(defmeth compiler comp-arith-neg-form (me oreg env form)
+  (if (> (len form) 3)
+    (tree-bind (nop . args) form
+      (let ((op (caseq nop (- '+) (/ '*)))
+            (a1 (car args)))
+        (if (and (eq nop '-)
+                 (constantp a1))
+          me.(comp-arith-form oreg env
+                              ^(,op (- ,a1) ,*(cdr args)))
+          me.(comp-fun-form oreg env
+                            ^(,nop ,(car args) (,op ,*(cdr args)))))))
+    me.(comp-fun-form oreg env form)))
+
 (defmeth compiler comp-fun-form (me oreg env form)
   (match-case form
     ((equal @a @b)
@@ -1175,6 +1205,11 @@
      (set form ^(neg ,a)))
     ((@(or identity + * min max) @a)
      (return-from comp-fun-form me.(compile oreg env a))))
+
+  (tree-case form
+    ((sym . args)
+     (if (member sym %const-foldable-funs%)
+       (set form (reduce-constant form)))))
 
   (when (or (atom form) (special-operator-p (car form)))
     (return-from comp-fun-form me.(compile oreg env form)))
@@ -1504,6 +1539,17 @@
       ((cons @a (@(and @op @(or list list*)) . @args))
        ^(,op ,a ,*args))
       (@else else))))
+
+(defun reduce-constant (form)
+  (if (consp form)
+    (tree-bind (op . args) form
+      (if (member op %const-foldable-funs%)
+        (let ((cargs [mapcar reduce-constant args]))
+          (if [all cargs constantp]
+            ^(quote ,(eval ^(,op ,*cargs)))
+            ^(,op ,*cargs)))
+        form))
+    form))
 
 (defun expand-quasi-mods (obj mods : form)
   (let (plist num sep rng-ix scalar-ix-p flex gens)
