@@ -258,7 +258,10 @@
 
 (defvarl %bin-op% (relate %nary-ops% %bin-ops% nil))
 
-(defvarl %const-foldable-funs% '(+ - * / b- b+ b* b/ car cdr cadr caddr first second))
+(defvarl %const-foldable-funs% '(+ - * / b- b+ b* b/
+                                 pred ppred ppred pppred
+                                 succ ssucc ssucc sssucc
+                                 car cdr cadr caddr first second))
 
 (defvarl assumed-fun)
 

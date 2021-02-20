@@ -25,12 +25,12 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defsymacro %lev-size% 1024)
-(defsymacro %max-lev-idx% (macro-time (pred %lev-size%)))
+(defsymacro %max-lev-idx% (pred %lev-size%))
 (defsymacro %lev-bits% 10)
 (defsymacro %max-lev% 63)
-(defsymacro %max-v-lev% (macro-time (ppred %max-lev%)))
+(defsymacro %max-v-lev% (ppred %max-lev%))
 (defsymacro %sm-lev-size% 64)
-(defsymacro %max-sm-lev-idx% (macro-time (pred %sm-lev-size%)))
+(defsymacro %max-sm-lev-idx% (pred %sm-lev-size%))
 (defsymacro %max-sm-lev% 15)
 (defsymacro %sm-lev-bits% 6)
 (defsymacro %max-lambda-fixed-args% 127)

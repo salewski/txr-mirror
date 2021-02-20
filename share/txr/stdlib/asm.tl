@@ -270,7 +270,7 @@
   (defmacro with-lev-idx ((lev-var idx-var) val-expr . body)
     (with-gensyms (val-var)
       ^(let* ((,val-var ,val-expr)
-              (,lev-var (ash ,val-var (macro-time (- %lev-bits%))))
+              (,lev-var (ash ,val-var (- %lev-bits%)))
               (,idx-var (logtrunc ,val-var %lev-bits%)))
          ,*body))))
 
