@@ -258,10 +258,19 @@
 
 (defvarl %bin-op% (relate %nary-ops% %bin-ops% nil))
 
-(defvarl %const-foldable-funs% '(+ - * / b- b+ b* b/
-                                 pred ppred ppred pppred
-                                 succ ssucc ssucc sssucc
-                                 car cdr cadr caddr first second))
+(defvarl %const-foldable-funs%
+  '(+ - * / sum prod abs trunc mod zerop nzerop plusp minusp evenp oddp
+    > < >= <= = /= wrap wrap* expt exptmod isqrt square gcd lcm floor ceil
+    round trunc-rem floor-rem ceil-rem round-rem sin cos tan asin acos atan
+    atan2 sinh cosh tanh asinh acosh atanh log log10 log2 exp sqrt
+    logand logior logxor logtest lognot logtrunc sign-extend ash bit mask
+    width logcount bitset cum-norm-dist inv-cum-norm n-choose-k n-perm-k
+    fixnump bignump floatp integerp numberp signum bignum-len divides sys:bits
+    digpow digits poly rpoly b< b> b<= b=> b= b+ b- b* b/ neg
+    pred ppred ppred pppred succ ssucc ssucc sssucc
+    car cdr cadr caddr first second))
+
+(defvarl %const-foldable% (hash-list %const-foldable-funs% :eq-based))
 
 (defvarl assumed-fun)
 
@@ -1211,7 +1220,7 @@
 
   (tree-case form
     ((sym . args)
-     (if (member sym %const-foldable-funs%)
+     (if [%const-foldable% sym]
        (set form (reduce-constant form)))))
 
   (when (or (atom form) (special-operator-p (car form)))
@@ -1546,7 +1555,7 @@
 (defun reduce-constant (form)
   (if (consp form)
     (tree-bind (op . args) form
-      (if (member op %const-foldable-funs%)
+      (if [%const-foldable% op]
         (let ((cargs [mapcar reduce-constant args]))
           (if [all cargs constantp]
             ^(quote ,(eval ^(,op ,*cargs)))
