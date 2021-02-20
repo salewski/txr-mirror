@@ -290,7 +290,7 @@
     chr-xdigit chr-toupper chr-tolower num-chr int-chr chr-num chr-int
     chr-str span-str compl-span-str break-str vectorp length-vec size-vec
     assq assql assoc rassq rassql rassoc prop memp length len ref rangep
-    from to  in-range in-range* nullify))
+    from to in-range in-range* nullify))
 
 (defvarl %const-foldable% (hash-list %const-foldable-funs% :eq-based))
 
@@ -1257,27 +1257,32 @@
       cfrag)))
 
 (defmeth compiler comp-apply-call (me oreg env form)
-  (tree-bind (sym . args) form
-    (let ((gopcode [%gcall-op% sym])
-          (opcode [%call-op% sym]))
-      (tree-case (car args)
-        ((op arg . more)
-         (caseq op
-           (fun (cond
-                  (more (compile-error form "excess args in fun form"))
-                  ((bindable arg)
-                   (let ((fbind env.(lookup-fun arg t)))
-                     me.(comp-call-impl oreg env (if fbind opcode gopcode)
-                                        (if fbind fbind.loc me.(get-sidx arg))
-                                        (cdr args))))
-                  ((and (consp arg) (eq (car arg) 'lambda))
-                   me.(comp-fun-form oreg env ^(,sym ,arg ,*(cdr args))))
+  (tree-bind (sym . oargs) form
+    (let ((args [mapcar reduce-constant oargs]))
+      (let ((gopcode [%gcall-op% sym])
+            (opcode [%call-op% sym]))
+        (cond
+          ((and (eq sym 'call)
+                [all args constantp])
+           me.(compile oreg env (eval form)))
+          (t (tree-case (car args)
+               ((op arg . more)
+                (caseq op
+                  (fun (cond
+                         (more (compile-error form "excess args in fun form"))
+                         ((bindable arg)
+                          (let ((fbind env.(lookup-fun arg t)))
+                            me.(comp-call-impl oreg env (if fbind opcode gopcode)
+                                               (if fbind fbind.loc me.(get-sidx arg))
+                                               (cdr args))))
+                         ((and (consp arg) (eq (car arg) 'lambda))
+                          me.(comp-fun-form oreg env ^(,sym ,arg ,*(cdr args))))
+                         (t :)))
+                  (lambda me.(comp-inline-lambda oreg env opcode
+                                                 (car args) (cdr args)))
                   (t :)))
-           (lambda me.(comp-inline-lambda oreg env opcode
-                                          (car args) (cdr args)))
-           (t :)))
-        (arg me.(comp-call oreg env
-                           (if (eq sym 'usr:apply) 'apply sym) args))))))
+               (arg me.(comp-call oreg env
+                                  (if (eq sym 'usr:apply) 'apply sym) args)))))))))
 
 (defmeth compiler comp-call (me oreg env opcode args)
   (tree-bind (fform . fargs) args
@@ -1459,8 +1464,8 @@
                            (not (boundp fun)))
                     (progn
                       (pushnew fun assumed-fun)
-                      ^(,fun ,*(mapcar (op list 'sys:lisp1-value) (cdr l1-exprs))))
-                    ^(call ,*(mapcar (op list 'sys:lisp1-value) l1-exprs)))))))
+                      ^(,fun ,*(mapcar [iffi bindable (op list 'sys:lisp1-value)] (cdr l1-exprs))))
+                    ^(call ,*(mapcar [iffi bindable (op list 'sys:lisp1-value)] l1-exprs)))))))
 
 (defmeth compiler comp-prof (me oreg env form)
   (mac-param-bind form (op . forms) form
