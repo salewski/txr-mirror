@@ -268,7 +268,13 @@
     fixnump bignump floatp integerp numberp signum bignum-len divides sys:bits
     digpow digits poly rpoly b< b> b<= b=> b= b+ b- b* b/ neg
     pred ppred ppred pppred succ ssucc ssucc sssucc
-    car cdr cadr caddr first second))
+    car cdr caar cadr cdar cddr caaar caadr cadar caddr cdaar cdadr cddar cdddr
+    caaaar caaadr caadar caaddr cadaar cadadr caddar cadddr cdaaar cdaadr
+    cdadar cdaddr cddaar cddadr cdddar cddddr caaaaar caaaadr caaadar caaaddr
+    caadaar caadadr caaddar caadddr cadaaar cadaadr cadadar cadaddr caddaar
+    caddadr cadddar caddddr cdaaaar cdaaadr cdaadar cdaaddr cdadaar cdadadr
+    cdaddar cdadddr cddaaar cddaadr cddadar cddaddr cdddaar cdddadr cddddar
+    cdddddr))
 
 (defvarl %const-foldable% (hash-list %const-foldable-funs% :eq-based))
 
