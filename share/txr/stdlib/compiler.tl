@@ -1193,7 +1193,7 @@
     me.(compile oreg env (expand qexp))))
 
 (defmeth compiler comp-arith-form (me oreg env form)
-  (let ((rform (reduce-constant form)))
+  (let ((rform (reduce-constant env form)))
     (tree-case rform
       ((op . args)
        (let* ((pargs [partition-by constantp args])
@@ -1242,8 +1242,7 @@
 
   (tree-case form
     ((sym . args)
-     (if [%const-foldable% sym]
-       (set form (reduce-constant form)))))
+     (set form (reduce-constant env form))))
 
   (when (or (atom form) (special-operator-p (car form)))
     (return-from comp-fun-form me.(compile oreg env form)))
@@ -1258,7 +1257,7 @@
 
 (defmeth compiler comp-apply-call (me oreg env form)
   (tree-bind (sym . oargs) form
-    (let ((args [mapcar reduce-constant oargs]))
+    (let ((args [mapcar (op reduce-constant env) oargs]))
       (let ((gopcode [%gcall-op% sym])
             (opcode [%call-op% sym]))
         (cond
@@ -1579,11 +1578,12 @@
        ^(,op ,a ,*args))
       (@else else))))
 
-(defun reduce-constant (form)
+(defun reduce-constant (env form)
   (if (consp form)
     (tree-bind (op . args) form
-      (if [%const-foldable% op]
-        (let ((cargs [mapcar reduce-constant args]))
+      (if (and [%const-foldable% op]
+               (not env.(lookup-fun op)))
+        (let ((cargs [mapcar (op reduce-constant env) args]))
           (if [all cargs constantp]
             ^(quote ,(eval ^(,op ,*cargs)))
             ^(,op ,*cargs)))
