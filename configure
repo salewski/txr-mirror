@@ -103,6 +103,9 @@ for arg in "$0" ${@+"$@"} ; do
   *'"'* | *['$*?[(){};&|<>#']* | '~'* )
     cmdline="$cmdline'$arg'"
     ;;
+  *' '* | *'    '* )
+    cmdline="$cmdline\"$arg\""
+    ;;
   * )
     cmdline="$cmdline$arg"
     ;;
