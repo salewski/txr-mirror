@@ -4550,27 +4550,40 @@ static val h_assert(match_line_ctx *c)
 
 static void open_data_source(match_files_ctx *c)
 {
-  spec_bind (specline, first_spec, c->spec);
-  int non_matching_dir = (consp(first_spec) &&
-                          (gethash(non_matching_directive_table,
-                                   first(first_spec))) &&
-                          !rest(specline));
-
   /* c->data == t is set up by the top level call to match_files.
    * It indicates that we have not yet opened any data source.
    */
 
-  if (c->data == t && c->files) {
+  if (c->data == t) {
+    spec_bind (specline, first_spec, c->spec);
+
     val source_spec = first(c->files);
     val ss_consp = consp(source_spec);
     val name = ss_consp ? cdr(source_spec) : source_spec;
-    val nothrow = tnil(ss_consp && car(source_spec) == nothrow_k);
+    val op = if2(consp(first_spec), first(first_spec));
+    int non_matching_dir = (!rest(specline) && op && symbolp(op) &&
+                            (gethash(non_matching_directive_table, op) ||
+                             car(uw_get_func(op))));
 
-    if (non_matching_dir) {
+    if (c->files == nil) {
+      if (opt_compat && opt_compat <= 170) {
+        c->data = nil;
+      } else if (non_matching_dir) {
+        debuglf(first_spec, lit("not opening standard input "
+                                "since query starts with non-matching "
+                                "directive."), nao);
+      } else {
+        debuglf(first_spec, lit("opening standard input as data source"), nao);
+        c->curfile = lit("-");
+        c->data = lazy_stream_cons(std_input);
+        c->data_lineno = one;
+      }
+    } else if (non_matching_dir) {
       debuglf(first_spec, lit("not opening source ~a "
                               "since query starts with non-matching "
                               "directive."), name, nao);
     } else if (stringp(name)) {
+      val nothrow = tnil(ss_consp && car(source_spec) == nothrow_k);
       val stream = complex_open(name, nil, nil, nothrow, t);
 
       debuglf(specline, lit("opening data source ~a"), name, nao);
@@ -4592,19 +4605,6 @@ static void open_data_source(match_files_ctx *c)
         c->data_lineno = one;
     } else {
       sem_error(specline, lit("~s doesn't denote a valid data source"), name, nao);
-    }
-  } else if (c->data == t && c->files == nil) {
-    if (opt_compat && opt_compat <= 170) {
-      c->data = nil;
-    } else if (non_matching_dir) {
-      debuglf(first_spec, lit("not opening standard input "
-                              "since query starts with non-matching "
-                              "directive."), nao);
-    } else {
-      debuglf(first_spec, lit("opening standard input as data source"), nao);
-      c->curfile = lit("-");
-      c->data = lazy_stream_cons(std_input);
-      c->data_lineno = one;
     }
   }
 }
@@ -5007,6 +5007,7 @@ static void dir_tables_init(void)
   sethash(non_matching_directive_table, do_s, t);
   sethash(non_matching_directive_table, load_s, t);
   sethash(non_matching_directive_table, close_s, t);
+  sethash(non_matching_directive_table, call_s, t);
 
   sethash(binding_directive_table, var_s, one);
   sethash(binding_directive_table, merge_s, one);

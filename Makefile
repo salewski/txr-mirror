@@ -390,6 +390,7 @@ tst/tests/008/configfile.ok: TXR_ARGS := tests/008/configfile
 tst/tests/008/students.ok: TXR_ARGS := tests/008/students.xml
 tst/tests/008/soundex.ok: TXR_ARGS := soundex sowndex lloyd lee jackson robert
 tst/tests/008/filtenv.ok: TXR_OPTS := -B
+tst/tests/008/no-stdin-hang.ok: TXR_OPTS := -n
 tst/tests/009/json.ok: TXR_ARGS := $(addprefix tests/009/,webapp.json pass1.json)
 tst/tests/010/align-columns.ok: TXR_ARGS := tests/010/align-columns.dat
 tst/tests/010/block.ok: TXR_OPTS := -B
