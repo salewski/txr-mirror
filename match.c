@@ -4506,18 +4506,11 @@ static val v_call(match_files_ctx *c)
   val funval = tleval_144(specline, funexpr, c->bindings);
   val argexprs = cdr(exprs);
   val call = cons(funval, argexprs);
-  val spec = cons(cons(call, nil), nil);
-  match_files_ctx ctx = mf_spec_bindings(*c, spec, c->bindings);
-  val ret = v_fun(&ctx);
+  val spec = cons(cons(call, nil), cdr(c->spec));
 
-  if (ret == nil)
-    return nil;
+  c->spec = spec;
 
-  if (ret == decline_k)
-    sem_error(nil, lit("call: function ~s not found"), funval, nao);
-
-  c->bindings = ctx.bindings;
-  return ret;
+  return v_fun(c);
 }
 
 static val h_do(match_line_ctx *c)

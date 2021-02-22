@@ -1,0 +1,6 @@
+@(define foo (var))
+@var
+@(end)
+@(next :list '("A" "B"))
+@(call (quote foo) "A")
+@(call (quote foo) "B")
