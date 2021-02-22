@@ -4653,7 +4653,7 @@ repeat_spec_same_data:
           /* Function declined, so we know there is no vertical function.
              If the horizontal one doesn't exist also, let's error out
              now instead of trying to get data for matching a horizontal
-             call that we known work out. */
+             call that we know won't work out. */
           if (!cdr(uw_get_func(sym)))
             sem_error(specline, lit("function ~s not found"), sym, nao);
         } else {
