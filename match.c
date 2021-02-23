@@ -2718,24 +2718,28 @@ static val v_next_impl(match_files_ctx *c)
     {
       int old_hacky_open = opt_compat && opt_compat <= 142;
       val alist = improper_plist_to_alist(args, list(nothrow_k, nao));
-      val from_var = cdr(assoc(var_k, alist));
-      val list_expr = cdr(assoc(list_k, alist));
-      val tlist_expr = cdr(assoc(tlist_k, alist));
-      val string_expr = cdr(assoc(string_k, alist));
+      val from_var_p = assoc(var_k, alist);
+      val from_var = cdr(from_var_p);
+      val list_p = assoc(list_k, alist);
+      val list_expr = cdr(list_p);
+      val tlist_p = assoc(tlist_k, alist);
+      val tlist_expr = cdr(tlist_p);
+      val string_p = assoc(string_k, alist);
+      val string_expr = cdr(string_p);
       val nothrow = cdr(assoc(nothrow_k, alist));
       val str = if3(meta,
                     txeval(specline, source, c->bindings),
                     tleval_nothrow(specline, source, c->bindings, nothrow));
 
-      if (!from_var && !source && !string_expr && !list_expr && !tlist_expr)
+      if (!from_var_p && !source && !string_p && !list_p && !tlist_p)
         sem_error(specline, lit("next: source required before keyword arguments"), nao);
 
       {
         int count = (source != nil) +
-                    (from_var != nil) +
-                    (list_expr != nil) +
-                    (tlist_expr != nil) +
-                    (string_expr != nil);
+                    (from_var_p != nil) +
+                    (list_p != nil) +
+                    (tlist_p != nil) +
+                    (string_p != nil);
 
         if (count > 1)
         {
@@ -2746,7 +2750,7 @@ static val v_next_impl(match_files_ctx *c)
       if (!meta && source && nothrow && str == colon_k)
         goto nothrow_lisp;
 
-      if (from_var) {
+      if (from_var_p) {
         val existing = tx_lookup_var_ubc(from_var, c->bindings, first_spec);
 
         {
@@ -2759,7 +2763,7 @@ static val v_next_impl(match_files_ctx *c)
                         if3(c->data, cons(c->data, c->data_lineno), t));
           return nil;
         }
-      } else if (list_expr) {
+      } else if (list_p) {
         val list_val = if3(opt_compat && opt_compat <= 143,
                            txeval(specline, list_expr, c->bindings),
                            tleval_nothrow(specline, list_expr, c->bindings, nothrow));
@@ -2777,7 +2781,7 @@ static val v_next_impl(match_files_ctx *c)
                         if3(c->data, cons(c->data, c->data_lineno), t));
           return nil;
         }
-      } else if (tlist_expr) {
+      } else if (tlist_p) {
         val list_val = txeval(specline, tlist_expr, c->bindings);
         cons_bind (new_bindings, success,
                    match_files(mf_file_data(*c, lit("var"),
@@ -2787,7 +2791,7 @@ static val v_next_impl(match_files_ctx *c)
           return cons(new_bindings,
                       if3(c->data, cons(c->data, c->data_lineno), t));
         return nil;
-      } else if (string_expr) {
+      } else if (string_p) {
         val str_val = tleval_144_nothrow(specline, string_expr, c->bindings, nothrow);
 
         if (nothrow && str_val == colon_k)
