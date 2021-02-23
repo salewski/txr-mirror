@@ -120,12 +120,12 @@
                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                          ^(ifq ,reg ,creg ,jjlabel))
                         (@jelse insn))))
-                   ((close @reg @nargs @jlabel . @cargs)
+                   ((close @reg @frsize @ntregs @jlabel . @cargs)
                     (let ((jinsns [bb.hash jlabel]))
                       (match-case jinsns
                         ((@jlabel
                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
-                         ^(close ,reg ,nargs ,jjlabel ,*cargs))
+                         ^(close ,reg ,frsize ,ntregs ,jjlabel ,*cargs))
                         (@jelse insn))))
                    (@else else))))
     (cond
