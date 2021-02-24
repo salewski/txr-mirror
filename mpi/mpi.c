@@ -2087,13 +2087,14 @@ out:
 mp_err mp_or(mp_int *a, mp_int *b, mp_int *c)
 {
   mp_err res;
-  mp_size ix, extent = 0;
+  mp_size ix, extent, mindig;
   mp_digit *pa, *pb, *pc;
   mp_int tmp_a, tmp_b;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
   extent = MAX(USED(a), USED(b));
+  mindig = MIN(USED(a), USED(b));
 
   if (a == b)
     return mp_copy(a, c);
@@ -2119,10 +2120,15 @@ mp_err mp_or(mp_int *a, mp_int *b, mp_int *c)
     goto out;
 
   for (pa = DIGITS(a), pb = DIGITS(b), pc = DIGITS(c), ix = 0;
-       ix < extent; ix++)
+       ix < mindig; ix++)
   {
     pc[ix] = pa[ix] | pb[ix];
   }
+
+  if (ix < USED(a))
+    s_mp_copy(pa + ix, pc + ix, USED(a) - ix);
+  else if (ix < USED(b))
+    s_mp_copy(pb + ix, pc + ix, USED(b) - ix);
 
   USED(c) = extent;
 
@@ -2146,7 +2152,7 @@ out:
 mp_err mp_xor(mp_int *a, mp_int *b, mp_int *c)
 {
   mp_err res;
-  mp_size ix, extent = 0;
+  mp_size ix, extent, mindig;
   mp_digit *pa, *pb, *pc;
   mp_int tmp_a, tmp_b;
 
@@ -2158,6 +2164,7 @@ mp_err mp_xor(mp_int *a, mp_int *b, mp_int *c)
   }
 
   extent = MAX(USED(a), USED(b));
+  mindig = MIN(USED(a), USED(b));
 
   if (ISNEG(a)) {
     if ((res = mp_2comp(a, &tmp_a, extent)) != MP_OKAY)
@@ -2180,10 +2187,15 @@ mp_err mp_xor(mp_int *a, mp_int *b, mp_int *c)
     goto out;
 
   for (pa = DIGITS(a), pb = DIGITS(b), pc = DIGITS(c), ix = 0;
-       ix < extent; ix++)
+       ix < mindig; ix++)
   {
     pc[ix] = pa[ix] ^ pb[ix];
   }
+
+  if (ix < USED(a))
+    s_mp_copy(pa + ix, pc + ix, USED(a) - ix);
+  else if (ix < USED(b))
+    s_mp_copy(pb + ix, pc + ix, USED(b) - ix);
 
   USED(c) = extent;
 
