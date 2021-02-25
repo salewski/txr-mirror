@@ -675,7 +675,7 @@
                           (null d))))
            (cases (if shared
                     (let ((cs-nil ^(,*cs nil)))
-                      [mapcar ldiff cs-nil (cdr cs-nil)])
+                      (vec-list [mapcar ldiff cs-nil (cdr cs-nil)]))
                     cases-vec))
            (lend (gensym "l"))
            (clabels (mapcar (ret (gensym "l")) cases))
