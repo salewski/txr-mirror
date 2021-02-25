@@ -25,14 +25,28 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (compile-only
+  (defstruct live-info nil
+    (defined 0)
+    (used 0))
+
+  (defstruct basic-block (live-info)
+    live
+    label
+    next
+    links
+    insns)
+
   (defstruct (basic-blocks insns) nil
     insns
+    root
     (hash (hash))
+    (li-hash (hash :eq-based))
     labels
     list
     rescan
     (:static start (gensym "start-"))
-    (:static jump-ops '(jmp if ifq ifql close swtch ret abscsr))
+    (:static jump-ops '(jmp if ifq ifql close swtch ret abscsr
+                        uwprot catch block jend))
 
     (:postinit (bb)
       (let* ((insns (dedup-labels (cons bb.start bb.insns)))
@@ -45,12 +59,15 @@
                                   use
                                   (op cons (gensym))]
                              parts)))
-        (set bb.list lparts)
+        (set bb.list (mapcar (do new basic-block
+                               insns @1 label (car @1))
+                             lparts))
         (set bb.labels [mapcar car lparts])
-        (mapdo (do set [bb.hash (car @1)] @1) lparts)))
+        (mapdo (do set [bb.hash @1.label] @1) bb.list))
+      bb.(link-graph))
 
     (:method get-insns (bb)
-      [mappend bb.hash bb.labels])
+      [mappend [chain bb.hash .insns] bb.labels])
 
     (:method cut-block (bb label at insns)
       (let ((nlabel (gensym "nl"))
@@ -58,8 +75,10 @@
         (set bb.labels (append (ldiff bb.labels ltail)
                                (list nlabel)
                                ltail))
-        (set [bb.hash nlabel] (cons nlabel at))
-        (set [bb.hash label] (ldiff insns at))
+        (set [bb.hash nlabel] (new basic-block
+                                   label nlabel
+                                   insns (cons nlabel at)))
+        (set [bb.hash label].insns (ldiff insns at))
         (push nlabel bb.rescan)
         nlabel))
 
@@ -74,6 +93,158 @@
                 ,*cases))
             ,list))
 
+(defmeth basic-blocks link-graph (bb)
+  (set bb.root [bb.hash (car bb.labels)])
+  (dohash (label bl bb.hash)
+    (let* ((code bl.insns)
+           (tail (last code))
+           (linsn (car tail))
+           (link-next t)
+           (nxlabel (cadr (member label bb.labels))))
+      (set bl.next nxlabel)
+      (match-case linsn
+        ((jmp @jlabel)
+         (set bl.links (list jlabel)
+              bl.next nil))
+        ((if @nil @jlabel)
+         (set bl.links (list jlabel)))
+        ((@(or ifq ifql) @nil @nil @jlabel)
+         (set bl.links (list jlabel)))
+        ((close @nil @nil @nil @jlabel . @nil)
+         (set bl.links (list jlabel)
+              link-next nil))
+        ((swtch @nil . @jlabels)
+         (set bl.links (uniq jlabels)
+              bl.next nil))
+        ((catch @nil @nil @nil @nil @hlabel)
+         (set bl.links (list hlabel)))
+        ((block @nil @nil @slabel)
+         (set bl.links (list slabel)))
+        ((uwprot @clabel)
+         (set bl.links (list clabel)))
+        ((@(or abscsr ret jend) . @nil)
+         (set bl.next nil)))
+      (if (and bl.next link-next)
+        (pushnew bl.next bl.links)))))
+
+(defmeth basic-blocks local-liveness (bb bl)
+  (labels ((regnum (reg)
+             (when-match (t @num) reg num))
+           (regnums (regs)
+             (mappend (do when-match
+                        (t @num) @1 (list num)) regs))
+           (def (li insn def)
+             (set [bb.li-hash insn] li)
+             (let* ((dn (regnum def))
+                    (dmask (if dn (mask dn))))
+               (if dn
+                 (new live-info
+                      used (logand li.used (lognot dmask))
+                      defined (logior li.defined dmask))
+                 li)))
+           (refs (li insn . refs)
+             (set [bb.li-hash insn] li)
+             (let* ((rn (regnums refs))
+                    (rmask (mask . rn)))
+               (new live-info
+                    used (logior li.used rmask)
+                    defined (logand li.defined (lognot rmask)))))
+           (def-ref (li insn def . refs)
+             (set [bb.li-hash insn] li)
+             (let* ((rn (regnums refs))
+                    (dn (regnum def))
+                    (dmask (if dn (mask dn)))
+                    (rmask (mask . rn)))
+               (new live-info
+                    used (if dn
+                           (logior (logand li.used (lognot dmask)) rmask)
+                           (logior li.used rmask))
+                    defined (if dn
+                              (logand (logior dmask
+                                              li.defined)
+                                      (lognot rmask))
+                              (logand li.defined (lognot rmask))))))
+           (liveness (insns)
+             (if (null insns)
+               (new live-info used 0)
+               (let* ((li (liveness (cdr insns)))
+                      (insn (car insns)))
+                 (match-case insn
+                   ((@(or end jend prof) @reg)
+                    (refs li insn reg))
+                   ((@(or apply call) @def . @refs)
+                    (def-ref li insn def . refs))
+                   ((@(or gapply gcall) @def @fidx . @refs)
+                    (def-ref li insn def . refs))
+                   ((mov @def @ref)
+                    (def-ref li insn def ref))
+                   ((if @reg . @nil)
+                    (refs li insn reg))
+                   ((@(or ifq ifql) @reg @creg . @nil)
+                    (refs li insn reg creg))
+                   ((swtch @reg . @nil)
+                    (refs li insn reg))
+                   ((block @reg @nreg . @nil)
+                    (refs li insn reg nreg))
+                   ((@(or ret abscsr) @nreg @reg)
+                    (refs li insn reg nreg))
+                   ((catch @esreg @eareg @syreg @descreg . @nil)
+                    (refs li insn esreg eareg syreg descreg))
+                   ((handle @funreg @syreg)
+                    (refs li insn funreg syreg))
+                   ((@(or getv getvb getfb getl1b getlx getf) @def . @nil)
+                    (def li insn def))
+                   ((@(or setv setl1 setlx bindv) @reg . @nil)
+                    (refs li insn reg))
+                   ((close @reg . @nil)
+                    (def li insn reg))
+                   ((@op . @nil)
+                    (caseq op
+                      ((end jend prof or apply call or gapply gcall mov if
+                        ifq ifql swtch block ret abscsr catch handle getv
+                        getvb getfb getl1b getlx getf setl1 setlx bindv close)
+                       (error `wrongly handled @insn instruction`))
+                      (t (set [bb.li-hash insn] li))))
+                   (@else (set [bb.li-hash insn] li)))))))
+    (let ((li (liveness bl.insns)))
+      (set bl.used li.used
+           bl.defined li.defined))))
+
+(defmeth basic-blocks calc-liveness (bb)
+  (dohash (label bl bb.hash)
+    bb.(local-liveness bl))
+  (let (changed)
+    (while* changed
+      (let ((visited (hash :eq-based)))
+        (labels ((upd-used (bl insns live)
+                   (tree-case insns
+                     ((fi . re)
+                      (let* ((live (upd-used bl re live))
+                             (lif [bb.li-hash fi]))
+                        (set live (logand live (lognot lif.defined)))
+                        (set lif.used (logior live lif.used))
+                        live))
+                     (else live)))
+                 (visit (bl)
+                   (unless [visited bl]
+                     (set [visited bl] t)
+                     (when bl.next
+                       (visit [bb.hash bl.next]))
+                     (let ((used 0)
+                           (old-live (or bl.live 0)))
+                       (each ((label bl.links))
+                         (let ((nx [bb.hash label]))
+                           (visit nx)
+                           (set used (logior used nx.used))))
+                       (when (neql (set bl.live (logior used old-live))
+                                   old-live)
+                         (let ((live-in (logand (upd-used bl bl.insns bl.live)
+                                                (lognot bl.defined))))
+                           (set bl.used (logior live-in bl.used)))
+                         (set changed t))))))
+          (set changed nil)
+          (visit bb.root))))))
+
 (defmeth basic-blocks thread-jumps-block (bb label code)
   (let* ((tail (last code))
          (oinsn (car tail))
@@ -84,14 +255,14 @@
            ninsn (match-case insn
                    ((if (d @reg) @jlabel) nil)
                    ((jmp @jlabel)
-                    (let ((jinsns [bb.hash jlabel]))
+                    (let ((jinsns [bb.hash jlabel].insns))
                       (match-case jinsns
                         ((@jlabel
                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                          ^(jmp ,jjlabel))
                         (@jelse insn))))
                    ((if @reg @jlabel)
-                    (let ((jinsns [bb.hash jlabel]))
+                    (let ((jinsns [bb.hash jlabel].insns))
                       (match-case jinsns
                         ((@jlabel
                            (if @reg
@@ -110,7 +281,7 @@
                              insn)))
                         (@jelse insn))))
                    ((ifq @reg @creg @jlabel)
-                    (let ((jinsns [bb.hash jlabel]))
+                    (let ((jinsns [bb.hash jlabel].insns))
                       (match-case jinsns
                         ((@jlabel
                            (ifq @reg @creg
@@ -121,7 +292,7 @@
                          ^(ifq ,reg ,creg ,jjlabel))
                         (@jelse insn))))
                    ((close @reg @frsize @ntregs @jlabel . @cargs)
-                    (let ((jinsns [bb.hash jlabel]))
+                    (let ((jinsns [bb.hash jlabel].insns))
                       (match-case jinsns
                         ((@jlabel
                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
@@ -135,6 +306,11 @@
 
 (defmeth basic-blocks peephole-block (bb label code)
   (rewrite-case insns code
+    ;; dead t-reg
+    (@(require ((mov (t @n) . @nil) . @nil)
+               (let ((li [bb.li-hash (car insns)]))
+                 (and li (not (bit li.used n)))))
+      (cdr insns))
     ;; wasteful moves
     (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
      (cdr insns))
@@ -149,7 +325,7 @@
      ^(,(cadr insns) ,(car insns) ,*rest))
     (((@(or frame dframe) . @nil)
       (if (t @reg) @jlabel))
-     (let ((jinsns [bb.hash jlabel]))
+     (let ((jinsns [bb.hash jlabel].insns))
        (match-case jinsns
          ((@jlabel
             (end (t @reg)) . @jrest)
@@ -157,10 +333,10 @@
                            bb.(cut-block jlabel jrest jinsns)
                            bb.(next-block jlabel)))
                  (ylabel bb.(next-block label))
-                 (yinsns [bb.hash ylabel]))
+                 (yinsns [bb.hash ylabel].insns))
             (cond
               ((and xlabel ylabel)
-               (set [bb.hash ylabel]
+               (set [bb.hash ylabel].insns
                     ^(,ylabel ,(car insns) ,*(cdr yinsns)))
                (push ylabel bb.rescan)
                ^((if (t ,reg) ,xlabel)))
@@ -169,19 +345,17 @@
     (@else insns)))
 
 (defmeth basic-blocks peephole (bb)
-  (dohash (label code bb.hash)
-    (set [bb.hash label]
-         bb.(peephole-block label code)))
+  (dohash (label bl bb.hash)
+    (set bl.insns bb.(peephole-block label bl.insns)))
   (whilet ((rescan bb.rescan))
     (set bb.rescan nil)
     (each ((label rescan))
-      (set [bb.hash label]
-           bb.(peephole-block label [bb.hash label])))))
+      (let ((bl [bb.hash label]))
+        (set bl.insns bb.(peephole-block label bl.insns))))))
 
 (defmeth basic-blocks thread-jumps (bb)
-  (dohash (label code bb.hash)
-    (set [bb.hash label]
-         bb.(thread-jumps-block label code))))
+  (dohash (label bl bb.hash)
+    (set bl.insns bb.(thread-jumps-block label bl.insns))))
 
 (defun rewrite (fun list)
   (build

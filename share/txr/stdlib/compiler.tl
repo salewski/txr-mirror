@@ -731,7 +731,7 @@
         (t (new (frag pfrag.oreg
                       ^((uwprot ,lclean)
                         ,*pfrag.code
-                        (jend nil)
+                        (end nil)
                         ,lclean
                         ,*cfrag.code
                         (end nil))
@@ -1503,6 +1503,7 @@
 
 (defmeth compiler optimize (me insns)
   (let* ((bb (new (basic-blocks insns))))
+    bb.(calc-liveness)
     bb.(peephole)
     bb.(thread-jumps)
     bb.(get-insns)))
