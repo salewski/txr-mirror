@@ -34678,6 +34678,16 @@ method, which is also how the final version of the list is eventually
 retrieved.
 
 The
+.code list-builder
+methods which add material to the list all return the list builder,
+making chaining possible.
+
+.verb
+   (new list-builder).(add 1).(add 2).(pend '(3 4 5)).(get)
+   -> (1 2 3 4 5)
+.brev
+
+The
 .code build
 macro is provided which syntactically streamlines the process.
 It implicitly creates a
@@ -34768,8 +34778,9 @@ whereas
 .code add*
 adds elements at the front.
 
-These methods return
-.codn nil .
+These methods return the
+.meta list-builder
+object.
 
 The precise semantics is as follows.
 All of the
@@ -34841,8 +34852,9 @@ however, they avoid mutating those parts of the current list
 that are shared with inputs that were given in earlier
 calls to these functions.
 
-These methods return
-.codn nil .
+These methods return the
+.meta list-builder
+object.
 
 .TP* Example:
 
@@ -34908,8 +34920,9 @@ installed as the terminating atom of the
 list being constructed, if the current list is
 an ordinary list.
 
-These methods return
-.codn nil .
+These methods return the
+.meta list-builder
+object.
 
 .TP* Example:
 
@@ -35031,9 +35044,11 @@ and
 .codn del* ,
 the local functions return
 .codn nil ,
-like the same-named
+unlike like the same-named
 .code list-builder
-methods.
+methods, which return the
+.code list-builder
+object.
 
 In this lexical environment, each
 .meta form

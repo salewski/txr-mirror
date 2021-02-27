@@ -37,12 +37,12 @@
       (let ((tl (last st)))
         (usr:rplacd tl (append (cdr tl) items))
         (set self.tail tl)))
-    nil)
+    self)
 
   (:method add* (self . items)
     (let ((h self.head))
       (usr:rplacd h (append items (cdr h))))
-    nil)
+    self)
 
   (:method pend (self . lists)
     (when lists
@@ -53,14 +53,14 @@
                (nl [apply append lists]))
           (usr:rplacd tl (append (cdr tl) (if cp (copy-list nl) nl)))
           (set self.tail tl)))
-      nil))
+      self))
 
   (:method pend* (self . lists)
     (let* ((h self.head)
            (pf [apply append (append lists (list (cdr h)))]))
       (usr:rplacd h pf)
       (set self.tail h))
-    nil)
+    self)
 
   (:method ncon (self . lists)
     (when lists
@@ -68,7 +68,7 @@
              (nl [apply nconc lists]))
         (usr:rplacd tl (nconc (cdr tl) nl))
         (set self.tail tl))
-      nil))
+      self))
 
   (:method ncon* (self . lists)
     (let* ((h self.head)
@@ -76,7 +76,7 @@
       (usr:rplacd h pf)
       (if (eq self.tail h)
         (set self.tail pf)))
-    nil)
+    self)
 
   (:method get (self)
     (cdr self.head))
@@ -113,7 +113,8 @@
   (nconc
     (collect-each ((op '(add add* pend pend* ncon ncon*)))
       ^(,op (. args)
-         (qref ,lb-form (,op . args))))
+         (qref ,lb-form (,op . args))
+         nil))
     ^((get ()
         (qref ,lb-form (get)))
       (del* ()
