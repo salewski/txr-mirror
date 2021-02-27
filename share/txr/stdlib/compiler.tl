@@ -845,7 +845,7 @@
                      ,lhand
                      ,*(mappend .code cfrags)
                      ,lhend
-                     (jend ,tfrag.oreg)
+                     (end ,tfrag.oreg)
                      (end ,tfrag.oreg))
                    (uni tfrag.fvars [reduce-left uni cfrags nil .fvars])
                    (uni tfrag.ffuns [reduce-left uni cfrags nil .ffuns])))))))

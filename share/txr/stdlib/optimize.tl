@@ -135,13 +135,13 @@
              (mappend (do when-match
                         (t @num) @1 (list num)) regs))
            (def (li insn def)
+             (set li (copy li)
+                  li.def def
+                  [bb.li-hash insn] li)
              (let* ((dn (regnum def))
                     (dmask (if dn (mask dn))))
                (cond
-                 (dn (set li (copy li)
-                          li.def dn
-                          [bb.li-hash insn] li)
-                     (new live-info
+                 (dn (new live-info
                           used (logand li.used (lognot dmask))
                           defined (logior li.defined dmask)))
                  (t (set [bb.li-hash insn] li)))))
@@ -153,15 +153,15 @@
                     used (logior li.used rmask)
                     defined (logand li.defined (lognot rmask)))))
            (def-ref (li insn def . refs)
+             (set li (copy li)
+                  li.def def
+                  [bb.li-hash insn] li)
              (let* ((rn (regnums refs))
                     (dn (regnum def))
                     (dmask (if dn (mask dn)))
                     (rmask (mask . rn)))
                (cond
-                 (dn (set li (copy li)
-                          li.def dn
-                          [bb.li-hash insn] li)
-                     (new live-info
+                 (dn (new live-info
                           used (logior (logand li.used (lognot dmask)) rmask)
                           defined (logior (logand li.defined (lognot rmask)) dmask)))
                  (t (set [bb.li-hash insn] li)
@@ -327,22 +327,19 @@
                  (and li (not (bit li.used n)))))
       (cdr insns))
     ;; unnecessary copying t-reg
-    (@(require ((mov @(as dst (t @n)) @(as src (@st @sn))) . @nil)
+    (@(require ((mov @(as dst (t @n)) @src) . @rest)
                (let ((li [bb.li-hash (car insns)]))
                  (and li (bit li.used n) (not (bit bl.live n))))
-               (neq st 'v)
-               (not (find n (cdr insns) : [chain bb.li-hash .def]))
-               (or (neq st 't)
-                   (and (not (bit bl.defined sn))
-                        (not (find sn insns : [chain bb.li-hash .def])))))
+               (or (neq (car src) 'v)
+                   (none rest [andf [chain car (op eq 'end)]
+                                    [chain bb.li-hash .used (lop bit n)]]))
+               (not (find dst rest : [chain bb.li-hash .def]))
+               (not (find src rest : [chain bb.li-hash .def])))
       (labels ((rename (insns n dst src)
                  (tree-case insns
                    ((fi . re)
-                      (let ((li [bb.li-hash fi]))
-                        (if (or (not li) (eql li.def n))
-                          insns
-                          (cons (subst-preserve dst src bb li fi)
-                                (rename (cdr insns) n dst src)))))
+                    (cons (subst-preserve dst src bb [bb.li-hash fi] fi)
+                          (rename (cdr insns) n dst src)))
                    (else else))))
         (rename (cdr insns) n dst src)))
     ;; wasteful moves
