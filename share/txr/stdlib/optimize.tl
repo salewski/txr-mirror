@@ -258,6 +258,8 @@
       (set insn ninsn
            ninsn (match-case insn
                    ((if (d @reg) @jlabel) nil)
+                   ((if (t 0) @jlabel)
+                    ^(jmp ,jlabel))
                    ((jmp @jlabel)
                     (let ((jinsns [bb.hash jlabel].insns))
                       (match-case jinsns
