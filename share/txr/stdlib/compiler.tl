@@ -1506,6 +1506,7 @@
     bb.(calc-liveness)
     bb.(peephole)
     bb.(thread-jumps)
+    bb.(elim-dead-code)
     bb.(get-insns)))
 
 (defun true-const-p (arg)

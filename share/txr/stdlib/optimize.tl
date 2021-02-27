@@ -388,6 +388,24 @@
   (dohash (label bl bb.hash)
     (set bl.insns bb.(thread-jumps-block label bl.insns))))
 
+(defmeth basic-blocks elim-dead-code (bb)
+  (dohash (label bl bb.hash)
+    (set bl.links nil))
+  bb.(link-graph)
+  (let* ((visited (hash :eq-based))
+         (reachable (build
+                      (labels ((visit (bl)
+                                 (when (test-set [visited bl])
+                                   (add bl.label)
+                                   (when bl.next
+                                     (visit [bb.hash bl.next]))
+                                   [mapcar [chain bb.hash visit] bl.links])))
+                        (for ((bl bb.root)) (bl) ((set bl [bb.hash bl.next]))
+                          (add bl.label)
+                          (visit bl))
+                        (visit bb.root)))))
+    (set bb.labels [keep-if (chain bb.hash visited) bb.labels])))
+
 (defun rewrite (fun list)
   (build
     (while* list
