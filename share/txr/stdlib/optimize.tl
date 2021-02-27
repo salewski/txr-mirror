@@ -27,7 +27,8 @@
 (compile-only
   (defstruct live-info nil
     (defined 0)
-    (used 0))
+    (used 0)
+    def)
 
   (defstruct basic-block (live-info)
     live
@@ -134,14 +135,16 @@
              (mappend (do when-match
                         (t @num) @1 (list num)) regs))
            (def (li insn def)
-             (set [bb.li-hash insn] li)
              (let* ((dn (regnum def))
                     (dmask (if dn (mask dn))))
-               (if dn
-                 (new live-info
-                      used (logand li.used (lognot dmask))
-                      defined (logior li.defined dmask))
-                 li)))
+               (cond
+                 (dn (set li (copy li)
+                          li.def dn
+                          [bb.li-hash insn] li)
+                     (new live-info
+                          used (logand li.used (lognot dmask))
+                          defined (logior li.defined dmask)))
+                 (t (set [bb.li-hash insn] li)))))
            (refs (li insn . refs)
              (set [bb.li-hash insn] li)
              (let* ((rn (regnums refs))
@@ -150,20 +153,21 @@
                     used (logior li.used rmask)
                     defined (logand li.defined (lognot rmask)))))
            (def-ref (li insn def . refs)
-             (set [bb.li-hash insn] li)
              (let* ((rn (regnums refs))
                     (dn (regnum def))
                     (dmask (if dn (mask dn)))
                     (rmask (mask . rn)))
-               (new live-info
-                    used (if dn
-                           (logior (logand li.used (lognot dmask)) rmask)
-                           (logior li.used rmask))
-                    defined (if dn
-                              (logand (logior dmask
-                                              li.defined)
-                                      (lognot rmask))
-                              (logand li.defined (lognot rmask))))))
+               (cond
+                 (dn (set li (copy li)
+                          li.def dn
+                          [bb.li-hash insn] li)
+                     (new live-info
+                          used (logior (logand li.used (lognot dmask)) rmask)
+                          defined (logior (logand li.defined (lognot rmask)) dmask)))
+                 (t (set [bb.li-hash insn] li)
+                    (new live-info
+                         used (logior li.used rmask)
+                         defined (logand li.defined (lognot rmask)))))))
            (liveness (insns)
              (if (null insns)
                (new live-info used 0)
@@ -304,13 +308,43 @@
       ((nequal ninsn oinsn) (append (ldiff code tail) (list ninsn)))
       (t code))))
 
-(defmeth basic-blocks peephole-block (bb label code)
+(defun subst (x y list)
+  (mapcar (lambda (item)
+            (if (equal item x) y item))
+          list))
+
+(defun subst-preserve (x y bb li list)
+  (let ((sub (subst x y list)))
+    (cond
+      ((equal sub list) list)
+      (t (set [bb.li-hash sub] li) sub))))
+
+(defmeth basic-blocks peephole-block (bb bl label code)
   (rewrite-case insns code
     ;; dead t-reg
     (@(require ((mov (t @n) . @nil) . @nil)
                (let ((li [bb.li-hash (car insns)]))
                  (and li (not (bit li.used n)))))
       (cdr insns))
+    ;; unnecessary copying t-reg
+    (@(require ((mov @(as dst (t @n)) @(as src (@st @sn))) . @nil)
+               (let ((li [bb.li-hash (car insns)]))
+                 (and li (bit li.used n) (not (bit bl.live n))))
+               (neq st 'v)
+               (not (find n (cdr insns) : [chain bb.li-hash .def]))
+               (or (neq st 't)
+                   (and (not (bit bl.defined sn))
+                        (not (find sn insns : [chain bb.li-hash .def])))))
+      (labels ((rename (insns n dst src)
+                 (tree-case insns
+                   ((fi . re)
+                      (let ((li [bb.li-hash fi]))
+                        (if (or (not li) (eql li.def n))
+                          insns
+                          (cons (subst-preserve dst src bb li fi)
+                                (rename (cdr insns) n dst src)))))
+                   (else else))))
+        (rename (cdr insns) n dst src)))
     ;; wasteful moves
     (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
      (cdr insns))
@@ -346,12 +380,12 @@
 
 (defmeth basic-blocks peephole (bb)
   (dohash (label bl bb.hash)
-    (set bl.insns bb.(peephole-block label bl.insns)))
+    (set bl.insns bb.(peephole-block bl label bl.insns)))
   (whilet ((rescan bb.rescan))
     (set bb.rescan nil)
     (each ((label rescan))
       (let ((bl [bb.hash label]))
-        (set bl.insns bb.(peephole-block label bl.insns))))))
+        (set bl.insns bb.(peephole-block bl label bl.insns))))))
 
 (defmeth basic-blocks thread-jumps (bb)
   (dohash (label bl bb.hash)
@@ -364,11 +398,6 @@
         (if (eq list nlist)
           (if list (add (pop list)))
           (set list nlist))))))
-
-(defun subst (x y list)
-  (mapcar (lambda (item)
-            (if (equal item x) y item))
-          list))
 
 (defun dedup-labels (insns)
   (rewrite-case tail insns
