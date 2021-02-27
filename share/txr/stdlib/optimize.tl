@@ -390,6 +390,14 @@
   (dohash (label bl bb.hash)
     (set bl.insns bb.(thread-jumps-block label bl.insns))))
 
+(defmeth basic-blocks elim-next-jump (bb bl label)
+  (let* ((tail (last bl.insns))
+         (linsn (car tail)))
+    (when-match (jmp @jlabel) linsn
+      (let ((next bb.(next-block label)))
+        (when (eql [bb.hash next].?label jlabel)
+          (set bl.insns (butlast bl.insns)))))))
+
 (defmeth basic-blocks elim-dead-code (bb)
   (dohash (label bl bb.hash)
     (set bl.links nil))
@@ -406,7 +414,9 @@
                           (add bl.label)
                           (visit bl))
                         (visit bb.root)))))
-    (set bb.labels [keep-if (chain bb.hash visited) bb.labels])))
+    (set bb.labels [keep-if (chain bb.hash visited) bb.labels])
+    (each ((lb bb.labels))
+      bb.(elim-next-jump [bb.hash lb] lb))))
 
 (defun rewrite (fun list)
   (build
