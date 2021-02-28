@@ -1,3 +1,76 @@
+                                    TXR 252
+                                   2021-02-28
+
+
+  Features:
+
+  - compiler:
+    - new optimizations introduced:
+      - elimination of frames for non-captured lexical variables
+      - elimination of blocks in self-recursive functions
+      - more compact frame size for closures
+      - strength reduction of equal (helps pattern matching)
+      - list construction optimization:
+        - e.g. (cons 1 (cons 2 3)) -> (list* 1 2 3) and more
+      - other algebraic reductions.
+      - aggressive constant-folding of over 300 library functions.
+      - new control-flow and data-flow analysis:
+        - removal of dead registers
+        - elimination of inefficiently used temporary registers
+        - comprehensive dead code removal
+
+  - structural pattern matching
+    - internal code cleanup, improvements and improved
+      diagnostics for hash patterns.
+
+  - syntax:
+    - obj.[fun ...] syntax changes meaning; it is now
+      method dispatch.
+      - obj.[method ...] is to [fun ...] as
+        obj.(method ...) is to (fun ....)
+    - improved diagnosis of invalid dotted forms.
+
+  - library:
+    - list-builder methods now return the object, allowing
+      chaining like (new list-builder).(add 3).(get)
+
+  - vm:
+    - backwards compatibility jump: TXR 251 generates version 6
+      object files (.tlo) and will not read older ones.
+    - Some obsolescent instructions have been removed from the
+      instruction set.
+
+  - TXR Pattern Language:
+    - function calls, including indirect calls via @(call ...)
+      are now considered non-matching directives, thus not
+      calling for the input source to be opened.
+
+  Bugs:
+
+  - math:
+    - fixed out-of-bounds memory access in or and xor
+      functions when the arguments are bignums.
+  - build:
+    - bug fixed: not dealing with spaces in configuration arguments when
+      generating ./reconfigure script
+  - printer:
+    - obscure bug in printing lambda expressions fixed,
+      triggering function lookup and expansion at print time.
+  - compiler:
+    - fixed internal error in compiler when compiling
+      certain cases sys:switch forms generated in certain cases
+      of caseq/caseql.
+    - assignment to a function binding being internally marked as
+      an a free variable reference by the compiler, rather than
+      a free function reference.
+    - incorrect compilation unwind-protect form when the
+      protected form is trivial, like a literal constant.
+  - TXR Pattern Language:
+    - fixed broken implementation of @(call ...), in several independent
+      aspects.
+
+
+
                                     TXR 251
                                    2021-02-08
 
