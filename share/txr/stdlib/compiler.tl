@@ -546,8 +546,8 @@
                    ^(,*vfrag.code
                       (getfb ,treg ,fname)
                       (gcall ,treg ,rplcd ,treg ,vfrag.oreg))
-                   (uni (list sym) vfrag.fvars)
-                   vfrag.ffuns))))))
+                   vfrag.fvars
+                   (uni (list sym) vfrag.ffuns)))))))
 
 (defmeth compiler comp-cond (me oreg env form)
   (tree-case form
