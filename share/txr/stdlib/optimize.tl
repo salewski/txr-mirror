@@ -37,8 +37,9 @@
     links
     insns)
 
-  (defstruct (basic-blocks insns) nil
+  (defstruct (basic-blocks insns lt-dregs) nil
     insns
+    lt-dregs
     root
     (hash (hash))
     (li-hash (hash :eq-based))
@@ -257,7 +258,9 @@
     (while* (nequal ninsn insn)
       (set insn ninsn
            ninsn (match-case insn
-                   ((if (d @reg) @jlabel) nil)
+                   (@(require (if @(as reg (d @reg)) @jlabel)
+                              (not (memqual reg bb.lt-dregs)))
+                    nil)
                    ((if (t 0) @jlabel)
                     ^(jmp ,jlabel))
                    ((jmp @jlabel)

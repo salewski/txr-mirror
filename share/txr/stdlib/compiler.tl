@@ -1502,7 +1502,8 @@
              (new (frag dreg nil))))))))
 
 (defmeth compiler optimize (me insns)
-  (let* ((bb (new (basic-blocks insns))))
+  (let* ((lt-dregs (mapcar .oreg me.lt-frags))
+         (bb (new (basic-blocks insns lt-dregs))))
     bb.(calc-liveness)
     bb.(peephole)
     bb.(thread-jumps)
