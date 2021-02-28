@@ -25,13 +25,7 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (eval-only
-  (defsymacro copy-size 65536)
-
-  (defpackage copy-file
-    (:fallback usr sys)
-    (:use-syms usr:perms usr:times usr:owner usr:symlinks))
-
-  (in-package copy-file))
+  (defsymacro copy-size 65536))
 
 (defstruct copy-path-opts ()
   perms times owner symlinks (euid (geteuid)))
@@ -218,6 +212,3 @@
       (let ((rst (stat ref-path)))
         (utimes s 0 nil rst.mtime rst.mtime-nsec))
       (utimes s 0 nil 0 t))))
-
-(eval-only
-  (merge-delete-package 'sys))
