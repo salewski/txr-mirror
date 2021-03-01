@@ -24,9 +24,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-.NOTPARALLEL:
-
 -include config.make
+
+ifeq ($(parallelmake),)
+.NOTPARALLEL:
+endif
 
 VERBOSE :=
 TXR_CFLAGS := -iquote . $(if $(top_srcdir), -iquote $(top_srcdir)) \
@@ -409,6 +411,8 @@ tst/tests/016/%: TXR_DBG_OPTS :=
 tst/tests/017/%: TXR_DBG_OPTS :=
 tst/tests/018/%: TXR_DBG_OPTS :=
 
+tst/tests/014/dgram-stream.ok: | tst/tests/014/socket-basic.ok
+
 TST_EXPECTED  = $(word 2,$^)
 TST_OUT = $(patsubst %.expected,tst/%.out,$(TST_EXPECTED))
 
@@ -439,11 +443,11 @@ tst/%.ok: %.tl %.expected $(TXR)
 	$(call SH,touch $@)
 
 .PHONY: tests.clean
-tests.clean:
+tests.clean: | tests
 	rm -rf tst
 
 .PHONY: retest
-retest: tests.clean tests
+retest: | tests.clean tests
 
 define GREP_CHECK
 	$(V)if [ $$(grep -E $(1) $(SRCS) | wc -l) -ne $(3) ] ; then \

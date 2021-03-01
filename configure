@@ -141,6 +141,8 @@ bindir='bin'
 datadir='share/txr'
 mandir='share/man'
 maintainer=
+parallelmake=
+parallelmake_given=
 make=
 cross=
 compiler_prefix=
@@ -331,6 +333,13 @@ maintainer [$maintainer]
   In user mode, the shipped parser and scanner are used. Changes to
   the parser.l and parser.y files will have no effect. In maintainer mode,
   also, c90 is used if compiling the code as C.
+
+parallelmake [$parallelmake]
+
+  Boolean. If set to 'y', it specifies that parallel building with make -j
+  is permitted. Otherwise the Makefile asserts no parallelism with
+  a .NOTOPARALLEL: directive. The above maintainer mode also implies
+  parallel building being permited.
 
 prefix [$prefix]
 
@@ -885,6 +894,9 @@ termios_define := $termios_define
 
 # do we compile in debug support?
 debug_support := $debug_support
+
+# allow parallel make?
+parallelmake := $parallelmake
 
 # EXE suffix
 EXE := $exe
@@ -1774,6 +1786,13 @@ if [ $maintainer ] ; then
   else
     printf "no\n"
   fi
+fi
+
+#
+# Check for parallel build
+#
+if [ $maintainer ] && ! [ $parallelmake_given ] ; then
+  parallelmake=y
 fi
 
 #
