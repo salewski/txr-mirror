@@ -43,7 +43,6 @@
     root
     (hash (hash))
     (li-hash (hash :eq-based))
-    labels
     list
     rescan
     (:static start (gensym "start-"))
@@ -64,28 +63,26 @@
         (set bb.list (mapcar (do new basic-block
                                insns @1 label (car @1))
                              lparts))
-        (set bb.labels [mapcar car lparts])
         (mapdo (do set [bb.hash @1.label] @1) bb.list))
       bb.(link-graph))
 
     (:method get-insns (bb)
-      [mappend [chain bb.hash .insns] bb.labels])
+      [mappend .insns bb.list])
 
-    (:method cut-block (bb label at insns)
-      (let ((nlabel (gensym "nl"))
-            (ltail (cdr (member label bb.labels))))
-        (set bb.labels (append (ldiff bb.labels ltail)
-                               (list nlabel)
-                               ltail))
-        (set [bb.hash nlabel] (new basic-block
-                                   label nlabel
-                                   insns (cons nlabel at)))
-        (set [bb.hash label].insns (ldiff insns at))
-        (push nlabel bb.rescan)
-        nlabel))
+    (:method cut-block (bb bl at insns)
+      (let* ((nlabel (gensym "nl"))
+             (ltail (cdr (memq bl bb.list)))
+             (nbl (new basic-block
+                       label nlabel
+                       insns (cons nlabel at))))
+        (set bb.list (append (ldiff bb.list ltail) (list nbl) ltail))
+        (set bl.insns (ldiff insns at))
+        (set [bb.hash nlabel] nbl)
+        (push bl bb.rescan)
+        nbl))
 
-    (:method next-block (bb label)
-      (let ((ltail (member label bb.labels)))
+    (:method next-block (bb bl)
+      (let ((ltail (memq bl bb.list)))
         (iflet ((next (cdr ltail)))
           (car next))))))
 
@@ -96,34 +93,34 @@
             ,list))
 
 (defmeth basic-blocks link-graph (bb)
-  (set bb.root [bb.hash (car bb.labels)])
-  (dohash (label bl bb.hash)
+  (set bb.root (car bb.list))
+  (each ((bl bb.list))
     (let* ((code bl.insns)
            (tail (last code))
            (linsn (car tail))
            (link-next t)
-           (nxlabel (cadr (member label bb.labels))))
-      (set bl.next nxlabel)
+           (nxbl (cadr (memq bl bb.list))))
+      (set bl.next nxbl)
       (match-case linsn
         ((jmp @jlabel)
-         (set bl.links (list jlabel)
+         (set bl.links (list [bb.hash jlabel])
               bl.next nil))
         ((if @nil @jlabel)
-         (set bl.links (list jlabel)))
+         (set bl.links (list [bb.hash jlabel])))
         ((@(or ifq ifql) @nil @nil @jlabel)
-         (set bl.links (list jlabel)))
+         (set bl.links (list [bb.hash jlabel])))
         ((close @nil @nil @nil @jlabel . @nil)
-         (set bl.links (list jlabel)
+         (set bl.links (list [bb.hash jlabel])
               link-next nil))
         ((swtch @nil . @jlabels)
-         (set bl.links (uniq jlabels)
+         (set bl.links [mapcar bb.hash (uniq jlabels)]
               bl.next nil))
         ((catch @nil @nil @nil @nil @hlabel)
-         (set bl.links (list hlabel)))
+         (set bl.links (list [bb.hash hlabel])))
         ((block @nil @nil @slabel)
-         (set bl.links (list slabel)))
+         (set bl.links (list [bb.hash slabel])))
         ((uwprot @clabel)
-         (set bl.links (list clabel)))
+         (set bl.links (list [bb.hash clabel])))
         ((@(or abscsr ret jend) . @nil)
          (set bl.next nil)))
       (if (and bl.next link-next)
@@ -216,7 +213,7 @@
            bl.defined li.defined))))
 
 (defmeth basic-blocks calc-liveness (bb)
-  (dohash (label bl bb.hash)
+  (each ((bl bb.list))
     bb.(local-liveness bl))
   (let (changed)
     (while* changed
@@ -234,13 +231,12 @@
                    (unless [visited bl]
                      (set [visited bl] t)
                      (when bl.next
-                       (visit [bb.hash bl.next]))
+                       (visit bl.next))
                      (let ((used 0)
                            (old-live (or bl.live 0)))
-                       (each ((label bl.links))
-                         (let ((nx [bb.hash label]))
-                           (visit nx)
-                           (set used (logior used nx.used))))
+                       (each ((nx bl.links))
+                         (visit nx)
+                         (set used (logior used nx.used)))
                        (when (neql (set bl.live (logior used old-live))
                                    old-live)
                          (let ((live-in (logand (upd-used bl bl.insns bl.live)
@@ -250,7 +246,7 @@
           (set changed nil)
           (visit bb.root))))))
 
-(defmeth basic-blocks thread-jumps-block (bb label code)
+(defmeth basic-blocks thread-jumps-block (bb code)
   (let* ((tail (last code))
          (oinsn (car tail))
          (insn oinsn)
@@ -282,11 +278,11 @@
                          ^(if ,reg ,jjlabel))
                         ((@jlabel
                            (ifq @reg nil @jjlabel) . @jrest)
-                         (let ((xlabel (if jrest
-                                         bb.(cut-block jlabel jrest jinsns)
-                                         bb.(next-block jlabel))))
-                           (if xlabel
-                             ^(if ,reg ,xlabel)
+                         (let ((xbl (if jrest
+                                      bb.(cut-block [bb.hash jlabel] jrest jinsns)
+                                      bb.(next-block [bb.hash jlabel]))))
+                           (if xbl
+                             ^(if ,reg ,xbl.label)
                              insn)))
                         (@jelse insn))))
                    ((ifq @reg @creg @jlabel)
@@ -324,7 +320,7 @@
       ((equal sub list) list)
       (t (set [bb.li-hash sub] li) sub))))
 
-(defmeth basic-blocks peephole-block (bb bl label code)
+(defmeth basic-blocks peephole-block (bb bl code)
   (rewrite-case insns code
     ;; dead t-reg
     (@(require ((mov (t @n) . @nil) . @nil)
@@ -365,61 +361,59 @@
        (match-case jinsns
          ((@jlabel
             (end (t @reg)) . @jrest)
-          (let* ((xlabel (if jrest
-                           bb.(cut-block jlabel jrest jinsns)
-                           bb.(next-block jlabel)))
-                 (ylabel bb.(next-block label))
-                 (yinsns [bb.hash ylabel].insns))
+          (let* ((xbl (if jrest
+                         bb.(cut-block [bb.hash jlabel] jrest jinsns)
+                         bb.(next-block [bb.hash jlabel])))
+                 (ybl bb.(next-block bl))
+                 (yinsns ybl.insns))
             (cond
-              ((and xlabel ylabel)
-               (set [bb.hash ylabel].insns
-                    ^(,ylabel ,(car insns) ,*(cdr yinsns)))
-               (push ylabel bb.rescan)
-               ^((if (t ,reg) ,xlabel)))
+              ((and xbl ybl)
+               (set ybl.insns ^(,ybl.label ,(car insns) ,*(cdr yinsns)))
+               (push ybl bb.rescan)
+               ^((if (t ,reg) ,xbl.label)))
               (t insns))))
          (@jelse insns))))
     (@else insns)))
 
 (defmeth basic-blocks peephole (bb)
-  (dohash (label bl bb.hash)
-    (set bl.insns bb.(peephole-block bl label bl.insns)))
+  (each ((bl bb.list))
+    (set bl.insns bb.(peephole-block bl bl.insns)))
   (whilet ((rescan bb.rescan))
     (set bb.rescan nil)
-    (each ((label rescan))
-      (let ((bl [bb.hash label]))
-        (set bl.insns bb.(peephole-block bl label bl.insns))))))
+    (each ((bl rescan))
+      (set bl.insns bb.(peephole-block bl bl.insns)))))
 
 (defmeth basic-blocks thread-jumps (bb)
-  (dohash (label bl bb.hash)
-    (set bl.insns bb.(thread-jumps-block label bl.insns))))
+  (each ((bl bb.list))
+    (set bl.insns bb.(thread-jumps-block bl.insns))))
 
-(defmeth basic-blocks elim-next-jump (bb bl label)
+(defmeth basic-blocks elim-next-jump (bb bl)
   (let* ((tail (last bl.insns))
          (linsn (car tail)))
     (when-match (jmp @jlabel) linsn
-      (let ((next bb.(next-block label)))
-        (when (eql [bb.hash next].?label jlabel)
+      (let ((nxbl bb.(next-block bl)))
+        (when (eql nxbl.?label jlabel)
           (set bl.insns (butlast bl.insns)))))))
 
 (defmeth basic-blocks elim-dead-code (bb)
-  (dohash (label bl bb.hash)
+  (each ((bl bb.list))
     (set bl.links nil))
   bb.(link-graph)
   (let* ((visited (hash :eq-based))
          (reachable (build
                       (labels ((visit (bl)
                                  (when (test-set [visited bl])
-                                   (add bl.label)
+                                   (add bl)
                                    (when bl.next
-                                     (visit [bb.hash bl.next]))
-                                   [mapcar [chain bb.hash visit] bl.links])))
-                        (for ((bl bb.root)) (bl) ((set bl [bb.hash bl.next]))
-                          (add bl.label)
+                                     (visit bl.next))
+                                   [mapcar visit bl.links])))
+                        (for ((bl bb.root)) (bl) ((set bl bl.next))
+                          (add bl)
                           (visit bl))
                         (visit bb.root)))))
-    (set bb.labels [keep-if (chain bb.hash visited) bb.labels])
-    (each ((lb bb.labels))
-      bb.(elim-next-jump [bb.hash lb] lb))))
+    (set bb.list [keep-if visited bb.list])
+    (each ((bl bb.list))
+      bb.(elim-next-jump bl))))
 
 (defun rewrite (fun list)
   (build
