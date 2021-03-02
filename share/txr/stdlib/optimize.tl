@@ -266,7 +266,7 @@
     (while* (nequal ninsn insn)
       (set insn ninsn
            ninsn (match-case insn
-                   (@(require (if @(as reg (d @reg)) @jlabel)
+                   (@(require (if @(as reg (d @dn)) @jlabel)
                               (not (memqual reg bb.lt-dregs)))
                     nil)
                    ((if (t 0) @jlabel)
