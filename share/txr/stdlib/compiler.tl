@@ -1504,10 +1504,10 @@
 (defmeth compiler optimize (me insns)
   (let* ((lt-dregs (mapcar .oreg me.lt-frags))
          (bb (new (basic-blocks insns lt-dregs))))
-    bb.(calc-liveness)
-    bb.(peephole)
     bb.(thread-jumps)
     bb.(elim-dead-code)
+    bb.(calc-liveness)
+    bb.(peephole)
     bb.(get-insns)))
 
 (defun true-const-p (arg)
