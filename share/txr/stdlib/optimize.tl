@@ -289,7 +289,7 @@
                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                          ^(if ,reg ,jjlabel))
                         ((@jlabel
-                           (ifq @reg nil @jjlabel) . @jrest)
+                           (ifq @reg (t 0) @jjlabel) . @jrest)
                          (let ((xbl (if jrest
                                       bb.(cut-block [bb.hash jlabel] jrest jinsns)
                                       bb.(next-block [bb.hash jlabel]))))

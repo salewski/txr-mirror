@@ -1161,7 +1161,7 @@
                           (pend frag.code
                                 me.(maybe-mov treg frag.oreg))
                           (unless islast
-                            (add ^(ifq ,treg ,nil ,lout)))
+                            (add ^(ifq ,treg (t 0) ,lout)))
                           (set fvars (uni fvars frag.fvars))
                           (set ffuns (uni ffuns frag.ffuns))))))))
        me.(maybe-free-treg treg oreg)
