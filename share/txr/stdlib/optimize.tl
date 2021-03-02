@@ -35,6 +35,7 @@
     label
     next
     links
+    rlinks
     insns)
 
   (defstruct (basic-blocks insns lt-dregs) nil
@@ -84,7 +85,16 @@
     (:method next-block (bb bl)
       (let ((ltail (memq bl bb.list)))
         (iflet ((next (cdr ltail)))
-          (car next))))))
+          (car next))))
+
+    (:method join-block (bb bl nxbl)
+      (when (eql (car nxbl.insns) nxbl.label)
+        (pop nxbl.insns))
+      (set bl.insns (append bl.insns nxbl.insns))
+      (set bl.next nxbl.next)
+      (set bl.links nxbl.links)
+      (set bb.list (remq nxbl bb.list))
+      (del [bb.hash nxbl.label]))))
 
 (defmacro rewrite-case (sym list . cases)
   ^(rewrite (lambda (,sym)
@@ -124,7 +134,9 @@
         ((@(or abscsr ret jend) . @nil)
          (set bl.next nil)))
       (if (and bl.next link-next)
-        (pushnew bl.next bl.links)))))
+        (pushnew bl.next bl.links))
+      (each ((nxbl bl.links))
+        (pushnew bl nxbl.rlinks)))))
 
 (defmeth basic-blocks local-liveness (bb bl)
   (labels ((regnum (reg)
@@ -395,9 +407,25 @@
         (when (eql nxbl.?label jlabel)
           (set bl.insns (butlast bl.insns)))))))
 
+(defmeth basic-blocks join-blocks (bb)
+  (labels ((join (list)
+             (tree-case list
+               ((bl nxbl . rest)
+                (cond
+                  ((and (eq bl.next nxbl)
+                        (eq (car bl.links) nxbl)
+                        (null (cdr bl.links))
+                        (null (cdr nxbl.rlinks)))
+                   bb.(join-block bl nxbl)
+                   (join (cons bl rest)))
+                  (t (cons bl (join (cdr list))))))
+               (else else))))
+    (set bb.list (join bb.list))))
+
 (defmeth basic-blocks elim-dead-code (bb)
   (each ((bl bb.list))
-    (set bl.links nil))
+    (set bl.links nil)
+    (set bl.rlinks nil))
   bb.(link-graph)
   (let* ((visited (hash :eq-based))
          (reachable (build
@@ -413,7 +441,8 @@
                         (visit bb.root)))))
     (set bb.list [keep-if visited bb.list])
     (each ((bl bb.list))
-      bb.(elim-next-jump bl))))
+      bb.(elim-next-jump bl)))
+  bb.(join-blocks))
 
 (defun rewrite (fun list)
   (build
