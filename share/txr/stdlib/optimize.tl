@@ -385,6 +385,12 @@
                ^((if (t ,reg) ,xbl.label)))
               (t insns))))
          (@jelse insns))))
+    (@(require ((if @(as reg (d @dn)) @jlabel) . @nil)
+               (not (memqual reg bb.lt-dregs)))
+      nil)
+    (@(require ((ifq @(as reg (d @dn)) (t 0) @jlabel) . @nil)
+               (not (memqual reg bb.lt-dregs)))
+      ^((jmp ,jlabel)))
     (@else insns)))
 
 (defmeth basic-blocks peephole (bb)
