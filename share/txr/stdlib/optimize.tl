@@ -36,7 +36,16 @@
     next
     links
     rlinks
-    insns)
+    insns
+
+    (:method print (bl stream pretty-p)
+       (put-string "#S" stream)
+       (print ^(basic-block live ,bl.live
+                            label ,bl.label
+                            insns ,bl.insns
+                            links ,(mapcar .label bl.links)
+                            rlinks ,(mapcar .label bl.rlinks)
+                            next ,bl.next) stream)))
 
   (defstruct (basic-blocks insns lt-dregs) nil
     insns
