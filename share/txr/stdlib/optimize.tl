@@ -391,6 +391,14 @@
     (@(require ((ifq @(as reg (d @dn)) (t 0) @jlabel) . @nil)
                (not (memqual reg bb.lt-dregs)))
       ^((jmp ,jlabel)))
+    (((jmp @jlabel) . @rest)
+     (let ((jinsns (cdr [bb.hash jlabel].insns)))
+       (match-case jinsns
+         (((jend @nil) . @nil)
+          ^(,(car jinsns) ,*rest))
+         ((@nil (jend @nil) . @nil)
+          ^(,(car jinsns) ,(cadr jinsns) ,*rest))
+         (@else insns))))
     (@else insns)))
 
 (defmeth basic-blocks peephole (bb)
