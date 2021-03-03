@@ -564,7 +564,7 @@
 
 (defmeth compiler comp-if (me oreg env form)
   (match-case (cdr form)
-    (@(require ((@(and (or equal nequal) @op) @a @b) . @rest)
+    (@(require ((@(and @(or equal nequal) @op) @a @b) . @rest)
                (or (eql-comparable a)
                    (eql-comparable b)))
       (let* ((pos (eq op 'equal))
