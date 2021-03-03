@@ -51,7 +51,7 @@
                         uwprot catch block jend))
 
     (:postinit (bb)
-      (let* ((insns (dedup-labels (cons bb.start bb.insns)))
+      (let* ((insns (early-peephole (dedup-labels (cons bb.start bb.insns))))
              (cuts (merge [where symbolp insns]
                           [where [andf consp
                                        (op memq (car @1) bb.jump-ops)]
@@ -474,3 +474,20 @@
      (cons label0 rest))
     (@else tail))
   insns)
+
+(defun early-peephole (code)
+  (rewrite-case insns code
+    (((mov (t @t1) (d @d1))
+      (jmp @lab2)
+      @(symbolp @lab1)
+      (mov (t @t1) (t 0))
+      @lab2
+      (ifq (t @t1) (t 0) @lab3)
+      . @rest)
+    ^((mov (t ,t1) (d ,d1))
+      (jmp ,lab3)
+      ,lab1
+      (mov (t ,t1) (t 0))
+      ,lab2
+      ,*rest))
+    (@else else)))
