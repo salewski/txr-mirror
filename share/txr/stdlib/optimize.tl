@@ -467,6 +467,31 @@
       bb.(elim-next-jump bl)))
   bb.(join-blocks))
 
+(defmeth basic-blocks merge-jump-thunks (bb)
+  (let* ((candidates (mappend (load-time
+                                [andf [chain .links len (op eql 1)]
+                                      [chain .insns len (lop < 4)]
+                                      [chain .insns last car
+                                             [iff consp
+                                                  [chain car (op eq 'jmp)]]]
+                                      list])
+                              bb.list))
+         (hash (group-by (load-time [chain .insns cdr]) candidates)))
+    (dohash (insns bls hash)
+      (when (cdr bls)
+        (whenlet ((keep (or (keep-if (op some @1.rlinks (op eq @@1) .next) bls)
+                            (list (car bls))))
+                  (leader (car keep)))
+          (whenlet ((dupes (diff bls keep)))
+            (each ((bl dupes))
+              (each ((pbl bl.rlinks))
+                (let* ((code pbl.insns)
+                       (tail (last code))
+                       (lins (car tail))
+                       (sins (subst bl.label leader.label lins)))
+                  (set pbl.insns (append (ldiff code tail) (list sins))))))
+            (set bb.list (remove-if (lop memq dupes) bb.list))))))))
+
 (defun rewrite (fun list)
   (build
     (while* list

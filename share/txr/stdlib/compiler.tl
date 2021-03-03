@@ -1508,6 +1508,7 @@
     bb.(elim-dead-code)
     bb.(calc-liveness)
     bb.(peephole)
+    bb.(merge-jump-thunks)
     bb.(get-insns)))
 
 (defun true-const-p (arg)
