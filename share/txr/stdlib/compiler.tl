@@ -296,7 +296,7 @@
 
 (defvarl %functional-funs%
   '(chain chand juxt andf orf notf iff iffi dup flipargs if or and
-    progn prog1 prog2 retf apf ipf callf mapf tf nilf))
+    progn prog1 prog2 retf apf ipf callf mapf tf nilf umethod uslot))
 
 (defvarl %functional% (hash-list %functional-funs% :eq-based))
 
