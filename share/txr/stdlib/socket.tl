@@ -65,9 +65,9 @@
 
 
 (defun sys:in6addr-condensed-text (numeric-pieces)
-  (let* ((str (cat-str [mapcar (load-time (op fmt "~x")) numeric-pieces] ":"))
+  (let* ((str (cat-str [mapcar (op fmt "~x") numeric-pieces] ":"))
          (zr (rra #/0(:0)+/ str))
-         (lp [pos-max zr : (load-time [callf - to from])])
+         (lp [pos-max zr : [callf - to from]])
          (lr [zr lp]))
     (when lp
       (del [str lr]))

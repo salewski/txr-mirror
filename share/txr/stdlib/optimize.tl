@@ -468,15 +468,14 @@
   bb.(join-blocks))
 
 (defmeth basic-blocks merge-jump-thunks (bb)
-  (let* ((candidates (mappend (load-time
-                                [andf [chain .links len (op eql 1)]
-                                      [chain .insns len (lop < 4)]
-                                      [chain .insns last car
-                                             [iff consp
-                                                  [chain car (op eq 'jmp)]]]
-                                      list])
+  (let* ((candidates (mappend [andf [chain .links len (op eql 1)]
+                                    [chain .insns len (lop < 4)]
+                                    [chain .insns last car
+                                           [iff consp
+                                                [chain car (op eq 'jmp)]]]
+                                    list]
                               bb.list))
-         (hash (group-by (load-time [chain .insns cdr]) candidates)))
+         (hash (group-by [chain .insns cdr] candidates)))
     (dohash (insns bls hash)
       (when (cdr bls)
         (whenlet ((keep (or (keep-if (op some @1.rlinks (op eq @@1) .next) bls)
