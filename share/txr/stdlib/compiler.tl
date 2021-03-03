@@ -294,6 +294,12 @@
 
 (defvarl %const-foldable% (hash-list %const-foldable-funs% :eq-based))
 
+(defvarl %functional-funs%
+  '(chain chand juxt andf orf notf iff iffi dup flipargs if or and
+    progn prog1 prog2 retf apf ipf callf mapf tf nilf))
+
+(defvarl %functional% (hash-list %functional-funs% :eq-based))
+
 (defvarl assumed-fun)
 
 (defvar *dedup*)
@@ -1252,6 +1258,17 @@
            (cfrag me.(comp-call-impl oreg env (if fbind 'call 'gcall)
                                      (if fbind fbind.loc me.(get-sidx sym))
                                      args)))
+      (when (and (not fbind)
+                 (not *load-time*)
+                 [%functional% sym])
+        (let ((ok-lift-var-pov (null cfrag.fvars))
+              (ok-lift-fun-pov (all cfrag.ffuns
+                                    (lambda (sym)
+                                      (and (not env.(lookup-fun sym))
+                                           (eq (symbol-package sym)
+                                               user-package))))))
+          (when (and ok-lift-var-pov ok-lift-fun-pov)
+            (set cfrag me.(compile oreg env ^(sys:load-time-lit nil ,form))))))
       (pushnew sym cfrag.ffuns)
       cfrag)))
 
