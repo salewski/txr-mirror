@@ -77,7 +77,7 @@
       bb.(link-graph))
 
     (:method get-insns (bb)
-      [mappend .insns bb.list])
+      bb.(late-peephole [mappend .insns bb.list]))
 
     (:method cut-block (bb bl at insns)
       (let* ((nlabel (gensym "nl"))
@@ -490,6 +490,21 @@
                        (sins (subst bl.label leader.label lins)))
                   (set pbl.insns (append (ldiff code tail) (list sins))))))
             (set bb.list (remove-if (lop memq dupes) bb.list))))))))
+
+(defmeth basic-blocks late-peephole (bb code)
+  (rewrite-case insns code
+    (((if @reg @lab1)
+      @lab2
+      (jmp @lab3)
+      @lab1
+      . @rest)
+     (let* ((bl [bb.hash lab2]))
+       (if (some bl.rlinks (op eq bb) .next)
+         insns
+         ^((ifq ,reg (t 0) ,lab3)
+           ,lab1
+           ,*rest))))
+    (@else else)))
 
 (defun rewrite (fun list)
   (build
