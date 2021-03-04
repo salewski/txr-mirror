@@ -37,6 +37,7 @@
 #include <math.h>
 #include <signal.h>
 #include <assert.h>
+#include <locale.h>
 #include "config.h"
 #include "alloca.h"
 #if HAVE_GETENVIRONMENTSTRINGS
@@ -129,6 +130,10 @@ val equal_f, eql_f, eq_f, car_f, cdr_f, null_f;
 val list_f, less_f, greater_f;
 
 val prog_string;
+
+#if CONFIG_LOCALE_TOLERANCE
+char dec_point = '.';
+#endif
 
 static val recycled_conses;
 
@@ -5402,9 +5407,21 @@ val flo_str(val str)
 {
   const wchar_t *wcs = c_str(str);
   wchar_t *ptr;
+  double value;
 
-  /* TODO: detect if we have wcstod */
-  double value = wcstod(wcs, &ptr);
+#if CONFIG_LOCALE_TOLERANCE
+  if (dec_point != '.') {
+    size_t size = c_unum(length_str(str), lit("flot-str")) + 1;
+    wchar_t *wcopy = alloca(sizeof *wcopy * size), *dot = wcopy;
+    wmemcpy(wcopy, wcs, size);
+    wcs = wcopy;
+    while ((dot = wcschr(dot, '.')) != 0)
+      *dot++ = dec_point;
+  }
+#endif
+
+  value = wcstod(wcs, &ptr);
+
   if (value == 0 && ptr == wcs)
     return nil;
   if ((value == HUGE_VAL || value == -HUGE_VAL) && errno == ERANGE)
@@ -11888,6 +11905,16 @@ val in_range_star(val range, val num)
   }
 }
 
+#if CONFIG_LOCALE_TOLERANCE
+
+static void locale_init(void)
+{
+  struct lconv *lc = localeconv();
+  dec_point = *lc->decimal_point;
+}
+
+#endif
+
 static void obj_init(void)
 {
   /*
@@ -12970,6 +12997,9 @@ void init(val *stack_bottom)
 
   t = one;
   gc_init(stack_bottom);
+#if CONFIG_LOCALE_TOLERANCE
+  locale_init();
+#endif
   obj_init();
   uw_init();
   eval_init();

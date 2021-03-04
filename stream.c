@@ -3494,7 +3494,11 @@ val formatv(val stream_in, val fmtstr, struct args *al)
             if (ch == 'e') {
               sprintf(num_buf, "%.*e", precision, n);
               {
+#if CONFIG_LOCALE_TOLERANCE
+                char *dec = strchr(num_buf, dec_point);
+#else
                 char *dec = strchr(num_buf, '.');
+#endif
                 char *exp = strchr(dec ? dec : num_buf, 'e');
 
                 if (exp) {
@@ -3525,6 +3529,13 @@ val formatv(val stream_in, val fmtstr, struct args *al)
               continue;
             }
             precision = (width ? width - 1 : 0);
+#if CONFIG_LOCALE_TOLERANCE
+            if (dec_point != '.') {
+              char *dot = num_buf;
+              while ((dot = strchr(dot, dec_point)) != 0)
+                *dot++ = '.';
+            }
+#endif
             goto output_num;
           }
         case 'd':
@@ -3584,6 +3595,14 @@ val formatv(val stream_in, val fmtstr, struct args *al)
 
             sprintf(num_buf, "%.*g", precision, obj->fl.n);
 
+#if CONFIG_LOCALE_TOLERANCE
+            if (dec_point != '.') {
+              char *dot = num_buf;
+              while ((dot = strchr(dot, dec_point)) != 0)
+                *dot++ = '.';
+            }
+#endif
+
             {
               char *dec = strchr(num_buf, '.');
               char *exp = strchr(dec ? dec : num_buf, 'e');
@@ -3606,7 +3625,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
               }
 
               if (ch == 's' && (!precision_p || precision > 0) && !dec && !exp)
-                  strcat(num_buf, ".0");
+                strcat(num_buf, ".0");
             }
 
             if (!isdigit(num_buf[0]) && !isdigit(num_buf[1])) {

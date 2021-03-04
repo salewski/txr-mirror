@@ -538,6 +538,8 @@ extern val list_f, less_f, greater_f;
 
 extern val prog_string;
 
+extern char dec_point;
+
 #if HAVE_ULONGLONG_T
 typedef ulonglong_t alloc_bytes_t;
 #define SIZEOF_ALLOC_BYTES_T SIZEOF_LONGLONG_T
