@@ -185,7 +185,19 @@
     (stab (hash :eql-based))
     lt-frags
     last-form
-    var-spies))
+    var-spies
+
+    (:method snapshot (me)
+      (let ((snap (copy me)))
+        (set snap.dreg (copy me.dreg)
+             snap.data (copy me.data)
+             snap.sidx (copy me.sidx)
+             snap.stab (copy me.stab))
+        snap))
+
+    (:method restore (me snap)
+      (replace-struct me snap))))
+
 
 (eval-only
   (defmacro compile-in-toplevel (me . body)
@@ -1100,16 +1112,19 @@
 (defmeth compiler comp-lambda (me oreg env form)
   (if *load-time*
     me.(comp-lambda-impl oreg env form)
-    (let* ((lambda-frag me.(comp-lambda-impl oreg env form))
+    (let* ((snap me.(snapshot))
+           (lambda-frag me.(comp-lambda-impl oreg env form))
            (ok-lift-var-pov (all lambda-frag.fvars
                                  (lambda (sym)
                                    (not env.(lookup-var sym)))))
            (ok-lift-fun-pov (all lambda-frag.ffuns
                                  (lambda (sym)
                                    (not env.(lookup-fun sym))))))
-      (if (and ok-lift-var-pov ok-lift-fun-pov)
-        me.(compile oreg env ^(sys:load-time-lit nil ,form))
-        lambda-frag))))
+      (cond
+        ((and ok-lift-var-pov ok-lift-fun-pov)
+         me.(restore snap)
+         me.(compile oreg env ^(sys:load-time-lit nil ,form)))
+        (t lambda-frag)))))
 
 (defmeth compiler comp-fun (me oreg env form)
   (mac-param-bind form (op arg) form
@@ -1252,6 +1267,7 @@
 
   (tree-bind (sym . args) form
     (let* ((fbind env.(lookup-fun sym t))
+           (snap me.(snapshot))
            (cfrag me.(comp-call-impl oreg env (if fbind 'call 'gcall)
                                      (if fbind fbind.loc me.(get-sidx sym))
                                      args)))
@@ -1265,6 +1281,7 @@
                                            (eq (symbol-package sym)
                                                user-package))))))
           (when (and ok-lift-var-pov ok-lift-fun-pov)
+            me.(restore snap)
             (set cfrag me.(compile oreg env ^(sys:load-time-lit nil ,form))))))
       (pushnew sym cfrag.ffuns)
       cfrag)))
