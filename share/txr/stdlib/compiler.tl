@@ -192,21 +192,18 @@
     (with-gensyms (saved-tregs saved-treg-cntr saved-nlev saved-discards)
       ^(let* ((,saved-tregs (qref ,me tregs))
               (,saved-treg-cntr (qref ,me treg-cntr))
-              (,saved-discards (qref ,me discards))
-              (,saved-nlev (qref ,me nlev)))
+              (,saved-discards (qref ,me discards)))
          (unwind-protect
            (progn
              (set (qref ,me tregs) nil
                   (qref ,me treg-cntr) 2
-                  (qref ,me discards) nil
-                  (qref ,me nlev) 2)
+                  (qref ,me discards) nil)
              (prog1
                (progn ,*body)
                (qref ,me (check-treg-leak))))
            (set (qref ,me tregs) ,saved-tregs
                 (qref ,me treg-cntr) ,saved-treg-cntr
-                (qref ,me discards) ,saved-discards
-                (qref ,me nlev) ,saved-nlev)))))
+                (qref ,me discards) ,saved-discards)))))
 
   (defmacro compile-with-fresh-tregs (me . body)
     (with-gensyms (saved-tregs saved-treg-cntr saved-discards)
