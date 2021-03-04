@@ -2943,6 +2943,19 @@ val int_flo(val f)
                 self, nao);
 
     have_exp = (strchr(text, 'e') != 0);
+
+#if CONFIG_LOCALE_TOLERANCE
+    have_point = (strchr(text, dec_point) != 0);
+
+    if (have_exp && have_point)
+      sscanf(text, "%127[-0-9]%*1[^0-9e]%127[0-9]e%d", mint, mfrac, &exp);
+    else if (have_exp)
+      sscanf(text, "%127[-0-9]e%d", mint, &exp);
+    else if (have_point)
+      sscanf(text, "%127[-0-9]%*1[^0-9]*[%127[0-9]", mint, mfrac);
+    else
+      return int_str(string_utf8(text), nil);
+#else
     have_point = (strchr(text, '.') != 0);
 
     if (have_exp && have_point)
@@ -2953,6 +2966,7 @@ val int_flo(val f)
       sscanf(text, "%127[-0-9].%127[0-9]", mint, mfrac);
     else
       return int_str(string_utf8(text), nil);
+#endif
 
     if (have_exp && exp < 0)
       return zero;
