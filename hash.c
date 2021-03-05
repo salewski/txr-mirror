@@ -257,9 +257,9 @@ ucnum equal_hash(val obj, int *count, ucnum seed)
     lazy_str_force_upto(obj, num(*count - 1));
     return equal_hash(obj->ls.prefix, count, seed);
   case BGNUM:
-    return mp_hash(mp(obj)) * seed;
+    return mp_hash(mp(obj)) * if3(seed, seed, 1);
   case FLNUM:
-    return hash_double(obj->fl.n) * seed;
+    return hash_double(obj->fl.n) * if3(seed, seed, 1);
   case COBJ:
   case CPTR:
     if (obj->co.ops->equalsub) {
