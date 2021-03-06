@@ -1,3 +1,43 @@
+                                    TXR 253
+                                   2021-03-06
+
+
+  Features:
+
+  - build:
+    - parallel builds allowed with ./configure --parallelmake
+    - after above, make -j is supported.
+    - recommended for development, not distro builds.
+
+  - compiler:
+    - new optimizations
+      - order of optimization passes rearranged
+      - new peephole patterns.
+      - Pattern-matching Ackermann 48 times faster
+        than interpreted
+      - functional combinator expressions are now automatically
+        hoisted to load time.
+        - E.g. [chain .foo car list] is now computed once when
+          the code is loaded, and then referenced.
+
+  Bugs:
+
+  - compiler:
+    - mistake in (if (equal ...) ...) pattern corrected,
+      allowing corresponding reduction to take place.
+    - fixed bug in frame depth calculation when load-time forms
+      are involved.
+    - fixed bug causing redundant dead code to be added to load-time.
+
+  - hashing:
+    - fixed bug causing hash-equal to produce zero for floats
+      and bignums
+      - equal-based hash tables using bignums or floats as keys
+        are affected.
+
+
+
+
                                     TXR 252
                                    2021-02-28
 
