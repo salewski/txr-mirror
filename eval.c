@@ -6798,7 +6798,12 @@ void eval_init(void)
 
   reg_fun(intern(lit("fmt-simple"), system_package), func_n5o(fmt_simple, 1));
   reg_fun(intern(lit("fmt-flex"), system_package), func_n2v(fmt_flex));
-  reg_fun(intern(lit("fmt-join"), system_package), func_n0v(fmt_join));
+  {
+    val join_f = func_n0v(fmt_join);
+    reg_fun(intern(lit("fmt-join"), system_package), join_f);
+    reg_fun(intern(lit("join"), user_package), join_f);
+  }
+  reg_fun(intern(lit("join-with"), user_package), func_n1v(join_with));
 
   reg_varl(user_package_s = intern(lit("user-package"), user_package), user_package);
   reg_varl(system_package_s = intern(lit("system-package"), user_package), system_package);

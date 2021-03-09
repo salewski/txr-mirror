@@ -4925,15 +4925,15 @@ val scat3(val s1, val sep, val s2)
   return cat_str_get(&cs);
 }
 
-val fmt_join(struct args *args)
+val join_with(val sep, struct args *args)
 {
-  val self = lit("sys:fmt-join");
+  val self = lit("join-with");
   cnum index;
   val iter;
   int more;
   struct cat_str cs;
 
-  cat_str_init(&cs, nil, 0, self);
+  cat_str_init(&cs, sep, 0, self);
 
   for (index = 0, iter = args->list, more = args_more_nozap(args, index, iter);
        more;)
@@ -4952,6 +4952,11 @@ val fmt_join(struct args *args)
   }
 
   return cat_str_get(&cs);
+}
+
+val fmt_join(struct args *args)
+{
+  return join_with(nil, args);
 }
 
 val split_str_keep(val str, val sep, val keep_sep)

@@ -431,7 +431,7 @@
           (set bl.insns (butlast bl.insns)))))))
 
 (defmeth basic-blocks join-blocks (bb)
-  (labels ((join (list)
+  (labels ((joinbl (list)
              (tree-case list
                ((bl nxbl . rest)
                 (cond
@@ -440,10 +440,10 @@
                         (null (cdr bl.links))
                         (null (cdr nxbl.rlinks)))
                    bb.(join-block bl nxbl)
-                   (join (cons bl rest)))
-                  (t (cons bl (join (cdr list))))))
+                   (joinbl (cons bl rest)))
+                  (t (cons bl (joinbl (cdr list))))))
                (else else))))
-    (set bb.list (join bb.list))))
+    (set bb.list (joinbl bb.list))))
 
 (defmeth basic-blocks elim-dead-code (bb)
   (each ((bl bb.list))

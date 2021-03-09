@@ -23455,21 +23455,78 @@ function has the same parameters and semantics as the
 function, except that the first argument is operated upon
 using string operations.
 
-.coNP Function @ cat-str
+.coNP Functions @, cat-str @ join-with and @ join
 .synb
-.mets (cat-str < string-list <> [ sep ])
+.mets (cat-str < item-list <> [ sep ])
+.mets (join-with < sep << item *)
+.mets (join << item *)
 .syne
 .desc
 The
-.code cat-str
-function catenates a list of strings given by
-.meta string-list
-into a
-single string.  The optional
+.codn cat-str ,
+.code join-with
+and
+.code join
+functions combine items, into
+a single string, which is returned.
+
+Every
+.meta item
+argument must be a character or string object. The same is true of the
 .meta sep
-argument specifies a separator
-which is interposed between the catenated strings.
-It must be either a character or a string.
+argument, if present.
+The
+.meta item-list
+argument must be a list of any mixture of characters or strings.
+
+If
+.meta item-list
+is empty, or no
+.meta item
+arguments are present, then all three functions return an
+empty string.
+
+The
+.code cat-str
+function receives the items as a single list. If the
+.meta sep
+argument is present, the items are catenated together such that
+.meta sep
+is interposed between them. If
+.meta item-list
+contains
+.I n
+items, then
+.I "n - 1"
+copies of
+.meta sep
+occur in the resulting string.
+
+If
+.meta sep
+is absent, then
+.code cat-str
+catenates the items together directly, without any separator.
+
+Copies of the items appear in the resulting string in the same
+order as the items appear in
+.metn item-list .
+
+The
+.code join-with
+function receives the items as arguments rather than a single
+.meta item-list
+arguments. The arguments are joined into a single character string
+in order, with
+.meta sep
+interposed between them.
+
+The
+.code join
+function takes no
+.meta sep
+argument. It joins all of its argument items into a single
+string, in order.
 
 .coNP Function @ split-str
 .synb
