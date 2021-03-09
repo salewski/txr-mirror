@@ -77,7 +77,7 @@
       bb.(link-graph))
 
     (:method get-insns (bb)
-      bb.(late-peephole [mappend .insns bb.list]))
+      [mappend .insns bb.list])
 
     (:method cut-block (bb bl at insns)
       (let* ((nlabel (gensym "nl"))

@@ -315,6 +315,15 @@
 
 (defvar *load-time*)
 
+;; 0 - no optimization
+;; 1 - constant folding, algebraics.
+;; 2 - block elimination, frame elimination
+;; 3 - lambda/combinator lifting
+;; 4 - control-flow: jump-threading, dead code
+;; 5 - data-flow: dead registers, useless regisers
+;; 6 - more expensive size or speed optimizations
+(defvar usr:*opt-level* 6)
+
 (defun dedup (obj)
   (cond
     ((null obj) nil)
@@ -767,11 +776,12 @@
            (lskip (gensym "l")))
       (when treg
         me.(maybe-free-treg treg oreg))
-      (if (and (not star)
+      (if (and (>= *opt-level* 2)
+               (not star)
                (not binfo.used)
-               (and (if (eq op 'sys:blk)
-                      [all bfrag.ffuns [orf system-symbol-p (op eq name)]]
-                      [all bfrag.ffuns system-symbol-p]))
+               (if (eq op 'sys:blk)
+                 [all bfrag.ffuns [orf system-symbol-p (op eq name)]]
+                 [all bfrag.ffuns system-symbol-p])
                [none bfrag.ffuns (op member @1 %block-using-funs%)])
         bfrag
         (new (frag oreg
@@ -911,7 +921,9 @@
            (seq (eq sym 'let*))
            (nenv (new env up env co me))
            (fenv (if seq nenv (new env up env co me))))
-      (with-var-spy me (not specials-occur) vspy (new var-spy env nenv)
+      (with-var-spy me (and (not specials-occur)
+                            (>= *opt-level* 2))
+                    vspy (new var-spy env nenv)
         (unless seq
           (each ((lsym lexsyms))
             nenv.(extend-var lsym)))
@@ -1110,7 +1122,7 @@
                                 bfrag.ffuns)))))))))))
 
 (defmeth compiler comp-lambda (me oreg env form)
-  (if *load-time*
+  (if (or *load-time* (< *opt-level* 3))
     me.(comp-lambda-impl oreg env form)
     (let* ((snap me.(snapshot))
            (lambda-frag me.(comp-lambda-impl oreg env form))
@@ -1211,17 +1223,19 @@
     me.(compile oreg env (expand qexp))))
 
 (defmeth compiler comp-arith-form (me oreg env form)
-  (let ((rform (reduce-constant env form)))
-    (tree-case rform
-      ((op . args)
-       (let* ((pargs [partition-by constantp args])
-              (fargs (append-each ((pa pargs))
-                       (if (and (constantp (car pa))
-                                (all pa [chain eval integerp]))
-                         (list (eval ^(,op ,*pa)))
-                         pa))))
-         me.(comp-fun-form oreg env ^(,op ,*fargs))))
-      (else me.(compile oreg env rform)))))
+  (if (plusp *opt-level*)
+    (let ((rform (reduce-constant env form)))
+      (tree-case rform
+        ((op . args)
+         (let* ((pargs [partition-by constantp args])
+                (fargs (append-each ((pa pargs))
+                         (if (and (constantp (car pa))
+                                  (all pa [chain eval integerp]))
+                           (list (eval ^(,op ,*pa)))
+                           pa))))
+           me.(comp-fun-form oreg env ^(,op ,*fargs))))
+        (else me.(compile oreg env rform))))
+    me.(comp-fun-form oreg env form)))
 
 (defmeth compiler comp-arith-neg-form (me oreg env form)
   (if (> (len form) 3)
@@ -1237,88 +1251,96 @@
     me.(comp-fun-form oreg env form)))
 
 (defmeth compiler comp-fun-form (me oreg env form)
-  (match-case form
-    ((equal @a @b)
-     (cond
-       ((or (eq-comparable a)
-            (eq-comparable b))
-        (set form ^(eq ,a ,b)))
-       ((or (eql-comparable a)
-            (eql-comparable b))
-        (set form ^(eql ,a ,b)))))
-    ((not (@(and @(or eq eql equal) @op) @a @b))
-     (let ((nop (caseq op (eq 'neq) (eql 'neql) (equal 'nequal))))
-       (return-from comp-fun-form me.(compile oreg env ^(,nop ,a ,b)))))
-    ((@(or append cons list list*) . @args)
-     (set form (reduce-lisp form)))
-    ((@(@bin [%bin-op% @sym]) @a @b)
-     (set form ^(,bin ,a ,b)))
-    ((- @a)
-     (set form ^(neg ,a)))
-    ((@(or identity + * min max) @a)
-     (return-from comp-fun-form me.(compile oreg env a))))
+  (let ((olev *opt-level*))
+    (when (plusp olev)
+      (match-case form
+        ((equal @a @b)
+         (cond
+           ((or (eq-comparable a)
+                (eq-comparable b))
+            (set form ^(eq ,a ,b)))
+           ((or (eql-comparable a)
+                (eql-comparable b))
+            (set form ^(eql ,a ,b)))))
+        ((not (@(and @(or eq eql equal) @op) @a @b))
+         (let ((nop (caseq op (eq 'neq) (eql 'neql) (equal 'nequal))))
+           (return-from comp-fun-form me.(compile oreg env ^(,nop ,a ,b)))))
+        ((@(or append cons list list*) . @args)
+         (set form (reduce-lisp form)))
+        ((@(@bin [%bin-op% @sym]) @a @b)
+         (set form ^(,bin ,a ,b)))
+        ((- @a)
+         (set form ^(neg ,a)))
+        ((@(or identity + * min max) @a)
+         (return-from comp-fun-form me.(compile oreg env a)))))
 
-  (tree-case form
-    ((sym . args)
-     (set form (reduce-constant env form))))
+    (when (plusp olev)
+      (tree-case form
+        ((sym . args)
+         (set form (reduce-constant env form)))))
 
-  (when (or (atom form) (special-operator-p (car form)))
-    (return-from comp-fun-form me.(compile oreg env form)))
+    (when (or (atom form) (special-operator-p (car form)))
+      (return-from comp-fun-form me.(compile oreg env form)))
 
-  (tree-bind (sym . args) form
-    (let* ((fbind env.(lookup-fun sym t)))
-      (macrolet ((comp-fun ()
-                    'me.(comp-call-impl oreg env (if fbind 'call 'gcall)
-                                        (if fbind fbind.loc me.(get-sidx sym))
-                                        args)))
-        (if (and (not fbind)
-                 (not *load-time*)
-                 [%functional% sym])
-          (let* ((snap me.(snapshot))
-                 (cfrag (comp-fun))
-                 (ok-lift-var-pov (null cfrag.fvars))
-                 (ok-lift-fun-pov (all cfrag.ffuns
-                                       (lambda (sym)
-                                         (and (not env.(lookup-fun sym))
-                                              (eq (symbol-package sym)
-                                                  user-package))))))
-            (cond
-              ((and ok-lift-var-pov ok-lift-fun-pov)
-               me.(restore snap)
-               me.(compile oreg env ^(sys:load-time-lit nil ,form)))
-              (t (pushnew sym cfrag.ffuns)
-                 cfrag)))
-          (let ((cfrag (comp-fun)))
-            (pushnew sym cfrag.ffuns)
-            cfrag))))))
+    (tree-bind (sym . args) form
+      (let* ((fbind env.(lookup-fun sym t)))
+        (macrolet ((comp-fun ()
+                      'me.(comp-call-impl oreg env (if fbind 'call 'gcall)
+                                          (if fbind fbind.loc me.(get-sidx sym))
+                                          args)))
+          (if (and (>= olev 3)
+                   (not fbind)
+                   (not *load-time*)
+                   [%functional% sym])
+            (let* ((snap me.(snapshot))
+                   (cfrag (comp-fun))
+                   (ok-lift-var-pov (null cfrag.fvars))
+                   (ok-lift-fun-pov (all cfrag.ffuns
+                                         (lambda (sym)
+                                           (and (not env.(lookup-fun sym))
+                                                (eq (symbol-package sym)
+                                                    user-package))))))
+              (cond
+                ((and ok-lift-var-pov ok-lift-fun-pov)
+                 me.(restore snap)
+                 me.(compile oreg env ^(sys:load-time-lit nil ,form)))
+                (t (pushnew sym cfrag.ffuns)
+                   cfrag)))
+            (let ((cfrag (comp-fun)))
+              (pushnew sym cfrag.ffuns)
+              cfrag)))))))
 
 (defmeth compiler comp-apply-call (me oreg env form)
-  (tree-bind (sym . oargs) form
-    (let ((args [mapcar (op reduce-constant env) oargs]))
-      (let ((gopcode [%gcall-op% sym])
-            (opcode [%call-op% sym]))
-        (cond
-          ((and (eq sym 'call)
-                [all args constantp])
-           me.(compile oreg env (eval form)))
-          (t (tree-case (car args)
-               ((op arg . more)
-                (caseq op
-                  (fun (cond
-                         (more (compile-error form "excess args in fun form"))
-                         ((bindable arg)
-                          (let ((fbind env.(lookup-fun arg t)))
-                            me.(comp-call-impl oreg env (if fbind opcode gopcode)
-                                               (if fbind fbind.loc me.(get-sidx arg))
-                                               (cdr args))))
-                         ((and (consp arg) (eq (car arg) 'lambda))
-                          me.(comp-fun-form oreg env ^(,sym ,arg ,*(cdr args))))
-                         (t :)))
-                  (lambda me.(comp-inline-lambda oreg env opcode
-                                                 (car args) (cdr args)))
-                  (t :)))
-               (arg me.(comp-call oreg env
-                                  (if (eq sym 'usr:apply) 'apply sym) args)))))))))
+  (let ((olev *opt-level*))
+    (tree-bind (sym . oargs) form
+      (let ((args (if (plusp olev)
+                    [mapcar (op reduce-constant env) oargs]
+                    oargs)))
+        (let ((gopcode [%gcall-op% sym])
+              (opcode [%call-op% sym]))
+          (cond
+            ((and (plusp olev)
+                  (eq sym 'call)
+                  [all args constantp])
+             me.(compile oreg env (eval form)))
+            (t (tree-case (car args)
+                 ((op arg . more)
+                  (caseq op
+                    (fun (cond
+                           (more (compile-error form "excess args in fun form"))
+                           ((bindable arg)
+                            (let ((fbind env.(lookup-fun arg t)))
+                              me.(comp-call-impl oreg env (if fbind opcode gopcode)
+                                                 (if fbind fbind.loc me.(get-sidx arg))
+                                                 (cdr args))))
+                           ((and (consp arg) (eq (car arg) 'lambda))
+                            me.(comp-fun-form oreg env ^(,sym ,arg ,*(cdr args))))
+                           (t :)))
+                    (lambda me.(comp-inline-lambda oreg env opcode
+                                                   (car args) (cdr args)))
+                    (t :)))
+                 (arg me.(comp-call oreg env
+                                    (if (eq sym 'usr:apply) 'apply sym) args))))))))))
 
 (defmeth compiler comp-call (me oreg env opcode args)
   (tree-bind (fform . fargs) args
@@ -1539,14 +1561,22 @@
              (new (frag dreg nil))))))))
 
 (defmeth compiler optimize (me insns)
-  (let* ((lt-dregs (mapcar .oreg me.lt-frags))
-         (bb (new (basic-blocks insns lt-dregs))))
-    bb.(thread-jumps)
-    bb.(elim-dead-code)
-    bb.(calc-liveness)
-    bb.(peephole)
-    bb.(merge-jump-thunks)
-    bb.(get-insns)))
+  (let ((olev *opt-level*))
+    (if (>= olev 4)
+      (let* ((lt-dregs (mapcar .oreg me.lt-frags))
+             (bb (new (basic-blocks insns lt-dregs))))
+        (when (>= olev 4)
+          bb.(thread-jumps)
+          bb.(elim-dead-code))
+        (when (>= olev 5)
+          bb.(calc-liveness)
+          bb.(peephole))
+        (cond
+          ((>= olev 6)
+           bb.(merge-jump-thunks)
+           bb.(late-peephole bb.(get-insns)))
+          (t bb.(get-insns))))
+      insns)))
 
 (defun true-const-p (arg)
   (and arg (constantp arg)))
@@ -1987,7 +2017,8 @@
 (defun usr:compile-toplevel (exp : (expanded-p nil))
   (let ((co (new compiler))
         (as (new assembler))
-        (*dedup* (or *dedup* (hash))))
+        (*dedup* (or *dedup* (hash)))
+        (*opt-level* (or *opt-level* 0)))
     (let* ((*load-time* t)
            (oreg co.(alloc-treg))
            (xexp (if expanded-p

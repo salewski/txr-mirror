@@ -75343,6 +75343,55 @@ or
 .code eval-only
 top-level forms.
 
+.coNP Special Variable @ *opt-level*
+
+.desc
+The special variable
+.code *opt-level*
+provides control over compiler optimizations.
+
+The variable takes on integer
+values. If the value is
+.codn nil ,
+it is interpreted as zero.  The meaningful range is from 0 to 6.
+The initial value of the variable is 6.
+
+The meanings of the values are as follows:
+
+.RS
+.IP 0
+Almost all optimizations are disabled, except for some strength
+reductions of instances of he
+.code equal
+function, to take advantage of certain conditional instructions.
+.IP 1
+Constant folding is applied, as well as algebraic reductions to list processing
+and arithmetic code. Two-argument calls to several common arithmetic operators
+are translated into calls to more efficient two-argument internal functions.
+.IP 2
+Blocks which can be easily confirmed not to be used as exit points are removed.
+Variable frames in which no lexically captured variables are bound, and no
+dynamic variables are bound, are eliminated.
+.IP 3
+Lambda expressions and calls to combinator functions such as
+.code chain
+and
+.code andf
+are lifted to load time, if possible.
+.IP 4
+Control flow optimizations are applied: jump threading and elimination of
+unreachable code. Some peephole optimizations are applied to improve
+certain instruction patterns.
+.IP 5
+Data flow optimizations are applied, such as elimination of dead register
+moves, or useless propagations of values from one register to another.
+More peephole optimizations are applied.
+.IP 6
+Certain more rarely applicable optimizations are applied which reduce code size
+by merging some identical code blocks, or improving some more rarely
+occurring instruction patterns.
+.RE
+
 .coNP Macro @ with-compilation-unit
 .synb
 .mets (with-compilation-unit << form *)
