@@ -47,14 +47,16 @@
                             rlinks ,(mapcar .label bl.rlinks)
                             next ,bl.next) stream)))
 
-  (defstruct (basic-blocks insns lt-dregs) nil
+  (defstruct (basic-blocks insns lt-dregs symvec) nil
     insns
     lt-dregs
+    symvec
     root
     (hash (hash))
     (li-hash (hash :eq-based))
     list
     rescan
+    recalc
     (:static start (gensym "start-"))
     (:static jump-ops '(jmp if ifq ifql close swtch ret abscsr
                         uwprot catch block jend))
@@ -88,7 +90,8 @@
         (set bb.list (append (ldiff bb.list ltail) (list nbl) ltail))
         (set bl.insns (ldiff insns at))
         (set [bb.hash nlabel] nbl)
-        (push bl bb.rescan)
+        (pushnew bl bb.rescan)
+        (pushnew nbl bb.rescan)
         nbl))
 
     (:method next-block (bb bl)
@@ -148,6 +151,7 @@
         (pushnew bl nxbl.rlinks)))))
 
 (defmeth basic-blocks local-liveness (bb bl)
+  (set bl.live nil)
   (labels ((regnum (reg)
              (when-match (t @num) reg num))
            (regnums (regs)
@@ -233,8 +237,8 @@
       (set bl.used li.used
            bl.defined li.defined))))
 
-(defmeth basic-blocks calc-liveness (bb)
-  (each ((bl bb.list))
+(defmeth basic-blocks calc-liveness (bb : (blist bb.list))
+  (each ((bl blist))
     bb.(local-liveness bl))
   (let (changed)
     (while* changed
@@ -342,79 +346,95 @@
       (t (set [bb.li-hash sub] li) sub))))
 
 (defmeth basic-blocks peephole-block (bb bl code)
-  (rewrite-case insns code
-    ;; dead t-reg
-    (@(require ((mov (t @n) . @nil) . @nil)
-               (let ((li [bb.li-hash (car insns)]))
-                 (and li (not (bit li.used n)))))
-      (cdr insns))
-    ;; unnecessary copying t-reg
-    (@(require ((mov @(as dst (t @n)) @src) . @rest)
-               (let ((li [bb.li-hash (car insns)]))
-                 (and li (bit li.used n) (not (bit bl.live n))))
-               (or (neq (car src) 'v)
-                   (none rest [andf [chain car (op eq 'end)]
-                                    [chain bb.li-hash .used (lop bit n)]]))
-               (not (find dst rest : [chain bb.li-hash .def]))
-               (not (find src rest : [chain bb.li-hash .def])))
-      (labels ((rename (insns n dst src)
-                 (tree-case insns
-                   ((fi . re)
-                    (cons (subst-preserve dst src bb [bb.li-hash fi] fi)
-                          (rename (cdr insns) n dst src)))
-                   (else else))))
-        (rename (cdr insns) n dst src)))
-    ;; wasteful moves
-    (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
-     (cdr insns))
-    (((mov @reg0 @reg1) (mov reg1 @reg0) . @rest)
-     ^(,(car insns) ,*rest))
-    ;; frame reduction
-    (((@(or frame dframe) @lev @size)
-      (@(or call gcall mov)
-        . @(require @(coll (v @vlev @nil))
-                    (none vlev (op eql (ppred lev)))))
-      . @rest)
-     ^(,(cadr insns) ,(car insns) ,*rest))
-    (((@(or frame dframe) . @nil)
-      (if (t @reg) @jlabel))
-     (let ((jinsns [bb.hash jlabel].insns))
-       (match-case jinsns
-         ((@jlabel
-            (end (t @reg)) . @jrest)
-          (let* ((xbl (if jrest
-                         bb.(cut-block [bb.hash jlabel] jrest jinsns)
-                         bb.(next-block [bb.hash jlabel])))
-                 (ybl bb.(next-block bl))
-                 (yinsns ybl.insns))
-            (cond
-              ((and xbl ybl)
-               (set ybl.insns ^(,ybl.label ,(car insns) ,*(cdr yinsns)))
-               (push ybl bb.rescan)
-               ^((if (t ,reg) ,xbl.label)))
-              (t insns))))
-         (@jelse insns))))
-    (@(require ((if @(as reg (d @dn)) @jlabel) . @nil)
-               (not (memqual reg bb.lt-dregs)))
-      nil)
-    (@(require ((ifq @(as reg (d @dn)) (t 0) @jlabel) . @nil)
-               (not (memqual reg bb.lt-dregs)))
-      ^((jmp ,jlabel)))
-    (((jmp @jlabel) . @rest)
-     (let ((jinsns (cdr [bb.hash jlabel].insns)))
-       (match-case jinsns
-         (((jend @nil) . @nil)
-          ^(,(car jinsns) ,*rest))
-         ((@nil (jend @nil) . @nil)
-          ^(,(car jinsns) ,(cadr jinsns) ,*rest))
-         (@else insns))))
-    (@else insns)))
+  (labels ((dead-treg (insn n)
+             (let ((li [bb.li-hash insn]))
+               (and li (not (bit li.used n)))))
+           (only-locally-used-treg (insn n)
+             (let ((li [bb.li-hash insn]))
+               (and li (bit li.used n) (not (bit bl.live n))))))
+    (rewrite-case insns code
+      ;; dead t-reg
+      (@(require ((mov (t @n) . @nil) . @nil)
+                 (dead-treg (car insns) n))
+        (pushnew bl bb.rescan)
+        (set bb.recalc t)
+        (cdr insns))
+      (@(require ((@(or gcall gapply) (t @n) @idx . @nil) . @nil)
+                 (dead-treg (car insns) n)
+                 [%const-foldable% [bb.symvec idx]])
+        (pushnew bl bb.rescan)
+        (set bb.recalc t)
+        (cdr insns))
+      ;; unnecessary copying t-reg
+      (@(require ((mov @(as dst (t @n)) @src) . @rest)
+                 (only-locally-used-treg (car insns) n)
+                 (or (neq (car src) 'v)
+                     (none rest [andf [chain car (op eq 'end)]
+                                      [chain bb.li-hash .used (lop bit n)]]))
+                 (not (find dst rest : [chain bb.li-hash .def]))
+                 (not (find src rest : [chain bb.li-hash .def])))
+        (pushnew bl bb.rescan)
+        (labels ((rename (insns n dst src)
+                   (tree-case insns
+                     ((fi . re)
+                      (cons (subst-preserve dst src bb [bb.li-hash fi] fi)
+                            (rename (cdr insns) n dst src)))
+                     (else else))))
+          (rename (cdr insns) n dst src)))
+      ;; wasteful moves
+      (((mov @reg0 @nil) (mov @reg0 @nil) . @nil)
+       (cdr insns))
+      (((mov @reg0 @reg1) (mov reg1 @reg0) . @rest)
+       ^(,(car insns) ,*rest))
+      ;; frame reduction
+      (((@(or frame dframe) @lev @size)
+        (@(or call gcall mov)
+          . @(require @(coll (v @vlev @nil))
+                      (none vlev (op eql (ppred lev)))))
+        . @rest)
+       ^(,(cadr insns) ,(car insns) ,*rest))
+      (((@(or frame dframe) . @nil)
+        (if (t @reg) @jlabel))
+       (let ((jinsns [bb.hash jlabel].insns))
+         (match-case jinsns
+           ((@jlabel
+              (end (t @reg)) . @jrest)
+            (let* ((xbl (if jrest
+                           bb.(cut-block [bb.hash jlabel] jrest jinsns)
+                           bb.(next-block [bb.hash jlabel])))
+                   (ybl bb.(next-block bl))
+                   (yinsns ybl.insns))
+              (cond
+                ((and xbl ybl)
+                 (set ybl.insns ^(,ybl.label ,(car insns) ,*(cdr yinsns)))
+                 (pushnew ybl bb.rescan)
+                 ^((if (t ,reg) ,xbl.label)))
+                (t insns))))
+           (@jelse insns))))
+      (@(require ((if @(as reg (d @dn)) @jlabel) . @nil)
+                 (not (memqual reg bb.lt-dregs)))
+        nil)
+      (@(require ((ifq @(as reg (d @dn)) (t 0) @jlabel) . @nil)
+                 (not (memqual reg bb.lt-dregs)))
+        ^((jmp ,jlabel)))
+      (((jmp @jlabel) . @rest)
+       (let ((jinsns (cdr [bb.hash jlabel].insns)))
+         (match-case jinsns
+           (((jend @nil) . @nil)
+            ^(,(car jinsns) ,*rest))
+           ((@nil (jend @nil) . @nil)
+            ^(,(car jinsns) ,(cadr jinsns) ,*rest))
+           (@else insns))))
+      (@else insns))))
 
 (defmeth basic-blocks peephole (bb)
   (each ((bl bb.list))
     (set bl.insns bb.(peephole-block bl bl.insns)))
   (whilet ((rescan bb.rescan))
     (set bb.rescan nil)
+    (when bb.recalc
+      bb.(calc-liveness rescan)
+      (set bb.recalc nil))
     (each ((bl rescan))
       (set bl.insns bb.(peephole-block bl bl.insns)))))
 

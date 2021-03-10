@@ -183,6 +183,8 @@
     (data (hash :eql-based))
     (sidx (hash :eql-based))
     (stab (hash :eql-based))
+    datavec
+    symvec
     lt-frags
     last-form
     var-spies
@@ -361,10 +363,12 @@
       (set [me.sidx atom] sidx))))
 
 (defmeth compiler get-datavec (me)
-  (vec-list [mapcar me.data (range* 0 me.dreg-cntr)]))
+  (or me.datavec
+      (set me.datavec (vec-list [mapcar me.data (range* 0 me.dreg-cntr)]))))
 
 (defmeth compiler get-symvec (me)
-  (vec-list [mapcar me.stab (range* 0 me.sidx-cntr)]))
+  (or me.symvec
+      (set me.symvec (vec-list [mapcar me.stab (range* 0 me.sidx-cntr)]))))
 
 (defmeth compiler alloc-treg (me)
   (cond
@@ -1564,7 +1568,7 @@
   (let ((olev *opt-level*))
     (if (>= olev 4)
       (let* ((lt-dregs (mapcar .oreg me.lt-frags))
-             (bb (new (basic-blocks insns lt-dregs))))
+             (bb (new (basic-blocks insns lt-dregs me.(get-symvec)))))
         (when (>= olev 4)
           bb.(thread-jumps)
           bb.(elim-dead-code))
