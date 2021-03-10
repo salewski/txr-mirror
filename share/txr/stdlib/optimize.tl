@@ -57,6 +57,7 @@
     list
     rescan
     recalc
+    reelim
     (:static start (gensym "start-"))
     (:static jump-ops '(jmp if ifq ifql close swtch ret abscsr
                         uwprot catch block jend))
@@ -359,6 +360,12 @@
         (pushnew bl bb.rescan)
         (set bb.recalc t)
         (cdr insns))
+      (@(require ((close (t @n) @nil @nil @jlabel . @nil) . @nil)
+                 (dead-treg (car insns) n))
+        (pushnew bl bb.rescan)
+        (set bb.recalc t
+             bb.reelim t)
+        ^((jmp ,jlabel) ,*(cdr insns)))
       (@(require ((@(or gcall gapply) (t @n) @idx . @nil) . @nil)
                  (dead-treg (car insns) n)
                  [%const-foldable% [bb.symvec idx]])
@@ -436,7 +443,9 @@
       bb.(calc-liveness rescan)
       (set bb.recalc nil))
     (each ((bl rescan))
-      (set bl.insns bb.(peephole-block bl bl.insns)))))
+      (set bl.insns bb.(peephole-block bl bl.insns))))
+ (when bb.reelim
+   bb.(elim-dead-code)))
 
 (defmeth basic-blocks thread-jumps (bb)
   (each ((bl bb.list))
