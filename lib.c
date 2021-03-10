@@ -9679,7 +9679,8 @@ val sort(val seq, val lessfun, val keyfun)
     return nil;
   case SEQ_VECLIKE:
   case SEQ_HASHLIKE:
-    sort_vec(copy(seq), lessfun, keyfun);
+    seq = copy(seq);
+    sort_vec(seq, lessfun, keyfun);
     return seq;
   case SEQ_LISTLIKE:
     return sort_list(copy_list(seq), lessfun, keyfun);
