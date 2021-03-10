@@ -285,14 +285,15 @@
     caadaar caadadr caaddar caadddr cadaaar cadaadr cadadar cadaddr caddaar
     caddadr cadddar caddddr cdaaaar cdaaadr cdaadar cdaaddr cdadaar cdadadr
     cdaddar cdadddr cddaaar cddaadr cddadar cddaddr cdddaar cdddadr cddddar
-    cdddddr cons sub-list identity typeof atom null false true have
-    consp listp endp proper-listp length-list first second third fourth fifth
+    cdddddr cons first rest sub-list identity typeof atom null false true have
+    consp listp endp proper-listp length-list second third fourth fifth
     sixth seventh eighth ninth tenth conses ldiff nthcdr nth tailp
     memq memql memqual rmemq rmemql rmemqual countq countql countqual
     posq posql posqual rposq rposql rposqual eq eql equal meq meql mequal
     neq neql nequal max min clamp bracket take drop uniq if or and progn
-    prog1 prog2 tostring tostringp display-width sys:fmt-simple sys:fmt-flex
-    sys:fmt-join packagep symbolp keywordp bindable stringp length-str
+    prog1 prog2 nilf tf tostring tostringp display-width sys:fmt-simple
+    sys:fmt-flex join join-with sys:fmt-join packagep
+    symbolp keywordp bindable stringp length-str
     coded-length cmp-str string-lt str= str< str> str<= str>= int-str
     flo-str num-str int-flo flo-int tofloat toint tointz less greater
     lequal gequal chrp chr-isalnum chr-isalnum chr-isalpha chr-isascii
@@ -300,8 +301,8 @@
     chr-ispunct chr-isspace chr-isblank chr-isunisp chr-isupper chr-isxdigit
     chr-xdigit chr-toupper chr-tolower num-chr int-chr chr-num chr-int
     chr-str span-str compl-span-str break-str vectorp length-vec size-vec
-    assq assql assoc rassq rassql rassoc prop memp length len ref rangep
-    from to in-range in-range* nullify))
+    assq assql assoc rassq rassql rassoc prop memp length len empty ref
+    rangep from to in-range in-range* nullify))
 
 (defvarl %const-foldable% (hash-list %const-foldable-funs% :eq-based))
 
