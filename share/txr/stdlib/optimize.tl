@@ -368,7 +368,7 @@
         ^((jmp ,jlabel) ,*(cdr insns)))
       (@(require ((@(or gcall gapply) (t @n) @idx . @nil) . @nil)
                  (dead-treg (car insns) n)
-                 [%const-foldable% [bb.symvec idx]])
+                 [%effect-free% [bb.symvec idx]])
         (pushnew bl bb.rescan)
         (set bb.recalc t)
         (cdr insns))
