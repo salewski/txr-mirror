@@ -355,7 +355,7 @@
                (and li (bit li.used n) (not (bit bl.live n))))))
     (rewrite-case insns code
       ;; dead t-reg
-      (@(require ((mov (t @n) . @nil) . @nil)
+      (@(require ((@(or mov getlx getv getf getfb) (t @n) . @nil) . @nil)
                  (dead-treg (car insns) n))
         (pushnew bl bb.rescan)
         (set bb.recalc t)
