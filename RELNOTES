@@ -1,3 +1,30 @@
+                                    TXR 254
+                                   2021-03-10
+
+
+  Features:
+
+  - compiler:
+    - elimination of function calls that produce unused values.
+      - this compiles down to just "nil":
+          (let ((x (cons y z))) (set x (cons u v)) (set x nil) x)))
+    - elimination of unused accesses to globals
+    - elimination of unused lambdas.
+    - optimization control: new variable *opt-level*, valued 0-6.
+
+  - lib:
+    - new functions join and join-with to complement the tired old
+      cat-str for joining strings and characters.
+      - (join-with ":" "a" "b" "c") -> "a:b:c"
+      - (join "a" "b" "c") -> "abc"
+
+  Bugs:
+
+  - broken sort function over vectors and strings
+    - failing to return the sorted object
+
+
+
                                     TXR 253
                                    2021-03-06
 
