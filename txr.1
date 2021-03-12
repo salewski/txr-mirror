@@ -35390,27 +35390,38 @@ The combinations are lexicographically ordered.
 
 
 .SS* Macros
-\*(TL supports structural macros. \*(TX's model of macroexpansion is that
-\*(TL code is processed in two phases: the expansion phase and the
-evaluation phase. The expansion phase is invoked on Lisp code early during the
-processing of source code. For instance when a \*(TX file containing a
-.code "@(do ...)"
-directive
-is loaded, expansion of the Lisp forms are its arguments takes place during the
-parsing of the entire source file, and is complete before any of the code in
-that file is executed. If the
-.code "@(do ...)"
-form is later executed,
-the expanded forms are then evaluated.
+Because \*(TL supports structural macros, \*(TX processes \*(TL expressions in
+two separate phases: the expansion phase and the evaluation/compilation phase.
+During the expansion phase, a top-level expression is recursively traversed,
+and all macro invocations in it are expanded. The result is a transformed
+expression which contains only function calls and invocations of special
+operators.  This expanded form is then evaluated or compiled, depending on the
+situation.
 
-\*(TL also supports symbol macros, which are symbolic forms that stand
-for forms, with which they are replaced at macro expansion time.
+Macro invocations are compound forms and whose operator symbol has a macro
+definition in scope.  A macro definition is a kind of function which operates
+on syntax during macro-expansion, called upon to calculate a transformation of
+the syntax. The return value of a macro replaces its invocation, and is
+traversed to look for more opportunities for macro expansion.
+Macros differ from ordinary functions in three ways: they are called
+at macro-expansion time, they receive pieces of unevaluated syntax as their
+arguments, and their parameter lists are macro parameter lists which
+support destructuring, as well as certain special parameters.
 
-When Lisp data is processed as code by the
-.code eval
-function, it is first expanded,
-and so processed in its entirety in the expansion phase. Then it is processed
-in the evaluation phase.
+\*(TL also supports symbol macros. A symbol macro definition associates
+a symbol with an expansion. When that symbol appears as a form, the
+macro-expander replaces it with the expansion.
+
+\*(TX source files are treated somewhat differently with regard to macro
+expansion compared to \*(TL. When \*(TL forms are read from a file by
+.code load
+or
+.code compile
+or read by the interactive listener, each form is expanded and evaluated
+or compiled before the subsequent form is processed. In contrast,
+when a \*(TX file is loaded, expansion of the Lisp forms are its arguments
+takes place during the parsing of the entire source file, and is complete
+for the entire file before any of the code is executed.
 
 .NP* Macro parameter lists
 
