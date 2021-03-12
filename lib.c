@@ -4795,10 +4795,10 @@ static void cat_str_measure(struct cat_str *cs, val item, int more_p, val self)
     return;
   }
 
-  uw_throwf(error_s, lit("cat-str: ~s is not a character or string"),
+  uw_throwf(error_s, lit("~a: ~s is not a character or string"), self,
             item, nao);
 oflow:
-  uw_throwf(error_s, lit("cat-str: string length overflow"), nao);
+  uw_throwf(error_s, lit("~a: string length overflow"), self, nao);
 }
 
 static void cat_str_alloc(struct cat_str *cs)
