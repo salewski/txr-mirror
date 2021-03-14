@@ -3841,7 +3841,8 @@ val toint(val obj, val base)
     }
     /* fallthrough */
   default:
-    uw_throwf(error_s, lit("toint: ~s is not convertible to integer"), obj, nao);
+    uw_throwf(error_s, lit("~a: ~s is not convertible to integer"),
+              self, obj, nao);
   }
 }
 

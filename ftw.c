@@ -93,8 +93,9 @@ val ftw_wrap(val dirpath, val fn, val flags_in, val nopenfd_in)
   val self = lit("ftw");
 
   if (s_callback) {
-    uw_throwf(error_s, lit("ftw: cannot be re-entered from "
-                           "ftw callback"), nao);
+    uw_throwf(error_s,
+              lit("~a: cannot be re-entered from ~a callback"),
+              self, self, nao);
   } else if (dirpath == nil) {
     return t;
   } else if (consp(dirpath)) {
@@ -128,8 +129,8 @@ val ftw_wrap(val dirpath, val fn, val flags_in, val nopenfd_in)
     case -1:
       {
         int eno = errno;
-        uw_throwf(errno_to_file_error(eno), lit("ftw ~a: ~d/~s"),
-                  dirpath, num(eno), errno_to_str(eno), nao);
+        uw_throwf(errno_to_file_error(eno), lit("~a ~a: ~d/~s"),
+                  self, dirpath, num(eno), errno_to_str(eno), nao);
       }
     default:
       return num(res);

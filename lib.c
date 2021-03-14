@@ -2005,7 +2005,7 @@ val nreverse(val in)
       return in;
     }
   default:
-    uw_throwf(error_s, lit("nreverse: cannot reverse ~s"), in, nao);
+    uw_throwf(error_s, lit("~a: cannot reverse ~s"), self, in, nao);
   }
 }
 
@@ -2048,7 +2048,7 @@ val reverse(val seq_in)
       return obj;
     }
   default:
-    uw_throwf(error_s, lit("reverse: cannot reverse ~s"), seq_in, nao);
+    uw_throwf(error_s, lit("~a: cannot reverse ~s"), self, seq_in, nao);
   }
 }
 
@@ -2707,7 +2707,7 @@ val remove_if(val pred, val seq_in, val keyfun_in)
       return out;
     }
   default:
-    uw_throwf(error_s, lit("remove-if: ~s isn't a sequence"), seq_in, nao);
+    uw_throwf(error_s, lit("~a: ~s isn't a sequence"), self, seq_in, nao);
   }
 }
 
@@ -5371,7 +5371,7 @@ val int_str(val str, val base)
     if (zerox)
       return zero;
   } else if (b < 2 || b > 36) {
-     uw_throwf(error_s, lit("int-str: invalid base ~s"), base, nao);
+     uw_throwf(error_s, lit("~a: invalid base ~s"), self, base, nao);
   }
 
   /* TODO: detect if we have wcstoll */
@@ -5523,8 +5523,8 @@ tail:
   case less_compare:
     break;
   case less_cannot:
-    uw_throwf(type_error_s, lit("less: cannot compare ~s and ~s"),
-              left, right, nao);
+    uw_throwf(type_error_s, lit("~a: cannot compare ~s and ~s"),
+              self, left, right, nao);
   }
 
   switch (l_type) {
@@ -5848,8 +5848,8 @@ val chr_str(val str, val ind)
   }
 
   if (index < 0 || !length_str_gt(str, ind))
-    uw_throwf(error_s, lit("chr-str: ~s is out of range for string ~s"),
-              ind, str, nao);
+    uw_throwf(error_s, lit("~a: ~s is out of range for string ~s"),
+              self, ind, str, nao);
 
   if (lazy_stringp(str)) {
     lazy_str_force_upto(str, ind);
@@ -5865,8 +5865,8 @@ val chr_str_set(val str, val ind, val chr)
   cnum index = c_num(ind, self);
 
   if (is_lit(str)) {
-    uw_throwf(error_s, lit("chr-str-set: cannot modify literal string ~s"),
-              str, nao);
+    uw_throwf(error_s, lit("~a: cannot modify literal string ~s"),
+              self, str, nao);
   }
 
   if (index < 0) {
@@ -5875,8 +5875,8 @@ val chr_str_set(val str, val ind, val chr)
   }
 
   if (index < 0 || !length_str_gt(str, ind))
-    uw_throwf(error_s, lit("chr-str-set: ~s is out of range for string ~s"),
-              ind, str, nao);
+    uw_throwf(error_s, lit("~a: ~s is out of range for string ~s"),
+              self, ind, str, nao);
 
 
   if (lazy_stringp(str)) {
@@ -6465,8 +6465,8 @@ val unintern(val symbol, val package_in)
 
   if (symbol_package(symbol) == package) {
     if (symbol == nil)
-      uw_throwf(error_s, lit("unintern: cannot unintern ~s from ~s"),
-                symbol, package, nao);
+      uw_throwf(error_s, lit("~a: cannot unintern ~s from ~s"),
+                self, symbol, package, nao);
     symbol->s.package = nil;
   }
 
@@ -6482,7 +6482,7 @@ val rehome_sym(val sym, val package_in)
   val name = symbol_name(sym);
 
   if (!sym)
-    uw_throwf(error_s, lit("rehome-sym: cannot rehome ~s"), sym, nao);
+    uw_throwf(error_s, lit("~a: cannot rehome ~s"), self, sym, nao);
 
   prot_sym_check(self, name, sym->s.package);
   prot_sym_check(self, name, package);
@@ -8131,7 +8131,7 @@ val vector(val length, val initval)
   ucnum len = c_unum(length, self);
   ucnum alloc_plus = len + 2;
   ucnum size = if3(alloc_plus > len, alloc_plus, (ucnum) -1);
-  val *v = coerce(val *, chk_xalloc(size, sizeof *v, lit("vector")));
+  val *v = coerce(val *, chk_xalloc(size, sizeof *v, self));
   val vec = make_obj();
   vec->v.type = VEC;
   initval = default_null_arg(initval);
@@ -10984,7 +10984,7 @@ val in(val seq, val item, val testfun, val keyfun)
         return nil;
       }
     default:
-      type_mismatch(lit("in: ~s is not a sequence"), seq, nao);
+      type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
     }
   }
 }
@@ -12671,7 +12671,7 @@ dot:
         if (obj->s.package == keyword_package)
           put_char(chr(':'), out);
     } else {
-      val prefix = symbol_needs_prefix(lit("print"), cur_package, obj);
+      val prefix = symbol_needs_prefix(self, cur_package, obj);
 
       if (prefix) {
         put_string(prefix, out);

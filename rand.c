@@ -182,8 +182,8 @@ val make_random_state(val seed, val warmup)
     return rs;
   } else if (vectorp(seed)) {
     if (length(seed) < num_fast(17))
-      uw_throwf(error_s, lit("make-random-state: vector ~s too short"),
-                seed, nao);
+      uw_throwf(error_s, lit("~a: vector ~s too short"),
+                self, seed, nao);
 
     for (i = 0; i < 16; i++)
       r->state[i] = c_unum(seed->v.vec[i], self);
@@ -191,8 +191,8 @@ val make_random_state(val seed, val warmup)
     r->cur = c_num(seed->v.vec[i], self);
     return rs;
   } else {
-    uw_throwf(error_s, lit("make-random-state: seed ~s is not a number"),
-              seed, nao);
+    uw_throwf(error_s, lit("~a: seed ~s is not a number"),
+              self, seed, nao);
   }
 
   while (i > 0 && r->state[i - 1] == 0)
@@ -353,8 +353,8 @@ val random(val state, val modulus)
     }
   }
 
-  uw_throwf(numeric_error_s, lit("random: invalid modulus ~s"),
-      modulus, nao);
+  uw_throwf(numeric_error_s, lit("~a: invalid modulus ~s"),
+            self, modulus, nao);
 }
 
 val rnd(val modulus, val state)

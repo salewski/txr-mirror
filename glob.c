@@ -73,8 +73,8 @@ val glob_wrap(val pattern, val flags, val errfun)
 
   if (s_errfunc) {
     free(pat_u8);
-    uw_throwf(error_s, lit("glob: glob cannot be re-entered from "
-                           "its error callback function"), nao);
+    uw_throwf(error_s, lit("~a: glob cannot be re-entered from "
+                           "its error callback function"), self, nao);
   }
 
   s_errfunc = default_null_arg(errfun);
