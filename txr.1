@@ -23457,7 +23457,7 @@ using string operations.
 
 .coNP Functions @, cat-str @ join-with and @ join
 .synb
-.mets (cat-str < item-list <> [ sep ])
+.mets (cat-str < item-seq <> [ sep ])
 .mets (join-with < sep << item *)
 .mets (join << item *)
 .syne
@@ -23476,11 +23476,15 @@ argument must be a character or string object. The same is true of the
 .meta sep
 argument, if present.
 The
-.meta item-list
-argument must be a list of any mixture of characters or strings.
+.meta item-seq
+argument must be a sequence of any mixture of characters or strings.
+Note that this means that if
+.meta item-seq
+is a character string, it is a valid argument, since it is a sequence
+of characters.
 
 If
-.meta item-list
+.meta item-seq
 is empty, or no
 .meta item
 arguments are present, then all three functions return an
@@ -23493,7 +23497,7 @@ function receives the items as a single list. If the
 argument is present, the items are catenated together such that
 .meta sep
 is interposed between them. If
-.meta item-list
+.meta item-seq
 contains
 .I n
 items, then
@@ -23510,12 +23514,12 @@ catenates the items together directly, without any separator.
 
 Copies of the items appear in the resulting string in the same
 order as the items appear in
-.metn item-list .
+.metn item-seq .
 
 The
 .code join-with
 function receives the items as arguments rather than a single
-.meta item-list
+.meta item-seq
 arguments. The arguments are joined into a single character string
 in order, with
 .meta sep

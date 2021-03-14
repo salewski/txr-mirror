@@ -4830,22 +4830,35 @@ static val cat_str_get(struct cat_str *cs)
   return string_own(cs->str);
 }
 
-val cat_str(val list, val sep)
+val cat_str(val items, val sep)
 {
   val self = lit("cat-str");
-  val iter;
+  seq_iter_t item_iter;
+  val item, peek = nil;
+  int more = 0;
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
+
   cat_str_init(&cs, sep, wref(onech), self);
 
-  for (iter = list; iter != nil; iter = cdr(iter))
-    cat_str_measure(&cs, car(iter), cdr(iter) != nil, self);
+  seq_iter_init(self, &item_iter, items);
+  more = seq_get(&item_iter, &item);
+  while (more)
+  {
+    cat_str_measure(&cs, item, more = seq_get(&item_iter, &peek), self);
+    item = peek;
+  }
 
   cat_str_alloc(&cs);
 
-  for (iter = list; iter != nil; iter = cdr(iter))
-    cat_str_append(&cs, car(iter), cdr(iter) != nil, self);
+  seq_iter_init(self, &item_iter, items);
+  more = seq_get(&item_iter, &item);
+  while (more)
+  {
+    cat_str_append(&cs, item, more = seq_get(&item_iter, &peek), self);
+    item = peek;
+  }
 
   return cat_str_get(&cs);
 }
