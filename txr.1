@@ -11318,6 +11318,83 @@ to the same object: the first occurrence creates the symbol and associates it
 with its name in a package. Subsequent occurrences do not create a new symbol,
 but retrieve the existing one.
 
+.NP* Meta-Symbols, Meta-Numbers and Meta-Expressions
+
+The syntax of a symbol, integer or compound expression may be preceded by the
+character
+.codn @ .
+
+This is "meta syntax", whose meaning is unassigned as far as \*(TL
+evaluation is concerned. It plays a syntactic role in the
+.code op
+operator, and in structural pattern matching. It also appears
+in the quasiliteral notation.  In other situations, application code may assign
+meaning to meta syntax as the programmer sees fit.
+
+Meta syntax is defined as a shorthand notation, as follows:
+
+If
+.code X
+is a symbol or integer, the syntax
+.code @X
+is a shorthand for the compound expression
+.codn "(sys:var X)" .
+This is referred to as a
+.I meta-symbol
+if
+.code X
+is a symbol, or a
+.I meta-number
+if
+.code X
+is an integer.
+
+If
+.code X
+is a compound expression,  either
+.code "(...)"
+or
+.codn "[...]" ,
+then
+.code @X
+is a shorthand for
+.codn "(sys:expr X)" .
+This is called a
+.IR meta-expression .
+
+The behavior of
+.code @
+followed by the syntax of a floating-point constant introduced by a leading
+decimal point, not preceded by digits, is unspecified. Examples of this
+are
+.code "@.123"
+and
+.codn "@.123E+5" .
+
+The behavior of
+.code @
+followed by the syntax of a floating-point expression in exponential notation,
+which lacks a decimal point, is also unspecified. An example of this is
+.codn @12E5 .
+
+It is a syntax error for
+.code @
+to be followed by what appears to be a floating-point constant consisting
+of a decimal point flanked by digits on both sides. For instance
+.code @1.2
+is rejected.
+
+A meta-expression followed by a period, and the syntax of another object is
+otherwise interpreted as a referencing dot expression. For instance
+.code @1.E3
+denotes
+.code "(qref @1 E3)"
+which, in turn, denotes
+.codn "(qref (sys:var 1) E3)" ,
+even though the unprefixed character sequence
+.code 1.E3
+is otherwise a floating-point constant.
+
 .NP* Consing Dot
 
 Unlike other major Lisp dialects, \*(TL allows a consing dot with no forms
@@ -12123,7 +12200,7 @@ may be understood according to the following transformations:
   [f a b c ... . x]  -->  [apply f a b c ... x]
 .brev
 
-In addition to atoms, meta-expressions and meta-variables can appear in the dot
+In addition to atoms, meta-expressions and meta-symbols can appear in the dot
 position, even though their underlying syntax is comprised of a compound
 expression. This appears to work according to a transformation pattern
 which superficially appears to be the same as that for atoms:
@@ -40000,7 +40077,7 @@ for itself, and not the value of a variable.
 .mets >> @ symbol
 .syne
 .desc
-A meta-variable can be used as a pattern expression.
+A meta-symbol can be used as a pattern expression.
 This pattern unconditionally matches an object of any kind.
 
 The
@@ -40818,7 +40895,7 @@ operator.
 Whenever the operator position of a pattern consists of a symbol which is not
 the name of a predicate operator, the expression denotes a predicate pattern,
 expected to conform to one of the first three syntax descriptions above.  Whenever
-the operator position of a pattern consists of a meta-variable, it is also a
+the operator position of a pattern consists of a meta-symbol, it is also a
 predicate pattern, expected to conform to one of the second three syntax
 descriptions.
 
@@ -40831,7 +40908,7 @@ may also appear in the dot position, rather than as an argument.  The role of
 .meta avar
 and the consequences of omitting it are described below.
 
-The second form of the predicate pattern consists of a meta-variable
+The second form of the predicate pattern consists of a meta-symbol
 .meta rvar
 ("result variable")
 which must be a bindable symbol or else
@@ -78033,8 +78110,8 @@ and
 .code do
 macros which was replaced starting in \*(TX 185. Also, this has the
 effect of disabling the special recognition of meta-expressions
-and meta-variables in the dot position of function calls, and
-the macro expansion of meta-variables in quasiliterals. This is
+and meta-symbols in the dot position of function calls, and
+the macro expansion of meta-symbols in quasiliterals. This is
 because the old
 .code op
 implementation implements these behaviors itself. The implication
@@ -78485,7 +78562,7 @@ If the compatibility option is set to 124 or lower, the old behavior
 is restored. However, even without the presence of the compatibility option,
 if the
 .meta source
-argument is a meta-expression or meta-variable (denotes by the
+argument is a meta-expression or meta-symbol (denotes by the
 .code @
 prefix in front of a compound expression or symbol, respectively)
 it is also treated in the old way. This latter behavior is obsolescent
