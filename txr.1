@@ -39875,59 +39875,56 @@ do not undergo place macro expansion.
 
 .SS* Structural Pattern Matching
 
-Warning: the following documentation describes new functionality appearing in
-\*(TX 247, which is in a "beta" state. Though the \*(TX project is committed to
-this feature, the detailed requirements documented here may change without
-maintaining backward compatibility. Programs relying on these features may
-require maintenance when upgrading to a newer version. When this situation
-changes in a future version of \*(TX, the manual for that version will no
-longer contain this notice.
+.NP* Introduction
 
 \*(TL provides a structural pattern matching system. Structural pattern
 matching is a syntax which allows for the succinct expression of code
 which classifies objects according to their shape and content, and which
 accesses the elements within objects, or both.
 
-Note: \*(TL's macro-style parameter lists, appearing in
-.code tree-bind
-and related macros, also provide a form of structural pattern matching.
-Macro-style parameter list pattern matching is limited to objects which
-are nested
-.code cons
-cell structures resembling macro calls. It is only useful for matching on
-shape, not content.  Moreover, every position in a macro-style parameter
-list is required to specify a variable, whether or not the corresponding
-object element is used in the situation.
-
 The central concept in structural pattern matching is the resolution of a
-pattern (specified as syntax which is part of the program) against an object (a
-run-time value of unknown type, shape and other properties).  The primary
-decision is Boolean: does the object match the pattern?  If the object matches
-the pattern, then variables specified in the pattern are bound against elements
-extracted from the object, and some associated body of code is evaluated under
-the scope of the variables.
+pattern against an object. The pattern is specified as syntax which is part of
+the program code. The object is a run-time value of unknown type, shape and
+other properties.  The primary pattern matching decision is Boolean: does the
+object match the pattern?  If the object matches the pattern, then it is
+possible to execute an associated body of code in a scope in which variables
+occurring in the pattern take on values from the corresponding parts of the
+object.
 
-Structural pattern matching is available via a number of different
-operators:
+.NP* Pattern Matching Operators
+
+Structural pattern matching is available via several different macro
+operators, which are:
 .codn when-match ,
 .codn if-match ,
 .codn match-case ,
 .code lambda-match
 and
 .codn defun-match .
+Function and macro argument lists may also be augmented with pattern
+matching using the
+.code :match
+parameter macro.
+
 The
 .code when-match
 macro is the simplest. It tests an object against a pattern, and if there is a
 match, evaluates zero or more forms in an environment in which the pattern
-variables have bindings to elements of the object.
+variables have bindings to the corresponding elements of the object.
+
 The
 .code if-match
-macro evaluates a single form if there is a match, otherwise an alternative form.
+macro evaluates a single form if there is a match, in the scope of the
+bindings established by the pattern, otherwise an alternative
+form evaluated in a scope in which those bindings are absent.
+
 The
 .code match-case
 macro evaluates the same object against multiple clauses, each consisting of a
 pattern and zero or more forms. The first case whose pattern matches the object
-is selected. The variables are bound, and the associated forms are evaluated.
+is selected. The forms associated with a matching clause are evaluated in
+the scope the variables bound by that clause's pattern.
+
 The
 .code lambda-match
 macro provides a way to express an anonymous function whose argument list
@@ -39937,7 +39934,9 @@ and
 .code defun-match
 provides a way to define a top-level function using the same concept.
 
-\*(TL's structural pattern matching notation is template based.
+.NP* Syntax and Key Concepts
+
+\*(TL's structural pattern matching notation is template-based.
 With the exception of structures and hash tables, objects are matched using
 patterns which are based on their printed notation. For instance, the pattern
 .code "(1 2 @a)"
@@ -39984,18 +39983,53 @@ can be significant. One sub-pattern may be expected to produce
 a match for a variable, which is then back-referenced in another
 sub-pattern.
 
-A pattern can contain multiple occurrences of the same variable.
-Except in the case when these variables occur in different
-branches of an
-.code @(or)
-pattern operator, or a fresh binding under the
+.NP* Variables in Patterns
+
+Patterns use meta-symbols for denoting variables. Variables must
+be either bindable symbols, or else
+.codn nil ,
+which has a special meaning: the pattern variable
+.code @nil
+matches any object, and binds no variable.
+
+Pattern variables are ordinary Lisp variables. Whereas in ordinary non-pattern
+matching Lisp code, it is always unambiguous whether a variable is being bound
+or referenced, this is deliberately not the case in patterns. A variable
+occurring in a pattern may be a fresh variable, or a reference to an existing
+one. The difference between these situations is not apparent from the syntax
+of the pattern; it depends on the context established by the scope.
+
+With one exception, if a pattern contains a variable which is already in
+the surrounding scope, including a global variable, then it refers to that
+variable. Otherwise, it freshly binds the variable.
+The exception is that pattern operator
 .code @(as)
-operator those repeated variables refer to one variable.
+always binds a fresh variable.
+
+When a pattern variable refers to an existing variable, then each occurrence
+of that variable must match an object which is
+.code equal
+to the value of that variable.
+For instance, the following function returns the third element of a list, if
+the first two elements are repetitions of the
+.code x
+argument, otherwise
+.codn nil :
+
+.verb
+  (defun x-x-y (list x)
+    (when-match (@x @x @y) list y))
+
+  (x-x-y '(1 1 2) 1) -> 2
+  (x-x-y '(1 2 3) 1) -> nil    ;; no @x @x match
+  (x-x-y '(1 1 2 r2) 1) -> nil ;; list too long
+.brev
+
 If the variable does not exist in the scope surrounding the pattern,
 then the leftmost occurrence of the variable establishes a binding,
 taking the value from is corresponding object being matched by that
 occurrence of the variable. The remaining
-occurrences of the variable must correspond to objects which are
+occurrences of the variable, if any, must correspond to objects which are
 .code equal
 to that value, or else there is no match.
 For instance, the pattern
@@ -40018,35 +40052,56 @@ retrieves an object that is not
 .code equal
 to that variable's existing value.
 
-Pattern variables exist in the same namespace as Lisp variables,
-and are fully integrated into it. Patterns not only bind variables,
-but have visibility to existing variables in scope, including
-lexical variables and special/global variables. When a variable
-is mentioned in a pattern, and is not freshly bound in that pattern
-using the
-.code as
-operator, if that symbol already has a variable binding outside the pattern,
-then it denotes a reference to that variable. Each occurrence of the variable
-in the pattern must match an object which compares
-.code equal
-to the variable's existing value. For instance,
-the following function returns the third element of a list, if the
-first two elements are repetitions of the
-.code x
-argument, otherwise
-.codn nil :
+A pattern can contain multiple occurrences of the same symbol as a variable.
+These may or may not refer to the same variable.  Two occurrences of the same
+symbol refer to distinct variables if:
 
-.verb
-  (defun x-x-y (list x)
-    (when-match (@x @x @y) list y))
+.RS
+.IP 1.
+they are freshly bound in separate
+branches of the
+.code @(or)
+operator; or
+.IP 2.
+one of the two variables is freshly bound by the
+.code @(as)
+operator and the other variable occurs outside of that
+.codn @(as) ;
+or
+.IP 3.
+or both of the variables are freshly bound using
+.codn @(as) .
+.RE
 
-  (x-x-y '(1 1 2) 1) -> 2
-  (x-x-y '(1 2 3) 1) -> nil    ;; no @x @x match
-  (x-x-y '(1 1 2 r2) 1) -> nil ;; list too long
-.brev
+Any other two or more occurrences same symbol occurring in the same pattern
+refer to the same variable.
+
+.NP* Comparison to Macro Parameter Lists
+
+\*(TL's macro-style parameter lists, appearing in
+.code tree-bind
+and related macros, also provide a form of structural pattern matching.
+Macro-style parameter list pattern matching is limited to objects of
+one kind: tree structures made of
+.code cons
+cells. It is only useful for matching on
+shape, not content. For example,
+.code tree-bind
+cannot express the idea of matching a list whose first element is the symbol
+.code a
+and whose third element is
+.codn 42 .
+Moreover, every position in the tree pattern much specify a variable
+which captures the corresponding element of the structure. For instance,
+a pattern which matches a three-element list must specify three variables,
+one for each list position. This is because macro-style parameter lists are
+oriented toward writing macros, and macros usually make use of every parameter
+position.
+
+.SS* Pattern Matching Notation
 
 The pattern-matching notation is documented in the following
-sections; sections describing the pattern matching macros follow.
+sections; a section describing the pattern matching macros follow.
 
 .NP* Atom match
 A pattern consisting of an atom other than a vector
@@ -40087,14 +40142,24 @@ is required to be a either a bindable symbol according to the
 function, or else the symbol
 .codn nil .
 
-If it is a bindable symbol, then the object is bound to that
-symbol.
+If
+.meta symbol
+is a bindable symbol, which has not binding in scope,
+then a variable by that name is freshly bound, and takes
+on the corresponding object as its value.
+
+If
+.meta symbol
+is a bindable symbol with an existing binding, then
+the corresponding object must be
+.code equal
+to that variable's existing value, or else the match fails.
 
 If
 .meta symbol
 is
 .codn nil ,
-then the match succeeds, without binding a variable.
+then the match succeeds unconditionally, without binding a variable.
 
 .TP* Examples:
 
@@ -40102,6 +40167,12 @@ then the match succeeds, without binding a variable.
   (when-match @a 42 (list a)) -> (42)
 
   (when-match (@a @b @c) '(1 2 3) (list c b a)) -> (3 2 1)
+
+  ;; No match: list is longer than pattern
+  (when-match (@a @b) '(1 2 3) (list a b)) -> nil
+
+  ;; Use of nil in dot position to match longer list
+  (when-match (@a @b . @nil) '(1 2 3) (list a b)) -> (1 2)
 .brev
 
 .NP* List match
@@ -40127,7 +40198,7 @@ matches the corresponding element of the list, including the
 .meta pattern
 in the dotted position.
 
-Because a the dotted position
+Because the dotted position
 .meta pattern
 matches a list, it is possible for a short pattern
 to match a longer list.
@@ -41018,6 +41089,8 @@ is a standard \*(TL notation with the same meaning as
   (when-match @(@x (< . @sym)) '(1 2 3) (list x sym))
  - > (t (1 2 3))
 .brev
+
+.SS* Pattern Matching Macros
 
 .coNP Macros @ when-match and @ if-match
 .synb
