@@ -40964,11 +40964,16 @@ operator.
 .syne
 .desc
 Whenever the operator position of a pattern consists of a symbol which is not
-the name of a predicate operator, the expression denotes a predicate pattern,
-expected to conform to one of the first three syntax descriptions above.  Whenever
-the operator position of a pattern consists of a meta-symbol, it is also a
-predicate pattern, expected to conform to one of the second three syntax
-descriptions.
+the name of a pattern operator, the expression denotes a predicate pattern,
+expected to conform to one of the first three syntax variations above.
+Together, these three variations constitute the
+.I "first form"
+of the pattern predicate operator.
+Whenever the operator position of a pattern consists of a meta-symbol, it is
+also a predicate pattern, expected to conform to one of the second three syntax
+variations above. These three variations constitute the
+.I "second form"
+of the operator.
 
 The first form of the predicate pattern consists of a compound form consisting
 of an operator and arguments. Exactly one of the arguments may be a pattern
