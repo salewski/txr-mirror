@@ -372,6 +372,11 @@ TESTS_OK := $(addprefix tst/,\
 tests: $(TESTS_OK)
 	$(V)echo "** tests passed!"
 
+.PHONY: retest
+retest:
+	$(V)rm -rf tst
+	$(V)$(MAKE) tests
+
 tst/tests/000/binding.ok: TXR_OPTS := -B
 tst/tests/001/%: TXR_ARGS := tests/001/data
 tst/tests/001/query-1.ok: TXR_OPTS := -B
@@ -441,13 +446,6 @@ tst/%.ok: %.tl %.expected $(TXR)
 	    exit 1 ;                                                          \
 	  fi)
 	$(call SH,touch $@)
-
-.PHONY: tests.clean
-tests.clean: | tests
-	rm -rf tst
-
-.PHONY: retest
-retest: | tests.clean tests
 
 define GREP_CHECK
 	$(V)if [ $$(grep -E $(1) $(SRCS) | wc -l) -ne $(3) ] ; then \
