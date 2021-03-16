@@ -138,32 +138,26 @@
     (let* ((bn (new blockinfo sym sym env me)))
       (set me.bb (acons sym bn me.bb)))))
 
-(defstruct var-spy ()
+(defstruct closure-spy ()
   env
   cap-vars
-
-  (:method accessed (me vbin sym))
-
-  (:method assigned (me vbin sym))
 
   (:method captured (me vbin sym)
     (when (eq vbin.env me.env)
       (pushnew sym me.cap-vars))))
 
-(defstruct capture-var-spy ()
-  var-spies
+(defstruct access-spy ()
+  closure-spies
 
   (:method accessed (me vbin sym)
-    (each ((spy me.var-spies))
+    (each ((spy me.closure-spies))
       (when (neq spy me)
         spy.(captured vbin sym))))
 
   (:method assigned (me vbin sym)
-    (each ((spy me.var-spies))
+    (each ((spy me.closure-spies))
       (when (neq spy me)
-        spy.(captured vbin sym))))
-
-  (:method captured (me vbin sym)))
+        spy.(captured vbin sym)))))
 
 (compile-only
   (defstruct compiler nil
@@ -181,7 +175,8 @@
     symvec
     lt-frags
     last-form
-    var-spies
+    closure-spies
+    access-spies
 
     (:method snapshot (me)
       (let ((snap (copy me)))
@@ -230,13 +225,19 @@
                 (qref ,me treg-cntr) ,saved-treg-cntr
                 (qref ,me discards) ,saved-discards)))))
 
-  (defmacro with-var-spy (me flag spy spy-expr . body)
+  (defun with-spy (me flag spy spy-expr body push-meth pop-meth)
     ^(let ((,spy (if ,flag ,spy-expr)))
        (unwind-protect
          (progn
-           (if ,spy (qref ,me (push-var-spy ,spy)))
+           (if ,spy (qref ,me (,push-meth ,spy)))
            ,*body)
-         (if ,spy (qref ,me (pop-var-spy ,spy)))))))
+         (if ,spy (qref ,me (,pop-meth ,spy))))))
+
+  (defmacro with-closure-spy (me flag spy spy-expr . body)
+    (with-spy me flag spy spy-expr body 'push-closure-spy 'pop-closure-spy))
+
+  (defmacro with-access-spy (me flag spy spy-expr . body)
+    (with-spy me flag spy spy-expr body 'push-access-spy 'pop-access-spy)))
 
 (defvarl %gcall-op% (relate '(apply usr:apply call) '(gapply gapply gcall)))
 
@@ -442,15 +443,25 @@
                      "code too complex: lexical nesting too deep"))
     (set me.nlev (succ env.lev))))
 
-(defmeth compiler push-var-spy (me spy)
-  (push spy me.var-spies))
+(defmeth compiler push-closure-spy (me spy)
+  (push spy me.closure-spies))
 
-(defmeth compiler pop-var-spy (me spy)
-  (let ((top (pop me.var-spies)))
+(defmeth compiler pop-closure-spy (me spy)
+  (let ((top (pop me.closure-spies)))
     (unless spy
-      (error "spy stack bug in compiler"))
+      (error "closure spy stack bug in compiler"))
     (unless (eq top spy)
-      (error "spy stack balance problem in compiler"))))
+      (error "closure spy stack balance problem in compiler"))))
+
+(defmeth compiler push-access-spy (me spy)
+  (push spy me.access-spies))
+
+(defmeth compiler pop-access-spy (me spy)
+  (let ((top (pop me.access-spies)))
+    (unless spy
+      (error "access spy stack bug in compiler"))
+    (unless (eq top spy)
+      (error "access spy stack balance problem in compiler"))))
 
 (defmeth compiler compile (me oreg env form)
   (set me.last-form form)
@@ -532,7 +543,7 @@
   (let ((vbin env.(lookup-var sym)))
     (cond
       (vbin
-        (each ((spy me.var-spies))
+        (each ((spy me.access-spies))
           spy.(accessed vbin sym))
         (new (frag vbin.loc nil (list sym))))
       ((special-var-p sym)
@@ -550,7 +561,7 @@
                    (t me.(get-sidx sym))))
            (vfrag me.(compile (if bind vloc oreg) env value)))
       (when bind
-        (each ((spy me.var-spies))
+        (each ((spy me.access-spies))
           spy.(assigned bind sym)))
       (new (frag vfrag.oreg
                  ^(,*vfrag.code
@@ -576,7 +587,7 @@
                         (setl1 ,vfrag.oreg ,l1loc))
                       (uni (list sym) vfrag.fvars)
                       vfrag.ffuns))))
-        (t (each ((spy me.var-spies))
+        (t (each ((spy me.access-spies))
              spy.(assigned bind sym))
           me.(compile oreg env ^(sys:setq ,sym ,val)))))))
 
@@ -944,9 +955,9 @@
            (seq (eq sym 'let*))
            (nenv (new env up env co me))
            (fenv (if seq nenv (new env up env co me))))
-      (with-var-spy me (and (not specials-occur)
-                            (>= *opt-level* 2))
-                    vspy (new var-spy env nenv)
+      (with-closure-spy me (and (not specials-occur)
+                                (>= *opt-level* 2))
+                        cspy (new closure-spy env nenv)
         (unless seq
           (each ((lsym lexsyms))
             nenv.(extend-var lsym)))
@@ -992,7 +1003,7 @@
                (code (append code bfrag.code
                              me.(maybe-mov boreg bfrag.oreg)
                              ^((end ,boreg)))))
-          (when (and vspy (null vspy.cap-vars))
+          (when (and cspy (null cspy.cap-vars))
             (set code me.(eliminate-frame code nenv)))
           (when treg
             me.(free-treg treg))
@@ -1044,9 +1055,9 @@
 
 (defmeth compiler comp-lambda-impl (me oreg env form)
   (mac-param-bind form (op par-syntax . body) form
-    (with-var-spy me me.var-spies
-                  spy (new capture-var-spy
-                           var-spies me.var-spies)
+    (with-access-spy me me.closure-spies
+                     spy (new access-spy
+                              closure-spies me.closure-spies)
       (compile-with-fresh-tregs me
         (let* ((*load-time* nil)
                (pars (new (fun-param-parser par-syntax form)))
@@ -1511,7 +1522,7 @@
        (let ((bind env.(lookup-lisp1 arg t)))
          (cond
            (bind
-             (each ((spy me.var-spies))
+             (each ((spy me.access-spies))
                spy.(accessed bind arg))
              (new (frag bind.loc
                         nil
