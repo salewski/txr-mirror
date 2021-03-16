@@ -140,17 +140,11 @@
 
 (defstruct var-spy ()
   env
-  acc-vars
-  set-vars
   cap-vars
 
-  (:method accessed (me vbin sym)
-    (when (eq vbin.env me.env)
-      (pushnew sym me.acc-vars)))
+  (:method accessed (me vbin sym))
 
-  (:method assigned (me vbin sym)
-    (when (eq vbin.env me.env)
-      (pushnew sym me.set-vars)))
+  (:method assigned (me vbin sym))
 
   (:method captured (me vbin sym)
     (when (eq vbin.env me.env)
