@@ -1452,13 +1452,16 @@ static val poll_wrap(val poll_list, val timeout_in)
 {
   val self = lit("poll");
   nfds_t i, len = c_num(length(poll_list), self);
-  val iter;
+  seq_iter_t iter;
+  val elem;
   struct pollfd *pfd = coerce(struct pollfd *, alloca(len * sizeof *pfd));
   val timeout = default_arg(timeout_in, negone);
   int res;
 
-  for (i = 0, iter = poll_list; iter; iter = cdr(iter), i++) {
-    cons_bind (obj, events, car(iter));
+  seq_iter_init(self, &iter, poll_list);
+
+  for (i = 0; seq_get(&iter, &elem); i++) {
+    cons_bind (obj, events, elem);
 
     pfd[i].events = c_num(events, self);
 
@@ -1504,10 +1507,11 @@ static val poll_wrap(val poll_list, val timeout_in)
   {
     list_collect_decl (out, ptail);
 
-    for (i = 0, iter = poll_list; iter; iter = cdr(iter), i++) {
-      val pair = car(iter);
+    seq_iter_init(self, &iter, poll_list);
+
+    for (i = 0; seq_get(&iter, &elem); i++) {
       if (pfd[i].revents)
-        ptail = list_collect(ptail, cons(car(pair), num(pfd[i].revents)));
+        ptail = list_collect(ptail, cons(car(elem), num(pfd[i].revents)));
     }
 
     return out;
