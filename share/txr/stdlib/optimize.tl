@@ -425,13 +425,19 @@
                  (not (memqual reg bb.lt-dregs)))
         ^((jmp ,jlabel)))
       (((jmp @jlabel) . @rest)
-       (let ((jinsns (cdr [bb.hash jlabel].insns)))
-         (match-case jinsns
-           (((jend @nil) . @nil)
-            ^(,(car jinsns) ,*rest))
-           ((@nil (jend @nil) . @nil)
-            ^(,(car jinsns) ,(cadr jinsns) ,*rest))
-           (@else insns))))
+       (let* ((jinsns (cdr [bb.hash jlabel].insns))
+              (oinsns (match-case jinsns
+                        (((jend @nil) . @nil)
+                         ^(,(car jinsns) ,*rest))
+                        ((@nil (jend @nil) . @nil)
+                         ^(,(car jinsns) ,(cadr jinsns) ,*rest))
+                        (@else insns))))
+         (when (neq insns oinsns)
+           (pushnew bl bb.rescan)
+           (set bb.recalc t
+                bl.next nil
+                bl.links nil))
+         oinsns))
       (@else insns))))
 
 (defmeth basic-blocks peephole (bb)
