@@ -739,10 +739,12 @@ static void ffi_ushort_put(struct txr_ffi_type *tft, val n, mem_t *dst,
 
 static val ffi_ushort_get(struct txr_ffi_type *tft, mem_t *src, val self)
 {
+  align_sw_get(unsigned short, src);
   unsigned short n = *coerce(unsigned short *, src);
   (void) tft;
   (void) self;
   return num_fast(n);
+  align_sw_end;
 }
 
 static void ffi_int_put(struct txr_ffi_type *tft, val n, mem_t *dst, val self)
