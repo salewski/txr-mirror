@@ -54,12 +54,18 @@
     (t exp)))
 
 (defun sys:analyze-argtypes (form argtypes)
-  (let ((p (posq : argtypes)))
-    (when p
-      (if (zerop p)
-        (compile-error form "variadic with zero fixed arguments not allowed")
-        (del [argtypes p])))
-    (list* (length argtypes) p argtypes)))
+  (tree-bind (: ftypes vtypes) (split* argtypes (op where (op eq :)))
+    (when vtypes
+      (when (null ftypes)
+        (compile-error form "variadic with zero fixed arguments not allowed"))
+      (set vtypes
+           (collect-each ((vt vtypes))
+             (caseq vt
+               ((float) 'double)
+               ((be-float le-float)
+                (compile-error form "variadic argument cannot be of type ~s"
+                               vt))))))
+    (list* (+ (len ftypes) (len vtypes)) (len ftypes) (append ftypes vtypes))))
 
 
 (defmacro deffi (:form f :env e name fun-expr rettype argtypes)

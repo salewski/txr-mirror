@@ -72113,6 +72113,26 @@ descriptor, and
 even if the return types and
 argument types match.
 
+Note: unlike the
+.code deffi
+and
+.code deffi-cb
+macros,
+the
+.code ffi-make-call-desc
+function doesn't perform any special treatment of variadic parameter types.
+When any of the types
+.codn float ,
+.code be-float
+or
+.code le-float
+occur in the variadic portion of
+.metn argtypes ,
+it is unspecified whether a descriptor is successfully produced and returned
+or whether an exception is thrown. If a descriptor is successfully produced,
+and then subsequently used for making or accepting calls, the behavior is
+undefined.
+
 .TP* Example:
 
 .verb
@@ -72689,8 +72709,9 @@ symbol appears as one of the elements of
 then the
 .code deffi
 form specifies a fixed call to a foreign function which is variadic. The
-argument types before the colon keyword are the fixed arguments. The types
-after the colon, if any, are the variadic arguments.
+argument types before the colon keyword are the types of the fixed arguments.
+The types after the colon, if any, are of the variadic arguments. Special
+considerations apply to some variadic argument types, described below.
 
 The following syntactic variants are permitted of the
 .meta fun-expr
@@ -72730,6 +72751,40 @@ form need not be surrounded by a call to the
 .code with-dyn-lib
 macro.
 .RE
+
+.IP
+When the FFI type
+.code float
+is used as the type of a variadic parameter,
+.code deffi
+replaces it by the FFI type
+.codn double .
+This treatment is necessary because the C variadic argument mechanism promotes
+.code float
+values to
+.codn double .
+Note: due to this substitution, it is possible to pass floating-point values
+which are out of range of the
+.code float
+type, without any diagnosis. The behavior of is undefined in the
+Lisp-to-C direction, if the C function extracts an out-of-range
+.code double
+argument as if it were of type
+.codn float .
+
+The FFI types
+.code be-float
+and
+.code le-float
+cannot be used for specifying the types of a variadic argument. If any of
+these occur in that position,
+.code deffi
+throws an error.
+Rationale: these types are related to the C type
+.code float
+type, which requires promotion in variadic passing. Promotion cannot
+be performed on floating-point values whose byte order has been rearranged,
+because promotion is a value-preserving conversion.
 
 .IP
 The result value of a
