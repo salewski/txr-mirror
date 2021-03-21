@@ -692,8 +692,8 @@ static val ffi_char_get(struct txr_ffi_type *tft, mem_t *src, val self)
 static void ffi_uchar_put(struct txr_ffi_type *tft, val n, mem_t *dst,
                           val self)
 {
-  (void) tft;
   unsigned char v = c_uchar(n, self);
+  (void) tft;
   *coerce(unsigned char *, dst) = v;
 }
 
