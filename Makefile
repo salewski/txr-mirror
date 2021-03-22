@@ -274,15 +274,7 @@ lex.yy.c: $(top_srcdir)parser.l
 	  fi)
 	$(call SH,chmod a-w $@)
 
-y.tab.h: y.tab.c
-	$(call SH,                                              \
-	  if ! [ -e y.tab.h ] ; then                            \
-	    echo "Someone removed y.tab.h but left y.tab.c" ;   \
-	    echo "Remove y.tab.c and re-run make" ;             \
-	    exit 1 ;                                            \
-	  fi)
-
-y.tab.c: $(top_srcdir)parser.y
+%.tab.c %.tab.h: $(top_srcdir)parser.%
 	$(call ABBREV,YACC)
 	$(call SH,                                              \
 	  if [ -e y.tab.h ]; then mv y.tab.h y.tab.h.old ; fi)
