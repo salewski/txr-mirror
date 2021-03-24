@@ -1193,11 +1193,9 @@ else
   done
 fi
 
-printf "Checking how to disable PIE ..."
 
-if [ $android_target ] ; then
-  printf " n/a (Android)\n"
-else
+if ! [ $android_target ] && ! [ $darwin_target ] ; then
+  printf "Checking how to disable PIE ..."
   nopie_flags=
 
   for flag in -nopie -no-pie ; do
