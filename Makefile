@@ -112,7 +112,11 @@ ABBREVN = $(if $(VERBOSE),\
 ABBREV3 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(3)" $(2))
 
 define DEPGEN
-$(V)sed ':x; /\\$$/ { N; s/\\\n//; tx }' < $(1) | \
+$(V)sed -e ':x'                                         \
+        -e '/\\$$/ {'                                   \
+        -e   'N; s/\\\n//'                              \
+        -e   'tx'                                       \
+        -e '}' < $(1) |                                 \
   sed -e '1s/^/DEP_/' -e '1s/: [^ ]\+/ :=/' > $(1:.d=.v)
 endef
 
