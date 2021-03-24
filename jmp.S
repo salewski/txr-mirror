@@ -29,6 +29,11 @@
 #define DEFUN(NAME) \
 .global _ ## NAME ; \
 _ ## NAME: ;
+#elif __APPLE__ && __arm64__
+#define DEFUN(NAME) \
+.globl _ ## NAME %% \
+.p2align 2 %% \
+_ ## NAME: ;
 #elif __APPLE__
 #define DEFUN(NAME) \
 .globl _ ## NAME ; \
@@ -295,7 +300,11 @@ DEFUN(jmp_restore)
   mr    %r3, %r4
   blr
 
-#elif __aarch64__
+#elif __aarch64__ || __arm64__
+
+#if __APPLE__
+  .section __TEXT,__text,regular,pure_instructions
+#endif
 
 DEFUN(jmp_save)
   stp x19, x20, [x0, 0]
@@ -328,6 +337,10 @@ DEFUN(jmp_restore)
   mov sp, x16
   mov w0, w1
   br x30
+
+#if __APPLE__
+  .subsections_via_symbols
+#endif
 
 #elif _MIPS_SZPTR == 32
 
