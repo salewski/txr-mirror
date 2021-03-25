@@ -7484,11 +7484,9 @@ val funcall(val fun)
   } else {
     switch (fun->f.functype) {
     case FVM:
-      {
-        if (fun->f.fixparam != 0)
-          break;
-        return vm_funcall(fun);
-      }
+      if (fun->f.fixparam != 0)
+        break;
+      return vm_funcall(fun);
     case F0:
       return fun->f.f.f0(fun->f.env);
     case N0:
@@ -7536,11 +7534,9 @@ val funcall1(val fun, val arg)
   } else {
     switch (fun->f.functype) {
     case FVM:
-      {
-        if (fun->f.fixparam != 1)
-          break;
-        return vm_funcall1(fun, z(arg));
-      }
+      if (fun->f.fixparam != 1)
+        break;
+      return vm_funcall1(fun, z(arg));
     case F1:
       return fun->f.f.f1(fun->f.env, z(arg));
     case N1:
@@ -7594,11 +7590,9 @@ val funcall2(val fun, val arg1, val arg2)
   } else {
     switch (fun->f.functype) {
     case FVM:
-      {
-        if (fun->f.fixparam != 2)
-          break;
-        return vm_funcall2(fun, z(arg1), z(arg2));
-      }
+      if (fun->f.fixparam != 2)
+        break;
+      return vm_funcall2(fun, z(arg1), z(arg2));
     case F2:
       return fun->f.f.f2(fun->f.env, z(arg1), z(arg2));
     case N2:
@@ -7658,11 +7652,9 @@ val funcall3(val fun, val arg1, val arg2, val arg3)
   } else {
     switch (fun->f.functype) {
     case FVM:
-      {
-        if (fun->f.fixparam != 3)
-          break;
-        return vm_funcall3(fun, z(arg1), z(arg2), z(arg3));
-      }
+      if (fun->f.fixparam != 3)
+        break;
+      return vm_funcall3(fun, z(arg1), z(arg2), z(arg3));
     case F3:
       return fun->f.f.f3(fun->f.env, z(arg1), z(arg2), z(arg3));
     case N3:
@@ -7728,11 +7720,9 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
   } else {
     switch (fun->f.functype) {
     case FVM:
-      {
-        if (fun->f.fixparam != 4)
-          break;
-        return vm_funcall4(fun, z(arg1), z(arg2), z(arg3), z(arg4));
-      }
+      if (fun->f.fixparam != 4)
+        break;
+      return vm_funcall4(fun, z(arg1), z(arg2), z(arg3), z(arg4));
     case F4:
       return fun->f.f.f4(fun->f.env, z(arg1), z(arg2), z(arg3), z(arg4));
     case N4:
