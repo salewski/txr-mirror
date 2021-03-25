@@ -6,7 +6,7 @@ including the library modules which it it uses, most of which are likewise
 BSD licensed.
 
 The MPI library, found in the mpi/ subdirectory, was developed over
-the yeras 1998-2006 by Michael J. Fromberger. Its license consists
+the years 1998-2006 by Michael J. Fromberger. Its license consists
 of the mpi/README file, which states:
 
    This software is in the public domain.  It is entirely free, and you
