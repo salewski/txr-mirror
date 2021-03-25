@@ -670,7 +670,10 @@ NOINLINE static void vm_movrr(struct vm *vm, vm_word_t insn)
 
 static void vm_jmp(struct vm *vm, vm_word_t insn)
 {
-  vm->ip = vm_insn_bigop(insn);
+  unsigned ip = vm_insn_bigop(insn);
+  if (ip < vm->ip)
+    sig_check_fast();
+  vm->ip = ip;
 }
 
 NOINLINE static void vm_if(struct vm *vm, vm_word_t insn)
@@ -944,6 +947,8 @@ NOINLINE static void vm_close(struct vm *vm, vm_word_t insn)
 
 NOINLINE static val vm_execute(struct vm *vm)
 {
+  sig_check_fast();
+
   for (;;) {
     vm_word_t insn = vm->code[vm->ip++];
     vm_op_t opcode = vm_insn_opcode(insn);
