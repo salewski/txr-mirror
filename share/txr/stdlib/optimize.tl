@@ -318,6 +318,15 @@
                            (ifq @reg @creg
                                 @(and @jjlabel @(not @jlabel))) . @nil)
                          ^(ifq ,reg ,creg ,jjlabel))
+                        ((@(require @jlabel (equal creg '(t 0)))
+                           (if @reg
+                                @(and @jjlabel @(not @jlabel))) . @jrest)
+                         (let ((xbl (if jrest
+                                      bb.(cut-block [bb.hash jlabel] jrest jinsns)
+                                      bb.(next-block [bb.hash jlabel]))))
+                           (if xbl
+                             ^(ifq ,reg ,creg ,xbl.label)
+                             insn)))
                         ((@jlabel
                            (jmp @(and @jjlabel @(not @jlabel))) . @nil)
                          ^(ifq ,reg ,creg ,jjlabel))
