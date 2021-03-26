@@ -49148,11 +49148,12 @@ function).
 
 The
 .code copy-hash
-function is like
-.codn make-similar-hash ,
-except that instead of
-producing an empty hash table, it produces one which has all the same elements
-as
+also produces a hash table similar to
+.metn hash ,
+in the same way as
+.codn make-similar-hash .
+However, rather than producing producing an empty hash table, it returns a
+duplicate table which has all the same elements as
 .metn hash :
 it contains the same key and value objects.
 
