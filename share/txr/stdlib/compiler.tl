@@ -1362,7 +1362,10 @@
           (cond
             ((and (plusp olev)
                   (eq sym 'call)
-                  [all args constantp])
+                  [all args constantp]
+                  (let ((op (eval (car args))))
+                    (or [%const-foldable% op]
+                        (not (bindable op)))))
              me.(compile oreg env (eval form)))
             (t (tree-case (car args)
                  ((op arg . more)
