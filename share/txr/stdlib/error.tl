@@ -32,22 +32,21 @@
   ctx)
 
 (defun sys:loc (ctx)
-  (let ((form (sys:ctx-form ctx)))
-    `(@(source-loc-str form)) `))
+  (source-loc-str (sys:ctx-form ctx)))
 
 (defun compile-error (ctx fmt . args)
   (let* ((nctx (sys:dig ctx))
          (loc (sys:loc nctx))
          (name (sys:ctx-name nctx)))
     (dump-deferred-warnings *stderr*)
-    (throwf 'eval-error `@loc~s: @fmt` name . args)))
+    (throwf 'eval-error `@loc: ~s: @fmt` name . args)))
 
 (defun compile-warning (ctx fmt . args)
   (let* ((nctx (sys:dig ctx))
          (loc (sys:loc nctx))
          (name (sys:ctx-name nctx)))
     (usr:catch
-      (throwf 'warning `@loc~s: @fmt` name . args)
+      (throwf 'warning `@loc: warning: ~s: @fmt` name . args)
       (continue ()))))
 
 (defun compile-defr-warning (ctx tag fmt . args)
@@ -55,7 +54,7 @@
          (loc (sys:loc nctx))
          (name (sys:ctx-name nctx)))
     (usr:catch
-      (throw 'defr-warning (fmt `@loc~s: @fmt` name . args)  tag)
+      (throw 'defr-warning (fmt `@loc: warning: ~s: @fmt` name . args)  tag)
       (continue ()))))
 
 (defun sys:bind-mac-error (ctx-form params obj too-few-p)

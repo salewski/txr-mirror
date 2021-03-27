@@ -713,7 +713,7 @@ val uw_rthrow(val sym, val args)
       if (uw_exception_subtype_p(sym, defr_warning_s))
         uw_defer_warning(args);
       else if (std_error != 0)
-        format(std_error, lit("warning: ~a\n"), car(args), nao);
+        format(std_error, lit("~a\n"), car(args), nao);
       if (!opt_compat || opt_compat >= 234) {
         uw_rthrow(continue_s, nil);
         return nil;
@@ -818,6 +818,7 @@ val uw_warningf(val fmt, ...)
 
   val stream = make_string_output_stream();
   va_start (vl, fmt);
+  put_string(lit("warning: "), stream);
   (void) vformat(stream, fmt, vl);
   va_end (vl);
 
@@ -879,7 +880,7 @@ val uw_dump_deferred_warnings(val stream)
 
   for (; wl; wl = cdr(wl)) {
     val args = car(wl);
-    format(stream, lit("warning: ~a\n"), car(args), nao);
+    format(stream, lit("~a\n"), car(args), nao);
   }
 
   return nil;

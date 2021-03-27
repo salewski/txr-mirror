@@ -294,7 +294,7 @@ static void eval_exception(val sym, val ctx, val fmt, va_list vl)
                 source_loc_str(last_form_evaled, nil));
 
   if (loc)
-    format(stream, lit("(~a) "), loc, nao);
+    format(stream, lit("~a: "), loc, nao);
 
   (void) vformat(stream, fmt, vl);
 
@@ -319,7 +319,7 @@ static val eval_warn(val ctx, val fmt, ...)
   uw_catch_begin (cons(continue_s, nil), exsym, exvals);
 
   va_start (vl, fmt);
-  eval_exception(warning_s, ctx, fmt, vl);
+  eval_exception(warning_s, ctx, scat2(lit("warning: "), fmt), vl);
   va_end (vl);
 
   uw_catch(exsym, exvals) { (void) exsym; (void) exvals; }
@@ -347,9 +347,9 @@ static val eval_defr_warn(val ctx, val tag, val fmt, ...)
                   source_loc_str(last_form_evaled, nil));
 
     if (loc)
-      format(stream, lit("(~a) "), loc, nao);
+      format(stream, lit("~a: "), loc, nao);
 
-    (void) vformat(stream, fmt, vl);
+    (void) vformat(stream, scat2(lit("warning: "), fmt), vl);
 
     uw_rthrow(defr_warning_s,
               cons(get_string_from_stream(stream), cons(tag, nil)));

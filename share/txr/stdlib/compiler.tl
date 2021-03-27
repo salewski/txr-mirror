@@ -2139,7 +2139,7 @@
 (defun open-compile-streams (in-path out-path test-fn)
   (let* ((parent (or *load-path* ""))
          (sep [path-sep-chars 0])
-         (in-path (if (pure-rel-path-p in-path)
+         (in-path (if (and (pure-rel-path-p in-path) (not (empty parent)))
                     `@(dir-name parent)@sep@{in-path}`
                     in-path))
          (rsuff (r$ %file-suff-rx% in-path))

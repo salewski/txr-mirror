@@ -1188,7 +1188,7 @@ static val repl_warning(val out_stream, val exc, struct args *rest)
   if (cdr(args))
     uw_defer_warning(args);
   else
-    format(out_stream, lit("** warning: ~!~a\n"), car(args), nao);
+    format(out_stream, lit("** ~!~a\n"), car(args), nao);
 
   return uw_rthrow(continue_s, nil);
 }
