@@ -1795,7 +1795,7 @@
        (caseq (car el)
          (sys:var (mac-param-bind form (sym exp : mods) el
                     (list (expand-quasi-mods exp mods))))
-         (sys:quasi (expand-quasi-mods el))
+         (sys:quasi (expand-quasi-args el))
          (t (list ^(sys:fmt-simple ,el)))))
       ((bindable el)
        (list ^(sys:fmt-simple ,el)))
