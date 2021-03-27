@@ -30,9 +30,10 @@
 (compile-only
   (load-for (struct sys:param-parser-base "param")))
 
-(defstruct (frag oreg code : fvars ffuns) nil
+(defstruct (frag oreg code : fvars ffuns pars) nil
   oreg
   code
+  pars
   fvars
   ffuns)
 
@@ -44,7 +45,8 @@
 
 (defstruct vbinding binding)
 
-(defstruct fbinding binding)
+(defstruct fbinding binding
+  pars)
 
 (defstruct blockinfo nil
   sym
@@ -334,6 +336,8 @@
 (defvarl assumed-fun)
 
 (defvar *dedup*)
+
+(defvar *unchecked-calls*)
 
 (defvar *load-time*)
 
@@ -1028,6 +1032,7 @@
                                 (frag me.(compile bind.loc
                                                   (if rec nenv eenv)
                                                   form)))
+                           (set bind.pars frag.pars)
                            (list bind
                                  (new (frag frag.oreg
                                             (append frag.code
@@ -1160,7 +1165,8 @@
                   (new (frag oreg code
                              (uni fvars (diff bfrag.fvars lexsyms))
                              (uni [reduce-left uni ifrags nil .ffuns]
-                                  bfrag.ffuns))))))))))))
+                                  bfrag.ffuns)
+                             pars)))))))))))
 
 (defmeth compiler comp-lambda (me oreg env form)
   (if (or *load-time* (< *opt-level* 3))
@@ -1292,36 +1298,47 @@
     me.(comp-fun-form oreg env form)))
 
 (defmeth compiler comp-fun-form (me oreg env form)
-  (let ((olev *opt-level*))
-    (when (plusp olev)
-      (match-case form
-        ((equal @a @b)
-         (cond
-           ((or (eq-comparable a)
-                (eq-comparable b))
-            (set form ^(eq ,a ,b)))
-           ((or (eql-comparable a)
-                (eql-comparable b))
-            (set form ^(eql ,a ,b)))))
-        ((not (@(and @(or eq eql equal) @op) @a @b))
-         (let ((nop (caseq op (eq 'neq) (eql 'neql) (equal 'nequal))))
-           (return-from comp-fun-form me.(compile oreg env ^(,nop ,a ,b)))))
-        ((@(or append cons list list*) . @args)
-         (set form (reduce-lisp form)))
-        ((@(@bin [%bin-op% @sym]) @a @b)
-         (set form ^(,bin ,a ,b)))
-        ((- @a)
-         (set form ^(neg ,a)))
-        ((@(or identity + * min max) @a)
-         (return-from comp-fun-form me.(compile oreg env a)))))
+  (let* ((olev *opt-level*)
+         (sym (car form))
+         (nargs (len (cdr form)))
+         (fbin env.(lookup-fun sym t))
+         (pars (or fbin.?pars
+                   (if (fboundp sym)
+                     (new param-info symbol sym)))))
+    (if pars
+      (param-check form nargs pars)
+      (push (cons form nargs) *unchecked-calls*))
 
-    (when (plusp olev)
-      (tree-case form
-        ((sym . args)
-         (set form (reduce-constant env form)))))
+    (when (null fbin)
+      (when (plusp olev)
+        (match-case form
+          ((equal @a @b)
+           (cond
+             ((or (eq-comparable a)
+                  (eq-comparable b))
+              (set form ^(eq ,a ,b)))
+             ((or (eql-comparable a)
+                  (eql-comparable b))
+              (set form ^(eql ,a ,b)))))
+          ((not (@(and @(or eq eql equal) @op) @a @b))
+           (let ((nop (caseq op (eq 'neq) (eql 'neql) (equal 'nequal))))
+             (return-from comp-fun-form me.(compile oreg env ^(,nop ,a ,b)))))
+          ((@(or append cons list list*) . @args)
+           (set form (reduce-lisp form)))
+          ((@(@bin [%bin-op% @sym]) @a @b)
+           (set form ^(,bin ,a ,b)))
+          ((- @a)
+           (set form ^(neg ,a)))
+          ((@(or identity + * min max) @a)
+           (return-from comp-fun-form me.(compile oreg env a)))))
 
-    (when (or (atom form) (special-operator-p (car form)))
-      (return-from comp-fun-form me.(compile oreg env form)))
+      (when (plusp olev)
+        (tree-case form
+          ((sym . args)
+           (set form (reduce-constant env form)))))
+
+      (when (or (atom form) (special-operator-p (car form)))
+        (return-from comp-fun-form me.(compile oreg env form))))
 
     (tree-bind (sym . args) form
       (let* ((fbind env.(lookup-fun sym t)))
@@ -2079,6 +2096,16 @@
                              (jend ,frag.oreg))))
       (vm-make-desc co.nlev (succ as.max-treg) as.buf co.(get-datavec) co.(get-symvec)))))
 
+(defun param-check (form nargs pars)
+  (cond
+    ((< nargs pars.nreq)
+     (compile-warning form "too few arguments: needs ~s, given ~s"
+                      pars.nreq nargs))
+    (pars.rest)
+    ((> nargs pars.nfix)
+     (compile-warning form "too many arguments: max ~s, given ~s"
+                      pars.nfix nargs))))
+
 (defun compiler-emit-warnings ()
   (let ((warn-fun [keep-if boundp (zap assumed-fun)]))
     (when warn-fun
@@ -2086,7 +2113,12 @@
         (throw 'warning
                `uses of @{warn-fun ", "} compiled as functions,\
                \ then defined as vars`)
-        (continue ())))))
+        (continue ()))))
+  (each ((uc (zap *unchecked-calls*)))
+    (when-match (@(as form (@sym . @args)) . @nargs) uc
+      (when (fboundp sym)
+        (let ((pars (new param-info symbol sym)))
+          (param-check form nargs pars))))))
 
 (defvarl %file-suff-rx% #/[.][^\\\/.]+/)
 
