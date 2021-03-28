@@ -4811,7 +4811,7 @@ again:
                     lit("fun used on special operator ~s"), arg, nao);
         else if (!bindable(arg))
           eval_warn(uw_last_form_expanded(),
-                    lit("~s appears in operator position"), arg, nao);
+                    lit("fun expects function, not ~s"), arg, nao);
         else
           eval_defr_warn(uw_last_form_expanded(),
                          cons(fun_s, arg),
