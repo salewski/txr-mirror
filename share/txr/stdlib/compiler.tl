@@ -339,6 +339,8 @@
 
 (defvar *unchecked-calls*)
 
+(defvarl %param-info% (hash :eq-based :weak-keys))
+
 (defvar *load-time*)
 
 ;; 0 - no optimization
@@ -1303,8 +1305,7 @@
          (nargs (len (cdr form)))
          (fbin env.(lookup-fun sym t))
          (pars (or fbin.?pars
-                   (if (fboundp sym)
-                     (new param-info symbol sym)))))
+                   (get-param-info sym))))
     (if pars
       (param-check form nargs pars)
       (push (cons form nargs) *unchecked-calls*))
@@ -2098,6 +2099,12 @@
                              (jend ,frag.oreg))))
       (vm-make-desc co.nlev (succ as.max-treg) as.buf co.(get-datavec) co.(get-symvec)))))
 
+(defun get-param-info (sym)
+  (whenlet ((fun (symbol-function sym)))
+    (or [%param-info% fun]
+        (set [%param-info% fun]
+             (new param-info fun fun)))))
+
 (defun param-check (form nargs pars)
   (cond
     ((< nargs pars.nreq)
@@ -2118,9 +2125,8 @@
         (continue ()))))
   (each ((uc (zap *unchecked-calls*)))
     (when-match (@(as form (@sym . @args)) . @nargs) uc
-      (when (fboundp sym)
-        (let ((pars (new param-info symbol sym)))
-          (param-check form nargs pars))))))
+      (whenlet ((fun (symbol-function sym)))
+        (param-check form nargs (get-param-info sym))))))
 
 (defvarl %file-suff-rx% #/[.][^\\\/.]+/)
 

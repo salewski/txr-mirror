@@ -69,16 +69,13 @@
   (defstruct (mac-param-parser syntax form) param-parser-base
     (mac-param-p t))
 
-  (defstruct (param-info symbol) nil
-    symbol
+  (defstruct (param-info fun) nil
+    fun
     nreq nopt nfix rest
     (:postinit (me)
-      (let* ((fun (or (symbol-function me.symbol)
-                      (error "~s: no such function: ~s"
-                             'param-info me.symbol)))
-             (fix (fun-fixparam-count fun))
-             (opt (fun-optparam-count fun)))
+      (let* ((fix (fun-fixparam-count me.fun))
+             (opt (fun-optparam-count me.fun)))
         (set me.nreq (- fix opt)
              me.nopt opt
              me.nfix fix
-             me.rest (fun-variadic fun))))))
+             me.rest (fun-variadic me.fun))))))
