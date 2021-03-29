@@ -4685,7 +4685,7 @@ The argument of
 .code line
 or
 .code chr
-may be a
+may be an
 .codn @ -delimited
 Lisp expression. This is useful for matching computed lines or
 character positions:
@@ -7322,7 +7322,7 @@ Immediately terminate the enclosing query block called
 .metn name ,
 as if that block
 failed to match anything. If more than one block by that name encloses
-the directive, the inner-most block is terminated. No bindings emerge from
+the directive, the innermost block is terminated. No bindings emerge from
 a failed block.
 
 .coIP @(fail)
@@ -7360,7 +7360,7 @@ Immediately terminate the enclosing query block called
 .metn name ,
 as if that block
 successfully matched. If more than one block by that name encloses the
-directive, the inner-most block is terminated.
+directive, the innermost block is terminated.
 
 .coIP @(accept)
 Immediately terminate the innermost enclosing anonymous block, as if
@@ -10365,7 +10365,7 @@ directive throws an exception of type
 .codn file-error ,
 because the given file does not exist. The exit point for this exception is the
 .code "@(catch file-error)"
-clause in the outer-most
+clause in the outermost
 .code try
 block. The inner block is
 not eligible because it contains no catch clauses at all. However, the inner
@@ -42382,7 +42382,7 @@ yields
 .code -1
 and
 .code "(round 1 2)"
-yields 1,
+yields 1.
 
 Note that for large floating point values, due to the limited
 precision, the integer value corresponding to the mathematical
@@ -45943,8 +45943,8 @@ The
 .code get-frames
 function inquires the current dynamic environment in order to retrieve
 information about established exception catch and handler frames.
-The function returns a list, ordered from the inner-most nesting
-level to the outer-most nesting, of structure objects derived from the
+The function returns a list, ordered from the innermost nesting
+level to the outermost nesting, of structure objects derived from the
 .code frame
 structure type. The list contains two kinds of objects: structures
 of type
@@ -46028,8 +46028,8 @@ The
 .code find-frames
 function is similar to
 .code find-frame
-except that it returns all matching frames, ordered from the inner-most nesting
-level to the outer-most nesting. If called with no arguments, it returns a
+except that it returns all matching frames, ordered from the innermost nesting
+level to the outermost nesting. If called with no arguments, it returns a
 list of the catch frames.
 
 .coNP Function @ invoke-catch
@@ -50962,7 +50962,10 @@ what is the meaning?
 
 An expression with a single
 .code @
-always belongs with the inner-most op or do
+always belongs with the innermost
+.code op
+or
+.code do
 operator. So for instance
 .code "(op (op @1))"
 means that an
@@ -50973,7 +50976,8 @@ within an outer
 expression that contains no references to its implicit variables.
 The
 .code @1
-belongs to the inner op.
+belongs to the inner
+.codn op .
 
 There is a way for an inner
 .code op
@@ -60736,7 +60740,7 @@ The association between the
 .meta pipe
 or
 .meta command
-strings, direction and type is scoped to the inner-most enclosing
+strings, direction and type is scoped to the innermost enclosing
 .code awk
 macro. An inner
 .code awk
@@ -60939,7 +60943,7 @@ completes:
   (awk (:begin (prn `@{*args* " "}`) (exit 0)))
 .brev
 .IP 18.
-Pint the components of the
+Print the components of the
 .code PATH
 environment variable, one per line:
 
@@ -67932,7 +67936,7 @@ Dictionaries are unordered collections of keys, which are strings, which
 have associated values, which are also strings.  A trie can be used to filter
 text, such that keys appearing in the text are replaced by the corresponding
 values. A trie supports this filtering operation by providing an efficient
-prefix-based lookup method which only looks at each input character ones, and
+prefix-based lookup method which only looks at each input character once, and
 which does not require knowledge of the length of the key in advance.
 
 .coNP Function @ make-trie
@@ -75702,11 +75706,11 @@ is returned.
 
 It is permissible to nest
 .code with-compilation-unit
-forms, lexically or dynamically. The outer-most invocation of
+forms, lexically or dynamically. The outermost invocation of
 .code with-compilation-unit
 dominates; all deferred
 .code compile-file
-actions are held until the outer-most enclosing
+actions are held until the outermost enclosing
 .code with-compilation-unit
 terminates.
 
@@ -78909,8 +78913,8 @@ to a library feature requires familiarity with the implementation.
 .SS* A. NOTES ON EXOTIC REGULAR EXPRESSIONS
 Users familiar with regular expressions may not be familiar with the complement
 and intersection operators, which are often absent from text processing tools
-that support regular expressions.  The following remarks are offered in hope
-that they are of some use.
+that support regular expressions.  The following remarks are offered in the
+hope that they may be of some use.
 
 .TP* "Equivalence to Sets"
 Regexp intersection is not essential; it may be obtained from complement and
@@ -79037,7 +79041,7 @@ actually consists of the comment
 .codn "/* /* nested */" ,
 which is followed by the trailing junk
 .codn */ .
-Our simple characterization of interior part of a C comment as a string
+Our simple characterization of the interior part of a C comment as a string
 which does not contain the terminating digraph makes use of the
 complement, and can be expressed using the complemented regular expression like
 this:
@@ -79074,7 +79078,7 @@ by something other than a slash, so let's include this via union:
   ([^*]|[*][^/])*.
 .brev
 
-Alas, already, we have a bug in this expression. The
+Alas, we already have a bug in this expression. The
 subexpression
 .code [*][^/]
 can match
@@ -79119,7 +79123,7 @@ interior asterisks before the comment close:
   ([^*]|[*]*[^*/])*[*]*
 .brev
 
-Thus our the semi-final regular expression is
+Thus the semi-final regular expression is
 
 .verb
   [/][*]([^*]|[*]*[^*/])*[*]*[*][/]
