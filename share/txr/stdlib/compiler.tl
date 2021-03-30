@@ -454,7 +454,7 @@
 
 (defmeth compiler pop-closure-spy (me spy)
   (let ((top (pop me.closure-spies)))
-    (unless spy
+    (unless top
       (error "closure spy stack bug in compiler"))
     (unless (eq top spy)
       (error "closure spy stack balance problem in compiler"))))
@@ -464,7 +464,7 @@
 
 (defmeth compiler pop-access-spy (me spy)
   (let ((top (pop me.access-spies)))
-    (unless spy
+    (unless top
       (error "access spy stack bug in compiler"))
     (unless (eq top spy)
       (error "access spy stack balance problem in compiler"))))
