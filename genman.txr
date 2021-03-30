@@ -175,7 +175,20 @@ This document was created by
 <head><title>Manpage for TXR @VERSION</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <style>
-.disambiguations dl { margin-bottom: 2048px; }
+.disambiguations dl {
+  margin-bottom: 2048px;
+}
+dl.items {
+  display: grid;
+  grid-template-columns: max-content auto;
+}
+dl.items dt {
+  grid-column-start: 1;
+}
+dl.items dd {
+  grid-column-start: 2;
+  margin-bottom: 1ex;
+}
 </style>
 <script type="text/javascript">
 var xpanded = false;
