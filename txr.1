@@ -743,7 +743,6 @@ function.
 
 .meIP -C < number
 .meIP >> --compat= number
-
 Requests \*(TX to behave in a manner that is compatible with the specified
 version of \*(TX. This makes a difference in situations when a release of
 \*(TX breaks backward compatibility. If some version N+1 deliberately introduces
@@ -768,7 +767,6 @@ option.
 For more information, see the COMPATIBILITY section.
 
 .meIP >> --gc-delta= number
-
 The
 .meta number
 argument to this option must be a decimal integer. It represents
@@ -1700,7 +1698,6 @@ is the ASCII character A.  If a semicolon character immediately follows the
 hex digits, it is consumed, and characters which follow are not considered
 part of the hex escape even if they are hex digits.
 .meIP @\e < octal-digits
-
 A
 .code @\e
 immediately followed by a sequence of octal digits (0 through 7) is interpreted
@@ -11585,7 +11582,6 @@ The function detects this case and returns
 
 .RS
 .meIP >> ' expr
-
 The quote character in front of an expression is used for suppressing evaluation,
 which is useful for forms that evaluate to something other than themselves.
 For instance if
@@ -11606,7 +11602,6 @@ is the contents of the variable
 .codn a .
 
 .meIP >> ^ qq-template
-
 The caret in front of an expression is a quasiquote. A quasiquote is like
 a quote, but with the possibility of substitution of material.
 
@@ -11661,7 +11656,6 @@ character
 used for quasi string literals.
 
 .meIP >> , expr
-
 The comma character is used within a
 .meta qq-template
 to denote an unquote.  Whereas the quasiquote suppresses evaluation,
@@ -11689,7 +11683,6 @@ variable name must be used:
 .codn ", *x*" .
 
 .meIP >> ,* expr
-
 The comma-star operator is used within quasiquote list to denote a splicing
 unquote.  The form which follows
 .code ,*
@@ -11845,7 +11838,6 @@ Example:
 .NP* Vector Literals
 
 .coIP "#(...)"
-
 A hash token followed by a list denotes a vector. For example
 .code "#(1 2 a)"
 is a three-element vector containing the numbers
@@ -11858,7 +11850,6 @@ and the symbol
 .NP* Struct Literals
 
 .meIP >> #S( name >> { slot << value }*)
-
 The notation
 .code #S
 followed by a nested list syntax denotes a struct literal.
@@ -11885,7 +11876,6 @@ expression.
 .NP* Hash Literals
 
 .meIP <> #H(( hash-argument *) >> ( key << value )*)
-
 The notation
 .code #H
 followed by list syntax denotes a hash table literal.
@@ -11940,7 +11930,6 @@ Both expressions are literal objects, not subject to evaluation.
 .NP* Range Literals
 
 .meIP >> #R( from << to )
-
 The notation
 .code #R
 followed by a two-element list syntax denotes a range literal.
@@ -11958,7 +11947,6 @@ fields are the objects denoted by these expressions.
 .NP* Buffer Literals
 
 .meIP <> #b' hex-data '
-
 The notation
 .code #b'
 introduces a buffer object: a data representation for a
@@ -11992,7 +11980,6 @@ or
 .NP* Tree Node Literals
 
 .meIP >> #N([ key >> [ left <> [ right ]]])
-
 The notation
 .code #N
 followed by list syntax denotes a tree node literal. The list syntax must be a
@@ -12017,7 +12004,6 @@ If the tree node literal syntax omits any of these, they default to
 .NP* Tree Literals
 
 .meIP >> #T([([ keyfun >> [ lessfun <> [ equalfun ]]]) << item *])
-
 The notation
 .code #T
 followed by list syntax denotes a tree literal, which specifies an
@@ -12396,7 +12382,6 @@ circular reference in the object.
 A detailed description of the notational elements follows:
 
 .meIP <> # digits = < object
-
 The
 .code #=
 syntax introduces an object label which denotes the
@@ -12419,7 +12404,6 @@ top-level expression in which they appear.  Consequently, references
 in one \*(TL top-level expression cannot reach definitions in another.
 
 .meIP <> # digits #
-
 The
 .code ##
 syntax denotes a label reference: the repetition of an object that was
@@ -12462,7 +12446,6 @@ PRINT-CIRCLE-SHARED:RESPECT-PRINT-CIRCLE.
 .NP* Notation for Erasing Objects
 
 .meIP #; < expr
-
 The \*(TL notation
 .code #;
 in TXR Lisp indicates that the expression
@@ -14385,13 +14368,11 @@ single parameter
 .brev
 
 .IP "Variadic function:"
-
 .verb
   (lambda args (list 'my-list-of-arguments args))
 .brev
 
 .IP "Optional arguments:"
-
 .verb
   [(lambda (x : y) (list x y)) 1] -> (1 nil)
   [(lambda (x : y) (list x y)) 1 2] -> (1 2)
@@ -17095,7 +17076,6 @@ The form is a
 form; these are spared from the optimization.
 .RE
 .IP
-
 Removal of blocks under the above rules means that some use of blocks which
 works in interpreted code will not work in compiled programs. Programs which
 adhere to the rules are not affected by such a difference.
@@ -43729,7 +43709,6 @@ Round to zero: the result of an operation is rounded to the nearest
 representable value that lies in the direction of zero.
 .RE
 .IP
-
 .coNP Functions @ flo-get-round-mode and @ flo-set-round-mode
 .synb
 .mets (flo-get-round-mode)

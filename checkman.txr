@@ -130,6 +130,14 @@
 @  (throw bad ln ".meti not in .mono")
 @(end)
 @;;
+@;; Check for .IP, coIP or .meIP followed by blank line
+@;;
+@(define check-ip ())
+.@{ip /IP|coIP|meIP/}@(skip)
+
+@  (throw bad ln `.@ip followed by blank line`)
+@(end)
+@;;
 @;; Main
 @;;
 @(bind errors 0)
@@ -152,6 +160,8 @@
 @      (check-spurious)
 @    (or)
 @      (check-meti)
+@    (or)
+@      (check-ip)
 @    (end)
 @  (catch bad (line msg))
 @    (do (inc errors)
