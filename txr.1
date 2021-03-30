@@ -13406,12 +13406,13 @@ and
 .metn right-place .
 
 .meIP (push < item << place )
-Pushes
+Adds
 .meta item
-into the list stored in
+to the front of the list which is currently stored in
+.codn place ,
+then stores the extended list back into
 .code place
-and returns
-.codn item .
+and returns it.
 
 .meIP (pop << place )
 Pop the list stored in
