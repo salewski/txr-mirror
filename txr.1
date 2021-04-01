@@ -3305,7 +3305,7 @@ followed by
 .code ..
 token).
 
-Dialect note: unlike in Common Lisp,
+Dialect Note: unlike in Common Lisp,
 .code 123.
 is not an integer, but the floating-point number
 .codn 123.0 .
@@ -11278,7 +11278,7 @@ denotes an uninterned symbol named
 .codn bar ,
 described in the next section.
 
-.TP* "Dialect note:"
+.TP* "Dialect Note:"
 In ANSI Common Lisp, the
 .code foo:bar
 syntax does not intern the symbol
@@ -11646,7 +11646,7 @@ belongs to the inner quasiquote
 and the outer quasiquote does not have
 any unquotes of its own, making it equivalent to a quote.
 
-Dialect note: in Common Lisp and Scheme,
+Dialect Note: in Common Lisp and Scheme,
 .code ^form
 is written
 .codn `form ,
@@ -17840,7 +17840,7 @@ operator yields
 as the prior value, consistent with the behavior when accessors are used to
 retrieve a nonexistent value.
 
-.TP* "Dialect note:"
+.TP* "Dialect Note:"
 
 In ANSI Common Lisp, the
 .code symbol-function
@@ -30954,7 +30954,7 @@ accessor, which operates on lists. That function has useful semantics for
 improper lists and treats an atom as the terminator of a zero-length improper
 list.
 
-Dialect note: a destructive function similar to Common Lisp's
+Dialect Note: a destructive function similar to Common Lisp's
 .code nbutlast
 isn't provided. Assignment to a
 .code butlast
@@ -41766,7 +41766,7 @@ be found when the recursion pops back to the outer quasiquote, which will
 then traverse the result of the inner compilation and find the
 .codn "(unquote x)" .
 
-.TP* "Dialect note:"
+.TP* "Dialect Note:"
 
 In Lisp dialects which have a published quasiquoting operator syntax, there is
 the expectation that the quasiquote read syntax corresponds to it. That is to
@@ -42374,7 +42374,7 @@ Note that for large floating point values, due to the limited
 precision, the integer value corresponding to the mathematical
 floor or ceiling may not be available.
 
-.TP* "Dialect note:"
+.TP* "Dialect Note:"
 In ANSI Common Lisp, the
 .code round
 function chooses the nearest even integer, rather than
@@ -76196,7 +76196,7 @@ to stage the evaluation of global effects that the macro expansion depends on
 simply by bundling these effects into the expansion, wrapped in
 .codn load-time .
 
-.TP* "Dialect note:"
+.TP* "Dialect Note:"
 The
 .code load-time
 macro is similar to the ANSI Common Lisp
