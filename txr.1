@@ -12421,8 +12421,10 @@ and is applied to an object which either encloses the reference,
 or lexically precedes the reference.  Forward references such as
 .code "(#1# #1=(1 2))"
 are not supported.
+.PP
 
-.TP* "Note:"
+Note:
+
 Circular notation can span hash table literals. The syntax
 .code "#1=#H((:eql-based) (#1# #1#))"
 denotes an
@@ -12435,7 +12437,8 @@ hash tables. The analogous syntax
 .code "#1=#H(() (#1# #1#))"
 produces a hash table in an inconsistent state.
 
-.TP* "Dialect note:"
+Dialect Note:
+
 Circle notation is taken from Common Lisp, 
 intended to be unsurprising to users familiar with that
 language.
@@ -12454,8 +12457,9 @@ in TXR Lisp indicates that the expression
 is to be read and then discarded, as if it were replaced by whitespace.
 
 This is useful for temporarily "commenting out" an expression.
+.PP
+Notes:
 
-.TP* Notes:
 Whereas it is valid for a \*(TL source file to be empty, it is
 a syntax error if a \*(TL source file contains nothing but one or more
 objects which are each suppressed by a preceding
