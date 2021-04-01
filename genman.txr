@@ -178,16 +178,21 @@ This document was created by
 .disambiguations dl {
   margin-bottom: 2048px;
 }
-dl.items {
-  display: grid;
-  grid-template-columns: max-content auto;
+dl.items dd:-moz-only-whitespace::after {
+  content: "\00A0";
 }
-dl.items dt {
-  grid-column-start: 1;
+dl.items dd:empty:after {
+  content: "\00A0";
 }
 dl.items dd {
-  grid-column-start: 2;
+  overflow: auto;
+  min-width: calc(100% - 3em);
+  margin-left: 3em;
   margin-bottom: 1ex;
+}
+dl.items dt {
+  float: left;
+  padding-right: 1ex;
 }
 </style>
 <script type="text/javascript">
