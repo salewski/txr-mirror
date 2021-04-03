@@ -77574,7 +77574,53 @@ The object
 .code 4
 is self-evaluating, and so the greedy evaluation process stops.
 
-.SS* Listener-Related Miscellanea
+.coNP Special variable @ *doc-url*
+.desc
+The special variable
+.code *doc-url*
+holds a character string representing a web URL intended to point to the HTML
+version of this document.  The initial value points to the publicly hosted
+document on the Internet.  The user may change this to point to another
+location, such as a locally hosted copy of the document.
+
+This variable is used by the
+.code doc
+function.
+
+.SS* Listener-Related Functions
+
+.coNP Function @ doc
+.synb
+.mets (doc << [ symbol ])
+.syne
+.desc
+The
+.code doc
+function provides help for the library symbol
+.metn symbol .
+If information about
+.meta symbol
+is available in the HTML version of this document, and is indexed, then this
+function causes that document to be opened using the system's default web
+browser, such that the browser navigates to the appropriate section of
+the manual.
+
+If the
+.meta symbol
+argument is omitted, then the document is opened without navigating to a
+particular section.
+
+The base URL for the document is configured by the
+.code *doc-url*
+variable.
+
+If
+.meta symbol
+is successfully found, or else not specified, and
+.code doc
+successfully invokes the URL-opening mechanism, it returns
+.codn t .
+Otherwise, it throws an error exception.
 
 .coNP Function @ quip
 .synb

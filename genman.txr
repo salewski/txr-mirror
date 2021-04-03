@@ -283,3 +283,4 @@ function tocjump(hash) {
 </body>
 </html>
 @(end)
+@(do (file-put "share/txr/stdlib/doc-syms.tl" ^(defvarl doc-syms ,symhash)))
