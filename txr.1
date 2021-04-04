@@ -75314,7 +75314,7 @@ prints 42 to standard out. This works both interpreted and compiled with
 Each of these two macro calls generates a top-level form into which
 the same gensym is inserted. This works under file compilation due to a
 deliberate strategy in the layout of compiled files, which allows such
-uses. Namely, the file compiler combines multiple top-level forms are combined
+uses. Namely, the file compiler combines multiple top-level forms
 into a single object, which is read at once, and which uses the circle
 notation to unify gensym references.
 
