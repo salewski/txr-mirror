@@ -58969,17 +58969,20 @@ and
 
 The following is a description of the special clauses:
 .RS
-.meIP (:name << sym )
+.meIP (:name << obj )
 The
 .code :name
 clause establishes the name of the implicit block contained
 within the expansion of the
 .code awk
-macro. Forms enclosed in the macro can use
+macro to be the object
+.metn obj ,
+usually a symbol.
+Forms enclosed in the macro can use
 .code return-from
 to abandon the
 .code awk
-form, specifying this symbol as the argument.
+form, specifying the same object as the argument.
 
 If the
 .code :name
@@ -58990,10 +58993,10 @@ It is an error for two or more
 .code :name
 forms to appear.
 
-The
+Note: in \*(TX 255 and older, the
 .code :name
-clause must have an argument which is a symbol;
-the symbol
+clause must have an argument which is a symbol.
+The symbol
 .code nil
 is not permitted.
 
