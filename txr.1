@@ -74952,10 +74952,13 @@ If a
 .code load-time
 form is top-level form, then its argument is a top-level form.
 .IP 6.
-When a form is identified as a top-level form by the above rule 1,
-its constituents are considered under rules 2-4 only after the form is
-fully macro-expanded.
+When a macro form is identified as a top-level form, it is macro-expanded
+as if by
+.code macroexpand
+before consideration whether it contains top-level forms under rules 2-5.
 .IP 7.
+Rules 2-6 are applied recursively.
+.IP 8.
 No other forms are top-level forms.
 .RE
 
