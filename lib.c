@@ -7168,7 +7168,7 @@ static val get_param_counts(val params, cnum *fixparam, cnum *optparam)
   }
 
   *fixparam = fx;
-  *optparam = oa;
+  *optparam = (oa > 0) ? oa : 0;
   return params;
 }
 
