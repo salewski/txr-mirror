@@ -75199,7 +75199,7 @@ No such de-duplication is performed for interpreted code.
 Consequently, code which depends on multiple occurrences of these objects to be
 distinct objects may behave correctly when interpreted, but misbehave when
 compiled. Or
-.IR "vice versa .
+.IR "vice versa" .
 One example is code which modifies a string literal.
 Under compilation, the change will affect all occurrences of that literal
 that have been merged into one object.  Another example is an
