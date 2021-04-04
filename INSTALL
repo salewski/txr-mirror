@@ -35,12 +35,17 @@ directory, for instance like this:
 
   $ mkdir build-txr
   $ cd build-dir
-  build-dir $ ../txr-039/configure
+  build-dir $ ../txr/configure
 
-If you're going to be making changes to txr, it's easier to build in the same
-directory, but to build txr for multiple architectures, or multiple kinds of
-builds at the same time (e.g. optimized or unoptimized) it's useful to follow
-the separate-directory approach.
+If you're going to be making changes to txr, it's easier to build in the
+source directory, but to build txr for multiple architectures, or multiple
+kinds of builds at the same time it's useful to follow the separate-directory
+approach.
+
+On that topic, note that TXR supports building optimized and unoptimized in the same tree;
+using "make txr-dbg", you can build an optimized debug target. The regular
+build places object files in the opt/ subdirectory; the unoptimized objects
+are placed into dbg/.
 
 Run configure --help to see an explanation of what options are available and
 what are their default values. If you aren't cross-compiling, you probably
@@ -103,6 +108,36 @@ Mind the slashes. If cross doesn't have a trailing slash, then
 compiler_prefix and tool_prefix will have to have a leading slash.
 These variables are just catenated together.
 
+
+1.2.  Handling the .tl files in Cross-Compiling
+
+During ordinary non-cross compilation, when the txr executable is built,
+that executable is then used to compile numerous .tl files in the standard
+library, producing .tlo files. These filesa are architecture-independent, and
+therefore do not require cross-compiling per se; however, their dependency on
+the txr executable poses a problem: if the txr executable is cross compiled, it
+cannot be executed.
+
+There are two solutions for this:
+
+Solution 1: build a native txr for the build machine. Then simply copy
+its .tlo files. Suppose the native TXR is built in a directory called
+native-build, and the cross-compiled txr has been built in the cross-build
+directory to the point that the executable exists. Simply:
+
+   cp native-build/share/txr/stdlib/*.tlo cross-build/share/txr/stdlib
+
+then change to the cross-build directory and continue the build with
+make install.
+
+Solution 2: build a native txr for the build machine. When building
+the cross-compiled txr, use the TXR make variable to specify the native
+executable:
+
+   make TXR=/path/to/native/txr
+
+The native txr should be the same version. If the version differs, the
+cross-compilation might not work.
 
 2. Prefix Selection
 
