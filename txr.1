@@ -16967,7 +16967,13 @@ The
 operator introduces a named block around the execution of
 some forms. The
 .meta name
-argument must be a symbol. Since a block name is not
+argument may be any object, though block names are usually symbols.
+Two block
+.meta name
+objects are considered to be the same name according to
+.code eq
+equality.
+Since a block name is not
 a variable binding, keyword symbols are permitted, and so are the symbols
 .code t
 and
