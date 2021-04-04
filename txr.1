@@ -75474,11 +75474,21 @@ If the argument is a lambda expression, then that function is
 compiled.
 
 If the argument is a function object, and that object is an interpreted
-function, then its code is retrieved and compiled.
+function, then its code and lexical environment are retrieved and compiled.
 
 In all cases, the return value of
 .code compile
 is the compiled function.
+
+Note: when an interpreted function object is compiled, the compiled environment
+does not share bindings with the original interpreted environment.
+Modifications to the bindings of either environment have no effect on the
+other. However, the objects referenced by the bindings are shared.  Shared
+bindings may be arranged using the
+.code hlet
+or
+.code hlet*
+macros.
 
 .coNP Functions @ compile-file and @ compile-update-file
 .synb
