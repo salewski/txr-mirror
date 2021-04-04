@@ -5860,7 +5860,7 @@ list is specified, it means that only the given variables can
 emerge from the successful collect. Any newly introduced bindings for other
 variables do not propagate. More precisely,  whenever the collect body matches
 successfully, the following three rules apply:
-.IP 1
+.IP 1.
 If
 .code :vars
 specifies required variables, the collect body must bind all of them,
@@ -5869,13 +5869,13 @@ or else must not bind any variable at all, whether listed in
 or not, otherwise an exception of type
 .code query-error
 is thrown.
-.IP 2
+.IP 2.
 If
 .code :vars
 specifies required variables, and also specifies default variables,
 and the collect body binds no variable at all, then the default variables
 are not bound to their default values.
-.IP 3
+.IP 3.
 If
 .code :vars
 specifies optional variables, and all required variables are bound by
@@ -17047,7 +17047,7 @@ form will be spared from
 .codn progn -conversion
 by the compiler if it meets the following rules.
 .RS
-.IP 1
+.IP 1.
 Any
 .meta body-form
 references the block's
@@ -17059,10 +17059,10 @@ in a
 or
 .code sys:capture-cont
 expression.
-.IP 2
+.IP 2.
 The form contains at least one direct call to a function
 not in the standard \*(TL library.
-.IP 3
+.IP 3.
 The form contains at least one direct call to the functions
 .codn sys:capture-cont ,
 .codn return* ,
@@ -17074,14 +17074,14 @@ The form contains at least one direct call to the functions
 .code compile-file
 or
 .codn compile-toplevel .
-.IP 4
+.IP 4.
 The form references any of the functions in rules 2 and 3
 as a function binding via the
 .code dwim
 operator (or the DWIM brackets notation) or via the
 .code fun
 operator.
-.IP 5
+.IP 5.
 The form is a
 .code block*
 form; these are spared from the optimization.
@@ -17510,12 +17510,12 @@ The
 .meta form
 is not expanded all at once. Rather, it is treated by the following algorithm:
 .RS
-.IP 1
+.IP 1.
 First, if
 .meta form
 is a macro, it is macro-expanded as if by an application of the function
 .codn macroexpand .
-.IP 2
+.IP 2.
 If the resulting expanded form is a
 .codn progn ,
 .codn compile-only ,
@@ -17528,7 +17528,7 @@ recursive call to
 .code eval
 using the same
 .metn env .
-.IP 3
+.IP 3.
 Otherwise, if the expanded form isn't one of the above three kinds of
 expressions, it is subject to a full expansion and evaluation.
 .RE
@@ -31073,7 +31073,7 @@ to a suffix of
 then
 .meta sequence
 is returned.
-.IP 6
+.IP 6.
 In all other cases,
 .meta sequence
 and
@@ -42008,15 +42008,15 @@ the displacement from the NUL character.
 
 The rules can be stated as a set of restrictions:
 .RS
-.IP 1
+.IP 1.
 Two characters may not be added together.
-.IP 2
+.IP 2.
 A character may not be subtracted from an integer (which also rules out
 the possibility of computing the additive inverse of a character).
-.IP 3
+.IP 3.
 A character operand may not be opposite to a floating point operand
 in any operation.
-.IP 4
+.IP 4.
 A character may not be an operand of multiplication.
 .RE
 
@@ -74947,7 +74947,7 @@ If an
 .code eval-only
 form is top-level form, then each of its constituent forms is also a top-level
 form.
-.IP 5
+.IP 5.
 If a
 .code load-time
 form is top-level form, then its argument is a top-level form.
@@ -74997,12 +74997,12 @@ similar to the algorithm used by the
 .code eval
 function:
 .RS
-.IP 1
+.IP 1.
 First, if
 .meta form
 is a macro, it is macro-expanded as if by an application of the function
 .codn macroexpand .
-.IP 2
+.IP 2.
 If the resulting expanded form is a
 .codn progn ,
 .codn compile-only ,
@@ -75012,7 +75012,7 @@ form, then
 .code compile-file
 iterates over that form's argument expressions, compiling each expression
 recursively as if it were a separate expression.
-.IP 3
+.IP 3.
 Otherwise, if the expanded form isn't one of the above three kinds of
 expressions, it is subject to a full expansion and compilation.
 .RE
