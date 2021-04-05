@@ -11470,16 +11470,21 @@ to produce
 .codn "(qref a b c)" .
 
 If the referencing dot is immediately followed by a question mark, it forms
-a single token, which produces the following syntactic variation:
+a single token, which produces the following syntactic variation,
+in which the following item is annotated as a list headed by
+the symbol
+.codn t :
 
 .verb
   a.?b     <-->  (t a).b         <--> (qref (t a) b)
   a.?b.?c  <-->  (t a).(t b).c   <--> (qref (t a) (t b) c)
+  a.?(b)   <-->  (t a).(b)       <--> (qref (t a) (b))
+  (a).?b   <-->  (t (a)).b       <--> (qref (t (a)) b)
 .brev
 
 This syntax denotes
 .I null-safe
-access to structure slots.
+access to structure slots and methods.
 .code a.?b
 means that
 .code a
@@ -11492,7 +11497,24 @@ otherwise,
 must evaluate to a
 .code struct
 which has a slot
-.codn b .
+.codn b ,
+and the expression denotes access to that slot.
+Similarly,
+.code "a.?(b 1)"
+means that if
+.code a
+evaluates to
+.codn nil ,
+the expression yields
+.codn nil ;
+otherwise,
+.code a
+is treated as a struct object whose method
+.code b
+is invoked with argument
+.codn 1 ,
+and the value returned by that method becomes the value of
+the expression.
 
 Integer tokens cannot be involved in this syntax, because they
 form floating-point constants when juxtaposed with a dot.
@@ -11534,7 +11556,7 @@ is as follows:
 .verb
   .?a      <--> (uref t a)
   .?a.b    <--> (uref t a b)
-  .?a.?b    <--> (uref t a (t b))
+  .?a.?b   <--> (uref t a (t b))
 .brev
 
 When the unbound referencing dot is applied to a dotted expression,
