@@ -69,13 +69,11 @@
       (set me.co me.up.co))
     me.co.(new-env me))
 
-  (:method lookup-var (me sym : mark-used)
+  (:method lookup-var (me sym)
     (condlet
       (((cell (assoc sym me.vb)))
-       (let ((bi (cdr cell)))
-         (if mark-used (set bi.used t))
-         bi))
-      (((up me.up)) up.(lookup-var sym mark-used))
+       (cdr cell))
+      (((up me.up)) up.(lookup-var sym))
       (t nil)))
 
   (:method lookup-fun (me sym : mark-used)
