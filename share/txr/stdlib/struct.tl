@@ -211,7 +211,9 @@
     (throwf 'eval-error "~s: bad syntax" 'qref))
   (tree-case obj
     ((a b) (if (eq a 't)
-             ^(if ,b (qref ,b ,*refs))
+             (let ((s (gensym)))
+               ^(slet ((,s ,b))
+                  (if ,s (qref ,s ,*refs))))
              :))
     (x (tree-case refs
          (() ())
