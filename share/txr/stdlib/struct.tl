@@ -220,7 +220,7 @@
          (((pref sym) . more)
            (if (eq pref t)
              (let ((s (gensym)))
-               ^(let ((,s (slot ,obj ',sym)))
+               ^(let ((,s (qref ,obj ,sym)))
                   (if ,s (qref ,s ,*more))))
              :))
          (((dw sym . args))
