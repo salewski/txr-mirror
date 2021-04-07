@@ -54,10 +54,10 @@ size_t utf8_from_buf(wchar_t *wdst, const unsigned char *src, size_t nbytes)
 {
   size_t nchar = 1;
   enum utf8_state state = utf8_init;
-  const unsigned char *backtrack = 0;
+  const unsigned char *backtrack = 0, *end = src + nbytes;
   wchar_t wch = 0, wch_min = 0;
 
-  while (nbytes-- > 0) {
+  while (src < end) {
     int ch = *src++;
 
     switch (state) {
@@ -101,7 +101,7 @@ size_t utf8_from_buf(wchar_t *wdst, const unsigned char *src, size_t nbytes)
         nchar++;
         break;
       }
-      backtrack = src;
+      backtrack = src - 1;
       break;
     case utf8_more1:
     case utf8_more2:
@@ -118,6 +118,7 @@ size_t utf8_from_buf(wchar_t *wdst, const unsigned char *src, size_t nbytes)
             src = backtrack;
             if (wdst)
               *wdst++ = 0xDC00 | *src;
+            src++;
           } else {
             if (wdst)
               *wdst++ = wch;
@@ -128,6 +129,7 @@ size_t utf8_from_buf(wchar_t *wdst, const unsigned char *src, size_t nbytes)
         src = backtrack;
         if (wdst)
           *wdst++ = 0xDC00 | *src;
+        src++;
         nchar++;
         state = utf8_init;
       }
