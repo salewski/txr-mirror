@@ -18,10 +18,10 @@
        u.sysname])))
 
 (caseql os-symbol
-  ((:linux :macos :solaris :solaris10)
+  ((:linux :macos :solaris :solaris10 :android)
    (defun open-url (url)
      (if (zerop (run (caseql os-symbol
-                       ((:linux :solaris) "xdg-open")
+                       ((:linux :solaris :android) "xdg-open")
                        (:solaris10 "/usr/dt/bin/sdtwebclient")
                        (:macos "open"))
                      (list url)))
