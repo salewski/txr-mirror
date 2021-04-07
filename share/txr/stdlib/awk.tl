@@ -162,11 +162,11 @@
                                        (t r))))))
                             (t
                               (set aws.par-mode nil)
-                              (let ((rin (record-adapter (if (regexp aws.rs)
-                                                           aws.rs
-                                                           (regex-compile aws.rs))
-                                                         *stdin*
-                                                         aws.krs)))
+                              (let ((rin (record-adapter
+                                           (if (regexp aws.rs) aws.rs
+                                             (regex-compile ^(compound, aws.rs)))
+                                           *stdin*
+                                           aws.krs)))
                                 (lambda () (get-line rin))))))))))
           (set aws.file-rec-num 0)
           (unwind-protect
