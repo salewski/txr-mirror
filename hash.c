@@ -1193,9 +1193,11 @@ val hash_equal(val obj, val seed)
  */
 static void do_weak_tables(void)
 {
-  struct hash *h;
+  struct hash *h = reachable_weak_hashes;
 
-  for (h = reachable_weak_hashes; h != 0; h = h->next) {
+  reachable_weak_hashes = 0;
+
+  for (; h != 0; h = h->next) {
     cnum i, c;
     /* The table of a weak hash was spuriously reached by conservative GC;
        it's a waste of time doing weak processing, since all keys and
@@ -1290,9 +1292,10 @@ static void do_weak_tables(void)
     }
   }
 
-  /* Done with weak processing; clear out the list in preparation for
-     the next gc round. */
-  reachable_weak_hashes = 0;
+  /* More weak hashes were discovered during weak processing.
+     Do another round. */
+  if (reachable_weak_hashes)
+    do_weak_tables();
 }
 
 static void do_iters(void)
