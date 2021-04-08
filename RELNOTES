@@ -1,3 +1,53 @@
+                                    TXR 256
+                                   2021-04-07
+
+
+  Features
+
+  - Compiler:
+    - Compiler now checks number of arguments in a function call
+      against its definition.
+
+  - Doc:
+    - numerous improvements in the manual, especially HTML output.
+    - New library function doc for documentation lookup:
+      - (doc) -> open manual with default browswer
+      - (doc 'cons) -> open manual to specific symbol
+    - INSTALL document maintained.
+
+  - Awk:
+    - :name argument not restricted to symbol, but any valid
+      object usable as a block name.
+
+  Bugs
+
+  - Compiler:
+    - fixed incorrect constant folding of call function.
+    - some instances of misleading diagnostic wording fixed.
+    - fixed regression in source location info propagation
+      - causing errors not to have location information in some cases
+      - caused by recent optimization work.
+  - OOP:
+    - fixed lack of hygiene in qref operator with regard to
+      a.?b syntax, causing mutiple evaluations of a.
+  - GC:
+    - fixed bug in weak hash processing dating back to the
+      initial weak hash implementation in 2009.
+  - Awk:
+    - The value of the rs (record separator) variable being
+      wrongly compiled as regex syntax even if it is a string object
+      that must be a fixed pattern.
+  - Lib:
+    - bug in UTF-8 decoding function
+      - affecting situations when buffered bytes are decoded as utf-8
+        (I/O streams not effected).
+      - incorrect behavior when invalid bytes are present;
+        valid UTF-8 not affected.
+    - func-optparam-count: function was returning bogus value
+      for interpreted functions.
+
+
+
                                     TXR 255
                                    2021-03-26
 
