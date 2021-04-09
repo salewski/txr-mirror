@@ -3011,6 +3011,20 @@ as a delimiter. Thus,
 represents
 .strn "!;" .
 
+Note: strings in \*(TX consist of Unicode code points, not UTF-8 bytes;
+therefore the elements of a string literal notation cannot specify individual
+bytes.  Each instance of hexadecimal or octal escape specifies a code point,
+even if its value lies in the 8 bit range.
+However, when a \*(TX string is encoded to UTF-8,
+every code point in the range U+DC00 through U+DCFF is converted to a
+a single byte, by taking the low-order eight bits of its value. By manipulating
+code points in this special range, \*(TX programs can output arbitrary binary
+data into text streams. Also note that the
+.code \eu
+escape sequence for specifying code points found in some languages is
+unnecessary and absent.  More detailed information is given in the section
+Character Handling and International Characters.
+
 If the line ends in the middle of a literal, it is an error, unless the
 last character is a backslash. This backslash is a special escape which does
 not denote a character; rather, it indicates that the string literal continues
