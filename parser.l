@@ -836,6 +836,10 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return TEXT;
 }
 
+<SPECIAL>[\\]x {
+  yyerrorf(yyg, lit("\\x escape without digits"), nao);
+}
+
 <SPECIAL>[\\]. {
   yyerrorf(yyg, lit("unrecognized escape \\~a"), chr(yytext[1]), nao);
 }
@@ -919,7 +923,10 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
     return REGCHAR;
   }
 
-  yyerrprepf(yyg, lit("unrecognized escape in regex"), nao);
+  if (yytext[1] == 'x')
+    yyerrprepf(yyg, lit("\\x escape without digits in regex"), nao);
+  else
+    yyerrprepf(yyg, lit("unrecognized escape in regex"), nao);
   return ERRTOK;
 }
 
@@ -1019,6 +1026,10 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <STRLIT,QSILIT,WLIT,QWLIT>[\\](x{HEX}+|{OCT}+);?  {
   yylval->chr = num_esc(yyg, yytext+1);
   return LITCHAR;
+}
+
+<STRLIT,QSILIT,WLIT,QWLIT>[\\]x {
+  yyerrorf(yyg, lit("\\x escape without digits"), nao);
 }
 
 <STRLIT,QSILIT,WLIT,QWLIT>[\\]. {
