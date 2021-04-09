@@ -385,13 +385,13 @@ scanning and extraction language referred to as the \*(TX Pattern Language
 
 \*(TX can be used for everything from "one liner" data transformation tasks at
 the command line, to data scanning and extracting scripts, to full
-application development in a wide-range of areas.
+application development in a wide range of areas.
 
 A script written in the \*(TX Pattern Language, also referred to in this
 document as a
 .IR query ,
 specifies a pattern which matches one or more sources of inputs, such
-as text files. Patterns can consist of large chunks of multi-line free-form
+as text files. Patterns can consist of large chunks of multiline free-form
 text, which is matched literally against material in the input sources. Free
 variables occurring in the pattern (denoted by the
 .code @
@@ -403,8 +403,8 @@ recursive.
 In addition to embedded variables which implicitly match text, the
 \*(TX pattern language supports a number of directives, for matching text using
 regular expressions, for continuing a match in another file, for searching
-through a file for the place where an entire sub-query matches, for collecting
-lists, and for combining sub-queries using logical conjunction, disjunction and
+through a file for the place where an entire subquery matches, for collecting
+lists, and for combining subqueries using logical conjunction, disjunction and
 negation, and numerous others.
 
 Patterns can contain actions which transform data and generate output.
@@ -414,7 +414,7 @@ session in the at the top of the script, and then deal with processing
 and reporting at the bottom.
 
 The \*(TL language can be used from within \*(TX scripts as an
-embedded language, or completely stand-alone.  It supports functional,
+embedded language, or completely standalone.  It supports functional,
 imperative and object-oriented programming, and provides numerous data types
 such as symbols, strings, vectors, hash tables with weak reference support,
 lazy lists, and arbitrary-precision ("bignum") integers.  It has expressive
@@ -423,7 +423,7 @@ components that support C-language-style calls.
 
 \*(TL source files as well as individual functions can be optionally compiled
 for execution on a virtual machine that is built into \*(TX.  Compiled files
-execute and load faster, and resist reverse-engineering.  Stand-alone
+execute and load faster, and resist reverse-engineering.  Standalone
 application delivery is possible.
 
 \*(TX is free software offered under the two-clause BSD license which
@@ -555,7 +555,7 @@ function) to an object described by Lisp syntax. It requires an argument
 of the form
 .meta sym=value
 where
-.code sym
+.meta sym
 must be, syntactically, a token denoting a bindable symbol, and
 .meta value
 is arbitrary \*(TL syntax. The
@@ -647,7 +647,7 @@ used, the
 .meta script-file
 argument is omitted. The first non-option argument,
 if there is one, now specifies the first input source rather than a query.
-Unlike queries read from a file, (non-empty) queries specified as arguments
+Unlike queries read from a file, (nonempty) queries specified as arguments
 using -c do not have to properly end in a newline. Internally,
 \*(TX adds the missing newline before parsing the query. Thus
 .code -c
@@ -780,9 +780,9 @@ function for a description.
 .meIP --debug-autoload
 This option turns on debugging, like
 .code --debugger
-but also requests stepping into the auto-load processing of
+but also requests stepping into the autoload processing of
 \*(TL library code.  Normally, debugging through the evaluations
-triggered by auto-loading is suppressed.
+triggered by autoloading is suppressed.
 Implies
 .codn --backtrace .
 
@@ -812,8 +812,8 @@ option provides a way to encode multiple arguments as a single
 argument, which is useful on some systems which have limitations in
 their implementation of the "hash bang" mechanism. For details about
 its special syntax, See Hash Bang Support below. It is also useful in
-stand-alone application deployment. See the section
-STAND-ALONE APPLICATION SUPPORT, in which example uses of
+standalone application deployment. See the section
+STANDALONE APPLICATION SUPPORT, in which example uses of
 .code --args
 are shown.
 
@@ -1026,7 +1026,7 @@ are not erroneous.
 In bindings-printing mode (options
 .code -B
 or
-.codn -a) ,
+.codn -a ),
 \*(TX prints the word
 .code false
 if the query fails, and exits with a failed
@@ -1083,7 +1083,7 @@ character can be used. This is an obsolescent feature.
 
 .SS* Hash Bang Support
 \*(TX has several features which support use of the "hash bang" convention
-for creating apparently stand-alone executable programs.
+for creating apparently standalone executable programs.
 
 .NP* Basic Hash Bang
 Special processing is applied to \*(TX query or \*(TL script files that are
@@ -1505,7 +1505,7 @@ A special behavior occurs. The
 .code -f
 option processing notices that the argument to
 .code -f
-is identical to the path name of name of the script file that \*(TX has
+is identical to the pathname of name of the script file that \*(TX has
 already opened for processing. The
 .code -f
 option and its argument are then skipped.
@@ -1742,15 +1742,14 @@ and
 .codn L_CTYPE .
 The program reads and writes only the UTF-8 encoding.
 
-If
-\*(TX encounters an invalid bytes in the UTF-8 input, what happens depends on
+If \*(TX encounters invalid bytes in the UTF-8 input, what happens depends on
 the context in which this occurs. In a query, comments are read without regard
 for encoding, so invalid encoding bytes in comments are not detected. A comment
 is simply a sequence of bytes terminated by a newline.  In lexical elements
 which represent text, such as string literals, invalid or unexpected encoding
 bytes are treated as syntax errors. The scanner issues an error message,
 then discards a byte and resumes scanning.  Certain sequences pass through the
-scanner without triggering an error, namely some UTF-8 overlong sequences.
+scanner without triggering an error, namely some overlong UTF-8 sequences.
 These are caught when when the lexeme is subject to UTF-8 decoding, and treated
 in the same manner as other UTF-8 data, described in the following paragraph.
 
@@ -2335,7 +2334,7 @@ See Functions below.
 In the
 .meta number
 form, the match processes a field of text which
-consists of the specified number of characters, which must be non-negative
+consists of the specified number of characters, which must be nonnegative
 number.  If the data line doesn't have that many characters starting at the
 current position, the match fails. A match for zero characters produces an
 empty string.  The text which is actually bound to the variable
@@ -2356,7 +2355,7 @@ syntax allows the
 or
 .meta regex
 modifier to come from a variable. The variable must be bound and contain
-a non-negative integer or regular expression.
+a nonnegative integer or regular expression.
 For example,
 .code "@{x y}"
 behaves like
@@ -2624,7 +2623,7 @@ number of times, which is opposite from the behavior of
 Repetitions of
 .code R1
 terminate at the earliest
-point in the text where a non-empty match for
+point in the text where a nonempty match for
 .code R2
 occurs. Because
 it favors shorter matches,
@@ -2718,7 +2717,7 @@ This operator is called intersection, logical and, or conjunction.
 
 .PP
 Any character which is not a regular expression operator, a backslash escape,
-or the slash delimiter, denotes one-position match of that character itself.
+or the slash delimiter, denotes a one-position match of that character itself.
 
 Any of the special characters, including the delimiting
 .codn / ,
@@ -2781,7 +2780,7 @@ behaves like a postfix operator.
 
 In
 \*(TX, regular expression matches do not span multiple lines. The regex
-language has no feature for multi-line matching. However, the
+language has no feature for multiline matching. However, the
 .code @(freeform)
 directive
 allows the remaining portion of the input to be treated as one string
@@ -2994,9 +2993,8 @@ and
 are recognized, as are hexadecimal escapes like
 .code \exFF
 or
-.code \exxabc
-and octal
-escapes like
+.code \exabc
+and octal escapes like
 .codn \e123 .
 Ambiguity between an escape and subsequent
 text can be resolved by using trailing semicolon delimiter:
@@ -3218,7 +3216,7 @@ followed by an optional sign, followed by hexadecimal digits:
 .code 0
 through
 .code 9
-and the upper or lower case letters
+and the uppercase or lowercase letters
 .code A
 through
 .codn F :
@@ -3522,7 +3520,7 @@ Search the data for multiple matches of a clause. Collect the
 bindings in the clause into lists, which are output as array variables.
 The
 .code @(collect)
-directive is line oriented. It works with a multi-line
+directive is line oriented. It works with a multiline
 pattern and scans line by line. A similar directive called
 .code @(coll)
 works within one line.
@@ -3597,7 +3595,7 @@ The
 .code assert
 directive requires the following material to match, otherwise
 it throws an exception. It is useful for catching mistakes or omissions
-in parts of a query that are sure-fire matches.
+in parts of a query that are surefire matches.
 
 .coIP @(flatten)
 Normalizes a set of specified variables to one-dimensional lists. Those
@@ -3644,7 +3642,7 @@ understood in an output clause.
 .coIP @(repeat)
 A directive understood within an
 .code @(output)
-section, for repeating multi-line
+section, for repeating multiline
 text, with successive substitutions pulled from lists. The directive
 .code @(rep)
 produces iteration over lists horizontally within one line. These directives
@@ -4381,7 +4379,7 @@ whereas a horizontal
 prevents the horizontal position from advancing. In other words,
 .code trailer
 performs matching without consuming the input, providing a
-look-ahead mechanism.
+lookahead mechanism.
 
 Example:
 
@@ -5240,7 +5238,7 @@ The syntax follows this pattern
   @(end)
 .brev
 
-The multi-line clauses are optional.   The
+The multiline clauses are optional.   The
 .code gather
 directive takes
 keyword parameters, see below.
@@ -5263,7 +5261,7 @@ clause:
 .brev
 
 How gather works is that the text is searched for matches for the single line
-and multi-line queries. The clauses are applied in the order in which they appear.
+and multiline queries. The clauses are applied in the order in which they appear.
 Whenever one of the clauses matches, any bindings it produces are retained and
 it is removed from further consideration. Multiple clauses can match at the
 same text position.  The position advances by the longest match from among the
@@ -6029,7 +6027,7 @@ directive is the horizontal version of
 .codn collect .
 Whereas
 .code collect
-works with multi-line clauses on line-oriented
+works with multiline clauses on line-oriented
 material,
 .code coll
 works within a single line. With
@@ -6062,7 +6060,7 @@ Here, the variable
 is bound to tokens which match the regular
 expression
 .codn "/[^, ]+/" :
-non-empty sequence of characters other than commas or
+nonempty sequence of characters other than commas or
 spaces.
 
 Like
@@ -6597,8 +6595,7 @@ are lists and are either identical, or one is
 found as substructure within the other.
 .PP
 The right hand side does not have to be a variable. It may be some other
-object, like a string, quasiliteral, regexp, or list of strings,
-.IR "et cetera" .
+object, like a string, quasiliteral, regexp, or list of strings, etc.
 For instance
 
 .verb
@@ -6813,7 +6810,7 @@ succeeds, because the value of a matches the second element of the list
 if it is upcased, and likewise
 .code b
 matches
-.str "b"
+.str b
 and
 .code c
 matches
@@ -7025,7 +7022,7 @@ features of
 .code bind
 do not make sense in
 .code rebind
-because the variables are always re-introduced into an environment
+because the variables are always reintroduced into an environment
 in which they don't exist, whereas filtering applies in
 situations when bound variables are matched against values.
 
@@ -8237,7 +8234,7 @@ These are rebound to the arguments
 and
 .codn second .
 The second call to the function binds the a parameter to the word
-.strn "ice" ,
+.strn ice ,
 and the
 .code b
 is unbound, because the
@@ -8363,7 +8360,7 @@ Example:
 
 A call made in a clearly horizontal context will prefer the
 horizontal function, and only fall back on the vertical one
-if the horizontal one doesn't exist. (In this fall-back case,
+if the horizontal one doesn't exist. (In this fallback case,
 the vertical function is called with empty data; it is useful
 for calling vertical functions which process arguments and
 produce values.)
@@ -8779,7 +8776,7 @@ argument,
 if present,
 is treated as a \*(TL expression and evaluated.
 The resulting value is taken as the output destination. The value may be a
-string which gives the path name of a file to open for output. Otherwise,
+string which gives the pathname of a file to open for output. Otherwise,
 the destination must be a stream object.
 
 The keyword list consists of a mixture of Boolean keywords which
@@ -8815,7 +8812,7 @@ the variable substitutions occurring within the
 .code output
 clause.
 The argument can also be a list of filter symbols, which specifies
-that multiple filters are to be applied, in left to right order.
+that multiple filters are to be applied, in left-to-right order.
 
 See the later sections Output Filtering below, and The Deffilter Directive.
 
@@ -8975,7 +8972,7 @@ spaces wide. The
 argument extracts a range of
 .codn a ;
 the
-.str ","
+.str ,
 argument specifies an alternate
 separator string, and
 .code 10
@@ -9040,7 +9037,7 @@ hold lists which contain at least one item, then no output is performed,
 (unless the repeat specifies an
 .code @(empty)
 clause, see below).
-Otherwise, among those variables which contain non-empty lists, repeat finds
+Otherwise, among those variables which contain nonempty lists, repeat finds
 the length of the longest list. This length of this list determines the number
 of repetitions, R.
 
@@ -9549,10 +9546,10 @@ is replaced by
 .codn > .
 
 .coIP :upcase
-Convert the 26 lower case letters of the English alphabet to upper case.
+Convert the 26 lowercase letters of the English alphabet to uppercase.
 
 .coIP :downcase
-Convert the 26 upper case letters of the English alphabet to lower case.
+Convert the 26 uppercase letters of the English alphabet to lowercase.
 
 .coIP :frompercent
 Decode percent-encoded text. Character triplets consisting
@@ -9692,7 +9689,7 @@ Multiple filters can be applied at the same time. For instance:
 
 This will fold the contents of
 .code x
-to upper case, and then encode any special
+to uppercase, and then encode any special
 characters into HTML. Beware of combinations that do not make sense.
 For instance, suppose the original text is HTML, containing codes
 like
@@ -9917,7 +9914,7 @@ symbol must be followed by the name of the filter to be defined,
 followed by bind expressions which evaluate to lists of strings. Each list must
 be at least two elements long and specifies one or more texts which are mapped
 to a replacement text. For instance, the following specifies a telephone keypad
-mapping from upper case letters to digits.
+mapping from uppercase letters to digits.
 
 .verb
   @(deffilter alpha_to_phone ("E" "0")
@@ -9980,7 +9977,7 @@ Example: convert
 .codn b ,
 and
 .code c
-to upper case and HTML encode:
+to uppercase and HTML encode:
 
 .verb
   @(filter (:upcase :tohtml) a b c)
@@ -9991,7 +9988,7 @@ to upper case and HTML encode:
 .NP* Introduction
 
 The exceptions mechanism in \*(TX is another
-disciplined form of non-local transfer, in addition to the blocks
+disciplined form of nonlocal transfer, in addition to the blocks
 mechanism (see Blocks above).  Like blocks, exceptions provide a construct
 which serves as the target for a dynamic exit.  Both blocks and exceptions
 can be used to bail out of deep nesting when some condition occurs.
@@ -10172,7 +10169,7 @@ A
 directive can terminate in one of three ways. The main clause
 may match successfully, and possibly yield some new variable bindings.
 The main clause may fail to match. Or the main clause may be terminated
-by a non-local control transfer, like an exception being thrown or a block
+by a nonlocal control transfer, like an exception being thrown or a block
 return (like the block foo example in the previous section).
 
 No matter how the
@@ -10299,7 +10296,7 @@ which captures
 
 When
 .code finally
-clauses are processed during a non-local return,
+clauses are processed during a nonlocal return,
 they have no externally visible effect if they do not bind variables.
 However, their execution makes itself known if they perform side effects,
 such as output.
@@ -10955,7 +10952,7 @@ definitions are in error:
 
 The
 .code assert
-directive requires the remaining query or sub-query which follows it
+directive requires the remaining query or subquery which follows it
 to match. If the remainder fails to match, the
 .code assert
 directive throws an exception. If the directive is simply
@@ -11431,7 +11428,7 @@ In no other circumstances is
 printed as
 .codn () ,
 or an atom
-.code sym
+.meta sym
 as
 .codn "(. sym)" .
 
@@ -12379,7 +12376,7 @@ can be represented as
 The
 .code #5=
 part introduces a reference label, associating the arbitrarily
-chosen non-negative integer 5 with the object which follows.
+chosen nonnegative integer 5 with the object which follows.
 The subsequent notation
 .code #5#
 simply refers to the object labeled by 5, reproducing that object
@@ -12794,7 +12791,7 @@ In \*(TL, sequences (strings, vectors and lists) as well as hashes and
 regular expressions can be used as functions everywhere, not just with the DWIM
 brackets.
 
-Sequences work as one or two-argument functions. With a single argument, an
+Sequences work as one- or two-argument functions. With a single argument, an
 element is selected by position and returned. With two arguments, a range is
 extracted and returned.
 
@@ -13135,7 +13132,7 @@ treated as (and consequently required to be) a syntactic place, or whether it is
 an ordinary form.
 
 All built-in place operators perform the evaluation of place and non-place
-argument forms in strict left to right order.
+argument forms in strict left-to-right order.
 
 Place forms are evaluated not in order to compute a value, but in order to
 determine the storage location.  In addition to determining a storage location,
@@ -13144,7 +13141,7 @@ Once a place is fully evaluated, the storage location can then be accessed.
 Access to the storage location is not considered part of the evaluation of a
 place.  To determine a storage location means to compute some hidden referential
 object which provides subsequent access to that location without the need for a
-re-evaluation of the original place form.  (The subsequent access to the
+reevaluation of the original place form.  (The subsequent access to the
 place through this referential object may still require a multi-step traversal
 of a data structure; minimizing such steps is a matter of optimization.)
 
@@ -13219,7 +13216,7 @@ but
 may also be overwritten with a new value.
 
 This behavior is necessary because the DWIM brackets notation maintains
-the illusion of an encapsulated array-like container over several dis-similar
+the illusion of an encapsulated array-like container over several dissimilar
 types, including Lisp lists.  But Lisp lists do not behave as fully
 encapsulated containers.  Some mutations on Lisp lists return new objects,
 which then have to stored (or otherwise accepted) in place of the original
@@ -13287,7 +13284,7 @@ The following is a summary of the built-in place mutating macros.
 They are described in detail in their own sections.
 
 .meIP (set >> { place << new-value }*)
-Assigns the values of expressions to places, performing assignments in left to right order,
+Assigns the values of expressions to places, performing assignments in left-to-right order,
 returning the value assigned to the rightmost place.
 
 .meIP (pset >> { place << new-value }*)
@@ -13470,7 +13467,7 @@ functions and variables.
 
 .NP* Global Functions and Operator Macros
 
-In \*(TL, global functions and operator macros co-exist, meaning that the same
+In \*(TL, global functions and operator macros coexist, meaning that the same
 symbol can be defined as both a macro and a function.
 
 There is a global namespace for functions,
@@ -13559,7 +13556,7 @@ is provided by
 and
 .codn lexical-lisp1-binding .
 
-Lexical operator macros and lexical functions can also co-exist in the
+Lexical operator macros and lexical functions can also coexist in the
 following way.  A lexical function shadows a global or lexical macro
 completely. However, the reverse is not the case. A lexical macro shadows
 only those uses of a function which look like macro calls. This is
@@ -13629,7 +13626,7 @@ The pattern language doesn't see Lisp lexical variables.
 When Lisp code is evaluated from the pattern language, the pattern variable
 bindings are not only installed as dynamic variables for the sake of their
 visibility from Lisp, but they are also specially stored in a dynamic
-environment frame.  When \*(TX pattern code is re-entered from Lisp, these
+environment frame.  When \*(TX pattern code is reentered from Lisp, these
 bindings are picked up from the closest such environment frame, allowing the
 nested invocation of pattern code to continue with the bindings captured by
 outer pattern code.
@@ -13714,7 +13711,7 @@ When the form is an operator invocation, the interpretation of the meaning of
 that form is under the complete control of that operator.
 
 If the compound form is a function call, the remaining forms, if any, denote
-argument expressions to the function.  They are evaluated in left to right
+argument expressions to the function.  They are evaluated in left-to-right
 order to produce the argument values, which are passed to the function.  An
 exception is thrown if there are not enough arguments, or too many.  Programs
 can define named functions with the defun operator
@@ -14242,7 +14239,7 @@ In TXR Lisp, they may not.
 .TP* "Dialect Note:"
 A function defined by
 .code defun
-may co-exist with a macro defined by
+may coexist with a macro defined by
 .codn defmacro .
 This is not permitted in ANSI Common Lisp.
 
@@ -14259,7 +14256,7 @@ The
 operator produces a value which is a function.  Like in most other
 Lisps, functions are objects in \*(TL.  They can be passed to functions as
 arguments, returned from functions, aggregated into lists, stored in variables,
-.IR "et cetera" .
+etc.
 
 Note that the above syntax synopsis describes only the canonical
 parameter syntax which remains after parameter list macros are
@@ -14292,7 +14289,7 @@ accepts only a variable argument list and no required arguments:
 (These notations are syntactically equivalent because the list notation
 .code "(. X)"
 actually denotes the object
-.code X
+.meta X
 which isn't wrapped in any list).
 
 The keyword symbol
@@ -14328,10 +14325,12 @@ introduced as an additional binding with a Boolean value which indicates
 whether or not the optional parameter had been specified by the caller.
 
 Each
-.code expr
+.meta expr
 that is evaluated is evaluated an environment in which
 all of the previous parameters are visible, in addition to the surrounding
-environment of the lambda. For instance:
+environment of the
+.codn lambda .
+For instance:
 
 .verb
   (let ((default 0))
@@ -14345,7 +14344,7 @@ the initializing expression for the optional parameter
 end is
 .codn "(length str)" ,
 and the
-.code str
+.meta str
 variable it refers to is the previous
 argument. The initializer for the optional variable counter is
 the expression default, and it refers to the binding established
@@ -14361,7 +14360,7 @@ may not be used as parameter names.
 The behavior is unspecified if the same symbol is specified
 more than once anywhere in the parameter list, whether as a parameter name or as
 the indicator
-.code sym
+.meta sym
 in an optional parameter or any combination.
 
 Implementation note: the \*(TX compiler diagnoses and rejects duplicate
@@ -16499,7 +16498,7 @@ and
 in the following way. The plain forms evaluate the
 .metn init-form -s
 in an environment in which none of the
-.code sym
+.meta sym
 variables are yet visible. By contrast, the alternate
 forms evaluate each
 .meta init-form
@@ -16550,7 +16549,7 @@ as well as each invocation of the
 .code lambda
 binds fresh instances of the variables, whereas these operators are permitted
 to bind a single instance of the variables, which are first initialized with
-the initializing expressions, and then re-used as iteration variables which are
+the initializing expressions, and then reused as iteration variables which are
 stepped by assignment.
 
 The other operators may be understood likewise, with the substitution
@@ -16965,7 +16964,7 @@ as well as each invocation of the
 .code lambda
 binds fresh instances of the variables, whereas these operators are permitted
 to bind a single instance of the variables, which are first initialized with
-the initializing expressions, and then re-used as iteration variables which are
+the initializing expressions, and then reused as iteration variables which are
 stepped by assignment.
 
 .TP* Example:
@@ -17050,7 +17049,7 @@ It is because blocks are dynamic that the
 variant exists; for lexically scoped blocks, it would make little
 sense to have support a dynamically computed name.
 
-Thus blocks in \*(TL provide dynamic non-local returns, as well
+Thus blocks in \*(TL provide dynamic nonlocal returns, as well
 as returns out of lexical nesting.
 
 It is permitted for blocks to be aggressively
@@ -17150,7 +17149,7 @@ is also not considered to be making a direct call.
 
 .TP* "Dialect Note:"
 In Common Lisp, blocks are lexical. A separate mechanism consisting of
-catch and throw operators performs non-local transfer based on symbols.
+catch and throw operators performs nonlocal transfer based on symbols.
 The \*(TL example:
 
 .verb
@@ -17302,7 +17301,9 @@ or other control transfers, the
 .code tagbody
 macro evaluates each
 .meta form
-in left to right order. The go labels are ignored.
+in left-to-right order. The
+.code go
+labels are ignored.
 After the last
 .meta form
 is evaluated, the
@@ -17312,13 +17313,15 @@ form terminates, and yields
 
 Any
 .meta form
-itself, or else any of its sub-forms, may be the form
+itself, or else any of its subforms, may be the form
 .mono
 .meti (go << label )
 .onom
 where
 .meta label
-matches one of the go labels of a surrounding
+matches one of the
+.code go
+labels of a surrounding
 .codn tagbody .
 When this
 .code go
@@ -17345,7 +17348,9 @@ is a dynamic transfer. All necessary unwinding inside
 .meta form
 takes place.
 
-The go labels are lexically scoped, but dynamically bound. Their scope
+The
+.code go
+labels are lexically scoped, but dynamically bound. Their scope
 being lexical means that the labels are not visible to forms which are not
 enclosed within the
 .codn tagbody ,
@@ -17874,7 +17879,7 @@ In ANSI Common Lisp, the
 .code symbol-function
 function retrieves a function, macro or special operator binding
 of a symbol.
-These are all in one space and may not co-exist. In \*(TL, it
+These are all in one space and may not coexist. In \*(TL, it
 retrieves a symbol's function binding only. Common Lisp has an accessor
 named
 .code macro-function
@@ -19592,7 +19597,7 @@ otherwise.
 is equivalent to
 .codn "(not (atom x))" .
 
-Non-empty lists test positive under
+Nonempty lists test positive under
 .code consp
 because a list is represented as a reference to the first cons in a chain of
 one or more conses.
@@ -19750,7 +19755,7 @@ is allowed, and returns
 .codn nil .
 
 .meta object
-may also be a vector or a string. If it is a non-empty string or vector
+may also be a vector or a string. If it is a nonempty string or vector
 containing at least two items, then the remaining part of the object is
 returned, with the first element removed. For example
 .mono
@@ -19946,7 +19951,7 @@ It is permissible to use
 on an empty string or vector. In this case,
 .meta new-cdr-value
 specifies the contents of the entire string or vector, as if the operation
-were done on a non-empty vector or string, followed by the deletion of the
+were done on a nonempty vector or string, followed by the deletion of the
 first element.
 
 The
@@ -20834,7 +20839,7 @@ element indicated by the zero-based index value given by
 .metn index .
 The
 .meta index
-argument must be a non-negative integer.
+argument must be a nonnegative integer.
 
 If
 .meta index
@@ -20863,7 +20868,7 @@ The
 function retrieves the n-th cons cell of a list, indexed from zero.
 The
 .meta index
-parameter must be a non-negative integer. If
+parameter must be a nonnegative integer. If
 .meta index
 specifies a nonexistent cons beyond the end of the list,
 then
@@ -21170,7 +21175,9 @@ is returned immediately to
 indicate that the find failed.  Otherwise,
 .meta tree
 is taken to be a proper list,
-and tree-find is recursively applied to each element of the list in turn, using
+and
+.code tree-find
+is recursively applied to each element of the list in turn, using
 the same
 .meta obj
 and
@@ -21286,10 +21293,10 @@ These functions are counterparts to
 .code member
 and
 .code member-if
-which look for the right-most
+which look for the rightmost
 element which matches
 .metn object ,
-rather than for the left-most element.
+rather than for the leftmost element.
 
 .coNP Functions @ conses and @ conses*
 .synb
@@ -21365,7 +21372,7 @@ can be expressed as:
 .SS* Association Lists
 
 Association lists are ordinary lists formed according to a special convention.
-Firstly, any empty list is a valid association list. A non-empty association
+Firstly, any empty list is a valid association list. A nonempty association
 list contains only cons cells as the key elements. These cons cells are
 understood to represent key/value associations, hence the name "association
 list".
@@ -21545,7 +21552,7 @@ function is like
 but potentially destructive.
 The input list
 .meta alist
-may be destroyed and its structural material re-used to
+may be destroyed and its structural material reused to
 form the output list. The application should not retain references to the input
 list.
 
@@ -23274,8 +23281,8 @@ The
 .code upcase-str
 function produces a copy of
 .meta string
-such that all lower-case
-characters of the English alphabet are mapped to their upper case counterparts.
+such that all lowercase
+characters of the English alphabet are mapped to their uppercase counterparts.
 
 .coNP Function @ downcase-str
 .synb
@@ -23287,8 +23294,8 @@ The
 function produces a copy of
 .meta string
 such that
-all upper case characters of the English alphabet are mapped to their
-lower case counterparts.
+all uppercase characters of the English alphabet are mapped to their
+lowercase counterparts.
 
 .coNP Function @ string-extend
 .synb
@@ -23377,7 +23384,7 @@ it returns
 If a
 .meta start
 argument is not specified, it defaults to zero. If it is
-a non-negative integer, it specifies the starting character position for
+a nonnegative integer, it specifies the starting character position for
 the search.  Negative values of
 .meta start
 indicate positions from the end of the
@@ -23441,7 +23448,7 @@ indication.
 
 If the
 .meta start
-argument is specified, and is a non-negative integer, then the
+argument is specified, and is a nonnegative integer, then the
 function tests whether
 .meta littlestring
 matches a prefix of that portion of
@@ -23481,8 +23488,9 @@ is a suffix of
 .desc
 The
 .code match-str-tree
-function is a generalization of match-str which matches
-multiple test strings against
+function is a generalization of
+.code match-str
+which matches multiple test strings against
 .meta bigstring
 at the same time. The value
 reported is the longest match from among any of the strings.
@@ -23492,8 +23500,8 @@ strings at the leaves.
 
 If
 .meta tree
-is a single string atom, then the function behaves
-exactly like match-str.
+is a single string atom, then the function behaves exactly like
+.codn match-str .
 
 .coNP Accessor @ sub-str
 .synb
@@ -23646,8 +23654,7 @@ All non-overlapping matches for
 .meta sep
 within
 .meta string
-are identified in left
-to right order, and are removed from
+are identified in left-to-right order, and are removed from
 .metn string .
 The string is broken into pieces
 according to the gaps left behind by the removed separators, and a list
@@ -23837,7 +23844,7 @@ the search for another token within
 .meta string
 resumes after advancing by one
 character position. However, if an empty match occurs immediately
-after a non-empty token, that empty match is not turned into
+after a nonempty token, that empty match is not turned into
 a token.
 
 So for instance,
@@ -23850,12 +23857,12 @@ returns
 .onom
 After the token
 .str "a"
-is extracted from a non-empty match
+is extracted from a nonempty match
 for the regex, an empty match for the regex occurs just
 before the character
 .codn b .
 This match is discarded because it is an empty match which
-immediately follows the non-empty match. The character
+immediately follows the nonempty match. The character
 .code b
 is skipped. The next match is an empty match between the
 .code b
@@ -23906,7 +23913,9 @@ of the pair gives the starting character position, and the second number
 is one position past the end of the match.  If a match is empty, then the
 two numbers are equal.
 
-The tok-where function does not support the
+The
+.code tok-where
+function does not support the
 .meta keep-between
 parameter.
 
@@ -23986,7 +23995,7 @@ Returns
 if
 .meta char
 is an alphanumeric character, otherwise nil. Alphanumeric
-means one of the upper or lower case letters of the English alphabet found in
+means one of the uppercase or lowercase letters of the English alphabet found in
 ASCII, or an ASCII digit. This function is not affected by locale.
 
 .coNP Function @ chr-isalpha
@@ -24001,7 +24010,7 @@ if
 is an alphabetic character, otherwise
 .codn nil .
 Alphabetic
-means one of the upper or lower case letters of the English alphabet found in
+means one of the uppercase or lowercase letters of the English alphabet found in
 ASCII. This function is not affected by locale.
 
 .coNP Function @ chr-isascii
@@ -24081,7 +24090,7 @@ function returns
 .code t
 if
 .meta char
-is an ASCII lower case letter. Otherwise it returns
+is an ASCII lowercase letter. Otherwise it returns
 .codn nil .
 
 .coNP Function @ chr-isprint
@@ -24210,7 +24219,7 @@ function returns
 .code t
 if
 .meta char
-is an ASCII upper case letter. Otherwise it returns
+is an ASCII uppercase letter. Otherwise it returns
 .codn nil .
 
 .coNP Functions @ chr-isxdigit and @ chr-xdigit
@@ -24240,7 +24249,7 @@ or else one of the letters
 .code A
 through
 .code F
-or their lower-case equivalents
+or their lowercase equivalents
 .code a
 through
 .code f
@@ -24253,8 +24262,8 @@ denoting the values 10 to 15.
 .desc
 If character
 .meta char
-is a lower case ASCII letter character, this function
-returns the upper case equivalent character. If it is some other
+is a lowercase ASCII letter character, this function
+returns the uppercase equivalent character. If it is some other
 character, then it just returns
 .metn char .
 
@@ -24265,8 +24274,8 @@ character, then it just returns
 .desc
 If character
 .meta char
-is an upper case ASCII letter character, this function
-returns the lower case equivalent character. If it is some other
+is an uppercase ASCII letter character, this function
+returns the lowercase equivalent character. If it is some other
 character, then it just returns
 .metn char .
 
@@ -24314,7 +24323,7 @@ which must
 be within range of the string.
 
 The index value 0 corresponds to the first (leftmost) character of the string
-and so non-negative values up to one less than the length are possible.
+and so nonnegative values up to one less than the length are possible.
 
 Negative index values are also allowed, such that -1 corresponds to the
 last (rightmost) character of the string, and so negative values down to
@@ -26118,7 +26127,7 @@ input is available. The bytes are returned aggregated into a buffer object.
 
 If the
 .meta max-bytes
-parameter is given an argument, it must be a non-negative integer.
+parameter is given an argument, it must be a nonnegative integer.
 That value specifies a limit on the number of bytes to read. A buffer
 no longer than
 .meta max-bytes
@@ -26126,7 +26135,7 @@ shall be returned.
 
 If the
 .meta skip-bytes
-parameter is given an argument, it must be a non-negative integer.
+parameter is given an argument, it must be a nonnegative integer.
 That value specifies how many initial bytes of the input should be
 discarded before accumulation of the buffer begins.
 If possible, the semantics of this parameter is achieved by performing a
@@ -26152,7 +26161,7 @@ into the file, and then closes the file.  If the file doesn't exist, it is
 created.  If it exists, it is truncated to zero length and overwritten.
 The default value of the optional
 .meta skip-bytes
-parameter is zero. If an argument is given, it must be a non-negative integer.
+parameter is zero. If an argument is given, it must be a nonnegative integer.
 If it is nonzero, then after opening the file, before writing the buffer,
 the function will seek to an offset of that many bytes from the start of the
 file. The contents of
@@ -26244,7 +26253,7 @@ significant byte first.
 
 The
 .code buf-uint
-function requires a non-negative
+function requires a nonnegative
 .meta integer
 argument, which may be a character. The representation stored in the
 buffer is a pure binary representation of the value using the smallest
@@ -26260,7 +26269,7 @@ stored in the buffer is a two's complement representation of
 using the smallest number of bytes which can represent that value.
 If
 .meta integer
-is non-negative, then the first byte of the buffer lies in the range
+is nonnegative, then the first byte of the buffer lies in the range
 0 to 127.
 If
 .meta integer
@@ -26381,7 +26390,7 @@ When
 is applied to a struct instance, it returns the name of
 the struct type. Effectively, struct names are types.
 
-The consequences are unspecified if an existing struct name is re-used for a
+The consequences are unspecified if an existing struct name is reused for a
 different struct type, or an existing type name is used for a struct type.
 
 .NP* Static Slots
@@ -26675,7 +26684,7 @@ slot of an object.
 
 Note: the dirty flag can be used to support support the caching of values
 derived from an object's slots. The derived values don't have to be
-re-computed while an object remains clean.
+recomputed while an object remains clean.
 
 .NP* Equality Substitution
 
@@ -27085,7 +27094,7 @@ The initialization for slots which are specified using the
 .code :method
 or
 .code :function
-specifiers is re-ordered with regard to
+specifiers is reordered with regard to
 .code :static
 slots. Regardless of their placement in the
 .code defstruct
@@ -27350,7 +27359,7 @@ macro, and lastly the "boa constructor" overrides.
 
 If any of the initializations abandon the evaluation of
 .code new
-by a non-local exit such as an exception throw, the object's
+by a nonlocal exit such as an exception throw, the object's
 finalizers, if any, are invoked.
 
 The macro
@@ -27376,7 +27385,7 @@ and initialization proceeds in the same way.
 If any of the initializations abandon the delayed initializations steps
 arranged by
 .code lnew
-by a non-local exit such as an exception throw, the object's
+by a nonlocal exit such as an exception throw, the object's
 finalizers, if any, are invoked.
 
 Lazy initialization does not detect cycles. Immediately prior to the lazy
@@ -28246,7 +28255,7 @@ are processed, if present, and passed to the boa constructor.
 
 If any of the initializations abandon the evaluation of
 .code make-struct
-by a non-local exit such as an exception throw, the object's
+by a nonlocal exit such as an exception throw, the object's
 finalizers, if any, are invoked.
 
 .coNP Function @ make-lazy-struct
@@ -29825,7 +29834,7 @@ If
 .code iter-reset
 determines that
 .meta iter
-can be re-used for a new iteration, then it can suitably mutate the
+can be reused for a new iteration, then it can suitably mutate the
 state of
 .meta iter
 and return it.  Otherwise, it behaves like
@@ -30230,7 +30239,7 @@ for such an object.
 
 The function also returns
 .code nil
-for iterable objects representing non-empty spaces, even if
+for iterable objects representing nonempty spaces, even if
 those spaces are infinite. For instance
 .code "(empty 0)"
 yields
@@ -30285,7 +30294,7 @@ returning the terminating value
 However, empty non-list sequences are handled incorrectly because
 since they are not the
 .code nil
-object, they look non-empty under this paradigm of traversal.
+object, they look nonempty under this paradigm of traversal.
 The
 .code nullify
 function provides a correction: if the input sequence is filtered
@@ -31269,7 +31278,7 @@ matches
 .meta haystack
 in multiple places,
 .code rsearch
-returns the right-most matching position rather than
+returns the rightmost matching position rather than
 the leftmost.
 
 Secondly, if
@@ -31808,8 +31817,8 @@ These functions are counterparts of
 .code rpos
 and
 .code rpos-if
-which report position of the right-most matching item,
-rather than the left-most.
+which report position of the rightmost matching item,
+rather than the leftmost.
 
 .coNP Functions @ pos-max and @ pos-min
 .synb
@@ -31826,7 +31835,9 @@ differ only in their defaulting behavior with regard to the
 .meta testfun
 argument.  If
 .meta testfun
-is not given, then the pos-max function defaults
+is not given, then the
+.code pos-max
+function defaults
 .meta testfun
 to the
 .code greater
@@ -32376,11 +32387,11 @@ Otherwise,
 .code partition
 returns a lazy list of partitions of
 .metn sequence .
-Partitions are consecutive, non-overlapping, non-empty sub-strings of
+Partitions are consecutive, non-overlapping, nonempty substrings of
 .metn sequence ,
 of the same kind as
 .metn sequence ,
-such that if these sub-strings are catenated together in their order
+such that if these substrings are catenated together in their order
 of appearance, a sequence
 .code equal
 to the original is produced.
@@ -32394,13 +32405,13 @@ was produced from the
 or
 .meta function
 arguments, each value in that list must be an integer. Each integer
-value which is non-negative specifies the index position
+value which is nonnegative specifies the index position
 given by its value. Each integer value which is negative
 specifies an index position given by adding the length of
 .meta sequence
 to its value. The sequence index positions thus denoted by
 .meta index-list
-shall be strictly non-decreasing. Each successive element
+shall be strictly nondecreasing. Each successive element
 is expected to designate an index position at least as high
 as all previous elements, otherwise the behavior is unspecified.
 Leading index positions which are (still) negative, or zero, are effectively
@@ -32483,7 +32494,7 @@ Otherwise,
 .code split
 returns a lazy list of pieces of
 .metn sequence :
-consecutive, non-overlapping, possibly empty sub-strings of
+consecutive, non-overlapping, possibly empty substrings of
 .metn sequence ,
 of the same kind as
 .metn sequence .
@@ -32508,7 +32519,7 @@ as the corresponding arguments of the
 .code partition
 function, with the following difference: the index positions indicated by
 .code index-list
-are required to be strictly increasing, rather than non-decreasing.
+are required to be strictly increasing, rather than nondecreasing.
 
 If the second argument is of the form
 .metn index-list ,
@@ -32597,7 +32608,7 @@ as the corresponding arguments of the
 .code partition
 function, with the following difference: the index positions indicated by
 .code index-list
-are required to be strictly increasing, rather than non-decreasing.
+are required to be strictly increasing, rather than nondecreasing.
 
 If the second argument is of the form
 .metn index-list ,
@@ -32611,7 +32622,7 @@ The pieces are formed by deleting from
 the elements at the positions given
 in
 .metn index-list ,
-such that the pieces are the remaining non-empty sub-strings from
+such that the pieces are the remaining nonempty substrings from
 between the deleted elements, maintaining their order.
 
 If
@@ -32719,7 +32730,7 @@ except that if there are multiple matches for
 .meta key
 in
 .metn sequence ,
-they return the right-most element rather than
+they return the rightmost element rather than
 the leftmost.
 
 In the case of
@@ -32749,8 +32760,9 @@ differ only in their defaulting behavior with regard to the
 .meta testfun
 argument.  If
 .meta testfun
-is not given, then the find-max function defaults it to
-the
+is not given, then the
+.code find-max
+function defaults it to the
 .code greater
 function, whereas
 .code find-min
@@ -33987,7 +33999,7 @@ for a hash table which contains
 keys which are the integers from 0 to
 .IR "N - 1" .
 Such as hash is treated as if it were a vector. The values are sorted
-and re-assigned to sorted order to the integer keys.
+and reassigned to sorted order to the integer keys.
 The behavior of
 .code sort
 is not specified for hashes whose contents do not conform to this convention.
@@ -34052,7 +34064,7 @@ in the APL language.
 .desc
 The
 .code nshuffle
-function pseudo-randomly rearranges the elements of
+function pseudorandomly rearranges the elements of
 .metn sequence .
 This is performed in place:
 .meta sequence
@@ -34062,7 +34074,7 @@ The return value is
 .meta sequence
 itself.
 
-The rearrangement depends on pseudo-random numbers obtained from the
+The rearrangement depends on pseudorandom numbers obtained from the
 .code rand
 function. The
 .meta random-state
@@ -34269,7 +34281,7 @@ Otherwise,
 .code partition-by
 returns a lazy list of partitions of the sequence
 .metn sequence .
-Partitions are consecutive, non-empty sub-strings of
+Partitions are consecutive, nonempty substrings of
 .metn sequence ,
 of the same kind as
 .metn sequence .
@@ -34783,7 +34795,7 @@ freshly allocated object.
 .desc
 The obsolescent
 .code seq-reset
-re-initializes the existing iterator object
+reinitializes the existing iterator object
 .meta iter
 to begin a new traversal over the given
 .metn object ,
@@ -34802,7 +34814,7 @@ function returns
 which encapsulates state and methods for constructing lists procedurally.
 Among the advantages of using
 .code list-builder
-is that lists can be constructed in the left to right direction without
+is that lists can be constructed in the left-to-right direction without
 requiring multiple traversals or reversal. For example,
 .code list-builder
 naturally combines with iteration or recursion: items visited in an
@@ -34848,7 +34860,7 @@ It implicitly creates a
 .code list-builder
 instance and binds it to a hidden lexical variable.
 It then evaluates forms in a lexical scope in which
-short-hand macros are available for building the list.
+shorthand macros are available for building the list.
 
 .coNP Structure @ list-builder
 .synb
@@ -35319,7 +35331,7 @@ If
 exceeds the length of
 .metn seq ,
 then an empty list is returned,
-since it is impossible to make a single non-repeating permutation that
+since it is impossible to make a single nonrepeating permutation that
 requires more items than are available.
 
 The permutations are lexicographically ordered.
@@ -35396,9 +35408,9 @@ The
 function returns a lazy list which consists of all
 length
 .meta len
-non-repeating combinations formed by taking items taken from
+nonrepeating combinations formed by taking items taken from
 .metn seq .
-"Non-repeating combinations" means that the combinations do not use any
+"Nonrepeating combinations" means that the combinations do not use any
 element of
 .meta seq
 more than once. If
@@ -35425,7 +35437,7 @@ If
 exceeds the number of elements in
 .metn seq ,
 then an empty list is returned, since it is impossible to make a single
-non-repeating combination that requires more items than are available.
+nonrepeating combination that requires more items than are available.
 
 If
 .meta seq
@@ -35893,13 +35905,13 @@ declines, more complicated requirements apply; see the description of
 .TP* "Dialect Notes:"
 A macro in the global namespace introduced by
 .code defmacro
-may co-exist with a function of the same name introduced by
+may coexist with a function of the same name introduced by
 .codn defun .
 This is not permitted in ANSI Common Lisp.
 
 ANSI Common Lisp doesn't describe the concept of declining to expand, except in
 the area of compiler macros. Since TXR Lisp allows global macros and functions
-of the same name to co-exist, ordinary macros can be used to optimize functions
+of the same name to coexist, ordinary macros can be used to optimize functions
 in a manner similar to Common Lisp compiler macros. A macro can be written
 of the same name as a function, and can optimize certain cases of the function
 call by expanding them to some alternative syntax. Cases which it doesn't
@@ -37547,7 +37559,7 @@ the value is also returned as the result value.
 
 If there are more than two arguments, then
 .code set
-performs multiple assignments in left to right order.
+performs multiple assignments in left-to-right order.
 Effectively,
 .code "(set v1 e1 v2 e2 ... vn en)"
 is precisely equivalent to
@@ -38774,7 +38786,7 @@ style, as in:
    (assign 42 a)  ;; store 42 in variable a
 .brev
 
-Now, the new value must be evaluated prior to the place, if left to right
+Now, the new value must be evaluated prior to the place, if left-to-right
 evaluation order is to be maintained. The standard
 .code push
 macro has this property: the push value is on the left, and the place
@@ -39994,10 +40006,10 @@ Similarly, hash objects are matched using a
 operator rather than
 .code "#H(...)"
 syntax. The reason is that the keys are not ordered in a hash
-table, whereas the order of sub-patterns in a pattern operator
-can be significant. One sub-pattern may be expected to produce
+table, whereas the order of subpatterns in a pattern operator
+can be significant. One subpattern may be expected to produce
 a match for a variable, which is then back-referenced in another
-sub-pattern.
+subpattern.
 
 .NP* Variables in Patterns
 
@@ -40197,7 +40209,7 @@ then the match succeeds unconditionally, without binding a variable.
 .mets <> ( pattern + . << pattern )
 .syne
 .desc
-Pattern syntax consisting of a non-empty, possibly improper list
+Pattern syntax consisting of a nonempty, possibly improper list
 matches list structure. A pattern expression may be specified in the
 dotted position. If it is omitted, then there is an implicit terminating
 .code nil
@@ -40268,7 +40280,7 @@ against the corresponding vector element.
   ;; empty vector pattern matches empty vector
   (if-match #() #() :yes :no) -> :yes
 
-  ;; empty vector pattern fails to match non-empty vector
+  ;; empty vector pattern fails to match nonempty vector
   (if-match #() #(1) :yes :no) -> :no
 
   ;; match with nested list and vector
@@ -40432,9 +40444,9 @@ An important concept in the requirements governing the operation of the
 .code hash
 operator is that of a trivial pattern.
 
-A pattern is non-trivial if it is a variable or operator pattern.
-A pattern is also non-trivial if it is a list, vector or range pattern
-containing at least one non-trivial pattern. Otherwise, it is trivial.
+A pattern is nontrivial if it is a variable or operator pattern.
+A pattern is also nontrivial if it is a list, vector or range pattern
+containing at least one nontrivial pattern. Otherwise, it is trivial.
 
 The
 .code hash
@@ -40458,7 +40470,7 @@ table is searched for that key. If the key is not found,
 the match fails. Otherwise, the value corresponding to
 that key is matched against the
 .meta value-pattern
-which may be trivial or non-trivial.
+which may be trivial or nontrivial.
 
 If
 .meta key-pattern
@@ -40474,11 +40486,11 @@ is looked up in the hash table. If it is not found, then
 the match fails, otherwise the corresponding value is matched
 against
 .metn value-pattern ,
-which may be trivial or non-trivial.
+which may be trivial or nontrivial.
 
 If
 .meta key-pattern
-is a non-trivial pattern other than a variable pattern
+is a nontrivial pattern other than a variable pattern
 for a variable which has an existing binding, and if
 .meta value-pattern
 is trivial, then
@@ -40499,7 +40511,7 @@ Finally, if both
 .meta key-pattern
 and
 .meta value-pattern
-are non-trivial, then an exhaustive search is performed of the hash table.
+are nontrivial, then an exhaustive search is performed of the hash table.
 Every key in the hash table is matched against
 .meta key-pattern
 and if it matches, the value is matched against
@@ -40886,7 +40898,7 @@ The
 .code or
 operator requires one
 .meta pattern
-to match. It tries the patterns in left to right order, and
+to match. It tries the patterns in left-to-right order, and
 stops at the first matching one, declaring failure if none match.
 
 The
@@ -42614,7 +42626,7 @@ similarly to the way nested exponents work in standard algebraic
 notation.
 
 Exponentiation is done pairwise using a binary operation.
-If both operands to this binary operation are non-negative integers, then the
+If both operands to this binary operation are nonnegative integers, then the
 result is an integer.
 
 If the exponent is negative, and the base is zero, the situation is
@@ -42655,7 +42667,7 @@ The
 function performs modular exponentiation and accepts only integer
 arguments. Furthermore,
 .meta exponent
-must be a non-negative and
+must be a nonnegative and
 .meta modulus
 must be positive.
 
@@ -43233,7 +43245,7 @@ arguments.
 Each of the
 .meta level
 arguments, of which there may be none, is associated with
-an integer index, starting at zero, in left to right order. The
+an integer index, starting at zero, in left-to-right order. The
 .meta level
 arguments are examined in that order. When a
 .meta level
@@ -43307,7 +43319,7 @@ represent a digit whose value is 10,
 represents 11 and
 so forth until
 .codn Z .
-Upper and lower case letters are recognized.
+Uppercase and lowercase letters are recognized.
 Any character which is not a digit of the specified radix is regarded
 as the start of trailing junk at which the extraction of the digits stops.
 
@@ -43542,7 +43554,7 @@ represented in the base given by
 
 The
 .meta number
-argument must be a non-negative integer, and
+argument must be a nonnegative integer, and
 .meta radix
 must be an integer greater than one.
 
@@ -43584,7 +43596,7 @@ argument into a power series whose terms add up to
 
 The
 .meta number
-argument must be a non-negative integer, and
+argument must be a nonnegative integer, and
 .meta radix
 must be an integer greater than one.
 
@@ -43903,7 +43915,7 @@ so that the three-argument case
 .code "(logand a b c)"
 is equivalent to the expression
 .codn "(logand (logand a b) c)" ,
-which features two two-argument cases..
+which features two two-argument cases.
 
 .coNP Function @ logtest
 .synb
@@ -43970,7 +43982,7 @@ of bits. If
 is negative, then the two's-complement representation
 is truncated. The return value of
 .code logtrunc
-is always a non-negative integer.
+is always a nonnegative integer.
 
 .coNP Function @ sign-extend
 .synb
@@ -43985,8 +43997,8 @@ the integer
 to the specified number of bits, similarly to the
 .code logtrunc
 function. Then, this truncated value is regarded as a
-.meta bits
-wide two's complement integer. The value of this integer is
+.metn bits -wide
+two's complement integer. The value of this integer is
 calculated and returned.
 
 .TP* Examples:
@@ -44056,9 +44068,9 @@ has a 1 in bit position
 .metn bit .
 The
 .meta bit
-argument must be a non-negative integer. A value of zero of
+argument must be a nonnegative integer. A value of
 .meta bit
-indicates the least significant bit position of
+of zero indicates the least-significant-bit position of
 .metn value .
 
 The
@@ -44074,10 +44086,13 @@ is set, otherwise
 
 If
 .meta value
-is negative, it is treated as if it had an infinite-bit two's
-complement representation. For instance, if value is 
+is negative, it is treated as if it had an infinite-bit
+two's complement representation. For instance, if
+.meta value
+is
 .codn -2 ,
-then the bit
+then the
+.code bit
 function returns
 .code nil
 for a
@@ -44161,7 +44176,7 @@ is zero, the empty list
 .code nil
 is returned.
 
-A negative integer is treated as an infinite bit two's complement
+A negative integer is treated as an infinite-bit two's complement
 representation.
 
 The argument may be a character.
@@ -44169,7 +44184,7 @@ The argument may be a character.
 If
 .meta integer
 .code x
-is non-negative, the following equivalence holds:
+is nonnegative, the following equivalence holds:
 
 .verb
   x  <-->  [apply mask (bitset x)]
@@ -44755,7 +44770,7 @@ mode. Exception processing mode terminates in one of several ways:
 A
 .I catch
 is found which matches the exception, and control is transferred
-to the catch by a non-local transfer which performs unwinding. Catches are
+to the catch by a nonlocal transfer which performs unwinding. Catches are
 defined by the
 .code catch
 macro.
@@ -44764,7 +44779,7 @@ A
 .I handler
 is found which matches the exception, and control is transferred to
 the handler by invoking its function. The handler function accepts the
-exception by performing a non-local transfer to a destination of its choice, or
+exception by performing a nonlocal transfer to a destination of its choice, or
 else declines to accept the exception by returning.
 Handlers are defined by the
 .code handler-bind
@@ -44822,7 +44837,7 @@ takes place to the catch site, which receives the exception type and arguments.
 A handler is also associated with an active scope. However, it is a function,
 and not a dynamic exit point.  When an exception is passed to handler,
 unwinding does not take place; rather, the function is called. The function then
-either completes the exception handling by performing a non-local transfer,
+either completes the exception handling by performing a nonlocal transfer,
 or else declines the exception by performing an ordinary return.
 
 Catches and handlers are identified by exception type symbols. A catch or
@@ -44970,7 +44985,7 @@ arguments. The symbols are related by inheritance.
 
 When a condition is raised in ANSI CL, the dynamic scope is searched for a
 handler, which is an ordinary function which receives the condition. No
-unwinding or non-local transfer takes place.  The handler can return, in which
+unwinding or nonlocal transfer takes place.  The handler can return, in which
 case the search continues. Matching the condition to the handler is by
 inheritance. Handler functions are bound to exception type names.
 If a handler chooses to actually handle a condition (thereby terminating
@@ -45312,12 +45327,12 @@ The
 however, are not protected. If a
 .meta cleanup-form
 terminates via
-some non-local jump, the subsequent
+some nonlocal jump, the subsequent
 .metn cleanup-form -s
 are not evaluated.
 
 .metn cleanup-form -s
-themselves can "hijack" a non-local control transfer such
+themselves can "hijack" a nonlocal control transfer such
 as an exception. If a
 .meta cleanup-form
 is evaluated during the processing of
@@ -45476,7 +45491,7 @@ If the function throws an exception for which the handler is eligible,
 the handler will not receive that exception; it will be skipped by the
 exception search as if it didn't exist.  When the handler function terminates,
 either via a normal return or a nonlocal control transfer, then the handler is
-re-enabled.
+reenabled.
 
 .coNP Macros @ handle and @ handle*
 .synb
@@ -45593,13 +45608,13 @@ construct.
 
 When an instance of
 .code with-resources
-terminates, either normally or by a non-local control transfer,
+terminates, either normally or by a nonlocal control transfer,
 then for each
 .meta sym
 whose
 .meta init-form
 had executed, thus causing that
-.code sym
+.meta sym
 to be bound to a value, the
 .metn cleanup-form -s
 corresponding to
@@ -46052,7 +46067,7 @@ list of the catch frames.
 The
 .code invoke-catch
 function abandons the current evaluation context to perform
-a non-local control transfer directly to the catch
+a nonlocal control transfer directly to the catch
 described by the
 .meta catch-frame
 argument, which must be a structure of type
@@ -46770,7 +46785,7 @@ returns whatever value
 returns.
 
 Resuming a continuation is done by invoking the continuation function.
-When this happens, the entire continuation context is restored by re-creating
+When this happens, the entire continuation context is restored by recreating
 its captured evaluation frames on top of the current stack. Inside the
 continuation, the
 .code sys:capture-cont
@@ -46785,7 +46800,7 @@ evaluating the last form contained in the block.  Secondly, can use
 .code return-from
 against its delimiting block to explicitly abandon all evaluations in between
 and terminate that block. Or it may perform
-a non-local control transfer past the delimited block somewhere into the
+a nonlocal control transfer past the delimited block somewhere into the
 evaluation frames of the caller. In the first two cases, the termination
 of the block turns into an ordinary return from the continuation function, and
 the result value of the terminated block becomes the return value of that
@@ -46842,7 +46857,7 @@ of special variables. That is to say, if
 .code *var*
 is a special variable, then a lexical closure created inside a
 .code "(let ((*var* 42)) ...)"
-form will not capture the local re-binding of
+form will not capture the local rebinding of
 .code *var*
 which holds 42.  When the closure is invoked and accesses
 .codn *var* ,
@@ -46964,7 +46979,7 @@ The
 .code obtain
 and
 .code yield-from
-macros closely inter-operate.
+macros closely interoperate.
 
 The
 .code obtain
@@ -47344,7 +47359,7 @@ is then evaluated in the scope of the variable
 
 When the last
 .meta body-form
-is evaluated, a non-local exit takes place to the block
+is evaluated, a nonlocal exit takes place to the block
 named by
 .meta block-name
 (using the
@@ -47355,7 +47370,7 @@ When the continuation bound to
 .meta var-name
 is invoked, a copy of the entire block
 .meta block-name
-is re-started, and in that copy, the
+is restarted, and in that copy, the
 .code suspend
 call appears to return normally, yielding the value which had been
 passed to the continuation.
@@ -47430,7 +47445,7 @@ theory, which equates regular expressions, finite automata and sets of strings.
 A regular expression determines whether or not a string of input characters
 belongs to a set. \*(TX regular expressions do not support features such
 as as "anchoring" a match to the start or end of a string, or capture of
-parenthesized sub-expression matches into registers. Parenthesis syntax
+parenthesized subexpression matches into registers. Parenthesis syntax
 denotes only grouping, with no additional meaning.
 
 The semantics of whether a regular expression is used for a substring
@@ -47830,7 +47845,7 @@ which indicates that no replacement is to take place.
 .TP* Examples:
 
 .verb
-  ;; match every lower case e or o, and replace by filtering
+  ;; match every lowercase e or o, and replace by filtering
   ;; through the upcase-str function:
 
   [regsub #/[eo]/ upcase-str "Hello world!"] -> "HEllO wOrld!"
@@ -48014,7 +48029,7 @@ The regular expression syntax
 produces the same structure, but as a
 literal which is processed at the time \*(TX source code is read; the
 .code regex-parse
-function performs this parsing at run-time.
+function performs this parsing at run time.
 
 If there are parse errors, the function returns
 .codn nil .
@@ -49143,7 +49158,9 @@ Separate the integers 1-10 into even and odd, and sum these groups:
 .desc
 The
 .code make-similar-hash
-and copy-hash functions create a new hash object based on
+and
+.code copy-hash
+functions create a new hash object based on
 the existing
 .meta hash
 object.
@@ -49359,7 +49376,7 @@ is returned.
 .desc
 The
 .code clearhash
-function removes all keys-value pairs from
+function removes all key-value pairs from
 .metn hash ,
 causing it to be empty.
 
@@ -49663,7 +49680,7 @@ The optional
 .meta hash-seed
 value perturbs the hashing function used by
 .code hash-equal
-for strings and buffer objects.  This seed value must be a non-negative integer
+for strings and buffer objects.  This seed value must be a nonnegative integer
 no wider than 32 bits: that is, in the range 0 to 4294967295.
 If the value isn't specified, it defaults to zero.
 Effectively, each possible value of the seed specifies a different hashing
@@ -50100,7 +50117,7 @@ degrade.
 
 The value of
 .code *hash-seed*
-must be a non-negative integer, no wider than 32 bits.
+must be a nonnegative integer, no wider than 32 bits.
 
 .coNP Function @ gen-hash-seed
 .synb
@@ -51556,7 +51573,7 @@ The
 .code chain
 function accepts zero or more functions as arguments, and returns
 a single function, called the chained function, which represents the chained
-application of those functions, in left to right order.
+application of those functions, in left-to-right order.
 
 If
 .code chain
@@ -51701,7 +51718,7 @@ The
 .code andf
 function returns a function which combines the input functions with
 a short-circuiting logical conjunction. The resulting function passes its
-arguments to the functions successively, in left to right order. As soon as any
+arguments to the functions successively, in left-to-right order. As soon as any
 of the functions returns
 .codn nil ,
 then nil is returned immediately, and the
@@ -51722,7 +51739,7 @@ function combines the input functions with a short-circuiting logical
 disjunction. The function produced by
 .code orf
 passes its arguments down to the
-functions successively, in left to right order.  As soon as any function
+functions successively, in left-to-right order.  As soon as any function
 returns a
 .cod2 non- nil
 value, that value is returned and the remaining functions are
@@ -52257,7 +52274,7 @@ Meaningful values are:
 and
 .codn 16 .
 
-When base 16 is selected, hexadecimal digits are printed as upper-case
+When base 16 is selected, hexadecimal digits are printed as uppercase
 characters.
 
 .coNP Special variable @ *print-circle*
@@ -52540,7 +52557,7 @@ The
 .code +
 flag in the precision is honored for rendering an explicit
 .code +
-sign on non-negative values.
+sign on nonnegative values.
 If a leading zero is specified in the precision, and a nonzero width is
 specified, then the printed value's integer part will be padded with leading
 zeros up to one less than the field width. These zeros are placed before the
@@ -52580,7 +52597,7 @@ value or character code is printed in decimal.
 
 .coIP x
 Requires an argument of character or integer type. The integer value or
-character code is printed in hexadecimal, using lower-case letters
+character code is printed in hexadecimal, using lowercase letters
 for the digits
 .code a
 through
@@ -52597,7 +52614,7 @@ directive, but the hexadecimal digits
 .code a
 through
 .code f
-are rendered in upper case.
+are rendered in uppercase.
 
 .coIP o
 Like the
@@ -52682,7 +52699,7 @@ function.
 The indentation mode and indentation column are automatically restored to their
 previous values when
 .code format
-function terminates, naturally or via an exception or non-local jump.
+function terminates, naturally or via an exception or nonlocal jump.
 
 The effect of a precision field (even if zero) combined with the
 .code !
@@ -52792,7 +52809,7 @@ The
 .codn print ,
 with the
 .meta pretty-p
-argument hard-coded true.
+argument hardcoded true.
 
 The
 .code prinl
@@ -53034,12 +53051,14 @@ which is a string.
 The
 .meta mode-string
 argument is a string which uses the same
-conventions as the mode argument of the C language
+conventions as the mode argument of the C-language
 .code fopen
 function, with greater permissiveness, and some extensions.
 
-The syntax of mode-string is described by the following
-grammar. Note that it permits no whitespace characters:
+The syntax of
+.meta mode-string
+is described by the following grammar.
+Note that it permits no whitespace characters:
 
 .mono
 .mets < mode-string := [ < mode ] [ < options ]
@@ -53205,9 +53224,9 @@ the beginning (the
 flag only applies to the initial open).
 In this manner, a tail stream can dynamically growing rotating log files.
 
-Caveat: since a tail stream can re-open a new file which has the same
+Caveat: since a tail stream can reopen a new file which has the same
 name as the original file, it behave incorrectly if the program
-changes the current working directory, and the path name is relative.
+changes the current working directory, and the pathname is relative.
 
 .coNP Function @ open-directory
 .synb
@@ -53223,7 +53242,9 @@ If a filesystem object exists
 under the path, is accessible, and is a directory, then the function
 returns a stream. Otherwise, a file error exception is thrown.
 
-The resulting stream supports the get-line operation. Each call to the
+The resulting stream supports the
+.code get-line
+operation. Each call to the
 .code get-line
 operation retrieves a string representing the next directory
 entry. The value
@@ -53295,7 +53316,7 @@ The
 function is used to retrieve the accumulated string.
 
 If the null character is written to a string output stream, the behavior
-is unspecified. \*(TX strings cannot contain null bytes. A the pseudo-null
+is unspecified. \*(TX strings cannot contain null bytes. The pseudo-null
 character
 .codn #\exDC00 ,
 also notated
@@ -53531,7 +53552,11 @@ errors, otherwise
 For most streams, "without errors" means that any buffered output data is
 flushed successfully.
 
-For command and process pipes (see open-command and open-process), success also
+For command and process pipes (see
+.code open-command
+and
+.codn open-process ),
+success also
 means that the process terminates normally, with a successful error code, or an
 unsuccessful one. An abnormal termination is considered an error, as
 as is the inability to retrieve the termination status, as well as the situation
@@ -53645,7 +53670,7 @@ The
 .code clear-error
 function removes the error situation from a stream. On some streams, it does
 nothing. If an error has occurred on a stream, this function should be called
-prior to re-trying any I/O or positioning operations.
+prior to retrying any I/O or positioning operations.
 The return value is the previous error code, or
 .code nil
 if there was no error, or the operation is not supported on the stream.
@@ -53675,7 +53700,8 @@ newline character and returns it as a string. (The newline character does not
 appear in the string which is returned).
 
 Character input from streams based on bytes requires UTF-8 decoding, so that
-get-char actually may read several bytes from the underlying low level
+.code get-char
+may actually read several bytes from the underlying low-level
 operating system stream.
 
 The
@@ -53807,13 +53833,17 @@ to a stream. If the
 stream is based on bytes, then the character is encoded into UTF-8 and multiple
 bytes are written. Streams which support
 .code put-char
-also support put-line, and
+also support
+.code put-line
+and
 .codn put-string .
 
 The
 .code put-string
 function writes the characters of a string out to
-the stream as if by multiple calls to put-char. The
+the stream as if by multiple calls to
+.codn put-char .
+The
 .meta string
 argument
 may be a symbol, in which case its name is used as the string.
@@ -53930,8 +53960,12 @@ to and from UTF-8.
 
 The
 .meta whence
-argument is one of three keywords: :from-start, :from-current
-and :from-end. These denote the start of the file, the current position
+argument is one of three keywords:
+.codn :from-start ,
+.code :from-current
+and
+.codn :from-end .
+These denote the start of the file, the current position in the file
 and the end of the file.
 
 If
@@ -54334,7 +54368,7 @@ The
 and
 .code base-name
 functions calculate, respective, the directory part and
-base name part of a path name.
+base name part of a pathname.
 
 The calculation is performed in a platform-dependent way, using the
 characters in the variable
@@ -54410,10 +54444,10 @@ string being returned.
 .desc
 The
 .code path-cat
-function joins the directory path name given by the character
+function joins the directory pathname given by the character
 string argument
 .meta dir-path
-with the relative path name given by
+with the relative pathname given by
 .metn rel-path ,
 returning the joined path.
 
@@ -54492,7 +54526,7 @@ itself.
 The
 .code path-sep-chars
 variable holds a string consisting of the characters which the underlying
-operating system recognizes as path name separators.
+operating system recognizes as pathname separators.
 
 If a particular of these characters is considered preferred on
 the host platform, that character is placed in the first position of
@@ -55125,7 +55159,8 @@ function specifies a program to invoke via the
 argument. This is subject to the operating system's search strategy.
 On POSIX systems, if it is an absolute or relative path, it is treated as
 such, but if it is a simple base name, then it is subject to searching
-via the components of the PATH environment variable. If open-process
+via the components of the PATH environment variable. If
+.code open-process
 is not able to find
 .metn program ,
 or is otherwise unable to execute
@@ -55182,7 +55217,7 @@ and
 special variables.  These variables must contain streams on which the
 .code fileno
 function is meaningful, otherwise the operation will fail.
-What this functionality means is that re-binding the special variables
+What this functionality means is that rebinding the special variables
 for standard streams has the effect of redirection. For example,
 the following two expressions achieve the same effect of creating
 a stream which reads the output of the
@@ -55220,7 +55255,7 @@ previous output to
 .code *stdout*
 or
 .code *stderr*
-is flushed, so that the output of the coprocess isn't re-ordered
+is flushed, so that the output of the coprocess isn't reordered
 with regard to output produced by the program. Similarly,
 input buffered in
 .code *stdin*
@@ -55288,8 +55323,8 @@ which is immediately followed by an open parenthesis
 .codn ( .
 The parenthesis is immediately followed by one or more digits which
 give the to-be-redirected file descriptor. This is followed by
-one or more whitespace characters, and then either another multi-digit decimal file descriptor
-or one of the two letters
+one or more whitespace characters, and then either another multi-digit
+decimal file descriptor or one of the two letters
 .code n
 or
 .codn x .
@@ -56673,7 +56708,7 @@ on whether that symbol is interned in other packages.
 When a foreign symbol is removed from a package via
 .codn unuse-sym ,
 then if a hidden symbol exists in that package of the same name,
-that hidden symbol is re-interned in that package and re-acquires
+that hidden symbol is reinterned in that package and reacquires
 that package as its home package, becoming an interned symbol again.
 
 Finally, packages have a
@@ -56882,7 +56917,7 @@ all "punctuation" directives like
 .code "@(and)"
 or
 .code "@(end)"
-and all sub-phrase indicators like
+and all subphrase indicators like
 .code "@(last)"
 or
 .codn "@(elif)" .
@@ -57069,8 +57104,9 @@ function.
 .desc
 The
 .code gensym
-function is similar to make-sym. It creates and returns a new
-symbol object. If the
+function is similar to
+.codn make-sym .
+It creates and returns a new symbol object. If the
 .meta prefix
 argument is omitted, it defaults to
 .strn g .
@@ -57240,7 +57276,7 @@ field is the name of a package and whose
 .code cdr
 is a package object.
 
-Note: the \*(TL application can overwrite or re-bind this
+Note: the \*(TL application can overwrite or rebind this
 variable to manipulate the active package list.  This is
 useful for
 .IR sandboxing :
@@ -57465,7 +57501,7 @@ returns the hidden symbol that was removed from the hidden store.
 If
 .meta symbol
 is a foreign symbol, then it is removed from the package. If the package
-has a hidden symbol of the same name, that hidden symbol is re-interned
+has a hidden symbol of the same name, that hidden symbol is reinterned
 in the package, and the package once again becomes its home package.
 In this case,
 .meta symbol
@@ -57755,7 +57791,7 @@ and is removed.
 
 If the package has a hidden symbol of the same name as
 .metn symbol ,
-that symbol is re-interned into
+that symbol is reinterned into
 .meta package
 as a local symbol. In this case, that previously hidden symbol is
 returned.
@@ -57855,7 +57891,7 @@ Each
 .meta package-name
 may be a string or symbol naming an existing package. It is permitted
 for the present package itself to appear in its own fallback list.
-This is useful for creating a package with a non-empty fallback list
+This is useful for creating a package with a nonempty fallback list
 which doesn't actually provide access to any other package.
 .meIP (:use << package-name *)
 The
@@ -57931,13 +57967,13 @@ The code generated by the macro performs a search for the
 package. If the package is not found at the time when
 the macro's expansion is evaluated, an error is thrown.
 
-.SS* Pseudo-random Numbers
+.SS* Pseudorandom Numbers
 .coNP Special variable @ *random-state*
 .desc
 The
 .code *random-state*
 variable holds an object which encapsulates the state
-of a pseudo-random number generator. This variable is the default argument
+of a pseudorandom number generator. This variable is the default argument
 value for the
 .code random-fixnum
 and
@@ -57946,7 +57982,7 @@ for the convenience of writing programs which are not concerned about the
 management of random state.
 
 On the other hand, programs can create and manage random states, making it
-possible to obtain repeatable sequences of pseudo-random numbers which do not
+possible to obtain repeatable sequences of pseudorandom numbers which do not
 interfere with each other. For instance objects or modules in a program can
 have their own independent streams of random numbers which are repeatable,
 independently of other modules making calls to the random number functions.
@@ -57968,7 +58004,7 @@ in place of a missing
 .meta warmup-period
 argument.
 
-To "warm up" a pseudo-random number generator (PRNG) means to obtain some
+To "warm up" a pseudorandom number generator (PRNG) means to obtain some
 values from it which are discarded, prior to use.  The number of values
 discarded is the
 .IR "warm-up period" .
@@ -58044,15 +58080,16 @@ that are separated by less than some minimum increment of real time produce
 different seeds.  The minimum time increment depends on the platform.
 
 On a platform with a millisecond-resolution real-time clock, the minimum
-time increment is a millisecond. Calls to make-random-state less than
-a millisecond apart may predictably produce the same seed.
+time increment is a millisecond. Calls to
+.code make-random-state
+less than a millisecond apart may predictably produce the same seed.
 
 If an integer seed is specified, then the integer value is mapped to a
-pseudo-random sequence, in a platform-independent way.
+pseudorandom sequence, in a platform-independent way.
 
 If an existing random state is specified as a seed, then it is duplicated. The
 returned random state object is a distinct object which is in the same
-state as the input object. It will produce the same remaining pseudo-random
+state as the input object. It will produce the same remaining pseudorandom
 number sequence, as will the input object.
 
 If a vector is specified as a seed, then a random state is constructed
@@ -58072,7 +58109,7 @@ case. If the parameter is required, but the argument is missing, then
 the value of the
 .code *random-warmup*
 special variable is used. This variable has a default value which may be too
-small for serious applications of pseudo-random numbers; see the Notes under
+small for serious applications of pseudorandom numbers; see the Notes under
 .codn *random-warmup* .
 
 .coNP Function @ random-state-p
@@ -58112,7 +58149,7 @@ is used.
 .mets (rand < modulus <> [ random-state ])
 .syne
 .desc
-All three functions produce pseudo-random numbers, which are positive integers.
+All three functions produce pseudorandom numbers, which are positive integers.
 
 The numbers are obtained from a WELL512a PRNG, whose state is stored in the
 random state object.
@@ -58140,7 +58177,7 @@ The
 argument must be a positive integer. If
 .meta modulus
 is 1, then the function returns zero without altering the state of the
-pseudo-random number generator.
+pseudorandom number generator.
 
 .coNP Function @ random-float
 .synb
@@ -58149,7 +58186,7 @@ pseudo-random number generator.
 .desc
 The
 .code random-float
-function produces a pseudo-random floating-point value in the range [0.0, 1.0).
+function produces a pseudorandom floating-point value in the range [0.0, 1.0).
 
 The numbers are obtained from a WELL512a PRNG, whose state is stored in the
 random state object given by the argument to the optional
@@ -58623,7 +58660,7 @@ function.
 
 The
 .code crc32-stream
-functions returns the calculated CRC-32 as a non-negative integer.
+functions returns the calculated CRC-32 as a nonnegative integer.
 
 .coNP Function @ crc32
 .synb
@@ -58658,7 +58695,7 @@ argument the CRC-32 obtained from the previous call.
 
 The
 .code crc32
-function returns the calculated CRC-32 as a non-negative integer.
+function returns the calculated CRC-32 as a nonnegative integer.
 
 .TP* Examples:
 
@@ -58760,7 +58797,7 @@ and
 .code sha256-end
 implement a stateful computation of SHA256 digest which allows multiple input
 sources to contribute to the result. Furthermore, the context object may be
-serially re-used for calculating multiple digests.
+serially reused for calculating multiple digests.
 
 The
 .code sha256-begin
@@ -58817,7 +58854,7 @@ and
 .code md5-end
 implement a stateful computation of MD5 digest which allows multiple input
 sources to contribute to the result. Furthermore, the context object may be
-serially re-used for calculating multiple digests.
+serially reused for calculating multiple digests.
 
 The
 .code md5-begin
@@ -58969,7 +59006,9 @@ forms, the
 .code awk
 macro substitutes the single action equivalent to the form
 .codn "(prn)" :
-a call to the local awk function
+a call to the local
+.code awk
+function
 .codn prn .
 The behavior of this macro, when called with no arguments, as above,
 is to print the current
@@ -59099,7 +59138,7 @@ will convert to an input stream as if by the
 .code make-strlist-input-stream
 function.
 Or else it must be a character
-string, which denotes a filesystem path name which
+string, which denotes a filesystem pathname which
 .code awk
 will open for reading.
 
@@ -59202,7 +59241,7 @@ redirection macros in the same
 .code awk
 macro invocation. In brief, the implication is that if
 .code :output
-creates a stream for the file path name
+creates a stream for the file pathname
 .str "out.txt"
 and somewhere in the same
 .code awk
@@ -59228,8 +59267,9 @@ clauses are processed in the order in which they appear, before
 input processing begins.
 Each
 .code form
-is evaluated. These forms have in their scope the awk local variables
-and macros.
+is evaluated. These forms have in their scope the local
+.code awk
+variables and macros.
 .meIP (:set >> { place << new-value }*)
 The
 .code :set
@@ -59245,7 +59285,7 @@ when the input processing loop terminates.
 This termination occurs when all records
 from all input sources are either processed or skipped, or else
 by an explicit termination such
-as a dynamic non-local transfer, such as
+as a dynamic nonlocal transfer, such as
 .codn return-from ,
 or the throwing of an exception.
 
@@ -59280,7 +59320,7 @@ clause, then end
 clauses are not processed.
 If an
 .code :end
-clause performs a non-local transfer, the remaining
+clause performs a nonlocal transfer, the remaining
 .code :end
 forms in that clause and
 .code :end
@@ -59325,17 +59365,17 @@ clauses are processed first, then the
 clauses.
 
 The
-:end-file
+.code :end-file
 clauses are processed unconditionally, no matter how
 the processing of an input source terminates, whether terminated
 naturally by running out of records, prematurely by invocation of the
 .code next-file
-macro, or via a dynamic non-local control transfer such as a block
+macro, or via a dynamic nonlocal control transfer such as a block
 return or exception throw.
 
 If a
 .code :begin-file
-clause performs a non-local transfer,
+clause performs a nonlocal transfer,
 .code :end-file
 processing is not triggered, because the processing of the input
 source is deemed not to have taken place.
@@ -59344,7 +59384,9 @@ Clauses which do not have one of the specially recognized keywords
 in the first position are ordinary condition-action clauses. After
 processing the
 .code :begin
-clauses, the awk enters a loop in which it extracts successive records
+clauses,
+.code awk
+enters a loop in which it extracts successive records
 from the input sources according to the
 .code rs
 (record separator) variable. Each record is divided into fields according
@@ -59384,7 +59426,9 @@ the macro terminates.
 
 .coNP Variables @ rec and @ orec
 .desc
-The awk variable
+The
+.code awk
+variable
 .code rec
 holds the current record. It is automatically updated prior to the
 processing of the condition-pattern clauses. Prior to the extraction
@@ -59397,7 +59441,8 @@ The value assigned to
 .code rec
 must be a character string. Immediately upon the assignment, the character
 string is delimited into fields according to the field separator
-awk variable
+.code awk
+variable
 .codn fs ,
 and these fields are assigned to the field list
 .codn f .
@@ -59434,7 +59479,9 @@ variable.
 
 .coNP Variable @ f
 .desc
-The awk variable
+The
+.code awk
+variable
 .code f
 holds the list of fields. Prior to the first record being read,
 its value is
@@ -59457,7 +59504,8 @@ variable is updated by catenating a string representation of the
 elements of this sequence, separated by the contents of the
 .code ofs
 (output field separator)
-awk variable.
+.code awk
+variable.
 
 Note that assigning to a DWIM bracket form which indexes
 .codn f ,
@@ -59485,7 +59533,9 @@ is erroneous.
 
 .coNP Variable @ nf
 .desc
-The awk variable
+The
+.code awk
+variable
 .code nf
 holds the current number of fields in the sequence
 .codn f .
@@ -59517,7 +59567,9 @@ variable.
 
 .coNP Variable @ nr
 .desc
-The awk variable
+The
+.code awk
+variable
 .code nr
 holds the current absolute record number. Record numbers start at 1.
 Absolute means that this value does not reset to 1 when
@@ -59533,7 +59585,9 @@ is zero.
 
 .coNP Variable @ fnr
 .desc
-The awk variable
+The
+.code awk
+variable
 .code fnr
 holds the current record number within the file. The first record is 1.
 
@@ -59546,7 +59600,9 @@ source.
 
 .coNP Variable @ arg
 .desc
-The awk variable
+The
+.code awk
+variable
 .code arg
 is an integer which indicates what input source is being processed.
 Prior to input processing, it holds the value zero. When the first
@@ -59557,15 +59613,17 @@ switches to a new input source.
 
 .coNP Variable @ fname
 .desc
-The awk variable
+The
+.code awk
+variable
 .code fname
 provides access to a character string which, if the current input is
 a file stream, is the name of the underlying file. Assigning to this
 variable changes its value, but has no effect on the input stream.
 Whenever a new input source is used by
-.code awk
-it sets this variable either from the file name on which it is opening
-a stream.. When using an existing stream rather than opening a file,
+.codn awk ,
+this variable is set from the file name on which it is opening
+a stream. When using an existing stream rather than opening a file,
 .code awk
 sets this variable from the
 .code :name
@@ -59581,7 +59639,9 @@ retains its value.
 
 .coNP Variable @ rs
 .desc
-The awk variable
+The
+.code awk
+variable
 .code rs
 specifies a string or regular expression which is used for
 delimiting characters read from the inputs into pieces called records.
@@ -59649,7 +59709,9 @@ matches a newline.
 
 .coNP Variable @ krs
 .desc
-The awk variable
+The
+.code awk
+variable
 .code krs
 stands for "keep record separator". It is a Boolean variable, initialized to
 .codn nil .
@@ -59667,7 +59729,9 @@ read record.
 
 .coNP Variables @ fs and @ ft
 .desc
-The awk variable
+The
+.code awk
+variable
 .code fs
 and
 .code ft
@@ -59711,7 +59775,7 @@ is ignored, and no fields are produced: the field list
 .code f
 is the empty list, and
 .code nf
-is zero.  A non-empty record is split by searching it for matches for the
+is zero.  A nonempty record is split by searching it for matches for the
 .code fs
 pattern. If a match does not occur, then the entire record is a field.
 If one match occurs, then the record is split into two fields, either of which,
@@ -59755,7 +59819,9 @@ is customized.
 
 .coNP Variable @ kfs
 .desc
-The awk variable
+The
+.code awk
+variable
 .code kfs
 is a Boolean flag which is initialized to
 .codn nil .
@@ -59835,7 +59901,9 @@ function.
 
 .coNP Variable @ fw
 .desc
-The awk variable
+The
+.code awk
+variable
 .code fw
 controls the fixed-width-based delimiting of records into fields.
 
@@ -59883,7 +59951,7 @@ If
 .code fw
 holds a value other than
 .code nil
-or else a list of non-negative integers, the behavior is unspecified.
+or else a list of nonnegative integers, the behavior is unspecified.
 
 .TP* Examples
 
@@ -59911,7 +59979,9 @@ give rise to field values
 
 .coNP Variable @ ofs
 .desc
-The awk variable
+The
+.code awk
+variable
 .code ofs
 hold the output field separator. Its initial value is a string
 consisting of a single space character.
@@ -59935,7 +60005,9 @@ is used to separate the fields, as they appear in
 
 .coNP Variable @ ors
 .desc
-The awk variable
+The
+.code awk
+variable
 .codn ors ,
 though it stands for "output record separator" holds what
 is in fact the output record terminator. It is named after the
@@ -59959,7 +60031,9 @@ function prints lines.
 .mets (prn << form *)
 .syne
 .desc
-The awk function
+The
+.code awk
+function
 .code prn
 performs output into the
 .code *stdout*
@@ -60004,7 +60078,9 @@ the output for that argument is an empty string, rather than the text
 .mets (next)
 .syne
 .desc
-The awk macro
+The
+.code awk
+macro
 .code next
 may be invoked in a condition-pattern clause. It terminates
 the processing of that clause, and all subsequent clauses,
@@ -60020,12 +60096,16 @@ terminates.
 .mets (again)
 .syne
 .desc
-The awk macro
+The
+.code awk
+macro
 .code again
 may be invoked in a condition-pattern clause. It terminates the
 processing of that clause, and all subsequent clauses.
 Then, the current value of the record, namely the datum stored
-in the Awk variable
+in the
+.code awk
+variable
 .codn rec ,
 is delimited into fields, and all of the condition-pattern clauses
 are processed again.
@@ -60045,12 +60125,16 @@ macro, which has no counterpart in POSIX or GNU Awk.
 .mets (next-file)
 .syne
 .desc
-The awk macro
+The
+.code awk
+macro
 .code next-file
 may be invoked in a condition-pattern clause. It terminates
-the processing of that clause, and all subsequent clauses.
-Awk then abandons the current input source, and moves to the
-next one.  If there is no next input source,
+the processing of that clause and all subsequent clauses.
+Then
+.code awk
+abandons the current input source and moves to the next one.
+If there is no next input source,
 .code awk
 terminates.
 
@@ -60067,7 +60151,9 @@ terminates.
 .mets (--rng+ < from-condition << to-condition )
 .syne
 .desc
-The nine awk macros in the
+The nine
+.code awk
+macros in the
 .code rng
 family may be used anywhere within an ordinary condition-pattern
 .code awk
@@ -60217,12 +60303,14 @@ expression merely fetches a previously computed Boolean value which indicates
 whether the range is active for this record.
 
 Also, the behavior is unspecified if range expressions attempt to modify
-the awk-special variables.
+any of the special
+.code awk
+variables
 .codn rec ,
 .codn f ,
 .codn fs ,
 .code ft
-or
+and
 .codn kfs .
 It is not recommended to place any side effects into range expressions.
 
@@ -60353,7 +60441,9 @@ expression is true.
 .mets (ff < opip-arg *)
 .syne
 .desc
-The awk macro
+The
+.code awk
+macro
 .code ff
 (filter fields)
 provides a shorthand for filtering the field list
@@ -60364,8 +60454,10 @@ argument syntax.
 
 The following equivalence holds, except that
 .code f
-refers to the awk variable even if the
-.code mf
+refers to the
+.code awk
+variable even if the
+.code ff
 invocation occurs in code which establishes
 a binding which shadows
 .codn f .
@@ -60385,7 +60477,9 @@ a binding which shadows
 .mets (mf < opip-arg *)
 .syne
 .desc
-The awk macro
+The
+.code awk
+macro
 .code mf
 (map fields)
 provides a shorthand for mapping each field
@@ -60395,7 +60489,9 @@ argument syntax.
 
 The following equivalence holds, except that
 .code f
-refers to the awk variable even if the
+refers to the
+.code awk
+variable even if the
 .code mf
 invocation occurs in code which establishes
 a binding which shadows
@@ -60416,7 +60512,9 @@ a binding which shadows
 .mets (fconv >> { clause | : | - }*)
 .syne
 .desc
-The awk macro
+The
+.code awk
+macro
 .code fconv
 provides a succinct way to request conversions of the textual fields.
 Conversions are expressed by clauses which correspond with fields.
@@ -60432,7 +60530,7 @@ specified simply by using their name as a
 
 Furthermore, several local functions exist in the scope of each
 .metn clause ,
-providing a short-hand notation. These are described below.
+providing a shorthand notation. These are described below.
 
 Conversion proceeds by applying the function produced by
 a clause to the field to which that clause corresponds, positionally.
@@ -60471,11 +60569,11 @@ Interior clauses apply to any fields which are left unconverted by the prefix
 clauses. All interior clauses are evaluated.  If there are fewer fields than
 interior clauses, then the values of the excess interior clauses are ignored.
 If there are more fields than clauses, then the clause values are cycled:
-re-used from the beginning against the excess fields, enough times to convert
+reused from the beginning against the excess fields, enough times to convert
 all the fields.
 
 If the colon appears twice, then the clauses before the first colon, if any,
-are prefix clauses, the clauses between the two clause are interior clauses,
+are prefix clauses, the clauses between the two colons are interior clauses,
 and those after the second colon are
 .IR "suffix clauses" .
 The presence of suffix clauses change the behavior relative to the one-colon
@@ -60492,7 +60590,7 @@ Finally, the previously reserved rightmost fields are processed using
 the suffix clauses.
 
 The following special convenience functions are in scope of the clauses,
-effectively providing a short-hand for commonly-needed conversions:
+effectively providing a shorthand for commonly-needed conversions:
 .RS
 .coIP i
 Provides conversion to integer. It is identical to the
@@ -60594,7 +60692,7 @@ actually holds the floating-point value 3.14, and the
 conversion is applied to it, it will produce 3, because it works by
 means of the
 .code toint
-function which.
+function.
 
 .TP* Examples:
 
@@ -60630,7 +60728,9 @@ function which.
 .mets (<! < command << form *)
 .syne
 .desc
-These awk macros provide convenient redirection of output and input to and from
+These
+.code awk
+macros provide convenient redirection of output and input to and from
 files and commands.
 
 When at least one
@@ -60766,9 +60866,9 @@ macro. An outer
 macro can obtain an association's stream object and communicate
 that stream to the nested macro where it can be used.
 
-When the
-.meta awk
-surrounding macro terminates, all of the streams opened by these
+When the surrounding
+.code awk
+macro terminates, all of the streams opened by these
 redirection macros are closed, without breaking those associations.
 If lexical closures are captured inside the macro, and then invoked after the
 macro has terminated, and inside those closures the redirection macros are
@@ -61253,7 +61353,7 @@ The
 function causes the variable to be removed from the hash table also.
 The
 .code getenv
-function accesses the underlying environment, and updates the hash
+function accesses the underlying environment and updates the hash
 table with the name-value pair which is retrieved.
 
 .SS* Command Line Option Processing
@@ -61295,7 +61395,7 @@ become slot values of an object, named by the same symbols.
 .NP* Command Line Option Conventions
 
 A command line option can have a short or long name. A short name is always
-one-character long, and treated specially in the command line syntax.  Long
+one character long, and treated specially in the command line syntax.  Long
 options have names two or more characters long.  An option can have both a long
 and short name. Options may not begin with the
 .code -
@@ -61378,7 +61478,7 @@ parses command line options:
           (opt "l" "lit" :str
                "A character string given in TXR Lisp notation.")
           (opt "c" nil 'upcase-str
-               "Custom treatment: ARG is converted to upper case.")
+               "Custom treatment: ARG is converted to uppercase.")
           (opt "b" "bool" :bool
                "A flag you can flip true.")))
 
@@ -61418,7 +61518,7 @@ macro:
     (l   lit     :str
                  "A character string given in TXR Lisp notation.")
     (c   nil     upcase-str
-                 "Custom treatment: ARG is converted to upper case.")
+                 "Custom treatment: ARG is converted to uppercase.")
     (b   bool    :bool
          "A flag you can flip true."))
 
@@ -61622,7 +61722,7 @@ corresponds to the same-named slot and defaults to
 
 The optional parameter
 .meta helptext
-corresponds to the same-named slot, and defaults to
+corresponds to the same-named slot and defaults to
 .code nil
 (no help text provided for the option).
 
@@ -61645,7 +61745,7 @@ function follows this equivalence:
 The
 .code opts
 structure represents a parsed command line, containing decoded
-information obtained from the options, and an indication where
+information obtained from the options and an indication of where
 the non-option arguments start.
 
 The
@@ -61767,7 +61867,7 @@ If the parse is successful,
 .code getopts
 returns an instance of the
 .code opts
-structure describing the parsed opts, and listing the non-option
+structure describing the parsed options and listing the non-option
 arguments.
 
 .coNP Function @ opthelp
@@ -62261,7 +62361,7 @@ support a pair of arguments
 .meti -c < command
 .onom
 to specify the command to be executed. On MS Windows, the interpreter
-is assumed to be the relative path name
+is assumed to be the relative pathname
 .code cmd.exe
 and expected to support
 .mono
@@ -62777,7 +62877,7 @@ argument.
 
 The difference between the two functions is that if
 .meta target
-is the path name of a symbolic link, then
+is the pathname of a symbolic link, then
 .code lutimes
 operates on the symbolic link itself, whereas
 .code utimes
@@ -62794,7 +62894,7 @@ relied on, with some reductions in functionality, that are documented below.
 The
 .meta target
 argument specifies the file to operate on. It may be an integer file descriptor,
-an open stream, or a character string representing a path name.
+an open stream, or a character string representing a pathname.
 
 The
 .meta atime-s
@@ -63000,8 +63100,8 @@ by expanding all symbolic links, removes all superfluous
 .str ".."
 and
 .str "."
-path components, and extra path-separating slash characters,
-to produce a canonical absolute path name.
+path components, and extra component-separating slash characters,
+to produce a canonical absolute pathname.
 
 If the underlying POSIX function indicates failure, then
 .code nil
@@ -63132,7 +63232,7 @@ exception.
 .desc
 The
 .code copy-path-rec
-function replicates a file system object identified by the path name
+function replicates a file system object identified by the pathname
 .metn from-path ,
 creating a similar object named
 .metn to-path .
@@ -63206,7 +63306,7 @@ permissions, times, symlinks and ownership are replicated.
 .IP
 The
 .code copy-path-rec
-function creates all necessary path name components required for
+function creates all necessary pathname components required for
 .meta to-path
 to come into existence, as if by using the
 .code ensure-dir
@@ -63244,7 +63344,7 @@ are copied by creating a new, similar objects at the destination path.
 In the case of devices, the major and minor numbers of the copy are
 derived from the original, so that the copy refers to the same device.
 However, the copy of a socket or a FIFO is effectively a new, different
-endpoint because these objects are identified by their path name.
+endpoint because these objects are identified by their pathname.
 Processes using the copy of a socket or a FIFO will not connect to
 processes which are working with the original.
 
@@ -63733,7 +63833,7 @@ with the arguments reversed.
 
 Note:
 .code path-newer
-takes advantage of sub-second timestamp resolution information,
+takes advantage of subsecond timestamp resolution information,
 if available. The implementation is based on using the
 .code mtime-nsec
 field of the
@@ -64436,7 +64536,7 @@ argument is treated exactly like that of the
 .code exit
 function. Unlike that function, this one exits the process immediately,
 cleaning up only low-level operating system resources such as closing file
-descriptors and releasing memory mappings, without performing user-space
+descriptors and releasing memory mappings, without performing userspace
 cleanup.
 
 .code exit*
@@ -65133,9 +65233,9 @@ function is a interface to the Unix function of the same name.
 The
 .meta pattern
 argument must be a string, which holds a glob pattern: a pattern which
-matches zero or more path names, similar to a regular expression.
+matches zero or more pathnames, similar to a regular expression.
 The function tries to expand the pattern and return a list of strings
-representing the matching path names in the file system.
+representing the matching pathnames in the file system.
 
 If there are no matches, then an empty list is returned.
 
@@ -65168,7 +65268,7 @@ an exception or performing a block return.
 
 The
 .meta errfun
-may not re-enter the
+may not reenter the
 .code glob
 function. This situation is detected and diagnosed by an exception.
 
@@ -65269,7 +65369,7 @@ function.
 These variables corresponds to the C constants
 .codn FTW_PHYS ,
 .codn FTW_MOUNT ,
-.IR "et cetera" .
+etc.
 
 Note that
 .code ftw-actionretval
@@ -65290,7 +65390,7 @@ error condition encountered.
 These variables correspond to the C constants
 .codn FTW_F ,
 .codn FTW_D ,
-.IR "et cetera" .
+etc.
 
 Not all of them are present. If the underlying platform doesn't have
 a given constant, then the corresponding variable doesn't exist in \*(TX.
@@ -65314,7 +65414,7 @@ the search and nonzero to stop.
 These variables correspond to the C constants
 .codn FTW_CONTINUE ,
 .codn FTW_STOP ,
-.IR "et cetera" .
+etc.
 
 .coNP Function @ ftw
 .synb
@@ -65341,7 +65441,7 @@ defaults to 20.
 
 The
 .meta path-or-list
-argument may be a string specifying the top-level path name that
+argument may be a string specifying the top-level pathname that
 .code ftw
 shall visit. Or else,
 .meta path-or-list
@@ -65511,7 +65611,7 @@ an exception or performing a block return.
 
 The
 .meta callbackfun
-may not re-enter the
+may not reenter the
 .code ftw
 function. This situation is detected and diagnosed by an exception.
 
@@ -65565,7 +65665,7 @@ the information, then this slot takes on the
 .code nil
 value. In this situation, the
 .code dirstat
-function may be used to back-fill the missing information.
+function may be used to backfill the missing information.
 
 .coNP Variables @, dt-blk @, dt-chr @, dt-dir @, dt-fifo @, dt-lnk @, dt-reg @ dt-sock and @ dt-unknown
 .desc
@@ -65805,7 +65905,7 @@ and
 .code sock-shutdown
 are used for enacting socket communication scenarios.
 
-Stream sockets use ordinary streams, re-using the same underlying framework
+Stream sockets use ordinary streams, reusing the same underlying framework
 that is used for file I/O and process types.
 
 Datagram socket streams are implemented using special datagram socket streams.
@@ -66079,7 +66179,7 @@ static slot holds the value
 .desc
 The
 .code sockaddr-un
-address represents a socket address used for inter-process communication
+address represents a socket address used for interprocess communication
 within a single operating system node, using the "Unix domain" sockets
 of the
 .code af-unix
@@ -66691,7 +66791,7 @@ in the hybrid notation exemplified by
 
 The
 .meta address
-parameter must be a non-negative integer in the appropriate range
+parameter must be a nonnegative integer in the appropriate range
 for the address type.
 
 If the
@@ -66808,7 +66908,7 @@ function recognizes the IPv6 notation consisting of 16-bit hexadecimal pieces
 separated by colons. If the operation is successful, it returns a
 .code sockaddr-in6
 structure.  Each piece must be a value in the range 0 to FFFF.
-The hexadecimal digits may be any mixture of upper and lower case. Leading
+The hexadecimal digits may be any mixture of uppercase and lowercase. Leading
 zeros are permitted.
 Up to eight such pieces must be specified. If fewer pieces are specified,
 then the token
@@ -66826,7 +66926,7 @@ The
 also recognizes the special notation for IPv6-mapped IPv4 addresses. This
 notation consists of the address string
 .str ::FFFF
-which may appear in any upper/lower case mixture, possibly with leading
+which may appear in any uppercase/lowercase mixture, possibly with leading
 zeros, followed by an IPv4 address given in the four-octet dot notation.
 For example,
 .strn ::FFFF:127.0.0.1 .
@@ -66885,8 +66985,8 @@ values and the speed constants (like
 .codn B38400 )
 used by the C API.
 
-All of the various termios-related constants are provided, including some non-standard
-ones. They appear in lower case. For instance
+All of the various termios-related constants are provided, including some nonstandard
+ones. They appear in lowercase. For instance
 .code IGNBRK
 and
 .code PARENB
@@ -67332,7 +67432,7 @@ function.
 .desc
 The
 .code tcflow
-function provides bi-directional flow control on the
+function provides bidirectional flow control on the
 specified terminal device. It is a direct wrapper
 for the like-named POSIX C function.
 
@@ -67621,7 +67721,7 @@ More generally, strings can consists of Unicode characters, but the URL
 encoding consists only of printable ASCII characters. Unicode characters in the
 original string are encoded by expanding into UTF-8, and applying
 percent-encoding the UTF-8 bytes, which are all in the range
-.codn \exx80-\exxFF .
+.codn \ex80-\exFF .
 
 Decoding is the reverse process: reconstituting the UTF-8 byte sequence
 specified by the URL-encoding, and then decoding the UTF-8 sequence into the
@@ -67835,7 +67935,7 @@ stream and writes characters to the
 .meta out
 stream comprising the Base64 encoding of that sequence. If the
 .meta nbytes
-argument is specified, it must be a non-negative integer. At most
+argument is specified, it must be a nonnegative integer. At most
 .meta nbytes
 bytes will be read from the
 .meta in
@@ -68797,7 +68897,7 @@ If there are no forms, the prof operator measures the smallest measurable
 operation of evaluating nothing and producing
 .codn nil .
 
-If the evaluation terminates normally (not abruptly by a non-local
+If the evaluation terminates normally (not abruptly by a nonlocal
 control transfer), then
 .code prof
 yields a list consisting of:
@@ -68884,7 +68984,7 @@ The
 .code gc
 function triggers garbage collection.  Garbage collection means
 that unreachable objects are identified and reclaimed, so that their
-storage can be re-used.
+storage can be reused.
 
 The function returns
 .code nil
@@ -69043,7 +69143,7 @@ Such a call can happen in two possible contexts: finalization
 initiated by by garbage collection, or under the scope of a
 .code call-finalizers
 invocation from application code. Doing so is safe, since the finalization
-logic may be re-entered recursively.  When finalizers are being called during a
+logic may be reentered recursively.  When finalizers are being called during a
 round of processing, those finalizers have already been removed from the
 registration list, and will not be redundantly invoked by a recursive
 invocation of finalization.
@@ -69081,7 +69181,7 @@ but incorrect under spontaneous reclamation driven by garbage collection.
 .SS* Modularization
 .coNP Variable @ self-path
 .desc
-This variable holds the invocation path name of the \*(TX program.
+This variable holds the invocation pathname of the \*(TX program.
 The value of
 .code self-path
 when \*(TL expressions are being evaluated in command line arguments
@@ -69117,7 +69217,7 @@ a \*(TL library function, macro or variable is referenced for the first time,
 the library module which defines it is loaded.  This includes references
 which occur during the code expansion phase, at "macro time", so it works for
 macros. In the middle of processing a syntax tree, the expander may encounter a
-symbol that is registered for auto-loading, and trigger the load. When the load
+symbol that is registered for autoloading, and trigger the load. When the load
 completes, the symbol might now be defined as a macro, which the expander
 can immediately use to expand the given form that is being traversed.
 
@@ -69150,7 +69250,7 @@ If an existing load operation is in progress, then the special variable
 has a binding. In this case,
 .code load
 will assume that the relative pathname is a reference relative to the
-directory portion of that path name.
+directory portion of that pathname.
 If
 .code *load-path*
 has the value
@@ -69160,7 +69260,7 @@ then a pure relative
 pathname is used as-is, and thus resolved relative to the current working
 directory.
 
-Once the tentative path name is determined,
+Once the tentative pathname is determined,
 .code load
 determines whether the name is suffixed. The name is suffixed if it
 ends in any of these four suffixes:
@@ -69170,7 +69270,7 @@ ends in any of these four suffixes:
 or
 .codn .txr_profile .
 
-Depending on whether the tentative path name is suffixed,
+Depending on whether the tentative pathname is suffixed,
 .code load
 tries to make one or more attempts to open several variations of that name.
 These variations are called
@@ -69181,12 +69281,12 @@ error exception propagates to
 .codn load 's
 caller.
 
-If the tentative path name is suffixed, then
+If the tentative pathname is suffixed, then
 .code load
-tries to open a file by that actual path name. If that attempt
+tries to open a file by that actual pathname. If that attempt
 fails, no other names are tried.
 
-If the tentative path name is unsuffixed, then first the suffix
+If the tentative pathname is unsuffixed, then first the suffix
 .code .tlo
 is appended to the name, and an attempt is made to open a file
 with this actual path. If that file is not found, then the suffix
@@ -69235,7 +69335,7 @@ Over the evaluation of either a \*(TL, compiled file, or \*(TX file,
 establishes a new dynamic binding for several special
 variables. The variable
 .code *load-path*
-is given a new binding containing the actual path name.
+is given a new binding containing the actual pathname.
 The
 .code *package*
 variable is also given a new dynamic binding, whose value is the
@@ -69287,7 +69387,7 @@ special variable has a top-level value which is
 .codn nil .
 
 When a file is being loaded, it is dynamically bound to the
-path name of that file. This value is visible to the forms
+pathname of that file. This value is visible to the forms
 are evaluated in that file during the loading process.
 
 The
@@ -69365,7 +69465,7 @@ function.
 
 First, all
 .code target
-expressions in all clauses are unconditionally evaluated in left to right
+expressions in all clauses are unconditionally evaluated in left-to-right
 order. Then the clauses are processed in that order. If the
 .meta kind
 symbol of a clause is
@@ -69434,7 +69534,7 @@ function returns
 
 .coNP Variable @ txr-exe-path
 .desc
-This variable holds the absolute path name of the executable file
+This variable holds the absolute pathname of the executable file
 of the running \*(TX instance.
 
 .SS* Function Tracing
@@ -69703,7 +69803,7 @@ named
 .codn RTLD_LAZY ,
 .codn RTLD_NOW ,
 .codn RTLD_LOCAL ,
-.IR "et cetera" .
+etc.
 
 .SH* FOREIGN FUNCTION INTERFACE
 
@@ -69760,7 +69860,7 @@ in the middle of some nested type can make the difference between correct code
 and code which causes a memory leak, or instability by freeing memory which is
 in use.
 
-FFI developers are encouraged to unit-test their FFI definitions carefully
+FFI developers are encouraged to unit test their FFI definitions carefully
 and use tools such as Valgrind to detect memory misuses and leaks.
 
 .SS* Key Concepts
@@ -70827,7 +70927,7 @@ to manage the conversion.
 The
 .meta dim
 argument is an ordinary Lisp expression expanded and evaluated in the
-top-level environment. It must produce a non-negative integer value.
+top-level environment. It must produce a nonnegative integer value.
 
 In addition, several types are treated specially: when
 .meta type
@@ -70939,11 +71039,11 @@ converts it to a Lisp string accordingly. The regular
 type doesn't assume null termination. In particular, this means that whereas
 .code "(array 42 char)"
 will decode 42 bytes of UTF-8, even if some of them are null, converting
-those null bytes the U+DC00 pseudo-null, in contrast, a
+those null bytes to the U+DC00 pseudo-null, in contrast, a
 .code zarray
 will treat the 42 bytes as a null-terminated string, and decode UTF-8 only
 up to the first null.
-In the other direction, when converting from Lisp string to the foreign array,
+In the other direction, when converting from Lisp string to foreign array,
 .code zarray
 ensures null termination.
 
@@ -71056,7 +71156,7 @@ member is declared as of type
 then the Lisp
 .code struct
 is expected to have an integer-valued slot corresponding to that member.
-The slot is then subject to a bi-directional transfer. FFI will create an
+The slot is then subject to a bidirectional transfer. FFI will create an
 .codn int -sized
 temporary data area, encode the slot into that area and place that area's
 pointer into the encoded structure.  After the call, the new value of the
@@ -71281,7 +71381,7 @@ The
 .code ubit
 and
 .code sbit
-types denote C language style bitfields. These types can only appear
+types denote C-language-style bitfields. These types can only appear
 as members of structures. A bitfield type cannot be the argument or return
 value of a foreign function or closure, and cannot be a foreign variable.
 Arrays of bitfields and pointers, of any kind, to bitfields are a forbidden
@@ -71375,7 +71475,7 @@ counterparts. The representation of negative values is defined
 by the "two's complement" operation, which maps each value to
 its additive inverse. The operation consists of temporarily treating the
 entire bitfield as unsigned, and inverting the logical value of all the
-bits, and then adding 1 with "wrap-around" to zero if 1 is added to a field
+bits, and then adding 1 with "wraparound" to zero if 1 is added to a field
 consisting of all 1 bits. (Thus zero maps to zero, as expected).
 An anomaly in the two's complement system is that the most negative
 value has no positive counterpart. The two's complement operation
@@ -71463,7 +71563,7 @@ and
 respectively. The
 .meta size
 argument is an expression which is evaluated in the top-level
-environment, and must produce a non-negative integer.
+environment, and must produce a nonnegative integer.
 
 Because they have a size, these types have useful get
 semantics.
@@ -71790,7 +71890,7 @@ and the two floating-point types
 .code float
 and
 .codn double ,
-the FFI type system provides a big-endian and little endian version,
+the FFI type system provides a big-endian and little-endian version,
 whose names are derived by prefixing the
 .code be-
 or
@@ -71990,8 +72090,8 @@ it exhibits byte alignment.
 
 The description isn't complete without a treatment of byte and bit order.
 Bitfield allocation follows an imaginary "bit endianness" whose direction
-follows the machine's byte order: most significant bits are allocated first on
-big endian, least significant bits first on little-endian.
+follows the machine's byte order: most-significant bits are allocated first on
+big endian, least significant bits first on little endian.
 
 If a one-bit-wide bitfield is allocated into a hitherto empty structure, it
 will be placed into the first byte of that structure, regardless of the
@@ -72000,7 +72100,7 @@ that bitfield. Within that first byte, it will be placed into the most
 significant bit position on a big-endian machine (bit 7); and on a
 little-endian machine, it will be placed into the least significant bit
 position (bit 0). If another one-bit-wide is allocated, it is placed into
-bit 6 on big-endian, and bit 1 on little-endian.
+bit 6 on big endian, and bit 1 on little endian.
 
 More generally, whenever a bitfield is allocated for a big-endian machine, and
 the storage unit is determined into which that bitfield shall be placed, the
@@ -72096,7 +72196,7 @@ function constructs a FFI call descriptor.
 
 The
 .meta ntotal
-argument must be a non-negative integer; it indicates the number
+argument must be a nonnegative integer; it indicates the number
 of arguments in the call.
 
 If the call denotes a variadic function, the
@@ -72250,7 +72350,7 @@ the capture of delimited continuations across foreign code. Delimited
 continuations can be captured inside a closure dispatched that way, but the
 delimiting prompt must be within the callback's local stack frame, without
 traversing across the foreign stack frames.  Secondly, a callback closure which
-is safely dispatched doesn't permit direct non-local control transfers across
+is safely dispatched doesn't permit direct nonlocal control transfers across
 foreign code, such as exception handling. Such transfers, however, appear to
 work anyway (with caveats): this is because they are specially handled. The
 closure dispatch mechanism intercepts all dynamic control transfers, converts
@@ -72862,7 +72962,7 @@ to be returned by the callback in the event that a dynamic control
 transfer is intercepted. The purpose of this value is to indicate
 to the foreign code that the callback wishes to abort operation;
 it is useful in situations when a suitable return value will induce
-the foreign code to co-operate and itself return to the Lisp code
+the foreign code to cooperate and itself return to the Lisp code
 which will then continue the dynamic control transfer.
 
 The
@@ -73007,7 +73107,7 @@ The
 is syntax which specifies the foreign pointer, using exactly the same
 conventions as described for the
 .code deffi-var
-macro, allowing for a short-hand notation if this form is
+macro, allowing for a shorthand notation if this form is
 enclosed in a
 .code with-dyn-lib
 macro invocation.
@@ -73250,7 +73350,7 @@ Finally, each slot of the struct which is not initialized via
 .meta slot-sym
 and
 .meta init-value
-pair, and which is known to the FFI type, is re-initialized by a conversion
+pair, and which is known to the FFI type, is reinitialized by a conversion
 from a foreign object of all-zero bits to a Lisp value.
 argument. The
 .code struct
@@ -73668,7 +73768,7 @@ The optional
 .meta offset
 argument specifies a byte offset from the beginning of the data area of
 .meta dst-buf
-where the foreign-representation of
+where the foreign representation of
 .meta obj
 is stored. The default value is zero.
 
@@ -73724,7 +73824,7 @@ The optional
 .meta offset
 argument specifies a byte offset from the beginning of the data area of
 .meta dst-buf
-where the foreign-representation of
+where the foreign representation of
 .meta obj
 is understood to be stored, and where it is updated if requested by
 .metn copy-p .
@@ -73802,7 +73902,7 @@ The optional
 .meta offset
 argument specifies a byte offset from the beginning of the data area of
 .meta src-buf
-from which the foreign-representation of
+from which the foreign representation of
 .meta obj
 is taken.
 
@@ -74141,7 +74241,7 @@ then the returned
 .code carray
 object will be of unknown length. Otherwise,
 .meta length
-must be a non-negative integer which will be taken as the
+must be a nonnegative integer which will be taken as the
 length of the array.
 
 Note: this conversion is inherently unsafe.
@@ -74197,7 +74297,7 @@ type.
 The
 .meta length
 argument indicates the new length, which must be
-a non-negative integer.
+a nonnegative integer.
 
 The operation throws an
 .code error
@@ -74236,7 +74336,7 @@ converting that element to a Lisp value, which is returned.
 
 The
 .meta idx
-argument must be a non-negative integer. If
+argument must be a nonnegative integer. If
 .meta carray
 has a known length,
 .meta idx
@@ -74289,7 +74389,7 @@ The return value is
 
 The
 .meta idx
-argument must be a non-negative integer. If
+argument must be a nonnegative integer. If
 .meta carray
 has a known length,
 .meta idx
@@ -74768,9 +74868,9 @@ left, near the beginning of the array.
 In the case of
 .codn carray-uint ,
 .meta number
-must be a non-negative integer. An unsigned representation is produced
+must be a nonnegative integer. An unsigned representation is produced
 which carries no sign bit. The representation is as many bytes wide as
-are required to cover the number up to its most significant bit whose
+are required to cover the number up to its most-significant bit whose
 value is 1. If any padding bytes are required due to the array being larger,
 they are always zero.
 
@@ -74779,14 +74879,14 @@ The
 function encodes negative integers also, using a variable-length two's
 complement representation. The number of bits required to hold the number
 is calculated as the smallest width which can represent the value in two's
-complement, including a sign bit.  Any unused bits in the most significant
+complement, including a sign bit.  Any unused bits in the most-significant
 byte are filled with copies of the sign bit: in other words, sign extension
 takes place up to the byte size.  The sign extension continues through the
 padding bytes if the array is larger than the number of bytes required to represent
 .metn number ;
 the padding bytes are filled with the value
 .code #b11111111
-(255) if the number is negative, or else 0 if it is non-negative.
+(255) if the number is negative, or else 0 if it is nonnegative.
 
 .coNP Functions @ uint-carray and @ int-carray
 .synb
@@ -74806,7 +74906,7 @@ The
 .code uint-carray
 function simply treats all of the bytes as a big-endian unsigned integer in
 a pure binary representation, and returns that integer, which is necessarily
-always non-negative.
+always nonnegative.
 
 The
 .code int-carray
@@ -75528,7 +75628,7 @@ function reads forms from an input file, and produces a compiled output file.
 First,
 .meta input-path
 is converted to a
-.I "tentative path name"
+.I "tentative pathname"
 as follows.
 
 If
@@ -75541,7 +75641,7 @@ If an existing load operation is in progress, then the special variable
 has a binding. In this case,
 .code load
 will assume that the relative pathname is a reference relative to the
-directory portion of that path name.
+directory portion of that pathname.
 
 If
 .code *load-path*
@@ -75552,18 +75652,18 @@ then a pure relative
 pathname is used as-is, and thus resolved relative to the current working
 directory.
 
-The tentative path name is converted to an
-.I "actual input path name"
-as follows. Firstly, if the tentative path name ends with one of the suffixes
+The tentative pathname is converted to an
+.I "actual input pathname"
+as follows. Firstly, if the tentative pathname ends with one of the suffixes
 .code .tl
 or
 .code .txr
 then it is considered suffixed, otherwise it is considered unsuffixed.
-If it is suffixed, then the actual path name is the same as the tentative path name.
-In the unsuffixed case, two possible actual input path names are formed. First,
+If it is suffixed, then the actual pathname is the same as the tentative pathname.
+In the unsuffixed case, two possible actual input pathnames are formed. First,
 the suffix
 .code .tl
-is added to the tentative path name. If that path exists, it is taken
+is added to the tentative pathname. If that path exists, it is taken
 taken as the actual path. Otherwise, the unmodified tentative path
 is taken as the actual input path.
 
@@ -75599,7 +75699,7 @@ Over the compilation of the input file,
 establishes a new dynamic binding for several special
 variables. The variable
 .code *load-path*
-is given a new binding containing the actual input path name.
+is given a new binding containing the actual input pathname.
 The
 .code *package*
 variable is also given a new dynamic binding, whose value is the
@@ -75913,7 +76013,7 @@ they were literal.  Or else, the evaluation may be performed late: when the
 form itself is encountered during normal evaluation. In that case,
 .meta form
 will still be evaluated only once and then its value will be be
-inserted as a literal in subsequent re-evaluations of that
+inserted as a literal in subsequent reevaluations of that
 .code load-time
 form, if any.
 
@@ -76139,7 +76239,7 @@ expressions to be evaluated.
 The
 .code load-time
 form is subject to compiler optimizations. A top-level expression is assumed to
-be evaluated in load time, so
+be evaluated at load time, so
 .code load-time
 does nothing in a top-level expression. It becomes active inside forms
 embedded in a
@@ -76184,7 +76284,7 @@ Furthermore, the use of
 versus
 .cod3 defparm / defparml
 controls whether the variable gets replaced with a new value when the
-file is re-loaded.
+file is reloaded.
 
 The advantage of
 .code load-time
@@ -76488,14 +76588,14 @@ The interactive listener can only accept up to 4095 abstract characters of
 input in a single command line.
 
 Though the edit buffer is referred as the "command line", it may contain
-multi-line input. The carriage return characters which separate multiple lines
+multiline input. The carriage return characters which separate multiple lines
 count as one abstract character each, and are understood to occupy two display
 positions.
 
 The command line must contain exactly one complete \*(TL expression, or a
 comment. Multiple expressions will not be evaluated.
 
-In multi-line mode, if the number of lines exceeds the number of lines
+In multiline mode, if the number of lines exceeds the number of lines
 of the terminal display, the editing experience is adversely affected
 in unspecified ways.
 
@@ -76700,11 +76800,11 @@ be used instead of Ctrl-A and Ctrl-E.
 In line mode, these commands move the cursor to the beginning or end of the
 edit buffer.
 
-In multi-line mode, if the cursor is not already at the beginning of a physical
+In multiline mode, if the cursor is not already at the beginning of a physical
 line, then Ctrl-A moves it to the first character of the physical line.
 Otherwise, Ctrl-A moves the cursor to the beginning of the edit buffer.
 
-Similarly, in multi-line mode, if the cursor not already at the end of a
+Similarly, in multiline mode, if the cursor not already at the end of a
 physical line, Ctrl-E moves it there. Otherwise, the cursor moves to the
 end of the edit buffer.
 
@@ -76752,7 +76852,7 @@ also performs the same action, since it corresponds to ASCII BS.
 The Ctrl-D command deletes the character under the cursor, if the cursor
 is block-shaped, or to the right of the cursor if the cursor is an I-beam.
 the cursor maintains its current character position relative to the
-start of the line. In multi-line mode, if Ctrl-D is at the end of a line that
+start of the line. In multiline mode, if Ctrl-D is at the end of a line that
 is not the last line, it deletes the newline character, causing the
 following line to be joined to the end of the current line.
 If the cursor is at the end of the buffer, then Ctrl-D does nothing,
@@ -76776,7 +76876,7 @@ right remains. The deleted material is copied into the clipboard.
 
 The Ctrl-U ("undo typing") command is a "super backspace" operation: it deletes
 all characters to the left of the cursor position. The cursor is moved to
-the leftmost position. In multi-line mode, Ctrl-U deletes only to the beginning of the current
+the leftmost position. In multiline mode, Ctrl-U deletes only to the beginning of the current
 physical line, not all the way to the first position of the buffer.
 Ctrl-U copies the deleted material into the clipboard.
 
@@ -76784,7 +76884,7 @@ Ctrl-U copies the deleted material into the clipboard.
 
 The Ctrl-K ("kill") command deletes the character under the cursor position
 and all subsequent characters. The cursor position doesn't change.
-In multi-line mode, Ctrl-K deletes only until the end of the current
+In multiline mode, Ctrl-K deletes only until the end of the current
 physical line, not the entire buffer.
 The material deleted by Ctrl-K is copied into the clipboard.
 
@@ -76798,17 +76898,17 @@ or a command character.
 .NP* Verbatim Insert Mode
 The two-character sequence Ctrl-X, Ctrl-V ("extended verbatim", "super paste")
 enters into an verbatim insert mode useful for entry of free-form text. It is
-particularly useful in multi-line mode. In this mode, almost every character
+particularly useful in multiline mode. In this mode, almost every character
 is inserted verbatim, including Enter.  The only commands recognized are:
 Ctrl-X, which terminates this mode, Backspace (both ASCII BS and DEL
 variants) and arrow key navigation. Enter inserts a line break, which
-appears as such in multi-line mode, or as
+appears as such in multiline mode, or as
 .code ^M
 in line mode.
 
 .NP* Delete Current Line
 
-The Ctrl-X, Ctrl-K command sequence may be used in multi-line mode
+The Ctrl-X, Ctrl-K command sequence may be used in multiline mode
 to delete the entire physical line under the cursor. Any lines below that
 line move up to close the gap. In line mode, the command has no effect,
 other than canceling select mode.  The deleted line, including the
@@ -76914,7 +77014,7 @@ Ctrl-R search.
 .NP* Submit and Stay in History
 
 Normally when the Enter key is used on a recalled history line,
-the next time the listener is re-entered, it jumps back to the
+the next time the listener is reentered, it jumps back to the
 newest history position where a new line is about to be composed.
 
 The alternative command sequence Ctrl-X, Enter provides a useful alternative
@@ -76975,9 +77075,9 @@ lines relative to the currently recalled history line.
 
 If the Tab key is pressed while editing a line, it is interpreted as a
 request for completion. There is a second completion command: the
-sequence Ctrl-X Tab.
+sequence Ctrl-X, Tab.
 
-When completion is invoked with Tab or Ctrl-X Tab, the listener looks at a few
+When completion is invoked with Tab or Ctrl-X, Tab, the listener looks at a few
 of the trailing characters to the left of the cursor position to determine the
 applicable list of completions. Completions are determined from among the \*(TL symbols which have
 global variable, function, macro and symbolic macro bindings, as well
@@ -76994,7 +77094,7 @@ immediately precede the prefix, then only those symbols are considered
 which are methods: that is, each is the static slot of at least one structure,
 in which that static slots holds a function.
 
-The difference between Tab and Ctrl-X Tab is that Tab completion looks only for
+The difference between Tab and Ctrl-X, Tab is that Tab completion looks only for
 prefix matches among the eligible identifiers. Thus it is a pure completion in
 the sense that it suggests additional material that may follow what has been
 typed. If the buffer contains
@@ -77008,7 +77108,7 @@ and
 .codn list-str .
 It will not suggest identifiers which rewrite the
 .code list
-prefix.  By contrast, the Ctrl-X Tab completion suggests not only pure
+prefix.  By contrast, the Ctrl-X, Tab completion suggests not only pure
 completions but also alternatives to the partial identifier, by looking for
 substring matches. For instance
 .code copy-list
@@ -77025,7 +77125,7 @@ If completions are found, listener enters into completion selection mode.
 The first available completion is placed into the line as if it had been typed
 in.  The other completions may be viewed one by one using the Tab key.
 (Note that the Ctrl-X is not used, only Tab, even if completion mode had been
-entered via Ctrl-X Tab).
+entered via Ctrl-X, Tab).
 When the completions are exhausted, the original uncompleted line is shown
 again, and Tab can continue to be used to cycle through the completions again.
 In completion mode, the Ctrl-C character acts as a command to cancel completion mode
@@ -77056,10 +77156,10 @@ environment variable in POSIX environments. On MS Windows, the
 variable is probed for the user's directory.
 
 If the command line contains embedded carriage returns (which denote
-line breaks in multi-line mode) these are replaced with newline characters
+line breaks in multiline mode) these are replaced with newline characters
 when written out to the file. Conversely, when the edited file is read
-back, its newlines are converted to carriage returns, so that multi-line
-content is handled properly. (See the following section, Multi-Line Mode).
+back, its newlines are converted to carriage returns, so that multiline
+content is handled properly. (See the following section, Multiline Mode).
 
 .NP* Undo Editing
 
@@ -77123,10 +77223,10 @@ Tab completion, history navigation, history search and editing in an external
 editor all cancel visual selection mode.
 
 By default, the the selection excludes the character which lies to the right of
-the rightmost end-point.  Thus, the selection simply consists of the text
+the rightmost endpoint.  Thus, the selection simply consists of the text
 between these two positions, whether or not they are reversed. This style of
 selection pairs excellently with an I-beam style cursor, and has clear
-semantics. The end-points are referenced to the positions between the
+semantics. The endpoints are referenced to the positions between the
 characters, and everything between them is selected.
 
 The selection behavior may be altered using the Boolean configuration variable
@@ -77137,7 +77237,7 @@ by default. If it is changed to true, then the selection includes the
 character to the right of the rightmost endpoint, if there is such a
 character within the current line.  This style of selection
 pair well with a block-shaped cursor. It creates the apparent semantics that
-the end-points of the election are characters, rather than points
+the endpoints of the election are characters, rather than points
 between characters, and that these characters are included in the selection.
 
 .NP* Selection Endpoint Toggle
@@ -77226,15 +77326,15 @@ selection is copied into the clipboard, not the deleted word.
 All other deletion commands such as Ctrl-K simply cancel visual
 selection mode and take their usual effect.
 
-.SS* Multi-Line Mode
+.SS* Multiline Mode
 
-The listener operates in one of two modes: line mode and multi-line mode.
+The listener operates in one of two modes: line mode and multiline mode.
 This is determined by the special variable
 .code *listener-multi-line-p*
 whose default value is
 .code t
-(multi-line mode).  It is possible to toggle between
-line mode and multi-line mode using the Ctrl-J command.
+(multiline mode).  It is possible to toggle between
+line mode and multiline mode using the Ctrl-J command.
 
 In line mode, all input given to a single prompt appears to be on a single
 line. When the line becomes longer than the screen width, it scrolls
@@ -77242,10 +77342,10 @@ horizontally.   In line mode, carriage return characters embedded in a line
 are displayed as
 .codn ^M .
 
-In multi-line mode, when the input exceeds the screen width, it simply wraps to
+In multiline mode, when the input exceeds the screen width, it simply wraps to
 take up additional lines rather than scrolling horizontally. Furthermore,
-multi-line mode not only wraps long lines of input onto multiple lines of
-the display, but also supports true multi-line input. In multi-line
+multiline mode not only wraps long lines of input onto multiple lines of
+the display, but also supports true multiline input. In multiline
 mode, carriage return characters embedded in input are treated as line
 breaks rather than being rendered as
 .codn ^M .
@@ -77254,7 +77354,7 @@ Because carriage returns are not line terminators in text files,
 lines which contain embedded carriage returns are correctly saved
 into and retrieved from the persistent history file.
 
-When Enter is typed in multi-line mode, the listener tries to determine whether
+When Enter is typed in multiline mode, the listener tries to determine whether
 the current input, taken as a whole, is an incomplete expression which requires
 closing punctuation for elements like compound expressions and string literals.
 
@@ -77265,7 +77365,7 @@ this behavior.
 
 .SS* Reading Forms Directly from the Terminal
 
-In addition to multi-line mode, the listener provides support
+In addition to multiline mode, the listener provides support
 for directly parsing input from the terminal, suitable for processing
 large amounts of pasted material.
 
@@ -77290,7 +77390,7 @@ command which triggers this parsing mode appears in the history.
 
 .SS* Clear Screen and Refresh
 
-The Ctrl-L command clears the screen and re-draws the line being edited.
+The Ctrl-L command clears the screen and redraws the line being edited.
 This is useful when the display is disturbed by the output of some
 background process, or serial line noise.
 
@@ -77304,7 +77404,7 @@ job-control command such as the
 .code fg
 command in GNU Bash.
 
-When \*(TX is resumed, the interactive listener will re-display the edited
+When \*(TX is resumed, the interactive listener will redisplay the edited
 line and restore the previous cursor position.
 
 Making full use of this feature requires a POSIX job control shell,
@@ -77314,7 +77414,7 @@ user to lose interactive control over that \*(TX instance.
 
 .SS* Editing Help
 
-The Ctrl-X ? command shows a summary of commands, in a four-line
+The Ctrl-X, ? command shows a summary of commands, in a four-line
 display which temporarily replaces the editing area. The help text
 is divided into several pages. Ctrl-C dismisses the display, and
 returns to editing. The Ctrl-P, left arrow and up arrow keys return
@@ -77388,7 +77488,7 @@ situations.  Exceptions not derived from
 .code error
 will terminate the process.
 
-The profile file is not read by non-interactive invocations of \*(TX:
+The profile file is not read by noninteractive invocations of \*(TX:
 that is, when the
 .code -i
 option isn't present.
@@ -77399,7 +77499,7 @@ The history is maintained in a text file called
 .code .txr_history
 in the user's home directory. Whenever the interactive listener terminates,
 this file is updated with the history contents stored in the listener's
-memory.  The next time the listener starts, it first re-loads the history from
+memory.  The next time the listener starts, it first reloads the history from
 this file, making the most recent
 .code *listener-hist-len*
 expressions of a previous session available for recall.
@@ -77494,13 +77594,13 @@ history lines are immediately discarded. The default value is 500.
 .coNP Special variable @ *listener-multi-line-p*
 .desc
 This is a Boolean variable which indicates whether the listener is
-in multi-line mode. The default value is
+in multiline mode. The default value is
 .codn nil .
 
 Changing this variable from within the listener takes effect
 immediately for the next line of input.
 
-If multi-line mode is toggled interactively from within the listener,
+If multiline mode is toggled interactively from within the listener,
 the variable is updated to reflect the latest state. This happens
 when the command is submitted for evaluation.
 
@@ -77511,9 +77611,9 @@ It is
 .code nil
 by default.
 
-A visual selection is determined by end-points, which are abstract positions
+A visual selection is determined by endpoints, which are abstract positions
 understood as being between characters. When a visual selection begins,
-it marks an end-point immediately to the left of a block-shaped cursor,
+it marks an endpoint immediately to the left of a block-shaped cursor,
 or precisely at the in-between position of an I-beam cursor.
 The end of the visual selection is similarly determined from the ending
 cursor position. The selection consists of those characters which lie
@@ -77561,7 +77661,7 @@ disabling the feature.
 
 Greedy evaluation means that after the listener evaluates an expression
 successfully and prints its value, it then checks whether that value is
-an expression that may be further subject to non-trivial evaluation.
+an expression that may be further subject to nontrivial evaluation.
 If so, it evaluates that expression, and prints the resulting value.
 The process is then repeated with the resulting value. It keeps repeating until
 evaluation throws an error, or produces a self-evaluating object.
@@ -77754,12 +77854,12 @@ On some platforms, this only works for dropping root privileges: it
 overwrites the real and saved ID only if the caller is effectively root.
 On those platforms, this approach does not drop non-root privileges.
 \*(TX tries to detect whether this approach worked by evaluating
-the C language expression
+the C-language expression
 .codn "seteuid(e)" ,
 where
 .code e
 is the previously noted effective user ID.  In other words, it
-attempts to re-gain the dropped privilege by recovering the previous
+attempts to regain the dropped privilege by recovering the previous
 effective ID. If this attempt succeeds, \*(TX immediately aborts.
 Dropping setgid privileges is similar. Where
 .code setresgid
@@ -77794,10 +77894,10 @@ running with setuid privilege. No group IDs are added to the list which
 need to be retracted when privileges are dropped. The supplementary
 groups also persist across the execution of a setuid/setgid script.
 
-.SH* STAND-ALONE APPLICATION SUPPORT
+.SH* STANDALONE APPLICATION SUPPORT
 
 The \*(TX executable image supports a general mechanism by means of which
-a custom program can be packaged as an apparent stand-alone executable.
+a custom program can be packaged as an apparent standalone executable.
 
 .SS* The Internal Argument String
 
@@ -77809,7 +77909,7 @@ represents a null-terminated UTF-8 string. In the stock executable,
 this area is filled with null bytes.
 
 If the \*(TX executable is edited such that this area is replaced
-with a non-empty, null-terminated UTF-8 string, the program will,
+with a nonempty, null-terminated UTF-8 string, the program will,
 for the purposes of command line argument processing, treat this string as if
 it were the one and only command line argument. (The original command
 line arguments are still retained in the
@@ -78069,9 +78169,9 @@ Until \*(TX 244, the
 function returned a new hash table each time it was called. The behavior is
 restored if 244 or older compatibility is selected.
 .IP 243
-Two mistakes in the pseudo-random-number generator (PRNG) were discovered,
+Two mistakes in the pseudorandom number generator (PRNG) were discovered,
 affecting \*(TX 243 and older. Using this compatibility value, or lower, will
-restore the buggy behavior, allowing pseudo-random number sequences produced
+restore the buggy behavior, allowing pseudorandom number sequences produced
 by those older versions can be reproduced. The PRNG is intended to be an
 implementation of the WELL512a PRNG described by Panneton and L'Ecuyer.
 The coding mistakes, however, resulted in the PRNG being an implementation of
@@ -78520,7 +78620,7 @@ and
 .code tok-where
 functions changed semantics. Previously, these functions exhibited the
 flaw that under some conditions they extracted an empty token immediately
-following a non-empty token. This behavior was working as designed and
+following a nonempty token. This behavior was working as designed and
 documented, but the design was flawed, creating a major difficulty in simple
 tokenizing tasks when tokens may be empty strings.  Requesting compatibility
 with version 155 or earlier restores the behavior.
@@ -78682,11 +78782,11 @@ to be used to denote a Lisp expression. This is no longer required.
 All these old behaviors are provided
 if compatibility with 142 or earlier is requested.
 .IP 139
-After \*(TX 139, changes were implemented in the area of pseudo-random
+After \*(TX 139, changes were implemented in the area of pseudorandom
 number generation. Compatibility with 139 brings back the previous
 seeding algorithm used by
 .codn make-random-state ,
-allowing the old pseudo-random sequences to be reproduced. This is only
+allowing the old pseudorandom sequences to be reproduced. This is only
 the case if the default value of 8 is used for the
 .meta warmup-period
 argument of that function (which didn't exist in 139 or earlier versions).
