@@ -945,16 +945,9 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return REGCHAR;
 }
 
-<SREGEX>. {
-  /* Allow non-UTF-8 byte for regexes scanned from string */
+<SREGEX,REGEX>. {
   yylval->chr = convert(unsigned char, yytext[0]) + 0xDC00;
   return REGCHAR;
-}
-
-<REGEX>. {
-  yyerrprepf(yyg, lit("non-UTF-8 byte in regex: '\\x~02x'"),
-             num(convert(unsigned char, yytext[0])), nao);
-  return ERRTOK;
 }
 
 <INITIAL>[ ]+ {
@@ -1128,9 +1121,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <STRLIT,CHRLIT,QSILIT,WLIT,QWLIT>. {
-  yyerrprepf(yyg, lit("non-UTF-8 byte in literal: '\\x~02x'"),
-             num(convert(unsigned char, yytext[0])), nao);
-  return ERRTOK;
+  yylval->chr = convert(unsigned char, yytext[0]) + 0xDC00;
+  return LITCHAR;
 }
 
 %%
