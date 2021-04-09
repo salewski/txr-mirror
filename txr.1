@@ -43898,7 +43898,7 @@ environment's interpretation of that value.
 
 .SS* Bit Operations
 In \*(TL, similarly to Common Lisp, bit operations on integers are based
-on a concept that might be called "infinite two's-complement".  
+on a concept that might be called "infinite two's complement".
 Under infinite two's complement, a positive number is regarded as having
 a binary representation prefixed by an infinite stream of zero digits (for
 example
@@ -43930,7 +43930,7 @@ Each one of the
 digits in the infinite sequence is replaced by
 .codn 1 ,
 And this leading sequence means that the number
-is negative, in fact corresponding to the two's-complement representation of
+is negative, in fact corresponding to the two's complement representation of
 the value
 .codn -2 .
 Hence, the infinite digit concept corresponds to an arithmetic
@@ -43939,7 +43939,7 @@ interpretation.
 In fact \*(TL's bignum integers do not use a two's complement
 representation internally. Numbers are represented as an array which holds a
 pure binary number. A separate field indicates the sign: negative,
-or non-negative.  That negative numbers appear as two's-complement under the
+or non-negative.  That negative numbers appear as two's complement under the
 bit operations is merely a carefully maintained illusion (which makes bit
 operations on negative numbers more expensive).
 
@@ -43962,7 +43962,7 @@ limit on the number of bits.
 These operations perform the familiar bitwise and, inclusive or, and exclusive
 or operations, respectively. Positive values inputs are treated as
 pure binary numbers.  Negative inputs are treated as infinite-bit
-two's-complement.
+two's complement.
 
 For example
 .code "(logand -2 7)"
@@ -43972,7 +43972,7 @@ This is because
 .code -2
 is
 .code ...111110
-in infinite-bit two's-complement.  And-ing this value with
+in infinite-bit two's complement.  And-ing this value with
 .code 7
 (or
 .codn ...000111 )
@@ -44068,7 +44068,7 @@ function truncates the integer
 to the  specified number
 of bits. If
 .meta value
-is negative, then the two's-complement representation
+is negative, then the two's complement representation
 is truncated. The return value of
 .code logtrunc
 is always a nonnegative integer.
@@ -44129,8 +44129,8 @@ A right shift by n bits of a positive integer is equivalent to integer
 division by
 .codn "(expt 2 n)" ,
 with truncation toward zero.
-For negative numbers, the bit shift is performed as if on the two's-complement
-representation. Under the infinite two's-complement representation,
+For negative numbers, the bit shift is performed as if on the two's complement
+representation. Under the infinite two's complement representation,
 a right shift does not exhaust the infinite sequence of
 .code 1
 digits which
@@ -53140,7 +53140,7 @@ which is a string.
 The
 .meta mode-string
 argument is a string which uses the same
-conventions as the mode argument of the C-language
+conventions as the mode argument of the C language
 .code fopen
 function, with greater permissiveness, and some extensions.
 
@@ -77943,7 +77943,7 @@ On some platforms, this only works for dropping root privileges: it
 overwrites the real and saved ID only if the caller is effectively root.
 On those platforms, this approach does not drop non-root privileges.
 \*(TX tries to detect whether this approach worked by evaluating
-the C-language expression
+the C language expression
 .codn "seteuid(e)" ,
 where
 .code e
