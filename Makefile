@@ -280,15 +280,10 @@ lex.yy.c: $(top_srcdir)parser.l
 
 %.tab.c %.tab.h: $(top_srcdir)parser.%
 	$(call ABBREV,YACC)
-	$(call SH,                                              \
-	  if [ -e y.tab.h ]; then mv y.tab.h y.tab.h.old ; fi)
-	$(call SH,rm -f y.tab.c)
+	$(call SH,rm -f y.tab.c y.tab.h)
 	$(call SH,                                              \
 	  if $(TXR_YACC) -v -d $< ; then                        \
 	    chmod a-w y.tab.c ;                                 \
-	    if cmp -s y.tab.h y.tab.h.old ; then                \
-	      mv y.tab.h.old y.tab.h ;                          \
-	    fi ;                                                \
 	  else                                                  \
 	    rm y.tab.c ;                                        \
 	    false ;                                             \
