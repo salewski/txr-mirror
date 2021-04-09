@@ -14382,6 +14382,81 @@ symbols in
 .code lambda
 whereas the interpreter ignores the situation.
 
+Note: it is not always necessary to use the
+.code lambda
+operator directly in order to produce an anonymous function.
+
+In situations when
+.code lambda
+is being written in order to simulate partial evaluation, it may be possible
+to instead make use of the
+.code op
+macro. For instance the function
+.code "(lambda (. args) [apply + a args])"
+which adds the values of all of its arguments together, and to the lexically
+captured variable
+.code a
+can be written more succinctly as
+.codn "(op + a)" .
+The
+.code op
+operator is the main representative of a family of operators:
+.codn lop ,
+.codn ap ,
+.codn ip ,
+.codn do ,
+.codn ado ,
+.code opip
+and
+.codn oand .
+
+In situations when functions are simply combined together, the effect
+may be achieved using some of the available functional combinators,
+instead of a
+.codn lambda .
+For instance chaining together functions as in
+.code "(lambda (x) (square (cos x)))"
+is achievable using the
+.code chain
+function:
+.codn "[chain cos square]" .
+The
+.code opip
+operator can also be used:
+.codn "(opip cos square)" .
+Numerous combinators are available; see the section Partial Evaluation and
+Combinators.
+
+When a function is needed which accesses an object, there are also
+alternatives. Instead of
+.code "(lambda (obj) obj.slot)"
+and
+.code "(lambda (obj arg) obj.(slot arg))"
+it is possible to simply the
+.code ".slot"
+and
+.code ".(slot arg)"
+notations. See the section Unbound Referencing Dot.
+Also see the functions
+.code umethod
+and
+.code uslot
+as well as the related convenience macros
+.code umeth
+and
+.codn usl .
+
+If a function is needed which partially applies some arguments
+to the method invoked on a specific object, the
+.code method
+function or
+.code meth
+macro may be used. For instance, instead of
+.codn "(lambda (arg) obj.(method 3 arg))" ,
+it is possible to write
+.code "(meth obj 3)"
+except that the latter produces a variadic function.
+
 .TP* Examples:
 .IP "Counting function:"
 This function, which takes no arguments, captures the
