@@ -818,13 +818,16 @@ var : SYMTOK                    { $$ = list(var_s, symhlpr($1, nil), nao); }
     | var_op SYMTOK             { $$ = list(var_s, symhlpr($2, nil), $1, nao); }
     | var_op '{' SYMTOK '}'     { $$ = list(var_s, symhlpr($3, nil), $1, nao); }
     | var_op '{' SYMTOK regex '}'       { $$ = nil;
+                                          free($3);
                                           yyerr("longest match "
                                                 "not useable with regex"); }
     | var_op '{' SYMTOK NUMBER '}'      { $$ = nil;
+                                          free($3);
                                           yyerr("longest match "
                                                 "not useable with "
                                                 "fixed width match"); }
     | SYMTOK error              { $$ = nil;
+                                  free($1);
                                   yybadtok(yychar, lit("variable spec")); }
     | var_op error              { $$ = nil;
                                   yybadtok(yychar, lit("variable spec")); }
@@ -856,6 +859,7 @@ o_var : SYMTOK                  { val expr = symhlpr($1, nil);
                                     val quasi_items = cons(quasi_var, nil);
                                     $$ = car(expand_quasi(quasi_items, nil)); } }
       | SYMTOK error            { $$ = nil;
+                                  free($1);
                                   yybadtok(yychar, lit("variable spec")); }
       ;
 
