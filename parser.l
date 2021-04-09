@@ -938,9 +938,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <REGEX,SREGEX>{UANYN}  {
   wchar_t wchr[8];
   if (utf8_from_buf(wchr, coerce(unsigned char *, yytext), yyleng) != 2) {
-    yyerrprepf(yyg, lit("non-UTF-8 byte in regex: '\\x~02x'"),
-               num(convert(unsigned char, yytext[0])), nao);
-    return ERRTOK;
+    yylval->lexeme = chk_strdup(wchr);
+    return TEXT;
   }
   yylval->chr = wchr[0];
   return REGCHAR;
@@ -1100,9 +1099,8 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <STRLIT,CHRLIT,QSILIT,WLIT,QWLIT>{UANYN} {
   wchar_t wchr[8];
   if (utf8_from_buf(wchr, coerce(unsigned char *, yytext), yyleng) != 2) {
-    yyerrprepf(yyg, lit("non-UTF-8 byte in literal: '\\x~02x'"),
-               num(convert(unsigned char, yytext[0])), nao);
-    return ERRTOK;
+    yylval->lexeme = chk_strdup(wchr);
+    return TEXT;
   }
   yylval->chr = wchr[0];
   return LITCHAR;

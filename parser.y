@@ -1187,6 +1187,7 @@ regterm : regterm '*'           { $$ = list(zeroplus_s, $1, nao); }
         | '-'                   { $$ = chr('-'); }
         | REGCHAR               { $$ = chr($1); }
         | regtoken              { $$ = $1; }
+        | TEXT                  { $$ = list(compound_s, string_own($1), nao); }
         | '(' regexpr ')'       { $$ = $2; }
         | '(' error             { $$ = nil;
                                   yybadtok(yychar, lit("regex subexpression")); }
@@ -1258,6 +1259,10 @@ chrlit : HASH_BACKSLASH SYMTOK  { wchar_t ch;
                                   $$ = chr(ch); }
        | HASH_BACKSLASH LITCHAR { $$ = chr($2);
                                   end_of_char(scnr); }
+       | HASH_BACKSLASH TEXT     { free($2);
+                                   yyerrorf(scnr,
+                                            lit("invalid UTF-8 used as character name"),
+                                            nao); }
        | HASH_BACKSLASH error   { $$ = nil;
                                   yybadtok(yychar,
                                              lit("character literal")); }
@@ -1278,7 +1283,6 @@ quasi_items : quasi_item                { $$ = cons($1, nil);
             ;
 
 quasi_item : litchars           { $$ = $1; }
-           | TEXT               { $$ = string_own($1); }
            | q_var              { $$ = $1; }
            | METANUM            { $$ = cons(var_s, cons($1, nil));
                                   rl($$, num(parser->lineno)); }
@@ -1292,10 +1296,14 @@ quasi_item : litchars           { $$ = $1; }
 litchars : LITCHAR              { $$ = mkstring(one, chr($1)); }
          | LITCHAR restlitchar  { val ch = mkstring(one, chr($1));
                                   $$ = string_extend(ch, $2); }
+         | TEXT                 { $$ = string_own($1); }
+         | TEXT restlitchar     { $$ = string_extend(string_own($1), $2); }
          ;
 
 restlitchar : LITCHAR                   { $$ = mkstring(one, chr($1)); }
             | restlitchar LITCHAR       { $$ = string_extend($1, chr($2)); }
+            | TEXT                      { $$ = string_own($1); }
+            | restlitchar TEXT          { $$ = string_extend($1, string_own($2)); }
             ;
 
 wordslit : '"'                  { $$ = nil; }
