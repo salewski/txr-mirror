@@ -1344,7 +1344,7 @@
         (macrolet ((comp-fun ()
                       'me.(comp-call-impl oreg env (if fbind 'call 'gcall)
                                           (if fbind fbind.loc me.(get-sidx sym))
-                                          args)))
+                                          args sym)))
           (if (and (>= olev 3)
                    (not fbind)
                    (not *load-time*)
@@ -1392,7 +1392,7 @@
                             (let ((fbind env.(lookup-fun arg t)))
                               me.(comp-call-impl oreg env (if fbind opcode gopcode)
                                                  (if fbind fbind.loc me.(get-sidx arg))
-                                                 (cdr args))))
+                                                 (cdr args) arg)))
                            ((and (consp arg) (eq (car arg) 'lambda))
                             me.(comp-fun-form oreg env ^(,sym ,arg ,*(cdr args))))
                            (t :)))
@@ -1414,7 +1414,7 @@
                  (uni ffrag.fvars cfrag.fvars)
                  (uni ffrag.ffuns cfrag.ffuns))))))
 
-(defmeth compiler comp-call-impl (me oreg env opcode freg args)
+(defmeth compiler comp-call-impl (me oreg env opcode freg args : extra-ffun)
   (let* ((aoregs nil)
          (afrags (collect-each ((arg args))
                    (let* ((aoreg me.(alloc-treg))
@@ -1422,13 +1422,16 @@
                      (if (nequal afrag.oreg aoreg)
                        me.(free-treg aoreg)
                        (push aoreg aoregs))
-                     afrag))))
+                     afrag)))
+         (fvars [reduce-left uni afrags nil .fvars])
+         (ffuns [reduce-left uni afrags nil .ffuns]))
     me.(free-tregs aoregs)
+    (when extra-ffun
+      (pushnew extra-ffun ffuns))
     (new (frag oreg
                ^(,*(mappend .code afrags)
                  (,opcode ,oreg ,freg ,*(mapcar .oreg afrags)))
-               [reduce-left uni afrags nil .fvars]
-               [reduce-left uni afrags nil .ffuns]))))
+               fvars ffuns))))
 
 (defmeth compiler comp-inline-lambda (me oreg env opcode lambda args)
   (let ((reg-args args) apply-list-arg)
