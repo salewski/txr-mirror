@@ -1742,25 +1742,21 @@ and
 .codn L_CTYPE .
 The program reads and writes only the UTF-8 encoding.
 
-If \*(TX encounters invalid bytes in the UTF-8 input, what happens depends on
-the context in which this occurs. In a query, comments are read without regard
-for encoding, so invalid encoding bytes in comments are not detected. A comment
-is simply a sequence of bytes terminated by a newline.  In lexical elements
-which represent text, such as string literals, invalid or unexpected encoding
-bytes are treated as syntax errors. The scanner issues an error message,
-then discards a byte and resumes scanning.  Certain sequences pass through the
-scanner without triggering an error, namely some overlong UTF-8 sequences.
-These are caught when when the lexeme is subject to UTF-8 decoding, and treated
-in the same manner as other UTF-8 data, described in the following paragraph.
+\*(TX deals with UTF-8 separately in its parser, and in its I/O streams
+implementation.
 
-Invalid bytes in data are treated as follows. When an invalid byte is
-encountered in the middle of a multibyte character, or if the input
-ends in the middle of a multibyte character, or if a character is extracted
-which is encoded as an overlong form, the UTF-8 decoder returns to the starting
-byte of the ill-formed multibyte character, and extracts just that byte,
-mapping it to the Unicode character range U+DC00 through U+DCFF.  The decoding
-resumes afresh at the following byte, expecting that byte to be the start
-of a UTF-8 code.
+\*(TX's text streams perform UTF-8 conversion internally,
+such that \*(TX application works with Unicode code points.
+
+In text streams, invalid UTF-8 bytes are treated as follows. When an invalid
+byte is encountered in the middle of a multibyte character, or if the input
+ends in the middle of a multibyte character, or if an invalid character is decoded,
+such as an overlong from, or code in the range U+DC00 through U+DCFF, the UTF-8
+decoder returns to the starting byte of the ill-formed multibyte character, and
+extracts just one byte, mapping that byte to the Unicode character range U+DC00
+through U+DCFF, producing that code point as the decoded result.  The decoder
+is then reset to its initial state and begins decoding at the following byte,
+where the same algorithm is repeated.
 
 Furthermore, because \*(TX internally uses a null-terminated character
 representation of strings which easily interoperates with C language
@@ -1768,6 +1764,23 @@ interfaces, when a null character is read from a stream, \*(TX converts it to
 the code U+DC00. On output, this code converts back to a null byte,
 as explained in the previous paragraph. By means of this representational
 trick, \*(TX can handle textual data containing null bytes.
+
+In contrast to the above, the \*(TX parser scans raw UTF-8 bytes from a binary
+stream, rather than using a text stream. The parser performing its own
+recognition of UTF-8 sequences in certain language constructs, using a UTF-8
+decoder only when processing certain kinds of tokens.
+
+Comments are read without regard for encoding, so invalid encoding bytes in
+comments are not detected. A comment is simply a sequence of bytes terminated
+by a newline.
+
+Invalid UTF-8 encountered while scanning identifiers and character names in
+character literal (hash-backslash) syntax is diagnosed as a syntax error.
+
+UTF-8 in string literals is treated in the same way as UTF-8 in text streams.
+Invalid UTF-8 bytes are mapped into code points in the U+DC000 through U+DCFF
+range, and incorporated as such into the resulting string object which the
+literal denotes. The same remarks apply to regular expression literals.
 
 .SS* Regular Expression Directives
 
@@ -1905,7 +1918,8 @@ Moreover, most Unicode characters beyond U+007F may appear in a
 with certain exceptions. A character may not be used if it is any of the
 Unicode space characters, a member of the high or low surrogate region,
 a member of any Unicode private use area, or is one of the two characters
-U+FFFE or U+FFFF.
+U+FFFE or U+FFFF. These situations produce a syntax error. Invalid UTF-8
+in an identifier is also a syntax error.
 
 The rule still holds that a name cannot look like a number so
 .code +123
@@ -2943,7 +2957,7 @@ numbers and not symbols.
 
 Character literals are introduced by the
 .code #\e
-syntax, which is either
+(hash-backslash) syntax, which is either
 followed by a character name, the letter
 .code x
 followed by hex digits,
@@ -3011,19 +3025,21 @@ as a delimiter. Thus,
 represents
 .strn "!;" .
 
-Note: strings in \*(TX consist of Unicode code points, not UTF-8 bytes;
-therefore the elements of a string literal notation cannot specify individual
-bytes.  Each instance of hexadecimal or octal escape specifies a code point,
-even if its value lies in the 8 bit range.
-However, when a \*(TX string is encoded to UTF-8,
-every code point in the range U+DC00 through U+DCFF is converted to a
-a single byte, by taking the low-order eight bits of its value. By manipulating
-code points in this special range, \*(TX programs can output arbitrary binary
-data into text streams. Also note that the
+Note that the source code syntax of \*(TX string literals is specified
+in UTF-8, which is decoded into an internal string representation consisting
+of code points. The numeric escape sequences are an abstract syntax for
+specifying code points, not for specifying bytes to be inserted into the
+UTF-8 representation, even if they lie in the 8 bit range. Bytes cannot be
+directly specified, other than literally.  However, when a \*(TX string object
+is encoded to UTF-8, every code point lying in the range U+DC00 through U+DCFF
+is converted to a a single byte, by taking the low-order eight bits of its
+value.  By manipulating code points in this special range, \*(TX programs can
+reproduce arbitrary byte sequences in text streams. Also note that the
 .code \eu
 escape sequence for specifying code points found in some languages is
-unnecessary and absent.  More detailed information is given in the section
-Character Handling and International Characters.
+unnecessary and absent, since the existing hexadecimal and octal escapes
+satisfy this requirement.  More detailed information is given in the earlier
+section Character Handling and International Characters.
 
 If the line ends in the middle of a literal, it is an error, unless the
 last character is a backslash. This backslash is a special escape which does
