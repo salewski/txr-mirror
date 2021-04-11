@@ -766,7 +766,6 @@ static val call_finalizers_impl(val ctx,
       if (should_call(f, ctx)) {
         *ftail = f;
         ftail = &f->next;
-        f->next = 0;
       } else {
         *tail = f;
         tail = &f->next;
@@ -775,6 +774,7 @@ static val call_finalizers_impl(val ctx,
       f = next;
     }
 
+    *ftail = 0;
     *tail = 0;
     final_tail = tail;
 
