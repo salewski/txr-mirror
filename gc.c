@@ -974,7 +974,8 @@ static val gc_wrap(val full)
 {
   if (gc_enabled) {
 #if CONFIG_GEN_GC
-    full_gc = !null_or_missing_p(full);
+    if (!null_or_missing_p(full))
+      full_gc = 1;
 #endif
     gc();
     return t;
