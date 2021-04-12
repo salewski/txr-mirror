@@ -2036,7 +2036,10 @@
                             (null pars.opt))
                        (if fix-vals
                          (if pars.rest
-                           (add ^(,pars.rest (list* ,*fix-arg-exprs ,apply-list-expr)))
+                           (add ^(,pars.rest
+                                   (list*
+                                     ,*(nthcdr pars.nfix
+                                               ^(,*fix-arg-exprs ,apply-list-expr)))))
                            (lambda-too-many-args lm-expr))
                          (when (or pars.rest apply-list-expr)
                            (add ^(,(or pars.rest ign-sym) ,apply-list-expr)))))
