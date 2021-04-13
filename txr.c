@@ -179,7 +179,7 @@ static void banner(void)
   format(std_output,
          if3(opt_noninteractive,
              lit("This is the TXR Lisp plain mode listener of TXR ~a.\n"
-                 "Quit wth :quit or Ctrl-D on an empty line.\n"),
+                 "Quit with :quit or Ctrl-D on an empty line.\n"),
              lit("This is the TXR Lisp interactive listener of TXR ~a.\n"
                  "Quit with :quit or Ctrl-D on an empty line. "
                  "Ctrl-X ? for cheatsheet.\n")),
