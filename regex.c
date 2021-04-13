@@ -2875,10 +2875,11 @@ val regsub(val regex, val repl, val str)
     {
       val rf = from(range);
       val rt = to(range);
+      val scopy = copy_str(str);
 
-      return replace_str(str, if3(isfunc,
-                                  funcall1(repl, sub_str(str, rf, rt)),
-                                  repl),
+      return replace_str(scopy, if3(isfunc,
+                                    funcall1(repl, sub_str(scopy, rf, rt)),
+                                    repl),
                          rf, rt);
     }
   } else {
