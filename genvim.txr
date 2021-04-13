@@ -170,7 +170,9 @@ hi def link txr_ncomment Comment
 hi def link txr_hashbang Preproc
 hi def link txr_contin Preproc
 hi def link txr_char String
+@  (if txr-p)
 hi def link txr_keyword Keyword
+@  (end)
 hi def link tl_keyword Type
 hi def link txr_string String
 hi def link txr_chr String
