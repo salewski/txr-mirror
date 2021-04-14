@@ -3134,17 +3134,23 @@ static val v_gather(match_files_ctx *c)
 
   if (have_vars) {
     val iter;
+    val missing = nil;
 
     for (iter = vars; iter != nil; iter = cdr(iter)) {
       cons_bind (var, dfl_val, car(iter));
       if (!tx_lookup_var(var, c->bindings)) {
         if (dfl_val == noval_s) {
-          debuglf(specline, lit("gather failed to match some required vars"), nao);
-          return nil;
+          push(var, &missing);
         } else {
           c->bindings = acons(var, dfl_val, c->bindings);
         }
       }
+    }
+
+    if (missing) {
+      debuglf(specline, lit("gather failed to match required vars ~s"),
+              missing, nao);
+      return nil;
     }
 
     debuglf(specline, lit("gather matched all required vars"), nao);
