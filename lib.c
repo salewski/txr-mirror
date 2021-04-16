@@ -13098,3 +13098,16 @@ void d(val obj)
 void breakpt(void)
 {
 }
+
+/*
+ * Function for dissembling VM functions
+ * when debugging in gdb.
+ */
+
+void dis(val obj)
+{
+  val sym = intern(lit("disassemble"), user_package);
+  val fun = cdr(if2(sym, lookup_fun(nil, sym)));
+  if (fun)
+    funcall1(fun, obj);
+}

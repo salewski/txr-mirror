@@ -1217,6 +1217,7 @@ int compat_fixup(int compat_ver);
 void dump(val obj, val stream);
 void d(val obj);
 void breakpt(void);
+void dis(val obj);
 
 #define nil convert(obj_t *, 0)
 
