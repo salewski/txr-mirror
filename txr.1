@@ -55154,12 +55154,14 @@ printing the
 (three dots) character sequence as if it were an additional element.
 This sequence is an invalid token; it cannot be read as input.
 
-When a character string is printed, any positive value of
-the maximum length which is less than 15 is considered to be 15.
-The maximum length specifies the number of characters of the
-a string which are output.
+When a character string is printed, and the maximum length parameter
+is nonzero, a maximum character count is determined as follows.
+Firstly, if the maximum length value is less than 3, it is taken
+to be 3. Then it is multiplied by 8. Thus, a maximum length
+of 10 allows 80 characters, whereas a maximum length of 1
+allows 24 characters.
 
-If a string which exceeds the maximum length is being printed
+If a string which exceeds the maximum number of characters is being printed
 with read-print consistency, as by the
 .code print
 function, then only a prefix of the string is printed, limited
@@ -55171,7 +55173,7 @@ whose leading invalid escape sequence
 .code \e.
 (backslash, dot) ensures that the truncated object is not readable.
 
-If a string which exceeds the maximum length is being printed
+If a string which exceeds the maximum number of characters is being printed
 without read-print consistency, as by the
 .code pprint
 function, then only a prefix of the string is printed, limited
@@ -55184,17 +55186,16 @@ Quasiliterals are treated using a combination of behaviors.  Elements of a
 quasiliteral are literal sequence of text, and embedded variables and
 expressions.  The maximum length specifies both the maximum number of elements
 in the quasiliteral, and the maximum number of characters in any element which
-is a sequence of text. When either limit is exceeded, the quasiliteral
-is immediately terminated with the sequence
+is a sequence of text. When either limit is exceeded, the
+quasiliteral is immediately terminated with the sequence
 .code \e...`
-(escaped dot, dot, dot, backtick). The maximum limit is applied to
+(escaped dot, dot, dot, backtick). The maximum character limit is applied to
 the units of text cumulatively, rather than individually. As in the case of
-string literals, smaller limit values than 15 are treated as 15,
-but only for the cumulative text length limit. For limiting the number of
-elements, the count is used as-is.
+string literals, the limit is determined by multiplying the length by 8, and
+clamping at a minimum value of 24.
 
 When a QLL is printed, the space-separated elements
-of the literal are individually subject to the maximum length limit as if
+of the literal are individually subject to the maximum character limit as if
 they were independent quasiliterals. Furthermore, the sequence of these
 elements is subject to the maximum length. If there are more elements in the
 QLL, then the sequence

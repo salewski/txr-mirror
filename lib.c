@@ -8657,6 +8657,11 @@ val lazy_str_force(val lstr)
   return lstr->ls.prefix;
 }
 
+INLINE cnum max_str_chars(cnum max_len)
+{
+  return max_len < INT_PTR_MAX / 8 ? 8 * max(3, max_len) : INT_PTR_MAX;
+}
+
 val lazy_str_put(val lstr, val stream, struct strm_base *s)
 {
   val self = lit("lazy-str-put");
@@ -8664,7 +8669,7 @@ val lazy_str_put(val lstr, val stream, struct strm_base *s)
   val term = lstr->ls.props->term;
   val iter;
   cnum max_len = s->max_length;
-  cnum max_chr = if3(max_len, max(max_len, 15), 0);
+  cnum max_chr = max_len ? max_str_chars(max_len) : 0;
 
   put_string(lstr->ls.prefix, stream);
 
@@ -8679,7 +8684,7 @@ val lazy_str_put(val lstr, val stream, struct strm_base *s)
         put_string(sub_str(str, zero, num(max_chr)), stream);
         goto max_reached;
       }
-      if (--max_len == 0)
+      if (--max_chr == 0)
         goto max_reached;
       max_chr -= c_num(length_str(str), self);
     }
@@ -12189,7 +12194,7 @@ static void out_lazy_str(val lstr, val out, struct strm_base *strm)
   val iter;
   const wchar_t *wcterm;
   cnum max_len = strm->max_length;
-  cnum max_chr = if3(max_len, max(max_len, 15), 0);
+  cnum max_chr = max_len ? max_str_chars(max_len) : 0;
 
   wcterm = c_str(term);
 
@@ -12208,7 +12213,7 @@ static void out_lazy_str(val lstr, val out, struct strm_base *strm)
         out_str_readable(c_str(sub_str(str, zero, num(max_chr))), out, &semi_flag);
         goto max_reached;
       }
-      if (--max_len == 0)
+      if (--max_chr == 0)
         goto max_reached;
       max_chr -= c_num(length_str(str), self);
     }
@@ -12261,9 +12266,7 @@ static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
   val self = lit("print");
   val iter, next;
   cnum max_len = ctx->strm->max_length, max_count = max_len;
-
-  if (max_len)
-    max_len = max(15, max_len);
+  cnum max_chr = max_len ? max_str_chars(max_len) : 0;
 
   for (iter = cdr(args); iter; iter = next) {
     val elem = car(iter);
@@ -12271,14 +12274,14 @@ static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
 
     if (stringp(elem)) {
       int semi_flag = 0;
-      if (max_len && length_str_gt(elem, num(max_len))) {
-        out_str_readable(c_str(sub_str(elem, zero, num(max_len))), out, &semi_flag);
+      if (max_len && length_str_gt(elem, num(max_chr))) {
+        out_str_readable(c_str(sub_str(elem, zero, num(max_chr))), out, &semi_flag);
         goto max_exceeded;
       } else {
         out_str_readable(c_str(elem), out, &semi_flag);
         if (max_len) {
-          max_len -= c_num(length(elem), self);
-          if (max_len == 0) {
+          max_chr -= c_num(length(elem), self);
+          if (max_chr == 0) {
             goto max_reached;
           }
         }
@@ -12596,23 +12599,23 @@ dot:
   case STR:
     {
       cnum max_length = ctx->strm->max_length;
-      cnum eff_max_length = max(15, max_length);
+      cnum max_chr = max_str_chars(max_length);
 
       if (pretty) {
-        if (!max_length || le(length_str(obj), num(eff_max_length))) {
+        if (!max_length || le(length_str(obj), num(max_chr))) {
           put_string(obj, out);
         } else {
-          put_string(sub_str(obj, zero, num(eff_max_length)), out);
+          put_string(sub_str(obj, zero, num(max_chr)), out);
           put_string(lit("..."), out);
         }
       } else {
         int semi_flag = 0;
         put_char(chr('"'), out);
 
-        if (!max_length || le(length_str(obj), num(eff_max_length))) {
+        if (!max_length || le(length_str(obj), num(max_chr))) {
           out_str_readable(c_str(obj), out, &semi_flag);
         } else {
-          out_str_readable(c_str(sub_str(obj, zero, num(eff_max_length))),
+          out_str_readable(c_str(sub_str(obj, zero, num(max_chr))),
                            out, &semi_flag);
           put_string(lit("\\..."), out);
         }
