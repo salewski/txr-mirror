@@ -68,4 +68,9 @@ extern val break_obj;
 #define FREE      0x200
 
 INLINE val zap(volatile val *loc) { val ret = *loc; *loc = nil; return ret; }
+
+#if CONFIG_ZAP_DEAD_LOCATIONS
 #define z(lvalue) zap(&lvalue)
+#else
+#define z(lvalue) (lvalue)
+#endif
