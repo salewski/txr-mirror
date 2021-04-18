@@ -40271,6 +40271,25 @@ one for each list position. This is because macro-style parameter lists are
 oriented toward writing macros, and macros usually make use of every parameter
 position.
 
+.NP* Application-defined Patterns
+
+Application-defined pattern operators are possible. When the
+.meta operator
+symbol in the
+.mono
+.meti >> @( operator << argument *)
+.onom
+syntax doesn't match any built-in operator, a search takes
+place to determine whether
+.meta operator
+is a pattern macro. If so, the pattern macro is expanded, and
+its result of the expansion treated as a pattern to process recursively,
+unless it is the original macro form, in which case it is treated
+as a predicate pattern. Application-defined pattern macros are defined
+using the
+.code defmatch
+macro.
+
 .SS* Pattern Matching Notation
 
 The pattern-matching notation is documented in the following
@@ -41136,9 +41155,14 @@ operator.
 .mets >> @(@ rvar >> ( function << arg * . <> @ avar ))
 .syne
 .desc
-Whenever the operator position of a pattern consists of a symbol which is not
-the name of a pattern operator, the expression denotes a predicate pattern,
-expected to conform to one of the first three syntax variations above.
+Whenever the operator position of a pattern consists of a symbol which is
+neither the name of a pattern operator, nor the name of a macro, the expression
+denotes a predicate pattern. An expression is also a predicate pattern if
+it is handled by a pattern macro which declines to expand it by yielding
+the original expression.
+
+An operator pattern is expected to conform to one of the first three
+syntactic variations above.
 Together, these three variations constitute the
 .I "first form"
 of the pattern predicate operator.
@@ -41809,6 +41833,73 @@ in which case it inserts its own generated symbol.
   --> #S(general-widget name "abc" frobosity nil luminance 9
                         width 0 height 0)
 .brev
+
+.coNP Macro @ defmatch
+.synb
+.mets (defmatch < name < macro-style-params
+.mets \ \  << body-form *)
+.syne
+.desc
+The
+.code defmatch
+macro allows for the definition of pattern macros: application-defined pattern
+operators which are implemented via expansion into existing operator syntax.
+
+The
+.code defmatch
+macro has the same syntax as
+.codn defmacro .
+It specifies a macro transformation for a compound form which has the
+.meta name
+symbol in its leftmost position.
+
+This macro transformation is performed when
+.meta name
+is used as a pattern operator: an expression of the form
+.mono
+.meti >> @( name << argument *)
+.onom
+occurring in pattern matching syntax.
+
+The behavior is unspecified if
+.meta name
+is the name a built-in pattern operator, or a predefined pattern macro.
+
+The pattern macro bindings are stored in a hash table held by the variable
+.code *match-macro*
+whose keys are symbols, and whose values are expander functions.
+There are no lexically scoped pattern macros.
+
+.TP* Example:
+
+.verb
+  ;; Create an alias called let for the @(as var pattern) operator:
+  ;; Note that the macro produces @(as ...) and not just (as ...)
+
+  (defmatch let (var pattern)
+    ^@(as ,var ,pattern))
+
+  ;; use the macro in matching:
+  (when-match @(let x @(or foo bar)) 'foo x)
+.brev
+
+.coNP Special variable @ *match-macro*
+.desc
+The
+.code *match-macro*
+special variable holds the hash table of associations between
+symbols and pattern macro expanders.
+
+If the expression
+.code "[*place-macro* 'sym]"
+yields a function, then symbol
+.code sym
+has a binding as a pattern macro. If that
+expression yields
+.codn nil ,
+then there is no such binding: pattern operator forms based on
+.code sym
+do not undergo place macro expansion.
 
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote

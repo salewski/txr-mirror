@@ -26,6 +26,8 @@
 
 (defvar *match-form*)
 
+(defvar *match-macro* (hash))
+
 (defstruct match-guard ()
   temps
   vars
@@ -541,21 +543,27 @@
          (sys:expr
            (let ((exp (cadr pat)))
              (if (consp exp)
-               (caseq (car exp)
-                 (struct (compile-struct-match exp obj-var var-list))
-                 (require (compile-require-match exp obj-var var-list))
-                 (usr:as (compile-as-match exp obj-var var-list))
-                 (usr:with (compile-with-match exp obj-var var-list))
-                 (all (compile-loop-match exp obj-var var-list))
-                 (usr:all* (compile-loop-match exp obj-var var-list))
-                 (some (compile-loop-match exp obj-var var-list))
-                 (coll (compile-loop-match exp obj-var var-list))
-                 (or (compile-or-match exp obj-var var-list))
-                 (and (compile-and-match exp obj-var var-list))
-                 (not (compile-not-match exp obj-var var-list))
-                 (hash (compile-hash-match exp obj-var var-list))
-                 (exprs (compile-exprs-match exp obj-var var-list))
-                 (t (compile-predicate-match exp obj-var var-list)))
+               (let ((op (car exp)))
+                 (caseq op
+                   (struct (compile-struct-match exp obj-var var-list))
+                   (require (compile-require-match exp obj-var var-list))
+                   (usr:as (compile-as-match exp obj-var var-list))
+                   (usr:with (compile-with-match exp obj-var var-list))
+                   (all (compile-loop-match exp obj-var var-list))
+                   (usr:all* (compile-loop-match exp obj-var var-list))
+                   (some (compile-loop-match exp obj-var var-list))
+                   (coll (compile-loop-match exp obj-var var-list))
+                   (or (compile-or-match exp obj-var var-list))
+                   (and (compile-and-match exp obj-var var-list))
+                   (not (compile-not-match exp obj-var var-list))
+                   (hash (compile-hash-match exp obj-var var-list))
+                   (exprs (compile-exprs-match exp obj-var var-list))
+                   (t (iflet ((xfun [*match-macro* op]))
+                        (let ((xexp [xfun exp]))
+                          (if (neq xexp exp)
+                            (compile-match xexp obj-var var-list)
+                            (compile-predicate-match exp obj-var var-list)))
+                        (compile-predicate-match exp obj-var var-list)))))
                (compile-error *match-form*
                               "unrecognized pattern syntax ~s" pat))))
          (sys:var (compile-var-match (cadr pat) obj-var var-list))
@@ -716,6 +724,16 @@
                       dashdash
                       (nthlast 0 lparams))
               body)))))
+
+(defmacro defmatch (name destructuring-args . body)
+  (with-gensyms (name-dummy args)
+    ^(progn
+       (sethash *match-macro* ',name
+                (lambda (,args)
+                  (mac-param-bind ,args
+                                  (,name-dummy ,*destructuring-args)
+                                  ,args ,*body)))
+       ',name)))
 
 (defun non-triv-pat-p (syntax) t)
 
