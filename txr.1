@@ -41041,6 +41041,70 @@ operator.
   -> ((2 4) (b d))
 .brev
 
+.coNP Pattern operator @ scan
+.synb
+.mets @(scan << pattern )
+.syne
+.desc
+The
+.code scan
+operator matches
+.meta pattern
+against the corresponding object. If the match fails, and the object
+is a
+.code cons
+cell, the match is tried on the
+.code cdr
+of the cons cell. The
+.code cdr
+traversal repeats until a successful match is found,
+or a match failure occurs against against an atom.
+
+Thus, a list object, possibly improper, matches
+.meta pattern
+under
+.code scan
+if any suffix of that object matches.
+
+.TP* Examples:
+
+.verb
+  ;; mismatch: 1 doesn't match 2
+  (when-match @(scan 2) 1 t) -> t
+
+  ;; simple atom match: 42 matches 42
+  (when-match @(scan 42) 42 t) -> t
+
+  ;; (2 3) is a sublist of (1 2 3 4)
+  (when-match @(scan (2 3 . @nil)) '(1 2 3 4) t) -> t
+
+  ;; (2 @x 4 . @nil) matches (2 3 4), binding x to 3:
+  (when-match @(scan (2 @x 4 . @nil)) '(1 2 3 4 5) x) -> 3
+
+  ;; The entire matching suffix can be captured.
+  (when-match @(scan @(as sfx (2 @x 4 . @nil)))
+               '(1 2 3 4 5)
+    sfx)
+  -> (2 3 4 5)
+
+  ;; Missing . @nil in pattern anchors search to end:
+  (when-match @(scan (@x 2))
+               '(1 2 3 2 4 2)
+    x)
+
+  ;; Terminating atom anchors to improper end:
+  (when-match @(scan (@x . 4))
+               '(1 2 3 . 4)
+    x)
+  -> 3
+
+  ;; Atom pattern matches only terminating atom
+  (when-match @(scan #(@x @y))
+               '(1 2 3 . #(4 5))
+    (list x y))
+  -> (4 5)
+.brev
+
 .coNP Pattern operators @ and and @ or
 .synb
 .mets @(and << pattern *)

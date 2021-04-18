@@ -520,6 +520,26 @@
            obj-var obj-var
            guard-chain (cons guard (mappend .guard-chain hash-matches))))))
 
+(defun compile-scan-match (scan-syntax obj-var var-list)
+  (mac-param-bind *match-form* (op pattern) scan-syntax
+    (with-gensyms (iter found-p cont-p success-p)
+      (let* ((cm (compile-match pattern iter var-list))
+             (loop ^(for ((,iter ,obj-var) (,cont-p t) ,found-p)
+                         (,cont-p ,found-p)
+                         ((cond
+                            ((null ,cont-p))
+                            ((consp ,iter) (set ,iter (cdr ,iter)))
+                            (t (zap ,cont-p))))
+                       ,cm.(wrap-guards ^(set ,found-p t ,cont-p nil))))
+             (guard (new match-guard
+                         vars (cons success-p cm.(get-vars))
+                         var-exprs (list loop)
+                         test-expr success-p)))
+      (new compiled-match
+           pattern scan-syntax
+           obj-var obj-var
+           guard-chain (list guard))))))
+
 (defun compile-exprs-match (exprs-syntax uexprs var-list)
   (let ((upats (cdr exprs-syntax))
         (utemps (mapcar (ret (gensym)) uexprs)))
@@ -557,6 +577,7 @@
                    (and (compile-and-match exp obj-var var-list))
                    (not (compile-not-match exp obj-var var-list))
                    (hash (compile-hash-match exp obj-var var-list))
+                   (usr:scan (compile-scan-match exp obj-var var-list))
                    (exprs (compile-exprs-match exp obj-var var-list))
                    (t (iflet ((xfun [*match-macro* op]))
                         (let ((xexp [xfun exp]))
