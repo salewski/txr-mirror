@@ -460,13 +460,21 @@ void termios_init(void)
   reg_varl(intern(lit("ocrnl"), user_package), num_fast(OCRNL));
   reg_varl(intern(lit("onocr"), user_package), num_fast(ONOCR));
   reg_varl(intern(lit("onlret"), user_package), num_fast(ONLRET));
+#ifdef OFILL
   reg_varl(intern(lit("ofill"), user_package), num_fast(OFILL));
+#endif
 #ifdef OFDEL
   reg_varl(intern(lit("ofdel"), user_package), num_fast(OFDEL));
 #endif
+#ifdef VTDLY
   reg_varl(intern(lit("vtdly"), user_package), num_fast(VTDLY));
+#endif
+#ifdef VT0
   reg_varl(intern(lit("vt0"), user_package), num_fast(VT0));
+#endif
+#ifdef VT1
   reg_varl(intern(lit("vt1"), user_package), num_fast(VT1));
+#endif
 #ifdef NLDLY
   reg_varl(intern(lit("nldly"), user_package), num_fast(NLDLY));
   reg_varl(intern(lit("nl0"), user_package), num_fast(NL0));

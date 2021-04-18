@@ -26,6 +26,7 @@
  */
 
 #define UTF8_DECL_OPENDIR
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -2553,25 +2554,35 @@ void sysif_init(void)
   reg_varl(intern(lit("emfile"), user_package), num_fast(EMFILE));
   reg_varl(intern(lit("emlink"), user_package), num_fast(EMLINK));
   reg_varl(intern(lit("emsgsize"), user_package), num_fast(EMSGSIZE));
+#ifdef EMULTIHOP
   reg_varl(intern(lit("emultihop"), user_package), num_fast(EMULTIHOP));
+#endif
   reg_varl(intern(lit("enametoolong"), user_package), num_fast(ENAMETOOLONG));
   reg_varl(intern(lit("enetdown"), user_package), num_fast(ENETDOWN));
   reg_varl(intern(lit("enetreset"), user_package), num_fast(ENETRESET));
   reg_varl(intern(lit("enetunreach"), user_package), num_fast(ENETUNREACH));
   reg_varl(intern(lit("enfile"), user_package), num_fast(ENFILE));
   reg_varl(intern(lit("enobufs"), user_package), num_fast(ENOBUFS));
+#ifdef ENODATA
   reg_varl(intern(lit("enodata"), user_package), num_fast(ENODATA));
+#endif
   reg_varl(intern(lit("enodev"), user_package), num_fast(ENODEV));
   reg_varl(intern(lit("enoent"), user_package), num_fast(ENOENT));
   reg_varl(intern(lit("enoexec"), user_package), num_fast(ENOEXEC));
   reg_varl(intern(lit("enolck"), user_package), num_fast(ENOLCK));
+#ifdef ENOLINK
   reg_varl(intern(lit("enolink"), user_package), num_fast(ENOLINK));
+#endif
   reg_varl(intern(lit("enomem"), user_package), num_fast(ENOMEM));
   reg_varl(intern(lit("enomsg"), user_package), num_fast(ENOMSG));
   reg_varl(intern(lit("enoprotoopt"), user_package), num_fast(ENOPROTOOPT));
   reg_varl(intern(lit("enospc"), user_package), num_fast(ENOSPC));
+#ifdef ENOSR
   reg_varl(intern(lit("enosr"), user_package), num_fast(ENOSR));
+#endif
+#ifdef ENOSTR
   reg_varl(intern(lit("enostr"), user_package), num_fast(ENOSTR));
+#endif
   reg_varl(intern(lit("enosys"), user_package), num_fast(ENOSYS));
   reg_varl(intern(lit("enotconn"), user_package), num_fast(ENOTCONN));
   reg_varl(intern(lit("enotdir"), user_package), num_fast(ENOTDIR));
@@ -2589,7 +2600,9 @@ void sysif_init(void)
   reg_varl(intern(lit("eownerdead"), user_package), num_fast(EOWNERDEAD));
 #endif
   reg_varl(intern(lit("eperm"), user_package), num_fast(EPERM));
+#ifdef EPIPE
   reg_varl(intern(lit("epipe"), user_package), num_fast(EPIPE));
+#endif
   reg_varl(intern(lit("eproto"), user_package), num_fast(EPROTO));
   reg_varl(intern(lit("eprotonosupport"), user_package), num_fast(EPROTONOSUPPORT));
   reg_varl(intern(lit("eprototype"), user_package), num_fast(EPROTOTYPE));
@@ -2598,7 +2611,9 @@ void sysif_init(void)
   reg_varl(intern(lit("espipe"), user_package), num_fast(ESPIPE));
   reg_varl(intern(lit("esrch"), user_package), num_fast(ESRCH));
   reg_varl(intern(lit("estale"), user_package), num_fast(ESTALE));
+#ifdef ETIME
   reg_varl(intern(lit("etime"), user_package), num_fast(ETIME));
+#endif
   reg_varl(intern(lit("etimedout"), user_package), num_fast(ETIMEDOUT));
   reg_varl(intern(lit("etxtbsy"), user_package), num_fast(ETXTBSY));
   reg_varl(intern(lit("ewouldblock"), user_package), num_fast(EWOULDBLOCK));

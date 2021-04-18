@@ -35,6 +35,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/socket.h>
 #include <sys/un.h>
 #include <netdb.h>
 #include "config.h"
@@ -1156,8 +1157,12 @@ void sock_load_init(void)
   reg_varl(intern(lit("ai-passive"), user_package), num_fast(AI_PASSIVE));
   reg_varl(intern(lit("ai-canonname"), user_package), num_fast(AI_CANONNAME));
   reg_varl(intern(lit("ai-numerichost"), user_package), num_fast(AI_NUMERICHOST));
+#ifdef AI_V4MAPPED
   reg_varl(intern(lit("ai-v4mapped"), user_package), num_fast(AI_V4MAPPED));
+#endif
+#ifdef AI_ALL
   reg_varl(intern(lit("ai-all"), user_package), num_fast(AI_ALL));
+#endif
   reg_varl(intern(lit("ai-addrconfig"), user_package), num_fast(AI_ADDRCONFIG));
   reg_varl(intern(lit("ai-numericserv"), user_package), num_fast(AI_NUMERICSERV));
 #endif
