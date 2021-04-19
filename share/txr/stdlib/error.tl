@@ -39,7 +39,10 @@
          (loc (sys:loc nctx))
          (name (sys:ctx-name nctx)))
     (dump-deferred-warnings *stderr*)
-    (throwf 'eval-error `@loc: ~s: @fmt` name . args)))
+    (let ((msg (fmt `@loc: ~s: @fmt` name . args)))
+      (when *load-recursive*
+        (put-line msg *stderr*))
+      (throw 'eval-error msg))))
 
 (defun compile-warning (ctx fmt . args)
   (let* ((nctx (sys:dig ctx))

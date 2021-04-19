@@ -39,3 +39,10 @@
   (caseql (os-symbol)
     ((:linux :solaris :macos :android) (dlopen nil))
     ((:cygwin) (dlopen "cygwin1.dll"))))
+
+(defmacro macro-time-let (:env env bindings . body)
+  (with-gensyms (invoke)
+    ^(macrolet ((,invoke ()
+                  (let ,bindings
+                     (expand '(progn ,*body) ,env))))
+       (,invoke))))
