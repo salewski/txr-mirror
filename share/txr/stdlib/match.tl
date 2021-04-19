@@ -751,7 +751,7 @@
     ^(progn
        (sethash *match-macro* ',name
                 (lambda (,args)
-                  (mac-param-bind ,args
+                  (mac-param-bind *match-form*
                                   (,name-dummy ,*destructuring-args)
                                   ,args ,*body)))
        ',name)))

@@ -41934,6 +41934,19 @@ The pattern macro bindings are stored in a hash table held by the variable
 whose keys are symbols, and whose values are expander functions.
 There are no lexically scoped pattern macros.
 
+If a
+.code defmatch
+macro uses the
+.code :form
+parameter to gain access to the form, what the parameter retrieves
+is the pattern matching form, or a constituent thereof, in which the
+the macro is being invoked. For instance, if the operator is being used
+inside a pattern given to a
+.code when-match
+macro invocation, then the form will be that entire
+.code when-match
+form.
+
 .TP* Example:
 
 .verb
@@ -41945,6 +41958,15 @@ There are no lexically scoped pattern macros.
 
   ;; use the macro in matching:
   (when-match @(let x @(or foo bar)) 'foo x)
+
+  ;; Error reporting example using :form
+
+  (defmatch foo (sym)
+    (unless (bindable sym)
+      (compile-error *match-form*
+                     "~s: bindable symbol expected, not ~s"
+                     'foo sym))
+    ...)
 .brev
 
 .coNP Special variable @ *match-macro*
