@@ -279,8 +279,7 @@
 
 (defun sys:new-expander (op form spec pairs)
   (when (oddp (length pairs))
-    (compile-error form
-                   "~s: slot initform arguments must occur pairwise" op))
+    (compile-error form "slot initform arguments must occur pairwise"))
   (let ((qpairs (mappend (aret ^(',@1 ,@2)) (tuples 2 pairs))))
     (tree-case spec
       ((texpr . args)
