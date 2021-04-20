@@ -428,7 +428,7 @@ typedef struct wli wchli_t;
 #if LIT_ALIGN < 4
 #define wli_noex(lit) (coerce(const wchli_t *,\
                               convert(const wchar_t *,\
-                                      "\0" L ## lit L"\0" + 1)))
+                                      L"\0" L ## lit L"\0" + 1)))
 #define wini(ini) L"\0" L ## ini L"\0"
 #define wref(arr) ((arr) + 1)
 #else
