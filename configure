@@ -1131,7 +1131,7 @@ fi
 #
 
 printf "Checking for Apple environment ... "
-if [ "$(make conftest.darwin)" = "yes" ] ; then
+if [ "$($make conftest.darwin)" = "yes" ] ; then
   printf "yes\n"
   darwin_target=y
   lang_flags="$lang_flags -D_DARWIN_C_SOURCE"
@@ -1145,7 +1145,7 @@ fi
 if ! [ $darwin_target ] ; then
   printf "Checking for Android environment ... "
 
-  if [ "$(make conftest.android)" = "yes" ] ; then
+  if [ "$($make conftest.android)" = "yes" ] ; then
     printf "yes\n"
     android_target=y
     lang_flags="$lang_flags -D__ANDROID_API__=65535 -D_BSD_SOURCE"
@@ -1707,7 +1707,7 @@ if [ $maintainer ] ; then
   if [ -z "$lex_given" -a -z "$lexname_given" ] ; then
     for lexname in '$(LEX)' "lex" "flex" "" ; do
       rm -f lex.yy.c
-      if make lexname="$lexname" lex.yy.c > /dev/null 2>&1; then
+      if $make lexname="$lexname" lex.yy.c > /dev/null 2>&1; then
         break;
       fi
     done
@@ -1717,7 +1717,7 @@ if [ $maintainer ] ; then
     fi
   else
     rm -f lex.yy.c
-    if ! make lexname="$lexname" lex.yy.c > /dev/null 2>&1; then
+    if ! $make lexname="$lexname" lex.yy.c > /dev/null 2>&1; then
       printf "error\n\n"
       printf 'values --lexname="%s" --lex="%s" are not working\n\n' "$lexname" "$lex"
       printf 'A GNU Flex compatible lex is required\n\n'
