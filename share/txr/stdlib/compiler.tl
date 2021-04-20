@@ -2180,7 +2180,7 @@
 
     (unless out-stream
       (close-stream in-stream)
-      (error "~s: unable to open output file ~s" 'compile-file in-stream))
+      (error "~s: unable to open output file ~s" 'compile-file out-path))
 
     (list in-stream out-stream out-path)))
 
