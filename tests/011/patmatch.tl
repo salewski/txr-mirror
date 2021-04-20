@@ -314,3 +314,10 @@
       (2 (3 5)))
 
 (test (when-match @(sme () () 5) 5 t) t)
+
+(test (when-match @(end 3 x) 3 x) 3)
+(test (when-match @(end (2 @x) y) '(1 2 3) (list x y)) (3 (2 3)))
+(test (when-match @(end (2 . @x) y) '(1 2 . 3) (list x y)) (3 (2 . 3)))
+
+(test (when-match @(as z @(end (2 @x) y)) '(1 2 3) (list x y z))
+      (3 (2 3) (1 2 3)))

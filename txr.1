@@ -41481,6 +41481,64 @@ then the match isn't possible.
   (when-match @(sme () () 5) 5 t) -> t
 .brev
 
+.coNP Pattern macro @ end
+.synb
+.mets @(end < pattern <> [ var ])
+.syne
+.desc
+The pattern macro
+.code end
+is a notation defined using the
+.code defmatch
+macro, which matches
+.meta pattern
+against the suffix of a corresponding list object,
+which may be an improper list or atom.
+
+The optional argument
+.meta var
+specifies the name of a variable which captures the matched portion of the
+object.
+
+The
+.code end
+macro is related to the
+.code sme
+macro according to the following equivalence:
+
+.verb
+  @(end pat var)  <-->  @(sme () () pat : : var)
+.brev
+
+All of the requirements given for
+.code sme
+apply accordingly.
+
+.TP* Examples:
+
+.verb
+  ;; atom match
+  (when-match @(end 3 x) 3 x) -> 3
+
+  ;; y captures (2 3)
+  (when-match @(end (2 @x) y)
+             '(1 2 3)
+    (list x y))
+  -> (3 (2 3))
+
+  ;; variable in dot position
+  (when-match @(end (2 . @x) y)
+              '(1 2 . 3)
+    (list x y))
+  -> (3 (2 . 3))
+
+  ;; z captures entire object
+  (when-match @(as z @(end (2 @x) y))
+             '(1 2 3)
+    (list x y z))
+  -> (3 (2 3) (1 2 3)))
+.brev
+
 .SS* Pattern Matching Macros
 
 .coNP Macros @ when-match and @ if-match
