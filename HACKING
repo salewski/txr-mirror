@@ -5,44 +5,43 @@ CONTENTS:
 
 SECTION                                                                    LINE
 
-0.       Overview                                                            48
+0.       Overview                                                            47
 
-1.       Coding Practice                                                     55
-1.2      Program File Structure                                              78
-1.3      Style                                                               92
-1.3      Error Handling                                                     154
-1.4      I/O                                                                167
-1.5      Type Safety                                                        177
-1.6      Regression                                                         219
+1.       Coding Practice                                                     54
+1.2      Program File Structure                                              77
+1.3      Style                                                               91
+1.3      Error Handling                                                     153
+1.4      I/O                                                                166
+1.5      Type Safety                                                        176
+1.6      Regression                                                         218
 
-2.       Dynamic Types                                                      228
-2.1      Two Kinds of Values                                                235
-2.1      Pointer Bitfield                                                   246
-2.2      Heap Objects                                                       269
-2.3      The COBJ type                                                      289
-2.4      Strings                                                            306
-2.4.1    Encapsulated C Strings                                             321
-2.4.2    Representation Hacks for 2-byte wchar_t                            365
-2.4.3    Representation hacks for 4-byte wchar_t that is 2-byte aligned                  423
+2.       Dynamic Types                                                      227
+2.1      Two Kinds of Values                                                234
+2.1      Pointer Bitfield                                                   245
+2.2      Heap Objects                                                       268
+2.3      The COBJ type                                                      288
+2.4      Strings                                                            305
+2.4.1    Encapsulated C Strings                                             320
+2.4.2    Representation Hacks for 2-byte wchar_t                            364
 
-3.       Garbage Collection                                                 433
-3.1      Root Pointers                                                      451
-3.2      GC-safe Code                                                       474
-3.2.1    Rule One: Full Initialization                                      500
-3.2.2    Rule Two: Make it Reachable                                        529
-3.3      Weak Reference Support                                             717
-3.4      Finalization                                                       760
-3.5      Generational GC                                                    784
-3.5.2    Representation of Generations                                      793
-3.5.3    Basic Algorithm                                                    829
-3.5.4    Handling Backpointers                                              864
-3.5.5    Generational GC and Finalization                                   942
+3.       Garbage Collection                                                 423
+3.1      Root Pointers                                                      441
+3.2      GC-safe Code                                                       464
+3.2.1    Rule One: Full Initialization                                      490
+3.2.2    Rule Two: Make it Reachable                                        519
+3.3      Weak Reference Support                                             707
+3.4      Finalization                                                       750
+3.5      Generational GC                                                    774
+3.5.2    Representation of Generations                                      783
+3.5.3    Basic Algorithm                                                    819
+3.5.4    Handling Backpointers                                              854
+3.5.5    Generational GC and Finalization                                   932
 
-4.       Debugging                                                          971
-4.2.     Debugging the Yacc-generated Parser                               1102
-4.3.     Debugging GC Issues                                               1115
-4.4      Object Breakpoint                                                 1138
-4.5      Valgrind: Your Friend                                             1157
+4.       Debugging                                                          961
+4.2.     Debugging the Yacc-generated Parser                               1092
+4.3.     Debugging GC Issues                                               1105
+4.4      Object Breakpoint                                                 1128
+4.5      Valgrind: Your Friend                                             1147
 
 
 0. Overview
@@ -420,15 +419,6 @@ The wref macro hides the displacement of the first character:
 
 On a platform where this hack isn't needed, these w* macros are no-ops.
 
-2.4.3 Representation hacks for 4-byte wchar_t that is 2-byte aligned
-
-On the LLVM compiler on OS X, I ran into the issue that although wchar_t
-is four byte aligned, the compiler neglects to make wide string literals
-four byte aligned. Cases occur of misaligned literals.
-
-The solution is to borrow some of the logic that is used for handling
-two-byte wchar_t. The data is similarly padded, and an adjustment calculation
-takes place similarly to recover the pointer.
 
 3. Garbage Collection
 

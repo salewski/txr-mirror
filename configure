@@ -1503,11 +1503,7 @@ if [ -z "$lit_align" ] ; then
     exit 1
   fi
 
-  if [ -n "$darwin_target" ] && [ "$(arch)" = "i386" ] ; then
-    lit_align=2
-  else
-    lit_align=$SIZEOF_WCHAR_T
-  fi
+  lit_align=$SIZEOF_WCHAR_T
 fi
 
 printf "%d\n" "$lit_align"
