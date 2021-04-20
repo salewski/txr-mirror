@@ -756,6 +756,51 @@
                                   ,args ,*body)))
        ',name)))
 
+(defmatch sme (:form f sta mid end : (mobj (gensym)) tobj)
+  (flet ((check (pat)
+           (if (or (not (listp pat))
+                   (meq (car pat) 'sys:expr 'sys:var))
+             (compile-error f
+                            "~s: list pattern expected, not ~s"
+                            'sme pat)
+             pat))
+         (check-end (pat)
+           (if (and (listp pat)
+                    (meq (car pat) 'sys:expr 'sys:var))
+             (compile-error f
+                            "~s: list or atom pattern expected, not ~s"
+                            'sme pat)
+             pat))
+         (check-sym (sym : nil-ok)
+           (cond
+             ((bindable sym) sym)
+             ((and (null sym) nil-ok) sym)
+             (t (compile-error f "~s: bindable symbol expected, not ~s"
+                               'sme sym))))
+         (loosen (pat)
+           (if (proper-list-p pat)
+             (append pat '@nil)
+             pat))
+         (pat-len (pat)
+           (if (consp pat)
+             (let ((var-op-pos (pos-if (op meq 'sys:var 'sys:expr)
+                                       (butlastn 0 pat))))
+               (if var-op-pos var-op-pos (len pat)))
+             0)))
+    (let* ((psta (loosen (check sta)))
+           (pmid (loosen (check mid)))
+           (pend (check-end end))
+           (lsta (pat-len psta))
+           (lmid (pat-len pmid))
+           (lend (pat-len pend))
+           (obj (gensym)))
+      ^@(as ,(check-sym obj)
+            @(and ,psta
+                  @(with @(scan @(as ,(check-sym mobj) ,pmid))
+                         (nthcdr ,lsta ,obj))
+                  @(with @(as ,(check-sym tobj t) ,pend)
+                         (nthlast ,lend (nthcdr ,lmid ,mobj))))))))
+
 (defun non-triv-pat-p (syntax) t)
 
 (defun non-triv-pat-p (syntax)

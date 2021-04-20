@@ -277,3 +277,40 @@
                ((@a 2 @b) ^(2 ,a))))
       (local 3 2 1)))
   (2 3))
+
+(test
+  (when-match @(sme (1 2) (3 4) (5 . 6) m e)
+              '(1 2 3 4 5 . 6)
+    (list m e))
+   ((3 4 5 . 6) (5 . 6)))
+
+(test
+  (when-match @(sme (1 2) (3 4) (5 . 6) m d)
+              '(1 2 abc 3 4 def 5 . 6)
+    (list m d))
+  ((3 4 def 5 . 6) (5 . 6)))
+
+(test
+  (when-match @(sme (1 2 @x . @y) (4 @z) 6)
+              '(1 2 abc 3 4 def 5 . 6)
+    (list x y z))
+  (abc (3 4 def 5 . 6) def))
+
+(test (when-match @(sme (1 2) (2 3) (4)) '(1 2 3 4) t) nil)
+(test (when-match @(sme (1 2) (3 4) (4)) '(1 2 3 4) t) nil)
+(test (when-match @(sme (1 2) (2 3) (3 4)) '(1 2 3 4) t) nil)
+(test (when-match @(sme (1 2 . @x) (3 . @y) (4)) '(1 2 3 4) t) t)
+(test (when-match @(sme (1 2 . @x) (3 . @y) ()) '(1 2 3 4) t) t)
+(test (when-match @(sme (1 2 . @x) (3 . @y) ()) '(1 2 3 4 . 5) t) nil)
+
+(test (when-match @(sme (1 @y) (@z @x @y @z) (@x @y)) '(1 2 3 1 2 3 1 2)
+        (list x y z))
+      (1 2 3))
+
+(test (when-match @(and @(sme (1 @x) (3) (7) m n)
+                        @(with @(coll @(oddp @y)) (ldiff m n)))
+                  '(1 2 3 4 5 6 7)
+        (list x y))
+      (2 (3 5)))
+
+(test (when-match @(sme () () 5) 5 t) t)

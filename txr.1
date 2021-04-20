@@ -41356,6 +41356,131 @@ is a standard \*(TL notation with the same meaning as
  - > (t (1 2 3))
 .brev
 
+.coNP Pattern macro @ sme
+.synb
+.mets @(sme < spat < mpat < epat >> [ mvar <> [ evar ]])
+.syne
+.desc
+The pattern macro
+.code sme
+(start, middle, end) is a notation defined using the
+.code defmatch
+macro.
+
+The
+.code sme
+macro generates a complex pattern which matches three non-overlapping
+parts of a list object using three patterns. The
+.meta spat
+pattern is required to match a prefix of the input list. If that match is
+successful, then the remainder of the list is searched for a match for
+.metn mpat ,
+using the
+.code scan
+operator. If that match, in turn, is successful, then the suffix of
+the remainder of the list is required to match
+.codn epat .
+
+The optional
+.meta mvar
+and
+.meta evar
+arguments must be bindable symbols, if they are specified.
+These symbols specify lexical variables which are bound to, respectively,
+the object matched by
+.meta mpat
+and
+.metn epat ,
+using the fresh binding semantics of the
+.code as
+pattern operator.
+
+The first two patterns,
+.meta spat
+and
+.metn mpat ,
+must be possibly dotted list patterns.
+The last pattern,
+.metn epat ,
+must be either an atom or a possibly dotted list pattern.
+
+Important to the semantics of
+.code sme
+is the concept of the length of a list pattern.
+
+The length of a pattern with a pattern variable or operator
+in the dotted position is the number of items before that variable
+or operator. The length of
+.code "(1 2 . @(and a b))"
+is 2; likewise the length of
+.code "(1 2 . @nil)"
+is also 2.
+The length of a pattern which does not have a variable or
+operator in the dotted position is simply its list length.
+For instance, the pattern
+.code "(1 2 3)"
+has length 3, and so does the pattern
+.codn "(1 2 3 . 4)" .
+The length is determined by the list object structure of the
+pattern, and not the printed syntax used to express it. Thus,
+.code "(1 . (2 3))"
+is still a length 3 pattern, because it denotes the same
+.code "(1 2 3)"
+object, using the dot notation unnecessarily.
+
+The non-overlapping semantics of
+.code sme
+develops as follows. When the
+.meta spat
+pattern matches a prefix of the input object, then a middle suffix is
+calculated of the input object by dropping leading elements from it. The number
+of elements dropped is equal to the length
+.metn spat .
+The
+.meta mpat
+is then similarly matched against a prefix of this middle suffix. If that match
+is successful, a number of leading elements equal to the length of
+.meta mpat
+is dropped from the middle suffix to determine the final suffix.
+Then
+.meta epat
+is matched against the tail portion of the final suffix which is equal
+to its length. If the final suffix is shorter than
+.metn epat ,
+then the match isn't possible.
+
+.TP* Examples:
+
+.verb
+  (when-match @(sme (1 2) (3 4) (5 . 6) m e)
+              '(1 2 3 4 5 . 6)
+    (list m e))
+  -> ((3 4 5 . 6) (5 . 6))
+
+  (when-match @(sme (1 2) (3 4) (5 . 6) m e)
+              '(1 2 abc 3 4 def 5 . 6)
+    (list m e))
+  ((3 4 def 5 . 6) (5 . 6))
+
+  ;; backreferencing
+  (when-match @(sme (1 @y) (@z @x @y @z) (@x @y)) '(1 2 3 1 2 3 1 2)
+    (list x y z))
+  -> (1 2 3))
+
+  ;; collect odd items starting at 3, before 7
+  (when-match @(and @(sme (1 @x) (3) (7) m e)
+                    @(with @(coll @(oddp @y)) (ldiff m e)))
+              '(1 2 3 4 5 6 7)
+    (list x y))
+  -> (2 (3 5)))
+
+  ;; no overlap
+  (when-match @(sme (1 2) (2 3) (3 4)) '(1 2 3 4) t) -> nil
+
+  ;; The atom 5 is like a "zero-length improper list".
+  (when-match @(sme () () 5) 5 t) -> t
+.brev
+
 .SS* Pattern Matching Macros
 
 .coNP Macros @ when-match and @ if-match
