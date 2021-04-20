@@ -299,7 +299,7 @@ static val sysroot(val target)
 static void sysroot_init(void)
 {
   val prog_dir;
-  const wchar_t *psc = wref(coerce(const wchar_t *, path_sep_chars));
+  const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
 
 #if HAVE_WINDOWS_H
   val slash = regex_compile(lit("\\\\"), nil);

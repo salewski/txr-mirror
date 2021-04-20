@@ -4778,7 +4778,7 @@ val base_name(val path, val suff)
   const wchar_t *wpath = c_str(path);
   const wchar_t *end = wpath + c_num(length_str(path), self);
   const wchar_t *rsep;
-  const wchar_t *psc = wref(coerce(const wchar_t *, path_sep_chars));
+  const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
 
   if (end == wpath)
     return null_string;
@@ -4810,7 +4810,7 @@ val dir_name(val path)
   val self = lit("dir-name");
   const wchar_t *wpath = c_str(path);
   const wchar_t *rsep = wpath + c_num(length_str(path), self);
-  const wchar_t *psc = wref(coerce(const wchar_t *, path_sep_chars));
+  const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
 
   if (rsep == wpath)
     return lit(".");
