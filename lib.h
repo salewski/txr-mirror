@@ -425,7 +425,7 @@ INLINE type_t type(val obj)
 
 typedef struct wli wchli_t;
 
-#if LIT_ALIGN < 4
+#if SIZEOF_WCHAR_T < 4
 #define wli_noex(lit) (coerce(const wchli_t *,\
                               convert(const wchar_t *,\
                                       L"\0" L ## lit L"\0" + 1)))
@@ -452,7 +452,7 @@ INLINE val static_str(const wchli_t *str)
 
 INLINE wchar_t *litptr(val obj)
 {
-#if LIT_ALIGN < 4
+#if SIZEOF_WCHAR_T < 4
  wchar_t *ret = coerce(wchar_t *, (coerce(cnum, obj) & ~TAG_MASK));
  return (*ret == 0) ? ret + 1 : ret;
 #else
@@ -479,7 +479,7 @@ INLINE cnum c_n(val num)
 {
     return coerce(cnum, num) >> TAG_SHIFT;
 }
-#if LIT_ALIGN < 4
+#if SIZEOF_WCHAR_T < 4
 #define lit_noex(strlit) coerce(obj_t *,\
                                 coerce(cnum, L"\0" L ## strlit L"\0" + 1) | \
                                 TAG_LIT)

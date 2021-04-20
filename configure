@@ -182,7 +182,6 @@ platform_ldflags=
 platform_ldlibs=
 txr_dbg_opts=--gc-debug
 valgrind=
-lit_align=
 extra_debugging=
 debug_support=y
 gen_gc=y
@@ -410,15 +409,6 @@ intptr [$intptr]
   Specifies the name of the C integer type wide enough such that a pointer
   value can be converted to it. If this is blank, the configure script
   will try to auto detect it.
-
-lit-align [$lit_align]
-
-  Specifies alignment for wide string literals.  This is guessed
-  from the size of the wchar_t type. If your wchar_t type is two byte wide, but
-  wide literals are aligned to four bytes, then you should specify this.  This
-  will eliminate some kludges in the program. There is no easy way to check
-  for this withut generating and running a C program, which is unfriendly
-  for cross-compiling!
 
 inline [$inline]
 
@@ -1481,33 +1471,6 @@ then
   printf "typedef superlong_t double_intptr_t;\n" >> config.h
   printf "typedef superulong_t double_uintptr_t;\n" >> config.h
 fi
-
-#
-# Alignment of wchar_t
-#
-# What we really want to know is the alignment of wide string literals
-# like L"wide literal".
-#
-# We make pessimistic assumption that the size of the wchar_t type is this
-# alignment.
-#
-# There is no easy way to get the information without running a compiled
-# program.
-#
-
-printf "Conservatively guessing the alignment of wide literals ... "
-
-if [ -z "$lit_align" ] ; then
-  if [ $SIZEOF_WCHAR_T -eq 0 ] ; then
-    printf "failed\n"
-    exit 1
-  fi
-
-  lit_align=$SIZEOF_WCHAR_T
-fi
-
-printf "%d\n" "$lit_align"
-printf "#define LIT_ALIGN %d\n" "$lit_align" >> config.h
 
 #
 # Endianness.
