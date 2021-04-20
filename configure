@@ -148,6 +148,9 @@ cross=
 compiler_prefix=
 ccname='$(CC)'
 cc='$(cross)$(compiler_prefix)$(ccname)'
+gcc_version=
+broken128=
+do_nopie=y
 cplusplus=
 intptr=
 exe=
@@ -1021,6 +1024,23 @@ else
   printf "okay\n"
 fi
 
+printf "Checking compiler version for various workarounds ... "
+
+output=$($make conftest.ccver)
+set -- $output
+if [ "$1" = "gcc" ] ; then
+  gcc_version=$3
+  save_ifs=$IFS ; IFS=. ; set -- $gcc_version ; IFS=$save_ifs
+  if [ $1 -lt 4 ] || [ $1 -eq 4 -a $2 -le 3 ] ; then
+    broken128=y
+  fi
+  [ $1 -lt 5 ] && do_nopie=
+elif [ "$2" = "clang" ] ; then
+  do_nopie=
+fi
+
+printf "done\n"
+
 printf "Checking whether executables have that idiotic .exe suffix ... "
 
 if ls conftest.exe > /dev/null 2>&1 ; then
@@ -1194,7 +1214,7 @@ else
 fi
 
 
-if ! [ $android_target ] && ! [ $darwin_target ] ; then
+if [ $do_nopie ] ; then
   printf "Checking how to disable PIE ..."
   nopie_flags=
 
@@ -1296,17 +1316,6 @@ else
 fi
 
 printf "Checking what C type we have for integers wider than \"long long\" ... "
-
-broken128=
-output=$($make conftest.ccver)
-set -- $output
-if [ "$1" = "gcc" ] ; then
-  gcc_version=$3
-  save_ifs=$IFS ; IFS=. ; set -- $gcc_version ; IFS=$save_ifs
-  if [ $1 -lt 4 ] || [ $1 -eq 4 -a $2 -le 3 ] ; then
-    broken128=y
-  fi
-fi
 
 superlong=
 
