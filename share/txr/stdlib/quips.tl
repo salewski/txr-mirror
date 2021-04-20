@@ -78,6 +78,8 @@
     "If TXR were TV, it would require music by Mike Post and Peter Carpenter."
     "TXR was set to appear on the cover of SI. Yeah, no. Learned about the jinx."
     "  |E|\n|V A N|\n  |S|\n  |T|"
+    "Lispが好き、とても好き、私はLispの...全てにいつも...夢中なの。"
+    "こんな広い分野の中、私が愛する...言語なら、やはり...Lispだけ。"
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
