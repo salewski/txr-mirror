@@ -84,16 +84,16 @@ size_t utf8_from_buf(wchar_t *wdst, const unsigned char *src, size_t nbytes)
         wch_min = 0x800;
         break;
       case 0xF:
-#ifdef FULL_UNICODE
         if (ch < 0xF5) {
+#ifdef FULL_UNICODE
           state = utf8_more3;
           wch = (ch & 0x7);
           wch_min = 0x10000;
           break;
-        }
 #else
         conversion_error();
 #endif
+        }
         /* fallthrough */
       default:
         if (wdst)
@@ -317,16 +317,16 @@ wint_t utf8_decode(utf8_decoder_t *ud, int (*get)(mem_t *ctx), mem_t *ctx)
         ud->wch_min = 0x800;
         break;
       case 0xF:
-#ifdef FULL_UNICODE
         if (ch < 0xF5) {
+#ifdef FULL_UNICODE
           ud->state = utf8_more3;
           ud->wch = (ch & 0x7);
           ud->wch_min = 0x10000;
           break;
-        }
 #else
         conversion_error();
 #endif
+        }
         /* fallthrough */
       default:
         ud->back = ud->tail;
