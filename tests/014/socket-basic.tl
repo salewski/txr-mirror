@@ -3,7 +3,7 @@
 
 (defvar socktype)
 
-(defvar %iters% (if (eql :macos (os-symbol)) 2000 5000))
+(defvar %iters% (if (meql (os-symbol) :macos :openbsd) 2000 5000))
 
 (defun client (addr)
   (with-stream (cli-sock (open-socket af-inet socktype))

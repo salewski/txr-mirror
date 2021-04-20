@@ -32,13 +32,14 @@
             (iff (f^ #/CYGWIN/) (ret :cygwin))
             (iff (f^ #/CYGNAL/) (ret :cygnal))
             (iff (f^ #/Darwin/) (ret :macos))
+            (iff (f^ #/OpenBSD/) (ret :openbsd))
             (ret :unknown))
        u.sysname])))
 
 (defun libc ()
   (caseql (os-symbol)
-    ((:linux :solaris :macos :android) (dlopen nil))
-    ((:cygwin) (dlopen "cygwin1.dll"))))
+    ((:cygwin :cygnal) (dlopen "cygwin1.dll"))
+    (t (dlopen nil))))
 
 (defmacro macro-time-let (:env env bindings . body)
   (with-gensyms (invoke)
