@@ -580,7 +580,11 @@
                    (usr:scan (compile-scan-match exp obj-var var-list))
                    (exprs (compile-exprs-match exp obj-var var-list))
                    (t (iflet ((xfun [*match-macro* op]))
-                        (let ((xexp [xfun exp]))
+                        (let* ((var-env (make-env (mapcar (lop cons
+                                                               'sys:special)
+                                                          var-list.vars)
+                                                  nil var-list.menv))
+                               (xexp [xfun exp var-env]))
                           (if (neq xexp exp)
                             (compile-match xexp obj-var var-list)
                             (compile-predicate-match exp obj-var var-list)))
@@ -750,10 +754,10 @@
   (with-gensyms (name-dummy args)
     ^(progn
        (sethash *match-macro* ',name
-                (lambda (,args)
-                  (mac-param-bind *match-form*
-                                  (,name-dummy ,*destructuring-args)
-                                  ,args ,*body)))
+                (lambda (,args vars-env)
+                  (mac-env-param-bind *match-form* vars-env
+                                     (,name-dummy ,*destructuring-args)
+                                     ,args ,*body)))
        ',name)))
 
 (defun check (f op pat)

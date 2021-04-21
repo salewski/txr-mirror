@@ -42169,18 +42169,34 @@ The pattern macro bindings are stored in a hash table held by the variable
 whose keys are symbols, and whose values are expander functions.
 There are no lexically scoped pattern macros.
 
-If a
+Pattern macros defined with
 .code defmatch
-macro uses the
+may specify the special macro parameters
 .code :form
-parameter to gain access to the form, what the parameter retrieves
-is the pattern matching form, or a constituent thereof, in which the
-the macro is being invoked. For instance, if the operator is being used
-inside a pattern given to a
+and
+.code :env
+in their parameter lists. The values of these parameters are determined
+in a manner particular to
+.codn defmatch .
+
+The
+.code :form
+parameter captures the pattern matching form, or a constituent thereof, in
+which the the macro is being invoked. For instance, if the operator is being
+used inside a pattern given to a
 .code when-match
 macro invocation, then the form will be that entire
 .code when-match
 form.
+
+The
+.code :env
+parameter captures a specially constructed macro-time environment object in
+which all of the variables to the left of the pattern appear as lexical
+variables. The parent of this environment is the surrounding macro environment.
+If the pattern macro needs to treat a variable which already has a binding
+differently from an unbound variable, it can look up the variable in this
+environment.
 
 .TP* Example:
 
@@ -42202,6 +42218,24 @@ form.
                      "~s: bindable symbol expected, not ~s"
                      'foo sym))
     ...)
+
+  ;; Pattern macro which uses = equality to backreference
+  ;; an existing lexical binding, or else binds the variable
+  ;; if it has no existing lexical binding.
+  (defmatch var= (sym :env e)
+    (if (lexical-var-p e sym)
+      (with-gensyms (obj)
+        ^@(require (sys:var ,obj)
+            (= ,sym ,obj)))
+      ^(sys:var ,sym)))
+
+  ;; example use:
+  (when-match (@(var= a) @(var= a)) '(1 1.0) a)
+  -> 1
+
+  ;; no match: (equal 1 1.0) is false
+  (when-match (@a @a) '(1 1.0) a)
+  -> nil
 .brev
 
 .coNP Special variable @ *match-macro*
@@ -42221,6 +42255,14 @@ expression yields
 then there is no such binding: pattern operator forms based on
 .code sym
 do not undergo place macro expansion.
+
+The macro expanders in
+.code *match-macro*
+are two-parameter functions. The first argument passes the operator
+syntax to be expanded. The second argument is used for passing the
+environment object which the expander can capture using
+.code :env
+in its macro parameter list.
 
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote

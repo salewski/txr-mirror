@@ -321,3 +321,18 @@
 
 (test (when-match @(as z @(end (2 @x) y)) '(1 2 3) (list x y z))
       (3 (2 3) (1 2 3)))
+
+(defmatch env (var :env e)
+  ^@(with ,var ',e))
+
+(test (when-match @(and @a @(env e) @b) 42
+        (list a (env-vbindings e) (lexical-var-p e 'a) (lexical-var-p e 'b) b))
+      (42 ((a . sys:special)) t nil 42))
+
+(defmatch var= (sym :env e)
+  (if (lexical-var-p e sym)
+    (with-gensyms (obj)
+      ^@(require (sys:var ,obj) (= ,sym ,obj)))
+    ^(sys:var ,sym)))
+
+(test (when-match (@(var= a) @(var= a)) '(1 1.0) a) 1)
