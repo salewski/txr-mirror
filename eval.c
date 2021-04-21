@@ -77,7 +77,7 @@ val dwim_s, progn_s, prog1_s, prog2_s, sys_blk_s;
 val let_s, let_star_s, lambda_s, call_s, dvbind_s;
 val sys_catch_s, handler_bind_s, cond_s, if_s, iflet_s, when_s, usr_var_s;
 val defvar_s, defvarl_s, defparm_s, defparml_s, defun_s, defmacro_s, macro_s;
-val tree_case_s, tree_bind_s, mac_param_bind_s;
+val tree_case_s, tree_bind_s, mac_param_bind_s, mac_env_param_bind_s;
 val sys_mark_special_s;
 val caseq_s, caseql_s, casequal_s;
 val caseq_star_s, caseql_star_s, casequal_star_s;
@@ -2360,6 +2360,23 @@ static val op_mac_param_bind(val form, val env)
   val expr_val = eval(expr, env, expr);
   val saved_de = dyn_env;
   val new_env = bind_macro_params(env, nil, params, expr_val, nil, ctx_val);
+  val ret = eval_progn(body, new_env, body);
+  dyn_env = saved_de;
+  return ret;
+}
+
+static val op_mac_env_param_bind(val form, val env)
+{
+  val body = cdr(form);
+  val ctx_form = pop(&body);
+  val menv = pop(&body);
+  val params = pop(&body);
+  val expr = pop(&body);
+  val ctx_val = eval(ctx_form, env, ctx_form);
+  val menv_val = eval(menv, env, menv);
+  val expr_val = eval(expr, env, expr);
+  val saved_de = dyn_env;
+  val new_env = bind_macro_params(env, menv_val, params, expr_val, nil, ctx_val);
   val ret = eval_progn(body, new_env, body);
   dyn_env = saved_de;
   return ret;
@@ -4774,9 +4791,13 @@ again:
       }
     } else if (sym == tree_case_s) {
       return expand_tree_case(form, menv);
-    } else if (sym == tree_bind_s || sym == mac_param_bind_s) {
+    } else if (sym == tree_bind_s || sym == mac_param_bind_s ||
+               sym == mac_env_param_bind_s)
+    {
       val args = rest(form);
-      val ctx_expr = if3(sym == mac_param_bind_s, pop(&args), nil);
+      val ctx_expr = if3(sym == mac_param_bind_s || sym == mac_env_param_bind_s,
+                         pop(&args), nil);
+      val menvarg = if3(sym == mac_env_param_bind_s, pop(&args), nil);
       val params = pop(&args);
       val expr = pop(&args);
       val body = args;
@@ -4784,8 +4805,19 @@ again:
                  expand_params(params, body, menv, t, form));
       val new_menv = make_var_shadowing_env(menv, get_param_syms(params_ex));
       val ctx_expr_ex = expand(ctx_expr, menv);
+      val menvarg_ex = expand(menvarg, menv);
       val body_ex = expand_progn(body_ex0, new_menv);
       val expr_ex = expand(expr, new_menv);
+
+      if (sym == mac_env_param_bind_s) {
+        if (ctx_expr_ex == ctx_expr && params_ex == params &&
+            menvarg_ex == menvarg && expr_ex == expr && body_ex == body)
+          return form;
+        return rlcp(cons(sym, cons(ctx_expr_ex,
+                                   cons(menvarg_ex,
+                                        cons(params_ex,
+                                             cons(expr_ex, body_ex))))), form);
+      }
 
       if (sym == mac_param_bind_s) {
         if (ctx_expr_ex == ctx_expr && params_ex == params &&
@@ -6361,6 +6393,7 @@ void eval_init(void)
   tree_case_s = intern(lit("tree-case"), user_package);
   tree_bind_s = intern(lit("tree-bind"), user_package);
   mac_param_bind_s = intern(lit("mac-param-bind"), user_package);
+  mac_env_param_bind_s = intern(lit("mac-env-param-bind"), user_package);
   setq_s = intern(lit("setq"), system_package);
   sys_lisp1_setq_s = intern(lit("lisp1-setq"), system_package);
   sys_lisp1_value_s = intern(lit("lisp1-value"), system_package);
@@ -6471,6 +6504,7 @@ void eval_init(void)
   reg_op(tree_case_s, op_tree_case);
   reg_op(tree_bind_s, op_tree_bind);
   reg_op(mac_param_bind_s, op_mac_param_bind);
+  reg_op(mac_env_param_bind_s, op_mac_env_param_bind);
   reg_op(setq_s, op_setq);
   reg_op(sys_lisp1_setq_s, op_lisp1_setq);
   reg_op(sys_lisp1_value_s, op_lisp1_value);

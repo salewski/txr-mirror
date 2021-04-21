@@ -506,6 +506,7 @@
               (dohash me.(compile oreg env (expand-dohash form)))
               (tree-bind me.(comp-tree-bind oreg env form))
               (mac-param-bind me.(comp-mac-param-bind oreg env form))
+              (mac-env-param-bind me.(comp-mac-env-param-bind oreg env form))
               (tree-case me.(comp-tree-case oreg env form))
               (sys:lisp1-value me.(comp-lisp1-value oreg env form))
               (dwim me.(comp-dwim oreg env form))
@@ -1495,6 +1496,17 @@
                              ,(expand-bind-mac-params form-var
                                                       form-var
                                                       params nil
+                                                      obj-var t nil body)))))
+        me.(compile oreg env expn)))))
+
+(defmeth compiler comp-mac-env-param-bind (me oreg env form)
+  (mac-param-bind form (op context menv params obj . body) form
+    (with-gensyms (obj-var form-var)
+      (let ((expn (expand ^(let* ((,obj-var ,obj)
+                                  (,form-var ,context))
+                             ,(expand-bind-mac-params form-var
+                                                      form-var
+                                                      params menv
                                                       obj-var t nil body)))))
         me.(compile oreg env expn)))))
 

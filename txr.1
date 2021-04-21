@@ -37075,10 +37075,12 @@ The
 operator is a mongrel of these two semantics: it permits expansion to proceed,
 but then suppresses evaluation of the result.
 
-.coNP Operators @ tree-bind and @ mac-param-bind
+.coNP Operators @, tree-bind @ mac-param-bind and @ mac-env-param-bind
 .synb
 .mets (tree-bind < macro-style-params < expr << form *)
 .mets (mac-param-bind < context-expr
+.mets \ \  < macro-style-params < expr << form *)
+.mets (mac-env-param-bind < context-expr < env-expr
 .mets \ \  < macro-style-params < expr << form *)
 .syne
 .desc
@@ -37097,13 +37099,15 @@ of the last
 is returned. If there are no forms,
 .code nil
 is returned.
-
-Note: this operator throws an exception if there is a
-structural mismatch between the parameters and the value of
-.codn expr .
-
-One way to avoid this exception is to use
-.codn tree-case .
+Under
+.codn tree-bind ,
+the value of the
+.code :form
+available to
+.meta macro-style-params
+is the
+.code tree-bind
+form itself.
 
 The
 .code mac-param-bind
@@ -37120,6 +37124,54 @@ operator's error diagnostic refers to the
 .code tree-bind
 form, which is cryptic if the binding is used for the implementation
 of some other construct, hidden from the user of that construct.
+In addition,
+.meta context-expr
+specifies the value for the
+.code :form
+parameter that
+.meta macro-style-params
+may refer to.
+
+The
+.code mac-env-param-bind
+is an extension of
+.code mac-param-bind
+which takes one more argument,
+.codn env-expr ,
+before the macro parameters. This expression is evaluated,
+and becomes the value of the
+.code :env
+parameter that
+.meta macro-style-params
+may refer to.
+
+Under
+.code tree-bind
+and
+.codn mac-param-bind ,
+the
+.code :env
+parameter takes on the value
+.codn nil .
+
+Under all three operators, the
+.code :whole
+parameter takes on the value of
+.metn expr .
+
+These operators throw an exception if there is a
+structural mismatch between the parameters and the value of
+.codn expr .
+One way to avoid this exception is to use
+.codn tree-case ,
+which is based on the conventions of
+.codn tree-bind .
+There exists no
+.code tree-case
+analog for
+.code mac-param-bind
+or
+.codn mac-env-param-bind .
 
 .coNP Operator @ tree-case
 .synb
