@@ -302,7 +302,7 @@ struct uw_eval {
 
 #endif
 
-#if __aarch64__
+#if __aarch64__ || (__clang__ && __amd64__)
 #define UW_FRAME_ALIGN __attribute__ ((aligned (16)))
 #else
 #define UW_FRAME_ALIGN
