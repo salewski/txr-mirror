@@ -107,7 +107,10 @@
       (set bl.next nxbl.next)
       (set bl.links nxbl.links)
       (set bb.list (remq nxbl bb.list))
-      (del [bb.hash nxbl.label]))))
+      (del [bb.hash nxbl.label])
+      (each ((nx bl.links))
+        (upd nx.rlinks (remq nxbl))
+        (pushnew bl nx.rlinks)))))
 
 (defmacro rewrite-case (sym list . cases)
   ^(rewrite (lambda (,sym)
