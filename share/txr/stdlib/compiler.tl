@@ -1383,7 +1383,7 @@
                   (let ((op (eval (car args))))
                     (or [%const-foldable% op]
                         (not (bindable op)))))
-             me.(compile oreg env (eval form)))
+             me.(compile oreg env ^(quote ,(eval form))))
             (t (tree-case (car args)
                  ((op arg . more)
                   (caseq op
