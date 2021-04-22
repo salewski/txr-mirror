@@ -230,12 +230,14 @@
      ((@x @y) :no-match)) 1 1]
   :no-match)
 
-(test
-  [(lambda-match
-     ((0 1) :zero-one)
-     ((1 0) :one-zero)
-     ((@x @y) :no-match)) 1 2 3]
-  :error)
+(compile-only
+  (eval-only
+    (test
+      [(lambda-match
+         ((0 1) :zero-one)
+         ((1 0) :one-zero)
+         ((@x @y) :no-match)) 1 2 3]
+      :error)))
 
 (defun-match fib
   ((0) 1)
@@ -336,3 +338,8 @@
     ^(sys:var ,sym)))
 
 (test (when-match (@(var= a) @(var= a)) '(1 1.0) a) 1)
+
+(compile-only
+  (eval-only
+    (compile-file (base-name *load-path*) "temp.tlo")
+    (remove-path "temp.tlo")))
