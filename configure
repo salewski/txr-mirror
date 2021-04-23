@@ -1025,7 +1025,7 @@ if [ "$1" = "gcc" ] ; then
     broken128=y
   fi
   [ $1 -lt 5 ] && do_nopie=
-elif [ "$2" = "clang" ] ; then
+elif [ "$1" = "clang" -o "$2" = "clang" ] ; then
   do_nopie=
 fi
 
