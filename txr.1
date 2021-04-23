@@ -14081,7 +14081,7 @@ The plain
 variant specifies a variable which is initialized to
 .codn nil .
 The
-.metn init-form -s
+.metn init-form s
 are evaluated in order, by both
 .code let
 and
@@ -14101,23 +14101,23 @@ and
 is that in
 .codn let* ,
 later
-.codn init-form -s
+.codn init-form s
 are in scope of the variables established by earlier variables in the same
 .code let*
 construct. In plain
 .codn let ,
 the
-.metn init-form -s
+.metn init-form s
 are evaluated in a scope which does not include any of the variables.
 
 When the variables are established, the
-.metn body-form -s
+.metn body-form s
 are evaluated in order. The value of the last
 .meta body-form
 becomes the return value of the
 .codn let .
 If there are no
-.metn body-form -s,
+.metn body-form s,
 then the return value
 .code nil
 is produced.
@@ -14125,7 +14125,7 @@ is produced.
 The list of variables may be empty.
 
 The list of variables may contain duplicate
-.metn sym -s
+.metn sym s
 if the operator is
 .codn let* .
 In that situation, a given
@@ -14134,7 +14134,7 @@ has in scope the rightmost duplicate of any given
 .meta sym
 that has been previously established.
 The
-.metn body-form -s
+.metn body-form s
 have in scope the rightmost duplicate of any
 .meta sym
 in the construct.
@@ -14193,7 +14193,7 @@ than the lexical environment.
 In
 .codn let* ,
 later
-.metn init-form -s
+.metn init-form s
 are evaluated in a dynamic scope in which previous dynamic variables
 are established, and later dynamic variables are not yet established.
 A special variable may appear multiple times in a
@@ -14237,7 +14237,7 @@ expanded. See the section Parameter List Macros.
 Unlike in
 .codn lambda ,
 the
-.metn body-form -s
+.metn body-form s
 of a
 .code defun
 are surrounded by a block.
@@ -14585,7 +14585,7 @@ Multiple functions in the same
 do not have each other's names in their scopes.
 
 More formally, the
-.metn function-body-form -s
+.metn function-body-form s
 and
 .meta param-list
 of the functions defined by
@@ -14601,7 +14601,7 @@ and
 .codn flet ,
 the local functions that are defined are
 lexically visible to the main
-.metn body-form -s.
+.metn body-form s.
 
 Note that
 .code labels
@@ -15760,7 +15760,7 @@ operator evaluates as follows. First, a return value is
 established and initialized to the value
 .codn t .
 The
-.metn form -s,
+.metn form s,
 if any, are
 evaluated from left to right.  The return value is overwritten with
 the result of each form. Evaluation stops when all forms are exhausted,
@@ -15817,7 +15817,7 @@ operator evaluates as follows.  First, a return value is
 established and initialized to the value
 .codn nil .
 The
-.metn form -s,
+.metn form s,
 if any,
 are evaluated from left to right. The return value is overwritten
 with the result of each
@@ -15907,7 +15907,7 @@ evaluates true, rather than false.
 
 These operators arrange for the evaluation of all their enclosed forms
 in an anonymous block. Any of the
-.metn form -s,
+.metn form s,
 or
 .metn expression ,
 may use
@@ -15939,7 +15939,7 @@ and
 .codn until .
 
 They differ in one respect: they begin by evaluating the
-.metn form -s
+.metn form s
 one time unconditionally, without first evaluating
 .metn expression .
 After this evaluation, the subsequent behavior is
@@ -15966,7 +15966,7 @@ binding.
 
 The evaluation of the form takes place as follows. First, fresh bindings are
 established for
-.metn sym -s
+.metn sym s
 as if by the
 .code let*
 operator.
@@ -15979,11 +15979,11 @@ is tested. If the value is
 then
 .code whilet
 terminates. Otherwise,
-.metn body-form -s
+.metn body-form s
 are evaluated in the scope of the variable bindings, and then
 .code whilet
 iterates from the beginning, again establishing fresh bindings for the
-.metn sym -s,
+.metn sym s,
 and testing the value of the last
 .metn sym .
 
@@ -16072,7 +16072,7 @@ If one or more bindings are specified rather than
 .metn atom-form ,
 then the evaluation of these forms takes
 place as follows. First, fresh bindings are established for
-.metn sym -s
+.metn sym s
 as if by the
 .code let*
 operator.
@@ -16118,13 +16118,13 @@ is returned.
 In the case of the
 .code whenlet
 operator, if the test is true, then the
-.metn body-form -s,
+.metn body-form s,
 if any, are evaluated. The value of the last one is
 returned, otherwise
 .code nil
 if the forms are missing.
 If the test is false, then evaluation of
-.metn body-form -s
+.metn body-form s
 is skipped, and
 .code nil
 is returned.
@@ -16176,10 +16176,10 @@ Each argument is a compound consisting of at least one item: a list of
 bindings or
 .metn atom-form .
 This item is followed by zero or more
-.metn body-form -s.
+.metn body-form s.
 
 If the are are no
-.metn body-form -s
+.metn body-form s
 then the situation is treated as if there were a single
 .meta body-form
 specified as
@@ -16193,7 +16193,7 @@ leftmost.
 If the argument's left item is an
 .meta atom-form
 then the form is evaluated. If it yields true, then the
-.metn body-form -s
+.metn body-form s
 next to it are evaluated in order, and the
 .code condlet
 form terminates, yielding the value obtained from the last
@@ -16207,7 +16207,7 @@ with exactly the same logic as under the
 .code iflet
 macro. If the last binding contains a true value, then the
 adjoining
-.metn body-form -s
+.metn body-form s
 are evaluated in a scope in which all of the bindings are visible, and
 .code condlet
 terminates, yielding the value of the last
@@ -16533,7 +16533,7 @@ is evaluated one time to produce a limiting value, which should be a number.
 Then, if the value of
 .meta var
 is less than the limiting value, the
-.metn body-form -s
+.metn body-form s
 are evaluated,
 .meta var
 is incremented by one, and the process repeats with a new comparison
@@ -16552,7 +16552,7 @@ unless a
 .meta result-form
 is present, in which case the value of that form specifies the return value.
 
-.metn body-form -s
+.metn body-form s
 as well as
 .meta result-form
 are evaluated in the scope in which the binding of
@@ -16577,12 +16577,12 @@ must evaluate to an iterable object that is suitable as an argument for the
 function.
 The sequences are then iterated in
 parallel over repeated evaluations of the
-.metn body-form -s,
+.metn body-form s,
 with each
 .meta sym
 variable being assigned to successive elements of its sequence. The shortest
 list determines the number of iterations, so if any of the
-.metn init-form -s
+.metn init-form s
 evaluate to
 an empty sequence, the body is not executed.
 
@@ -16641,7 +16641,7 @@ differ from
 and
 .code append-each
 in the following way. The plain forms evaluate the
-.metn init-form -s
+.metn init-form s
 in an environment in which none of the
 .meta sym
 variables are yet visible. By contrast, the alternate
@@ -16798,7 +16798,7 @@ then the loop terminates.  Each
 is evaluated, and the value of the last of these
 forms is is the result value of the loop.
 If there are no
-.metn result-form -s
+.metn result-form s
 then the result value is
 .codn nil .
 If the
@@ -16848,7 +16848,7 @@ Each
 element in the form must be a symbol suitable for use as a variable name.
 
 The
-.metn tagbody-form -s
+.metn tagbody-form s
 are placed into an implicit
 .codn tagbody ,
 meaning that a
@@ -16871,11 +16871,11 @@ Then, in the environment in which these variables now exist,
 is evaluated. If that form yields
 .codn nil ,
 then the loop terminates. The
-.metn result-form -s
+.metn result-form s
 are evaluated, and the value of the last one is returned.
 
 If
-.metn result-form -s
+.metn result-form s
 are absent, then
 .code nil
 is returned.
@@ -16888,11 +16888,11 @@ is also absent, then the loop terminates and returns
 If
 .meta test-form
 produces a true value, then
-.metn result-form -s
+.metn result-form s
 are not evaluated. Instead, the implicit
 .code tagbody
 comprised of the
-.metn tagbody-form -s
+.metn tagbody-form s
 is evaluated.
 If that evaluation terminates normally, the loop variables are
 then updated by assigning to each
@@ -17204,7 +17204,7 @@ by compilation.  This means that a
 form which meets certain criteria is converted to a
 .code progn
 form which surrounds the
-.metn body-form -s
+.metn body-form s
 and thus no longer establishes an exit point.
 
 A
@@ -17633,9 +17633,9 @@ macro: labels are permitted, along with use of
 
 Finally, an anonymous block is established around all of the enclosed
 forms (both the
-.metn init-form -s
+.metn init-form s
 and
-.metn body-forms -s)
+.metn body-forms s)
 allowing the use of
 .code return
 to terminate evaluation with a value.
@@ -18748,7 +18748,7 @@ and then successively tests its type against each clause.
 Each clause consists of a type symbol
 .meta type-sym
 and zero or more
-.metn clause-form -s.
+.metn clause-form s.
 
 The first clause whose
 .meta type-sym
@@ -18756,12 +18756,12 @@ is a supertype of the type of
 .metn test-form 's
 value is considered to be the matching clause.
 That clause's
-.metn clause-form -s
+.metn clause-form s
 are evaluated, and the value of the last form is returned.
 
 If there is no matching clause, or there are no clauses present,
 or the matching clause has no
-.metn clause-form -s,
+.metn clause-form s,
 then
 .code nil
 is returned.
@@ -22422,9 +22422,9 @@ Under
 the scope of the bindings of the
 .meta sym
 variables extends over the
-.metn init-form -s,
+.metn init-form s,
 as well as the
-.metn body-form -s.
+.metn body-form s.
 
 Unlike the
 .code let*
@@ -26999,7 +26999,7 @@ form. The function takes the arguments specified
 by the
 .meta param
 symbols, and its body consists of the
-.metn body-form -s.
+.metn body-form s.
 There must be at least one
 .metn param .
 When the function is invoked as a method, as intended,
@@ -27007,7 +27007,7 @@ the leftmost
 .meta param
 receives the structure instance.
 The
-.metn body-form -s
+.metn body-form s
 are evaluated in a context in which a block named
 .meta name
 is visible. Consequently,
@@ -27034,7 +27034,7 @@ form. The function takes the arguments specified
 by the
 .meta param
 symbols, and its body consists of the
-.metn body-form -s.
+.metn body-form s.
 This specifier differs from
 .code :method
 only in one respect: there may be zero
@@ -27042,7 +27042,7 @@ parameters. A structure function defined this way is
 intended to be used as a utility function which doesn't
 receive the structure instance as an argument.
 The
-.metn body-form -s
+.metn body-form s
 are evaluated in a context in which a block named
 .meta name
 is visible. Consequently,
@@ -27066,7 +27066,7 @@ specifier doesn't describe a slot. Rather, it specifies code
 which is executed when a structure is instantiated, before
 the slot initializations specific to the structure type
 are performed. The code consists of
-.metn body-form -s
+.metn body-form s
 which are evaluated in order in a lexical scope in
 which the variable
 .meta param
@@ -27116,7 +27116,7 @@ applied to the slot.
 for initializing instance slots performs this kind of check).
 
 The
-.metn body-form -s
+.metn body-form s
 of an
 .code :init
 specifier are not surrounded by an implicit
@@ -27128,7 +27128,7 @@ specifier is similar to
 .codn :init .
 Both specify forms which are evaluated during object instantiation.
 The difference is that the
-.codn body-form -s
+.codn body-form s
 of a
 .code :postinit
 are evaluated after other initializations have taken
@@ -27178,7 +27178,7 @@ hierarchy, the finalizers specified for a derived structure type are called
 before inherited finalizers.
 
 The
-.metn body-form -s
+.metn body-form s
 of a
 .code :fini
 specifier are not surrounded by an implicit
@@ -27275,7 +27275,7 @@ or the syntax
 If the second form is used, then the structure type will support
 "boa construction", where "boa" stands for "by order of arguments".
 The
-.metn arg -s
+.metn arg s
 specify the list of slot names which are to be initialized in the
 by-order-of-arguments style. For instance, if three slot names
 are given, then those slots can be optionally initialized by giving three
@@ -27286,7 +27286,7 @@ macro or the
 function.
 
 Slots are first initialized according to their
-.metn init-form -s,
+.metn init-form s,
 regardless of whether they are involved in boa construction
 
 A slot initialized in this style still has a
@@ -27307,7 +27307,7 @@ optional parameter syntax isn't supported.
 
 When boa construction is invoked with optional arguments missing,
 the default values for those arguments come from the
-.metn init-form -s
+.metn init-form s
 in the remaining
 .code defstruct
 syntax.
@@ -27391,10 +27391,10 @@ The function takes the arguments specified
 by the
 .meta param-list
 symbols, and its body consists of the
-.metn body-form -s.
+.metn body-form s.
 
 The
-.metn body-form -s
+.metn body-form s
 are placed into a
 .code block
 named
@@ -27487,9 +27487,9 @@ arguments.
 Note: the evaluation order in
 .code new
 is surprising: namely,
-.metn init-form -s
+.metn init-form s
 are evaluated before
-.metn arg -s
+.metn arg s
 if both are present.
 
 When the object is constructed, all default initializations take place
@@ -27606,7 +27606,7 @@ After evaluating
 the
 .code with-slots
 macro arranges for the evaluation of
-.metn body-form -s
+.metn body-form s
 in the lexical scope in which the aliases are visible.
 
 .TP* "Dialect Notes:"
@@ -28059,7 +28059,7 @@ The slot named
 is retrieved from that object, and is expected to be a function.
 That function is called with the object, followed by the values
 of the
-.metn curried-expr -s,
+.metn curried-expr s,
 if any, followed by that function's arguments.
 
 The syntax can be understood as a translation to a call of the
@@ -28379,7 +28379,7 @@ will be stored into the slot of the newly created object. If a slot is
 repeated, it is unspecified which value takes effect.
 
 The optional
-.metn arg -s
+.metn arg s
 specify arguments to the structure type's boa constructor.
 If the arguments are omitted, the boa constructor is not invoked.
 Otherwise the boa constructor is invoked on the structure object
@@ -28395,7 +28395,7 @@ functions as described under
 Then, the
 .meta slot-init-plist
 is processed, if not empty, and finally, the
-.metn arg -s
+.metn arg s
 are processed, if present, and passed to the boa constructor.
 
 If any of the initializations abandon the evaluation of
@@ -28484,7 +28484,7 @@ function calls
 with an empty
 .metn slot-init-plist ,
 passing down the list of
-.metn arg -s.
+.metn arg s.
 
 The following equivalences hold:
 
@@ -29226,7 +29226,7 @@ of one of the direct supertypes of
 and invokes it, passing to that function
 .meta struct-obj
 as the leftmost argument, followed by the given
-.metn argument -s,
+.metn argument s,
 if any.
 
 The
@@ -29263,7 +29263,7 @@ retrieves the function stored in the slot
 of one of the supertypes of
 .meta type
 and invokes it, passing to that function the given
-.metn argument -s,
+.metn argument s,
 if any.
 
 The
@@ -29401,10 +29401,10 @@ corresponding
 .meta sym
 which is initialized with the value of that form. The binding
 is visible to subsequent
-.metn init-form -s.
+.metn init-form s.
 
 Additionally, the values of the
-.metn init-form -s
+.metn init-form s
 are noted as they are produced.  When the
 .code with-objects
 form terminates, by any means, the
@@ -29415,7 +29415,7 @@ and had been noted. These calls are performed in the
 reverse order relative to the original evaluation of the forms.
 
 After the variables are established and initialized, the
-.metn body-form -s
+.metn body-form s
 are evaluated in the scope of the variables. The value of the
 last form is returned, or else
 .code nil
@@ -33233,7 +33233,7 @@ Like
 .code mappend*
 must "consume" empty lists. For instance,
 if the function being mapped puts out a sequence of
-.codn nil -s,
+.codn nil s,
 then the result must be the empty list
 .codn nil ,
 because
@@ -33258,7 +33258,7 @@ The
 .code mappend*
 function is caught in a loop trying to consume
 and squash an infinite stream of
-.codn nil -s,
+.codn nil s,
 and so doesn't return.
 
 .TP* Examples:
@@ -34333,7 +34333,7 @@ but with duplicates removed.
 If neither
 .meta keyfun
 nor
-.metn hash-arg -s
+.metn hash-arg s
 are specified, then elements of sequence are considered equal under the
 .code eql
 function. The first occurrence of each element is retained,
@@ -34351,7 +34351,7 @@ were the
 function.
 
 If one or more
-.metn hash-arg -s
+.metn hash-arg s
 are present, these specify the arguments for the construction of
 the internal hash table used by
 .codn unique .
@@ -36102,7 +36102,7 @@ Each definition is a form which begins with a
 followed by
 .meta macro-style-params
 which is a macro parameter list, and zero or more
-.metn macro-body-form -s.
+.metn macro-body-form s.
 These macro definitions are similar
 to those globally defined by the
 .code defmacro
@@ -36115,7 +36115,7 @@ The macros specified in the definitions are visible to these
 forms.
 
 Forms inside the macro definitions such as the
-.metn macro-body-form -s,
+.metn macro-body-form s,
 and initializer forms appearing in the
 .meta macro-style-params
 are subject
@@ -36123,7 +36123,7 @@ to macro-expansion in a scope in which none of the new macros being
 defined are yet visible. Once the macro definitions are themselves
 macro-expanded, they are placed into a new macro environment, which
 is then used for macro expanding the
-.metn body-form -s.
+.metn body-form s.
 
 A
 .code macrolet
@@ -36131,7 +36131,7 @@ form is fully processed in the expansion phase of a form, and is
 effectively replaced by
 .code progn
 form which contains expanded versions of
-.metn body-form -s.
+.metn body-form s.
 This expanded structure shows no evidence that any
 macrolet forms ever existed in it. Therefore, it is impossible for the code
 evaluated in the bodies and parameter lists of
@@ -36922,7 +36922,7 @@ corresponding
 .meta sym
 is established as an alias for the storage location which that place denotes,
 over the scope of the
-.metn body-form -s.
+.metn body-form s.
 
 This binding takes place in such a way that each
 .meta place
@@ -36931,7 +36931,7 @@ storage location.  The corresponding
 .meta sym
 then serves as an alias for that location, over the
 scope of the
-.metn body-form -s.
+.metn body-form s.
 This means that whenever
 .meta sym
 is evaluated, it stands for the value of the storage
@@ -36950,7 +36950,7 @@ bound to an earlier
 form. In other words, a given
 .meta sym
 binding is visible not only to the
-.metn body-form -s
+.metn body-form s
 but also to
 .meta place
 forms which occur later.
@@ -37092,7 +37092,7 @@ and then uses the
 resulting value as a counterpart to a macro-style parameter list.
 If the value has a tree structure which matches the parameters,
 then those parameters are established as bindings, and the
-.metn form -s,
+.metn form s,
 if any, are evaluated in the scope of those bindings.  The value
 of the last
 .meta form
@@ -37192,7 +37192,7 @@ If the object produced by
 matches
 .metn macro-style-params ,
 then the parameters are bound, becoming local variables, and the
-.metn form -s,
+.metn form s,
 if any, are evaluated in order in the environment in which those variables are
 visible.  If there are forms, the value of the last
 .meta form
@@ -37323,7 +37323,7 @@ should be understood to be a globally unique symbol:
 The
 .code with-gensyms
 evaluates the
-.metn body-form -s
+.metn body-form s
 in an environment in which each variable name symbol
 .meta sym
 is bound to a new uninterned symbol ("gensym").
@@ -38486,7 +38486,7 @@ occurs.  The first abstract action is to evaluate
 exactly one time, in order to determine the actual run-time location to which
 that form refers.
 The second abstract action is to evaluate the caller's
-.metn body-form -s,
+.metn body-form s,
 in a lexical environment in which bindings exist for some lexical
 functions or (more usually) lexical macros. These lexical macros
 are explicitly referenced by the
@@ -39860,9 +39860,9 @@ The macro
 is similar to the
 .code let
 operator. It establishes bindings for one or more
-.metn sym -s,
+.metn sym s,
 which are initialized using the values of
-.metn init-form -s.
+.metn init-form s.
 
 Note that the simplified syntax for a variable which initializes to
 .code nil
@@ -39886,9 +39886,9 @@ macro differs from
 in that
 .code rlet
 assumes that those
-.metn sym -s
+.metn sym s
 whose
-.metn init-form -s,
+.metn init-form s,
 after macro expansion,
 are constant expressions
 (according to the
@@ -40599,7 +40599,7 @@ pair requires that the object's slot of that name contain
 a value which matches
 .metn pattern .
 The operator assumes that all the
-.metn slot-name -s
+.metn slot-name s
 are slots of the struct type indicated by
 .metn name .
 
@@ -41728,7 +41728,7 @@ are zero or more clauses similar to those of
 each consisting of a compound expression headed by a
 .meta pattern
 followed by zero or more
-.metn form -s.
+.metn form s.
 
 The macro generates a
 .code lambda
@@ -45918,19 +45918,19 @@ operator evaluates
 in such a way that no matter how the execution of
 .meta protected-form
 terminates, the
-.metn cleanup-form -s
+.metn cleanup-form s
 will be executed.
 
 The
-.metn cleanup-form -s,
+.metn cleanup-form s,
 however, are not protected. If a
 .meta cleanup-form
 terminates via
 some nonlocal jump, the subsequent
-.metn cleanup-form -s
+.metn cleanup-form s
 are not evaluated.
 
-.metn cleanup-form -s
+.metn cleanup-form s
 themselves can "hijack" a nonlocal control transfer such
 as an exception. If a
 .meta cleanup-form
@@ -46048,7 +46048,7 @@ The
 .code handler-bind
 operator establishes a handler for one or more
 exception types, and evaluates zero or more
-.metn body-form -s
+.metn body-form s
 in a dynamic scope in which that handler is visible.
 
 When the
@@ -46174,12 +46174,12 @@ macro provides a sequential binding construct similar to
 Every
 .meta sym
 is established as a variable which is visible to the
-.metn init-form -s
+.metn init-form s
 of subsequent variables, to all subsequent
-.metn cleanup-form -s
+.metn cleanup-form s
 including that of the same variable,
 and to the
-.metn body-form -s.
+.metn body-form s.
 
 If no
 .meta init-form
@@ -46191,14 +46191,14 @@ is bound to the value
 If an
 .meta init-form
 is supplied, but no
-.metn cleanup-form -s,
+.metn cleanup-form s,
 then
 .meta sym
 is bound to the value of the
 .metn init-form .
 
 If one or more
-.metn cleanup-form -s
+.metn cleanup-form s
 are supplied in addition to
 .metn init-form ,
 they specifies forms to be executed upon the termination of the
@@ -46215,15 +46215,15 @@ whose
 had executed, thus causing that
 .meta sym
 to be bound to a value, the
-.metn cleanup-form -s
+.metn cleanup-form s
 corresponding to
 .meta sym
 are evaluated in the usual left-to-right order.
 
 The
-.metn sym -s
+.metn sym s
 are cleaned up in reverse (right-to-left) order. The
-.metn cleanup-form -s
+.metn cleanup-form s
 of the most recently bound
 .meta sym
 are processed first; those of the least recently bound
@@ -46237,7 +46237,7 @@ form terminates normally, the value of the last
 is returned, or else
 .code nil
 if no
-.metn body-form -s
+.metn body-form s
 are present.
 
 .TP* "Example:"
@@ -46697,7 +46697,7 @@ argument should be an exception symbol. It is passed to the
 exception frame, as if it had appeared as the first argument of the
 .code throw
 function. Similarly, the
-.metn argument -s
+.metn argument s
 are passed to the catch frame as if they were the trailing arguments
 of a
 .codn throw .
@@ -46905,7 +46905,7 @@ and the
 arguments
 .meta fmt-string
 and its
-.metn fmt-arg -s.
+.metn fmt-arg s.
 
 .coNP Function @ compile-defr-warning
 .synb
@@ -46932,7 +46932,7 @@ and the
 arguments
 .meta fmt-string
 and its
-.metn fmt-arg -s.
+.metn fmt-arg s.
 This diagnostic message constitutes the first
 argument of the exception. The
 .meta tag
@@ -47583,11 +47583,11 @@ macros closely interoperate.
 The
 .code obtain
 macro treats zero or more
-.metn form -s
+.metn form s
 as a suspendable execution context called the
 .IR "obtain block" .
 It is expected that
-.metn form -s
+.metn form s
 establish a block named
 .meta name
 and return its result value to
@@ -47805,7 +47805,7 @@ and
 .code obtain
 into a single expression.
 The
-.metn form -s
+.metn form s
 are evaluated in a block named
 .codn name .
 
@@ -50362,7 +50362,7 @@ and
 .meta value-var
 arguments must be symbols suitable for use as variable names.
 Bindings are established for these variables over the scope of the
-.metn body-form -s
+.metn body-form s
 and the optional
 .metn result-form .
 
@@ -50386,7 +50386,7 @@ the return value is
 The
 .meta result-form
 and
-.metn body-form -s
+.metn body-form s
 are in the scope of an implicit anonymous
 block, which means that it is possible to terminate the execution of
 dohash early using
@@ -50639,7 +50639,7 @@ remains unvisited by the iterator.
 The
 .code with-hash-iter
 macro evaluates
-.metn body-form -s
+.metn body-form s
 in an environment in which a lexically scoped function is visible.
 
 The function is named by
@@ -50662,7 +50662,7 @@ or
 .meta vsym
 arguments are present, they must be symbols suitable as variable names. They
 are bound as variables visible to
-.metn body-form -s,
+.metn body-form s,
 initialized to the value
 .codn nil .
 
@@ -51746,14 +51746,14 @@ arguments are present, then
 .code lop
 generates a variadic function which inserts all of its trailing
 arguments between the first and second
-.metn form -s.
+.metn form s.
 
 That is to say, trailing arguments coming into the anonymous function
 become the left arguments of the function or function-like object
 denoted by the first
 .meta form
 and the remaining
-.metn form -s
+.metn form s
 give additional arguments. Hence the name
 .codn lop ,
 which stands for \(dqleft-inserting
@@ -52573,14 +52573,14 @@ It then returns whatever
 returns.
 
 If one or more additional
-.metn arg -s
+.metn arg s
 are passed to
 .codn apf ,
 then these are stored in the function which is returned.
 When the function is invoked, it prepends all of these stored
 arguments to those that it is being given, and the resulting combined
 arguments are applied. Thus the
-.metn arg -s
+.metn arg s
 become the leftmost arguments of
 .metn function .
 
@@ -52669,7 +52669,7 @@ The
 .code mapf
 function returns a function which distributes its arguments
 into the
-.metn arg-function -s.
+.metn arg-function s.
 That is to say, each successive argument of the returned
 function is associated with a successive
 .metn arg-function .
@@ -52684,10 +52684,10 @@ and the resulting value is returned.
 
 If the returned function is called with fewer arguments than there
 are
-.metn arg-function -s,
+.metn arg-function s,
 then only that many functions are used. Conversely, if the function is
 called with more arguments than there are
-.metn arg-function -s,
+.metn arg-function s,
 then those arguments are ignored.
 
 The following equivalence holds:
@@ -53989,7 +53989,7 @@ as if by the
 expression.
 
 Then it evaluates the
-.metn body-form -s
+.metn body-form s
 in the scope of the variable.
 
 The value of the last
@@ -54031,7 +54031,7 @@ as if by the
 expression.
 
 Then it evaluates the
-.metn body-form -s
+.metn body-form s
 in the scope of the variable.
 
 The value of the last
@@ -54062,7 +54062,7 @@ stream is created as if by the
 function.
 
 Then it evaluates
-.metn body-form -s
+.metn body-form s
 in the scope of that variable.
 
 After these forms are evaluated, the string is extracted
@@ -54088,7 +54088,7 @@ stream is created as if by the
 function.
 
 Then it evaluates
-.metn body-form -s
+.metn body-form s
 in the scope of that variable.
 
 After these forms are evaluated, the string list is extracted
@@ -54182,7 +54182,7 @@ The
 binds the variable whose name is given by the
 .meta stream-var
 argument, and macro arranges for the evaluation of
-.metn body-form -s
+.metn body-form s
 in the scope of that variable.
 
 The variable is initialized with the value produced
@@ -54206,7 +54206,7 @@ or else
 if these forms are absent.
 
 If the evaluation of the
-.metn body-form -s
+.metn body-form s
 is abandoned, the stream is still closed. That is to say,
 the closure of the stream is a protected action, as if by
 the
@@ -56264,7 +56264,7 @@ and
 macros both bind variable
 .meta var
 to an implicitly created buffer stream, and evaluate zero or more
-.metn body-form -s
+.metn body-form s
 in the environment where the variable is visible.
 
 The
@@ -59558,7 +59558,7 @@ is broken into fields. For each record, the sequence of condition-action
 clauses (except for certain special clauses) is processed. Every
 .meta condition
 is evaluated, and if it yields true, the corresponding
-.metn action -s
+.metn action s
 are evaluated.
 
 The
@@ -59814,7 +59814,7 @@ in a scope which is nested within the scope established
 by
 .codn :output .
 Therefore,
-.metn init-form -s
+.metn init-form s
 in the
 .code :let
 may refer to the new value of
@@ -60012,7 +60012,7 @@ If the condition is true, then its associated
 .meta action
 forms are evaluated. Either way, processing passes to the next condition
 clause (unless an explicit step is taken in one of the
-.metn action -s
+.metn action s
 to prevent this, for instance by invoking the
 .code next
 and
@@ -69554,16 +69554,16 @@ The
 macro is similar to
 .codn progn .
 It evaluates
-.metn form -s,
+.metn form s,
 and returns the rightmost one, or
 .code nil
 if there are no forms.
 
 Over the evaluation of
-.metn form -s,
+.metn form s,
 it counts memory allocations, and measures
 CPU time. If
-.metn form -s
+.metn form s
 terminate normally, then just prior to returning,
 .code pprof
 prints these statistics in a concise report on the
@@ -70433,7 +70433,7 @@ The FFI module supports passing and returning both structures and arrays
 by value. Passing arrays by value isn't a feature of the C language syntax;
 from the C point of view, these by-value array objects in the \*(TX FFI
 type system are equivalent to C arrays encapsulated in
-.codn struct -s.
+.codn struct s.
 
 A
 .code carray
@@ -73297,7 +73297,7 @@ macros.
 When a
 .code deffi
 form appears as one of the
-.metn body-form -s
+.metn body-form s
 of the
 .code with-dyn-lib
 macro, that
@@ -73445,7 +73445,7 @@ is a literal string, then the
 form must be enclosed in the
 .code with-dyn-lib
 macro, appearing as one of that macro's
-.metn body-form -s.
+.metn body-form s.
 In this situation the literal character string
 .meta name-string
 specifies a symbol to be found within the library established by the
@@ -73656,7 +73656,7 @@ is a literal string, then the
 form must be enclosed in the
 .code with-dyn-lib
 macro, appearing as one of that macro's
-.metn body-form -s.
+.metn body-form s.
 In this situation the literal character string
 .meta name-string
 specifies a symbol to be found within the library established by the
@@ -76464,7 +76464,7 @@ When a
 .code compile-only
 form appears as a top-level form under file compilation, it indicates to the
 file compiler that the
-.metn form -s
+.metn form s
 enclosed in it are not to be evaluated. By default, the file compiler executes
 each top-level form after compiling it.  The
 .code compile-only
@@ -76474,7 +76474,7 @@ When a
 .code eval-only
 form appears as a top-level form under file compilation, it indicates to the
 file compiler that the
-.metn form -s
+.metn form s
 enclosed in it are not to be emitted into the output file. By default, the file
 compiler includes the compiled image in the output written to the output file.
 The
