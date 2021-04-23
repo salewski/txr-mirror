@@ -1,3 +1,75 @@
+                                    TXR 257
+                                   2021-04-22
+
+
+  Features
+
+  - parser:
+    - Invalid UTF-8 bytes and characters now allowed in literals and regexes.
+    - Treated using rules consistent with behavior of text streams.
+  - doc:
+    - General improvements in documentation, many due to of Paul A. Patience.
+  - build:
+    - Test suite no longer requires .expected files which are empty;
+      they materialize on-the-fly and make cleans them away afterward.
+  - streams:
+    - stream-max-len behavior changes for strings. Some small bugs
+      fixed in this area.
+  - structural pattern matching
+    - new @(scan) operator for finding a match over a list
+    - new defmatch macro for defining new pattern operators
+    - new pattern operators @(end) and @(sme) defined using defmatch
+  - TXR:
+    - Debug output for @(gather) directive reports exact list of variables
+      that were not bound.
+  - compile/eval:
+    - compile-error macro now prints error on *stdout* in addition to
+      throwing exception.
+      - upshot of this is that this helps editors navigate to the error.
+      - previously this worked for warnings, not errors.
+    - new binding operator: mac-env-param-bind
+  - port status:
+    - TXR ported to OpenBSD, amd64.
+  - internal:
+    - New C function dis that can be used debugging TXR with gdb to
+      disassemble VM code.
+
+  Bugs:
+
+  - compiler:
+    - (call (fun f) ...) forms not registering the reference to f,
+      causing lambdas to be incorrectly lifted to a scope where they
+      lose access to a needed lexical function.
+    - incorrect handling of trailing arguments in immediately-called lambda.
+    - bad diagnostic in compile-file when output file can't be opened.
+    - constant-folded (call ...) expressions not quoted.
+    - bug in dead code elimination (optimization level 6) causing
+      references to nonexistent assembly language labels.
+    - bug in frame elimination (optimization level 2) not initializing
+      some registers in code that can execute more than once due to loops.
+  - GC:
+    - Bug in sys:gc function fixed, whereby it wrongly resets the
+      internal flag which requests a full collection, leading to corruption
+      (since that flag is sometimes set for reasons of correctness).
+  - regex:
+    - The regsub function was found to have destructive behavior,
+      contrary to documentation.
+  - lib:
+    - fixed a bug causing the functions base-name, dir-name and TXR's
+      sysrooting calculations to be wrong on platforms where sizeof(wchar_t)
+      is 2 (Windows/Cygwin) and on MacOS.
+    - fixed the bogus assumption in the code, introduced in 2015, that there
+      are platforms with four-byte wchar_t which don't align L"..." literals
+      to four byte boundaries, and that MacOS is one of them.
+  - continuations:
+    - fix stack alignment on amd64 under clang.
+      - discovered during OpenBSD port, but not an OpenBSD problem.
+  - build:
+    - make referenced in a few places instead of $make, causing
+      some nuisance error messages on platform where GNU Make is gmake.
+
+
+
                                     TXR 256
                                    2021-04-07
 
