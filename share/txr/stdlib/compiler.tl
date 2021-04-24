@@ -1828,7 +1828,10 @@
 
 (defun expand-quasi (form)
   (let ((qa (expand-quasi-args form)))
-    ^(sys:fmt-join ,*qa)))
+    (cond
+      ((cdr qa) ^(sys:fmt-join ,*qa))
+      (qa (car qa))
+      (t '(mkstring 0)))))
 
 (defun expand-dohash (form)
   (mac-param-bind form (op (key-var val-var hash-form : res-form) . body) form
