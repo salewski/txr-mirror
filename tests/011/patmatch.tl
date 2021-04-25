@@ -339,6 +339,16 @@
 
 (test (when-match (@(var= a) @(var= a)) '(1 1.0) a) 1)
 
+(test (when-match `` "" t) t)
+(test (when-match `abc` "abc" t) t)
+(test (when-match `@a` "abc" a) "abc")
+
+(macro-time-let ((*stderr* *stdnull*))
+  (test (when-match `@a@b` "abc" a) :error))
+
+(test (when-match `@a-$` "a-$" a) "a")
+(test (when-match `#@a-$` "#a-$" a) "a")
+
 (compile-only
   (eval-only
     (compile-file (base-name *load-path*) "temp.tlo")
