@@ -348,6 +348,12 @@
 
 (test (when-match `@a-$` "a-$" a) "a")
 (test (when-match `#@a-$` "#a-$" a) "a")
+(test (when-match `#@a-$` "#a-$$" a) nil)
+(test (when-match `#@a-$` "#a-" a) nil)
+(test (when-match `#@{a #/ab*c/}` "#abbbc" a) "abbbc")
+(test (when-match `#@{a #/ab*c/}d` "#abbbcd" a) "abbbc")
+(test (when-match `#@{a 3}@b` "#abb" a) "abb")
+(test (when-match `#@{a 3}@b` "#abbbc" (list a b)) ("abb" "bc"))
 
 (compile-only
   (eval-only
