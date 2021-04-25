@@ -367,7 +367,14 @@
   (test (when-match `@a@b` "abcd" a) "a")
   (test (when-match `@a@{b [1..:]}` "acd" a) "a")
   (test (when-match `@a@{b [1..:]}` "abcd" a) "ab")
-  (test (when-match `@a@{b [0..1]}` "abcd" a) nil))
+  (test (when-match `@a@{b [0..1]}` "abcd" a) nil)
+  (test (when-match `@a@{b [0..2]}d` "abcd" a) "a"))
+
+(let ((x 123))
+  (test (when-match `^@{x 5}$` "^123  $" t) t)
+  (test (when-match `^@{x -5}$` "^  123$" t) t)
+  (test (when-match `@x@x` "123123" t) t)
+  (test (when-match `@x@{x [1..:]}` "12323" t) t))
 
 (compile-only
   (eval-only
