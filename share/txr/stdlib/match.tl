@@ -312,8 +312,8 @@
            (car-match (compile-match car car-gensym var-list))
            (cdr-match (if (consp cdr)
                         (caseq (car cdr)
-                          ((sys:expr sys:var) (compile-match cdr cdr-gensym
-                                                             var-list))
+                          ((sys:expr sys:var sys:quasi)
+                             (compile-match cdr cdr-gensym var-list))
                           (t (compile-cons-structure cdr cdr-gensym var-list)))
                         (compile-atom-match cdr cdr-gensym var-list)))
            (guard (new match-guard
@@ -666,7 +666,7 @@
                           variadic-pattern args
                           forms body))
       ((proper-list-p args)
-       (let* ((vpos (pos-if (lop meq 'sys:expr 'sys:var) args)))
+       (let* ((vpos (pos-if (lop meq 'sys:expr 'sys:var 'sys:quasi) args)))
          (tree-bind (fixed-pats . variadic-pat) (split args vpos)
            (new lambda-clause
                 orig-syntax args
@@ -764,13 +764,13 @@
 
 (defun check (f op pat)
   (if (or (not (listp pat))
-          (meq (car pat) 'sys:expr 'sys:var))
+          (meq (car pat) 'sys:expr 'sys:var 'sys:quasi))
     (compile-error f "~s: list pattern expected, not ~s" op pat)
     pat))
 
 (defun check-end (f op pat)
   (if (and (listp pat)
-           (meq (car pat) 'sys:expr 'sys:var))
+           (meq (car pat) 'sys:expr 'sys:var 'sys:quasi))
     (compile-error f "~s: list or atom pattern expected, not ~s" op pat)
     pat))
 
@@ -787,7 +787,7 @@
 
 (defun pat-len (f pat)
   (if (consp pat)
-    (let ((var-op-pos (pos-if (op meq 'sys:var 'sys:expr)
+    (let ((var-op-pos (pos-if (op meq 'sys:var 'sys:expr 'sys:quasi)
                               (butlastn 0 pat))))
       (if var-op-pos var-op-pos (len pat)))
     0))
@@ -821,6 +821,7 @@
   (match-case syntax
     ((@(eq 'sys:expr) (@(bindable) . @nil)) t)
     ((@(eq 'sys:var) @(or @(bindable) nil) . @nil) t)
+    ((@(eq 'sys:quasi) . @(some @(consp))) t)
     ((@pat . @rest) (or (non-triv-pat-p pat)
                         (non-triv-pat-p rest)))
     (#R(@from @to) (or (non-triv-pat-p from)
@@ -944,4 +945,3 @@
                 (stringp ,str))
              @(with ,pos 0)
              ,*(quasi-match var-list (normalize args) nil str pos)))))
-
