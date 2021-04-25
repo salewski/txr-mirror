@@ -350,10 +350,24 @@
 (test (when-match `#@a-$` "#a-$" a) "a")
 (test (when-match `#@a-$` "#a-$$" a) nil)
 (test (when-match `#@a-$` "#a-" a) nil)
+(test (when-match `#@a-@b` "#a-$" (list a b)) ("a" "$"))
 (test (when-match `#@{a #/ab*c/}` "#abbbc" a) "abbbc")
 (test (when-match `#@{a #/ab*c/}d` "#abbbcd" a) "abbbc")
 (test (when-match `#@{a 3}@b` "#abb" a) "abb")
 (test (when-match `#@{a 3}@b` "#abbbc" (list a b)) ("abb" "bc"))
+(test (when-match `#@{a 4}@b` "#abb" a) nil)
+(test (when-match `#@{a 3}` "#abb" a) "abb")
+(test (when-match `#@{a 2}` "#abb" a) nil)
+(test (when-match `#@{a 4}` "#abb" a) nil)
+
+(macro-time-let ((*stderr* *stdnull*))
+  (test (when-match `#@{a 4 5}` "#abb" a) :error))
+
+(let ((b "bcd"))
+  (test (when-match `@a@b` "abcd" a) "a")
+  (test (when-match `@a@{b [1..:]}` "acd" a) "a")
+  (test (when-match `@a@{b [1..:]}` "abcd" a) "ab")
+  (test (when-match `@a@{b [0..1]}` "abcd" a) nil))
 
 (compile-only
   (eval-only
