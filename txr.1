@@ -23606,12 +23606,7 @@ argument, the
 function determines whether
 .meta littlestring
 is a prefix of
-.metn bigstring ,
-returning a
-.code t
-or
-.code nil
-indication.
+.metn bigstring .
 
 If the
 .meta start
@@ -23647,6 +23642,25 @@ then this corresponds to testing whether
 .meta littlestring
 is a suffix of
 .metn bigstring .
+
+The
+.code match-str
+function returns
+.code nil
+if there is no match.
+
+If a prefix match is successful,
+then an integer value is returned indicating the position, inside
+.metn bigstring ,
+one character past the matching prefix. If the entire string is matched, then
+this value corresponds to the length of
+.metn bigstring .
+
+If a suffix match is successful, the return value is the position within
+.meta bigstring
+where the leftmost character of
+.meta littlestring
+matched.
 
 .coNP Function @ match-str-tree
 .synb

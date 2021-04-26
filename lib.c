@@ -4511,7 +4511,7 @@ val match_str(val bigstr, val str, val pos)
         return nil;
     }
 
-    return length_str_le(str, i) ? t : nil;
+    return length_str_le(str, i) ? succ(i) : nil;
   } else {
     pos = plus(pos, length(bigstr));
     pos = plus(minus(pos, length(str)), one);
@@ -4524,7 +4524,7 @@ val match_str(val bigstr, val str, val pos)
         return nil;
     }
 
-    return minusp(i);
+    return minusp(i) ? pos : nil;
   }
 }
 
