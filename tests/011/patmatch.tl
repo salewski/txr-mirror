@@ -344,7 +344,11 @@
 (test (when-match `@a` "abc" a) "abc")
 
 (macro-time-let ((*stderr* *stdnull*))
-  (test (when-match `@a@b` "abc" a) :error))
+  (test (when-match `@a@b` "abc" a) :error)
+  (test (when-match `@nil@b` "abc" a) :error)
+  (test (when-match `@nil@nil` "abc" a) :error)
+  (test (when-match `@a@nil` "abc" a) :error))
+
 
 (test (when-match `@a-$` "a-$" a) "a")
 (test (when-match `#@a-$` "#a-$" a) "a")

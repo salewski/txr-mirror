@@ -836,7 +836,7 @@
   (labels ((bound-p (vlist vars sym)
              (cond
                ((bindable sym) (or (member sym vars) vlist.(exists sym)))
-               ((null sym) t)
+               ((null sym) nil)
                ((compile-error *match-form* "bindable symbol expected, not ~s"
                                sym))))
            (normalize (args)
