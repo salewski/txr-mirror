@@ -364,6 +364,20 @@
 (test (when-match `#@{a 2}` "#abb" a) nil)
 (test (when-match `#@{a 4}` "#abb" a) nil)
 
+(let ((z 0))
+  (test (when-match `@z#@a-$` "0#a-$" a) "a")
+  (test (when-match `@z#@a-$` "0#a-$$" a) nil)
+  (test (when-match `@z#@a-$` "0#a-" a) nil)
+  (test (when-match `@z#@a-@b` "0#a-$" (list a b)) ("a" "$"))
+  (test (when-match `@z#@{a #/ab*c/}` "0#abbbc" a) "abbbc")
+  (test (when-match `@z#@{a #/ab*c/}d` "0#abbbcd" a) "abbbc")
+  (test (when-match `@z#@{a 3}@b` "0#abb" a) "abb")
+  (test (when-match `@z#@{a 3}@b` "0#abbbc" (list a b)) ("abb" "bc"))
+  (test (when-match `@z#@{a 4}@b` "0#abb" a) nil)
+  (test (when-match `@z#@{a 3}` "0#abb" a) "abb")
+  (test (when-match `@z#@{a 2}` "0#abb" a) nil)
+  (test (when-match `@z#@{a 4}` "0#abb" a) nil))
+
 (macro-time-let ((*stderr* *stdnull*))
   (test (when-match `#@{a 4 5}` "#abb" a) :error))
 
@@ -374,11 +388,15 @@
   (test (when-match `@a@{b [0..1]}` "abcd" a) nil)
   (test (when-match `@a@{b [0..2]}d` "abcd" a) "a"))
 
-(let ((x 123))
+(let ((x 123) (z 0))
   (test (when-match `^@{x 5}$` "^123  $" t) t)
   (test (when-match `^@{x -5}$` "^  123$" t) t)
   (test (when-match `@x@x` "123123" t) t)
-  (test (when-match `@x@{x [1..:]}` "12323" t) t))
+  (test (when-match `@x@{x [1..:]}` "12323" t) t)
+  (test (when-match `@z^@{x 5}$` "0^123  $" t) t)
+  (test (when-match `@z^@{x -5}$` "0^  123$" t) t)
+  (test (when-match `@z@x@x` "0123123" t) t)
+  (test (when-match `@z@x@{x [1..:]}` "012323" t) t))
 
 (let ((a "$"))
   (test (when-match `@a-@b` "$-@" b) "@"))
