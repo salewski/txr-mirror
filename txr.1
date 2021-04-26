@@ -191,8 +191,19 @@
 .                shift
 .              \}
 .              el \{\
-.                as s \\$1 
-.                shift
+.                ie "\\$1"<2>" \{\
+.                  shift
+.                  as s \\$1\fI<\\$2>\fP\\$3\fI<\\$4>\fP\\$5 
+.                  shift
+.                  shift
+.                  shift
+.                  shift
+.                  shift
+.                \}
+.                el \{\
+.                  as s \\$1 
+.                  shift
+.                \}
 .              \}
 .            \}
 .          \}
@@ -233,16 +244,27 @@
 .              shift
 .            \}
 .            el \{\
-.              ie "\\$1"><" \{\
+.              ie "\\$1"<2>" \{\
 .                shift
-.                as s \\f5\\$1\\f4\\$2\f5\\$3\\f4 
+.                as s \\$1\\f5\\$2\\f4\\$3\\f5\\$4\\f4\\$5 
+.                shift
+.                shift
 .                shift
 .                shift
 .                shift
 .              \}
 .              el \{\
-.                as s \\$1 
-.                shift
+.                ie "\\$1"><" \{\
+.                  shift
+.                  as s \\f5\\$1\\f4\\$2\f5\\$3\\f4 
+.                  shift
+.                  shift
+.                  shift
+.                \}
+.                el \{\
+.                  as s \\$1 
+.                  shift
+.                \}
 .              \}
 .            \}
 .          \}
@@ -40544,6 +40566,180 @@ that being a syntactic sugar for
 
   ;; above, de-sugared:
   (when-match (rcons @a @b) '(rcons 1 2) (list a b)) -> (1 2)
+
+.brev
+
+.NP* Quasiliteral match
+.synb
+.mets <> "`...@" var "...`"
+.syne
+.desc
+The quasiliteral syntax is supported as a pattern matching operator.
+The corresponding object is required to be a character string, which
+is analyzed according to the structure of the quasiliteral pattern,
+and portions of the string are captured by variables. If the corresponding
+object isn't a string according to
+.code stringp
+then the match fails. The quasiliteral pattern must match the entire
+input string.
+
+Note: this feature is new, having been introduced in \*(TX 258,
+and should be regarded as being in "beta" state, with requirements
+that have not been finalized. This notice will be removed when
+that is no longer the case.
+
+A quasiliteral pattern matches in a linear fashion, from left to right.
+Variables bound earlier in the pattern can be referenced later in the pattern
+as bound variables.
+
+Bound variables denote character strings in accordance with the usual
+quasiliteral conversion and formatting rules. All of the modifier notations may
+be used.  For instance, if
+.code x
+is a bound variable, then
+.code "@{x -40}"
+denotes the value of
+.code x
+converted to a string, and right-aligned in a forty-character-wide field.
+Consequently, the notation matches exactly such a forty-character text.
+
+In the following description of the quasiliteral pattern matching rules, the
+symbols
+.metn uv ,
+.meta uv0
+and
+.meta uv1
+represent to unbound variables: variables which have no apparent
+lexical binding and are not defined as global variables. Unless indicated
+otherwise,
+.mono
+.meti >> @ uv
+.onom
+refers to a plain variable syntax such as
+.code @abc
+or else to braced syntax without modifiers, such as
+.codn @{abc} .
+The same remarks apply to
+.meta uv0
+and
+.metn uv1 .
+The symbol
+.meta bv
+represents an unbound variables: a variable which has an existing binding,
+which can occur in the form of the ordinary notation, or the braced notation
+with or without modifiers.
+The notation
+.codn {P} ,
+.codn {P0} ,
+.codn {P1} ...
+denotes a substring of the pattern, possibly empty.
+
+.RS
+.coIP ``
+The empty quasiliteral pattern matches an empty string.
+.coIP `text{P}`
+A quasiliteral pattern which begins with a portion of text matches a string
+which begins with the same text. The remaining portion
+.code {P}
+of the pattern is then matched against a suffix of the input string which
+excludes the matched text.
+.meIP <> `@ uv `
+A simple unbound variable occurring as the last element of the pattern
+matches and binds the entire rest of the input string.
+.meIP <> `@ uv text{P}`
+A simple unbound variable followed by a text element matches the input string if
+.str text
+occurs in that string as a substring. In that case,
+.meta uv
+is bound to the possibly empty prefix of the input string consisting of the
+characters before the leftmost match for
+.strn text .
+The rest of the pattern
+.code {P}
+is then matched against that suffix of the input string which begins after the
+last character of the leftmost match for
+.strn text .
+.meIP <2> `@ uv @ bv {P}`
+The bound variable
+.meta bv
+is converted to text in the manner of an ordinary quasiliteral substitution.
+The situation then reduces to the
+.mono
+.meti <> `@ uv text{P}`
+.onom
+pattern, where
+.code text
+denotes the character string produced by substitution of
+.metn bv .
+.meIP >> `@{ uv << integer }{P}`
+An unbound variable
+.meta uv
+which uses the brace notation to specify a literal
+.meta integer
+modifier denotes
+a match for that many characters. It is an error if the value is zero or
+negative.  The match succeeds if the input string has at least that
+many characters, in which case the variable
+.meta uv
+takes on those characters, and the rest of the pattern is matched against
+a suffix of the string with those characters removed.
+.meIP >> `@{ uv <> #/ regex /}{P}`
+An unbound variable
+.meta uv
+which carries a regular expression modifier specifies a regular expression
+match. If a prefix of the input string matches
+.metn regex ,
+then the match is successful and
+.meta uv
+captures that prefix. The rest of the pattern
+.code {P}
+is then matched against the rest of the string after the prefix.
+.mono
+.meti >> @ bv {R}
+.onom
+The bound variable
+.meta bv
+is converted to text the manner of an ordinary quasiliteral substitution.
+The situation then reduces to the
+.code `text{P}`
+pattern, where
+.code text
+denotes the character string produced by substitution of
+.metn bv .
+.meIP <2> `@ uv0 @ uv1 {P0}`
+Two consecutive unbound variables, where
+.meta uv0
+is a plain variable with no modifiers, constitutes an invalid pattern.
+This situation is diagnosed as an error. If
+.meta uv0
+is braced, carrying an integer or regular expression modifier
+.metn mod ,
+then the situation is treated as the pattern
+.mono
+.meti >> `@{ uv << mod }{P}`
+.onom
+where
+.code {P}
+refers to the
+.mono
+.meti <> @ uv1 {P0}
+.onom
+portion.
+.RE
+.IP
+No other quasiliteral syntax, or combination of variable modifiers, is
+supported in quasiliteral patterns.
+
+.TP* Examples:
+
+.verb
+  (when-match `@a-@b` "foo-bar" (list a b)) -> ("foo" "bar")
+
+  (when-match `@{a #/\ed+/}@b` "123xy" (list a b)) -> ("123" "xy")
+
+  (let ((a 42))
+    (when-match `[@{a -8}] @b` "[      42] packets` b))
+  -> "packets"
 
 .brev
 
