@@ -376,6 +376,9 @@
   (test (when-match `@x@x` "123123" t) t)
   (test (when-match `@x@{x [1..:]}` "12323" t) t))
 
+(let ((a "$"))
+  (test (when-match `@a-@b` "$-@" b) "@"))
+
 (compile-only
   (eval-only
     (compile-file (base-name *load-path*) "temp.tlo")

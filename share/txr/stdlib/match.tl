@@ -852,8 +852,8 @@
                ;; `txt@...`
                ((@(stringp @txt) . @rest)
                 (with-gensyms (npos)
-                  (cons ^@(require @(with ,npos ,(len txt))
-                            (starts-with ,txt ,str))
+                  (cons ^@(require @(with ,npos (+ ,pos (len ,txt)))
+                            (match-str ,str ,txt ,pos))
                         (quasi-match vlist rest vars str npos))))
                ;; `@var` (existing binding)
                (((@(eq 'sys:var) @(bound-p vlist vars @sym) . @nil))
