@@ -950,7 +950,12 @@
                  . @rest)
                 (compile-error *match-form*
                                "consecutive unbound variables ~s and ~s"
-                               sym0 sym1)))))
+                               sym0 sym1))
+               ((@bad . @rest) (compile-error *match-form*
+                                              "unsupported syntax ~s"
+                                              ^(sys:quasi ,bad)))
+               (@else (compile-error *match-form* "bad quasiliteral syntax")))))
+
     (with-gensyms (str pos)
       ^@(and @(require (sys:var ,str)
                 (stringp ,str))
