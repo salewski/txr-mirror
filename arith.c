@@ -54,7 +54,6 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
 #define TAG_PAIR(A, B) ((A) << TAG_SHIFT | (B))
-#define NOOP(A, B)
 #define CNUM_BIT ((int) sizeof (cnum) * CHAR_BIT)
 #define ABS(A) ((A) < 0 ? -(A) : (A))
 
