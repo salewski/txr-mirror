@@ -965,6 +965,15 @@ example, objects which have been reclaimed by the garbage collector
 are marked as inaccessible, and marked as uninitialized when they are
 allocated again.
 
+.coIP --free-all
+This option specifies that all memory allocated by \*(TX should be freed upon
+normal termination. This behavior is useful for debugging memory leaks.
+An accurate leak detection tool, such as the one built into Valgrind,
+should report zero leaked or still reachable memory if
+.code --free-all
+has been used and \*(TX has terminated normally.
+that indicates either a leak in \*(TX, a leak or global object retention
+in a platform library, or else a a leak introduced due to misuse of FFI.
 .coIP --dv-regex
 If this option is used, then regular expressions are all treated using the
 derivative-based back-end.  The NFA-based regex implementation is disabled.
