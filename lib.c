@@ -903,7 +903,7 @@ static void seq_iter_mark(val seq_iter)
     gc_mark(si->ui.iter);
     break;
   default:
-    if (cobjp(seq_iter) && obj_struct_p(seq_iter))
+    if (cobjp(si->inf.obj) && obj_struct_p(si->inf.obj))
       gc_mark(si->ui.iter);
     break;
   }
