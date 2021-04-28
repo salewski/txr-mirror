@@ -848,6 +848,17 @@ val type_mismatch(val fmt, ...)
   abort();
 }
 
+NORETURN void invalid_ops(val self, val obj1, val obj2)
+{
+  uw_throwf(type_error_s, lit("~a: invalid operands ~s ~s"), self,
+            obj1, obj2, nao);
+}
+
+NORETURN void invalid_op(val self, val obj)
+{
+  uw_throwf(type_error_s, lit("~a: invalid operand ~s"), self, obj, nao);
+}
+
 val uw_defer_warning(val args)
 {
   val msg = car(args);

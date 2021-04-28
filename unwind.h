@@ -384,6 +384,8 @@ void uw_init(void);
 void uw_late_init(void);
 
 NORETURN val type_mismatch(val, ...);
+NORETURN void invalid_ops(val self, val obj1, val obj2);
+NORETURN void invalid_op(val self, val obj);
 
 #define uw_mark_frame                           \
   uw_frame_t *uw_top = uw_current_frame()

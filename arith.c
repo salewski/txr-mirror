@@ -132,17 +132,6 @@ static NORETURN void not_integer(val self, val obj)
   uw_throwf(type_error_s, lit("~a: ~s is not an integer"), self, obj, nao);
 }
 
-static NORETURN void invalid_ops(val self, val obj1, val obj2)
-{
-  uw_throwf(type_error_s, lit("~a: invalid operands ~s ~s"), self,
-            obj1, obj2, nao);
-}
-
-static NORETURN void invalid_op(val self, val obj)
-{
-  uw_throwf(type_error_s, lit("~a: invalid operand ~s"), self, obj, nao);
-}
-
 int num_to_buffer(val num, mem_t *buf, int bytes)
 {
   switch (type(num)) {
