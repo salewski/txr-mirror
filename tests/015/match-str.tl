@@ -38,4 +38,32 @@
 
 (mtest
   (match-str "" "" -1) nil
-  (match-str "" "" -1) nil)
+  (match-str "a" "" -1) 1
+  (match-str "a" "a" -1) 0
+  (match-str "ab" "a" -1) nil
+  (match-str "ab" "a" -2) 0
+  (match-str "abc" "abc" -1) 0
+  (match-str "abc" "c" -1) 2
+  (match-str "abc" "b" -2) 1
+  (match-str "abc" "a" -3) 0
+  (match-str "abc" "a" -4) nil
+  (match-str "abcd" "cd" -1) 2
+  (match-str "abcd" "bc" -2) 1
+  (match-str "abcd" "ab" -3) 0
+  (match-str "abcd" "ab" -4) nil
+  (match-str "abcd" "ab" -5) nil
+  (match-str (lz "abcd") "cd" -1) 2
+  (match-str (lz "abcd") "bc" -2) 1
+  (match-str (lz "abcd") "ab" -3) 0
+  (match-str (lz "abcd") "ab" -4) nil
+  (match-str (lz "abcd") "ab" -5) nil
+  (match-str "abcd" (lz "cd") -1) 2
+  (match-str "abcd" (lz "bc") -2) 1
+  (match-str "abcd" (lz "ab") -3) 0
+  (match-str "abcd" (lz "ab") -4) nil
+  (match-str "abcd" (lz "ab") -5) nil
+  (match-str (lz "abcd") (lz "cd") -1) 2
+  (match-str (lz "abcd") (lz "bc") -2) 1
+  (match-str (lz "abcd") (lz "ab") -3) 0
+  (match-str (lz "abcd") (lz "ab") -4) nil
+  (match-str (lz "abcd") (lz "ab") -5) nil)
