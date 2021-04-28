@@ -73,6 +73,7 @@ typedef enum type {
 
 #define TYPE_SHIFT 5
 #define TYPE_PAIR(A, B) ((A) << TYPE_SHIFT | (B))
+#define TAG_PAIR(A, B) ((A) << TAG_SHIFT | (B))
 
 typedef enum functype
 {
