@@ -4496,36 +4496,118 @@ val search_str_tree(val haystack, val tree, val start_num, val from_end)
   return nil;
 }
 
+static val do_match_str(val bigstr, val str, cnum pos, val self)
+{
+  switch (TYPE_PAIR(type(bigstr), type(str))) {
+  case TYPE_PAIR(LIT, LIT):
+  case TYPE_PAIR(LIT, STR):
+  case TYPE_PAIR(STR, LIT):
+  case TYPE_PAIR(STR, STR):
+    {
+      cnum bl = c_num(length_str(bigstr), self);
+      cnum sl = c_num(length_str(str), self);
+
+      if (sl == 0 && pos <= bl)
+        return num(pos);
+
+      if (pos > bl || sl > bl)
+        return nil;
+
+      if (pos > INT_PTR_MAX - sl)
+        return nil;
+
+      if (pos + sl > bl)
+        return nil;
+
+      {
+        const wchar_t *bs = c_str(bigstr);
+        const wchar_t *ss = c_str(str);
+
+        return if3(wmemcmp(bs + pos, ss, sl) == 0, num(pos + sl), nil);
+      }
+    }
+  case TYPE_PAIR(LSTR, LIT):
+  case TYPE_PAIR(LSTR, STR):
+    {
+      lazy_str_force_upto(bigstr, num(pos + c_num(length_str(str), self)));
+      return do_match_str(bigstr->ls.prefix, str, pos, self);
+    }
+  case TYPE_PAIR(LIT, LSTR):
+  case TYPE_PAIR(STR, LSTR):
+    {
+      if (length_str_gt(str, length_str(bigstr)))
+        return nil;
+
+      lazy_str_force(str);
+      return do_match_str(bigstr, str->ls.prefix, pos, self);
+    }
+  case TYPE_PAIR(LSTR, LSTR):
+    {
+      cnum i, p;
+
+      for (i = 0;
+           length_str_gt(bigstr, num((p = pos + i))) &&
+           length_str_gt(str, num(i));
+           i++)
+      {
+        if (chr_str(bigstr, num(p)) != chr_str(str, num(i)))
+          return nil;
+      }
+
+      return length_str_le(str, num(i)) ? num(i + 1) : nil;
+    }
+  default:
+    invalid_ops(self, bigstr, str);
+  }
+}
+
+static val do_rmatch_str(val bigstr, val str, cnum pos, val self)
+{
+  if (type(bigstr) == LSTR) {
+    lazy_str_force(bigstr);
+    return do_rmatch_str(bigstr->ls.prefix, str, pos, self);
+  }
+
+  if (type(str) == LSTR) {
+    lazy_str_force(str);
+    return do_rmatch_str(bigstr, str->ls.prefix, pos, self);
+  }
+
+  {
+    cnum bl = c_num(length_str(bigstr), self);
+    cnum sl = c_num(length_str(str), self);
+
+    pos += bl;
+
+    if (pos < 0)
+      return nil;
+
+    if (sl == 0)
+      return num(pos + 1);
+
+    if (sl > pos + 1)
+      return nil;
+
+    if (pos > INT_PTR_MAX - sl)
+      return nil;
+
+    {
+      const wchar_t *bs = c_str(bigstr);
+      const wchar_t *ss = c_str(str);
+      cnum start = pos + 1 - sl;
+      return if3(wmemcmp(bs + start, ss, sl) == 0, num(start), nil);
+    }
+  }
+}
+
 val match_str(val bigstr, val str, val pos)
 {
-  val i, p;
+  val self = lit("match-str");
+  cnum p = c_num(default_arg(pos, zero), self);
 
-  pos = default_arg(pos, zero);
-
-  if (ge(pos, zero)) {
-    for (i = zero;
-         length_str_gt(bigstr, p = plus(pos, i)) && length_str_gt(str, i);
-         i = plus(i, one))
-    {
-      if (chr_str(bigstr, p) != chr_str(str, i))
-        return nil;
-    }
-
-    return length_str_le(str, i) ? succ(i) : nil;
-  } else {
-    pos = plus(pos, length(bigstr));
-    pos = plus(minus(pos, length(str)), one);
-
-    for (i = minus(length(str), one);
-         ge(i, zero) && ge(p = plus(pos, i), zero);
-         i = minus(i, one))
-    {
-      if (chr_str(bigstr, p) != chr_str(str, i))
-        return nil;
-    }
-
-    return minusp(i) ? pos : nil;
-  }
+  return if3(p >= 0,
+             do_match_str(bigstr, str, p, self),
+             do_rmatch_str(bigstr, str, p, self));
 }
 
 val match_str_tree(val bigstr, val tree, val pos)
