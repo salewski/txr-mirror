@@ -4554,7 +4554,7 @@ static val do_match_str(val bigstr, val str, cnum pos, val self)
           return nil;
       }
 
-      return length_str_le(str, num(i)) ? num(i + 1) : nil;
+      return length_str_le(str, num(i)) ? num(p) : nil;
     }
   default:
     invalid_ops(self, bigstr, str);
