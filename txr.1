@@ -18525,6 +18525,8 @@ brackets indicate a plurality of types which are not listed by name:
         |                    |
         |                    +--- tree-iter
         |                    |
+        |                    +--- seq-iter
+        |                    |
         |                    +--- cptr
         |                    |
         |                    +--- dir
@@ -34539,14 +34541,12 @@ method. Details are specified in the section
 .desc
 The
 .code iter-begin
-function returns an iterator object specialized for the task of traversing the
+function returns an iterator object suitable for traversing the
+elements of the sequence denoted by the
 .meta seq
-object. The
-.meta seq
-argument may be any sequence. Additionally, it may be a character, number or
-a numeric or character range.
+object.
 
-Note: if
+If
 .meta seq
 is a list-like sequence, then
 .code iter-begin
@@ -34556,6 +34556,28 @@ itself as the iterator. Likewise if
 .meta seq
 is a number.
 
+If
+.meta seq
+is a structure which supports the
+.code iter-begin
+method, then that method is called and its return value is returned.
+A structure which does not support this method is possibly considered
+to be a sequence according to the usual criteria, based on whether
+it supports the
+.codn nullify ,
+.code length
+or
+.code car
+methods. An struct object supporting none of these methods is deemed
+not iterable.
+
+In all other cases, if
+.meta seq
+is iterable, an object of type
+.code seq-iter
+is returned.
+
+Range objects are iterable.
 A range is considered to be a numeric or character range if the
 .code from
 element is a number or character. The
@@ -34576,10 +34598,8 @@ are equivalent to
 .codn "(iter-begin X)" .
 
 If
-.meta seq
-is a structure which supports the
-.code iter-begin
-method, then that method is called and its return value is returned.
+.code seq
+is not an iterable object, an error exception is thrown.
 
 .coNP Function @ iter-more
 .synb
