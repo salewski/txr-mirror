@@ -571,6 +571,20 @@ static int seq_iter_get_oop(seq_iter_t *it, val *pval)
 {
   val iter = it->ui.iter;
 
+  /* The assignments to ui.iter and ui.next are wrong if the it structure is
+   * embedded inside a heap-allocated iterator object. The object could be a
+   * gen 1 object, whereas the value being assigned could be a gen 0.
+   *
+   * The only way this can happen is if the obsolescent seq-begin function is
+   * used on an object that supports the iter-begin method. The seq-begin
+   * constructor is the only function which creates a heap-allocated iterator
+   * which is initialized via seq_iter_init_with_info, which binds this
+   * seq_iter_get_oop function and its sisters.
+   *
+   * The other heap-allocated iterator type is iter-begin. iter-begin applies
+   * its own handling for OOP iterators; it doesn't set up seq_iter_t for
+   * objects of that type, and so these functions are not used.
+   */
   if (it->ul.next != nao) {
     val iter_step_meth = get_special_required_slot(iter, iter_step_m);
     *pval = it->ul.next;
@@ -596,6 +610,8 @@ static int seq_iter_get_oop(seq_iter_t *it, val *pval)
 static int seq_iter_peek_oop(seq_iter_t *it, val *pval)
 {
   val iter = it->ui.iter;
+
+  /* See comment in seq_iter_get_oop */
 
   if (it->ul.next != nao) {
     *pval = it->ul.next;
@@ -629,6 +645,8 @@ static int seq_iter_get_fast_oop(seq_iter_t *it, val *pval)
       *pval = item;
     }
 
+    /* See comment in seq_iter_get_oop */
+
     it->ui.iter = funcall1(iter_step_meth, iter);
     it->ul.next = nao;
     return 1;
@@ -645,6 +663,8 @@ static int seq_iter_peek_fast_oop(seq_iter_t *it, val *pval)
     *pval = it->ul.next;
     return 1;
   }
+
+  /* See comment in seq_iter_get_oop */
 
   if (iter) {
     val iter_item_meth = get_special_required_slot(iter, iter_item_m);
