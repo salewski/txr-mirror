@@ -11703,24 +11703,28 @@ val contains(val key, val seq, val testfun, val keyfun)
   return search_common(lit("contains"), 0, seq, key, testfun, keyfun);
 }
 
-static val lazy_where_func(val seq_iter, val lcons)
+static val lazy_where_func(val iter, val lcons)
 {
-  struct seq_iter *si = coerce(struct seq_iter *, seq_iter->co.handle);
+  val iter_orig = iter;
   us_cons_bind (index, func, lcons);
 
   for (;;) {
-    val item;
-    if (!si->get(si, &item)) {
+    if (!iter_more(iter)) {
       us_rplacd(lcons, nil);
       return nil;
     }
     index = succ(index);
-    if (funcall1(func, item))
+    if (funcall1(func, iter_item(iter)))
       break;
+    iter = iter_step(iter);
   }
+  iter = iter_step(iter);
 
   {
-    us_rplacd(lcons, make_lazy_cons_car_cdr(lcons_fun(lcons), index, func));
+    val fun = us_lcons_fun(lcons);
+    if (iter != iter_orig)
+      us_func_set_env(fun, iter);
+    us_rplacd(lcons, make_lazy_cons_car_cdr(fun, index, func));
     return nil;
   }
 }
@@ -11751,20 +11755,20 @@ static val lazy_where_hash_func(val hash_iter, val lcons)
 val where(val func, val seq)
 {
   if (!hashp(seq)) {
-    val seq_iter = seq_begin(seq);
+    val iter = iter_begin(seq);
     val index = zero;
-    struct seq_iter *si = coerce(struct seq_iter *, seq_iter->co.handle);
 
     for (;;) {
-      val item;
-      if (!si->get(si, &item))
+      if (!iter_more(iter))
         return nil;
-      if (funcall1(func, item))
+      if (funcall1(func, iter_item(iter)))
         break;
+      iter = iter_step(iter);
       index = succ(index);
     }
 
-    return make_lazy_cons_car_cdr(func_f1(seq_iter, lazy_where_func),
+    iter = iter_step(iter);
+    return make_lazy_cons_car_cdr(func_f1(iter, lazy_where_func),
                                   index, func);
   } else {
     val hash_iter = hash_begin(seq);
