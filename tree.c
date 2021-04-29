@@ -170,7 +170,7 @@ static val tn_lookup(struct tree *tr, val node, val key)
                  funcall2(tr->equal_fn, key, tr_key))) {
     return node;
   } else {
-    return if2(node->tn.left, tn_lookup(tr, node->tn.left, key));
+    return if2(node->tn.right, tn_lookup(tr, node->tn.right, key));
   }
 }
 

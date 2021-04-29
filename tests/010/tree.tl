@@ -1,0 +1,31 @@
+(load "../common")
+
+(defvarl tr (tree))
+(defvarl keys '(0 6 8 11 10 2 16 3 17 7 19 12 15 13 18 4 14 5 1 9))
+
+(test tr #T(()))
+
+(each ((n keys))
+  (tree-insert tr n))
+
+(mtest
+  (tree-lookup tr 0) 0
+  (tree-lookup tr 1) 1
+  (tree-lookup tr 2) 2
+  (tree-lookup tr 3) 3
+  (tree-lookup tr 4) 4
+  (tree-lookup tr 5) 5
+  (tree-lookup tr 6) 6
+  (tree-lookup tr 7) 7
+  (tree-lookup tr 8) 8
+  (tree-lookup tr 9) 9
+  (tree-lookup tr 10) 10
+  (tree-lookup tr 11) 11
+  (tree-lookup tr 12) 12
+  (tree-lookup tr 13) 13
+  (tree-lookup tr 14) 14
+  (tree-lookup tr 15) 15
+  (tree-lookup tr 16) 16
+  (tree-lookup tr 17) 17
+  (tree-lookup tr 18) 18
+  (tree-lookup tr 19) 19)
