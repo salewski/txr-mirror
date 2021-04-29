@@ -64,6 +64,7 @@ enum tree_iter_state {
 };
 
 struct tree_iter {
+  val self;
   int depth;
   enum tree_iter_state state;
   val path[TREE_DEPTH_MAX];
@@ -75,7 +76,7 @@ struct tree_diter {
   val lastnode;
 };
 
-#define tree_iter_init() { 0, tr_visited_nothing, { 0 } }
+#define tree_iter_init(self) { (self), 0, tr_visited_nothing, { 0 } }
 
 val tree_s, tree_iter_s, tree_fun_whitelist_s;
 
@@ -115,21 +116,21 @@ val key(val node)
 val set_left(val node, val nleft)
 {
   type_check(lit("set-left"), node, TNOD);
-  node->tn.left = nleft;
+  set(mkloc(node->tn.left, node), nleft);
   return node;
 }
 
 val set_right(val node, val nright)
 {
   type_check(lit("set-right"), node, TNOD);
-  node->tn.right = nright;
+  set(mkloc(node->tn.right, node), nright);
   return node;
 }
 
 val set_key(val node, val nkey)
 {
   type_check(lit("set-key"), node, TNOD);
-  node->tn.key = nkey;
+  set(mkloc(node->tn.key, node), nkey);
   return node;
 }
 
@@ -182,7 +183,7 @@ static val tn_find_next(val node, struct tree_iter *trit)
         return nil;
       while (node->tn.left) {
         bug_unless (trit->depth < TREE_DEPTH_MAX);
-        trit->path[trit->depth++] = node;
+        set(mkloc(trit->path[trit->depth++], trit->self), node);
         node = node->tn.left;
       }
       trit->state = tr_visited_left;
@@ -214,7 +215,7 @@ static val tn_flatten(val x, val y)
 {
   if (x == nil)
     return y;
-  x->tn.right = tn_flatten(x->tn.right, y);
+  set(mkloc(x->tn.right, x), tn_flatten(x->tn.right, y));
   return tn_flatten(x->tn.left, x);
 }
 
@@ -227,14 +228,15 @@ static val tn_build_tree(ucnum n, val x)
     val r = tn_build_tree(n / 2, x);
     val s = tn_build_tree((n - 1) / 2, r->tn.right);
 
-    r->tn.right = s->tn.left;
-    s->tn.left = r;
+    set(mkloc(r->tn.right, r), s->tn.left);
+    set(mkloc(s->tn.left, s), r);
 
     return s;
   }
 }
 
-static void tr_rebuild(struct tree *tr, val node, val parent, ucnum size)
+static void tr_rebuild(val tree, struct tree *tr, val node,
+                       val parent, ucnum size)
 {
 #if CONFIG_GEN_GC
   obj_t dummy = { { TNOD, 0, 0, { 0 }, 0 } };
@@ -246,15 +248,16 @@ static void tr_rebuild(struct tree *tr, val node, val parent, ucnum size)
 
   if (parent) {
     if (parent->tn.left == node)
-      parent->tn.left = new_root;
+      set(mkloc(parent->tn.left, parent), new_root);
     else
-      parent->tn.right = new_root;
+      set(mkloc(parent->tn.right, parent), new_root);
   } else {
-    tr->root = new_root;
+    set(mkloc(tr->root, tree), new_root);
   }
 }
 
-static void tr_find_rebuild_scapegoat(struct tree *tr, struct tree_iter *ti,
+static void tr_find_rebuild_scapegoat(val tree, struct tree *tr,
+                                      struct tree_iter *ti,
                                       val child, ucnum child_size)
 {
   val parent = ti->path[--ti->depth];
@@ -262,12 +265,12 @@ static void tr_find_rebuild_scapegoat(struct tree *tr, struct tree_iter *ti,
   ucnum sib_size = parent_size - child_size;
 
   if (2 * child_size > parent_size || 2 * sib_size > parent_size)
-    tr_rebuild(tr, parent, ti->path[ti->depth - 1], parent_size);
+    tr_rebuild(tree, tr, parent, ti->path[ti->depth - 1], parent_size);
   else
-    tr_find_rebuild_scapegoat(tr, ti, parent, parent_size);
+    tr_find_rebuild_scapegoat(tree, tr, ti, parent, parent_size);
 }
 
-static void tr_insert(struct tree *tr, struct tree_iter *ti,
+static void tr_insert(val tree, struct tree *tr, struct tree_iter *ti,
                       val subtree, val node)
 {
   val tn_key = if3(tr->key_fn,
@@ -282,41 +285,41 @@ static void tr_insert(struct tree *tr, struct tree_iter *ti,
           less(tn_key, tr_key)))
   {
     if (subtree->tn.left) {
-      ti->path[ti->depth++] = subtree;
-      tr_insert(tr, ti, subtree->tn.left, node);
+      set(mkloc(ti->path[ti->depth++], ti->self), subtree);
+      tr_insert(tree, tr, ti, subtree->tn.left, node);
     } else {
       int dep = ti->depth + 1;
-      subtree->tn.left = node;
+      set(mkloc(subtree->tn.left, subtree), node);
       if (subtree->tn.right == nil && (((ucnum) 1) << dep) > tr->size) {
-        ti->path[ti->depth++] = subtree;
-        tr_find_rebuild_scapegoat(tr, ti, node, 1);
+        set(mkloc(ti->path[ti->depth++], ti->self), subtree);
+        tr_find_rebuild_scapegoat(tree, tr, ti, node, 1);
       }
     }
   } else if (if3(tr->equal_fn == nil,
                  equal(tn_key, tr_key),
                  funcall2(tr->equal_fn, tn_key, tr_key))) {
-    node->tn.left = subtree->tn.left;
-    node->tn.right = subtree->tn.right;
+    set(mkloc(node->tn.left, node), subtree->tn.left);
+    set(mkloc(node->tn.right, node), subtree->tn.right);
     if (ti->depth > 0) {
       val parent = ti->path[ti->depth - 1];
 
       if (parent->tn.left == subtree)
-        parent->tn.left = node;
+        set(mkloc(parent->tn.left, parent), node);
       else
-        parent->tn.right = node;
+        set(mkloc(parent->tn.right, parent), node);
     } else {
-      tr->root = node;
+      set(mkloc(tr->root, tree), node);
     }
   } else {
     if (subtree->tn.right) {
-      ti->path[ti->depth++] = subtree;
-      tr_insert(tr, ti, subtree->tn.right, node);
+      set(mkloc(ti->path[ti->depth++], ti->self), subtree);
+      tr_insert(tree, tr, ti, subtree->tn.right, node);
     } else {
       int dep = ti->depth + 1;
-      subtree->tn.right = node;
+      set(mkloc(subtree->tn.right, subtree), node);
       if (subtree->tn.left == nil && (((ucnum) 1) << dep) > tr->size) {
-        ti->path[ti->depth++] = subtree;
-        tr_find_rebuild_scapegoat(tr, ti, node, 1);
+        set(mkloc(ti->path[ti->depth++], ti->self), subtree);
+        tr_find_rebuild_scapegoat(tree, tr, ti, node, 1);
       }
     }
   }
@@ -327,7 +330,8 @@ static val tr_lookup(struct tree *tree, val key)
   return if2(tree->root, tn_lookup(tree, tree->root, key));
 }
 
-static val tr_do_delete(struct tree *tr, val subtree, val parent, val key)
+static val tr_do_delete(val tree, struct tree *tr, val subtree,
+                        val parent, val key)
 {
   val tr_key = if3(tr->key_fn,
                    funcall1(tr->key_fn, subtree->tn.key),
@@ -338,7 +342,7 @@ static val tr_do_delete(struct tree *tr, val subtree, val parent, val key)
           less(key, tr_key)))
   {
     if (subtree->tn.left)
-      return tr_do_delete(tr, subtree->tn.left, subtree, key);
+      return tr_do_delete(tree, tr, subtree->tn.left, subtree, key);
     return nil;
   } else if (if3(tr->equal_fn == nil,
                  equal(key, tr_key),
@@ -347,23 +351,23 @@ static val tr_do_delete(struct tree *tr, val subtree, val parent, val key)
     val ri = subtree->tn.right;
 
     if (le && ri) {
-      struct tree_iter trit = tree_iter_init();
+      struct tree_iter trit = tree_iter_init(0);
       val succ = tn_find_next(ri, &trit);
       val succ_par = if3(trit.depth, trit.path[trit.depth - 1], subtree);
 
       if (succ_par == subtree)
-        succ_par->tn.right = succ->tn.right;
+        set(mkloc(succ_par->tn.right, succ_par), succ->tn.right);
       else
-        succ_par->tn.left = succ->tn.right;
+        set(mkloc(succ_par->tn.left, succ_par), succ->tn.right);
 
-      succ->tn.left = subtree->tn.left;
-      succ->tn.right = subtree->tn.right;
+      set(mkloc(succ->tn.left, succ), subtree->tn.left);
+      set(mkloc(succ->tn.right, succ), subtree->tn.right);
 
       if (parent) {
         if (parent->tn.left == subtree)
-          parent->tn.left = succ;
+          set(mkloc(parent->tn.left, parent), succ);
         else
-          parent->tn.right = succ;
+          set(mkloc(parent->tn.right, parent), succ);
       } else {
         tr->root = succ;
       }
@@ -373,11 +377,11 @@ static val tr_do_delete(struct tree *tr, val subtree, val parent, val key)
 
       if (parent) {
         if (parent->tn.left == subtree)
-          parent->tn.left = chld;
+          set(mkloc(parent->tn.left, parent), chld);
         else
-          parent->tn.right = chld;
+          set(mkloc(parent->tn.right, parent), chld);
       } else {
-        tr->root = chld;
+        set(mkloc(tr->root, tree), chld);
       }
     }
 
@@ -385,18 +389,18 @@ static val tr_do_delete(struct tree *tr, val subtree, val parent, val key)
     return subtree;
   } else {
     if (subtree->tn.right)
-      return tr_do_delete(tr, subtree->tn.right, subtree, key);
+      return tr_do_delete(tree, tr, subtree->tn.right, subtree, key);
     return nil;
   }
 }
 
-static val tr_delete(struct tree *tr, val key)
+static val tr_delete(val tree, struct tree *tr, val key)
 {
   if (tr->root) {
-    val node = tr_do_delete(tr, tr->root, nil, key);
+    val node = tr_do_delete(tree, tr, tr->root, nil, key);
     if (node) {
       if (2 * --tr->size < tr->max_size) {
-        tr_rebuild(tr, tr->root, nil, tr->size);
+        tr_rebuild(tree, tr, tr->root, nil, tr->size);
         tr->max_size = tr->size;
       }
     }
@@ -419,12 +423,12 @@ val tree_insert_node(val tree, val node)
   if (tr->root == nil) {
     tr->size = 1;
     tr->max_size = 1;
-    tr->root = node;
+    set(mkloc(tr->root, tree), node);
   } else {
-    struct tree_iter ti = tree_iter_init();
+    struct tree_iter ti = tree_iter_init(0);
     if (++tr->size > tr->max_size)
       tr->max_size = tr->size;
-    tr_insert(tr, &ti, tr->root, node);
+    tr_insert(tree, tr, &ti, tr->root, node);
   }
 
   return node;
@@ -452,7 +456,7 @@ static val tree_delete_node(val tree, val key)
 {
   val self = lit("tree-delete-node");
   struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
-  return tr_delete(tr, key);
+  return tr_delete(tree, tr, key);
 }
 
 static val tree_delete(val tree, val key)
@@ -487,7 +491,7 @@ static val tree_equal_op(val left, val right)
     return nil;
 
   {
-    struct tree_iter liter = tree_iter_init(), riter = tree_iter_init();
+    struct tree_iter liter = tree_iter_init(0), riter = tree_iter_init(0);
     val lnode = ltr->root, rnode = rtr->root;
 
     while ((lnode = tn_find_next(lnode, &liter)) &&
@@ -527,7 +531,7 @@ static void tree_print_op(val tree, val out, val pretty, struct strm_ctx *ctx)
   put_char(chr(')'), out);
 
   {
-    struct tree_iter trit = tree_iter_init();
+    struct tree_iter trit = tree_iter_init(0);
     val node = tr->root;
 
     while ((node = tn_find_next(node, &trit))) {
@@ -571,7 +575,7 @@ static ucnum tree_hash_op(val obj, int *count, ucnum seed)
   hash += equal_hash(tr->equal_fn, count, seed);
 
   {
-    struct tree_iter trit = tree_iter_init();
+    struct tree_iter trit = tree_iter_init(0);
     val node = tr->root;
 
     while ((node = tn_find_next(node, &trit)) && (*count)-- <= 0)
@@ -687,10 +691,13 @@ val tree_begin(val tree)
   struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
   struct tree_diter *tdi = coerce(struct tree_diter *,
                                   chk_calloc(1, sizeof *tdi));
+  val iter = cobj(coerce(mem_t *, tdi), tree_iter_s, &tree_iter_ops);
+
+  tdi->ti.self = iter;
   tdi->tr = tr;
   tdi->lastnode = tr->root;
 
-  return cobj(coerce(mem_t *, tdi), tree_iter_s, &tree_iter_ops);
+  return iter;
 }
 
 val tree_next(val iter)
