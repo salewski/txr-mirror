@@ -5,6 +5,9 @@
 
 (test tr #T(()))
 
+(test (treep tr) t)
+(test (treep 42) nil)
+
 (each ((n keys))
   (tree-insert tr n))
 
@@ -29,3 +32,40 @@
   (tree-lookup tr 17) 17
   (tree-lookup tr 18) 18
   (tree-lookup tr 19) 19)
+
+(vtest (build (for* ((i (tree-begin tr))
+                     (n (tree-next i)))
+                    (n)
+                    ((set n (tree-next i)))
+                (add (key n))))
+       (range 0 19))
+
+(defvarl trc (copy-search-tree tr))
+
+(vtest trc tr)
+
+(tree-clear trc)
+
+(test trc #T(()))
+
+(mtest
+  (tree-delete tr 0) 0
+  (tree-delete tr 1) 1
+  (tree-delete tr 2) 2
+  (tree-delete tr 3) 3
+  (tree-delete tr 4) 4
+  (tree-delete tr 5) 5
+  (tree-delete tr 6) 6
+  (tree-delete tr 7) 7
+  (tree-delete tr 8) 8
+  (tree-delete tr 9) 9
+  (tree-delete tr 10) 10
+  (tree-delete tr 11) 11
+  (tree-delete tr 12) 12
+  (tree-delete tr 13) 13
+  (tree-delete tr 14) 14
+  (tree-delete tr 15) 15
+  (tree-delete tr 16) 16
+  (tree-delete tr 17) 17
+  (tree-delete tr 18) 18
+  (tree-delete tr 19) 19)
