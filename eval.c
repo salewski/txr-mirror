@@ -715,7 +715,33 @@ static val reparent_env(val child, val parent)
   return child;
 }
 
+static val special_var_p(val sym)
+{
+  uses_or2;
+  return or2(gethash(special, sym),
+             if2(lisplib_try_load(sym), gethash(special, sym)));
+}
+
 static val lexical_var_p(val menv, val sym)
+{
+  if (nilp(menv)) {
+    return nil;
+  } else if (special_var_p(sym)) {
+    return nil;
+  } else {
+    type_check(lit("lexical-var-p"), menv, ENV);
+
+    {
+      val binding = assoc(sym, menv->e.vbindings);
+
+      if (binding) /* special_s: see make_var_shadowing_env */
+        return tnil(cdr(binding) == special_s);
+      return lexical_var_p(menv->e.up_env, sym);
+    }
+  }
+}
+
+static val old_lexical_var_p(val menv, val sym)
 {
   if (nilp(menv)) {
     return nil;
@@ -725,7 +751,7 @@ static val lexical_var_p(val menv, val sym)
     {
       val binding = assoc(sym, menv->e.vbindings);
 
-      if (binding) /* special_s: see make_var_shadowing_env */
+      if (binding)
         return tnil(cdr(binding) == special_s);
       return lexical_var_p(menv->e.up_env, sym);
     }
@@ -778,13 +804,6 @@ static val mark_special(val sym)
 {
   assert (sym != nil);
   return sethash(special, sym, t);
-}
-
-static val special_var_p(val sym)
-{
-  uses_or2;
-  return or2(gethash(special, sym),
-             if2(lisplib_try_load(sym), gethash(special, sym)));
 }
 
 static void copy_env_handler(mem_t *ptr)
@@ -6793,7 +6812,10 @@ void eval_init(void)
   reg_fun(intern(lit("env-vbindings"), user_package), func_n1(env_vbindings));
   reg_fun(intern(lit("env-fbindings"), user_package), func_n1(env_fbindings));
   reg_fun(intern(lit("env-next"), user_package), func_n1(env_next));
-  reg_fun(intern(lit("lexical-var-p"), user_package), func_n2(lexical_var_p));
+  reg_fun(intern(lit("lexical-var-p"), user_package),
+          func_n2(if3(opt_compat && opt_compat <= 257,
+                      old_lexical_var_p,
+                      lexical_var_p)));
   reg_fun(intern(lit("lexical-fun-p"), user_package), func_n2(lexical_fun_p));
   reg_fun(intern(lit("lexical-lisp1-binding"), user_package),
           func_n2(lexical_lisp1_binding));

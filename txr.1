@@ -36785,10 +36785,44 @@ parameter. Using these functions, a macro can enquire whether
 a given
 .meta form
 is a symbol which has a variable binding or a function binding
-in the lexical environment.
+in the local lexical environment.
 This information is known during macro expansion. The macro expander
 recognizes lexical function and variable bindings, because these
 bindings can shadow macros.
+
+Special variables are not lexical. The function
+.code lexical-var-p
+returns
+.code nil
+if
+.meta form
+satisfies
+.code special-var-p
+function, indicating that it is the name of a special variable.
+
+The
+.code lexical-var-p
+function also returns
+.code nil
+for global lexical variables. If
+.meta form
+is a symbol for which only a global lexical variable binding is apparent,
+.code lexical-var-p
+returns
+.codn nil .
+Testing for the existence for a global variable can be done using
+.codn boundp ;
+if a symbol is
+.code boundp
+but not
+.codn special-var-p ,
+then it is a global lexical variable.
+
+Similarly,
+.code lexical-fun-p
+returns
+.code nil
+for global functions.
 
 .TP* Example:
 
@@ -36806,14 +36840,20 @@ bindings can shadow macros.
       (t :not-lex-fun-var)))
 
   ;;
-  ;; This returns:
-  ;;
-  ;;   (:lexical-var :not-lex-fun-var :lexical-fun)
+  ;; Use classify macro above to report classification
+  ;; of the x, y and f symbols in the given scope
   ;;
   (let ((x 1) (y 2))
     (symacrolet ((y x))
       (flet ((f () (+ 2 2)))
         (list (classify x) (classify y) (classify f)))))
+  --> (:lexical-var :not-lex-fun-var :lexical-fun)
+
+  ;; Locally bound specials are not lexical
+
+  (let ((*stdout* *stdnull*))
+    (classify *stdout*))
+  --> :not-lex-fun-var
 .brev
 
 .TP* Note:
@@ -79273,6 +79313,14 @@ A compatibility value of 248 or lower restores the above old behaviors of
 .code @
 and
 .codn hash-revget .
+.IP 257
+Until \*(TX 257, the function
+.code lexical-var-p
+returned
+.code t
+for not only lexical variables, but also for locally bound special variables,
+which are not lexical. The behavior is restored if 257 or older compatibility
+is selected.
 .IP 244
 Until \*(TX 244, the
 .code env-hash
