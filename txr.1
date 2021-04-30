@@ -51542,23 +51542,32 @@ and contains the same elements.
 The nodes held inside the new tree are freshly allocated,
 but their key objects are shared with the original tree.
 
-.coNP Function @ tree-begin
+.coNP Functions @ tree-begin and @ tree-begin-at
 .synb
 .mets (tree-begin < tree )
+.mets (tree-begin-at < tree << low-key )
 .syne
 .desc
 The
 .code tree-begin
 function returns a new object of type
 .code tree-iter
-which provides in-order traversal of the elements stored in the tree.
+which provides in-order traversal of all the nodes stored in the tree.
+
+The
+.code tree-begin-at
+similarly returns a new object of type
+.codn tree-iter .
+This object provides in-order traversal of those nodes stored in the tree
+whose key is equal to or higher than
+.metn low-key .
 
 The
 .meta tree
 argument must be an object of type
 .codn tree .
 
-Note: the elements are traversed by applying the
+The nodes are traversed by applying the
 .code tree-next
 function to the
 .code tree-iter

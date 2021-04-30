@@ -43,6 +43,7 @@ val copy_search_tree(val tree);
 val treep(val obj);
 val tree_insert_node(val tree, val node);
 val tree_begin(val tree);
+val tree_begin_at(val tree, val lowkey);
 val tree_next(val iter);
 val tree_clear(val tree);
 void tree_init(void);

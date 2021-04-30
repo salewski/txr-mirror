@@ -25,7 +25,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include <stddef.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -60,7 +59,8 @@ struct tree {
 
 enum tree_iter_state {
   tr_visited_nothing,
-  tr_visited_left
+  tr_visited_left,
+  tr_find_low_prepared
 };
 
 struct tree_iter {
@@ -191,6 +191,7 @@ static val tn_find_next(val node, struct tree_iter *trit)
     case tr_visited_left:
       if (node->tn.right) {
         trit->state = tr_visited_nothing;
+        set(mkloc(trit->path[trit->depth++], trit->self), node);
         node = node->tn.right;
         continue;
       } else {
@@ -205,9 +206,57 @@ static val tn_find_next(val node, struct tree_iter *trit)
         }
         return nil;
       }
+    case tr_find_low_prepared:
+      trit->state = tr_visited_left;
+      return node;
     default:
       internal_error("invalid tree iterator state");
     }
+  }
+}
+
+static void tn_find_low(val node, struct tree_diter *tdi,
+                        struct tree *tr, val key)
+{
+  struct tree_iter *trit = &tdi->ti;
+
+  if (node == 0) {
+    return;
+  } else {
+    val tr_key = if3(tr->key_fn,
+                     funcall1(tr->key_fn, node->tn.key),
+                     node->tn.key);
+
+    set(mkloc(trit->path[trit->depth++], trit->self), node);
+
+    if (if3(tr->less_fn,
+            funcall2(tr->less_fn, key, tr_key),
+            less(key, tr_key)))
+    {
+      set(mkloc(tdi->lastnode, tdi->ti.self), node);
+      if (node->tn.left) {
+        tn_find_low(node->tn.left, tdi, tr, key);
+        return;
+      }
+    } else if (if3(tr->equal_fn == nil,
+                   equal(key, tr_key),
+                   funcall2(tr->equal_fn, key, tr_key))) {
+      set(mkloc(tdi->lastnode, tdi->ti.self), node);
+      if (node->tn.left) {
+        tn_find_low(node->tn.left, tdi, tr, key);
+        return;
+      }
+    } else {
+      if (node->tn.right) {
+        tn_find_low(node->tn.right, tdi, tr, key);
+        return;
+      }
+    }
+
+    while (trit->path[trit->depth - 1] != tdi->lastnode)
+      trit->depth--;
+    trit->depth--;
+    trit->state = tr_find_low_prepared;
   }
 }
 
@@ -700,6 +749,22 @@ val tree_begin(val tree)
   return iter;
 }
 
+val tree_begin_at(val tree, val lowkey)
+{
+  val self = lit("tree-begin-at");
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  struct tree_diter *tdi = coerce(struct tree_diter *,
+                                  chk_calloc(1, sizeof *tdi));
+  val iter = cobj(coerce(mem_t *, tdi), tree_iter_s, &tree_iter_ops);
+
+  tdi->ti.self = iter;
+  tdi->tr = tr;
+
+  tn_find_low(tr->root, tdi, tr, lowkey);
+
+  return iter;
+}
+
 val tree_next(val iter)
 {
   val self = lit("tree-next");
@@ -750,6 +815,7 @@ void tree_init(void)
   reg_fun(intern(lit("tree-delete"), user_package), func_n2(tree_delete));
   reg_fun(intern(lit("tree-root"), user_package), func_n1(tree_root));
   reg_fun(intern(lit("tree-begin"), user_package), func_n1(tree_begin));
+  reg_fun(intern(lit("tree-begin-at"), user_package), func_n2(tree_begin_at));
   reg_fun(intern(lit("tree-next"), user_package), func_n1(tree_next));
   reg_fun(intern(lit("tree-clear"), user_package), func_n1(tree_clear));
   reg_var(tree_fun_whitelist_s, list(identity_s, equal_s, less_s, nao));

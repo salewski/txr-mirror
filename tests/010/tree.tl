@@ -48,6 +48,34 @@
 
 (test trc #T(()))
 
+(test (tree-delete tr 6) 6)
+
+(vtest (build (for* ((i (tree-begin-at tr 6))
+                     (n (tree-next i)))
+                    (n)
+                    ((set n (tree-next i)))
+                (add (key n))))
+       (range 7 19))
+
+(vtest (build (for* ((i (tree-begin-at tr 0))
+                     (n (tree-next i)))
+                    (n)
+                    ((set n (tree-next i)))
+                (add (key n))))
+       (append (range 0 5) (range 7 19)))
+
+(vtest (build (for* ((i (tree-begin-at tr 8))
+                     (n (tree-next i)))
+                    (n)
+                    ((set n (tree-next i)))
+                (add (key n))))
+       (range 8 19))
+
+(test (tree-next (tree-begin-at tr 20)) nil)
+
+(test (tree-next (tree-begin-at #T(()) 0)) nil)
+(test (key (tree-next (tree-begin-at #T(() 1) 1))) 1)
+
 (mtest
   (tree-delete tr 0) 0
   (tree-delete tr 1) 1
@@ -55,7 +83,6 @@
   (tree-delete tr 3) 3
   (tree-delete tr 4) 4
   (tree-delete tr 5) 5
-  (tree-delete tr 6) 6
   (tree-delete tr 7) 7
   (tree-delete tr 8) 8
   (tree-delete tr 9) 9
