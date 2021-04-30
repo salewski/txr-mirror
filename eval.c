@@ -5428,7 +5428,7 @@ static val lazy_mapcar_func(val env, val lcons)
   us_cons_bind (fun, iter, env);
 
   us_rplaca(lcons, funcall1(fun, iter_item(iter)));
-  us_rplacd(env, iter_step(iter));
+  us_rplacd(env, iter = iter_step(iter));
 
   if (iter_more(iter))
     us_rplacd(lcons, make_lazy_cons(us_lcons_fun(lcons)));
