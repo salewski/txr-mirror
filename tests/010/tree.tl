@@ -62,7 +62,7 @@
                     (n)
                     ((set n (tree-next i)))
                 (add (key n))))
-       (append (range 0 5) (range 7 19)))
+       (rlist 0..5 7..19))
 
 (vtest (build (for* ((i (tree-begin-at tr 8))
                      (n (tree-next i)))
