@@ -76288,6 +76288,48 @@ operator. If a macro calculates a new string each time it is expanded,
 and inserts it into the expansion as a literal, the compiler will identify
 and consolidate groups of such strings that are identical.
 
+.coNP Treatment of symbols
+
+A source file may contain unqualified symbol tokens which are interned
+in the current package.
+
+In contrast, a compiled file encodes symbols with full package qualification.
+When a compiled file is loaded, the current package at that time has no effect
+on the symbols in the compiled file, even if those symbols were specified as
+unqualified in the original source file.
+
+This difference can lead to surprising behaviors. Suppose a source file
+contains references to functions or variables or other entities which do not
+exist. Furthermore, suppose the entities were referenced, in that file, using
+unqualified symbols which didn't exist, and were expected to come from a
+different package from the one where they ended up interned. For instance,
+supposed the file is being processed in a package called
+.code abc
+and is expecting to use a function
+.code calc
+which should come from the
+.code xyz
+package. Unfortunately, no such symbol exists. Therefore, the symbol is
+interned as
+.code abc:calc
+and not
+.codn xyz:calc .
+In that case, it
+should be
+sufficient to ensure that the
+.code xyz:calc
+function exists, and then reload the source file. The unqualified symbol token
+.code calc
+in that file will be correctly resolved to
+.code xyz:calc
+that time.  However, if the file is compiled, reloading will not be suficient.
+Even though the symbol
+.code xyz:calc
+exists, the file will continue to try to refer a function using the symbol
+.code abc:calc
+which comes from a fully qualified representation stored in the compiled file.
+The file will have to be recompiled to fix the issue.
+
 .coNP Treatment of unbound variables
 
 Unbound variables are treated differently by the compiler. A reference
