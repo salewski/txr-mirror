@@ -72,7 +72,6 @@ struct tree_iter {
 
 struct tree_diter {
   struct tree_iter ti;
-  struct tree *tr;
   val lastnode;
 };
 
@@ -743,7 +742,6 @@ val tree_begin(val tree)
   val iter = cobj(coerce(mem_t *, tdi), tree_iter_s, &tree_iter_ops);
 
   tdi->ti.self = iter;
-  tdi->tr = tr;
   tdi->lastnode = tr->root;
 
   return iter;
@@ -758,7 +756,6 @@ val tree_begin_at(val tree, val lowkey)
   val iter = cobj(coerce(mem_t *, tdi), tree_iter_s, &tree_iter_ops);
 
   tdi->ti.self = iter;
-  tdi->tr = tr;
 
   tn_find_low(tr->root, tdi, tr, lowkey);
 
