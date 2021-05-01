@@ -1,35 +1,5 @@
 /* A Bison parser, made by GNU Bison 2.5.  */
 
-/* Bison implementation for Yacc-like parsers in C
-   
-      Copyright (C) 1984, 1989-1990, 2000-2011 Free Software Foundation, Inc.
-   
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-   
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-   
-   You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
-
-/* As a special exception, you may create a larger work that contains
-   part or all of the Bison parser skeleton and distribute that work
-   under terms of your choice, so long as that work isn't itself a
-   parser generator using the skeleton or a modified version thereof
-   as a parser skeleton.  Alternatively, if you modify or redistribute
-   the parser skeleton itself, you may (at your option) remove this
-   special exception, which will cause the skeleton and the resulting
-   Bison output files to be licensed under the GNU General Public
-   License without this special exception.
-   
-   This special exception was added by the Free Software Foundation in
-   version 2.2 of Bison.  */
-
 /* C LALR(1) parser skeleton written by Richard Stallman, by
    simplifying the original so-called "semantic" parser.  */
 
@@ -121,6 +91,7 @@
 #include "buf.h"
 #include "parser.h"
 
+static void set_syntax_tree(parser_t *parser, val tree);
 static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed);
 static val repeat_rep_helper(val sym, val args, val main, val parts);
 static void process_catch_exprs(val exprs);
@@ -168,7 +139,7 @@ INLINE val expand_form_ver(val form, int ver)
 
 
 /* Line 268 of yacc.c  */
-#line 172 "y.tab.c"
+#line 173 "y.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -341,7 +312,7 @@ typedef union YYSTYPE
 {
 
 /* Line 293 of yacc.c  */
-#line 106 "parser.y"
+#line 107 "parser.y"
 
   wchar_t *lexeme;
   union obj *val;
@@ -351,7 +322,7 @@ typedef union YYSTYPE
 
 
 /* Line 293 of yacc.c  */
-#line 355 "y.tab.c"
+#line 356 "y.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -363,7 +334,7 @@ typedef union YYSTYPE
 
 
 /* Line 343 of yacc.c  */
-#line 367 "y.tab.c"
+#line 368 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -835,49 +806,49 @@ static const yytype_int16 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   173,   173,   174,   176,   175,   179,   178,   181,   188,
-     195,   204,   204,   207,   207,   210,   210,   213,   214,   215,
-     218,   218,   221,   221,   224,   224,   227,   228,   229,   234,
-     235,   236,   239,   240,   243,   244,   247,   248,   249,   250,
-     251,   252,   253,   254,   255,   256,   259,   260,   261,   262,
-     265,   267,   271,   274,   280,   282,   286,   288,   292,   294,
-     298,   309,   314,   317,   322,   331,   343,   348,   352,   353,
-     354,   357,   363,   375,   380,   381,   384,   385,   388,   391,
-     392,   393,   396,   419,   423,   436,   439,   444,   447,   450,
-     451,   454,   456,   461,   462,   470,   472,   475,   476,   479,
-     481,   483,   491,   494,   502,   505,   514,   517,   519,   521,
-     523,   524,   526,   527,   528,   529,   532,   538,   541,   542,
-     543,   546,   551,   555,   557,   559,   564,   572,   577,   582,
-     588,   593,   594,   597,   600,   606,   610,   612,   615,   627,
-     632,   634,   637,   640,   643,   648,   649,   652,   653,   654,
-     657,   663,   668,   672,   676,   685,   689,   696,   703,   706,
-     718,   721,   725,   736,   739,   742,   745,   746,   748,   751,
-     753,   756,   757,   758,   759,   762,   764,   766,   767,   769,
-     772,   775,   779,   782,   785,   793,   796,   802,   808,   815,
-     816,   817,   818,   819,   820,   824,   829,   832,   836,   839,
-     840,   842,   844,   847,   852,   861,   866,   869,   874,   879,
-     883,   889,   893,   900,   904,   908,   912,   917,   921,   934,
-     938,   939,   945,   946,   947,   948,   952,   957,   961,   966,
-     970,   974,   975,   976,   980,   981,   982,   985,   988,   989,
-     992,   994,   999,  1002,  1002,  1006,  1006,  1009,  1012,  1014,
-    1018,  1020,  1026,  1027,  1029,  1030,  1031,  1032,  1033,  1034,
-    1035,  1036,  1037,  1038,  1039,  1040,  1041,  1042,  1043,  1044,
-    1046,  1046,  1050,  1050,  1054,  1054,  1058,  1058,  1061,  1064,
-    1065,  1067,  1068,  1070,  1071,  1072,  1073,  1074,  1075,  1076,
-    1077,  1078,  1079,  1080,  1081,  1082,  1083,  1084,  1085,  1087,
-    1087,  1091,  1091,  1095,  1095,  1099,  1102,  1108,  1112,  1118,
-    1119,  1122,  1123,  1124,  1124,  1127,  1130,  1131,  1134,  1135,
-    1136,  1139,  1142,  1147,  1151,  1157,  1160,  1161,  1162,  1163,
-    1166,  1167,  1168,  1171,  1172,  1173,  1174,  1175,  1182,  1183,
-    1185,  1186,  1187,  1188,  1189,  1190,  1191,  1192,  1196,  1197,
-    1200,  1201,  1202,  1205,  1207,  1208,  1209,  1210,  1211,  1212,
-    1213,  1214,  1215,  1216,  1217,  1218,  1221,  1235,  1236,  1240,
-    1241,  1243,  1247,  1260,  1262,  1266,  1271,  1272,  1275,  1279,
-    1281,  1285,  1286,  1287,  1289,  1296,  1297,  1299,  1300,  1303,
-    1304,  1305,  1306,  1309,  1310,  1311,  1313,  1317,  1318,  1319,
-    1321,  1327,  1329,  1332,  1337,  1339,  1343,  1344,  1351,  1352,
-    1353,  1354,  1355,  1356,  1357,  1358,  1359,  1360,  1362,  1364,
-    1366,  1368,  1370,  1372,  1374,  1379
+       0,   174,   174,   175,   178,   177,   181,   180,   183,   190,
+     197,   206,   206,   209,   209,   212,   212,   215,   216,   217,
+     220,   220,   223,   223,   226,   226,   229,   230,   231,   236,
+     237,   238,   241,   242,   245,   246,   249,   250,   251,   252,
+     253,   254,   255,   256,   257,   258,   261,   262,   263,   264,
+     267,   269,   273,   276,   282,   284,   288,   290,   294,   296,
+     300,   311,   316,   319,   324,   333,   345,   350,   354,   355,
+     356,   359,   365,   377,   382,   383,   386,   387,   390,   393,
+     394,   395,   398,   421,   425,   438,   441,   446,   449,   452,
+     453,   456,   458,   463,   464,   472,   474,   477,   478,   481,
+     483,   485,   493,   496,   504,   507,   516,   519,   521,   523,
+     525,   526,   528,   529,   530,   531,   534,   540,   543,   544,
+     545,   548,   553,   557,   559,   561,   566,   574,   579,   584,
+     590,   595,   596,   599,   602,   608,   612,   614,   617,   629,
+     634,   636,   639,   642,   645,   650,   651,   654,   655,   656,
+     659,   665,   670,   674,   678,   687,   691,   698,   705,   708,
+     720,   723,   727,   738,   741,   744,   747,   748,   750,   753,
+     755,   758,   759,   760,   761,   764,   766,   768,   769,   771,
+     774,   777,   781,   784,   787,   795,   798,   804,   810,   817,
+     818,   819,   820,   821,   822,   826,   831,   834,   838,   841,
+     842,   844,   846,   849,   854,   863,   868,   871,   876,   881,
+     885,   891,   895,   902,   906,   910,   914,   919,   923,   936,
+     940,   941,   947,   948,   949,   950,   954,   959,   963,   968,
+     972,   976,   977,   978,   982,   983,   984,   987,   990,   991,
+     994,   996,  1001,  1004,  1004,  1008,  1008,  1011,  1014,  1016,
+    1020,  1022,  1028,  1029,  1031,  1032,  1033,  1034,  1035,  1036,
+    1037,  1038,  1039,  1040,  1041,  1042,  1043,  1044,  1045,  1046,
+    1048,  1048,  1052,  1052,  1056,  1056,  1060,  1060,  1063,  1066,
+    1067,  1069,  1070,  1072,  1073,  1074,  1075,  1076,  1077,  1078,
+    1079,  1080,  1081,  1082,  1083,  1084,  1085,  1086,  1087,  1089,
+    1089,  1093,  1093,  1097,  1097,  1101,  1104,  1110,  1114,  1120,
+    1121,  1124,  1125,  1126,  1126,  1129,  1132,  1133,  1136,  1137,
+    1138,  1141,  1144,  1149,  1153,  1159,  1162,  1163,  1164,  1165,
+    1168,  1169,  1170,  1173,  1174,  1175,  1176,  1177,  1184,  1185,
+    1187,  1188,  1189,  1190,  1191,  1192,  1193,  1194,  1198,  1199,
+    1202,  1203,  1204,  1207,  1209,  1210,  1211,  1212,  1213,  1214,
+    1215,  1216,  1217,  1218,  1219,  1220,  1223,  1237,  1238,  1242,
+    1243,  1245,  1249,  1262,  1264,  1268,  1273,  1274,  1277,  1281,
+    1283,  1287,  1288,  1289,  1291,  1298,  1299,  1301,  1302,  1305,
+    1306,  1307,  1308,  1311,  1312,  1313,  1315,  1319,  1320,  1321,
+    1323,  1329,  1331,  1334,  1339,  1341,  1345,  1346,  1353,  1354,
+    1355,  1356,  1357,  1358,  1359,  1360,  1361,  1362,  1364,  1366,
+    1368,  1370,  1372,  1374,  1376,  1381
 };
 #endif
 
@@ -3136,49 +3107,50 @@ yyreduce:
         case 2:
 
 /* Line 1806 of yacc.c  */
-#line 173 "parser.y"
-    { parser->syntax_tree = (yyvsp[(1) - (1)].val); }
+#line 174 "parser.y"
+    { set_syntax_tree(parser, (yyvsp[(1) - (1)].val)); }
     break;
 
   case 3:
 
 /* Line 1806 of yacc.c  */
-#line 174 "parser.y"
-    { parser->syntax_tree = (yyvsp[(2) - (2)].val); end_of_regex(scnr); }
+#line 175 "parser.y"
+    { set_syntax_tree(parser, (yyvsp[(2) - (2)].val));
+                                  end_of_regex(scnr); }
     break;
 
   case 4:
 
 /* Line 1806 of yacc.c  */
-#line 176 "parser.y"
-    { parser->syntax_tree = (yyvsp[(2) - (2)].val); YYACCEPT; }
+#line 178 "parser.y"
+    { set_syntax_tree(parser, (yyvsp[(2) - (2)].val)); YYACCEPT; }
     break;
 
   case 5:
 
 /* Line 1806 of yacc.c  */
-#line 177 "parser.y"
+#line 179 "parser.y"
     { internal_error("notreached"); }
     break;
 
   case 6:
 
 /* Line 1806 of yacc.c  */
-#line 179 "parser.y"
-    { parser->syntax_tree = (yyvsp[(2) - (2)].val); YYACCEPT; }
+#line 181 "parser.y"
+    { set_syntax_tree(parser, (yyvsp[(2) - (2)].val)); YYACCEPT; }
     break;
 
   case 7:
 
 /* Line 1806 of yacc.c  */
-#line 180 "parser.y"
+#line 182 "parser.y"
     { internal_error("notreached"); }
     break;
 
   case 8:
 
 /* Line 1806 of yacc.c  */
-#line 181 "parser.y"
+#line 183 "parser.y"
     { if (yychar == YYEOF) {
                                     parser->syntax_tree = nao;
                                     YYACCEPT;
@@ -3191,7 +3163,7 @@ yyreduce:
   case 9:
 
 /* Line 1806 of yacc.c  */
-#line 188 "parser.y"
+#line 190 "parser.y"
     { if (yychar == YYEOF) {
                                     parser->syntax_tree = nao;
                                     YYACCEPT;
@@ -3204,7 +3176,7 @@ yyreduce:
   case 10:
 
 /* Line 1806 of yacc.c  */
-#line 195 "parser.y"
+#line 197 "parser.y"
     { parser->syntax_tree = nil;
                                   if (parser->errors >= 8)
                                     YYABORT;
@@ -3215,14 +3187,14 @@ yyreduce:
   case 11:
 
 /* Line 1806 of yacc.c  */
-#line 204 "parser.y"
+#line 206 "parser.y"
     { parser->ignore = 1; }
     break;
 
   case 12:
 
 /* Line 1806 of yacc.c  */
-#line 205 "parser.y"
+#line 207 "parser.y"
     { parser->ignore = 0;
                                                   (yyval.val) = nao; }
     break;
@@ -3230,14 +3202,14 @@ yyreduce:
   case 13:
 
 /* Line 1806 of yacc.c  */
-#line 207 "parser.y"
+#line 209 "parser.y"
     { parser->ignore = 1; }
     break;
 
   case 14:
 
 /* Line 1806 of yacc.c  */
-#line 208 "parser.y"
+#line 210 "parser.y"
     { parser->ignore = 0;
                                                   (yyval.val) = nao; }
     break;
@@ -3245,14 +3217,14 @@ yyreduce:
   case 15:
 
 /* Line 1806 of yacc.c  */
-#line 210 "parser.y"
+#line 212 "parser.y"
     { parser->ignore = 1; }
     break;
 
   case 16:
 
 /* Line 1806 of yacc.c  */
-#line 211 "parser.y"
+#line 213 "parser.y"
     { parser->ignore = 0;
                                                   (yyval.val) = nao; }
     break;
@@ -3260,35 +3232,35 @@ yyreduce:
   case 17:
 
 /* Line 1806 of yacc.c  */
-#line 213 "parser.y"
+#line 215 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 18:
 
 /* Line 1806 of yacc.c  */
-#line 214 "parser.y"
+#line 216 "parser.y"
     { (yyval.val) = uref_helper(parser, (yyvsp[(2) - (2)].val)); }
     break;
 
   case 19:
 
 /* Line 1806 of yacc.c  */
-#line 215 "parser.y"
+#line 217 "parser.y"
     { (yyval.val) = uoref_helper(parser, (yyvsp[(2) - (2)].val)); }
     break;
 
   case 20:
 
 /* Line 1806 of yacc.c  */
-#line 218 "parser.y"
+#line 220 "parser.y"
     { parser->ignore = 1; }
     break;
 
   case 21:
 
 /* Line 1806 of yacc.c  */
-#line 219 "parser.y"
+#line 221 "parser.y"
     { parser->ignore = 0;
                                                   (yyval.val) = nao; }
     break;
@@ -3296,14 +3268,14 @@ yyreduce:
   case 22:
 
 /* Line 1806 of yacc.c  */
-#line 221 "parser.y"
+#line 223 "parser.y"
     { parser->ignore = 1; }
     break;
 
   case 23:
 
 /* Line 1806 of yacc.c  */
-#line 222 "parser.y"
+#line 224 "parser.y"
     { parser->ignore = 0;
                                                   (yyval.val) = nao; }
     break;
@@ -3311,14 +3283,14 @@ yyreduce:
   case 24:
 
 /* Line 1806 of yacc.c  */
-#line 224 "parser.y"
+#line 226 "parser.y"
     { parser->ignore = 1; }
     break;
 
   case 25:
 
 /* Line 1806 of yacc.c  */
-#line 225 "parser.y"
+#line 227 "parser.y"
     { parser->ignore = 0;
                                                   (yyval.val) = nao; }
     break;
@@ -3326,140 +3298,140 @@ yyreduce:
   case 26:
 
 /* Line 1806 of yacc.c  */
-#line 227 "parser.y"
+#line 229 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 27:
 
 /* Line 1806 of yacc.c  */
-#line 228 "parser.y"
+#line 230 "parser.y"
     { (yyval.val) = uref_helper(parser, (yyvsp[(2) - (2)].val)); }
     break;
 
   case 28:
 
 /* Line 1806 of yacc.c  */
-#line 229 "parser.y"
+#line 231 "parser.y"
     { (yyval.val) = uoref_helper(parser, (yyvsp[(2) - (2)].val)); }
     break;
 
   case 29:
 
 /* Line 1806 of yacc.c  */
-#line 234 "parser.y"
+#line 236 "parser.y"
     { internal_error("notreached"); }
     break;
 
   case 30:
 
 /* Line 1806 of yacc.c  */
-#line 235 "parser.y"
+#line 237 "parser.y"
     { internal_error("notreached"); }
     break;
 
   case 31:
 
 /* Line 1806 of yacc.c  */
-#line 236 "parser.y"
+#line 238 "parser.y"
     { internal_error("notreached"); }
     break;
 
   case 32:
 
 /* Line 1806 of yacc.c  */
-#line 239 "parser.y"
+#line 241 "parser.y"
     { (yyval.val) = check_parse_time_action(cons((yyvsp[(1) - (1)].val), nil)); }
     break;
 
   case 33:
 
 /* Line 1806 of yacc.c  */
-#line 240 "parser.y"
+#line 242 "parser.y"
     { (yyval.val) = check_parse_time_action(cons((yyvsp[(2) - (2)].val), (yyvsp[(1) - (2)].val)));  }
     break;
 
   case 34:
 
 /* Line 1806 of yacc.c  */
-#line 243 "parser.y"
+#line 245 "parser.y"
     { (yyval.val) = us_nreverse((yyvsp[(1) - (1)].val)); }
     break;
 
   case 35:
 
 /* Line 1806 of yacc.c  */
-#line 244 "parser.y"
+#line 246 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 36:
 
 /* Line 1806 of yacc.c  */
-#line 247 "parser.y"
+#line 249 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 37:
 
 /* Line 1806 of yacc.c  */
-#line 248 "parser.y"
+#line 250 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 38:
 
 /* Line 1806 of yacc.c  */
-#line 249 "parser.y"
+#line 251 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 39:
 
 /* Line 1806 of yacc.c  */
-#line 250 "parser.y"
+#line 252 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 40:
 
 /* Line 1806 of yacc.c  */
-#line 251 "parser.y"
+#line 253 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 41:
 
 /* Line 1806 of yacc.c  */
-#line 252 "parser.y"
+#line 254 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 42:
 
 /* Line 1806 of yacc.c  */
-#line 253 "parser.y"
+#line 255 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 43:
 
 /* Line 1806 of yacc.c  */
-#line 254 "parser.y"
+#line 256 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 44:
 
 /* Line 1806 of yacc.c  */
-#line 255 "parser.y"
+#line 257 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 45:
 
 /* Line 1806 of yacc.c  */
-#line 256 "parser.y"
+#line 258 "parser.y"
     { (yyval.val) = list(define_transform(parser, (yyvsp[(1) - (1)].val)), nao);
                                   rlc(car((yyval.val)), (yyvsp[(1) - (1)].val));
                                   rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
@@ -3468,35 +3440,35 @@ yyreduce:
   case 46:
 
 /* Line 1806 of yacc.c  */
-#line 259 "parser.y"
+#line 261 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 47:
 
 /* Line 1806 of yacc.c  */
-#line 260 "parser.y"
+#line 262 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 48:
 
 /* Line 1806 of yacc.c  */
-#line 261 "parser.y"
+#line 263 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 49:
 
 /* Line 1806 of yacc.c  */
-#line 262 "parser.y"
+#line 264 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 50:
 
 /* Line 1806 of yacc.c  */
-#line 265 "parser.y"
+#line 267 "parser.y"
     { (yyval.val) = list(all_s, (yyvsp[(3) - (3)].val), nao);
                                           rl((yyval.val), num((yyvsp[(1) - (3)].lineno))); }
     break;
@@ -3504,7 +3476,7 @@ yyreduce:
   case 51:
 
 /* Line 1806 of yacc.c  */
-#line 267 "parser.y"
+#line 269 "parser.y"
     { (yyval.val) = nil;
                                           yybadtok(yychar, lit("all clause")); }
     break;
@@ -3512,7 +3484,7 @@ yyreduce:
   case 52:
 
 /* Line 1806 of yacc.c  */
-#line 272 "parser.y"
+#line 274 "parser.y"
     { (yyval.val) = list(some_s, (yyvsp[(5) - (5)].val), (yyvsp[(2) - (5)].val), nao);
                                           rl((yyval.val), num((yyvsp[(1) - (5)].lineno))); }
     break;
@@ -3520,7 +3492,7 @@ yyreduce:
   case 53:
 
 /* Line 1806 of yacc.c  */
-#line 276 "parser.y"
+#line 278 "parser.y"
     { (yyval.val) = nil;
                                           yybadtok(yychar, lit("some clause")); }
     break;
@@ -3528,7 +3500,7 @@ yyreduce:
   case 54:
 
 /* Line 1806 of yacc.c  */
-#line 280 "parser.y"
+#line 282 "parser.y"
     { (yyval.val) = list(none_s, (yyvsp[(3) - (3)].val), nao);
                                           rl((yyval.val), num((yyvsp[(1) - (3)].lineno))); }
     break;
@@ -3536,7 +3508,7 @@ yyreduce:
   case 55:
 
 /* Line 1806 of yacc.c  */
-#line 282 "parser.y"
+#line 284 "parser.y"
     { (yyval.val) = nil;
                                           yybadtok(yychar, lit("none clause")); }
     break;
@@ -3544,7 +3516,7 @@ yyreduce:
   case 56:
 
 /* Line 1806 of yacc.c  */
-#line 286 "parser.y"
+#line 288 "parser.y"
     { (yyval.val) = list(maybe_s, (yyvsp[(3) - (3)].val), nao);
                                           rl((yyval.val), num((yyvsp[(1) - (3)].lineno))); }
     break;
@@ -3552,7 +3524,7 @@ yyreduce:
   case 57:
 
 /* Line 1806 of yacc.c  */
-#line 288 "parser.y"
+#line 290 "parser.y"
     { (yyval.val) = nil;
                                           yybadtok(yychar, lit("maybe clause")); }
     break;
@@ -3560,7 +3532,7 @@ yyreduce:
   case 58:
 
 /* Line 1806 of yacc.c  */
-#line 292 "parser.y"
+#line 294 "parser.y"
     { (yyval.val) = list(cases_s, (yyvsp[(3) - (3)].val), nao);
                                           rl((yyval.val), num((yyvsp[(1) - (3)].lineno))); }
     break;
@@ -3568,7 +3540,7 @@ yyreduce:
   case 59:
 
 /* Line 1806 of yacc.c  */
-#line 294 "parser.y"
+#line 296 "parser.y"
     { (yyval.val) = nil;
                                           yybadtok(yychar, lit("cases clause")); }
     break;
@@ -3576,7 +3548,7 @@ yyreduce:
   case 60:
 
 /* Line 1806 of yacc.c  */
-#line 300 "parser.y"
+#line 302 "parser.y"
     { val name = first((yyvsp[(2) - (7)].val));
                                           if (gt(length((yyvsp[(2) - (7)].val)), one))
                                             yyerr("block: takes zero or no arguments");
@@ -3591,7 +3563,7 @@ yyreduce:
   case 61:
 
 /* Line 1806 of yacc.c  */
-#line 310 "parser.y"
+#line 312 "parser.y"
     { (yyval.val) = nil;
                                           yybadtok(yychar, lit("block clause")); }
     break;
@@ -3599,7 +3571,7 @@ yyreduce:
   case 62:
 
 /* Line 1806 of yacc.c  */
-#line 315 "parser.y"
+#line 317 "parser.y"
     { (yyval.val) = list(choose_s, (yyvsp[(5) - (5)].val), (yyvsp[(2) - (5)].val), nao);
                                           rl((yyval.val), num((yyvsp[(1) - (5)].lineno))); }
     break;
@@ -3607,7 +3579,7 @@ yyreduce:
   case 63:
 
 /* Line 1806 of yacc.c  */
-#line 318 "parser.y"
+#line 320 "parser.y"
     { (yyval.val) = nil;
                                           yybadtok(yychar, lit("choose clause")); }
     break;
@@ -3615,7 +3587,7 @@ yyreduce:
   case 64:
 
 /* Line 1806 of yacc.c  */
-#line 324 "parser.y"
+#line 326 "parser.y"
     { val args = match_expand_keyword_args((yyvsp[(2) - (7)].val));
                                           (yyval.val) = list(gather_s,
                                                     append2(mapcar(pa_12_1(func_n2(cons), nil),
@@ -3627,7 +3599,7 @@ yyreduce:
   case 65:
 
 /* Line 1806 of yacc.c  */
-#line 335 "parser.y"
+#line 337 "parser.y"
     { val args = match_expand_keyword_args((yyvsp[(2) - (12)].val));
                                           (yyval.val) = list(gather_s,
                                                     append2(mapcar(pa_12_1(func_n2(cons), nil),
@@ -3640,7 +3612,7 @@ yyreduce:
   case 66:
 
 /* Line 1806 of yacc.c  */
-#line 344 "parser.y"
+#line 346 "parser.y"
     { (yyval.val) = nil;
                                           yybadtok(yychar, lit("gather clause")); }
     break;
@@ -3648,35 +3620,35 @@ yyreduce:
   case 67:
 
 /* Line 1806 of yacc.c  */
-#line 349 "parser.y"
+#line 351 "parser.y"
     { (yyval.val) = if2((yyvsp[(1) - (2)].val), cons((yyvsp[(1) - (2)].val), (yyvsp[(2) - (2)].val))); }
     break;
 
   case 68:
 
 /* Line 1806 of yacc.c  */
-#line 352 "parser.y"
+#line 354 "parser.y"
     { (yyval.val) = (yyvsp[(3) - (3)].val); }
     break;
 
   case 69:
 
 /* Line 1806 of yacc.c  */
-#line 353 "parser.y"
+#line 355 "parser.y"
     { (yyval.val) = (yyvsp[(3) - (3)].val); }
     break;
 
   case 70:
 
 /* Line 1806 of yacc.c  */
-#line 354 "parser.y"
+#line 356 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 71:
 
 /* Line 1806 of yacc.c  */
-#line 358 "parser.y"
+#line 360 "parser.y"
     { val args = match_expand_keyword_args((yyvsp[(2) - (7)].val));
                                             (yyval.val) = list(car((yyvsp[(1) - (7)].val)),
                                                       (yyvsp[(5) - (7)].val), nil, args,
@@ -3687,7 +3659,7 @@ yyreduce:
   case 72:
 
 /* Line 1806 of yacc.c  */
-#line 366 "parser.y"
+#line 368 "parser.y"
     { val args = match_expand_keyword_args((yyvsp[(2) - (12)].val));
                                             if (nilp((yyvsp[(10) - (12)].val)))
                                               yyerr("empty until/last in collect");
@@ -3702,7 +3674,7 @@ yyreduce:
   case 73:
 
 /* Line 1806 of yacc.c  */
-#line 376 "parser.y"
+#line 378 "parser.y"
     { (yyval.val) = nil;
                                           yybadtok(yychar, lit("collect clause")); }
     break;
@@ -3710,63 +3682,63 @@ yyreduce:
   case 74:
 
 /* Line 1806 of yacc.c  */
-#line 380 "parser.y"
+#line 382 "parser.y"
     { (yyval.val) = cons(collect_s, num((yyvsp[(1) - (1)].lineno))); }
     break;
 
   case 75:
 
 /* Line 1806 of yacc.c  */
-#line 381 "parser.y"
+#line 383 "parser.y"
     { (yyval.val) = cons(repeat_s, num((yyvsp[(1) - (1)].lineno))); }
     break;
 
   case 76:
 
 /* Line 1806 of yacc.c  */
-#line 384 "parser.y"
+#line 386 "parser.y"
     { (yyval.val) = cons(num((yyvsp[(1) - (1)].lineno)), until_s); }
     break;
 
   case 77:
 
 /* Line 1806 of yacc.c  */
-#line 385 "parser.y"
+#line 387 "parser.y"
     { (yyval.val) = cons(num((yyvsp[(1) - (1)].lineno)), last_s); }
     break;
 
   case 78:
 
 /* Line 1806 of yacc.c  */
-#line 388 "parser.y"
+#line 390 "parser.y"
     { (yyval.val) = if2((yyvsp[(1) - (2)].val), cons((yyvsp[(1) - (2)].val), (yyvsp[(2) - (2)].val))); }
     break;
 
   case 79:
 
 /* Line 1806 of yacc.c  */
-#line 391 "parser.y"
+#line 393 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 80:
 
 /* Line 1806 of yacc.c  */
-#line 392 "parser.y"
+#line 394 "parser.y"
     { (yyval.val) = (yyvsp[(3) - (3)].val); }
     break;
 
   case 81:
 
 /* Line 1806 of yacc.c  */
-#line 393 "parser.y"
+#line 395 "parser.y"
     { (yyval.val) = (yyvsp[(3) - (3)].val); }
     break;
 
   case 82:
 
 /* Line 1806 of yacc.c  */
-#line 400 "parser.y"
+#line 402 "parser.y"
     { if (opt_compat && opt_compat <= 136)
                                   { val xexp = expand_meta((yyvsp[(2) - (9)].val), nil);
                                     val req = rlc(cons(require_s, xexp), (yyvsp[(2) - (9)].val));
@@ -3791,14 +3763,14 @@ yyreduce:
   case 83:
 
 /* Line 1806 of yacc.c  */
-#line 420 "parser.y"
+#line 422 "parser.y"
     { (yyval.val) = nil; yybadtok(yychar, lit("if clause")); }
     break;
 
   case 84:
 
 /* Line 1806 of yacc.c  */
-#line 425 "parser.y"
+#line 427 "parser.y"
     { if (opt_compat && opt_compat <= 136)
                                        { val xexp = expand_meta((yyvsp[(2) - (6)].val), nil);
                                          val req = rlc(cons(require_s, xexp), (yyvsp[(2) - (6)].val));
@@ -3815,14 +3787,14 @@ yyreduce:
   case 85:
 
 /* Line 1806 of yacc.c  */
-#line 436 "parser.y"
+#line 438 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 86:
 
 /* Line 1806 of yacc.c  */
-#line 440 "parser.y"
+#line 442 "parser.y"
     { if (opt_compat && opt_compat <= 136)
                                        { (yyval.val) = (yyvsp[(3) - (3)].val); }
                                        else
@@ -3832,35 +3804,35 @@ yyreduce:
   case 87:
 
 /* Line 1806 of yacc.c  */
-#line 444 "parser.y"
+#line 446 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 88:
 
 /* Line 1806 of yacc.c  */
-#line 447 "parser.y"
+#line 449 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (2)].val); }
     break;
 
   case 89:
 
 /* Line 1806 of yacc.c  */
-#line 450 "parser.y"
+#line 452 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 90:
 
 /* Line 1806 of yacc.c  */
-#line 451 "parser.y"
+#line 453 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 91:
 
 /* Line 1806 of yacc.c  */
-#line 454 "parser.y"
+#line 456 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil);
                                   rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
@@ -3868,7 +3840,7 @@ yyreduce:
   case 92:
 
 /* Line 1806 of yacc.c  */
-#line 456 "parser.y"
+#line 458 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (2)].val), (yyvsp[(2) - (2)].val));
                                   rlc((yyval.val), (yyvsp[(1) - (2)].val)); }
     break;
@@ -3876,14 +3848,14 @@ yyreduce:
   case 93:
 
 /* Line 1806 of yacc.c  */
-#line 461 "parser.y"
+#line 463 "parser.y"
     { (yyval.val) = rl(string_own((yyvsp[(1) - (1)].lexeme)), num(parser->lineno)); }
     break;
 
   case 94:
 
 /* Line 1806 of yacc.c  */
-#line 462 "parser.y"
+#line 464 "parser.y"
     { if ((yyvsp[(1) - (1)].lexeme)[0] == ' ' && (yyvsp[(1) - (1)].lexeme)[1] == 0)
                                   { val spaces = list(oneplus_s,
                                                       chr(' '), nao);
@@ -3897,7 +3869,7 @@ yyreduce:
   case 95:
 
 /* Line 1806 of yacc.c  */
-#line 470 "parser.y"
+#line 472 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val);
                                   rl((yyval.val), num(parser->lineno)); }
     break;
@@ -3905,28 +3877,28 @@ yyreduce:
   case 96:
 
 /* Line 1806 of yacc.c  */
-#line 472 "parser.y"
+#line 474 "parser.y"
     { (yyval.val) = null_string; }
     break;
 
   case 97:
 
 /* Line 1806 of yacc.c  */
-#line 475 "parser.y"
+#line 477 "parser.y"
     { (yyval.val) = rlc(cons((yyvsp[(1) - (1)].val), nil), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 98:
 
 /* Line 1806 of yacc.c  */
-#line 476 "parser.y"
+#line 478 "parser.y"
     { (yyval.val) = rlc(cons((yyvsp[(1) - (2)].val), (yyvsp[(2) - (2)].val)), (yyvsp[(2) - (2)].val)); }
     break;
 
   case 99:
 
 /* Line 1806 of yacc.c  */
-#line 479 "parser.y"
+#line 481 "parser.y"
     { (yyval.val) = rlc(cons(text_s, (yyvsp[(1) - (1)].val)), (yyvsp[(1) - (1)].val));
                                   (yyval.val) = rlc(optimize_text((yyval.val)), (yyval.val)); }
     break;
@@ -3934,7 +3906,7 @@ yyreduce:
   case 100:
 
 /* Line 1806 of yacc.c  */
-#line 481 "parser.y"
+#line 483 "parser.y"
     { (yyval.val) = rl((yyvsp[(1) - (1)].val), num(parser->lineno));
                                   match_reg_elem((yyval.val)); }
     break;
@@ -3942,7 +3914,7 @@ yyreduce:
   case 101:
 
 /* Line 1806 of yacc.c  */
-#line 483 "parser.y"
+#line 485 "parser.y"
     { val sym = first((yyvsp[(1) - (1)].val));
                                   if (sym ==  do_s || sym == require_s)
                                     (yyval.val) = rlc(cons(sym,
@@ -3956,7 +3928,7 @@ yyreduce:
   case 102:
 
 /* Line 1806 of yacc.c  */
-#line 491 "parser.y"
+#line 493 "parser.y"
     { val args = match_expand_keyword_args((yyvsp[(2) - (5)].val));
                                           (yyval.val) = list(coll_s, (yyvsp[(4) - (5)].val), nil, args, nao);
                                           rl((yyval.val), num((yyvsp[(1) - (5)].lineno))); }
@@ -3965,7 +3937,7 @@ yyreduce:
   case 103:
 
 /* Line 1806 of yacc.c  */
-#line 496 "parser.y"
+#line 498 "parser.y"
     { val args = match_expand_keyword_args((yyvsp[(2) - (9)].val));
                                   (yyval.val) = list(coll_s, (yyvsp[(4) - (9)].val), cons(cdr((yyvsp[(5) - (9)].val)),
                                                              cons((yyvsp[(6) - (9)].val), (yyvsp[(8) - (9)].val))),
@@ -3977,7 +3949,7 @@ yyreduce:
   case 104:
 
 /* Line 1806 of yacc.c  */
-#line 502 "parser.y"
+#line 504 "parser.y"
     { val args = match_expand_keyword_args((yyvsp[(2) - (5)].val));
                                          (yyval.val) = list(rep_s, (yyvsp[(4) - (5)].val), nil, args, nao);
                                          rl((yyval.val), num((yyvsp[(1) - (5)].lineno))); }
@@ -3986,7 +3958,7 @@ yyreduce:
   case 105:
 
 /* Line 1806 of yacc.c  */
-#line 508 "parser.y"
+#line 510 "parser.y"
     { val args = match_expand_keyword_args((yyvsp[(2) - (9)].val));
                                   (yyval.val) = list(rep_s, (yyvsp[(4) - (9)].val), cons(cdr((yyvsp[(5) - (9)].val)),
                                                             cons((yyvsp[(6) - (9)].val), (yyvsp[(8) - (9)].val))),
@@ -3998,7 +3970,7 @@ yyreduce:
   case 106:
 
 /* Line 1806 of yacc.c  */
-#line 514 "parser.y"
+#line 516 "parser.y"
     { (yyval.val) = list(block_s, car((yyvsp[(2) - (5)].val)),
                                                  cons((yyvsp[(4) - (5)].val), nil), nao);
                                        rl((yyval.val), num((yyvsp[(1) - (5)].lineno))); }
@@ -4007,7 +3979,7 @@ yyreduce:
   case 107:
 
 /* Line 1806 of yacc.c  */
-#line 517 "parser.y"
+#line 519 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("coll clause")); }
     break;
@@ -4015,7 +3987,7 @@ yyreduce:
   case 108:
 
 /* Line 1806 of yacc.c  */
-#line 519 "parser.y"
+#line 521 "parser.y"
     { (yyval.val) = nil;
                                  yybadtok(yychar, lit("rep clause")); }
     break;
@@ -4023,7 +3995,7 @@ yyreduce:
   case 109:
 
 /* Line 1806 of yacc.c  */
-#line 521 "parser.y"
+#line 523 "parser.y"
     { (yyval.val) = nil;
                                  yybadtok(yychar, lit("rep clause")); }
     break;
@@ -4031,42 +4003,42 @@ yyreduce:
   case 110:
 
 /* Line 1806 of yacc.c  */
-#line 523 "parser.y"
+#line 525 "parser.y"
     { (yyval.val) = rl(list(all_s, t, (yyvsp[(2) - (2)].val), nao), num((yyvsp[(1) - (2)].lineno))); }
     break;
 
   case 111:
 
 /* Line 1806 of yacc.c  */
-#line 525 "parser.y"
+#line 527 "parser.y"
     { (yyval.val) = rl(list(some_s, t, (yyvsp[(4) - (4)].val), (yyvsp[(2) - (4)].val), nao), num((yyvsp[(1) - (4)].lineno))); }
     break;
 
   case 112:
 
 /* Line 1806 of yacc.c  */
-#line 526 "parser.y"
+#line 528 "parser.y"
     { (yyval.val) = rl(list(none_s, t, (yyvsp[(2) - (2)].val), nao), num((yyvsp[(1) - (2)].lineno))); }
     break;
 
   case 113:
 
 /* Line 1806 of yacc.c  */
-#line 527 "parser.y"
+#line 529 "parser.y"
     { (yyval.val) = rl(list(maybe_s, t, (yyvsp[(2) - (2)].val), nao), num((yyvsp[(1) - (2)].lineno))); }
     break;
 
   case 114:
 
 /* Line 1806 of yacc.c  */
-#line 528 "parser.y"
+#line 530 "parser.y"
     { (yyval.val) = rl(list(cases_s, t, (yyvsp[(2) - (2)].val), nao), num((yyvsp[(1) - (2)].lineno))); }
     break;
 
   case 115:
 
 /* Line 1806 of yacc.c  */
-#line 530 "parser.y"
+#line 532 "parser.y"
     { (yyval.val) = list(choose_s, t, (yyvsp[(4) - (4)].val), (yyvsp[(2) - (4)].val), nao);
                                   rl((yyval.val), num((yyvsp[(1) - (4)].lineno))); }
     break;
@@ -4074,7 +4046,7 @@ yyreduce:
   case 116:
 
 /* Line 1806 of yacc.c  */
-#line 533 "parser.y"
+#line 535 "parser.y"
     { (yyval.val) = list(define_s, t, (yyvsp[(4) - (5)].val), (yyvsp[(2) - (5)].val), nao);
                                   rl((yyval.val), num((yyvsp[(1) - (5)].lineno)));
                                   match_reg_params(second((yyvsp[(2) - (5)].val))); }
@@ -4083,35 +4055,35 @@ yyreduce:
   case 117:
 
 /* Line 1806 of yacc.c  */
-#line 538 "parser.y"
+#line 540 "parser.y"
     { (yyval.val) = if2((yyvsp[(1) - (2)].val), cons((yyvsp[(1) - (2)].val), (yyvsp[(2) - (2)].val))); }
     break;
 
   case 118:
 
 /* Line 1806 of yacc.c  */
-#line 541 "parser.y"
+#line 543 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 119:
 
 /* Line 1806 of yacc.c  */
-#line 542 "parser.y"
+#line 544 "parser.y"
     { (yyval.val) = (yyvsp[(2) - (2)].val); }
     break;
 
   case 120:
 
 /* Line 1806 of yacc.c  */
-#line 543 "parser.y"
+#line 545 "parser.y"
     { (yyval.val) = (yyvsp[(2) - (2)].val); }
     break;
 
   case 121:
 
 /* Line 1806 of yacc.c  */
-#line 548 "parser.y"
+#line 550 "parser.y"
     { (yyval.val) = list(define_s, (yyvsp[(2) - (7)].val), (yyvsp[(5) - (7)].val), nao);
                                   rl((yyval.val), num((yyvsp[(1) - (7)].lineno)));
                                   match_reg_params(second((yyvsp[(2) - (7)].val))); }
@@ -4120,7 +4092,7 @@ yyreduce:
   case 122:
 
 /* Line 1806 of yacc.c  */
-#line 553 "parser.y"
+#line 555 "parser.y"
     { (yyval.val) = list(define_s, nil, (yyvsp[(4) - (6)].val), nao);
                                   rl((yyval.val), num((yyvsp[(1) - (6)].lineno))); }
     break;
@@ -4128,7 +4100,7 @@ yyreduce:
   case 123:
 
 /* Line 1806 of yacc.c  */
-#line 555 "parser.y"
+#line 557 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("define directive")); }
     break;
@@ -4136,14 +4108,14 @@ yyreduce:
   case 124:
 
 /* Line 1806 of yacc.c  */
-#line 558 "parser.y"
+#line 560 "parser.y"
     { (yyval.val) = nil; yybadtok(yychar, lit("define")); }
     break;
 
   case 125:
 
 /* Line 1806 of yacc.c  */
-#line 560 "parser.y"
+#line 562 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("define")); }
     break;
@@ -4151,7 +4123,7 @@ yyreduce:
   case 126:
 
 /* Line 1806 of yacc.c  */
-#line 567 "parser.y"
+#line 569 "parser.y"
     { (yyval.val) = list(try_s,
                                             flatten(mapcar(func_n1(second),
                                                            (yyvsp[(4) - (6)].val))),
@@ -4162,7 +4134,7 @@ yyreduce:
   case 127:
 
 /* Line 1806 of yacc.c  */
-#line 573 "parser.y"
+#line 575 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("try clause")); }
     break;
@@ -4170,7 +4142,7 @@ yyreduce:
   case 128:
 
 /* Line 1806 of yacc.c  */
-#line 579 "parser.y"
+#line 581 "parser.y"
     { (yyval.val) = cons(list(catch_s, cons(t, nil),
                                                          (yyvsp[(4) - (5)].val), nao), (yyvsp[(5) - (5)].val));
                                           rl((yyval.val), num((yyvsp[(1) - (5)].lineno))); }
@@ -4179,7 +4151,7 @@ yyreduce:
   case 129:
 
 /* Line 1806 of yacc.c  */
-#line 584 "parser.y"
+#line 586 "parser.y"
     { (yyval.val) = cons(list(catch_s, (yyvsp[(2) - (6)].val), (yyvsp[(5) - (6)].val), nao),
                                                     (yyvsp[(6) - (6)].val));
                                           process_catch_exprs((yyvsp[(2) - (6)].val));
@@ -4189,7 +4161,7 @@ yyreduce:
   case 130:
 
 /* Line 1806 of yacc.c  */
-#line 589 "parser.y"
+#line 591 "parser.y"
     { (yyval.val) = cons(list(finally_s, nil,
                                                          (yyvsp[(3) - (3)].val), nao),
                                                     nil);
@@ -4199,14 +4171,14 @@ yyreduce:
   case 131:
 
 /* Line 1806 of yacc.c  */
-#line 593 "parser.y"
+#line 595 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 132:
 
 /* Line 1806 of yacc.c  */
-#line 595 "parser.y"
+#line 597 "parser.y"
     { (yyval.val) = nil;
                                           yybadtok(yychar, lit("catch clause")); }
     break;
@@ -4214,7 +4186,7 @@ yyreduce:
   case 133:
 
 /* Line 1806 of yacc.c  */
-#line 598 "parser.y"
+#line 600 "parser.y"
     { (yyval.val) = nil;
                                           yybadtok(yychar, lit("catch clause")); }
     break;
@@ -4222,7 +4194,7 @@ yyreduce:
   case 134:
 
 /* Line 1806 of yacc.c  */
-#line 601 "parser.y"
+#line 603 "parser.y"
     { (yyval.val) = nil;
                                           yybadtok(yychar, lit("finally clause")); }
     break;
@@ -4230,7 +4202,7 @@ yyreduce:
   case 135:
 
 /* Line 1806 of yacc.c  */
-#line 608 "parser.y"
+#line 610 "parser.y"
     { (yyval.val) = nil;
                                   yyerr("obsolete output syntax: trailing material"); }
     break;
@@ -4238,21 +4210,21 @@ yyreduce:
   case 136:
 
 /* Line 1806 of yacc.c  */
-#line 611 "parser.y"
+#line 613 "parser.y"
     { (yyval.val) = rl(list(output_s, nao), num((yyvsp[(1) - (5)].lineno))); }
     break;
 
   case 137:
 
 /* Line 1806 of yacc.c  */
-#line 614 "parser.y"
+#line 616 "parser.y"
     { (yyval.val) = rl(list(output_s, (yyvsp[(4) - (6)].val), nao), num((yyvsp[(1) - (6)].lineno))); }
     break;
 
   case 138:
 
 /* Line 1806 of yacc.c  */
-#line 617 "parser.y"
+#line 619 "parser.y"
     { cons_bind (dest, rest, (yyvsp[(2) - (7)].val));
                                   val dest_ex = expand_form_ver(dest, 166);
                                   val args = if3(dest_ex == dest,
@@ -4268,7 +4240,7 @@ yyreduce:
   case 139:
 
 /* Line 1806 of yacc.c  */
-#line 629 "parser.y"
+#line 631 "parser.y"
     { (yyval.val) = nil;
                                   yyerr("invalid combination of old and "
                                                "new syntax in output directive"); }
@@ -4277,7 +4249,7 @@ yyreduce:
   case 140:
 
 /* Line 1806 of yacc.c  */
-#line 632 "parser.y"
+#line 634 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("output directive")); }
     break;
@@ -4285,7 +4257,7 @@ yyreduce:
   case 141:
 
 /* Line 1806 of yacc.c  */
-#line 635 "parser.y"
+#line 637 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("output clause")); }
     break;
@@ -4293,7 +4265,7 @@ yyreduce:
   case 142:
 
 /* Line 1806 of yacc.c  */
-#line 638 "parser.y"
+#line 640 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("output clause")); }
     break;
@@ -4301,7 +4273,7 @@ yyreduce:
   case 143:
 
 /* Line 1806 of yacc.c  */
-#line 641 "parser.y"
+#line 643 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("output clause")); }
     break;
@@ -4309,7 +4281,7 @@ yyreduce:
   case 144:
 
 /* Line 1806 of yacc.c  */
-#line 644 "parser.y"
+#line 646 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("output clause")); }
     break;
@@ -4317,42 +4289,42 @@ yyreduce:
   case 145:
 
 /* Line 1806 of yacc.c  */
-#line 648 "parser.y"
+#line 650 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); }
     break;
 
   case 146:
 
 /* Line 1806 of yacc.c  */
-#line 649 "parser.y"
+#line 651 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (2)].val), (yyvsp[(2) - (2)].val));  }
     break;
 
   case 147:
 
 /* Line 1806 of yacc.c  */
-#line 652 "parser.y"
+#line 654 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); }
     break;
 
   case 148:
 
 /* Line 1806 of yacc.c  */
-#line 653 "parser.y"
+#line 655 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); }
     break;
 
   case 149:
 
 /* Line 1806 of yacc.c  */
-#line 654 "parser.y"
+#line 656 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 150:
 
 /* Line 1806 of yacc.c  */
-#line 660 "parser.y"
+#line 662 "parser.y"
     { (yyval.val) = repeat_rep_helper(repeat_s,
                                                                  (yyvsp[(2) - (8)].val), (yyvsp[(5) - (8)].val), (yyvsp[(6) - (8)].val));
                                           rl((yyval.val), num((yyvsp[(1) - (8)].lineno))); }
@@ -4361,7 +4333,7 @@ yyreduce:
   case 151:
 
 /* Line 1806 of yacc.c  */
-#line 664 "parser.y"
+#line 666 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("repeat clause")); }
     break;
@@ -4369,7 +4341,7 @@ yyreduce:
   case 152:
 
 /* Line 1806 of yacc.c  */
-#line 670 "parser.y"
+#line 672 "parser.y"
     { (yyval.val) = cons(cons(single_s, (yyvsp[(3) - (4)].val)), (yyvsp[(4) - (4)].val));
                                           rl((yyval.val), num((yyvsp[(1) - (4)].lineno))); }
     break;
@@ -4377,7 +4349,7 @@ yyreduce:
   case 153:
 
 /* Line 1806 of yacc.c  */
-#line 674 "parser.y"
+#line 676 "parser.y"
     { (yyval.val) = cons(cons(first_s, (yyvsp[(3) - (4)].val)), (yyvsp[(4) - (4)].val));
                                           rl((yyval.val), num((yyvsp[(1) - (4)].lineno))); }
     break;
@@ -4385,7 +4357,7 @@ yyreduce:
   case 154:
 
 /* Line 1806 of yacc.c  */
-#line 678 "parser.y"
+#line 680 "parser.y"
     { if ((yyvsp[(2) - (6)].val))
                                             yyerrorf(scnr,
                                                      lit("last: in output, "
@@ -4398,7 +4370,7 @@ yyreduce:
   case 155:
 
 /* Line 1806 of yacc.c  */
-#line 687 "parser.y"
+#line 689 "parser.y"
     { (yyval.val) = cons(cons(empty_s, (yyvsp[(3) - (4)].val)), (yyvsp[(4) - (4)].val));
                                           rl((yyval.val), num((yyvsp[(1) - (4)].lineno))); }
     break;
@@ -4406,7 +4378,7 @@ yyreduce:
   case 156:
 
 /* Line 1806 of yacc.c  */
-#line 692 "parser.y"
+#line 694 "parser.y"
     { (yyval.val) = cons(cons(mod_s,
                                                          cons(expand_forms_ver((yyvsp[(2) - (6)].val), 166),
                                                               (yyvsp[(5) - (6)].val))), (yyvsp[(6) - (6)].val));
@@ -4416,7 +4388,7 @@ yyreduce:
   case 157:
 
 /* Line 1806 of yacc.c  */
-#line 699 "parser.y"
+#line 701 "parser.y"
     { (yyval.val) = cons(cons(modlast_s,
                                                          cons(expand_forms_ver((yyvsp[(2) - (6)].val), 166),
                                                               (yyvsp[(5) - (6)].val))), (yyvsp[(6) - (6)].val));
@@ -4426,14 +4398,14 @@ yyreduce:
   case 158:
 
 /* Line 1806 of yacc.c  */
-#line 703 "parser.y"
+#line 705 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 159:
 
 /* Line 1806 of yacc.c  */
-#line 710 "parser.y"
+#line 712 "parser.y"
     { val expr = expand((yyvsp[(2) - (9)].val), nil);
                                   val ifs = (yyvsp[(5) - (9)].val);
                                   val branch = cons(cons(expr, ifs), nil);
@@ -4447,7 +4419,7 @@ yyreduce:
   case 160:
 
 /* Line 1806 of yacc.c  */
-#line 719 "parser.y"
+#line 721 "parser.y"
     { (yyval.val) = nil;
                                   yyerr("if requires expression"); }
     break;
@@ -4455,14 +4427,14 @@ yyreduce:
   case 161:
 
 /* Line 1806 of yacc.c  */
-#line 722 "parser.y"
+#line 724 "parser.y"
     { (yyval.val) = nil; yybadtok(yychar, lit("if clause")); }
     break;
 
   case 162:
 
 /* Line 1806 of yacc.c  */
-#line 728 "parser.y"
+#line 730 "parser.y"
     { val expr = expand(car((yyvsp[(2) - (6)].val)), nil);
                                   val elifs = (yyvsp[(5) - (6)].val);
                                   val branch = cons(cons(expr, elifs), nil);
@@ -4476,49 +4448,49 @@ yyreduce:
   case 163:
 
 /* Line 1806 of yacc.c  */
-#line 736 "parser.y"
+#line 738 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 164:
 
 /* Line 1806 of yacc.c  */
-#line 741 "parser.y"
+#line 743 "parser.y"
     { (yyval.val) = cons(cons(t, (yyvsp[(3) - (3)].val)), nil); }
     break;
 
   case 165:
 
 /* Line 1806 of yacc.c  */
-#line 742 "parser.y"
+#line 744 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 166:
 
 /* Line 1806 of yacc.c  */
-#line 745 "parser.y"
+#line 747 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 167:
 
 /* Line 1806 of yacc.c  */
-#line 746 "parser.y"
+#line 748 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 168:
 
 /* Line 1806 of yacc.c  */
-#line 748 "parser.y"
+#line 750 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (2)].val); }
     break;
 
   case 169:
 
 /* Line 1806 of yacc.c  */
-#line 751 "parser.y"
+#line 753 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val);
                                   rl((yyval.val), num(parser->lineno)); }
     break;
@@ -4526,47 +4498,39 @@ yyreduce:
   case 170:
 
 /* Line 1806 of yacc.c  */
-#line 753 "parser.y"
+#line 755 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 171:
 
 /* Line 1806 of yacc.c  */
-#line 756 "parser.y"
+#line 758 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); }
     break;
 
   case 172:
 
 /* Line 1806 of yacc.c  */
-#line 757 "parser.y"
+#line 759 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (2)].val), (yyvsp[(2) - (2)].val)); }
     break;
 
   case 173:
 
 /* Line 1806 of yacc.c  */
-#line 758 "parser.y"
+#line 760 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); }
     break;
 
   case 174:
 
 /* Line 1806 of yacc.c  */
-#line 759 "parser.y"
+#line 761 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (2)].val), (yyvsp[(2) - (2)].val)); }
     break;
 
   case 175:
-
-/* Line 1806 of yacc.c  */
-#line 762 "parser.y"
-    { (yyval.val) = string_own((yyvsp[(1) - (1)].lexeme));
-                                  rl((yyval.val), num(parser->lineno)); }
-    break;
-
-  case 176:
 
 /* Line 1806 of yacc.c  */
 #line 764 "parser.y"
@@ -4574,17 +4538,25 @@ yyreduce:
                                   rl((yyval.val), num(parser->lineno)); }
     break;
 
-  case 177:
+  case 176:
 
 /* Line 1806 of yacc.c  */
 #line 766 "parser.y"
+    { (yyval.val) = string_own((yyvsp[(1) - (1)].lexeme));
+                                  rl((yyval.val), num(parser->lineno)); }
+    break;
+
+  case 177:
+
+/* Line 1806 of yacc.c  */
+#line 768 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 178:
 
 /* Line 1806 of yacc.c  */
-#line 767 "parser.y"
+#line 769 "parser.y"
     { (yyval.val) = rlc(list(expr_s,
                                                  expand((yyvsp[(1) - (1)].val), nil), nao), (yyvsp[(1) - (1)].val)); }
     break;
@@ -4592,14 +4564,14 @@ yyreduce:
   case 179:
 
 /* Line 1806 of yacc.c  */
-#line 769 "parser.y"
+#line 771 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 180:
 
 /* Line 1806 of yacc.c  */
-#line 773 "parser.y"
+#line 775 "parser.y"
     { (yyval.val) = repeat_rep_helper(rep_s, (yyvsp[(2) - (6)].val), (yyvsp[(4) - (6)].val), (yyvsp[(5) - (6)].val));
                                   rl((yyval.val), num((yyvsp[(1) - (6)].lineno))); }
     break;
@@ -4607,7 +4579,7 @@ yyreduce:
   case 181:
 
 /* Line 1806 of yacc.c  */
-#line 775 "parser.y"
+#line 777 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("rep clause")); }
     break;
@@ -4615,7 +4587,7 @@ yyreduce:
   case 182:
 
 /* Line 1806 of yacc.c  */
-#line 780 "parser.y"
+#line 782 "parser.y"
     { (yyval.val) = cons(cons(single_s, (yyvsp[(2) - (3)].val)), (yyvsp[(3) - (3)].val));
                                           rl((yyval.val), num((yyvsp[(1) - (3)].lineno))); }
     break;
@@ -4623,7 +4595,7 @@ yyreduce:
   case 183:
 
 /* Line 1806 of yacc.c  */
-#line 783 "parser.y"
+#line 785 "parser.y"
     { (yyval.val) = cons(cons(first_s, (yyvsp[(2) - (3)].val)), (yyvsp[(3) - (3)].val));
                                           rl((yyval.val), num((yyvsp[(1) - (3)].lineno))); }
     break;
@@ -4631,7 +4603,7 @@ yyreduce:
   case 184:
 
 /* Line 1806 of yacc.c  */
-#line 786 "parser.y"
+#line 788 "parser.y"
     { if ((yyvsp[(2) - (5)].val))
                                             yyerrorf(scnr,
                                                      lit("last: in output, "
@@ -4644,7 +4616,7 @@ yyreduce:
   case 185:
 
 /* Line 1806 of yacc.c  */
-#line 794 "parser.y"
+#line 796 "parser.y"
     { (yyval.val) = cons(cons(empty_s, (yyvsp[(2) - (3)].val)), (yyvsp[(3) - (3)].val));
                                           rl((yyval.val), num((yyvsp[(1) - (3)].lineno))); }
     break;
@@ -4652,7 +4624,7 @@ yyreduce:
   case 186:
 
 /* Line 1806 of yacc.c  */
-#line 798 "parser.y"
+#line 800 "parser.y"
     { (yyval.val) = cons(cons(mod_s,
                                                          cons(expand_forms_ver((yyvsp[(2) - (5)].val), 166),
                                                               (yyvsp[(4) - (5)].val))), (yyvsp[(5) - (5)].val));
@@ -4662,7 +4634,7 @@ yyreduce:
   case 187:
 
 /* Line 1806 of yacc.c  */
-#line 804 "parser.y"
+#line 806 "parser.y"
     { (yyval.val) = cons(cons(modlast_s,
                                                          cons(expand_forms_ver((yyvsp[(2) - (5)].val), 166),
                                                               (yyvsp[(4) - (5)].val))), (yyvsp[(5) - (5)].val));
@@ -4672,49 +4644,49 @@ yyreduce:
   case 188:
 
 /* Line 1806 of yacc.c  */
-#line 808 "parser.y"
+#line 810 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 189:
 
 /* Line 1806 of yacc.c  */
-#line 815 "parser.y"
+#line 817 "parser.y"
     { (yyval.val) = list(var_s, symhlpr((yyvsp[(1) - (1)].lexeme), nil), nao); }
     break;
 
   case 190:
 
 /* Line 1806 of yacc.c  */
-#line 816 "parser.y"
+#line 818 "parser.y"
     { (yyval.val) = list(var_s, symhlpr((yyvsp[(2) - (3)].lexeme), nil), nao); }
     break;
 
   case 191:
 
 /* Line 1806 of yacc.c  */
-#line 817 "parser.y"
+#line 819 "parser.y"
     { (yyval.val) = list(var_s, symhlpr((yyvsp[(2) - (4)].lexeme), nil), (yyvsp[(3) - (4)].val), nao); }
     break;
 
   case 192:
 
 /* Line 1806 of yacc.c  */
-#line 818 "parser.y"
+#line 820 "parser.y"
     { (yyval.val) = list(var_s, symhlpr((yyvsp[(2) - (2)].lexeme), nil), (yyvsp[(1) - (2)].val), nao); }
     break;
 
   case 193:
 
 /* Line 1806 of yacc.c  */
-#line 819 "parser.y"
+#line 821 "parser.y"
     { (yyval.val) = list(var_s, symhlpr((yyvsp[(3) - (4)].lexeme), nil), (yyvsp[(1) - (4)].val), nao); }
     break;
 
   case 194:
 
 /* Line 1806 of yacc.c  */
-#line 820 "parser.y"
+#line 822 "parser.y"
     { (yyval.val) = nil;
                                           free((yyvsp[(3) - (5)].lexeme));
                                           yyerr("longest match "
@@ -4724,7 +4696,7 @@ yyreduce:
   case 195:
 
 /* Line 1806 of yacc.c  */
-#line 824 "parser.y"
+#line 826 "parser.y"
     { (yyval.val) = nil;
                                           free((yyvsp[(3) - (5)].lexeme));
                                           yyerr("longest match "
@@ -4735,7 +4707,7 @@ yyreduce:
   case 196:
 
 /* Line 1806 of yacc.c  */
-#line 829 "parser.y"
+#line 831 "parser.y"
     { (yyval.val) = nil;
                                   free((yyvsp[(1) - (2)].lexeme));
                                   yybadtok(yychar, lit("variable spec")); }
@@ -4744,7 +4716,7 @@ yyreduce:
   case 197:
 
 /* Line 1806 of yacc.c  */
-#line 832 "parser.y"
+#line 834 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("variable spec")); }
     break;
@@ -4752,21 +4724,21 @@ yyreduce:
   case 198:
 
 /* Line 1806 of yacc.c  */
-#line 836 "parser.y"
+#line 838 "parser.y"
     { (yyval.val) = list(t, nao); }
     break;
 
   case 199:
 
 /* Line 1806 of yacc.c  */
-#line 839 "parser.y"
+#line 841 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); }
     break;
 
   case 200:
 
 /* Line 1806 of yacc.c  */
-#line 840 "parser.y"
+#line 842 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil);
                                   rlc((yyval.val), (yyvsp[(1) - (1)].val)); }
     break;
@@ -4774,7 +4746,7 @@ yyreduce:
   case 201:
 
 /* Line 1806 of yacc.c  */
-#line 842 "parser.y"
+#line 844 "parser.y"
     { (yyval.val) = rlc(cons(expand_meta((yyvsp[(1) - (1)].val), nil),
                                                  nil), (yyvsp[(1) - (1)].val)); }
     break;
@@ -4782,14 +4754,14 @@ yyreduce:
   case 202:
 
 /* Line 1806 of yacc.c  */
-#line 844 "parser.y"
+#line 846 "parser.y"
     { (yyval.val) = cons(symhlpr((yyvsp[(1) - (1)].lexeme), nil), nil); }
     break;
 
   case 203:
 
 /* Line 1806 of yacc.c  */
-#line 847 "parser.y"
+#line 849 "parser.y"
     { val expr = symhlpr((yyvsp[(1) - (1)].lexeme), nil);
                                   if (!opt_compat || opt_compat > 128)
                                     expr = expand(expr, nil);
@@ -4800,7 +4772,7 @@ yyreduce:
   case 204:
 
 /* Line 1806 of yacc.c  */
-#line 853 "parser.y"
+#line 855 "parser.y"
     { if (opt_compat && opt_compat <= 128)
                                   { (yyval.val) = list(var_s,
                                               expand_meta((yyvsp[(2) - (4)].val), nil),
@@ -4814,7 +4786,7 @@ yyreduce:
   case 205:
 
 /* Line 1806 of yacc.c  */
-#line 861 "parser.y"
+#line 863 "parser.y"
     { (yyval.val) = nil;
                                   free((yyvsp[(1) - (2)].lexeme));
                                   yybadtok(yychar, lit("variable spec")); }
@@ -4823,7 +4795,7 @@ yyreduce:
   case 206:
 
 /* Line 1806 of yacc.c  */
-#line 867 "parser.y"
+#line 869 "parser.y"
     { (yyval.val) = list(var_s, (yyvsp[(3) - (5)].val), (yyvsp[(4) - (5)].val), nao);
                                   rl((yyval.val), num(parser->lineno)); }
     break;
@@ -4831,7 +4803,7 @@ yyreduce:
   case 207:
 
 /* Line 1806 of yacc.c  */
-#line 869 "parser.y"
+#line 871 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("variable spec")); }
     break;
@@ -4839,7 +4811,7 @@ yyreduce:
   case 208:
 
 /* Line 1806 of yacc.c  */
-#line 874 "parser.y"
+#line 876 "parser.y"
     { if (parser->quasi_level > 0 && unquotes_occur((yyvsp[(2) - (2)].val), 0))
                                     (yyval.val) = rlc(cons(vector_lit_s,
                                                    cons((yyvsp[(2) - (2)].val), nil)), (yyvsp[(2) - (2)].val));
@@ -4850,7 +4822,7 @@ yyreduce:
   case 209:
 
 /* Line 1806 of yacc.c  */
-#line 879 "parser.y"
+#line 881 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("unassigned/reserved # notation")); }
     break;
@@ -4858,7 +4830,7 @@ yyreduce:
   case 210:
 
 /* Line 1806 of yacc.c  */
-#line 883 "parser.y"
+#line 885 "parser.y"
     { if (parser->quasi_level > 0 && unquotes_occur((yyvsp[(2) - (2)].val), 0))
                                     (yyval.val) = rl(cons(hash_lit_s, (yyvsp[(2) - (2)].val)), num((yyvsp[(1) - (2)].lineno)));
                                   else
@@ -4870,7 +4842,7 @@ yyreduce:
   case 211:
 
 /* Line 1806 of yacc.c  */
-#line 889 "parser.y"
+#line 891 "parser.y"
     { (yyval.val) = nil;
                                     yybadtok(yychar, lit("hash literal")); }
     break;
@@ -4878,7 +4850,7 @@ yyreduce:
   case 212:
 
 /* Line 1806 of yacc.c  */
-#line 893 "parser.y"
+#line 895 "parser.y"
     { if (parser->quasi_level > 0 && unquotes_occur((yyvsp[(2) - (2)].val), 0))
                                     (yyval.val) = rl(cons(struct_lit_s, (yyvsp[(2) - (2)].val)),
                                               num((yyvsp[(1) - (2)].lineno)));
@@ -4891,7 +4863,7 @@ yyreduce:
   case 213:
 
 /* Line 1806 of yacc.c  */
-#line 900 "parser.y"
+#line 902 "parser.y"
     { (yyval.val) = nil;
                                     yybadtok(yychar, lit("struct literal")); }
     break;
@@ -4899,7 +4871,7 @@ yyreduce:
   case 214:
 
 /* Line 1806 of yacc.c  */
-#line 904 "parser.y"
+#line 906 "parser.y"
     { if (length((yyvsp[(2) - (2)].val)) != two)
                                     yyerr("range literal needs two elements");
                                   { val range = rcons(first((yyvsp[(2) - (2)].val)), second((yyvsp[(2) - (2)].val)));
@@ -4909,7 +4881,7 @@ yyreduce:
   case 215:
 
 /* Line 1806 of yacc.c  */
-#line 908 "parser.y"
+#line 910 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("range literal")); }
     break;
@@ -4917,7 +4889,7 @@ yyreduce:
   case 216:
 
 /* Line 1806 of yacc.c  */
-#line 912 "parser.y"
+#line 914 "parser.y"
     { if (gt(length((yyvsp[(2) - (2)].val)), three))
                                     yyerr("excess elements in tree node");
                                   { val tn = tnode(first((yyvsp[(2) - (2)].val)), second((yyvsp[(2) - (2)].val)),
@@ -4928,7 +4900,7 @@ yyreduce:
   case 217:
 
 /* Line 1806 of yacc.c  */
-#line 917 "parser.y"
+#line 919 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("tree node literal")); }
     break;
@@ -4936,7 +4908,7 @@ yyreduce:
   case 218:
 
 /* Line 1806 of yacc.c  */
-#line 921 "parser.y"
+#line 923 "parser.y"
     { if (parser->quasi_level > 0 && unquotes_occur((yyvsp[(2) - (2)].val), 0))
                                    (yyval.val) = rl(cons(tree_lit_s, (yyvsp[(2) - (2)].val)), num((yyvsp[(1) - (2)].lineno)));
                                  else
@@ -4955,7 +4927,7 @@ yyreduce:
   case 219:
 
 /* Line 1806 of yacc.c  */
-#line 934 "parser.y"
+#line 936 "parser.y"
     { (yyval.val) = nil;
                                  yybadtok(yychar, lit("tree node literal")); }
     break;
@@ -4963,14 +4935,14 @@ yyreduce:
   case 220:
 
 /* Line 1806 of yacc.c  */
-#line 938 "parser.y"
+#line 940 "parser.y"
     { (yyval.val) = rl((yyvsp[(2) - (3)].val), num((yyvsp[(1) - (3)].lineno))); }
     break;
 
   case 221:
 
 /* Line 1806 of yacc.c  */
-#line 939 "parser.y"
+#line 941 "parser.y"
     { val a = car((yyvsp[(3) - (4)].val));
                                   val ur = uref_helper(parser, a);
                                   if (ur == a)
@@ -4982,28 +4954,28 @@ yyreduce:
   case 222:
 
 /* Line 1806 of yacc.c  */
-#line 945 "parser.y"
+#line 947 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 223:
 
 /* Line 1806 of yacc.c  */
-#line 946 "parser.y"
+#line 948 "parser.y"
     { (yyval.val) = (yyvsp[(3) - (4)].val); }
     break;
 
   case 224:
 
 /* Line 1806 of yacc.c  */
-#line 947 "parser.y"
+#line 949 "parser.y"
     { (yyval.val) = (yyvsp[(3) - (4)].val); }
     break;
 
   case 225:
 
 /* Line 1806 of yacc.c  */
-#line 948 "parser.y"
+#line 950 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("expression")); }
     break;
@@ -5011,7 +4983,7 @@ yyreduce:
   case 226:
 
 /* Line 1806 of yacc.c  */
-#line 952 "parser.y"
+#line 954 "parser.y"
     { if (consp((yyvsp[(2) - (2)].val)))
                                     (yyval.val) = rl(cons(expr_s, cons((yyvsp[(2) - (2)].val), nil)), num((yyvsp[(1) - (2)].lineno)));
                                   else
@@ -5022,7 +4994,7 @@ yyreduce:
   case 227:
 
 /* Line 1806 of yacc.c  */
-#line 957 "parser.y"
+#line 959 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("meta expression")); }
     break;
@@ -5030,7 +5002,7 @@ yyreduce:
   case 228:
 
 /* Line 1806 of yacc.c  */
-#line 961 "parser.y"
+#line 963 "parser.y"
     { if (consp((yyvsp[(2) - (2)].val)))
                                     (yyval.val) = rl(cons(expr_s, cons((yyvsp[(2) - (2)].val), nil)), num((yyvsp[(1) - (2)].chr)));
                                   else
@@ -5041,7 +5013,7 @@ yyreduce:
   case 229:
 
 /* Line 1806 of yacc.c  */
-#line 966 "parser.y"
+#line 968 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("meta expression")); }
     break;
@@ -5049,7 +5021,7 @@ yyreduce:
   case 230:
 
 /* Line 1806 of yacc.c  */
-#line 970 "parser.y"
+#line 972 "parser.y"
     { val a = car((yyvsp[(3) - (4)].val));
                                   val ur = uref_helper(parser, a);
                                   (yyval.val) = rlcp_tree(cons(dwim_s,
@@ -5059,21 +5031,21 @@ yyreduce:
   case 231:
 
 /* Line 1806 of yacc.c  */
-#line 974 "parser.y"
+#line 976 "parser.y"
     { (yyval.val) = rl(cons(dwim_s, (yyvsp[(2) - (3)].val)), num((yyvsp[(1) - (3)].lineno))); }
     break;
 
   case 232:
 
 /* Line 1806 of yacc.c  */
-#line 975 "parser.y"
+#line 977 "parser.y"
     { (yyval.val) = rl(cons(dwim_s, nil), num((yyvsp[(1) - (2)].lineno))); }
     break;
 
   case 233:
 
 /* Line 1806 of yacc.c  */
-#line 976 "parser.y"
+#line 978 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("DWIM expression")); }
     break;
@@ -5081,28 +5053,28 @@ yyreduce:
   case 237:
 
 /* Line 1806 of yacc.c  */
-#line 985 "parser.y"
+#line 987 "parser.y"
     { (yyval.val) = rlc(expand_meta((yyvsp[(1) - (1)].val), nil), (yyvsp[(1) - (1)].val)); }
     break;
 
   case 238:
 
 /* Line 1806 of yacc.c  */
-#line 988 "parser.y"
+#line 990 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 239:
 
 /* Line 1806 of yacc.c  */
-#line 989 "parser.y"
+#line 991 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 240:
 
 /* Line 1806 of yacc.c  */
-#line 992 "parser.y"
+#line 994 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val)->c.cdr;
                                   (yyvsp[(1) - (1)].val)->c.cdr = nil; }
     break;
@@ -5110,7 +5082,7 @@ yyreduce:
   case 241:
 
 /* Line 1806 of yacc.c  */
-#line 995 "parser.y"
+#line 997 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (3)].val)->c.cdr;
                                   (yyvsp[(1) - (3)].val)->c.cdr = (yyvsp[(3) - (3)].val); }
     break;
@@ -5118,7 +5090,7 @@ yyreduce:
   case 242:
 
 /* Line 1806 of yacc.c  */
-#line 999 "parser.y"
+#line 1001 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil);
                                   rlc((yyval.val), (yyvsp[(1) - (1)].val));
                                   (yyval.val)->c.cdr = (yyval.val); }
@@ -5127,14 +5099,14 @@ yyreduce:
   case 243:
 
 /* Line 1806 of yacc.c  */
-#line 1002 "parser.y"
+#line 1004 "parser.y"
     { parser->ignore = 1; }
     break;
 
   case 244:
 
 /* Line 1806 of yacc.c  */
-#line 1003 "parser.y"
+#line 1005 "parser.y"
     { parser->ignore = 0;
                                   (yyval.val) = cons(nil, nil);
                                   (yyval.val)->c.cdr = (yyval.val); }
@@ -5143,14 +5115,14 @@ yyreduce:
   case 245:
 
 /* Line 1806 of yacc.c  */
-#line 1006 "parser.y"
+#line 1008 "parser.y"
     { parser->ignore = 1; }
     break;
 
   case 246:
 
 /* Line 1806 of yacc.c  */
-#line 1007 "parser.y"
+#line 1009 "parser.y"
     { parser->ignore = 0;
                                   (yyval.val) = (yyvsp[(1) - (4)].val); }
     break;
@@ -5158,7 +5130,7 @@ yyreduce:
   case 247:
 
 /* Line 1806 of yacc.c  */
-#line 1009 "parser.y"
+#line 1011 "parser.y"
     { uses_or2;
                                   (yyval.val) = rlc(cons((yyvsp[(2) - (2)].val), (yyvsp[(1) - (2)].val)->c.cdr), or2((yyvsp[(2) - (2)].val), (yyvsp[(1) - (2)].val)->c.cdr));
                                   (yyvsp[(1) - (2)].val)->c.cdr = (yyval.val); }
@@ -5167,7 +5139,7 @@ yyreduce:
   case 248:
 
 /* Line 1806 of yacc.c  */
-#line 1012 "parser.y"
+#line 1014 "parser.y"
     { (yyval.val) = lastcons(rl((yyvsp[(2) - (2)].val), num((yyvsp[(1) - (2)].lineno))));
                                   (yyval.val)->c.cdr = (yyvsp[(2) - (2)].val); }
     break;
@@ -5175,7 +5147,7 @@ yyreduce:
   case 249:
 
 /* Line 1806 of yacc.c  */
-#line 1015 "parser.y"
+#line 1017 "parser.y"
     { (yyval.val) = lastcons(rl((yyvsp[(3) - (3)].val), num((yyvsp[(2) - (3)].lineno))));
                                   (yyval.val)->c.cdr = (yyvsp[(1) - (3)].val)->c.cdr;
                                   (yyvsp[(1) - (3)].val)->c.cdr = (yyvsp[(3) - (3)].val); }
@@ -5184,7 +5156,7 @@ yyreduce:
   case 250:
 
 /* Line 1806 of yacc.c  */
-#line 1018 "parser.y"
+#line 1020 "parser.y"
     { (yyval.val) = lastcons(rl((yyvsp[(2) - (2)].val), num((yyvsp[(1) - (2)].lineno))));
                                   (yyval.val)->c.cdr = (yyvsp[(2) - (2)].val); }
     break;
@@ -5192,7 +5164,7 @@ yyreduce:
   case 251:
 
 /* Line 1806 of yacc.c  */
-#line 1021 "parser.y"
+#line 1023 "parser.y"
     { (yyval.val) = lastcons(rl((yyvsp[(3) - (3)].val), num((yyvsp[(2) - (3)].lineno))));
                                   (yyval.val)->c.cdr = (yyvsp[(1) - (3)].val)->c.cdr;
                                   (yyvsp[(1) - (3)].val)->c.cdr = (yyvsp[(3) - (3)].val); }
@@ -5201,14 +5173,14 @@ yyreduce:
   case 252:
 
 /* Line 1806 of yacc.c  */
-#line 1026 "parser.y"
+#line 1028 "parser.y"
     { (yyval.val) = ifnign(symhlpr((yyvsp[(1) - (1)].lexeme), t)); }
     break;
 
   case 253:
 
 /* Line 1806 of yacc.c  */
-#line 1027 "parser.y"
+#line 1029 "parser.y"
     { (yyval.val) = cons(var_s, cons((yyvsp[(1) - (1)].val), nil));
                                   rl((yyval.val), num(parser->lineno)); }
     break;
@@ -5216,112 +5188,112 @@ yyreduce:
   case 254:
 
 /* Line 1806 of yacc.c  */
-#line 1029 "parser.y"
+#line 1031 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 255:
 
 /* Line 1806 of yacc.c  */
-#line 1030 "parser.y"
+#line 1032 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 256:
 
 /* Line 1806 of yacc.c  */
-#line 1031 "parser.y"
+#line 1033 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 257:
 
 /* Line 1806 of yacc.c  */
-#line 1032 "parser.y"
+#line 1034 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 258:
 
 /* Line 1806 of yacc.c  */
-#line 1033 "parser.y"
+#line 1035 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 259:
 
 /* Line 1806 of yacc.c  */
-#line 1034 "parser.y"
+#line 1036 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 260:
 
 /* Line 1806 of yacc.c  */
-#line 1035 "parser.y"
+#line 1037 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 261:
 
 /* Line 1806 of yacc.c  */
-#line 1036 "parser.y"
+#line 1038 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 262:
 
 /* Line 1806 of yacc.c  */
-#line 1037 "parser.y"
+#line 1039 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 263:
 
 /* Line 1806 of yacc.c  */
-#line 1038 "parser.y"
+#line 1040 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 264:
 
 /* Line 1806 of yacc.c  */
-#line 1039 "parser.y"
+#line 1041 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 265:
 
 /* Line 1806 of yacc.c  */
-#line 1040 "parser.y"
+#line 1042 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 266:
 
 /* Line 1806 of yacc.c  */
-#line 1041 "parser.y"
+#line 1043 "parser.y"
     { (yyval.val) = rl((yyvsp[(2) - (2)].val), num((yyvsp[(1) - (2)].lineno))); }
     break;
 
   case 267:
 
 /* Line 1806 of yacc.c  */
-#line 1042 "parser.y"
+#line 1044 "parser.y"
     { (yyval.val) = rl(cons(quasilist_s, (yyvsp[(2) - (2)].val)), num((yyvsp[(1) - (2)].lineno))); }
     break;
 
   case 268:
 
 /* Line 1806 of yacc.c  */
-#line 1043 "parser.y"
+#line 1045 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 269:
 
 /* Line 1806 of yacc.c  */
-#line 1044 "parser.y"
+#line 1046 "parser.y"
     { (yyval.val) = rl(rlc(list(quote_s, (yyvsp[(2) - (2)].val), nao), (yyvsp[(2) - (2)].val)),
                                           num(parser->lineno)); }
     break;
@@ -5329,14 +5301,14 @@ yyreduce:
   case 270:
 
 /* Line 1806 of yacc.c  */
-#line 1046 "parser.y"
+#line 1048 "parser.y"
     { parser->quasi_level++; }
     break;
 
   case 271:
 
 /* Line 1806 of yacc.c  */
-#line 1047 "parser.y"
+#line 1049 "parser.y"
     { parser->quasi_level--;
                                   (yyval.val) = rl(rlc(list(sys_qquote_s, (yyvsp[(3) - (3)].val), nao), (yyvsp[(3) - (3)].val)),
                                           num(parser->lineno)); }
@@ -5345,14 +5317,14 @@ yyreduce:
   case 272:
 
 /* Line 1806 of yacc.c  */
-#line 1050 "parser.y"
+#line 1052 "parser.y"
     { parser->quasi_level--; }
     break;
 
   case 273:
 
 /* Line 1806 of yacc.c  */
-#line 1051 "parser.y"
+#line 1053 "parser.y"
     { parser->quasi_level++;
                                   (yyval.val) = rl(rlc(list(sys_unquote_s, (yyvsp[(3) - (3)].val), nao), (yyvsp[(3) - (3)].val)),
                                           num(parser->lineno)); }
@@ -5361,14 +5333,14 @@ yyreduce:
   case 274:
 
 /* Line 1806 of yacc.c  */
-#line 1054 "parser.y"
+#line 1056 "parser.y"
     { parser->quasi_level--; }
     break;
 
   case 275:
 
 /* Line 1806 of yacc.c  */
-#line 1055 "parser.y"
+#line 1057 "parser.y"
     { parser->quasi_level++;
                                   (yyval.val) = rl(rlc(list(sys_splice_s, (yyvsp[(3) - (3)].val), nao), (yyvsp[(3) - (3)].val)),
                                           num(parser->lineno)); }
@@ -5377,14 +5349,14 @@ yyreduce:
   case 276:
 
 /* Line 1806 of yacc.c  */
-#line 1058 "parser.y"
+#line 1060 "parser.y"
     { parser_circ_def(parser, (yyvsp[(1) - (1)].val), unique_s); }
     break;
 
   case 277:
 
 /* Line 1806 of yacc.c  */
-#line 1059 "parser.y"
+#line 1061 "parser.y"
     { parser_circ_def(parser, (yyvsp[(1) - (3)].val), (yyvsp[(3) - (3)].val));
                                   (yyval.val) = (yyvsp[(3) - (3)].val); }
     break;
@@ -5392,35 +5364,35 @@ yyreduce:
   case 278:
 
 /* Line 1806 of yacc.c  */
-#line 1061 "parser.y"
+#line 1063 "parser.y"
     { (yyval.val) = parser_circ_ref(parser, (yyvsp[(1) - (1)].val)); }
     break;
 
   case 279:
 
 /* Line 1806 of yacc.c  */
-#line 1064 "parser.y"
+#line 1066 "parser.y"
     { (yyval.val) = uref_helper(parser, (yyvsp[(2) - (2)].val)); }
     break;
 
   case 280:
 
 /* Line 1806 of yacc.c  */
-#line 1065 "parser.y"
+#line 1067 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 281:
 
 /* Line 1806 of yacc.c  */
-#line 1067 "parser.y"
+#line 1069 "parser.y"
     { (yyval.val) = ifnign(symhlpr((yyvsp[(1) - (1)].lexeme), t)); }
     break;
 
   case 282:
 
 /* Line 1806 of yacc.c  */
-#line 1068 "parser.y"
+#line 1070 "parser.y"
     { (yyval.val) = cons(var_s, cons((yyvsp[(1) - (1)].val), nil));
                                   rl((yyval.val), num(parser->lineno)); }
     break;
@@ -5428,112 +5400,112 @@ yyreduce:
   case 283:
 
 /* Line 1806 of yacc.c  */
-#line 1070 "parser.y"
+#line 1072 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 284:
 
 /* Line 1806 of yacc.c  */
-#line 1071 "parser.y"
+#line 1073 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 285:
 
 /* Line 1806 of yacc.c  */
-#line 1072 "parser.y"
+#line 1074 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 286:
 
 /* Line 1806 of yacc.c  */
-#line 1073 "parser.y"
+#line 1075 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 287:
 
 /* Line 1806 of yacc.c  */
-#line 1074 "parser.y"
+#line 1076 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 288:
 
 /* Line 1806 of yacc.c  */
-#line 1075 "parser.y"
+#line 1077 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 289:
 
 /* Line 1806 of yacc.c  */
-#line 1076 "parser.y"
+#line 1078 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 290:
 
 /* Line 1806 of yacc.c  */
-#line 1077 "parser.y"
+#line 1079 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 291:
 
 /* Line 1806 of yacc.c  */
-#line 1078 "parser.y"
+#line 1080 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 292:
 
 /* Line 1806 of yacc.c  */
-#line 1079 "parser.y"
+#line 1081 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 293:
 
 /* Line 1806 of yacc.c  */
-#line 1080 "parser.y"
+#line 1082 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 294:
 
 /* Line 1806 of yacc.c  */
-#line 1081 "parser.y"
+#line 1083 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 295:
 
 /* Line 1806 of yacc.c  */
-#line 1082 "parser.y"
+#line 1084 "parser.y"
     { (yyval.val) = rl((yyvsp[(2) - (2)].val), num((yyvsp[(1) - (2)].lineno))); }
     break;
 
   case 296:
 
 /* Line 1806 of yacc.c  */
-#line 1083 "parser.y"
+#line 1085 "parser.y"
     { (yyval.val) = rl(cons(quasilist_s, (yyvsp[(2) - (2)].val)), num((yyvsp[(1) - (2)].lineno))); }
     break;
 
   case 297:
 
 /* Line 1806 of yacc.c  */
-#line 1084 "parser.y"
+#line 1086 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 298:
 
 /* Line 1806 of yacc.c  */
-#line 1085 "parser.y"
+#line 1087 "parser.y"
     { (yyval.val) = rl(rlc(list(quote_s, (yyvsp[(2) - (2)].val), nao), (yyvsp[(2) - (2)].val)),
                                           num(parser->lineno)); }
     break;
@@ -5541,14 +5513,14 @@ yyreduce:
   case 299:
 
 /* Line 1806 of yacc.c  */
-#line 1087 "parser.y"
+#line 1089 "parser.y"
     { parser->quasi_level++; }
     break;
 
   case 300:
 
 /* Line 1806 of yacc.c  */
-#line 1088 "parser.y"
+#line 1090 "parser.y"
     { parser->quasi_level--;
                                   (yyval.val) = rl(rlc(list(sys_qquote_s, (yyvsp[(3) - (3)].val), nao), (yyvsp[(3) - (3)].val)),
                                           num(parser->lineno)); }
@@ -5557,14 +5529,14 @@ yyreduce:
   case 301:
 
 /* Line 1806 of yacc.c  */
-#line 1091 "parser.y"
+#line 1093 "parser.y"
     { parser->quasi_level--; }
     break;
 
   case 302:
 
 /* Line 1806 of yacc.c  */
-#line 1092 "parser.y"
+#line 1094 "parser.y"
     { parser->quasi_level++;
                                   (yyval.val) = rl(rlc(list(sys_unquote_s, (yyvsp[(3) - (3)].val), nao), (yyvsp[(3) - (3)].val)),
                                           num(parser->lineno)); }
@@ -5573,14 +5545,14 @@ yyreduce:
   case 303:
 
 /* Line 1806 of yacc.c  */
-#line 1095 "parser.y"
+#line 1097 "parser.y"
     { parser->quasi_level--; }
     break;
 
   case 304:
 
 /* Line 1806 of yacc.c  */
-#line 1096 "parser.y"
+#line 1098 "parser.y"
     { parser->quasi_level++;
                                   (yyval.val) = rl(rlc(list(sys_splice_s, (yyvsp[(3) - (3)].val), nao), (yyvsp[(3) - (3)].val)),
                                           num(parser->lineno)); }
@@ -5589,7 +5561,7 @@ yyreduce:
   case 305:
 
 /* Line 1806 of yacc.c  */
-#line 1099 "parser.y"
+#line 1101 "parser.y"
     { uses_or2;
                                   (yyval.val) = rlc(list(rcons_s, (yyvsp[(1) - (3)].val), (yyvsp[(3) - (3)].val), nao),
                                             or2((yyvsp[(1) - (3)].val), (yyvsp[(3) - (3)].val))); }
@@ -5598,7 +5570,7 @@ yyreduce:
   case 306:
 
 /* Line 1806 of yacc.c  */
-#line 1103 "parser.y"
+#line 1105 "parser.y"
     { uses_or2;
                                   (yyval.val) = rlc(list(rcons_s, (yyvsp[(1) - (4)].val),
                                                           uref_helper(parser, (yyvsp[(4) - (4)].val)),
@@ -5609,7 +5581,7 @@ yyreduce:
   case 307:
 
 /* Line 1806 of yacc.c  */
-#line 1109 "parser.y"
+#line 1111 "parser.y"
     { uses_or2;
                                   (yyval.val) = rlc(list(rcons_s, (yyvsp[(1) - (3)].val), (yyvsp[(3) - (3)].val), nao),
                                             or2((yyvsp[(1) - (3)].val), (yyvsp[(3) - (3)].val))); }
@@ -5618,7 +5590,7 @@ yyreduce:
   case 308:
 
 /* Line 1806 of yacc.c  */
-#line 1113 "parser.y"
+#line 1115 "parser.y"
     { uses_or2;
                                   (yyval.val) = rlc(list(rcons_s, (yyvsp[(1) - (4)].val),
                                                           uref_helper(parser, (yyvsp[(4) - (4)].val)),
@@ -5629,14 +5601,14 @@ yyreduce:
   case 309:
 
 /* Line 1806 of yacc.c  */
-#line 1118 "parser.y"
+#line 1120 "parser.y"
     { (yyval.val) = qref_helper(parser, (yyvsp[(1) - (3)].val), (yyvsp[(3) - (3)].val)); }
     break;
 
   case 310:
 
 /* Line 1806 of yacc.c  */
-#line 1119 "parser.y"
+#line 1121 "parser.y"
     { (yyval.val) = qref_helper(parser,
                                                    cons(t, cons((yyvsp[(1) - (3)].val), nil)),
                                                         (yyvsp[(3) - (3)].val)); }
@@ -5645,28 +5617,28 @@ yyreduce:
   case 311:
 
 /* Line 1806 of yacc.c  */
-#line 1122 "parser.y"
+#line 1124 "parser.y"
     { (yyval.val) = uref_helper(parser, (yyvsp[(2) - (2)].val)); }
     break;
 
   case 312:
 
 /* Line 1806 of yacc.c  */
-#line 1123 "parser.y"
+#line 1125 "parser.y"
     { (yyval.val) = uoref_helper(parser, (yyvsp[(2) - (2)].val)); }
     break;
 
   case 313:
 
 /* Line 1806 of yacc.c  */
-#line 1124 "parser.y"
+#line 1126 "parser.y"
     { parser_circ_def(parser, (yyvsp[(1) - (1)].val), unique_s); }
     break;
 
   case 314:
 
 /* Line 1806 of yacc.c  */
-#line 1125 "parser.y"
+#line 1127 "parser.y"
     { parser_circ_def(parser, (yyvsp[(1) - (3)].val), (yyvsp[(3) - (3)].val));
                                   (yyval.val) = (yyvsp[(3) - (3)].val); }
     break;
@@ -5674,49 +5646,49 @@ yyreduce:
   case 315:
 
 /* Line 1806 of yacc.c  */
-#line 1127 "parser.y"
+#line 1129 "parser.y"
     { (yyval.val) = parser_circ_ref(parser, (yyvsp[(1) - (1)].val)); }
     break;
 
   case 316:
 
 /* Line 1806 of yacc.c  */
-#line 1130 "parser.y"
+#line 1132 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 317:
 
 /* Line 1806 of yacc.c  */
-#line 1131 "parser.y"
+#line 1133 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 318:
 
 /* Line 1806 of yacc.c  */
-#line 1134 "parser.y"
+#line 1136 "parser.y"
     { (yyval.val) = uref_helper(parser, (yyvsp[(2) - (2)].val)); }
     break;
 
   case 319:
 
 /* Line 1806 of yacc.c  */
-#line 1135 "parser.y"
+#line 1137 "parser.y"
     { (yyval.val) = uoref_helper(parser, (yyvsp[(2) - (2)].val)); }
     break;
 
   case 320:
 
 /* Line 1806 of yacc.c  */
-#line 1136 "parser.y"
+#line 1138 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 321:
 
 /* Line 1806 of yacc.c  */
-#line 1139 "parser.y"
+#line 1141 "parser.y"
     { (yyval.val) = regex_compile((yyvsp[(2) - (3)].val), nil);
                                   end_of_regex(scnr);
                                   rl((yyval.val), num(parser->lineno)); }
@@ -5725,7 +5697,7 @@ yyreduce:
   case 322:
 
 /* Line 1806 of yacc.c  */
-#line 1142 "parser.y"
+#line 1144 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("regex"));
                                   end_of_regex(scnr); }
@@ -5734,7 +5706,7 @@ yyreduce:
   case 323:
 
 /* Line 1806 of yacc.c  */
-#line 1148 "parser.y"
+#line 1150 "parser.y"
     { (yyval.val) = regex_compile((yyvsp[(2) - (3)].val), nil);
                                   end_of_regex(scnr);
                                   rl((yyval.val), num(parser->lineno)); }
@@ -5743,7 +5715,7 @@ yyreduce:
   case 324:
 
 /* Line 1806 of yacc.c  */
-#line 1152 "parser.y"
+#line 1154 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("regex"));
                                   end_of_regex(scnr); }
@@ -5752,7 +5724,7 @@ yyreduce:
   case 325:
 
 /* Line 1806 of yacc.c  */
-#line 1157 "parser.y"
+#line 1159 "parser.y"
     { (yyval.val) = if3(cdr((yyvsp[(1) - (1)].val)),
                                                    cons(compound_s, (yyvsp[(1) - (1)].val)),
                                                    car((yyvsp[(1) - (1)].val))); }
@@ -5761,84 +5733,84 @@ yyreduce:
   case 326:
 
 /* Line 1806 of yacc.c  */
-#line 1160 "parser.y"
+#line 1162 "parser.y"
     { (yyval.val) = list(or_s, (yyvsp[(1) - (3)].val), (yyvsp[(3) - (3)].val), nao); }
     break;
 
   case 327:
 
 /* Line 1806 of yacc.c  */
-#line 1161 "parser.y"
+#line 1163 "parser.y"
     { (yyval.val) = list(and_s, (yyvsp[(1) - (3)].val), (yyvsp[(3) - (3)].val), nao); }
     break;
 
   case 328:
 
 /* Line 1806 of yacc.c  */
-#line 1162 "parser.y"
+#line 1164 "parser.y"
     { (yyval.val) = list(compl_s, (yyvsp[(2) - (2)].val), nao); }
     break;
 
   case 329:
 
 /* Line 1806 of yacc.c  */
-#line 1163 "parser.y"
+#line 1165 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 330:
 
 /* Line 1806 of yacc.c  */
-#line 1166 "parser.y"
+#line 1168 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); }
     break;
 
   case 331:
 
 /* Line 1806 of yacc.c  */
-#line 1167 "parser.y"
+#line 1169 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (2)].val), (yyvsp[(2) - (2)].val)); }
     break;
 
   case 332:
 
 /* Line 1806 of yacc.c  */
-#line 1168 "parser.y"
+#line 1170 "parser.y"
     { (yyval.val) = list((yyvsp[(1) - (3)].val), list(compl_s, (yyvsp[(3) - (3)].val), nao), nao); }
     break;
 
   case 333:
 
 /* Line 1806 of yacc.c  */
-#line 1171 "parser.y"
+#line 1173 "parser.y"
     { (yyval.val) = list(zeroplus_s, (yyvsp[(1) - (2)].val), nao); }
     break;
 
   case 334:
 
 /* Line 1806 of yacc.c  */
-#line 1172 "parser.y"
+#line 1174 "parser.y"
     { (yyval.val) = list(oneplus_s, (yyvsp[(1) - (2)].val), nao); }
     break;
 
   case 335:
 
 /* Line 1806 of yacc.c  */
-#line 1173 "parser.y"
+#line 1175 "parser.y"
     { (yyval.val) = list(optional_s, (yyvsp[(1) - (2)].val), nao); }
     break;
 
   case 336:
 
 /* Line 1806 of yacc.c  */
-#line 1174 "parser.y"
+#line 1176 "parser.y"
     { (yyval.val) = list(nongreedy_s, (yyvsp[(1) - (3)].val), (yyvsp[(3) - (3)].val), nao); }
     break;
 
   case 337:
 
 /* Line 1806 of yacc.c  */
-#line 1175 "parser.y"
+#line 1177 "parser.y"
     { if (first((yyvsp[(2) - (3)].val)) == chr('^'))
                                   { if (rest((yyvsp[(2) - (3)].val)))
                                       (yyval.val) = cons(cset_s, rest((yyvsp[(2) - (3)].val)));
@@ -5851,14 +5823,14 @@ yyreduce:
   case 338:
 
 /* Line 1806 of yacc.c  */
-#line 1182 "parser.y"
+#line 1184 "parser.y"
     { (yyval.val) = cons(set_s, nil); }
     break;
 
   case 339:
 
 /* Line 1806 of yacc.c  */
-#line 1183 "parser.y"
+#line 1185 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("regex character class")); }
     break;
@@ -5866,56 +5838,56 @@ yyreduce:
   case 340:
 
 /* Line 1806 of yacc.c  */
-#line 1185 "parser.y"
+#line 1187 "parser.y"
     { (yyval.val) = wild_s; }
     break;
 
   case 341:
 
 /* Line 1806 of yacc.c  */
-#line 1186 "parser.y"
+#line 1188 "parser.y"
     { (yyval.val) = chr(']'); }
     break;
 
   case 342:
 
 /* Line 1806 of yacc.c  */
-#line 1187 "parser.y"
+#line 1189 "parser.y"
     { (yyval.val) = chr('-'); }
     break;
 
   case 343:
 
 /* Line 1806 of yacc.c  */
-#line 1188 "parser.y"
+#line 1190 "parser.y"
     { (yyval.val) = chr((yyvsp[(1) - (1)].chr)); }
     break;
 
   case 344:
 
 /* Line 1806 of yacc.c  */
-#line 1189 "parser.y"
+#line 1191 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 345:
 
 /* Line 1806 of yacc.c  */
-#line 1190 "parser.y"
+#line 1192 "parser.y"
     { (yyval.val) = list(compound_s, string_own((yyvsp[(1) - (1)].lexeme)), nao); }
     break;
 
   case 346:
 
 /* Line 1806 of yacc.c  */
-#line 1191 "parser.y"
+#line 1193 "parser.y"
     { (yyval.val) = (yyvsp[(2) - (3)].val); }
     break;
 
   case 347:
 
 /* Line 1806 of yacc.c  */
-#line 1192 "parser.y"
+#line 1194 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("regex subexpression")); }
     break;
@@ -5923,133 +5895,133 @@ yyreduce:
   case 348:
 
 /* Line 1806 of yacc.c  */
-#line 1196 "parser.y"
+#line 1198 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil); }
     break;
 
   case 349:
 
 /* Line 1806 of yacc.c  */
-#line 1197 "parser.y"
+#line 1199 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (2)].val), (yyvsp[(2) - (2)].val)); }
     break;
 
   case 350:
 
 /* Line 1806 of yacc.c  */
-#line 1200 "parser.y"
+#line 1202 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 351:
 
 /* Line 1806 of yacc.c  */
-#line 1201 "parser.y"
+#line 1203 "parser.y"
     { (yyval.val) = chr((yyvsp[(1) - (1)].chr)); }
     break;
 
   case 352:
 
 /* Line 1806 of yacc.c  */
-#line 1202 "parser.y"
+#line 1204 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 353:
 
 /* Line 1806 of yacc.c  */
-#line 1205 "parser.y"
+#line 1207 "parser.y"
     { (yyval.val) = cons(chr((yyvsp[(1) - (3)].chr)), chr((yyvsp[(3) - (3)].chr))); }
     break;
 
   case 354:
 
 /* Line 1806 of yacc.c  */
-#line 1207 "parser.y"
+#line 1209 "parser.y"
     { (yyval.chr) = '?'; }
     break;
 
   case 355:
 
 /* Line 1806 of yacc.c  */
-#line 1208 "parser.y"
+#line 1210 "parser.y"
     { (yyval.chr) = '.'; }
     break;
 
   case 356:
 
 /* Line 1806 of yacc.c  */
-#line 1209 "parser.y"
+#line 1211 "parser.y"
     { (yyval.chr) = '*'; }
     break;
 
   case 357:
 
 /* Line 1806 of yacc.c  */
-#line 1210 "parser.y"
+#line 1212 "parser.y"
     { (yyval.chr) = '+'; }
     break;
 
   case 358:
 
 /* Line 1806 of yacc.c  */
-#line 1211 "parser.y"
+#line 1213 "parser.y"
     { (yyval.chr) = '('; }
     break;
 
   case 359:
 
 /* Line 1806 of yacc.c  */
-#line 1212 "parser.y"
+#line 1214 "parser.y"
     { (yyval.chr) = ')'; }
     break;
 
   case 360:
 
 /* Line 1806 of yacc.c  */
-#line 1213 "parser.y"
+#line 1215 "parser.y"
     { (yyval.chr) = '|'; }
     break;
 
   case 361:
 
 /* Line 1806 of yacc.c  */
-#line 1214 "parser.y"
+#line 1216 "parser.y"
     { (yyval.chr) = '~'; }
     break;
 
   case 362:
 
 /* Line 1806 of yacc.c  */
-#line 1215 "parser.y"
+#line 1217 "parser.y"
     { (yyval.chr) = '&'; }
     break;
 
   case 363:
 
 /* Line 1806 of yacc.c  */
-#line 1216 "parser.y"
+#line 1218 "parser.y"
     { (yyval.chr) = '%'; }
     break;
 
   case 364:
 
 /* Line 1806 of yacc.c  */
-#line 1217 "parser.y"
+#line 1219 "parser.y"
     { (yyval.chr) = '/'; }
     break;
 
   case 365:
 
 /* Line 1806 of yacc.c  */
-#line 1218 "parser.y"
+#line 1220 "parser.y"
     { (yyval.chr) = (yyvsp[(1) - (1)].chr); }
     break;
 
   case 366:
 
 /* Line 1806 of yacc.c  */
-#line 1221 "parser.y"
+#line 1223 "parser.y"
     { switch ((yyvsp[(1) - (1)].chr))
                                   { case 's':
                                       (yyval.val) = space_k; break;
@@ -6068,7 +6040,7 @@ yyreduce:
   case 368:
 
 /* Line 1806 of yacc.c  */
-#line 1236 "parser.y"
+#line 1238 "parser.y"
     { yyerr("newline expected after directive");
                           yyerrok; }
     break;
@@ -6076,14 +6048,14 @@ yyreduce:
   case 369:
 
 /* Line 1806 of yacc.c  */
-#line 1240 "parser.y"
+#line 1242 "parser.y"
     { (yyval.val) = null_string; }
     break;
 
   case 370:
 
 /* Line 1806 of yacc.c  */
-#line 1241 "parser.y"
+#line 1243 "parser.y"
     { (yyval.val) = (yyvsp[(2) - (3)].val);
                                   rl((yyval.val), num(parser->lineno)); }
     break;
@@ -6091,7 +6063,7 @@ yyreduce:
   case 371:
 
 /* Line 1806 of yacc.c  */
-#line 1243 "parser.y"
+#line 1245 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("string literal")); }
     break;
@@ -6099,7 +6071,7 @@ yyreduce:
   case 372:
 
 /* Line 1806 of yacc.c  */
-#line 1247 "parser.y"
+#line 1249 "parser.y"
     { wchar_t ch;
                                   val str = string_own((yyvsp[(2) - (2)].lexeme));
                                   const wchar_t *cstr = c_str(str);
@@ -6118,7 +6090,7 @@ yyreduce:
   case 373:
 
 /* Line 1806 of yacc.c  */
-#line 1260 "parser.y"
+#line 1262 "parser.y"
     { (yyval.val) = chr((yyvsp[(2) - (2)].chr));
                                   end_of_char(scnr); }
     break;
@@ -6126,7 +6098,7 @@ yyreduce:
   case 374:
 
 /* Line 1806 of yacc.c  */
-#line 1262 "parser.y"
+#line 1264 "parser.y"
     { free((yyvsp[(2) - (2)].lexeme));
                                    yyerrorf(scnr,
                                             lit("invalid UTF-8 used as character name"),
@@ -6136,7 +6108,7 @@ yyreduce:
   case 375:
 
 /* Line 1806 of yacc.c  */
-#line 1266 "parser.y"
+#line 1268 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar,
                                              lit("character literal")); }
@@ -6145,14 +6117,14 @@ yyreduce:
   case 376:
 
 /* Line 1806 of yacc.c  */
-#line 1271 "parser.y"
+#line 1273 "parser.y"
     { (yyval.val) = null_string; }
     break;
 
   case 377:
 
 /* Line 1806 of yacc.c  */
-#line 1272 "parser.y"
+#line 1274 "parser.y"
     { (yyval.val) = cons(quasi_s, (yyvsp[(2) - (3)].val));
                                   rlc((yyval.val), (yyvsp[(2) - (3)].val));
                                   rl((yyval.val), num(parser->lineno)); }
@@ -6161,7 +6133,7 @@ yyreduce:
   case 378:
 
 /* Line 1806 of yacc.c  */
-#line 1275 "parser.y"
+#line 1277 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("quasistring")); }
     break;
@@ -6169,7 +6141,7 @@ yyreduce:
   case 379:
 
 /* Line 1806 of yacc.c  */
-#line 1279 "parser.y"
+#line 1281 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (1)].val), nil);
                                           rl((yyval.val), num(parser->lineno)); }
     break;
@@ -6177,7 +6149,7 @@ yyreduce:
   case 380:
 
 /* Line 1806 of yacc.c  */
-#line 1281 "parser.y"
+#line 1283 "parser.y"
     { (yyval.val) = cons((yyvsp[(1) - (2)].val), (yyvsp[(2) - (2)].val));
                                           rl((yyval.val), num(parser->lineno)); }
     break;
@@ -6185,21 +6157,21 @@ yyreduce:
   case 381:
 
 /* Line 1806 of yacc.c  */
-#line 1285 "parser.y"
+#line 1287 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 382:
 
 /* Line 1806 of yacc.c  */
-#line 1286 "parser.y"
+#line 1288 "parser.y"
     { (yyval.val) = (yyvsp[(1) - (1)].val); }
     break;
 
   case 383:
 
 /* Line 1806 of yacc.c  */
-#line 1287 "parser.y"
+#line 1289 "parser.y"
     { (yyval.val) = cons(var_s, cons((yyvsp[(1) - (1)].val), nil));
                                   rl((yyval.val), num(parser->lineno)); }
     break;
@@ -6207,7 +6179,7 @@ yyreduce:
   case 384:
 
 /* Line 1806 of yacc.c  */
-#line 1289 "parser.y"
+#line 1291 "parser.y"
     { if (integerp((yyvsp[(2) - (2)].val)) || symbolp((yyvsp[(2) - (2)].val)))
                                     (yyval.val) = rlcp_tree(cons(var_s, cons((yyvsp[(2) - (2)].val), nil)),
                                                    (yyvsp[(2) - (2)].val));
@@ -6218,14 +6190,14 @@ yyreduce:
   case 385:
 
 /* Line 1806 of yacc.c  */
-#line 1296 "parser.y"
+#line 1298 "parser.y"
     { (yyval.val) = mkstring(one, chr((yyvsp[(1) - (1)].chr))); }
     break;
 
   case 386:
 
 /* Line 1806 of yacc.c  */
-#line 1297 "parser.y"
+#line 1299 "parser.y"
     { val ch = mkstring(one, chr((yyvsp[(1) - (2)].chr)));
                                   (yyval.val) = string_extend(ch, (yyvsp[(2) - (2)].val)); }
     break;
@@ -6233,63 +6205,63 @@ yyreduce:
   case 387:
 
 /* Line 1806 of yacc.c  */
-#line 1299 "parser.y"
+#line 1301 "parser.y"
     { (yyval.val) = string_own((yyvsp[(1) - (1)].lexeme)); }
     break;
 
   case 388:
 
 /* Line 1806 of yacc.c  */
-#line 1300 "parser.y"
+#line 1302 "parser.y"
     { (yyval.val) = string_extend(string_own((yyvsp[(1) - (2)].lexeme)), (yyvsp[(2) - (2)].val)); }
     break;
 
   case 389:
 
 /* Line 1806 of yacc.c  */
-#line 1303 "parser.y"
+#line 1305 "parser.y"
     { (yyval.val) = mkstring(one, chr((yyvsp[(1) - (1)].chr))); }
     break;
 
   case 390:
 
 /* Line 1806 of yacc.c  */
-#line 1304 "parser.y"
+#line 1306 "parser.y"
     { (yyval.val) = string_extend((yyvsp[(1) - (2)].val), chr((yyvsp[(2) - (2)].chr))); }
     break;
 
   case 391:
 
 /* Line 1806 of yacc.c  */
-#line 1305 "parser.y"
+#line 1307 "parser.y"
     { (yyval.val) = string_own((yyvsp[(1) - (1)].lexeme)); }
     break;
 
   case 392:
 
 /* Line 1806 of yacc.c  */
-#line 1306 "parser.y"
+#line 1308 "parser.y"
     { (yyval.val) = string_extend((yyvsp[(1) - (2)].val), string_own((yyvsp[(2) - (2)].lexeme))); }
     break;
 
   case 393:
 
 /* Line 1806 of yacc.c  */
-#line 1309 "parser.y"
+#line 1311 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 394:
 
 /* Line 1806 of yacc.c  */
-#line 1310 "parser.y"
+#line 1312 "parser.y"
     { (yyval.val) = (yyvsp[(2) - (2)].val); }
     break;
 
   case 395:
 
 /* Line 1806 of yacc.c  */
-#line 1311 "parser.y"
+#line 1313 "parser.y"
     { val word = (yyvsp[(1) - (2)].val);
                                   (yyval.val) = rlc(cons(word, (yyvsp[(2) - (2)].val)), (yyvsp[(1) - (2)].val)); }
     break;
@@ -6297,7 +6269,7 @@ yyreduce:
   case 396:
 
 /* Line 1806 of yacc.c  */
-#line 1313 "parser.y"
+#line 1315 "parser.y"
     { (yyval.val) = nil;
                                   yybadtok(yychar, lit("word list")); }
     break;
@@ -6305,21 +6277,21 @@ yyreduce:
   case 397:
 
 /* Line 1806 of yacc.c  */
-#line 1317 "parser.y"
+#line 1319 "parser.y"
     { (yyval.val) = nil; }
     break;
 
   case 398:
 
 /* Line 1806 of yacc.c  */
-#line 1318 "parser.y"
+#line 1320 "parser.y"
     { (yyval.val) = (yyvsp[(2) - (2)].val); }
     break;
 
   case 399:
 
 /* Line 1806 of yacc.c  */
-#line 1319 "parser.y"
+#line 1321 "parser.y"
     { val qword = cons(quasi_s, (yyvsp[(1) - (2)].val));
                                    (yyval.val) = rlc(cons(qword, nil), (yyvsp[(1) - (2)].val)); }
     break;
@@ -6327,7 +6299,7 @@ yyreduce:
   case 400:
 
 /* Line 1806 of yacc.c  */
-#line 1323 "parser.y"
+#line 1325 "parser.y"
     { val qword = cons(quasi_s, (yyvsp[(1) - (3)].val));
                                    (yyval.val) = rlc(cons(qword, (yyvsp[(3) - (3)].val)), (yyvsp[(1) - (3)].val)); }
     break;
@@ -6335,7 +6307,7 @@ yyreduce:
   case 401:
 
 /* Line 1806 of yacc.c  */
-#line 1327 "parser.y"
+#line 1329 "parser.y"
     { (yyval.val) = make_buf(zero, nil, nil);
                                            end_of_buflit(scnr); }
     break;
@@ -6343,7 +6315,7 @@ yyreduce:
   case 402:
 
 /* Line 1806 of yacc.c  */
-#line 1329 "parser.y"
+#line 1331 "parser.y"
     { end_of_buflit(scnr);
                                            buf_trim((yyvsp[(2) - (3)].val));
                                            (yyval.val) = (yyvsp[(2) - (3)].val); }
@@ -6352,7 +6324,7 @@ yyreduce:
   case 403:
 
 /* Line 1806 of yacc.c  */
-#line 1332 "parser.y"
+#line 1334 "parser.y"
     { yyerr("unterminated buffer literal");
                                            end_of_buflit(scnr);
                                            yyerrok; }
@@ -6361,7 +6333,7 @@ yyreduce:
   case 404:
 
 /* Line 1806 of yacc.c  */
-#line 1337 "parser.y"
+#line 1339 "parser.y"
     { buf_put_u8((yyvsp[(1) - (2)].val), length_buf((yyval.val)), (yyvsp[(2) - (2)].val));
                                           (yyval.val) = (yyvsp[(1) - (2)].val); }
     break;
@@ -6369,7 +6341,7 @@ yyreduce:
   case 405:
 
 /* Line 1806 of yacc.c  */
-#line 1339 "parser.y"
+#line 1341 "parser.y"
     { (yyval.val) = make_buf(zero, nil, num_fast(512));
                                           buf_put_u8((yyval.val), zero, (yyvsp[(1) - (1)].val)); }
     break;
@@ -6377,14 +6349,14 @@ yyreduce:
   case 406:
 
 /* Line 1806 of yacc.c  */
-#line 1343 "parser.y"
+#line 1345 "parser.y"
     { (yyval.val) = num((yyvsp[(1) - (2)].chr) << 4 | (yyvsp[(2) - (2)].chr)); }
     break;
 
   case 407:
 
 /* Line 1806 of yacc.c  */
-#line 1344 "parser.y"
+#line 1346 "parser.y"
     { (yyval.val) = zero;
                                           yyerr("unpaired digit in buffer literal");
                                           yyerrok; }
@@ -6393,119 +6365,119 @@ yyreduce:
   case 408:
 
 /* Line 1806 of yacc.c  */
-#line 1351 "parser.y"
+#line 1353 "parser.y"
     { (yyval.val) = mkexp(all_s, nil, num(parser->lineno)); }
     break;
 
   case 409:
 
 /* Line 1806 of yacc.c  */
-#line 1352 "parser.y"
+#line 1354 "parser.y"
     { (yyval.val) = mkexp(some_s, nil, num(parser->lineno)); }
     break;
 
   case 410:
 
 /* Line 1806 of yacc.c  */
-#line 1353 "parser.y"
+#line 1355 "parser.y"
     { (yyval.val) = mkexp(none_s, nil, num(parser->lineno)); }
     break;
 
   case 411:
 
 /* Line 1806 of yacc.c  */
-#line 1354 "parser.y"
+#line 1356 "parser.y"
     { (yyval.val) = mkexp(maybe_s, nil, num(parser->lineno)); }
     break;
 
   case 412:
 
 /* Line 1806 of yacc.c  */
-#line 1355 "parser.y"
+#line 1357 "parser.y"
     { (yyval.val) = mkexp(cases_s, nil, num(parser->lineno)); }
     break;
 
   case 413:
 
 /* Line 1806 of yacc.c  */
-#line 1356 "parser.y"
+#line 1358 "parser.y"
     { (yyval.val) = mkexp(and_s, nil, num(parser->lineno)); }
     break;
 
   case 414:
 
 /* Line 1806 of yacc.c  */
-#line 1357 "parser.y"
+#line 1359 "parser.y"
     { (yyval.val) = mkexp(or_s, nil, num(parser->lineno)); }
     break;
 
   case 415:
 
 /* Line 1806 of yacc.c  */
-#line 1358 "parser.y"
+#line 1360 "parser.y"
     { (yyval.val) = mkexp(try_s, nil, num(parser->lineno)); }
     break;
 
   case 416:
 
 /* Line 1806 of yacc.c  */
-#line 1359 "parser.y"
+#line 1361 "parser.y"
     { (yyval.val) = mkexp(finally_s, nil, num(parser->lineno)); }
     break;
 
   case 417:
 
 /* Line 1806 of yacc.c  */
-#line 1361 "parser.y"
+#line 1363 "parser.y"
     { (yyval.val) = mkexp(block_s, (yyvsp[(2) - (3)].val), nil); }
     break;
 
   case 418:
 
 /* Line 1806 of yacc.c  */
-#line 1363 "parser.y"
+#line 1365 "parser.y"
     { (yyval.val) = mkexp(choose_s, (yyvsp[(2) - (3)].val), nil); }
     break;
 
   case 419:
 
 /* Line 1806 of yacc.c  */
-#line 1365 "parser.y"
+#line 1367 "parser.y"
     { (yyval.val) = mkexp(collect_s, (yyvsp[(2) - (3)].val), nil); }
     break;
 
   case 420:
 
 /* Line 1806 of yacc.c  */
-#line 1367 "parser.y"
+#line 1369 "parser.y"
     { (yyval.val) = mkexp(coll_s, (yyvsp[(2) - (3)].val), nil); }
     break;
 
   case 421:
 
 /* Line 1806 of yacc.c  */
-#line 1369 "parser.y"
+#line 1371 "parser.y"
     { (yyval.val) = mkexp(gather_s, (yyvsp[(2) - (3)].val), nil); }
     break;
 
   case 422:
 
 /* Line 1806 of yacc.c  */
-#line 1371 "parser.y"
+#line 1373 "parser.y"
     { (yyval.val) = mkexp(define_s, (yyvsp[(2) - (3)].val), nil); }
     break;
 
   case 423:
 
 /* Line 1806 of yacc.c  */
-#line 1373 "parser.y"
+#line 1375 "parser.y"
     { (yyval.val) = mkexp(catch_s, (yyvsp[(2) - (3)].val), nil); }
     break;
 
   case 424:
 
 /* Line 1806 of yacc.c  */
-#line 1375 "parser.y"
+#line 1377 "parser.y"
     { (yyval.val) = mkexp(if_s,
                                                          cons((yyvsp[(2) - (5)].val),
                                                               cons((yyvsp[(3) - (5)].val), (yyvsp[(4) - (5)].val))),
@@ -6515,14 +6487,14 @@ yyreduce:
   case 425:
 
 /* Line 1806 of yacc.c  */
-#line 1380 "parser.y"
+#line 1382 "parser.y"
     { yyerr("@(output) doesn't nest"); }
     break;
 
 
 
 /* Line 1806 of yacc.c  */
-#line 6526 "y.tab.c"
+#line 6528 "y.tab.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -6753,7 +6725,7 @@ yyreturn:
 
 
 /* Line 2067 of yacc.c  */
-#line 1384 "parser.y"
+#line 1386 "parser.y"
 
 
 const int have_yydebug = YYDEBUG;
@@ -6767,6 +6739,11 @@ void yydebug_onoff(int val)
 #else
   (void) val;
 #endif
+}
+
+static void set_syntax_tree(parser_t *parser, val tree)
+{
+  set(mkloc(parser->syntax_tree, parser->parser), tree);
 }
 
 static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)

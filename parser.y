@@ -52,6 +52,7 @@
 #include "buf.h"
 #include "parser.h"
 
+static void set_syntax_tree(parser_t *parser, val tree);
 static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed);
 static val repeat_rep_helper(val sym, val args, val main, val parts);
 static void process_catch_exprs(val exprs);
@@ -170,13 +171,14 @@ INLINE val expand_form_ver(val form, int ver)
 
 %%
 
-spec : clauses_opt              { parser->syntax_tree = $1; }
-     | SECRET_ESCAPE_R regexpr  { parser->syntax_tree = $2; end_of_regex(scnr); }
+spec : clauses_opt              { set_syntax_tree(parser, $1); }
+     | SECRET_ESCAPE_R regexpr  { set_syntax_tree(parser, $2);
+                                  end_of_regex(scnr); }
      | SECRET_ESCAPE_E hash_semi_or_n_expr
-                                { parser->syntax_tree = $2; YYACCEPT; }
+                                { set_syntax_tree(parser, $2); YYACCEPT; }
        byacc_fool               { internal_error("notreached"); }
      | SECRET_ESCAPE_I hash_semi_or_i_expr
-                                { parser->syntax_tree = $2; YYACCEPT; }
+                                { set_syntax_tree(parser, $2); YYACCEPT; }
        byacc_fool               { internal_error("notreached"); }
      | SECRET_ESCAPE_E          { if (yychar == YYEOF) {
                                     parser->syntax_tree = nao;
@@ -1394,6 +1396,11 @@ void yydebug_onoff(int val)
 #else
   (void) val;
 #endif
+}
+
+static void set_syntax_tree(parser_t *parser, val tree)
+{
+  set(mkloc(parser->syntax_tree, parser->parser), tree);
 }
 
 static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)
