@@ -798,7 +798,7 @@ if [ $cplusplus ] ; then
 else
    printf "no\n"
    if [ $maintainer ] ; then
-     lang_flags="-std=c90 $lang_flags"
+     lang_flags="-ansi $lang_flags"
    else
      lang_flags="-std=c99 $lang_flags"
    fi
