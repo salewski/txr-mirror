@@ -40,6 +40,14 @@
                 (add (key n))))
        (range 0 19))
 
+(vtest (build (for* ((j (tree-begin tr))
+                     (i (progn (tree-next j) (tree-next j) (tree-reset j tr)))
+                     (n (tree-next i)))
+                    (n)
+                    ((set n (tree-next i)))
+                (add (key n))))
+       (range 0 19))
+
 (defvarl trc (copy-search-tree tr))
 
 (vtest trc tr)
@@ -65,6 +73,13 @@
        (rlist 0..5 7..19))
 
 (vtest (build (for* ((i (tree-begin-at tr 8))
+                     (n (tree-next i)))
+                    (n)
+                    ((set n (tree-next i)))
+                (add (key n))))
+       (range 8 19))
+
+(vtest (build (for* ((i (tree-reset-at (tree-begin #T(())) tr 8))
                      (n (tree-next i)))
                     (n)
                     ((set n (tree-next i)))

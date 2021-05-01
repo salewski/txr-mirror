@@ -762,6 +762,37 @@ val tree_begin_at(val tree, val lowkey)
   return iter;
 }
 
+val tree_reset(val iter, val tree)
+{
+  val self = lit("tree-reset");
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  struct tree_diter *tdi = coerce(struct tree_diter *,
+                                  cobj_handle(self, iter, tree_iter_s));
+  const struct tree_iter it = tree_iter_init(0);
+
+  tdi->ti = it;
+  set(mkloc(tdi->ti.self, iter), iter);
+  set(mkloc(tdi->lastnode, iter), tr->root);
+
+  return iter;
+}
+
+val tree_reset_at(val iter, val tree, val lowkey)
+{
+  val self = lit("tree-reset-at");
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  struct tree_diter *tdi = coerce(struct tree_diter *,
+                                  cobj_handle(self, iter, tree_iter_s));
+  const struct tree_iter it = tree_iter_init(0);
+
+  tdi->ti = it;
+  tdi->lastnode = tr->root;
+
+  tn_find_low(tr->root, tdi, tr, lowkey);
+
+  return iter;
+}
+
 val tree_next(val iter)
 {
   val self = lit("tree-next");
@@ -813,6 +844,8 @@ void tree_init(void)
   reg_fun(intern(lit("tree-root"), user_package), func_n1(tree_root));
   reg_fun(intern(lit("tree-begin"), user_package), func_n1(tree_begin));
   reg_fun(intern(lit("tree-begin-at"), user_package), func_n2(tree_begin_at));
+  reg_fun(intern(lit("tree-reset"), user_package), func_n2(tree_reset));
+  reg_fun(intern(lit("tree-reset-at"), user_package), func_n3(tree_reset_at));
   reg_fun(intern(lit("tree-next"), user_package), func_n1(tree_next));
   reg_fun(intern(lit("tree-clear"), user_package), func_n1(tree_clear));
   reg_var(tree_fun_whitelist_s, list(identity_s, equal_s, less_s, nao));

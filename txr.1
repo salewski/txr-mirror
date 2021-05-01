@@ -51573,6 +51573,57 @@ function to the
 .code tree-iter
 object.
 
+.coNP Functions @ tree-reset and @ tree-reset-at
+.synb
+.mets (tree-reset < iter < tree )
+.mets (tree-reset-at < iter < tree << low-key )
+.syne
+.desc
+The
+.code tree-reset
+and
+.code tree-reset-at
+functions are closely analogous to
+.code tree-begin
+and
+.codn tree-begin-at ,
+respectively.  These functions do not create a new iterator object.
+
+The
+.meta iter
+argument must be an existing
+.code tree-iter
+object, previously returned by a call to either
+.code tree-begin
+or
+.codn tree-begin-at .
+Regardless of its current state, the
+.meta iter
+object is re-initialized to traverse the specified
+.metn tree ,
+and is then returned.
+
+The
+.code tree-reset
+function prepares
+.meta iter
+to traverse in the same manner as would new iterator returned by
+.code tree-begin
+for the
+.meta tree
+argument.
+The
+.code tree-begin-at
+function similarly prepares
+.meta iter
+to traverse in the same manner as a new iterator returned by
+.code tree-begin-at
+for the
+.meta tree
+and
+.meta low-key
+arguments.
+
 .coNP Function @ tree-next
 .synb
 .mets (tree-next < iter )
