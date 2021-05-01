@@ -537,71 +537,72 @@ syn keyword tl_keyword contained sys:expand-and sys:expand-bind-mac-params sys:e
 syn keyword tl_keyword contained sys:expand-defun sys:expand-defvarl sys:expand-dohash sys:expand-doloop
 syn keyword tl_keyword contained sys:expand-each sys:expand-each-prod sys:expand-each-prod* sys:expand-handle
 syn keyword tl_keyword contained sys:expand-lambda-match sys:expand-params sys:expand-quasi sys:expand-quasi-args
-syn keyword tl_keyword contained sys:expand-quasi-mods sys:expand-sym-ref sys:expr sys:extract-keys
-syn keyword tl_keyword contained sys:extract-keys-p sys:fbind sys:fixed-point sys:flatten-or
-syn keyword tl_keyword contained sys:fmt-flex sys:fmt-join sys:fmt-simple sys:for-op
-syn keyword tl_keyword contained sys:gc sys:gc-set-delta sys:get-buf-common sys:get-fun-getter-setter
-syn keyword tl_keyword contained sys:get-mb sys:get-param-info sys:get-parser sys:get-place-macro
-syn keyword tl_keyword contained sys:get-var-list sys:get-vars sys:get-vb sys:getopts-error
-syn keyword tl_keyword contained sys:handle-bad-syntax sys:hlet-expand sys:if-to-cond sys:in6addr-condensed-text
-syn keyword tl_keyword contained sys:is-label sys:l1-setq sys:l1-val sys:lambda-apply-transform
-syn keyword tl_keyword contained sys:lambda-short-apply-list sys:lambda-too-few-args sys:lambda-too-many-args sys:lbind
-syn keyword tl_keyword contained sys:lisp1-setq sys:lisp1-value sys:list-builder-flets sys:list-from-vm-desc
-syn keyword tl_keyword contained sys:load-time-lit sys:loc sys:loosen sys:mac-env-flatten
-syn keyword tl_keyword contained sys:make-anon-package sys:make-copy-path-opts sys:make-struct-lit sys:make-struct-type
-syn keyword tl_keyword contained sys:mark-special sys:misleading-ref-check sys:name-str sys:new-expander
-syn keyword tl_keyword contained sys:new-type sys:non-triv-pat-p sys:null-reg sys:obtain-impl
-syn keyword tl_keyword contained sys:op-alpha-rename sys:op-ensure-rec sys:op-expand sys:op-meta-p
-syn keyword tl_keyword contained sys:op-rec-p sys:open-compile-streams sys:open-url sys:operand-to-exp
-syn keyword tl_keyword contained sys:operand-to-sym sys:opip-expand sys:opt-dash sys:opt-err
-syn keyword tl_keyword contained sys:os-symbol sys:param-check sys:parse-compound-operand sys:parse-lambda-match-clause
-syn keyword tl_keyword contained sys:parse-operand sys:parser-eof sys:parser-errors sys:pat-len
-syn keyword tl_keyword contained sys:path-access sys:path-examine sys:path-test-mode sys:path-test-type
-syn keyword tl_keyword contained sys:pl-expand sys:placelet-1 sys:print-backtrace sys:propagate-ancestor
-syn keyword tl_keyword contained sys:propagate-perms sys:prune-missing-inits sys:qquote sys:quasi
-syn keyword tl_keyword contained sys:quasilist sys:r-s-let-expander sys:reduce-constant sys:reduce-lisp
-syn keyword tl_keyword contained sys:reduce-or sys:reg-expand-nongreedy sys:reg-optimize sys:register-opcode
-syn keyword tl_keyword contained sys:register-simple-accessor sys:repl sys:rewrite sys:rewrite-case
-syn keyword tl_keyword contained sys:rplaca sys:rplacd sys:rslotset sys:rt-assert-fail
-syn keyword tl_keyword contained sys:rt-defmacro sys:rt-defsymacro sys:rt-defun sys:rt-defvarl
-syn keyword tl_keyword contained sys:rt-load-for sys:rt-pprof sys:set-hash-traversal-limit sys:set-macro-ancestor
-syn keyword tl_keyword contained sys:setq sys:setqf sys:simplify-or sys:slot-types
-syn keyword tl_keyword contained sys:small-op-p sys:small-op-to-sym sys:splice sys:static-slot-types
-syn keyword tl_keyword contained sys:str-inaddr-net-impl sys:struct-lit sys:subst sys:subst-preserve
-syn keyword tl_keyword contained sys:switch sys:sym-clobber-expander sys:sym-delete-expander sys:sym-update-expander
-syn keyword tl_keyword contained sys:system-symbol-p sys:top-fb sys:top-mb sys:top-vb
-syn keyword tl_keyword contained sys:tr* sys:trace sys:trace-canonicalize-name sys:trace-enter
-syn keyword tl_keyword contained sys:trace-leave sys:trace-redefine-check sys:tree-construct sys:trfm
-syn keyword tl_keyword contained sys:true-const-p sys:try-load sys:txr-case-impl sys:unquote
-syn keyword tl_keyword contained sys:untrace sys:upenv sys:uw-block sys:uw-captured-block
-syn keyword tl_keyword contained sys:uw-catch sys:uw-cont-copy sys:uw-eval sys:uw-expand
-syn keyword tl_keyword contained sys:uw-fcall sys:uw-guard sys:uw-handle sys:uw-menv
-syn keyword tl_keyword contained sys:var sys:var-pat-p sys:vars-check sys:vm-closure-desc
-syn keyword tl_keyword contained sys:vm-closure-entry sys:vm-desc-bytecode sys:vm-desc-datavec sys:vm-desc-nlevels
-syn keyword tl_keyword contained sys:vm-desc-nregs sys:vm-desc-symvec sys:vm-execute-toplevel sys:vm-make-desc
-syn keyword tl_keyword contained sys:wdwrap sys:when-exprs-match sys:with-dyn-lib-check syslog
-syn keyword tl_keyword contained system-package t tab0 tab1
-syn keyword tl_keyword contained tab2 tab3 tabdly tagbody
-syn keyword tl_keyword contained tailp take take-until take-while
-syn keyword tl_keyword contained tan tanh tb tc
-syn keyword tl_keyword contained tcdrain tcflow tcflush tcgetattr
-syn keyword tl_keyword contained tciflush tcioff tcioflush tcion
-syn keyword tl_keyword contained tcoflush tcooff tcoon tcsadrain
-syn keyword tl_keyword contained tcsaflush tcsanow tcsendbreak tcsetattr
-syn keyword tl_keyword contained tentative-def-exists tenth test-clear test-clear-dirty
-syn keyword tl_keyword contained test-dec test-dirty test-inc test-neq-set-indent-mode
-syn keyword tl_keyword contained test-set test-set-indent-mode tf third
-syn keyword tl_keyword contained throw throwf time time-fields-local
-syn keyword tl_keyword contained time-fields-utc time-nsec time-parse time-parse-local
-syn keyword tl_keyword contained time-parse-utc time-string-local time-string-utc time-struct-local
-syn keyword tl_keyword contained time-struct-utc time-t time-usec tnode
-syn keyword tl_keyword contained to tofloat tofloatz toint
-syn keyword tl_keyword contained tointz tok tok-str tok-where
-syn keyword tl_keyword contained tostop tostring tostringp touch
-syn keyword tl_keyword contained tprint trace transpose tree
-syn keyword tl_keyword contained tree-begin tree-bind tree-case tree-clear
-syn keyword tl_keyword contained tree-delete tree-delete-node tree-find tree-insert
-syn keyword tl_keyword contained tree-insert-node tree-lookup tree-lookup-node tree-next
+syn keyword tl_keyword contained sys:expand-quasi-match sys:expand-quasi-mods sys:expand-sym-ref sys:expr
+syn keyword tl_keyword contained sys:extract-keys sys:extract-keys-p sys:fbind sys:fixed-point
+syn keyword tl_keyword contained sys:flatten-or sys:fmt-flex sys:fmt-join sys:fmt-simple
+syn keyword tl_keyword contained sys:for-op sys:gc sys:gc-set-delta sys:get-buf-common
+syn keyword tl_keyword contained sys:get-fun-getter-setter sys:get-mb sys:get-param-info sys:get-parser
+syn keyword tl_keyword contained sys:get-place-macro sys:get-var-list sys:get-vars sys:get-vb
+syn keyword tl_keyword contained sys:getopts-error sys:handle-bad-syntax sys:hlet-expand sys:if-to-cond
+syn keyword tl_keyword contained sys:in6addr-condensed-text sys:is-label sys:l1-setq sys:l1-val
+syn keyword tl_keyword contained sys:lambda-apply-transform sys:lambda-short-apply-list sys:lambda-too-few-args sys:lambda-too-many-args
+syn keyword tl_keyword contained sys:lbind sys:lisp1-setq sys:lisp1-value sys:list-builder-flets
+syn keyword tl_keyword contained sys:list-from-vm-desc sys:load-time-lit sys:loc sys:loosen
+syn keyword tl_keyword contained sys:mac-env-flatten sys:make-anon-package sys:make-copy-path-opts sys:make-struct-lit
+syn keyword tl_keyword contained sys:make-struct-type sys:mark-special sys:misleading-ref-check sys:name-str
+syn keyword tl_keyword contained sys:new-expander sys:new-type sys:non-triv-pat-p sys:null-reg
+syn keyword tl_keyword contained sys:obtain-impl sys:op-alpha-rename sys:op-ensure-rec sys:op-expand
+syn keyword tl_keyword contained sys:op-meta-p sys:op-rec-p sys:open-compile-streams sys:open-url
+syn keyword tl_keyword contained sys:operand-to-exp sys:operand-to-sym sys:opip-expand sys:opt-dash
+syn keyword tl_keyword contained sys:opt-err sys:os-symbol sys:param-check sys:parse-compound-operand
+syn keyword tl_keyword contained sys:parse-lambda-match-clause sys:parse-operand sys:parser-eof sys:parser-errors
+syn keyword tl_keyword contained sys:pat-len sys:path-access sys:path-examine sys:path-test-mode
+syn keyword tl_keyword contained sys:path-test-type sys:pl-expand sys:placelet-1 sys:print-backtrace
+syn keyword tl_keyword contained sys:propagate-ancestor sys:propagate-perms sys:prune-missing-inits sys:qquote
+syn keyword tl_keyword contained sys:quasi sys:quasilist sys:r-s-let-expander sys:reduce-constant
+syn keyword tl_keyword contained sys:reduce-lisp sys:reduce-or sys:reg-expand-nongreedy sys:reg-optimize
+syn keyword tl_keyword contained sys:register-opcode sys:register-simple-accessor sys:repl sys:rewrite
+syn keyword tl_keyword contained sys:rewrite-case sys:rplaca sys:rplacd sys:rslotset
+syn keyword tl_keyword contained sys:rt-assert-fail sys:rt-defmacro sys:rt-defsymacro sys:rt-defun
+syn keyword tl_keyword contained sys:rt-defvarl sys:rt-load-for sys:rt-pprof sys:set-hash-traversal-limit
+syn keyword tl_keyword contained sys:set-macro-ancestor sys:setq sys:setqf sys:simplify-or
+syn keyword tl_keyword contained sys:slot-types sys:small-op-p sys:small-op-to-sym sys:splice
+syn keyword tl_keyword contained sys:static-slot-types sys:str-inaddr-net-impl sys:struct-lit sys:subst
+syn keyword tl_keyword contained sys:subst-preserve sys:switch sys:sym-clobber-expander sys:sym-delete-expander
+syn keyword tl_keyword contained sys:sym-update-expander sys:system-symbol-p sys:top-fb sys:top-mb
+syn keyword tl_keyword contained sys:top-vb sys:tr* sys:trace sys:trace-canonicalize-name
+syn keyword tl_keyword contained sys:trace-enter sys:trace-leave sys:trace-redefine-check sys:tree-construct
+syn keyword tl_keyword contained sys:trfm sys:true-const-p sys:try-load sys:txr-case-impl
+syn keyword tl_keyword contained sys:unquote sys:untrace sys:upenv sys:uw-block
+syn keyword tl_keyword contained sys:uw-captured-block sys:uw-catch sys:uw-cont-copy sys:uw-eval
+syn keyword tl_keyword contained sys:uw-expand sys:uw-fcall sys:uw-guard sys:uw-handle
+syn keyword tl_keyword contained sys:uw-menv sys:var sys:var-pat-p sys:vars-check
+syn keyword tl_keyword contained sys:vm-closure-desc sys:vm-closure-entry sys:vm-desc-bytecode sys:vm-desc-datavec
+syn keyword tl_keyword contained sys:vm-desc-nlevels sys:vm-desc-nregs sys:vm-desc-symvec sys:vm-execute-toplevel
+syn keyword tl_keyword contained sys:vm-make-desc sys:wdwrap sys:when-exprs-match sys:with-dyn-lib-check
+syn keyword tl_keyword contained syslog system-package t tab0
+syn keyword tl_keyword contained tab1 tab2 tab3 tabdly
+syn keyword tl_keyword contained tagbody tailp take take-until
+syn keyword tl_keyword contained take-while tan tanh tb
+syn keyword tl_keyword contained tc tcdrain tcflow tcflush
+syn keyword tl_keyword contained tcgetattr tciflush tcioff tcioflush
+syn keyword tl_keyword contained tcion tcoflush tcooff tcoon
+syn keyword tl_keyword contained tcsadrain tcsaflush tcsanow tcsendbreak
+syn keyword tl_keyword contained tcsetattr tentative-def-exists tenth test-clear
+syn keyword tl_keyword contained test-clear-dirty test-dec test-dirty test-inc
+syn keyword tl_keyword contained test-neq-set-indent-mode test-set test-set-indent-mode tf
+syn keyword tl_keyword contained third throw throwf time
+syn keyword tl_keyword contained time-fields-local time-fields-utc time-nsec time-parse
+syn keyword tl_keyword contained time-parse-local time-parse-utc time-string-local time-string-utc
+syn keyword tl_keyword contained time-struct-local time-struct-utc time-t time-usec
+syn keyword tl_keyword contained tnode to tofloat tofloatz
+syn keyword tl_keyword contained toint tointz tok tok-str
+syn keyword tl_keyword contained tok-where tostop tostring tostringp
+syn keyword tl_keyword contained touch tprint trace transpose
+syn keyword tl_keyword contained tree tree-begin tree-begin-at tree-bind
+syn keyword tl_keyword contained tree-case tree-clear tree-delete tree-delete-node
+syn keyword tl_keyword contained tree-find tree-insert tree-insert-node tree-lookup
+syn keyword tl_keyword contained tree-lookup-node tree-next tree-reset tree-reset-at
 syn keyword tl_keyword contained tree-root treep trie-add trie-compress
 syn keyword tl_keyword contained trie-lookup-begin trie-lookup-feed-char trie-value-at trim-left
 syn keyword tl_keyword contained trim-right trim-str true trunc
@@ -656,7 +657,7 @@ syn match txr_numesc "\\x[0-9A-Fa-f]\+;\?" contained
 syn match txr_numesc "\\[0-7]\+;\?" contained
 syn match txr_regesc "\\[abtnvfre\\ \n/sSdDwW()\|.*?+~&%\[\]\-]" contained
 
-syn match txr_error "#[^HSR]"
+syn match txr_error "#[^HSRTN]"
 
 syn match txr_chr "#\\x[0-9A-Fa-f]\+"
 syn match txr_chr "#\\o[0-7]\+"
@@ -694,17 +695,18 @@ syn match txr_buf_error "[^']" contained
 syn match txr_buf_interior "\([0-9A-Fa-f][\n\t ]*[0-9A-Fa-f]\|[\n\t ]\+\)" contained
 
 syn region txr_bracevar matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_pnum,tl_ident,tl_splice,tl_metanum,txr_metaat,txr_circ,txr_braced_ident,txr_dot,txr_dotdot,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_regex,txr_quasilit,txr_chr,txr_nested_error
-syn region txr_list matchgroup=Delimiter start="\(#[HSR]\?\)\?(" matchgroup=Delimiter end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
+syn region tl_bracevar contained matchgroup=Delimiter start="@[ \t]*[*]\?{" matchgroup=Delimiter end="}" contains=txr_num,txr_pnum,tl_ident,tl_splice,tl_metanum,txr_metaat,txr_circ,txr_braced_ident,txr_dot,txr_dotdot,txr_string,txr_list,txr_bracket,txr_mlist,txr_mbracket,tl_regex,txr_quasilit,txr_chr,txr_nested_error
+syn region txr_list matchgroup=Delimiter start="\(#[HSRTN]\?\)\?(" matchgroup=Delimiter end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
 syn region txr_bracket matchgroup=Delimiter start="\[" matchgroup=Delimiter end="\]" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
 syn region txr_mlist matchgroup=Delimiter start="@[ \t^',]*(" matchgroup=Delimiter end=")" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
 syn region txr_mbracket matchgroup=Delimiter start="@[ \t^',]*\[" matchgroup=Delimiter end="\]" contains=tl_keyword,txr_string,tl_regex,txr_num,txr_pnum,txr_badnum,tl_ident,txr_metanum,txr_ign_par,txr_ign_bkt,txr_list,txr_bracket,txr_mlist,txr_mbracket,txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_ncomment,txr_nested_error
 syn region txr_string start=+#\?\*\?"+ end=+["\n]+ contains=txr_stresc,txr_numesc,txr_badesc
-syn region txr_quasilit start=+#\?\*\?`+ end=+[`\n]+ contains=txr_splicevar,txr_metanum,txr_bracevar,txr_mlist,txr_mbracket,txr_escat,txr_stresc,txr_numesc,txr_badesc
+syn region txr_quasilit start=+#\?\*\?`+ end=+[`\n]+ contains=txr_splicevar,txr_metanum,tl_bracevar,txr_mlist,txr_mbracket,txr_escat,txr_stresc,txr_numesc,txr_badesc
 syn region txr_regex start="/" end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
 syn region tl_regex start="#/" end="[/\n]" contains=txr_regesc,txr_numesc,txr_badesc
 syn region txr_buf matchgroup=txr_buf start="#b'" end="'" contains=txr_buf_interior,txr_buf_error
-syn region txr_ign_par matchgroup=Comment start="#;[ \t',]*\(#[HSR]\?\)\?(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior
-syn region txr_ign_bkt matchgroup=Comment start="#;[ \t',]*\(#[HSR]\?\)\?\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
+syn region txr_ign_par matchgroup=Comment start="#;[ \t',]*\(#[HSRTN]\?\)\?(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior
+syn region txr_ign_bkt matchgroup=Comment start="#;[ \t',]*\(#[HSRTN]\?\)\?\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
 syn region txr_ign_par_interior contained matchgroup=Comment start="(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior
 syn region txr_ign_bkt_interior contained matchgroup=Comment start="\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
 

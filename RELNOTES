@@ -1,3 +1,29 @@
+                                    TXR 258
+                                   2021-04-30
+
+
+  Features
+
+  - Structural pattern matching now supports quasiliteral patterns
+    for matching into strings.
+  - Search tree module supports a way to start scanning nodes
+    in order at or above a given lower bound key.
+  - improvements in Vim syntax highlighting files.
+
+  Bugs
+
+  - GC issue in sequence iterators: not marking iterated object
+    when it's a structure.
+  - GC issue in parser.
+  - lexical-var-p: no longer wrongly returns t for locally bound
+    special variables.
+  - regression in mapcar*, going back to 240.
+  - search tree module:
+    - massive gc problems
+    - broken tree-lookup
+
+
+
                                     TXR 257
                                    2021-04-22
 
@@ -34,7 +60,7 @@
     - New C function dis that can be used debugging TXR with gdb to
       disassemble VM code.
 
-  Bugs:
+  Bugs
 
   - compiler:
     - (call (fun f) ...) forms not registering the reference to f,
