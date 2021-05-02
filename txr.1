@@ -55205,14 +55205,17 @@ there are no files, then read from standard input:
    @(end)
 .brev
 
-.coNP Function @ abs-path-p
+.coNP Functions @ abs-path-p and @ portable-abs-path-p
 .synb
 .mets (abs-path-p << path )
+.mets (portable-abs-path-p << path )
 .syne
 .desc
 The
-.code abs-path-function
-tests whether the argument
+.code abs-path-p
+and
+.code portable-abs-path-p
+functions test whether the argument
 .meta path
 is an absolute path, returning a
 .code t
@@ -55220,7 +55223,9 @@ or
 .code nil
 indication.
 
-The function behaves in the same manner on all platforms, implementing
+The
+.code portable-abs-path-p
+function behaves in the same manner on all platforms, implementing
 a platform-agnostic definition of
 .IR "absolute path" ,
 as follows.
@@ -55231,7 +55236,8 @@ followed by a slash or backslash.
 
 The empty string isn't an absolute path.
 
-Examples of absolute paths:
+Examples of absolute paths under
+.codn portable-abs-path-p :
 
 .verb
   /etc
@@ -55250,6 +55256,21 @@ Examples of strings which are not absolute paths:
   foo:bar/x
   $:\eabc
 .onom
+
+The
+.code abs-path-p
+is similar to
+.code portable-abs-path-p
+except that it reports false for paths which are not absolute paths
+according to the host platform. The following paths are not absolute
+on POSIX platforms:
+
+.verb
+  c:/tmp
+  ftp://user@server
+  disk0:/home
+  Z:\eUsers
+.brev
 
 .coNP Function @ pure-rel-path-p
 .synb
@@ -79415,6 +79436,11 @@ A compatibility value of 248 or lower restores the above old behaviors of
 .code @
 and
 .codn hash-revget .
+.IP 258
+Selecting 258 or lower compatibility causes
+.code abs-path-p
+to behave like
+.codn portable-abs-path-p .
 .IP 257
 Until \*(TX 257, the function
 .code lexical-var-p

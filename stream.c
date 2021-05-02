@@ -4712,7 +4712,7 @@ static val open_files_star(val file_list, val substitute_stream, val mode)
 
 static val ap_regex;
 
-val abs_path_p(val path)
+val portable_abs_path_p(val path)
 {
   val ch;
 
@@ -4720,6 +4720,28 @@ val abs_path_p(val path)
     return nil;
   if ((ch = chr_str(path, zero)) == chr('/') || ch == chr('\\'))
     return t;
+
+  if (!ap_regex)
+    ap_regex = regex_compile(lit("[A-Za-z0-9]+:[/\\\\]"), nil);
+
+  if (match_regex(path, ap_regex, zero))
+    return t;
+
+  return nil;
+}
+
+val abs_path_p(val path)
+{
+  const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
+
+  if (length(path) == zero)
+    return nil;
+
+  if (wcschr(psc, c_chr(chr_str(path, zero))))
+    return t;
+
+  if (psc[0] != '\\')
+    return nil;
 
   if (!ap_regex)
     ap_regex = regex_compile(lit("[A-Za-z0-9]+:[/\\\\]"), nil);
@@ -5065,7 +5087,10 @@ void stream_init(void)
   reg_fun(intern(lit("rename-path"), user_package), func_n2(rename_path));
   reg_fun(intern(lit("open-files"), user_package), func_n3o(open_files, 1));
   reg_fun(intern(lit("open-files*"), user_package), func_n3o(open_files_star, 1));
-  reg_fun(intern(lit("abs-path-p"), user_package), func_n1(abs_path_p));
+  reg_fun(intern(lit("portable-abs-path-p"), user_package), func_n1(portable_abs_path_p));
+  reg_fun(intern(lit("abs-path-p"), user_package),
+          func_n1(if3(opt_compat && opt_compat <= 258,
+                      portable_abs_path_p, abs_path_p)));
   reg_fun(intern(lit("pure-rel-path-p"), user_package), func_n1(pure_rel_path_p));
   reg_fun(intern(lit("base-name"), user_package), func_n2o(base_name, 1));
   reg_fun(intern(lit("dir-name"), user_package), func_n1(dir_name));
