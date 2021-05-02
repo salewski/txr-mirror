@@ -5047,8 +5047,9 @@ val join_with(val sep, struct args *args)
   val iter;
   int more;
   struct cat_str cs;
+  wchar_t onech[] = wini(" ");
 
-  cat_str_init(&cs, sep, 0, self);
+  cat_str_init(&cs, sep, wref(onech), self);
 
   for (index = 0, iter = args->list, more = args_more_nozap(args, index, iter);
        more;)

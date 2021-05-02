@@ -194,3 +194,26 @@
 (mtest
   (tok-str "abcacabcac" #/ab?/) #"ab a ab a"
   (tok-str "abcacabcac" #/ab?/ t) ("" "ab" "c" "a" "c" "ab" "c" "a" "c"))
+
+(mtest
+  (join) ""
+  (join "") ""
+  (join "" "") ""
+  (join #\a) "a"
+  (join "a") "a"
+  (join #\a "b") "ab"
+  (join "a" #\b) "ab"
+  (join #\a #\b) "ab"
+  (join "a" "b") "ab"
+  (join "a" "b" "cde") "abcde")
+
+(mtest
+  (join-with #\a) ""
+  (join-with #\a #\b) "b"
+  (join-with #\a "b") "b"
+  (join-with "a") ""
+  (join-with "a" #\b) "b"
+  (join-with "a" "b") "b"
+  (join-with "a" "b") "b"
+  (join-with "--" "b" "c" "d") "b--c--d"
+  (join-with #\- "b" "c" "d") "b-c-d")
