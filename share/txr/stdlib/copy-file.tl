@@ -212,3 +212,35 @@
       (let ((rst (stat ref-path)))
         (utimes s 0 nil rst.mtime rst.mtime-nsec))
       (utimes s 0 nil 0 t))))
+
+(defun rel-path (from to)
+  (unless (eq (abs-path-p from) (abs-path-p to))
+    (error "~s: mixture of absolute and relative paths ~s ~s given"
+           'rel-path from to))
+
+  (macrolet ((if-windows (then : else)
+               (if (find #\\ path-sep-chars) then else)))
+    (if-windows
+      (when-match `@{fdrv #/[A-Za-z0-9]+:/}@nil` from
+        (when-match `@{tdrv #/[A-Za-z0-9]+:/}@nil` to
+          (unless (equal fdrv tdrv)
+            (error "~s: paths on different drives ~s ~s given"
+                   'rel-path from to)))))
+
+    (flet ((canon (comp)
+             (let (out)
+               (each ((c comp))
+                 (cond
+                   ((and out (equal ".." c)) (pop out))
+                   ((equal "." c))
+                   (t (push c out))))
+               (nreverse out))))
+      (let* ((fcomp (canon (spl path-sep-chars from)))
+             (tcomp (canon (spl path-sep-chars to)))
+             (ncommon (mismatch fcomp tcomp)))
+        (if (null ncommon)
+          "."
+          (let ((nup (- (len fcomp) ncommon))
+                (down [tcomp ncommon..:]))
+            (cat-str (append (repeat '("..") nup) down)
+                     [path-sep-chars 0])))))))

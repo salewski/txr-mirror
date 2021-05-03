@@ -55479,6 +55479,105 @@ itself.
   (path-cat "ab/cd" "ef")  --> "ab/cd/ef"
 .brev
 
+.coNP Function @ rel-path
+.synb
+.mets (rel-path < from-path << to-path )
+.syne
+.desc
+The
+.code rel-path
+function calculates the relative path between two file system locations
+indicated by string arguments
+.meta from-path
+and
+.metn to-path .
+The
+.meta from-path
+is assumed to be a directory. The return value is a relative path
+which could be used to access an object named by
+.meta to-path
+if
+.meta from-path
+were the current working directory.
+
+The calculation performed by
+.code rel-path
+is a pure calculation; it has no interaction with the host operating system.
+No component of either input path has to exist. Symbolic links are not
+resolved. This can lead to incorrect results, as noted below.
+
+Either both the inputs must be absolute paths, or must both be relative,
+otherwise an error exception is thrown.
+
+On the MS Windows platform, if one input specifies a drive letter prefix, the
+other input must specify the same prefix, or else an error exception is thrown;
+there is no relative path between locations on different drives.
+The behavior is unspecified if the arguments are two UNC paths indicating
+different hosts.
+
+The
+.code rel-path
+function first splits both paths into components according to the
+platform-specific pathname separators indicated by the
+.code path-sep-chars
+variable.
+
+Next, it eliminates all empty components,
+.code .
+(dot) components and
+.code ..
+(dotdot)
+components from both separated paths. All dot components are removed,
+and any component which is neither dot nor dotdot is removed if it is
+followed by dotdot.
+
+Then, a common prefix is determined between the two component sequences,
+and a relative component sequence is calculated from them as follows:
+if the component sequence corresponding to
+.meta from-path
+is longer than the common prefix, then a sequence is generated consisting
+of a sufficient number of repetitions of
+.code ..
+(dotdot)
+components to express the relative navigation from
+.meta from-path
+up to the director indicated by the common prefix. Next,
+if the component sequence corresponding to
+.meta to-path
+has any components in excess of the common prefix, those components are
+appended to this possibly empty sequence of dotdot components, in
+order to expres navigation from the common prefix down to the
+.meta to-path
+object.
+
+Finally, if the resulting sequence is nonempty, it is joined together using the leftmost
+path separator character indicated in
+.code path-sep-chars
+and returned. If it is empty, then the string
+.str .
+is returned.
+
+Note: because the function doesn't access the file system and in particular
+does not resolve symbolic links or other indirection devices, the result
+may be incorrect. For example, suppose that the current working directory
+contains a symbolic link called
+.code up
+which expands to
+.code ..
+(dotdot). The expression
+.code "(rel-path \(dqup/a\(dq \(dq../a\(dq)"
+is oblivious to this, and calculates
+.strn ../../../a .
+The correct result in light of
+.code up
+being an alias for
+.code ..
+calls for a return value of
+.strn . .
+
+In situtions where this possibility exists, it is recommended to use
+.code realpath
+function to canonicalize the input paths.
 
 .coNP Variable @ path-sep-chars
 .desc

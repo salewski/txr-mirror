@@ -1611,6 +1611,7 @@
      ("struct-type" "N-02C33D76")
      ("op" "N-0068EA9D")
      ("int-cptr" "N-01768FB9")
+     ("rel-path" "N-016892B4")
      ("window-mappend" "N-015AFD48")
      ("with-delete-expander" "N-02A6E020")
      ("f-getfl" "N-025E55E7")
