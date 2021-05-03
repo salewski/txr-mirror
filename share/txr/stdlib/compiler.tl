@@ -1638,10 +1638,11 @@
                                       ^(,*exp.code
                                          ,*me.(maybe-mov dreg exp.oreg))
                                       exp.fvars
-                                      exp.ffuns))))
+                                      exp.ffuns
+                                      exp.pars))))
              (misleading-ref-check exp env form)
              (push lt-frag me.lt-frags)
-             (new (frag dreg nil))))))))
+             (new (frag dreg nil nil nil exp.pars))))))))
 
 (defmeth compiler optimize (me insns)
   (let ((olev *opt-level*))
