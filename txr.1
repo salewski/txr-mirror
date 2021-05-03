@@ -55533,22 +55533,32 @@ followed by dotdot.
 
 Then, a common prefix is determined between the two component sequences,
 and a relative component sequence is calculated from them as follows:
-if the component sequence corresponding to
+
+If the component sequence corresponding to
 .meta from-path
-is longer than the common prefix, then a sequence is generated consisting
-of a sufficient number of repetitions of
+is longer than the common prefix, then the excess part of that
+sequence after the common prefix must not contain any
 .code ..
-(dotdot)
-components to express the relative navigation from
+(dotdot) components, or else an error exception is thrown.
+Otherwise, every component in this excess part of the
 .meta from-path
-up to the director indicated by the common prefix. Next,
-if the component sequence corresponding to
+component sequence is converted to
+.code ..
+in order to express the relative navigation from
+.meta from-path
+up to the directory indicated by the common prefix.
+
+Next, if the component sequence corresponding to
 .meta to-path
-has any components in excess of the common prefix, those components are
+has any components in excess of the common prefix, those excess components are
 appended to this possibly empty sequence of dotdot components, in
-order to expres navigation from the common prefix down to the
+order to express navigation from the common prefix down to the
 .meta to-path
-object.
+object. This excess sequence coming from
+.meta to-path
+may include
+.code ..
+components.
 
 Finally, if the resulting sequence is nonempty, it is joined together using the leftmost
 path separator character indicated in
@@ -55574,10 +55584,105 @@ being an alias for
 .code ..
 calls for a return value of
 .strn . .
+The exact problem is that any symbolic links in the excess part of
+.meta from-path
+after the common prefix are assumed by
+.code rel-path
+to be simple subdirectory names, which can be navigated in reverse
+using a
+.code ..
+link. This reverse navigation assumption is false for any symbolic link which
+which does not act as an alias for a subdirectory in the same location.
 
-In situtions where this possibility exists, it is recommended to use
+In situations where this possibility exists, it is recommended to use
 .code realpath
 function to canonicalize the input paths.
+
+The following is an example of the algorithm being applied to arguments
+.str a/d/../b/x/y/
+and
+.strn a/b/w ,
+where the assumption is that this is on a POSIX platform where the leftmost
+character in
+.code path-sep-chars
+is
+.codn / :
+
+Firstly, both inputs are converted to component sequences, those respectively being:
+
+.verb
+  ("a" "d" ".." "b" "x" "y" "")
+  ("a" "b" "w")
+.brev
+
+Next the
+.code ..
+and empty components are removed:
+
+.verb
+  ("a" "b" "x" "y")
+  ("a" "b" "w")
+.brev
+
+At this point, the common prefix is identified:
+
+.verb
+  ("a" "b")
+.brev
+
+The
+.meta from-path
+has two components in excess of the prefix:
+
+.verb
+  ("x" "y")
+.brev
+
+which are each replaced by
+.strn .. .
+
+The
+.meta to-path
+has one component in excess of the common prefix,
+.strn w .
+
+These two sequences are appended together:
+
+.verb
+  (".." ".." "w")
+.brev
+
+The resulting path is then formed by joining these with the separator
+character, resulting in the relative path
+.strn "../../w" .
+
+.TP* Examples:
+
+.verb
+  ;; mixtures of relative and absolute
+  (rel-path "/abc" "abc") -> ;; error
+  (rel-path "abc" "/abc") -> ;; error
+
+  ;; dotdot in excess part of from path:
+  (rel-path "../../x" "y") -> ;; error
+
+  (rel-path "." ".") -> "."
+  (rel-path "./abc" "abc") -> "."
+  (rel-path "abc" "./abc") -> "."
+  (rel-path "./abc" "./abc") -> "."
+  (rel-path "abc" "abc") -> "."
+  (rel-path "." "abc") -> "abc"
+  (rel-path "abc/def" "abc/ghi") -> "../ghi"
+  (rel-path "xyz/../abc/def" "abc/ghi") -> "../ghi"
+  (rel-path "abc" "d/e/f/g/h") -> "../d/e/f/g/h"
+  (rel-path "abc" "d/e/../g/h") -> "../d/g/h"
+  (rel-path "d/e/../g/h" ".") -> "../../.."
+  (rel-path "d/e/../g/h" "a/b") -> "../../../a/b"
+  (rel-path "x" "../../../y") -> "../../../../y"
+  (rel-path "x///" "x") -> "."
+  (rel-path "x" "x///") -> "."
+  (rel-path "///x" "/x") -> "."
+.brev
 
 .coNP Variable @ path-sep-chars
 .desc

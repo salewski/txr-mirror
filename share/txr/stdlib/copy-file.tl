@@ -230,17 +230,22 @@
     (flet ((canon (comp)
              (let (out)
                (each ((c comp))
-                 (cond
-                   ((and out (equal ".." c)) (pop out))
-                   ((equal "." c))
+                 (casequal c
+                   (".." (if (and out (nequal (car out) ".."))
+                           (pop out)
+                           (push c out)))
+                   (("." ""))
                    (t (push c out))))
                (nreverse out))))
       (let* ((fcomp (canon (spl path-sep-chars from)))
              (tcomp (canon (spl path-sep-chars to)))
              (ncommon (mismatch fcomp tcomp)))
-        (if (null ncommon)
-          "."
-          (let ((nup (- (len fcomp) ncommon))
-                (down [tcomp ncommon..:]))
-            (cat-str (append (repeat '("..") nup) down)
-                     [path-sep-chars 0])))))))
+        (cond
+          ((null ncommon) ".")
+          ((find ".." (nthcdr ncommon fcomp))
+           (error "~s: from path uses ... to escapes common prefix: ~s ~s"
+                  'rel-path from to))
+          (t (let ((nup (- (len fcomp) ncommon))
+                   (down [tcomp ncommon..:]))
+               (cat-str (append (repeat '("..") nup) down)
+                        [path-sep-chars 0]))))))))
