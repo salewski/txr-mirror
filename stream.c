@@ -3497,9 +3497,9 @@ val formatv(val stream_in, val fmtstr, struct args *al)
               n = convert(double, c_num(obj, self));
               break;
             default:
-              uw_throwf(error_s, lit("format: ~~~a conversion requires "
+              uw_throwf(error_s, lit("~a: ~~~a conversion requires "
                                      "numeric arg: ~s given"),
-                        chr(ch), obj, nao);
+                        self, chr(ch), obj, nao);
             }
 
             if (!precision_p) {
@@ -3510,8 +3510,8 @@ val formatv(val stream_in, val fmtstr, struct args *al)
 
             /* guard against num_buf overflow */
             if (precision > 128)
-              uw_throwf(error_s, lit("excessive precision in format: ~s"),
-                        num(precision), nao);
+              uw_throwf(error_s, lit("~a: excessive precision: ~s"),
+                        self, num(precision), nao);
 
             if (ch == 'e') {
               sprintf(num_buf, "%.*e", precision, n);
@@ -3612,8 +3612,8 @@ val formatv(val stream_in, val fmtstr, struct args *al)
             }
 
             if (precision > 500)
-              uw_throwf(error_s, lit("excessive precision in format: ~s"),
-                        num(precision), nao);
+              uw_throwf(error_s, lit("~a: excessive precision: ~s"),
+                        self, num(precision), nao);
 
             sprintf(num_buf, "%.*g", precision, obj->fl.n);
 
