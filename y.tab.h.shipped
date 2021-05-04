@@ -154,7 +154,7 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 106 "parser.y"
+#line 107 "parser.y"
 
   wchar_t *lexeme;
   union obj *val;

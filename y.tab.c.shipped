@@ -6743,7 +6743,10 @@ void yydebug_onoff(int val)
 
 static void set_syntax_tree(parser_t *parser, val tree)
 {
-  set(mkloc(parser->syntax_tree, parser->parser), tree);
+  if (tree == nao)
+    parser->syntax_tree = tree;
+  else
+    set(mkloc(parser->syntax_tree, parser->parser), tree);
 }
 
 static val sym_helper(parser_t *parser, wchar_t *lexeme, val meta_allowed)
