@@ -97,7 +97,7 @@ static val chksum_ensure_buf(val self, val buf_in,
 {
   if (null_or_missing_p(buf_in)) {
     *phash = chk_malloc(c_unum(len, self));
-    return make_borrowed_buf(len, *phash);
+    return make_owned_buf(len, *phash);
   } else {
     *phash = buf_get(buf_in, self);
     if (lt(length_buf(buf_in), len))

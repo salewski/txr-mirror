@@ -130,7 +130,7 @@ val make_duplicate_buf(val len, mem_t *data)
   return obj;
 }
 
-static val make_owned_buf(val len, mem_t *data)
+val make_owned_buf(val len, mem_t *data)
 {
   val buf = make_borrowed_buf(len, data);
   buf->b.size = len;
