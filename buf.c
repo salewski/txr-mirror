@@ -1184,7 +1184,7 @@ static val int_buf(val buf)
 {
   val self = lit("int-buf");
   struct buf *b = buf_handle(buf, self);
-  ucnum size = c_unum(b->size, self);
+  ucnum size = c_unum(b->len, self);
   ucnum bits = size * 8;
   val ubn = make_bignum();
   mp_err mpe = mp_read_unsigned_bin(mp(ubn), b->data, size);
@@ -1197,7 +1197,7 @@ static val uint_buf(val buf)
 {
   val self = lit("uint-buf");
   struct buf *b = buf_handle(buf, self);
-  ucnum size = c_unum(b->size, self);
+  ucnum size = c_unum(b->len, self);
   val ubn = make_bignum();
   mp_err mpe = mp_read_unsigned_bin(mp(ubn), b->data, size);
   if (mpe != MP_OKAY)
