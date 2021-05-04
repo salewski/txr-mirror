@@ -3407,19 +3407,41 @@ val formatv(val stream_in, val fmtstr, struct args *al)
           obj = args_get_checked(self, al, &arg_ix);
           typ = type(obj);
         hex:
-          if (typ == BGNUM) {
-            int nchars = mp_radix_size(mp(obj), 16);
-            if (nchars >= convert(int, sizeof (num_buf)))
-              pnum = coerce(char *, chk_malloc(nchars + 1));
-            mp_toradix_case(mp(obj), coerce(unsigned char *, pnum), 16, ch == 'x');
-          } else {
-            const char *fmt = ch == 'x' ? num_fmt->hex : num_fmt->HEX;
-            value = c_num(obj, self);
-            if (value < 0) {
-              num_buf[0] = '-';
-              sprintf(num_buf + 1, fmt, -value);
-            } else {
-              sprintf(num_buf, fmt, value);
+          switch (typ) {
+          case BGNUM:
+            {
+              int nchars = mp_radix_size(mp(obj), 16);
+              if (nchars >= convert(int, sizeof (num_buf)))
+                pnum = coerce(char *, chk_malloc(nchars + 1));
+              mp_toradix_case(mp(obj), coerce(unsigned char *, pnum), 16, ch == 'x');
+            }
+            break;
+          case BUF:
+            {
+              ucnum len = c_unum(length_buf(obj), self);
+              ucnum nchars = 2 * len + 1;
+
+              if (len >= INT_PTR_MAX)
+                uw_throwf(error_s, lit("~a: ~~~a conversion given "
+                                       "too large a buf argument"),
+                          self, chr(ch), nao);
+
+              pnum = coerce(char *, chk_malloc(nchars));
+              buf_hex(obj, pnum, nchars, ch == 'X');
+            }
+            break;
+          case NUM:
+          case CHR:
+          default:
+            {
+              const char *fmt = ch == 'x' ? num_fmt->hex : num_fmt->HEX;
+              value = c_num(obj, self);
+              if (value < 0) {
+                num_buf[0] = '-';
+                sprintf(num_buf + 1, fmt, -value);
+              } else {
+                sprintf(num_buf, fmt, value);
+              }
             }
           }
           goto output_num;

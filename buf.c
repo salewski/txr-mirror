@@ -834,6 +834,20 @@ val buf_pprint(val buf, val stream_in)
   return t;
 }
 
+void buf_hex(val buf, char *hex, size_t sz, int caps)
+{
+  val self = lit("buf-hex");
+  struct buf *b = buf_handle(buf, self);
+  size_t i;
+  unsigned char *data = b->data;
+  const char *fmt = caps ? "%02X" : "%02x";
+
+  *hex = 0;
+
+  for (i = 0; i < sz - 1; i += 2)
+    hex += sprintf(hex, fmt, *data++);
+}
+
 struct buf_strm {
   struct strm_base a;
   utf8_decoder_t ud;
