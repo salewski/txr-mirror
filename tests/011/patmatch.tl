@@ -412,6 +412,59 @@
 (let ((a "$"))
   (test (when-match `@a-@b` "$-@" b) "@"))
 
+(test
+  (build
+    (each-match (`(@a) @b-@c` '("x"
+                                ""
+                                "(311) 555-5353"
+                                "(604) 923-2323"
+                                "133"
+                                "4-5-6-7")
+                 @x 1)
+     (add (list x a b c))))
+  ((3 "311" "555" "5353") (4 "604" "923" "2323")))
+
+(test
+  (append-matches ((:foo @y) '((:foo a) (:bar b) (:foo c) (:foo d))
+                   (@x :bar) '((1 :bar)  (2 :bar) (3 :bar) (4 :foo)))
+    (list x y))
+  (1 a 3 c))
+
+(test
+  (append-matches (@x '((1) (2) (3) 4)) x)
+  (1 2 3 . 4))
+
+(test
+  (keep-matches ((:foo @y) '((:foo a) (:bar b) (:foo c) (:foo d))
+                 (@x :bar) '((1 :bar)  (2 :bar) (3 :bar) (4 :foo)))
+    (list x y))
+  ((1 a) (3 c)))
+
+(test
+  (build
+    (each-match-product (`(@a) @b-@c` '("x"
+                                        ""
+                                        "(311) 555-5353"
+                                        "(604) 923-2323"
+                                        "133"
+                                        "4-5-6-7")
+                         @(oddp @x) '(1 2 3))
+     (add (list x a b c))))
+  ((1 "311" "555" "5353") (3 "311" "555" "5353")
+   (1 "604" "923" "2323") (3 "604" "923" "2323")))
+
+(test
+  (append-match-products (@(oddp @x) (range 1 5)
+                          @(evenp @y) (range 1 5))
+    (list x y))
+  (1 2 1 4 3 2 3 4 5 2 5 4))
+
+(test
+  (keep-match-products (@(oddp @x) (range 1 5)
+                        @(evenp @y) (range 1 5))
+    (list x y))
+  ((1 2) (1 4) (3 2) (3 4) (5 2) (5 4)))
+
 (compile-only
   (eval-only
     (compile-file (base-name *load-path*) "temp.tlo")

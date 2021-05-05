@@ -961,3 +961,34 @@
                 (stringp ,str))
              @(with ,pos 0)
              ,*(quasi-match var-list (normalize args) nil str pos)))))
+
+(defun each-match-expander (f pat-seq-list body fun)
+  (unless (and (proper-list-p pat-seq-list)
+               (evenp (len pat-seq-list)))
+    (compile-error f "pattern-sequence arguments must form pairs"))
+  (let ((pat-seq-pairs (tuples 2 pat-seq-list)))
+    (each ((pair pat-seq-pairs))
+      (unless (and (proper-list-p pair)
+                   (eql 2 (length pair)))
+        (compile-error f "invalid pattern-sequence pair ~s" pair)))
+    (let* ((pats [mapcar car pat-seq-pairs])
+           (seqs [mapcar cadr pat-seq-pairs]))
+       ^(,fun (lambda-match ((,*pats) (progn ,*body))) ,*seqs))))
+
+(defmacro each-match (:form f pat-seq-pairs . body)
+  (each-match-expander f pat-seq-pairs body 'mapdo))
+
+(defmacro append-matches (:form f pat-seq-pairs . body)
+  (each-match-expander f pat-seq-pairs body 'mappend))
+
+(defmacro keep-matches (:form f pat-seq-pairs . body)
+  (each-match-expander f pat-seq-pairs ^((list (progn ,*body))) 'mappend))
+
+(defmacro each-match-product (:form f pat-seq-pairs . body)
+  (each-match-expander f pat-seq-pairs body 'maprodo))
+
+(defmacro append-match-products (:form f pat-seq-pairs . body)
+  (each-match-expander f pat-seq-pairs body 'maprend))
+
+(defmacro keep-match-products (:form f pat-seq-pairs . body)
+  (each-match-expander f pat-seq-pairs ^((list (progn ,*body))) 'maprend))

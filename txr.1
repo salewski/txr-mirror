@@ -42543,6 +42543,238 @@ environment object which the expander can capture using
 .code :env
 in its macro parameter list.
 
+.coNP Macros @ each-match and @ each-match-product
+.synb
+.mets (each-match >> ({ pattern << seq-form }*) << body-form *)
+.mets (each-match-product >> ({ pattern << seq-form }*) << body-form *)
+.syne
+.desc
+The
+.code each-match
+macro arranges for elements from multiple sequences to be
+visited in parallel, and each to be matched against respective patterns.
+For each matching tuple of parallel elements, a body of forms is evaluated in
+the scope of the variables bound in the patterns.
+
+The first argument of
+.code each-match
+specifies a list of alternating
+.meta pattern
+and
+.meta seq-form
+expressions. Each
+.meta pattern
+is associated with the sequence which results from evaluating the
+immediately following
+.metn seq-form .
+Items coming from that sequence correspond with that pattern.
+
+The remaining arguments are
+.metn body-form s
+to evaluated for successful matches.
+
+The processing takes place as follows:
+.RS
+.IP 1.
+Every
+.meta seq-form
+is evaluated in left-to-right order and is expected to produce an
+iterable sequence or object that would be a suitable argument to
+.code mapcar
+or
+.codn iter-begin .
+This evaluation takes place in the scope surrounding the macro form,
+in which none of the variables that are bound in the
+.meta pattern
+expressions are yet visible.
+.IP 2.
+The next available item is taken from each of the sequences.
+If any of the sequences has no more items available, then
+.code each-match
+terminates and returns
+.codn nil .
+.IP 3.
+Each item taken in step 2 is matched against the
+.meta pattern
+which is corresponds with its sequence.  Each successive pattern can
+refer to the variables bound in the previous patterns in the same
+iteration. If any pattern match fails, then the process continues with step 2.
+.IP 4.
+If all the matches are successful, then
+.metn body-form s,
+if any, are executed in the scope of variables bound in the
+.metn pattern s.
+Processing then continues at step 2.
+.RE
+.IP
+The
+.code each-match-product
+differs from
+.code each-match
+in that instead of taking parallel tuples of items from the sequences,
+it iterates over the tuples of the Cartesian product of the sequences
+similarly to the
+.code maprod
+function. The product tuples are ordered in such a way that the rightmost
+element, which always coming coming from sequence produced by the last
+.metn seq-form ,
+varies the fastest. If there are two sequences
+.code "(1 2)"
+and
+.codn "(a b)" ,
+then
+.code each-match
+iterates over the tuples
+.code "(1 a)"
+and
+.codn "(2 b)" ,
+whereas
+.code each-match-product
+iterates over
+.codn "(1 a)" ,
+.codn "(1 b)" ,
+.code "(2 a)"
+and
+.codn "(2 b)" .
+
+.TP* Examples:
+.verb
+  ;; Number all the .JPG files in the current directory.
+  ;; For instance foo.jpg becomes foo-0001.jpg, if it is
+  ;; the first file.
+  (each-match (@(as name `@base.jpg`) (glob "*.jpg")
+               @(@num (fmt "~,04a")) 1)
+    (rename-path name `@base-@num.jpg`))
+
+  ;; Iterate over combinations of matching phone
+  ;; numbers and odd integers from the (1 2 3) list
+  (build
+    (each-match-product (`(@a) @b-@c` '("x"
+                                        ""
+                                        "(311) 555-5353"
+                                        "(604) 923-2323"
+                                        "133"
+                                        "4-5-6-7")
+                         @(oddp @x) '(1 2 3))
+     (add (list x a b c))))
+  -->
+  ((1 "311" "555" "5353") (3 "311" "555" "5353")
+   (1 "604" "923" "2323") (3 "604" "923" "2323")))
+.brev
+
+.coNP Macros @ append-matches and @ append-match-products
+.synb
+.mets (append-matches >> ({ pattern << seq-form }*) << body-form *)
+.mets (append-match-products >> ({ pattern << seq-form }*) << body-form *)
+.syne
+.desc
+The macro
+.code append-matches
+is subject to all of the requirements specified for
+.code each-match
+in regard to the argument conventions and semantics.
+
+Whereas
+.code each-match
+returns
+.codn nil ,
+the
+.code append-matches
+macro requires, in each iteration which produces a match for each
+.metn pattern ,
+that the last
+.meta body-form
+evaluated must produce a list.
+
+These lists are catenated together as if by the
+.code append
+function and returned.
+
+It is unspecified whether the non-matching iterations produce
+empty lists which are included in the append operation.
+
+If the last tuple of items which produces a match is absolutely the
+the last tuple, the corresponding
+.meta body-form
+evaluation may yield an atom which then becomes the terminator
+for the returned list, in keeping with the semantics of
+.codn append .
+an atom.
+
+The
+.code append-match-products
+macro differs from
+.code append-matches
+in that it iterates over the Cartesian product tuples of the sequences,
+rather than parallel tuples. The difference is exactly like that between
+.code each-match
+and
+.codn each-match-product .
+
+.TP* Examples:
+
+.verb
+  (append-matches
+    ((:foo @y) '((:foo a) (:bar b) (:foo c) (:foo d))
+     (@x :bar) '((1 :bar)  (2 :bar) (3 :bar) (4 :foo)))
+    (list x y))
+  --> (1 a 3 c)
+
+  (append-matches (@x '((1) (2) (3) 4)) x)
+  --> (1 2 3 . 4)
+
+  (append-match-products (@(oddp @x) (range 1 5)
+                          @(evenp @y) (range 1 5))
+    (list x y))
+  --> (1 2 1 4 3 2 3 4 5 2 5 4)
+.brev
+
+.coNP Macros @ keep-matches and @ keep-match-products
+.synb
+.mets (keep-matches >> ({ pattern << seq-form }*) << body-form *)
+.mets (keep-match-products >> ({ pattern << seq-form }*) << body-form *)
+.syne
+.desc
+The macro
+.code keep-matches
+is subject to all of the requirements specified for
+.code each-match
+in regard to the argument conventions and semantics.
+
+Whereas
+.code each-match
+returns
+.codn nil ,
+the
+.code keep-matches
+macro returns a list of the values produced by all matching iterations which
+led to the the execution of the
+.metn body-form s.
+
+The
+.code keep-match-products
+macro differs from
+.code keep-matches
+in that it iterates over the Cartesian product tuples of the sequences,
+rather than parallel tuples. The difference is exactly like that between
+.code each-match
+and
+.codn each-match-product .
+
+.TP* Examples:
+
+.verb
+  (keep-matches ((:foo @y) '((:foo a) (:bar b) (:foo c) (:foo d))
+                 (@x :bar) '((1 :bar)  (2 :bar) (3 :bar) (4 :foo)))
+    (list x y))
+  --> ((1 a) (3 c))
+
+  (keep-match-products (@(oddp @x) (range 1 5)
+                        @(evenp @y) (range 1 5))
+    (list x y))
+  --> ((1 2) (1 4) (3 2) (3 4) (5 2) (5 4))
+.brev
+
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote
 .synb
