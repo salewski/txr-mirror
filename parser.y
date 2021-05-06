@@ -1005,7 +1005,14 @@ listacc : n_expr                { $$ = cons($1, nil);
           n_expr                { parser->ignore = 0;
                                   $$ = cons(nil, nil);
                                   $$->c.cdr = $$; }
+        | HASH_SEMI '.'         { parser->ignore = 1; }
+          n_expr                { parser->ignore = 0;
+                                  $$ = cons(nil, nil);
+                                  $$->c.cdr = $$; }
         | listacc HASH_SEMI     { parser->ignore = 1; }
+          n_expr                { parser->ignore = 0;
+                                  $$ = $1; }
+        | listacc HASH_SEMI '.' { parser->ignore = 1; }
           n_expr                { parser->ignore = 0;
                                   $$ = $1; }
         | listacc n_expr        { uses_or2;
