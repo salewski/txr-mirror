@@ -3738,9 +3738,9 @@ printf "done\n"
 cat > reconfigure <<!
 #!/bin/sh
 #
-# Configured on $(date) using:
+# Configured on $(date) using these parameters:
 
-$cmdline
+$cmdline "\$@"
 
 !
 #
