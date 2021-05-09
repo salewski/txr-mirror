@@ -40,6 +40,7 @@ val set_key(val node, val nkey);
 val copy_tnode(val node);
 val tree(val keys, val key_fn, val less_fn, val equal_fn);
 val copy_search_tree(val tree);
+val make_similar_tree(val tree);
 val treep(val obj);
 val tree_insert_node(val tree, val node);
 val tree_begin(val tree);

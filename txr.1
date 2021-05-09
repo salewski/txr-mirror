@@ -51774,6 +51774,23 @@ and contains the same elements.
 The nodes held inside the new tree are freshly allocated,
 but their key objects are shared with the original tree.
 
+.coNP Function @ make-similar-tree
+.synb
+.mets (make-similar-tree << tree )
+.syne
+.desc
+The
+.code copy-search-tree
+returns a new, empty search tree object.
+
+The
+.meta tree
+argument must be an object of type
+.codn tree .
+
+The returned object has the same key abstraction functions as
+.metn tree .
+
 .coNP Functions @ tree-begin and @ tree-begin-at
 .synb
 .mets (tree-begin < tree )

@@ -111,3 +111,11 @@
   (tree-delete tr 17) 17
   (tree-delete tr 18) 18
   (tree-delete tr 19) 19)
+
+(set *tree-fun-whitelist* [list* '= '< *tree-fun-whitelist*])
+
+(let ((tr [tree '(1 2 3) identity < =]))
+  (mtest
+    tr #T((identity < =) 1 2 3)
+    (copy-search-tree tr) #T((identity < =) 1 2 3)
+    (make-similar-tree tr) #T((identity < =))))
