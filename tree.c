@@ -519,32 +519,32 @@ val tree_insert_node(val tree, val node)
   return node;
 }
 
-static val tree_insert(val tree, val key)
+val tree_insert(val tree, val key)
 {
   return tree_insert_node(tree, tnode(key, nil, nil));
 }
 
-static val tree_lookup_node(val tree, val key)
+val tree_lookup_node(val tree, val key)
 {
   val self = lit("tree-lookup-node");
   struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
   return tr_lookup(tr, key);
 }
 
-static val tree_lookup(val tree, val key)
+val tree_lookup(val tree, val key)
 {
   val node = tree_lookup_node(tree, key);
   return if2(node, node->tn.key);
 }
 
-static val tree_delete_node(val tree, val key)
+val tree_delete_node(val tree, val key)
 {
   val self = lit("tree-delete-node");
   struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
   return tr_delete(tree, tr, key);
 }
 
-static val tree_delete(val tree, val key)
+val tree_delete(val tree, val key)
 {
   val node = tree_delete_node(tree, key);
   return if2(node, node->tn.key);
