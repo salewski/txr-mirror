@@ -915,7 +915,7 @@ val seq_getpos(val self, seq_iter_t *it)
   case SEQ_LISTLIKE:
     return it->ui.iter;
   case SEQ_VECLIKE:
-    return num(it->ui.index);;
+    return num(it->ui.index);
   default:
     unsup_obj(self, it->inf.obj);
   }
