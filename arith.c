@@ -3980,7 +3980,7 @@ val poly(val x, val seq)
       return acc;
     }
   default:
-    uw_throwf(error_s, lit("~a: bad argument ~s; poly wants a sequence!"),
+    uw_throwf(error_s, lit("~a: bad argument ~s; poly wants a list or vector!"),
               self, seq, nao);
 
   }
@@ -4025,7 +4025,7 @@ val rpoly(val x, val seq)
       return acc;
     }
   default:
-    uw_throwf(error_s, lit("~a: bad argument ~s; poly wants a sequence!"),
+    uw_throwf(error_s, lit("~a: bad argument ~s; poly wants a list or vector!"),
               self, seq, nao);
 
   }

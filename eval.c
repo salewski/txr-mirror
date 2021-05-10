@@ -6278,13 +6278,15 @@ val tprint(val obj, val out)
 
   switch (si.kind) {
   case SEQ_NIL:
-    break;
+    return nil;
   case SEQ_LISTLIKE:
+    if (consp(si.obj))
     {
       gc_hint(si.obj);
       gc_hint(obj);
       for (obj = z(si.obj); !endp(obj); obj = cdr(obj))
         tprint(car(obj), out);
+      return nil;
     }
     break;
   case SEQ_VECLIKE:
@@ -6293,23 +6295,27 @@ val tprint(val obj, val out)
     case STR:
     case LSTR:
       put_line(obj, out);
-      break;
+      return nil;
     default:
-      {
-        val vec = si.obj;
-        cnum i, len = c_fixnum(length(vec), self);
-
-        for (i = 0; i < len; i++)
-          tprint(ref(vec, num_fast(i)), out);
-
-      }
       break;
     }
     break;
-  case SEQ_NOTSEQ:
-  case SEQ_HASHLIKE:
-    pprinl(obj, out);
+  case SEQ_TREELIKE:
     break;
+  case SEQ_HASHLIKE:
+  case SEQ_NOTSEQ:
+    pprinl(obj, out);
+    return nil;
+  }
+
+  {
+    seq_iter_t iter;
+    val elem;
+
+    seq_iter_init_with_info(self, &iter, si, 0);
+
+    while (seq_get(&iter, &elem))
+      tprint(elem, out);
   }
 
   return nil;

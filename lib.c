@@ -317,6 +317,8 @@ seq_info_t seq_info(val obj)
         ret.kind = SEQ_VECLIKE;
       else if (get_special_slot(obj, car_m))
         ret.kind = SEQ_LISTLIKE;
+    } else if (cls == tree_s) {
+      ret.kind = SEQ_TREELIKE;
     }
   }
 
@@ -424,6 +426,20 @@ static int seq_iter_peek_hash(seq_iter_t *it, val *pval)
 {
   *pval = hash_peek(it->ui.iter);
   return *pval != nil;
+}
+
+static int seq_iter_get_tree(seq_iter_t *it, val *pval)
+{
+  val node = tree_next(it->ui.iter);
+  *pval = if2(node, key(node));
+  return node != nil;
+}
+
+static int seq_iter_peek_tree(seq_iter_t *it, val *pval)
+{
+  val node = tree_peek(it->ui.iter);
+  *pval = if2(node, key(node));
+  return node != nil;
 }
 
 static int seq_iter_get_range_cnum(seq_iter_t *it, val *pval)
@@ -726,14 +742,17 @@ static void seq_iter_rewind(seq_iter_t *it, val self)
     case SEQ_HASHLIKE:
       it->ui.iter = hash_begin(it->inf.obj);
       break;
+    case SEQ_TREELIKE:
+      it->ui.iter = tree_begin(it->inf.obj);
+      break;
     default:
       break;
     }
   }
 }
 
-static void seq_iter_init_with_info(val self, seq_iter_t *it,
-                                    seq_info_t si, int support_rewind)
+void seq_iter_init_with_info(val self, seq_iter_t *it,
+                             seq_info_t si, int support_rewind)
 {
   it->inf = si;
 
@@ -867,6 +886,12 @@ static void seq_iter_init_with_info(val self, seq_iter_t *it,
       it->get = seq_iter_get_hash;
       it->peek = seq_iter_peek_hash;
       break;
+    case SEQ_TREELIKE:
+      it->ui.iter = tree_begin(it->inf.obj);
+      it->ul.len = 0;
+      it->get = seq_iter_get_tree;
+      it->peek = seq_iter_peek_tree;
+      break;
     default:
       unsup_obj(self, it->inf.obj);
     }
@@ -920,11 +945,15 @@ static void seq_iter_mark(val seq_iter)
   switch (si->inf.kind) {
   case SEQ_LISTLIKE:
   case SEQ_HASHLIKE:
+  case SEQ_TREELIKE:
     gc_mark(si->ui.iter);
     break;
-  default:
+  case SEQ_NOTSEQ:
     if (cobjp(si->inf.obj) && obj_struct_p(si->inf.obj))
       gc_mark(si->ui.iter);
+    break;
+  case SEQ_NIL:
+  case SEQ_VECLIKE:
     break;
   }
 }
@@ -2377,11 +2406,13 @@ loop:
     case SEQ_KIND_PAIR(SEQ_NIL, SEQ_LISTLIKE):
     case SEQ_KIND_PAIR(SEQ_NIL, SEQ_VECLIKE):
     case SEQ_KIND_PAIR(SEQ_NIL, SEQ_HASHLIKE):
+    case SEQ_KIND_PAIR(SEQ_NIL, SEQ_TREELIKE):
     case SEQ_KIND_PAIR(SEQ_NIL, SEQ_NOTSEQ):
       break;
     case SEQ_KIND_PAIR(SEQ_LISTLIKE, SEQ_NIL):
     case SEQ_KIND_PAIR(SEQ_VECLIKE, SEQ_NIL):
     case SEQ_KIND_PAIR(SEQ_HASHLIKE, SEQ_NIL):
+    case SEQ_KIND_PAIR(SEQ_TREELIKE, SEQ_NIL):
     case SEQ_KIND_PAIR(SEQ_NOTSEQ, SEQ_NIL):
       return seq1;
     case SEQ_KIND_PAIR(SEQ_LISTLIKE, SEQ_LISTLIKE):
@@ -2390,6 +2421,7 @@ loop:
       goto loop;
     case SEQ_KIND_PAIR(SEQ_LISTLIKE, SEQ_VECLIKE):
     case SEQ_KIND_PAIR(SEQ_LISTLIKE, SEQ_HASHLIKE):
+    case SEQ_KIND_PAIR(SEQ_LISTLIKE, SEQ_TREELIKE):
     case SEQ_KIND_PAIR(SEQ_LISTLIKE, SEQ_NOTSEQ):
       ptail = list_collect(ptail, car(si1.obj));
       seq1 = cdr(si1.obj);
@@ -2401,6 +2433,7 @@ loop:
       seq1 = sub(seq1, one, t);
       goto loop;
     case SEQ_KIND_PAIR(SEQ_HASHLIKE, SEQ_HASHLIKE):
+    case SEQ_KIND_PAIR(SEQ_HASHLIKE, SEQ_TREELIKE):
     case SEQ_KIND_PAIR(SEQ_NOTSEQ, SEQ_NOTSEQ):
       if (!equal(seq1, seq2))
         ptail = list_collect_append(ptail, seq1);
@@ -9770,6 +9803,7 @@ val nsort(val seq, val lessfun, val keyfun)
     return seq;
   case SEQ_LISTLIKE:
     return sort_list(seq, lessfun, keyfun);
+  case SEQ_TREELIKE:
   case SEQ_NOTSEQ:
     unsup_obj(self, seq);
   }
@@ -9795,6 +9829,7 @@ val sort(val seq, val lessfun, val keyfun)
     return seq;
   case SEQ_LISTLIKE:
     return sort_list(copy_list(seq), lessfun, keyfun);
+  case SEQ_TREELIKE:
   case SEQ_NOTSEQ:
     unsup_obj(self, seq);
   }
@@ -9839,7 +9874,8 @@ val nshuffle(val seq, val randstate)
       return seq;
     }
   case SEQ_NOTSEQ:
-    type_mismatch(lit("nshuffle: ~s is not a sequence"), seq, nao);
+  case SEQ_TREELIKE:
+    unsup_obj(lit("nshuffle"), seq);
   }
 
   abort();
@@ -10871,6 +10907,8 @@ val take(val count, val seq)
     return sub(seq, zero, count);
   case SEQ_HASHLIKE:
     type_mismatch(lit("~a: hashes not supported"), self, nao);
+  case SEQ_TREELIKE:
+    type_mismatch(lit("~a: trees not supported"), self, nao);
   default:
     type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
@@ -10913,6 +10951,8 @@ val take_while(val pred, val seq, val keyfun)
     }
   case SEQ_HASHLIKE:
     type_mismatch(lit("~a: hashes not supported"), self, nao);
+  case SEQ_TREELIKE:
+    type_mismatch(lit("~a: trees not supported"), self, nao);
   default:
     type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
@@ -10953,6 +10993,8 @@ val take_until(val pred, val seq, val keyfun)
     }
   case SEQ_HASHLIKE:
     type_mismatch(lit("~a: hashes not supported"), self, nao);
+  case SEQ_TREELIKE:
+    type_mismatch(lit("~a: trees not supported"), self, nao);
   default:
     type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
@@ -10987,6 +11029,8 @@ val drop_while(val pred, val seq, val keyfun)
     }
   case SEQ_HASHLIKE:
     type_mismatch(lit("~a: hashes not supported"), self, nao);
+  case SEQ_TREELIKE:
+    type_mismatch(lit("~a: trees not supported"), self, nao);
   default:
     type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
@@ -11020,6 +11064,8 @@ val drop_until(val pred, val seq, val keyfun)
     }
   case SEQ_HASHLIKE:
     type_mismatch(lit("~a: hashes not supported"), self, nao);
+  case SEQ_TREELIKE:
+    type_mismatch(lit("~a: trees not supported"), self, nao);
   default:
     type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
@@ -11633,6 +11679,8 @@ val update(val seq, val fun)
     break;
   case SEQ_HASHLIKE:
     return hash_update(seq, fun);
+  case SEQ_TREELIKE:
+    type_mismatch(lit("~a: trees not supported"), self, nao);
   default:
     type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
@@ -11773,25 +11821,29 @@ static val lazy_where_hash_func(val hash_iter, val lcons)
   }
 }
 
+static val lazy_where_tree_func(val tree_iter, val lcons)
+{
+  val func = us_cdr(lcons);
+
+  for (;;) {
+    val node = tree_next(tree_iter);
+    if (!node) {
+      us_rplacd(lcons, nil);
+      return nil;
+    } else {
+      val ky = key(node);
+      if (funcall1(func, ky)) {
+        val fun = us_lcons_fun(lcons);
+        us_rplacd(lcons, make_lazy_cons_car_cdr(fun, ky, func));
+        return nil;
+      }
+    }
+  }
+}
+
 val where(val func, val seq)
 {
-  if (!hashp(seq)) {
-    val iter = iter_begin(seq);
-    val index = zero;
-
-    for (;;) {
-      if (!iter_more(iter))
-        return nil;
-      if (funcall1(func, iter_item(iter)))
-        break;
-      iter = iter_step(iter);
-      index = succ(index);
-    }
-
-    iter = iter_step(iter);
-    return make_lazy_cons_car_cdr(func_f1(iter, lazy_where_func),
-                                  index, func);
-  } else {
+  if (hashp(seq)) {
     val hash_iter = hash_begin(seq);
     val key;
 
@@ -11807,6 +11859,36 @@ val where(val func, val seq)
 
     return make_lazy_cons_car_cdr(func_f1(hash_iter, lazy_where_hash_func),
                                   key, func);
+  } else if (treep(seq)) {
+    val tree_iter = tree_begin(seq);
+
+    for (;;) {
+      val node = tree_next(tree_iter);
+      if (!node) {
+        return nil;
+      } else {
+        val ky = key(node);
+        if (funcall1(func, ky))
+          return make_lazy_cons_car_cdr(func_f1(tree_iter, lazy_where_tree_func),
+                                        ky, func);
+      }
+    }
+  } else {
+    val iter = iter_begin(seq);
+    val index = zero;
+
+    for (;;) {
+      if (!iter_more(iter))
+        return nil;
+      if (funcall1(func, iter_item(iter)))
+        break;
+      iter = iter_step(iter);
+      index = succ(index);
+    }
+
+    iter = iter_step(iter);
+    return make_lazy_cons_car_cdr(func_f1(iter, lazy_where_func),
+                                  index, func);
   }
 }
 
@@ -11837,6 +11919,18 @@ val sel(val seq, val where_in)
       }
 
       return newhash;
+    }
+  case SEQ_TREELIKE:
+    {
+      val newtree = make_similar_tree(si.obj);
+
+      while (seq_get(&wh_iter, &wh)) {
+        val node = tree_lookup_node(seq, wh);
+        if (node)
+          tree_insert(newtree, key(node));
+      }
+
+      return newtree;
     }
   case SEQ_LISTLIKE:
     {
@@ -11888,19 +11982,24 @@ val reject(val seq, val where_in)
   case SEQ_NIL:
     return nil;
   case SEQ_HASHLIKE:
+  case SEQ_TREELIKE:
     {
       seq_iter_t wh_iter;
       val wh;
-      val newhash = copy_hash(si.obj);
+      val newobj = copy(si.obj);
       val where = if3(functionp(where_in),
                       funcall1(where_in, seq),
                       where_in);
       seq_iter_init(self, &wh_iter, where);
 
-      while (seq_get(&wh_iter, &wh))
-        remhash(newhash, wh);
+      if (si.kind == SEQ_HASHLIKE)
+        while (seq_get(&wh_iter, &wh))
+          remhash(newobj, wh);
+      else
+        while (seq_get(&wh_iter, &wh))
+          tree_delete(newobj, wh);
 
-      return newhash;
+      return newobj;
     }
   case SEQ_VECLIKE:
     appendfn = appendl;
@@ -11912,9 +12011,10 @@ val reject(val seq, val where_in)
     }
     break;
   case SEQ_NOTSEQ:
-  default:
     type_mismatch(lit("~a: ~s is not a sequence"), self, seq, nao);
   }
+
+  abort();
 }
 
 static val do_relate(val env, val arg)

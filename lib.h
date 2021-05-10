@@ -378,7 +378,7 @@ typedef val *loc;
 #endif
 
 typedef enum seq_kind {
-  SEQ_NIL, SEQ_LISTLIKE, SEQ_VECLIKE, SEQ_HASHLIKE, SEQ_NOTSEQ
+  SEQ_NIL, SEQ_LISTLIKE, SEQ_VECLIKE, SEQ_HASHLIKE, SEQ_TREELIKE, SEQ_NOTSEQ
 } seq_kind_t;
 
 typedef struct seq_info {
@@ -554,6 +554,8 @@ val typeof(val obj);
 val subtypep(val sub, val sup);
 val typep(val obj, val type);
 seq_info_t seq_info(val cobj);
+void seq_iter_init_with_info(val self, seq_iter_t *it,
+                             seq_info_t si, int support_rewind);
 void seq_iter_init(val self, seq_iter_t *it, val obj);
 INLINE int seq_get(seq_iter_t *it, val *pval) { return it->get(it, pval); }
 INLINE int seq_peek(seq_iter_t *it, val *pval) { return it->peek(it, pval); }
