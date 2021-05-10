@@ -214,6 +214,43 @@ static val tn_find_next(val node, struct tree_iter *trit)
   }
 }
 
+static val tn_peek_next(val node, struct tree_iter *trit)
+{
+  enum tree_iter_state state = trit->state;
+  int depth = trit->depth;
+
+  for (;;) {
+    switch (state) {
+    case tr_visited_nothing:
+      if (!node)
+        return nil;
+      while (node->tn.left)
+        node = node->tn.left;
+      return node;
+    case tr_visited_left:
+      if (node->tn.right) {
+        state = tr_visited_nothing;
+        node = node->tn.right;
+        continue;
+      } else {
+        while (depth > 0) {
+          val parent = trit->path[--depth];
+          if (node == parent->tn.right) {
+            node = parent;
+            continue;
+          }
+          return parent;
+        }
+        return nil;
+      }
+    case tr_find_low_prepared:
+      return node;
+    default:
+      internal_error("invalid tree iterator state");
+    }
+  }
+}
+
 static void tn_find_low(val node, struct tree_diter *tdi,
                         struct tree *tr, val key)
 {
@@ -820,6 +857,20 @@ val tree_next(val iter)
   return nil;
 }
 
+val tree_peek(val iter)
+{
+  val self = lit("tree-peek");
+  struct tree_diter *tdi = coerce(struct tree_diter *,
+                                  cobj_handle(self, iter, tree_iter_s));
+
+  if (tdi->lastnode) {
+    val node = tn_peek_next(tdi->lastnode, &tdi->ti);
+    return node;
+  }
+
+  return nil;
+}
+
 val tree_clear(val tree)
 {
   val self = lit("tree-clear");
@@ -860,6 +911,7 @@ void tree_init(void)
   reg_fun(intern(lit("tree-reset"), user_package), func_n2(tree_reset));
   reg_fun(intern(lit("tree-reset-at"), user_package), func_n3(tree_reset_at));
   reg_fun(intern(lit("tree-next"), user_package), func_n1(tree_next));
+  reg_fun(intern(lit("tree-peek"), user_package), func_n1(tree_peek));
   reg_fun(intern(lit("tree-clear"), user_package), func_n1(tree_clear));
   reg_var(tree_fun_whitelist_s, list(identity_s, equal_s, less_s, nao));
 }

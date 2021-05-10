@@ -51873,34 +51873,53 @@ and
 .meta low-key
 arguments.
 
-.coNP Function @ tree-next
+.coNP Functions @ tree-next and @ tree-peek
 .synb
 .mets (tree-next < iter )
+.mets (tree-peek < iter )
 .syne
 .desc
 The
 .code tree-next
+and
+.code tree-peek
 function returns the next node in sequence from the tree iterator
-.metn iter ,
-which must be an object of type
-.codn tree-iter .
-Note: the
+.metn iter .
+The iterator must be an object of type
+.codn tree-iter ,
+returned by the
 .code tree-begin
-function returns such a
-.code tree-iter
-object.
+or
+.code tree-begin-at
+functions.
 
-If there are no more nodes to be visited, the function returns
+If there are no more nodes to be visited, these functions
 .codn nil .
 
 If, during the traversal of a tree, nodes are inserted or deleted,
 the behavior of
 .code tree-next
+and
+.code tree-peek
 on
 .code tree-iter
-object that were obtained prior to the insertion or deletion is
+objects that were obtained prior to the insertion or deletion is
 not specified. An attempt to complete the iteration may not successfully
 visit all keys that should be visited.
+
+The
+.code tree-next
+function changes the state of the iterator. If
+.code tree-next
+is invoked repeatedly on the same iterator, it returns successive
+nodes of the tree.
+
+If
+.code tree-peek
+is invoked more than once on the same iterator without any intervening calls to
+.codn tree-next ,
+it returns the same node; it does not appear to change the state of
+the iterator and therefore does not advance through successive nodes.
 
 .coNP Special variable @ *tree-fun-whitelist*
 .desc
