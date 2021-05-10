@@ -3949,7 +3949,7 @@ val digits(val n, val base)
 
 val poly(val x, val seq)
 {
-  val self = lit("rpoly");
+  val self = lit("poly");
   val acc = zero;
   seq_info_t si = seq_info(seq);
 
@@ -3988,7 +3988,7 @@ val poly(val x, val seq)
 
 val rpoly(val x, val seq)
 {
-  val self = lit("poly");
+  val self = lit("rpoly");
   val acc = zero;
   val pow = x;
   seq_info_t si = seq_info(seq);
