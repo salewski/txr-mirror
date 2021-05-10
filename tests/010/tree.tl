@@ -127,3 +127,8 @@
     tr #T((identity < =) 1 2 3)
     (copy-search-tree tr) #T((identity < =) 1 2 3)
     (make-similar-tree tr) #T((identity < =))))
+
+(mtest
+  (uni #T(() "a" "b") #T(() "b" "c")) ("a" "b" "c")
+  (diff #T(() "a" "b") #T(() "b" "c")) ("a")
+  (isec #T(() "a" "b") #T(() "b" "c")) ("b"))

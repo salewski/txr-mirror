@@ -740,10 +740,10 @@ static void seq_iter_rewind(seq_iter_t *it, val self)
       it->ui.index = 0;
       break;
     case SEQ_HASHLIKE:
-      it->ui.iter = hash_begin(it->inf.obj);
+      it->ui.iter = hash_reset(it->ui.iter, it->inf.obj);
       break;
     case SEQ_TREELIKE:
-      it->ui.iter = tree_begin(it->inf.obj);
+      it->ui.iter = tree_reset(it->ui.iter, it->inf.obj);
       break;
     default:
       break;
