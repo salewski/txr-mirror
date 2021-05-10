@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 #include <limits.h>
 #include <signal.h>
 #include "config.h"
@@ -811,6 +812,26 @@ val tree_begin_at(val tree, val lowkey)
   return iter;
 }
 
+val copy_tree_iter(val iter)
+{
+  val self = lit("copy-tree-iter");
+  struct tree_diter *tdis = coerce(struct tree_diter *,
+                                   cobj_handle(self, iter, tree_iter_s));
+  struct tree_diter *tdid = coerce(struct tree_diter *,
+                                   chk_calloc(1, sizeof *tdid));
+  val iter_copy = cobj(coerce(mem_t *, tdid), tree_iter_s, &tree_iter_ops);
+  int depth = tdis->ti.depth;
+
+  tdid->ti.self = iter_copy;
+  tdid->ti.depth = depth;
+  tdid->ti.state = tdis->ti.state;
+  tdid->lastnode = tdis->lastnode;
+
+  memcpy(tdid->ti.path, tdis->ti.path, sizeof tdid->ti.path[0] * depth);
+
+  return iter_copy;
+}
+
 val tree_reset(val iter, val tree)
 {
   val self = lit("tree-reset");
@@ -908,6 +929,7 @@ void tree_init(void)
   reg_fun(intern(lit("tree-root"), user_package), func_n1(tree_root));
   reg_fun(intern(lit("tree-begin"), user_package), func_n1(tree_begin));
   reg_fun(intern(lit("tree-begin-at"), user_package), func_n2(tree_begin_at));
+  reg_fun(intern(lit("copy-tree-iter"), user_package), func_n1(copy_tree_iter));
   reg_fun(intern(lit("tree-reset"), user_package), func_n2(tree_reset));
   reg_fun(intern(lit("tree-reset-at"), user_package), func_n3(tree_reset_at));
   reg_fun(intern(lit("tree-next"), user_package), func_n1(tree_next));

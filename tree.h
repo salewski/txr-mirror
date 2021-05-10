@@ -25,7 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern val tree_s, tree_fun_whitelist_s;
+extern val tree_s, tree_iter_s, tree_fun_whitelist_s;
 
 #define tree_fun_whitelist (deref(lookup_var_l(nil, tree_fun_whitelist_s)))
 
@@ -50,6 +50,7 @@ val tree_delete_node(val tree, val key);
 val tree_delete(val tree, val key);
 val tree_begin(val tree);
 val tree_begin_at(val tree, val lowkey);
+val copy_tree_iter(val iter);
 val tree_reset(val iter, val tree);
 val tree_reset_at(val iter, val tree, val lowkey);
 val tree_next(val iter);

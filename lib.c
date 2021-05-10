@@ -11340,6 +11340,8 @@ val copy(val seq)
       return copy_carray(seq);
     if (seq->co.cls == tree_s)
       return copy_search_tree(seq);
+    if (seq->co.cls == tree_iter_s)
+      return copy_tree_iter(seq);
     if (obj_struct_p(seq))
       return copy_struct(seq);
     /* fallthrough */

@@ -19582,6 +19582,10 @@ the type of the argument, as follows:
 .mono
 .meti (copy-search-tree << object )
 .onom
+.coIP tree-iter
+.mono
+.meti (copy-tree-iter << object )
+.onom
 .RE
 
 .IP
@@ -51920,6 +51924,27 @@ is invoked more than once on the same iterator without any intervening calls to
 .codn tree-next ,
 it returns the same node; it does not appear to change the state of
 the iterator and therefore does not advance through successive nodes.
+
+.coNP Function @ copy-tree-iter
+.synb
+.mets (copy-tree-iter < iter )
+.syne
+.desc
+The
+.code copy-tree-iter
+function creates and returns a duplicate of the
+.meta iter
+object, which must be a tree iterator returned by
+.code tree-begin
+or
+.codn tree-begin-at .
+
+The returned object has the same state as the original; it references the same
+traversal position in the same tree. However, it is independent of the original.
+Calls to
+.code tree-next
+on the original have no effect on the duplicate and
+.IR vice-versa .
 
 .coNP Special variable @ *tree-fun-whitelist*
 .desc
