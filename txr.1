@@ -79862,6 +79862,19 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 258
+Selecting 258 or lower compatibility causes
+.code abs-path-p
+to behave like
+.codn portable-abs-path-p .
+.IP 257
+Until \*(TX 257, the function
+.code lexical-var-p
+returned
+.code t
+for not only lexical variables, but also for locally bound special variables,
+which are not lexical. The behavior is restored if 257 or older compatibility
+is selected.
 .IP 251
 Until \*(TX 251, the syntax
 .code "obj.[fun arg]"
@@ -79907,19 +79920,6 @@ A compatibility value of 248 or lower restores the above old behaviors of
 .code @
 and
 .codn hash-revget .
-.IP 258
-Selecting 258 or lower compatibility causes
-.code abs-path-p
-to behave like
-.codn portable-abs-path-p .
-.IP 257
-Until \*(TX 257, the function
-.code lexical-var-p
-returned
-.code t
-for not only lexical variables, but also for locally bound special variables,
-which are not lexical. The behavior is restored if 257 or older compatibility
-is selected.
 .IP 244
 Until \*(TX 244, the
 .code env-hash
@@ -79965,6 +79965,16 @@ returns normally, yielding the value
 .codn nil .
 If a compatibility value equal to or lower than 234 is requested,
 the old behavior occurs: all unhandled exceptions terminate.
+.IP 231
+Versions of \*(TX until 231 contained an undocumented feature: some
+library functions which are documented as having parameters that must be of
+string type were allowing the arguments to be symbols.  For such symbolic
+arguments, the name of the symbol obtained from
+.code symbol-name
+was implicitly taken as the required string value. This behavior was removed:
+passing symbolic arguments to library function parameters documented as
+strings will cause an exception to the thrown. If a compatibility value
+of 231 or lower is specified, however, the tolerant behavior is restored.
 .IP 227
 In \*(TX 227 and older versions, the functions
 .codn carray-uint ,
@@ -79981,16 +79991,6 @@ and
 respectively.
 If 227 or lower compatibility is selected, these functions become
 available under their old names in addition to their new names.
-.IP 231
-Versions of \*(TX until 231 contained an undocumented feature: some
-library functions which are documented as having parameters that must be of
-string type were allowing the arguments to be symbols.  For such symbolic
-arguments, the name of the symbol obtained from
-.code symbol-name
-was implicitly taken as the required string value. This behavior was removed:
-passing symbolic arguments to library function parameters documented as
-strings will cause an exception to the thrown. If a compatibility value
-of 231 or lower is specified, however, the tolerant behavior is restored.
 .IP 225
 After \*(TX 225, the behavior of the
 .code do
