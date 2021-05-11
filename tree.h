@@ -51,6 +51,7 @@ val tree_delete(val tree, val key);
 val tree_begin(val tree);
 val tree_begin_at(val tree, val lowkey);
 val copy_tree_iter(val iter);
+val replace_tree_iter(val diter, val siter);
 val tree_reset(val iter, val tree);
 val tree_reset_at(val iter, val tree, val lowkey);
 val tree_next(val iter);

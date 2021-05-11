@@ -832,6 +832,26 @@ val copy_tree_iter(val iter)
   return iter_copy;
 }
 
+val replace_tree_iter(val diter, val siter)
+{
+  val self = lit("replace-tree-iter");
+  struct tree_diter *tdid = coerce(struct tree_diter *,
+                                   cobj_handle(self, diter, tree_iter_s));
+  struct tree_diter *tdis = coerce(struct tree_diter *,
+                                   cobj_handle(self, siter, tree_iter_s));
+  int depth = tdis->ti.depth;
+
+  tdid->ti.depth = depth;
+  tdid->ti.state = tdis->ti.state;
+  tdid->lastnode = tdis->lastnode;
+
+  memcpy(tdid->ti.path, tdis->ti.path, sizeof tdid->ti.path[0] * depth);
+
+  mut(diter);
+
+  return diter;
+}
+
 val tree_reset(val iter, val tree)
 {
   val self = lit("tree-reset");
@@ -930,6 +950,7 @@ void tree_init(void)
   reg_fun(intern(lit("tree-begin"), user_package), func_n1(tree_begin));
   reg_fun(intern(lit("tree-begin-at"), user_package), func_n2(tree_begin_at));
   reg_fun(intern(lit("copy-tree-iter"), user_package), func_n1(copy_tree_iter));
+  reg_fun(intern(lit("replace-tree-iter"), user_package), func_n2(replace_tree_iter));
   reg_fun(intern(lit("tree-reset"), user_package), func_n2(tree_reset));
   reg_fun(intern(lit("tree-reset-at"), user_package), func_n3(tree_reset_at));
   reg_fun(intern(lit("tree-next"), user_package), func_n1(tree_next));

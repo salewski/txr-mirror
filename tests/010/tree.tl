@@ -103,6 +103,17 @@
               (key (tree-next t1))))
       (1 2 3))
 
+(test (let* ((t0 (tree-begin tr))
+             (t1 (progn (tree-next t0) (copy-tree-iter t0)))
+             (t2 (replace-tree-iter (tree-begin tr) t0)))
+        (tree-next t0)
+        (tree-next t0)
+        (list (key (tree-next t1))
+              (key (tree-next t1))
+              (key (tree-next t2))
+              (key (tree-next t2))))
+      (1 2 1 2))
+
 (test (tree-next (tree-begin-at tr 20)) nil)
 
 (test (tree-next (tree-begin-at #T(()) 0)) nil)
