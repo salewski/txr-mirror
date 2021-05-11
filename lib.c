@@ -7450,6 +7450,22 @@ INLINE val do_generic_funcall(val fun, struct args *args_in)
       return vm_execute_toplevel(fun);
     } else if (fun->co.cls == carray_s) {
       goto carray;
+    } else if (fun->co.cls == tree_s) {
+      switch (args->fill) {
+      case 0:
+        callerror(fun, lit("missing required arguments"));
+      case 1:
+        switch (type(args->arg[0])) {
+        case RNG:
+          return sub(fun, args->arg[0]->rn.from, args->arg[0]->rn.to);
+        default:
+          return ref(fun, args->arg[0]);
+        }
+      case 2:
+        return sub(fun, args->arg[0], args->arg[1]);
+      default:
+        callerror(fun, lit("too many arguments"));
+      }
     } else if (obj_struct_p(fun)) {
       fun = method(fun, lambda_s);
       break;
@@ -11410,6 +11426,8 @@ val sub(val seq, val from, val to)
   case COBJ:
     if (seq->co.cls == carray_s)
       return carray_sub(seq, from, to);
+    if (seq->co.cls == tree_s)
+      return sub_tree(seq, from, to);
     if (obj_struct_p(seq)) {
       val lambda_meth = get_special_slot(seq, lambda_m);
       if (lambda_meth)
@@ -11433,6 +11451,8 @@ val ref(val seq, val ind)
       return gethash(seq, ind);
     if (seq->co.cls == carray_s)
       return carray_ref(seq, ind);
+    if (seq->co.cls == tree_s)
+      return tree_lookup(seq, ind);
     if (obj_struct_p(seq)) {
       val lambda_meth = get_special_slot(seq, lambda_m);
       if (lambda_meth)

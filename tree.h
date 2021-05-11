@@ -57,4 +57,5 @@ val tree_reset_at(val iter, val tree, val lowkey);
 val tree_next(val iter);
 val tree_peek(val iter);
 val tree_clear(val tree);
+val sub_tree(val tree, val from, val to);
 void tree_init(void);

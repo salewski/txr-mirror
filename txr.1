@@ -15145,6 +15145,19 @@ if there is no such entry. The expression
 .meta alt
 is always evaluated, whether or not its value is used.
 
+.meIP >> [ search-tree << key ]
+Retrieves an element from the search tree as if by applying the
+.code tree-lookup
+function to
+.metn key .
+
+.meIP >> [ search-tree << from-key .. to-below-key ]
+Retrieves a list of elements from the search tree as if by evaluating the
+.mono
+.meti (sub-tree < search-tree < from-key << to-below-key )
+.onom
+expression.
+
 .meIP >> [ regex >> [ start <> [ from-end ]] < string ]
 Determine whether regular expression
 .meta regex
@@ -30605,6 +30618,18 @@ object, then the function behaves like
 
 If
 .meta sequence
+is a
+.code tree
+object, then the function behaves like
+.codn sub-tree .
+Note: because
+.code sub-tree
+is not an accessor, assigning to the
+.code sub
+syntax in this case will produce an error.
+
+If
+.meta sequence
 is a structure, it must support the
 .code lambda
 method. The
@@ -31591,6 +31616,16 @@ rather than an error. For other sequence types, such accesses
 are erroneous. For hashes, accesses to nonexistent elements
 are treated leniently, and produce
 .codn nil .
+
+If
+.meta sequence
+is a search tree, then
+.code ref
+behaves like
+.codn tree-lookup .
+The
+.code refset
+function is not supported by search trees.
 
 The
 .code refset
@@ -51924,6 +51959,46 @@ is invoked more than once on the same iterator without any intervening calls to
 .codn tree-next ,
 it returns the same node; it does not appear to change the state of
 the iterator and therefore does not advance through successive nodes.
+
+.coNP Function @ sub-tree
+.synb
+.mets (sub-tree < tree >> [ from-key <> [ to-key ]])
+.syne
+.desc
+The
+.code sub-tree
+function selects those elements elements in
+.meta tree
+which are not less than
+.meta from-key
+but less than
+.metn to-key .
+
+If only the
+.meta from-key
+argument is specified, then
+.code sub-tree
+selects those elements which are not less than
+.metn from-key .
+
+Similarly, if only the
+.meta to-key
+argument is specified, then
+.code sub-tree
+selects those elements which are less than
+.metn to-key .
+
+If neither
+.meta from-key
+nor
+.meta to-key
+are specified, then
+.code sub-tree
+selects all elements from the tree.
+
+A list of the selected elements is returned, in which the elements appear in
+the same order as they do in
+.metn tree .
 
 .coNP Function @ copy-tree-iter
 .synb

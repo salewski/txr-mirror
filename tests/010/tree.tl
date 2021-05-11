@@ -33,6 +33,24 @@
   (tree-lookup tr 18) 18
   (tree-lookup tr 19) 19)
 
+(mtest
+  [tr 0] 0
+  [tr 5] 5
+  [tr 19] 19)
+
+(mtest
+  [tr 0..3] (0 1 2)
+  [tr 3..5] (3 4)
+  [tr -2..0] ()
+  [tr -2..4] (0 1 2 3)
+  [tr :..4] (0 1 2 3)
+  [tr 18..100] (18 19)
+  [tr 18..:] (18 19)
+  [tr 100..200] ())
+
+(vtest
+  [tr :..:] (range 0 19))
+
 (vtest (build (for* ((i (tree-begin tr))
                      (n (tree-next i)))
                     (n)

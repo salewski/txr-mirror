@@ -922,6 +922,28 @@ val tree_clear(val tree)
   return oldsize ? num(oldsize) : nil;
 }
 
+val sub_tree(val tree, val from, val to)
+{
+  val self = lit("sub_tree");
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  val iter = if3(missingp(from), tree_begin(tree), tree_begin_at(tree, from));
+  val node, key;
+  list_collect_decl (out, ptail);
+
+  if (missingp(to)) {
+    while ((node = tree_next(iter)))
+      ptail = list_collect(ptail, node->tn.key);
+  } else {
+    while (and2((node = tree_next(iter)),
+                if3(tr->less_fn,
+                    funcall2(tr->less_fn, (key = node->tn.key), to),
+                    less((key = node->tn.key), to))))
+      ptail = list_collect(ptail, key);
+  }
+
+  return out;
+}
+
 void tree_init(void)
 {
   tree_s = intern(lit("tree"), user_package);
@@ -956,5 +978,6 @@ void tree_init(void)
   reg_fun(intern(lit("tree-next"), user_package), func_n1(tree_next));
   reg_fun(intern(lit("tree-peek"), user_package), func_n1(tree_peek));
   reg_fun(intern(lit("tree-clear"), user_package), func_n1(tree_clear));
+  reg_fun(intern(lit("sub-tree"), user_package), func_n3o(sub_tree, 1));
   reg_var(tree_fun_whitelist_s, list(identity_s, equal_s, less_s, nao));
 }
