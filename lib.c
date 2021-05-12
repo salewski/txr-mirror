@@ -857,6 +857,16 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
         }
       }
     }
+    if (it->inf.obj->co.cls == tree_iter_s)
+    {
+      it->ui.iter = if3(support_rewind,
+                        copy_tree_iter(it->inf.obj),
+                        it->inf.obj);
+      it->ul.len = 0;
+      it->get = seq_iter_get_tree;
+      it->peek = seq_iter_peek_tree;
+      break;
+    }
     /* fallthrough */
   default:
     switch (it->inf.kind) {

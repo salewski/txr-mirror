@@ -166,6 +166,11 @@
     (copy-search-tree tr) #T((identity < =) 1 2 3)
     (make-similar-tree tr) #T((identity < =))))
 
+(test
+  (collect-each ((el (tree-begin #T(() 1 2 3 4 5) 2 5)))
+    (* 10 el))
+  (20 30 40))
+
 (mtest
   (uni #T(() "a" "b") #T(() "b" "c")) ("a" "b" "c")
   (diff #T(() "a" "b") #T(() "b" "c")) ("a")

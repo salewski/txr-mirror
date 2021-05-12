@@ -34636,6 +34636,14 @@ and
 are equivalent to
 .codn "(iter-begin X)" .
 
+Search trees are iterable. Iteration entails an in-order visits of the elements
+of a tree. A tree iterator created by
+.code tree-begin
+is also iterable. It is unspecified whether iteration over a
+.code tree-iter
+object modifies that object to perform the traversal, or whether it uses a copy
+of the iterator.
+
 If
 .code seq
 is not an iterable object, an error exception is thrown.
@@ -51865,6 +51873,19 @@ The nodes are traversed by applying the
 function to the returned
 .code tree-iter
 object.
+
+A
+.code tree-iter
+object is iterable.
+
+.TP* Example:
+
+.verb
+  (collect-each ((el (tree-begin #T(() 1 2 3 4 5)
+                                 2 5)))
+    (* 10 el))
+  --> (20 30 40)
+.brev
 
 .coNP Function @ tree-reset
 .synb
