@@ -69720,7 +69720,7 @@ for each successive operation. If every character is found, it means
 that either that exact string is found in the trie, or a prefix.
 The ambiguity can be resolved by testing whether the trie has a value
 at the last node using
-.codn tree-value-at .
+.codn trie-value-at .
 For instance, if
 .str catalog
 is inserted into an empty trie with value
@@ -69737,7 +69737,7 @@ indicating that
 .str cat
 is only a prefix of one or more entries in the trie.
 
-.coNP Function @ tree-value-at
+.coNP Function @ trie-value-at
 .synb
 .mets (trie-value-at << trie-context )
 .syne
