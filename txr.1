@@ -51830,66 +51830,64 @@ argument must be an object of type
 The returned object has the same key abstraction functions as
 .metn tree .
 
-.coNP Functions @ tree-begin and @ tree-begin-at
+.coNP Function @ tree-begin
 .synb
-.mets (tree-begin < tree )
-.mets (tree-begin-at < tree << low-key )
+.mets (tree-begin < tree >> [ low-key <> [ high-key ]])
 .syne
 .desc
 The
 .code tree-begin
 function returns a new object of type
 .code tree-iter
-which provides in-order traversal of all the nodes stored in the tree.
-
-The
-.code tree-begin-at
-similarly returns a new object of type
-.codn tree-iter .
-This object provides in-order traversal of those nodes stored in the tree
-whose key is equal to or higher than
-.metn low-key .
+which provides in-order traversal of nodes stored in
+.metn tree .
 
 The
 .meta tree
 argument must be an object of type
 .codn tree .
 
+If the
+.meta low-key
+argument is specified, then nodes with keys lesser than
+.meta low-key
+are omitted from the traversal.
+
+If the
+.meta high-key
+argument is specified, then nodes with keys equal to
+or greater than
+.meta high-key
+are omitted from the traversal.
+
 The nodes are traversed by applying the
 .code tree-next
-function to the
+function to the returned
 .code tree-iter
 object.
 
-.coNP Functions @ tree-reset and @ tree-reset-at
+.coNP Function @ tree-reset
 .synb
-.mets (tree-reset < iter < tree )
-.mets (tree-reset-at < iter < tree << low-key )
+.mets (tree-reset < iter < tree >> [ low-key <> [ high-key ]])
 .syne
 .desc
 The
 .code tree-reset
-and
-.code tree-reset-at
-functions are closely analogous to
-.code tree-begin
-and
-.codn tree-begin-at ,
-respectively.  These functions do not create a new iterator object.
+functions is closely analogous to
+.codn tree-begin .
 
 The
 .meta iter
 argument must be an existing
 .code tree-iter
-object, previously returned by a call to either
-.code tree-begin
-or
-.codn tree-begin-at .
+object, previously returned by a call to
+.codn tree-begin .
+
 Regardless of its current state, the
 .meta iter
 object is re-initialized to traverse the specified
-.metn tree ,
-and is then returned.
+.meta tree
+with the specified parameters, and is then returned.
 
 The
 .code tree-reset
@@ -51897,19 +51895,11 @@ function prepares
 .meta iter
 to traverse in the same manner as would new iterator returned by
 .code tree-begin
-for the
-.meta tree
-argument.
-The
-.code tree-begin-at
-function similarly prepares
-.meta iter
-to traverse in the same manner as a new iterator returned by
-.code tree-begin-at
-for the
-.meta tree
-and
+for the specified
+.metn tree ,
 .meta low-key
+and
+.meta high-key
 arguments.
 
 .coNP Functions @ tree-next and @ tree-peek
@@ -51928,9 +51918,7 @@ The iterator must be an object of type
 .codn tree-iter ,
 returned by the
 .code tree-begin
-or
-.code tree-begin-at
-functions.
+function.
 
 If there are no more nodes to be visited, these functions
 .codn nil .
@@ -51967,34 +51955,21 @@ the iterator and therefore does not advance through successive nodes.
 .desc
 The
 .code sub-tree
-function selects those elements elements in
-.meta tree
-which are not less than
-.meta from-key
-but less than
-.metn to-key .
+function selects elements from
+.metn tree ,
+which must be a search tree.
 
-If only the
+If
 .meta from-key
-argument is specified, then
-.code sub-tree
-selects those elements which are not less than
-.metn from-key .
+is specified, then elements lesser than
+.meta from-key
+are omitted from the selection.
 
-Similarly, if only the
+If
 .meta to-key
-argument is specified, then
-.code sub-tree
-selects those elements which are less than
-.metn to-key .
-
-If neither
-.meta from-key
-nor
+is specified, the elements greater than or equal to
 .meta to-key
-are specified, then
-.code sub-tree
-selects all elements from the tree.
+are omitted from the selection.
 
 A list of the selected elements is returned, in which the elements appear in
 the same order as they do in
@@ -52010,9 +51985,7 @@ The
 function creates and returns a duplicate of the
 .meta iter
 object, which must be a tree iterator returned by
-.code tree-begin
-or
-.codn tree-begin-at .
+.codn tree-begin .
 
 The returned object has the same state as the original; it references the same
 traversal position in the same tree. However, it is independent of the original.
@@ -52038,9 +52011,7 @@ Both
 and
 .meta src-iter
 must be tree iterator objects returned by
-.code tree-begin
-or
-.codn tree-begin-at .
+.codn tree-begin .
 
 The contents of
 .meta dest-iter

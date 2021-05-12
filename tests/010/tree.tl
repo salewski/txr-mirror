@@ -84,28 +84,28 @@
 
 (test (tree-delete tr 6) 6)
 
-(vtest (build (for* ((i (tree-begin-at tr 6))
+(vtest (build (for* ((i (tree-begin tr 6))
                      (n (tree-next i)))
                     (n)
                     ((set n (tree-next i)))
                 (add (key n))))
        (range 7 19))
 
-(vtest (build (for* ((i (tree-begin-at tr 0))
+(vtest (build (for* ((i (tree-begin tr 0))
                      (n (tree-next i)))
                     (n)
                     ((set n (tree-next i)))
                 (add (key n))))
        (rlist 0..5 7..19))
 
-(vtest (build (for* ((i (tree-begin-at tr 8))
+(vtest (build (for* ((i (tree-begin tr 8))
                      (n (tree-next i)))
                     (n)
                     ((set n (tree-next i)))
                 (add (key n))))
        (range 8 19))
 
-(vtest (build (for* ((i (tree-reset-at (tree-begin #T(())) tr 8))
+(vtest (build (for* ((i (tree-reset (tree-begin #T(())) tr 8))
                      (n (tree-next i)))
                     (n)
                     ((set n (tree-next i)))
@@ -132,10 +132,10 @@
               (key (tree-next t2))))
       (1 2 1 2))
 
-(test (tree-next (tree-begin-at tr 20)) nil)
+(test (tree-next (tree-begin tr 20)) nil)
 
-(test (tree-next (tree-begin-at #T(()) 0)) nil)
-(test (key (tree-next (tree-begin-at #T(() 1) 1))) 1)
+(test (tree-next (tree-begin #T(()) 0)) nil)
+(test (key (tree-next (tree-begin #T(() 1) 1))) 1)
 
 (mtest
   (tree-delete tr 0) 0

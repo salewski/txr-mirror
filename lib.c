@@ -743,7 +743,7 @@ static void seq_iter_rewind(seq_iter_t *it, val self)
       it->ui.iter = hash_reset(it->ui.iter, it->inf.obj);
       break;
     case SEQ_TREELIKE:
-      it->ui.iter = tree_reset(it->ui.iter, it->inf.obj);
+      it->ui.iter = tree_reset(it->ui.iter, it->inf.obj, colon_k, colon_k);
       break;
     default:
       break;
@@ -887,7 +887,7 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
       it->peek = seq_iter_peek_hash;
       break;
     case SEQ_TREELIKE:
-      it->ui.iter = tree_begin(it->inf.obj);
+      it->ui.iter = tree_begin(it->inf.obj, colon_k, colon_k);
       it->ul.len = 0;
       it->get = seq_iter_get_tree;
       it->peek = seq_iter_peek_tree;
@@ -11882,7 +11882,7 @@ val where(val func, val seq)
     return make_lazy_cons_car_cdr(func_f1(hash_iter, lazy_where_hash_func),
                                   key, func);
   } else if (treep(seq)) {
-    val tree_iter = tree_begin(seq);
+    val tree_iter = tree_begin(seq, colon_k, colon_k);
 
     for (;;) {
       val node = tree_next(tree_iter);
@@ -13092,7 +13092,7 @@ tail:
         populate_obj_hash(slot(obj, sn), ctx);
       }
     } else if (treep(obj)) {
-      val iter = tree_begin(obj);
+      val iter = tree_begin(obj, colon_k, colon_k);
       val node;
       while ((node = tree_next(iter)))
         populate_obj_hash(key(node), ctx);

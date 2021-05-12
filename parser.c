@@ -411,7 +411,7 @@ tail:
           break;
       }
     } else if (treep(obj)) {
-      val iter = tree_begin(obj);
+      val iter = tree_begin(obj, colon_k, colon_k);
       val node;
       val nodes = nil;
       cnum old_circ_count = p->circ_count;

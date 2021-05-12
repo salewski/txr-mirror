@@ -73,7 +73,9 @@ struct tree_iter {
 
 struct tree_diter {
   struct tree_iter ti;
+  val tree;
   val lastnode;
+  val highkey;
 };
 
 #define tree_iter_init(self) { (self), 0, tr_visited_nothing, { 0 } }
@@ -774,7 +776,9 @@ static void tree_iter_mark(val tree_iter)
   for (i = 0; i < tdi->ti.depth; i++)
     gc_mark(tdi->ti.path[i]);
 
+  gc_mark(tdi->tree);
   gc_mark(tdi->lastnode);
+  gc_mark(tdi->highkey);
 }
 
 static struct cobj_ops tree_iter_ops = cobj_ops_init(eq,
@@ -783,7 +787,7 @@ static struct cobj_ops tree_iter_ops = cobj_ops_init(eq,
                                                      tree_iter_mark,
                                                      cobj_eq_hash_op);
 
-val tree_begin(val tree)
+val tree_begin(val tree, val lowkey, val highkey)
 {
   val self = lit("tree-begin");
   struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
@@ -792,22 +796,17 @@ val tree_begin(val tree)
   val iter = cobj(coerce(mem_t *, tdi), tree_iter_s, &tree_iter_ops);
 
   tdi->ti.self = iter;
-  tdi->lastnode = tr->root;
+  tdi->tree = tree;
 
-  return iter;
-}
+  if (!missingp(lowkey))
+    tn_find_low(tr->root, tdi, tr, lowkey);
+  else
+    tdi->lastnode = tr->root;
 
-val tree_begin_at(val tree, val lowkey)
-{
-  val self = lit("tree-begin-at");
-  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
-  struct tree_diter *tdi = coerce(struct tree_diter *,
-                                  chk_calloc(1, sizeof *tdi));
-  val iter = cobj(coerce(mem_t *, tdi), tree_iter_s, &tree_iter_ops);
-
-  tdi->ti.self = iter;
-
-  tn_find_low(tr->root, tdi, tr, lowkey);
+  if (!missingp(highkey))
+    tdi->highkey = highkey;
+  else
+    tdi->highkey = iter;
 
   return iter;
 }
@@ -825,7 +824,13 @@ val copy_tree_iter(val iter)
   tdid->ti.self = iter_copy;
   tdid->ti.depth = depth;
   tdid->ti.state = tdis->ti.state;
+  tdid->tree = tdis->tree;
   tdid->lastnode = tdis->lastnode;
+
+  if (tdis->highkey == iter)
+    tdid->highkey = iter_copy;
+  else
+    tdid->highkey = tdis->highkey;
 
   memcpy(tdid->ti.path, tdis->ti.path, sizeof tdid->ti.path[0] * depth);
 
@@ -843,7 +848,13 @@ val replace_tree_iter(val diter, val siter)
 
   tdid->ti.depth = depth;
   tdid->ti.state = tdis->ti.state;
+  tdid->tree = tdis->tree;
   tdid->lastnode = tdis->lastnode;
+
+  if (tdis->highkey == siter)
+    tdid->highkey = diter;
+  else
+    tdid->highkey = tdis->highkey;
 
   memcpy(tdid->ti.path, tdis->ti.path, sizeof tdid->ti.path[0] * depth);
 
@@ -852,7 +863,7 @@ val replace_tree_iter(val diter, val siter)
   return diter;
 }
 
-val tree_reset(val iter, val tree)
+val tree_reset(val iter, val tree, val lowkey, val highkey)
 {
   val self = lit("tree-reset");
   struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
@@ -862,23 +873,19 @@ val tree_reset(val iter, val tree)
 
   tdi->ti = it;
   set(mkloc(tdi->ti.self, iter), iter);
-  set(mkloc(tdi->lastnode, iter), tr->root);
+  set(mkloc(tdi->tree, iter), tree);
 
-  return iter;
-}
+  if (!missingp(lowkey)) {
+    tdi->lastnode = nil;
+    tn_find_low(tr->root, tdi, tr, lowkey);
+  } else {
+    set(mkloc(tdi->lastnode, iter), tr->root);
+  }
 
-val tree_reset_at(val iter, val tree, val lowkey)
-{
-  val self = lit("tree-reset-at");
-  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
-  struct tree_diter *tdi = coerce(struct tree_diter *,
-                                  cobj_handle(self, iter, tree_iter_s));
-  const struct tree_iter it = tree_iter_init(0);
-
-  tdi->ti = it;
-  tdi->lastnode = tr->root;
-
-  tn_find_low(tr->root, tdi, tr, lowkey);
+  if (!missingp(highkey))
+    set(mkloc(tdi->highkey, iter), highkey);
+  else
+    tdi->highkey = iter;
 
   return iter;
 }
@@ -888,10 +895,24 @@ val tree_next(val iter)
   val self = lit("tree-next");
   struct tree_diter *tdi = coerce(struct tree_diter *,
                                   cobj_handle(self, iter, tree_iter_s));
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tdi->tree, tree_s));
 
   if (tdi->lastnode) {
     val node = tn_find_next(tdi->lastnode, &tdi->ti);
-    set(mkloc(tdi->lastnode, iter), node);
+    if (tdi->highkey == iter) {
+      set(mkloc(tdi->lastnode, iter), node);
+      return node;
+    } else if (node) {
+      val key = node->tn.key;
+      if (if3(tr->less_fn,
+              funcall2(tr->less_fn, key, tdi->highkey),
+              less(key, tdi->highkey)))
+        return set(mkloc(tdi->lastnode, iter), node);
+      else
+        return tdi->lastnode = nil;
+    } else {
+      return tdi->lastnode = nil;
+    }
     return node;
   }
 
@@ -903,9 +924,21 @@ val tree_peek(val iter)
   val self = lit("tree-peek");
   struct tree_diter *tdi = coerce(struct tree_diter *,
                                   cobj_handle(self, iter, tree_iter_s));
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tdi->tree, tree_s));
 
   if (tdi->lastnode) {
     val node = tn_peek_next(tdi->lastnode, &tdi->ti);
+    if (tdi->highkey == iter) {
+      return node;
+    } else if (node) {
+      val key = node->tn.key;
+      if (if3(tr->less_fn,
+              funcall2(tr->less_fn, key, tdi->highkey),
+              less(key, tdi->highkey)))
+        return node;
+      else
+        return nil;
+    }
     return node;
   }
 
@@ -924,22 +957,12 @@ val tree_clear(val tree)
 
 val sub_tree(val tree, val from, val to)
 {
-  val self = lit("sub_tree");
-  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
-  val iter = if3(missingp(from), tree_begin(tree), tree_begin_at(tree, from));
-  val node, key;
+  val iter = tree_begin(tree, from, to);
+  val node;
   list_collect_decl (out, ptail);
 
-  if (missingp(to)) {
-    while ((node = tree_next(iter)))
-      ptail = list_collect(ptail, node->tn.key);
-  } else {
-    while (and2((node = tree_next(iter)),
-                if3(tr->less_fn,
-                    funcall2(tr->less_fn, (key = node->tn.key), to),
-                    less((key = node->tn.key), to))))
-      ptail = list_collect(ptail, key);
-  }
+  while ((node = tree_next(iter)))
+    ptail = list_collect(ptail, node->tn.key);
 
   return out;
 }
@@ -969,12 +992,10 @@ void tree_init(void)
   reg_fun(intern(lit("tree-delete-node"), user_package), func_n2(tree_delete_node));
   reg_fun(intern(lit("tree-delete"), user_package), func_n2(tree_delete));
   reg_fun(intern(lit("tree-root"), user_package), func_n1(tree_root));
-  reg_fun(intern(lit("tree-begin"), user_package), func_n1(tree_begin));
-  reg_fun(intern(lit("tree-begin-at"), user_package), func_n2(tree_begin_at));
+  reg_fun(intern(lit("tree-begin"), user_package), func_n3o(tree_begin, 1));
   reg_fun(intern(lit("copy-tree-iter"), user_package), func_n1(copy_tree_iter));
   reg_fun(intern(lit("replace-tree-iter"), user_package), func_n2(replace_tree_iter));
-  reg_fun(intern(lit("tree-reset"), user_package), func_n2(tree_reset));
-  reg_fun(intern(lit("tree-reset-at"), user_package), func_n3(tree_reset_at));
+  reg_fun(intern(lit("tree-reset"), user_package), func_n4o(tree_reset, 2));
   reg_fun(intern(lit("tree-next"), user_package), func_n1(tree_next));
   reg_fun(intern(lit("tree-peek"), user_package), func_n1(tree_peek));
   reg_fun(intern(lit("tree-clear"), user_package), func_n1(tree_clear));
