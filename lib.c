@@ -4985,7 +4985,7 @@ val cat_str(val items, val sep)
   wchar_t onech[] = wini(" ");
 
 
-  cat_str_init(&cs, sep, wref(onech), self);
+  cat_str_init(&cs, sep, onech, self);
 
   seq_iter_init(self, &item_iter, items);
   more = seq_get(&item_iter, &item);
@@ -5014,7 +5014,7 @@ static val vscat(val sep, va_list vl1, va_list vl2, val self)
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
-  cat_str_init(&cs, sep, wref(onech), self);
+  cat_str_init(&cs, sep, onech, self);
 
   for (item = va_arg(vl1, val); item != nao; item = next)
   {
@@ -5070,7 +5070,7 @@ val scat3(val s1, val sep, val s2)
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
-  cat_str_init(&cs, sep, wref(onech), self);
+  cat_str_init(&cs, sep, onech, self);
 
   cat_str_measure(&cs, s1, 1, self);
   cat_str_measure(&cs, s2, 0, self);
@@ -5092,7 +5092,7 @@ val join_with(val sep, struct args *args)
   struct cat_str cs;
   wchar_t onech[] = wini(" ");
 
-  cat_str_init(&cs, sep, wref(onech), self);
+  cat_str_init(&cs, sep, onech, self);
 
   for (index = 0, iter = args->list, more = args_more_nozap(args, index, iter);
        more;)
