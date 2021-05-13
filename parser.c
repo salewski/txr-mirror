@@ -135,9 +135,11 @@ void parser_common_init(parser_t *p)
   p->scanner = convert(scanner_t *, yyscan);
   yyset_extra(p, p->scanner);
   p->recent_tok.yy_char = 0;
+  p->recent_tok.yy_lex_state = 0;
   p->recent_tok.yy_lval.val = 0;
   for (i = 0; i < 4; i++) {
     p->tok_pushback[i].yy_char = 0;
+    p->tok_pushback[i].yy_lex_state = 0;
     p->tok_pushback[i].yy_lval.val = 0;
   }
   p->tok_idx = 0;

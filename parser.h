@@ -39,6 +39,7 @@ typedef struct parser parser_t;
 struct yy_token {
   int yy_char;
   YYSTYPE yy_lval;
+  int yy_lex_state;
 };
 
 struct circ_stack {

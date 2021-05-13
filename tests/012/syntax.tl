@@ -1,5 +1,11 @@
 (load "../common")
 
+"top level literal"
+
+".."
+
+"."
+
 #;(commented out list)
 #;3.14
 #;abc

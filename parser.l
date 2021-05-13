@@ -1222,11 +1222,14 @@ int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner)
     struct yy_token *tok = &yyextra->tok_pushback[--yyextra->tok_idx];
     yyextra->recent_tok = *tok;
     *yylval_param = tok->yy_lval;
+    if (tok->yy_lex_state && tok->yy_lex_state != YYSTATE)
+      yy_push_state(tok->yy_lex_state, yyg);
     return tok->yy_char;
   }
 
   yy_char = yyextra->recent_tok.yy_char = yylex_impl(yylval_param, yyscanner);
   yyextra->recent_tok.yy_lval = *yylval_param;
+  yyextra->recent_tok.yy_lex_state = YYSTATE;
 
   return yy_char;
 }
