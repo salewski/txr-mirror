@@ -1,3 +1,46 @@
+                                    TXR 259
+                                   2021-05-13
+
+
+  Features
+
+  - lib:
+    - New rel-path function for calculating relative path
+      between two directories.
+    - format function's ~x/~X supports printig buffer
+      objects in hex.
+  - structural pattern matching:
+    - new each-match family of macros for iterating over
+      sequences, with destructuring.
+  - search trees:
+    - numerous new functions
+    - tree iterators support sub-ranges of trees
+    - trees are now sequences and can be mapped over with
+      mapcar, each and other functions.
+  - build:
+    - fixed issue with ./reconfigure overwriting itself,
+      causing instability.
+    - ./reconfigure takes configure parameters to be added.
+
+  Bugs
+
+  - join-with segfault on character (not string) separator.
+  - parser:
+    - regression introduced in 258: crash when the #; syntax
+      for commenting out an object is processed.
+    - bug in handling certain objects, such as string
+      literals, as top-level forms in a file.
+  - compiler:
+    - failing to diagnose wrong number of arguments in calls to lexical
+      functions that have been lambda-lifted to the top level.
+  - buffers:
+    - int-buf and uint-buf functions wrongly referring to
+      buffer's allocated size instead of its length.
+  - sha256/md5:
+    - memory leak in use of buffers.
+
+
+
                                     TXR 258
                                    2021-04-30
 
