@@ -295,4 +295,17 @@ function tocjump(hash) {
 </body>
 </html>
 @(end)
-@(do (file-put "share/txr/stdlib/doc-syms.tl" ^(defvarl doc-syms ,symhash)))
+@(bind (name code) @(transpose [nsort (mapcar (tb ((sym code))
+                                                (list (html-decode sym) code))
+                                              (hash-pairs symhash)) : car]))
+@(output "share/txr/stdlib/doc-syms.tl")
+(defparml doc-syms
+  (hash-from-pairs
+@  (repeat)
+      (@(tostring name) @(tostring code))
+@(first)
+    '((@(tostring name) @(tostring code))
+@(last)
+      (@(tostring name) @(tostring code)))))
+@ (end)
+@(end)
