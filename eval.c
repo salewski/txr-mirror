@@ -1965,7 +1965,7 @@ static val op_or(val form, val env)
 
 static val rt_defvarl(val sym)
 {
-  val self = lit("defvar");
+  val self = lit("sys:defvarl");
   val new_p;
   val cell = (lisplib_try_load(sym),
               gethash_c(self, top_vb, sym, mkcloc(new_p)));
@@ -1980,15 +1980,32 @@ static val rt_defvarl(val sym)
   return nil;
 }
 
+static val rt_defv(val sym)
+{
+  val self = lit("sys:defv");
+  val new_p;
+  val cell = (lisplib_try_load(sym),
+              gethash_c(self, top_vb, sym, mkcloc(new_p)));
+
+  if (new_p) {
+    uw_purge_deferred_warning(cons(var_s, sym));
+    uw_purge_deferred_warning(cons(sym_s, sym));
+    remhash(top_smb, sym);
+    return sys_rplacd(cell, cons(sym, nil));
+  }
+
+  return nil;
+}
+
 static val op_defvarl(val form, val env)
 {
   val args = rest(form);
   val sym = first(args);
-  val cell = rt_defvarl(sym);
+  val bind = rt_defv(sym);
 
-  if (cell) {
+  if (bind) {
     val value = eval(second(args), env, form);
-    rplacd(cell, cons(sym, value));
+    rplacd(bind, value);
   }
 
   return sym;
@@ -7180,6 +7197,7 @@ void eval_init(void)
   reg_varl(intern(lit("cptr-null"), user_package), cptr(0));
 
   reg_fun(intern(lit("rt-defvarl"), system_package), func_n1(rt_defvarl));
+  reg_fun(intern(lit("rt-defv"), system_package), func_n1(rt_defv));
   reg_fun(intern(lit("rt-defun"), system_package), func_n2(rt_defun));
   reg_fun(intern(lit("rt-defmacro"), system_package), func_n3(rt_defmacro));
   reg_fun(intern(lit("rt-defsymacro"), system_package), func_n2(rt_defsymacro));

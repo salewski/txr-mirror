@@ -1982,10 +1982,12 @@
 (defun expand-defvarl (form)
   (mac-param-bind form (op sym : value) form
     (with-gensyms (cell)
-      ^(let ((,cell (sys:rt-defvarl ',sym)))
-         (if ,cell
-           (usr:rplacd ,cell (cons ',sym ,value)))
-         ',sym))))
+      (if value
+        ^(let ((,cell (sys:rt-defv ',sym)))
+           (if ,cell
+             (usr:rplacd ,cell ,value))
+           ',sym)
+        ^(progn (sys:rt-defv ',sym) ',sym)))))
 
 (defun expand-defun (form)
   (mac-param-bind form (op name args . body) form
@@ -2164,7 +2166,7 @@
 
 (defvarl %big-endian% (equal (ffi-put 1 (ffi uint32)) #b'00000001'))
 
-(defvarl %tlo-ver% ^(6 0 ,%big-endian%))
+(defvarl %tlo-ver% ^(7 0 ,%big-endian%))
 
 (defvarl %package-manip% '(make-package delete-package
                            use-package unuse-package

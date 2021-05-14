@@ -743,7 +743,7 @@ static val read_file_common(val self, val stream, val error_stream, val compiled
 
     if (compiled && first) {
       val major = car(form);
-      if (neq(major, num_fast(6)))
+      if (neq(major, num_fast(6)) && neq(major, num_fast(7)))
         uw_throwf(error_s,
                   lit("cannot load ~s: version number mismatch"),
                   stream, nao);
