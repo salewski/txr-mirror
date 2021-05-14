@@ -1373,10 +1373,10 @@ val sys_rplaca(val cons, val new_car)
   return new_car;
 }
 
-val sys_rplacd(val cons, val new_car)
+val sys_rplacd(val cons, val new_cdr)
 {
-  (void) rplacd(cons, new_car);
-  return new_car;
+  (void) rplacd(cons, new_cdr);
+  return new_cdr;
 }
 
 loc car_l(val cons)
