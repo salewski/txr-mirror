@@ -41808,24 +41808,51 @@ object, using the dot notation unnecessarily.
 
 The non-overlapping semantics of
 .code sme
-develops as follows. When the
+evolves as follows. In the following description, it is understood
+that a match is required at every step. If that match fails, then
+the entire
+.code sme
+operator fails:
+
+.RS
+.IP 1.
+First,
 .meta spat
-pattern matches a prefix of the input object, then a middle suffix is
-calculated of the input object by dropping leading elements from it. The number
-of elements dropped is equal to the length
+is required to match a a prefix of the input list. If the match
+succeeds, then a
+.I "middle suffix"
+of the input is calculated by dropping from it leading
+elements. The number of elements dropped is equal to the length of
 .metn spat .
-The
-.meta mpat
-is then similarly matched against a prefix of this middle suffix. If that match
-is successful, a number of leading elements equal to the length of
-.meta mpat
-is dropped from the middle suffix to determine the final suffix.
-Then
+.IP 2.
+The middle suffix is then searched for an occurrence of the middle pattern
+.metn mpat ,
+as if using the
+.code scan
+pattern operator. All elements skipped by the search are dropped,
+until a match is found.
+.IP 3.
+At that point, if
+.meta mvar
+has been specified, it is bound to the remaining input, which still
+includes the part which just matched
+.metn mpat .
+.IP 4.
+Next, a number of elements equal to the length of
+.metn mpat ,
+are dropped from the middle suffix, leaving a residue comprising the
+.IR "final suffix" .
+.IP 5.
+The end pattern
 .meta epat
-is matched against the tail portion of the final suffix which is equal
-to its length. If the final suffix is shorter than
-.metn epat ,
-then the match isn't possible.
+must then match a suffix of the final suffix.
+.IP 6.
+If the
+.meta evar
+variable has been specified, it is bound to the entire suffix that
+was matched by
+.metn epat .
+.RE
 
 .TP* Examples:
 
