@@ -9254,28 +9254,40 @@ and if it is the last repetition.
 .PP
 
 The precedence among the clauses which take an iteration is:
-.codn "single > first > mod > modlast > last > main" .
-That is if two or more of these
+.codn "single > first > modlast > last > mod > main" .
+That is, whenever two or more of these
 clauses can apply to a repetition, then the leftmost one in this precedence
-list applies. For instance, if there is just a single repetition, then any of
-these special clause types can apply to that repetition, since it is the only
-repetition, as well as the first and last one. In this situation, if there is a
+list will be selected. It is possible for all these clauses to be viable
+for processing the same repetition.  If a
+.code repeat
+occurs which has only one repetition, then that repetition is simultaneously
+the first, only and last repetition. Moreover, it also matches
+.code "(mod 0 m)"
+and, because it is the last repetition, it matches
+.codn "(modlast 0 m)" .
+In this situation, if there is a
 .code @(single)
-clause present, then the repetition is processed using that clause.
-Otherwise, if there is a
+clause present, then the repetition shall be processed using that
+clause.  Otherwise, if there is a
 .code @(first)
-clause present, that clause is used. Failing
+clause present, that clause is activated. Failing
 that,
-.code @(mod)
-is used if there is such a clause and its numeric conditions
-are satisfied. If there isn't, then
 .code @(modlast)
-clauses are considered, and if there
-are none, or none of them activate, then
+is used if there is such a clause, featuring an
+.code n
+argument of zero. If there isn't, then the
 .code @(last)
-is considered. Finally if none
-of all these clauses are present or apply, then the repetition is processed
-using the main clause.
+clause is considered, if present. Otherwise, the
+.code @(mod)
+clause is considered if present with an
+.code n
+argument of zero. Otherwise, none of these clauses are present or applicable,
+and the repetition is processed using the main clause.
+
+.code @(empty)
+clause does not appear in the above precedence list because it is mutually
+exclusive with respect to the others; it is processed only when there are no
+iterations, in which case even the main clause isn't active.
 
 Repeat supports arguments.
 
