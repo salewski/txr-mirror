@@ -1988,8 +1988,8 @@ Moreover, most Unicode characters beyond U+007F may appear in a
 .metn bident ,
 with certain exceptions. A character may not be used if it is any of the
 Unicode space characters, a member of the high or low surrogate region,
-a member of any Unicode private use area, or is one of the two characters
-U+FFFE or U+FFFF. These situations produce a syntax error. Invalid UTF-8
+a member of any Unicode private-use area, or is either of the two characters
+U+FFFE and U+FFFF. These situations produce a syntax error. Invalid UTF-8
 in an identifier is also a syntax error.
 
 The rule still holds that a name cannot look like a number so
@@ -2329,7 +2329,7 @@ everything:
 The closest-match behavior for the negative match can be overridden to longest
 match behavior. A special syntax is provided for this: an asterisk between the
 .code @
-and the variable, e.g:
+and the variable, e.g.:
 .IP code:
 .mono
 \ a @*{FOO}cd
@@ -3100,7 +3100,7 @@ Note that the source code syntax of \*(TX string literals is specified
 in UTF-8, which is decoded into an internal string representation consisting
 of code points. The numeric escape sequences are an abstract syntax for
 specifying code points, not for specifying bytes to be inserted into the
-UTF-8 representation, even if they lie in the 8 bit range. Bytes cannot be
+UTF-8 representation, even if they lie in the 8-bit range. Bytes cannot be
 directly specified, other than literally.  However, when a \*(TX string object
 is encoded to UTF-8, every code point lying in the range U+DC00 through U+DCFF
 is converted to a a single byte, by taking the low-order eight bits of its
@@ -5361,7 +5361,9 @@ clause:
   @(end)
 .brev
 
-How gather works is that the text is searched for matches for the single line
+How
+.code gather
+works is that the text is searched for matches for the single-line
 and multiline queries. The clauses are applied in the order in which they appear.
 Whenever one of the clauses matches, any bindings it produces are retained and
 it is removed from further consideration. Multiple clauses can match at the
@@ -5383,9 +5385,14 @@ order:
   @(end)
 .brev
 
-If the until or last clause is present and a match occurs, then the matches
-from the other clauses are discarded and the gather terminates. The difference
-between
+If the
+.code until
+or
+.code last
+clause is present and a match occurs, then the matches
+from the other clauses are discarded and the
+.code gather
+terminates. The difference between
 .cod3 until / last
 is that any bindings bindings established in last are
 retained, and the input position is advanced past the matched material.
@@ -5417,11 +5424,14 @@ also occurs, whether or not the clause is
 Meaningful use of
 .code :mandatory
 requires that the gather be open-ended; it must allow some (or all) variables
-not to be required. The presence of the option means that for the gather
+not to be required. The presence of the option means that for
+.code gather
 to succeed, all required variables must be gathered first, but then termination
 must be achieved via the
 .cod3 until / last
-clause before all gather clauses are satisfied.
+clause before all
+.code gather
+clauses are satisfied.
 
 .coNP Keyword parameters in @ gather
 The
@@ -5457,12 +5467,17 @@ The presence of
 .code :vars
 changes the behavior in three ways.
 
-Firstly, even if all the clauses in the gather match successfully and are
+Firstly, even if all the clauses in the
+.code gather
+match successfully and are
 eliminated, the directive will fail if the required variables do not have
 bindings. It doesn't matter whether the bindings are existing, or whether they
-are established by the gather.
+are established by
+.codn gather .
 
-Secondly, if some of the clauses of the gather did not match, but all
+Secondly, if some of the clauses of
+.code gather
+did not match, but all
 of the required variables have bindings, then the directive succeeds.
 Without the presence of
 .codn :vars ,
@@ -5491,7 +5506,11 @@ directive is:
   @(end)
 .brev
 
-or with an until or last clause:
+or with an
+.code until
+or
+.code last
+clause:
 
 .verb
   @(collect)
@@ -5537,7 +5556,9 @@ clause never finds a match.
 
 If no
 .cod3 until / last
-last clause is specified, and the collect is not limited
+clause is specified, and the
+.code collect
+is not limited
 using parameters, the collection is unbounded: it consumes the entire data
 file.
 
@@ -5545,7 +5566,7 @@ file.
 
 If an
 .cod3 until / last
-last clause is specified, the collection stops when that clause
+clause is specified, the collection stops when that clause
 matches at the current position.
 
 If an
@@ -5555,9 +5576,17 @@ position, even if the main clause matches at that position also. Moreover, the
 position is not advanced.  The remainder of the query begins matching at that
 position.
 
-If a last clause terminates collect, the behavior is different. Any bindings
-captured by the main clause are thrown away, just like with the until clause.
-However, the bindings in the last clause itself survive, and the position is
+If a
+.code last
+clause terminates
+.codn collect ,
+the behavior is different. Any bindings
+captured by the main clause are thrown away, just like with the
+.code until
+clause.
+However, the bindings in the
+.code last
+clause itself survive, and the position is
 advanced to skip over that material.
 
 Example:
@@ -5625,7 +5654,9 @@ emerges. Furthermore, the position advances
 so variable now takes
 .codn 6 .
 
-The binding variables within the clause of a collect are treated specially.
+The binding variables within the clause of a
+.code collect
+are treated specially.
 The multiple matches for each variable are collected into lists,
 which then appear as array variables in the final output.
 
@@ -5667,19 +5698,26 @@ list binding.
 
 The clauses of
 .code collect
-may be nested.   Variable matches collated into lists in an
-inner collect, are again collated into nested lists in the outer collect.
+may be nested.
+Variable matches collated into lists in an inner
+.code collect
+are again collated into nested lists in the outer
+.codn collect .
 Thus an unbound variable wrapped in N nestings of
 .code @(collect)
 will
-be an N-dimensional list. A one dimensional list is a list of strings;
-a two dimensional list is a list of lists of strings, etc.
+be an N-dimensional list. A one-dimensional list is a list of strings;
+a two-dimensional list is a list of lists of strings, etc.
 
 It is important to note that the variables which are bound within the main
-clause of a collect. That is, the variables which are subject to
-collection appear, within the collect, as normal one-value bindings. The
-collation into lists happens outside of the collect. So for instance in the
-query:
+clause of a
+.codn collect .
+That is, the variables which are subject to collection appear, within the
+.codn collect ,
+as normal one-value bindings.
+The collation into lists happens outside of the
+.codn collect .
+So for instance in the query:
 
 .mono
  @(collect)
@@ -5696,15 +5734,21 @@ refers to that binding. The value of
 .code @x
 is different in each
 iteration, and these values are collected. What finally comes out of the
-collect clause is a single variable called
+.code collect
+clause is a single variable called
 .code x
 which holds a list containing each value that
-was ever instantiated under that name within the collect clause.
+was ever instantiated under that name within the
+.code collect
+clause.
 
-Also note that the until clause has visibility over the bindings
+Also note that the
+.code until
+clause has visibility over the bindings
 established in the main clause. This is true even in the terminating
-case when the until clause matches, and the bindings of the main clause
-are discarded.
+case when the
+.code until
+clause matches, and the bindings of the main clause are discarded.
 
 .coNP Keyword parameters in @ collect
 By default,
@@ -5730,8 +5774,9 @@ The
 keyword takes a numeric argument
 .metn n ,
 which is a Lisp expression.
-It causes the collect to terminate
-if it fails to find a match after skipping
+It causes
+.code collect
+to terminate if it fails to find a match after skipping
 .meta n
 lines from the starting position,
 or more than
@@ -5743,8 +5788,9 @@ lines since any successful match. For example,
 .brev
 
 specifies that the gap between the current position and the first
-match for the body of the collect, or between consecutive matches
-can be no longer than five lines. A
+match for the body of the
+.codn collect ,
+or between consecutive matches can be no longer than five lines. A
 .code :maxgap
 value of
 .code 0
@@ -5797,8 +5843,12 @@ This shorthand means the same thing as if
 .meIP :mintimes < n :maxtimes < n
 were specified.  This means that exactly
 .meta n
-matches must occur. If fewer occur, then the collect fails.
-Collect stops once it achieves
+matches must occur. If fewer occur, then
+.code collect
+fails.
+The
+.code collect
+stops once it achieves
 .code n
 matches.
 
@@ -5809,7 +5859,9 @@ of the
 .code :mintimes
 keyword is a Lisp expression which specifies that at least
 .meta n
-matches must occur, or else the collect fails.
+matches must occur, or else
+.code collect
+fails.
 
 .meIP :mintimes < n
 The Lisp argument expression
@@ -5827,8 +5879,12 @@ of the
 .code :lines
 keyword parameter
 is a Lisp expression which specifies the upper bound on how many lines
-should be scanned by collect, measuring from the starting position.
-The extent of the collect body is not counted. Example:
+should be scanned by
+.codn collect ,
+measuring from the starting position.
+The extent of the
+.code collect
+body is not counted. Example:
 
 .verb
   @(collect :lines 2)
@@ -5847,8 +5903,10 @@ and one line down.
 The
 .code :vars
 keyword specifies a restriction on what variables will emanate
-from the collect. Its argument is a list of variable
-names. An empty list may be specified using empty parentheses
+from the
+.codn collect .
+Its argument is a list of variable names.
+An empty list may be specified using empty parentheses
 or, equivalently, the symbol
 .codn nil .
 The
@@ -5874,8 +5932,11 @@ Unlike
 the
 .code :lists
 mechanism doesn't assert that only the listed variables may emanate
-from the collect. It also doesn't assert that each iteration of the
-collect must bind each of those variables.
+from the
+.codn collect .
+It also doesn't assert that each iteration of the
+.code collect
+must bind each of those variables.
 
 .meIP :counter >> { variable | >> ( variable << starting-value )}
 The
@@ -5929,10 +5990,14 @@ with a value of
 .coNP Specifying variables in @ collect
 Normally, any variable for which a new binding occurs in a
 .code collect
-block is collected. A collect clause may be "sloppy": it can neglect to collect
+block is collected. A
+.code collect
+clause may be "sloppy": it can neglect to collect
 some variables on some iterations, or bind some variables which are intended to
 behave like local temporaries, but end up collated into lists. Another issue is
-that the collect clause might not match anything at all, and then none of the
+that the
+.code collect
+clause might not match anything at all, and then none of the
 variables are bound.
 
 The
@@ -5956,13 +6021,18 @@ for the variable, which is optional.
 When a
 .code :vars
 list is specified, it means that only the given variables can
-emerge from the successful collect. Any newly introduced bindings for other
-variables do not propagate. More precisely,  whenever the collect body matches
-successfully, the following three rules apply:
+emerge from the successful
+.codn collect .
+Any newly introduced bindings for other variables do not propagate.
+More precisely, whenever the
+.code collect
+body matches successfully, the following three rules apply:
 .IP 1.
 If
 .code :vars
-specifies required variables, the collect body must bind all of them,
+specifies required variables, the
+.code collect
+body must bind all of them,
 or else must not bind any variable at all, whether listed in
 .code :vars
 or not, otherwise an exception of type
@@ -5972,14 +6042,20 @@ is thrown.
 If
 .code :vars
 specifies required variables, and also specifies default variables,
-and the collect body binds no variable at all, then the default variables
+and the
+.code collect
+body binds no variable at all, then the default variables
 are not bound to their default values.
 .IP 3.
 If
 .code :vars
 specifies optional variables, and all required variables are bound by
-the collect body, then all those optional variables that are not bound
-by the collect body are bound to their default values. Under this rule, if
+the
+.code collect
+body, then all those optional variables that are not bound
+by the
+.code collect
+body are bound to their default values. Under this rule, if
 .code :vars
 specifies no required variables, that is deemed to be
 logically equivalent to all required variables being bound.
@@ -5993,7 +6069,7 @@ specified in
 whether required or optional, are all bound to
 empty lists. These bindings are established after the processing of the
 .cod3 until / last
-last clause, if present.
+clause, if present.
 
 Example:
 
@@ -6066,7 +6142,9 @@ is bound to an empty list.
 .brev
 
 The following means: do not allow any variables to propagate out of any
-iteration of the collect and therefore collect nothing:
+iteration of the
+.code collect
+and therefore collect nothing:
 
 .verb
   @(collect :vars nil)
@@ -6079,7 +6157,9 @@ Instead of writing
 it is possible to write
 .codn @(repeat) .
 .code @(repeat)
-takes all collect keywords, except for
+takes all
+.code collect
+keywords, except for
 .codn :vars .
 There is a
 .code @(repeat)
@@ -6103,14 +6183,17 @@ exemplified by the following:
   @(end)
 .brev
 
-This means that the collect
+This means that the
+.code collect
 .B must
 be terminated by a match for the
 .cod3 until / last
 clause, or else by an explicit
 .codn @(accept) .
 
-Specifically, the collect cannot terminate due to simply running out of data,
+Specifically, the
+.code collect
+cannot terminate due to simply running out of data,
 or exceeding a limit on the number of matches that may be collected. In
 those situations, if an
 .code until
@@ -6118,7 +6201,9 @@ or
 .code last
 clause is present with
 .codn :mandatory ,
-the collect is deemed to have failed.
+the
+.code collect
+is deemed to have failed.
 
 .dir coll
 
@@ -6136,7 +6221,8 @@ works within a single line. With
 it is possible to
 recognize repeating regularities within a line and collect lists.
 
-Regular-expression based Positive Match variables work well with coll.
+Regular-expression-based Positive Match variables work well with
+.codn coll .
 
 Example: collect a comma-separated list, terminated by a space.
 .IP code:
@@ -6384,7 +6470,7 @@ takes all keywords, except
 
 The
 .code flatten
-directive can be used to convert variables to one dimensional
+directive can be used to convert variables to one-dimensional
 lists. Variables which have a scalar value are converted to lists containing
 that value. Variables which are multidimensional lists are flattened to
 one-dimensional lists.
@@ -9048,7 +9134,7 @@ one position less than the position given by
 If the variable is a list, it is treated as a list substitution,
 exactly as if it were the value of an unsubscripted list variable.
 The elements of the list are converted to strings and catenated
-together wit ha separator string between them, the default one being
+together with a separator string between them, the default one being
 a single space.
 
 An alternate character may be given as a string argument in the brace
@@ -10048,7 +10134,9 @@ mapping from uppercase letters to digits.
   @(deffilter sub x y)
 .brev
 
-The last deffilter has the same effect as the
+The last
+.code deffilter
+has the same effect as the
 .mono
 @(deffilter sub ("from" "to") ("---" "+++"))
 .onom
@@ -11254,7 +11342,7 @@ with the symbols
 and
 .code nil
 (note the case sensitivity of
-identifiers denoting symbols!) Furthermore, the symbol
+identifiers denoting symbols!). Furthermore, the symbol
 .code nil
 is also the empty list, which terminates nonempty lists.
 
@@ -11266,7 +11354,7 @@ are supported. \*(TL also supports global lexical variables via
 .codn defvarl .
 
 Functions are lexically scoped in \*(TL; they can be
-defined in pervasive global environment using
+defined in the pervasive global environment using
 .code defun
 or in local scopes using
 .code flet
@@ -14530,8 +14618,8 @@ When a function is needed which accesses an object, there are also
 alternatives. Instead of
 .code "(lambda (obj) obj.slot)"
 and
-.code "(lambda (obj arg) obj.(slot arg))"
-it is possible to simply the
+.codn "(lambda (obj arg) obj.(slot arg))" ,
+it is simpler to use the
 .code ".slot"
 and
 .code ".(slot arg)"
@@ -25309,7 +25397,7 @@ Object of the type
 are
 .IR buffers :
 vector-like objects specialized for holding binary data represented as
-a sequence of 8 bit bytes.  Buffers support operations specialized toward the
+a sequence of 8-bit bytes.  Buffers support operations specialized toward the
 encoding of Lisp values into machine-oriented data types, and decoding such
 data types into Lisp values.
 
@@ -25633,7 +25721,7 @@ The
 .code buf-put-i8
 converts
 .meta val
-into an eight bit signed integer, and stores it into the buffer at
+into an 8-bit signed integer, and stores it into the buffer at
 the offset indicated by
 .metn pos .
 
@@ -25649,7 +25737,7 @@ The
 .code buf-put-u8
 converts
 .meta val
-into an eight bit unsigned integer, and stores it into the buffer at
+into an 8-bit unsigned integer, and stores it into the buffer at
 the offset indicated by
 .metn pos .
 
@@ -25697,7 +25785,7 @@ The
 .code buf-put-i32
 converts
 .meta val
-into a 32 bit signed integer, and stores it into the buffer at
+into a 32-bit signed integer, and stores it into the buffer at
 the offset indicated by
 .metn pos .
 
@@ -25713,7 +25801,7 @@ The
 .code buf-put-u32
 converts
 .meta val
-into a 32 bit unsigned integer, and stores it into the buffer at
+into a 32-bit unsigned integer, and stores it into the buffer at
 the offset indicated by
 .metn pos .
 
@@ -25729,7 +25817,7 @@ The
 .code buf-put-i64
 converts
 .meta val
-into a 64 bit signed integer, and stores it into the buffer at
+into a 64-bit signed integer, and stores it into the buffer at
 the offset indicated by
 .metn pos .
 
@@ -25745,7 +25833,7 @@ The
 .code buf-put-u64
 converts the value
 .meta val
-into a 64 bit unsigned integer, and stores it into the buffer at
+into a 64-bit unsigned integer, and stores it into the buffer at
 the offset indicated by
 .metn pos .
 
@@ -25935,7 +26023,7 @@ the offset indicated by
 .desc
 The
 .code buf-get-i8
-function extracts and returns signed eight bit integer from
+function extracts and returns signed 8-bit integer from
 .meta buf
 at the offset given by
 .metn pos .
@@ -25947,7 +26035,7 @@ at the offset given by
 .desc
 The
 .code buf-get-u8
-function extracts and returns an unsigned eight bit integer from
+function extracts and returns an unsigned 8-bit integer from
 .meta buf
 at the offset given by
 .metn pos .
@@ -25959,7 +26047,7 @@ at the offset given by
 .desc
 The
 .code buf-get-i16
-function extracts and returns a signed 16 bit integer  from
+function extracts and returns a signed 16-bit integer from
 .meta buf
 at the offset given by
 .metn pos .
@@ -25971,7 +26059,7 @@ at the offset given by
 .desc
 The
 .code buf-get-u16
-function extracts and returns an unsigned 16 bit integer  from
+function extracts and returns an unsigned 16-bit integer from
 .meta buf
 at the offset given by
 .metn pos .
@@ -25983,7 +26071,7 @@ at the offset given by
 .desc
 The
 .code buf-get-i32
-function extracts and returns a signed 32 bit integer  from
+function extracts and returns a signed 32-bit integer from
 .meta buf
 at the offset given by
 .metn pos .
@@ -25995,7 +26083,7 @@ at the offset given by
 .desc
 The
 .code buf-get-u32
-function extracts and returns an unsigned 32 bit integer  from
+function extracts and returns an unsigned 32-bit integer from
 .meta buf
 at the offset given by
 .metn pos .
@@ -26007,7 +26095,7 @@ at the offset given by
 .desc
 The
 .code buf-get-i64
-function extracts and returns a signed 64 bit integer  from
+function extracts and returns a signed 64-bit integer from
 .meta buf
 at the offset given by
 .metn pos .
@@ -26019,7 +26107,7 @@ at the offset given by
 .desc
 The
 .code buf-get-u64
-function extracts and returns an unsigned 64 bit integer  from
+function extracts and returns an unsigned 64-bit integer from
 .meta buf
 at the offset given by
 .metn pos .
@@ -48308,7 +48396,7 @@ function suspends execution and yields a question out of the
 .code map
 block. It then classifies
 the item as a fruit or not according to the reply it receives. The reply
-emerges as a the result value of the
+emerges as the result value of the
 .code yield-from
 call.
 
@@ -48318,8 +48406,12 @@ macro converts the block to a generating function. The first call to the
 function is made with no argument, because the argument would be ignored
 anyway. The function returns a question, asking whether the first item
 in the list, the potato, is a fruit.
-To answer negatively, the user calls the function again, passing in
-.codn nil .
+To answer positively or negatively, the user calls the function again,
+passing in
+.code t
+or
+.codn nil ,
+respectively.
 The function returns the next question, which is answered in the
 same manner.
 
@@ -48593,7 +48685,7 @@ and
 
 Use
 .code amb
-to bind the of
+to bind the
 .code x
 and
 .code y
@@ -48601,7 +48693,7 @@ which satisfy the predicate
 .mono
 .meti (eql (* x y) 8)
 .onom
-non-deterministically:
+nondeterministically:
 
 .verb
   (amb-scope
@@ -59630,12 +59722,12 @@ distribution of values.
 Applications which critically depend on good PRNG behavior should choose
 large warm-up periods into the hundreds or thousands of iterations.
 If a small warm-up period is used, it is recommended to use larger seeds
-which initialize more of the 4096 bit state space.
+which initialize more of the 4096-bit state space.
 
 \*(TX's PRNG implementation addresses "problem 1" first problem by padding the
 unseeded portions of the state space with random values (from a static table
 that doesn't change). For instance, if the integer 1 is used to seed the space,
-then one 32 bit word of the space is set to the value 1. The remaining 15 are
+then one 32-bit word of the space is set to the value 1. The remaining 15 are
 populated from the random table. This helps to ensure that a good PRNG sequence
 is obtained immediately. However, it doesn't address "problem 2": that
 similar seed values generate similar sequences, when the warm-up period is
@@ -60279,7 +60371,7 @@ which constitute its UTF-8 representation.
 The optional
 .meta crc-prev
 argument defaults to zero. If specified, it should be a nonnegative integer in
-the 32 bit range. This argument is useful when a single CRC-32 must be
+the 32-bit range. This argument is useful when a single CRC-32 must be
 calculated in multiple operations over several objects. The first call should
 specify a value of zero, or omit the argument. To continue the checksum,
 each subsequent call to the function should pass as the
@@ -68618,7 +68710,7 @@ slots correspond to the
 and
 .code c_lflag
 members of the C structure. They hold integer values representing
-bit fields.
+bitfields.
 
 The
 .code cc
@@ -71669,7 +71761,7 @@ and
 .codn "unsigned long long" .
 
 .coNP FFI types @ int8 and @ uint8
-These types correspond to 8 bit signed and unsigned integers.
+These types correspond to 8-bit signed and unsigned integers.
 They convert like integer types: both Lisp integers and characters
 convert to these types, if in a suitable range; and under
 the reverse conversion, the foreign values become Lisp integers.
@@ -73042,7 +73134,7 @@ are given in the paragraph below entitled
 A
 .code ubit
 field stores values which follow a pure binary enumeration. For instance,
-a bit field of width 4 stores values from 0 to 15. On conversion from
+a bitfield of width 4 stores values from 0 to 15. On conversion from
 the Lisp structure to the foreign structure, the corresponding member
 must be a integer value in this range, or an error exception is thrown.
 
@@ -73061,7 +73153,7 @@ The
 .code sbit
 field creates a correspondence between a range of Lisp integers,
 and a foreign representation based on the two's complement system.
-The most significant bit of the bit field functions as a sign bit.
+The most significant bit of the bitfield functions as a sign bit.
 Values whose most significant bit is clear are positive, and use
 a pure binary representation just like their
 .code ubit
@@ -76826,8 +76918,8 @@ Furthermore, these files are architecture-independent, except that their
 encoding is in the local byte order ("endianness") of the host machine.
 The byte order is explicitly indicated in the files, and the
 .code load
-function resolves it. Thus a file produced by \*(TX running on a 64 bit big
-endian Power PC can be loaded by \*(TX running on 32 bit x86, which is
+function resolves it. Thus a file produced by \*(TX running on a 64-bit
+big-endian Power PC can be loaded by \*(TX running on 32-bit x86, which is
 little endian.
 
 A given \*(TX version may also be capable of loading files produced by
