@@ -17869,6 +17869,25 @@ forms the reference model for how the
 .code load
 function processes top-level forms.
 
+Note that, according to these rules, the constituent body forms of a
+.code macrolet
+or
+.code symacrolet
+top-level form are not individual top-level forms, even if the
+expansion of the construct combines the expanded versions of those
+forms with
+.codn progn .
+
+The form
+.code "(macrolet () (defmacro foo ()) (foo))"
+will therefore not work correctly. However, the specific problem in
+this situation can be be resolved by rewriting
+.code foo
+as a
+.code macrolet
+macro:
+.codn "(macrolet ((foo ())) (foo))" .
+
 See also: the
 .code make-env
 function.
@@ -76777,6 +76796,15 @@ This means that it is not a form based on any of the operators
 .code compile-only
 or
 .codn eval-only .
+
+Note that the constituent body forms of a
+.code macrolet
+or
+.code symacrolet
+top-level form are not individual top-level forms, even if the
+expansion of the construct combines the expanded versions of those
+forms with
+.codn progn .
 
 .SS* File Compilation Model
 
