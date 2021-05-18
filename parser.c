@@ -957,14 +957,13 @@ static void find_matching_syms(lino_completions_t *cpl,
         if (!fboundp(sym) && !mboundp(sym) && !special_operator_p(sym))
           continue;
         break;
-      case '[':
-        if (!boundp(sym) && !lookup_fun(nil, sym))
-          continue;
-        break;
       case 'M':
       case 'S':
         break;
+      case '[':
       default:
+        if (!fboundp(sym) && !boundp(sym))
+          continue;
         break;
       }
 
