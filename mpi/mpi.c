@@ -433,9 +433,10 @@ mp_err mp_get_uintptr(mp_int *mp, uint_ptr_t *z)
 
 #if MP_DIGIT_SIZE < SIZEOF_PTR
   mp_size ix;
-  mp_size nd = USED(mp);
-  for (ix = 0; ix < nd; ix++, out <<= MP_DIGIT_BIT)
+  for (ix = USED(mp) - 1; ix < MP_SIZE_MAX; ix--) {
+    out <<= MP_DIGIT_BIT;
     out |= DIGIT(mp, ix);
+  }
 #else
   out = DIGIT(mp, 0);
 #endif
@@ -548,9 +549,10 @@ mp_err mp_get_double_uintptr(mp_int *mp, double_uintptr_t *z)
 {
   double_uintptr_t out = 0;
   mp_size ix;
-  mp_size nd = USED(mp);
-  for (ix = 0; ix < nd; ix++, out <<= MP_DIGIT_BIT)
+  for (ix = USED(mp) - 1; ix < MP_SIZE_MAX; ix--) {
+    out <<= MP_DIGIT_BIT;
     out |= DIGIT(mp, ix);
+  }
 
   *z = (SIGN(mp) == MP_NEG) ? -out : out;
   return MP_OKAY;
