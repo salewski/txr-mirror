@@ -80,6 +80,8 @@
     "  |E|\n|V A N|\n  |S|\n  |T|"
     "Lispが好き、とても好き、私はLispの...全てにいつも...夢中なの。"
     "こんな広い分野の中、私が愛する...言語なら、やはり...Lispだけ。"
+    "This area is under 24 hour TTY surveillance."
+    "Imitation is the benignest form of forgery."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
