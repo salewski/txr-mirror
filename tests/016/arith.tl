@@ -121,3 +121,24 @@
       #xAABBCCDDEE)
 (test (ffi-get #b'000000AABBCCDDEE' (ffi be-int64))
       #xAABBCCDDEE)
+
+(test (mequal (ffi-put #x-8000 (ffi int16))
+              #b'0080'
+              #b'8000') t)
+
+(test (ffi-get (ffi-put #x-8000 (ffi int16)) (ffi int16))
+      #x-8000)
+
+(test (mequal (ffi-put #x-80000000 (ffi int32))
+              #b'00000080'
+              #b'80000000') t)
+
+(test (ffi-get (ffi-put #x-80000000 (ffi int32)) (ffi int32))
+      #x-80000000)
+
+(test (mequal (ffi-put #x-8000000000000000 (ffi int64))
+              #b'0000000000000080'
+              #b'8000000000000000') t)
+
+(test (ffi-get (ffi-put #x-8000000000000000 (ffi int64)) (ffi int64))
+      #x-8000000000000000)
