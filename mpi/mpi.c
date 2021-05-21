@@ -455,7 +455,7 @@ mp_err mp_get_intptr(mp_int *mp, int_ptr_t *z)
 
 int mp_in_range(mp_int *mp, uint_ptr_t lim, int unsig)
 {
-  const unsigned ptrnd = (SIZEOF_PTR + MP_DIGIT_BIT - 1) / MP_DIGIT_BIT;
+  const unsigned ptrnd = (SIZEOF_PTR + MP_DIGIT_SIZE - 1) / MP_DIGIT_SIZE;
   mp_size nd = USED(mp);
   int neg = ISNEG(mp);
 
@@ -561,13 +561,13 @@ mp_err mp_get_double_intptr(mp_int *mp, double_intptr_t *z)
   double_uintptr_t tmp = 0;
   mp_get_double_uintptr(mp, &tmp);
   /* Reliance on bitwise unsigned to two's complement conversion */
-  *z = convert(int_ptr_t, tmp);
+  *z = convert(double_intptr_t, tmp);
   return MP_OKAY;
 }
 
 static int s_mp_in_big_range(mp_int *mp, double_uintptr_t lim, int unsig)
 {
-  const unsigned ptrnd = (SIZEOF_DOUBLE_INTPTR + MP_DIGIT_BIT - 1) / MP_DIGIT_BIT;
+  const unsigned ptrnd = (SIZEOF_DOUBLE_INTPTR + MP_DIGIT_SIZE - 1) / MP_DIGIT_SIZE;
   mp_size nd = USED(mp);
 
   if (unsig && ISNEG(mp))
