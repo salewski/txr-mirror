@@ -71,3 +71,53 @@
 (test [apply bracket '(15 10 20 30)] 1)
 (test [apply bracket '(25 10 20 30)] 2)
 (test [apply bracket '(30 10 20 30)] 3)
+
+(test (typeof fixnum-max) fixnum)
+(test (typeof (succ fixnum-max)) bignum)
+(test (typeof fixnum-min) fixnum)
+(test (typeof (pred fixnum-min)) bignum)
+
+(test (< fixnum-min fixnum-max) t)
+(test (< (pred fixnum-min) fixnum-min) t)
+(test (> (succ fixnum-max) fixnum-max) t)
+
+(test (ffi-put #xA5 (ffi le-int16))
+      #b'A500')
+(test (ffi-put #xA5 (ffi be-int16))
+      #b'00A5')
+(test (mequal (ffi-put #xA5 (ffi int16))
+              #b'A500'
+              #b'00A5') t)
+
+(test (ffi-put #xAABBCC (ffi le-int32))
+      #b'CCBBAA00')
+(test (ffi-put #xAABBCC (ffi be-int32))
+      #b'00AABBCC')
+(test (mequal (ffi-put #xAABBCC (ffi int32))
+              #b'CCBBAA00'
+              #b'00AABBCC') t)
+
+(test (ffi-put #xAABBCCDDEE (ffi le-int64))
+      #b'EEDDCCBBAA000000')
+(test (ffi-put #xAABBCCDDEE (ffi be-int64))
+      #b'000000AABBCCDDEE')
+(test (mequal (ffi-put #xAABBCCDDEE (ffi int64))
+              #b'EEDDCCBBAA000000'
+              #b'000000AABBCCDDEE') t)
+
+(test (ffi-get #b'A500' (ffi le-int16))
+      #xA5)
+(test (ffi-get #b'00A5' (ffi be-int16))
+      #xA5)
+
+
+(test (ffi-get #b'CCBBAA00' (ffi le-int32))
+      #xAABBCC)
+(test (ffi-get #b'00AABBCC' (ffi be-int32))
+      #xAABBCC)
+
+
+(test (ffi-get #b'EEDDCCBBAA000000' (ffi le-int64))
+      #xAABBCCDDEE)
+(test (ffi-get #b'000000AABBCCDDEE' (ffi be-int64))
+      #xAABBCCDDEE)
