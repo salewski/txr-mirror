@@ -571,8 +571,9 @@ static int s_mp_in_big_range(mp_int *mp, double_uintptr_t lim, int unsig)
 {
   const unsigned ptrnd = (SIZEOF_DOUBLE_INTPTR + MP_DIGIT_SIZE - 1) / MP_DIGIT_SIZE;
   mp_size nd = USED(mp);
+  int neg = ISNEG(mp);
 
-  if (unsig && ISNEG(mp))
+  if (unsig && neg)
     return 0;
 
   if (nd < ptrnd)
@@ -584,7 +585,7 @@ static int s_mp_in_big_range(mp_int *mp, double_uintptr_t lim, int unsig)
   {
     mp_digit top = DIGITS(mp)[ptrnd - 1];
     lim >>= ((ptrnd - 1) * MP_DIGIT_BIT);
-    return top <= lim;
+    return (top - neg) <= lim;
   }
 }
 
