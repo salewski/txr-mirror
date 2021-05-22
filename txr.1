@@ -502,6 +502,18 @@ way, it prints a one-line banner is printed announcing the program
 name and version, and one line of help text instructing the user
 how to exit.
 
+Unless the
+.code -c
+or
+.code -f
+options are present, the first non-option argument is treated as a
+.meta script-file
+which is executed.  This is described after the following
+descriptions of all of the options.
+Any additional arguments have no fixed meaning; they are available to the
+\*(TX query or \*(TL application for specifying input files to be processed, or
+other meanings under the control of the application.
+
 Options which don't take an argument may be combined together.
 The
 .code -v
@@ -763,19 +775,38 @@ comment syntax can be used for better formatting:
 .RE
 
 .meIP -f < script-file
-Specifies the file from which the query is to be read, instead of the
+Provides a way to specify the file from which the query is to be read,
+as an alternative to using the main
 .meta script-file
 argument. This is useful in
 .code #!
 ("hash bang") scripts. (See Hash Bang Support below).
+Use of this option does not affect the order of processing. All of the options
+are processed first, before the is read, as if it were specified by the main
+.meta script-file
+option argument.
+If the argument to
+.code -f
+is
+.code -
+(dash) then the script will be read from standard input instead
+of a file.
+If this option is used, the first non-option argument, if there is one,
+no longer specifies the
+.metn script-file .
+It is an argument to the script, such as the name of an input source.
 
 .meIP -e < expression
 Evaluates a \*(TL expression for its side effects, without printing
 its value. Can be specified more than once. The
 .meta script-file
-argument becomes optional if
-.code -e
-is used at least once. If the evaluation of every
+argument becomes optional if at least one
+.codn -e ,
+.codn -p ,
+.code -P
+or
+.code -t
+option is processed. If the evaluation of every
 .meta expression
 evaluated this way terminates normally, and there is no
 .meta script-file
@@ -1002,25 +1033,60 @@ It may be possible to indicate EOF from the interactive terminal, and
 then specify more input which is interpreted as the second file, and so forth.
 
 .PP
-After the options, the remaining arguments are files. The first file argument
-specifies the script file, and is mandatory if the
+After the options, the remaining arguments are treated as follows.
+
+If neither the
 .code -f
-option has not been specified, and \*(TX isn't operating in interactive
-mode or evaluating expressions from the command line via
-.code -e
-or one of the related options.  A file argument consisting of a single
+nor the
+.code -c
+options were specified, then the first argument is treated as the
+.metn script-file .
+If no arguments are present, then \*(TX
+enters interactive mode, provided that none of the
+.codn -e ,
+.codn -p ,
+.code -P
+or
+.code -t
+options had been processed, in which case it instead terminates.
+
+The \*(TX Pattern Language has features for implicitly treating
+the subsequent command line arguments as input files.
+It follows the convention that an argument consisting of a single
 .code -
-means to read the standard input instead of opening a file.
+(dash) character specifies that standard input is to be used,
+instead of opening a file. If the query does not use the
+.code @(next)
+directive to select an alternative data source, and a pattern matching
+construct is processed which demands data, then the first argument
+will be opened as a data source. Arguments not opened as data sources
+can be assigned alternative meanings and uses, or can be ignored
+entirely, under control of the query.
 
 Specifying standard input as a source with an explicit
 .code -
-argument is unnecessary. If no data source arguments are present, then
+argument is unnecessary. If no arguments are present, then
 \*(TX scans standard input by default. This was not true in versions of \*(TX
 prior to 171; see the COMPATIBILITY section.
 
 .PP
-\*(TX begins by reading the script. In the case of the \*(TX pattern language,
-the entire query is scanned, internalized and then begins executing, if it is
+\*(TX begins by reading the script, which is given as the
+contents of the argument of the
+.code -c
+option, or else as the contents of an input source specified by the
+.code -f
+option or by the
+.meta script-file
+argument. If
+.code -f
+or the
+.meta script-file
+argument specify
+.code -
+(dash) then the script is read from standard input.
+
+In the case of the \*(TX pattern language,
+the entire query is scanned, internalized, and then begins executing, if it is
 free of syntax errors. (\*(TL is processed differently, form by form).  On the
 other hand, the pattern language reads data files in a lazy manner. A file
 isn't opened until the query demands material from that file, and then the
