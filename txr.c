@@ -79,7 +79,7 @@ static void help(void)
 "\n"
 "Usage:\n"
 "\n"
-"  ~a [ options ] script-file { data-file }*\n"
+"  ~a [ options ] script-file { argument }*\n"
 "\n"
 #if HAVE_TERMIOS
 "If no arguments are present, TXR will enter into interactive listener mode.\n"
