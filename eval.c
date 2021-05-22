@@ -4088,9 +4088,9 @@ static val me_case(val form, val menv)
 
     if (star) {
       if (atom(keys))
-        hash_keys = cons(keys = eval(keys, nil, form), nil);
+        hash_keys = cons(keys = expand_eval(keys, nil, menv), nil);
       else
-        hash_keys = keys = eval(cons(list_s, keys), nil, form);
+        hash_keys = keys = expand_eval(cons(list_s, keys), nil, menv);
     }
 
     if (consp(keys) && !cdr(keys))
