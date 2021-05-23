@@ -3164,7 +3164,7 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
     tft->alloc = ffi_fixed_alloc;
     tft->dynsize = ffi_fixed_dynsize;
     tft->free = free;
-    tft->by_value_in = 1;
+    tft->by_value_in = (in != 0);
 
     return obj;
   }
