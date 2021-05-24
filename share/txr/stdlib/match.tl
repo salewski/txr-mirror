@@ -469,16 +469,32 @@
     (let* ((hash-alist-var (gensym "hash-alist-"))
            (hash-alt-val ^',(gensym "alt"))
            (need-alist-p nil)
+           (hash-keys-var (gensym "hash-keys-"))
+           (need-keys-p nil)
            (hash-matches
              (collect-each ((pair pairs))
-               (mac-param-bind *match-form* (key val) pair
+               (mac-param-bind *match-form* (key : (val nil val-p)) pair
                  (let ((key-pat-p (non-triv-pat-p key))
                        (val-pat-p (non-triv-pat-p val))
                        (key-var-sym (var-pat-p key)))
                    (cond
+                     ((and (not val-p) key-var-sym var-list.(exists key-var-sym))
+                      (let ((guard (new match-guard
+                                        test-expr ^(inhash ,obj-var
+                                                           ,key-var-sym))))
+                        (new compiled-match
+                             guard-chain (list guard))))
+                     ((and (not val-p) (not key-pat-p))
+                      (let ((guard (new match-guard
+                                        test-expr ^(inhash ,obj-var
+                                                           ',key))))
+                        (new compiled-match
+                             guard-chain (list guard))))
+                     ((not val-p)
+                      (set need-keys-p t)
+                      (compile-match key hash-keys-var var-list))
                      ((and key-var-sym var-list.(exists key-var-sym))
-                       (let ((vm (compile-match val (gensym "val") var-list))
-                             (val-sym (gensym "val")))
+                       (let ((vm (compile-match val (gensym "val") var-list)))
                          vm.(add-guards-pre
                               (new match-guard
                                    vars (list vm.obj-var)
@@ -511,10 +527,16 @@
                          vm)))))))
            (guard (new match-guard
                        guard-expr ^(hashp ,obj-var)
-                       vars (if need-alist-p
-                              (list hash-alist-var))
-                       var-exprs (if need-alist-p
-                                   (list ^(hash-alist ,obj-var))))))
+                       vars (append
+                              (if need-alist-p
+                                (list hash-alist-var))
+                              (if need-keys-p
+                                (list hash-keys-var)))
+                       var-exprs (append
+                                   (if need-alist-p
+                                     (list ^(hash-alist ,obj-var)))
+                                   (if need-keys-p
+                                     (list ^(hash-keys ,obj-var)))))))
       (new compiled-match
            pattern hash-expr
            obj-var obj-var

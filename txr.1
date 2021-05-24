@@ -41159,7 +41159,7 @@ object's structure type: the type itself, rather than its symbolic name.
 
 .coNP Pattern operator @ hash
 .synb
-.mets @(hash >> {( key-pattern << value-pattern )}*)
+.mets @(hash >> {( key-pattern <> [ value-pattern ])}*)
 .syne
 .desc
 The
@@ -41187,6 +41187,9 @@ and
 pair against that object as described below. Each of
 the pairs must successfully match, otherwise the overall
 match fails.
+
+The following requirements apply to key-value pattern pairs in which
+the value pattern is specified.
 
 If
 .meta key-pattern
@@ -41266,6 +41269,25 @@ operator against this list in the following way:
 such that the semantics can then be understood in terms of the
 .code coll
 operator matching against an association list.
+
+The following requirements apply when the
+.meta value-pattern
+is omitted.
+
+If
+.meta key-pattern
+is a nontrivial pattern other than a variable pattern
+for a variable which has an existing binding, then the pattern
+is applied against the list of keys from the hash table, which
+are retrieved as if using the
+.code hash-keys
+function.
+
+If
+.meta key-pattern
+is a variable pattern referring to an existing binding, then that pattern is
+taken as a literal object.  The match is successful if that object occurs as a
+key in the hash table.
 
 .TP* Example:
 

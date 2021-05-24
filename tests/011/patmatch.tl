@@ -187,6 +187,13 @@
       (42))
 
 (mtest
+  (when-match @(hash (a)) #H(() (a b)) t) t
+  (when-match @(hash (c)) #H(() (a b)) t) nil
+  (let ((x 'a)) (when-match @(hash (@x)) #H(() (a b)) t)) t
+  (let ((x 'd)) (when-match @(hash (@x)) #H(() (a b)) t)) nil
+  (when-match @(hash (@x)) #H(() (a b)) x) (a))
+
+(mtest
   (if-match #R(10 20) 10..20 :yes :no) :yes
   (if-match #R(10 20) #R(10 20) :yes :no) :yes
   (if-match #R(10 20) #R(1 2) :yes :no) :no
