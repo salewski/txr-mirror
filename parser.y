@@ -2121,8 +2121,11 @@ int parse(parser_t *parser, val name, enum prime_parser prim)
   if (parser->errors && parser->syntax_tree == nil &&
       parser->lineno != start_line)
   {
-    yyerrorf(parser->scanner, lit("while parsing form starting at line ~a"),
-             num(start_line), nao);
+    cnum curline = parser->lineno;
+    parser->lineno = start_line;
+    yyerrorf(parser->scanner,
+             lit("while parsing expression starting on this line"), nao);
+    parser->lineno = curline;
   }
 
   return res;
