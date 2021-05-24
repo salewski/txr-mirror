@@ -334,6 +334,8 @@
 
 (defvarl assumed-fun)
 
+(defvar *in-compilation-unit* nil)
+
 (defvar *dedup*)
 
 (defvar *unchecked-calls*)
@@ -2219,7 +2221,8 @@
 
 (defmacro usr:with-compilation-unit (. body)
   (with-gensyms (rec)
-    ^(let* ((,rec sys:*load-recursive*)
+    ^(let* ((,rec *in-compilation-unit*)
+            (*in-compilation-unit* t)
             (sys:*load-recursive* t)
             (*dedup* (or *dedup* (hash))))
        (unwind-protect
