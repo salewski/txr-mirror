@@ -505,8 +505,8 @@
                          vm.(add-guards-pre
                               (new match-guard
                                    pure-temps (list vm.obj-var)
-                                   pure-temp-exprs ^((gethash ,obj-var ',key,
-                                                              hash-alt-val))
+                                   pure-temp-exprs ^((gethash ,obj-var ',key
+                                                              ,hash-alt-val))
                                    test-expr ^(neq ,vm.obj-var ,hash-alt-val)))
                          vm)))))))
            (guard (new match-guard
