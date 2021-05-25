@@ -20,3 +20,36 @@
 
 (test (mapcar (lambda (. args) (list . args)) '#(1 2 3) '#(4 5 6))
       #((1 4) (2 5) (3 6)))
+
+(test [window-map 2 '(x x) list '(a b c d e f g)]
+      ((x x a b c) (x a b c d) (a b c d e)
+       (b c d e f) (c d e f g) (d e f g nil)
+       (e f g nil nil)))
+
+(test [window-map 2 '(x x y y) list '(a b c d e f g)]
+      ((x x a b c) (x a b c d) (a b c d e)
+       (b c d e f) (c d e f g) (d e f g y)
+       (e f g y y)))
+
+(test [window-map 2 nil list '(a b c d e f g)]
+      ((nil nil a b c) (nil a b c d) (a b c d e)
+       (b c d e f) (c d e f g)
+       (d e f g nil) (e f g nil nil)))
+
+(test [window-map 2 :wrap list '(a b c d e f g)]
+      ((f g a b c) (g a b c d) (a b c d e) (b c d e f)
+       (c d e f g) (d e f g a) (e f g a b)))
+
+(test [window-map 2 :reflect list '(a b c d e f g)]
+      ((b a a b c) (a a b c d) (a b c d e) (b c d e f)
+       (c d e f g) (d e f g g) (e f g g f)))
+
+(test [window-map 7 :wrap list '(a b c)]
+      ((c a b c a b c a b c a b c a b)
+       (a b c a b c a b c a b c a b c)
+       (b c a b c a b c a b c a b c a)))
+
+(test [window-map 7 :reflect list '(a b c)]
+      ((a c b a c b a a b c c b a c b)
+       (c b a c b a a b c c b a c b a)
+       (b a c b a a b c c b a c b a c)))

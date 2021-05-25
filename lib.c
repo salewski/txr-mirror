@@ -9491,17 +9491,27 @@ static val window_map_list(val range, val boundary, val fun, val list,
 
   args_set_fill(args, ws);
 
-  if (boundary == wrap_k) {
-    val lcopy = take(range, list);
-    while (lt(length(lcopy), range))
-      lcopy = append2(lcopy, lcopy);
-    boundary = append2(sub(lcopy, num_fast(-ra), t), sub(lcopy, zero, range));
-  } else if (boundary == reflect_k) {
-    val lcopy = take(range, list);
-    while (lt(length(lcopy), range))
-      lcopy = append2(lcopy, lcopy);
-    boundary = nappend2(nreverse(sub(lcopy, zero, range)),
-                        nreverse(sub(lcopy, num_fast(-ra), t)));
+  if (boundary == wrap_k || boundary == reflect_k) {
+    val lw = sub(list, num_fast(-ra), t), lwing = lw;
+    val rw = sub(list, zero, range), rwing = rw;
+    cnum i, len = c_fixnum(length(list), self);
+
+    if (boundary == reflect_k) {
+      lwing = reverse(rw);
+      rwing = reverse(lw);
+      lw = lwing;
+      rw = rwing;
+    }
+
+    for (i = len; i < ra; i += len) {
+      lwing = append2(lwing, lw);
+      rwing = append2(rwing, rw);
+    }
+
+    if (len < ra)
+      boundary = append2(sub(lwing, num_fast(-ra), t), sub(rwing, zero, range));
+    else
+      boundary = append2(lwing, rwing);
   }
 
   for (i = 0; i < ra; i++)
