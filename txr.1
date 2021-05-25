@@ -44789,12 +44789,14 @@ floating point value.
 .mets (toint < value <> [ radix ])
 .syne
 .desc
-These convenience functions convert
+These functions convert
 .meta value
-to floating-point or integer, respectively.
+to floating-point or integer, respectively. The
+.meta value
+can be of several types, including string.
 
 If a floating-point value is passed into tofloat, or an integer value into
-toint, then the value is simply returned.
+toint, then that value is simply returned.
 
 If
 .meta value
@@ -44807,7 +44809,7 @@ is a string, then it is converted by
 .code tofloat
 as if by the function
 .metn flo-str ,
-, and by
+and by
 .code toint
 as if by the function
 .codn int-str .
