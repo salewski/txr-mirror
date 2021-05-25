@@ -63,6 +63,7 @@
 #include "arith.h"
 #include "buf.h"
 #include "vm.h"
+#include "ffi.h"
 #include "txr.h"
 #if HAVE_TERMIOS
 #include "linenoise/linenoise.h"
@@ -954,17 +955,20 @@ static void find_matching_syms(lino_completions_t *cpl,
 
       switch (kind) {
       case '(':
-        if (!fboundp(sym) && !mboundp(sym) && !special_operator_p(sym))
-          continue;
-        break;
+        if (fboundp(sym) || mboundp(sym) || special_operator_p(sym))
+          break;
+        continue;
       case 'M':
       case 'S':
         break;
-      case '[':
       default:
-        if (!fboundp(sym) && !boundp(sym))
-          continue;
-        break;
+        if (find_struct_type(sym) || ffi_type_p(sym))
+          break;
+        /* fallthrough */
+      case '[':
+        if (fboundp(sym) || boundp(sym))
+          break;
+        continue;
       }
 
       if (equal(name, prefix))
