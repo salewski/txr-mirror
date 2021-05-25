@@ -53,3 +53,22 @@
       ((a c b a c b a a b c c b a c b)
        (c b a c b a a b c c b a c b a)
        (b a c b a a b c c b a c b a c)))
+
+(test [window-map 1 nil (lambda (x y z)
+                          (if (and (eq x #\<)
+                                   (eq z #\>))
+                            (chr-toupper y)
+                            y))
+                  "ab<c>de<f>g"]
+      "ab<C>de<F>g")
+
+(test [window-mappend 1 :reflect (lambda (x y z)
+                                   (if (< x y z)
+                                     (list y)))
+                      '(1 2 1 3 4 2 1 9 7 5 7 8 5)]
+      (3 7))
+
+(test [window-map 2 #(0 0 0 0)
+                  (lambda (. args) (/ (sum args) 5))
+                  #(4 7 9 13 5 1 6 11 10 3 8)]
+      #(4.0 6.6 7.6 7.0 6.8 7.2 6.6 6.2 7.6 6.4 4.2))
