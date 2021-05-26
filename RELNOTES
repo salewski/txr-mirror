@@ -1,3 +1,37 @@
+                                    TXR 260
+                                   2021-05-26
+
+
+  Features
+
+  - structural pattern matching:
+    - values in hash pattern can be now omitted with usefully nuanced
+      semantics.
+  - parser:
+    - unterminated expression diagnostic now given in in format that lets
+      editors jump to the start of the unterminated construct.
+  - compiler:
+    - better translation strategy for global var definitions.
+  - documentation improvements.
+
+  Bugs
+
+  - lib:
+    - buggy :wrap and :reflect in window-map fixed.
+    - case{q*,ql*,qual*} macros failing to expand key expressions.
+  - compiler:
+    - fix compile-file warnings being deferred to end of surrounding load
+  - ffi:
+    - crash when carray object passed as argument to foreign function.
+  - arithmetic:
+    - several bugs in the area of bignum to 64 bit conversions.
+  - listener:
+    - don't complete on symbols that are just interned, with no binding.
+  - doc function now handling symbols like <= that use HTML codes in
+    the document.
+
+
+
                                     TXR 259
                                    2021-05-13
 
