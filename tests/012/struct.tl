@@ -62,7 +62,7 @@
 
 (test (new foo) #S(foo a 42))
 
-(set *gensym-counter* 0)
+(set *gensym-counter* 4)
 (stest (expand '(defstruct (boa x y) nil
                       (x 0) (y 0)))
        "(sys:make-struct-type 'boa '() '()\n                                            \

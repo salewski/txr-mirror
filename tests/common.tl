@@ -3,16 +3,19 @@
     (error (cond) :error)))
 
 (defmacro vtest (:env env expr expected)
- (catch
-   (let ((expr-expn (expand expr env))
-         (expval (gensym)))
-     ^(let ((,expval ,expected))
-        (ifa (not (equal (error-to-sym ,expr-expn) ,expval))
+  (if (mequal expected :error '':error)
+    (catch
+      (let ((expr-expn (expand expr env)))
+        ^(ifa (not (equal (error-to-sym ,expr-expn) :error))
            (error "test case ~s failed: produced ~s; expected ~s"
-                  ',expr it ,expval))))
-   (error (exc)
-          (unless (eq (eval expected) :error)
-            (error "test case ~s failed to expand: expected is ~s" expr expected)))))
+                  ',expr it :error)))
+      (error (exc)))
+    (let ((expr-expn (expand expr env))
+          (expval (gensym)))
+      ^(let ((,expval ,expected))
+         (ifa (not (equal ,expr-expn ,expval))
+           (error "test case ~s failed: produced ~s; expected ~s"
+                  ',expr it ,expval))))))
 
 (defmacro test (expr expected)
   ^(vtest ,expr ',expected))

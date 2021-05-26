@@ -33969,8 +33969,8 @@ being the first four elements of an infinite repetition of
 .verb
   ;; change characters between angle brackets to upper case.
   [window-map 1 nil (lambda (x y z)
-                      (if (and (eq x #\<)
-                               (eq z #\>))
+                      (if (and (eq x #\e<)
+                               (eq z #\e>))
                         (chr-toupper y)
                         y))
               "ab<c>de<f>g"]
