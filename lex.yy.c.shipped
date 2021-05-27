@@ -5405,7 +5405,7 @@ case 143:
 YY_RULE_SETUP
 #line 1118 "parser.l"
 {
-  yyerrorf(yyg, lit("bad character in buffer literal: \\~a"),
+  yyerrorf(yyg, lit("bad character ~s in buffer literal"),
            chr(yytext[0]), nao);
 }
 	YY_BREAK

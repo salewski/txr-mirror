@@ -1116,7 +1116,7 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 }
 
 <BUFLIT>. {
-  yyerrorf(yyg, lit("bad character in buffer literal: \\~a"),
+  yyerrorf(yyg, lit("bad character ~s in buffer literal"),
            chr(yytext[0]), nao);
 }
 
