@@ -755,13 +755,13 @@ NJPUNC  [^(){},:\[\]" \t\n]
   return HASH_SEMI;
 }
 
-<NESTED,BRACED>#{DIG}+= {
+<NESTED,BRACED,JSON>#{DIG}+= {
   val str = string_own(utf8_dup_from(yytext + 1));
   yylval->val = int_str(str, num(10));
   return HASH_N_EQUALS;
 }
 
-<NESTED,BRACED>#{DIG}+# {
+<NESTED,BRACED,JSON>#{DIG}+# {
   val str = string_own(utf8_dup_from(yytext + 1));
   yylval->val = int_str(str, num(10));
   return HASH_N_HASH;

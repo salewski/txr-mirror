@@ -950,6 +950,10 @@ json_val : NUMBER               { $$ = $1; }
          | '[' json_vals ']'    { $$ = $2; }
          | '{' '}'              { $$ = make_hash(nil, nil, t); }
          | '{' json_pairs '}'   { $$ = $2; }
+         | HASH_N_EQUALS        { parser_circ_def(parser, $1, unique_s); }
+           json_val             { parser_circ_def(parser, $1, $3);
+                                  $$ = $3; }
+         | HASH_N_HASH          { $$ = parser_circ_ref(parser, $1); }
          | '"' error            { $$ = nil;
                                   yybadtok(yychar, lit("JSON string")); }
          | '[' error            { $$ = nil;
