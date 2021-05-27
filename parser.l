@@ -163,7 +163,7 @@ static wchar_t num_esc(scanner_t *scn, char *num)
 {
   long val = 0;
 
-  if (num[0] == 'x') {
+  if (num[0] == 'x' || num[0] == 'u') {
     if (strlen(num) > 7)
       yyerror(scn, yyget_extra(scn), "too many digits in hex character escape");
     else
@@ -235,6 +235,7 @@ TOK     [a-zA-Z0-9_]+
 SGN     [+\-]
 EXP     [eE][+\-]?[0-9]+
 DIG     [0-9]
+DIG19   [1-9]
 XDIG    [0-9A-Fa-f]
 NUM     {SGN}?{DIG}+
 FLO     {SGN}?({DIG}*[.]{DIG}+{EXP}?|{DIG}+[.]?{EXP})
@@ -278,8 +279,13 @@ UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
+JNUM    -?(0|{DIG19}{DIG}*)([.]{DIG}+)?{EXP}?
+JPUNC   [(){},:\[\]"]
+NJPUNC  [^(){},:\[\]" \t\n]
+
 %x      SPECIAL BRACED NESTED REGEX SREGEX STRLIT CHRLIT
 %x      QSILIT QSPECIAL WLIT QWLIT BUFLIT
+%x      JSON JLIT
 
 %%
 
@@ -738,6 +744,12 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return HASH_T;
 }
 
+<NESTED,BRACED>#J {
+  yylval->lineno = yyextra->lineno;
+  yy_push_state(JSON, yyscanner);
+  return HASH_J;
+}
+
 <NESTED,BRACED>#; {
   yylval->lineno = yyextra->lineno;
   return HASH_SEMI;
@@ -1089,7 +1101,46 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
   return ' ';
 }
 
-<STRLIT,CHRLIT,QSILIT,WLIT,QWLIT>{UANYN} {
+<JLIT>\" {
+  yy_pop_state(yyscanner);
+  return yytext[0];
+}
+
+<JLIT>[\\][bfnrt"\\/] {
+  yylval->chr = char_esc(yytext[1]);
+  return LITCHAR;
+}
+
+<JLIT>[\\]u[Dd][8-9A-Fa-f]{HEX}{2}[\\]u[Dd][C-Fc-f]{HEX}{2} {
+  wchar_t ch0, ch1;
+  yytext[6] = 0;
+  ch0 = num_esc(yyg, yytext + 1);
+  ch1 = num_esc(yyg, yytext + 7);
+  yylval->chr = ((ch0 - 0xD800) << 10 | (ch1 - 0xDC00)) + 0x10000;
+  return LITCHAR;
+}
+
+<JLIT>[\\]u{HEX}{4} {
+  yylval->chr = num_esc(yyg, yytext + 1);
+  return LITCHAR;
+}
+
+<JLIT>[\\]u {
+  yyerrorf(yyg, lit("JSON \\u escape needs four digits"), nao);
+}
+
+<JLIT>[\\]. {
+  yyerrorf(yyg, lit("unrecognized JSON escape: \\~a"), chr(yytext[1]), nao);
+}
+
+<JLIT>{NL} {
+  yyerrprepf(yyg, lit("newline in JSON string"), nao);
+  yyextra->lineno++;
+  yylval->chr = yytext[0];
+  return ERRTOK;
+}
+
+<STRLIT,CHRLIT,QSILIT,WLIT,QWLIT,JLIT>{UANYN} {
   wchar_t wchr[8];
   if (utf8_from_buf(wchr, coerce(unsigned char *, yytext), yyleng) != 2) {
     yylval->lexeme = chk_strdup(wchr);
@@ -1123,6 +1174,66 @@ UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 <STRLIT,CHRLIT,QSILIT,WLIT,QWLIT>. {
   yylval->chr = convert(unsigned char, yytext[0]) + 0xDC00;
   return LITCHAR;
+}
+
+<JSON>{JNUM} {
+  val str = string_own(utf8_dup_from(yytext));
+  if ((yylval->val = flo_str(str)) == nil)
+    out_of_range_float(yyg, str);
+  return NUMBER;
+}
+
+<JSON>true/({JPUNC}|[ \t\n]) {
+  yylval->val = t;
+  return JSKW;
+}
+
+<JSON>false/({JPUNC}|[ \t\n]) {
+  yylval->val = nil;
+  return JSKW;
+}
+
+<JSON>{NJPUNC}+ {
+  if (strcmp("true", yytext) == 0) {
+    yylval->val = t;
+    return JSKW;
+  }
+
+  if (strcmp("false", yytext) == 0) {
+    yylval->val = nil;
+    return JSKW;
+  }
+
+  {
+    val str = string_own(utf8_dup_from(yytext));
+    yyerrorf(yyg, lit("unrecognized JSON syntax: ~a"), str, nao);
+  }
+}
+
+<JSON>\" {
+  yy_push_state(JLIT, yyscanner);
+  return yytext[0];
+}
+
+<JSON>{JPUNC} {
+  return yytext[0];
+}
+
+<JSON>{NL} {
+  yyextra->lineno++;
+}
+
+<JSON>{WS} {
+}
+
+<JSON>. {
+  yyerrorf(yyg, lit("bad character ~s in JSON literal"),
+           chr(yytext[0]), nao);
+}
+
+<JSON>\" {
+  yy_push_state(JLIT, yyscanner);
+  return yytext[0];
 }
 
 %%
@@ -1196,6 +1307,17 @@ void end_of_buflit(scanner_t *yyg)
 {
   if (YYSTATE != BUFLIT)
     internal_error("end_of_buflit called in wrong scanner state");
+
+  yy_pop_state(yyg);
+}
+
+void end_of_json(scanner_t *yyg)
+{
+  if (YYSTATE == JLIT)
+    yy_pop_state(yyg);
+
+  if (YYSTATE != JSON)
+    internal_error("end_of_json called in wrong scanner state");
 
   yy_pop_state(yyg);
 }

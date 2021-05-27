@@ -75,6 +75,7 @@ extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
 extern val parser_s, unique_s, circref_s;
 extern val rec_source_loc_s;
+extern val json_s;
 void yydebug_onoff(int);
 void yyerror(scanner_t *scanner, parser_t *, const char *s);
 void yyerr(scanner_t *scanner, const char *s);
@@ -83,6 +84,7 @@ void yybadtoken(parser_t *, int tok, val context);
 void end_of_regex(scanner_t *scanner);
 void end_of_char(scanner_t *scanner);
 void end_of_buflit(scanner_t *scanner);
+void end_of_json(scanner_t *scanner);
 #ifdef SPACE
 int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner);
 #endif

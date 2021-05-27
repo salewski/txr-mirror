@@ -117,13 +117,13 @@ INLINE val expand_form_ver(val form, int ver)
 %token <lineno> UNTIL COLL OUTPUT REPEAT REP SINGLE FIRST LAST EMPTY
 %token <lineno> MOD MODLAST DEFINE TRY CATCH FINALLY IF
 %token <lineno> ERRTOK /* deliberately not used in grammar */
-%token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S HASH_R HASH_SEMI
-%token <lineno> HASH_B_QUOTE HASH_N HASH_T
+%token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S HASH_R HASH_J
+%token <lineno> HASH_SEMI HASH_B_QUOTE HASH_N HASH_T
 %token <lineno> WORDS WSPLICE QWORDS QWSPLICE
 %token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E SECRET_ESCAPE_I
 %token <lineno> OLD_DOTDOT
 
-%token <val> NUMBER METANUM
+%token <val> NUMBER METANUM JSKW
 %token <val> HASH_N_EQUALS HASH_N_HASH
 
 %token <chr> REGCHAR REGTOKEN LITCHAR SPLICE OLD_AT
@@ -140,6 +140,7 @@ INLINE val expand_form_ver(val form, int ver)
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers
 %type <val> vector hash struct range tnode tree
+%type <val> json json_val json_vals json_pairs
 %type <val> exprs exprs_opt n_exprs listacc i_expr i_dot_expr
 %type <val> n_expr n_exprs_opt n_dot_expr
 %type <val> list dwim meta compound
@@ -937,6 +938,50 @@ tree : HASH_T list             { if (parser->quasi_level > 0 && unquotes_occur($
                                  yybadtok(yychar, lit("tree node literal")); }
      ;
 
+json : HASH_J json_val          { $$ = cons(json_s, cons($2, nil));
+                                  end_of_json(scnr); }
+
+json_val : NUMBER               { $$ = $1; }
+         | JSKW                 { $$ = $1; }
+         | '"' '"'              { $$ = null_string; }
+         | '"' litchars '"'     { $$ = $2;
+                                  rl($$, num(parser->lineno)); }
+         | '[' ']'              { $$ = vector(0, nil); }
+         | '[' json_vals ']'    { $$ = $2; }
+         | '{' '}'              { $$ = make_hash(nil, nil, t); }
+         | '{' json_pairs '}'   { $$ = $2; }
+         | '"' error            { $$ = nil;
+                                  yybadtok(yychar, lit("JSON string")); }
+         | '[' error            { $$ = nil;
+                                  yybadtok(yychar, lit("JSON array")); }
+         | '{' error            { $$ = nil;
+                                  yybadtok(yychar, lit("JSON hash")); }
+         ;
+
+json_vals : json_val                    { $$ = vector(one, $1); }
+          | json_vals ',' json_val      { vec_push($1, $3);
+                                          $$ = $1; }
+          | json_vals json_val          { yyerr("missing comma in JSON array");
+                                          $$ = $1; }
+          | json_vals error             { yyerr("bad element in JSON array");
+                                          $$ = $1; }
+          ;
+
+json_pairs : json_val ':' json_val      { if (!stringp($1))
+                                           yyerr("non-string key in JSON hash");
+                                          $$ = make_hash(nil, nil, t);
+                                          sethash($$, $1, $3); }
+           | json_pairs ','
+             json_val ':' json_val     { if (!stringp($3))
+                                           yyerr("non-string key in JSON hash");
+                                         sethash($1, $3, $5);
+                                         $$ = $1; }
+           | json_val json_val         { yyerr("missing colon in JSON hash"); }
+           | json_val ':' json_val
+             error                     { yyerr("missing comma in JSON hash"); }
+           | json_val error            { yyerr("bad element in JSON hash"); }
+           ;
+
 list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' '.' n_exprs ')'      { val a = car($3);
                                   val ur = uref_helper(parser, a);
@@ -1043,6 +1088,7 @@ i_expr : SYMTOK                 { $$ = ifnign(symhlpr($1, t)); }
        | range                  { $$ = $1; }
        | tnode                  { $$ = $1; }
        | tree                   { $$ = $1; }
+       | json                   { $$ = $1; }
        | lisp_regex             { $$ = $1; }
        | chrlit                 { $$ = $1; }
        | strlit                 { $$ = $1; }
@@ -1084,6 +1130,7 @@ n_expr : SYMTOK                 { $$ = ifnign(symhlpr($1, t)); }
        | range                  { $$ = $1; }
        | tnode                  { $$ = $1; }
        | tree                   { $$ = $1; }
+       | json                   { $$ = $1; }
        | lisp_regex             { $$ = $1; }
        | chrlit                 { $$ = $1; }
        | strlit                 { $$ = $1; }
@@ -2001,6 +2048,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case ELIF:    problem = lit("\"elif\""); break;
   case ELSE:    problem = lit("\"else\""); break;
   case NUMBER:  problem = lit("number"); break;
+  case JSKW:    problem = lit("JSON keyword"); break;
   case REGCHAR: problem = lit("regular expression character"); break;
   case REGTOKEN: problem = lit("regular expression token"); break;
   case LITCHAR: problem = lit("string literal character"); break;
@@ -2019,6 +2067,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case HASH_R:         problem = lit("#R"); break;
   case HASH_N:         problem = lit("#N"); break;
   case HASH_T:         problem = lit("#T"); break;
+  case HASH_J:         problem = lit("#J"); break;
   case HASH_SEMI:      problem = lit("#;"); break;
   case HASH_N_EQUALS:  problem = lit("#<n>="); break;
   case HASH_N_HASH:    problem = lit("#<n>#"); break;

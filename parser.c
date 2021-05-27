@@ -73,6 +73,7 @@ val parser_s, unique_s, circref_s;
 val listener_hist_len_s, listener_multi_line_p_s, listener_sel_inclusive_p_s;
 val listener_pprint_s, listener_greedy_eval_s;
 val rec_source_loc_s;
+val json_s;
 val intr_s;
 static lino_t *lino_ctx;
 static int repl_level = 0;
@@ -1251,6 +1252,12 @@ static int is_balanced_line(const wchar_t *line, void *ctx)
         else
           state[++sp] = ST_BKT;
         break;
+      case '{':
+        if (state[sp] == ST_BRC)
+          count[sp]++;
+        else
+          state[++sp] = ST_BRC;
+        break;
       case ')': case ']': case '}':
         {
           enum state match = ST_START;
@@ -1824,6 +1831,12 @@ static_def(lino_os_t linenoise_txr_binding =
                         lino_open, lino_open8, lino_fdopen, lino_close,
                         wide_display_char_p));
 
+static val me_json(val form, val menv)
+{
+  (void) menv;
+  return cons(quote_s, cdr(form));
+}
+
 void parse_init(void)
 {
   parser_s = intern(lit("parser"), user_package);
@@ -1835,6 +1848,7 @@ void parse_init(void)
   listener_pprint_s = intern(lit("*listener-pprint-p*"), user_package);
   listener_greedy_eval_s = intern(lit("*listener-greedy-eval-p*"), user_package);
   rec_source_loc_s = intern(lit("*rec-source-loc*"), user_package);
+  json_s = intern(lit("json"), user_package);
   unique_s = gensym(nil);
   protect(&stream_parser_hash, &unique_s, &catch_all, convert(val *, 0));
   stream_parser_hash = make_hash(t, nil, nil);
@@ -1852,4 +1866,5 @@ void parse_init(void)
   reg_fun(intern(lit("parser-errors"), system_package), func_n1(parser_errors));
   reg_fun(intern(lit("parser-eof"), system_package), func_n1(parser_eof));
   reg_fun(intern(lit("repl"), system_package), func_n4(repl));
+  reg_mac(json_s, func_n2(me_json));
 }

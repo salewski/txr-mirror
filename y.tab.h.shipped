@@ -46,35 +46,37 @@
      HASH_H = 293,
      HASH_S = 294,
      HASH_R = 295,
-     HASH_SEMI = 296,
-     HASH_B_QUOTE = 297,
-     HASH_N = 298,
-     HASH_T = 299,
-     WORDS = 300,
-     WSPLICE = 301,
-     QWORDS = 302,
-     QWSPLICE = 303,
-     SECRET_ESCAPE_R = 304,
-     SECRET_ESCAPE_E = 305,
-     SECRET_ESCAPE_I = 306,
-     OLD_DOTDOT = 307,
-     NUMBER = 308,
-     METANUM = 309,
-     HASH_N_EQUALS = 310,
-     HASH_N_HASH = 311,
-     REGCHAR = 312,
-     REGTOKEN = 313,
-     LITCHAR = 314,
-     SPLICE = 315,
-     OLD_AT = 316,
-     CONSDOT = 317,
-     LAMBDOT = 318,
-     UREFDOT = 319,
-     OREFDOT = 320,
-     UOREFDOT = 321,
-     LOW = 322,
-     ELSE = 323,
-     ELIF = 324
+     HASH_J = 296,
+     HASH_SEMI = 297,
+     HASH_B_QUOTE = 298,
+     HASH_N = 299,
+     HASH_T = 300,
+     WORDS = 301,
+     WSPLICE = 302,
+     QWORDS = 303,
+     QWSPLICE = 304,
+     SECRET_ESCAPE_R = 305,
+     SECRET_ESCAPE_E = 306,
+     SECRET_ESCAPE_I = 307,
+     OLD_DOTDOT = 308,
+     NUMBER = 309,
+     METANUM = 310,
+     JSKW = 311,
+     HASH_N_EQUALS = 312,
+     HASH_N_HASH = 313,
+     REGCHAR = 314,
+     REGTOKEN = 315,
+     LITCHAR = 316,
+     SPLICE = 317,
+     OLD_AT = 318,
+     CONSDOT = 319,
+     LAMBDOT = 320,
+     UREFDOT = 321,
+     OREFDOT = 322,
+     UOREFDOT = 323,
+     LOW = 324,
+     ELSE = 325,
+     ELIF = 326
    };
 #endif
 /* Tokens.  */
@@ -116,35 +118,37 @@
 #define HASH_H 293
 #define HASH_S 294
 #define HASH_R 295
-#define HASH_SEMI 296
-#define HASH_B_QUOTE 297
-#define HASH_N 298
-#define HASH_T 299
-#define WORDS 300
-#define WSPLICE 301
-#define QWORDS 302
-#define QWSPLICE 303
-#define SECRET_ESCAPE_R 304
-#define SECRET_ESCAPE_E 305
-#define SECRET_ESCAPE_I 306
-#define OLD_DOTDOT 307
-#define NUMBER 308
-#define METANUM 309
-#define HASH_N_EQUALS 310
-#define HASH_N_HASH 311
-#define REGCHAR 312
-#define REGTOKEN 313
-#define LITCHAR 314
-#define SPLICE 315
-#define OLD_AT 316
-#define CONSDOT 317
-#define LAMBDOT 318
-#define UREFDOT 319
-#define OREFDOT 320
-#define UOREFDOT 321
-#define LOW 322
-#define ELSE 323
-#define ELIF 324
+#define HASH_J 296
+#define HASH_SEMI 297
+#define HASH_B_QUOTE 298
+#define HASH_N 299
+#define HASH_T 300
+#define WORDS 301
+#define WSPLICE 302
+#define QWORDS 303
+#define QWSPLICE 304
+#define SECRET_ESCAPE_R 305
+#define SECRET_ESCAPE_E 306
+#define SECRET_ESCAPE_I 307
+#define OLD_DOTDOT 308
+#define NUMBER 309
+#define METANUM 310
+#define JSKW 311
+#define HASH_N_EQUALS 312
+#define HASH_N_HASH 313
+#define REGCHAR 314
+#define REGTOKEN 315
+#define LITCHAR 316
+#define SPLICE 317
+#define OLD_AT 318
+#define CONSDOT 319
+#define LAMBDOT 320
+#define UREFDOT 321
+#define OREFDOT 322
+#define UOREFDOT 323
+#define LOW 324
+#define ELSE 325
+#define ELIF 326
 
 
 
@@ -164,7 +168,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 197 "y.tab.h"
+#line 201 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
