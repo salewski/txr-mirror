@@ -280,8 +280,8 @@ UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 JNUM    -?(0|{DIG19}{DIG}*)([.]{DIG}+)?{EXP}?
-JPUNC   [(){},:\[\]"~*]
-NJPUNC  [^(){},:\[\]"~* \t\n]
+JPUNC   [(){},:\[\]"~*^]
+NJPUNC  [^(){},:\[\]"~*^ \t\n]
 
 %x      SPECIAL BRACED NESTED REGEX SREGEX STRLIT CHRLIT
 %x      QSILIT QSPECIAL WLIT QWLIT BUFLIT

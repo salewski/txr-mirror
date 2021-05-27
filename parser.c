@@ -1834,7 +1834,7 @@ static_def(lino_os_t linenoise_txr_binding =
 static val me_json(val form, val menv)
 {
   (void) menv;
-  return cons(quote_s, cdr(form));
+  return cdr(form);
 }
 
 void parse_init(void)

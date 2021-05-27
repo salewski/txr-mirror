@@ -938,9 +938,11 @@ tree : HASH_T list             { if (parser->quasi_level > 0 && unquotes_occur($
                                  yybadtok(yychar, lit("tree node literal")); }
      ;
 
-json : HASH_J json_val          { $$ = cons(json_s, cons($2, nil));
+json : HASH_J json_val          { $$ = list(json_s, quote_s, $2, nao);
                                   end_of_json(scnr); }
-
+     | HASH_J '^'               { parser->quasi_level++; }
+       json_val                 { parser->quasi_level--;
+                                  $$ = list(json_s, sys_qquote_s, $4, nao); }
 json_val : NUMBER               { $$ = $1; }
          | JSKW                 { $$ = $1; }
          | '"' '"'              { $$ = null_string; }
