@@ -126,7 +126,7 @@ INLINE val expand_form_ver(val form, int ver)
 %token <val> NUMBER METANUM JSKW
 %token <val> HASH_N_EQUALS HASH_N_HASH
 
-%token <chr> REGCHAR REGTOKEN LITCHAR SPLICE OLD_AT
+%token <chr> REGCHAR REGTOKEN LITCHAR SPLICE JSPLICE OLD_AT
 %token <chr> CONSDOT LAMBDOT UREFDOT OREFDOT UOREFDOT
 
 %type <val> spec hash_semi_or_n_expr hash_semi_or_i_expr
@@ -949,7 +949,20 @@ json_val : NUMBER               { $$ = $1; }
          | '[' ']'              { $$ = vector(0, nil); }
          | '[' json_vals ']'    { $$ = $2; }
          | '{' '}'              { $$ = make_hash(nil, nil, t); }
-         | '{' json_pairs '}'   { $$ = $2; }
+         | '{' json_pairs '}'   { $$ = if3(hashp($2),
+                                           $2,
+                                           rl(cons(hash_lit_s,
+                                                   cons(nil, $2)), $2)); }
+         | '~'                  { parser->quasi_level--; }
+           n_dot_expr           { parser->quasi_level++;
+                                  end_of_json_unquote(scnr);
+                                  $$ = rl(rlc(list(sys_unquote_s, $3, nao), $3),
+                                          num(parser->lineno)); }
+         | JSPLICE              { parser->quasi_level--; }
+           n_dot_expr           { parser->quasi_level++;
+                                  end_of_json_unquote(scnr);
+                                  $$ = rl(rlc(list(sys_splice_s, $3, nao), $3),
+                                          num(parser->lineno)); }
          | HASH_N_EQUALS        { parser_circ_def(parser, $1, unique_s); }
            json_val             { parser_circ_def(parser, $1, $3);
                                   $$ = $3; }
@@ -962,9 +975,19 @@ json_val : NUMBER               { $$ = $1; }
                                   yybadtok(yychar, lit("JSON hash")); }
          ;
 
-json_vals : json_val                    { $$ = vector(one, $1); }
-          | json_vals ',' json_val      { vec_push($1, $3);
-                                          $$ = $1; }
+json_vals : json_val                    { $$ = if3(parser->quasi_level > 0 &&
+                                                   unquotes_occur($1, 0),
+                                                   cons($1, nil),
+                                                   vector(one, $1)); }
+          | json_vals ',' json_val      { if (consp($1))
+                                          { $$ = cons($3, $1); }
+                                          else if (parser->quasi_level > 0 &&
+                                                   unquotes_occur($3, 0))
+                                          { val li = list_vec($1);
+                                            $$ = cons($3, li); }
+                                          else
+                                          { vec_push($1, $3);
+                                            $$ = $1; } }
           | json_vals json_val          { yyerr("missing comma in JSON array");
                                           $$ = $1; }
           | json_vals error             { yyerr("bad element in JSON array");
@@ -972,14 +995,27 @@ json_vals : json_val                    { $$ = vector(one, $1); }
           ;
 
 json_pairs : json_val ':' json_val      { if (!stringp($1))
-                                           yyerr("non-string key in JSON hash");
-                                          $$ = make_hash(nil, nil, t);
-                                          sethash($$, $1, $3); }
+                                            yyerr("non-string key in JSON hash");
+                                          if (parser->quasi_level > 0 &&
+                                              (unquotes_occur($1, 0) ||
+                                               unquotes_occur($3, 0)))
+                                          { $$ = cons(list($1, $3, nao), nil); }
+                                          else
+                                          { $$ = make_hash(nil, nil, t);
+                                            sethash($$, $1, $3); } }
            | json_pairs ','
              json_val ':' json_val     { if (!stringp($3))
                                            yyerr("non-string key in JSON hash");
-                                         sethash($1, $3, $5);
-                                         $$ = $1; }
+                                         if (consp($1))
+                                         { $$ = cons(list($3, $5, nao), $1); }
+                                         else if (parser->quasi_level > 0 &&
+                                                  ((unquotes_occur($3, 0)) ||
+                                                   unquotes_occur($5, 0)))
+                                         { val pa = hash_pairs($1);
+                                           $$ = cons(list($3, $5, nao), pa); }
+                                         else
+                                         { sethash($1, $3, $5);
+                                           $$ = $1; } }
            | json_val json_val         { yyerr("missing colon in JSON hash"); }
            | json_val ':' json_val
              error                     { yyerr("missing comma in JSON hash"); }
@@ -2057,6 +2093,7 @@ void yybadtoken(parser_t *parser, int tok, val context)
   case REGTOKEN: problem = lit("regular expression token"); break;
   case LITCHAR: problem = lit("string literal character"); break;
   case SPLICE:  problem = lit("*"); break;
+  case JSPLICE: problem = lit("~*"); break;
   case CONSDOT:
   case LAMBDOT: problem = lit("consing dot"); break;
   case DOTDOT: problem = lit(".."); break;

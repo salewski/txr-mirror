@@ -280,8 +280,8 @@ UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
 JNUM    -?(0|{DIG19}{DIG}*)([.]{DIG}+)?{EXP}?
-JPUNC   [(){},:\[\]"]
-NJPUNC  [^(){},:\[\]" \t\n]
+JPUNC   [(){},:\[\]"~*]
+NJPUNC  [^(){},:\[\]"~* \t\n]
 
 %x      SPECIAL BRACED NESTED REGEX SREGEX STRLIT CHRLIT
 %x      QSILIT QSPECIAL WLIT QWLIT BUFLIT
@@ -650,7 +650,7 @@ NJPUNC  [^(){},:\[\]" \t\n]
 }
 
 
-<SPECIAL,QSPECIAL,NESTED>[)\]] {
+<SPECIAL,QSPECIAL,NESTED>[)\]}] {
   yy_pop_state(yyscanner);
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
@@ -1215,6 +1215,16 @@ NJPUNC  [^(){},:\[\]" \t\n]
   return yytext[0];
 }
 
+<JSON>~[*] {
+  yy_push_state(NESTED, yyscanner);
+  return JSPLICE;
+}
+
+<JSON>~ {
+  yy_push_state(NESTED, yyscanner);
+  return yytext[0];
+}
+
 <JSON>{JPUNC} {
   return yytext[0];
 }
@@ -1320,6 +1330,15 @@ void end_of_json(scanner_t *yyg)
     internal_error("end_of_json called in wrong scanner state");
 
   yy_pop_state(yyg);
+}
+
+void end_of_json_unquote(scanner_t *yyg)
+{
+  if (YYSTATE == NESTED)
+    yy_pop_state(yyg);
+
+  if (YYSTATE != JSON)
+    internal_error("end_of_json_unquote called in wrong scanner state");
 }
 
 val source_loc(val form)

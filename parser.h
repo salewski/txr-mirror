@@ -85,6 +85,7 @@ void end_of_regex(scanner_t *scanner);
 void end_of_char(scanner_t *scanner);
 void end_of_buflit(scanner_t *scanner);
 void end_of_json(scanner_t *scanner);
+void end_of_json_unquote(scanner_t *scanner);
 #ifdef SPACE
 int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner);
 #endif
