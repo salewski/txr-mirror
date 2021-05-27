@@ -949,7 +949,11 @@ json_val : NUMBER               { $$ = $1; }
          | '"' litchars '"'     { $$ = $2;
                                   rl($$, num(parser->lineno)); }
          | '[' ']'              { $$ = vector(0, nil); }
-         | '[' json_vals ']'    { $$ = $2; }
+         | '[' json_vals ']'    { $$ = if3(vectorp($2),
+                                           $2,
+                                           rl(cons(vector_lit_s,
+                                                   cons(nreverse($2), nil)),
+                                              $2)); }
          | '{' '}'              { $$ = make_hash(nil, nil, t); }
          | '{' json_pairs '}'   { $$ = if3(hashp($2),
                                            $2,
