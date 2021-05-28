@@ -1194,6 +1194,11 @@ NJPUNC  [^(){},:\[\]"~*^ \t\n]
   return JSKW;
 }
 
+<JSON>null/({JPUNC}|[ \t\n]) {
+  yylval->val = null_s;
+  return JSKW;
+}
+
 <JSON>{NJPUNC}+ {
   if (strcmp("true", yytext) == 0) {
     yylval->val = t;
@@ -1202,6 +1207,11 @@ NJPUNC  [^(){},:\[\]"~*^ \t\n]
 
   if (strcmp("false", yytext) == 0) {
     yylval->val = nil;
+    return JSKW;
+  }
+
+  if (strcmp("null", yytext) == 0) {
+    yylval->val = null_s;
     return JSKW;
   }
 

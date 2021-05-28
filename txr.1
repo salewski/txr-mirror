@@ -12361,7 +12361,7 @@ A JSON object corresponds to an
 .codn equal -based
 hash table.
 
-The JSON symbols
+The JSON Boolean symbols
 .code true
 and
 .code false
@@ -12369,7 +12369,17 @@ translate to the Lisp symbols
 .code t
 and
 .codn nil ,
-respectively.
+respectively, those being the standard ones in the
+.code usr
+package.
+
+The JSON symbol
+.code null
+maps to the
+.code null
+symbol in the
+.code usr
+package.
 
 The
 .mono
