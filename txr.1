@@ -12407,6 +12407,11 @@ symbol is bound as a macro, which is expanded when a
 .code #J
 expression is evaluated.
 
+\*(TL does not impose the restriction that the keys in a JSON object
+must be strings:
+.code "#J{1:2,true:false}"
+is accepted.
+
 \*(TL allows the circle notation to occur within JSON syntax. See the section
 Notation for Circular and Shared Structure.
 

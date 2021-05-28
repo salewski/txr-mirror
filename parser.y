@@ -140,7 +140,7 @@ INLINE val expand_form_ver(val form, int ver)
 %type <val> line elems_opt elems clause_parts_h additional_parts_h
 %type <val> text texts elem var var_op modifiers
 %type <val> vector hash struct range tnode tree
-%type <val> json json_val json_vals json_pairs
+%type <val> json json_val json_vals json_pairs json_col
 %type <val> exprs exprs_opt n_exprs listacc i_expr i_dot_expr
 %type <val> n_expr n_exprs_opt n_dot_expr
 %type <val> list dwim meta compound
@@ -996,13 +996,11 @@ json_vals : json_val                    { $$ = if3(parser->quasi_level > 0 &&
                                             $$ = $1; } }
           | json_vals json_val          { yyerr("missing comma in JSON array");
                                           $$ = $1; }
-          | json_vals error             { yyerr("bad element in JSON array");
+          | json_vals error             { yybadtok(yychar, lit("JSON array"));
                                           $$ = $1; }
           ;
 
-json_pairs : json_val ':' json_val      { if (!stringp($1))
-                                            yyerr("non-string key in JSON hash");
-                                          if (parser->quasi_level > 0 &&
+json_pairs : json_val json_col json_val { if (parser->quasi_level > 0 &&
                                               (unquotes_occur($1, 0) ||
                                                unquotes_occur($3, 0)))
                                           { $$ = cons(list($1, $3, nao), nil); }
@@ -1010,23 +1008,29 @@ json_pairs : json_val ':' json_val      { if (!stringp($1))
                                           { $$ = make_hash(nil, nil, t);
                                             sethash($$, $1, $3); } }
            | json_pairs ','
-             json_val ':' json_val     { if (!stringp($3))
-                                           yyerr("non-string key in JSON hash");
-                                         if (consp($1))
-                                         { $$ = cons(list($3, $5, nao), $1); }
-                                         else if (parser->quasi_level > 0 &&
-                                                  ((unquotes_occur($3, 0)) ||
-                                                   unquotes_occur($5, 0)))
-                                         { val pa = hash_pairs($1);
-                                           $$ = cons(list($3, $5, nao), pa); }
-                                         else
-                                         { sethash($1, $3, $5);
-                                           $$ = $1; } }
-           | json_val json_val         { yyerr("missing colon in JSON hash"); }
-           | json_val ':' json_val
-             error                     { yyerr("missing comma in JSON hash"); }
-           | json_val error            { yyerr("bad element in JSON hash"); }
+             json_val json_col json_val { if (consp($1))
+                                          { $$ = cons(list($3, $5, nao), $1); }
+                                          else if (parser->quasi_level > 0 &&
+                                                   ((unquotes_occur($3, 0)) ||
+                                                    unquotes_occur($5, 0)))
+                                          { val pa = hash_pairs($1);
+                                            $$ = cons(list($3, $5, nao), pa); }
+                                          else
+                                          { sethash($1, $3, $5);
+                                            $$ = $1; } }
+           | json_val json_val          { yyerr("missing colon in JSON hash"); }
+           | json_pairs json_val
+             error                      { yyerr("missing comma in JSON hash"); }
+           | json_val error             { yybadtok(yychar, lit("JSON hash")); }
            ;
+
+json_col : SYMTOK       { if ($1[0] == ':' && $1[1] == 0)
+                          { $$ = nil; }
+                          else
+                          { yybadtok(yychar, lit("JSON hash")); } }
+         | ':'          { $$ = nil; }
+         ;
+
 
 list : '(' n_exprs ')'          { $$ = rl($2, num($1)); }
      | '(' '.' n_exprs ')'      { val a = car($3);
