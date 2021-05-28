@@ -12563,6 +12563,184 @@ max_exceeded:
     put_string(lit("\\..."), out);
 }
 
+static void out_json_str(val str, val out)
+{
+  const wchar_t *cstr = c_str(str);
+  wchar_t ch;
+
+  put_char(chr('"'), out);
+
+  while ((ch = *cstr++)) {
+    switch (ch) {
+    case '\\':
+    case '"':
+      put_char(chr('\\'), out);
+      put_char(chr(ch), out);
+      break;
+    case '\b':
+      put_string(lit("\\b"), out);
+      break;
+    case '\f':
+      put_string(lit("\\f"), out);
+      break;
+    case '\n':
+      put_string(lit("\\n"), out);
+      break;
+    case '\r':
+      put_string(lit("\\r"), out);
+      break;
+    case '\t':
+      put_string(lit("\\t"), out);
+      break;
+    case 0xDC00:
+      put_string(lit("\\u0000"), out);
+      break;
+    default:
+      {
+
+        if ((ch < 0x20) || (ch >= 0x7F && ch < 0xA0) ||
+            (ch >= 0xD800 && ch < 0xDC00) ||
+            (ch >= 0xDD00 && ch < 0xE000) ||
+            ch == 0xFFFE || ch == 0xFFFF)
+        {
+          format(out, lit("\\u~,04X"), chr(ch), nao);
+        } else if (ch >= 0xDC01 && ch < 0xDD00) {
+          put_byte(num_fast(ch & 0xFF), out);
+        } else if (ch >= 0xFFFF) {
+          wchar_t c20 = ch - 0x10000;
+          wchar_t sg0 = 0xD800 + ((c20 >> 10) & 0x3FF);
+          wchar_t sg1 = 0xDC00 + (c20 & 0x3FF);
+          format(out, lit("\\u~,04X\\u~,04X"), chr(sg0), chr(sg1), nao);
+        } else {
+          put_char(chr(ch), out);
+        }
+      }
+      break;
+    }
+  }
+
+  put_char(chr('"'), out);
+}
+
+static void out_json_rec(val obj, val out, struct strm_ctx *ctx)
+{
+  switch (type(obj)) {
+  case NIL:
+    put_string(lit("false"), out);
+    return;
+  case SYM:
+    if (obj == t) {
+      put_string(lit("true"), out);
+      return;
+    }
+    if (obj == null_s) {
+      put_string(lit("null"), out);
+      return;
+    }
+    break;
+  case CONS:
+    {
+      val sym = car(obj);
+      if (sym == hash_lit_s) {
+        val iter, next;
+        put_char(chr('{'), out);
+        for (iter = cddr(obj), next = nil; iter; iter = next) {
+          val pair = car(iter);
+          next = cdr(iter);
+          out_json_rec(car(pair), out, ctx);
+          put_char(chr(':'), out);
+          out_json_rec(cadr(pair), out, ctx);
+          if (next)
+            put_char(chr(','), out);
+        }
+        put_char(chr('}'), out);
+        return;
+      }
+      if (sym == vector_lit_s) {
+        val iter, next;
+        put_char(chr('['), out);
+        for (iter = cadr(obj), next = nil; iter; iter = next) {
+          val elem = car(iter);
+          next = cdr(iter);
+          out_json_rec(elem, out, ctx);
+          if (next)
+            put_char(chr(','), out);
+        }
+        put_char(chr(']'), out);
+        return;
+      }
+      if (sym == sys_unquote_s) {
+        put_char(chr('~'), out);
+        obj_print_impl(cadr(obj), out, nil, ctx);
+        return;
+      }
+      if (sym == sys_splice_s) {
+        put_string(lit("~*"), out);
+        obj_print_impl(cadr(obj), out, nil, ctx);
+        return;
+      }
+    }
+    break;
+  case VEC:
+    {
+      cnum len = c_num(length(obj), lit("print"));
+      cnum i;
+
+      put_char(chr('['), out);
+      for (i = 0; i < len; i++) {
+        val elem = obj->v.vec[i];
+        out_json_rec(elem, out, ctx);
+        if (i < len - 1)
+          put_char(chr(','), out);
+      }
+      put_char(chr(']'), out);
+
+      return;
+    }
+    break;
+  case COBJ:
+    if (hashp(obj)) {
+      val cell, next;
+      struct hash_iter hi;
+
+      us_hash_iter_init(&hi, obj);
+
+      put_char(chr('{'), out);
+      for (next = nil, cell = hash_iter_next(&hi); cell; cell = next) {
+        next = hash_iter_next(&hi);
+        out_json_rec(car(cell), out, ctx);
+        put_char(chr(':'), out);
+        out_json_rec(cdr(cell), out, ctx);
+        if (next)
+          put_char(chr(','), out);
+      }
+      put_char(chr('}'), out);
+      return;
+    }
+    break;
+  case FLNUM:
+    format(out, lit("~a"), obj, nao);
+    return;
+  case LIT:
+  case STR:
+  case LSTR:
+    out_json_str(obj, out);
+    return;
+  default:
+    break;
+  }
+
+  uw_throwf(type_error_s, lit("print: invalid object ~s in JSON"),
+            obj, nao);
+}
+
+static void out_json(val op, val obj, val out, struct strm_ctx *ctx)
+{
+  if (op == sys_qquote_s)
+    put_char(chr('^'), out);
+  out_json_rec(obj, out, ctx);
+}
+
 INLINE int circle_print_eligible(val obj)
 {
   return is_ptr(obj) && (!symbolp(obj) || !symbol_package(obj));
@@ -12669,6 +12847,11 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
       } else if (sym == hash_lit_s) {
         put_string(lit("#H"), out);
         obj_print_impl(rest(obj), out, pretty, ctx);
+      } else if (sym == json_s && have_args &&
+                 consp(cdr(args)) && nilp(cddr(args)))
+      {
+        put_string(lit("#J"), out);
+        out_json(arg, cadr(args), out, ctx);
       } else if (sym == var_s && two_elem &&
                  (symbolp(arg) || integerp(arg)))
       {

@@ -12431,6 +12431,18 @@ The JSON escape sequence
 .code "\eu0000"
 denoting the U+0000 NUL character is also converted to U+DC00.
 
+When a JSON string is output, any code points U+DC01 through U+DCFF occurring
+in that string are assumed to denote raw bytes to be output, without
+escaping. The code point U+DC00 produces the
+.code "\eu0000"
+escape syntax. This behavior is different from \*(TL literals, which, on
+output, simply render these code points using
+.code "\ex"
+escape sequences. Rationale: this is because JSON is considered an external format.
+The requirements are intended to reproduce the original byte sequence, if
+possible, rather than JSON syntax which will produce the same \*(TX object
+if read back by \*(TX.
+
 \*(TL does not impose the restriction that the keys in a JSON object
 must be strings:
 .code "#J{1:2,true:false}"
