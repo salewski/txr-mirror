@@ -12341,6 +12341,125 @@ syntax, either explicitly or as defaults. Then, every
 object is constructed from its respective literal syntax and inserted into
 the tree.
 
+.NP* JSON Literals
+.meIP >> #J json-syntax
+Introduces a JSON literal.
+.meIP >> #J^ json-syntax
+Introduces a JSON quasiliteral, allowing unquoting and splicing of Lisp expressions.
+
+The implementation of JSON syntax is based on, and intended to conform with
+the IETF RFC8259 document. Only \*(TX's extensions to JSON syntax are described
+in this manual, as well as the correspondence between JSON syntax and Lisp.
+
+The
+.meta json-syntax
+is translated into a \*(TL object as follows.
+
+A JSON string corresponds to a Lisp string. A JSON number corresponds to a
+Lisp floating-point number. A JSON array corresponds to a Lisp vector.
+A JSON object corresponds to an
+.codn equal -based
+hash table.
+
+The JSON symbols
+.code true
+and
+.code false
+translate to the Lisp symbols
+.code t
+and
+.codn nil ,
+respectively.
+
+The
+.mono
+.meti >> #J json-syntax
+.onom
+expression produces the object:
+
+.mono
+.mets (json quote << lisp-object )
+.onom
+
+where
+.meta lisp-object
+is the Lisp value which corresponds to the
+.metn json-syntax .
+
+Similarly, but with a key difference, the
+.mono
+.meti >> #J^ json-syntax
+.onom
+expression produces the object:
+
+.mono
+.mets (json sys:qquote << lisp-object )
+.onom
+
+in which
+.code quote
+has been replaced with
+.codn sys:qquote .
+
+The
+.code json
+symbol is bound as a macro, which is expanded when a
+.code #J
+expression is evaluated.
+
+\*(TL allows the circle notation to occur within JSON syntax. See the section
+Notation for Circular and Shared Structure.
+
+\*(TL allows for JSON syntax to be quasiquoted, and provides two extensions
+for writing unquotes and splicing unquotes. Within a JSON quasiquote, the
+.code ~
+(tilde) character introduces a Lisp expression whose value is to be substituted
+at that point. Thus, the tilde serves the role of the unquoting comma used
+in Lisp quasiquotes. Splicing is indicated by the character sequence
+.codn ~* ,
+which introduces a Lisp expression that is expected to produce a list, whose
+elements are interpolated into the JSON value.
+
+Note: quasiquoting allows Lisp values to be introduced into the resulting
+object which are outside of the JSON type system, such as integers, characters,
+symbols or structures. These objects have no representation in JSON syntax.
+
+.TP* Examples:
+
+.verb
+  ;; Basic JSON:
+
+  #Jtrue -> t
+  #Jfalse -> nil
+  (list #J true #Jtrue #Jfalse) -> (t t nil)
+  #J[1, 2, 3.14] -> #(1.0 2.0 3.14)
+  #J{"foo":"bar"} -> #H(() ("foo" "bar"))
+
+  ;; Quoting JSON shows the json expression
+
+  '#Jfalse -> (json quote ())
+  '#Jtrue -> (json quote t)
+  '#J["a", true, 3.0] -> (json quote #("a" t 3.0))
+  '#J^[~(+ 2 2), 3] -> (json sys:qquote #(,(+ 2 2) 3.0))
+
+  :; Circle notation:
+
+  #J[#1="abc", #1#, #1#] -> #("abc" "abc" "abc")
+
+  ;; JSON Quasiquote:
+
+  #J^[~*(list 1.0 2.0 3.0), ~(* 2.0 2), 5.0]
+  --> #(1.0 2.0 3.0 4.0 5.0)
+
+  ;; Lisp quasiquote around JSON quote: requires evaluation round.
+
+  ^#J[~*(list 1.0 2.0 3.0), ~(* 2.0 2), 5.0]
+  --> (json quote #(1.0 2.0 3.0 4.0 5.0))
+
+  (eval ^#J[~*(list 1.0 2.0 3.0), ~(* 2.0 2), 5.0])
+  --> #(1.0 2.0 3.0 4.0 5.0)
+.brev
+
 .coNP The @ .. notation
 In \*(TL, there is a special "dotdot" notation consisting of a pair of dots.
 This can be written between successive atoms or compound expressions, and is a
@@ -71645,6 +71764,42 @@ named
 .codn RTLD_NOW ,
 .codn RTLD_LOCAL ,
 etc.
+
+.SS* Data Interchange Support
+
+.coNP Macro @ json
+.synb
+.mets (json [quote | sys:qquote] << object )
+.syne
+.desc
+The
+.code json
+macro exists in supports of the JSON literal and quasiliteral
+.mono
+.meti >> #J json-syntax
+.onom
+and
+.mono
+.meti >> #J^ json-syntax
+.onom
+notations, which use the macro as their target abstract syntax.
+
+The macro transforms itself by deleting the
+.code json
+symbol, producing either the
+.mono
+.meti (quote << object )
+.onom
+quote syntax, or else the
+.mono
+.meti (sys:qquote << object )
+.onom
+quasiquote syntax, depending on which quoting symbol is present.
+
+If the application produces and expands a
+.code json
+macro form which does not conform to this syntax, or does not
+specify one of the above two quoting symbols, the behavior is unspecified.
 
 .SH* FOREIGN FUNCTION INTERFACE
 
