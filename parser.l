@@ -1121,7 +1121,8 @@ NJPUNC  [^(){},:\[\]"~*^ \t\n]
 }
 
 <JLIT>[\\]u{HEX}{4} {
-  yylval->chr = num_esc(yyg, yytext + 1);
+  wchar_t ch = num_esc(yyg, yytext + 1);
+  yylval->chr = if3(ch, ch, 0xDC00);
   return LITCHAR;
 }
 
@@ -1171,7 +1172,7 @@ NJPUNC  [^(){},:\[\]"~*^ \t\n]
            chr(yytext[0]), nao);
 }
 
-<STRLIT,CHRLIT,QSILIT,WLIT,QWLIT>. {
+<STRLIT,CHRLIT,QSILIT,WLIT,QWLIT,JLIT>. {
   yylval->chr = convert(unsigned char, yytext[0]) + 0xDC00;
   return LITCHAR;
 }

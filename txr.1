@@ -12348,7 +12348,7 @@ Introduces a JSON literal.
 Introduces a JSON quasiliteral, allowing unquoting and splicing of Lisp expressions.
 
 The implementation of JSON syntax is based on, and intended to conform with
-the IETF RFC8259 document. Only \*(TX's extensions to JSON syntax are described
+the IETF RFC 8259 document. Only \*(TX's extensions to JSON syntax are described
 in this manual, as well as the correspondence between JSON syntax and Lisp.
 
 The
@@ -12406,6 +12406,20 @@ The
 symbol is bound as a macro, which is expanded when a
 .code #J
 expression is evaluated.
+
+The following extensions to JSON are supported.
+
+When an invalid UTF-8 byte is encountered inside a JSON string, its value is
+mapped into the code point range U+DC01 to U+DCFF. That byte is consumed, and
+decoding continues with the next byte. This treatment is consistent with the
+treatment of invalid UTF-8 bytes in \*(TL literals and I/O streams.  If the
+valid UTF-8 byte U+0000 (ASCII NUL) occurs in a JSON string, it is also mapped
+to U+DC00, \*(TX's pseudo-null character. This treatment is consistent with
+\*(TX string literals and I/O streams.
+
+The JSON escape sequence
+.code "\eu0000"
+denoting the U+0000 NUL character is also converted to U+DC00.
 
 \*(TL does not impose the restriction that the keys in a JSON object
 must be strings:
