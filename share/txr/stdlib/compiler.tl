@@ -2314,10 +2314,9 @@
                 (compile-form obj))
               (dump-to-tlo out-stream out))
 
-            (let ((parser (sys:get-parser in-stream)))
-              (when (> (sys:parser-errors parser) 0)
-                (error "~s: compilation of ~s failed" 'compile-file
-                       (stream-get-prop in-stream :name)))))
+            (when (parse-errors in-stream)
+              (error "~s: compilation of ~s failed" 'compile-file
+                     (stream-get-prop in-stream :name))))
           (flush-stream out-stream)
           (set success t))))))
 

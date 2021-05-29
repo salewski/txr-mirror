@@ -667,7 +667,7 @@ static val lisp_parse_impl(val self, enum prime_parser prime,
     parse(pi, if3(std_error != std_null, name, lit("")), prime);
     gc_state(gc);
 
-    if (pi->syntax_tree == nao && pi->errors == 0 && !parser_eof(parser))
+    if (pi->syntax_tree == nao && pi->errors == 0 && !pi->eof)
       continue;
 
     break;
@@ -749,9 +749,7 @@ static val read_file_common(val self, val stream, val error_stream, val compiled
     if (form == error_val) {
       if (parser_errors(parser) != zero)
         return nil;
-      if (parser_eof(parser))
-        break;
-      continue;
+      break;
     }
 
     if (compiled && first) {
@@ -780,9 +778,6 @@ static val read_file_common(val self, val stream, val error_stream, val compiled
     } else {
       (void) eval_intrinsic(form, nil);
     }
-
-    if (parser_eof(parser))
-      break;
   }
 
   return t;
@@ -1160,18 +1155,11 @@ static val read_eval_ret_last(val env, val counter,
 
   for (;; lineno = succ(lineno)) {
     val form = lisp_parse(in_stream, out_stream, error_val, name, lineno);
-    val parser = get_parser(in_stream);
 
-    if (form == error_val) {
-      if (parser_errors(parser) != zero || parser_eof(parser))
-        break;
-      continue;
-    }
+    if (form == error_val)
+      break;
 
     value = eval_intrinsic(form, nil);
-
-    if (parser_eof(parser))
-      break;
   }
 
   dyn_env = saved_dyn_env;
@@ -1664,11 +1652,6 @@ val repl(val bindings, val in_stream, val out_stream, val env)
 
 #endif
 
-val get_parser(val stream)
-{
-  return gethash(stream_parser_hash, stream);
-}
-
 val parser_errors(val parser)
 {
   val self = lit("parser-errors");
@@ -1676,18 +1659,11 @@ val parser_errors(val parser)
   return num(p->errors);
 }
 
-val parser_eof(val parser)
-{
-  val self = lit("parser-eof");
-  parser_t *p = coerce(parser_t *, cobj_handle(self, parser, parser_s));
-  return tnil(p->eof);
-}
-
 val parse_errors(val stream)
 {
   val self = lit("parse-errors");
   val errors = nil;
-  val parser = get_parser(stream);
+  val parser = gethash(stream_parser_hash, stream);
   if (parser) {
     parser_t *p = coerce(parser_t *, cobj_handle(self, parser, parser_s));
     if (p->errors)
@@ -1886,9 +1862,6 @@ void parse_init(void)
   reg_var(listener_greedy_eval_s, nil);
   reg_var(rec_source_loc_s, nil);
   reg_fun(circref_s, func_n1(circref));
-  reg_fun(intern(lit("get-parser"), system_package), func_n1(get_parser));
-  reg_fun(intern(lit("parser-errors"), system_package), func_n1(parser_errors));
-  reg_fun(intern(lit("parser-eof"), system_package), func_n1(parser_eof));
   reg_fun(intern(lit("parse-errors"), user_package), func_n1(parse_errors));
   reg_fun(intern(lit("repl"), system_package), func_n4(repl));
   reg_mac(json_s, func_n2(me_json));
