@@ -1616,7 +1616,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
       lino_hist_add(ls, line_w);
 
       if (uw_exception_subtype_p(exsym, syntax_error_s)) {
-        put_line(lit("** syntax error"), out_stream);
+        format(out_stream, lit("** syntax error: ~a\n"), car(exvals), nao);
       } else if (uw_exception_subtype_p(exsym, error_s)) {
         error_trace(exsym, exvals, out_stream, lit("**"));
       } else {
