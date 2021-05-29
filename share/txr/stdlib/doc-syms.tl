@@ -1854,6 +1854,7 @@
       ("tofloatz" "N-03E2D4B8")
       ("toint" "N-01DBC9D7")
       ("tointz" "N-03E2D4B8")
+      ("tojson" "N-017848BD")
       ("tok" "N-0117F60C")
       ("tok-str" "N-0225F28F")
       ("tok-where" "N-0225F28F")

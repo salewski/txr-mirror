@@ -1206,6 +1206,7 @@ val print(val obj, val stream, val pretty);
 val pprint(val obj, val stream);
 val tostring(val obj);
 val tostringp(val obj);
+val tojson(val obj, val flat);
 val display_width(val obj);
 #if !HAVE_SETENV
 void setenv(const char *name, const char *value, int overwrite);

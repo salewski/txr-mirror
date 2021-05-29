@@ -6873,6 +6873,7 @@ void eval_init(void)
   reg_fun(intern(lit("prinl"), user_package), func_n2o(prinl, 1));
   reg_fun(intern(lit("pprinl"), user_package), func_n2o(pprinl, 1));
   reg_fun(intern(lit("tprint"), user_package), func_n2o(tprint, 1));
+  reg_fun(intern(lit("tojson"), user_package), func_n2o(tojson, 1));
   reg_fun(intern(lit("display-width"), user_package), func_n1(display_width));
 
   reg_fun(intern(lit("fmt-simple"), system_package), func_n5o(fmt_simple, 1));

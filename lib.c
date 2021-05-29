@@ -13454,6 +13454,27 @@ val tostringp(val obj)
   return get_string_from_stream(ss);
 }
 
+val tojson(val obj, val flat)
+{
+  if (consp(obj) && eq(car(obj), json_s)) {
+    val ss = make_string_output_stream();
+    if (default_null_arg(flat))
+      set_indent_mode(ss, num_fast(indent_foff));
+    obj_print(obj, ss, nil);
+    return get_string_from_stream(ss);
+  } else {
+    val json = cons(json_s, cons(quote_s, cons(obj, nil)));
+    val ss = make_string_output_stream();
+    if (default_null_arg(flat))
+      set_indent_mode(ss, num_fast(indent_foff));
+    obj_print(json, ss, nil);
+    rcyc_pop(&json);
+    rcyc_pop(&json);
+    rcyc_pop(&json);
+    return get_string_from_stream(ss);
+  }
+}
+
 val display_width(val obj)
 {
   if (stringp(obj)) {
