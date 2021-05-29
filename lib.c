@@ -12644,7 +12644,7 @@ static void out_json_rec(val obj, val out, struct strm_ctx *ctx)
     }
     break;
   case CONS:
-    {
+    if (ctx != 0) {
       val sym = car(obj);
       if (sym == hash_lit_s) {
         val save_indent;
@@ -13461,23 +13461,11 @@ val tostringp(val obj)
 
 val tojson(val obj, val flat)
 {
-  if (consp(obj) && eq(car(obj), json_s)) {
-    val ss = make_string_output_stream();
-    if (default_null_arg(flat))
-      set_indent_mode(ss, num_fast(indent_foff));
-    obj_print(obj, ss, nil);
-    return get_string_from_stream(ss);
-  } else {
-    val json = cons(json_s, cons(quote_s, cons(obj, nil)));
-    val ss = make_string_output_stream();
-    if (default_null_arg(flat))
-      set_indent_mode(ss, num_fast(indent_foff));
-    obj_print(json, ss, nil);
-    rcyc_pop(&json);
-    rcyc_pop(&json);
-    rcyc_pop(&json);
-    return get_string_from_stream(ss);
-  }
+  val ss = make_string_output_stream();
+  if (default_null_arg(flat))
+    set_indent_mode(ss, num_fast(indent_foff));
+  out_json_rec(obj, ss, 0);
+  return get_string_from_stream(ss);
 }
 
 val display_width(val obj)
