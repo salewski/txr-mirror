@@ -1419,6 +1419,8 @@
       ("put-byte" "D-002E")
       ("put-carray" "N-00737951")
       ("put-char" "D-0003")
+      ("put-json" "N-009C27EF")
+      ("put-jsonl" "N-009C27EF")
       ("put-line" "N-012163C3")
       ("put-lines" "N-0367B282")
       ("put-obj" "N-025DB229")

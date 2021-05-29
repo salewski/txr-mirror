@@ -12609,8 +12609,6 @@ static void out_json_str(val str, val out)
             ch == 0xFFFE || ch == 0xFFFF)
         {
           format(out, lit("\\u~,04X"), chr(ch), nao);
-        } else if (ch >= 0xDC01 && ch < 0xDD00) {
-          put_byte(num_fast(ch & 0xFF), out);
         } else if (ch >= 0xFFFF) {
           wchar_t c20 = ch - 0x10000;
           wchar_t sg0 = 0xD800 + ((c20 >> 10) & 0x3FF);
@@ -13457,6 +13455,28 @@ val tostringp(val obj)
   val ss = make_string_output_stream();
   pprint(obj, ss);
   return get_string_from_stream(ss);
+}
+
+val put_json(val obj, val stream_in, val flat)
+{
+  val stream = default_arg(stream_in, std_output);
+
+  if (default_null_arg(flat)) {
+    out_json_rec(obj, stream, 0);
+  } else {
+    val imode = set_indent_mode(stream, num_fast(indent_foff));
+    out_json_rec(obj, stream, 0);
+    set_indent_mode(stream, imode);
+  }
+
+  return t;
+}
+
+val put_jsonl(val obj, val stream, val flat)
+{
+  put_json(obj, stream, flat);
+  put_char(chr('\n'), stream);
+  return t;
 }
 
 val tojson(val obj, val flat)

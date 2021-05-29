@@ -1206,6 +1206,8 @@ val print(val obj, val stream, val pretty);
 val pprint(val obj, val stream);
 val tostring(val obj);
 val tostringp(val obj);
+val put_json(val obj, val stream, val flat);
+val put_jsonl(val obj, val stream, val flat);
 val tojson(val obj, val flat);
 val display_width(val obj);
 #if !HAVE_SETENV

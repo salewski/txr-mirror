@@ -12420,7 +12420,7 @@ expression is evaluated.
 The following remarks indicate special treatment and extensions in the
 processing of JSON. Similar remarks regarding the production of JSON are
 given under the
-.code tojson
+.code put-json
 function.
 
 When an invalid UTF-8 byte is encountered inside a JSON string, its value is
@@ -71843,16 +71843,25 @@ etc.
 
 .SS* Data Interchange Support
 
-.coNP Function @ tojson
+.coNP Functions @ put-json and @ put-jsonl
 .synb
-.mets (tojson < obj <> [ flat-p ])
+.mets (put-json < obj >> [ stream <> [ flat-p ]])
+.mets (put-jsonl < obj >> [ stream <> [ flat-p ]])
 .syne
 .desc
 The
-.code tojson
+.code put-json
 function converts
 .meta obj
-into JSON notation, returned as a character string.
+into JSON notation, and writes that notation into
+.meta stream
+as a sequence of characters.
+
+If
+.meta stream
+is an external stream such as a file stream, then the JSON is
+rendered by conversion of the characters into UTF-8, in the usual
+manner characteristic of those streams.
 
 The behavior is unspecified if
 .meta obj
@@ -71891,37 +71900,94 @@ is produced, since RFC 8259 requires JSON object keys to be strings.
 If the
 .code flat-p
 argument is present and has a true value, then the JSON is generated
-without any line breaks or indentation.
+without any line breaks or indentation.  Otherwise, the JSON output is subject
+to such formatting.
 
-Otherwise, the JSON is potentially subject to such formatting.
+The difference between
+.code put-json
+and
+.code put-jsonl
+is that the latter emits a newline character after the JSON output.
 
-Even if the JSON data contains line breaks, it does not end in a line break.
+When a string object is output as JSON string syntax, the following rules
 
-When a JSON string is output, any code points U+DC01 through U+DCFF occurring
-in that string are assumed to denote raw bytes to be output, without
-escaping. The code point U+DC00 produces the
-.code "\eu0000"
-escape syntax. This behavior is different from \*(TL literals, which, on
-output, simply render these code points using
-.code "\ex"
-escape sequences. Rationale: this is because JSON is considered an external format.
-The requirements are intended to reproduce the original byte sequence, if
-possible, rather than JSON syntax which will produce the same \*(TX object
-if read back by \*(TX.
-
+.RS
+.IP 1.
+The characters
+.code \e
+(backslash, reverse solidus) and
+.code \(dq
+(double quote)
+are preceded by a backslash escape.
+.IP 2.
+The characters U+0008 (BS), U+0009 (TAB), U+000A (LF), U+000C (FF) and
+U+000D (CR) are rendered as, respectively,
+.codn \eb ,
+.codn \et ,
+.codn \en ,
+.code \ef
+and
+.codn \er .
+.IP 3.
 If the character sequence
 .code "</"
-occurs in the string, the slash is escaped, such that the sequence
-is rendered as
+occurs in a string, then in the JSON representation the slash is escaped, such
+that the sequence is rendered as
 .codn "<\e/" .
 Instances of the
 .code /
 (forward slash, solidus) occurs not preceded by
 .code <
-(less than) are unescaped. Rationale: this allows for safe embedding
-of the resulting JSON into HTML
+(less than) are unescaped. Rationale: this is a feature of JSON which allows
+for safer embedding of the resulting JSON into HTML
 .code script
 tags.
+.IP 4.
+The code point U+DC00 (\*(TX's pseudo-null character) is translated into the
+.code "\eu0000"
+escape syntax.
+.IP 4.
+The code points U+DC01 through U+DCFF are send to the stream as-is.
+If the stream performs UTF-8 encoding, these characters turn into individual
+bytes in the range 0 to 255.
+.IP 5.
+Control characters in the U+0001 to U+001F other than the ones subject
+to rule 1 above are rendered as
+.code \eu
+escape sequences. Likewise, code points in the range U+0080 to U+00BF,
+the range U+D800 to U+DBFF, U+DD00 to U+DFFF, and the code points
+U+FFFE and U+FFFF are also encoded as
+.code \eu
+escape sequences.
+.IP 6.
+A character outside of the BMP (Basic Multilingual Plane) in the range
+U+10000 to U+10FFFF is encoded using as a pair of consecutive
+.code \eu
+escape sequences, specifying the code points of a UTF-16 surrogate pair
+encoding that character. This representation is described in RFC 8259.
+.RE
+
+.coNP Function @ tojson
+.synb
+.mets (tojson < obj <> [ flat-p ])
+.syne
+.desc
+The
+.code tojson
+function converts
+.meta obj
+into JSON notation, returned as a character string.
+
+The function can be understood as constructing a string output stream,
+calling the
+.code put-json
+function to write the object into that stream,
+and then retrieving and returning the constructed string.
+
+The
+.meta flat-p
+argument is passed to
+.codn put-json .
 
 .coNP Function @ get-json
 .synb
