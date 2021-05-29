@@ -223,9 +223,12 @@ void prime_parser(parser_t *p, val name, enum prime_parser prim)
   case prime_regex:
     sec_tok.yy_char = SECRET_ESCAPE_R;
     break;
+  case prime_json:
+    sec_tok.yy_char = SECRET_ESCAPE_J;
+    break;
   }
 
-  if (p->recent_tok.yy_char)
+  if (p->recent_tok.yy_char && prim != prime_json)
     pushback_token(p, &p->recent_tok);
   pushback_token(p, &sec_tok);
   prime_scanner(p->scanner, prim);
@@ -624,7 +627,8 @@ val regex_parse(val string, val error_stream)
   return parser.syntax_tree;
 }
 
-static val lisp_parse_impl(val self, val interactive, val rlcp_p, val source_in,
+static val lisp_parse_impl(val self, enum prime_parser prime,
+                           val rlcp_p, val source_in,
                            val error_stream, val error_return_val, val name_in,
                            val lineno)
 {
@@ -660,7 +664,6 @@ static val lisp_parse_impl(val self, val interactive, val rlcp_p, val source_in,
 
   for (;;) {
     int gc = gc_state(0);
-    enum prime_parser prime = if3(interactive, prime_interactive, prime_lisp);
     parse(pi, if3(std_error != std_null, name, lit("")), prime);
     gc_state(gc);
 
@@ -697,7 +700,7 @@ val lisp_parse(val source_in, val error_stream, val error_return_val,
                val name_in, val lineno)
 {
   val self = lit("lisp-parse");
-  return lisp_parse_impl(self, nil, t, source_in, error_stream,
+  return lisp_parse_impl(self, prime_lisp, t, source_in, error_stream,
                          error_return_val, name_in, lineno);
 }
 
@@ -705,7 +708,7 @@ val nread(val source_in, val error_stream, val error_return_val,
           val name_in, val lineno)
 {
   val self = lit("nread");
-  return lisp_parse_impl(self, nil, nil, source_in, error_stream,
+  return lisp_parse_impl(self, prime_lisp, nil, source_in, error_stream,
                          error_return_val, name_in, lineno);
 }
 
@@ -713,7 +716,15 @@ val iread(val source_in, val error_stream, val error_return_val,
           val name_in, val lineno)
 {
   val self = lit("iread");
-  return lisp_parse_impl(self, t, nil, source_in, error_stream,
+  return lisp_parse_impl(self, prime_interactive, nil, source_in, error_stream,
+                         error_return_val, name_in, lineno);
+}
+
+val get_json(val source_in, val error_stream, val error_return_val,
+             val name_in, val lineno)
+{
+  val self = lit("get-json");
+  return lisp_parse_impl(self, prime_json, nil, source_in, error_stream,
                          error_return_val, name_in, lineno);
 }
 
@@ -732,7 +743,7 @@ static val read_file_common(val self, val stream, val error_stream, val compiled
   }
 
   for (;;) {
-    val form = lisp_parse_impl(self, nil, not_compiled, stream,
+    val form = lisp_parse_impl(self, prime_lisp, not_compiled, stream,
                                error_stream, error_val, name, colon_k);
 
     if (form == error_val) {

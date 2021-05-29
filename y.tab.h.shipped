@@ -58,26 +58,27 @@
      SECRET_ESCAPE_R = 305,
      SECRET_ESCAPE_E = 306,
      SECRET_ESCAPE_I = 307,
-     OLD_DOTDOT = 308,
-     NUMBER = 309,
-     METANUM = 310,
-     JSKW = 311,
-     HASH_N_EQUALS = 312,
-     HASH_N_HASH = 313,
-     REGCHAR = 314,
-     REGTOKEN = 315,
-     LITCHAR = 316,
-     SPLICE = 317,
-     JSPLICE = 318,
-     OLD_AT = 319,
-     CONSDOT = 320,
-     LAMBDOT = 321,
-     UREFDOT = 322,
-     OREFDOT = 323,
-     UOREFDOT = 324,
-     LOW = 325,
-     ELSE = 326,
-     ELIF = 327
+     SECRET_ESCAPE_J = 308,
+     OLD_DOTDOT = 309,
+     NUMBER = 310,
+     METANUM = 311,
+     JSKW = 312,
+     HASH_N_EQUALS = 313,
+     HASH_N_HASH = 314,
+     REGCHAR = 315,
+     REGTOKEN = 316,
+     LITCHAR = 317,
+     SPLICE = 318,
+     JSPLICE = 319,
+     OLD_AT = 320,
+     CONSDOT = 321,
+     LAMBDOT = 322,
+     UREFDOT = 323,
+     OREFDOT = 324,
+     UOREFDOT = 325,
+     LOW = 326,
+     ELSE = 327,
+     ELIF = 328
    };
 #endif
 /* Tokens.  */
@@ -131,26 +132,27 @@
 #define SECRET_ESCAPE_R 305
 #define SECRET_ESCAPE_E 306
 #define SECRET_ESCAPE_I 307
-#define OLD_DOTDOT 308
-#define NUMBER 309
-#define METANUM 310
-#define JSKW 311
-#define HASH_N_EQUALS 312
-#define HASH_N_HASH 313
-#define REGCHAR 314
-#define REGTOKEN 315
-#define LITCHAR 316
-#define SPLICE 317
-#define JSPLICE 318
-#define OLD_AT 319
-#define CONSDOT 320
-#define LAMBDOT 321
-#define UREFDOT 322
-#define OREFDOT 323
-#define UOREFDOT 324
-#define LOW 325
-#define ELSE 326
-#define ELIF 327
+#define SECRET_ESCAPE_J 308
+#define OLD_DOTDOT 309
+#define NUMBER 310
+#define METANUM 311
+#define JSKW 312
+#define HASH_N_EQUALS 313
+#define HASH_N_HASH 314
+#define REGCHAR 315
+#define REGTOKEN 316
+#define LITCHAR 317
+#define SPLICE 318
+#define JSPLICE 319
+#define OLD_AT 320
+#define CONSDOT 321
+#define LAMBDOT 322
+#define UREFDOT 323
+#define OREFDOT 324
+#define UOREFDOT 325
+#define LOW 326
+#define ELSE 327
+#define ELIF 328
 
 
 
@@ -170,7 +172,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 203 "y.tab.h"
+#line 205 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

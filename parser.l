@@ -1401,6 +1401,9 @@ void prime_scanner(scanner_t *yyg, enum prime_parser prim)
   case prime_regex:
     yy_push_state(SREGEX, yyg);
     break;
+  case prime_json:
+    yy_push_state(JSON, yyg);
+    break;
   }
 }
 

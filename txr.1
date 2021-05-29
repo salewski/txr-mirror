@@ -71875,6 +71875,37 @@ Otherwise, the JSON is potentially subject to such formatting.
 
 Even if the JSON data contains line breaks, it does not end in a line break.
 
+.coNP Function @ get-json
+.synb
+.mets (get-json >> [ source
+.mets \ \ \ \ \ \ \ \ \ \  >> [ err-stream
+.mets \ \ \ \ \ \ \ \ \ \ \  >> [ err-retval >> [ name <> [ lineno ]]]]])
+.syne
+.desc
+The
+.code get-json
+function closely resembles the
+.code read
+function, and follows the same argument and error reporting conventions.
+
+Rather than reading a Lisp object from the input source, it reads a JSON
+object, with support for \*(TX's JSON extensions.
+
+If an object is successfully read, its Lisp representation is returned.
+JSON numbers produce floating-point number objects.
+JSON strings produce string objects. The keywords
+.codn true ,
+.code false
+and
+.code null
+map to the Lisp symbols
+.codn t ,
+.codn nil ,
+and
+.codn null ,
+respectively.
+JSON objects map to hash tables, and JSON arrays to vectors.
+
 .coNP Macro @ json
 .synb
 .mets (json [quote | sys:qquote] << object )

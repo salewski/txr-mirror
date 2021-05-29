@@ -835,6 +835,7 @@
       ("get-hash-userdata" "N-030B41A7")
       ("get-indent" "N-024E9FD8")
       ("get-indent-mode" "N-03F3170C")
+      ("get-json" "N-014295FE")
       ("get-line" "D-0018")
       ("get-line-as-buf" "N-007FD2F9")
       ("get-lines" "N-00B65D06")

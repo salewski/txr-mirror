@@ -68,7 +68,7 @@ struct parser {
 };
 #endif
 
-enum prime_parser { prime_lisp, prime_interactive, prime_regex };
+enum prime_parser { prime_lisp, prime_interactive, prime_regex, prime_json };
 
 extern const int have_yydebug;
 extern const wchar_t *spec_file;
@@ -125,6 +125,8 @@ val nread(val source_in, val error_stream, val error_return_val,
           val name_in, val lineno);
 val iread(val source_in, val error_stream, val error_return_val,
           val name_in, val lineno);
+val get_json(val source_in, val error_stream, val error_return_val,
+             val name_in, val lineno);
 val read_eval_stream(val self, val stream, val error_stream);
 val read_compiled_file(val self, val stream, val error_stream);
 val txr_parse(val source, val error_stream,

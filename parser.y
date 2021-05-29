@@ -120,7 +120,7 @@ INLINE val expand_form_ver(val form, int ver)
 %token <lineno> HASH_BACKSLASH HASH_SLASH DOTDOT HASH_H HASH_S HASH_R HASH_J
 %token <lineno> HASH_SEMI HASH_B_QUOTE HASH_N HASH_T
 %token <lineno> WORDS WSPLICE QWORDS QWSPLICE
-%token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E SECRET_ESCAPE_I
+%token <lineno> SECRET_ESCAPE_R SECRET_ESCAPE_E SECRET_ESCAPE_I SECRET_ESCAPE_J
 %token <lineno> OLD_DOTDOT
 
 %token <val> NUMBER METANUM JSKW
@@ -189,6 +189,16 @@ spec : clauses_opt              { set_syntax_tree(parser, $1); }
                                     parser->syntax_tree = nil;
                                   } }
      | SECRET_ESCAPE_I          { if (yychar == YYEOF) {
+                                    parser->syntax_tree = nao;
+                                    YYACCEPT;
+                                  } else {
+                                    yybadtok(yychar, nil);
+                                    parser->syntax_tree = nil;
+                                  } }
+     | SECRET_ESCAPE_J json_val { set_syntax_tree(parser, $2);
+                                  YYACCEPT; }
+       byacc_fool               { internal_error("notreached"); }
+     | SECRET_ESCAPE_J          { if (yychar == YYEOF) {
                                     parser->syntax_tree = nao;
                                     YYACCEPT;
                                   } else {
