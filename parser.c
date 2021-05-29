@@ -1683,6 +1683,19 @@ val parser_eof(val parser)
   return tnil(p->eof);
 }
 
+val parse_errors(val stream)
+{
+  val self = lit("parse-errors");
+  val errors = nil;
+  val parser = get_parser(stream);
+  if (parser) {
+    parser_t *p = coerce(parser_t *, cobj_handle(self, parser, parser_s));
+    if (p->errors)
+      errors = num(p->errors);
+  }
+  return errors;
+}
+
 static val circref(val n)
 {
   uw_throwf(error_s, lit("unresolved #~s# reference in object syntax"),
@@ -1876,6 +1889,7 @@ void parse_init(void)
   reg_fun(intern(lit("get-parser"), system_package), func_n1(get_parser));
   reg_fun(intern(lit("parser-errors"), system_package), func_n1(parser_errors));
   reg_fun(intern(lit("parser-eof"), system_package), func_n1(parser_eof));
+  reg_fun(intern(lit("parse-errors"), user_package), func_n1(parse_errors));
   reg_fun(intern(lit("repl"), system_package), func_n4(repl));
   reg_mac(json_s, func_n2(me_json));
 }

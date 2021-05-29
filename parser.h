@@ -143,4 +143,5 @@ val ensure_parser(val stream, val name);
 val parser_set_lineno(val self, val stream, val lineno);
 val parser_errors(val parser);
 val parser_eof(val parser);
+val parse_errors(val stream);
 void parse_init(void);

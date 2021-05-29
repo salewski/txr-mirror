@@ -1330,6 +1330,7 @@
       ("parenb" "N-01B1B5DF")
       ("parmrk" "N-02391683")
       ("parodd" "N-01B1B5DF")
+      ("parse-errors" "N-00F843D4")
       ("partition" "N-0142889E")
       ("partition*" "N-03951D7A")
       ("partition-by" "N-000167DF")

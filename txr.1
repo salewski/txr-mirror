@@ -56632,6 +56632,48 @@ it may be useful to set
 true in order to obtain better diagnostics. However, source location recording
 incurs a performance and storage penalty.
 
+.coNP Function @ parse-errors
+.synb
+.mets (parse-errors << stream )
+.syne
+.desc
+The
+.code parse-errors
+function retrieves information, from a
+.metn stream ,
+pertaining to the status of the most recent parsing operation performed
+on that stream: namely, a previous call to
+.codn read ,
+.code iread
+or
+.codn get-json .
+
+If the
+.meta stream
+object has not been used for parsing, or else the most recent
+parsing operation did not encounter errors, then
+.code parse-errors
+returns
+.codn nil .
+
+If the most recent parsing operation on
+.meta stream
+encountered errors, then
+.code parse-errors
+function returns a positive integer value indicating the error count.
+Otherwise it returns
+.codn nil .
+
+If a parse error operation encounters a syntax error before obtaining any token
+from the stream, then the error count is zero and
+.code parse-errors
+returns
+.codn nil .
+Consequently,
+.code parse-errors
+may be used after a failed parse operation to distinguish a true
+syntax error from an end-of-stream condition.
+
 .coNP Function @ record-adapter
 .synb
 .mets (record-adapter < regex >> [ stream <> [ include-match ]])
