@@ -942,13 +942,14 @@ json : HASH_J json_val          { $$ = list(json_s, quote_s, $2, nao);
                                   end_of_json(scnr); }
      | HASH_J '^'               { parser->quasi_level++; }
        json_val                 { parser->quasi_level--;
+                                  end_of_json(scnr);
                                   $$ = list(json_s, sys_qquote_s, $4, nao); }
 json_val : NUMBER               { $$ = $1; }
          | JSKW                 { $$ = $1; }
          | '"' '"'              { $$ = null_string; }
          | '"' litchars '"'     { $$ = $2;
                                   rl($$, num(parser->lineno)); }
-         | '[' ']'              { $$ = vector(0, nil); }
+         | '[' ']'              { $$ = vector(zero, nil); }
          | '[' json_vals ']'    { $$ = if3(vectorp($2),
                                            $2,
                                            rl(cons(vector_lit_s,
