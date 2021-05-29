@@ -12417,7 +12417,11 @@ symbol is bound as a macro, which is expanded when a
 .code #J
 expression is evaluated.
 
-The following extensions to JSON are supported.
+The following remarks indicate special treatment and extensions in the
+processing of JSON. Similar remarks regarding the production of JSON are
+given under the
+.code tojson
+function.
 
 When an invalid UTF-8 byte is encountered inside a JSON string, its value is
 mapped into the code point range U+DC01 to U+DCFF. That byte is consumed, and
@@ -12430,18 +12434,6 @@ to U+DC00, \*(TX's pseudo-null character. This treatment is consistent with
 The JSON escape sequence
 .code "\eu0000"
 denoting the U+0000 NUL character is also converted to U+DC00.
-
-When a JSON string is output, any code points U+DC01 through U+DCFF occurring
-in that string are assumed to denote raw bytes to be output, without
-escaping. The code point U+DC00 produces the
-.code "\eu0000"
-escape syntax. This behavior is different from \*(TL literals, which, on
-output, simply render these code points using
-.code "\ex"
-escape sequences. Rationale: this is because JSON is considered an external format.
-The requirements are intended to reproduce the original byte sequence, if
-possible, rather than JSON syntax which will produce the same \*(TX object
-if read back by \*(TX.
 
 \*(TL does not impose the restriction that the keys in a JSON object
 must be strings:
@@ -71916,6 +71908,32 @@ without any line breaks or indentation.
 Otherwise, the JSON is potentially subject to such formatting.
 
 Even if the JSON data contains line breaks, it does not end in a line break.
+
+When a JSON string is output, any code points U+DC01 through U+DCFF occurring
+in that string are assumed to denote raw bytes to be output, without
+escaping. The code point U+DC00 produces the
+.code "\eu0000"
+escape syntax. This behavior is different from \*(TL literals, which, on
+output, simply render these code points using
+.code "\ex"
+escape sequences. Rationale: this is because JSON is considered an external format.
+The requirements are intended to reproduce the original byte sequence, if
+possible, rather than JSON syntax which will produce the same \*(TX object
+if read back by \*(TX.
+
+If the character sequence
+.code "</"
+occurs in the string, the slash is escaped, such that the sequence
+is rendered as
+.codn "<\e/" .
+Instances of the
+.code /
+(forward slash, solidus) occurs not preceded by
+.code <
+(less than) are unescaped. Rationale: this allows for safe embedding
+of the resulting JSON into HTML
+.code script
+tags.
 
 .coNP Function @ get-json
 .synb

@@ -12592,6 +12592,11 @@ static void out_json_str(val str, val out)
     case '\t':
       put_string(lit("\\t"), out);
       break;
+    case '<':
+      put_char(chr(ch), out);
+      if (*cstr == '/')
+        put_char(chr('\\'), out);
+      break;
     case 0xDC00:
       put_string(lit("\\u0000"), out);
       break;
