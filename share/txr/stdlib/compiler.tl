@@ -877,6 +877,7 @@
              (eavb (cdar nenv.(extend-var ex-args-var)))
              (tfrag me.(compile oreg nenv try-expr))
              (dfrag me.(compile oreg nenv desc-expr))
+             (coreg (if (equal tfrag.oreg '(t 0)) oreg tfrag.oreg))
              (lhand (gensym "l"))
              (lhend (gensym "l"))
              (treg me.(alloc-treg))
@@ -886,34 +887,35 @@
                        (mac-param-bind form (sym params . body) cl
                          (let* ((cl-src ^(apply (lambda ,params ,*body)
                                                 ,ex-sym-var ,ex-args-var))
-                                (cfrag me.(compile oreg nenv (expand cl-src)))
+                                (cfrag me.(compile coreg nenv (expand cl-src)))
                                 (lskip (gensym "l")))
-                           (new (frag oreg
+                           (new (frag coreg
                                       ^((gcall ,treg
                                                ,me.(get-sidx 'exception-subtype-p)
                                                ,esvb.loc
                                                ,me.(get-dreg sym))
                                         (if ,treg ,lskip)
                                         ,*cfrag.code
-                                        ,*me.(maybe-mov tfrag.oreg cfrag.oreg)
+                                        ,*me.(maybe-mov coreg cfrag.oreg)
                                         ,*(unless (eql i nclauses)
                                             ^((jmp ,lhend)))
                                         ,lskip)
                                       cfrag.fvars
                                       cfrag.ffuns)))))))
         me.(free-treg treg)
-        (new (frag tfrag.oreg
+        (new (frag coreg
                    ^((frame ,nenv.lev ,nenv.v-cntr)
                      ,*dfrag.code
                      (catch ,esvb.loc ,eavb.loc
                             ,me.(get-dreg symbols) ,dfrag.oreg ,lhand)
                      ,*tfrag.code
+                     ,*me.(maybe-mov coreg tfrag.oreg)
                      (jmp ,lhend)
                      ,lhand
                      ,*(mappend .code cfrags)
                      ,lhend
-                     (end ,tfrag.oreg)
-                     (end ,tfrag.oreg))
+                     (end ,coreg)
+                     (end ,coreg))
                    (uni tfrag.fvars [reduce-left uni cfrags nil .fvars])
                    (uni tfrag.ffuns [reduce-left uni cfrags nil .ffuns])))))))
 
