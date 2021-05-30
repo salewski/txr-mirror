@@ -517,15 +517,20 @@ static val package_instantiate(val set_fun)
 static val getput_set_entries(val dlt, val fun)
 {
   val name[] = {
+    lit("get-jsons"), lit("put-jsons"),
     lit("file-get"), lit("file-put"), lit("file-append"),
     lit("file-get-string"), lit("file-put-string"), lit("file-append-string"),
     lit("file-get-lines"), lit("file-put-lines"), lit("file-append-lines"),
     lit("file-get-buf"), lit("file-put-buf"),
     lit("file-place-buf"), lit("file-append-buf"),
+    lit("file-get-json"), lit("file-put-json"), lit("file-append-json"),
+    lit("file-get-jsons"), lit("file-put-jsons"), lit("file-append-jsons"),
     lit("command-get"), lit("command-put"),
     lit("command-get-string"), lit("command-put-string"),
     lit("command-get-lines"), lit("command-put-lines"),
     lit("command-get-buf"), lit("command-put-buf"),
+    lit("command-get-json"), lit("command-put-json"),
+    lit("command-get-jsons"), lit("command-put-jsons"),
     nil
   };
   set_dlt_entries(dlt, name, fun);

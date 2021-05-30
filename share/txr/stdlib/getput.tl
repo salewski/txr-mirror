@@ -45,6 +45,19 @@
           (buf-set-length b (min (+ p p) bytes)))))
     b))
 
+(defun get-jsons (: (s *stdin*))
+  (build
+    (catch*
+      (while t
+        (add (get-json s)))
+      (syntax-error (type . args)
+        (if (parse-errors s)
+          (throw type . args))))))
+
+(defun put-jsons (list : (s *stdout*) flat-p)
+  (each ((obj list))
+    (put-jsonl obj s flat-p)))
+
 (defun file-get (name)
   (with-stream (s (open-file name))
     (read s)))
@@ -100,6 +113,30 @@
   (with-stream (s (open-file name "ab"))
     (put-buf buf 0 s)))
 
+(defun file-get-json (name)
+  (with-stream (s (open-file name))
+    (get-json s)))
+
+(defun file-put-json (name : flat-p)
+  (with-stream (s (open-file name))
+    (put-jsonl s flat-p)))
+
+(defun file-append-json (name : flat-p)
+  (with-stream (s (open-file name "a"))
+    (put-jsonl s flat-p)))
+
+(defun file-get-jsons (name)
+  (with-stream (s (open-file name))
+    (get-jsons s)))
+
+(defun file-put-jsons (name : flat-p)
+  (with-stream (s (open-file name))
+    (put-jsons s flat-p)))
+
+(defun file-append-jsons (name : flat-p)
+  (with-stream (s (open-file name "a"))
+    (put-jsons s flat-p)))
+
 (defun command-get (cmd)
   (with-stream (s (open-command cmd))
     (read s)))
@@ -130,3 +167,19 @@
 (defun command-put-buf (cmd buf)
   (with-stream (s (open-command cmd "wb"))
     (put-buf buf 0 s)))
+
+(defun command-get-json (cmd)
+  (with-stream (s (open-command cmd))
+    (get-json s)))
+
+(defun command-put-json (cmd : flat-p)
+  (with-stream (s (open-command cmd "w"))
+    (put-jsonl s flat-p)))
+
+(defun command-get-jsons (cmd)
+  (with-stream (s (open-command cmd))
+    (get-jsons s)))
+
+(defun command-put-jsons (cmd : flat-p)
+  (with-stream (s (open-command cmd "w"))
+    (put-jsons s flat-p)))
