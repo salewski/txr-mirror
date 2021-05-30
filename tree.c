@@ -303,7 +303,7 @@ static val tn_flatten(val x, val y)
 {
   if (x == nil)
     return y;
-  set(mkloc(x->tn.right, x), tn_flatten(x->tn.right, y));
+  x->tn.right = tn_flatten(x->tn.right, y);
   return tn_flatten(x->tn.left, x);
 }
 
@@ -327,7 +327,7 @@ static void tr_rebuild(val tree, struct tree *tr, val node,
                        val parent, ucnum size)
 {
 #if CONFIG_GEN_GC
-  obj_t dummy = { { TNOD, 0, 1, { 0 }, 0 } };
+  obj_t dummy = { { TNOD, 0, 0, { 0 }, 0 } };
 #else
   obj_t dummy = { { TNOD, { 0 }, 0 } };
 #endif
