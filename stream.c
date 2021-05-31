@@ -738,6 +738,8 @@ static val stdio_set_prop(val stream, val ind, val prop)
   } else if (ind == byte_oriented_k) {
     h->is_byte_oriented = prop ? 1 : 0;
     return t;
+  } else if (ind == name_k) {
+    h->descr = prop;
   }
   return nil;
 }
@@ -4952,6 +4954,55 @@ val tmpfile_wrap(void)
             num(errno), errno_to_str(errno), nao);
 }
 
+#if HAVE_MKSTEMP
+
+val mkdtemp_wrap(val template)
+{
+  char *tmpl = utf8_dup_to(c_str(scat2(template, lit("XXXXXX"))));
+
+  if (mkdtemp(tmpl) != 0) {
+    val ret = string_utf8(tmpl);
+    free(tmpl);
+    return ret;
+  }
+
+  free(tmpl);
+  uw_throwf(file_error_s, lit("mkdtemp failed: ~d/~s"),
+            num(errno), errno_to_str(errno), nao);
+}
+
+val mkstemp_wrap(val prefix, val suffix)
+{
+  val self = lit("mkstemp");
+  val suff = default_arg(suffix, null_string);
+  val template = scat3(prefix, lit("XXXXXX"), suff);
+  cnum slen = c_num(length(suffix), self);
+  char *tmpl = utf8_dup_to(c_str(template));
+  val name;
+  int fd;
+
+#if HAVE_MKSTEMPS
+  fd = mkstemps(tmpl, slen);
+#else
+  if (slen > 0) {
+    free(tmpl);
+    uw_throwf(system_error_s, lit("~a: suffix not supported"), self, nao);
+  }
+  fd = mkstemps(tmpl);
+#endif
+  name = string_utf8(tmpl);
+  free(tmpl);
+  if (fd != -1) {
+    val stream = open_fileno(num(fd), lit("w+b"));
+    stream_set_prop(stream, name_k, name);
+    return stream;
+  }
+  uw_throwf(file_error_s, lit("~a failed: ~d/~s"),
+            self, num(errno), errno_to_str(errno), nao);
+}
+
+#endif
+
 static val iobuf_free_list;
 
 val iobuf_get(void)
@@ -5145,6 +5196,10 @@ void stream_init(void)
   reg_varl(intern(lit("indent-code"), user_package), num_fast(indent_code));
   reg_varl(intern(lit("indent-foff"), user_package), num_fast(indent_foff));
   reg_fun(intern(lit("tmpfile"), user_package), func_n0(tmpfile_wrap));
+#if HAVE_MKSTEMP
+  reg_fun(intern(lit("mkdtemp"), user_package), func_n1(mkdtemp_wrap));
+  reg_fun(intern(lit("mkstemp"), user_package), func_n2o(mkstemp_wrap, 1));
+#endif
 
 #if HAVE_SOCKETS
   uw_register_subtype(socket_error_s, error_s);

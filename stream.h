@@ -252,4 +252,6 @@ val iobuf_get(void);
 void iobuf_put(val buf);
 void iobuf_list_empty(void);
 val tmpfile_wrap(void);
+val mkdtemp_wrap(val template);
+val mkstemp_wrap(val prefix, val suffix);
 void stream_init(void);

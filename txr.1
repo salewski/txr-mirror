@@ -55048,6 +55048,14 @@ in the file system. POSIX (IEEE Std 1003.1-2017) notes that in some
 implementations, "a permanent file may be left behind if the process calling
 tmpfile() is killed while it is processing a call to tmpfile".
 
+Notes: if a unique file is required which exists in the file system under a
+known name until explicitly deleted, the
+.code mkstemp
+function may be used. If a unique directory needs to be created, the
+.code mkdtemp
+function may be used. These two functions are described in the Unix Filesystem
+Complex Operations section of the manual.
+
 .coNP Function @ make-string-input-stream
 .synb
 .mets (make-string-input-stream << string )
@@ -65555,6 +65563,83 @@ If
 is a symbolic link, it is dereferenced;
 .code touch
 operates on the target of the link.
+
+.coNP Function @ mkdtemp
+.synb
+.mets (mkdtemp << prefix )
+.syne
+.desc
+The
+.code mkdtemp
+function combines the
+.metn prefix ,
+which is a string, with a generated suffix to create a unique directory
+name. The directory is created, and the name is returned.
+
+If the
+.code prefix
+argument ends in with a sequence of one or more
+.code X
+characters, the behavior is unspecified.
+
+Note: this function is implemented using the same-named POSIX function.
+Whereas the POSIX function requires the template to end in a sequence of
+at least six
+.code X
+characters, which are replaced by the generated suffix, the \*(TL function
+handles this detail internally, requiring only the prefix part without those
+characters.
+
+.coNP Function @ mkstemp
+.synb
+.mets (mkstemp << prefix <> [ suffix ])
+.syne
+.desc
+The
+.code mkdtemp
+create a unique file name by adding a generated infix between the
+.meta prefix
+and
+.meta suffix
+strings.
+The file is created, and a stream open in
+.str w+b
+mode for the file is returned.
+
+If either the
+.meta prefix
+or
+.meta suffix
+contain
+.code X
+characters, the behavior is unspecified.
+
+If
+.meta suffix
+is omitted, it defaults to the empty string.
+
+The name of the file is available by interrogating the returned stream's
+.code :name
+property using the function
+.codn stream-get-prop .
+
+Notes: this function is implemented using the POSIX function
+.code mkstemp
+or, if available, using the
+.code mkstemps
+function which is not standardized, but appears in the GNU C Library
+and some other systems. If
+.code mkstemps
+is unavailable, then the suffix functionality is not available: the
+.meta suffix
+argument must either be omitted, or must be an empty string.
+
+Whereas the C library functions require the template to contain a sequence
+at least six
+.code X
+characters, which are replaced by the generated portion, the \*(TL function
+handles this detail internally, requiring no such characters in any of its
+inputs.
 
 .SS* Unix Filesystem Object Existence, Type and Access Tests
 
