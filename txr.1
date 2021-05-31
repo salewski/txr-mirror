@@ -55022,6 +55022,32 @@ and
 .code ..
 entries in Unix filesystems are not skipped.
 
+.coNP Function @ tmpfile
+.synb
+.mets (tmpfile)
+.syne
+.desc
+The
+.code tmpfile
+function creates a new temporary binary file which is different from any
+existing file. It opens a stream for that file and returns the stream. The
+stream is created with the
+.code open-file
+mode
+.strn w+b .
+When the stream is closed, or the \*(TX image terminates, the file is deleted.
+
+Note: the
+.code tmpfile
+function is implemented using the same-named ISO C and POSIX library function.
+On POSIX systems of sufficient quality,
+.code tmpfile
+deletes the file before returning the open stream, such that the file object
+continues to exist while the stream is open, but is not known by any name
+in the file system. POSIX (IEEE Std 1003.1-2017) notes that in some
+implementations, "a permanent file may be left behind if the process calling
+tmpfile() is killed while it is processing a call to tmpfile".
+
 .coNP Function @ make-string-input-stream
 .synb
 .mets (make-string-input-stream << string )

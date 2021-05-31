@@ -4941,6 +4941,17 @@ val make_byte_input_stream(val obj)
   }
 }
 
+val tmpfile_wrap(void)
+{
+  struct stdio_mode m_blank = stdio_mode_init_blank;
+  struct stdio_mode m = do_parse_mode(lit("w+b"), m_blank);
+  FILE *tf = tmpfile();
+  if (tf != 0)
+    return set_mode_props(m, make_stdio_stream(tf, lit("tmpfile")));
+  uw_throwf(file_error_s, lit("tmpnam failed: ~d/~s"),
+            num(errno), errno_to_str(errno), nao);
+}
+
 static val iobuf_free_list;
 
 val iobuf_get(void)
@@ -5133,6 +5144,7 @@ void stream_init(void)
   reg_varl(intern(lit("indent-data"), user_package), num_fast(indent_data));
   reg_varl(intern(lit("indent-code"), user_package), num_fast(indent_code));
   reg_varl(intern(lit("indent-foff"), user_package), num_fast(indent_foff));
+  reg_fun(intern(lit("tmpfile"), user_package), func_n0(tmpfile_wrap));
 
 #if HAVE_SOCKETS
   uw_register_subtype(socket_error_s, error_s);

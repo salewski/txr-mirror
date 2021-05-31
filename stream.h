@@ -251,4 +251,5 @@ val make_byte_input_stream(val obj);
 val iobuf_get(void);
 void iobuf_put(val buf);
 void iobuf_list_empty(void);
+val tmpfile_wrap(void);
 void stream_init(void);
