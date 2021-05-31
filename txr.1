@@ -72061,6 +72061,249 @@ If the application produces and expands a
 macro form which does not conform to this syntax, or does not
 specify one of the above two quoting symbols, the behavior is unspecified.
 
+.coNP Function @ put-jsons
+.synb
+.mets (put-jsons < seq >> [ stream <> [ flat-p ]])
+.syne
+.desc
+The
+.code put-jsons
+function writes multiple JSON representations into
+.metn stream .
+The objects are specified by the
+.meta seq
+argument, which must be an iterable object. The
+.code put-jsons
+function iterates over
+.meta seq
+and writes each element to the stream as if by using the
+.code put-jsonl
+function. Consequently, a newline character is written after each object.
+
+If the
+.meta stream
+argument is not specified, the parameter takes on the value of
+.metn *stdout* .
+
+The
+.meta flat-p
+argument has the same meaning as in
+.code put-json
+with regard to the individual elements. If it is specified and true,
+then exactly as many lines of text are written to
+.meta stream
+as there are elements in
+.metn seq .
+
+The
+.code put-jsons
+function returns
+.metn t .
+
+.coNP Function @ get-jsons
+.synb
+.mets (gut-jsons <> [ stream ])
+.syne
+.desc
+The
+.meta get-jsons
+function reads zero or more JSON representations from
+.meta stream
+until an end-of-stream or error condition is encountered.
+
+The objects are read as if by calls to
+.code get-json
+and accumulated into a list.
+
+If the
+.meta stream
+argument is omitted, it defaults to
+.codn *stdin* .
+
+If the end-of-stream condition is read, then the list of accumulated objects is
+returned. If an error occurs, then an exception is thrown and the list of
+accumulated objects is not available.
+
+If an end-of-stream condition occurs before any character is seen other than
+JSON whitespace, then the empty list
+.code nil
+is returned.
+
+.coNP Functions @ file-get-json and @ file-get-jsons
+.synb
+.mets (file-get-json << name )
+.mets (file-get-jsons << name )
+.syne
+.desc
+The
+.code file-get-json
+and
+.code file-get-jsons
+function open a text stream over the file indicated by the string argument
+.meta name
+for reading. The functions ensure that the stream is closed when
+they terminate.
+
+The
+.code file-get-json
+function invokes
+.code get-json
+to read a single JSON object, which is returned if that function
+returns normally.
+
+The
+.code file-get-jsons
+function invokes
+.code get-jsons
+to retrieve a list of JSON objects from the stream, which is returned
+if that function returns normally.
+
+.coNP Functions @ file-put-json and @ file-put-jsons
+.synb
+.mets (file-put-json < obj < name <> [ flat-p ])
+.mets (file-put-jsons < seq < name <> [ flat-p ])
+.syne
+.desc
+The
+.code file-put-json
+and
+.code file-put-jsons
+functions open a text stream over the file indicated by the string argument
+.metn name ,
+using the function
+.code open-file
+with a
+.meta mode-string
+argument of
+.strn w ,
+write the argument object into the stream in their specific manner,
+and then close the stream.
+
+The
+.code file-put-json
+function writes a JSON representation of
+.meta obj
+using the
+.code put-json
+function. The
+.meta flat-p
+argument is passed to that function, defaulting to
+.codn nil .
+The value returned is that of
+.codn put-json .
+
+The
+.code file-put-jsons
+function writes zero or more JSON representations of objects from
+.metn seq ,
+which must be an iterable object, using the
+.code put-jsons
+function. The
+.meta flat-p
+argument is passed to that function, defaulting to
+.codn nil .
+The value returned is that of
+.codn put-jsons .
+
+.coNP Functions @ file-put-json and @ file-put-jsons
+.synb
+.mets (file-append-json < obj < name <> [ flat-p ])
+.mets (file-append-jsons < seq < name <> [ flat-p ])
+.syne
+.desc
+The
+.code file-append-json
+and
+.code file-append-jsons
+are identical in almost all requirements to the functions
+.code file-put-json
+and
+.codn file-put-jsons .
+
+The only difference is that when these functions open
+a text stream using
+.codn open-file ,
+they specify a
+.meta mode-string
+argument of
+.str a
+rather than
+.strn w ,
+in order to append data to the target file rather than overwrite it.
+
+.coNP Functions @ command-get-json and @ command-get-jsons
+.synb
+.mets (command-get-json << cmd )
+.mets (command-get-jsons << cmd )
+.syne
+.desc
+The
+.code command-get-json
+and
+.code command-get-jsons
+functions opens text stream over an input command pipe created for
+the command string
+.metn cmd ,
+as if by the
+.code open-command
+function. They ensure that the stream is closed when they terminate.
+
+The
+.code command-get-json
+function calls
+.code get-json
+on the stream, and returns the value returned by that function.
+
+Similarly,
+.code command-get-jsons
+function calls
+.code get-jsons
+on the stream, and returns the value returned by that function.
+
+.coNP Functions @ command-put-json and @ command-put-jsons
+.synb
+.mets (command-put-json < obj < cmd <> [ flat-p ])
+.mets (command-put-jsons < seq < cmd <> [ flat-p ])
+.syne
+.desc
+The
+.code command-put-json
+and
+.code command-put-jsons
+functions open an output text stream over an output command pipe created
+for the command specified in the string argument
+.metn cmd ,
+using the function
+.code open-command
+function, write the argument object into the stream, in their specific manner,
+and then close the stream.
+
+The
+.code command-put-json
+function writes a JSON representation of
+.meta obj
+using the
+.code put-json
+function. The
+.meta flat-p
+argument is passed to that function, defaulting to
+.codn nil .
+The value returned is that of
+.codn put-json .
+
+The
+.code command-put-jsons
+function writes zero or more JSON representations of objects from
+.metn seq ,
+which must be an iterable object, using the
+.code put-jsons
+function. The
+.meta flat-p
+argument is passed to that function, defaulting to
+.codn nil .
+The value returned is that of
+.codn put-jsons .
+
 .SH* FOREIGN FUNCTION INTERFACE
 
 On platforms where it is supported, \*(TX provides a feature called the
