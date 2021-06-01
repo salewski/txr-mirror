@@ -290,6 +290,7 @@ lex.yy.c: $(top_srcdir)parser.l
 	  fi)
 
 %.shipped: $(top_srcdir)%
+	$(call ABBREV,COPY)
 	$(call SH,[ $^ -nt $@ ] && cp $^ $@)
 
 else
