@@ -81,6 +81,8 @@ SRCS := $(addprefix $(top_srcdir),\
                                               ls-files "*.c" "*.h" "*.l" "*.y")))
 endif
 
+SHIPPED := lex.yy.c y.tab.c y.tab.h
+
 # MPI objects
 MPI_OBJ_BASE=mpi.o
 
@@ -110,6 +112,7 @@ ABBREVN = $(if $(VERBOSE),\
             @printf "%s %s -> %s\n" $(1) \
             "$(patsubst $(top_srcdir)%,%,$(filter-out $(DEP_$@),$^))" $@)
 ABBREV3 = $(if $(VERBOSE),@:,@printf "%s %s -> %s\n" $(1) "$(3)" $(2))
+ABBREV3SH = $(if $(VERBOSE),:,printf "%s %s -> %s\n" $(1) "$(3)" $(2))
 
 define DEPGEN
 $(V)sed -e ':x'                                         \
@@ -289,9 +292,12 @@ lex.yy.c: $(top_srcdir)parser.l
 	    false ;                                             \
 	  fi)
 
-%.shipped: $(top_srcdir)%
-	$(call ABBREV,COPY)
-	$(call SH,[ $^ -nt $@ ] && cp $^ $@)
+shipped:
+	$(V)$(foreach NAME,$(SHIPPED),                          \
+	   if ! cmp -s $(NAME) $(NAME).shipped; then            \
+	      $(call ABBREV3SH,COPY,$(NAME),$(NAME).shipped);   \
+	      cp $(NAME) $(NAME).shipped;                       \
+	   fi;)
 
 else
 
