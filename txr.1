@@ -24586,10 +24586,13 @@ function returns
 .code t
 if the character
 .meta char
-is a character whose code
-ranges from 0 to 31, or is 127. In other words, any non-printable ASCII
-character. For other characters, it returns
+is a control character. For all other character, it returns
 .codn nil .
+
+A control character is one which belongs to the Unicode C0 or C1 block.
+C0 consists of the the characters U+0000 through U+001F, plus the
+character U+007F. These are the original ASCII control characters.
+Block C1 consists of U+0080 through U+009F.
 
 .coNP Functions @ chr-isdigit and @ chr-digit
 .synb

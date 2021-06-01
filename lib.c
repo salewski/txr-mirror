@@ -5897,7 +5897,13 @@ val chr_isascii(val ch)
 
 val chr_iscntrl(val ch)
 {
-  return tnil(iswcntrl(c_chr(ch)));
+  wchar_t c = c_chr(ch);
+  switch ((c >> 5)) {
+  case 0: case 4:
+    return t;
+  default:
+    return tnil(c == 0x7F);
+  }
 }
 
 val chr_isdigit(val ch)
