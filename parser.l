@@ -285,7 +285,7 @@ NJPUNC  [^(){},:\[\]"~*^ \t\n]
 
 %x      SPECIAL BRACED NESTED REGEX SREGEX STRLIT CHRLIT
 %x      QSILIT QSPECIAL WLIT QWLIT BUFLIT
-%x      JSON JLIT
+%x      JSON JLIT JMARKER
 
 %%
 
@@ -1227,11 +1227,13 @@ NJPUNC  [^(){},:\[\]"~*^ \t\n]
 }
 
 <JSON>~[*] {
+  yy_push_state(JMARKER, yyscanner);
   yy_push_state(NESTED, yyscanner);
   return JSPLICE;
 }
 
 <JSON>~ {
+  yy_push_state(JMARKER, yyscanner);
   yy_push_state(NESTED, yyscanner);
   return yytext[0];
 }
@@ -1255,6 +1257,10 @@ NJPUNC  [^(){},:\[\]"~*^ \t\n]
 <JSON>\" {
   yy_push_state(JLIT, yyscanner);
   return yytext[0];
+}
+
+<JMARKER>. {
+  internal_error("scanner processed input JMARKER state");
 }
 
 %%
@@ -1343,13 +1349,63 @@ void end_of_json(scanner_t *yyg)
   yy_pop_state(yyg);
 }
 
+/* The complexity here is necessary because TXR Lisp parsing looks ahead
+ * by one token. (The reason for *that* is the support of a.b.c referencing dot
+ * syntax in TXR Lisp.)
+ *
+ * Consider these two different cases:
+ *
+ * ^#J[,~(+ 2.0 2.0)]
+ * ^#J[,~(+ 2.0 2.0) #J42]
+ *
+ * This end_of_json_unquote function gets called when the (+ 2.0 2.0)
+ * has been parsed, but the Yacc-generated parser has shifted one tokan
+ * ahead.  It has read the ] token in the one case or the #J token in
+ * the other. These tokens have totally different effects on the Lex
+ * start condition. When the lexer reads the ] token, it pops off a NESTED
+ * state, whereas the #J token wants to push on a new JSON state.
+ * By the time end_of_json_unquote has been called, this has already happened.
+ *
+ * To deal with this, we use the dummy JMARKER start state which serves as a
+ * kind of parenthesis inside the start condition stack. BHefore scanning Lisp
+ * unquote within JSON, we push JMARKER state first, then the NESTED state.
+ *
+ * If the lookahead token is like ], and pops off a state, it will pop off
+ * our NESTED state, so we are left at the JMARKER state. If the lookahead
+ * token is something else like #J (HASH_J), then it will push a new
+ * state like JSON on top, and we have JMARKER NESTED JSON.
+ *
+ * So what we are doing here is popping off everything until we get down
+ * to the JMARKER state, and putting it into our little save area.
+ *
+ * Then we lose the JMARKER state.
+ *
+ * If the save area is empty, it means that the lookahead token consumed
+ * our NESTED state, and so we are done.
+ *
+ * If the save area is not empty, it means the lookahead put something
+ * extra over our NESTED state. We drop that state from our save area,
+ * and restore the rest of the save area back into the stack.
+ * Effectively, we are deleting the unquote-related states from the
+ * interior of the start condition stack, not to disturb new material
+ * initiated by the lookahead token.
+ */
 void end_of_json_unquote(scanner_t *yyg)
 {
-  if (YYSTATE == NESTED)
-    yy_pop_state(yyg);
+  int stacksave[8];
+  int top = 0;
 
-  if (YYSTATE != JSON)
-    internal_error("end_of_json_unquote called in wrong scanner state");
+  while (YYSTATE != JMARKER) {
+    stacksave[top++] = YYSTATE;
+    yy_pop_state(yyg);
+  }
+
+  yy_pop_state(yyg);
+
+  if (top-- > 0) {
+    while (top > 0)
+      yy_push_state(stacksave[--top], yyg);
+  }
 }
 
 val source_loc(val form)
