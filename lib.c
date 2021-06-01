@@ -13473,15 +13473,12 @@ val tostringp(val obj)
 val put_json(val obj, val stream_in, val flat)
 {
   val stream = default_arg(stream_in, std_output);
-
-  if (default_null_arg(flat)) {
-    out_json_rec(obj, stream, 0);
-  } else {
-    val imode = set_indent_mode(stream, num_fast(indent_foff));
-    out_json_rec(obj, stream, 0);
-    set_indent_mode(stream, imode);
-  }
-
+  val imode = if3(default_null_arg(flat),
+                  set_indent_mode(stream, num_fast(indent_foff)),
+                  test_set_indent_mode(stream, num_fast(indent_off),
+                                       num_fast(indent_data)));
+  out_json_rec(obj, stream, 0);
+  set_indent_mode(stream, imode);
   return t;
 }
 
@@ -13495,9 +13492,7 @@ val put_jsonl(val obj, val stream, val flat)
 val tojson(val obj, val flat)
 {
   val ss = make_string_output_stream();
-  if (default_null_arg(flat))
-    set_indent_mode(ss, num_fast(indent_foff));
-  out_json_rec(obj, ss, 0);
+  put_json(obj, ss, flat);
   return get_string_from_stream(ss);
 }
 
