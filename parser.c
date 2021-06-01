@@ -665,6 +665,7 @@ static val lisp_parse_impl(val self, enum prime_parser prime,
   for (;;) {
     int gc = gc_state(0);
     parse(pi, if3(std_error != std_null, name, lit("")), prime);
+    mut(parser);
     gc_state(gc);
 
     if (pi->syntax_tree == nao && pi->errors == 0 && !pi->eof)
@@ -823,6 +824,7 @@ val txr_parse(val source_in, val error_stream,
 
   uw_unwind {
     dyn_env = saved_dyn;
+    mut(parser_obj);
     gc_state(gc);
     if (!loading)
       uw_release_deferred_warnings();

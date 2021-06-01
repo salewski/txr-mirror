@@ -1068,6 +1068,7 @@ int txr_main(int argc, char **argv)
     val parser_obj = ensure_parser(parse_stream, spec_file_str);
     parser_t *parser = parser_get_impl(prog_string, parser_obj);
     parse_once_noerr(parse_stream, spec_file_str);
+    mut(parser_obj)
     gc_state(gc);
 
     close_stream(parse_stream, nil);
