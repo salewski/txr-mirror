@@ -72213,23 +72213,31 @@ function returns
 
 .coNP Function @ get-jsons
 .synb
-.mets (gut-jsons <> [ stream ])
+.mets (get-jsons <> [ source ])
 .syne
 .desc
 The
 .meta get-jsons
 function reads zero or more JSON representations from
-.meta stream
+.meta source
 until an end-of-stream or error condition is encountered.
+
+If
+.meta source
+is a character string, then the input takes place from a stream
+created from the character string using
+.codn make-string-byte-input-stream .
+Otherwise, if
+.meta source
+is specified, it must be an input stream supporting byte input;
+input takes place from that stream. If the
+.meta source
+argument is omitted, it defaults to
+.codn *stdin* .
 
 The objects are read as if by calls to
 .code get-json
 and accumulated into a list.
-
-If the
-.meta stream
-argument is omitted, it defaults to
-.codn *stdin* .
 
 If the end-of-stream condition is read, then the list of accumulated objects is
 returned. If an error occurs, then an exception is thrown and the list of

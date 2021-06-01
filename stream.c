@@ -4976,7 +4976,7 @@ val mkstemp_wrap(val prefix, val suffix)
   val self = lit("mkstemp");
   val suff = default_arg(suffix, null_string);
   val template = scat3(prefix, lit("XXXXXX"), suff);
-  cnum slen = c_num(length(suffix), self);
+  cnum slen = c_num(length(suff), self);
   char *tmpl = utf8_dup_to(c_str(template));
   val name;
   int fd;

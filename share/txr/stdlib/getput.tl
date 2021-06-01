@@ -46,6 +46,8 @@
     b))
 
 (defun get-jsons (: (s *stdin*))
+  (when (stringp s)
+    (set s (make-string-byte-input-stream s)))
   (build
     (catch*
       (while t
@@ -56,7 +58,8 @@
 
 (defun put-jsons (list : (s *stdout*) flat-p)
   (each ((obj list))
-    (put-jsonl obj s flat-p)))
+    (put-jsonl obj s flat-p))
+  t)
 
 (defun file-get (name)
   (with-stream (s (open-file name))
@@ -117,25 +120,25 @@
   (with-stream (s (open-file name))
     (get-json s)))
 
-(defun file-put-json (name : flat-p)
-  (with-stream (s (open-file name))
-    (put-jsonl s flat-p)))
+(defun file-put-json (name obj : flat-p)
+  (with-stream (s (open-file name "w"))
+    (put-jsonl obj s flat-p)))
 
-(defun file-append-json (name : flat-p)
+(defun file-append-json (name obj : flat-p)
   (with-stream (s (open-file name "a"))
-    (put-jsonl s flat-p)))
+    (put-jsonl obj s flat-p)))
 
 (defun file-get-jsons (name)
   (with-stream (s (open-file name))
     (get-jsons s)))
 
-(defun file-put-jsons (name : flat-p)
-  (with-stream (s (open-file name))
-    (put-jsons s flat-p)))
+(defun file-put-jsons (name seq : flat-p)
+  (with-stream (s (open-file name "w"))
+    (put-jsons seq s flat-p)))
 
-(defun file-append-jsons (name : flat-p)
+(defun file-append-jsons (name seq : flat-p)
   (with-stream (s (open-file name "a"))
-    (put-jsons s flat-p)))
+    (put-jsons s seq flat-p)))
 
 (defun command-get (cmd)
   (with-stream (s (open-command cmd))
@@ -172,14 +175,14 @@
   (with-stream (s (open-command cmd))
     (get-json s)))
 
-(defun command-put-json (cmd : flat-p)
+(defun command-put-json (cmd obj : flat-p)
   (with-stream (s (open-command cmd "w"))
-    (put-jsonl s flat-p)))
+    (put-jsonl obj s flat-p)))
 
 (defun command-get-jsons (cmd)
   (with-stream (s (open-command cmd))
     (get-jsons s)))
 
-(defun command-put-jsons (cmd : flat-p)
+(defun command-put-jsons (cmd seq : flat-p)
   (with-stream (s (open-command cmd "w"))
-    (put-jsons s flat-p)))
+    (put-jsons seq s flat-p)))

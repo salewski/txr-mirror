@@ -26,6 +26,9 @@
 (defmacro mtest (. pairs)
   ^(progn ,*(mapcar (op cons 'test) (tuples 2 pairs))))
 
+(defmacro mstest (. pairs)
+  ^(progn ,*(mapcar (op cons 'stest) (tuples 2 pairs))))
+
 (defun os-symbol ()
   (if (ignerr (dlsym (dlopen "libandroid.so") "AAsset_close"))
     :android
@@ -50,3 +53,11 @@
                   (let ,bindings
                      (expand '(progn ,*body) ,env))))
        (,invoke))))
+
+(defmacro with-temp-file ((name-var stream-var prefix) . body)
+  ^(let* ((,stream-var (mkstemp ,prefix))
+          (,name-var (stream-get-prop ,stream-var :name)))
+     (unwind-protect
+       (progn ,*body)
+       (close-stream ,stream-var)
+       (remove-path ,name-var))))
