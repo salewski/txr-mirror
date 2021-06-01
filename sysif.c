@@ -1340,14 +1340,14 @@ static val do_utimes(val target, val atime, val atimens,
   return t;
 }
 
-static val wrap_utimes(val target, val atime, val atimens,
+static val utimes_wrap(val target, val atime, val atimens,
                        val mtime, val mtimens)
 {
   val self = lit("utimes");
   return do_utimes(target, atime, atimens, mtime, mtimens, nil, self);
 }
 
-static val wrap_lutimes(val target, val atime, val atimens,
+static val lutimes_wrap(val target, val atime, val atimens,
                         val mtime, val mtimens)
 {
   val self = lit("lutimes");
@@ -2742,8 +2742,8 @@ void sysif_init(void)
 #endif
 
 #if HAVE_FILE_STAMP_CHANGE
-  reg_fun(intern(lit("utimes"), user_package), func_n5(wrap_utimes));
-  reg_fun(intern(lit("lutimes"), user_package), func_n5(wrap_lutimes));
+  reg_fun(intern(lit("utimes"), user_package), func_n5(utimes_wrap));
+  reg_fun(intern(lit("lutimes"), user_package), func_n5(lutimes_wrap));
 #endif
 
   {
