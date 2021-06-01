@@ -12625,8 +12625,40 @@ static void out_json_str(val str, val out)
   put_char(chr('"'), out);
 }
 
+INLINE int circle_print_eligible(val obj)
+{
+  return is_ptr(obj) && (!symbolp(obj) || !symbol_package(obj));
+}
+
+static int check_emit_circle(val obj, val out, struct strm_ctx *ctx, val self)
+{
+  if (ctx->obj_hash && circle_print_eligible(obj)) {
+    loc pcdr = gethash_l(self, ctx->obj_hash, obj, nulloc);
+    val label = deref(pcdr);
+
+    if (label == t) {
+      val counter = succ(ctx->counter);
+      ctx->counter = counter;
+      set(pcdr, counter);
+      format(out, lit("#~s="), counter, nao);
+    } else if (integerp(label)) {
+      format(out, lit("#~s#"), label, nao);
+      return 1;
+    } else if (!label) {
+      set(pcdr, colon_k);
+    }
+  }
+
+  return 0;
+}
+
 static void out_json_rec(val obj, val out, struct strm_ctx *ctx)
 {
+  val self = lit("print");
+
+  if (ctx && check_emit_circle(obj, out, ctx, self))
+    return;
+
   switch (type(obj)) {
   case NIL:
     put_string(lit("false"), out);
@@ -12786,11 +12818,6 @@ static void out_json(val op, val obj, val out, struct strm_ctx *ctx)
   set_indent_mode(out, save_mode);
 }
 
-INLINE int circle_print_eligible(val obj)
-{
-  return is_ptr(obj) && (!symbolp(obj) || !symbol_package(obj));
-}
-
 static int unquote_star_check(val obj, val pretty)
 {
   if (!obj || !symbolp(obj))
@@ -12806,22 +12833,8 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
   val ret = obj;
   cnum save_depth = ctx->depth;
 
-  if (ctx->obj_hash && circle_print_eligible(obj)) {
-    loc pcdr = gethash_l(self, ctx->obj_hash, obj, nulloc);
-    val label = deref(pcdr);
-
-    if (label == t) {
-      val counter = succ(ctx->counter);
-      ctx->counter = counter;
-      set(pcdr, counter);
-      format(out, lit("#~s="), counter, nao);
-    } else if (integerp(label)) {
-      format(out, lit("#~s#"), label, nao);
-      return ret;
-    } else if (!label) {
-      set(pcdr, colon_k);
-    }
-  }
+  if (check_emit_circle(obj, out, ctx, self))
+    return ret;
 
   if (ctx->strm->max_depth) {
     if (ctx->depth > ctx->strm->max_depth) {
