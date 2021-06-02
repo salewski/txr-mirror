@@ -25,12 +25,15 @@
   #J"" ""
   #J"\u0000" "\xdc00"
   #J"\u0001" "\x1"
-  #J"\ud801\udc37" "\x10437"
   #J"a\u0000b" "a\xdc00;b"
   #J"a\u0001b" "a\x1;b"
-  #J"a\ud801\udc37b" "a\x10437;b"
   #J"\b\t\n\f\r" "\b\t\n\f\r"
   #J"\/\\\"" "/\\\"")
+
+(when (> (sizeof wchar) 2)
+  (let ((chr (read "\"\\x10437\"")))
+    (vtest #J"\ud801\udc37" `@chr`)
+    (vtest #J"a\ud801\udc37b" `a@{chr}b`)))
 
 (mtest
   #J[] #()
