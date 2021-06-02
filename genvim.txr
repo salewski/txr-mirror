@@ -38,6 +38,7 @@ static void dir_tables_init(void)
 @(set (tl-sym tl-orig-sym) @(multi-sort (list tl-sym tl-orig-sym)
                                         [list less]))
 @(bind bs "\\\\")
+@(bind ws "[\\t\\n ]")
 @(bind hex "0-9A-Fa-f")
 @(bind at "\\(@[ \\t]*\\)")
 @(bind alpha "A-Za-z_")
@@ -76,7 +77,15 @@ static void dir_tables_init(void)
              txr_ign_tok,txr_list,txr_bracket,txr_mlist,txr_mbracket,\
              txr_quasilit,txr_chr,txr_buf,txr_quote,txr_unquote,\
              txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,\
-             txr_jarray,txr_ncomment,txr_nested_error")
+             txr_jarray,txr_jatom,txr_ncomment,txr_nested_error")
+@(bind jlist "txr_jarray_in,txr_jhash_in,txr_jkeyword,txr_jstring,\
+              txr_jnum,txr_jpunc,txr_junqlist,txr_circ,txr_jerr")
+@(bind jsonkw #"true false null")
+@(bind jerr ".")
+@(bind jpunc "[,: \\t\\n]")
+@(bind jesc "\\\\[bfnrt\"\\\\/]")
+@(bind juesc `\\\\u[@hex][@hex][@hex][@hex]`)
+@(bind jnum `-\\?\\(0\\|[@dig19][@dig]*\\)\\([.][@dig]\\+\\)\\?\\([Ee][+-]\\?[@dig]\\+\\)\\?`)
 @(define generate (txr-p))
 @  (output @(if txr-p "txr.vim" "tl.vim"))
 " VIM Syntax file for txr
@@ -156,7 +165,6 @@ syn match txr_quote "'" contained
 syn match txr_quote "\^" contained
 syn match txr_dotdot "\.\." contained
 syn match txr_metaat "@@" contained
-syn match txr_circ "#[0-9]\+[#=]"
 
 syn match txr_buf_error "[^']" contained
 syn match txr_buf_interior "\([@hex][\n\t ]*[@hex]\|[\n\t ]\+\)" contained
@@ -182,18 +190,22 @@ syn region txr_ign_bkt @(if txr-p "contained ")matchgroup=Comment start="#;[ \t'
 syn region txr_ign_par_interior contained matchgroup=Comment start="(" matchgroup=Comment end=")" contains=txr_ign_par_interior,txr_ign_bkt_interior
 syn region txr_ign_bkt_interior contained matchgroup=Comment start="\[" matchgroup=Comment end="\]" contains=txr_ign_par_interior,txr_ign_bkt_interior
 
-syn keyword txr_jkeyword contained true false
+syn match txr_jerr "@jerr" contained
+syn match txr_jpunc "@jpunc" contained
+syn match txr_jesc "@jesc" contained
+syn match txr_juesc "@juesc" contained
+syn match txr_jnum "@jnum" contained
+syn match txr_jkeyword "@(join-with "\\|" . jsonkw)" contained
 
-syn match txr_jerr "." contained
-syn match txr_jpunc "[,: \t\n]" contained
-syn match txr_jesc "\\[bfnrt"\\/]" contained
-syn match txr_juesc "\\u[@hex][@hex][@hex][@hex]" contained
-syn match txr_jnum "-\?\(0\|[@dig19][@dig]*\)\([.][@dig]\+\)\?\([Ee][+-][@dig]\+\)\?" contained
-
+syn region txr_jatom @(if txr-p "contained ")matchgroup=Delimiter start="#J\^\?@ws*"rs=e end="@ws\|[\])}]"re=e-1 contains=@jlist
 syn region txr_junqlist @(if txr-p "contained ")matchgroup=Delimiter start="\~\*\?(" end=")" contains=@list
 syn region txr_jstring @(if txr-p "contained ")matchgroup=Delimiter start=+"+ end=+["\n]+ contains=txr_jesc,txr_juesc,txr_badesc
-syn region txr_jarray @(if txr-p "contained ")matchgroup=Delimiter start="#J\^\?\[" matchgroup=Delimiter end="\]" contains=tl_jkeyword,txr_jstring,txr_jnum,txr_jpunc,txr_junqlist,txr_jerr
-syn region txr_jhash @(if txr-p "contained ")matchgroup=Delimiter start="#J\^\?{" matchgroup=Delimiter end="}" contains=tl_jkeyword,txr_jstring,txr_jnum,txr_jpunc,txr_junqlist,txr_jerr
+syn region txr_jarray @(if txr-p "contained ")matchgroup=Delimiter start="#J\^\?@ws*\[" matchgroup=Delimiter end="\]" contains=@jlist
+syn region txr_jhash @(if txr-p "contained ")matchgroup=Delimiter start="#J\^\?@ws*{" matchgroup=Delimiter end="}" contains=@jlist
+syn region txr_jarray_in contained matchgroup=Delimiter start="\[" end="\]" contains=@jlist
+syn region txr_jhash_in contained matchgroup=Delimiter start="{" end="}" contains=@jlist
+
+syn match txr_circ "#[0-9]\+[#=]" contained
 
 hi def link txr_at Special
 hi def link txr_atstar Special
