@@ -430,9 +430,9 @@
 .ds TX \f[B]TXR\f[]
 .ds TL \f[B]TXR Lisp\f[]
 .\" Start of man page:
-.TH TXR 1 2021-05-25 "Utility Commands" "TXR Programming Language" "Kaz Kylheku"
+.TH TXR 1 2021-06-01 "Utility Commands" "TXR Programming Language" "Kaz Kylheku"
 .SH* NAME
-\*(TX \- Programming Language (Version 260)
+\*(TX \- Programming Language (Version 261)
 
 .SH* SYNOPSIS
 .mono
@@ -77867,7 +77867,12 @@ little endian.
 
 A given \*(TX version may also be capable of loading files produced by
 an older version, or even ones produced by a newer version. Whether this
-is possible depends on the versions involved.
+is possible depends on the versions involved.  Furthermore,
+there is a general issue at play: code compiled by newer
+versions of \*(TX may require functions that are not present
+in older versions, preventing that code from running. Newer
+\*(TX may support new syntax not recognized by older \*(TX,
+and that syntax may end up in compiled files.
 
 Compiled files contain a minor and major version number (which is independent
 of the \*(TX version). The
@@ -77897,8 +77902,12 @@ version 2, 3, 4 or 5, regardless of minor version.
 Versions 252 through 259 produce version 6.0 files and loads only version 6,
 regardless of minor version.
 
-Version 260 produces version 7.0 files and loads version 6 and 7, regardless of
-minor version.
+Versions 260 and 261 produce version 7.0 files and loads
+version 6 and 7, regardless of minor version. Version 261
+introduces JSON
+.code #J
+syntax. Compiled code which contains embedded JSON literals
+is not loadable by \*(TX 260 or older.
 
 .SS* Semantic Differences between Compilation and Interpretation
 

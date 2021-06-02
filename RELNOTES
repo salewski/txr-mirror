@@ -1,3 +1,37 @@
+                                    TXR 261
+                                   2021-06-01
+
+
+  Features
+
+  - JSON support:
+    #J syntax in TXR Lisp
+    - allows quasi-quoting and circular notation.
+    - I/O with JSON objects, with convenience routines like
+      file-put-json, and others.
+    - Vim syntax highlighting support for everything.
+  - parser:
+    - new parse-errors function for retrieving number or
+      parse errors from stream or nil if no errors.
+  - filesystem:
+    - new functions tmpfile, mkdtemp and mkstemp.
+  - lib:
+    - chr-iscntrl now recognizes Unicode C1 control character block,
+      not only the C0 from ASCII.
+
+  Bugs
+
+  - compiler:
+    - invalid move into register T0 generated when compiling catch code,
+      causing assembler to throw error.
+  - search trees:
+    - GC abort caused by tree-delete/tree-delete-node.
+  - parser:
+    - GC bug due to storing lookahead token in parser using
+      a wrong-way assignment.
+
+
+
                                     TXR 260
                                    2021-05-26
 
