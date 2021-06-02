@@ -79,7 +79,8 @@ static void dir_tables_init(void)
              txr_splice,txr_dot,txr_dotdot,txr_metaat,txr_circ,txr_jhash,\
              txr_jarray,txr_jatom,txr_ncomment,txr_nested_error")
 @(bind jlist "txr_jarray_in,txr_jhash_in,txr_jkeyword,txr_jstring,\
-              txr_jnum,txr_jpunc,txr_junqlist,txr_circ,txr_jerr")
+              txr_jnum,txr_jpunc,txr_junqlist,txr_junqbkt,\
+              txr_circ,txr_jerr")
 @(bind jsonkw #"true false null")
 @(bind jerr ".")
 @(bind jpunc "[,: \\t\\n]")
@@ -198,7 +199,8 @@ syn match txr_jnum "@jnum" contained
 syn match txr_jkeyword "@(join-with "\\|" . jsonkw)" contained
 
 syn region txr_jatom @(if txr-p "contained ")matchgroup=Delimiter start="#J\^\?@ws*"rs=e end="@ws\|[\])}]"re=e-1 contains=@jlist
-syn region txr_junqlist @(if txr-p "contained ")matchgroup=Delimiter start="\~\*\?(" end=")" contains=@list
+syn region txr_junqlist @(if txr-p "contained ")matchgroup=Delimiter start="\~\*\?#\?(" end=")" contains=@list
+syn region txr_junqbkt @(if txr-p "contained ")matchgroup=Delimiter start="\~\*\?\[" end="\]" contains=@list
 syn region txr_jstring @(if txr-p "contained ")matchgroup=Delimiter start=+"+ end=+["\n]+ contains=txr_jesc,txr_juesc,txr_badesc
 syn region txr_jarray @(if txr-p "contained ")matchgroup=Delimiter start="#J\^\?@ws*\[" matchgroup=Delimiter end="\]" contains=@jlist
 syn region txr_jhash @(if txr-p "contained ")matchgroup=Delimiter start="#J\^\?@ws*{" matchgroup=Delimiter end="}" contains=@jlist
