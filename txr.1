@@ -71957,6 +71957,40 @@ etc.
 
 .SS* Data Interchange Support
 
+.coNP Macro @ json
+.synb
+.mets (json [quote | sys:qquote] << object )
+.syne
+.desc
+The
+.code json
+macro exists in supports of the JSON literal and quasiliteral
+.mono
+.meti >> #J json-syntax
+.onom
+and
+.mono
+.meti >> #J^ json-syntax
+.onom
+notations, which use the macro as their target abstract syntax.
+
+The macro transforms itself by deleting the
+.code json
+symbol, producing either the
+.mono
+.meti (quote << object )
+.onom
+quote syntax, or else the
+.mono
+.meti (sys:qquote << object )
+.onom
+quasiquote syntax, depending on which quoting symbol is present.
+
+If the application produces and expands a
+.code json
+macro form which does not conform to this syntax, or does not
+specify one of the above two quoting symbols, the behavior is unspecified.
+
 .coNP Functions @ put-json and @ put-jsonl
 .synb
 .mets (put-json < obj >> [ stream <> [ flat-p ]])
@@ -72140,40 +72174,6 @@ and
 .codn null ,
 respectively.
 JSON objects map to hash tables, and JSON arrays to vectors.
-
-.coNP Macro @ json
-.synb
-.mets (json [quote | sys:qquote] << object )
-.syne
-.desc
-The
-.code json
-macro exists in supports of the JSON literal and quasiliteral
-.mono
-.meti >> #J json-syntax
-.onom
-and
-.mono
-.meti >> #J^ json-syntax
-.onom
-notations, which use the macro as their target abstract syntax.
-
-The macro transforms itself by deleting the
-.code json
-symbol, producing either the
-.mono
-.meti (quote << object )
-.onom
-quote syntax, or else the
-.mono
-.meti (sys:qquote << object )
-.onom
-quasiquote syntax, depending on which quoting symbol is present.
-
-If the application produces and expands a
-.code json
-macro form which does not conform to this syntax, or does not
-specify one of the above two quoting symbols, the behavior is unspecified.
 
 .coNP Function @ put-jsons
 .synb
