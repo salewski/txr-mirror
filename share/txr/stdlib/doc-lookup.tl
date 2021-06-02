@@ -27,7 +27,7 @@
                      (list url)))
        t
        (error `~s:  failed to open ~s` 'open-url url))))
-  ((:cygwin)
+  ((:cygwin :cygnal)
    (with-dyn-lib "shell32.dll"
      (deffi shell-execute "ShellExecuteW"
             cptr (cptr wstr wstr wstr wstr int))
