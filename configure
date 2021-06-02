@@ -3228,7 +3228,7 @@ if [ -z "$have_winsize" ] ; then
   printf "no\n"
 fi
 
-printf "Checking for mkstemp/mkdtemp ... "
+printf "Checking for mkstemp ... "
 
 cat > conftest.c <<!
 #include <stdlib.h>
@@ -3237,7 +3237,6 @@ int main(int argc, char **argv)
 {
   char templ[] = "abcXXXXXX";
   int fd = mkstemp(templ);
-  char *s = mkdtemp(templ);
   return 0;
 }
 !
@@ -3245,6 +3244,26 @@ int main(int argc, char **argv)
 if conftest ; then
   printf "yes\n"
   printf "#define HAVE_MKSTEMP 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
+printf "Checking for mkdtemp ... "
+
+cat > conftest.c <<!
+#include <stdlib.h>
+
+int main(int argc, char **argv)
+{
+  char templ[] = "abcXXXXXX";
+  char *s = mkdtemp(templ);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_MKDTEMP 1\n" >> config.h
 else
   printf "no\n"
 fi

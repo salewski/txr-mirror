@@ -4954,7 +4954,7 @@ val tmpfile_wrap(void)
             num(errno), errno_to_str(errno), nao);
 }
 
-#if HAVE_MKSTEMP
+#if HAVE_MKDTEMP
 
 val mkdtemp_wrap(val prefix)
 {
@@ -4970,6 +4970,10 @@ val mkdtemp_wrap(val prefix)
   uw_throwf(file_error_s, lit("mkdtemp failed: ~d/~s"),
             num(errno), errno_to_str(errno), nao);
 }
+
+#endif
+
+#if HAVE_MKSTEMP
 
 val mkstemp_wrap(val prefix, val suffix)
 {
@@ -4988,7 +4992,7 @@ val mkstemp_wrap(val prefix, val suffix)
     free(tmpl);
     uw_throwf(system_error_s, lit("~a: suffix not supported"), self, nao);
   }
-  fd = mkstemps(tmpl);
+  fd = mkstemp(tmpl);
 #endif
   name = string_utf8(tmpl);
   free(tmpl);
@@ -5196,8 +5200,10 @@ void stream_init(void)
   reg_varl(intern(lit("indent-code"), user_package), num_fast(indent_code));
   reg_varl(intern(lit("indent-foff"), user_package), num_fast(indent_foff));
   reg_fun(intern(lit("tmpfile"), user_package), func_n0(tmpfile_wrap));
-#if HAVE_MKSTEMP
+#if HAVE_MKDTEMP
   reg_fun(intern(lit("mkdtemp"), user_package), func_n1(mkdtemp_wrap));
+#endif
+#if HAVE_MKSTEMP
   reg_fun(intern(lit("mkstemp"), user_package), func_n2o(mkstemp_wrap, 1));
 #endif
 
