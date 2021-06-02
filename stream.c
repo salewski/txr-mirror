@@ -4956,9 +4956,9 @@ val tmpfile_wrap(void)
 
 #if HAVE_MKSTEMP
 
-val mkdtemp_wrap(val template)
+val mkdtemp_wrap(val prefix)
 {
-  char *tmpl = utf8_dup_to(c_str(scat2(template, lit("XXXXXX"))));
+  char *tmpl = utf8_dup_to(c_str(scat2(prefix, lit("XXXXXX"))));
 
   if (mkdtemp(tmpl) != 0) {
     val ret = string_utf8(tmpl);
@@ -4975,9 +4975,9 @@ val mkstemp_wrap(val prefix, val suffix)
 {
   val self = lit("mkstemp");
   val suff = default_arg(suffix, null_string);
-  val template = scat3(prefix, lit("XXXXXX"), suff);
+  val templ = scat3(prefix, lit("XXXXXX"), suff);
   cnum slen = c_num(length(suff), self);
-  char *tmpl = utf8_dup_to(c_str(template));
+  char *tmpl = utf8_dup_to(c_str(templ));
   val name;
   int fd;
 
