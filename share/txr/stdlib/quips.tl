@@ -82,6 +82,7 @@
     "こんな広い分野の中、私が愛する...言語なら、やはり...Lispだけ。"
     "This area is under 24 hour TTY surveillance."
     "Imitation is the benignest form of forgery."
+    "This could be the year of the TXR desktop; I can feel it!"
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
