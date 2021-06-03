@@ -12936,6 +12936,9 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
       } else if (sym == hash_lit_s) {
         put_string(lit("#H"), out);
         obj_print_impl(rest(obj), out, pretty, ctx);
+      } else if (sym == struct_lit_s) {
+        put_string(lit("#S"), out);
+        obj_print_impl(rest(obj), out, pretty, ctx);
       } else if (sym == json_s && have_args &&
                  consp(cdr(args)) && nilp(cddr(args)))
       {
