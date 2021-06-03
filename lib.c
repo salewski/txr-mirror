@@ -12600,8 +12600,19 @@ static void out_json_str(val str, val out)
       break;
     case '<':
       put_char(chr(ch), out);
-      if (*cstr == '/')
+      if (wcsncmp(cstr, L"/script", 7) == 0) {
         put_char(chr('\\'), out);
+      } else if (wcsncmp(cstr, L"!--", 3) == 0) {
+        put_string(lit("\\u0021"), out);
+        cstr++;
+      }
+      break;
+    case '-':
+      put_char(chr(ch), out);
+      if (wcsncmp(cstr, L"->", 2) == 0) {
+        put_string(lit("\\u002D"), out);
+        cstr++;
+      }
       break;
     case 0xDC00:
       put_string(lit("\\u0000"), out);

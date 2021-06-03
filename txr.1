@@ -72200,27 +72200,50 @@ and
 .codn \er .
 .IP 3.
 If the character sequence
-.code "</"
+.code "</script"
 occurs in a string, then in the JSON representation the slash is escaped, such
 that the sequence is rendered as
-.codn "<\e/" .
-Instances of the
+.codn "<\e/script" .
+Instances of
 .code /
-(forward slash, solidus) occurs not preceded by
-.code <
-(less than) are unescaped. Rationale: this is a feature of JSON which allows
-for safer embedding of the resulting JSON into HTML
+(forward slash, solidus) in other situations are unescaped.  Rationale: this is
+a feature of JSON which allows for safer embedding of the resulting
+JSON into HTML
 .code script
 tags.
-.IP 4.
+.IP 4
+If the character sequence
+.code <!--
+occurs in a string, then in the JSON representation, the sequence is
+rendered as
+.codn <\eu0021-- .
+Instances of
+.code !
+(exclamation mark) in other situations are not encoded. Rationale: safe
+embedding in HTML
+.code script
+tags.
+.IP 5
+If the character sequence
+.code -->
+occurs in a string, then in the JSON representation, the sequence is
+rendered as
+.codn -\eu002D> .
+Instances of
+.code -
+(hyphen) in other situations are not encoded. Rationale: safe
+embedding in HTML
+.code script
+tags.
+.IP 6.
 The code point U+DC00 (\*(TX's pseudo-null character) is translated into the
 .code "\eu0000"
 escape syntax.
-.IP 5.
+.IP 7.
 The code points U+DC01 through U+DCFF are send to the stream as-is.
 If the stream performs UTF-8 encoding, these characters turn into individual
 bytes in the range 0 to 255.
-.IP 6.
+.IP 8.
 Control characters in the U+0001 to U+001F other than the ones subject
 to rule 1 above are rendered as
 .code \eu
@@ -72229,7 +72252,7 @@ the range U+D800 to U+DBFF, U+DD00 to U+DFFF, and the code points
 U+FFFE and U+FFFF are also encoded as
 .code \eu
 escape sequences.
-.IP 7.
+.IP 9.
 A character outside of the BMP (Basic Multilingual Plane) in the range
 U+10000 to U+10FFFF is encoded using as a pair of consecutive
 .code \eu

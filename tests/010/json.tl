@@ -94,8 +94,18 @@
   (get-json "false") nil
   (get-json "null") null)
 
-(test
-  (tojson #(1.0 "abc" t)) "[1,\"abc\",true]")
+(mtest
+  (tojson #(1.0 "abc" t)) "[1,\"abc\",true]"
+  (tojson "<!--") "\"<\\u0021--\""
+  (tojson "a<!--b") "\"a<\\u0021--b\""
+  (tojson "<!-") "\"<!-\""
+  (tojson "-->") "\"-\\u002D>\""
+  (tojson "a-->b") "\"a-\\u002D>b\""
+  (tojson "->") "\"->\""
+  (tojson "</") "\"</\""
+  (tojson "</scrip") "\"</scrip\""
+  (tojson "</script") "\"<\\/script\""
+  (tojson "a</scriptb") "\"a<\\/scriptb\"")
 
 (mtest
   (get-jsons "") nil
