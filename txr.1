@@ -41361,11 +41361,18 @@ A JSON hash quasiquote is translated into
 .onom
 exactly like a hash.
 .meIP >> ( car . << cdr )
-Tree structure is translated according ot the
+Tree structure is translated according to the
 .mono
 .meti <> ([ car ] . <> [ cdr ])
 .onom
 pattern: it is recursively examined for translations.
+.meIP >> ^ nested-qq-syntax
+A nested quasiquote pattern is diagnosed as an error.
+.meIP >> ,* expr
+Splicing syntax is diagnosed as an error.
+.meIP >> ~* expr
+Splicing JSON syntax is diagnosed as an error inside a JSON quasiliteral.
+.meIP >> ~* expr
 .meIP < obj
 Any other quasiquoted object is left untranslated.
 .RE

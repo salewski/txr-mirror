@@ -989,11 +989,9 @@
 
 (defun transform-qquote (syn)
   (match-case syn
-    ((sys:hash-lit @props . @(coll (@key @val)))
-     (if props
-       (error "~s: only equal hash tables supported" syn)
-       ^@(hash ,*(zip [mapcar transform-qquote key]
-                      [mapcar transform-qquote val]))))
+    ((sys:hash-lit nil . @(coll (@key @val)))
+     ^@(hash ,*(zip [mapcar transform-qquote key]
+                    [mapcar transform-qquote val])))
     ((sys:struct-lit @type . @args)
      ^@(struct ,(transform-qquote type)
                ,*[mapcar transform-qquote args]))
@@ -1003,6 +1001,15 @@
     ((sys:unquote @pat) (if (symbolp pat)
                           ^(sys:var ,pat)
                           ^(sys:expr ,pat)))
+    ((sys:hash-lit @(have) . @nil)
+     (compile-error *match-form*
+                    "only equal hash tables supported"))
+    ((@(or sys:qquote) . @nil)
+     (compile-error *match-form*
+                    "pattern-matching quasiquote doesn't support nesting"))
+    ((sys:splice . @nil)
+     (compile-error *match-form*
+                    "pattern-matching quasiquote doesn't support splicing"))
     ((@ca . @cd) (cons (transform-qquote ca)
                        (transform-qquote cd)))
     (@else else)))
