@@ -472,6 +472,23 @@
     (list x y))
   ((1 2) (1 4) (3 2) (3 4) (5 2) (5 4)))
 
+(mtest
+  (when-match ^(,a ,b) '(1 2) (list a b)) (1 2)
+  (when-match ^#(,a ,b) #(1 2) (list a b)) (1 2)
+  (when-match ^#S(,type year ,y) #S(time year 2021)
+    (list (struct-type-name type) y)) (time 2021)
+  (when-match ^#H(() (x ,y) (,(symbolp @y) ,datum))
+              #H(() (x k) (k 42))
+              datum) (42))
+
+(mtest
+  (when-match ^#J~a 42.0 a) 42.0
+  (when-match ^#J[~a, ~b] #J[true, false] (list a b)) (t nil)
+  (when-match ^#J{"x" : ~y, ~(symbolp @y) : ~datum}
+              #J{"x" : true, true : 42}
+              datum) (42.0)
+  (when-match ^#J{"foo" : {"x" : ~val}} #J{"foo" : {"x" : "y"}} val) "y")
+
 (compile-only
   (eval-only
     (compile-file (base-name *load-path*) "temp.tlo")

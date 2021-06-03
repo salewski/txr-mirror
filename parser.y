@@ -969,7 +969,8 @@ json_val : NUMBER               { $$ = $1; }
          | '{' json_pairs '}'   { $$ = if3(hashp($2),
                                            $2,
                                            rl(cons(hash_lit_s,
-                                                   cons(nil, $2)), $2)); }
+                                                   cons(nil, nreverse($2))),
+                                                   $2)); }
          | '~'                  { parser->quasi_level--; }
            n_dot_expr           { parser->quasi_level++;
                                   end_of_json_unquote(scnr);
