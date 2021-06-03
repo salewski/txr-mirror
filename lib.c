@@ -12701,11 +12701,18 @@ static void out_json_rec(val obj, val out, struct strm_ctx *ctx)
         save_indent = inc_indent(out, zero);
         for (iter = cddr(obj), next = nil; iter; iter = next) {
           val pair = car(iter);
-          next = cdr(iter);
-          out_json_rec(car(pair), out, ctx);
-          put_char(chr(':'), out);
-          out_json_rec(cadr(pair), out, ctx);
-          if (next) {
+          val k = car(pair), v = cadr(pair);
+          if (consp(k) || consp(v)) {
+            if (next)
+              put_char(chr(' '), out);
+            out_json_rec(k, out, ctx);
+            put_string(lit(" : "), out);
+          } else {
+            out_json_rec(k, out, ctx);
+            put_char(chr(':'), out);
+          }
+          out_json_rec(v, out, ctx);
+          if ((next = cdr(iter)) != 0) {
             put_char(chr(','), out);
             if (width_check(out, nil))
               force_br = 1;
@@ -12791,11 +12798,18 @@ static void out_json_rec(val obj, val out, struct strm_ctx *ctx)
       put_char(chr('{'), out);
       save_indent = inc_indent(out, zero);
       for (next = nil, cell = hash_iter_next(&hi); cell; cell = next) {
-        next = hash_iter_next(&hi);
-        out_json_rec(car(cell), out, ctx);
-        put_char(chr(':'), out);
-        out_json_rec(cdr(cell), out, ctx);
-        if (next) {
+        val k = car(cell), v = cdr(cell);
+        if (consp(k) || consp(v)) {
+          if (next)
+            put_char(chr(' '), out);
+          out_json_rec(k, out, ctx);
+          put_string(lit(" : "), out);
+        } else {
+          out_json_rec(k, out, ctx);
+          put_char(chr(':'), out);
+        }
+        out_json_rec(v, out, ctx);
+        if ((next = hash_iter_next(&hi)) != 0) {
           put_char(chr(','), out);
           if (width_check(out, nil))
             force_br = 1;
