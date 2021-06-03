@@ -616,6 +616,8 @@
          (sys:var (compile-var-match (cadr pat) obj-var var-list))
          (sys:quasi (compile-match (expand-quasi-match (cdr pat) var-list)
                                    obj-var var-list))
+         (sys:qquote (compile-match (transform-qquote (cadr pat))
+                                    obj-var var-list))
          (t (if (non-triv-pat-p pat)
               (compile-cons-structure pat obj-var var-list)
               (compile-atom-match pat obj-var var-list)))))
@@ -844,6 +846,7 @@
     ((@(eq 'sys:expr) (@(bindable) . @nil)) t)
     ((@(eq 'sys:var) @(or @(bindable) nil) . @nil) t)
     ((@(eq 'sys:quasi) . @(some @(consp))) t)
+    ((@(eq 'sys:qquote) @nil) t)
     ((@pat . @rest) (or (non-triv-pat-p pat)
                         (non-triv-pat-p rest)))
     (#R(@from @to) (or (non-triv-pat-p from)
@@ -983,6 +986,26 @@
                 (stringp ,str))
              @(with ,pos 0)
              ,*(quasi-match var-list (normalize args) nil str pos)))))
+
+(defun transform-qquote (syn)
+  (match-case syn
+    ((sys:hash-lit @props . @(coll (@key @val)))
+     (if props
+       (error "~s: only equal hash tables supported" syn)
+       ^@(hash ,*(zip [mapcar transform-qquote key]
+                      [mapcar transform-qquote val]))))
+    ((sys:struct-lit @type . @args)
+     ^@(struct ,(transform-qquote type)
+               ,*[mapcar transform-qquote args]))
+    ((sys:vector-lit @elems)
+     ^#(,*[mapcar transform-qquote elems]))
+    ((json quote @arg) (transform-qquote arg))
+    ((sys:unquote @pat) (if (symbolp pat)
+                          ^(sys:var ,pat)
+                          ^(sys:expr ,pat)))
+    ((@ca . @cd) (cons (transform-qquote ca)
+                       (transform-qquote cd)))
+    (@else else)))
 
 (defun each-match-expander (f pat-seq-list body fun)
   (unless (and (proper-list-p pat-seq-list)

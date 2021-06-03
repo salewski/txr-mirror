@@ -40724,23 +40724,45 @@ as well as useful pattern matching operators like
 which matches a list or sublist whose elements all match
 .metn pattern .
 
+The quasiquote syntax is specially supported for expressing matching,
+in an alternative style.  For instance the quasiquote
+.code "^(1 2 ,a)"
+is a pattern equivalent to the
+.codn "(1 2 @a)" .
+
 Structure objects are matched using a dedicated
 .code "@(struct name ...)"
-operator rather than using
+operator, or else in the quasiquote style using
+.code "^#S(name ...)"
+syntax. The non-quasiquoted literal syntax
 .code "#S(name ...)"
-notation. The reason is that a struct literal produces an object
-which loses information about how it was specified in the literal syntax,
-but those details are critically important in pattern matching.
+cannot be used for matching.
 
 Similarly, hash objects are matched using a
 .code "@(hash ...)"
-operator rather than
+operator, or else
+.code "^#H(...)"
+syntax in the quasiquote style.
 .code "#H(...)"
-syntax. The reason is that the keys are not ordered in a hash
-table, whereas the order of subpatterns in a pattern operator
-can be significant. One subpattern may be expected to produce
-a match for a variable, which is then back-referenced in another
-subpattern.
+cannot be used.
+
+Note: the non-quasiquoted
+.code #S
+and
+.code #H
+literals are not and cannot be used for matching because they produce structure
+and hash objects which lose important information about how they were specified
+in the syntax, and carry restrictions which are unacceptable for pattern
+matching.  The order of sub-patterns is important in pattern syntax, but struct
+and hash objects do not preserve the order in which their elements were
+specified.  A struct literal is required to specify the name of an existing
+struct type, and slot names which are valid for that type, otherwise it is
+erroneous.  This is not acceptable for pattern matching, because patterns may
+appear in place of those elements. The pattern match for a hash may specify the
+same key pattern more than once, which means that the key pattern cannot be an
+actual key in an actual hash, which requires every key to be unique.  Structure
+and hash quasiquotes do not have these issues; they are not actually literal
+structure and hash objects, but list-based syntax.
 
 .NP* Variables in Patterns
 
@@ -41254,6 +41276,99 @@ supported in quasiliteral patterns.
   -> "packets"
 
 .brev
+
+.NP* Quasiliteral matching notation
+.synb
+.mets >> ^ qq-syntax
+.syne
+.desc
+Quasiquoting provides an alternative pattern matching syntax. It uses a subset
+of the quasiquoting notation. Only specific kinds of quasiquoted objects listed
+in this description are supported. Within a quasiquote used for
+pattern-matching, unquotes indicate operators and variables instead of the
+.code @
+prefix.  Splicing unquote syntax plays no role; its presence produces
+unspecified behavior.
+
+The quasiquote matching notation is described, understood and implementing
+in terms of a translation to the standard pattern-matching syntax, according
+to the following rules. The
+.code [X]
+notation used here indicates that the element enclosed in brackets is
+subject to a recursive translation according to the rules:
+.RS
+.meIP >> , expr
+An unquoted expression occurring in the quasiquote is translated to the
+.mono
+.meti >> @ expr
+.onom
+pattern matching syntax. If
+.meta expr
+is an symbol, then this is a meta-variable:
+.mono
+.meti (sys:var << expr )
+.onom
+otherwise it is translated to the
+.mono
+.meti (sys:expr << expr )
+.onom
+syntax.
+.meIP >> ~ expr
+In JSON syntax, unquotes are given the same above treatment as
+.code ,
+(comma) unquotes in ordinary syntax.
+.meIP #H(() >> ( k0 << v0 ) >> ( k1 << v1 ) ...)
+Hash quasiliteral syntax is translated according to the
+.mono
+.meti @(hash <> ([ k0 ] <> [ v0 ]) <> ([ k0 ] <> [ v0 ]) ...)
+.onom
+pattern, with each key and value recursively translated.
+The syntax must specify
+.code ()
+for the hash construction arguments part, otherwise an error is diagnosed.
+That is to say, it must be of the form
+.codn "#H(() ...)" .
+where the first element is
+.codn () .
+.meIP >> #S( type < e0 < e1 ...)
+Structure quasiliteral syntax is translated according to the
+.mono
+.meti @(struct <> [ type ] <> [ e0 ] <> [ e1 ]  ...)
+.onom
+pattern.
+.meIP >> #( e0 < e1 ...)
+Vector quasiliteral syntax is translated according to the
+.mono
+.meti <> #([ e0 ] <> [ e1 ]  ...)
+.onom
+pattern: it becomes a vector object containing embedded patterns.
+.meIP <> #J[ e0 , << e1 ,  ...]
+A JSON array quasiquote is translated into
+.mono
+.meti <> #([ e0 ] <> [ e1 ]  ...)
+.onom
+exactly like a vector.  Here, the
+.code [X]
+transformation recognizes JSON
+.code ~
+(tilde) unquotes, and recursively recognizes and transform JSON syntax not
+prefixed by
+.codn #J .
+.meIP >> #J{ k0 : << v0 ,  < k1 : << v1 , ...}
+A JSON hash quasiquote is translated into
+.mono
+.meti @(hash <> ([ k0 ] <> [ v0 ]) <> ([ k0 ] <> [ v0 ]) ...)
+.onom
+exactly like a hash.
+.meIP >> ( car . << cdr )
+Tree structure is translated according ot the
+.mono
+.meti <> ([ car ] . <> [ cdr ])
+.onom
+pattern: it is recursively examined for translations.
+.meIP < obj
+Any other quasiquoted object is left untranslated.
+.RE
 
 .coNP Pattern operator @ struct
 .synb
