@@ -4808,10 +4808,7 @@ again:
         cons_bind (params_ex, body_ex0,
                    expand_params(params, body, menv,
                                  eq(sym, defmacro_s), form));
-        val inter_env = make_var_shadowing_env(menv, get_param_syms(params_ex));
-        val new_menv = if3(sym == defun_s,
-                           make_fun_shadowing_env(inter_env, cons(name, nil)),
-                           inter_env);
+        val new_menv = make_var_shadowing_env(menv, get_param_syms(params_ex));
         val body_ex = expand_progn(body_ex0, new_menv);
         val form_ex = form;
 
