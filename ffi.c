@@ -4653,6 +4653,7 @@ struct txr_ffi_call_desc {
   cnum nfixed, ntotal;
   val argtypes;
   val rettype;
+  val name;
 };
 
 static struct txr_ffi_call_desc *ffi_call_desc(val obj)
@@ -4672,7 +4673,8 @@ static void ffi_call_desc_print_op(val obj, val out,
   struct txr_ffi_call_desc *tfcd = ffi_call_desc(obj);
   put_string(lit("#<"), out);
   obj_print_impl(obj->co.cls, out, pretty, ctx);
-  format(out, lit(" ~s ~!~s>"), tfcd->rettype, tfcd->argtypes, nao);
+  format(out, lit("~s ~s ~!~s>"), tfcd->name, tfcd->rettype,
+         tfcd->argtypes, nao);
 }
 
 static void ffi_call_desc_destroy_op(val obj)
@@ -4688,6 +4690,7 @@ static void ffi_call_desc_mark_op(val obj)
   struct txr_ffi_call_desc *tfcd = ffi_call_desc(obj);
   gc_mark(tfcd->argtypes);
   gc_mark(tfcd->rettype);
+  gc_mark(tfcd->name);
 }
 
 static struct cobj_ops ffi_call_desc_ops =
@@ -4697,9 +4700,11 @@ static struct cobj_ops ffi_call_desc_ops =
                 ffi_call_desc_mark_op,
                 cobj_eq_hash_op);
 
-val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
+val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes,
+                       val name_in)
 {
-  val self = lit("ffi-make-call-desc");
+  val name = default_null_arg(name_in);
+  val self = if3(name, name, lit("ffi-make-call-desc"));
   cnum nf = c_num(default_arg(nfixed, zero), self);
   cnum nt = c_num(ntotal, self), i;
   struct txr_ffi_call_desc *tfcd = coerce(struct txr_ffi_call_desc *,
@@ -4714,6 +4719,7 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
   tfcd->argtypes = argtypes;
   tfcd->rettype = rettype;
   tfcd->args = args;
+  tfcd->name = name;
 
   for (i = 0; i < nt; i++) {
     val type = pop(&argtypes);
@@ -4753,8 +4759,9 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes)
 
 val ffi_call_wrap(val fptr, val ffi_call_desc, struct args *args)
 {
-  val self = lit("ffi-call");
-  struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(self, ffi_call_desc);
+  val real_self = lit("ffi-call");
+  struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(real_self, ffi_call_desc);
+  val self = if3(tfcd->name, tfcd->name, real_self);
   mem_t *fp = cptr_get(fptr);
   cnum n = tfcd->ntotal;
   void **values = convert(void **, alloca(sizeof *values * tfcd->ntotal));
@@ -4833,11 +4840,11 @@ val ffi_call_wrap(val fptr, val ffi_call_desc, struct args *args)
 static void ffi_closure_dispatch(ffi_cif *cif, void *cret,
                                  void *cargs[], void *clo)
 {
-  val self = lit("ffi-closure-dispatch");
   val closure = coerce(val, clo);
   struct txr_ffi_closure *tfcl = ffi_closure_struct(closure);
   cnum i, nargs = tfcl->nparam;
   struct txr_ffi_call_desc *tfcd = tfcl->tfcd;
+  val self = if3(tfcd->name, tfcd->name, lit("ffi-closure-dispatch"));
   val types = tfcd->argtypes;
   val rtype = tfcd->rettype;
   struct txr_ffi_type *rtft = ffi_type_struct(rtype);
@@ -4877,11 +4884,11 @@ static void ffi_closure_dispatch(ffi_cif *cif, void *cret,
 static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
                                       void *cargs[], void *clo)
 {
-  val self = lit("ffi-closure-dispatch-safe");
   val closure = coerce(val, clo);
   struct txr_ffi_closure *tfcl = ffi_closure_struct(closure);
   cnum i, nargs = tfcl->nparam;
   struct txr_ffi_call_desc *tfcd = tfcl->tfcd;
+  val self = if3(tfcd->name, tfcd->name, lit("ffi-closure-dispatch-safe"));
   val types = tfcd->argtypes;
   val rtype = tfcd->rettype;
   struct txr_ffi_type *rtft = ffi_type_struct(rtype);
@@ -4953,10 +4960,11 @@ static void ffi_closure_dispatch_safe(ffi_cif *cif, void *cret,
 
 val ffi_make_closure(val fun, val call_desc, val safe_p_in, val abort_ret_in)
 {
-  val self = lit("ffi-make-closure");
+  val real_self = lit("ffi-make-closure");
   struct txr_ffi_closure *tfcl = coerce(struct txr_ffi_closure *,
                                         chk_calloc(1, sizeof *tfcl));
-  struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(self, call_desc);
+  struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(real_self, call_desc);
+  val self = if3(tfcd->name, tfcd->name, real_self);
   val obj = cobj(coerce(mem_t *, tfcl), ffi_closure_s, &ffi_closure_ops);
   val safe_p = default_arg_strict(safe_p_in, t);
   ffi_status ffis = FFI_OK;
@@ -6328,7 +6336,7 @@ void ffi_init(void)
   reg_fun(intern(lit("ffi-type-operator-p"), user_package), func_n1(ffi_type_operator_p));
   reg_fun(intern(lit("ffi-type-p"), user_package), func_n1(ffi_type_p));
 #if HAVE_LIBFFI
-  reg_fun(intern(lit("ffi-make-call-desc"), user_package), func_n4(ffi_make_call_desc));
+  reg_fun(intern(lit("ffi-make-call-desc"), user_package), func_n5o(ffi_make_call_desc, 4));
   reg_fun(intern(lit("ffi-call"), user_package), func_n2v(ffi_call_wrap));
   reg_fun(intern(lit("ffi-make-closure"), user_package), func_n4o(ffi_make_closure, 2));
 #endif

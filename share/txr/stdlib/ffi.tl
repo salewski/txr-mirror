@@ -81,7 +81,8 @@
            (defvarl ,arg-types-sym [mapcar ffi-type-compile ',argtypes])
            (defvarl ,call-desc-sym (ffi-make-call-desc ,nargs ,nvariadic
                                                        ,ret-type-sym
-                                                       ,arg-types-sym))
+                                                       ,arg-types-sym
+                                                       ',name))
            (defvarl ,fun-sym ,fun-ref)
            (defun ,name ,arg-syms
              (ffi-call ,fun-sym ,call-desc-sym ,*arg-syms)))))))
@@ -103,7 +104,8 @@
          (defvarl ,arg-types-sym [mapcar ffi-type-compile ',argtypes])
          (defvarl ,call-desc-sym (ffi-make-call-desc ,nargs ,nvariadic
                                                      ,ret-type-sym
-                                                     ,arg-types-sym))
+                                                     ,arg-types-sym
+                                                     ',name))
          (defun ,name (,fun-sym)
            [ffi-make-closure ,fun-sym ,call-desc-sym ,safe-p ,abort-retval])))))
 

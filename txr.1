@@ -74953,7 +74953,8 @@ a Lisp expression denoting FFI syntax.
 
 .coNP Function @ ffi-make-call-desc
 .synb
-.mets (ffi-make-call-desc < ntotal < nfixed < rettype << argtypes )
+.mets (ffi-make-call-desc < ntotal < nfixed < rettype
+.mets \ \  < argtypes <> [ name ])
 .syne
 .desc
 The
@@ -74991,6 +74992,14 @@ If the function is variadic, then the first
 .meta nfixed
 elements of this list specify the types of the fixed arguments;
 the remaining elements specify the variadic arguments.
+
+The
+.meta name
+argument gives the name of the function for which this description is intended,
+or some other identifying symbol. This symbols is used in diagnostic messages
+related to errors in the construction of the descriptor itself or its
+subsequent use. If this parameter is omitted, then the involved FFI functions
+use their own names in reporting diagnostics.
 
 Note: variadic functions must not be called using a non-variadic
 descriptor, and
