@@ -474,6 +474,7 @@
 
 (mtest
   (when-match ^(,a ,b) '(1 2) (list a b)) (1 2)
+  (when-match ^(,(oddp @a) ,(evenp @b)) '(1 2) (list a b)) (1 2)
   (when-match ^#(,a ,b) #(1 2) (list a b)) (1 2)
   (when-match ^#S(,type year ,y) #S(time year 2021)
     (list (struct-type-name type) y)) (time 2021)

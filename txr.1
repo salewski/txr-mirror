@@ -41277,7 +41277,7 @@ supported in quasiliteral patterns.
 
 .brev
 
-.NP* Quasiliteral matching notation
+.NP* Quasiquote matching notation
 .synb
 .mets >> ^ qq-syntax
 .syne
@@ -41376,6 +41376,46 @@ Splicing JSON syntax is diagnosed as an error inside a JSON quasiliteral.
 .meIP < obj
 Any other quasiquoted object is left untranslated.
 .RE
+.IP
+.TP* Examples:
+.verb
+  ;; basic unquote: variables embedded via unquote,
+  ;; not requiring @ prefix.
+  (when-match ^(,a ,b) '(1 2) (list a b))
+  --> (1 2)
+
+  ;; operators embedded via unquote; interior of operators
+  ;; is regular non-quasiquoting pattern syntax.
+  (when-match ^(,(oddp @a) ,(evenp @b)) '(1 2) (list a b))
+  --> (1 2)
+
+  (when-match ^#(,a ,b) #(1 2) (list a b))
+  --> (1 2)
+
+  (when-match ^#S(,type year ,y) #S(time year 2021)
+    (list (struct-type-name type) y))
+  --> (time 2021)
+
+  (when-match ^#H(() (x ,y) (,(symbolp @y) ,datum))
+              #H(() (x k) (k 42))
+              datum)
+  --> (42)
+
+  ;; JSON syntax
+
+  (when-match ^#J~a 42.0 a) --> 42.0
+
+  (when-match ^#J[~a, ~b] #J[true, false] (list a b)) --> (t nil)
+
+  (when-match ^#J{"x" : ~y, ~(symbolp @y) : ~datum}
+              #J{"x" : true, true : 42}
+              datum)
+  --> (42.0)
+
+  (when-match ^#J{"foo" : {"x" : ~val}}
+              #J{"foo" : {"x" : "y"}} val)
+  --> "y"
+.brev
 
 .coNP Pattern operator @ struct
 .synb
