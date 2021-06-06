@@ -2228,7 +2228,8 @@ static void dlsym_error(val dlptr, val name, val self)
 {
   char *err = dlerror();
   if (err)
-    uw_throwf(error_s, lit("~a: ~a"), self, string_utf8(err), nao);
+    uw_throwf(error_s, lit("~a: while looking up ~a in ~s: ~a"),
+              self, name, dlptr, string_utf8(err), nao);
   else
     uw_throwf(error_s, lit("~a: ~a not found in ~s"),
               self, name, dlptr, nao);
