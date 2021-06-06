@@ -73233,11 +73233,29 @@ the foreign function alters the pointer.
 .coNP FFI type @ closure
 The
 .code closure
-type converts two kinds of Lisp objects to a C pointer: the
+type converts three kinds of Lisp objects to a C pointer: the object
+.codn nil ,
+the
 .code cptr
-type, and the special
+type, or the special
 .code ffi-closure
-type, whose instances are produced by the
+type.
+
+When the
+.code nil
+symbol is converted to a
+.code closure
+type, it becomes a null function pointer.
+
+A
+.code cptr
+object of any kind converts to a
+.codn closure ;
+the internal pointer is converted to a function pointer.
+
+Instances of the
+.code ffi-closure
+type are produced by the
 .code ffi-make-closure
 function, or by calls to functions defined by the
 .code deffi-cb
@@ -73245,6 +73263,15 @@ macro. The
 .code closure
 type is useful for passing callbacks to foreign functions: Lisp functions
 which appear to be C functions to foreign code.
+
+In the reverse direction, when a
+.code closure
+object is converted from the foreign function pointer representation
+to a Lisp object, it becomes a
+.code cptr
+object whose tag is the
+.code closure
+symbol.
 
 .coNP FFI type @ void
 The

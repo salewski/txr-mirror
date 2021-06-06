@@ -2142,7 +2142,7 @@ static void ffi_closure_put(struct txr_ffi_type *tft, val ptr, mem_t *dst,
   } else if (type == ffi_closure_s) {
     struct txr_ffi_closure *tfcl = ffi_closure_struct(ptr);
     p = tfcl->fptr;
-  } else {
+  } else if (ptr != nil) {
     uw_throwf(error_s, lit("~a: ~s cannot be used as function pointer"),
               self, ptr, nao);
   }
