@@ -4673,7 +4673,7 @@ static void ffi_call_desc_print_op(val obj, val out,
   struct txr_ffi_call_desc *tfcd = ffi_call_desc(obj);
   put_string(lit("#<"), out);
   obj_print_impl(obj->co.cls, out, pretty, ctx);
-  format(out, lit("~s ~s ~!~s>"), tfcd->name, tfcd->rettype,
+  format(out, lit(" ~s ~s ~!~s>"), tfcd->name, tfcd->rettype,
          tfcd->argtypes, nao);
 }
 
