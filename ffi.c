@@ -1901,10 +1901,16 @@ static val ffi_bool_rget(struct txr_ffi_type *tft, mem_t *src, val self)
 
 #endif
 
-static void ffi_cptr_put(struct txr_ffi_type *tft, val n, mem_t *dst,
+static void ffi_cptr_put(struct txr_ffi_type *tft, val ptr, mem_t *dst,
                          val self)
 {
-  mem_t *p = cptr_handle(n, tft->tag, self);
+  mem_t *p = 0;
+
+  if (type(ptr) == CPTR)
+    p = cptr_handle(ptr, tft->tag, self);
+  else
+    p = carray_ptr(ptr, tft->eltype, self);
+
   *coerce(mem_t **, dst) = p;
 }
 
@@ -3932,6 +3938,7 @@ val ffi_type_compile(val syntax)
       tft->alloc = ffi_cptr_alloc;
       tft->free = ffi_noop_free;
       tft->tag = tag;
+      tft->eltype = gethash(ffi_typedef_hash, tag);
       if (cddr(syntax))
         goto excess;
       return type;

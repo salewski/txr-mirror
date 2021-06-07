@@ -74513,7 +74513,10 @@ type is similar to the unparametrized
 .codn cptr .
 It also converts between Lisp objects of type
 .code cptr
-and foreign pointers. However, it provides a measure of type safety.
+and foreign pointers. Unlike the unparametrized type, it provides a measure of
+type safety, and also supports the conversion of
+.code carray
+objects.
 
 When a foreign pointer is converted to a Lisp object under control of the
 parametrized
@@ -74544,7 +74547,34 @@ is specified as
 .codn nil ,
 then this is precisely equivalent to the unparametrized
 .code cptr
-which doesn't provides the above safety measure.
+which doesn't provide the above safety measure.
+
+A
+.code carray
+object may also be converted to a foreign pointer under the control of
+a parametrized
+.code cptr
+type. The
+.code carray
+object's internal pointer becomes the foreign pointer value.
+The conversion is only permitted if the following two restrictions are not met,
+otherwise an error exception is thrown.
+Firstly, the
+.meta type-sym
+of the
+.code cptr
+type must be the name of an FFI type, at the time when the
+.code cptr
+type expression is processed, otherwise the
+.code cptr
+is not associated with a type.
+Secondly, the
+.code carray
+object being converted must have an element type which matches the
+FFI type denoted by the
+.code cptr
+object's
+.metn type-sym .
 
 Pointer type safety is useful, because FFI can be used to create bindings
 to large application programming interfaces (APIs) in which objects of
