@@ -43,10 +43,10 @@
 (stest (ignwarn (expand 's.(a b c)))
        "(call (slot s 'a)\n                     \
        \      s b c)")
-(test (expand 's.[a].d)
-      (slot [(slot s 'a) s] 'd))
-(test (expand 's.[a b c].d)
-      (slot [(slot s 'a) s b c] 'd))
+(test (expand 's.[a].b)
+      (slot [(slot s 'a) s] 'b))
+(test (expand 's.[a b c].b)
+      (slot [(slot s 'a) s b c] 'b))
 (set *gensym-counter* 0)
 (stest (ignwarn (expand 's.(a).d))
        "(slot (call (slot s 'a)\n               \

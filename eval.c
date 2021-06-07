@@ -5088,12 +5088,31 @@ val expand(val form, val menv)
   return ret;
 }
 
+static val muffle_unbound_warning(val exc, struct args *args)
+{
+  (void) exc;
+
+  args_normalize_least(args, 2);
+
+  if (args->fill >= 2) {
+    val tag = args->arg[1];
+
+    if (consp(tag)) {
+      val type = car(tag);
+      if (type == var_s || type == fun_s || type == sym_s)
+        uw_rthrow(continue_s, nil);
+    }
+  }
+
+  return nil;
+}
+
 static val no_warn_expand(val form, val menv)
 {
   val ret;
   uw_frame_t uw_handler;
   uw_push_handler(&uw_handler, cons(defr_warning_s, nil),
-                  func_n1v(uw_muffle_warning));
+                  func_n1v(muffle_unbound_warning));
   ret = expand(form, menv);
   uw_pop_frame(&uw_handler);
   return ret;

@@ -36903,7 +36903,20 @@ and
 .code expand*
 is that
 .code expand
-suppresses any warning exceptions that are issued during expansion.
+suppresses expansion-time deferred warnings (exceptions of type
+.codn defr-warning ),
+issued for unbound variables or functions.
+To suppress a warning means to intercept the warning exception with a handler
+which throws a
+.code continue
+exception to resume processing.
+What this requirement means is that if unbound functions or variables
+occur in the
+.meta form
+being expanded by expand, the warning is effectively squelched. Rationale:
+.code expand
+is may be used by macros for expanding fragments which contain references to
+variables or functions which are not defined in those fragments.
 
 .coNP Function @ expand-with-free-refs
 .synb
