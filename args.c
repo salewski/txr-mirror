@@ -59,7 +59,7 @@ void args_normalize_exact(struct args *args, cnum fill)
 
 void args_normalize_least(struct args *args, cnum minfill)
 {
-  bug_unless (args->fill <= args->argc);
+  bug_unless (minfill <= args->argc);
 
   while (args->fill < minfill && args->list)
     args_add(args, pop(&args->list));
