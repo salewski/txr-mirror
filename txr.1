@@ -76030,6 +76030,36 @@ macro yields the compiled version of
 .meta type-syntax
 as its value.
 
+.coNP Macros @ deffi-struct and @ deffi-union
+.synb
+.mets (deffi-struct < name >> {( slot < type <> [ init-form ])}*)
+.mets (deffi-union < name >> {( slot < type <> [ init-form ])}*)
+.syne
+.desc
+The
+.code deffi-struct
+and
+.code deffi-union
+macros provide a more compact notation for defining FFI structure and union
+types together with matching
+.code typedef
+names.
+
+The semantics follows from these equivalences:
+
+.verb
+  (deffi-struct S ...)  <-->  (typedef S (struct S ...))
+  (deffi-union U ...)  <-->  (typedef U (union U ...))
+.brev
+
+.TP* Example:
+
+.verb
+  (deffi-struct point
+    (x double)
+    (y double))
+.brev
+
 .coNP Macro @ sizeof
 .synb
 .mets (sizeof < type-syntax <> [ object-expr ])

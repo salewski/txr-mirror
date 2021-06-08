@@ -632,7 +632,8 @@ static val ffi_set_entries(val dlt, val fun)
   val name[] = {
     lit("with-dyn-lib"), lit("deffi"), lit("deffi-type"), lit("deffi-cb"),
     lit("deffi-cb-unsafe"),
-    lit("deffi-sym"), lit("deffi-var"), lit("typedef"), lit("sizeof"),
+    lit("deffi-sym"), lit("deffi-var"), lit("deffi-struct"),
+    lit("deffi-union"), lit("typedef"), lit("sizeof"),
     lit("alignof"), lit("offsetof"), lit("arraysize"), lit("elemsize"),
     lit("elemtype"), lit("ffi"), lit("carray-ref"), lit("carray-sub"),
     lit("sub-buf"), lit("znew"),

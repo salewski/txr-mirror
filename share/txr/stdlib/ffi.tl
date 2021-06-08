@@ -130,6 +130,12 @@
        (defvarl ,var-sym (carray-cptr ,var-ref ,type-sym 1))
        (defsymacro ,name (carray-ref ,var-sym 0)))))
 
+(defmacro deffi-struct (name . body)
+  ^(typedef ,name (struct ,name ,*body)))
+
+(defmacro deffi-union (name . body)
+  ^(typedef ,name (union ,name ,*body)))
+
 (defmacro sizeof (type : (obj nil obj-p) :env menv)
   (if obj-p
     (if (constantp obj menv)
