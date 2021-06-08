@@ -25613,6 +25613,94 @@ function except that the
 .meta vec
 argument must be a vector.
 
+.coNP Function @ fill-vec
+.synb
+.mets (fill-vec-vec < vec < elem >> [ from <> [ to ]])
+.syne
+.desc
+The
+.code fill-vec
+function overwrites a range of the vector with copies of the
+.meta elem
+value.
+
+The
+.meta from
+and
+.meta to
+index arguments follow the same range indexing conventions as the
+.meta replace
+and
+.meta sub
+functions.
+If
+.meta from
+is omitted, it defaults to zero.
+If
+.meta to
+is omitted, it defaults to the length of
+.metn vec .
+Negative values of
+.meta from
+and
+.meta to
+are adjusted by adding the length of the vector to them, once.
+
+If the adjusted value of either
+.meta from
+or
+.meta to
+is negative, or exceeds the length of
+.metn vec ,
+an error exception is thrown.
+
+The adjusted values of
+.meta to
+and
+.meta from
+specify a range of vec starting at the
+.meta from
+index, and ending at the
+.meta to
+index, which is excluded from the range.
+
+If the adjusted
+.meta to
+is less than or equal to the adjusted
+.metn from ,
+then
+.meta vec
+is unaltered.
+
+Otherwise, copies of element are stored into
+.meta vec
+starting at the
+.meta from
+index, ending just before the the
+.meta to
+index is reached.
+
+The
+.code fill-vec
+function returns
+.metn vec .
+
+.TP* Examples:
+
+.verb
+  (defvarl v (vec 1 2 3))
+
+  v --> #(1 2 3)
+
+  (fill-vec v 0) --> #(0 0 0)
+
+  (fill-vec v 3 1) --> #(0 3 3)
+
+  (fill-vec v 4 -1) --> #(0 3 4)
+
+  (fill-vec v 5 -3 -1) --> #(5 5 4)
+.brev
+
 .coNP Function @ cat-vec
 .synb
 .mets (cat-vec << vec-list )

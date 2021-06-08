@@ -8661,6 +8661,40 @@ val replace_obj(val obj, val items, val from, val to)
   return obj;
 }
 
+val fill_vec(val vec, val item, val from_in, val to_in)
+{
+  val self = lit("fill-vec");
+  val len = length_vec(vec);
+  cnum from = c_num(default_arg(from_in, zero), self);
+  cnum to = c_num(default_arg(to_in, len), self);
+  cnum l = c_num(len, self);
+  cnum i;
+
+  if (from < 0)
+    from += l;
+
+  if (to < 0)
+    to += l;
+
+  if (from < 0 || from > l)
+    uw_throwf(error_s, lit("~a: from index ~s is out of range for vector ~s"),
+              self, num(from), vec, nao);
+
+  if (to < 0 || to > l)
+    uw_throwf(error_s, lit("~a: to index ~s is out of range for vector ~s"),
+              self, num(to), vec, nao);
+
+  if (from >= to)
+    return vec;
+
+  for (i = from; i < to - 1; i++)
+    vec->v.vec[i] = item;
+
+  set(mkloc(vec->v.vec[i], vec), item);
+
+  return vec;
+}
+
 val cat_vec(val list)
 {
   val self = lit("cat-vec");

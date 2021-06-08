@@ -7061,6 +7061,7 @@ void eval_init(void)
   reg_fun(intern(lit("copy-vec"), user_package), func_n1(copy_vec));
   reg_fun(intern(lit("sub-vec"), user_package), func_n3o(sub_vec, 1));
   reg_fun(intern(lit("replace-vec"), user_package), func_n4o(replace_vec, 2));
+  reg_fun(intern(lit("fill-vec"), user_package), func_n4o(fill_vec, 2));
   reg_fun(intern(lit("cat-vec"), user_package), func_n1(cat_vec));
 
   reg_fun(intern(lit("assoc"), user_package), func_n2(assoc));

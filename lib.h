@@ -1069,6 +1069,7 @@ val copy_vec(val vec);
 val sub_vec(val vec_in, val from, val to);
 val replace_vec(val vec_in, val items, val from, val to);
 val replace_obj(val obj, val items, val from, val to);
+val fill_vec(val vec, val item, val from_in, val to_in);
 val cat_vec(val list);
 val lazy_stream_cons(val stream);
 val lazy_str(val list, val term, val limit);

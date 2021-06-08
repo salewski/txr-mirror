@@ -720,6 +720,7 @@
       ("fill-buf-adjust" "N-00D142E1")
       ("fill-carray" "N-00737951")
       ("fill-obj" "N-0039A1D1")
+      ("fill-vec" "N-03C9A237")
       ("filter" "N-00B50006")
       ("filter-equal" "N-03136087")
       ("filter-string-tree" "N-00C9EEB0")
