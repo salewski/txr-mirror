@@ -260,6 +260,7 @@
     (let* ((have-arv (boundp 'ftw-actionretval))
            (excf [apply orf (mapcar (do op fnmatch @@1 @1) o.exclude)])
            (skips ())
+           (*read-unknown-structs* t)
            (tags (build
                    (ftw o.out-args
                         (lambda (path type stat . rest)
