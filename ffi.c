@@ -182,7 +182,7 @@ struct txr_ffi_type {
   val self;
   ffi_kind_t kind;
   ffi_type *ft;
-  ffi_type *elements[1];
+  ffi_type **elements;
   val lt;
   val syntax;
   val eltype;
@@ -248,13 +248,11 @@ static void ffi_type_print_op(val obj, val out, val pretty, struct strm_ctx *ctx
 static void ffi_type_struct_destroy_op(val obj)
 {
   struct txr_ffi_type *tft = ffi_type_struct(obj);
-#if HAVE_LIBFFI
-  ffi_type *ft = tft->ft;
-#endif
 
 #if HAVE_LIBFFI
-  ft->elements = 0;
-  free(ft);
+  free(tft->elements);
+  tft->elements = 0;
+  free(tft->ft);
   tft->ft = 0;
 #endif
 
@@ -3181,15 +3179,38 @@ static struct txr_ffi_type *ffi_struct_clone(struct txr_ffi_type *orig)
   cnum nmemb = orig->nelem;
   struct txr_ffi_type *copy = ffi_simple_clone(orig);
   size_t memb_size = sizeof *orig->memb * nmemb;
-#if HAVE_LIBFFI
-  ffi_type *ft = coerce(ffi_type *, chk_copy_obj(coerce(mem_t *, orig->ft),
-                                                 sizeof *orig->ft));
-#endif
 
 #if HAVE_LIBFFI
-  copy->ft = ft;
-  ft->elements = copy->elements;
+  copy->ft = coerce(ffi_type *, chk_copy_obj(coerce(mem_t *, orig->ft),
+                                             sizeof *orig->ft));
+  copy->elements = coerce(ffi_type **,
+                          chk_copy_obj(coerce(mem_t *, orig->elements),
+                                       sizeof *orig->elements * (nmemb + 1)));
+  copy->ft->elements = copy->elements;
 #endif
+
+  copy->memb = coerce(struct smemb *, chk_copy_obj(coerce(mem_t *,
+                                                          orig->memb),
+                                                   memb_size));
+
+  return copy;
+}
+
+static struct txr_ffi_type *ffi_union_clone(struct txr_ffi_type *orig)
+{
+  cnum nmemb = orig->nelem;
+  struct txr_ffi_type *copy = ffi_simple_clone(orig);
+  size_t memb_size = sizeof *orig->memb * nmemb;
+
+#if HAVE_LIBFFI
+  copy->ft = coerce(ffi_type *, chk_copy_obj(coerce(mem_t *, orig->ft),
+                                             sizeof *orig->ft));
+  copy->elements = coerce(ffi_type **,
+                          chk_copy_obj(coerce(mem_t *, orig->elements),
+                                       sizeof *orig->elements * 2));
+  copy->ft->elements = copy->elements;
+#endif
+
   copy->memb = coerce(struct smemb *, chk_copy_obj(coerce(mem_t *,
                                                           orig->memb),
                                                    memb_size));
@@ -3223,6 +3244,8 @@ static val ffi_memb_compile(val syntax, int last, int *pflexp, val self)
 static val make_ffi_type_struct(val syntax, val lisp_type,
                                 val use_existing, val self)
 {
+  val slot_exprs = cddr(syntax);
+  cnum nmemb = c_num(length(slot_exprs), self), i, e;
   struct txr_ffi_type *tft = if3(use_existing,
                                  ffi_type_struct(use_existing),
                                  coerce(struct txr_ffi_type *,
@@ -3231,10 +3254,12 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   ffi_type *ft = if3(use_existing,
                      tft->ft,
                      coerce(ffi_type *, chk_calloc(1, sizeof *ft)));
+  ffi_type **elem = if3(use_existing,
+                       tft->elements,
+                       coerce(ffi_type **,
+                              chk_calloc(nmemb + 1, sizeof *elem)));
 #endif
   int flexp = 0;
-  val slot_exprs = cddr(syntax);
-  cnum nmemb = c_num(length(slot_exprs), self), i;
   struct smemb *memb = coerce(struct smemb *,
                               chk_calloc(nmemb, sizeof *memb));
   val obj = if3(use_existing,
@@ -3253,6 +3278,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
     }
 #if HAVE_LIBFFI
     free(tft->ft);
+    free(tft->elements);
 #endif
     free(tft->memb);
     memset(tft, 0, sizeof *tft);
@@ -3262,6 +3288,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
   tft->kind = FFI_KIND_STRUCT;
 #if HAVE_LIBFFI
   tft->ft = ft;
+  tft->elements = elem;
 #endif
   tft->syntax = syntax;
   tft->lt = lisp_type;
@@ -3285,7 +3312,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
   sethash(ffi_struct_tag_hash, cadr(syntax), obj);
 
-  for (i = 0; i < nmemb; i++) {
+  for (i = 0, e = 0; i < nmemb; i++) {
     val slot_syntax = pop(&slot_exprs);
     val slot = car(slot_syntax);
     val type = ffi_memb_compile(slot_syntax, i == nmemb - 1, &flexp, self);
@@ -3300,6 +3327,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
     setcheck(obj, slot);
     setcheck(obj, type);
+
+    if (bit_offs == 0)
+      tft->elements[e++] = mtft->ft;
 
     if (mtft->bitfield) {
       ucnum size = mtft->size;
@@ -3409,6 +3439,9 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
   ffi_type *ft = if3(use_existing,
                      tft->ft,
                      coerce(ffi_type *, chk_calloc(1, sizeof *ft)));
+  ffi_type **elem = if3(use_existing,
+                        tft->elements,
+                        coerce(ffi_type **, chk_calloc(2, sizeof *elem)));
 #endif
   int flexp = 0;
   val slot_exprs = cddr(syntax);
@@ -3420,6 +3453,7 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
                 cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops));
   ucnum most_align = 0;
   ucnum biggest_size = 0;
+  struct txr_ffi_type *biggest_tft = 0;
   const unsigned bits_int = 8 * sizeof(int);
 
   if (use_existing) {
@@ -3429,6 +3463,7 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
     }
 #if HAVE_LIBFFI
     free(tft->ft);
+    free(tft->elements);
 #endif
     free(tft->memb);
     memset(tft, 0, sizeof *tft);
@@ -3438,11 +3473,12 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
   tft->kind = FFI_KIND_UNION;
 #if HAVE_LIBFI
   tft->ft = ft;
+  tft->elements = elem;
 #endif
   tft->syntax = syntax;
   tft->lt = union_s;
   tft->nelem = nmemb;
-  tft->clone = ffi_struct_clone;
+  tft->clone = ffi_union_clone;
   tft->put = ffi_union_put;
   tft->get = ffi_union_get;
 #if !HAVE_LITTLE_ENDIAN
@@ -3496,13 +3532,17 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
 
       if (most_align < align)
         most_align = align;
-      if (biggest_size < size)
+      if (biggest_size < size) {
         biggest_size = size;
+        biggest_tft = mtft;
+      }
     } else {
       if (most_align < (ucnum) mtft->align)
         most_align = mtft->align;
-      if (biggest_size < (ucnum) mtft->size)
+      if (biggest_size < (ucnum) mtft->size) {
         biggest_size = mtft->size;
+        biggest_tft = mtft;
+      }
     }
   }
 
@@ -3519,6 +3559,7 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
   tft->align = most_align;
 
 #if HAVE_LIBFFI
+  elem[0] = biggest_tft->ft;
   ft->type = FFI_TYPE_STRUCT;
   ft->size = tft->size;
   ft->alignment = tft->align;
@@ -3531,16 +3572,17 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
 
 static struct txr_ffi_type *ffi_array_clone(struct txr_ffi_type *orig)
 {
+  cnum nmemb = min(orig->nelem, 20);
   struct txr_ffi_type *copy = ffi_simple_clone(orig);
 #if HAVE_LIBFFI
-  ffi_type *ft = coerce(ffi_type *, chk_copy_obj(coerce(mem_t *, orig->ft),
-                                                 sizeof *orig->ft));
+  copy->ft = coerce(ffi_type *, chk_copy_obj(coerce(mem_t *, orig->ft),
+                                             sizeof *orig->ft));
+  copy->elements = coerce(ffi_type **,
+                          chk_copy_obj(coerce(mem_t *, orig->elements),
+                                       sizeof *orig->elements * (nmemb + 1)));
+  copy->ft->elements = copy->elements;
 #endif
 
-#if HAVE_LIBFFI
-  copy->ft = ft;
-  ft->elements = copy->elements;
-#endif
   return copy;
 }
 
@@ -3549,10 +3591,13 @@ static val make_ffi_type_array(val syntax, val lisp_type,
 {
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
                                     chk_calloc(1, sizeof *tft));
+  cnum nelem = c_num(dim, self);
+  cnum nelem20 = min(nelem, 20);
 #if HAVE_LIBFFI
   ffi_type *ft = coerce(ffi_type *, chk_calloc(1, sizeof *ft));
+  ffi_type **elem = coerce(ffi_type **, chk_calloc(nelem20 + 1, sizeof *elem));
+  int i;
 #endif
-  cnum nelem = c_num(dim, self);
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
 
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
@@ -3563,6 +3608,7 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->kind = FFI_KIND_ARRAY;
 #if HAVE_LIBFFI
   tft->ft = ft;
+  tft->elements = elem;
 #endif
   tft->syntax = syntax;
   tft->lt = lisp_type;
@@ -3587,6 +3633,9 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   tft->nelem = nelem;
 
 #if HAVE_LIBFFI
+  for (i = 0; i < nelem20; i++)
+    elem[i] = etft->ft;
+
   ft->type = FFI_TYPE_STRUCT;
   ft->size = tft->size;
   ft->alignment = etft->align;
