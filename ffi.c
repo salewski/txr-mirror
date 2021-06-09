@@ -3251,6 +3251,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
       free(memb);
       return make_ffi_type_struct(syntax, lisp_type, nil, self);
     }
+#if HAVE_LIBFFI
+    free(tft->ft);
+#endif
     free(tft->memb);
     memset(tft, 0, sizeof *tft);
   }
@@ -3424,6 +3427,9 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
       free(memb);
       return make_ffi_type_union(syntax, nil, self);
     }
+#if HAVE_LIBFFI
+    free(tft->ft);
+#endif
     free(tft->memb);
     memset(tft, 0, sizeof *tft);
   }
