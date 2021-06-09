@@ -3181,11 +3181,13 @@ static struct txr_ffi_type *ffi_struct_clone(struct txr_ffi_type *orig)
   cnum nmemb = orig->nelem;
   struct txr_ffi_type *copy = ffi_simple_clone(orig);
   size_t memb_size = sizeof *orig->memb * nmemb;
+#if HAVE_LIBFFI
   ffi_type *ft = coerce(ffi_type *, chk_copy_obj(coerce(mem_t *, orig->ft),
                                                  sizeof *orig->ft));
+#endif
 
-  copy->ft = ft;
 #if HAVE_LIBFFI
+  copy->ft = ft;
   ft->elements = copy->elements;
 #endif
   copy->memb = coerce(struct smemb *, chk_copy_obj(coerce(mem_t *,
@@ -3225,9 +3227,11 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
                                  ffi_type_struct(use_existing),
                                  coerce(struct txr_ffi_type *,
                                         chk_calloc(1, sizeof *tft)));
+#if HAVE_LIBFFI
   ffi_type *ft = if3(use_existing,
                      tft->ft,
                      coerce(ffi_type *, chk_calloc(1, sizeof *ft)));
+#endif
   int flexp = 0;
   val slot_exprs = cddr(syntax);
   cnum nmemb = c_num(length(slot_exprs), self), i;
@@ -3253,7 +3257,9 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
 
   tft->self = obj;
   tft->kind = FFI_KIND_STRUCT;
+#if HAVE_LIBFFI
   tft->ft = ft;
+#endif
   tft->syntax = syntax;
   tft->lt = lisp_type;
   tft->clone = ffi_struct_clone;
@@ -3396,9 +3402,11 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
                                  ffi_type_struct(use_existing),
                                  coerce(struct txr_ffi_type *,
                                         chk_calloc(1, sizeof *tft)));
+#if HAVE_LIBFFI
   ffi_type *ft = if3(use_existing,
                      tft->ft,
                      coerce(ffi_type *, chk_calloc(1, sizeof *ft)));
+#endif
   int flexp = 0;
   val slot_exprs = cddr(syntax);
   cnum nmemb = c_num(length(slot_exprs), self), i;
@@ -3422,7 +3430,9 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
 
   tft->self = obj;
   tft->kind = FFI_KIND_UNION;
+#if HAVE_LIBFI
   tft->ft = ft;
+#endif
   tft->syntax = syntax;
   tft->lt = union_s;
   tft->nelem = nmemb;
@@ -3516,11 +3526,13 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
 static struct txr_ffi_type *ffi_array_clone(struct txr_ffi_type *orig)
 {
   struct txr_ffi_type *copy = ffi_simple_clone(orig);
+#if HAVE_LIBFFI
   ffi_type *ft = coerce(ffi_type *, chk_copy_obj(coerce(mem_t *, orig->ft),
                                                  sizeof *orig->ft));
+#endif
 
-  copy->ft = ft;
 #if HAVE_LIBFFI
+  copy->ft = ft;
   ft->elements = copy->elements;
 #endif
   return copy;
@@ -3531,7 +3543,9 @@ static val make_ffi_type_array(val syntax, val lisp_type,
 {
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
                                     chk_calloc(1, sizeof *tft));
+#if HAVE_LIBFFI
   ffi_type *ft = coerce(ffi_type *, chk_calloc(1, sizeof *ft));
+#endif
   cnum nelem = c_num(dim, self);
   val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
 
@@ -3541,7 +3555,9 @@ static val make_ffi_type_array(val syntax, val lisp_type,
 
   tft->self = obj;
   tft->kind = FFI_KIND_ARRAY;
+#if HAVE_LIBFFI
   tft->ft = ft;
+#endif
   tft->syntax = syntax;
   tft->lt = lisp_type;
   tft->eltype = eltype;
