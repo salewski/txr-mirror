@@ -44,6 +44,7 @@
       ("*r" "N-03A7AE5A")
       ("*random-state*" "N-033875AD")
       ("*random-warmup*" "N-010348CD")
+      ("*read-unknown-structs*" "N-0174F337")
       ("*rec-source-loc*" "N-014AFEA9")
       ("*stddebug*" "N-006566FB")
       ("*stderr*" "N-006566FB")

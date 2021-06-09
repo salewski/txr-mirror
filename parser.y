@@ -903,9 +903,10 @@ hash : HASH_H list              { if (parser->quasi_level > 0 && unquotes_occur(
                                     yybadtok(yychar, lit("hash literal")); }
      ;
 
-struct : HASH_S list            { if (parser->quasi_level > 0 && unquotes_occur($2, 0))
-                                    $$ = rl(cons(struct_lit_s, $2),
-                                              num($1));
+struct : HASH_S list            { if ((parser->quasi_level > 0 && unquotes_occur($2, 0)) ||
+                                      (parser->read_unknown_structs &&
+                                        !find_struct_type(first($2))))
+                                  { $$ = rl(cons(struct_lit_s, $2), num($1)); }
                                   else
                                   { val strct = make_struct_lit(first($2),
                                                                 rest($2));

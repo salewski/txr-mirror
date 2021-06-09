@@ -65,6 +65,7 @@ struct parser {
   struct yy_token tok_pushback[4];
   int tok_idx;
   int rec_source_loc;
+  int read_unknown_structs;
 };
 #endif
 
@@ -74,7 +75,7 @@ extern const int have_yydebug;
 extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
 extern val parser_s, unique_s, circref_s;
-extern val rec_source_loc_s;
+extern val rec_source_loc_s, read_unknown_structs_s;
 extern val json_s;
 void yydebug_onoff(int);
 void yyerror(scanner_t *scanner, parser_t *, const char *s);

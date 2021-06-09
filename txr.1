@@ -54351,6 +54351,25 @@ circle notation label.  The "ordinary structure that is reachable from the
 slots" denotes structure that is directly reachable by traversing conses,
 ranges, vectors, hashes and struct slots: all printable aggregate objects.
 
+.coNP Special variable @ *read-unknown-structs*
+.desc
+The
+.code *read-unknown-structs*
+variable controls the behavior of the parser upon encountering
+structure literal
+.code #S
+syntax which specifies an unknown structure type.
+
+If this variable's value is
+.code nil
+then such a literal is erroneous; an exception is thrown. Otherwise, such
+a structure is converted not into a structure object, which is impossible,
+but into a list object whose first element is the symbol
+.codn sys:struct-lit .
+The remaining elements are taken from the
+.code #S
+syntax.
+
 .coNP Function @ format
 .synb
 .mets (format < stream-designator < format-string << format-arg *)
