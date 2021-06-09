@@ -136,7 +136,7 @@
                  (cond
                    (long (add (ntag slot-tag long struct-name)))
                    (short (add (ntag slot-tag short struct-name))))))))
-          ((defstruct)
+          ((defstruct deffi-struct)
            (let ((struct-obj obj)
                  (struct-name (tree-case (cadr obj)
                                 ((atom . rest) atom)
