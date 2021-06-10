@@ -4783,15 +4783,15 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes,
 {
   val name = default_null_arg(name_in);
   val self = if3(name, name, lit("ffi-make-call-desc"));
-  cnum nf = c_num(default_arg(nfixed, zero), self);
   cnum nt = c_num(ntotal, self), i;
+  cnum nf = c_num(default_arg(nfixed, ntotal), self);
   struct txr_ffi_call_desc *tfcd = coerce(struct txr_ffi_call_desc *,
                                           chk_calloc(1, sizeof *tfcd));
   ffi_type **args = coerce(ffi_type **, chk_xalloc(nt, sizeof *args, self));
   val obj = cobj(coerce(mem_t *, tfcd), ffi_call_desc_s, &ffi_call_desc_ops);
   ffi_status ffis = FFI_OK;
 
-  tfcd->variadic = (nfixed != nil);
+  tfcd->variadic = (nt != nf);
   tfcd->nfixed = nf;
   tfcd->ntotal = nt;
   tfcd->argtypes = argtypes;

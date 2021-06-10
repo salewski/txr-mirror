@@ -74,12 +74,12 @@
         (arg-types-sym (gensym "arg-types-"))
         (call-desc-sym (gensym "call-desc-"))
         (fun-sym (gensym "ffi-fun-")))
-    (tree-bind (nargs nvariadic . argtypes) (sys:analyze-argtypes f argtypes)
+    (tree-bind (nargs nfixed . argtypes) (sys:analyze-argtypes f argtypes)
       (let ((arg-syms (take nargs (gun (gensym)))))
         ^(progn
            (defvarl ,ret-type-sym (ffi-type-compile ',rettype))
            (defvarl ,arg-types-sym [mapcar ffi-type-compile ',argtypes])
-           (defvarl ,call-desc-sym (ffi-make-call-desc ,nargs ,nvariadic
+           (defvarl ,call-desc-sym (ffi-make-call-desc ,nargs ,nfixed
                                                        ,ret-type-sym
                                                        ,arg-types-sym
                                                        ',name))

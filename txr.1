@@ -75185,13 +75185,16 @@ of arguments in the call.
 
 If the call denotes a variadic function, the
 .meta nfixed
-argument must be an integer between 1 and
+argument must be an integer at least 1 and less than
 .metn ntotal ,
 denoting the number of fixed arguments.
 If the call denotes an ordinary, non-variadic function, then
 .meta nfixed
-must be specified as
-.codn nil .
+must either be specified specified as
+.code nil
+or else equal to the
+.meta ntotal
+argument.
 
 The
 .meta rettype
