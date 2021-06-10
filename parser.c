@@ -972,6 +972,10 @@ static void find_matching_syms(lino_completions_t *cpl,
       case 'M':
       case 'S':
         break;
+      case 'Q':
+        if (mboundp(sym) || special_operator_p(sym))
+          break;
+        /* fallthrough */
       default:
         if (find_struct_type(sym) || ffi_type_p(sym))
           break;
@@ -1072,17 +1076,18 @@ static void provide_completions(const wchar_t *data,
       val line_pfx = string(line_pfxs);
       char prev = (end > data) ? end[-1] : 0;
       char pprev = (end > data + 1) ? end[-2] : 0;
-      int quote = (pprev == '^' || pprev == '\'' || pprev == '#');
+      int quote = (prev == '^' || prev == '\'');
+      int pquote = (pprev == '^' || pprev == '\'' || pprev == '#');
       int ppar = (pprev == '(');
       int dwim = (prev == '[');
       int par = (prev == '(');
       int slot = (prev == '.');
       int meth = (pprev == '.') && (dwim || par);
-      char kind = (slot
-                   ? 'S'
-                   : (meth
-                      ? 'M'
-                      : (!pprev || (!quote && !ppar) || dwim) ? prev : 0));
+      char kind = if3(slot, 'S',
+                      if3(meth, 'M',
+                          if3(quote, 'Q',
+                              if3(!pprev || (!pquote && !ppar) || dwim,
+                                  prev,  0))));
 
       find_matching_syms(cpl, or2(package, cur_package),
                          sym_pfx, line_pfx, kind, if2(package, null(keyword)));
