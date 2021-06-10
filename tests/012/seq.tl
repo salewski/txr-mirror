@@ -72,3 +72,13 @@
                   (lambda (. args) (/ (sum args) 5))
                   #(4 7 9 13 5 1 6 11 10 3 8)]
       #(4.0 6.6 7.6 7.0 6.8 7.2 6.6 6.2 7.6 6.4 4.2))
+
+(mtest
+  [reduce-left + () 0] 0
+  [reduce-left + ()] 0
+  [reduce-left cons ()] :error
+  [reduce-left cons '(1)] 1
+  [reduce-left cons #(1)] 1
+  [reduce-left cons #(1) : (op * 10)] 10
+  [reduce-left cons #(1) 2 (op * 10)] (2 . 10)
+  [reduce-left cons #(2 3) 10 (op * 10)] ((10 . 20) . 30))

@@ -7902,22 +7902,26 @@ val funcall4(val fun, val arg1, val arg2, val arg3, val arg4)
   wrongargs(fun);
 }
 
-val reduce_left(val fun, val list, val init, val key)
+val reduce_left(val fun, val seq, val init, val key)
 {
+  val self = lit("reduce-left");
+  seq_iter_t item_iter;
+  val item;
+
   if (null_or_missing_p(key))
     key = identity_f;
 
-  list = nullify(list);
+  seq_iter_init(self, &item_iter, seq);
 
   if (missingp(init)) {
-    if (list)
-      init = funcall1(key, pop(&list));
+    if (seq_get(&item_iter, &item))
+      init = funcall1(key, item);
     else
       return funcall(fun);
   }
 
-  for (; list; list = cdr(list))
-    init = funcall2(fun, init, funcall1(key, car(list)));
+  while (seq_get(&item_iter, &item))
+    init = funcall2(fun, init, funcall1(key, item));
 
   return init;
 }
