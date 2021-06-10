@@ -3337,8 +3337,11 @@ val formatv(val stream_in, val fmtstr, struct args *al)
       case vf_precision:
         switch (ch) {
         case '0':
-          zeropad = 1;
-          continue;
+          if (!zeropad) {
+            zeropad = 1;
+            continue;
+          }
+          /* fallthrough */
         case '1': case '2': case '3': case '4': case '5':
         case '6': case '7': case '8': case '9':
           saved_state = state;
@@ -3404,6 +3407,10 @@ val formatv(val stream_in, val fmtstr, struct args *al)
         break;
       case vf_spec:
         state = vf_init;
+        if (zeropad && !precision_p) {
+          zeropad = precision = 0;
+          precision_p = 1;
+        }
         switch (ch) {
         case 'x': case 'X':
           obj = args_get_checked(self, al, &arg_ix);

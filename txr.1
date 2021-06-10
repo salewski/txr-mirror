@@ -54517,17 +54517,26 @@ is being omitted; there is only a precision field.
 The precision specifier may begin with these optional characters:
 .RS
 .coIP 0
-(the "leading zero flag"),
+(the "leading zero indicator"),
 .coIP +
 (print a sign for positive values")
 .IP space
 (print a space in place of a positive sign).
 .RE
 
-The precision specifier itself is either a decimal integer that does not
-begin with a zero digit, or the
+The precision specifier itself follows: it must be either a decimal integer
+or the
 .code *
-character.
+character indicating that the precision value comes from an integer argument.
+
+The leading zero indicator is only active if a precision specifier is
+present. If no precision specifier is present, then the leading zero indicator
+is interpreted as a specifier indicating a precision value of zero, rather
+than requesting leading zeros.  To request zero padding together with zero
+precision, either two or more zero digits are required, or else the leading
+zero indicator must be given together with the
+.code *
+specifier.
 
 The precision field's components have a meaning which depends on the type of
 object printed and the conversion specifier.
@@ -54615,6 +54624,7 @@ the
 special variable, whose default value is the same as that of the
 .code flo-dig
 variable.
+
 Floating point values which are integers are
 printed without a trailing
 .code .0
@@ -54627,7 +54637,9 @@ sign on nonnegative values.
 If a leading zero is specified in the precision, and a nonzero width is
 specified, then the printed value's integer part will be padded with leading
 zeros up to one less than the field width. These zeros are placed before the
-sign.
+sign.  A precision value of zero imposed on floating-point values is
+equivalent to a value of one; it is not possible to request zero significant
+figures.
 
 .coIP s
 Prints any object in a standard way, as if by the
@@ -54709,7 +54721,7 @@ precision of the number or its type.  If it is omitted, then the value
 is obtained from the special variable
 .codn *print-flo-digits* ,
 whose default value is three: three digits past the decimal point. A precision
-of zero means no digits pas the decimal point, and in this case the decimal
+of zero means no digits past the decimal point, and in this case the decimal
 point is suppressed (regardless of whether the numeric argument is
 floating-point or integer).
 
