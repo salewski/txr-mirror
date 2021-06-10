@@ -1,0 +1,107 @@
+;; Copyright 2021
+;; Kaz Kylheku <kaz@kylheku.com>
+;; Vancouver, Canada
+;; All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; 1. Redistributions of source code must retain the above copyright notice, this
+;;    list of conditions and the following disclaimer.
+;;
+;; 2. Redistributions in binary form must reproduce the above copyright notice,
+;;    this list of conditions and the following disclaimer in the documentation
+;;    and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+;; ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+;; WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+;; DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+;; FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+;; DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+;; SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+;; CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+(defun expand-pic-num (fmt val)
+  (let* ((zero (or (starts-with "0" fmt)
+                   (starts-with "+0" fmt)
+                   (starts-with "-0" fmt)))
+         (plus (eql [fmt 0] #\+))
+         (minus (eql [fmt 0] #\-))
+         (exc (pos #\! fmt))
+         (dot (or exc (pos #\. fmt)))
+         (int (if dot [fmt 0..dot] fmt))
+         (fra (if dot [fmt (succ dot)..:] "")))
+    (let ((code (if (or minus plus)
+                  ^(fmt ,`~@(len fmt),@(if plus "+")@(if zero "0")@(len fra)f`
+                        ,val)
+                  (with-gensyms (vg)
+                    ^(let ((,vg ,val))
+                       (if (minusp ,vg)
+                         (fmt ,`~@(len fmt),@(if zero "0")@(len fra)f`
+                              ,vg)
+                         (rest (fmt ,`~@(succ (len fmt)),@(if zero "0")@(len fra)f`
+                                    ,vg))))))))
+      (if exc
+        (with-gensyms (str)
+          ^(let ((,str ,code))
+             (if (> (len ,str) ,(len fmt))
+               (mkstring ,(len fmt) #\#)
+               ,str)))
+        code))))
+
+(defun expand-pic-align (chr fmt val)
+  ^(fmt ,`~@(if chr chr)@(len fmt)a` ,val))
+
+(defun pic-join-opt (join-form)
+  (labels ((et (str) (regsub #/\~/ "~~" str)))
+    (match-case join-form
+      ((join @(stringp @s) (fmt `@fmt` . @args) . @rest)
+       (pic-join-opt ^(join (fmt ,`@(et s)@fmt` ,*args) ,*rest)))
+      ((join (fmt `@fmt` . @args) @(stringp @s) . @rest)
+       (pic-join-opt ^(join (fmt ,`@fmt@(et s)` ,*args) ,*rest)))
+      ((join (fmt `@fmt1` . @args1) (fmt `@fmt2` . @args2) . @rest)
+       (pic-join-opt ^(join (fmt ,`@fmt1@fmt2` ,*args1 ,*args2) ,*rest)))
+      ((join @(stringp @s1) @(stringp @s2) . @rest)
+       (pic-join-opt ^(join ,`@s1@s1` ,rest)))
+      ((join "" @item . @rest)
+       (pic-join-opt ^(join ,item ,*rest)))
+      ((join @item "" . @rest)
+       (pic-join-opt ^(join ,item ,*rest)))
+      ((join @item) item)
+      (@else else))))
+
+(defun expand-pic (f fmt val)
+  (unless (stringp fmt)
+    (compile-error f "~s is required to be a format string" fmt))
+  (cond
+    ([m^$ #/\~[~#<>\|\-+0.!]/ fmt] [fmt 1])
+    ([m^$ #/[+\-]?0?#+([.!]#+)?/ fmt] (expand-pic-num fmt val))
+    ([m^$ #/<+/ fmt] (expand-pic-align "<" fmt val))
+    ([m^$ #/>+/ fmt] (expand-pic-align nil fmt val))
+    ([m^$ #/\|+/ fmt] (expand-pic-align "^" fmt val))
+    (t (compile-error f "unrecognized format string ~s" fmt))))
+
+(defmacro pic (:form f :env e bigfmt . args)
+  (unless (stringp bigfmt)
+    (compile-error f "~s is required to be a format string" bigfmt))
+  (let* ((regex #/[+\-]?0?#+([.!]#+)?| \
+                  <+| \
+                  >+| \
+                  \|+| \
+                  \~[~#<>\|\-+0.!]/)
+         (items (collect-each ((piece (tok regex t bigfmt)))
+                  (cond
+                    ((m^$ regex piece)
+                     (cond
+                       ((starts-with "~" piece)
+                          (expand-pic f piece nil))
+                       (t (unless args
+                            (compile-error f "insufficient arguments for format"))
+                          (expand-pic f piece (pop args)))))
+                    (t piece)))))
+    (if args
+      (compile-warning f "excess arguments"))
+    (pic-join-opt ^(join ,*items))))
