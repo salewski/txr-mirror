@@ -893,7 +893,10 @@ vector : '#' list               { if (parser->quasi_level > 0 && unquotes_occur(
                                   yybadtok(yychar, lit("unassigned/reserved # notation")); }
        ;
 
-hash : HASH_H list              { if (parser->quasi_level > 0 && unquotes_occur($2, 0))
+hash : HASH_H list              { if (parser->ignore)
+                                    $$ = nil;
+                                  else if (parser->quasi_level > 0 &&
+                                           unquotes_occur($2, 0))
                                     $$ = rl(cons(hash_lit_s, $2), num($1));
                                   else
                                     $$ = rl(hash_construct(first($2),
@@ -903,9 +906,12 @@ hash : HASH_H list              { if (parser->quasi_level > 0 && unquotes_occur(
                                     yybadtok(yychar, lit("hash literal")); }
      ;
 
-struct : HASH_S list            { if ((parser->quasi_level > 0 && unquotes_occur($2, 0)) ||
-                                      (parser->read_unknown_structs &&
-                                        !find_struct_type(first($2))))
+struct : HASH_S list            {  if (parser->ignore)
+                                   { $$ = nil; }
+                                   else if ((parser->quasi_level > 0 &&
+                                            unquotes_occur($2, 0)) ||
+                                           (parser->read_unknown_structs &&
+                                            !find_struct_type(first($2))))
                                   { $$ = rl(cons(struct_lit_s, $2), num($1)); }
                                   else
                                   { val strct = make_struct_lit(first($2),
@@ -932,8 +938,11 @@ tnode : HASH_N list             { if (gt(length($2), three))
                                   yybadtok(yychar, lit("tree node literal")); }
       ;
 
-tree : HASH_T list             { if (parser->quasi_level > 0 && unquotes_occur($2, 0))
-                                   $$ = rl(cons(tree_lit_s, $2), num($1));
+tree : HASH_T list             { if (parser->ignore)
+                                 { $$ = nil; }
+                                 else if (parser->quasi_level > 0 &&
+                                          unquotes_occur($2, 0))
+                                 { $$ = rl(cons(tree_lit_s, $2), num($1)); }
                                  else
                                  { val opts = first($2);
                                    val key_fn_name = pop(&opts);
