@@ -1380,6 +1380,7 @@
       ("pend*" "N-03975507")
       ("pendin" "N-0072FF5E")
       ("perm" "N-0176D3A1")
+      ("pic" "N-02AF39D2")
       ("pid-t" "N-01D716FE")
       ("pinc" "N-00E4BC37")
       ("pipe" "N-03F6D390")

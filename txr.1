@@ -54801,6 +54801,199 @@ and
   (fmt s arg ...)  <-->  (format nil s arg ...)
 .brev
 
+.coNP Macro @ pic
+.synb
+.mets (pic < format-string << format-arg *)
+.syne
+.desc
+The
+.code pic
+macro provides a notation for constructing a character string under the
+control of
+.meta format-string
+which indicates the insertion of zero or more
+.meta format-arg
+argument values.
+
+Like the
+.code fmt
+function or quasistring syntax, the
+.code pic
+macro returns a character string.
+
+The
+.code pic
+macro's
+.meta format-string
+notation is different from quasiliterals or from
+.codn fmt .
+
+The
+.code pic
+.meta format-string
+is scanned left to right in search  of
+.IR "pic patterns" .
+Any characters not belonging to a pic pattern are copied into the output
+string verbatim. When a pic pattern is found, it is removed from
+.meta format-string
+and applied to the next successive
+.meta format-arg
+to perform a conversion and formatting of that value to text. The resulting
+text is appended to the output string, and the process continues in search of the next pic pattern.
+When the
+.meta format-string
+is exhausted, the constructed string is returned.
+
+There must be exactly as many
+.meta format-arg
+arguments as there are pic patterns in
+.metn format-string .
+
+There are two kinds of pic patterns: alignment patterns, numeric patterns and
+escape patterns.
+
+Alignment patterns are described first.
+.RS
+.coIP <<...<<
+A sequence of one or more
+.code <
+(less than)
+characters specifies that the corresponding argument is rendered left-aligned
+in a field whose width is given by the number of
+.code <
+characters. If the argument's textual representation doesn't fit into the field,
+it overflows.
+.coIP >>...>>
+A sequence of one or more
+.code >
+(greater than)
+characters specifies that the corresponding argument is rendered right-aligned
+in a field whose width is given by the number of
+.code >
+characters. If the argument's textual representation doesn't fit into the field,
+it overflows.
+.coIP ||...||
+A sequence of one or more
+.code |
+(pipe) characters specifies that the corresponding argument is centered
+in a field whose width is given by the number of
+.code |
+characters. If the argument's textual representation doesn't fit into the field,
+it overflows. If the argument cannot be precisely centered, because the
+even-odd parity of its character count is different from the parity of the
+field width, it is centered slightly to the left: one less space appears on its
+left side in respect to its right side.
+.RE
+.IP
+The numeric patterns are more complex. They conform to one of the two
+following syntactic rule:
+
+.mono
+.mets <> [ sign ]  [0] {#}+ >> [ point {#}+]
+.onom
+
+The pattern consists of an optional
+.meta sign
+which is one of the characters
+.code +
+(plus) or
+.code -
+(minus). This is followed by an optional leading zero.
+After this comes a sequence of one or more
+.code #
+(hash) characters, which may contain exactly one
+.metn point .
+This
+.meta point
+element may appear at most once, and must not be the first or
+last character. The
+.meta point
+element is defined as one of the characters
+.code .
+(period)
+or
+.code !
+(exclamation mark). The entire numeric pattern contains no whitespace.
+
+A numeric pattern specifies a field width which is equal to the number
+of characters occurring in the pattern itself.
+For instance, the patterns
+.codn #### ,
+.code +###
+and
+.code 0#.#
+all specify a field width of four.
+
+If the leading sign is present, it has the following meanings:
+.RS
+.coIP -
+If the corresponding numeric argument is non-negative, a space will appear before
+the first digit. Otherwise, the minus character will appear.
+.coIP +
+If the corresponding numeric argument is non-negative, the
+.code +
+character shall appear before first digit. Otherwise the minus character
+will appear.
+.RE
+.IP
+If a leading sign is not present, then no extra character appears before
+the first digit of a positive value, which means that an extra character
+of field width is available for representing non-negative values.
+
+If the leading zero is present, it specifies that the number is
+padded with zeros on the left. In combination with the
+.code -
+sign, this shall not cause the leading space before a positive value to
+be overwritten with a zero; leading zeros, if any, begin after that space.
+
+The remainder of the pattern specifies the number of digits of the fractional
+part which is indicated by number of
+.code #
+characters after the
+.metn point .
+The number is rounded to that many fractional digits, which are all rendered,
+even if there are trailing zeros.
+If no
+.meta point
+is not specified, then the number of fractional digits is zero. The
+numeric argument is rounded to integer, and rendered without any decimal
+point or fractional part.
+
+Finally, there is a difference between
+.meta point
+being specified using the ordinary decimal point character
+.code .
+versus the
+.code !
+character. The
+.code !
+character specifies that if the conversion of the numeric argument overflows
+the field, then instead of showing any digits, the field is filled with
+.code #
+(hash) characters. The
+.code .
+character permits overflow.
+
+Escape patterns consist of a two-character sequence introduced by the
+.code ~
+(tilde)
+character, which is followed by one of the characters that are special in
+pic pattern syntax:
+
+.verb
+  < > | + - 0 # . ! ~
+.brev
+
+An escape pattern produces the second character as its output. For instance
+.code ~~
+encoded a single
+.code ~
+character, and
+.code ~#
+encodes a literal
+.code #
+character that is not part of any pattern.
+
 .coNP Functions @, print @, pprint @, prinl @, pprinl @ tostring and @ tostringp
 .synb
 .mets (print < obj >> [ stream <> [ pretty-p ]])
