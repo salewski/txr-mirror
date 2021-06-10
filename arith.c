@@ -4185,31 +4185,6 @@ val nary_op(val self, val (*bfun)(val, val),
   return acc;
 }
 
-static val nary_op_keyfun(val self, val (*bfun)(val, val),
-                          val (*ufun)(val self, val),
-                          struct args *args, val emptyval,
-                          val keyfun)
-{
-  val acc, next;
-  cnum index = 0;
-
-  if (!args_more(args, index))
-    return emptyval;
-
-  acc = funcall1(keyfun, args_get(args, &index));
-
-  if (!args_more(args, index))
-    return ufun(self, acc);
-
-  do {
-    next = funcall1(keyfun, args_get(args, &index));
-    acc = bfun(acc, next);
-  } while (args_more(args, index));
-
-  return acc;
-}
-
-
 val nary_simple_op(val (*bfun)(val, val),
                    struct args *args, val firstval)
 {
@@ -4220,6 +4195,51 @@ val nary_simple_op(val (*bfun)(val, val),
     next = args_get(args, &index);
     acc = bfun(acc, next);
   }
+
+  return acc;
+}
+
+static val nary_op_seq(val self, val (*bfun)(val, val),
+                       val (*ufun)(val self, val),
+                       val seq, val emptyval)
+{
+  seq_iter_t item_iter;
+  val acc, next;
+  seq_iter_init(self, &item_iter, seq);
+
+  if (!seq_get(&item_iter, &acc))
+    return emptyval;
+
+  if (!seq_get(&item_iter, &next))
+    return ufun(self, acc);
+
+  do {
+    acc = bfun(acc, next);
+  } while (seq_get(&item_iter, &next));
+
+  return acc;
+}
+
+static val nary_op_seq_keyfun(val self, val (*bfun)(val, val),
+                              val (*ufun)(val self, val),
+                              val seq, val emptyval, val keyfun)
+{
+  seq_iter_t item_iter;
+  val acc, next;
+  seq_iter_init(self, &item_iter, seq);
+
+  if (!seq_get(&item_iter, &acc))
+    return emptyval;
+
+  acc = funcall1(keyfun, acc);
+
+  if (!seq_get(&item_iter, &next))
+    return ufun(self, acc);
+
+  do {
+    next = funcall1(keyfun, next);
+    acc = bfun(acc, next);
+  } while (seq_get(&item_iter, &next));
 
   return acc;
 }
@@ -4428,26 +4448,18 @@ val numneqv(struct args *args)
   }
 }
 
-static val sumv(struct args *nlist, val keyfun)
-{
-  return nary_op_keyfun(plus_s, plus, unary_arith, nlist, zero, keyfun);
-}
-
 val sum(val seq, val keyfun)
 {
-  args_decl_list(args, ARGS_MIN, tolist(seq));
-  return if3(missingp(keyfun), plusv(args), sumv(args, keyfun));
-}
-
-static val prodv(struct args *nlist, val keyfun)
-{
-  return nary_op_keyfun(mul_s, mul, unary_num, nlist, one, keyfun);
+  return if3(missingp(keyfun),
+             nary_op_seq(plus_s, plus, unary_arith, seq, zero),
+             nary_op_seq_keyfun(plus_s, plus, unary_arith, seq, zero, keyfun));
 }
 
 val prod(val seq, val keyfun)
 {
-  args_decl_list(args, ARGS_MIN, tolist(seq));
-  return if3(missingp(keyfun), mulv(args), prodv(args, keyfun));
+  return if3(missingp(keyfun),
+             nary_op_seq(mul_s, mul, unary_num, seq, one),
+             nary_op_seq_keyfun(mul_s, mul, unary_num, seq, one, keyfun));
 }
 
 static val rexpt(val right, val left)
