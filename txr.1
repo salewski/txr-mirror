@@ -54889,7 +54889,7 @@ The numeric patterns are more complex. They conform to one of the two
 following syntactic rule:
 
 .mono
-.mets <> [ sign ]  [0] {#}+ >> [ point {#}+]
+.mets <> [ sign ]  [0] {#}+ >> [ point {#}+ | !]
 .onom
 
 The pattern consists of an optional
@@ -54902,27 +54902,32 @@ which is one of the characters
 After this comes a sequence of one or more
 .code #
 (hash) characters, which may contain exactly one
-.metn point .
-This
 .meta point
-element may appear at most once, and must not be the first or
-last character. The
-.meta point
-element is defined as one of the characters
+element, which is defined as one of the characters
 .code .
 (period)
 or
 .code !
-(exclamation mark). The entire numeric pattern contains no whitespace.
+(exclamation mark).
+This
+.meta point
+element may appear at most once, and must not be the first or
+last character, unless is is the exclamation mark,
+in which case it may appear last.
 
-A numeric pattern specifies a field width which is equal to the number
-of characters occurring in the pattern itself.
+Except if ending in the exclamation mark, a numeric pattern specifies a field
+width which is equal to the number of characters occurring in the pattern
+itself.
 For instance, the patterns
 .codn #### ,
 .code +###
 and
 .code 0#.#
-all specify a field width of four.
+all specify a field width of four. If the numeric pattern ends in an exclamation
+mark, that character is not counted toward the field width that it specifies.
+Thus the pattern
+.code ###!
+specifies a field width of three.
 
 If the leading sign is present, it has the following meanings:
 .RS
@@ -54959,9 +54964,13 @@ The number is rounded to that many fractional digits, which are all rendered,
 even if there are trailing zeros.
 If no
 .meta point
-is not specified, then the number of fractional digits is zero. The
-numeric argument is rounded to integer, and rendered without any decimal
-point or fractional part.
+is not specified, then the number of fractional digits is zero. The same is
+true if
+.meta point
+is specified as
+.code !
+as the last character. In both cases, the numeric argument is rounded to
+integer, and rendered without any decimal point or fractional part.
 
 Finally, there is a difference between
 .meta point

@@ -32,6 +32,7 @@
          (minus (eql [fmt 0] #\-))
          (exc (pos #\! fmt))
          (dot (or exc (pos #\. fmt)))
+         (fmt (if (and exc (eq #\! [fmt -1])) [fmt 0..-1] fmt))
          (int (if dot [fmt 0..dot] fmt))
          (fra (if dot [fmt (succ dot)..:] "")))
     (let ((code (if (or minus plus (not zero))
@@ -80,7 +81,7 @@
     ([m^$ #/\~[~#<>\|\-+0.!]/ fmt] [fmt 1..2])
     ([m^$ #/\~./ fmt] (compile-error f "unrecognized escape sequence ~a" fmt))
     ([m^$ #/\~/ fmt] (compile-error f "incomplete ~~ escape"))
-    ([m^$ #/[+\-]?0?#+([.!]#+)?/ fmt] (expand-pic-num fmt val))
+    ([m^$ #/[+\-]?0?#+([.!]#+|!)?/ fmt] (expand-pic-num fmt val))
     ([m^$ #/<+/ fmt] (expand-pic-align "<" fmt val))
     ([m^$ #/>+/ fmt] (expand-pic-align nil fmt val))
     ([m^$ #/\|+/ fmt] (expand-pic-align "^" fmt val))
@@ -89,7 +90,7 @@
 (defmacro pic (:form f :env e bigfmt . args)
   (unless (stringp bigfmt)
     (compile-error f "~s is required to be a format string" bigfmt))
-  (let* ((regex #/[+\-]?0?#+([.!]#+)?| \
+  (let* ((regex #/[+\-]?0?#+([.!]#+|!)?| \
                   <+| \
                   >+| \
                   \|+| \
