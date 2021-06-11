@@ -1,15 +1,25 @@
 (defmacro error-to-sym (expr)
  ^(catch ,expr
-    (error (cond) :error)))
+    (error (cond) :error)
+    (warning (cond) :warning)))
 
 (defmacro vtest (:env env expr expected)
-  (if (mequal expected :error '':error)
+  (if-match (quote @(as sym @(or :error :warning))) expected
+    (set expected sym))
+  (if (mequal expected :error :warning :warnerror)
     (catch
       (let ((expr-expn (expand expr env)))
-        ^(ifa (not (equal (error-to-sym ,expr-expn) :error))
+        ^(ifa (not (equal (error-to-sym ,expr-expn) ,expected))
            (error "test case ~s failed: produced ~s; expected ~s"
-                  ',expr it :error)))
-      (error (exc)))
+                  ',expr it ,expected)))
+      (error (exc)
+        (if (eq expected :warning)
+          (error "test case ~s produced error during expansion, expected ~s"
+                 expr expected)))
+      (warning (exc)
+        (if (eq expected :error)
+          (error "test case ~s warned during expansion, expected ~s"
+                 expr expected))))
     (let ((expr-expn (expand expr env))
           (expval (gensym)))
       ^(let ((,expval ,expected))
