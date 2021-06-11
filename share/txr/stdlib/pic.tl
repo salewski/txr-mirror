@@ -34,7 +34,7 @@
          (dot (or exc (pos #\. fmt)))
          (int (if dot [fmt 0..dot] fmt))
          (fra (if dot [fmt (succ dot)..:] "")))
-    (let ((code (if (or minus plus)
+    (let ((code (if (or minus plus (not zero))
                   ^(fmt ,`~@(len fmt),@(if plus "+")@(if zero "0")@(len fra)f`
                         ,val)
                   (with-gensyms (vg)
@@ -42,7 +42,7 @@
                        (if (minusp ,vg)
                          (fmt ,`~@(len fmt),@(if zero "0")@(len fra)f`
                               ,vg)
-                         (rest (fmt ,`~@(succ (len fmt)),@(if zero "0")@(len fra)f`
+                         (rest (fmt ,`~@(succ (len fmt)),+@(if zero "0")@(len fra)f`
                                     ,vg))))))))
       (if exc
         (with-gensyms (str)
@@ -65,7 +65,7 @@
       ((join (fmt `@fmt1` . @args1) (fmt `@fmt2` . @args2) . @rest)
        (pic-join-opt ^(join (fmt ,`@fmt1@fmt2` ,*args1 ,*args2) ,*rest)))
       ((join @(stringp @s1) @(stringp @s2) . @rest)
-       (pic-join-opt ^(join ,`@s1@s1` ,rest)))
+       (pic-join-opt ^(join ,`@s1@s2` ,*rest)))
       ((join "" @item . @rest)
        (pic-join-opt ^(join ,item ,*rest)))
       ((join @item "" . @rest)
@@ -77,7 +77,9 @@
   (unless (stringp fmt)
     (compile-error f "~s is required to be a format string" fmt))
   (cond
-    ([m^$ #/\~[~#<>\|\-+0.!]/ fmt] [fmt 1])
+    ([m^$ #/\~[~#<>\|\-+0.!]/ fmt] [fmt 1..2])
+    ([m^$ #/\~./ fmt] (compile-error f "unrecognized escape sequence ~a" fmt))
+    ([m^$ #/\~/ fmt] (compile-error f "incomplete ~~ escape"))
     ([m^$ #/[+\-]?0?#+([.!]#+)?/ fmt] (expand-pic-num fmt val))
     ([m^$ #/<+/ fmt] (expand-pic-align "<" fmt val))
     ([m^$ #/>+/ fmt] (expand-pic-align nil fmt val))
@@ -91,16 +93,16 @@
                   <+| \
                   >+| \
                   \|+| \
-                  \~[~#<>\|\-+0.!]/)
+                  \~.|\~/)
          (items (collect-each ((piece (tok regex t bigfmt)))
                   (cond
                     ((m^$ regex piece)
                      (cond
                        ((starts-with "~" piece)
                           (expand-pic f piece nil))
-                       (t (unless args
-                            (compile-error f "insufficient arguments for format"))
-                          (expand-pic f piece (pop args)))))
+                       (args
+                          (expand-pic f piece (pop args)))
+                       (t (compile-error f "insufficient arguments for format"))))
                     (t piece)))))
     (if args
       (compile-warning f "excess arguments"))
