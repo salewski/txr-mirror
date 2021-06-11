@@ -54926,14 +54926,18 @@ all specify a field width of four.
 
 If the leading sign is present, it has the following meanings:
 .RS
-.coIP -
-If the corresponding numeric argument is non-negative, a space will appear before
-the first digit. Otherwise, the minus character will appear.
 .coIP +
 If the corresponding numeric argument is non-negative, the
 .code +
 character shall appear before first digit. Otherwise the minus character
 will appear.
+.coIP -
+Like
+.code +
+except that when the numeric argument is non-negative, instead of a
+.code +
+character, a space appears before the first digit. This space counts
+toward the field width and therefore contributes to overflow.
 .RE
 .IP
 If a leading sign is not present, then no extra character appears before
