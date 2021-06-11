@@ -357,12 +357,11 @@
   (when-match `abc` "abc" t) t
   (when-match `@a` "abc" a) "abc")
 
-(macro-time-let ((*stderr* *stdnull*))
-  (mtest
-    (when-match `@a@b` "abc" a) :error
-    (when-match `@nil@b` "abc" a) :error
-    (when-match `@nil@nil` "abc" a) :error
-    (when-match `@a@nil` "abc" a) :error))
+(mtest
+  (when-match `@a@b` "abc" a) :error
+  (when-match `@nil@b` "abc" a) :error
+  (when-match `@nil@nil` "abc" a) :error
+  (when-match `@a@nil` "abc" a) :error)
 
 (mtest
   (when-match `@a-$` "a-$" a) "a"
@@ -394,8 +393,7 @@
     (when-match `@z#@{a 2}` "0#abb" a) nil
     (when-match `@z#@{a 4}` "0#abb" a) nil))
 
-(macro-time-let ((*stderr* *stdnull*))
-  (test (when-match `#@{a 4 5}` "#abb" a) :error))
+(test (when-match `#@{a 4 5}` "#abb" a) :error)
 
 (let ((b "bcd"))
   (mtest

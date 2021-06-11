@@ -57,13 +57,6 @@
     ((:cygwin :cygnal) (dlopen "cygwin1.dll"))
     (t (dlopen nil))))
 
-(defmacro macro-time-let (:env env bindings . body)
-  (with-gensyms (invoke)
-    ^(macrolet ((,invoke ()
-                  (let ,bindings
-                     (expand '(progn ,*body) ,env))))
-       (,invoke))))
-
 (defmacro with-temp-file ((name-var stream-var prefix) . body)
   ^(let* ((,stream-var (mkstemp ,prefix))
           (,name-var (stream-get-prop ,stream-var :name)))
