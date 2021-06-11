@@ -88,23 +88,37 @@
     (t (compile-error f "unrecognized format string ~s" fmt))))
 
 (defmacro pic (:form f :env e bigfmt . args)
-  (unless (stringp bigfmt)
-    (compile-error f "~s is required to be a format string" bigfmt))
   (let* ((regex #/[+\-]?0?#+([.!]#+|!)?| \
                   <+| \
                   >+| \
                   \|+| \
-                  \~.|\~/)
-         (items (collect-each ((piece (tok regex t bigfmt)))
-                  (cond
-                    ((m^$ regex piece)
-                     (cond
-                       ((starts-with "~" piece)
-                          (expand-pic f piece nil))
-                       (args
-                          (expand-pic f piece (pop args)))
-                       (t (compile-error f "insufficient arguments for format"))))
-                    (t piece)))))
-    (if args
-      (compile-warning f "excess arguments"))
-    (pic-join-opt ^(join ,*items))))
+                  \~.|\~/))
+    (labels ((pic-compile-string (fmtstr)
+               (let ((items (collect-each ((piece (tok regex t fmtstr)))
+                              (cond
+                                ((m^$ regex piece)
+                                 (cond
+                                   ((starts-with "~" piece)
+                                    (expand-pic f piece nil))
+                                   (args
+                                     (expand-pic f piece (pop args)))
+                                   (t (compile-error
+                                        f "insufficient arguments for format"))))
+                                (t piece)))))
+                 (pic-join-opt ^(join ,*items)))))
+      (match-case bigfmt
+        (@(stringp @s)
+           (let ((out (pic-compile-string s)))
+             (if args
+               (compile-warning f "excess arguments"))
+             out))
+        ((@(or sys:quasi) . @qargs)
+           (let ((nqargs (build (each ((q qargs))
+                                  (if (stringp q)
+                                    (add (pic-compile-string q))
+                                    (add q))))))
+             (if args
+               (compile-warning f "excess arguments"))
+             ^(sys:quasi ,*nqargs)))
+        (@else (compile-error
+                 f "~s is required to be a string or quasiliteral" else))))))

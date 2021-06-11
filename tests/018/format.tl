@@ -126,3 +126,8 @@
 (test (mapcar (do pic "foo~-0##.jpg") (rlist 0..5 8 12))
       ("foo-000.jpg" "foo-001.jpg" "foo-002.jpg" "foo-003.jpg"
        "foo-004.jpg" "foo-005.jpg" "foo-008.jpg" "foo-012.jpg"))
+
+(test
+  (let ((a 2) (b "###") (c 13.5))
+    (pic `abc@(+ a a)###.##@b>>>>` c "x"))
+  "abc4 13.50###   x")

@@ -54814,8 +54814,8 @@ and
 .desc
 The
 .code pic
-macro provides a notation for constructing a character string under the
-control of
+macro ("picture based formatting") provides a notation for constructing a
+character string under the control of
 .meta format-string
 which indicates the insertion of zero or more
 .meta format-arg
@@ -54823,7 +54823,7 @@ argument values.
 
 Like the
 .code fmt
-function or quasistring syntax, the
+function or quasiliteral syntax, the
 .code pic
 macro returns a character string.
 
@@ -54837,7 +54837,12 @@ notation is different from quasiliterals or from
 The
 .code pic
 .meta format-string
-is scanned left to right in search  of
+argument isn't an evaluated expression, but syntax. It must be either a string
+literal or else a string quasiliteral.  No other syntax is permitted.
+
+If
+.meta pic
+is a string, is scanned left to right in search of
 .IR "pic patterns" .
 Any characters not belonging to a pic pattern are copied into the output
 string verbatim. When a pic pattern is found, it is removed from
@@ -54850,10 +54855,42 @@ When the
 .meta format-string
 is exhausted, the constructed string is returned.
 
+If
+.meta format-string
+is a quasiliteral, then all of the text strings embedded within the
+quasiliteral are examined in the same way, in left to right order. Each such
+string is transformed into an expression which produces a character string
+according to the semantics of the pic patterns it contains, and the resulting
+expressions are substituted into the original quasiliteral to produce a
+transformed quasiliteral.
+
 There must be exactly as many
 .meta format-arg
 arguments as there are pic patterns in
 .metn format-string .
+
+The
+.code pic
+macro arranges for the left-to-right evaluation of the
+.meta format-arg
+expressions. If
+.meta format-string
+is a quasiliteral, the evaluation of these expressions is interleaved
+into the quasiliterals expressions and variables, in the order implied
+by the placement of the corresponding pic patterns relative to the
+quasiliteral elements. For instance, if
+.meta format-string
+is
+.code `@(abc)<<<@(xyz)`
+then the function
+.code abc
+is called first, then the
+.meta format-argument
+is evaluated which produces a value for the
+.code <<<
+pic pattern, after which the
+.code xyz
+function is called.
 
 There are two kinds of pic patterns: alignment patterns, numeric patterns and
 escape patterns.
@@ -54891,8 +54928,10 @@ field width, it is centered slightly to the left: one less space appears on its
 left side in respect to its right side.
 .RE
 .IP
-The numeric patterns are more complex. They conform to one of the two
-following syntactic rule:
+The numeric patterns, by means of their visual pattern and several optional
+prefix codes, specify the parameters for the conversion of a numeric
+argument, which is rendered right-aligned in a fixed-width field.  Numeric
+patterns conform to one of the two following syntactic rule:
 
 .mono
 .mets <> [ sign ]  [0] {#}+ >> [ point {#}+ | !]
