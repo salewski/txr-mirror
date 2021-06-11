@@ -298,8 +298,6 @@ static void eval_exception(val sym, val ctx, val fmt, va_list vl)
 
   (void) vformat(stream, fmt, vl);
 
-  uw_release_deferred_warnings();
-
   uw_rthrow(sym, get_string_from_stream(stream));
 }
 
@@ -392,6 +390,8 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
   val last = last_form_evaled;
   val xlast = uw_last_form_expanded();
   val info = source_loc_str(last, nil);
+
+  uw_dump_deferred_warnings(out_stream);
 
   if (cdr(exvals) || !stringp(car(exvals)))
     format(out_stream, lit("~a exception args: ~!~s\n"),

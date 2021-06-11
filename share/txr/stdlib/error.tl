@@ -38,9 +38,10 @@
   (let* ((nctx (sys:dig ctx))
          (loc (sys:loc nctx))
          (name (sys:ctx-name nctx)))
-    (dump-deferred-warnings *stderr*)
     (let ((msg (fmt `@loc: ~s: @fmt` name . args)))
-      (when *load-recursive*
+      (when (and *load-recursive*
+                 (null (find-frame 'error 'catch-frame)))
+        (dump-deferred-warnings *stderr*)
         (put-line msg *stderr*))
       (throw 'eval-error msg))))
 
