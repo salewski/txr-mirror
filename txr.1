@@ -14097,7 +14097,8 @@ The curly braces may be omitted if the scope of the
 is clear.
 
 .coIP {syntax | syntax | ...}
-This indicates a choice among alternatives.
+This indicates a single, mandatory element, which is selected
+from among the indicated alternatives.
 May be combined with
 .code +
 or
@@ -14106,6 +14107,11 @@ repetition.
 
 .meIP [syntax] <> [ word ]
 Square brackets indicate optional syntax.
+
+.meIP [syntax | syntax | ...]
+Square brackets containing piped elements indicate an optional
+element, which, if present, must be chosen from among the indicated
+alternatives.
 
 .coIP '[' ']'
 The quoted square brackets indicate literal brackets which appear
