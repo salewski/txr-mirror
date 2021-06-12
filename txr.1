@@ -55052,6 +55052,43 @@ encodes a literal
 .code #
 character that is not part of any pattern.
 
+.TP* Examples:
+
+.verb
+  ;; numeric formatting
+  (pic  "######"     1234.1) ->   "  1234"
+  (pic  "######.#"   1234.1) ->   "  1234.1"
+  (pic "#######.##"  1234.1) ->  "   1234.10"
+  (pic "#######.##" -1234.1) ->  "  -1234.10"
+  (pic "0######.##"  1234.1) ->  "0001234.10"
+  (pic "+######.##"  1234.1) ->  "  +1234.10"
+  (pic "-######.##"  1234.1) ->  "   1234.10"
+  (pic "+0#####.##"  1234.1) ->  "+001234.10"
+  (pic "-0#####.##"  1234.1) ->  " 001234.10"
+
+  ;; overflow with !
+  (pic   "#!#" 1234) ->    "###"
+  (pic   "#!#"  123) ->    "###"
+  (pic "-##!#" -123) ->  "#####"
+  (pic "+##!#"  123) ->  "#####"
+  (pic "###!"  1234) ->    "###"
+
+  ;; alignment, multiple arguments
+  (pic "<<<<<< 0#.# >>>>>>>" "foo" (+ 2 2) "bar")
+  -->  "foo    04.0     bar"
+
+  ;; quasiliteral
+  (let ((a 2) (b "###") (c 13.5))
+    (pic `abc@(+ a a)###.##@b>>>>` c "x"))
+  --> "abc4 13.50###   x"
+
+  ;; filename generation
+  (mapcar (do pic "foo~-0##.jpg") (rlist 0..5 8 12))
+
+  --> ("foo-000.jpg" "foo-001.jpg" "foo-002.jpg" "foo-003.jpg"
+       "foo-004.jpg" "foo-005.jpg" "foo-008.jpg" "foo-012.jpg")
+.brev
+
 .coNP Functions @, print @, pprint @, prinl @, pprinl @ tostring and @ tostringp
 .synb
 .mets (print < obj >> [ stream <> [ pretty-p ]])
