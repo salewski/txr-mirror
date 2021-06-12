@@ -1,3 +1,75 @@
+                                    TXR 262
+                                   2021-06-11
+
+
+  Feature
+
+  - structural pattern matching:
+    - new feature: quasiquote matching.
+  - JSON:
+    - improved escaping of JSON output for safe embedding in <script> tags.
+    - new JSON pattern matching.
+  - text processing:
+    - new pic macro for formatting using pattern similar to perl's
+      format or PRINT USING in BASIC languages: ####.# <<<<<<.
+      - works by compiling to fmt calls.
+  - FFI:
+    - bad FFI call diagnostics now have function name.
+    - failures in dlsym function converted to better diagnosis.
+    - carray objects can be passed to cptr argument now.
+    - new deffi-struct and deffi-union macros for less verbose
+      definitions without a typedef.
+  - lib:
+    - new fill-vec function for efficiently filling an area of a vector
+      with repetitions of a value.
+    - reduce-left rewritten with generic sequence iteration, for
+      better efficiency (e.g. not consing memory over vectors).
+    - sum and prod functions likewise.
+  - expander:
+    - fixed issue in defun expansion interfering with defining a macro
+      and then a function of the same name which calls the macro.
+  - parser:
+    - new *read-unknown-structs* Boolean variable
+      - if set, the reader can read #S syntax which names undefined
+        structure types, without blowing up.
+      - used in tags.tl, which can therefore handle source code
+        that contains struct literals.
+  - compile/eval:
+    - improvement coordination between error exceptions,
+      compiler error messages sent to the error stream, and
+      deferred warnings.
+
+  Bugs
+
+  - listener:
+    - doc function not working in Cygwin/Cygnal port.
+    - macro and oeprator completion after ' (quote) character;
+      so that (doc 'wh[Tab] will complete on a macro name like while.
+  - system interface:
+    - mkstemp build problem problem affecting Solaris and other platforms.
+  - printer:
+    - added mising handing for for printing (sys:struct-lit ...)
+      syntax as #S syntax.
+  - parser
+    - bug with #; commenting syntax not playing nicely with #S literals.
+  - JSON:
+    - test cases on Cygwin work.
+    - JSON print-read consistency problem addressed..
+  - FFI:
+    - memory leaks in FFI type system when struct type is redefined.
+    - bug in deffi causing the libffi ffi_prep_cif_var function to
+      always be used, even for non-variadic functions.
+    - FFI now properly calculates the structure member descriptor arrays
+      for libffi, and fakes them out for arrays and unions also.
+      This should address problems with passing small structures by value.
+      - The material is calculated lazily: not done for types that are
+        never used as by-value parameters or return values.
+  - format:
+    - fix bugs in leading zero in precision field of format specifier.
+
+
+
+
                                     TXR 261
                                    2021-06-01
 
