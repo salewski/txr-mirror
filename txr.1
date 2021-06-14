@@ -45723,7 +45723,7 @@ interpretation.
 In fact \*(TL's bignum integers do not use a two's complement
 representation internally. Numbers are represented as an array which holds a
 pure binary number. A separate field indicates the sign: negative,
-or non-negative.  That negative numbers appear as two's complement under the
+or nonnegative.  That negative numbers appear as two's complement under the
 bit operations is merely a carefully maintained illusion (which makes bit
 operations on negative numbers more expensive).
 
@@ -54977,14 +54977,14 @@ specifies a field width of three.
 If the leading sign is present, it has the following meanings:
 .RS
 .coIP +
-If the corresponding numeric argument is non-negative, the
+If the corresponding numeric argument is nonnegative, the
 .code +
 character shall appear before first digit. Otherwise the minus character
 will appear.
 .coIP -
 Like
 .code +
-except that when the numeric argument is non-negative, instead of a
+except that when the numeric argument is nonnegative, instead of a
 .code +
 character, a space appears before the first digit. This space counts
 toward the field width and therefore contributes to overflow.
@@ -54992,7 +54992,7 @@ toward the field width and therefore contributes to overflow.
 .IP
 If a leading sign is not present, then no extra character appears before
 the first digit of a positive value, which means that an extra character
-of field width is available for representing non-negative values.
+of field width is available for representing nonnegative values.
 
 If the leading zero is present, it specifies that the number is
 padded with zeros on the left. In combination with the
