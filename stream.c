@@ -71,6 +71,9 @@
 #include "txr.h"
 #include "buf.h"
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
 /* Adhere to ISO C rules about direction switching on update streams. */
 #ifndef __gnu_linux__
 #define CONFIG_STDIO_STRICT 1
@@ -3167,12 +3170,18 @@ static void vformat_align_post(val stream, enum align align, int slack)
 
 static void vformat_num(val stream, const char *str,
                         int width, enum align align, int zeropad,
-                        int precision, int sign)
+                        int precision, int add_sign)
 {
   int sign_char = (str[0] == '-' || str[0] == '+') ? str[0] : 0;
+  int have_sign = sign_char == '-';
+  int mandatory_sign = have_sign || add_sign == '+';
   int digit_len = strlen(str) - (sign_char != 0);
-  int padlen = precision > digit_len ? precision - digit_len : 0;
-  int total_len = digit_len + padlen + (sign_char || sign);
+  int overflow = digit_len > precision;
+  int padlen = overflow ? 0 : precision - digit_len;
+  int tentative_len = digit_len + padlen + (have_sign || add_sign);
+  int total_len = (tentative_len > width &&
+                   (have_sign || add_sign)
+                   && !mandatory_sign) ? tentative_len - 1 : tentative_len;
   int slack = (total_len < width) ? width - total_len : 0;
   int i;
 
@@ -3182,11 +3191,13 @@ static void vformat_num(val stream, const char *str,
     for (i = 0; i < padlen; i++)
       put_char(chr(' '), stream);
 
-  if (sign_char) {
-    put_char(chr(sign_char), stream);
+  if (sign_char)
     str++;
-  } else if (sign) {
-    put_char(chr(sign), stream);
+
+  if (mandatory_sign) {
+    put_char(chr(have_sign ? sign_char : add_sign), stream);
+  } else if (add_sign && tentative_len <= width) {
+    put_char(chr(add_sign), stream);
   }
 
   if (zeropad)
@@ -3605,6 +3616,8 @@ val formatv(val stream_in, val fmtstr, struct args *al)
           case NUM:
             value = c_num(obj, self);
             sprintf(num_buf, num_fmt->dec, value);
+            if (width)
+              precision = min(precision, width - 1);
             goto output_num;
           case BGNUM:
             {
@@ -3613,6 +3626,8 @@ val formatv(val stream_in, val fmtstr, struct args *al)
                 pnum = coerce(char *, chk_malloc(nchars + 1));
               mp_toradix(mp(obj), coerce(unsigned char *, pnum), 10);
             }
+            if (width)
+              precision = min(precision, width - 1);
             goto output_num;
           case FLNUM:
             if (!precision_p) {
@@ -3667,7 +3682,8 @@ val formatv(val stream_in, val fmtstr, struct args *al)
               continue;
             }
 
-            precision = (width ? width - 1 : 0);
+            precision = max(0, min(precision, width - 1));
+
             goto output_num;
           default:
             if (width != 0 || precision_p) {

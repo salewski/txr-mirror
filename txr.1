@@ -54520,35 +54520,37 @@ character, then it means that
 .meta width
 is being omitted; there is only a precision field.
 
-The precision specifier may begin with these optional characters:
+The precision specifier may begin with these optional characters, whose effect
 .RS
 .coIP 0
-(the "leading zero indicator"),
+the "leading zero option": pad with leading zeros;
 .coIP +
-(print a sign for positive values")
+print a sign for positive values;
 .coIP -
-(print a zero in place of a positive sign).
+print a single leading zero in place of a positive sign; and
 .IP space
-(print a space in place of a positive sign).
+print a space in place of a positive sign.
 .RE
+
+The precision options apply only when the value being printed is a number;
+otherwise they are ignored.
+
 If the
 .codn + ,
 .code -
 or
-space are multiply specified, the rightmost one takes precedence. The
-prefix character that these three options produce (plus sign, zero or space) is
-produced unconditionally, even if it overflows the width of the field.
-Leading zeros produced by the
-.code 0
-option are not generated if they would overflow the field.
+space are multiply specified, the rightmost one takes precedence.
 
 The precision specifier itself follows: it must be either a decimal integer
 or the
 .code *
 character indicating that the precision value comes from an integer argument.
 
-The leading zero indicator is only active if a precision specifier is
-present. If no precision specifier is present, then the leading zero indicator
+The leading zero option is only active if accompanied by a precision
+value, either coming from additional digits in the formatting directive,
+or from an argument indicated by
+.codn * .
+If no precision specifier is present, then the leading zero option
 is interpreted as a specifier indicating a precision value of zero, rather
 than requesting leading zeros.  To request zero padding together with zero
 precision, either two or more zero digits are required, or else the leading
@@ -54556,50 +54558,7 @@ zero indicator must be given together with the
 .code *
 specifier.
 
-The precision field's components have a meaning which depends on the type of
-object printed and the conversion specifier.
-
-For integer arguments, the precision value specifies the minimum number of digits
-to print.  If the precision field has a leading zero flag, then the integer is
-padded with zeros to the required number of digits, otherwise the number is
-padded with spaces instead of zeros.  If zero or space padding is present, and
-a leading positive or negative sign must be printed, then it is placed before
-leading zeros, or after leading spaces, as the case may be.
-
-For floating-point values, the meaning of the precision value depends on which
-specific conversion specifier
-.cod1 ( f ,
-.codn e ,
-.code a
-or
-.codn s )
-is used. The details are
-documented in the description of each of these, below. The leading zero flag is
-also taken into account for floating-point values, and treated uniformly by
-these directives.  If the flag is present, then the printed value's integer
-part will be padded with leading zeros up to the width of the field such that
-one character of unused space remains in the field, in case a positive or
-negative sign needs also to be rendered.
-
-For integer or floating-point arguments, if the precision specifier has a
-.code +
-sign
-among the special characters, then a
-.code +
-sign is printed for positive numbers. If
-the precision specifier has a leading space instead of a
-.code +
-sign, then the
-.code +
-sign is rendered as a space for positive numbers. If there is no leading space
-or
-.codn + ,
-then a sign character is omitted for positive numbers. Negative
-numbers are unconditionally prefixed with a
-.code -
-sign.
-
-For all other objects, the precision specifies the maximum number of
+For non-numeric values, the precision specifies the maximum number of
 print positions to occupy, taking into account the display width of each
 character of the printed representation of the object, as according
 to the
@@ -54608,6 +54567,42 @@ function.  The object's printed representation is truncated, if necessary, to
 the maximum number of characters which will not exceed the specified number of
 print positions.
 
+A numeric argument is formatted into the field in two distinct steps, both of
+which involve the precision value in a different role. The details of the first
+of these steps, and the role payed by precision, depends on which conversion
+directive is used. The second step works in a generic way, and is described
+below.
+
+The second step, namely setting a the printed representation of the number
+into the text field, occurs in the following way.
+
+First, the precision that was specified, or else the default precision that was
+used by the first stage in the absence of the precision being specified, is
+clamped to one less than the field width, or else zero if the field width
+is zero. The resulting value is called the effective precision.
+
+Next, the length of the printed representation of the number, not including
+its sign, is calculated. If this part of the number is shorter than the
+effective precision, then it is padded on the left with spaces or leading zeros
+so that the resulting string is equal to the precision.
+
+Next, if the number is negative, or else if adding a positive sign has been
+requested, then the sign is added. It is added to the left of the padding
+zeros, or else to the right of padding spaces, whichever the case may be.
+
+At this stage, if the number is not yet adorned with a sign, and either the
+.code -
+or space precision option had been given, then the appropriate character,
+the digit
+.code 0
+or a space, is added in the place where the sign would go. This is done
+only if the result will not overflow the field width, but without regard
+for whether the character will overflow the effective precision.
+
+Finally, the resulting number is rendered into the field, using the requested
+left, right or center adjustment, as if it were a character string.  If it
+overflows the field, it is reproduced in its entirety without any adjustment
+being performed.
 .RE
 
 .TP* "Format directives:"
@@ -54632,12 +54627,19 @@ is not necessarily readable if it is implanted in \*(TX source code.
 The field width specifier is honored, including the left-right adjustment
 semantics.
 
-When this specifier is used for floating-point values, the precision specifies
-the maximum number of total significant figures, which do not include any
-digits in the exponent, if one is printed. Numbers are printed in exponential
-notation if their magnitude is small, or else if their exponent exceeds their
-precision. If the precision is not specified, then it is obtained from
-the
+When the
+.code a
+specifier is used for numbers, the formatting is performed in two
+distinct steps: the printed representation of the number is calculated
+first, and then that representation is set into the field. The precision
+parameter plays two different roles in these two steps.
+
+In the first step, the rendering of a floating-point number to its printed
+representation, the precision specifies the maximum number of total significant
+figures, which do not include any digits in the exponent, if one is printed.
+Numbers are printed in exponential notation if their magnitude is small, or
+else if their exponent exceeds their precision. If the precision is not
+specified, then it is obtained from the
 .code *print-flo-precision*
 special variable, whose default value is the same as that of the
 .code flo-dig
@@ -54658,6 +54660,9 @@ zeros up to one less than the field width. These zeros are placed before the
 sign.  A precision value of zero imposed on floating-point values is
 equivalent to a value of one; it is not possible to request zero significant
 figures.
+
+Integers are not affected by the precision value in the conversion to
+text; all of the digits of the integer are taken into the second step.
 
 .coIP s
 Prints any object in a standard way, as if by the
@@ -54690,6 +54695,9 @@ directive, depending on the value of the variable.
 .coIP d
 Requires an argument of integer or character type type. The integer
 value or character code is printed in decimal.
+Width and precision semantics are as described for the
+.code a
+format directive, for integers.
 
 .coIP x
 Requires an argument of character, integer or buffer type. The integer value,
@@ -54732,16 +54740,33 @@ argument. (Unlike
 and
 .codn o ,
 it does not allow an argument of character type).
-The precision specifier gives the number of digits past the decimal point.
-The number is rounded off to the specified precision, if necessary.
-Furthermore, that many digits are always printed, regardless of the actual
-precision of the number or its type.  If it is omitted, then the value
+
+The formatting performed by
+.code f
+is performed in two distinct steps: the printed representation of the number is
+calculated first, and then that representation is set into the field. The
+precision parameter coming from the directive is only involved in
+the first step.
+
+In the first step, the precision specifier gives the number of digits past the
+decimal point.  The number is rounded off to the specified precision, if
+necessary.  Furthermore, that many digits are always printed, regardless of the
+actual precision of the number or its type.  If it is omitted, then the value
 is obtained from the special variable
 .codn *print-flo-digits* ,
 whose default value is three: three digits past the decimal point. A precision
 of zero means no digits past the decimal point, and in this case the decimal
 point is suppressed (regardless of whether the numeric argument is
 floating-point or integer).
+
+No limit is placed on the number of significant figures in the number by
+either the precision or width value.
+
+When the resulting textual number passes to the second formatting step, the
+precision value, for the purposes of that step, is calculated by taking one
+less than the field width, or else zero if the field width is zero.
+This value is not related to the precision that had been used to determine
+the number of places past the decimal point.
 
 .coIP e
 The
@@ -54753,14 +54778,29 @@ a numeric argument. (Unlike
 and
 .codn o ,
 it does not allow an argument of character type).
-The precision specifier gives the number of digits past the decimal point
-printed in the exponential notation, not counting the digits in the exponent.
-Exactly that many digits are printed, regardless of the precision of the
-number.  If the precision is omitted, then the number of digits after the
-decimal point is obtained from the value of the special variable
+
+The formatting performed by
+.code e
+is performed in two distinct steps: the printed representation of the number is
+calculated first, and then that representation is set into the field. The
+precision parameter coming from the directive is only involved in
+the first step.
+
+In the first step, the precision specifier gives the number of digits past the
+decimal point printed in the exponential notation, not counting the digits in
+the exponent.  Exactly that many digits are printed, regardless of the
+precision of the number.  If the precision is omitted, then the number of
+digits after the decimal point is obtained from the value of the special
+variable
 .codn *print-flo-digits* ,
 whose default value is three. If the precision is zero, then a decimal portion
 is truncated off entirely, including the decimal point.
+
+When the resulting textual number passes to the second formatting step, the
+precision value, for the purposes of that step, is calculated by taking one
+less than the field width, or else zero if the field width is zero.
+This value is not related to the precision that had been used to determine
+the number of places past the decimal point.
 
 .coIP p
 The
