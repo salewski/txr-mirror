@@ -3351,6 +3351,9 @@ val formatv(val stream_in, val fmtstr, struct args *al)
         case '+': case ' ':
           sign = ch;
           continue;
+        case '-':
+          sign = '0';
+          continue;
         case '*':
           saved_state = state;
           state = vf_star;

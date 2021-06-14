@@ -54526,9 +54526,21 @@ The precision specifier may begin with these optional characters:
 (the "leading zero indicator"),
 .coIP +
 (print a sign for positive values")
+.coIP -
+(print a zero in place of a positive sign).
 .IP space
 (print a space in place of a positive sign).
 .RE
+If the
+.codn + ,
+.code -
+or
+space are multiply specified, the rightmost one takes precedence. The
+prefix character that these three options produce (plus sign, zero or space) is
+produced unconditionally, even if it overflows the width of the field.
+Leading zeros produced by the
+.code 0
+option are not generated if they would overflow the field.
 
 The precision specifier itself follows: it must be either a decimal integer
 or the
