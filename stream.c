@@ -4247,7 +4247,13 @@ static void fds_init(struct save_fds *fds)
 
 static int fds_subst(val stream, int fd_std, val self)
 {
-  int fd_orig = c_num(stream_fd(stream), self);
+  val sfd = stream_fd(stream);
+  int fd_orig = if3(integerp(sfd), c_num(sfd, self), INT_MIN);
+
+
+  if (fd_orig == INT_MIN)
+    uw_throwf(file_error_s, lit("~a: (fileno ~s) is ~s, which is unusable"),
+              self, stream, sfd, nao);
 
   if (fd_orig == fd_std)
     return -1;
@@ -4260,8 +4266,8 @@ static int fds_subst(val stream, int fd_std, val self)
       return fd_dup;
     }
 
-    uw_throwf(file_error_s, lit("failed to duplicate file descriptor: ~d/~s"),
-              num(errno), errno_to_str(errno), nao);
+    uw_throwf(file_error_s, lit("~a: failed to duplicate file descriptor: ~d/~s"),
+              self, num(errno), errno_to_str(errno), nao);
   }
 }
 
