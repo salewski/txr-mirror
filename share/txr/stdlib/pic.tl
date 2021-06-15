@@ -49,7 +49,7 @@
         (with-gensyms (str)
           ^(let ((,str ,code))
              (if (> (len ,str) ,(len fmt))
-               (mkstring ,(len fmt) #\#)
+               ,(mkstring (len fmt) #\#)
                ,str)))
         code))))
 
