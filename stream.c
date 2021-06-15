@@ -432,6 +432,44 @@ void fill_stream_ops(struct strm_ops *ops)
     ops->set_sock_peer = unimpl_set_sock_peer;
 }
 
+struct dev_null {
+  struct strm_base a;
+  int fd;
+};
+
+static val dev_null_close(val stream, val throw_on_error)
+{
+  struct dev_null *n = coerce(struct dev_null *, stream->co.handle);
+  (void) throw_on_error;
+  if (n->fd != -1) {
+    close(n->fd);
+    n->fd = -1;
+  }
+  return nil;
+}
+
+static val dev_null_get_fd(val stream)
+{
+  struct dev_null *n = coerce(struct dev_null *, stream->co.handle);
+  if (n->fd == -1 && (n->fd = open("/dev/null", O_RDWR)) == -1) {
+    int eno = errno;
+    uw_throwf(errno_to_file_error(eno), lit("error opening /dev/null: ~d/~s"),
+              num(eno), errno_to_str(eno), nao);
+  }
+  return num(n->fd);
+}
+
+static val dev_null_get_prop(val stream, val ind)
+{
+  if (ind == name_k)
+    return null_get_prop(stream, ind);
+
+  if (ind == fd_k)
+    return dev_null_get_fd(stream);
+
+  return nil;
+}
+
 static struct strm_ops null_ops =
   strm_ops_init(cobj_ops_init(eq,
                               stream_print_op,
@@ -443,16 +481,17 @@ static struct strm_ops null_ops =
                 null_get_char, null_get_byte,
                 unimpl_unget_char, unimpl_unget_byte,
                 unimpl_put_buf, unimpl_fill_buf,
-                null_close, null_flush, null_seek, unimpl_truncate,
-                null_get_prop, null_set_prop,
+                dev_null_close, null_flush, null_seek, unimpl_truncate,
+                dev_null_get_prop, null_set_prop,
                 null_get_error, null_get_error_str, null_clear_error,
-                null_get_fd);
+                dev_null_get_fd);
 
 val make_null_stream(void)
 {
-  struct strm_base *s = coerce(struct strm_base *, chk_malloc(sizeof *s));
-  strm_base_init(s);
-  return cobj(coerce(mem_t *, s), stream_s, &null_ops.cobj_ops);
+  struct dev_null *n = coerce(struct dev_null *, chk_malloc(sizeof *n));
+  strm_base_init(&n->a);
+  n->fd = -1;
+  return cobj(coerce(mem_t *, n), stream_s, &null_ops.cobj_ops);
 }
 
 #if CONFIG_STDIO_STRICT

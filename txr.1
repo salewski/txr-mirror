@@ -54188,11 +54188,38 @@ debugging output to be separated from normal output.
 
 The
 .code *stdnull*
-stream is a special kind of stream called a null stream.
-This stream is not connected to any device or file.  It is similar to
+stream is a special kind of stream called a null stream. To read operations,
+the stream appears empty, like a stream open on an empty file. To write
+operations, it appears as a data sink of infinite capacity which consumes data
+and discards it. This stream is similar to
 the
 .code /dev/null
-device on Unix, but does not involve the operating system.
+device on Unix, and in fact has a relationship to it. If an attempt is made
+to obtain the underlying file descriptor of
+.code *stdnull*
+using the
+.code fileno
+function, then the
+.code /dev/null
+device is open, if the host platform supports it. The resulting file
+descriptor number is returned, and also retained in the
+.code *stdnull*
+device. When
+.code close-stream
+is invoked on
+.codn *stdnull* ,
+that descriptor is closed. This feature of
+.code *stdnull*
+allows it to be useful for establishing redirections around the
+execution of external utilities.
+
+.TP* Example:
+
+.verb
+  ;; redirect output of ls *.txt command to /dev/null
+  (let ((*stderr *stdnull*))
+    (sh "ls *.txt"))
+.brev
 
 .coNP Special variables @ *print-flo-format* and @ *pprint-flo-format*
 .desc
