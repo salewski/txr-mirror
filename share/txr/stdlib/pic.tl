@@ -38,13 +38,8 @@
     (let ((code (if (or minus plus (not zero))
                   ^(fmt ,`~@(len fmt),@(if plus "+")@(if zero "0")@(len fra)f`
                         ,val)
-                  (with-gensyms (vg)
-                    ^(let ((,vg ,val))
-                       (if (minusp ,vg)
-                         (fmt ,`~@(len fmt),@(if zero "0")@(len fra)f`
-                              ,vg)
-                         (rest (fmt ,`~@(succ (len fmt)),+@(if zero "0")@(len fra)f`
-                                    ,vg))))))))
+                  ^(fmt ,`~@(len fmt),-0@(len fra)f`
+                        ,val))))
       (if exc
         (with-gensyms (str)
           ^(let ((,str ,code))
