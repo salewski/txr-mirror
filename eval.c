@@ -3823,6 +3823,9 @@ val expand_quasi(val quasi_forms, val menv)
         if (comp_184)
           form_ex = expand(form, menv);
       }
+
+      if (atom(form_ex) && !bindable(form_ex))
+        form_ex = list(var_s, form_ex, nao);
     }
 
     {

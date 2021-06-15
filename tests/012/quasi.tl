@@ -36,3 +36,18 @@
     (let ((s))
       (mapcar (ret `<@{(push (inc @1) s) d}>`) (range 0 2))))
   ("<1>" "<2-1>" "<3-2-1>"))
+
+(test
+  (symacrolet ((two 2))
+    `@{two}abc`)
+  "2abc")
+
+(test
+  (macrolet ((two () 2))
+    `@(two)abc`)
+  "2abc")
+
+(compile-only
+  (eval-only
+    (compile-file (base-name *load-path*) "temp.tlo")
+    (remove-path "temp.tlo")))
