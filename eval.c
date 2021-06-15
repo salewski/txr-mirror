@@ -4749,32 +4749,49 @@ again:
       if (pairs == pairs_ex)
         return form;
       return rlcp(cons(cond_s, pairs_ex), form);
-    } else if (sym == defvarl_s || sym == defsymacro_s) {
+    } else if (sym == defvarl_s) {
       val name = second(form);
       val init = third(form);
       val init_ex = expand(init, menv);
       val form_ex = form;
 
-      if (sym == defsymacro_s && length(form) != three)
+      if (!bindable(name))
+        not_bindable_error(form, name);
+
+      uw_register_tentative_def(cons(var_s, name));
+
+      if (init != init_ex)
+        form_ex = rlcp(cons(sym, cons(name, cons(init_ex, nil))), form);
+
+      return form_ex;
+    } else if (sym == defsymacro_s) {
+      val name = second(form);
+      val init = third(form);
+
+      if (length(form) != three)
         eval_error(form, lit("~s: two arguments expected"), sym, nao);
 
       if (!bindable(name))
         not_bindable_error(form, name);
 
-      if (sym == defvarl_s)
-        uw_register_tentative_def(cons(var_s, name));
+      if (opt_compat && opt_compat <= 262) {
+        val init_ex = expand(init, menv);
+        val form_ex = form;
 
-      if (init != init_ex)
-        form_ex = rlcp(cons(sym, cons(name, cons(init_ex, nil))), form);
+        if (init != init_ex)
+          form_ex = rlcp(cons(sym, cons(name, cons(init_ex, nil))), form);
 
-      if (opt_compat && opt_compat <= 190 && sym == defsymacro_s) {
-        val result = eval(if3(opt_compat && opt_compat <= 137,
-                              form_ex, form),
-                          make_env(nil, nil, nil), form);
-        return cons(quote_s, cons(result, nil));
+        if (opt_compat <= 190 && sym == defsymacro_s) {
+          val result = eval(if3(opt_compat && opt_compat <= 137,
+                                form_ex, form),
+                            make_env(nil, nil, nil), form);
+          return cons(quote_s, cons(result, nil));
+        }
+
+        return form_ex;
       }
 
-      return form_ex;
+      return form;
     } else if (sym == lambda_s) {
       if (!cdr(form))
         eval_error(form, lit("~s: missing argument list"), sym, nao);

@@ -10,3 +10,11 @@
           (macrolet ((m (:form f) f))
             (m))))))
   42)
+
+(defvar x 0)
+(defmacro mac-time-counter () (inc x))
+(defsymacro s (mac-time-counter))
+
+(mtest s 1
+       s 2
+       s 3)

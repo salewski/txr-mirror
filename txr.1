@@ -37464,15 +37464,30 @@ between a symbol
 .meta sym
 and and a
 .metn form .
-The binding denotes the form itself, rather than its value. How the
-symbol macro works is that if
+The binding denotes the form itself, rather than its value.
+
+The
+.meta form
+argument is not subject to macro expansion; it is associated with
 .meta sym
-occurs as a form in a scope where the symbol macro definition is
-in scope,
+in its unexpanded state, as it appears in the
+.code defmacro
+form.
+
+The
+.code defsymacro
+form must be evaluated for its defining to to take place; therefore,
+the definition is not available in the top-level form which contains the
+.code defsymacro
+invocation; it becomes available to a subsequent top-level form.
+
+Subsequent to the evaluation of the
+.code defsymacro
+definition, whenever the macro expander encounters
 .meta sym
-is replaced by
+sym as a form, it replaces it by
 .metn form .
-Immediately after this replacement takes place,
+After this replacement takes place,
 .meta form
 itself is then processed for further replacement of macros and
 symbol macros.
@@ -37484,14 +37499,6 @@ denotes a place which is the target of an assignment operation
 like
 .code set
 and similar.
-
-A
-.code defsymacro
-form is implicitly executed at expansion time, and thus need
-not be wrapped in a
-.code macro-time
-form, just like
-.codn defmacro .
 
 Note: if a symbol macro expands to itself directly, expansion stops. However,
 if a symbol macro expands to itself through a chain of expansions,
@@ -81870,6 +81877,14 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 262
+Selection 262 compatibility restores a wrong behavior which existed between
+versions 191 and 262 due to a regression. The wrong behavior is that the
+.code defsymacro
+operator macro-expanded the replacement form, instead of associating the
+macro symbol with the unexpanded form. This makes a crucial difference
+to symbol macros which rely on expansion-time effects, such as producing a
+different expansion each time they are used.
 .IP 258
 Selecting 258 or lower compatibility causes
 .code abs-path-p
