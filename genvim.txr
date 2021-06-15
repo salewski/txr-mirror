@@ -65,7 +65,7 @@ static void dir_tables_init(void)
 @(bind bvar "txr_num,txr_pnum,tl_ident,tl_splice,tl_metanum,\
              txr_metaat,txr_circ,txr_braced_ident,txr_dot,\
              txr_dotdot,txr_string,txr_list,txr_bracket,\
-             txr_mlist,txr_mbracket,txr_regex,txr_quasilit,\
+             txr_mlist,txr_mbracket,txr_regex,tl_regex,txr_quasilit,\
              txr_chr,txr_nested_error")
 @(bind dir "txr_keyword,txr_string,txr_list,txr_bracket,\
             txr_mlist,txr_mbracket,txr_quasilit,txr_num,txr_pnum,\
