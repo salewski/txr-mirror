@@ -82117,7 +82117,20 @@ symbol package didn't exist; the
 variable was initialized to the user package and so symbols introduced
 by application code were interned in the same package as the \*(TL
 library.
-All these old behaviors are restored in compatibility
+Until \*(TX 190,
+.code defmacro
+and
+.code defsymacro
+forms were evaluated immediately during macro expansion; in \*(TX 191
+or later, this eager evaluation was abandoned.
+Unfortunately, this change introduced
+a regression, causing the replacement form of a
+.code defsymacro
+to be macro-expanded at the time that form is traversed by the
+expander, so that the macro is associated with the expanded version
+of that form. This is something which had been fixed in 137.
+It went unnoticed until much later, after the 262 release.
+All the above old behaviors are restored in compatibility
 with version 190 or earlier.
 Finally, one more change after \*(TX 190 that is controlled by the
 compatibility mechanism was a critical redesign of the requirements
