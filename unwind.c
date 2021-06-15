@@ -120,6 +120,8 @@ static void uw_unwind_to_exit_point(void)
     val sym = unhandled_ex.ca.sym;
     val args = unhandled_ex.ca.args;
 
+    dyn_env = nil;
+
     if (opt_loglevel >= 1) {
       val prefix = scat2(prog_string, lit(":"));
 
