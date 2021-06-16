@@ -71237,11 +71237,17 @@ which will be interpreted as pattern variables, and may be bound or unbound.
 If they are not symbols, then they are treated as expressions (of the
 pattern language, not \*(TL) and evaluated accordingly.
 
-The
+The optional
 .meta input
-argument is a list of strings, which may be lazy. It represents the
-lines of the text stream to be processed. If omitted, it defaults to
-.codn nil .
+argument is an object of one of several types. It may be a stream,
+character string or list of strings.  If it is a string, then
+it is converted to a list containing that string.
+A list of strings represents zero or more lines of text to be
+processed.  If the
+.meta input
+argument is omitted, then it defaults to
+.codn nil ,
+interpreted as an empty list of lines.
 
 The
 .meta files
@@ -71353,7 +71359,11 @@ macro invokes the \*(TX pattern matching function
 .meta name
 on some input given by the
 .meta input
-parameter, which is a list of strings, or a single string.
+parameter, whose semantics are the same as the
+.meta input
+argument of the
+.code match-fun
+funtion.
 
 If
 .meta name
@@ -71514,6 +71524,24 @@ yields
 otherwise the forms are evaluated in order and the value of the last
 one specifies the result of
 .codn txr-case .
+
+The value of the input
+.meta input-form
+is expected to be one of the same kinds of objects as given by the
+requirements for the
+.meta input
+argument of the
+.code match-fun
+functions.
+
+If
+.meta input-form
+evaluates to a stream object according to the
+.code streamp
+function, then the stream is converted to a lazy list of lines,
+as if by invoking the
+.code get-lines
+function on that stream; that list then serves as input to the clauses.
 
 .coNP Function @ txr-parse
 .synb

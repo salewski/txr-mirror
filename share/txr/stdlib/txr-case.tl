@@ -65,4 +65,6 @@
 (defmacro txr-case (input-expr . clauses)
   (let ((input (gensym "input-")))
     ^(let ((,input ,input-expr))
+       (if (streamp ,input)
+         (set ,input (get-lines ,input)))
        (txr-case-impl ,input ,*clauses))))

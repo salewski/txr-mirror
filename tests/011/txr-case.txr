@@ -7,3 +7,15 @@
      (txr-if date (y m d) date
        (put-line `match: year @y, month @m, day @d`)
        (put-line `no match for @date`))))
+@(define notmatch ())
+blah
+@(end)
+@(define stuff (year month day a b))
+@(date year month day)
+@a @b
+@(end)
+@(do (txr-case (make-strlist-input-stream '("2021-06-16"
+                                            "foo bar"))
+
+       (notmatch () (put-line "notexpected"))
+       (stuff (y m d a b) (put-line `match: year @y, month @m, day @d, @a:@b`))))
