@@ -4279,6 +4279,13 @@ static int fds_subst(int fd_sub, int fd_std, val self)
   }
 }
 
+static void fds_subst_nosave(int fd_sub, int fd_std)
+{
+  if (fd_sub == fd_std)
+    return;
+  dup2(fd_sub, fd_std);
+}
+
 static void fds_prepare(struct save_fds *fds, int flags, val self)
 {
   if ((flags & FDS_IN) != 0)
@@ -4319,6 +4326,18 @@ static void fds_restore(struct save_fds *fds)
     dup2(fds->err, STDERR_FILENO);
     close(fds->err);
   }
+}
+
+static void fds_clobber(struct save_fds *fds, int flags)
+{
+  if ((flags & FDS_IN) != 0)
+    fds_subst_nosave(fds->subin, STDIN_FILENO);
+
+  if ((flags & FDS_OUT) != 0)
+    fds_subst_nosave(fds->subout, STDOUT_FILENO);
+
+  if ((flags & FDS_ERR) != 0)
+    fds_subst_nosave(fds->suberr, STDERR_FILENO);
 }
 
 val open_command(val path, val mode_str)
@@ -4418,7 +4437,7 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
   }
 
   if (pid == 0) {
-    fds_swizzle(&sfds, fds_flags, self);
+    fds_clobber(&sfds, fds_flags);
 
     if (input) {
       dup2(fd[1], STDOUT_FILENO);
@@ -4726,7 +4745,7 @@ static val run(val name, val args)
   }
 
   if (pid == 0) {
-    fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR, self);
+    fds_clobber(&sfds, FDS_IN | FDS_OUT | FDS_ERR);
     execvp(argv[0], argv);
     _exit(errno);
   } else {
