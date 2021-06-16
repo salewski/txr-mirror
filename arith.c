@@ -1884,11 +1884,23 @@ val pppred(val num)
   return minus(num, three);
 }
 
+static void seq_lt_compat_check(seq_iter_t *ita, seq_iter_t *itb,
+                                val a, val b, val self)
+{
+  if (ita->inf.kind == SEQ_NOTSEQ || ita->inf.kind == SEQ_HASHLIKE ||
+      itb->inf.kind == SEQ_NOTSEQ || itb->inf.kind == SEQ_HASHLIKE)
+  {
+    uw_throwf(error_s, lit("~a: invalid operands ~s ~s"), self, a, b, nao);
+  }
+}
+
 static val seq_lt(val self, val aseq, val bseq)
 {
   seq_iter_t ita, itb;
   seq_iter_init(self, &ita, aseq);
   seq_iter_init(self, &itb, bseq);
+
+  seq_lt_compat_check(&ita, &itb, aseq, bseq, self);
 
   for (;;) {
     val aelem, belem;
@@ -1918,6 +1930,8 @@ static val seq_le(val self, val aseq, val bseq)
   seq_iter_t ita, itb;
   seq_iter_init(self, &ita, aseq);
   seq_iter_init(self, &itb, bseq);
+
+  seq_lt_compat_check(&ita, &itb, aseq, bseq, self);
 
   for (;;) {
     val aelem, belem;
