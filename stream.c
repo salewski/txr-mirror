@@ -4234,6 +4234,9 @@ struct save_fds {
   volatile int in;
   volatile int out;
   volatile int err;
+  volatile int subin;
+  volatile int subout;
+  volatile int suberr;
 };
 
 #define FDS_IN  1
@@ -4242,27 +4245,32 @@ struct save_fds {
 
 static void fds_init(struct save_fds *fds)
 {
-  fds->in = fds->out = fds->err = -1;
+  fds->in = fds->out = fds->err = fds->subin = fds->subin = fds->subin = -1;
 }
 
-static int fds_subst(val stream, int fd_std, val self)
+static int fds_getfd(val stream, val self)
 {
   val sfd = stream_fd(stream);
-  int fd_orig = if3(integerp(sfd), c_num(sfd, self), INT_MIN);
+  int fd_sub = if3(integerp(sfd), c_num(sfd, self), INT_MIN);
 
 
-  if (fd_orig == INT_MIN)
+  if (fd_sub == INT_MIN)
     uw_throwf(file_error_s, lit("~a: (fileno ~s) is ~s, which is unusable"),
               self, stream, sfd, nao);
 
-  if (fd_orig == fd_std)
+  return fd_sub;
+}
+
+static int fds_subst(int fd_sub, int fd_std, val self)
+{
+  if (fd_sub == fd_std)
     return -1;
 
   {
     int fd_dup = dup(fd_std);
 
     if (fd_dup != -1) {
-      dup2(fd_orig, fd_std);
+      dup2(fd_sub, fd_std);
       return fd_dup;
     }
 
@@ -4271,16 +4279,28 @@ static int fds_subst(val stream, int fd_std, val self)
   }
 }
 
+static void fds_prepare(struct save_fds *fds, int flags, val self)
+{
+  if ((flags & FDS_IN) != 0)
+    fds->subin = fds_getfd(std_input, self);
+
+  if ((flags & FDS_OUT) != 0)
+    fds->subout = fds_getfd(std_output, self);
+
+  if ((flags & FDS_ERR) != 0)
+    fds->suberr = fds_getfd(std_error, self);
+}
+
 static void fds_swizzle(struct save_fds *fds, int flags, val self)
 {
   if ((flags & FDS_IN) != 0)
-    fds->in = fds_subst(std_input, STDIN_FILENO, self);
+    fds->in = fds_subst(fds->subin, STDIN_FILENO, self);
 
   if ((flags & FDS_OUT) != 0)
-    fds->out = fds_subst(std_output, STDOUT_FILENO, self);
+    fds->out = fds_subst(fds->subout, STDOUT_FILENO, self);
 
   if ((flags & FDS_ERR) != 0)
-    fds->err = fds_subst(std_error, STDERR_FILENO, self);
+    fds->err = fds_subst(fds->suberr, STDERR_FILENO, self);
 }
 
 static void fds_restore(struct save_fds *fds)
@@ -4301,7 +4321,6 @@ static void fds_restore(struct save_fds *fds)
   }
 }
 
-
 val open_command(val path, val mode_str)
 {
   val self = lit("open-command");
@@ -4310,12 +4329,15 @@ val open_command(val path, val mode_str)
   int input = m.read != 0;
   struct save_fds sfds;
   FILE *f = 0;
+  int fds_flags = (input ? FDS_IN : FDS_OUT) | FDS_ERR;
 
   fds_init(&sfds);
 
   uw_simple_catch_begin;
 
-  fds_swizzle(&sfds, (input ? FDS_IN : FDS_OUT) | FDS_ERR, self);
+  fds_prepare(&sfds, fds_flags, self);
+
+  fds_swizzle(&sfds, fds_flags, self);
 
   f = w_popen(c_str(path), c_str(mode));
 
@@ -4348,6 +4370,7 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
   int i, nargs;
   struct save_fds sfds;
   val ret = nil;
+  int fds_flags = (input ? FDS_IN : FDS_OUT) | FDS_ERR;
 
   args = default_null_arg(args);
   fun = default_null_arg(fun);
@@ -4358,9 +4381,7 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
 
   fds_init(&sfds);
 
-  uw_simple_catch_begin;
-
-  fds_swizzle(&sfds, (input ? FDS_IN : FDS_OUT) | FDS_ERR, self);
+  fds_prepare(&sfds, fds_flags, self);
 
   if (nargs < 0 || nargs == INT_MAX)
     uw_throwf(error_s, lit("~a: argument list overflow"), self, nao);
@@ -4397,6 +4418,8 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
   }
 
   if (pid == 0) {
+    fds_swizzle(&sfds, fds_flags, self);
+
     if (input) {
       dup2(fd[1], STDOUT_FILENO);
       if (fd[1] != STDOUT_FILENO) /* You never know */
@@ -4481,12 +4504,6 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
     /* TODO: catch potential OOM exception here and kill process. */
     ret = set_mode_props(m, make_pipevp_stream(f, name, pid));
   }
-
-  uw_unwind {
-    fds_restore(&sfds);
-  }
-
-  uw_catch_end;
 
   return ret;
 }
@@ -4631,6 +4648,8 @@ static val run(val command, val args)
 
   uw_simple_catch_begin;
 
+  fds_prepare(&sfds, FDS_IN | FDS_OUT | FDS_ERR, self);
+
   fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR, self);
 
   if (nargs < 0 || nargs == INT_MAX)
@@ -4694,9 +4713,7 @@ static val run(val name, val args)
 
   fds_init(&sfds);
 
-  uw_simple_catch_begin;
-
-  fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR, self);
+  fds_prepare(&sfds, FDS_IN | FDS_OUT | FDS_ERR, self);
 
   pid = fork();
 
@@ -4709,6 +4726,7 @@ static val run(val name, val args)
   }
 
   if (pid == 0) {
+    fds_swizzle(&sfds, FDS_IN | FDS_OUT | FDS_ERR, self);
     execvp(argv[0], argv);
     _exit(errno);
   } else {
@@ -4731,12 +4749,6 @@ static val run(val name, val args)
   }
 
 out:
-  uw_unwind {
-    fds_restore(&sfds);
-  }
-
-  uw_catch_end;
-
   return ret;
 }
 
