@@ -982,6 +982,12 @@ The re-executed image will then obtain the script name from the arguments
 which are passed to it and determine whether that script will run setuid.
 See the section SETUID/SETGID OPERATION.
 
+.coIP --noprofile
+If entering the interactive listener, suppress the reading of the
+.code .txr_profile
+in the home directory. See the Interactive Profile File subsection in the
+INTERACTIVE LISTENER section of the manual.
+
 .coIP --gc-debug
 This option enables a behavior which stresses the garbage collector with
 frequent garbage collection requests. The purpose is to make it more likely
@@ -81246,7 +81252,9 @@ is still processed, as usual.
 
 .SS* Interactive Profile File
 
-When the listener starts up, it looks for file called
+Unless the
+.code --noprofile
+option has been used, when the listener starts up, it looks for file called
 .code .txr_profile
 in the user's home directory, as determined by the
 .code HOME

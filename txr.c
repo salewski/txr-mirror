@@ -66,6 +66,7 @@ wchar_t *progname;
 static const char *progname_u8;
 static val prog_path = nil, sysroot_path = nil;
 int opt_noninteractive;
+int opt_noprofile;
 int opt_compat;
 int opt_dbg_expansion;
 val stdlib_path;
@@ -156,6 +157,7 @@ static void help(void)
 "                       the following argument arg, and allows one or more\n"
 "                       copies of it to be to be embedded in the\n"
 "                       encoded arguments. See manual.\n"
+"--noprofile            Do not read .txr_profile when entering listener.\n"
 #if HAVE_FORK_STUFF
 "--reexec               Re-execute TXR with remaining arguments.\n"
 #endif
@@ -798,6 +800,9 @@ int txr_main(int argc, char **argv)
         continue;
       } else if (equal(opt, lit("free-all"))) {
         atexit(free_all);
+        continue;
+      } else if (equal(opt, lit("noprofile"))) {
+        opt_noprofile = 1;
         continue;
       } else {
         drop_privilege();

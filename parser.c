@@ -1470,7 +1470,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   val home = if3(repl_level == 1, get_home_path(), nil);
   val histfile = if2(home, scat2(home, lit("/.txr_history")));
   const wchar_t *histfile_w = if3(home, c_str(histfile), NULL);
-  val rcfile = if2(home, scat2(home, lit("/.txr_profile")));
+  val rcfile = if2(home && !opt_noprofile, scat2(home, lit("/.txr_profile")));
   val old_sig_handler = set_sig_handler(num(SIGINT), func_n2(repl_intr));
   val hist_len_var = lookup_global_var(listener_hist_len_s);
   val multi_line_var = lookup_global_var(listener_multi_line_p_s);
