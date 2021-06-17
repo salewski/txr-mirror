@@ -74536,7 +74536,7 @@ using a C pointer as the external representation.
 When used for passing a value to a foreign function, the
 .code ptr
 type has in-out semantics: it supports the interfacing concept that
-the called function can update datum which has been passed to it "by pointer",
+the called function can update the datum which has been passed to it "by pointer",
 thereby altering the caller's object. Since a Lisp value requires a conversion
 to the FFI external representation, it cannot be directly passed by pointer.
 Instead, this semantics is simulated. The put semantics of
