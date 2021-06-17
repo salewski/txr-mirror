@@ -126,6 +126,7 @@
                                (let ((fargs-l1 (mapcar (lambda (farg)
                                                          ^(sys:l1-val ,farg))
                                                        fargs)))
+                                 ;; no cadr here to avoid circular autoload
                                  ^[sys:apply ,(car (cdr syntax-2))
                                              (append ,rest-sym (list ,*fargs-l1))]))
                               (metas syntax-2)
