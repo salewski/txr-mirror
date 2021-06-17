@@ -124,8 +124,12 @@ val atime_s, mtime_s, ctime_s;
 val atime_nsec_s, mtime_nsec_s, ctime_nsec_s;
 val path_s, dir_s, dirent_s;
 
+#if HAVE_PWUID || HAVE_GRGID
+val passwd_s;
+#endif
+
 #if HAVE_PWUID
-val passwd_s, gecos_s, shell_s;
+val gecos_s, shell_s;
 #endif
 
 #if HAVE_GRGID
