@@ -119,7 +119,8 @@
          (rec (slot ctx 'rec))
          (recvar (slot ctx 'recvar))
          (rest-sym (sys:ensure-op-arg ctx 0))
-         (lambda-interior (let ((fargs (cdr (cdr syntax-2))))
+         (lambda-interior (let ((fargs (tree-case syntax-2
+                                         ((a b . fa) fa))))
                             (cond
                               ((and (eq sym 'lop) fargs)
                                (let ((fargs-l1 (mapcar (lambda (farg)
