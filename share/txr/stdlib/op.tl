@@ -196,3 +196,6 @@
 
 (defmacro oand (:env e . clauses)
   ^[chand ,*(sys:opip-expand e clauses)])
+
+(defmacro flow (val . opip-args)
+  ^(call (opip ,*opip-args) ,val))

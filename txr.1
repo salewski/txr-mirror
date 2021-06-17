@@ -53514,6 +53514,46 @@ respectively, whereas
 .code "[iff oddp list]"
 is passed through untransformed.
 
+.coNP Macro @ flow
+.synb
+.mets (flow < form << opip-arg *)
+.syne
+.desc
+The
+.code flow
+macro passes the value of
+.meta form
+through the processing stages described by the
+.meta opip-arg
+arguments, yielding the resulting value.
+
+The
+.meta opip-arg
+arguments follow the semantics of the
+.code opip
+macro.
+
+The following equivalence holds:
+
+.verb
+  (flow x ...)  <-->  [(opip ...) x]
+.brev
+
+That is to say,
+.code flow
+is equivalent to the application of an
+.codn opip -generated
+function to the value of
+.metn form .
+
+.TP* Examples:
+
+.verb
+  (flow 1 (+ 2) (* 3) (cons 0)) -> (0 . 9)
+
+  (flow "abc" (upcase-str) (regsub #/B/ "ZTE")) -> "AZTEC"
+.brev
+
 .coNP Macro @ ret
 .synb
 .mets (ret << form )
