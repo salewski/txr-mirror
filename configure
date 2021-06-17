@@ -1159,7 +1159,7 @@ if ! [ $darwin_target ] ; then
   if [ "$($make conftest.android)" = "yes" ] ; then
     printf "yes\n"
     android_target=y
-    lang_flags="$lang_flags -D__ANDROID_API__=65535 -D_BSD_SOURCE"
+    lang_flags="$lang_flags -U__ANDROID_API__ -D__ANDROID_API__=65535 -D_BSD_SOURCE"
     printf "Regenerating config.make ..."
     gen_config_make
     printf "done\n"
