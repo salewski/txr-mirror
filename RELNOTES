@@ -1,8 +1,62 @@
+                                    TXR 263
+                                   2021-06-17
+
+
+  Features
+
+  - New macro named flow, providing the syntactic sugar for
+    using an opip function on a value.
+  - I/O:
+    - the *stdnull* stream lazily attaches to /dev/null if
+      fileno is invoked on it
+  - formatted printing:
+    - format: new precision modifier - for zero instead of plus sign.
+    - pic macro: takes advantae of format work to generate better code.
+  - subprocesses:
+    - some file descriptor saving-restoring manipulations moved
+      into child process (in open-process, open-subprocess, run)
+    - diagnostic for situation when *stdout*, *stdin* or *stderr*
+      are redirected to something that cannot produce a file descriptor.
+  - match-fun/txr-if
+    - documented that input can be a stream
+    - documented that input can be a single string
+  - txr-case:
+    - if input is a stream, it is now converted to a lazy list of lines,
+      so that the txr-case construct effectively backtracks over the
+      data as it tries successive cases.
+  - command-line
+    - new --noprofile option to invoke listner without processing
+      ~/.txr_profile file.
+
+  Bugs
+
+  - format: numeric handling maintenance
+    - poor behaviors identified and revised.
+    - requirements clarified.
+    - cemented in test cases.
+  - exceptions:
+    - unwind dynamic environment when tracing unhandled exception
+      - solves problem when exception goes off while *stderr* is redirected.
+  - subprocesses:
+    - diagnostic for situation when *stdout*, *stdin* or *stderr*
+      are redirected to something that cannot produce a file descriptor.
+  - macros:
+    - fixed TXR 191 regression in defsymacro: expanding the replacement form
+      before associating it with the symbol, rather than taking as-is.
+  - quasiliterals:
+    - fixed issue arising when a macro invoked as a @(...) expression in a
+      quasiliteral expands to a non-string atom.
+  - math:
+    - forbid dubious inequality comparisons like (< 1 "abc") which
+      became unintentionally allowed due to numbers being iterable.
+
+
+
                                     TXR 262
                                    2021-06-11
 
 
-  Feature
+  Features
 
   - structural pattern matching:
     - new feature: quasiquote matching.

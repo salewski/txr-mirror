@@ -159,10 +159,10 @@ extern val flock_s, len_s, pid_s, start_s, type_s;
 extern val whence_s;
 #endif
 #if HAVE_GRGID
-extern val group_s, mem_s;
+extern val group_s, mem_s, passwd_s, passwd_s;
 #endif
 #if HAVE_PWUID
-extern val gecos_s, passwd_s, shell_s;
+extern val gecos_s, shell_s;
 #endif
 #if HAVE_SOCKETS
 extern val addr_s, addrinfo_s, canonname_s, family_s, flags_s;
@@ -310,10 +310,10 @@ val *protected_sym[] = {
   &whence_s,
 #endif
 #if HAVE_GRGID
-  &group_s, &mem_s,
+  &group_s, &mem_s, &passwd_s, &passwd_s,
 #endif
 #if HAVE_PWUID
-  &gecos_s, &passwd_s, &shell_s,
+  &gecos_s, &shell_s,
 #endif
 #if HAVE_SOCKETS
   &addr_s, &addrinfo_s, &canonname_s, &family_s, &flags_s,
