@@ -374,6 +374,7 @@ FILE *w_fopen(const wchar_t *wname, const wchar_t *wmode)
   return f;
 }
 
+#if !HAVE_FORK_STUFF
 FILE *w_popen(const wchar_t *wcmd, const wchar_t *wmode)
 {
   char *cmd = utf8_dup_to(wcmd);
@@ -383,6 +384,7 @@ FILE *w_popen(const wchar_t *wcmd, const wchar_t *wmode)
   free(mode);
   return f;
 }
+#endif
 
 FILE *w_freopen(const wchar_t *wname, const wchar_t *wmode, FILE *fold)
 {

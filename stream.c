@@ -4261,6 +4261,7 @@ static int fds_getfd(val stream, val self)
   return fd_sub;
 }
 
+#if !HAVE_FORK_STUFF
 static int fds_subst(int fd_sub, int fd_std, val self)
 {
   if (fd_sub == fd_std)
@@ -4278,6 +4279,7 @@ static int fds_subst(int fd_sub, int fd_std, val self)
               self, num(errno), errno_to_str(errno), nao);
   }
 }
+#endif
 
 static void fds_subst_nosave(int fd_sub, int fd_std)
 {
@@ -4298,6 +4300,7 @@ static void fds_prepare(struct save_fds *fds, int flags, val self)
     fds->suberr = fds_getfd(std_error, self);
 }
 
+#if !HAVE_FORK_STUFF
 static void fds_swizzle(struct save_fds *fds, int flags, val self)
 {
   if ((flags & FDS_IN) != 0)
@@ -4327,6 +4330,7 @@ static void fds_restore(struct save_fds *fds)
     close(fds->err);
   }
 }
+#endif
 
 static void fds_clobber(struct save_fds *fds, int flags)
 {
@@ -4338,41 +4342,6 @@ static void fds_clobber(struct save_fds *fds, int flags)
 
   if ((flags & FDS_ERR) != 0)
     fds_subst_nosave(fds->suberr, STDERR_FILENO);
-}
-
-val open_command(val path, val mode_str)
-{
-  val self = lit("open-command");
-  struct stdio_mode m, m_r = stdio_mode_init_r;
-  val mode = normalize_mode_no_bin(&m, mode_str, m_r);
-  int input = m.read != 0;
-  struct save_fds sfds;
-  FILE *f = 0;
-  int fds_flags = (input ? FDS_IN : FDS_OUT) | FDS_ERR;
-
-  fds_init(&sfds);
-
-  uw_simple_catch_begin;
-
-  fds_prepare(&sfds, fds_flags, self);
-
-  fds_swizzle(&sfds, fds_flags, self);
-
-  f = w_popen(c_str(path), c_str(mode));
-
-  if (!f) {
-    int eno = errno;
-    uw_throwf(errno_to_file_error(eno), lit("~a: error opening pipe ~s: ~d/~s"),
-              self, path, num(eno), errno_to_str(eno), nao);
-  }
-
-  uw_unwind {
-    fds_restore(&sfds);
-  }
-
-  uw_catch_end;
-
-  return set_mode_props(m, make_pipe_stream(f, path));
 }
 
 #if HAVE_FORK_STUFF
@@ -4531,7 +4500,61 @@ val open_process(val name, val mode_str, val args)
 {
   return open_subprocess(name, mode_str, args, nil);
 }
+
+val open_command(val command, val mode_str)
+{
+#ifdef __CYGWIN__
+  uses_or2;
+  const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
+  val interp = if3(psc[0] == '\\',
+                   or2(getenv_wrap(lit("COMSPEC")),
+                       lit("C:\\WINDOWS\\system32\\cmd.exe")),
+                   lit("/bin/sh"));
+  val opt = if3(psc[0] == '\\', lit("/c"), lit("-c"));
 #else
+  val interp = lit("/bin/sh");
+  val opt = lit("-c");
+#endif
+  return open_process(interp, mode_str, list(opt, command, nao));
+}
+
+#else
+
+val open_command(val path, val mode_str)
+{
+  val self = lit("open-command");
+  struct stdio_mode m, m_r = stdio_mode_init_r;
+  val mode = normalize_mode_no_bin(&m, mode_str, m_r);
+  int input = m.read != 0;
+  struct save_fds sfds;
+  FILE *f = 0;
+  int fds_flags = (input ? FDS_IN : FDS_OUT) | FDS_ERR;
+
+  fds_init(&sfds);
+
+  uw_simple_catch_begin;
+
+  fds_prepare(&sfds, fds_flags, self);
+
+  fds_swizzle(&sfds, fds_flags, self);
+
+  f = w_popen(c_str(path), c_str(mode));
+
+  if (!f) {
+    int eno = errno;
+    uw_throwf(errno_to_file_error(eno), lit("~a: error opening pipe ~s: ~d/~s"),
+              self, path, num(eno), errno_to_str(eno), nao);
+  }
+
+  uw_unwind {
+    fds_restore(&sfds);
+  }
+
+  uw_catch_end;
+
+  return set_mode_props(m, make_pipe_stream(f, path));
+}
+
 
 static void string_extend_count(int count, val out, val tail)
 {
