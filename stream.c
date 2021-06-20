@@ -1342,8 +1342,7 @@ static int pipevp_close(FILE *f, pid_t pid)
   sig_restore_enable;
   return status;
 }
-#endif
-
+#else
 static int se_pclose(FILE *f)
 {
   int ret;
@@ -1352,6 +1351,7 @@ static int se_pclose(FILE *f)
   sig_restore_enable;
   return ret;
 }
+#endif
 
 static val pipe_close(val stream, val throw_on_error)
 {
@@ -1359,7 +1359,7 @@ static val pipe_close(val stream, val throw_on_error)
 
   if (h->f != 0) {
 #if HAVE_FORK_STUFF
-    int status = h->pid != 0 ? pipevp_close(h->f, h->pid) : se_pclose(h->f);
+    int status = pipevp_close(h->f, h->pid);
 #else
     int status = se_pclose(h->f);
 #endif
@@ -1706,10 +1706,12 @@ val make_tail_stream(FILE *f, val descr)
   return stream;
 }
 
+#if !HAVE_FORK_STUFF
 val make_pipe_stream(FILE *f, val descr)
 {
   return make_stdio_stream_common(f, descr, &pipe_ops.cobj_ops);
 }
+#endif
 
 #if HAVE_SOCKETS
 val make_sock_stream(FILE *f, val family, val type)
