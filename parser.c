@@ -636,11 +636,12 @@ static val lisp_parse_impl(val self, enum prime_parser prime,
 {
   uses_or2;
   val source = default_null_arg(source_in);
-  val input_stream = if3(stringp(source),
+  val str = stringp(source);
+  val input_stream = if3(str,
                          make_string_byte_input_stream(source),
                          or2(source, std_input));
   val name = or2(default_null_arg(name_in),
-                 if3(stringp(source),
+                 if3(str,
                      lit("string"),
                      stream_get_prop(input_stream, name_k)));
   val parser = ensure_parser(input_stream, name);
@@ -674,6 +675,19 @@ static val lisp_parse_impl(val self, enum prime_parser prime,
       continue;
 
     break;
+  }
+
+  if (str) {
+    int junk = 0;
+    if (prime == prime_json) {
+      yystype yyl;
+      junk = yylex(&yyl, pi->scanner);
+    } else {
+      junk = pi->recent_tok.yy_char;
+    }
+
+    if (junk)
+      yyerrorf(pi->scanner, lit("trailing material after expression"), nao);
   }
 
   parsed = t;

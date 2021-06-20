@@ -57319,7 +57319,23 @@ string, or a stream.  If it is omitted, then
 .code *stdin*
 is used as the stream.
 
-The source must provide the text representation of one complete \*(TL object.
+The
+.meta source
+must provide the text representation of one complete \*(TL object.
+If
+.meta source
+and the function being applied is
+.codn read ,
+then if the object is followed by any non-whitespace material, the
+situation is treated as a syntax error, even if that material is
+a syntactically valid additional object.
+The
+.code iread
+function ignores this situation. Other differences between
+.code read
+and
+.code iread
+are given below.
 
 Multiple calls to read on the same stream will extract successive objects
 from the stream. To parse successive objects from a string, it is necessary

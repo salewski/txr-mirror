@@ -92,7 +92,27 @@
   (get-json "\"abc\"") "abc"
   (get-json "true") t
   (get-json "false") nil
-  (get-json "null") null)
+  (get-json "null") null
+  (get-json "[1,2,3]") #(1.0 2.0 3.0)
+  (get-json "{\"a\":\"b\"}") #H(() ("a" "b")))
+
+(mtest
+  (get-json "0 \n") 0.0
+  (get-json "\"abc\" \n") "abc"
+  (get-json "true \n") t
+  (get-json "false \n") nil
+  (get-json "null \n") null
+  (get-json "[1,2,3] \n") #(1.0 2.0 3.0)
+  (get-json "{\"a\":\"b\"} \n") #H(() ("a" "b")))
+
+(mtest
+  (get-json "0,") :error
+  (get-json "\"abc\",") :error
+  (get-json "true,") :error
+  (get-json "false,") :error
+  (get-json "null,") :error
+  (get-json "[1,2,3],") :error
+  (get-json "{\"a\":\"b\"},") :error)
 
 (mtest
   (tojson #(1.0 "abc" t)) "[1,\"abc\",true]"
