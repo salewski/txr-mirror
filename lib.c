@@ -4259,7 +4259,7 @@ val string(const wchar_t *str)
 {
   val obj = make_obj();
   obj->st.type = STR;
-  obj->st.str = coerce(wchar_t *, chk_strdup(str));
+  obj->st.str = chk_strdup(str);
   obj->st.len = nil;
   obj->st.alloc = nil;
   return obj;
