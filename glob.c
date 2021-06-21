@@ -68,21 +68,36 @@ val glob_wrap(val pattern, val flags, val errfun)
 {
   val self = lit("glob");
   cnum c_flags = c_num(default_arg(flags, zero), self);
-  char *pat_u8 = utf8_dup_to(c_str(pattern));
   glob_t gl;
 
-  if (s_errfunc) {
-    free(pat_u8);
+  if (s_errfunc)
     uw_throwf(error_s, lit("~a: glob cannot be re-entered from "
                            "its error callback function"), self, nao);
-  }
 
   s_errfunc = default_null_arg(errfun);
 
-  (void) glob(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
+  c_flags &= ~GLOB_APPEND;
+
+  if (stringp(pattern)) {
+    char *pat_u8 = utf8_dup_to(c_str(pattern));
+    (void) glob(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
+    free(pat_u8);
+  } else {
+    seq_iter_t iter;
+    val elem;
+    seq_iter_init(self, &iter, pattern);
+
+    while (seq_get(&iter, &elem)) {
+      char *pat_u8 = utf8_dup_to(c_str(elem));
+      (void) glob(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
+      if (s_exit_point)
+        break;
+      c_flags |= GLOB_APPEND;
+      free(pat_u8);
+    }
+  }
 
   s_errfunc = nil;
-  free(pat_u8);
 
   if (s_exit_point) {
     uw_frame_t *ep = s_exit_point;

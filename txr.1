@@ -68125,19 +68125,29 @@ variables may not be available. They are extensions in the GNU C library
 implementation of
 .codn glob .
 
+The standard
+.code GLOB_APPEND
+flag is not represented as a \*(TX variable. The
+.code glob
+function uses it internally when calling the C library function
+multiple times, due to having been given multiple patterns.
+
 .coNP Function @ glob
 .synb
-.mets (glob < pattern >> [ flags <> [ errfun ]])
+.mets (glob >> { pattern | << patterns } >> [ flags <> [ errfun ]])
 .syne
 .desc
 The
 .code glob
 function is a interface to the Unix function of the same name.
-The
-.meta pattern
-argument must be a string, which holds a glob pattern: a pattern which
+The first argument must either be a single
+.metn pattern ,
+which is a string, or else sequence of strings specifying multiple
+.metn patterns ,
+which are strings.
+Each string is a glob pattern: a pattern which
 matches zero or more pathnames, similar to a regular expression.
-The function tries to expand the pattern and return a list of strings
+The function tries to expand the patterns and return a list of strings
 representing the matching pathnames in the file system.
 
 If there are no matches, then an empty list is returned.
@@ -68149,7 +68159,8 @@ values of the variables
 .codn glob-err ,
 .codn glob-mark ,
 .code glob-nosort
-and others.
+and others. The
+.code glob-append
 
 If the
 .meta errfun
@@ -68182,6 +68193,21 @@ code invoked from the error may not capture a continuation up to a prompt
 which surrounds the
 .code glob
 call. Such an attempt is detected and diagnosed by an exception.
+
+If a sequence of
+.meta patterns
+is specified instead of a single pattern,
+.code glob
+makes multiple calls to the underlying C library function. The
+second and subsequent calls specify the
+.code GLOB_APPEND
+flag to add the matches to the result. The following equivalence applies:
+
+.verb
+  (glob (list p0 p1 ...) f e)  <-->  (append (glob p0 f e)
+                                             (glob p1 f e)
+                                             ...)
+.brev
 
 Details of the semantics of the
 .code glob
