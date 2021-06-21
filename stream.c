@@ -4263,7 +4263,7 @@ static int fds_getfd(val stream, val self)
   return fd_sub;
 }
 
-#if !HAVE_FORK_STUFF
+#if !HAVE_FORK_STUFF || HAVE_WSPAWN || HAVE_SPAWN
 static int fds_subst(int fd_sub, int fd_std, val self)
 {
   if (fd_sub == fd_std)
@@ -4302,7 +4302,7 @@ static void fds_prepare(struct save_fds *fds, int flags, val self)
     fds->suberr = fds_getfd(std_error, self);
 }
 
-#if !HAVE_FORK_STUFF
+#if !HAVE_FORK_STUFF || HAVE_WSPAWN || HAVE_SPAWN
 static void fds_swizzle(struct save_fds *fds, int flags, val self)
 {
   if ((flags & FDS_IN) != 0)
