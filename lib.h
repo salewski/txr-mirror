@@ -603,6 +603,8 @@ val seventh(val cons);
 val eighth(val cons);
 val ninth(val cons);
 val tenth(val cons);
+val cxr(val addr, val obj);
+val cyr(val addr, val obj);
 val conses(val list);
 val lazy_conses(val list);
 val listref(val list, val ind);

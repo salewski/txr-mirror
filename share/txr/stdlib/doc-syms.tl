@@ -443,6 +443,8 @@
       ("csize" "N-01B1B5DF")
       ("cstopb" "N-01B1B5DF")
       ("cum-norm-dist" "N-03AB449B")
+      ("cxr" "N-01DA4F04")
+      ("cyr" "N-01DA4F04")
       ("daemon" "N-017C3515")
       ("data" "N-03B6EA7D")
       ("dec" "N-03A0AABD")

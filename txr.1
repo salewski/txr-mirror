@@ -21598,6 +21598,58 @@ places. For example,
 means the same as
 .codn "(del (car (cddr x)))" .
 
+.coNP Functions @ cyr and @ cxr
+.synb
+.mets (cyr < address << object )
+.mets (cxr < address << object )
+.syne
+.desc
+The
+.code cyr
+and
+.code cxr
+functions provide
+.cod3 car / cdr
+navigation of tree structure driven by numeric address given by the
+.meta address
+argument.
+
+The
+.meta address
+argument can express any combination of the application of
+.code car
+and
+.code cdr
+functions, including none at all.
+
+The difference between
+.code cyr
+and
+.code cxr
+is the bit order of the encoding. Under
+.codn cyr ,
+the most significant bit of the encoding given in
+.meta address
+indicates the initial
+.cod3 car / cdr
+navigation, and the least significant bit gives the final one.
+Under
+.codn cxr ,
+it is opposite.
+
+Both functions require
+.meta address
+to be a positive integer. Any other argument raises an error.
+
+Under both functions, the
+.meta address
+value
+.code 1
+encodes the
+.code identity
+operation: no
+.cod3 car / cdr
+
 .coNP Functions @ flatten and @ flatten*
 .synb
 .mets (flatten << list )

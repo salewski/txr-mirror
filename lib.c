@@ -1468,6 +1468,75 @@ val tenth(val obj)
   return ref(obj, num_fast(9));
 }
 
+val cxr(val addr, val obj)
+{
+  val self = lit("cxr");
+
+  switch (type(addr)) {
+  case NUM:
+    {
+      cnum a = c_num(addr, self);
+      if (a > 0) {
+        for (; a != 1; a >>= 1)
+          obj = if3((a & 1) != 0, car(obj), cdr(obj));
+        return obj;
+      }
+    }
+    break;
+  case BGNUM:
+    {
+      mp_int *a = mp(addr);
+      if (!mp_isneg(a)) {
+        mp_size i, n = mp_count_bits(a);
+        for (i = 0; i < n - 1; i++)
+          obj = if3(mp_bit(a, i) == MP_YES, car(obj), cdr(obj));
+        return obj;
+      }
+    }
+    break;
+  default:
+    break;
+  }
+
+  uw_throwf(error_s, lit("~a: ~s is an invalid address"), self, addr, nao);
+}
+
+val cyr(val addr, val obj)
+{
+  val self = lit("cyr");
+
+  switch (type(addr)) {
+  case NUM:
+    {
+      cnum a = c_num(addr, self);
+      if (a > 0) {
+        int m, h = highest_bit(a);
+        if (h > 1) {
+          for (m = 1 << (h - 2); m != 0; m >>= 1)
+            obj = if3((a & m) != 0, car(obj), cdr(obj));
+        }
+        return obj;
+      }
+    }
+    break;
+  case BGNUM:
+    {
+      mp_int *a = mp(addr);
+      if (!mp_isneg(a)) {
+        mp_size i, n = mp_count_bits(a);
+        for (i = n - 2; i != (mp_size) -1; i--)
+          obj = if3(mp_bit(a, i) == MP_YES, car(obj), cdr(obj));
+        return obj;
+      }
+    }
+    break;
+  default:
+    break;
+  }
+
+  uw_throwf(error_s, lit("~a: ~s is an invalid address"), self, addr, nao);
+}
+
 val conses(val list)
 {
   list_collect_decl (out, ptail);
