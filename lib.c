@@ -10882,10 +10882,29 @@ val mismatch(val left, val right, val testfun_in, val keyfun_in)
     case CONS:
     case LCONS:
       return mismatch(right, left, testfun, keyfun);
-    case VEC:
-    case LIT:
     case STR:
+    case LIT:
+      switch (type(left)) {
+      case STR:
+      case LIT:
+        if (keyfun == identity_f && (testfun == equal_f ||
+                                     testfun == eql_f ||
+                                     testfun == eq_f))
+        {
+          const wchar_t *lft = c_str(left), *le = lft;
+          const wchar_t *rgt = c_str(right), *ri = rgt;
+
+          while (*le && *ri && *le == *ri)
+            le++, ri++;
+
+          return if3(*le || *ri, num(le - lft), nil);
+        }
+      default:
+          break;
+      }
+      /* fallthrough */
     case LSTR:
+    case VEC:
       {
         val llen = length(left);
         val rlen = length(right);
@@ -10913,6 +10932,7 @@ val mismatch(val left, val right, val testfun_in, val keyfun_in)
 
 val rmismatch(val left, val right, val testfun_in, val keyfun_in)
 {
+  val self = lit("rmismatch");
   val testfun = default_arg(testfun_in, equal_f);
   val keyfun = default_arg(keyfun_in, identity_f);
 
@@ -10980,9 +11000,32 @@ val rmismatch(val left, val right, val testfun_in, val keyfun_in)
     case CONS:
     case LCONS:
       return rmismatch(right, left, testfun, keyfun);
-    case VEC:
     case LIT:
     case STR:
+      switch (type(left)) {
+      case STR:
+      case LIT:
+        if (keyfun == identity_f && (testfun == equal_f ||
+                                     testfun == eql_f ||
+                                     testfun == eq_f))
+        {
+          cnum ll = c_num(length(left), self), li = ll - 1;
+          cnum rl = c_num(length(right), self), ri = rl - 1;
+          const wchar_t *lft = c_str(left);
+          const wchar_t *rgt = c_str(right);
+
+          for (; li >= 0 && ri >= 0; li--, ri--) {
+            if (lft[li] != rgt[ri])
+              break;
+          }
+
+          return if2(li >= 0 || ri >= 0, num(li - ll));
+        }
+      default:
+        break;
+      }
+      /* fallthrough */
+    case VEC:
     case LSTR:
       {
         val llen = length(left);

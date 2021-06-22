@@ -82,3 +82,52 @@
   [reduce-left cons #(1) : (op * 10)] 10
   [reduce-left cons #(1) 2 (op * 10)] (2 . 10)
   [reduce-left cons #(2 3) 10 (op * 10)] ((10 . 20) . 30))
+
+(mtest
+  (starts-with "" "") t
+  (starts-with "" "a") t
+  (starts-with "a" "") nil
+  (starts-with "a" "a") t
+  (starts-with "" "abc") t
+  (starts-with "abc" "") nil
+  (starts-with "abc" "abc") t
+  (starts-with "ab" "abc") t
+  (starts-with "bc" "abc") nil
+  )
+
+(mtest
+  (ends-with "" "") t
+  (ends-with "" "a") t
+  (ends-with "a" "") nil
+  (ends-with "a" "a") t
+  (ends-with "" "abc") t
+  (ends-with "abc" "") nil
+  (ends-with "abc" "abc") t
+  (ends-with "ab" "abc") nil
+  (ends-with "bc" "abc") t)
+
+(mtest
+  (rmismatch #() #()) nil
+  (rmismatch #(1) #()) -1
+  (rmismatch #() #(1)) -1
+  (rmismatch #(1) #(1)) nil
+  (rmismatch #(1 2) #(1 2)) nil
+  (rmismatch #(2 2) #(1 2)) -2
+  (rmismatch #(1 2) #(2 2)) -2
+  (rmismatch #(3 2 1) #(1 1)) -2
+  (rmismatch #(1 1) #(3 2 1)) -2
+  (rmismatch #(3 2 1) #(2 1)) -3
+  (rmismatch #(2 1) #(3 2 1)) -3)
+
+(mtest
+  (rmismatch "" "") nil
+  (rmismatch "1" "") -1
+  (rmismatch "" "1") -1
+  (rmismatch "1" "1") nil
+  (rmismatch "12" "12") nil
+  (rmismatch "22" "12") -2
+  (rmismatch "12" "22") -2
+  (rmismatch "321" "11") -2
+  (rmismatch "11" "321") -2
+  (rmismatch "321" "21") -3
+  (rmismatch "21" "321") -3)
