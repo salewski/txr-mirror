@@ -120,6 +120,45 @@
   (rmismatch #(2 1) #(3 2 1)) -3)
 
 (mtest
+  (rmismatch '() '()) nil
+  (rmismatch '(1) '()) -1
+  (rmismatch '() '(1)) -1
+  (rmismatch '(1) '(1)) nil
+  (rmismatch '(1 2) '(1 2)) nil
+  (rmismatch '(2 2) '(1 2)) -2
+  (rmismatch '(1 2) '(2 2)) -2
+  (rmismatch '(3 2 1) '(1 1)) -2
+  (rmismatch '(1 1) '(3 2 1)) -2
+  (rmismatch '(3 2 1) '(2 1)) -3
+  (rmismatch '(2 1) '(3 2 1)) -3)
+
+(mtest
+  (rmismatch '() #()) nil
+  (rmismatch '(1) #()) -1
+  (rmismatch '() #(1)) -1
+  (rmismatch '(1) #(1)) nil
+  (rmismatch '(1 2) #(1 2)) nil
+  (rmismatch '(2 2) #(1 2)) -2
+  (rmismatch '(1 2) #(2 2)) -2
+  (rmismatch '(3 2 1) #(1 1)) -2
+  (rmismatch '(1 1) #(3 2 1)) -2
+  (rmismatch '(3 2 1) #(2 1)) -3
+  (rmismatch '(2 1) #(3 2 1)) -3)
+
+(mtest
+  (rmismatch #() '()) nil
+  (rmismatch #(1) '()) -1
+  (rmismatch #() '(1)) -1
+  (rmismatch #(1) '(1)) nil
+  (rmismatch #(1 2) '(1 2)) nil
+  (rmismatch #(2 2) '(1 2)) -2
+  (rmismatch #(1 2) '(2 2)) -2
+  (rmismatch #(3 2 1) '(1 1)) -2
+  (rmismatch #(1 1) '(3 2 1)) -2
+  (rmismatch #(3 2 1) '(2 1)) -3
+  (rmismatch #(2 1) '(3 2 1)) -3)
+
+(mtest
   (rmismatch "" "") nil
   (rmismatch "1" "") -1
   (rmismatch "" "1") -1

@@ -10996,7 +10996,7 @@ val rmismatch(val left, val right, val testfun_in, val keyfun_in)
   case VEC:
     switch (type(right)) {
     case NIL:
-      return if3(length(left) == zero, nil, zero);
+      return if3(length(left) == zero, nil, negone);
     case CONS:
     case LCONS:
       return rmismatch(right, left, testfun, keyfun);
