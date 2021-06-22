@@ -248,6 +248,8 @@ val abs_path_p(val path);
 val pure_rel_path_p(val path);
 val base_name(val path, val suff);
 val dir_name(val path);
+val short_suffix(val name, val alt_in);
+val long_suffix(val name, val alt_in);
 val path_cat(val dir_name, val base_name);
 val make_byte_input_stream(val obj);
 val iobuf_get(void);

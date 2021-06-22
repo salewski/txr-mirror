@@ -5014,6 +5014,20 @@ val dir_name(val path)
   }
 }
 
+val short_suffix(val name, val alt_in)
+{
+  const wchar_t *str = c_str(name);
+  const wchar_t *dot = wcsrchr(str, '.');
+  return if3(dot, string(dot + 1), default_null_arg(alt_in));
+}
+
+val long_suffix(val name, val alt_in)
+{
+  const wchar_t *str = c_str(name);
+  const wchar_t *dot = wcschr(str, '.');
+  return if3(dot, string(dot + 1), default_null_arg(alt_in));
+}
+
 val path_cat(val dir_name, val base_name)
 {
   val dl = length(dir_name);
@@ -5309,6 +5323,8 @@ void stream_init(void)
   reg_fun(intern(lit("pure-rel-path-p"), user_package), func_n1(pure_rel_path_p));
   reg_fun(intern(lit("base-name"), user_package), func_n2o(base_name, 1));
   reg_fun(intern(lit("dir-name"), user_package), func_n1(dir_name));
+  reg_fun(intern(lit("short-suffix"), user_package), func_n2o(short_suffix, 1));
+  reg_fun(intern(lit("long-suffix"), user_package), func_n2o(long_suffix, 1));
   reg_fun(intern(lit("path-cat"), user_package), func_n2(path_cat));
   reg_varl(intern(lit("path-sep-chars"), user_package), static_str(path_sep_chars));
   reg_fun(intern(lit("get-indent-mode"), user_package), func_n1(get_indent_mode));

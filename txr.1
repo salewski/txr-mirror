@@ -57051,6 +57051,68 @@ then a trimmed version of the base name is returned instead, with that suffix
 removed. This adjustment isn't performed if it would result in an empty
 string being returned.
 
+.coNP Functions @ long-suffix and @ short-suffix
+.synb
+.mets (long-suffix < path <> [ alt ])
+.mets (short-suffix < path <> [ alt ])
+.syne
+.desc
+The
+.code long-suffix
+and
+.code short-suffix
+functions calculate the
+.I "long suffix"
+and
+.I "short suffix"
+of
+.metn path ,
+which must be a string.
+
+If
+.meta path
+does not contain any occurrences of the character
+.code .
+(period) then it does not have a suffix. In this situation, both
+functions return the
+.meta alt
+argument, which defaults to
+.code nil
+if it is omitted.
+
+Otherwise the long and short suffix is the substring of
+.meta path
+consisting of all the characters which follow the delimiting period.
+The delimiting period for the long suffix is the leftmost period;
+the delimiting period for the short suffix is the rightmost period.
+
+If the delimiting period is the rightmost character of
+.metn path ,
+then the suffix delimited by that period is the empty string.
+
+If
+.meta path
+contains only one period, then its long and short suffix coincide.
+
+.TP* Examples:
+
+.verb
+  (short-suffix "") -> nil
+  (short-suffix ".") -> ""
+  (short-suffix "abc") -> nil
+  (short-suffix "abc" "") -> ""
+  (short-suffix "abc.") -> ""
+  (short-suffix "abc.tar") -> "tar"
+  (short-suffix "abc.tar.gz") -> "gz"
+
+  (long-suffix "") -> nil
+  (long-suffix ".") -> ""
+  (long-suffix "abc") -> nil
+  (long-suffix "abc.") -> ""
+  (long-suffix "abc.tar") -> "txt"
+  (long-suffix "abc.tar.gz") -> "tar.gz"
+.brev
+
 .coNP Function @ path-cat
 .synb
 .mets (path-cat < dir-path << rel-path )
