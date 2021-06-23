@@ -13484,8 +13484,8 @@ tail:
       val label = cdr(prev_cell);
 
       if (label == colon_k)
-        uw_throwf(error_s, lit("print: unexpected duplicate object "
-                               "(misbehaving print method?)"), nao);
+        uw_throwf(error_s, lit("~a: unexpected duplicate object "
+                               "(misbehaving print method?)"), self, nao);
       if (prev_cell)
         return;
     } else {
