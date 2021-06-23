@@ -32,3 +32,29 @@
   (long-suffix "foo.txt.gz") "txt.gz"
   (long-suffix ".gz") "gz"
   (long-suffix ".txt.gz") "txt.gz")
+
+(mtest
+  (short-suffix "/") nil
+  (short-suffix "a/") nil
+  (short-suffix ".a/") "a"
+  (short-suffix ".a/b") nil
+  (short-suffix ".a/b/") nil
+  (short-suffix ".a/b/.b") "b"
+  (short-suffix ".a/b/.b/") "b"
+  (short-suffix ".a/b/c.b") "b"
+  (short-suffix ".a/b/c.b/") "b"
+  (short-suffix ".a/b/c.b//") nil)
+
+(mtest
+  (long-suffix "/") nil
+  (long-suffix "a/") nil
+  (long-suffix ".a/") "a"
+  (long-suffix ".a/b") nil
+  (long-suffix ".a/b/") nil
+  (long-suffix ".a/b/.b") "b"
+  (long-suffix ".a/b/.b/") "b"
+  (long-suffix ".a/b/c.b") "b"
+  (long-suffix ".a/b/c.b/") "b"
+  (long-suffix "a.b/c.d.e") "d.e"
+  (long-suffix "a.b/c.d.e/") "d.e"
+  (long-suffix "a.b/c.d.e//") nil)

@@ -5016,16 +5016,44 @@ val dir_name(val path)
 
 val short_suffix(val name, val alt_in)
 {
+  const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
   const wchar_t *str = c_str(name);
   const wchar_t *dot = wcsrchr(str, '.');
-  return if3(dot, string(dot + 1), default_null_arg(alt_in));
+  const wchar_t *sl = if3(dot, wcspbrk(dot + 1, psc), 0);
+
+  if (!dot || (sl && sl[1])) {
+    return default_null_arg(alt_in);
+  } else {
+    wchar_t *suff = chk_strdup(dot + 1);
+    if (sl)
+      suff[sl - (dot + 1)] = 0;
+    return string_own(suff);
+  }
 }
 
 val long_suffix(val name, val alt_in)
 {
+  const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
   const wchar_t *str = c_str(name);
   const wchar_t *dot = wcschr(str, '.');
-  return if3(dot, string(dot + 1), default_null_arg(alt_in));
+
+  {
+    const wchar_t *sl;
+
+    while (dot && (sl = wcspbrk(dot, psc)) && sl[1]) {
+      dot = wcschr(sl + 1, '.');
+      sl = wcspbrk(dot, psc);
+    }
+
+    if (!dot || (sl && sl[1])) {
+      return default_null_arg(alt_in);
+    } else {
+      wchar_t *suff = chk_strdup(dot + 1);
+      if (sl)
+      suff[sl - (dot + 1)] = 0;
+      return string_own(suff);
+    }
+  }
 }
 
 val path_cat(val dir_name, val base_name)

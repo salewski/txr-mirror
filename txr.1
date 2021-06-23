@@ -57073,26 +57073,55 @@ If
 .meta path
 does not contain any occurrences of the character
 .code .
-(period) then it does not have a suffix. In this situation, both
+(period) in the role of a suffix delimiter, then
+.meta path
+does not have a suffix. In this situation, both
 functions return the
 .meta alt
 argument, which defaults to
 .code nil
 if it is omitted.
 
-Otherwise the long and short suffix is the substring of
+What it means for
 .meta path
-consisting of all the characters which follow the delimiting period.
-The delimiting period for the long suffix is the leftmost period;
-the delimiting period for the short suffix is the rightmost period.
+to have a suffix delimiter is that the
+.code .
+character occurs somewhere in the last component of
+.metn path .
+What constitutes the last component is specified
+in more detail below.
+
+If a suffix delimiter is present, then the long or short suffix is the
+substring of
+.meta path
+consisting of all the characters which follow the delimiting period,
+exclusive of
+.metn path 's
+trailing path separator, if any.
+
+If multiple periods occur in the last component of the path,
+the delimiter for the long suffix is the leftmost period;
+the delimiter for the short suffix is the rightmost period.
 
 If the delimiting period is the rightmost character of
 .metn path ,
+or occurs immediately before a trailing path separator,
 then the suffix delimited by that period is the empty string.
 
 If
 .meta path
-contains only one period, then its long and short suffix coincide.
+contains only one suffix delimiter, then its long and short suffix coincide.
+
+For the purpose of identifying the last component of
+.meta path
+if
+.meta path
+ends in a path separating character, that character is removed.
+If the remaining string contains path-separating characters, then
+the last component consists of that portion of it which follows
+the rightmost path-separating character. Otherwise, the last component
+is the entire string. The suffix, if present, is identified and
+extracted from this last component.
 
 .TP* Examples:
 
@@ -57104,6 +57133,9 @@ contains only one period, then its long and short suffix coincide.
   (short-suffix "abc.") -> ""
   (short-suffix "abc.tar") -> "tar"
   (short-suffix "abc.tar.gz") -> "gz"
+  (short-suffix "abc.tar.gz/") -> "gz"
+  (short-suffix "x.y.z/abc.tar.gz/") -> "gz"
+  (short-suffix "x.y.z/abc.tar.gz//") -> nil
 
   (long-suffix "") -> nil
   (long-suffix ".") -> ""
@@ -57111,6 +57143,8 @@ contains only one period, then its long and short suffix coincide.
   (long-suffix "abc.") -> ""
   (long-suffix "abc.tar") -> "txt"
   (long-suffix "abc.tar.gz") -> "tar.gz"
+  (long-suffix "abc.tar.gz/") -> "tar.gz"
+  (long-suffix "x.y.z/abc.tar.gz/") -> "tar.gz"
 .brev
 
 .coNP Function @ path-cat
