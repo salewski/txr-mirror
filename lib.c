@@ -1510,9 +1510,10 @@ val cyr(val addr, val obj)
     {
       cnum a = c_num(addr, self);
       if (a > 0) {
-        int m, h = highest_bit(a);
+        int h = highest_bit(a);
+	cnum m;
         if (h > 1) {
-          for (m = 1 << (h - 2); m != 0; m >>= 1)
+          for (m = convert(cnum, 1) << (h - 2); m != 0; m >>= 1)
             obj = if3((a & m) != 0, car(obj), cdr(obj));
         }
         return obj;
