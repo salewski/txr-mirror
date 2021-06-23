@@ -5060,10 +5060,8 @@ val long_suffix(val name, val alt_in)
   {
     const wchar_t *sl;
 
-    while (dot && (sl = wcspbrk(dot, psc)) && sl[1]) {
+    while (dot && (sl = wcspbrk(dot, psc)) && sl[1])
       dot = wcschr(sl + 1, '.');
-      sl = wcspbrk(dot, psc);
-    }
 
     if (!dot || (sl && sl[1])) {
       return default_null_arg(alt_in);
