@@ -5490,43 +5490,43 @@ val cmp_str(val astr, val bstr)
 {
   val self = lit("bstr");
 
-   switch (TYPE_PAIR(type(astr), type(bstr))) {
-   case TYPE_PAIR(LIT, LIT):
-   case TYPE_PAIR(STR, STR):
-   case TYPE_PAIR(LIT, STR):
-   case TYPE_PAIR(STR, LIT):
-     {
-       int cmp = wcscmp(c_str(astr, self), c_str(bstr, self));
-       return if3(cmp < 0, negone, if3(cmp > 0, one, zero));
-     }
-   case TYPE_PAIR(LSTR, LIT):
-   case TYPE_PAIR(LSTR, STR):
-   case TYPE_PAIR(LIT, LSTR):
-   case TYPE_PAIR(STR, LSTR):
-   case TYPE_PAIR(LSTR, LSTR):
-     {
-       val i;
-       for (i = zero;
-            length_str_lt(astr, i) && length_str_lt(bstr, i);
-            i = plus(i, one))
-       {
-         val ach = chr_str(astr, i);
-         val bch = chr_str(bstr, i);
+  switch (TYPE_PAIR(type(astr), type(bstr))) {
+  case TYPE_PAIR(LIT, LIT):
+  case TYPE_PAIR(STR, STR):
+  case TYPE_PAIR(LIT, STR):
+  case TYPE_PAIR(STR, LIT):
+    {
+      int cmp = wcscmp(c_str(astr, self), c_str(bstr, self));
+      return if3(cmp < 0, negone, if3(cmp > 0, one, zero));
+    }
+  case TYPE_PAIR(LSTR, LIT):
+  case TYPE_PAIR(LSTR, STR):
+  case TYPE_PAIR(LIT, LSTR):
+  case TYPE_PAIR(STR, LSTR):
+  case TYPE_PAIR(LSTR, LSTR):
+    {
+      val i;
+      for (i = zero;
+           length_str_lt(astr, i) && length_str_lt(bstr, i);
+           i = plus(i, one))
+      {
+        val ach = chr_str(astr, i);
+        val bch = chr_str(bstr, i);
 
-         if (ach < bch)
-           return one;
-         else if (ach < bch)
-           return one;
-       }
-       if (length_str_lt(bstr, i))
-         return negone;
-       if (length_str_lt(astr, i))
-         return negone;
-       return zero;
-     }
-   default:
-     uw_throwf(error_s, lit("cmp-str: invalid operands ~s ~s"),
-               astr, bstr, nao);
+        if (ach < bch)
+          return one;
+        else if (ach < bch)
+          return one;
+      }
+      if (length_str_lt(bstr, i))
+        return negone;
+      if (length_str_lt(astr, i))
+        return negone;
+      return zero;
+    }
+  default:
+    uw_throwf(error_s, lit("cmp-str: invalid operands ~s ~s"),
+              astr, bstr, nao);
   }
 }
 
