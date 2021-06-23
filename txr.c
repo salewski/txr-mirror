@@ -583,7 +583,7 @@ int txr_main(int argc, char **argv)
     if (car(arg) != chr('-')) {
       if (!parse_stream) {
         spec_file_str = arg;
-        open_txr_file(arg, &txr_lisp_p, &spec_file_str, &parse_stream);
+        open_txr_file(arg, &txr_lisp_p, &spec_file_str, &parse_stream, self);
         simulate_setuid_setgid(parse_stream);
         dyn_env = make_env(nil, nil, dyn_env);
         env_vbind(dyn_env, load_path_s, spec_file_str);
@@ -886,8 +886,9 @@ int txr_main(int argc, char **argv)
                  prog_string, arg, spec_file_str, nao);
           return EXIT_FAILURE;
         }
-        if (wcscmp(c_str(spec_file), L"-") != 0) {
-          open_txr_file(spec_file, &txr_lisp_p, &spec_file_str, &parse_stream);
+        if (wcscmp(c_str(spec_file, self), L"-") != 0) {
+          open_txr_file(spec_file, &txr_lisp_p, &spec_file_str,
+                        &parse_stream, self);
           simulate_setuid_setgid(parse_stream);
           dyn_env = make_env(nil, nil, dyn_env);
           env_vbind(dyn_env, load_path_s, spec_file_str);

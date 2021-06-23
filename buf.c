@@ -876,8 +876,9 @@ static int buf_strm_put_byte_callback(int b, mem_t *ctx)
 
 static val buf_strm_put_string(val stream, val str)
 {
+  val self = lit("put-string");
   struct buf_strm *s = coerce(struct buf_strm *, stream->co.handle);
-  const wchar_t *p = c_str(str);
+  const wchar_t *p = c_str(str, self);
 
   while (*p) {
     (void) utf8_encode(*p++, buf_strm_put_byte_callback, coerce(mem_t *, s));
@@ -1121,9 +1122,10 @@ void buf_swap32(val buf)
 
 static val buf_str(val str, val null_term)
 {
+  val self = lit("buf-str");
   size_t sz;
   val nt = default_null_arg(null_term);
-  unsigned char *u8 = utf8_dup_to_buf(c_str(str), &sz, nt != nil);
+  unsigned char *u8 = utf8_dup_to_buf(c_str(str, self), &sz, nt != nil);
   return make_owned_buf(unum(sz), u8);
 }
 

@@ -686,12 +686,13 @@ static int stdio_get_char_callback(mem_t *f)
 
 static val stdio_put_string(val stream, val str)
 {
+  val self = lit("put-string");
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
 
   errno = 0;
 
   if (h->f != 0) {
-    const wchar_t *s = c_str(str);
+    const wchar_t *s = c_str(str, self);
 
     stdio_switch(h, stdio_write);
 
@@ -1157,6 +1158,7 @@ static void tail_calc(unsigned long *state, int *usec, int *mod)
 
 static void tail_strategy(val stream, unsigned long *state)
 {
+  val self = lit("open-tail");
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
   int usec = 0, mod = 0;
   val mode = nil;
@@ -1192,11 +1194,11 @@ static void tail_strategy(val stream, unsigned long *state)
       FILE *newf;
 
       if (!mode)
-        mode = normalize_mode(&m, h->mode, m_r);
+        mode = normalize_mode(&m, h->mode, m_r,  self);
 
       /* Try to open the file.
        */
-      if (!(newf = w_fopen_mode(c_str(h->descr), c_str(mode), m))) {
+      if (!(newf = w_fopen_mode(c_str(h->descr, self), c_str(mode, self), m))) {
         /* If already have the file open previously, and the name
          * does not open any more, then the file has rotated.
          * Have the caller try to read the last bit of data
@@ -1428,10 +1430,11 @@ static struct strm_ops pipe_ops =
                 stdio_clear_error,
                 stdio_get_fd);
 
-static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl)
+static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl,
+                                       val self)
 {
   struct stdio_mode m = stdio_mode_init_blank;
-  const wchar_t *ms = c_str(default_arg(mode_str, lit("")));
+  const wchar_t *ms = c_str(default_arg(mode_str, lit("")), self);
   int nredir = 0;
 
   switch (*ms) {
@@ -1564,11 +1567,12 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl)
   return m;
 }
 
-struct stdio_mode parse_mode(val mode_str, struct stdio_mode m_dfl)
+struct stdio_mode parse_mode(val mode_str, struct stdio_mode m_dfl, val self)
 {
-  struct stdio_mode m = do_parse_mode(mode_str, m_dfl);
+  struct stdio_mode m = do_parse_mode(mode_str, m_dfl, self);
   if (m.malformed)
-    uw_throwf(file_error_s, lit("invalid mode string ~s"), mode_str, nao);
+    uw_throwf(file_error_s, lit("~s: invalid mode string ~s"), self,
+              mode_str, nao);
   return m;
 }
 
@@ -1605,9 +1609,10 @@ static val format_mode(const struct stdio_mode m)
   return string(buf);
 }
 
-val normalize_mode(struct stdio_mode *m, val mode_str, struct stdio_mode m_dfl)
+val normalize_mode(struct stdio_mode *m, val mode_str, struct stdio_mode m_dfl,
+                   val self)
 {
-  *m = do_parse_mode(mode_str, m_dfl);
+  *m = do_parse_mode(mode_str, m_dfl, self);
 
   if (m->malformed)
     uw_throwf(file_error_s, lit("invalid file open mode ~s"), mode_str, nao);
@@ -1615,15 +1620,17 @@ val normalize_mode(struct stdio_mode *m, val mode_str, struct stdio_mode m_dfl)
   return format_mode(*m);
 }
 
-val normalize_mode_no_bin(struct stdio_mode *m, val mode_str, struct stdio_mode m_dfl)
+val normalize_mode_no_bin(struct stdio_mode *m, val mode_str,
+                          struct stdio_mode m_dfl, val self)
 {
 #ifdef __CYGWIN__
-  return normalize_mode(m, mode_str, m_dfl);
+  return normalize_mode(m, mode_str, m_dfl, self);
 #else
-  *m = do_parse_mode(mode_str, m_dfl);
+  *m = do_parse_mode(mode_str, m_dfl, self);
 
   if (m->malformed)
-    uw_throwf(file_error_s, lit("invalid file open mode ~s"), mode_str, nao);
+    uw_throwf(file_error_s, lit("~a: invalid file open mode ~s"),
+              self, mode_str, nao);
 
   m->binary = 0;
 
@@ -2066,10 +2073,11 @@ static struct strm_ops byte_in_ops =
 
 val make_string_byte_input_stream(val string)
 {
+  val self = lit("make-string-byte-input-stream");
   type_assert (stringp(string), (lit("~a is not a string"), string, nao));
 
   {
-    const wchar_t *wstring = c_str(string);
+    const wchar_t *wstring = c_str(string, self);
     struct byte_input *bi = coerce(struct byte_input *, chk_malloc(sizeof *bi));
     strm_base_init(&bi->a);
     bi->buf = utf8_dup_to_buf(wstring, &bi->size, 0);
@@ -2281,7 +2289,7 @@ static val string_out_put_string(val stream, val str)
     string_out_byte_flush(so, stream);
 
   {
-    const wchar_t *s = c_str(str);
+    const wchar_t *s = c_str(str, self);
     size_t len = c_num(length_str(str), self);
     size_t old_size = so->size;
     size_t required_size = len + so->fill + 1;
@@ -3277,7 +3285,8 @@ static cnum calc_fitlen(const wchar_t *cstr, int precision, int width)
 static void vformat_str(val stream, val str, int width, enum align align,
                         int precision)
 {
-  const wchar_t *cstr = c_str(str);
+  val self = lit("format");
+  const wchar_t *cstr = c_str(str, self);
   cnum fitlen = calc_fitlen(cstr, precision, width);
   cnum slack = (fitlen < width) ? width - fitlen : 0;
   cnum i, w;
@@ -3313,7 +3322,7 @@ val formatv(val stream_in, val fmtstr, struct args *al)
   uw_simple_catch_begin;
 
   {
-    const wchar_t *fmt = c_str(fmtstr);
+    const wchar_t *fmt = c_str(fmtstr, self);
     enum {
       vf_init, vf_width, vf_digits, vf_star, vf_precision, vf_spec
     } state = vf_init, saved_state = vf_init;
@@ -3852,7 +3861,7 @@ val put_string(val string, val stream_in)
                                   cobj_ops(self, stream, stream_s));
     cnum col = s->column;
 
-    const wchar_t *str = c_str(string), *p = str;
+    const wchar_t *str = c_str(string, self), *p = str;
 
     if (s->indent_mode != indent_off && s->indent_mode != indent_foff) {
       while (*str)
@@ -4165,7 +4174,8 @@ val get_string(val stream_in, val nchars, val close_after_p)
 
 val open_directory(val path)
 {
-  DIR *d = w_opendir(c_str(path));
+  val self = lit("open-directory");
+  DIR *d = w_opendir(c_str(path, self));
 
   if (!d) {
     int eno = errno;
@@ -4179,9 +4189,10 @@ val open_directory(val path)
 
 val open_file(val path, val mode_str)
 {
+  val self = lit("open-file");
   struct stdio_mode m, m_r = stdio_mode_init_r;
-  val norm_mode = normalize_mode(&m, mode_str, m_r);
-  FILE *f = w_fopen_mode(c_str(path), c_str(norm_mode), m);
+  val norm_mode = normalize_mode(&m, mode_str, m_r, self);
+  FILE *f = w_fopen_mode(c_str(path, self), c_str(norm_mode, self), m);
 
   if (!f) {
     int eno = errno;
@@ -4196,7 +4207,9 @@ val open_fileno(val fd, val mode_str)
 {
   val self = lit("open-fileno");
   struct stdio_mode m, m_r = stdio_mode_init_r;
-  FILE *f = (errno = 0, w_fdopen(c_num(fd, self), c_str(normalize_mode(&m, mode_str, m_r))));
+  FILE *f = (errno = 0, w_fdopen(c_num(fd, self),
+                                 c_str(normalize_mode(&m, mode_str, m_r, self),
+                                       self)));
 
   if (!f) {
     int eno = errno;
@@ -4212,9 +4225,10 @@ val open_fileno(val fd, val mode_str)
 
 val open_tail(val path, val mode_str, val seek_end_p)
 {
+  val self = lit("open-tail");
   struct stdio_mode m, m_r = stdio_mode_init_r;
-  val mode = normalize_mode(&m, mode_str, m_r);
-  FILE *f = w_fopen_mode(c_str(path), c_str(mode), m);
+  val mode = normalize_mode(&m, mode_str, m_r, self);
+  FILE *f = w_fopen_mode(c_str(path, self), c_str(mode, self), m);
   struct stdio_handle *h;
   val stream;
   unsigned long state = 0;
@@ -4351,7 +4365,7 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
 {
   val self = lit("open-subprocess");
   struct stdio_mode m, m_r = stdio_mode_init_r;
-  val mode = normalize_mode(&m, mode_str, m_r);
+  val mode = normalize_mode(&m, mode_str, m_r, self);
   int input = m.read != 0;
   int fd[2];
   pid_t pid;
@@ -4390,7 +4404,7 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
   if (argv) {
     for (i = 0, iter = cons(name, args); iter; i++, iter = cdr(iter)) {
       val arg = car(iter);
-      argv[i] = utf8_dup_to(c_str(arg));
+      argv[i] = utf8_dup_to(c_str(arg, self));
     }
     argv[i] = 0;
   }
@@ -4458,7 +4472,7 @@ static val open_subprocess(val name, val mode_str, val args, val fun)
     _exit(errno);
   } else {
     int whichfd;
-    char *utf8mode = utf8_dup_to(c_str(mode));
+    char *utf8mode = utf8_dup_to(c_str(mode, self));
     FILE *f;
 
     if (input) {
@@ -4540,7 +4554,7 @@ val open_command(val path, val mode_str)
 
   fds_swizzle(&sfds, fds_flags, self);
 
-  f = w_popen(c_str(path), c_str(mode));
+  f = w_popen(c_str(path, self), c_str(mode, self));
 
   if (!f) {
     int eno = errno;
@@ -4570,7 +4584,7 @@ static val win_escape_cmd(val str)
   const wchar_t *s;
   val out = string(L"");
 
-  for (s = c_str(str); *s; s++) {
+  for (s = c_str(str, nil); *s; s++) {
     switch (*s) {
     case ' ': case '\t':
       string_extend(out, lit("\""));
@@ -4591,7 +4605,7 @@ static val win_escape_arg(val str)
   const wchar_t *s;
   val out = string(L"");
 
-  for (s = c_str(str); *s; s++) {
+  for (s = c_str(str, nil); *s; s++) {
     switch (*s) {
     case '"':
       string_extend_count(bscount, out, lit("\\\\"));
@@ -4702,13 +4716,13 @@ static val run(val command, val args)
   wargv = coerce(const wchar_t **, chk_xalloc(nargs + 1, sizeof *wargv, self));
 
   for (i = 0, iter = cons(command, args); iter; i++, iter = cdr(iter))
-    wargv[i] = c_str(car(iter));
+    wargv[i] = c_str(car(iter), self);
   wargv[i] = 0;
 
 #if HAVE_WSPAWN
-  status = _wspawnvp(_P_WAIT, c_str(command), wargv);
+  status = _wspawnvp(_P_WAIT, c_str(command, self), wargv);
 #else
-  status = w_spawnvp(_P_WAIT, c_str(command), nargs, wargv);
+  status = w_spawnvp(_P_WAIT, c_str(command, self), nargs, wargv);
 #endif
 
   free(strip_qual(wchar_t **, wargv));
@@ -4751,7 +4765,7 @@ static val run(val name, val args)
 
   for (i = 0, iter = cons(name, args); iter; i++, iter = cdr(iter)) {
     val arg = car(iter);
-    argv[i] = utf8_dup_to(c_str(arg));
+    argv[i] = utf8_dup_to(c_str(arg, self));
   }
   argv[i] = 0;
 
@@ -4807,7 +4821,9 @@ static val sh(val command)
 
 val remove_path(val path, val throw_on_error)
 {
-  if (w_remove(c_str(path)) < 0) {
+  val self = lit("remove-path");
+
+  if (w_remove(c_str(path, self)) < 0) {
     if (default_null_arg(throw_on_error) || errno != ENOENT) {
       int eno = errno;
       uw_throwf(errno_to_file_error(eno), lit("trying to remove ~s: ~d/~s"),
@@ -4821,7 +4837,9 @@ val remove_path(val path, val throw_on_error)
 
 val rename_path(val from, val to)
 {
-  if (w_rename(c_str(from), c_str(to)) < 0) {
+  val self = lit("rename-path");
+
+  if (w_rename(c_str(from, self), c_str(to, self)) < 0) {
     int eno = errno;
     uw_throwf(errno_to_file_error(eno),
               lit("trying to rename ~s to ~s: ~d/~s"),
@@ -4948,7 +4966,7 @@ static void detect_path_separators(void)
 val base_name(val path, val suff)
 {
   val self = lit("base-name");
-  const wchar_t *wpath = c_str(path);
+  const wchar_t *wpath = c_str(path, self);
   const wchar_t *end = wpath + c_num(length_str(path), self);
   const wchar_t *rsep;
   const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
@@ -4981,7 +4999,7 @@ val base_name(val path, val suff)
 val dir_name(val path)
 {
   val self = lit("dir-name");
-  const wchar_t *wpath = c_str(path);
+  const wchar_t *wpath = c_str(path, self);
   const wchar_t *rsep = wpath + c_num(length_str(path), self);
   const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
 
@@ -5016,8 +5034,9 @@ val dir_name(val path)
 
 val short_suffix(val name, val alt_in)
 {
+  val self = lit("short-suffix");
   const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
-  const wchar_t *str = c_str(name);
+  const wchar_t *str = c_str(name, self);
   const wchar_t *dot = wcsrchr(str, '.');
   const wchar_t *sl = if3(dot, wcspbrk(dot + 1, psc), 0);
 
@@ -5033,8 +5052,9 @@ val short_suffix(val name, val alt_in)
 
 val long_suffix(val name, val alt_in)
 {
+  val self = lit("long-suffix");
   const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
-  const wchar_t *str = c_str(name);
+  const wchar_t *str = c_str(name, self);
   const wchar_t *dot = wcschr(str, '.');
 
   {
@@ -5114,20 +5134,22 @@ val make_byte_input_stream(val obj)
 
 val tmpfile_wrap(void)
 {
+  val self = lit("tmpfile");
   struct stdio_mode m_blank = stdio_mode_init_blank;
-  struct stdio_mode m = do_parse_mode(lit("w+b"), m_blank);
+  struct stdio_mode m = do_parse_mode(lit("w+b"), m_blank, self);
   FILE *tf = tmpfile();
   if (tf != 0)
-    return set_mode_props(m, make_stdio_stream(tf, lit("tmpfile")));
-  uw_throwf(file_error_s, lit("tmpnam failed: ~d/~s"),
-            num(errno), errno_to_str(errno), nao);
+    return set_mode_props(m, make_stdio_stream(tf, self));
+  uw_throwf(file_error_s, lit("~a failed: ~d/~s"),
+            self, num(errno), errno_to_str(errno), nao);
 }
 
 #if HAVE_MKDTEMP
 
 val mkdtemp_wrap(val prefix)
 {
-  char *tmpl = utf8_dup_to(c_str(scat2(prefix, lit("XXXXXX"))));
+  val self = lit("mkdtemp");
+  char *tmpl = utf8_dup_to(c_str(scat2(prefix, lit("XXXXXX")), self));
 
   if (mkdtemp(tmpl) != 0) {
     val ret = string_utf8(tmpl);
@@ -5150,7 +5172,7 @@ val mkstemp_wrap(val prefix, val suffix)
   val suff = default_arg(suffix, null_string);
   val templ = scat3(prefix, lit("XXXXXX"), suff);
   cnum slen = c_num(length(suff), self);
-  char *tmpl = utf8_dup_to(c_str(templ));
+  char *tmpl = utf8_dup_to(c_str(templ, self));
   val name;
   int fd;
 

@@ -4489,7 +4489,7 @@ val load(val target)
   val saved_dyn_env = dyn_env;
   val rec = cdr(lookup_var(saved_dyn_env, load_recursive_s));
 
-  open_txr_file(path, &txr_lisp_p, &name, &stream);
+  open_txr_file(path, &txr_lisp_p, &name, &stream, self);
 
   if (match_str(or2(get_line(stream), lit("")), lit("#!"), nil))
     parser_set_lineno(self, stream, two);

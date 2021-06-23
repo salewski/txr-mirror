@@ -95,7 +95,7 @@ val openlog_wrap(val wident, val optmask, val facility)
   cnum cfacility = c_num(default_arg(facility, num_fast(LOG_USER)), self);
   char *old_ident = ident;
 
-  ident = utf8_dup_to(c_str(wident));
+  ident = utf8_dup_to(c_str(wident, self));
 
   openlog(ident, coptmask, cfacility);
 
@@ -115,7 +115,7 @@ val syslog_wrapv(val prio, val fmt, struct args *args)
   val self = lit("syslog");
   val text = formatv(nil, fmt, args);
   cnum cprio = c_num(prio, self);
-  char *u8text = utf8_dup_to(c_str(text));
+  char *u8text = utf8_dup_to(c_str(text, self));
   syslog(cprio, "%s", u8text);
   return nil;
 }

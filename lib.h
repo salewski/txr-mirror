@@ -864,7 +864,7 @@ val stringp(val str);
 val lazy_stringp(val str);
 val length_str(val str);
 val coded_length(val str);
-const wchar_t *c_str(val str);
+const wchar_t *c_str(val str, val self);
 val search_str(val haystack, val needle, val start_num, val from_end);
 val search_str_tree(val haystack, val tree, val start_num, val from_end);
 val match_str(val bigstr, val str, val pos);

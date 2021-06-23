@@ -180,8 +180,8 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
   val service = default_arg(service_in, nil);
   val hints = default_arg(hints_in, nil);
   struct addrinfo hints_ai, *phints = hints ? &hints_ai : 0, *alist = 0, *aiter;
-  char *node_u8 = stringp(node) ? utf8_dup_to(c_str(node)) : 0;
-  char *service_u8 = stringp(service) ? utf8_dup_to(c_str(service)) : 0;
+  char *node_u8 = stringp(node) ? utf8_dup_to(c_str(node, self)) : 0;
+  char *service_u8 = stringp(service) ? utf8_dup_to(c_str(service, self)) : 0;
   val node_num_p = integerp(node);
   val svc_num_p = integerp(service);
   int res = 0;
@@ -281,7 +281,7 @@ static void sockaddr_pack(val sockaddr, val family,
     val path = slot(sockaddr, path_s);
     struct sockaddr_un *sa = coerce(struct sockaddr_un *, buf);
     size_t size;
-    unsigned char *path_u8 = utf8_dup_to_buf(c_str(path), &size, 0);
+    unsigned char *path_u8 = utf8_dup_to_buf(c_str(path, self), &size, 0);
     memset(sa, 0, sizeof *sa);
     sa->sun_family = AF_UNIX;
     memcpy(sa->sun_path, path_u8, MIN(size, sizeof sa->sun_path));
@@ -382,8 +382,9 @@ static int dgram_put_byte_callback(int b, mem_t *ctx)
 
 static val dgram_put_string(val stream, val str)
 {
+  val self = lit("put-string");
   struct dgram_stream *d = coerce(struct dgram_stream *, stream->co.handle);
-  const wchar_t *s = c_str(str);
+  const wchar_t *s = c_str(str, self);
 
   while (*s) {
     if (!utf8_encode(*s++, dgram_put_byte_callback, coerce(mem_t *, d)))
@@ -817,9 +818,12 @@ static val open_sockfd(val fd, val family, val type, val mode_str, val self)
 
   if (type == num_fast(SOCK_DGRAM)) {
     return make_dgram_sock_stream(c_num(fd, self), family, nil, 0, 0, 0, 0,
-                                  parse_mode(mode_str, m_rpb), 0);
+                                  parse_mode(mode_str, m_rpb, self), 0);
   } else {
-    FILE *f = (errno = 0, w_fdopen(c_num(fd, self), c_str(normalize_mode(&m, mode_str, m_rpb))));
+    FILE *f = (errno = 0, w_fdopen(c_num(fd, self),
+                                   c_str(normalize_mode(&m, mode_str,
+                                                        m_rpb, self),
+                                         self)));
 
     if (!f) {
       int eno = errno;
@@ -831,7 +835,6 @@ static val open_sockfd(val fd, val family, val type, val mode_str, val self)
     return set_mode_props(m, make_sock_stream(f, family, type));
   }
 }
-
 
 static val sock_connect(val sock, val sockaddr, val timeout)
 {
@@ -996,7 +999,7 @@ static val sock_accept(val sock, val mode_str, val timeout_in)
       }
       return make_dgram_sock_stream(afd, family, peer, dgram, nbytes,
                                     coerce(struct sockaddr *, &sa), salen,
-                                    parse_mode(mode_str, mode_rpb), d);
+                                    parse_mode(mode_str, mode_rpb, self), d);
     }
   } else {
     int afd = -1;

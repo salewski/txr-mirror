@@ -173,7 +173,7 @@ static void dump_var(val var, char *pfx1, size_t len1,
     dump_byte_string(pfx1);
     dump_byte_string(pfx2);
     put_char(chr('='), std_output);
-    dump_shell_string(c_str(str));
+    dump_shell_string(c_str(str, nil));
     put_char(chr('\n'), std_output);
   }
 }
@@ -4350,7 +4350,7 @@ static val v_load(match_files_ctx *c)
     val saved_dyn_env = dyn_env;
     val rec = cdr(lookup_var(saved_dyn_env, load_recursive_s));
 
-    open_txr_file(path, &txr_lisp_p, &name, &stream);
+    open_txr_file(path, &txr_lisp_p, &name, &stream, self);
 
     uw_simple_catch_begin;
 

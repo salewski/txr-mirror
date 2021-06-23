@@ -429,7 +429,7 @@ static cnum ffi_varray_dynsize(struct txr_ffi_type *tft, val obj, val self)
   switch (tft->ch_conv) {
   case conv_char:
   case conv_zchar:
-    return utf8_to_buf(0, c_str(obj), tft->null_term);
+    return utf8_to_buf(0, c_str(obj, self), tft->null_term);
   case conv_wchar:
   case conv_bchar:
   case conv_none:
@@ -1952,7 +1952,7 @@ static void ffi_str_put(struct txr_ffi_type *tft, val s, mem_t *dst,
   if (s == nil) {
     *coerce(const char **, dst) = 0;
   } else {
-    const wchar_t *ws = c_str(s);
+    const wchar_t *ws = c_str(s, self);
     char *u8s = utf8_dup_to(ws);
     *coerce(const char **, dst) = u8s;
   }
@@ -2006,7 +2006,7 @@ static void ffi_wstr_put(struct txr_ffi_type *tft, val s, mem_t *dst,
   if (s == nil) {
     *coerce(const wchar_t **, dst) = 0;
   } else {
-    const wchar_t *ws = c_str(s);
+    const wchar_t *ws = c_str(s, self);
     *coerce(const wchar_t **, dst) = chk_strdup(ws);
   }
 }
@@ -2042,7 +2042,7 @@ static void ffi_bstr_put(struct txr_ffi_type *tft, val s, mem_t *dst,
   if (s == nil) {
     *coerce(unsigned char **, dst) = 0;
   } else {
-    const wchar_t *ws = c_str(s);
+    const wchar_t *ws = c_str(s, self);
     unsigned char *u8s = chk_strdup_8bit(ws);
     *coerce(unsigned char **, dst) = u8s;
   }
@@ -2477,10 +2477,10 @@ static val ffi_char_array_get(struct txr_ffi_type *tft, mem_t *src,
 }
 
 static void ffi_char_array_put(struct txr_ffi_type *tft, val str, mem_t *dst,
-                               cnum nelem)
+                               cnum nelem, val self)
 {
   int nt = tft->null_term;
-  const wchar_t *wstr = c_str(str);
+  const wchar_t *wstr = c_str(str, self);
   cnum needed = utf8_to_buf(0, wstr, nt);
 
   if (needed <= nelem) {
@@ -2533,9 +2533,9 @@ static val ffi_wchar_array_get(struct txr_ffi_type *tft, mem_t *src,
 }
 
 static void ffi_wchar_array_put(struct txr_ffi_type *tft, val str, mem_t *dst,
-                                cnum nelem)
+                                cnum nelem, val self)
 {
-  const wchar_t *wstr = c_str(str);
+  const wchar_t *wstr = c_str(str, self);
   wcsncpy(coerce(wchar_t *, dst), wstr, nelem);
   if (tft->null_term)
     dst[nelem - 1] = 0;
@@ -2558,7 +2558,7 @@ static val ffi_bchar_array_get(struct txr_ffi_type *tft, mem_t *src,
 static void ffi_bchar_array_put(struct txr_ffi_type *tft, val str, mem_t *dst,
                                 cnum nelem, val self)
 {
-  const wchar_t *wstr = c_str(str);
+  const wchar_t *wstr = c_str(str, self);
   cnum i;
 
   for (i = 0; i < nelem && wstr[i]; i++) {
@@ -2691,10 +2691,10 @@ static void ffi_array_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
     switch (tft->ch_conv) {
     case conv_char:
     case conv_zchar:
-      ffi_char_array_put(tft, vec, dst, tft->nelem);
+      ffi_char_array_put(tft, vec, dst, tft->nelem, self);
       break;
     case conv_wchar:
-      ffi_wchar_array_put(tft, vec, dst, tft->nelem);
+      ffi_wchar_array_put(tft, vec, dst, tft->nelem, self);
       break;
     case conv_bchar:
       ffi_bchar_array_put(tft, vec, dst, tft->nelem, self);
@@ -2741,10 +2741,10 @@ static void ffi_array_out(struct txr_ffi_type *tft, int copy, val vec,
     switch (tft->ch_conv) {
     case conv_char:
     case conv_zchar:
-      ffi_char_array_put(tft, vec, dst, tft->nelem);
+      ffi_char_array_put(tft, vec, dst, tft->nelem, self);
       break;
     case conv_wchar:
-      ffi_wchar_array_put(tft, vec, dst, tft->nelem);
+      ffi_wchar_array_put(tft, vec, dst, tft->nelem, self);
       break;
     case conv_bchar:
       ffi_bchar_array_put(tft, vec, dst, tft->nelem, self);
@@ -2841,10 +2841,10 @@ static void ffi_varray_put(struct txr_ffi_type *tft, val vec, mem_t *dst,
     switch (tft->ch_conv) {
     case conv_char:
     case conv_zchar:
-      ffi_char_array_put(tft, vec, dst, nelem);
+      ffi_char_array_put(tft, vec, dst, nelem, self);
       break;
     case conv_wchar:
-      ffi_wchar_array_put(tft, vec, dst, nelem);
+      ffi_wchar_array_put(tft, vec, dst, nelem, self);
       break;
     case conv_bchar:
       ffi_bchar_array_put(tft, vec, dst, nelem, self);

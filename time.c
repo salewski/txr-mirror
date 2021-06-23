@@ -125,7 +125,7 @@ val time_string_local(val time, val format)
 {
   val self = lit("time-string-local");
   time_t secs = c_time(time, self);
-  const wchar_t *wcfmt = c_str(format);
+  const wchar_t *wcfmt = c_str(format, self);
   char *u8fmt = utf8_dup_to(wcfmt);
   val timestr = string_time(localtime_r, u8fmt, secs);
   free(u8fmt);
@@ -136,7 +136,7 @@ val time_string_utc(val time, val format)
 {
   val self = lit("time-string-utc");
   time_t secs = c_time(time, self);
-  const wchar_t *wcfmt = c_str(format);
+  const wchar_t *wcfmt = c_str(format, self);
   char *u8fmt = utf8_dup_to(wcfmt);
   val timestr = string_time(gmtime_r, u8fmt, secs);
   free(u8fmt);
@@ -317,8 +317,9 @@ static struct tm epoch_tm(void)
 
 static int strptime_wrap(val string, val format, struct tm *ptms)
 {
-  const wchar_t *w_str = c_str(string);
-  const wchar_t *w_fmt = c_str(format);
+  val self = lit("strptime");
+  const wchar_t *w_str = c_str(string, self);
+  const wchar_t *w_fmt = c_str(format, self);
   char *str = utf8_dup_to(w_str);
   char *fmt = utf8_dup_to(w_fmt);
   char *ptr = strptime(str, fmt, ptms);
@@ -407,7 +408,7 @@ static val time_string_meth(val time_struct, val format)
   struct tm tms = all_zero_init;
   time_struct_to_tm(&tms, time_struct, t, self);
   char buffer[512] = "";
-  char *fmt = utf8_dup_to(c_str(format));
+  char *fmt = utf8_dup_to(c_str(format, self));
 
   if (strftime(buffer, sizeof buffer, fmt, &tms) == 0)
     buffer[0] = 0;
@@ -427,8 +428,8 @@ static val time_parse_meth(val time_struct, val format, val string)
   val ret = nil;
 
   {
-    const wchar_t *w_str = c_str(string);
-    const wchar_t *w_fmt = c_str(format);
+    const wchar_t *w_str = c_str(string, self);
+    const wchar_t *w_fmt = c_str(format, self);
     char *str = utf8_dup_to(w_str);
     char *fmt = utf8_dup_to(w_fmt);
     char *ptr = strptime(str, fmt, &tms);

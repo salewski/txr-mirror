@@ -2593,7 +2593,7 @@ val search_regex(val haystack, val needle_regex, val start,
   if (from_end) {
     cnum i;
     cnum s = c_num(start, self);
-    const wchar_t *h = c_str(haystack);
+    const wchar_t *h = c_str(haystack, self);
 
     slen = (slen ? slen : length_str(haystack));
 

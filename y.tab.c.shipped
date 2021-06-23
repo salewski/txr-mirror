@@ -6542,7 +6542,7 @@ yyreduce:
 #line 1375 "parser.y"
     { wchar_t ch;
                                   val str = string_own((yyvsp[(2) - (2)].lexeme));
-                                  const wchar_t *cstr = c_str(str);
+                                  const wchar_t *cstr = c_str(str, nil);
 
                                   if (cstr[1] == 0)
                                   { ch = cstr[0]; }

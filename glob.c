@@ -79,7 +79,7 @@ val glob_wrap(val pattern, val flags, val errfun)
   c_flags &= ~GLOB_APPEND;
 
   if (stringp(pattern)) {
-    char *pat_u8 = utf8_dup_to(c_str(pattern));
+    char *pat_u8 = utf8_dup_to(c_str(pattern, self));
     (void) glob(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
     free(pat_u8);
   } else {
@@ -88,7 +88,7 @@ val glob_wrap(val pattern, val flags, val errfun)
     seq_iter_init(self, &iter, pattern);
 
     while (seq_get(&iter, &elem)) {
-      char *pat_u8 = utf8_dup_to(c_str(elem));
+      char *pat_u8 = utf8_dup_to(c_str(elem, self));
       (void) glob(pat_u8, c_flags, s_errfunc ? errfunc_thunk : 0, &gl);
       if (s_exit_point)
         break;

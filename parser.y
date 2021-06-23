@@ -1374,7 +1374,7 @@ strlit : '"' '"'                { $$ = null_string; }
 
 chrlit : HASH_BACKSLASH SYMTOK  { wchar_t ch;
                                   val str = string_own($2);
-                                  const wchar_t *cstr = c_str(str);
+                                  const wchar_t *cstr = c_str(str, nil);
 
                                   if (cstr[1] == 0)
                                   { ch = cstr[0]; }

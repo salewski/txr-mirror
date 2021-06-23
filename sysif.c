@@ -374,7 +374,7 @@ static val mkdir_wrap(val path, val mode)
 {
   val self = lit("mkdir");
   cnum cmode = c_num(default_arg(mode, num_fast(0777)), self);
-  char *u8path = utf8_dup_to(c_str(path));
+  char *u8path = utf8_dup_to(c_str(path, self));
   int err = mkdir(u8path, cmode);
   free(u8path);
 
@@ -389,7 +389,7 @@ static val mkdir_wrap(val path, val mode)
 #elif HAVE_WINDOWS_H
 static val mkdir_wrap(val path, val mode)
 {
-  int err = _wmkdir(c_str(path));
+  int err = _wmkdir(c_str(path, self));
 
   (void) mode;
   if (err < 0) {
@@ -422,10 +422,10 @@ static int get_fd(val stream, val self)
 #endif
 
 #if HAVE_SYS_STAT
-static int do_stat(val wpath, struct stat *buf)
+static int do_stat(val wpath, struct stat *buf, val self)
 {
   if (stringp(wpath)) {
-    char *path = utf8_dup_to(c_str(wpath));
+    char *path = utf8_dup_to(c_str(wpath, self));
     int res = stat(path, buf);
     free(path);
     return res;
@@ -437,9 +437,9 @@ static int do_stat(val wpath, struct stat *buf)
 }
 
 #ifdef S_IFLNK
-static int do_lstat(val wpath, struct stat *buf)
+static int do_lstat(val wpath, struct stat *buf, val self)
 {
-  char *path = utf8_dup_to(c_str(wpath));
+  char *path = utf8_dup_to(c_str(wpath, self));
   int res = lstat(path, buf);
   free(path);
   return res;
@@ -450,7 +450,7 @@ static int do_lstat(val wpath, struct stat *buf)
 #endif
 
 #if HAVE_MKDIR || HAVE_WINDOWS_H
-static val mkdir_nothrow_exists(val path, val mode)
+static val mkdir_nothrow_exists(val path, val mode, val self)
 {
   val ret = t;
 
@@ -469,7 +469,7 @@ static val mkdir_nothrow_exists(val path, val mode)
 #if HAVE_SYS_STAT
       {
         struct stat st;
-        int err = do_stat(path, &st);
+        int err = do_stat(path, &st, self);
         if (err == 0 && !S_ISDIR(st.st_mode))
           ret = num(EEXIST);
       }
@@ -503,7 +503,7 @@ static val ensure_dir(val path, val mode)
 
   for (;;) {
     if (length(partial_path) != zero)
-      ret = mkdir_nothrow_exists(partial_path, mode);
+      ret = mkdir_nothrow_exists(partial_path, mode, self);
 
     if (!split_path)
       break;
@@ -525,7 +525,8 @@ static val ensure_dir(val path, val mode)
 #if HAVE_UNISTD_H
 static val chdir_wrap(val path)
 {
-  char *u8path = utf8_dup_to(c_str(path));
+  val self = lit("chdir");
+  char *u8path = utf8_dup_to(c_str(path, self));
   int err = chdir(u8path);
   free(u8path);
 
@@ -566,7 +567,8 @@ val getcwd_wrap(void)
 
 static val rmdir_wrap(val path)
 {
-  char *u8path = utf8_dup_to(c_str(path));
+  val self = lit("rmdir");
+  char *u8path = utf8_dup_to(c_str(path, self));
   int err = rmdir(u8path);
   free(u8path);
 
@@ -609,7 +611,7 @@ static val mknod_wrap(val path, val mode, val dev)
   val self = lit("mknod");
   cnum cmode = c_num(mode, self);
   cnum cdev = c_num(default_arg(dev, zero), self);
-  char *u8path = utf8_dup_to(c_str(path));
+  char *u8path = utf8_dup_to(c_str(path, self));
   int err = mknod(u8path, cmode, cdev);
   free(u8path);
 
@@ -637,7 +639,7 @@ static val mkfifo_wrap(val path, val mode)
 {
   val self = lit("mkfifo");
   cnum cmode = c_num(mode, self);
-  char *u8path = utf8_dup_to(c_str(path));
+  char *u8path = utf8_dup_to(c_str(path, self));
   int err = mkfifo(u8path, cmode);
   free(u8path);
 
@@ -667,7 +669,7 @@ static val chmod_wrap(val target, val mode)
   val self = lit("chmod");
   cnum cmode = 0;
   int err = 0;
-  char *u8path = if3(stringp(target), utf8_dup_to(c_str(target)), 0);
+  char *u8path = if3(stringp(target), utf8_dup_to(c_str(target, self)), 0);
   int fd = if3(u8path, -1, get_fd(target, self));
 
   if (integerp(mode)) {
@@ -685,7 +687,7 @@ static val chmod_wrap(val target, val mode)
       err = fstat(fd, &st);
 
     if (err == 0) {
-      const wchar_t *cm = c_str(mode);
+      const wchar_t *cm = c_str(mode, self);
       wchar_t ch;
       mode_t srcm = 0, oldm = st.st_mode;
 
@@ -843,7 +845,7 @@ static val do_chown(val target, val uid, val gid, val link_p, val self)
   int err;
 
   if (stringp(target)) {
-    char *u8path = utf8_dup_to(c_str(target));
+    char *u8path = utf8_dup_to(c_str(target, self));
     err = if3(link_p, lchown, chown)(u8path, cuid, cgid);
     free(u8path);
   } else {
@@ -877,8 +879,9 @@ static val lchown_wrap(val target, val uid, val gid)
 
 static val symlink_wrap(val target, val to)
 {
-  const wchar_t *wtarget = c_str(target);
-  const wchar_t *wto = c_str(to);
+  val self = lit("symlink");
+  const wchar_t *wtarget = c_str(target, self);
+  const wchar_t *wto = c_str(to, self);
   char *u8target = utf8_dup_to(wtarget);
   char *u8to = utf8_dup_to(wto);
   int err = symlink(u8target, u8to);
@@ -896,8 +899,9 @@ static val symlink_wrap(val target, val to)
 
 static val link_wrap(val target, val to)
 {
-  const wchar_t *wtarget = c_str(target);
-  const wchar_t *wto = c_str(to);
+  val self = lit("link");
+  const wchar_t *wtarget = c_str(target, self);
+  const wchar_t *wto = c_str(to, self);
   char *u8target = utf8_dup_to(wtarget);
   char *u8to = utf8_dup_to(wto);
   int err = link(u8target, u8to);
@@ -915,7 +919,8 @@ static val link_wrap(val target, val to)
 
 static val readlink_wrap(val path)
 {
-  char *u8path = utf8_dup_to(c_str(path));
+  val self = lit("readlink");
+  char *u8path = utf8_dup_to(c_str(path, self));
   ssize_t guess = 256;
 
   for (;;) {
@@ -1129,7 +1134,7 @@ val exec_wrap(val file, val args_opt)
 
   for (i = 0, iter = cons(file, args); iter; i++, iter = cdr(iter)) {
     val arg = car(iter);
-    argv[i] = utf8_dup_to(c_str(arg));
+    argv[i] = utf8_dup_to(c_str(arg, self));
   }
   argv[i] = 0;
 
@@ -1230,12 +1235,12 @@ val stat_to_struct(struct stat st, val path, val stat_opt)
 }
 #endif
 
-static val stat_impl(val obj, int (*statfn)(val, struct stat *),
+static val stat_impl(val obj, int (*statfn)(val, struct stat *, val),
                      val name, val path, val stat_opt)
 {
 #if HAVE_SYS_STAT
   struct stat st;
-  int res = statfn(obj, &st);
+  int res = statfn(obj, &st, name);
 
   if (res == -1) {
     int eno = errno;
@@ -1276,7 +1281,7 @@ static val do_utimes(val target, val atime, val atimens,
   int res = -1;
 
   if (stringp(target)) {
-    char *u8path = utf8_dup_to(c_str(target));
+    char *u8path = utf8_dup_to(c_str(target, self));
 #if HAVE_FUTIMENS
     int flags = if3(symlink_nofollow, AT_SYMLINK_NOFOLLOW, 0);
     struct timespec times[2];
@@ -1394,7 +1399,8 @@ static val pipe_wrap(void)
 
 val getenv_wrap(val name)
 {
-  char *nameu8 = utf8_dup_to(c_str(name));
+  val self = lit("getenv");
+  char *nameu8 = utf8_dup_to(c_str(name, self));
   char *lookup = getenv(nameu8);
   val result = lookup ? string_utf8(lookup) : nil;
   free(nameu8);
@@ -1408,8 +1414,8 @@ val getenv_wrap(val name)
 static val setenv_wrap(val name, val value, val overwrite)
 {
   val self = lit("setenv");
-  const wchar_t *wname = c_str(name);
-  const wchar_t *wvalu = value ? c_str(value) : 0;
+  const wchar_t *wname = c_str(name, self);
+  const wchar_t *wvalu = value ? c_str(value, self) : 0;
   int ovw = default_arg_strict(overwrite, t) != nil;
   char *nameu8 = utf8_dup_to(wname);
   char *valu8 = wvalu ? utf8_dup_to(wvalu) : 0;
@@ -1440,7 +1446,8 @@ static val setenv_wrap(val name, val value, val overwrite)
 
 static val unsetenv_wrap(val name)
 {
-  char *nameu8 = utf8_dup_to(c_str(name));
+  val self = lit("unsetenv");
+  char *nameu8 = utf8_dup_to(c_str(name, self));
   unsetenv(nameu8);
   free(nameu8);
   env_list = nil;
@@ -1867,9 +1874,10 @@ static val getpwuid_wrap(val uid)
 
 static val getpwnam_wrap(val wname)
 {
+  val self = lit("getpwnam");
   char buf[1024];
   struct passwd pw, *p;
-  char *name = utf8_dup_to(c_str(wname));
+  char *name = utf8_dup_to(c_str(wname, self));
   int res = getpwnam_r(name, &pw, buf, sizeof buf, &p);
 
   free(name);
@@ -1893,7 +1901,8 @@ static val getpwuid_wrap(val uid)
 
 static val getpwnam_wrap(val wname)
 {
-  char *name = utf8_dup_to(c_str(wname));
+  val self = lit("getpwnam");
+  char *name = utf8_dup_to(c_str(wname, self));
   struct passwd *p = getpwnam(name);
   free(name);
   return (p != 0) ? make_pwstruct(p) : nil;
@@ -1962,9 +1971,10 @@ static val getgrgid_wrap(val uid)
 
 static val getgrnam_wrap(val wname)
 {
+  val self = lit("getgrnam");
   char buf[1024];
   struct group gr, *g;
-  char *name = utf8_dup_to(c_str(wname));
+  char *name = utf8_dup_to(c_str(wname, self));
   int res = getgrnam_r(name, &gr, buf, sizeof buf, &g);
 
   free(name);
@@ -1981,7 +1991,8 @@ static val getgrgid_wrap(val uid)
 
 static val getgrnam_wrap(val wname)
 {
-  char *name = utf8_dup_to(c_str(wname));
+  val self = lit("getgrnam");
+  char *name = utf8_dup_to(c_str(wname, self));
   struct group *g = getgrnam(name);
   free(name);
   return (g != 0) ? make_grstruct(g) : nil;
@@ -2049,8 +2060,9 @@ badsalt:
 
 static val crypt_wrap(val wkey, val wsalt)
 {
-  const wchar_t *cwkey = c_str(wkey);
-  const wchar_t *cwsalt = validate_salt(c_str(wsalt));
+  val self = lit("crypt");
+  const wchar_t *cwkey = c_str(wkey, self);
+  const wchar_t *cwsalt = validate_salt(c_str(wsalt, self));
 
   if (cwsalt != 0) {
     char *key = utf8_dup_to(cwkey);
@@ -2125,8 +2137,8 @@ int stdio_fseek(FILE *f, val off, int whence)
 static val fnmatch_wrap(val pattern, val string, val flags)
 {
   val self = lit("fnmatch");
-  const wchar_t *pattern_ws = c_str(pattern);
-  const wchar_t *string_ws = c_str(string);
+  const wchar_t *pattern_ws = c_str(pattern, self);
+  const wchar_t *string_ws = c_str(string, self);
   cnum c_flags = c_num(default_arg(flags, zero), self);
   char *pattern_u8 = utf8_dup_to(pattern_ws);
   char *string_u8 = utf8_dup_to(string_ws);
@@ -2187,7 +2199,7 @@ static val dlopen_wrap(val name, val flags)
 {
   val self = lit("dlopen");
   const wchar_t *name_ws = if3(null_or_missing_p(name),
-                               0, c_str(name));
+                               0, c_str(name, self));
   char *name_u8 = if3(name_ws != 0, utf8_dup_to(name_ws), 0);
   cnum f = if3(missingp(flags), RTLD_LAZY, c_num(flags, self));
   mem_t *ptr = coerce(mem_t *, (dlerror(), dlopen(name_u8, f)));
@@ -2220,7 +2232,7 @@ static val dlclose_wrap(val cptr)
 static val dlsym_wrap(val dlptr, val name)
 {
   val self = lit("dlsym");
-  const wchar_t *name_ws = c_str(name);
+  const wchar_t *name_ws = c_str(name, self);
   char *name_u8 = utf8_dup_to(name_ws);
   mem_t *dl = cptr_handle(dlptr, dlhandle_s, self);
   mem_t *sym = coerce(mem_t *, dlsym(dl, name_u8));
@@ -2256,8 +2268,8 @@ static val dlvsym_wrap(val dlptr, val name, val ver)
   if (null_or_missing_p(ver)) {
     return dlsym_wrap(dlptr, name);
   } else {
-    const wchar_t *name_ws = c_str(name);
-    const wchar_t *ver_ws = c_str(ver);
+    const wchar_t *name_ws = c_str(name, self);
+    const wchar_t *ver_ws = c_str(ver, self);
     char *name_u8 = utf8_dup_to(name_ws);
     char *ver_u8 = utf8_dup_to(ver_ws);
     mem_t *dl = cptr_handle(dlptr, dlhandle_s, self);
@@ -2283,7 +2295,8 @@ static val dlvsym_checked(val dlptr, val name, val ver)
 #if HAVE_REALPATH
 static val realpath_wrap(val path)
 {
-  const wchar_t *path_ws = c_str(path);
+  val self = lit("realpath");
+  const wchar_t *path_ws = c_str(path, self);
   char *path_u8 = utf8_dup_to(path_ws);
   char *rp_u8 = realpath(path_u8, 0);
   val rp = if2(rp_u8, string_utf8(rp_u8));
@@ -2341,7 +2354,8 @@ static struct cobj_ops opendir_ops = cobj_ops_init(eq,
                                                    cobj_eq_hash_op);
 static val opendir_wrap(val path, val prefix_p)
 {
-  DIR *dir = w_opendir(c_str(path));
+  val self = lit("opendir");
+  DIR *dir = w_opendir(c_str(path, self));
 
   if (dir == 0) {
     uw_throwf(system_error_s, lit("opendir failed for ~a: ~d/~s"),

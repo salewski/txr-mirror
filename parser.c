@@ -508,7 +508,8 @@ val parser_circ_ref(parser_t *p, val num)
   return obj;
 }
 
-void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
+void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream,
+                   val self)
 {
   enum { none, tl, tlo, txr } suffix;
 
@@ -531,7 +532,7 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
 
     if (suffix == none && !*txr_lisp_p) {
       spec_file_try = scat(lit("."), spec_file, lit("txr"), nao);
-      if ((in = w_fopen(c_str(spec_file_try), L"r")) != 0)
+      if ((in = w_fopen(c_str(spec_file_try, nil), L"r")) != 0)
         goto found;
 #ifdef ENOENT
       if (in == 0 && errno != ENOENT)
@@ -543,7 +544,7 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
       {
         spec_file_try = scat(lit("."), spec_file, lit("tlo"), nao);
         errno = 0;
-        if ((in = w_fopen(c_str(spec_file_try), L"r")) != 0) {
+        if ((in = w_fopen(c_str(spec_file_try, nil), L"r")) != 0) {
           *txr_lisp_p = chr('o');
           goto found;
         }
@@ -555,7 +556,7 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
       {
         spec_file_try = scat(lit("."), spec_file, lit("tl"), nao);
         errno = 0;
-        if ((in = w_fopen(c_str(spec_file_try), L"r")) != 0) {
+        if ((in = w_fopen(c_str(spec_file_try, nil), L"r")) != 0) {
           *txr_lisp_p = t;
           goto found;
         }
@@ -569,7 +570,7 @@ void open_txr_file(val spec_file, val *txr_lisp_p, val *name, val *stream)
     {
       spec_file_try = spec_file;
       errno = 0;
-      in = w_fopen(c_str(spec_file_try), L"r");
+      in = w_fopen(c_str(spec_file_try, self), L"r");
       if (in != 0) {
         switch (suffix) {
         case tl:
@@ -886,6 +887,7 @@ static void report_security_problem(val name)
 
 static void load_rcfile(val name)
 {
+  val self = lit("listener");
   val resolved_name;
   val lisp_p = t;
   val stream = nil;
@@ -894,7 +896,7 @@ static void load_rcfile(val name)
 
   uw_catch_begin (catch_syms, sy, va);
 
-  open_txr_file(name, &lisp_p, &resolved_name, &stream);
+  open_txr_file(name, &lisp_p, &resolved_name, &stream, self);
 
   if (stream) {
     if (!funcall1(path_private_to_me_p, stream)) {
@@ -902,7 +904,7 @@ static void load_rcfile(val name)
     } else {
       val saved_dyn_env = set_dyn_env(make_env(nil, nil, dyn_env));
       env_vbind(dyn_env, load_path_s, resolved_name);
-      read_eval_stream(lit("listener"), stream, std_output);
+      read_eval_stream(self, stream, std_output);
       dyn_env = saved_dyn_env;
     }
   }
@@ -1008,7 +1010,7 @@ static void find_matching_syms(lino_completions_t *cpl,
       else
         comple = scat2(line_prefix, name);
 
-      lino_add_completion(cpl, c_str(comple));
+      lino_add_completion(cpl, c_str(comple, nil));
       gc_hint(comple);
     }
   }
@@ -1142,7 +1144,7 @@ static wchar_t *provide_atom(lino_t *l, const wchar_t *str, int n, void *ctx)
   }
 
   if (obj != nao)
-    out = chk_strdup(c_str(tostring(obj)));
+    out = chk_strdup(c_str(tostring(obj), nil));
 
   uw_catch (exsym, exvals) {
     (void) exsym;
@@ -1446,7 +1448,7 @@ static void hist_save(lino_t *ls, val in_stream, val out_stream,
   val self = lit("listener");
   if (histfile_w && lino_have_new_lines(ls)) {
     val histfile_tmp = scat2(histfile, lit(".tmp"));
-    const wchar_t *histfile_tmp_w = c_str(histfile_tmp);
+    const wchar_t *histfile_tmp_w = c_str(histfile_tmp, self);
     lino_t *ltmp = lino_make(coerce(mem_t *, in_stream),
                              coerce(mem_t *, out_stream));
     lino_hist_set_max_len(ltmp, c_num(cdr(hist_len_var), self));
@@ -1483,7 +1485,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   val counter = one;
   val home = if3(repl_level == 1, get_home_path(), nil);
   val histfile = if2(home, scat2(home, lit("/.txr_history")));
-  const wchar_t *histfile_w = if3(home, c_str(histfile), NULL);
+  const wchar_t *histfile_w = if3(home, c_str(histfile, self), NULL);
   val rcfile = if2(home && !opt_noprofile, scat2(home, lit("/.txr_profile")));
   val old_sig_handler = set_sig_handler(num(SIGINT), func_n2(repl_intr));
   val hist_len_var = lookup_global_var(listener_hist_len_s);
@@ -1549,7 +1551,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
     lino_set_selinclusive(ls, cdr(sel_inclusive_var) != nil);
     reg_varl(counter_sym, counter);
     reg_varl(var_counter_sym, var_counter);
-    line_w = linenoise(ls, c_str(prompt));
+    line_w = linenoise(ls, c_str(prompt, self));
 
     rplacd(multi_line_var, tnil(lino_get_multiline(ls)));
 
@@ -1614,7 +1616,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
         reg_varl(var_sym, value);
         sethash(result_hash, var_counter, value);
         pfun(value, out_stream);
-        lino_set_result(ls, chk_strdup(c_str(tsfun(value))));
+        lino_set_result(ls, chk_strdup(c_str(tsfun(value), self)));
         lino_hist_add(ls, line_w);
         if (cdr(greedy_eval)) {
           val error_p = nil;

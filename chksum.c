@@ -137,9 +137,9 @@ static void sha256_buf(val buf, unsigned char *hash, val self)
   SHA256_final(&s256, hash);
 }
 
-static void sha256_str(val str, unsigned char *hash)
+static void sha256_str(val str, unsigned char *hash, val self)
 {
-  char *s = utf8_dup_to(c_str(str));
+  char *s = utf8_dup_to(c_str(str, self));
   SHA256_t s256;
   SHA256_init(&s256);
   SHA256_update(&s256, coerce(const unsigned char *, s), strlen(s));
@@ -158,7 +158,7 @@ val sha256(val obj, val buf_in)
   case STR:
   case LSTR:
   case LIT:
-    sha256_str(obj, hash);
+    sha256_str(obj, hash, self);
     return buf;
   case BUF:
     sha256_buf(obj, hash, self);
@@ -199,7 +199,7 @@ val sha256_hash(val ctx, val obj)
   case LSTR:
   case LIT:
     {
-      char *str = utf8_dup_to(c_str(obj));
+      char *str = utf8_dup_to(c_str(obj, self));
       SHA256_update(ps256, coerce(const unsigned char *, str), strlen(str));
       free(str);
     }
@@ -401,9 +401,9 @@ static void md5_buf(val buf, unsigned char *hash, val self)
   MD5_final(&md5, hash);
 }
 
-static void md5_str(val str, unsigned char *hash)
+static void md5_str(val str, unsigned char *hash, val self)
 {
-  char *s = utf8_dup_to(c_str(str));
+  char *s = utf8_dup_to(c_str(str, self));
   MD5_t md5;
   MD5_init(&md5);
   MD5_update(&md5, coerce(const unsigned char *, s), strlen(s));
@@ -422,7 +422,7 @@ val md5(val obj, val buf_in)
   case STR:
   case LSTR:
   case LIT:
-    md5_str(obj, hash);
+    md5_str(obj, hash, self);
     return buf;
   case BUF:
     md5_buf(obj, hash, self);
@@ -463,7 +463,7 @@ val md5_hash(val ctx, val obj)
   case LSTR:
   case LIT:
     {
-      char *str = utf8_dup_to(c_str(obj));
+      char *str = utf8_dup_to(c_str(obj, self));
       MD5_update(pmd5, coerce(const unsigned char *, str), strlen(str));
       free(str);
     }

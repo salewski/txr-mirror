@@ -4405,9 +4405,10 @@ static val copy_lazy_str(val lstr);
 
 val copy_str(val str)
 {
+  val self = lit("copy-str");
   return if3(lazy_stringp(str),
              copy_lazy_str(str),
-             string(c_str(str)));
+             string(c_str(str, self)));
 }
 
 val upcase_str(val str)
@@ -4415,7 +4416,7 @@ val upcase_str(val str)
   val self = lit("upcase-str");
   val len = length_str(str);
   wchar_t *dst = chk_wmalloc(c_unum(len, self) + 1);
-  const wchar_t *src = c_str(str);
+  const wchar_t *src = c_str(str, self);
   val out = string_own(dst);
 
   while ((*dst++ = towupper(*src++)))
@@ -4429,7 +4430,7 @@ val downcase_str(val str)
   val self = lit("downcase-str");
   val len = length_str(str);
   wchar_t *dst = chk_wmalloc(c_unum(len, self) + 1);
-  const wchar_t *src = c_str(str);
+  const wchar_t *src = c_str(str, self);
   val out = string_own(dst);
 
   while ((*dst++ = towlower(*src++)))
@@ -4480,7 +4481,7 @@ val string_extend(val str, val tail)
     set(mkloc(str->st.len, str), num_fast(len + delta));
 
     if (stringp(tail)) {
-      wmemcpy(str->st.str + len, c_str(tail), delta + 1);
+      wmemcpy(str->st.str + len, c_str(tail, self), delta + 1);
     } else if (chrp(tail)) {
       str->st.str[len] = c_chr(tail);
       str->st.str[len + 1] = 0;
@@ -4509,9 +4510,10 @@ val lazy_stringp(val str)
 
 val length_str(val str)
 {
+  val self = lit("length-str");
   switch (type(str)) {
   case LIT:
-    return num(wcslen(c_str(str)));
+    return num(wcslen(c_str(str, self)));
   case LSTR:
     lazy_str_force(str);
     return length_str(str->ls.prefix);
@@ -4528,10 +4530,11 @@ val length_str(val str)
 
 val coded_length(val str)
 {
-  return unum(utf8_to_buf(0, c_str(str), 0));
+  val self = lit("coded-length");
+  return unum(utf8_to_buf(0, c_str(str, self), 0));
 }
 
-const wchar_t *c_str(val obj)
+const wchar_t *c_str(val obj, val self)
 {
   switch (type(obj)) {
   case LIT:
@@ -4540,13 +4543,14 @@ const wchar_t *c_str(val obj)
     return obj->st.str;
   case LSTR:
     lazy_str_force(obj);
-    return c_str(obj->ls.prefix);
+    return c_str(obj->ls.prefix, self);
   case SYM:
     if (opt_compat && opt_compat <= 231)
-      return c_str(symbol_name(obj));
+      return c_str(symbol_name(obj), self);
     /* fallthrough */
   default:
-    type_mismatch(lit("~s is not a string"), obj, nao);
+    self = default_arg(self, lit("internal error"));
+    type_mismatch(lit("~a: ~s is not a string"), self, obj, nao);
   }
 }
 
@@ -4562,10 +4566,10 @@ val search_str(val haystack, val needle, val start_num, val from_end)
     val h_is_lazy = lazy_stringp(haystack);
     cnum start = c_num(start_num, self);
     cnum good = -1, pos = -1;
-    const wchar_t *n = c_str(needle), *h;
+    const wchar_t *n = c_str(needle, self), *h;
 
     if (!h_is_lazy) {
-      h = c_str(haystack);
+      h = c_str(haystack, self);
 
       if (start < 0)
         start += wcslen(h);
@@ -4584,14 +4588,14 @@ val search_str(val haystack, val needle, val start_num, val from_end)
 
       if (start < 0) {
         lazy_str_force(haystack);
-        h = c_str(haystack->ls.prefix);
+        h = c_str(haystack->ls.prefix, self);
         start += wcslen(h);
         goto nonlazy;
       }
 
       do {
         lazy_str_force_upto(haystack, plus(num(start + 1), length_str(needle)));
-        h = c_str(haystack->ls.prefix);
+        h = c_str(haystack->ls.prefix, self);
 
         if (!wcsncmp(h + start, n, ln))
           good = start;
@@ -4652,8 +4656,8 @@ static val do_match_str(val bigstr, val str, cnum pos, val self)
         return nil;
 
       {
-        const wchar_t *bs = c_str(bigstr);
-        const wchar_t *ss = c_str(str);
+        const wchar_t *bs = c_str(bigstr, self);
+        const wchar_t *ss = c_str(str, self);
 
         return if3(wmemcmp(bs + pos, ss, sl) == 0, num(pos + sl), nil);
       }
@@ -4724,8 +4728,8 @@ static val do_rmatch_str(val bigstr, val str, cnum pos, val self)
       return nil;
 
     {
-      const wchar_t *bs = c_str(bigstr);
-      const wchar_t *ss = c_str(str);
+      const wchar_t *bs = c_str(bigstr, self);
+      const wchar_t *ss = c_str(str, self);
       cnum start = pos + 1 - sl;
       return if3(wmemcmp(bs + start, ss, sl) == 0, num(start), nil);
     }
@@ -4857,7 +4861,7 @@ val sub_str(val str_in, val from, val to)
   } else {
     size_t nchar = c_num(to, self) - c_num(from, self) + 1;
     wchar_t *sub = chk_wmalloc(nchar);
-    const wchar_t *str = c_str(str_in);
+    const wchar_t *str = c_str(str_in, self);
     wcsncpy(sub, str + c_num(from, self), nchar);
     sub[nchar-1] = 0;
     return string_own(sub);
@@ -4939,7 +4943,8 @@ val replace_str(val str_in, val items, val from, val to)
     if (zerop(len_it))
       return str_in;
     if (stringp(items)) {
-      wmemmove(str_in->st.str + c_num(from, self), c_str(items), c_num(len_it, self));
+      wmemmove(str_in->st.str + c_num(from, self),
+               c_str(items, self), c_num(len_it, self));
     } else {
       seq_iter_t item_iter;
       seq_iter_init(self, &item_iter, items);
@@ -5026,14 +5031,14 @@ static void cat_str_append(struct cat_str *cs, val item, int more_p, val self)
     return;
   if (stringp(item)) {
     cnum len = c_num(length_str(item), self);
-    wmemcpy(cs->ptr, c_str(item), len);
+    wmemcpy(cs->ptr, c_str(item, self), len);
     cs->ptr += len;
   } else {
     *cs->ptr++ = c_chr(item);
   }
 
   if (cs->len_sep && more_p) {
-    wmemcpy(cs->ptr, c_str(cs->sep), cs->len_sep);
+    wmemcpy(cs->ptr, c_str(cs->sep, self), cs->len_sep);
     cs->ptr += cs->len_sep;
   }
 }
@@ -5232,7 +5237,7 @@ val split_str_keep(val str, val sep, val keep_sep)
       if (opt_compat && opt_compat <= 100) {
         return list_str(str);
       } else {
-        const wchar_t *cstr = c_str(str);
+        const wchar_t *cstr = c_str(str, self);
 
         if (*cstr) {
           list_collect_decl (out, iter);
@@ -5253,8 +5258,8 @@ val split_str_keep(val str, val sep, val keep_sep)
         }
       }
     } else {
-      const wchar_t *cstr = c_str(str);
-      const wchar_t *csep = c_str(sep);
+      const wchar_t *cstr = c_str(str, self);
+      const wchar_t *csep = c_str(sep, self);
 
       list_collect_decl (out, iter);
 
@@ -5297,8 +5302,8 @@ val split_str(val str, val sep)
 val split_str_set(val str, val set)
 {
   val self = lit("split-str-set");
-  const wchar_t *cstr = c_str(str);
-  const wchar_t *cset = c_str(set);
+  const wchar_t *cstr = c_str(str, self);
+  const wchar_t *cset = c_str(set, self);
   list_collect_decl (out, iter);
 
   for (;;) {
@@ -5437,7 +5442,8 @@ val tok_where(val str, val tok_regex)
 
 val list_str(val str)
 {
-  const wchar_t *cstr = c_str(str);
+  val self = lit("list-str");
+  const wchar_t *cstr = c_str(str, self);
   list_collect_decl (out, iter);
 
   while (*cstr)
@@ -5451,7 +5457,7 @@ val list_str(val str)
 val trim_str(val str)
 {
   val self = lit("trim-str");
-  const wchar_t *start = c_str(str);
+  const wchar_t *start = c_str(str, self);
   const wchar_t *end = start + c_num(length_str(str), self);
 
   if (opt_compat && opt_compat <= 148) {
@@ -5481,13 +5487,15 @@ val trim_str(val str)
 
 val cmp_str(val astr, val bstr)
 {
+  val self = lit("bstr");
+
    switch (TYPE_PAIR(type(astr), type(bstr))) {
    case TYPE_PAIR(LIT, LIT):
    case TYPE_PAIR(STR, STR):
    case TYPE_PAIR(LIT, STR):
    case TYPE_PAIR(STR, LIT):
      {
-       int cmp = wcscmp(c_str(astr), c_str(bstr));
+       int cmp = wcscmp(c_str(astr, self), c_str(bstr, self));
        return if3(cmp < 0, negone, if3(cmp > 0, one, zero));
      }
    case TYPE_PAIR(LSTR, LIT):
@@ -5551,7 +5559,7 @@ val str_ge(val astr, val bstr)
 val int_str(val str, val base)
 {
   val self = lit("int-str");
-  const wchar_t *wcs = c_str(str);
+  const wchar_t *wcs = c_str(str, self);
   wchar_t *ptr;
   long value;
   cnum b = c_num(default_arg(base, num_fast(10)), self);
@@ -5638,13 +5646,14 @@ val int_str(val str, val base)
 
 val flo_str(val str)
 {
-  const wchar_t *wcs = c_str(str);
+  val self = lit("flo-str");
+  const wchar_t *wcs = c_str(str, self);
   wchar_t *ptr;
   double value;
 
 #if CONFIG_LOCALE_TOLERANCE
   if (dec_point != '.') {
-    size_t size = c_unum(length_str(str), lit("flot-str")) + 1;
+    size_t size = c_unum(length_str(str), self) + 1;
     wchar_t *wcopy = alloca(sizeof *wcopy * size), *dot = wcopy;
     wmemcpy(wcopy, wcs, size);
     wcs = wcopy;
@@ -5664,7 +5673,8 @@ val flo_str(val str)
 
 val num_str(val str)
 {
-  const wchar_t *wcs = c_str(str);
+  val self = lit("num-str");
+  const wchar_t *wcs = c_str(str, self);
   const wchar_t *nws = wcs + wcsspn(wcs, L"\f\n\r\t\v");
   const wchar_t *dig = nws + wcsspn(wcs, L"+-");
 
@@ -6087,9 +6097,9 @@ val chr_str(val str, val ind)
 
   if (lazy_stringp(str)) {
     lazy_str_force_upto(str, ind);
-    return chr(c_str(str->ls.prefix)[index]);
+    return chr(c_str(str->ls.prefix, self)[index]);
   } else {
-    return chr(c_str(str)[index]);
+    return chr(c_str(str, self)[index]);
   }
 }
 
@@ -6125,24 +6135,27 @@ val chr_str_set(val str, val ind, val chr)
 
 val span_str(val str, val set)
 {
-  const wchar_t *cstr = c_str(str);
-  const wchar_t *cset = c_str(set);
+  val self = lit("span-str");
+  const wchar_t *cstr = c_str(str, self);
+  const wchar_t *cset = c_str(set, self);
   size_t span = wcsspn(cstr, cset);
   return num(span);
 }
 
 val compl_span_str(val str, val set)
 {
-  const wchar_t *cstr = c_str(str);
-  const wchar_t *cset = c_str(set);
+  val self = lit("compl-span-str");
+  const wchar_t *cstr = c_str(str, self);
+  const wchar_t *cset = c_str(set, self);
   size_t span = wcscspn(cstr, cset);
   return num(span);
 }
 
 val break_str(val str, val set)
 {
-  const wchar_t *cstr = c_str(str);
-  const wchar_t *cset = c_str(set);
+  val self = lit("break-str");
+  const wchar_t *cstr = c_str(str, self);
+  const wchar_t *cset = c_str(set, self);
   const wchar_t *brk = wcspbrk(cstr, cset);
   if (!brk)
     return nil;
@@ -9014,7 +9027,7 @@ val length_str_gt(val str, val len)
   switch (type(str)) {
   case LIT:
     {
-      const wchar_t *cstr = c_str(str);
+      const wchar_t *cstr = c_str(str, self);
       size_t clen = c_num(len, self);
       const wchar_t *nult = wmemchr(cstr, 0, clen + 1);
       return nult == 0 ? t : nil;
@@ -9035,7 +9048,7 @@ val length_str_ge(val str, val len)
   switch (type(str)) {
   case LIT:
     {
-      const wchar_t *cstr = c_str(str);
+      const wchar_t *cstr = c_str(str, self);
       size_t clen = c_num(len, self);
       const wchar_t *nult = wmemchr(cstr, 0, clen);
       return nult == 0 ? t : nil;
@@ -9056,7 +9069,7 @@ val length_str_lt(val str, val len)
   switch (type(str)) {
   case LIT:
     {
-      const wchar_t *cstr = c_str(str);
+      const wchar_t *cstr = c_str(str, self);
       size_t clen = c_num(len, self);
       const wchar_t *nult = wmemchr(cstr, 0, clen);
       return nult != 0 ? t : nil;
@@ -9077,7 +9090,7 @@ val length_str_le(val str, val len)
   switch (type(str)) {
   case LIT:
     {
-      const wchar_t *cstr = c_str(str);
+      const wchar_t *cstr = c_str(str, self);
       size_t clen = c_num(len, self);
       const wchar_t *nult = wmemchr(cstr, 0, clen + 1);
       return nult != 0 ? t : nil;
@@ -10206,7 +10219,7 @@ val find(val item, val seq, val testfun, val keyfun)
           (testfun == equal_f || testfun == eql_f || testfun == eq_f))
       {
         const wchar_t ch = c_chr(item);
-        const wchar_t *cstr = c_str(seq);
+        const wchar_t *cstr = c_str(seq, self);
         if (wcschr(cstr, ch))
           return item;
         return nil;
@@ -10265,7 +10278,7 @@ val rfind(val item, val seq, val testfun, val keyfun)
           (testfun == equal_f || testfun == eql_f || testfun == eq_f))
       {
         const wchar_t ch = c_chr(item);
-        const wchar_t *cstr = c_str(seq);
+        const wchar_t *cstr = c_str(seq, self);
         if (wcschr(cstr, ch))
           return item;
         return nil;
@@ -10524,7 +10537,7 @@ val pos(val item, val seq, val testfun, val keyfun)
           (testfun == equal_f || testfun == eql_f || testfun == eq_f))
       {
         const wchar_t ch = c_chr(item);
-        const wchar_t *cstr = c_str(seq);
+        const wchar_t *cstr = c_str(seq, self);
         const wchar_t *cpos = wcschr(cstr, ch);
         if (cpos != 0)
           return num(cpos - cstr);
@@ -10585,7 +10598,7 @@ val rpos(val item, val seq, val testfun, val keyfun)
           (testfun == equal_f || testfun == eql_f || testfun == eq_f))
       {
         const wchar_t ch = c_chr(item);
-        const wchar_t *cstr = c_str(seq);
+        const wchar_t *cstr = c_str(seq, self);
         const wchar_t *cpos = wcsrchr(cstr, ch);
         if (cpos != 0)
           return num(cpos - cstr);
@@ -10891,8 +10904,8 @@ val mismatch(val left, val right, val testfun_in, val keyfun_in)
                                      testfun == eql_f ||
                                      testfun == eq_f))
         {
-          const wchar_t *lft = c_str(left), *le = lft;
-          const wchar_t *rgt = c_str(right), *ri = rgt;
+          const wchar_t *lft = c_str(left, nil), *le = lft;
+          const wchar_t *rgt = c_str(right, nil), *ri = rgt;
 
           while (*le && *ri && *le == *ri)
             le++, ri++;
@@ -11011,8 +11024,8 @@ val rmismatch(val left, val right, val testfun_in, val keyfun_in)
         {
           cnum ll = c_num(length(left), self), li = ll - 1;
           cnum rl = c_num(length(right), self), ri = rl - 1;
-          const wchar_t *lft = c_str(left);
-          const wchar_t *rgt = c_str(right);
+          const wchar_t *lft = c_str(left, self);
+          const wchar_t *rgt = c_str(right, self);
 
           for (; li >= 0 && ri >= 0; li--, ri--) {
             if (lft[li] != rgt[ri])
@@ -12601,11 +12614,11 @@ static void out_lazy_str(val lstr, val out, struct strm_base *strm)
   cnum max_len = strm->max_length;
   cnum max_chr = max_len ? max_str_chars(max_len) : 0;
 
-  wcterm = c_str(term);
+  wcterm = c_str(term, self);
 
   put_char(chr('"'), out);
 
-  out_str_readable(c_str(lstr->ls.prefix), out, &semi_flag);
+  out_str_readable(c_str(lstr->ls.prefix, self), out, &semi_flag);
 
   for (iter = lstr->ls.list; (!lim || gt(lim, zero)) && iter;
        iter = cdr(iter))
@@ -12615,14 +12628,15 @@ static void out_lazy_str(val lstr, val out, struct strm_base *strm)
       break;
     if (max_len) {
       if (length_str_gt(str, num(max_chr))) {
-        out_str_readable(c_str(sub_str(str, zero, num(max_chr))), out, &semi_flag);
+        out_str_readable(c_str(sub_str(str, zero, num(max_chr)), self),
+                         out, &semi_flag);
         goto max_reached;
       }
       if (--max_chr == 0)
         goto max_reached;
       max_chr -= c_num(length_str(str), self);
     }
-    out_str_readable(c_str(str), out, &semi_flag);
+    out_str_readable(c_str(str, self), out, &semi_flag);
     out_str_readable(wcterm, out, &semi_flag);
     if (lim)
       lim = pred(lim);
@@ -12680,10 +12694,11 @@ static void out_quasi_str(val args, val out, struct strm_ctx *ctx)
     if (stringp(elem)) {
       int semi_flag = 0;
       if (max_len && length_str_gt(elem, num(max_chr))) {
-        out_str_readable(c_str(sub_str(elem, zero, num(max_chr))), out, &semi_flag);
+        out_str_readable(c_str(sub_str(elem, zero, num(max_chr)), self),
+                         out, &semi_flag);
         goto max_exceeded;
       } else {
-        out_str_readable(c_str(elem), out, &semi_flag);
+        out_str_readable(c_str(elem, self), out, &semi_flag);
         if (max_len) {
           max_chr -= c_num(length(elem), self);
           if (max_chr == 0) {
@@ -12721,7 +12736,8 @@ max_exceeded:
 
 static void out_json_str(val str, val out)
 {
-  const wchar_t *cstr = c_str(str);
+  val self = lit("print");
+  const wchar_t *cstr = c_str(str, self);
   wchar_t ch;
 
   put_char(chr('"'), out);
@@ -12914,7 +12930,7 @@ static void out_json_rec(val obj, val out, struct strm_ctx *ctx)
     {
       val save_indent;
       int force_br = 0;
-      cnum len = c_num(length(obj), lit("print"));
+      cnum len = c_num(length(obj), self);
       cnum i;
 
       put_char(chr('['), out);
@@ -12985,8 +13001,8 @@ static void out_json_rec(val obj, val out, struct strm_ctx *ctx)
     break;
   }
 
-  uw_throwf(type_error_s, lit("print: invalid object ~s in JSON"),
-            obj, nao);
+  uw_throwf(type_error_s, lit("~a: invalid object ~s in JSON"),
+            self, obj, nao);
 }
 
 static void out_json(val op, val obj, val out, struct strm_ctx *ctx)
@@ -13287,9 +13303,9 @@ dot:
         put_char(chr('"'), out);
 
         if (!max_length || le(length_str(obj), num(max_chr))) {
-          out_str_readable(c_str(obj), out, &semi_flag);
+          out_str_readable(c_str(obj, self), out, &semi_flag);
         } else {
-          out_str_readable(c_str(sub_str(obj, zero, num(max_chr))),
+          out_str_readable(c_str(sub_str(obj, zero, num(max_chr)), self),
                            out, &semi_flag);
           put_string(lit("\\..."), out);
         }
@@ -13682,8 +13698,10 @@ val tojson(val obj, val flat)
 
 val display_width(val obj)
 {
+  val self = lit("display-width");
+
   if (stringp(obj)) {
-    const wchar_t *s = c_str(obj);
+    const wchar_t *s = c_str(obj, self);
     cnum width = 0;
     for (; *s; s++) {
       if (iswcntrl(*s))
@@ -13698,8 +13716,8 @@ val display_width(val obj)
     return num_fast(1 + wide_display_char_p(ch));
   }
 
-  uw_throwf(type_error_s, lit("display-width: ~s isn't a character or string"),
-            obj, nao);
+  uw_throwf(type_error_s, lit("~a: ~s isn't a character or string"),
+            self, obj, nao);
 }
 
 void init(val *stack_bottom)
