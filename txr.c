@@ -302,6 +302,7 @@ static void sysroot_init(void)
 {
   val prog_dir;
   const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
+  int share_txr_stdlib = 1;
 
 #if HAVE_WINDOWS_H
   val slash = regex_compile(lit("\\\\"), nil);
@@ -318,14 +319,17 @@ static void sysroot_init(void)
 
   if (!(maybe_sysroot(lit(TXR_REL_PATH)) ||
         maybe_sysroot(lit(TXR_REL_PATH EXE_SUFF)) ||
+        maybe_sysroot(substitute_basename(lit(TXR_REL_PATH), prog_path)) ||
+        (share_txr_stdlib = 0) ||
         maybe_sysroot(lit(PROG_NAME)) ||
-        maybe_sysroot(lit(PROG_NAME EXE_SUFF)) ||
-        maybe_sysroot(substitute_basename(lit(TXR_REL_PATH), prog_path))))
+        maybe_sysroot(lit(PROG_NAME EXE_SUFF))))
   {
     sysroot_path = prog_dir;
   }
 
-  stdlib_path = sysroot(lit("share/txr/stdlib/"));
+  stdlib_path = sysroot(if3(share_txr_stdlib,
+                            lit("share/txr/stdlib/"),
+                            lit("stdlib/")));
 
   reg_varl(intern(lit("stdlib"), user_package), stdlib_path);
   reg_varl(intern(lit("*txr-version*"), user_package),

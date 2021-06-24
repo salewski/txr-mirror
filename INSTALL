@@ -125,7 +125,7 @@ its .tlo files. Suppose the native TXR is built in a directory called
 native-build, and the cross-compiled txr has been built in the cross-build
 directory to the point that the executable exists. Simply:
 
-   cp native-build/share/txr/stdlib/*.tlo cross-build/share/txr/stdlib
+   cp native-build/stdlib/*.tlo cross-build/stdlib
 
 then change to the cross-build directory and continue the build with
 make install.

@@ -82187,7 +82187,9 @@ functionality invoked by the program code. Library files are located
 relative to the installation directory, called the
 .IR sysroot .
 The executable tries to dynamically determine the sysroot from
-its own location, according to this directory structure:
+its own location, according to the following directory structure.
+The executable may be renamed, it need not be called
+.codn txr :
 
 .verb
   /path/to/sysroot/bin/txr
@@ -82208,6 +82210,19 @@ the following structure is expected:
 
 .verb
   /path/to/installation/txr
+                    .../stdlib/cadr.tl
+                    .../stdlib/cadr.tlo
+                    .../stdlib/except.tl
+                                         ...
+.brev
+
+Note that this has changed starting in \*(TX 264. Older versions
+of \*(TX, when the executable is not in a directory named
+.strn bin ,
+expect the following structure:
+
+.verb
+  /path/to/installation/txr
                     .../share/txr/stdlib/cadr.tl
                     .../share/txr/stdlib/cadr.tlo
                     .../share/txr/stdlib/except.tl
@@ -82223,8 +82238,8 @@ subdirectory where the executable is located, on the
 same level with the
 .code share
 directory, or else the second structure in which the
-.code share
-directory is a subdirectory of the executable directory.
+.code stdlib
+directory is a direct subdirectory of the executable directory.
 If one of these structures is not observed, the application
 may fail due to the failure of a library file to load.
 

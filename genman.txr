@@ -298,7 +298,7 @@ function tocjump(hash) {
 @(bind (name code) @(transpose [nsort (mapcar (tb ((sym code))
                                                 (list (html-decode sym) code))
                                               (hash-pairs symhash)) : car]))
-@(output "share/txr/stdlib/doc-syms.tl")
+@(output "stdlib/doc-syms.tl")
 (defparml doc-syms
   (hash-from-pairs
 @  (repeat)

@@ -65,7 +65,7 @@ OBJS-$(have_termios) += termios.o
 OBJS-$(have_termios) += linenoise/linenoise.o
 EXTRA_OBJS-$(add_win_res) += win/txr.res
 
-STDLIB_SRCS := $(wildcard share/txr/stdlib/*.tl)
+STDLIB_SRCS := $(wildcard stdlib/*.tl)
 STDLIB_TLOS := $(patsubst %.tl,%.tlo,$(STDLIB_SRCS))
 
 STDLIB_EARLY_PATS := %/error.tlo # these must be compiled first
@@ -342,7 +342,7 @@ distclean:
 	$(V)echo "executing generic cleanup for non-configured directory"
 	rm -f txr txr.exe txr-dbg txr-dbg.exe txr-win.exe txr-win-dbg.exe
 	rm -f y.tab.c lex.yy.c y.tab.h y.output
-	rm -rf config opt dbg share/txr/stdlib/*.tlo* run.sh
+	rm -rf config opt dbg share/*.tlo* share/txr/stdlib run.sh
 	rm -f config.* reconfigure
 	rm -rf mpi-1.?.?
 else
@@ -498,7 +498,7 @@ install: $(PROG)
 	$(call INSTALL,0444,$(top_srcdir)METALICENSE,$(DESTDIR)$(datadir))
 	$(call INSTALL,0444,$(top_srcdir)txr.1,$(DESTDIR)$(mandir)/man1)
 	$(call INSTALL,0444,\
-	   $(addprefix share/txr/stdlib/,*.txr *.tl *.tlo),\
+	   $(addprefix stdlib/,*.txr *.tl *.tlo),\
 	   $(DESTDIR)$(datadir)/stdlib)
 
 .PHONY: unixtar gnutar zip
