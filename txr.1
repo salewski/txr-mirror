@@ -27046,7 +27046,7 @@ nonnegative.
 
 .SS* Structures
 
-\*(TX supports application-defined types in the form of structures. Structures
+\*(TX supports user-defined types in the form of structures. Structures
 are objects which hold multiple storage locations called slots, which are named
 by symbols.  Structures can be related to each other by inheritance. Multiple
 inheritance is permitted.
@@ -35103,7 +35103,7 @@ group, and functions in the
 .code seq-begin
 group. The latter are obsolescent.
 
-Application-defined iteration is possible via defining special methods on
+User-defined iteration is possible via defining special methods on
 structures. An object supports iteration by defining the special method
 .code iter-begin
 which is different from the
@@ -41063,9 +41063,9 @@ one for each list position. This is because macro-style parameter lists are
 oriented toward writing macros, and macros usually make use of every parameter
 position.
 
-.NP* Application-defined Patterns
+.NP* User-defined Patterns
 
-Application-defined pattern operators are possible. When the
+User-defined pattern operators are possible. When the
 .meta operator
 symbol in the
 .mono
@@ -41077,7 +41077,7 @@ place to determine whether
 is a pattern macro. If so, the pattern macro is expanded, and
 its result of the expansion treated as a pattern to process recursively,
 unless it is the original macro form, in which case it is treated
-as a predicate pattern. Application-defined pattern macros are defined
+as a predicate pattern. User-defined pattern macros are defined
 using the
 .code defmatch
 macro.
@@ -43244,7 +43244,7 @@ in which case it inserts its own generated symbol.
 .desc
 The
 .code defmatch
-macro allows for the definition of pattern macros: application-defined pattern
+macro allows for the definition of pattern macros: user-defined pattern
 operators which are implemented via expansion into existing operator syntax.
 
 The
@@ -58032,7 +58032,7 @@ methods defined on structure objects can take advantage of
 .code width-check
 and
 .code force-break
-in the same way so that application-defined output integrates
+in the same way so that user-defined output integrates
 with the formatting algorithm.
 
 .SS* Stream Output Limiting
