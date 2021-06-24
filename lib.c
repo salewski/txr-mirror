@@ -112,7 +112,7 @@ val eof_s, eol_s, assert_s, name_s;
 val error_s, type_error_s, internal_error_s, panic_s;
 val numeric_error_s, range_error_s;
 val query_error_s, file_error_s, process_error_s, syntax_error_s;
-val timeout_error_s, system_error_s, alloc_error_s;
+val timeout_error_s, system_error_s, alloc_error_s, stack_overflow_s;
 val path_not_found_s, path_exists_s, path_permission_s;
 val warning_s, defr_warning_s, restart_s, continue_s;
 val gensym_counter_s, length_s;
@@ -12492,6 +12492,7 @@ static void obj_init(void)
   system_error_s = intern(lit("system-error"), user_package);
   timeout_error_s = intern(lit("timeout-error"), user_package);
   alloc_error_s = intern(lit("alloc-error"), user_package);
+  stack_overflow_s = intern(lit("stack-overflow"), user_package);
   path_not_found_s = intern(lit("path-not-found"), user_package);
   path_exists_s = intern(lit("path-exists"), user_package);
   path_permission_s = intern(lit("path-permission"), user_package);
@@ -13030,6 +13031,8 @@ val obj_print_impl(val obj, val out, val pretty, struct strm_ctx *ctx)
   val self = lit("print");
   val ret = obj;
   cnum save_depth = ctx->depth;
+
+  gc_stack_check();
 
   if (check_emit_circle(obj, out, ctx, self))
     return ret;

@@ -120,6 +120,8 @@ static void uw_unwind_to_exit_point(void)
     val sym = unhandled_ex.ca.sym;
     val args = unhandled_ex.ca.args;
 
+    gc_stack_limit = 0;
+
     dyn_env = nil;
 
     if (opt_loglevel >= 1) {
@@ -1256,6 +1258,7 @@ void uw_init(void)
   uw_register_subtype(process_error_s, error_s);
   uw_register_subtype(system_error_s, error_s);
   uw_register_subtype(alloc_error_s, error_s);
+  uw_register_subtype(stack_overflow_s, error_s);
   uw_register_subtype(timeout_error_s, error_s);
   uw_register_subtype(assert_s, error_s);
   uw_register_subtype(syntax_error_s, error_s);

@@ -74,3 +74,13 @@ INLINE val zap(volatile val *loc) { val ret = *loc; *loc = nil; return ret; }
 #else
 #define z(lvalue) (lvalue)
 #endif
+
+extern val *gc_stack_bottom;
+extern val *gc_stack_limit;
+void gc_stack_overflow(void);
+INLINE void gc_stack_check(void)
+{
+  val v;
+  if (&v < gc_stack_limit)
+    gc_stack_overflow();
+}

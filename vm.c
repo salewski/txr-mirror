@@ -1115,6 +1115,8 @@ val vm_execute_closure(val fun, struct args *args)
   cnum ix = 0;
   vm_word_t argw = 0;
 
+  gc_stack_check();
+
   vm_reset(&vm, vd, dspl, vc->nlvl - 1, vc->ip);
 
   vm.dspl = coerce(struct vm_env *, frame + vc->nreg);
@@ -1174,6 +1176,7 @@ val vm_execute_closure(val fun, struct args *args)
   int frsz = vd->nlvl * 2 + vc->nreg;                                        \
   val *frame = coerce(val *, zalloca(sizeof *frame * frsz));                 \
   struct vm_env *dspl = coerce(struct vm_env *, frame + vc->nreg);           \
+  gc_stack_check();                                                          \
   vm_reset(&vm, vd, dspl, vc->nlvl - 1, vc->ip);                             \
   vm.dspl = coerce(struct vm_env *, frame + vc->nreg);                       \
   frame[0] = nil;                                                            \

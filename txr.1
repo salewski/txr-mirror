@@ -72284,6 +72284,86 @@ only correct under an explicit
 .code call-finalizers
 but incorrect under spontaneous reclamation driven by garbage collection.
 
+.SS* Stack Overflow Protection
+
+\*(TX features a rudimentary mechanism for guarding against stack overflow
+situations, which cause the \*(TX process to crash. This capability is separate
+from and exists in addition to the possibility of catching a
+.code sig-segv
+(segmentation violation) signal upon stack overflow using
+.codn set-sig-handler .
+
+The stack overflow guard mechanism is based on \*(TX, at certain key places
+in the execution, checking the current position of the stack relative to
+a predetermined limit. If the position exceeds the limit, then an exception
+of type
+.codn stack-overflow ,
+derived from
+.codn error ,
+is thrown.
+
+The stack overflow guard mechanism is enabled at startup on those platforms
+where it is possible to inquire the system about the stack limit, and where the
+stack limit is at least 512 kilobytes.  \*(TX configures the limit to within a
+certain percentage of the actual value. If it is not possible to determine the
+system's stack limit, or it is too low, then the mechanism is disabled.
+
+The
+.code get-stack-limit
+and
+.code set-stack-limit
+functions are provided to manipulate the stack limit.
+
+The mechanism cannot contain absolutely all sources of stack overflow threat
+under all conditions. External functions are not protected, and not all
+internal functions are monitored. If \*(TX is close to the limit, but
+a function is called whose stack growth is not monitored, such as
+an external function or unmonitored internal function, it is possible that
+the stack may overflow anyway.
+
+.coNP Functions @ get-stack-limit and @ set-stack-limit
+.synb
+.mets (get-stack-limit)
+.mets (set-stack-limit << value )
+.syne
+.desc
+The
+.code get-stack-limit
+returns the current value of the stack limit. If the guard mechanism is
+not enabled, it returns
+.codn nil ,
+otherwise it returns a positive integer, which is measured in bytes.
+
+The
+.code set-stack-limit
+configures the stack limit according to
+.metn value ,
+possibly enabling or disabling the guard mechanism, and returns the previous
+stack limit in exactly the same manner as
+.codn get-stack-limit .
+
+The
+.meta value
+must be a non-negative integer or else the symbol
+.codn nil .
+
+The values zero or
+.code nil
+disable the guard mechanism. Positive integer values set the limit.
+The value may be truncated to a multiple of some denomination or
+otherwise adjusted, so that a subsequent call to
+.code get-stack-limit
+need not retrieve that exact value.
+
+If
+.meta value
+is too close to the system stack limit or beyond, the effectiveness
+of the stack overflow detection mechanism is compromised.
+Likewise, if
+.meta value
+is too low, the operation of \*(TX shall become unreliable. Values
+smaller than 326767 bytes are strongly discouraged.
+
 .SS* Modularization
 .coNP Variable @ self-path
 .desc

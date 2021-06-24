@@ -3721,6 +3721,25 @@ else
   printf "no\n"
 fi
 
+printf "Checking for getrlimit ... "
+cat > conftest.c <<!
+#include <sys/resource.h>
+
+int main(void)
+{
+  struct rlimit rl;
+  int res = getrlimit(RLIMIT_STACK, &rl);
+  return 0;
+}
+!
+
+if conftest ; then
+  printf "yes\n"
+  printf "#define HAVE_RLIMIT 1\n" >> config.h
+else
+  printf "no\n"
+fi
+
 #
 # Dependent variables
 #

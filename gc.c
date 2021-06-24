@@ -36,6 +36,9 @@
 #if HAVE_VALGRIND
 #include <valgrind/memcheck.h>
 #endif
+#if HAVE_RLIMIT
+#include <sys/resource.h>
+#endif
 #include "lib.h"
 #include "stream.h"
 #include "hash.h"
@@ -84,7 +87,9 @@ int opt_gc_debug;
 #if HAVE_VALGRIND
 int opt_vg_debug;
 #endif
-static val *gc_stack_bottom;
+
+val *gc_stack_bottom;
+val *gc_stack_limit;
 
 static val *prot_stack[PROT_STACK_SIZE];
 static val **prot_stack_limit = prot_stack + PROT_STACK_SIZE;
@@ -888,6 +893,15 @@ int gc_inprogress(void)
 void gc_init(val *stack_bottom)
 {
   gc_stack_bottom = stack_bottom;
+#if HAVE_RLIMIT
+  struct rlimit rl;
+  if (getrlimit(RLIMIT_STACK, &rl) == 0) {
+    if (rl.rlim_cur > 512 * 1024) {
+      rlim_t lim = (rl.rlim_cur - rl.rlim_cur / 16) / sizeof (val);
+      gc_stack_limit = gc_stack_bottom - lim;
+    }
+  }
+#endif
 }
 
 void gc_mark(val obj)
@@ -968,6 +982,27 @@ static val gc_set_delta(val delta)
   val self = lit("gc");
   opt_gc_delta = c_num(delta, self);
   return nil;
+}
+
+static val set_stack_limit(val limit)
+{
+  val self = lit("set-stack-limit");
+  val *gsl = gc_stack_limit;
+
+  if (limit == nil || limit == zero) {
+    gc_stack_limit = 0;
+  } else {
+    ucnum lim = c_unum(limit, self);
+    gc_stack_limit = gc_stack_bottom - lim / sizeof (val);
+  }
+
+  return if2(gsl, num((gc_stack_bottom - gsl) * sizeof (val)));
+}
+
+static val get_stack_limit(void)
+{
+  val *gsl = gc_stack_limit;
+  return if2(gsl, num((gc_stack_bottom - gsl) * sizeof (val)));
 }
 
 static val gc_wrap(val full)
@@ -1051,6 +1086,8 @@ void gc_late_init(void)
   reg_fun(intern(lit("finalize"), user_package), func_n3o(gc_finalize, 2));
   reg_fun(intern(lit("call-finalizers"), user_package),
           func_n1(gc_call_finalizers));
+  reg_fun(intern(lit("set-stack-limit"), user_package), func_n1(set_stack_limit));
+  reg_fun(intern(lit("get-stack-limit"), user_package), func_n0(get_stack_limit));
 }
 
 /*
@@ -1160,4 +1197,9 @@ void gc_free_all(void)
       iter = next;
     }
   }
+}
+
+void gc_stack_overflow(void)
+{
+  uw_throwf(stack_overflow_s, lit("computation exceeded stack limit"), nao);
 }

@@ -1560,6 +1560,8 @@ static val do_eval(val form, val env, val ctx,
 
   sig_check_fast();
 
+  gc_stack_check();
+
   if (form && symbolp(form)) {
     if (!bindable(form)) {
       ret = form;
@@ -4672,6 +4674,8 @@ static val expand_switch(val form, val menv)
 static val do_expand(val form, val menv)
 {
   val macro = nil;
+
+  gc_stack_check();
 
   menv = default_null_arg(menv);
 
