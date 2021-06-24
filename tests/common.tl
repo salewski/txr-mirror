@@ -36,6 +36,9 @@
 (defmacro mtest (. pairs)
   ^(progn ,*(mapcar (op cons 'test) (tuples 2 pairs))))
 
+(defmacro mvtest (. pairs)
+  ^(progn ,*(mapcar (op cons 'vtest) (tuples 2 pairs))))
+
 (defmacro mstest (. pairs)
   ^(progn ,*(mapcar (op cons 'stest) (tuples 2 pairs))))
 
