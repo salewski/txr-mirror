@@ -43599,6 +43599,115 @@ and
   --> ((1 2) (1 4) (3 2) (3 4) (5 2) (5 4))
 .brev
 
+.coNP Macro @ while-match
+.synb
+.mets (when-match < pattern < expr << form *)
+.syne
+.desc
+The
+.code while-match
+macro evaluates
+.meta expr
+and matches it against
+.meta pattern
+similarly to
+.codn when-match .
+
+If the match is successful, every
+.meta form
+is evaluated in an environment in which new bindings from
+.meta pattern
+are visible. In this case, the process repeats:
+.meta expr
+is evaluated again, and tested against
+.metn pattern .
+
+If the match fails,
+.code while-match
+terminates and produces
+.code nil
+as its result value.
+
+Each iteration produces fresh bindings for any variables
+that are implicated for binding in
+.metn pattern .
+
+The
+.meta expr
+and
+.meta form
+expressions are surrounded by an anonymous block.
+
+.coNP Macros @ while-match-case and @ while-true-match-case
+.synb
+.mets (while-match-case < expr >> {( pattern << form *)}*)
+.mets (while-true-match-case < expr >> {( pattern << form *)}*)
+.syne
+.desc
+The macros
+.code while-match-case
+and
+.code while-true-match-case
+combine iteration with the semantics of
+.codn match-case .
+
+The
+.code while-match-case
+evaluates
+.meta expr
+and matches it against zero or more clauses in the manner of
+.code match-case.
+If there is a match, this process is repeated.
+If there is no match,
+.code while-match-case
+terminates, and returns
+.codn nil .
+
+In each iteration, the matching clause produces fresh bindings for any
+variables implicated for binding in its respective
+.metn pattern .
+
+The
+.meta expr
+and
+.meta form
+expressions are surrounded by an anonymous block.
+
+The
+.code while-true-match-case
+macro is identical in almost every respect to
+.codn while-match-case ,
+except that it terminates the loop if
+.meta expr
+evaluates to
+.codn nil ,
+without attempting to match that value against the clauses.
+
+Note: the semantics of
+.code while-true-match-case
+can be obtained in
+.code while-match-case
+by inserting a
+.code return
+clause. That is to say, a construct of the form
+
+.verb
+  (while-true-match-case expr
+    ...)
+.brev
+
+may be rewritten into
+
+.verb
+  (while-match-case expr
+    (nil (return)) ;; match nil and return
+    ...)
+.brev
+
+except that
+.code while-true-match-case
+isn't required to rely on performing a block return.
+
 .SS* Quasiquote Operator Syntax
 .coNP Macro @ qquote
 .synb

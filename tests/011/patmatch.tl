@@ -488,6 +488,31 @@
               datum) (42.0)
   (when-match ^#J{"foo" : {"x" : ~val}} #J{"foo" : {"x" : "y"}} val) "y")
 
+(test
+  (let ((a '(1 2 3 4)))
+    (build
+      (while-match @(true @x) (pop a)
+        (add (* 10 x)))))
+  (10 20 30 40))
+
+(test
+  (let ((a '(1 (2 3) 4 (5 6))))
+    (build
+      (while-match-case (pop a)
+        ((@x @y) (add :pair x y))
+        (@(numberp @x) (add :num x)))))
+  (:num 1 :pair 2 3 :num 4 :pair 5 6))
+
+(test
+  (let ((a '(1 (2 3) 4 (5 6))))
+    (build
+      (while-true-match-case (pop a)
+        ((@x @y) (add :pair x y))
+        (@(evenp @x) (add :even x))
+        (@(oddp @x) (add :odd x))
+        (@else (error "unhandled case")))))
+  (:odd 1 :pair 2 3 :even 4 :pair 5 6))
+
 (compile-only
   (eval-only
     (compile-file (base-name *load-path*) "temp.tlo")

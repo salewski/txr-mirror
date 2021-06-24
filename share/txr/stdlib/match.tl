@@ -643,6 +643,14 @@
            ,result
            ,else)))))
 
+(defmacro while-match (:form *match-form* :env e pat obj . body)
+  (let ((cm (compile-match pat : (get-var-list e))))
+    ^(for ()
+          ((alet ((,cm.obj-var ,obj))
+             (let ,cm.(get-vars)
+               ,cm.(wrap-guards ^(progn ,*body t)))))
+          ())))
+
 (defmacro match-case (:form *match-form* :env e obj . clauses)
   (unless [all clauses [andf proper-listp [chain len plusp]]]
     (compile-error *match-form* "bad clause syntax"))
@@ -665,6 +673,23 @@
        (let (,result-temp)
          (or ,*clause-code)
          ,result-temp))))
+
+(defmacro while-match-case (:form *match-form* :env e obj . clauses)
+  (unless [all clauses [andf proper-listp [chain len plusp]]]
+    (compile-error *match-form* "bad clause syntax"))
+  ^(for ()
+        ((match-case ,obj
+           ,*(mapcar (ret ^(,(car @1) ,*(cdr @1) t)) clauses)))
+        ()))
+
+(defmacro while-true-match-case (:form *match-form* :env e obj . clauses)
+  (unless [all clauses [andf proper-listp [chain len plusp]]]
+    (compile-error *match-form* "bad clause syntax"))
+  ^(for ()
+        ((match-case ,obj
+           (nil)
+           ,*(mapcar (ret ^(,(car @1) ,*(cdr @1) t)) clauses)))
+        ()))
 
 (defmacro when-exprs-match (:form *match-form* :env e pats exprs . forms)
   (let ((em (compile-match ^@(exprs ,*pats) exprs (get-var-list e))))
