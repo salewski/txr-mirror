@@ -634,7 +634,6 @@
 
 (defmacro if-match (:form *match-form* :env e pat obj then : else)
   (let ((cm (compile-match pat : (get-var-list e)))
-        (match-p (gensym "match-p-"))
         (result (gensym "result-")))
     ^(alet ((,cm.obj-var ,obj))
        (let* (,result ,*cm.(get-vars))
