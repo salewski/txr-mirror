@@ -530,7 +530,7 @@ install-tests:
 	$(call SH,                                                     \
 	  (echo "#!/bin/sh" ;                                          \
 	   echo "set -ex" ;                                            \
-	   echo "cd $(datadir)" ;                                      \
+	   echo 'cd "$$(dirname "$$(dirname "$$0")")"' ;               \
 	   make -s -n tests VERBOSE=y TXR=$(bindir)/txr)               \
 	  > run.sh)
 	$(call INSTALL,0755,run.sh,$(DESTDIR)$(datadir)/tests)
