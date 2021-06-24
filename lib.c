@@ -5645,6 +5645,31 @@ val int_str(val str, val base)
   return bignum_from_long(value);
 }
 
+val flo_str_utf8(const char *str)
+{
+  char *ptr;
+  double value;
+
+#if CONFIG_LOCALE_TOLERANCE
+  if (dec_point != '.') {
+    size_t size = strlen(str) + 1;
+    char *scopy = alloca(size), *dot = scopy;
+    wmemcpy(scopy, str, size);
+    str = scopy;
+    while ((dot = strchr(dot, '.')) != 0)
+      *dot++ = dec_point;
+  }
+#endif
+
+  value = strtod(str, &ptr);
+
+  if (value == 0 && ptr == str)
+    return nil;
+  if ((value == HUGE_VAL || value == -HUGE_VAL) && errno == ERANGE)
+    return nil;
+  return flo(value);
+}
+
 val flo_str(val str)
 {
   val self = lit("flo-str");

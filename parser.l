@@ -130,10 +130,10 @@ static void yyerrprepf(scanner_t *scanner, val fmt, ...)
   }
 }
 
-static void out_of_range_float(scanner_t *scanner, val tok)
+static void out_of_range_float(scanner_t *scanner, const char *tok)
 {
     yyerrorf(scanner, lit("out-of-range floating-point literal: ~a"),
-             tok, nao);
+             string_utf8(tok), nao);
 }
 
 static wchar_t char_esc(int letter)
@@ -343,15 +343,13 @@ NJPUNC  [^(){},:\[\]"~*^ \t\n]
 }
 
 <SPECIAL,NESTED,BRACED>{WS}{FLO} {
-  val str = string_own(utf8_dup_from(yytext));
-
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  if ((yylval->val = flo_str(str)) == nil)
-    out_of_range_float(yyg, str);
+  if ((yylval->val = flo_str_utf8(yytext)) == nil)
+    out_of_range_float(yyg, yytext);
 
   return NUMBER;
 }
@@ -368,22 +366,20 @@ NJPUNC  [^(){},:\[\]"~*^ \t\n]
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  if ((yylval->val = flo_str(str)) == nil)
-    out_of_range_float(yyg, str);
+  if ((yylval->val = flo_str_utf8(yytext)) == nil)
+    out_of_range_float(yyg, yytext);
 
   return NUMBER;
 }
 
 <SPECIAL,QSPECIAL,NESTED,BRACED>{FLODOT}/[^.] {
-  val str = string_own(utf8_dup_from(yytext));
-
   if (yy_top_state(yyscanner) == INITIAL
       || yy_top_state(yyscanner) == QSILIT
       || yy_top_state(yyscanner) == QWLIT)
     yy_pop_state(yyscanner);
 
-  if ((yylval->val = flo_str(str)) == nil)
-    out_of_range_float(yyg, str);
+  if ((yylval->val = flo_str_utf8(yytext)) == nil)
+    out_of_range_float(yyg, yytext);
 
   return NUMBER;
 }
@@ -1178,9 +1174,8 @@ NJPUNC  [^(){},:\[\]"~*^ \t\n]
 }
 
 <JSON>{JNUM} {
-  val str = string_own(utf8_dup_from(yytext));
-  if ((yylval->val = flo_str(str)) == nil)
-    out_of_range_float(yyg, str);
+  if ((yylval->val = flo_str_utf8(yytext)) == nil)
+    out_of_range_float(yyg, yytext);
   return NUMBER;
 }
 
