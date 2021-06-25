@@ -58,9 +58,9 @@ section "TXR"
   File LICENSE
   File METALICENSE
   SetOutPath $INSTDIR\txr\share\txr\stdlib
-  File share\txr\stdlib\*.txr
-  File share\txr\stdlib\*.tl
-  File share\txr\stdlib\*.tlo
+  File stdlib\*.txr
+  File stdlib\*.tl
+  File stdlib\*.tlo
   Delete /REBOOTOK $INSTDIR\txr\bin\sh.exe
   RmDir /r /REBOOTOK $INSTDIR\txr\share\man
   WriteUninstaller $INSTDIR\txr\uninstall.exe
