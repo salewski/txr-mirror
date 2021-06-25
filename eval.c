@@ -390,8 +390,14 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
   val last = last_form_evaled;
   val xlast = uw_last_form_expanded();
   val info = source_loc_str(last, nil);
+  val max_length = nil, max_depth = nil;
 
   uw_dump_deferred_warnings(out_stream);
+
+  if (uw_exception_subtype_p(exsym, stack_overflow_s)) {
+    max_length = set_max_length(out_stream, num_fast(5));
+    max_depth = set_max_depth(out_stream, num_fast(5));
+  }
 
   if (cdr(exvals) || !stringp(car(exvals)))
     format(out_stream, lit("~a exception args: ~!~s\n"),
@@ -481,6 +487,11 @@ void error_trace(val exsym, val exvals, val out_stream, val prefix)
 #else
   format(std_error, lit("~a not compiled with backtrace support\n"), prefix, nao);
 #endif
+
+  if (max_length) {
+    set_max_length(out_stream, max_length);
+    set_max_depth(out_stream, max_depth);
+  }
 }
 
 val lookup_global_var(val sym)
