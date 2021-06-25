@@ -124,32 +124,32 @@ extern val sequence_s, set_prop_s, set_s, setq_s, setqf_s;
 extern val short_s, shortest_k, sign_extend_s, signum_s, sin_s;
 extern val single_s, sinh_s, size_k, size_s, skip_s;
 extern val slot_s, some_s, space_k, special_s, splice_s;
-extern val sqrt_s, square_s, stat_s, stddebug_s, stderr_s;
-extern val stdin_s, stdio_stream_s, stdnull_s, stdout_s, str_d_s;
-extern val str_s, stream_s, string_k, string_s, struct_lit_s;
-extern val struct_s, struct_type_s, switch_s, sym_s, symacro_k;
-extern val symacrolet_s, syntax_error_s, sys_abscond_from_s, sys_apply_s, sys_blk_s;
-extern val sys_catch_s, sys_l1_setq_s, sys_l1_val_s, sys_lisp1_setq_s, sys_lisp1_value_s;
-extern val sys_mark_special_s, sys_qquote_s, sys_splice_s, sys_unquote_s, system_error_s;
-extern val system_package_s, tan_s, tanh_s, text_s, throw_s;
-extern val time_local_s, time_parse_s, time_s, time_string_s, time_utc_s;
-extern val timeout_error_s, times_k, tlist_k, tnode_s, tobase64_k;
-extern val tobase64url_k, tofloat_k, tohtml_k, tohtml_star_k, toint_k;
-extern val tonumber_k, topercent_k, tourl_k, trailer_s, tree_bind_s;
-extern val tree_case_s, tree_construct_s, tree_fun_whitelist_s, tree_iter_s, tree_lit_s;
-extern val tree_s, trunc1_s, trunc_s, truncate_s, try_s;
-extern val type_error_s, ubit_s, uchar_s, uid_k, uid_s;
-extern val uint16_s, uint32_s, uint64_s, uint8_s, uint_s;
-extern val ulong_s, unbound_s, unget_byte_s, unget_char_s, union_s;
-extern val unique_s, unquote_s, until_s, until_star_s, upcase_k;
-extern val uref_s, user_package_s, userdata_k, ushort_s, usr_var_s;
-extern val uw_protect_s, val_s, var_k, var_s, vars_k;
-extern val vec_list_s, vec_s, vecref_s, vector_lit_s, vm_closure_s;
-extern val vm_desc_s, void_s, warning_s, wchar_s, weak_keys_k;
-extern val weak_vals_k, when_s, while_s, while_star_s, whole_k;
-extern val width_s, wild_s, word_char_k, wrap_k, wstr_d_s;
-extern val wstr_s, year_s, zap_s, zarray_s, zchar_s;
-extern val zerop_s, zeroplus_s, zone_s;
+extern val sqrt_s, square_s, stack_overflow_s, stat_s, stddebug_s;
+extern val stderr_s, stdin_s, stdio_stream_s, stdnull_s, stdout_s;
+extern val str_d_s, str_s, stream_s, string_k, string_s;
+extern val struct_lit_s, struct_s, struct_type_s, switch_s, sym_s;
+extern val symacro_k, symacrolet_s, syntax_error_s, sys_abscond_from_s, sys_apply_s;
+extern val sys_blk_s, sys_catch_s, sys_l1_setq_s, sys_l1_val_s, sys_lisp1_setq_s;
+extern val sys_lisp1_value_s, sys_mark_special_s, sys_qquote_s, sys_splice_s, sys_unquote_s;
+extern val system_error_s, system_package_s, tan_s, tanh_s, text_s;
+extern val throw_s, time_local_s, time_parse_s, time_s, time_string_s;
+extern val time_utc_s, timeout_error_s, times_k, tlist_k, tnode_s;
+extern val tobase64_k, tobase64url_k, tofloat_k, tohtml_k, tohtml_star_k;
+extern val toint_k, tonumber_k, topercent_k, tourl_k, trailer_s;
+extern val tree_bind_s, tree_case_s, tree_construct_s, tree_fun_whitelist_s, tree_iter_s;
+extern val tree_lit_s, tree_s, trunc1_s, trunc_s, truncate_s;
+extern val try_s, type_error_s, ubit_s, uchar_s, uid_k;
+extern val uid_s, uint16_s, uint32_s, uint64_s, uint8_s;
+extern val uint_s, ulong_s, unbound_s, unget_byte_s, unget_char_s;
+extern val union_s, unique_s, unquote_s, until_s, until_star_s;
+extern val upcase_k, uref_s, user_package_s, userdata_k, ushort_s;
+extern val usr_var_s, uw_protect_s, val_s, var_k, var_s;
+extern val vars_k, vec_list_s, vec_s, vecref_s, vector_lit_s;
+extern val vm_closure_s, vm_desc_s, void_s, warning_s, wchar_s;
+extern val weak_keys_k, weak_vals_k, when_s, while_s, while_star_s;
+extern val whole_k, width_s, wild_s, word_char_k, wrap_k;
+extern val wstr_d_s, wstr_s, year_s, zap_s, zarray_s;
+extern val zchar_s, zerop_s, zeroplus_s, zone_s;
 
 #if HAVE_DLOPEN
 extern val dlhandle_s, dlsym_s;
@@ -159,10 +159,13 @@ extern val flock_s, len_s, pid_s, start_s, type_s;
 extern val whence_s;
 #endif
 #if HAVE_GRGID
-extern val group_s, mem_s, passwd_s, passwd_s;
+extern val group_s, mem_s;
 #endif
 #if HAVE_PWUID
 extern val gecos_s, shell_s;
+#endif
+#if HAVE_PWUID || HAVE_GRGID
+extern val passwd_s;
 #endif
 #if HAVE_SOCKETS
 extern val addr_s, addrinfo_s, canonname_s, family_s, flags_s;
@@ -275,32 +278,32 @@ val *protected_sym[] = {
   &short_s, &shortest_k, &sign_extend_s, &signum_s, &sin_s,
   &single_s, &sinh_s, &size_k, &size_s, &skip_s,
   &slot_s, &some_s, &space_k, &special_s, &splice_s,
-  &sqrt_s, &square_s, &stat_s, &stddebug_s, &stderr_s,
-  &stdin_s, &stdio_stream_s, &stdnull_s, &stdout_s, &str_d_s,
-  &str_s, &stream_s, &string_k, &string_s, &struct_lit_s,
-  &struct_s, &struct_type_s, &switch_s, &sym_s, &symacro_k,
-  &symacrolet_s, &syntax_error_s, &sys_abscond_from_s, &sys_apply_s, &sys_blk_s,
-  &sys_catch_s, &sys_l1_setq_s, &sys_l1_val_s, &sys_lisp1_setq_s, &sys_lisp1_value_s,
-  &sys_mark_special_s, &sys_qquote_s, &sys_splice_s, &sys_unquote_s, &system_error_s,
-  &system_package_s, &tan_s, &tanh_s, &text_s, &throw_s,
-  &time_local_s, &time_parse_s, &time_s, &time_string_s, &time_utc_s,
-  &timeout_error_s, &times_k, &tlist_k, &tnode_s, &tobase64_k,
-  &tobase64url_k, &tofloat_k, &tohtml_k, &tohtml_star_k, &toint_k,
-  &tonumber_k, &topercent_k, &tourl_k, &trailer_s, &tree_bind_s,
-  &tree_case_s, &tree_construct_s, &tree_fun_whitelist_s, &tree_iter_s, &tree_lit_s,
-  &tree_s, &trunc1_s, &trunc_s, &truncate_s, &try_s,
-  &type_error_s, &ubit_s, &uchar_s, &uid_k, &uid_s,
-  &uint16_s, &uint32_s, &uint64_s, &uint8_s, &uint_s,
-  &ulong_s, &unbound_s, &unget_byte_s, &unget_char_s, &union_s,
-  &unique_s, &unquote_s, &until_s, &until_star_s, &upcase_k,
-  &uref_s, &user_package_s, &userdata_k, &ushort_s, &usr_var_s,
-  &uw_protect_s, &val_s, &var_k, &var_s, &vars_k,
-  &vec_list_s, &vec_s, &vecref_s, &vector_lit_s, &vm_closure_s,
-  &vm_desc_s, &void_s, &warning_s, &wchar_s, &weak_keys_k,
-  &weak_vals_k, &when_s, &while_s, &while_star_s, &whole_k,
-  &width_s, &wild_s, &word_char_k, &wrap_k, &wstr_d_s,
-  &wstr_s, &year_s, &zap_s, &zarray_s, &zchar_s,
-  &zerop_s, &zeroplus_s, &zone_s,
+  &sqrt_s, &square_s, &stack_overflow_s, &stat_s, &stddebug_s,
+  &stderr_s, &stdin_s, &stdio_stream_s, &stdnull_s, &stdout_s,
+  &str_d_s, &str_s, &stream_s, &string_k, &string_s,
+  &struct_lit_s, &struct_s, &struct_type_s, &switch_s, &sym_s,
+  &symacro_k, &symacrolet_s, &syntax_error_s, &sys_abscond_from_s, &sys_apply_s,
+  &sys_blk_s, &sys_catch_s, &sys_l1_setq_s, &sys_l1_val_s, &sys_lisp1_setq_s,
+  &sys_lisp1_value_s, &sys_mark_special_s, &sys_qquote_s, &sys_splice_s, &sys_unquote_s,
+  &system_error_s, &system_package_s, &tan_s, &tanh_s, &text_s,
+  &throw_s, &time_local_s, &time_parse_s, &time_s, &time_string_s,
+  &time_utc_s, &timeout_error_s, &times_k, &tlist_k, &tnode_s,
+  &tobase64_k, &tobase64url_k, &tofloat_k, &tohtml_k, &tohtml_star_k,
+  &toint_k, &tonumber_k, &topercent_k, &tourl_k, &trailer_s,
+  &tree_bind_s, &tree_case_s, &tree_construct_s, &tree_fun_whitelist_s, &tree_iter_s,
+  &tree_lit_s, &tree_s, &trunc1_s, &trunc_s, &truncate_s,
+  &try_s, &type_error_s, &ubit_s, &uchar_s, &uid_k,
+  &uid_s, &uint16_s, &uint32_s, &uint64_s, &uint8_s,
+  &uint_s, &ulong_s, &unbound_s, &unget_byte_s, &unget_char_s,
+  &union_s, &unique_s, &unquote_s, &until_s, &until_star_s,
+  &upcase_k, &uref_s, &user_package_s, &userdata_k, &ushort_s,
+  &usr_var_s, &uw_protect_s, &val_s, &var_k, &var_s,
+  &vars_k, &vec_list_s, &vec_s, &vecref_s, &vector_lit_s,
+  &vm_closure_s, &vm_desc_s, &void_s, &warning_s, &wchar_s,
+  &weak_keys_k, &weak_vals_k, &when_s, &while_s, &while_star_s,
+  &whole_k, &width_s, &wild_s, &word_char_k, &wrap_k,
+  &wstr_d_s, &wstr_s, &year_s, &zap_s, &zarray_s,
+  &zchar_s, &zerop_s, &zeroplus_s, &zone_s,
 
 #if HAVE_DLOPEN
   &dlhandle_s, &dlsym_s,
@@ -310,10 +313,13 @@ val *protected_sym[] = {
   &whence_s,
 #endif
 #if HAVE_GRGID
-  &group_s, &mem_s, &passwd_s, &passwd_s,
+  &group_s, &mem_s,
 #endif
 #if HAVE_PWUID
   &gecos_s, &shell_s,
+#endif
+#if HAVE_PWUID || HAVE_GRGID
+  &passwd_s,
 #endif
 #if HAVE_SOCKETS
   &addr_s, &addrinfo_s, &canonname_s, &family_s, &flags_s,

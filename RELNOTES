@@ -1,3 +1,49 @@
+                                    TXR 264
+                                   2021-06-25
+
+
+  Features
+
+  - system interface:
+    - TXR no longer relies on popen for open-command.
+    - glob function accepts multiple pattern arguments and
+      uses multiple calls to the C function with GLOB_APPEND.
+  - parser:
+    - parsing Lisp or JSON from a string now produces error
+      if there is any trailing material in the string.
+  - paths:
+    - new functions short-suffix and long-suffix for robustly
+      extracting the suffixes/extensions of path names.
+  - lib:
+    - new functions cxr and cyr for traversing cons cell
+      structure using a car/cdr path binary-coded in an integer.
+    - mismatch/rmismatch better optimized for strings
+      - starts-with and ends-with use these.
+  - structural pattern matching:
+    - new looping macros while-match, while-match-case, while-true-match-case.
+  - parser:
+    - no longer wastefully allocates dynamic string when scanning a
+      floating-point token.
+  - tests:
+    - target-installable test cases are now relocatable (can be installed
+      at any path) due to small improvement in the run.sh script.
+
+  - program-wide:
+    - share/txr/stdlib moved to stdlib.
+    - type mismatches when a string is expected now give
+      function name in error diagnostic.
+    - stack overflow protection is introduced:
+      - In key places, TXR detects whether the stack pointer is over a
+        predetermined limit and throws a stack-overflow exception.
+      - Controlled by set-stack-limit function.
+
+  Bugs
+
+  - fixed wrong result from (rmismatch #() ()) and (rmismatch "" ()).
+
+
+
+
                                     TXR 263
                                    2021-06-17
 
