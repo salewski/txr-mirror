@@ -1533,6 +1533,8 @@ static val do_match_line(match_line_ctx *c)
 {
   val lfe_save = set_last_form_evaled(nil);
 
+  gc_stack_check();
+
   while (c->specline) {
     val elem = first(c->specline);
 
@@ -4615,6 +4617,8 @@ static void open_data_source(match_files_ctx *c)
 static val match_files(match_files_ctx c)
 {
   gc_hint(c.data);
+
+  gc_stack_check();
 
   for (; c.spec; c.spec = rest(c.spec),
                  c.data = rest(c.data),
