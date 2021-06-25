@@ -81,11 +81,14 @@ static void sig_handler(int sig)
   int exc = is_cpu_exception(sig);
   int ic = interrupt_count++;
   int in_interrupt = ic > 0;
+  val *stack_lim;
 
   if (exc) {
     gc = gc_state(0);
+    stack_lim = gc_stack_limit;
     as = async_sig_enabled;
     async_sig_enabled = 1;
+    gc_stack_limit = 0;
   }
 
   sig_reload_cache();
@@ -109,6 +112,7 @@ static void sig_handler(int sig)
   }
 
   if (exc) {
+    gc_stack_limit = stack_lim;
     async_sig_enabled = as;
     gc_state(gc);
   }

@@ -29,3 +29,14 @@
   (set-stack-limit orig) nil
   (set-stack-limit 65536) orig
   (set-stack-limit orig) 65536)
+
+(set-sig-handler sig-segv
+  (lambda (signal async-p)
+    (assert (null (get-stack-limit)))
+    (throw 'out)))
+
+(test
+  (catch
+    (raise sig-segv)
+    (out () :sig))
+  :sig)
