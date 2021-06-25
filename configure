@@ -756,7 +756,7 @@ if [ $(inode "$source_dir") != $(inode ".") ] ; then
     printf "Symlinking %s -> $source_dir/%s\n" $x $x
     ln -sf "$source_dir/$x" .
   done
-  for x in share tests; do
+  for x in stdlib tests; do
     printf "Tree symlinking %s -> $source_dir/%s\n" $x $x
     lndir $source_dir/$x $x
   done
