@@ -57196,7 +57196,8 @@ What it means for
 to have a suffix delimiter is that the
 .code .
 character occurs somewhere in the last component of
-.metn path .
+.metn path ,
+other than as the character of that component.
 What constitutes the last component is specified
 in more detail below.
 
@@ -57236,8 +57237,10 @@ extracted from this last component.
 
 .verb
   (short-suffix "") -> nil
-  (short-suffix ".") -> ""
+  (short-suffix ".") -> nil
   (short-suffix "abc") -> nil
+  (short-suffix ".abc") -> nil
+  (short-suffix "/.abc") -> nil
   (short-suffix "abc" "") -> ""
   (short-suffix "abc.") -> ""
   (short-suffix "abc.tar") -> "tar"
@@ -57247,10 +57250,12 @@ extracted from this last component.
   (short-suffix "x.y.z/abc.tar.gz//") -> nil
 
   (long-suffix "") -> nil
-  (long-suffix ".") -> ""
+  (long-suffix ".") -> nil
   (long-suffix "abc") -> nil
+  (long-suffix ".abc") -> nil
+  (long-suffix "/.abc") -> nil
   (long-suffix "abc.") -> ""
-  (long-suffix "abc.tar") -> "txt"
+  (long-suffix "abc.tar") -> "tar"
   (long-suffix "abc.tar.gz") -> "tar.gz"
   (long-suffix "abc.tar.gz/") -> "tar.gz"
   (long-suffix "x.y.z/abc.tar.gz/") -> "tar.gz"

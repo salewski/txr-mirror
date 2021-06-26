@@ -5040,7 +5040,7 @@ val short_suffix(val name, val alt_in)
   const wchar_t *dot = wcsrchr(str, '.');
   const wchar_t *sl = if3(dot, wcspbrk(dot + 1, psc), 0);
 
-  if (!dot || (sl && sl[1])) {
+  if (!dot || (sl && sl[1]) || dot == str || wcschr(psc, dot[-1])) {
     return default_null_arg(alt_in);
   } else {
     wchar_t *suff = chk_strdup(dot + 1);
@@ -5063,7 +5063,10 @@ val long_suffix(val name, val alt_in)
     while (dot && (sl = wcspbrk(dot, psc)) && sl[1])
       dot = wcschr(sl + 1, '.');
 
-    if (!dot || (sl && sl[1])) {
+    if (dot && (dot == str || wcschr(psc, dot[-1])))
+      dot = wcschr(dot + 1, '.');
+
+    if (!dot || dot == str) {
       return default_null_arg(alt_in);
     } else {
       wchar_t *suff = chk_strdup(dot + 1);
