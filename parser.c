@@ -681,7 +681,7 @@ static val lisp_parse_impl(val self, enum prime_parser prime,
   if (str) {
     int junk = 0;
     if (prime == prime_json) {
-      yystype yyl;
+      YYSTYPE yyl;
       junk = yylex(&yyl, pi->scanner);
     } else {
       junk = pi->recent_tok.yy_char;
