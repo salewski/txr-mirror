@@ -5043,9 +5043,9 @@ val short_suffix(val name, val alt_in)
   if (!dot || (sl && sl[1]) || dot == str || wcschr(psc, dot[-1])) {
     return default_null_arg(alt_in);
   } else {
-    wchar_t *suff = chk_strdup(dot + 1);
+    wchar_t *suff = chk_strdup(dot);
     if (sl)
-      suff[sl - (dot + 1)] = 0;
+      suff[sl - dot] = 0;
     return string_own(suff);
   }
 }
@@ -5069,9 +5069,9 @@ val long_suffix(val name, val alt_in)
     if (!dot || dot == str) {
       return default_null_arg(alt_in);
     } else {
-      wchar_t *suff = chk_strdup(dot + 1);
+      wchar_t *suff = chk_strdup(dot);
       if (sl)
-      suff[sl - (dot + 1)] = 0;
+      suff[sl - dot] = 0;
       return string_own(suff);
     }
   }
