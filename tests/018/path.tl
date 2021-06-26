@@ -68,3 +68,31 @@
   (long-suffix "a.b/c.d.e/f") nil
   (long-suffix "a.b/c.d.e/f.g.h") ".g.h"
   (long-suffix "a.b/c.d.e//") nil)
+
+(mtest
+  (base-name "") ""
+  (base-name "/") "/"
+  (base-name ".") "."
+  (base-name "./") "."
+  (base-name "a") "a"
+  (base-name "a/") "a"
+  (base-name "/a") "a"
+  (base-name "/a/") "a"
+  (base-name "/a/b") "b"
+  (base-name "/a/b/") "b"
+  (base-name "/a/b//") "b"
+  (base-name "/a/b///") "b")
+
+(mtest
+  (base-name "" "") ""
+  (base-name "/" "/") "/"
+  (base-name "/" "") "/"
+  (base-name "." ".") "."
+  (base-name "." "") "."
+  (base-name "./" "/") "."
+  (base-name "a" "a") "a"
+  (base-name "a" "") "a"
+  (base-name "a.b" ".b") "a"
+  (base-name "a.b/" ".b") "a"
+  (base-name "a.b/" ".b/") "a.b"
+  (base-name "a.b/" "a.b") "a.b")

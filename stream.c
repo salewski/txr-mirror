@@ -4990,7 +4990,7 @@ val base_name(val path, val suff)
     val base = mkustring(num_fast(end - rsep));
     init_str(base, rsep, self);
     return if3(!null_or_missing_p(suff) && ends_with(suff, base, nil, nil) &&
-               neql(length(suff), length(base)),
+               plusp(length(suff)) && neql(length(suff), length(base)),
                sub(base, zero, neg(length(suff))),
                base);
   }
