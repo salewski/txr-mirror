@@ -965,7 +965,7 @@ static void sync_data_to_buf(lino_t *l)
             l->sel = pos;
         if (l->dend == dpos)
             l->end = pos;
-        if (l->dsel == dpos - 1 && rev && l->selinclusive && ch && ch != '\r')
+        if (l->dsel == dpos - 1 && rev && l->selinclusive)
             l->sel = pos;
 
         if (ch) {
