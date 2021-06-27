@@ -289,8 +289,6 @@ static val trie_filter_string(val filter, val str)
     }
 
     if (match) {
-      if (!stringp(subst) && chrp(subst))
-        subst = tostringp(subst);
       string_extend(out, subst);
       i = plus(match, one);
     } else {
