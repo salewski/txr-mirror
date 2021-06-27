@@ -163,6 +163,8 @@ static val regex_from_trie(val trie)
           else
             out = ry;
         }
+        if (get_hash_userdata(trie))
+          out = list(or_s, nil, out, nao);
         return out;
       }
     }

@@ -46,4 +46,4 @@
 
 (mvtest
   (build (each ((d dat)) (add [rx0 d]))) dat
-  (build (each ((n enu)) (add [rx0 n]))) (repeat '(nil) (len dat)))
+  (build (each ((n ndt)) (add [rx0 n]))) (repeat '(nil) (len dat)))
