@@ -1,6 +1,7 @@
 @(define recur ())
 @(recur)
 @(end)
+@(do (set-stack-limit 32768))
 @(try)
 @(recur)
 @(catch stack-overflow (arg))
