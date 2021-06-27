@@ -52,3 +52,7 @@
 (mvtest
   (build (each ((d dat)) (add [rx1 d]))) dat
   (build (each ((n ndt)) (add [rx1 n]))) (repeat '(nil) (len dat)))
+
+(mtest
+  (regex-from-trie (make-trie)) t
+  (regex-from-trie (trie-compress (make-trie))) t)

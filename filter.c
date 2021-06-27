@@ -121,7 +121,7 @@ static val regex_from_trie(val trie)
 {
   switch (type(trie)) {
   case NIL:
-    return nil;
+    return t;
   case CONS:
     {
       val a = car(trie);
@@ -145,7 +145,7 @@ static val regex_from_trie(val trie)
   case COBJ:
     if (trie->co.cls == hash_s) {
       if (zerop(hash_count(trie))) {
-        return nil;
+        return tnil(!get_hash_userdata(trie));
       } else {
         val out = nil;
         val cell;
