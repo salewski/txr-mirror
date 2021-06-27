@@ -147,7 +147,7 @@ static val regex_from_trie(val trie)
       if (zerop(hash_count(trie))) {
         return nil;
       } else {
-        list_collect_decl (out, ptail);
+        val out = nil;
         val cell;
         struct hash_iter hi;
 
@@ -155,12 +155,15 @@ static val regex_from_trie(val trie)
 
         while ((cell = hash_iter_next(&hi)) != nil) {
           val rx = regex_from_trie(us_cdr(cell));
-          ptail = list_collect(ptail,
-                               if3(consp(rx) && car(rx) == compound_s,
-                                   cons(compound_s, cons(us_car(cell), cdr(rx))),
-                                   list(compound_s, us_car(cell), rx, nao)));
+          val ry = if3(consp(rx) && car(rx) == compound_s,
+                       cons(compound_s, cons(us_car(cell), cdr(rx))),
+                       list(compound_s, us_car(cell), rx, nao));
+          if (out)
+            out = list(or_s, ry, out, nao);
+          else
+            out = ry;
         }
-        return cons(or_s, out);
+        return out;
       }
     }
     /* fallthrough */
