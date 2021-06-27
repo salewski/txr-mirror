@@ -154,10 +154,12 @@ static val regex_from_trie(val trie)
         us_hash_iter_init(&hi, trie);
 
         while ((cell = hash_iter_next(&hi)) != nil) {
-          val rx = regex_from_trie(us_cdr(cell));
+          val a = us_car(cell);
+          val d = us_cdr(cell);
+          val rx = if2(consp(d) || hashp(d), regex_from_trie(d));
           val ry = if3(consp(rx) && car(rx) == compound_s,
-                       cons(compound_s, cons(us_car(cell), cdr(rx))),
-                       list(compound_s, us_car(cell), rx, nao));
+                       cons(compound_s, cons(a, cdr(rx))),
+                       if3(rx, list(compound_s, a, rx, nao), a));
           if (out)
             out = list(or_s, ry, out, nao);
           else

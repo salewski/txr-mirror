@@ -33,6 +33,7 @@
 (trie-compress tr1)
 
 (defvarl rx0 (regex-compile (regex-from-trie tr0)))
+(defvarl rx1 (regex-compile (regex-from-trie tr1)))
 
 (mvtest
   (build (each ((d dat)) (add (filter-string-tree tr0 d)))) enu
@@ -47,3 +48,7 @@
 (mvtest
   (build (each ((d dat)) (add [rx0 d]))) dat
   (build (each ((n ndt)) (add [rx0 n]))) (repeat '(nil) (len dat)))
+
+(mvtest
+  (build (each ((d dat)) (add [rx1 d]))) dat
+  (build (each ((n ndt)) (add [rx1 n]))) (repeat '(nil) (len dat)))
