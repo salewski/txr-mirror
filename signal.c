@@ -81,7 +81,7 @@ static void sig_handler(int sig)
   int exc = is_cpu_exception(sig);
   int ic = interrupt_count++;
   int in_interrupt = ic > 0;
-  val *stack_lim;
+  val *stack_lim = 0;
 
   if (exc) {
     gc = gc_state(0);
