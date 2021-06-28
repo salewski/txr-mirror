@@ -3385,7 +3385,7 @@ static val expand_forms_ss(val forms, val menv, val ss_hash)
   }
 }
 
-static val constantp(val form, val env_in);
+static val constantp_noex(val form);
 
 static val expand_progn(val form, val menv)
 {
@@ -3403,7 +3403,7 @@ static val expand_progn(val form, val menv)
       return rlcp(cdr(ex_f), form);
     }
 
-    if ((symbolp(ex_f) || constantp(ex_f, menv)) && ex_r)
+    if ((symbolp(ex_f) || constantp_noex(ex_f)) && ex_r)
       return rlcp(ex_r, form);
 
     if (ex_f == f && ex_r == r)
@@ -5080,8 +5080,8 @@ again:
 
       if (insym_ex == rcons_s &&
           proper_list_p(args_ex) && length(args_ex) == two &&
-          constantp(car(args_ex), menv) &&
-          constantp(cadr(args_ex), menv))
+          constantp_noex(car(args_ex)) &&
+          constantp_noex(cadr(args_ex)))
       {
         return rlcp(rcons(eval(car(args_ex), menv, form),
                           eval(cadr(args_ex), menv, form)), form);
