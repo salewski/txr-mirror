@@ -2216,14 +2216,16 @@ static val regex_optimize(val regex_sexp)
 
 val regex_compile(val regex_sexp, val error_stream)
 {
-  val regex_source = regex_sexp;
+  val regex_source;
 
   if (stringp(regex_sexp)) {
     regex_sexp = regex_parse(regex_sexp, default_null_arg(error_stream));
     return if2(regex_sexp, regex_compile(regex_sexp, error_stream));
   }
 
-  regex_sexp = regex_optimize(regex_sexp);
+  regex_source = reg_nary_to_bin(regex_sexp);
+
+  regex_sexp = reg_optimize(reg_expand_nongreedy(regex_source));
 
   if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
     regex_t *regex = coerce(regex_t *, chk_malloc(sizeof *regex));
