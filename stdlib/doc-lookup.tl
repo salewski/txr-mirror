@@ -1,6 +1,6 @@
 (load "doc-syms")
 
-(defvarl usr:*doc-url* "https://www.nongnu.org/txr/txr-manpage.html")
+(defvar usr:*doc-url* "https://www.nongnu.org/txr/txr-manpage.html")
 
 (defvar os-symbol
   (if (ignerr (dlsym (dlopen "libandroid.so") "AAsset_close"))
