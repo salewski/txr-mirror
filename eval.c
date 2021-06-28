@@ -104,6 +104,7 @@ val fbind_s, lbind_s, flet_s, labels_s;
 val load_path_s, load_recursive_s;
 val load_time_s, load_time_lit_s;
 val eval_only_s, compile_only_s;
+val const_foldable_s;
 
 val special_s, unbound_s;
 val whole_k, form_k, symacro_k;
@@ -114,6 +115,8 @@ val call_f, iter_begin_f, iter_from_binding_f, iter_more_f;
 val iter_item_f, iter_step_f;
 
 val origin_hash;
+
+static val const_foldable_hash;
 
 val make_env(val vbindings, val fbindings, val up_env)
 {
@@ -5277,7 +5280,27 @@ static val macroexpand_lisp1(val form, val menv)
 static val constantp_noex(val form)
 {
   if (consp(form)) {
-    return eq(car(form), quote_s);
+    val sym = car(form);
+    val args = cdr(form);
+    if (eq(sym, quote_s))
+      return t;
+    if (!proper_list_p(args))
+      return nil;
+    if (eq(sym, dwim_s)) {
+      sym = us_car(args);
+      args = us_cdr(args);
+    }
+    if (!symbolp(sym))
+      return nil;
+    if (!const_foldable_hash)
+      const_foldable_hash = cdr(lookup_var(nil, const_foldable_s));
+    if (!gethash(const_foldable_hash, sym))
+      return nil;
+    for (; args; args = us_cdr(args)) {
+      if (!constantp_noex(us_car(args)))
+        return nil;
+    }
+    return t;
   } else {
     if (bindable(form))
       return nil;
@@ -5290,21 +5313,15 @@ static val constantp(val form, val env_in)
   val env = default_null_arg(env_in);
 
   if (consp(form)) {
-    if (car(form) == quote_s) {
+    if (car(form) == quote_s)
       return t;
-    } else if (macro_form_p(form, env)) {
-      return constantp_noex(macroexpand(form, env));
-    } else {
-      return nil;
-    }
+    else
+      return constantp_noex(no_warn_expand(form, env));
   } else if (symbolp(form)) {
-    if (!bindable(form)) {
+    if (!bindable(form))
       return t;
-    } else if (macro_form_p(form, env)) {
-      return constantp_noex(macroexpand(form, env));
-    } else {
-      return nil;
-    }
+    else
+      return constantp_noex(no_warn_expand(form, env));
   } else {
     return t;
   }
@@ -6421,7 +6438,7 @@ void eval_init(void)
           &op_table, &pm_table, &last_form_evaled,
           &call_f, &iter_begin_f, &iter_from_binding_f, &iter_more_f,
           &iter_item_f, &iter_step_f,
-          &unbound_s, &origin_hash, convert(val *, 0));
+          &unbound_s, &origin_hash, &const_foldable_hash, convert(val *, 0));
   top_fb = make_hash(t, nil, nil);
   top_vb = make_hash(t, nil, nil);
   top_mb = make_hash(t, nil, nil);
@@ -6561,6 +6578,7 @@ void eval_init(void)
   load_time_lit_s  = intern(lit("load-time-lit"), system_package);
   eval_only_s  = intern(lit("eval-only"), user_package);
   compile_only_s = intern(lit("compile-only"), user_package);
+  const_foldable_s = intern(lit("%const-foldable%"), system_package);
 
   qquote_init();
 

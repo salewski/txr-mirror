@@ -26,6 +26,7 @@
 
 (load "vm-param")
 (load "optimize")
+(load-for (usr:var %const-foldable% "constfun"))
 
 (compile-only
   (load-for (struct sys:param-parser-base "param")))
@@ -264,43 +265,6 @@
 (defvarl %bin-ops% '(b< b> b<= b=> b= b+ b- b* b/))
 
 (defvarl %bin-op% (relate %nary-ops% %bin-ops% nil))
-
-(defvarl %const-foldable-funs%
-  '(+ - * / sum prod abs trunc mod zerop nzerop plusp minusp evenp oddp
-    > < >= <= = /= wrap wrap* expt exptmod isqrt square gcd lcm floor ceil
-    round trunc-rem floor-rem ceil-rem round-rem sin cos tan asin acos atan
-    atan2 sinh cosh tanh asinh acosh atanh log log10 log2 exp sqrt
-    logand logior logxor logtest lognot logtrunc sign-extend ash bit mask
-    width logcount bitset cum-norm-dist inv-cum-norm n-choose-k n-perm-k
-    fixnump bignump floatp integerp numberp signum bignum-len divides sys:bits
-    digpow digits poly rpoly b< b> b<= b=> b= b+ b- b* b/ neg
-    pred ppred ppred pppred succ ssucc ssucc sssucc
-    car cdr caar cadr cdar cddr caaar caadr cadar caddr cdaar cdadr cddar cdddr
-    caaaar caaadr caadar caaddr cadaar cadadr caddar cadddr cdaaar cdaadr
-    cdadar cdaddr cddaar cddadr cdddar cddddr caaaaar caaaadr caaadar caaaddr
-    caadaar caadadr caaddar caadddr cadaaar cadaadr cadadar cadaddr caddaar
-    caddadr cadddar caddddr cdaaaar cdaaadr cdaadar cdaaddr cdadaar cdadadr
-    cdaddar cdadddr cddaaar cddaadr cddadar cddaddr cdddaar cdddadr cddddar
-    cdddddr cons first rest sub-list identity typeof atom null false true have
-    consp listp endp proper-listp length-list second third fourth fifth
-    sixth seventh eighth ninth tenth conses ldiff nthcdr nth tailp
-    memq memql memqual rmemq rmemql rmemqual countq countql countqual
-    posq posql posqual rposq rposql rposqual eq eql equal meq meql mequal
-    neq neql nequal max min clamp bracket take drop uniq if or and progn
-    prog1 prog2 nilf tf tostring tostringp display-width sys:fmt-simple
-    sys:fmt-flex join join-with sys:fmt-join packagep
-    symbolp keywordp bindable stringp length-str
-    coded-length cmp-str string-lt str= str< str> str<= str>= int-str
-    flo-str num-str int-flo flo-int tofloat toint tointz less greater
-    lequal gequal chrp chr-isalnum chr-isalnum chr-isalpha chr-isascii
-    chr-iscntrl chr-isdigit chr-digit chr-isgraph chr-islower chr-isprint
-    chr-ispunct chr-isspace chr-isblank chr-isunisp chr-isupper chr-isxdigit
-    chr-xdigit chr-toupper chr-tolower num-chr int-chr chr-num chr-int
-    chr-str span-str compl-span-str break-str vectorp length-vec size-vec
-    assq assql assoc rassq rassql rassoc prop memp length len empty ref
-    rangep from to in-range in-range* nullify))
-
-(defvarl %const-foldable% (hash-list %const-foldable-funs% :eq-based))
 
 (defvarl %effect-free-funs%
   '(append append* revappend list list* zip interpose copy-list reverse

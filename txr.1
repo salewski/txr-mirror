@@ -18139,8 +18139,9 @@ If
 is absent, the global environment is used.
 The
 .meta env
-argument is used for macro-expanding
-.metn form .
+argument is used for fully expanding
+.meta form
+prior to analyzing.
 
 Currently,
 .code constantp
@@ -18154,10 +18155,48 @@ These symbols are the keyword symbols, and the symbols
 and
 .codn nil .
 
-In the future,
+Additionally,
 .code constantp
-will be able to recognize more constant forms, such as calls to certain
-functions whose arguments are constant forms.
+returns true for a compound form, or a DWIM form, whose symbol is
+the member of a set a large number of constant-foldable library functions,
+and whose arguments are, recursively,
+.code constantp
+expressions for the same environment. The arithmetic functions
+are members of this set.
+
+For all other inputs,
+.code constantp
+returns
+.codn nil .
+
+Note: some uses of
+.code constantp
+require manual expansion.
+
+.TP* Examples:
+
+.verb
+  (constantp nil) -> t
+  (constantp t) -> t
+  (constantp :key) -> t
+  (constantp :) -> t
+  (constantp 'a) -> nil
+  (constantp 42) -> t
+
+  (constantp '(+ 2 2 [* 3 (/ 4 4)]) -> t
+
+  ;; symacrolet form expands to 42, which is constant
+  (constantp '(symacrolet ((a 42)) a))
+
+  (defmacro cp (:env e arg)
+    (constantp arg e))
+
+  ;; macro call (cp 'a) is replaced by t because
+  ;; the symbol a expands to (+ 2 2) in the given environment,
+  ;; and so (* a a) expands to (* (+ 2 2) (+ 2 2)) which is constantp.
+  (symacrolet ((a (+ 2 2)))
+    (cp '(* a a))) -> t
+.brev
 
 .coNP Function @ make-env
 .synb
