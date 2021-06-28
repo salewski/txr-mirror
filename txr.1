@@ -50137,6 +50137,51 @@ The double backslash in the string literal produces a single backslash
 in the resulting string object that is processed by
 .codn regex-parse .
 
+.coNP Function @ regex-optimize
+.synb
+.mets (regex-optimize << regex-tree-syntax )
+.syne
+.desc
+The
+.code regex-compile
+function accepts the source code of a regular expression,
+expressed as a Lisp data structure representing an abstract syntax tree,
+and calculates an equivalent structure in which certain simplifications
+have been performed, or in some cases substitutions which eliminate the
+dependence on derivative-based processing.
+
+The
+.meta regex-tree-syntax
+is assumed to be correct, as if it were produced by the
+.code regex-parse
+or
+.code regex-from-trie
+functions. Incorrect syntax produces unspecified results; an exception may be
+thrown, or some object may appear to be successfully returned.
+
+Note: it is unnecessary to call this function to prepare the input for
+.code regex-compile
+because that function optimizes internally. However, the source code attached
+to a compiled regular expression object is the original unoptimized syntax
+tree, and that is used for rendering the
+.code #/.../
+notation when the object is printed. If the syntax is passed through
+.code regex-optimize
+before
+.codn regex-compile ,
+the resulting object will have the optimized code attached to it, and
+subsequently render that way in printed form.
+
+.TP* Examples:
+
+.verb
+  ;; a|b|c -> [abc]
+  (regex-optimize '(or #\ea (or #\eb #\ec))) -> (set #\ea #\eb #\ec)
+
+  ;; (a|) -> a?
+  (regex-optimize '(or #\ea nil)) -> (? #\ea)
+.brev
+
 .coNP Function @ read-until-match
 .synb
 .mets (read-until-match < regex >> [ stream <> [ include-match ]])

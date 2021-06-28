@@ -2209,6 +2209,11 @@ static val regex_requires_dv(val exp)
   }
 }
 
+static val regex_optimize(val regex_sexp)
+{
+  return reg_optimize(reg_expand_nongreedy(reg_nary_to_bin(regex_sexp)));
+}
+
 val regex_compile(val regex_sexp, val error_stream)
 {
   val regex_source = regex_sexp;
@@ -2218,7 +2223,7 @@ val regex_compile(val regex_sexp, val error_stream)
     return if2(regex_sexp, regex_compile(regex_sexp, error_stream));
   }
 
-  regex_sexp = reg_optimize(reg_expand_nongreedy(reg_nary_to_bin(regex_sexp)));
+  regex_sexp = regex_optimize(regex_sexp);
 
   if (opt_derivative_regex || regex_requires_dv(regex_sexp)) {
     regex_t *regex = coerce(regex_t *, chk_malloc(sizeof *regex));
@@ -3358,7 +3363,7 @@ void regex_init(void)
 
   reg_fun(intern(lit("reg-expand-nongreedy"), system_package),
           func_n1(reg_expand_nongreedy));
-  reg_fun(intern(lit("reg-optimize"), system_package), func_n1(reg_optimize));
+  reg_fun(intern(lit("regex-optimize"), user_package), func_n1(regex_optimize));
   reg_fun(intern(lit("read-until-match"), user_package), func_n3o(read_until_match, 1));
   reg_fun(intern(lit("scan-until-match"), user_package), func_n2(scan_until_match));
   reg_fun(intern(lit("count-until-match"), user_package), func_n2(count_until_match));

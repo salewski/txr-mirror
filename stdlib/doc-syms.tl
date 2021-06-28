@@ -1497,6 +1497,7 @@
       ("refset" "N-01A419FB")
       ("regex-compile" "N-0168C611")
       ("regex-from-trie" "N-00E48912")
+      ("regex-optimize" "N-008430D8")
       ("regex-parse" "N-01C9C361")
       ("regex-prefix-match" "N-02CE60DF")
       ("regex-source" "N-0218BD2B")
