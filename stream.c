@@ -5079,8 +5079,8 @@ val long_suffix(val name, val alt_in)
 
 val path_cat(val dir_name, val base_name)
 {
-  val dl = length(dir_name);
-  val bl = length(base_name);
+  val dl = length_str(dir_name);
+  val bl = length_str(base_name);
   val ps = static_str(path_sep_chars);
 
   if (dl == zero)
