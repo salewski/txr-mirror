@@ -1372,6 +1372,7 @@
       ("path-read-writable-to-me-p" "N-028A5109")
       ("path-readable-to-me-p" "N-02933008")
       ("path-same-object" "N-0103E27B")
+      ("path-search" "N-01AB7247")
       ("path-sep-chars" "N-03985DE5")
       ("path-setgid-p" "N-02FBA677")
       ("path-setuid-p" "N-02FBA677")

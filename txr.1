@@ -67107,6 +67107,79 @@ and
 resolve to the same filesystem object: the same inode number on the same
 device.
 
+.coNP Function @ path-search
+.synb
+.mets (path-search < program-name <> [ search-path ])
+.syne
+.desc
+The
+.code path-search
+searches for an executable program whose name is given by the
+.meta program-name
+string argument. If the program is found, then the full path to that
+program is returned, otherwise
+.code nil
+is returned.
+
+If the
+.meta search-path
+is omitted, then
+.code path-search
+uses the search path given in the
+.code PATH
+environment variable. This path is decomposed into components according
+to the separator character, which may be
+.code :
+(colon)
+or
+.code ;
+(semicolon) depending on the system. Then, for each component of the path,
+.code path-search
+affixes the
+.meta program-name
+to that component, as if using the
+.code path-cat
+function, and tests whether the resulting path is an existing file object
+according to
+.codn path-file-p ,
+which is executable according to
+.codn path-executable-to-me-p .
+
+The
+.code search-path
+argument may be specified as a string, which is taken instead of the value
+of the
+.code PATH
+environment variable, and decomposed into components in the same way.
+The argument may also be specified as a list of strings, which are taken
+to be components of a search path, and used as-is.
+
+If
+.meta program-name
+is the empty string or the search path is empty, the function returns
+.codn nil .
+
+Components of the search path which are empty strings are ignored.
+
+If
+.meta program-name
+is a string which includes path separator characters, or if
+.meta program-name
+is one of the special names
+.str .
+or
+.strn .. ,
+the behavior may produce a different result from the host platform's native
+path search strategy.
+
+The behavior of
+.code path-search
+may also deviate from the host platform's native path search strategy
+due to issues of permissions. If an executable file is found in the path,
+but is not executable to the caller due to permissions, it is treated
+as nonexistent, which means that the search can find a same-named file
+later in the search path.
+
 .SS* Unix Credentials
 
 .coNP Functions @, getuid @, geteuid @ getgid and @ getegid
