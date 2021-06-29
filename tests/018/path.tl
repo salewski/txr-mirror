@@ -96,3 +96,35 @@
   (base-name "a.b/" ".b") "a"
   (base-name "a.b/" ".b/") "a.b"
   (base-name "a.b/" "a.b") "a.b")
+
+(mtest
+  (path-cat "" "") ""
+  (path-cat "" ".") "."
+  (path-cat "." "") "."
+  (path-cat "." ".") "."
+  (path-cat "abc" ".") "abc"
+  (path-cat "." "abc") "abc"
+  (path-cat "./" ".") "./"
+  (path-cat "."  "./") "./"
+  (path-cat "abc/" ".") "abc/"
+  (path-cat "./" "abc") "abc"
+  (path-cat "/" ".") "/"
+  (path-cat "/" "abc") "/abc"
+  (path-cat "ab/cd" "ef") "ab/cd/ef"
+  (path-cat "a" "b" "c") "a/b/c"
+  (path-cat "a" "b" "" "c" "/") "a/b/c/")
+
+(mtest
+  (path-cat) "."
+  (path-cat 3) :error
+  (path-cat "") ""
+  (path-cat "/") "/"
+  (path-cat ".") "."
+  (path-cat "" "" "") ""
+  (path-cat "." "" "") "."
+  (path-cat "" "." "") "."
+  (path-cat "" "" ".") "."
+  (path-cat "." "." ".") "."
+  (path-cat "abc/" "/def/" "g") "abc/def/g"
+  (path-cat "abc/" "/def/" "g/") "abc/def/g/"
+  (path-cat "" "abc/" "/def/" "g/") "abc/def/g/")

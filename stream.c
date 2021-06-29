@@ -5116,6 +5116,25 @@ val path_cat(val dir_name, val base_name)
   return scat(lit("/"), dir_name, base_name, nao);
 }
 
+static val path_vcat(struct args *args)
+{
+  cnum ix = 0;
+
+  if (!args_more(args, ix)) {
+    return lit(".");
+  } else {
+    val accum = args_get(args, &ix);
+
+    if (!stringp(accum))
+      uw_throwf(file_error_s, lit("path-cat: ~s isn't a string"), accum, nao);
+
+    while (args_more(args, ix))
+      accum = path_cat(accum, args_get(args, &ix));
+
+    return accum;
+  }
+}
+
 val make_byte_input_stream(val obj)
 {
   val self = lit("make-byte-input-stream");
@@ -5376,7 +5395,7 @@ void stream_init(void)
   reg_fun(intern(lit("dir-name"), user_package), func_n1(dir_name));
   reg_fun(intern(lit("short-suffix"), user_package), func_n2o(short_suffix, 1));
   reg_fun(intern(lit("long-suffix"), user_package), func_n2o(long_suffix, 1));
-  reg_fun(intern(lit("path-cat"), user_package), func_n2(path_cat));
+  reg_fun(intern(lit("path-cat"), user_package), func_n0v(path_vcat));
   reg_varl(intern(lit("path-sep-chars"), user_package), static_str(path_sep_chars));
   reg_fun(intern(lit("get-indent-mode"), user_package), func_n1(get_indent_mode));
   reg_fun(intern(lit("test-set-indent-mode"), user_package), func_n3(test_set_indent_mode));

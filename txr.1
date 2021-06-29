@@ -57365,19 +57365,25 @@ extracted from this last component.
 
 .coNP Function @ path-cat
 .synb
-.mets (path-cat < dir-path << rel-path )
+.mets (path-cat >> [ dir-path <> { rel-path }*])
 .syne
 .desc
 The
 .code path-cat
-function joins the directory pathname given by the character
-string argument
-.meta dir-path
-with the relative pathname given by
-.metn rel-path ,
-returning the joined path.
+joints together zero or more paths, returning the combined path.
+All arguments are strings.
 
-The function is related to the functions
+The following description defines the behavior when
+.code path-cat
+is given exactly two arguments, which are interpreted as
+.meta dir-path
+and
+.metn rel-path .
+A description of the variable argument semantics follows.
+
+Firstly, the two-argument
+.code path-cat
+is related to the functions
 .code dir-name
 and
 .code base-name
@@ -57422,6 +57428,40 @@ string is
 .meta dir-name
 itself.
 
+If
+.meta dir-path
+is an empty string, then
+.code rel-path
+is returned, and
+.IR "vice versa" .
+
+The variadic semantics of
+.code path-cat
+is as follows.
+
+If
+.code path-cat
+is called with no arguments at all, it returns the path
+.str .
+(period) denoting the relative path of the current directory.
+
+If
+.code path-cat
+is called with one argument, that argument is returned.
+
+If
+.code path-cat
+is called with three or more arguments, a left-associative reduction
+takes place using the two-argument semantics. The first two arguments
+are catenated into a single path, which is then catenated
+with the third argument, and so on.
+
+The above semantics implies that the following equivalence holds:
+
+.verb
+  [reduce-left path-cat list]  <--> [apply path-cat list]
+.brev
+
 .TP* Examples:
 
 .verb
@@ -57444,6 +57484,10 @@ itself.
   (path-cat "/" "abc")  --> "/abc"
 
   (path-cat "ab/cd" "ef")  --> "ab/cd/ef"
+
+  (path-cat "a" "b" "c")  -->  "a/b/c"
+
+  (path-cat "a" "b" "" "c" "/")  -->  "a/b/c/"
 .brev
 
 .coNP Function @ rel-path
