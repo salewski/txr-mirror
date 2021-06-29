@@ -2008,7 +2008,8 @@
     (mac-param-bind lm-expr (lambda lm-args . lm-body) lm-expr
       (let* ((pars (new (fun-param-parser lm-args lm-expr)))
              (fix-vals (mapcar (ret (gensym)) fix-arg-exprs))
-             (ign-sym (gensym))
+             (ign-1 (gensym))
+             (ign-2 (gensym))
              (al-val (gensym))
              (shadow-p (let ((all-vars (append pars.req pars.(opt-syms)
                                                (if pars.rest (list pars.rest)))))
@@ -2036,12 +2037,12 @@
                                                ^(,*fix-arg-exprs ,apply-list-expr)))))
                            (lambda-too-many-args lm-expr))
                          (when (or pars.rest apply-list-expr)
-                           (add ^(,(or pars.rest ign-sym) ,apply-list-expr)))))
+                           (add ^(,(or pars.rest ign-1) ,apply-list-expr)))))
                       ((and fix-vals apply-list-expr)
                        (lambda-too-many-args lm-expr))
                       (apply-list-expr
                         (when pars.req
-                          (add ^(,ign-sym (if (< (len ,al-val) ,(len pars.req))
+                          (add ^(,ign-1 (if (< (len ,al-val) ,(len pars.req))
                                             (lambda-short-apply-list)))))
                         (while pars.req
                           (add ^(,(pop pars.req) (pop ,al-val))))
@@ -2058,8 +2059,10 @@
                               (t (add ^(,var-sym (if ,al-val
                                                    (pop ,al-val)
                                                    ,init-form)))))))
-                        (when pars.rest
-                          (add ^(,pars.rest ,al-val))))
+                        (if pars.rest
+                          (add ^(,pars.rest ,al-val))
+                          (add ^(,ign-2 (if ,al-val
+                                          (lambda-excess-apply-list))))))
                       (pars.req
                         (lambda-too-few-args lm-expr))
                       (pars.opt

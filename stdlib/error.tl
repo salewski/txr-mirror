@@ -93,3 +93,6 @@
 
 (defun lambda-short-apply-list ()
   (throwf 'eval-error "~s: applied argument list too short" 'lambda))
+
+(defun lambda-excess-apply-list ()
+  (throwf 'eval-error "~s: applied argument list too long" 'lambda))
