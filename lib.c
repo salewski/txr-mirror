@@ -10411,6 +10411,69 @@ val find_min(val seq, val testfun, val keyfun)
   return find_max(seq, default_arg(testfun, less_f), keyfun);
 }
 
+val find_true(val pred, val seq, val key)
+{
+  val self = lit("find-true");
+  val keyfun = default_arg(key, identity_f);
+  seq_info_t si = seq_info(seq);
+
+  switch (si.kind) {
+  case SEQ_NIL:
+    break;
+  case SEQ_HASHLIKE:
+    {
+      struct hash_iter hi;
+      val cell;
+
+      hash_iter_init(&hi, si.obj, self);
+
+      while ((cell = hash_iter_next(&hi))) {
+        val key = funcall1(keyfun, cell);
+        val res = funcall1(pred, key);
+        if (res)
+          return res;
+      }
+
+      break;
+    }
+  case SEQ_LISTLIKE:
+    {
+      gc_hint(seq);
+
+      for (seq = z(si.obj); seq; seq = cdr(seq)) {
+        val elt = car(seq);
+        val key = funcall1(keyfun, elt);
+        val res = funcall1(pred, key);
+        if (res)
+          return res;
+      }
+
+      break;
+    }
+  case SEQ_VECLIKE:
+    {
+      val vec = si.obj;
+      cnum len = c_fixnum(length(vec), self);
+      cnum i;
+
+      for (i = 0; i < len; i++) {
+        val elt = ref(vec, num_fast(i));
+        val key = funcall1(keyfun, elt);
+        val res = funcall1(pred, key);
+        if (res)
+          return res;
+      }
+
+      break;
+    }
+  case SEQ_NOTSEQ:
+  default:
+    unsup_obj(self, seq);
+  }
+
+  return nil;
+}
+
 val find_if(val pred, val seq, val key)
 {
   val self = lit("find-if");

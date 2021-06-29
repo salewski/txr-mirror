@@ -1150,6 +1150,7 @@ val find_if(val pred, val list, val key);
 val rfind_if(val pred, val list, val key);
 val find_max(val seq, val testfun, val keyfun);
 val find_min(val seq, val testfun, val keyfun);
+val find_true(val pred, val list, val keyfun);
 val posqual(val obj, val list);
 val rposqual(val obj, val list);
 val posql(val obj, val list);

@@ -33403,10 +33403,11 @@ is returned.
   (partition* "abcd" '(0 1 2 3)) -> nil
 .brev
 
-.coNP Functions @ find and @ find-if
+.coNP Functions @, find @ find-if and @ find-true
 .synb
 .mets (find < key < sequence >> [ testfun <> [ keyfun ]])
 .mets (find-if < predfun >> { sequence | << hash }  <> [ keyfun ])
+.mets (find-true < predfun >> { sequence | << hash }  <> [ keyfun ])
 .syne
 .desc
 The
@@ -33415,6 +33416,12 @@ and
 .code find-if
 functions search through a sequence for an item which
 matches a key, or satisfies a predicate function, respectively.
+The
+.code find-true
+function is a variant of
+.code find-if
+which returns the value of the predicate function, instead
+of the item.
 
 The
 .meta keyfun
@@ -33474,6 +33481,16 @@ slots of which are the hash keys, and the
 of which are the hash values.  If the caller doesn't specify a
 .meta keyfun
 then these cells are taken as their keys.
+
+The
+.code find-true
+funtion's argument conventions and search semantics are identical to those of
+.codn find-if ,
+but the return value is different. Instead of returning the found item,
+.code find-true
+returns the value which
+.meta predfun
+returned for the found item's key.
 
 .coNP Functions @ rfind and @ rfind-if
 .synb
