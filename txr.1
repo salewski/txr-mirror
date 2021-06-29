@@ -82147,8 +82147,8 @@ function provides help for the library symbol
 If information about
 .meta symbol
 is available in the HTML version of this document, and is indexed, then this
-function causes that document to be opened using the system's default web
-browser, such that the browser navigates to the appropriate section of
+function causes that document to be opened using a web browser,
+such that the browser navigates to the appropriate section of
 the manual.
 
 If the
@@ -82167,6 +82167,31 @@ is successfully found, or else not specified, and
 successfully invokes the URL-opening mechanism, it returns
 .codn t .
 Otherwise, it throws an error exception.
+
+The web browser is invoked using a system-dependent strategy.
+On MS Windows, the
+.code ShellExecuteW
+function is relied upon to open the URL.
+
+On other platforms, if the
+.code BROWSER
+environment variable exists, its value is assumed to indicate the
+name or path of the web browsing program which can accept the URL
+as an argument. If this variable doesn't exist, then
+.code doc
+searches for a system-dependent URL-opening utility, such as
+.codn xdg-open .
+If this utility is not found, then
+.code doc
+tries to fall back searching for a browser using one of several names.
+If no URL-opening mechanism is identified using the above strategies, an error
+exception is thrown. However, if the mechanism is identified, but does not
+successfully dispatch the URL to a browser, there is no requirement to thrown
+an error exception. It may appear that the
+.code doc
+function returns
+.code t
+but has no effect.
 
 .coNP Function @ quip
 .synb

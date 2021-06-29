@@ -28,11 +28,21 @@
 (caseql os-symbol
   ((:linux :macos :solaris :solaris10 :android)
    (defun open-url (url)
-     (detached-run (caseql os-symbol
+     (let ((opener (caseql os-symbol
                      ((:linux :solaris :android) "xdg-open")
                      (:solaris10 "/usr/dt/bin/sdtwebclient")
-                     (:macos "open"))
-                   (list url))))
+                     (:macos "open")))
+           (fallback '#"firefox iceweasel seamonkey mozilla \
+                        epiphany konqueror chromium chromium-browser \
+                        google-chrome"))
+       (let ((prog (or (getenv "BROWSER")
+                       (if (abs-path-p opener)
+                         opener
+                         (path-search opener))
+                       [find-true path-search fallback])))
+         (if prog
+           (detached-run prog (list url))
+           (error "~s: no URL-opening method available" 'open-url))))))
   ((:cygwin :cygnal)
    (with-dyn-lib "shell32.dll"
      (deffi shell-execute "ShellExecuteW"
