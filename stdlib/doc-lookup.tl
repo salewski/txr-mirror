@@ -17,16 +17,22 @@
             (ret :unknown))
        u.sysname])))
 
+(defun detached-run (program args)
+  (match-case (fork)
+    (@(= 0) (if (zerop (fork))
+              (exit* (let ((*stdout* *stdnull*))
+                       (run program args)))
+              (exit* 0)))
+    (@(< @res 0) (error "fork failed"))))
+
 (caseql os-symbol
   ((:linux :macos :solaris :solaris10 :android)
    (defun open-url (url)
-     (if (zerop (run (caseql os-symbol
-                       ((:linux :solaris :android) "xdg-open")
-                       (:solaris10 "/usr/dt/bin/sdtwebclient")
-                       (:macos "open"))
-                     (list url)))
-       t
-       (error `~s:  failed to open ~s` 'open-url url))))
+     (detached-run (caseql os-symbol
+                     ((:linux :solaris :android) "xdg-open")
+                     (:solaris10 "/usr/dt/bin/sdtwebclient")
+                     (:macos "open"))
+                   (list url))))
   ((:cygwin :cygnal)
    (with-dyn-lib "shell32.dll"
      (deffi shell-execute "ShellExecuteW"
