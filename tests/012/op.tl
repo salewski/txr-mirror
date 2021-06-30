@@ -40,6 +40,11 @@
   (fi (do if @42 @rest)) (42 t)
   (fi (do if @1 @3 @rest @2)) (3 t))
 
+(mtest
+  [(do quote x) 3] :error
+  [(do quote @1) 3] :error
+  (do pop a) :error)
+
 (defun y (f)
   [(op @1 @1)
    (op f (op [@@1 @@1]))])

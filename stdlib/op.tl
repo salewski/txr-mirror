@@ -137,8 +137,12 @@
                                    (let ((arg1 (sys:ensure-op-arg ctx 1)))
                                      ^(symacrolet ((,do-gen ,arg1))
                                         ,syntax-2)))
-                                 (t (let ((arg1 (sys:ensure-op-arg ctx 1)))
-                                      (append syntax-2 (list arg1))))))
+                                 (t (let* ((arg1 (sys:ensure-op-arg ctx 1))
+                                           (syntax-0-alt (append args (list arg1)))
+                                           (syntax-1-alt (sys:op-alpha-rename f e
+                                                                              syntax-0-alt
+                                                                              nil)))
+                                      (sys:op-alpha-rename f e syntax-1-alt t)))))
                               (t (append syntax-2 rest-sym))))))
     (let ((metas (slot ctx 'gens)))
       (cond
