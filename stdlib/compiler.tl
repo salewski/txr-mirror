@@ -2036,8 +2036,14 @@
                                      ,*(nthcdr pars.nfix
                                                ^(,*fix-arg-exprs ,apply-list-expr)))))
                            (lambda-too-many-args lm-expr))
-                         (when (or pars.rest apply-list-expr)
-                           (add ^(,(or pars.rest ign-1) ,apply-list-expr)))))
+                         (cond
+                           ((and pars.rest apply-list-expr)
+                            (add ^(,pars.rest ,al-val)))
+                           (pars.rest
+                             ^(,pars.rest nil))
+                           (apply-list-expr
+                             (add ^(,ign-2 (if ,al-val
+                                             (lambda-excess-apply-list))))))))
                       ((and fix-vals apply-list-expr)
                        (lambda-too-many-args lm-expr))
                       (apply-list-expr
