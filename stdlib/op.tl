@@ -99,21 +99,52 @@
     ['compile-error f "arguments required"])
   (let* ((compat (and (plusp sys:compat) (<= sys:compat 225)))
          (ctx (make-struct 'sys:op-ctx ^(form ,f)))
-         (do-gen)
          (sys:*op-ctx* ctx)
          (sym (car f))
          (syntax-0 (if (eq sym 'do) args ^[,*args]))
          (syntax-1 (if (or (null syntax-0) (neq sym 'do) compat)
+                     ;; not do, or empty do syntax, or compat mode.
                      (sys:op-alpha-rename f e syntax-0 nil)
-                     (or (op-ignerr (sys:op-alpha-rename f e syntax-0 nil))
+                     ;; try to expand args as-is, catching errors
+                     (let ((syn (op-ignerr (sys:op-alpha-rename f e
+                                                                syntax-0
+                                                                nil))))
+                       (if syn
+                         ;; args expanded
+                         (if (slot ctx 'gens)
+                           ;; there are metas: okay, use expansion as-is.
+                           syn
+                           ;; no metas: add @1 at the end and expand
+                           ;; again, without catching errors.
+                           (sys:op-alpha-rename f e
+                                                (append syntax-0
+                                                        '(@1))
+                                                nil))
+                         ;; args didn't expand, thus need the extra
+                         ;; element. But we can't add a @1 because by
+                         ;; doing so we could be introducing metas.
+                         ;; We add a gensym instead to try to satisfy
+                         ;; the syntax without adding metas. If all works,
+                         ;; we can use a symacrolet pass to replace
+                         ;; that gensym with @1.
                          (let ((syn (sys:op-alpha-rename
                                       f e (append syntax-0
-                                                  (list (sys:setq do-gen
-                                                                  (gensym))))
+                                                  (list (gensym)))
                                       nil)))
+                           ;; It didn't blow up with the gensym. But
+                           ;; if there are metas, we don't want to be
+                           ;; be adding this gensym. We know that the
+                           ;; form does not expand without the gensym.
+                           ;; So we repeat that expansion, but this time
+                           ;; without op-ignerr. This will flush out
+                           ;; the error.
                            (when (slot ctx 'gens)
                              (sys:op-alpha-rename f e syntax-0 nil))
-                           syn))))
+                           ;; There were no metas. OK, let's augment
+                           ;; syntax-0 with @1 instead of the gensym.
+                           (sys:op-alpha-rename f e
+                                                (append syntax-0 '(@1))
+                                                nil))))))
          (syntax-2 (sys:op-alpha-rename f e syntax-1 t))
          (metas (slot ctx 'gens))
          (rec (slot ctx 'rec))
@@ -129,20 +160,7 @@
                                  ;; no cadr here to avoid circular autoload
                                  ^[sys:apply ,(car (cdr syntax-2))
                                              (append ,rest-sym (list ,*fargs-l1))]))
-                              (metas syntax-2)
-                              ((eq sym 'do)
-                               (cond
-                                 (compat syntax-2)
-                                 (do-gen
-                                   (let ((arg1 (sys:ensure-op-arg ctx 1)))
-                                     ^(symacrolet ((,do-gen ,arg1))
-                                        ,syntax-2)))
-                                 (t (let* ((arg1 (sys:ensure-op-arg ctx 1))
-                                           (syntax-0-alt (append args (list arg1)))
-                                           (syntax-1-alt (sys:op-alpha-rename f e
-                                                                              syntax-0-alt
-                                                                              nil)))
-                                      (sys:op-alpha-rename f e syntax-1-alt t)))))
+                              ((or metas (eq sym 'do)) syntax-2)
                               (t (append syntax-2 rest-sym))))))
     (let ((metas (slot ctx 'gens)))
       (cond
