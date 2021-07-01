@@ -49,6 +49,9 @@
 @;;
 @(define check-func ())
 @  (cases)
+@;   exception
+.coNP @/Accessors/ @@, caar @(skip)
+@    (or)
 .coNP @{type /Operator|Macro/}/function @(skip)
 @      (assert bad ln `no .synb after @type/function heading`)
 @      (check-synb)
@@ -61,7 +64,7 @@
 @      (assert bad ln `no .synb after @{type}s heading`)
 @      (check-synb)
 @    (or)
-.coNP @{type /Function|Operator|Macro|Accessor|Method|Structure|Pattern operator|Parameter list macro/}@(assert bad ln `bad @type heading`) @@ @{x /\S+/}@junk
+.coNP @{type /Function|Operator|Macro|Accessor|Method|Structure|Pattern (operator|macro)|Parameter list macro|(Operator|Macro)\/function/}@(assert bad ln `bad @type heading`) @@ @{x /\S+/}@junk
 @      (assert bad ln `extra elements in singular @type heading`)
 @      (bind junk "")
 @      (assert bad ln `no .synb after @type heading`)

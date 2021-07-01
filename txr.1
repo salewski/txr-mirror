@@ -21556,7 +21556,7 @@ yields the same value as the
 .onom
 expression.
 
-.coNP Accessors @, caar @, cadr @, cdar @, cddr @ ... and @ cdddddr
+.coNP Accessors @, caar @, cadr @, cdar @, cddr ..., @ cdddddr
 .synb
 .mets (caar << object )
 .mets (cadr << object )
@@ -37086,7 +37086,7 @@ one or more argument forms to be treated in a Lisp-1 context, in situations
 when such a macro needs to itself expand the material, rather than merely
 insert it as-is into the output code template.
 
-.coNP Functions @ expand and @ *expand
+.coNP Functions @ expand and @ expand*
 .synb
 .mets (expand < form <> [ env ])
 .mets (expand* < form <> [ env ])
@@ -51851,7 +51851,7 @@ and
 each produce the same integer hash value for any valid seed value
 .codn S .
 
-.coNP Functions @, hash_keys @, hash_values @ hash_pairs and @ hash_alist
+.coNP Functions @, hash-keys @, hash-values @ hash-pairs and @ hash-alist
 .synb
 .mets (hash-keys << hash )
 .mets (hash-values << hash )
@@ -53580,7 +53580,7 @@ specified by the first form.
   --> (c b a)
 .brev
 
-.coNP Macros @, ap @, ip @ ado and @ ido.
+.coNP Macros @, ap @, ip @ ado and @ ido
 .synb
 .mets (ap << form +)
 .mets (ip << form +)
@@ -65755,7 +65755,7 @@ or
 .meta fd
 arguments.
 
-.coNP Variables @, s-ifmt @, s-iflnk @, s-ifreg @, s-ifblk ... , @ s-ixoth
+.coNP Variables @, s-ifmt @, s-iflnk @, s-ifreg @, s-ifblk ..., @ s-ixoth
 .desc
 The following variables exist, having integer values. These are bitmasks
 which can be applied against the value given by the
@@ -68426,7 +68426,7 @@ These are the integer priority codes specified in the
 .code syslog
 function.
 
-.coNP The @ *stdlog* special variable
+.coNP Special variable @ *stdlog*
 .desc
 The
 .code *stdlog*
@@ -74068,7 +74068,7 @@ other than for expressing the element type of an
 or
 .codn zarray .
 
-.coNP FFI types @, short @, ushort @, int @, uint @, long @ and @ ulong
+.coNP FFI types @, short @, ushort @, int @, uint @ long and @ ulong
 These types correspond to the C integer types
 .codn short ,
 .codn "unsigned short" ,
@@ -75860,7 +75860,7 @@ the most strictly alignment member of the structure.  The alignment of all
 other bitfields is ignored.
 
 .SS* Additional Types
-.coNP FFI types @, size-t @, ptrdiff-t @, int-ptr-t @, uint-ptr-t @, wint-t @, sig-atomic-t @ time-t and @ clock-t .
+.coNP FFI types @, size-t @, ptrdiff-t @, int-ptr-t @, uint-ptr-t @, wint-t @, sig-atomic-t @ time-t and @ clock-t
 These additional FFI types for common C language types are provided as
 .code typedef
 aliases.
@@ -79933,7 +79933,7 @@ or
 .code eval-only
 top-level forms.
 
-.coNP Special Variable @ *opt-level*
+.coNP Special variable @ *opt-level*
 
 .desc
 The special variable
@@ -80857,7 +80857,7 @@ is recorded as a value.
 
 .SS* Listener Variables
 
-.coNP Variables @, *0 @, *1 @, *2 @, ... @ *99
+.coNP Variables @, *0 @, *1 @, *2 ..., @ *99
 .desc
 The listener provides useful variables which allow commands to reference
 the results of previous commands. As noted previously, the commands
@@ -80880,7 +80880,7 @@ Thus, up to the previous hundred results can be referenced:
   10
 .brev
 
-.coNP Symbol Macros @, *-1 @, *-2 @, ... @ *-20
+.coNP Symbol macros @, *-1 @, *-2 ..., @ *-20
 The listener provides small number of symbol macros for referencing the 
 results of previous commands in a relative. The macro
 .code *-1
