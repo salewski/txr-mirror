@@ -59274,11 +59274,11 @@ The
 argument may not be a variable length type, such as an array of
 unspecified size.
 
-Note: the
+Note: the functions
 .code cptr-get
 and
 .code cptr-out
-is useful in simplifying the interaction with "semi-opaque" foreign objects:
+are useful in simplifying the interaction with "semi-opaque" foreign objects:
 objects which serve as a API handles that are treated as opaque pointers in API
 argument calls, but which expose some internal members that the application
 must access directly. The
@@ -59289,13 +59289,13 @@ necessary. Under this technique, the description of the foreign object need not
 be complete. Structure members which occur after the last member that the
 application is interested in need not be described in the FFI type.
 
-.coNP Function @ cptr-put
+.coNP Function @ cptr-out
 .synb
-.mets (cptr-put < cptr < obj <> [ type ])
+.mets (cptr-out < cptr < obj <> [ type ])
 .syne
 .desc
 The
-.code cptr-put
+.code cptr-out
 function converts a Lisp value into a C representation,
 which is stored at the memory location denoted by
 .metn cptr ,

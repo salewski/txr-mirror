@@ -419,7 +419,7 @@
       ("cptr-int" "N-015139D6")
       ("cptr-null" "N-01CB17AB")
       ("cptr-obj" "N-013139D1")
-      ("cptr-put" "N-00513A38")
+      ("cptr-out" "N-005139EC")
       ("cptr-size-hint" "N-024CD90F")
       ("cptr-type" "N-03B1F90C")
       ("cptr-zap" "N-00913A85")
