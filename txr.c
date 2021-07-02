@@ -105,8 +105,6 @@ static void help(void)
 "-Dvar                  Predefine variable var, with empty string value.\n"
 "-q                     Quiet: don't report errors during query matching.\n"
 "-v                     Verbose: extra logging from matcher.\n"
-"-b                     Don't dump list of bindings, or 'false'\n"
-"                       on unsuccessful termination.\n"
 "-B                     Force list of bindings to be dumped, or false\n"
 "                       if termination is unsuccessful.\n"
 "-l                     If dumping bindings, use TXR Lisp format.\n"
@@ -134,6 +132,9 @@ static void help(void)
 "                       using the prinl function.\n"
 "-P expression          Like -p, but prints using pprinl.\n"
 "-t expression          Like -p, but prints using tprint.\n"
+"-b var=value           Bind a Lisp global variable as if by defparml.\n"
+"                       var and value are parsed as Lisp syntax.\n"
+"                       value is not evaluated.\n"
 "-C N                   Request backward-compatible behavior to the\n"
 "                       specified version of TXR.\n"
 "--help                 Reproduce this help text.\n"
@@ -843,20 +844,27 @@ int txr_main(int argc, char **argv)
       case 'b':
         drop_privilege();
         {
-          val pair = partition_star(arg, pos(chr('='), arg, nil, nil));
-          val sym = lisp_parse(pop(&pair), std_error,
-                               colon_k, lit("cmdline-expr"), colon_k);
-          val obj = lisp_parse(pop(&pair), std_error,
-                               colon_k, lit("cmdline-expr"), colon_k);
+          val pair = split_str(arg, chr('='));
+          if (cdr(pair)) {
+            val sym = lisp_parse(pop(&pair), std_error,
+                                 colon_k, lit("cmdline-expr"), colon_k);
+            val obj = lisp_parse(pop(&pair), std_error,
+                                 colon_k, lit("cmdline-expr"), colon_k);
 
-          if (!bindable(sym)) {
+            if (!bindable(sym)) {
+              format(std_error,
+                     lit("~a: ~s isn't a bindable symbol\n"),
+                     prog_string, sym, nao);
+              return EXIT_FAILURE;
+            }
+
+            reg_var(sym, obj);
+          } else {
             format(std_error,
-                   lit("~a: ~s isn't a bindable symbol\n"),
-                   prog_string, sym, nao);
+                   lit("~a: -b argument must be var=val syntax\n"),
+                   prog_string, nao);
             return EXIT_FAILURE;
           }
-
-          reg_var(sym, obj);
         }
         break;
       case 'c':
