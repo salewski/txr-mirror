@@ -9,7 +9,6 @@ static void dir_tables_init(void)
 @(end)
 @(bind tl-orig-sym
        @(append-each* ((entry (package-alist))
-                       (pkg-name [mapcar car entry])
                        (pkg [mapcar cdr entry]))
           (append-each ((sym (package-symbols pkg)))
             (when (or (boundp sym) (fboundp sym)
