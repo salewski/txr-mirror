@@ -200,7 +200,7 @@ void sig_init(void)
 #if HAVE_ITIMER
   reg_varl(intern(lit("itimer-real"), user_package), num_fast(ITIMER_REAL));
   reg_varl(intern(lit("itimer-virtual"), user_package), num_fast(ITIMER_VIRTUAL));
-  reg_varl(intern(lit("itimer-prov"), user_package), num_fast(ITIMER_PROF));
+  reg_varl(intern(lit("itimer-prof"), user_package), num_fast(ITIMER_PROF));
   reg_fun(intern(lit("getitimer"), user_package), func_n1(getitimer_wrap));
   reg_fun(intern(lit("setitimer"), user_package), func_n3(setitimer_wrap));
 #endif
