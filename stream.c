@@ -1434,7 +1434,7 @@ static struct stdio_mode do_parse_mode(val mode_str, struct stdio_mode m_dfl,
                                        val self)
 {
   struct stdio_mode m = stdio_mode_init_blank;
-  const wchar_t *ms = c_str(default_arg(mode_str, lit("")), self);
+  const wchar_t *ms = c_str(default_arg_strict(mode_str, lit("")), self);
   int nredir = 0;
 
   switch (*ms) {
@@ -2917,7 +2917,8 @@ static struct strm_ops record_adapter_ops =
 val record_adapter(val regex, val stream, val include_match)
 {
   val self = lit("record-adapter");
-  val rec_adapter = make_delegate_stream(self, default_arg(stream, std_input),
+  val rec_adapter = make_delegate_stream(self,
+                                         default_arg_strict(stream, std_input),
                                          sizeof (struct record_adapter_base),
                                          &record_adapter_ops.cobj_ops);
   struct record_adapter_base *rb = coerce(struct record_adapter_base *,
@@ -2998,7 +2999,7 @@ val clear_error(val stream)
 val get_line(val stream_in)
 {
   val self = lit("get-line");
-  val stream = default_arg(stream_in, std_input);
+  val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
   return ops->get_line(stream);
@@ -3007,7 +3008,7 @@ val get_line(val stream_in)
 val get_char(val stream_in)
 {
   val self = lit("get-char");
-  val stream = default_arg(stream_in, std_input);
+  val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
   return ops->get_char(stream);
@@ -3016,7 +3017,7 @@ val get_char(val stream_in)
 val get_byte(val stream_in)
 {
   val self = lit("get-byte");
-  val stream = default_arg(stream_in, std_input);
+  val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
   return ops->get_byte(stream);
@@ -3024,7 +3025,7 @@ val get_byte(val stream_in)
 
 val get_bytes(val self, val stream_in, mem_t *ptr, ucnum len)
 {
-  val stream = default_arg(stream_in, std_input);
+  val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
   return unum(ops->fill_buf(stream, ptr, len, 0));
@@ -3033,7 +3034,7 @@ val get_bytes(val self, val stream_in, mem_t *ptr, ucnum len)
 val unget_char(val ch, val stream_in)
 {
   val self = lit("unget-char");
-  val stream = default_arg(stream_in, std_input);
+  val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
   if (!is_chr(ch))
@@ -3045,7 +3046,7 @@ val unget_byte(val byte, val stream_in)
 {
   val self = lit("unget-byte");
   cnum b = c_num(byte, self);
-  val stream = default_arg(stream_in, std_input);
+  val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
 
@@ -3059,8 +3060,8 @@ val unget_byte(val byte, val stream_in)
 val put_buf(val buf, val pos_in, val stream_in)
 {
   val self = lit("put-buf");
-  val stream = default_arg(stream_in, std_output);
-  ucnum pos = c_unum(default_arg(pos_in, zero), self);
+  val stream = default_arg_strict(stream_in, std_output);
+  ucnum pos = c_unum(default_arg_strict(pos_in, zero), self);
   ucnum len = c_unum(length_buf(buf), self);
   mem_t *ptr = buf_get(buf, self);
   struct strm_ops *ops = coerce(struct strm_ops *,
@@ -3072,8 +3073,8 @@ val put_buf(val buf, val pos_in, val stream_in)
 val fill_buf(val buf, val pos_in, val stream_in)
 {
   val self = lit("fill-buf");
-  val stream = default_arg(stream_in, std_input);
-  ucnum pos = c_unum(default_arg(pos_in, zero), self);
+  val stream = default_arg_strict(stream_in, std_input);
+  ucnum pos = c_unum(default_arg_strict(pos_in, zero), self);
   ucnum len = c_unum(length_buf(buf), self);
   mem_t *ptr = buf_get(buf, self);
   struct strm_ops *ops = coerce(struct strm_ops *,
@@ -3084,8 +3085,8 @@ val fill_buf(val buf, val pos_in, val stream_in)
 val fill_buf_adjust(val buf, val pos_in, val stream_in)
 {
   val self = lit("fill-buf-adjust");
-  val stream = default_arg(stream_in, std_input);
-  ucnum pos = c_unum(default_arg(pos_in, zero), self);
+  val stream = default_arg_strict(stream_in, std_input);
+  ucnum pos = c_unum(default_arg_strict(pos_in, zero), self);
   val alloc_size = buf_alloc_size(buf);
   ucnum len = c_unum(alloc_size, self);
   mem_t *ptr = buf_get(buf, self);
@@ -3101,7 +3102,7 @@ val fill_buf_adjust(val buf, val pos_in, val stream_in)
 val get_line_as_buf(val stream_in)
 {
   val self = lit("get-line-as-buf");
-  val stream = default_arg(stream_in, std_input);
+  val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
   val buf = make_buf(zero, nil, num_fast(128));
@@ -3851,7 +3852,7 @@ static val put_indent(val stream, struct strm_ops *ops, cnum chars)
 val put_string(val string, val stream_in)
 {
   val self = lit("put-string");
-  val stream = default_arg(stream_in, std_output);
+  val stream = default_arg_strict(stream_in, std_output);
   struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
 
   if (lazy_stringp(string)) {
@@ -3894,7 +3895,7 @@ val put_string(val string, val stream_in)
 val put_char(val ch, val stream_in)
 {
   val self = lit("put-char");
-  val stream = default_arg(stream_in, std_output);
+  val stream = default_arg_strict(stream_in, std_output);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
   struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
@@ -3936,7 +3937,7 @@ val put_char(val ch, val stream_in)
 val put_byte(val byte, val stream_in)
 {
   val self = lit("put-byte");
-  val stream = default_arg(stream_in, std_output);
+  val stream = default_arg_strict(stream_in, std_output);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
   cnum b = c_num(byte, self);
@@ -3948,9 +3949,11 @@ val put_byte(val byte, val stream_in)
   return ops->put_byte(stream, b);
 }
 
-val put_line(val string, val stream)
+val put_line(val string, val stream_in)
 {
-  return (put_string(default_arg(string, null_string), stream), put_char(chr('\n'), stream));
+  val stream = default_arg_strict(stream_in, std_output);
+  return (put_string(default_arg_strict(string, null_string), stream),
+          put_char(chr('\n'), stream));
 }
 
 val put_strings(val strings, val stream)
@@ -3974,7 +3977,7 @@ val put_lines(val lines, val stream)
 val flush_stream(val stream_in)
 {
   val self = lit("flush-stream");
-  val stream = default_arg(stream_in, std_output);
+  val stream = default_arg_strict(stream_in, std_output);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
   return ops->flush(stream);
@@ -4151,7 +4154,7 @@ struct strm_ctx *get_ctx(val stream)
 
 val get_string(val stream_in, val nchars, val close_after_p)
 {
-  val stream = default_arg(stream_in, std_input);
+  val stream = default_arg_strict(stream_in, std_input);
   val strstream = make_string_output_stream();
   nchars = default_null_arg(nchars);
   val ch;
@@ -5189,7 +5192,7 @@ val mkdtemp_wrap(val prefix)
 val mkstemp_wrap(val prefix, val suffix)
 {
   val self = lit("mkstemp");
-  val suff = default_arg(suffix, null_string);
+  val suff = default_arg_strict(suffix, null_string);
   val templ = scat3(prefix, lit("XXXXXX"), suff);
   cnum slen = c_num(length(suff), self);
   char *tmpl = utf8_dup_to(c_str(templ, self));

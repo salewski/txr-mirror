@@ -604,13 +604,12 @@ found:
 
 val regex_parse(val string, val error_stream)
 {
-  uses_or2;
   val save_stream = std_error;
   val stream = make_string_byte_input_stream(string);
   parser_t parser;
 
-  error_stream = default_null_arg(error_stream);
-  std_error = if3(error_stream == t, std_output, or2(error_stream, std_null));
+  error_stream = default_arg_strict(error_stream, std_null);
+  std_error = if3(error_stream == t, std_output, error_stream);
 
   parser_common_init(&parser);
   parser.stream = stream;
@@ -635,16 +634,13 @@ static val lisp_parse_impl(val self, enum prime_parser prime,
                            val error_stream, val error_return_val, val name_in,
                            val lineno)
 {
-  uses_or2;
-  val source = default_null_arg(source_in);
+  val source = default_arg_strict(source_in, std_input);
   val str = stringp(source);
-  val input_stream = if3(str,
-                         make_string_byte_input_stream(source),
-                         or2(source, std_input));
-  val name = or2(default_null_arg(name_in),
-                 if3(str,
-                     lit("string"),
-                     stream_get_prop(input_stream, name_k)));
+  val input_stream = if3(str, make_string_byte_input_stream(source), source);
+  val name = default_arg_strict(name_in,
+                                if3(str,
+                                    lit("string"),
+                                    stream_get_prop(input_stream, name_k)));
   val parser = ensure_parser(input_stream, name);
   val saved_dyn = dyn_env;
   parser_t *pi = parser_get_impl(self, parser);
@@ -657,8 +653,8 @@ static val lisp_parse_impl(val self, enum prime_parser prime,
 
   dyn_env = make_env(nil, nil, dyn_env);
 
-  error_stream = default_null_arg(error_stream);
-  error_stream = if3(error_stream == t, std_output, or2(error_stream, std_null));
+  error_stream = default_arg_strict(error_stream, std_null);
+  error_stream = if3(error_stream == t, std_output, error_stream);
   class_check (self, error_stream, stream_s);
 
   if (lineno && !missingp(lineno))
@@ -814,16 +810,15 @@ val read_compiled_file(val self, val stream, val error_stream)
 val txr_parse(val source_in, val error_stream,
               val error_return_val, val name_in)
 {
-  uses_or2;
   val self = lit("txr-parse");
-  val source = default_null_arg(source_in);
+  val source = default_arg_strict(source_in, std_input);
   val input_stream = if3(stringp(source),
                          make_string_byte_input_stream(source),
-                         or2(source, std_input));
-  val name = or2(default_null_arg(name_in),
-                 if3(stringp(source),
-                     lit("string"),
-                     stream_get_prop(input_stream, name_k)));
+                         source);
+  val name = default_arg_strict(name_in,
+                                if3(stringp(source),
+                                    lit("string"),
+                                    stream_get_prop(input_stream, name_k)));
   int gc = gc_state(0);
   val saved_dyn = dyn_env;
   val parser_obj = ensure_parser(input_stream, name);
@@ -833,8 +828,8 @@ val txr_parse(val source_in, val error_stream,
   uw_simple_catch_begin;
 
   dyn_env = make_env(nil, nil, dyn_env);
-  error_stream = default_null_arg(error_stream);
-  error_stream = if3(error_stream == t, std_output, or2(error_stream, std_null));
+  error_stream = default_arg_strict(error_stream, std_null);
+  error_stream = if3(error_stream == t, std_output, error_stream);
   class_check (self, error_stream, stream_s);
 
   parse_once(self, input_stream, name);

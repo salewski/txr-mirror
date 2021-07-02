@@ -6342,16 +6342,18 @@ static val mapf(val fun, struct args *funlist)
   return func_f0v(cons(fun, args_get_list(funlist)), do_mapf);
 }
 
-val prinl(val obj, val stream)
+val prinl(val obj, val stream_in)
 {
-  val ret = obj_print(obj, default_arg(stream, std_output), nil);
+  val stream = default_arg_strict(stream_in, std_output);
+  val ret = obj_print(obj, stream, nil);
   put_char(chr('\n'), stream);
   return ret;
 }
 
-val pprinl(val obj, val stream)
+val pprinl(val obj, val stream_in)
 {
-  val ret = obj_print(obj, default_arg(stream, std_output), t);
+  val stream = default_arg_strict(stream_in, std_output);
+  val ret = obj_print(obj, stream, t);
   put_char(chr('\n'), stream);
   return ret;
 }

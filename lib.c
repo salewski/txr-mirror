@@ -8888,7 +8888,7 @@ static val lazy_stream_func(val env, val lcons)
 
 val lazy_stream_cons(val stream)
 {
-  stream = default_arg(stream, std_input);
+  stream = default_arg_strict(stream, std_input);
 
   if (real_time_stream_p(stream)) {
     return make_lazy_cons(func_f1(stream, simple_lazy_stream_func));
@@ -13739,13 +13739,13 @@ val obj_print(val obj, val out, val pretty)
 
 val print(val obj, val stream, val pretty)
 {
-  return obj_print(obj, default_arg(stream, std_output),
+  return obj_print(obj, default_arg_strict(stream, std_output),
                    default_null_arg(pretty));
 }
 
 val pprint(val obj, val stream)
 {
-  return obj_print(obj, default_arg(stream, std_output), t);
+  return obj_print(obj, default_arg_strict(stream, std_output), t);
 }
 
 val tostring(val obj)
@@ -13764,7 +13764,7 @@ val tostringp(val obj)
 
 val put_json(val obj, val stream_in, val flat)
 {
-  val stream = default_arg(stream_in, std_output);
+  val stream = default_arg_strict(stream_in, std_output);
   val imode = if3(default_null_arg(flat),
                   set_indent_mode(stream, num_fast(indent_foff)),
                   test_set_indent_mode(stream, num_fast(indent_off),
