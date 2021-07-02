@@ -6640,17 +6640,6 @@ val find_symbol(val name, val package_in, val notfound_val_in)
       return cdr(cell);
   }
 
-  {
-    val fallback = get_hash_userdata(package->pk.symhash);
-
-    for (; fallback; fallback = cdr(fallback)) {
-      val fb_pkg = car(fallback);
-      val cell = gethash_e(self, fb_pkg->pk.symhash, name);
-      if (cell)
-        return cdr(cell);
-    }
-  }
-
   return default_null_arg(notfound_val_in);
 }
 
