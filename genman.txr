@@ -298,14 +298,33 @@ function tocjump(hash) {
 @(bind (name code) @(transpose [nsort (mapcar (tb ((sym code))
                                                 (list (html-decode sym) code))
                                               (hash-pairs symhash)) : car]))
+@(do (let ((syms (append-each* ((entry [remove-if (op equal "pub")
+                                                  (package-alist)
+                                                  car])
+                                (pkg-name [mapcar car entry])
+                                (pkg [mapcar cdr entry]))
+                   (let ((fn (casequal pkg-name
+                               (("usr" "keyword") (fun tostringp))
+                               (t (opip tostringp (join-with ":" pkg-name))))))
+                     (mapcar fn (package-symbols pkg)))))
+           (ignames '("*-1" "*-2" "*-20"
+                      "*0" "*1" "*2" "*99"
+                      "*n" "*r" "*v"
+                      "--args" "--eargs" "-C"
+                      ".."
+                      "TXR_COMPAT"
+                      "buf-get-" "buf-put-")))
+       (mapdo (do unless (in syms @1)
+                  (format *stderr* "~a: missing from image\n" @1))
+              (remove-if (op in ignames) name))))
 @(output "stdlib/doc-syms.tl")
 (defparml doc-syms
   (hash-from-pairs
 @  (repeat)
       (@(tostring name) @(tostring code))
-@(first)
+@  (first)
     '((@(tostring name) @(tostring code))
-@(last)
+@  (last)
       (@(tostring name) @(tostring code)))))
-@ (end)
+@  (end)
 @(end)
