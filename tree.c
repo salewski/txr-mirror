@@ -980,6 +980,7 @@ void tree_init(void)
   reg_fun(intern(lit("set-right"), user_package), func_n2(set_right));
   reg_fun(intern(lit("set-key"), user_package), func_n2(set_key));
   reg_fun(intern(lit("copy-tnode"), user_package), func_n1(copy_tnode));
+  reg_fun(intern(lit("tnodep"), user_package), func_n1(tnodep));
   reg_fun(tree_s, func_n4o(tree, 0));
   reg_fun(tree_construct_s, func_n2(tree_construct));
   reg_fun(intern(lit("copy-search-tree"), user_package), func_n1(copy_search_tree));
