@@ -2040,7 +2040,7 @@
                            ((and pars.rest apply-list-expr)
                             (add ^(,pars.rest ,al-val)))
                            (pars.rest
-                             ^(,pars.rest nil))
+                             (add ^(,pars.rest nil)))
                            (apply-list-expr
                              (add ^(,ign-2 (if ,al-val
                                              (lambda-excess-apply-list))))))))
