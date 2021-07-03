@@ -86,3 +86,8 @@
 (mtest
   [(lambda (x y : (a 3) (b 4)) (list x y a b)) . vl] (a b c d)
   [(lambda (x y : (a 3) (b 4)) (list x y a b)) 1 . vl] :error)
+
+(cond
+  (*compile-test* (exit t))
+  (t (set *compile-test* t)
+     (load (base-name *load-path*))))
