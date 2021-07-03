@@ -5,7 +5,7 @@
 
 (each ((f '#"aseq ashwin circ cont defset except \
              fini ifa man-or-boy oop-mi oop-seq oop \
-             parse quasi quine seq stslot"))
+             parse quasi quine seq stslot const"))
   (let ((exf `@{%this-dir%}/@f.expected`))
     (when (path-exists-p exf)
       (file-append-string %expected-file%
