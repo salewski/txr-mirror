@@ -57418,7 +57418,7 @@ the delimiter for the short suffix is the rightmost period.
 If the delimiting period is the rightmost character of
 .metn path ,
 or occurs immediately before a trailing path separator,
-then the suffix delimited by that period is the empty string.
+then the suffix delimited by that period is the period itself.
 
 If
 .meta path
@@ -57456,7 +57456,7 @@ extracted from this last component.
   (long-suffix "abc") -> nil
   (long-suffix ".abc") -> nil
   (long-suffix "/.abc") -> nil
-  (long-suffix "abc.") -> ""
+  (long-suffix "abc.") -> "."
   (long-suffix "abc.tar") -> ".tar"
   (long-suffix "abc.tar.gz") -> ".tar.gz"
   (long-suffix "abc.tar.gz/") -> ".tar.gz"
