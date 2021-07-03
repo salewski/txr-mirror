@@ -5042,8 +5042,9 @@ val short_suffix(val name, val alt_in)
   const wchar_t *str = c_str(name, self);
   const wchar_t *dot = wcsrchr(str, '.');
   const wchar_t *sl = if3(dot, wcspbrk(dot + 1, psc), 0);
+  int sl_trail = if3(sl, sl[wcsspn(sl, psc)] == 0, 0);
 
-  if (!dot || (sl && sl[1]) || dot == str || wcschr(psc, dot[-1])) {
+  if (!dot || (sl && sl[1] && !sl_trail) || dot == str || wcschr(psc, dot[-1])) {
     return default_null_arg(alt_in);
   } else {
     wchar_t *suff = chk_strdup(dot);
@@ -5063,7 +5064,7 @@ val long_suffix(val name, val alt_in)
   {
     const wchar_t *sl;
 
-    while (dot && (sl = wcspbrk(dot, psc)) && sl[1])
+    while (dot && (sl = wcspbrk(dot, psc)) && sl[1] && sl[wcsspn(sl, psc)] != 0)
       dot = wcschr(sl + 1, '.');
 
     if (dot && (dot == str || wcschr(psc, dot[-1])))
@@ -5074,7 +5075,7 @@ val long_suffix(val name, val alt_in)
     } else {
       wchar_t *suff = chk_strdup(dot);
       if (sl)
-      suff[sl - dot] = 0;
+        suff[sl - dot] = 0;
       return string_own(suff);
     }
   }

@@ -57406,10 +57406,10 @@ If a suffix delimiter is present, then the long or short suffix is the
 substring of
 .meta path
 which includes the delimiting period and all characters which follow,
-except that if the last character of
+except that if
 .meta path
-is a path separator character, that character is omitted from the
-returned suffix.
+ends in a sequence of one or more path separator characters,
+those characters are omitted from the returned suffix.
 
 If multiple periods occur in the last component of the path,
 the delimiter for the long suffix is the leftmost period and
@@ -57428,7 +57428,8 @@ For the purpose of identifying the last component of
 .metn path ,
 if
 .meta path
-ends in a path-separator character, then that character is removed.
+ends a sequence of one or more path-separator characters, then those
+characters are removed from consideration.
 If the remaining string contains path-separator characters, then
 the last component consists of that portion of it which follows
 the rightmost path-separator character. Otherwise, the last component
@@ -57446,6 +57447,7 @@ extracted from this last component.
   (short-suffix "abc" "") -> ""
   (short-suffix "abc.") -> "."
   (short-suffix "abc.tar") -> ".tar"
+  (short-suffix "abc.tar///") -> ".tar"
   (short-suffix "abc.tar.gz") -> ".gz"
   (short-suffix "abc.tar.gz/") -> ".gz"
   (short-suffix "x.y.z/abc.tar.gz/") -> ".gz"
@@ -57458,6 +57460,7 @@ extracted from this last component.
   (long-suffix "/.abc") -> nil
   (long-suffix "abc.") -> "."
   (long-suffix "abc.tar") -> ".tar"
+  (long-suffix "abc.tar///") -> ".tar"
   (long-suffix "abc.tar.gz") -> ".tar.gz"
   (long-suffix "abc.tar.gz/") -> ".tar.gz"
   (long-suffix "x.y.z/abc.tar.gz/") -> ".tar.gz"

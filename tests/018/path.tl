@@ -49,7 +49,12 @@
   (short-suffix ".a/b/.b/") nil
   (short-suffix ".a/b/c.b") ".b"
   (short-suffix ".a/b/c.b/") ".b"
-  (short-suffix ".a/b/c.b//") nil)
+  (short-suffix ".a/b/c.b//") ".b"
+  (short-suffix ".a/b/c.b///") ".b"
+  (short-suffix ".a/b/c.") "."
+  (short-suffix ".a/b/c./") "."
+  (short-suffix ".a/b/c.//") "."
+  (short-suffix ".a/b/c.///") ".")
 
 (mtest
   (long-suffix "/") nil
@@ -67,7 +72,16 @@
   (long-suffix "a.b/c.d.e/") ".d.e"
   (long-suffix "a.b/c.d.e/f") nil
   (long-suffix "a.b/c.d.e/f.g.h") ".g.h"
-  (long-suffix "a.b/c.d.e//") nil)
+  (long-suffix "a.b/c.d.e//") ".d.e"
+  (long-suffix "a.b/c.d.e///") ".d.e"
+  (long-suffix "a.b/c.d.") ".d."
+  (long-suffix "a.b/c.d./") ".d."
+  (long-suffix "a.b/c.d.//") ".d."
+  (long-suffix "a.b/c.d.///") ".d."
+  (long-suffix "a.b/c.") "."
+  (long-suffix "a.b/c./") "."
+  (long-suffix "a.b/c.//") "."
+  (long-suffix "a.b/c.///") ".")
 
 (mtest
   (base-name "") ""
