@@ -89,7 +89,7 @@
   (compile-error form "excess arguments given"))
 
 (defun lambda-too-few-args (form)
-  (compile-error form "inufficient arguments given"))
+  (compile-error form "insufficient arguments given"))
 
 (defun lambda-short-apply-list ()
   (throwf 'eval-error "~s: applied argument list too short" 'lambda))
