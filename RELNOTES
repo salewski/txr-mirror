@@ -15,8 +15,8 @@
     - new functions short-suffix and long-suffix for robustly
       extracting the suffixes/extensions of path names.
   - lib:
-    - new functions cxr and cyr for traversing cons cell
-      structure using a car/cdr path binary-coded in an integer.
+    - new functions cxr and cyr for traversing cons-cell
+      structures using a car/cdr path binary-coded in an integer.
     - mismatch/rmismatch better optimized for strings
       - starts-with and ends-with use these.
   - structural pattern matching:
@@ -26,7 +26,7 @@
       floating-point token.
   - tests:
     - target-installable test cases are now relocatable (can be installed
-      at any path) due to small improvement in the run.sh script.
+      at any path) due to a small improvement in the run.sh script.
 
   - program-wide:
     - share/txr/stdlib moved to stdlib.
@@ -57,7 +57,7 @@
       fileno is invoked on it
   - formatted printing:
     - format: new precision modifier - for zero instead of plus sign.
-    - pic macro: takes advantae of format work to generate better code.
+    - pic macro: takes advantage of format work to generate better code.
   - subprocesses:
     - some file descriptor saving-restoring manipulations moved
       into child process (in open-process, open-subprocess, run)
@@ -71,7 +71,7 @@
       so that the txr-case construct effectively backtracks over the
       data as it tries successive cases.
   - command-line
-    - new --noprofile option to invoke listner without processing
+    - new --noprofile option to invoke listener without processing
       ~/.txr_profile file.
 
   Bugs
@@ -135,26 +135,25 @@
       - used in tags.tl, which can therefore handle source code
         that contains struct literals.
   - compile/eval:
-    - improvement coordination between error exceptions,
-      compiler error messages sent to the error stream, and
-      deferred warnings.
+    - improved coordination between error exceptions, compiler
+      error messages sent to the error stream, and deferred warnings.
 
   Bugs
 
   - listener:
     - doc function not working in Cygwin/Cygnal port.
-    - macro and oeprator completion after ' (quote) character;
+    - macro and operator completion after ' (quote) character;
       so that (doc 'wh[Tab] will complete on a macro name like while.
   - system interface:
     - mkstemp build problem problem affecting Solaris and other platforms.
   - printer:
-    - added mising handing for for printing (sys:struct-lit ...)
-      syntax as #S syntax.
+    - added missing handling for printing (sys:struct-lit ...) syntax
+      as #S syntax.
   - parser
     - bug with #; commenting syntax not playing nicely with #S literals.
   - JSON:
     - test cases on Cygwin work.
-    - JSON print-read consistency problem addressed..
+    - JSON print-read consistency problem addressed.
   - FFI:
     - memory leaks in FFI type system when struct type is redefined.
     - bug in deffi causing the libffi ffi_prep_cif_var function to
@@ -177,7 +176,7 @@
   Features
 
   - JSON support:
-    #J syntax in TXR Lisp
+    - #J syntax in TXR Lisp
     - allows quasi-quoting and circular notation.
     - I/O with JSON objects, with convenience routines like
       file-put-json, and others.
@@ -392,7 +391,7 @@
   - Doc:
     - numerous improvements in the manual, especially HTML output.
     - New library function doc for documentation lookup:
-      - (doc) -> open manual with default browswer
+      - (doc) -> open manual with default browser
       - (doc 'cons) -> open manual to specific symbol
     - INSTALL document maintained.
 

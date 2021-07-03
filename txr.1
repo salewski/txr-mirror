@@ -470,16 +470,16 @@ lists, and for combining subqueries using logical conjunction, disjunction and
 negation, and numerous others.
 
 Patterns can contain actions which transform data and generate output.
-These actions can be embedded anywhere within the pattern matching logic.
+These actions can be embedded anywhere within the pattern-matching logic.
 A common structure for small \*(TX scripts is to perform a complete matching
-session in the at the top of the script, and then deal with processing
+session at the top of the script, and then deal with processing
 and reporting at the bottom.
 
 The \*(TL language can be used from within \*(TX scripts as an
 embedded language, or completely standalone.  It supports functional,
 imperative and object-oriented programming, and provides numerous data types
 such as symbols, strings, vectors, hash tables with weak reference support,
-lazy lists, and arbitrary-precision ("bignum") integers.  It has expressive
+lazy lists, and arbitrary-precision ("bignum") integers.  It has an expressive
 foreign function interface (FFI) for calling into libraries and other software
 components that support C-language-style calls. 
 
@@ -498,9 +498,8 @@ charge, and free of any restrictions.
 If \*(TX is given no arguments, it will enter into an interactive
 mode. See the INTERACTIVE LISTENER section for a
 description of this mode.  When \*(TX enters interactive mode this
-way, it prints a one-line banner is printed announcing the program
-name and version, and one line of help text instructing the user
-how to exit.
+way, it prints a one-line banner announcing the program name and version,
+and one line of help text instructing the user how to exit.
 
 Unless the
 .code -c
@@ -534,7 +533,7 @@ Bind the variable
 to the value
 .meta value
 prior to processing the query. The name is in scope over the entire
-query, so that all occurrence of the variable are substituted and
+query, so that all occurrences of the variable are substituted and
 match the equivalent text.  If the value contains commas, these
 are interpreted as separators, which give rise to a list value.
 For instance
@@ -544,8 +543,11 @@ creates a list of the strings
 .str "b"
 and
 .strn "c" .
-(See Collect Directive bellow). List variables provide a multiple
-match. That is to say, if a list variable occurs in a query, a successful
+(See the
+.code @(collect)
+directive.)
+List variables provide a multiple match.
+That is to say, if a list variable occurs in a query, a successful
 match occurs if any of its values matches the text. If more than one
 value matches the text, the first one is taken.
 
@@ -556,7 +558,7 @@ to an empty string value prior to processing the query.
 
 .coIP -q
 Quiet operation during matching. Certain error messages are not reported on the
-standard error device (but the if the situations occur, they still fail the
+standard error device (but if the situations occur, they still fail the
 query). This option does not suppress error generation during the parsing
 of the query, only during its execution.
 
@@ -680,7 +682,9 @@ nested collect:
 .mono
 ((("a" "b") ("c" "d")) (("e" "f") ("g" "h"))).
 .onom
-Suppose this is bound to a variable V.  With
+Suppose this is bound to a variable
+.metn V .
+With
 .codn "-a 1" ,
 this will be
 reported as:
@@ -716,7 +720,7 @@ the dimension order is:
 .codn "NAME_m_m+1_..._n[1][2]...[m-1]" .
 
 .meIP -c < query
-Specifies the query in the form of a command line argument. If this option is
+Specifies the query in the form of a command-line argument. If this option is
 used, the
 .meta script-file
 argument is omitted. The first non-option argument,
@@ -780,11 +784,13 @@ as an alternative to using the main
 .meta script-file
 argument. This is useful in
 .code #!
-("hash bang") scripts. (See Hash Bang Support below).
+("hash bang") scripts. (See Hash-Bang Support below.)
 Use of this option does not affect the order of processing. All of the options
-are processed first, before the is read, as if it were specified by the main
+are processed first, before the
 .meta script-file
-option argument.
+is read, as if it were specified by the main
+.meta script-file
+argument.
 If the argument to
 .code -f
 is
@@ -903,8 +909,8 @@ The
 .code --args
 option provides a way to encode multiple arguments as a single
 argument, which is useful on some systems which have limitations in
-their implementation of the "hash bang" mechanism. For details about
-its special syntax, See Hash Bang Support below. It is also useful in
+their implementation of the hash-bang mechanism. For details about
+its special syntax, see Hash-Bang Support below. It is also useful in
 standalone application deployment. See the section
 STANDALONE APPLICATION SUPPORT, in which example uses of
 .code --args
@@ -931,7 +937,7 @@ a suffix indicating their type. The
 .code --lisp
 option causes an unsuffixed file to be treated as Lisp source;
 .code --compiled
-causes it to be treated as a compile file.
+causes it to be treated as a compiled file.
 
 Moreover, if
 .code --lisp
@@ -960,7 +966,7 @@ and
 .code --compiled
 influence how the argument of the
 .code -f
-option is treated, but only they precedes that option.
+option is treated, but only if they precede that option.
 
 .coIP --reexec
 On platforms which support the POSIX
@@ -970,10 +976,10 @@ The re-executed image receives the remaining arguments which follow
 the
 .code --reexec
 argument. Note: this option is useful for supporting setuid operation in
-"hash hang" scripts. On some platforms, the interpreter designated by
-a "hash bang" script runs without altered privilege, even if that
+hash-hang scripts. On some platforms, the interpreter designated by
+a hash-bang script runs without altered privilege, even if that
 interpreter is installed setuid. If the interpreter is executed directly,
-then setuid applies to it, but not if it is executed via "hash bang".
+then setuid applies to it, but not if it is executed via hash bang.
 If the
 .code --reexec
 option is used in the interpreter command line of such a script, the
@@ -1057,13 +1063,13 @@ or
 options had been processed, in which case it instead terminates.
 
 The \*(TX Pattern Language has features for implicitly treating
-the subsequent command line arguments as input files.
+the subsequent command-line arguments as input files.
 It follows the convention that an argument consisting of a single
 .code -
 (dash) character specifies that standard input is to be used,
 instead of opening a file. If the query does not use the
 .code @(next)
-directive to select an alternative data source, and a pattern matching
+directive to select an alternative data source, and a pattern-matching
 construct is processed which demands data, then the first argument
 will be opened as a data source. Arguments not opened as data sources
 can be assigned alternative meanings and uses, or can be ignored
@@ -1093,7 +1099,7 @@ argument specify
 
 In the case of the \*(TX pattern language,
 the entire query is scanned, internalized, and then begins executing, if it is
-free of syntax errors. (\*(TL is processed differently, form by form).  On the
+free of syntax errors. (\*(TL is processed differently, form by form.)  On the
 other hand, the pattern language reads data files in a lazy manner. A file
 isn't opened until the query demands material from that file, and then the
 contents are read on demand, not all at once.
@@ -1147,7 +1153,7 @@ bindings with
 or
 .codn -a .
 
-If the command line arguments are incorrect, \*(TX issues an error diagnostic
+If the command-line arguments are incorrect, \*(TX issues an error diagnostic
 and terminates with a failed status.
 
 If the
@@ -1224,8 +1230,8 @@ character, the
 .code #
 character can be used. This is an obsolescent feature.
 
-.SS* Hash Bang Support
-\*(TX has several features which support use of the "hash bang" convention
+.SS* Hash-Bang Support
+\*(TX has several features which support use of the hash-bang convention
 for creating apparently standalone executable programs.
 
 .NP* Basic Hash Bang
@@ -1237,9 +1243,9 @@ a file begins with the characters
 .codn #! ,
 that entire line is consumed and processed specially.
 
-This removal
+This removal allows
 for \*(TX queries to be turned into standalone executable programs in the POSIX
-environment using the "hash bang" mechanism.  Unlike most interpreters,
+environment using the hash-bang mechanism.  Unlike most interpreters,
 \*(TX applies special processing to the
 .code #!
 line, which is described below, in the section
@@ -1263,7 +1269,7 @@ run it. This assumes \*(TX is installed in
   Hello, world!
 .brev
 
-When this plain hash bang line is used, \*(TX receives the name of the script
+When this plain hash-bang line is used, \*(TX receives the name of the script
 as an argument.  Therefore, it is not possible to pass additional options
 to \*(TX.  For instance, if the above script is invoked like this
 
@@ -1271,17 +1277,19 @@ to \*(TX.  For instance, if the above script is invoked like this
   $ ./hello.txr -B
 .brev
 
-the -B option isn't processed by \*(TX, but treated as an additional argument,
+the
+.code -B
+option isn't processed by \*(TX, but treated as an additional argument,
 just as if
 .mono
-.meti txr < scriptname -B
+.meti txr < script-file -B
 .onom
 had been executed directly.
 
 This behavior is useful if the script author wants not to expose the
 \*(TX options to the user of the script.
 
-However, the hash bang line can use the
+However, the hash-bang line can use the
 .code -f
 option:
 
@@ -1306,7 +1314,7 @@ option is honored.
 
 .coNP Argument Generation with @ --args and @ --eargs
 On some operating systems, it is not possible to pass more than one
-argument through the hash bang mechanism. That is to say, this will
+argument through the hash-bang mechanism. That is to say, this will
 not work.
 
 .verb
@@ -1315,7 +1323,7 @@ not work.
 
 To support systems like this, \*(TX supports the special argument
 .codn --args ,
-as well as as an extended version,
+as well as an extended version,
 .codn --eargs .
 With
 .codn --args ,
@@ -1341,7 +1349,7 @@ The above has the same behavior as
   #!/usr/bin/txr -B -f
 .brev
 
-on a system which supports multiple arguments in hash bang.
+on a system which supports multiple arguments in the hash-bang line.
 The separator character is the colon, and so the remainder
 of that argument,
 .codn -B:-f ,
@@ -1350,10 +1358,9 @@ is split into the two arguments
 
 The
 .code --eargs
-mechanism allows an additional flexibility. An
-.code --eargs
-argument must be followed by one more argument.
-
+option is similar to
+.codn --args ,
+but must be followed by one more argument.
 After
 .code --eargs
 performs the argument splitting in the same manner as
@@ -1372,8 +1379,8 @@ Example:
 .brev
 
 This has an effect which cannot be replicated in any known
-implementation of the hash bang mechanism. Suppose
-that this hash bang line is placed in a script called
+implementation of the hash-bang mechanism. Suppose
+that this hash-bang line is placed in a script called
 .codn script.txr .
 When this script is invoked with arguments, as in:
 
@@ -1397,7 +1404,8 @@ processing takes place, firstly the argument sequence
 
 is produced by splitting into four fields using the
 .code :
-character as the separator.  Then, within these four fields, all occurrences of
+(colon) character as the separator.
+Then, within these four fields, all occurrences of
 .code {}
 are replaced with the following argument
 .codn script.txr ,
@@ -1437,7 +1445,7 @@ mechanisms do not solve the following problem: the POSIX
 .code env
 utility is often exploited for its
 .code PATH
-searching capability, and used to express hash bang scripts in the following
+searching capability, and used to express hash-bang scripts in the following
 way:
 
 .verb
@@ -1450,28 +1458,27 @@ utility searches for the
 .code txr
 program in the directories indicated by the
 .code PATH
-variable, which liberates the script from having encode the exact location
+variable, which liberates the script from having to encode the exact location
 where the program is installed.  However, if the operating system allows only
-one argument in the hash bang mechanism, then no arguments can be passed
+one argument in the hash-bang mechanism, then no arguments can be passed
 to the program.
 
 To mitigate this problem,
 \*(TX
-supports a special feature in its hash bang support. If the hash bang
-.code #!
-line contains a null byte, then text after the null byte, to the end of the
-line, is split into fields using the space character as a separator, and these
+supports a special feature in its hash-bang support. If the hash-bang
+line contains a null byte, then the text from after the null byte
+until the end of the line
+is split into fields using the space character as a separator, and these
 fields are inserted into the command line. This manipulation happens during
-command line processing, prior to the execution of the file, which happens
-after command-line processing. If this processing is applied to a file
-that is specified using the
+command-line processing, i.e. prior to the execution of the file.
+If this processing is applied to a file that is specified using the
 .code -f
 option, then the arguments which arise from the special processing
 are inserted after that option and its argument.  If this processing is
 applied to the file which is the first non-option argument, then the
 options are inserted before that argument. However, care is taken not
 to process that argument a second time.
-In either situation, processing of the command line options continues, and the
+In either situation, processing of the command-line options continues, and the
 arguments which are processed next are the ones which were just inserted.  This
 is true even if the options had been inserted as a result of processing the
 first non-option argument, which would ordinarily signal the termination of
@@ -1488,7 +1495,7 @@ resolves to
 .codn /usr/bin/txr .
 The
 .code <NUL>
-code indicates a literal ASCII NUL character, or zero bytes.
+code indicates a literal ASCII NUL character (the zero byte).
 
 Basic example:
 
@@ -1509,8 +1516,8 @@ Thus, including the executable name, \*(TX receives this full argument list:
 .brev
 
 The first non-option argument is the name of the script. \*(TX opens
-the script, and notices that it begins with a hash bang line.
-It consumes the hash bang line and finds the null byte inside it,
+the script, and notices that it begins with a hash-bang line.
+It consumes the hash-bang line and finds the null byte inside it,
 retrieving the character string after it, which is
 .strn "-a 3" .
 This is split into the two arguments
@@ -1524,7 +1531,7 @@ the script name. The effective command line then becomes:
   /usr/bin/txr -a 3 /home/jenny/foo.txr --bar abc
 .brev
 
-Command line option processing continues, beginning with the
+Command-line option processing continues, beginning with the
 .code -a
 option. After the option is processed,
 .code /home/jenny/foo.txr
@@ -1535,8 +1542,8 @@ do if it hadn't triggered the insertion of any arguments.
 Advanced example: use
 .code env
 to invoke
-.code txr
-passing options to interpreter and to the script:
+.codn txr ,
+passing options to the interpreter and to the script:
 
 .verb
   #!/usr/bin/env txr<NUL>--eargs:-C:175:{}:--debug
@@ -1553,7 +1560,7 @@ begins executing, it receives the arguments
 .brev
 
 The script file is opened, and the arguments delimited by the
-null character in the hash bang line are inserted, resulting
+null character in the hash-bang line are inserted, resulting
 in the effective command line:
 
 .verb
@@ -1586,24 +1593,24 @@ argument: it executes with the
 list containing one element, the character string
 .strn --debug .
 
-The hash bang null hack feature was introduced in \*(TX 177.
-Previous versions ignore the hash bang line, performing no special
+The hash-bang null-hack feature was introduced in \*(TX 177.
+Previous versions ignore the hash-bang line, performing no special
 processing. Where a risk exists that programs which depend on the
 feature might be executed by an older version of \*(TX, care must
 be taken to detect and handle that situation, either by means of the
 .code txr-version
-variable, or else by some logic which infers that the processing of the hash
-bang line hadn't been performed.
+variable, or else by some logic which infers that the processing of the
+hash-bang line hasn't been performed.
 
-.coNP Passing Options to \*(TX via Hash Bang Null Hack
+.coNP Passing Options to \*(TX via Hash-Bang Null Hack
 
-It is possible to use the Hash Bang Null Hack, such that the resulting
+It is possible to use the Hash-Bang Null Hack, such that the resulting
 executable program recognizes \*(TX options. This is made possible by
 a special behavior in the processing of the
 .code -f
 option.
 
-For instance, suppose that the effect of the following familiar hash bang line
+For instance, suppose that the effect of the following familiar hash-bang line
 is required:
 
 .verb
@@ -1612,8 +1619,8 @@ is required:
 
 However, suppose there is also a requirement to use the
 .code env
-utility to find \*(TX. Furthermore, the operation system allows only one hash
-bang argument.  Using the Null Hack, this is rewritten as:
+utility to find \*(TX. Furthermore, the operating system allows only one
+hash-bang argument.  Using the Null Hack, this is rewritten as:
 
 .verb
   #!/usr/bin/env txr<NUL>-f
@@ -1640,7 +1647,7 @@ However, note that there is a subtle issue with the
 .code -f
 option that has been inserted via the Null Hack: namely, this
 insertion happens after
-\*(TX has opened the script file and read the hash bang line from it.
+\*(TX has opened the script file and read the hash-bang line from it.
 This means that when the inserted
 .code -f
 option is being processed, the script file is already open.
@@ -1654,8 +1661,8 @@ already opened for processing. The
 option and its argument are then skipped.
 
 .NP* Hash Bang and Setuid
-\*(TX supports setuid hash bang scripting, even on platforms that do not
-support setuid and setgid attributes on hash bang scripts. On such
+\*(TX supports setuid hash-bang scripting, even on platforms that do not
+support setuid and setgid attributes on hash-bang scripts. On such
 platforms, \*(TX has to be installed setuid/setgid. See the section
 SETUID/SETGID OPERATION. On some platforms, it may also be necessary to
 to use the
@@ -1688,9 +1695,9 @@ For matching a single space, the syntax
 .code "@\e "
 can be used (backslash-escaped space).
 
-It is more often necessary to match multiple spaces than to exactly
-match one space, so this rule simplifies many queries and adds inconvenience
-to only few.
+It is more often necessary to match multiple spaces than to
+match exactly one space, so this rule simplifies many queries
+and inconveniences only a few.
 
 In output clauses, string and character literals and quasiliterals, a space
 token denotes a space.
@@ -1719,7 +1726,7 @@ section Variables below.
 A query may not leave a line of input partially matched. If any portion of a
 line of input is matched, it must be entirely matched, otherwise a matching
 failure results. However, a query may leave unmatched lines. Matching only
-four lines of a ten line file is not a matching failure. The
+four lines of a ten-line file is not a matching failure. The
 .code eof
 directive can be used to explicitly match the end of a file.
 
@@ -1776,7 +1783,7 @@ can be used. Example:
 .PP
 
 In this example, the query matches, since the regular expression
-matches the string "of data". (See Regular Expressions section below).
+matches the string "of data". (See the Regular Expressions section below.)
 
 Another way to do this is:
 .IP code:
@@ -1885,11 +1892,11 @@ and
 .codn L_CTYPE .
 The program reads and writes only the UTF-8 encoding.
 
-\*(TX deals with UTF-8 separately in its parser, and in its I/O streams
+\*(TX deals with UTF-8 separately in its parser and in its I/O streams
 implementation.
 
 \*(TX's text streams perform UTF-8 conversion internally,
-such that \*(TX application works with Unicode code points.
+such that \*(TX applications use Unicode code points.
 
 In text streams, invalid UTF-8 bytes are treated as follows. When an invalid
 byte is encountered in the middle of a multibyte character, or if the input
@@ -1923,18 +1930,18 @@ character literal (hash-backslash) syntax is diagnosed as a syntax error.
 UTF-8 in string literals is treated in the same way as UTF-8 in text streams.
 Invalid UTF-8 bytes are mapped into code points in the U+DC000 through U+DCFF
 range, and incorporated as such into the resulting string object which the
-literal denotes. The same remarks apply to regular expression literals.
+literal denotes. The same remarks apply to regular-expression literals.
 
 .SS* Regular Expression Directives
 
-In place of a piece of text (see section Text above), a regular expression
+In place of a piece of text (see section Text above), a regular-expression
 directive may be used, which has the following syntax:
 
 .verb
   @/RE/
 .brev
 
-where the RE part enclosed in slashes represents regular expression
+where the RE part enclosed in slashes represents regular-expression
 syntax (described in the section Regular Expressions below).
 
 Long regular expressions can be broken into multiple lines using a
@@ -1951,11 +1958,11 @@ sequence is not significant, so the following two are equivalent:
 There may not be whitespace between the backslash and newline.
 
 Whereas literal text simply represents itself, regular expression denotes a
-(potentially infinite) set of texts.  The regular expression directive
+(potentially infinite) set of texts.  The regular-expression directive
 matches the longest piece of text (possibly empty) which belongs to the set
 denoted by the regular expression. The match is anchored to the current
 position; thus if the directive is the first element of a line, the match is
-anchored to the start of a line. If the regular expression directive is the
+anchored to the start of a line. If the regular-expression directive is the
 last element of a line, it is anchored to the end of the line also: the regular
 expression must match the text from the current position to the end of the
 line.
@@ -1969,7 +1976,7 @@ only two lines. This will fail: the data has no line for the regular expression 
 match. A line containing no characters is not the same thing as the absence of
 a line, even though both abstractions imply an absence of characters.
 
-Like text which follows a variable, a regular expression directive which
+Like text which follows a variable, a regular-expression directive which
 follows a variable has special semantics, described in the section Variables
 below.
 
@@ -1984,7 +1991,7 @@ character.  Two consecutive
 characters encode a literal
 .codn @ .
 
-A variable matching or substitution directive is written in one of several
+A variable-matching or substitution directive is written in one of several
 ways:
 
 .mono
@@ -1993,8 +2000,9 @@ ways:
 .mets >> @* sident
 .mets <> @*{ bident }
 .mets >> @{ bident <> / regex /}
-.mets >> @{ bident >> ( fun >> [ arg ... ])}
+.mets >> @{ bident >> ( fun >> [ arg ...])}
 .mets >> @{ bident << number }
+.mets >> @{ bident << bident }
 .onom
 
 The forms with an
@@ -2047,7 +2055,7 @@ otherwise be interpreted as being part of the identifier. When a name is
 enclosed in braces it is a
 .metn bident .
 
-The following additional characters may be used as part of
+The following additional characters may be used as part of a
 .meta bident
 which are not allowed in a
 .metn sident :
@@ -2115,7 +2123,7 @@ material finds a match. This is why this is called a "negative match": the
 spanned text which ends up bound to the variable is that in which the match for
 the trailing material did not occur.
 
-A variable may be followed by a piece of text, a regular expression directive,
+A variable may be followed by a piece of text, a regular-expression directive,
 a function call, a directive, another variable, or nothing (i.e.  occurs at the
 end of a line). These cases are described in detail below.
 
@@ -2145,7 +2153,9 @@ So for instance in this example:
 .brev
 .PP
 
-the variable @a is considered to be followed by
+the variable
+.code a
+is considered to be followed by
 .strn ":@/foo/bcd e" .
 
 If a variable is followed by text, then the extent of the negative match is
@@ -2206,13 +2216,15 @@ For example:
 .brev
 
 Here,
-.code foo
+.code @foo
 will match the text from the current position to where
 .str "xyz"
 occurs, even though there is a
 .code @(bind)
 directive. Furthermore, if
-more material is added after the xyz, it is part of the search.
+more material is added after the
+.strn "xyz" ,
+it is part of the search.
 Note the difference between the following two:
 
 .verb
@@ -2220,13 +2232,17 @@ Note the difference between the following two:
   @foo@(func)@/abc/
 .brev
 
-In the first example, the variable foo matches the text from the current
-position until the match for the regular expression abc.
+In the first example,
+.code @foo
+matches the text from the current
+position until the match for the regular expression
+.strn "abc" .
 .code @(func)
 is not
 considered when processing
 .codn @foo .
-In the second example, the variable foo
+In the second example,
+.code @foo
 matches the text from the current position until the position which matches
 the function call, followed by a match for the regular expression.
 The entire sequence
@@ -2252,7 +2268,7 @@ variables.  (In theory, a repetition of the same variable, like
 .codn @FOO@FOO ,
 could find a solution by dividing the match extent in half, which would work
 only in the case when it contains an even number of characters.  This behavior
-seems to have dubious value).
+seems to have dubious value.)
 
 An unbound variable may be followed by one which is bound. The bound
 variable is effectively replaced by the text which it denotes, and the logic
@@ -2322,11 +2338,11 @@ a match. The first match is taken.
 An unbound variable may be followed by another unbound variable which specifies
 a regular expression or function call match. This is a special case called a
 "double variable match".  What happens is that the text is searched using the
-regular expression or function.  If the search fails, than neither variable is
-bound: it is a matching failure.  If the search succeeds, than the first
+regular expression or function.  If the search fails, then neither variable is
+bound: it is a matching failure.  If the search succeeds, then the first
 variable is bound to the text which is skipped by the search.  The second
 variable is bound to the text matched by the regular expression or function.
-Examples:
+Example:
 .IP code:
 .mono
 \ @foo@{bar /abc/}
@@ -2341,10 +2357,8 @@ Examples:
 .onom
 .PP
 
-.NP* Consecutive Variables Via Directive
-Two variables can be
-.I de facto
-consecutive in a manner shown in the
+.NP* Consecutive Variables via Directive
+Two variables can be de facto consecutive in a manner shown in the
 following example:
 
 .verb
@@ -2426,7 +2440,6 @@ and the variable, e.g.:
 .IP result:
 .mono
 \ FOO="b "
- b=""
 .onom
 .PP
 
@@ -2452,7 +2465,7 @@ enclosed with the variable in braces:
 
 .mono
 .mets >> @{ bident <> / regex /}
-.mets >> @{ bident >> ( fun >> [args ...])}
+.mets >> @{ bident >> ( fun >> [ args ...])}
 .mets >> @{ bident << number }
 .mets >> @{ bident << bident }
 .onom
@@ -2470,7 +2483,7 @@ form, the match
 extends over all characters from the current position which match
 the regular expression
 .metn regex .
-(see Regular Expressions section below).
+(See the Regular Expressions section below.)
 In the
 .mono
 .meti >> ( fun >> [ args ...])
@@ -2491,7 +2504,7 @@ See Functions below.
 In the
 .meta number
 form, the match processes a field of text which
-consists of the specified number of characters, which must be nonnegative
+consists of the specified number of characters, which must be a nonnegative
 number.  If the data line doesn't have that many characters starting at the
 current position, the match fails. A match for zero characters produces an
 empty string.  The text which is actually bound to the variable
@@ -2499,13 +2512,12 @@ is all text within the specified field, but excluding leading and
 trailing whitespace. If the field contains only spaces, then an empty
 string is extracted.
 
-This syntax is processed without consideration of what other
-syntax follows.  A positive match may be directly followed by an unbound
-variable.
+This syntax is processed without considering any following syntax.
+A positive match may be directly followed by an unbound variable.
 
 The
 .mono
-.mets >> @{ bident << bident }
+.meti >> @{ bident << bident }
 .onom
 syntax allows the
 .meta number
@@ -2549,7 +2561,7 @@ cannot be used as variables. When evaluated, they evaluate to themselves.
 In the \*(TX pattern language,
 .code nil
 can be used in the variable binding syntax, but does not create a binding;
-it has a special meaning.  It allows the variable matching syntax to be used to
+it has a special meaning.  It allows the variable-matching syntax to be used to
 skip material, in ways similar to the
 .code skip
 directive.
@@ -2565,15 +2577,15 @@ is considered to be anonymous.
 
 .SS* Keyword Symbols
 
-Names whose names begin with the
+Names beginning with the
 .code :
-character are keyword symbols.  These also
-may not be used as variables either and stand for themselves. Keywords are
+(colon) character are keyword symbols.  These also
+stand for themselves and may not be used as variables. Keywords are
 useful for labeling information and situations.
 
 .SS* Regular Expressions
 Regular expressions are a language for specifying sets of character strings.
-Through the use of pattern matching elements, regular expression is
+Through the use of pattern-matching elements, a regular expression is
 able to denote an infinite set of texts.
 \*(TX contains an original implementation of regular expressions, which
 supports the following syntax:
@@ -2733,7 +2745,7 @@ you to leave it in place, then enable it later by removing the "block".
 If
 .code R
 is a regular expression, then so is
-.code (R).
+.codn (R) .
 The contents of parentheses denote one regular expression unit, so that for
 instance in
 .codn (RE)* ,
@@ -2754,7 +2766,7 @@ operator is sometimes called the "Kleene star", or "Kleene closure".
 The Kleene closure favors the longest match. Roughly speaking, if there are two
 or more ways in which
 .code R1*R2
-can match, than that match occurs in which
+can match, then that match occurs in which
 .code R1*
 matches the longest possible text.
 .coIP R+
@@ -2873,7 +2885,7 @@ and the set matched by
 This operator is called intersection, logical and, or conjunction.
 
 .PP
-Any character which is not a regular expression operator, a backslash escape,
+Any character which is not a regular-expression operator, a backslash escape,
 or the slash delimiter, denotes a one-position match of that character itself.
 
 Any of the special characters, including the delimiting
@@ -2893,7 +2905,7 @@ Octal and hex character escapes can be optionally
 terminated by a semicolon, which is useful if the following characters are
 octal or hex digits not intended to be part of the escape.
 
-Only the above escapes are supported. Unlike in some other regular expression
+Only the above escapes are supported. Unlike in some other regular-expression
 implementations, if a backlash appears before a character which isn't a regex
 special character or one of the supported escape sequences, it is an error.
 This wasn't true of historic versions of \*(TX. See the COMPATIBILITY section.
@@ -3025,7 +3037,7 @@ the rightmost place. Thus variable
 .code A
 fetches the entire line.
 
-For additional information about the advanced regular expression
+For additional information about the advanced regular-expression
 operators, NOTES ON EXOTIC REGULAR EXPRESSIONS below.
 
 .SS* Compound Expressions
@@ -3038,8 +3050,7 @@ The \*(TX language has the unusual property that its syntactic elements,
 so-called
 .IR directives ,
 are Lisp compound expressions. These expressions not only enclose syntax, but
-expressions which begin with certain symbols
-.I de facto
+expressions which begin with certain symbols de facto
 behave as tokens in a phrase structure grammar. For instance, the expression
 .code @(collect)
 begins a block which must be terminated by the expression
@@ -3220,11 +3231,11 @@ There are two flavors of the WLL: the regular WLL which begins with
 .mono
 #"
 .onom
-(hash, double-quote) and the splicing list literal which begins with
+(hash, double quote) and the splicing list literal which begins with
 .mono
 #*"
 .onom
-(hash, star, double-quote).
+(hash, star, double quote).
 
 Both types are terminated by a double quote, which may be escaped
 as
@@ -3505,7 +3516,7 @@ This is equivalent to
 
 .SS* Overview
 
-When a \*(TL compound expressions occurs in \*(TX preceded by a
+When a \*(TL compound expression occurs in \*(TX preceded by a
 .codn @ ,
 it is a
 .IR directive .
@@ -3528,18 +3539,18 @@ requires a matching
 directive. In other words,
 .code @(collect)
 is not only
-an expression, but serves as a kind of token in a higher level phrase structure
+an expression, but serves as a kind of token in a higher-level, phrase-structure
 grammar.
 
 Effectively,
 .code collect
 is a reserved symbol in the \*(TX language. A \*(TX program cannot use
-this symbol as the name of a pattern function, due to its role in the syntax.
+this symbol as the name of a pattern function due to its role in the syntax.
 The symbol has no reserved role in \*(TL.
 
 Usually if this type of directive occurs alone in a line, not
-preceded or followed by other material, it is involved in a "vertical" (or line
-oriented) syntax.
+preceded or followed by other material, it is involved in a "vertical"
+(or line-oriented) syntax.
 
 If such a directive is embedded in a line (has preceding or trailing material)
 then it is in a horizontal syntactic and semantic context (character-oriented).
@@ -3555,7 +3566,7 @@ a line of data. (This is necessary because all horizontal syntax matches
 something within a line of data, which is undesirable for definitions.)
 
 Many directives exhibit both horizontal and vertical syntax, with different but
-closely related semantics. A few are vertical only, and some are
+closely related semantics. Some are vertical only, some are
 horizontal only.
 
 A summary of the available directives follows:
@@ -3569,11 +3580,11 @@ Explicitly match the end of line. Fails if the current position is not the
 end of a line. Also fails if no data remains (there is no current line).
 
 .coIP @(next)
-Continue matching in another file or other data source.
+Continue matching in another file or data source.
 
 .coIP @(block)
 Groups together a sequence of directives into a logical name block,
-which can be explicitly terminated from within using
+which can be explicitly terminated from within by using
 the
 .code @(accept)
 and
@@ -3583,8 +3594,10 @@ Blocks are described in the section Blocks below.
 
 .coIP @(skip)
 Treat the remaining query as a subquery unit, and search the lines (or
-characters) of the input file until that subquery matches somewhere.  A skip is
-also an anonymous block.
+characters) of the input file until that subquery matches somewhere.
+A
+.code skip
+is also an anonymous block.
 
 .coIP @(trailer)
 Treat the remaining query or subquery as a match for a trailing context. That
@@ -3609,7 +3622,7 @@ number or character position.
 Match a variable against the name of the current data source.
 
 .coIP @(data)
-Match a variable against the remaining data (lazy list of strings).
+Match a variable against the remaining data (a lazy list of strings).
 
 .coIP @(some)
 Multiple clauses are each applied to the same input. Succeeds if at least one
@@ -3642,8 +3655,11 @@ The
 directive is similar to the
 .code do
 directive in that it evaluates one or more
-\*(TL expressions.  If the result of the rightmost expression is nil,
-then require triggers a match failure.  See the TXR LISP section far below.
+\*(TL expressions.  If the result of the rightmost expression is
+.codn nil ,
+then
+.code require
+triggers a match failure.  See the TXR LISP section far below.
 
 .ccIP @, @(if) @, @(elif) and @ @(else)
 The
@@ -3652,7 +3668,7 @@ directive with optional
 .code elif
 and
 .code else
-clauses allows one of multiple bodies of pattern matching directives to be
+clauses allows one of multiple bodies of pattern-matching directives to be
 conditionally selected by testing the values of Lisp expressions. It is
 also available inside
 .code @(output)
@@ -3677,7 +3693,7 @@ clauses, in conjunction with
 .meIP @(define < name >> ( args ...))
 Introduces a function. Functions are described in the Functions section below.
 
-.meIP @(call < expr << args *)
+.meIP @(call < expr << arg *)
 Performs function indirection.  Evaluates
 .metn expr ,
 which must produce a symbol that names a pattern function. Then that
@@ -3693,7 +3709,7 @@ Search the data for multiple matches of a clause. Collect the
 bindings in the clause into lists, which are output as array variables.
 The
 .code @(collect)
-directive is line oriented. It works with a multiline
+directive is line-oriented. It works with a multiline
 pattern and scans line by line. A similar directive called
 .code @(coll)
 works within one line.
@@ -3748,7 +3764,8 @@ Blocks are described in the section Blocks below.
 
 .coIP @(accept)
 Terminate the processing of a block, as if it were a successful match.
-What bindings emerge may depend on the kind of block: collect
+What bindings emerge may depend on the kind of block:
+.code collect
 has special semantics.  Blocks are described in the section Blocks below.
 
 .coIP @(try)
@@ -3772,7 +3789,7 @@ in parts of a query that are surefire matches.
 
 .coIP @(flatten)
 Normalizes a set of specified variables to one-dimensional lists. Those
-variables which have scalar value are reduced to lists of that value.
+variables which have a scalar value are reduced to lists of that value.
 Those which are lists of lists (to an arbitrary level of nesting) are converted
 to flat lists of their leaf values.
 
@@ -4023,7 +4040,7 @@ match failure.
 
 The variant
 .code "@(next :args)"
-means that the remaining command line arguments are to
+means that the remaining command-line arguments are to
 be treated as a data source. For this purpose, each argument is considered to
 be a line of text. The argument list does include that argument which specifies
 the file that is currently being processed or was most recently processed.
@@ -4167,11 +4184,11 @@ The
 variant indicates that the following subquery is applied to empty data,
 and the list of data sources from the command line is considered empty.
 This directive is useful in front of \*(TX code which doesn't process data
-sources from the command line, but takes command line arguments.
+sources from the command line, but takes command-line arguments.
 The
 .code "@(next nil)"
 incantation absolutely prevents \*(TX from trying to open the
-first command line argument as a data source.
+first command-line argument as a data source.
 
 Note that the
 .code @(next)
@@ -4353,9 +4370,9 @@ space,
 .code @a
 will get an empty string.
 
-A line oriented example of greedy skip: match the last line without
+A line-oriented example of greedy skip: match the last line without
 using
-.codn @eof :
+.codn @(eof) :
 
 .verb
   @(skip :greedy)
@@ -4373,7 +4390,7 @@ skip 15 lines and then search indefinitely for
 .brev
 
 The two arguments may be used together. For instance, the following
-matches if, and only if, the 15th line of input starts with
+matches if and only if the 15th line of input starts with
 .codn "begin " :
 
 .verb
@@ -4414,9 +4431,9 @@ Or using greedy skip:
   @(skip 1 3)
 .brev
 
-Nongreedy skip with the
+Non-greedy skip with the
 .code @(eof)
-has a slight advantage because the greedy skip
+directive has a slight advantage because the greedy skip
 will keep scanning even though it has found the correct match, then backtrack
 to the last good match once it runs out of data. The regular skip with explicit
 .code @(eof)
@@ -4426,8 +4443,10 @@ matches.
 
 .NP* Reducing Backtracking with Blocks
 
+The
 .code skip
-can consume considerable CPU time when multiple skips are nested.  Consider:
+directive can consume considerable CPU time when multiple skips are nested.
+Consider:
 
 .verb
   @(skip)
@@ -4438,32 +4457,33 @@ can consume considerable CPU time when multiple skips are nested.  Consider:
   C
 .brev
 
-This is actually nesting: the second a third skips occur within the body of the
+This is actually nesting: the second and third skips occur within the body of the
 first one, and thus this creates nested iteration. \*(TX is searching for the
-combination of skips which find match the pattern of lines
+combination of skips which match the pattern of lines
 .codn A ,
 .code B
 and
-.codn C ,
+.code C
 with
 backtracking behavior. The outermost skip marches through the data until it
 finds
-.codn A ,
+.code A
 followed by a pattern match for the second skip. The second skip
-iterates within to find
-.codn B ,
+iterates to find
+.code B
 followed by the third skip, and the third skip
 iterates to find
 .codn C .
-If there is only one line
-.codn A ,
-and one
-.codn B ,
+If
+.code A
+and
+.code B
+are only one line each,
 then this is reasonably fast. But suppose there are many lines matching
 .code A
 and
 .codn B ,
-giving rise to a large number combinations of skips which match
+giving rise to a large number of combinations of skips which match
 .code A
 and
 .codn B ,
@@ -4779,14 +4799,23 @@ evaluate to integers:
 This expresses that over the next
 .meta n
 query lines, the matching strictness
-is relaxed a little bit. Only m out of those n lines have to match.
+is relaxed a little bit. Only
+.meta m
+out of those
+.meta n
+lines have to match.
 Afterward, the rest of the query follows normal, strict processing.
 
-In the degenerate situation that there are fewer than n query lines following
-the
+In the degenerate situation where there are fewer than
+.meta n
+query lines following the
 .code fuzz
-directive, then m of them must succeed nevertheless. (If there
-are fewer than m, then this is impossible.)
+directive, then
+.meta m
+of them must succeed anyway. (If there
+are fewer than
+.metn m ,
+then this is impossible.)
 
 .dirs line chr
 
@@ -5238,7 +5267,7 @@ Example:
 
 The
 .code if
-directive allows for conditional selection of pattern matching clauses,
+directive allows for conditional selection of pattern-matching clauses,
 based on the Boolean results of Lisp expressions.
 
 A variant of the
@@ -5316,7 +5345,7 @@ expressions if any are present. If any Lisp expression yields a true result
 .codn nil )
 then evaluation of Lisp expressions stops. The corresponding clause of that
 Lisp expression is selected and pattern matching continues
-with that clauses. The result of that clause (its success or failure,
+with that clause. The result of that clause (its success or failure,
 and any newly bound variables) is then taken as the result of the
 .code if
 directive. If none of the Lisp expressions yield true, and an
@@ -5384,7 +5413,7 @@ For further convenience, the lines of the first clause of the
 directive
 are implicitly treated as separate clauses.
 
-The syntax follows this pattern
+The syntax follows this pattern:
 
 .verb
   @(gather)
@@ -5466,8 +5495,10 @@ from the other clauses are discarded and the
 .code gather
 terminates. The difference between
 .cod3 until / last
-is that any bindings bindings established in last are
-retained, and the input position is advanced past the matched material.
+is that any bindings bindings established in
+.code last
+are retained,
+and the input position is advanced past the matching material.
 The
 .cod3 until / last
 clause has visibility to bindings established in the
@@ -5616,7 +5647,7 @@ If it matches successfully, it is tried at the line following the
 entire extent of matched data, if there is one. Thus, the collected regions do
 not overlap. (Overlapping behavior can be obtained: see the
 .code @(trailer)
-directive).
+directive.)
 
 Unless certain keywords are specified, or unless the collection is explicitly
 failed with
@@ -5643,10 +5674,12 @@ matches at the current position.
 
 If an
 .code until
-clause terminates collect, no bindings are collected at that
-position, even if the main clause matches at that position also. Moreover, the
-position is not advanced.  The remainder of the query begins matching at that
-position.
+clause terminates
+.codn collect ,
+no bindings are collected at that position,
+even if the main clause matches at that position also.
+Moreover, the position is not advanced.
+The remainder of the query begins matching at that position.
 
 If a
 .code last
@@ -5719,7 +5752,7 @@ the output will be different:
 
 The
 .code 42
-is not collected into the a list, just like before. But now
+is not collected into a list, just like before. But now
 the binding captured by
 .code @b
 emerges. Furthermore, the position advances
@@ -5765,7 +5798,7 @@ a list of three elements, reported as an array.
 Variables with list bindings may be referenced in a query. They denote a
 multiple match. The
 .code -D
-command line option can establish a one-dimensional
+command-line option can establish a one-dimensional
 list binding.
 
 The clauses of
@@ -5783,8 +5816,8 @@ a two-dimensional list is a list of lists of strings, etc.
 
 It is important to note that the variables which are bound within the main
 clause of a
-.codn collect .
-That is, the variables which are subject to collection appear, within the
+.codn collect ,
+that is, the variables which are subject to collection, appear, within the
 .codn collect ,
 as normal one-value bindings.
 The collation into lists happens outside of the
@@ -6548,7 +6581,7 @@ that value. Variables which are multidimensional lists are flattened to
 one-dimensional lists.
 
 Example (without
-.codn @(flatten) )
+.codn @(flatten) ):
 .IP code:
 .mono
 \ @b
@@ -6759,13 +6792,13 @@ against a value produced by the
 .meta bind-expression
 on the right.
 
-Variables names occurring in the
+Variable names occurring in the
 .meta pattern
-expression may refer to bound variables, or may be unbound.
+expression may refer to bound or unbound variables.
 
-All variables references occurring in
+All variable references occurring in
 .meta bind-expression
-must have value.
+must have a value.
 
 Binding occurs as follows. The tree structure of
 .meta pattern
@@ -6788,9 +6821,11 @@ or else
 the
 .code bind
 directive fails. Variables which are already bound are not altered,
-retaining their current values, even if the matching is inexact.
+retaining their current values even if the matching is inexact.
 
-The simplest bind is of one variable against itself, for instance bind
+The simplest
+.code bind
+is of one variable against itself, for instance binding
 .code A
 against
 .codn A :
@@ -6808,7 +6843,9 @@ succeeds, since
 .code A
 matches itself.
 
-The next simplest bind binds one variable to another:
+The next simplest
+.code bind
+binds one variable to another:
 
 .verb
   @(bind A B)
@@ -6823,7 +6860,9 @@ If
 is bound, it has
 to match
 .codn B ,
-or the bind fails. Matching means that either
+or the
+.code bind
+fails. Matching means that either
 .IP -
 .code A
 and
@@ -6838,7 +6877,7 @@ is a list, and
 occurs within
 .codn B .
 .IP -
-.IR "vice versa" :
+vice versa:
 .code B
 is text,
 .code A
@@ -6851,11 +6890,11 @@ occurs within
 and
 .code B
 are lists and are either identical, or one is
-found as substructure within the other.
+found as a substructure within the other.
 .PP
-The right hand side does not have to be a variable. It may be some other
+The right-hand side does not have to be a variable. It may be some other
 object, like a string, quasiliteral, regexp, or list of strings, etc.
-For instance
+For instance,
 
 .verb
   @(bind A "ab\etc")
@@ -6871,11 +6910,12 @@ is unbound. If
 .code A
 is bound, this will fail unless
 .code A
-already contains an identical string. However, the right hand side of a bind
+already contains an identical string. However, the right-hand side of a
+.code bind
 cannot be an unbound variable, nor a complex expression that contains unbound
 variables.
 
-The left hand side of
+The left-hand side of
 .code bind
 can be a nested list pattern containing variables.
 The last item of a list at any nesting level can be preceded by a
@@ -7024,10 +7064,10 @@ filtering through the :upcase filter.
 The argument to
 .code :rfilt
 is a filter specification. The specified filter is
-applied to the right hand side material prior to matching it against
+applied to the right-hand-side material prior to matching it against
 the left side. The filter is not applied if the left side is a variable
 with no binding. It is only applied to determine a match. Binding takes
-place the unmodified right hand side object.
+place the unmodified right-hand-side object.
 
 For example, the following produces a match:
 
@@ -7124,7 +7164,7 @@ The
 directive syntactically resembles
 .codn bind ,
 but is not a pattern match. It overwrites
-the previous values of variables with new values from the right hand side.
+the previous values of variables with new values from the right-hand side.
 Each variable that is assigned must have an existing binding:
 .code set
 will not induce binding.
@@ -7363,7 +7403,7 @@ Example:
 
 .verb
   @; match text into variables a and b, then insert into hash table h
-  @(bind h (hash))
+  @(bind h @(hash))
   @a:@b
   @(do (set [h a] b))
 .brev
@@ -7439,7 +7479,7 @@ Blocks are sections of a query which are either denoted by a name,
 or are anonymous. They may nest: blocks can occur within blocks
 and other constructs.
 
-Blocks are useful for terminating parts of a pattern matching search
+Blocks are useful for terminating parts of a pattern-matching search
 prematurely, and escaping to a higher level. This makes blocks not only
 useful for simplifying the semantics of certain pattern matches,
 but also an optimization tool.
@@ -7592,8 +7632,10 @@ If the implicit block introduced by
 is terminated in this manner,
 this has the effect of causing
 .code skip
-itself to fail. I.e. the behavior
-is as if skip search did not find a match for the trailing material,
+itself to fail. In other words, the behavior
+is as if
+.codn @(skip) 's
+search did not find a match for the trailing material,
 except that it takes place prematurely (before the end of the available
 data source is reached).
 
@@ -7603,10 +7645,12 @@ is terminated this way,
 then the entire
 .code collect
 fails. This is a special behavior, because a
-collect normally does not fail, even if it matches nothing and collects nothing!
+.code collect
+normally does not fail, even if it matches nothing and collects nothing!
 
-To prematurely terminate a collect by means of its anonymous block, without
-failing it, use
+To prematurely terminate a
+.code collect
+by means of its anonymous block, without failing it, use
 .codn @(accept) .
 
 .meIP @(accept << name )
@@ -8127,12 +8171,11 @@ and
 .code fail
 directives comes in horizontal and vertical forms.
 
-This creates the possibility than an
+This creates the possibility that an
 .code accept
 in horizontal context targets a vertical
 .code block
-or
-.IR "vice versa" ,
+or vice versa,
 raising the question of how the input position
 is treated.  The semantics of this is defined.
 
@@ -8399,7 +8442,7 @@ Functions may be nested within function bodies. Such local functions have
 dynamic scope. They are visible in the function body in which they are defined,
 and in any functions invoked from that body.
 
-The body of a function is an anonymous block. (See Blocks above).
+The body of a function is an anonymous block. (See Blocks above.)
 
 .NP* Two Forms of The Horizontal Function
 
@@ -8422,7 +8465,7 @@ This would, in turn, would mean that the
 is
 actually in horizontal mode, and so it matches a span of zero characters within
 a line (which means that is would require a line of input to match: a
-surprising behavior for a non-matching directive!)
+surprising behavior for a nonmatching directive!)
 
 A horizontal function can be defined in an actual horizontal context. This
 occurs if its is in a line where it is preceded by other material.
@@ -8893,7 +8936,9 @@ to the directory portion of the path which is stored in
 
 If
 .code *load-path*
-is nil, or the load path is not pure relative, then the
+is
+.codn nil ,
+or the load path is not pure relative, then the
 path is taken as-is as the effective path.
 
 Next, an attempt is made to open the file for processing, in
@@ -9062,6 +9107,7 @@ trying to open a destination file, but not having permissions, etc.
 .coIP :append
 This keyword is meaningful for files, specifying append mode: the output is to
 be added to the end of the file rather than overwriting the file.
+.PP
 
 The following value keywords are supported:
 
@@ -9185,7 +9231,7 @@ See Output Filtering below.
 .NP* Output Variables: Indexing
 
 Additional syntax is supported in output variables that does not appear
-in pattern matching variables.
+in pattern-matching variables.
 
 A square bracket index notation may be used to extract elements or
 ranges from a variable, which works with strings, vectors and lists.  Elements
@@ -9442,12 +9488,15 @@ clause is considered if present with an
 argument of zero. Otherwise, none of these clauses are present or applicable,
 and the repetition is processed using the main clause.
 
+The
 .code @(empty)
 clause does not appear in the above precedence list because it is mutually
-exclusive with respect to the others; it is processed only when there are no
+exclusive with respect to the others: it is processed only when there are no
 iterations, in which case even the main clause isn't active.
 
-Repeat supports arguments.
+The
+.code @(repeat)
+clause supports arguments.
 
 .mono
 .mets @(repeat
@@ -9528,14 +9577,14 @@ pattern in the current directory:
   @(end)
 .brev
 
-Prior to \*(TX 243, the simple variable binding syntax supported by
+Prior to \*(TX 243, the simple variable-binding syntax supported by
 .code :vars
 of the form
 .meta symbol
-binding was needed for situations in which \*(TL expressions which
-reference variables were embedded in
+was needed for situations in which \*(TL expressions which
+referenced variables were embedded in
 .code @(repeat)
-blocks.  Variables references embedded in Lisp code were not identified
+blocks.  Variable references embedded in Lisp code were not identified in
 .codn @(repeat) .
 For instance, the following produced no output, because no variables
 were found in the
@@ -9552,14 +9601,14 @@ body:
 .brev
 
 There is a reference to
-.meta list
-but it's inside a Lisp
-.code "(reverse lisp)"
-expression that was not processed by
+.meta trigraph
+but it's inside the
+.code "(reverse trigraph)"
+Lisp expression that was not processed by
 .codn repeat .
 The solution was to mention
-.meta list
-via the
+.meta trigraph
+in the
 .code :vars
 construct:
 
@@ -9572,7 +9621,11 @@ construct:
   @(end)
 .brev
 
-Then the repeat block would iterates over list, producing the output:
+Then the
+.code repeat
+block would iterate over
+.metn trigraph ,
+producing the output
 
 .verb
   cba
@@ -9589,24 +9642,34 @@ is produced by the first example, without
 If a
 .code repeat
 clause encloses variables which hold multidimensional lists,
-those lists require additional nesting levels of repeat (or rep).
+those lists require additional nesting levels of
+.code repeat
+(or
+.codn rep ).
 It is an error to attempt to output a list variable which has not been
-decimated into primary elements via a repeat construct.
+decimated into primary elements via a
+.code repeat
+construct.
 
 Suppose that a variable
 .code X
 is two-dimensional (contains a list of lists).
 .code X
-must be twice nested in a
+must be nested twice in a
 .codn repeat .
-The outer repeat will traverse the lists
-contained in
+The outer
+.code repeat
+will traverse the lists contained in
 .codn X .
-The inner repeat will traverse the elements of each of these
-lists.
+The inner
+.code repeat
+will traverse the elements of each of these lists.
 
-A nested repeat may be embedded in any of the clauses of a repeat,
-not only the main clause.
+A nested
+.code repeat
+may be embedded in any of the clauses of a
+.codn repeat ,
+not only in the main clause.
 
 .dir rep
 
@@ -9616,7 +9679,7 @@ directive is similar to
 .codn repeat .
 Whereas
 .code repeat
-is line oriented,
+is line-oriented,
 .code rep
 generates material within a line. It has all the same clauses,
 but everything is specified within one line:
@@ -10216,7 +10279,7 @@ directive.
 
 Filtering works using a longest match algorithm. The input is scanned from left
 to right, and the longest piece of text is identified at every character
-position which matches a string on the left hand side, and that text is
+position which matches a string on the left-hand side, and that text is
 replaced with its associated replacement text. The scanning then continues
 at the first character after the matched text.
 
@@ -10228,7 +10291,7 @@ Filtering is not in-place but rather instantiates a new text, and so
 replacement text is not re-scanned for more replacements.
 
 If a filter definition accidentally contains two or more repetitions of the
-same left hand string with different right hand translations, the later ones
+same left-hand string with different right-hand translations, the later ones
 take precedence. No warning is issued.
 
 
@@ -10313,8 +10376,9 @@ directive
 also provides unwind protection by means of a
 .code @(finally)
 clause,
-which specifies query material to be executed unconditionally when
-the try clause terminates, no matter how it terminates.
+which specifies query material to be executed unconditionally when the
+.code try
+clause terminates, no matter how it terminates.
 
 .dir try
 
@@ -11946,7 +12010,7 @@ and
 quasiquotes are also informally known as backquotes.  In \*(TX, the backquote
 character
 .code `
-used for quasi string literals.
+used for quasistring literals.
 
 .meIP >> , expr
 The comma character is used within a
@@ -12081,7 +12145,7 @@ it is embedded in a quasiquote:
     ^(a b c #(d ,a))) ; value is (a b c #(d 42))
 .brev
 
-Hash table literals have two parts: the list of hash construction
+Hash-table literals have two parts: the list of hash construction
 arguments and the key-value pairs. For instance:
 
 .verb
@@ -12171,7 +12235,7 @@ expression.
 .meIP <> #H(( hash-argument *) >> ( key << value )*)
 The notation
 .code #H
-followed by list syntax denotes a hash table literal.
+followed by list syntax denotes a hash-table literal.
 The first item in the syntax is a list of keywords. These are the same
 keywords as are used when calling the function hash to construct
 a hash table. Allowed keywords are:
@@ -12213,7 +12277,7 @@ be specified as
 .codn nil ;
 the empty parentheses notation is required.
 
-The hash table key-value contents are specified as zero or more
+The hash table's key-value contents are specified as zero or more
 two-element lists, whose first element specifies the
 .meta key
 and whose second specifies the
@@ -12548,7 +12612,7 @@ denotes
 Note that range objects are not printed using the dotdot notation.
 A range literal has the syntax of a two-element list, prefixed by
 .codn #R .
-(See Range Literals above).
+(See Range Literals above.)
 
 In any context where the dotdot notation may be used, and where
 it is evaluated to its value, a range literal may also be specified.
@@ -12762,7 +12826,7 @@ then
 receives the improper list form
 .codn "3 . 4" .
 
-.NP* Regular Expression Literals
+.NP* Regular-Expression Literals
 In \*(TL, the
 .code /
 character can occur in symbol names, and the
@@ -12869,7 +12933,7 @@ are not supported.
 
 Note:
 
-Circular notation can span hash table literals. The syntax
+Circular notation can span hash-table literals. The syntax
 .code "#1=#H((:eql-based) (#1# #1#))"
 denotes an
 .codn eql -based
@@ -13095,7 +13159,7 @@ they produce lazy lists.
 \*(TL implements a unified paradigm for iterating over sequence-like
 container structures and abstract spaces such as bounded and unbounded ranges
 of integers. This concept is based around an iterator abstraction which is
-directly compatible with Lisp cons cell traversal in the sense that when
+directly compatible with Lisp cons-cell traversal in the sense that when
 iteration takes place over lists, the iterator instance is nothing but a cons
 cell.
 
@@ -13540,7 +13604,7 @@ overwritten with a value. What exactly it means for a place to be deleted,
 or whether that is even permitted, depends on the kind of place.
 For instance a place which denotes a lexical variable may not be deleted,
 whereas a global variable may be.
-A place which denotes a hash table entry may be deleted, and results in the
+A place which denotes a hash-table entry may be deleted, and results in the
 entry being removed from the hash table. Deleting a place in a list
 causes the trailing items, if any, or else the terminating atom, to
 move in to close the gap. Users may define new kinds of places
@@ -14319,8 +14383,8 @@ The symbols
 .code t
 and
 .code nil
-may not be used as variables, and neither
-can be keyword symbols: symbols denoted by a leading colon.
+may not be used as variables,
+nor can they be keyword symbols (symbols denoted by a leading colon).
 
 In addition to creating a binding, the
 .code defvar
@@ -14739,10 +14803,10 @@ An optional parameter can also be written in the form
 .mono
 .meti >> ( name < expr <> [ sym ]).
 .onom
-In this situation, if the call does not specify a value for the parameter
-(or specifies a value as the keyword
+In this situation, if the call does not specify a value for the parameter,
+or specifies a value as the
 .code :
-(colon)) then the parameter takes on the
+(colon) keyword symbol, then the parameter takes on the
 value of the expression
 .metn expr .
 This expression is only evaluated when its value is required.
@@ -15299,7 +15363,7 @@ and is referenced by a dwim argument, this constitutes a conflict which is
 resolved according to two rules.  When nested scopes are concerned, then an
 inner binding shadows an outer binding, regardless of their kind.  An inner
 variable binding for a symbol shadows an outer or global function binding, and
-.IR "vice versa" .
+vice versa.
 
 If a symbol is bound to both a function and variable in the global namespace,
 then the variable binding is favored.
@@ -15395,7 +15459,8 @@ and
 .code to
 fields of a range object. The
 .code ..
-(dotdot) syntactic sugar denotes it construction via the
+(dotdot)
+syntactic sugar denotes the construction of the range object via the
 .code rcons
 function.  See the section on Range Indexing below.
 
@@ -15481,14 +15546,14 @@ Retrieves an element from the search tree as if by applying the
 function to
 .metn key .
 
-.meIP >> [ search-tree << from-key .. to-below-key ]
+.meIP >> [ search-tree << from-key..to-below-key ]
 Retrieves a list of elements from the search tree as if by evaluating the
 .mono
 .meti (sub-tree < search-tree < from-key << to-below-key )
 .onom
 expression.
 
-.meIP >> [ regex >> [ start <> [ from-end ]] < string ]
+.meIP >> [ regex >> [ start <> [ from-end ]] << string ]
 Determine whether regular expression
 .meta regex
 matches
@@ -15642,7 +15707,7 @@ the two occurrences refer to different bindings:
 one is a function and the other a variable.
 Thus there can exist a variable
 .code car
-which holds a cons cell object, rather than the
+which holds a cons-cell object, rather than the
 .code car
 function, and the form makes sense.
 
@@ -15747,8 +15812,7 @@ made by
 .code copy-fun
 has its own copy of that environment. If the copied function changes the
 values of captured lexical variables, the original function is not affected by
-these changes and
-.IR "vice versa" .
+these changes and vice versa.
 
 The entire lexical environment is copied; the copy and original function do not
 share any portion of the environment at any level of nesting.
@@ -16227,7 +16291,9 @@ returns the value of the first argument which isn't
 .mets (unless < expression << form *)
 .syne
 .desc
-The when macro operator evaluates
+The
+.code when
+macro operator evaluates
 .metn expression .
 If
 .meta expression
@@ -16235,14 +16301,18 @@ yields
 true, and there are additional forms, then each
 .meta form
 is evaluated.
-The value of the last form is becomes the result value of the when form.
+The value of the last form becomes the result value of the
+.code when
+form.
 If there are no forms, then the result is
 .codn nil .
 
 The
 .code unless
-operator is similar to when, except that it reverses the
-logic of the test. The forms, if any, are evaluated if, and only if
+operator is similar to
+.codn when ,
+except that it reverses the
+logic of the test. The forms, if any, are evaluated if and only if
 .meta expression
 is false.
 
@@ -16274,8 +16344,11 @@ repeating all of the previous steps.
 
 The
 .code until
-macro operator is similar to while, except that the until form
-terminates when
+macro operator is similar to
+.codn while ,
+except that the
+.code until
+form terminates when
 .meta expression
 evaluates true, rather than false.
 
@@ -16325,7 +16398,7 @@ or
 Another way to regard the behavior is that that these forms execute
 one iteration unconditionally, without evaluating the termination test prior to
 the first iteration. Yet another view is that these constructs relocate the
-test from the "top of the loop" to the "bottom of the loop".
+test from the top of the loop to the bottom of the loop.
 
 .coNP Macro @ whilet
 .synb
@@ -16552,7 +16625,7 @@ bindings or
 This item is followed by zero or more
 .metn body-form s.
 
-If the are are no
+If there are no
 .metn body-form s
 then the situation is treated as if there were a single
 .meta body-form
@@ -18183,7 +18256,7 @@ require manual expansion.
   (constantp 'a) -> nil
   (constantp 42) -> t
 
-  (constantp '(+ 2 2 [* 3 (/ 4 4)]) -> t
+  (constantp '(+ 2 2 [* 3 (/ 4 4)])) -> t
 
   ;; symacrolet form expands to 42, which is constant
   (constantp '(symacrolet ((a 42)) a))
@@ -18488,7 +18561,7 @@ has a function binding in the global
 environment, the method specified by
 .meta method-name
 exists, or a lambda expression argument is given.
-Otherwise it returns nil
+Otherwise it returns
 .codn nil .
 
 .code mboundp
@@ -19099,7 +19172,7 @@ Hash table.
 I/O stream of any kind.
 
 .coIP regex
-Regular expression object.
+Regular-expression object.
 
 .coIP struct-type
 A structure type: the type of any one of the values which represents
@@ -19227,7 +19300,8 @@ function returns its argument.
 If the
 .code identity*
 function is given at least one argument, then it returns its
-leftmost argument, otherwise it returns nil.
+leftmost argument, otherwise it returns
+.codn nil .
 
 The
 .code use
@@ -19377,7 +19451,7 @@ The
 function uses the strictest equivalence test, called implementation
 equality.  The eq function returns
 .code t
-if, and only if,
+if and only if,
 .meta left-obj
 and
 .meta right-obj
@@ -19394,7 +19468,7 @@ are
 if they have the same value.  All other object representations are actually
 pointers, and are
 .code eq
-if, and only, if they point to the same object in memory.
+if and only if they point to the same object in memory.
 So, for instance, two bignum integers might not be
 .code eq
 even if they have the same numeric
@@ -19555,8 +19629,7 @@ then
 .code neq
 returns
 .codn nil .
-.IR "Vice versa" ,
-if
+Vice versa, if
 .code eq
 returns
 .codn nil ,
@@ -20099,7 +20172,7 @@ In other words
 is exactly the same as
 .codn "(a b ... l m n o ... w x y z)" .
 
-Every list, and more generally cons cell tree structure, can be written
+Every list, and more generally cons-cell tree structure, can be written
 in a "fully dotted" notation, such that there are as many dots as there
 are cells. For instance the cons structure of the nested list
 .code "(1 (2) (3 4 (5)))"
@@ -20505,7 +20578,7 @@ and
 .code rplacd
 functions return
 .metn cons .
-Note: \*(TX versions 89 and earlier, these functions returned the new value.
+Note: In \*(TX versions 89 and earlier, these functions returned the new value.
 The behavior was undocumented.
 
 The
@@ -21077,7 +21150,7 @@ The
 function which returns a list similar to
 .metn list ,
 but with
-a newly allocated cons cell structure.
+a newly allocated cons-cell structure.
 
 If
 .meta list
@@ -22163,7 +22236,7 @@ function rather than
 
 .coNP Function @ alist-remove
 .synb
-.mets (alist-remove < alist << keys )
+.mets (alist-remove < alist << key ...)
 .syne
 .desc
 The
@@ -22177,7 +22250,7 @@ argument is a list of the keys not to appear in the output list.
 
 .coNP Function @ alist-nremove
 .synb
-.mets (alist-nremove < alist << keys )
+.mets (alist-nremove < alist << key ...)
 .syne
 .desc
 The
@@ -23139,7 +23212,7 @@ receives
 
 The return value is interpreted as follows. If
 .meta gen-fun
-returns a cons cell pair
+returns a cons-cell pair
 .mono
 .meti >> ( elem . << next )
 .onom
@@ -23966,7 +24039,9 @@ are indeterminate.
 .desc
 The
 .code stringp
-function returns t if
+function returns
+.code t
+if
 .meta obj
 is one of the several
 kinds of strings. Otherwise it returns
@@ -24727,10 +24802,13 @@ function returns
 if
 .meta char
 is a non-space printable ASCII character.
-It returns nil if it is a space or control character.
+It returns
+.code nil
+if it is a space or control character.
 
-It also returns nil for non-ASCII characters: Unicode characters with a code
-above 127.
+It also returns
+.code nil
+for non-ASCII characters: Unicode characters with a code above 127.
 
 .coNP Function @ chr-islower
 .synb
@@ -24775,8 +24853,9 @@ function returns
 if
 .meta char
 is an ASCII character which is not a
-control character.  It also returns nil for all non-ASCII characters: Unicode
-characters with a code above 127.
+control character.  It also returns
+.code nil
+for all non-ASCII characters: Unicode characters with a code above 127.
 
 .coNP Function @ chr-isspace
 .synb
@@ -24863,7 +24942,7 @@ For all other characters, it returns
 
 .coNP Function @ chr-isupper
 .synb
-.mets (chr-isupper < char )
+.mets (chr-isupper << char )
 .syne
 .desc
 The
@@ -25134,7 +25213,7 @@ If there is no such character, then
 is returned.
 
 .SS* Lazy Strings
-Lazy strings are objects that were developed for the \*(TX pattern matching
+Lazy strings are objects that were developed for the \*(TX pattern-matching
 language, and are exposed via \*(TL. Lazy strings behave much like strings,
 and can be substituted for strings. However, unlike regular strings, which
 exist in their entirety, first to last character, from the moment they are
@@ -25503,7 +25582,9 @@ function creates a vector out of its arguments.
 .desc
 The
 .code vectorp
-function returns t if
+function returns
+.code t
+if
 .meta obj
 is a vector, otherwise it returns
 .codn nil .
@@ -26978,8 +27059,8 @@ from the conversion of a pseudo-null character occurring in
 
 .coNP Functions @ buf-int and @ buf-uint
 .synb
-.mets (buf-int < integer )
-.mets (buf-uint < integer )
+.mets (buf-int << integer )
+.mets (buf-uint << integer )
 .syne
 .desc
 The
@@ -27032,8 +27113,8 @@ function.
 
 .coNP Functions @ int-buf and @ uint-buf
 .synb
-.mets (int-buf < buf )
-.mets (uint-buf < buf )
+.mets (int-buf << buf )
+.mets (uint-buf << buf )
 .syne
 .desc
 The
@@ -27221,8 +27302,7 @@ static slot, yet have that in their own instance.
 The slot type can be overridden. A structure type deriving from another
 type can introduce slots which have the same names as the supertype,
 but are of a different kind: an instance slot in the supertype
-can be replaced by a static slot in the derived type or
-.IR "vice versa" .
+can be replaced by a static slot in the derived type or vice versa.
 
 Note that, in light of the above type overriding possibility, the static slot
 value propagation happens only from the immediate supertype.
@@ -27701,7 +27781,7 @@ these values to be stable can be defined with
 
 Initializers in base structures must be careful about assumptions about slot
 kinds, because derived structures can alter static slots to instance slots or
-.IR "vice versa" .
+vice versa.
 To avoid an unwanted initialization being applied to the
 wrong kind of slot, initialization code can be made conditional on the
 outcome of
@@ -28529,11 +28609,11 @@ That is to say, it returns a function
 .meta f
 such that
 .mono
-.meti >> [ f < arg ... ]
+.meti >> [ f < arg ...]
 .onom
 calls
 .mono
-.meti >> [ struct.slot < struct < arg ... ]
+.meti >> [ struct.slot < struct < arg ...]
 .onom
 except that
 .meta struct
@@ -28552,11 +28632,11 @@ is produced by
 .code "(meth struct slot c1 c2 c3 ...)"
 then
 .mono
-.meti >> [ f < arg ... ]
+.meti >> [ f < arg ...]
 .onom
 calls
 .mono
-.meti >> [ struct.slot < struct < c1v < c2v < c3v ... arg ... ]
+.meti >> [ struct.slot < struct < c1v < c2v < c3v ... < arg ...]
 .onom
 except that
 .meta struct
@@ -28899,7 +28979,9 @@ same type,
 .desc
 The
 .code struct-type-p
-function returns t if
+function returns
+.code t
+if
 .meta obj
 is a structure type, otherwise it returns
 .codn nil .
@@ -29294,7 +29376,9 @@ or
 .desc
 The
 .code structp
-function returns t if
+function returns
+.code t
+if
 .meta obj
 is a structure, otherwise it returns
 .codn nil .
@@ -30041,7 +30125,7 @@ instance as an argument. Their syntax is indicated using the same notation
 which may be used to invoke them, such as:
 
 .verb
-.mets << object .(function-name < arg << ... )
+.mets << object .(function-name < arg ...)
 .brev
 
 However, those introduced as "Function" do not operate on an instance.
@@ -30049,7 +30133,7 @@ Their syntax is likewise indicated using the notation that may be used
 to invoke them:
 
 .verb
-.mets <> '[' object .function-name < arg << ... ']'
+.mets <> '[' object .function-name < arg ...']'
 .brev
 
 If such a invocation is actually used, the
@@ -30062,7 +30146,7 @@ doesn't participate in the call. An object is not strictly required since
 the function can be called using
 
 .verb
-.mets [(static-slot < type 'function-name) < arg << ... ]
+.mets [(static-slot < type 'function-name) < arg ...]
 .brev
 
 which looks up the function in the struct
@@ -30757,7 +30841,7 @@ certain methods: see the previous section Special Structure Functions.
 
 Moreover, hash tables behave like sequences of key-value entries represented by
 .code cons
-pairs. Not all sequence-processing functions accept hash table sequences.
+pairs. Not all sequence-processing functions accept hash-table sequences.
 
 Additionally, some sequence-processing functions work not only with sequences
 but with all iterable objects: objects that can be used as arguments to the
@@ -31182,9 +31266,9 @@ That is to say, the
 and
 .code to
 arguments are converted to range object. If either argument
-is missing, the symbol
+is missing, the
 .code :
-is used for the corresponding element of the range.
+(colon) keyword symbol is used for the corresponding element of the range.
 
 When a
 .code sub
@@ -31429,7 +31513,7 @@ or
 .code to
 are omitted, the range object contains the
 .code :
-symbol in the corresponding place:
+(colon) keyword symbol in the corresponding place:
 
 .verb
   (replace o items from)
@@ -33406,8 +33490,8 @@ is returned.
 .coNP Functions @, find @ find-if and @ find-true
 .synb
 .mets (find < key < sequence >> [ testfun <> [ keyfun ]])
-.mets (find-if < predfun >> { sequence | << hash }  <> [ keyfun ])
-.mets (find-true < predfun >> { sequence | << hash }  <> [ keyfun ])
+.mets (find-if < predfun >> { sequence | << hash } <> [ keyfun ])
+.mets (find-true < predfun >> { sequence | << hash } <> [ keyfun ])
 .syne
 .desc
 The
@@ -33420,7 +33504,7 @@ The
 .code find-true
 function is a variant of
 .code find-if
-which returns the value of the predicate function, instead
+which returns the value of the predicate function instead
 of the item.
 
 The
@@ -33495,7 +33579,7 @@ returned for the found item's key.
 .coNP Functions @ rfind and @ rfind-if
 .synb
 .mets (rfind < key < sequence >> [ testfun <> [ keyfun ]])
-.mets (rfind-if < predfun >> { sequence | << hash }  <> [ keyfun ])
+.mets (rfind-if < predfun >> { sequence | << hash } <> [ keyfun ])
 .syne
 .desc
 The
@@ -33730,8 +33814,7 @@ contains all of the elements of
 .meta iter1
 which do not occur in
 .meta iter2
-and
-.IR "vice versa" :
+and vice versa:
 it also contains all of the elements of
 .meta iter2
 which do not occur in
@@ -33769,8 +33852,7 @@ order of items from
 that survive into the output sequence.
 This requirement is not documented for the
 .code diff
-function, but is
-.I "de facto"
+function, but is de facto
 honored by the implementation for at as long as the
 .code set-diff
 synonym continues to be available.
@@ -33786,7 +33868,7 @@ argument is
 .codn car ,
 and
 .meta testfun
-matches the equality used by both hash table inputs.
+matches the equality used by both hash-table inputs.
 If applicable, the operations
 .codn hash-uni ,
 .code hash-isec
@@ -34514,7 +34596,7 @@ Omitting
 .meta init-value
 is the same as specifying a value of
 .code :
-(the colon symbol).
+(the colon keyword symbol).
 It is possible to specify
 .meta key-function
 while omitting an
@@ -34587,7 +34669,7 @@ The
 .code all
 and
 .code none
-functions apply a predicate test function
+functions apply a predicate-test function
 .meta predicate-fun
 over a list of elements.  If the argument
 .meta key-fun
@@ -34604,17 +34686,27 @@ applied to the resulting values. If
 is omitted, the behavior is
 as if
 .meta key-fun
-is the identity function. If
+were the
+.code identity
+function. If
 .meta predicate-fun
 is omitted,
 the behavior is as if
 .meta predicate-fun
-is the identity function.
+were the
+.code identity
+function.
 
 These functions have short-circuiting semantics and return conventions similar
-to the and and or operators.
+to the
+.code and
+and
+.code or
+operators.
 
-The some function applies
+The
+.code some
+function applies
 .meta predicate-fun
 to successive values
 produced by retrieving elements of
@@ -34629,12 +34721,14 @@ first
 return value returned by a call to
 .meta predicate-fun
 and
-stops evaluating more elements. If
+stops evaluating the elements. If
 .meta predicate-fun
 returns
 .code nil
 for all
-elements, it returns
+elements,
+.code some
+returns
 .metn nil .
 
 The
@@ -34658,8 +34752,9 @@ function immediately
 returns without invoking
 .meta predicate-fun
 on any more elements.
-If all the elements are processed, then the all function returns
-the value which
+If all the elements are processed, then the
+.code all
+function returns the value which
 .meta predicate-fun
 yielded for the last element.
 
@@ -34678,11 +34773,17 @@ Otherwise, if
 .meta predicate-fun
 yields
 .cod2 non- nil
-for any value, the none function
-immediately returns nil. If
+for any value, the
+.code none
+function immediately returns
+.codn nil .
+If
 .meta predicate-fun
-yields nil for all
-values, the none function returns
+yields
+.code nil
+for all values, the
+.code none
+function returns
 .codn t .
 
 .TP* Examples:
@@ -34736,9 +34837,8 @@ is a transformed list of rows which is reconstituted into a list of columns.
 .TP* Example:
 
 .verb
-  ;; Take three lists in parallel, and remove from all of them
-  ;; them the element at all positions where the third list
-  ;; has an element of 20.
+  ;; Take three lists in parallel, and remove from all of them the
+  ;; element at all positions where the third list has an element of 20.
 
   (multi (op remove-if (op eql 20) @1 third)
          '(1 2 3)
@@ -36531,17 +36631,15 @@ list: its parameter will capture just that part of the argument material which
 matches that parameter list, rather than the entire argument list.
 
 The processing of macro parameter lists omits the feature that when the
-keyword symbol
 .code :
-(colon) given as the argument to an optional parameter, that argument is
-treated as a missing argument. This special logic is implemented only
+(colon) keyword symbol is given as the argument to an optional parameter,
+that argument is treated as a missing argument.
+This special logic is implemented only
 in the function argument passing mechanism, not in the binding of macro
 parameters to object structure. If the colon symbol appears in the object
 structure and is matched against an optional parameter, it is an
 ordinary value. That parameter is considered present, and takes on
-that
-.code :
-keyword symbol as its value.
+the colon symbol as its value.
 
 .TP* "Dialect Note:"
 
@@ -36552,10 +36650,10 @@ binds its corresponding variable to the entire macro form, whereas
 .code :whole
 binds its variable only to the arguments of the macro form.
 
-Note, however, that ANSI CL distinguishes destructuring lambda lists
-and macro lambda lists and the
+Note, however, that ANSI CL distinguishes between destructuring and
+macro lambda lists, and the
 .code &whole
-parameter has a different behavior between the two.  Under
+parameter has a different behavior in each.  Under
 .codn destructuring-bind ,
 the
 .code &whole
@@ -36564,7 +36662,8 @@ of \*(TL's
 .code :whole
 parameter.
 
-\*(TL does not distinguish destructuring and macro lambda lists;
+\*(TL does not distinguish between destructuring and
+macro lambda lists;
 they are the same and behave the same way. Thus
 .code :whole
 is treated the same way in macros as in
@@ -36642,8 +36741,7 @@ calculation can have some useful effect in that environment, or use
 as an input information that is available in that environment.
 The
 .code load-time
-operator also inserts a calculated value as a
-.I "de facto"
+operator also inserts a calculated value as a de facto
 literal into the program, but it performs that calculation in the
 environment where the compiled file is being loaded.
 The two operators may be considered complementary in this sense.
@@ -38441,8 +38539,7 @@ Arguments specifying unrecognized keywords are ignored.
 If the function has a
 .metn rest-param ,
 then that parameter receives the keyword arguments as a list.
-Since that list contains indicators and values, it is a
-.I "de facto"
+Since that list contains indicators and values, it is a de facto
 property list. In detail, the
 .code :key
 mechanism generates a regular variadic function which receives the keyword
@@ -40876,7 +40973,7 @@ do not undergo place macro expansion.
 
 .NP* Introduction
 
-\*(TL provides a structural pattern matching system. Structural pattern
+\*(TL provides a structural pattern-matching system. Structural pattern
 matching is a syntax which allows for the succinct expression of code
 which classifies objects according to their shape and content, and which
 accesses the elements within objects, or both.
@@ -40884,13 +40981,13 @@ accesses the elements within objects, or both.
 The central concept in structural pattern matching is the resolution of a
 pattern against an object. The pattern is specified as syntax which is part of
 the program code. The object is a run-time value of unknown type, shape and
-other properties.  The primary pattern matching decision is Boolean: does the
+other properties.  The primary pattern-matching decision is Boolean: does the
 object match the pattern?  If the object matches the pattern, then it is
 possible to execute an associated body of code in a scope in which variables
 occurring in the pattern take on values from the corresponding parts of the
 object.
 
-.NP* Pattern Matching Operators
+.NP* Pattern-Matching Operators
 
 Structural pattern matching is available via several different macro
 operators, which are:
@@ -40935,7 +41032,7 @@ provides a way to define a top-level function using the same concept.
 
 .NP* Syntax and Key Concepts
 
-\*(TL's structural pattern matching notation is template-based.
+\*(TL's structural pattern-matching notation is template-based.
 With the exception of structures and hash tables, objects are matched using
 patterns which are based on their printed notation. For instance, the pattern
 .code "(1 2 @a)"
@@ -40957,7 +41054,7 @@ except those parts introduced by the meta prefix
 .codn @ .
 This prefix denotes variables like
 .code @a
-as well as useful pattern matching operators like
+as well as useful pattern-matching operators like
 .mono
 .meti @(all << pattern )
 .onom
@@ -41138,10 +41235,10 @@ using the
 .code defmatch
 macro.
 
-.SS* Pattern Matching Notation
+.SS* Pattern-Matching Notation
 
 The pattern-matching notation is documented in the following
-sections; a section describing the pattern matching macros follow.
+sections; a section describing the pattern-matching macros follow.
 
 .NP* Atom match
 A pattern consisting of an atom other than a vector
@@ -41348,7 +41445,7 @@ that being a syntactic sugar for
 .mets <> "`...@" var "...`"
 .syne
 .desc
-The quasiliteral syntax is supported as a pattern matching operator.
+The quasiliteral syntax is supported as a pattern-matching operator.
 The corresponding object is required to be a character string, which
 is analyzed according to the structure of the quasiliteral pattern,
 and portions of the string are captured by variables. If the corresponding
@@ -41377,7 +41474,7 @@ denotes the value of
 converted to a string, and right-aligned in a forty-character-wide field.
 Consequently, the notation matches exactly such a forty-character text.
 
-In the following description of the quasiliteral pattern matching rules, the
+In the following description of the quasiliteral pattern-matching rules, the
 symbols
 .metn uv ,
 .meta uv0
@@ -41460,7 +41557,7 @@ a suffix of the string with those characters removed.
 .meIP >> `@{ uv <> #/ regex /}{P}`
 An unbound variable
 .meta uv
-which carries a regular expression modifier specifies a regular expression
+which carries a regular-expression modifier specifies a regular-expression
 match. If a prefix of the input string matches
 .metn regex ,
 then the match is successful and
@@ -41486,7 +41583,7 @@ Two consecutive unbound variables, where
 is a plain variable with no modifiers, constitutes an invalid pattern.
 This situation is diagnosed as an error. If
 .meta uv0
-is braced, carrying an integer or regular expression modifier
+is braced, carrying an integer or regular-expression modifier
 .metn mod ,
 then the situation is treated as the pattern
 .mono
@@ -41522,7 +41619,7 @@ supported in quasiliteral patterns.
 .mets >> ^ qq-syntax
 .syne
 .desc
-Quasiquoting provides an alternative pattern matching syntax. It uses a subset
+Quasiquoting provides an alternative pattern-matching syntax. It uses a subset
 of the quasiquoting notation. Only specific kinds of quasiquoted objects listed
 in this description are supported. Within a quasiquote used for
 pattern-matching, unquotes indicate operators and variables instead of the
@@ -41542,7 +41639,7 @@ An unquoted expression occurring in the quasiquote is translated to the
 .mono
 .meti >> @ expr
 .onom
-pattern matching syntax. If
+pattern-matching syntax. If
 .meta expr
 is an symbol, then this is a meta-variable:
 .mono
@@ -41573,19 +41670,19 @@ where the first element is
 .meIP >> #S( type < e0 < e1 ...)
 Structure quasiliteral syntax is translated according to the
 .mono
-.meti @(struct <> [ type ] <> [ e0 ] <> [ e1 ]  ...)
+.meti @(struct <> [ type ] <> [ e0 ] <> [ e1 ] ...)
 .onom
 pattern.
 .meIP >> #( e0 < e1 ...)
 Vector quasiliteral syntax is translated according to the
 .mono
-.meti <> #([ e0 ] <> [ e1 ]  ...)
+.meti <> #([ e0 ] <> [ e1 ] ...)
 .onom
 pattern: it becomes a vector object containing embedded patterns.
-.meIP <> #J[ e0 , << e1 ,  ...]
+.meIP <> #J[ e0 , << e1 , ...]
 A JSON array quasiquote is translated into
 .mono
-.meti <> #([ e0 ] <> [ e1 ]  ...)
+.meti <> #([ e0 ] <> [ e1 ] ...)
 .onom
 exactly like a vector.  Here, the
 .code [X]
@@ -41763,7 +41860,7 @@ object's structure type: the type itself, rather than its symbolic name.
 .desc
 The
 .code hash
-pattern operator matches a hash table object by means of patterns
+pattern operator matches a hash-table object by means of patterns
 which target keys, values or both.
 
 An important concept in the requirements governing the operation of the
@@ -41848,8 +41945,8 @@ and if it matches, the value is matched against
 If both match, then the values from the matches are collected into lists.
 At least one matching key-value pair must be found, otherwise
 the overall match fails.
-Note: this situation can be understood as if the hash table were association
-list of
+Note: this situation can be understood as if the hash table were
+an association list of
 .code cons
 cells of the form
 
@@ -42340,7 +42437,7 @@ operator matches, the variables from all of the patterns
 are also bound. However, only the variables from the matching
 .meta pattern
 take on the values implied by that pattern.
-The variables from the non-matching patterns that do not have
+The variables from the nonmatching patterns that do not have
 the same names as variables in the matching
 .metn pattern ,
 and that have been newly introduced in the
@@ -42366,7 +42463,7 @@ values.
 .desc
 The pattern operator
 .code not
-provides logical inverse semantics. It matches if, and only if, the
+provides logical inverse semantics. It matches if and only if the
 .meta pattern
 does not match.
 
@@ -42382,10 +42479,10 @@ operator.
 
 .verb
    ;; @a matches unconditionally, so @(not @a) always fails:
-   (match-if @(not @a) 1 :yes :no) -> no
+   (if-match @(not @a) 1 :yes :no) -> :no
 
    ;; error: a is not bound
-   (match-if @(not @a) 1 :yes a) -> error
+   (if-match @(not @a) 1 :yes a) -> error
 
    (match-case '(1 2 3)
      ((@(not 1) @b @c) (list :case1 b c))
@@ -42750,7 +42847,7 @@ apply accordingly.
   -> (3 (2 3) (1 2 3)))
 .brev
 
-.SS* Pattern Matching Macros
+.SS* Pattern-Matching Macros
 
 .coNP Macros @ when-match and @ if-match
 .synb
@@ -43119,7 +43216,7 @@ under
 The following restrictions apply. The parameter list may not include
 optional parameters delimited by
 .code :
-(colon symbol). The parameter list may not be dotted.
+(the colon keyword symbol). The parameter list may not be dotted.
 
 The macro produces a function which the
 .meta left-param
@@ -43317,7 +43414,7 @@ is used as a pattern operator: an expression of the form
 .mono
 .meti >> @( name << argument *)
 .onom
-occurring in pattern matching syntax.
+occurring in pattern-matching syntax.
 
 The behavior is unspecified if
 .meta name
@@ -43340,7 +43437,7 @@ in a manner particular to
 
 The
 .code :form
-parameter captures the pattern matching form, or a constituent thereof, in
+parameter captures the pattern-matching form, or a constituent thereof, in
 which the the macro is being invoked. For instance, if the operator is being
 used inside a pattern given to a
 .code when-match
@@ -43570,7 +43667,7 @@ These lists are catenated together as if by the
 .code append
 function and returned.
 
-It is unspecified whether the non-matching iterations produce
+It is unspecified whether the nonmatching iterations produce
 empty lists which are included in the append operation.
 
 If the last tuple of items which produces a match is absolutely the
@@ -44964,8 +45061,7 @@ for those arguments for which
 .code zerop
 returns
 .code nil
-and
-.IR "vice versa" .
+and vice versa.
 
 .coNP Functions @ plusp and @ minusp
 .synb
@@ -45053,7 +45149,7 @@ subtract 2 and 3 from their argument.
 .mets (= < object << object *)
 .syne
 .desc
-These relational functions compare characters, numbers ranges and sequences of
+These relational functions compare characters, numbers, ranges and sequences of
 characters or numbers for numeric equality or inequality. The arguments must be
 one or more numbers, characters, ranges, or sequences of these objects,
 or, recursively, of sequences.
@@ -45230,7 +45326,7 @@ Otherwise it returns
 .coNP Functions @ max and @ min
 .synb
 .mets (max < first-arg << arg *)
-.mets (min < first-arg << args *)
+.mets (min < first-arg << arg *)
 .syne
 .desc
 The
@@ -46051,8 +46147,7 @@ function performs a bitwise complement of
 When the one-argument form of lognot is used, then if
 .meta value
 is nonnegative,
-then the result is negative, and
-.IR "vice versa" ,
+then the result is negative, and vice versa,
 according to the infinite-bit
 two's complement representation. For instance
 .code "(lognot -2)"
@@ -47636,7 +47731,7 @@ gathered from every clause.
 
 The handler function established in the generated
 .code handler-bind
-is synthesized from of all of the clauses, together with dispatch logic which
+is synthesized from all of the clauses, together with dispatch logic which
 which passes the exception and its arguments to the first
 eligible clause.
 
@@ -48449,7 +48544,9 @@ an accepting handler,
 .code compile-defr-warning
 returns
 .codn nil .
-In also returns nil if it catches a
+In also returns
+.code nil
+if it catches a
 .code continue
 exception.
 
@@ -49547,13 +49644,13 @@ The
 in the names stands for "heap", serving as a mnemonic based on the
 implementation concept of these bindings being "heap-allocated".
 
-.SS* Regular Expression Library
+.SS* Regular-Expression Library
 
-\*(TX provides a "pure" regular expression implementation based on automata
+\*(TX provides a "pure" regular-expression implementation based on automata
 theory, which equates regular expressions, finite automata and sets of strings.
 A regular expression determines whether or not a string of input characters
 belongs to a set. \*(TX regular expressions do not support features such
-as as "anchoring" a match to the start or end of a string, or capture of
+as "anchoring" a match to the start or end of a string, or capturing
 parenthesized subexpression matches into registers. Parenthesis syntax
 denotes only grouping, with no additional meaning.
 
@@ -49563,7 +49660,7 @@ the functions which use regular expressions to perform these operations.
 
 .NP* Regular Expressions as Functions
 .synb
-.mets >> [ regex >> [ start <> [ from-end ]] < string ]
+.mets >> [ regex >> [ start <> [ from-end ]] << string ]
 .syne
 .desc
 A regular expression is callable as a function in \*(TL.
@@ -49630,7 +49727,7 @@ proceeds in reverse, from the position just beyond the last character of
 toward
 .metn start .
 
-if
+If
 .meta start
 exceeds the length of the string, then
 .code search-regex
@@ -49842,7 +49939,7 @@ the matching substring of
 .desc
 The
 .code regex-prefix-match
-determines whether the input string might
+determines whether the input string
 might be the prefix of a string which matches regular expression
 .metn regex .
 
@@ -49977,7 +50074,7 @@ function returns
 .code t
 if
 .meta obj
-is a compiled regular expression
+is a compiled regular-expression
 object. For any other object type, it returns
 .codn nil .
 
@@ -50016,7 +50113,7 @@ matches all of
 then the empty string is returned.
 
 If the first argument is a character string, then it is treated
-as if it were a regular expression match for that literal
+as if it were a regular-expression match for that literal
 sequence of characters. Thus,
 .code trim-left
 interprets that string as a
@@ -50062,7 +50159,7 @@ The
 function takes the source code of a regular expression,
 expressed as a Lisp data structure representing an abstract syntax tree, or
 else a regular expression specified as a character string, and compiles it to a
-regular expression object.
+regular-expression object.
 
 If
 .meta form-or-string
@@ -50092,7 +50189,7 @@ stream.
 .TP* Examples:
 
 .verb
-  ;; the equivalent of #/[a-zA-Z0-9_/
+  ;; the equivalent of #/[a-zA-Z0-9_]/
   (regex-compile '(set (#\ea . #\ez) (#\eA . #\eZ)
                        (#\e0 . #\e9) #\e_))
 
@@ -50133,7 +50230,7 @@ function parses a character string which contains a regular expression and
 turns it into a Lisp data structure (the abstract syntax tree representation of
 the regular expression).
 
-The regular expression syntax
+The regular-expression syntax
 .code #/RE/
 produces the same structure, but as a
 literal which is processed at the time \*(TX source code is read; the
@@ -50166,11 +50263,11 @@ which is suitable as input to
 
 There is a small difference in the syntax accepted by
 .code regex-parse
-and the syntax of regular expression literals. Any
+and the syntax of regular-expression literals. Any
 .code /
 (slash) characters occurring in any position within
 .meta string
-are treated as ordinary characters, not as regular expression delimiters.
+are treated as ordinary characters, not as regular-expression delimiters.
 The call
 .mono
 (regex-parse "/a/")
@@ -50210,17 +50307,17 @@ dependence on derivative-based processing.
 
 The
 .meta regex-tree-syntax
-is assumed to be correct, as if it were produced by the
+argument is assumed to be correct, as if it were produced by the
 .code regex-parse
 or
 .code regex-from-trie
-functions. Incorrect syntax produces unspecified results; an exception may be
+functions. Incorrect syntax produces unspecified results: an exception may be
 thrown, or some object may appear to be successfully returned.
 
 Note: it is unnecessary to call this function to prepare the input for
 .code regex-compile
 because that function optimizes internally. However, the source code attached
-to a compiled regular expression object is the original unoptimized syntax
+to a compiled regular-expression object is the original unoptimized syntax
 tree, and that is used for rendering the
 .code #/.../
 notation when the object is printed. If the syntax is passed through
@@ -50290,7 +50387,7 @@ removed from the stream.  If
 is true, that matching text is included in
 the returned string. Otherwise, it is discarded.
 The next available character in the stream is the first
-non-matching character following the matched text.
+nonmatching character following the matched text.
 However, the next available character, as well as some number of
 subsequent characters, may originate from the stream's push-back buffer,
 rather than from the underlying operating system object,
@@ -50347,7 +50444,7 @@ The text matched by
 .meta regex
 is as long as possible, and is removed from the stream.
 The next available character in the stream is the first
-non-matching character following the matched text.
+nonmatching character following the matched text.
 However, the next available character, as well as some number of
 subsequent characters, may originate from the stream's push-back buffer,
 rather than from the underlying operating system object,
@@ -50376,7 +50473,7 @@ The
 and
 .code $
 notation used in their names are an allusion to the
-regular expression search anchoring operators found in
+regular-expression search-anchoring operators found in
 familiar POSIX utilities such as
 .codn grep .
 
@@ -50647,7 +50744,7 @@ character. If so, these are included.
 .mets (f$ < regex <> [ end-position ])
 .syne
 .desc
-These regular expression functions do not directly
+These regular-expression functions do not directly
 perform regex operations. Rather, they each return
 a function of one argument which performs a regex
 operation.
@@ -50727,7 +50824,7 @@ and
 .mets (frr < regex <> [[ start-position ] << from-end ])
 .syne
 .desc
-These regular expression functions do not directly
+These regular-expression functions do not directly
 perform regex operations. Rather, they each return
 a function of one argument which performs a regex
 operation.
@@ -50840,7 +50937,7 @@ requiring protection against collision attacks may use
 to create a randomized hash seed, and, depending on their specific need, either
 store that value in
 .codn *hash-seed* ,
-or pass the value to hash table constructors like
+or pass the value to hash-table constructors like
 .codn make-hash ,
 or both.
 Note: randomization of hash seeding isn't a default behavior because it affects
@@ -50875,13 +50972,12 @@ collector. That is to say, when the garbage collector discovers that the only
 references to some object are weak references, then that object is considered
 garbage, just as if it had no references to it. The object is reclaimed, and
 the weak references "lapse" in some way, which depends on what kind they are.
-Hash table weak references lapse by entry removal.  When an object used
+Hash-table weak references lapse by entry removal.  When an object used
 as a key in in one or more weak-key hash tables becomes unreachable, those hash
 entries disappear. This happens even if the values are themselves reachable.
 That is what it means that.
-.IR "Vice versa" ,
-when an object appearing as a value in
-one or more hash table entries in weak-value hash tables becomes unreachable,
+Vice versa, when an object appearing as a value in
+one or more hash-table entries in weak-value hash tables becomes unreachable,
 those entries disappear, even if the keys are reachable. When a hash table has
 both weak keys and weak values, then its entries are removed when either keys
 or values become unreachable.  In other words, both the key and value must be
@@ -50944,9 +51040,11 @@ argument specifies whether it shall have weak values, and
 .meta equal-based
 specifies whether it is
 .codn equal -based.
-The hash function defaults
-all three of these properties to false, and allows them to be overridden to
-true by the presence of keyword arguments.
+The
+.code hash
+function defaults all three of these properties to false,
+and allows them to be overridden to true
+by the presence of keyword arguments.
 
 The optional
 .meta hash-seed
@@ -51027,7 +51125,8 @@ The
 .code hash-construct
 function constructs a populated hash in one step. The
 .meta hash-args
-argument specifies a list suitable as an argument list in a call to the hash
+argument specifies a list suitable as an argument list in a call to the
+.code hash
 function.  The
 .meta key-val-pairs
 is a sequence of pairs, which are two-element
@@ -51113,8 +51212,7 @@ If
 .meta key-seq
 is longer than
 .metn value-seq ,
-then the excess keys are ignored, and
-.IR "vice versa" .
+then the excess keys are ignored, and vice versa.
 
 .coNP Function @ hash-update
 .synb
@@ -51205,9 +51303,9 @@ The trailing arguments
 .mono
 .meti << option *
 .onom
-if any, consist of the same keywords
-that are understood by the hash function, and determine the properties
-of the hash.
+if any, consist of the same keywords that are understood by the
+.code hash
+function, and determine the properties of the hash.
 
 .TP* Example:
 Group the integers from 0 to 10 into three buckets keyed on 0, 1 and 2
@@ -51500,7 +51598,7 @@ value is added to the front of that list,
 and the extended list then becomes the new value under
 .metn key .
 
-The return value is Boolean. If true, indicates that the hash table entry was
+The return value is Boolean. If true, indicates that the hash-table entry was
 newly created. If false, it indicates that the push took place on an existing
 entry.
 
@@ -51568,7 +51666,7 @@ function retrieves the user data object associated with
 
 A hash table can be created with user data using the
 .code :userdata
-keyword in a hash table literal or in a call to the
+keyword in a hash-table literal or in a call to the
 .code hash
 function, directly, or via other hash-constructing functions which take the
 hash construction keywords, such as
@@ -51911,7 +52009,7 @@ The
 operator iterates over a hash table. The
 .meta hash-form
 expression must
-evaluate to an object of hash table type. The
+evaluate to an object of hash-table type. The
 .meta key-var
 and
 .meta value-var
@@ -51953,7 +52051,7 @@ or
 
 .coNP Functions @, hash-uni @, hash-diff @ hash-symdiff and @ hash-isec
 .synb
-.mets (hash-uni < hash1 < hash2  >> [ joinfun >> [ map1fun <> [ map2fun ]]])
+.mets (hash-uni < hash1 < hash2 >> [ joinfun >> [ map1fun <> [ map2fun ]]])
 .mets (hash-diff < hash1 << hash2 )
 .mets (hash-symdiff < hash1 << hash2 )
 .mets (hash-isec < hash1 < hash2 <> [ joinfun ])
@@ -52038,8 +52136,7 @@ contains all of the keys from
 .meta hash1
 that are not in
 .meta hash2
-and
-.IR "vice versa" :
+and vice versa:
 all of the keys from
 .meta hash2
 that are not in
@@ -52204,10 +52301,10 @@ which must be a symbol suitable for naming functions with
 
 The
 .meta hash-form
-argument must be a form which evaluates to a hash table object.
+argument must be a form which evaluates to a hash-table object.
 
 Invocations of the function retrieve successive entries of the hash table
-as cons cell pairs of keys and values. The function returns
+as cons-cell pairs of keys and values. The function returns
 .code nil
 to indicate no more entries remain.
 
@@ -52225,7 +52322,7 @@ If
 .meta ksym
 is specified, then whenever the function
 .meta isym
-macro is invoked and retrieves a hash table entry, the
+macro is invoked and retrieves a hash-table entry, the
 .meta ksym
 variable is set to the key. If the function returns
 .code nil
@@ -52266,7 +52363,7 @@ hash tables make use of their seed, and only for keys which are strings and
 buffers.  The purpose of the seed is to scramble the hashing function, to make
 a hash table resistant to a type of denial-of-service attack, whereby a
 malicious input causes a hash table to be populated with a large number of keys
-which all map to the same hash table chain, causing the performance to severely
+which all map to the same hash-table chain, causing the performance to severely
 degrade.
 
 The value of
@@ -52759,7 +52856,7 @@ A possible implementation is this:
 
 .coNP Function @ tree-root
 .synb
-.mets (tree-root < tree )
+.mets (tree-root << tree )
 .syne
 .desc
 The
@@ -52778,7 +52875,7 @@ is returned.
 
 .coNP Function @ tree-clear
 .synb
-.mets (tree-root < tree )
+.mets (tree-clear << tree )
 .syne
 .desc
 The
@@ -52922,8 +53019,8 @@ arguments.
 
 .coNP Functions @ tree-next and @ tree-peek
 .synb
-.mets (tree-next < iter )
-.mets (tree-peek < iter )
+.mets (tree-next << iter )
+.mets (tree-peek << iter )
 .syne
 .desc
 The
@@ -52995,7 +53092,7 @@ the same order as they do in
 
 .coNP Function @ copy-tree-iter
 .synb
-.mets (copy-tree-iter < iter )
+.mets (copy-tree-iter << iter )
 .syne
 .desc
 The
@@ -53009,8 +53106,7 @@ The returned object has the same state as the original; it references the same
 traversal position in the same tree. However, it is independent of the original.
 Calls to
 .code tree-next
-on the original have no effect on the duplicate and
-.IR vice-versa .
+on the original have no effect on the duplicate and vice versa.
 
 .coNP Function @ replace-tree-iter
 .synb
@@ -53095,7 +53191,7 @@ operator).
 The argument forms of
 .code op
 are arbitrary expressions, within which special
-conventions is permitted regarding the use of certain implicit variables:
+conventions are permitted regarding the use of certain implicit variables:
 .RS
 .meIP >> @ num
 A number preceded by a
@@ -53195,8 +53291,8 @@ all but the first one, which is passed to
 The
 .code do
 operator is similar to
-.code op
-op, with the following three differences:
+.codn op ,
+with the following three differences:
 .RS
 .IP 1.
 The first argument of
@@ -53208,7 +53304,7 @@ implicit variables. Thus for instance
 .code "(do @1 ...)"
 is invalid. By contrast,
 .code "(op @1 ...)"
-is possible and make sense under the right circumstances.
+is possible, and makes sense under the right circumstances.
 The
 .meta oper
 argument may be the name of a macro or special operator, whereas
@@ -53246,18 +53342,21 @@ is effectively a shorthand for
 Because it accepts operators,
 .code do
 can be used with imperative constructs
-which are not functions, like set: like set: for instance
+which are not functions, like
+.codn set .
+For example,
 .code "(do set x)"
 produces an anonymous function which, if called with one argument, stores that
 argument into
-.codn x .
+.metn x .
 
 The actions of
 .code op
 and
 .code do
-be understood by these examples, which convey how the syntax is
-is rewritten to lambda.  However, note that the real translator
+can be understood by the following examples,
+which convey how the syntax is rewritten to lambda.
+However, note that the real translator
 uses generated symbols for the arguments, which are not equal to any
 symbols in the program.
 
@@ -55340,7 +55439,7 @@ argument, which is rendered right-aligned in a fixed-width field.  Numeric
 patterns conform to one of the two following syntactic rule:
 
 .mono
-.mets <> [ sign ]  [0] {#}+ >> [ point {#}+ | !]
+.mets <> [ sign ] [0] {#}+ >> [ point {#}+ | !]
 .onom
 
 The pattern consists of an optional
@@ -55805,7 +55904,7 @@ the POSIX function
 reports true). This is only supported on platforms that have this function.
 The behavior is overridden by the
 .code -n
-command line option.
+command-line option.
 
 .coNP Function @ open-file
 .synb
@@ -56363,7 +56462,7 @@ and
 .codn open-process ),
 success also
 means that the process terminates normally, with a successful error code, or an
-unsuccessful one. An abnormal termination is considered an error, as
+unsuccessful one. An abnormal termination is considered an error,
 as is the inability to retrieve the termination status, as well as the situation
 that the process continues running in spite of the close attempt.
 Detecting these situations is platform specific.
@@ -56385,7 +56484,7 @@ instead of returning
 .desc
 The
 .code with-stream
-binds the variable whose name is given by the
+macro binds the variable whose name is given by the
 .meta stream-var
 argument, and macro arranges for the evaluation of
 .metn body-form s
@@ -57116,13 +57215,12 @@ Examples of absolute paths under
 
 Examples of strings which are not absolute paths:
 
-.mono
-.mets >> ( the < empty << string )
+.verb
   .
   abc
   foo:bar/x
   $:\eabc
-.onom
+.brev
 
 The
 .code abs-path-p
@@ -57156,7 +57254,7 @@ which isn't the string
 .str .
 (single period),
 which doesn't begin with a period followed by a slash or backslash,
-and which doesn't begin with alphanumeric word
+and which doesn't begin with an alphanumeric word
 terminated by a colon.
 
 The empty string is a pure relative path.
@@ -57300,7 +57398,7 @@ to have a suffix delimiter is that the
 .code .
 character occurs somewhere in the last component of
 .metn path ,
-other than as the character of that component.
+other than as the first character of that component.
 What constitutes the last component is specified
 in more detail below.
 
@@ -57314,7 +57412,7 @@ is a path separator character, that character is omitted from the
 returned suffix.
 
 If multiple periods occur in the last component of the path,
-the delimiter for the long suffix is the leftmost period;
+the delimiter for the long suffix is the leftmost period and
 the delimiter for the short suffix is the rightmost period.
 
 If the delimiting period is the rightmost character of
@@ -57327,13 +57425,13 @@ If
 contains only one suffix delimiter, then its long and short suffix coincide.
 
 For the purpose of identifying the last component of
-.meta path
+.metn path ,
 if
 .meta path
-ends in a path separating character, that character is removed.
-If the remaining string contains path-separating characters, then
+ends in a path-separator character, then that character is removed.
+If the remaining string contains path-separator characters, then
 the last component consists of that portion of it which follows
-the rightmost path-separating character. Otherwise, the last component
+the rightmost path-separator character. Otherwise, the last component
 is the entire string. The suffix, if present, is identified and
 extracted from this last component.
 
@@ -57372,7 +57470,7 @@ extracted from this last component.
 .desc
 The
 .code path-cat
-joints together zero or more paths, returning the combined path.
+function joins together zero or more paths, returning the combined path.
 All arguments are strings.
 
 The following description defines the behavior when
@@ -57381,7 +57479,7 @@ is given exactly two arguments, which are interpreted as
 .meta dir-path
 and
 .metn rel-path .
-A description of the variable argument semantics follows.
+A description of the variable-argument semantics follows.
 
 Firstly, the two-argument
 .code path-cat
@@ -57404,7 +57502,7 @@ might not be equivalent strings.
 The
 .code path-cat
 function ensures that paths are joined without superfluous
-path separator characters, regardless of whether
+path-separator characters, regardless of whether
 .meta dir-path
 ends in a separator.
 
@@ -57422,7 +57520,7 @@ function eliminates trivial occurrences of the
 (dot) path component. It preserves trailing separators in the following
 way: if
 .meta rel-path
-ends in a path separator character, then the returned string shall
+ends in a path-separator character, then the returned string shall
 end in that character; and if
 .meta rel-path
 vanishes entirely because it is equivalent to the dot, then the returned
@@ -57434,12 +57532,11 @@ If
 .meta dir-path
 is an empty string, then
 .code rel-path
-is returned, and
-.IR "vice versa" .
+is returned, and vice versa.
 
 The variadic semantics of
 .code path-cat
-is as follows.
+are as follows.
 
 If
 .code path-cat
@@ -57458,7 +57555,7 @@ takes place using the two-argument semantics. The first two arguments
 are catenated into a single path, which is then catenated
 with the third argument, and so on.
 
-The above semantics implies that the following equivalence holds:
+The above semantics imply that the following equivalence holds:
 
 .verb
   [reduce-left path-cat list]  <--> [apply path-cat list]
@@ -58026,8 +58123,7 @@ function sets the indent mode of
 .meta stream
 to
 .meta new-mode
-if, and only if,
-its current mode is equal to
+if and only if its current mode is equal to
 .metn compare-mode .
 Whether or not it changes the mode, it returns the previous mode.
 
@@ -58037,8 +58133,7 @@ only differs in that it sets
 .meta stream
 to
 .meta new-mode
-if, and only if,
-the current mode is
+if and only if the current mode is
 .B not
 equal to
 .metn compare-mode .
@@ -58235,7 +58330,7 @@ as well as quasiliterals and quasiword list literals (QLLs).
 The default value is 0 and this value means that no limit is imposed.
 Otherwise, the value must be a positive integer.
 
-When the list, vector or hash table object being printed has more
+When the list, vector or hash-table object being printed has more
 elements than the maximum length, then elements are printed only up to
 the maximum count, and then the remaining elements are summarized by
 printing the
@@ -62350,7 +62445,7 @@ and ordinary clauses, it will be shadowed by the
 .code awk
 variable
 .codn fs ,
-which holds the field separator regular expression or string.
+which holds the field-separator regular expression or string.
 .meIP (:inputs << source-form *)
 The
 .code :inputs
@@ -62400,7 +62495,7 @@ This is done in order that if
 .code awk
 is used from the \*(TX command line, for example using the
 .code -e
-command line option, after
+command-line option, after
 .code awk
 terminates, \*(TX will not try to open the next argument
 as a script file or treat it as an option.
@@ -62886,14 +62981,14 @@ instantiated by the
 .code record-adapter
 function.
 
-The regular expression pattern stored in
+The regular-expression pattern stored in
 .code rs
 is used to matches substrings in the input which separate or terminate records.
 Unless the
 .code krs
 variable is set true, the substrings which match
 .code rs
-are discarded and the records consist of the non-matching extents between
+are discarded and the records consist of the nonmatching extents between
 them.
 
 The initial value of
@@ -63075,11 +63170,11 @@ being set, there is always at least one field, even if the record is empty.
 If the record doesn't match the tokenizing regular expression in
 .code ft
 then a single field is generated, then the entire record is
-taken as one field, denoting the non-matching space, even
+taken as one field, denoting the nonmatching space, even
 if the record is the empty string.
 
 If the record matches one or more tokens, then the first and
-last field will always contain the non-matching material before
+last field will always contain the nonmatching material before
 the first and last token, respectively. This is true even if
 the material is empty. Thus
 .code "[f 0]"
@@ -63481,8 +63576,8 @@ are ordinary expressions which are evaluated. However, their
 evaluation is unusual in two ways.
 
 Firstly, if either expression
-produces, as its result, a function or regular expression object,
-then that function or regular expression object is applied to
+produces, as its result, a function or regular-expression object,
+then that function or regular-expression object is applied to
 the current record (value of the
 .code rec
 variable), and the result of that application is then taken
@@ -63782,7 +63877,7 @@ on its field.
 The
 .code :
 (colon)
-symbol isn't a clause and does not correspond to a field position.
+keyword symbol isn't a clause and does not correspond to a field position.
 Rather, it acts as a separator among clauses. It need not appear at
 all. If it appears, it may appear at most twice. Thus, the
 clauses may be separated into up to three sequences.
@@ -63792,8 +63887,7 @@ If the colon does not appear, then all the clauses are
 Prefix clauses line up with fields from left to right.  If there are fewer
 fields than prefix clauses, the values of the excess clauses are evaluated, but
 ignored.
-.IR "Vice versa" ,
-if there are fewer prefix clauses than fields, then the excess
+Vice versa, if there are fewer prefix clauses than fields, then the excess
 fields are not subject to conversions.
 
 If the colon appears once, then the clauses before the colon, if any, are
@@ -64333,7 +64427,7 @@ prints the file, filling in page numbers starting at 5.
 
 .SS* Environment Variables and Command Line
 
-Note that environment variable names, their values, and command line
+Note that environment variable names, their values, and command-line
 arguments are all regarded as being externally encoded in UTF-8. \*(TX performs
 the encoding and decoding automatically.
 
@@ -64345,12 +64439,12 @@ variable holds the original, complete list of arguments passed
 from the operating system, including the program executable
 name.
 
-During command line option processing, \*(TX may transform the
-argument list. The hash bang mechanism, and the
+During command-line-option processing, \*(TX may transform the
+argument list. The hash-bang mechanism, and the
 .code --args
 and
 .code --eargs
-options can inject new command line arguments, as can code
+options can inject new command-line arguments, as can code
 which is executed during argument processing via the
 .code -e
 options and others.
@@ -64362,8 +64456,8 @@ variable holds the list of
 which is the argument list after these transformations are applied.
 This variable is established and set to the same value as
 .code *args-full*
-prior to command line processing, but is not updated with its final
-value until after command line processing.
+prior to command-line processing, but is not updated with its final
+value until after command-line processing.
 
 The
 .code *args*
@@ -64378,7 +64472,7 @@ can be calculated using the expression
 
 The
 .code *args*
-variable is available to to \*(TL expressions invoked from the
+variable is available to \*(TL expressions invoked from the
 command line via the
 .codn -p ,
 .code -e
@@ -64591,7 +64685,7 @@ The
 function accesses the underlying environment and updates the hash
 table with the name-value pair which is retrieved.
 
-.SS* Command Line Option Processing
+.SS* Command-Line-Option Processing
 
 \*(TL provides a support for recognizing, extracting and validating
 the POSIX-style options from a list of command-line arguments.
@@ -64627,10 +64721,10 @@ same facility. The options are declared in a more condensed way, and
 using symbols instead of strings. Furthermore, the parsed option values
 become slot values of an object, named by the same symbols.
 
-.NP* Command Line Option Conventions
+.NP* Command-Line-Option Conventions
 
-A command line option can have a short or long name. A short name is always
-one character long, and treated specially in the command line syntax.  Long
+A command-line option can have a short or long name. A short name is always
+one character long, and treated specially in the command-line syntax.  Long
 options have names two or more characters long.  An option can have both a long
 and short name. Options may not begin with the
 .code -
@@ -64658,7 +64752,7 @@ immediately followed by the name. When a long option takes an argument,
 it is mandatory. It must be specified in the same argument, separated
 from the name by the
 .code =
-character. If that is omitted, then the next command line argument
+character. If that is omitted, then the next command-line argument
 is taken as the argument. That argument is removed, and not recognized as
 an option, even if it looks like one.
 
@@ -64678,20 +64772,20 @@ of
 to explicitly specify false for a Boolean option.
 
 If a short option takes an argument, it may not clump with other
-short option. The following command line argument is taken as the
+short option. The following command-line argument is taken as the
 options argument. That argument is removed and is not recognized as
 an option even if it looks like one.
 
-If the command line argument
+If the command-line argument
 .code --
 occurs in the command line where an option would otherwise be recognized,
 it signifies the end of the options. The subsequent arguments are the
 non-option arguments, even if they resemble options.
 
-.NP* Command Line Processing Examples
+.NP* Command-Line Processing Examples
 
 The following example illustrates a complete \*(TL program which
-parses command line options:
+parses command-line options:
 
 .verb
   (defvarl options
@@ -64778,7 +64872,7 @@ macro:
 .desc
 The
 .code opt-desc
-structure describes a single command line option.
+structure describes a single command-line option.
 
 The
 .code short
@@ -64868,7 +64962,7 @@ successfully yield a string object, otherwise the argument is ill-formed.
 .meIP (list << type )
 If the type is specified as a compound form headed by the
 .code list
-symbol, it indicates that the command line option's argument is a list
+symbol, it indicates that the command-line option's argument is a list
 of elements.  The argument appears on the command line as a single string
 contained within one argument.  It may contain commas, and is split into pieces
 using the comma character as a separator. The pieces are then individually
@@ -65083,7 +65177,7 @@ function takes a list of
 .code opt-desc
 structures and a list of strings
 .meta arg-list
-representing command line arguments.
+representing command-line arguments.
 
 The
 .meta arg-list
@@ -65117,7 +65211,7 @@ function processes the list of
 structures
 .meta opt-desc-list
 and compiles a customized body of help text describing all of the
-options, as well as general description of the command line option
+options, as well as general description of the command-line option
 conventions to guide the user in in the correct use of command
 line options.
 
@@ -65145,7 +65239,7 @@ is thrown.
 .desc
 The
 .code define-option-struct
-macro defines a struct type, instances of which provide command line option
+macro defines a struct type, instances of which provide command-line option
 parsing.
 
 The
@@ -67177,7 +67271,7 @@ device.
 .desc
 The
 .code path-search
-searches for an executable program whose name is given by the
+function searches for an executable program whose name is given by the
 .meta program-name
 string argument. If the program is found, then the full path to that
 program is returned, otherwise
@@ -67186,7 +67280,7 @@ is returned.
 
 If the
 .meta search-path
-is omitted, then
+argument is omitted, then
 .code path-search
 uses the search path given in the
 .code PATH
@@ -67204,8 +67298,8 @@ to that component, as if using the
 .code path-cat
 function, and tests whether the resulting path is an existing file object
 according to
-.codn path-file-p ,
-which is executable according to
+.code path-file-p
+and which is executable according to
 .codn path-executable-to-me-p .
 
 The
@@ -67226,18 +67320,18 @@ Components of the search path which are empty strings are ignored.
 
 If
 .meta program-name
-is a string which includes path separator characters, or if
+is a string which includes path-separator characters, or if
 .meta program-name
 is one of the special names
 .str .
 or
 .strn .. ,
 the behavior may produce a different result from the host platform's native
-path search strategy.
+path-search strategy.
 
 The behavior of
 .code path-search
-may also deviate from the host platform's native path search strategy
+may also deviate from the host platform's native path-search strategy
 due to issues of permissions. If an executable file is found in the path,
 but is not executable to the caller due to permissions, it is treated
 as nonexistent, which means that the search can find a same-named file
@@ -68016,7 +68110,7 @@ when called with one or two arguments, respectively.
 The
 .code pipe
 function, if successful, returns a pair of integer file descriptors
-as a cons cell pair. The descriptor in the
+as a cons-cell pair. The descriptor in the
 .code car
 field of the pair is the read end of the pipe.
 The
@@ -68028,7 +68122,7 @@ If the function fails, it throws an exception of type
 
 .coNP Function @ close
 .synb
-.mets (close < fileno <> [  throw-on-error-p ])
+.mets (close < fileno <> [ throw-on-error-p ])
 .syne
 .desc
 The
@@ -68735,7 +68829,7 @@ function, if available, provides access
 to the like-named POSIX C library function.
 The
 .meta pattern
-argument specifies a POSIX-shell-style file pattern matching expression.
+argument specifies a POSIX-shell-style filename-pattern-matching expression.
 Its exact features and dialect are controlled by
 .metn flags .
 If
@@ -71637,15 +71731,15 @@ a value hold the value
 .desc
 The
 .code filter-string-tree
-a tree structure similar to
-.metn obj ,
+function returns a tree structure similar to
+.meta obj
 in which all of the
 string atoms have been filtered through
 .metn filter .
 
 The
 .meta obj
-argument is a string tree structure: either the symbol
+argument is a string-tree structure: either the symbol
 .codn nil ,
 denoting an empty structure; a string; or a list of tree structures. If
 .meta obj
@@ -71724,7 +71818,7 @@ The
 .code regex-from-trie
 function returns a representation of
 .meta trie
-as regular expression abstract syntax, suitable for
+as regular-expression abstract syntax, suitable for
 processing by the
 .code regex-compile
 function.
@@ -71749,7 +71843,7 @@ The
 .code *filters*
 special variable holds a hash table which associates symbols with
 filters. This hash table defines the named filters used in the
-\*(TX pattern language. The names are the hash table keys, and filter
+\*(TX pattern language. The names are the hash-table keys, and filter
 objects are the values. Filter objects are one of three representations.
 The value
 .code nil
@@ -71765,7 +71859,7 @@ with values which conform to the above representation of filters.
 The behavior is unspecified if any of the predefined filters
 are removed or redefined, and are subsequently used, or if the
 .code *filters*
-variable is replaced or rebound with a hash table value which omits
+variable is replaced or rebound with a hash-table value which omits
 those keys, or associates them with different values.
 
 Note that functions
@@ -71936,7 +72030,7 @@ it is local inside it.
 .desc
 The
 .code txr-if
-macro invokes the \*(TX pattern matching function
+macro invokes the \*(TX pattern-matching function
 .meta name
 on some input given by the
 .meta input
@@ -72705,14 +72799,14 @@ smaller than 326767 bytes are strongly discouraged.
 This variable holds the invocation pathname of the \*(TX program.
 The value of
 .code self-path
-when \*(TL expressions are being evaluated in command line arguments
+when \*(TL expressions are being evaluated in command-line arguments
 is the string
 .strn cmdline-expr .
 The value of
 .code self-path
 when a \*(TX query is supplied on the command line via the
 .code -c
-command line option is the string
+command-line option is the string
 .strn cmdline .
 
 Note that for programs read from a file,
@@ -72883,7 +72977,7 @@ fails, causing subsequent directives not to be processed.
 A \*(TX pattern language file loaded with the Lisp
 .code load
 function does not have the usual implicit access to the
-command line arguments, unlike a top-level \*(TX query.
+command-line arguments, unlike a top-level \*(TX query.
 If the directives in the file try to match input, they
 work against the
 .code *stdin*
@@ -72894,7 +72988,7 @@ are available.
 
 If the source or compiled file begins with the characters
 .codn #! ,
-usually indicating "hash bang" script,
+usually indicating a hash-bang script,
 .code load
 reads reads the first line of the file and discards it.
 Processing of the file then begins with the first byte
@@ -72918,7 +73012,7 @@ line.
 
 If the
 .code -i
-command line option is used to enter the interactive listener,
+command-line option is used to enter the interactive listener,
 and a file to be loaded is also specified, then the
 .code *load-path*
 variable remains bound to the name of that file inside the
@@ -75518,7 +75612,7 @@ by the "two's complement" operation, which maps each value to
 its additive inverse. The operation consists of temporarily treating the
 entire bitfield as unsigned, and inverting the logical value of all the
 bits, and then adding 1 with "wraparound" to zero if 1 is added to a field
-consisting of all 1 bits. (Thus zero maps to zero, as expected).
+consisting of all 1 bits. (Thus zero maps to zero, as expected.)
 An anomaly in the two's complement system is that the most negative
 value has no positive counterpart. The two's complement operation
 on the most negative value produces that same value itself.
@@ -76311,8 +76405,7 @@ subsequent use. If this parameter is omitted, then the involved FFI functions
 use their own names in reporting diagnostics.
 
 Note: variadic functions must not be called using a non-variadic
-descriptor, and
-.IR "vice versa" ,
+descriptor, and vice versa,
 even if the return types and
 argument types match.
 
@@ -76906,8 +76999,8 @@ literal list, using FFI type syntax. The macro arranges for these types
 to be compiled. Furthermore, a special convention may be used for
 specifying a variadic function: if the
 .code :
-(colon keyword)
-symbol appears as one of the elements of
+(colon)
+keyword symbol appears as one of the elements of
 .metn argtypes ,
 then the
 .code deffi
@@ -79125,7 +79218,7 @@ The
 function is provided to list the compiled code in a more understandable way;
 .code disassemble
 takes a compiled code object and decodes it into an assembly language
-presentation of its virtual machine code, accompanied by a dump of the various
+presentation of its virtual-machine code, accompanied by a dump of the various
 information tables.
 
 File compilation via
@@ -79310,22 +79403,22 @@ special variable has no influence on this.
 Circular structures in compiled literals are preserved; on loading, similar
 circular structures are reproduced.
 
-.SS* Treatment of The Hash Bang Line
+.SS* Treatment of the Hash-Bang Line
 
-\*(TX supports the hash bang mechanism in compiled
+\*(TX supports the hash-bang mechanism in compiled
 .code .tlo
 files, thereby allowing compiled scripts to be executable.
 
 When a source file begins with the
 .code #!
-("hash-bang") character sequence, the file compiler propagates that
+(hash bang) character sequence, the file compiler propagates that
 line (all characters up to and including the terminating newline) to the
 compiled file, subject to the following transformation: occurrences of
 .str --lisp
 which are not followed by a dash are replaced with
 .strn --compiled .
 
-Furthermore, certain permissions are propagated from a hash bang source
+Furthermore, certain permissions are propagated from a hash-bang source
 file to the target file. If the source file is executable to its owner,
 then the target file is made executable as if by using
 .code chmod
@@ -79343,9 +79436,9 @@ bit is set on the target file.
 
 .SS* Compiled File Compatibility
 
-\*(TX's virtual machine architecture for executing compiled code
+\*(TX's virtual-machine architecture for executing compiled code
 is evolving, and that evolution has implications for the compatibility between
-compiled files the \*(TX executable image.
+compiled files and the \*(TX executable image.
 
 The basic requirement is that a given version of \*(TX can load and execute
 the compiled files which that same version has produced.
@@ -79382,25 +79475,26 @@ version.
 Versions 193 through 198 produce version 2 compiled files and load only
 that version.
 
-Version 199 produces version 3 files and loads version 2 or 3.
+Version 199 produces version 3 files and loads versions 2 and 3.
 
-Versions 200 through 215 produce version 4 files and load version 2, 3 or 4.
+Versions 200 through 215 produce version 4 files and load
+versions 2, 3 and 4.
 
 Versions 216 through 243 produce version 5.0 files and load
-version 2, 3, 4 or 5, regardless of minor version.
+versions 2, 3, 4 and 5, regardless of minor version.
 
 Versions 244 through 251 produce version 5.1 files and load
-version 2, 3, 4 or 5, regardless of minor version.
+versions 2, 3, 4 and 5, regardless of minor version.
 
-Versions 252 through 259 produce version 6.0 files and loads only version 6,
-regardless of minor version.
+Versions 252 through 259 produce version 6.0 files and load
+only version 6, regardless of minor version.
 
-Versions 260 through 264 produce version 7.0 files and loads
-version 6 and 7, regardless of minor version. Version 261
-introduces JSON
+Versions 260 through 264 produce version 7.0 files and load
+versions 6 and 7, regardless of minor version.
+Version 261 introduces JSON
 .code #J
 syntax. Compiled code which contains embedded JSON literals
-is not loadable by \*(TX 260 or older.
+is not loadable by \*(TX 260 and older.
 
 .SS* Semantic Differences between Compilation and Interpretation
 
@@ -79454,8 +79548,7 @@ No such de-duplication is performed for interpreted code.
 
 Consequently, code which depends on multiple occurrences of these objects to be
 distinct objects may behave correctly when interpreted, but misbehave when
-compiled. Or
-.IR "vice versa" .
+compiled. Or vice versa.
 One example is code which modifies a string literal.
 Under compilation, the change will affect all occurrences of that literal
 that have been merged into one object.  Another example is an
@@ -79676,7 +79769,7 @@ The
 function takes the Lisp form
 .meta form
 and compiles it. The return value is a
-.I "virtual machine description"
+.I "virtual-machine description"
 object representing the compiled form. This object isn't of function type, but may be
 invoked as if it were a function with no arguments.
 
@@ -80029,7 +80122,7 @@ When a
 .code compile-only
 or
 .code eval-only
-form is processed by the evaluator rather than compiler, or when it is
+form is processed by the evaluator rather than the compiler, or when it is
 processed outside of file compilation, or when it is appears as other than a
 top-level form even under file compilation, then these operators behave
 in a manner identical to
@@ -80233,7 +80326,7 @@ form appearing in a form passed to
 .code compile-toplevel
 is translated such that its embedded
 .meta form
-will be executed each time the virtual machine description returned by
+will be executed each time the virtual-machine description returned by
 .code compile-toplevel
 is executed, and the execution of all such forms is placed ahead
 of other code.
@@ -80571,7 +80664,7 @@ which preceded it by four years.
 .desc
 The
 .code disassemble
-function presents a disassembly listing of the virtual machine
+function presents a disassembly listing of the virtual-machine
 code of a compiled function or form. It also presents the literal data
 contained in that compiled object in a tabular form which is readily
 cross-referenced with the disassembly listing.
@@ -80586,7 +80679,7 @@ argument.
 
 A
 .meta function
-argument is one that is a function object. Only compiled virtual machine
+argument is one that is a function object. Only compiled virtual-machine
 functions can be disassembled; other kinds of functions are rejected by
 .codn disassemble .
 
@@ -80638,7 +80731,7 @@ Each
 must be be one of three kinds of values:
 .RS
 .IP 1.
-a virtual machine description object returned by
+a virtual-machine-description object returned by
 .code compile-toplevel
 function; or
 .IP 2.
@@ -80658,8 +80751,8 @@ writes some preamble information into
 .metn stream .
 Then, for each
 .meta object
-that is not already a virtual machine description, its corresponding
-virtual machine description is retrieved. The virtual machine description
+that is not already a virtual-machine description, its corresponding
+virtual-machine description is retrieved. The virtual-machine description
 is converted into the externalized format required for the object format
 and that externalized format is written into
 .metn stream .
@@ -80673,11 +80766,11 @@ is used to populate an initially empty file, and no other data are
 written into the file, then that file is a valid compiled file.
 If that file is processed by
 .code load-file
-then each of the externalized forms is converted to a virtual machine
+then each of the externalized forms is converted to a virtual-machine
 description and executed.
 
-Note that virtual machine descriptions are not functions. A function's
-virtual machine description is the compiled version of the top-level form
+Note that virtual-machine descriptions are not functions. A function's
+virtual-machine description is the compiled version of the top-level form
 whose evaluation produced that function.
 
 For example, if the following top-level form is compiled and executed,
@@ -80702,7 +80795,7 @@ Whether the
 .code a
 or
 .code b
-symbol is used to specify the object to be dumped, the same virtual machine
+symbol is used to specify the object to be dumped, the same virtual-machine
 description is externalized and deposited into the stream. That machine
 description, when loaded and executed, defines two functions.
 
@@ -80713,7 +80806,7 @@ description, when loaded and executed, defines two functions.
 On some target platforms, \*(TX provides an interactive listener, which is
 invoked using the
 .code -i
-command line option, or by executing
+command-line option, or by executing
 .code txr
 with no arguments.  The interactive listener provides features like visual
 editing of the command line, tab completion on \*(TL symbols, and history
@@ -80851,8 +80944,8 @@ so that the listener ends up printing
 .str intr **
 like in the case of the
 .key Ctrl-C
-editing command. In this situation, though new
-command line prompt is issued with an incremented number, and the exception
+editing command. In this situation, though, a new
+command-line prompt is issued with an incremented number, and the exception
 is recorded as a value.
 
 .SS* Listener Variables
@@ -80903,7 +80996,7 @@ vector, according to the following pattern:
 .desc
 The listener variable
 .code *n
-evaluates to the current command line number: the number of the command in
+evaluates to the current command-line number: the number of the command in
 which the variable occurs:
 
 .verb
@@ -81537,7 +81630,7 @@ If the command line contains embedded carriage returns (which denote
 line breaks in multiline mode) these are replaced with newline characters
 when written out to the file. Conversely, when the edited file is read
 back, its newlines are converted to carriage returns, so that multiline
-content is handled properly. (See the following section, Multiline Mode).
+content is handled properly. (See the following section, Multiline Mode.)
 
 .NP* Undo Editing
 
@@ -81890,7 +81983,7 @@ When the input device isn't an interactive terminal, or if the
 .code -n
 or
 .code --noninteractive
-command line operations are used when invoking \*(TX,
+command-line operations are used when invoking \*(TX,
 the listener operates in
 .IR "plain mode" .
 It reads input without providing any editing features: no completion,
@@ -82120,7 +82213,7 @@ suppressed and all other exceptions are intercepted.
 Greedy evaluation doesn't affect the state of the listener.
 Only the original expression is entered into the
 history. Only the value of the original expression is saved in the result hash
-or a numbered variable.  The command line number
+or a numbered variable.  The command-line number
 .code *n
 is incremented by one. The additional evaluations are only performed for
 the purpose of producing useful output. The evaluations may
@@ -82222,17 +82315,17 @@ function is relied upon to open the URL.
 On other platforms, if the
 .code BROWSER
 environment variable exists, its value is assumed to indicate the
-name or path of the web browsing program which can accept the URL
+name or path of the web-browsing program which can accept the URL
 as an argument. If this variable doesn't exist, then
 .code doc
 searches for a system-dependent URL-opening utility, such as
 .codn xdg-open .
 If this utility is not found, then
 .code doc
-tries to fall back searching for a browser using one of several names.
+falls back to searching for a browser using one of several names.
 If no URL-opening mechanism is identified using the above strategies, an error
 exception is thrown. However, if the mechanism is identified, but does not
-successfully dispatch the URL to a browser, there is no requirement to thrown
+successfully dispatch the URL to a browser, there is no requirement to throw
 an error exception. It may appear that the
 .code doc
 function returns
@@ -82273,7 +82366,7 @@ prevent a warning:
 
 On platforms with the Unix filesystem and process security model, \*(TX has
 support for executing setuid/setgid scripts, even on platforms whose operating system
-kernel does not honor the setuid/setgid bit on hash bang scripts. On these
+kernel does not honor the setuid/setgid bit on hash-bang scripts. On these
 systems, taking advantage of the feature requires \*(TX to be installed as a
 setuid/setgid executable. For this reason, \*(TX is aware when it is executed
 setuid and takes care to manage privileges.  The following description about
@@ -82281,7 +82374,7 @@ the handling of setuid applies to the parallel handling of setgid also.
 
 When \*(TX starts, early in its execution it determines whether or not is
 is executing setuid. If so, it temporarily drops privileges, as a precaution.
-This is done before processing the command line arguments.
+This is done before processing the command-line arguments.
 When \*(TX determines that it is executing a setuid script (a file marked
 executable to its owner and attributed with the set-user-ID bit), it then
 attempts to impersonate the owner of the script file by changing to
@@ -82383,8 +82476,8 @@ this area is filled with null bytes.
 
 If the \*(TX executable is edited such that this area is replaced
 with a nonempty, null-terminated UTF-8 string, the program will,
-for the purposes of command line argument processing, treat this string as if
-it were the one and only command line argument. (The original command
+for the purposes of command-line-argument processing, treat this string as if
+it were the one and only command-line argument. (The original command
 line arguments are still retained in the
 .code *args*
 and
@@ -82420,7 +82513,7 @@ bytes contains the following string:
 When the
 .code myapp
 executable is invoked, it will process the above string as a single
-command line argument, causing the
+command-line argument, causing the
 .code main.tl
 \*(TL source file to be loaded.
 Any arguments passed to
@@ -82564,7 +82657,7 @@ The rationale for not requiring backward compatibility support for older
 compiled files is that older files require the older implementation of the
 virtual machine which they target. In some cases the differences between
 the older virtual machine and new is so great that \*(TX would have to carry a
-whole separate virtual machine implementation for the sake of the older files,
+whole separate virtual-machine implementation for the sake of the older files,
 which is a significant burden.
 
 .coSS The @ -C compatibility option
@@ -82978,10 +83071,10 @@ and
 A value of 183 or lower restores an inconsistent behavior in the
 .code "@(bind)"
 directive and other places in the \*(TX pattern language where binding
-takes place. Prior to version 184, a string tree match was only tried in
-both directions when the left hand side of a binding (the "pattern") was a
+takes place. Prior to version 184, a string-tree match was only tried in
+both directions when the left-hand side of a binding (the "pattern") was a
 variable. For non-variable pattern terms, such as Lisp expressions or atoms,
-the string tree match was tried in one direction only: a string tree arising
+the string-tree match was tried in one direction only: a string tree arising
 out of the pattern could match a string atom value on the right side.
 A string tree is a nested list structure whose leaves are strings: a list
 of strings, a list of lists of strings, and so on, in any mixture.
@@ -83282,7 +83375,7 @@ convention on data sources. Data sources beginning with the character
 were treated as system command pipes, and data sources beginning with
 .code $
 indicated that a directory is to be scanned. This convention was recognized
-both for command line arguments, the arguments of the
+both for command-line arguments, the arguments of the
 .code @(next)
 directive, and of the
 .code @(output)
@@ -83296,7 +83389,7 @@ as denoting standard input, and
 .code @(output)
 recognized it as standard output. These behaviors were also removed;
 versions after 142 recognize this convention only when it appears
-as a command line argument.  Lastly, until version 142, the
+as a command-line argument.  Lastly, until version 142, the
 .code @(output)
 directive evaluated the
 .meta destination
@@ -83615,7 +83708,7 @@ hope that they may be of some use.
 
 .TP* "Equivalence to Sets"
 Regexp intersection is not essential; it may be obtained from complement and
-union as follows, since De Morgan's law applies to regular expression algebra:
+union as follows, since De Morgan's law applies to regular-expression algebra:
 .code (R1)&(R2)
 =
 .codn ~(~(R1)|~(R2)) .
@@ -83679,7 +83772,7 @@ This
 idiom is also called set
 difference, sometimes notated with a minus sign:
 .code A-B
-(which is not supported in \*(TX regular expression syntax).  Elements which
+(which is not supported in \*(TX regular-expression syntax).  Elements which
 are in the set
 .codn A ,
 but not
