@@ -2008,24 +2008,32 @@
     (mac-param-bind lm-expr (lambda lm-args . lm-body) lm-expr
       (let* ((pars (new (fun-param-parser lm-args lm-expr)))
              (fix-vals (mapcar (ret (gensym)) fix-arg-exprs))
+             (fix-arg-iter fix-arg-exprs)
+             (check-opts)
              (ign-1 (gensym))
              (ign-2 (gensym))
              (al-val (gensym))
              (shadow-p (let ((all-vars (append pars.req pars.(opt-syms)
                                                (if pars.rest (list pars.rest)))))
-                         (or (isec all-vars fix-arg-exprs)
+                         (or (isec all-vars fix-arg-iter)
                              (member apply-list-expr all-vars)))))
-        ^(,(if shadow-p 'let 'alet) ,(zip fix-vals fix-arg-exprs)
+        ^(,(if shadow-p 'let 'alet) ,(zip fix-vals fix-arg-iter)
            (let* ,(build
                     (if apply-list-expr
                       (add ^(,al-val ,apply-list-expr)))
                     (while (and fix-vals pars.req)
-                      (add ^(,(pop pars.req) ,(pop fix-vals))))
+                      (add ^(,(pop pars.req) ,(pop fix-vals)))
+                      (pop fix-arg-iter))
                     (while (and fix-vals pars.opt)
                       (tree-bind (var-sym : init-form have-sym) (pop pars.opt)
-                        (add ^(,var-sym ,(pop fix-vals)))
+                        (add ^(,var-sym ,(car fix-vals)))
                         (if have-sym
-                          (add ^(,have-sym t)))))
+                          (add ^(,have-sym t)))
+                        (unless (and (constantp (car fix-arg-iter))
+                                     (neq (eval (car fix-arg-iter)) :))
+                          (push (list* var-sym have-sym init-form) check-opts)))
+                      (pop fix-vals)
+                      (pop fix-arg-iter))
                     (cond
                       ((and (null pars.req)
                             (null pars.opt))
@@ -2079,6 +2087,12 @@
                               (add ^(,have-sym)))))
                         (when pars.rest
                           (add ^(,pars.rest))))))
+             ,*(mapcar (tb ((var-sym have-sym . init-form))
+                         ^(when (eq ,var-sym :)
+                            (set ,var-sym ,init-form)
+                            ,*(if have-sym
+                                ^((set ,have-sym nil)))))
+                       (nreverse check-opts))
              ,*lm-body))))))
 
 (defun system-symbol-p (sym)
