@@ -1,3 +1,61 @@
+                                    TXR 265
+                                   2021-07-04
+
+
+  Features
+
+  - requirements change in new long-suffix and short-suffix functions:
+    - dot is now part of suffix
+    - leading dot is not a suffix delimiter: e.g. .bashrc is not a suffix.
+    - trailing path separators ignored, like in base-name.
+  - regex: optimization function exposed.
+  - constantp function now recognizes more kinds of expressions:
+    - (+ 1 (* 3 4)) are constantp as is (symacrolet ((a (+ 2 2))) (* b 3)).
+  - doc function
+    - now handles situations in which xdg-open blocks until browser exits.
+    - now reacts to BROWSER variable, and if xdg-open is not found,
+      falls back on the first of a long list of possible browsers.
+  - file system interface:
+    - path-cat function is now variadic: (path-cat "a" "b" "c" ...).
+    - new path-search function, searches for an executable by name in path,
+      defaulting to the system PATH.
+  - sequences:
+    - new find-true function; like find-if, but returns the true value
+      that the predicate produces, rather than the item from the sequence.
+  - I/O streams:
+    - argument defaulting tightened; functions no longer treat a nil
+      value for the stream argument as a missing argument.
+  - stack limit:
+    - minimum limit now imposed when the system stack limit is too low,
+      rather than disabling the mechanism.
+    - stack limit is now always on, even if we don't obtain a value
+      from the system or that value indicates that there is no limit.
+  - documentation infrastructure:
+    - improvements from Paul A. Patience integrated.
+    - doc workflow catches more kinds of problems.
+  - listener: empty EDITOR variable now treated as missing.
+
+  Bugs
+
+  - build: regression in separate directory build.
+  - parser: regression: not working with byacc.
+  - compiler: a number of bugs in inline lambda implementation.
+  - op: subtle bug in do operator; code refactored.
+  - base-name function: problem with empty suffix.
+  - listener: end-of-line/buffer visual glitch in selection.
+  - trie: bugs in regex-from-trie function, now covered by tests.
+  - regex: print/read consistency problem printing n-ary operators.
+  - doc: *doc-lookup* variable not special, as documented.
+  - getopts: throwing sys:opt-error instead of usr:opt-error.
+  - command line: lack of robustness in -b option fixed.
+  - documentation: numerous fixes.
+  - packages: find-symbol was behaving identically to find-symbol-fb.
+  - signals: itimer-prof variable misspelled as itimer-prov.
+  - search trees: documented tnodep function now actually exists.
+  - stack limit: fix crash when system stack limit is RLIM_INFINITY.
+
+
+
                                     TXR 264
                                    2021-06-25
 
