@@ -580,8 +580,8 @@ static val error_set_entries(val dlt, val fun)
 {
   val sys_name[] = {
     lit("bind-mac-error"), lit("bind-mac-check"),
-    lit("lambda-too-many-args"),
-    lit("lambda-too-few-args"), lit("lambda-short-apply-list"),
+    lit("lambda-too-many-args"), lit("lambda-too-few-args"),
+    lit("lambda-short-apply-list"), lit("lambda-excess-apply-list"),
     nil
   };
   val name[] = {
