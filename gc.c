@@ -57,6 +57,7 @@
 #define FULL_GC_INTERVAL        20
 #define FRESHOBJ_VEC_SIZE       (2 * HEAP_SIZE)
 #define DFL_MALLOC_DELTA_THRESH (16L * 1024 * 1024)
+#define DFL_STACK_LIMIT         (128 * 1024L)
 #else
 #define HEAP_SIZE               16384
 #define CHECKOBJ_VEC_SIZE       (2 * HEAP_SIZE)
@@ -64,6 +65,7 @@
 #define FULL_GC_INTERVAL        40
 #define FRESHOBJ_VEC_SIZE       (8 * HEAP_SIZE)
 #define DFL_MALLOC_DELTA_THRESH (64L * 1024 * 1024)
+#define DFL_STACK_LIMIT         (16384 * 1024L)
 #endif
 
 #if HAVE_MEMALIGN || HAVE_POSIX_MEMALIGN
@@ -893,6 +895,7 @@ int gc_inprogress(void)
 void gc_init(val *stack_bottom)
 {
   gc_stack_bottom = stack_bottom;
+  gc_stack_limit = gc_stack_bottom - DFL_STACK_LIMIT / sizeof (val);
 #if HAVE_RLIMIT
   struct rlimit rl;
   if (getrlimit(RLIMIT_STACK, &rl) == 0) {
