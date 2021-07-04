@@ -5,7 +5,7 @@
 @(define check-synb ())
 .synb
 @  (assert bad ln `bad .synb block`)
-@  (repeat :gap 0 :min 1)
+@  (repeat :gap 0 :mintimes 1)
 .mets @(skip)
 @    (maybe)
 @      (repeat :gap 0 :mintimes 1)
@@ -128,8 +128,7 @@
 @  (throw bad ln `dangling @mac`)
 @(end)
 @;;
-@;; Check for .meti not wrapped in .mono/onom.
-@;; macros.
+@;; Check for .meti not wrapped in .mono/.onom macros.
 @;;
 @(define check-meti ())
 .meti @(skip)
