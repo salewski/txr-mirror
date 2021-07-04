@@ -1796,13 +1796,13 @@ Control characters may be embedded directly in a query (with the exception of
 newline characters). An alternative to embedding is to use escape syntax.
 The following escapes are supported:
 
-.meIP >> @\e  newline
+.meIP >> @\e newline
 A backslash immediately followed by a newline introduces a physical line
 break without breaking up the logical line. Material following this sequence
 continues to be interpreted as a continuation of the previous line, so
 that indentation can be introduced to show the continuation without appearing
 in the data.
-.meIP >> @\e  space
+.meIP >> @\e space
 A backslash followed by a space encodes a space. This is useful in line
 continuations when it is necessary for some or all of the leading spaces to be
 preserved.  For instance the two line sequence
@@ -1839,7 +1839,7 @@ kinds of terminals, or ejects a page of text from a line printer.
 Carriage return (ASCII 13, CR).
 .coIP @\ee
 Escape (ASCII 27, ESC)
-.meIP @\ex < hex-digits
+.meIP >> @\ex hex-digits
 A
 .code @\ex
 immediately followed by a sequence of hex digits is interpreted as a hexadecimal
@@ -1848,7 +1848,7 @@ numeric character code. For instance
 is the ASCII character A.  If a semicolon character immediately follows the
 hex digits, it is consumed, and characters which follow are not considered
 part of the hex escape even if they are hex digits.
-.meIP @\e < octal-digits
+.meIP >> @\e octal-digits
 A
 .code @\e
 immediately followed by a sequence of octal digits (0 through 7) is interpreted
