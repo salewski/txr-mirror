@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <assert.h>
 #include <wchar.h>
 #include <signal.h>
@@ -67,6 +68,8 @@
 #define DFL_MALLOC_DELTA_THRESH (64L * 1024 * 1024)
 #define DFL_STACK_LIMIT         (16384 * 1024L)
 #endif
+
+#define MIN_STACK_LIMIT         32768
 
 #if HAVE_MEMALIGN || HAVE_POSIX_MEMALIGN
 #define OBJ_ALIGN (sizeof (obj_t))
@@ -899,9 +902,12 @@ void gc_init(val *stack_bottom)
 #if HAVE_RLIMIT
   struct rlimit rl;
   if (getrlimit(RLIMIT_STACK, &rl) == 0) {
-    if (rl.rlim_cur != RLIM_INFINITY && rl.rlim_cur > 512 * 1024) {
-      rlim_t lim = (rl.rlim_cur - rl.rlim_cur / 16) / sizeof (val);
-      gc_stack_limit = gc_stack_bottom - lim;
+    rlim_t lim = rl.rlim_cur;
+    if (lim != RLIM_INFINITY) {
+      ptrdiff_t delta = (lim >= MIN_STACK_LIMIT
+                         ? (lim - lim / 16)
+                         : MIN_STACK_LIMIT) / sizeof (val);
+      gc_stack_limit = gc_stack_bottom - delta;
     }
   }
 #endif

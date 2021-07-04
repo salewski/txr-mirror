@@ -72734,11 +72734,15 @@ derived from
 .codn error ,
 is thrown.
 
-The stack overflow guard mechanism is enabled at startup on those platforms
-where it is possible to inquire the system about the stack limit, and where the
-stack limit is at least 512 kilobytes.  \*(TX configures the limit to within a
+The stack overflow guard mechanism is configured on start-up.
+On platforms on those platforms where it is possible to
+inquire the system about the actual stack limit, and where the stack limit is
+at least 512 kilobytes, \*(TX sets the limit to within a
 certain percentage of the actual value. If it is not possible to determine the
-system's stack limit, or it is too low, then the mechanism is disabled.
+system's stack limit, or if the system indicates that the stack size is
+unlimited, then a default limit is imposed. If the system's limit is
+configured below a certain small value, then that small value is used
+as the stack limit.
 
 The
 .code get-stack-limit
@@ -72794,7 +72798,7 @@ of the stack overflow detection mechanism is compromised.
 Likewise, if
 .meta value
 is too low, the operation of \*(TX shall become unreliable. Values
-smaller than 326767 bytes are strongly discouraged.
+smaller than 32767 bytes are strongly discouraged.
 
 .SS* Modularization
 .coNP Variable @ self-path
