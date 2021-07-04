@@ -896,7 +896,7 @@ void gc_init(val *stack_bottom)
 #if HAVE_RLIMIT
   struct rlimit rl;
   if (getrlimit(RLIMIT_STACK, &rl) == 0) {
-    if (rl.rlim_cur > 512 * 1024) {
+    if (rl.rlim_cur != RLIM_INFINITY && rl.rlim_cur > 512 * 1024) {
       rlim_t lim = (rl.rlim_cur - rl.rlim_cur / 16) / sizeof (val);
       gc_stack_limit = gc_stack_bottom - lim;
     }

@@ -1,5 +1,7 @@
 (load "../common")
 
+(defvar stack-limited (set-stack-limit 32768))
+
 (defun recur () (recur))
 
 (defmacro so (expr)
@@ -8,12 +10,13 @@
 
 (test (so (recur)) :so)
 
-(test (let ((pid (fork)))
-        (cond
-          ((zerop pid) (set-stack-limit 0) (recur))
-          (t (let ((status (wait pid)))
-               (w-ifsignaled status)))))
-      t)
+(if stack-limited
+  (test (let ((pid (fork)))
+          (cond
+            ((zerop pid) (set-stack-limit 0) (recur))
+            (t (let ((status (wait pid)))
+                 (w-ifsignaled status)))))
+        t))
 
 (defmacro infexp ()
   ^(foo (infexp)))
