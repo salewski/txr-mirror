@@ -1,7 +1,7 @@
 (load "../common")
 
 (mtest
-  (path-search "sh") "/bin/sh"
+  (ends-with "/bin/sh" (path-search "sh")) t
   (path-search "AlMoStCeRtAiNlLyNoNeXisTenT") nil
   (path-search "") nil
   (path-search "sh" nil) nil
