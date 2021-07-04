@@ -1,3 +1,39 @@
+                                    TXR 266
+                                   2021-07-12
+
+
+  Features
+
+  - built-in macros and special operators are now subject to more
+    rigorous syntax checking during the macro-expansion walk.
+  - improvements in error reporting
+    - built-in macros use compiler-like error reporting now.
+    - Lisp files executed from command line rather than loaded, ditto.
+    - running make tests out of an editor now takes you to the error line.
+  - improvements in doc function, and OpenBSD support.
+  - type system overhauled to disallow structs that clash with built-in types.
+  - new function called separate contributed by P. A. Patience.
+    - combines keep-if and remove-if semantics
+  - new path manipulating related functions trim-short-suffix, trim-long-suffix
+    and add-suffix.
+  - new build-id feature: optional string that can be inserted into TXR
+    at build time, displayed by txr --build-id.
+
+  Bugs
+
+  - non-functional chmod.tl test case fixed, thanks to Paul. A. Patience.
+  - regex: argument defaulting problem in regex-compile.
+  - *stderr* stream is now sanely reset during unhandled exceptin processing.
+  - new steps taken to prevent runaway recursion in exception processing.
+  - streams:
+    - close-stream function refuses to close stderr.
+      (previously refused only stdin and stdout.)
+    - put-char, put-line: lack of type checking on stream argument.
+  - bug in with-resources problem fixed, reported by Paul A. Patience.
+  - doc ignores BROWSER variable if it is empty.
+
+
+
                                     TXR 265
                                    2021-07-04
 
