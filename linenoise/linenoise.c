@@ -1940,7 +1940,7 @@ static void edit_in_editor(lino_t *l) {
     char *ed = getenv("EDITOR");
     char path[128];
 
-    if (ed) {
+    if (ed && ed[0] != '\0') {
         const char *ho = get_home();
         int fd;
 #if HAVE_MKSTEMPS
