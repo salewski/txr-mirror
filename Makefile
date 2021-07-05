@@ -217,8 +217,8 @@ ifneq ($(wildcard $(top_srcdir)/config.h $(top_srcdir)/y.tab.h),)
 .PHONY: tainted
 tainted:
 	$(V)echo "Source directory $(top_srcdir) is in a configured state."
-	$(V)echo "Generated files there with interfere with the build here."
-	$(V)echo "Please do a \"make distclean\" in $(top_srcdir) first."
+	$(V)echo "Generated files there will interfere with the build here."
+	$(V)echo "Please run \"make distclean\" in $(top_srcdir) first."
 	$(V)exit 1
 endif
 endif
@@ -333,32 +333,37 @@ $(call EACH_CONF,txr.o txr-win.o): TXR_CFLAGS += -DEXE_SUFF=\"$(EXE)\"
 $(call EACH_CONF,txr.o txr-win.o): TXR_CFLAGS += -DTXR_VER=\"$(txr_ver)\"
 
 $(call EACH_CONF,linenoise/linenoise.o): TXR_CFLAGS += -D$(termios_define)
-.PHONY: rebuild clean repatch clean-tlo distclean
+.PHONY: rebuild clean clean-tlo distclean
 
 ifeq ($(PROG),)
-rebuild clean repatch: notconfigured
+rebuild clean: notconfigured
 
 distclean:
 	$(V)echo "executing generic cleanup for non-configured directory"
 	rm -f txr txr.exe txr-dbg txr-dbg.exe txr-win.exe txr-win-dbg.exe
 	rm -f y.tab.c lex.yy.c y.tab.h y.output
-	rm -rf config opt dbg share/*.tlo* share/txr/stdlib run.sh
-	rm -f config.* reconfigure
-	rm -rf mpi-1.?.?
+	rm -rf opt dbg tst
+	rm -f stdlib/*.tlo run.sh
+	rm -f config.h config.make reconfigure txr-manpage.html txr-manpage.pdf
+	# artifacts from prior versions of TXR
+	rm -rf config config.* share/txr/stdlib mpi-1.?.?
+	-rmdir share/txr
+	-rmdir share
 else
-rebuild: clean repatch $(PROG)
+rebuild: clean $(PROG)
 
 clean: conftest.clean clean-tlo
 	rm -f $(PROG)$(EXE) $(PROG)-dbg$(EXE) y.tab.c lex.yy.c y.tab.h y.output
 	rm -f y.tab.h.old
 	rm -f $(PROG)-win$(EXE) $(PROG)-win-dbg$(EXE)
-	rm -rf opt dbg $(EXTRA_OBJS-y) run.sh
+	rm -rf opt dbg tst
+	rm -f $(EXTRA_OBJS-y) run.sh
 
 clean-tlo:
 	rm -f $(STDLIB_TLOS)
 
 distclean: clean
-	rm -f config.h config.make reconfigure
+	rm -f config.h config.make reconfigure txr-manpage.html txr-manpage.pdf
 endif
 
 TESTS_OK := $(addprefix tst/,\
