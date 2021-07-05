@@ -14,6 +14,7 @@
             (iff (f^ #/CYGWIN/) (ret :cygwin))
             (iff (f^ #/CYGNAL/) (ret :cygnal))
             (iff (f^ #/Darwin/) (ret :macos))
+            (iff (f^ #/OpenBSD/) (ret :openbsd))
             (ret :unknown))
        u.sysname])))
 
@@ -26,10 +27,10 @@
     (@(< @res 0) (error "fork failed"))))
 
 (caseql os-symbol
-  ((:linux :macos :solaris :solaris10 :android)
+  ((:linux :macos :openbsd :solaris :solaris10 :android)
    (defun open-url (url)
      (let ((opener (caseql os-symbol
-                     ((:linux :solaris :android) "xdg-open")
+                     ((:linux :openbsd :solaris :android) "xdg-open")
                      (:solaris10 "/usr/dt/bin/sdtwebclient")
                      (:macos "open")))
            (fallback '#"firefox iceweasel seamonkey mozilla \
