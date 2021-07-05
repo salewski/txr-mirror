@@ -7,7 +7,7 @@
 (with-stream (s (open-file tgt "w")))
 (umask #o022)
 
-(defvarl os (os-symbol)
+(defvarl os (os-symbol))
 
 (defvarl test-sticky (unless (eq os :openbsd)
                        (chmod tgt s-isvtx)
@@ -21,19 +21,19 @@
   (when (or test-sticky
             (not (find #\t `@init@mode@expected`)))
     (let ((ini (dec-perm init))
-	  (exp (dec-perm expected)))
+          (exp (dec-perm expected)))
       (chmod tgt ini)
       (let* ((st (stat tgt))
-	     (m (mode-bits st.mode)))
-	(unless (eql m ini)
-	  (error "failed to set initial mode: expected: ~s, actual: ~s "
-		 init (enc-perm m))))
+             (m (mode-bits st.mode)))
+        (unless (eql m ini)
+          (error "failed to set initial mode: expected: ~s, actual: ~s "
+                 init (enc-perm m))))
       (chmod tgt mode)
       (let* ((st (stat tgt))
-	     (m (mode-bits st.mode)))
-	(unless (eql m exp)
-	  (error "failed to set mode with ~s: expected ~s, actual ~s"
-		 mode expected (enc-perm m)))))))
+             (m (mode-bits st.mode)))
+        (unless (eql m exp)
+          (error "failed to set mode with ~s: expected ~s, actual ~s"
+                 mode expected (enc-perm m)))))))
 
 (cht "------------" "a+strwx"           "sgtrwxrwxrwx")
 (cht "------------" "+strwx"            "sgtrwxr-xr-x")
@@ -59,4 +59,4 @@
 (cht "-----x------" "=,a+X"             "------------")
 (cht "-----x------" "a-x+X"             "------------")
 (cht "------------" "u+x-X"             "------------")
-(cht "------------" "o+x=o"             "-----------x"))
+(cht "------------" "o+x=o"             "-----------x")
