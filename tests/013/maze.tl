@@ -1,7 +1,3 @@
-(defvar vi)  ;; visited hash
-(defvar pa)  ;; path connectivity hash
-(defvar sc)  ;; count, derived from straightness fator
-
 (defun scramble (list)
   (let ((out ()))
     (each ((item list))
@@ -18,7 +14,7 @@
     (list (- x 1)..y (+ x 1)..y
           x..(- y 1) x..(+ y 1))))
 
-(defun make-maze-impl (cu)
+(defun make-maze-impl (vi pa sc cu)
   (let ((fr (hash :equal-based))
         (q (list cu))
         (c sc))
@@ -38,16 +34,16 @@
                  (pop q)))))))
 
 (defun make-maze (w h sf)
-  (let ((vi (hash :equal-based))
-        (pa (hash :equal-based))
-        (sc (max 1 (int-flo (trunc (* sf w h) 100.0)))))
+  (let ((vi (hash :equal-based)) ;; visited hash
+        (pa (hash :equal-based)) ;; path connectivity hash
+        (sc (max 1 (int-flo (trunc (* sf w h) 100.0))))) ;; go straight count
     (each ((x (range -1 w)))
       (set [vi x..-1] t)
       (set [vi x..h] t))
     (each ((y (range* 0 h)))
       (set [vi -1..y] t)
       (set [vi w..y] t))
-    (make-maze-impl 0..0)
+    (make-maze-impl vi pa sc 0..0)
     ;; Open start and end
     (push 0..-1 [pa 0..0])
     (push (- w 1)..(- h 1) [pa (- w 1)..h])
@@ -78,7 +74,7 @@
   (let ((invocation (ldiff *full-args* *args*)))
     (put-line "usage: ")
     (put-line `@invocation <width> <height> [<straightness>]`)
-    (put-line "straightness-factor is a percentage, defaulting to 15")
+    (put-line "straightness is a percentage, defaulting to 15")
     (exit 1)))
 
 (let ((args [mapcar num-str *args*]))

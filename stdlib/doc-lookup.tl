@@ -2,7 +2,7 @@
 
 (defvar usr:*doc-url* "https://www.nongnu.org/txr/txr-manpage.html")
 
-(defvar os-symbol
+(defvarl os-symbol
   (if (ignerr (dlsym (dlopen "libandroid.so") "AAsset_close"))
     :android
     (let ((u (uname)))

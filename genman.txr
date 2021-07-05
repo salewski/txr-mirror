@@ -9,8 +9,8 @@
 @(bind clpsall "[collapse all]")
 @(bind closed t)
 @(do
-   (defvar dupes (hash))
-   (defvar tagnum (hash :equal-based))
+   (defvarl dupes (hash))
+   (defvarl tagnum (hash :equal-based))
    (defvarl disamb (hash :equal-based))
    (defvarl dist-counter 0)
 

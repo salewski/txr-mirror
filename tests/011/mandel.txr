@@ -1,16 +1,14 @@
 @(do 
-    (defvar x-centre -0.5)
-    (defvar y-centre 0.0)
-    (defvar width 4.0)
-    (defvar i-max 80)
-    (defvar j-max 60)
-    (defvar n 100)
-    (defvar r-max 2.0)
-    (defvar file "mandelbrot.pgm")
-    (defvar colour-max 255)
-    (defvar pixel-size (/ width i-max))
-    (defvar x-offset (- x-centre (* 0.5 pixel-size (+ i-max 1))))
-    (defvar y-offset (+ y-centre (* 0.5 pixel-size (+ j-max 1))))
+    (defvarl x-centre -0.5)
+    (defvarl y-centre 0.0)
+    (defvarl width 4.0)
+    (defvarl i-max 80)
+    (defvarl j-max 60)
+    (defvarl n 100)
+    (defvarl r-max 2.0)
+    (defvarl pixel-size (/ width i-max))
+    (defvarl x-offset (- x-centre (* 0.5 pixel-size (+ i-max 1))))
+    (defvarl y-offset (+ y-centre (* 0.5 pixel-size (+ j-max 1))))
  
     ;; complex number library
     (macro-time

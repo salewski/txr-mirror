@@ -1,12 +1,12 @@
 (load "../sock-common.tl")
 (load "../common.tl")
 
-(defvar socktype)
+(defvar *socktype*)
 
-(defvar %iters% (if (meql (os-symbol) :macos :openbsd) 2000 5000))
+(defvarl %iters% (if (meql (os-symbol) :macos :openbsd) 2000 5000))
 
 (defun client (addr)
-  (with-stream (cli-sock (open-socket af-inet socktype))
+  (with-stream (cli-sock (open-socket af-inet *socktype*))
     (sock-connect cli-sock addr)
     (put-string "5000" cli-sock)
     (sock-shutdown cli-sock)
@@ -19,7 +19,7 @@
     (close-stream acc-sock)))
 
 (defun sock-test ()
-  (let* ((svc-sock (open-socket af-inet socktype))
+  (let* ((svc-sock (open-socket af-inet *socktype*))
          (svc-addr (bindfree svc-sock 1025 65535))
          (child-pid (fork)))
     (cond
@@ -29,6 +29,6 @@
 
 (if (and (fboundp 'open-socket)
          (fboundp 'fork))
-  (each ((socktype (list sock-dgram sock-stream)))
+  (each ((*socktype* (list sock-dgram sock-stream)))
     (unless (sock-test)
       (error "test failed"))))

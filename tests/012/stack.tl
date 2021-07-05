@@ -1,6 +1,6 @@
 (load "../common")
 
-(defvar stack-limited (set-stack-limit 32768))
+(defvarl stack-limited (set-stack-limit 32768))
 
 (defun recur () (recur))
 

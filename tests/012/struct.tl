@@ -16,7 +16,7 @@
 (test (expand '^#S(bar b ,(+ 2 2)))
       (sys:make-struct-lit 'bar (list 'b (+ 2 2))))
 
-(defvar s (eval ^#S(bar b ,(+ 2 2))))
+(defvarl s (eval ^#S(bar b ,(+ 2 2))))
 
 (test (set (slot s 'a) 100)
       100)

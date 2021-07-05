@@ -1,7 +1,7 @@
 (load "../common.tl")
 (load "../sock-common.tl")
 
-(defvar family)
+(defvar *family*)
 
 (defun server (svc-sock)
   (whilet ((acc-sock (sock-accept svc-sock))
@@ -10,7 +10,7 @@
     (close-stream acc-sock)))
 
 (defun client (addr)
-  (with-stream (cli-sock (open-socket family sock-dgram))
+  (with-stream (cli-sock (open-socket *family* sock-dgram))
     (sock-connect cli-sock addr)
     (dotimes (i 1000)
       (print i cli-sock)
@@ -22,7 +22,7 @@
     (flush-stream cli-sock)))
 
 (defun dgram-test ()
-  (let* ((svc-sock (open-socket family sock-dgram))
+  (let* ((svc-sock (open-socket *family* sock-dgram))
          (svc-addr (bindfree svc-sock 1025 65535))
          (server-pid (fork)))
     (cond
@@ -37,6 +37,6 @@
          (fboundp 'fork))
   (let ((maybe-ipv6 (if (memq (os-symbol) '(:linux :macos :cygwin :cygnal))
                       (list af-inet6))))
-    (each ((family ^(,af-inet ,*maybe-ipv6)))
+    (each ((*family* ^(,af-inet ,*maybe-ipv6)))
       (unless (dgram-test)
         (error "test failed")))))

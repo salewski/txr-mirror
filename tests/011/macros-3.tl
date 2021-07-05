@@ -11,7 +11,7 @@
             (m))))))
   42)
 
-(defvar x 0)
+(defvarl x 0)
 (defmacro mac-time-counter () (inc x))
 (defsymacro s (mac-time-counter))
 
