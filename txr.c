@@ -1134,16 +1134,13 @@ int txr_main(int argc, char **argv)
                                           std_error);
     if (!enter_repl)
       return result ? 0 : EXIT_FAILURE;
-  } else {
-    val result = read_eval_stream_noerr(self, parse_stream, spec_file_str,
-                                        std_error);
-
+  } else if (enter_repl) {
+    read_eval_stream_noerr(self, parse_stream, spec_file_str, std_error);
     close_stream(parse_stream, nil);
-
     uw_release_deferred_warnings();
-
-    if (!enter_repl)
-      return result ? 0 : EXIT_FAILURE;
+  } else {
+    val result = read_eval_stream(self, parse_stream, std_error);
+    return result ? 0 : EXIT_FAILURE;
   }
 
 repl:
