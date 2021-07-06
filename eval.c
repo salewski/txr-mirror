@@ -1054,8 +1054,8 @@ static void syn_check(val form, val sym,
 
 NORETURN static val not_bindable_error(val form, val sym)
 {
-  eval_error(form, lit("~s: ~s is not a bindable symbol"),
-             car(form), sym, nao);
+  expand_error(form, lit("~s: ~s is not a bindable symbol"),
+               car(form), sym, nao);
 }
 
 static val not_bindable_warning(val form, val sym)
@@ -1087,18 +1087,18 @@ static val expand_opt_params_rec(val params, val menv,
 
       if (pair == whole_k || pair == form_k || pair == env_k) {
         if (!macro_style_p)
-          eval_error(form, lit("~s: ~s not usable in function parameter list"),
-                     car(form), pair, nao);
+          expand_error(form, lit("~s: ~s not usable in function parameter list"),
+                       car(form), pair, nao);
         if (!consp(cdr(params)))
-          eval_error(form, lit("~s: ~s parameter requires name"),
-                     car(form), pair, nao);
+          expand_error(form, lit("~s: ~s parameter requires name"),
+                       car(form), pair, nao);
         if (pair == env_k && !bindable(cadr(params)))
-          eval_error(form, lit("~s: ~s parameter requires bindable symbol"),
-                     car(form), pair, nao);
+          expand_error(form, lit("~s: ~s parameter requires bindable symbol"),
+                       car(form), pair, nao);
       } else if (!bindable(pair)) {
         if (pair == colon_k)
-          eval_error(form, lit("~s: multiple colons in parameter list"),
-                     car(form), nao);
+          expand_error(form, lit("~s: multiple colons in parameter list"),
+                       car(form), nao);
         not_bindable_error(form, pair);
       } else {
         new_menv = make_var_shadowing_env(menv, pair);
@@ -1114,8 +1114,8 @@ static val expand_opt_params_rec(val params, val menv,
         return rlcp(cons(pair, params_ex), cdr(params));
       }
     } else if (!macro_style_p && !bindable(car(pair))) {
-      eval_error(form, lit("~s: parameter symbol expected, not ~s"),
-                 car(form), car(pair), nao);
+      expand_error(form, lit("~s: parameter symbol expected, not ~s"),
+                   car(form), car(pair), nao);
     } else {
       val param = car(pair);
       val param_ex = expand_params_rec(param, menv,
@@ -1130,8 +1130,8 @@ static val expand_opt_params_rec(val params, val menv,
       val new_menv = make_var_shadowing_env(menv, get_param_syms(param_ex));
 
       if (cdddr(pair))
-        eval_error(form, lit("~s: extra forms ~s in ~s"),
-                   car(form), pair, cdddr(pair), nao);
+        expand_error(form, lit("~s: extra forms ~s in ~s"),
+                     car(form), pair, cdddr(pair), nao);
 
       if (opt_sym) {
         if (!bindable(opt_sym))
@@ -1161,8 +1161,8 @@ static val expand_params_rec(val params, val menv,
       return params;
     return rlcp(cons(colon_k, params_ex), cdr(params));
   } else if (!macro_style_p && consp(car(params))) {
-    eval_error(form, lit("~s: parameter symbol expected, not ~s"),
-               car(form), car(params), nao);
+    expand_error(form, lit("~s: parameter symbol expected, not ~s"),
+                 car(form), car(params), nao);
   } else {
     val param = car(params);
     val param_ex;
@@ -1170,14 +1170,14 @@ static val expand_params_rec(val params, val menv,
 
     if (param == whole_k || param == form_k || param == env_k) {
       if (!macro_style_p)
-        eval_error(form, lit("~s: ~s not usable in function parameter list"),
-                   car(form), param, nao);
+        expand_error(form, lit("~s: ~s not usable in function parameter list"),
+                     car(form), param, nao);
       if (!consp(cdr(params)))
-        eval_error(form, lit("~s: ~s parameter requires name"),
-                   car(form), param, nao);
+        expand_error(form, lit("~s: ~s parameter requires name"),
+                     car(form), param, nao);
       if (param == env_k && !bindable(cadr(params)))
-        eval_error(form, lit("~s: ~s parameter requires bindable symbol"),
-                   car(form), param, nao);
+        expand_error(form, lit("~s: ~s parameter requires bindable symbol"),
+                     car(form), param, nao);
       param_ex = param;
     } else if (bindable(param) || (macro_style_p && listp(param))) {
       param_ex = expand_params_rec(param, menv, t, form);
@@ -1213,8 +1213,8 @@ static val expand_param_macro(val params, val body, val menv, val form)
       lisplib_try_load(sym);
       pmac = gethash(pm_table, sym);
       if (!pmac)
-        eval_error(form, lit("~s: keyword ~s has no param macro binding"),
-                   car(form), sym, nao);
+        expand_error(form, lit("~s: keyword ~s has no param macro binding"),
+                     car(form), sym, nao);
     }
 
     {
@@ -2514,8 +2514,7 @@ static val expand_lisp1(val form, val menv);
 
 static val expand_lisp1_value(val form, val menv)
 {
-  if (length(form) != two)
-    eval_error(form, lit("~s: invalid syntax"), first(form), nao);
+  syn_check(form, car(form), cdr, cddr);
 
   {
     val sym = cadr(form);
@@ -2524,8 +2523,8 @@ static val expand_lisp1_value(val form, val menv)
 
     if (nilp(binding_type)) {
       if (!bindable(sym_ex))
-        eval_error(form, lit("~s: misapplied to form ~s"),
-                   first(form), sym_ex, nao);
+        expand_error(form, lit("~s: misapplied to form ~s"),
+                     first(form), sym_ex, nao);
       return form;
     }
 
@@ -2535,15 +2534,14 @@ static val expand_lisp1_value(val form, val menv)
     if (binding_type == fun_k)
       return rlcp(cons(fun_s, cons(sym_ex, nil)), form);
 
-    eval_error(form, lit("~s: applied to unexpanded symbol macro ~s"),
-               first(form), sym_ex, nao);
+    expand_error(form, lit("~s: applied to unexpanded symbol macro ~s"),
+                 first(form), sym_ex, nao);
   }
 }
 
 static val expand_lisp1_setq(val form, val menv)
 {
-  if (!consp(cdr(form)) || !consp(cddr(form)) || cdddr(form))
-    eval_error(form, lit("~s: invalid syntax"), car(form), nao);
+  syn_check(form, car(form), cddr, cdddr);
 
   {
     val op = car(form);
@@ -2554,8 +2552,8 @@ static val expand_lisp1_setq(val form, val menv)
 
     if (nilp(binding_type)) {
       if (!bindable(sym_ex))
-        eval_error(form, lit("~s: misapplied to form ~s"),
-                   op, sym_ex, nao);
+        expand_error(form, lit("~s: misapplied to form ~s"),
+                     op, sym_ex, nao);
       return rlcp(cons(op, cons(sym_ex, cons(expand(newval, menv), nil))),
                   form);
     }
@@ -2564,16 +2562,17 @@ static val expand_lisp1_setq(val form, val menv)
       return expand(rlcp(cons(setq_s, cons(sym_ex, cddr(form))), form), menv);
 
     if (binding_type == fun_k)
-      eval_error(form, lit("~s: cannot assign lexical function ~s"), op, sym_ex, nao);
+      expand_error(form, lit("~s: cannot assign lexical function ~s"),
+                   op, sym_ex, nao);
 
-    eval_error(form, lit("~s: applied to unexpanded symbol macro ~s"), op, sym_ex, nao);
+    expand_error(form, lit("~s: applied to unexpanded symbol macro ~s"),
+                 op, sym_ex, nao);
   }
 }
 
 static val expand_setqf(val form, val menv)
 {
-  if (!consp(cdr(form)) || !consp(cddr(form)) || cdddr(form))
-    eval_error(form, lit("~s: invalid syntax"), car(form), nao);
+  syn_check(form, car(form), cddr, cdddr);
 
   {
     val op = car(form);
@@ -2581,7 +2580,8 @@ static val expand_setqf(val form, val menv)
     val newval = caddr(form);
 
     if (lexical_fun_p(menv, sym))
-      eval_error(form, lit("~s: cannot assign lexical function ~s"), op, sym, nao);
+      expand_error(form, lit("~s: cannot assign lexical function ~s"),
+                   op, sym, nao);
 
     if (!lookup_fun(nil, sym))
       eval_defr_warn(uw_last_form_expanded(),
@@ -3383,9 +3383,9 @@ static val dot_to_apply(val form, val lisp1_p)
 NORETURN static void dotted_form_error(val form)
 {
   if (atom(form))
-    eval_error(form, lit("dotted argument ~!~s not allowed here"), form, nao);
+    expand_error(form, lit("dotted argument ~!~s not allowed here"), form, nao);
   else
-    eval_error(form, lit("dotted syntax ~!~s not allowed here"), form, nao);
+    expand_error(form, lit("dotted syntax ~!~s not allowed here"), form, nao);
 }
 
 val expand_forms(val form, val menv)
@@ -3661,8 +3661,7 @@ static val expand_qquote_rec(val qquoted_form, val qq, val unq, val spl)
                               "or in the dotted position of a list"),
                           lit("(splice ~s) cannot occur outside of a list "
                               "or in the dotted position of a list"));
-        eval_error(qquoted_form, error_msg,
-                   second(qquoted_form), nao);
+      expand_error(qquoted_form, error_msg, second(qquoted_form), nao);
     } else if (sym == unq) {
       return second(qquoted_form);
     } else if (sym == qq) {
@@ -3756,8 +3755,8 @@ static val expand_vars(val vars, val menv, val form, int seq_p)
   if (nilp(vars)) {
     return nil;
   } else if (atom(vars)) {
-    eval_error(form, lit("~a is an invalid variable binding syntax"),
-               vars, nao);
+    expand_error(form, lit("~a is an invalid variable binding syntax"),
+                 vars, nao);
     return vars;
   } else if (symbolp(sym = car(vars))) {
     val rest_vars = rest(vars);
@@ -3800,7 +3799,7 @@ static val expand_vars(val vars, val menv, val form, int seq_p)
     }
     return rlcp(cons(cons(var, cons(init_ex, nil)), rest_vars_ex), vars);
   } else {
-    eval_error(form, lit("variable binding expected, not ~s"), sym, nao);
+    expand_error(form, lit("variable binding expected, not ~s"), sym, nao);
   }
 }
 
@@ -3811,11 +3810,11 @@ static val expand_fbind_vars(val vars, val menv, val form)
   if (nilp(vars)) {
     return nil;
   } else if (atom(vars)) {
-    eval_error(form, lit("~a is an invalid function binding syntax"),
-               vars, nao);
+    expand_error(form, lit("~a is an invalid function binding syntax"),
+                 vars, nao);
     return vars;
   } else if (symbolp(sym = car(vars))) {
-    eval_error(form, lit("symbols in this construct require initforms"), nao);
+    expand_error(form, lit("symbols in this construct require initforms"), nao);
   } else {
     cons_bind (var, init, sym);
     val rest_vars = rest(vars);
@@ -4124,7 +4123,7 @@ static val me_case(val form, val menv)
   (void) menv;
 
   if (atom(cdr(form_orig)))
-    eval_error(form_orig, lit("~s: missing test form"), casesym, nao);
+    expand_error(form_orig, lit("~s: missing test form"), casesym, nao);
 
   if (casesym == caseq_s || casesym == caseq_star_s) {
     memfuncsym = memq_s;
@@ -4152,7 +4151,7 @@ static val me_case(val form, val menv)
     }
 
     if (keys == t)
-      eval_error(form_orig, lit("~s: symbol t used as key"), casesym, nao);
+      expand_error(form_orig, lit("~s: symbol t used as key"), casesym, nao);
 
     if (star) {
       if (atom(keys))
@@ -4208,7 +4207,8 @@ static val me_case(val form, val menv)
   }
 
   if (form && atom(form))
-    eval_error(form_orig, lit("~s: improper form terminated by ~s"), casesym, form, nao);
+    expand_error(form_orig, lit("~s: improper form terminated by ~s"),
+                 casesym, form, nao);
 
   if (!compat && (all_keys_integer || all_keys_chr)) {
     val minmax = cons(nil, nil);
@@ -4340,7 +4340,7 @@ static val me_whilet(val form, val env)
   (void) env;
 
   if (nilp(lastlet_cons))
-    eval_error(form, lit("~s: empty binding list"), sym, nao);
+    expand_error(form, lit("~s: empty binding list"), sym, nao);
 
   if (!cdr(lastlet)) {
     val var = car(lastlet);
@@ -4375,10 +4375,10 @@ static val me_iflet_whenlet(val form, val env)
     val lastlet = car(lastlet_cons);
 
     if (nilp(lastlet))
-      eval_error(form, lit("~s: empty binding list"), sym, nao);
+      expand_error(form, lit("~s: empty binding list"), sym, nao);
 
     if (!consp(lastlet))
-      eval_error(form, lit("~s: bad binding syntax ~s"), sym, lastlet, nao);
+      expand_error(form, lit("~s: bad binding syntax ~s"), sym, lastlet, nao);
 
     {
       val var = car(lastlet);
@@ -4517,21 +4517,21 @@ static val me_load_for(val form, val menv)
       val kind = car(arg);
       if (kind != usr_var_s && kind != fun_s && kind != macro_s
           && kind != struct_s && kind != pkg_s)
-        eval_error(form, lit("~s: unrecognized clause symbol ~s"),
-                   sym, kind, nao);
+        expand_error(form, lit("~s: unrecognized clause symbol ~s"),
+                     sym, kind, nao);
       if (!bindable(cadr(arg)))
-        eval_error(form, lit("~s: first argument in ~s must be bindable symbol"),
-                   sym, arg, nao);
+        expand_error(form, lit("~s: first argument in ~s must be bindable symbol"),
+                     sym, arg, nao);
       if (length(arg) != three)
-        eval_error(form, lit("~s: clause ~s expected to have two arguments"),
-                   sym, arg, nao);
+        expand_error(form, lit("~s: clause ~s expected to have two arguments"),
+                     sym, arg, nao);
       ptail = list_collect(ptail, list(list_s,
                                        list(quote_s, car(arg), nao),
                                        list(quote_s, cadr(arg), nao),
                                        caddr(arg),
                                        nao));
     } else {
-      eval_error(form, lit("~s: invalid clause ~s"), sym, arg, nao);
+      expand_error(form, lit("~s: invalid clause ~s"), sym, arg, nao);
     }
   }
 
@@ -4671,7 +4671,7 @@ static val expand_catch_clause(val form, val menv)
   val new_menv = make_var_shadowing_env(menv, get_param_syms(params_ex));
   val body_ex = expand_forms(body_ex0, new_menv);
   if (!symbolp(sym))
-    eval_error(form, lit("catch: ~s isn't a symbol"), sym, nao);
+    expand_error(form, lit("catch: ~s isn't a symbol"), sym, nao);
   if (body == body_ex && params == params_ex)
     return form;
   return rlcp(cons(sym, cons(params_ex, body_ex)), form);
@@ -4731,7 +4731,7 @@ static val expand_switch(val form, val menv)
     branches_ex = vec_list(expand_list_of_form_lists(list_vec(branches),
                                                      menv, ss_hash));
   } else {
-    eval_error(form, lit("~s: representation of branches"), sym, nao);
+    expand_error(form, lit("~s: representation of branches"), sym, nao);
   }
   return rlcp(cons(sym, cons(expr_ex, cons(branches_ex, nil))), form);
 }
@@ -5396,7 +5396,7 @@ static val me_l1_val(val form, val menv)
           return expr;
         return list(sys_lisp1_value_s, expr_ex, nao);
       } else {
-        eval_error(form, lit("~s: invalid case"), car(form), nao);
+        expand_error(form, lit("~s: invalid case"), car(form), nao);
       }
     }
 
@@ -5419,7 +5419,7 @@ static val me_l1_setq(val form, val menv)
       if (binding_type == var_k) {
         return list(setq_s, expr_ex, new_val, nao);
       } else if (binding_type == symacro_k) {
-        eval_error(form, lit("~s: invalid use on symacro"), car(form), nao);
+        expand_error(form, lit("~s: invalid use on symacro"), car(form), nao);
       } else if (boundp(expr_ex)) {
         return list(setq_s, expr_ex, new_val, nao);
       } else {
