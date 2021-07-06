@@ -76,6 +76,8 @@ static val deferred_warnings, tentative_defs;
 static int uw_break_on_error;
 #endif
 
+static int reentry_count;
+
 static void uw_unwind_to_exit_point(void)
 {
   uw_frame_t *orig_stack = uw_stack;
@@ -110,6 +112,7 @@ static void uw_unwind_to_exit_point(void)
     case UW_GUARD:
       if (uw_stack->gu.uw_ok)
         break;
+      ++reentry_count;
       format(top_stderr, lit("~a: cannot unwind across foreign stack frames\n"),
              prog_string, nao);
       abort();
@@ -123,6 +126,7 @@ static void uw_unwind_to_exit_point(void)
     val args = unhandled_ex.ca.args;
 
     gc_stack_limit = 0;
+    ++reentry_count;
 
     dyn_env = nil;
 
@@ -670,7 +674,6 @@ static void invoke_handler(uw_frame_t *fr, struct args *args)
 val uw_rthrow(val sym, val args)
 {
   uw_frame_t *ex;
-  static int reentry_count = 0;
 
   if (++reentry_count > 1) {
     fprintf(stderr, "txr: invalid re-entry of exception handling logic\n");
