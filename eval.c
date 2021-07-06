@@ -288,27 +288,40 @@ val ctx_name(val obj)
   return nil;
 }
 
-static void eval_exception(val sym, val ctx, val fmt, va_list vl)
+static void eval_exception(val sym, val ctx, val fmt, int ex_time, va_list vl)
 {
   uses_or2;
   val form = ctx_form(ctx);
   val stream = make_string_output_stream();
   val loc = or2(source_loc_str(form, nil),
                 source_loc_str(last_form_evaled, nil));
+  val msg;
 
   if (loc)
     format(stream, lit("~a: "), loc, nao);
 
   (void) vformat(stream, fmt, vl);
 
-  uw_rthrow(sym, get_string_from_stream(stream));
+  msg = get_string_from_stream(stream);
+
+  if (ex_time) {
+    val loading = cdr(lookup_var(dyn_env, load_recursive_s));
+    val error_caught = uw_find_frame(error_s, catch_frame_s);
+
+    if (loading && !error_caught) {
+      uw_dump_deferred_warnings(std_error);
+      put_line(msg, std_error);
+    }
+  }
+
+  uw_rthrow(sym, msg);
 }
 
 NORETURN val eval_error(val ctx, val fmt, ...)
 {
   va_list vl;
   va_start (vl, fmt);
-  eval_exception(eval_error_s, ctx, fmt, vl);
+  eval_exception(eval_error_s, ctx, fmt, 0, vl);
   va_end (vl);
   abort();
 }
@@ -320,7 +333,7 @@ static val eval_warn(val ctx, val fmt, ...)
   uw_catch_begin (cons(continue_s, nil), exsym, exvals);
 
   va_start (vl, fmt);
-  eval_exception(warning_s, ctx, scat2(lit("warning: "), fmt), vl);
+  eval_exception(warning_s, ctx, scat2(lit("warning: "), fmt), 0, vl);
   va_end (vl);
 
   uw_catch(exsym, exvals) { (void) exsym; (void) exvals; }
@@ -365,6 +378,15 @@ static val eval_defr_warn(val ctx, val tag, val fmt, ...)
   va_end (vl);
 
   return nil;
+}
+
+static NORETURN val expand_error(val ctx, val fmt, ...)
+{
+  va_list vl;
+  va_start (vl, fmt);
+  eval_exception(eval_error_s, ctx, fmt, 1, vl);
+  va_end (vl);
+  abort();
 }
 
 val lookup_origin(val form)
@@ -1001,6 +1023,34 @@ static val bind_args(val env, val params, struct args *args, val ctx)
 
   return new_env;
 }
+
+static void missing_arg_error(val form, val sym)
+{
+  expand_error(form, lit("~s: missing argument material"), sym, nao);
+}
+
+static void excess_args_error(val form, val sym)
+{
+  expand_error(form, lit("~s: excess arguments"), sym, nao);
+}
+
+static void no_dot_check(val form, val sym)
+{
+  if (!proper_list_p(form))
+    expand_error(form, lit("~s: dotted argument list not supported"), sym, nao);
+}
+
+static void syn_check(val form, val sym,
+                      val (*have_required_p)(val),
+                      val (*have_excess_p)(val))
+{
+  no_dot_check(form, sym);
+  if (!have_required_p(form))
+    missing_arg_error(form, sym);
+  if (have_excess_p && have_excess_p(form))
+    excess_args_error(form, sym);
+}
+
 
 NORETURN static val not_bindable_error(val form, val sym)
 {
@@ -3082,7 +3132,8 @@ static val me_def_variable(val form, val menv)
 {
   val args = rest(form);
   val op = first(form);
-  val sym = first(args);
+  val sym = (syn_check(form, op, if3(op == defvar_s, cdr, cddr), cdddr),
+             first(args));
   val initform = second(args);
   val mkspecial = if2(op == defvar_s || op == defparm_s,
                       cons(list(sys_mark_special_s,
@@ -3092,9 +3143,6 @@ static val me_def_variable(val form, val menv)
   val mksv = nappend2(mkspecial, setval);
 
   (void) menv;
-
-  if (op != defvar_s && length(args) != two)
-    eval_error(form, lit("~s: two arguments expected"), op, nao);
 
   if (!bindable(sym))
     not_bindable_error(form, sym);
@@ -3130,7 +3178,8 @@ static val me_each(val form, val menv)
 {
   uses_or2;
   val each = first(form);
-  val args = rest(form);
+  val args = (syn_check(form, each, cdr, 0),
+              rest(form));
   val vars = pop(&args);
   val star = or3(eq(each, each_star_s),
                  eq(each, collect_each_star_s),
@@ -3152,7 +3201,7 @@ static val me_each(val form, val menv)
 static val me_for(val form, val menv)
 {
   val forsym = first(form);
-  val args = rest(form);
+  val args = (syn_check(form, forsym, cdr, 0), rest(form));
   val vars = first(args);
   val body = rest(args);
   int oldscope = opt_compat && opt_compat <= 123;
@@ -3167,6 +3216,7 @@ static val me_for(val form, val menv)
 static val me_gen(val form, val menv)
 {
   (void) menv;
+  syn_check(form, car(form), cddr, cdddr);
   return list(generate_s,
               list(lambda_s, nil, second(form), nao),
               list(lambda_s, nil, third(form), nao), nao);
@@ -3175,7 +3225,7 @@ static val me_gen(val form, val menv)
 static val me_gun(val form, val menv)
 {
   val var = gensym(nil);
-  val expr = second(form);
+  val expr = (syn_check(form, car(form), cdr, cddr), second(form));
   (void) menv;
   return list(let_s, cons(var, nil),
               list(gen_s, list(set_s, var, expr, nao), var, nao), nao);
@@ -3184,6 +3234,7 @@ static val me_gun(val form, val menv)
 static val me_delay(val form, val menv)
 {
   (void) menv;
+  syn_check(form, car(form), cdr, cddr);
   rlcp_tree(rest(form), second(form));
   return list(cons_s,
               cons(quote_s, cons(promise_s, nil)),
@@ -3195,6 +3246,7 @@ static val me_delay(val form, val menv)
 static val me_pprof(val form, val menv)
 {
   (void) menv;
+  no_dot_check(form, car(form));
   return list(intern(lit("rt-pprof"), system_package),
               cons(prof_s, rest(form)), nao);
 }
@@ -3220,7 +3272,7 @@ static val rt_pprof(val prof_list)
 static val me_when(val form, val menv)
 {
   (void) menv;
-
+  syn_check(form, car(form), cdr, 0);
   return if3(cdddr(form),
              cons(cond_s, cons(cdr(form), nil)),
              cons(if_s, cdr(form)));
@@ -3228,19 +3280,16 @@ static val me_when(val form, val menv)
 
 static val me_unless(val form, val menv)
 {
-  val test = cadr(form);
+  val test = (syn_check(form, car(form), cdr, 0), cadr(form));
   val body = cddr(form);
-
   (void) menv;
-
   return list(if_s, test, nil, maybe_progn(body), nao);
 }
 
 static val me_while_until(val form, val menv)
 {
-  val cond = cadr(form);
+  val cond = (syn_check(form, car(form), cdr, 0), cadr(form));
   val test = if3(car(form) == until_s, cons(not_s, cons(cond, nil)), cond);
-
   (void) menv;
   return apply_frob_args(list(for_s, nil, cons(test, nil), nil,
                               rest(rest(form)), nao));
@@ -3249,9 +3298,8 @@ static val me_while_until(val form, val menv)
 static val me_while_until_star(val form, val menv)
 {
   val once = gensym(lit("once-"));
-  val cond = cadr(form);
+  val cond = (syn_check(form, car(form), cdr, 0), cadr(form));
   val test = if3(car(form) == until_star_s, cons(not_s, cons(cond, nil)), cond);
-
   (void) menv;
   return apply_frob_args(list(for_s, cons(list(once, t, nao), nil),
                               cons(list(or_s, once, test, nao), nil),
@@ -3694,9 +3742,7 @@ static val me_qquote(val form, val menv)
 
 static val me_equot(val form, val menv)
 {
-  if (!cdr(form) || cddr(form))
-    eval_error(form, lit("~s: one argument required"), car(form), nao);
-
+  syn_check(form, car(form), cdr, cddr);
   return rlcp(cons(quote_s, cons(expand(cadr(form), menv), nil)), form);
 }
 
@@ -4237,6 +4283,7 @@ static val me_case(val form, val menv)
 static val me_prog2(val form, val menv)
 {
   val arg1 = cadr(form);
+  no_dot_check(form, car(form));
 
   (void) menv;
 
@@ -4351,9 +4398,10 @@ static val me_iflet_whenlet(val form, val env)
 static val me_dotimes(val form, val env)
 {
   val count = gensym(lit("count-"));
-  val args = rest(form);
+  val sym = car(form);
+  val args = (syn_check(form, sym, cdr, 0), rest(form));
   val spec = pop(&args);
-  val counter = pop(&spec);
+  val counter = (syn_check(spec, sym, cdr, cdddr), pop(&spec));
   val count_form = pop(&spec);
   val result = pop(&spec);
   val body = args;
@@ -4371,7 +4419,7 @@ static val me_dotimes(val form, val env)
 
 static val me_lcons(val form, val menv)
 {
-  val car_form = second(form);
+  val car_form = (syn_check(form, car(form), cddr, cdddr), second(form));
   val cdr_form = third(form);
   val lc_sym = gensym(lit("lcons-"));
   val make_lazy_cons = intern(lit("make-lazy-cons"), user_package);
@@ -4388,7 +4436,7 @@ static val me_lcons(val form, val menv)
 static val me_mlet(val form, val menv)
 {
   uses_or2;
-  val body = cdr(form);
+  val body = (syn_check(form, car(form), cdr, 0), cdr(form));
   val bindings = pop(&body);
   val symacrolet = intern(lit("symacrolet"), user_package);
   val delay = intern(lit("delay"), user_package);
@@ -4444,7 +4492,7 @@ static val me_mlet(val form, val menv)
 
 static val me_load_time(val form, val menv)
 {
-  val expr = cadr(form);
+  val expr = (syn_check(form, car(form), cdr, cddr), cadr(form));
   (void) menv;
   return list(load_time_lit_s, nil, expr, nao);
 }
@@ -4717,7 +4765,7 @@ again:
 
     if (sym == let_s || sym == let_star_s)
     {
-      val body = rest(rest(form));
+      val body = (syn_check(form, sym, cdr, 0), rest(rest(form)));
       val vars = second(form);
       int seq_p = sym == let_star_s;
       val new_menv = make_var_shadowing_env(menv, vars);
@@ -4727,7 +4775,7 @@ again:
         return form;
       return rlcp(cons(sym, cons(vars_ex, body_ex)), form);
     } else if (sym == each_op_s) {
-      val args = rest(form);
+      val args = (syn_check(form, sym, cdr, 0), rest(form));
       val eachsym = first(args);
       val vars = second(args);
       val body = rest(rest(args));
@@ -4738,7 +4786,7 @@ again:
 
       return rlcp(cons(sym, cons(eachsym, cons(vars, body_ex))), form);
     } else if (sym == fbind_s || sym == lbind_s) {
-      val body = rest(rest(form));
+      val body = (syn_check(form, sym, cdr, 0), rest(rest(form)));
       val funcs = second(form);
       val new_menv = make_fun_shadowing_env(menv, funcs);
       val body_ex = expand_progn(body, new_menv);
@@ -4750,14 +4798,14 @@ again:
         return rlcp(cons(sym, cons(funcs_ex, body_ex)), form);
       }
     } else if (sym == block_s) {
-      val name = second(form);
+      val name = (syn_check(form, sym, cdr, 0), second(form));
       val body = rest(rest(form));
       val body_ex = expand_progn(body, menv);
       if (body == body_ex)
         return form;
       return rlcp(cons(sym, cons(name, body_ex)), form);
     } else if (sym == return_from_s || sym == sys_abscond_from_s) {
-      val name = second(form);
+      val name = (syn_check(form, sym, cdr, cdddr), second(form));
       val ret = third(form);
       val ret_ex = expand(ret, menv);
       if (ret == ret_ex)
@@ -4779,6 +4827,9 @@ again:
       if (!bindable(name))
         not_bindable_error(form, name);
 
+      if (cdddr(form))
+        excess_args_error(form, sym);
+
       uw_register_tentative_def(cons(var_s, name));
 
       if (init != init_ex)
@@ -4786,11 +4837,8 @@ again:
 
       return form_ex;
     } else if (sym == defsymacro_s) {
-      val name = second(form);
+      val name = (syn_check(form, sym, cddr, cdddr), second(form));
       val init = third(form);
-
-      if (length(form) != three)
-        eval_error(form, lit("~s: two arguments expected"), sym, nao);
 
       if (!bindable(name))
         not_bindable_error(form, name);
@@ -4814,11 +4862,7 @@ again:
 
       return form;
     } else if (sym == lambda_s) {
-      if (!cdr(form))
-        eval_error(form, lit("~s: missing argument list"), sym, nao);
-
-      if (atom(cdr(form)))
-        eval_error(form, lit("~s: bad syntax"), sym, nao);
+      syn_check(form, sym, cdr, 0);
 
       {
         val params = second(form);
@@ -4833,7 +4877,7 @@ again:
         return rlcp(cons(sym, cons(params_ex, body_ex)), form);
       }
     } else if (sym == defun_s || sym == defmacro_s) {
-      val name = second(form);
+      val name = (syn_check(form, sym, cddr, 0), second(form));
       val params = third(form);
 
       builtin_reject_test(sym, name, form, sym);
@@ -4922,7 +4966,10 @@ again:
                          arg, nao);
       }
       return form;
-    } else if (sym == quote_s || sym == dvbind_s) {
+    } else if (sym == quote_s) {
+      syn_check(form, sym, cdr, cddr);
+      return form;
+    } else if (sym == dvbind_s) {
       return form;
     } else if (sym == for_op_s) {
       val inits = second(form);
@@ -4944,8 +4991,8 @@ again:
                                                        forms_ex)))), form);
       }
     } else if (sym == dohash_s) {
-      val spec = second(form);
-      val keysym = first(spec);
+      val spec = (syn_check(form, sym, cdr, 0), second(form));
+      val keysym = (syn_check(spec, sym, cddr, cddddr), first(spec));
       val valsym = second(spec);
       val hashform = third(spec);
       val resform = fourth(spec);
@@ -4972,14 +5019,14 @@ again:
       return expand_catch(form, menv);
     } else if (sym == handler_bind_s) {
       val args = rest(form);
-      val fun = pop(&args);
+      val fun = (syn_check(args, sym, cdr, 0), pop(&args));
       val handle_syms = pop(&args);
       val body = args;
       val fun_ex = expand(fun, menv);
       val body_ex = expand_forms(body, menv);
 
       if (!cddr(form))
-        eval_error(form, lit("~s: missing arguments"), sym, nao);
+        missing_arg_error(form, sym);
 
       if (fun == fun_ex && body == body_ex)
         return form;
@@ -5052,11 +5099,7 @@ again:
       val args_ex = expand_forms(args, menv);
 
       if (sym == setq_s) {
-        if (!args)
-          eval_error(form, lit("~s: missing argument"), sym, nao);
-
-        if (cddr(args))
-          eval_error(form, lit("~s: excess arguments"), sym, nao);
+        syn_check(form, sym, cddr, cdddr);
 
         {
           val target = car(args_ex);
@@ -5067,6 +5110,9 @@ again:
           }
         }
       }
+
+      if (sym == return_s)
+        syn_check(form, sym, identity, cddr);
 
       if (consp(insym) && car(insym) == lambda_s) {
         insym_ex = expand(insym, menv);
@@ -5329,8 +5375,7 @@ static val constantp(val form, val env_in)
 
 static val me_l1_val(val form, val menv)
 {
-  if (length(form) != two)
-    eval_error(form, lit("~s: invalid syntax"), first(form), nao);
+  syn_check(form, car(form), cdr, cddr);
 
   {
     val expr = cadr(form);
@@ -5358,8 +5403,7 @@ static val me_l1_val(val form, val menv)
 
 static val me_l1_setq(val form, val menv)
 {
-  if (!consp(cdr(form)) || !consp(cddr(form)) || cdddr(form))
-    eval_error(form, lit("~s: invalid syntax"), car(form), nao);
+  syn_check(form, car(form), cddr, cdddr);
 
   {
     val expr = cadr(form);
@@ -5413,7 +5457,7 @@ static val rt_assert_fail(val file, val line, val expr,
 static val me_assert(val form, val menv)
 {
   cons_bind (line, file, source_loc(form));
-  val extra_args = cddr(form);
+  val extra_args = (syn_check(form, car(form), cdr, 0), cddr(form));
   val rt_assert_fail = intern(lit("rt-assert-fail"), system_package);
 
   (void) menv;

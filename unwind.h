@@ -322,6 +322,7 @@ union uw_frame {
 #endif
 } UW_FRAME_ALIGN;
 
+extern val catch_frame_s;
 void uw_push_block(uw_frame_t *, val tag);
 void uw_push_match_env(uw_frame_t *);
 val uw_get_func(val sym);

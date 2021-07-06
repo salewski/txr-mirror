@@ -65,6 +65,8 @@ static val args_s, form_s;
 static val sys_cont_s, sys_cont_poison_s;
 static val sys_cont_free_s, sys_capture_cont_s;
 
+val catch_frame_s;
+
 static val frame_type, catch_frame_type, handle_frame_type;
 static val fcall_frame_type, eval_frame_type, expand_frame_type;
 
@@ -1286,10 +1288,10 @@ void uw_late_init(void)
   sys_cont_s = intern(lit("cont"), system_package);
   sys_cont_poison_s = intern(lit("cont-poison"), system_package);
   sys_cont_free_s = intern(lit("cont-free"), system_package);
+  catch_frame_s = intern(lit("catch-frame"), user_package);
   frame_type = make_struct_type(intern(lit("frame"), user_package),
                                 nil, nil, nil, nil, nil, nil, nil);
-  catch_frame_type = make_struct_type(intern(lit("catch-frame"),
-                                             user_package),
+  catch_frame_type = make_struct_type(catch_frame_s,
                                       frame_type, nil,
                                       list(types_s, desc_s, jump_s, nao),
                                       nil, nil, nil, nil);
