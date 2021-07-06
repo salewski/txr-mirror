@@ -2219,7 +2219,7 @@ val regex_compile(val regex_sexp, val error_stream)
   val regex_source;
 
   if (stringp(regex_sexp)) {
-    regex_sexp = regex_parse(regex_sexp, default_null_arg(error_stream));
+    regex_sexp = regex_parse(regex_sexp, error_stream);
     return if2(regex_sexp, regex_compile(regex_sexp, error_stream));
   }
 
