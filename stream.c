@@ -101,6 +101,8 @@ val socket_error_s;
 
 const wchli_t *path_sep_chars = wli("/");
 
+val top_stderr;
+
 val shell, shell_arg;
 
 void strm_base_init(struct strm_base *s)
@@ -5253,6 +5255,7 @@ void stream_init(void)
 {
   prot1(&ap_regex);
   prot1(&plp_regex);
+  prot1(&top_stderr);
 
   detect_format_string();
   detect_path_separators();
@@ -5298,7 +5301,7 @@ void stream_init(void)
   reg_var(stddebug_s = intern(lit("*stddebug*"), user_package),
           make_stdio_stream(stdout, lit("debug")));
   reg_var(stderr_s = intern(lit("*stderr*"), user_package),
-          make_stdio_stream(stderr, lit("stderr")));
+          top_stderr = make_stdio_stream(stderr, lit("stderr")));
   reg_var(stdnull_s = intern(lit("*stdnull*"), user_package),
           make_null_stream());
 

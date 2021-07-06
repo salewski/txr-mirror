@@ -110,7 +110,7 @@ static void uw_unwind_to_exit_point(void)
     case UW_GUARD:
       if (uw_stack->gu.uw_ok)
         break;
-      format(std_error, lit("~a: cannot unwind across foreign stack frames\n"),
+      format(top_stderr, lit("~a: cannot unwind across foreign stack frames\n"),
              prog_string, nao);
       abort();
     default:
@@ -130,11 +130,11 @@ static void uw_unwind_to_exit_point(void)
       val prefix = scat2(prog_string, lit(":"));
 
       flush_stream(std_output);
-      format(std_error, lit("~a unhandled exception of type ~a:\n"),
+      format(top_stderr, lit("~a unhandled exception of type ~a:\n"),
              prefix, sym, nao);
 
       uw_stack = orig_stack;
-      error_trace(sym, args, std_error, prefix);
+      error_trace(sym, args, top_stderr, prefix);
     }
     if (uw_exception_subtype_p(sym, query_error_s) ||
         uw_exception_subtype_p(sym, file_error_s)) {
@@ -718,8 +718,8 @@ val uw_rthrow(val sym, val args)
       --reentry_count;
       if (uw_exception_subtype_p(sym, defr_warning_s))
         uw_defer_warning(args);
-      else if (std_error != 0)
-        format(std_error, lit("~a\n"), car(args), nao);
+      else if (top_stderr != 0)
+        format(top_stderr, lit("~a\n"), car(args), nao);
       if (!opt_compat || opt_compat >= 234) {
         uw_rthrow(continue_s, nil);
         return nil;
@@ -734,7 +734,7 @@ val uw_rthrow(val sym, val args)
       }
     }
 
-    if (std_error == 0) {
+    if (top_stderr == 0) {
       fprintf(stderr, "txr: unhandled exception in early initialization\n");
       abort();
     }
@@ -749,8 +749,8 @@ val uw_rthrow(val sym, val args)
         if (functionp(fun))
           funcall3(fun, sym, args, last_form_evaled);
         else
-          format(std_error, lit("~a: *unhandled-hook* ~s isn't a function\n"),
-                            prog_string, fun, nao);
+          format(top_stderr, lit("~a: *unhandled-hook* ~s isn't a function\n"),
+                 prog_string, fun, nao);
       }
     }
 

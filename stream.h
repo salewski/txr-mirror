@@ -150,6 +150,8 @@ extern val socket_error_s;
 
 extern const wchli_t *path_sep_chars;
 
+extern val top_stderr;
+
 void strm_base_init(struct strm_base *s);
 void strm_base_cleanup(struct strm_base *s);
 void strm_base_mark(struct strm_base *s);
