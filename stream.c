@@ -973,7 +973,7 @@ static val stdio_close(val stream, val throw_on_error)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, stream->co.handle);
 
-  if (h->f != 0 && h->f != stdin && h->f != stdout) {
+  if (h->f != 0 && h->f != stdin && h->f != stdout && h->f != stderr) {
     int result = fclose(h->f);
     h->f = 0;
     if (result == EOF && throw_on_error) {
