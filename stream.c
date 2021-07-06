@@ -103,7 +103,7 @@ const wchli_t *path_sep_chars = wli("/");
 
 val top_stderr;
 
-val shell, shell_arg;
+static val shell, shell_arg;
 
 void strm_base_init(struct strm_base *s)
 {
