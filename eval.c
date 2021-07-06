@@ -1377,7 +1377,8 @@ static val list_star_intrinsic(struct args *args)
 }
 
 static val bind_macro_params(val env, val menv, val params, val form,
-                             val loose_p, val ctx_form)
+                             val loose_p, val ctx_form,
+                             val (*error_fn)(val ctx, val fmt, ...))
 {
   val new_env = make_env(nil, nil, env);
   val dyn_env_made = nil;
@@ -1397,16 +1398,15 @@ static val bind_macro_params(val env, val menv, val params, val form,
                       if3(param == form_k,
                           ctx_form, menv));
       if (!consp(next))
-        eval_error(ctx_form, lit("~s: dangling ~s in param list"),
-                   car(ctx_form), param, nao);
+        error_fn(ctx_form, lit("~s: dangling ~s in param list"),
+                 car(ctx_form), param, nao);
       nparam = car(next);
 
       if (atom(nparam)) {
         lex_or_dyn_bind(&dyn_env_made, new_env, nparam, bform);
       } else {
-        new_env = bind_macro_params(new_env, menv,
-                                    nparam, bform,
-                                    loose_p, ctx_form);
+        new_env = bind_macro_params(new_env, menv, nparam, bform,
+                                    loose_p, ctx_form, error_fn);
         if (!new_env)
           goto nil_out;
       }
@@ -1436,15 +1436,14 @@ static val bind_macro_params(val env, val menv, val params, val form,
 
           (void) initform;
 
-          new_env = bind_macro_params(new_env, menv,
-                                      nparam, car(form), t, ctx_form);
+          new_env = bind_macro_params(new_env, menv, nparam, car(form),
+                                      t, ctx_form, error_fn);
 
           if (presentsym)
             lex_or_dyn_bind(&dyn_env_made, new_env, presentsym, t);
         } else {
-          new_env = bind_macro_params(new_env, menv,
-                                      param, car(form),
-                                      loose_p, ctx_form);
+          new_env = bind_macro_params(new_env, menv, param, car(form),
+                                      loose_p, ctx_form, error_fn);
           if (!new_env)
             goto nil_out;
         }
@@ -1457,14 +1456,14 @@ static val bind_macro_params(val env, val menv, val params, val form,
     if (form) {
       if (loose_p == colon_k)
         goto nil_out;
-      eval_error(ctx_form, lit("~s: atom ~s not matched by params ~s"),
-                 car(ctx_form), form, params, nao);
+      error_fn(ctx_form, lit("~s: atom ~s not matched by params ~s"),
+               car(ctx_form), form, params, nao);
     }
 
     if (!optargs) {
       if (!loose_p)
-        eval_error(ctx_form, lit("~s: missing arguments for params ~s"),
-                   car(ctx_form), params, nao);
+        error_fn(ctx_form, lit("~s: missing arguments for params ~s"),
+                 car(ctx_form), params, nao);
       if (loose_p == colon_k)
         goto nil_out;
     }
@@ -1479,11 +1478,11 @@ noarg:
 
       if (initform) {
         val initval = eval(initform, new_env, ctx_form);
-        new_env = bind_macro_params(new_env, menv,
-                                    nparam, initval, t, ctx_form);
+        new_env = bind_macro_params(new_env, menv, nparam, initval,
+                                    t, ctx_form, error_fn);
       } else {
-        new_env = bind_macro_params(new_env, menv,
-                                    nparam, nil, t, ctx_form);
+        new_env = bind_macro_params(new_env, menv, nparam, nil,
+                                    t, ctx_form, error_fn);
       }
 
       if (presentsym)
@@ -1501,9 +1500,9 @@ noarg:
   if (form) {
     if (loose_p == colon_k)
       goto nil_out;
-    eval_error(ctx_form,
-               lit("~s: extra form part ~s not matched by parameter list"),
-               car(ctx_form), form, nao);
+    error_fn(ctx_form,
+             lit("~s: extra form part ~s not matched by parameter list"),
+             car(ctx_form), form, nao);
   }
 
 out:
@@ -2180,7 +2179,8 @@ static val me_interp_macro(val expander, val form, val menv)
   val params = cadr(expander);
   val body = cddr(expander);
   val saved_de = set_dyn_env(make_env(nil, nil, dyn_env));
-  val exp_env = bind_macro_params(env, menv, params, arglist, nil, form);
+  val exp_env = bind_macro_params(env, menv, params, arglist,
+                                  nil, form, expand_error);
   val result = eval_progn(body, exp_env, body);
   set_dyn_env(saved_de);
   set_origin(result, form);
@@ -2382,7 +2382,7 @@ static val op_tree_case(val form, val env)
     cons_bind (params, forms, onecase);
     val saved_de = dyn_env;
     val new_env = bind_macro_params(env, nil, params, expr_val,
-                                    colon_k, onecase);
+                                    colon_k, onecase, eval_error);
     if (new_env) {
       val ret = eval_progn(forms, new_env, forms);
       dyn_env = saved_de;
@@ -2446,7 +2446,8 @@ static val op_tree_bind(val form, val env)
   val body = rest(rest(rest(form)));
   val expr_val = eval(expr, env, expr);
   val saved_de = dyn_env;
-  val new_env = bind_macro_params(env, nil, params, expr_val, nil, form);
+  val new_env = bind_macro_params(env, nil, params, expr_val,
+                                  nil, form, eval_error);
   val ret = eval_progn(body, new_env, body);
   dyn_env = saved_de;
   return ret;
@@ -2461,7 +2462,8 @@ static val op_mac_param_bind(val form, val env)
   val ctx_val = eval(ctx_form, env, ctx_form);
   val expr_val = eval(expr, env, expr);
   val saved_de = dyn_env;
-  val new_env = bind_macro_params(env, nil, params, expr_val, nil, ctx_val);
+  val new_env = bind_macro_params(env, nil, params, expr_val,
+                                  nil, ctx_val, expand_error);
   val ret = eval_progn(body, new_env, body);
   dyn_env = saved_de;
   return ret;
@@ -2478,7 +2480,8 @@ static val op_mac_env_param_bind(val form, val env)
   val menv_val = eval(menv, env, menv);
   val expr_val = eval(expr, env, expr);
   val saved_de = dyn_env;
-  val new_env = bind_macro_params(env, menv_val, params, expr_val, nil, ctx_val);
+  val new_env = bind_macro_params(env, menv_val, params, expr_val,
+                                  nil, ctx_val, expand_error);
   val ret = eval_progn(body, new_env, body);
   dyn_env = saved_de;
   return ret;
