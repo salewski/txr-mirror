@@ -57354,12 +57354,59 @@ If the
 .meta suffix
 argument is given to
 .codn base-name ,
-then the returned base name is adjusted as follows. If the base
-name ends in
+it specifies a proper suffix to be removed from the returned base name.
+First, the base name is calculated according to the foregoing rules.
+Then, if
 .meta suffix
-then a trimmed version of the base name is returned instead, with that suffix
-removed. This adjustment isn't performed if it would result in an empty
-string being returned.
+matches a trailing portion of the base name, but not the entire base name,
+it is removed from the base name.
+
+The
+.meta suffix
+parameter may be given a
+.codn nil ,
+argument, which is treated exactly as if it were absent.
+Note: this requirement allows for the following idiom
+to work correctly even in cases when
+.code p
+has no suffix:
+
+.verb
+  ;; calculate base name of p with short suffix removed
+  (base-name p (short-suffix p))
+
+  ;; calculate base name of p with long suffix removed
+  (base-name p (long-suffix p))
+.brev
+
+.TP* Examples:
+
+.verb
+  (base-name "") -> ""
+  (base-name "/") -> "/"
+  (base-name ".") -> "."
+  (base-name "./") -> "."
+  (base-name "a") -> "a"
+  (base-name "/a") -> "a"
+  (base-name "/a/") -> "a"
+  (base-name "/a/b") -> "b"
+  (base-name "/a/b/") -> "b"
+  (base-name "/a/b///") -> "b"
+
+  ;; with suffix
+  (base-name "" "") -> ""
+  (base-name "/" "/") -> "/"
+  (base-name "/" "") -> "/"
+  (base-name "." ".") -> "."
+  (base-name "." "") -> "."
+  (base-name "./" "/") -> "."
+  (base-name "a" "a") -> "a"
+  (base-name "a" "") -> "a"
+  (base-name "a.b" ".b") -> "a"
+  (base-name "a.b/" ".b") -> "a"
+  (base-name "a.b/" ".b/") -> "a.b"
+  (base-name "a.b/" "a.b") -> "a.b"
+.brev
 
 .coNP Functions @ long-suffix and @ short-suffix
 .synb
