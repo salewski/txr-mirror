@@ -3855,7 +3855,8 @@ val put_string(val string, val stream_in)
 {
   val self = lit("put-string");
   val stream = default_arg_strict(stream_in, std_output);
-  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(self, stream, stream_s));
 
   if (lazy_stringp(string)) {
     return lazy_str_put(string, stream_in, s);
@@ -3900,7 +3901,8 @@ val put_char(val ch, val stream_in)
   val stream = default_arg_strict(stream_in, std_output);
   struct strm_ops *ops = coerce(struct strm_ops *,
                                 cobj_ops(self, stream, stream_s));
-  struct strm_base *s = coerce(struct strm_base *, stream->co.handle);
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(self, stream, stream_s));
   wint_t cch = c_chr(ch);
 
   switch (cch) {
