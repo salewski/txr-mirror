@@ -30,8 +30,13 @@
      ^(let ((,sym ,init))
         (with-resources ,rest ,*body)))
     (((sym init . cleanup) . rest)
-     ^(let ((,sym ,init))
-        (when ,sym
+     (if (and (plusp sys:compat) (<= sys:compat 265))
+       ^(let ((,sym ,init))
+          (when ,sym
+            (unwind-protect
+              (with-resources ,rest ,*body)
+              ,*cleanup)))
+       ^(let ((,sym ,init))
           (unwind-protect
             (with-resources ,rest ,*body)
             ,*cleanup))))

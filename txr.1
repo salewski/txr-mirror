@@ -47841,6 +47841,14 @@ if no
 .metn body-form s
 are present.
 
+.TP* Note:
+
+From its inception, until \*(TX 265,
+.code with-resources
+featured an undocumented behavior. Details are given in the
+COMPATIBILITY section's Compatibility Version Values subsection,
+in the notes for compatibility value 265.
+
 .TP* "Example:"
 
 The following expression opens a text file and reads a line from it,
@@ -47852,8 +47860,6 @@ immediately:
     (whilet ((l (get-line f)))
       (put-line l)))
 .brev
-
-
 
 .coNP Special variable @ *unhandled-hook*
 The
@@ -82755,6 +82761,27 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 265
+Until \*(TX 265, the
+.code with-resources
+macro exhibits an undocumented behavior: the three-element binding expression
+.mono
+.meti >> ( var < init << cleanup )
+.onom
+immediately causes the
+.code with-resources
+form to terminate with a return value of
+.code nil
+if the
+.meta init
+form returns
+.codn nil .
+Neither the
+.meta cleanup
+in the same expression, nor any subsequent binding expressions or the body
+of the construct, are evaluated. Prior cleanup forms are evaluated in
+reverse order, as documented. A compatibility value of 265 or less restores
+this behavior.
 .IP 262
 Selection 262 compatibility restores a wrong behavior which existed between
 versions 191 and 262 due to a regression. The wrong behavior is that the
