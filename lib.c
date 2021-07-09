@@ -211,7 +211,7 @@ static val code2type(int code)
 
 val built_in_type_p(val sym)
 {
-  type_t i;
+  int i;
 
   for (i = NIL; i <= MAXTYPE; i++) {
     val type = code2type(i);
