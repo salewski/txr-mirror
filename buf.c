@@ -1074,7 +1074,7 @@ static struct strm_ops buf_strm_ops =
 static struct buf_strm *buf_strm(val stream, val self)
 {
   struct buf_strm *s = coerce(struct buf_strm *,
-                              cobj_handle(self, stream, stream_s));
+                              cobj_handle(self, stream, stream_cls));
 
   type_assert (stream->co.ops == &buf_strm_ops.cobj_ops,
                (lit("~a: ~a is not a buffer stream"), self, stream, nao));
@@ -1093,7 +1093,7 @@ val make_buf_stream(val buf_opt)
   s->pos = zero;
   s->is_byte_oriented = 0;
   s->unget_c = nil;
-  stream = cobj(coerce(mem_t *, s), stream_s, &buf_strm_ops.cobj_ops);
+  stream = cobj(coerce(mem_t *, s), stream_cls, &buf_strm_ops.cobj_ops);
   s->buf = buf;
 
   return stream;

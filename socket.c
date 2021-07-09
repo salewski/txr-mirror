@@ -321,7 +321,7 @@ static val make_dgram_sock_stream(int fd, val family, val peer,
   if (peer_addr != 0)
     memcpy(&d->peer_addr, peer_addr, pa_len);
   d->pa_len = pa_len;
-  stream = cobj(coerce(mem_t *, d), stream_s, &dgram_strm_ops.cobj_ops);
+  stream = cobj(coerce(mem_t *, d), stream_cls, &dgram_strm_ops.cobj_ops);
   d->stream = stream;
   d->family = family;
   d->peer = peer;

@@ -116,6 +116,9 @@ static val *special_sym[num_special_slots] = {
   &iter_begin_s, &iter_more_s, &iter_item_s, &iter_step_s, &iter_reset_s
 };
 
+static struct cobj_class *struct_type_cls;
+struct cobj_class *struct_cls;
+
 static val struct_type_hash;
 static val slot_hash;
 static val struct_type_finalize_f;
@@ -152,6 +155,9 @@ void struct_init(void)
   iter_item_s = intern(lit("iter-item"), user_package);
   iter_step_s = intern(lit("iter-step"), user_package);
   iter_reset_s = intern(lit("iter-reset"), user_package);
+
+  struct_type_cls = cobj_register(struct_type_s);
+  struct_cls = cobj_register(struct_s);
 
   struct_type_hash = make_hash(nil, nil, nil);
   slot_hash = make_hash(nil, nil, t);
@@ -260,6 +266,14 @@ static void call_stinitfun_chain(struct struct_type *st, val stype)
   }
 }
 
+static struct struct_inst *struct_handle(val obj, val ctx)
+{
+  if (cobjp(obj) && obj->co.ops == &struct_inst_ops)
+    return coerce(struct struct_inst *, obj->co.handle);
+  uw_throwf(error_s, lit("~a: ~s isn't a structure"),
+            ctx, obj, nao);
+}
+
 static struct struct_type *stype_handle(val *pobj, val ctx)
 {
   val obj = *pobj;
@@ -272,11 +286,13 @@ static struct struct_type *stype_handle(val *pobj, val ctx)
         no_such_struct(ctx, obj);
       *pobj = stype;
       return coerce(struct struct_type *, cobj_handle(ctx, stype,
-                                                      struct_type_s));
+                                                      struct_type_cls));
     }
   case COBJ:
-    if (obj->co.cls == struct_type_s)
+    if (obj->co.cls == struct_type_cls)
       return coerce(struct struct_type *, obj->co.handle);
+    if (obj->co.cls == struct_cls)
+      return struct_handle(obj, ctx)->type;
     /* fallthrough */
   default:
     uw_throwf(error_s, lit("~a: ~s isn't a struct type"),
@@ -413,6 +429,10 @@ val make_struct_type(val name, val supers,
 
   lisplib_try_load(name);
 
+  if (builtin_type_p(name) || cobj_class_exists(name))
+    uw_throwf(error_s, lit("~a: ~s is a built-in type"),
+              self, name, nao);
+
   if (!listp(supers))
     supers = cons(supers, nil);
 
@@ -427,7 +447,7 @@ val make_struct_type(val name, val supers,
           no_such_struct(self, super);
         ptail = list_collect(ptail, supertype);
       } else {
-        class_check(self, super, struct_type_s);
+        class_check(self, super, struct_type_cls);
         ptail = list_collect(ptail, super);
       }
     }
@@ -459,7 +479,7 @@ val make_struct_type(val name, val supers,
     cnum stsl_upb = c_num(plus(length(static_slots),
                                num(count_super_stslots(nsupers, sus, self))),
                           self);
-    val stype = cobj(coerce(mem_t *, st), struct_type_s, &struct_type_ops);
+    val stype = cobj(coerce(mem_t *, st), struct_type_cls, &struct_type_ops);
     val iter;
     cnum sl, stsl, i;
     struct stslot null_ptr = { nil, 0, 0, nil };
@@ -575,7 +595,7 @@ val find_struct_type(val sym)
 
 val struct_type_p(val obj)
 {
-  return cobjclassp(obj, struct_type_s);
+  return cobjclassp(obj, struct_type_cls);
 }
 
 val struct_get_initfun(val type)
@@ -737,7 +757,7 @@ val allocate_struct(val type)
   si->lazy = 0;
   si->dirty = 1;
   bug_unless (type == st->self);
-  return cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
+  return cobj(coerce(mem_t *, si), struct_cls, &struct_inst_ops);
 }
 
 #define alloc_seen(name, size_name)                                     \
@@ -771,7 +791,7 @@ static val make_struct_impl(val self, val type,
   si->id = st->id;
   si->dirty = 1;
 
-  sinst = cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
+  sinst = cobj(coerce(mem_t *, si), struct_cls, &struct_inst_ops);
 
   bug_unless (type == st->self);
 
@@ -895,7 +915,7 @@ val make_lazy_struct(val type, val argfun)
   si->lazy = 1;
   si->dirty = 1;
 
-  sinst = cobj(coerce(mem_t *, si), st->name, &struct_inst_ops);
+  sinst = cobj(coerce(mem_t *, si), struct_cls, &struct_inst_ops);
 
   bug_unless (type == st->self);
 
@@ -920,14 +940,6 @@ val make_struct_lit(val type, val plist)
   return strct;
 }
 
-static struct struct_inst *struct_handle(val obj, val ctx)
-{
-  if (cobjp(obj) && obj->co.ops == &struct_inst_ops)
-    return coerce(struct struct_inst *, obj->co.handle);
-  uw_throwf(error_s, lit("~a: ~s isn't a structure"),
-            ctx, obj, nao);
-}
-
 static struct struct_inst *struct_handle_for_slot(val obj, val ctx, val slot)
 {
   if (cobjp(obj) && obj->co.ops == &struct_inst_ops)
@@ -947,7 +959,7 @@ val copy_struct(val strct)
   struct struct_inst *si_copy = coerce(struct struct_inst *, chk_malloc(size));
   check_init_lazy_struct(strct, si);
   memcpy(si_copy, si, size);
-  copy = cobj(coerce(mem_t *, si_copy), st->name, &struct_inst_ops);
+  copy = cobj(coerce(mem_t *, si_copy), struct_cls, &struct_inst_ops);
   gc_hint(strct);
   return copy;
 }

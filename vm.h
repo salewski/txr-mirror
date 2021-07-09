@@ -27,6 +27,8 @@
 
 extern val vm_desc_s, vm_closure_s;
 
+extern struct cobj_class *vm_desc_cls;
+
 val vm_make_desc(val nlevels, val nregs, val bytecode,
                  val datavec, val funvec);
 val vm_execute_toplevel(val desc);

@@ -1626,7 +1626,7 @@ static val do_match_line(match_line_ctx *c)
         break;
       }
     case COBJ:
-      if (elem->co.cls == regex_s) {
+      if (elem->co.cls == regex_cls) {
         val past = match_regex(c->dataline, elem, c->pos);
         if (nilp(past)) {
           LOG_MISMATCH("regex");

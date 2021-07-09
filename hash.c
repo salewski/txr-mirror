@@ -95,6 +95,7 @@ val weak_keys_k, weak_vals_k, userdata_k;
 val equal_based_k, eql_based_k, eq_based_k;
 val hash_seed_s;
 
+struct cobj_class *hash_cls, *hash_iter_cls;
 /*
  * Dynamic lists built up during gc.
  */
@@ -779,7 +780,7 @@ static val do_make_hash(val weak_keys, val weak_vals,
     struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
     val mod = num_fast(256);
     val table = vector(mod, nil);
-    val hash = cobj(coerce(mem_t *, h), hash_s, &hash_ops);
+    val hash = cobj(coerce(mem_t *, h), hash_cls, &hash_ops);
 
     h->seed = convert(u32_t, c_unum(default_arg(seed,
                                                 if3(hash_seed_s,
@@ -829,11 +830,11 @@ val make_eq_hash(val weak_keys, val weak_vals)
 val make_similar_hash(val existing)
 {
   val self = lit("make-similar-hash");
-  struct hash *ex = coerce(struct hash *, cobj_handle(self, existing, hash_s));
+  struct hash *ex = coerce(struct hash *, cobj_handle(self, existing, hash_cls));
   struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
   val mod = num_fast(256);
   val table = vector(mod, nil);
-  val hash = cobj(coerce(mem_t *, h), hash_s, &hash_ops);
+  val hash = cobj(coerce(mem_t *, h), hash_cls, &hash_ops);
 
   h->modulus = c_num(mod, self);
   h->count = 0;
@@ -865,10 +866,10 @@ static val copy_hash_chain(val chain)
 val copy_hash(val existing)
 {
   val self = lit("copy-hash");
-  struct hash *ex = coerce(struct hash *, cobj_handle(self, existing, hash_s));
+  struct hash *ex = coerce(struct hash *, cobj_handle(self, existing, hash_cls));
   struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
   val mod = num_fast(ex->modulus);
-  val hash = cobj(coerce(mem_t *, h), hash_s, &hash_ops);
+  val hash = cobj(coerce(mem_t *, h), hash_cls, &hash_ops);
   val table = vector(mod, nil);
   cnum i;
 
@@ -891,7 +892,7 @@ val copy_hash(val existing)
 
 val gethash_c(val self, val hash, val key, loc new_p)
 {
-  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   int lim = hash_traversal_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
   loc pchain = mkloc(h->table->v.vec[hv % h->modulus], h->table);
@@ -904,7 +905,7 @@ val gethash_c(val self, val hash, val key, loc new_p)
 
 val gethash_e(val self, val hash, val key)
 {
-  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   int lim = hash_traversal_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
   val chain = h->table->v.vec[hv % h->modulus];
@@ -958,7 +959,7 @@ val pushhash(val hash, val key, val value)
 val remhash(val hash, val key)
 {
   val self = lit("remhash");
-  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   int lim = hash_traversal_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
   val *pchain = &h->table->v.vec[hv % h->modulus];
@@ -982,7 +983,7 @@ val remhash(val hash, val key)
 val clearhash(val hash)
 {
   val self = lit("clearhash");
-  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   val mod = num_fast(256);
   val table = vector(mod, nil);
   cnum oldcount = h->count;
@@ -996,7 +997,7 @@ val clearhash(val hash)
 val hash_count(val hash)
 {
   val self = lit("hash-count");
-  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   return num_fast(h->count);
 }
 
@@ -1009,14 +1010,14 @@ val us_hash_count(val hash)
 val get_hash_userdata(val hash)
 {
   val self = lit("get-hash-userdata");
-  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   return h->userdata;
 }
 
 val set_hash_userdata(val hash, val data)
 {
   val self = lit("set-hash-userdata");
-  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   val olddata = h->userdata;
   set(mkloc(h->userdata, hash), data);
   return olddata;
@@ -1024,7 +1025,7 @@ val set_hash_userdata(val hash, val data)
 
 val hashp(val obj)
 {
-  return cobjclassp(obj, hash_s);
+  return cobjclassp(obj, hash_cls);
 }
 
 static void hash_iter_mark(val hash_iter)
@@ -1045,7 +1046,7 @@ static struct cobj_ops hash_iter_ops = cobj_ops_init(eq,
 
 void hash_iter_init(struct hash_iter *hi, val hash, val self)
 {
-  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_s));
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   hi->next = 0;
   hi->chain = -1;
   hi->cons = nil;
@@ -1116,7 +1117,7 @@ val hash_begin(val hash)
   val hi_obj;
   struct hash_iter *hi = coerce(struct hash_iter *, chk_malloc(sizeof *hi));
   hash_iter_init(hi, hash, self);
-  hi_obj = cobj(coerce(mem_t *, hi), hash_iter_s, &hash_iter_ops);
+  hi_obj = cobj(coerce(mem_t *, hi), hash_iter_cls, &hash_iter_ops);
   gc_hint(hash);
   return hi_obj;
 }
@@ -1125,7 +1126,7 @@ val hash_next(val iter)
 {
   val self = lit("hash-next");
   struct hash_iter *hi = coerce(struct hash_iter *,
-                                cobj_handle(self, iter, hash_iter_s));
+                                cobj_handle(self, iter, hash_iter_cls));
   return hash_iter_next_impl(hi, iter);
 }
 
@@ -1134,7 +1135,7 @@ val hash_peek(val iter)
 {
   val self = lit("hash-peek");
   struct hash_iter *hi = coerce(struct hash_iter *,
-                                cobj_handle(self, iter, hash_iter_s));
+                                cobj_handle(self, iter, hash_iter_cls));
   return hash_iter_peek(hi);
 }
 
@@ -1142,7 +1143,7 @@ val hash_reset(val iter, val hash)
 {
   val self = lit("hash-reset");
   struct hash_iter *hi = coerce(struct hash_iter *,
-                                cobj_handle(self, iter, hash_iter_s));
+                                cobj_handle(self, iter, hash_iter_cls));
 
   if (hi->hash) {
     struct hash *h = coerce(struct hash *, hash->co.handle);
@@ -1597,8 +1598,8 @@ val hash_alist(val hash)
 val hash_uni(val hash1, val hash2, val joinfun, val map1fun, val map2fun)
 {
   val self = lit("hash-uni");
-  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_s));
-  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_s));
+  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_cls));
+  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_cls));
 
   if (h1->hops != h2->hops)
     uw_throwf(error_s, lit("~a: ~s and ~s are incompatible hashes"),
@@ -1645,8 +1646,8 @@ val hash_uni(val hash1, val hash2, val joinfun, val map1fun, val map2fun)
 val hash_diff(val hash1, val hash2)
 {
   val self = lit("hash-diff");
-  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_s));
-  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_s));
+  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_cls));
+  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_cls));
 
   if (h1->hops != h2->hops)
     uw_throwf(error_s, lit("~a: ~s and ~a are incompatible hashes"),
@@ -1670,8 +1671,8 @@ val hash_diff(val hash1, val hash2)
 val hash_symdiff(val hash1, val hash2)
 {
   val self = lit("hash-symdiff");
-  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_s));
-  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_s));
+  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_cls));
+  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_cls));
 
   if (h1->hops != h2->hops)
     uw_throwf(error_s, lit("~a: ~s and ~a are incompatible hashes"),
@@ -1703,8 +1704,8 @@ val hash_symdiff(val hash1, val hash2)
 val hash_isec(val hash1, val hash2, val joinfun)
 {
   val self = lit("hash-isec");
-  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_s));
-  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_s));
+  struct hash *h1 = coerce(struct hash *, cobj_handle(self, hash1, hash_cls));
+  struct hash *h2 = coerce(struct hash *, cobj_handle(self, hash2, hash_cls));
 
   if (h1->hops != h2->hops)
     uw_throwf(error_s, lit("~a: ~s and ~s are incompatible hashes"),
@@ -1889,6 +1890,12 @@ static val gen_hash_seed(void)
   return unum(sec ^ (usec << 12) ^ pid);
 }
 
+void hash_early_init(void)
+{
+  hash_cls = cobj_register(nil);
+  hash_iter_cls = cobj_register(nil);
+}
+
 void hash_init(void)
 {
   weak_keys_k = intern(lit("weak-keys"), keyword_package);
@@ -1899,6 +1906,9 @@ void hash_init(void)
   userdata_k = intern(lit("userdata"), keyword_package);
   hash_seed_s = intern(lit("*hash-seed*"), user_package);
   val ghu = func_n1(get_hash_userdata);
+
+  hash_cls->cls_sym = hash_s;
+  hash_iter_cls->cls_sym = hash_iter_s;
 
   reg_var(hash_seed_s, zero);
 

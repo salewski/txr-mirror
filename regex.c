@@ -256,6 +256,9 @@ union regex_machine {
 
 int opt_derivative_regex = 0;
 
+struct cobj_class *regex_cls;
+static struct cobj_class *chset_cls;
+
 wchar_t spaces[] = {
   0x0009, 0x000a, 0x000b, 0x000c, 0x000d, 0x0020, 0x00a0, 0x1680, 0x180e,
   0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008,
@@ -1609,17 +1612,17 @@ static val reg_nary_to_bin(val regex)
 static val reg_compile_csets(val exp)
 {
   if (exp == space_k) {
-    return cobj(coerce(mem_t *, space_cs), chset_s, &char_set_obj_ops);
+    return cobj(coerce(mem_t *, space_cs), chset_cls, &char_set_obj_ops);
   } else if (exp == digit_k) {
-    return cobj(coerce(mem_t *, digit_cs), chset_s, &char_set_obj_ops);
+    return cobj(coerce(mem_t *, digit_cs), chset_cls, &char_set_obj_ops);
   } else if (exp == word_char_k) {
-    return cobj(coerce(mem_t *, word_cs), chset_s, &char_set_obj_ops);
+    return cobj(coerce(mem_t *, word_cs), chset_cls, &char_set_obj_ops);
   } else if (exp == cspace_k) {
-    return cobj(coerce(mem_t *, cspace_cs), chset_s, &char_set_obj_ops);
+    return cobj(coerce(mem_t *, cspace_cs), chset_cls, &char_set_obj_ops);
   } else if (exp == cdigit_k) {
-    return cobj(coerce(mem_t *, cdigit_cs), chset_s, &char_set_obj_ops);
+    return cobj(coerce(mem_t *, cdigit_cs), chset_cls, &char_set_obj_ops);
   } else if (exp == cword_char_k) {
-    return cobj(coerce(mem_t *, cword_cs), chset_s, &char_set_obj_ops);
+    return cobj(coerce(mem_t *, cword_cs), chset_cls, &char_set_obj_ops);
   } else if (symbolp(exp) || chrp(exp)) {
     return exp;
   } else if (stringp(exp)) {
@@ -1630,7 +1633,7 @@ static val reg_compile_csets(val exp)
 
     if (sym == set_s || sym == cset_s) {
       char_set_t *set = char_set_compile(args, eq(sym, cset_s));
-      return cobj(coerce(mem_t *, set), chset_s, &char_set_obj_ops);
+      return cobj(coerce(mem_t *, set), chset_cls, &char_set_obj_ops);
     } else if (sym == compound_s || sym == zeroplus_s || sym == oneplus_s ||
                sym == optional_s || sym == compl_s || sym == nongreedy_s ||
                sym == or_s || sym == and_s)
@@ -1841,7 +1844,7 @@ static val reg_derivative(val exp, val ch)
     return t;
   } else if (chrp(exp)) {
     return null(eq(exp, ch));
-  } else if (cobjclassp(exp, chset_s)) {
+  } else if (cobjclassp(exp, chset_cls)) {
     char_set_t *set = coerce(char_set_t *, exp->co.handle);
     return if3(char_set_contains(set, c_chr(ch)), nil, t);
   } else if (exp == wild_s) {
@@ -2234,7 +2237,7 @@ val regex_compile(val regex_sexp, val error_stream)
     regex->kind = REGEX_DV;
     regex->nstates = 0;
     regex->source = nil;
-    ret = cobj(coerce(mem_t *, regex), regex_s, &regex_obj_ops);
+    ret = cobj(coerce(mem_t *, regex), regex_cls, &regex_obj_ops);
     regex->r.dv = dv;
     regex->source = regex_source;
     return ret;
@@ -2243,7 +2246,7 @@ val regex_compile(val regex_sexp, val error_stream)
     val ret;
     regex->kind = REGEX_NFA;
     regex->source = nil;
-    ret = cobj(coerce(mem_t *, regex), regex_s, &regex_obj_ops);
+    ret = cobj(coerce(mem_t *, regex), regex_cls, &regex_obj_ops);
     regex->r.nfa = nfa_optimize(nfa_compile_regex(regex_sexp));
     regex->nstates = nfa_count_states(regex->r.nfa.start);
     regex->source = regex_source;
@@ -2253,14 +2256,14 @@ val regex_compile(val regex_sexp, val error_stream)
 
 val regexp(val obj)
 {
-  return cobjclassp(obj, regex_s);
+  return cobjclassp(obj, regex_cls);
 }
 
 val regex_source(val compiled_regex)
 {
   val self = lit("regex-source");
   regex_t *regex = coerce(regex_t *,
-                          cobj_handle(self, compiled_regex, regex_s));
+                          cobj_handle(self, compiled_regex, regex_cls));
   return regex->source;
 }
 
@@ -2434,7 +2437,7 @@ static void print_rec(val exp, val stream, int *semi_flag)
 static void regex_print(val obj, val stream, val pretty, struct strm_ctx *ctx)
 {
   val self = lit("regex-print");
-  regex_t *regex = coerce(regex_t *, cobj_handle(self, obj, regex_s));
+  regex_t *regex = coerce(regex_t *, cobj_handle(self, obj, regex_cls));
   int semi_flag = 0;
 
   (void) pretty;
@@ -2448,7 +2451,7 @@ static void regex_print(val obj, val stream, val pretty, struct strm_ctx *ctx)
 static cnum regex_run(val compiled_regex, const wchar_t *str)
 {
   val self = lit("regex-run");
-  regex_t *regex = coerce(regex_t *, cobj_handle(self, compiled_regex, regex_s));
+  regex_t *regex = coerce(regex_t *, cobj_handle(self, compiled_regex, regex_cls));
 
   return if3(regex->kind == REGEX_DV,
              dv_run(regex->r.dv, str),
@@ -2492,7 +2495,7 @@ static void regex_machine_reset(regex_machine_t *regm)
 
 static void regex_machine_init(val self, regex_machine_t *regm, val reg)
 {
-  regex_t *regex = coerce(regex_t *, cobj_handle(self, reg, regex_s));
+  regex_t *regex = coerce(regex_t *, cobj_handle(self, reg, regex_cls));
 
   if (regex->kind == REGEX_DV) {
     regm->n.is_nfa = 0;
@@ -3341,6 +3344,9 @@ void regex_init(void)
   cspace_k = intern(lit("cspace"), keyword_package);
   cdigit_k = intern(lit("cdigit"), keyword_package);
   cword_char_k = intern(lit("cword-char"), keyword_package);
+
+  regex_cls = cobj_register(regex_s);
+  chset_cls = cobj_register(chset_s);
 
   reg_fun(intern(lit("regex-compile"), user_package), func_n2o(regex_compile, 1));
   reg_fun(intern(lit("regexp"), user_package), func_n1(regexp));

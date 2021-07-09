@@ -99,6 +99,9 @@ struct vm_closure {
 
 val vm_desc_s, vm_closure_s;
 
+struct cobj_class *vm_desc_cls;
+static struct cobj_class *vm_closure_cls;
+
 static_forward(struct cobj_ops vm_desc_ops);
 
 static_forward(struct cobj_ops vm_closure_ops);
@@ -109,7 +112,7 @@ static struct vm_desc_links vmd_list = {
 
 static struct vm_desc *vm_desc_struct(val self, val obj)
 {
-  return coerce(struct vm_desc *, cobj_handle(self, obj, vm_desc_s));
+  return coerce(struct vm_desc *, cobj_handle(self, obj, vm_desc_cls));
 }
 
 val vm_make_desc(val nlevels, val nregs, val bytecode,
@@ -158,7 +161,7 @@ val vm_make_desc(val nlevels, val nregs, val bytecode,
     vnull->lnk.prev = vd;
     vtail->lnk.next = vd;
 
-    desc = cobj(coerce(mem_t *, vd), vm_desc_s, &vm_desc_ops);
+    desc = cobj(coerce(mem_t *, vd), vm_desc_cls, &vm_desc_ops);
 
     vd->bytecode = bytecode;
     vd->datavec = datavec;
@@ -230,7 +233,7 @@ static void vm_desc_mark(val obj)
 
 static struct vm_closure *vm_closure_struct(val self, val obj)
 {
-  return coerce(struct vm_closure *, cobj_handle(self, obj, vm_closure_s));
+  return coerce(struct vm_closure *, cobj_handle(self, obj, vm_closure_cls));
 }
 
 static val vm_make_closure(struct vm *vm, int frsz, int nreg)
@@ -253,7 +256,7 @@ static val vm_make_closure(struct vm *vm, int frsz, int nreg)
 
   assert (vc->nlvl <= vm->nlvl);
 
-  closure = cobj(coerce(mem_t *, vc), vm_closure_s, &vm_closure_ops);
+  closure = cobj(coerce(mem_t *, vc), vm_closure_cls, &vm_closure_ops);
 
   for (i = 2; i < vc->nlvl; i++) {
     struct vm_env *sdi = &vm->dspl[i];
@@ -302,7 +305,7 @@ val vm_copy_closure(val oclosure)
 
   memcpy(nvc, ovc, hdr_sz + dspl_sz);
 
-  nclosure = cobj(coerce(mem_t *, nvc), vm_closure_s, &vm_closure_ops);
+  nclosure = cobj(coerce(mem_t *, nvc), vm_closure_cls, &vm_closure_ops);
 
   for (i = 2; i < nvc->nlvl; i++) {
     struct vm_env *ndi = &nvc->dspl[i];
@@ -1317,6 +1320,8 @@ void vm_init(void)
 {
   vm_desc_s = intern(lit("vm-desc"), system_package);
   vm_closure_s = intern(lit("vm-closure"), system_package);
+  vm_desc_cls = cobj_register(vm_desc_s);
+  vm_closure_cls = cobj_register(vm_closure_s);
   reg_fun(intern(lit("vm-make-desc"), system_package), func_n5(vm_make_desc));
   reg_fun(intern(lit("vm-desc-nlevels"), system_package), func_n1(vm_desc_nlevels));
   reg_fun(intern(lit("vm-desc-nregs"), system_package), func_n1(vm_desc_nregs));

@@ -82,6 +82,8 @@ struct tree_diter {
 
 val tree_s, tree_iter_s, tree_fun_whitelist_s;
 
+struct cobj_class *tree_cls, *tree_iter_cls;
+
 val tnode(val key, val left, val right)
 {
   val obj = make_obj();
@@ -501,7 +503,7 @@ static val tr_delete(val tree, struct tree *tr, val key)
 val tree_insert_node(val tree, val node)
 {
   val self = lit("tree-insert-node");
-  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
 
   type_check(self, node, TNOD);
 
@@ -530,7 +532,7 @@ val tree_insert(val tree, val key)
 val tree_lookup_node(val tree, val key)
 {
   val self = lit("tree-lookup-node");
-  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
   return tr_lookup(tr, key);
 }
 
@@ -543,7 +545,7 @@ val tree_lookup(val tree, val key)
 val tree_delete_node(val tree, val key)
 {
   val self = lit("tree-delete-node");
-  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
   return tr_delete(tree, tr, key);
 }
 
@@ -556,15 +558,15 @@ val tree_delete(val tree, val key)
 static val tree_root(val tree)
 {
   val self = lit("tree-root");
-  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
   return tr->root;
 }
 
 static val tree_equal_op(val left, val right)
 {
   val self = lit("equal");
-  struct tree *ltr = coerce(struct tree *, cobj_handle(self, left, tree_s));
-  struct tree *rtr = coerce(struct tree *, cobj_handle(self, right, tree_s));
+  struct tree *ltr = coerce(struct tree *, cobj_handle(self, left, tree_cls));
+  struct tree *rtr = coerce(struct tree *, cobj_handle(self, right, tree_cls));
 
   if (ltr->size != rtr->size)
     return nil;
@@ -683,7 +685,7 @@ val tree(val keys_in, val key_fn, val less_fn, val equal_fn)
 {
   struct tree *tr = coerce(struct tree *, chk_calloc(1, sizeof *tr));
   val keys = default_null_arg(keys_in), key;
-  val tree = cobj(coerce(mem_t *, tr), tree_s, &tree_ops);
+  val tree = cobj(coerce(mem_t *, tr), tree_cls, &tree_ops);
   seq_iter_t ki;
   uses_or2;
 
@@ -743,9 +745,9 @@ val copy_search_tree(val tree)
 {
   val self = lit("copy-search-tree");
   struct tree *ntr = coerce(struct tree *, malloc(sizeof *ntr));
-  struct tree *otr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  struct tree *otr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
   val nroot = deep_copy_tnode(otr->root);
-  val ntree = cobj(coerce(mem_t *, ntr), tree_s, &tree_ops);
+  val ntree = cobj(coerce(mem_t *, ntr), tree_cls, &tree_ops);
   *ntr = *otr;
   ntr->root = nroot;
   return ntree;
@@ -755,8 +757,8 @@ val make_similar_tree(val tree)
 {
   val self = lit("make-similar-tree");
   struct tree *ntr = coerce(struct tree *, malloc(sizeof *ntr));
-  struct tree *otr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
-  val ntree = cobj(coerce(mem_t *, ntr), tree_s, &tree_ops);
+  struct tree *otr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
+  val ntree = cobj(coerce(mem_t *, ntr), tree_cls, &tree_ops);
   *ntr = *otr;
   ntr->root = nil;
   ntr->size = ntr->max_size = 0;
@@ -765,7 +767,7 @@ val make_similar_tree(val tree)
 
 val treep(val obj)
 {
-  return tnil(type(obj) == COBJ && obj->co.cls == tree_s);
+  return tnil(type(obj) == COBJ && obj->co.cls == tree_cls);
 }
 
 static void tree_iter_mark(val tree_iter)
@@ -790,10 +792,10 @@ static struct cobj_ops tree_iter_ops = cobj_ops_init(eq,
 val tree_begin(val tree, val lowkey, val highkey)
 {
   val self = lit("tree-begin");
-  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
   struct tree_diter *tdi = coerce(struct tree_diter *,
                                   chk_calloc(1, sizeof *tdi));
-  val iter = cobj(coerce(mem_t *, tdi), tree_iter_s, &tree_iter_ops);
+  val iter = cobj(coerce(mem_t *, tdi), tree_iter_cls, &tree_iter_ops);
 
   tdi->ti.self = iter;
   tdi->tree = tree;
@@ -815,10 +817,10 @@ val copy_tree_iter(val iter)
 {
   val self = lit("copy-tree-iter");
   struct tree_diter *tdis = coerce(struct tree_diter *,
-                                   cobj_handle(self, iter, tree_iter_s));
+                                   cobj_handle(self, iter, tree_iter_cls));
   struct tree_diter *tdid = coerce(struct tree_diter *,
                                    chk_calloc(1, sizeof *tdid));
-  val iter_copy = cobj(coerce(mem_t *, tdid), tree_iter_s, &tree_iter_ops);
+  val iter_copy = cobj(coerce(mem_t *, tdid), tree_iter_cls, &tree_iter_ops);
   int depth = tdis->ti.depth;
 
   tdid->ti.self = iter_copy;
@@ -841,9 +843,9 @@ val replace_tree_iter(val diter, val siter)
 {
   val self = lit("replace-tree-iter");
   struct tree_diter *tdid = coerce(struct tree_diter *,
-                                   cobj_handle(self, diter, tree_iter_s));
+                                   cobj_handle(self, diter, tree_iter_cls));
   struct tree_diter *tdis = coerce(struct tree_diter *,
-                                   cobj_handle(self, siter, tree_iter_s));
+                                   cobj_handle(self, siter, tree_iter_cls));
   int depth = tdis->ti.depth;
 
   tdid->ti.depth = depth;
@@ -866,9 +868,9 @@ val replace_tree_iter(val diter, val siter)
 val tree_reset(val iter, val tree, val lowkey, val highkey)
 {
   val self = lit("tree-reset");
-  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
   struct tree_diter *tdi = coerce(struct tree_diter *,
-                                  cobj_handle(self, iter, tree_iter_s));
+                                  cobj_handle(self, iter, tree_iter_cls));
   const struct tree_iter it = tree_iter_init(0);
 
   tdi->ti = it;
@@ -894,8 +896,8 @@ val tree_next(val iter)
 {
   val self = lit("tree-next");
   struct tree_diter *tdi = coerce(struct tree_diter *,
-                                  cobj_handle(self, iter, tree_iter_s));
-  struct tree *tr = coerce(struct tree *, cobj_handle(self, tdi->tree, tree_s));
+                                  cobj_handle(self, iter, tree_iter_cls));
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tdi->tree, tree_cls));
 
   if (tdi->lastnode) {
     val node = tn_find_next(tdi->lastnode, &tdi->ti);
@@ -923,8 +925,8 @@ val tree_peek(val iter)
 {
   val self = lit("tree-peek");
   struct tree_diter *tdi = coerce(struct tree_diter *,
-                                  cobj_handle(self, iter, tree_iter_s));
-  struct tree *tr = coerce(struct tree *, cobj_handle(self, tdi->tree, tree_s));
+                                  cobj_handle(self, iter, tree_iter_cls));
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tdi->tree, tree_cls));
 
   if (tdi->lastnode) {
     val node = tn_peek_next(tdi->lastnode, &tdi->ti);
@@ -948,7 +950,7 @@ val tree_peek(val iter)
 val tree_clear(val tree)
 {
   val self = lit("tree-clear");
-  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_s));
+  struct tree *tr = coerce(struct tree *, cobj_handle(self, tree, tree_cls));
   cnum oldsize = tr->size;
   tr->root = nil;
   tr->size = tr->max_size = 0;
@@ -972,6 +974,10 @@ void tree_init(void)
   tree_s = intern(lit("tree"), user_package);
   tree_iter_s = intern(lit("tree-iter"), user_package);
   tree_fun_whitelist_s = intern(lit("*tree-fun-whitelist*"), user_package);
+
+  tree_cls = cobj_register(tree_s);
+  tree_iter_cls = cobj_register(tree_iter_s);
+
   reg_fun(tnode_s, func_n3(tnode));
   reg_fun(intern(lit("left"), user_package), func_n1(left));
   reg_fun(intern(lit("right"), user_package), func_n1(right));

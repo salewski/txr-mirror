@@ -71,6 +71,8 @@ extern val bool_s;
 
 extern val ffi_type_s, ffi_call_desc_s, ffi_closure_s;
 
+extern struct cobj_class *carray_cls;
+
 val ffi_type_compile(val syntax);
 val ffi_type_operator_p(val sym);
 val ffi_type_p(val sym);

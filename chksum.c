@@ -46,6 +46,7 @@
 #include "chksum.h"
 
 static val sha256_ctx_s, md5_ctx_s;
+static struct cobj_class *sha256_ctx_cls, *md5_ctx_cls;
 
 static void sha256_stream_impl(val stream, val nbytes, unsigned char *hash,
                                val self)
@@ -178,7 +179,7 @@ val sha256_begin(void)
 {
   SHA256_t *ps256 = coerce(SHA256_t *, chk_malloc(sizeof *ps256));
   SHA256_init(ps256);
-  return cobj(coerce(mem_t *, ps256), sha256_ctx_s, &sha256_ops);
+  return cobj(coerce(mem_t *, ps256), sha256_ctx_cls, &sha256_ops);
 }
 
 static int sha256_utf8_byte_callback(int b, mem_t *ctx)
@@ -192,7 +193,7 @@ static int sha256_utf8_byte_callback(int b, mem_t *ctx)
 val sha256_hash(val ctx, val obj)
 {
   val self = lit("sha256-hash");
-  SHA256_t *ps256 = coerce(SHA256_t *, cobj_handle(self, ctx, sha256_ctx_s));
+  SHA256_t *ps256 = coerce(SHA256_t *, cobj_handle(self, ctx, sha256_ctx_cls));
 
   switch (type(obj)) {
   case STR:
@@ -232,7 +233,7 @@ val sha256_end(val ctx, val buf_in)
 {
   val self = lit("sha256-end");
   unsigned char *hash;
-  SHA256_t *ps256 = coerce(SHA256_t *, cobj_handle(self, ctx, sha256_ctx_s));
+  SHA256_t *ps256 = coerce(SHA256_t *, cobj_handle(self, ctx, sha256_ctx_cls));
   val buf = chksum_ensure_buf(self, buf_in, num_fast(SHA256_DIGEST_LENGTH),
                               &hash, lit("SHA-256"));
 
@@ -442,7 +443,7 @@ val md5_begin(void)
 {
   MD5_t *pmd5 = coerce(MD5_t *, chk_malloc(sizeof *pmd5));
   MD5_init(pmd5);
-  return cobj(coerce(mem_t *, pmd5), md5_ctx_s, &md5_ops);
+  return cobj(coerce(mem_t *, pmd5), md5_ctx_cls, &md5_ops);
 }
 
 static int md5_utf8_byte_callback(int b, mem_t *ctx)
@@ -456,7 +457,7 @@ static int md5_utf8_byte_callback(int b, mem_t *ctx)
 val md5_hash(val ctx, val obj)
 {
   val self = lit("md5-hash");
-  MD5_t *pmd5 = coerce(MD5_t *, cobj_handle(self, ctx, md5_ctx_s));
+  MD5_t *pmd5 = coerce(MD5_t *, cobj_handle(self, ctx, md5_ctx_cls));
 
   switch (type(obj)) {
   case STR:
@@ -496,7 +497,7 @@ val md5_end(val ctx, val buf_in)
 {
   val self = lit("md5-end");
   unsigned char *hash;
-  MD5_t *pmd5 = coerce(MD5_t *, cobj_handle(self, ctx, md5_ctx_s));
+  MD5_t *pmd5 = coerce(MD5_t *, cobj_handle(self, ctx, md5_ctx_cls));
   val buf = chksum_ensure_buf(self, buf_in, num_fast(MD5_DIGEST_LENGTH),
                               &hash, lit("SHA-256"));
 
@@ -509,6 +510,8 @@ void chksum_init(void)
 {
   sha256_ctx_s = intern(lit("sha256-ctx"), user_package);
   md5_ctx_s = intern(lit("md5-ctx"), user_package);
+  sha256_ctx_cls = cobj_register(sha256_ctx_s);
+  md5_ctx_cls = cobj_register(md5_ctx_s);
   reg_fun(intern(lit("sha256-stream"), user_package), func_n3o(sha256_stream, 1));
   reg_fun(intern(lit("sha256"), user_package), func_n2o(sha256, 1));
   reg_fun(intern(lit("sha256-begin"), user_package), func_n0(sha256_begin));

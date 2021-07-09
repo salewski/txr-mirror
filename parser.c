@@ -75,6 +75,9 @@ val listener_pprint_s, listener_greedy_eval_s;
 val rec_source_loc_s, read_unknown_structs_s;
 val json_s;
 val intr_s;
+
+struct cobj_class *parser_cls;
+
 static lino_t *lino_ctx;
 static int repl_level = 0;
 
@@ -172,7 +175,7 @@ val parser(val stream, val name, val lineno)
   parser_t *p = coerce(parser_t *, chk_malloc(sizeof *p));
   val parser;
   parser_common_init(p);
-  parser = cobj(coerce(mem_t *, p), parser_s, &parser_ops);
+  parser = cobj(coerce(mem_t *, p), parser_cls, &parser_ops);
   p->parser = parser;
   p->lineno = c_num(default_arg(lineno, one), self);
   p->name = name;
@@ -183,7 +186,7 @@ val parser(val stream, val name, val lineno)
 
 parser_t *parser_get_impl(val self, val parser)
 {
-  return coerce(parser_t *, cobj_handle(self, parser, parser_s));
+  return coerce(parser_t *, cobj_handle(self, parser, parser_cls));
 }
 
 val ensure_parser(val stream, val name)
@@ -655,7 +658,7 @@ static val lisp_parse_impl(val self, enum prime_parser prime,
 
   error_stream = default_arg_strict(error_stream, std_null);
   error_stream = if3(error_stream == t, std_output, error_stream);
-  class_check (self, error_stream, stream_s);
+  class_check (self, error_stream, stream_cls);
 
   if (lineno && !missingp(lineno))
     pi->lineno = c_num(lineno, self);
@@ -830,7 +833,7 @@ val txr_parse(val source_in, val error_stream,
   dyn_env = make_env(nil, nil, dyn_env);
   error_stream = default_arg_strict(error_stream, std_null);
   error_stream = if3(error_stream == t, std_output, error_stream);
-  class_check (self, error_stream, stream_s);
+  class_check (self, error_stream, stream_cls);
 
   parse_once(self, input_stream, name);
 
@@ -1675,7 +1678,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
 val parser_errors(val parser)
 {
   val self = lit("parser-errors");
-  parser_t *p = coerce(parser_t *, cobj_handle(self, parser, parser_s));
+  parser_t *p = coerce(parser_t *, cobj_handle(self, parser, parser_cls));
   return num(p->errors);
 }
 
@@ -1685,7 +1688,7 @@ val parse_errors(val stream)
   val errors = nil;
   val parser = gethash(stream_parser_hash, stream);
   if (parser) {
-    parser_t *p = coerce(parser_t *, cobj_handle(self, parser, parser_s));
+    parser_t *p = coerce(parser_t *, cobj_handle(self, parser, parser_cls));
     if (p->errors)
       errors = num(p->errors);
   }
@@ -1871,11 +1874,17 @@ void parse_init(void)
   read_unknown_structs_s = intern(lit("*read-unknown-structs*"), user_package);
   json_s = intern(lit("json"), user_package);
   unique_s = gensym(nil);
+
+  parser_cls = cobj_register(parser_s);
+
   protect(&stream_parser_hash, &unique_s, &catch_all, convert(val *, 0));
   stream_parser_hash = make_hash(t, nil, nil);
   catch_all = cons(t, nil);
+
   parser_l_init();
+
   lino_init(&linenoise_txr_binding);
+
   reg_var(listener_hist_len_s, num_fast(500));
   reg_var(listener_multi_line_p_s, t);
   reg_var(listener_sel_inclusive_p_s, nil);

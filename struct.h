@@ -32,6 +32,7 @@ extern val lambda_set_s;
 extern val iter_begin_s, iter_more_s, iter_item_s, iter_step_s, iter_reset_s;
 
 extern struct cobj_ops struct_inst_ops;
+extern struct cobj_class *struct_cls;
 
 enum special_slot {
   equal_m, nullify_m, from_list_m, lambda_m, lambda_set_m,

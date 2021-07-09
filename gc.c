@@ -428,9 +428,11 @@ tail_call:
     mark_obj(obj->ls.props->term);
     mark_obj_tail(obj->ls.list);
   case COBJ:
+    obj->co.ops->mark(obj);
+    mark_obj_tail(obj->co.cls->cls_sym);
   case CPTR:
     obj->co.ops->mark(obj);
-    mark_obj_tail(obj->co.cls);
+    mark_obj_tail(obj->cp.cls);
   case ENV:
     mark_obj(obj->e.vbindings);
     mark_obj(obj->e.fbindings);

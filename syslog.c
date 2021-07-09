@@ -242,7 +242,7 @@ val make_syslog_stream(val prio)
   strm_base_init(&s->a);
   s->prio = prio;
   s->strstream = nil;
-  stream = cobj(coerce(mem_t *, s), stream_s, &syslog_strm_ops.cobj_ops);
+  stream = cobj(coerce(mem_t *, s), stream_cls, &syslog_strm_ops.cobj_ops);
   s->strstream = strstream;
   return stream;
 }

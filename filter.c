@@ -135,7 +135,7 @@ static val regex_from_trie(val trie)
           return list(compound_s, a, rx, nao);
         }
       case COBJ:
-        if (d->co.cls == hash_s)
+        if (d->co.cls == hash_cls)
           return list(compound_s, a, regex_from_trie(d), nao);
         /* fallthrough */
       default:
@@ -143,7 +143,7 @@ static val regex_from_trie(val trie)
       }
     }
   case COBJ:
-    if (trie->co.cls == hash_s) {
+    if (trie->co.cls == hash_cls) {
       if (zerop(hash_count(trie))) {
         return tnil(!get_hash_userdata(trie));
       } else {

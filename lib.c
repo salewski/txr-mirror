@@ -81,6 +81,7 @@
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
+#define nelem(array) (sizeof (array) / sizeof (array)[0])
 
 #if !HAVE_POSIX_SIGS
 int async_sig_enabled = 0;
@@ -134,6 +135,12 @@ val prog_string;
 #if CONFIG_LOCALE_TOLERANCE
 char dec_point = '.';
 #endif
+
+static struct cobj_class cobj_class[64], *cobj_ptr = cobj_class;
+
+static val cobj_hash;
+
+struct cobj_class *seq_iter_cls;
 
 static val recycled_conses;
 
@@ -202,6 +209,19 @@ static val code2type(int code)
   return nil;
 }
 
+val builtin_type_p(val sym)
+{
+  type_t i;
+
+  for (i = NIL; i <= MAXTYPE; i++) {
+    val type = code2type(i);
+    if (subtypep(type, sym))
+      return t;
+  }
+
+  return nil;
+}
+
 val typeof(val obj)
 {
   switch (tag(obj)) {
@@ -216,7 +236,10 @@ val typeof(val obj)
       int typecode = type(obj);
 
       if (typecode == COBJ) {
-        return obj->co.cls;
+        if (obj->co.cls == struct_cls)
+          return struct_type_name(obj);
+        else
+          return obj->co.cls->cls_sym;
       } else {
         val typesym = code2type(typecode);
         if (!typesym)
@@ -231,9 +254,9 @@ val typeof(val obj)
 
 val subtypep(val sub, val sup)
 {
-  if (sub == nil || sup == t) {
+  if (sub == sup) {
     return t;
-  } else if (sub == sup) {
+  } else if (sub == nil || sup == t) {
     return t;
   } else if (sup == atom_s) {
     return tnil(sub != cons_s && sub != lcons_s);
@@ -294,7 +317,7 @@ seq_info_t seq_info(val obj)
     ret.kind = seq_kind_tab[to];
     return ret;
   } else {
-    val cls = obj->co.cls;
+    val cls = obj->co.cls->cls_sym;
 
     if (cls == hash_s) {
       ret.kind = SEQ_HASHLIKE;
@@ -858,7 +881,7 @@ void seq_iter_init_with_info(val self, seq_iter_t *it,
         }
       }
     }
-    if (it->inf.obj->co.cls == tree_iter_s)
+    if (it->inf.obj->co.cls == tree_iter_cls)
     {
       it->ui.iter = if3(support_rewind,
                         copy_tree_iter(it->inf.obj),
@@ -980,7 +1003,7 @@ val seq_begin(val obj)
   val self = lit("seq-begin");
   val si_obj;
   struct seq_iter *si = coerce(struct seq_iter *, chk_calloc(1, sizeof *si));
-  si_obj = cobj(coerce(mem_t *, si), seq_iter_s, &seq_iter_ops);
+  si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_ops);
   seq_iter_init(self, si, obj);
   return si_obj;
 }
@@ -989,7 +1012,7 @@ val seq_next(val iter, val end_val)
 {
   val self = lit("seq-next");
   struct seq_iter *si = coerce(struct seq_iter *,
-                               cobj_handle(self, iter, seq_iter_s));
+                               cobj_handle(self, iter, seq_iter_cls));
   val item = nil;
   return if3(seq_get(si, &item), item, end_val);
 }
@@ -998,7 +1021,7 @@ val seq_reset(val iter, val obj)
 {
   val self = lit("seq-reset");
   struct seq_iter *si = coerce(struct seq_iter *,
-                               cobj_handle(self, iter, seq_iter_s));
+                               cobj_handle(self, iter, seq_iter_cls));
   seq_iter_init(self, si, obj);
   return iter;
 }
@@ -1030,7 +1053,7 @@ val iter_begin(val obj)
         val si_obj;
         struct seq_iter *si = coerce(struct seq_iter *,
                                      chk_calloc(1, sizeof *si));
-        si_obj = cobj(coerce(mem_t *, si), seq_iter_s, &seq_iter_ops);
+        si_obj = cobj(coerce(mem_t *, si), seq_iter_cls, &seq_iter_ops);
         seq_iter_init_with_info(self, si, sinf, 0);
         return si_obj;
       }
@@ -1049,7 +1072,7 @@ val iter_more(val iter)
   case BGNUM:
     return t;
   case COBJ:
-    if (iter->co.cls == seq_iter_s)
+    if (iter->co.cls == seq_iter_cls)
     {
       struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
       val item = nil;
@@ -1076,7 +1099,7 @@ val iter_item(val iter)
   case BGNUM:
     return iter;
   case COBJ:
-    if (iter->co.cls == seq_iter_s)
+    if (iter->co.cls == seq_iter_cls)
     {
       struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
       val item = nil;
@@ -1113,7 +1136,7 @@ val iter_step(val iter)
       return next;
     }
   case COBJ:
-    if (iter->co.cls == seq_iter_s)
+    if (iter->co.cls == seq_iter_cls)
     {
       struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
       val item = nil;
@@ -1151,7 +1174,7 @@ val iter_reset(val iter, val obj)
   case BGNUM:
     return obj;
   case COBJ:
-    if (iter->co.cls == seq_iter_s)
+    if (iter->co.cls == seq_iter_cls)
     {
       struct seq_iter *si = coerce(struct seq_iter *, iter->co.handle);
       seq_iter_init_with_info(self, si, sinf, 0);
@@ -1179,10 +1202,10 @@ val throw_mismatch(val self, val obj, type_t t)
   type_mismatch(lit("~a: ~s is not of type ~s"), self, obj, code2type(t), nao);
 }
 
-val class_check(val self, val cobj, val class_sym)
+val class_check(val self, val cobj, struct cobj_class *cls)
 {
-  type_assert (cobjclassp(cobj, class_sym),
-               (lit("~a: ~s is not of type ~s"), self, cobj, class_sym, nao));
+  type_assert (cobjclassp(cobj, cls),
+               (lit("~a: ~s is not of type ~s"), self, cobj, cls->cls_sym, nao));
   return t;
 }
 
@@ -1751,7 +1774,7 @@ val make_like(val list, val thatobj)
         if (from_list_meth)
           return funcall1(from_list_meth, list);
       }
-      if (thatobj->co.cls == carray_s)
+      if (thatobj->co.cls == carray_cls)
         return carray_list(list, carray_type(thatobj), nil);
       break;
     case NIL:
@@ -1905,7 +1928,7 @@ again:
     replace_buf(tailobj, items, t, t);
     return ptail;
   case COBJ:
-    if (tailobj->co.cls == carray_s) {
+    if (tailobj->co.cls == carray_cls) {
       carray_replace(tailobj, items, t, t);
       return ptail;
     }
@@ -7528,7 +7551,7 @@ INLINE val do_generic_funcall(val fun, struct args *args_in)
     }
     break;
   case COBJ:
-    if (fun->co.cls == hash_s) {
+    if (fun->co.cls == hash_cls) {
       bug_unless (args->argc >= ARGS_MIN);
       args_normalize_least(args, 3);
 
@@ -7542,7 +7565,7 @@ INLINE val do_generic_funcall(val fun, struct args *args_in)
       default:
         callerror(fun, lit("too many arguments"));
       }
-    } else if (fun->co.cls == regex_s) {
+    } else if (fun->co.cls == regex_cls) {
       bug_unless (args->argc >= ARGS_MIN);
       args_normalize_least(args, 3);
 
@@ -7558,13 +7581,13 @@ INLINE val do_generic_funcall(val fun, struct args *args_in)
       default:
         callerror(fun, lit("too many arguments"));
       }
-    } else if (fun->co.cls == vm_desc_s) {
+    } else if (fun->co.cls == vm_desc_cls) {
       if (args->fill || args->list)
         callerror(fun, lit("too many arguments"));
       return vm_execute_toplevel(fun);
-    } else if (fun->co.cls == carray_s) {
+    } else if (fun->co.cls == carray_cls) {
       goto carray;
-    } else if (fun->co.cls == tree_s) {
+    } else if (fun->co.cls == tree_cls) {
       switch (args->fill) {
       case 0:
         callerror(fun, lit("missing required arguments"));
@@ -9141,14 +9164,44 @@ val lazy_str_get_trailing_list(val lstr, val index)
   }
 }
 
-val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops)
+struct cobj_class *cobj_register(val cls_sym)
 {
-  val obj = make_obj();
-  obj->co.type = COBJ;
-  obj->co.handle = handle;
-  obj->co.ops = ops;
-  obj->co.cls = cls_sym;
-  return obj;
+  if ((size_t) (cobj_ptr - cobj_class) >= nelem(cobj_class))
+    internal_error("cobj array too small");
+  cobj_ptr->cls_sym = cls_sym;
+  return cobj_ptr++;
+}
+
+struct cobj_class *cobj_register_super(val cls_sym, struct cobj_class *super)
+{
+  struct cobj_class *cls = cobj_register(cls_sym);
+  cls->super = super;
+  return cls;
+}
+
+static void cobj_populate_hash(void)
+{
+  struct cobj_class *ptr;
+  for (ptr = cobj_class; ptr < cobj_ptr; ptr++)
+    sethash(cobj_hash, ptr->cls_sym, ptr->cls_sym);
+}
+
+int cobj_class_exists(val cls_sym)
+{
+  return gethash(cobj_hash, cls_sym) != 0;
+}
+
+val cobj(mem_t *handle, struct cobj_class *cls, struct cobj_ops *ops)
+{
+  if (cls != 0) {
+    val obj = make_obj();
+    obj->co.type = COBJ;
+    obj->co.handle = handle;
+    obj->co.ops = ops;
+    obj->co.cls = cls;
+    return obj;
+  }
+  internal_error("cobj creation with null class pointer");
 }
 
 val cobjp(val obj)
@@ -9156,28 +9209,33 @@ val cobjp(val obj)
   return type(obj) == COBJ ? t : nil;
 }
 
-val cobjclassp(val obj, val cls_sym)
+val cobjclassp(val obj, struct cobj_class *cls)
 {
-  return tnil(is_ptr(obj) && obj->t.type == COBJ &&
-              (obj->co.cls == cls_sym || subtypep(obj->co.cls, cls_sym)));
+  if (is_ptr(obj) && obj->t.type == COBJ) {
+    struct cobj_class *pcls;
+    for (pcls = obj->co.cls; pcls != 0; pcls = pcls->super)
+      if (pcls == cls)
+        return t;
+  }
+  return nil;
 }
 
-mem_t *cobj_handle(val self, val cobj, val cls_sym)
+mem_t *cobj_handle(val self, val cobj, struct cobj_class *cls)
 {
-  class_check(self, cobj, cls_sym);
+  class_check(self, cobj, cls);
   return cobj->co.handle;
 }
 
-struct cobj_ops *cobj_ops(val self, val cobj, val cls_sym)
+struct cobj_ops *cobj_ops(val self, val cobj, struct cobj_class *cls)
 {
-  class_check(self, cobj, cls_sym);
+  class_check(self, cobj, cls);
   return cobj->co.ops;
 }
 
 void cobj_print_op(val obj, val out, val pretty, struct strm_ctx *ctx)
 {
   put_string(lit("#<"), out);
-  obj_print_impl(obj->co.cls, out, pretty, ctx);
+  obj_print_impl(obj->co.cls->cls_sym, out, pretty, ctx);
   format(out, lit(": ~p>"), coerce(val, obj->co.handle), nao);
 }
 
@@ -9186,7 +9244,7 @@ void cptr_print_op(val obj, val out, val pretty, struct strm_ctx *ctx)
   put_string(lit("#<cptr"), out);
   if (obj->co.cls) {
     put_char(chr(' '), out);
-    obj_print_impl(obj->co.cls, out, pretty, ctx);
+    obj_print_impl(obj->cp.cls, out, pretty, ctx);
   }
   format(out, lit(": ~p>"), coerce(val, obj->co.handle), nao);
 }
@@ -9212,10 +9270,10 @@ static struct cobj_ops cptr_ops = cobj_ops_init(cobj_equal_handle_op,
 val cptr_typed(mem_t *handle, val type_sym, struct cobj_ops *ops)
 {
   val obj = make_obj();
-  obj->co.type = CPTR;
-  obj->co.handle = handle;
-  obj->co.ops = (ops != 0 ? ops : &cptr_ops);
-  obj->co.cls = type_sym;
+  obj->cp.type = CPTR;
+  obj->cp.handle = handle;
+  obj->cp.ops = (ops != 0 ? ops : &cptr_ops);
+  obj->cp.cls = type_sym;
   return obj;
 }
 
@@ -9232,7 +9290,7 @@ val cptrp(val obj)
 val cptr_type(val cptr)
 {
   (void) cptr_handle(cptr, nil, lit("cptr-type"));
-  return cptr->co.cls;
+  return cptr->cp.cls;
 }
 
 val cptr_size_hint(val cptr, val size)
@@ -9294,9 +9352,9 @@ mem_t *cptr_handle(val cptr, val type_sym, val self)
   if (type(cptr) != CPTR) {
     uw_throwf(error_s, lit("~a: ~s isn't a cptr"), self, cptr, nao);
   } else {
-    mem_t *ptr = cptr->co.handle;
+    mem_t *ptr = cptr->cp.handle;
 
-    if (type_sym && cptr->co.cls != type_sym && (ptr != 0 || cptr->co.cls))
+    if (type_sym && cptr->cp.cls != type_sym && (ptr != 0 || cptr->cp.cls))
       uw_throwf(error_s, lit("~a: cptr ~s isn't of type ~s"), self, cptr,
                 type_sym, nao);
 
@@ -9312,7 +9370,7 @@ mem_t *cptr_get(val cptr)
 mem_t **cptr_addr_of(val cptr, val type_sym, val self)
 {
   (void) cptr_handle(cptr, type_sym, self);
-  return &cptr->co.handle;
+  return &cptr->cp.handle;
 }
 
 val assoc(val key, val list)
@@ -11616,15 +11674,15 @@ val copy(val seq)
   case TNOD:
     return copy_tnode(seq);
   case COBJ:
-    if (seq->co.cls == hash_s)
+    if (seq->co.cls == hash_cls)
       return copy_hash(seq);
-    if (seq->co.cls == random_state_s)
+    if (seq->co.cls == random_state_cls)
       return make_random_state(seq, nil);
-    if (seq->co.cls == carray_s)
+    if (seq->co.cls == carray_cls)
       return copy_carray(seq);
-    if (seq->co.cls == tree_s)
+    if (seq->co.cls == tree_cls)
       return copy_search_tree(seq);
-    if (seq->co.cls == tree_iter_s)
+    if (seq->co.cls == tree_iter_cls)
       return copy_tree_iter(seq);
     if (obj_struct_p(seq))
       return copy_struct(seq);
@@ -11654,9 +11712,9 @@ val length(val seq)
   case BUF:
     return length_buf(seq);
   case COBJ:
-    if (seq->co.cls == hash_s)
+    if (seq->co.cls == hash_cls)
       return hash_count(seq);
-    if (seq->co.cls == carray_s)
+    if (seq->co.cls == carray_cls)
       return length_carray(seq);
     if (obj_struct_p(seq)) {
       val length_meth = get_special_slot(seq, length_m);
@@ -11692,9 +11750,9 @@ val sub(val seq, val from, val to)
   case BUF:
     return sub_buf(seq, from, to);
   case COBJ:
-    if (seq->co.cls == carray_s)
+    if (seq->co.cls == carray_cls)
       return carray_sub(seq, from, to);
-    if (seq->co.cls == tree_s)
+    if (seq->co.cls == tree_cls)
       return sub_tree(seq, from, to);
     if (obj_struct_p(seq)) {
       val lambda_meth = get_special_slot(seq, lambda_m);
@@ -11715,11 +11773,11 @@ val ref(val seq, val ind)
   case NIL:
     return nil;
   case COBJ:
-    if (seq->co.cls == hash_s)
+    if (seq->co.cls == hash_cls)
       return gethash(seq, ind);
-    if (seq->co.cls == carray_s)
+    if (seq->co.cls == carray_cls)
       return carray_ref(seq, ind);
-    if (seq->co.cls == tree_s)
+    if (seq->co.cls == tree_cls)
       return tree_lookup(seq, ind);
     if (obj_struct_p(seq)) {
       val lambda_meth = get_special_slot(seq, lambda_m);
@@ -11767,9 +11825,9 @@ val refset(val seq, val ind, val newval)
   case BUF:
     return buf_put_uchar(seq, ind, newval);
   case COBJ:
-    if (seq->co.cls == hash_s)
+    if (seq->co.cls == hash_cls)
       return sethash(seq, ind, newval);
-    if (seq->co.cls == carray_s)
+    if (seq->co.cls == carray_cls)
       return carray_refset(seq, ind, newval);
     if (obj_struct_p(seq)) {
       {
@@ -11812,7 +11870,7 @@ val replace(val seq, val items, val from, val to)
   case BUF:
     return replace_buf(seq, items, from, to);
   case COBJ:
-    if (seq->co.cls == carray_s)
+    if (seq->co.cls == carray_cls)
       return carray_replace(seq, items, from, to);
     if (obj_struct_p(seq))
       return replace_obj(seq, items, from, to);
@@ -11829,7 +11887,7 @@ val dwim_set(val place_p, val seq, varg vargs)
   switch (type(seq)) {
   case COBJ:
     if (type(seq) == COBJ) {
-      if (seq->co.cls == hash_s) {
+      if (seq->co.cls == hash_cls) {
         args_normalize_least(vargs, 3);
 
         switch (vargs->fill) {
@@ -11913,7 +11971,7 @@ val dwim_del(val place_p, val seq, val ind_range)
                 nao);
     break;
   case COBJ:
-    if (seq->co.cls == hash_s) {
+    if (seq->co.cls == hash_cls) {
       (void) remhash(seq, ind_range);
       return seq;
     }
@@ -12439,7 +12497,7 @@ static void obj_init(void)
           &null_list, &equal_f, &eq_f, &eql_f,
           &car_f, &cdr_f, &null_f, &list_f,
           &identity_f, &identity_star_f, &less_f, &greater_f,
-          &prog_string,
+          &prog_string, &cobj_hash,
           convert(val *, 0));
 
   nil_string = lit("nil");
@@ -12593,6 +12651,8 @@ static void obj_init(void)
   wrap_k = intern(lit("wrap"), keyword_package);
   reflect_k = intern(lit("reflect"), keyword_package);
 
+  seq_iter_cls = cobj_register(seq_iter_s);
+
   equal_f = func_n2(equal);
   eq_f = func_n2(eq);
   eql_f = func_n2(eql);
@@ -12605,6 +12665,10 @@ static void obj_init(void)
   less_f = func_n2(less);
   greater_f = func_n2(greater);
   prog_string = string(progname);
+
+  cobj_hash = make_hash(nil, nil, nil);
+
+  cobj_populate_hash();
 }
 
 static val simple_qref_args_p(val args, val pos)
@@ -13696,7 +13760,7 @@ val obj_print(val obj, val out, val pretty)
     }
   } else {
     struct strm_base *s = coerce(struct strm_base *,
-                                 cobj_handle(self, out, stream_s));
+                                 cobj_handle(self, out, stream_cls));
     ctx = &ctx_struct;
     ctx->strm = s;
     ctx->counter = zero;
@@ -13809,6 +13873,7 @@ void init(val *stack_bottom)
 
   t = one;
   gc_init(stack_bottom);
+  hash_early_init();
 #if CONFIG_LOCALE_TOLERANCE
   locale_init();
 #endif

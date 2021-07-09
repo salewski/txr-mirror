@@ -77,6 +77,9 @@ extern val form_to_ln_hash;
 extern val parser_s, unique_s, circref_s;
 extern val rec_source_loc_s, read_unknown_structs_s;
 extern val json_s;
+
+extern struct cobj_class *parser_cls;
+
 void yydebug_onoff(int);
 void yyerror(scanner_t *scanner, parser_t *, const char *s);
 void yyerr(scanner_t *scanner, const char *s);

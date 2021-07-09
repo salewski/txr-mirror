@@ -149,6 +149,8 @@ val flock_s, type_s, whence_s, start_s, len_s, pid_s;
 val dlhandle_s, dlsym_s;
 #endif
 
+struct cobj_class *dir_cls;
+
 static val at_exit_list;
 
 static val dirent_st;
@@ -1482,7 +1484,7 @@ static val poll_wrap(val poll_list, val timeout_in)
       pfd[i].fd = c_num(obj, self);
       break;
     case COBJ:
-      if (subtypep(obj->co.cls, stream_s)) {
+      if (typep(obj, stream_s)) {
         val fdval = stream_fd(obj);
         if (!fdval) {
           free(pfd);
@@ -2362,7 +2364,7 @@ static val opendir_wrap(val path, val prefix_p)
               path, num(errno), errno_to_str(errno), nao);
   } else {
     struct dir *d = coerce(struct dir *, chk_malloc(sizeof *d));
-    val obj = cobj(coerce(mem_t *, d), dir_s, &opendir_ops);
+    val obj = cobj(coerce(mem_t *, d), dir_cls, &opendir_ops);
     d->dir = dir;
     d->path = if2(default_null_arg(prefix_p), path);
     return obj;
@@ -2372,7 +2374,7 @@ static val opendir_wrap(val path, val prefix_p)
 static val closedir_wrap(val dirobj)
 {
   val self = lit("closedir");
-  struct dir *d = coerce(struct dir *, cobj_handle(self, dirobj, dir_s));
+  struct dir *d = coerce(struct dir *, cobj_handle(self, dirobj, dir_cls));
 
   if (d->dir != 0) {
     closedir(d->dir);
@@ -2386,7 +2388,7 @@ static val closedir_wrap(val dirobj)
 static val readdir_wrap(val dirobj, val dirent_in)
 {
   val self = lit("readdir");
-  struct dir *d = coerce(struct dir *, cobj_handle(self, dirobj, dir_s));
+  struct dir *d = coerce(struct dir *, cobj_handle(self, dirobj, dir_cls));
   struct dirent *dent = if3(d->dir != 0, readdir(d->dir), 0);
 
   for (;;) {
@@ -2509,6 +2511,8 @@ void sysif_init(void)
   len_s = intern(lit("len"), user_package);
   pid_s = intern(lit("pid"), user_package);
 #endif
+
+  dir_cls = cobj_register(dir_s);
 
   make_struct_type(stat_s, nil, nil,
                    list(dev_s, ino_s, mode_s, nlink_s, uid_s, gid_s,

@@ -72,6 +72,8 @@ static val fcall_frame_type, eval_frame_type, expand_frame_type;
 
 static val deferred_warnings, tentative_defs;
 
+static struct cobj_class *sys_cont_cls;
+
 #if CONFIG_EXTRA_DEBUGGING
 static int uw_break_on_error;
 #endif
@@ -1053,7 +1055,7 @@ static void call_copy_handlers(uw_frame_t *upto)
 static val revive_cont(val dc, val arg)
 {
   val self = lit("revive-cont");
-  struct cont *cont = coerce(struct cont *, cobj_handle(self, dc, sys_cont_s));
+  struct cont *cont = coerce(struct cont *, cobj_handle(self, dc, sys_cont_cls));
 
   if (arg == sys_cont_free_s) {
     free(cont->stack);
@@ -1161,7 +1163,7 @@ static val capture_cont(val tag, val fun, uw_frame_t *block)
     blcopy->uw.up = 0;
     blcopy->uw.type = UW_CAPTURED_BLOCK;
 
-    cont_obj = cobj(coerce(mem_t *, cont), sys_cont_s, &cont_ops);
+    cont_obj = cobj(coerce(mem_t *, cont), sys_cont_cls, &cont_ops);
 
     cont->tag = tag;
 
@@ -1292,6 +1294,9 @@ void uw_late_init(void)
   sys_cont_poison_s = intern(lit("cont-poison"), system_package);
   sys_cont_free_s = intern(lit("cont-free"), system_package);
   catch_frame_s = intern(lit("catch-frame"), user_package);
+
+  sys_cont_cls = cobj_register(sys_cont_s);
+
   frame_type = make_struct_type(intern(lit("frame"), user_package),
                                 nil, nil, nil, nil, nil, nil, nil);
   catch_frame_type = make_struct_type(catch_frame_s,

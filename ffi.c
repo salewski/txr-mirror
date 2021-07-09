@@ -163,6 +163,10 @@ static ffi_type ffi_type_sint64, ffi_type_uint64;
 static ffi_type ffi_type_float, ffi_type_double;
 #endif
 
+static struct cobj_class *ffi_type_cls, *ffi_call_desc_cls;
+static struct cobj_class *ffi_closure_cls, *union_cls;
+struct cobj_class *carray_cls;
+
 struct smemb {
   val mname;
   val mtype;
@@ -223,7 +227,7 @@ static struct txr_ffi_type *ffi_type_struct(val obj)
 
 static struct txr_ffi_type *ffi_type_struct_checked(val self, val obj)
 {
-  return coerce(struct txr_ffi_type *, cobj_handle(self, obj, ffi_type_s));
+  return coerce(struct txr_ffi_type *, cobj_handle(self, obj, ffi_type_cls));
 }
 
 #if HAVE_LIBFFI
@@ -248,7 +252,7 @@ static void ffi_type_print_op(val obj, val out, val pretty, struct strm_ctx *ctx
 {
   struct txr_ffi_type *tft = ffi_type_struct(obj);
   put_string(lit("#<"), out);
-  obj_print_impl(obj->co.cls, out, pretty, ctx);
+  obj_print_impl(obj->co.cls->cls_sym, out, pretty, ctx);
   format(out, lit(" ~!~s>"), tft->syntax, nao);
 }
 
@@ -360,7 +364,8 @@ static struct txr_ffi_closure *ffi_closure_struct(val obj)
 
 static struct txr_ffi_closure *ffi_closure_struct_checked(val self, val obj)
 {
-  return coerce(struct txr_ffi_closure *, cobj_handle(self, obj, ffi_closure_s));
+  return coerce(struct txr_ffi_closure *, cobj_handle(self, obj,
+                                                      ffi_closure_cls));
 }
 
 static void ffi_closure_print_op(val obj, val out,
@@ -368,7 +373,7 @@ static void ffi_closure_print_op(val obj, val out,
 {
   struct txr_ffi_closure *tfcl = ffi_closure_struct(obj);
   put_string(lit("#<"), out);
-  obj_print_impl(obj->co.cls, out, pretty, ctx);
+  obj_print_impl(obj->co.cls->cls_sym, out, pretty, ctx);
   format(out, lit(" ~s ~s>"), tfcl->fun, tfcl->call_desc, nao);
 }
 
@@ -3103,7 +3108,7 @@ static val make_ffi_type_builtin(val syntax, val lisp_type, ffi_kind_t kind,
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
                                     chk_calloc(1, sizeof *tft));
 
-  val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_builtin_ops);
+  val obj = cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_builtin_ops);
 
   tft->self = obj;
   tft->kind = kind;
@@ -3152,7 +3157,7 @@ static val make_ffi_type_pointer(val syntax, val lisp_type,
     struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
                                       chk_calloc(1, sizeof *tft));
 
-    val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_ptr_ops);
+    val obj = cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_ptr_ops);
 
     tft->self = obj;
     tft->kind = FFI_KIND_PTR;
@@ -3315,7 +3320,7 @@ static val make_ffi_type_struct(val syntax, val lisp_type,
                               chk_calloc(nmemb, sizeof *memb));
   val obj = if3(use_existing,
                 tft->self,
-                cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops));
+                cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_struct_ops));
   ucnum offs = 0;
   ucnum most_align = 0;
   int need_out_handler = 0;
@@ -3482,7 +3487,7 @@ static val make_ffi_type_union(val syntax, val use_existing, val self)
                               chk_calloc(nmemb, sizeof *memb));
   val obj = if3(use_existing,
                 tft->self,
-                cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops));
+                cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_struct_ops));
   ucnum most_align = 0;
   ucnum biggest_size = 0;
   const unsigned bits_int = 8 * sizeof(int);
@@ -3593,7 +3598,7 @@ static val make_ffi_type_array(val syntax, val lisp_type,
   struct txr_ffi_type *tft = coerce(struct txr_ffi_type *,
                                     chk_calloc(1, sizeof *tft));
   cnum nelem = c_num(dim, self);
-  val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_struct_ops);
+  val obj = cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_struct_ops);
 
   struct txr_ffi_type *etft = ffi_type_struct(eltype);
 
@@ -3644,7 +3649,7 @@ static val make_ffi_type_enum(val syntax, val enums,
 
   val sym_num = make_hash(nil, nil, t);
   val num_sym = make_hash(nil, nil, nil);
-  val obj = cobj(coerce(mem_t *, tft), ffi_type_s, &ffi_type_enum_ops);
+  val obj = cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_enum_ops);
   cnum lowest = INT_PTR_MAX;
   cnum highest = INT_PTR_MIN;
   cnum cur = -1;
@@ -4726,7 +4731,7 @@ static struct txr_ffi_call_desc *ffi_call_desc(val obj)
 static struct txr_ffi_call_desc *ffi_call_desc_checked(val self, val obj)
 {
   return coerce(struct txr_ffi_call_desc *, cobj_handle(self, obj,
-                                                        ffi_call_desc_s));
+                                                        ffi_call_desc_cls));
 }
 
 static void ffi_call_desc_print_op(val obj, val out,
@@ -4734,7 +4739,7 @@ static void ffi_call_desc_print_op(val obj, val out,
 {
   struct txr_ffi_call_desc *tfcd = ffi_call_desc(obj);
   put_string(lit("#<"), out);
-  obj_print_impl(obj->co.cls, out, pretty, ctx);
+  obj_print_impl(obj->co.cls->cls_sym, out, pretty, ctx);
   format(out, lit(" ~s ~s ~!~s>"), tfcd->name, tfcd->rettype,
          tfcd->argtypes, nao);
 }
@@ -4772,7 +4777,7 @@ val ffi_make_call_desc(val ntotal, val nfixed, val rettype, val argtypes,
   struct txr_ffi_call_desc *tfcd = coerce(struct txr_ffi_call_desc *,
                                           chk_calloc(1, sizeof *tfcd));
   ffi_type **args = coerce(ffi_type **, chk_xalloc(nt, sizeof *args, self));
-  val obj = cobj(coerce(mem_t *, tfcd), ffi_call_desc_s, &ffi_call_desc_ops);
+  val obj = cobj(coerce(mem_t *, tfcd), ffi_call_desc_cls, &ffi_call_desc_ops);
   ffi_status ffis = FFI_OK;
 
   tfcd->variadic = (nt != nf);
@@ -5031,7 +5036,7 @@ val ffi_make_closure(val fun, val call_desc, val safe_p_in, val abort_ret_in)
                                         chk_calloc(1, sizeof *tfcl));
   struct txr_ffi_call_desc *tfcd = ffi_call_desc_checked(real_self, call_desc);
   val self = if3(tfcd->name, tfcd->name, real_self);
-  val obj = cobj(coerce(mem_t *, tfcl), ffi_closure_s, &ffi_closure_ops);
+  val obj = cobj(coerce(mem_t *, tfcl), ffi_closure_cls, &ffi_closure_ops);
   val safe_p = default_arg_strict(safe_p_in, t);
   ffi_status ffis = FFI_OK;
 
@@ -5265,14 +5270,14 @@ static struct carray *carray_struct(val carray)
 
 static struct carray *carray_struct_checked(val self, val carray)
 {
-  return coerce(struct carray*, cobj_handle(self, carray, carray_s));
+  return coerce(struct carray*, cobj_handle(self, carray, carray_cls));
 }
 
 static void carray_print_op(val obj, val out, val pretty, struct strm_ctx *ctx)
 {
   struct carray *scry = carray_struct(obj);
   put_string(lit("#<"), out);
-  obj_print_impl(obj->co.cls, out, pretty, ctx);
+  obj_print_impl(obj->co.cls->cls_sym, out, pretty, ctx);
   format(out, lit(" ~a"), if3(scry->nelem < 0,
                               lit("unknown-len"), num(scry->nelem)), nao);
   format(out, lit(" ~s>"), scry->eltype, nao);
@@ -5320,7 +5325,7 @@ val make_carray(val type, mem_t *data, cnum nelem, val ref, cnum offs)
   scry->nelem = nelem;
   scry->ref = nil;
   scry->artype[0] = scry->artype[1] = nil;
-  obj = cobj(coerce(mem_t *, scry), carray_s, &carray_borrowed_ops);
+  obj = cobj(coerce(mem_t *, scry), carray_cls, &carray_borrowed_ops);
   scry->eltype = type;
   scry->ref = ref;
   scry->offs = offs;
@@ -5329,7 +5334,7 @@ val make_carray(val type, mem_t *data, cnum nelem, val ref, cnum offs)
 
 val carrayp(val obj)
 {
-  return cobjclassp(obj, carray_s);
+  return cobjclassp(obj, carray_cls);
 }
 
 val carray_set_length(val carray, val nelem)
@@ -6043,7 +6048,7 @@ static val cptr_getobj(val cptr, val type_in)
 {
   val self = lit("cptr-get");
   mem_t *data = cptr_get(cptr);
-  val type = default_arg(type_in, ffi_type_lookup_checked(self, cptr->co.cls));
+  val type = default_arg(type_in, ffi_type_lookup_checked(self, cptr->cp.cls));
   struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   if (data != 0)
     return tft->get(tft, data, self);
@@ -6054,7 +6059,7 @@ static val cptr_out(val cptr, val obj, val type_in)
 {
   val self = lit("cptr-out");
   mem_t *data = cptr_get(cptr);
-  val type = default_arg(type_in, ffi_type_lookup_checked(self, cptr->co.cls));
+  val type = default_arg(type_in, ffi_type_lookup_checked(self, cptr->cp.cls));
   struct txr_ffi_type *tft = ffi_type_struct_checked(self, type);
   if (data != 0) {
     if (tft->out != 0)
@@ -6078,7 +6083,7 @@ static struct uni *uni_struct(val obj)
 
 static struct uni *uni_struct_checked(val self, val obj)
 {
-  return coerce(struct uni *, cobj_handle(self, obj, union_s));
+  return coerce(struct uni *, cobj_handle(self, obj, union_cls));
 }
 
 static void union_destroy_op(val obj)
@@ -6105,7 +6110,7 @@ static struct cobj_ops union_ops =
 static val make_union_common(mem_t *data, struct txr_ffi_type *tft)
 {
   struct uni *us = coerce(struct uni *, chk_calloc(1, sizeof *us));
-  val obj = cobj(coerce(mem_t *, us), union_s, &union_ops);
+  val obj = cobj(coerce(mem_t *, us), union_cls, &union_ops);
   us->tft = tft;
   us->data = data;
   return obj;
@@ -6398,6 +6403,11 @@ void ffi_init(void)
   ffi_type_s = intern(lit("ffi-type"), user_package);
   ffi_call_desc_s = intern(lit("ffi-call-desc"), user_package);
   ffi_closure_s = intern(lit("ffi-closure"), user_package);
+  ffi_type_cls = cobj_register(ffi_type_s);
+  ffi_call_desc_cls = cobj_register(ffi_call_desc_s);
+  ffi_closure_cls = cobj_register(ffi_closure_s);
+  carray_cls = cobj_register(carray_s);
+  union_cls = cobj_register(union_s);
   reg_fun(intern(lit("ffi-type-compile"), user_package), func_n1(ffi_type_compile));
   reg_fun(intern(lit("ffi-type-operator-p"), user_package), func_n1(ffi_type_operator_p));
   reg_fun(intern(lit("ffi-type-p"), user_package), func_n1(ffi_type_p));

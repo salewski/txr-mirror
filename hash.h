@@ -35,6 +35,8 @@ struct hash_iter {
 extern val weak_keys_k, weak_vals_k, userdata_k;
 extern val equal_based_k, eql_based_k, eq_based_k;
 
+extern struct cobj_class *hash_cls;
+
 ucnum equal_hash(val obj, int *count, ucnum);
 val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed);
 val make_hash(val weak_keys, val weak_vals, val equal_based);
@@ -99,4 +101,5 @@ INLINE loc gethash_l(val self, val hash, val key, loc new_p)
   return cdr_l(gethash_c(self, hash, key, new_p));
 }
 
+void hash_early_init(void);
 void hash_init(void);

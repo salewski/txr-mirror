@@ -258,7 +258,7 @@ val make_struct_delegate_stream(val target_obj)
   val stream;
   strm_base_init(&sb->a);
   sb->obj = nil;
-  stream = cobj(coerce(mem_t *, sb), stream_s, &strudel_ops.cobj_ops);
+  stream = cobj(coerce(mem_t *, sb), stream_cls, &strudel_ops.cobj_ops);
   sb->obj = target_obj;
   return stream;
 }

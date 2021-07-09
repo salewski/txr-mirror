@@ -238,7 +238,19 @@ struct lazy_string {
   struct lazy_string_props *props;
 };
 
+struct cobj_class {
+  val cls_sym;
+  struct cobj_class *super;
+};
+
 struct cobj {
+  obj_common;
+  mem_t *handle;
+  struct cobj_ops *ops;
+  struct cobj_class *cls;
+};
+
+struct cptr {
   obj_common;
   mem_t *handle;
   struct cobj_ops *ops;
@@ -330,6 +342,7 @@ union obj {
   struct lazy_cons lc;
   struct lazy_string ls;
   struct cobj co;
+  struct cptr cp;
   struct env e;
   struct bignum bn;
   struct flonum fl;
@@ -550,6 +563,7 @@ extern alloc_bytes_t malloc_bytes;
 extern alloc_bytes_t gc_bytes;
 
 val identity(val obj);
+val builtin_type_p(val sym);
 val typeof(val obj);
 val subtypep(val sub, val sup);
 val typep(val obj, val type);
@@ -577,7 +591,6 @@ INLINE val type_check(val self, val obj, type_t typecode)
     throw_mismatch(self, obj, typecode);
   return t;
 }
-val class_check(val self, val cobj, val class_sym);
 val car(val cons);
 val cdr(val cons);
 INLINE val us_car(val cons) { return cons->c.car; }
@@ -1085,11 +1098,15 @@ val length_str_gt(val str, val len);
 val length_str_ge(val str, val len);
 val length_str_lt(val str, val len);
 val length_str_le(val str, val len);
-val cobj(mem_t *handle, val cls_sym, struct cobj_ops *ops);
+struct cobj_class *cobj_register(val cls_sym);
+struct cobj_class *cobj_register_super(val cls_sym, struct cobj_class *super);
+int cobj_class_exists(val cls_sym);
+val cobj(mem_t *handle, struct cobj_class *cls, struct cobj_ops *ops);
 val cobjp(val obj);
-val cobjclassp(val obj, val cls_sym);
-mem_t *cobj_handle(val self, val cobj, val cls_sym);
-struct cobj_ops *cobj_ops(val self, val cobj, val cls_sym);
+val cobjclassp(val obj, struct cobj_class *);
+val class_check(val self, val cobj, struct cobj_class *cls);
+mem_t *cobj_handle(val self, val cobj, struct cobj_class *cls);
+struct cobj_ops *cobj_ops(val self, val cobj, struct cobj_class *cls);
 val cptr(mem_t *ptr);
 val cptr_typed(mem_t *handle, val type_sym, struct cobj_ops *ops);
 val cptrp(val obj);

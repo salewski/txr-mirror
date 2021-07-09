@@ -26,6 +26,7 @@
  */
 
 extern val tree_s, tree_iter_s, tree_fun_whitelist_s;
+extern struct cobj_class *tree_cls, *tree_iter_cls;
 
 #define tree_fun_whitelist (deref(lookup_var_l(nil, tree_fun_whitelist_s)))
 

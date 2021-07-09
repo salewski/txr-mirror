@@ -99,6 +99,8 @@ val stdio_stream_s;
 val socket_error_s;
 #endif
 
+struct cobj_class *stream_cls, *stdio_stream_cls;
+
 const wchli_t *path_sep_chars = wli("/");
 
 val top_stderr;
@@ -493,7 +495,7 @@ val make_null_stream(void)
   struct dev_null *n = coerce(struct dev_null *, chk_malloc(sizeof *n));
   strm_base_init(&n->a);
   n->fd = -1;
-  return cobj(coerce(mem_t *, n), stream_s, &null_ops.cobj_ops);
+  return cobj(coerce(mem_t *, n), stream_cls, &null_ops.cobj_ops);
 }
 
 #if CONFIG_STDIO_STRICT
@@ -821,7 +823,7 @@ static val stdio_get_fd(val stream)
 {
   val self = lit("stream-fd");
   struct stdio_handle *h = coerce(struct stdio_handle *,
-                                  cobj_handle(self, stream, stdio_stream_s));
+                                  cobj_handle(self, stream, stdio_stream_cls));
   return h->f ? num(fileno(h->f)) : nil;
 }
 
@@ -1673,7 +1675,7 @@ val set_mode_props(const struct stdio_mode m, val stream)
 static val make_stdio_stream_common(FILE *f, val descr, struct cobj_ops *ops)
 {
   struct stdio_handle *h = coerce(struct stdio_handle *, chk_malloc(sizeof *h));
-  val stream = cobj(coerce(mem_t *, h), stdio_stream_s, ops);
+  val stream = cobj(coerce(mem_t *, h), stdio_stream_cls, ops);
   strm_base_init(&h->a);
   h->f = f;
   h->descr = descr;
@@ -1737,7 +1739,7 @@ val stream_fd(val stream)
 {
   val self = lit("fileno");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->get_fd(stream);
 }
 
@@ -1746,7 +1748,7 @@ val sock_family(val stream)
 {
   val self = lit("sock-family");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->get_sock_family(stream);
 }
 
@@ -1754,7 +1756,7 @@ val sock_type(val stream)
 {
   val self = lit("sock-type");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->get_sock_type(stream);
 }
 
@@ -1762,7 +1764,7 @@ val sock_peer(val stream)
 {
   val self = lit("sock-peer");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->get_sock_peer(stream);
 }
 
@@ -1770,7 +1772,7 @@ val sock_set_peer(val stream, val peer)
 {
   val self = lit("sock-set-peer");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->set_sock_peer(stream, peer);
 }
 #endif
@@ -1882,7 +1884,7 @@ static val make_dir_stream(DIR *dir)
   strm_base_init(&h->a);
   h->d = dir;
   h->err = nil;
-  return cobj(coerce(mem_t *, h), stream_s, &dir_ops.cobj_ops);
+  return cobj(coerce(mem_t *, h), stream_cls, &dir_ops.cobj_ops);
 }
 
 struct string_in {
@@ -2005,7 +2007,7 @@ val make_string_input_stream(val string)
   strm_base_init(&s->a);
   s->string = string;
   s->pos = zero;
-  return cobj(coerce(mem_t *, s), stream_s, &string_in_ops.cobj_ops);
+  return cobj(coerce(mem_t *, s), stream_cls, &string_in_ops.cobj_ops);
 }
 
 struct byte_input {
@@ -2084,7 +2086,7 @@ val make_string_byte_input_stream(val string)
     strm_base_init(&bi->a);
     bi->buf = utf8_dup_to_buf(wstring, &bi->size, 0);
     bi->index = 0;
-    return cobj(coerce(mem_t *, bi), stream_s, &byte_in_ops.cobj_ops);
+    return cobj(coerce(mem_t *, bi), stream_cls, &byte_in_ops.cobj_ops);
   }
 }
 
@@ -2220,7 +2222,7 @@ val make_strlist_input_stream(val list)
   s->string = car(list);
   s->pos = zero;
   s->list = cdr(list);
-  return cobj(coerce(mem_t *, s), stream_s, &strlist_in_ops.cobj_ops);
+  return cobj(coerce(mem_t *, s), stream_cls, &strlist_in_ops.cobj_ops);
 }
 
 struct string_out {
@@ -2365,14 +2367,14 @@ val make_string_output_stream(void)
   so->buf[0] = 0;
   utf8_decoder_init(&so->ud);
   so->head = so->tail = 0;
-  return cobj(coerce(mem_t *, so), stream_s, &string_out_ops.cobj_ops);
+  return cobj(coerce(mem_t *, so), stream_cls, &string_out_ops.cobj_ops);
 }
 
 val get_string_from_stream(val stream)
 {
   val self = lit("get-string-from-stream");
   struct string_out *so = coerce(struct string_out *,
-                                 cobj_handle(self, stream, stream_s));
+                                 cobj_handle(self, stream, stream_cls));
 
   if (stream->co.ops == &string_out_ops.cobj_ops) {
     val out = nil;
@@ -2481,7 +2483,7 @@ val make_strlist_output_stream(void)
   strm_base_init(&s->a);
   s->lines = nil;
   s->strstream = nil;
-  stream = cobj(coerce(mem_t *, s), stream_s, &strlist_out_ops.cobj_ops);
+  stream = cobj(coerce(mem_t *, s), stream_cls, &strlist_out_ops.cobj_ops);
   s->strstream = strstream;
   return stream;
 }
@@ -2490,7 +2492,7 @@ val get_list_from_stream(val stream)
 {
   val self = lit("get-list-from-stream");
   struct strlist_out *s = coerce(struct strlist_out *,
-                                 cobj_handle(self, stream, stream_s));
+                                 cobj_handle(self, stream, stream_cls));
 
   if (stream->co.ops == &strlist_out_ops.cobj_ops) {
     val stray = get_string_from_stream(s->strstream);
@@ -2671,7 +2673,7 @@ val make_catenated_stream(val stream_list)
   val catstrm = nil;
   strm_base_init(&s->a);
   s->streams = nil;
-  catstrm = cobj(coerce(mem_t *, s), stream_s, &cat_stream_ops.cobj_ops);
+  catstrm = cobj(coerce(mem_t *, s), stream_cls, &cat_stream_ops.cobj_ops);
   s->streams = stream_list;
   return catstrm;
 }
@@ -2858,7 +2860,7 @@ static val make_delegate_stream(val self, val orig_stream, size_t handle_size,
                                 struct cobj_ops *ops)
 {
   struct strm_ops *orig_ops = coerce(struct strm_ops *,
-                                     cobj_ops(self, orig_stream, stream_s));
+                                     cobj_ops(self, orig_stream, stream_cls));
   struct delegate_base *db = coerce(struct delegate_base *,
                                     chk_calloc(1, handle_size));
   val delegate_stream;
@@ -2867,7 +2869,7 @@ static val make_delegate_stream(val self, val orig_stream, size_t handle_size,
   db->target_stream = nil;
   db->target_ops = orig_ops;
 
-  delegate_stream = cobj(coerce(mem_t *, db), stream_s, ops);
+  delegate_stream = cobj(coerce(mem_t *, db), stream_cls, ops);
 
   db->target_stream = orig_stream;
 
@@ -2940,7 +2942,7 @@ val stream_set_prop(val stream, val ind, val prop)
 {
   val self = lit("stream-set-prop");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->set_prop(stream, ind, prop);
 }
 
@@ -2948,7 +2950,7 @@ val stream_get_prop(val stream, val ind)
 {
   val self = lit("stream-get-prop");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
 
   if (ind == fd_k && ops->get_fd != null_get_fd)
     return ops->get_fd(stream);
@@ -2970,7 +2972,7 @@ val close_stream(val stream, val throw_on_error)
 {
   val self = lit("close-stream");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->close(stream, throw_on_error);
 }
 
@@ -2978,7 +2980,7 @@ val get_error(val stream)
 {
   val self = lit("get-error");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->get_error(stream);
 }
 
@@ -2986,7 +2988,7 @@ val get_error_str(val stream)
 {
   val self = lit("get-error-str");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->get_error_str(stream);
 }
 
@@ -2994,7 +2996,7 @@ val clear_error(val stream)
 {
   val self = lit("clear-error");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->clear_error(stream);
 }
 
@@ -3003,7 +3005,7 @@ val get_line(val stream_in)
   val self = lit("get-line");
   val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->get_line(stream);
 }
 
@@ -3012,7 +3014,7 @@ val get_char(val stream_in)
   val self = lit("get-char");
   val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->get_char(stream);
 }
 
@@ -3021,7 +3023,7 @@ val get_byte(val stream_in)
   val self = lit("get-byte");
   val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->get_byte(stream);
 }
 
@@ -3029,7 +3031,7 @@ val get_bytes(val self, val stream_in, mem_t *ptr, ucnum len)
 {
   val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return unum(ops->fill_buf(stream, ptr, len, 0));
 }
 
@@ -3038,7 +3040,7 @@ val unget_char(val ch, val stream_in)
   val self = lit("unget-char");
   val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   if (!is_chr(ch))
     type_mismatch(lit("~a: ~s is not a character"), self, ch, nao);
   return ops->unget_char(stream, ch);
@@ -3050,7 +3052,7 @@ val unget_byte(val byte, val stream_in)
   cnum b = c_num(byte, self);
   val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
 
   if (b < 0 || b > 255)
     uw_throwf(file_error_s, lit("~a: stream ~s: byte value ~a out of range"),
@@ -3067,7 +3069,7 @@ val put_buf(val buf, val pos_in, val stream_in)
   ucnum len = c_unum(length_buf(buf), self);
   mem_t *ptr = buf_get(buf, self);
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
 
   return unum(ops->put_buf(stream, ptr, len, pos));
 }
@@ -3080,7 +3082,7 @@ val fill_buf(val buf, val pos_in, val stream_in)
   ucnum len = c_unum(length_buf(buf), self);
   mem_t *ptr = buf_get(buf, self);
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return unum(ops->fill_buf(stream, ptr, len, pos));
 }
 
@@ -3094,7 +3096,7 @@ val fill_buf_adjust(val buf, val pos_in, val stream_in)
   mem_t *ptr = buf_get(buf, self);
   val readpos;
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   buf_set_length(buf, alloc_size, zero);
   readpos = unum(ops->fill_buf(stream, ptr, len, pos));
   buf_set_length(buf, readpos, zero);
@@ -3106,7 +3108,7 @@ val get_line_as_buf(val stream_in)
   val self = lit("get-line-as-buf");
   val stream = default_arg_strict(stream_in, std_input);
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   val buf = make_buf(zero, nil, num_fast(128));
   unsigned char bytes[128];
   size_t count = 0;
@@ -3826,7 +3828,7 @@ val format(val stream, val str, ...)
   val st = if3(stream == t,
                std_output,
                or2(stream, make_string_output_stream()));
-  class_check(self, st, stream_s);
+  class_check(self, st, stream_cls);
 
   {
     va_list vl;
@@ -3856,13 +3858,13 @@ val put_string(val string, val stream_in)
   val self = lit("put-string");
   val stream = default_arg_strict(stream_in, std_output);
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
 
   if (lazy_stringp(string)) {
     return lazy_str_put(string, stream_in, s);
   } else {
     struct strm_ops *ops = coerce(struct strm_ops *,
-                                  cobj_ops(self, stream, stream_s));
+                                  cobj_ops(self, stream, stream_cls));
     cnum col = s->column;
 
     const wchar_t *str = c_str(string, self), *p = str;
@@ -3900,9 +3902,9 @@ val put_char(val ch, val stream_in)
   val self = lit("put-char");
   val stream = default_arg_strict(stream_in, std_output);
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
   wint_t cch = c_chr(ch);
 
   switch (cch) {
@@ -3943,7 +3945,7 @@ val put_byte(val byte, val stream_in)
   val self = lit("put-byte");
   val stream = default_arg_strict(stream_in, std_output);
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   cnum b = c_num(byte, self);
 
   if (b < 0 || b > 255)
@@ -3983,7 +3985,7 @@ val flush_stream(val stream_in)
   val self = lit("flush-stream");
   val stream = default_arg_strict(stream_in, std_output);
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   return ops->flush(stream);
 }
 
@@ -3991,7 +3993,7 @@ val seek_stream(val stream, val offset, val whence)
 {
   val self = lit("seek-stream");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   enum strm_whence w;
 
   if (whence == from_start_k)
@@ -4011,7 +4013,7 @@ val truncate_stream(val stream, val len)
 {
   val self = lit("truncate-stream");
   struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_s));
+                                cobj_ops(self, stream, stream_cls));
   if (missingp(len))
     len = ops->seek(stream, zero, strm_cur);
   return ops->truncate(stream, len);
@@ -4021,7 +4023,7 @@ val get_indent_mode(val stream)
 {
   val self = lit("get-indent-mode");
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
   return num_fast(s->indent_mode);
 }
 
@@ -4029,7 +4031,7 @@ val test_set_indent_mode(val stream, val compare, val mode)
 {
   val self = lit("test-set-indent-mode");
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
   val oldval = num_fast(s->indent_mode);
   if (oldval == compare)
     s->indent_mode = convert(enum indent_mode, c_num(mode, self));
@@ -4040,7 +4042,7 @@ val test_neq_set_indent_mode(val stream, val compare, val mode)
 {
   val self = lit("test-neq-set-indent-mode");
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
   val oldval = num_fast(s->indent_mode);
   if (oldval != compare)
     s->indent_mode = convert(enum indent_mode, c_num(mode, self));
@@ -4051,7 +4053,7 @@ val set_indent_mode(val stream, val mode)
 {
   val self = lit("set-indent-mode");
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
   val oldval = num_fast(s->indent_mode);
   s->indent_mode = convert(enum indent_mode, c_num(mode, self));
   return oldval;
@@ -4061,7 +4063,7 @@ val get_indent(val stream)
 {
   val self = lit("get-indent");
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
   return num(s->indent_chars);
 }
 
@@ -4069,7 +4071,7 @@ val set_indent(val stream, val indent)
 {
   val self = lit("set-indent");
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
   val oldval = num(s->indent_chars);
   s->indent_chars = c_num(indent, self);
   if (s->indent_chars < 0)
@@ -4081,7 +4083,7 @@ val inc_indent(val stream, val delta)
 {
   val self = lit("inc-indent");
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
   val oldval = num(s->indent_chars);
   val col = num(s->column);
   s->indent_chars = c_num(plus(delta, col), self);
@@ -4094,7 +4096,7 @@ val width_check(val stream, val alt)
 {
   val self = lit("width-check");
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
 
   if ((s->indent_mode == indent_code &&
        s->column >= s->indent_chars + s->code_width) ||
@@ -4117,7 +4119,7 @@ val force_break(val stream)
 {
   val self = lit("force-break");
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
   s->force_break = 1;
   return stream;
 }
@@ -4126,7 +4128,7 @@ val set_max_length(val stream, val length)
 {
   val self = lit("set-max-length");
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
   cnum old_max = s->max_length;
   s->max_length = c_num(length, self);
   return num(old_max);
@@ -4136,7 +4138,7 @@ val set_max_depth(val stream, val depth)
 {
   val self = lit("set-max-depth");
   struct strm_base *s = coerce(struct strm_base *,
-                               cobj_handle(self, stream, stream_s));
+                               cobj_handle(self, stream, stream_cls));
   cnum old_max = s->max_depth;
   s->max_depth = c_num(depth, self);
   return num(old_max);
@@ -5295,6 +5297,9 @@ void stream_init(void)
   get_error_str_s = intern(lit("get-error-str"), user_package);
   clear_error_s = intern(lit("clear-error"), user_package);
   get_fd_s = intern(lit("get-fd"), user_package);
+
+  stream_cls = cobj_register(stream_s);
+  stdio_stream_cls = cobj_register_super(stdio_stream_s, stream_cls);
 
   reg_var(stdin_s = intern(lit("*stdin*"), user_package),
           make_stdio_stream(stdin, lit("stdin")));
