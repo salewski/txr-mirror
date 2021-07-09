@@ -252,6 +252,12 @@ val typeof(val obj)
   }
 }
 
+static struct cobj_class *class_from_sym(val cls_sym)
+{
+  val idx = gethash(cobj_hash, cls_sym);
+  return idx ? cobj_class + c_n(idx) : 0;
+}
+
 val subtypep(val sub, val sup)
 {
   if (sub == sup) {
@@ -284,16 +290,30 @@ val subtypep(val sub, val sup)
                 sub == lcons_s || sub == list_s || sub == string_s);
   } else if (sup == string_s) {
     return tnil(sub == str_s || sub == lit_s || sub == lstr_s);
-  } else if (sup == stream_s) {
-    return tnil(sub == stdio_stream_s);
   } else if (sup == struct_s) {
     return tnil(find_struct_type(sub));
   } else {
-    val sub_struct = find_struct_type(sub);
-    val sup_struct = find_struct_type(sup);
+    {
+      val sub_struct = find_struct_type(sub);
+      val sup_struct = find_struct_type(sup);
 
-    if (sub_struct && sup_struct)
-      return struct_subtype_p(sub_struct, sup_struct);
+      if (sub_struct && sup_struct)
+        return struct_subtype_p(sub_struct, sup_struct);
+    }
+
+    {
+      struct cobj_class *sub_cls = class_from_sym(sub);
+      struct cobj_class *sup_cls = class_from_sym(sup);
+
+      if (sub_cls && sup_cls) {
+        struct cobj_class *pcls = sub_cls;
+        do {
+          if (pcls == sup_cls)
+            return t;
+          pcls = pcls->super;
+        } while (pcls);
+      }
+    }
 
     return nil;
   }
@@ -9183,12 +9203,12 @@ static void cobj_populate_hash(void)
 {
   struct cobj_class *ptr;
   for (ptr = cobj_class; ptr < cobj_ptr; ptr++)
-    sethash(cobj_hash, ptr->cls_sym, ptr->cls_sym);
+    sethash(cobj_hash, ptr->cls_sym, num_fast(ptr - cobj_class));
 }
 
 int cobj_class_exists(val cls_sym)
 {
-  return gethash(cobj_hash, cls_sym) != 0;
+  return gethash(cobj_hash, cls_sym) != nil;
 }
 
 val cobj(mem_t *handle, struct cobj_class *cls, struct cobj_ops *ops)
@@ -12667,8 +12687,6 @@ static void obj_init(void)
   prog_string = string(progname);
 
   cobj_hash = make_hash(nil, nil, nil);
-
-  cobj_populate_hash();
 }
 
 static val simple_qref_args_p(val args, val pos)
@@ -13915,6 +13933,8 @@ void init(val *stack_bottom)
   cadr_init();
   time_init();
   chksum_init();
+
+  cobj_populate_hash();
 
   gc_state(gc_save);
 }
