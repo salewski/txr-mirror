@@ -429,7 +429,7 @@ tail_call:
     mark_obj_tail(obj->ls.list);
   case COBJ:
     obj->co.ops->mark(obj);
-    mark_obj_tail(obj->co.cls->cls_sym);
+    return;
   case CPTR:
     obj->co.ops->mark(obj);
     mark_obj_tail(obj->cp.cls);
