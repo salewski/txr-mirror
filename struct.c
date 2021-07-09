@@ -274,7 +274,7 @@ static struct struct_inst *struct_handle(val obj, val ctx)
             ctx, obj, nao);
 }
 
-static struct struct_type *stype_handle(val *pobj, val ctx)
+static struct struct_type *stype_handle_impl(val *pobj, val obj_ok, val ctx)
 {
   val obj = *pobj;
 
@@ -291,13 +291,23 @@ static struct struct_type *stype_handle(val *pobj, val ctx)
   case COBJ:
     if (obj->co.cls == struct_type_cls)
       return coerce(struct struct_type *, obj->co.handle);
-    if (obj->co.cls == struct_cls)
+    if (obj_ok && obj->co.cls == struct_cls)
       return struct_handle(obj, ctx)->type;
     /* fallthrough */
   default:
     uw_throwf(error_s, lit("~a: ~s isn't a struct type"),
               ctx, obj, nao);
   }
+}
+
+static struct struct_type *stype_handle(val *pobj, val ctx)
+{
+  return stype_handle_impl(pobj, nil, ctx);
+}
+
+static struct struct_type *stype_handle_obj(val *pobj, val ctx)
+{
+  return stype_handle_impl(pobj, t, ctx);
 }
 
 static void static_slot_home_fixup(struct struct_type *st)
@@ -635,15 +645,7 @@ val super(val type, val idx)
               self, idx, nao);
 
   {
-    struct struct_type *st;
-
-    if (structp(type)) {
-      struct struct_inst *si = coerce(struct struct_inst *, type->co.handle);
-      st = si->type;
-    } else {
-      st = stype_handle(&type, self);
-    }
-
+    struct struct_type *st = stype_handle_obj(&type, self);
     return if2(ix < st->nsupers, st->sus[ix]->self);
   }
 }
@@ -1613,7 +1615,7 @@ val struct_type(val strct)
 
 val struct_type_name(val stype)
 {
-  struct struct_type *st = stype_handle(&stype, lit("struct-type-name"));
+  struct struct_type *st = stype_handle_obj(&stype, lit("struct-type-name"));
   return st->name;
 }
 

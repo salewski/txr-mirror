@@ -28993,39 +28993,42 @@ returned by
 
 .coNP Function @ struct-type-name
 .synb
-.mets (struct-type-name << type )
+.mets (struct-type-name << type-or-struct )
 .syne
 .desc
 The
 .code struct-type-name
-function returns the symbol which serves as the name of
-.metn type ,
-which must be either a struct type object (such as the return value of
+function determines a structure type from the
+.meta type-or-struct
+and returns that structure type's symbolic name.
+
+The
+.meta type-or-struct
+argument must be either a struct type object (such as the return value of
 a successful lookup via
 .codn find-struct-type ),
-or else a struct type name.
+a symbol which names a struct type,
+or else a struct instance.
 
 .coNP Function @ super
 .synb
-.mets (super << type )
+.mets (super >> [ type-or-struct ])
 .syne
 .desc
 The
 .code super
-function returns the struct type object which is the
-supertype of
-.metn type ,
-or returns
+function determines a structure type from the
+.meta type-or-struct
+and returns the struct type object which is
+the supertype of that type, or else
 .code nil
-if
-.meta type
-has no supertype.
+if that type has no supertype.
 
 The
-.meta type
-argument must be either a struct type object, a
-a symbol which names a struct type (which is resolved to that type),
-or else a structure instance (which is resolved to its structure type).
+.meta type-or-struct
+argument must be either a struct type object,
+a symbol which names a struct type,
+or else a struct instance.
 
 .coNP Function @ make-struct
 .synb
