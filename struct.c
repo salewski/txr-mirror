@@ -439,7 +439,7 @@ val make_struct_type(val name, val supers,
 
   lisplib_try_load(name);
 
-  if (builtin_type_p(name) || cobj_class_exists(name))
+  if (built_in_type_p(name))
     uw_throwf(error_s, lit("~a: ~s is a built-in type"),
               self, name, nao);
 

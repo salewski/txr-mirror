@@ -6771,6 +6771,7 @@ void eval_init(void)
   reg_fun(intern(lit("typeof"), user_package), func_n1(typeof));
   reg_fun(intern(lit("subtypep"), user_package), func_n2(subtypep));
   reg_fun(intern(lit("typep"), user_package), func_n2(typep));
+  reg_fun(intern(lit("built-in-type-p"), user_package), func_n1(built_in_type_p));
 
   reg_fun(intern(lit("atom"), user_package), func_n1(atom));
   reg_fun(intern(lit("null"), user_package), null_f);

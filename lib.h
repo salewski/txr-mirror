@@ -563,7 +563,7 @@ extern alloc_bytes_t malloc_bytes;
 extern alloc_bytes_t gc_bytes;
 
 val identity(val obj);
-val builtin_type_p(val sym);
+val built_in_type_p(val sym);
 val typeof(val obj);
 val subtypep(val sub, val sup);
 val typep(val obj, val type);
@@ -1100,7 +1100,6 @@ val length_str_lt(val str, val len);
 val length_str_le(val str, val len);
 struct cobj_class *cobj_register(val cls_sym);
 struct cobj_class *cobj_register_super(val cls_sym, struct cobj_class *super);
-int cobj_class_exists(val cls_sym);
 val cobj(mem_t *handle, struct cobj_class *cls, struct cobj_ops *ops);
 val cobjp(val obj);
 val cobjclassp(val obj, struct cobj_class *);

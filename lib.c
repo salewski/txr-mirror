@@ -209,7 +209,7 @@ static val code2type(int code)
   return nil;
 }
 
-val builtin_type_p(val sym)
+val built_in_type_p(val sym)
 {
   type_t i;
 
@@ -218,6 +218,9 @@ val builtin_type_p(val sym)
     if (subtypep(type, sym))
       return t;
   }
+
+  if (gethash(cobj_hash, sym))
+    return t;
 
   return nil;
 }
@@ -9204,11 +9207,6 @@ static void cobj_populate_hash(void)
   struct cobj_class *ptr;
   for (ptr = cobj_class; ptr < cobj_ptr; ptr++)
     sethash(cobj_hash, ptr->cls_sym, num_fast(ptr - cobj_class));
-}
-
-int cobj_class_exists(val cls_sym)
-{
-  return gethash(cobj_hash, cls_sym) != nil;
 }
 
 val cobj(mem_t *handle, struct cobj_class *cls, struct cobj_ops *ops)

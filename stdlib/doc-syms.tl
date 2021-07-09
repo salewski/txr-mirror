@@ -233,6 +233,7 @@
       ("build" "N-01346AAA")
       ("build-list" "N-0315C467")
       ("buildn" "N-01346AAA")
+      ("built-in-type-p" "N-011BB3FF")
       ("butlast" "N-026BB6FA")
       ("butlastn" "N-01E2C334")
       ("caar" "N-001FA3CB")

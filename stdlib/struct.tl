@@ -39,6 +39,8 @@
                            (atom (list atom nil)))
     (unless (bindable name)
       (compile-error form "~s isn't a bindable symbol" name))
+    (if (built-in-type-p name)
+      (compile-warning form "~s is a built-in type" name))
     (unless (proper-listp slot-specs)
       (compile-error form "bad syntax: dotted form"))
     (let* ((instance-init-form nil)
