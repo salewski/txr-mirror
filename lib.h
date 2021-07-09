@@ -67,7 +67,7 @@ typedef double_uintptr_t dbl_ucnum;
 typedef enum type {
   NIL = TAG_PTR, NUM = TAG_NUM, CHR = TAG_CHR, LIT = TAG_LIT, CONS,
   STR, SYM, PKG, FUN, VEC, LCONS, LSTR, COBJ, CPTR, ENV,
-  BGNUM, FLNUM, RNG, BUF, TNOD, DARG, MAXTYPE = TNOD
+  BGNUM, FLNUM, RNG, BUF, TNOD, DARG, MAXTYPE = DARG
   /* If extending, check TYPE_SHIFT and all ocurrences of MAX_TYPE */
 } type_t;
 

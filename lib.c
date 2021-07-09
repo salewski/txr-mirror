@@ -158,6 +158,7 @@ const seq_kind_t seq_kind_tab[MAXTYPE+1] = {
   SEQ_NOTSEQ,   /* RNG */
   SEQ_VECLIKE,  /* BUF */
   SEQ_NOTSEQ,   /* TNOD */
+  SEQ_NOTSEQ,   /* DARG */
 };
 
 val identity(val obj)
