@@ -82571,9 +82571,10 @@ function is relied upon to open the URL.
 
 On other platforms, if the
 .code BROWSER
-environment variable exists, its value is assumed to indicate the
-name or path of the web-browsing program which can accept the URL
-as an argument. If this variable doesn't exist, then
+environment variable exists and is nonempty,
+its value is assumed to indicate the name or path
+of the web-browsing program which can accept the URL as an argument.
+If this variable doesn't exist or is empty, then
 .code doc
 searches for a system-dependent URL-opening utility, such as
 .codn xdg-open .

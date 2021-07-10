@@ -36,14 +36,14 @@
            (fallback '#"firefox iceweasel seamonkey mozilla \
                         epiphany konqueror chromium chromium-browser \
                         google-chrome"))
-       (let ((prog (or (getenv "BROWSER")
-                       (if (abs-path-p opener)
-                         opener
-                         (path-search opener))
-                       [find-true path-search fallback])))
-         (if prog
-           (detached-run prog (list url))
-           (error "~s: no URL-opening method available" 'open-url))))))
+       (iflet ((prog (getenv "BROWSER"))
+               (prog (or (and (plusp (len prog)) prog)
+                         (if (abs-path-p opener)
+                           opener
+                           (path-search opener))
+                         [find-true path-search fallback])))
+         (detached-run prog (list url))
+         (error "~s: no URL-opening method available" 'open-url)))))
   ((:cygwin :cygnal)
    (with-dyn-lib "shell32.dll"
      (deffi shell-execute "ShellExecuteW"
