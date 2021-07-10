@@ -170,3 +170,45 @@
   (rmismatch "11" "321") -2
   (rmismatch "321" "21") -3
   (rmismatch "21" "321") -3)
+
+(mtest
+  [keep-if oddp (range 1 10)] (1 3 5 7 9)
+  [keep-if oddp nil] nil
+  [keep-if oddp #()] #()
+  [keep-if oddp #(1)] #(1)
+  [keep-if oddp #(2)] #()
+  [keep-if chr-isalpha "a1b2c3d"] "abcd"
+  [keep-if chr-isalpha ""] ""
+  [keep-if chr-isalpha "abc"] "abc"
+  [keep-if chr-isalpha "1234"] "")
+
+(mtest
+  [remove-if oddp (range 1 10)] (2 4 6 8 10)
+  [remove-if oddp nil] nil
+  [remove-if oddp #()] #()
+  [remove-if oddp #(1)] #()
+  [remove-if oddp #(2)] #(2)
+  [remove-if chr-isalpha "a1b2c3d"] "123"
+  [remove-if chr-isalpha ""] ""
+  [remove-if chr-isalpha "1234"] "1234"
+  [remove-if chr-isalpha "abcd"] "")
+
+(mtest
+  [keep-if* chr-isalpha ""] nil
+  [keep-if* chr-isalpha "abcd"] (#\a #\b #\c #\d)
+  (take 3 [keep-if* oddp (range 1)]) (1 3 5))
+
+(mtest
+  [remove-if* chr-isalpha ""] nil
+  [remove-if* chr-isalpha "abcd"] nil
+  [remove-if* chr-isdigit "a1b2c3d4"] (#\a #\b #\c #\d)
+  (take 3 [remove-if* oddp (range 1)]) (2 4 6))
+
+(mtest
+  [separate oddp (range 1 10)] ((1 3 5 7 9) (2 4 6 8 10))
+  [separate integerp (range 1 10)] ((1 2 3 4 5 6 7 8 9 10) ())
+  [separate chrp (range 1 10)] (() (1 2 3 4 5 6 7 8 9 10))
+  [separate oddp (vec-list (range 1 10))] (#(1 3 5 7 9) #(2 4 6 8 10))
+  [separate chr-isalpha "a1b2c3d4"] ("abcd" "1234")
+  [separate chrp "a1b2c3d4"] ("a1b2c3d4" "")
+  [separate integerp "a1b2c3d4"] ("" "a1b2c3d4"))
