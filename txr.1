@@ -57636,6 +57636,86 @@ characters, these are preserved in the return value.
   (trim-long-suffix "a.b.c///") -> "a///"
 .brev
 
+.coNP Function @ add-suffix
+.synb
+.mets (add-suffix < path << suffix )
+.syne
+.desc
+The
+.code add-suffix
+function combines the string arguments
+.meta path
+and
+.meta suffix
+in a way which harmonizes with the
+.code long-suffix
+and
+.code short-suffix
+functions.
+
+If
+.meta path
+does not end in a path separator character, that category being defined by the
+.code path-sep-chars
+variable, then
+.code add-suffix
+returns the trivial string catenation of
+.meta path
+and
+.metn suffix .
+
+Otherwise,
+.code add-suffix
+returns a string formed by inserting
+.meta suffix
+into
+.meta path
+just prior to the sequence of trailing path separator characters.
+The returned string is a catenation of that portion of
+.meta path
+which excludes the sequence of trailing path separators,
+followed by
+.metn suffix ,
+followed by the sequence of trailing path separators.
+
+A path separator which occurs as a part of syntax that indicates an absolute
+pathname is not considered a trailing separator. A path which begins with a
+separator is absolute.  Other platform-specific path patterns may constitute
+an absolute pathname.
+
+Note: in cases when
+.meta suffix
+does not begin with a period, or is inserted in such a way
+that it is the start of a path component, then the functions
+.code long-suffix
+and
+.code short-suffix
+will not recognize
+.meta suffix
+in the resulting path.
+
+.TP* Examples:
+
+.verb
+  (add-suffix "" "") -> ""
+  (add-suffix "" "a") -> "a"
+  (add-suffix "." "a") -> ".a"
+  (add-suffix "." ".a") -> "..a"
+  (add-suffix "/" ".b") -> "/.b"
+  (add-suffix "//" ".b") -> "/.b/"
+  (add-suffix "//" "b") -> "/b/"
+  (add-suffix "a" "") -> "a"
+  (add-suffix "a" ".b") -> "a.b"
+  (add-suffix "a/" ".b") -> "a.b/"
+  (add-suffix "a//" ".b") -> "a.b//"
+
+  ;; On MS Windows
+  (add-suffix "c://" "x") -> "c:/x/"
+  (add-suffix "host://" "x") -> "host://x"
+  (add-suffix "host:///" "x") -> "host://x/"
+
+.brev
+
 .coNP Function @ path-cat
 .synb
 .mets (path-cat >> [ dir-path <> { rel-path }*])

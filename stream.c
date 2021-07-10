@@ -5149,6 +5149,53 @@ val trim_long_suffix(val name)
   }
 }
 
+val add_suffix(val name, val suffix)
+{
+  val self = lit("add-suffix");
+  size_t len_n = c_unum(length_str(name), self);
+  size_t len_s = c_unum(length_str(suffix), self);
+  const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
+  const wchar_t *nam = c_str(name, self);
+  const wchar_t *suf = c_str(suffix, self);
+  const wchar_t *sl = wcspbrk(nam, psc);
+
+  if (psc[0] == '\\' || 1) {
+    const wchar_t *set = L"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                         L"abcdefghijklmnopqrstuvwxyz"
+                         L"0123456789";
+    const wchar_t *drv = nam + wcsspn(nam, set);
+    if (drv[0] == ':' && sl == drv + 1) {
+      if (drv - nam > 1) {
+        if (wcschr(psc, drv[2]))
+          sl = wcspbrk(drv + 3, psc);
+      } else if (drv  > nam) {
+        sl = wcspbrk(drv + 2, psc);
+      }
+    }
+  }
+
+  if (sl == nam)
+    sl = wcspbrk(nam + 1, psc);
+
+  while (sl) {
+    const wchar_t *nsl = sl + 1 + wcsspn(sl + 1, psc);
+
+    if (*nsl == 0) {
+      size_t nchar = len_n + len_s + 1;
+      size_t offs = sl - nam;
+      wchar_t *out = chk_wmalloc(nchar);
+      wmemcpy(out, nam, offs);
+      wmemcpy(out + offs, suf, len_s);
+      wcscpy(out + offs + len_s, sl);
+      return string_own(out);
+    }
+
+    sl = wcspbrk(nsl, psc);
+  }
+
+  return scat2(name, suffix);
+}
+
 val path_cat(val dir_name, val base_name)
 {
   val dl = length_str(dir_name);
@@ -5474,6 +5521,7 @@ void stream_init(void)
   reg_fun(intern(lit("trim-short-suffix"), user_package), func_n1(trim_short_suffix));
   reg_fun(intern(lit("trim-long-suffix"), user_package), func_n1(trim_long_suffix));
   reg_fun(intern(lit("path-cat"), user_package), func_n0v(path_vcat));
+  reg_fun(intern(lit("add-suffix"), user_package), func_n2(add_suffix));
   reg_varl(intern(lit("path-sep-chars"), user_package), static_str(path_sep_chars));
   reg_fun(intern(lit("get-indent-mode"), user_package), func_n1(get_indent_mode));
   reg_fun(intern(lit("test-set-indent-mode"), user_package), func_n3(test_set_indent_mode));

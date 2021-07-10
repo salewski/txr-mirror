@@ -134,6 +134,25 @@
   (trim-long-suffix "/a.//") "/a//")
 
 (mtest
+  (add-suffix "" "") ""
+  (add-suffix "" "a") "a"
+  (add-suffix "." "a") ".a"
+  (add-suffix "." ".a") "..a"
+  (add-suffix "/" ".b") "/.b"
+  (add-suffix "//" ".b") "/.b/"
+  (add-suffix "//" "b") "/b/"
+  (add-suffix "a" "") "a"
+  (add-suffix "a" ".b") "a.b"
+  (add-suffix "a/" ".b") "a.b/"
+  (add-suffix "a//" ".b") "a.b//"
+
+  (add-suffix "c://" "x") "c:/x/"
+  (add-suffix "0://" "x") "0:/x/"
+  (add-suffix "host://" "x") "host://x"
+  (add-suffix "host:///" "x") "host://x/"
+  (add-suffix "1234:///" "x") "1234://x/")
+
+(mtest
   (base-name "") ""
   (base-name "/") "/"
   (base-name ".") "."

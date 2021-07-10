@@ -94,6 +94,7 @@
       ("acosh" "D-0041")
       ("add" "N-03244398")
       ("add*" "N-03244398")
+      ("add-suffix" "N-00AE9981")
       ("addrinfo" "N-0110E961")
       ("ado" "N-011CFC0C")
       ("af-inet" "N-0228EAE0")
