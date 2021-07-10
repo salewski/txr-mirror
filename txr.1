@@ -2196,7 +2196,7 @@ is
 .strn " e f" .
 This is found within the data
 .str "c d e f"
-at position 3 (counting from 0).  So positions 0-2
+at position 3 (counting from 0).  So positions 0\(en2
 .mono
 ("c d")
 .onom
@@ -2865,7 +2865,7 @@ or logical not.
 Two consecutive regular expressions denote catenation:
 the left expression must match, and then the right.
 .coIP R1|R2
-match either the expression
+Match either the expression
 .code R1
 or
 .codn R2 .
@@ -2893,8 +2893,8 @@ Any of the special characters, including the delimiting
 and the backslash, can be escaped with a backslash to suppress its
 meaning and denote the character itself.
 
-Furthermore, all of the same escapes as are described in the section Special
-Characters in Text above are supported - the difference is that in regular
+Furthermore, all of the same escapes that are described in the section Special
+Characters in Text above are supported \(em the difference is that in regular
 expressions, the
 .code @
 character is not required, so for example a tab is coded as
@@ -2931,10 +2931,8 @@ operand, but like a unary operator with respect to its right operand.
 Thus
 .code a~b%c~d
 is
-.mono
-a(~(b%(c(~d))))
-.onom
-, demonstrating right-to-left associativity,
+.codn a(~(b%(c(~d)))) ,
+demonstrating right-to-left associativity,
 where all of
 .code b%
 may be regarded as a unary operator being applied to
@@ -2959,8 +2957,7 @@ may freely match through this sequence.
 It's possible for a regular expression to match an empty string.
 For instance, if the next input character is
 .codn z ,
-facing a
-the regular expression
+facing the regular expression
 .codn /a?/ ,
 there is a zero-character match:
 the regular expression's state machine can reach an acceptance
@@ -3038,7 +3035,7 @@ the rightmost place. Thus variable
 fetches the entire line.
 
 For additional information about the advanced regular-expression
-operators, NOTES ON EXOTIC REGULAR EXPRESSIONS below.
+operators, see NOTES ON EXOTIC REGULAR EXPRESSIONS below.
 
 .SS* Compound Expressions
 If the
@@ -3060,7 +3057,7 @@ otherwise there is a syntax error. The
 expression can contain arguments which modify the behavior of the construct,
 for instance
 .codn "@(collect :gap 0 :vars (a b))" .
-In some ways, this situation might be compared to the HTML language, in which
+In some ways, this situation might be compared to HTML, in which
 an element such as
 .code <a>
 must be terminated by
@@ -3068,8 +3065,9 @@ must be terminated by
 and can have attributes such as
 .codn "<a href=\(dq...\(dq>" .
 
-Compound contain subexpressions: other compound expressions, or literal objects
-of various kinds. Among these are: symbols, numbers, string literals, character
+Compound expressions contain subexpressions which are
+other compound expressions or literal objects of various kinds.
+Among these are: symbols, numbers, string literals, character
 literals, quasiliterals and regular expressions. These are described in the
 following sections. Additional kinds of literal objects exist, which are
 discussed in the TXR LISP section of the manual.
@@ -3090,7 +3088,7 @@ Some examples of compound expressions are:
   (_ `@file.txt`)
 .brev
 
-Symbols occurring in a compound expression follow a slight more permissive
+Symbols occurring in a compound expression follow a slightly more permissive
 lexical syntax than the
 .meta bident
 in the syntax
@@ -3165,7 +3163,7 @@ or
 and octal escapes like
 .codn \e123 .
 Ambiguity between an escape and subsequent
-text can be resolved by using trailing semicolon delimiter:
+text can be resolved by adding a semicolon delimiter after the escape:
 .str "\exabc;d"
 is a string consisting of the character
 .code "U+0ABC"
@@ -3186,7 +3184,7 @@ specifying code points, not for specifying bytes to be inserted into the
 UTF-8 representation, even if they lie in the 8-bit range. Bytes cannot be
 directly specified, other than literally.  However, when a \*(TX string object
 is encoded to UTF-8, every code point lying in the range U+DC00 through U+DCFF
-is converted to a a single byte, by taking the low-order eight bits of its
+is converted to a single byte by taking the low-order eight bits of its
 value.  By manipulating code points in this special range, \*(TX programs can
 reproduce arbitrary byte sequences in text streams. Also note that the
 .code \eu
@@ -3246,8 +3244,9 @@ in order to include it as a character. All the escaping conventions
 used in string literals can be used in word literals.
 
 Unlike in string literals, whitespace (tabs and spaces) is not
-significant in word literals: it separates words.  Whitespace may be
-escaped with a backslash in order to include it as a literal character.
+significant in word literals: it separates words.
+A whitespace character may be escaped with a backslash
+in order to include it as a literal character.
 
 Just like in string literals, an unescaped newline character is not allowed.
 A newline preceded by a backslash is permitted. Such an escaped backslash,
@@ -3322,34 +3321,37 @@ string literals.
 
 .SS* Quasiword List Literals
 
-The quasiword list literals (QLL-s) are to quasiliterals what WLL-s are to
+The quasiword list literals (QLLs) are to quasiliterals what WLLs are to
 ordinary literals. (See the above section Word List Literals.)
 
 A QLL combines the convenience of the WLL
 with the power of quasistrings.
 
-Just as in the case of WLL-s, there are two flavors of the
+Just as in the case of WLLs, there are two flavors of the
 QLL: the regular QLL which begins with
 .code #`
-\ (hash, backquote) and the splicing QLL which begins with
+(hash, backquote) and the splicing QLL which begins with
 .code #*`
-\ (hash, star, backquote).
+(hash, star, backquote).
 
 Both types are terminated by a backquote, which may be escaped
 as
 .code \e`
-\ in order to include it as a character. All the escaping conventions
-used in quasiliterals can be used in QLL.
+in order to include it as a character. All the escaping conventions
+used in quasiliterals can be used in QLLs.
 
 Unlike in quasiliterals, whitespace (tabs and spaces) is not
-significant in QLL: it separates words.  Whitespace may be
-escaped with a backslash in order to include it as a literal character.
+significant in QLLs: it separates words.
+A whitespace character may be escaped with a backslash
+in order to include it as a literal character.
 
 A newline is not permitted unless escaped. An escaped newline works exactly the
-same way as it does in word list literals (WLL-s).
+same way as it does in WLLs.
 
 Note that the delimiting into words is done before the variable
-substitution. If the variable a contains spaces, then
+substitution. If the variable
+.code a
+contains spaces, then
 .code #`@a`
 nevertheless
 expands into a list of one item: the string derived from
@@ -3431,9 +3433,9 @@ Note that the
 prefix is also used for buffer literals.
 
 A floating-point constant is marked by the inclusion of a decimal point, the
-exponential "e notation", or both. It is an optional sign, followed
+scientific E notation, or both. It is an optional sign, followed
 by a mantissa consisting of digits, a decimal point, more digits, and then an
-optional exponential notation consisting of the letter
+optional E notation consisting of the letter
 .code "e"
 or
 .codn "E" ,
@@ -3443,8 +3445,8 @@ or
 .code -
 sign, and then digits indicating the exponent value.
 In the mantissa, the digits are not optional. At least one digit must either
-precede the decimal point or follow. That is to say, a decimal point by itself
-is not a floating-point constant.
+precede the decimal point or follow it.
+That is to say, a decimal point by itself is not a floating-point constant.
 
 Examples:
 
@@ -4359,7 +4361,7 @@ Without
 .codn :greedy ,
 the variable
 .code @c
-will can match multiple tokens,
+may match multiple tokens,
 and end up with spaces in it, because nothing follows
 .code @c
 and so it matches from any position which follows a space to the
@@ -4659,9 +4661,11 @@ argument is given, its value limits the range of lines which are combined
 together. For instance
 .code "@(freeform 5)"
 means to only consider the next five lines
-to to be one big line. Without this argument, freeform is "bottomless". It
-can match the entire file, which creates the risk of allocating a large amount
-of memory.
+to to be one big line. Without this argument,
+.code freeform
+is "bottomless".
+It can match the entire file,
+which creates the risk of allocating a large amount of memory.
 
 If the
 .meta string
@@ -11705,7 +11709,7 @@ and
 
 The behavior of
 .code @
-followed by the syntax of a floating-point expression in exponential notation,
+followed by the syntax of a floating-point expression in E notation,
 which lacks a decimal point, is also unspecified. An example of this is
 .codn @12E5 .
 
@@ -16419,7 +16423,7 @@ as if by the
 operator.
 It is an error for the list of variable bindings to be empty.
 
-After the establishment of the bindings, the the value of the
+After the establishment of the bindings, the value of the last
 .meta sym
 is tested. If the value is
 .codn nil ,
@@ -20709,7 +20713,7 @@ The
 function creates a new object which is a catenation of the
 .meta list
 arguments. All arguments are optional;
-.code (append)
+.code append
 produces the empty list, and if
 a single argument is specified, that argument
 is returned.
@@ -29015,7 +29019,7 @@ The
 .code struct-type-name
 function determines a structure type from the
 .meta type-or-struct
-and returns that structure type's symbolic name.
+argument and returns that structure type's symbolic name.
 
 The
 .meta type-or-struct
@@ -29027,14 +29031,14 @@ or else a struct instance.
 
 .coNP Function @ super
 .synb
-.mets (super >> [ type-or-struct ])
+.mets (super <> [ type-or-struct ])
 .syne
 .desc
 The
 .code super
 function determines a structure type from the
 .meta type-or-struct
-and returns the struct type object which is
+argument and returns the struct type object which is
 the supertype of that type, or else
 .code nil
 if that type has no supertype.
@@ -31871,7 +31875,7 @@ function supports the original
 semantics when both inputs are lists. It determines whether the
 .meta tail-sequence
 list is a structural suffix of
-.metn sequence ;
+.metn sequence ,
 which is to say: is
 .meta tail-sequence
 one of the
@@ -35911,14 +35915,14 @@ function instantiates and returns an object of struct type
 If no
 .meta initial-list
 argument is supplied, then the object is implicitly
-with an empty list.
+initialized with an empty list.
 
 If the argument is supplied, then it is equivalent
 to calling
 .code build-list
 without an argument to produce an object
 .meta obj
-the invoking the method call
+by invoking the method call
 .mono
 .meti << obj .(ncon << initial-list )
 .onom
@@ -39166,7 +39170,7 @@ the value of the first (leftmost) place. The leftmost place
 receives the value of the second place, and so on.
 If there are two arguments, this equivalent to
 .codn swap .
-The prior value of the first place, which is the the value
+The prior value of the first place, which is the value
 rotated into the last place, is returned.
 
 More precisely, the
@@ -42692,7 +42696,7 @@ is a standard \*(TL notation with the same meaning as
 
   ;; apply (1 2 3) to < using dot position
   (when-match @(@x (< . @sym)) '(1 2 3) (list x sym))
- - > (t (1 2 3))
+  -> (t (1 2 3))
 .brev
 
 .coNP Pattern macro @ sme
@@ -47822,7 +47826,7 @@ only the exception arguments are passed to the clauses of
 
 .coNP Macro @ with-resources
 .synb
-.mets (with-resources >> ({ sym >> [ init-form <> [ cleanup-form *])}*)
+.mets (with-resources >> ({( sym >> [ init-form <> [ cleanup-form *]])}*)
 .mets \ \  << body-form *)
 .syne
 .desc
@@ -47860,7 +47864,7 @@ If one or more
 .metn cleanup-form s
 are supplied in addition to
 .metn init-form ,
-they specifies forms to be executed upon the termination of the
+they specify forms to be executed upon the termination of the
 .code with-resources
 construct.
 
@@ -47918,6 +47922,11 @@ immediately:
     (whilet ((l (get-line f)))
       (put-line l)))
 .brev
+
+Note that a better way to initialize exactly one stream resource
+is with the
+.code with-stream
+macro, which implicitly closes the stream when it terminates.
 
 .coNP Special variable @ *unhandled-hook*
 The
@@ -51459,7 +51468,7 @@ Frequency histogram:
         (#\eu 1) (#\ev 1) (#\ey 1))
 .brev
 
-Separate the integers 1-10 into even and odd, and sum these groups:
+Separate the integers 1\(en10 into even and odd, and sum these groups:
 
 .verb
   [group-reduce (hash) evenp + (range 1 10) 0]
@@ -54205,8 +54214,9 @@ function accepts a variable number of arguments which are functions.  It
 combines these into a single function which, when invoked, passes its arguments
 to each of these functions, and collects the results into a list.
 
-Note: the juxt function can be understood in terms of the following reference
-implementation:
+Note: the
+.code juxt
+function can be understood in terms of the following reference implementation:
 
 .verb
   (defun juxt (funcs)
@@ -55154,7 +55164,7 @@ parameter plays two different roles in these two steps.
 In the first step, the rendering of a floating-point number to its printed
 representation, the precision specifies the maximum number of total significant
 figures, which do not include any digits in the exponent, if one is printed.
-Numbers are printed in exponential notation if their magnitude is small, or
+Numbers are printed in E notation if their magnitude is small, or
 else if their exponent exceeds their precision. If the precision is not
 specified, then it is obtained from the
 .code *print-flo-precision*
@@ -55288,7 +55298,7 @@ the number of places past the decimal point.
 .coIP e
 The
 .code e
-directive prints numbers in exponential notation. It requires
+directive prints numbers in E notation. It requires
 a numeric argument. (Unlike
 .codn x ,
 .code X
@@ -55304,7 +55314,7 @@ precision parameter coming from the directive is only involved in
 the first step.
 
 In the first step, the precision specifier gives the number of digits past the
-decimal point printed in the exponential notation, not counting the digits in
+decimal point printed in the E notation, not counting the digits in
 the exponent.  Exactly that many digits are printed, regardless of the
 precision of the number.  If the precision is omitted, then the number of
 digits after the decimal point is obtained from the value of the special
@@ -56270,7 +56280,7 @@ The
 .code make-string-output-stream
 function, which takes no arguments, creates a string output stream.
 Data sent to this stream is accumulated into a string object.
-String output streams supports both character and byte output operations.
+String output streams support both character and byte output operations.
 Bytes are assumed to represent a UTF-8 encoding, and are decoded in order
 to form characters which are stored into the string.
 
@@ -58104,7 +58114,8 @@ to convert it to a string stream.
 The optional
 .meta err-stream
 argument can be used to specify a stream to which
-parse errors diagnostics are sent. If absent, the diagnostics are suppressed.
+diagnostics of parse errors are sent.
+If absent, the diagnostics are suppressed.
 
 The optional
 .meta name
@@ -72496,7 +72507,8 @@ must provide the text representation of one complete \*(TX query.
 The optional
 .meta error-stream
 argument can be used to specify a stream to which
-parse errors diagnostics are sent. If absent, the diagnostics are suppressed.
+diagnostics of parse errors are sent.
+If absent, the diagnostics are suppressed.
 
 The optional
 .meta name
@@ -72966,16 +72978,16 @@ only correct under an explicit
 .code call-finalizers
 but incorrect under spontaneous reclamation driven by garbage collection.
 
-.SS* Stack Overflow Protection
+.SS* Stack-Overflow Protection
 
-\*(TX features a rudimentary mechanism for guarding against stack overflow
-situations, which cause the \*(TX process to crash. This capability is separate
+\*(TX features a rudimentary mechanism for guarding against stack overflows,
+which cause the \*(TX process to crash. This capability is separate
 from and exists in addition to the possibility of catching a
 .code sig-segv
 (segmentation violation) signal upon stack overflow using
 .codn set-sig-handler .
 
-The stack overflow guard mechanism is based on \*(TX, at certain key places
+The stack-overflow guard mechanism is based on \*(TX, at certain key places
 in the execution, checking the current position of the stack relative to
 a predetermined limit. If the position exceeds the limit, then an exception
 of type
@@ -72984,9 +72996,9 @@ derived from
 .codn error ,
 is thrown.
 
-The stack overflow guard mechanism is configured on start-up.
-On platforms on those platforms where it is possible to
-inquire the system about the actual stack limit, and where the stack limit is
+The stack-overflow guard mechanism is configured on startup.
+On platforms where it is possible to
+inquire the system's actual stack limit, and where the stack limit is
 at least 512 kilobytes, \*(TX sets the limit to within a
 certain percentage of the actual value. If it is not possible to determine the
 system's stack limit, or if the system indicates that the stack size is
@@ -73000,7 +73012,7 @@ and
 .code set-stack-limit
 functions are provided to manipulate the stack limit.
 
-The mechanism cannot contain absolutely all sources of stack overflow threat
+The mechanism cannot contain absolutely all sources of stack-overflow threat
 under all conditions. External functions are not protected, and not all
 internal functions are monitored. If \*(TX is close to the limit, but
 a function is called whose stack growth is not monitored, such as
@@ -73043,8 +73055,8 @@ need not retrieve that exact value.
 
 If
 .meta value
-is too close to the system stack limit or beyond, the effectiveness
-of the stack overflow detection mechanism is compromised.
+is too close to the system's stack limit or beyond, the effectiveness
+of the stack-overflow detection mechanism is compromised.
 Likewise, if
 .meta value
 is too low, the operation of \*(TX shall become unreliable. Values
@@ -79540,9 +79552,9 @@ form is top-level form, then its argument is a top-level form.
 When a macro form is identified as a top-level form, it is macro-expanded
 as if by
 .code macroexpand
-before consideration whether it contains top-level forms under rules 2-5.
+before considering whether it contains top-level forms under rules 2\(en5.
 .IP 7.
-Rules 2-6 are applied recursively.
+Rules 2\(en6 are applied recursively.
 .IP 8.
 No other forms are top-level forms.
 .RE
@@ -82962,24 +82974,24 @@ selects the behaviors described below for version 105, but not those for 102.
 .IP 265
 Until \*(TX 265, the
 .code with-resources
-macro exhibits an undocumented behavior: the three-element binding expression
+macro exhibited an undocumented behavior: the three-element binding expression
 .mono
 .meti >> ( var < init << cleanup )
 .onom
-immediately causes the
+immediately caused the
 .code with-resources
 form to terminate with a return value of
 .code nil
 if the
 .meta init
-form returns
+form returned
 .codn nil .
 Neither the
 .meta cleanup
 in the same expression, nor any subsequent binding expressions or the body
-of the construct, are evaluated. Prior cleanup forms are evaluated in
-reverse order, as documented. A compatibility value of 265 or less restores
-this behavior.
+of the construct, would be evaluated.
+Prior cleanup forms would be evaluated in reverse order, as documented.
+A compatibility value of 265 or less restores this behavior.
 .IP 262
 Selection 262 compatibility restores a wrong behavior which existed between
 versions 191 and 262 due to a regression. The wrong behavior is that the

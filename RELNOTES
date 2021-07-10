@@ -5,20 +5,20 @@
   Features
 
   - requirements change in new long-suffix and short-suffix functions:
-    - dot is now part of suffix
+    - dot is now part of suffix.
     - leading dot is not a suffix delimiter: e.g. .bashrc is not a suffix.
     - trailing path separators ignored, like in base-name.
   - regex: optimization function exposed.
   - constantp function now recognizes more kinds of expressions:
-    - (+ 1 (* 3 4)) are constantp as is (symacrolet ((a (+ 2 2))) (* b 3)).
+    - (+ 1 (* 3 4)) is constantp, as is (symacrolet ((a (+ 2 2))) (* b 3)).
   - doc function
     - now handles situations in which xdg-open blocks until browser exits.
     - now reacts to BROWSER variable, and if xdg-open is not found,
       falls back on the first of a long list of possible browsers.
-  - file system interface:
+  - filesystem interface:
     - path-cat function is now variadic: (path-cat "a" "b" "c" ...).
     - new path-search function, searches for an executable by name in path,
-      defaulting to the system PATH.
+      defaulting to the system's PATH.
   - sequences:
     - new find-true function; like find-if, but returns the true value
       that the predicate produces, rather than the item from the sequence.
@@ -26,7 +26,7 @@
     - argument defaulting tightened; functions no longer treat a nil
       value for the stream argument as a missing argument.
   - stack limit:
-    - minimum limit now imposed when the system stack limit is too low,
+    - minimum limit now imposed when the system's stack limit is too low,
       rather than disabling the mechanism.
     - stack limit is now always on, even if we don't obtain a value
       from the system or that value indicates that there is no limit.
@@ -37,7 +37,7 @@
 
   Bugs
 
-  - build: regression in separate directory build.
+  - build: regression in separate-directory build.
   - parser: regression: not working with byacc.
   - compiler: a number of bugs in inline lambda implementation.
   - op: subtle bug in do operator; code refactored.
@@ -45,7 +45,7 @@
   - listener: end-of-line/buffer visual glitch in selection.
   - trie: bugs in regex-from-trie function, now covered by tests.
   - regex: print/read consistency problem printing n-ary operators.
-  - doc: *doc-lookup* variable not special, as documented.
+  - doc: *doc-url* variable not special, as documented.
   - getopts: throwing sys:opt-error instead of usr:opt-error.
   - command line: lack of robustness in -b option fixed.
   - documentation: numerous fixes.
@@ -91,9 +91,9 @@
     - type mismatches when a string is expected now give
       function name in error diagnostic.
     - stack overflow protection is introduced:
-      - In key places, TXR detects whether the stack pointer is over a
+      - in key places, TXR detects whether the stack pointer is over a
         predetermined limit and throws a stack-overflow exception.
-      - Controlled by set-stack-limit function.
+      - controlled by set-stack-limit function.
 
   Bugs
 
@@ -304,7 +304,7 @@
   - lib:
     - New rel-path function for calculating relative path
       between two directories.
-    - format function's ~x/~X supports printig buffer
+    - format function's ~x/~X supports printing buffer
       objects in hex.
   - structural pattern matching:
     - new each-match family of macros for iterating over
@@ -1285,7 +1285,7 @@
   - configure:
     - quote characters handled in config variable values.
   - Doc:
-    - existing lineno argumnt of read and iread documented.
+    - existing lineno argument of read and iread documented.
   - Hashing:
     - flaw in weak hash algorithm leading to spurious retention in situations
       when keys are weak, but values have reference to keys, or vice versa.
@@ -2954,7 +2954,7 @@
 
   Features
 
-  - read an iread no longer record source code location info
+  - read and iread no longer record source-code location info
     unconditionally
     - now controlled by new *rec-source-loc* special variable.
 
