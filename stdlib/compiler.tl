@@ -2150,8 +2150,6 @@
       (whenlet ((fun (symbol-function sym)))
         (param-check form nargs (get-param-info sym))))))
 
-(defvarl %file-suff-rx% #/[.][^\\\/.]+/)
-
 (defvar *emit*)
 
 (defvar *eval*)
@@ -2169,23 +2167,20 @@
 (defun open-compile-streams (in-path out-path test-fn)
   (let* ((parent (or *load-path* ""))
          (sep [path-sep-chars 0])
+         (in-path (trim-right #/[\/\\]+/ in-path))
          (in-path (if (and (pure-rel-path-p in-path) (not (empty parent)))
                     `@(dir-name parent)@sep@{in-path}`
                     in-path))
-         (rsuff (r$ %file-suff-rx% in-path))
-         (suff (if rsuff [in-path rsuff]))
-         (ip-nosuff (if rsuff [in-path 0..(from rsuff)] in-path))
+         (suff (short-suffix in-path))
+         (ip-nosuff (trim-right in-path suff))
          in-stream out-stream)
-    (cond
-      ((ends-with ".txr" in-path)
-       (error "~s: cannot compile TXR files" 'compile-file))
-      ((ends-with ".tl" in-path)
-       (set in-stream (ignerr (open-file in-path))
-            out-path (or out-path `@{in-path [0..-3]}.tlo`)))
-      (t
-        (set in-stream (or (ignerr (open-file `@{in-path}.tl`))
-                           (ignerr (open-file in-path)))
-             out-path (or out-path `@{in-path}.tlo`))))
+    (casequal suff
+      (".txr" (error "~s: cannot compile TXR files" 'compile-file))
+      (".tl" (set in-stream (ignerr (open-file in-path))
+                  out-path (or out-path `@{ip-nosuff}.tlo`)))
+      (t (set in-stream (or (ignerr (open-file `@{in-path}.tl`))
+                            (ignerr (open-file in-path)))
+              out-path (or out-path `@{in-path}.tlo`))))
 
     (unless in-stream
       (error "~s: unable to open input file ~s" 'compile-file in-path))
