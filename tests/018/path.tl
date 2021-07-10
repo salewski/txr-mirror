@@ -12,6 +12,7 @@
   (short-suffix "a.b.") "."
   (short-suffix ".c") nil
   (short-suffix "a.c") ".c"
+  (short-suffix ".a.c") ".c"
   (short-suffix "a.b.c") ".c"
   (short-suffix "foo.txt.gz") ".gz"
   (short-suffix "txt.gz") ".gz"
@@ -34,7 +35,8 @@
   (long-suffix ".gz") nil
   (long-suffix ".txt.gz") ".gz"
   (long-suffix "/.txt.gz") ".gz"
-  (long-suffix "a/.txt.gz") ".gz")
+  (long-suffix "a/.txt.gz") ".gz"
+  (long-suffix "a/.txt.tar.gz") ".tar.gz")
 
 (mtest
   (short-suffix "/") nil
