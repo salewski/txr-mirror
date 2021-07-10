@@ -2166,10 +2166,9 @@
 
 (defun open-compile-streams (in-path out-path test-fn)
   (let* ((parent (or *load-path* ""))
-         (sep [path-sep-chars 0])
          (in-path (trim-right #/[\/\\]+/ in-path))
          (in-path (if (and (pure-rel-path-p in-path) (not (empty parent)))
-                    `@(dir-name parent)@sep@{in-path}`
+                    (path-cat (dir-name parent) in-path)
                     in-path))
          (suff (short-suffix in-path))
          (ip-nosuff (trim-right in-path suff))
