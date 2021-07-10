@@ -256,6 +256,8 @@ val base_name(val path, val suff);
 val dir_name(val path);
 val short_suffix(val name, val alt_in);
 val long_suffix(val name, val alt_in);
+val trim_short_suffix(val name);
+val trim_long_suffix(val name);
 val path_cat(val dir_name, val base_name);
 val make_byte_input_stream(val obj);
 val iobuf_get(void);

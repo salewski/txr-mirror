@@ -5087,6 +5087,68 @@ val long_suffix(val name, val alt_in)
   }
 }
 
+val trim_short_suffix(val name)
+{
+  val self = lit("trim-short-suffix");
+  const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
+  const wchar_t *str = c_str(name, self);
+  const wchar_t *dot = wcsrchr(str, '.');
+  const wchar_t *sl = if3(dot, wcspbrk(dot + 1, psc), 0);
+  int sl_trail = if3(sl, sl[wcsspn(sl, psc)] == 0, 0);
+
+  if (!dot || (sl && sl[1] && !sl_trail) || dot == str || wcschr(psc, dot[-1])) {
+    return name;
+  } else {
+    size_t off = dot - str;
+    if (sl) {
+      size_t slsz = wcslen(sl) + 1;
+      size_t nchar = off + slsz;
+      wchar_t *out = chk_wmalloc(nchar);
+      wmemcpy(out, str, off);
+      wmemcpy(out + off, sl, slsz);
+      return string_own(out);
+    } else {
+      wchar_t *pref = chk_substrdup(str, 0, dot - str);
+      return string_own(pref);
+    }
+  }
+}
+
+val trim_long_suffix(val name)
+{
+  val self = lit("trim-long-suffix");
+  const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
+  const wchar_t *str = c_str(name, self);
+  const wchar_t *dot = wcschr(str, '.');
+
+  {
+    const wchar_t *sl;
+
+    while (dot && (sl = wcspbrk(dot, psc)) && sl[1] && sl[wcsspn(sl, psc)] != 0)
+      dot = wcschr(sl + 1, '.');
+
+    if (dot && (dot == str || wcschr(psc, dot[-1])))
+      dot = wcschr(dot + 1, '.');
+
+    if (!dot || dot == str) {
+      return name;
+    } else {
+      size_t off = dot - str;
+      if (sl) {
+        size_t slsz = wcslen(sl) + 1;
+        size_t nchar = off + slsz;
+        wchar_t *out = chk_wmalloc(nchar);
+        wmemcpy(out, str, off);
+        wmemcpy(out + off, sl, slsz);
+        return string_own(out);
+      } else {
+        wchar_t *pref = chk_substrdup(str, 0, dot - str);
+        return string_own(pref);
+      }
+    }
+  }
+}
+
 val path_cat(val dir_name, val base_name)
 {
   val dl = length_str(dir_name);
@@ -5409,6 +5471,8 @@ void stream_init(void)
   reg_fun(intern(lit("dir-name"), user_package), func_n1(dir_name));
   reg_fun(intern(lit("short-suffix"), user_package), func_n2o(short_suffix, 1));
   reg_fun(intern(lit("long-suffix"), user_package), func_n2o(long_suffix, 1));
+  reg_fun(intern(lit("trim-short-suffix"), user_package), func_n1(trim_short_suffix));
+  reg_fun(intern(lit("trim-long-suffix"), user_package), func_n1(trim_long_suffix));
   reg_fun(intern(lit("path-cat"), user_package), func_n0v(path_vcat));
   reg_varl(intern(lit("path-sep-chars"), user_package), static_str(path_sep_chars));
   reg_fun(intern(lit("get-indent-mode"), user_package), func_n1(get_indent_mode));

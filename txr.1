@@ -57577,6 +57577,65 @@ extracted from this last component.
   (long-suffix "x.y.z/abc.tar.gz/") -> ".tar.gz"
 .brev
 
+.coNP Functions @ trim-long-suffix and @ trim-short-suffix
+.synb
+.mets (trim-long-suffix << path )
+.mets (trim-short-suffix << path )
+.syne
+.desc
+The
+.code trim-long-suffix
+and
+.code trim-short-suffix
+functions calculate the portion of
+.meta path
+.I "long suffix"
+and
+.I "short suffix"
+of the string argument
+.metn path ,
+and return a path with the suffix removed.
+
+Respectively,
+.code trim-long-suffix
+and
+.code trim-short-suffix
+calculate the suffix in exactly the same manner as
+.code long-suffix
+and
+.codn short-suffix .
+
+If
+.meta path
+is found not to contain a suffix, then it is returned.
+
+If
+.meta path
+contains a suffix, then a new string is returned from which
+the suffix is deleted. If the suffix is followed by one or more path separator
+characters, these are preserved in the return value.
+
+.TP* Examples:
+
+.verb
+  (trim-short-suffix "") -> ""
+  (trim-short-suffix "a") -> "a"
+  (trim-short-suffix ".") -> "."
+  (trim-short-suffix ".a") -> ".a"
+
+  (trim-short-suffix "a.") -> "a"
+  (trim-short-suffix "a.b") -> "a"
+  (trim-short-suffix "a.b.c") -> "a.b"
+
+  (trim-short-suffix "a./") -> "a/"
+  (trim-short-suffix "a.b/") -> "a/"
+  (trim-short-suffix "a.b.c/") -> "a.b/"
+
+  (trim-long-suffix "a.b.c") -> "a"
+  (trim-long-suffix "a.b.c/") -> "a/"
+  (trim-long-suffix "a.b.c///") -> "a///"
+.brev
+
 .coNP Function @ path-cat
 .synb
 .mets (path-cat >> [ dir-path <> { rel-path }*])

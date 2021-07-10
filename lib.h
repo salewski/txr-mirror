@@ -717,6 +717,7 @@ mem_t *chk_manage_vec(mem_t *old, size_t oldfilled, size_t newfilled,
 wchar_t *chk_wmalloc(size_t nwchar);
 wchar_t *chk_wrealloc(wchar_t *, size_t nwchar);
 wchar_t *chk_strdup(const wchar_t *str);
+wchar_t *chk_substrdup(const wchar_t *str, size_t off, size_t len);
 char *chk_strdup_utf8(const char *str);
 unsigned char *chk_strdup_8bit(const wchar_t *str);
 mem_t *chk_copy_obj(mem_t *orig, size_t size);

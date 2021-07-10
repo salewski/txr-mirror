@@ -4064,6 +4064,21 @@ wchar_t *chk_strdup(const wchar_t *str)
   return copy;
 }
 
+wchar_t *chk_substrdup(const wchar_t *str, size_t off, size_t len)
+{
+  size_t size = wcslen(str) + 1, nchar;
+  wchar_t *copy;
+  if (off >= size - 1)
+    return chk_strdup(L"");
+  if (off + len < off)
+    uw_throw(error_s, lit("string size overflow"));
+  nchar = min(size - off, len + 1);
+  copy = chk_wmalloc(nchar);
+  wmemcpy(copy, str, nchar - 1);
+  copy[nchar - 1] = 0;
+  return copy;
+}
+
 char *chk_strdup_utf8(const char *str)
 {
   size_t nchar = strlen(str) + 1;
