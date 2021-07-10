@@ -686,6 +686,7 @@ val keepq(val obj, val seq, val keyfun);
 val keepql(val obj, val seq, val keyfun);
 val keepqual(val obj, val seq, val keyfun);
 val keep_if(val pred, val seq, val keyfun);
+val separate(val pred, val seq, val keyfun);
 val remq_lazy(val obj, val list);
 val remql_lazy(val obj, val list);
 val remqual_lazy(val obj, val list);

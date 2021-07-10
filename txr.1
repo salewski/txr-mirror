@@ -32451,10 +32451,11 @@ is omitted, then each element itself of
 is compared to
 .metn object .
 
-.coNP Functions @, remove-if @, keep-if @ remove-if* and @ keep-if*
+.coNP Functions @, remove-if @, keep-if @, separate @ remove-if* and @ keep-if*
 .synb
 .mets (remove-if < predicate-function < sequence <> [ key-function ])
 .mets (keep-if < predicate-function < sequence <> [ key-function ])
+.mets (separate < predicate-function < sequence <> [ key-function ])
 .mets (remove-if* < predicate-function < sequence <> [ key-function ])
 .mets (keep-if* < predicate-function < sequence <> [ key-function ])
 .syne
@@ -32495,6 +32496,45 @@ which
 will delete, and removes those that
 .code remove-if
 will preserve.
+
+The
+.code separate
+function combines
+.code keep-if
+and
+.code remove-if
+into one,
+returning a list of two elements whose
+.code car
+and
+.code cadr
+are the result of calling
+.code keep-if
+and
+.codn remove-if ,
+respectively,
+on
+.meta sequence
+(with the
+.meta predicate-function
+and
+.meta key-function
+arguments passed through).
+One of the two elements may share substructure with the input sequence,
+and may even be the same sequence object if all items are either kept or
+removed (in which case the other element will be
+.codn nil ).
+
+Note: the
+.code separate
+function may be understood in terms of the following reference implementation:
+
+.verb
+  (defun separate (pred seq : (keyfun :))
+    [(juxt (op keep-if pred @1 keyfun)
+           (op remove-if pred @1 keyfun))
+     seq])
+.brev
 
 The
 .code remove-if*
