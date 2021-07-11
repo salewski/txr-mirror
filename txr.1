@@ -49007,7 +49007,13 @@ and
 .code hlet*
 can be used instead. These macros create variable bindings whose storage is
 always outside of the stack, and therefore the variables will exhibit
-consistent
+consistent interpreted and compiled semantics under continuations.
+All contexts which capture the same lexical binding of a given
+.cod3 hlet / hlet*
+variable share a single instance. The most recent assignment
+to the variable taking place in any context establishes its value,
+as seen by any other context. The resumption of a continuation will not restore
+such a variable to a previous value.
 
 If the affected variables are other kinds of bindings such as
 function parameters or variables created with specialized binding
