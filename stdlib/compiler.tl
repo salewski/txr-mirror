@@ -2165,8 +2165,10 @@
                            use-sym unuse-sym))
 
 (defun open-compile-streams (in-path out-path test-fn)
+  (if (and (nullify in-path)
+           (find [in-path -1] path-sep-chars))
+    (error "~s: invalid input pathname ~s" 'compile-file in-path))
   (let* ((parent (or *load-path* ""))
-         (in-path (trim-right #/[\/\\]+/ in-path))
          (in-path (if (and (pure-rel-path-p in-path) (not (empty parent)))
                     (path-cat (dir-name parent) in-path)
                     in-path))
