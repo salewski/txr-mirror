@@ -148,10 +148,12 @@
                            #H(() ("a" t)))
     (file-put-jsons name '(1.0 t null)) t
     (file-get-jsons name) (1.0 t null)
-    (file-get-string name) "1\ntrue\nnull\n"
-    (command-put-json `cat > @name` #(#() #())) t
-    (file-get-string name) "[[],[]]\n"
-    (command-get-json `cat @name`) #(#() #())
-    (command-put-jsons `cat > @name` '(#() 1.0 nil)) t
-    (file-get-string name) "[]\n1\nfalse\n"
-    (command-get-jsons `cat @name`) (#() 1.0 nil)))
+    (file-get-string name) "1\ntrue\nnull\n")
+  (if (path-search "cat")
+    (mtest
+      (command-put-json `cat > @name` #(#() #())) t
+      (file-get-string name) "[[],[]]\n"
+      (command-get-json `cat @name`) #(#() #())
+      (command-put-jsons `cat > @name` '(#() 1.0 nil)) t
+      (file-get-string name) "[]\n1\nfalse\n"
+      (command-get-jsons `cat @name`) (#() 1.0 nil))))
