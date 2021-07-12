@@ -1,3 +1,5 @@
+@(do (unless (and (path-search "ls") (path-search "sort"))
+       (exit 13)))
 @(next `!ls @TESTDIR/proc | sort -n`)
 @(collect)
 @{process /[0-9]+/}
