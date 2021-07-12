@@ -438,11 +438,12 @@ tst/%.ok: %.txr %.expected $(TXR)
 	  $(if $(TXR_SCRIPT_ON_CMDLINE),                                      \
 	    $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) -c "$$(cat $<)"                \
 	    $(TXR_ARGS) > $(TST_OUT),                                         \
-	    $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TST_OUT)))
-	$(call SH,                                                            \
-	  if ! diff -u $(TST_EXPECTED) $(TST_OUT) ; then                      \
-	    exit 1 ;                                                          \
-	  fi)
+	    $(TXR) $(TXR_DBG_OPTS) $(TXR_OPTS) $< $(TXR_ARGS) > $(TST_OUT)) ; \
+	  case $$? in                                                         \
+	     ( 0 ) diff -u $(TST_EXPECTED) $(TST_OUT) ;;                      \
+	     ( 13 ) printf "SKIP %s\n" $< ; exit 0 ;;                         \
+	     ( * ) exit 1 ;;                                                  \
+	  esac)
 	$(call SH,touch $@)
 
 tst/%.ok: %.tl %.expected $(TXR)
