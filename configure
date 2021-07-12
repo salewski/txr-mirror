@@ -211,6 +211,7 @@ have_pkgconfig=
 libffi_cflags=
 darwin_target=
 android_target=
+build_id=
 
 #
 # Parse configuration variables
@@ -545,6 +546,22 @@ small-mem [$small_mem]
   and certain global book-keeping arrays in the generational garbage
   collector are smaller, resulting in more frequent collections.
 
+build-id [$build_id]
+
+  This option specifies the value of the build_id make variable.
+  The argument is GNU make syntax which calculates a string
+  that is inserted into the TXR executable. The string is reproduced
+  by reproduced using the txr --build-id. The default is that there
+  no build-id, and the --build-id option produces empty output.
+
+  If the argument value "git" is given, then the value is replaced
+  by syntax which which takes value of the output of the command
+  "git describe --tags --dirty",
+  executed in the source directory. This is recalculated each time
+  the txr.c source file is compiled.
+
+  The build_id variable can be overridden from the make command line.
+
 !
   exit 1
 fi
@@ -868,6 +885,19 @@ compiler_prefix := $compiler_prefix
 
 # prefix for non-compiler toolchain commands
 tool_prefix := $tool_prefix
+
+# build_id
+$(gitcmd='git describe --tags --dirty';
+  if [ "$build_id" = "git" ] ; then
+     if [ $build_in_srcdir ] ; then
+       printf 'build_id ?= $(shell %s)\n' "$gitcmd"
+     else
+       printf 'build_id ?= $(shell cd $(top_srcdir); %s)\n' "$gitcmd"
+     fi
+  else
+     printf 'build_id = %s\n' "$build_id"
+  fi)
+build_id_exp := \$(build_id)
 
 # do we compile in syslog support?
 have_syslog := $have_syslog

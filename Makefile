@@ -329,6 +329,9 @@ opt/txr-win.o: TXR_CFLAGS += -DPROG_NAME=\"$(PROG)-win\" \
                              -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-win$(EXE)\"
 dbg/txr-win.o: TXR_CFLAGS += -DPROG_NAME=\"$(PROG)-win-dbg\" \
                              -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-win-dbg$(EXE)\"
+ifneq ($(build_id_exp),)
+$(call EACH_CONF,txr.o txr-win.o): TXR_CFLAGS += -DTXR_BUILD_ID=\"$(build_id_exp)\"
+endif
 $(call EACH_CONF,txr.o txr-win.o): TXR_CFLAGS += -DEXE_SUFF=\"$(EXE)\"
 $(call EACH_CONF,txr.o txr-win.o): TXR_CFLAGS += -DTXR_VER=\"$(txr_ver)\"
 

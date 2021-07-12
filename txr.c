@@ -62,6 +62,9 @@
 #include "txr.h"
 
 const wchli_t *version = wli(TXR_VER);
+#ifdef TXR_BUILD_ID
+const wchli_t *build_id = wli(TXR_BUILD_ID);
+#endif
 wchar_t *progname;
 static const char *progname_u8;
 static val prog_path = nil, sysroot_path = nil;
@@ -139,6 +142,7 @@ static void help(void)
 "                       specified version of TXR.\n"
 "--help                 Reproduce this help text.\n"
 "--version              Display program version.\n"
+"--build-id             Print build ID string if compiled in.\n"
 "--license              Display software license.\n"
 "                       Use of txr implies agreement with the disclaimer\n"
 "                       section at the bottom of the license.\n"
@@ -697,6 +701,14 @@ int txr_main(int argc, char **argv)
         drop_privilege();
         format(std_output, lit("~a: version ~a\n"),
                prog_string, static_str(version), nao);
+        return 0;
+      }
+
+      if (equal(opt, lit("build-id"))) {
+        drop_privilege();
+#ifdef TXR_BUILD_ID
+        format(std_output, lit("~a\n"), static_str(build_id), nao);
+#endif
         return 0;
       }
 
