@@ -840,7 +840,8 @@ txr_ver := $txr_ver
 # is this configuration in maintainer mode
 maintainer := $maintainer
 
-# absolute path to source code directory
+# absolute path to source code directory or blank if
+# not building in a separate directory
 top_srcdir := $top_srcdir
 
 # build directory is top_srcdir
