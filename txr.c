@@ -483,6 +483,7 @@ static void free_all(void)
 #ifndef CONFIG_DEBUG_SUPPORT
 static void no_dbg_support(val arg)
 {
+  drop_privilege();
   format(std_error,
          lit("~a: option ~a requires debug support compiled in\n"),
          prog_string, arg, nao);
@@ -689,7 +690,7 @@ int txr_main(int argc, char **argv)
       }
 
       /* Long opts with no arguments */
-      if (org) {
+      if (0) noarg: {
         drop_privilege();
         format(std_error,
                lit("~a: option --~a takes no argument, ~a given\n"),
@@ -698,6 +699,8 @@ int txr_main(int argc, char **argv)
       }
 
       if (equal(opt, lit("version"))) {
+        if (org)
+          goto noarg;
         drop_privilege();
         format(std_output, lit("~a: version ~a\n"),
                prog_string, static_str(version), nao);
@@ -705,6 +708,8 @@ int txr_main(int argc, char **argv)
       }
 
       if (equal(opt, lit("build-id"))) {
+        if (org)
+          goto noarg;
         drop_privilege();
 #ifdef TXR_BUILD_ID
         format(std_output, lit("~a\n"), static_str(build_id), nao);
@@ -719,46 +724,65 @@ int txr_main(int argc, char **argv)
       }
 
       if (equal(opt, lit("license"))) {
+        if (org)
+          goto noarg;
         drop_privilege();
         return license();
       }
 
       if (equal(opt, lit("gc-debug"))) {
+        if (org)
+          goto noarg;
         drop_privilege();
         opt_gc_debug = 1;
         continue;
       } else if (equal(opt, lit("vg-debug"))) {
-        drop_privilege();
 #if HAVE_VALGRIND
+        if (org)
+          goto noarg;
+        drop_privilege();
         opt_vg_debug = 1;
         continue;
 #else
+        drop_privilege();
         format(std_error,
                lit("~a: option ~a requires Valgrind support compiled in\n"),
                prog_string, arg, nao);
         return EXIT_FAILURE;
 #endif
       } else if (equal(opt, lit("dv-regex"))) {
+        if (org)
+          goto noarg;
         opt_derivative_regex = 1;
         continue;
       } else if (equal(opt, lit("lisp-bindings"))) {
+        if (org)
+          goto noarg;
         opt_lisp_bindings = 1;
         opt_print_bindings = 1;
         continue;
       } else if (equal(opt, lit("lisp"))) {
+        if (org)
+          goto noarg;
         txr_lisp_p = t;
         continue;
       } else if (equal(opt, lit("compiled"))) {
+        if (org)
+          goto noarg;
         txr_lisp_p = chr('o');
         continue;
 #if HAVE_FORK_STUFF
       } else if (equal(opt, lit("reexec"))) {
+        if (org)
+          goto noarg;
         exec_wrap(prog_path, arg_list);
         return EXIT_FAILURE;
 #endif
       } else if (equal(opt, lit("debugger"))) {
-        drop_privilege();
 #if CONFIG_DEBUG_SUPPORT
+        if (org)
+          goto noarg;
+        drop_privilege();
         opt_debugger = 1;
         debug_set(DBG_ENABLE | DBG_BACKTRACE);
         continue;
@@ -767,8 +791,10 @@ int txr_main(int argc, char **argv)
         return EXIT_FAILURE;
 #endif
       } else if (equal(opt, lit("debug-autoload"))) {
-        drop_privilege();
 #if CONFIG_DEBUG_SUPPORT
+        if (org)
+          goto noarg;
+        drop_privilege();
         opt_debugger = 1;
         opt_dbg_autoload = 1;
         debug_set(DBG_ENABLE | DBG_BACKTRACE);
@@ -778,8 +804,10 @@ int txr_main(int argc, char **argv)
         return EXIT_FAILURE;
 #endif
       } else if (equal(opt, lit("debug-expansion"))) {
-        drop_privilege();
 #if CONFIG_DEBUG_SUPPORT
+        if (org)
+          goto noarg;
+        drop_privilege();
         opt_debugger = 1;
         opt_dbg_expansion = 1;
         debug_set(DBG_ENABLE | DBG_BACKTRACE);
@@ -789,6 +817,8 @@ int txr_main(int argc, char **argv)
         return EXIT_FAILURE;
 #endif
       } else if (equal(opt, lit("yydebug"))) {
+        if (org)
+          goto noarg;
         drop_privilege();
         if (have_yydebug) {
           yydebug_onoff(1);
@@ -804,6 +834,8 @@ int txr_main(int argc, char **argv)
           return EXIT_FAILURE;
         }
       } else if (equal(opt, lit("backtrace"))) {
+        if (org)
+          goto noarg;
 #if CONFIG_DEBUG_SUPPORT
         debug_set(DBG_BACKTRACE);
         continue;
@@ -812,13 +844,19 @@ int txr_main(int argc, char **argv)
         return EXIT_FAILURE;
 #endif
       } else if (equal(opt, lit("noninteractive"))) {
+        if (org)
+          goto noarg;
         opt_noninteractive = 1;
         stream_set_prop(std_input, real_time_k, nil);
         continue;
       } else if (equal(opt, lit("free-all"))) {
+        if (org)
+          goto noarg;
         atexit(free_all);
         continue;
       } else if (equal(opt, lit("noprofile"))) {
+        if (org)
+          goto noarg;
         opt_noprofile = 1;
         continue;
       } else {
