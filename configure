@@ -1063,7 +1063,7 @@ fi
 
 printf "done\n"
 
-printf "Checking whether executables have that idiotic .exe suffix ... "
+printf "Checking whether executables require an .exe suffix ... "
 
 if ls conftest.exe > /dev/null 2>&1 ; then
   echo "yes"
