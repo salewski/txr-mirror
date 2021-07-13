@@ -67,4 +67,8 @@ INLINE void simulate_setuid_setgid(val open_script) { }
 #if HAVE_UNISTD_H
 val getcwd_wrap(void);
 #endif
+#if HAVE_RLIMIT
+val getrlimit_wrap(val resource, val rlim_opt);
+val setrlimit_wrap(val resource, val rlim);
+#endif
 void sysif_init(void);

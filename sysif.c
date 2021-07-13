@@ -88,6 +88,9 @@
 #if HAVE_UTIME
 #include <utime.h>
 #endif
+#if HAVE_RLIMIT
+#include <sys/resource.h>
+#endif
 #include "alloca.h"
 #include "lib.h"
 #include "stream.h"
@@ -147,6 +150,11 @@ val flock_s, type_s, whence_s, start_s, len_s, pid_s;
 
 #if HAVE_DLOPEN
 val dlhandle_s, dlsym_s;
+#endif
+
+#if HAVE_RLIMIT
+val rlim_s, cur_s, max_s;
+static val rlim_st;
 #endif
 
 struct cobj_class *dir_cls;
@@ -2446,9 +2454,47 @@ static val dirstat(val dirent, val dir_path, val stat_opt)
   return stat;
 }
 
+#if HAVE_RLIMIT
+val getrlimit_wrap(val resource, val rlim_opt)
+{
+  val self = lit("getrlimit");
+  struct rlimit rl;
+  val rlim = rlim_opt;
+  int res = getrlimit(c_int(resource, self), &rl);
+
+  if (res != 0)
+    uw_throwf(system_error_s, lit("~a failed for ~a: ~d/~s"),
+              self, resource, num(errno), errno_to_str(errno), nao);
+
+  if (missingp(rlim)) {
+    args_decl(args, ARGS_MIN);
+    rlim = make_struct(rlim_st, nil, args);
+  }
+
+  slotset(rlim, cur_s, unum(rl.rlim_cur));
+  slotset(rlim, max_s, unum(rl.rlim_max));
+  return rlim;
+}
+
+val setrlimit_wrap(val resource, val rlim)
+{
+  val self = lit("setrlimit");
+  struct rlimit rl;
+  rl.rlim_cur = c_unum(slot(rlim, cur_s), self);
+  rl.rlim_max = c_unum(slot(rlim, max_s), self);
+  int res = setrlimit(c_int(resource, self), &rl);
+
+  if (res != 0)
+    uw_throwf(system_error_s, lit("~a failed for ~a: ~d/~s"),
+              self, resource, num(errno), errno_to_str(errno), nao);
+
+  return t;
+}
+#endif
+
 void sysif_init(void)
 {
-  protect(&at_exit_list, &dirent_st, &env_list, &env_hash, convert(val *, 0));
+  protect(&at_exit_list, &dirent_st, &rlim_st, &env_list, &env_hash, convert(val *, 0));
 
   atexit(at_exit_handler);
 
@@ -3048,4 +3094,25 @@ void sysif_init(void)
   reg_varl(intern(lit("dt-reg"), user_package), num_fast(DT_REG));
   reg_varl(intern(lit("dt-lnk"), user_package), num_fast(DT_LNK));
   reg_varl(intern(lit("dt-sock"), user_package), num_fast(DT_SOCK));
+
+#if HAVE_RLIMIT
+  rlim_s = intern(lit("rlim"), user_package);
+  cur_s = intern(lit("cur"), user_package);
+  max_s = intern(lit("max"), user_package);
+  rlim_st = make_struct_type(rlim_s, nil, nil,
+                             list(cur_s, max_s, nao),
+                             nil, nil, nil, nil);
+  reg_fun(intern(lit("getrlimit"), user_package), func_n2o(getrlimit_wrap, 1));
+  reg_fun(intern(lit("setrlimit"), user_package), func_n2(setrlimit_wrap));
+  reg_varl(intern(lit("rlim-saved-max"), user_package), num_fast(RLIM_SAVED_MAX));
+  reg_varl(intern(lit("rlim-saved-cur"), user_package), num_fast(RLIM_SAVED_CUR));
+  reg_varl(intern(lit("rlim-infinity"), user_package), num_fast(RLIM_INFINITY));
+  reg_varl(intern(lit("rlimit-core"), user_package), num_fast(RLIMIT_CORE));
+  reg_varl(intern(lit("rlimit-cpu"), user_package), num_fast(RLIMIT_CPU));
+  reg_varl(intern(lit("rlimit-data"), user_package), num_fast(RLIMIT_DATA));
+  reg_varl(intern(lit("rlimit-fsize"), user_package), num_fast(RLIMIT_FSIZE));
+  reg_varl(intern(lit("rlimit-nofile"), user_package), num_fast(RLIMIT_NOFILE));
+  reg_varl(intern(lit("rlimit-stack"), user_package), num_fast(RLIMIT_STACK));
+  reg_varl(intern(lit("rlimit-as"), user_package), num_fast(RLIMIT_AS));
+#endif
 }

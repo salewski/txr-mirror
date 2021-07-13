@@ -71479,6 +71479,98 @@ slot of the returned
 structure will have the value
 .codn nil .
 
+.SS* Unix Resource Limits
+
+.coNP Structure @ rlim
+.synb
+.mets (defstruct rlim nil
+.mets \ \ cur max)
+.syne
+.desc
+The
+.code rlim
+structure is required by the functions
+.code getrlimit
+and
+.codn setrlimit .
+It is analogous to the C structure by the same name described in POSIX.
+
+.coNP Variables @, rlim-saved-max @ rlim-saved-cur and @ rlim-infinity
+.desc
+These variables correspond to the POSIX constants
+.codn RLIM_SAVED_MAX ,
+.code RLIM_SAVED_CUR
+and
+.codn RLIM_INFINITY .
+They have the same values, and are suitable as slot values of the
+.code rlim
+structure.
+
+Variables @, rlimit-core @, rlimit-cpu @, rlimit-data @, rlimit-fsize @, rlimit-nofile @ rlimit-stack and @ rlimit-as
+.desc
+These variables correspond to the POSIX constants
+.codn RLIMIT_CORE ,
+.codn RLIMIT_CPU ,
+.code RLIMIT_DATA
+and so forth.
+
+.coNP Functions @ getrlimit and @ setrlimit
+.synb
+.mets (getrlimit < resource <> [ rlim ])
+.mets (setrlimit < resource << rlim )
+.syne
+.desc
+The
+.code getrlimit
+function retrieves information about the limits imposed for a particular parameter indicated by the
+.meta resource
+integer.
+
+The
+.code setrlimit
+function changes the limit information for a resource parameter.
+
+The
+.meta resource
+parameter is the value of one of the variables
+.codn rlimit-core ,
+.codn rlimit-cpu ,
+.code rlimit-data
+and so forth.
+
+The
+.meta rlim
+argument is a structure of type
+.codn rlim .
+If this argument is given to the
+.code getrlimit
+function, then it fills in that structure with the retrieved
+parameters. Otherwise it allocates a new structure and fills
+that one. In either situation, the filled structure is returned,
+if the underlying call to the host operating system is successful.
+
+In the case of
+.codn setrlimit ,
+the
+.code rlim
+object must have non-negative integer values which are in the range
+of the platform's
+.code rlim_t
+type.
+
+If the underlying system call fails, then these functions throw
+an exception. In the successful case, the
+.code getrlimit
+function returns the
+.code rlim
+structure, and
+.code setrlimit
+returns
+.codn t .
+
+Further information about resource limits is available in the POSIX standard
+and platform documentation.
+
 .SS* Web Programming Support
 
 .coNP Functions @ url-encode and @ url-decode
