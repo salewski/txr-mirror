@@ -2448,7 +2448,7 @@ static val dirstat(val dirent, val dir_path, val stat_opt)
 
 void sysif_init(void)
 {
-  protect(&at_exit_list, dirent_st, &env_list, &env_hash, convert(val *, 0));
+  protect(&at_exit_list, &dirent_st, &env_list, &env_hash, convert(val *, 0));
 
   atexit(at_exit_handler);
 
