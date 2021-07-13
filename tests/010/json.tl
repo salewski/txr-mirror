@@ -149,7 +149,7 @@
     (file-put-jsons name '(1.0 t null)) t
     (file-get-jsons name) (1.0 t null)
     (file-get-string name) "1\ntrue\nnull\n")
-  (if (path-search "cat")
+  (if (path-executable-to-me-p "/bin/sh")
     (mtest
       (command-put-json `cat > @name` #(#() #())) t
       (file-get-string name) "[[],[]]\n"

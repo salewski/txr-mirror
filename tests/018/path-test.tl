@@ -1,7 +1,10 @@
 (load "../common")
 
+(unless (path-executable-to-me-p "/bin/sh")
+  (exit 0))
+
 (mtest
-  (ends-with "/sh" (path-search "sh")) t
+  (ends-with "/bin/sh" (path-search "sh")) t
   (path-search "AlMoStCeRtAiNlLyNoNeXisTenT") nil
   (path-search "") nil
   (path-search "sh" nil) nil

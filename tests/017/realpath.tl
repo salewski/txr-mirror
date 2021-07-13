@@ -1,6 +1,7 @@
 (load "../common")
 
-(when (memq (os-symbol) '(:cygwin :solaris :android))
+(when (or (memq (os-symbol) '(:cygwin :solaris :android))
+          (not (path-exists-p "/usr/bin")))
   (put-string (file-get-string "tests/017/realpath.expected"))
   (exit 0))
 

@@ -1,5 +1,8 @@
 (load "../common")
 
+(unless (path-executable-to-me-p "/bin/sh")
+  (exit 0))
+
 (defun cmd (c : (m "r"))
   (with-stream (s (open-command c m))
     (get-string s)))
