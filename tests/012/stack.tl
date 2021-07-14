@@ -10,10 +10,15 @@
 
 (test (so (recur)) :so)
 
-(if stack-limited
+(if (fboundp 'setrlimit)
   (test (let ((pid (fork)))
           (cond
-            ((zerop pid) (set-stack-limit 0) (recur))
+            ((zerop pid)
+             (set-stack-limit 0)
+             (let ((rlim (getrlimit rlimit-stack)))
+               (set rlim.cur 32768)
+               (setrlimit rlimit-stack rlim))
+             (recur))
             (t (let ((status (wait pid)))
                  (w-ifsignaled status)))))
         t))
