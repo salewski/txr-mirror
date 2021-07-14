@@ -329,6 +329,13 @@ opt/txr-win.o: TXR_CFLAGS += -DPROG_NAME=\"$(PROG)-win\" \
                              -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-win$(EXE)\"
 dbg/txr-win.o: TXR_CFLAGS += -DPROG_NAME=\"$(PROG)-win-dbg\" \
                              -DTXR_REL_PATH=\"$(bindir_rel)/$(PROG)-win-dbg$(EXE)\"
+
+old_build_id=$(shell cat .build_id 2> /dev/null)
+ifneq ($(build_id_exp),$(old_build_id))
+$(shell rm -f $(call EACH_CONF,txr.o txr-win.o))
+endif
+$(shell printf "%s" "$(build_id_exp)" > .build_id)
+
 ifneq ($(build_id_exp),)
 $(call EACH_CONF,txr.o txr-win.o): TXR_CFLAGS += -DTXR_BUILD_ID=\"$(build_id_exp)\"
 endif
@@ -343,7 +350,7 @@ rebuild clean: notconfigured
 
 distclean:
 	$(V)echo "executing generic cleanup for non-configured directory"
-	rm -f txr txr.exe txr-dbg txr-dbg.exe txr-win.exe txr-win-dbg.exe
+	rm -f txr txr.exe txr-dbg txr-dbg.exe txr-win.exe txr-win-dbg.exe .build_id
 	rm -f y.tab.c lex.yy.c y.tab.h y.output
 	rm -rf opt dbg tst
 	rm -f stdlib/*.tlo run.sh
@@ -358,7 +365,7 @@ rebuild: clean $(PROG)
 clean: conftest.clean clean-tlo
 	rm -f $(PROG)$(EXE) $(PROG)-dbg$(EXE) y.tab.c lex.yy.c y.tab.h y.output
 	rm -f y.tab.h.old
-	rm -f $(PROG)-win$(EXE) $(PROG)-win-dbg$(EXE)
+	rm -f $(PROG)-win$(EXE) $(PROG)-win-dbg$(EXE) .build_id
 	rm -rf opt dbg tst
 	rm -f $(EXTRA_OBJS-y) run.sh
 
