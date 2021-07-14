@@ -152,10 +152,8 @@ val flock_s, type_s, whence_s, start_s, len_s, pid_s;
 val dlhandle_s, dlsym_s;
 #endif
 
-#if HAVE_RLIMIT
 val rlim_s, cur_s, max_s;
 static val rlim_st;
-#endif
 
 struct cobj_class *dir_cls;
 
@@ -3095,13 +3093,13 @@ void sysif_init(void)
   reg_varl(intern(lit("dt-lnk"), user_package), num_fast(DT_LNK));
   reg_varl(intern(lit("dt-sock"), user_package), num_fast(DT_SOCK));
 
-#if HAVE_RLIMIT
   rlim_s = intern(lit("rlim"), user_package);
   cur_s = intern(lit("cur"), user_package);
   max_s = intern(lit("max"), user_package);
   rlim_st = make_struct_type(rlim_s, nil, nil,
                              list(cur_s, max_s, nao),
                              nil, nil, nil, nil);
+#if HAVE_RLIMIT
   reg_fun(intern(lit("getrlimit"), user_package), func_n2o(getrlimit_wrap, 1));
   reg_fun(intern(lit("setrlimit"), user_package), func_n2(setrlimit_wrap));
   reg_varl(intern(lit("rlim-saved-max"), user_package), num_fast(RLIM_SAVED_MAX));
