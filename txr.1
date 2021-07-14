@@ -61669,9 +61669,9 @@ an object of the same kind as what is stored in the
 .code *random-state*
 variable.
 
-The seed, if specified, must be either an integer value, an
-existing random state object, or a vector returned from a call
-to the function
+The seed, if specified, must be an integer value, a buffer,
+an existing random state object, or else a vector returned from a call to the
+function
 .codn random-state-get-vec .
 
 Note that the sign of the seed is ignored, so that negative seed
@@ -61691,8 +61691,8 @@ time increment is a millisecond. Calls to
 .code make-random-state
 less than a millisecond apart may predictably produce the same seed.
 
-If an integer seed is specified, then the integer value is mapped to a
-pseudorandom sequence, in a platform-independent way.
+If an integer or buffer seed is specified, then the integer value is mapped to
+a pseudorandom sequence, in a platform-independent way.
 
 If an existing random state is specified as a seed, then it is duplicated. The
 returned random state object is a distinct object which is in the same

@@ -40,6 +40,7 @@
 #include "arith.h"
 #include "eval.h"
 #include "time.h"
+#include "buf.h"
 #include "txr.h"
 #include "rand.h"
 
@@ -191,8 +192,46 @@ val make_random_state(val seed, val warmup)
 
     r->cur = c_num(seed->v.vec[i], self);
     return rs;
+  } else if (bufp(seed)) {
+    ucnum len = c_unum(seed->b.len, self);
+    mem_t *data = seed->b.data;
+
+    for (i = 0; i < 16; i++) {
+      if (len >= 4) {
+        r->state[i] = (((rand32_t) data[0]) << 24 |
+                       ((rand32_t) data[1]) << 16 |
+                       ((rand32_t) data[2]) <<  8 |
+                       ((rand32_t) data[3]));
+        data += 4;
+        len -= 4;
+      } else if (len == 0) {
+        r->state[i] = 0;
+      } else {
+        switch (len % 4) {
+        case 0:
+          r->state[i] = 0;
+          len = 0;
+          break;
+        case 1:
+          r->state[i] = (((rand32_t) data[0]) << 24);
+          len = 0;
+          break;
+        case 2:
+          r->state[i] = (((rand32_t) data[0]) << 24 |
+                         ((rand32_t) data[1]) << 16);
+          len = 0;
+          break;
+        case 3:
+          r->state[i] = (((rand32_t) data[0]) << 24 |
+                         ((rand32_t) data[1]) << 16 |
+                         ((rand32_t) data[2]) <<  8);
+          len = 0;
+          break;
+        }
+      }
+    }
   } else {
-    uw_throwf(error_s, lit("~a: seed ~s is not a number"),
+    uw_throwf(error_s, lit("~a: unable to seed random state with ~s"),
               self, seed, nao);
   }
 
