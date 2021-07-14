@@ -61708,15 +61708,22 @@ function.
 The
 .meta warm-up-period
 argument specifies the number of values which are immediately obtained and
-discarded from the newly-seeded generator before it is returned.
-Warm-up is not performed when
+discarded from the newly-seeded generator before it is returned. This
+procedure is referred to as PRNG
+.IR warm-up .
+
+Warm-up is not performed if
 .meta seed
-is an existing random state object, and this argument is ignored in that
-case. If the parameter is required, but the argument is missing, then
-the value of the
+is a vector or random state object. In this situation, if the
+.meta warm-up-period
+is present, it may still be required to be an integer, even though it is ignored.
+
+If warm-up is performed, but the
+.meta warm-up-period
+argument is missing, then the value of the
 .code *random-warmup*
-special variable is used. This variable has a default value which may be too
-small for serious applications of pseudorandom numbers; see the Notes under
+special variable is used. Note: this variable has a default value which may be too
+small for some applications of pseudorandom numbers; see the Notes under
 .codn *random-warmup* .
 
 .coNP Function @ random-state-p
