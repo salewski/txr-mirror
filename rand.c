@@ -139,8 +139,7 @@ val make_random_state(val seed, val warmup)
   val self = lit("make-random-state");
   val rs = make_state();
   int i = 0;
-  struct rand_state *r = coerce(struct rand_state *,
-                                cobj_handle(self, rs, random_state_cls));
+  struct rand_state *r = coerce(struct rand_state *, rs->co.handle);
 
   seed = default_null_arg(seed);
   warmup = default_null_arg(warmup);
