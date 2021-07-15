@@ -211,3 +211,49 @@
   (path-cat "abc/" "/def/" "g") "abc/def/g"
   (path-cat "abc/" "/def/" "g/") "abc/def/g/"
   (path-cat "" "abc/" "/def/" "g/") "abc/def/g/")
+
+(mtest
+  (abs-path-p "") nil
+  (abs-path-p "/") t
+  (abs-path-p "/abc") t
+  (abs-path-p "abc") nil
+  (abs-path-p ".") nil)
+
+(if (eql [path-sep-chars 0] #\\)
+  (mtest
+    (abs-path-p "\\abc") t
+    (abs-path-p "a:\\abc") t
+    (abs-path-p "0:\\abc") t
+    (abs-path-p "AB0:\\abc") t
+    (abs-path-p "cd5:\\abc") t
+    (abs-path-p "a:/abc") t
+    (abs-path-p "0:/abc") t
+    (abs-path-p "AB0:/abc") t
+    (abs-path-p "cd5:/abc") t)
+  (mtest
+    (abs-path-p "\\abs") nil
+    (abs-path-p "a:\\abc") nil
+    (abs-path-p "0:\\abc") nil
+    (abs-path-p "AB0:\\abc") nil
+    (abs-path-p "cd5:\\abc") nil
+    (abs-path-p "a:/abc") nil
+    (abs-path-p "0:/abc") nil
+    (abs-path-p "AB0:/abc") nil
+    (abs-path-p "cd5:/abc") nil))
+
+(mtest
+  (portable-abs-path-p "") nil
+  (portable-abs-path-p "/") t
+  (portable-abs-path-p "/abc") t
+  (portable-abs-path-p "\\abc") t
+  (portable-abs-path-p "abc") nil
+  (portable-abs-path-p ".") nil
+  (portable-abs-path-p "\\abc") t
+  (portable-abs-path-p "a:\\abc") t
+  (portable-abs-path-p "0:\\abc") t
+  (portable-abs-path-p "AB0:\\abc") t
+  (portable-abs-path-p "cd5:\\abc") t
+  (portable-abs-path-p "a:/abc") t
+  (portable-abs-path-p "0:/abc") t
+  (portable-abs-path-p "AB0:/abc") t
+  (portable-abs-path-p "cd5:/abc") t)
