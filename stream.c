@@ -4888,46 +4888,58 @@ static val open_files_star(val file_list, val substitute_stream, val mode)
   }
 }
 
-static val ap_regex;
-
-val portable_abs_path_p(val path)
+static val volume_prefix_p(const wchar_t *str)
 {
-  val ch;
+  enum { init, slash } state;
 
-  if (length(path) == zero)
-    return nil;
-  if ((ch = chr_str(path, zero)) == chr('/') || ch == chr('\\'))
-    return t;
-
-  if (!ap_regex)
-    ap_regex = regex_compile(lit("[A-Za-z0-9]+:[/\\\\]"), nil);
-
-  if (match_regex(path, ap_regex, zero))
-    return t;
+  for (state = init; *str; str++) {
+    wchar_t ch = *str;
+    switch (state) {
+    case init:
+      if (iswalnum(ch))
+        continue;
+      if (ch == ':') {
+        state = slash;
+        continue;
+      }
+      return nil;
+    case slash:
+      if (ch == '/' || ch == '\\')
+        return t;
+      return nil;
+    }
+  }
 
   return nil;
 }
 
+val portable_abs_path_p(val path)
+{
+  val self = lit("portable-abs-path-p");
+  const wchar_t *str = c_str(path, self);
+
+  if (*str == 0)
+    return nil;
+  if (str[0] == '/' || str[0] == '\\')
+    return t;
+  return volume_prefix_p(str);
+}
+
 val abs_path_p(val path)
 {
+  val self = lit("abs-path-p");
   const wchar_t *psc = coerce(const wchar_t *, path_sep_chars);
+  const wchar_t *str = c_str(path, self);
 
-  if (length(path) == zero)
+  if (*str == 0)
     return nil;
-
-  if (wcschr(psc, c_chr(chr_str(path, zero))))
+  if (wcschr(psc, str[0]))
     return t;
 
   if (psc[0] != '\\')
     return nil;
 
-  if (!ap_regex)
-    ap_regex = regex_compile(lit("[A-Za-z0-9]+:[/\\\\]"), nil);
-
-  if (match_regex(path, ap_regex, zero))
-    return t;
-
-  return nil;
+  return volume_prefix_p(str);
 }
 
 static val plp_regex;
@@ -5366,7 +5378,6 @@ void iobuf_list_empty(void)
 
 void stream_init(void)
 {
-  prot1(&ap_regex);
   prot1(&plp_regex);
   prot1(&top_stderr);
 
