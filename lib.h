@@ -1286,10 +1286,7 @@ INLINE val default_null_arg(val arg)
   return if3(missingp(arg), nil, arg);
 }
 
-INLINE val default_arg_strict(val arg, val dfl)
-{
-  return if3(missingp(arg), dfl, arg);
-}
+#define default_arg_strict(arg, dfl) if3(missingp(arg), dfl, arg)
 
 #define list_collect_decl(OUT, PTAIL)           \
   val OUT = nil;                                \
