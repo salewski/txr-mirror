@@ -560,6 +560,7 @@ txr-manpage.html: txr.1 genman.txr
 txr-manpage.pdf: txr.1 checkman.txr
 	$(TXR) checkman.txr $<
 	tbl $< | pdfroff -ww -man --no-toc - > $@
+	[ $$SOURCE_DATE_EPOCH ] && $(TXR) pdf-clobber-stamps.tl || true
 
 #
 # Special targets used by ./configure
