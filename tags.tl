@@ -1,15 +1,28 @@
 #!/usr/bin/env txr
 
+;; The etags format is described here:
+;; https://git.savannah.gnu.org/cgit/emacs.git/tree/etc/ETAGS.EBNF.
+;;
+;; Unmentioned in the document is that the line number is 1-based and
+;; the byte offset 0-based.
+(defparml etag-sec-start #\x0c)
+(defparml etag-pat-end #\x7f)
+(defparml etag-name-end #\x01)
+
 (define-option-struct tags-opts nil
-  (nil help    :bool "List this help text.")
+  (nil help    :bool "List this help text and exit.")
+  (o   output  :text "Act on the tags file named TEXT.")
   (a   append  :bool "Append to existing tags file, without sorting.")
   (m   merge   :bool "Merge with existing tags file, sorting combined content.")
   (nil exclude (cumul :text) "Skip paths matching glob pattern given \ \
-                              in TEXT. Multiple patterns can be specified."))
+                              in TEXT. Multiple patterns can be specified.")
+  (e   emacs   :bool "Write the tags file in Emacs's etags format."))
 
 (defstruct tag ()
   ident
   path
+  linum
+  byte
   pattern
   (type "?")
 
@@ -17,7 +30,12 @@
     (upd me.ident tostringp))
 
   (:method text (me)
-    `@{me.ident}\t@{me.path}\t/^@{me.pattern}$/;"\t@{me.type}`))
+    `@{me.ident}\t@{me.path}\t/^@{me.pattern}$/;"\t@{me.type}`)
+
+  (:method etext (me)
+    `@{me.pattern}@{etag-pat-end} \
+     @{me.ident}@{etag-name-end} \
+     @{me.linum},@{me.byte}`))
 
 (defun escape (str)
   (mappend (do caseql @1
@@ -26,10 +44,11 @@
            str))
 
 (defstruct file-tag tag
+  (type "F")
   (:postinit (me)
     (set me.ident (base-name me.path)))
   (:method text (me)
-    `@{me.ident}\t@{me.path}\t;"\tF`))
+    `@{me.ident}\t@{me.path}\t;"\t@{me.type}`))
 
 (defstruct fun-tag tag
   (type "f"))
@@ -60,9 +79,16 @@
 
 (defvar *fake-load-path*)
 
-(defun get-pat (lines form)
+(defun get-pos-pat (lines form)
   (tree-case (source-loc form)
-    ((line . file) (escape [lines line]))))
+    ((line . file)
+     ;; The file-get-string function keeps carriage returns, so the byte
+     ;; offset is correct even with \r\n line separators.
+     (let ((byte (+ line ; Count the newlines.
+                    -1   ; Adjust the byte offset to be 0-based.
+                    [sum (take line lines) coded-length])))
+       (cons (cons line byte)
+             (escape [lines line]))))))
 
 (defmacro in-anon-package (. body)
   (with-gensyms (pkg)
@@ -75,14 +101,19 @@
 (defmacro with-tag-shorthand-macro ((name-sym path-var lines-var obj-var)
                                     . body)
   ^(macrolet ((,name-sym (type ident : parent pattern-obj)
-                ^(new ,type ident ,ident
-                            path ,',path-var
-                            pattern ,*(if pattern-obj
-                                        ^((get-pat ,',lines-var ,pattern-obj))
-                                        ^((get-pat ,',lines-var ,',obj-var)))
-                            ,*(if parent ^(parent ,parent))
-                            ,*(if pattern-obj ^(expattern t)))))
-    ,*body))
+                (with-gensyms (linum byte pat)
+                  ^(tree-case ,(if pattern-obj
+                                 ^(get-pos-pat ,',lines-var ,pattern-obj)
+                                 ^(get-pos-pat ,',lines-var ,',obj-var))
+                     (((,linum . ,byte) . ,pat)
+                      (new ,type ident ,ident
+                                 path ,',path-var
+                                 linum ,linum
+                                 byte ,byte
+                                 pattern ,pat
+                                 ,*(if parent ^(parent ,parent))
+                                 ,*(if pattern-obj ^(expattern t))))))))
+     ,*body))
 
 (defun process-package-influencing-form (form)
   (caseq (car form)
@@ -184,6 +215,7 @@
 (defun collect-tags-tl (path)
   (let* ((text (file-get-string path))
          (text (if (starts-with "#!" text) `;@text` text))
+         ;; Make line numbers and byte offsets 1-based.
          (lines (cons "" (spl #\newline text)))
          (stream (make-string-byte-input-stream text))
          (*rec-source-loc* t)
@@ -199,6 +231,7 @@
 (defun collect-tags-txr (path)
   (let* ((text (file-get-string path))
          (text (if (starts-with "#!" text) `\@;@text` text))
+         ;; Make line numbers and byte offsets 1-based.
          (lines (cons "" (spl #\newline text)))
          (stream (make-string-byte-input-stream text))
          (*rec-source-loc* t)
@@ -222,15 +255,25 @@
 (defun write-tagfile (tags o)
   (when o.merge
     (catch
-      (let* ((lines (file-get-lines "tags"))
+      (let* ((lines (file-get-lines o.output))
              (orig-tags (collect-each ((line lines))
                           (new orig-tag ident (m^ #/[^\t]*/ line)
                                         line line))))
         (set tags (merge tags orig-tags : .ident)))
       (path-not-found (e))))
-  (with-stream (stream (open-file "tags" (if o.append "a" "w")))
+  (with-stream (stream (open-file o.output (if o.append "a" "w")))
     (each ((tag tags))
       (put-line tag.(text) stream))))
+
+(defun write-etagfile (grouped-etags o)
+  (with-stream (stream (open-file o.output (if o.append "a" "w")))
+    (each ((pair grouped-etags))
+      (tree-bind (path . etags) pair
+        (let ((str (with-out-string-stream (s)
+                     (each ((etag etags))
+                       (put-line etag.(etext) s)))))
+          (put-string `@{etag-sec-start}\n@{path},@(len str)\n@{str}`
+                      stream))))))
 
 (defvarl ftw-actionretval 0)
 (defvarl ftw-continue 0)
@@ -253,12 +296,22 @@
     (unless o.out-args
       (push "." o.out-args))
 
-    (when (and o.merge o.append)
-      (put-line `@{*load-path*}: --append and --merge are mutually exclusive`)
+    (unless (plusp (len o.output))
+      (set o.output (if o.emacs "TAGS" "tags")))
+
+    (when (and o.merge (or o.append o.emacs))
+      ;; The --merge option (without --emacs) currently results in
+      ;; duplicate tags if a file is retagged (e.g., "txr tags.tl foo.tl
+      ;; && txr tags.tl --merge foo.tl").
+      ;; We could have --merge replace all existing tags of a retagged
+      ;; file with the latest ones, with and without --emacs, but for
+      ;; now don't bother (and therefore forbid combining --emacs with
+      ;; --merge).
+      (put-line `@{*load-path*}: @(if o.append `--append` `--emacs`)\ \
+                 and --merge are mutually exclusive`)
       (exit nil))
 
-    (let* ((have-arv (boundp 'ftw-actionretval))
-           (excf [apply orf (mapcar (do op fnmatch @@1 @1) o.exclude)])
+    (let* ((excf [apply orf (mapcar (do op fnmatch @@1) o.exclude)])
            (skips ())
            (*read-unknown-structs* t)
            (tags (build
@@ -285,4 +338,12 @@
                                       ftw-skip-subtree)))
                             (t ftw-continue)))
                         (logior ftw-phys ftw-actionretval)))))
-      (write-tagfile (nsort tags : .ident) o))))
+      (if o.emacs
+        (write-etagfile (flow tags
+                              (remove-if (op equal @1.type "F"))
+                              (nsort @1 : .linum)
+                              (group-by .path)
+                              (hash-alist)
+                              (nsort @1 : car))
+                        o)
+        (write-tagfile (nsort tags : .ident) o)))))
