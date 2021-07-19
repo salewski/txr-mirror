@@ -46,8 +46,8 @@
          ((sys:setq i (succ i)))
       (sys:setq l (cons (gensym `arg-@(if (plusp i) i "rest")-`) l)))))
 
-(defun sys:op-meta-p (expr)
-  (tree-case expr
+(defun sys:op-meta-p (exp)
+  (tree-case exp
     ((x y . r) (and (null r)
                     (cond
                       ((eq x 'sys:expr) (sys:op-meta-p y))
