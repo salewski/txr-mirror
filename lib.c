@@ -2899,7 +2899,7 @@ val remq(val obj, val seq, val keyfun)
 
 val remql(val obj, val seq, val keyfun)
 {
-  return rem_impl(eql, lit("remq"), obj, seq, keyfun);
+  return rem_impl(eql, lit("remql"), obj, seq, keyfun);
 }
 
 val remqual(val obj, val seq, val keyfun)
