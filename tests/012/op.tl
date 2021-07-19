@@ -82,3 +82,14 @@
   [[(do op list @1)] 2] :error
   [[(do op list @1) 1] 2] (2 1)
   [[(do op list @@1 @1) 1] 2] (1 2))
+
+(mtest
+  [[[[(do do do op list @1) 1] 2] 3] 4] (4 1 2 3)
+  [[[[(do do do op list @@1) 1] 2] 3] 4] (3 1 2 4)
+  [[[[(do do do op list @@@1) 1] 2] 3] 4] (2 1 3 4)
+  [[[[(do do do op list @@@@1) 1] 2] 3] 4] (1 2 3 4))
+
+(mtest
+  [[[[(do do do op list) 1] 2] 3] 4] (1 2 3 4)
+  [[[[(do do do op list @1 @@1 @@@1 @@@@1) 1] 2] 3] 4] (4 3 2 1)
+  [[[[(do do do op list @@@@1 @@@1 @@1 @1) 1] 2] 3] 4] (1 2 3 4))

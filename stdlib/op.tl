@@ -50,9 +50,11 @@
   (tree-case exp
     ((x y . r) (and (null r)
                     (cond
-                      ((eq x 'sys:expr) (sys:op-meta-p y))
-                      ((eq x 'sys:var) (or (integerp y)
-                                           (eq y 'rest))))))))
+                      ((eq x 'sys:expr) (let ((depth (sys:op-meta-p y)))
+                                          (if depth (succ depth))))
+                      ((eq x 'sys:var) (if (or (integerp y)
+                                               (eq y 'rest))
+                                         0)))))))
 
 (defun sys:op-rec-p (exp)
   (or (tree-case exp
@@ -64,17 +66,25 @@
     (slotset ctx 'recvar t))
   (or (slot ctx 'rec) (slotset ctx 'rec (gensym "rec-"))))
 
+(defun sys:find-parent (ctx depth)
+  (for ((more t)) (more ctx) ((if (minusp (sys:setq depth (pred depth)))
+                                (sys:setq more nil)))
+    (sys:setq ctx (slot ctx 'up))))
+
 (defun sys:op-alpha-rename (f e op-args do-nested-metas)
   (let* ((ctx sys:*op-ctx*)
          (code ^(macrolet ((sys:expr (:form f arg)
-                             (let ((ctx ,ctx))
+                             (let* ((ctx ,ctx)
+                                    (depth (sys:op-meta-p arg))
+                                    (rec (sys:op-rec-p arg))
+                                    (up (slot ctx 'up))
+                                    (par (cond
+                                           (depth (sys:find-parent ctx depth))
+                                           (rec up))))
                                (cond
-                                 ((and (slot ctx 'up)
-                                       (or (sys:op-meta-p arg)
-                                           (sys:op-rec-p arg)))
-                                  (let ((up (slot ctx 'up)))
-                                    (slotset up 'nested t)
-                                    ^(,(slot up 'meta) (quote ,arg))))
+                                 ((and par (or depth rec))
+                                  (slotset par 'nested t)
+                                  ^(,(slot (slot ctx 'up) 'meta) (quote ,arg)))
                                  ((sys:op-rec-p f)
                                   ^(,(sys:op-ensure-rec ctx) ,*(rest arg)))
                                  (t f))))
