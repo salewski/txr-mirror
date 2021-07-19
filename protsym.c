@@ -150,7 +150,7 @@ extern val vm_closure_s, vm_desc_s, void_s, warning_s, wchar_s;
 extern val weak_and_k, weak_keys_k, weak_or_k, weak_vals_k, when_s;
 extern val while_s, while_star_s, whole_k, width_s, wild_s;
 extern val word_char_k, wrap_k, wstr_d_s, wstr_s, year_s;
-extern val zap_s, zarray_s, zchar_s, zerop_s, zeroplus_s;
+extern val zarray_s, zchar_s, zerop_s, zeroplus_s;
 extern val zone_s;
 
 #if HAVE_DLOPEN
@@ -306,7 +306,7 @@ val *protected_sym[] = {
   &weak_and_k, &weak_keys_k, &weak_or_k, &weak_vals_k, &when_s,
   &while_s, &while_star_s, &whole_k, &width_s, &wild_s,
   &word_char_k, &wrap_k, &wstr_d_s, &wstr_s, &year_s,
-  &zap_s, &zarray_s, &zchar_s, &zerop_s, &zeroplus_s,
+  &zarray_s, &zchar_s, &zerop_s, &zeroplus_s,
   &zone_s,
 
 #if HAVE_DLOPEN

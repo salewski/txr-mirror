@@ -86,7 +86,7 @@ val eq_s, eql_s, equal_s, less_s;
 val car_s, cdr_s, not_s, vecref_s;
 val setq_s, setqf_s, sys_lisp1_value_s, sys_lisp1_setq_s;
 val sys_l1_val_s, sys_l1_setq_s;
-val inc_s, zap_s;
+val inc_s;
 val for_s, for_star_s, each_s, each_star_s, collect_each_s, collect_each_star_s;
 val for_op_s, each_op_s;
 val append_each_s, append_each_star_s, while_s, while_star_s, until_star_s;
@@ -6560,7 +6560,6 @@ void eval_init(void)
   sys_l1_val_s = intern(lit("l1-val"), system_package);
   setqf_s = intern(lit("setqf"), system_package);
   inc_s = intern(lit("inc"), user_package);
-  zap_s = intern(lit("zap"), user_package);
   for_s = intern(lit("for"), user_package);
   for_star_s = intern(lit("for*"), user_package);
   each_s = intern(lit("each"), user_package);
