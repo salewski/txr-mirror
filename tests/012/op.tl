@@ -74,3 +74,11 @@
 (mtest
   (flow 1 (+ 2) [dup *] (let ((x @1)) x)) 9
   (flow #S(time year 2021) .year succ) 2022)
+
+(mtest
+  [[(do op list)] 2] :error
+  [[(do op list) 2]] (2)
+  [[(do op list @@1) 1] 2] (1 2)
+  [[(do op list @1)] 2] :error
+  [[(do op list @1) 1] 2] (2 1)
+  [[(do op list @@1 @1) 1] 2] (1 2))
