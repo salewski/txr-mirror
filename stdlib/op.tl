@@ -54,9 +54,10 @@
                       ((eq x 'sys:var) (or (integerp y)
                                            (eq y 'rest))))))))
 
-(defun sys:op-rec-p (expr)
-  (tree-case expr
-    ((x (y . r)) (and (eq x 'sys:expr) (eq y 'usr:rec)))))
+(defun sys:op-rec-p (exp)
+  (or (tree-case exp
+        ((x (y . r)) (and (eq x 'sys:expr) (eq y 'usr:rec))))
+      (equal exp '(sys:var usr:rec))))
 
 (defun sys:op-ensure-rec (ctx : recvar)
   (when recvar
@@ -70,8 +71,7 @@
                                (cond
                                  ((and (slot ctx 'up)
                                        (or (sys:op-meta-p arg)
-                                           (sys:op-rec-p arg)
-                                           (equal arg '(sys:var usr:rec))))
+                                           (sys:op-rec-p arg)))
                                   (let ((up (slot ctx 'up)))
                                     (slotset up 'nested t)
                                     ^(,(slot up 'meta) (quote ,arg))))
@@ -84,7 +84,7 @@
                                 (unless (integerp arg)
                                   (sys:setq arg 0))
                                 (sys:ensure-op-arg ,ctx arg))
-                               ((equal f '(sys:var usr:rec))
+                               ((sys:op-rec-p f)
                                 (sys:op-ensure-rec ,ctx t))
                                (t f)))
                            ,*(if do-nested-metas
