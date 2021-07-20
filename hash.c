@@ -601,30 +601,46 @@ static void hash_mark(val hash)
 
   gc_mark(h->userdata);
 
+  if (h->count == 0) {
+    gc_mark(h->table);
+    return;
+  }
+
   /* Use counts will be re-calculated by a scan of the
      hash iterators which are still reachable. */
   h->usecount = 0;
 
   switch (h->flags) {
+    cnum i;
+    val iter;
   case hash_weak_none:
-    /* If the hash is not weak, we can simply mark the table
-       vector and we are done. */
     gc_mark(h->table);
-    break;
+    return;
   case hash_weak_keys:
-  case hash_weak_vals:
-  case hash_weak_both:
-    /* If the hash is weak, we don't touch it at this time,
-       but add it to the list of reachable weak hashes,
-       unless it is empty. */
-    if (h->count > 0) {
-      h->next = reachable_weak_hashes;
-      reachable_weak_hashes = h;
-    } else {
-      gc_mark(h->table);
-      break;
+    /* Mark values only. Don't mark the table. */
+    for (i = 0; i < h->modulus; i++) {
+      for (iter = h->table->v.vec[i]; iter; iter = us_cdr(iter)) {
+        val entry = us_car(iter);
+        gc_mark(us_cdr(entry));
+      }
     }
+    break;
+  case hash_weak_vals:
+    /* Mark keys only. Don't mark the table. */
+    for (i = 0; i < h->modulus; i++) {
+      for (iter = h->table->v.vec[i]; iter; iter = us_cdr(iter)) {
+        val entry = us_car(iter);
+        gc_mark(us_car(entry));
+      }
+    }
+    break;
+  case hash_weak_both:
+    /* mark nothing */
+    break;
   }
+
+  h->next = reachable_weak_hashes;
+  reachable_weak_hashes = h;
 }
 
 static struct cobj_ops hash_ops = cobj_ops_init(hash_equal_op,

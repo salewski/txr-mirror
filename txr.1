@@ -51061,13 +51061,11 @@ the weak references "lapse" in some way, which depends on what kind they are.
 Hash-table weak references lapse by entry removal.  When an object used
 as a key in in one or more weak-key hash tables becomes unreachable, those hash
 entries disappear. This happens even if the values are themselves reachable.
-That is what it means that.
-Vice versa, when an object appearing as a value in
-one or more hash-table entries in weak-value hash tables becomes unreachable,
-those entries disappear, even if the keys are reachable. When a hash table has
-both weak keys and weak values, then its entries are removed when either keys
-or values become unreachable.  In other words, both the key and value must be
-reachable in order to retain the entry.
+Vice versa, when an object appearing as a value in one or more weak-value hash
+tables becomes unreachable, those entries disappear, even if the keys are
+reachable. When a hash table has both weak keys and weak values, then its
+entries are removed when either keys or values become unreachable.  In other
+words, both the key and value must be reachable in order to retain the entry.
 
 An open traversal of a hash table is performed by the
 .code maphash
