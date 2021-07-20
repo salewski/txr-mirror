@@ -1215,7 +1215,7 @@ static void do_weak_tables(void)
   reachable_weak_hashes = 0;
 
   for (; h != 0; h = h->next) {
-    cnum i, c;
+    cnum i, c = 0;
     /* The table of a weak hash was spuriously reached by conservative GC;
        it's a waste of time doing weak processing, since all keys and
        values have been transitively marked as reachable; and so we
@@ -1230,11 +1230,11 @@ static void do_weak_tables(void)
     case hash_weak_keys:
       /* Sweep through all entries. Delete any which have keys
          that are garbage. */
-      for (c = 0, i = 0; i < h->modulus; i++) {
+      for (i = 0; i < h->modulus; i++) {
         val *pchain = &h->table->v.vec[i];
         val *iter;
 
-        for (iter = pchain; !gc_is_reachable(*iter); ) {
+        for (iter = pchain; *iter; ) {
           val entry = us_car(*iter);
           if (!gc_is_reachable(entry) && !gc_is_reachable(us_car(entry))) {
             *iter = us_cdr(*iter);
@@ -1248,18 +1248,15 @@ static void do_weak_tables(void)
           }
         }
       }
-      /* Garbage is gone now. Seal things by marking the vector. */
-      gc_mark(h->table);
-      h->count = c;
       break;
     case hash_weak_vals:
       /* Sweep through all entries. Delete any which have values
          that are garbage. */
-      for (i = 0, c = 0; i < h->modulus; i++) {
+      for (i = 0; i < h->modulus; i++) {
         val *pchain = &h->table->v.vec[i];
         val *iter;
 
-        for (iter = pchain; !gc_is_reachable(*iter); ) {
+        for (iter = pchain; *iter; ) {
           val entry = us_car(*iter);
           if (!gc_is_reachable(entry) && !gc_is_reachable(us_cdr(entry))) {
             *iter = us_cdr(*iter);
@@ -1273,18 +1270,15 @@ static void do_weak_tables(void)
           }
         }
       }
-      /* Garbage is gone now. Seal things by marking the vector. */
-      gc_mark(h->table);
-      h->count = c;
       break;
     case hash_weak_both:
       /* Sweep through all entries. Delete any which have keys
          or values that are garbage. */
-      for (i = 0, c = 0; i < h->modulus; i++) {
+      for (i = 0; i < h->modulus; i++) {
         val *pchain = &h->table->v.vec[i];
         val *iter;
 
-        for (iter = pchain; !gc_is_reachable(*iter); ) {
+        for (iter = pchain; *iter; ) {
           val entry = us_car(*iter);
           if (!gc_is_reachable(entry) &&
               (!gc_is_reachable(us_car(entry)) || !gc_is_reachable(us_cdr(entry))))
@@ -1302,11 +1296,12 @@ static void do_weak_tables(void)
           }
         }
       }
-      /* Garbage is gone now. Seal things by marking the vector. */
-      gc_mark(h->table);
-      h->count = c;
       break;
     }
+
+    /* Garbage is gone now. Seal things by marking the vector. */
+    gc_mark(h->table);
+    h->count = c;
   }
 
   /* More weak hashes were discovered during weak processing.
