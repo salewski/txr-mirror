@@ -826,6 +826,15 @@ static val do_make_hash(val weak_keys, val weak_vals,
   }
 }
 
+val tweak_hash(val hash, val weak_keys, val weak_vals)
+{
+  val self = lit("tweak-hash");
+  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
+  int flags = ((weak_vals != nil) << 1) | (weak_keys != nil);
+  h->flags = convert(hash_flags_t, flags);
+  return hash;
+}
+
 val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed)
 {
   return do_make_hash(weak_keys, weak_vals,

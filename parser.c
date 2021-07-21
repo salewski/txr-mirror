@@ -1878,7 +1878,7 @@ void parse_init(void)
   parser_cls = cobj_register(parser_s);
 
   protect(&stream_parser_hash, &unique_s, &catch_all, convert(val *, 0));
-  stream_parser_hash = make_hash(t, nil, nil);
+  stream_parser_hash = make_hash(t, t, nil);
   catch_all = cons(t, nil);
 
   parser_l_init();
@@ -1896,4 +1896,10 @@ void parse_init(void)
   reg_fun(intern(lit("parse-errors"), user_package), func_n1(parse_errors));
   reg_fun(intern(lit("repl"), system_package), func_n4(repl));
   reg_mac(json_s, func_n2(me_json));
+}
+
+void parse_compat_fixup(int compat_ver)
+{
+  if (compat_ver <= 266)
+    tweak_hash(stream_parser_hash, t, nil);
 }

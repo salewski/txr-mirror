@@ -14052,6 +14052,7 @@ int compat_fixup(int compat_ver)
 
   eval_compat_fixup(compat_ver);
   rand_compat_fixup(compat_ver);
+  parse_compat_fixup(compat_ver);
   return 0;
 }
 

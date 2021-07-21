@@ -6488,12 +6488,12 @@ void eval_init(void)
           &call_f, &iter_begin_f, &iter_from_binding_f, &iter_more_f,
           &iter_item_f, &iter_step_f,
           &unbound_s, &origin_hash, &const_foldable_hash, convert(val *, 0));
-  top_fb = make_hash(t, nil, nil);
-  top_vb = make_hash(t, nil, nil);
-  top_mb = make_hash(t, nil, nil);
-  top_smb = make_hash(t, nil, nil);
-  special = make_hash(t, nil, nil);
-  builtin = make_hash(t, nil, nil);
+  top_fb = make_hash(t, t, nil);
+  top_vb = make_hash(t, t, nil);
+  top_mb = make_hash(t, t, nil);
+  top_smb = make_hash(t, t, nil);
+  special = make_hash(t, t, nil);
+  builtin = make_hash(t, t, nil);
   op_table = make_hash(nil, nil, nil);
   pm_table = make_hash(nil, nil, nil);
 
@@ -7342,6 +7342,15 @@ void eval_init(void)
 
 void eval_compat_fixup(int compat_ver)
 {
+  if (compat_ver <= 266) {
+    tweak_hash(top_fb, t, nil);
+    tweak_hash(top_vb, t, nil);
+    tweak_hash(top_mb, t, nil);
+    tweak_hash(top_smb, t, nil);
+    tweak_hash(special, t, nil);
+    tweak_hash(builtin, t, nil);
+  }
+
   if (compat_ver <= 107)
     reg_fun(intern(lit("flip"), user_package), func_n1(swap_12_21));
 }

@@ -39,6 +39,7 @@ extern struct cobj_class *hash_cls;
 
 ucnum equal_hash(val obj, int *count, ucnum);
 val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed);
+val tweak_hash(val hash, val weak_keys, val weak_vals);
 val make_hash(val weak_keys, val weak_vals, val equal_based);
 val make_eq_hash(val weak_keys, val weak_vals);
 val make_similar_hash(val existing);
