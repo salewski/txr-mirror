@@ -5922,7 +5922,7 @@ val carray_uint(val num, val eltype_in)
 {
   val self = lit("carray-uint");
   val eltype = default_arg(eltype_in, ffi_type_compile(uchar_s));
-  struct txr_ffi_type *tft = ffi_type_struct(eltype);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, eltype);
 
   carray_elem_check(tft, self);
 
@@ -5957,7 +5957,7 @@ val carray_int(val num, val eltype_in)
 {
   val self = lit("carray-int");
   val eltype = default_arg(eltype_in, ffi_type_compile(uchar_s));
-  struct txr_ffi_type *tft = ffi_type_struct(eltype);
+  struct txr_ffi_type *tft = ffi_type_struct_checked(self, eltype);
 
   carray_elem_check(tft, self);
 
