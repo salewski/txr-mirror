@@ -4584,13 +4584,6 @@ void arith_init(void)
   bitset_s = intern(lit("bitset"), user_package);
   logcount_s = intern(lit("logcount"), user_package);
 
-  if (opt_compat && opt_compat <= 199) {
-    reg_varl(intern(lit("*flo-dig*"), user_package), num_fast(DBL_DIG));
-    reg_varl(intern(lit("*flo-max*"), user_package), flo(DBL_MAX));
-    reg_varl(intern(lit("*flo-min*"), user_package), flo(DBL_MIN));
-    reg_varl(intern(lit("*flo-epsilon*"), user_package), flo(DBL_EPSILON));
-  }
-
   reg_varl(intern(lit("flo-dig"), user_package), num_fast(DBL_DIG));
   reg_varl(intern(lit("flo-max-dig"), user_package), num_fast(FLO_MAX_DIG));
   reg_varl(intern(lit("flo-max"), user_package), flo(DBL_MAX));
@@ -4607,11 +4600,6 @@ void arith_init(void)
 #define M_E 2.71828182845904523536
 #endif
   reg_varl(intern(lit("%e%"), user_package), flo(M_E));
-
-  if (opt_compat && opt_compat <= 199) {
-    reg_varl(intern(lit("*pi*"), user_package), flo(M_PI));
-    reg_varl(intern(lit("*e*"), user_package), flo(M_E));
-  }
 
   reg_fun(plus_s, func_n0v(plusv));
   reg_fun(minus_s, func_n1v(minusv));
@@ -4675,8 +4663,7 @@ void arith_init(void)
   reg_fun(sqrt_s, func_n1(sqroot));
   reg_fun(logand_s, func_n0v(logandv));
   reg_fun(logior_s, func_n0v(logiorv));
-  reg_fun(logxor_s,
-          func_n2(if3(opt_compat && opt_compat <= 202, logxor_old, logxor)));
+  reg_fun(logxor_s, func_n2(logxor));
   reg_fun(intern(lit("logtest"), user_package), func_n2(logtest));
   reg_fun(lognot_s, func_n2o(lognot, 1));
   reg_fun(logtrunc_s, func_n2(logtrunc));
@@ -4729,6 +4716,21 @@ void arith_init(void)
   reg_fun(intern(lit("flo-set-round-mode"), user_package),
           func_n1(flo_set_round_mode));
 #endif
+}
+
+void arith_compat_fixup(int compat_ver)
+{
+  if (compat_ver <= 202)
+    reg_fun(logxor_s, func_n2(logxor_old));
+
+  if (compat_ver <= 199) {
+    reg_varl(intern(lit("*pi*"), user_package), flo(M_PI));
+    reg_varl(intern(lit("*e*"), user_package), flo(M_E));
+    reg_varl(intern(lit("*flo-dig*"), user_package), num_fast(DBL_DIG));
+    reg_varl(intern(lit("*flo-max*"), user_package), flo(DBL_MAX));
+    reg_varl(intern(lit("*flo-min*"), user_package), flo(DBL_MIN));
+    reg_varl(intern(lit("*flo-epsilon*"), user_package), flo(DBL_EPSILON));
+  }
 }
 
 void arith_free_all(void)

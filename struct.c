@@ -165,12 +165,8 @@ void struct_init(void)
   static_slot_type_hash = make_hash(nil, nil, nil);
   struct_type_finalize_f = func_n1(struct_type_finalize);
 
-  if (opt_compat && opt_compat <= 117)
-    reg_fun(intern(lit("make-struct-type"), user_package),
-            func_n5(make_struct_type_compat));
-  else
-    reg_fun(intern(lit("make-struct-type"), user_package),
-            func_n8o(make_struct_type, 7));
+  reg_fun(intern(lit("make-struct-type"), user_package),
+          func_n8o(make_struct_type, 7));
 
   reg_fun(intern(lit("make-struct-type"), system_package),
           func_n8(make_struct_type));
@@ -210,8 +206,6 @@ void struct_init(void)
   reg_fun(intern(lit("call-super-fun"), user_package),
           func_n2v(call_super_fun));
   reg_fun(intern(lit("slotp"), user_package), func_n2(slotp));
-  if (opt_compat && opt_compat <= 118)
-    reg_fun(intern(lit("slot-p"), user_package), func_n2(slotp));
   reg_fun(intern(lit("static-slot-p"), user_package), func_n2(static_slot_p));
   reg_fun(intern(lit("structp"), user_package), func_n1(structp));
   reg_fun(intern(lit("struct-type"), user_package), func_n1(struct_type));
@@ -223,6 +217,16 @@ void struct_init(void)
   reg_fun(intern(lit("slots"), user_package), func_n1(slots));
   reg_fun(intern(lit("slot-types"), system_package), func_n1(slot_types));
   reg_fun(intern(lit("static-slot-types"), system_package), func_n1(static_slot_types));
+}
+
+void struct_compat_fixup(int compat_ver)
+{
+  if (compat_ver <= 118)
+    reg_fun(intern(lit("slot-p"), user_package), func_n2(slotp));
+
+  if (compat_ver <= 117)
+    reg_fun(intern(lit("make-struct-type"), user_package),
+            func_n5(make_struct_type_compat));
 }
 
 static NORETURN void no_such_struct(val ctx, val sym)

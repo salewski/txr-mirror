@@ -6703,10 +6703,6 @@ void eval_init(void)
   reg_mac(gen_s, func_n2(me_gen));
   reg_mac(gun_s, func_n2(me_gun));
   reg_mac(intern(lit("delay"), user_package), func_n2(me_delay));
-  if (opt_compat && opt_compat <= 184) {
-    reg_mac(op_s, func_n2(me_op));
-    reg_mac(do_s, func_n2(me_op));
-  }
   reg_mac(sys_l1_val_s, func_n2(me_l1_val));
   reg_mac(sys_l1_setq_s, func_n2(me_l1_setq));
   reg_mac(qquote_s, func_n2(me_qquote));
@@ -6830,8 +6826,7 @@ void eval_init(void)
   reg_fun(intern(lit("copy-list"), user_package), func_n1(copy_list));
   reg_fun(intern(lit("nreverse"), user_package), func_n1(nreverse));
   reg_fun(intern(lit("reverse"), user_package), func_n1(reverse));
-  reg_fun(intern(lit("ldiff"), user_package),
-          func_n2(if3(opt_compat && opt_compat <= 190, ldiff_old, ldiff)));
+  reg_fun(intern(lit("ldiff"), user_package), func_n2(ldiff));
   reg_fun(intern(lit("last"), user_package), func_n2o(last, 1));
   reg_fun(intern(lit("butlast"), user_package), func_n2o(butlast, 1));
   reg_fun(intern(lit("nthlast"), user_package), func_n2(nthlast));
@@ -6958,10 +6953,7 @@ void eval_init(void)
   reg_fun(intern(lit("env-vbindings"), user_package), func_n1(env_vbindings));
   reg_fun(intern(lit("env-fbindings"), user_package), func_n1(env_fbindings));
   reg_fun(intern(lit("env-next"), user_package), func_n1(env_next));
-  reg_fun(intern(lit("lexical-var-p"), user_package),
-          func_n2(if3(opt_compat && opt_compat <= 257,
-                      old_lexical_var_p,
-                      lexical_var_p)));
+  reg_fun(intern(lit("lexical-var-p"), user_package), func_n2(lexical_var_p));
   reg_fun(intern(lit("lexical-fun-p"), user_package), func_n2(lexical_fun_p));
   reg_fun(intern(lit("lexical-lisp1-binding"), user_package),
           func_n2(lexical_lisp1_binding));
@@ -7014,18 +7006,11 @@ void eval_init(void)
   reg_varl(system_package_s = intern(lit("system-package"), user_package), system_package);
   reg_varl(keyword_package_s = intern(lit("keyword-package"), user_package), keyword_package);
 
-  if (opt_compat && opt_compat <= 156) {
-    reg_varl(intern(lit("*user-package*"), user_package), user_package);
-    reg_varl(intern(lit("*system-package*"), user_package), system_package);
-    reg_varl(intern(lit("*keyword-package*"), user_package), keyword_package);
-  }
-
   reg_fun(intern(lit("make-sym"), user_package), func_n1(make_sym));
   reg_fun(intern(lit("gensym"), user_package), func_n1o(gensym, 0));
   reg_var(gensym_counter_s = intern(lit("*gensym-counter*"), user_package), zero);
   reg_var(package_alist_s = intern(lit("*package-alist*"), user_package), packages);
-  reg_var(package_s = intern(lit("*package*"), user_package),
-          (opt_compat && opt_compat <= 190) ? user_package : public_package);
+  reg_var(package_s = intern(lit("*package*"), user_package), public_package);
   reg_fun(intern(lit("make-package"), user_package), func_n2o(make_package, 1));
   reg_fun(intern(lit("make-anon-package"), system_package), func_n1o(make_anon_package, 0));
   reg_fun(intern(lit("find-package"), user_package), func_n1(find_package));
@@ -7190,11 +7175,9 @@ void eval_init(void)
   reg_fun(intern(lit("improper-plist-to-alist"), user_package), func_n2(improper_plist_to_alist));
   reg_fun(intern(lit("merge"), user_package), func_n4o(merge_wrap, 2));
   reg_fun(intern(lit("nsort"), user_package), func_n3o(nsort, 1));
-  reg_fun(intern(lit("sort"), user_package),
-          func_n3o(if3(opt_compat && opt_compat <= 237, nsort, sort), 1));
+  reg_fun(intern(lit("sort"), user_package), func_n3o(sort, 1));
   reg_fun(intern(lit("nshuffle"), user_package), func_n2o(nshuffle, 1));
-  reg_fun(intern(lit("shuffle"), user_package),
-          func_n2o(if3(opt_compat && opt_compat <= 237, nshuffle, shuffle), 1));
+  reg_fun(intern(lit("shuffle"), user_package), func_n2o(shuffle, 1));
   reg_fun(intern(lit("find"), user_package), func_n4o(find, 2));
   reg_fun(intern(lit("rfind"), user_package), func_n4o(rfind, 2));
   reg_fun(intern(lit("find-if"), user_package), func_n3o(find_if, 2));
@@ -7349,6 +7332,31 @@ void eval_compat_fixup(int compat_ver)
     tweak_hash(top_smb, t, nil);
     tweak_hash(special, t, nil);
     tweak_hash(builtin, t, nil);
+  }
+
+  if (compat_ver <= 257)
+    reg_fun(intern(lit("lexical-var-p"), user_package),
+            func_n2(old_lexical_var_p));
+
+  if (compat_ver <= 237) {
+    reg_fun(intern(lit("sort"), user_package), func_n3o(nsort, 1));
+    reg_fun(intern(lit("shuffle"), user_package), func_n2o(nshuffle, 1));
+  }
+
+  if (compat_ver <= 190) {
+    reg_var(package_s, user_package);
+    reg_fun(intern(lit("ldiff"), user_package), func_n2(ldiff_old));
+  }
+
+  if (compat_ver <= 184) {
+    reg_mac(op_s, func_n2(me_op));
+    reg_mac(do_s, func_n2(me_op));
+  }
+
+  if (compat_ver <= 156) {
+    reg_varl(intern(lit("*user-package*"), user_package), user_package);
+    reg_varl(intern(lit("*system-package*"), user_package), system_package);
+    reg_varl(intern(lit("*keyword-package*"), user_package), keyword_package);
   }
 
   if (compat_ver <= 107)

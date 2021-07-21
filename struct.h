@@ -95,3 +95,4 @@ val get_special_required_slot(val obj, enum special_slot spidx);
 val get_special_slot_by_type(val stype, enum special_slot spidx);
 INLINE int obj_struct_p(val obj) { return obj->co.ops == &struct_inst_ops; }
 void struct_init(void);
+void struct_compat_fixup(int compat_ver);

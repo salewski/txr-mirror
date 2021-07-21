@@ -3354,16 +3354,12 @@ void regex_init(void)
   reg_fun(intern(lit("search-regex"), user_package), func_n4o(search_regex, 2));
   reg_fun(intern(lit("range-regex"), user_package), func_n4o(range_regex, 2));
   reg_fun(intern(lit("search-regst"), user_package), func_n4o(search_regst, 2));
-  reg_fun(intern(lit("match-regex"), user_package),
-          func_n3o((opt_compat && opt_compat <= 150) ?
-                   match_regex : match_regex_len, 2));
+  reg_fun(intern(lit("match-regex"), user_package), func_n3o(match_regex_len, 2));
   reg_fun(intern(lit("match-regst"), user_package), func_n3o(match_regst, 2));
   reg_fun(intern(lit("match-regex-right"), user_package),
-          func_n3o((opt_compat && opt_compat <= 150) ?
-                   match_regex_right_old : match_regex_right, 2));
+          func_n3o(match_regex_right, 2));
   reg_fun(intern(lit("match-regst-right"), user_package),
-          func_n3o((opt_compat && opt_compat <= 150) ?
-                   match_regst_right_old : match_regst_right, 2));
+          func_n3o(match_regst_right, 2));
   reg_fun(intern(lit("regex-prefix-match"), user_package),
           func_n3o(regex_prefix_match, 2));
   reg_fun(intern(lit("regsub"), user_package), func_n3(regsub));
@@ -3393,6 +3389,17 @@ void regex_init(void)
   reg_fun(intern(lit("trim-left"), user_package), func_n2(trim_left));
   reg_fun(intern(lit("trim-right"), user_package), func_n2(trim_right));
   init_special_char_sets();
+}
+
+void regex_compat_fixup(int compat_ver)
+{
+  if (compat_ver <= 150) {
+    reg_fun(intern(lit("match-regex"), user_package), func_n3o(match_regex, 2));
+    reg_fun(intern(lit("match-regex-right"), user_package),
+            func_n3o(match_regex_right_old, 2));
+    reg_fun(intern(lit("match-regst-right"), user_package),
+            func_n3o(match_regst_right_old, 2));
+  }
 }
 
 void regex_free_all(void)

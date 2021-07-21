@@ -141,3 +141,4 @@ val put_obj(val obj, val type, val stream);
 val get_obj(val type, val stream);
 val fill_obj(val obj, val type, val stream);
 void ffi_init(void);
+void ffi_compat_fixup(int compat_ver);

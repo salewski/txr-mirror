@@ -268,3 +268,4 @@ val tmpfile_wrap(void);
 val mkdtemp_wrap(val prefix);
 val mkstemp_wrap(val prefix, val suffix);
 void stream_init(void);
+void stream_compat_fixup(int compat_ver);

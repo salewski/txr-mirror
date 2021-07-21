@@ -66,4 +66,5 @@ val regex_range_right_fun(val regex, val end);
 val regex_range_search_fun(val regex, val start, val from_end);
 int wide_display_char_p(wchar_t ch);
 void regex_init(void);
+void regex_compat_fixup(int compat_ver);
 void regex_free_all(void);

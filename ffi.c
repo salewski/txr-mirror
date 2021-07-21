@@ -6464,13 +6464,6 @@ void ffi_init(void)
     reg_fun(intern(lit("carray-int"), user_package), ca_int);
     reg_fun(intern(lit("uint-carray"), user_package), uint_ca);
     reg_fun(intern(lit("int-carray"), user_package), int_ca);
-
-    if (opt_compat && opt_compat <= 227) {
-      reg_fun(intern(lit("carray-unum"), user_package), ca_uint);
-      reg_fun(intern(lit("carray-num"), user_package), ca_int);
-      reg_fun(intern(lit("unum-carray"), user_package), uint_ca);
-      reg_fun(intern(lit("num-carray"), user_package), int_ca);
-    }
   }
   reg_fun(intern(lit("put-carray"), user_package), func_n3o(put_carray, 1));
   reg_fun(intern(lit("fill-carray"), user_package), func_n3o(fill_carray, 1));
@@ -6492,4 +6485,19 @@ void ffi_init(void)
   ffi_struct_tag_hash = make_hash(nil, nil, nil);
   ffi_init_types();
   ffi_init_extra_types();
+}
+
+void ffi_compat_fixup(int compat_ver)
+{
+  if (compat_ver <= 227) {
+    val ca_uint = func_n2o(carray_uint, 1);
+    val ca_int = func_n2o(carray_int, 1);
+    val uint_ca = func_n1(uint_carray);
+    val int_ca = func_n1(int_carray);
+
+    reg_fun(intern(lit("carray-unum"), user_package), ca_uint);
+    reg_fun(intern(lit("carray-num"), user_package), ca_int);
+    reg_fun(intern(lit("unum-carray"), user_package), uint_ca);
+    reg_fun(intern(lit("num-carray"), user_package), int_ca);
+  }
 }

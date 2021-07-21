@@ -5521,9 +5521,7 @@ void stream_init(void)
   reg_fun(intern(lit("open-files"), user_package), func_n3o(open_files, 1));
   reg_fun(intern(lit("open-files*"), user_package), func_n3o(open_files_star, 1));
   reg_fun(intern(lit("portable-abs-path-p"), user_package), func_n1(portable_abs_path_p));
-  reg_fun(intern(lit("abs-path-p"), user_package),
-          func_n1(if3(opt_compat && opt_compat <= 258,
-                      portable_abs_path_p, abs_path_p)));
+  reg_fun(intern(lit("abs-path-p"), user_package), func_n1(abs_path_p));
   reg_fun(intern(lit("pure-rel-path-p"), user_package), func_n1(pure_rel_path_p));
   reg_fun(intern(lit("base-name"), user_package), func_n2o(base_name, 1));
   reg_fun(intern(lit("dir-name"), user_package), func_n1(dir_name));
@@ -5603,4 +5601,11 @@ void stream_init(void)
     }
   }
 #endif
+}
+
+void stream_compat_fixup(int compat_ver)
+{
+  if (compat_ver <= 258)
+    reg_fun(intern(lit("abs-path-p"), user_package),
+            func_n1(portable_abs_path_p));
 }
