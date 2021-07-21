@@ -1236,7 +1236,7 @@ static void do_weak_tables(void)
 
         for (iter = pchain; *iter; ) {
           val entry = us_car(*iter);
-          if (!gc_is_reachable(entry) && !gc_is_reachable(us_car(entry))) {
+          if (!gc_is_reachable(us_car(entry))) {
             *iter = us_cdr(*iter);
 #if CONFIG_EXTRA_DEBUGGING
             if (us_car(entry) == break_obj)
@@ -1258,7 +1258,7 @@ static void do_weak_tables(void)
 
         for (iter = pchain; *iter; ) {
           val entry = us_car(*iter);
-          if (!gc_is_reachable(entry) && !gc_is_reachable(us_cdr(entry))) {
+          if (!gc_is_reachable(us_cdr(entry))) {
             *iter = us_cdr(*iter);
 #if CONFIG_EXTRA_DEBUGGING
             if (us_cdr(entry) == break_obj)
@@ -1280,8 +1280,7 @@ static void do_weak_tables(void)
 
         for (iter = pchain; *iter; ) {
           val entry = us_car(*iter);
-          if (!gc_is_reachable(entry) &&
-              (!gc_is_reachable(us_car(entry)) || !gc_is_reachable(us_cdr(entry))))
+          if (!gc_is_reachable(us_car(entry)) || !gc_is_reachable(us_cdr(entry)))
           {
             *iter = us_cdr(*iter);
 #if CONFIG_EXTRA_DEBUGGING
