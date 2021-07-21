@@ -19,30 +19,30 @@
   (e   emacs   :bool "Write the tags file in Emacs's etags format.")
   (q   qual    :bool "Also generate struct:slot tags for each slot."))
 
+(defun escape (str)
+  (mappend (do caseql @1
+             ((#\^ #\$ #\/ #\\) (list #\\ @1))
+             (t (list @1)))
+           str))
+
 (defstruct tag ()
   ident
   path
   linum
   byte
-  pattern
+  line
   (type "?")
 
   (:postinit (me)
     (upd me.ident tostringp))
 
   (:method text (me)
-    `@{me.ident}\t@{me.path}\t/^@{me.pattern}$/;"\t@{me.type}`)
+    `@{me.ident}\t@{me.path}\t/^@(escape me.line)$/;"\t@{me.type}`)
 
   (:method etext (me)
-    `@{me.pattern}@{etag-pat-end} \
+    `@{me.line}@{etag-pat-end} \
      @{me.ident}@{etag-name-end} \
      @{me.linum},@{me.byte}`))
-
-(defun escape (str)
-  (mappend (do caseql @1
-             ((#\^ #\$ #\/ #\\) (list #\\ @1))
-             (t (list @1)))
-           str))
 
 (defstruct file-tag tag
   (type "F")
@@ -68,7 +68,7 @@
   parent
   expattern
   (:method text (me)
-    `@{me.ident}\t@{me.path}\t/^@{me.pattern}$/ \
+    `@{me.ident}\t@{me.path}\t/^@(escape me.line)$/ \
      @(if me.expattern `;/@(escape me.ident)/`);"\t \
      @{me.type}\tstruct:@{me.parent}`)
   (:method make-qual-tag (me)
@@ -78,14 +78,14 @@
         qt))))
 
 (defstruct orig-tag tag
-  line
-  (:method text (me) me.line))
+  orig-line
+  (:method text (me) me.orig-line))
 
 (defvarl err-ret (gensym))
 
 (defvar *fake-load-path*)
 
-(defun get-pos-pat (lines form)
+(defun get-pos-line (lines form)
   (tree-case (source-loc form)
     ((line . file)
      ;; The file-get-string function keeps carriage returns, so the byte
@@ -93,8 +93,7 @@
      (let ((byte (+ line ; Count the newlines.
                     -1   ; Adjust the byte offset to be 0-based.
                     [sum (take line lines) coded-length])))
-       (cons (cons line byte)
-             (escape [lines line]))))))
+       (cons (cons line byte) [lines line])))))
 
 (defmacro in-anon-package (. body)
   (with-gensyms (pkg)
@@ -107,16 +106,16 @@
 (defmacro with-tag-shorthand-macro ((name-sym path-var lines-var obj-var)
                                     . body)
   ^(macrolet ((,name-sym (type ident : parent pattern-obj)
-                (with-gensyms (linum byte pat)
+                (with-gensyms (linum byte line)
                   ^(tree-case ,(if pattern-obj
-                                 ^(get-pos-pat ,',lines-var ,pattern-obj)
-                                 ^(get-pos-pat ,',lines-var ,',obj-var))
-                     (((,linum . ,byte) . ,pat)
+                                 ^(get-pos-line ,',lines-var ,pattern-obj)
+                                 ^(get-pos-line ,',lines-var ,',obj-var))
+                     (((,linum . ,byte) . ,line)
                       (new ,type ident ,ident
                                  path ,',path-var
                                  linum ,linum
                                  byte ,byte
-                                 pattern ,pat
+                                 line ,line
                                  ,*(if parent ^(parent ,parent))
                                  ,*(if pattern-obj ^(expattern t))))))))
      ,*body))
@@ -264,7 +263,7 @@
       (let* ((lines (file-get-lines o.output))
              (orig-tags (collect-each ((line lines))
                           (new orig-tag ident (m^ #/[^\t]*/ line)
-                                        line line))))
+                                        orig-line line))))
         (set tags (merge tags orig-tags : .ident)))
       (path-not-found (e))))
   (with-stream (stream (open-file o.output (if o.append "a" "w")))
