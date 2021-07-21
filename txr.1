@@ -51063,9 +51063,16 @@ as a key in in one or more weak-key hash tables becomes unreachable, those hash
 entries disappear. This happens even if the values are themselves reachable.
 Vice versa, when an object appearing as a value in one or more weak-value hash
 tables becomes unreachable, those entries disappear, even if the keys are
-reachable. When a hash table has both weak keys and weak values, then its
-entries are removed when either keys or values become unreachable.  In other
-words, both the key and value must be reachable in order to retain the entry.
+reachable. When a hash table has both weak keys and weak values, then an
+entry is removed when neither its key nor its value is reachable.  In other
+words, if either the key or value is reachable, the entry is retained.
+Note: this behavior differed in \*(TX 266 and earlier versions.
+
+If the keys of a weak-key hash table are reachable from the values, or if the
+values of a weak-key hash table are reachable from the keys, then the weak
+semantics is defeated for the affected entries: the hash table retains those
+entries as if it were an ordinary table.  A hash table with both weak keys and
+values does not have this issue.
 
 An open traversal of a hash table is performed by the
 .code maphash
@@ -83081,6 +83088,13 @@ of these version values, the described behaviors are provided if
 is given an argument which is equal or lower. For instance
 .code "-C 103"
 selects the behaviors described below for version 105, but not those for 102.
+.IP 266
+Until \*(TX 266, hash tables with both weak values and keys are subject to
+a conjunctive rule for entry retention: entries are retained if both the
+key and value are reachable objects. If either the key or value is unreachable,
+the entry is eligible for removal. The behavior changed in favor of a disjunctive
+rule: the hash entry is retained if either the key or value is reachable.
+A compatibility option value of 266 or lower restores the old behavior.
 .IP 265
 Until \*(TX 265, the
 .code with-resources

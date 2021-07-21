@@ -1274,24 +1274,48 @@ static void do_weak_tables(void)
     case hash_weak_both:
       /* Sweep through all entries. Delete any which have keys
          or values that are garbage. */
-      for (i = 0; i < h->modulus; i++) {
-        val *pchain = &h->table->v.vec[i];
-        val *iter;
+      if (opt_compat && opt_compat <= 266) {
+        for (i = 0; i < h->modulus; i++) {
+          val *pchain = &h->table->v.vec[i];
+          val *iter;
 
-        for (iter = pchain; *iter; ) {
-          val entry = us_car(*iter);
-          if (!gc_is_reachable(us_car(entry)) || !gc_is_reachable(us_cdr(entry)))
-          {
-            *iter = us_cdr(*iter);
+          for (iter = pchain; *iter; ) {
+            val entry = us_car(*iter);
+            if (!gc_is_reachable(us_car(entry)) || !gc_is_reachable(us_cdr(entry)))
+            {
+              *iter = us_cdr(*iter);
 #if CONFIG_EXTRA_DEBUGGING
-            if (!gc_is_reachable(us_car(entry)) && us_car(entry) == break_obj)
-              breakpt();
-            if (!gc_is_reachable(us_cdr(entry)) && us_cdr(entry) == break_obj)
-              breakpt();
+              if (!gc_is_reachable(us_car(entry)) && us_car(entry) == break_obj)
+                breakpt();
+              if (!gc_is_reachable(us_cdr(entry)) && us_cdr(entry) == break_obj)
+                breakpt();
 #endif
-          } else {
-            iter = us_cdr_p(*iter);
-            c++;
+            } else {
+              iter = us_cdr_p(*iter);
+              c++;
+            }
+          }
+        }
+      } else {
+        for (i = 0; i < h->modulus; i++) {
+          val *pchain = &h->table->v.vec[i];
+          val *iter;
+
+          for (iter = pchain; *iter; ) {
+            val entry = us_car(*iter);
+            if (!gc_is_reachable(us_car(entry)) && !gc_is_reachable(us_cdr(entry)))
+            {
+              *iter = us_cdr(*iter);
+#if CONFIG_EXTRA_DEBUGGING
+              if (!gc_is_reachable(us_car(entry)) && us_car(entry) == break_obj)
+                breakpt();
+              if (!gc_is_reachable(us_cdr(entry)) && us_cdr(entry) == break_obj)
+                breakpt();
+#endif
+            } else {
+              iter = us_cdr_p(*iter);
+              c++;
+            }
           }
         }
       }
