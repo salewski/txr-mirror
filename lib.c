@@ -14052,7 +14052,6 @@ int compat_fixup(int compat_ver)
 
   eval_compat_fixup(compat_ver);
   rand_compat_fixup(compat_ver);
-  parse_compat_fixup(compat_ver);
   arith_compat_fixup(compat_ver);
   ffi_compat_fixup(compat_ver);
   regex_compat_fixup(compat_ver);

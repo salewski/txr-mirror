@@ -6488,14 +6488,21 @@ void eval_init(void)
           &call_f, &iter_begin_f, &iter_from_binding_f, &iter_more_f,
           &iter_item_f, &iter_step_f,
           &unbound_s, &origin_hash, &const_foldable_hash, convert(val *, 0));
-  top_fb = make_hash(t, t, nil);
-  top_vb = make_hash(t, t, nil);
-  top_mb = make_hash(t, t, nil);
-  top_smb = make_hash(t, t, nil);
-  special = make_hash(t, t, nil);
-  builtin = make_hash(t, t, nil);
+  top_fb = make_hash(nil, nil, nil);
+  top_vb = make_hash(nil, nil, nil);
+  top_mb = make_hash(nil, nil, nil);
+  top_smb = make_hash(nil, nil, nil);
+  special = make_hash(nil, nil, nil);
+  builtin = make_hash(nil, nil, nil);
   op_table = make_hash(nil, nil, nil);
   pm_table = make_hash(nil, nil, nil);
+
+  tweak_hash(top_fb, hash_weak_and);
+  tweak_hash(top_vb, hash_weak_and);
+  tweak_hash(top_mb, hash_weak_and);
+  tweak_hash(top_smb, hash_weak_and);
+  tweak_hash(special, hash_weak_and);
+  tweak_hash(builtin, hash_weak_and);
 
   call_f = func_n1v(generic_funcall);
   iter_begin_f = func_n1(iter_begin);
@@ -7325,15 +7332,6 @@ void eval_init(void)
 
 void eval_compat_fixup(int compat_ver)
 {
-  if (compat_ver <= 266) {
-    tweak_hash(top_fb, t, nil);
-    tweak_hash(top_vb, t, nil);
-    tweak_hash(top_mb, t, nil);
-    tweak_hash(top_smb, t, nil);
-    tweak_hash(special, t, nil);
-    tweak_hash(builtin, t, nil);
-  }
-
   if (compat_ver <= 257)
     reg_fun(intern(lit("lexical-var-p"), user_package),
             func_n2(old_lexical_var_p));

@@ -25,6 +25,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+typedef enum hash_flags {
+  hash_weak_none = 0,
+  hash_weak_keys = 1,
+  hash_weak_vals = 2,
+  hash_weak_or = 3,
+  hash_weak_and = 4,
+} hash_flags_t;
+
 struct hash_iter {
   struct hash_iter *next;
   val hash;
@@ -32,14 +40,14 @@ struct hash_iter {
   val cons;
 };
 
-extern val weak_keys_k, weak_vals_k, userdata_k;
+extern val weak_keys_k, weak_vals_k, weak_and_k, weak_or_k, userdata_k;
 extern val equal_based_k, eql_based_k, eq_based_k;
 
 extern struct cobj_class *hash_cls;
 
 ucnum equal_hash(val obj, int *count, ucnum);
 val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed);
-val tweak_hash(val hash, val weak_keys, val weak_vals);
+void tweak_hash(val hash, hash_flags_t);
 val make_hash(val weak_keys, val weak_vals, val equal_based);
 val make_eq_hash(val weak_keys, val weak_vals);
 val make_similar_hash(val existing);

@@ -148,4 +148,3 @@ val parser_set_lineno(val self, val stream, val lineno);
 val parser_errors(val parser);
 val parse_errors(val stream);
 void parse_init(void);
-void parse_compat_fixup(int compat_ver);

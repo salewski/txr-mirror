@@ -50,13 +50,6 @@
 #include "time.h"
 #include "hash.h"
 
-typedef enum hash_flags {
-  hash_weak_none = 0,
-  hash_weak_keys = 1,
-  hash_weak_vals = 2,
-  hash_weak_both = 3
-} hash_flags_t;
-
 typedef enum hash_type {
   hash_type_eq,
   hash_type_eql,
@@ -91,7 +84,7 @@ static_forward(struct hash_ops hash_eq_ops);
 static_forward(struct hash_ops hash_eql_ops);
 static_forward(struct hash_ops hash_equal_ops);
 
-val weak_keys_k, weak_vals_k, userdata_k;
+val weak_keys_k, weak_vals_k, weak_and_k, weak_or_k, userdata_k;
 val equal_based_k, eql_based_k, eq_based_k;
 val hash_seed_s;
 
@@ -534,7 +527,7 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
       put_char(chr(' '), out);
     need_space = 1;
     switch (h->flags) {
-    case hash_weak_both:
+    case hash_weak_or:
       obj_print_impl(weak_keys_k, out, pretty, ctx);
       put_char(chr(' '), out);
       /* fallthrough */
@@ -543,6 +536,9 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
       break;
     case hash_weak_keys:
       obj_print_impl(weak_keys_k, out, pretty, ctx);
+      break;
+    case hash_weak_and:
+      obj_print_impl(weak_and_k, out, pretty, ctx);
       break;
     default:
       break;
@@ -634,7 +630,8 @@ static void hash_mark(val hash)
       }
     }
     break;
-  case hash_weak_both:
+  case hash_weak_or:
+  case hash_weak_and:
     /* mark nothing */
     break;
   }
@@ -809,6 +806,13 @@ static val do_make_hash(val weak_keys, val weak_vals,
 
     h->usecount = 0;
 
+    if (weak_keys) {
+      if (weak_keys == weak_and_k)
+        h->flags = hash_weak_and;
+      else if (weak_keys == weak_or_k)
+        h->flags = hash_weak_or;
+    }
+
     switch (type) {
     case hash_type_eq:
       h->hops = &hash_eq_ops;
@@ -826,13 +830,11 @@ static val do_make_hash(val weak_keys, val weak_vals,
   }
 }
 
-val tweak_hash(val hash, val weak_keys, val weak_vals)
+void tweak_hash(val hash, hash_flags_t flags)
 {
-  val self = lit("tweak-hash");
+  val self = lit("internal-error");
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
-  int flags = ((weak_vals != nil) << 1) | (weak_keys != nil);
-  h->flags = convert(hash_flags_t, flags);
-  return hash;
+  h->flags = flags;
 }
 
 val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed)
@@ -1280,51 +1282,50 @@ static void do_weak_tables(void)
         }
       }
       break;
-    case hash_weak_both:
+    case hash_weak_and:
       /* Sweep through all entries. Delete any which have keys
-         or values that are garbage. */
-      if (opt_compat && opt_compat <= 266) {
-        for (i = 0; i < h->modulus; i++) {
-          val *pchain = &h->table->v.vec[i];
-          val *iter;
+         and values that are garbage. */
+      for (i = 0; i < h->modulus; i++) {
+        val *pchain = &h->table->v.vec[i];
+        val *iter;
 
-          for (iter = pchain; *iter; ) {
-            val entry = us_car(*iter);
-            if (!gc_is_reachable(us_car(entry)) || !gc_is_reachable(us_cdr(entry)))
-            {
-              *iter = us_cdr(*iter);
+        for (iter = pchain; *iter; ) {
+          val entry = us_car(*iter);
+          if (!gc_is_reachable(us_car(entry)) && !gc_is_reachable(us_cdr(entry))) {
+            *iter = us_cdr(*iter);
 #if CONFIG_EXTRA_DEBUGGING
-              if (!gc_is_reachable(us_car(entry)) && us_car(entry) == break_obj)
-                breakpt();
-              if (!gc_is_reachable(us_cdr(entry)) && us_cdr(entry) == break_obj)
-                breakpt();
+            if (!gc_is_reachable(us_car(entry)) && us_car(entry) == break_obj)
+              breakpt();
+            if (!gc_is_reachable(us_cdr(entry)) && us_cdr(entry) == break_obj)
+              breakpt();
 #endif
-            } else {
-              iter = us_cdr_p(*iter);
-              c++;
-            }
+          } else {
+            iter = us_cdr_p(*iter);
+            c++;
           }
         }
-      } else {
-        for (i = 0; i < h->modulus; i++) {
-          val *pchain = &h->table->v.vec[i];
-          val *iter;
+      }
+      break;
+    case hash_weak_or:
+      /* Sweep through all entries. Delete any which have keys
+         or values that are garbage. */
+      for (i = 0; i < h->modulus; i++) {
+        val *pchain = &h->table->v.vec[i];
+        val *iter;
 
-          for (iter = pchain; *iter; ) {
-            val entry = us_car(*iter);
-            if (!gc_is_reachable(us_car(entry)) && !gc_is_reachable(us_cdr(entry)))
-            {
-              *iter = us_cdr(*iter);
+        for (iter = pchain; *iter; ) {
+          val entry = us_car(*iter);
+          if (!gc_is_reachable(us_car(entry)) || !gc_is_reachable(us_cdr(entry))) {
+            *iter = us_cdr(*iter);
 #if CONFIG_EXTRA_DEBUGGING
-              if (!gc_is_reachable(us_car(entry)) && us_car(entry) == break_obj)
-                breakpt();
-              if (!gc_is_reachable(us_cdr(entry)) && us_cdr(entry) == break_obj)
-                breakpt();
+            if (!gc_is_reachable(us_car(entry)) && us_car(entry) == break_obj)
+              breakpt();
+            if (!gc_is_reachable(us_cdr(entry)) && us_cdr(entry) == break_obj)
+              breakpt();
 #endif
-            } else {
-              iter = us_cdr_p(*iter);
-              c++;
-            }
+          } else {
+            iter = us_cdr_p(*iter);
+            c++;
           }
         }
       }
@@ -1404,7 +1405,8 @@ static val equal_based_p(val equal, val eql, val eq, val wkeys)
 
 val hashv(struct args *args)
 {
-  val wkeys = nil, wvals = nil, equal = nil, eql = nil;
+  val self = lit("hash");
+  val wkeys = nil, wvals = nil, equal = nil, eql = nil, wand = nil, wor = nil;
   val eq = nil, userdata = nil;
   struct args_bool_key akv[] = {
     { weak_keys_k, nil, &wkeys },
@@ -1412,14 +1414,31 @@ val hashv(struct args *args)
     { equal_based_k, nil, &equal },
     { eql_based_k, nil, &eql },
     { eq_based_k, nil, &eq },
+    { weak_and_k, nil, &wand },
+    { weak_or_k, nil, &wor },
     { userdata_k, t, &userdata }
   };
-  val ebp = (args_keys_extract(args, akv, sizeof akv / sizeof akv[0]),
-             equal_based_p(equal, eql, eq, wkeys));
-  val hash = if3(eq, make_eq_hash(wkeys, wvals), make_hash(wkeys, wvals, ebp));
-  if (userdata)
-    set_hash_userdata(hash, userdata);
-  return hash;
+
+  args_keys_extract(args, akv, sizeof akv / sizeof akv[0]);
+
+  if (wand && wor)
+    uw_throwf(error_s, lit("~a: both ~s and ~s specified"),
+              self, weak_and_k, weak_or_k, nao);
+
+  if (wand)
+    wkeys = weak_and_k;
+  else if (wor)
+    wkeys = weak_or_k;
+
+  {
+    val ebp = equal_based_p(equal, eql, eq, wkeys);
+    val hash = if3(eq,
+                   make_eq_hash(wkeys, wvals),
+                   make_hash(wkeys, wvals, ebp));
+    if (userdata)
+      set_hash_userdata(hash, userdata);
+    return hash;
+  }
 }
 
 val hashl(val arglist)
@@ -1943,6 +1962,8 @@ void hash_init(void)
 {
   weak_keys_k = intern(lit("weak-keys"), keyword_package);
   weak_vals_k = intern(lit("weak-vals"), keyword_package);
+  weak_and_k = intern(lit("weak-and"), keyword_package);
+  weak_or_k = intern(lit("weak-or"), keyword_package);
   equal_based_k = intern(lit("equal-based"), keyword_package);
   eql_based_k = intern(lit("eql-based"), keyword_package);
   eq_based_k = intern(lit("eq-based"), keyword_package);
