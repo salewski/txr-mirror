@@ -68,7 +68,7 @@ struct hash_ops {
 
 struct hash {
   ucnum seed;
-  hash_flags_t flags;
+  hash_weak_opt_t wkopt;
   struct hash *next;
   val table;
   cnum modulus;
@@ -522,11 +522,11 @@ static void hash_print_op(val hash, val out, val pretty, struct strm_ctx *ctx)
     need_space = 1;
   }
 
-  if (h->flags != hash_weak_none) {
+  if (h->wkopt != hash_weak_none) {
     if (need_space)
       put_char(chr(' '), out);
     need_space = 1;
-    switch (h->flags) {
+    switch (h->wkopt) {
     case hash_weak_or:
       obj_print_impl(weak_keys_k, out, pretty, ctx);
       put_char(chr(' '), out);
@@ -606,7 +606,7 @@ static void hash_mark(val hash)
      hash iterators which are still reachable. */
   h->usecount = 0;
 
-  switch (h->flags) {
+  switch (h->wkopt) {
     cnum i;
     val iter;
   case hash_weak_none:
@@ -800,7 +800,7 @@ static val do_make_hash(val weak_keys, val weak_vals,
               lit("make-hash: bad combination :weak-keys with :equal-based"),
               nao);
   } else {
-    int flags = ((weak_vals != nil) << 1) | (weak_keys != nil);
+    int wkopt = ((weak_vals != nil) << 1) | (weak_keys != nil);
     struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
     val mod = num_fast(256);
     val table = vector(mod, nil);
@@ -809,7 +809,7 @@ static val do_make_hash(val weak_keys, val weak_vals,
     h->seed = convert(u32_t, c_unum(default_arg(seed,
                                                 if3(hash_seed_s,
                                                     hash_seed, zero)), self));
-    h->flags = convert(hash_flags_t, flags);
+    h->wkopt = convert(hash_weak_opt_t, wkopt);
     h->modulus = c_num(mod, self);
     h->count = 0;
     h->table = table;
@@ -819,9 +819,9 @@ static val do_make_hash(val weak_keys, val weak_vals,
 
     if (weak_keys) {
       if (weak_keys == weak_and_k)
-        h->flags = hash_weak_and;
+        h->wkopt = hash_weak_and;
       else if (weak_keys == weak_or_k)
-        h->flags = hash_weak_or;
+        h->wkopt = hash_weak_or;
     }
 
     switch (type) {
@@ -841,11 +841,11 @@ static val do_make_hash(val weak_keys, val weak_vals,
   }
 }
 
-void tweak_hash(val hash, hash_flags_t flags)
+void tweak_hash(val hash, hash_weak_opt_t wkopt)
 {
   val self = lit("internal-error");
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
-  h->flags = flags;
+  h->wkopt = wkopt;
 }
 
 val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed)
@@ -880,7 +880,7 @@ val make_similar_hash(val existing)
   h->userdata = ex->userdata;
 
   h->seed = ex->seed;
-  h->flags = ex->flags;
+  h->wkopt = ex->wkopt;
   h->usecount = 0;
   h->hops = ex->hops;
 
@@ -917,7 +917,7 @@ val copy_hash(val existing)
   h->userdata = ex->userdata;
 
   h->seed = ex->seed;
-  h->flags = ex->flags;
+  h->wkopt = ex->wkopt;
   h->usecount = 0;
   h->hops = ex->hops;
 
@@ -1245,7 +1245,7 @@ static void do_weak_tables(void)
     if (gc_is_reachable(h->table))
       continue;
 
-    switch (h->flags) {
+    switch (h->wkopt) {
     case hash_weak_none:
       /* what is this doing here */
       break;
