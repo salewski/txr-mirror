@@ -257,3 +257,26 @@
   (portable-abs-path-p "0:/abc") t
   (portable-abs-path-p "AB0:/abc") t
   (portable-abs-path-p "cd5:/abc") t)
+
+(mtest
+  (pure-rel-path-p "") t
+  (pure-rel-path-p "/") nil
+  (pure-rel-path-p "\\") nil
+  (pure-rel-path-p "/abc") nil
+  (pure-rel-path-p ".") nil
+  (pure-rel-path-p "./") nil
+  (pure-rel-path-p ".\\") nil
+  (pure-rel-path-p ".abc") t
+  (pure-rel-path-p ".abc/") t
+  (pure-rel-path-p ".abc\\") t
+  (pure-rel-path-p ":") t
+  (pure-rel-path-p "a:") nil
+  (pure-rel-path-p "A:") nil
+  (pure-rel-path-p "0:") nil
+  (pure-rel-path-p "9:") nil
+  (pure-rel-path-p "_:") t
+  (pure-rel-path-p "abc") t
+  (pure-rel-path-p "abc/def") t
+  (pure-rel-path-p "abc/.") t
+  (pure-rel-path-p "abc\\def") t
+  (pure-rel-path-p "abc\\.") t)
