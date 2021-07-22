@@ -4913,6 +4913,19 @@ static val volume_prefix_p(const wchar_t *str)
   return nil;
 }
 
+static val volume_name_p(const wchar_t *str)
+{
+  for (; *str; str++) {
+    if (iswalnum(*str))
+      continue;
+    if (*str == ':')
+      return t;
+    break;
+  }
+
+  return nil;
+}
+
 val portable_abs_path_p(val path)
 {
   val self = lit("portable-abs-path-p");
@@ -4942,30 +4955,24 @@ val abs_path_p(val path)
   return volume_prefix_p(str);
 }
 
-static val plp_regex;
-
 val pure_rel_path_p(val path)
 {
-  val ch;
-  val len = length_str(path);
+  val self = lit("pure-rel-path-p");
+  const wchar_t *str = c_str(path, self);
 
-  if (len == zero)
+  if (str[0] == 0)
     return t;
 
-  if ((ch = chr_str(path, zero)) == chr('/') || ch == chr('\\'))
+  if (str[0] == '/' || str[0] == '\\')
     return nil;
 
-  if (len == one)
-    return ch == chr('.') ? nil : t;
+  if (str[1] == 0)
+    return str[0] == '.' ? nil : t;
 
-  if (ch == chr('.') &&
-      ((ch = chr_str(path, one)) == chr('/') || ch == chr('\\')))
+  if (str[0] == '.' && (str[1] == '/' || str[1] == '\\'))
     return nil;
 
-  if (!plp_regex)
-    plp_regex = regex_compile(lit("[A-Za-z0-9]+:"), nil);
-
-  if (match_regex(path, plp_regex, zero))
+  if (volume_name_p(str))
     return nil;
 
   return t;
@@ -5378,7 +5385,6 @@ void iobuf_list_empty(void)
 
 void stream_init(void)
 {
-  prot1(&plp_regex);
   prot1(&top_stderr);
 
   detect_format_string();
