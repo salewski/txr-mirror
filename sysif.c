@@ -341,7 +341,7 @@ static val get_env_hash(void)
     return env_hash;
   } else {
     val env_strings = env();
-    val hash = make_hash(nil, nil, t);
+    val hash = make_hash(hash_weak_none, t);
 
     for (; env_strings; env_strings = cdr(env_strings)) {
       val estr = car(env_strings);

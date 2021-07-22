@@ -3647,8 +3647,8 @@ static val make_ffi_type_enum(val syntax, val enums,
                                     chk_calloc(1, sizeof *tft));
   struct txr_ffi_type *btft = ffi_type_struct(base_type);
 
-  val sym_num = make_hash(nil, nil, t);
-  val num_sym = make_hash(nil, nil, nil);
+  val sym_num = make_hash(hash_weak_none, t);
+  val num_sym = make_hash(hash_weak_none, nil);
   val obj = cobj(coerce(mem_t *, tft), ffi_type_cls, &ffi_type_enum_ops);
   cnum lowest = INT_PTR_MAX;
   cnum highest = INT_PTR_MIN;
@@ -6481,8 +6481,8 @@ void ffi_init(void)
   reg_fun(intern(lit("get-obj"), user_package), func_n2o(get_obj, 1));
   reg_fun(intern(lit("fill-obj"), user_package), func_n3o(fill_obj, 2));
   reg_fun(intern(lit("dyn-size"), system_package), func_n2(dyn_size));
-  ffi_typedef_hash = make_hash(nil, nil, nil);
-  ffi_struct_tag_hash = make_hash(nil, nil, nil);
+  ffi_typedef_hash = make_hash(hash_weak_none, nil);
+  ffi_struct_tag_hash = make_hash(hash_weak_none, nil);
   ffi_init_types();
   ffi_init_extra_types();
 }

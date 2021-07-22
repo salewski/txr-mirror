@@ -481,7 +481,7 @@ void parser_resolve_circ(parser_t *p)
 void parser_circ_def(parser_t *p, val num, val expr)
 {
   if (!p->circ_ref_hash) {
-    p->circ_ref_hash = make_eq_hash(nil, nil);
+    p->circ_ref_hash = make_eq_hash(hash_weak_none);
     setcheck(p->parser, p->circ_ref_hash);
   }
 
@@ -1478,7 +1478,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   val var_counter_sym = intern(lit("*v"), user_package);
   val result_hash_sym = intern(lit("*r"), user_package);
   val path_private_to_me_p =  intern(lit("path-private-to-me-p"), user_package);
-  val result_hash = make_hash(nil, nil, nil);
+  val result_hash = make_hash(hash_weak_none, nil);
   val done = nil;
   val counter = one;
   val home = if3(repl_level == 1, get_home_path(), nil);
@@ -1878,7 +1878,7 @@ void parse_init(void)
   parser_cls = cobj_register(parser_s);
 
   protect(&stream_parser_hash, &unique_s, &catch_all, convert(val *, 0));
-  stream_parser_hash = make_hash(weak_and_k, nil, nil);
+  stream_parser_hash = make_hash(hash_weak_and, nil);
   catch_all = cons(t, nil);
 
   parser_l_init();

@@ -4906,10 +4906,10 @@ static void dir_tables_init(void)
           &non_matching_directive_table, &binding_directive_table,
           convert(val *, 0));
 
-  h_directive_table = make_hash(nil, nil, nil);
-  v_directive_table = make_hash(nil, nil, nil);
-  non_matching_directive_table = make_hash(nil, nil, nil);
-  binding_directive_table = make_hash(nil, nil, nil);
+  h_directive_table = make_hash(hash_weak_none, nil);
+  v_directive_table = make_hash(hash_weak_none, nil);
+  non_matching_directive_table = make_hash(hash_weak_none, nil);
+  binding_directive_table = make_hash(hash_weak_none, nil);
 
   sethash(v_directive_table, skip_s, cptr(coerce(mem_t *, v_skip)));
   sethash(v_directive_table, fuzz_s, cptr(coerce(mem_t *, v_fuzz)));

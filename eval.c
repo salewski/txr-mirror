@@ -4128,15 +4128,15 @@ static val me_case(val form, val menv)
   if (casesym == caseq_s || casesym == caseq_star_s) {
     memfuncsym = memq_s;
     eqfuncsym = eq_s;
-    hash = make_hash(nil, nil, nil);
+    hash = make_hash(hash_weak_none, nil);
   } else if (casesym == caseql_s || casesym == caseql_star_s) {
     memfuncsym = memql_s;
     eqfuncsym = eql_s;
-    hash = make_hash(nil, nil, nil);
+    hash = make_hash(hash_weak_none, nil);
   } else {
     memfuncsym = memqual_s;
     eqfuncsym = equal_s;
-    hash = make_hash(nil, nil, t);
+    hash = make_hash(hash_weak_none, t);
   }
 
   for (; consp(form); form = cdr(form)) {
@@ -4723,7 +4723,7 @@ static val expand_switch(val form, val menv)
   val branches = second(args);
   val expr_ex = expand(expr, menv);
   val branches_ex;
-  val ss_hash = make_hash(nil, nil, nil);
+  val ss_hash = make_hash(hash_weak_none, nil);
 
   if (listp(branches)) {
     branches_ex = expand_list_of_form_lists(branches, menv, ss_hash);
@@ -6488,21 +6488,14 @@ void eval_init(void)
           &call_f, &iter_begin_f, &iter_from_binding_f, &iter_more_f,
           &iter_item_f, &iter_step_f,
           &unbound_s, &origin_hash, &const_foldable_hash, convert(val *, 0));
-  top_fb = make_hash(nil, nil, nil);
-  top_vb = make_hash(nil, nil, nil);
-  top_mb = make_hash(nil, nil, nil);
-  top_smb = make_hash(nil, nil, nil);
-  special = make_hash(nil, nil, nil);
-  builtin = make_hash(nil, nil, nil);
-  op_table = make_hash(nil, nil, nil);
-  pm_table = make_hash(nil, nil, nil);
-
-  tweak_hash(top_fb, hash_weak_and);
-  tweak_hash(top_vb, hash_weak_and);
-  tweak_hash(top_mb, hash_weak_and);
-  tweak_hash(top_smb, hash_weak_and);
-  tweak_hash(special, hash_weak_and);
-  tweak_hash(builtin, hash_weak_and);
+  top_fb = make_hash(hash_weak_and, nil);
+  top_vb = make_hash(hash_weak_and, nil);
+  top_mb = make_hash(hash_weak_and, nil);
+  top_smb = make_hash(hash_weak_and, nil);
+  special = make_hash(hash_weak_and, nil);
+  builtin = make_hash(hash_weak_and, nil);
+  op_table = make_hash(hash_weak_none, nil);
+  pm_table = make_hash(hash_weak_none, nil);
 
   call_f = func_n1v(generic_funcall);
   iter_begin_f = func_n1(iter_begin);
@@ -6511,7 +6504,7 @@ void eval_init(void)
   iter_item_f = func_n1(iter_item);
   iter_step_f = func_n1(iter_step);
 
-  origin_hash = make_eq_hash(t, nil);
+  origin_hash = make_eq_hash(hash_weak_keys);
 
   dwim_s = intern(lit("dwim"), user_package);
   progn_s = intern(lit("progn"), user_package);

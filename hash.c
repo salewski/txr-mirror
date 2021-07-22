@@ -790,17 +790,17 @@ static_def(struct hash_ops hash_equal_ops = hash_ops_init(equal_hash, equal,
                                                           hash_assoc,
                                                           hash_acons_new_c));
 
-static val do_make_hash(val weak_keys, val weak_vals,
-                        hash_type_t type, val seed)
+static val do_make_hash(hash_weak_opt_t wkopt, hash_type_t type, val seed)
 {
   val self = lit("make-hash");
 
-  if (weak_keys && type == hash_type_equal) {
+  if (type == hash_type_equal &&
+      wkopt != hash_weak_none && wkopt != hash_weak_vals)
+  {
     uw_throwf(error_s,
               lit("make-hash: bad combination :weak-keys with :equal-based"),
               nao);
   } else {
-    int wkopt = ((weak_vals != nil) << 1) | (weak_keys != nil);
     struct hash *h = coerce(struct hash *, chk_malloc(sizeof *h));
     val mod = num_fast(256);
     val table = vector(mod, nil);
@@ -809,20 +809,13 @@ static val do_make_hash(val weak_keys, val weak_vals,
     h->seed = convert(u32_t, c_unum(default_arg(seed,
                                                 if3(hash_seed_s,
                                                     hash_seed, zero)), self));
-    h->wkopt = convert(hash_weak_opt_t, wkopt);
+    h->wkopt = wkopt;
     h->modulus = c_num(mod, self);
     h->count = 0;
     h->table = table;
     h->userdata = nil;
 
     h->usecount = 0;
-
-    if (weak_keys) {
-      if (weak_keys == weak_and_k)
-        h->wkopt = hash_weak_and;
-      else if (weak_keys == weak_or_k)
-        h->wkopt = hash_weak_or;
-    }
 
     switch (type) {
     case hash_type_eq:
@@ -841,28 +834,43 @@ static val do_make_hash(val weak_keys, val weak_vals,
   }
 }
 
-void tweak_hash(val hash, hash_weak_opt_t wkopt)
+static hash_weak_opt_t weak_opt_from_flags(val weak_keys, val weak_vals)
 {
-  val self = lit("internal-error");
-  struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
-  h->wkopt = wkopt;
+  if (weak_keys) {
+    if (weak_keys == weak_and_k)
+      return hash_weak_and;
+    if (weak_keys == weak_or_k)
+      return hash_weak_or;
+  }
+
+  switch (!!weak_vals << 1 | !!weak_keys) {
+  case 0: return hash_weak_none;
+  case 1: return hash_weak_keys;
+  case 2: return hash_weak_vals;
+  case 3: return hash_weak_or;
+  default:
+    /* notreached */
+    abort();
+  }
 }
 
 val make_seeded_hash(val weak_keys, val weak_vals, val equal_based, val seed)
 {
-  return do_make_hash(weak_keys, weak_vals,
+  return do_make_hash(weak_opt_from_flags(weak_keys, weak_vals),
                       if3(equal_based, hash_type_equal, hash_type_eql),
                       seed);
 }
 
-val make_hash(val weak_keys, val weak_vals, val equal_based)
+val make_hash(hash_weak_opt_t wkopt, val equal_based)
 {
-  return make_seeded_hash(weak_keys, weak_vals, equal_based, nil);
+  return do_make_hash(wkopt,
+                      if3(equal_based, hash_type_equal, hash_type_eql),
+                      nil);
 }
 
-val make_eq_hash(val weak_keys, val weak_vals)
+val make_eq_hash(hash_weak_opt_t wkopt)
 {
-  return do_make_hash(weak_keys, weak_vals, hash_type_eq, nil);
+  return do_make_hash(wkopt, hash_type_eq, nil);
 }
 
 val make_similar_hash(val existing)
@@ -1429,6 +1437,7 @@ val hashv(struct args *args)
     { weak_or_k, nil, &wor },
     { userdata_k, t, &userdata }
   };
+  hash_weak_opt_t wkopt = hash_weak_none;
 
   args_keys_extract(args, akv, sizeof akv / sizeof akv[0]);
 
@@ -1437,15 +1446,17 @@ val hashv(struct args *args)
               self, weak_and_k, weak_or_k, nao);
 
   if (wand)
-    wkeys = weak_and_k;
+    wkopt = hash_weak_and;
   else if (wor)
-    wkeys = weak_or_k;
+    wkopt = hash_weak_or;
+  else
+    wkopt = weak_opt_from_flags(wkeys, wvals);
 
   {
     val ebp = equal_based_p(equal, eql, eq, wkeys);
     val hash = if3(eq,
-                   make_eq_hash(wkeys, wvals),
-                   make_hash(wkeys, wvals, ebp));
+                   make_eq_hash(wkopt),
+                   make_hash(wkopt, ebp));
     if (userdata)
       set_hash_userdata(hash, userdata);
     return hash;

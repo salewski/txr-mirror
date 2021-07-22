@@ -159,10 +159,10 @@ void struct_init(void)
   struct_type_cls = cobj_register(struct_type_s);
   struct_cls = cobj_register(struct_s);
 
-  struct_type_hash = make_hash(nil, nil, nil);
-  slot_hash = make_hash(nil, nil, t);
-  slot_type_hash = make_hash(nil, nil, nil);
-  static_slot_type_hash = make_hash(nil, nil, nil);
+  struct_type_hash = make_hash(hash_weak_none, nil);
+  slot_hash = make_hash(hash_weak_none, t);
+  slot_type_hash = make_hash(hash_weak_none, nil);
+  static_slot_type_hash = make_hash(hash_weak_none, nil);
   struct_type_finalize_f = func_n1(struct_type_finalize);
 
   reg_fun(intern(lit("make-struct-type"), user_package),
@@ -1969,7 +1969,7 @@ val method_name(val fun)
 
 val get_slot_syms(val package, val is_current, val method_only)
 {
-  val result_hash = make_hash(nil, nil, nil);
+  val result_hash = make_hash(hash_weak_none, nil);
   struct hash_iter sthi;
   val sth_cell;
 

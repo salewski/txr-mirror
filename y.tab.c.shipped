@@ -5153,7 +5153,7 @@ yyreduce:
 
 /* Line 1806 of yacc.c  */
 #line 978 "parser.y"
-    { (yyval.val) = make_hash(nil, nil, t); }
+    { (yyval.val) = make_hash(hash_weak_none, t); }
     break;
 
   case 233:
@@ -5297,7 +5297,7 @@ yyreduce:
                                                unquotes_occur((yyvsp[(3) - (3)].val), 0)))
                                           { (yyval.val) = cons(list((yyvsp[(1) - (3)].val), (yyvsp[(3) - (3)].val), nao), nil); }
                                           else
-                                          { (yyval.val) = make_hash(nil, nil, t);
+                                          { (yyval.val) = make_hash(hash_weak_none, t);
                                             sethash((yyval.val), (yyvsp[(1) - (3)].val), (yyvsp[(3) - (3)].val)); } }
     break;
 

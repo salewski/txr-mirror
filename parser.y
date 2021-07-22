@@ -975,7 +975,7 @@ json_val : NUMBER               { $$ = $1; }
                                            rl(cons(vector_lit_s,
                                                    cons(nreverse($2), nil)),
                                               $2)); }
-         | '{' '}'              { $$ = make_hash(nil, nil, t); }
+         | '{' '}'              { $$ = make_hash(hash_weak_none, t); }
          | '{' json_pairs '}'   { $$ = if3(hashp($2),
                                            $2,
                                            rl(cons(hash_lit_s,
@@ -1027,7 +1027,7 @@ json_pairs : json_val json_col json_val { if (parser->quasi_level > 0 &&
                                                unquotes_occur($3, 0)))
                                           { $$ = cons(list($1, $3, nao), nil); }
                                           else
-                                          { $$ = make_hash(nil, nil, t);
+                                          { $$ = make_hash(hash_weak_none, t);
                                             sethash($$, $1, $3); } }
            | json_pairs ','
              json_val json_col json_val { if (consp($1))

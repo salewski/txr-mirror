@@ -52,7 +52,7 @@ val tonumber_k, toint_k, tofloat_k, hextoint_k;
 
 static val make_trie(void)
 {
-  return make_hash(nil, nil, nil);
+  return make_hash(hash_weak_none, nil);
 }
 
 static val trie_add(val trie, val key, val value)
@@ -64,7 +64,7 @@ static val trie_add(val trie, val key, val value)
     val newnode_p;
     loc place = gethash_l(lit("trie-add"), node, ch, mkcloc(newnode_p));
     if (newnode_p)
-      set(place, make_hash(nil, nil, nil));
+      set(place, make_hash(hash_weak_none, nil));
     node = deref(place);
   }
 
@@ -1032,7 +1032,7 @@ static val html_decode(val str)
 
 void filter_init(void)
 {
-  val fh = make_hash(nil, nil, nil);
+  val fh = make_hash(hash_weak_none, nil);
 
   filters_s = intern(lit("*filters*"), user_package);
   filter_k = intern(lit("filter"), keyword_package);

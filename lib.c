@@ -6379,9 +6379,10 @@ val gensym(val prefix)
 
 static val make_package_common(val name, val weak)
 {
-  val weak_vals = default_null_arg(weak);
-  val sh = make_hash(nil, weak_vals, t);
-  val hh = make_hash(nil, weak_vals, t);
+  hash_weak_opt_t wkopt = if3(default_null_arg(weak),
+                              hash_weak_vals, hash_weak_none);
+  val sh = make_hash(wkopt, t);
+  val hh = make_hash(wkopt, t);
   val obj = make_obj();
   obj->pk.type = PKG;
   obj->pk.name = name;
@@ -12782,7 +12783,7 @@ static void obj_init(void)
   greater_f = func_n2(greater);
   prog_string = string(progname);
 
-  cobj_hash = make_hash(nil, nil, nil);
+  cobj_hash = make_hash(hash_weak_none, nil);
 }
 
 static val simple_qref_args_p(val args, val pos)
@@ -13866,7 +13867,7 @@ val obj_print(val obj, val out, val pretty)
   if (ctx) {
     if (cdr(lookup_var(nil, print_circle_s))) {
       ctx->obj_hash_prev = ctx->obj_hash;
-      ctx->obj_hash = make_eq_hash(nil, nil);
+      ctx->obj_hash = make_eq_hash(hash_weak_none);
       populate_obj_hash(obj, ctx);
       obj_hash_merge(ctx->obj_hash_prev, ctx->obj_hash);
       ctx->obj_hash = ctx->obj_hash_prev;
@@ -13881,7 +13882,7 @@ val obj_print(val obj, val out, val pretty)
     ctx->obj_hash_prev = nil;
     ctx->obj_hash = if2(print_circle_s &&
                         cdr(lookup_var(nil, print_circle_s)),
-                        make_eq_hash(nil, nil));
+                        make_eq_hash(hash_weak_none));
     ctx->depth = 0;
     get_set_ctx(out, ctx);
     if (ctx->obj_hash)

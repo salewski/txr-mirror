@@ -963,7 +963,7 @@ val dlt_register(val dlt,
 void lisplib_init(void)
 {
   prot1(&dl_table);
-  dl_table = make_hash(nil, nil, nil);
+  dl_table = make_hash(hash_weak_none, nil);
   dlt_register(dl_table, place_instantiate, place_set_entries);
   dlt_register(dl_table, ver_instantiate, ver_set_entries);
   dlt_register(dl_table, ifa_instantiate, ifa_set_entries);
