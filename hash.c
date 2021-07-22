@@ -631,8 +631,19 @@ static void hash_mark(val hash)
     }
     break;
   case hash_weak_or:
-  case hash_weak_and:
     /* mark nothing */
+    break;
+  case hash_weak_and:
+    /* Mark key if value is reachable and vice versa. */
+    for (i = 0; i < h->modulus; i++) {
+      for (iter = h->table->v.vec[i]; iter; iter = us_cdr(iter)) {
+        val entry = us_car(iter);
+        if (gc_is_reachable(us_car(entry)))
+          gc_mark(us_cdr(entry));
+        else if (gc_is_reachable(us_cdr(entry)))
+          gc_mark(us_car(entry));
+      }
+    }
     break;
   }
 
