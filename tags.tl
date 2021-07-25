@@ -16,7 +16,8 @@
   (m   merge   :bool "Merge with existing tags file, sorting combined content.")
   (nil exclude (cumul :text) "Skip paths matching glob pattern given \ \
                               in TEXT. Multiple patterns can be specified.")
-  (e   emacs   :bool "Write the tags file in Emacs's etags format."))
+  (e   emacs   :bool "Write the tags file in Emacs's etags format.")
+  (q   qual    :bool "Also generate struct:slot tags for each slot."))
 
 (defstruct tag ()
   ident
@@ -69,7 +70,12 @@
   (:method text (me)
     `@{me.ident}\t@{me.path}\t/^@{me.pattern}$/ \
      @(if me.expattern `;/@(escape me.ident)/`);"\t \
-     @{me.type}\tstruct:@{me.parent}`))
+     @{me.type}\tstruct:@{me.parent}`)
+  (:method make-qual-tag (me)
+    (if me.parent
+      (let ((qt (copy me)))
+        (set qt.ident `@{me.parent}:@{me.ident}`)
+        qt))))
 
 (defstruct orig-tag tag
   line
@@ -338,6 +344,13 @@
                                       ftw-skip-subtree)))
                             (t ftw-continue)))
                         (logior ftw-phys ftw-actionretval)))))
+      (if o.qual
+        (set tags (build
+                    (pend tags)
+                    (each ((tg tags))
+                      (if (typep tg 'slot-tag)
+                        (iflet ((qt tg.(make-qual-tag)))
+                          (add qt)))))))
       (if o.emacs
         (write-etagfile (flow tags
                               (remove-if (op equal @1.type "F"))
