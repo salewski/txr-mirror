@@ -1,3 +1,54 @@
+                                    TXR 267
+                                   2021-07-26
+
+
+  Features
+
+  - system interface
+    - new getrlimit, setrlimit functions
+  - random numbers:
+    - buffer objects can be used as random seeds now
+  - build:
+    - txr.c now recompiled if build_id changes.
+    - PDF build is now reproducible even if ghostscript
+      and groff don't have patches for this.
+  - tags.tl:
+    - now supports --emacs argument for Emacs style tags,
+      thanks to Paul A. Patience.
+    - other improvements
+  - hashes:
+    - Hashes now support both and-semantics and or-semantics
+      for tables that have both weak keys and values.
+      - and-semantics means both key and value must be unreachable
+        for the hash entry to disappear.
+      - or-semantics means the entry disappears if just the key
+        or the value is unreachable.
+
+  Bugs
+
+  - compat:
+    - glaring bug fixed going back more than 150 versions.
+    - certain effects of the -C compatibility option not
+      having their documented effect.
+    - caused by referencing the opt_compat variable in global
+      initialization functions, at which time opt_compat is
+      always zero due to -C not having been processed yet.
+  - Test case fixes for missing /bin/sh situation exemplified
+    by Guix build environment.
+  - op:
+    - weirdness in handling nested do (do do do ... ) fixed
+  - hashes:
+    - fixed TXR 235 regression in weak processing, causing
+      entries to spuriously disappear from weak hash tables that are only
+      referenced by other weak hash tables.
+    - fixed incorrect recalculation of hash table counts of weak
+      hash tables during garbage collection.
+  - carray:
+    - missing type checking in a couple of functions, creating
+      opportunity for trivial crash.
+
+
+
                                     TXR 266
                                    2021-07-12
 
