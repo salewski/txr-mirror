@@ -130,14 +130,14 @@ typedef struct {
   cnum id;
   cnum slot;
 } slot_cache_entry_t;
+
 typedef slot_cache_entry_t slot_cache_set_t[4];
-typedef slot_cache_set_t *slot_cache_t;
 
 struct sym {
   obj_common;
   val name;
   val package;
-  slot_cache_t slot_cache;
+  slot_cache_set_t *slot_cache;
 };
 
 struct package {

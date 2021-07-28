@@ -243,7 +243,7 @@ static val struct_type_finalize(val obj)
 
   for (iter = st->slots; iter; iter = cdr(iter)) {
     val slot = car(iter);
-    slot_cache_t slot_cache = slot->s.slot_cache;
+    slot_cache_set_t *slot_cache = slot->s.slot_cache;
     int i, j;
 
     remhash(slot_hash, cons(slot, id));
@@ -1097,7 +1097,7 @@ static void cache_set_insert(slot_cache_entry_t *set, cnum id, cnum slot)
 
 static loc lookup_slot(val inst, struct struct_inst *si, val sym)
 {
-  slot_cache_t slot_cache = sym->s.slot_cache;
+  slot_cache_set_t *slot_cache = sym->s.slot_cache;
   cnum id = si->id;
 
   if (slot_cache != 0) {
@@ -1130,7 +1130,7 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
       }
     }
   } else {
-    slot_cache = coerce(slot_cache_t,
+    slot_cache = coerce(slot_cache_set_t *,
                         chk_calloc(SLOT_CACHE_SIZE,
                                    sizeof (slot_cache_set_t)));
     slot_cache_set_t *set = &slot_cache[id % SLOT_CACHE_SIZE];
@@ -1159,7 +1159,7 @@ static loc lookup_slot(val inst, struct struct_inst *si, val sym)
 
 static struct stslot *lookup_static_slot_desc(struct struct_type *st, val sym)
 {
-  slot_cache_t slot_cache = sym->s.slot_cache;
+  slot_cache_set_t *slot_cache = sym->s.slot_cache;
   cnum id = st->id;
 
   if (slot_cache != 0) {
@@ -1182,7 +1182,7 @@ static struct stslot *lookup_static_slot_desc(struct struct_type *st, val sym)
       }
     }
   } else {
-    slot_cache = coerce(slot_cache_t,
+    slot_cache = coerce(slot_cache_set_t *,
                         chk_calloc(SLOT_CACHE_SIZE,
                                    sizeof (slot_cache_set_t)));
     slot_cache_set_t *set = &slot_cache[id % SLOT_CACHE_SIZE];
