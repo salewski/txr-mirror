@@ -19203,17 +19203,25 @@ There are more kinds of objects, such as user-defined structures.
 
 .coNP Function @ subtypep
 .synb
-.mets (subtypep < left-type-symbol << right-type-symbol )
+.mets (subtypep < left-type << right-type )
 .syne
 .desc
 The
 .code subtypep
 function tests whether
-.meta left-type-symbol
+.meta left-type
 and
-.meta right-type-symbol
+.meta right-type
 name a pair of types, such that the left type is a subtype of the right
 type.
+
+The arguments are either type symbols, or structure type objects, as returned by the
+.code find-struct-type
+function. Thus, the symbol
+.codn time ,
+which is the name of a predefined struct type, and the object returned by
+.code "(find-struct-type 'time)"
+are considered equivalent argument values.
 
 If either argument doesn't name a type, the behavior is
 unspecified.
@@ -19222,10 +19230,10 @@ Each type is a subtype of itself. Most other type relationships can be inferred
 from the type hierarchy diagrams given in the introduction to this section.
 
 In addition, there are inheritance relationships among structures. If
-.meta left-type-symbol
+.meta left-type
 and
-.meta right-type-symbol
-both name structure types, then
+.meta right-type
+are both structure types, then
 .code subtypep
 yields true if the types are the same struct type, or if the right
 type is a direct or indirect supertype of the left.
