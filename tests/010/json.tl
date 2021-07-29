@@ -133,6 +133,23 @@
   (get-jsons "1 1 [2] {3:4}") (1.0 1.0 #(2.0) #H(() (3.0 4.0))))
 
 (mtest
+  (get-json "{ , }") :error
+  (get-json "{ 1:2, }") :error
+  (get-json "{ 1:2, 3:4, }") :error
+  (get-json "[ , ]") :error
+  (get-json "[ 1, ]") :error
+  (get-json "[ 1, 2, ]") :error)
+
+(let ((*read-bad-json* t))
+  (mtest
+    (get-json "{ , }") :error
+    (get-json "{ 1:2, }") #H(() (1.0 2.0))
+    (get-json "{ 1:2, 3:4, }") #H(() (1.0 2.0) (3.0 4.0))
+    (get-json "[ , ]") :error
+    (get-json "[ 1, ]") #(1.0)
+    (get-json "[ 1, 2, ]") #(1.0 2.0)))
+
+(mtest
   (with-out-string-stream (s) (put-json nil s)) "false"
   (with-out-string-stream (s) (put-jsons nil s)) ""
   (with-out-string-stream (s) (put-jsons '(1.0 t nil) s)) "1\ntrue\nfalse\n")

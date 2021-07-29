@@ -72,7 +72,7 @@
 val parser_s, unique_s, circref_s;
 val listener_hist_len_s, listener_multi_line_p_s, listener_sel_inclusive_p_s;
 val listener_pprint_s, listener_greedy_eval_s;
-val rec_source_loc_s, read_unknown_structs_s;
+val rec_source_loc_s, read_unknown_structs_s, read_bad_json_s;
 val json_s;
 val intr_s;
 
@@ -124,6 +124,7 @@ void parser_common_init(parser_t *p)
   yyscan_t yyscan;
   val rec_source_loc_var = lookup_var(nil, rec_source_loc_s);
   val read_unknown_structs_var = lookup_var(nil, read_unknown_structs_s);
+  val read_bad_json_var = lookup_var(nil, read_bad_json_s);
 
   p->parser = nil;
   p->lineno = 1;
@@ -151,6 +152,7 @@ void parser_common_init(parser_t *p)
   p->tok_idx = 0;
   p->rec_source_loc = !nilp(cdr(rec_source_loc_var));
   p->read_unknown_structs = !nilp(cdr(read_unknown_structs_var));
+  p->read_bad_json = !nilp(cdr(read_bad_json_var));
 }
 
 void parser_cleanup(parser_t *p)
@@ -1872,6 +1874,7 @@ void parse_init(void)
   listener_greedy_eval_s = intern(lit("*listener-greedy-eval-p*"), user_package);
   rec_source_loc_s = intern(lit("*rec-source-loc*"), user_package);
   read_unknown_structs_s = intern(lit("*read-unknown-structs*"), user_package);
+  read_bad_json_s = intern(lit("*read-bad-json*"), user_package);
   json_s = intern(lit("json"), user_package);
   unique_s = gensym(nil);
 
@@ -1892,6 +1895,7 @@ void parse_init(void)
   reg_var(listener_greedy_eval_s, nil);
   reg_var(rec_source_loc_s, nil);
   reg_var(read_unknown_structs_s, nil);
+  reg_var(read_bad_json_s, nil);
   reg_fun(circref_s, func_n1(circref));
   reg_fun(intern(lit("parse-errors"), user_package), func_n1(parse_errors));
   reg_fun(intern(lit("repl"), system_package), func_n4(repl));

@@ -66,6 +66,7 @@ struct parser {
   int tok_idx;
   int rec_source_loc;
   int read_unknown_structs;
+  int read_bad_json;
 };
 #endif
 
@@ -75,7 +76,7 @@ extern const int have_yydebug;
 extern const wchar_t *spec_file;
 extern val form_to_ln_hash;
 extern val parser_s, unique_s, circref_s;
-extern val rec_source_loc_s, read_unknown_structs_s;
+extern val rec_source_loc_s, read_unknown_structs_s, read_bad_json_s;
 extern val json_s;
 
 extern struct cobj_class *parser_cls;

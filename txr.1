@@ -74368,6 +74368,30 @@ argument is passed to that function, defaulting to
 The value returned is that of
 .codn put-jsons .
 
+.coNP Variable @ *read-bad-json*
+.desc
+This dynamic variable, initialized to a value of
+.code nil ,
+controls whether the parser is tolerant to certain non-conformances in the
+syntax of JSON data, which are ordinarily syntax errors.
+
+If the value of this variable is true, then the last element in a JSON
+array or the last element pair in a JSON object may be followed by spurious
+trailing comma, which is ignored.
+
+Note: in the future, the variable may be extended to enable other instances of
+tolerance in the area of JSON parsing.
+
+.TP* Example:
+
+.verb
+  (get-json "{ 3:4, }") -> ;; syntax error
+
+  (let ((*read-bad-json* t))
+    (get-json "{ 3:4, }"))
+  --> #H(() (3.0 4.0))
+.brev
+
 .SH* FOREIGN FUNCTION INTERFACE
 
 On platforms where it is supported, \*(TX provides a feature called the
