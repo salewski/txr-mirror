@@ -133,11 +133,13 @@ val copy_env(val oenv)
   type_check(lit("copy-env"), oenv, ENV);
 
   {
+    val vb = copy_alist(oenv->e.vbindings);
+    val fb = copy_alist(oenv->e.fbindings);
     val nenv = make_obj();
 
     nenv->e.type = ENV;
-    nenv->e.vbindings = copy_alist(oenv->e.vbindings);
-    nenv->e.fbindings = copy_alist(oenv->e.fbindings);
+    nenv->e.vbindings = vb;
+    nenv->e.fbindings = fb;
     nenv->e.up_env = oenv->e.up_env;
     return nenv;
   }
@@ -148,13 +150,16 @@ val deep_copy_env(val oenv)
   type_check(lit("deep-copy-env"), oenv, ENV);
 
   {
-    val nenv = make_obj();
-    nenv->e.type = ENV;
-    nenv->e.vbindings = copy_alist(oenv->e.vbindings);
-    nenv->e.fbindings = copy_alist(oenv->e.fbindings);
-
-    nenv->e.up_env = if2(oenv->e.up_env != nil,
+    val vb = copy_alist(oenv->e.vbindings);
+    val fb = copy_alist(oenv->e.fbindings);
+    val up_env = if2(oenv->e.up_env != nil,
                          deep_copy_env(oenv->e.up_env));
+    val nenv = make_obj();
+
+    nenv->e.type = ENV;
+    nenv->e.vbindings = vb;
+    nenv->e.fbindings = fb;
+    nenv->e.up_env = up_env;
     return nenv;
   }
 }
