@@ -83,6 +83,7 @@
     "This area is under 24 hour TTY surveillance."
     "Imitation is the benignest form of forgery."
     "This could be the year of the TXR desktop; I can feel it!"
+    "TXR's suggested retail price is $0. (More in Canada.)"
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
