@@ -269,6 +269,17 @@ val make_obj(void)
   abort();
 }
 
+val copy_obj(val orig)
+{
+  val copy = make_obj();
+  *copy = *orig;
+#if CONFIG_GEN_GC
+  copy->t.fincount = 0;
+  copy->t.gen = 0;
+#endif
+  return copy;
+}
+
 static void finalize(val obj)
 {
   switch (convert(type_t, obj->t.type)) {

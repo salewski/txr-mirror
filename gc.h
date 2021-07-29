@@ -30,6 +30,7 @@ void gc_late_init(void);
 val prot1(val *loc);
 void protect(val *, ...);
 val make_obj(void);
+val copy_obj(val);
 void gc(void);
 int gc_state(int);
 int gc_inprogress(void);

@@ -7494,8 +7494,7 @@ val copy_fun(val ofun)
   val self = lit("copy-fun");
   type_check(self, ofun, FUN);
   {
-    val nfun = make_obj();
-    nfun->f = ofun->f;
+    val nfun = copy_obj(ofun);
 
     if (nfun->f.env)
       nfun->f.env = if3(nfun->f.functype == FVM,
@@ -9692,9 +9691,7 @@ val copy_cons(val cell)
   case CONS:
   case LCONS:
     {
-      val obj = make_obj();
-      *obj = *cell;
-      return obj;
+      return copy_obj(cell);
     }
   default:
     type_mismatch(lit("copy-cons: ~s is not a cons"), cell, nao);
@@ -9708,11 +9705,7 @@ val copy_tree(val tree)
   } else {
     val car = copy_tree(tree->c.car);
     val cdr = copy_tree(tree->c.cdr);
-    val copy = make_obj();
-    *copy = *tree;
-    copy->c.car = car;
-    copy->c.cdr = cdr;
-    return copy;
+    return cons(car, cdr);
   }
 }
 

@@ -140,9 +140,7 @@ val set_key(val node, val nkey)
 
 val copy_tnode(val node)
 {
-  val obj = (type_check(lit("copy-tnode"), node, TNOD), make_obj());
-  obj->tn = node->tn;
-  return obj;
+  return (type_check(lit("copy-tnode"), node, TNOD), copy_obj(node));
 }
 
 static ucnum tn_size(val node)
