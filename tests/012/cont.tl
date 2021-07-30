@@ -24,8 +24,8 @@
 (defun amb (. args)
   (suspend amb-scope cont
     (each ((a args))
-      (when (and a (call cont a))
-        (return-from amb a)))))
+      (whenlet ((res (and a (call cont a))))
+        (return-from amb-scope res)))))
 
 (test (amb-scope
         (let ((w1 (amb "the" "that" "a"))
