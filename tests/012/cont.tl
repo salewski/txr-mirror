@@ -37,3 +37,13 @@
                     (eql [w3 -1] [w4 0])))
           (list w1 w2 w3 w4)))
       ("that" "thing" "grows" "slowly"))
+
+(test (amb-scope
+        (let ((🍌 [apply amb (range 95795 95805)])
+              (🍏 [apply amb (range 217510 217520)])
+              (🍉 [apply amb (range 414555 414570)])
+              (🍒 [apply amb (range 422470 422485)]))
+          (amb (= (+ (expt 🍌 4) (expt 🍏 4) (expt 🍉 4))
+                  (expt 🍒 4)))
+          (list 🍌 🍏 🍉 🍒)))
+      (95800 217519 414560 422481))
