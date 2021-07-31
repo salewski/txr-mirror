@@ -285,15 +285,18 @@
   (let ((qpairs (mappend (aret ^(',@1 ,@2)) (tuples 2 pairs))))
     (tree-case spec
       ((texpr . args)
-       (let ((type (sys:new-type op form texpr)))
-         (caseq op
-           ((new new*) (if qpairs
-                         ^(make-struct ,type (list ,*qpairs) ,*args)
-                         ^(struct-from-args ,type ,*args)))
-           ((lnew lnew*) ^(make-lazy-struct ,type
-                                            (lambda ()
-                                              (cons (list ,*qpairs)
-                                                    (list ,*args))))))))
+       (if (and (eq texpr 'dwim)
+                (meq op 'new* 'lnew*))
+         :
+         (let ((type (sys:new-type op form texpr)))
+           (caseq op
+             ((new new*) (if qpairs
+                           ^(make-struct ,type (list ,*qpairs) ,*args)
+                           ^(struct-from-args ,type ,*args)))
+             ((lnew lnew*) ^(make-lazy-struct ,type
+                                              (lambda ()
+                                                (cons (list ,*qpairs)
+                                                      (list ,*args)))))))))
       (texpr
         (let ((type (sys:new-type op form texpr)))
           (caseq op

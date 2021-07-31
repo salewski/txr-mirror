@@ -28264,7 +28264,7 @@ macros are variants, respectively, of
 and
 .codn lnew .
 
-The only difference in behavior in these macros relative to
+The difference in behavior in these macros relative to
 .code new
 and
 .code lnew
@@ -28275,6 +28275,77 @@ argument is replaced with an expression
 which is evaluated. The value of
 .meta expr
 must be a struct type, or a symbol which is the name of a struct type.
+
+With one exception, if
+.meta expr0
+is a compound expression, then
+.mono
+.meti (new* < expr0 ...)
+.onom
+is interpreted as
+.mono
+.meti (new* >> ( expr1 << args... ) ...)
+.onom
+where the head of
+.metn expr0 ,
+.metn expr1 ,
+is actually the expression which is evaluated to produce the type, and the remaining
+constituents of
+.metn expr0 ,
+.metn args ,
+become the boa arguments. The same requirement applies to
+.codn lnew* .
+
+The exception is that if
+.meta expr1
+is the symbol
+.codn dwim ,
+this interpretation does not apply. Thus
+.mono
+.meti (new* >> [ fun << args... ] ...)
+.onom
+evaluates the
+.mono
+.meti >> [ fun << args... ]
+.onom
+expression, rather than treating it as
+.mono
+.meti (dwim < fun << args... )
+.onom
+where
+.code dwim
+would be evaluated as a variable reference expected to produce a type.
+
+.TP* Examples:
+
+.verb
+  ;; struct with boa constructor
+  (defstruct (ab a : b) () a b)
+
+  ;; error: find-struct-type is interpreted as a variable
+  (new* (find-struct-type 'ab) a 1) -> ;; error
+
+  ;; OK: extra nesting.
+  (new* ((find-struct-type 'ab)) a 1) -> #S(ab a 1 b nil)
+
+  ;; OK: dwim brackets without nesting.
+  (new* [find-struct-type 'ab] a 1) -> #S(ab a 1 b nil)
+
+  ;; boa construction
+  (new* ([find-struct-type 'ab] 1 2)) -> #S(ab a 1 b 2)
+  (new* ((find-struct-type 'ab) 1 2)) -> #S(ab a 1 b 2)
+
+  ;; mixed construction
+  (new* ([find-struct-type 'ab] 1) b 2) -> #S(ab a 1 b 2)
+
+  (let ((type (find-struct-type 'ab)))
+    (new* type a 3 b 4))
+  -> #S(ab a 3 b 4)
+
+  (let ((type (find-struct-type 'ab)))
+    (new* (type 3 4)))
+  -> #S(ab a 3 b 4)
+.brev
 
 .coNP Macro @ with-slots
 .synb

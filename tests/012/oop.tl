@@ -77,3 +77,17 @@
   (prinl d)
   (prinl (list b.sa b.sb b.sc b.x b.y))
   (prinl (list d.sa d.sb d.sc d.x d.y)))
+
+(defstruct (ab a : b) () a b)
+
+(mtest
+  (new* (find-struct-type 'ab) a 1) :error
+  (new* ((find-struct-type 'ab)) a 1) #S(ab a 1 b nil)
+  (new* [find-struct-type 'ab] a 1) #S(ab a 1 b nil)
+  (new* ([find-struct-type 'ab] 1 2)) #S(ab a 1 b 2)
+  (new* ((find-struct-type 'ab) 1 2)) #S(ab a 1 b 2)
+  (new* ([find-struct-type 'ab] 1) b 2) #S(ab a 1 b 2)
+  (let ((type (find-struct-type 'ab)))
+    (new* type a 3 b 4)) #S(ab a 3 b 4)
+  (let ((type (find-struct-type 'ab)))
+    (new* (type 3 4))) #S(ab a 3 b 4))
