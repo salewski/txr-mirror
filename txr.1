@@ -82547,6 +82547,14 @@ for accessing evaluation results are established.
 Lines are still entered into the history, and the interactive profile
 is still processed, as usual.
 
+Plain mode reads whole lines of input, yet recognizes multi-line expressions.
+Whenever a line of input is read which represents incomplete syntax, another
+line of input is read and appended to that line. This repeats until the
+accumulated input represents complete syntax, and is then processed as a unit.
+
+Each unit of input is expected to represent a single expression, otherwise
+an error is diagnosed.
+
 .SS* Interactive Profile File
 
 Unless the

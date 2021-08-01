@@ -2528,17 +2528,45 @@ wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
     int ifd = lino_os.fileno_fn(ls->tty_ifs);
 
     if ( ls->noninteractive || !isatty(ifd)) {
-        /* Not a tty: read from file / pipe. */
-        if (lino_os.getl_fn(ls->tty_ifs, ls->data, nelem(ls->data)) == 0) {
-            ls->error = (lino_os.eof_fn(ls->tty_ifs) ? lino_eof : lino_ioerr);
-            return 0;
+        wchar_t *ret = 0;
+        size_t len = 0, i;
+
+        for (;;) {
+            size_t nlen;
+            /* Not a tty: read from file / pipe. */
+            if (lino_os.getl_fn(ls->tty_ifs, ls->data, nelem(ls->data)) == 0) {
+                ls->error = (lino_os.eof_fn(ls->tty_ifs) ? lino_eof : lino_ioerr);
+                break;
+            }
+
+            nlen = wcslen(ls->data);
+
+            {
+                wchar_t *nret = lino_os.wrealloc_fn(ret, len + nlen + 1);
+                if (nret == 0) {
+                    lino_os.free_fn(ret);
+                    return 0;
+                }
+                wmemcpy(nret + len, ls->data, nlen + 1);
+                ret = nret;
+                len = len + nlen;
+            }
+
+            if (!ls->enter_callback || ls->enter_callback(ret, ls->ce_ctx))
+                break;
         }
 
-        count = wcslen(ls->data);
+        if (ret != 0) {
+            if (len && ret[len - 1] == '\n')
+                ret[len-1] = '\0';
 
-        if (count && ls->data[count-1] == '\n')
-            ls->data[count-1] = '\0';
-        return lino_os.wstrdup_fn(ls->data);
+            for (i = 0; i < len; i++) {
+                if (ret[i] == '\n')
+                    ret[i] = '\r';
+            }
+        }
+
+        return ret;
     } else {
         wchar_t *ret = 0;
 #ifdef SIGWINCH
