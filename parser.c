@@ -1474,6 +1474,7 @@ val repl(val bindings, val in_stream, val out_stream, val env)
   val quit_k = intern(lit("quit"), keyword_package);
   val read_k = intern(lit("read"), keyword_package);
   val prompt_k = intern(lit("prompt"), keyword_package);
+  val prompt_on_k = intern(lit("prompt-on"), keyword_package);
   val p_k = intern(lit("p"), keyword_package);
   val save_k = intern(lit("save"), keyword_package);
   val counter_sym = intern(lit("*n"), user_package);
@@ -1598,6 +1599,9 @@ val repl(val bindings, val in_stream, val out_stream, val env)
         done = t;
       } else if (form == prompt_k) {
         pprinl(prompt, out_stream);
+        counter = prev_counter;
+      } else if (form == prompt_on_k) {
+        lino_enable_noninteractive_prompt(ls, 1);
         counter = prev_counter;
       } else if (form == p_k) {
         pprinl(prev_counter, out_stream);

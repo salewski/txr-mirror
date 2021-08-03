@@ -137,6 +137,7 @@ struct lino_state {
     int selmode;        /* Visual selection being made. */
     int selinclusive;   /* Selections include character right of endpoint. */
     int noninteractive; /* No character editing, even if input is tty. */
+    int show_prompt;    /* Show prompting in non-interactive mode. */
     struct lino_undo *undo_stack;
     lino_error_t error; /* Most recent error. */
 };
@@ -205,6 +206,11 @@ void lino_set_noninteractive(lino_t *ls, int ni)
 int lino_get_noninteractive(lino_t *ls)
 {
     return ls->noninteractive;
+}
+
+void lino_enable_noninteractive_prompt(lino_t *ls, int enable)
+{
+    ls->show_prompt = enable;
 }
 
 void lino_set_atom_cb(lino_t *l, lino_atom_cb_t *cb, void *ctx)
@@ -2530,9 +2536,22 @@ wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
     if ( ls->noninteractive || !isatty(ifd)) {
         wchar_t *ret = 0;
         size_t len = 0, i;
+        const wchar_t *condensed_prompt = prompt + wcslen(prompt);
+
+        if (ls->show_prompt) {
+            while (condensed_prompt > prompt &&
+                   (*condensed_prompt == 0 || *condensed_prompt == ' '))
+            {
+                condensed_prompt--;
+            }
+        }
 
         for (;;) {
             size_t nlen;
+
+            if (ls->show_prompt)
+                lino_os.puts_fn(ls->tty_ofs, ret ? condensed_prompt : prompt);
+
             /* Not a tty: read from file / pipe. */
             if (lino_os.getl_fn(ls->tty_ifs, ls->data, nelem(ls->data)) == 0) {
                 ls->error = (lino_os.eof_fn(ls->tty_ifs) ? lino_eof : lino_ioerr);

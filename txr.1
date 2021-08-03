@@ -82533,8 +82533,18 @@ incrementing the prompt number. The
 command prints just the current prompt number, followed by a newline,
 without incrementing the number.
 
-These comments are useful in plain mode, in which no prompts are
-printed. See Plain Mode below.
+The
+.code :prompt-on
+command enables the printing of prompts. The full prompt is printed before
+reading each new expression. An abbreviated prompt is printed before reading
+the continuation lines of an incomplete expression.
+
+These commands are useful in plain mode, in which no prompts are
+printed by default. See Plain Mode below. The
+.code :prompt-on
+command only has an effect in plain mode.
+
+None of these prompt-related commands are entered into the history.
 
 .SS* Plain Mode
 

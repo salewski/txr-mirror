@@ -124,6 +124,7 @@ void lino_set_selinclusive(lino_t *, int si);
 int lino_get_selinculsive(lino_t *);
 void lino_set_noninteractive(lino_t *, int ni);
 int lino_get_noninteractive(lino_t *);
+void lino_enable_noninteractive_prompt(lino_t *, int enable);
 
 typedef wchar_t *lino_atom_cb_t(lino_t *, const wchar_t *line, int n, void *ctx);
 void lino_set_atom_cb(lino_t *, lino_atom_cb_t *, void *ctx);
