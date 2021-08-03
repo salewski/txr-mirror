@@ -80,8 +80,10 @@
 
 (defstruct (ab a : b) () a b)
 
+(defvar foo)
+
 (mtest
-  (new* (find-struct-type 'ab) a 1) :error
+  (new* (foo 'ab) a 1) :error
   (new* ((find-struct-type 'ab)) a 1) #S(ab a 1 b nil)
   (new* [find-struct-type 'ab] a 1) #S(ab a 1 b nil)
   (new* ([find-struct-type 'ab] 1 2)) #S(ab a 1 b 2)
