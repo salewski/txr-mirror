@@ -56,6 +56,7 @@
 #include "regex.h"
 #include "arith.h"
 #include "sysif.h"
+#include "itypes.h"
 #if HAVE_GLOB
 #include "glob.h"
 #endif
@@ -181,8 +182,11 @@ static void help(void)
 }
 
 #if HAVE_TERMIOS
-static void banner(void)
+static void banner(val self)
 {
+  if (!isatty(c_int(stream_fd(std_input), self)))
+    return;
+
   format(std_output,
          if3(opt_noninteractive,
              lit("This is the TXR Lisp plain mode listener of TXR ~a.\n"
@@ -573,7 +577,7 @@ int txr_main(int argc, char **argv)
   } else if (argc <= 1) {
     drop_privilege();
 #if HAVE_TERMIOS
-    banner();
+    banner(self);
     goto repl;
 #else
     hint();
@@ -1107,7 +1111,7 @@ int txr_main(int argc, char **argv)
       if (evaled)
         return EXIT_SUCCESS;
 #if HAVE_TERMIOS
-      banner();
+      banner(self);
       goto repl;
 #else
       hint();
