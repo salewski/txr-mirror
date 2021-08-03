@@ -56707,6 +56707,16 @@ function throws an exception if an error occurs during the close operation
 instead of returning
 .codn nil .
 
+If
+.code close-stream
+is applied to a
+.meta stream
+which is already closed, the operation returns
+.code nil
+regardless of the
+.meta throw-on-error-p
+argument's value.
+
 .coNP Macro @ with-stream
 .synb
 .mets (with-stream >> ( stream-var << init-form )
