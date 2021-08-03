@@ -82533,16 +82533,12 @@ incrementing the prompt number. The
 command prints just the current prompt number, followed by a newline,
 without incrementing the number.
 
-The
+In plain mode, the
 .code :prompt-on
 command enables the printing of prompts. The full prompt is printed before
 reading each new expression. An abbreviated prompt is printed before reading
-the continuation lines of an incomplete expression.
-
-These commands are useful in plain mode, in which no prompts are
-printed by default. See Plain Mode below. The
-.code :prompt-on
-command only has an effect in plain mode.
+the continuation lines of an incomplete expression. The printing of prompts
+is automatically enabled if the input device is an interactive terminal.
 
 None of these prompt-related commands are entered into the history.
 
@@ -82558,7 +82554,8 @@ the listener operates in
 It reads input without providing any editing features: no completion,
 history recall, selection, or copy and paste.  Only the line editing
 features provided by the operating system are available.
-No prompts appear; however, there is still an incrementing counter,
+Prompts appear if standard input is an interactive terminal, or
+if explicitly enabled. There is still an incrementing counter,
 and the numbered variables
 .codn *1 ,
 .codn *2 ,

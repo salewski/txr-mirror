@@ -2533,12 +2533,13 @@ wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
     int count;
     int ifd = lino_os.fileno_fn(ls->tty_ifs);
 
-    if ( ls->noninteractive || !isatty(ifd)) {
+    if (ls->noninteractive || !isatty(ifd)) {
         wchar_t *ret = 0;
         size_t len = 0, i;
         const wchar_t *condensed_prompt = prompt + wcslen(prompt);
+        int show_prompt = ls->show_prompt || (ls->noninteractive && isatty(ifd));
 
-        if (ls->show_prompt) {
+        if (show_prompt) {
             while (condensed_prompt > prompt &&
                    (*condensed_prompt == 0 || *condensed_prompt == ' '))
             {
@@ -2549,7 +2550,7 @@ wchar_t *linenoise(lino_t *ls, const wchar_t *prompt)
         for (;;) {
             size_t nlen;
 
-            if (ls->show_prompt)
+            if (show_prompt)
                 lino_os.puts_fn(ls->tty_ofs, ret ? condensed_prompt : prompt);
 
             /* Not a tty: read from file / pipe. */
