@@ -978,7 +978,7 @@ static val stdio_close(val stream, val throw_on_error)
   if (h->f != 0 && h->f != stdin && h->f != stdout && h->f != stderr) {
     int result = fclose(h->f);
     h->f = 0;
-    if (result == EOF && throw_on_error) {
+    if (result == EOF && default_null_arg(throw_on_error)) {
       h->err = num(errno);
       uw_throwf(file_error_s, lit("error closing ~s: ~d/~s"),
                 stream, num(errno), errno_to_str(errno), nao);
@@ -1378,7 +1378,7 @@ static val pipe_close(val stream, val throw_on_error)
                   stream, num(errno), errno_to_str(errno), nao);
     } else {
 #if HAVE_SYS_WAIT
-      if (throw_on_error) {
+      if (default_null_arg(throw_on_error)) {
         if (WIFSIGNALED(status)) {
           int termsig = WTERMSIG(status);
           uw_throwf(process_error_s, lit("pipe ~s terminated by signal ~a"),
@@ -1397,7 +1397,7 @@ static val pipe_close(val stream, val throw_on_error)
         return num(exitstatus);
       }
 #else
-      if (status != 0 && throw_on_error)
+      if (status != 0 && default_null_arg(throw_on_error))
         uw_throwf(process_error_s, lit("closing pipe ~s failed"), stream, nao);
 #endif
       return status == 0 ? zero : nil;

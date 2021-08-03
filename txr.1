@@ -60159,7 +60159,7 @@ invocation.
 
 .coNP Method @ close
 .synb
-.mets << stream .(close offs whence)
+.mets << stream .(close throw-on-error-p)
 .syne
 .desc
 The
@@ -60311,8 +60311,8 @@ stream I/O function.
 .mets \ \ \ \ (put-buf buf pos me.stream))
 .mets \ \ (:method fill-buf (me buf pos)
 .mets \ \ \ \ (fill-buf buf pos me.stream))
-.mets \ \ (:method close (me)
-.mets \ \ \ \ (close-stream me.stream))
+.mets \ \ (:method close (me throw-on-error)
+.mets \ \ \ \ (close-stream me.stream throw-on-error))
 .mets \ \ (:method flush (me)
 .mets \ \ \ \ (flush-stream me.stream))
 .mets \ \ (:method seek (me offs whence)

@@ -145,7 +145,7 @@ static val strudel_close(val stream, val throw_on_error)
   struct strudel_base *sb = coerce(struct strudel_base *, stream->co.handle);
   val obj = sb->obj;
   val meth = slot(obj, close_s);
-  return funcall2(meth, obj, throw_on_error);
+  return funcall2(meth, obj, default_null_arg(throw_on_error));
 }
 
 static val strudel_flush(val stream)
