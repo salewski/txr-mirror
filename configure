@@ -3480,6 +3480,7 @@ if [ $have_sockets ] ; then
 
   cat > conftest.c <<!
 #include <sys/select.h>
+#include <sys/time.h>
 
 int main(int argc, char **argv)
 {
@@ -3494,6 +3495,7 @@ int main(int argc, char **argv)
   if conftest; then
     printf "yes\n"
     printf "#define HAVE_SELECT 1\n" >> config.h
+    have_sys_time=y
   else
     printf "no\n"
   fi

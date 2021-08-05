@@ -45,6 +45,9 @@
 #elif HAVE_SELECT
 #include <sys/select.h>
 #endif
+#if HAVE_SYS_TIME
+#include <sys/time.h>
+#endif
 #include <netinet/in.h>
 #include "lib.h"
 #include "stream.h"
@@ -1045,7 +1048,7 @@ static val sock_shutdown(val sock, val how)
   return t;
 }
 
-#if defined SO_SNDTIMEO && defined SO_RCVTIMEO
+#if HAVE_SYS_TIME && defined SO_SNDTIMEO && defined SO_RCVTIMEO
 static val sock_timeout(val sock, val usec, val name, int which, val self)
 {
   cnum fd = c_num(stream_fd(sock), self);
@@ -1180,7 +1183,7 @@ void sock_load_init(void)
   reg_fun(intern(lit("sock-shutdown"), user_package), func_n2o(sock_shutdown, 1));
   reg_fun(intern(lit("open-socket"), user_package), func_n3o(open_socket, 2));
   reg_fun(intern(lit("open-socket-pair"), user_package), func_n3o(socketpair_wrap, 2));
-#if defined SO_SNDTIMEO && defined SO_RCVTIMEO
+#if HAVE_SYS_TIME && defined SO_SNDTIMEO && defined SO_RCVTIMEO
   reg_fun(intern(lit("sock-send-timeout"), user_package), func_n2(sock_send_timeout));
   reg_fun(intern(lit("sock-recv-timeout"), user_package), func_n2(sock_recv_timeout));
 #endif
