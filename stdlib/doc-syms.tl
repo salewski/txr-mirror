@@ -618,6 +618,7 @@
       ("env-vbind" "N-03389BE3")
       ("env-vbindings" "N-0018DCDC")
       ("enxio" "N-036B1BDB")
+      ("eof" "N-0336501B")
       ("eopnotsupp" "N-036B1BDB")
       ("eoverflow" "N-036B1BDB")
       ("eownerdead" "N-036B1BDB")

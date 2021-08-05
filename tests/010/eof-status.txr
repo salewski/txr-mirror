@@ -1,0 +1,3 @@
+@(next (open-command "echo a; exit 5"))
+@a
+@(eof status)

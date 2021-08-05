@@ -3582,7 +3582,7 @@ A summary of the available directives follows:
 
 .coIP @(eof)
 Explicitly match the end of file. Fails if unmatched data remains in
-the input stream.
+the input stream. Can capture or match the termination status of a pipe.
 
 .coIP @(eol)
 Explicitly match the end of line. Fails if the current position is not the
@@ -5006,6 +5006,64 @@ lines:
 .verb
   @(data remainder)
   @(do (tprint remainder))
+.brev
+
+.dir eof
+
+The
+.code eof
+directive, if not given any argument, matches successfully when no more input
+is available from the current input source.
+
+In the following example, the
+.meta line
+variable captures the text
+.str "One-line file"
+and then since that is the last line of input, the
+.code eof
+directive matches:
+
+.IP code:
+.mono
+\ @line
+ @(eof)
+.onom
+
+.IP data:
+.mono
+\ One-line file
+.onom
+.PP
+
+If the data consisted of two or more lines,
+.code eof
+would fail.
+
+The
+.code eof
+directive may be given a single argument, which is a pattern that matches the
+termination status of the input source. This is useful when the input source
+is a process pipe. For the purposes of
+.codn eof ,
+sources which are not process pipes have the symbol
+.code t
+as their termination status.
+
+In the following example, which assumes the availability of a POSIX shell
+command interpreter in the host system, the variable
+.meta a
+captures the string
+.str a
+and the
+.meta status
+variable captures the integer value
+.codn 5 ,
+which is the termination status of the command:
+
+.verb
+  @(next (open-command "echo a; exit 5"))
+  @a
+  @(eof status)
 .brev
 
 .dirs some all none maybe cases choose

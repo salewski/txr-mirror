@@ -418,6 +418,7 @@ tst/tests/009/json.ok: TXR_ARGS := $(addprefix tests/009/,webapp.json pass1.json
 tst/tests/010/align-columns.ok: TXR_ARGS := tests/010/align-columns.dat
 tst/tests/010/block.ok: TXR_OPTS := -B
 tst/tests/010/reghash.ok: TXR_OPTS := -B
+tst/tests/010/eof-status.ok: TXR_OPTS := -B
 tst/tests/013/maze.ok: TXR_ARGS := 20 20
 tst/tests/018/chmod.ok: TXR_ARGS := tst/tests/018/tempfile
 
