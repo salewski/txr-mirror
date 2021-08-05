@@ -56709,13 +56709,13 @@ instead of returning
 
 If
 .code close-stream
-is applied to a
+is called in such a way that it returns a value, without throwing an exception,
+that value is retained. Additional calls to the function with the same
 .meta stream
-which is already closed, the operation returns
-.code nil
-regardless of the
+object return that same value without having any effect on the stream.
+These additional calls ignore the
 .meta throw-on-error-p
-argument's value.
+argument.
 
 .coNP Macro @ with-stream
 .synb

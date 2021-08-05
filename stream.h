@@ -55,6 +55,7 @@ struct strm_base {
   unsigned force_break;
   cnum max_length;
   cnum max_depth;
+  val close_result;
   struct strm_ctx *ctx;
 };
 

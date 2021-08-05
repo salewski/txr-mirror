@@ -109,7 +109,7 @@ static val shell, shell_arg;
 
 void strm_base_init(struct strm_base *s)
 {
-  static struct strm_base init = { indent_off, 60, 10, 0, 0, 0, 0, 0, 0 };
+  static struct strm_base init = { indent_off, 60, 10, 0, 0, 0, 0, 0, nao, 0 };
   *s = init;
 }
 
@@ -120,7 +120,8 @@ void strm_base_cleanup(struct strm_base *s)
 
 void strm_base_mark(struct strm_base *s)
 {
-  (void) s;
+  if (s->close_result != nao)
+    gc_mark(s->close_result);
 }
 
 void stream_print_op(val stream, val out, val pretty, struct strm_ctx *ctx)
@@ -2971,9 +2972,14 @@ val real_time_stream_p(val obj)
 val close_stream(val stream, val throw_on_error)
 {
   val self = lit("close-stream");
-  struct strm_ops *ops = coerce(struct strm_ops *,
-                                cobj_ops(self, stream, stream_cls));
-  return ops->close(stream, throw_on_error);
+  struct strm_base *s = coerce(struct strm_base *,
+                               cobj_handle(self, stream, stream_cls));
+  struct strm_ops *ops = coerce(struct strm_ops *, stream->co.ops);
+
+  if (s->close_result == nao)
+    s->close_result = ops->close(stream, throw_on_error);
+
+  return s->close_result;
 }
 
 val get_error(val stream)
