@@ -38,6 +38,9 @@
           (list w1 w2 w3 w4)))
       ("that" "thing" "grows" "slowly"))
 
+(unless (>= (sizeof wchar) 4)
+  (exit 0))
+
 (test (amb-scope
         (let ((🍌 [apply amb (range 95795 95805)])
               (🍏 [apply amb (range 217510 217520)])
