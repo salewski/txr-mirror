@@ -53830,6 +53830,60 @@ from a quasiliteral within a nested
   (op ... (op ... `@@@1`))
 .brev
 
+Because the
+.code do
+macro may be applied to operators, it is possible to apply it to itself,
+as well as to
+.codn op ,
+as in the following example:
+
+.verb
+  [[[[(do do do op list) 1] 2] 3] 4] -> (1 2 3 4)
+.brev
+
+The chained application associates right-to-left: the rightmost
+.code do
+is applied to
+.codn op ;
+the second rightmost
+.code do
+is applied to the rightmost on and so on. The effect is that partial
+application has been achieved. The value
+.code 1
+is passed to the resulting function, which returns another function
+which takes the next argument. Finally, all these chained argument
+values are passed to
+.codn list .
+
+Each
+.cod3 do / op
+level is processed independently. The following examples show how the list may
+be permuted into several different orders by referring to an implicit argument
+at various levels of nesting, making it the first argument of
+.codn list .
+The unmentioned arguments implicitly follow, in order. This works because
+mentioning the argument explicitly means that its corresponding
+.code do
+operator no longer inserts its argument implicitly into body of the
+function which it generates:
+
+.verb
+  [[[[(do do do op list @1) 1] 2] 3] 4] -> (4 1 2 3)
+  [[[[(do do do op list @@1) 1] 2] 3] 4] ->(3 1 2 4)
+  [[[[(do do do op list @@@1) 1] 2] 3] 4] -> (2 1 3 4)
+  [[[[(do do do op list @@@@1) 1] 2] 3] 4] -> (1 2 3 4))
+.brev
+
+The following example mentions all arguments at every
+.cod3 do / op
+nesting level, thereby explicitly establishing the order
+in which they are passed to
+.codn list :
+
+.verb
+  [[[[(do do do op list @1 @@1 @@@1 @@@@1) 1] 2] 3] 4] -> (4 3 2 1)
+.brev
+
 .TP* Examples:
 
 .verb
@@ -53839,6 +53893,7 @@ from a quasiliteral within a nested
 
   (reduce-left (op + (* 10 @1) @2) '(1 2 3)) --> 123
 .brev
+
 .coNP Macro @ lop
 .synb
 .mets (lop << form +)
