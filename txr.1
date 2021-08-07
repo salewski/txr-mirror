@@ -4045,7 +4045,21 @@ is invoked with the
 .code :nothrow
 keyword, then if the input
 source cannot be opened, the situation is treated as a simple
-match failure.
+match failure. The
+.code :nothrow
+keyword also ensures that when the stream is later closed,
+which occurs when the lazy list reads all of the available data,
+the implicit call to the
+.code close-stream
+function specifies
+.code nil
+as the argument value to that function's
+.meta throw-on-error-p
+parameter. This
+.code :nothrow
+mechanism does not suppress all exceptions related to the processing
+of that stream; unusual conditions encountered during the reading of
+data from the stream may throw exceptions.
 
 The variant
 .code "@(next :args)"
@@ -22855,8 +22869,8 @@ function:
 
 .coNP Functions @ lazy-stream-cons and @ get-lines
 .synb
-.mets (lazy-stream-cons << stream )
-.mets (get-lines <> [ stream ])
+.mets (lazy-stream-cons << stream <> [ no-throw-close-p ])
+.mets (get-lines >> [ stream <> [ no-throw-close-p ]])
 .syne
 .desc
 The
@@ -22903,7 +22917,8 @@ by making another call to
 .codn lazy-stream-cons ,
 installing the result into the
 .code cdr
-field.
+field. When this lazy list obtains an end-of-file indication from the stream,
+it closes the stream.
 
 .code lazy-stream-cons
 inspects the real-time property of a stream
@@ -22927,6 +22942,22 @@ a one-line stream translates to
 ("line" nil)
 .onom
 and so forth.
+
+If and when
+.meta stream
+is closed by the function directly, or else by the returned lazy list, the
+.meta no-throw-close-p
+Boolean argument, defaulting to
+.codn nil ,
+controls the
+.meta throw-on-error-p
+argument of the call to the
+.code close-stream
+function. These arguments have opposite polarity: if
+.meta no-throw-close-p
+is true, then
+.meta throw-on-error-p
+shall be false, and vice versa.
 
 .coNP Macro @ delay
 .synb

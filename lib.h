@@ -1089,7 +1089,7 @@ val replace_vec(val vec_in, val items, val from, val to);
 val replace_obj(val obj, val items, val from, val to);
 val fill_vec(val vec, val item, val from_in, val to_in);
 val cat_vec(val list);
-val lazy_stream_cons(val stream);
+val lazy_stream_cons(val stream, val no_throw_close);
 val lazy_str(val list, val term, val limit);
 val lazy_str_force_upto(val lstr, val index);
 val lazy_str_force(val lstr);

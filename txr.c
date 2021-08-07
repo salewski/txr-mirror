@@ -381,7 +381,7 @@ static int license(void)
     for (iter = path_list; iter; iter = cdr(iter)) {
       val lic = open_file(car(iter), lit("r"));
 
-      put_lines(lazy_stream_cons(lic), std_output);
+      put_lines(lazy_stream_cons(lic, nil), std_output);
       put_char(chr('\n'), std_output);
     }
   }

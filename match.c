@@ -2843,7 +2843,8 @@ static val v_next_impl(match_files_ctx *c)
         if (stream) {
           cons_bind (new_bindings, success,
                      match_files(mf_file_data(*c, str, stream,
-                                              lazy_stream_cons(stream), one)));
+                                              lazy_stream_cons(stream, nothrow),
+                                              one)));
 
           if (success)
             return cons(new_bindings,
@@ -4604,7 +4605,7 @@ static void open_data_source(match_files_ctx *c)
       } else {
         debuglf(first_spec, lit("opening standard input as data source"), nao);
         c->curfile = lit("-");
-        c->data = lazy_stream_cons(std_input);
+        c->data = lazy_stream_cons(std_input, nil);
         c->data_lineno = one;
       }
     } else if (non_matching_dir) {
@@ -4628,10 +4629,10 @@ static void open_data_source(match_files_ctx *c)
       c->curfile = source_spec;
       c->stream = stream;
 
-      if ((c->data = lazy_stream_cons(stream)) != nil)
+      if ((c->data = lazy_stream_cons(stream, nothrow)) != nil)
         c->data_lineno = one;
     } else if (streamp(name)) {
-      if ((c->data = lazy_stream_cons(name)))
+      if ((c->data = lazy_stream_cons(name, nil)))
         c->data_lineno = one;
     } else {
       sem_error(specline, lit("~s doesn't denote a valid data source"), name, nao);
@@ -4773,7 +4774,7 @@ val match_fun(val name, val args, val input_in, val files_in)
   val files = cons(curfile, default_null_arg(files_in));
   val in_bindings = cdr(uw_get_match_context());
   val data = if3(streamp(input),
-                 lazy_stream_cons(input),
+                 lazy_stream_cons(input, nil),
                  input);
   /* TODO: pass through source location context */
   match_files_ctx c = mf_all(spec, files, in_bindings, data,

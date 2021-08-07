@@ -8995,12 +8995,24 @@ static val simple_lazy_stream_func(val stream, val lcons)
   return nil;
 }
 
-static val lazy_stream_cont(val stream, val func, val env)
+static val simple_lazy_stream_func_nt(val stream, val lcons)
+{
+  if (set(mkloc(lcons->lc.car, lcons), get_line(stream)) != nil) {
+    set(mkloc(lcons->lc.cdr, lcons), make_lazy_cons(us_lcons_fun(lcons)));
+  } else {
+    close_stream(stream, nil);
+    lcons->lc.cdr = nil;
+  }
+
+  return nil;
+}
+
+static val lazy_stream_cont(val stream, val func, val env, val throw_p)
 {
   val next = get_line(stream);
 
   if (!next) {
-    close_stream(stream, t);
+    close_stream(stream, throw_p);
     return nil;
   }
 
@@ -9015,27 +9027,45 @@ static val lazy_stream_func(val env, val lcons)
 
   set(mkloc(lcons->lc.car, lcons), prefetched_line);
   set(mkloc(lcons->lc.cdr, lcons), lazy_stream_cont(stream,
-                                                    us_lcons_fun(lcons), env));
+                                                    us_lcons_fun(lcons), env, t));
 
   return prefetched_line;
 }
 
-val lazy_stream_cons(val stream)
+static val lazy_stream_func_nt(val env, val lcons)
+{
+  val stream = car(env);
+  val prefetched_line = cdr(env);
+
+  set(mkloc(lcons->lc.car, lcons), prefetched_line);
+  set(mkloc(lcons->lc.cdr, lcons), lazy_stream_cont(stream,
+                                                    us_lcons_fun(lcons), env, nil));
+
+  return prefetched_line;
+}
+
+
+val lazy_stream_cons(val stream, val no_throw_close)
 {
   stream = default_arg_strict(stream, std_input);
+  no_throw_close = default_null_arg(no_throw_close);
 
   if (real_time_stream_p(stream)) {
-    return make_lazy_cons(func_f1(stream, simple_lazy_stream_func));
+    return make_lazy_cons(func_f1(stream, if3(no_throw_close,
+                                              simple_lazy_stream_func_nt,
+                                              simple_lazy_stream_func)));
   } else {
     val first = get_line(stream);
 
     if (!first) {
-      close_stream(stream, t);
+      close_stream(stream, null(no_throw_close));
       return nil;
     }
 
     return make_lazy_cons(func_f1(cons(stream, first),
-                                  lazy_stream_func));
+                                  if3(no_throw_close,
+                                      lazy_stream_func_nt,
+                                      lazy_stream_func)));
   }
 }
 
