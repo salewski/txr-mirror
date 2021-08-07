@@ -1,3 +1,40 @@
+				    TXR 268
+				   2021-08-07
+
+
+  Features
+
+  - subtypep: arguments can now be struct type objects returned
+    by find-struct-type, not only type symbols.
+  - JSON:
+    - new *read-bad-json* dynamic variable, enabling tolerance for
+      trailing commas in JSON arrays and objects.
+  - OOP:
+    - syntactic infelicity in new* and lnew* operators addressed.
+  - streams:
+    - close-stream now replays return value if called redudnantly.
+    - get-lines/lazy-stream-cons now have optional parameter
+      controlling whether the implicit close-stream can throw.
+  - listener: plain mode
+    - handles multi-line expressions
+    - prints prompts if stdin is tty
+    - prompts can be turned on with :prompt-on
+    - banner is suppressed when stdin isn't tty; more usable in pipes.
+  - TXR Pattern Language:
+    - @(eof) now takes an optional argument which can bind
+      the exit status of the input source. Useful for process pipes.
+
+  Bugs
+
+  - gc: aborts caused by incorrectness in several object-copying functions.
+  - correct diagnostic name in remql function.
+  - listener: plain mode (txr -n, or input is not a terminal) now
+    handles multi-line expressions.
+  - build: musl fix for socket.c: need <sys/time.h>.
+  - streams: incorrect argument defaulting of second arg of close-stream
+
+
+
                                     TXR 267
                                    2021-07-26
 
