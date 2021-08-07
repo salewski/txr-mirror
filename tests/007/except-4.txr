@@ -1,0 +1,7 @@
+@(try)
+@(next (open-command "echo foo; kill $$"))
+@a
+@(catch)
+@(bind a "bar")
+@(end)
+@(do (put-line a))
