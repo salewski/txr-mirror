@@ -1,0 +1,468 @@
+#!/usr/bin/env txr
+@(do
+  ;; TODO
+  ;; #. etags support (update to new hash table format, etc.).
+  ;; #. Remove obsolete symbols (flip, etc.).
+  ;; #. Update to the new compat handling. There may be fewer if3s in the reg calls.
+  ;; #. merge into tags.tl the writing functions.
+  ;; #. handle reg_vars, etc. need to handle the reg_varl(sym,val) which is in the definition of reg_var.
+  ;;    reg_var(sym, obj) too, with the -b option.
+  ;;    (there are many cases where the reg_vars are used to initialize some variables.
+  ;;    need special handling, probably.)
+  ;; #. others of my todos.
+  ;;
+  ;; #. *args-eff* not stored in var, so getting doubly stored.
+  ;;
+  ;; #. make sure some hard-to-determine things are printed to stderr,
+  ;; like the multiple occurrences of idents in the existing tags file.
+  ;; makes it easier to handle changes in the C source.
+  ;;
+  ;; #. Check if it still allows us to navigate to the right tags (e.g., acons-new vs acons_new).
+
+  ;; FIXME Why is .l getting added.
+  ;; and .y too.
+  ;; with only *.c pattern.
+  ;; Should I add .shipped ones?
+  ;; probably better to assume maintainer, since libtags.txr is for
+  ;; developers of txr.
+  ;; so check the .l, .y, yy.tab.c, etc.
+  ;; not the .shipped ones.
+
+  ;; libtags.txr can tag the source even without an existing tags file.
+  ;; It will just be less accurate.
+  ;;
+  ;; libtags.txr automatically ignores lines with any comments, so
+  ;; adding "/* OBS */" to for example num-chr does remove it.
+  ;; However, there may be no other comments, otherwise it will miss
+  ;; them.
+  ;;
+  ;; Even if some vars like path_sep_chars are declared and initialized
+  ;; at the same time, better to just tag the reg_var call directly.
+  ;; The user can navigate manually to the var in question; there would
+  ;; be too many useless false positives.
+  ;; also when they get assigned, like stderr_s, etc.
+  ;; *maybe* we can have a list of exceptions, of which path_sep_chars
+  ;; can be a part of.
+  ;; but even then, it's being assigned in a static_str, so that may
+  ;; be interesting to know.
+  ;;
+  ;; actually, completely unnecessary to specify that type is intrinsic,
+  ;; because they are in c files.
+  ;; any c files with such a tag is an intrinsic.
+
+  ;; Note that libtags.txr should be run from the TXR source tree.
+  ;; Because it globs for *.c.
+
+  (defvar *tags-lib*)
+
+  (let ((*tags-lib* t))
+    (load "tags"))
+
+  (define-option-struct libtags-opts tags-opts
+    (v verbose :bool "Print diagnostic messages during processing."))
+
+  (defvarl output)
+  (defvarl emacs)
+  (defvarl verbose)
+
+  (let ((o (new libtags-opts)))
+    o.(getopts *args*)
+    (set output (cond (o.output o.output)
+                      (o.emacs "TAGS")
+                      (t "tags")))
+    (set emacs o.emacs)
+    (set verbose o.verbose))
+
+  (defvarl ix-tags (hash :equal-based))
+  ;; FIXME Rename to sym-vars?
+  (defvarl var-syms (hash :equal-based))
+  (defvarl fun-vars (hash :equal-based))
+
+  (defun update-ix-tags (tag newkey : oldkey)
+    ;; Remove the var_s tag because we need not tag it if we have the
+    ;; actual function.
+    (when oldkey
+      (del [ix-tags oldkey]))
+    (upd [ix-tags newkey] (append @1 (list tag))))
+
+  (defun qualify-sym (sym pkg)
+    (join (casequal pkg
+            ("user_package" "")
+            ("system_package" "sys:")
+            ("keyword_package" ":")
+            (t (when verbose
+                 (put-line `@sym: in unknown package @pkg` *stderr*))
+               pkg))
+          sym))
+
+  (defun op-error-fun-p (fun)
+    (mequal fun
+            "op_error" "op_meta_error"
+            "op_qquote_error" "op_unquote_error")))
+@(bind var_s #/\w[\w\d]*_s/)
+@(bind cident #/\w[\w\d]*/)
+@(bind regfun #/reg_(op|mac|fun)/)
+@(bind regvar #/reg_(varl?|symacro)|ffi_typedef/)
+@(bind lpar "(")
+@(bind rpar ")")
+@;;
+@(define get-interned-sym (sym))@\
+@  (local lit pkg)intern(lit("@lit"), @{pkg cident})@\
+@  (bind sym @(qualify-sym lit pkg))@\
+@(end)
+@;;
+@(define get-fun (fun))@\
+@  func_@/[\w\d]+/(@{fun cident}@(maybe), @/\d+/@(end))@\
+@(end)
+@;;
+@(define get-sym-fun (fun))@\
+@  (local fun-var)@\
+@  (cases)func_@/[\w\d]+/(if3(opt_compat && opt_compat <= @/\d+/, @\
+@                             cident, @{fun cident})@(maybe), @/\d+/@(end))@\
+@  ;; TODO There may be missing cases here of func_ with compat opt handling.
+@  (or)@(get-fun fun)@\
+@  (or)@{fun-var cident}@\
+@    (do (when verbose
+           (unless (or (starts-with "op_" fun-var)
+                       [fun-vars fun-var])
+             (put-line `@{fun-var}: undefined function variable` *stderr*))))@\
+@    (bind fun @(or [fun-vars fun-var] fun-var))@\
+@  (end)@\
+@(end)
+@;;
+@(define get-sym-fun (fun))
+@  (cases)
+@    / +/@(get-sym-fun fun)@rpar;
+@  (or)
+@    / +/func_@/[\w\d]+/(if3(opt_compat && opt_compat <= @/\d+/,
+@    (cases)
+@      ;; For abs-path-p.
+@      / +/@cident, @{fun cident})@(maybe), @/\d+/@(end))@rpar;
+@    (or)
+@      ;; For lexical-var-p.
+@      / +/@cident,
+@      / +/@{fun cident}@rpar@(maybe), @/\d+/@(end)@rpar@rpar;
+@    (end)
+@  (or)
+@    ;; For match-regex, match-regex-right and match-regst-right.
+@    / +/func_@/[\w\d]+/((opt_compat && opt_compat <= @/\d+/) ?
+@                    / +/@cident : @{fun cident}@(maybe), @/\d+/@(end))@rpar;
+@  (end)
+@(end)
+@(define get-file-ix-tags (file))
+@  (next file)
+@  (collect)
+@    (local sym var fun pkg)
+@    (all)
+@      line
+@    (and)
+@      (cases)
+@        / +/@(maybe)val @(end)@{var cident} = @(get-fun fun);
+@        (do (set [fun-vars var] fun))
+@      (or)
+@        / +/@(maybe)val @(end)@{var var_s} = @(get-interned-sym sym);
+@        (do (if [var-syms var]
+               (when verbose
+                 (put-line `@var: reassigned variable` *stderr*))
+               (progn
+                 (iflet ((tags [ix-tags var]))
+                   ;; The variable is declared later in our search.
+                   (progn
+                     (each ((tag tags))
+                       (let ((old-ident tag.ident))
+                         (set tag.ident sym)
+                         (typecase tag
+                           (fun-tag (update-ix-tags tag old-ident))
+                           (var-tag (update-ix-tags tag sym))
+                           (t
+                            ;; This would be a bug in libtags.txr,
+                            ;; so print it regardless of --verbose.
+                            (put-line `@(struct-type-name tag): unexpected struct type`
+                                      *stderr*)))))
+                     (del [ix-tags var]))
+                   ;; We may not find a corresponding C function or
+                   ;; variable (either because of missing patterns in
+                   ;; libtags.txr, or accidental omissions in the C
+                   ;; source), in which case we will just tag the line of
+                   ;; the var_s assignment.
+                   (set [ix-tags var] (list (new tag
+                                                 ident sym
+                                                 path file
+                                                 line line))))
+                 ;; Keep track of the symbols, because when we find a
+                 ;; symbol corresponding to the above tag to insert into
+                 ;; ix-tags, we remove the above tag, but some symbols
+                 ;; are multiply bound, for example ‘and’ which is both
+                 ;; an operator and a function.
+                 (set [var-syms var] sym))))
+@      (or)
+@        (cases)
+@          / +/@regfun(@{var var_s}, @(get-sym-fun fun));
+@        (or)
+@          / +/@regfun(@{var var_s},
+@                  / +/@(get-sym-fun fun));
+@        (end)
+@        (do
+          ;; op_error and company appear only in the var_s cases
+          ;; (because otherwise the interned symbol would be used
+          ;; only for throwing an error).
+          (unless (op-error-fun-p fun)
+            (iflet ((sym [var-syms var])
+                    ;; We store the path and line in case there is no such
+                    ;; tagged function or variable in the tags file, so
+                    ;; that we can still jump to the line where the symbol
+                    ;; was interned.
+                    (tag (new fun-tag
+                              ident (or sym fun)
+                              path file
+                              line line))
+                    ((have sym)))
+              (update-ix-tags tag fun var)
+              (update-ix-tags tag var))))
+@      (or)
+@        (cases)
+@          / +/@regfun(@(get-interned-sym sym), @(get-sym-fun fun));
+@          (bind var nil)
+@        (or)
+@          / +/@regfun@lpar@(get-interned-sym sym),
+@          (get-sym-fun fun)
+@          (bind var nil)
+@        (or)
+@          ;; The assignment form always spans two or more lines.
+@          / +/@regfun(@{var var_s} = @(get-interned-sym sym),
+@                  / +/@(get-sym-fun fun));
+@        (or)
+@          / +/@regfun(@{var var_s} = intern(lit("@lit"),
+@                  / +/@{pkg cident}), @(get-sym-fun fun));
+@          (bind sym @(qualify-sym lit pkg))
+@        (end)
+@        (do (when var
+               (if [var-syms var]
+                 (when verbose
+                   (put-line `@var: reassigned variable` *stderr*))
+                 (set [var-syms var] sym)))
+             (update-ix-tags (new fun-tag
+                                  ident sym
+                                  path file
+                                  line line)
+                             fun var))
+@      (or)
+@        (cases)
+@          / +/@regvar(@{var var_s}, @(skip));
+@        (or)
+@          ;; Cannot add a comma after the skip because the line
+@          ;; contains many comma.
+@          / +/ffi_typedef@lpar@{var var_s}, @(skip)
+@        (end)
+@        (do (iflet ((sym [var-syms var])
+                     (tag (new var-tag
+                               ;; The var value is not used.
+                               ;; (except in debugging, to print the undefined
+                               ;; variables.)
+                               ident (or sym var)
+                               path file
+                               line line))
+                     ((have sym)))
+               ;; FIXME Makes sense to have a list here?
+               ;; Or just following along with the style for funs?
+               (update-ix-tags tag
+                               ;; Doesn't matter if we set the hash table
+                               ;; key to sym, because in the output we
+                               ;; separate the tags based on var-tag or
+                               ;; tag/fun-tag.
+                               ;; Only fun-tags need to have a key that
+                               ;; corresponds to the existing tags.
+                               sym var)
+               (update-ix-tags tag var)))
+@      (or)
+@        (cases)
+@          / +/@regvar(@(get-interned-sym sym), @(skip));
+@          (bind var nil)
+@        (or)
+@          / +/@regvar@lpar@(get-interned-sym sym),
+@          (bind var nil)
+@        (or)
+@          / +/@regvar(@{var var_s} = @(get-interned-sym sym), @(skip));
+@        (or)
+@          / +/@regvar@lpar@{var var_s} = @(get-interned-sym sym),
+@        (or)
+@          / +/@regvar(@{var var_s} = intern(lit("@lit"),
+@                  / +/@{pkg cident}), @(skip));
+@          (bind sym @(qualify-sym lit pkg))
+@        (or)
+@          / +/@regvar@lpar@{var var_s} = intern(lit("@lit"),
+@                      / +/@{pkg cident}),
+@          (bind sym @(qualify-sym lit pkg))
+@        (end)
+@        (do (when var
+               (if [var-syms var]
+                 (when verbose
+                   (put-line `@var: reassigned variable` *stderr*))
+                 (set [var-syms var] sym)))
+             (update-ix-tags (new var-tag
+                                  ident sym
+                                  path file
+                                  line line)
+                             sym var))
+@      (end)
+@    (end)
+@  (end)
+@(end)
+@;; Move lib.c to the front, because many _f variables are
+@;; defined there before being used elsewhere, for example in eval.c.
+@;; (And with such an order, none are ever defined after being used.)
+@;; However, if we ever need to do it, we could add the tags in question
+@;; to another hash table and replace the _f variables in question as soon
+@;; as we found suitable candidates.
+@(next :list (cons "lib.c" (remqual "lib.c" (glob "*.c"))))
+@(repeat)
+@  file.c
+@  (get-file-ix-tags `@file.c`)
+@(end)
+@(do
+  ;; Is nshuffle even getting detected as possible duplicate?
+  ;; FIXME The eval.c compat handling has changed.
+  ;; Need to update that.
+
+  (when nil
+    (dohash (ident tag ix-tags)
+      (when (mequal tag.ident
+                    ;; Obsolete symbols.
+                    "flip" "slot-p")
+        (del [ix-tags ident]))))
+
+  ;; TODO what if sym has _s? shouldn't happen, but could be more
+  ;; robust by using another kind of key. like (list ident "foo").
+
+  (when verbose
+    (let ((alist (keep-if (op ends-with "_s" (first @1))
+                          (hash-pairs ix-tags)))
+          (undefined nil)
+          (missing nil))
+      (each ((pair alist))
+        (tree-bind (key tags) pair
+          (each ((tag tags))
+            (typecase tag
+              (fun-tag (push (list key (join "(" tag.ident ")")) undefined))
+              (var-tag (push (list key) undefined))
+              (tag (push (list key (join "(" tag.ident ")")) missing))
+              (t (put-line `@(struct-type-name tag): unexpected struct type`
+                           *stderr*))))))
+      (upd undefined (nsort @1 : car))
+      (upd missing (nsort @1 : car))
+      (mapdo (op put-line `@(cat-str @1 " "): undefined variable`
+                 *stderr*)
+             undefined)
+      (mapdo (op put-line `@(cat-str @1 " "): no corresponding function or value`
+                 *stderr*)
+             missing)
+      (put-line `@(len undefined) undefined variables` *stderr*)
+      (put-line `@(len missing) missing corresponding functions` *stderr*)
+      (let ((vals (flow ix-tags hash-values flatten (nsort @1 : .ident))))
+        (put-line `@(len vals) ix-tags` *stderr*))))
+
+  (defun merge-ix-tags (orig-tags)
+    (let ((tags orig-tags)
+          ;; Empty if no original tags file.
+          (orig-tags (group-by (op identity @1.ident) orig-tags))
+          (ix-tags (hash-pairs ix-tags)))
+      (each ((pair ix-tags))
+        ;; These idents are unique, because we store them into the hash
+        ;; table and have lists of ix-tags for each ident.
+        (tree-bind (ident ix-tags) pair
+          (condlet
+            ((((ends-with "_s" ident)))
+             ;; We don't want the tag to point to the declaration of the
+             ;; variable (which is what would happen if we duplicate the
+             ;; tag in the existing tags file), because that is of
+             ;; limited usefulness, so fall back to our info.
+             (upd tags (revappend ix-tags)))
+            (((orig-tags-orig orig-tags)
+              (orig-tags (keep-if (andf (op mequal
+                                            (short-suffix @1.path)
+                                            ;; We know that the identifiers are
+                                            ;; in C source (in particular, not
+                                            ;; in TXR Lisp source).
+                                            ".c" ".l" ".y")
+                                        ;; Assume that an open parenthesis means the tagged
+                                        ;; identifier is a function.
+                                        ;; This way we can skipped tagged struct members, which
+                                        ;; can share the same name as an existing function, but
+                                        ;; which we want to ignore (because we are tagging Lisp
+                                        ;; functions here).
+                                        (op find #\( @1.line))
+                                  [orig-tags ident])))
+             ;; We may tag Lisp identifiers several times (possibly with
+             ;; same-named static functions in different compilation
+             ;; units, but more likely from #ifdef blocks), but it's the
+             ;; best we can do without fully parsing the C.
+             (when (and verbose (> (len orig-tags) 1))
+               (put-line `@ident: multiple occurrences in tags file` *stderr*))
+             (tree-bind (: var-tags other-tags) (separate (op equal @1.type "v")
+                                                          ix-tags)
+               (upd tags (revappend var-tags))
+               (each-prod ((orig-tag orig-tags)
+                           (ix-tag other-tags))
+                 (unless (equal orig-tag.ident ix-tag.ident)
+                   (let ((tag (copy-struct orig-tag)))
+                     (set tag.ident ix-tag.ident)
+                     (push tag tags))))))
+            (t
+             (when verbose
+               (whenlet ((orig-tags (keep-if (op mequal
+                                                 (short-suffix @1.path)
+                                                 ".c" ".l" ".y")
+                                             [orig-tags-orig ident])))
+                 (each-prod ((orig-tag orig-tags)
+                             (ix-tag ix-tags))
+                   ;; FIXME args (for args_s) is duplicated four times.
+                   (put-line `@ident | orig @{orig-tag.ident} @{orig-tag.path} | ix @{ix-tag.ident} @{ix-tag.path}`))))
+             ;; The tags file doesn't contain a tag for our ident.
+             ;; Fall back to our info.
+             (upd tags (revappend ix-tags))))))
+      ;; Not nsort so as not to modify orig-tags in caller.
+      (sort tags : .ident)))
+
+  ;; We may as well merge the ctags file (i.e., sort the lines), since
+  ;; we have to read all the existing lines.
+  ;;
+  ;; Greatly adjusted from tags.tl.
+  ;;
+  ;; For some reason, acons-new is found only if it is placed before
+  ;; acons_new, and asin is found only if it is placed before asine.
+  ;; Is there some alphabetical ordering particularity?
+  ;; Will need to resort the ctags since me_op could be associated to op
+  ;; or do.
+  (defun write-tagfile (ix-tags)
+    (let* ((orig-tags (read-tagfile output))
+           (ix-tags (merge-ix-tags orig-tags)))
+      (with-stream (stream (open-file output "w"))
+        (each ((tag ix-tags))
+          (put-line tag.(text) stream)))))
+
+  ;; Greatly adjusted from tags.tl.
+  ;;
+  ;; FIXME incomplete at the moment.
+  (defun write-etagfile (ix-tags)
+    (let ((orig-tags (read-etagfile output)))
+      (upd orig-tags (nsort @1 : car))
+      (file-put "tags.out" orig-tags)
+      (with-stream (stream (open-file output "w"))
+        (each ((pair orig-tags))
+          (tree-bind (path . etags) pair
+            (let ((str (with-out-string-stream (s)
+                         (each ((etag etags))
+                           (unless (ends-with "_s" etag.ident)
+                             (each ((ix-tag [keep-if (op find etag.ident @1 : .ident)
+                                                     ix-tags .ctags]))
+                               (put-line `duping @ix-tag`)
+                               ;; (put-line `@{lisptag.ident}@[tag.(text) (len tag.ident)..:]`
+                               ;;           stream)
+                               ))
+                           (put-line etag.(etext) s)))))
+              (put-string `@{etag-sec-start}\n@{path},@(len str)\n@{str}`
+                          stream)))))))
+
+  (if emacs
+    (write-etagfile ix-tags)
+    (write-tagfile ix-tags)))

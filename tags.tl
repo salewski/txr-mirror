@@ -1,5 +1,7 @@
 #!/usr/bin/env txr
 
+(defvar *tags-lib*)
+
 ;; The etags format is described here:
 ;; https://git.savannah.gnu.org/cgit/emacs.git/tree/etc/ETAGS.EBNF.
 ;;
@@ -8,6 +10,7 @@
 (defparml etag-sec-start #\x0c)
 (defparml etag-pat-end #\x7f)
 (defparml etag-name-end #\x01)
+(defparml etag-nonname-chars " \f\t\n\r()=,;'")
 
 (define-option-struct tags-opts nil
   (nil help    :bool "List this help text and exit.")
@@ -68,9 +71,7 @@
   parent
   expattern
   (:method text (me)
-    `@{me.ident}\t@{me.path}\t/^@(escape me.line)$/ \
-     @(if me.expattern `;/@(escape me.ident)/`);"\t \
-     @{me.type}\tstruct:@{me.parent}`)
+    `@{me.ident}\t@{me.path}\t/^@(escape me.line)$/@(if me.expattern `\x3b/@(escape me.ident)/`)\x3b"\t@{me.type}\tstruct:@{me.parent}`)
   (:method make-qual-tag (me)
     (if me.parent
       (let ((qt (copy me)))
@@ -78,8 +79,11 @@
         qt))))
 
 (defstruct orig-tag tag
-  orig-line
-  (:method text (me) me.orig-line))
+  ;; We reuse the line slot as the already-escaped ctag pattern.
+  orig-fields
+  (:method text (me)
+    `@{me.ident}\t@{me.path}\t@{me.line} \
+     @(if me.orig-fields `\t@(cat-str me.orig-fields #\tab)`)`))
 
 (defvarl err-ret (gensym))
 
@@ -257,15 +261,70 @@
           (put-line `@path: unable to determine file type` *stderr*)
           nil)))))
 
+  (defun parse-etag-path (stream)
+    (let ((line (get-line stream)))
+      (unless line
+        (throw 'syntax-error "trailing etag section starter"))
+      (match-case line
+        (`@{path #/[^,]+/},@{size #/\d+/}` path)
+        (@otherwise
+         (throwf 'syntax-error "bad etag path line: ~s" line)))))
+
+  (defun get-etag-name (line)
+    (let ((etag-pat-end etag-pat-end)
+          (etag-name-end etag-name-end))
+      (match-case line
+        (`@pat@{etag-pat-end}@ident@{etag-name-end}@rest` ident)
+        (`@pat@{etag-pat-end}@rest`
+         (labels ((nonname-char-p (ch) (in etag-nonname-chars ch)))
+           (when (nonname-char-p [pat -1])
+             (set pat [pat 0..-1]))
+           (let ((pos [rpos-if nonname-char-p pat]))
+             (when pos (inc pos))
+             [pat pos..:])))
+        (@otherwise
+         (throwf 'syntax-error "bad etag line: ~s" line)))))
+
+  ;; Does not support include sections.
+  ;; Does not support file properties.
+  (defun read-etagfile (path)
+    (with-stream (stream (open-file path))
+      (let ((line (get-line stream)))
+        (unless line (return nil))
+        (unless (equal line (tostringp etag-sec-start))
+          (throwf 'syntax-error "bad etag section starter: ~s" line)))
+      (let ((all-tags ()))
+        (whilet ((path (parse-etag-path stream))
+                 (tags ())
+                 (t))
+          (whilet ((line (get-line stream))
+                   (next (equal line (tostringp etag-sec-start)))
+                   (t))
+            (when (or (not line) next)
+              (push (cons path tags) all-tags)
+              (if next
+                (return)
+                (return-from read-etagfile all-tags)))
+            (push (new orig-tag
+                       ident (get-etag-name line)
+                       orig-line line)
+                  tags))))))
+
+(defun read-tagfile (path)
+  (catch (let ((lines (file-get-lines path)))
+           (collect-each ((line lines))
+             (tree-bind (ident path pat . fields) (split-str line #\tab)
+               (new orig-tag
+                    ident ident
+                    path path
+                    line pat
+                    orig-fields fields))))
+    (path-not-found (_))))
+
 (defun write-tagfile (tags o)
   (when o.merge
-    (catch
-      (let* ((lines (file-get-lines o.output))
-             (orig-tags (collect-each ((line lines))
-                          (new orig-tag ident (m^ #/[^\t]*/ line)
-                                        orig-line line))))
-        (set tags (merge tags orig-tags : .ident)))
-      (path-not-found (e))))
+    (whenlet ((orig-tags (read-tagfile o.output)))
+      (set tags (merge tags orig-tags : .ident))))
   (with-stream (stream (open-file o.output (if o.append "a" "w")))
     (each ((tag tags))
       (put-line tag.(text) stream))))
@@ -288,74 +347,75 @@
   (when (eval expr) ^(progn ,*body)))
 
 (compile-only
-  (let ((o (new tags-opts)))
-    o.(getopts *args*)
-    (when o.help
-      (put-line "\nUsage:\n")
-      (put-line `  @{*load-path*} [options] {file|dir}*\n`)
-      (put-line "Directory arguments are recursively searched for .tl and .txr files.")
-      (put-line "If no arguments are given, the current directory is searched.")
-      o.(opthelp)
-      (exit t))
+  (unless *tags-lib*
+    (let ((o (new tags-opts)))
+      o.(getopts *args*)
+      (when o.help
+        (put-line "\nUsage:\n")
+        (put-line `  @{*load-path*} [options] {file|dir}*\n`)
+        (put-line "Directory arguments are recursively searched for .tl and .txr files.")
+        (put-line "If no arguments are given, the current directory is searched.")
+        o.(opthelp)
+        (exit t))
 
-    (unless o.out-args
-      (push "." o.out-args))
+      (unless o.out-args
+        (push "." o.out-args))
 
-    (unless (plusp (len o.output))
-      (set o.output (if o.emacs "TAGS" "tags")))
+      (unless (plusp (len o.output))
+        (set o.output (if o.emacs "TAGS" "tags")))
 
-    (when (and o.merge (or o.append o.emacs))
-      ;; The --merge option (without --emacs) currently results in
-      ;; duplicate tags if a file is retagged (e.g., "txr tags.tl foo.tl
-      ;; && txr tags.tl --merge foo.tl").
-      ;; We could have --merge replace all existing tags of a retagged
-      ;; file with the latest ones, with and without --emacs, but for
-      ;; now don't bother (and therefore forbid combining --emacs with
-      ;; --merge).
-      (put-line `@{*load-path*}: @(if o.append `--append` `--emacs`)\ \
-                 and --merge are mutually exclusive`)
-      (exit nil))
+      (when (and o.merge (or o.append o.emacs))
+        ;; The --merge option (without --emacs) currently results in
+        ;; duplicate tags if a file is retagged (e.g., "txr tags.tl foo.tl
+        ;; && txr tags.tl --merge foo.tl").
+        ;; We could have --merge replace all existing tags of a retagged
+        ;; file with the latest ones, with and without --emacs, but for
+        ;; now don't bother (and therefore forbid combining --emacs with
+        ;; --merge).
+        (put-line `@{*load-path*}: @(if o.append `--append` `--emacs`)\ \
+                   and --merge are mutually exclusive`)
+        (exit nil))
 
-    (let* ((excf [apply orf (mapcar (do op fnmatch @@1) o.exclude)])
-           (skips ())
-           (*read-unknown-structs* t)
-           (tags (build
-                   (ftw o.out-args
-                        (lambda (path type stat . rest)
-                          (caseql* type
-                            (ftw-f (when (and (not [excf path])
-                                              (not [excf (base-name path)])
-                                              (not (some skips (op starts-with @1 path))))
+      (let* ((excf [apply orf (mapcar (do op fnmatch @@1) o.exclude)])
+             (skips ())
+             (*read-unknown-structs* t)
+             (tags (build
+                     (ftw o.out-args
+                          (lambda (path type stat . rest)
+                            (caseql* type
+                              (ftw-f (when (and (not [excf path])
+                                                (not [excf (base-name path)])
+                                                (not (some skips (op starts-with @1 path))))
+                                       (cond
+                                         ((ends-with ".tl" path)
+                                          (pend (ignerr (collect-tags-tl path))))
+                                         ((ends-with ".txr" path)
+                                          (pend (ignerr (collect-tags-txr path))))
+                                         ((member path o.out-args)
+                                          (pend (ignerr (collect-tags-guess path))))
+                                         (t ftw-continue))))
+                              (ftw-d (while (and skips (starts-with path (car skips)))
+                                       (pop skips))
                                      (cond
-                                       ((ends-with ".tl" path)
-                                        (pend (ignerr (collect-tags-tl path))))
-                                       ((ends-with ".txr" path)
-                                        (pend (ignerr (collect-tags-txr path))))
-                                       ((member path o.out-args)
-                                        (pend (ignerr (collect-tags-guess path))))
-                                       (t ftw-continue))))
-                            (ftw-d (while (and skips (starts-with path (car skips)))
-                                     (pop skips))
-                                   (cond
-                                     ((or [excf path] [excf (base-name path)])
-                                      (static-when (zerop ftw-actionretval)
-                                        (push `@path/` skips))
-                                      ftw-skip-subtree)))
-                            (t ftw-continue)))
-                        (logior ftw-phys ftw-actionretval)))))
-      (if o.qual
-        (set tags (build
-                    (pend tags)
-                    (each ((tg tags))
-                      (if (typep tg 'slot-tag)
-                        (iflet ((qt tg.(make-qual-tag)))
-                          (add qt)))))))
-      (if o.emacs
-        (write-etagfile (flow tags
-                              (remove-if (op equal @1.type "F"))
-                              (nsort @1 : .linum)
-                              (group-by .path)
-                              (hash-alist)
-                              (nsort @1 : car))
-                        o)
-        (write-tagfile (nsort tags : .ident) o)))))
+                                       ((or [excf path] [excf (base-name path)])
+                                        (static-when (zerop ftw-actionretval)
+                                                     (push `@path/` skips))
+                                        ftw-skip-subtree)))
+                              (t ftw-continue)))
+                          (logior ftw-phys ftw-actionretval)))))
+        (if o.qual
+          (set tags (build
+                      (pend tags)
+                      (each ((tg tags))
+                        (if (typep tg 'slot-tag)
+                          (iflet ((qt tg.(make-qual-tag)))
+                            (add qt)))))))
+        (if o.emacs
+          (write-etagfile (flow tags
+                                (remove-if (op equal @1.type "F"))
+                                (nsort @1 : .linum)
+                                (group-by .path)
+                                (hash-alist)
+                                (nsort @1 : car))
+                          o)
+          (write-tagfile (nsort tags : .ident) o))))))
