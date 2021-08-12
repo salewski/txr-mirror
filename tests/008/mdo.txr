@@ -1,0 +1,7 @@
+@(mdo (defvar a))
+@(mdo (push 1 a))
+@(define foo)
+@  (mdo (push 2 a))
+@(end)
+@(foo)
+@(do (assert (equal a '(2 1))))
