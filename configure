@@ -3172,7 +3172,7 @@ int main(void)
 
   if conftest ; then
     printf "memalign\n"
-    printf "#define HAVE_MEMALIGN 1\n" $try_header >> config.h
+    printf "#define HAVE_MEMALIGN 1\n" >> config.h
     break;
   fi
 
@@ -3188,8 +3188,8 @@ int main(void)
 
   if conftest ; then
     printf "memalign\n"
-    printf "#define HAVE_MEMALIGN 1\n" $try_header >> config.h
-    printf "#define HAVE_MALLOC_H 1\n" $try_header >> config.h
+    printf "#define HAVE_MEMALIGN 1\n" >> config.h
+    printf "#define HAVE_MALLOC_H 1\n" >> config.h
     break;
   fi
 
@@ -3205,7 +3205,7 @@ int main(void)
 !
   if conftest ; then
     printf "posix_memalign\n"
-    printf "#define HAVE_POSIX_MEMALIGN 1\n" $try_header >> config.h
+    printf "#define HAVE_POSIX_MEMALIGN 1\n" >> config.h
     break;
   fi
 
