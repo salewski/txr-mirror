@@ -43086,14 +43086,16 @@ apply accordingly.
 
 .SS* Pattern-Matching Macros
 
-.coNP Macros @ when-match and @ if-match
+.coNP Macros @, when-match @ must-match and @ if-match
 .synb
 .mets (when-match < pattern < expr << form *)
+.mets (must-match < pattern < expr << form *)
 .mets (if-match < pattern < expr < then-form <> [ else-form ])
 .syne
 .desc
 The
-.code when-match
+.codn when-match ,
+.code must-match
 and
 .code if-match
 macros conditionally evaluate code based on whether the value of
@@ -43119,6 +43121,15 @@ If the match fails, the forms are not evaluated, and
 is produced.
 
 The
+.code must-match
+macro behaves exactly like
+.code when-match
+when the match is successful. When the match fails,
+.code must-match
+throws an exception of type
+.codn match-error .
+
+The
 .code if-match
 macro evaluates
 .meta then-form
@@ -43131,9 +43142,10 @@ which defaults to
 .code nil
 if it is not specified.
 
-.coNP Macro @ match-case
+.coNP Macros @ match-case and @ must-match-case
 .synb
 .mets (match-case < expr >> {( pattern << form *)}*)
+.mets (must-match-case < expr >> {( pattern << form *)}*)
 .syne
 .desc
 The
@@ -43176,6 +43188,19 @@ terminates, returning the value of the last
 or else
 .code nil
 if there are no forms.
+
+The
+.code must-match-case
+macro differs from
+.code match-case
+as follows. When none of the clauses match under
+.codn match-case ,
+then that form terminates with a value of
+.codn nil .
+In the same situation, the
+.code must-match-case
+form throws an exception of type
+.codn match-error .
 
 .TP* Examples:
 

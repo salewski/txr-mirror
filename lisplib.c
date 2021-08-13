@@ -877,11 +877,12 @@ static val match_instantiate(val set_fun)
 static val match_set_entries(val dlt, val fun)
 {
   val name_noload[] = {
-    lit("all*"), lit("as"), lit("with"), lit("scan"), lit("sme"),
+    lit("all*"), lit("as"), lit("with"), lit("scan"), lit("sme"), lit("match-error"),
     nil
   };
   val name[] = {
-    lit("when-match"), lit("match-case"), lit("if-match"),
+    lit("when-match"), lit("match-case"), lit("if-match"), lit("must-match"),
+    lit("must-match-case"),
     lit("while-match"), lit("while-match-case"), lit("while-true-match-case"),
     lit("lambda-match"), lit("defun-match"), lit("defmatch"),
     lit("each-match"), lit("append-matches"),
