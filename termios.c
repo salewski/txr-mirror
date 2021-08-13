@@ -489,9 +489,17 @@ void termios_init(void)
 #endif
 #ifdef TABDLY
   reg_varl(intern(lit("tabdly"), user_package), num_fast(TABDLY));
+#endif
+#ifdef TAB0
   reg_varl(intern(lit("tab0"), user_package), num_fast(TAB0));
+#endif
+#ifdef TAB1
   reg_varl(intern(lit("tab1"), user_package), num_fast(TAB1));
+#endif
+#ifdef TAB2
   reg_varl(intern(lit("tab2"), user_package), num_fast(TAB2));
+#endif
+#ifdef TAB3
   reg_varl(intern(lit("tab3"), user_package), num_fast(TAB3));
 #endif
 #ifdef BSDLY
