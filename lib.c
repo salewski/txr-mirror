@@ -5745,15 +5745,16 @@ val int_str(val str, val base)
 
   if (base == chr('c')) {
     b = (zerox ? 16 : (octzero ? 8 : 10));
-  } else if (b == 16) {
-    /* If base is 16, strtoul and its siblings
-       still recognize the 0x prefix. We don't want that;
-       except if base is the character #\c. Otherwise,
-       it is a zero with trailing junk. */
-    if (zerox)
-      return zero;
   } else if (b < 2 || b > 36) {
      uw_throwf(error_s, lit("~a: invalid base ~s"), self, base, nao);
+  } else if (zerox) {
+    /* If we have a 0x prefix, and base is not #\c
+     * then that is just a zero followed by junk.
+     * We do this check here because wcstol recognizes
+     * these prefixes even when base isn't zero.
+     */
+    if (zerox)
+      return zero;
   }
 
   /* TODO: detect if we have wcstoll */
