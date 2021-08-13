@@ -74,7 +74,7 @@
             (iff (f^ #/CYGWIN/) (ret :cygwin))
             (iff (f^ #/CYGNAL/) (ret :cygnal))
             (iff (f^ #/Darwin/) (ret :macos))
-            (iff (f^ #/OpenBSD/) (ret :openbsd))
+            (iff #/BSD/ (ret :bsd))
             (ret :unknown))
        u.sysname])))
 

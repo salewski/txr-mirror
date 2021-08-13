@@ -9,7 +9,7 @@
 
 (defvarl os (os-symbol))
 
-(defvarl test-sticky (unless (eq os :openbsd)
+(defvarl test-sticky (unless (eq os :bsd)
                        (chmod tgt s-isvtx)
                        (let ((st (stat tgt)))
                          (plusp (logand s-isvtx st.mode)))))
