@@ -207,7 +207,9 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
   uw_catch_end;
 
   if (res == 0) {
+    val canonname = nil;
     for (aiter = alist; aiter; aiter = aiter->ai_next) {
+      val addr = nil;
       switch (aiter->ai_family) {
       case AF_INET:
         {
@@ -216,7 +218,7 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
             ipv4_addr_from_num(&sa->sin_addr, node);
           if (svc_num_p)
             sa->sin_port = htons(c_num(service, self));
-          ptail = list_collect(ptail, sockaddr_in_unpack(sa));
+          addr = sockaddr_in_unpack(sa);
         }
         break;
       case AF_INET6:
@@ -226,9 +228,17 @@ static val getaddrinfo_wrap(val node_in, val service_in, val hints_in)
             ipv6_addr_from_num(&sa->sin6_addr, node);
           if (svc_num_p)
             sa->sin6_port = ntohs(c_num(service, self));
-          ptail = list_collect(ptail, sockaddr_in6_unpack(sa));
+          addr = sockaddr_in6_unpack(sa);
         }
         break;
+      }
+      if (addr) {
+        if (aiter == alist && (hints_ai.ai_flags & AI_CANONNAME) != 0
+            && aiter->ai_canonname)
+          canonname = string_utf8(aiter->ai_canonname);
+        if (canonname)
+          slotset(addr, canonname_s, canonname);
+        ptail = list_collect(ptail, addr);
       }
     }
   }

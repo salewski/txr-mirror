@@ -25,6 +25,7 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defstruct sockaddr nil
+  canonname ;; from getaddrinfo
   (:static family nil))
 
 (defstruct sockaddr-in sockaddr
@@ -46,7 +47,7 @@
   (family 0)
   (socktype 0)
   (protocol 0)
-  (canonname 0))
+  canonname)
 
 (defvarl shut-rd 0)
 (defvarl shut-wr 1)

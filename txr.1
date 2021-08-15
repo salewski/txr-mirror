@@ -70174,6 +70174,7 @@ newly created datagram socket which is returned.
 .coNP Structure @ sockaddr
 .synb
 .mets (defstruct sockaddr nil
+.mets \ \  canonname
 .mets \ \  (:static family nil))
 .syne
 .desc
@@ -70186,10 +70187,21 @@ several other types are derived:
 and
 .codn sockaddr-un .
 
-It has a single slot called
+It has a single static slot named
 .code family
-which is static, and initialized to
+and a single instance slot
+.codn canonname ,
+both initialized to
 .codn nil .
+
+Note: the
+.code canonname
+slot is optionally by the
+.code getaddrinfo
+function on address structures that it returns, if requested via the
+.code ai-canonname
+flag. The slot only provides information to the application, playing no
+semantic role in addressing.
 
 .coNP Structure @ sockaddr-in
 .synb
@@ -70372,6 +70384,7 @@ flags: values given by the variables.
 .codn ai-passive ,
 .codn ai-numerichost ,
 .codn ai-v4mapped ,
+.codn ai-canonname ,
 .codn ai-all ,
 .code ai-addrconfig
 and
@@ -70380,6 +70393,16 @@ These correspond to the C constants
 .codn AI_PASSIVE ,
 .code AI_NUMERICHOST
 and so forth.
+
+If
+.code ai-canonname
+is specified, then every returned address structure will have its
+.code canonname
+member set to a string value rather than
+.codn nil .
+This string is a copy of the canonical name reported by the underlying
+C library function, which that function places only into the first
+returned address structure.
 
 The
 .code family
