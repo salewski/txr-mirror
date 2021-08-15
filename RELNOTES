@@ -41,7 +41,7 @@
 
   Features
 
-  - system interface
+  - system interface:
     - new getrlimit, setrlimit functions
   - random numbers:
     - buffer objects can be used as random seeds now
@@ -50,7 +50,7 @@
     - PDF build is now reproducible even if ghostscript
       and groff don't have patches for this.
   - tags.tl:
-    - now supports --emacs argument for Emacs style tags,
+    - now supports --emacs argument for Emacs-style tags,
       thanks to Paul A. Patience.
     - other improvements
   - hashes:
@@ -73,7 +73,7 @@
   - Test case fixes for missing /bin/sh situation exemplified
     by Guix build environment.
   - op:
-    - weirdness in handling nested do (do do do ... ) fixed
+    - weirdness in handling nested do (do do do ...) fixed
   - hashes:
     - fixed TXR 235 regression in weak processing, causing
       entries to spuriously disappear from weak hash tables that are only
@@ -100,18 +100,18 @@
     - running make tests out of an editor now takes you to the error line.
   - improvements in doc function, and OpenBSD support.
   - type system overhauled to disallow structs that clash with built-in types.
-  - new function called separate contributed by P. A. Patience.
+  - new function called separate contributed by Paul A. Patience.
     - combines keep-if and remove-if semantics
-  - new path manipulating related functions trim-short-suffix, trim-long-suffix
+  - new path-manipulation-related functions trim-short-suffix, trim-long-suffix
     and add-suffix.
   - new build-id feature: optional string that can be inserted into TXR
     at build time, displayed by txr --build-id.
 
   Bugs
 
-  - non-functional chmod.tl test case fixed, thanks to Paul. A. Patience.
+  - non-functional chmod.tl test case fixed, thanks to Paul A. Patience.
   - regex: argument defaulting problem in regex-compile.
-  - *stderr* stream is now sanely reset during unhandled exceptin processing.
+  - *stderr* stream is now sanely reset during unhandled exception processing.
   - new steps taken to prevent runaway recursion in exception processing.
   - streams:
     - close-stream function refuses to close stderr.
@@ -498,7 +498,7 @@
     - Invalid UTF-8 bytes and characters now allowed in literals and regexes.
     - Treated using rules consistent with behavior of text streams.
   - doc:
-    - General improvements in documentation, many due to of Paul A. Patience.
+    - General improvements in documentation, many thanks to Paul A. Patience.
   - build:
     - Test suite no longer requires .expected files which are empty;
       they materialize on-the-fly and make cleans them away afterward.
@@ -1040,7 +1040,7 @@
   - Build:
     - Dropped dependency on Bison/Byacc and Flex:
       - TXR now ships the generated parser and scanner source.
-      - The --maintainer option must be given to congfigure to enable
+      - The --maintainer option must be given to configure to enable
         regenerating these sources, otherwise the shipped ones are used.
 
   - Lib:

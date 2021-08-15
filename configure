@@ -555,7 +555,7 @@ build-id [$build_id]
   no build-id, and the --build-id option produces empty output.
 
   If the argument value "git" is given, then the value is replaced
-  by syntax which which takes value of the output of the command
+  by syntax which takes the value of the output of the command
   "git describe --tags --dirty",
   executed in the source directory. This is recalculated each time
   the txr.c source file is compiled.

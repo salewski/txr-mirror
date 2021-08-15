@@ -2015,13 +2015,12 @@ ways:
 The forms with an
 .code *
 indicate a long match, see Longest Match below.
-The last three forms with the embedded regexp
+The forms with the embedded regexp
 .mono
 .meti <> / regex /
 .onom
-or
+or function or
 .meta number
-or function
 have special semantics; see Positive Match below.
 
 The identifier
@@ -9592,7 +9591,7 @@ The
 argument designates a symbol which will behave as an integer
 variable over the scope of the clauses inside the repeat. The variable provides
 access to the repetition count, starting at zero, incrementing with each
-repetition. If the the argument is given as
+repetition. If the argument is given as
 .mono
 .meti >> ( symbol << expr )
 .onom
@@ -11210,7 +11209,7 @@ also.  Furthermore, every type is a subtype of the type
 which has no
 supertype other than itself. Type
 .code nil
-is is a subtype of every type, including
+is a subtype of every type, including
 itself.  The subtyping relationship is transitive also. If
 .code A
 is a subtype
@@ -11283,7 +11282,7 @@ Thus
 .code a
 is now a subtype of
 .codn e .
-The the above can be condensed to:
+The above can be condensed to:
 
 .verb
   @(defex a b c d e)
@@ -16693,8 +16692,8 @@ is returned.
 .coNP Macro @ condlet
 .synb
 .mets (condlet
-.mets \ \  ([({ sym | >> ( sym << init-form )}+) | << atom-form ]
-.mets \ \ \  << body-form *)*)
+.mets \  ([({ sym | >> ( sym << init-form )}+) | << atom-form ]
+.mets \ \  << body-form *)*)
 .syne
 .desc
 The
@@ -16756,17 +16755,17 @@ runs out of arguments, it terminates and returns
 .verb
   (let ((l '(1 2 3)))
     (condlet
-       ;; first arg
-       (((a (first l)   ;; a binding gets 1
-         (b (second l)) ;; b binding gets 2
-         (g (> a b))))  ;; last variable g is nil
-        'foo)           ;; not evaluated
-       ;; second arg
-       (((b (second l)  ;; b gets 2
-         (c (third l))  ;; c gets 3
-         (g (> b c))))  ;; last variable g is true
-        'bar)))         ;; condlet terminates
-   --> bar              ;; result is bar
+      ;; first arg
+      (((a (first l)   ;; a binding gets 1
+        (b (second l)) ;; b binding gets 2
+        (g (> a b))))  ;; last variable g is nil
+       'foo)           ;; not evaluated
+      ;; second arg
+      (((b (second l)  ;; b gets 2
+        (c (third l))  ;; c gets 3
+        (g (> b c))))  ;; last variable g is true
+       'bar)))         ;; condlet terminates
+  --> bar              ;; result is bar
 .brev
 
 .coNP Macro @ ifa
@@ -16776,7 +16775,7 @@ runs out of arguments, it terminates and returns
 .desc
 The
 .code ifa
-macro provides a anaphoric conditional operator resembling the
+macro provides an anaphoric conditional operator resembling the
 .code if
 operator. Around the evaluation of the
 .meta then
@@ -17326,7 +17325,7 @@ yields
 then the loop terminates.  Each
 .meta result-form
 is evaluated, and the value of the last of these
-forms is is the result value of the loop.
+forms is the result value of the loop.
 If there are no
 .metn result-form s
 then the result value is
@@ -17562,10 +17561,10 @@ These macros can be understood as providing syntactic sugar according to the
 pattern established by the following equivalences:
 
 .mono
-  (each-prod               (mapdo (lambda (x y)
-    ((x xinit)                      body)
-     (y yinit))       <-->        xinit
-    body)                         yinit)
+  (each-prod               (maprodo (lambda (x y)
+    ((x xinit)                        body)
+     (y yinit))       <-->          xinit
+    body)                           yinit)
 
   (collect-each-prod       (maprod (lambda (x y)
     ((x xinit)                       body)
@@ -17607,10 +17606,10 @@ The macros
 and
 .code append-each-prod*
 are variants of
-.codn each-prod* ,
-.code collect-each-prod*
+.codn each-prod ,
+.code collect-each-prod
 and
-.code append-each-prod*
+.code append-each-prod
 with sequential binding.
 
 These macros can be understood as providing syntactic sugar according to the
@@ -17619,8 +17618,8 @@ pattern established by the following equivalences:
 .mono
   (each-prod*              (let* ((x xinit)
     ((x xinit)                    (y yinit))
-     (y yinit))       <-->   (mapdo (lambda (x y) body)
-    body)                           x y)
+     (y yinit))       <-->   (maprodo (lambda (x y) body)
+    body)                             x y)
 
   (collect-each-prod*      (let* ((x xinit)
     ((x xinit)                    (y yinit))
@@ -17915,7 +17914,7 @@ and so the second pprint form is not evaluated.
 .desc
 The
 .code return*
-function is similar to the the
+function is similar to the
 .code return-from
 operator, except that
 .code name
@@ -18420,7 +18419,7 @@ These function retrieve the components of
 .metn env ,
 which must be an environment. The
 .code env-vbindings
-function retrieves the the association list representing variable
+function retrieves the association list representing variable
 bindings. Similarly, the
 .code env-fbindings
 retrieves the association list of function bindings.
@@ -19563,7 +19562,7 @@ and
 .meta right-obj
 are actually the same object. The
 .code eq
-test is is implemented
+test is implemented
 by comparing the raw bit pattern of the value, whether or not it is
 an immediate value or a pointer to a heaped object.
 Two character values are
@@ -20527,7 +20526,7 @@ yields
 .strn "bc" .
 If
 .meta object
-is is a one-element vector or string, or an empty vector or string,
+is a one-element vector or string, or an empty vector or string,
 then
 .code nil
 is returned. Thus
@@ -21007,7 +21006,7 @@ which is unmodified.
 The
 .code nreconc
 function behaves similarly, except
-that the the returned object may share
+that the returned object may share
 structure with not only
 .meta list2
 but also
@@ -21497,7 +21496,7 @@ isn't permitted.
 
 If
 .meta list
-is is of length zero, or an atom (in which case its
+is of length zero, or an atom (in which case its
 length is considered to be zero) then the above
 remarks about position
 .I n
@@ -21765,7 +21764,7 @@ The symbol names of the a-d accessors are a generalization of the words
 .code car
 and
 .code cdr
-traversal of the structure using a sequence of the the letters
+traversal of the structure using a sequence of the letters
 .code a
 and
 .code d
@@ -22342,7 +22341,7 @@ function rather than
 
 .coNP Function @ alist-remove
 .synb
-.mets (alist-remove < alist << key ...)
+.mets (alist-remove < alist << key *)
 .syne
 .desc
 The
@@ -22350,13 +22349,13 @@ The
 function takes association list
 .meta alist
 and produces a
-duplicate from which cells matching the specified keys have been removed. The
-.meta keys
-argument is a list of the keys not to appear in the output list.
+duplicate from which cells matching any of the specified
+.metn key s
+have been removed.
 
 .coNP Function @ alist-nremove
 .synb
-.mets (alist-nremove < alist << key ...)
+.mets (alist-nremove < alist << key *)
 .syne
 .desc
 The
@@ -24891,7 +24890,7 @@ is a control character. For all other character, it returns
 .codn nil .
 
 A control character is one which belongs to the Unicode C0 or C1 block.
-C0 consists of the the characters U+0000 through U+001F, plus the
+C0 consists of the characters U+0000 through U+001F, plus the
 character U+007F. These are the original ASCII control characters.
 Block C1 consists of U+0080 through U+009F.
 
@@ -24903,7 +24902,7 @@ Block C1 consists of U+0080 through U+009F.
 .desc
 If
 .meta char
-is is an ASCII decimal digit character,
+is an ASCII decimal digit character,
 .code chr-isdigit
 returns the value
 .code t
@@ -25140,21 +25139,25 @@ character, then it just returns
 .mets (chr-int << num )
 .syne
 .desc
-The argument
+The
 .meta char
-must be a character. The
-.code num-chr
+argument must be a character. The
+.code int-chr
 function returns that
 character's Unicode code point value as an integer.
 
-The argument
+The
 .meta num
-must be a fixnum integer in the range
+argument must be a fixnum integer in the range
 .code 0
 to
 .codn #\ex10FFFF .
-The argument is taken to be a Unicode code point value and the
-corresponding character object is returned.
+The
+.code chr-int
+function interprets
+.meta num
+as a Unicode code point value and returns the
+corresponding character object.
 
 Note: these functions are also known by the obsolescent names
 .code num-chr
@@ -25983,7 +25986,7 @@ Otherwise, copies of element are stored into
 .meta vec
 starting at the
 .meta from
-index, ending just before the the
+index, ending just before the
 .meta to
 index is reached.
 
@@ -27409,7 +27412,7 @@ will not inherit the
 .meta B
 instance of slot
 .metn s .
-Moreover, if the the definition of
+Moreover, if the definition of
 .code D
 omits the
 .meta init-form
@@ -27431,7 +27434,7 @@ Note that, in light of the above type overriding possibility, the static slot
 value propagation happens only from the immediate supertype.
 If
 .code D
-is is derived from
+is derived from
 .code G
 which has a static slot
 .codn s ,
@@ -28315,7 +28318,7 @@ function.
 When
 .code lnew
 is used to construct an instance, a lazy struct is returned
-immediately, without evaluating any of the the
+immediately, without evaluating any of the
 .meta arg
 and
 .meta init-form
@@ -29329,14 +29332,14 @@ in the description of
 .coNP Functions @ struct-from-plist and @ struct-from-args
 .synb
 .mets (struct-from-plist < type >> { slot << value }*)
-.mets (struct-from-arg < type << arg *)
+.mets (struct-from-args < type << arg *)
 .syne
 .desc
 The
 .code struct-from-plist
 and
-.code struct-from-arg
-are interfaces to the
+.code struct-from-args
+functions are interfaces to the
 .code make-struct
 function.
 
@@ -29353,7 +29356,7 @@ argument of
 It passes no boa constructor arguments.
 
 The
-.code struct-from-plist
+.code struct-from-args
 function calls
 .meta make-struct
 with an empty
@@ -36966,7 +36969,7 @@ that of the quote, in this case
 .codn "(1 2 3)" .
 
 .code macro-time
-forms do not see the surrounding lexical environment; the see only
+forms do not see the surrounding lexical environment; they see only
 global function and variable bindings and macros.
 
 Note:
@@ -40484,7 +40487,7 @@ call contains only code fragments for the expander functions.
 The name and syntax of the place is determined by the
 .meta place-destructuring-args
 argument, which is macro-style parameter list whose structure
-mimics that of the the place. In particular, its leftmost symbol
+mimics that of the place. In particular, its leftmost symbol
 gives the name under which the place is registered.
 The
 .code defplace
@@ -40498,7 +40501,7 @@ parameter must be be a symbol. This symbol will capture the
 .meta body-forms
 parameter which is passed to the update expander, clobber
 expander or delete expander. The code fragments then have
-access to the the body forms via this name.
+access to the body forms via this name.
 
 The
 .metn getter-sym ,
@@ -43255,7 +43258,7 @@ in the usual way.
 
 When the anonymous function is called, each clause's
 .meta pattern
-is matched against the the function's actual arguments. When a
+is matched against the function's actual arguments. When a
 match occurs, each
 .meta form
 associated with the
@@ -43700,7 +43703,7 @@ in a manner particular to
 The
 .code :form
 parameter captures the pattern-matching form, or a constituent thereof, in
-which the the macro is being invoked. For instance, if the operator is being
+which the macro is being invoked. For instance, if the operator is being
 used inside a pattern given to a
 .code when-match
 macro invocation, then the form will be that entire
@@ -43987,7 +43990,7 @@ returns
 the
 .code keep-matches
 macro returns a list of the values produced by all matching iterations which
-led to the the execution of the
+led to the execution of the
 .metn body-form s.
 
 The
@@ -45151,7 +45154,7 @@ function returns the product of
 with itself. The following
 equivalence holds, except that
 .code x
-is evaluated only once in the the
+is evaluated only once in the
 .code square
 expression:
 
@@ -46261,7 +46264,7 @@ if it is successful, otherwise the return value is
 .code nil
 and the rounding mode is not changed.
 
-If a value is is passed to
+If a value is passed to
 .code flo-set-round-mode
 which is not the value of one of the above
 four rounding mode variables, and the function succeeds anyway, then the
@@ -46490,7 +46493,7 @@ new value.  If
 is positive, then a left shift takes place.  If
 .meta bits
 is negative, then a right shift takes place. If
-.meta bit
+.meta bits
 is zero, then
 .meta value
 is returned unaltered.  For positive numbers, a left shift by n bits is
@@ -47346,7 +47349,7 @@ established.
 Exception type symbols are arranged
 in an inheritance hierarchy, at whose top the symbol
 .code t
-is is the supertype of every exception type, and the
+is the supertype of every exception type, and the
 .code nil
 symbol is at the bottom, the subtype of every exception type.
 
@@ -49426,7 +49429,7 @@ that control will return into a restarted copy of that context.
 .desc
 The
 .code sys:abscond*
-function is similar to the the
+function is similar to the
 .code sys:abscond-from
 operator, except that
 .code name
@@ -51007,7 +51010,7 @@ If this situation is true of
 .metn end ,
 then
 .meta end
-is is curtailed to the the string length.
+is curtailed to the string length.
 
 The
 .code rra
@@ -52926,7 +52929,7 @@ tree is created.
 The
 .meta keyfun
 argument specifies the function which is applied to every element
-to produce a key. If omitted, the the tree object shall behave as if the
+to produce a key. If omitted, the tree object shall behave as if the
 .code identity
 function were used, taking the elements themselves to be keys.
 
@@ -52997,7 +53000,7 @@ object holds the element that is being inserted. The actual search key
 which is associated with this element is determined by applying
 .metn tree 's
 .meta keyfun
-to the the
+to the
 .metn node 's
 .code key
 value.
@@ -53903,7 +53906,7 @@ is applied to
 .codn op ;
 the second rightmost
 .code do
-is applied to the rightmost on and so on. The effect is that partial
+is applied to the rightmost one and so on. The effect is that partial
 application has been achieved. The value
 .code 1
 is passed to the resulting function, which returns another function
@@ -55862,7 +55865,7 @@ or
 This
 .meta point
 element may appear at most once, and must not be the first or
-last character, unless is is the exclamation mark,
+last character, unless it is the exclamation mark,
 in which case it may appear last.
 
 Except if ending in the exclamation mark, a numeric pattern specifies a field
@@ -56425,7 +56428,7 @@ specified as unbuffered with
 .coIP n
 Specifies that the operation shall not block.
 .meIP digit
-A decimal digit specifies the the stream buffer size
+A decimal digit specifies the stream buffer size
 as binary exponential buffer size order, such that
 .code 0
 specifies 1024 bytes,
@@ -56492,7 +56495,7 @@ this change: it automatically opens the smaller file and starts reading from
 the beginning (the
 .meta seek-to-end-p
 flag only applies to the initial open).
-In this manner, a tail stream can dynamically growing rotating log files.
+In this manner, a tail stream can dynamically grow rotating log files.
 
 Caveat: since a tail stream can reopen a new file which has the same
 name as the original file, it behave incorrectly if the program
@@ -58885,7 +58888,7 @@ with the formatting algorithm.
 
 .SS* Stream Output Limiting
 
-Streams have two properties which are used by the The \*(TL object printer to
+Streams have two properties which are used by the \*(TL object printer to
 optionally truncate the output generated by aggregate objects.
 
 A stream can specify a maximum length for aggregate objects via the
@@ -59039,7 +59042,7 @@ The
 function returns the previous value.
 
 .SS* Coprocesses
-.coNP Functions @ open-command and @ open-process
+.coNP Functions @, open-command @ open-process and @ open-subprocess
 .synb
 .mets (open-command < system-command <> [ mode-string ])
 .mets (open-process < program < mode-string <> [ argument-list ])
@@ -59048,7 +59051,7 @@ function returns the previous value.
 .syne
 .desc
 These functions spawn external programs which execute concurrently
-with the \*(TX program. Both functions return a unidirectional stream for
+with the \*(TX program. They all return a unidirectional stream for
 communicating with these programs: either an output stream, or an input
 stream, depending on the contents of
 .metn mode-string .
@@ -59106,10 +59109,10 @@ optional arguments to be passed passed to the program. The
 .meta program
 argument
 becomes the first argument, and
-.meta argument-string
-become the second and
+.meta argument-list
+becomes the second and
 subsequent arguments. If
-.meta argument-strings
+.meta argument-list
 is omitted, it defaults to empty.
 
 If a coprocess is open for writing
@@ -59974,7 +59977,7 @@ Note: the functions
 and
 .code cptr-out
 are useful in simplifying the interaction with "semi-opaque" foreign objects:
-objects which serve as a API handles that are treated as opaque pointers in API
+objects which serve as API handles that are treated as opaque pointers in API
 argument calls, but which expose some internal members that the application
 must access directly. The
 .code cptr
@@ -62281,7 +62284,7 @@ The slot
 represents the number of seconds east of UTC, and
 .code zone
 holds a string giving the abbreviated time zone name.
-On platform where the C type
+On platforms where the C type
 .code "struct tm"
 has fields corresponding to these slots, values for
 these slots are calculated and stored into them by the
@@ -62292,7 +62295,7 @@ functions, and also the related
 .code time-local
 and
 .code time-utc
-methods. On platform where the corresponding fields are not
+methods. On platforms where the corresponding fields are not
 present in the C language
 .codn "struct tm" ,
 these slots are unaffected by those functions,
@@ -64765,7 +64768,7 @@ If the last
 .meta form
 yields the
 .code :close
-keyword symbol, the the association between the
+keyword symbol, the association between the
 .meta path
 or
 .metn command ,
@@ -69420,10 +69423,11 @@ function.
 
 Note that the
 .codn fnm-leading-dir ,
-.code fnm-case-fold
+.code fnm-casefold
 and
 .code fnm-extmatch
-may not be available. They are GNU extensions, found in the GNU C library.
+functions may not be available.
+They are GNU extensions, found in the GNU C library.
 
 .coNP Function @ fnmatch
 .synb
@@ -71955,7 +71959,7 @@ If the argument is a value other than
 then spaces are encoded as the
 character
 .code +
-.codn (plus) .
+(plus).
 
 The
 .code url-decode
@@ -71965,7 +71969,7 @@ argument is omitted or specified as
 .codn nil ,
 then
 .code +
-.code (plus)
+(plus)
 characters in the
 encoded data are retained as
 .code +
@@ -73402,7 +73406,7 @@ finalizer performs the explicit
 .code call-finalizers
 invocation against
 .codn B .
-Thus the the call either has no effect at all, or only calls some remaining
+Thus the call either has no effect at all, or only calls some remaining
 .code B
 finalizers that have not yet been processed, rather than all of them,
 as the application expects.
@@ -73711,7 +73715,7 @@ are evaluated in that file during the loading process.
 
 The
 .code *load-path*
-variable is is bound when a file is loaded from the command
+variable is bound when a file is loaded from the command
 line.
 
 If the
@@ -74683,9 +74687,9 @@ requires more responsibility from the application.
 
 The FFI feature is inherently unsafe. If the FFI type language is used to write
 incorrect type definitions which do not match the actual binary interface of a
-foreign function, undefined behavior results. Incorrect use of FFI can corrupt
-memory, creating instability and security problems. Also, incorrect use of FFI
-can cause memory leaks and/or use-after-free errors due to inappropriate
+foreign function, undefined behavior results. Improper use of FFI can corrupt
+memory, creating instability and security problems. It can also
+cause memory leaks and/or use-after-free errors due to inappropriate
 deallocation of memory.
 
 The implicit memory management behaviors encoded in the FFI type system
@@ -74705,7 +74709,7 @@ and use tools such as Valgrind to detect memory misuses and leaks.
 .NP* The \fIput\fP operation
 
 When a function call takes place from the \*(TL arena into a foreign
-library function, argument values must be prepared in the foreign
+library function, argument values must be prepared into the foreign
 representation. This takes place by converting Lisp objects into
 stack-allocated temporary buffers representing C objects. For aggregate objects
 containing pointers, additional buffers are allocated dynamically. For
@@ -74725,7 +74729,7 @@ callback return value to the foreign caller is also the put operation.
 After a foreign function call returns from a foreign library back to the \*(TL
 arena, the arguments have to be examined one more time, because two-way
 communication is possible, and because some of the material has temporary
-dynamically-allocated buffers associated with it which must be released. For
+dynamically allocated buffers associated with it which must be released. For
 instance a structure passed by pointer may be updated by the foreign function.
 FFI needs to propagate the changes which the foreign function performed to the
 C version of the structure, back to the original Lisp structure. Furthermore,
@@ -74743,15 +74747,15 @@ by-pointer nuance.
 Data passed into a function by value such as function arguments or via
 .code ptr-in
 are subject to the by-value nuance. Updates to the foreign representation
-of these objects does not propagate back to the Lisp representation to the
-external representation; however, those objects may contain pointers requiring
+of these objects does not propagate back to the Lisp representation;
+however, those objects may contain pointers requiring
 the by-pointer nuance of the in operation of those pointers to be invoked.
 
 .NP* The \fIget\fP operation
 
 After a foreign call completes, it is also necessary to retrieve the call's
 return value, convert it to a Lisp object, and free any dynamic memory.
-This is preformed by the
+This is performed by the
 .I get
 operation.
 
@@ -75179,7 +75183,7 @@ type syntax which specifies a size.
 Under the
 .code buf
 type's put operation, no memory allocation takes place. The pointer to the
-buffer object's data is is written into the argument space, so the foreign
+buffer object's data is written into the argument space, so the foreign
 function can manipulate the buffer directly. If the object isn't a buffer
 but rather the symbol
 .codn nil ,
@@ -75366,7 +75370,7 @@ is an expression which must evaluate to an integer value in range of the FFI
 .code int
 type. 
 It is evaluated in an environment in which the previous
-symbols from the same enumeration appear as variables whose binding are the
+symbols from the same enumeration appear as variables whose bindings are
 their enumeration values, making it possible to use earlier enumerations in the
 definition of later enumerations.
 
@@ -75417,7 +75421,7 @@ The values associated with the enumeration symbols must be in
 the representation range of
 .metn type ,
 which is not checked until the conversion of a symbol
-through the enumeration is is attempted at run time.
+through the enumeration is attempted at run time.
 
 .coNP FFI type @ struct
 .synb
@@ -75432,11 +75436,12 @@ and a C
 .codn struct .
 The
 .meta name
-argument of the syntax gives the structure type name, known as the tag.
+argument of the syntax gives the structure type's name, known as the tag.
 If this argument is the symbol
 .meta nil
 then the structure type is named by a newly generated uninterned
-symbol (gensym).
+symbol (with
+.codn gensym ).
 
 The
 .meta name
@@ -75452,7 +75457,7 @@ name associated with the FFI type.
 The
 .meta slot
 and
-.code type
+.meta type
 pairs specify the structure members. The
 .meta slot
 elements must be symbols, and the
@@ -75460,8 +75465,8 @@ elements must be symbols, and the
 elements must be FFI type expressions.
 
 A
-.meta struct
-definition with no member refers to a previously defined
+.code struct
+definition with no members refers to a previously defined
 .code struct
 or
 .code union
@@ -75475,14 +75480,14 @@ If no prior
 .code struct
 or
 .code union
-exists, then a definition with no slots specifies a new,
-structure type that is incomplete.
+exists, then a definition with no slots specifies a new, incomplete
+structure type.
 A
-.meta struct
+.code struct
 definition with no members never causes a Lisp structure type to be created.
 
 A
-.meta struct
+.code struct
 definition that specifies one or more members either defines a new structure
 type, or completes an existing one. If an incomplete structure or union
 type which has the same
@@ -75500,7 +75505,7 @@ same
 already exists, then the newly appearing definition replaces that type
 in the tag namespace.
 
-A struct
+A
 .code struct
 definition with members is entered into the
 .cod3 struct / union
@@ -75512,7 +75517,7 @@ except in the special situation when that member causes the type to become
 a flexible structure, described several paragraphs below.
 
 A
-.meta struct
+.code struct
 definition that specifies members causes a Lisp
 .code struct
 having the same
@@ -75595,7 +75600,7 @@ and
 .code bit
 compound type operators.
 
-A structure member must not be an incomplete or zero sized array,
+A structure member must not be an incomplete or zero-sized array,
 unless it is the last member. If the last member of FFI structure is
 an incomplete array, then it is a flexible structure.
 
@@ -75636,7 +75641,8 @@ argument specifies the name for the union type, known as a tag.
 If this argument is the symbol
 .meta nil
 then the union type is named by a newly generated uninterned
-symbol (gensym).
+symbol (with
+.codn gensym ).
 
 The
 .meta name
@@ -76320,7 +76326,7 @@ On conversion from the foreign representation to Lisp, the integer
 corresponding to the bit pattern is recovered. Bitfields follow the
 bit order of the underlying storage word. That is to say, the most
 significant binary digit of the bitfield is the one which is closest
-to the the most significant bit of the underlying storage unit.
+to the most significant bit of the underlying storage unit.
 If a four-bit field is placed into an empty storage unit and the value
 8 its stored, then on a big-endian machine, this has the effect of
 setting to 1 the most significant bit of the underlying storage word.
@@ -76502,7 +76508,7 @@ foreign code generates such an array, and the size of that array
 isn't known from the object itself.
 
 It is also useful, instead of a variable-length
-.code zarray
+.codn zarray ,
 for passing a dynamic array to foreign code in situations when the application benefits
 from managing the memory for the array. The variable-length
 .code zarray
@@ -76875,7 +76881,7 @@ from detecting null-termination of the foreign array. The conversion of
 the array itself is consistent with the semantics of an incomplete
 arrays that is not a structure member.
 Before the conversion takes place, all of the members of the
-structure prior to the the terminating array, are extracted and converted to
+structure prior to the terminating array, are extracted and converted to
 Lisp representations.  The corresponding slots of the Lisp structure are
 updated. Then if the Lisp structure type has a
 .code length
@@ -77035,7 +77041,7 @@ in the call descriptor mechanism for expressing a variadic function,
 it expresses a particular
 .B instance
 of a variadic function, rather than the variadic function's type
-.IR "per se" .
+per se.
 To call the same variadic function using different variadic arguments,
 different call descriptors are required. For instance to perform
 the equivalent of the C function call
@@ -77375,7 +77381,8 @@ type object it represents.
 
 The
 .code ffi-typedef
-function returns type.
+function returns
+.metn type .
 
 .TP* Example:
 
@@ -79279,7 +79286,7 @@ must be less than the length.
 
 If
 .meta carray
-has an unknown length, then the the access is permitted regardless of how
+has an unknown length, then the access is permitted regardless of how
 positive is the value of
 .metn idx .
 Whether the access has well-defined behavior depends on the actual extent of
@@ -79332,7 +79339,7 @@ must be less than the length.
 
 If
 .meta carray
-has an unknown length, then the the access is permitted regardless of how
+has an unknown length, then the access is permitted regardless of how
 positive is the value of
 .metn idx .
 Whether the access has well-defined behavior depends on the actual extent of
@@ -82000,7 +82007,7 @@ clipboard.
 By default, the most recent 500 lines submitted to the interactive listener are
 remembered in a history.  This history is available for recall, making it
 convenient to repair mistakes, or compose new lines which are based on previous
-lines.  Note that the the history suppresses consecutive duplicate lines.
+lines.  Note that the history suppresses consecutive, duplicate lines.
 The number of lines retained may be customized using the
 .code *listener-hist-len*
 variable.
@@ -82431,7 +82438,7 @@ the mode.
 Tab completion, history navigation, history search and editing in an external
 editor all cancel visual selection mode.
 
-By default, the the selection excludes the character which lies to the right of
+By default, the selection excludes the character which lies to the right of
 the rightmost endpoint.  Thus, the selection simply consists of the text
 between these two positions, whether or not they are reversed. This style of
 selection pairs excellently with an I-beam style cursor, and has clear
@@ -82854,7 +82861,7 @@ new character is typed during the brief time delay, the delay is immediately
 canceled, so as not to hinder rapid typing.
 
 This back-and-forth jump behavior also occurs when a character is erased using
-Backspace, and the the cursor ends up immediately to the right of a
+Backspace, and the cursor ends up immediately to the right of a
 parenthesis.
 
 Note that the matching is unsophisticated; it doesn't observe the
@@ -84424,8 +84431,8 @@ in the empty list case. Moreover, in the
 .code @(output)
 case, the value of TXR Lisp expressions was not subject to filtering. 
 Starting with \*(TX 100, these issues
-are fixed, making the the behavior is consistent with
-the behavior of TXR Lisp quasiliterals.
+are fixed, making the behavior consistent with
+that of TXR Lisp quasiliterals.
 .IP 97
 Up to \*(TX 97, the error exception symbols such as
 .code file-error
