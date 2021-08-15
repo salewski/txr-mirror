@@ -6338,7 +6338,6 @@ void ffi_init(void)
   prot1(&ffi_struct_tag_hash);
   uint8_s = intern(lit("uint8"), user_package);
   int8_s = intern(lit("int8"), user_package);
-  int8_s = intern(lit("int8"), user_package);
   uint16_s = intern(lit("uint16"), user_package);
   int16_s = intern(lit("int16"), user_package);
   uint32_s = intern(lit("uint32"), user_package);
