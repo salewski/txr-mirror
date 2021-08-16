@@ -84,6 +84,8 @@
     "Imitation is the benignest form of forgery."
     "This could be the year of the TXR desktop; I can feel it!"
     "TXR's suggested retail price is $0. (More in Canada.)"
+    "All of our cores are currently busy servicing other applications."
+    "For faster service, do not time out & retry. Syscalls are answered in sequence."
     ))
 
 (defparml sys:%quip-rand-state% (make-random-state))
