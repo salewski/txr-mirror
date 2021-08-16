@@ -3337,12 +3337,14 @@ val formatv(val stream_in, val fmtstr, struct args *al)
     enum {
       vf_init, vf_width, vf_digits, vf_star, vf_precision, vf_spec
     } state = vf_init, saved_state = vf_init;
-    int width = 0, precision = 0, precision_p = 0, digits = 0, lt = 0, neg = 0;
-    enum align align = al_right;
-    int sign = 0, zeropad = 0, dfl_precision = 0;
-    int dfl_digits = 0, print_base = 0;
     cnum value;
     cnum arg_ix = 0;
+    /* conversion variables that are reset before for each conversion */
+    int width = 0, precision = 0, precision_p = 0, digits = 0, lt = 0, neg = 0;
+    int sign = 0, zeropad = 0;
+    enum align align = al_right;
+    /* conversion variables that persist across conversions */
+    int dfl_precision = 0, dfl_digits = 0, print_base = 0;
 
     for (;;) {
       val obj;
@@ -3357,14 +3359,9 @@ val formatv(val stream_in, val fmtstr, struct args *al)
           break;
         case '~':
           state = vf_width;
-          width = 0;
+          width = precision = precision_p = 0;
+          digits = lt = neg = sign = zeropad = 0;
           align = al_right;
-          zeropad = 0;
-          precision = 0;
-          precision_p = 0;
-          digits = 0;
-          lt = 0;
-          neg = 0;
           continue;
         default:
           put_char(chr(ch), stream);
