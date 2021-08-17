@@ -64,7 +64,8 @@
                ((float) 'double)
                ((be-float le-float)
                 (compile-error form "variadic argument cannot be of type ~s"
-                               vt))))))
+                               vt))
+               (t vt)))))
     (list* (+ (len ftypes) (len vtypes)) (len ftypes) (append ftypes vtypes))))
 
 
