@@ -6485,9 +6485,16 @@ static val merge_wrap(val seq1, val seq2, val lessfun, val keyfun)
 void eval_init(void)
 {
   val not_null_f = func_n1(not_null);
+  val me_def_variable_f = func_n2(me_def_variable);
   val me_each_f = func_n2(me_each);
   val me_for_f = func_n2(me_for);
+  val me_qquote_f = func_n2(me_qquote);
   val length_f = func_n1(length);
+  val me_flet_labels_f = func_n2(me_flet_labels);
+  val me_case_f = func_n2(me_case);
+  val me_iflet_whenlet_f = func_n2(me_iflet_whenlet);
+  val me_while_until_f = func_n2(me_while_until);
+  val me_while_until_star_f = func_n2(me_while_until_star);
 
   protect(&top_vb, &top_fb, &top_mb, &top_smb, &special, &builtin, &dyn_env,
           &op_table, &pm_table, &last_form_evaled,
@@ -6694,9 +6701,9 @@ void eval_init(void)
   reg_op(eval_only_s, op_progn);
   reg_op(load_time_lit_s, op_load_time_lit);
 
-  reg_mac(defvar_s, func_n2(me_def_variable));
-  reg_mac(defparm_s, func_n2(me_def_variable));
-  reg_mac(defparml_s, func_n2(me_def_variable));
+  reg_mac(defvar_s, me_def_variable_f);
+  reg_mac(defparm_s, me_def_variable_f);
+  reg_mac(defparml_s, me_def_variable_f);
   reg_mac(each_s, me_each_f);
   reg_mac(each_star_s, me_each_f);
   reg_mac(collect_each_s, me_each_f);
@@ -6710,32 +6717,32 @@ void eval_init(void)
   reg_mac(intern(lit("delay"), user_package), func_n2(me_delay));
   reg_mac(sys_l1_val_s, func_n2(me_l1_val));
   reg_mac(sys_l1_setq_s, func_n2(me_l1_setq));
-  reg_mac(qquote_s, func_n2(me_qquote));
-  reg_mac(sys_qquote_s, func_n2(me_qquote));
+  reg_mac(qquote_s, me_qquote_f);
+  reg_mac(sys_qquote_s, me_qquote_f);
   reg_mac(intern(lit("equot"), user_package), func_n2(me_equot));
   reg_mac(intern(lit("pprof"), user_package), func_n2(me_pprof));
   reg_mac(when_s, func_n2(me_when));
   reg_mac(intern(lit("unless"), user_package), func_n2(me_unless));
-  reg_mac(while_s, func_n2(me_while_until));
-  reg_mac(while_star_s, func_n2(me_while_until_star));
-  reg_mac(until_s, func_n2(me_while_until));
-  reg_mac(until_star_s, func_n2(me_while_until_star));
+  reg_mac(while_s, me_while_until_f);
+  reg_mac(until_s, me_while_until_f);
+  reg_mac(while_star_s, me_while_until_star_f);
+  reg_mac(until_star_s, me_while_until_star_f);
   reg_mac(quasilist_s, func_n2(me_quasilist));
-  reg_mac(flet_s, func_n2(me_flet_labels));
-  reg_mac(labels_s, func_n2(me_flet_labels));
-  reg_mac(caseq_s, func_n2(me_case));
-  reg_mac(caseql_s, func_n2(me_case));
-  reg_mac(casequal_s, func_n2(me_case));
-  reg_mac(caseq_star_s, func_n2(me_case));
-  reg_mac(caseql_star_s, func_n2(me_case));
-  reg_mac(casequal_star_s, func_n2(me_case));
+  reg_mac(flet_s, me_flet_labels_f);
+  reg_mac(labels_s, me_flet_labels_f);
+  reg_mac(caseq_s, me_case_f);
+  reg_mac(caseql_s, me_case_f);
+  reg_mac(casequal_s, me_case_f);
+  reg_mac(caseq_star_s, me_case_f);
+  reg_mac(caseql_star_s, me_case_f);
+  reg_mac(casequal_star_s, me_case_f);
   reg_mac(prog2_s, func_n2(me_prog2));
   reg_mac(intern(lit("tb"), user_package), func_n2(me_tb));
   reg_mac(intern(lit("tc"), user_package), func_n2(me_tc));
   reg_mac(intern(lit("ignerr"), user_package), func_n2(me_ignerr));
   reg_mac(intern(lit("whilet"), user_package), func_n2(me_whilet));
-  reg_mac(iflet_s, func_n2(me_iflet_whenlet));
-  reg_mac(intern(lit("whenlet"), user_package), func_n2(me_iflet_whenlet));
+  reg_mac(iflet_s, me_iflet_whenlet_f);
+  reg_mac(intern(lit("whenlet"), user_package), me_iflet_whenlet_f);
   reg_mac(intern(lit("dotimes"), user_package), func_n2(me_dotimes));
   reg_mac(intern(lit("lcons"), user_package), func_n2(me_lcons));
   reg_mac(intern(lit("mlet"), user_package), func_n2(me_mlet));
