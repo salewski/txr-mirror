@@ -16195,6 +16195,74 @@ macros as case keys.
   --> "cool"
 .brev
 
+.coNP Macros @, ecaseq @, ecaseql @, ecasequal @, ecaseq* @ ecaseql* and @ ecasequal*
+.synb
+.mets (ecaseq < test-form << normal-clause * <> [ else-clause ])
+.mets (ecaseql < test-form << normal-clause * <> [ else-clause ])
+.mets (ecasequal < test-form << normal-clause * <> [ else-clause ])
+.mets (ecaseq* < test-form << normal-clause * <> [ else-clause ])
+.mets (ecaseql* < test-form << normal-clause * <> [ else-clause ])
+.mets (ecasequal* < test-form << normal-clause * <> [ else-clause ])
+.syne
+.desc
+These macros are error-catching variants of, respectively,
+.codn caseq ,
+.codn caseql ,
+.codn casequal ,
+.codn caseq* ,
+.code caseql*
+and
+.cond casequal* .
+
+If the
+.meta else-clause
+is present in the invocation of an error-catching case macro, then the the
+invocation is precisely equivalent to the corresponding non-error-trapping
+variant.
+
+If the
+.meta else-clause
+is missing in the invocation of an error-catching variant, then a default
+.meta else-clause
+is inserted which throws an exception of type
+.codn case-error ,
+derived from
+.codn error .
+After this insertion, the semantics follows that of the non-error-trapping
+variant.
+
+For instance,
+.codn "(ecaseql 3)" ,
+which has no
+.metn else-clause ,
+is equivalent to
+.mono
+.meti (caseql 3 (t << expr ))
+.onom
+where
+.meta expr
+indicates the inserted expression which throws
+.codn case-error .
+However,
+.code "(ecaseql 3 (t 42))"
+is simply equivalent to
+.codn "(caseql 3 (t 42))" ,
+since it has an
+.metn else-clause .
+
+Note: the error-catching case macros are intended for situations in which it is
+a matter of program correctness that every possible value of
+.meta test-form
+matches a
+.metn normal-clause ,
+such that if a failure to match occurs, it indicates a software defect.
+The error-throwing
+.meta else-clause
+helps to ensure that the error situation is noticed.
+Without this clause, the case macro terminates with a value of
+.codn nil ,
+which may conceal the defect and delay its identification.
+
 .coNP Operator/function @ if
 .synb
 .mets (if < cond < t-form <> [ e-form ])
@@ -47408,6 +47476,10 @@ subtype of every exception type:
                       +--- syntax-error
                       |
                       +--- eval-error
+                      |
+                      +--- match-error
+                      |
+                      +--- case-error
                       |
                       +--- opt-error
 .brev

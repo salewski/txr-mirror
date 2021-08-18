@@ -73,7 +73,7 @@ val top_vb, top_fb, top_mb, top_smb, special, builtin;
 val op_table, pm_table;
 val dyn_env;
 
-val eval_error_s;
+val eval_error_s, case_error_s;
 val dwim_s, progn_s, prog1_s, prog2_s, sys_blk_s;
 val let_s, let_star_s, lambda_s, call_s, dvbind_s;
 val sys_catch_s, handler_bind_s, cond_s, if_s, iflet_s, when_s, usr_var_s;
@@ -4289,6 +4289,34 @@ static val me_case(val form, val menv)
               cons(cond_s, condpairs), nao);
 }
 
+static val me_ecase(val form, val menv)
+{
+  val casesym = pop(&form);
+  val orig_args = form;
+  val testform = pop(&form);
+  val tgtsym = intern(cdr(symbol_name(casesym)), user_package);
+  val clauses = form;
+  val lastclause = car(lastcons(clauses));
+
+  if (consp(lastclause) && car(lastclause) == t) {
+    return cons(tgtsym, orig_args);
+  } else {
+    val nform = apply_frob_args(list(tgtsym,
+                                     testform,
+                                     append2(clauses,
+                                             cons(list(t, list(throw_s,
+                                                               list(quote_s,
+                                                                    case_error_s,
+                                                                    nao),
+                                                               lit("unhandled case"),
+                                                               nao),
+                                                       nao),
+                                                  nil)),
+                                     nao));
+    return me_case(nform, menv);
+  }
+}
+
 static val me_prog2(val form, val menv)
 {
   val arg1 = cadr(form);
@@ -6492,6 +6520,7 @@ void eval_init(void)
   val length_f = func_n1(length);
   val me_flet_labels_f = func_n2(me_flet_labels);
   val me_case_f = func_n2(me_case);
+  val me_ecase_f = func_n2(me_ecase);
   val me_iflet_whenlet_f = func_n2(me_iflet_whenlet);
   val me_while_until_f = func_n2(me_while_until);
   val me_while_until_star_f = func_n2(me_while_until_star);
@@ -6736,6 +6765,12 @@ void eval_init(void)
   reg_mac(caseq_star_s, me_case_f);
   reg_mac(caseql_star_s, me_case_f);
   reg_mac(casequal_star_s, me_case_f);
+  reg_mac(intern(lit("ecaseq"), user_package), me_ecase_f);
+  reg_mac(intern(lit("ecaseql"), user_package), me_ecase_f);
+  reg_mac(intern(lit("ecasequal"), user_package), me_ecase_f);
+  reg_mac(intern(lit("ecaseq*"), user_package), me_ecase_f);
+  reg_mac(intern(lit("ecaseql*"), user_package), me_ecase_f);
+  reg_mac(intern(lit("ecasequal*"), user_package), me_ecase_f);
   reg_mac(prog2_s, func_n2(me_prog2));
   reg_mac(intern(lit("tb"), user_package), func_n2(me_tb));
   reg_mac(intern(lit("tc"), user_package), func_n2(me_tc));
@@ -7330,7 +7365,9 @@ void eval_init(void)
   reg_fun(intern(lit("rt-assert-fail"), system_package), func_n4ov(rt_assert_fail, 3));
 
   eval_error_s = intern(lit("eval-error"), user_package);
+  case_error_s = intern(lit("case-error"), user_package);
   uw_register_subtype(eval_error_s, error_s);
+  uw_register_subtype(case_error_s, error_s);
 
   lisplib_init();
 }
