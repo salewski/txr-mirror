@@ -514,13 +514,13 @@
   (:odd 1 :pair 2 3 :even 4 :pair 5 6))
 
 (mtest
-  (must-match (@a @b) '(1 2) (list a b)) (1 2)
-  (must-match (@a @b) '(1 2 3) (list a b)) :error)
+  (match (@a @b) '(1 2) (list a b)) (1 2)
+  (match (@a @b) '(1 2 3) (list a b)) :error)
 
 (mtest
-  (must-match-case 42) :error
-  (must-match-case 42 (@a a)) 42
-  (must-match-case '(1 2) ((@a) a)) :error)
+  (match-ecase 42) :error
+  (match-ecase 42 (@a a)) 42
+  (match-ecase '(1 2) ((@a) a)) :error)
 
 (compile-only
   (eval-only

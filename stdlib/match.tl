@@ -645,12 +645,12 @@
            ,result
            ,else)))))
 
-(defmacro must-match (pat obj . body)
+(defmacro match (pat obj . body)
   (with-gensyms (val)
     ^(let ((,val ,obj))
        (if-match ,pat ,val
          (progn ,*body)
-         (throwf 'match-error "~s: ~s failed to match object ~s" 'must-match ',pat ,val)))))
+         (throwf 'match-error "~s: ~s failed to match object ~s" 'match ',pat ,val)))))
 
 (defmacro while-match (:form *match-form* :env e pat obj . body)
   (let ((cm (compile-match pat : (get-var-list e))))
@@ -683,11 +683,11 @@
          (or ,*clause-code)
          ,result-temp))))
 
-(defmacro must-match-case (obj . clauses)
+(defmacro match-ecase (obj . clauses)
   (with-gensyms (else)
     ^(match-case ,obj
        ,*clauses
-       ((var ,else) (throwf 'match-error "~s: failed to match object ~s" 'must-match-case ,else)))))
+       ((var ,else) (throwf 'match-error "~s: failed to match object ~s" 'match-ecase ,else)))))
 
 (defmacro while-match-case (:form *match-form* :env e obj . clauses)
   (unless [all clauses [andf proper-listp [chain len plusp]]]

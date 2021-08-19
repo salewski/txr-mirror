@@ -43157,10 +43157,10 @@ apply accordingly.
 
 .SS* Pattern-Matching Macros
 
-.coNP Macros @, when-match @ must-match and @ if-match
+.coNP Macros @, when-match @ match and @ if-match
 .synb
 .mets (when-match < pattern < expr << form *)
-.mets (must-match < pattern < expr << form *)
+.mets (match < pattern < expr << form *)
 .mets (if-match < pattern < expr < then-form <> [ else-form ])
 .syne
 .desc
@@ -43192,11 +43192,11 @@ If the match fails, the forms are not evaluated, and
 is produced.
 
 The
-.code must-match
+.code match
 macro behaves exactly like
 .code when-match
 when the match is successful. When the match fails,
-.code must-match
+.code match
 throws an exception of type
 .codn match-error .
 
@@ -43213,10 +43213,10 @@ which defaults to
 .code nil
 if it is not specified.
 
-.coNP Macros @ match-case and @ must-match-case
+.coNP Macros @ match-case and @ match-ecase
 .synb
 .mets (match-case < expr >> {( pattern << form *)}*)
-.mets (must-match-case < expr >> {( pattern << form *)}*)
+.mets (match-ecase < expr >> {( pattern << form *)}*)
 .syne
 .desc
 The
@@ -43261,7 +43261,7 @@ or else
 if there are no forms.
 
 The
-.code must-match-case
+.code match-ecase
 macro differs from
 .code match-case
 as follows. When none of the clauses match under
@@ -43269,7 +43269,7 @@ as follows. When none of the clauses match under
 then that form terminates with a value of
 .codn nil .
 In the same situation, the
-.code must-match-case
+.code match-ecase
 form throws an exception of type
 .codn match-error .
 
