@@ -72,8 +72,8 @@ struct hash {
   hash_weak_opt_t wkopt;
   struct hash *next;
   val table;
-  cnum modulus;
-  cnum count;
+  ucnum modulus;
+  ucnum count;
   val userdata;
   int usecount;
   struct hash_ops *hops;
@@ -608,7 +608,7 @@ static void hash_mark(val hash)
   h->usecount = 0;
 
   switch (h->wkopt) {
-    cnum i;
+    ucnum i;
     val iter;
   case hash_weak_none:
     gc_mark(h->table);
@@ -660,8 +660,8 @@ static struct cobj_ops hash_ops = cobj_ops_init(hash_equal_op,
 
 static void hash_grow(struct hash *h, val hash)
 {
-  cnum i;
-  cnum new_modulus = 2 * h->modulus;
+  ucnum i;
+  ucnum new_modulus = 2 * h->modulus;
   val new_table;
 
   if (new_modulus > NUM_MAX)
@@ -811,7 +811,7 @@ static val do_make_hash(hash_weak_opt_t wkopt, hash_type_t type, val seed)
                                                 if3(hash_seed_s,
                                                     hash_seed, zero)), self));
     h->wkopt = wkopt;
-    h->modulus = c_num(mod, self);
+    h->modulus = c_unum(mod, self);
     h->count = 0;
     h->table = table;
     h->userdata = nil;
@@ -883,7 +883,7 @@ val make_similar_hash(val existing)
   val table = vector(mod, nil);
   val hash = cobj(coerce(mem_t *, h), hash_cls, &hash_ops);
 
-  h->modulus = c_num(mod, self);
+  h->modulus = c_unum(mod, self);
   h->count = 0;
   h->table = table;
   h->userdata = ex->userdata;
@@ -918,7 +918,7 @@ val copy_hash(val existing)
   val mod = num_fast(ex->modulus);
   val hash = cobj(coerce(mem_t *, h), hash_cls, &hash_ops);
   val table = vector(mod, nil);
-  cnum i;
+  ucnum i;
 
   h->modulus = ex->modulus;
   h->count = ex->count;
@@ -942,7 +942,7 @@ val gethash_c(val self, val hash, val key, loc new_p)
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   int lim = hash_traversal_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
-  loc pchain = mkloc(h->table->v.vec[hv % h->modulus], h->table);
+  loc pchain = mkloc(h->table->v.vec[hv & (h->modulus - 1)], h->table);
   val old = deref(pchain);
   val cell = h->hops->acons_new_c_fun(key, hv, new_p, pchain);
   if (old != deref(pchain) && ++h->count > 2 * h->modulus && h->usecount == 0)
@@ -955,7 +955,7 @@ val gethash_e(val self, val hash, val key)
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   int lim = hash_traversal_limit;
   ucnum hv = h->hops->hash_fun(key, &lim, h->seed);
-  val chain = h->table->v.vec[hv % h->modulus];
+  val chain = h->table->v.vec[hv & (h->modulus - 1)];
   return h->hops->assoc_fun(key, hv, chain);
 }
 
@@ -1019,8 +1019,8 @@ val remhash(val hash, val key)
         break;
       }
     }
+    bug_unless (h->count > 0);
     h->count--;
-    bug_unless (h->count >= 0);
     return us_cdr(existing);
   }
 
@@ -1033,8 +1033,8 @@ val clearhash(val hash)
   struct hash *h = coerce(struct hash *, cobj_handle(self, hash, hash_cls));
   val mod = num_fast(256);
   val table = vector(mod, nil);
-  cnum oldcount = h->count;
-  h->modulus = c_num(mod, self);
+  ucnum oldcount = h->count;
+  h->modulus = c_unum(mod, self);
   h->count = 0;
   h->table = table;
   setcheck(hash, table);
@@ -1140,7 +1140,7 @@ val hash_iter_peek(struct hash_iter *hi)
 {
   val hash = hi->hash;
   struct hash *h = hash ? coerce(struct hash *, hash->co.handle) : 0;
-  cnum chain = hi->chain;
+  ucnum chain = hi->chain;
   val cell = hi->cons;
 
   if (!h)
@@ -1246,7 +1246,7 @@ static void do_weak_tables(void)
   reachable_weak_hashes = 0;
 
   for (; h != 0; h = h->next) {
-    cnum i, c = 0;
+    ucnum i, c = 0;
     /* The table of a weak hash was spuriously reached by conservative GC;
        it's a waste of time doing weak processing, since all keys and
        values have been transitively marked as reachable; and so we
